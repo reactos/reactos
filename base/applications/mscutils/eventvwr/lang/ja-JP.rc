@@ -1,0 +1,117 @@
+/*
+ * PROJECT:     ReactOS Event Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mscutils/eventvwr/lang/ja-JP.rc
+ * PURPOSE:     Japanese Language File for ReactOS Event Viewer
+ * TRANSLATORS: Tomoya Kitagawa
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDC_EVENTVWR MENU
+BEGIN
+	POPUP "ログ(&L)"
+	BEGIN
+		MENUITEM "アプリケーション(&A)",      ID_LOG_APPLICATION
+		MENUITEM "セキュリティ(&S)",          ID_LOG_SECURITY
+		MENUITEM "システム(&S)",              ID_LOG_SYSTEM
+		MENUITEM SEPARATOR
+		MENUITEM "終了(&X)",                  IDM_EXIT
+	END
+	POPUP "表\示(&V)"
+	BEGIN
+		MENUITEM "更新(&R)",                  IDM_REFRESH
+	END
+	MENUITEM "オプション(&O)",                    ID_OPTIONS
+	POPUP "ヘルプ(&H)"
+	BEGIN
+		MENUITEM "ヘルプ(&E)",                IDM_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "バージョン情報(&A)...",     IDM_ABOUT
+	END
+END
+
+IDC_EVENTVWR ACCELERATORS
+BEGIN
+	"?",            IDM_ABOUT,              ASCII,  ALT
+	"/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "バージョン情報"
+FONT 9, "MS UI Gothic", 0, 0, 0x0
+BEGIN
+	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+	LTEXT           "ReactOS イベント ビューア Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
+CAPTION "お待ちください.."
+FONT 9, "MS UI Gothic", 0, 0, 0x0
+BEGIN
+	CTEXT           "イベント ログを読み込んでいます。 お待ちください ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+END
+
+IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "イベントの詳細情報"
+FONT 9, "MS UI Gothic", 400, 0, 0x1
+BEGIN
+	DEFPUSHBUTTON   "閉じる(&C)",IDOK,12,258,50,14
+	PUSHBUTTON      "前へ(&P)",IDPREVIOUS,78,258,50,14
+	PUSHBUTTON      "次へ(&N)",IDNEXT,144,258,50,14
+	PUSHBUTTON      "ヘルプ(&H)",IDHELP,210,258,50,14
+	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+	LTEXT           "説明(&D):",IDC_STATIC,15,70,39,8
+	LTEXT           "日付:",IDC_STATIC,14,14,36,8
+	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
+	LTEXT           "時刻:",IDC_STATIC,14,27,36,8
+	LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
+	LTEXT           "ユーザー(&U):",IDC_STATIC,14,41,36,8
+	LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
+	LTEXT           "コンピュータ(&C):",IDC_STATIC,14,54,36,8
+	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
+	LTEXT           "イベントID:",IDC_STATIC,133,15,36,8
+	LTEXT           "Static",IDC_EVENTIDSTATIC,175,15,87,8
+	LTEXT           "ソ\ース:",IDC_STATIC,133,28,36,8
+	LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
+	LTEXT           "種類:",IDC_STATIC,133,42,36,8
+	LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
+	LTEXT           "分類:",IDC_STATIC,133,55,36,8
+	LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,175,55,87,8
+	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+	LTEXT           "データ(&A)",IDC_STATIC,14,194,20,8
+	CONTROL         "バイト(&B)",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
+	CONTROL         "ワード(&W)",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+END
+
+STRINGTABLE
+BEGIN
+	IDS_APP_TITLE                  "イベント ビューア"
+	IDC_EVENTSTRINGIDNOTFOUND      "イベント ID (%lu) (ソ\ース %s 内) に関する説明が見つかりませんでした。 リモート コンピュータからメッセージを表\示するために必要なレジストリ情報またはメッセージ DLL ファイルがローカル コンピュータにない可能\性があります。"
+	IDC_EVENTLOG_ERROR_TYPE        "エラー"
+	IDC_EVENTLOG_WARNING_TYPE      "警告"
+	IDC_EVENTLOG_INFORMATION_TYPE  "情報"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "成功の監査"
+	IDC_EVENTLOG_AUDIT_FAILURE     "失敗の監査"
+	IDC_EVENTLOG_SUCCESS           "成功"
+	IDC_EVENTLOG_UNKNOWN_TYPE      "不明なイベント"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "Type"
+    IDS_COLUMNDATE      "Date"
+    IDS_COLUMNTIME      "Time"
+    IDS_COLUMNSOURCE    "Source"
+    IDS_COLUMNCATEGORY  "Category"
+    IDS_COLUMNEVENT     "Event"
+    IDS_COLUMNUSER      "User"
+    IDS_COLUMNCOMPUTER  "Computer"
+    IDS_COLUMNEVENTDATA "Event Data"
+END

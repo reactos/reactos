@@ -273,13 +273,13 @@ InstallDefaultSystemSoundScheme(HKEY hRootKey)
             swprintf(Path, L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
             if (RegCreateKeyExW(hSubKey, L".Current",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
-                RegSetValueExW(hScheme, NULL, 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
                 RegCloseKey(hScheme);
             }
 
             if (RegCreateKeyExW(hSubKey, L".Default",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
-                RegSetValueExW(hScheme, NULL, 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
                 RegCloseKey(hScheme);
             }
             RegCloseKey(hSubKey);
@@ -435,7 +435,26 @@ MMSYS_InstallDevice(HDEVINFO hDevInfo, PSP_DEVINFO_DATA pspDevInfoData)
             swprintf(WaveName, L"wave%u", Index);
             if (RegQueryValueExW(hKey, WaveName, 0, NULL, NULL, &BufferSize) != ERROR_MORE_DATA)
             {
+                /* Store new audio driver entry */
                 RegSetValueExW(hKey, WaveName, 0, REG_SZ, (LPBYTE)szBuffer, (wcslen(szBuffer)+1) * sizeof(WCHAR));
+                break;
+            }
+            else
+            {
+                WCHAR Buffer[MAX_PATH];
+                BufferSize = sizeof(Buffer);
+
+                if (RegQueryValueExW(hKey, WaveName, 0, NULL, (LPBYTE)Buffer, &BufferSize) == ERROR_SUCCESS)
+                {
+                    /* Make sure the buffer is zero terminated */
+                    Buffer[MAX_PATH-1] = L'\0';
+
+                    if (!wcsicmp(Buffer, szBuffer))
+                    {
+                        /* an entry already exists */
+                        break;
+                    }
+                }
             }
         }
         RegCloseKey(hKey);

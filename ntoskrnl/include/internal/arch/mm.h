@@ -12,12 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H
+
+#pragma once
 
 #ifdef _M_IX86
 #include <internal/i386/mm.h>
@@ -27,8 +27,8 @@
 #include <internal/mips/mm.h>
 #elif defined(_M_ARM)
 #include <internal/arm/mm.h>
+#elif defined(_M_AMD64)
+#include <internal/amd64/mm.h>
 #else
 #error "Unknown processor"
 #endif
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_ARCH_MM_H */

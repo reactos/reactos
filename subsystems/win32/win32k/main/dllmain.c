@@ -12,20 +12,21 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  *  Entry Point for win32k.sys
  */
 
-#include <w32k.h>
+#include <win32k.h>
 #include <include/napi.h>
 
 #define NDEBUG
 #include <debug.h>
+
+HANDLE hModuleWin;
 
 PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
@@ -53,7 +54,7 @@ APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kProcessCallback\n");
@@ -67,12 +68,12 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     {
         /* FIXME - lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
-                                             sizeof(W32PROCESS),
-                                             TAG('W', '3', '2', 'p'));
+                                             sizeof(PROCESSINFO),
+                                             'p23W');
 
         if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
-        RtlZeroMemory(Win32Process, sizeof(W32PROCESS));
+        RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
 
         PsSetProcessWin32Process(Process, Win32Process);
         /* FIXME - unlock the process */
@@ -113,6 +114,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
       InitializeListHead(&Win32Process->MenuListHead);
 
+      InitializeListHead(&Win32Process->GDIBrushAttrFreeList);
+      InitializeListHead(&Win32Process->GDIDcAttrFreeList);
+
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
 
@@ -128,6 +132,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
       }
 
+      Win32Process->peProcess = Process;
       /* setup process flags */
       Win32Process->W32PF_flags = 0;
     }
@@ -151,12 +156,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       if(LogonProcess == Win32Process)
       {
         LogonProcess = NULL;
-      }
-
-      if (Win32Process->ProcessInfo != NULL)
-      {
-          UserHeapFree(Win32Process->ProcessInfo);
-          Win32Process->ProcessInfo = NULL;
       }
     }
 
@@ -192,7 +191,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(THREADINFO),
-                                            TAG('W', '3', '2', 't'));
+                                            't23W');
 
         if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 
@@ -247,7 +246,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         if (hDesk != NULL)
         {
           PDESKTOP DesktopObject;
-          Win32Thread->Desktop = NULL;
+          Win32Thread->rpdesk = NULL;
           Status = ObReferenceObjectByHandle(hDesk,
                                              0,
                                              ExDesktopObjectType,
@@ -269,7 +268,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
           }
         }
       }
-      Win32Thread->IsExiting = FALSE;
+      Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
       co_IntDestroyCaret(Win32Thread);
       Win32Thread->ppi = PsGetCurrentProcessWin32Process();
       pTeb = NtCurrentTeb();
@@ -280,11 +279,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
-      if (Win32Thread->ThreadInfo)
-      {
-          Win32Thread->ThreadInfo->ClientThreadInfo.dwcPumpHook = 0;
-          Win32Thread->pClientInfo->pClientThreadInfo = &Win32Thread->ThreadInfo->ClientThreadInfo;
-      }
+      Win32Thread->pEThread = Thread;
     }
   else
     {
@@ -292,8 +287,12 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
-      Win32Thread->IsExiting = TRUE;
+      Win32Thread->TIF_flags |= TIF_INCLEANUP;
+      DceFreeThreadDCE(Win32Thread);
       HOOK_DestroyThreadHooks(Thread);
+      /* Cleanup timers */
+      DestroyTimersForThread(Win32Thread);
+      KeSetEvent(Win32Thread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
       UnregisterThreadHotKeys(Thread);
       /* what if this co_ func crash in umode? what will clean us up then? */
       co_DestroyThreadWindows(Thread);
@@ -314,12 +313,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       IntSetThreadDesktop(NULL,
                           TRUE);
-
-      if (Win32Thread->ThreadInfo != NULL)
-      {
-          UserHeapFree(Win32Thread->ThreadInfo);
-          Win32Thread->ThreadInfo = NULL;
-      }
 
       PsSetThreadWin32Thread(Thread, NULL);
     }
@@ -344,12 +337,12 @@ Win32kInitWin32Thread(PETHREAD Thread)
   if (Process->Win32Process == NULL)
     {
       /* FIXME - lock the process */
-      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(W32PROCESS));
+      Process->Win32Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(PROCESSINFO), USERTAG_PROCESSINFO);
 
       if (Process->Win32Process == NULL)
 	return STATUS_NO_MEMORY;
 
-      RtlZeroMemory(Process->Win32Process, sizeof(W32PROCESS));
+      RtlZeroMemory(Process->Win32Process, sizeof(PROCESSINFO));
       /* FIXME - unlock the process */
 
       Win32kProcessCallback(Process, TRUE);
@@ -357,7 +350,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
   if (Thread->Tcb.Win32Thread == NULL)
     {
-      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(THREADINFO));
+      Thread->Tcb.Win32Thread = ExAllocatePoolWithTag(NonPagedPool, sizeof(THREADINFO), USERTAG_THREADINFO);
       if (Thread->Tcb.Win32Thread == NULL)
 	return STATUS_NO_MEMORY;
 
@@ -398,6 +391,8 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
     }
 
+  hModuleWin = MmPageEntireDriver(DriverEntry);
+  DPRINT("Win32k hInstance 0x%x!\n",hModuleWin);
     /*
      * Register Object Manager Callbacks
      */
@@ -538,6 +533,8 @@ DriverEntry (
       DPRINT1("Unable to initialize font support\n");
       return STATUS_UNSUCCESSFUL;
     }
+
+  InitXlateImpl();
 
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */

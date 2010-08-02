@@ -234,7 +234,7 @@ static BOOL do_searchW(PCWSTR file, PWSTR buffer, BOOL recurse,
         strcpyW(buffer + pos, fd.cFileName);
         if (recurse && (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             found = do_searchW(file, buffer, TRUE, cb, user);
-        else if (SymMatchFileNameW(buffer, (WCHAR*)file, NULL, NULL))
+        else if (SymMatchFileNameW(buffer, file, NULL, NULL))
         {
             if (!cb || cb(buffer, user)) found = TRUE;
         }
@@ -340,13 +340,13 @@ struct sffip
  */
 static BOOL CALLBACK sffip_cb(PCWSTR buffer, PVOID user)
 {
-    struct sffip*       s = (struct sffip*)user;
+    struct sffip*       s = user;
 
     if (!s->cb) return TRUE;
     /* yes, EnumDirTree/do_search and SymFindFileInPath callbacks use the opposite
      * convention to stop/continue enumeration. sigh.
      */
-    return !(s->cb)((WCHAR*)buffer, s->user);
+    return !(s->cb)(buffer, s->user);
 }
 
 /******************************************************************
@@ -461,7 +461,7 @@ struct module_find
  */
 static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
 {
-    struct module_find* mf = (struct module_find*)user;
+    struct module_find* mf = user;
     DWORD               size, checksum, timestamp;
     unsigned            matched = 0;
 
@@ -509,6 +509,21 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
         break;
     case DMT_ELF:
         if (elf_fetch_file_info(buffer, 0, &size, &checksum))
+        {
+            matched++;
+            if (checksum == mf->dw1) matched++;
+            else
+                WARN("Found %s, but wrong checksums: %08x %08x\n",
+                     debugstr_w(buffer), checksum, mf->dw1);
+        }
+        else
+        {
+            WARN("Couldn't read %s\n", debugstr_w(buffer));
+            return FALSE;
+        }
+        break;
+    case DMT_MACHO:
+        if (macho_fetch_file_info(buffer, 0, &size, &checksum))
         {
             matched++;
             if (checksum == mf->dw1) matched++;
@@ -580,7 +595,7 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
                 if ((mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL)
                 {
                     const IMAGE_SEPARATE_DEBUG_HEADER*  hdr;
-                    hdr = (const IMAGE_SEPARATE_DEBUG_HEADER*)mapping;
+                    hdr = mapping;
 
                     if (hdr->Signature == IMAGE_SEPARATE_DEBUG_SIGNATURE)
                     {

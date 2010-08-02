@@ -233,6 +233,8 @@ struct _xmlAutomataState {
 typedef struct _xmlAutomata xmlRegParserCtxt;
 typedef xmlRegParserCtxt *xmlRegParserCtxtPtr;
 
+#define AM_AUTOMATA_RNG 1
+
 struct _xmlAutomata {
     xmlChar *string;
     xmlChar *cur;
@@ -260,6 +262,7 @@ struct _xmlAutomata {
 
     int determinist;
     int negs;
+    int flags;
 };
 
 struct _xmlRegexp {
@@ -271,6 +274,7 @@ struct _xmlRegexp {
     int nbCounters;
     xmlRegCounter *counters;
     int determinist;
+    int flags;
     /*
      * That's the compact form for determinists automatas
      */
@@ -353,6 +357,8 @@ static int xmlRegCheckCharacter(xmlRegAtomPtr atom, int codepoint);
 static int xmlRegCheckCharacterRange(xmlRegAtomType type, int codepoint,
                   int neg, int start, int end, const xmlChar *blockName);
 
+void xmlAutomataSetFlags(xmlAutomataPtr am, int flags);
+
 /************************************************************************
  *									*
  * 		Regexp memory error handler				*
@@ -434,6 +440,7 @@ xmlRegEpxFromParse(xmlRegParserCtxtPtr ctxt) {
     ret->nbCounters = ctxt->nbCounters;
     ret->counters = ctxt->counters;
     ret->determinist = ctxt->determinist;
+    ret->flags = ctxt->flags;
     if (ret->determinist == -1) {
         xmlRegexpIsDeterminist(ret);
     }
@@ -1569,8 +1576,13 @@ xmlFAGenerateTransitions(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr from,
 		 *      1. set transition from atom start to new state
 		 *      2. set transition from atom end to this state. 
 		 */
-		xmlFAGenerateEpsilonTransition(ctxt, atom->start, 0);
-		xmlFAGenerateEpsilonTransition(ctxt, atom->stop, ctxt->state);
+                if (to == NULL) {
+                    xmlFAGenerateEpsilonTransition(ctxt, atom->start, 0);
+                    xmlFAGenerateEpsilonTransition(ctxt, atom->stop,
+                                                   ctxt->state);
+                } else {
+                    xmlFAGenerateEpsilonTransition(ctxt, atom->start, to);
+                }
 		break;
 	    case XML_REGEXP_QUANT_MULT:
 		atom->quant = XML_REGEXP_QUANT_ONCE;
@@ -2083,12 +2095,13 @@ xmlFACompareRanges(xmlRegRangePtr range1, xmlRegRangePtr range2) {
                (range2->type == XML_REGEXP_EPSILON)) {
 	return(0);
     } else if (range1->type == range2->type) {
-        if ((range1->type != XML_REGEXP_CHARVAL) ||
-	    (range1->end < range2->start) ||
-	    (range2->end < range1->start))
-	    ret = 1;
-	else
+        if (range1->type != XML_REGEXP_CHARVAL)
+            ret = 1;
+        else if ((range1->end < range2->start) ||
+	         (range2->end < range1->start))
 	    ret = 0;
+	else
+	    ret = 1;
     } else if (range1->type == XML_REGEXP_CHARVAL) {
         int codepoint;
 	int neg = 0;
@@ -2215,7 +2228,7 @@ xmlFACompareRanges(xmlRegRangePtr range1, xmlRegRangePtr range2) {
     if (((range1->neg == 0) && (range2->neg != 0)) ||
         ((range1->neg != 0) && (range2->neg == 0)))
 	ret = !ret;
-    return(1);
+    return(ret);
 }
 
 /**
@@ -2423,6 +2436,7 @@ xmlFACompareAtomTypes(xmlRegAtomType type1, xmlRegAtomType type2) {
  * xmlFAEqualAtoms:
  * @atom1:  an atom
  * @atom2:  an atom
+ * @deep: if not set only compare string pointers
  *
  * Compares two atoms to check whether they are the same exactly
  * this is used to remove equivalent transitions
@@ -2430,7 +2444,7 @@ xmlFACompareAtomTypes(xmlRegAtomType type1, xmlRegAtomType type2) {
  * Returns 1 if same and 0 otherwise
  */
 static int
-xmlFAEqualAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
+xmlFAEqualAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2, int deep) {
     int ret = 0;
 
     if (atom1 == atom2)
@@ -2445,8 +2459,11 @@ xmlFAEqualAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
 	    ret = 0;
 	    break;
         case XML_REGEXP_STRING:
-	    ret = xmlStrEqual((xmlChar *)atom1->valuep,
-	                      (xmlChar *)atom2->valuep);
+            if (!deep)
+                ret = (atom1->valuep == atom2->valuep);
+            else
+                ret = xmlStrEqual((xmlChar *)atom1->valuep,
+                                  (xmlChar *)atom2->valuep);
 	    break;
         case XML_REGEXP_CHARVAL:
 	    ret = (atom1->codepoint == atom2->codepoint);
@@ -2464,6 +2481,7 @@ xmlFAEqualAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
  * xmlFACompareAtoms:
  * @atom1:  an atom
  * @atom2:  an atom
+ * @deep: if not set only compare string pointers
  *
  * Compares two atoms to check whether they intersect in some ways,
  * this is used by xmlFAComputesDeterminism and xmlFARecurseDeterminism only
@@ -2471,7 +2489,7 @@ xmlFAEqualAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
  * Returns 1 if yes and 0 otherwise
  */
 static int
-xmlFACompareAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
+xmlFACompareAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2, int deep) {
     int ret = 1;
 
     if (atom1 == atom2)
@@ -2497,8 +2515,11 @@ xmlFACompareAtoms(xmlRegAtomPtr atom1, xmlRegAtomPtr atom2) {
     }
     switch (atom1->type) {
         case XML_REGEXP_STRING:
-	    ret = xmlRegStrEqualWildcard((xmlChar *)atom1->valuep,
-	                                 (xmlChar *)atom2->valuep);
+            if (!deep)
+                ret = (atom1->valuep != atom2->valuep);
+            else
+                ret = xmlRegStrEqualWildcard((xmlChar *)atom1->valuep,
+                                             (xmlChar *)atom2->valuep);
 	    break;
         case XML_REGEXP_EPSILON:
 	    goto not_determinist;
@@ -2561,9 +2582,14 @@ xmlFARecurseDeterminism(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
     int res;
     int transnr, nbTrans;
     xmlRegTransPtr t1;
+    int deep = 1;
 
     if (state == NULL)
 	return(ret);
+
+    if (ctxt->flags & AM_AUTOMATA_RNG)
+        deep = 0;
+
     /*
      * don't recurse on transitions potentially added in the course of
      * the elimination.
@@ -2587,7 +2613,7 @@ xmlFARecurseDeterminism(xmlRegParserCtxtPtr ctxt, xmlRegStatePtr state,
 	}
 	if (t1->to != to)
 	    continue;
-	if (xmlFACompareAtoms(t1->atom, atom)) {
+	if (xmlFACompareAtoms(t1->atom, atom, deep)) {
 	    ret = 0;
 	    /* mark the transition as non-deterministic */
 	    t1->nd = 1;
@@ -2611,6 +2637,7 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
     xmlRegTransPtr t1, t2, last;
     int i;
     int ret = 1;
+    int deep = 1;
 
 #ifdef DEBUG_REGEXP_GRAPH
     printf("xmlFAComputesDeterminism\n");
@@ -2618,6 +2645,9 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 #endif
     if (ctxt->determinist != -1)
 	return(ctxt->determinist);
+
+    if (ctxt->flags & AM_AUTOMATA_RNG)
+        deep = 0;
 
     /*
      * First cleanup the automata removing cancelled transitions
@@ -2646,7 +2676,13 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 		    continue;
 		if (t2->atom != NULL) {
 		    if (t1->to == t2->to) {
-			if (xmlFAEqualAtoms(t1->atom, t2->atom))
+                        /*
+                         * Here we use deep because we want to keep the
+                         * transitions which indicate a conflict
+                         */
+			if (xmlFAEqualAtoms(t1->atom, t2->atom, deep) &&
+                            (t1->counter == t2->counter) &&
+                            (t1->count == t2->count))
 			    t2->to = -1; /* eliminated */
 		    }
 		}
@@ -2681,8 +2717,11 @@ xmlFAComputesDeterminism(xmlRegParserCtxtPtr ctxt) {
 		if (t2->to == -1) /* eliminated */
 		    continue;
 		if (t2->atom != NULL) {
-		    /* not determinist ! */
-		    if (xmlFACompareAtoms(t1->atom, t2->atom)) {
+                    /*
+                     * But here we don't use deep because we want to
+                     * find transitions which indicate a conflict
+                     */
+		    if (xmlFACompareAtoms(t1->atom, t2->atom, 1)) {
 			ret = 0;
 			/* mark the transitions as non-deterministic ones */
 			t1->nd = 1;
@@ -4853,6 +4892,17 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 		}
 	    }
 	} else if (ctxt->atom->type == XML_REGEXP_RANGES) {
+            switch (cur) {
+                case 'n':
+                    cur = '\n';
+                    break;
+                case 'r':
+                    cur = '\r';
+                    break;
+                case 't':
+                    cur = '\t';
+                    break;
+            }
 	    xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
 			       XML_REGEXP_CHARVAL, cur, cur, NULL);
 	}
@@ -5470,10 +5520,12 @@ xmlRegexpIsDeterminist(xmlRegexpPtr comp) {
     am->nbStates = comp->nbStates;
     am->states = comp->states;
     am->determinist = -1;
+    am->flags = comp->flags;
     ret = xmlFAComputesDeterminism(am);
     am->atoms = NULL;
     am->states = NULL;
     xmlFreeAutomata(am);
+    comp->determinist = ret;
     return(ret);
 }
 
@@ -5551,6 +5603,7 @@ xmlNewAutomata(void) {
 	xmlFreeAutomata(ctxt);
 	return(NULL);
     }
+    ctxt->flags = 0;
 
     return(ctxt);
 }
@@ -5566,6 +5619,20 @@ xmlFreeAutomata(xmlAutomataPtr am) {
     if (am == NULL)
 	return;
     xmlRegFreeParserCtxt(am);
+}
+
+/**
+ * xmlAutomataSetFlags:
+ * @am: an automata
+ * @flags:  a set of internal flags
+ *
+ * Set some flags on the automata
+ */
+void
+xmlAutomataSetFlags(xmlAutomataPtr am, int flags) {
+    if (am == NULL)
+	return;
+    am->flags |= flags;
 }
 
 /**
@@ -6254,6 +6321,7 @@ struct _xmlExpCtxt {
     int size;
     int nbElems;
     int nb_nodes;
+    int maxNodes;
     const char *expr;
     const char *cur;
     int nb_cons;
@@ -6283,6 +6351,7 @@ xmlExpNewCtxt(int maxNodes, xmlDictPtr dict) {
     memset(ret, 0, sizeof(xmlExpCtxt));
     ret->size = size;
     ret->nbElems = 0;
+    ret->maxNodes = maxNodes;
     ret->table = xmlMalloc(size * sizeof(xmlExpNodePtr));
     if (ret->table == NULL) {
         xmlFree(ret);
@@ -6868,7 +6937,7 @@ tail:
 		    return(0);
             if (nb >= len)
 	        return(-2);
-	    list[nb++] = exp->exp_str;
+	    list[nb] = exp->exp_str;
 	    return(1);
         case XML_EXP_COUNT:
 	    exp = exp->exp_left;
@@ -6923,7 +6992,7 @@ tail:
 		    return(0);
             if (nb >= len)
 	        return(-2);
-	    list[nb++] = exp->exp_str;
+	    list[nb] = exp->exp_str;
 	    return(1);
         case XML_EXP_COUNT:
 	    exp = exp->exp_left;

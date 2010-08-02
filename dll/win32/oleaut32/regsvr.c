@@ -21,6 +21,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -32,6 +33,7 @@
 #include "oleauto.h"
 #include "initguid.h"
 #include "typelib.h"
+#include "wincodec.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -377,6 +379,32 @@ static LONG register_key_defvalueA(
 }
 
 /***********************************************************************
+ *		register_typelib
+ */
+static HRESULT register_typelib( const WCHAR *name )
+{
+    static const WCHAR backslash[] = {'\\',0};
+    HRESULT hr;
+    ITypeLib *typelib;
+    WCHAR *path;
+    DWORD len;
+
+    len = GetSystemDirectoryW( NULL, 0 ) + strlenW( name ) + 1;
+    if (!(path = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return E_OUTOFMEMORY;
+    GetSystemDirectoryW( path, len );
+    strcatW( path, backslash );
+    strcatW( path, name );
+    hr = LoadTypeLib( path, &typelib );
+    if (SUCCEEDED(hr))
+    {
+        hr = RegisterTypeLib( typelib, path, NULL );
+        ITypeLib_Release( typelib );
+    }
+    HeapFree( GetProcessHeap(), 0, path );
+    return hr;
+}
+
+/***********************************************************************
  *		coclass list
  */
 static GUID const CLSID_RecordInfo = {
@@ -384,9 +412,6 @@ static GUID const CLSID_RecordInfo = {
 
 static GUID const CLSID_OldFont = {
     0x46763EE0, 0xCAB2, 0x11CE, {0x8C,0x20,0x00,0xAA,0x00,0x51,0xE5,0xD4} };
-
-static GUID const CLSID_PSFactoryBuffer = {
-    0xB196B286, 0xBAB4, 0x101A, {0xB6,0x9C,0x00,0xAA,0x00,0x34,0x1D,0x07} };
 
 static struct regsvr_coclass const coclass_list[] = {
     {   &CLSID_RecordInfo,
@@ -455,11 +480,11 @@ static struct regsvr_coclass const coclass_list[] = {
 	"Obsolete Font",
 	"OldFont"
     },
-    {   &CLSID_PSFactoryBuffer,
-	"PSFactoryBuffer",
-	NULL,
+    {   &IID_ISupportErrorInfo,
+	"PSSupportErrorInfo",
+	"ole2disp.dll",
 	"oleaut32.dll",
-	"Both"
+	NULL
     },
     { NULL }			/* list terminator */
 };
@@ -469,7 +494,6 @@ static struct regsvr_coclass const coclass_list[] = {
  */
 #define INTERFACE_ENTRY(interface, clsid16, clsid32) { &IID_##interface, #interface, NULL, sizeof(interface##Vtbl)/sizeof(void*), clsid16, clsid32 }
 #define LCL_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, NULL)
-#define PSFAC_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer)
 #define CLSID_INTERFACE_ENTRY(interface,clsid) INTERFACE_ENTRY(interface, clsid, clsid)
 
 static struct regsvr_interface const interface_list[] = {
@@ -480,43 +504,10 @@ static struct regsvr_interface const interface_list[] = {
     CLSID_INTERFACE_ENTRY(ITypeComp,&CLSID_PSTypeComp),
     CLSID_INTERFACE_ENTRY(ITypeInfo,&CLSID_PSTypeInfo),
     CLSID_INTERFACE_ENTRY(ITypeLib,&CLSID_PSTypeLib),
-    PSFAC_INTERFACE_ENTRY(IAdviseSinkEx),
-    PSFAC_INTERFACE_ENTRY(IClassFactory2),
-    PSFAC_INTERFACE_ENTRY(IConnectionPoint),
-    PSFAC_INTERFACE_ENTRY(IConnectionPointContainer),
-    PSFAC_INTERFACE_ENTRY(ICreateErrorInfo),
-    PSFAC_INTERFACE_ENTRY(IEnumConnectionPoints),
-    PSFAC_INTERFACE_ENTRY(IEnumConnections),
-    PSFAC_INTERFACE_ENTRY(IEnumOleUndoUnits),
-    PSFAC_INTERFACE_ENTRY(IErrorInfo),
-    PSFAC_INTERFACE_ENTRY(IErrorLog),
-    PSFAC_INTERFACE_ENTRY(IFont),
-    PSFAC_INTERFACE_ENTRY(IObjectWithSite),
-    PSFAC_INTERFACE_ENTRY(IOleControl),
-    PSFAC_INTERFACE_ENTRY(IOleControlSite),
-    PSFAC_INTERFACE_ENTRY(IOleInPlaceSiteEx),
-    PSFAC_INTERFACE_ENTRY(IOleParentUndoUnit),
-    PSFAC_INTERFACE_ENTRY(IOleUndoManager),
-    PSFAC_INTERFACE_ENTRY(IOleUndoUnit),
-    PSFAC_INTERFACE_ENTRY(IPerPropertyBrowsing),
-    PSFAC_INTERFACE_ENTRY(IPersistMemory),
-    PSFAC_INTERFACE_ENTRY(IPersistPropertyBag),
-    PSFAC_INTERFACE_ENTRY(IPersistPropertyBag2),
-    PSFAC_INTERFACE_ENTRY(IPersistStreamInit),
-    PSFAC_INTERFACE_ENTRY(IPicture),
-    PSFAC_INTERFACE_ENTRY(IPointerInactive),
-    PSFAC_INTERFACE_ENTRY(IPropertyBag),
-    PSFAC_INTERFACE_ENTRY(IPropertyBag2),
-    PSFAC_INTERFACE_ENTRY(IPropertyNotifySink),
-    PSFAC_INTERFACE_ENTRY(IPropertyPage),
-    PSFAC_INTERFACE_ENTRY(IPropertyPage2),
-    PSFAC_INTERFACE_ENTRY(IPropertyPageSite),
-    PSFAC_INTERFACE_ENTRY(IProvideClassInfo),
-    PSFAC_INTERFACE_ENTRY(IProvideClassInfo2),
-    PSFAC_INTERFACE_ENTRY(IProvideMultipleClassInfo),
-    PSFAC_INTERFACE_ENTRY(IQuickActivate),
-    PSFAC_INTERFACE_ENTRY(ISimpleFrameSite),
-    PSFAC_INTERFACE_ENTRY(ISpecifyPropertyPages),
+    INTERFACE_ENTRY(ISupportErrorInfo,NULL,&CLSID_PSDispatch),
+    INTERFACE_ENTRY(ITypeFactory,NULL,&CLSID_PSDispatch),
+    INTERFACE_ENTRY(ITypeInfo2,NULL,&CLSID_PSDispatch),
+    INTERFACE_ENTRY(ITypeLib2,NULL,&CLSID_PSDispatch),
     { NULL }			/* list terminator */
 };
 
@@ -537,6 +528,13 @@ HRESULT WINAPI DllRegisterServer(void)
         hr = register_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = register_interfaces(interface_list);
+    if (SUCCEEDED(hr))
+    {
+        const WCHAR stdole32W[] = {'s','t','d','o','l','e','3','2','.','t','l','b',0};
+        const WCHAR stdole2W[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
+        hr = register_typelib( stdole2W );
+        if (SUCCEEDED(hr)) hr = register_typelib( stdole32W );
+    }
     return hr;
 }
 

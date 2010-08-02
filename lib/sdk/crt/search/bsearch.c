@@ -6,7 +6,7 @@
  */
 void *
 bsearch(const void *key, const void *base0, size_t nelem,
-	size_t size, int (*cmp)(const void *ck, const void *ce))
+	size_t size, int (__cdecl *cmp)(const void *ck, const void *ce))
 {
   char *base = (char *)base0;
   int lim, cmpval;

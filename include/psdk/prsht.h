@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
+
 #ifndef SNDMSG
 #ifdef __cplusplus
 #define SNDMSG ::SendMessage
@@ -58,6 +63,10 @@ extern "C" {
 #else
 #define PSH_WIZARD97	0x01000000
 #endif
+#ifdef _WINE
+#define PSH_WIZARD97_OLD 0x00002000
+#define PSH_WIZARD97_NEW 0x01000000
+#endif
 #endif /* _WIN32_IE >= 0x0400 */
 #if (_WIN32_IE >= 0x0500)
 #define PSH_WIZARD_LITE	0x400000
@@ -73,7 +82,11 @@ extern "C" {
 #if (_WIN32_IE >= 0x0500)
 #define PSM_GETRESULT	1159
 #define PropSheet_GetResult(hDlg)	SNDMSG(hDlg, PSM_GETRESULT, 0, 0)
+
 #define PSM_HWNDTOINDEX	1153
+#define PropSheet_HwndToIndex(hDlg, hwnd) \
+        (int)SNDMSG(hDlg, PSM_HWNDTOINDEX, (WPARAM)(hwnd), 0)
+
 #define PSM_IDTOINDEX	1157
 #define PSM_INDEXTOHWND	1154
 #define PSM_INDEXTOID	1158
@@ -352,6 +365,11 @@ static const WCHAR WC_PROPSHEETW[] = { 'S','y','s',
 #define CreatePropertySheetPage CreatePropertySheetPageA
 #define PropertySheet PropertySheetA
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

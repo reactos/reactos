@@ -149,6 +149,7 @@ typedef enum {
 #define IS_PROCESSED		(1 << 5)
 #define IS_COMPILABLE		(1 << 6)
 #define IS_NOT_COMPILABLE	(1 << 7)
+#define IS_EXTERNAL_REF	        (1 << 8)
 
 struct _xmlRelaxNGDefine {
     xmlRelaxNGType type;        /* the type of definition */
@@ -414,6 +415,7 @@ struct _xmlRelaxNGDocument {
     xmlDocPtr doc;              /* the associated XML document */
     xmlRelaxNGDefinePtr content;        /* the definitions */
     xmlRelaxNGPtr schema;       /* the schema */
+    int externalRef;            /* 1 if an external ref */
 };
 
 
@@ -1006,7 +1008,7 @@ xmlRelaxNGNewStates(xmlRelaxNGValidCtxtPtr ctxt, int size)
     xmlRelaxNGStatesPtr ret;
 
     if ((ctxt != NULL) &&
-        (ctxt->freeState != NULL) && (ctxt->freeStatesNr > 0)) {
+        (ctxt->freeStates != NULL) && (ctxt->freeStatesNr > 0)) {
         ctxt->freeStatesNr--;
         ret = ctxt->freeStates[ctxt->freeStatesNr];
         ret->nbState = 0;
@@ -1970,6 +1972,7 @@ xmlRelaxNGLoadExternalRef(xmlRelaxNGParserCtxtPtr ctxt,
     ret->doc = doc;
     ret->href = xmlStrdup(URL);
     ret->next = ctxt->documents;
+    ret->externalRef = 1;
     ctxt->documents = ret;
 
     /*
@@ -2371,6 +2374,9 @@ xmlRelaxNGAddValidError(xmlRelaxNGValidCtxtPtr ctxt,
             seq = ctxt->state->seq;
         } else {
             node = seq = NULL;
+        }
+        if ((node == NULL) && (seq == NULL)) {
+            node = ctxt->pnode;
         }
         xmlRelaxNGShowValidError(ctxt, err, node, seq, arg1, arg2);
     }
@@ -2849,6 +2855,10 @@ xmlRelaxNGCleanupTypes(void)
  * 									*
  ************************************************************************/
 
+/* from automata.c but not exported */
+void xmlAutomataSetFlags(xmlAutomataPtr am, int flags);
+
+
 static int xmlRelaxNGTryCompile(xmlRelaxNGParserCtxtPtr ctxt,
                                 xmlRelaxNGDefinePtr def);
 
@@ -3032,6 +3042,17 @@ xmlRelaxNGCompile(xmlRelaxNGParserCtxtPtr ctxt, xmlRelaxNGDefinePtr def)
                 ctxt->am = xmlNewAutomata();
                 if (ctxt->am == NULL)
                     return (-1);
+
+                /*
+                 * assume identical strings but not same pointer are different
+                 * atoms, needed for non-determinism detection
+                 * That way if 2 elements with the same name are in a choice
+                 * branch the automata is found non-deterministic and
+                 * we fallback to the normal validation which does the right
+                 * thing of exploring both choices.
+                 */
+                xmlAutomataSetFlags(ctxt->am, 1);
+
                 ctxt->state = xmlAutomataGetInitState(ctxt->am);
                 while (list != NULL) {
                     xmlRelaxNGCompile(ctxt, list);
@@ -3063,6 +3084,7 @@ xmlRelaxNGCompile(xmlRelaxNGParserCtxtPtr ctxt, xmlRelaxNGDefinePtr def)
                 ctxt->am = xmlNewAutomata();
                 if (ctxt->am == NULL)
                     return (-1);
+                xmlAutomataSetFlags(ctxt->am, 1);
                 ctxt->state = xmlAutomataGetInitState(ctxt->am);
                 while (list != NULL) {
                     xmlRelaxNGCompile(ctxt, list);
@@ -3071,6 +3093,11 @@ xmlRelaxNGCompile(xmlRelaxNGParserCtxtPtr ctxt, xmlRelaxNGDefinePtr def)
                 xmlAutomataSetFinalState(ctxt->am, ctxt->state);
                 def->contModel = xmlAutomataCompile(ctxt->am);
                 if (!xmlRegexpIsDeterminist(def->contModel)) {
+#ifdef DEBUG_COMPILE
+                    xmlGenericError(xmlGenericErrorContext,
+                        "Content model not determinist %s\n",
+                                    def->name);
+#endif
                     /*
                      * we can only use the automata if it is determinist
                      */
@@ -3098,7 +3125,11 @@ xmlRelaxNGCompile(xmlRelaxNGParserCtxtPtr ctxt, xmlRelaxNGDefinePtr def)
         case XML_RELAXNG_OPTIONAL:{
                 xmlAutomataStatePtr oldstate = ctxt->state;
 
-                xmlRelaxNGCompile(ctxt, def->content);
+                list = def->content;
+                while (list != NULL) {
+                    xmlRelaxNGCompile(ctxt, list);
+                    list = list->next;
+                }
                 xmlAutomataNewEpsilon(ctxt->am, oldstate, ctxt->state);
                 break;
             }
@@ -3439,6 +3470,9 @@ xmlRelaxNGGetDataTypeLibrary(xmlRelaxNGParserCtxtPtr ctxt ATTRIBUTE_UNUSED,
                              xmlNodePtr node)
 {
     xmlChar *ret, *escape;
+
+    if (node == NULL)
+        return(NULL);
 
     if ((IS_RELAXNG(node, "data")) || (IS_RELAXNG(node, "value"))) {
         ret = xmlGetProp(node, BAD_CAST "datatypeLibrary");
@@ -4616,6 +4650,72 @@ xmlRelaxNGParseDefine(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node)
 }
 
 /**
+ * xmlRelaxNGParseImportRef:
+ * @payload: the parser context
+ * @data: the current grammar
+ * @name: the reference name
+ *
+ * Import import one references into the current grammar
+ */
+static void
+xmlRelaxNGParseImportRef(void *payload, void *data, xmlChar *name) {
+    xmlRelaxNGParserCtxtPtr ctxt = (xmlRelaxNGParserCtxtPtr) data;
+    xmlRelaxNGDefinePtr def = (xmlRelaxNGDefinePtr) payload;
+    int tmp;
+
+    def->dflags |= IS_EXTERNAL_REF;
+
+    tmp = xmlHashAddEntry(ctxt->grammar->refs, name, def);
+    if (tmp < 0) {
+        xmlRelaxNGDefinePtr prev;
+
+        prev = (xmlRelaxNGDefinePtr)
+            xmlHashLookup(ctxt->grammar->refs, def->name);
+        if (prev == NULL) {
+            if (def->name != NULL) {
+                xmlRngPErr(ctxt, NULL, XML_RNGP_REF_CREATE_FAILED,
+                           "Error refs definitions '%s'\n",
+                           def->name, NULL);
+            } else {
+                xmlRngPErr(ctxt, NULL, XML_RNGP_REF_CREATE_FAILED,
+                           "Error refs definitions\n",
+                           NULL, NULL);
+            }
+        } else {
+            def->nextHash = prev->nextHash;
+            prev->nextHash = def;
+        }
+    }
+}
+
+/**
+ * xmlRelaxNGParseImportRefs:
+ * @ctxt: the parser context
+ * @grammar: the sub grammar
+ *
+ * Import references from the subgrammar into the current grammar
+ *
+ * Returns 0 in case of success, -1 in case of failure
+ */
+static int
+xmlRelaxNGParseImportRefs(xmlRelaxNGParserCtxtPtr ctxt,
+                          xmlRelaxNGGrammarPtr grammar) {
+    if ((ctxt == NULL) || (grammar == NULL) || (ctxt->grammar == NULL))
+        return(-1);
+    if (grammar->refs == NULL)
+        return(0);
+    if (ctxt->grammar->refs == NULL)
+        ctxt->grammar->refs = xmlHashCreate(10);
+    if (ctxt->grammar->refs == NULL) {
+        xmlRngPErr(ctxt, NULL, XML_RNGP_REF_CREATE_FAILED,
+                   "Could not create references hash\n", NULL, NULL);
+        return(-1);
+    }
+    xmlHashScan(grammar->refs, xmlRelaxNGParseImportRef, ctxt);
+    return(0);
+}
+
+/**
  * xmlRelaxNGProcessExternalRef:
  * @ctxt: the parser context
  * @node:  the externlRef node
@@ -4683,6 +4783,8 @@ xmlRelaxNGProcessExternalRef(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node)
             if ((docu->schema != NULL) &&
                 (docu->schema->topgrammar != NULL)) {
                 docu->content = docu->schema->topgrammar->start;
+                if (docu->schema->topgrammar->refs)
+                    xmlRelaxNGParseImportRefs(ctxt, docu->schema->topgrammar);
             }
 
             /*
@@ -5267,7 +5369,8 @@ xmlRelaxNGParseNameClass(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr node,
     } else {
         xmlRngPErr(ctxt, node, XML_RNGP_CHOICE_CONTENT,
                    "expecting name, anyName, nsName or choice : got %s\n",
-                   node->name, NULL);
+                   (node == NULL ? (const xmlChar *) "nothing" : node->name),
+		   NULL);
         return (NULL);
     }
     if (ret != def) {
@@ -5568,6 +5671,12 @@ xmlRelaxNGCheckReference(xmlRelaxNGDefinePtr ref,
 {
     xmlRelaxNGGrammarPtr grammar;
     xmlRelaxNGDefinePtr def, cur;
+
+    /*
+     * Those rules don't apply to imported ref from xmlRelaxNGParseImportRef
+     */
+    if (ref->dflags & IS_EXTERNAL_REF)
+        return;
 
     grammar = ctxt->grammar;
     if (grammar == NULL) {
@@ -6133,7 +6242,7 @@ xmlRelaxNGCheckRules(xmlRelaxNGParserCtxtPtr ctxt,
                      xmlRelaxNGDefinePtr cur, int flags,
                      xmlRelaxNGType ptype)
 {
-    int nflags = flags;
+    int nflags;
     xmlRelaxNGContentType ret, tmp, val = XML_RELAXNG_CONTENT_EMPTY;
 
     while (cur != NULL) {
@@ -6156,6 +6265,16 @@ xmlRelaxNGCheckRules(xmlRelaxNGParserCtxtPtr ctxt,
                 xmlRngPErr(ctxt, cur->node, XML_RNGP_PAT_DATA_EXCEPT_REF,
                            "Found forbidden pattern data/except//ref\n",
                            NULL, NULL);
+            }
+            if (cur->content == NULL) {
+                if (cur->type == XML_RELAXNG_PARENTREF)
+                    xmlRngPErr(ctxt, cur->node, XML_RNGP_REF_NO_DEF,
+                               "Internal found no define for parent refs\n",
+                               NULL, NULL);
+                else
+                    xmlRngPErr(ctxt, cur->node, XML_RNGP_REF_NO_DEF,
+                               "Internal found no define for ref %s\n",
+                               (cur->name ? cur->name: BAD_CAST "null"), NULL);
             }
             if (cur->depth > -4) {
                 cur->depth = -4;
@@ -6408,6 +6527,10 @@ xmlRelaxNGCheckRules(xmlRelaxNGParserCtxtPtr ctxt,
         if (ptype == XML_RELAXNG_GROUP) {
             val = xmlRelaxNGGroupContentType(val, ret);
         } else if (ptype == XML_RELAXNG_INTERLEAVE) {
+            /*
+             * TODO: scan complain that tmp is never used, seems on purpose
+             *       need double-checking
+             */
             tmp = xmlRelaxNGGroupContentType(val, ret);
             if (tmp != XML_RELAXNG_CONTENT_ERROR)
                 tmp = xmlRelaxNGMaxContentType(val, ret);
@@ -6494,6 +6617,7 @@ xmlRelaxNGParseGrammar(xmlRelaxNGParserCtxtPtr ctxt, xmlNodePtr nodes)
         xmlHashScan(ret->refs, (xmlHashScanner) xmlRelaxNGCheckReference,
                     ctxt);
     }
+
 
     /* @@@@ */
 
@@ -8345,7 +8469,7 @@ xmlRelaxNGValidateFullElement(xmlRelaxNGValidCtxtPtr ctxt,
         ret = -1;
     else
         ret = 1;
-    xmlRelaxNGFreeValidState(ctxt, state);
+    xmlRelaxNGFreeValidState(ctxt, ctxt->state);
     ctxt->state = NULL;
 #ifdef DEBUG_PROGRESSIVE
     if (ret < 0)
@@ -8815,8 +8939,11 @@ xmlRelaxNGValidateValue(xmlRelaxNGValidCtxtPtr ctxt,
         case XML_RELAXNG_REF:
         case XML_RELAXNG_PARENTREF:
 	    if (define->content == NULL) {
-	    }
-            ret = xmlRelaxNGValidateValue(ctxt, define->content);
+                VALID_ERR(XML_RELAXNG_ERR_NODEFINE);
+                ret = -1;
+	    } else {
+                ret = xmlRelaxNGValidateValue(ctxt, define->content);
+            }
             break;
         default:
             TODO ret = -1;
@@ -9323,6 +9450,7 @@ xmlRelaxNGValidateInterleave(xmlRelaxNGValidCtxtPtr ctxt,
 		    oldstate =
 			ctxt->states->tabState[ctxt->states->nbState - 1];
                     ctxt->states->tabState[ctxt->states->nbState - 1] = NULL;
+                    ctxt->states->nbState--;
 		}
             }
             for (j = 0; j < ctxt->states->nbState ; j++) {
@@ -9331,7 +9459,12 @@ xmlRelaxNGValidateInterleave(xmlRelaxNGValidCtxtPtr ctxt,
             xmlRelaxNGFreeStates(ctxt, ctxt->states);
             ctxt->states = NULL;
             if (found == 0) {
-                VALID_ERR2(XML_RELAXNG_ERR_INTEREXTRA, cur->name);
+                if (cur == NULL) {
+		    VALID_ERR2(XML_RELAXNG_ERR_INTEREXTRA,
+			       (const xmlChar *) "noname");
+                } else {
+                    VALID_ERR2(XML_RELAXNG_ERR_INTEREXTRA, cur->name);
+                }
                 ret = -1;
                 ctxt->state = oldstate;
                 goto done;
@@ -9878,8 +10011,8 @@ xmlRelaxNGValidateState(xmlRelaxNGValidCtxtPtr ctxt,
                     }
                     for (i = 0; i < ctxt->states->nbState; i++) {
                         xmlRelaxNGFreeValidState(ctxt,
-                                                 ctxt->states->
-                                                 tabState[i]);
+                                                 ctxt->states->tabState[i]);
+                        ctxt->states->tabState[i] = NULL;
                     }
                     xmlRelaxNGFreeStates(ctxt, ctxt->states);
                     ctxt->flags = oldflags;
@@ -10001,11 +10134,8 @@ xmlRelaxNGValidateState(xmlRelaxNGValidCtxtPtr ctxt,
                 } else {
                     for (j = 0; j < ctxt->states->nbState; j++) {
                         xmlRelaxNGAddStates(ctxt, res,
-                                            xmlRelaxNGCopyValidState(ctxt,
-                                                                     ctxt->
-                                                                     states->
-                                                                     tabState
-                                                                     [j]));
+                            xmlRelaxNGCopyValidState(ctxt,
+                                            ctxt->states->tabState[j]));
                     }
                 }
                 oldflags = ctxt->flags;
@@ -10034,10 +10164,7 @@ xmlRelaxNGValidateState(xmlRelaxNGValidCtxtPtr ctxt,
                                          j++) {
                                         tmp =
                                             xmlRelaxNGAddStates(ctxt, res,
-                                                                ctxt->
-                                                                states->
-                                                                tabState
-                                                                [j]);
+                                                   ctxt->states->tabState[j]);
                                         if (tmp == 1)
                                             progress = 1;
                                     }
@@ -10071,9 +10198,7 @@ xmlRelaxNGValidateState(xmlRelaxNGValidCtxtPtr ctxt,
                             } else if (ctxt->states != NULL) {
                                 for (j = 0; j < ctxt->states->nbState; j++) {
                                     tmp = xmlRelaxNGAddStates(ctxt, res,
-                                                              ctxt->
-                                                              states->
-                                                              tabState[j]);
+                                               ctxt->states->tabState[j]);
                                     if (tmp == 1)
                                         progress = 1;
                                 }
@@ -10111,8 +10236,7 @@ xmlRelaxNGValidateState(xmlRelaxNGValidCtxtPtr ctxt,
                             for (i = base; i < res->nbState; i++)
                                 xmlRelaxNGAddStates(ctxt, states,
                                                     xmlRelaxNGCopyValidState
-                                                    (ctxt,
-                                                     res->tabState[i]));
+                                                    (ctxt, res->tabState[i]));
                             ctxt->states = states;
                         }
                     }
@@ -10634,6 +10758,60 @@ xmlRelaxNGValidateDocument(xmlRelaxNGValidCtxtPtr ctxt, xmlDocPtr doc)
     return (ret);
 }
 
+/**
+ * xmlRelaxNGCleanPSVI:
+ * @node:  an input element or document
+ *
+ * Call this routine to speed up XPath computation on static documents.
+ * This stamps all the element nodes with the document order
+ * Like for line information, the order is kept in the element->content
+ * field, the value stored is actually - the node number (starting at -1)
+ * to be able to differentiate from line numbers.
+ *
+ * Returns the number of elements found in the document or -1 in case
+ *    of error.
+ */
+static void
+xmlRelaxNGCleanPSVI(xmlNodePtr node) {
+    xmlNodePtr cur;
+
+    if ((node == NULL) ||
+        ((node->type != XML_ELEMENT_NODE) &&
+         (node->type != XML_DOCUMENT_NODE) &&
+         (node->type != XML_HTML_DOCUMENT_NODE)))
+	return;
+    if (node->type == XML_ELEMENT_NODE)
+        node->psvi = NULL;
+
+    cur = node->children;
+    while (cur != NULL) {
+	if (cur->type == XML_ELEMENT_NODE) {
+	    cur->psvi = NULL;
+	    if (cur->children != NULL) {
+		cur = cur->children;
+		continue;
+	    }
+	}
+	if (cur->next != NULL) {
+	    cur = cur->next;
+	    continue;
+	}
+	do {
+	    cur = cur->parent;
+	    if (cur == NULL)
+		break;
+	    if (cur == node) {
+		cur = NULL;
+		break;
+	    }
+	    if (cur->next != NULL) {
+		cur = cur->next;
+		break;
+	    }
+	} while (cur != NULL);
+    }
+    return;
+}
 /************************************************************************
  * 									*
  * 			Validation interfaces				*
@@ -10807,6 +10985,11 @@ xmlRelaxNGValidateDoc(xmlRelaxNGValidCtxtPtr ctxt, xmlDocPtr doc)
     ctxt->doc = doc;
 
     ret = xmlRelaxNGValidateDocument(ctxt, doc);
+    /*
+     * Remove all left PSVI
+     */
+    xmlRelaxNGCleanPSVI((xmlNodePtr) doc);
+
     /*
      * TODO: build error codes
      */

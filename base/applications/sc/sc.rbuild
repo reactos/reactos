@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="sc" type="win32cui" installbase="system32" installname="sc.exe" unicode="yes">
 	<define name="DEFINE_GUID" />
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<file>control.c</file>
 	<file>create.c</file>

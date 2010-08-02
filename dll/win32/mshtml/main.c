@@ -44,9 +44,10 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 HINSTANCE hInst;
-DWORD mshtml_tls = 0;
+DWORD mshtml_tls = TLS_OUT_OF_INDEXES;
 
 static HINSTANCE shdoclc = NULL;
+static HDC display_dc;
 
 static void thread_detach(void)
 {
@@ -69,8 +70,10 @@ static void process_detach(void)
 
     if(shdoclc)
         FreeLibrary(shdoclc);
-    if(mshtml_tls)
+    if(mshtml_tls != TLS_OUT_OF_INDEXES)
         TlsFree(mshtml_tls);
+    if(display_dc)
+        DeleteObject(display_dc);
 }
 
 HINSTANCE get_shdoclc(void)
@@ -82,6 +85,21 @@ HINSTANCE get_shdoclc(void)
         return shdoclc;
 
     return shdoclc = LoadLibraryExW(wszShdoclc, NULL, LOAD_LIBRARY_AS_DATAFILE);
+}
+
+HDC get_display_dc(void)
+{
+    static const WCHAR displayW[] = {'D','I','S','P','L','A','Y',0};
+
+    if(!display_dc) {
+        HDC hdc;
+
+        hdc = CreateICW(displayW, NULL, NULL, NULL);
+        if(InterlockedCompareExchangePointer((void**)&display_dc, hdc, NULL))
+            DeleteObject(hdc);
+    }
+
+    return display_dc;
 }
 
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
@@ -284,7 +302,6 @@ DEFINE_GUID(CLSID_HTMLPluginDocument, 0x25336921, 0x03F9, 0x11CF, 0x8F,0xD0, 0x0
 DEFINE_GUID(CLSID_HTMLPopup, 0x3050F667, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_HTMLPopupDoc, 0x3050F67D, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_HTMLServerDoc, 0x3050F4E7, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
-DEFINE_GUID(CLSID_HTMLWindowProxy, 0x3050F391, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_IImageDecodeFilter, 0x607FD4E8, 0x0A03, 0x11D1, 0xAB,0x1D, 0x00,0xC0,0x4F,0xC9,0xB3,0x04);
 DEFINE_GUID(CLSID_IImgCtx, 0x3050F3D6, 0x98B5, 0x11CF, 0xBB,0x82, 0x00,0xAA,0x00,0xBD,0xCE,0x0B);
 DEFINE_GUID(CLSID_IntDitherer, 0x05F6FE1A, 0xECEF, 0x11D0, 0xAA,0xE7, 0x00,0xC0,0x4F,0xC9,0xB3,0x04);
@@ -392,9 +409,6 @@ static HRESULT register_server(BOOL do_register)
     if(FAILED(hres))
         ERR("typelib registration failed: %08x\n", hres);
 
-    if(do_register && SUCCEEDED(hres))
-        load_gecko(TRUE);
-
     return hres;
 }
 
@@ -406,7 +420,13 @@ static HRESULT register_server(BOOL do_register)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
-    return register_server(TRUE);
+    HRESULT hres;
+
+    hres = register_server(TRUE);
+    if(SUCCEEDED(hres))
+        load_gecko(FALSE);
+
+    return hres;
 }
 
 /***********************************************************************
@@ -419,11 +439,14 @@ HRESULT WINAPI DllUnregisterServer(void)
 
 const char *debugstr_variant(const VARIANT *v)
 {
+    if(!v)
+        return "(null)";
+
     switch(V_VT(v)) {
     case VT_EMPTY:
-        return wine_dbg_sprintf("{VT_EMPTY}");
+        return "{VT_EMPTY}";
     case VT_NULL:
-        return wine_dbg_sprintf("{VT_NULL}");
+        return "{VT_NULL}";
     case VT_I4:
         return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
     case VT_R8:
@@ -434,6 +457,8 @@ const char *debugstr_variant(const VARIANT *v)
         return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
     case VT_BOOL:
         return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
+    case VT_UINT:
+        return wine_dbg_sprintf("{VT_UINT: %u}", V_UINT(v));
     default:
         return wine_dbg_sprintf("{vt %d}", V_VT(v));
     }

@@ -1,7 +1,139 @@
+Fri Jul 10 16:11:34 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* parser.c: fix a regression in entity parsing when using the reader
+	  introduced because we were not reusing _private on entities parsing
+	  context
+
+Thu Jul  9 10:21:00 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	Aleksey Sanin support for c14n 1.1
+	* c14n.c include/libxml/c14n.h: adds support for C14N 1.1,
+	  new flags at the API level
+	* runtest.c Makefile.am testC14N.c xmllint.c: add support in CLI
+	  tools and test binaries
+	* result/c14n/1-1-without-comments/* test/c14n/1-1-without-comments/*:
+	  add a new batch of tests
+
+Thu Jul  9 08:52:35 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* config.h.in: update of libtool seems to have modified it
+	* python/libxml2class.txt: python update modified the order
+	  of classes apparently
+
+Thu Jul  9 08:43:06 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* tree.c: avoid calling xmlAddID with NULL values
+	* parser.c: add a few xmlInitParser in some entry points
+
+Fri Jun 19 19:51:08 CEST 2009 Rob Richards <rrichards@cdatazone.org>
+
+	* parser.c: use options from current parser context when creating 
+	  a parser context within xmlParseCtxtExternalEntity
+	* xmlwriter.c: fix error message when unable to create output file
+
+Thu Jun  4 11:17:23 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* c14n.c debugXML.c doc/examples/io2.c parser.c schematron.c
+	  valid.c xmlschemas.c xmlwriter.c xpath.c: use %s to printf string
+	  patch by Christian Persch, fixes #581612
+
+Thu Jun  4 11:06:07 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* parser.c threads.c: change the threading initialization sequence
+	  as suggested by Igor Novoseltsev to avoid crash if xmlInitParser()
+	  is called from a thread which is not the main one, should fix
+	  #584605
+
+Fri May 15 17:54:48 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* HTMLparser.c: make sure we keep line numbers fixes #580705
+	  based Aaron Patterson patch
+
+Tue May 12 09:13:58 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* HTMLparser.c: a broken HTML table attributes initialization,
+	  fixes #581803, by Roland Steiner <rolandsteiner@google.com>
+
+Tue May 12 08:54:20 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* libxml2.doap: adding RDF dope file.
+
+Tue May 12 08:42:52 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* configure.in: adapt the extra version detection code to git
+
+Wed Apr 29 16:09:38 CEST 2009 Rob Richards <rrichards@cdatazone.org>
+
+	* parser.c: do not set error code in xmlNsWarn
+
+Wed Apr 15 11:18:24 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* include/libxml/parser.h include/libxml/xmlwriter.h
+	  include/libxml/relaxng.h include/libxml/xmlversion.h.in
+	  include/libxml/xmlwin32version.h.in include/libxml/valid.h
+	  include/libxml/xmlschemas.h include/libxml/xmlerror.h: change
+	  ATTRIBUTE_PRINTF into LIBXML_ATTR_FORMAT to avoid macro name
+	  collisions with other packages and headers as reported by
+	  Belgabor and Mike Hommey
+
+Thu Apr  2 13:57:15 CEST 2009 Daniel Veillard <daniel@veillard.com>
+
+	* error.c: fix structured error handling problems #564217
+
+Thu Mar 26 19:08:08 CET 2009 Rob Richards <rrichards@cdatazone.org>
+
+	* parser.c: use options from current parser context when creating 
+	  an entity parser context
+
+Wed Mar 25 11:40:34 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* doc/*: updated SVN URL for GNOME as pointed by Vincent Lefevre
+	  and regenerated docs
+
+Wed Mar 25 11:21:26 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* parser.c: hide the nbParse* variables used for debugging
+	  as pointed by Mike Hommey
+
+Wed Mar 25 10:50:05 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* include/wsockcompat.h win32/Makefile.bcb xpath.c: fixes for
+	  Borland/CodeGear/Embarcadero compilers by Eric Zurcher
+
+Wed Mar 25 10:43:07 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* xpath.c: xmlXPathRegisterNs should not allow enpty prefixes
+
+Mon Mar 23 20:27:15 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* tree.c: add a missing check in xmlAddSibling, patch by Kris Breuker
+	* xmlIO.c: avoid xmlAllocOutputBuffer using XML_BUFFER_EXACT which
+	  leads to performances problems especially on Windows.
+
+Tue Mar  3 14:30.28 HKT 2009 William Brack <wbrack@mmm.com.hk>
+
+	* trio.h: changed include of config.h to be surrounded by
+	  quotation marks #570806
+
+Sat Feb 21 10:20:34 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* threads.c parser.c: more warnings about xmlCleanupThreads and
+	  xmlCleanupParser to avoid troubles like #571409
+
+Fri Feb 20 09:40:04 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* xmlwriter.c: cleanups and error reports when xmlTextWriterVSprintf
+	  fails, by Jinmei Tatuya
+
+Fri Feb 20 09:18:56 CET 2009 Daniel Veillard <daniel@veillard.com>
+
+	* xmlwriter.c: remove a couple of leaks on errors reported by
+	  Jinmei Tatuya
+
 Sun Jan 18 22:37:59 CET 2009 Daniel Veillard <daniel@veillard.com>
 
 	* configure.in doc/xml.html doc/*: preparing 0.7.3 release
-	* include/libxml/parserInternals.h SAX2.c: fix a typo in an name
+	* include/libxml/parserInternals.h SAX2.c: fix a typo in a name
 
 Sun Jan 18 21:48:28 CET 2009 Daniel Veillard <daniel@veillard.com>
 

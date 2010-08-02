@@ -1,6 +1,7 @@
 /*
  *  FreeLoader NTFS support
  *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
+ *  Copyright (C) 2009-2010  Hervé Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -12,9 +13,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -23,18 +24,24 @@
  * - May crash on corrupted filesystem.
  */
 
+#ifndef _M_ARM
 #include <freeldr.h>
 #include <debug.h>
 
-PNTFS_BOOTSECTOR NtfsBootSector;
-ULONG NtfsClusterSize;
-ULONG NtfsMftRecordSize;
-ULONG NtfsIndexRecordSize;
-ULONG NtfsDriveNumber;
-ULONG NtfsSectorOfClusterZero;
-PNTFS_MFT_RECORD NtfsMasterFileTable;
-/* FIXME: NtfsMFTContext is never freed. */
-PNTFS_ATTR_CONTEXT NtfsMFTContext;
+typedef struct _NTFS_VOLUME_INFO
+{
+    NTFS_BOOTSECTOR BootSector;
+    ULONG ClusterSize;
+    ULONG MftRecordSize;
+    ULONG IndexRecordSize;
+    PNTFS_MFT_RECORD MasterFileTable;
+    /* FIXME: MFTContext is never freed. */
+    PNTFS_ATTR_CONTEXT MFTContext;
+    ULONG DeviceId;
+    PUCHAR TemporarySector;
+} NTFS_VOLUME_INFO;
+
+PNTFS_VOLUME_INFO NtfsVolumes[MAX_FDS];
 
 static ULONGLONG NtfsGetAttributeSize(PNTFS_ATTR_RECORD AttrRecord)
 {
@@ -123,50 +130,87 @@ static VOID NtfsReleaseAttributeContext(PNTFS_ATTR_CONTEXT Context)
     MmHeapFree(Context);
 }
 
-/* FIXME: Optimize for multisector reads. */
-static BOOLEAN NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
+static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
 {
+    LARGE_INTEGER Position;
+    ULONG Count;
     USHORT ReadLength;
+    LONG ret;
 
     DPRINTM(DPRINT_FILESYSTEM, "NtfsDiskRead - Offset: %I64d Length: %I64d\n", Offset, Length);
-    RtlZeroMemory((PCHAR)DISKREADBUFFER, 0x1000);
 
-    /* I. Read partial first sector if needed */
-    if (Offset % NtfsBootSector->BytesPerSector)
+    //
+    // I. Read partial first sector if needed
+    //
+    if (Offset % Volume->BootSector.BytesPerSector)
     {
-        if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 1, (PCHAR)DISKREADBUFFER))
+        Position.HighPart = 0;
+        Position.LowPart = Offset & ~(Volume->BootSector.BytesPerSector - 1);
+        ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+        if (ret != ESUCCESS)
             return FALSE;
-        ReadLength = min(Length, NtfsBootSector->BytesPerSector - (Offset % NtfsBootSector->BytesPerSector));
-        RtlCopyMemory(Buffer, (PCHAR)DISKREADBUFFER + (Offset % NtfsBootSector->BytesPerSector), ReadLength);
+        ret = ArcRead(Volume->DeviceId, Volume->TemporarySector, Volume->BootSector.BytesPerSector, &Count);
+        if (ret != ESUCCESS || Count != Volume->BootSector.BytesPerSector)
+            return FALSE;
+        ReadLength = min(Length, Volume->BootSector.BytesPerSector - (Offset % Volume->BootSector.BytesPerSector));
+
+        //
+        // Copy interesting data
+        //
+        RtlCopyMemory(Buffer,
+                      &Volume->TemporarySector[Offset % Volume->BootSector.BytesPerSector],
+                      ReadLength);
+
+        //
+        // Move to unfilled buffer part
+        //
         Buffer += ReadLength;
         Length -= ReadLength;
         Offset += ReadLength;
     }
 
-    /* II. Read all complete 64-sector blocks. */
-    while (Length >= (ULONGLONG)64 * (ULONGLONG)NtfsBootSector->BytesPerSector)
+    //
+    // II. Read all complete blocks
+    //
+    if (Length >= Volume->BootSector.BytesPerSector)
     {
-        if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 64, (PCHAR)DISKREADBUFFER))
+        Position.HighPart = 0;
+        Position.LowPart = Offset;
+        ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+        if (ret != ESUCCESS)
             return FALSE;
-        RtlCopyMemory(Buffer, (PCHAR)DISKREADBUFFER, 64 * NtfsBootSector->BytesPerSector);
-        Buffer += 64 * NtfsBootSector->BytesPerSector;
-        Length -= 64 * NtfsBootSector->BytesPerSector;
-        Offset += 64 * NtfsBootSector->BytesPerSector;
+        ReadLength = Length & ~(Volume->BootSector.BytesPerSector - 1);
+        ret = ArcRead(Volume->DeviceId, Buffer, ReadLength, &Count);
+        if (ret != ESUCCESS || Count != ReadLength)
+            return FALSE;
+
+        //
+        // Move to unfilled buffer part
+        //
+        Buffer += ReadLength;
+        Length -= ReadLength;
+        Offset += ReadLength;
     }
 
-    /* III. Read the rest of data */
+    //
+    // III. Read the rest of data
+    //
     if (Length)
     {
-        ReadLength = ((Length + NtfsBootSector->BytesPerSector - 1) / NtfsBootSector->BytesPerSector);
-        if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), ReadLength, (PCHAR)DISKREADBUFFER))
+        Position.HighPart = 0;
+        Position.LowPart = Offset;
+        ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+        if (ret != ESUCCESS)
             return FALSE;
-        RtlCopyMemory(Buffer, (PCHAR)DISKREADBUFFER, Length);
+        ret = ArcRead(Volume->DeviceId, Buffer, Length, &Count);
+        if (ret != ESUCCESS || Count != Length)
+            return FALSE;
     }
 
     return TRUE;
 }
 
-static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR Buffer, ULONGLONG Length)
+static ULONGLONG NtfsReadAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR Buffer, ULONGLONG Length)
 {
     ULONGLONG LastLCN;
     PUCHAR DataRun;
@@ -197,7 +241,9 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
 
     AlreadyRead = 0;
 
-    if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * NtfsClusterSize)
+    // FIXME: Cache seems to be non-working. Disable it for now
+    //if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
+    if (0)
     {
         DataRun = Context->CacheRun;
         LastLCN = Context->CacheRunLastLCN;
@@ -227,7 +273,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
             }
 
             if (Offset >= CurrentOffset &&
-                Offset < CurrentOffset + (DataRunLength * NtfsClusterSize))
+                Offset < CurrentOffset + (DataRunLength * Volume->ClusterSize))
             {
                 break;
             }
@@ -237,7 +283,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
                 return AlreadyRead;
             }
 
-            CurrentOffset += DataRunLength * NtfsClusterSize;
+            CurrentOffset += DataRunLength * Volume->ClusterSize;
         }
     }
 
@@ -245,18 +291,18 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
      * II. Go through the run list and read the data
      */
 
-    ReadLength = min(DataRunLength * NtfsClusterSize - (Offset - CurrentOffset), Length);
+    ReadLength = min(DataRunLength * Volume->ClusterSize - (Offset - CurrentOffset), Length);
     if (DataRunStartLCN == -1)
     RtlZeroMemory(Buffer, ReadLength);
-    if (NtfsDiskRead(DataRunStartLCN * NtfsClusterSize + Offset - CurrentOffset, ReadLength, Buffer))
+    if (NtfsDiskRead(Volume, DataRunStartLCN * Volume->ClusterSize + Offset - CurrentOffset, ReadLength, Buffer))
     {
         Length -= ReadLength;
         Buffer += ReadLength;
         AlreadyRead += ReadLength;
 
-        if (ReadLength == DataRunLength * NtfsClusterSize - (Offset - CurrentOffset))
+        if (ReadLength == DataRunLength * Volume->ClusterSize - (Offset - CurrentOffset))
         {
-            CurrentOffset += DataRunLength * NtfsClusterSize;
+            CurrentOffset += DataRunLength * Volume->ClusterSize;
             DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
             if (DataRunLength != (ULONGLONG)-1)
             {
@@ -272,10 +318,10 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
 
         while (Length > 0)
         {
-            ReadLength = min(DataRunLength * NtfsClusterSize, Length);
+            ReadLength = min(DataRunLength * Volume->ClusterSize, Length);
             if (DataRunStartLCN == -1)
                 RtlZeroMemory(Buffer, ReadLength);
-            else if (!NtfsDiskRead(DataRunStartLCN * NtfsClusterSize, ReadLength, Buffer))
+            else if (!NtfsDiskRead(Volume, DataRunStartLCN * Volume->ClusterSize, ReadLength, Buffer))
                 break;
 
             Length -= ReadLength;
@@ -283,7 +329,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
             AlreadyRead += ReadLength;
 
             /* We finished this request, but there still data in this data run. */
-            if (Length == 0 && ReadLength != DataRunLength * NtfsClusterSize)
+            if (Length == 0 && ReadLength != DataRunLength * Volume->ClusterSize)
                 break;
 
             /*
@@ -292,7 +338,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
 
             if (*DataRun == 0)
                 break;
-            CurrentOffset += DataRunLength * NtfsClusterSize;
+            CurrentOffset += DataRunLength * Volume->ClusterSize;
             DataRun = NtfsDecodeRun(DataRun, &DataRunOffset, &DataRunLength);
             if (DataRunOffset != -1)
             {
@@ -319,7 +365,7 @@ static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset,
     return AlreadyRead;
 }
 
-static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_ATTR_RECORD AttrRecord, PNTFS_ATTR_RECORD AttrRecordEnd, ULONG Type, const WCHAR *Name, ULONG NameLength)
+static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_RECORD AttrRecord, PNTFS_ATTR_RECORD AttrRecordEnd, ULONG Type, const WCHAR *Name, ULONG NameLength)
 {
     while (AttrRecord < AttrRecordEnd)
     {
@@ -343,9 +389,9 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_ATTR_RECORD AttrRecord, 
             ListAttrRecord = (PNTFS_ATTR_RECORD)ListBuffer;
             ListAttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)ListBuffer + ListSize);
 
-            if (NtfsReadAttribute(ListContext, 0, ListBuffer, ListSize) == ListSize)
+            if (NtfsReadAttribute(Volume, ListContext, 0, ListBuffer, ListSize) == ListSize)
             {
-                Context = NtfsFindAttributeHelper(ListAttrRecord, ListAttrRecordEnd,
+                Context = NtfsFindAttributeHelper(Volume, ListAttrRecord, ListAttrRecordEnd,
                                                   Type, Name, NameLength);
 
                 NtfsReleaseAttributeContext(ListContext);
@@ -371,27 +417,29 @@ static PNTFS_ATTR_CONTEXT NtfsFindAttributeHelper(PNTFS_ATTR_RECORD AttrRecord, 
             }
         }
 
+        if (AttrRecord->Length == 0)
+            return NULL;
         AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)AttrRecord + AttrRecord->Length);
     }
 
     return NULL;
 }
 
-static PNTFS_ATTR_CONTEXT NtfsFindAttribute(PNTFS_MFT_RECORD MftRecord, ULONG Type, const WCHAR *Name)
+static PNTFS_ATTR_CONTEXT NtfsFindAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_MFT_RECORD MftRecord, ULONG Type, const WCHAR *Name)
 {
     PNTFS_ATTR_RECORD AttrRecord;
     PNTFS_ATTR_RECORD AttrRecordEnd;
     ULONG NameLength;
 
     AttrRecord = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + MftRecord->AttributesOffset);
-    AttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + NtfsMftRecordSize);
+    AttrRecordEnd = (PNTFS_ATTR_RECORD)((PCHAR)MftRecord + Volume->MftRecordSize);
     for (NameLength = 0; Name[NameLength] != 0; NameLength++)
         ;
 
-    return NtfsFindAttributeHelper(AttrRecord, AttrRecordEnd, Type, Name, NameLength);
+    return NtfsFindAttributeHelper(Volume, AttrRecord, AttrRecordEnd, Type, Name, NameLength);
 }
 
-static BOOLEAN NtfsFixupRecord(PNTFS_RECORD Record)
+static BOOLEAN NtfsFixupRecord(PNTFS_VOLUME_INFO Volume, PNTFS_RECORD Record)
 {
     USHORT *USA;
     USHORT USANumber;
@@ -401,33 +449,33 @@ static BOOLEAN NtfsFixupRecord(PNTFS_RECORD Record)
     USA = (USHORT*)((PCHAR)Record + Record->USAOffset);
     USANumber = *(USA++);
     USACount = Record->USACount - 1; /* Exclude the USA Number. */
-    Block = (USHORT*)((PCHAR)Record + NtfsBootSector->BytesPerSector - 2);
+    Block = (USHORT*)((PCHAR)Record + Volume->BootSector.BytesPerSector - 2);
 
     while (USACount)
     {
         if (*Block != USANumber)
             return FALSE;
         *Block = *(USA++);
-        Block = (USHORT*)((PCHAR)Block + NtfsBootSector->BytesPerSector);
+        Block = (USHORT*)((PCHAR)Block + Volume->BootSector.BytesPerSector);
         USACount--;
     }
 
     return TRUE;
 }
 
-static BOOLEAN NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
+static BOOLEAN NtfsReadMftRecord(PNTFS_VOLUME_INFO Volume, ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
     ULONGLONG BytesRead;
 
-    BytesRead = NtfsReadAttribute(NtfsMFTContext, MFTIndex * NtfsMftRecordSize, (PCHAR)Buffer, NtfsMftRecordSize);
-    if (BytesRead != NtfsMftRecordSize)
+    BytesRead = NtfsReadAttribute(Volume, Volume->MFTContext, MFTIndex * Volume->MftRecordSize, (PCHAR)Buffer, Volume->MftRecordSize);
+    if (BytesRead != Volume->MftRecordSize)
         return FALSE;
 
     /* Apply update sequence array fixups. */
-    return NtfsFixupRecord((PNTFS_RECORD)Buffer);
+    return NtfsFixupRecord(Volume, (PNTFS_RECORD)Buffer);
 }
 
-#ifdef DBG
+#if DBG
 VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR FileName;
@@ -455,7 +503,7 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     EntryFileName = IndexEntry->FileName.FileName;
     EntryFileNameLength = IndexEntry->FileName.FileNameLength;
 
-#ifdef DBG
+#if DBG
     NtfsPrintFile(IndexEntry);
 #endif
 
@@ -479,7 +527,7 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     return TRUE;
 }
 
-static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
+static BOOLEAN NtfsFindMftRecord(PNTFS_VOLUME_INFO Volume, ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 {
     PNTFS_MFT_RECORD MftRecord;
     ULONG Magic;
@@ -495,38 +543,38 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
     ULONG RecordOffset;
     ULONG IndexBlockSize;
 
-    MftRecord = MmHeapAlloc(NtfsMftRecordSize);
+    MftRecord = MmHeapAlloc(Volume->MftRecordSize);
     if (MftRecord == NULL)
     {
         return FALSE;
     }
 
-    if (NtfsReadMftRecord(MFTIndex, MftRecord))
+    if (NtfsReadMftRecord(Volume, MFTIndex, MftRecord))
     {
         Magic = MftRecord->Magic;
 
-        IndexRootCtx = NtfsFindAttribute(MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, L"$I30");
+        IndexRootCtx = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_INDEX_ROOT, L"$I30");
         if (IndexRootCtx == NULL)
         {
             MmHeapFree(MftRecord);
             return FALSE;
         }
 
-        IndexRecord = MmHeapAlloc(NtfsIndexRecordSize);
+        IndexRecord = MmHeapAlloc(Volume->IndexRecordSize);
         if (IndexRecord == NULL)
         {
             MmHeapFree(MftRecord);
             return FALSE;
         }
 
-        NtfsReadAttribute(IndexRootCtx, 0, IndexRecord, NtfsIndexRecordSize);
+        NtfsReadAttribute(Volume, IndexRootCtx, 0, IndexRecord, Volume->IndexRecordSize);
         IndexRoot = (PNTFS_INDEX_ROOT)IndexRecord;
         IndexEntry = (PNTFS_INDEX_ENTRY)((PCHAR)&IndexRoot->IndexHeader + IndexRoot->IndexHeader.EntriesOffset);
         /* Index root is always resident. */
         IndexEntryEnd = (PNTFS_INDEX_ENTRY)(IndexRecord + IndexRootCtx->Record.Resident.ValueLength);
         NtfsReleaseAttributeContext(IndexRootCtx);
 
-        DPRINTM(DPRINT_FILESYSTEM, "NtfsIndexRecordSize: %x IndexBlockSize: %x\n", NtfsIndexRecordSize, IndexRoot->IndexBlockSize);
+        DPRINTM(DPRINT_FILESYSTEM, "IndexRecordSize: %x IndexBlockSize: %x\n", Volume->IndexRecordSize, IndexRoot->IndexBlockSize);
 
         while (IndexEntry < IndexEntryEnd &&
                !(IndexEntry->Flags & NTFS_INDEX_ENTRY_END))
@@ -547,7 +595,7 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
 
             IndexBlockSize = IndexRoot->IndexBlockSize;
 
-            IndexBitmapCtx = NtfsFindAttribute(MftRecord, NTFS_ATTR_TYPE_BITMAP, L"$I30");
+            IndexBitmapCtx = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_BITMAP, L"$I30");
             if (IndexBitmapCtx == NULL)
             {
                 DPRINTM(DPRINT_FILESYSTEM, "Corrupted filesystem!\n");
@@ -563,10 +611,10 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
                 MmHeapFree(MftRecord);
                 return FALSE;
             }
-            NtfsReadAttribute(IndexBitmapCtx, 0, BitmapData, BitmapDataSize);
+            NtfsReadAttribute(Volume, IndexBitmapCtx, 0, BitmapData, BitmapDataSize);
             NtfsReleaseAttributeContext(IndexBitmapCtx);
 
-            IndexAllocationCtx = NtfsFindAttribute(MftRecord, NTFS_ATTR_TYPE_INDEX_ALLOCATION, L"$I30");
+            IndexAllocationCtx = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_INDEX_ALLOCATION, L"$I30");
             if (IndexAllocationCtx == NULL)
             {
                 DPRINTM(DPRINT_FILESYSTEM, "Corrupted filesystem!\n");
@@ -596,9 +644,9 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
                     break;
                 }
 
-                NtfsReadAttribute(IndexAllocationCtx, RecordOffset, IndexRecord, IndexBlockSize);
+                NtfsReadAttribute(Volume, IndexAllocationCtx, RecordOffset, IndexRecord, IndexBlockSize);
 
-                if (!NtfsFixupRecord((PNTFS_RECORD)IndexRecord))
+                if (!NtfsFixupRecord(Volume, (PNTFS_RECORD)IndexRecord))
                 {
                     break;
                 }
@@ -641,7 +689,7 @@ static BOOLEAN NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIn
     return FALSE;
 }
 
-static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT *DataContext)
+static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT *DataContext)
 {
     ULONG NumberOfPathParts;
     CHAR PathPart[261];
@@ -661,7 +709,7 @@ static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_
         FileName++;
 
         DPRINTM(DPRINT_FILESYSTEM, "- Lookup: %s\n", PathPart);
-        if (!NtfsFindMftRecord(CurrentMFTIndex, PathPart, &CurrentMFTIndex))
+        if (!NtfsFindMftRecord(Volume, CurrentMFTIndex, PathPart, &CurrentMFTIndex))
         {
             DPRINTM(DPRINT_FILESYSTEM, "- Failed\n");
             return FALSE;
@@ -669,13 +717,13 @@ static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_
         DPRINTM(DPRINT_FILESYSTEM, "- Lookup: %x\n", CurrentMFTIndex);
     }
 
-    if (!NtfsReadMftRecord(CurrentMFTIndex, MftRecord))
+    if (!NtfsReadMftRecord(Volume, CurrentMFTIndex, MftRecord))
     {
         DPRINTM(DPRINT_FILESYSTEM, "NtfsLookupFile: Can't read MFT record\n");
         return FALSE;
     }
 
-    *DataContext = NtfsFindAttribute(MftRecord, NTFS_ATTR_TYPE_DATA, L"");
+    *DataContext = NtfsFindAttribute(Volume, MftRecord, NTFS_ATTR_TYPE_DATA, L"");
     if (*DataContext == NULL)
     {
         DPRINTM(DPRINT_FILESYSTEM, "NtfsLookupFile: Can't find data attribute\n");
@@ -685,149 +733,254 @@ static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_
     return TRUE;
 }
 
-BOOLEAN NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
+LONG NtfsClose(ULONG FileId)
 {
-    NtfsBootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
 
-    DPRINTM(DPRINT_FILESYSTEM, "NtfsOpenVolume() DriveNumber = 0x%x VolumeStartSector = 0x%x\n", DriveNumber, VolumeStartSector);
-
-    if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PCHAR)DISKREADBUFFER))
-    {
-        FileSystemError("Failed to read the boot sector.");
-        return FALSE;
-    }
-
-    if (!RtlEqualMemory(NtfsBootSector->SystemId, "NTFS", 4))
-    {
-        FileSystemError("Invalid NTFS signature.");
-        return FALSE;
-    }
-
-    NtfsBootSector = MmHeapAlloc(NtfsBootSector->BytesPerSector);
-    if (NtfsBootSector == NULL)
-    {
-        return FALSE;
-    }
-
-    RtlCopyMemory(NtfsBootSector, (PCHAR)DISKREADBUFFER, ((PNTFS_BOOTSECTOR)DISKREADBUFFER)->BytesPerSector);
-
-    NtfsClusterSize = NtfsBootSector->SectorsPerCluster * NtfsBootSector->BytesPerSector;
-    if (NtfsBootSector->ClustersPerMftRecord > 0)
-        NtfsMftRecordSize = NtfsBootSector->ClustersPerMftRecord * NtfsClusterSize;
-    else
-        NtfsMftRecordSize = 1 << (-NtfsBootSector->ClustersPerMftRecord);
-    if (NtfsBootSector->ClustersPerIndexRecord > 0)
-        NtfsIndexRecordSize = NtfsBootSector->ClustersPerIndexRecord * NtfsClusterSize;
-    else
-        NtfsIndexRecordSize = 1 << (-NtfsBootSector->ClustersPerIndexRecord);
-
-    DPRINTM(DPRINT_FILESYSTEM, "NtfsClusterSize: 0x%x\n", NtfsClusterSize);
-    DPRINTM(DPRINT_FILESYSTEM, "ClustersPerMftRecord: %d\n", NtfsBootSector->ClustersPerMftRecord);
-    DPRINTM(DPRINT_FILESYSTEM, "ClustersPerIndexRecord: %d\n", NtfsBootSector->ClustersPerIndexRecord);
-    DPRINTM(DPRINT_FILESYSTEM, "NtfsMftRecordSize: 0x%x\n", NtfsMftRecordSize);
-    DPRINTM(DPRINT_FILESYSTEM, "NtfsIndexRecordSize: 0x%x\n", NtfsIndexRecordSize);
-
-    NtfsDriveNumber = DriveNumber;
-    NtfsSectorOfClusterZero = VolumeStartSector;
-
-    DPRINTM(DPRINT_FILESYSTEM, "Reading MFT index...\n");
-    if (!MachDiskReadLogicalSectors(DriveNumber,
-                                NtfsSectorOfClusterZero +
-                                (NtfsBootSector->MftLocation * NtfsBootSector->SectorsPerCluster),
-                                NtfsMftRecordSize / NtfsBootSector->BytesPerSector, (PCHAR)DISKREADBUFFER))
-    {
-        FileSystemError("Failed to read the Master File Table record.");
-        return FALSE;
-    }
-
-    NtfsMasterFileTable = MmHeapAlloc(NtfsMftRecordSize);
-    if (NtfsMasterFileTable == NULL)
-    {
-        MmHeapFree(NtfsBootSector);
-        return FALSE;
-    }
-
-    RtlCopyMemory(NtfsMasterFileTable, (PCHAR)DISKREADBUFFER, NtfsMftRecordSize);
-
-    DPRINTM(DPRINT_FILESYSTEM, "Searching for DATA attribute...\n");
-    NtfsMFTContext = NtfsFindAttribute(NtfsMasterFileTable, NTFS_ATTR_TYPE_DATA, L"");
-    if (NtfsMFTContext == NULL)
-    {
-        FileSystemError("Can't find data attribute for Master File Table.");
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-FILE* NtfsOpenFile(PCSTR FileName)
-{
-    PNTFS_FILE_HANDLE FileHandle;
-    PNTFS_MFT_RECORD MftRecord;
-
-    FileHandle = MmHeapAlloc(sizeof(NTFS_FILE_HANDLE) + NtfsMftRecordSize);
-    if (FileHandle == NULL)
-    {
-        return NULL;
-    }
-
-    MftRecord = (PNTFS_MFT_RECORD)(FileHandle + 1);
-    if (!NtfsLookupFile(FileName, MftRecord, &FileHandle->DataContext))
-    {
-        MmHeapFree(FileHandle);
-        return NULL;
-    }
-
-    FileHandle->Offset = 0;
-
-    return (FILE*)FileHandle;
-}
-
-VOID NtfsCloseFile(FILE *File)
-{
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     NtfsReleaseAttributeContext(FileHandle->DataContext);
     MmHeapFree(FileHandle);
+
+    return ESUCCESS;
 }
 
-BOOLEAN NtfsReadFile(FILE *File, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+LONG NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    ULONGLONG BytesRead64;
-    BytesRead64 = NtfsReadAttribute(FileHandle->DataContext, FileHandle->Offset, Buffer, BytesToRead);
-    if (BytesRead64)
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+
+    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    Information->EndingAddress.LowPart = (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record);
+    Information->CurrentAddress.LowPart = FileHandle->Offset;
+
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsGetFileInformation() FileSize = %d\n",
+        Information->EndingAddress.LowPart);
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsGetFileInformation() FilePointer = %d\n",
+        Information->CurrentAddress.LowPart);
+
+    return ESUCCESS;
+}
+
+LONG NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+    PNTFS_VOLUME_INFO Volume;
+    PNTFS_FILE_HANDLE FileHandle;
+    PNTFS_MFT_RECORD MftRecord;
+    ULONG DeviceId;
+
+    //
+    // Check parameters
+    //
+    if (OpenMode != OpenReadOnly)
+        return EACCES;
+
+    //
+    // Get underlying device
+    //
+    DeviceId = FsGetDeviceId(*FileId);
+    Volume = NtfsVolumes[DeviceId];
+
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsOpen() FileName = %s\n", Path);
+
+    //
+    // Allocate file structure
+    //
+    FileHandle = MmHeapAlloc(sizeof(NTFS_FILE_HANDLE) + Volume->MftRecordSize);
+    if (!FileHandle)
     {
-        *BytesRead = (ULONG)BytesRead64;
-        FileHandle->Offset += BytesRead64;
-        return TRUE;
+        return ENOMEM;
     }
-    return FALSE;
+    RtlZeroMemory(FileHandle, sizeof(NTFS_FILE_HANDLE) + Volume->MftRecordSize);
+    FileHandle->Volume = Volume;
+
+    //
+    // Search file entry
+    //
+    MftRecord = (PNTFS_MFT_RECORD)(FileHandle + 1);
+    if (!NtfsLookupFile(Volume, Path, MftRecord, &FileHandle->DataContext))
+    {
+        MmHeapFree(FileHandle);
+        return ENOENT;
+    }
+
+    FsSetDeviceSpecific(*FileId, FileHandle);
+    return ESUCCESS;
 }
 
-ULONG NtfsGetFileSize(FILE *File)
+LONG NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    return (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record);
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+    ULONGLONG BytesRead64;
+
+    //
+    // Read file
+    //
+    BytesRead64 = NtfsReadAttribute(FileHandle->Volume, FileHandle->DataContext, FileHandle->Offset, Buffer, N);
+    *Count = (ULONG)BytesRead64;
+
+    //
+    // Check for success
+    //
+    if (BytesRead64 > 0)
+        return ESUCCESS;
+    else
+        return EIO;
 }
 
-VOID NtfsSetFilePointer(FILE *File, ULONG NewFilePointer)
+LONG NtfsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    FileHandle->Offset = NewFilePointer;
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsSeek() NewFilePointer = %lu\n", Position->LowPart);
+
+    if (SeekMode != SeekAbsolute)
+        return EINVAL;
+    if (Position->HighPart != 0)
+        return EINVAL;
+    if (Position->LowPart >= (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record))
+        return EINVAL;
+
+    FileHandle->Offset = Position->LowPart;
+    return ESUCCESS;
 }
 
-ULONG NtfsGetFilePointer(FILE *File)
+const DEVVTBL NtfsFuncTable =
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    return FileHandle->Offset;
-}
-
-const FS_VTBL NtfsVtbl = {
-	NtfsOpenVolume,
-	NtfsOpenFile,
-	NtfsCloseFile,
-	NtfsReadFile,
-	NtfsGetFileSize,
-	NtfsSetFilePointer,
-	NtfsGetFilePointer,
+    NtfsClose,
+    NtfsGetFileInformation,
+    NtfsOpen,
+    NtfsRead,
+    NtfsSeek,
+    L"ntfs",
 };
+
+const DEVVTBL* NtfsMount(ULONG DeviceId)
+{
+    PNTFS_VOLUME_INFO Volume;
+    LARGE_INTEGER Position;
+    ULONG Count;
+    LONG ret;
+
+    //
+    // Allocate data for volume information
+    //
+    Volume = MmHeapAlloc(sizeof(NTFS_VOLUME_INFO));
+    if (!Volume)
+        return NULL;
+    RtlZeroMemory(Volume, sizeof(NTFS_VOLUME_INFO));
+
+    //
+    // Read the BootSector
+    //
+    Position.HighPart = 0;
+    Position.LowPart = 0;
+    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (ret != ESUCCESS)
+    {
+        MmHeapFree(Volume);
+        return NULL;
+    }
+    ret = ArcRead(DeviceId, &Volume->BootSector, sizeof(Volume->BootSector), &Count);
+    if (ret != ESUCCESS || Count != sizeof(Volume->BootSector))
+    {
+        MmHeapFree(Volume);
+        return NULL;
+    }
+
+    //
+    // Check if BootSector is valid. If no, return early
+    //
+    if (!RtlEqualMemory(Volume->BootSector.SystemId, "NTFS", 4))
+    {
+        MmHeapFree(Volume);
+        return NULL;
+    }
+
+    //
+    // Calculate cluster size and MFT record size
+    //
+    Volume->ClusterSize = Volume->BootSector.SectorsPerCluster * Volume->BootSector.BytesPerSector;
+    if (Volume->BootSector.ClustersPerMftRecord > 0)
+        Volume->MftRecordSize = Volume->BootSector.ClustersPerMftRecord * Volume->ClusterSize;
+    else
+        Volume->MftRecordSize = 1 << (-Volume->BootSector.ClustersPerMftRecord);
+    if (Volume->BootSector.ClustersPerIndexRecord > 0)
+        Volume->IndexRecordSize = Volume->BootSector.ClustersPerIndexRecord * Volume->ClusterSize;
+    else
+        Volume->IndexRecordSize = 1 << (-Volume->BootSector.ClustersPerIndexRecord);
+
+    DPRINTM(DPRINT_FILESYSTEM, "ClusterSize: 0x%x\n", Volume->ClusterSize);
+    DPRINTM(DPRINT_FILESYSTEM, "ClustersPerMftRecord: %d\n", Volume->BootSector.ClustersPerMftRecord);
+    DPRINTM(DPRINT_FILESYSTEM, "ClustersPerIndexRecord: %d\n", Volume->BootSector.ClustersPerIndexRecord);
+    DPRINTM(DPRINT_FILESYSTEM, "MftRecordSize: 0x%x\n", Volume->MftRecordSize);
+    DPRINTM(DPRINT_FILESYSTEM, "IndexRecordSize: 0x%x\n", Volume->IndexRecordSize);
+
+    //
+    // Read MFT index
+    //
+    DPRINTM(DPRINT_FILESYSTEM, "Reading MFT index...\n");
+    Volume->MasterFileTable = MmHeapAlloc(Volume->MftRecordSize);
+    if (!Volume->MasterFileTable)
+    {
+        MmHeapFree(Volume);
+        return NULL;
+    }
+    Position.HighPart = 0;
+    Position.LowPart = Volume->BootSector.MftLocation * Volume->ClusterSize;
+    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (ret != ESUCCESS)
+    {
+        FileSystemError("Failed to seek to Master File Table record.");
+        MmHeapFree(Volume->MasterFileTable);
+        MmHeapFree(Volume);
+        return NULL;
+    }
+    ret = ArcRead(DeviceId, Volume->MasterFileTable, Volume->MftRecordSize, &Count);
+    if (ret != ESUCCESS || Count != Volume->MftRecordSize)
+    {
+        FileSystemError("Failed to read the Master File Table record.");
+        MmHeapFree(Volume->MasterFileTable);
+        MmHeapFree(Volume);
+        return NULL;
+    }
+
+    //
+    // Keep room to read partial sectors
+    //
+    Volume->TemporarySector = MmHeapAlloc(Volume->BootSector.BytesPerSector);
+    if (!Volume->TemporarySector)
+    {
+        FileSystemError("Failed to allocate memory.");
+        MmHeapFree(Volume->MasterFileTable);
+        MmHeapFree(Volume);
+        return NULL;
+    }
+
+    //
+    // Keep device id
+    //
+    Volume->DeviceId = DeviceId;
+
+    //
+    // Search DATA attribute
+    //
+    DPRINTM(DPRINT_FILESYSTEM, "Searching for DATA attribute...\n");
+    Volume->MFTContext = NtfsFindAttribute(Volume, Volume->MasterFileTable, NTFS_ATTR_TYPE_DATA, L"");
+    if (!Volume->MFTContext)
+    {
+        FileSystemError("Can't find data attribute for Master File Table.");
+        MmHeapFree(Volume->MasterFileTable);
+        MmHeapFree(Volume);
+        return NULL;
+    }
+
+    //
+    // Remember NTFS volume information
+    //
+    NtfsVolumes[DeviceId] = Volume;
+
+    //
+    // Return success
+    //
+    return &NtfsFuncTable;
+}
+
+#endif

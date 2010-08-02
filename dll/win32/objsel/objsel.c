@@ -55,7 +55,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
     if (IsEqualGUID(rclsid, &CLSID_DsObjectPicker))
         return IClassFactory_QueryInterface((IClassFactory*)&OBJSEL_ClassFactory, iid, ppv);
 
-    FIXME("\n\tCLSID:\t%s,\n\tIID:\t%s\n",debugstr_guid(rclsid),debugstr_guid(iid));
+    FIXME("CLSID: %s, IID: %s\n", debugstr_guid(rclsid), debugstr_guid(iid));
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
@@ -147,7 +147,7 @@ static HRESULT WINAPI OBJSEL_IDsObjectPicker_QueryInterface(
 	return S_OK;
     }
 
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+    FIXME("- no interface IID: %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 

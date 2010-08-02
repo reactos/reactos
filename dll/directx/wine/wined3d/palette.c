@@ -22,7 +22,6 @@
 #include "winerror.h"
 #include "wine/debug.h"
 
-#include <assert.h>
 #include <string.h>
 
 #include "wined3d_private.h"
@@ -31,20 +30,23 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 #define SIZE_BITS (WINEDDPCAPS_1BIT | WINEDDPCAPS_2BIT | WINEDDPCAPS_4BIT | WINEDDPCAPS_8BIT)
 
-static HRESULT  WINAPI IWineD3DPaletteImpl_QueryInterface(IWineD3DPalette *iface, REFIID refiid, void **obj) {
-    IWineD3DPaletteImpl *This = (IWineD3DPaletteImpl *)iface;
-    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(refiid),obj);
+static HRESULT WINAPI IWineD3DPaletteImpl_QueryInterface(IWineD3DPalette *iface, REFIID riid, void **object)
+{
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
 
-    if (IsEqualGUID(refiid, &IID_IUnknown)
-        || IsEqualGUID(refiid, &IID_IWineD3DPalette)) {
-        *obj = iface;
-        IWineD3DPalette_AddRef(iface);
+    if (IsEqualGUID(riid, &IID_IWineD3DPalette)
+            || IsEqualGUID(riid, &IID_IWineD3DBase)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        IUnknown_AddRef(iface);
+        *object = iface;
         return S_OK;
     }
-    else {
-        *obj = NULL;
-        return E_NOINTERFACE;
-    }
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
+    *object = NULL;
+    return E_NOINTERFACE;
 }
 
 static ULONG  WINAPI IWineD3DPaletteImpl_AddRef(IWineD3DPalette *iface) {
@@ -72,13 +74,16 @@ static ULONG  WINAPI IWineD3DPaletteImpl_Release(IWineD3DPalette *iface) {
 }
 
 /* Not called from the vtable */
-DWORD IWineD3DPaletteImpl_Size(DWORD dwFlags) {
+static DWORD IWineD3DPaletteImpl_Size(DWORD dwFlags)
+{
     switch (dwFlags & SIZE_BITS) {
         case WINEDDPCAPS_1BIT: return 2;
         case WINEDDPCAPS_2BIT: return 4;
         case WINEDDPCAPS_4BIT: return 16;
         case WINEDDPCAPS_8BIT: return 256;
-        default: assert(0); return 256;
+        default:
+            FIXME("Unhandled size bits %#x.\n", dwFlags & SIZE_BITS);
+            return 256;
     }
 }
 
@@ -150,7 +155,8 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface,
 
     /* If the palette is attached to the render target, update all render targets */
 
-    LIST_FOR_EACH_ENTRY(res, &This->wineD3DDevice->resources, IWineD3DResourceImpl, resource.resource_list_entry) {
+    LIST_FOR_EACH_ENTRY(res, &This->device->resources, IWineD3DResourceImpl, resource.resource_list_entry)
+    {
         if(IWineD3DResource_GetType((IWineD3DResource *) res) == WINED3DRTYPE_SURFACE) {
             IWineD3DSurfaceImpl *impl = (IWineD3DSurfaceImpl *) res;
             if(impl->palette == This)
@@ -178,7 +184,7 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_GetParent(IWineD3DPalette *iface, IUn
     return WINED3D_OK;
 }
 
-const IWineD3DPaletteVtbl IWineD3DPalette_Vtbl =
+static const IWineD3DPaletteVtbl IWineD3DPalette_Vtbl =
 {
     /*** IUnknown ***/
     IWineD3DPaletteImpl_QueryInterface,
@@ -190,3 +196,33 @@ const IWineD3DPaletteVtbl IWineD3DPalette_Vtbl =
     IWineD3DPaletteImpl_GetCaps,
     IWineD3DPaletteImpl_SetEntries
 };
+
+HRESULT wined3d_palette_init(IWineD3DPaletteImpl *palette, IWineD3DDeviceImpl *device,
+        DWORD flags, const PALETTEENTRY *entries, IUnknown *parent)
+{
+    HRESULT hr;
+
+    palette->lpVtbl = &IWineD3DPalette_Vtbl;
+    palette->ref = 1;
+    palette->parent = parent;
+    palette->device = device;
+    palette->Flags = flags;
+
+    palette->palNumEntries = IWineD3DPaletteImpl_Size(flags);
+    palette->hpal = CreatePalette((const LOGPALETTE *)&palette->palVersion);
+    if (!palette->hpal)
+    {
+        WARN("Failed to create palette.\n");
+        return E_FAIL;
+    }
+
+    hr = IWineD3DPalette_SetEntries((IWineD3DPalette *)palette, 0, 0, IWineD3DPaletteImpl_Size(flags), entries);
+    if (FAILED(hr))
+    {
+        WARN("Failed to set palette entries, hr %#x.\n", hr);
+        DeleteObject(palette->hpal);
+        return hr;
+    }
+
+    return WINED3D_OK;
+}

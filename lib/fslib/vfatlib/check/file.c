@@ -5,10 +5,6 @@
 /* FAT32, VFAT, Atari format support, and various fixes additions May 1998
  * by Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de> */
 
-/* Need to define this so that islower isn't inlined
-   (ntdll doesn't export isctype) */
-#define __NO_CTYPE_INLINES
-
 #include "vfatlib.h"
 
 #define NDEBUG

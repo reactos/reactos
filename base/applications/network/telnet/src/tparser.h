@@ -10,8 +10,7 @@
 //   - An Init() function, which will re-initialize the parser when
 //     necessary.
 
-#ifndef __TPARSER_H
-#define __TPARSER_H
+#pragma once
 
 #include "tconsole.h"
 #include "keytrans.h"
@@ -45,5 +44,3 @@ protected:
 	TNetwork &Network;
 	TCharmap &Charmap;
 };
-
-#endif

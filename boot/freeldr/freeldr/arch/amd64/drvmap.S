@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 	.text
@@ -24,7 +24,7 @@
 #include <arch.h>
 
 
-EXTERN(_DriveMapInt13HandlerStart)
+EXTERN(DriveMapInt13HandlerStart)
 Int13Handler:
 
 	pushw	%bp
@@ -82,7 +82,7 @@ CallOldInt13Handler:
 
 	/* Call old int 13h handler with new drive number */
 	.byte	0x9a /* lcall */
-EXTERN(_DriveMapOldInt13HandlerAddress)
+EXTERN(DriveMapOldInt13HandlerAddress)
 	.word	0
 	.word	0
 
@@ -105,7 +105,7 @@ CallersFlags:
 PassedInDriveNumber:
 	.byte	0
 
-EXTERN(_DriveMapInt13HandlerMapList)
+EXTERN(DriveMapInt13HandlerMapList)
 Int13HandlerMapCount:
 	.byte	0
 
@@ -129,4 +129,4 @@ Int13HandlerDrive4:
 Int13HandlerDriveNew4:
 	.byte	0
 
-EXTERN(_DriveMapInt13HandlerEnd)
+EXTERN(DriveMapInt13HandlerEnd)

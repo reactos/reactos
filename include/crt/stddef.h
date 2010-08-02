@@ -148,7 +148,7 @@ _TYPE_wchar_t;
 #endif
 #ifndef _PTRDIFF_T_DEFINED
 #define _PTRDIFF_T_DEFINED
-typedef __PTRDIFF_TYPE__ ptrdiff_t;
+__MINGW_EXTENSION typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #endif
 #endif /* _GCC_PTRDIFF_T */
 #endif /* ___int_ptrdiff_t_h */
@@ -215,7 +215,7 @@ typedef __PTRDIFF_TYPE__ ptrdiff_t;
 #endif
 #endif
 #if !(defined (__GNUG__) && defined (size_t))
-typedef __SIZE_TYPE__ size_t;
+__MINGW_EXTENSION typedef __SIZE_TYPE__ size_t;
 #ifdef __BEOS__
 typedef long ssize_t;
 #endif /* __BEOS__ */
@@ -287,7 +287,7 @@ typedef long ssize_t;
    symbols in the _FOO_T_ family, stays defined even after its
    corresponding type is defined).  If we define wchar_t, then we
    must undef _WCHAR_T_; for BSD/386 1.1 (and perhaps others), if
-   we undef _WCHAR_T_, then we must also define rune_t, since 
+   we undef _WCHAR_T_, then we must also define rune_t, since
    headers like runetype.h assume that if machine/ansi.h is included,
    and _BSD_WCHAR_T_ is not defined, then rune_t is available.
    machine/ansi.h says, "Note that _WCHAR_T_ and _RUNE_T_ must be of
@@ -390,7 +390,11 @@ typedef __WCHAR_TYPE__ wchar_t;
 #ifndef offsetof
 
 /* Offset of member MEMBER in a struct of type TYPE. */
+#if defined(__GNUC__)
 #define offsetof(TYPE, MEMBER) __builtin_offsetof (TYPE, MEMBER)
+#else
+#define offsetof(TYPE, MEMBER) ((size_t)&(((TYPE *)0)->MEMBER))
+#endif
 
 #endif /* !offsetof */
 

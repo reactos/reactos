@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -104,7 +104,7 @@ int DesktopSettingsDlg::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {
 	  case PSN_QUERYINITIALFOCUS:
-		SetWindowLong(_hwnd, DWL_MSGRESULT, (LPARAM)GetDlgItem(_hwnd, IDC_ICON_ALIGN_0+_alignment_cur));
+		SetWindowLongPtr(_hwnd, DWL_MSGRESULT, (LPARAM)GetDlgItem(_hwnd, IDC_ICON_ALIGN_0+_alignment_cur));
 		break;
 
 	  case PSN_APPLY:

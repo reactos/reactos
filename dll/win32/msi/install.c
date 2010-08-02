@@ -661,6 +661,8 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
     MSIPACKAGE *package;
     BOOL r = FALSE;
 
+    TRACE("%d %d\n", hInstall, iRunMode);
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
     {
@@ -706,30 +708,75 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
         r = package->commit_action_running;
         break;
 
+    case MSIRUNMODE_MAINTENANCE:
+        r = msi_get_property_int( package->db, szInstalled, 0 ) != 0;
+        break;
+
+    case MSIRUNMODE_REBOOTATEND:
+        r = package->need_reboot;
+        break;
+
     default:
-        FIXME("%d %d\n", hInstall, iRunMode);
+        FIXME("unimplemented run mode: %d\n", iRunMode);
         r = TRUE;
     }
 
+    msiobj_release( &package->hdr );
     return r;
 }
 
 /***********************************************************************
  *           MsiSetMode    (MSI.@)
  */
-BOOL WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
+UINT WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
 {
+    MSIPACKAGE *package;
+    UINT r;
+
+    TRACE("%d %d %d\n", hInstall, iRunMode, fState);
+
+    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!package)
+    {
+        HRESULT hr;
+        IWineMsiRemotePackage *remote_package;
+
+        remote_package = (IWineMsiRemotePackage *)msi_get_remote( hInstall );
+        if (!remote_package)
+            return FALSE;
+
+        hr = IWineMsiRemotePackage_SetMode( remote_package, iRunMode, fState );
+        IWineMsiRemotePackage_Release( remote_package );
+
+        if (FAILED(hr))
+        {
+            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+                return HRESULT_CODE(hr);
+
+            return ERROR_FUNCTION_FAILED;
+        }
+
+        return ERROR_SUCCESS;
+    }
+
     switch (iRunMode)
     {
-    case MSIRUNMODE_RESERVED11:
-    case MSIRUNMODE_WINDOWS9X:
-    case MSIRUNMODE_RESERVED14:
-    case MSIRUNMODE_RESERVED15:
-        return FALSE;
+    case MSIRUNMODE_REBOOTATEND:
+        package->need_reboot = 1;
+        r = ERROR_SUCCESS;
+        break;
+
+    case MSIRUNMODE_REBOOTNOW:
+        FIXME("unimplemented run mode: %d\n", iRunMode);
+        r = ERROR_FUNCTION_FAILED;
+        break;
+
     default:
-        FIXME("%d %d %d\n", hInstall, iRunMode, fState);
+        r = ERROR_ACCESS_DENIED;
     }
-    return TRUE;
+
+    msiobj_release( &package->hdr );
+    return r;
 }
 
 /***********************************************************************
@@ -934,9 +981,76 @@ UINT WINAPI MsiGetFeatureStateW(MSIHANDLE hInstall, LPCWSTR szFeature,
 UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
                   MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
 {
-    FIXME("(%d %s %i %i %p): stub\n", hInstall, debugstr_a(szFeature),
-          iCostTree, iState, piCost);
-    if (piCost) *piCost = 0;
+    LPWSTR szwFeature = NULL;
+    UINT rc;
+
+    szwFeature = strdupAtoW(szFeature);
+
+    rc = MsiGetFeatureCostW(hInstall, szwFeature, iCostTree, iState, piCost);
+
+    msi_free(szwFeature);
+
+    return rc;
+}
+
+static INT feature_cost( MSIFEATURE *feature )
+{
+    INT cost = 0;
+    MSICOMPONENT *comp;
+
+    LIST_FOR_EACH_ENTRY( comp, &feature->Components, MSICOMPONENT, entry )
+    {
+        cost += comp->Cost;
+    }
+    return cost;
+}
+
+UINT MSI_GetFeatureCost( MSIPACKAGE *package, MSIFEATURE *feature, MSICOSTTREE tree,
+                         INSTALLSTATE state, LPINT cost )
+{
+    TRACE("%s, %u, %d, %p\n", debugstr_w(feature->Feature), tree, state, cost);
+
+    *cost = 0;
+    switch (tree)
+    {
+    case MSICOSTTREE_CHILDREN:
+    {
+        MSIFEATURE *child;
+
+        LIST_FOR_EACH_ENTRY( child, &feature->Children, MSIFEATURE, entry )
+        {
+            if (child->ActionRequest == state)
+                *cost += feature_cost( child );
+        }
+        break;
+    }
+    case MSICOSTTREE_PARENTS:
+    {
+        const WCHAR *feature_parent = feature->Feature_Parent;
+        for (;;)
+        {
+            MSIFEATURE *parent = get_loaded_feature( package, feature_parent );
+            if (!parent)
+                break;
+
+            if (parent->ActionRequest == state)
+                *cost += feature_cost( parent );
+
+            feature_parent = parent->Feature_Parent;
+        }
+        break;
+    }
+    case MSICOSTTREE_SELFONLY:
+        if (feature->ActionRequest == state)
+            *cost = feature_cost( feature );
+        break;
+
+    default:
+        WARN("unhandled cost tree %u\n", tree);
+        break;
+    }
+
+    *cost /= 512;
     return ERROR_SUCCESS;
 }
 
@@ -946,10 +1060,57 @@ UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
 UINT WINAPI MsiGetFeatureCostW(MSIHANDLE hInstall, LPCWSTR szFeature,
                   MSICOSTTREE iCostTree, INSTALLSTATE iState, LPINT piCost)
 {
-    FIXME("(%d %s %i %i %p): stub\n", hInstall, debugstr_w(szFeature),
+    MSIPACKAGE *package;
+    MSIFEATURE *feature;
+    UINT ret;
+
+    TRACE("(%d %s %i %i %p)\n", hInstall, debugstr_w(szFeature),
           iCostTree, iState, piCost);
-    if (piCost) *piCost = 0;
-    return ERROR_SUCCESS;
+
+    package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+    {
+        HRESULT hr;
+        BSTR feature;
+        IWineMsiRemotePackage *remote_package;
+
+        remote_package = (IWineMsiRemotePackage *)msi_get_remote(hInstall);
+        if (!remote_package)
+            return ERROR_INVALID_HANDLE;
+
+        feature = SysAllocString(szFeature);
+        if (!feature)
+        {
+            IWineMsiRemotePackage_Release(remote_package);
+            return ERROR_OUTOFMEMORY;
+        }
+
+        hr = IWineMsiRemotePackage_GetFeatureCost(remote_package, feature,
+                                                  iCostTree, iState, piCost);
+
+        SysFreeString(feature);
+        IWineMsiRemotePackage_Release(remote_package);
+
+        if (FAILED(hr))
+        {
+            if (HRESULT_FACILITY(hr) == FACILITY_WIN32)
+                return HRESULT_CODE(hr);
+
+            return ERROR_FUNCTION_FAILED;
+        }
+
+        return ERROR_SUCCESS;
+    }
+
+    feature = get_loaded_feature(package, szFeature);
+
+    if (feature)
+        ret = MSI_GetFeatureCost(package, feature, iCostTree, iState, piCost);
+    else
+        ret = ERROR_UNKNOWN_FEATURE;
+
+    msiobj_release( &package->hdr );
+    return ret;
 }
 
 /***********************************************************************
@@ -1154,7 +1315,7 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
         return 0;
     }
 
-    langid = msi_get_property_int( package, szProductLanguage, 0 );
+    langid = msi_get_property_int( package->db, szProductLanguage, 0 );
     msiobj_release( &package->hdr );
     return langid;
 }
@@ -1176,7 +1337,7 @@ UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel )
         return MSI_SetFeatureStates( package );
 
     sprintfW( level, fmt, iInstallLevel );
-    r = MSI_SetPropertyW( package, szInstallLevel, level );
+    r = msi_set_property( package->db, szInstallLevel, level );
     if ( r == ERROR_SUCCESS )
         r = MSI_SetFeatureStates( package );
 

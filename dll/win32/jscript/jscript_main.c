@@ -24,6 +24,7 @@
 #include "advpub.h"
 #include "activaut.h"
 #include "objsafe.h"
+#include "mshtmhst.h"
 
 #include "wine/debug.h"
 
@@ -40,7 +41,7 @@ static const CLSID CLSID_JScriptEncode =
 
 DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
-static HINSTANCE jscript_hinstance;
+HINSTANCE jscript_hinstance;
 
 static HRESULT WINAPI ClassFactory_QueryInterface(IClassFactory *iface, REFIID riid, void **ppv)
 {

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -23,7 +23,7 @@
  *
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -35,7 +35,7 @@
 typedef struct _GRAPHICS_DRIVER
 {
   PWSTR  Name;
-  PGD_ENABLEDRIVER  EnableDriver;
+  PFN_DrvEnableDriver  EnableDriver;
   int  ReferenceCount;
   struct _GRAPHICS_DRIVER  *Next;
 } GRAPHICS_DRIVER, *PGRAPHICS_DRIVER;
@@ -43,7 +43,7 @@ typedef struct _GRAPHICS_DRIVER
 static PGRAPHICS_DRIVER  DriverList;
 static PGRAPHICS_DRIVER  GenericDriver = NULL;
 
-BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
+BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PFN_DrvEnableDriver  EnableDriver)
 {
   PGRAPHICS_DRIVER  Driver;
   
@@ -79,7 +79,7 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   return  TRUE;
 }
 
-PGD_ENABLEDRIVER DRIVER_FindExistingDDIDriver(LPCWSTR Name)
+PFN_DrvEnableDriver DRIVER_FindExistingDDIDriver(LPCWSTR Name)
 {
   GRAPHICS_DRIVER *Driver = DriverList;
   while (Driver && Name)
@@ -94,11 +94,11 @@ PGD_ENABLEDRIVER DRIVER_FindExistingDDIDriver(LPCWSTR Name)
   return NULL;
 }
 
-PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
+PFN_DrvEnableDriver DRIVER_FindDDIDriver(LPCWSTR Name)
 {
   static WCHAR DefaultPath[] = L"\\SystemRoot\\System32\\";
   static WCHAR DefaultExtension[] = L".DLL";
-  PGD_ENABLEDRIVER ExistingDriver;
+  PFN_DrvEnableDriver ExistingDriver;
   SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   NTSTATUS Status;
   LPWSTR FullName;
@@ -167,14 +167,14 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool(FullName);
+    ExFreePoolWithTag(FullName, TAG_DRIVER);
     return NULL;
   }
 
   DRIVER_RegisterDriver( L"DISPLAY", GdiDriverInfo.EntryPoint);
   DRIVER_RegisterDriver( FullName, GdiDriverInfo.EntryPoint);
   ExFreePoolWithTag(FullName, TAG_DRIVER);
-  return (PGD_ENABLEDRIVER)GdiDriverInfo.EntryPoint;
+  return (PFN_DrvEnableDriver)GdiDriverInfo.EntryPoint;
 }
 
 #define BEGIN_FUNCTION_MAP() \
@@ -572,8 +572,8 @@ BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
 
   if (Driver != NULL)
   {
-    ExFreePool(Driver->Name);
-    ExFreePool(Driver);
+    ExFreePoolWithTag(Driver->Name, TAG_DRIVER);
+    ExFreePoolWithTag(Driver, TAG_DRIVER);
 
     return  TRUE;
   }
@@ -597,7 +597,7 @@ INT DRIVER_ReferenceDriver (LPCWSTR  Name)
     Driver = Driver->Next;
   }
   DPRINT( "Driver %S not found to reference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
-  assert( GenericDriver != 0 );
+  ASSERT( GenericDriver != 0 );
   return ++GenericDriver->ReferenceCount;
 }
 
@@ -615,7 +615,7 @@ INT DRIVER_UnreferenceDriver (LPCWSTR  Name)
     Driver = Driver->Next;
   }
   DPRINT( "Driver '%S' not found to dereference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
-  assert( GenericDriver != 0 );
+  ASSERT( GenericDriver != 0 );
   return --GenericDriver->ReferenceCount;
 }
 /* EOF */

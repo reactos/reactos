@@ -30,6 +30,10 @@ cpp_quote("#define BG_NOTIFY_JOB_ERROR 0x0002")
 cpp_quote("#define BG_NOTIFY_DISABLE 0x0004")
 cpp_quote("#define BG_NOTIFY_JOB_MODIFICATION 0x0008")
 
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef EnumJobs")
+cpp_quote("#undef GetJob")
+cpp_quote("#endif")
 
 #define BG_ENUM_SIZEIS(maxcount) maxcount
 #define BG_ENUM_LENGTHIS(maxcount,lengthptr) lengthptr ? *lengthptr : maxcount

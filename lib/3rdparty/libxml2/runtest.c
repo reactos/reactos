@@ -1704,9 +1704,11 @@ saxParseTest(const char *filename, const char *result,
     if (compareFiles(temp, result)) {
         fprintf(stderr, "Got a difference for %s\n", filename);
         ret = 1;
-    } else
-    unlink(temp);
-    free(temp);
+    }
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
 
     /* switch back to structured error handling */
     xmlSetGenericErrorFunc(NULL, NULL);
@@ -1779,8 +1781,10 @@ oldParseTest(const char *filename, const char *result,
     }
     xmlFreeDoc(doc);
 
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
     return(res);
 }
 
@@ -1980,8 +1984,10 @@ noentParseTest(const char *filename, const char *result,
     }
     xmlFreeDoc(doc);
 
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
     return(res);
 }
 
@@ -2120,8 +2126,10 @@ streamProcessTest(const char *filename, const char *result, const char *err,
 	    testErrorHandler(NULL, "Relax-NG schema %s failed to compile\n",
 	                     rng);
 	    fclose(t);
-	    unlink(temp);
-	    free(temp);
+            if (temp != NULL) {
+                unlink(temp);
+                free(temp);
+            }
 	    return(0);
 	}
     }
@@ -2147,8 +2155,10 @@ streamProcessTest(const char *filename, const char *result, const char *err,
     if (t != NULL) {
         fclose(t);
 	ret = compareFiles(temp, result);
-	unlink(temp);
-	free(temp);
+        if (temp != NULL) {
+            unlink(temp);
+            free(temp);
+        }
 	if (ret) {
 	    fprintf(stderr, "Result for %s failed\n", filename);
 	    return(-1);
@@ -2357,8 +2367,10 @@ xpathCommonTest(const char *filename, const char *result,
 	}
     }
 
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
     return(ret);
 }
 
@@ -2527,8 +2539,10 @@ xmlidDocTest(const char *filename,
 	}
     }
 
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
     xmlFreeDoc(xpathDocument);
 
     if (err != NULL) {
@@ -2614,8 +2628,10 @@ uriCommonTest(const char *filename,
     if (f == NULL) {
 	fprintf(stderr, "failed to open input file %s\n", filename);
 	fclose(o);
-	unlink(temp);
-        free(temp);
+        if (temp != NULL) {
+            unlink(temp);
+            free(temp);
+        }
 	return(-1);
     }
 
@@ -2658,8 +2674,10 @@ uriCommonTest(const char *filename,
 	}
     }
 
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
     return(res);
 }
 
@@ -2933,8 +2951,10 @@ schemasOneTest(const char *sch,
 	    ret = 1;
 	}
     }
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
 
     if ((validResult != 0) && (err != NULL)) {
 	if (compareFileMem(err, testErrors, testErrorsSize)) {
@@ -3100,14 +3120,17 @@ rngOneTest(const char *sch,
 	       filename);
     }
     fclose(schemasOutput);
+    ret = 0;
     if (result) {
 	if (compareFiles(temp, result)) {
 	    fprintf(stderr, "Result for %s on %s failed\n", filename, sch);
 	    ret = 1;
 	}
     }
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
 
     if (err != NULL) {
 	if (compareFileMem(err, testErrors, testErrorsSize)) {
@@ -3142,7 +3165,7 @@ rngTest(const char *filename,
     const char *instance;
     xmlRelaxNGParserCtxtPtr ctxt;
     xmlRelaxNGPtr schemas;
-    int res = 0, len, ret;
+    int res = 0, len, ret = 0;
     char pattern[500];
     char prefix[500];
     char result[500];
@@ -3207,7 +3230,7 @@ rngTest(const char *filename,
     globfree(&globbuf);
     xmlRelaxNGFree(schemas);
 
-    return(res);
+    return(ret);
 }
 
 #ifdef LIBXML_READER_ENABLED
@@ -3257,7 +3280,8 @@ rngStreamTest(const char *filename,
      * hack is also done in the Makefile
      */
     if ((!strcmp(prefix, "tutor10_1")) || (!strcmp(prefix, "tutor10_2")) ||
-        (!strcmp(prefix, "tutor3_2")) || (!strcmp(prefix, "307377")))
+        (!strcmp(prefix, "tutor3_2")) || (!strcmp(prefix, "307377")) ||
+        (!strcmp(prefix, "tutor8_2")))
 	disable_err = 1;
 
     snprintf(pattern, 499, "./test/relaxng/%s_?.xml", prefix);
@@ -3463,7 +3487,7 @@ patternTest(const char *filename,
 		namespaces[j++] = ns->prefix;
 	    }
 	    namespaces[j++] = NULL;
-	    namespaces[j++] = NULL;
+	    namespaces[j] = NULL;
 
 	    patternc = xmlPatterncompile((const xmlChar *) str, doc->dict,
 					 0, &namespaces[0]);
@@ -3511,8 +3535,10 @@ patternTest(const char *filename,
 	fprintf(stderr, "Result for %s failed\n", filename);
 	ret = 1;
     }
-    unlink(temp);
-    free(temp);
+    if (temp != NULL) {
+        unlink(temp);
+        free(temp);
+    }
     return(ret);
 }
 #endif /* READER */
@@ -3642,7 +3668,6 @@ parse_list(xmlChar *str) {
     if((str[0] == '\'') && (str[len - 1] == '\'')) {
 	str[len - 1] = '\0';
 	str++;
-	len -= 2;
     }
     /*
      * allocate an translation buffer.
@@ -3671,7 +3696,7 @@ parse_list(xmlChar *str) {
 }
 
 static int
-c14nRunTest(const char* xml_filename, int with_comments, int exclusive,
+c14nRunTest(const char* xml_filename, int with_comments, int mode,
 	    const char* xpath_filename, const char *ns_filename,
 	    const char* result_file) {
     xmlDocPtr doc;
@@ -3733,12 +3758,13 @@ c14nRunTest(const char* xml_filename, int with_comments, int exclusive,
     /* fprintf(stderr,"File \"%s\" loaded: start canonization\n", xml_filename); */
     ret = xmlC14NDocDumpMemory(doc,
 	    (xpath) ? xpath->nodesetval : NULL,
-	    exclusive, inclusive_namespaces,
+	    mode, inclusive_namespaces,
 	    with_comments, &result);
     if (ret >= 0) {
 	if(result != NULL) {
 	    if (compareFileMem(result_file, (const char *) result, ret)) {
 		fprintf(stderr, "Result mismatch for %s\n", xml_filename);
+		fprintf(stderr, "RESULT:\n%s\n", (const char*)result);
 	        ret = -1;
 	    }
 	}
@@ -3760,7 +3786,7 @@ c14nRunTest(const char* xml_filename, int with_comments, int exclusive,
 }
 
 static int
-c14nCommonTest(const char *filename, int with_comments, int exclusive,
+c14nCommonTest(const char *filename, int with_comments, int mode,
                const char *subdir) {
     char buf[500];
     char prefix[500];
@@ -3793,7 +3819,7 @@ c14nCommonTest(const char *filename, int with_comments, int exclusive,
     }
 
     nb_tests++;
-    if (c14nRunTest(filename, with_comments, exclusive,
+    if (c14nRunTest(filename, with_comments, mode,
                     xpath, ns, result) < 0)
         ret = 1;
 
@@ -3808,21 +3834,28 @@ c14nWithCommentTest(const char *filename,
                     const char *resul ATTRIBUTE_UNUSED,
 		    const char *err ATTRIBUTE_UNUSED,
 		    int options ATTRIBUTE_UNUSED) {
-    return(c14nCommonTest(filename, 1, 0, "with-comments"));
+    return(c14nCommonTest(filename, 1, XML_C14N_1_0, "with-comments"));
 }
 static int
 c14nWithoutCommentTest(const char *filename,
                     const char *resul ATTRIBUTE_UNUSED,
 		    const char *err ATTRIBUTE_UNUSED,
 		    int options ATTRIBUTE_UNUSED) {
-    return(c14nCommonTest(filename, 0, 0, "without-comments"));
+    return(c14nCommonTest(filename, 0, XML_C14N_1_0, "without-comments"));
 }
 static int
 c14nExcWithoutCommentTest(const char *filename,
                     const char *resul ATTRIBUTE_UNUSED,
 		    const char *err ATTRIBUTE_UNUSED,
 		    int options ATTRIBUTE_UNUSED) {
-    return(c14nCommonTest(filename, 0, 1, "exc-without-comments"));
+    return(c14nCommonTest(filename, 0, XML_C14N_EXCLUSIVE_1_0, "exc-without-comments"));
+}
+static int
+c14n11WithoutCommentTest(const char *filename,
+                    const char *resul ATTRIBUTE_UNUSED,
+		    const char *err ATTRIBUTE_UNUSED,
+		    int options ATTRIBUTE_UNUSED) {
+    return(c14nCommonTest(filename, 0, XML_C14N_1_1, "1-1-without-comments"));
 }
 #endif
 #if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED) && defined (LIBXML_SAX1_ENABLED)
@@ -3903,7 +3936,7 @@ thread_specific_data(void *private_data)
     return ((void *) Okay);
 }
 
-#if defined(linux) || defined(solaris) || defined(__APPLE_CC__)
+#if defined(linux) || defined(__sun) || defined(__APPLE_CC__)
 
 #include <pthread.h>
 
@@ -4256,6 +4289,9 @@ testDesc testDescriptions[] = {
       0 },
     { "C14N exclusive without comments regression tests" ,
       c14nExcWithoutCommentTest, "./test/c14n/exc-without-comments/*.xml", NULL, NULL, NULL,
+      0 },
+    { "C14N 1.1 without comments regression tests" ,
+      c14n11WithoutCommentTest, "./test/c14n/1-1-without-comments/*.xml", NULL, NULL, NULL,
       0 },
 #endif
 #if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED) && defined(LIBXML_SAX1_ENABLED)

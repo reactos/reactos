@@ -3,8 +3,6 @@
 <module name="freeldr_startup" type="objectlibrary">
 	<include base="freeldr_startup">include</include>
 	<include base="ntoskrnl">include</include>
-	<compilerflag>-fno-inline</compilerflag>
-	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
 	<directory name="arch">
 		<if property="ARCH" value="i386">
 			<directory name="i386">

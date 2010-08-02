@@ -74,7 +74,6 @@ DIB_GetBitmapInfo(const BITMAPINFOHEADER *header,
                   PLONG compr,
                   PLONG size )
 {
-
   if (header->biSize == sizeof(BITMAPCOREHEADER))
   {
      BITMAPCOREHEADER *core = (BITMAPCOREHEADER *)header;
@@ -293,7 +292,7 @@ CreateBitmap(INT  Width,
              INT  Height,
              UINT  Planes,
              UINT  BitsPixel,
-             PCVOID pUnsafeBits)
+             CONST VOID* pUnsafeBits)
 {
     /* FIXME some part should be done in user mode */
     if (Width && Height)
@@ -468,6 +467,8 @@ CreateDIBitmap( HDC hDC,
   PVOID pvSafeBits = NULL;
   HBITMAP hBmp;
 
+  if (!Header) return 0;
+
   pConvertedInfo = ConvertBitmapInfo(Data, ColorUse,
                                           &ConvertedInfoSize, FALSE);
 
@@ -500,11 +501,18 @@ CreateDIBitmap( HDC hDC,
      hBmp = GetStockObject(DEFAULT_BITMAP);
   else
   {
-     if ( Bits )
+     if ( Bits && Init == CBM_INIT )
      {
         pvSafeBits = RtlAllocateHeap(GetProcessHeap(), 0, cjBmpScanSize);
-        if ( pvSafeBits )
+        if (pvSafeBits == NULL)
+        {
+            hBmp = NULL;
+            goto Exit;
+        }
+        else
+        {
            RtlCopyMemory( pvSafeBits, Bits, cjBmpScanSize);
+        }
      }
 
      hBmp = NtGdiCreateDIBitmapInternal(hDC,
@@ -519,7 +527,7 @@ CreateDIBitmap( HDC hDC,
                                         0,
                                         0);
 
-     if ( Bits )
+     if ( Bits && Init == CBM_INIT )
         RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
   }
 Exit:

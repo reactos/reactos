@@ -64,7 +64,7 @@ BEGIN
 	AUTOCHECKBOX "&Shiva Password Authentication Protocol (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
 	AUTOCHECKBOX "&Challenge Handshake Authentication Protocol (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
 	AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Ältere MS-CHAP Versionen von &Win 95 Servern erlauben", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Ältere MS-CHAP-Versionen von &Win 95 Servern erlauben", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
 	AUTOCHECKBOX "M&icrosoft CHAP Version 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
 	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
 	AUTOCHECKBOX "&Für MS-CHAP basierte Protokolle, automatisch den ReactOS Anmeldename und Passwort verwenden (und Domäne wenn vorhanden)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
@@ -223,7 +223,7 @@ CAPTION "Verbinden mit %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
-	LTEXT "Be&nutername:", 1413, 8, 60, 88, 8
+	LTEXT "Be&nutzername:", 1413, 8, 60, 88, 8
 	EDITTEXT 1104, 103, 57, 154, 14, ES_AUTOHSCROLL
 	LTEXT "&Passwort:", 1112, 8, 79, 88, 8
 	EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
@@ -313,7 +313,7 @@ END
 
 121 DIALOGEX 6, 18, 230, 131
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "ISDN Konfiguration"
+CAPTION "ISDN-Konfiguration"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "&Leitungstyp:", 1155, 9, 9, 65, 8
@@ -330,7 +330,7 @@ END
 
 122 DIALOGEX 6, 18, 220, 68
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "ISDN Konfiguration"
+CAPTION "ISDN-Konfiguration"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "&Leitungstyp:", 1155, 9, 11, 55, 8
@@ -345,7 +345,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 	EDITTEXT 1161, 5, 5, 338, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
-	LTEXT "I&P Adresse:", 1163, 7, 253, 68, 8
+	LTEXT "I&P-Adresse:", 1163, 7, 253, 68, 8
 	CONTROL "", 1160, "RASIPADDRESS", WS_TABSTOP, 76, 250, 117, 14
 	DEFPUSHBUTTON "", 1162, 197, 252, 16, 13, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
 	PUSHBUTTON "&Fertig", 1, 219, 252, 60, 14, WS_GROUP
@@ -364,7 +364,7 @@ END
 
 125 DIALOGEX 12, 16, 261, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Modem Konfiguration"
+CAPTION "Modem-Konfiguration"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 15102, 1238, 7, 7, 20, 20
@@ -412,7 +412,7 @@ END
 
 128 DIALOGEX 7, 22, 236, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Manuelles wählen"
+CAPTION "Manuelles Wählen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Nehmen Sie den Hörer und wählen Sie (oder bitten Sie die Vermittlung). Nach vollendetem Wählvorgang, klicken Sie auf OK. Warten Sie, bis kein Ton mehr zu hören ist und dann legen Sie auf.", 1281, 8, 8, 219, 32
@@ -436,7 +436,7 @@ END
 
 133 DIALOGEX 6, 18, 231, 211
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "X.25 Anmeldeeinstellungen"
+CAPTION "X.25-Anmeldeeinstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Wählen Sie ihren X.25 Netzwerkanbieter and und geben Sie ihre X.121 Adresse des Remoteservers ein:", 1408, 7, 4, 220, 27
@@ -583,10 +583,10 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	AUTOCHECKBOX "&Telefonnummern vor dem Wählen anzeigen", 1142, 8, 10, 224, 10, WS_GROUP
 	AUTOCHECKBOX "Standorteinste&llungen vor dem Wählen anzeigen", 1139, 8, 27, 224, 10
-	AUTOCHECKBOX "Standortänderungen während dem &Wählen zulassen", 1140, 21, 43, 212, 10
-	AUTOCHECKBOX "Verbindungsforts&chritt während dem Wählen anzeigen", 1143, 8, 59, 224, 10
-	AUTOCHECKBOX "Beim Wählvorgang schlie&ssen", 1137, 8, 76, 224, 10
-	AUTOCHECKBOX "Telef&onbuchänderungen während dem Wählen zulassen", 1141, 8, 94, 224, 10
+	AUTOCHECKBOX "Standortänderungen während des &Wählens zulassen", 1140, 21, 43, 212, 10
+	AUTOCHECKBOX "Verbindungsforts&chritt während des Wählens anzeigen", 1143, 8, 59, 224, 10
+	AUTOCHECKBOX "Beim Wählvorgang schlie&ßen", 1137, 8, 76, 224, 10
+	AUTOCHECKBOX "Telef&onbuchänderungen während des Wählens zulassen", 1141, 8, 94, 224, 10
 	AUTOCHECKBOX "&Zum Erstellen neuer Einträge den Assistenten verwenden", 1144, 22, 111, 210, 10
 END
 
@@ -598,10 +598,10 @@ BEGIN
 	AUTOCHECKBOX "&Telefonnummern vor dem Wählen anzeigen", 1142, 8, 10, 223, 10, WS_GROUP
 	AUTOCHECKBOX "Standorteinste&llungen vor dem Wählen anzeigen", 1139, 8, 27, 206, 10
 	AUTOCHECKBOX "DFÜ-Netz&werk-Monitor vor dem Wählen starten", 1138, 8, 44, 226, 10
-	AUTOCHECKBOX "Verbindungsforts&chritt während dem Wählen anzeigen", 1143, 8, 61, 224, 10
-	AUTOCHECKBOX "Beim Wählvorgang schlie&ssen", 1137, 8, 79, 220, 10
+	AUTOCHECKBOX "Verbindungsforts&chritt während des Wählens anzeigen", 1143, 8, 61, 224, 10
+	AUTOCHECKBOX "Beim Wählvorgang schlie&ßen", 1137, 8, 79, 220, 10
 	AUTOCHECKBOX "&Zum Erstellen neuer Einträge den Assistenten verwenden", 1144, 8, 97, 220, 10
-	AUTOCHECKBOX "Vo&r automatischen Wählvorgang immer fragen", 1136, 8, 114, 220, 10
+	AUTOCHECKBOX "Vo&r automatischem Wählvorgang immer fragen", 1136, 8, 114, 220, 10
 END
 
 160 DIALOGEX 6, 18, 320, 145
@@ -619,7 +619,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Sicherheit"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Sicherhetseinstellungen", 1580, 8, 3, 215, 139
+	GROUPBOX "Sicherheitseinstellungen", 1580, 8, 3, 215, 139
 	AUTORADIOBUTTON "&Typisch (Empfohlen)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
 	AUTORADIOBUTTON "E&rweitert (Benutzerdefiniert)", 1541, 14, 102, 198, 8, BS_NOTIFY
 	LTEXT "&Identität folgendermaßen bestätigen:", 1537, 26, 29, 187, 8, NOT WS_GROUP
@@ -667,9 +667,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Geben Sie die IP-Adresse eines DNS- oder WINS- Servers im Remotenetzwerk an. Behalten Sie 0.0.0.0 bei, wenn der Remoterouter die Adressen zur Verfügung stellt oder wenn Sie sich der Adressen nicht sicher sind.", 1275, 7, 2, 311, 25
-	LTEXT "&DNS Server:", 1274, 7, 29, 160, 8, NOT WS_GROUP
+	LTEXT "&DNS-Server:", 1274, 7, 29, 160, 8, NOT WS_GROUP
 	CONTROL "", 1272, "RASIPADDRESS", WS_TABSTOP, 21, 41, 85, 12
-	LTEXT "&WINS Server:", 1276, 7, 65, 166, 8, NOT WS_GROUP
+	LTEXT "&WINS-Server:", 1276, 7, 65, 166, 8, NOT WS_GROUP
 	CONTROL "", 1273, "RASIPADDRESS", WS_TABSTOP, 21, 77, 85, 12
 END
 
@@ -739,7 +739,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Geben Sie die IP-Adresse des Routers im Remotenetzwerk an, oder setzen Sie sie auf 0.0.0.0., wenn der Server die Adresse zur Verfügung stellt. Der Administrator des Remotenetzwerks gibt gewöhnlich Anweisungen für die Eingabe.", 1331, 5, 4, 308, 35
-	LTEXT "Meine &IP Adresse:", 1332, 4, 51, 100, 8, NOT WS_GROUP
+	LTEXT "Meine &IP-Adresse:", 1332, 4, 51, 100, 8, NOT WS_GROUP
 	CONTROL "", 1330, "RASIPADDRESS", WS_TABSTOP, 21, 62, 104, 12
 	LTEXT "Anmerkung: Wenn Sie einen Adapter installiert haben, sollten Sie NICHT die gleiche Adresse wie der Adapter wählen.", 1333, 5, 94, 306, 36, NOT WS_GROUP
 END
@@ -749,7 +749,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Bei einigen DFÜ-Servern oder Routern ist nach der Verbindungsherstellung eine interaktive Anmeldung erforderlich. Sie können ein Skript automatisch ausführen, das das Antworten für Sie übernimmt.", 1339, 5, 3, 309, 27
-	AUTOCHECKBOX "&Terminal Fenster anzeigen", 1462, 15, 31, 162, 10
+	AUTOCHECKBOX "&Terminalfenster anzeigen", 1462, 15, 31, 162, 10
 	AUTOCHECKBOX "&Skript starten:", 1463, 15, 45, 58, 10
 	COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 	PUSHBUTTON "Bea&rbeiten...", 1335, 180, 77, 60, 14
@@ -911,7 +911,7 @@ END
 
 502 DIALOGEX 20, 60, 215, 73
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "PPP Einstellungen"
+CAPTION "PPP-Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	AUTOCHECKBOX "&LCP Erweiterungen aktivieren", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
@@ -953,7 +953,7 @@ END
 
 532 DIALOGEX 0, 0, 263, 263
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Router Rückruf"
+CAPTION "Router-Rückruf"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Ein Router kann beim Einwählen die Möglichkeit des Rückrufs anbieten, um Telefonkosten zu reduzieren und gleichzeitig die Sicherheit zu erhöhen. Geben Sie an, ob Sie die Rückrufoption verwenden möchten.", 1043, 7, 5, 253, 24
@@ -1080,7 +1080,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Willkommen zum Assistenten.", 1530, 122, 8, 192, 32
 	LTEXT "Mit diesem Assistenten können Sie eine Schnittstelle für Wählen bei Bedarf erstellen, um eine Verbindung von diesem Router zu anderen Routern herzustellen.", 1531, 122, 43, 192, 37
-	LTEXT "Klicken Sie auf Weiter um den Vorgang fortzusetzen.", 1532, 122, 85, 191, 29
+	LTEXT "Klicken Sie auf Weiter, um den Vorgang fortzusetzen.", 1532, 122, 85, 191, 29
 END
 
 548 DIALOGEX 0, 0, 317, 143
@@ -1301,12 +1301,12 @@ BEGIN
 	AUTOCHECKBOX "Daten&verschlüsselung ist zwingend erforderlich", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
 	LTEXT "Diese Einstellungen erfordern Kenntnisse über Sicherheitsprotokolle.", 1539, 26, 111, 136, 20
 	PUSHBUTTON "&Einstellungen...", 1180, 151, 134, 60, 14
-	PUSHBUTTON "I&PSec Einstellungen...", 1598, 126, 163, 85, 14
+	PUSHBUTTON "I&PSec-Einstellungen...", 1598, 126, 163, 85, 14
 END
 
 570 DIALOGEX 0, 0, 265, 126
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "IPSec Einstellungen"
+CAPTION "IPSec-Einstellungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 151, 104, 50, 14
@@ -1325,10 +1325,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Sicherheitslogging"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Logging Optionen:", -1, 6, 8, 216, 47
+	GROUPBOX "Logging-Optionen:", -1, 6, 8, 216, 47
 	AUTOCHECKBOX "&Fehlgeschlagene eingeh. Verbindungsversuche loggen", 1642, 14, 22, 201, 10
 	AUTOCHECKBOX "&Erfolgreiche eingehende Verbindungsversuche loggen", 1641, 14, 37, 200, 10
-	GROUPBOX "Logdatei Optionen:", -1, 7, 64, 215, 91
+	GROUPBOX "Logdatei-Optionen:", -1, 7, 64, 215, 91
 	LTEXT "&Name:", -1, 14, 78, 199, 8
 	EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
 	PUSHBUTTON "&Durchsuchen...", 1639, 153, 108, 60, 14
@@ -1343,7 +1343,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "ICMP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Das &Internet Control Message-Protokoll (ICMP) ermöglicht Computern eines Netzwerks die gemeinsame Nutzung von Fehler- und Statusinformationen. Wählen Sie Informationsanfragen aus dem Internet, auf die dieser Computer antworten soll:", -1, 7, 5, 215, 37
+	LTEXT "Das &Internet-Control-Message-Protokoll (ICMP) ermöglicht Computern eines Netzwerks die gemeinsame Nutzung von Fehler- und Statusinformationen. Wählen Sie Informationsanfragen aus dem Internet, auf die dieser Computer antworten soll:", -1, 7, 5, 215, 37
 	CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
 	GROUPBOX "Beschreibung:", -1, 7, 153, 215, 55
 	LTEXT "", 1645, 14, 171, 199, 32
@@ -1622,11 +1622,11 @@ END
 
 1660 DIALOGEX 0, 0, 258, 78
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Internetverbindungs Firewall"
+CAPTION "Internetverbindungsfirewall"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 32515, -1, 7, 7, 20, 20
-	LTEXT "Durch Deaktivieren des Internetverbindungsfirewalls wird der Computer eventuell nicht autorisierten Zugriffen aus dem Internet ausgesetzt. Soll der Firewall deaktiviert werden?", -1, 44, 5, 212, 24
+	LTEXT "Durch Deaktivieren der Internetverbindungsfirewall wird der Computer eventuell nicht autorisierten Zugriffen aus dem Internet ausgesetzt. Soll die Firewall deaktiviert werden?", -1, 44, 5, 212, 24
 	AUTOCHECKBOX "&Diesen Dialog nicht mehr anzeigen", 1662, 42, 40, 210, 10
 	DEFPUSHBUTTON "&Ja", 6, 74, 60, 50, 14
 	PUSHBUTTON "&Nein", 7, 128, 60, 50, 14
@@ -1678,7 +1678,7 @@ END
 
 7016 DIALOGEX 0, 0, 265, 190
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "TCP/IP Eigenschaften eingehender Verbindungen"
+CAPTION "TCP/IP-Eigenschaften eingehender Verbindungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Netzwerkzugriff", -1, 6, 5, 252, 32
@@ -1699,7 +1699,7 @@ END
 
 7025 DIALOGEX 0, 0, 250, 157
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "IPX Eigenschaften eingehender Verbindungen"
+CAPTION "IPX-Eigenschaften eingehender Verbindungen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Netzwerkzugriff", -1, 8, 6, 234, 32
@@ -1735,7 +1735,7 @@ BEGIN
 	PUSHBUTTON "&Deinstallieren", 7038, 80, 110, 67, 14, WS_GROUP
 	PUSHBUTTON "&Eigenschaften", 7039, 153, 110, 67, 14, WS_GROUP
 	GROUPBOX "Beschreibung", -1, 7, 138, 213, 69
-	LTEXT "<protokoll beschreibung>", 7040, 17, 150, 193, 48
+	LTEXT "<protokollbeschreibung>", 7040, 17, 150, 193, 48
 END
 
 7042 DIALOGEX 0, 0, 230, 215
@@ -1785,7 +1785,7 @@ BEGIN
 	PUSHBUTTON "&Installieren...", 7037, 108, 71, 60, 14, WS_GROUP
 	PUSHBUTTON "&Deinstallieren", 7038, 172, 71, 60, 14, WS_GROUP
 	PUSHBUTTON "&Eigenschaften", 7039, 236, 71, 60, 14, WS_GROUP
-	LTEXT "<protokoll beschreibung>", 7040, 21, 105, 273, 38
+	LTEXT "<protokollbeschreibung>", 7040, 21, 105, 273, 38
 	LTEXT "Beschreibung:", -1, 21, 95, 275, 8
 END
 
@@ -1818,7 +1818,7 @@ END
 
 19900 DIALOGEX 0, 0, 156, 44
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "DFÜ Netzwerk"
+CAPTION "DFÜ-Netzwerk"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 563, 19901, 10, 10, 18, 20
@@ -1834,7 +1834,7 @@ BEGIN
 	191 "Alle Geräte wählen"
 	192 "Geräte nur falls erforderlich wählen"
 	193 "Geben Sie den Namen und das Passwort eines Benutzers mit Zugriff auf die Remotenetzwerkdomäne ein."
-	194 "NAT (Network Address Translation) ist derzeit als Routing Protokoll installiert\nund muss vor Aktivierung der Internetverbindungsfreigabe entfernt werden.\nUm NAT zu entfernen, öffnen Sie das Routing und Remote Access Manager\nSnapIn und öffnen Sie den Eintrag des Routers im linken Panel.\nLöschen Sie das NAT Routing Protokoll von der Liste der IP\nRouting Protokolle."
+	194 "NAT (Network Address Translation) ist derzeit als Routingprotokoll installiert\nund muss vor Aktivierung der Internetverbindungsfreigabe entfernt werden.\nUm NAT zu entfernen, öffnen Sie das Routing und Remote Access Manager\nSnapIn und öffnen Sie den Eintrag des Routers im linken Panel.\nLöschen Sie das NAT Routing Protokoll von der Liste der IP\nRouting Protokolle."
 	195 "Die Vorwahl darf nur Ziffern von 0 bis 9 enthalten."
 	196 "Der Eintragsname muss mindestens ein nicht leeres Zeichen enthalten und darf nicht mit einem Punkt beginnen. Wählen Sie einen anderen Namen."
 	197 "Sie müssen für dieses Feld einen Wert zwischen %1 und %2 wählen."
@@ -1902,7 +1902,7 @@ BEGIN
 	260 "%1 erfolgreich verbunden.\n"
 	261 "Sie können wählen, welches DFÜ-Protokoll verwendet werden soll."
 	262 "DFÜ-Protokoll wählen"
-	263 "Klicken Sie auf Fertig stellen, um '%1' zu speichern."
+	263 "Klicken Sie auf Fertigstellen, um '%1' zu speichern."
 	264 "netcfg.hlp"
 	265 "Bei &Verbindung erfolgreiche Nummer an den Listenanfang verschieben."
 	266 "&Neue Telefonnummer:"
@@ -2078,7 +2078,7 @@ BEGIN
 	470 "Manuelles Modembefehlterminal"
 	471 "Terminal nach dem Wählen"
 	472 "Terminal vor dem Wählen"
-	473 "SLIP Anmeldeterminal"
+	473 "SLIP-Anmeldeterminal"
 	474 "10 Minuten"
 	475 "10 Sekunden"
 	476 "1 Stunde"
@@ -2146,9 +2146,9 @@ BEGIN
 	538 "Klicken Sie auf Einstellungen, um die benutzerdefinierte Authentifizierung und die Datenverschlüsselung anzugeben."
 	539 "Die Anschlussnummer wird bereits von einem anderen Eintrag verwendet.\nGeben Sie eine eindeutige Anschlussnummer ein."
 	540 "Geben Sie einen oder mehrere Ports für eingehende Antworten ein."
-	541 "Wählen Sie den Eintrag der gelöscht werden soll."
+	541 "Wählen Sie den Eintrag, der gelöscht werden soll."
 	542 "1 Sekunde"
-	543 "Wählen Sie den Eintrag der geändert werden soll."
+	543 "Wählen Sie den Eintrag, der geändert werden soll."
 	549 "Wie lautet der Name des Computers, mit dem eine Verbindung hergestellt werden soll?"
 	576 "20 Minuten"
 	579 "Geben einen Namen für die Verbindung mit Ihrem Arbeitsplatz an."

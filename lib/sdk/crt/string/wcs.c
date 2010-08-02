@@ -109,6 +109,35 @@ wchar_t* CDECL _wcsset( wchar_t* str, wchar_t c )
   return ret;
 }
 
+/******************************************************************
+ *		_wcsupr_s (MSVCRT.@)
+ *
+ */
+INT CDECL _wcsupr_s( wchar_t* str, size_t n )
+{
+  wchar_t* ptr = str;
+
+  if (!str || !n)
+  {
+    if (str) *str = '\0';
+    __set_errno(EINVAL);
+    return EINVAL;
+  }
+
+  while (n--)
+  {
+    if (!*ptr) return 0;
+    *ptr = toupperW(*ptr);
+    ptr++;
+  }
+
+  /* MSDN claims that the function should return and set errno to
+   * ERANGE, which doesn't seem to be true based on the tests. */
+  *str = '\0';
+  __set_errno(EINVAL);
+  return EINVAL;
+}
+
 /*********************************************************************
  *		wcstod (MSVCRT.@)
  */
@@ -1106,6 +1135,8 @@ INT CDECL iswxdigit( wchar_t wc )
     return isxdigitW( wc );
 }
 
+#endif
+
 /*********************************************************************
  *		wcscpy_s (MSVCRT.@)
  */
@@ -1130,14 +1161,10 @@ INT CDECL wcscpy_s( wchar_t* wcDest, size_t numElement, const  wchar_t *wcSrc)
         return ERANGE;
     }
 
-    if(size > numElement)
-        size = numElement;
-
     memcpy( wcDest, wcSrc, size*sizeof(WCHAR) );
 
     return 0;
 }
-#endif
 
 /******************************************************************
  *		wcsncpy_s (MSVCRT.@)

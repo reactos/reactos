@@ -36,135 +36,28 @@
 #include "wine/unicode.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-#define USER_AGENT "User-Agent:"
-#define CONTENT_TYPE "Content-Type:"
-
-static int fix_headers(char *buf, DWORD post_len)
-{
-    char *ptr = buf, *ptr2;
-
-    while(*ptr && (ptr[0] != '\r' || ptr[1] != '\n')) {
-        for(ptr2=ptr+1; *ptr2 && (ptr2[0] != '\r' || ptr2[1] != '\n'); ptr2++);
-
-        if(*ptr2)
-            ptr2 += 2;
-
-        if(!strncasecmp(ptr, USER_AGENT, sizeof(USER_AGENT)-1)) {
-            FIXME("Ignoring User-Agent header\n");
-            memmove(ptr, ptr2, strlen(ptr2)+1);
-        }else if(!post_len && !strncasecmp(ptr, CONTENT_TYPE, sizeof(CONTENT_TYPE)-1)) {
-            TRACE("Ignoring Content-Type header\n");
-            memmove(ptr, ptr2, strlen(ptr2)+1);
-        }else {
-            ptr = ptr2;
-        }
-    }
-
-    *ptr = 0;
-    return ptr-buf;
-}
-
-static nsIInputStream *get_post_data_stream(IBindCtx *bctx)
-{
-    nsIInputStream *ret = NULL;
-    IUnknown *unk;
-    IBindStatusCallback *callback;
-    IServiceProvider *service_provider;
-    BINDINFO bindinfo;
-    DWORD bindf = 0;
-    DWORD post_len = 0, headers_len = 0;
-    LPWSTR headers = NULL;
-    WCHAR emptystr[] = {0};
-    char *data;
-    HRESULT hres;
-
-    static WCHAR _BSCB_Holder_[] =
-        {'_','B','S','C','B','_','H','o','l','d','e','r','_',0};
-
-
-    /* FIXME: This should be done in URLMoniker */
-    if(!bctx)
-        return NULL;
-
-    hres = IBindCtx_GetObjectParam(bctx, _BSCB_Holder_, &unk);
-    if(FAILED(hres))
-        return NULL;
-
-    hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)&callback);
-    if(FAILED(hres)) {
-        IUnknown_Release(unk);
-        return NULL;
-    }
-
-    hres = IUnknown_QueryInterface(unk, &IID_IServiceProvider, (void**)&service_provider);
-    IUnknown_Release(unk);
-    if(SUCCEEDED(hres)) {
-        IHttpNegotiate *http_negotiate;
-
-        hres = IServiceProvider_QueryService(service_provider, &IID_IHttpNegotiate, &IID_IHttpNegotiate,
-                                             (void**)&http_negotiate);
-        if(SUCCEEDED(hres)) {
-            hres = IHttpNegotiate_BeginningTransaction(http_negotiate, emptystr,
-                                                       emptystr, 0, &headers);
-            IHttpNegotiate_Release(http_negotiate);
-
-            if(SUCCEEDED(hres) && headers)
-                headers_len = WideCharToMultiByte(CP_ACP, 0, headers, -1, NULL, 0, NULL, NULL);
-        }
-
-        IServiceProvider_Release(service_provider);
-    }
-
-    memset(&bindinfo, 0, sizeof(bindinfo));
-    bindinfo.cbSize = sizeof(bindinfo);
-
-    hres = IBindStatusCallback_GetBindInfo(callback, &bindf, &bindinfo);
-
-    if(SUCCEEDED(hres) && bindinfo.dwBindVerb == BINDVERB_POST)
-        post_len = bindinfo.cbstgmedData;
-
-    if(headers_len || post_len) {
-        int len = 0;
-
-        static const char content_length[] = "Content-Length: %u\r\n\r\n";
-
-        data = heap_alloc(headers_len+post_len+sizeof(content_length)+8);
-
-        if(headers_len) {
-            WideCharToMultiByte(CP_ACP, 0, headers, -1, data, headers_len, NULL, NULL);
-            len = fix_headers(data, post_len);
-        }
-
-        if(post_len) {
-            sprintf(data+len, content_length, post_len);
-            len += strlen(data+len);
-
-            memcpy(data+len, bindinfo.stgmedData.u.hGlobal, post_len);
-        }
-
-        TRACE("data = %s\n", debugstr_an(data, len+post_len));
-
-        if(len)
-            ret = create_nsstream(data, len+post_len);
-    }
-
-    CoTaskMemFree(headers);
-    ReleaseBindInfo(&bindinfo);
-    IBindStatusCallback_Release(callback);
-
-    return ret;
-}
+typedef struct {
+    task_t header;
+    HTMLDocumentObj *doc;
+    BOOL set_download;
+} download_proc_task_t;
 
 static BOOL use_gecko_script(LPCWSTR url)
 {
     static const WCHAR fileW[] = {'f','i','l','e',':'};
-    return strncmpiW(fileW, url, sizeof(fileW)/sizeof(WCHAR));
+    static const WCHAR aboutW[] = {'a','b','o','u','t',':'};
+    static const WCHAR resW[] = {'r','e','s',':'};
+
+    return strncmpiW(fileW, url, sizeof(fileW)/sizeof(WCHAR))
+        && strncmpiW(aboutW, url, sizeof(aboutW)/sizeof(WCHAR))
+        && strncmpiW(resW, url, sizeof(resW)/sizeof(WCHAR));
 }
 
-void set_current_mon(HTMLDocument *This, IMoniker *mon)
+void set_current_mon(HTMLWindow *This, IMoniker *mon)
 {
     HRESULT hres;
 
@@ -191,50 +84,101 @@ void set_current_mon(HTMLDocument *This, IMoniker *mon)
     set_script_mode(This, use_gecko_script(This->url) ? SCRIPTMODE_GECKO : SCRIPTMODE_ACTIVESCRIPT);
 }
 
-static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BOOL *bind_complete)
+static void set_progress_proc(task_t *_task)
 {
-    nsChannelBSC *bscallback;
-    LPOLESTR url = NULL;
-    task_t *task;
+    docobj_task_t *task = (docobj_task_t*)_task;
+    IOleCommandTarget *olecmd = NULL;
+    HTMLDocumentObj *doc = task->doc;
     HRESULT hres;
-    nsresult nsres;
 
-    if(pibc) {
-        IUnknown *unk = NULL;
+    TRACE("(%p)\n", doc);
 
-        /* FIXME:
-         * Use params:
-         * "__PrecreatedObject"
-         * "BIND_CONTEXT_PARAM"
-         * "__HTMLLOADOPTIONS"
-         * "__DWNBINDINFO"
-         * "URL Context"
-         * "CBinding Context"
-         * "_ITransData_Object_"
-         * "_EnumFORMATETC_"
-         */
+    if(doc->client)
+        IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
 
-        IBindCtx_GetObjectParam(pibc, (LPOLESTR)SZ_HTML_CLIENTSITE_OBJECTPARAM, &unk);
-        if(unk) {
-            IOleClientSite *client = NULL;
+    if(olecmd) {
+        VARIANT progress_max, progress;
 
-            hres = IUnknown_QueryInterface(unk, &IID_IOleClientSite, (void**)&client);
-            if(SUCCEEDED(hres)) {
-                TRACE("Got client site %p\n", client);
-                IOleObject_SetClientSite(OLEOBJ(This), client);
-                IOleClientSite_Release(client);
-            }
+        V_VT(&progress_max) = VT_I4;
+        V_I4(&progress_max) = 0; /* FIXME */
+        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETPROGRESSMAX, OLECMDEXECOPT_DONTPROMPTUSER,
+                               &progress_max, NULL);
 
-            IUnknown_Release(unk);
-        }
+        V_VT(&progress) = VT_I4;
+        V_I4(&progress) = 0; /* FIXME */
+        IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETPROGRESSPOS, OLECMDEXECOPT_DONTPROMPTUSER,
+                               &progress, NULL);
+        IOleCommandTarget_Release(olecmd);
     }
 
-    This->readystate = READYSTATE_LOADING;
-    call_property_onchanged(&This->cp_propnotif, DISPID_READYSTATE);
-    update_doc(This, UPDATE_TITLE);
+    if(doc->usermode == EDITMODE && doc->hostui) {
+        DOCHOSTUIINFO hostinfo;
 
-    HTMLDocument_LockContainer(This, TRUE);
-    
+        memset(&hostinfo, 0, sizeof(DOCHOSTUIINFO));
+        hostinfo.cbSize = sizeof(DOCHOSTUIINFO);
+        hres = IDocHostUIHandler_GetHostInfo(doc->hostui, &hostinfo);
+        if(SUCCEEDED(hres))
+            /* FIXME: use hostinfo */
+            TRACE("hostinfo = {%u %08x %08x %s %s}\n",
+                    hostinfo.cbSize, hostinfo.dwFlags, hostinfo.dwDoubleClick,
+                    debugstr_w(hostinfo.pchHostCss), debugstr_w(hostinfo.pchHostNS));
+    }
+}
+
+static void set_downloading_proc(task_t *_task)
+{
+    download_proc_task_t *task = (download_proc_task_t*)_task;
+    HTMLDocumentObj *doc = task->doc;
+    IOleCommandTarget *olecmd;
+    HRESULT hres;
+
+    TRACE("(%p)\n", doc);
+
+    if(doc->frame)
+        IOleInPlaceFrame_SetStatusText(doc->frame, NULL /* FIXME */);
+
+    if(!doc->client)
+        return;
+
+    if(task->set_download) {
+        hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
+        if(SUCCEEDED(hres)) {
+            VARIANT var;
+
+            V_VT(&var) = VT_I4;
+            V_I4(&var) = 1;
+
+            IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE,
+                    OLECMDEXECOPT_DONTPROMPTUSER, &var, NULL);
+            IOleCommandTarget_Release(olecmd);
+        }
+
+        doc->download_state = 1;
+    }
+
+    if(doc->view_sink)
+        IAdviseSink_OnViewChange(doc->view_sink, DVASPECT_CONTENT, -1);
+
+    if(doc->hostui) {
+        IDropTarget *drop_target = NULL;
+
+        hres = IDocHostUIHandler_GetDropTarget(doc->hostui, NULL /* FIXME */, &drop_target);
+        if(drop_target) {
+            FIXME("Use IDropTarget\n");
+            IDropTarget_Release(drop_target);
+        }
+    }
+}
+
+HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, nsChannelBSC *async_bsc, BOOL set_download)
+{
+    nsChannelBSC *bscallback;
+    docobj_task_t *task;
+    download_proc_task_t *download_task;
+    nsWineURI *nsuri;
+    LPOLESTR url;
+    HRESULT hres;
+
     hres = IMoniker_GetDisplayName(mon, pibc, NULL, &url);
     if(FAILED(hres)) {
         WARN("GetDiaplayName failed: %08x\n", hres);
@@ -243,13 +187,10 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
 
     TRACE("got url: %s\n", debugstr_w(url));
 
-    set_current_mon(This, mon);
-
-    if(This->client) {
+    if(This->doc_obj->client) {
         VARIANT silent, offline;
-        IOleCommandTarget *cmdtrg = NULL;
 
-        hres = get_client_disp_property(This->client, DISPID_AMBIENT_SILENT, &silent);
+        hres = get_client_disp_property(This->doc_obj->client, DISPID_AMBIENT_SILENT, &silent);
         if(SUCCEEDED(hres)) {
             if(V_VT(&silent) != VT_BOOL)
                 WARN("V_VT(silent) = %d\n", V_VT(&silent));
@@ -257,7 +198,7 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
                 FIXME("silent == true\n");
         }
 
-        hres = get_client_disp_property(This->client,
+        hres = get_client_disp_property(This->doc_obj->client,
                 DISPID_AMBIENT_OFFLINEIFNOTCONNECTED, &offline);
         if(SUCCEEDED(hres)) {
             if(V_VT(&silent) != VT_BOOL)
@@ -265,75 +206,95 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
             else if(V_BOOL(&silent))
                 FIXME("offline == true\n");
         }
+    }
 
-        hres = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget,
+    if(This->window->mon) {
+        update_doc(This, UPDATE_TITLE|UPDATE_UI);
+    }else {
+        update_doc(This, UPDATE_TITLE);
+        set_current_mon(This->window, mon);
+    }
+
+    set_ready_state(This->window, READYSTATE_LOADING);
+
+    if(This->doc_obj->client) {
+        IOleCommandTarget *cmdtrg = NULL;
+
+        hres = IOleClientSite_QueryInterface(This->doc_obj->client, &IID_IOleCommandTarget,
                 (void**)&cmdtrg);
         if(SUCCEEDED(hres)) {
-            VARIANT var;
+            VARIANT var, out;
 
-            V_VT(&var) = VT_I4;
-            V_I4(&var) = 0;
-            IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 37, 0, &var, NULL);
+            if(!async_bsc) {
+                V_VT(&var) = VT_I4;
+                V_I4(&var) = 0;
+                IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 37, 0, &var, NULL);
+            }else {
+                V_VT(&var) = VT_UNKNOWN;
+                V_UNKNOWN(&var) = (IUnknown*)HTMLWINDOW2(This->window);
+                V_VT(&out) = VT_EMPTY;
+                hres = IOleCommandTarget_Exec(cmdtrg, &CGID_ShellDocView, 63, 0, &var, &out);
+                if(SUCCEEDED(hres))
+                    VariantClear(&out);
+            }
 
             IOleCommandTarget_Release(cmdtrg);
         }
     }
 
-    bscallback = create_channelbsc(mon);
-
-    if(This->frame) {
-        task = heap_alloc(sizeof(task_t));
-
-        task->doc = This;
-        task->task_id = TASK_SETPROGRESS;
-        task->next = NULL;
-
-        push_task(task);
-    }
-
-    task = heap_alloc(sizeof(task_t));
-
-    task->doc = This;
-    task->task_id = TASK_SETDOWNLOADSTATE;
-    task->next = NULL;
-
-    push_task(task);
-
-    if(This->nscontainer) {
-        nsIInputStream *post_data_stream = get_post_data_stream(pibc);
-
-        This->nscontainer->bscallback = bscallback;
-        nsres = nsIWebNavigation_LoadURI(This->nscontainer->navigation, url,
-                LOAD_FLAGS_NONE, NULL, post_data_stream, NULL);
-        This->nscontainer->bscallback = NULL;
-
-        if(post_data_stream)
-            nsIInputStream_Release(post_data_stream);
-
-        if(NS_SUCCEEDED(nsres)) {
-            /* FIXME: don't return here (URL Moniker needs to be good enough) */
-
-            IUnknown_Release((IUnknown*)bscallback);
-            CoTaskMemFree(url);
-
-            if(bind_complete)
-                *bind_complete = TRUE;
-            return S_OK;
-        }else if(nsres != WINE_NS_LOAD_FROM_MONIKER) {
-            WARN("LoadURI failed: %08x\n", nsres);
-        }
-    }
-
-    set_document_bscallback(This, bscallback);
-    IUnknown_Release((IUnknown*)bscallback);
+    hres = create_doc_uri(This->window, url, &nsuri);
     CoTaskMemFree(url);
+    if(FAILED(hres))
+        return hres;
 
-    if(bind_complete)
-        *bind_complete = FALSE;
+    if(async_bsc) {
+        bscallback = async_bsc;
+    }else {
+        hres = create_channelbsc(mon, NULL, NULL, 0, &bscallback);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    hres = load_nsuri(This->window, nsuri, bscallback, LOAD_INITIAL_DOCUMENT_URI);
+    nsISupports_Release((nsISupports*)nsuri); /* FIXME */
+    if(SUCCEEDED(hres))
+        set_window_bscallback(This->window, bscallback);
+    if(bscallback != async_bsc)
+        IUnknown_Release((IUnknown*)bscallback);
+    if(FAILED(hres))
+        return hres;
+
+    HTMLDocument_LockContainer(This->doc_obj, TRUE);
+
+    if(This->doc_obj->frame) {
+        task = heap_alloc(sizeof(docobj_task_t));
+        task->doc = This->doc_obj;
+        push_task(&task->header, set_progress_proc, This->doc_obj->basedoc.task_magic);
+    }
+
+    download_task = heap_alloc(sizeof(download_proc_task_t));
+    download_task->doc = This->doc_obj;
+    download_task->set_download = set_download;
+    push_task(&download_task->header, set_downloading_proc, This->doc_obj->basedoc.task_magic);
+
     return S_OK;
 }
 
-static HRESULT get_doc_string(HTMLDocument *This, char **str, DWORD *len)
+void set_ready_state(HTMLWindow *window, READYSTATE readystate)
+{
+    window->readystate = readystate;
+
+    if(window->doc_obj && window->doc_obj->basedoc.window == window)
+        call_property_onchanged(&window->doc_obj->basedoc.cp_propnotif, DISPID_READYSTATE);
+
+    fire_event(window->doc, EVENTID_READYSTATECHANGE, FALSE, window->doc->node.nsnode, NULL);
+
+    if(window->frame_element)
+        fire_event(window->frame_element->element.node.doc, EVENTID_READYSTATECHANGE,
+                   TRUE, window->frame_element->element.node.nsnode, NULL);
+}
+
+static HRESULT get_doc_string(HTMLDocumentNode *This, char **str)
 {
     nsIDOMNode *nsnode;
     LPCWSTR strw;
@@ -358,9 +319,7 @@ static HRESULT get_doc_string(HTMLDocument *This, char **str, DWORD *len)
     nsAString_GetData(&nsstr, &strw);
     TRACE("%s\n", debugstr_w(strw));
 
-    *len = WideCharToMultiByte(CP_ACP, 0, strw, -1, NULL, 0, NULL, NULL);
-    *str = heap_alloc(*len);
-    WideCharToMultiByte(CP_ACP, 0, strw, -1, *str, *len, NULL, NULL);
+    *str = heap_strdupWtoA(strw);
 
     nsAString_Finish(&nsstr);
 
@@ -412,19 +371,44 @@ static HRESULT WINAPI PersistMoniker_Load(IPersistMoniker *iface, BOOL fFullyAva
         IMoniker *pimkName, LPBC pibc, DWORD grfMode)
 {
     HTMLDocument *This = PERSISTMON_THIS(iface);
-    BOOL bind_complete = FALSE;
     HRESULT hres;
 
     TRACE("(%p)->(%x %p %p %08x)\n", This, fFullyAvailable, pimkName, pibc, grfMode);
 
-    hres = set_moniker(This, pimkName, pibc, &bind_complete);
+    if(pibc) {
+        IUnknown *unk = NULL;
+
+        /* FIXME:
+         * Use params:
+         * "__PrecreatedObject"
+         * "BIND_CONTEXT_PARAM"
+         * "__HTMLLOADOPTIONS"
+         * "__DWNBINDINFO"
+         * "URL Context"
+         * "_ITransData_Object_"
+         * "_EnumFORMATETC_"
+         */
+
+        IBindCtx_GetObjectParam(pibc, (LPOLESTR)SZ_HTML_CLIENTSITE_OBJECTPARAM, &unk);
+        if(unk) {
+            IOleClientSite *client = NULL;
+
+            hres = IUnknown_QueryInterface(unk, &IID_IOleClientSite, (void**)&client);
+            if(SUCCEEDED(hres)) {
+                TRACE("Got client site %p\n", client);
+                IOleObject_SetClientSite(OLEOBJ(This), client);
+                IOleClientSite_Release(client);
+            }
+
+            IUnknown_Release(unk);
+        }
+    }
+
+    hres = set_moniker(This, pimkName, pibc, NULL, TRUE);
     if(FAILED(hres))
         return hres;
 
-    if(!bind_complete)
-        return start_binding(This, (BSCallback*)This->bscallback, pibc);
-
-    return S_OK;
+    return start_binding(This->window, NULL, (BSCallback*)This->window->bscallback, pibc);
 }
 
 static HRESULT WINAPI PersistMoniker_Save(IPersistMoniker *iface, IMoniker *pimkName,
@@ -448,11 +432,11 @@ static HRESULT WINAPI PersistMoniker_GetCurMoniker(IPersistMoniker *iface, IMoni
 
     TRACE("(%p)->(%p)\n", This, ppimkName);
 
-    if(!This->mon)
+    if(!This->window || !This->window->mon)
         return E_UNEXPECTED;
 
-    IMoniker_AddRef(This->mon);
-    *ppimkName = This->mon;
+    IMoniker_AddRef(This->window->mon);
+    *ppimkName = This->window->mon;
     return S_OK;
 }
 
@@ -500,8 +484,8 @@ static HRESULT WINAPI MonikerProp_PutProperty(IMonikerProp *iface, MONIKERPROPER
 
     switch(mkp) {
     case MIMETYPEPROP:
-        heap_free(This->mime);
-        This->mime = heap_strdupW(val);
+        heap_free(This->doc_obj->mime);
+        This->doc_obj->mime = heap_strdupW(val);
         break;
 
     case CLASSIDPROP:
@@ -579,7 +563,7 @@ static HRESULT WINAPI PersistFile_Save(IPersistFile *iface, LPCOLESTR pszFileNam
 {
     HTMLDocument *This = PERSISTFILE_THIS(iface);
     char *str;
-    DWORD len, written=0;
+    DWORD written=0;
     HANDLE file;
     HRESULT hres;
 
@@ -592,9 +576,9 @@ static HRESULT WINAPI PersistFile_Save(IPersistFile *iface, LPCOLESTR pszFileNam
         return E_FAIL;
     }
 
-    hres = get_doc_string(This, &str, &len);
+    hres = get_doc_string(This->doc_node, &str);
     if(SUCCEEDED(hres))
-        WriteFile(file, str, len, &written, NULL);
+        WriteFile(file, str, strlen(str), &written, NULL);
 
     CloseHandle(file);
     return hres;
@@ -659,7 +643,7 @@ static HRESULT WINAPI PersistStreamInit_IsDirty(IPersistStreamInit *iface)
 
     TRACE("(%p)\n", This);
 
-    if(This->usermode == EDITMODE)
+    if(This->doc_obj->usermode == EDITMODE)
         return editor_is_dirty(This);
 
     return S_FALSE;
@@ -681,12 +665,12 @@ static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM
         return hres;
     }
 
-    hres = set_moniker(This, mon, NULL, NULL);
+    hres = set_moniker(This, mon, NULL, NULL, TRUE);
     IMoniker_Release(mon);
     if(FAILED(hres))
         return hres;
 
-    return channelbsc_load_stream(This->bscallback, pStm);
+    return channelbsc_load_stream(This->window->bscallback, pStm);
 }
 
 static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM pStm,
@@ -694,16 +678,16 @@ static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM
 {
     HTMLDocument *This = PERSTRINIT_THIS(iface);
     char *str;
-    DWORD len, written=0;
+    DWORD written=0;
     HRESULT hres;
 
     TRACE("(%p)->(%p %x)\n", This, pStm, fClearDirty);
 
-    hres = get_doc_string(This, &str, &len);
+    hres = get_doc_string(This->doc_node, &str);
     if(FAILED(hres))
         return hres;
 
-    hres = IStream_Write(pStm, str, len, &written);
+    hres = IStream_Write(pStm, str, strlen(str), &written);
     if(FAILED(hres))
         FIXME("Write failed: %08x\n", hres);
 
@@ -726,8 +710,25 @@ static HRESULT WINAPI PersistStreamInit_GetSizeMax(IPersistStreamInit *iface,
 static HRESULT WINAPI PersistStreamInit_InitNew(IPersistStreamInit *iface)
 {
     HTMLDocument *This = PERSTRINIT_THIS(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    IMoniker *mon;
+    HRESULT hres;
+
+    static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
+
+    TRACE("(%p)\n", This);
+
+    hres = CreateURLMoniker(NULL, about_blankW, &mon);
+    if(FAILED(hres)) {
+        WARN("CreateURLMoniker failed: %08x\n", hres);
+        return hres;
+    }
+
+    hres = set_moniker(This, mon, NULL, NULL, FALSE);
+    IMoniker_Release(mon);
+    if(FAILED(hres))
+        return hres;
+
+    return start_binding(This->window, NULL, (BSCallback*)This->window->bscallback, NULL);
 }
 
 #undef PERSTRINIT_THIS
@@ -744,15 +745,82 @@ static const IPersistStreamInitVtbl PersistStreamInitVtbl = {
     PersistStreamInit_InitNew
 };
 
+/**********************************************************
+ * IPersistHistory implementation
+ */
+
+#define PERSISTHIST_THIS(iface) DEFINE_THIS(HTMLDocument, PersistHistory, iface)
+
+static HRESULT WINAPI PersistHistory_QueryInterface(IPersistHistory *iface, REFIID riid, void **ppvObject)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IHTMLDocument2_QueryInterface(HTMLDOC(This), riid, ppvObject);
+}
+
+static ULONG WINAPI PersistHistory_AddRef(IPersistHistory *iface)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IHTMLDocument2_AddRef(HTMLDOC(This));
+}
+
+static ULONG WINAPI PersistHistory_Release(IPersistHistory *iface)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IHTMLDocument2_Release(HTMLDOC(This));
+}
+
+static HRESULT WINAPI PersistHistory_GetClassID(IPersistHistory *iface, CLSID *pClassID)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    return IPersist_GetClassID(PERSIST(This), pClassID);
+}
+
+static HRESULT WINAPI PersistHistory_LoadHistory(IPersistHistory *iface, IStream *pStream, IBindCtx *pbc)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pStream, pbc);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistHistory_SaveHistory(IPersistHistory *iface, IStream *pStream)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pStream);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistHistory_SetPositionCookie(IPersistHistory *iface, DWORD dwPositioncookie)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%x)\n", This, dwPositioncookie);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistHistory_GetPositionCookie(IPersistHistory *iface, DWORD *pdwPositioncookie)
+{
+    HTMLDocument *This = PERSISTHIST_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pdwPositioncookie);
+    return E_NOTIMPL;
+}
+
+#undef PERSISTHIST_THIS
+
+static const IPersistHistoryVtbl PersistHistoryVtbl = {
+    PersistHistory_QueryInterface,
+    PersistHistory_AddRef,
+    PersistHistory_Release,
+    PersistHistory_GetClassID,
+    PersistHistory_LoadHistory,
+    PersistHistory_SaveHistory,
+    PersistHistory_SetPositionCookie,
+    PersistHistory_GetPositionCookie
+};
+
 void HTMLDocument_Persist_Init(HTMLDocument *This)
 {
     This->lpPersistMonikerVtbl = &PersistMonikerVtbl;
     This->lpPersistFileVtbl = &PersistFileVtbl;
     This->lpMonikerPropVtbl = &MonikerPropVtbl;
     This->lpPersistStreamInitVtbl = &PersistStreamInitVtbl;
-
-    This->bscallback = NULL;
-    This->mon = NULL;
-    This->url = NULL;
-    This->mime = NULL;
+    This->lpPersistHistoryVtbl = &PersistHistoryVtbl;
 }

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  * COPYRIGHT:       See COPYING in the top level directory
@@ -24,14 +24,11 @@
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#ifndef __FORMAT_H__
-#define __FORMAT_H__
+#pragma once
 
 NTSTATUS
 FormatPartition(
     IN PUNICODE_STRING DriveRoot,
     IN PFILE_SYSTEM_ITEM FileSystem);
-
-#endif /* __FILESUP_H__ */
 
 /* EOF */

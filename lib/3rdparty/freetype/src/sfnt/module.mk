@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += SFNT_MODULE
 
 define SFNT_MODULE
-$(OPEN_DRIVER)sfnt_module_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Module_Class, sfnt_module_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)sfnt      $(ECHO_DRIVER_DESC)helper module for TrueType & OpenType formats$(ECHO_DRIVER_DONE)
 endef
 

@@ -206,7 +206,7 @@ PspAssignPrimaryToken(IN PEPROCESS Process,
 
     /* Dereference Tokens and Return */
     if (NT_SUCCESS(Status)) ObDereferenceObject(OldToken);
-    if (AccessToken) ObDereferenceObject(NewToken);
+    if (!AccessToken) ObDereferenceObject(NewToken);
     return Status;
 }
 
@@ -349,7 +349,7 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
     PACCESS_TOKEN Token;
     HANDLE hToken;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
     PSTRACE(PS_SECURITY_DEBUG,
             "Process: %p DesiredAccess: %lx\n", ProcessHandle, DesiredAccess);
@@ -365,13 +365,10 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Fail on exception */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Open the process token */
@@ -634,7 +631,7 @@ PsImpersonateClient(IN PETHREAD Thread,
             if (!Impersonation) return STATUS_INSUFFICIENT_RESOURCES;
 
             /* Update the pointer */
-            OldData = InterlockedCompareExchangePointer(&Thread->
+            OldData = InterlockedCompareExchangePointer((PVOID*)&Thread->
                                                         ImpersonationInfo,
                                                         Impersonation,
                                                         NULL);
@@ -938,7 +935,7 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
     PETHREAD Thread;
     PETHREAD ThreadToImpersonate;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
     PSTRACE(PS_SECURITY_DEBUG,
             "Threads: %p %p\n", ThreadHandle, ThreadToImpersonateHandle);
@@ -960,43 +957,40 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception status */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Fail on exception */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Reference the thread */
     Status = ObReferenceObjectByHandle(ThreadHandle,
-                                       THREAD_IMPERSONATE,
+                                       THREAD_DIRECT_IMPERSONATION,
                                        PsThreadType,
                                        PreviousMode,
                                        (PVOID*)&Thread,
                                        NULL);
-    if(NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
         /* Reference the impersonating thead */
         Status = ObReferenceObjectByHandle(ThreadToImpersonateHandle,
-                                           THREAD_DIRECT_IMPERSONATION,
+                                           THREAD_IMPERSONATE,
                                            PsThreadType,
                                            PreviousMode,
                                            (PVOID*)&ThreadToImpersonate,
                                            NULL);
-        if(NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status))
         {
             /* Create a client security context */
             Status = SeCreateClientSecurity(ThreadToImpersonate,
                                             SecurityQualityOfService,
                                             0,
                                             &ClientContext);
-            if(NT_SUCCESS(Status))
+            if (NT_SUCCESS(Status))
             {
                 /* Do the impersonation */
                 SeImpersonateClient(&ClientContext, Thread);
-                if(ClientContext.ClientToken)
+                if (ClientContext.ClientToken)
                 {
                     /* Dereference the client token if we had one */
                     ObDereferenceObject(ClientContext.ClientToken);

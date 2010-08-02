@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_NTOSKRNL_CONFIG_H
-#define __INCLUDE_NTOSKRNL_CONFIG_H
+#pragma once
 
 /********** dbg/print.c **********/
 
@@ -16,7 +15,7 @@
 /********** mm/ppool.c **********/
 
 /* Disable Debugging Features */
-#ifndef DBG
+#if !DBG
     /* Enable strict checking of the nonpaged pool on every allocation */
     #undef ENABLE_VALIDATE_POOL
 
@@ -39,6 +38,3 @@
      */
     #undef WHOLE_PAGE_ALLOCATIONS
 #endif
-
-#endif /* __INCLUDE_NTOSKRNL_CONFIG_H */
-

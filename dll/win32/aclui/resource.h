@@ -1,5 +1,4 @@
-#ifndef __ACLUI_RESOURCE_H
-#define __ACLUI_RESOURCE_H
+#pragma once
 
 #define IDD_SECPAGE	101
 
@@ -23,7 +22,5 @@
 #define IDS_USERFORMAT  1007
 
 #define IDB_USRGRPIMAGES	1001
-
-#endif /* __ACLUI_RESOURCE_H */
 
 /* EOF */

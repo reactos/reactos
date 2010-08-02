@@ -1,5 +1,4 @@
-#ifndef LANG_PA_IN_H__
-#define LANG_PA_IN_H__
+#pragma once
 
 MUI_LAYOUTS paINLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS paINLayouts[] =
     { L"0439", L"00010439" },
     { NULL, NULL }
 };
-
-#endif

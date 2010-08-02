@@ -3420,7 +3420,8 @@ static const int CY_Divisors[5] = { CY_MULTIPLIER/10000, CY_MULTIPLIER/1000,
  */
 HRESULT WINAPI VarCyFromUI1(BYTE bIn, CY* pCyOut)
 {
-  return VarCyFromR8(bIn, pCyOut);
+    pCyOut->int64 = (ULONG64)bIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3440,7 +3441,8 @@ HRESULT WINAPI VarCyFromUI1(BYTE bIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromI2(SHORT sIn, CY* pCyOut)
 {
-  return VarCyFromR8(sIn, pCyOut);
+    pCyOut->int64 = (LONG64)sIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3460,7 +3462,8 @@ HRESULT WINAPI VarCyFromI2(SHORT sIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromI4(LONG lIn, CY* pCyOut)
 {
-  return VarCyFromR8(lIn, pCyOut);
+    pCyOut->int64 = (LONG64)lIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3500,7 +3503,7 @@ HRESULT WINAPI VarCyFromR4(FLOAT fltIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromR8(double dblIn, CY* pCyOut)
 {
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
   /* This code gives identical results to Win32 on Intel.
    * Here we use fp exceptions to catch overflows when storing the value.
    */
@@ -3617,7 +3620,8 @@ HRESULT WINAPI VarCyFromDisp(IDispatch* pdispIn, LCID lcid, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromBool(VARIANT_BOOL boolIn, CY* pCyOut)
 {
-  return VarCyFromR8(boolIn, pCyOut);
+    pCyOut->int64 = (LONG64)boolIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3637,7 +3641,8 @@ HRESULT WINAPI VarCyFromBool(VARIANT_BOOL boolIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromI1(signed char cIn, CY* pCyOut)
 {
-  return VarCyFromR8(cIn, pCyOut);
+    pCyOut->int64 = (LONG64)cIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3657,7 +3662,8 @@ HRESULT WINAPI VarCyFromI1(signed char cIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI2(USHORT usIn, CY* pCyOut)
 {
-  return VarCyFromR8(usIn, pCyOut);
+    pCyOut->int64 = (ULONG64)usIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3677,7 +3683,8 @@ HRESULT WINAPI VarCyFromUI2(USHORT usIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI4(ULONG ulIn, CY* pCyOut)
 {
-  return VarCyFromR8(ulIn, pCyOut);
+    pCyOut->int64 = (ULONG64)ulIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -3757,7 +3764,9 @@ HRESULT WINAPI VarCyFromI8(LONG64 llIn, CY* pCyOut)
  */
 HRESULT WINAPI VarCyFromUI8(ULONG64 ullIn, CY* pCyOut)
 {
-  return VarCyFromR8(ullIn, pCyOut);
+    if (ullIn >= (I8_MAX/CY_MULTIPLIER)) return DISP_E_OVERFLOW;
+    pCyOut->int64 = ullIn * CY_MULTIPLIER;
+    return S_OK;
 }
 
 /************************************************************************
@@ -5359,7 +5368,7 @@ typedef union
 {
     struct
     {
-        unsigned long m : 23;
+        unsigned int m : 23;
         unsigned int exp_bias : 8;
         unsigned int sign : 1;
     } i;
@@ -5418,7 +5427,7 @@ typedef union
 {
     struct
     {
-        unsigned long m_lo : 32;    /* 52 bits of precision */
+        unsigned int m_lo : 32;     /* 52 bits of precision */
         unsigned int m_hi : 20;
         unsigned int exp_bias : 11; /* bias == 1023 */
         unsigned int sign : 1;
@@ -5788,6 +5797,16 @@ HRESULT WINAPI VarDecCmp(const DECIMAL* pDecLeft, const DECIMAL* pDecRight)
   HRESULT hRet;
   DECIMAL result;
 
+  if (!pDecLeft || !pDecRight)
+    return VARCMP_NULL;
+
+  if ((!(DEC_SIGN(pDecLeft) & DECIMAL_NEG)) && (DEC_SIGN(pDecRight) & DECIMAL_NEG) &&
+      (DEC_HI32(pDecLeft) | DEC_MID32(pDecLeft) | DEC_LO32(pDecLeft)))
+    return VARCMP_GT;
+  else if ((DEC_SIGN(pDecLeft) & DECIMAL_NEG) && (!(DEC_SIGN(pDecRight) & DECIMAL_NEG)) &&
+      (DEC_HI32(pDecLeft) | DEC_MID32(pDecLeft) | DEC_LO32(pDecLeft)))
+    return VARCMP_LT;
+
   /* Subtract right from left, and compare the result to 0 */
   hRet = VarDecSub(pDecLeft, pDecRight, &result);
 
@@ -5961,7 +5980,13 @@ HRESULT WINAPI VarBoolFromCy(CY cyIn, VARIANT_BOOL *pBoolOut)
   return S_OK;
 }
 
-static BOOL VARIANT_GetLocalisedText(LANGID langId, DWORD dwId, WCHAR *lpszDest)
+/************************************************************************
+ * VARIANT_GetLocalisedText [internal]
+ *
+ * Get a localized string from the resources
+ *
+ */
+BOOL VARIANT_GetLocalisedText(LANGID langId, DWORD dwId, WCHAR *lpszDest)
 {
   HRSRC hrsrc;
 
@@ -6907,20 +6932,21 @@ HRESULT WINAPI VarBstrCat(BSTR pbstrLeft, BSTR pbstrRight, BSTR *pbstrOut)
   if (!pbstrOut)
     return E_INVALIDARG;
 
-  lenLeft = pbstrLeft ? SysStringLen(pbstrLeft) : 0;
-  lenRight = pbstrRight ? SysStringLen(pbstrRight) : 0;
+  /* use byte length here to properly handle ansi-allocated BSTRs */
+  lenLeft = pbstrLeft ? SysStringByteLen(pbstrLeft) : 0;
+  lenRight = pbstrRight ? SysStringByteLen(pbstrRight) : 0;
 
-  *pbstrOut = SysAllocStringLen(NULL, lenLeft + lenRight);
+  *pbstrOut = SysAllocStringByteLen(NULL, lenLeft + lenRight);
   if (!*pbstrOut)
     return E_OUTOFMEMORY;
 
   (*pbstrOut)[0] = '\0';
 
   if (pbstrLeft)
-    memcpy(*pbstrOut, pbstrLeft, lenLeft * sizeof(WCHAR));
+    memcpy(*pbstrOut, pbstrLeft, lenLeft);
 
   if (pbstrRight)
-    memcpy(*pbstrOut + lenLeft, pbstrRight, lenRight * sizeof(WCHAR));
+    memcpy((CHAR*)*pbstrOut + lenLeft, pbstrRight, lenRight);
 
   TRACE("%s\n", debugstr_wn(*pbstrOut, SysStringLen(*pbstrOut)));
   return S_OK;
@@ -6957,9 +6983,8 @@ HRESULT WINAPI VarBstrCmp(BSTR pbstrLeft, BSTR pbstrRight, LCID lcid, DWORD dwFl
 
     if (!pbstrLeft || !*pbstrLeft)
     {
-      if (!pbstrRight || !*pbstrRight)
-        return VARCMP_EQ;
-      return VARCMP_LT;
+      if (pbstrRight && *pbstrRight)
+        return VARCMP_LT;
     }
     else if (!pbstrRight || !*pbstrRight)
         return VARCMP_GT;
@@ -6981,8 +7006,17 @@ HRESULT WINAPI VarBstrCmp(BSTR pbstrLeft, BSTR pbstrRight, LCID lcid, DWORD dwFl
     }
     else
     {
-      hres = CompareStringW(lcid, dwFlags, pbstrLeft, SysStringLen(pbstrLeft),
-              pbstrRight, SysStringLen(pbstrRight)) - 1;
+      unsigned int lenLeft = SysStringLen(pbstrLeft);
+      unsigned int lenRight = SysStringLen(pbstrRight);
+
+      if (lenLeft == 0 || lenRight == 0)
+      {
+          if (lenLeft == 0 && lenRight == 0) return VARCMP_EQ;
+          return lenLeft < lenRight ? VARCMP_LT : VARCMP_GT;
+      }
+
+      hres = CompareStringW(lcid, dwFlags, pbstrLeft, lenLeft,
+              pbstrRight, lenRight) - 1;
       TRACE("%d\n", hres);
       return hres;
     }
@@ -7393,7 +7427,8 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
     LOCALE_SABBREVDAYNAME1, LOCALE_SABBREVDAYNAME2, LOCALE_SABBREVDAYNAME3,
     LOCALE_SABBREVDAYNAME4, LOCALE_SABBREVDAYNAME5, LOCALE_SABBREVDAYNAME6,
     LOCALE_SABBREVDAYNAME7,
-    LOCALE_S1159, LOCALE_S2359
+    LOCALE_S1159, LOCALE_S2359,
+    LOCALE_SDATE
   };
   static const BYTE ParseDateMonths[] =
   {
@@ -7465,7 +7500,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
             dp.dwFlags[dp.dwCount] |= (DP_MONTH|DP_DATESEP);
             dp.dwCount++;
           }
-          else if (i > 39)
+          else if (i > 39 && i < 42)
           {
             if (!dp.dwCount || dp.dwParseFlags & (DP_AM|DP_PM))
               hRet = DISP_E_TYPEMISMATCH;
@@ -7512,7 +7547,16 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       if (!dp.dwCount || !strIn[1])
         hRet = DISP_E_TYPEMISMATCH;
       else
-        dp.dwFlags[dp.dwCount - 1] |= DP_TIMESEP;
+        if (tokens[42][0] == *strIn)
+        {
+          dwDateSeps++;
+          if (dwDateSeps > 2)
+            hRet = DISP_E_TYPEMISMATCH;
+          else
+            dp.dwFlags[dp.dwCount - 1] |= DP_DATESEP;
+        }
+        else
+          dp.dwFlags[dp.dwCount - 1] |= DP_TIMESEP;
     }
     else if (*strIn == '-' || *strIn == '/')
     {

@@ -21,13 +21,14 @@
 /*
     Standard MME driver entry-point for messages relating to MIDI input.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 midMessage(
-    DWORD DeviceId,
-    DWORD Message,
-    DWORD PrivateHandle,
-    DWORD Parameter1,
-    DWORD Parameter2)
+    UINT DeviceId,
+    UINT Message,
+    DWORD_PTR PrivateHandle,
+    DWORD_PTR Parameter1,
+    DWORD_PTR Parameter2)
 {
     MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
@@ -51,6 +52,19 @@ midMessage(
                                                    Parameter2);
             break;
         }
+
+        case DRV_QUERYDEVICEINTERFACESIZE :
+        {
+            Result = MmeGetDeviceInterfaceString(MIDI_IN_DEVICE_TYPE, DeviceId, NULL, 0, (DWORD*)Parameter1); //FIXME DWORD_PTR
+            break;
+        }
+
+        case DRV_QUERYDEVICEINTERFACE :
+        {
+            Result = MmeGetDeviceInterfaceString(MIDI_IN_DEVICE_TYPE, DeviceId, (LPWSTR)Parameter1, Parameter2, NULL); //FIXME DWORD_PTR
+            break;
+        }
+
     }
 
     SND_TRACE(L"midMessage returning MMRESULT %d\n", Result);

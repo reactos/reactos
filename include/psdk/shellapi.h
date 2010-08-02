@@ -4,6 +4,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
+
+#if !defined(_WIN64)
+#include <pshpack1.h>
+#endif
+
 #define WINSHELLAPI DECLSPEC_IMPORT
 #define ABE_LEFT	0
 #define ABE_TOP	1
@@ -124,6 +133,19 @@ extern "C" {
 #define SHGFI_PIDL	8
 #define SHGFI_USEFILEATTRIBUTES	16
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+#define SHIL_LARGE        0x0
+#define SHIL_SMALL        0x1
+#define SHIL_EXTRALARGE   0x2
+#define SHIL_SYSSMALL     0x3
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define SHIL_JUMBO        0x4
+#define SHIL_LAST         SHIL_JUMBO
+#else
+#define SHIL_LAST         SHIL_SYSSMALL
+#endif
+#endif
+
 typedef struct _SHCREATEPROCESSINFOW
 {
     DWORD cbSize;
@@ -143,7 +165,7 @@ typedef struct _SHCREATEPROCESSINFOW
 
 typedef WORD FILEOP_FLAGS;
 typedef WORD PRINTEROP_FLAGS;
-#include <pshpack1.h>
+
 typedef struct _AppBarData {
 	DWORD	cbSize;
 	HWND	hWnd;
@@ -313,11 +335,22 @@ typedef struct _SHNAMEMAPPINGW {
 	int	cchOldPath;
 	int	cchNewPath;
 } SHNAMEMAPPINGW, *LPSHNAMEMAPPINGW;
-#include <poppack.h>
 
 #define SHERB_NOCONFIRMATION 0x1
 #define SHERB_NOPROGRESSUI   0x2
 #define SHERB_NOSOUND        0x4
+
+/******************************************
+ * Links
+ */
+
+#define SHGNLI_PIDL        0x01
+#define SHGNLI_PREFIXNAME  0x02
+#define SHGNLI_NOUNIQUE    0x04
+#define SHGNLI_NOLNK       0x08
+
+BOOL WINAPI SHGetNewLinkInfoA(LPCSTR,LPCSTR,LPSTR,BOOL*,UINT);
+BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR,LPCWSTR,LPWSTR,BOOL*,UINT);
 
 LPWSTR * WINAPI CommandLineToArgvW(LPCWSTR,int*);
 void WINAPI DragAcceptFiles(HWND,BOOL);
@@ -338,6 +371,8 @@ BOOL WINAPI Shell_NotifyIconA(DWORD,PNOTIFYICONDATAA);
 BOOL WINAPI Shell_NotifyIconW(DWORD,PNOTIFYICONDATAW);
 int WINAPI ShellAboutA(HWND,LPCSTR,LPCSTR,HICON);
 int WINAPI ShellAboutW(HWND,LPCWSTR,LPCWSTR,HICON);
+int WINAPI ShellMessageBoxA(HINSTANCE,HWND,LPCSTR,LPCSTR,UINT,...);
+int WINAPI ShellMessageBoxW(HINSTANCE,HWND,LPCWSTR,LPCWSTR,UINT,...);
 HINSTANCE WINAPI ShellExecuteA(HWND,LPCSTR,LPCSTR,LPCSTR,LPCSTR,INT);
 HINSTANCE WINAPI ShellExecuteW(HWND,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR,INT);
 BOOL WINAPI ShellExecuteExA(LPSHELLEXECUTEINFOA);
@@ -374,11 +409,13 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define ShellAbout ShellAboutW
 #define ShellExecute ShellExecuteW
 #define ShellExecuteEx ShellExecuteExW
+#define ShellMessageBox ShellMessageBoxW
 #define SHFileOperation SHFileOperationW
 #define SHGetFileInfo SHGetFileInfoW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
 #define SHQueryRecycleBin SHQueryRecycleBinW
 #define SHEmptyRecycleBin SHEmptyRecycleBinW
+#define SHGetNewLinkInfo SHGetNewLinkInfoW
 
 #else
 #define NOTIFYICONDATA_V1_SIZE NOTIFYICONDATAA_V1_SIZE
@@ -399,11 +436,21 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define ShellAbout ShellAboutA
 #define ShellExecute ShellExecuteA
 #define ShellExecuteEx ShellExecuteExA
+#define ShellMessageBox ShellMessageBoxA
 #define SHFileOperation SHFileOperationA
 #define SHGetFileInfo SHGetFileInfoA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
+#define SHGetNewLinkInfo SHGetNewLinkInfoA
+#endif
+
+#if !defined(_WIN64)
+#include <poppack.h>
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 #ifdef __cplusplus
 }

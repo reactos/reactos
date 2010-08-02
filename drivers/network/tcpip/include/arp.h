@@ -4,8 +4,8 @@
  * FILE:        include/arp.h
  * PURPOSE:     Address Resolution Protocol definitions
  */
-#ifndef __ARP_H
-#define __ARP_H
+
+#pragma once
 
 typedef struct ARP_HEADER {
     USHORT HWType;       /* Hardware Type */
@@ -24,12 +24,10 @@ typedef struct ARP_HEADER {
 #define ARP_OPCODE_REPLY   WH2N(0x0002) /* ARP reply */
 
 
-BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface);
+BOOLEAN ARPTransmit(PIP_ADDRESS Address, PVOID LinkAddress, PIP_INTERFACE Interface);
 
 VOID ARPReceive(
     PVOID Context,
     PIP_PACKET Packet);
-
-#endif /* __ARP_H */
 
 /* EOF */

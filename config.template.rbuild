@@ -42,7 +42,7 @@
 
 <!--
 	What level of optimisation to use.
-		0 = off (will not work)
+		0 = off
 		1 = Default option, optimize for size (-Os) with some additional options
 		2 = -Os
 		3 = -O1
@@ -59,8 +59,7 @@
 
 
 <!--
-	Whether to compile for debugging. No compiler optimizations will be
-	performed.
+	Whether to compile for debugging.
 -->
 <property name="DBG" value="1" />
 

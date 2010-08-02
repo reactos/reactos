@@ -1,5 +1,4 @@
-#ifndef LANG_MUI_FONTS_H__
-#define LANG_MUI_FONTS_H__
+#pragma once
 
 MUI_SUBFONT LatinFonts[] =
 {
@@ -59,18 +58,18 @@ MUI_SUBFONT HebrewFonts[] =
     { NULL, NULL }
 };
 
-MUI_SUBFONT JapaneseFonts[] =
+MUI_SUBFONT CJKFonts[] =
 {
     { L"Arial",           L"Liberation Sans" },
     { L"Courier",         L"FreeMono" },
     { L"Courier New",     L"FreeMono" },
     { L"Times New Roman", L"Liberation Serif" },
-    { L"Tahoma",          L"IPAMonaUIGothic" },
+    { L"Tahoma",          L"Droid Sans Fallback" },
     { L"MS Sans Serif",   L"Tahoma" },
-    { L"MS Shell Dlg",    L"IPAMonaUIGothic" },
-    { L"MS Shell Dlg 2",  L"IPAMonaUIGothic" },
-    { L"MS UI Gothic",    L"IPAMonaUIGothic" },
-    { L"MS UI Gothic 2",  L"IPAMonaUIGothic" },
+    { L"MS Shell Dlg",    L"Droid Sans Fallback" },
+    { L"MS Shell Dlg 2",  L"Droid Sans Fallback" },
+    { L"MS UI Gothic",    L"Droid Sans Fallback" },
+    { L"MS UI Gothic 2",  L"Droid Sans Fallback" },
     { L"Helv",            L"Tahoma" },
     { NULL, NULL }
 };
@@ -88,5 +87,3 @@ MUI_SUBFONT UnicodeFonts[] =
     { L"Helv",            L"DejaVu Sans" },
     { NULL, NULL }
 };
-
-#endif

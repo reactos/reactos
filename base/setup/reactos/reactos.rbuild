@@ -3,7 +3,6 @@
 <module name="reactos" type="win32gui" unicode="yes">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="reactos">.</include>
-	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>comctl32</library>

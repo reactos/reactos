@@ -1,5 +1,4 @@
-#ifndef __ANSIPRSR_H
-#define __ANSIPRSR_H
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,5 +80,3 @@ public:
 	char* ParseBuffer(char* pszBuffer, char* pszBufferEnd);
 	static int StripBuffer(char* pszBuffer, char* pszBufferEnd, int width);
 };
-
-#endif

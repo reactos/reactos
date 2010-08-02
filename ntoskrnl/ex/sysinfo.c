@@ -142,17 +142,6 @@ ExpQueryModuleInformation(IN PLIST_ENTRY KernelModeList,
 /*
  * @implemented
  */
-#undef ExGetPreviousMode
-KPROCESSOR_MODE
-NTAPI
-ExGetPreviousMode (VOID)
-{
-    return KeGetPreviousMode();
-}
-
-/*
- * @implemented
- */
 VOID
 NTAPI
 ExGetCurrentProcessorCpuUsage(PULONG CpuUsage)
@@ -228,8 +217,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     ANSI_STRING AValue;
     UNICODE_STRING WValue;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
-
+    NTSTATUS Status;
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
@@ -248,13 +236,12 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
 
             if (ReturnLength != NULL) ProbeForWriteUlong(ReturnLength);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /*
@@ -490,9 +477,9 @@ QSI_DEF(SystemBasicInformation)
     Sbi->Reserved = 0;
     Sbi->TimerResolution = KeMaximumIncrement;
     Sbi->PageSize = PAGE_SIZE;
-    Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
-    Sbi->LowestPhysicalPageNumber = 0; /* FIXME */
-    Sbi->HighestPhysicalPageNumber = MmStats.NrTotalPages; /* FIXME */
+    Sbi->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
+    Sbi->LowestPhysicalPageNumber = MmLowestPhysicalPage;
+    Sbi->HighestPhysicalPageNumber = MmHighestPhysicalPage;
     Sbi->AllocationGranularity = MM_VIRTMEM_GRANULARITY; /* hard coded on Intel? */
     Sbi->MinimumUserModeAddress = 0x10000; /* Top of 64k */
     Sbi->MaximumUserModeAddress = (ULONG_PTR)MmHighestUserAddress;
@@ -557,7 +544,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->IoWriteOperationCount = IoWriteOperationCount;
     Spi->IoOtherOperationCount = IoOtherOperationCount;
 
-    Spi->AvailablePages = MmStats.NrFreePages;
+    Spi->AvailablePages = MmAvailablePages;
     /*
      *   Add up all the used "Committed" memory + pagefile.
      *   Not sure this is right. 8^\
@@ -572,7 +559,7 @@ QSI_DEF(SystemPerformanceInformation)
      *  All this make Taskmgr happy but not sure it is the right numbers.
      *  This too, fixes some of GlobalMemoryStatusEx numbers.
      */
-    Spi->CommitLimit = MmStats.NrTotalPages + MiFreeSwapPages + MiUsedSwapPages;
+    Spi->CommitLimit = MmNumberOfPhysicalPages + MiFreeSwapPages + MiUsedSwapPages;
 
     Spi->PeakCommitment = 0; /* FIXME */
     Spi->PageFaultCount = 0; /* FIXME */
@@ -598,7 +585,7 @@ QSI_DEF(SystemPerformanceInformation)
 
     Spi->FreeSystemPtes = 0; /* FIXME */
 
-    Spi->ResidentSystemCodePage = MmStats.NrSystemPages; /* FIXME */
+    Spi->ResidentSystemCodePage = 0; /* FIXME */
 
     Spi->TotalSystemDriverPages = 0; /* FIXME */
     Spi->TotalSystemCodePages = 0; /* FIXME */
@@ -607,7 +594,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->Spare3Count = 0; /* FIXME */
 
     Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
-    Spi->ResidentPagedPoolPage = MmPagedPoolSize; /* FIXME */
+    Spi->ResidentPagedPoolPage = MiMemoryConsumers[MC_PPOOL].PagesUsed; /* FIXME */
 
     Spi->ResidentSystemDriverPage = 0; /* FIXME */
     Spi->CcFastReadNoWait = 0; /* FIXME */
@@ -956,9 +943,11 @@ QSI_DEF(SystemProcessorPerformanceInformation)
     }
 
     CurrentTime.QuadPart = KeQueryInterruptTime();
-    Prcb = KeGetPcr()->Prcb;
     for (i = 0; i < KeNumberProcessors; i++)
     {
+        /* Get the PRCB on this processor */
+        Prcb = KiProcessorBlock[i];
+
         /* Calculate total user and kernel times */
         TotalTime = Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime;
         Spi->IdleTime.QuadPart = UInt32x32To64(TotalTime, KeMaximumIncrement);
@@ -968,7 +957,6 @@ QSI_DEF(SystemProcessorPerformanceInformation)
         Spi->InterruptTime.QuadPart = UInt32x32To64(Prcb->InterruptTime, KeMaximumIncrement);
         Spi->InterruptCount = Prcb->InterruptCount;
         Spi++;
-        Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
     }
 
     return STATUS_SUCCESS;
@@ -1007,12 +995,23 @@ QSI_DEF(SystemCallTimeInformation)
 /* Class 11 - Module Information */
 QSI_DEF(SystemModuleInformation)
 {
-    extern LIST_ENTRY PsLoadedModuleList;
-    return ExpQueryModuleInformation(&PsLoadedModuleList,
-                                     NULL,
-                                     (PRTL_PROCESS_MODULES)Buffer,
-                                     Size,
-                                     ReqSize);
+    NTSTATUS Status;
+
+    /* Acquire system module list lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
+
+    /* Call the generic handler with the system module list */
+    Status = ExpQueryModuleInformation(&PsLoadedModuleList,
+                                       &MmLoadedUserImageList,
+                                       (PRTL_PROCESS_MODULES)Buffer,
+                                       Size,
+                                       ReqSize);
+
+    /* Release list lock and return status */
+    ExReleaseResourceLite(&PsLoadedModuleResource);
+    KeLeaveCriticalRegion();
+    return Status;
 }
 
 /* Class 12 - Locks Information */
@@ -1114,7 +1113,7 @@ QSI_DEF(SystemHandleInformation)
 
         for (Count = 0; HandleCount > 0 ; HandleCount--)
         {
-            Shi->Handles[i].UniqueProcessId = (USHORT)(ULONG)pr->UniqueProcessId;
+            Shi->Handles[i].UniqueProcessId = (USHORT)(ULONG_PTR)pr->UniqueProcessId;
             Count++;
             i++;
         }
@@ -1239,7 +1238,6 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
     PKPRCB Prcb;
-    PKPCR Pcr;
     LONG i;
     ULONG ti;
     PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
@@ -1254,12 +1252,7 @@ QSI_DEF(SystemInterruptInformation)
     for (i = 0; i < KeNumberProcessors; i++)
     {
         Prcb = KiProcessorBlock[i];
-        Pcr = CONTAINING_RECORD(Prcb, KPCR, Prcb);
-#ifdef _M_ARM // This code should probably be done differently
-        sii->ContextSwitches = Pcr->ContextSwitches;
-#else
-        sii->ContextSwitches = ((PKIPCR)Pcr)->ContextSwitches;
-#endif
+        sii->ContextSwitches = KeGetContextSwitches(Prcb);
         sii->DpcCount = Prcb->DpcData[0].DpcCount;
         sii->DpcRate = Prcb->DpcRequestRate;
         sii->TimeIncrement = ti;
@@ -1323,10 +1316,9 @@ QSI_DEF(SystemFullMemoryInformation)
 SSI_DEF(SystemLoadGdiDriverInformation)
 {
     PSYSTEM_GDI_DRIVER_INFORMATION DriverInfo = (PVOID)Buffer;
-    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     UNICODE_STRING ImageName;
     PVOID ImageBase;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
+    PVOID SectionPointer;
     ULONG_PTR EntryPoint;
     NTSTATUS Status;
     ULONG DirSize;
@@ -1339,8 +1331,8 @@ SSI_DEF(SystemLoadGdiDriverInformation)
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    /* Only kernel-mode can call this function */
-    if (PreviousMode != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
+    /* Only kernel mode can call this function */
+    if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
 
     /* Load the driver */
     ImageName = DriverInfo->DriverName;
@@ -1348,7 +1340,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
                                NULL,
                                NULL,
                                0,
-                               (PVOID)&ModuleObject,
+                               &SectionPointer,
                                &ImageBase);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1366,7 +1358,7 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 
     /* Save other data */
     DriverInfo->ImageAddress = ImageBase;
-    DriverInfo->SectionPointer = NULL;
+    DriverInfo->SectionPointer = SectionPointer;
     DriverInfo->EntryPoint = (PVOID)EntryPoint;
     DriverInfo->ImageLength = NtHeader->OptionalHeader.SizeOfImage;
 
@@ -1377,44 +1369,21 @@ SSI_DEF(SystemLoadGdiDriverInformation)
 /* Class 27 - Unload Image */
 SSI_DEF(SystemUnloadGdiDriverInformation)
 {
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PLIST_ENTRY NextEntry;
-    PVOID BaseAddr = *((PVOID*)Buffer);
+    PVOID SectionPointer = Buffer;
 
-    if(Size != sizeof(PVOID))
+    /* Validate size */
+    if (Size != sizeof(PVOID))
+    {
+        /* Incorrect length, fail */
         return STATUS_INFO_LENGTH_MISMATCH;
-
-    if(KeGetPreviousMode() != KernelMode)
-        return STATUS_PRIVILEGE_NOT_HELD;
-
-    // Scan the module list
-    NextEntry = PsLoadedModuleList.Flink;
-    while(NextEntry != &PsLoadedModuleList)
-    {
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
-
-        if (LdrEntry->DllBase == BaseAddr)
-        {
-            // Found it.
-            break;
-        }
-
-        NextEntry = NextEntry->Flink;
     }
 
-    // Check if we found the image
-    if(NextEntry != &PsLoadedModuleList)
-    {
-        return MmUnloadSystemImage(LdrEntry);
-    }
-    else
-    {
-        DPRINT1("Image 0x%x not found.\n", BaseAddr);
-        return STATUS_DLL_NOT_FOUND;
-    }
+    /* Only kernel mode can call this function */
+    if (ExGetPreviousMode() != KernelMode) return STATUS_PRIVILEGE_NOT_HELD;
 
+    /* Unload the image */
+    MmUnloadSystemImage(SectionPointer);
+    return STATUS_SUCCESS;
 }
 
 /* Class 28 - Time Adjustment Information */
@@ -1498,9 +1467,35 @@ QSI_DEF(SystemCrashDumpInformation)
 /* Class 33 - Exception Information */
 QSI_DEF(SystemExceptionInformation)
 {
-    /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemExceptionInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    PSYSTEM_EXCEPTION_INFORMATION ExceptionInformation =
+        (PSYSTEM_EXCEPTION_INFORMATION)Buffer;
+    PKPRCB Prcb;
+    ULONG i, AlignmentFixupCount = 0, ExceptionDispatchCount = 0;
+    ULONG FloatingEmulationCount = 0, ByteWordEmulationCount = 0;
+
+    /* Check size of a buffer, it must match our expectations */
+    if (sizeof(SYSTEM_EXCEPTION_INFORMATION) != Size)
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* Sum up exception count information from all processors */
+    for (i = 0; i < KeNumberProcessors; i++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb)
+        {
+            AlignmentFixupCount += Prcb->KeAlignmentFixupCount;
+            ExceptionDispatchCount += Prcb->KeExceptionDispatchCount;
+            FloatingEmulationCount += Prcb->KeFloatingEmulationCount;
+        }
+    }
+
+    /* Save information in user's buffer */
+    ExceptionInformation->AlignmentFixupCount = AlignmentFixupCount;
+    ExceptionInformation->ExceptionDispatchCount = ExceptionDispatchCount;
+    ExceptionInformation->FloatingEmulationCount = FloatingEmulationCount;
+    ExceptionInformation->ByteWordEmulationCount = ByteWordEmulationCount;
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 34 - Crash Dump State Information */
@@ -1531,9 +1526,42 @@ QSI_DEF(SystemKernelDebuggerInformation)
 /* Class 36 - Context Switch Information */
 QSI_DEF(SystemContextSwitchInformation)
 {
+    PSYSTEM_CONTEXT_SWITCH_INFORMATION ContextSwitchInformation =
+        (PSYSTEM_CONTEXT_SWITCH_INFORMATION)Buffer;
+    ULONG ContextSwitches, i;
+    PKPRCB Prcb;
+
+    /* Check size of a buffer, it must match our expectations */
+    if (sizeof(SYSTEM_CONTEXT_SWITCH_INFORMATION) != Size)
+        return STATUS_INFO_LENGTH_MISMATCH;
+
+    /* Calculate total value of context switches across all processors */
+    ContextSwitches = 0;
+    for (i = 0; i < KeNumberProcessors; i ++)
+    {
+        Prcb = KiProcessorBlock[i];
+        if (Prcb)
+        {
+            ContextSwitches += KeGetContextSwitches(Prcb);
+        }
+    }
+
+    ContextSwitchInformation->ContextSwitches = ContextSwitches;
+
     /* FIXME */
-    DPRINT1("NtQuerySystemInformation - SystemContextSwitchInformation not implemented\n");
-    return STATUS_NOT_IMPLEMENTED;
+    ContextSwitchInformation->FindAny = 0;
+    ContextSwitchInformation->FindLast = 0;
+    ContextSwitchInformation->FindIdeal = 0;
+    ContextSwitchInformation->IdleAny = 0;
+    ContextSwitchInformation->IdleCurrent = 0;
+    ContextSwitchInformation->IdleLast = 0;
+    ContextSwitchInformation->IdleIdeal = 0;
+    ContextSwitchInformation->PreemptAny = 0;
+    ContextSwitchInformation->PreemptCurrent = 0;
+    ContextSwitchInformation->PreemptLast = 0;
+    ContextSwitchInformation->SwitchToIdle = 0;
+
+    return STATUS_SUCCESS;
 }
 
 /* Class 37 - Registry Quota Information */
@@ -1987,7 +2015,6 @@ NtSetSystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
     return STATUS_INVALID_INFO_CLASS;
 }
 
-
 NTSTATUS
 NTAPI
 NtFlushInstructionCache(IN HANDLE ProcessHandle,
@@ -1996,7 +2023,7 @@ NtFlushInstructionCache(IN HANDLE ProcessHandle,
 {
     PAGED_CODE();
 
-#if defined(_M_IX86)
+#if defined(_M_IX86) || defined(_M_AMD64)
     __wbinvd();
 #elif defined(_M_PPC)
     __asm__ __volatile__("tlbsync");
@@ -2019,4 +2046,13 @@ NtGetCurrentProcessorNumber(VOID)
     return KeGetCurrentProcessorNumber();
 }
 
-/* EOF */
+/*
+ * @implemented
+ */
+#undef ExGetPreviousMode
+KPROCESSOR_MODE
+NTAPI
+ExGetPreviousMode (VOID)
+{
+    return KeGetPreviousMode();
+}

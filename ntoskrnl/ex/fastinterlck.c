@@ -19,6 +19,7 @@
 #undef ExInterlockedAddULong
 #undef ExInterlockedIncrementLong
 #undef ExInterlockedDecrementLong
+#undef ExInterlockedAddLargeStatistic
 
 /* FUNCTIONS ******************************************************************/
 
@@ -254,7 +255,7 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
     KIRQL OldIrql;
     PSINGLE_LIST_ENTRY OldHead = NULL;
     KeAcquireSpinLock(Lock, &OldIrql);
-    if (!ListHead->Next) OldHead = PopEntryList(ListHead);
+    OldHead = PopEntryList(ListHead);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }
@@ -268,7 +269,8 @@ ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
     KIRQL OldIrql;
     PSINGLE_LIST_ENTRY OldHead = NULL;
     KeAcquireSpinLock(Lock, &OldIrql);
-    if (!ListHead->Next) OldHead = PushEntryList(ListHead, ListEntry);
+    OldHead = ListHead->Next;
+    PushEntryList(ListHead, ListEntry);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }
@@ -288,7 +290,7 @@ ExInterlockedRemoveHeadList(IN PLIST_ENTRY ListHead,
 
 VOID
 FASTCALL
-ExInterlockedAddLargeStatistic(IN PLARGE_INTEGER Addend,
+ExInterlockedAddLargeStatistic(IN PLONGLONG Addend,
                                IN ULONG Increment)
 {
     UNIMPLEMENTED;
@@ -296,7 +298,7 @@ ExInterlockedAddLargeStatistic(IN PLARGE_INTEGER Addend,
 
 LONGLONG
 FASTCALL
-ExInterlockedCompareExchange64(IN OUT PLONGLONG Destination,
+ExInterlockedCompareExchange64(IN OUT LONGLONG volatile *Destination,
                                IN PLONGLONG Exchange,
                                IN PLONGLONG Comparand,
                                IN PKSPIN_LOCK Lock)

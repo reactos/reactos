@@ -101,7 +101,7 @@ static HRESULT AVIDec_ProcessSampleData(InputPin *pin, IMediaSample *pSample)
 
     cbSrcStream = IMediaSample_GetActualDataLength(pSample);
 
-    TRACE("Sample data ptr = %p, size = %ld\n", pbSrcStream, (long)cbSrcStream);
+    TRACE("Sample data ptr = %p, size = %d\n", pbSrcStream, cbSrcStream);
 
     hr = IPin_ConnectionMediaType(This->tf.ppPins[0], &amt);
     if (FAILED(hr)) {
@@ -203,7 +203,7 @@ static HRESULT AVIDec_ConnectInput(InputPin *pin, const AM_MEDIA_TYPE * pmt)
             bmi = &format2->bmiHeader;
         else
             goto failed;
-        TRACE("Fourcc: %s\n", debugstr_an((char *)&pmt->subtype.Data1, 4));
+        TRACE("Fourcc: %s\n", debugstr_an((const char *)&pmt->subtype.Data1, 4));
 
         This->hvid = ICLocate(pmt->majortype.Data1, pmt->subtype.Data1, bmi, NULL, ICMODE_DECOMPRESS);
         if (This->hvid)

@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  16-03-2009
+ * LAST CHANGE:  15-12-2009
  * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
@@ -43,6 +43,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "NapÌöte Vaöe celÈ meno a n·zov Vaöej firmy alebo organiz·cie.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Meno:", IDC_STATIC, 54, 37, 44, 8
@@ -57,11 +58,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "NapÌöte n·zov V·öho poËÌtaËa v dÂûke 63 znakov alebo menej. "\
           "Ak je poËÌtaË pripojen˝ k sieti, musÌ b˝ù jeho n·zov unik·tny.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&N·zov poËÌtaËa:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Inötal·tor vytvorÌ na poËÌtaËi pouûÌvateæsk˝ ˙Ëet nazvan˝ Administrator. "\
           "Tento ˙Ëet mÙûete pouûiù, keÔ budete potrebovaù pln˝ prÌstup k V·ömu poËÌtaËu.",
           IDC_STATIC, 54, 57, 250, 25
@@ -79,16 +82,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Lokaliz·cia systÈmu by mala s˙hlasiù s jazykom aplik·ciÌ, "\
           "ktorÈ chcete pouûÌvaù. Lokaliz·cia urËÌ ako bud˙ zobrazenÈ "\
           "ËÌsla, meny a ˙daje kalend·ra.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "<text lokality>", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pre zmenu lokaliz·cie systÈmu kliknite na Zmeniù.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmeniù...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Rozloûenie kl·ves urËÌ znaky, ktorÈ sa zobrazia, keÔ pÌöete.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "<text rozloûenia>", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pre zmenu rozloûenia kl·ves, kliknite na Zmeniù.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&meniù...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
@@ -100,6 +104,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Inötal·tor systÈmu ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "D·tum a Ëas", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -194,6 +199,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Spustiù Vzdialen˙ pracovn˙ plochu"
     IDS_CMT_EVENTVIEW   "Spustiù ZobrazovaË udalostÌ"
     IDS_CMT_MSCONFIG    "Spustiù Program na konfigur·ciu systÈmu"
+    IDS_CMT_PAINT       "Spustiù Skic·r"
 END
 
 STRINGTABLE
@@ -201,6 +207,7 @@ BEGIN
     IDS_GAMES           "Hry"
     IDS_CMT_SOLITAIRE   "SolitÈr"
     IDS_CMT_WINEMINE    "MÌny"
+    IDS_CMT_SPIDER      "Pav˙ËÌ solitÈr"
 END
 
 STRINGTABLE
@@ -222,7 +229,8 @@ STRINGTABLE
 BEGIN
     IDS_SYS_ENTERTAINMENT       "Z·bava" //Entertainment
     IDS_CMT_MPLAY32             "Spustiù Multimedi·lny prehr·vaË"
-    IDS_CMT_SNDVOL32            "Stustiù Ovl·danie hlasitosti"
+    IDS_CMT_SNDVOL32            "Spustiù Ovl·danie hlasitosti"
+    IDS_CMT_SNDREC32            "Spustiù Nahr·vanie zvuku"
 END
 
 STRINGTABLE
@@ -242,7 +250,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "PrÌkazov˝ riadok.lnk"
     IDS_SHORT_EXPLORER   "PrieskumnÌk systÈmu ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "çahaj!.lnk"
+    IDS_SHORT_DOWNLOADER "ManaûÈr aplik·ciÌ systÈmu ReactOS.lnk"
     IDS_SHORT_SERVICE    "Spr·vca sluûieb.lnk"
     IDS_SHORT_DEVICE     "Spr·vca zariadenÌ.lnk"
     IDS_SHORT_MPLAY32    "Multimedi·lny prehr·vaË.lnk"
@@ -260,7 +268,10 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "ZobrazovaË udalostÌ.lnk"
     IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
     IDS_SHORT_SNDVOL32   "Ovl·danie hlasitosti.lnk" //Volume Control
+    IDS_SHORT_SNDREC32   "AudiorekordÈr.lnk"
     IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
+    IDS_SHORT_PAINT      "Skic·r.lnk"
+    IDS_SHORT_SPIDER     "Pav˙ËÌ solitÈr.lnk"
 END
 
 STRINGTABLE

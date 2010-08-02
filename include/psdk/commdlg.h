@@ -37,6 +37,7 @@ extern "C" {
 #define CDN_HELP	(CDN_FIRST-4U)
 #define CDN_FILEOK	(CDN_FIRST-5U)
 #define CDN_TYPECHANGE	(CDN_FIRST-6U)
+#define CDN_INCLUDEITEM (CDN_FIRST-7U)
 #define CDM_FIRST	(WM_USER+100)
 #define CDM_LAST	(WM_USER+200)
 #define CDM_GETSPEC	CDM_FIRST
@@ -333,9 +334,18 @@ typedef struct tagOFNA {
 	WORD nFileOffset;
 	WORD nFileExtension;
 	LPCSTR lpstrDefExt;
-	DWORD lCustData;
+	LPARAM lCustData;
 	LPOFNHOOKPROC lpfnHook;
 	LPCSTR lpTemplateName;
+#ifdef _MAC
+    LPEDITMENU lpEditInfo;
+    LPCSTR lpstrPrompt;
+#endif
+#if (_WIN32_WINNT >= 0x0500)
+    void *pvReserved;
+    DWORD dwReserved;
+    DWORD FlagsEx;
+#endif
 } OPENFILENAMEA,*LPOPENFILENAMEA;
 typedef struct tagOFNW {
 	DWORD lStructSize;
@@ -355,9 +365,18 @@ typedef struct tagOFNW {
 	WORD nFileOffset;
 	WORD nFileExtension;
 	LPCWSTR lpstrDefExt;
-	DWORD lCustData;
+	LPARAM lCustData;
 	LPOFNHOOKPROC lpfnHook;
 	LPCWSTR lpTemplateName;
+#ifdef _MAC
+    LPEDITMENU lpEditInfo;
+    LPCSTR lpstrPrompt;
+#endif
+#if (_WIN32_WINNT >= 0x0500)
+    void *pvReserved;
+    DWORD dwReserved;
+    DWORD FlagsEx;
+#endif
 } OPENFILENAMEW,*LPOPENFILENAMEW;
 typedef struct _OFNOTIFYA {
 	NMHDR hdr;
@@ -369,6 +388,23 @@ typedef struct _OFNOTIFYW {
 	LPOPENFILENAMEW lpOFN;
 	LPWSTR pszFile;
 } OFNOTIFYW,*LPOFNOTIFYW;
+
+typedef struct _OFNOTIFYEXA
+{
+    NMHDR hdr;
+    LPOPENFILENAMEA lpOFN;
+    LPVOID psf;
+    LPVOID pidl;
+} OFNOTIFYEXA, *LPOFNOTIFYEXA;
+
+typedef struct _OFNOTIFYEXW
+{
+        NMHDR hdr;
+        LPOPENFILENAMEW lpOFN;
+        LPVOID psf;
+        LPVOID pidl;
+} OFNOTIFYEXW, *LPOFNOTIFYEXW;
+
 typedef struct tagPSDA {
 	DWORD lStructSize;
 	HWND hwndOwner;

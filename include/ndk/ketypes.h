@@ -43,6 +43,16 @@ Author:
 // Processor Architectures
 //
 #define PROCESSOR_ARCHITECTURE_INTEL    0
+#define PROCESSOR_ARCHITECTURE_MIPS     1
+#define PROCESSOR_ARCHITECTURE_ALPHA    2
+#define PROCESSOR_ARCHITECTURE_PPC      3
+#define PROCESSOR_ARCHITECTURE_SHX      4
+#define PROCESSOR_ARCHITECTURE_ARM      5
+#define PROCESSOR_ARCHITECTURE_IA64     6
+#define PROCESSOR_ARCHITECTURE_ALPHA64  7
+#define PROCESSOR_ARCHITECTURE_MSIL     8
+#define PROCESSOR_ARCHITECTURE_AMD64    9
+#define PROCESSOR_ARCHITECTURE_UNKNOWN  0xFFFF
 
 //
 // Object Type Mask for Kernel Dispatcher Objects
@@ -537,17 +547,6 @@ typedef enum _KAPC_ENVIRONMENT
 } KAPC_ENVIRONMENT;
 
 //
-// CPU Cache Types 	 
-// 	 
-typedef enum _PROCESSOR_CACHE_TYPE 	 
-{
-    CacheUnified, 	 
-    CacheInstruction, 	 
-    CacheData, 	 
-    CacheTrace, 	 
-} PROCESSOR_CACHE_TYPE;
-
-//
 // PRCB DPC Data
 //
 typedef struct _KDPC_DATA
@@ -566,18 +565,6 @@ typedef struct _PP_LOOKASIDE_LIST
     struct _GENERAL_LOOKASIDE *P;
     struct _GENERAL_LOOKASIDE *L;
 } PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
-
-//
-// CPU Cache Descriptor 	 
-// 	 
-typedef struct _CACHE_DESCRIPTOR 	 
-{
-    UCHAR Level; 	 
-    UCHAR Associativity; 	 
-    USHORT LineSize; 	 
-    ULONG Size; 	 
-    PROCESSOR_CACHE_TYPE Type; 	 
-} CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
 
 //
 // Architectural Types
@@ -616,7 +603,7 @@ typedef struct _KPROFILE
     PVOID RangeLimit;
     ULONG BucketShift;
     PVOID Buffer;
-    PVOID Segment;
+    ULONG_PTR Segment;
     KAFFINITY Affinity;
     KPROFILE_SOURCE Source;
     BOOLEAN Started;

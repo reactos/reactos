@@ -1,12 +1,8 @@
 /*
  *  Notepad (Slovak resources)
  *
- *  Copyright 1997,98 Marcel Baur <mbaur@g26.ethz.ch>
- *  Proofread 1998 by David Lee Lambert <lamber45@egr.msu.edu>
- *  Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- *  Translation:
  *  TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- *  DATE OF TR.:  xx-xx-2007 
+ *  DATE OF TR.:  xx-xx-2007
  *  LAST CHANGE:  27-12-2008
  */
 
@@ -151,7 +147,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Tento program je vo¾nı softvér; môete ho šíri a/alebo modifikova pod¾a podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buï verzie 2 tejto licencie, alebo (pod¾a Vášho uváenia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovanı v nádeji, e bude uitoènı, avšak BEZ AKEJKO¼VEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URÈITİ ÚÈEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dosta spolu s tımto programom; ak nie, napíšte si o òu na Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Tento program je vo¾nı softvér; môete ho šíri a/alebo modifikova pod¾a podmienok GNU Všeobecnej verejnej licencie (GNU General Public License) ako bola zverejnená nadáciou Free Software Foundation; buï verzie 2 tejto licencie, alebo (pod¾a Vášho uváenia) niektorej neskoršej verzie.\r\n\r\nTento program je distribuovanı v nádeji, e bude uitoènı, avšak BEZ AKEJKO¼VEK ZÁRUKY; rovnako bez záruky PREDAJNOSTI alebo VHODNOSTI PRE URÈITİ ÚÈEL. Pre viac detailov si pozrite GNU Všeobecnú verejnú licenciu (GNU General Public License).\r\n\r\nKópiu Všeobecnej verejnej licencie GNU ste mali dosta spolu s tımto programom; ak nie, napíšte si o òu na Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

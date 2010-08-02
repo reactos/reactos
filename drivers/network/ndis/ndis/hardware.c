@@ -28,8 +28,9 @@ NdisImmediateReadPciSlotInformation(
     IN  ULONG       Length)
 {
   PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+  /* Slot number is ignored. */
   return HalGetBusDataByOffset(PCIConfiguration, WrapperContext->BusNumber,
-                               SlotNumber, Buffer, Offset, Length);
+                               WrapperContext->SlotNumber, Buffer, Offset, Length);
 }
 
 
@@ -46,8 +47,9 @@ NdisImmediateWritePciSlotInformation(
     IN  ULONG       Length)
 {
   PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+  /* Slot number is ignored. */
   return HalSetBusDataByOffset(PCIConfiguration, WrapperContext->BusNumber,
-                               SlotNumber, Buffer, Offset, Length);
+                               WrapperContext->SlotNumber, Buffer, Offset, Length);
 }
 
 
@@ -63,9 +65,10 @@ NdisMPciAssignResources(
 {
   PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
 
-  if (Adapter->NdisMiniportBlock.BusType != PCIBus ||
+  if (Adapter->NdisMiniportBlock.BusType != NdisInterfacePci ||
       Adapter->NdisMiniportBlock.AllocatedResources == NULL)
     {
+      NDIS_DbgPrint(MIN_TRACE, ("Bad bus type or no resources\n"));
       *AssignedResources = NULL;
       return NDIS_STATUS_FAILURE;
     }
@@ -190,6 +193,141 @@ NdisWritePciSlotInformation(
   return HalSetBusDataByOffset(PCIConfiguration,
                                Adapter->NdisMiniportBlock.BusNumber, Adapter->NdisMiniportBlock.SlotNumber,
                                Buffer, Offset, Length);
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisReadEisaSlotInformation(
+    OUT PNDIS_STATUS                    Status,
+    IN  NDIS_HANDLE                     WrapperConfigurationContext,
+    OUT PUINT                           SlotNumber,
+    OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
+{
+    PNDIS_WRAPPER_CONTEXT Wrapper = WrapperConfigurationContext;
+    ULONG Ret;
+    PVOID Buffer;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    /* We are called only at PASSIVE_LEVEL */
+    Buffer = ExAllocatePool(PagedPool, sizeof(NDIS_EISA_FUNCTION_INFORMATION));
+    if (!Buffer) {
+         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        *Status = NDIS_STATUS_RESOURCES;
+        return;
+    }
+
+    Ret = HalGetBusData(EisaConfiguration,
+                        Wrapper->BusNumber,
+                        Wrapper->SlotNumber,
+                        Buffer,
+                        sizeof(NDIS_EISA_FUNCTION_INFORMATION));
+
+    if (Ret == 0 || Ret == 2) {
+        NDIS_DbgPrint(MIN_TRACE, ("HalGetBusData failed.\n"));
+        ExFreePool(Buffer);
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    *SlotNumber = Wrapper->SlotNumber;
+
+    RtlCopyMemory(EisaData, Buffer, sizeof(NDIS_EISA_FUNCTION_INFORMATION));
+
+    ExFreePool(Buffer);
+
+    *Status = NDIS_STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisReadPcmciaAttributeMemory(
+    IN  NDIS_HANDLE NdisAdapterHandle,
+    IN  ULONG       Offset,
+    IN  PVOID       Buffer,
+    IN  ULONG       Length)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return HalGetBusDataByOffset(PCMCIAConfiguration,
+                                 Adapter->NdisMiniportBlock.BusNumber,
+                                 Adapter->NdisMiniportBlock.SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+}
+
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisWritePcmciaAttributeMemory(
+    IN  NDIS_HANDLE NdisAdapterHandle,
+    IN  ULONG       Offset,
+    IN  PVOID       Buffer,
+    IN  ULONG       Length)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return HalSetBusDataByOffset(PCMCIAConfiguration,
+                                 Adapter->NdisMiniportBlock.BusNumber,
+                                 Adapter->NdisMiniportBlock.SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisOverrideBusNumber(
+    IN  NDIS_HANDLE WrapperConfigurationContext,
+    IN  NDIS_HANDLE MiniportAdapterHandle   OPTIONAL,
+    IN  ULONG       BusNumber)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    PNDIS_WRAPPER_CONTEXT Wrapper = WrapperConfigurationContext;
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    Wrapper->BusNumber = BusNumber;
+
+    if (Adapter)
+        Adapter->NdisMiniportBlock.BusNumber = BusNumber;
 }
 
 /* EOF */

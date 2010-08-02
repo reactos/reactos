@@ -147,33 +147,32 @@ static BOOL
 WaitForSettingsDialog(HWND hwndDlg,
                       HANDLE hProcess)
 {
+    DWORD dwResult;
+    MSG msg;
+
     while (TRUE)
     {
-        DWORD Ret;
-        MSG msg;
-
-        while (PeekMessage(&msg,
-                           NULL,
-                           0,
-                           0,
-                           PM_REMOVE))
+        dwResult = MsgWaitForMultipleObjects(1,
+                                             &hProcess,
+                                             FALSE,
+                                             INFINITE,
+                                             QS_ALLINPUT);
+        if (dwResult == WAIT_OBJECT_0 + 1)
         {
-            if (msg.message == WM_QUIT)
-                return FALSE;
-
-            if (IsDialogMessage(hwndDlg, &msg))
+            if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
             {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                if (msg.message == WM_QUIT)
+                {
+                    return FALSE;
+                }
+                if (IsDialogMessage(hwndDlg, &msg))
+                {
+                    TranslateMessage(&msg);
+                    DispatchMessage(&msg);
+                }
             }
         }
-
-        Ret = MsgWaitForMultipleObjects(1,
-                                        &hProcess,
-                                        FALSE,
-                                        INFINITE,
-                                        QS_ALLINPUT);
-        if (Ret == (WAIT_OBJECT_0))
+        else
         {
             return TRUE;
         }

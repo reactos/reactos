@@ -1,5 +1,4 @@
-#ifndef ___TELNET_H
-#define ___TELNET_H
+#pragma once
 
 /*
 * Copyright (c) 1983 Regents of the University of California.
@@ -298,8 +297,3 @@ extern char *enctype_names[];
 #define	ENCTYPE_NAME(x)		enctype_names[x]
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
-
-
-
-#endif
-

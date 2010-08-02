@@ -1,6 +1,6 @@
 /*************************************************************************
  *
- * $Id: triodef.h 912 2003-04-26 12:06:36Z veillard $
+ * $Id$
  *
  * Copyright (C) 2001 Bjorn Reese <breese@users.sourceforge.net>
  *

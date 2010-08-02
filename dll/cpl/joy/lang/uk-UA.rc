@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/joy/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for joy.cpl
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -53,9 +53,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Особливості", -1, 7, 7, 245, 52
     AUTORADIOBUTTON "Джо&йстик", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
-    AUTORADIOBUTTON "&Штурвал або ручка керування", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
-    AUTORADIOBUTTON "І&гровий планшет", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
-    AUTORADIOBUTTON "Керування перегоновим &автомобілем", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
+    AUTORADIOBUTTON "&Штурвал або ручка керування", IDC_FLIGHT_YOKE_RADIO, 125, 23, 116, 10
+    AUTORADIOBUTTON "І&гровий планшет", IDC_GAME_PAD_RADIO, 17, 40, 70, 10
+    AUTORADIOBUTTON "Керування перегон. &автомобілем", IDC_RACE_CAR_RADIO, 125, 40, 125, 10
     GROUPBOX "&Степені вільності", -1, 7, 67, 116, 44, WS_GROUP
     COMBOBOX IDC_AXES_COMBO, 37, 79, 48, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     AUTORADIOBUTTON "Руль або педалі", IDC_RUDDER_PEDALS_RADIO, 14, 97, 63, 10, NOT WS_VISIBLE
@@ -78,7 +78,7 @@ BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
     DEFPUSHBUTTON "OK", IDOK, 106, 65, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 163, 65, 50, 14
-    LTEXT "Виберіть пристрій, який слід використовувати зі старими програмами.", -1, 7, 7, 208, 10
+    LTEXT "Виберіть пристрій, який слід використовувати зі старими програмами.", -1, 7, 7, 190, 18
     LTEXT "&Кращий пристрій:", -1, 34, 24, 70, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END

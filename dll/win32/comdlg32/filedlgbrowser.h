@@ -58,6 +58,8 @@ typedef struct
     LPCWSTR defext;
     LPCWSTR filter;
     LPCWSTR customfilter;
+    SIZE sizedlg; /* remember the size of the dialog */
+    POINT initial_size; /* remember the initial size of the dialog */
     struct {
         IShellBrowser *FOIShellBrowser;
         IShellFolder *FOIShellFolder;
@@ -78,6 +80,7 @@ typedef struct
         HWND hwndLookInCB;
         HWND hwndFileName;
 	HWND hwndTB;
+	HWND hwndGrip;
         HWND hwndCustomDlg;
 	DWORD dwDlgProp;
     } DlgInfos;

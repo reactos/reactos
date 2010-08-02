@@ -225,10 +225,9 @@
 #define THIS   void
 
 #define interface struct
-#define DECLARE_INTERFACE(iface)        interface iface
-#define DECLARE_INTERFACE_(iface,ibase) interface iface : public ibase
-#define DECLARE_INTERFACE_IID(iface, iid)             interface DECLSPEC_UUID(iid) iface
-#define DECLARE_INTERFACE_IID_(iface, baseiface, iid) interface DECLSPEC_UUID(iid) iface : public baseiface
+#define DECLARE_INTERFACE(iface)        interface DECLSPEC_NOVTABLE iface
+#define DECLARE_INTERFACE_(iface,ibase) interface DECLSPEC_NOVTABLE iface : public ibase
+#define DECLARE_INTERFACE_IID_(iface, ibase, iid) interface DECLSPEC_UUID(iid) DECLSPEC_NOVTABLE iface : public ibase
 
 #define BEGIN_INTERFACE
 #define END_INTERFACE
@@ -268,6 +267,7 @@
          struct iface##Vtbl
 #endif
 #define DECLARE_INTERFACE_(iface,ibase) DECLARE_INTERFACE(iface)
+#define DECLARE_INTERFACE_IID_(iface, ibase, iid) DECLARE_INTERFACE_(iface, ibase)
 
 #define BEGIN_INTERFACE
 #define END_INTERFACE
@@ -331,6 +331,7 @@ HINSTANCE WINAPI CoLoadLibrary(LPOLESTR lpszLibName, BOOL bAutoFree);
 void WINAPI CoFreeAllLibraries(void);
 void WINAPI CoFreeLibrary(HINSTANCE hLibrary);
 void WINAPI CoFreeUnusedLibraries(void);
+void WINAPI CoFreeUnusedLibrariesEx(DWORD dwUnloadDelay, DWORD dwReserved);
 
 HRESULT WINAPI CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID iid, LPVOID *ppv);
 HRESULT WINAPI CoCreateInstanceEx(REFCLSID      rclsid,
@@ -344,12 +345,14 @@ HRESULT WINAPI CoGetInstanceFromFile(COSERVERINFO* pServerInfo, CLSID* pClsid, I
 HRESULT WINAPI CoGetInstanceFromIStorage(COSERVERINFO* pServerInfo, CLSID* pClsid, IUnknown* punkOuter, DWORD dwClsCtx, IStorage* pstg, DWORD dwCount, MULTI_QI* pResults);
 
 HRESULT WINAPI CoGetMalloc(DWORD dwMemContext, LPMALLOC* lpMalloc);
-LPVOID WINAPI CoTaskMemAlloc(ULONG size);
+LPVOID WINAPI CoTaskMemAlloc(ULONG size) __WINE_ALLOC_SIZE(1);
 void WINAPI CoTaskMemFree(LPVOID ptr);
 LPVOID WINAPI CoTaskMemRealloc(LPVOID ptr, ULONG size);
 
 HRESULT WINAPI CoRegisterMallocSpy(LPMALLOCSPY pMallocSpy);
 HRESULT WINAPI CoRevokeMallocSpy(void);
+
+HRESULT WINAPI CoGetContextToken( ULONG_PTR *token );
 
 /* class registration flags; passed to CoRegisterClassObject */
 typedef enum tagREGCLS
@@ -390,9 +393,10 @@ BOOL WINAPI CoIsHandlerConnected(LPUNKNOWN pUnk);
 /* security */
 HRESULT WINAPI CoInitializeSecurity(PSECURITY_DESCRIPTOR pSecDesc, LONG cAuthSvc, SOLE_AUTHENTICATION_SERVICE* asAuthSvc, void* pReserved1, DWORD dwAuthnLevel, DWORD dwImpLevel, void* pReserved2, DWORD dwCapabilities, void* pReserved3);
 HRESULT WINAPI CoGetCallContext(REFIID riid, void** ppInterface);
+HRESULT WINAPI CoSwitchCallContext(IUnknown *pContext, IUnknown **ppOldContext);
 HRESULT WINAPI CoQueryAuthenticationServices(DWORD* pcAuthSvc, SOLE_AUTHENTICATION_SERVICE** asAuthSvc);
 
-HRESULT WINAPI CoQueryProxyBlanket(IUnknown* pProxy, DWORD* pwAuthnSvc, DWORD* pAuthzSvc, OLECHAR** pServerPrincName, DWORD* pAuthnLevel, DWORD* pImpLevel, RPC_AUTH_IDENTITY_HANDLE* pAuthInfo, DWORD* pCapabilites);
+HRESULT WINAPI CoQueryProxyBlanket(IUnknown* pProxy, DWORD* pwAuthnSvc, DWORD* pAuthzSvc, OLECHAR** pServerPrincName, DWORD* pAuthnLevel, DWORD* pImpLevel, RPC_AUTH_IDENTITY_HANDLE* pAuthInfo, DWORD* pCapabilities);
 HRESULT WINAPI CoSetProxyBlanket(IUnknown* pProxy, DWORD dwAuthnSvc, DWORD dwAuthzSvc, OLECHAR* pServerPrincName, DWORD dwAuthnLevel, DWORD dwImpLevel, RPC_AUTH_IDENTITY_HANDLE pAuthInfo, DWORD dwCapabilities);
 HRESULT WINAPI CoCopyProxy(IUnknown* pProxy, IUnknown** ppCopy);
 
@@ -427,7 +431,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags,DWORD dwTimeout,ULONG cHan
  *	GUID API
  */
 HRESULT WINAPI StringFromCLSID(REFCLSID id, LPOLESTR*);
-HRESULT WINAPI CLSIDFromString(LPOLESTR, CLSID *);
+HRESULT WINAPI CLSIDFromString(LPCOLESTR, LPCLSID);
 HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID riid);
 HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID);
 
@@ -506,6 +510,7 @@ typedef struct tagSTGOPTIONS
     const WCHAR* pwcsTemplateFile;
 } STGOPTIONS;
 
+HRESULT WINAPI StringFromIID(REFIID rclsid, LPOLESTR *lplpsz);
 HRESULT WINAPI StgCreateDocfile(LPCOLESTR pwcsName,DWORD grfMode,DWORD reserved,IStorage **ppstgOpen);
 HRESULT WINAPI StgCreateStorageEx(const WCHAR*,DWORD,DWORD,DWORD,STGOPTIONS*,void*,REFIID,void**);
 HRESULT WINAPI StgIsStorageFile(LPCOLESTR fn);

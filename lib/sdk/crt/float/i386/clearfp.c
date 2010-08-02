@@ -18,10 +18,10 @@ unsigned int _statusfp( void );
 unsigned int CDECL _clearfp(void)
 {
   unsigned int retVal = _statusfp();
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(__GNUC__)
   __asm__ __volatile__( "fnclex" );
 #else
-  FIXME(":Not Implemented\n");
+  __asm fnclex;
 #endif
   return retVal;
 }

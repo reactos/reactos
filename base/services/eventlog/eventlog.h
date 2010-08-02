@@ -44,7 +44,8 @@ typedef struct _IO_ERROR_LPC
 #define ELF_LOGFILE_ARCHIVE_SET 8
 
 /* FIXME: MSDN reads that the following two structs are in winnt.h. Are they? */
-typedef struct _EVENTLOGHEADER {
+typedef struct _EVENTLOGHEADER
+{
     ULONG HeaderSize;
     ULONG Signature;
     ULONG MajorVersion;
@@ -59,7 +60,8 @@ typedef struct _EVENTLOGHEADER {
     ULONG EndHeaderSize;
 } EVENTLOGHEADER, *PEVENTLOGHEADER;
 
-typedef struct _EVENTLOGEOF {
+typedef struct _EVENTLOGEOF
+{
     ULONG RecordSizeBeginning;
     ULONG Ones;
     ULONG Twos;
@@ -72,13 +74,13 @@ typedef struct _EVENTLOGEOF {
     ULONG RecordSizeEnd;
 } EVENTLOGEOF, *PEVENTLOGEOF;
 
-typedef struct
+typedef struct _EVENT_OFFSET_INFO
 {
     ULONG EventNumber;
     ULONG EventOffset;
 } EVENT_OFFSET_INFO, *PEVENT_OFFSET_INFO;
 
-typedef struct
+typedef struct _LOGFILE
 {
     HANDLE hFile;
     EVENTLOGHEADER Header;
@@ -91,10 +93,12 @@ typedef struct
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
-typedef struct
+typedef struct _EVENTSOURCE
 {
+    LIST_ENTRY EventSourceListEntry;
     PLOGFILE LogFile;
-    WCHAR *Name;
+    ULONG CurrentRecord;
+    WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
 
 /* file.c */
@@ -114,9 +118,9 @@ VOID LogfListAddItem(PLOGFILE Item);
 
 VOID LogfListRemoveItem(PLOGFILE Item);
 
-BOOL LogfReadEvent(PLOGFILE LogFile,
+DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD Flags,
-                   DWORD RecordNumber,
+                   DWORD * RecordNumber,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
@@ -139,12 +143,17 @@ BOOL LogfInitializeExisting(PLOGFILE LogFile);
 
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
 
+DWORD LogfGetCurrentRecord(PLOGFILE LogFile);
+
 ULONG LogfOffsetByNumber(PLOGFILE LogFile,
                          DWORD RecordNumber);
 
 BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
                               ULONG ulNumber,
                               ULONG ulOffset);
+
+BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile,
+                              ULONG ulNumber);
 
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwRecordNumber,

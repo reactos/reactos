@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <math.h>
+
 #include "jscript.h"
 
 #include "wine/debug.h"
@@ -40,19 +42,82 @@ static const WCHAR sortW[] = {'s','o','r','t',0};
 static const WCHAR spliceW[] = {'s','p','l','i','c','e',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 static const WCHAR unshiftW[] = {'u','n','s','h','i','f','t',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
 static const WCHAR default_separatorW[] = {',',0};
 
-static HRESULT Array_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static inline ArrayInstance *array_from_vdisp(vdisp_t *vdisp)
+{
+    return (ArrayInstance*)vdisp->u.jsdisp;
+}
+
+static inline ArrayInstance *array_this(vdisp_t *jsthis)
+{
+    return is_vclass(jsthis, JSCLASS_ARRAY) ? array_from_vdisp(jsthis) : NULL;
+}
+
+static HRESULT get_length(script_ctx_t *ctx, vdisp_t *vdisp, jsexcept_t *ei, DispatchEx **jsthis, DWORD *ret)
+{
+    ArrayInstance *array;
+    VARIANT var;
+    HRESULT hres;
+
+    array = array_this(vdisp);
+    if(array) {
+        *jsthis = &array->dispex;
+        *ret = array->length;
+        return S_OK;
+    }
+
+    if(!is_jsdisp(vdisp))
+        return throw_type_error(ctx, ei, IDS_JSCRIPT_EXPECTED, NULL);
+
+    hres = jsdisp_propget_name(vdisp->u.jsdisp, lengthW, &var, ei, NULL/*FIXME*/);
+    if(FAILED(hres))
+        return hres;
+
+    hres = to_uint32(ctx, &var, ei, ret);
+    VariantClear(&var);
+    if(FAILED(hres))
+        return hres;
+
+    *jsthis = vdisp->u.jsdisp;
+    return S_OK;
+}
+
+static HRESULT set_length(DispatchEx *obj, jsexcept_t *ei, DWORD length)
+{
+    VARIANT var;
+
+    if(is_class(obj, JSCLASS_ARRAY)) {
+        ((ArrayInstance*)obj)->length = length;
+        return S_OK;
+    }
+
+    V_VT(&var) = VT_I4;
+    V_I4(&var) = length;
+    return jsdisp_propput_name(obj, lengthW, &var, ei, NULL/*FIXME*/);
+}
+
+static WCHAR *idx_to_str(DWORD idx, WCHAR *ptr)
+{
+    if(!idx) {
+        *ptr = '0';
+        return ptr;
+    }
+
+    while(idx) {
+        *ptr-- = '0' + (idx%10);
+        idx /= 10;
+    }
+
+    return ptr+1;
+}
+
+static HRESULT Array_length(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    ArrayInstance *This = (ArrayInstance*)dispex;
+    ArrayInstance *This = array_from_vdisp(jsthis);
 
     TRACE("%p %d\n", This, This->length);
 
@@ -61,6 +126,30 @@ static HRESULT Array_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
         V_VT(retv) = VT_I4;
         V_I4(retv) = This->length;
         break;
+    case DISPATCH_PROPERTYPUT: {
+        VARIANT num;
+        DOUBLE len = -1;
+        DWORD i;
+        HRESULT hres;
+
+        hres = to_number(ctx, get_arg(dp, 0), ei, &num);
+        if(V_VT(&num) == VT_I4)
+            len = V_I4(&num);
+        else
+            len = floor(V_R8(&num));
+
+        if(len!=(DWORD)len)
+            return throw_range_error(ctx, ei, IDS_INVALID_LENGTH, NULL);
+
+        for(i=len; i<This->length; i++) {
+            hres = jsdisp_delete_idx(&This->dispex, i);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        This->length = len;
+        break;
+    }
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -69,7 +158,7 @@ static HRESULT Array_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     return S_OK;
 }
 
-static HRESULT concat_array(DispatchEx *array, ArrayInstance *obj, DWORD *len, LCID lcid,
+static HRESULT concat_array(DispatchEx *array, ArrayInstance *obj, DWORD *len,
         jsexcept_t *ei, IServiceProvider *caller)
 {
     VARIANT var;
@@ -77,13 +166,13 @@ static HRESULT concat_array(DispatchEx *array, ArrayInstance *obj, DWORD *len, L
     HRESULT hres;
 
     for(i=0; i < obj->length; i++) {
-        hres = jsdisp_propget_idx(&obj->dispex, i, lcid, &var, ei, caller);
+        hres = jsdisp_get_idx(&obj->dispex, i, &var, ei, caller);
         if(hres == DISP_E_UNKNOWNNAME)
             continue;
         if(FAILED(hres))
             return hres;
 
-        hres = jsdisp_propput_idx(array, *len+i, lcid, &var, ei, caller);
+        hres = jsdisp_propput_idx(array, *len+i, &var, ei, caller);
         VariantClear(&var);
         if(FAILED(hres))
             return hres;
@@ -93,7 +182,7 @@ static HRESULT concat_array(DispatchEx *array, ArrayInstance *obj, DWORD *len, L
     return S_OK;
 }
 
-static HRESULT concat_obj(DispatchEx *array, IDispatch *obj, DWORD *len, LCID lcid, jsexcept_t *ei, IServiceProvider *caller)
+static HRESULT concat_obj(DispatchEx *array, IDispatch *obj, DWORD *len, jsexcept_t *ei, IServiceProvider *caller)
 {
     DispatchEx *jsobj;
     VARIANT var;
@@ -102,7 +191,7 @@ static HRESULT concat_obj(DispatchEx *array, IDispatch *obj, DWORD *len, LCID lc
     jsobj = iface_to_jsdisp((IUnknown*)obj);
     if(jsobj) {
         if(is_class(jsobj, JSCLASS_ARRAY)) {
-            hres = concat_array(array, (ArrayInstance*)jsobj, len, lcid, ei, caller);
+            hres = concat_array(array, (ArrayInstance*)jsobj, len, ei, caller);
             jsdisp_release(jsobj);
             return hres;
         }
@@ -111,10 +200,10 @@ static HRESULT concat_obj(DispatchEx *array, IDispatch *obj, DWORD *len, LCID lc
 
     V_VT(&var) = VT_DISPATCH;
     V_DISPATCH(&var) = obj;
-    return jsdisp_propput_idx(array, (*len)++, lcid, &var, ei, caller);
+    return jsdisp_propput_idx(array, (*len)++, &var, ei, caller);
 }
 
-static HRESULT Array_concat(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_concat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
     DispatchEx *ret;
@@ -123,11 +212,11 @@ static HRESULT Array_concat(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 
     TRACE("\n");
 
-    hres = create_array(dispex->ctx, 0, &ret);
+    hres = create_array(ctx, 0, &ret);
     if(FAILED(hres))
         return hres;
 
-    hres = concat_obj(ret, (IDispatch*)_IDispatchEx_(dispex), &len, lcid, ei, caller);
+    hres = concat_obj(ret, jsthis->u.disp, &len, ei, caller);
     if(SUCCEEDED(hres)) {
         VARIANT *arg;
         DWORD i;
@@ -135,9 +224,9 @@ static HRESULT Array_concat(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
         for(i=0; i < arg_cnt(dp); i++) {
             arg = get_arg(dp, i);
             if(V_VT(arg) == VT_DISPATCH)
-                hres = concat_obj(ret, V_DISPATCH(arg), &len, lcid, ei, caller);
+                hres = concat_obj(ret, V_DISPATCH(arg), &len, ei, caller);
             else
-                hres = jsdisp_propput_idx(ret, len++, lcid, arg, ei, caller);
+                hres = jsdisp_propput_idx(ret, len++, arg, ei, caller);
             if(FAILED(hres))
                 break;
         }
@@ -155,7 +244,7 @@ static HRESULT Array_concat(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     return S_OK;
 }
 
-static HRESULT array_join(DispatchEx *array, LCID lcid, DWORD length, const WCHAR *sep, VARIANT *retv,
+static HRESULT array_join(script_ctx_t *ctx, DispatchEx *array, DWORD length, const WCHAR *sep, VARIANT *retv,
         jsexcept_t *ei, IServiceProvider *caller)
 {
     BSTR *str_tab, ret = NULL;
@@ -178,12 +267,15 @@ static HRESULT array_join(DispatchEx *array, LCID lcid, DWORD length, const WCHA
         return E_OUTOFMEMORY;
 
     for(i=0; i < length; i++) {
-        hres = jsdisp_propget_idx(array, i, lcid, &var, ei, caller);
-        if(FAILED(hres))
+        hres = jsdisp_get_idx(array, i, &var, ei, caller);
+        if(hres == DISP_E_UNKNOWNNAME) {
+            hres = S_OK;
+            continue;
+        } else if(FAILED(hres))
             break;
 
         if(V_VT(&var) != VT_EMPTY && V_VT(&var) != VT_NULL)
-            hres = to_string(array->ctx, &var, ei, str_tab+i);
+            hres = to_string(ctx, &var, ei, str_tab+i);
         VariantClear(&var);
         if(FAILED(hres))
             break;
@@ -253,86 +345,72 @@ static HRESULT array_join(DispatchEx *array, LCID lcid, DWORD length, const WCHA
 }
 
 /* ECMA-262 3rd Edition    15.4.4.5 */
-static HRESULT Array_join(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_join(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
+    DispatchEx *jsthis;
     DWORD length;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(is_class(dispex, JSCLASS_ARRAY)) {
-        length = ((ArrayInstance*)dispex)->length;
-    }else {
-        FIXME("dispid is not Array\n");
-        return E_NOTIMPL;
-    }
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
 
     if(arg_cnt(dp)) {
         BSTR sep;
 
-        hres = to_string(dispex->ctx, dp->rgvarg + dp->cArgs-1, ei, &sep);
+        hres = to_string(ctx, get_arg(dp,0), ei, &sep);
         if(FAILED(hres))
             return hres;
 
-        hres = array_join(dispex, lcid, length, sep, retv, ei, caller);
+        hres = array_join(ctx, jsthis, length, sep, retv, ei, caller);
 
         SysFreeString(sep);
     }else {
-        hres = array_join(dispex, lcid, length, default_separatorW, retv, ei, caller);
+        hres = array_join(ctx, jsthis, length, default_separatorW, retv, ei, caller);
     }
 
     return hres;
 }
 
-static HRESULT Array_pop(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_pop(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
+    DispatchEx *jsthis;
     VARIANT val;
     DWORD length;
-    WCHAR buf[14];
-    DISPID id;
     HRESULT hres;
-
-    static const WCHAR formatW[] = {'%','d',0};
 
     TRACE("\n");
 
-    if(is_class(dispex, JSCLASS_ARRAY)) {
-        ArrayInstance *array = (ArrayInstance*)dispex;
-        length = array->length;
-    }else {
-        FIXME("not Array this\n");
-        return E_NOTIMPL;
-    }
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
 
     if(!length) {
+        hres = set_length(jsthis, ei, 0);
+        if(FAILED(hres))
+            return hres;
+
         if(retv)
             V_VT(retv) = VT_EMPTY;
         return S_OK;
     }
 
-    sprintfW(buf, formatW, --length);
-    hres = jsdisp_get_id(dispex, buf, 0, &id);
+    length--;
+    hres = jsdisp_get_idx(jsthis, length, &val, ei, caller);
     if(SUCCEEDED(hres)) {
-        hres = jsdisp_propget(dispex, id, lcid, &val, ei, caller);
-        if(FAILED(hres))
-            return hres;
-
-        hres = IDispatchEx_DeleteMemberByDispID(_IDispatchEx_(dispex), id);
-    }else if(hres == DISP_E_UNKNOWNNAME) {
+        hres = jsdisp_delete_idx(jsthis, length);
+    } else if(hres == DISP_E_UNKNOWNNAME) {
         V_VT(&val) = VT_EMPTY;
         hres = S_OK;
-    }else {
+    } else
         return hres;
-    }
 
-    if(SUCCEEDED(hres)) {
-        if(is_class(dispex, JSCLASS_ARRAY)) {
-            ArrayInstance *array = (ArrayInstance*)dispex;
-            array->length = length;
-        }
-    }
+    if(SUCCEEDED(hres))
+        hres = set_length(jsthis, ei, length);
 
     if(FAILED(hres)) {
         VariantClear(&val);
@@ -343,32 +421,35 @@ static HRESULT Array_pop(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
         *retv = val;
     else
         VariantClear(&val);
+
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.4.4.7 */
-static HRESULT Array_push(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_push(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    DispatchEx *jsthis;
     DWORD length = 0;
     int i, n;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(dispex->builtin_info->class == JSCLASS_ARRAY) {
-        length = ((ArrayInstance*)dispex)->length;
-    }else {
-        FIXME("not Array this\n");
-        return E_NOTIMPL;
-    }
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
 
-    n = dp->cArgs - dp->cNamedArgs;
+    n = arg_cnt(dp);
     for(i=0; i < n; i++) {
-        hres = jsdisp_propput_idx(dispex, length+i, lcid, get_arg(dp, i), ei, sp);
+        hres = jsdisp_propput_idx(jsthis, length+i, get_arg(dp, i), ei, sp);
         if(FAILED(hres))
             return hres;
     }
+
+    hres = set_length(jsthis, ei, length+n);
+    if(FAILED(hres))
+        return hres;
 
     if(retv) {
         V_VT(retv) = VT_I4;
@@ -377,25 +458,196 @@ static HRESULT Array_push(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
     return S_OK;
 }
 
-static HRESULT Array_reverse(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_reverse(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    DispatchEx *jsthis;
+    DWORD length, k, l;
+    VARIANT v1, v2;
+    HRESULT hres1, hres2;
+
+    TRACE("\n");
+
+    hres1 = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres1))
+        return hres1;
+
+    for(k=0; k<length/2; k++) {
+        l = length-k-1;
+
+        hres1 = jsdisp_get_idx(jsthis, k, &v1, ei, sp);
+        if(FAILED(hres1) && hres1!=DISP_E_UNKNOWNNAME)
+            return hres1;
+
+        hres2 = jsdisp_get_idx(jsthis, l, &v2, ei, sp);
+        if(FAILED(hres2) && hres2!=DISP_E_UNKNOWNNAME) {
+            VariantClear(&v1);
+            return hres2;
+        }
+
+        if(hres1 == DISP_E_UNKNOWNNAME)
+            hres1 = jsdisp_delete_idx(jsthis, l);
+        else
+            hres1 = jsdisp_propput_idx(jsthis, l, &v1, ei, sp);
+
+        if(FAILED(hres1)) {
+            VariantClear(&v1);
+            VariantClear(&v2);
+            return hres1;
+        }
+
+        if(hres2 == DISP_E_UNKNOWNNAME)
+            hres2 = jsdisp_delete_idx(jsthis, k);
+        else
+            hres2 = jsdisp_propput_idx(jsthis, k, &v2, ei, sp);
+
+        if(FAILED(hres2)) {
+            VariantClear(&v2);
+            return hres2;
+        }
+    }
+
+    if(retv) {
+        V_VT(retv) = VT_DISPATCH;
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(jsthis);
+        IDispatch_AddRef(V_DISPATCH(retv));
+    }
+
+    return S_OK;
 }
 
-static HRESULT Array_shift(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+/* ECMA-262 3rd Edition    15.4.4.9 */
+static HRESULT Array_shift(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    DispatchEx *jsthis;
+    DWORD length = 0, i;
+    VARIANT v, ret;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
+
+    if(!length) {
+        hres = set_length(jsthis, ei, 0);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    if(!length) {
+        if(retv)
+            V_VT(retv) = VT_EMPTY;
+        return S_OK;
+    }
+
+    hres = jsdisp_get_idx(jsthis, 0, &ret, ei, caller);
+    if(hres == DISP_E_UNKNOWNNAME) {
+        V_VT(&ret) = VT_EMPTY;
+        hres = S_OK;
+    }
+
+    for(i=1; SUCCEEDED(hres) && i<length; i++) {
+        hres = jsdisp_get_idx(jsthis, i, &v, ei, caller);
+        if(hres == DISP_E_UNKNOWNNAME)
+            hres = jsdisp_delete_idx(jsthis, i-1);
+        else if(SUCCEEDED(hres))
+            hres = jsdisp_propput_idx(jsthis, i-1, &v, ei, caller);
+    }
+
+    if(SUCCEEDED(hres)) {
+        hres = jsdisp_delete_idx(jsthis, length-1);
+        if(SUCCEEDED(hres))
+            hres = set_length(jsthis, ei, length-1);
+    }
+
+    if(SUCCEEDED(hres) && retv)
+        *retv = ret;
+    else
+        VariantClear(&ret);
+    return hres;
 }
 
-static HRESULT Array_slice(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+/* ECMA-262 3rd Edition    15.4.4.10 */
+static HRESULT Array_slice(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    DispatchEx *arr, *jsthis;
+    VARIANT v;
+    DOUBLE range;
+    DWORD length, start, end, idx;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
+
+    if(arg_cnt(dp)) {
+        hres = to_number(ctx, get_arg(dp, 0), ei, &v);
+        if(FAILED(hres))
+            return hres;
+
+        if(V_VT(&v) == VT_I4)
+            range = V_I4(&v);
+        else
+            range = floor(V_R8(&v));
+
+        if(-range>length || isnan(range)) start = 0;
+        else if(range < 0) start = range+length;
+        else if(range <= length) start = range;
+        else start = length;
+    }
+    else start = 0;
+
+    if(arg_cnt(dp)>1) {
+        hres = to_number(ctx, get_arg(dp, 1), ei, &v);
+        if(FAILED(hres))
+            return hres;
+
+        if(V_VT(&v) == VT_I4)
+            range = V_I4(&v);
+        else
+            range = floor(V_R8(&v));
+
+        if(-range>length) end = 0;
+        else if(range < 0) end = range+length;
+        else if(range <= length) end = range;
+        else end = length;
+    }
+    else end = length;
+
+    hres = create_array(ctx, (end>start)?end-start:0, &arr);
+    if(FAILED(hres))
+        return hres;
+
+    for(idx=start; idx<end; idx++) {
+        hres = jsdisp_get_idx(jsthis, idx, &v, ei, sp);
+        if(hres == DISP_E_UNKNOWNNAME)
+            continue;
+
+        if(SUCCEEDED(hres)) {
+            hres = jsdisp_propput_idx(arr, idx-start, &v, ei, sp);
+            VariantClear(&v);
+        }
+
+        if(FAILED(hres)) {
+            jsdisp_release(arr);
+            return hres;
+        }
+    }
+
+    if(retv) {
+        V_VT(retv) = VT_DISPATCH;
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(arr);
+    }
+    else
+        jsdisp_release(arr);
+
+    return S_OK;
 }
 
 static HRESULT sort_cmp(script_ctx_t *ctx, DispatchEx *cmp_func, VARIANT *v1, VARIANT *v2, jsexcept_t *ei,
@@ -412,7 +664,7 @@ static HRESULT sort_cmp(script_ctx_t *ctx, DispatchEx *cmp_func, VARIANT *v1, VA
         args[0] = *v2;
         args[1] = *v1;
 
-        hres = jsdisp_call_value(cmp_func, ctx->lcid, DISPATCH_METHOD, &dp, &res, ei, caller);
+        hres = jsdisp_call_value(cmp_func, DISPATCH_METHOD, &dp, &res, ei, caller);
         if(FAILED(hres))
             return hres;
 
@@ -425,39 +677,41 @@ static HRESULT sort_cmp(script_ctx_t *ctx, DispatchEx *cmp_func, VARIANT *v1, VA
             *cmp = V_I4(&tmp);
         else
             *cmp = V_R8(&tmp) > 0.0 ? 1 : -1;
-    }else if(is_num_vt(V_VT(v1))) {
-        if(is_num_vt(V_VT(v2))) {
-            DOUBLE d = num_val(v1)-num_val(v2);
-            if(d > 0.0)
-                *cmp = 1;
-            else if(d < -0.0)
-                *cmp = -1;
-            else
-                *cmp = 0;
-        }else {
-            *cmp = -1;
-        }
-    }else if(is_num_vt(V_VT(v2))) {
-        *cmp = 1;
-    }else if(V_VT(v1) == VT_BSTR) {
-        if(V_VT(v2) == VT_BSTR)
-            *cmp = strcmpW(V_BSTR(v1), V_BSTR(v2));
+    }else if(V_VT(v1) == VT_EMPTY) {
+        *cmp = V_VT(v2) == VT_EMPTY ? 0 : 1;
+    }else if(V_VT(v2) == VT_EMPTY) {
+        *cmp = -1;
+    }else if(is_num_vt(V_VT(v1)) && is_num_vt(V_VT(v2))) {
+        DOUBLE d = num_val(v1)-num_val(v2);
+        if(d > 0.0)
+            *cmp = 1;
         else
-            *cmp = -1;
-    }else if(V_VT(v2) == VT_BSTR) {
-        *cmp = 1;
+            *cmp = d < -0.0 ? -1 : 0;
     }else {
-        *cmp = 0;
+        BSTR x, y;
+
+        hres = to_string(ctx, v1, ei, &x);
+        if(FAILED(hres))
+            return hres;
+
+        hres = to_string(ctx, v2, ei, &y);
+        if(SUCCEEDED(hres)) {
+            *cmp = strcmpW(x, y);
+            SysFreeString(y);
+        }
+        SysFreeString(x);
+        if(FAILED(hres))
+            return hres;
     }
 
     return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.4.4.11 */
-static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_sort(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    DispatchEx *cmp_func = NULL;
+    DispatchEx *jsthis, *cmp_func = NULL;
     VARIANT *vtab, **sorttab = NULL;
     DWORD length;
     DWORD i;
@@ -465,12 +719,9 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
 
     TRACE("\n");
 
-    if(is_class(dispex, JSCLASS_ARRAY)) {
-        length = ((ArrayInstance*)dispex)->length;
-    }else {
-        FIXME("unsupported this not array\n");
-        return E_NOTIMPL;
-    }
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
 
     if(arg_cnt(dp) > 1) {
         WARN("invalid arg_cnt %d\n", arg_cnt(dp));
@@ -500,8 +751,8 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
             jsdisp_release(cmp_func);
         if(retv) {
             V_VT(retv) = VT_DISPATCH;
-            V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(dispex);
-	    IDispatchEx_AddRef(_IDispatchEx_(dispex));
+            V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(jsthis);
+	    IDispatch_AddRef(V_DISPATCH(retv));
         }
         return S_OK;
     }
@@ -509,8 +760,11 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
     vtab = heap_alloc_zero(length * sizeof(VARIANT));
     if(vtab) {
         for(i=0; i<length; i++) {
-            hres = jsdisp_propget_idx(dispex, i, lcid, vtab+i, ei, caller);
-            if(FAILED(hres) && hres != DISP_E_UNKNOWNNAME) {
+            hres = jsdisp_get_idx(jsthis, i, vtab+i, ei, caller);
+            if(hres == DISP_E_UNKNOWNNAME) {
+                V_VT(vtab+i) = VT_EMPTY;
+                hres = S_OK;
+            } else if(FAILED(hres)) {
                 WARN("Could not get elem %d: %08x\n", i, hres);
                 break;
             }
@@ -535,7 +789,7 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
             sorttab[i] = vtab+i;
 
         for(i=0; i < length/2; i++) {
-            hres = sort_cmp(dispex->ctx, cmp_func, sorttab[2*i+1], sorttab[2*i], ei, caller, &cmp);
+            hres = sort_cmp(ctx, cmp_func, sorttab[2*i+1], sorttab[2*i], ei, caller, &cmp);
             if(FAILED(hres))
                 break;
 
@@ -560,7 +814,7 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
                     memcpy(tmpbuf, sorttab+i, k*sizeof(VARIANT*));
 
                     while(a < k && b < bend) {
-                        hres = sort_cmp(dispex->ctx, cmp_func, tmpbuf[a], sorttab[i+k+b], ei, caller, &cmp);
+                        hres = sort_cmp(ctx, cmp_func, tmpbuf[a], sorttab[i+k+b], ei, caller, &cmp);
                         if(FAILED(hres))
                             break;
 
@@ -586,7 +840,7 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
         }
 
         for(i=0; SUCCEEDED(hres) && i < length; i++)
-            hres = jsdisp_propput_idx(dispex, i, lcid, sorttab[i], ei, caller);
+            hres = jsdisp_propput_idx(jsthis, i, sorttab[i], ei, caller);
     }
 
     if(vtab) {
@@ -603,84 +857,222 @@ static HRESULT Array_sort(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS 
 
     if(retv) {
         V_VT(retv) = VT_DISPATCH;
-        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(dispex);
-        IDispatch_AddRef(_IDispatchEx_(dispex));
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(jsthis);
+        IDispatch_AddRef(V_DISPATCH(retv));
     }
 
     return S_OK;
 }
 
-static HRESULT Array_splice(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+/* ECMA-262 3rd Edition    15.4.4.12 */
+static HRESULT Array_splice(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    DWORD length, start=0, delete_cnt=0, argc, i, add_args = 0;
+    DispatchEx *ret_array = NULL, *jsthis;
+    VARIANT v;
+    HRESULT hres = S_OK;
+
+    TRACE("\n");
+
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
+
+    argc = arg_cnt(dp);
+    if(argc >= 1) {
+        hres = to_integer(ctx, get_arg(dp,0), ei, &v);
+        if(FAILED(hres))
+            return hres;
+
+        if(V_VT(&v) == VT_I4) {
+            if(V_I4(&v) >= 0)
+                start = min(V_I4(&v), length);
+            else
+                start = -V_I4(&v) > length ? 0 : length + V_I4(&v);
+        }else {
+            start = V_R8(&v) < 0.0 ? 0 : length;
+        }
+    }
+
+    if(argc >= 2) {
+        hres = to_integer(ctx, get_arg(dp,1), ei, &v);
+        if(FAILED(hres))
+            return hres;
+
+        if(V_VT(&v) == VT_I4) {
+            if(V_I4(&v) > 0)
+                delete_cnt = min(V_I4(&v), length-start);
+        }else if(V_R8(&v) > 0.0) {
+            delete_cnt = length-start;
+        }
+
+        add_args = argc-2;
+    }
+
+    if(retv) {
+        hres = create_array(ctx, 0, &ret_array);
+        if(FAILED(hres))
+            return hres;
+
+        for(i=0; SUCCEEDED(hres) && i < delete_cnt; i++) {
+            hres = jsdisp_get_idx(jsthis, start+i, &v, ei, caller);
+            if(hres == DISP_E_UNKNOWNNAME)
+                hres = S_OK;
+            else if(SUCCEEDED(hres))
+                hres = jsdisp_propput_idx(ret_array, i, &v, ei, caller);
+        }
+
+        if(SUCCEEDED(hres)) {
+            V_VT(&v) = VT_I4;
+            V_I4(&v) = delete_cnt;
+
+            hres = jsdisp_propput_name(ret_array, lengthW, &v, ei, caller);
+        }
+    }
+
+    if(add_args < delete_cnt) {
+        for(i = start; SUCCEEDED(hres) && i < length-delete_cnt; i++) {
+            hres = jsdisp_get_idx(jsthis, i+delete_cnt, &v, ei, caller);
+            if(hres == DISP_E_UNKNOWNNAME)
+                hres = jsdisp_delete_idx(jsthis, i+add_args);
+            else if(SUCCEEDED(hres))
+                hres = jsdisp_propput_idx(jsthis, i+add_args, &v, ei, caller);
+        }
+
+        for(i=length; SUCCEEDED(hres) && i != length-delete_cnt+add_args; i--)
+            hres = jsdisp_delete_idx(jsthis, i-1);
+    }else if(add_args > delete_cnt) {
+        for(i=length-delete_cnt; SUCCEEDED(hres) && i != start; i--) {
+            hres = jsdisp_get_idx(jsthis, i+delete_cnt-1, &v, ei, caller);
+            if(hres == DISP_E_UNKNOWNNAME)
+                hres = jsdisp_delete_idx(jsthis, i+add_args-1);
+            else if(SUCCEEDED(hres))
+                hres = jsdisp_propput_idx(jsthis, i+add_args-1, &v, ei, caller);
+        }
+    }
+
+    for(i=0; SUCCEEDED(hres) && i < add_args; i++)
+        hres = jsdisp_propput_idx(jsthis, start+i, get_arg(dp,i+2), ei, caller);
+
+    if(SUCCEEDED(hres)) {
+        V_VT(&v) = VT_I4;
+        V_I4(&v) = length-delete_cnt+add_args;
+        hres = jsdisp_propput_name(jsthis, lengthW, &v, ei, caller);
+    }
+
+    if(FAILED(hres)) {
+        if(ret_array)
+            jsdisp_release(ret_array);
+        return hres;
+    }
+
+    if(retv) {
+        V_VT(retv) = VT_DISPATCH;
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(ret_array);
+    }
+    return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.4.4.2 */
-static HRESULT Array_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_toString(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    ArrayInstance *array;
+
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_ARRAY)) {
-        WARN("not Array object\n");
-        return E_FAIL;
+    array = array_this(jsthis);
+    if(!array)
+        return throw_type_error(ctx, ei, IDS_ARRAY_EXPECTED, NULL);
+
+    return array_join(ctx, &array->dispex, array->length, default_separatorW, retv, ei, sp);
+}
+
+static HRESULT Array_toLocaleString(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    FIXME("\n");
+    return E_NOTIMPL;
+}
+
+/* ECMA-262 3rd Edition    15.4.4.13 */
+static HRESULT Array_unshift(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+{
+    DispatchEx *jsthis;
+    WCHAR buf[14], *buf_end, *str;
+    DWORD argc, i, length;
+    VARIANT var;
+    DISPID id;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = get_length(ctx, vthis, ei, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
+
+    argc = arg_cnt(dp);
+    if(argc) {
+        buf_end = buf + sizeof(buf)/sizeof(WCHAR)-1;
+        *buf_end-- = 0;
+        i = length;
+
+        while(i--) {
+            str = idx_to_str(i, buf_end);
+
+            hres = jsdisp_get_id(jsthis, str, 0, &id);
+            if(SUCCEEDED(hres)) {
+                hres = jsdisp_propget(jsthis, id, &var, ei, caller);
+                if(FAILED(hres))
+                    return hres;
+
+                hres = jsdisp_propput_idx(jsthis, i+argc, &var, ei, caller);
+                VariantClear(&var);
+            }else if(hres == DISP_E_UNKNOWNNAME) {
+                hres = IDispatchEx_DeleteMemberByDispID(vthis->u.dispex, id);
+            }
+        }
+
+        if(FAILED(hres))
+            return hres;
     }
 
-    return array_join(dispex, lcid, ((ArrayInstance*)dispex)->length, default_separatorW, retv, ei, sp);
+    for(i=0; i<argc; i++) {
+        hres = jsdisp_propput_idx(jsthis, i, get_arg(dp,i), ei, caller);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    if(argc) {
+        length += argc;
+        hres = set_length(jsthis, ei, length);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    if(retv) {
+        if(ctx->version < 2) {
+            V_VT(retv) = VT_EMPTY;
+        }else {
+            V_VT(retv) = VT_I4;
+            V_I4(retv) = length;
+        }
+    }
+    return S_OK;
 }
 
-static HRESULT Array_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_unshift(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Array_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     TRACE("\n");
 
     switch(flags) {
+    case INVOKE_FUNC:
+        return throw_type_error(ctx, ei, IDS_NOT_FUNC, NULL);
     case INVOKE_PROPERTYGET:
-        return array_join(dispex, lcid, ((ArrayInstance*)dispex)->length, default_separatorW, retv, ei, sp);
+        return array_join(ctx, jsthis->u.jsdisp, array_from_vdisp(jsthis)->length, default_separatorW, retv, ei, sp);
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -716,23 +1108,19 @@ static void Array_on_put(DispatchEx *dispex, const WCHAR *name)
 }
 
 static const builtin_prop_t Array_props[] = {
-    {concatW,                Array_concat,               PROPF_METHOD},
-    {hasOwnPropertyW,        Array_hasOwnProperty,       PROPF_METHOD},
-    {isPrototypeOfW,         Array_isPrototypeOf,        PROPF_METHOD},
-    {joinW,                  Array_join,                 PROPF_METHOD},
+    {concatW,                Array_concat,               PROPF_METHOD|1},
+    {joinW,                  Array_join,                 PROPF_METHOD|1},
     {lengthW,                Array_length,               0},
     {popW,                   Array_pop,                  PROPF_METHOD},
-    {propertyIsEnumerableW,  Array_propertyIsEnumerable, PROPF_METHOD},
-    {pushW,                  Array_push,                 PROPF_METHOD},
+    {pushW,                  Array_push,                 PROPF_METHOD|1},
     {reverseW,               Array_reverse,              PROPF_METHOD},
     {shiftW,                 Array_shift,                PROPF_METHOD},
-    {sliceW,                 Array_slice,                PROPF_METHOD},
-    {sortW,                  Array_sort,                 PROPF_METHOD},
-    {spliceW,                Array_splice,               PROPF_METHOD},
+    {sliceW,                 Array_slice,                PROPF_METHOD|2},
+    {sortW,                  Array_sort,                 PROPF_METHOD|1},
+    {spliceW,                Array_splice,               PROPF_METHOD|2},
     {toLocaleStringW,        Array_toLocaleString,       PROPF_METHOD},
     {toStringW,              Array_toString,             PROPF_METHOD},
-    {unshiftW,               Array_unshift,              PROPF_METHOD},
-    {valueOfW,               Array_valueOf,              PROPF_METHOD}
+    {unshiftW,               Array_unshift,              PROPF_METHOD|1},
 };
 
 static const builtin_info_t Array_info = {
@@ -744,7 +1132,7 @@ static const builtin_info_t Array_info = {
     Array_on_put
 };
 
-static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT ArrayConstr_value(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
     DispatchEx *obj;
@@ -755,14 +1143,13 @@ static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     TRACE("\n");
 
     switch(flags) {
+    case DISPATCH_METHOD:
     case DISPATCH_CONSTRUCT: {
         if(arg_cnt(dp) == 1 && V_VT((arg_var = get_arg(dp, 0))) == VT_I4) {
-            if(V_I4(arg_var) < 0) {
-                FIXME("throw RangeError\n");
-                return E_FAIL;
-            }
+            if(V_I4(arg_var) < 0)
+                return throw_range_error(ctx, ei, IDS_INVALID_LENGTH, NULL);
 
-            hres = create_array(dispex->ctx, V_I4(arg_var), &obj);
+            hres = create_array(ctx, V_I4(arg_var), &obj);
             if(FAILED(hres))
                 return hres;
 
@@ -771,12 +1158,12 @@ static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISP
             return S_OK;
         }
 
-        hres = create_array(dispex->ctx, arg_cnt(dp), &obj);
+        hres = create_array(ctx, arg_cnt(dp), &obj);
         if(FAILED(hres))
             return hres;
 
         for(i=0; i < arg_cnt(dp); i++) {
-            hres = jsdisp_propput_idx(obj, i, lcid, get_arg(dp, i), ei, caller);
+            hres = jsdisp_propput_idx(obj, i, get_arg(dp, i), ei, caller);
             if(FAILED(hres))
                 break;
         }
@@ -797,7 +1184,7 @@ static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     return S_OK;
 }
 
-static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **ret)
+static HRESULT alloc_array(script_ctx_t *ctx, DispatchEx *object_prototype, ArrayInstance **ret)
 {
     ArrayInstance *array;
     HRESULT hres;
@@ -806,10 +1193,10 @@ static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **r
     if(!array)
         return E_OUTOFMEMORY;
 
-    if(use_constr)
-        hres = init_dispex_from_constr(&array->dispex, ctx, &Array_info, ctx->array_constr);
+    if(object_prototype)
+        hres = init_dispex(&array->dispex, ctx, &Array_info, object_prototype);
     else
-        hres = init_dispex(&array->dispex, ctx, &Array_info, NULL);
+        hres = init_dispex_from_constr(&array->dispex, ctx, &Array_info, ctx->array_constr);
 
     if(FAILED(hres)) {
         heap_free(array);
@@ -820,18 +1207,20 @@ static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **r
     return S_OK;
 }
 
-HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     ArrayInstance *array;
     HRESULT hres;
 
-    hres = alloc_array(ctx, FALSE, &array);
+    static const WCHAR ArrayW[] = {'A','r','r','a','y',0};
+
+    hres = alloc_array(ctx, object_prototype, &array);
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, ArrayConstr_value, PROPF_CONSTR, &array->dispex, ret);
+    hres = create_builtin_function(ctx, ArrayConstr_value, ArrayW, NULL, PROPF_CONSTR|1, &array->dispex, ret);
 
-    IDispatchEx_Release(_IDispatchEx_(&array->dispex));
+    jsdisp_release(&array->dispex);
     return hres;
 }
 
@@ -840,7 +1229,7 @@ HRESULT create_array(script_ctx_t *ctx, DWORD length, DispatchEx **ret)
     ArrayInstance *array;
     HRESULT hres;
 
-    hres = alloc_array(ctx, TRUE, &array);
+    hres = alloc_array(ctx, NULL, &array);
     if(FAILED(hres))
         return hres;
 

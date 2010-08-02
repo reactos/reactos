@@ -4,7 +4,7 @@
 * FILE:            ntoskrnl/fstub/disksup.c
 * PURPOSE:         I/O HAL Routines for Disk Access
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
-*                  Eric Kohl (ekohl@rz-online.de)
+*                  Eric Kohl
 *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
 */
 
@@ -20,7 +20,7 @@
 #if 1
 const WCHAR DiskMountString[] = L"\\DosDevices\\%C:";
 
-#define AUTO_DRIVE         ((ULONG)-1)
+#define AUTO_DRIVE         MAXULONG
 
 #define PARTITION_MAGIC    0xaa55
 
@@ -135,7 +135,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
     if (RtlCompareUnicodeString(PartitionName, BootDevice, FALSE) == 0)
     {
         /* Set NtSystemPath to that partition's disk letter */
-        *NtSystemPath = 'A' + DriveNumber;
+        *NtSystemPath = (UCHAR)('A' + DriveNumber);
     }
 
     return TRUE;
@@ -452,6 +452,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PartialInformation = (PKEY_VALUE_PARTIAL_INFORMATION)ExAllocatePool(PagedPool,
         sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO));
 
+    if (!Buffer1 || !Buffer2 || !PartialInformation) return;
+
     DiskMountInfo = (PREG_DISK_MOUNT_INFO) PartialInformation->Data;
 
     /* Open or Create the 'MountedDevices' key */
@@ -522,8 +524,18 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
 
     /* Initialize layout array */
+    if (ConfigInfo->DiskCount == 0)
+        goto end_assign_disks;
     LayoutArray = ExAllocatePool(NonPagedPool,
         ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+    if (!LayoutArray)
+    {
+        ExFreePool(PartialInformation);
+        ExFreePool(Buffer2);
+        ExFreePool(Buffer1);
+        if (hKey) ZwClose(hKey);
+    }
+
     RtlZeroMemory(LayoutArray,
         ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
     for (i = 0; i < ConfigInfo->DiskCount; i++)
@@ -885,6 +897,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             ExFreePool(LayoutArray[i]);
     }
     ExFreePool(LayoutArray);
+end_assign_disks:
 
     /* Assign floppy drives */
     DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
@@ -1673,7 +1686,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
         {
             /* Check if this is a container partition, since we skipped them */
-            if (IsContainerPartition(PartitionType))
+            if (IsContainerPartition(PartitionDescriptor->PartitionType))
             {
                 /* Get its offset */
                 Offset.QuadPart = VolumeOffset.QuadPart +

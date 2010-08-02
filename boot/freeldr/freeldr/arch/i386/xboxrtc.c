@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -37,46 +37,28 @@ HalpQueryCMOS(UCHAR Reg)
   return(Val);
 }
 
-VOID
-XboxRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second)
+TIMEINFO*
+XboxGetTime(VOID)
 {
-  while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
+    static TIMEINFO TimeInfo;
+
+    while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
     {
-      ;
+        ;
     }
 
-  if (NULL != Second)
-    {
-      *Second = BCD_INT(HalpQueryCMOS(0));
-    }
-  if (NULL != Minute)
-    {
-      *Minute = BCD_INT(HalpQueryCMOS(2));
-    }
-  if (NULL != Hour)
-    {
-      *Hour = BCD_INT(HalpQueryCMOS(4));
-    }
-  if (NULL != Day)
-    {
-      *Day = BCD_INT(HalpQueryCMOS(7));
-    }
-  if (NULL != Month)
-    {
-      *Month = BCD_INT(HalpQueryCMOS(8));
-    }
-  if (NULL != Year)
-    {
-      *Year = BCD_INT(HalpQueryCMOS(9));
-      if (*Year > 80)
-        {
-          *Year += 1900;
-        }
-      else
-        {
-          *Year += 2000;
-        }
-    }
+    TimeInfo.Second = BCD_INT(HalpQueryCMOS(0));
+    TimeInfo.Minute = BCD_INT(HalpQueryCMOS(2));
+    TimeInfo.Hour = BCD_INT(HalpQueryCMOS(4));
+    TimeInfo.Day = BCD_INT(HalpQueryCMOS(7));
+    TimeInfo.Month = BCD_INT(HalpQueryCMOS(8));
+    TimeInfo.Year = BCD_INT(HalpQueryCMOS(9));
+    if (TimeInfo.Year > 80)
+        TimeInfo.Year += 1900;
+    else
+        TimeInfo.Year += 2000;
+
+    return &TimeInfo;
 }
 
 /* EOF */

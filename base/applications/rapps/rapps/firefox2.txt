@@ -1,0 +1,30 @@
+﻿; UTF-8
+
+[Section]
+Name = Mozilla Firefox 2.0
+Version = 2.0.0.20
+Licence = MPL/GPL/LGPL
+Description = The most popular and one of the best free Web Browsers out there.
+Size = 5.8M
+Category = 5
+URLSite = http://www.mozilla.com/en-US/
+URLDownload = http://svn.reactos.org/packages/Firefox%20Setup%202.0.0.20.exe
+CDPath = none
+
+[Section.0407]
+Description = Der populärste und einer der besten freien Webbrowser.
+
+[Section.040a]
+Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
+
+[Section.0414]
+Description = Mest populære og best også gratis nettleserene der ute.
+
+[Section.0415]
+Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
+
+[Section.0419]
+Description = Один из самых популярных и лучших бесплатных браузеров.
+
+[Section.0422]
+Description = Найпопулярніший та один з кращих безплатних веб-браузерів.

@@ -12,7 +12,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -163,7 +163,7 @@ static BOOL UserLoadKbdDll(WCHAR *wsKLID,
       DPRINT("Loaded %wZ\n", &FullLayoutPath);
 
       RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
-      LdrGetProcedureAddress((PVOID)*phModule,
+      LdrGetProcedureAddress((*(PDRIVERS*)phModule)->BaseAddress,
                              &kbdProcedureName,
                              0,
                              (PVOID*)&layerDescGetFn);
@@ -199,7 +199,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
    ULONG hKl;
    LANGID langid;
 
-   NewKbl = ExAllocatePool(PagedPool, sizeof(KBL));
+   NewKbl = ExAllocatePoolWithTag(PagedPool, sizeof(KBL), TAG_KEYBOARD);
 
    if(!NewKbl)
    {
@@ -212,7 +212,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
    if(!UserLoadKbdDll(NewKbl->Name, &NewKbl->hModule, &NewKbl->KBTables))
    {
       DPRINT("%s: failed to load %x dll!\n", __FUNCTION__, LocaleId);
-      ExFreePool(NewKbl);
+      ExFreePoolWithTag(NewKbl, TAG_KEYBOARD);
       return NULL;
    }
 
@@ -228,7 +228,7 @@ static PKBL UserLoadDllAndCreateKbl(DWORD LocaleId)
       hKl |= 0xe001 << 16; /* FIXME */
    else hKl |= hKl << 16;
 
-   NewKbl->hkl = (HKL) hKl;
+   NewKbl->hkl = (HKL)(ULONG_PTR) hKl;
    NewKbl->klid = LocaleId;
    NewKbl->Flags = 0;
    NewKbl->RefCount = 0;
@@ -401,7 +401,7 @@ BOOL UserUnloadKbl(PKBL pKbl)
       //Unload the layout
       EngUnloadImage(pKbl->hModule);
       RemoveEntryList(&pKbl->List);
-      ExFreePool(pKbl);
+      ExFreePoolWithTag(pKbl, TAG_KEYBOARD);
    }
 
    return TRUE;
@@ -453,7 +453,7 @@ UserGetKeyboardLayout(
       return W32Thread->KeyboardLayout->hkl;
    }
 
-   Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+   Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

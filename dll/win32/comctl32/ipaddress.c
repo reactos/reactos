@@ -77,6 +77,29 @@ static const WCHAR IP_SUBCLASS_PROP[] =
 static LRESULT CALLBACK
 IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+static void IPADDRESS_UpdateText (const IPADDRESS_INFO *infoPtr)
+{
+    static const WCHAR zero[2] = {'0', 0};
+    static const WCHAR dot[2]  = {'.', 0};
+    WCHAR field[4];
+    WCHAR ip[16];
+    INT i;
+
+    ip[0] = 0;
+
+    for (i = 0; i < 4; i++) {
+        if (GetWindowTextW (infoPtr->Part[i].EditHwnd, field, 4))
+            strcatW(ip, field);
+        else
+            /* empty edit treated as zero */
+            strcatW(ip, zero);
+        if (i != 3)
+            strcatW(ip, dot);
+    }
+
+    SetWindowTextW(infoPtr->Self, ip);
+}
+
 static LRESULT IPADDRESS_Notify (const IPADDRESS_INFO *infoPtr, UINT command)
 {
     HWND hwnd = infoPtr->Self;
@@ -135,18 +158,18 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
     GetClientRect (infoPtr->Self, &rect);
 
     if (infoPtr->Enabled) {
-        bgCol = COLOR_WINDOW;
-        fgCol = COLOR_WINDOWTEXT;
+        bgCol = comctl32_color.clrWindow;
+        fgCol = comctl32_color.clrWindowText;
     } else {
-        bgCol = COLOR_3DFACE;
-        fgCol = COLOR_GRAYTEXT;
+        bgCol = comctl32_color.clr3dFace;
+        fgCol = comctl32_color.clrGrayText;
     }
     
     FillRect (hdc, &rect, (HBRUSH)(DWORD_PTR)(bgCol+1));
     DrawEdge (hdc, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
     
-    SetBkColor  (hdc, GetSysColor(bgCol));
-    SetTextColor(hdc, GetSysColor(fgCol));
+    SetBkColor  (hdc, bgCol);
+    SetTextColor(hdc, fgCol);
 
     for (i = 0; i < 3; i++) {
         GetWindowRect (infoPtr->Part[i].EditHwnd, &rcPart);
@@ -166,7 +189,6 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
 
 static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
 {
-    static const WCHAR EDIT[] = { 'E', 'd', 'i', 't', 0 };
     IPADDRESS_INFO *infoPtr;
     RECT rcClient, edit;
     int i, fieldsize;
@@ -207,7 +229,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
         edit.left = rcClient.left + i*fieldsize + 6;
         edit.right = rcClient.left + (i+1)*fieldsize - 2;
         part->EditHwnd =
-		CreateWindowW (EDIT, NULL, WS_CHILD | WS_VISIBLE | ES_CENTER,
+		CreateWindowW (WC_EDITW, NULL, WS_CHILD | WS_VISIBLE | ES_CENTER,
                                edit.left, edit.top, edit.right - edit.left,
 			       edit.bottom - edit.top, hwnd, (HMENU) 1,
 			       (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL);
@@ -218,6 +240,8 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
 				(DWORD_PTR)IPADDRESS_SubclassProc);
         EnableWindow(part->EditHwnd, infoPtr->Enabled);
     }
+
+    IPADDRESS_UpdateText (infoPtr);
 
     return 0;
 }
@@ -483,7 +507,7 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    return return_val;
 		} else if (len == 3 && startsel==endsel && endsel==len)
 		    IPADDRESS_GotoNextField (infoPtr, index, POS_SELALL);
-		else if (len < 3) break;
+		else if (len < 3 || startsel != endsel) break;
 	    } else if(c == '.' || c == ' ') {
 		if(len && startsel==endsel && startsel != 0) {
 		    IPADDRESS_GotoNextField(infoPtr, index, POS_SELALL);
@@ -561,6 +585,7 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 	    switch(wParam >> 16) {
 		case EN_CHANGE:
+		    IPADDRESS_UpdateText(infoPtr);
 		    IPADDRESS_Notify(infoPtr, EN_CHANGE);
 		    break;
 		case EN_KILLFOCUS:
@@ -568,6 +593,10 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    break;
 	    }
 	    break;
+
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
+            return 0;
 
         case IPM_CLEARADDRESS:
             IPADDRESS_ClearAddress (infoPtr);

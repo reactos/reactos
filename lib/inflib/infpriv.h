@@ -6,18 +6,17 @@
  *             Ge van Geldorp <gvg@reactos.org>
  */
 
-#ifndef INFPRIV_H_INCLUDED
-#define INFPRIV_H_INCLUDED
+#pragma once
 
 #ifndef FIELD_OFFSET
 #define FIELD_OFFSET(t,f) ((ptrdiff_t)&(((t*)0)->f))
 #endif
 
-#define INF_STATUS_INSUFFICIENT_RESOURCES  (0xC000009A)
-#define INF_STATUS_BAD_SECTION_NAME_LINE   (0xC0700001)
-#define INF_STATUS_SECTION_NAME_TOO_LONG   (0xC0700002)
-#define INF_STATUS_WRONG_INF_STYLE         (0xC0700003)
-#define INF_STATUS_NOT_ENOUGH_MEMORY       (0xC0700004)
+#define INF_STATUS_INSUFFICIENT_RESOURCES  ((INFSTATUS)0xC000009A)
+#define INF_STATUS_BAD_SECTION_NAME_LINE   ((INFSTATUS)0xC0700001)
+#define INF_STATUS_SECTION_NAME_TOO_LONG   ((INFSTATUS)0xC0700002)
+#define INF_STATUS_WRONG_INF_STYLE         ((INFSTATUS)0xC0700003)
+#define INF_STATUS_NOT_ENOUGH_MEMORY       ((INFSTATUS)0xC0700004)
 
 typedef struct _INFCACHEFIELD
 {
@@ -69,7 +68,7 @@ typedef struct _INFCONTEXT
   PINFCACHELINE Line;
 } INFCONTEXT;
 
-typedef long INFSTATUS;
+typedef int INFSTATUS;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -116,7 +115,7 @@ extern INFSTATUS InfpGetBinaryField(PINFCONTEXT Context,
                                     PULONG RequiredSize);
 extern INFSTATUS InfpGetIntField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
-                                 PLONG IntegerValue);
+                                 INT* IntegerValue);
 extern INFSTATUS InfpGetMultiSzField(PINFCONTEXT Context,
                                      ULONG FieldIndex,
                                      PTSTR ReturnBuffer,
@@ -141,7 +140,5 @@ extern INFSTATUS InfpAddLineWithKey(PINFCONTEXT Context, PCTSTR Key);
 extern INFSTATUS InfpAddField(PINFCONTEXT Context, PCTSTR Data);
 
 extern VOID InfpFreeContext(PINFCONTEXT Context);
-
-#endif /* INFPRIV_H_INCLUDED */
 
 /* EOF */

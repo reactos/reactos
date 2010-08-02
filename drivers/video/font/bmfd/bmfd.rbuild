@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="bmfd" type="kernelmodedriver" entrypoint="BmfdEnableDriver@12" installbase="system32" installname="bmfd.dll" crt="static">
 	<library>win32k</library>
 	<library>libcntpr</library>

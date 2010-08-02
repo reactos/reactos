@@ -226,7 +226,7 @@ NtCreateJobObject (
     PEJOB Job;
     KPROCESSOR_MODE PreviousMode;
     PEPROCESS CurrentProcess;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     PAGED_CODE();
 
@@ -234,7 +234,7 @@ NtCreateJobObject (
     CurrentProcess = PsGetCurrentProcess();
 
     /* check for valid buffers */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -242,14 +242,9 @@ NtCreateJobObject (
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
 
     Status = ObCreateObject(PreviousMode,
@@ -397,14 +392,14 @@ NtOpenJobObject (
 {
     KPROCESSOR_MODE PreviousMode;
     HANDLE hJob;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
 
     /* check for valid buffers */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -412,37 +407,29 @@ NtOpenJobObject (
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    Status = ObOpenObjectByName(ObjectAttributes,
+        PsJobType,
+        PreviousMode,
+        NULL,
+        DesiredAccess,
+        NULL,
+        &hJob);
+    if(NT_SUCCESS(Status))
+    {
+        _SEH2_TRY
+        {
+            *JobHandle = hJob;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
-
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-    }
-
-    if(NT_SUCCESS(Status))
-    {
-        Status = ObOpenObjectByName(ObjectAttributes,
-            PsJobType,
-            PreviousMode,
-            NULL,
-            DesiredAccess,
-            NULL,
-            &hJob);
-        if(NT_SUCCESS(Status))
-        {
-            _SEH2_TRY
-            {
-                *JobHandle = hJob;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-        }
     }
 
     return Status;

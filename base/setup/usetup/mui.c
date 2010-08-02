@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
@@ -235,7 +235,7 @@ AddHotkeySettings(IN LPCWSTR Hotkey, IN LPCWSTR LangHotkey, IN LPCWSTR LayoutHot
                                NULL);
 
     Status =  NtCreateKey(&KeyHandle,
-                          KEY_ALL_ACCESS,
+                          KEY_SET_VALUE,
                           &ObjectAttributes,
                           0,
                           NULL,
@@ -326,7 +326,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                NULL);
 
     Status =  NtCreateKey(&KeyHandle,
-                          KEY_ALL_ACCESS,
+                          KEY_CREATE_SUB_KEY,
                           &ObjectAttributes,
                           0,
                           NULL,
@@ -358,7 +358,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                NULL);
 
     Status = NtCreateKey(&KeyHandle,
-                         KEY_ALL_ACCESS,
+                         KEY_SET_VALUE,
                          &ObjectAttributes,
                          0,
                          NULL,
@@ -379,7 +379,7 @@ AddKbLayoutsToRegistry(IN const MUI_LAYOUTS * MuiLayouts)
                                NULL);
 
     Status =  NtCreateKey(&SubKeyHandle,
-                          KEY_ALL_ACCESS,
+                          KEY_SET_VALUE,
                           &ObjectAttributes,
                           0,
                           NULL,

@@ -5,8 +5,8 @@
  * PURPOSE:         Internal header for the I/O HAL Functions (Fstub)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
-#ifndef _HAL_
-#define _HAL_
+
+#pragma once
 
 //
 // Default implementations of HAL dispatch table
@@ -46,6 +46,31 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
                           IN ULONG SectorsPerTrack,
                           IN ULONG NumberOfHeads,
                           IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer);
+
+VOID
+NTAPI
+xHalHaltSystem(
+    VOID
+);
+
+VOID
+NTAPI
+xHalEndOfBoot(
+    VOID
+);
+
+VOID
+NTAPI
+xHalSetWakeEnable(
+    IN BOOLEAN Enable
+);
+
+UCHAR
+NTAPI
+xHalVectorToIDTEntry(
+    IN ULONG Vector
+);
+
 
 //
 // Various offsets in the boot record
@@ -143,5 +168,3 @@ typedef struct _PTE
     ULONG StartingSector;
     ULONG PartitionLength;
 } PTE, *PPTE;
-
-#endif

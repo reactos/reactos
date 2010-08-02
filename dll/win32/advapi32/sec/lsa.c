@@ -1,17 +1,18 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/sec/lsa.c
+ * FILE:            dll/win32/advapi32/sec/lsa.c
  * PURPOSE:         Local security authority functions
  * PROGRAMMER:      Emanuele Aliberti
  * UPDATE HISTORY:
- *	19990322 EA created
- *	19990515 EA stubs
+ *      19990322 EA created
+ *      19990515 EA stubs
  *      20030202 KJK compressed stubs
  *
  */
 #include <advapi32.h>
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
@@ -67,6 +68,27 @@ static void* ADVAPI_GetDomainName(unsigned sz, unsigned ofs)
     }
     return ptr;
 }
+
+
+static BOOL LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
+{
+    DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+    BOOL Result;
+    LPWSTR buf;
+
+    if (ServerName == NULL || ServerName->Length == 0 || ServerName->Buffer == NULL)
+        return TRUE;
+
+    buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    Result = GetComputerNameW(buf, &dwSize);
+    if (Result && (ServerName->Buffer[0] == '\\') && (ServerName->Buffer[1] == '\\'))
+        ServerName += 2;
+    Result = Result && !lstrcmpW(ServerName->Buffer, buf);
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    return Result;
+}
+
 
 handle_t __RPC_USER
 PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
@@ -183,7 +205,7 @@ LsaAddAccountRights(
     ULONG CountOfRights)
 {
     FIXME("(%p,%p,%p,0x%08x) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -200,7 +222,7 @@ LsaCreateTrustedDomainEx(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, TrustedDomainInformation, AuthenticationInformation,
           DesiredAccess, TrustedDomainHandle);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -213,11 +235,11 @@ LsaDeleteTrustedDomain(
     PSID TrustedDomainSid)
 {
     FIXME("(%p,%p) stub\n", PolicyHandle, TrustedDomainSid);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -227,8 +249,35 @@ LsaEnumerateAccountRights(
     PLSA_UNICODE_STRING *UserRights,
     PULONG CountOfRights)
 {
-    FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    LSAPR_USER_RIGHT_SET UserRightsSet;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
+
+    UserRightsSet.Entries = 0;
+    UserRightsSet.UserRights = NULL;
+
+    RpcTryExcept
+    {
+        Status = LsarEnmuerateAccountRights((LSAPR_HANDLE)PolicyHandle,
+                                            AccountSid,
+                                            &UserRightsSet);
+
+        *CountOfRights = UserRightsSet.Entries;
+        *UserRights = (PUNICODE_STRING)UserRightsSet.UserRights;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+
+        if (UserRightsSet.UserRights != NULL)
+        {
+            MIDL_user_free(UserRightsSet.UserRights);
+        }
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /*
@@ -243,7 +292,7 @@ LsaEnumerateAccountsWithUserRight(
     PULONG CountReturned)
 {
     FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, UserRights, EnumerationBuffer, CountReturned);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_NO_MORE_ENTRIES;
 }
 
 /*
@@ -260,7 +309,9 @@ LsaEnumerateTrustedDomains(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext,
         Buffer, PreferedMaximumLength, CountReturned);
-    return STATUS_NOT_IMPLEMENTED;
+    
+    if (CountReturned) *CountReturned = 0;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -277,13 +328,15 @@ LsaEnumerateTrustedDomainsEx(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, EnumerationContext, Buffer,
         PreferedMaximumLength, CountReturned);
-    return STATUS_NOT_IMPLEMENTED;
+    if (CountReturned) *CountReturned = 0;
+    return STATUS_SUCCESS;
 }
 
 /*
  * @implemented
  */
-NTSTATUS WINAPI
+NTSTATUS
+WINAPI
 LsaFreeMemory(PVOID Buffer)
 {
     TRACE("(%p)\n", Buffer);
@@ -295,47 +348,47 @@ LsaFreeMemory(PVOID Buffer)
  */
 NTSTATUS
 WINAPI
-LsaLookupNames(
-    LSA_HANDLE PolicyHandle,
-    ULONG Count,
-    PLSA_UNICODE_STRING Names,
-    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-    PLSA_TRANSLATED_SID *Sids)
+LsaLookupNames(IN LSA_HANDLE PolicyHandle,
+               IN ULONG Count,
+               IN PLSA_UNICODE_STRING Names,
+               OUT PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+               OUT PLSA_TRANSLATED_SID *Sids)
 {
-    PLSA_TRANSLATED_SID2 Sids2;
-    LSA_TRANSLATED_SID *TranslatedSids;
-    ULONG i;
+    LSAPR_TRANSLATED_SIDS TranslatedSids;
+    ULONG MappedCount = 0;
     NTSTATUS Status;
 
     TRACE("(%p,0x%08x,%p,%p,%p)\n", PolicyHandle, Count, Names,
           ReferencedDomains, Sids);
 
-    /* Call LsaLookupNames2, which supersedes this function */
-    Status = LsaLookupNames2(PolicyHandle, Count, 0, Names, ReferencedDomains, &Sids2);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    RpcTryExcept
+    {
+        *ReferencedDomains = NULL;
+        *Sids = NULL;
 
-    /* Translate the returned structure */
-    TranslatedSids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID));
-    if (!TranslatedSids)
-    {
-        LsaFreeMemory(Sids2);
-        return SCESTATUS_NOT_ENOUGH_RESOURCE;
+        TranslatedSids.Entries = Count;
+        TranslatedSids.Sids = *Sids;
+
+        Status = LsarLookupNames((LSAPR_HANDLE)PolicyHandle,
+                                 Count,
+                                 (PRPC_UNICODE_STRING)Names,
+                                 (PLSAPR_REFERENCED_DOMAIN_LIST *)ReferencedDomains,
+                                 &TranslatedSids,
+                                 LsapLookupWksta,
+                                 &MappedCount);
+
+        *Sids = (PLSA_TRANSLATED_SID)TranslatedSids.Sids;
     }
-    RtlZeroMemory(Sids, Count * sizeof(PLSA_TRANSLATED_SID));
-    for (i = 0; i < Count; i++)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        TranslatedSids[i].Use = Sids2[i].Use;
-        if (Sids2[i].Use != SidTypeInvalid && Sids2[i].Use != SidTypeUnknown)
+        if (TranslatedSids.Sids != NULL)
         {
-            TranslatedSids[i].DomainIndex = Sids2[i].DomainIndex;
-            if (Sids2[i].Use != SidTypeDomain)
-                TranslatedSids[i].RelativeId = *GetSidSubAuthority(Sids2[i].Sid, 0);
+            MIDL_user_free(TranslatedSids.Sids);
         }
-    }
-    LsaFreeMemory(Sids2);
 
-    *Sids = TranslatedSids;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
 
     return Status;
 }
@@ -355,51 +408,134 @@ LsaLookupNames2(
 {
     FIXME("(%p,0x%08x,0x%08x,%p,%p,%p) stub\n", PolicyHandle, Flags,
         Count, Names, ReferencedDomains, Sids);
+    if (Names != NULL && Count > 0)
+    {
+        *ReferencedDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_REFERENCED_DOMAIN_LIST));
+        *Sids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID2));
+        return STATUS_SOME_NOT_MAPPED;
+    }
     return STATUS_NONE_MAPPED;
 }
 
 /*
- * @unimplemented
+ * @unmplemented
  */
 NTSTATUS
 WINAPI
-LsaLookupSids(
-    LSA_HANDLE PolicyHandle,
-    ULONG Count,
-    PSID *Sids,
-    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-    PLSA_TRANSLATED_NAME *Names)
+LsaLookupPrivilegeName(IN LSA_HANDLE PolicyHandle,
+                       IN PLUID Value,
+                       OUT PUNICODE_STRING *Name)
 {
-    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
-    PLSA_REFERENCED_DOMAIN_LIST LocalDomains;
-    PLSA_TRANSLATED_NAME LocalNames;
+    PRPC_UNICODE_STRING NameBuffer = NULL;
+    NTSTATUS Status;
 
-    TRACE("(%p,%u,%p,%p,%p) stub\n", PolicyHandle, Count, Sids,
+    TRACE("(%p,%p,%p)\n", PolicyHandle, Value, Name);
+
+    RpcTryExcept
+    {
+        Status = LsarLookupPrivilegeName(PolicyHandle,
+                                         Value,
+                                         &NameBuffer);
+
+        *Name = (PUNICODE_STRING)NameBuffer;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (NameBuffer != NULL)
+            MIDL_user_free(NameBuffer);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
+                        IN PLSA_UNICODE_STRING Name,
+                        OUT PLUID Value)
+{
+    LUID Luid;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%p)\n", PolicyHandle, Name, Value);
+
+    RpcTryExcept
+    {
+        Status = LsarLookupPrivilegeValue(PolicyHandle,
+                                          (PRPC_UNICODE_STRING)Name,
+                                          &Luid);
+        if (Status == STATUS_SUCCESS)
+            *Value = Luid;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaLookupSids(IN LSA_HANDLE PolicyHandle,
+              IN ULONG Count,
+              IN PSID *Sids,
+              OUT PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+              OUT PLSA_TRANSLATED_NAME *Names)
+{
+    LSAPR_SID_ENUM_BUFFER SidEnumBuffer;
+    LSAPR_TRANSLATED_NAMES TranslatedNames;
+    ULONG MappedCount = 0;
+    NTSTATUS  Status;
+
+    TRACE("(%p,%u,%p,%p,%p)\n", PolicyHandle, Count, Sids,
           ReferencedDomains, Names);
 
-    WARN("LsaLookupSids(): stub. Always returning 'Administrator'\n");
-    if (Count != 1)
-        return STATUS_NONE_MAPPED;
-    LocalDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_TRANSLATED_SID));
-    if (!LocalDomains)
-        return SCESTATUS_NOT_ENOUGH_RESOURCE;
-    LocalNames = RtlAllocateHeap(RtlGetProcessHeap(), 0,  sizeof(LSA_TRANSLATED_NAME) + UserName.MaximumLength);
-    if (!LocalNames)
-    {
-        LsaFreeMemory(LocalDomains);
-        return SCESTATUS_NOT_ENOUGH_RESOURCE;
-    }
-    LocalDomains[0].Entries = 0;
-    LocalDomains[0].Domains = NULL;
-    LocalNames[0].Use = SidTypeWellKnownGroup;
-    LocalNames[0].Name.Buffer = (LPWSTR)((ULONG_PTR)(LocalNames) + sizeof(LSA_TRANSLATED_NAME));
-    LocalNames[0].Name.Length = UserName.Length;
-    LocalNames[0].Name.MaximumLength = UserName.MaximumLength;
-    RtlCopyMemory(LocalNames[0].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
+    if (Count == 0)
+        return STATUS_INVALID_PARAMETER;
 
-    *ReferencedDomains = LocalDomains;
-    *Names = LocalNames;
-    return STATUS_SUCCESS;
+    SidEnumBuffer.Entries = Count;
+    SidEnumBuffer.SidInfo = (PLSAPR_SID_INFORMATION)Sids;
+
+    RpcTryExcept
+    {
+        *ReferencedDomains = NULL;
+        *Names = NULL;
+
+        TranslatedNames.Entries = 0;
+        TranslatedNames.Names = NULL;
+
+        Status = LsarLookupSids((LSAPR_HANDLE)PolicyHandle,
+                                &SidEnumBuffer,
+                                (PLSAPR_REFERENCED_DOMAIN_LIST *)ReferencedDomains,
+                                &TranslatedNames,
+                                LsapLookupWksta,
+                                &MappedCount);
+
+        *Names = (PLSA_TRANSLATED_NAME)TranslatedNames.Names;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (TranslatedNames.Names != NULL)
+        {
+            MIDL_user_free(TranslatedNames.Names);
+        }
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /******************************************************************************
@@ -442,6 +578,10 @@ LsaOpenPolicy(
           SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
 
+    /* FIXME: RPC should take care of this */
+    if (!LsapIsLocalComputer(SystemName))
+        return RPC_NT_SERVER_UNAVAILABLE;
+
     RpcTryExcept
     {
         *PolicyHandle = NULL;
@@ -475,7 +615,7 @@ LsaOpenTrustedDomainByName(
     PLSA_HANDLE TrustedDomainHandle)
 {
     FIXME("(%p,%p,0x%08x,%p) stub\n", PolicyHandle, TrustedDomainName, DesiredAccess, TrustedDomainHandle);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -549,10 +689,9 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
                 DWORD padding[3];
                 WCHAR domain[MAX_COMPUTERNAME_LENGTH + 1];
             };
-            SID_IDENTIFIER_AUTHORITY localSidAuthority = {SECURITY_NT_AUTHORITY};
 
             DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-            struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
+            struct di * xdi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
 
             xdi->info.DomainName.MaximumLength = dwSize * sizeof(WCHAR);
             xdi->info.DomainName.Buffer = xdi->domain;
@@ -562,10 +701,16 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
             TRACE("setting name to %s\n", debugstr_w(xdi->info.DomainName.Buffer));
 
             xdi->info.DomainSid = &xdi->sid;
-            xdi->sid.Revision = SID_REVISION;
-            xdi->sid.SubAuthorityCount = 1;
-            xdi->sid.IdentifierAuthority = localSidAuthority;
-            xdi->sid.SubAuthority[0] = SECURITY_LOCAL_SYSTEM_RID;
+
+            /* read the computer SID from the registry */
+            if (!ADVAPI_GetComputerSid(&xdi->sid))
+            {
+                HeapFree(GetProcessHeap(), 0, xdi);
+
+                WARN("Computer SID not found\n");
+
+                return STATUS_UNSUCCESSFUL;
+            }
 
             *Buffer = xdi;
         }
@@ -613,7 +758,7 @@ LsaQueryTrustedDomainInfoByName(
     PVOID *Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -628,7 +773,7 @@ LsaQueryTrustedDomainInfo(
     PVOID *Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -644,7 +789,7 @@ LsaRemoveAccountRights(
     ULONG CountOfRights)
 {
     FIXME("(%p,%p,%d,%p,0x%08x) stub\n", PolicyHandle, AccountSid, AllRights, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -658,7 +803,7 @@ LsaRetrievePrivateData(
     PLSA_UNICODE_STRING *PrivateData)
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -672,7 +817,7 @@ LsaSetDomainInformationPolicy(
     PVOID Buffer)
 {
     FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -686,7 +831,20 @@ LsaSetInformationPolicy(
     PVOID Buffer)
 {
     FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS WINAPI LsaSetSecret(
+    IN LSA_HANDLE SecretHandle,
+    IN PLSA_UNICODE_STRING EncryptedCurrentValue,
+    IN PLSA_UNICODE_STRING EncryptedOldValue)
+{
+    FIXME("(%p,%p,%p) stub\n", SecretHandle, EncryptedCurrentValue,
+            EncryptedOldValue);
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -717,7 +875,18 @@ LsaSetTrustedDomainInfoByName(
     PVOID Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainName, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS WINAPI LsaRegisterPolicyChangeNotification(
+    POLICY_NOTIFICATION_INFORMATION_CLASS class,
+    HANDLE event)
+{
+    FIXME("(%d,%p) stub\n", class, event);
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -732,7 +901,7 @@ LsaSetTrustedDomainInformation(
     PVOID Buffer)
 {
     FIXME("(%p,%p,%d,%p) stub\n", PolicyHandle, TrustedDomainSid, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -746,7 +915,18 @@ LsaStorePrivateData(
     PLSA_UNICODE_STRING PrivateData)
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS WINAPI LsaUnregisterPolicyChangeNotification(
+    POLICY_NOTIFICATION_INFORMATION_CLASS class,
+    HANDLE event)
+{
+    FIXME("(%d,%p) stub\n", class, event);
+    return STATUS_SUCCESS;
 }
 
 /*

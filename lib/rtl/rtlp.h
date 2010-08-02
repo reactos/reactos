@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* PAGED_CODE equivalent for user-mode RTL */
-#ifdef DBG
+#if DBG
 extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL() CHECK_PAGED_CODE_RTL(__FILE__, __LINE__)
 #else
@@ -32,10 +32,12 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define ROUND_UP(n, align) \
     ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+
 VOID
 NTAPI
-RtlpGetStackLimits(PULONG_PTR StackBase,
-                   PULONG_PTR StackLimit);
+RtlpGetStackLimits(PULONG_PTR LowLimit,
+                   PULONG_PTR HighLimit);
 
 PEXCEPTION_REGISTRATION_RECORD
 NTAPI
@@ -100,7 +102,7 @@ RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type);
+RtlpCheckForActiveDebugger(VOID);
 
 BOOLEAN
 NTAPI
@@ -114,7 +116,15 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
 
 BOOLEAN
 NTAPI
-RtlpSetInDbgPrint(IN BOOLEAN NewValue);
+RtlpSetInDbgPrint(
+    VOID
+);
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(
+    VOID
+);
 
 /* i386/except.S */
 
@@ -141,33 +151,35 @@ RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
                       IN PVOID ContextData,
                       IN ULONG Size);
 
-PVOID
-NTAPI
-RtlpGetExceptionAddress(VOID);
-
 VOID
 NTAPI
 RtlpCaptureContext(OUT PCONTEXT ContextRecord);
 
-/* i386/debug.S */
-NTSTATUS
+//
+// Debug Service calls
+//
+ULONG
 NTAPI
-DebugService(IN ULONG Service,
-             IN const void* Buffer,
-             IN ULONG Length,
-             IN PVOID Argument1,
-             IN PVOID Argument2);
+DebugService(
+    IN ULONG Service,
+    IN PVOID Argument1,
+    IN PVOID Argument2,
+    IN PVOID Argument3,
+    IN PVOID Argument4
+);
 
-NTSTATUS
+VOID
 NTAPI
-DebugService2(IN PVOID Argument1,
-              IN PVOID Argument2,
-              IN ULONG Service);
+DebugService2(
+    IN PVOID Argument1,
+    IN PVOID Argument2,
+    IN ULONG Service
+);
 
 /* Tags for the String Allocators */
-#define TAG_USTR        TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+#define TAG_USTR        'RTSU'
+#define TAG_ASTR        'RTSA'
+#define TAG_OSTR        'RTSO'
 
 /* Timer Queue */
 

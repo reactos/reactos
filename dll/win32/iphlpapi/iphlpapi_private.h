@@ -19,10 +19,9 @@
 # include <resolv.h>
 #endif
 
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x500
 #define WIN32_NO_STATUS
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -32,8 +31,11 @@
 #include "resinfo.h"
 #include "wine/debug.h"
 
+//#include "ntddndis.h"
 #include "ddk/tdiinfo.h"
 #include "tcpioctl.h"
+
+#include "tdilib.h"
 
 #ifndef ETH_ALEN
 #define ETH_ALEN 6
@@ -58,7 +60,14 @@
 #define TCP_REQUEST_QUERY_INFORMATION_INIT { { { 0 } } }
 #define TCP_REQUEST_SET_INFORMATION_INIT { { 0 } }
 
-#define IP_MIB_ROUTETABLE_ENTRY_ID   0x101
+/* FIXME: ROS headers suck */
+#ifndef GAA_FLAG_SKIP_UNICAST
+#define GAA_FLAG_SKIP_UNICAST      0x0001
+#endif
+
+#ifndef GAA_FLAG_SKIP_FRIENDLY_NAME
+#define GAA_FLAG_SKIP_FRIENDLY_NAME 0x0020
+#endif
 
 // As in the mib from RFC 1213
 
@@ -88,12 +97,19 @@ typedef union _IFEntrySafelySized {
     IFEntry ent;
 } IFEntrySafelySized;
 
-typedef union _TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED {
+typedef union _TCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY {
     CHAR MaxSize[sizeof(TCP_REQUEST_SET_INFORMATION_EX) - 1 +
 		 sizeof(IPRouteEntry)];
     TCP_REQUEST_SET_INFORMATION_EX Req;
-} TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED,
-    *PTCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED;
+} TCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY,
+    *PTCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY;
+
+typedef union _TCP_REQUEST_SET_INFORMATION_EX_ARP_ENTRY {
+    CHAR MaxSize[sizeof(TCP_REQUEST_SET_INFORMATION_EX) - 1 +
+		 sizeof(MIB_IPNETROW)];
+    TCP_REQUEST_SET_INFORMATION_EX Req;
+} TCP_REQUEST_SET_INFORMATION_EX_ARP_ENTRY,
+    *PTCP_REQUEST_SET_INFORMATION_EX_ARP_ENTRY;
 
 /* Encapsulates information about an interface */
 typedef struct _IFInfo {
@@ -113,20 +129,9 @@ typedef enum _IPHLPAddrType {
 } IPHLPAddrType;
 
 /** Prototypes **/
-NTSTATUS openTcpFile(PHANDLE tcpFile);
-VOID closeTcpFile(HANDLE tcpFile);
-NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
-			    PDWORD numEntities );
-NTSTATUS tdiGetSetOfThings( HANDLE tcpFile, DWORD toiClass, DWORD toiType,
-			    DWORD toiId, DWORD teiEntity, DWORD teiInstance,
-			    DWORD fixedPart,
-			    DWORD entrySize, PVOID *tdiEntitySet,
-			    PDWORD numEntries );
-VOID tdiFreeThingSet( PVOID things );
 NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent );
 NTSTATUS tdiGetIpAddrsForIpEntity( HANDLE tcpFile, TDIEntityID *ent,
 				   IPAddrEntry **addrs, PDWORD numAddrs );
-
 int GetLongestChildKeyName( HANDLE RegHandle );
 LONG OpenChildKeyRead( HANDLE RegHandle,
 		       PWCHAR ChildKeyName,
@@ -142,6 +147,10 @@ typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
 				     PWCHAR NameServer,
 				     PVOID Data );
 void EnumNameServers( HANDLE RegHandle, PWCHAR Interface, PVOID Data, EnumNameServersFunc cb );
+NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
+                             char *name,
+                             DWORD index,
+                             IFInfo *ifInfo);
 
 #include <w32api.h>
 /* This is here until we switch to version 2.5 of the mingw headers */

@@ -22,6 +22,15 @@
 #ifndef __MINITAPE_H
 #define __MINITAPE_H
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -77,9 +86,9 @@ typedef struct _INQUIRYDATA {
 	UCHAR  DeviceTypeQualifier : 3;
 	UCHAR  DeviceTypeModifier : 7;
 	UCHAR  RemovableMedia : 1;
-	union {
+	__GNU_EXTENSION union {
 		UCHAR  Versions;
-		struct {
+		__GNU_EXTENSION struct {
 			UCHAR  ANSIVersion : 3;
 			UCHAR  ECMAVersion : 3;
 			UCHAR  ISOVersion : 2;
@@ -150,24 +159,24 @@ typedef struct _MODE_CAPABILITIES_PAGE {
 	UCHAR Reserved11[2];
 } MODE_CAPABILITIES_PAGE, *PMODE_CAPABILITIES_PAGE;
 
-typedef BOOLEAN DDKAPI
+typedef BOOLEAN NTAPI
 (*TAPE_VERIFY_INQUIRY_ROUTINE)(
 	IN PINQUIRYDATA  InquiryData,
 	IN PMODE_CAPABILITIES_PAGE ModeCapabilitiesPage);
 
-typedef VOID DDKAPI
+typedef VOID NTAPI
 (*TAPE_EXTENSION_INIT_ROUTINE)(
   IN PVOID  MinitapeExtension,
   IN PINQUIRYDATA  InquiryData,
   IN PMODE_CAPABILITIES_PAGE  ModeCapabilitiesPage);
 
-typedef VOID DDKAPI
+typedef VOID NTAPI
 (*TAPE_ERROR_ROUTINE)(
     IN PVOID  MinitapeExtension,
     IN PSCSI_REQUEST_BLOCK  Srb,
     IN OUT PTAPE_STATUS  TapeStatus);
 
-typedef TAPE_STATUS DDKAPI
+typedef TAPE_STATUS NTAPI
 (*TAPE_PROCESS_COMMAND_ROUTINE)(
   IN OUT PVOID  MinitapeExtension,
   IN OUT PVOID  CommandExtension,

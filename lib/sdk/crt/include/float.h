@@ -101,9 +101,6 @@
 #ifndef DBL_MAX_10_EXP
 #define DBL_MAX_10_EXP  308
 #endif
-#ifndef S_IFIFO
-#define S_IFIFO			-1
-#endif
 #ifndef UINT64_MAX
 #define UINT64_MAX	0xffffffffffffffff
 #endif
@@ -117,10 +114,10 @@ extern "C" {
 #ifndef _CRTIMP
 #ifdef  _DLL
 #define _CRTIMP __declspec(dllimport)
-#else   
+#else
 #define _CRTIMP
 #endif  /* _DLL */
-#endif 
+#endif
 
 /* Set the FPU control word as cw = (cw & ~unMask) | (unNew & unMask),
  * i.e. change the bits in unMask to have the values they have in unNew,

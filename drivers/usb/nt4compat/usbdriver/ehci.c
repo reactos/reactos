@@ -58,15 +58,7 @@
 
 #define endp_mult_count( endp ) ( ( ( endp->pusb_endp_desc->wMaxPacketSize & 0x1800 ) >> 11 ) + 1 )
 
-#if 0
-/* WTF?! */
-#define release_adapter( padapTER ) \
-{\
-    ( ( padapTER ) ); \
-}
-#else
-#define release_adapter( padapTER ) (void)(padapTER)
-#endif
+#define release_adapter( padapTER ) HalPutDmaAdapter(padapTER)
 
 #define get_int_idx( _urb, _idx ) \
 {\
@@ -279,7 +271,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
 BOOLEAN ehci_init_schedule(PEHCI_DEV ehci, PADAPTER_OBJECT padapter);
 
-BOOLEAN ehci_release(PDEVICE_OBJECT pdev);
+BOOLEAN ehci_release(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr);
 
 static VOID ehci_stop(PEHCI_DEV ehci);
 
@@ -321,7 +313,7 @@ PDEVICE_OBJECT ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUS
 
 PDEVICE_OBJECT ehci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr);
 
-BOOLEAN ehci_delete_device(PDEVICE_OBJECT pdev);
+BOOLEAN ehci_delete_device(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr);
 
 VOID ehci_get_capabilities(PEHCI_DEV ehci, PBYTE base);
 
@@ -630,7 +622,7 @@ ehci_process_pending_endp(PEHCI_DEV ehci)
         if (can_submit == STATUS_NO_MORE_ENTRIES)
         {
             //no enough bandwidth or tds
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
             InsertTailList(&temp_list, pthis);
         }
         else
@@ -788,7 +780,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     }
 
     pending_endp->pendp = purb->pendp;
-    InsertTailList(&ehci->pending_endp_list, (PLIST_ENTRY) pending_endp);
+    InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
     unlock_dev(pdev, TRUE);
     unlock_pending_endp_list(&ehci->pending_endp_list_lock);
@@ -798,7 +790,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
   LBL_OUT2:
     pdev->ref_count--;
-    RemoveEntryList((PLIST_ENTRY) purb);
+    RemoveEntryList(&purb->urb_link);
 
   LBL_OUT:
     unlock_dev(pdev, TRUE);
@@ -1198,10 +1190,16 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
             purb->flags &= ~URB_FLAG_STATE_MASK;
             purb->flags |= URB_FLAG_STATE_PENDING;
 
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
         }
 
         pending_endp = alloc_pending_endp(&ehci->pending_endp_pool, 1);
+        if (!pending_endp)
+        {
+            unlock_dev(pdev, TRUE);
+            KeReleaseSpinLockFromDpcLevel(&ehci->pending_endp_list_lock);
+            return;
+        }
         pending_endp->pendp = pendp;
         InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
@@ -1382,7 +1380,7 @@ ehci_insert_urb_schedule(PEHCI_DEV ehci, PURB purb)
 
     purb->flags &= ~URB_FLAG_STATE_MASK;
     purb->flags |= URB_FLAG_STATE_IN_PROCESS | URB_FLAG_IN_SCHEDULE;
-    InsertTailList(&ehci->urb_list, (PLIST_ENTRY) purb);
+    InsertTailList(&ehci->urb_list, &purb->urb_link);
 
     return TRUE;
 }
@@ -1567,6 +1565,7 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
     PEHCI_QTD_CONTENT ptdc;
     PEHCI_QH_CONTENT pqhc;
     PEHCI_ELEM_LINKS pelnk;
+    PEHCI_ELEM_LINKS plnk;
 
     if (ehci == NULL || purb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1679,7 +1678,17 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
     RemoveEntryList(&td_list);
 
     elem_pool_lock(qh_pool, TRUE);
-    pqh = (PEHCI_QH) ((ULONG) elem_pool_alloc_elem(qh_pool)->phys_part & PHYS_PART_ADDR_MASK);
+
+    plnk = elem_pool_alloc_elem(qh_pool);
+    if (plnk == NULL)
+    {
+        // free the qtds
+        elem_safe_free(pthis, TRUE);
+        if (qh_pool) elem_pool_unlock(qh_pool, TRUE);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    pqh = (PEHCI_QH) ((ULONG) plnk->phys_part & PHYS_PART_ADDR_MASK);
     elem_pool_unlock(qh_pool, TRUE);
 
     if (pqh == NULL)
@@ -3113,6 +3122,12 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
 
                 ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+                if (!ptimer)
+                {
+                    purb->status = STATUS_NO_MEMORY;
+                    break;
+                }
+
                 ptimer->threshold = 0;  // within [ 50ms, 60ms ], one tick is 10 ms
                 ptimer->context = (ULONG) purb;
                 ptimer->pdev = pdev;
@@ -3136,6 +3151,11 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
         case USB_ENDPOINT_XFER_INT:
         {
             ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+            if (!ptimer)
+            {
+                purb->status = STATUS_NO_MEMORY;
+                break;
+            }
             ptimer->threshold = RH_INTERVAL;
             ptimer->context = (ULONG) purb;
             ptimer->pdev = pdev;
@@ -3346,7 +3366,7 @@ ehci_hcd_release(PHCD hcd)
 
     ehci = ehci_from_hcd(hcd);
     pdev_ext = ehci->pdev_ext;
-    return ehci_release(pdev_ext->pdev_obj);
+    return ehci_release(pdev_ext->pdev_obj, hcd->dev_mgr);
 }
 
 NTSTATUS
@@ -3433,18 +3453,19 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
     PDEVICE_OBJECT pdev;
     BYTE buffer[sizeof(PCI_COMMON_CONFIG)];
     PEHCI_DEVICE_EXTENSION pdev_ext;
+    LONG count = 0;
 
     slot_num.u.AsULONG = 0;
     pci_config = (PPCI_COMMON_CONFIG) buffer;
     pdev = NULL;
 
-    //scan the bus to find ehci controller
-    for(bus = 0; bus < 3; bus++)        /* enum bus0-bus2 */
+    //scan the PCI buses to find ehci controller
+    for (bus = 0; bus <= PCI_MAX_BRIDGE_NUMBER; bus++) //Yes, it should be <=
     {
-        for(i = 0; i < PCI_MAX_DEVICES; i++)
+        for(i = 0; i <= PCI_MAX_DEVICES; i++)
         {
             slot_num.u.bits.DeviceNumber = i;
-            for(j = 0; j < PCI_MAX_FUNCTIONS; j++)
+            for(j = 0; j <= PCI_MAX_FUNCTION; j++)
             {
                 slot_num.u.bits.FunctionNumber = j;
 
@@ -3462,9 +3483,12 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
                 {
                     //well, we find our usb host controller( EHCI ), create device
                     pdev = ehci_alloc(drvr_obj, reg_path, ((bus << 8) | (i << 3) | j), dev_mgr);
-
-                    if (!pdev)
-                        continue;
+                    if (pdev)
+#ifdef _MULTI_EHCI
+                        count++;
+#else
+                        goto LBL_LOOPOUT;
+#endif
                 }
             }
 
@@ -3472,6 +3496,11 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
                 break;
         }
     }
+
+#ifndef _MULTI_EHCI
+LBL_LOOPOUT:
+#endif
+    DbgPrint("Found %d EHCI controllers\n", count);
 
     if (pdev)
     {
@@ -3482,7 +3511,7 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
             KeSynchronizeExecution(pdev_ext->ehci_int, ehci_cal_cpu_freq, NULL);
         }
     }
-    return NULL;
+    return pdev;
 }
 
 PDEVICE_OBJECT
@@ -3536,7 +3565,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     if (pdev_ext->padapter == NULL)
     {
         //fatal error
-        ehci_delete_device(pdev);
+        ehci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -3555,7 +3584,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         DbgPrint("ehci_alloc(): error assign slot res, 0x%x\n", status);
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
-        ehci_delete_device(pdev);
+        ehci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -3590,7 +3619,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         DbgPrint("ehci_alloc(): error, can not translate bus address\n");
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
-        ehci_delete_device(pdev);
+        ehci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -3609,7 +3638,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         {
             release_adapter(pdev_ext->padapter);
             pdev_ext->padapter = NULL;
-            ehci_delete_device(pdev);
+            ehci_delete_device(pdev, dev_mgr);
             return NULL;
         }
     }
@@ -3634,7 +3663,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     {
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
-        ehci_delete_device(pdev);
+        ehci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -3654,6 +3683,8 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                                    pdev_ext->res_interrupt.level,
                                    pdev_ext->res_interrupt.vector, &irql, &affinity);
 
+    KeInitializeDpc(&pdev_ext->ehci_dpc, ehci_dpc_callback, (PVOID) pdev_ext->ehci);
+
     //connect the interrupt
     DbgPrint("ehci_alloc(): the int=0x%x\n", vector);
     if (IoConnectInterrupt(&pdev_ext->ehci_int, ehci_isr, pdev_ext->ehci, NULL, //&pdev_ext->ehci->frame_list_lock,
@@ -3661,11 +3692,9 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                            affinity, FALSE)     //No float save
         != STATUS_SUCCESS)
     {
-        ehci_release(pdev);
+        ehci_release(pdev, dev_mgr);
         return NULL;
     }
-
-    KeInitializeDpc(&pdev_ext->ehci_dpc, ehci_dpc_callback, (PVOID) pdev_ext->ehci);
 
     return pdev;
 }
@@ -3988,7 +4017,7 @@ ehci_get_capabilities(PEHCI_DEV ehci, PBYTE base)
 }
 
 BOOLEAN
-ehci_delete_device(PDEVICE_OBJECT pdev)
+ehci_delete_device(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr)
 {
     STRING string;
     UNICODE_STRING symb_name;
@@ -4007,6 +4036,8 @@ ehci_delete_device(PDEVICE_OBJECT pdev)
     RtlAnsiStringToUnicodeString(&symb_name, &string, TRUE);
     IoDeleteSymbolicLink(&symb_name);
     RtlFreeUnicodeString(&symb_name);
+
+    dev_mgr_deregister_hcd(dev_mgr, pdev_ext->ehci->hcd_interf.hcd_get_id(&pdev_ext->ehci->hcd_interf));
 
     if (pdev_ext->res_list)
         ExFreePool(pdev_ext->res_list); //      not allocated by usb_alloc_mem
@@ -4033,7 +4064,7 @@ ehci_stop(PEHCI_DEV ehci)
 }
 
 BOOLEAN
-ehci_release(PDEVICE_OBJECT pdev)
+ehci_release(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr)
 {
     PEHCI_DEVICE_EXTENSION pdev_ext;
     PEHCI_DEV ehci;
@@ -4066,7 +4097,7 @@ ehci_release(PDEVICE_OBJECT pdev)
     release_adapter(pdev_ext->padapter);
     pdev_ext->padapter = NULL;
 
-    ehci_delete_device(pdev);
+    ehci_delete_device(pdev, dev_mgr);
 
     return FALSE;
 
@@ -6060,7 +6091,7 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
 
     PEHCI_DEV ehci;
     ULONG status;
-#ifdef DBG
+#if DBG
     ULONG urb_count;
 #endif
     PLIST_ENTRY pthis, pnext;
@@ -6116,7 +6147,7 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
     door_bell_rings = ((status & STS_IAA) != 0);
 
     // scan to remove those due
-#ifdef DBG
+#if DBG
     urb_count = dbg_count_list(&ehci->urb_list);
     ehci_dbg_print(DBGLVL_MAXIMUM, ("ehci_isr(): urb# in process is %d\n", urb_count));
 #endif

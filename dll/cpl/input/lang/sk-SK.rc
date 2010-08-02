@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  01-03-2008
- * LAST CHANGE:  17-02-2009
+ * LAST CHANGE:  14-06-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -90,14 +90,14 @@ BEGIN
     IDS_KEYBOARD             "Kl·vesnica"
     IDS_NONE                 "(Nie je)"
     IDS_UNKNOWN              "(Nezn·me)"
-    IDS_RESTART              "Do you want to restart your computer now?"
+    IDS_RESTART              "Chcete teraz reötartovaù V·ö poËÌtaË?"
     IDS_WHATS_THIS           "»o je toto?"
     IDS_LANGUAGE             "Jazyk"
     IDS_LAYOUT               "Rozloûenie kl·vesnice"
-    IDS_REM_QUESTION         "Do you want to remove selected keyboard layout?"
+    IDS_REM_QUESTION         "Chcete odstr·niù vybranÈ rozloûenie kl·vesnice?"
     IDS_CONFIRMATION         "Potvrdenie" //Confirmation
-    IDS_LAYOUT_EXISTS        "This layout already exists."
-    IDS_LAYOUT_EXISTS2       "This layout already exists and can not be added."
+    IDS_LAYOUT_EXISTS        "Toto rozloûenie uû existuje."
+    IDS_LAYOUT_EXISTS2       "Toto rozloûenie uû existuje a nemÙûe byù pridanÈ."
     IDS_CTRL_SHIFT           "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "ºav˝ Alt+Shift"
     IDS_SWITCH_BET_INLANG    "Switch between input languages"

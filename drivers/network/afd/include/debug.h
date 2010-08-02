@@ -6,8 +6,8 @@
  * DEFINES:     DBG     - Enable debug output
  *              NASSERT - Disable assertions
  */
-#ifndef __DEBUG_H
-#define __DEBUG_H
+
+#pragma once
 
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
@@ -19,7 +19,7 @@
 #define DEBUG_IRP      0x00000200
 #define DEBUG_ULTRA    0xFFFFFFFF
 
-#ifdef DBG
+#if DBG
 
 extern DWORD DebugTraceLevel;
 
@@ -50,16 +50,13 @@ extern DWORD DebugTraceLevel;
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */
-#define ASSERT(x) if (!(x)) { AFD_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) { AFD_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); DbgBreakPoint(); }
 #endif /* NASSERT */
-
-#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */
 
 #define AFD_DbgPrint(_t_, _x_)
 
-#define ASSERT_IRQL(x)
 #define ASSERTKM(x)
 #ifndef ASSERT
 #define ASSERT(x)
@@ -70,7 +67,6 @@ extern DWORD DebugTraceLevel;
 
 #undef assert
 #define assert(x) ASSERT(x)
-#define assert_irql(x) ASSERT_IRQL(x)
 
 
 #ifdef _MSC_VER
@@ -92,7 +88,5 @@ extern DWORD DebugTraceLevel;
     AFD_DbgPrint(DEBUG_CHECK, ("\n"));
 
 #define CP CHECKPOINT
-
-#endif /* __DEBUG_H */
 
 /* EOF */

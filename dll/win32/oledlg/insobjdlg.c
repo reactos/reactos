@@ -380,7 +380,7 @@ static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
        *lpclsid = clsid;
 
        len = SendMessageW(pdlgInfo->hwndObjTypeLB, LB_ADDSTRING, 0, (LPARAM)keydesc);
-       SendMessageW(pdlgInfo->hwndObjTypeLB, LB_SETITEMDATA, (WPARAM)len, (LPARAM)lpclsid);
+       SendMessageW(pdlgInfo->hwndObjTypeLB, LB_SETITEMDATA, len, (LPARAM)lpclsid);
     }
   }
 
@@ -426,7 +426,7 @@ static void UIINSERTOBJECTDLG_SelChange(InsertObjectDlgInfo* pdlgInfo)
 
   if (LoadStringW(OLEDLG_hInstance, IDS_RESULTOBJDESC, resstr, MAX_PATH) &&
      ((index = SendMessageW(pdlgInfo->hwndObjTypeLB, LB_GETCURSEL, 0, 0)) >= 0) &&
-     SendMessageW(pdlgInfo->hwndObjTypeLB, LB_GETTEXT, (WPARAM)index, (LPARAM)objname))
+     SendMessageW(pdlgInfo->hwndObjTypeLB, LB_GETTEXT, index, (LPARAM)objname))
        wsprintfW(objdesc, resstr, objname);
   else
     objdesc[0] = 0;
@@ -452,7 +452,7 @@ static BOOL UIINSERTOBJECTDLG_OnOpen(InsertObjectDlgInfo* pdlgInfo)
     if (index >= 0)
     {
        CLSID* clsid = (CLSID*) SendMessageA(pdlgInfo->hwndObjTypeLB, 
-          LB_GETITEMDATA, (WPARAM)index, 0);
+          LB_GETITEMDATA, index, 0);
        pdlgInfo->lpOleUIInsertObject->clsid = *clsid;
 
        if (pdlgInfo->lpOleUIInsertObject->dwFlags & IOF_CREATENEWOBJECT)
@@ -525,7 +525,7 @@ static void UIINSERTOBJECTDLG_BrowseFile(InsertObjectDlgInfo* pdlgInfo)
    fn.nMaxCustFilter = 0;
    fn.nFilterIndex = 0;
 
-   SendMessageA(pdlgInfo->hwndFileTB, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)fname);
+   SendMessageA(pdlgInfo->hwndFileTB, WM_GETTEXT, MAX_PATH, (LPARAM)fname);
    fn.lpstrFile = fname;
    fn.nMaxFile = MAX_PATH;
 

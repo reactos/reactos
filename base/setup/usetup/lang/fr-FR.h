@@ -1,5 +1,4 @@
-#ifndef LANG_FR_FR_H__
-#define LANG_FR_FR_H__
+#pragma once
 
 MUI_LAYOUTS frFRLayouts[] =
 {
@@ -1491,6 +1490,12 @@ MUI_ERROR frFRErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1628,7 +1633,7 @@ MUI_STRING frFRStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup n'a pu trouver la section '%S'\ndans TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copie du fichier: %S"},
+     "   Copie du fichier: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup copie les fichiers..."},
     {STRING_REGHIVEUPDATE,
@@ -1707,5 +1712,3 @@ MUI_STRING frFRStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

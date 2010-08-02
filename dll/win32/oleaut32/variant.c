@@ -40,6 +40,7 @@
 #include "wine/unicode.h"
 #include "winerror.h"
 #include "variant.h"
+#include "resource.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
@@ -577,6 +578,66 @@ void WINAPI VariantInit(VARIANTARG* pVarg)
   V_VT(pVarg) = VT_EMPTY; /* Native doesn't set any other fields */
 }
 
+HRESULT VARIANT_ClearInd(VARIANTARG *pVarg)
+{
+    HRESULT hres;
+
+    TRACE("(%p->(%s%s))\n", pVarg, debugstr_VT(pVarg), debugstr_VF(pVarg));
+
+    hres = VARIANT_ValidateType(V_VT(pVarg));
+    if (FAILED(hres))
+        return hres;
+
+    switch (V_VT(pVarg))
+    {
+    case VT_DISPATCH:
+    case VT_UNKNOWN:
+        if (V_UNKNOWN(pVarg))
+            IUnknown_Release(V_UNKNOWN(pVarg));
+        break;
+    case VT_UNKNOWN | VT_BYREF:
+    case VT_DISPATCH | VT_BYREF:
+        if(*V_UNKNOWNREF(pVarg))
+            IUnknown_Release(*V_UNKNOWNREF(pVarg));
+        break;
+    case VT_BSTR:
+        SysFreeString(V_BSTR(pVarg));
+        break;
+    case VT_BSTR | VT_BYREF:
+        SysFreeString(*V_BSTRREF(pVarg));
+        break;
+    case VT_VARIANT | VT_BYREF:
+        VariantClear(V_VARIANTREF(pVarg));
+        break;
+    case VT_RECORD:
+    case VT_RECORD | VT_BYREF:
+    {
+        struct __tagBRECORD* pBr = &V_UNION(pVarg,brecVal);
+        if (pBr->pRecInfo)
+        {
+            IRecordInfo_RecordClear(pBr->pRecInfo, pBr->pvRecord);
+            IRecordInfo_Release(pBr->pRecInfo);
+        }
+        break;
+    }
+    default:
+        if (V_ISARRAY(pVarg) || (V_VT(pVarg) & ~VT_BYREF) == VT_SAFEARRAY)
+        {
+            if (V_ISBYREF(pVarg))
+            {
+                if (*V_ARRAYREF(pVarg))
+                    hres = SafeArrayDestroy(*V_ARRAYREF(pVarg));
+            }
+            else if (V_ARRAY(pVarg))
+                hres = SafeArrayDestroy(V_ARRAY(pVarg));
+        }
+        break;
+    }
+
+    V_VT(pVarg) = VT_EMPTY;
+    return hres;
+}
+
 /******************************************************************************
  *		VariantClear	[OLEAUT32.9]
  *
@@ -587,7 +648,7 @@ void WINAPI VariantInit(VARIANTARG* pVarg)
  *
  * RETURNS
  *  Success: S_OK. Any previous value in pVarg is freed and its type is set to VT_EMPTY.
- *  Failure: DISP_E_BADVARTYPE, if the variant is a not a valid variant type.
+ *  Failure: DISP_E_BADVARTYPE, if the variant is not a valid variant type.
  */
 HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
 {
@@ -1068,71 +1129,66 @@ static inline double VARIANT_JulianFromDMY(USHORT year, USHORT month, USHORT day
 static HRESULT VARIANT_RollUdate(UDATE *lpUd)
 {
   static const BYTE days[] = { 0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+  short iYear, iMonth, iDay, iHour, iMinute, iSecond;
 
-  TRACE("Raw date: %d/%d/%d %d:%d:%d\n", lpUd->st.wDay, lpUd->st.wMonth,
-        lpUd->st.wYear, lpUd->st.wHour, lpUd->st.wMinute, lpUd->st.wSecond);
+  /* interpret values signed */
+  iYear   = lpUd->st.wYear;
+  iMonth  = lpUd->st.wMonth;
+  iDay    = lpUd->st.wDay;
+  iHour   = lpUd->st.wHour;
+  iMinute = lpUd->st.wMinute;
+  iSecond = lpUd->st.wSecond;
 
+  TRACE("Raw date: %d/%d/%d %d:%d:%d\n", iDay, iMonth,
+        iYear, iHour, iMinute, iSecond);
+
+  if (iYear > 9999 || iYear < -9999)
+    return E_INVALIDARG; /* Invalid value */
   /* Years < 100 are treated as 1900 + year */
-  if (lpUd->st.wYear < 100)
-    lpUd->st.wYear += 1900;
+  if (iYear > 0 && iYear < 100)
+    iYear += 1900;
 
-  if (!lpUd->st.wMonth)
+  iMinute += iSecond / 60;
+  iSecond  = iSecond % 60;
+  iHour   += iMinute / 60;
+  iMinute  = iMinute % 60;
+  iDay    += iHour / 24;
+  iHour    = iHour % 24;
+  iYear   += iMonth / 12;
+  iMonth   = iMonth % 12;
+  if (iMonth<=0) {iMonth+=12; iYear--;}
+  while (iDay > days[iMonth])
   {
-    /* Roll back to December of the previous year */
-    lpUd->st.wMonth = 12;
-    lpUd->st.wYear--;
-  }
-  else while (lpUd->st.wMonth > 12)
-  {
-    /* Roll forward the correct number of months */
-    lpUd->st.wYear++;
-    lpUd->st.wMonth -= 12;
-  }
-
-  if (lpUd->st.wYear > 9999 || lpUd->st.wHour > 23 ||
-      lpUd->st.wMinute > 59 || lpUd->st.wSecond > 59)
-    return E_INVALIDARG; /* Invalid values */
-
-  if (!lpUd->st.wDay)
-  {
-    /* Roll back the date one day */
-    if (lpUd->st.wMonth == 1)
-    {
-      /* Roll back to December 31 of the previous year */
-      lpUd->st.wDay   = 31;
-      lpUd->st.wMonth = 12;
-      lpUd->st.wYear--;
-    }
+    if (iMonth == 2 && IsLeapYear(iYear))
+      iDay -= 29;
     else
-    {
-      lpUd->st.wMonth--; /* Previous month */
-      if (lpUd->st.wMonth == 2 && IsLeapYear(lpUd->st.wYear))
-        lpUd->st.wDay = 29; /* February has 29 days on leap years */
-      else
-        lpUd->st.wDay = days[lpUd->st.wMonth]; /* Last day of the month */
-    }
+      iDay -= days[iMonth];
+    iMonth++;
+    iYear += iMonth / 12;
+    iMonth = iMonth % 12;
   }
-  else if (lpUd->st.wDay > 28)
+  while (iDay <= 0)
   {
-    int rollForward = 0;
-
-    /* Possibly need to roll the date forward */
-    if (lpUd->st.wMonth == 2 && IsLeapYear(lpUd->st.wYear))
-      rollForward = lpUd->st.wDay - 29; /* February has 29 days on leap years */
+    iMonth--;
+    if (iMonth<=0) {iMonth+=12; iYear--;}
+    if (iMonth == 2 && IsLeapYear(iYear))
+      iDay += 29;
     else
-      rollForward = lpUd->st.wDay - days[lpUd->st.wMonth];
-
-    if (rollForward > 0)
-    {
-      lpUd->st.wDay = rollForward;
-      lpUd->st.wMonth++;
-      if (lpUd->st.wMonth > 12)
-      {
-        lpUd->st.wMonth = 1; /* Roll forward into January of the next year */
-        lpUd->st.wYear++;
-      }
-    }
+      iDay += days[iMonth];
   }
+
+  if (iSecond<0){iSecond+=60; iMinute--;}
+  if (iMinute<0){iMinute+=60; iHour--;}
+  if (iHour<0)  {iHour+=24; iDay--;}
+  if (iYear<=0)  iYear+=2000;
+
+  lpUd->st.wYear   = iYear;
+  lpUd->st.wMonth  = iMonth;
+  lpUd->st.wDay    = iDay;
+  lpUd->st.wHour   = iHour;
+  lpUd->st.wMinute = iMinute;
+  lpUd->st.wSecond = iSecond;
+
   TRACE("Rolled date: %d/%d/%d %d:%d:%d\n", lpUd->st.wDay, lpUd->st.wMonth,
         lpUd->st.wYear, lpUd->st.wHour, lpUd->st.wMinute, lpUd->st.wSecond);
   return S_OK;
@@ -1189,6 +1245,8 @@ INT WINAPI DosDateTimeToVariantTime(USHORT wDosDate, USHORT wDosTime,
   ud.st.wMinute = DOS_MINUTE(wDosTime);
   ud.st.wSecond = DOS_SECOND(wDosTime);
   ud.st.wDayOfWeek = ud.st.wMilliseconds = 0;
+  if (ud.st.wHour > 23 || ud.st.wMinute > 59 || ud.st.wSecond > 59)
+    return FALSE; /* Invalid values in Dos*/
 
   return VarDateFromUdate(&ud, 0, pDateOut) == S_OK;
 }
@@ -1327,7 +1385,6 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
   dateVal += ud.st.wHour / 24.0;
   dateVal += ud.st.wMinute / 1440.0;
   dateVal += ud.st.wSecond / 86400.0;
-  dateVal += ud.st.wMilliseconds / 86400000.0;
 
   TRACE("Returning %g\n", dateVal);
   *pDateOut = dateVal;
@@ -2467,14 +2524,19 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 {
     VARTYPE leftvt,rightvt,resultvt;
     HRESULT hres;
-    static const WCHAR str_true[] = {'T','r','u','e','\0'};
-    static const WCHAR str_false[] = {'F','a','l','s','e','\0'};
+    static WCHAR str_true[32];
+    static WCHAR str_false[32];
     static const WCHAR sz_empty[] = {'\0'};
     leftvt = V_VT(left);
     rightvt = V_VT(right);
 
     TRACE("(%p->(%s%s),%p->(%s%s),%p)\n", left, debugstr_VT(left),
           debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right), out);
+
+    if (!str_true[0]) {
+        VARIANT_GetLocalisedText(LOCALE_USER_DEFAULT, IDS_FALSE, str_false);
+        VARIANT_GetLocalisedText(LOCALE_USER_DEFAULT, IDS_TRUE, str_true);
+    }
 
     /* when both left and right are NULL the result is NULL */
     if (leftvt == VT_NULL && rightvt == VT_NULL)
@@ -2558,7 +2620,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
         {
             if (leftvt == VT_BOOL)
             {
-                /* Bools are handled as True/False strings instead of 0/-1 as in MSDN */
+                /* Bools are handled as localized True/False strings instead of 0/-1 as in MSDN */
                 V_VT(&bstrvar_left) = VT_BSTR;
                 if (V_BOOL(left) == TRUE)
                     V_BSTR(&bstrvar_left) = SysAllocString(str_true);
@@ -2598,7 +2660,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
         {
             if (rightvt == VT_BOOL)
             {
-                /* Bools are handled as True/False strings instead of 0/-1 as in MSDN */
+                /* Bools are handled as localized True/False strings instead of 0/-1 as in MSDN */
                 V_VT(&bstrvar_right) = VT_BSTR;
                 if (V_BOOL(right) == TRUE)
                     V_BSTR(&bstrvar_right) = SysAllocString(str_true);
@@ -2789,6 +2851,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
                 if (FAILED(rc))
                     return rc;
                 rc = VarBstrCmp(V_BSTR(bstrv), V_BSTR(&rv), lcid, flags);
+                VariantClear(&rv);
             } else if (V_BSTR(bstrv) && *V_BSTR(bstrv)) {
             /* Non NULL nor empty BSTR */
                 /* If the BSTR is not a number the BSTR is greater */
@@ -2804,8 +2867,8 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
                     /* Numeric comparison, will be handled below.
                        VARCMP_NULL used only to break out. */
                     rc = VARCMP_NULL;
-            VariantClear(&lv);
-            VariantClear(&rv);
+                VariantClear(&lv);
+                VariantClear(&rv);
             } else
                 /* Empty or NULL BSTR */
                 rc = VARCMP_GT;
@@ -3003,7 +3066,7 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     {
         /*
          * Special cases for when left variant is VT_NULL
-         * (NULL & 0 = NULL, NULL & value = value)
+         * (VT_NULL & 0 = VT_NULL, VT_NULL & value = value)
          */
         if (leftvt == VT_NULL)
         {
@@ -5357,7 +5420,6 @@ end:
 HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
     BOOL         lOk        = TRUE;
-    BOOL         rOk        = TRUE;
     HRESULT      rc         = E_FAIL;
     int          resT = 0;
     VARIANT      lv,rv;
@@ -5428,7 +5490,6 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     }
 
 
-    rOk = TRUE;
     switch (V_VT(right) & VT_TYPEMASK) {
     case VT_BOOL :
     case VT_I1   :
@@ -5565,7 +5626,9 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     V_VT(result) = VT_I8;
     V_I8(result) = V_I8(&lv) % V_I8(&rv);
 
-    TRACE("V_I8(left) == %ld, V_I8(right) == %ld, V_I8(result) == %ld\n", (long)V_I8(&lv), (long)V_I8(&rv), (long)V_I8(result));
+    TRACE("V_I8(left) == %s, V_I8(right) == %s, V_I8(result) == %s\n",
+          wine_dbgstr_longlong(V_I8(&lv)), wine_dbgstr_longlong(V_I8(&rv)),
+          wine_dbgstr_longlong(V_I8(result)));
 
     /* convert left and right to the destination type */
     rc = VariantChangeType(result, result, 0, resT);

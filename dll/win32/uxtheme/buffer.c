@@ -61,8 +61,14 @@ HPAINTBUFFER WINAPI BeginBufferedPaint(HDC hdcTarget,
                                        BP_PAINTPARAMS *pPaintParams,
                                        HDC *phdc)
 {
-    FIXME("Stub (%p %p %d %p %p)\n", hdcTarget, prcTarget, dwFormat,
+    static int i;
+
+    TRACE("Stub (%p %p %d %p %p)\n", hdcTarget, prcTarget, dwFormat,
           pPaintParams, phdc);
+
+    if (!i++)
+        FIXME("Stub (%p %p %d %p %p)\n", hdcTarget, prcTarget, dwFormat,
+              pPaintParams, phdc);
     return NULL;
 }
 

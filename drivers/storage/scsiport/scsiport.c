@@ -12,16 +12,16 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Storage Stack
  * FILE:            drivers/storage/scsiport/scsiport.c
  * PURPOSE:         SCSI port driver
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  *                  Aleksey Bragin (aleksey reactos org)
  */
 
@@ -44,6 +44,8 @@
 #include "scsiport_int.h"
 
 ULONG InternalDebugLevel = 0x00;
+
+#undef ScsiPortMoveMemory
 
 /* TYPES *********************************************************************/
 
@@ -216,7 +218,9 @@ SpiHandleAttachRelease(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 static NTSTATUS
 SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCachedSize);
 
-
+NTHALAPI ULONG NTAPI HalGetBusData(BUS_DATA_TYPE, ULONG, ULONG, PVOID, ULONG);
+NTHALAPI ULONG NTAPI HalGetInterruptVector(INTERFACE_TYPE, ULONG, ULONG, ULONG, PKIRQL, PKAFFINITY);
+NTHALAPI NTSTATUS NTAPI HalAssignSlotResources(PUNICODE_STRING, PUNICODE_STRING, PDRIVER_OBJECT, PDEVICE_OBJECT, INTERFACE_TYPE, ULONG, ULONG, PCM_RESOURCE_LIST *);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -552,7 +556,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 
     /* i/o space */
     if (AddressSpace != 0)
-        return((PVOID)TranslatedAddress.u.LowPart);
+        return((PVOID)(ULONG_PTR)TranslatedAddress.QuadPart);
 
     MappedAddress = MmMapIoSpace(TranslatedAddress,
                                  NumberOfBytes,
@@ -1223,8 +1227,8 @@ CreatePortConfig:
             PortConfig->AccessRanges = (PVOID)(PortConfig+1);
 
             /* Align to LONGLONG */
-            PortConfig->AccessRanges = (PVOID)((ULONG)(PortConfig->AccessRanges) + 7);
-            PortConfig->AccessRanges = (PVOID)((ULONG)(PortConfig->AccessRanges) & ~7);
+            PortConfig->AccessRanges = (PVOID)((ULONG_PTR)(PortConfig->AccessRanges) + 7);
+            PortConfig->AccessRanges = (PVOID)((ULONG_PTR)(PortConfig->AccessRanges) & ~7);
 
             /* Copy the data */
             RtlCopyMemory(PortConfig->AccessRanges,
@@ -1981,8 +1985,24 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
                 SCSI_PORT_RESET | SCSI_PORT_RESET_REPORTED;
           break;
 
+      case CallDisableInterrupts:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: CallDisableInterrupts!\n");
+          break;
+
+      case CallEnableInterrupts:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: CallEnableInterrupts!\n");
+          break;
+
+      case RequestTimerCall:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: RequestTimerCall!\n");
+          break;
+
+      case BusChangeDetected:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: BusChangeDetected!\n");
+          break;
+      
       default:
-	DPRINT1 ("Unsupported notification %lu\n", NotificationType);
+	DPRINT1 ("Unsupported notification from WMI: %lu\n", NotificationType);
 	break;
     }
 
@@ -2804,6 +2824,14 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
           /* Copy inquiry data to the port device extension */
           Status = SpiGetInquiryData(DeviceExtension, Irp);
+          break;
+
+      case IOCTL_SCSI_MINIPORT:
+          DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
+          break;
+
+      case IOCTL_SCSI_PASS_THROUGH:
+          DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
           break;
 
       default:

@@ -23,6 +23,9 @@ extern BOOLEAN NlsMbCodePageTag;
 extern BOOLEAN NlsMbOemCodePageTag;
 extern PUSHORT NlsLeadByteInfo;
 
+extern USHORT NlsOemDefaultChar;
+extern USHORT NlsUnicodeDefaultChar;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -392,6 +395,57 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
     {
         RtlpFreeStringMemory(UnicodeString->Buffer, TAG_USTR);
         RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
+    }
+}
+
+
+/*
+ * @implemented
+ *
+ * NOTES
+ *  Check the OEM string to match the Unicode string.
+ *
+ *  Functions which convert Unicode strings to OEM strings will set a
+ *  DefaultChar from the OEM codepage when the characters are unknown.
+ *  So check it against the Unicode string and return false when the
+ *  Unicode string does not contain a TransDefaultChar.
+ */
+BOOLEAN
+NTAPI
+RtlpDidUnicodeToOemWork(IN PCUNICODE_STRING UnicodeString,
+                        IN POEM_STRING OemString)
+{
+    ULONG i = 0;
+
+    if (NlsMbOemCodePageTag == FALSE)
+    {
+        /* single-byte code page */
+        /* Go through all characters of a string */
+        while (i < OemString->Length)
+        {
+            /* Check if it got translated into a default char,
+             * but source char wasn't a default char equivalent
+             */
+            if ((OemString->Buffer[i] == NlsOemDefaultChar) &&
+                (UnicodeString->Buffer[i] != NlsUnicodeDefaultChar))
+            {
+                /* Yes, it means unmappable characters were found */
+                return FALSE;
+            }
+
+            /* Move to the next char */
+            i++;
+        }
+
+        /* All chars were translated successfuly */
+        return TRUE;
+    }
+    else
+    {
+        /* multibyte code page */
+
+        /* FIXME */
+        return TRUE;
     }
 }
 
@@ -1065,7 +1119,7 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
     static const WCHAR byterev_control_chars[] = {0x0d00,0x0a00,0x0900,0x2000,0};
     const WCHAR *s = buf;
     int i;
-    unsigned int flags = ~0U, out_flags = 0;
+    unsigned int flags = MAXULONG, out_flags = 0;
 
     if (len < sizeof(WCHAR))
     {
@@ -1534,8 +1588,9 @@ RtlUnicodeStringToCountedOemString(
                               UniSource->Buffer,
                               UniSource->Length);
 
-    /* FIXME: Check if everything mapped correctly and
-     * return STATUS_UNMAPPABLE_CHARACTER */
+    /* Check for unmapped character */
+    if (NT_SUCCESS(Status) && !RtlpDidUnicodeToOemWork(UniSource, OemDest))
+        Status = STATUS_UNMAPPABLE_CHARACTER;
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
@@ -1763,7 +1818,9 @@ RtlUpcaseUnicodeStringToCountedOemString(
                                     UniSource->Buffer,
                                     UniSource->Length);
 
-    /* FIXME: Special check needed and return STATUS_UNMAPPABLE_CHARACTER */
+    /* Check for unmapped characters */
+    if (NT_SUCCESS(Status) && !RtlpDidUnicodeToOemWork(UniSource, OemDest))
+        Status = STATUS_UNMAPPABLE_CHARACTER;
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
@@ -1816,7 +1873,9 @@ RtlUpcaseUnicodeStringToOemString (
                                     UniSource->Buffer,
                                     UniSource->Length);
 
-    /* FIXME: Special check needed and return STATUS_UNMAPPABLE_CHARACTER */
+    /* Check for unmapped characters */
+    if (NT_SUCCESS(Status) && !RtlpDidUnicodeToOemWork(UniSource, OemDest))
+        Status = STATUS_UNMAPPABLE_CHARACTER;
 
     if (!NT_SUCCESS(Status) && AllocateDestinationString)
     {
@@ -2377,3 +2436,74 @@ RtlFindCharInUnicodeString(IN ULONG Flags,
 
     return STATUS_NOT_FOUND;
 }
+
+/*
+ * @implemented
+ *
+ * NOTES
+ *  Get the maximum of MAX_COMPUTERNAME_LENGTH characters from the dns.host name until the dot is found.
+ *  Convert is to an uppercase oem string and check for unmapped characters.
+ *  Then convert the oem string back to an unicode string.
+ */
+NTSTATUS
+NTAPI
+RtlDnsHostNameToComputerName(PUNICODE_STRING ComputerName,PUNICODE_STRING DnsHostName,BOOLEAN AllocateComputerNameString)
+{
+   NTSTATUS Status;
+   ULONG Length;
+   ULONG ComputerNameLength;
+   ULONG ComputerNameOemNLength;
+   OEM_STRING ComputerNameOem;
+   CHAR ComputerNameOemN[MAX_COMPUTERNAME_LENGTH + 1];
+
+   Status = STATUS_INVALID_COMPUTER_NAME;
+   ComputerNameLength = DnsHostName->Length;
+
+   /* find the first dot in the dns host name */
+   for (Length = 0;Length < DnsHostName->Length/sizeof(WCHAR);Length++)
+   {
+      if (DnsHostName->Buffer[Length] == L'.')
+      {
+         /* dot found, so set the length for the oem translation */
+         ComputerNameLength = Length*sizeof(WCHAR);
+         break;
+      }
+   }
+
+   /* the computername must have one character */
+   if (ComputerNameLength > 0)
+   {
+      ComputerNameOemNLength = 0;
+      /* convert to oem string and use uppercase letters */
+      Status = RtlUpcaseUnicodeToOemN(ComputerNameOemN,
+                                      MAX_COMPUTERNAME_LENGTH,
+                                      &ComputerNameOemNLength,
+                                      DnsHostName->Buffer,
+                                      ComputerNameLength);
+      /* status STATUS_BUFFER_OVERFLOW is not a problem since the computername shoud only 
+         have MAX_COMPUTERNAME_LENGTH characters */
+      if ((Status == STATUS_SUCCESS) ||
+          (Status == STATUS_BUFFER_OVERFLOW))
+      {
+         /* set the termination for the oem string */
+         ComputerNameOemN[MAX_COMPUTERNAME_LENGTH] = 0;
+         /* set status for the case the next function failed */
+         Status = STATUS_INVALID_COMPUTER_NAME;
+         /* fillup the oem string structure with the converted computername
+            and check it for unmapped characters */
+         ComputerNameOem.Buffer = ComputerNameOemN;
+         ComputerNameOem.Length = (USHORT)ComputerNameOemNLength;
+         ComputerNameOem.MaximumLength = (USHORT)(MAX_COMPUTERNAME_LENGTH + 1);
+         if (RtlpDidUnicodeToOemWork(DnsHostName, &ComputerNameOem) == TRUE)
+         {
+            /* no unmapped character so convert it back to an unicode string */
+            Status = RtlOemStringToUnicodeString(ComputerName,
+                                                 &ComputerNameOem,
+                                                 AllocateComputerNameString);
+         }
+      }
+   }
+
+   return Status;
+}
+

@@ -171,7 +171,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE             "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU General Public License (バージョン 2 か、希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って頒布されますが、*全くの無保証* です。商業可能\性の保証や特定の目的への適合性は、言外に示されたものも含め全く存在しません。詳しくは GNU General Public License をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU General Public License の複製物を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください (宛先は the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA)。"
+    IDS_LICENSE             "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU General Public License (バージョン 2 か、希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って頒布されますが、*全くの無保証* です。商業可能\性の保証や特定の目的への適合性は、言外に示されたものも含め全く存在しません。詳しくは GNU General Public License をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU General Public License の複製物を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください (宛先は the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.)。"
 END
 
 #endif    // Japanese resources

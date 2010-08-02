@@ -71,13 +71,11 @@ typedef struct tagPageSet
 
 typedef struct tagWinHelp
 {
-    LPCSTR              lpszName;
-
+    unsigned            ref_count;
     WINHELP_BUTTON*     first_button;
     HLPFILE_PAGE*       page;
 
     HWND                hMainWnd;
-    HWND                hShadowWnd;
     HWND                hHistoryWnd;
 
     WNDPROC             origRicheditWndProc;
@@ -116,7 +114,7 @@ typedef struct tagWinHelp
 #define DW_ACTIVATE   9
 #define	DW_CALLBACKS 10
 
-typedef long (CALLBACK *WINHELP_LDLLHandler)(WORD, LONG, LONG);
+typedef LONG (CALLBACK *WINHELP_LDLLHandler)(WORD, LONG_PTR, LONG_PTR);
 
 typedef struct tagDll
 {
@@ -141,8 +139,28 @@ typedef struct
     HFONT               hButtonFont;
 } WINHELP_GLOBALS;
 
+extern const struct winhelp_callbacks
+{
+    WORD      (WINAPI *GetFSError)(void);
+    HANDLE    (WINAPI *HfsOpenSz)(LPSTR,BYTE);
+    WORD      (WINAPI *RcCloseHfs)(HANDLE);
+    HANDLE    (WINAPI *HfOpenHfs)(HANDLE,LPSTR,BYTE);
+    HANDLE    (WINAPI *RcCloseHf)(HANDLE);
+    LONG      (WINAPI *LcbReadHf)(HANDLE,BYTE*,LONG);
+    LONG      (WINAPI *LTellHf)(HANDLE);
+    LONG      (WINAPI *LSeekHf)(HANDLE,LONG,WORD);
+    BOOL      (WINAPI *FEofHf)(HANDLE);
+    LONG      (WINAPI *LcbSizeHf)(HANDLE);
+    BOOL      (WINAPI *FAccessHfs)(HANDLE,LPSTR,BYTE);
+    WORD      (WINAPI *RcLLInfoFromHf)(HANDLE,WORD,LPWORD,LPLONG,LPLONG);
+    WORD      (WINAPI *RcLLInfoFromHfs)(HANDLE,LPSTR,WORD,LPWORD,LPLONG,LPLONG);
+    void      (WINAPI *ErrorW)(int);
+    void      (WINAPI *ErrorSz)(LPSTR);
+    ULONG_PTR (WINAPI *GetInfo)(WORD,HWND);
+    LONG      (WINAPI *API)(LPSTR,WORD,DWORD);
+} Callbacks;
+
 extern WINHELP_GLOBALS Globals;
-extern FARPROC         Callbacks[];
 
 BOOL WINHELP_CreateHelpWindow(WINHELP_WNDPAGE*, int, BOOL);
 BOOL WINHELP_OpenHelpWindow(HLPFILE_PAGE* (*)(HLPFILE*, LONG, ULONG*),
@@ -153,6 +171,8 @@ void WINHELP_DeleteBackSet(WINHELP_WINDOW*);
 HLPFILE* WINHELP_LookupHelpFile(LPCSTR lpszFile);
 HLPFILE_WINDOWINFO* WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name);
 void WINHELP_LayoutMainWindow(WINHELP_WINDOW* win);
+WINHELP_WINDOW* WINHELP_GrabWindow(WINHELP_WINDOW*);
+BOOL WINHELP_ReleaseWindow(WINHELP_WINDOW*);
 
 extern const char MAIN_WIN_CLASS_NAME[];
 extern const char BUTTON_BOX_WIN_CLASS_NAME[];

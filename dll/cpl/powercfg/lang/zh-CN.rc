@@ -1,0 +1,169 @@
+/* 
+ * Simplified Chinese Resource for Powercfg (dll/cpl/powercfg/lang/zh-CN.rc)
+ * CREATED: Jingjing Fu (jingjingf AT 188.com) 2009-05-02
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "电源使用方案"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
+  LTEXT "请选定对于您使用计算机方式最适合的电源使用方案。请注意，更改下面的设置将修改选定的方案。",
+	-1,37, 6, 209, 36
+  GROUPBOX "电源使用方案(&O)", -1, 6, 43, 240, 50
+  COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
+  PUSHBUTTON "另存为(&S)...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
+  PUSHBUTTON "删除(&D)", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
+  GROUPBOX "未知", IDC_GRPDETAIL, 6, 95, 240, 136
+  LTEXT "当计算机:",IDC_SAT, 12, 109, 60, 12
+  LTEXT "接通电源",IDC_SAC, 123, 110, 45, 15
+  ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
+  LTEXT "使用电池",IDC_SDC, 195, 110, 45, 15
+  ICON IDI_DC, IDC_IDC, 170, 108, 21, 20
+  LTEXT "关闭监视器(&M):",IDC_MONITOR, 13, 148, 84, 10
+  COMBOBOX IDC_MONITORACLIST, 100, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_MONITORDCLIST, 173, 145, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "关闭硬盘(&I):",IDC_DISK, 13, 171, 84, 10
+  COMBOBOX IDC_DISKACLIST, 100, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_DISKDCLIST, 173, 167, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "系统待机(&T):",IDC_STANDBY, 13, 191, 84, 10
+  COMBOBOX IDC_STANDBYACLIST, 100, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_STANDBYDCLIST, 173, 188, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  LTEXT "系统休眠(&H):",IDC_HYBERNATE, 13, 212, 84, 10
+  COMBOBOX IDC_HYBERNATEACLIST, 100, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+  COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "警报"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "电池不足警报",-1, 6, 7, 239, 104
+    CONTROL         "当电量降低到以下水平时，发出电池不足警报(&L):",IDC_ALARM1,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
+    LTEXT           "未知",IDC_ALARMVALUE1, 209, 20, 33, 10
+    LTEXT           "0%",-1, 28, 43, 15, 10
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
+                    TBS_AUTOTICKS | WS_TABSTOP, 42, 45, 170, 15
+    LTEXT           "100%", -1, 214, 43, 25, 10
+    PUSHBUTTON      "警报操作(&M)...",-1, 17, 69, 70, 14,WS_DISABLED
+    LTEXT           "通知:",-1, 95, 71, 57, 10
+    LTEXT           "未知",IDC_ALARMMSG1, 154, 71, 84, 10
+    LTEXT           "操作:",-1, 95, 83, 55, 10
+    LTEXT           "未知",IDC_ALARMAKTION1, 154, 83, 84, 10
+    LTEXT           "运行程序:",-1, 95, 95, 55, 10
+    LTEXT           "未知",IDC_ALARMPROG1, 154, 95, 84, 10
+
+    GROUPBOX        "电池严重短缺警报",-1, 6, 120, 239, 106
+    CONTROL         "当电力降低到以下水平时，发出电池严重短缺警报(&C):",IDC_ALARM2,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
+    LTEXT           "未知",IDC_ALARMVALUE2, 209, 133, 33, 10
+    LTEXT           "0%",-1, 28, 154, 15, 10
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
+                    TBS_AUTOTICKS | WS_TABSTOP, 42, 158, 170, 15
+    LTEXT           "100%",-1, 214, 154, 25, 10
+    PUSHBUTTON      "警报操作(&M)...",-1, 17, 183, 70, 14, WS_DISABLED
+    LTEXT           "通知:",-1, 95, 185, 50, 10
+    LTEXT           "未知",IDC_ALARMMSG2, 154, 185, 84, 10
+    LTEXT           "操作:",-1, 95, 198, 45, 10
+    LTEXT           "未知",IDC_ALARMAKTION2, 154, 198, 84, 10
+    LTEXT           "运行程序:",-1, 95, 211, 50, 10
+    LTEXT           "未知",IDC_ALARMPROG2, 154, 211, 84, 10
+END
+
+IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "高级"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_ACDC,IDI_ACDC, 7, 7, 20, 20
+    LTEXT           "请选择要使用的节能设置。",-1, 37, 6, 207, 20
+    GROUPBOX        "选项",-1, 6, 30, 240, 65
+    CONTROL         "总是在任务栏上显示图标(&S)",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 43, 220, 10
+    CONTROL         "在计算机从待机状态恢复时，提示输入密码(&P)",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 60, 220, 10
+    CONTROL         "在使用电池时弱显示(&D)。",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 78, 220, 10
+    GROUPBOX        "电源按钮",-1, 6, 101, 240, 127
+    LTEXT           "在合上便携式计算机时(&W):", IDC_SLIDCLOSE, 15, 115, 222, 10
+    COMBOBOX        IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "在按下计算机电源按钮时(&E):", IDC_SPOWERBUTTON, 15, 153, 222, 10
+    COMBOBOX        IDC_POWERBUTTON, 15, 165, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "在按下计算机睡眠按钮时(&N):", IDC_SSLEEPBUTTON, 15, 191, 222, 10
+    COMBOBOX        IDC_SLEEPBUTTON, 15, 203, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PROPPAGEHIBERNATE DIALOGEX DISCARDABLE  0, 0, 252, 237
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "休眠"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON            IDI_HIBERNATE,IDI_HIBERNATE, 7, 7, 20, 20
+    LTEXT           "在计算机休眠时，它将内存中所有信息保存到硬盘上，然后关闭计算机。在退出休眠状态时，计算机会恢复到原来的状态。",
+                    -1, 37, 6, 210, 35
+    GROUPBOX        "休眠",-1, 6, 41, 240, 32
+    CONTROL         "启用休眠(&H)",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP, 17, 55, 210, 10
+    GROUPBOX        "用于休眠的磁盘空间",-1, 6, 80, 240, 76
+    LTEXT           "空闲的磁盘空间:",-1, 15, 95, 140, 10
+    LTEXT           "未知",IDC_FREESPACE, 160, 95, 80, 10
+    LTEXT           "休眠所需的磁盘空间:",-1, 15, 115, 140, 10
+    LTEXT           "未知",IDC_SPACEFORHIBERNATEFILE, 160, 115, 80, 10
+    LTEXT           "在计算机进入休眠之前，您必须释放一些磁盘空间。",IDC_TOLESSFREESPACE, 15, 135, 224, 20
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "电源选项"
+  IDS_CPLDESCRIPTION_1 "配置计算机的节能设置。"
+  IDS_PROCENT "%i%%"
+  IDS_SOUND "声音"
+  IDS_TEXT "文本"
+  IDS_CONFIG1 "为 %i 设置电源使用方案"
+  IDS_CONFIG2 "%i 的高级设置"
+
+  IDS_SIZEBYTS "%i 字节"
+  IDS_SIZEMB "%i MB"
+
+  IDS_NOACTION "无操作"
+
+  IDS_PowerActionNone1 "无动作"
+  IDS_PowerActionUnknown "未知"
+  IDS_PowerActionSleep "待机"
+  IDS_PowerActionHibernate "休眠"
+  IDS_PowerActionShutdown "关机"
+  IDS_PowerActionRestart "重新启动"
+  IDS_PowerActionShutdownOff "关机并切断电源"
+  IDS_PowerActionWarmEject "问我要做什么"
+  IDS_PowerActionNone2 "无"
+
+  IDS_TIMEOUT1 "1 分钟之后"
+  IDS_TIMEOUT2 "2 分钟之后"
+  IDS_TIMEOUT3 "3 分钟之后"
+  IDS_TIMEOUT4 "5 分钟之后"
+  IDS_TIMEOUT5 "10 分钟之后"
+  IDS_TIMEOUT6 "15 分钟之后"
+  IDS_TIMEOUT7 "20 分钟之后"
+  IDS_TIMEOUT8 "25 分钟之后"
+  IDS_TIMEOUT9 "30 分钟之后"
+  IDS_TIMEOUT10 "45 分钟之后"
+  IDS_TIMEOUT11 "1 小时之后"
+  IDS_TIMEOUT12 "2 小时之后"
+  IDS_TIMEOUT13 "3 小时之后"
+  IDS_TIMEOUT14 "4 小时之后"
+  IDS_TIMEOUT15 "5 小时之后"
+  IDS_TIMEOUT16 "从不"
+  
+  IDS_DEL_SCHEME "您确定要删除电源使用方案吗?"
+  IDS_DEL_SCHEME_TITLE "删除方案"
+END
+
+

@@ -12,14 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
-#ifndef __ARCH_H
-#define __ARCH_H
+#pragma once
 
 #ifdef _M_AMD64
 #include <arch/amd64/amd64.h>
@@ -46,16 +44,33 @@
 #define BIOSCALLBUFOFFSET	0x0000	/* Buffer to store temporary data for any Int386() call */
 #define FILESYSBUFFER		0x80000	/* Buffer to store file system data (e.g. cluster buffer for FAT) */
 #define DISKREADBUFFER		0x90000	/* Buffer to store data read in from the disk via the BIOS */
-#elif defined(_M_PPC) || defined(_M_MIPS) || defined(_M_ARM)
-extern PVOID FsStaticBufferDisk, FsStaticBufferData;
-#define DISKREADBUFFER		FsStaticBufferDisk
-#define FILESYSBUFFER           FsStaticBufferData
+#define DISKREADBUFFER_SIZE 512
+#elif defined(_M_PPC) || defined(_M_MIPS)
+#define DISKREADBUFFER		    0x80000000
+#define FILESYSBUFFER           0x80000000
+#elif defined(_M_ARM)
+extern ULONG gDiskReadBuffer, gFileSysBuffer;
+#define DISKREADBUFFER gDiskReadBuffer
+#define FILESYSBUFFER  gFileSysBuffer
 #endif
 
 /* Makes "x" a global variable or label */
 #define EXTERN(x)	.global x; x:
 
 
+// Flag Masks
+#define I386FLAG_CF		0x0001		// Carry Flag
+#define I386FLAG_RESV1	0x0002		// Reserved - Must be 1
+#define I386FLAG_PF		0x0004		// Parity Flag
+#define I386FLAG_RESV2	0x0008		// Reserved - Must be 0
+#define I386FLAG_AF		0x0010		// Auxiliary Flag
+#define I386FLAG_RESV3	0x0020		// Reserved - Must be 0
+#define I386FLAG_ZF		0x0040		// Zero Flag
+#define I386FLAG_SF		0x0080		// Sign Flag
+#define I386FLAG_TF		0x0100		// Trap Flag (Single Step)
+#define I386FLAG_IF		0x0200		// Interrupt Flag
+#define I386FLAG_DF		0x0400		// Direction Flag
+#define I386FLAG_OF		0x0800		// Overflow Flag
 
 
 #ifndef ASM
@@ -146,20 +161,6 @@ typedef union
 // specifically handles linear addresses.
 int		Int386(int ivec, REGS* in, REGS* out);
 
-// Flag Masks
-#define I386FLAG_CF		0x0001		// Carry Flag
-#define I386FLAG_RESV1	0x0002		// Reserved - Must be 1
-#define I386FLAG_PF		0x0004		// Parity Flag
-#define I386FLAG_RESV2	0x0008		// Reserved - Must be 0
-#define I386FLAG_AF		0x0010		// Auxiliary Flag
-#define I386FLAG_RESV3	0x0020		// Reserved - Must be 0
-#define I386FLAG_ZF		0x0040		// Zero Flag
-#define I386FLAG_SF		0x0080		// Sign Flag
-#define I386FLAG_TF		0x0100		// Trap Flag (Single Step)
-#define I386FLAG_IF		0x0200		// Interrupt Flag
-#define I386FLAG_DF		0x0400		// Direction Flag
-#define I386FLAG_OF		0x0800		// Overflow Flag
-
 // This macro tests the Carry Flag
 // If CF is set then the call failed (usually)
 #define INT386_SUCCESS(regs)	((regs.x.eflags & I386FLAG_CF) == 0)
@@ -172,6 +173,3 @@ VOID	SoftReboot(VOID);					// Implemented in boot.S
 VOID	DetectHardware(VOID);		// Implemented in hardware.c
 
 #endif /* ! ASM */
-
-
-#endif // #defined __ARCH_H

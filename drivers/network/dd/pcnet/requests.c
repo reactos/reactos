@@ -15,9 +15,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * PROGRAMMERS:
  *     Vizzini (vizzini@plasmic.com),
@@ -118,11 +118,9 @@ MiniportQueryInformation(
 
   DPRINT("Called. OID 0x%x\n", Oid);
 
-  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
   ASSERT(Adapter);
 
-  NdisDprAcquireSpinLock(&Adapter->Lock);
+  NdisAcquireSpinLock(&Adapter->Lock);
 
   Status   = NDIS_STATUS_SUCCESS;
   CopyFrom = (PVOID)&GenericULONG;
@@ -139,8 +137,8 @@ MiniportQueryInformation(
 
     case OID_GEN_HARDWARE_STATUS:
         {
-          /* TODO: implement this... */
           GenericULONG = (ULONG)NdisHardwareStatusReady;
+          /* ((Adapter->MediaState == NdisMediaStateConnected) ? NdisHardwareStatusReady : NdisHardwareStatusNotReady); */
           break;
         }
 
@@ -173,7 +171,7 @@ MiniportQueryInformation(
 
     case OID_GEN_LINK_SPEED:
         {
-          GenericULONG = 100000;  /* 10Mbps */
+          GenericULONG = Adapter->MediaSpeed * 10000;
           break;
         }
 
@@ -369,7 +367,7 @@ MiniportQueryInformation(
        *BytesNeeded = 0;
     }
 
-  NdisDprReleaseSpinLock(&Adapter->Lock);
+  NdisReleaseSpinLock(&Adapter->Lock);
 
   DPRINT("Leaving. Status is 0x%x\n", Status);
 
@@ -408,11 +406,9 @@ MiniportSetInformation(
 
   ASSERT(Adapter);
 
-  ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
   DPRINT("Called, OID 0x%x\n", Oid);
 
-  NdisDprAcquireSpinLock(&Adapter->Lock);
+  NdisAcquireSpinLock(&Adapter->Lock);
 
   switch (Oid)
     {
@@ -511,7 +507,7 @@ MiniportSetInformation(
       *BytesNeeded = 0;
     }
 
-  NdisDprReleaseSpinLock(&Adapter->Lock);
+  NdisReleaseSpinLock(&Adapter->Lock);
 
   DPRINT("Leaving. Status (0x%X).\n", Status);
 

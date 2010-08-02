@@ -1,5 +1,4 @@
-#ifndef _WIN32K_HOTKEY_H
-#define _WIN32K_HOTKEY_H
+#pragma once
 
 #include <include/winsta.h>
 #include <include/window.h>
@@ -15,7 +14,7 @@ typedef struct _HOT_KEY_ITEM
 } HOT_KEY_ITEM, *PHOT_KEY_ITEM;
 
 NTSTATUS FASTCALL
-InitHotkeyImpl();
+InitHotkeyImpl(VOID);
 
 //NTSTATUS FASTCALL
 //CleanupHotKeys(PWINSTATION_OBJECT WinStaObject);
@@ -32,7 +31,5 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
 
 VOID FASTCALL
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);
-
-#endif /* _WIN32K_HOTKEY_H */
 
 /* EOF */

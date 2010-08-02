@@ -2,6 +2,7 @@
  *  (Simplified Chinese resources)
  *  (简体中文资源)
  *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *  Updated: 2009-04-26 Jingjing Fu <jingjingf AT 188.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -59,10 +60,10 @@ FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_APPEARANCE_PREVIEW, "PreviewWndClass",
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
-    LTEXT           "色彩方案:", IDC_STATIC, 7, 140, 64, 7
+    LTEXT           "色彩方案", IDC_STATIC, 7, 140, 64, 7
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 134, 90 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
-    PUSHBUTTON      "高级", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
+    PUSHBUTTON      "效果(&E)...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "高级(&D)", IDC_APPEARANCE_ADVANCED, 182, 170, 56, 15
 END
 
 IDD_ADVAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 250, 239
@@ -106,25 +107,25 @@ END
 IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effects"
+CAPTION "效果"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&Use the following transition effect for menus and tooltips:",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "为菜单和工具提示使用以下过渡效果(&U):",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "U&se the following method to smooth edges of screen fonts:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "使用下列方式使屏幕字体的边缘平滑(&S)",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "Us&e large icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "使用大图标(&E)",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "Show sh&adows under menus",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "在菜单下显示阴影(&A)",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "Show &window contents while dragging",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "拖动时显示窗口内容(&W)",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
-    CONTROL         "&Hide underlined letters for keyboard navigation until I press the Alt key",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "直到我按 Alt 键之前，请隐藏有下划线的字母供键盘使用",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Cancel", IDCANCEL, 226, 165, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 226, 165, 50, 14
+    DEFPUSHBUTTON "确定", IDOK, 172, 165, 50, 14
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 204
@@ -186,14 +187,14 @@ END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT  "Fade effect"
+    IDS_SLIDEEFFECT "滑动效果"
+    IDS_FADEEFFECT  "渐变效果"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "Standard"
-    IDS_CLEARTYPEEFFECT "ClearType"
+    IDS_STANDARDEFFECT  "标准"
+    IDS_CLEARTYPEEFFECT "清晰字体"
 END
 
 STRINGTABLE
@@ -267,7 +268,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_DISPLAY_SETTINGS "显示设置"
+    IDS_APPLY_FAILED "应用新设置失败..."
+    IDS_APPLY_NEEDS_RESTART "需要重新启动计算机使更改生效。"
 END

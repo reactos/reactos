@@ -4,19 +4,20 @@
    Contributed by John C. Bowman <bowman@ipp-garching.mpg.de>, 1995.
 
    The GNU C Library is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Library General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
+   modify it under the terms of the GNU Lesser General Public
+   License as published by the Free Software Foundation; either
+   version 2.1 of the License, or (at your option) any later version.
 
    The GNU C Library is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-   Library General Public License for more details.
+   Lesser General Public License for more details.
 
-   You should have received a copy of the GNU Library General Public
-   License along with the GNU C Library; see the file COPYING.LIB.  If not,
-   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   You should have received a copy of the GNU Lesser General Public
+   License along with the GNU C Library; if not, write to the Free
+   Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.
+*/
 
 #include <math.h>
 
@@ -42,6 +43,22 @@ double exp (double __x)
 
   return __value;
 #else
-  return linkme_exp(__x);
+  register double __val;
+  __asm
+  {
+    fld1                        // store 1.0 for later use
+    fld __x
+    fldl2e                      // e^x = 2^(x * log2(e))
+    fmul    st,st(1)            // x * log2(e)
+    fld     st(0)
+    frndint                     // int(x * log2(e))
+    fsub    st,st(1)            // fract(x * log2(e))
+    fxch
+    f2xm1                       // 2^(fract(x * log2(e))) - 1
+    fadd    st,st(3)            // + 1.0
+    fscale
+    fstp __val
+  }
+  return __val;
 #endif /*__GNUC__*/
 }

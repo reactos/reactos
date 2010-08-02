@@ -396,9 +396,10 @@ BOOL SIC_Initialize(void)
         return FALSE;
     }
 
-    hDC = GetDC(NULL);
+    hDC = CreateICW(L"DISPLAY", NULL, NULL, NULL);
     if (!hDC)
     {
+        ERR("Failed to create information context (error %d)\n", GetLastError());
         return FALSE;
     }
 
@@ -883,8 +884,14 @@ HRESULT WINAPI SHDefExtractIconW(LPCWSTR pszIconFile, int iIndex, UINT uFlags,
 	if (ret == 0xFFFFFFFF)
 	  return E_FAIL;
 	if (ret > 0) {
-	  *phiconLarge = hIcons[0];
-	  *phiconSmall = hIcons[1];
+	  if (phiconLarge)
+	    *phiconLarge = hIcons[0];
+	  else
+	    DestroyIcon(hIcons[0]);
+	  if (phiconSmall)
+	    *phiconSmall = hIcons[1];
+	  else
+	    DestroyIcon(hIcons[1]);
 	  return S_OK;
 	}
 	return S_FALSE;

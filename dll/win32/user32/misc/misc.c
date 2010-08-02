@@ -45,13 +45,6 @@ PrivateCsrssManualGuiCheck(LONG Check)
   NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
-VOID
-WINAPI
-PrivateCsrssInitialized(VOID)
-{
-  NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
-}
-
 
 /*
  * @implemented
@@ -61,7 +54,7 @@ WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
   return NtUserCallTwoParam(dwProcessId,
-			    (DWORD)bRegister,
+			    (DWORD_PTR)bRegister,
 			    TWOPARAM_ROUTINE_REGISTERLOGONPROC);
 }
 
@@ -104,17 +97,17 @@ UpdatePerUserSystemParameters(
    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
 
-PW32THREADINFO
+PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
 
-    ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+    ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
     if (ti == NULL)
     {
-        /* create the W32THREADINFO structure */
+        /* create the THREADINFO structure */
         NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-        ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+        ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
     }
 
     return ti;
@@ -250,13 +243,13 @@ WINAPI
 IsGUIThread(
     BOOL bConvert)
 {
-  PW32THREADINFO ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+  PTHREADINFO ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
   if (ti == NULL)
   {
     if(bConvert)
     {
       NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-      if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
+      if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
       else
          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
@@ -268,13 +261,13 @@ IsGUIThread(
 
 BOOL
 FASTCALL
-TestWindowProcess(PWINDOW Wnd)
+TestWindowProcess(PWND Wnd)
 {
-   if (Wnd->ti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+   if (Wnd->head.pti == (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo)
       return TRUE;
    else
-      return (NtUserQueryWindow(Wnd->hdr.Handle, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
-              (DWORD)NtCurrentTeb()->ClientId.UniqueProcess );
+      return (NtUserQueryWindow(Wnd->head.h, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
+              (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess );
 }
 
 BOOL
@@ -300,7 +293,7 @@ GetUser32Handle(HANDLE handle)
     INT Index;
     USHORT generation;
 
-    Index = (((UINT)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
+    Index = (((UINT_PTR)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
 
     if (Index < 0 || Index >= gHandleTable->nb_handles)
         return NULL;
@@ -308,7 +301,7 @@ GetUser32Handle(HANDLE handle)
     if (!gHandleEntries[Index].type || !gHandleEntries[Index].ptr)
         return NULL;
 
-    generation = (UINT)handle >> 16;
+    generation = (UINT_PTR)handle >> 16;
 
     if (generation == gHandleEntries[Index].generation || !generation || generation == 0xffff)
         return &gHandleEntries[Index];
@@ -322,13 +315,13 @@ GetUser32Handle(HANDLE handle)
 static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_EVENT + 1] =
 {
     FALSE, /* VALIDATE_TYPE_FREE (not used) */
-    TRUE, /* VALIDATE_TYPE_WIN */ /* FIXME: FALSE once WINDOW_OBJECT is deleted! */
-    TRUE, /* VALIDATE_TYPE_MENU */
+    TRUE, /* VALIDATE_TYPE_WIN  FALSE */
+    TRUE, /* VALIDATE_TYPE_MENU  FALSE */
     TRUE, /* VALIDATE_TYPE_CURSOR */
     TRUE, /* VALIDATE_TYPE_MWPOS */
-    TRUE, /* VALIDATE_TYPE_HOOK */
+    TRUE, /* VALIDATE_TYPE_HOOK  FALSE */
     FALSE, /* (not used) */
-    TRUE, /* VALIDATE_TYPE_CALLPROC */
+    TRUE, /* VALIDATE_TYPE_CALLPROC  FALSE */
     TRUE, /* VALIDATE_TYPE_ACCEL */
     FALSE, /* (not used) */
     FALSE, /* (not used) */
@@ -357,7 +350,10 @@ ValidateHandle(HANDLE handle, UINT uType)
       uType = pEntry->type;
 
 // Must have an entry and must be the same type!
-  if ( (!pEntry) || (pEntry->type != uType) || !pEntry->ptr )
+  if ( (!pEntry) ||
+        (pEntry->type != uType) ||
+        !pEntry->ptr ||
+        (pEntry->flags & HANDLEENTRY_INDESTROY) )
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!
@@ -426,25 +422,37 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
 //
 // Validate a callproc handle and return the pointer to the object.
 //
-PCALLPROC
+PCALLPROCDATA
 FASTCALL
 ValidateCallProc(HANDLE hCallProc)
 {
-    PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
-    if (CallProc != NULL && CallProc->pi == g_ppi)
-        return CallProc;
+  PUSER_HANDLE_ENTRY pEntry;
 
-    return NULL;
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
+
+  pEntry = GetUser32Handle(hCallProc);
+
+  if (CallProc != NULL && pEntry->ppi == g_ppi)
+     return CallProc;
+
+  return NULL;
 }
+
+// HACK HACK HACK!
+typedef struct _WNDX
+{
+    THRDESKHEAD head;
+    PWND pWnd;
+} WNDX, *PWNDX;
 
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -455,9 +463,6 @@ ValidateHwnd(HWND hwnd)
     Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
     {
-        /* FIXME: Check if handle table entry is marked as deleting and
-                  return NULL in this case! */
-
 #if 0
         return Wnd;
 #else
@@ -468,8 +473,8 @@ ValidateHwnd(HWND hwnd)
            !!! REMOVE AS SOON AS WINDOW_OBJECT NO LONGER EXISTS !!!
          */
 
-        if (*((PVOID*)Wnd) != NULL)
-            return DesktopPtrToUser(*((PVOID*)Wnd));
+        if ( ((PWNDX)Wnd)->pWnd != NULL)
+            return DesktopPtrToUser( ((PWNDX)Wnd)->pWnd );
 #endif
     }
 
@@ -479,11 +484,11 @@ ValidateHwnd(HWND hwnd)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndNoErr(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -494,9 +499,6 @@ ValidateHwndNoErr(HWND hwnd)
     Wnd = ValidateHandleNoErr((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
     {
-        /* FIXME: Check if handle table entry is marked as deleting and
-                  return NULL in this case! */
-
 #if 0
         return Wnd;
 #else
@@ -507,19 +509,19 @@ ValidateHwndNoErr(HWND hwnd)
            !!! REMOVE AS SOON AS WINDOW_OBJECT NO LONGER EXISTS !!!
          */
 
-        if (*((PVOID*)Wnd) != NULL)
-            return DesktopPtrToUser(*((PVOID*)Wnd));
+        if ( ((PWNDX)Wnd)->pWnd != NULL)
+            return DesktopPtrToUser( ((PWNDX)Wnd)->pWnd );
 #endif
     }
 
     return NULL;
 }
 
-PWINDOW
+PWND
 FASTCALL
 GetThreadDesktopWnd(VOID)
 {
-    PWINDOW Wnd = GetThreadDesktopInfo()->Wnd;
+    PWND Wnd = GetThreadDesktopInfo()->spwnd;
     if (Wnd != NULL)
         Wnd = DesktopPtrToUser(Wnd);
     return Wnd;
@@ -528,7 +530,7 @@ GetThreadDesktopWnd(VOID)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndOrDesk(HWND hwnd)
 {

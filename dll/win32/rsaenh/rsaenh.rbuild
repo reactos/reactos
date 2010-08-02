@@ -17,11 +17,11 @@
 	<file>rc4.c</file>
 	<file>rsa.c</file>
 	<file>rsaenh.c</file>
+	<file>sha2.c</file>
 	<file>version.rc</file>
 	<library>wine</library>
 	<library>crypt32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

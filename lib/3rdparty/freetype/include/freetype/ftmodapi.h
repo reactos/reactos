@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType modules public interface (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2008, 2009 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -78,12 +78,50 @@ FT_BEGIN_HEADER
 
   typedef FT_Pointer  FT_Module_Interface;
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    FT_Module_Constructor                                              */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A function used to initialize (not create) a new module object.    */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    module :: The module to initialize.                                */
+  /*                                                                       */
   typedef FT_Error
   (*FT_Module_Constructor)( FT_Module  module );
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    FT_Module_Destructor                                               */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A function used to finalize (not destroy) a given module object.   */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    module :: The module to finalize.                                  */
+  /*                                                                       */
   typedef void
   (*FT_Module_Destructor)( FT_Module  module );
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <FuncType>                                                            */
+  /*    FT_Module_Requester                                                */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A function used to query a given module for a specific interface.  */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    module :: The module to finalize.                                  */
+  /*                                                                       */
+  /*    name ::   The name of the interface in the module.                 */
+  /*                                                                       */
   typedef FT_Module_Interface
   (*FT_Module_Requester)( FT_Module    module,
                           const char*  name );
@@ -112,14 +150,11 @@ FT_BEGIN_HEADER
   /*                       as a 16.16 fixed number (major.minor).  Starts  */
   /*                       at version 2.0, i.e., 0x20000.                  */
   /*                                                                       */
-  /*    module_init     :: A function used to initialize (not create) a    */
-  /*                       new module object.                              */
+  /*    module_init     :: The initializing function.                      */
   /*                                                                       */
-  /*    module_done     :: A function used to finalize (not destroy) a     */
-  /*                       given module object                             */
+  /*    module_done     :: The finalizing function.                        */
   /*                                                                       */
-  /*    get_interface   :: Queries a given module for a specific           */
-  /*                       interface by name.                              */
+  /*    get_interface   :: The interface requesting function.              */
   /*                                                                       */
   typedef struct  FT_Module_Class_
   {
@@ -144,7 +179,7 @@ FT_BEGIN_HEADER
   /*    FT_Add_Module                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Adds a new module to a given library instance.                     */
+  /*    Add a new module to a given library instance.                      */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    library :: A handle to the library object.                         */
@@ -153,7 +188,7 @@ FT_BEGIN_HEADER
   /*    clazz   :: A pointer to class descriptor for the module.           */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    An error will be returned if a module already exists by that name, */
@@ -170,7 +205,7 @@ FT_BEGIN_HEADER
   /*    FT_Get_Module                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Finds a module by its name.                                        */
+  /*    Find a module by its name.                                         */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library     :: A handle to the library object.                     */
@@ -178,7 +213,7 @@ FT_BEGIN_HEADER
   /*    module_name :: The module's name (as an ASCII string).             */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    A module handle.  0 if none was found.                             */
+  /*    A module handle.  0~if none was found.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    FreeType's internal modules aren't documented very well, and you   */
@@ -195,7 +230,7 @@ FT_BEGIN_HEADER
   /*    FT_Remove_Module                                                   */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Removes a given module from a library instance.                    */
+  /*    Remove a given module from a library instance.                     */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    library :: A handle to a library object.                           */
@@ -204,7 +239,7 @@ FT_BEGIN_HEADER
   /*    module  :: A handle to a module object.                            */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The module object is destroyed by the function in case of success. */
@@ -224,6 +259,10 @@ FT_BEGIN_HEADER
   /*    from a given memory object.  It is thus possible to use libraries  */
   /*    with distinct memory allocators within the same program.           */
   /*                                                                       */
+  /*    Normally, you would call this function (followed by a call to      */
+  /*    @FT_Add_Default_Modules or a series of calls to @FT_Add_Module)    */
+  /*    instead of @FT_Init_FreeType to initialize the FreeType library.   */
+  /*                                                                       */
   /* <Input>                                                               */
   /*    memory   :: A handle to the original memory object.                */
   /*                                                                       */
@@ -231,7 +270,7 @@ FT_BEGIN_HEADER
   /*    alibrary :: A pointer to handle of a new library object.           */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_New_Library( FT_Memory    memory,
@@ -244,14 +283,14 @@ FT_BEGIN_HEADER
   /*    FT_Done_Library                                                    */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Discards a given library object.  This closes all drivers and      */
+  /*    Discard a given library object.  This closes all drivers and       */
   /*    discards all resource objects.                                     */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library :: A handle to the target library.                         */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Done_Library( FT_Library  library );
@@ -268,7 +307,7 @@ FT_BEGIN_HEADER
   /*    FT_Set_Debug_Hook                                                  */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Sets a debug hook function for debugging the interpreter of a font */
+  /*    Set a debug hook function for debugging the interpreter of a font  */
   /*    format.                                                            */
   /*                                                                       */
   /* <InOut>                                                               */
@@ -283,7 +322,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Note>                                                                */
   /*    Currently, four debug hook slots are available, but only two (for  */
-  /*    the TrueType and the Type 1 interpreter) are defined.              */
+  /*    the TrueType and the Type~1 interpreter) are defined.              */
   /*                                                                       */
   /*    Since the internal headers of FreeType are no longer installed,    */
   /*    the symbol `FT_DEBUG_HOOK_TRUETYPE' isn't available publicly.      */
@@ -301,7 +340,7 @@ FT_BEGIN_HEADER
   /*    FT_Add_Default_Modules                                             */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Adds the set of default drivers to a given library object.         */
+  /*    Add the set of default drivers to a given library object.          */
   /*    This is only useful when you create a library object with          */
   /*    @FT_New_Library (usually to plug a custom memory manager).         */
   /*                                                                       */
@@ -362,7 +401,7 @@ FT_BEGIN_HEADER
    *       2.2
    *
    */
-  typedef enum
+  typedef enum  FT_TrueTypeEngineType_
   {
     FT_TRUETYPE_ENGINE_TYPE_NONE = 0,
     FT_TRUETYPE_ENGINE_TYPE_UNPATENTED,
@@ -377,7 +416,7 @@ FT_BEGIN_HEADER
    *     FT_Get_TrueType_Engine_Type
    *
    *  @description:
-   *     Return a @FT_TrueTypeEngineType value to indicate which level of
+   *     Return an @FT_TrueTypeEngineType value to indicate which level of
    *     the TrueType virtual machine a given library instance supports.
    *
    *  @input:

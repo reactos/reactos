@@ -87,6 +87,7 @@
 
 #define RPC_FC_POINTER			0x36
 
+#define RPC_FC_ALIGNM2			0x37
 #define RPC_FC_ALIGNM4			0x38
 #define RPC_FC_ALIGNM8			0x39
 
@@ -166,6 +167,7 @@
 #define RPC_FC_PROC_OIF_OBJECT          0x04
 #define RPC_FC_PROC_OIF_RPCFLAGS        0x08
 #define RPC_FC_PROC_OIF_OBJ_V2          0x20
+#define RPC_FC_PROC_OIF_HAS_COMM_OR_FAULT 0x20
 #define RPC_FC_PROC_OIF_NEWINIT         0x40
 
 #define RPC_FC_PROC_PF_MUSTSIZE         0x0001

@@ -3,8 +3,9 @@
  * French language support
  *
  * Copyright 2003 Mike McCormack for CodeWeavers
- * Copyright 2003 Vincent B�ron
+ * Copyright 2003 Vincent Béron
  * Copyright 2005 Jonathan Ernst
+ * Copyright 2009 Frédéric Delanoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,29 +22,54 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 218, 150
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Entrez le mot de passe r�seau"
+CAPTION "Entrez le mot de passe réseau"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Entrez votre nom d'utilisateur et votre mot de passe :", -1, 40, 6, 150, 15
- LTEXT "Mandataire", -1, 40, 26, 50, 10
- LTEXT "Domaine", -1, 40, 46, 50, 10
- LTEXT "Utilisateur", -1, 40, 66, 50, 10
- LTEXT "Mot de passe", -1, 40, 86, 50, 10
- LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
- LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
- EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
- EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Enregistrer ce mot de passe (risqu�)", IDC_SAVEPASSWORD,
-           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Annuler", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "Entrez votre nom d'utilisateur et votre mot de passe :", -1, 10, 8, 173, 12
+ LTEXT "Serveur mandataire", -1, 10, 28, 50, 17
+ LTEXT "Domaine", -1, 10, 50, 50, 10
+ LTEXT "Utilisateur", -1, 10, 71, 50, 10
+ LTEXT "Mot de passe", -1, 10, 90, 50, 10
+ LTEXT "" IDC_PROXY, 58, 28, 150, 14, 0
+ LTEXT "" IDC_REALM, 58, 48, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 58, 68, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 58, 88, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Enregistrer ce mot de passe (risqué)", IDC_SAVEPASSWORD,
+           58, 108, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 87, 128, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Annuler", IDCANCEL, 147, 128, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 218, 150
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Authentification requise"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Entrez votre nom d'utilisateur et votre mot de passe :", -1, 10, 8, 173, 12
+ LTEXT "Serveur", -1, 10, 28, 50, 17
+ LTEXT "Domaine", -1, 10, 50, 50, 10
+ LTEXT "Utilisateur", -1, 10, 71, 50, 10
+ LTEXT "Mot de passe", -1, 10, 90, 50, 10
+ LTEXT "" IDC_SERVER, 58, 28, 150, 14, 0
+ LTEXT "" IDC_REALM, 58, 48, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 58, 68, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 58, 88, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Enregistrer ce mot de passe (risqué)", IDC_SAVEPASSWORD,
+           58, 108, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 87, 128, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Annuler", IDCANCEL, 147, 128, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_LANCONNECTION "Connexion LAN"
+  IDS_LANCONNECTION "Connexion réseau local (LAN)"
 }

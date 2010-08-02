@@ -1,6 +1,7 @@
 /*
  * Copyright 2003 Marcelo Duarte
- * Copyright 2006-2007 AmÈrico JosÈ Melo
+ * Copyright 2006-2007 Am√©rico Jos√© Melo
+ * Copyright 2009 Ricardo Filipe
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +18,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+#pragma code_page(65001)
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
@@ -24,10 +29,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Entrar Senha da Rede"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Por favor, entre com o nome de usu·rio e a senha:", -1, 40, 6, 150, 15
+ LTEXT "Por favor, entre com o nome de usu√°rio e a senha:", -1, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
  LTEXT "Realm", -1, 40, 46, 50, 10
- LTEXT "Usu·rio", -1, 40, 66, 50, 10
+ LTEXT "Usu√°rio", -1, 40, 66, 50, 10
  LTEXT "Senha", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
@@ -61,17 +66,36 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Cancelar", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
+IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Autentica√ß√£o necess√°ria"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Por favor insira o seu nome de utilizador e palavra-passe:", -1, 40, 6, 150, 15
+ LTEXT "Servidor", -1, 40, 26, 50, 10
+ LTEXT "Reino", -1, 40, 46, 50, 10
+ LTEXT "Utilizador", -1, 40, 66, 50, 10
+ LTEXT "Palavra-passe", -1, 40, 86, 50, 10
+ LTEXT "" IDC_SERVER, 80, 26, 150, 14, 0
+ LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Guardar esta palavra-passe (inseguro)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Cancelar", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_LANCONNECTION "Conex„o LAN"
+  IDS_LANCONNECTION "Conex√£o LAN"
 }
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_LANCONNECTION "LigaÁ„o LAN"
+  IDS_LANCONNECTION "Liga√ß√£o LAN"
 }

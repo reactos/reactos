@@ -1,5 +1,4 @@
-#ifndef LANG_EL_GR_H__
-#define LANG_EL_GR_H__
+#pragma once
 
 MUI_LAYOUTS elGRLayouts[] =
 {
@@ -1645,7 +1644,7 @@ MUI_STRING elGRStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 €¤« š¨á­œ«˜  «¦ ˜¨®œå¦: %S"},
+     "   €¤« š¨á­œ«˜  «¦ ˜¨®œå¦: %S"},
     {STRING_SETUPCOPYINGFILES,
      "† œš¡˜«á©«˜©ž ˜¤« š¨á­œ  ˜¨®œå˜..."},
     {STRING_REGHIVEUPDATE,
@@ -1724,5 +1723,3 @@ MUI_STRING elGRStrings[] =
     "‚å¤œ«˜  §¨¦©Ÿã¡ž «à¤ › ˜«á¥œà¤ §¢ž¡«¨¦¢¦šå¦¬"},
     {0, 0}
 };
-
-#endif

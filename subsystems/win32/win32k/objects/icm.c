@@ -12,12 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -104,10 +104,10 @@ IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 
   if (!(pGDev->flFlags & PDEV_DISPLAY )) return FALSE;
 
-  if ((pGDev->DevInfo.iDitherFormat == BMF_8BPP)  ||
-      (pGDev->DevInfo.iDitherFormat == BMF_16BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_24BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
+  if ((pGDev->devinfo.iDitherFormat == BMF_8BPP)  ||
+      (pGDev->devinfo.iDitherFormat == BMF_16BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_24BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_32BPP))
   {
      if (pGDev->flFlags & PDEV_GAMMARAMP_TABLE)
         RtlCopyMemory( Ramp,
@@ -146,7 +146,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  SafeRamp = ExAllocatePool(PagedPool, sizeof(GAMMARAMP));
+  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
@@ -174,7 +174,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
   _SEH2_END;
 
   DC_UnlockDc(dc);
-  ExFreePool(SafeRamp);
+  ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
 
   if (!NT_SUCCESS(Status))
   {
@@ -232,26 +232,26 @@ FASTCALL
 UpdateDeviceGammaRamp( HDEV hPDev )
 {
   BOOL Ret = FALSE;
-  PPALGDI palGDI;
+  PPALETTE palGDI;
   PALOBJ *palPtr;
   PPDEVOBJ pGDev = (PPDEVOBJ) hPDev;
 
-  if ((pGDev->DevInfo.iDitherFormat == BMF_8BPP)  ||
-      (pGDev->DevInfo.iDitherFormat == BMF_16BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_24BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
+  if ((pGDev->devinfo.iDitherFormat == BMF_8BPP)  ||
+      (pGDev->devinfo.iDitherFormat == BMF_16BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_24BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_32BPP))
   {
      if (pGDev->DriverFunctions.IcmSetDeviceGammaRamp)
-         return pGDev->DriverFunctions.IcmSetDeviceGammaRamp( pGDev->hPDev,
+         return pGDev->DriverFunctions.IcmSetDeviceGammaRamp( pGDev->dhpdev,
                                                         IGRF_RGB_256WORDS,
                                                        pGDev->pvGammaRamp);
 
-     if ( (pGDev->DevInfo.iDitherFormat != BMF_8BPP) ||
-         !(pGDev->GDIInfo.flRaster & RC_PALETTE)) return FALSE;
+     if ( (pGDev->devinfo.iDitherFormat != BMF_8BPP) ||
+         !(pGDev->gdiinfo.flRaster & RC_PALETTE)) return FALSE;
 
      if (!(pGDev->flFlags & PDEV_GAMMARAMP_TABLE)) return FALSE;
 
-     palGDI = PALETTE_LockPalette(pGDev->DevInfo.hpalDefault);
+     palGDI = PALETTE_LockPalette(pGDev->devinfo.hpalDefault);
      if(!palGDI) return FALSE;
      palPtr = (PALOBJ*) palGDI;
 
@@ -266,7 +266,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
      // PALOBJ_cGetColors check mode flags and update Gamma Correction.
      // Set the HDEV to pal and go.
         palGDI->hPDev = hPDev;
-        Ret = pGDev->DriverFunctions.SetPalette(pGDev->hPDev,
+        Ret = pGDev->DriverFunctions.SetPalette(pGDev->dhpdev,
                                                      palPtr,
                                                           0,
                                                           0,
@@ -296,18 +296,18 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 
   if (!(pGDev->flFlags & PDEV_DISPLAY )) return FALSE;
 
-  if ((pGDev->DevInfo.iDitherFormat == BMF_8BPP)  ||
-      (pGDev->DevInfo.iDitherFormat == BMF_16BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_24BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
+  if ((pGDev->devinfo.iDitherFormat == BMF_8BPP)  ||
+      (pGDev->devinfo.iDitherFormat == BMF_16BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_24BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_32BPP))
   {
      if (!pGDev->DriverFunctions.IcmSetDeviceGammaRamp)
      {  // No driver support
-        if (!(pGDev->DevInfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP))
+        if (!(pGDev->devinfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP))
         { // Driver does not support Gamma Ramp, so test to see we
           // have BMF_8BPP only and palette operation support.
-           if ((pGDev->DevInfo.iDitherFormat != BMF_8BPP) ||
-              !(pGDev->GDIInfo.flRaster & RC_PALETTE))  return FALSE;
+           if ((pGDev->devinfo.iDitherFormat != BMF_8BPP) ||
+              !(pGDev->gdiinfo.flRaster & RC_PALETTE))  return FALSE;
         }
      }
 
@@ -377,7 +377,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  SafeRamp = ExAllocatePool(PagedPool, sizeof(GAMMARAMP));
+  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
@@ -402,14 +402,14 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   if (!NT_SUCCESS(Status))
   {
      DC_UnlockDc(dc);
-     ExFreePool(SafeRamp);
+     ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
      SetLastNtError(Status);
      return FALSE;
   }
 
   Ret = IntSetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp, TRUE);
   DC_UnlockDc(dc);
-  ExFreePool(SafeRamp);
+  ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
   return Ret;
 }
 

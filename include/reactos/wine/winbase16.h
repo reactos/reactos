@@ -317,6 +317,13 @@ typedef struct
 #define __AHSHIFT  3  /* don't change! */
 #define __AHINCR   (1 << __AHSHIFT)
 
+
+typedef struct tagSYSLEVEL
+{
+    CRITICAL_SECTION crst;
+    INT              level;
+} SYSLEVEL;
+
 /* undocumented functions */
 WORD        WINAPI AllocCStoDSAlias16(WORD);
 WORD        WINAPI AllocDStoCSAlias16(WORD);

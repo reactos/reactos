@@ -1,12 +1,11 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* metrics */
 #define PROPSHEETWIDTH  246
 #define PROPSHEETHEIGHT 228
 #define PROPSHEETPADDING(x)  (x+x+x+x+x+x)
 #define SYSTEM_COLUMN   (18*PROPSHEETPADDING)
-#define LABELLINE(x)  (x+x+x+2+x+x+x+x+x+x)
+#define LABELLINE(x)  (x+x+x+x+x+x+x+x+x+2)
 
 
 #define ICONSIZE        16
@@ -112,7 +111,5 @@
 
 #define IDC_SERIAL_PORT_COMBO		275
 #define IDC_SERIAL_BAUD_COMBO		276
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

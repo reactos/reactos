@@ -34,7 +34,7 @@ BOOL ScmShutdown = FALSE;
 VOID
 PrintString(LPCSTR fmt, ...)
 {
-#ifdef DBG
+#if DBG
     CHAR buffer[512];
     va_list ap;
 
@@ -279,7 +279,7 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
 {
     DPRINT1("ShutdownHandlerRoutine() called\n");
 
-    if (dwCtrlType == CTRL_SHUTDOWN_EVENT)
+    if (dwCtrlType & (CTRL_SHUTDOWN_EVENT | CTRL_LOGOFF_EVENT))
     {
         DPRINT1("Shutdown event received!\n");
         ScmShutdown = TRUE;

@@ -50,7 +50,7 @@ static HRESULT WINAPI OBJSEL_IClassFactory_QueryInterface(
         return IClassFactory_CreateInstance(iface, NULL, riid, ppvObj);
     }
 
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+    FIXME("- no interface IID: %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 

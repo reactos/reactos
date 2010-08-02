@@ -21,13 +21,35 @@ Author:
 
 #define TOKEN_SOURCE_LENGTH               8
 
+#ifndef _NTIFS_
 typedef enum _TOKEN_TYPE
 {
     TokenPrimary = 1,
     TokenImpersonation
 } TOKEN_TYPE, *PTOKEN_TYPE;
 
-typedef PVOID PRTL_HEAP_PARAMETERS;
+typedef NTSTATUS
+(NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
+    IN PVOID Base,
+    IN OUT PVOID *CommitAddress,
+    IN OUT PSIZE_T CommitSize
+);
+
+typedef struct _RTL_HEAP_PARAMETERS
+{
+    ULONG Length;
+    SIZE_T SegmentReserve;
+    SIZE_T SegmentCommit;
+    SIZE_T DeCommitFreeBlockThreshold;
+    SIZE_T DeCommitTotalFreeThreshold;
+    SIZE_T MaximumAllocationSize;
+    SIZE_T VirtualMemoryThreshold;
+    SIZE_T InitialCommit;
+    SIZE_T InitialReserve;
+    PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
+    SIZE_T Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
+
 typedef PVOID PFS_FILTER_CALLBACKS;
 typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
@@ -259,6 +281,8 @@ typedef struct _TOKEN_DEFAULT_DACL
 #define HEAP_CREATE_ALIGN_16            0x00010000
 #define HEAP_CREATE_ENABLE_TRACING      0x00020000
 #define HEAP_CREATE_ENABLE_EXECUTE      0x00040000
+
+#endif
 
 #endif // !NTOS_MODE_USER
 #endif // _NTIFS_

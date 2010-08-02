@@ -17,11 +17,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __PERFDATA_H
-#define __PERFDATA_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +59,8 @@ BOOL	PerfDataInitialize(void);
 void	PerfDataUninitialize(void);
 void	PerfDataRefresh(void);
 
+BOOL    PerfDataGet(ULONG Index, PPERFDATA *lppData);
+ULONG   PerfDataGetProcessIndex(ULONG pid);
 ULONG	PerfDataGetProcessCount(void);
 ULONG	PerfDataGetProcessorUsage(void);
 ULONG	PerfDataGetProcessorSystemUsage(void);
@@ -105,5 +106,3 @@ ULONG	PerfDataGetTotalThreadCount(void);
 #ifdef __cplusplus
 };
 #endif
-
-#endif /* __PERFDATA_H */

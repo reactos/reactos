@@ -17,7 +17,6 @@ GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR R
     DWORD dwType;
     DWORD dwSize;
 
-
     if (RegOpenKeyExW(hBaseKey, SubKey, 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
         return FALSE;
 
@@ -25,10 +24,10 @@ GetRegValue(HKEY hBaseKey, LPWSTR SubKey, LPWSTR ValueName, DWORD Type, LPWSTR R
     res = RegQueryValueExW(hKey, ValueName, NULL, &dwType, (LPBYTE)Result, &dwSize);
     RegCloseKey(hKey);
 
-    if (dwType != Type)
+    if (res != ERROR_SUCCESS)
         return FALSE;
 
-    if (res != ERROR_SUCCESS)
+	if (dwType != Type)
         return FALSE;
 
     if (Size == sizeof(DWORD))

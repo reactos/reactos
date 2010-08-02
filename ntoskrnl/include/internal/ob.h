@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _OB_DEBUG_                                      0x01
+#define _OB_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -142,7 +142,7 @@ typedef union
 //
 // Private Temporary Buffer for Lookup Routines
 //
-#define TAG_OB_TEMP_STORAGE TAG('O', 'b', 'S', 't')
+#define TAG_OB_TEMP_STORAGE 'tSbO'
 typedef struct _OB_TEMP_BUFFER
 {
     ACCESS_STATE LocalAccessState;

@@ -479,11 +479,16 @@ static HRESULT WINAPI FilterMapper2_UnregisterFilter(
 static HRESULT FM2_WriteFriendlyName(IPropertyBag * pPropBag, LPCWSTR szName)
 {
     VARIANT var;
+    HRESULT ret;
+    BSTR value;
 
     V_VT(&var) = VT_BSTR;
-    V_UNION(&var, bstrVal) = (BSTR)szName;
+    V_UNION(&var, bstrVal) = value = SysAllocString(szName);
 
-    return IPropertyBag_Write(pPropBag, wszFriendlyName, &var);
+    ret = IPropertyBag_Write(pPropBag, wszFriendlyName, &var);
+    SysFreeString(value);
+
+    return ret;
 }
 
 static HRESULT FM2_WriteClsid(IPropertyBag * pPropBag, REFCLSID clsid)
@@ -1773,7 +1778,7 @@ static HRESULT WINAPI AMFilterData_ParseFilterData(IAMFilterData* iface,
     prf2 = CoTaskMemAlloc(sizeof(*prf2));
     if (!prf2)
         return E_OUTOFMEMORY;
-    *ppRegFilter2 = (BYTE *)&prf2;
+    *ppRegFilter2 = (BYTE *)prf2;
 
     hr = FM2_ReadFilterData(pData, prf2);
     if (FAILED(hr))

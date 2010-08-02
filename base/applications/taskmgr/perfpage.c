@@ -15,9 +15,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <precomp.h>
@@ -178,7 +178,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 /*         PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ; */
 /*         PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ; */
         GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
-        GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(152, 205, 152)) ;
+        GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 128, 64));
 
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(0, 255, 0)) ;
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(255, 0, 0)) ;
@@ -188,7 +188,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         GraphCtrl_SetRange(&PerformancePageMemUsageHistoryGraph, 0.0, 100.0, 10) ;
         GraphCtrl_SetBackgroundColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 0, 0)) ;
-        GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(152, 215, 152)) ;
+        GraphCtrl_SetGridColor(&PerformancePageMemUsageHistoryGraph, RGB(0, 128, 64)) ;
         GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
         /*  Start our refresh thread */
 #ifdef RUN_PERF_PAGE

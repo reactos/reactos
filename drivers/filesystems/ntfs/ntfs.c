@@ -55,7 +55,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   TRACE_(NTFS, "DriverEntry(%p, '%wZ')\n", DriverObject, RegistryPath);
 
   /* Initialize global data */
-  NtfsGlobalData = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_GLOBAL_DATA), TAG('N', 'D', 'R', 'G'));
+  NtfsGlobalData = ExAllocatePoolWithTag(NonPagedPool, sizeof(NTFS_GLOBAL_DATA), 'GRDN');
   if (!NtfsGlobalData)
   {
     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -107,7 +107,7 @@ ErrorEnd:
     if (NtfsGlobalData)
     {
       ExDeleteResourceLite(&NtfsGlobalData->Resource);
-      ExFreePoolWithTag(NtfsGlobalData, TAG('N', 'D', 'R', 'G'));
+      ExFreePoolWithTag(NtfsGlobalData, 'GRDN');
     }
   }
 

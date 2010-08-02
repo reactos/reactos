@@ -56,7 +56,7 @@ static HRESULT WINAPI parseError_QueryInterface(
     REFIID riid,
     void** ppvObject )
 {
-    TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IUnknown ) ||
          IsEqualGUID( riid, &IID_IDispatch ) ||
@@ -97,7 +97,7 @@ static ULONG WINAPI parseError_Release(
         SysFreeString(This->url);
         SysFreeString(This->reason);
         SysFreeString(This->srcText);
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -191,7 +191,7 @@ static HRESULT WINAPI parseError_Invoke(
 
 static HRESULT WINAPI parseError_get_errorCode(
     IXMLDOMParseError *iface,
-    long *code )
+    LONG *code )
 {
     parse_error_t *This = impl_from_IXMLDOMParseError( iface );
     TRACE("(%p)->(%p)\n", This, code);
@@ -208,7 +208,8 @@ static HRESULT WINAPI parseError_get_url(
     IXMLDOMParseError *iface,
     BSTR *url )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, url);
     return E_NOTIMPL;
 }
 
@@ -232,31 +233,35 @@ static HRESULT WINAPI parseError_get_srcText(
     IXMLDOMParseError *iface,
     BSTR *srcText )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, srcText);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI parseError_get_line(
     IXMLDOMParseError *iface,
-    long *line )
+    LONG *line )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, line);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI parseError_get_linepos(
     IXMLDOMParseError *iface,
-    long *linepos )
+    LONG *linepos )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, linepos);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI parseError_get_filepos(
     IXMLDOMParseError *iface,
-    long *filepos )
+    LONG *filepos )
 {
-    FIXME("\n");
+    parse_error_t *This = impl_from_IXMLDOMParseError( iface );
+    FIXME("(%p)->(%p)\n", This, filepos);
     return E_NOTIMPL;
 }
 
@@ -283,7 +288,7 @@ IXMLDOMParseError *create_parseError( LONG code, BSTR url, BSTR reason, BSTR src
 {
     parse_error_t *This;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof(*This) );
+    This = heap_alloc( sizeof(*This) );
     if ( !This )
         return NULL;
 

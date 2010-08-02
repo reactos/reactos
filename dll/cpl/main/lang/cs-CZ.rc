@@ -1,7 +1,7 @@
 /* FILE:        dll/cpl/main/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   Kamil Hornicek, who translated major part of this file 
- * UPDATED:     2008-07-27
+ * UPDATED:     2009-02-03
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -85,7 +85,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
   LTEXT "Vl&astní", -1, 5, 60, 40, 10
   LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-  CHECKBOX "&Zobrazit stín pod ukazatelem", IDC_CHECK_DROP_SHADOW, 5, 200, 110, 10
+  CHECKBOX "&Zobrazit stín pod ukazatelem", IDC_CHECK_CURSOR_SHADOW, 5, 200, 110, 10
   PUSHBUTTON "Použít &výchozí", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
   PUSHBUTTON "&Procházet", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
 END
@@ -160,7 +160,7 @@ BEGIN
   IDS_NWPEN "Psaní rukou"
   IDS_NO "Není k dispozici"
   IDS_SIZENS "Zmìna výšky"
-  IDS_SIZEWE "Horizontal Resize"
+  IDS_SIZEWE "Zmìna šíøky"
   IDS_SIZENWSE "Diagonální zmìna velikosti 1"
   IDS_SIZENESW "Diagonální zmìna velikosti 2"
   IDS_SIZEALL "Pøesunout"

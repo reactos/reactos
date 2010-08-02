@@ -17,11 +17,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __TASKMGR_H__
-#define __TASKMGR_H__
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +46,9 @@ typedef struct _IO_COUNTERS {
 #define RUN_PERF_PAGE
 
 #define STATUS_WINDOW	2001
+#define STATUS_SIZE1	80
+#define STATUS_SIZE2	210
+#define STATUS_SIZE3	400
 
 typedef struct
 {
@@ -121,5 +123,3 @@ LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __TASKMGR_H__ */

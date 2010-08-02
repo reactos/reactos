@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *
  *
@@ -28,11 +28,11 @@
 
 
 
-typedef int  WINAPI (*CHOOSEPIXELFMT) (HDC, CONST PIXELFORMATDESCRIPTOR *);
-typedef BOOL WINAPI (*SETPIXELFMT) (HDC, int, CONST PIXELFORMATDESCRIPTOR *);
-typedef BOOL WINAPI (*SWAPBUFFERS) (HDC hdc);
-typedef int  WINAPI (*DESCRIBEPIXELFMT) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
-typedef int  WINAPI (*GETPIXELFMT) (HDC);
+typedef int  (WINAPI *CHOOSEPIXELFMT) (HDC, CONST PIXELFORMATDESCRIPTOR *);
+typedef BOOL (WINAPI *SETPIXELFMT) (HDC, int, CONST PIXELFORMATDESCRIPTOR *);
+typedef BOOL (WINAPI *SWAPBUFFERS) (HDC hdc);
+typedef int  (WINAPI *DESCRIBEPIXELFMT) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
+typedef int  (WINAPI *GETPIXELFMT) (HDC);
 
 
 static CHOOSEPIXELFMT    glChoosePixelFormat   = NULL;

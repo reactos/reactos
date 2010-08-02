@@ -1,5 +1,4 @@
-#ifndef __TNMAIN_H
-#define __TNMAIN_H
+#pragma once
 
 #include <stdlib.h>
 #include <process.h>
@@ -15,5 +14,3 @@ struct cmdHistory {
 	struct cmdHistory *next;
 	struct cmdHistory *prev;
 };
-
-#endif

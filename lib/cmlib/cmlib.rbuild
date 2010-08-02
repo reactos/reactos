@@ -3,7 +3,6 @@
 <group>
 <module name="cmlib" type="staticlibrary">
 	<include base="cmlib">.</include>
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="NASSERT" />
@@ -15,13 +14,17 @@
 	<file>hivewrt.c</file>
 </module>
 <module name="cmlibhost" type="hoststaticlibrary">
+	<define name="WINE_UNICODE_API">" "</define>
+	<include base="unicode" />
 	<include base="cmlibhost">.</include>
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="NASSERT" />
-	<compilerflag>-Wwrite-strings</compilerflag>
-	<compilerflag>-Wpointer-arith</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag>-Wwrite-strings</compilerflag>
+		<compilerflag>-Wpointer-arith</compilerflag>
+	</group>
 	<define name="CMLIB_HOST" />
 	<file>cminit.c</file>
 	<file>hivebin.c</file>

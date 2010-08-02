@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /*
  *
@@ -30,6 +30,9 @@
 
 #define NDEBUG
 #include <debug.h>
+
+/* setupapi */
+DWORD WINAPI pSetupGuidFromString(PCWSTR pString, LPGUID lpGUID);
 
 typedef INT_PTR (WINAPI *PPROPERTYSHEETW)(LPCPROPSHEETHEADERW);
 typedef HPROPSHEETPAGE (WINAPI *PCREATEPROPERTYSHEETPAGEW)(LPCPROPSHEETPAGEW);
@@ -162,26 +165,6 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                                  &DriverInfoData))
     {
         HSPFILEQ queueHandle;
-        DWORD HiVal, LoVal;
-        WCHAR szTime[25];
-
-        HiVal = (DriverInfoData.DriverVersion >> 32);
-        if (HiVal)
-        {
-            swprintf (szTime, L"%d.%d", HIWORD(HiVal), LOWORD(HiVal));
-            LoVal = (DriverInfoData.DriverVersion & 0xFFFFFFFF);
-            if (HIWORD(LoVal))
-            {
-                swprintf(&szTime[wcslen(szTime)], L".%d", HIWORD(LoVal));
-                if (LOWORD(LoVal))
-                {
-                    swprintf(&szTime[wcslen(szTime)], L".%d", LOWORD(LoVal));
-                }
-            }
-            SetDlgItemTextW(hwndDlg, IDC_FILEVERSION, szTime);
-        }
-        SetDlgItemText(hwndDlg, IDC_FILEPROVIDER, DriverInfoData.ProviderName);
-
 
         queueHandle = SetupOpenFileQueue();
         if (queueHandle != (HSPFILEQ)INVALID_HANDLE_VALUE)
@@ -222,12 +205,139 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                     (void)ListView_SetColumn(hDriversListView,
                                              0,
                                              &lvc);
+
+                    /* highlight the first item from list */
+                    if (ListView_GetSelectedCount(hDriversListView) != 0)
+                    {
+                        ListView_SetItemState(hDriversListView,
+                                              0,
+                                              LVIS_FOCUSED | LVIS_SELECTED,
+                                              LVIS_FOCUSED | LVIS_SELECTED);
+                    }
                 }
             }
 
             SetupCloseFileQueue(queueHandle);
         }
     }
+}
+
+
+static VOID
+UpdateDriverVersionInfoDetails(IN HWND hwndDlg,
+                               IN LPCWSTR lpszDriverPath)
+{
+    DWORD dwHandle;
+    DWORD dwVerInfoSize;
+    LPVOID lpData = NULL;
+    LPVOID lpInfo;
+    UINT uInfoLen;
+    DWORD dwLangId;
+    WCHAR szLangInfo[255];
+    WCHAR szLangPath[MAX_PATH];
+    LPWSTR lpCompanyName = NULL;
+    LPWSTR lpFileVersion = NULL;
+    LPWSTR lpLegalCopyright = NULL;
+    LPWSTR lpDigitalSigner = NULL;
+    UINT uBufLen;
+    WCHAR szNotAvailable[255];
+
+    /* extract version info from selected file */
+    dwVerInfoSize = GetFileVersionInfoSize(lpszDriverPath,
+                                           &dwHandle);
+    if (!dwVerInfoSize)
+        goto done;
+
+    lpData = HeapAlloc(GetProcessHeap(),
+                       HEAP_ZERO_MEMORY,
+                       dwVerInfoSize);
+    if (!lpData)
+        goto done;
+
+    if (!GetFileVersionInfo(lpszDriverPath,
+                            dwHandle,
+                            dwVerInfoSize,
+                            lpData))
+        goto done;
+
+    if (!VerQueryValue(lpData,
+                       L"\\VarFileInfo\\Translation",
+                       &lpInfo,
+                       &uInfoLen))
+        goto done;
+
+    dwLangId = *(LPDWORD)lpInfo;
+    swprintf(szLangInfo, L"\\StringFileInfo\\%04x%04x\\",
+             LOWORD(dwLangId), HIWORD(dwLangId));
+
+    /* read CompanyName */
+    wcscpy(szLangPath, szLangInfo);
+    wcscat(szLangPath, L"CompanyName");
+
+    VerQueryValue(lpData,
+                  szLangPath,
+                  (void **)&lpCompanyName,
+                  (PUINT)&uBufLen);
+
+    /* read FileVersion */
+    wcscpy(szLangPath, szLangInfo);
+    wcscat(szLangPath, L"FileVersion");
+
+    VerQueryValue(lpData,
+                  szLangPath,
+                  (void **)&lpFileVersion,
+                  (PUINT)&uBufLen);
+
+    /* read LegalTrademarks */
+    wcscpy(szLangPath, szLangInfo);
+    wcscat(szLangPath, L"LegalCopyright");
+
+    VerQueryValue(lpData,
+                  szLangPath,
+                  (void **)&lpLegalCopyright,
+                  (PUINT)&uBufLen);
+
+    /* TODO: read digital signer info */
+
+done:
+    if (!LoadString(hDllInstance,
+                    IDS_NOTAVAILABLE,
+                    szNotAvailable,
+                    sizeof(szNotAvailable) / sizeof(WCHAR)))
+    {
+        wcscpy(szNotAvailable, L"n/a");
+    }
+
+    /* update labels */
+    if (!lpCompanyName)
+        lpCompanyName = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_FILEPROVIDER,
+                   lpCompanyName);
+
+    if (!lpFileVersion)
+        lpFileVersion = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_FILEVERSION,
+                   lpFileVersion);
+
+    if (!lpLegalCopyright)
+        lpLegalCopyright = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_FILECOPYRIGHT,
+                   lpLegalCopyright);
+
+    if (!lpDigitalSigner)
+        lpDigitalSigner = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_DIGITALSIGNER,
+                   lpDigitalSigner);
+
+    /* release version info */
+    if (lpData)
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpData);
 }
 
 
@@ -253,6 +363,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                 switch (LOWORD(wParam))
                 {
                     case IDOK:
+                    case IDCANCEL:
                     {
                         EndDialog(hwndDlg,
                                   IDOK);
@@ -298,6 +409,53 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                 }
 
                 Ret = TRUE;
+                break;
+            }
+
+            case WM_NOTIFY:
+            {
+                LPNMHDR pnmhdr = (LPNMHDR)lParam;
+
+                switch (pnmhdr->code)
+                {
+                case LVN_ITEMCHANGED:
+                    {
+                        LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
+                        HWND hDriversListView = GetDlgItem(hwndDlg,
+                                                           IDC_DRIVERFILES);
+
+                        if (ListView_GetSelectedCount(hDriversListView) == 0)
+                        {
+                            /* nothing is selected - empty the labels */
+                            SetDlgItemText(hwndDlg,
+                                           IDC_FILEPROVIDER,
+                                           NULL);
+                            SetDlgItemText(hwndDlg,
+                                           IDC_FILEVERSION,
+                                           NULL);
+                            SetDlgItemText(hwndDlg,
+                                           IDC_FILECOPYRIGHT,
+                                           NULL);
+                            SetDlgItemText(hwndDlg,
+                                           IDC_DIGITALSIGNER,
+                                           NULL);
+                        }
+                        else if (pnmv->uNewState != 0)
+                        {
+                            /* extract version info and update the labels */
+                            WCHAR szDriverPath[MAX_PATH];
+
+                            ListView_GetItemText(hDriversListView,
+                                                 pnmv->iItem,
+                                                 pnmv->iSubItem,
+                                                 szDriverPath,
+                                                 MAX_PATH);
+
+                            UpdateDriverVersionInfoDetails(hwndDlg,
+                                                           szDriverPath);
+                        }
+                    }
+                }
                 break;
             }
         }
@@ -428,6 +586,844 @@ AdvProcDriverDlgProc(IN HWND hwndDlg,
 
                     UpdateDriverDlg(hwndDlg,
                                     dap);
+                }
+                Ret = TRUE;
+                break;
+            }
+        }
+    }
+
+    return Ret;
+}
+
+
+static VOID
+SetListViewText(HWND hwnd,
+                INT iItem,
+                LPWSTR lpText)
+{
+    LVITEM li;
+
+    li.mask = LVIF_TEXT | LVIF_STATE;
+    li.iItem = iItem;
+    li.iSubItem = 0;
+    li.state = 0; //(li.iItem == 0 ? LVIS_SELECTED : 0);
+    li.stateMask = LVIS_SELECTED;
+    li.pszText = lpText;
+    (void)ListView_InsertItem(hwnd,
+                              &li);
+}
+
+
+static VOID
+UpdateDetailsDlg(IN HWND hwndDlg,
+                 IN PDEVADVPROP_INFO dap)
+{
+    HWND hwndComboBox;
+    HWND hwndListView;
+    LV_COLUMN lvc;
+    RECT rcClient;
+
+    UINT i;
+    UINT Properties[] =
+    {
+        IDS_PROP_DEVICEID,
+        IDS_PROP_HARDWAREIDS,
+        IDS_PROP_COMPATIBLEIDS,
+        IDS_PROP_MATCHINGDEVICEID,
+        IDS_PROP_SERVICE,
+        IDS_PROP_ENUMERATOR,
+        IDS_PROP_CAPABILITIES,
+        IDS_PROP_DEVNODEFLAGS,
+        IDS_PROP_CONFIGFLAGS,
+        IDS_PROP_CSCONFIGFLAGS,
+        IDS_PROP_EJECTIONRELATIONS,
+        IDS_PROP_REMOVALRELATIONS,
+        IDS_PROP_BUSRELATIONS,
+        IDS_PROP_DEVUPPERFILTERS,
+        IDS_PROP_DEVLOWERFILTERS,
+        IDS_PROP_CLASSUPPERFILTERS,
+        IDS_PROP_CLASSLOWERFILTERS,
+        IDS_PROP_CLASSINSTALLER,
+        IDS_PROP_CLASSCOINSTALLER,
+        IDS_PROP_DEVICECOINSTALLER,
+        IDS_PROP_FIRMWAREREVISION,
+        IDS_PROP_CURRENTPOWERSTATE,
+        IDS_PROP_POWERCAPABILITIES,
+        IDS_PROP_POWERSTATEMAPPINGS
+    };
+
+
+    /* set the device image */
+    SendDlgItemMessage(hwndDlg,
+                       IDC_DEVICON,
+                       STM_SETICON,
+                       (WPARAM)dap->hDevIcon,
+                       0);
+
+    /* set the device name edit control text */
+    SetDlgItemText(hwndDlg,
+                   IDC_DEVNAME,
+                   dap->szDevName);
+
+
+    hwndComboBox = GetDlgItem(hwndDlg,
+                              IDC_DETAILSPROPNAME);
+
+    hwndListView = GetDlgItem(hwndDlg,
+                              IDC_DETAILSPROPVALUE);
+
+    for (i = 0; i != sizeof(Properties) / sizeof(Properties[0]); i++)
+    {
+        /* fill in the device usage combo box */
+        if (LoadString(hDllInstance,
+                       Properties[i],
+                       dap->szTemp,
+                       sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
+        {
+            SendMessage(hwndComboBox,
+                        CB_ADDSTRING,
+                        0,
+                        (LPARAM)dap->szTemp);
+        }
+    }
+
+
+    GetClientRect(hwndListView,
+                  &rcClient);
+
+    /* add a column to the list view control */
+    lvc.mask = LVCF_FMT | LVCF_WIDTH;
+    lvc.fmt = LVCFMT_LEFT;
+    lvc.cx = rcClient.right;
+    (void)ListView_InsertColumn(hwndListView,
+                                0,
+                                &lvc);
+
+    SendMessage(hwndComboBox,
+                CB_SETCURSEL,
+                0,
+                0);
+
+    SetListViewText(hwndListView, 0, dap->szDeviceID);
+
+    SetFocus(hwndComboBox);
+}
+
+
+static VOID
+DisplayDevicePropertyText(IN PDEVADVPROP_INFO dap,
+                          IN HWND hwndListView,
+                          IN DWORD dwProperty)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    DWORD dwType;
+    DWORD dwSize;
+    LPBYTE lpBuffer;
+    LPWSTR lpStr;
+    INT len;
+    INT index;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    dwSize = 0;
+    SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                     DeviceInfoData,
+                                     dwProperty,
+                                     &dwType,
+                                     NULL,
+                                     0,
+                                     &dwSize);
+    if (dwSize == 0)
+    {
+        if (GetLastError() != ERROR_FILE_NOT_FOUND)
+        {
+            swprintf(dap->szTemp, L"Error: Getting the size failed! (Error: %ld)", GetLastError());
+            SetListViewText(hwndListView, 0, dap->szTemp);
+        }
+        return;
+    }
+
+    lpBuffer = HeapAlloc(GetProcessHeap(),
+                         HEAP_ZERO_MEMORY,
+                         dwSize);
+    if (lpBuffer == NULL)
+    {
+        SetListViewText(hwndListView, 0, L"Error: Allocating the buffer failed!");
+        return;
+    }
+
+    if (SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                         DeviceInfoData,
+                                         dwProperty,
+                                         &dwType,
+                                         lpBuffer,
+                                         dwSize,
+                                         &dwSize))
+    {
+        if (dwType == REG_SZ)
+        {
+            SetListViewText(hwndListView, 0, (LPWSTR)lpBuffer);
+        }
+        else if (dwType == REG_MULTI_SZ)
+        {
+            lpStr = (LPWSTR)lpBuffer;
+            index = 0;
+            while (*lpStr != 0)
+            {
+                len = wcslen(lpStr) + 1;
+
+                SetListViewText(hwndListView, index, lpStr);
+
+                lpStr += len;
+                index++;
+            }
+        }
+        else if (dwType == REG_DWORD)
+        {
+            switch (dwProperty)
+            {
+                case SPDRP_CAPABILITIES:
+                    index = 0;
+                    if (*lpBuffer & CM_DEVCAP_LOCKSUPPORTED)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_LOCKSUPPORTED");
+                    if (*lpBuffer & CM_DEVCAP_EJECTSUPPORTED)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_EJECTSUPPORTED");
+                    if (*lpBuffer & CM_DEVCAP_REMOVABLE)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_REMOVABLE");
+                    if (*lpBuffer & CM_DEVCAP_DOCKDEVICE)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_DOCKDEVICE");
+                    if (*lpBuffer & CM_DEVCAP_UNIQUEID)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_UNIQUEID");
+                    if (*lpBuffer & CM_DEVCAP_SILENTINSTALL)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_SILENTINSTALL");
+                    if (*lpBuffer & CM_DEVCAP_RAWDEVICEOK)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_RAWDEVICEOK");
+                    if (*lpBuffer & CM_DEVCAP_SURPRISEREMOVALOK)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_SURPRISEREMOVALOK");
+                    if (*lpBuffer & CM_DEVCAP_HARDWAREDISABLED)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_HARDWAREDISABLED");
+                    if (*lpBuffer & CM_DEVCAP_NONDYNAMIC)
+                        SetListViewText(hwndListView, index++, L"CM_DEVCAP_NONDYNAMIC");
+                    break;
+
+                case SPDRP_CONFIGFLAGS:
+                    index = 0;
+                    if (*lpBuffer & CONFIGFLAG_DISABLED)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_DISABLED");
+                    if (*lpBuffer & CONFIGFLAG_REMOVED)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_REMOVED");
+                    if (*lpBuffer & CONFIGFLAG_MANUAL_INSTALL)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_MANUAL_INSTALL");
+                    if (*lpBuffer & CONFIGFLAG_IGNORE_BOOT_LC)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_IGNORE_BOOT_LC");
+                    if (*lpBuffer & CONFIGFLAG_NET_BOOT)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_NET_BOOT");
+                    if (*lpBuffer & CONFIGFLAG_REINSTALL)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_REINSTALL");
+                    if (*lpBuffer & CONFIGFLAG_FAILEDINSTALL)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_FAILEDINSTALL");
+                    if (*lpBuffer & CONFIGFLAG_CANTSTOPACHILD)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_CANTSTOPACHILD");
+                    if (*lpBuffer & CONFIGFLAG_OKREMOVEROM)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_OKREMOVEROM");
+                    if (*lpBuffer & CONFIGFLAG_NOREMOVEEXIT)
+                        SetListViewText(hwndListView, index++, L"CONFIGFLAG_NOREMOVEEXIT");
+                    break;
+
+                default:
+                    swprintf(dap->szTemp, L"0x%08x", *lpBuffer);
+                    SetListViewText(hwndListView, 0, dap->szTemp);
+                    break;
+            }
+        }
+        else
+        {
+            SetListViewText(hwndListView, 0, L"Error: Unsupported value type!");
+
+        }
+    }
+    else
+    {
+        SetListViewText(hwndListView, 0, L"Error: Retrieving the value failed!");
+    }
+
+    HeapFree(GetProcessHeap(),
+             0,
+             lpBuffer);
+}
+
+static VOID
+DisplayDevNodeFlags(IN PDEVADVPROP_INFO dap,
+                    IN HWND hwndListView)
+{
+    DWORD dwStatus = 0;
+    DWORD dwProblem = 0;
+    INT index;
+
+    CM_Get_DevNode_Status_Ex(&dwStatus,
+                             &dwProblem,
+                             dap->DeviceInfoData.DevInst,
+                             0,
+                             dap->hMachine);
+
+    index = 0;
+    if (dwStatus & DN_ROOT_ENUMERATED)
+        SetListViewText(hwndListView, index++, L"DN_ROOT_ENUMERATED");
+    if (dwStatus & DN_DRIVER_LOADED)
+        SetListViewText(hwndListView, index++, L"DN_DRIVER_LOADED");
+    if (dwStatus & DN_ENUM_LOADED)
+        SetListViewText(hwndListView, index++, L"DN_ENUM_LOADED");
+    if (dwStatus & DN_STARTED)
+        SetListViewText(hwndListView, index++, L"DN_STARTED");
+    if (dwStatus & DN_MANUAL)
+        SetListViewText(hwndListView, index++, L"DN_MANUAL");
+    if (dwStatus & DN_NEED_TO_ENUM)
+        SetListViewText(hwndListView, index++, L"DN_NEED_TO_ENUM");
+    if (dwStatus & DN_DRIVER_BLOCKED)
+        SetListViewText(hwndListView, index++, L"DN_DRIVER_BLOCKED");
+    if (dwStatus & DN_HARDWARE_ENUM)
+        SetListViewText(hwndListView, index++, L"DN_HARDWARE_ENUM");
+    if (dwStatus & DN_NEED_RESTART)
+        SetListViewText(hwndListView, index++, L"DN_NEED_RESTART");
+    if (dwStatus & DN_CHILD_WITH_INVALID_ID)
+        SetListViewText(hwndListView, index++, L"DN_CHILD_WITH_INVALID_ID");
+    if (dwStatus & DN_HAS_PROBLEM)
+        SetListViewText(hwndListView, index++, L"DN_HAS_PROBLEM");
+    if (dwStatus & DN_FILTERED)
+        SetListViewText(hwndListView, index++, L"DN_FILTERED");
+    if (dwStatus & DN_LEGACY_DRIVER)
+        SetListViewText(hwndListView, index++, L"DN_LEGACY_DRIVER");
+    if (dwStatus & DN_DISABLEABLE)
+        SetListViewText(hwndListView, index++, L"DN_DISABLEABLE");
+    if (dwStatus & DN_REMOVABLE)
+        SetListViewText(hwndListView, index++, L"DN_REMOVABLE");
+    if (dwStatus & DN_PRIVATE_PROBLEM)
+        SetListViewText(hwndListView, index++, L"DN_PRIVATE_PROBLEM");
+    if (dwStatus & DN_MF_PARENT)
+        SetListViewText(hwndListView, index++, L"DN_MF_PARENT");
+    if (dwStatus & DN_MF_CHILD)
+        SetListViewText(hwndListView, index++, L"DN_MF_CHILD");
+    if (dwStatus & DN_WILL_BE_REMOVED)
+        SetListViewText(hwndListView, index++, L"DN_WILL_BE_REMOVED");
+
+    if (dwStatus & DN_NOT_FIRST_TIMEE)
+        SetListViewText(hwndListView, index++, L"DN_NOT_FIRST_TIMEE");
+    if (dwStatus & DN_STOP_FREE_RES)
+        SetListViewText(hwndListView, index++, L"DN_STOP_FREE_RES");
+    if (dwStatus & DN_REBAL_CANDIDATE)
+        SetListViewText(hwndListView, index++, L"DN_REBAL_CANDIDATE");
+    if (dwStatus & DN_BAD_PARTIAL)
+        SetListViewText(hwndListView, index++, L"DN_BAD_PARTIAL");
+    if (dwStatus & DN_NT_ENUMERATOR)
+        SetListViewText(hwndListView, index++, L"DN_NT_ENUMERATOR");
+    if (dwStatus & DN_NT_DRIVER)
+        SetListViewText(hwndListView, index++, L"DN_NT_DRIVER");
+
+    if (dwStatus & DN_NEEDS_LOCKING)
+        SetListViewText(hwndListView, index++, L"DN_NEEDS_LOCKING");
+    if (dwStatus & DN_ARM_WAKEUP)
+        SetListViewText(hwndListView, index++, L"DN_ARM_WAKEUP");
+    if (dwStatus & DN_APM_ENUMERATOR)
+        SetListViewText(hwndListView, index++, L"DN_APM_ENUMERATOR");
+    if (dwStatus & DN_APM_DRIVER)
+        SetListViewText(hwndListView, index++, L"DN_APM_DRIVER");
+    if (dwStatus & DN_SILENT_INSTALL)
+        SetListViewText(hwndListView, index++, L"DN_SILENT_INSTALL");
+    if (dwStatus & DN_NO_SHOW_IN_DM)
+        SetListViewText(hwndListView, index++, L"DN_NO_SHOW_IN_DM");
+    if (dwStatus & DN_BOOT_LOG_PROB)
+        SetListViewText(hwndListView, index++, L"DN_BOOT_LOG_PROB");
+
+//    swprintf(dap->szTemp, L"0x%08x", dwStatus);
+//    SetListViewText(hwndListView, 0, dap->szTemp);
+}
+
+
+static VOID
+DisplayDevNodeEnumerator(IN PDEVADVPROP_INFO dap,
+                         IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+
+    DWORD dwType = 0;
+    WCHAR szBuffer[256];
+    DWORD dwSize = 256 * sizeof(WCHAR);
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    CM_Get_DevNode_Registry_Property_ExW(DeviceInfoData->DevInst,
+                                         CM_DRP_ENUMERATOR_NAME,
+                                         &dwType,
+                                         &szBuffer,
+                                         &dwSize,
+                                         0,
+                                         dap->hMachine);
+
+    SetListViewText(hwndListView, 0, szBuffer);
+}
+
+
+static VOID
+DisplayCsFlags(IN PDEVADVPROP_INFO dap,
+               IN HWND hwndListView)
+{
+    DWORD dwValue = 0;
+    INT index;
+
+    CM_Get_HW_Prof_Flags_Ex(dap->szDevName,
+                            0, /* current hardware profile */
+                            &dwValue,
+                            0,
+                            dap->hMachine);
+
+    index = 0;
+    if (dwValue & CSCONFIGFLAG_DISABLED)
+        SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DISABLED");
+
+    if (dwValue & CSCONFIGFLAG_DO_NOT_CREATE)
+        SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DO_NOT_CREATE");
+
+    if (dwValue & CSCONFIGFLAG_DO_NOT_START)
+        SetListViewText(hwndListView, index++, L"CSCONFIGFLAG_DO_NOT_START");
+}
+
+
+static VOID
+DisplayMatchingDeviceId(IN PDEVADVPROP_INFO dap,
+                        IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    WCHAR szBuffer[256];
+    HKEY hKey;
+    DWORD dwSize;
+    DWORD dwType;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        dwSize = 256 * sizeof(WCHAR);
+        if (RegQueryValueEx(hKey,
+                            L"MatchingDeviceId",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)szBuffer,
+                            &dwSize) == ERROR_SUCCESS)
+        {
+            SetListViewText(hwndListView, 0, szBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
+
+static VOID
+DisplayDeviceCoinstallers(IN PDEVADVPROP_INFO dap,
+                          IN HWND hwndListView)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    HKEY hKey;
+    DWORD dwSize;
+    DWORD dwType;
+    LPBYTE lpBuffer;
+    LPWSTR lpStr;
+    INT index;
+    INT len;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet,
+                                DeviceInfoData,
+                                DICS_FLAG_GLOBAL,
+                                0,
+                                DIREG_DRV,
+                                KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        dwSize = 0;
+        if (RegQueryValueEx(hKey,
+                            L"CoInstallers32",
+                            NULL,
+                            &dwType,
+                            NULL,
+                            &dwSize) == ERROR_SUCCESS &&
+            dwSize > 0)
+        {
+
+            lpBuffer = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 dwSize);
+
+            RegQueryValueEx(hKey,
+                            L"CoInstallers32",
+                            NULL,
+                            &dwType,
+                            lpBuffer,
+                            &dwSize);
+
+            lpStr = (LPWSTR)lpBuffer;
+            index = 0;
+            while (*lpStr != 0)
+            {
+                len = wcslen(lpStr) + 1;
+
+                SetListViewText(hwndListView, index, lpStr);
+
+                lpStr += len;
+                index++;
+            }
+
+            HeapFree(GetProcessHeap(),
+                     0,
+                     lpBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
+
+static VOID
+DisplayClassProperties(IN PDEVADVPROP_INFO dap,
+                       IN HWND hwndListView,
+                       IN LPWSTR lpProperty)
+{
+    HDEVINFO DeviceInfoSet;
+    PSP_DEVINFO_DATA DeviceInfoData;
+    WCHAR szClassGuid[45];
+    DWORD dwSize;
+    DWORD dwType;
+    HKEY hKey;
+    GUID ClassGuid;
+    LPBYTE lpBuffer;
+    LPWSTR lpStr;
+    INT index = 0;
+    INT len;
+
+    if (dap->CurrentDeviceInfoSet != INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoSet = dap->CurrentDeviceInfoSet;
+        DeviceInfoData = &dap->CurrentDeviceInfoData;
+    }
+    else
+    {
+        DeviceInfoSet = dap->DeviceInfoSet;
+        DeviceInfoData = &dap->DeviceInfoData;
+    }
+
+    dwSize = 45 * sizeof(WCHAR);
+    if (!SetupDiGetDeviceRegistryProperty(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          SPDRP_CLASSGUID,
+                                          &dwType,
+                                          (LPBYTE)szClassGuid,
+                                          dwSize,
+                                          &dwSize))
+        return;
+
+    pSetupGuidFromString(szClassGuid,
+                         &ClassGuid);
+
+    hKey = SetupDiOpenClassRegKey(&ClassGuid,
+                                  KEY_QUERY_VALUE);
+    if (hKey != INVALID_HANDLE_VALUE)
+    {
+        dwSize = 0;
+        if (RegQueryValueEx(hKey,
+                            lpProperty,
+                            NULL,
+                            &dwType,
+                            NULL,
+                            &dwSize) == ERROR_SUCCESS &&
+            dwSize > 0)
+        {
+            lpBuffer = HeapAlloc(GetProcessHeap(),
+                                 HEAP_ZERO_MEMORY,
+                                 dwSize);
+
+            RegQueryValueEx(hKey,
+                            lpProperty,
+                            NULL,
+                            &dwType,
+                            lpBuffer,
+                            &dwSize);
+
+            if (dwType == REG_SZ)
+            {
+                SetListViewText(hwndListView, 0, (LPWSTR)lpBuffer);
+            }
+            else if (dwType == REG_MULTI_SZ)
+            {
+                lpStr = (LPWSTR)lpBuffer;
+                index = 0;
+                while (*lpStr != 0)
+                {
+                    len = wcslen(lpStr) + 1;
+
+                    SetListViewText(hwndListView, index, lpStr);
+
+                    lpStr += len;
+                    index++;
+                }
+            }
+
+            HeapFree(GetProcessHeap(),
+                     0,
+                     lpBuffer);
+        }
+
+        RegCloseKey(hKey);
+    }
+}
+
+
+static VOID
+DisplayDeviceProperties(IN PDEVADVPROP_INFO dap,
+                        IN HWND hwndComboBox,
+                        IN HWND hwndListView)
+{
+    INT Index;
+
+    Index = (INT)SendMessage(hwndComboBox,
+                             CB_GETCURSEL,
+                             0,
+                             0);
+    if (Index == CB_ERR)
+        return;
+
+    (void)ListView_DeleteAllItems(hwndListView);
+
+    switch (Index)
+    {
+        case 0:
+            SetListViewText(hwndListView, 0, dap->szDeviceID);
+            break;
+
+        case 1: /* Hardware ID */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_HARDWAREID);
+            break;
+
+        case 2: /* Compatible IDs */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_COMPATIBLEIDS);
+            break;
+
+        case 3: /* Matching ID */
+            DisplayMatchingDeviceId(dap,
+                                    hwndListView);
+            break;
+
+        case 4: /* Service */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_SERVICE);
+            break;
+
+        case 5: /* Enumerator */
+            DisplayDevNodeEnumerator(dap,
+                                     hwndListView);
+            break;
+
+        case 6: /* Capabilities */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_CAPABILITIES);
+            break;
+
+        case 7: /* Devnode Flags */
+            DisplayDevNodeFlags(dap,
+                                hwndListView);
+            break;
+
+        case 8: /* Config Flags */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_CONFIGFLAGS);
+            break;
+
+        case 9: /* CSConfig Flags */
+            DisplayCsFlags(dap,
+                           hwndListView);
+            break;
+
+#if 0
+        case 10: /* Ejection relation */
+            break;
+
+        case 11: /* Removal relations */
+            break;
+
+        case 12: /* Bus relation */
+            break;
+#endif
+
+        case 13: /* Device Upper Filters */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_UPPERFILTERS);
+            break;
+
+        case 14: /* Device Lower Filters */
+            DisplayDevicePropertyText(dap,
+                                      hwndListView,
+                                      SPDRP_LOWERFILTERS);
+            break;
+
+        case 15: /* Class Upper Filters */
+            DisplayClassProperties(dap,
+                                   hwndListView,
+                                   L"UpperFilters");
+            break;
+
+        case 16: /* Class Lower Filters */
+            DisplayClassProperties(dap,
+                                   hwndListView,
+                                   L"LowerFilters");
+            break;
+
+        case 17: /* Class Installer */
+            DisplayClassProperties(dap,
+                                   hwndListView,
+                                   L"Installer32");
+            break;
+
+#if 0
+        case 18: /* Class Coinstaller */
+            break;
+#endif
+
+        case 19: /* Device Coinstaller */
+            DisplayDeviceCoinstallers(dap,
+                                      hwndListView);
+            break;
+
+#if 0
+        case 20: /* Firmware Revision */
+            break;
+
+        case 21: /* Current Power State */
+            break;
+
+        case 20: /* Power Capabilities */
+            break;
+
+        case 21: /* Power State Mappings */
+            break;
+#endif
+
+        default:
+            SetListViewText(hwndListView, 0, L"<Not implemented yet>");
+            break;
+    }
+}
+
+
+static INT_PTR
+CALLBACK
+AdvProcDetailsDlgProc(IN HWND hwndDlg,
+                      IN UINT uMsg,
+                      IN WPARAM wParam,
+                      IN LPARAM lParam)
+{
+    PDEVADVPROP_INFO dap;
+    INT_PTR Ret = FALSE;
+
+    dap = (PDEVADVPROP_INFO)GetWindowLongPtr(hwndDlg,
+                                             DWL_USER);
+
+    if (dap != NULL || uMsg == WM_INITDIALOG)
+    {
+        switch (uMsg)
+        {
+            case WM_COMMAND:
+            {
+                switch (LOWORD(wParam))
+                {
+                    case IDC_DETAILSPROPNAME:
+                        if (HIWORD(wParam) == CBN_SELCHANGE)
+                        {
+                            DisplayDeviceProperties(dap,
+                                                    GetDlgItem(hwndDlg, IDC_DETAILSPROPNAME),
+                                                    GetDlgItem(hwndDlg, IDC_DETAILSPROPVALUE));
+                        }
+                        break;
+                }
+                break;
+            }
+
+            case WM_NOTIFY:
+            {
+                NMHDR *hdr = (NMHDR*)lParam;
+                switch (hdr->code)
+                {
+                    case PSN_APPLY:
+                        break;
+                }
+                break;
+            }
+
+            case WM_INITDIALOG:
+            {
+                dap = (PDEVADVPROP_INFO)((LPPROPSHEETPAGE)lParam)->lParam;
+                if (dap != NULL)
+                {
+                    SetWindowLongPtr(hwndDlg,
+                                     DWL_USER,
+                                     (DWORD_PTR)dap);
+
+                    UpdateDetailsDlg(hwndDlg,
+                                     dap);
                 }
                 Ret = TRUE;
                 break;
@@ -807,7 +1803,8 @@ GetParentNode:
     }
 
     /* set the device location edit control text */
-    if (GetDeviceLocationString(DeviceInfoData->DevInst,
+    if (GetDeviceLocationString(DeviceInfoSet,
+                                DeviceInfoData,
                                 dap->ParentDevInst,
                                 dap->szTemp,
                                 sizeof(dap->szTemp) / sizeof(dap->szTemp[0])))
@@ -1021,6 +2018,9 @@ GetParentNode:
     if (dap->HasDriverPage)
         dap->nDevPropSheets++;
 
+    /* include the details page */
+    dap->nDevPropSheets++;
+
     /* add the device property sheets */
     if (dap->nDevPropSheets != 0)
     {
@@ -1092,6 +2092,36 @@ GetParentNode:
                     }
                 }
             }
+
+            if (1)
+            {
+                PROPSHEETPAGE pspDetails = {0};
+                pspDetails.dwSize = sizeof(PROPSHEETPAGE);
+                pspDetails.dwFlags = PSP_DEFAULT;
+                pspDetails.hInstance = hDllInstance;
+                pspDetails.pszTemplate = (LPCWSTR)MAKEINTRESOURCE(IDD_DEVICEDETAILS);
+                pspDetails.pfnDlgProc = AdvProcDetailsDlgProc;
+                pspDetails.lParam = (LPARAM)dap;
+                dap->DevPropSheets[iPage] = dap->pCreatePropertySheetPageW(&pspDetails);
+                if (dap->DevPropSheets[iPage] != NULL)
+                {
+                    if (PropSheet_AddPage(hPropSheetDlg,
+                                          dap->DevPropSheets[iPage]))
+                    {
+                        iPage++;
+                        RecalcPages = TRUE;
+                    }
+                    else
+                    {
+                        dap->pDestroyPropertySheetPage(dap->DevPropSheets[iPage]);
+                        dap->DevPropSheets[iPage] = NULL;
+                    }
+                }
+            }
+
+            /* FIXME: Add the resources page */
+
+            /* FIXME: Add the power page */
         }
         else
             dap->nDevPropSheets = 0;

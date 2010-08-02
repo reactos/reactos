@@ -33,15 +33,23 @@
 #include "dlgs.h"
 #include "wine/debug.h"
 #include "cderr.h"
+#include "cdlg.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
+
+typedef struct
+{
+  HWND hWnd1;
+  HWND hWnd2;
+  LPCHOOSEFONTW lpcf32w;
+  int  added;
+} CFn_ENUMSTRUCT, *LPCFn_ENUMSTRUCT;
+
 
 static const WCHAR strWineFontData[] = {'_','_','W','I','N','E','_','F','O','N','T','D','L','G','D','A','T','A',0};
 static const WCHAR strWineFontData_a[] =
                                {'_','_','W','I','N','E','_','F','O','N','T','D','L','G','D','A','T','A','_','A',0};
 static const WCHAR chooseFontW[] = {'C','H','O','O','S','E','_','F','O','N','T',0};
-
-#include "cdlg.h"
 
 /* image list with TrueType bitmaps and more */
 static HIMAGELIST himlTT = 0;
@@ -148,7 +156,7 @@ static const struct {
 #undef XX
 };
 
-void _dump_cf_flags(DWORD cflags)
+static void _dump_cf_flags(DWORD cflags)
 {
     unsigned int i;
 
@@ -299,8 +307,8 @@ static BOOL CFn_HookCallChk32(const CHOOSEFONTW *lpcf)
 /*************************************************************************
  *              AddFontFamily                               [internal]
  */
-INT AddFontFamily(const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *lpNTM,
-        UINT nFontType, const CHOOSEFONTW *lpcf, HWND hwnd, LPCFn_ENUMSTRUCT e)
+static INT AddFontFamily(const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *lpNTM,
+                         UINT nFontType, const CHOOSEFONTW *lpcf, HWND hwnd, LPCFn_ENUMSTRUCT e)
 {
     int i;
     WORD w;
@@ -448,6 +456,21 @@ static inline HDC CFn_GetDC(const CHOOSEFONTW *lpcf)
 }
 
 /*************************************************************************
+ *              GetScreenDPI                           [internal]
+ */
+static inline int GetScreenDPI(void)
+{
+    HDC hdc;
+    int result;
+
+    hdc = GetDC(0);
+    result = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(0, hdc);
+
+    return result;
+}
+
+/*************************************************************************
  *              CFn_ReleaseDC                           [internal]
  */
 static inline void CFn_ReleaseDC(const CHOOSEFONTW *lpcf, HDC hdc)
@@ -459,9 +482,8 @@ static inline void CFn_ReleaseDC(const CHOOSEFONTW *lpcf, HDC hdc)
 /***********************************************************************
  *                 AddFontStyle                          [internal]
  */
-INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *lpNTM,
-                UINT nFontType, const CHOOSEFONTW *lpcf, HWND hcmb2, HWND hcmb3,
-                HWND hDlg, BOOL iswin16)
+static INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *lpNTM,
+                         UINT nFontType, const CHOOSEFONTW *lpcf, HWND hcmb2, HWND hcmb3, HWND hDlg)
 {
     int i;
     const LOGFONTW *lplf = &(lpElfex->elfLogFont);
@@ -479,10 +501,8 @@ INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *lpNTM,
     if (nFontType & RASTER_FONTTYPE)
     {
         INT points;
-        if(!(hdc = CFn_GetDC(lpcf))) return 0;
         points = MulDiv( lpNTM->ntmTm.tmHeight - lpNTM->ntmTm.tmInternalLeading,
-                72, GetDeviceCaps(hdc, LOGPIXELSY));
-        CFn_ReleaseDC(lpcf, hdc);
+                72, GetScreenDPI());
         i = AddFontSizeToCombo3(hcmb3, points, lpcf);
         if(i) return 0;
     } else if (SetFontSizesToCombo3(hcmb3, lpcf)) return 0;
@@ -495,7 +515,7 @@ INT AddFontStyle( const ENUMLOGFONTEXW *lpElfex, const NEWTEXTMETRICEXW *lpNTM,
         if (i)
             return 0;
     }
-    if( iswin16 || !( hcmb5 = GetDlgItem(hDlg, cmb5))) return 1;
+    if (!( hcmb5 = GetDlgItem(hDlg, cmb5))) return 1;
     i = SendMessageW( hcmb5, CB_FINDSTRINGEXACT, 0,
                 (LPARAM)lpElfex->elfScript);
     if( i == CB_ERR) {
@@ -584,14 +604,13 @@ static INT WINAPI FontStyleEnumProc( const ENUMLOGFONTEXW *lpElfex,
     HWND hcmb3=s->hWnd2;
     HWND hDlg=GetParent(hcmb3);
     return AddFontStyle( lpElfex, (const NEWTEXTMETRICEXW *) metrics,
-            dwFontType, s->lpcf32w, hcmb2, hcmb3, hDlg, FALSE);
+                         dwFontType, s->lpcf32w, hcmb2, hcmb3, hDlg);
 }
 
 /***********************************************************************
  *           CFn_WMInitDialog                            [internal]
  */
-LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
-                         LPCHOOSEFONTW lpcf)
+static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
 {
     HDC hdc;
     int i,j,init=0;
@@ -699,7 +718,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
                 lpxx->lfHeight;
             INT points;
             int charset = lpxx->lfCharSet;
-            points = MulDiv( height, 72, GetDeviceCaps(hdc, LOGPIXELSY));
+            points = MulDiv( height, 72, GetScreenDPI());
             pstyle = MAKELONG(lpxx->lfWeight > FW_MEDIUM ? FW_BOLD:
                     FW_NORMAL,lpxx->lfItalic !=0);
             SendDlgItemMessageW(hDlg, cmb1, CB_SETCURSEL, j, 0);
@@ -747,7 +766,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
 /***********************************************************************
  *           CFn_WMMeasureItem                           [internal]
  */
-LRESULT CFn_WMMeasureItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
+static LRESULT CFn_WMMeasureItem(HWND hDlg, LPARAM lParam)
 {
     HDC hdc;
     HFONT hfontprev;
@@ -763,7 +782,7 @@ LRESULT CFn_WMMeasureItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
     /* use MAX of bitmap height and tm.tmHeight .*/
     hdc=GetDC(hDlg);
     if(!hdc) return 0;
-    hfontprev = SelectObject( hdc, GetStockObject( SYSTEM_FONT));
+    hfontprev = SelectObject( hdc, GetStockObject( DEFAULT_GUI_FONT ) );
     GetTextMetricsW(hdc, &tm);
     if( tm.tmHeight > lpmi->itemHeight) lpmi->itemHeight = tm.tmHeight;
     SelectObject(hdc, hfontprev);
@@ -775,7 +794,7 @@ LRESULT CFn_WMMeasureItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
 /***********************************************************************
  *           CFn_WMDrawItem                              [internal]
  */
-LRESULT CFn_WMDrawItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
+static LRESULT CFn_WMDrawItem(LPARAM lParam)
 {
     HBRUSH hBrush;
     WCHAR buffer[40];
@@ -879,13 +898,13 @@ LRESULT CFn_WMDrawItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
 /***********************************************************************
  *           CFn_WMCommand                               [internal]
  */
-LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
-        LPCHOOSEFONTW lpcf)
+static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcf)
 {
     int i;
     long l;
     HDC hdc;
-    LPLOGFONTW lpxx=lpcf->lpLogFont;
+
+    if (!lpcf) return FALSE;
 
     TRACE("WM_COMMAND wParam=%08X lParam=%08lX\n", (LONG)wParam, lParam);
     switch (LOWORD(wParam))
@@ -945,6 +964,7 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
         {
             WCHAR str[256];
             WINDOWINFO wininfo;
+            LPLOGFONTW lpxx=lpcf->lpLogFont;
 
             TRACE("WM_COMMAND/cmb2,3 =%08lX\n", lParam);
             i=SendDlgItemMessageW(hDlg,cmb1,CB_GETCURSEL,0,0);
@@ -977,14 +997,8 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
                             CB_GETITEMDATA , i, 0));
             else
                 lpcf->iPointSize = 100;
-            hdc = CFn_GetDC(lpcf);
-            if( hdc)
-            {
-                lpxx->lfHeight = - MulDiv( lpcf->iPointSize ,
-                        GetDeviceCaps(hdc, LOGPIXELSY), 720);
-                CFn_ReleaseDC(lpcf, hdc);
-            } else
-                lpxx->lfHeight = -lpcf->iPointSize / 10;
+            lpxx->lfHeight = - MulDiv( lpcf->iPointSize ,
+                    GetScreenDPI(), 720);
             i=SendDlgItemMessageW(hDlg, cmb5, CB_GETCURSEL, 0, 0);
             if (i!=CB_ERR)
                 lpxx->lfCharSet=SendDlgItemMessageW(hDlg, cmb5, CB_GETITEMDATA, i, 0);
@@ -1028,8 +1042,6 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
         i=RegisterWindowMessageW( HELPMSGSTRINGW );
         if (lpcf->hwndOwner)
             SendMessageW(lpcf->hwndOwner, i, 0, (LPARAM)GetPropW(hDlg, strWineFontData));
-        /* if (CFn_HookCallChk(lpcf))
-           CallWindowProc16(lpcf->lpfnHook,hDlg,WM_COMMAND,psh15,(LPARAM)lpcf);*/
         break;
 
     case IDOK:
@@ -1054,12 +1066,14 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
     return(FALSE);
 }
 
-static LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcfw)
+static LRESULT CFn_WMDestroy(HWND hwnd, LPCHOOSEFONTW lpcfw)
 {
     LPCHOOSEFONTA lpcfa;
     LPSTR lpszStyle;
     LPLOGFONTA lpLogFonta;
     int len;
+
+    if (!lpcfw) return FALSE;
 
     lpcfa = GetPropW(hwnd, strWineFontData_a);
     lpLogFonta = lpcfa->lpLogFont;
@@ -1084,9 +1098,11 @@ static LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
     return TRUE;
 }
 
-LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSEFONTW *lpcf)
+static LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSEFONTW *lpcf)
 {
     WINDOWINFO info;
+
+    if (!lpcf) return FALSE;
 
     info.cbSize=sizeof(info);
     if( GetWindowInfo( GetDlgItem( hDlg, stc5), &info ) )
@@ -1137,8 +1153,7 @@ LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSEFONTW *
 /***********************************************************************
  *           FormatCharDlgProcA   [internal]
  */
-INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
-        LPARAM lParam)
+static INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPCHOOSEFONTW lpcfw;
     LPCHOOSEFONTA lpcfa;
@@ -1147,9 +1162,7 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
 
     if (uMsg!=WM_INITDIALOG) {
         lpcfw = GetPropW(hDlg, strWineFontData);
-        if (!lpcfw)
-            return FALSE;
-        if (CFn_HookCallChk32(lpcfw))
+        if (lpcfw && CFn_HookCallChk32(lpcfw))
             res=CallWindowProcA((WNDPROC)lpcfw->lpfnHook, hDlg, uMsg, wParam, lParam);
         if (res)
             return res;
@@ -1170,7 +1183,7 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
             MultiByteToWideChar(CP_ACP, 0, lpcfa->lpszStyle, -1, lpcfw->lpszStyle, len);
         }
 
-        if (!CFn_WMInitDialog(hDlg, wParam, lParam, lpcfw))
+        if (!CFn_WMInitDialog(hDlg, lParam, lpcfw))
         {
             TRACE("CFn_WMInitDialog returned FALSE\n");
             return FALSE;
@@ -1181,13 +1194,13 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
     switch (uMsg)
     {
     case WM_MEASUREITEM:
-        return CFn_WMMeasureItem(hDlg, wParam, lParam);
+        return CFn_WMMeasureItem(hDlg,lParam);
     case WM_DRAWITEM:
-        return CFn_WMDrawItem(hDlg, wParam, lParam);
+        return CFn_WMDrawItem(lParam);
     case WM_COMMAND:
         return CFn_WMCommand(hDlg, wParam, lParam, lpcfw);
     case WM_DESTROY:
-        return CFn_WMDestroy(hDlg, wParam, lParam, lpcfw);
+        return CFn_WMDestroy(hDlg, lpcfw);
     case WM_CHOOSEFONT_GETLOGFONT:
         TRACE("WM_CHOOSEFONT_GETLOGFONT lParam=%08lX\n", lParam);
         FIXME("current logfont back to caller\n");
@@ -1201,8 +1214,7 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
 /***********************************************************************
  *           FormatCharDlgProcW   [internal]
  */
-INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
-        LPARAM lParam)
+static INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LPCHOOSEFONTW lpcf;
     INT_PTR res = FALSE;
@@ -1210,9 +1222,7 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
     if (uMsg!=WM_INITDIALOG)
     {
         lpcf= GetPropW(hDlg, strWineFontData);
-        if (!lpcf)
-            return FALSE;
-        if (CFn_HookCallChk32(lpcf))
+        if (lpcf && CFn_HookCallChk32(lpcf))
             res=CallWindowProcW((WNDPROC)lpcf->lpfnHook, hDlg, uMsg, wParam, lParam);
         if (res)
             return res;
@@ -1220,7 +1230,7 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
     else
     {
         lpcf=(LPCHOOSEFONTW)lParam;
-        if (!CFn_WMInitDialog(hDlg, wParam, lParam, lpcf))
+        if (!CFn_WMInitDialog(hDlg, lParam, lpcf))
         {
             TRACE("CFn_WMInitDialog returned FALSE\n");
             return FALSE;
@@ -1231,9 +1241,9 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
     switch (uMsg)
     {
     case WM_MEASUREITEM:
-        return CFn_WMMeasureItem(hDlg, wParam, lParam);
+        return CFn_WMMeasureItem(hDlg, lParam);
     case WM_DRAWITEM:
-        return CFn_WMDrawItem(hDlg, wParam, lParam);
+        return CFn_WMDrawItem(lParam);
     case WM_COMMAND:
         return CFn_WMCommand(hDlg, wParam, lParam, lpcf);
     case WM_DESTROY:

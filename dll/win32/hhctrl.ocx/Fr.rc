@@ -19,6 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE
@@ -33,9 +38,9 @@ STRINGTABLE
 BEGIN
     IDTB_EXPAND      "Afficher"
     IDTB_CONTRACT    "Cacher"
-    IDTB_STOP        "Arrêter"
+    IDTB_STOP        "ArrÃªter"
     IDTB_REFRESH     "A&ctualiser"
-    IDTB_BACK        "Précédent"
+    IDTB_BACK        "PrÃ©cÃ©dent"
     IDTB_HOME        "Sommaire"
     IDTB_SYNC        "Synchroniser"
     IDTB_PRINT       "Imprimer"
@@ -49,8 +54,8 @@ BEGIN
     IDTB_SEARCH      "IDTB_SEARCH"
     IDTB_HISTORY     "IDTB_HISTORY"
     IDTB_FAVORITES   "IDTB_FAVORITES"
-    IDTB_JUMP1       "Jump1"
-    IDTB_JUMP2       "Jump2"
+    IDTB_JUMP1       "Saut1"
+    IDTB_JUMP2       "Saut2"
     IDTB_CUSTOMIZE   "Personnaliser"
     IDTB_ZOOM        "Zoom"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"

@@ -42,31 +42,6 @@ HRESULT WINAPI ClearDownloadCache(void)
 }
 
 /******************************************************************
- *  CompareAssemblyIdentity   (FUSION.@)
- */
-HRESULT WINAPI CompareAssemblyIdentity(LPCWSTR pwzAssemblyIdentity1, BOOL fUnified1,
-                                       LPCWSTR pwzAssemblyIdentity2, BOOL fUnified2,
-                                       BOOL *pfEquivalent, AssemblyComparisonResult *pResult)
-{
-    FIXME("(%s, %d, %s, %d, %p, %p) stub!\n", debugstr_w(pwzAssemblyIdentity1),
-          fUnified1, debugstr_w(pwzAssemblyIdentity2), fUnified2, pfEquivalent, pResult);
-
-    return E_NOTIMPL;
-}
-
-/******************************************************************
- *  CreateAssemblyEnum   (FUSION.@)
- */
-HRESULT WINAPI CreateAssemblyEnum(IAssemblyEnum **pEnum, IUnknown *pUnkReserved,
-                                  IAssemblyName *pName, DWORD dwFlags, LPVOID pvReserved)
-{
-    FIXME("(%p, %p, %p, %08x, %p) stub!\n", pEnum, pUnkReserved,
-          pName, dwFlags, pvReserved);
-
-    return E_NOTIMPL;
-}
-
-/******************************************************************
  *  CreateInstallReferenceEnum   (FUSION.@)
  */
 HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum **ppRefEnum,
@@ -78,14 +53,11 @@ HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum **ppRefEnum,
 }
 
 /******************************************************************
- *  GetAssemblyIdentityFromFile   (FUSION.@)
+ *  CreateApplicationContext   (FUSION.@)
  */
-HRESULT WINAPI GetAssemblyIdentityFromFile(LPCWSTR pwzFilePath, REFIID riid,
-                                           IUnknown **ppIdentity)
+HRESULT WINAPI CreateApplicationContext(IAssemblyName *name, void *ctx)
 {
-    FIXME("(%s, %s, %p) stub!\n", debugstr_w(pwzFilePath), debugstr_guid(riid),
-          ppIdentity);
-
+    FIXME("%p, %p\n", name, ctx);
     return E_NOTIMPL;
 }
 
@@ -129,8 +101,11 @@ HRESULT WINAPI GetCachePath(ASM_CACHE_FLAGS dwCacheFlags, LPWSTR pwzCachePath,
     static const WCHAR gac[] = {'G','A','C',0};
     static const WCHAR nativeimg[] = {
         'N','a','t','i','v','e','I','m','a','g','e','s','_',0};
-    static const WCHAR zapfmt[] = {
-        '%','s','\\','%','s','\\','%','s','%','s','_','3','2',0};
+#ifdef _WIN64
+    static const WCHAR zapfmt[] = {'%','s','\\','%','s','\\','%','s','%','s','_','6','4',0};
+#else
+    static const WCHAR zapfmt[] = {'%','s','\\','%','s','\\','%','s','%','s','_','3','2',0};
+#endif
 
     TRACE("(%08x, %p, %p)\n", dwCacheFlags, pwzCachePath, pcchPath);
 

@@ -12,7 +12,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -155,7 +155,7 @@ BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
 	LTEXT "Напишете името на приложение, папка, документ или интернет източник и РеактОС ще го отвори.", 12289, 36, 11, 182, 18
 	LTEXT "&Отваряне:", 12305, 7, 39, 40, 10
-	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 46, 37, 180, 100
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 46, 37, 180, 100
 	DEFPUSHBUTTON "Добре", IDOK, 62, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "Отказ", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "&Обзор...", 12288, 170, 63, 50, 14, WS_TABSTOP
@@ -270,32 +270,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Вид:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "Файлова уредба:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Използвано място:", -1, 25, 90, 120, 10
-	LTEXT "", 14004, 110, 90, 120, 10
-	LTEXT "", 14005, 200, 90, 40, 10
+	LTEXT "", 14003, 110, 90, 120, 10
+	LTEXT "", 14004, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Свободно място:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14005, 110, 105, 120, 10
+	LTEXT "", 14006, 200, 105, 40, 10
 
 	LTEXT "Обем:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14007, 110, 125, 120, 10
+	LTEXT "", 14008, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Устройство %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Почистване на диска", 14011, 150, 175, 80, 15, WS_TABSTOP
-	CHECKBOX "Уплътняване на устройството за спестяване на място", 14012, 1, 205, 238, 10, WS_DISABLED
+	LTEXT "Устройство %s", 14009, 100, 170, 40, 10
+	PUSHBUTTON "Почистване на диска", 14010, 150, 175, 80, 15, WS_TABSTOP
+	CHECKBOX "Уплътняване на устройството за спестяване на място", 14011, 1, 205, 238, 10, WS_DISABLED
 	CHECKBOX "Индексиращата услуга да индексира диска за по- бързо търсене", 14012, 1, 220, 238, 10, WS_DISABLED
 END
 
@@ -357,7 +357,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Отваряне с"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -666,6 +666,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Искате ли да презапуснете системата?"
 	IDS_SHUTDOWN_TITLE          "Изключване"
 	IDS_SHUTDOWN_PROMPT         "Искате ли да изключите компютъра?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	// shell folder path default values 
 	IDS_PROGRAMS                "Пусков изборник\\Приложения"
@@ -749,6 +751,9 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Слагане на нов шрифт..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Подразбиран разпределителен размер"
+	IDS_COPY_OF                 "Copy of"
+
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 END
 
 

@@ -76,6 +76,7 @@ DefineDosDeviceW(
     LPCWSTR lpTargetPath
     )
 {
+    UNIMPLEMENTED;
 	return FALSE;
 }
 

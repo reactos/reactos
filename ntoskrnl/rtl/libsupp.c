@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATMT TAG('A', 't', 'o', 'T') /* Atom table */
+#define TAG_ATMT 'TotA' /* Atom table */
 
 extern ULONG NtGlobalFlag;
 
@@ -28,6 +28,30 @@ SIZE_T RtlpAllocDeallocQueryBufferSize = 128;
 
 /* FUNCTIONS *****************************************************************/
 
+PVOID
+NTAPI
+RtlPcToFileHeader(
+    IN  PVOID PcValue,
+    OUT PVOID *BaseOfImage)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN InSystem;
+
+    /* Get the base for this file */
+    if ((ULONG_PTR)PcValue > (ULONG_PTR)MmHighestUserAddress)
+    {
+        /* We are in kernel */
+        *BaseOfImage = KiPcToFileHeader(PcValue, &LdrEntry, FALSE, &InSystem);
+    }
+    else
+    {
+        /* We are in user land */
+        *BaseOfImage = KiRosPcToUserFileHeader(PcValue, &LdrEntry);
+    }
+
+    return *BaseOfImage;
+}
+
 VOID
 NTAPI
 RtlInitializeRangeListPackage(VOID)
@@ -38,24 +62,31 @@ RtlInitializeRangeListPackage(VOID)
                                    NULL,
                                    POOL_COLD_ALLOCATION,
                                    sizeof(RTL_RANGE_ENTRY),
-                                   TAG('R', 'R', 'l', 'e'),
+                                   'elRR',
                                    16);
 }
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type)
+RtlpCheckForActiveDebugger(VOID)
 {
     /* This check is meaningless in kernel-mode */
-    return Type;
+    return FALSE;
 }
 
 BOOLEAN
 NTAPI
-RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+RtlpSetInDbgPrint(VOID)
 {
-    /* This check is meaningless in kernel-mode */
+    /* Nothing to set in kernel mode */
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(VOID)
+{
+    /* Nothing to clear in kernel mode */
 }
 
 KPROCESSOR_MODE
@@ -76,9 +107,9 @@ RtlpAllocateMemory(ULONG Bytes,
 }
 
 
-#define TAG_USTR        TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+#define TAG_USTR        'RTSU'
+#define TAG_ASTR        'RTSA'
+#define TAG_OSTR        'RTSO'
 VOID
 NTAPI
 RtlpFreeMemory(PVOID Mem,
@@ -159,7 +190,7 @@ RtlLeaveHeapLock(
     return STATUS_SUCCESS;
 }
 
-#ifdef DBG
+#if DBG
 VOID FASTCALL
 CHECK_PAGED_CODE_RTL(char *file, int line)
 {
@@ -218,7 +249,7 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
     return FALSE;
 }
 
-#ifndef _ARM_
+#if !defined(_ARM_) && !defined(_AMD64_)
 
 BOOLEAN
 NTAPI
@@ -278,7 +309,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     ULONG Eip;
     BOOLEAN Result, StopSearch = FALSE;
     ULONG i = 0;
-    PKTHREAD Thread = KeGetCurrentThread();
+    PETHREAD Thread = PsGetCurrentThread();
     PTEB Teb;
     PKTRAP_FRAME TrapFrame;
 
@@ -310,7 +341,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                                         &StackBegin,
                                         &StackEnd);
         if (!Result) return 0;
-    }
+        }
 
     /* Use a SEH block for maximum protection */
     _SEH2_TRY
@@ -319,28 +350,27 @@ RtlWalkFrameChain(OUT PVOID *Callers,
         if (Flags == 1)
         {
             /* Get the trap frame and TEB */
-            TrapFrame = Thread->TrapFrame;
-            Teb = Thread->Teb;
+            TrapFrame = KeGetTrapFrame(&Thread->Tcb);
+            Teb = Thread->Tcb.Teb;
 
             /* Make sure we can trust the TEB and trap frame */
             if (!(Teb) ||
-                !((PVOID)((ULONG_PTR)TrapFrame & 0x80000000)) ||
-                ((PVOID)TrapFrame <= (PVOID)Thread->StackLimit) ||
-                ((PVOID)TrapFrame >= (PVOID)Thread->StackBase) ||
                 (KeIsAttachedProcess()) ||
                 (KeGetCurrentIrql() >= DISPATCH_LEVEL))
             {
                 /* Invalid or unsafe attempt to get the stack */
-                return 0;
+                _SEH2_YIELD(return 0;)
             }
 
             /* Get the stack limits */
-            StackBegin = (ULONG_PTR)Teb->Tib.StackLimit;
-            StackEnd = (ULONG_PTR)Teb->Tib.StackBase;
+            StackBegin = (ULONG_PTR)Teb->NtTib.StackLimit;
+            StackEnd = (ULONG_PTR)Teb->NtTib.StackBase;
 #ifdef _M_IX86
             Stack = TrapFrame->Ebp;
 #elif defined(_M_PPC)
             Stack = TrapFrame->Gpr1;
+#else
+#error Unknown architecture
 #endif
 
             /* Validate them */
@@ -381,7 +411,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             if ((StackBegin < Eip) && (Eip < StackEnd)) break;
 
             /* Check if we reached a user-mode address */
-            if (!(Flags) && !(Eip & 0x80000000)) break;
+            if (!(Flags) && !(Eip & 0x80000000)) break; // FIXME: 3GB breakage
 
             /* Save this frame */
             Callers[i] = (PVOID)Eip;
@@ -409,6 +439,19 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     return i;
 }
 
+#endif
+
+#ifdef _AMD64_
+VOID
+NTAPI
+RtlpGetStackLimits(
+    OUT PULONG_PTR LowLimit,
+    OUT PULONG_PTR HighLimit)
+{
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+    *HighLimit = (ULONG_PTR)CurrentThread->InitialStack;
+    *LowLimit = (ULONG_PTR)CurrentThread->StackLimit;
+}
 #endif
 
 /* RTL Atom Tables ************************************************************/
@@ -516,29 +559,36 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    HANDLE Handle;
    USHORT HandleIndex;
 
+   /* Initialize ex handle table entry */
    ExEntry.Object = Entry;
    ExEntry.GrantedAccess = 0x1; /* FIXME - valid handle */
 
+   /* Create ex handle */
    Handle = ExCreateHandle(AtomTable->ExHandleTable,
-                                &ExEntry);
-   if (Handle != NULL)
-   {
-      HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
-      /* FIXME - Handle Indexes >= 0xC000 ?! */
-      if ((ULONG_PTR)HandleIndex >> 2 < 0xC000)
-      {
-         Entry->HandleIndex = HandleIndex;
-         Entry->Atom = 0xC000 + HandleIndex;
+                           &ExEntry);
+   if (!Handle) return FALSE;
 
-         return TRUE;
-      }
-      else
-         ExDestroyHandle(AtomTable->ExHandleTable,
-                         Handle,
-                         NULL);
+   /* Calculate HandleIndex (by getting rid of the first two bits) */
+   HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
+
+   /* Index must be less than 0xC000 */
+   if (HandleIndex >= 0xC000)
+   {
+       /* Destroy ex handle */
+       ExDestroyHandle(AtomTable->ExHandleTable,
+                       Handle,
+                       NULL);
+
+       /* Return failure */
+       return FALSE;
    }
 
-   return FALSE;
+   /* Initialize atom table entry */
+   Entry->HandleIndex = HandleIndex;
+   Entry->Atom = 0xC000 + HandleIndex;
+
+   /* Return success */
+   return TRUE;
 }
 
 PRTL_ATOM_TABLE_ENTRY

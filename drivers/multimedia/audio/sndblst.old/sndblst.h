@@ -9,8 +9,7 @@
  *                       Sept 28, 2003: Created
  */
 
-#ifndef __INCLUDES_SNDBLST_H__
-#define __INCLUDES_SNDBLST_H__
+#pragma once
 
 #include <ntddk.h>
 
@@ -172,5 +171,3 @@ VOID SetOutputSampleRate(ULONG BasePort, ULONG SampleRate);
 VOID EnableSpeaker(ULONG BasePort, BOOLEAN SpeakerOn);
 BOOLEAN IsSpeakerEnabled(ULONG BasePort);
 VOID BeginPlayback(ULONG BasePort, ULONG BitDepth, ULONG Channels, ULONG BlockSize);
-
-#endif

@@ -3,7 +3,6 @@
 <module name="kbdblr" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdblr.dll">
 	<importlibrary definition="kbdblr.spec" />
 	<include base="ntoskrnl">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<file>kbdblr.c</file>
 	<file>kbdblr.rc</file>
 </module>

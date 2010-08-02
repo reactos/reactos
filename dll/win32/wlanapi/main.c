@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -198,7 +198,7 @@ WlanScan(IN HANDLE hClientHandle,
 }
 
 void __RPC_FAR * __RPC_USER
-midl_user_allocate(size_t len)
+midl_user_allocate(SIZE_T len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }

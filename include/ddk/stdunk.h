@@ -2,8 +2,7 @@
     ReactOS Kernel-Mode COM
     IUnknown implementations
 
-    LICENSE
-        Please see COPYING in the top-level directory for license information.
+    This file is in the public domain.
 
     AUTHORS
         Andrew Greenwood
@@ -12,9 +11,16 @@
 #ifndef STDUNK_H
 #define STDUNK_H
 
-#define STDUNK_TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 #include <punknown.h>
+
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
 /* ===============================================================
     INonDelegatingUnknown interface
@@ -94,26 +100,26 @@ class CUnknown : public INonDelegatingUnknown
 
 #else   /* Not C++ - this is probably very buggy... */
 
-STDMETHODCALLTYPE
 NTSTATUS
+STDMETHODCALLTYPE
 Unknown_QueryInterface(
     IUnknown* this,
     IN  REFIID refiid,
     OUT PVOID* output);
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 Unknown_AddRef(
     IUnknown* unknown_this);
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 Unknown_Release(
     IUnknown* unknown_this);
 
 typedef struct CUnknown
 {
-    union
+    __GNU_EXTENSION union
     {
         IUnknown IUnknown;
         INonDelegatingUnknown INonDelegatingUnknown;
@@ -154,7 +160,7 @@ typedef struct CUnknown
     STD_CREATE_BODY_WITH_TAG_(classname, unknown, outer_unknown, pool_type, tag, PUNKNOWN)
 
 #define STD_CREATE_BODY_(classname, unknown, outer_unknown, pool_type, base) \
-    STD_CREATE_BODY_WITH_TAG_(classname, unknown, outer_unknown, pool_type, STDUNK_TAG('r','C','c','P'), base)
+    STD_CREATE_BODY_WITH_TAG_(classname, unknown, outer_unknown, pool_type, 'rCcP', base)
 
 #define STD_CREATE_BODY(classname, unknown, outer_unknown, pool_type) \
     STD_CREATE_BODY_(classname, unknown, outer_unknown, pool_type, PUNKNOWN)
@@ -188,7 +194,7 @@ operator new (
     size_t  size,
     POOL_TYPE pool_type)
 {
-    return KCOM_New(size, pool_type, STDUNK_TAG ('w','N','c','P'));
+    return KCOM_New(size, pool_type, 'wNcP');
 }
 
 inline PVOID

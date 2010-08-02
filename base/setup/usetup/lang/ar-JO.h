@@ -1,5 +1,4 @@
-#ifndef LANG_AR_JO_H__
-#define LANG_AR_JO_H__
+#pragma once
 
 MUI_LAYOUTS arJOLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arJOLayouts[] =
     { L"2C01", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

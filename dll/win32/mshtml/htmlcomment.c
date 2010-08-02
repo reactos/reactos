@@ -103,18 +103,20 @@ static HRESULT WINAPI HTMLCommentElement_put_text(IHTMLCommentElement *iface, BS
 static HRESULT WINAPI HTMLCommentElement_get_text(IHTMLCommentElement *iface, BSTR *p)
 {
     HTMLCommentElement *This = HTMLCOMMENT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return IHTMLElement_get_outerHTML(HTMLELEM(&This->element), p);
 }
 
-static HRESULT WINAPI HTMLCommentElement_put_atomic(IHTMLCommentElement *iface, long v)
+static HRESULT WINAPI HTMLCommentElement_put_atomic(IHTMLCommentElement *iface, LONG v)
 {
     HTMLCommentElement *This = HTMLCOMMENT_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLCommentElement_get_atomic(IHTMLCommentElement *iface, long *p)
+static HRESULT WINAPI HTMLCommentElement_get_atomic(IHTMLCommentElement *iface, LONG *p)
 {
     HTMLCommentElement *This = HTMLCOMMENT_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -171,11 +173,7 @@ static const NodeImplVtbl HTMLCommentElementImplVtbl = {
 };
 
 static const tid_t HTMLCommentElement_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLCommentElement_tid,
     0
 };
@@ -186,16 +184,17 @@ static dispex_static_data_t HTMLCommentElement_dispex = {
     HTMLCommentElement_iface_tids
 };
 
-HTMLElement *HTMLCommentElement_Create(HTMLDocument *doc, nsIDOMNode *nsnode)
+HTMLElement *HTMLCommentElement_Create(HTMLDocumentNode *doc, nsIDOMNode *nsnode)
 {
     HTMLCommentElement *ret = heap_alloc_zero(sizeof(*ret));
 
     ret->element.node.vtbl = &HTMLCommentElementImplVtbl;
     ret->lpIHTMLCommentElementVtbl = &HTMLCommentElementVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLCOMMENT(ret), &HTMLCommentElement_dispex);
-    HTMLElement_Init(&ret->element);
-    HTMLDOMNode_Init(doc, &ret->element.node, nsnode);
+    HTMLElement_Init(&ret->element, doc, NULL, &HTMLCommentElement_dispex);
+
+    nsIDOMNode_AddRef(nsnode);
+    ret->element.node.nsnode = nsnode;
 
     return &ret->element;
 }

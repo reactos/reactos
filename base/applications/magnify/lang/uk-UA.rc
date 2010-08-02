@@ -1,0 +1,72 @@
+/*
+ * PROJECT:     ReactOS Magnifier
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        rosapps/magnify/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Magnifier
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "В&ихід",                      IDM_EXIT
+        MENUITEM "П&араметри",                  IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&Про програму ...",           IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "Про програму"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
+    LTEXT           "Екранна лупа Версія 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
+    PUSHBUTTON      "OK",IDOK,162,48,50,14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Параметри екранної лупи"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Вихід",IDOK,96,161,50,14
+    PUSHBUTTON      "Довідка",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "Збільшення:",IDC_STATIC,6,8,68,8
+    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Відстеження",IDC_STATIC,7,25,139,59
+    GROUPBOX        "Подання",IDC_STATIC,7,87,139,57
+    CONTROL         "Відстежувати вказівник миші",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "Відстежувати фокус вводу",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "Відстежувати редагування тексту",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "Обернути кольори",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
+    CONTROL         "Запустити у згорнутому вигляді",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
+    CONTROL         "Показувати вікно екранної лупи",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Екранна лупа ReactOS"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "Екранна лупа надає лише мінімальний обсяг можливостей для людей із порушенням зору. Більшості таких користувачів доцільно застосовувати спеціальні програми з більш широкими можливостями.",IDC_STATIC,36,7,207,33
+    CONTROL         "Більше не показувати це повідомлення",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "Екранна лупа"
+END

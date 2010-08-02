@@ -32,12 +32,78 @@
 #include "oleidl.h"
 
 #include "shdocvw.h"
+#include "mshtmcid.h"
+#include "shellapi.h"
 
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+#define IDI_APPICON 1
+
 static const WCHAR szIEWinFrame[] = { 'I','E','F','r','a','m','e',0 };
+
+/* Windows uses "Microsoft Internet Explorer" */
+static const WCHAR wszWineInternetExplorer[] =
+        {'W','i','n','e',' ','I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r',0};
+
+static INT_PTR CALLBACK ie_dialog_open_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    static InternetExplorer* This;
+
+    switch(msg)
+    {
+        case WM_INITDIALOG:
+            This = (InternetExplorer*)lparam;
+            EnableWindow(GetDlgItem(hwnd, IDOK), FALSE);
+            return TRUE;
+
+        case WM_COMMAND:
+            switch(LOWORD(wparam))
+            {
+                case IDC_BROWSE_OPEN_URL:
+                {
+                    HWND hwndurl = GetDlgItem(hwnd, IDC_BROWSE_OPEN_URL);
+                    int len = GetWindowTextLengthW(hwndurl);
+
+                    EnableWindow(GetDlgItem(hwnd, IDOK), len ? TRUE : FALSE);
+                    break;
+                }
+                case IDOK:
+                {
+                    HWND hwndurl = GetDlgItem(hwnd, IDC_BROWSE_OPEN_URL);
+                    int len = GetWindowTextLengthW(hwndurl);
+
+                    if(len)
+                    {
+                        VARIANT url;
+
+                        V_VT(&url) = VT_BSTR;
+                        V_BSTR(&url) = SysAllocStringLen(NULL, len);
+
+                        GetWindowTextW(hwndurl, V_BSTR(&url), len);
+                        IWebBrowser2_Navigate2(WEBBROWSER2(This), &url, NULL, NULL, NULL, NULL);
+
+                        SysFreeString(V_BSTR(&url));
+                    }
+                }
+                /* fall through */
+                case IDCANCEL:
+                    EndDialog(hwnd, wparam);
+                    return TRUE;
+            }
+    }
+    return FALSE;
+}
+
+static void ie_dialog_about(HWND hwnd)
+{
+    HICON icon = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON, 48, 48, LR_SHARED);
+
+    ShellAboutW(hwnd, wszWineInternetExplorer, NULL, icon);
+
+    DestroyIcon(icon);
+}
 
 static LRESULT iewnd_OnCreate(HWND hwnd, LPCREATESTRUCTW lpcs)
 {
@@ -64,6 +130,38 @@ static LRESULT iewnd_OnDestroy(InternetExplorer *This)
     return 0;
 }
 
+static LRESULT CALLBACK iewnd_OnCommand(InternetExplorer *This, HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch(LOWORD(wparam))
+    {
+        case ID_BROWSE_OPEN:
+            DialogBoxParamW(shdocvw_hinstance, MAKEINTRESOURCEW(IDD_BROWSE_OPEN), hwnd, ie_dialog_open_proc, (LPARAM)This);
+            break;
+
+        case ID_BROWSE_PRINT:
+            if(This->doc_host.document)
+            {
+                IOleCommandTarget* target;
+
+                if(FAILED(IUnknown_QueryInterface(This->doc_host.document, &IID_IOleCommandTarget, (LPVOID*)&target)))
+                    break;
+
+                IOleCommandTarget_Exec(target, &CGID_MSHTML, IDM_PRINT, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+
+                IOleCommandTarget_Release(target);
+            }
+            break;
+
+        case ID_BROWSE_ABOUT:
+            ie_dialog_about(hwnd);
+            break;
+
+        default:
+            return DefWindowProcW(hwnd, msg, wparam, lparam);
+    }
+    return 0;
+}
+
 static LRESULT CALLBACK
 ie_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -77,6 +175,8 @@ ie_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         return iewnd_OnDestroy(This);
     case WM_SIZE:
         return iewnd_OnSize(This, LOWORD(lparam), HIWORD(lparam));
+    case WM_COMMAND:
+        return iewnd_OnCommand(This, hwnd, msg, wparam, lparam);
     case WM_DOCHOSTTASK:
         return process_dochost_task(&This->doc_host, lparam);
     }
@@ -85,21 +185,24 @@ ie_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 void register_iewindow_class(void)
 {
-    WNDCLASSW wc;
+    WNDCLASSEXW wc;
 
     memset(&wc, 0, sizeof wc);
+    wc.cbSize = sizeof(wc);
     wc.style = 0;
     wc.lpfnWndProc = ie_window_proc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = sizeof(InternetExplorer*);
     wc.hInstance = shdocvw_hinstance;
-    wc.hIcon = 0;
-    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDI_APPLICATION));
+    wc.hIcon = LoadIconW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON));
+    wc.hIconSm = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON,
+                            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDC_ARROW));
     wc.hbrBackground = 0;
     wc.lpszClassName = szIEWinFrame;
     wc.lpszMenuName = NULL;
 
-    RegisterClassW(&wc);
+    RegisterClassExW(&wc);
 }
 
 void unregister_iewindow_class(void)
@@ -109,10 +212,6 @@ void unregister_iewindow_class(void)
 
 static void create_frame_hwnd(InternetExplorer *This)
 {
-    /* Windows uses "Microsoft Internet Explorer" */
-    static const WCHAR wszWineInternetExplorer[] =
-        {'W','i','n','e',' ','I','n','t','e','r','n','e','t',' ','E','x','p','l','o','r','e','r',0};
-
     This->frame_hwnd = CreateWindowExW(
             WS_EX_WINDOWEDGE,
             szIEWinFrame, wszWineInternetExplorer,
@@ -131,21 +230,30 @@ static IWebBrowser2 *create_ie_window(LPCSTR cmdline)
         return NULL;
 
     IWebBrowser2_put_Visible(wb, VARIANT_TRUE);
+    IWebBrowser2_put_MenuBar(wb, VARIANT_TRUE);
 
     if(!*cmdline) {
         IWebBrowser2_GoHome(wb);
     }else {
         VARIANT var_url;
         DWORD len;
+        int cmdlen;
 
         if(!strncasecmp(cmdline, "-nohome", 7))
             cmdline += 7;
+        while(*cmdline == ' ' || *cmdline == '\t')
+            cmdline++;
+        cmdlen = lstrlenA(cmdline);
+        if(cmdlen > 2 && cmdline[0] == '"' && cmdline[cmdlen-1] == '"') {
+            cmdline++;
+            cmdlen -= 2;
+        }
 
         V_VT(&var_url) = VT_BSTR;
 
-        len = MultiByteToWideChar(CP_ACP, 0, cmdline, -1, NULL, 0);
+        len = MultiByteToWideChar(CP_ACP, 0, cmdline, cmdlen, NULL, 0);
         V_BSTR(&var_url) = SysAllocStringLen(NULL, len);
-        MultiByteToWideChar(CP_ACP, 0, cmdline, -1, V_BSTR(&var_url), len);
+        MultiByteToWideChar(CP_ACP, 0, cmdline, cmdlen, V_BSTR(&var_url), len);
 
         /* navigate to the first page */
         IWebBrowser2_Navigate2(wb, &var_url, NULL, NULL, NULL, NULL);
@@ -163,7 +271,7 @@ HRESULT InternetExplorer_Create(IUnknown *pOuter, REFIID riid, void **ppv)
 
     TRACE("(%p %s %p)\n", pOuter, debugstr_guid(riid), ppv);
 
-    ret = heap_alloc(sizeof(InternetExplorer));
+    ret = heap_alloc_zero(sizeof(InternetExplorer));
     ret->ref = 0;
 
     ret->doc_host.disp = (IDispatch*)WEBBROWSER2(ret);

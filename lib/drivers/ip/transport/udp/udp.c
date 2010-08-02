@@ -14,11 +14,13 @@ BOOLEAN UDPInitialized = FALSE;
 PORT_SET UDPPorts;
 
 NTSTATUS AddUDPHeaderIPv4(
+    PADDRESS_FILE AddrFile,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
     PIP_ADDRESS LocalAddress,
     USHORT LocalPort,
     PIP_PACKET IPPacket,
+    PVOID Data,
     UINT DataLength)
 /*
  * FUNCTION: Adds an IPv4 and UDP header to an IP packet
@@ -38,7 +40,7 @@ NTSTATUS AddUDPHeaderIPv4(
 			    IPPacket, IPPacket->NdisPacket));
 
     Status = AddGenericHeaderIPv4
-        ( RemoteAddress, RemotePort,
+        ( AddrFile, RemoteAddress, RemotePort,
           LocalAddress, LocalPort,
           IPPacket, DataLength, IPPROTO_UDP,
           sizeof(UDP_HEADER), (PVOID *)&UDPHeader );
@@ -49,10 +51,20 @@ NTSTATUS AddUDPHeaderIPv4(
     /* Port values are already big-endian values */
     UDPHeader->SourcePort = LocalPort;
     UDPHeader->DestPort   = RemotePort;
-    /* FIXME: Calculate UDP checksum and put it in UDP header */
     UDPHeader->Checksum   = 0;
     /* Length of UDP header and data */
     UDPHeader->Length     = WH2N(DataLength + sizeof(UDP_HEADER));
+
+    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
+			    IPPacket->Header, IPPacket->Data,
+			    (PCHAR)IPPacket->Data - (PCHAR)IPPacket->Header));
+
+    RtlCopyMemory(IPPacket->Data, Data, DataLength);
+
+    UDPHeader->Checksum = UDPv4ChecksumCalculate((PIPv4_HEADER)IPPacket->Header,
+                                                 (PUCHAR)UDPHeader,
+                                                 DataLength + sizeof(UDP_HEADER));
+    UDPHeader->Checksum = WH2N(UDPHeader->Checksum);
 
     TI_DbgPrint(MID_TRACE, ("Packet: %d ip %d udp %d payload\n",
 			    (PCHAR)UDPHeader - (PCHAR)IPPacket->Header,
@@ -64,6 +76,7 @@ NTSTATUS AddUDPHeaderIPv4(
 
 
 NTSTATUS BuildUDPPacket(
+    PADDRESS_FILE AddrFile,
     PIP_PACKET Packet,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
@@ -88,15 +101,13 @@ NTSTATUS BuildUDPPacket(
 
     /* FIXME: Assumes IPv4 */
     IPInitializePacket(Packet, IP_ADDRESS_V4);
-    if (!Packet)
-	return STATUS_INSUFFICIENT_RESOURCES;
 
     Packet->TotalSize = sizeof(IPv4_HEADER) + sizeof(UDP_HEADER) + DataLen;
 
     /* Prepare packet */
     Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
 				       NULL,
-				       Packet->TotalSize + MaxLLHeaderSize );
+				       Packet->TotalSize );
 
     if( !NT_SUCCESS(Status) ) return Status;
 
@@ -106,8 +117,8 @@ NTSTATUS BuildUDPPacket(
 
     switch (RemoteAddress->Type) {
     case IP_ADDRESS_V4:
-	Status = AddUDPHeaderIPv4(RemoteAddress, RemotePort,
-				  LocalAddress, LocalPort, Packet, DataLen);
+	Status = AddUDPHeaderIPv4(AddrFile, RemoteAddress, RemotePort,
+				  LocalAddress, LocalPort, Packet, DataBuffer, DataLen);
 	break;
     case IP_ADDRESS_V6:
 	/* FIXME: Support IPv6 */
@@ -122,12 +133,6 @@ NTSTATUS BuildUDPPacket(
 	FreeNdisPacket(Packet->NdisPacket);
 	return Status;
     }
-
-    TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
-			    Packet->Header, Packet->Data,
-			    (PCHAR)Packet->Data - (PCHAR)Packet->Header));
-
-    RtlCopyMemory( Packet->Data, DataBuffer, DataLen );
 
     TI_DbgPrint(MID_TRACE, ("Displaying packet\n"));
 
@@ -163,10 +168,13 @@ NTSTATUS UDPSendDatagram(
     IP_PACKET Packet;
     PTA_IP_ADDRESS RemoteAddressTa = (PTA_IP_ADDRESS)ConnInfo->RemoteAddress;
     IP_ADDRESS RemoteAddress;
-	IP_ADDRESS LocalAddress;
+    IP_ADDRESS LocalAddress;
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    KIRQL OldIrql;
+
+    LockObject(AddrFile, &OldIrql);
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 						   AddrFile, ConnInfo, BufferData, DataSize));
@@ -181,27 +189,42 @@ NTSTATUS UDPSendDatagram(
 		break;
 
     default:
+		UnlockObject(AddrFile, OldIrql);
 		return STATUS_UNSUCCESSFUL;
     }
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-		return STATUS_NETWORK_UNREACHABLE;
+    LocalAddress = AddrFile->Address;
+    if (AddrIsUnspecified(&LocalAddress))
+    {
+        /* If the local address is unspecified (0),
+         * then use the unicast address of the
+         * interface we're sending over
+         */
+        if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+	     UnlockObject(AddrFile, OldIrql);
+	     return STATUS_NETWORK_UNREACHABLE;
+        }
+
+        LocalAddress = NCE->Interface->Unicast;
+    }
+    else
+    {
+        if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
+	     UnlockObject(AddrFile, OldIrql);
+	     return STATUS_INVALID_PARAMETER;
+        }
     }
 
-	LocalAddress = AddrFile->Address;
-	if (AddrIsUnspecified(&LocalAddress))
-	{
-		if (!IPGetDefaultAddress(&LocalAddress))
-			return FALSE;
-	}
-
-    Status = BuildUDPPacket( &Packet,
+    Status = BuildUDPPacket( AddrFile,
+							 &Packet,
 							 &RemoteAddress,
 							 RemotePort,
 							 &LocalAddress,
 							 AddrFile->Port,
 							 BufferData,
 							 DataSize );
+
+    UnlockObject(AddrFile, OldIrql);
 
     if( !NT_SUCCESS(Status) )
 		return Status;
@@ -257,7 +280,15 @@ VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 
   UDPHeader = (PUDP_HEADER)IPPacket->Data;
 
-  /* FIXME: Calculate and validate UDP checksum */
+  /* Calculate and validate UDP checksum */
+  i = UDPv4ChecksumCalculate(IPv4Header,
+                             (PUCHAR)UDPHeader,
+                             WH2N(UDPHeader->Length));
+  if (i != DH2N(0x0000FFFF) && UDPHeader->Checksum != 0)
+  {
+      TI_DbgPrint(MIN_TRACE, ("Bad checksum on packet received.\n"));
+      return;
+  }
 
   /* Sanity checks */
   i = WH2N(UDPHeader->Length);
@@ -311,12 +342,12 @@ NTSTATUS UDPStartup(
  *     Status of operation
  */
 {
+  NTSTATUS Status;
+
 #ifdef __NTDRIVER__
   RtlZeroMemory(&UDPStats, sizeof(UDP_STATISTICS));
 #endif
   
-  NTSTATUS Status;
-
   Status = PortsStartup( &UDPPorts, 1, UDP_STARTING_PORT + UDP_DYNAMIC_PORTS );
 
   if( !NT_SUCCESS(Status) ) return Status;

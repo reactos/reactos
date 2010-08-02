@@ -92,6 +92,11 @@ typedef struct _DLSID
   BYTE abData4[8];
 } DLSID, FAR *LPDLSID;
 
+typedef struct _MIDILOCALE {
+  ULONG ulBank;
+  ULONG ulInstrument;
+} MIDILOCALE, *LPMIDILOCALE;
+
 typedef struct _INSTHEADER
 {
   ULONG cRegions;

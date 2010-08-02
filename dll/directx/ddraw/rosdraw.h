@@ -1,5 +1,4 @@
-#ifndef __DDRAW_PRIVATE
-#define __DDRAW_PRIVATE
+#pragma once
 
 /********* Includes  *********/
 #include <windows.h>
@@ -8,6 +7,7 @@
 #include <ddrawi.h>
 #include <d3dhal.h>
 #include <ddrawgdi.h>
+#include <pseh/pseh.h>
 
 #include <pseh/pseh2.h>
 
@@ -282,5 +282,3 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
     #define DX_STUB_str(x) //
 
 #endif
-
-#endif /* __DDRAW_PRIVATE */

@@ -4,8 +4,8 @@
  * FILE:        include/ip.h
  * PURPOSE:     Internet Protocol related definitions
  */
-#ifndef __IP_H
-#define __IP_H
+
+#pragma once
 
 typedef VOID (*OBJECT_FREE_ROUTINE)(PVOID Object);
 
@@ -21,7 +21,6 @@ typedef IPv6_RAW_ADDRESS *PIPv6_RAW_ADDRESS;
 
 /* IP style address */
 typedef struct IP_ADDRESS {
-    DEFINE_TAG
     UCHAR Type;                      /* Type of IP address */
     union {
         IPv4_RAW_ADDRESS IPv4Address;/* IPv4 address (in network byte order) */
@@ -76,7 +75,6 @@ typedef VOID (*PACKET_COMPLETION_ROUTINE)(
 
 /* Structure for an IP packet */
 typedef struct _IP_PACKET {
-    DEFINE_TAG
     OBJECT_FREE_ROUTINE Free;           /* Routine used to free resources for the object */
     UCHAR Type;                         /* Type of IP packet (see IP_ADDRESS_xx above) */
     UCHAR Flags;                        /* Flags for packet (see IP_PACKET_FLAG_xx below)*/
@@ -134,10 +132,22 @@ typedef struct _LLIP_BIND_INFO {
     LL_TRANSMIT_ROUTINE Transmit; /* Transmit function for this interface */
 } LLIP_BIND_INFO, *PLLIP_BIND_INFO;
 
+typedef struct _SEND_RECV_STATS {
+    UINT InBytes;
+    UINT InUnicast;
+    UINT InNUnicast;
+    UINT InDiscarded;
+    UINT InErrors;
+    UINT InDiscardedUnknownProto;
+    UINT OutBytes;
+    UINT OutUnicast;
+    UINT OutNUnicast;
+    UINT OutDiscarded;
+    UINT OutErrors;
+} SEND_RECV_STATS, *PSEND_RECV_STATS;
 
 /* Information about an IP interface */
 typedef struct _IP_INTERFACE {
-    DEFINE_TAG
     LIST_ENTRY ListEntry;         /* Entry on list */
     OBJECT_FREE_ROUTINE Free;     /* Routine used to free resources used by the object */
     KSPIN_LOCK Lock;              /* Spin lock for this object */
@@ -157,6 +167,7 @@ typedef struct _IP_INTERFACE {
     UINT  Index;                  /* Index of adapter (used to add ip addr) */
     LL_TRANSMIT_ROUTINE Transmit; /* Pointer to transmit function */
     PVOID TCPContext;             /* TCP Content for this interface */
+    SEND_RECV_STATS Stats;        /* Send/Receive statistics */
 } IP_INTERFACE, *PIP_INTERFACE;
 
 typedef struct _IP_SET_ADDRESS {
@@ -173,8 +184,8 @@ typedef VOID (*IP_PROTOCOL_HANDLER)(
 
 /* Loopback adapter address information (network byte order) */
 #define LOOPBACK_ADDRESS_IPv4   ((IPv4_RAW_ADDRESS)DH2N(0x7F000001))
-#define LOOPBACK_BCASTADDR_IPv4 ((IPv4_RAW_ADDRESS)DH2N(0x7F0000FF))
-#define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFFFFFF00))
+#define LOOPBACK_BCASTADDR_IPv4 ((IPv4_RAW_ADDRESS)DH2N(0x7FFFFFFF))
+#define LOOPBACK_ADDRMASK_IPv4  ((IPv4_RAW_ADDRESS)DH2N(0xFF000000))
 
 /* Protocol definitions */
 #ifndef IPPROTO_RAW
@@ -194,8 +205,6 @@ extern LIST_ENTRY InterfaceListHead;
 extern KSPIN_LOCK InterfaceListLock;
 extern LIST_ENTRY NetTableListHead;
 extern KSPIN_LOCK NetTableListLock;
-extern UINT MaxLLHeaderSize;
-extern UINT MinLLFrameSize;
 extern BOOLEAN IpWorkItemQueued;
 
 PIP_PACKET IPCreatePacket(
@@ -236,9 +245,5 @@ VOID IPRegisterProtocol(
 NTSTATUS IPStartup(PUNICODE_STRING RegistryPath);
 
 NTSTATUS IPShutdown(VOID);
-
-
-
-#endif /* __IP_H */
 
 /* EOF */

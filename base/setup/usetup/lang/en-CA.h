@@ -1,5 +1,4 @@
-#ifndef LANG_EN_CA_H__
-#define LANG_EN_CA_H__
+#pragma once
 
 MUI_LAYOUTS enCALayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS enCALayouts[] =
     { L"1009", L"00001009" },
     { NULL, NULL }
 };
-
-#endif

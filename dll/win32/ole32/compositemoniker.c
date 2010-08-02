@@ -101,7 +101,7 @@ CompositeMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
     /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
+    if ( ppvObject==0 )
 	return E_INVALIDARG;
 
     /* Initialize the return parameter */
@@ -445,7 +445,6 @@ static HRESULT WINAPI
 CompositeMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar,
                IMoniker** ppmkToLeft, IMoniker** ppmkReduced)
 {
-    HRESULT   res;
     IMoniker *tempMk,*antiMk,*mostRigthMk,*leftReducedComposedMk,*mostRigthReducedMk;
     IEnumMoniker *enumMoniker;
 
@@ -462,8 +461,8 @@ CompositeMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar
         IEnumMoniker_Next(enumMoniker,1,&mostRigthMk,NULL);
         IEnumMoniker_Release(enumMoniker);
 
-        res=CreateAntiMoniker(&antiMk);
-        res=IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
+        CreateAntiMoniker(&antiMk);
+        IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
         IMoniker_Release(antiMk);
 
         return IMoniker_Reduce(mostRigthMk,pbc,dwReduceHowFar,&tempMk, ppmkReduced);
@@ -479,8 +478,8 @@ CompositeMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar
         IEnumMoniker_Next(enumMoniker,1,&mostRigthMk,NULL);
         IEnumMoniker_Release(enumMoniker);
 
-        res=CreateAntiMoniker(&antiMk);
-        res=IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
+        CreateAntiMoniker(&antiMk);
+        IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
         IMoniker_Release(antiMk);
 
         /* If any of the components  reduces itself, the method returns S_OK and passes back a composite */
@@ -552,6 +551,7 @@ CompositeMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
     IEnumMoniker *enumMoniker1,*enumMoniker2;
     IMoniker *tempMk1,*tempMk2;
     HRESULT res1,res2,res;
+    BOOL done;
 
     TRACE("(%p,%p)\n",iface,pmkOtherMoniker);
 
@@ -567,27 +567,18 @@ CompositeMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
 
     IMoniker_Enum(iface,TRUE,&enumMoniker2);
 
-    while(1){
+    do {
 
         res1=IEnumMoniker_Next(enumMoniker1,1,&tempMk1,NULL);
         res2=IEnumMoniker_Next(enumMoniker2,1,&tempMk2,NULL);
 
         if((res1==S_OK)&&(res2==S_OK)){
-
-            if(IMoniker_IsEqual(tempMk1,tempMk2)==S_FALSE){
-                res= S_FALSE;
-                break;
-            }
-            else
-                continue;
+            done = (res = IMoniker_IsEqual(tempMk1,tempMk2)) == S_FALSE;
         }
-        else if ( (res1==S_FALSE) && (res2==S_FALSE) ){
-                res = S_OK;
-                break;
-        }
-        else{
-            res = S_FALSE;
-            break;
+        else
+        {
+            res = (res1==S_FALSE) && (res2==S_FALSE);
+            done = TRUE;
         }
 
         if (res1==S_OK)
@@ -595,7 +586,7 @@ CompositeMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherMoniker)
 
         if (res2==S_OK)
             IMoniker_Release(tempMk2);
-    }
+    } while (!done);
 
     IEnumMoniker_Release(enumMoniker1);
     IEnumMoniker_Release(enumMoniker2);
@@ -678,7 +669,7 @@ CompositeMonikerImpl_IsRunning(IMoniker* iface, IBindCtx* pbc,
         else{
 
             if (pbc==NULL)
-                return E_POINTER;
+                return E_INVALIDARG;
 
             /* If pmkToLeft and pmkNewlyRunning are both NULL, this method checks the ROT to see whether */
             /* the moniker is running. If so, the method returns S_OK; otherwise, it recursively calls   */
@@ -989,12 +980,12 @@ static VOID GetAfterCommonPrefix(IMoniker* pGenMk,IMoniker* commonMk,IMoniker** 
                     nbRestMk++;
 
                 IMoniker_Release(tempMk1);
-                IMoniker_Release(tempMk1);
+                IMoniker_Release(tempMk2);
 
                 break;
             }
             IMoniker_Release(tempMk1);
-            IMoniker_Release(tempMk1);
+            IMoniker_Release(tempMk2);
         }
     }
     else{
@@ -1513,7 +1504,7 @@ EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID riid,void** ppvObject)
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
     /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
+    if ( ppvObject==0 )
 	return E_INVALIDARG;
 
     /* Initialize the return parameter */

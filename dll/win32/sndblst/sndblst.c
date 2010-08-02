@@ -32,6 +32,7 @@ PWSTR SBMixerDeviceName   = L"ROS Sound Blaster Mixer";
 MMRESULT
 GetSoundBlasterDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD DeviceId,
     OUT PVOID Capabilities,
     IN  DWORD CapabilitiesSize)
 {
@@ -136,7 +137,7 @@ BOOLEAN FoundDevice(
     return TRUE;
 }
 
-APIENTRY LONG
+LONG APIENTRY
 DriverProc(
     DWORD DriverId,
     HANDLE DriverHandle,

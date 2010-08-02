@@ -25,6 +25,8 @@
 #define YYPARSE_PARAM ctx
 
 static int parser_error(const char*);
+static void set_error(parser_ctx_t*,UINT);
+static BOOL explicit_error(parser_ctx_t*,void*,WCHAR);
 static BOOL allow_auto_semicolon(parser_ctx_t*);
 static void program_parsed(parser_ctx_t*,source_elements_t*);
 static source_elements_t *function_body_parsed(parser_ctx_t*,source_elements_t*);
@@ -36,7 +38,6 @@ typedef struct _statement_list_t {
 
 static literal_t *new_string_literal(parser_ctx_t*,const WCHAR*);
 static literal_t *new_null_literal(parser_ctx_t*);
-static literal_t *new_undefined_literal(parser_ctx_t*);
 static literal_t *new_boolean_literal(parser_ctx_t*,VARIANT_BOOL);
 
 typedef struct _property_list_t {
@@ -169,8 +170,8 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 
 /* keywords */
 %token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
-%token kINSTANCEOF kNEW kNULL kUNDEFINED kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
-%token tANDAND tOROR tINC tDEC
+%token kINSTANCEOF kNEW kNULL kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
+%token tANDAND tOROR tINC tDEC tHTMLCOMMENT kDIVEQ
 
 %token <srcptr> kFUNCTION '}'
 
@@ -200,7 +201,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <statement> Finally
 %type <statement_list> StatementList StatementList_opt
 %type <parameter_list> FormalParameterList FormalParameterList_opt
-%type <expr> Expression Expression_opt
+%type <expr> Expression Expression_opt Expression_err
 %type <expr> ExpressionNoIn ExpressionNoIn_opt
 %type <expr> FunctionExpression
 %type <expr> AssignmentExpression AssignmentExpressionNoIn
@@ -243,6 +244,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <literal> PropertyName
 %type <literal> BooleanLiteral
 %type <srcptr> KFunction
+%type <ival> AssignOper
 
 %nonassoc LOWER_THAN_ELSE
 %nonassoc kELSE
@@ -251,7 +253,12 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 
 /* ECMA-262 3rd Edition    14 */
 Program
-       : SourceElements         { program_parsed(ctx, $1); }
+       : SourceElements HtmlComment
+                                { program_parsed(ctx, $1); }
+
+HtmlComment
+        : tHTMLCOMMENT          {}
+        | /* empty */           {}
 
 /* ECMA-262 3rd Edition    14 */
 SourceElements
@@ -261,7 +268,7 @@ SourceElements
 
 /* ECMA-262 3rd Edition    13 */
 FunctionExpression
-        : KFunction Identifier_opt '(' FormalParameterList_opt ')' '{' FunctionBody '}'
+        : KFunction Identifier_opt left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
                                 { $$ = new_function_expression(ctx, $2, $4, $7, $1, $8-$1+1); }
 
 KFunction
@@ -287,6 +294,7 @@ Statement
         : Block                 { $$ = $1; }
         | VariableStatement     { $$ = $1; }
         | EmptyStatement        { $$ = $1; }
+        | FunctionExpression    { $$ = new_empty_statement(ctx); } /* FIXME: return NULL */
         | ExpressionStatement   { $$ = $1; }
         | IfStatement           { $$ = $1; }
         | IterationStatement    { $$ = $1; }
@@ -374,24 +382,32 @@ ExpressionStatement
 
 /* ECMA-262 3rd Edition    12.5 */
 IfStatement
-        : kIF '(' Expression ')' Statement kELSE Statement
+        : kIF left_bracket Expression_err right_bracket Statement kELSE Statement
                                 { $$ = new_if_statement(ctx, $3, $5, $7); }
-        | kIF '(' Expression ')' Statement %prec LOWER_THAN_ELSE
+        | kIF left_bracket Expression_err right_bracket Statement %prec LOWER_THAN_ELSE
                                 { $$ = new_if_statement(ctx, $3, $5, NULL); }
 
 /* ECMA-262 3rd Edition    12.6 */
 IterationStatement
-        : kDO Statement kWHILE '(' Expression ')' ';'
+        : kDO Statement kWHILE left_bracket Expression_err right_bracket semicolon_opt
                                 { $$ = new_while_statement(ctx, TRUE, $5, $2); }
-        | kWHILE '(' Expression ')' Statement
+        | kWHILE left_bracket Expression_err right_bracket Statement
                                 { $$ = new_while_statement(ctx, FALSE, $3, $5); }
-        | kFOR '(' ExpressionNoIn_opt ';' Expression_opt ';' Expression_opt ')' Statement
-                                { $$ = new_for_statement(ctx, NULL, $3, $5, $7, $9); }
-        | kFOR '(' kVAR VariableDeclarationListNoIn ';' Expression_opt ';' Expression_opt ')' Statement
-                                { $$ = new_for_statement(ctx, $4, NULL, $6, $8, $10); }
-        | kFOR '(' LeftHandSideExpression kIN Expression ')' Statement
+        | kFOR left_bracket ExpressionNoIn_opt
+                                { if(!explicit_error(ctx, $3, ';')) YYABORT; }
+        semicolon  Expression_opt
+                                { if(!explicit_error(ctx, $6, ';')) YYABORT; }
+        semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, NULL, $3, $6, $9, $11); }
+        | kFOR left_bracket kVAR VariableDeclarationListNoIn
+                                { if(!explicit_error(ctx, $4, ';')) YYABORT; }
+        semicolon Expression_opt
+                                { if(!explicit_error(ctx, $7, ';')) YYABORT; }
+        semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, $4, NULL, $7, $10, $12); }
+        | kFOR left_bracket LeftHandSideExpression kIN Expression_err right_bracket Statement
                                 { $$ = new_forin_statement(ctx, NULL, $3, $5, $7); }
-        | kFOR '(' kVAR VariableDeclarationNoIn kIN Expression ')' Statement
+        | kFOR left_bracket kVAR VariableDeclarationNoIn kIN Expression_err right_bracket Statement
                                 { $$ = new_forin_statement(ctx, $4, NULL, $6, $8); }
 
 /* ECMA-262 3rd Edition    12.7 */
@@ -411,7 +427,7 @@ ReturnStatement
 
 /* ECMA-262 3rd Edition    12.10 */
 WithStatement
-        : kWITH '(' Expression ')' Statement
+        : kWITH left_bracket Expression right_bracket Statement
                                 { $$ = new_with_statement(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.12 */
@@ -421,8 +437,8 @@ LabelledStatement
 
 /* ECMA-262 3rd Edition    12.11 */
 SwitchStatement
-        : kSWITCH '(' Expression ')' CaseBlock
-                                 { $$ = new_switch_statement(ctx, $3, $5); }
+        : kSWITCH left_bracket Expression right_bracket CaseBlock
+                                { $$ = new_switch_statement(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.11 */
 CaseBlock
@@ -466,8 +482,8 @@ TryStatement
 
 /* ECMA-262 3rd Edition    12.14 */
 Catch
-        : kCATCH '(' tIdentifier ')' Block
-                                 { $$ = new_catch_block(ctx, $3, $5); }
+        : kCATCH left_bracket tIdentifier right_bracket Block
+                                { $$ = new_catch_block(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.14 */
 Finally
@@ -477,6 +493,10 @@ Finally
 Expression_opt
         : /* empty */           { $$ = NULL; }
         | Expression            { $$ = $1; }
+
+Expression_err
+        : Expression            { $$ = $1; }
+        | error                 { set_error(ctx, IDS_SYNTAX_ERROR); YYABORT; }
 
 /* ECMA-262 3rd Edition    11.14 */
 Expression
@@ -496,12 +516,16 @@ ExpressionNoIn
         | ExpressionNoIn ',' AssignmentExpressionNoIn
                                 { $$ = new_binary_expression(ctx, EXPR_COMMA, $1, $3); }
 
+AssignOper
+        : tAssignOper           { $$ = $1; }
+        | kDIVEQ                { $$ = EXPR_ASSIGNDIV; }
+
 /* ECMA-262 3rd Edition    11.13 */
 AssignmentExpression
         : ConditionalExpression { $$ = $1; }
         | LeftHandSideExpression '=' AssignmentExpression
                                 { $$ = new_binary_expression(ctx, EXPR_ASSIGN, $1, $3); }
-        | LeftHandSideExpression tAssignOper AssignmentExpression
+        | LeftHandSideExpression AssignOper AssignmentExpression
                                 { $$ = new_binary_expression(ctx, $2, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.13 */
@@ -510,7 +534,7 @@ AssignmentExpressionNoIn
                                 { $$ = $1; }
         | LeftHandSideExpression '=' AssignmentExpressionNoIn
                                 { $$ = new_binary_expression(ctx, EXPR_ASSIGN, $1, $3); }
-        | LeftHandSideExpression tAssignOper AssignmentExpressionNoIn
+        | LeftHandSideExpression AssignOper AssignmentExpressionNoIn
                                 { $$ = new_binary_expression(ctx, $2, $1, $3); }
 
 /* ECMA-262 3rd Edition    11.12 */
@@ -775,21 +799,34 @@ Identifier_opt
 /* ECMA-262 3rd Edition    7.8 */
 Literal
         : kNULL                 { $$ = new_null_literal(ctx); }
-        | kUNDEFINED            { $$ = new_undefined_literal(ctx); }
         | BooleanLiteral        { $$ = $1; }
         | tNumericLiteral       { $$ = $1; }
         | tStringLiteral        { $$ = new_string_literal(ctx, $1); }
         | '/'                   { $$ = parse_regexp(ctx);
                                   if(!$$) YYABORT; }
+        | kDIVEQ                { $$ = parse_regexp(ctx);
+                                  if(!$$) YYABORT; }
 
 /* ECMA-262 3rd Edition    7.8.2 */
 BooleanLiteral
-        : kTRUE                 { $$ = new_boolean_literal(ctx, TRUE); }
-        | kFALSE                { $$ = new_boolean_literal(ctx, FALSE); }
+        : kTRUE                 { $$ = new_boolean_literal(ctx, VARIANT_TRUE); }
+        | kFALSE                { $$ = new_boolean_literal(ctx, VARIANT_FALSE); }
 
 semicolon_opt
         : ';'
         | error                 { if(!allow_auto_semicolon(ctx)) {YYABORT;} }
+
+left_bracket
+        : '('
+        | error                 { set_error(ctx, IDS_LBRACKET); YYABORT; }
+
+right_bracket
+        : ')'
+        | error                 { set_error(ctx, IDS_RBRACKET); YYABORT; }
+
+semicolon
+        : ';'
+        | error                 { set_error(ctx, IDS_SEMICOLON); YYABORT; }
 
 %%
 
@@ -802,7 +839,7 @@ static literal_t *new_string_literal(parser_ctx_t *ctx, const WCHAR *str)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_BSTR;
+    ret->type = LT_STRING;
     ret->u.wstr = str;
 
     return ret;
@@ -812,16 +849,7 @@ static literal_t *new_null_literal(parser_ctx_t *ctx)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_NULL;
-
-    return ret;
-}
-
-static literal_t *new_undefined_literal(parser_ctx_t *ctx)
-{
-    literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
-
-    ret->vt = VT_EMPTY;
+    ret->type = LT_NULL;
 
     return ret;
 }
@@ -830,7 +858,7 @@ static literal_t *new_boolean_literal(parser_ctx_t *ctx, VARIANT_BOOL bval)
 {
     literal_t *ret = parser_alloc(ctx, sizeof(literal_t));
 
-    ret->vt = VT_BOOL;
+    ret->type = LT_BOOL;
     ret->u.bval = bval;
 
     return ret;
@@ -1429,6 +1457,20 @@ static int parser_error(const char *str)
     return 0;
 }
 
+static void set_error(parser_ctx_t *ctx, UINT error)
+{
+    ctx->hres = JSCRIPT_ERROR|error;
+}
+
+static BOOL explicit_error(parser_ctx_t *ctx, void *obj, WCHAR next)
+{
+    if(obj || *(ctx->ptr-1)==next) return TRUE;
+
+    set_error(ctx, IDS_SYNTAX_ERROR);
+    return FALSE;
+}
+
+
 static expression_t *new_identifier_expression(parser_ctx_t *ctx, const WCHAR *identifier)
 {
     identifier_expression_t *ret = parser_alloc(ctx, sizeof(identifier_expression_t));
@@ -1532,38 +1574,46 @@ static void program_parsed(parser_ctx_t *ctx, source_elements_t *source)
     pop_func(ctx);
 
     ctx->source = source;
-    ctx->hres = S_OK;
+    if(!ctx->lexer_error)
+        ctx->hres = S_OK;
 }
 
 void parser_release(parser_ctx_t *ctx)
 {
-    obj_literal_t *iter;
-
     if(--ctx->ref)
         return;
 
-    for(iter = ctx->obj_literals; iter; iter = iter->next)
-        jsdisp_release(iter->obj);
-
+    script_release(ctx->script);
+    heap_free(ctx->begin);
     jsheap_free(&ctx->heap);
     heap_free(ctx);
 }
 
-HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, parser_ctx_t **ret)
+HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, const WCHAR *delimiter,
+        parser_ctx_t **ret)
 {
     parser_ctx_t *parser_ctx;
     jsheap_t *mark;
     HRESULT hres;
+
+    const WCHAR html_tagW[] = {'<','/','s','c','r','i','p','t','>',0};
 
     parser_ctx = heap_alloc_zero(sizeof(parser_ctx_t));
     if(!parser_ctx)
         return E_OUTOFMEMORY;
 
     parser_ctx->ref = 1;
-    parser_ctx->hres = E_FAIL;
+    parser_ctx->hres = JSCRIPT_ERROR|IDS_SYNTAX_ERROR;
+    parser_ctx->is_html = delimiter && !strcmpiW(delimiter, html_tagW);
 
-    parser_ctx->begin = parser_ctx->ptr = code;
-    parser_ctx->end = code + strlenW(code);
+    parser_ctx->begin = heap_strdupW(code);
+    if(!parser_ctx->begin) {
+        heap_free(parser_ctx);
+        return E_OUTOFMEMORY;
+    }
+
+    parser_ctx->ptr = parser_ctx->begin;
+    parser_ctx->end = parser_ctx->begin + strlenW(parser_ctx->begin);
 
     script_addref(ctx);
     parser_ctx->script = ctx;

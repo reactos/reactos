@@ -270,9 +270,11 @@ PspDeleteProcess(IN PVOID ObjectBody)
         Process->SectionObject = NULL;
     }
 
-    /* Clean LDT and VDM_OBJECTS */
+#if defined(_X86_)
+    /* Clean Ldt and Vdm objects */
     PspDeleteLdt(Process);
     PspDeleteVdmObjects(Process);
+#endif
 
     /* Delete the Object Table */
     if (Process->ObjectTable)
@@ -594,6 +596,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (TerminationPort)
     {
         /* Setup the message header */
+        TerminationMsg.h.u2.ZeroInit = 0;
         TerminationMsg.h.u2.s2.Type = LPC_CLIENT_DIED;
         TerminationMsg.h.u1.s1.TotalLength = sizeof(TerminationMsg);
         TerminationMsg.h.u1.s1.DataLength = sizeof(TerminationMsg) -
@@ -969,6 +972,7 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
 
     /* Allocate the APC */
     Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
+    if (!Apc) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Set the Terminated Flag */
     Flags = Thread->CrossThreadFlags | CT_TERMINATED_BIT;
@@ -1298,7 +1302,7 @@ NtRegisterThreadTerminatePort(IN HANDLE PortHandle)
     /* Allocate the Port and make sure it suceeded */
     TerminationPort = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(TERMINATION_PORT),
-                                            TAG('P', 's', 'T', '='));
+                                            '=TsP');
     if(TerminationPort)
     {
         /* Associate the Port */

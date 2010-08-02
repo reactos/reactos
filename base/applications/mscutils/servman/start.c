@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/start.c
  * PURPOSE:     Start a service
- * COPYRIGHT:   Copyright 2005-2007 Ged Murphy <gedmurphy@reactos.org>
+ * COPYRIGHT:   Copyright 2005-2010 Ged Murphy <gedmurphy@reactos.org>
  *
  */
 
@@ -11,125 +11,140 @@
 
 static BOOL
 DoStartService(PMAIN_WND_INFO Info,
-               HWND hProgDlg)
+               HWND hProgress)
 {
     SC_HANDLE hSCManager;
-    SC_HANDLE hSc;
+    SC_HANDLE hService;
     SERVICE_STATUS_PROCESS ServiceStatus;
     DWORD BytesNeeded = 0;
+    DWORD dwStartTickCount;
+    DWORD dwOldCheckPoint;
+    DWORD dwWaitTime;
+    DWORD dwMaxWait;
     BOOL bRet = FALSE;
-    BOOL bDispErr = TRUE;
 
     hSCManager = OpenSCManager(NULL,
                                NULL,
-                               SC_MANAGER_ALL_ACCESS);
-    if (hSCManager != NULL)
+                               SC_MANAGER_CONNECT);
+    if (hSCManager)
     {
-        hSc = OpenService(hSCManager,
-                          Info->pCurrentService->lpServiceName,
-                          SERVICE_ALL_ACCESS);
-        if (hSc != NULL)
+        hService = OpenService(hSCManager,
+                               Info->pCurrentService->lpServiceName,
+                               SERVICE_START | SERVICE_QUERY_STATUS);
+        if (hService)
         {
-            if (StartService(hSc,
-                              0,
-                              NULL))
+            if (hProgress)
             {
-                bDispErr = FALSE;
+                /* Increment the progress bar */
+                IncrementProgressBar(hProgress, DEFAULT_STEP);
+            }
 
-                if (QueryServiceStatusEx(hSc,
+            /* Start the service */
+            bRet = StartService(hService,
+                                0,
+                                NULL);
+            if (!bRet && GetLastError() == ERROR_SERVICE_ALREADY_RUNNING)
+            {
+                /* If it's already running, just return TRUE */
+                bRet = TRUE;
+            }
+            else if (bRet)
+            {
+                bRet = FALSE;
+
+                /* Get the service status to check if it's running */
+                if (QueryServiceStatusEx(hService,
                                          SC_STATUS_PROCESS_INFO,
                                          (LPBYTE)&ServiceStatus,
                                          sizeof(SERVICE_STATUS_PROCESS),
                                          &BytesNeeded))
                 {
-                    DWORD dwStartTickCount = GetTickCount();
-                    DWORD dwOldCheckPoint = ServiceStatus.dwCheckPoint;
-                    DWORD dwMaxWait = 2000 * 60; // wait for 2 mins
+                    /* We don't want to wait for more than 30 seconds */
+                    dwMaxWait = 30000;
+                    dwStartTickCount = GetTickCount();
 
-                    IncrementProgressBar(hProgDlg);
-
+                    /* Loop until it's running */
                     while (ServiceStatus.dwCurrentState != SERVICE_RUNNING)
                     {
-                        DWORD dwWaitTime = ServiceStatus.dwWaitHint / 10;
+                        dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+                        dwWaitTime = ServiceStatus.dwWaitHint / 10;
 
-                        if (!QueryServiceStatusEx(hSc,
+                        /* Get the latest status info */
+                        if (!QueryServiceStatusEx(hService,
                                                   SC_STATUS_PROCESS_INFO,
                                                   (LPBYTE)&ServiceStatus,
                                                   sizeof(SERVICE_STATUS_PROCESS),
                                                   &BytesNeeded))
                         {
+                            /* Something went wrong... */
                             break;
                         }
 
+                        /* Is the service making progress? */
                         if (ServiceStatus.dwCheckPoint > dwOldCheckPoint)
                         {
-                            /* The service is making progress, increment the progress bar */
-                            IncrementProgressBar(hProgDlg);
+                            /* It is, get the latest tickcount to reset the max wait time */
                             dwStartTickCount = GetTickCount();
                             dwOldCheckPoint = ServiceStatus.dwCheckPoint;
+                            IncrementProgressBar(hProgress, DEFAULT_STEP);
                         }
                         else
                         {
-                            if(GetTickCount() >= dwStartTickCount + dwMaxWait)
+                            /* It's not, make sure we haven't exceeded our wait time */
+                            if (GetTickCount() >= dwStartTickCount + dwMaxWait)
                             {
-                                /* give up */
+                                /* We have, give up */
                                 break;
                             }
                         }
 
-                        if(dwWaitTime < 200)
+                        /* Adjust the wait hint times */
+                        if (dwWaitTime < 200)
                             dwWaitTime = 200;
                         else if (dwWaitTime > 10000)
                             dwWaitTime = 10000;
 
+                        /* Wait before trying again */
                         Sleep(dwWaitTime);
                     }
                 }
+
+                if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
+                {
+                    bRet = TRUE;
+                }
             }
 
-            CloseServiceHandle(hSc);
+            CloseServiceHandle(hService);
         }
 
         CloseServiceHandle(hSCManager);
     }
 
-    if (ServiceStatus.dwCurrentState == SERVICE_RUNNING)
-    {
-        CompleteProgressBar(hProgDlg);
-        Sleep(500);
-        bRet = TRUE;
-    }
-    else
-    {
-        if (bDispErr)
-            GetError();
-        else
-            DisplayString(_T("The service failed to start"));
-    }
-
     return bRet;
 }
-
 
 BOOL
 DoStart(PMAIN_WND_INFO Info)
 {
-    HWND hProgDlg;
+    HWND hProgress;
     BOOL bRet = FALSE;
 
-    hProgDlg = CreateProgressDialog(Info->hMainWnd,
-                                    Info->pCurrentService->lpServiceName,
-                                    IDS_PROGRESS_INFO_START);
-
-    if (hProgDlg)
+    /* Create a progress window to track the progress of the stopping service */
+    hProgress = CreateProgressDialog(Info->hMainWnd,
+                                     IDS_PROGRESS_INFO_START);
+    if (hProgress)
     {
-        IncrementProgressBar(hProgDlg);
+        /* Set the service name and reset the progress bag */
+        InitializeProgressDialog(hProgress, Info->pCurrentService->lpServiceName);
 
-        bRet = DoStartService(Info,
-                              hProgDlg);
+        /* Start the requested service */
+        bRet = DoStartService(Info, hProgress);
 
-        DestroyWindow(hProgDlg);
+        /* Complete and destroy the progress bar */
+        DestroyProgressDialog(hProgress, bRet);
     }
 
     return bRet;
 }
+

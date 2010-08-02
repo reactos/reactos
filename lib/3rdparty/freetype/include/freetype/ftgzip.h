@@ -66,7 +66,7 @@ FT_BEGIN_HEADER
   *     The source stream.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
   *   The source stream must be opened _before_ calling this function.

@@ -12,17 +12,14 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __PARSEINI_H
-#define __PARSEINI_H
+#pragma once
 
 #define INI_FILE_COMMENT_CHAR	';'
-
-
 
 // This structure describes a single .ini file item
 // The item format in the .ini file is:
@@ -54,8 +51,6 @@ extern	BOOLEAN			IniFileSectionInitialized;
 extern	ULONG					IniFileSectionCount;
 extern	ULONG					IniFileSettingCount;
 
-PFILE	IniOpenIniFile();
-
 BOOLEAN	IniParseFile(PCHAR IniFileData, ULONG IniFileSize);
 ULONG		IniGetNextLineSize(PCHAR IniFileData, ULONG IniFileSize, ULONG CurrentOffset);
 ULONG		IniGetNextLine(PCHAR IniFileData, ULONG IniFileSize, PCHAR Buffer, ULONG BufferSize, ULONG CurrentOffset);
@@ -80,6 +75,3 @@ BOOLEAN	IniReadSettingByNumber(ULONG_PTR SectionId, ULONG SettingNumber, PCHAR S
 BOOLEAN	IniReadSettingByName(ULONG_PTR SectionId, PCSTR SettingName, PCHAR Buffer, ULONG BufferSize);
 BOOLEAN	IniAddSection(PCSTR SectionName, ULONG_PTR* SectionId);
 BOOLEAN	IniAddSettingValueToSection(ULONG_PTR SectionId, PCSTR SettingName, PCSTR SettingValue);
-
-
-#endif // defined __PARSEINI_H

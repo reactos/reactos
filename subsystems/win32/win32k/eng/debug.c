@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -27,7 +27,7 @@
  *                 11/7/1999: Created
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -40,8 +40,11 @@ EngDebugPrint(PCHAR StandardPrefix,
 	      PCHAR DebugMessage,
 	      va_list ap)
 {
-  DbgPrint(StandardPrefix);
-  DbgPrint(DebugMessage, ap);
-  DbgPrint("\n");
+    vDbgPrintExWithPrefix(StandardPrefix,
+                          -1,
+                          DPFLTR_ERROR_LEVEL,
+                          DebugMessage,
+                          ap);
 }
+
 /* EOF */

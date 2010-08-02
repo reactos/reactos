@@ -3,7 +3,6 @@
 <module name="access" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_ACCESS}"  installbase="system32" installname="access.cpl" unicode="yes">
 	<importlibrary definition="access.spec" />
 	<include base="access">.</include>
-	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>advapi32</library>

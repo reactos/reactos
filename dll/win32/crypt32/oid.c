@@ -82,7 +82,8 @@ static const WCHAR MY[] = {'M','Y',0};
 static const WCHAR CA[] = {'C','A',0};
 static const WCHAR ADDRESSBOOK[] = {'A','D','D','R','E','S','S','B','O','O','K',0};
 static const WCHAR TRUSTEDPUBLISHER[] = {'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r',0};
-static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER};
+static const WCHAR DISALLOWED[] = {'D','i','s','a','l','l','o','w','e','d',0};
+static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER,DISALLOWED};
 static WCHAR LocalizedNames[sizeof(LocalizedKeys)/sizeof(LocalizedKeys[0])][256];
 
 static void free_function_sets(void)
@@ -169,7 +170,7 @@ static char *CRYPT_GetKeyName(DWORD dwEncodingType, LPCSTR pszFuncName,
      * "EncodingType 2" would be expected if it were a mask.  Instead native
      * stores values in "EncodingType 3".
      */
-    if (!HIWORD(pszOID))
+    if (IS_INTOID(pszOID))
     {
         snprintf(numericOID, sizeof(numericOID), "#%d", LOWORD(pszOID));
         oid = numericOID;
@@ -197,7 +198,7 @@ BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
     struct OIDFunctionSet *set = hFuncSet;
     char *keyName;
     HKEY key;
-    long rc;
+    LSTATUS rc;
 
     TRACE("(%p, %d, %p, %p)\n", hFuncSet, dwEncodingType, pwszDllList,
      pcchDllList);
@@ -254,7 +255,7 @@ BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
         {
             struct OIDFunction *func;
 
-            if (HIWORD(rgFuncEntry[i].pszOID))
+            if (!IS_INTOID(rgFuncEntry[i].pszOID))
                 func = CryptMemAlloc(sizeof(struct OIDFunction)
                  + strlen(rgFuncEntry[i].pszOID) + 1);
             else
@@ -262,7 +263,7 @@ BOOL WINAPI CryptInstallOIDFunctionAddress(HMODULE hModule,
             if (func)
             {
                 func->encoding = GET_CERT_ENCODING_TYPE(dwEncodingType);
-                if (HIWORD(rgFuncEntry[i].pszOID))
+                if (!IS_INTOID(rgFuncEntry[i].pszOID))
                 {
                     LPSTR oid;
 
@@ -299,7 +300,7 @@ static BOOL CRYPT_GetFuncFromReg(DWORD dwEncodingType, LPCSTR pszOID,
     char *keyName;
     const char *funcName;
     HKEY key;
-    long rc;
+    LSTATUS rc;
 
     keyName = CRYPT_GetKeyName(dwEncodingType, szFuncName, pszOID);
     rc = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &key);
@@ -401,9 +402,9 @@ BOOL WINAPI CryptGetOIDFunctionAddress(HCRYPTOIDFUNCSET hFuncSet,
         {
             if (function->encoding == GET_CERT_ENCODING_TYPE(dwEncodingType))
             {
-                if (HIWORD(pszOID))
+                if (!IS_INTOID(pszOID))
                 {
-                    if (HIWORD(function->entry.pszOID) &&
+                    if (!IS_INTOID(function->entry.pszOID) &&
                      !strcasecmp(function->entry.pszOID, pszOID))
                     {
                         *ppvFuncAddr = function->entry.pvFuncAddr;
@@ -665,6 +666,16 @@ error_close_key:
 }
 
 /***********************************************************************
+ *             CryptRegisterOIDInfo (CRYPT32.@)
+ */
+BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO pInfo, DWORD dwFlags)
+{
+    FIXME("(%p, %x): stub\n", pInfo, dwFlags );
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
  *             CryptUnregisterOIDFunction (CRYPT32.@)
  */
 BOOL WINAPI CryptUnregisterOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,
@@ -862,9 +873,20 @@ static BOOL CRYPT_RemoveStringFromMultiString(LPWSTR multi, LPCWSTR toRemove)
     {
         DWORD len = CRYPT_GetMultiStringCharacterLen(multi);
 
-        /* Copy remainder of string "left" */
-        memmove(spotToRemove, spotToRemove + lstrlenW(toRemove) + 1,
-         (len - (spotToRemove - multi)) * sizeof(WCHAR));
+        if (spotToRemove + lstrlenW(toRemove) + 2 >= multi + len)
+        {
+            /* Removing last string in list, terminate multi string directly */
+            *spotToRemove = 0;
+            *(spotToRemove + 1) = 0;
+        }
+        else
+        {
+            LPCWSTR nextStr = spotToRemove + lstrlenW(toRemove) + 1;
+
+            /* Copy remainder of string "left" */
+            memmove(spotToRemove, nextStr,
+             (len - (nextStr - multi)) * sizeof(WCHAR));
+        }
         ret = TRUE;
     }
     else
@@ -1045,6 +1067,9 @@ static const WCHAR rc2[] = { 'r','c','2',0 };
 static const WCHAR rc4[] = { 'r','c','4',0 };
 static const WCHAR sha[] = { 's','h','a',0 };
 static const WCHAR sha1[] = { 's','h','a','1',0 };
+static const WCHAR sha256[] = { 's','h','a','2','5','6',0 };
+static const WCHAR sha384[] = { 's','h','a','3','8','4',0 };
+static const WCHAR sha512[] = { 's','h','a','5','1','2',0 };
 static const WCHAR RSA[] = { 'R','S','A',0 };
 static const WCHAR RSA_KEYX[] = { 'R','S','A','_','K','E','Y','X',0 };
 static const WCHAR RSA_SIGN[] = { 'R','S','A','_','S','I','G','N',0 };
@@ -1064,6 +1089,9 @@ static const WCHAR shaDSA[] = { 's','h','a','D','S','A',0 };
 static const WCHAR sha1DSA[] = { 's','h','a','1','D','S','A',0 };
 static const WCHAR shaRSA[] = { 's','h','a','R','S','A',0 };
 static const WCHAR sha1RSA[] = { 's','h','a','1','R','S','A',0 };
+static const WCHAR sha256RSA[] = { 's','h','a','2','5','6','R','S','A',0 };
+static const WCHAR sha384RSA[] = { 's','h','a','3','8','4','R','S','A',0 };
+static const WCHAR sha512RSA[] = { 's','h','a','5','1','2','R','S','A',0 };
 static const WCHAR mosaicUpdatedSig[] =
  { 'm','o','s','a','i','c','U','p','d','a','t','e','d','S','i','g',0 };
 static const WCHAR CN[] = { 'C','N',0 };
@@ -1167,6 +1195,9 @@ static const struct OIDInfoConstructor {
  { 3, szOID_PKIX_NO_SIGNATURE,         CALG_NO_SIGN,  NO_SIGN, NULL },
 
  { 4, szOID_RSA_SHA1RSA,               CALG_SHA1,     sha1RSA, &rsaSignBlob },
+ { 4, szOID_RSA_SHA256RSA,             CALG_SHA_256,  sha256RSA, &rsaSignBlob },
+ { 4, szOID_RSA_SHA384RSA,             CALG_SHA_384,  sha384RSA, &rsaSignBlob },
+ { 4, szOID_RSA_SHA512RSA,             CALG_SHA_512,  sha512RSA, &rsaSignBlob },
  { 4, szOID_RSA_MD5RSA,                CALG_MD5,      md5RSA, &rsaSignBlob },
  { 4, szOID_X957_SHA1DSA,              CALG_SHA1,     sha1DSA, &dssSignBlob },
  { 4, szOID_OIWSEC_sha1RSASign,        CALG_SHA1,     sha1RSA, &rsaSignBlob },
@@ -1376,7 +1407,7 @@ static void init_oid_info(void)
     for (i = 0; i < sizeof(oidInfoConstructors) /
      sizeof(oidInfoConstructors[0]); i++)
     {
-        if (HIWORD(oidInfoConstructors[i].pwszName))
+        if (!IS_INTRESOURCE(oidInfoConstructors[i].pwszName))
         {
             struct OIDInfo *info;
 

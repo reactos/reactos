@@ -24,23 +24,22 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl  *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl  *lpIInternetProtocolVtbl;
     const IInternetPriorityVtbl  *lpInternetPriorityVtbl;
 
     LONG ref;
 } GopherProtocol;
 
-#define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
 #define PRIORITY(x)  ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
 
 #define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(GopherProtocol, base, iface)
 
 static HRESULT GopherProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD request_flags,
-                                        IInternetBindInfo *bind_info)
+        HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     GopherProtocol *This = ASYNCPROTOCOL_THIS(prot);
 
-    This->base.request = InternetOpenUrlW(This->base.internet, url, NULL, 0,
+    This->base.request = InternetOpenUrlW(internet_session, url, NULL, 0,
             request_flags, (DWORD_PTR)&This->base);
     if (!This->base.request && GetLastError() != ERROR_IO_PENDING) {
         WARN("InternetOpenUrl failed: %d\n", GetLastError());
@@ -67,7 +66,7 @@ static const ProtocolVtbl AsyncProtocolVtbl = {
     GopherProtocol_close_connection
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(GopherProtocol, InternetProtocol, iface)
+#define PROTOCOL_THIS(iface) DEFINE_THIS(GopherProtocol, IInternetProtocol, iface)
 
 static HRESULT WINAPI GopherProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -123,11 +122,11 @@ static ULONG WINAPI GopherProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI GopherProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     GopherProtocol *This = PROTOCOL_THIS(iface);
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
           pOIBindInfo, grfPI, dwReserved);
 
     return protocol_start(&This->base, PROTOCOL(This), szUrl, pOIProtSink, pOIBindInfo);
@@ -289,8 +288,8 @@ HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret = heap_alloc_zero(sizeof(GopherProtocol));
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpInternetProtocolVtbl = &GopherProtocolVtbl;
-    ret->lpInternetPriorityVtbl = &GopherPriorityVtbl;
+    ret->lpIInternetProtocolVtbl = &GopherProtocolVtbl;
+    ret->lpInternetPriorityVtbl  = &GopherPriorityVtbl;
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);

@@ -31,6 +31,7 @@
 #include "wine/debug.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -110,20 +111,20 @@ static HRESULT WINAPI HTMLDocument3_createTextNode(IHTMLDocument3 *iface, BSTR t
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(text), newTextNode);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&text_str, text);
-    nsres = nsIDOMHTMLDocument_CreateTextNode(This->nsdoc, &text_str, &nstext);
+    nsAString_InitDepend(&text_str, text);
+    nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc_node->nsdoc, &text_str, &nstext);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
         ERR("CreateTextNode failed: %08x\n", nsres);
         return E_FAIL;
     }
 
-    node = HTMLDOMTextNode_Create(This, (nsIDOMNode*)nstext);
+    node = HTMLDOMTextNode_Create(This->doc_node, (nsIDOMNode*)nstext);
     nsIDOMElement_Release(nstext);
 
     *newTextNode = HTMLDOMNODE(node);
@@ -140,19 +141,24 @@ static HRESULT WINAPI HTMLDocument3_get_documentElement(IHTMLDocument3 *iface, I
 
     TRACE("(%p)->(%p)\n", This, p);
 
-    if(!This->nsdoc) {
+    if(This->window->readystate == READYSTATE_UNINITIALIZED) {
+        *p = NULL;
+        return S_OK;
+    }
+
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsres = nsIDOMHTMLDocument_GetDocumentElement(This->nsdoc, &nselem);
+    nsres = nsIDOMHTMLDocument_GetDocumentElement(This->doc_node->nsdoc, &nselem);
     if(NS_FAILED(nsres)) {
         ERR("GetDocumentElement failed: %08x\n", nsres);
         return E_FAIL;
     }
 
     if(nselem) {
-        node = get_node(This, (nsIDOMNode *)nselem, TRUE);
+        node = get_node(This->doc_node, (nsIDOMNode *)nselem, TRUE);
         nsIDOMElement_Release(nselem);
         IHTMLDOMNode_QueryInterface(HTMLDOMNODE(node), &IID_IHTMLElement, (void**)p);
     }else {
@@ -173,16 +179,20 @@ static HRESULT WINAPI HTMLDocument3_attachEvent(IHTMLDocument3 *iface, BSTR even
                                                 IDispatch* pDisp, VARIANT_BOOL *pfResult)
 {
     HTMLDocument *This = HTMLDOC3_THIS(iface);
-    FIXME("(%p)->(%s %p %p)\n", This, debugstr_w(event), pDisp, pfResult);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s %p %p)\n", This, debugstr_w(event), pDisp, pfResult);
+
+    return attach_event(&This->doc_node->node.event_target, This->doc_node->node.nsnode, This, event, pDisp, pfResult);
 }
 
 static HRESULT WINAPI HTMLDocument3_detachEvent(IHTMLDocument3 *iface, BSTR event,
                                                 IDispatch *pDisp)
 {
     HTMLDocument *This = HTMLDOC3_THIS(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(event), pDisp);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(event), pDisp);
+
+    return detach_event(This->doc_node->node.event_target, This, event, pDisp);
 }
 
 static HRESULT WINAPI HTMLDocument3_put_onrowsdelete(IHTMLDocument3 *iface, VARIANT v)
@@ -300,15 +310,19 @@ static HRESULT WINAPI HTMLDocument3_get_dir(IHTMLDocument3 *iface, BSTR *p)
 static HRESULT WINAPI HTMLDocument3_put_oncontextmenu(IHTMLDocument3 *iface, VARIANT v)
 {
     HTMLDocument *This = HTMLDOC3_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->()\n", This);
+
+    return set_doc_event(This, EVENTID_CONTEXTMENU, &v);
 }
 
 static HRESULT WINAPI HTMLDocument3_get_oncontextmenu(IHTMLDocument3 *iface, VARIANT *p)
 {
     HTMLDocument *This = HTMLDOC3_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_doc_event(This, EVENTID_CONTEXTMENU, p);
 }
 
 static HRESULT WINAPI HTMLDocument3_put_onstop(IHTMLDocument3 *iface, VARIANT v)
@@ -423,27 +437,76 @@ static HRESULT WINAPI HTMLDocument3_getElementById(IHTMLDocument3 *iface, BSTR v
     HTMLDocument *This = HTMLDOC3_THIS(iface);
     nsIDOMElement *nselem;
     HTMLDOMNode *node;
+    nsIDOMNode *nsnode, *nsnode_by_id, *nsnode_by_name;
+    nsIDOMNodeList *nsnode_list;
     nsAString id_str;
     nsresult nsres;
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pel);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&id_str, v);
-    nsres = nsIDOMHTMLDocument_GetElementById(This->nsdoc, &id_str, &nselem);
-    nsAString_Finish(&id_str);
+    nsAString_InitDepend(&id_str, v);
+    /* get element by id attribute */
+    nsres = nsIDOMHTMLDocument_GetElementById(This->doc_node->nsdoc, &id_str, &nselem);
     if(FAILED(nsres)) {
         ERR("GetElementById failed: %08x\n", nsres);
+        nsAString_Finish(&id_str);
         return E_FAIL;
     }
+    nsnode_by_id = (nsIDOMNode*)nselem;
 
-    if(nselem) {
-        node = get_node(This, (nsIDOMNode*)nselem, TRUE);
-        nsIDOMElement_Release(nselem);
+    /* get first element by name attribute */
+    nsres = nsIDOMHTMLDocument_GetElementsByName(This->doc_node->nsdoc, &id_str, &nsnode_list);
+    nsAString_Finish(&id_str);
+    if(FAILED(nsres)) {
+        ERR("getElementsByName failed: %08x\n", nsres);
+        if(nsnode_by_id)
+            nsIDOMNode_Release(nsnode_by_id);
+        return E_FAIL;
+    }
+    nsIDOMNodeList_Item(nsnode_list, 0, &nsnode_by_name);
+    nsIDOMNodeList_Release(nsnode_list);
+
+
+    if(nsnode_by_name && nsnode_by_id) {
+        nsIDOM3Node *node3;
+        PRUint16 pos;
+
+        nsres = nsIDOMNode_QueryInterface(nsnode_by_name, &IID_nsIDOM3Node, (void**)&node3);
+        if(NS_FAILED(nsres)) {
+            FIXME("failed to get nsIDOM3Node interface: 0x%08x\n", nsres);
+            nsIDOMNode_Release(nsnode_by_name);
+            nsIDOMNode_Release(nsnode_by_id);
+            return E_FAIL;
+        }
+
+        nsres = nsIDOM3Node_CompareDocumentPosition(node3, nsnode_by_id, &pos);
+        nsIDOM3Node_Release(node3);
+        if(NS_FAILED(nsres)) {
+            FIXME("nsIDOM3Node_CompareDocumentPosition failed: 0x%08x\n", nsres);
+            nsIDOMNode_Release(nsnode_by_name);
+            nsIDOMNode_Release(nsnode_by_id);
+            return E_FAIL;
+        }
+
+        TRACE("CompareDocumentPosition gave: 0x%x\n", pos);
+        if(pos & PRECEDING || pos & CONTAINS) {
+            nsnode = nsnode_by_id;
+            nsIDOMNode_Release(nsnode_by_name);
+        }else {
+            nsnode = nsnode_by_name;
+            nsIDOMNode_Release(nsnode_by_id);
+        }
+    }else
+        nsnode = nsnode_by_name ? nsnode_by_name : nsnode_by_id;
+
+    if(nsnode) {
+        node = get_node(This->doc_node, nsnode, TRUE);
+        nsIDOMNode_Release(nsnode);
 
         IHTMLDOMNode_QueryInterface(HTMLDOMNODE(node), &IID_IHTMLElement, (void**)pel);
     }else {
@@ -465,14 +528,14 @@ static HRESULT WINAPI HTMLDocument3_getElementsByTagName(IHTMLDocument3 *iface, 
 
     TRACE("(%p)->(%s %p)\n", This, debugstr_w(v), pelColl);
 
-    if(!This->nsdoc) {
+    if(!This->doc_node->nsdoc) {
         WARN("NULL nsdoc\n");
         return E_UNEXPECTED;
     }
 
-    nsAString_Init(&id_str, v);
-    nsAString_Init(&ns_str, str);
-    nsres = nsIDOMHTMLDocument_GetElementsByTagNameNS(This->nsdoc, &ns_str, &id_str, &nslist);
+    nsAString_InitDepend(&id_str, v);
+    nsAString_InitDepend(&ns_str, str);
+    nsres = nsIDOMHTMLDocument_GetElementsByTagNameNS(This->doc_node->nsdoc, &ns_str, &id_str, &nslist);
     nsAString_Finish(&id_str);
     nsAString_Finish(&ns_str);
     if(FAILED(nsres)) {
@@ -480,7 +543,7 @@ static HRESULT WINAPI HTMLDocument3_getElementsByTagName(IHTMLDocument3 *iface, 
         return E_FAIL;
     }
 
-    *pelColl = (IHTMLElementCollection*)create_collection_from_nodelist(This, (IUnknown*)HTMLDOC3(This), nslist);
+    *pelColl = (IHTMLElementCollection*)create_collection_from_nodelist(This->doc_node, (IUnknown*)HTMLDOC3(This), nslist);
     nsIDOMNodeList_Release(nslist);
 
     return S_OK;
@@ -599,7 +662,7 @@ static HRESULT WINAPI HTMLDocument4_focus(IHTMLDocument4 *iface)
 
     TRACE("(%p)->()\n", This);
 
-    nsres = nsIDOMHTMLDocument_GetBody(This->nsdoc, &nsbody);
+    nsres = nsIDOMHTMLDocument_GetBody(This->doc_node->nsdoc, &nsbody);
     if(NS_FAILED(nsres) || !nsbody) {
         ERR("GetBody failed: %08x\n", nsres);
         return E_FAIL;
@@ -612,7 +675,7 @@ static HRESULT WINAPI HTMLDocument4_focus(IHTMLDocument4 *iface)
         return E_FAIL;
     }
 
-    nsres = nsIDOMNSHTMLElement_focus(nselem);
+    nsres = nsIDOMNSHTMLElement_Focus(nselem);
     nsIDOMNSHTMLElement_Release(nselem);
     if(NS_FAILED(nsres)) {
         ERR("Focus failed: %08x\n", nsres);

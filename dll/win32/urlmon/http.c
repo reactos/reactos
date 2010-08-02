@@ -17,11 +17,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
- * TODO:
- * - Handle redirects as native.
- */
-
 #include "urlmon_main.h"
 #include "wininet.h"
 
@@ -32,8 +27,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl *lpIInternetProtocolVtbl;
     const IInternetPriorityVtbl *lpInternetPriorityVtbl;
+    const IWinInetHttpInfoVtbl  *lpWinInetHttpInfoVtbl;
 
     BOOL https;
     IHttpNegotiate *http_negotiate;
@@ -42,8 +38,8 @@ typedef struct {
     LONG ref;
 } HttpProtocol;
 
-#define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
-#define PRIORITY(x)  ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
+#define PRIORITY(x)      ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
+#define INETHTTPINFO(x)  ((IWinInetHttpInfo*)   &(x)->lpWinInetHttpInfoVtbl)
 
 /* Default headers from native */
 static const WCHAR wszHeaders[] = {'A','c','c','e','p','t','-','E','n','c','o','d','i','n','g',
@@ -72,7 +68,7 @@ static LPWSTR query_http_info(HttpProtocol *This, DWORD option)
 #define ASYNCPROTOCOL_THIS(iface) DEFINE_THIS2(HttpProtocol, base, iface)
 
 static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD request_flags,
-                                         IInternetBindInfo *bind_info)
+        HINTERNET internet_session, IInternetBindInfo *bind_info)
 {
     HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
     LPWSTR addl_header = NULL, post_cookie = NULL, optional = NULL;
@@ -83,8 +79,8 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     URL_COMPONENTSW url_comp;
     BYTE security_id[512];
     DWORD len = 0;
-    ULONG num = 0;
-    BOOL res;
+    ULONG num;
+    BOOL res, b;
     HRESULT hres;
 
     static const WCHAR wszBindVerb[BINDVERB_CUSTOM][5] =
@@ -94,7 +90,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
 
     memset(&url_comp, 0, sizeof(url_comp));
     url_comp.dwStructSize = sizeof(url_comp);
-    url_comp.dwSchemeLength = url_comp.dwHostNameLength = url_comp.dwUrlPathLength =
+    url_comp.dwSchemeLength = url_comp.dwHostNameLength = url_comp.dwUrlPathLength = url_comp.dwExtraInfoLength =
         url_comp.dwUserNameLength = url_comp.dwPasswordLength = 1;
     if (!InternetCrackUrlW(url, 0, 0, &url_comp))
         return MK_E_SYNTAX;
@@ -105,7 +101,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     host = heap_strndupW(url_comp.lpszHostName, url_comp.dwHostNameLength);
     user = heap_strndupW(url_comp.lpszUserName, url_comp.dwUserNameLength);
     pass = heap_strndupW(url_comp.lpszPassword, url_comp.dwPasswordLength);
-    This->base.connection = InternetConnectW(This->base.internet, host, url_comp.nPort, user, pass,
+    This->base.connection = InternetConnectW(internet_session, host, url_comp.nPort, user, pass,
             INTERNET_SERVICE_HTTP, This->https ? INTERNET_FLAG_SECURE : 0, (DWORD_PTR)&This->base);
     heap_free(pass);
     heap_free(user);
@@ -123,7 +119,12 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     }
     accept_mimes[num] = 0;
 
-    path = heap_strndupW(url_comp.lpszUrlPath, url_comp.dwUrlPathLength);
+    path = heap_alloc((url_comp.dwUrlPathLength+url_comp.dwExtraInfoLength+1)*sizeof(WCHAR));
+    if(url_comp.dwUrlPathLength)
+        memcpy(path, url_comp.lpszUrlPath, url_comp.dwUrlPathLength*sizeof(WCHAR));
+    if(url_comp.dwExtraInfoLength)
+        memcpy(path+url_comp.dwUrlPathLength, url_comp.lpszExtraInfo, url_comp.dwExtraInfoLength*sizeof(WCHAR));
+    path[url_comp.dwUrlPathLength+url_comp.dwExtraInfoLength] = 0;
     if(This->https)
         request_flags |= INTERNET_FLAG_SECURE;
     This->base.request = HttpOpenRequestW(This->base.connection,
@@ -131,8 +132,8 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
                 ? wszBindVerb[This->base.bind_info.dwBindVerb] : This->base.bind_info.szCustomVerb,
             path, NULL, NULL, (LPCWSTR *)accept_mimes, request_flags, (DWORD_PTR)&This->base);
     heap_free(path);
-    while (num<sizeof(accept_mimes)/sizeof(accept_mimes[0]) && accept_mimes[num])
-        CoTaskMemFree(accept_mimes[num++]);
+    while(num--)
+        CoTaskMemFree(accept_mimes[num]);
     if (!This->base.request) {
         WARN("HttpOpenRequest failed: %d\n", GetLastError());
         return INET_E_RESOURCE_NOT_FOUND;
@@ -208,6 +209,11 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
             optional = (LPWSTR)This->base.bind_info.stgmedData.u.hGlobal;
     }
 
+    b = TRUE;
+    res = InternetSetOptionW(This->base.request, INTERNET_OPTION_HTTP_DECODING, &b, sizeof(b));
+    if(!res)
+        WARN("InternetSetOption(INTERNET_OPTION_HTTP_DECODING) failed: %08x\n", GetLastError());
+
     res = HttpSendRequestW(This->base.request, This->full_header, lstrlenW(This->full_header),
             optional, optional ? This->base.bind_info.cbstgmedData : 0);
     if(!res && GetLastError() != ERROR_IO_PENDING) {
@@ -221,7 +227,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
 static HRESULT HttpProtocol_start_downloading(Protocol *prot)
 {
     HttpProtocol *This = ASYNCPROTOCOL_THIS(prot);
-    LPWSTR content_type = 0, content_length = 0;
+    LPWSTR content_type, content_length, ranges;
     DWORD len = sizeof(DWORD);
     DWORD status_code;
     BOOL res;
@@ -252,8 +258,11 @@ static HRESULT HttpProtocol_start_downloading(Protocol *prot)
         WARN("HttpQueryInfo failed: %d\n", GetLastError());
     }
 
-    if(This->https)
+    ranges = query_http_info(This, HTTP_QUERY_ACCEPT_RANGES);
+    if(ranges) {
         IInternetProtocolSink_ReportProgress(This->base.protocol_sink, BINDSTATUS_ACCEPTRANGES, NULL);
+        heap_free(ranges);
+    }
 
     content_type = query_http_info(This, HTTP_QUERY_CONTENT_TYPE);
     if(content_type) {
@@ -307,7 +316,7 @@ static const ProtocolVtbl AsyncProtocolVtbl = {
     HttpProtocol_close_connection
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, InternetProtocol, iface)
+#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, IInternetProtocol, iface)
 
 static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -326,6 +335,12 @@ static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFI
     }else if(IsEqualGUID(&IID_IInternetPriority, riid)) {
         TRACE("(%p)->(IID_IInternetPriority %p)\n", This, ppv);
         *ppv = PRIORITY(This);
+    }else if(IsEqualGUID(&IID_IWinInetInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetInfo %p)\n", This, ppv);
+        *ppv = INETHTTPINFO(This);
+    }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetHttpInfo %p)\n", This, ppv);
+        *ppv = INETHTTPINFO(This);
     }
 
     if(*ppv) {
@@ -364,14 +379,14 @@ static ULONG WINAPI HttpProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     HttpProtocol *This = PROTOCOL_THIS(iface);
 
     static const WCHAR httpW[] = {'h','t','t','p',':'};
     static const WCHAR httpsW[] = {'h','t','t','p','s',':'};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     if(This->https
@@ -527,6 +542,52 @@ static const IInternetPriorityVtbl HttpPriorityVtbl = {
     HttpPriority_GetPriority
 };
 
+#define INETINFO_THIS(iface) DEFINE_THIS(HttpProtocol, WinInetHttpInfo, iface)
+
+static HRESULT WINAPI HttpInfo_QueryInterface(IWinInetHttpInfo *iface, REFIID riid, void **ppv)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    return IBinding_QueryInterface(PROTOCOL(This), riid, ppv);
+}
+
+static ULONG WINAPI HttpInfo_AddRef(IWinInetHttpInfo *iface)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    return IBinding_AddRef(PROTOCOL(This));
+}
+
+static ULONG WINAPI HttpInfo_Release(IWinInetHttpInfo *iface)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    return IBinding_Release(PROTOCOL(This));
+}
+
+static HRESULT WINAPI HttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
+    return E_NOTIMPL;
+}
+
+#undef INETINFO_THIS
+
+static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {
+    HttpInfo_QueryInterface,
+    HttpInfo_AddRef,
+    HttpInfo_Release,
+    HttpInfo_QueryOption,
+    HttpInfo_QueryInfo
+};
+
 static HRESULT create_http_protocol(BOOL https, void **ppobj)
 {
     HttpProtocol *ret;
@@ -536,8 +597,9 @@ static HRESULT create_http_protocol(BOOL https, void **ppobj)
         return E_OUTOFMEMORY;
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
-    ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
+    ret->lpIInternetProtocolVtbl = &HttpProtocolVtbl;
+    ret->lpInternetPriorityVtbl  = &HttpPriorityVtbl;
+    ret->lpWinInetHttpInfoVtbl   = &WinInetHttpInfoVtbl;
 
     ret->https = https;
     ret->ref = 1;

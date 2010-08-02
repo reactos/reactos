@@ -6,8 +6,8 @@
 	<include base="msvcrt40">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="CRTDLL" />
 	<file>msvcrt40.c</file>
 	<library>wine</library>
-	<library>kernel32</library>
 </module>
 </group>

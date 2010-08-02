@@ -19,6 +19,7 @@ LIST_ENTRY KiProfileListHead;
 LIST_ENTRY KiProfileSourceListHead;
 KSPIN_LOCK KiProfileLock;
 ULONG KiProfileTimeInterval = 78125; /* Default resolution 7.8ms (sysinternals) */
+ULONG KiProfileAlignmentFixupInterval;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -46,26 +47,27 @@ KeInitializeProfile(PKPROFILE Profile,
     Profile->Affinity = Affinity;
 }
 
-VOID
+BOOLEAN
 NTAPI
-KeStartProfile(PKPROFILE Profile,
-               PVOID Buffer)
+KeStartProfile(IN PKPROFILE Profile,
+               IN PVOID Buffer)
 {
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT SourceBuffer;
     PKPROFILE_SOURCE_OBJECT CurrentSource;
-    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE;
+    BOOLEAN FreeBuffer = TRUE, SourceFound = FALSE, StartedProfile;
     PKPROCESS ProfileProcess;
     PLIST_ENTRY NextEntry;
 
     /* Allocate a buffer first, before we raise IRQL */
     SourceBuffer = ExAllocatePoolWithTag(NonPagedPool,
-                                          sizeof(KPROFILE_SOURCE_OBJECT),
-                                          TAG('P', 'r', 'o', 'f'));
+                                         sizeof(KPROFILE_SOURCE_OBJECT),
+                                         'forP');
+    if (!SourceBuffer) return FALSE;
     RtlZeroMemory(SourceBuffer, sizeof(KPROFILE_SOURCE_OBJECT));
 
-    /* Raise to PROFILE_LEVEL */
-    KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
+    /* Raise to profile IRQL and acquire the profile lock */
+    KeRaiseIrql(KiProfileIrql, &OldIrql);
     KeAcquireSpinLockAtDpcLevel(&KiProfileLock);
 
     /* Make sure it's not running */
@@ -74,6 +76,7 @@ KeStartProfile(PKPROFILE Profile,
         /* Set it as Started */
         Profile->Buffer = Buffer;
         Profile->Started = TRUE;
+        StartedProfile = TRUE;
 
         /* Get the process, if any */
         ProfileProcess = Profile->Process;
@@ -123,29 +126,39 @@ KeStartProfile(PKPROFILE Profile,
             FreeBuffer = FALSE;
         }
     }
+    else
+    {
+        /* Already running so nothing to start */
+        StartedProfile = FALSE;
+    }
 
-    /* Lower the IRQL */
+    /* Release the profile lock */
     KeReleaseSpinLockFromDpcLevel(&KiProfileLock);
-    KeLowerIrql(OldIrql);
 
-    /* FIXME: Tell HAL to Start the Profile Interrupt */
-    //HalStartProfileInterrupt(Profile->Source);
+    /* Tell HAL to start the profile interrupt */
+    HalStartProfileInterrupt(Profile->Source);
+
+    /* Lower back to original IRQL */
+    KeLowerIrql(OldIrql);
 
     /* Free the pool */
     if (FreeBuffer) ExFreePool(SourceBuffer);
+
+    /* Return whether we could start the profile */
+    return StartedProfile;
 }
 
 BOOLEAN
 NTAPI
-KeStopProfile(PKPROFILE Profile)
+KeStopProfile(IN PKPROFILE Profile)
 {
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT CurrentSource = NULL;
     PLIST_ENTRY NextEntry;
-    BOOLEAN SourceFound = FALSE;
+    BOOLEAN SourceFound = FALSE, StoppedProfile;
 
-    /* Raise to PROFILE_LEVEL and acquire spinlock */
-    KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
+    /* Raise to profile IRQL and acquire the profile lock */
+    KeRaiseIrql(KiProfileIrql, &OldIrql);
     KeAcquireSpinLockAtDpcLevel(&KiProfileLock);
 
     /* Make sure it's running */
@@ -154,6 +167,7 @@ KeStopProfile(PKPROFILE Profile)
         /* Remove it from the list and disable */
         RemoveEntryList(&Profile->ProfileListEntry);
         Profile->Started = FALSE;
+        StoppedProfile = TRUE;
 
         /* Start looping */
         for (NextEntry = KiProfileSourceListHead.Flink;
@@ -178,60 +192,99 @@ KeStopProfile(PKPROFILE Profile)
         }
 
     }
+    else
+    {
+        /* It wasn't! */
+        StoppedProfile = FALSE;
+    }
 
-    /* Lower IRQL */
+    /* Release the profile lock */
     KeReleaseSpinLockFromDpcLevel(&KiProfileLock);
-    KeLowerIrql(OldIrql);
 
-    /* Stop Profiling. FIXME: Implement in HAL */
-    //HalStopProfileInterrupt(Profile->Source);
+    /* Stop the profile interrupt */
+    HalStopProfileInterrupt(Profile->Source);
+
+    /* Lower back to original IRQL */
+    KeLowerIrql(OldIrql);
 
     /* Free the Source Object */
     if (SourceFound) ExFreePool(CurrentSource);
 
-    /* FIXME */
-    return FALSE;
+    /* Return whether we could stop the profile */
+    return StoppedProfile;
 }
 
 ULONG
 NTAPI
-KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource)
+KeQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource)
 {
-    /* Check if this is the timer profile */
+    HAL_PROFILE_SOURCE_INFORMATION ProfileSourceInformation;
+    ULONG ReturnLength, Interval;
+    NTSTATUS Status;
+
+    /* Check what profile this is */
     if (ProfileSource == ProfileTime)
     {
-        /* Return the good old 100ns sampling interval */
-        return KiProfileTimeInterval;
+        /* Return the time interval */
+        Interval = KiProfileTimeInterval;
+    }
+    else if (ProfileSource == ProfileAlignmentFixup)
+    {
+        /* Return the alignment interval */
+        Interval = KiProfileAlignmentFixupInterval;
     }
     else
     {
-        /* Request it from HAL. FIXME: What structure is used? */
-        HalQuerySystemInformation(HalProfileSourceInformation,
-                                  sizeof(NULL),
-                                  NULL,
-                                  NULL);
+        /* Request it from HAL */
+        ProfileSourceInformation.Source = ProfileSource;
+        Status = HalQuerySystemInformation(HalProfileSourceInformation,
+                                           sizeof(HAL_PROFILE_SOURCE_INFORMATION),
+                                           &ProfileSourceInformation,
+                                           &ReturnLength);
 
-        return 0;
+        /* Check if HAL handled it and supports this profile */
+        if (NT_SUCCESS(Status) && (ProfileSourceInformation.Supported))
+        {
+            /* Get the interval */
+            Interval = ProfileSourceInformation.Interval;
+        }
+        else
+        {
+            /* Unsupported or invalid source, fail */
+            Interval = 0;
+        }
     }
+
+    /* Return the interval we got */
+    return Interval;
 }
 
 VOID
 NTAPI
-KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
-                     ULONG Interval)
+KeSetIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
+                     IN ULONG Interval)
 {
-    /* Check if this is the timer profile */
+    HAL_PROFILE_SOURCE_INTERVAL ProfileSourceInterval;
+
+    /* Check what profile this is */
     if (ProfileSource == ProfileTime)
     {
-        /* Set the good old 100ns sampling interval */
-        KiProfileTimeInterval = Interval;
+        /* Set the interval through HAL */
+        KiProfileTimeInterval = HalSetProfileInterval(Interval);
+    }
+    else if (ProfileSource == ProfileAlignmentFixup)
+    {
+        /* Set the alignment interval */
+        KiProfileAlignmentFixupInterval = Interval;
     }
     else
     {
-        /* Set it with HAL. FIXME: What structure is used? */
-        HalSetSystemInformation(HalProfileSourceInformation,
-                                  sizeof(NULL),
-                                  NULL);
+        /* HAL handles any other interval */
+        ProfileSourceInterval.Source = ProfileSource;
+        ProfileSourceInterval.Interval = Interval;
+        HalSetSystemInformation(HalProfileSourceInterval,
+                                sizeof(HAL_PROFILE_SOURCE_INTERVAL),
+                                &ProfileSourceInterval);
     }
 }
 
@@ -240,7 +293,7 @@ KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
  */
 VOID
 NTAPI
-KeProfileInterrupt(PKTRAP_FRAME TrapFrame)
+KeProfileInterrupt(IN PKTRAP_FRAME TrapFrame)
 {
     /* Called from HAL for Timer Profiling */
     KeProfileInterruptWithSource(TrapFrame, ProfileTime);
@@ -255,6 +308,10 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
     PULONG BucketValue;
     PKPROFILE Profile;
     PLIST_ENTRY NextEntry;
+    ULONG_PTR ProgramCounter;
+
+    /* Get the Program Counter */
+    ProgramCounter = KeGetTrapFramePc(TrapFrame);
 
     /* Loop the List */
     for (NextEntry = ListHead->Flink;
@@ -265,21 +322,17 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
         Profile = CONTAINING_RECORD(NextEntry, KPROFILE, ProfileListEntry);
 
         /* Check if the source is good, and if it's within the range */
-#ifdef _M_IX86
         if ((Profile->Source != Source) ||
-            (TrapFrame->Eip < (ULONG_PTR)Profile->RangeBase) ||
-            (TrapFrame->Eip > (ULONG_PTR)Profile->RangeLimit))
+            (ProgramCounter < (ULONG_PTR)Profile->RangeBase) ||
+            (ProgramCounter > (ULONG_PTR)Profile->RangeLimit))
         {
             continue;
         }
 
-        /* Get the Pointer to the Bucket Value representing this EIP */
+        /* Get the Pointer to the Bucket Value representing this Program Counter */
         BucketValue = (PULONG)((((ULONG_PTR)Profile->Buffer +
-                               (TrapFrame->Eip - (ULONG_PTR)Profile->RangeBase))
+                               (ProgramCounter - (ULONG_PTR)Profile->RangeBase))
                                 >> Profile->BucketShift) &~ 0x3);
-#elif defined(_M_PPC)
-    // XXX arty
-#endif
 
         /* Increment the value */
         ++BucketValue;

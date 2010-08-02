@@ -6,7 +6,6 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<library>scm_server</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>rpcrt4</library>

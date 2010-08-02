@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* metrics */
 #define PROPSHEETWIDTH                                  252
@@ -203,7 +202,5 @@
 #define IDS_GERMAN_DE_ERGO_LAYOUT                       5139
 #define IDS_BURMESE_LAYOUT                              5140
 #define IDS_UKRAINIAN_STUDENT_LAYOUT                    5141
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

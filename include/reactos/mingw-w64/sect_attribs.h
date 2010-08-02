@@ -1,16 +1,17 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#if defined (__ia64__) || defined (__x86_64)
+#if defined(_MSC_VER)
+
+#if defined(_M_IA64) || defined(_M_AMD64)
 #define _ATTRIBUTES
 #else
 #define _ATTRIBUTES shared
 #endif
 
-#if 0
 /* Reference list of existing section for msvcrt.  */
 #pragma section(".CRTMP$XCA",long,_ATTRIBUTES)
 #pragma section(".CRTMP$XCZ",long,_ATTRIBUTES)
@@ -55,6 +56,17 @@
 #pragma section(".rtc$IZZ",long,read)
 #pragma section(".rtc$TAA",long,read)
 #pragma section(".rtc$TZZ",long,read)
+/* for tlssup.c: */
+#pragma section(".tls",long,read,write)
+#pragma section(".tls$AAA",long,read,write)
+#pragma section(".tls$ZZZ",long,read,write)
+#endif /* _MSC_VER */
+
+#if defined(_MSC_VER)
+#define _CRTALLOC(x) __declspec(allocate(x))
+#elif defined(__GNUC__)
+#define _CRTALLOC(x) __attribute__ ((section (x) ))
+#else
+#error Your compiler is not supported.
 #endif
 
-#define _CRTALLOC(x) __attribute__ ((section (x) ))

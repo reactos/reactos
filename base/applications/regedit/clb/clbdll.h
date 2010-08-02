@@ -1,5 +1,4 @@
-#ifndef __CLBDLL_H
-#define __CLBDLL_H
+#pragma once
 
 #define CLBS_NOTIFY 0x1
 #define CLBS_SORT   0x2
@@ -39,5 +38,3 @@ typedef struct _CUSTOM_CONTROL_INFO
 LRESULT CALLBACK ClbWndProc(HWND,UINT,WPARAM,LPARAM);
 INT_PTR WINAPI ClbStyleW(HWND,LPARAM);
 BOOL WINAPI CustomControlInfoW(LPCUSTOM_CONTROL_INFO);
-
-#endif /* __CLBDLL_H */

@@ -29,7 +29,7 @@ GUIInitialize(
 	return TRUE;
 }
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 StatusMessageWindowProc(
 	IN HWND hwndDlg,
 	IN UINT uMsg,
@@ -259,7 +259,7 @@ LoggedOnWindowProc(
 		}
 		case WM_CLOSE:
 		{
-			EndDialog(hwndDlg, IDNO);
+			EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
 			return TRUE;
 		}
 	}

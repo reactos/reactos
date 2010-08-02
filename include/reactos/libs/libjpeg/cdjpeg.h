@@ -104,6 +104,7 @@ typedef struct cdjpeg_progress_mgr * cd_progress_ptr;
 #define jinit_write_targa	jIWrTarga
 #define read_quant_tables	RdQTables
 #define read_scan_script	RdScnScript
+#define set_quality_ratings     SetQRates
 #define set_quant_slots		SetQSlots
 #define set_sample_factors	SetSFacts
 #define read_color_map		RdCMap
@@ -116,39 +117,41 @@ typedef struct cdjpeg_progress_mgr * cd_progress_ptr;
 
 /* Module selection routines for I/O modules. */
 
-EXTERN_1(cjpeg_source_ptr) jinit_read_bmp JPP((j_compress_ptr cinfo));
-EXTERN_1(djpeg_dest_ptr) jinit_write_bmp JPP((j_decompress_ptr cinfo,
+EXTERN(cjpeg_source_ptr) jinit_read_bmp JPP((j_compress_ptr cinfo));
+EXTERN(djpeg_dest_ptr) jinit_write_bmp JPP((j_decompress_ptr cinfo,
 					    boolean is_os2));
-EXTERN_1(cjpeg_source_ptr) jinit_read_gif JPP((j_compress_ptr cinfo));
-EXTERN_1(djpeg_dest_ptr) jinit_write_gif JPP((j_decompress_ptr cinfo));
-EXTERN_1(cjpeg_source_ptr) jinit_read_ppm JPP((j_compress_ptr cinfo));
-EXTERN_1(djpeg_dest_ptr) jinit_write_ppm JPP((j_decompress_ptr cinfo));
-EXTERN_1(cjpeg_source_ptr) jinit_read_rle JPP((j_compress_ptr cinfo));
-EXTERN_1(djpeg_dest_ptr) jinit_write_rle JPP((j_decompress_ptr cinfo));
-EXTERN_1(cjpeg_source_ptr) jinit_read_targa JPP((j_compress_ptr cinfo));
-EXTERN_1(djpeg_dest_ptr) jinit_write_targa JPP((j_decompress_ptr cinfo));
+EXTERN(cjpeg_source_ptr) jinit_read_gif JPP((j_compress_ptr cinfo));
+EXTERN(djpeg_dest_ptr) jinit_write_gif JPP((j_decompress_ptr cinfo));
+EXTERN(cjpeg_source_ptr) jinit_read_ppm JPP((j_compress_ptr cinfo));
+EXTERN(djpeg_dest_ptr) jinit_write_ppm JPP((j_decompress_ptr cinfo));
+EXTERN(cjpeg_source_ptr) jinit_read_rle JPP((j_compress_ptr cinfo));
+EXTERN(djpeg_dest_ptr) jinit_write_rle JPP((j_decompress_ptr cinfo));
+EXTERN(cjpeg_source_ptr) jinit_read_targa JPP((j_compress_ptr cinfo));
+EXTERN(djpeg_dest_ptr) jinit_write_targa JPP((j_decompress_ptr cinfo));
 
 /* cjpeg support routines (in rdswitch.c) */
 
-EXTERN_1(boolean) read_quant_tables JPP((j_compress_ptr cinfo, char * filename,
-				    int scale_factor, boolean force_baseline));
-EXTERN_1(boolean) read_scan_script JPP((j_compress_ptr cinfo, char * filename));
-EXTERN_1(boolean) set_quant_slots JPP((j_compress_ptr cinfo, char *arg));
-EXTERN_1(boolean) set_sample_factors JPP((j_compress_ptr cinfo, char *arg));
+EXTERN(boolean) read_quant_tables JPP((j_compress_ptr cinfo, char * filename,
+				       boolean force_baseline));
+EXTERN(boolean) read_scan_script JPP((j_compress_ptr cinfo, char * filename));
+EXTERN(boolean) set_quality_ratings JPP((j_compress_ptr cinfo, char *arg,
+					 boolean force_baseline));
+EXTERN(boolean) set_quant_slots JPP((j_compress_ptr cinfo, char *arg));
+EXTERN(boolean) set_sample_factors JPP((j_compress_ptr cinfo, char *arg));
 
 /* djpeg support routines (in rdcolmap.c) */
 
-EXTERN_1(void) read_color_map JPP((j_decompress_ptr cinfo, FILE * infile));
+EXTERN(void) read_color_map JPP((j_decompress_ptr cinfo, FILE * infile));
 
 /* common support routines (in cdjpeg.c) */
 
-EXTERN_1(void) enable_signal_catcher JPP((j_common_ptr cinfo));
-EXTERN_1(void) start_progress_monitor JPP((j_common_ptr cinfo,
+EXTERN(void) enable_signal_catcher JPP((j_common_ptr cinfo));
+EXTERN(void) start_progress_monitor JPP((j_common_ptr cinfo,
 					 cd_progress_ptr progress));
-EXTERN_1(void) end_progress_monitor JPP((j_common_ptr cinfo));
-EXTERN_1(boolean) keymatch JPP((char * arg, const char * keyword, int minchars));
-EXTERN_1(FILE *) read_stdin JPP((void));
-EXTERN_1(FILE *) write_stdout JPP((void));
+EXTERN(void) end_progress_monitor JPP((j_common_ptr cinfo));
+EXTERN(boolean) keymatch JPP((char * arg, const char * keyword, int minchars));
+EXTERN(FILE *) read_stdin JPP((void));
+EXTERN(FILE *) write_stdout JPP((void));
 
 /* miscellaneous useful macros */
 

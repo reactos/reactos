@@ -42,12 +42,6 @@ Author:
     & ~(MM_ALLOCATION_GRANULARITY - 1))
 
 //
-// Macro for generating pool tags
-//
-#define TAG(A, B, C, D)                                     \
-    (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
-//
 // PFN Identity Uses
 //
 #define MMPFNUSE_PROCESSPRIVATE                             0
@@ -62,6 +56,12 @@ Author:
 #define MMPFNUSE_AWEPAGE                                    9
 #define MMPFNUSE_DRIVERLOCKPAGE                             10
 #define MMPFNUSE_KERNELSTACK                                11
+
+//
+// Lock/Unlock Virtuam Memory Flags
+//
+#define MAP_PROCESS                                         1
+#define MAP_SYSTEM                                          2
 
 #ifndef NTOS_MODE_USER
 
@@ -170,6 +170,21 @@ typedef enum _SECTION_INFORMATION_CLASS
     SectionBasicInformation,
     SectionImageInformation,
 } SECTION_INFORMATION_CLASS;
+
+//
+// Kinds of VADs
+//
+typedef enum _MI_VAD_TYPE
+{
+    VadNone,
+    VadDevicePhysicalMemory,
+    VadImageMap,
+    VadAwe,
+    VadWriteWatch,
+    VadLargePages,
+    VadRotatePhysical,
+    VadLargePageSection
+} MI_VAD_TYPE, *PMI_VAD_TYPE;
 
 #ifdef NTOS_MODE_USER
 
@@ -592,13 +607,13 @@ typedef struct _MMADDRESS_NODE
 {
     union
     {
-        LONG Balance:2;
+        LONG_PTR Balance:2;
         struct _MMADDRESS_NODE *Parent;
     } u1;
     struct _MMADDRESS_NODE *LeftChild;
     struct _MMADDRESS_NODE *RightChild;
-    ULONG StartingVpn;
-    ULONG EndingVpn;
+    ULONG_PTR StartingVpn;
+    ULONG_PTR EndingVpn;
 } MMADDRESS_NODE, *PMMADDRESS_NODE;
 
 //
@@ -607,12 +622,123 @@ typedef struct _MMADDRESS_NODE
 typedef struct _MM_AVL_TABLE
 {
     MMADDRESS_NODE BalancedRoot;
-    ULONG DepthOfTree:5;
-    ULONG Unused:3;
-    ULONG NumberGenericTableElements:24;
+    ULONG_PTR DepthOfTree:5;
+    ULONG_PTR Unused:3;
+#ifdef _WIN64
+    ULONG_PTR NumberGenericTableElements:56;
+#else
+    ULONG_PTR NumberGenericTableElements:24;
+#endif
     PVOID NodeHint;
     PVOID NodeFreeHint;
 } MM_AVL_TABLE, *PMM_AVL_TABLE;
+
+//
+// Virtual Adress List used in VADs
+//
+typedef struct _MMADDRESS_LIST
+{
+    ULONG StartVpn;
+    ULONG EndVpn;
+} MMADDRESS_LIST, *PMMADDRESS_LIST;
+
+//
+// Flags used in the VAD
+//
+typedef struct _MMVAD_FLAGS
+{
+    ULONG CommitCharge:19;
+    ULONG NoChange:1;
+    ULONG VadType:3;
+    ULONG MemCommit:1;
+    ULONG Protection:5;
+    ULONG Spare:2;
+    ULONG PrivateMemory:1;
+} MMVAD_FLAGS, *PMMVAD_FLAGS;
+
+//
+// Extended flags used in the VAD
+//
+typedef struct _MMVAD_FLAGS2
+{
+    ULONG FileOffset:24;
+    ULONG SecNoChange:1;
+    ULONG OneSecured:1;
+    ULONG MultipleSecured:1;
+    ULONG ReadOnly:1;
+    ULONG LongVad:1;
+    ULONG ExtendableFile:1;
+    ULONG Inherit:1;
+    ULONG CopyOnWrite:1;
+} MMVAD_FLAGS2, *PMMVAD_FLAGS2;
+
+//
+// Virtual Address Descriptor (VAD) Structure
+//
+typedef struct _MMVAD
+{
+    union
+    {
+        LONG_PTR Balance:2;
+        struct _MMVAD *Parent;
+    } u1;
+    struct _MMVAD *LeftChild;
+    struct _MMVAD *RightChild;
+    ULONG StartingVpn;
+    ULONG EndingVpn;
+    union
+    {
+        ULONG LongFlags;
+        MMVAD_FLAGS VadFlags;
+    } u;
+    PCONTROL_AREA ControlArea;
+    PMMPTE FirstPrototypePte;
+    PMMPTE LastContiguousPte;
+    union
+    {
+        ULONG LongFlags2;
+        MMVAD_FLAGS2 VadFlags2;
+    } u2;
+} MMVAD, *PMMVAD;
+
+//
+// Long VAD used in section and private allocations
+//
+typedef struct _MMVAD_LONG 
+{
+    union
+    {
+        LONG_PTR Balance:2;
+        PMMVAD Parent;
+    } u1;
+    PMMVAD LeftChild;
+    PMMVAD RightChild;
+    ULONG StartingVpn;
+    ULONG EndingVpn;
+    union
+    {
+        ULONG LongFlags;
+        MMVAD_FLAGS VadFlags;
+    } u;
+    PCONTROL_AREA ControlArea;
+    PMMPTE FirstPrototypePte;
+    PMMPTE LastContiguousPte;
+    union
+    {
+        ULONG LongFlags2;
+        MMVAD_FLAGS2 VadFlags2;
+    } u2;
+    union
+    {
+        LIST_ENTRY List;
+        MMADDRESS_LIST Secured;
+    } u3;
+    union
+    {
+        PVOID Banked;
+        PMMEXTEND_INFO ExtendedInfo;
+    } u4;
+} MMVAD_LONG, *PMMVAD_LONG;
 
 //
 // Actual Section Object
@@ -756,7 +882,7 @@ typedef struct _MEMORY_BASIC_INFORMATION
     PVOID BaseAddress;
     PVOID AllocationBase;
     ULONG AllocationProtect;
-    ULONG RegionSize;
+    SIZE_T RegionSize;
     ULONG State;
     ULONG Protect;
     ULONG Type;

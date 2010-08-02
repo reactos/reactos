@@ -222,3 +222,12 @@ BOOL WINAPI WTSUnRegisterSessionNotification(HWND hWnd)
     FIXME("Stub %p\n", hWnd);
     return FALSE;
 }
+
+/************************************************************
+ *                WTSQueryUserToken (WTSAPI32.@)
+ */
+BOOL WINAPI WTSQueryUserToken(ULONG session_id, PHANDLE token)
+{
+    FIXME("%u %p\n", session_id, token);
+    return FALSE;
+}

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -39,33 +39,33 @@
 
 NTSTATUS NTAPI
 MupCreate(PDEVICE_OBJECT DeviceObject,
-	  PIRP Irp)
+          PIRP Irp)
 {
-  PDEVICE_EXTENSION DeviceExt;
-  PIO_STACK_LOCATION Stack;
-  PFILE_OBJECT FileObject;
-  NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExt;
+    PIO_STACK_LOCATION Stack;
+    PFILE_OBJECT FileObject;
+    NTSTATUS Status;
 
-  DPRINT("MupCreate() called\n");
+    DPRINT("MupCreate() called\n");
 
-  DeviceExt = DeviceObject->DeviceExtension;
-  ASSERT(DeviceExt);
-  Stack = IoGetCurrentIrpStackLocation (Irp);
-  ASSERT(Stack);
+    DeviceExt = DeviceObject->DeviceExtension;
+    ASSERT(DeviceExt);
+    Stack = IoGetCurrentIrpStackLocation (Irp);
+    ASSERT(Stack);
 
-  FileObject = Stack->FileObject;
+    FileObject = Stack->FileObject;
 
-  DPRINT("FileName: '%wZ'\n", &FileObject->FileName);
+    DPRINT("FileName: '%wZ'\n", &FileObject->FileName);
 
-  Status = STATUS_ACCESS_DENIED;
+    Status = STATUS_ACCESS_DENIED;
 
-  Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
-  Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = (NT_SUCCESS(Status)) ? FILE_OPENED : 0;
+    Irp->IoStatus.Status = Status;
 
-  IoCompleteRequest(Irp,
-		    IO_NO_INCREMENT);
+    IoCompleteRequest(Irp,
+                      IO_NO_INCREMENT);
 
-  return(Status);
+    return Status;
 }
 
 /* EOF */

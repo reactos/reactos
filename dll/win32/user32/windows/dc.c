@@ -54,7 +54,7 @@ ReleaseDC(HWND hWnd,
 
     GdiReleaseDC ( hDC ); // Release locals.
     // Win 3.1 throw back, hWnd is ignored and not used.
-    return NtUserCallOneParam((DWORD) hDC, ONEPARAM_ROUTINE_RELEASEDC);
+    return NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_RELEASEDC);
 }
 
 

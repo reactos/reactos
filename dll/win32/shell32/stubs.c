@@ -131,6 +131,32 @@ SHCreateFileExtractIconW(LPCWSTR pszPath,
     return E_FAIL;
 }
 
+HRESULT
+WINAPI
+SHGetUnreadMailCountW(HKEY hKeyUser,
+                      LPCWSTR pszMailAddress,
+                      DWORD *pdwCount,
+                      FILETIME *pFileTime,
+                      LPCWSTR pszShellExecuteCommand,
+                      int cchShellExecuteCommand)
+{
+    FIXME("SHGetUnreadMailCountW() stub\n");
+    return E_FAIL;
+}
+
+/*
+ * Unimplemented
+ */
+HRESULT
+WINAPI
+SHSetUnreadMailCountW(LPCWSTR pszMailAddress,
+                      DWORD dwCount,
+                      LPCWSTR pszShellExecuteCommand)
+{
+    FIXME("SHSetUnreadMailCountW() stub\n");
+    return E_FAIL;
+}
+
 /*
  * Unimplemented
  */
@@ -355,7 +381,7 @@ CDefFolderMenu_MergeMenu(HINSTANCE hInstance,
  */
 HRESULT
 WINAPI
-CDefFolderMenu_Create(PCIDLIST_ABSOLUTE pidlFolder,
+CDefFolderMenu_Create(LPITEMIDLIST pidlFolder,
                       HWND hwnd,
                       UINT uidl,
                       PCUITEMID_CHILD_ARRAY *apidl,
@@ -409,23 +435,6 @@ RealDriveTypeFlags(INT iDrive, BOOL bUnknown)
 {
     FIXME("RealDriveTypeFlags() stub\n");
     return 1;
-}
-
-/*
- * Unimplemented
- */
-HINSTANCE
-WINAPI
-WOWShellExecute(HWND hwnd,
-                LPCWSTR lpOperation,
-                LPCWSTR lpFile,
-                LPCWSTR lpParameters,
-                LPCWSTR lpDirectory,
-                INT nShowCmd,
-                void *lpfnCBWinExec)
-{
-    FIXME("WOWShellExecute() stub\n");
-    return NULL;
 }
 
 /*
@@ -953,7 +962,7 @@ PifMgr_CloseProperties(HANDLE hHandle, UINT uUnknown)
 BOOL
 WINAPI
 DAD_DragEnterEx2(HWND hwndTarget,
-                 const POINT ptStart,
+                 POINT ptStart,
                  IDataObject *pdtObject)
 {
     FIXME("DAD_DragEnterEx2() stub\n");

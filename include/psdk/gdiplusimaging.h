@@ -31,11 +31,42 @@ DEFINE_GUID(ImageFormatTIFF,      0xb96b3cb1, 0x728, 0x11d3, 0x9d, 0x7b, 0, 0, 0
 DEFINE_GUID(ImageFormatEXIF,      0xb96b3cb2, 0x728, 0x11d3, 0x9d, 0x7b, 0, 0, 0xf8, 0x1e, 0xf3, 0x2e);
 DEFINE_GUID(ImageFormatIcon,      0xb96b3cb5, 0x728, 0x11d3, 0x9d, 0x7b, 0, 0, 0xf8, 0x1e, 0xf3, 0x2e);
 
+DEFINE_GUID(FrameDimensionTime,       0x6aedbd6d, 0x3fb5, 0x418a, 0x83, 0xa6, 0x7f, 0x45, 0x22, 0x9d, 0xc8, 0x72);
+DEFINE_GUID(FrameDimensionPage,       0x7462dc86, 0x6180, 0x4c7e, 0x8e, 0x3f, 0xee, 0x73, 0x33, 0xa7, 0xa4, 0x83);
+DEFINE_GUID(FrameDimensionResolution, 0x84236f7b, 0x3bd3, 0x428f, 0x8d, 0xab, 0x4e, 0xa1, 0x43, 0x9c, 0xa3, 0x15);
+
 enum ImageLockMode
 {
     ImageLockModeRead           = 1,
     ImageLockModeWrite          = 2,
     ImageLockModeUserInputBuf   = 4
+};
+
+enum RotateFlipType
+{
+    RotateNoneFlipNone = 0,
+    Rotate180FlipXY    = RotateNoneFlipNone,
+
+    Rotate90FlipNone   = 1,
+    Rotate270FlipXY    = Rotate90FlipNone,
+
+    Rotate180FlipNone  = 2,
+    RotateNoneFlipXY   = Rotate180FlipNone,
+
+    Rotate270FlipNone  = 3,
+    Rotate90FlipXY     = Rotate270FlipNone,
+
+    RotateNoneFlipX    = 4,
+    Rotate180FlipY     = RotateNoneFlipX,
+
+    Rotate90FlipX      = 5,
+    Rotate270FlipY     = Rotate90FlipX,
+
+    Rotate180FlipX     = 6,
+    RotateNoneFlipY    = Rotate180FlipX,
+
+    Rotate270FlipX     = 7,
+    Rotate90FlipY      = Rotate270FlipX
 };
 
 #ifdef __cplusplus
@@ -108,6 +139,7 @@ public:
 #else /* end of c++ typedefs */
 
 typedef enum ImageLockMode ImageLockMode;
+typedef enum RotateFlipType RotateFlipType;
 
 typedef struct EncoderParameter
 {

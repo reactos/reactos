@@ -62,3 +62,26 @@ int CDECL strcat_s( char* dst, size_t elem, const char* src )
     dst[0] = '\0';
     return ERANGE;
 }
+
+/*********************************************************************
+ *      strcpy_s (MSVCRT.@)
+ */
+int CDECL strcpy_s( char* dst, size_t elem, const char* src )
+{
+    size_t i;
+    if(!elem) return EINVAL;
+    if(!dst) return EINVAL;
+    if(!src)
+    {
+        dst[0] = '\0';
+        return EINVAL;
+    }
+
+    for(i = 0; i < elem; i++)
+    {
+        if((dst[i] = src[i]) == '\0') return 0;
+    }
+    dst[0] = '\0';
+    return ERANGE;
+}
+

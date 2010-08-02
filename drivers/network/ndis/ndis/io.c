@@ -68,12 +68,14 @@ BOOLEAN NTAPI ServiceRoutine(
   NDIS_DbgPrint(MAX_TRACE, ("Called. Interrupt (0x%X)\n", NdisInterrupt));
 
   if (NdisInterrupt->IsrRequested) {
+      NDIS_DbgPrint(MAX_TRACE, ("Calling MiniportISR\n"));
       (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.ISRHandler)(
           &InterruptRecognized,
           &QueueMiniportHandleInterrupt,
           NdisMiniportBlock->MiniportAdapterContext);
 
   } else if (NdisMiniportBlock->DriverHandle->MiniportCharacteristics.DisableInterruptHandler) {
+      NDIS_DbgPrint(MAX_TRACE, ("Calling MiniportDisableInterrupt\n"));
       (*NdisMiniportBlock->DriverHandle->MiniportCharacteristics.DisableInterruptHandler)(
           NdisMiniportBlock->MiniportAdapterContext);
        QueueMiniportHandleInterrupt = TRUE;
@@ -104,7 +106,7 @@ NdisImmediateReadPortUchar(
     OUT PUCHAR      Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  *Data = READ_PORT_UCHAR((PUCHAR)Port); // FIXME: What to do with WrapperConfigurationContext?
+  *Data = READ_PORT_UCHAR(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -119,7 +121,7 @@ NdisImmediateReadPortUlong(
     OUT PULONG      Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  *Data = READ_PORT_ULONG((PULONG)Port); // FIXME: What to do with WrapperConfigurationContext?
+  *Data = READ_PORT_ULONG(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -134,7 +136,7 @@ NdisImmediateReadPortUshort(
     OUT PUSHORT     Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  *Data = READ_PORT_USHORT((PUSHORT)Port); // FIXME: What to do with WrapperConfigurationContext?
+  *Data = READ_PORT_USHORT(UlongToPtr(Port)); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -149,7 +151,7 @@ NdisImmediateWritePortUchar(
     IN  UCHAR       Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  WRITE_PORT_UCHAR((PUCHAR)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  WRITE_PORT_UCHAR(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -164,7 +166,7 @@ NdisImmediateWritePortUlong(
     IN  ULONG       Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  WRITE_PORT_ULONG((PULONG)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  WRITE_PORT_ULONG(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -179,7 +181,7 @@ NdisImmediateWritePortUshort(
     IN  USHORT      Data)
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-  WRITE_PORT_USHORT((PUSHORT)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
+  WRITE_PORT_USHORT(UlongToPtr(Port), Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -276,8 +278,10 @@ NdisMAllocateMapRegisters(
   ASSERT(Adapter);
 
   /* only bus masters may call this routine */
-  if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
+  if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER)) {
+    NDIS_DbgPrint(MIN_TRACE, ("Not a bus master\n"));
     return NDIS_STATUS_NOT_SUPPORTED;
+  }
 
   DeviceObject = Adapter->NdisMiniportBlock.DeviceObject;
 
@@ -308,7 +312,7 @@ NdisMAllocateMapRegisters(
   
   if(DmaSize == NDIS_DMA_64BITS)
     Description.Dma64BitAddresses = TRUE;
-  else
+  else if(DmaSize == NDIS_DMA_32BITS)
     Description.Dma32BitAddresses = TRUE;
 
   AdapterObject = IoGetDmaAdapter(
@@ -327,6 +331,8 @@ NdisMAllocateMapRegisters(
       NDIS_DbgPrint(MIN_TRACE, ("Didn't get enough map registers from hal - requested 0x%x, got 0x%x\n",
           MapRegistersPerBaseRegister, AvailableMapRegisters));
 
+      AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+      Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -335,6 +341,8 @@ NdisMAllocateMapRegisters(
   if(!Adapter->NdisMiniportBlock.MapRegisters)
     {
       NDIS_DbgPrint(MIN_TRACE, ("insufficient resources.\n"));
+      AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+      Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -359,6 +367,9 @@ NdisMAllocateMapRegisters(
         {
           NDIS_DbgPrint(MIN_TRACE, ("IoAllocateAdapterChannel failed: 0x%x\n", NtStatus));
           ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
+          AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+          Adapter->NdisMiniportBlock.CurrentMapRegister = Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = 0;
+          Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
           return NDIS_STATUS_RESOURCES;
         }
 
@@ -370,6 +381,9 @@ NdisMAllocateMapRegisters(
         {
           NDIS_DbgPrint(MIN_TRACE, ("KeWaitForSingleObject failed: 0x%x\n", NtStatus));
           ExFreePool(Adapter->NdisMiniportBlock.MapRegisters);
+          AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
+          Adapter->NdisMiniportBlock.CurrentMapRegister = Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = 0;
+          Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
           return NDIS_STATUS_RESOURCES;
         }
 
@@ -493,14 +507,17 @@ NdisMCompleteBufferPhysicalMapping(
 VOID
 EXPORT
 NdisMDeregisterDmaChannel(
-    IN  PNDIS_HANDLE    MiniportDmaHandle)
+    IN  NDIS_HANDLE    MiniportDmaHandle)
 {
-    PNDIS_MINIPORT_BLOCK NdisMiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
-    PDMA_ADAPTER AdapterObject = NdisMiniportBlock->SystemAdapterObject;
+    PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
+    PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
+
+    if (AdapterObject == ((PLOGICAL_ADAPTER)DmaBlock->Miniport)->NdisMiniportBlock.SystemAdapterObject)
+        ((PLOGICAL_ADAPTER)DmaBlock->Miniport)->NdisMiniportBlock.SystemAdapterObject = NULL;
 
     AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
 
-    NdisMiniportBlock->SystemAdapterObject = NULL;
+    ExFreePool(DmaBlock);
 }
 
 
@@ -551,10 +568,11 @@ NdisMFreeMapRegisters(
   ASSERT(Adapter);
 
   /* only bus masters may call this routine */
-  ASSERT(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER);
   if(!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER) ||
-     Adapter->NdisMiniportBlock.SystemAdapterObject == NULL)
+     Adapter->NdisMiniportBlock.SystemAdapterObject == NULL) {
+     NDIS_DbgPrint(MIN_TRACE, ("Not bus master or bad adapter object\n"));
     return;
+  }
 
   MapRegistersPerBaseRegister = ((Adapter->NdisMiniportBlock.MaximumPhysicalMapping - 2) / PAGE_SIZE) + 2;
 
@@ -603,19 +621,30 @@ NdisMMapIoSpace(
  *     NDIS_STATUS_FAILURE: a general failure has occured
  * NOTES:
  *     - Must be called at IRQL = PASSIVE_LEVEL
- * BUGS:
- *     - Only supports things that MmMapIoSpace internally supports - what
- *       about considering bus type, etc?
- *     - doesn't track resources allocated...
  */
 {
+  PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+  ULONG AddressSpace = 0; /* Memory Space */
+  NDIS_PHYSICAL_ADDRESS TranslatedAddress;
+
   PAGED_CODE();
   ASSERT(VirtualAddress && MiniportAdapterHandle);
 
-  *VirtualAddress = MmMapIoSpace(PhysicalAddress, Length, MmNonCached);
+  NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  if(!*VirtualAddress)
+  if(!HalTranslateBusAddress(Adapter->NdisMiniportBlock.BusType, Adapter->NdisMiniportBlock.BusNumber,
+                             PhysicalAddress, &AddressSpace, &TranslatedAddress))
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Unable to translate address\n"));
+      return NDIS_STATUS_RESOURCES;
+  }
+
+  *VirtualAddress = MmMapIoSpace(TranslatedAddress, Length, MmNonCached);
+
+  if(!*VirtualAddress) {
+    NDIS_DbgPrint(MIN_TRACE, ("MmMapIoSpace failed\n"));
     return NDIS_STATUS_RESOURCES;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -629,13 +658,10 @@ EXPORT
 NdisMReadDmaCounter(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
-  PNDIS_MINIPORT_BLOCK MiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
-  PDMA_ADAPTER AdapterObject = MiniportBlock->SystemAdapterObject;
+  PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
+  PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  if (AdapterObject == NULL)
-    return 0;
 
   return AdapterObject->DmaOperations->ReadDmaCounter(AdapterObject);
 }
@@ -649,13 +675,10 @@ EXPORT
 NdisMGetDmaAlignment(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
-  PNDIS_MINIPORT_BLOCK MiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
-  PDMA_ADAPTER AdapterObject = MiniportBlock->SystemAdapterObject;
+  PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
+  PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  if (AdapterObject == NULL)
-    return 0;
 
   return AdapterObject->DmaOperations->GetDmaAlignment(AdapterObject);
 }
@@ -677,15 +700,9 @@ NdisMRegisterDmaChannel(
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   DEVICE_DESCRIPTION DeviceDesc;
   ULONG MapRegisters;
+  PNDIS_DMA_BLOCK DmaBlock;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  if (Adapter->NdisMiniportBlock.SystemAdapterObject)
-  {
-      NDIS_DbgPrint(MIN_TRACE,("Using existing DMA adapter\n"));
-      *MiniportDmaHandle = &Adapter->NdisMiniportBlock;
-      return NDIS_STATUS_SUCCESS;
-  }
 
   RtlZeroMemory(&DeviceDesc, sizeof(DEVICE_DESCRIPTION));
 
@@ -703,13 +720,26 @@ NdisMRegisterDmaChannel(
   DeviceDesc.DmaSpeed = DmaDescription->DmaSpeed;
   DeviceDesc.MaximumLength = MaximumLength;
 
-  Adapter->NdisMiniportBlock.SystemAdapterObject = 
-         IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
 
-  if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
+  DmaBlock = ExAllocatePool(NonPagedPool, sizeof(NDIS_DMA_BLOCK));
+  if (!DmaBlock) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
+  }
 
-  *MiniportDmaHandle = &Adapter->NdisMiniportBlock;
+  DmaBlock->SystemAdapterObject = (PVOID)IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
+
+  if (!DmaBlock->SystemAdapterObject) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
+      ExFreePool(DmaBlock);
+      return NDIS_STATUS_RESOURCES;
+  }
+
+  Adapter->NdisMiniportBlock.SystemAdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
+
+  DmaBlock->Miniport = Adapter;
+
+  *MiniportDmaHandle = DmaBlock;
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -850,7 +880,7 @@ NdisMRegisterIoPortRange(
   if(AddressSpace)
     {
       ASSERT(TranslatedAddress.u.HighPart == 0);
-      *PortOffset = (PVOID) TranslatedAddress.u.LowPart;
+      *PortOffset = (PVOID)(ULONG_PTR)TranslatedAddress.QuadPart;
       NDIS_DbgPrint(MAX_TRACE, ("Returning 0x%x\n", *PortOffset));
       return NDIS_STATUS_SUCCESS;
     }
@@ -860,8 +890,10 @@ NdisMRegisterIoPortRange(
   *PortOffset = MmMapIoSpace(TranslatedAddress, NumberOfPorts, MmNonCached);
   NDIS_DbgPrint(MAX_TRACE, ("Returning 0x%x for port range\n", *PortOffset));
 
-  if(!*PortOffset)
+  if(!*PortOffset) {
+    NDIS_DbgPrint(MIN_TRACE, ("MmMapIoSpace failed\n"));
     return NDIS_STATUS_RESOURCES;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -919,13 +951,9 @@ NdisMInitializeScatterGatherDma(
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    if (!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
+    if (!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER)) {
+        NDIS_DbgPrint(MIN_TRACE, ("Not a bus master\n"));
         return NDIS_STATUS_NOT_SUPPORTED;
-
-    if (Adapter->NdisMiniportBlock.SystemAdapterObject)
-    {
-        NDIS_DbgPrint(MIN_TRACE,("Using existing DMA adapter\n"));
-        return NDIS_STATUS_SUCCESS;
     }
 
     RtlZeroMemory(&DeviceDesc, sizeof(DEVICE_DESCRIPTION));
@@ -944,6 +972,9 @@ NdisMInitializeScatterGatherDma(
 
     if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
         return NDIS_STATUS_RESOURCES;
+
+    /* FIXME: Right now we just use this as a place holder */
+    Adapter->NdisMiniportBlock.ScatterGatherListSize = 1;
 
     return NDIS_STATUS_SUCCESS;
 }

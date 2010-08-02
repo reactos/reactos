@@ -14,9 +14,12 @@
 #include <debug.h>
 
 SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;
+PTEB LdrpTopLevelDllBeingLoadedTeb = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
+#ifndef _M_AMD64
+// FIXME: Why "Not implemented"???
 /*
  * @implemented
  */
@@ -29,31 +32,34 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     /* Not implemented for user-mode */
     return 0;
 }
+#endif
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(BOOLEAN Type)
+RtlpCheckForActiveDebugger(VOID)
 {
-    return (NtCurrentPeb()->BeingDebugged);
+    /* Return the flag in the PEB */
+    return NtCurrentPeb()->BeingDebugged;
 }
 
 BOOLEAN
 NTAPI
-RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+RtlpSetInDbgPrint(VOID)
 {
-    /* If we're setting it to false, do it and return */
-    if (NewValue == FALSE)
-    {
-        NtCurrentTeb()->InDbgPrint = FALSE;
-        return FALSE;
-    }
-
-    /* Setting to true; check if it's not already */
+    /* Check if it's already set and return TRUE if so */
     if (NtCurrentTeb()->InDbgPrint) return TRUE;
 
     /* Set it and return */
     NtCurrentTeb()->InDbgPrint = TRUE;
     return FALSE;
+}
+
+VOID
+NTAPI
+RtlpClearInDbgPrint(VOID)
+{
+    /* Clear the flag */
+    NtCurrentTeb()->InDbgPrint = FALSE;
 }
 
 KPROCESSOR_MODE
@@ -80,7 +86,7 @@ VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebLockRoutine (Peb->FastPebLock);
+   RtlEnterCriticalSection(Peb->FastPebLock);
 }
 
 /*
@@ -90,7 +96,7 @@ VOID NTAPI
 RtlReleasePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
-   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
+   RtlLeaveCriticalSection(Peb->FastPebLock);
 }
 
 /*
@@ -162,7 +168,7 @@ RtlpFreeMemory(PVOID Mem,
 }
 
 
-#ifdef DBG
+#if DBG
 VOID FASTCALL
 CHECK_PAGED_CODE_RTL(char *file, int line)
 {
@@ -198,9 +204,29 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
                        IN ULONG_PTR *StackEnd)
 {
     /* FIXME: Verify */
-    *StackBegin = (ULONG_PTR)NtCurrentTeb()->Tib.StackLimit;
-    *StackEnd = (ULONG_PTR)NtCurrentTeb()->Tib.StackBase;
+    *StackBegin = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+    *StackEnd = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
     return TRUE;
+}
+
+#ifdef _AMD64_
+VOID
+NTAPI
+RtlpGetStackLimits(
+    OUT PULONG_PTR LowLimit,
+    OUT PULONG_PTR HighLimit)
+{
+    *LowLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackLimit;
+    *HighLimit = (ULONG_PTR)NtCurrentTeb()->NtTib.StackBase;
+    return;
+}
+#endif
+
+BOOLEAN
+NTAPI
+RtlIsThreadWithinLoaderCallout(VOID)
+{
+    return LdrpTopLevelDllBeingLoadedTeb == NtCurrentTeb();
 }
 
 /* RTL Atom Tables ************************************************************/

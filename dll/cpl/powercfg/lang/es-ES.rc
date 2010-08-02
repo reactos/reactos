@@ -5,7 +5,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 252, 237
+IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 262, 237
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Combinaciones de energía"
 FONT 8, "MS Shell Dlg"
@@ -13,11 +13,11 @@ BEGIN
   ICON IDI_ACDC, IDI_ACDC, 7, 7, 28, 22
   LTEXT "Seleccione la combinación de energía cuya configuración sea la más adecuada para su equipo. Tenga en cuenta que, si cambia la configuración siguiente, se modificará la combinación seleccionada.",
 	-1,37, 6, 209, 36
-  GROUPBOX "C&ombinaciones de energía ", -1, 6, 43, 240, 50
+  GROUPBOX "C&ombinaciones de energía ", -1, 6, 43, 250, 50
   COMBOBOX IDC_ENERGYLIST, 14, 54, 224, 92, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL
   PUSHBUTTON "&Guardar como...", IDC_SAVEAS_BTN, 109, 72, 70, 14, WS_DISABLED
   PUSHBUTTON "E&liminar", IDC_DELETE_BTN, 183, 72, 55, 14, WS_DISABLED
-  GROUPBOX "Desconocido ", IDC_GRPDETAIL, 6, 95, 240, 136
+  GROUPBOX "Desconocido ", IDC_GRPDETAIL, 6, 95, 250, 136
   LTEXT "Cuando el equipo está:",IDC_SAT, 12, 109, 65, 14
   LTEXT "Enchufado",IDC_SAC, 123, 110, 45, 15
   ICON IDI_AC, IDC_IAC, 97, 108, 21, 20
@@ -37,12 +37,12 @@ BEGIN
   COMBOBOX IDC_HYBERNATEDCLIST, 173, 209, 65, 150, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 252, 237
+IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 262, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Alarmas"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Alarma de batería baja ",-1, 6, 7, 239, 104
+    GROUPBOX        "Alarma de batería baja ",-1, 6, 7, 249, 104
     CONTROL         "Activar la a&larma de batería baja cuando la potencia alcance un nivel:",IDC_ALARM1,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 17, 190, 15
     LTEXT           "Desconocido",IDC_ALARMVALUE1, 209, 20, 33, 10
@@ -58,7 +58,7 @@ BEGIN
     LTEXT           "Ejecutar programa:",-1, 95, 95, 55, 10
     LTEXT           "Desconocido",IDC_ALARMPROG1, 154, 95, 84, 10
 
-    GROUPBOX        "Alarma de batería crítica ",-1, 6, 120, 239, 106
+    GROUPBOX        "Alarma de batería crítica ",-1, 6, 120, 249, 106
     CONTROL         "Activar la a&larma de batería baja cuando la potencia alcance un nivel:",IDC_ALARM2,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
     LTEXT           "Desconocido",IDC_ALARMVALUE2, 209, 133, 33, 10
@@ -75,21 +75,21 @@ BEGIN
     LTEXT           "Desconocido",IDC_ALARMPROG2, 154, 211, 84, 10
 END
 
-IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 252, 237
+IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 262, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Opciones avanzadas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON            IDI_ACDC,IDI_ACDC, 7, 7, 20, 20
     LTEXT           "Seleccione la configuración de ahorro de energía que desea usar.",-1, 37, 6, 207, 20
-    GROUPBOX        "Opciones ",-1, 6, 30, 240, 65
+    GROUPBOX        "Opciones ",-1, 6, 30, 250, 65
     CONTROL         "Mo&strar siempre el icono en la barra de tareas",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 43, 220, 10
+                    WS_TABSTOP, 17, 43, 230, 10
     CONTROL         "S&olicitar una contraseña cuando el equipo se active tras un tiempo de inactividad",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 56, 220, 14
+                    WS_TABSTOP, 17, 56, 230, 14
     CONTROL         "&Atenuar monitor cuando esté funcionando con baterias",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP, 17, 78, 220, 10
-    GROUPBOX        "Botones de encendido ",-1, 6, 101, 240, 127
+                    WS_TABSTOP, 17, 78, 230, 10
+    GROUPBOX        "Botones de encendido ",-1, 6, 101, 250, 127
     LTEXT           "&Cuando cierre la tapa de mi ordenador portátil:", IDC_SLIDCLOSE, 15, 115, 222, 10
     COMBOBOX        IDC_LIDCLOSE, 15, 127, 220, 90, CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
@@ -101,7 +101,7 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_PROPPAGEHIBERNATE DIALOGEX DISCARDABLE  0, 0, 252, 237
+IDD_PROPPAGEHIBERNATE DIALOGEX DISCARDABLE  0, 0, 262, 237
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Hibernación"
 FONT 8, "MS Shell Dlg"
@@ -109,10 +109,10 @@ BEGIN
     ICON            IDI_HIBERNATE,IDI_HIBERNATE, 7, 7, 20, 20
     LTEXT           "Cuando su equipo hiberna, almacena lo que hay en memoria en el disco duro y luego se apaga. Cuando sale del modo de hibernación vuelve a su estado anterior. ",
                     -1, 37, 6, 210, 35
-    GROUPBOX        "Hibernar ",-1, 6, 41, 240, 32
+    GROUPBOX        "Hibernar ",-1, 6, 41, 250, 32
     CONTROL         "Habilitar &hibernación",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP, 17, 55, 210, 10
-    GROUPBOX        "Espacio en disco para hibernación ",-1, 6, 80, 240, 76
+    GROUPBOX        "Espacio en disco para hibernación ",-1, 6, 80, 250, 76
     LTEXT           "Espacio libre en disco:",-1, 15, 95, 140, 10
     LTEXT           "Desconocido",IDC_FREESPACE, 160, 95, 80, 10
     LTEXT           "Espacio en disco requerido para hibernar:",-1, 15, 115, 140, 10
@@ -146,15 +146,15 @@ BEGIN
   IDS_PowerActionNone2 "None"
 
   IDS_TIMEOUT1 "Tras 1 min"
-  IDS_TIMEOUT2 "Tras 2 mins"
-  IDS_TIMEOUT3 "Tras 3 mins"
-  IDS_TIMEOUT4 "Tras 5 mins"
-  IDS_TIMEOUT5 "Tras 10 mins"
-  IDS_TIMEOUT6 "Tras 15 mins"
-  IDS_TIMEOUT7 "Tras 20 mins"
-  IDS_TIMEOUT8 "Tras 25 mins"
-  IDS_TIMEOUT9 "Tras 30 mins"
-  IDS_TIMEOUT10 "Tras 45 mins"
+  IDS_TIMEOUT2 "Tras 2 min"
+  IDS_TIMEOUT3 "Tras 3 min"
+  IDS_TIMEOUT4 "Tras 5 min"
+  IDS_TIMEOUT5 "Tras 10 min"
+  IDS_TIMEOUT6 "Tras 15 min"
+  IDS_TIMEOUT7 "Tras 20 min"
+  IDS_TIMEOUT8 "Tras 25 min"
+  IDS_TIMEOUT9 "Tras 30 min"
+  IDS_TIMEOUT10 "Tras 45 min"
   IDS_TIMEOUT11 "Tras 1 hora"
   IDS_TIMEOUT12 "Tras 2 horas"
   IDS_TIMEOUT13 "Tras 3 horas"

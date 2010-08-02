@@ -1,6 +1,5 @@
-/* $Id$
- *
- * reactos/lib/gdi32/misc/stubs.c
+/*
+ * dll/win32/gdi32/misc/stubsw.c
  *
  * GDI32.DLL Stubs for Unicode functions
  *
@@ -10,10 +9,7 @@
  */
 
 #include "precomp.h"
-
-#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
-
-
+#include <debug.h>
 
 
 /*
@@ -21,15 +17,12 @@
  */
 BOOL
 WINAPI
-PolyTextOutW(
-	HDC			hdc,
-	CONST POLYTEXTW		*a1,
-	int			a2
-	)
+PolyTextOutW( HDC hdc, const POLYTEXTW *pptxt, INT cStrings )
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    for (; cStrings>0; cStrings--, pptxt++)
+        if (!ExtTextOutW( hdc, pptxt->x, pptxt->y, pptxt->uiFlags, &pptxt->rcl, pptxt->lpstr, pptxt->n, pptxt->pdx ))
+            return FALSE;
+    return TRUE;
 }
 
 /*
@@ -55,11 +48,13 @@ GetLogColorSpaceW(
 BOOL
 WINAPI
 GetICMProfileW(
-	HDC		a0,
-	LPDWORD		a1,
-	LPWSTR		a2
+	HDC		hdc,
+	LPDWORD		size,
+	LPWSTR		filename
 	)
 {
+    if (!hdc || !size || !filename) return FALSE;
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -105,46 +100,6 @@ EnumICMProfilesW(
   UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-wglUseFontBitmapsW(
-	HDC		a0,
-	DWORD		a1,
-	DWORD		a2,
-	DWORD		a3
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-wglUseFontOutlinesW(
-	HDC			a0,
-	DWORD			a1,
-	DWORD			a2,
-	DWORD			a3,
-	FLOAT			a4,
-	FLOAT			a5,
-	int			a6,
-	LPGLYPHMETRICSFLOAT	a7
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 
@@ -288,9 +243,22 @@ CreateScalableFontResourceW(
 	LPCWSTR lpszCurrentPath
 	)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+    HANDLE f;
+
+    UNIMPLEMENTED;
+
+    /* fHidden=1 - only visible for the calling app, read-only, not
+     * enumerated with EnumFonts/EnumFontFamilies
+     * lpszCurrentPath can be NULL
+     */
+
+    /* If the output file already exists, return the ERROR_FILE_EXISTS error as specified in MSDN */
+    if ((f = CreateFileW(lpszFontRes, 0, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0)) != INVALID_HANDLE_VALUE) {
+        CloseHandle(f);
+        SetLastError(ERROR_FILE_EXISTS);
+        return FALSE;
+    }
+    return FALSE; /* create failed */
 }
   
 

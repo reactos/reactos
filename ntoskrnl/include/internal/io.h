@@ -10,7 +10,7 @@
 //
 // Define this if you want debugging support
 //
-#define _IO_DEBUG_                                      0x01
+#define _IO_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -43,7 +43,7 @@
     }
 #endif
 #else
-#define IOTRACE(x, ...) DPRINT(__VA_ARGS__);
+#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
 //
@@ -87,21 +87,6 @@
     ObpAllocateObjectCreateInfoBuffer
 #define IopFreeMdlFromLookaside                         \
     ObpFreeCapturedAttributes
-
-//
-// Returns the size of a CM_RESOURCE_LIST
-//
-#define CM_RESOURCE_LIST_SIZE(ResList)                  \
-    (ResList->Count == 1) ?                             \
-        FIELD_OFFSET(                                   \
-            CM_RESOURCE_LIST,                           \
-            List[0].PartialResourceList.                \
-            PartialDescriptors[(ResList)->              \
-                               List[0].                 \
-                               PartialResourceList.     \
-                               Count])                  \
-        :                                               \
-        FIELD_OFFSET(CM_RESOURCE_LIST, List)
 
 //
 // Determines if the IRP is Synchronous
@@ -222,6 +207,16 @@
         (_DeviceNode);                                  \
     (_DeviceTreeTraverseContext)->Action = (_Action);   \
     (_DeviceTreeTraverseContext)->Context = (_Context); }
+
+/*
+ * BOOLEAN
+ * IopIsValidPhysicalDeviceObject(
+ *   IN PDEVICE_OBJECT PhysicalDeviceObject);
+ */
+#define IopIsValidPhysicalDeviceObject(PhysicalDeviceObject)                                                            \
+        (((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject) &&                                                          \
+        (((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode) &&                      \
+        (((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->Flags & DNF_ENUMERATED))
 
 //
 // Device List Operations
@@ -396,6 +391,33 @@ typedef struct _LOAD_UNLOAD_PARAMS
 } LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
 
 //
+// Boot Driver List Entry
+//
+typedef struct _DRIVER_INFORMATION
+{
+    LIST_ENTRY Link;
+    PDRIVER_OBJECT DriverObject;
+    PBOOT_DRIVER_LIST_ENTRY DataTableEntry;
+    HANDLE ServiceHandle;
+    USHORT TagPosition;
+    ULONG Failed;
+    ULONG Processed;
+    NTSTATUS Status;
+} DRIVER_INFORMATION, *PDRIVER_INFORMATION;
+
+//
+// Boot Driver Node
+//
+typedef struct _BOOT_DRIVER_NODE
+{
+    BOOT_DRIVER_LIST_ENTRY ListEntry;
+    UNICODE_STRING Group;
+    UNICODE_STRING Name;
+    ULONG Tag;
+    ULONG ErrorControl;
+} BOOT_DRIVER_NODE, *PBOOT_DRIVER_NODE;
+ 
+//
 // List of Bus Type GUIDs
 //
 typedef struct _IO_BUS_TYPE_GUID_LIST
@@ -480,10 +502,32 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
 //
+// Resource code
+//
+ULONG
+NTAPI
+PnpDetermineResourceListSize(IN PCM_RESOURCE_LIST ResourceList);
+
+NTSTATUS
+NTAPI
+IopAssignDeviceResources(
+    IN PDEVICE_NODE DeviceNode
+);
+
+//
 // PNP Routines
 //
-VOID
-PnpInit(
+NTSTATUS
+NTAPI
+PipCallDriverAddDevice(
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN LoadDriver,     
+    IN PDRIVER_OBJECT DriverObject
+);
+
+NTSTATUS
+NTAPI
+IopInitializePlugPlayServices(
     VOID
 );
 
@@ -522,6 +566,12 @@ IopGetSystemPowerDeviceObject(
     IN PDEVICE_OBJECT *DeviceObject
 );
 
+PDEVICE_NODE
+NTAPI
+PipAllocateDeviceNode(
+    IN PDEVICE_OBJECT PhysicalDeviceObject
+);
+
 NTSTATUS
 IopCreateDeviceNode(
     IN PDEVICE_NODE ParentNode,
@@ -536,6 +586,15 @@ IopFreeDeviceNode(
 );
 
 NTSTATUS
+NTAPI
+IopSynchronousCall(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    OUT PVOID *Information
+);
+
+NTSTATUS
+NTAPI
 IopInitiatePnpIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STATUS_BLOCK IoStatusBlock,
@@ -600,11 +659,66 @@ IopOpenRegistryKeyEx(
 
 NTSTATUS
 NTAPI
-IopGetRegistryValue(IN HANDLE Handle,
-                    IN PWSTR ValueName,
-                    OUT PKEY_VALUE_FULL_INFORMATION *Information);
+IopGetRegistryValue(
+    IN HANDLE Handle,
+    IN PWSTR ValueName,
+    OUT PKEY_VALUE_FULL_INFORMATION *Information
+);
 
+NTSTATUS
+NTAPI
+IopCreateRegistryKeyEx(
+    OUT PHANDLE Handle,
+    IN HANDLE BaseHandle OPTIONAL,
+    IN PUNICODE_STRING KeyName,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG CreateOptions,
+    OUT PULONG Disposition OPTIONAL
+);
 
+//
+// PnP Routines
+//
+NTSTATUS
+NTAPI
+IopUpdateRootKey(
+    VOID
+);
+
+NTSTATUS
+NTAPI
+PiInitCacheGroupInformation(
+    VOID
+);
+
+USHORT
+NTAPI
+PpInitGetGroupOrderIndex(
+    IN HANDLE ServiceHandle
+);
+
+USHORT
+NTAPI
+PipGetDriverTagPriority(
+    IN HANDLE ServiceHandle
+);
+
+NTSTATUS
+NTAPI
+PnpRegMultiSzToUnicodeStrings(
+    IN PKEY_VALUE_FULL_INFORMATION KeyValueInformation,
+    OUT PUNICODE_STRING *UnicodeStringList,
+    OUT PULONG UnicodeStringCount
+);
+
+BOOLEAN
+NTAPI
+PnpRegSzToString(
+    IN PWCHAR RegSzData,
+    IN ULONG RegSzLength,
+    OUT PUSHORT StringLength OPTIONAL
+);
+                                               
 //
 // Initialization Routines
 //
@@ -630,6 +744,12 @@ IoInitSystem(
 //
 // Device/Volume Routines
 //
+VOID
+NTAPI
+IopReadyDeviceObjects(
+    IN PDRIVER_OBJECT Driver
+);
+
 NTSTATUS
 FASTCALL
 IopInitializeDevice(
@@ -743,14 +863,14 @@ IoInitShutdownNotification(
 
 VOID
 NTAPI
-IoShutdownRegisteredDevices(
-    VOID
+IoShutdownSystem(
+    IN ULONG Phase
 );
 
 VOID
 NTAPI
-IoShutdownRegisteredFileSystems(
-    VOID
+IopShutdownBaseFileSystems(
+    IN PLIST_ENTRY ListHead
 );
 
 //
@@ -852,7 +972,8 @@ PnpRootDriverEntry(
 NTSTATUS
 PnpRootCreateDevice(
     IN PUNICODE_STRING ServiceName,
-    IN OUT PDEVICE_OBJECT *PhysicalDeviceObject
+    OUT PDEVICE_OBJECT *PhysicalDeviceObject,
+    OUT OPTIONAL PUNICODE_STRING FullInstancePath
 );
 
 //
@@ -938,6 +1059,10 @@ IopReinitializeBootDrivers(
 //
 // File Routines
 //
+VOID
+NTAPI
+IopDeleteDevice(IN PVOID ObjectBody);
+
 NTSTATUS
 NTAPI
 IopParseDevice(
@@ -1046,6 +1171,7 @@ IopStartRamdisk(
 //
 extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
+extern KSPIN_LOCK IopDeviceTreeLock;
 extern ULONG IopTraceLevel;
 extern GENERAL_LOOKASIDE IopMdlLookasideList;
 extern GENERIC_MAPPING IopCompletionMapping;
@@ -1053,6 +1179,10 @@ extern GENERIC_MAPPING IopFileMapping;
 extern POBJECT_TYPE _IoFileObjectType;
 extern HAL_DISPATCH _HalDispatchTable;
 extern LIST_ENTRY IopErrorLogListHead;
+extern ULONG IopNumTriageDumpDataBlocks;
+extern PVOID IopTriageDumpDataBlocks[64];
+extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
+extern PDRIVER_OBJECT IopRootDriverObject;
 
 //
 // Inlined Functions

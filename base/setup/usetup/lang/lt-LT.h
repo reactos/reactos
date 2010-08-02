@@ -7,8 +7,7 @@
  * DATE:        2008-01-06
  */
 
-#ifndef LANG_LT_LT_H__
-#define LANG_LT_LT_H__
+#pragma once
 
 MUI_LAYOUTS ltLTLayouts[] =
 {
@@ -1488,6 +1487,12 @@ MUI_ERROR ltLTErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1625,7 +1630,7 @@ MUI_STRING ltLTStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copying file: %S"},
+     "   Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_REGHIVEUPDATE,
@@ -1704,5 +1709,3 @@ MUI_STRING ltLTStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

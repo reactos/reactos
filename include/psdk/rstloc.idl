@@ -1,0 +1,67 @@
+/*
+ * Copyright (C) 2009 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+[
+    local,
+    object,
+    uuid(0c733a7d-2a1c-11ce-ade5-00aa0044773d),
+    pointer_default(unique)
+]
+interface IRowsetLocate : IRowset
+{
+    typedef DWORD DBCOMPARE;
+
+    enum DBCOMPAREENUM
+    {
+        DBCOMPARE_LT,
+        DBCOMPARE_EQ,
+        DBCOMPARE_GT,
+        DBCOMPARE_NE,
+        DBCOMPARE_NOTCOMPARABLE
+    };
+
+    HRESULT Compare([in] HCHAPTER hReserved,
+                    [in] DBBKMARK cbBookmark1,
+                    [in, size_is(cbBookmark1)] const BYTE *pBookmark1,
+                    [in] DBBKMARK cbBookmark2,
+                    [in, size_is(cbBookmark2)] const BYTE *pBookmark2,
+                    [out] DBCOMPARE *pComparison);
+
+    HRESULT GetRowsAt([in] HWATCHREGION hReserved1,
+                      [in] HCHAPTER hReserved2,
+                      [in] DBBKMARK cbBookmark,
+                      [in, size_is(cbBookmark)] const BYTE *pBookmark,
+                      [in] DBROWOFFSET lRowsOffset,
+                      [in] DBROWCOUNT cRows,
+                      [out] DBCOUNTITEM *pcRowsObtained,
+                      [out, size_is(,cRows)] HROW **prghRows);
+
+    HRESULT GetRowsByBookmark([in] HCHAPTER hReserved,
+                              [in] DBCOUNTITEM cRows,
+                              [in, size_is(cRows)] const DBBKMARK rgcbBookmarks[],
+                              [in, size_is(cRows)] const BYTE *rgpBookmarks[],
+                              [out, size_is(cRows)] HROW rghRows[],
+                              [out, size_is(cRows)] DBROWSTATUS rgRowStatus[]);
+
+    HRESULT Hash([in] HCHAPTER hReserved,
+                 [in] DBBKMARK cBookmarks,
+                 [in, size_is(cBookmarks)] const DBBKMARK rgcbBookmarks[],
+                 [in, size_is(cBookmarks)] const BYTE *rgpBookmarks[],
+                 [out, size_is(cBookmarks)] DBHASHVALUE rgHashedValues[],
+                 [out, size_is(cBookmarks)] DBROWSTATUS rgBookmarkStatus[]);
+}

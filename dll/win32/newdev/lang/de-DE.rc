@@ -9,7 +9,7 @@ BEGIN
     LTEXT           "Willkommen",IDC_WELCOMETITLE,120,8,195,24
     LTEXT           "Dieser Assistent installiert einen neuen Gerätetreiber für:",
                     IDC_STATIC,120,21,195,16
-    LTEXT           "Klicken Sie auf Weiter um fortzufahren.",IDC_STATIC,120,169,195,17
+    LTEXT           "Klicken Sie auf Weiter, um fortzufahren.",IDC_STATIC,120,169,195,17
     LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,134,36,164,11
     LTEXT           "WARNUNG! DAS INSTALLIEREN VON TREIBERN KANN IHREN PC ZUM ABSTURZ BRINGEN ODER AM BOOTEN HINDERN!",IDC_STATIC,120,59,195,16
     CONTROL         "Treiber automatisch installieren",IDC_RADIO_AUTO,"Button",

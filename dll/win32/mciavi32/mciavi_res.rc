@@ -20,6 +20,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "mmddk.h"
+#include "digitalv.h"
 
 MCIAVI RCDATA
 BEGIN
@@ -562,4 +563,11 @@ L"\0", 0x00000000L, MCI_END_CONSTANT,
 L"text\0", 0x00080000L, MCI_STRING,
 L"\0", 0x00000000L, MCI_END_COMMAND,
 L"\0", 0x00000000L, MCI_END_COMMAND_LIST
+END
+
+STRINGTABLE
+BEGIN
+
+MCI_ON_S,			"on"
+MCI_OFF_S,			"off"
 END

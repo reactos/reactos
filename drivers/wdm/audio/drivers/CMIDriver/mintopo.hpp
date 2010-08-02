@@ -31,8 +31,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common.hpp"
 #include "property.h"
 
-class CCMITopology : public ICMITopology,
-                     public CUnknown
+class CCMITopology : public ICMITopology
 {
 private:
     PCMIADAPTER         CMIAdapter;      // Adapter common object.
@@ -45,8 +44,24 @@ private:
 
     NTSTATUS ProcessResources(PRESOURCELIST ResourceList);
 public:
-    DECLARE_STD_UNKNOWN();
-    DEFINE_STD_CONSTRUCTOR(CCMITopology);
+    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
+    STDMETHODIMP_(ULONG) AddRef()
+    {
+        InterlockedIncrement(&m_Ref);
+        return m_Ref;
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        InterlockedDecrement(&m_Ref);
+
+        if (!m_Ref)
+        {
+            delete this;
+            return 0;
+        }
+        return m_Ref;
+    }
+    CCMITopology(IUnknown * OuterUnknown){}
     ~CCMITopology();
 	STDMETHODIMP_(NTSTATUS) loadMixerSettingsFromRegistry();
     STDMETHODIMP_(NTSTATUS) storeMixerSettingsToRegistry();
@@ -88,6 +103,8 @@ public:
     friend NTSTATUS NTAPI PropertyHandler_Mux(PPCPROPERTY_REQUEST PropertyRequest);
 
     static NTSTATUS NTAPI EventHandler(PPCEVENT_REQUEST EventRequest);
+
+    LONG m_Ref;
 };
 
 #endif //_MINTOPO_HPP_

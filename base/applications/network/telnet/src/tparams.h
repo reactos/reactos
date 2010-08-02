@@ -1,5 +1,4 @@
-#ifndef __THREADPARAMS
-#define __THREADPARAMS
+#pragma once
 
 #include "ttelhndl.h"
 
@@ -20,5 +19,3 @@ public:
 	NetParams p;
 	TTelnetHandler &TelHandler;
 };
-
-#endif

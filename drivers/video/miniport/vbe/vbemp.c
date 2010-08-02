@@ -15,9 +15,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * TODO:
  * - Check input parameters everywhere.
@@ -36,7 +36,7 @@
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
-VP_STATUS NTAPI
+ULONG NTAPI
 DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
    VIDEO_HW_INITIALIZATION_DATA InitData;
@@ -71,6 +71,9 @@ VBEFindAdapter(
    IN OUT PVIDEO_PORT_CONFIG_INFO ConfigInfo,
    OUT PUCHAR Again)
 {
+   if (VideoPortIsNoVesa())
+       return ERROR_DEV_NOT_EXIST;
+
    return NO_ERROR;
 }
 
@@ -546,56 +549,8 @@ VBEResetHw(
    ULONG Columns,
    ULONG Rows)
 {
-   INT10_BIOS_ARGUMENTS BiosRegisters;
-   PVBE_DEVICE_EXTENSION VBEDeviceExtension =
-     (PVBE_DEVICE_EXTENSION)DeviceExtension;
-
-   if (!VBEResetDevice(DeviceExtension, NULL))
-      return FALSE;
-
-   /* Change number of columns/rows */
-   VideoPortZeroMemory(&BiosRegisters, sizeof(BiosRegisters));
-
-   if (Columns == 80 && Rows == 25)
-   {
-      /* Default text size, don't change anything. */
-      return TRUE;
-   }
-   else if (Columns == 80 && Rows == 28)
-   {
-      /* Use 9x14 font (80x28) */
-      BiosRegisters.Eax = 0x1111;
-   }
-   else if (Columns == 80 && Rows == 43)
-   {
-      /* Use 8x8 font in 350 scans mode (80x43) */
-      BiosRegisters.Eax = 0x1201;
-      BiosRegisters.Ebx = 0x30;
-      VBEDeviceExtension->Int10Interface.Int10CallBios(
-         VBEDeviceExtension->Int10Interface.Context,
-         &BiosRegisters);
-
-      BiosRegisters.Eax = 0x3;
-      BiosRegisters.Ebx = 0;
-      VBEDeviceExtension->Int10Interface.Int10CallBios(
-         VBEDeviceExtension->Int10Interface.Context,
-         &BiosRegisters);
-
-      BiosRegisters.Eax = 0x1112;
-   }
-   else if (Columns == 80 && Rows == 50)
-   {
-      /* Use 8x8 font (80x50) */
-      BiosRegisters.Eax = 0x1112;
-   }
-   else
-      return FALSE;
-
-   VBEDeviceExtension->Int10Interface.Int10CallBios(
-      VBEDeviceExtension->Int10Interface.Context,
-      &BiosRegisters);
-
-   return TRUE;
+   /* Return FALSE to let HAL reset the display with INT10 */
+   return FALSE;
 }
 
 /*

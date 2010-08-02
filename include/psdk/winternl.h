@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef __WINE_WINTERNL_H
@@ -191,6 +191,21 @@ typedef struct _GDI_TEB_BATCH
     ULONG  Buffer[0x136];
 } GDI_TEB_BATCH;
 
+typedef struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME
+{
+    struct _RTL_ACTIVATION_CONTEXT_STACK_FRAME *Previous;
+    struct _ACTIVATION_CONTEXT                 *ActivationContext;
+    ULONG                                       Flags;
+} RTL_ACTIVATION_CONTEXT_STACK_FRAME, *PRTL_ACTIVATION_CONTEXT_STACK_FRAME;
+
+typedef struct _ACTIVATION_CONTEXT_STACK
+{
+    ULONG                               Flags;
+    ULONG                               NextCookieSequenceNumber;
+    RTL_ACTIVATION_CONTEXT_STACK_FRAME *ActiveFrame;
+    LIST_ENTRY                          FrameListCache;
+} ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
+
 /***********************************************************************
  * PEB data structure
  */
@@ -279,7 +294,8 @@ typedef struct _TEB
     PVOID           SystemReserved1[54];        /* 0cc used for kernel32 private data in Wine */
     PVOID           Spare1;                     /* 1a4 */
     LONG            ExceptionCode;              /* 1a8 */
-    BYTE            SpareBytes1[40];            /* 1ac */
+    PACTIVATION_CONTEXT_STACK     ActivationContextStackPointer;            /* 1a8/02c8 */
+    BYTE            SpareBytes1[36];            /* 1ac */
     PVOID           SystemReserved2[10];        /* 1d4 used for ntdll private data in Wine */
     GDI_TEB_BATCH   GdiTebBatch;                /* 1fc */
     ULONG           gdiRgn;                     /* 6dc */
@@ -364,6 +380,20 @@ typedef enum _FILE_INFORMATION_CLASS {
     FileNetworkOpenInformation,
     FileAttributeTagInformation,
     FileTrackingInformation,
+    FileIdBothDirectoryInformation,
+    FileIdFullDirectoryInformation,
+    FileValidDataLengthInformation,
+    FileShortNameInformation = 40,
+    /* 41, 42, 43 undocumented */
+    FileSfioReserveInformation = 44,
+    FileSfioVolumeInformation = 45,
+    FileHardLinkInformation = 46,
+    /* 47 undocumented */
+    FileNormalizedNameInformation = 48,
+    /* 49 undocumented */
+    FileIdGlobalTxDirectoryInformation = 50,
+    /* 51, 52, 53 undocumented */
+    FileStandardLinkInformation = 54,
     FileMaximumInformation
 } FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 
@@ -397,6 +427,22 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION,
   FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;
 
+typedef struct _FILE_ID_FULL_DIRECTORY_INFORMATION {
+    ULONG               NextEntryOffset;
+    ULONG               FileIndex;
+    LARGE_INTEGER       CreationTime;
+    LARGE_INTEGER       LastAccessTime;
+    LARGE_INTEGER       LastWriteTime;
+    LARGE_INTEGER       ChangeTime;
+    LARGE_INTEGER       EndOfFile;
+    LARGE_INTEGER       AllocationSize;
+    ULONG               FileAttributes;
+    ULONG               FileNameLength;
+    ULONG               EaSize;
+    LARGE_INTEGER       FileId;
+    WCHAR               FileName[ANYSIZE_ARRAY];
+} FILE_ID_FULL_DIRECTORY_INFORMATION, *PFILE_ID_FULL_DIRECTORY_INFORMATION;
+
 typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     ULONG               NextEntryOffset;
     ULONG               FileIndex;
@@ -414,6 +460,24 @@ typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
     WCHAR               FileName[ANYSIZE_ARRAY];
 } FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION,
   FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_ID_BOTH_DIRECTORY_INFORMATION {
+    ULONG               NextEntryOffset;
+    ULONG               FileIndex;
+    LARGE_INTEGER       CreationTime;
+    LARGE_INTEGER       LastAccessTime;
+    LARGE_INTEGER       LastWriteTime;
+    LARGE_INTEGER       ChangeTime;
+    LARGE_INTEGER       EndOfFile;
+    LARGE_INTEGER       AllocationSize;
+    ULONG               FileAttributes;
+    ULONG               FileNameLength;
+    ULONG               EaSize;
+    CHAR                ShortNameLength;
+    WCHAR               ShortName[12];
+    LARGE_INTEGER       FileId;
+    WCHAR               FileName[ANYSIZE_ARRAY];
+} FILE_ID_BOTH_DIRECTORY_INFORMATION, *PFILE_ID_BOTH_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_BASIC_INFORMATION {
     LARGE_INTEGER CreationTime;
@@ -807,20 +871,20 @@ typedef struct _UNWIND_HISTORY_TABLE {
  */
 
 /* This is used by NtQuerySystemInformation */
-typedef struct _SYSTEM_THREAD_INFORMATION{
-    FILETIME    ftKernelTime;
-    FILETIME    ftUserTime;
-    FILETIME    ftCreateTime;
-    DWORD       dwTickCount;
-    DWORD       dwStartAddress;
-    DWORD       dwOwningPID;
-    DWORD       dwThreadID;
-    DWORD       dwCurrentPriority;
-    DWORD       dwBasePriority;
-    DWORD       dwContextSwitches;
-    DWORD       dwThreadState;
-    DWORD       dwWaitReason;
-    DWORD       dwUnknown;
+typedef struct _SYSTEM_THREAD_INFORMATION
+{                                    /* win32/win64 */
+    LARGE_INTEGER KernelTime;          /* 00/00 */
+    LARGE_INTEGER UserTime;            /* 08/08 */
+    LARGE_INTEGER CreateTime;          /* 10/10 */
+    DWORD         dwTickCount;         /* 18/18 */
+    LPVOID        StartAddress;        /* 1c/20 */
+    CLIENT_ID     ClientId;            /* 20/28 */
+    DWORD         dwCurrentPriority;   /* 28/38 */
+    DWORD         dwBasePriority;      /* 2c/3c */
+    DWORD         dwContextSwitches;   /* 30/40 */
+    DWORD         dwThreadState;       /* 34/44 */
+    DWORD         dwWaitReason;        /* 38/48 */
+    DWORD         dwUnknown;           /* 3c/4c */
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
 
 typedef struct _IO_STATUS_BLOCK {
@@ -1131,38 +1195,39 @@ typedef struct _VM_COUNTERS_ {
     SIZE_T QuotaNonPagedPoolUsage;
     SIZE_T PagefileUsage;
     SIZE_T PeakPagefileUsage;
+    SIZE_T PrivatePageCount;
 } VM_COUNTERS, *PVM_COUNTERS;
 
 typedef struct _SYSTEM_PROCESS_INFORMATION {
-#ifdef __WINESRC__
-    DWORD dwOffset;
-    DWORD dwThreadCount;
-    DWORD dwUnknown1[6];
-    FILETIME ftCreationTime;
-    FILETIME ftUserTime;
-    FILETIME ftKernelTime;
-    UNICODE_STRING ProcessName;
-    DWORD dwBasePriority;
-    DWORD dwProcessID;
-    DWORD dwParentProcessID;
-    DWORD dwHandleCount;
-    DWORD dwUnknown3;
-    DWORD dwUnknown4;
-    VM_COUNTERS vmCounters;
-    IO_COUNTERS ioCounters;
-    SYSTEM_THREAD_INFORMATION ti[1];
+#ifdef __WINESRC__                  /* win32/win64 */
+    ULONG NextEntryOffset;             /* 00/00 */
+    DWORD dwThreadCount;               /* 04/04 */
+    DWORD dwUnknown1[6];               /* 08/08 */
+    LARGE_INTEGER CreationTime;        /* 20/20 */
+    LARGE_INTEGER UserTime;            /* 28/28 */
+    LARGE_INTEGER KernelTime;          /* 30/30 */
+    UNICODE_STRING ProcessName;        /* 38/38 */
+    DWORD dwBasePriority;              /* 40/48 */
+    HANDLE UniqueProcessId;            /* 44/50 */
+    HANDLE ParentProcessId;            /* 48/58 */
+    ULONG HandleCount;                 /* 4c/60 */
+    DWORD dwUnknown3;                  /* 50/64 */
+    DWORD dwUnknown4;                  /* 54/68 */
+    VM_COUNTERS vmCounters;            /* 58/70 */
+    IO_COUNTERS ioCounters;            /* 88/d0 */
+    SYSTEM_THREAD_INFORMATION ti[1];   /* b8/100 */
 #else
-    ULONG NextEntryOffset;
-    BYTE Reserved1[52];
-    PVOID Reserved2[3];
-    HANDLE UniqueProcessId;
-    PVOID Reserved3;
-    ULONG HandleCount;
-    BYTE Reserved4[4];
-    PVOID Reserved5[11];
-    SIZE_T PeakPagefileUsage;
-    SIZE_T PrivatePageCount;
-    LARGE_INTEGER Reserved6[6];
+    ULONG NextEntryOffset;             /* 00/00 */
+    BYTE Reserved1[52];                /* 04/04 */
+    PVOID Reserved2[3];                /* 38/38 */
+    HANDLE UniqueProcessId;            /* 44/50 */
+    PVOID Reserved3;                   /* 48/58 */
+    ULONG HandleCount;                 /* 4c/60 */
+    BYTE Reserved4[4];                 /* 50/64 */
+    PVOID Reserved5[11];               /* 54/68 */
+    SIZE_T PeakPagefileUsage;          /* 80/c0 */
+    SIZE_T PrivatePageCount;           /* 84/c8 */
+    LARGE_INTEGER Reserved6[6];        /* 88/d0 */
 #endif
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
@@ -1334,7 +1399,7 @@ typedef struct _RTL_HANDLE_TABLE
 #define FILE_CREATE_TREE_CONNECTION     0x00000080
 #define FILE_COMPLETE_IF_OPLOCKED       0x00000100
 #define FILE_NO_EA_KNOWLEDGE            0x00000200
-#define FILE_OPEN_FOR_RECOVERY          0x00000400
+#define FILE_OPEN_REMOTE_INSTANCE       0x00000400
 #define FILE_RANDOM_ACCESS              0x00000800
 #define FILE_DELETE_ON_CLOSE            0x00001000
 #define FILE_OPEN_BY_FILE_ID            0x00002000
@@ -1443,6 +1508,38 @@ typedef void (CALLBACK *PRTL_THREAD_START_ROUTINE)(LPVOID); /* FIXME: not the ri
 #define SE_CREATE_GLOBAL_PRIVILEGE       30L
 #define SE_MAX_WELL_KNOWN_PRIVILEGE      SE_CREATE_GLOBAL_PRIVILEGE
 
+/* NtGlobalFlag bits */
+#define FLG_STOP_ON_EXCEPTION            0x00000001
+#define FLG_SHOW_LDR_SNAPS               0x00000002
+#define FLG_DEBUG_INITIAL_COMMAND        0x00000004
+#define FLG_STOP_ON_HUNG_GUI             0x00000008
+#define FLG_HEAP_ENABLE_TAIL_CHECK       0x00000010
+#define FLG_HEAP_ENABLE_FREE_CHECK       0x00000020
+#define FLG_HEAP_VALIDATE_PARAMETERS     0x00000040
+#define FLG_HEAP_VALIDATE_ALL            0x00000080
+#define FLG_APPLICATION_VERIFIER         0x00000100
+#define FLG_POOL_ENABLE_TAGGING          0x00000400
+#define FLG_HEAP_ENABLE_TAGGING          0x00000800
+#define FLG_USER_STACK_TRACE_DB          0x00001000
+#define FLG_KERNEL_STACK_TRACE_DB        0x00002000
+#define FLG_MAINTAIN_OBJECT_TYPELIST     0x00004000
+#define FLG_HEAP_ENABLE_TAG_BY_DLL       0x00008000
+#define FLG_DISABLE_STACK_EXTENSION      0x00010000
+#define FLG_ENABLE_CSRDEBUG              0x00020000
+#define FLG_ENABLE_KDEBUG_SYMBOL_LOAD    0x00040000
+#define FLG_DISABLE_PAGE_KERNEL_STACKS   0x00080000
+#define FLG_ENABLE_SYSTEM_CRIT_BREAKS    0x00100000
+#define FLG_HEAP_DISABLE_COALESCING      0x00200000
+#define FLG_ENABLE_CLOSE_EXCEPTIONS      0x00400000
+#define FLG_ENABLE_EXCEPTION_LOGGING     0x00800000
+#define FLG_ENABLE_HANDLE_TYPE_TAGGING   0x01000000
+#define FLG_HEAP_PAGE_ALLOCS             0x02000000
+#define FLG_DEBUG_INITIAL_COMMAND_EX     0x04000000
+#define FLG_DISABLE_DBGPRINT             0x08000000
+#define FLG_CRITSEC_EVENT_CREATION       0x10000000
+#define FLG_LDR_TOP_DOWN                 0x20000000
+#define FLG_ENABLE_HANDLE_EXCEPTIONS     0x40000000
+#define FLG_DISABLE_PROTDLLS             0x80000000
 
 /* Rtl*Registry* functions structs and defines */
 #define RTL_REGISTRY_ABSOLUTE             0
@@ -1489,7 +1586,7 @@ typedef struct _KEY_MULTIPLE_VALUE_INFORMATION
   ULONG Type;
 } KEY_MULTIPLE_VALUE_INFORMATION, *PKEY_MULTIPLE_VALUE_INFORMATION;
 
-typedef VOID (*PTIMER_APC_ROUTINE) ( PVOID, ULONG, LONG );
+typedef VOID (CALLBACK *PTIMER_APC_ROUTINE) ( PVOID, ULONG, LONG );
 
 typedef enum _EVENT_TYPE {
   NotificationEvent,

@@ -219,42 +219,59 @@ HIMAGELIST
 InitImageList(UINT StartResource,
               UINT EndResource,
               UINT Width,
-              UINT Height)
+              UINT Height,
+              ULONG type)
 {
-    HBITMAP hBitmap;
-    HIMAGELIST hImageList;
+    HANDLE hImage;
+    HIMAGELIST himl;
     UINT i;
-	INT Ret;
+    INT ret;
 
     /* Create the toolbar icon image list */
-    hImageList = ImageList_Create(Width,
-                                  Height,
-                                  ILC_MASK | ILC_COLOR24,
-                                  EndResource - StartResource,
-                                  0);
-    if (hImageList == NULL)
+    himl = ImageList_Create(Width,
+                            Height,
+                            ILC_MASK | ILC_COLOR32,
+                            EndResource - StartResource,
+                            0);
+    if (himl == NULL)
         return NULL;
 
-    /* Add all icons to the image list */
-    for (i = StartResource; i <= EndResource; i++)
+    ret = 0;
+    for (i = StartResource; i <= EndResource && ret != -1; i++)
     {
-        hBitmap = (HBITMAP) LoadImage(hInstance,
-                            MAKEINTRESOURCE(i),
-                            IMAGE_BITMAP,
-                            Width,
-                            Height,
-                            LR_LOADTRANSPARENT);
-        if (hBitmap == NULL)
-            return NULL;
+        hImage = LoadImage(hInstance,
+                           MAKEINTRESOURCE(i),
+                           type,
+                           Width,
+                           Height,
+                           LR_LOADTRANSPARENT);
+        if (hImage == NULL)
+        {
+            ImageList_Destroy(himl);
+            himl = NULL;
+            break;
+        }
 
-        Ret = ImageList_AddMasked(hImageList,
-                                  hBitmap,
-                                  RGB(255, 0, 128));
-        if (Ret == -1)
-            return NULL;
+        if (type == IMAGE_BITMAP)
+        {
+            ret = ImageList_AddMasked(himl,
+                                      hImage,
+                                      RGB(255, 0, 128));
+        }
+        else if (type == IMAGE_ICON)
+        {
+            ret = ImageList_AddIcon(himl,
+                                    hImage);
+        }
 
-        DeleteObject(hBitmap);
+        DeleteObject(hImage);
     }
 
-    return hImageList;
+    if (ret == -1)
+    {
+        ImageList_Destroy(himl);
+        himl = NULL;
+    }
+
+    return himl;
 }

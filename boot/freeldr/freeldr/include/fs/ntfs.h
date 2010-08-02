@@ -12,13 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __NTFS_H
-#define __NTFS_H
+#pragma once
 
 #define NTFS_FILE_MFT				0
 #define NTFS_FILE_MFTMIRR			1
@@ -214,22 +213,15 @@ typedef struct
 	NTFS_ATTR_RECORD	Record;
 } NTFS_ATTR_CONTEXT, *PNTFS_ATTR_CONTEXT;
 
+typedef struct _NTFS_VOLUME_INFO *PNTFS_VOLUME_INFO;
+
 #include <pshpack1.h>
 typedef struct
 {
 	PNTFS_ATTR_CONTEXT	DataContext;
 	ULONGLONG			Offset;
+	PNTFS_VOLUME_INFO	Volume;
 } NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 #include <poppack.h>
 
-BOOLEAN	NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-FILE*	NtfsOpenFile(PCSTR FileName);
-VOID	NtfsCloseFile(FILE *FileHandle);
-BOOLEAN	NtfsReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG	NtfsGetFileSize(FILE *FileHandle);
-VOID	NtfsSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG	NtfsGetFilePointer(FILE *FileHandle);
-
-extern const FS_VTBL NtfsVtbl;
-
-#endif // #defined __NTFS_H
+const DEVVTBL* NtfsMount(ULONG DeviceId);

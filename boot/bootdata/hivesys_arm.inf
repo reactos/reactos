@@ -378,6 +378,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetService"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Protocol"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetTrans"
+HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,""
 
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","37",0x00000000,"c_037.nls"
@@ -448,6 +449,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0402",0x00000000,"l_intl.n
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0403",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0404",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0804",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0c04",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","1004",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","1404",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0405",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0406",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0407",0x00000000,"l_intl.nls"
@@ -750,13 +754,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x0000
 
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\system32\wbem"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemDrive%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemDrive%\TEMP"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00020000,".COM;.EXE;.BAT;.CMD"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROCESSOR_ARCHITECTURE",0x00020000,"x86"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000000,".COM;.EXE;.BAT;.CMD"
 
 
 ; Known DLLs
@@ -781,9 +783,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","version",0x00
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wininet",0x00000000,"wininet.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wldap32",0x00000000,"wldap32.dll"
 
-; Pagefile settings
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
- "C:\pagefile.sys"
+; Memory Management
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",,0x00000012
 
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""

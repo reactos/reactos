@@ -4,19 +4,18 @@
  * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -35,22 +34,30 @@ VideoPortCreateEvent(
    IN PVOID Unused,
    OUT PEVENT *Event)
 {
-   EVENT_TYPE Type;
+   PVIDEO_PORT_EVENT VpEvent;
+   EVENT_TYPE Type = SynchronizationEvent;
 
-   (*Event) = ExAllocatePoolWithTag(
+   /* Allocate storage for the event structure */
+   VpEvent = ExAllocatePoolWithTag(
       NonPagedPool,
-      sizeof(KEVENT),
+      sizeof(VIDEO_PORT_EVENT),
       TAG_VIDEO_PORT);
 
-   if ((*Event) == NULL)
-      return ERROR_NOT_ENOUGH_MEMORY;
+   /* Fail if not enough memory */
+   if (!VpEvent) return ERROR_NOT_ENOUGH_MEMORY;
 
+   /* Initialize the event structure */
+   RtlZeroMemory(VpEvent, sizeof(VIDEO_PORT_EVENT));
+   VpEvent->pKEvent = &VpEvent->Event;
+
+   /* Determine the event type */
    if (EventFlag & NOTIFICATION_EVENT)
       Type = NotificationEvent;
-   else
-      Type = SynchronizationEvent;
 
-   KeInitializeEvent((PKEVENT)*Event, Type, EventFlag & INITIAL_EVENT_SIGNALED);
+   /* Initialize kernel event */
+   KeInitializeEvent(VpEvent->pKEvent, Type, EventFlag & INITIAL_EVENT_SIGNALED);
+
+   /* Indicate success */
    return NO_ERROR;
 }
 
@@ -63,7 +70,10 @@ VideoPortDeleteEvent(
    IN PVOID HwDeviceExtension,
    IN PEVENT Event)
 {
+   /* Free storage */
    ExFreePool(Event);
+
+   /* Indicate success */
    return NO_ERROR;
 }
 
@@ -76,7 +86,7 @@ VideoPortSetEvent(
    IN PVOID HwDeviceExtension,
    IN PEVENT Event)
 {
-   return KeSetEvent((PKEVENT)Event, IO_NO_INCREMENT, FALSE);
+   return KeSetEvent(Event->pKEvent, IO_NO_INCREMENT, FALSE);
 }
 
 /*
@@ -88,7 +98,7 @@ VideoPortClearEvent(
    IN PVOID HwDeviceExtension,
    IN PEVENT Event)
 {
-   KeClearEvent((PKEVENT)Event);
+   KeClearEvent(Event->pKEvent);
 }
 
 /*

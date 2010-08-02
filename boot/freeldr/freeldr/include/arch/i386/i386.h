@@ -13,16 +13,15 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __I386_I386_H_
-#define __I386_I386_H_
+#pragma once
 
-
-
-#endif /* __I386_I386_H_ */
+// This is needed because headers define wrong one for ReactOS
+#undef KIP0PCRADDRESS
+#define KIP0PCRADDRESS                      0xffdff000
 
 /* EOF */

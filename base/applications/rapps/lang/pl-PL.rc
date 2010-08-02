@@ -1,0 +1,195 @@
+// * translated by Caemyr - Olaf Siejka (Aug, 2009)
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Plik"
+	BEGIN
+		MENUITEM "&Ustawienia", ID_SETTINGS
+		MENUITEM SEPARATOR
+		MENUITEM "&Wyjúcie",     ID_EXIT
+	END
+	POPUP "&Programy"
+	BEGIN
+		MENUITEM "&Instaluj",  ID_INSTALL
+		MENUITEM "&Odinstaluj",ID_UNINSTALL
+		MENUITEM "&Modyfikuj",   ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&UsuÒ z rejestru", ID_REGREMOVE
+		MENUITEM SEPARATOR
+		MENUITEM "O&dúwieø",  ID_REFRESH
+	END
+	POPUP "Pomoc"
+	BEGIN
+		MENUITEM "Pomoc",      ID_HELP, GRAYED
+		MENUITEM "O programie",     ID_ABOUT
+	END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&OtwÛrz link w przeglπdarce", ID_OPEN_LINK
+		MENUITEM "&Skopiuj link do przeglπdarki", ID_COPY_LINK
+	END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Instaluj",   ID_INSTALL
+		MENUITEM "&odinstaluj", ID_UNINSTALL
+		MENUITEM "&Modyfikuj",    ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&UsuÒ z rejestru", ID_REGREMOVE
+		MENUITEM SEPARATOR
+		MENUITEM "&Odúwieø",   ID_REFRESH
+	END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Ustawienia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "OgÛlne", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Zapisz pozycjÍ okna", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Aktualizuj listÍ dostÍpnych programÛw przy kaødym uruchomieniu", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "Zap&isuj dziennik instalacji i usuwania programÛw", IDC_LOG_ENABLED, 15, 46, 219, 12
+
+	GROUPBOX "Pobieranie", -1, 4, 65, 240, 51
+	LTEXT "Katalog dla pobranych plikÛw:", -1, 16, 75, 100, 9
+	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+	PUSHBUTTON "&Wybierz", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&UsuÒ instalatory programÛw po ich zainstalowaniu", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+
+	PUSHBUTTON "Domyúlne", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 181, 124, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalacja programu"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+
+	AUTORADIOBUTTON "&Zainstaluj z dysku (CD or DVD)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Pobierz i zainstaluj", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+
+	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 150, 78, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "åciπgnij..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
+    PUSHBUTTON "Anuluj", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "O programie"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	PUSHBUTTON "Zamknij", IDOK, 133, 46, 50, 14
+	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_TOOLTIP_INSTALL "Instaluj"
+	IDS_TOOLTIP_UNINSTALL "Odinstaluj"
+	IDS_TOOLTIP_MODIFY "Modyfikuj"
+	IDS_TOOLTIP_SETTINGS "Ustawienia"
+	IDS_TOOLTIP_REFRESH "Odúwieø"
+	IDS_TOOLTIP_EXIT "Wyjúcie"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APP_NAME "Nazwa"
+	IDS_APP_INST_VERSION "Wersja"
+	IDS_APP_DESCRIPTION "Opis"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INFO_VERSION "\nWersja: "
+	IDS_INFO_DESCRIPTION "\nOpis: "
+	IDS_INFO_PUBLISHER "\nAutor: "
+	IDS_INFO_HELPLINK "\nLink do pomocy: "
+	IDS_INFO_HELPPHONE "\nInfolinia: "
+	IDS_INFO_README "\nPrzeczytaj.to: "
+	IDS_INFO_REGOWNER "\nW≥aúciciel: "
+	IDS_INFO_PRODUCTID "\nProductID: "
+	IDS_INFO_CONTACT "\nKontakt: "
+	IDS_INFO_UPDATEINFO "\nAktualizacje: "
+	IDS_INFO_INFOABOUT "\nInformacje: "
+	IDS_INFO_COMMENTS "\nKomentarze: "
+	IDS_INFO_INSTLOCATION "\nScieøka instalacji: "
+	IDS_INFO_INSTALLSRC "\nèrÛd≥o instalacji: "
+	IDS_INFO_UNINSTALLSTR "\nKomenda deinstalacji: "
+	IDS_INFO_MODIFYPATH "\nModyfikacja úcieøki instalacji: "
+	IDS_INFO_INSTALLDATE "\nData instalacji: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_AINFO_VERSION "\nWersja: "
+	IDS_AINFO_DESCRIPTION "\nOpis: "
+	IDS_AINFO_SIZE "\nRozmiar: "
+	IDS_AINFO_URLSITE "\nStrona: "
+	IDS_AINFO_LICENCE "\nLicencja: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_CAT_AUDIO "DüwiÍk"
+	IDS_CAT_DEVEL "Programowanie"
+	IDS_CAT_DRIVERS "Sterowniki"
+	IDS_CAT_EDU "Edukacja"
+	IDS_CAT_ENGINEER "Inøynieria"
+	IDS_CAT_FINANCE "Finanse"
+	IDS_CAT_GAMES "Gry i rozrywka"
+	IDS_CAT_GRAPHICS "Grafika"
+	IDS_CAT_INTERNET "Internet i Sieci"
+	IDS_CAT_LIBS "Biblioteki"
+	IDS_CAT_OFFICE "Biurowe"
+	IDS_CAT_OTHER "Inne"
+	IDS_CAT_SCIENCE "Nauka"
+	IDS_CAT_TOOLS "NarzÍdzia"
+	IDS_CAT_VIDEO "Wideo"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APPTITLE "Menedøer aplikacji ReactOS"
+	IDS_SEARCH_TEXT "Szukaj..."
+	IDS_INSTALL "Instaluj"
+	IDS_UNINSTALL "Odinstaluj"
+	IDS_MODIFY "Modyfikuj"
+	IDS_APPS_COUNT "Licznik aplikacji: %d"
+	IDS_WELCOME_TITLE "Witamy w Menedøerze aplikacji ReactOS!\n\n"
+	IDS_WELCOME_TEXT "Z listy po lewej wybierz kategoriÍ, a nastÍpnie aplikacjÍ by jπ zainstalowaÊ lub odinstalowaÊ.\nStrona projektu ReactOS: "
+	IDS_WELCOME_URL "http://www.reactos.org"
+	IDS_INSTALLED "Zainstalowane"
+	IDS_AVAILABLEFORINST "DostÍpne"
+	IDS_UPDATES "Uaktualnienia"
+	IDS_APPLICATIONS "Aplikacje"
+	IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog w ktÛrym bÍda zapisywane pobrane programy:"
+	IDS_CHOOSE_FOLDER_ERROR "Wybra≥eú nieistniejπcy katalog! Czy chcesz utworzyÊ nowy?"
+	IDS_USER_NOT_ADMIN "Musisz mieÊ uprawnienia administratora aby uruchomiÊ ""ReactOS Applications Manager""!"
+	IDS_APP_REG_REMOVE "Czy na pewno chcesz usunπÊ wpis tego programu z rejestru?"
+	IDS_INFORMATION "Informacja"
+	IDS_UNABLE_TO_REMOVE "Nie moøna by≥o usunπÊ wpisu z rejestru!"
+END

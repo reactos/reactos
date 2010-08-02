@@ -64,7 +64,7 @@ static HRESULT WINAPI xmlnodelist_QueryInterface(
     REFIID riid,
     void** ppvObject )
 {
-    TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     if(!ppvObject)
         return E_INVALIDARG;
@@ -104,7 +104,7 @@ static ULONG WINAPI xmlnodelist_Release(
     if ( ref == 0 )
     {
         xmldoc_release( This->parent->doc );
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -198,14 +198,14 @@ static HRESULT WINAPI xmlnodelist_Invoke(
 
 static HRESULT WINAPI xmlnodelist_get_item(
         IXMLDOMNodeList* iface,
-        long index,
+        LONG index,
         IXMLDOMNode** listItem)
 {
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
     xmlNodePtr curr;
-    long nodeIndex = 0;
+    LONG nodeIndex = 0;
 
-    TRACE("%p %ld\n", This, index);
+    TRACE("(%p)->(%d %p)\n", This, index, listItem);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -230,15 +230,15 @@ static HRESULT WINAPI xmlnodelist_get_item(
 
 static HRESULT WINAPI xmlnodelist_get_length(
         IXMLDOMNodeList* iface,
-        long* listLength)
+        LONG* listLength)
 {
 
     xmlNodePtr curr;
-    long nodeCount = 0;
+    LONG nodeCount = 0;
 
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p\n", This);
+    TRACE("(%p)->(%p)\n", This, listLength);
 
     if(!listLength)
         return E_INVALIDARG;
@@ -260,7 +260,7 @@ static HRESULT WINAPI xmlnodelist_nextNode(
 {
     xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p %p\n", This, nextItem );
+    TRACE("(%p)->(%p)\n", This, nextItem );
 
     if(!nextItem)
         return E_INVALIDARG;
@@ -289,7 +289,8 @@ static HRESULT WINAPI xmlnodelist__newEnum(
         IXMLDOMNodeList* iface,
         IUnknown** ppUnk)
 {
-    FIXME("\n");
+    xmlnodelist *This = impl_from_IXMLDOMNodeList( iface );
+    FIXME("(%p)->(%p)\n", This, ppUnk);
     return E_NOTIMPL;
 }
 
@@ -314,7 +315,7 @@ IXMLDOMNodeList* create_children_nodelist( xmlNodePtr node )
 {
     xmlnodelist *nodelist;
 
-    nodelist = HeapAlloc( GetProcessHeap(), 0, sizeof *nodelist );
+    nodelist = heap_alloc( sizeof *nodelist );
     if ( !nodelist )
         return NULL;
 

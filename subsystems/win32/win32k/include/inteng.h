@@ -1,5 +1,4 @@
-#ifndef _WIN32K_INTENG_H
-#define _WIN32K_INTENG_H
+#pragma once
 
 typedef ULONG HCLIP;
 
@@ -90,6 +89,8 @@ IntEngGradientFill(SURFOBJ *psoDest,
                    POINTL *pptlDitherOrg,
                    ULONG ulMode);
 
+VOID InitXlateImpl(VOID);
+
 XLATEOBJ* FASTCALL
 IntEngCreateXlate(USHORT DestPalType,
                   USHORT SourcePalType,
@@ -106,6 +107,9 @@ XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG Color0,
                          ULONG Color1);
+
+XLATEOBJ*
+IntCreateBrushXlate(BRUSH *pbrush, SURFACE * psurf, COLORREF crBackgroundClr);
 
 HPALETTE FASTCALL
 IntEngGetXlatePalette(XLATEOBJ *XlateObj,
@@ -156,6 +160,19 @@ IntEngMovePointer(IN SURFOBJ *pso,
                   IN LONG y,
                   IN RECTL *prcl);
 
+ULONG APIENTRY
+IntEngSetPointerShape(
+   IN SURFOBJ *pso,
+   IN SURFOBJ *psoMask,
+   IN SURFOBJ *psoColor,
+   IN XLATEOBJ *pxlo,
+   IN LONG xHot,
+   IN LONG yHot,
+   IN LONG x,
+   IN LONG y,
+   IN RECTL *prcl,
+   IN FLONG fl);
+
 BOOL APIENTRY
 IntEngAlphaBlend(IN SURFOBJ *Dest,
                  IN SURFOBJ *Source,
@@ -165,5 +182,10 @@ IntEngAlphaBlend(IN SURFOBJ *Dest,
                  IN PRECTL SourceRect,
                  IN BLENDOBJ *BlendObj);
 
-
-#endif /* _WIN32K_INTENG_H */
+BOOL APIENTRY
+IntEngCopyBits(SURFOBJ *psoDest,
+	    SURFOBJ *psoSource,
+	    CLIPOBJ *pco,
+	    XLATEOBJ *pxlo,
+	    RECTL *prclDest,
+	    POINTL *ptlSource);

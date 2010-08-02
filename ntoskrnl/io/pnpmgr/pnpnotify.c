@@ -5,6 +5,7 @@
  * PURPOSE:         Plug & Play notification functions
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  *                  Hervé Poussineau (hpoussin@reactos.org)
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES ******************************************************************/
@@ -42,6 +43,9 @@ IopNotifyPlugPlayNotification(
 	PLIST_ENTRY ListEntry;
 	PVOID NotificationStructure;
 	BOOLEAN CallCurrentEntry;
+	UNICODE_STRING GuidString;
+	NTSTATUS Status;
+	PDEVICE_OBJECT EntryDeviceObject = NULL;
 
 	ASSERT(DeviceObject);
 
@@ -61,11 +65,23 @@ IopNotifyPlugPlayNotification(
 				PagedPool,
 				sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION),
 				TAG_PNP_NOTIFY);
+			if (!NotificationInfos)
+			{
+				KeReleaseGuardedMutex(&PnpNotifyListLock);
+				return;
+			}
 			NotificationInfos->Version = 1;
 			NotificationInfos->Size = sizeof(DEVICE_INTERFACE_CHANGE_NOTIFICATION);
 			RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
 			RtlCopyMemory(&NotificationInfos->InterfaceClassGuid, EventCategoryData1, sizeof(GUID));
 			NotificationInfos->SymbolicLinkName = (PUNICODE_STRING)EventCategoryData2;
+			Status = RtlStringFromGUID(&NotificationInfos->InterfaceClassGuid, &GuidString);
+			if (!NT_SUCCESS(Status))
+			{
+				KeReleaseGuardedMutex(&PnpNotifyListLock);
+				ExFreePool(NotificationStructure);
+				return;
+			}
 			break;
 		}
 		case EventCategoryHardwareProfileChange:
@@ -75,6 +91,11 @@ IopNotifyPlugPlayNotification(
 				PagedPool,
 				sizeof(HWPROFILE_CHANGE_NOTIFICATION),
 				TAG_PNP_NOTIFY);
+			if (!NotificationInfos)
+			{
+				KeReleaseGuardedMutex(&PnpNotifyListLock);
+				return;
+			}
 			NotificationInfos->Version = 1;
 			NotificationInfos->Size = sizeof(HWPROFILE_CHANGE_NOTIFICATION);
 			RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
@@ -82,15 +103,37 @@ IopNotifyPlugPlayNotification(
 		}
 		case EventCategoryTargetDeviceChange:
 		{
-			PTARGET_DEVICE_REMOVAL_NOTIFICATION NotificationInfos;
-			NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
-				PagedPool,
-				sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION),
-				TAG_PNP_NOTIFY);
-			NotificationInfos->Version = 1;
-			NotificationInfos->Size = sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION);
-			RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
-			NotificationInfos->FileObject = (PFILE_OBJECT)EventCategoryData1;
+			if (Event != &GUID_PNP_CUSTOM_NOTIFICATION)
+			{
+				PTARGET_DEVICE_REMOVAL_NOTIFICATION NotificationInfos;
+				NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
+					PagedPool,
+					sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION),
+					TAG_PNP_NOTIFY);
+				if (!NotificationInfos)
+				{
+					KeReleaseGuardedMutex(&PnpNotifyListLock);
+					return;
+				}
+				NotificationInfos->Version = 1;
+				NotificationInfos->Size = sizeof(TARGET_DEVICE_REMOVAL_NOTIFICATION);
+				RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
+				NotificationInfos->FileObject = (PFILE_OBJECT)EventCategoryData1;
+			}
+			else
+			{
+				PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationInfos;
+				NotificationStructure = NotificationInfos = ExAllocatePoolWithTag(
+					PagedPool,
+					sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION),
+					TAG_PNP_NOTIFY);
+				if (!NotificationInfos)
+				{
+					KeReleaseGuardedMutex(&PnpNotifyListLock);
+					return;
+				}
+				RtlCopyMemory(NotificationInfos, EventCategoryData1, sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION));
+			}
 			break;
 		}
 		default:
@@ -110,12 +153,17 @@ IopNotifyPlugPlayNotification(
 		ChangeEntry = CONTAINING_RECORD(ListEntry, PNP_NOTIFY_ENTRY, PnpNotifyList);
 		CallCurrentEntry = FALSE;
 
+		if (ChangeEntry->EventCategory != EventCategory)
+		{
+			ListEntry = ListEntry->Flink;
+			continue;
+		}
+
 		switch (EventCategory)
 		{
 			case EventCategoryDeviceInterfaceChange:
 			{
-				if (ChangeEntry->EventCategory == EventCategory
-					&& RtlCompareUnicodeString(&ChangeEntry->Guid, (PUNICODE_STRING)EventCategoryData1, FALSE) == 0)
+				if (RtlCompareUnicodeString(&ChangeEntry->Guid, &GuidString, FALSE) == 0)
 				{
 					CallCurrentEntry = TRUE;
 				}
@@ -128,8 +176,23 @@ IopNotifyPlugPlayNotification(
 			}
 			case EventCategoryTargetDeviceChange:
 			{
-				if (ChangeEntry->FileObject == (PFILE_OBJECT)EventCategoryData1)
-					CallCurrentEntry = TRUE;
+				if (Event != &GUID_PNP_CUSTOM_NOTIFICATION)
+				{
+					if (ChangeEntry->FileObject == (PFILE_OBJECT)EventCategoryData1)
+						CallCurrentEntry = TRUE;
+				}
+				else
+				{
+					Status = IoGetRelatedTargetDevice(ChangeEntry->FileObject, &EntryDeviceObject);
+    				if (NT_SUCCESS(Status))
+    				{
+						if (DeviceObject == EntryDeviceObject)
+						{
+							((PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure)->FileObject = ChangeEntry->FileObject;
+							CallCurrentEntry = TRUE;
+						}
+					}
+				}
 			}
 			default:
 			{
@@ -159,6 +222,8 @@ IopNotifyPlugPlayNotification(
 	}
 	KeReleaseGuardedMutex(&PnpNotifyListLock);
 	ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
+	if (EventCategory == EventCategoryDeviceInterfaceChange)
+		RtlFreeUnicodeString(&GuidString);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

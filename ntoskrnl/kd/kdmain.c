@@ -16,10 +16,12 @@
 BOOLEAN KdDebuggerEnabled = FALSE;
 BOOLEAN KdEnteredDebugger = FALSE;
 BOOLEAN KdDebuggerNotPresent = TRUE;
-BOOLEAN KiEnableTimerWatchdog = FALSE;
 BOOLEAN KdBreakAfterSymbolLoad = FALSE;
-BOOLEAN KdpBreakPending;
+BOOLEAN KdpBreakPending = FALSE;
 BOOLEAN KdPitchDebugger = TRUE;
+BOOLEAN KdIgnoreUmExceptions = FALSE;
+KD_CONTEXT KdpContext;
+ULONG Kd_WIN2000_Mask;
 VOID NTAPI PspDumpThreads(BOOLEAN SystemThreads);
 
 typedef struct
@@ -49,29 +51,13 @@ KdpServiceDispatcher(ULONG Service,
             Result = KdpPrintString(Buffer1, Buffer1Length);
             break;
 
-#ifdef DBG
-        case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
+#if DBG
+        case ' soR': /* ROS-INTERNAL */
         {
-            switch ((ULONG)Buffer1)
+            switch ((ULONG_PTR)Buffer1)
             {
-                case DumpNonPagedPool:
-                    MiDebugDumpNonPagedPool(FALSE);
-                    break;
-
                 case ManualBugCheck:
                     KeBugCheck(MANUALLY_INITIATED_CRASH);
-                    break;
-
-                case DumpNonPagedPoolStats:
-                    MiDebugDumpNonPagedPoolStats(FALSE);
-                    break;
-
-                case DumpNewNonPagedPool:
-                    MiDebugDumpNonPagedPool(TRUE);
-                    break;
-
-                case DumpNewNonPagedPoolStats:
-                    MiDebugDumpNonPagedPoolStats(TRUE);
                     break;
 
                 case DumpAllThreads:
@@ -85,6 +71,10 @@ KdpServiceDispatcher(ULONG Service,
                 case EnterDebugger:
                     DbgBreakPoint();
                     break;
+                    
+                case ThatsWhatSheSaid:
+                    MmDumpPfnDatabase();
+                    break;
 
                 default:
                     break;
@@ -93,7 +83,7 @@ KdpServiceDispatcher(ULONG Service,
         }
 
         /* Special  case for stack frame dumps */
-        case TAG('R', 'o', 's', 'D'):
+        case 'DsoR':
         {
             KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
             break;
@@ -116,11 +106,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                           IN KPROCESSOR_MODE PreviousMode,
                           IN BOOLEAN SecondChance)
 {
-    KD_CONTINUE_TYPE Return;
+    KD_CONTINUE_TYPE Return = kdHandleException;
     ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
-#ifdef _M_IX86
-    ULONG EipOld;
-#endif
 
     /* Check if this was a breakpoint due to DbgPrint or Load/UnloadSymbols */
     if ((ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT) &&
@@ -128,7 +115,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         ((ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS) ||
          (ExceptionCommand == BREAKPOINT_UNLOAD_SYMBOLS) ||
          (ExceptionCommand == BREAKPOINT_COMMAND_STRING) ||
-         (ExceptionCommand == BREAKPOINT_PRINT)))
+         (ExceptionCommand == BREAKPOINT_PRINT) ||
+         (ExceptionCommand == BREAKPOINT_PROMPT)))
     {
         /* Check if this is a debug print */
         if (ExceptionCommand == BREAKPOINT_PRINT)
@@ -137,43 +125,80 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
                                  ExceptionRecord->ExceptionInformation[2]);
+
+            /* Return success */
+            KeSetContextReturnRegister(Context, STATUS_SUCCESS);
         }
+#ifdef KDBG
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
-            /* Load symbols. Currently implemented only for KDBG! */
-            KDB_SYMBOLFILE_HOOK((PANSI_STRING)ExceptionRecord->ExceptionInformation[1],
-                (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2]);
-        }
+            PLDR_DATA_TABLE_ENTRY LdrEntry;
 
-        /* This we can handle: simply bump EIP */
-#ifdef _M_IX86
-        Context->Eip++;
-#elif _M_ARM
-        Context->Pc += sizeof(ULONG);
+            /* Load symbols. Currently implemented only for KDBG! */
+            if(KdbpSymFindModule(((PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2])->BaseOfDll, NULL, -1, &LdrEntry))
+                KdbSymProcessSymbols(LdrEntry);
+        }
+        else if (ExceptionCommand == BREAKPOINT_PROMPT)
+        {
+            ULONG ReturnValue;
+            LPSTR OutString;
+            USHORT OutStringLength;
+
+            /* Get the response string  and length */
+            OutString = (LPSTR)Context->Ebx;
+            OutStringLength = (USHORT)Context->Edi;
+
+            /* Call KDBG */
+            ReturnValue = KdpPrompt((LPSTR)ExceptionRecord->
+                                    ExceptionInformation[1],
+                                    (USHORT)ExceptionRecord->
+                                    ExceptionInformation[2],
+                                    OutString,
+                                    OutStringLength);
+
+            /* Return the number of characters that we received */
+            Context->Eax = ReturnValue;
+        }
 #endif
+
+        /* This we can handle: simply bump the Program Counter */
+        KeSetContextPc(Context, KeGetContextPc(Context) + KD_BREAKPOINT_SIZE);
         return TRUE;
     }
+
+#ifdef KDBG
+    /* Check if this is an assertion failure */
+    if (ExceptionRecord->ExceptionCode == STATUS_ASSERTION_FAILURE)
+    {
+        /* Warn about it */
+        DbgPrint("\n!!! Assertion Failure at Address 0x%p !!!\n\n",
+                 (PVOID)Context->Eip);
+
+        /* Bump EIP to the instruction following the int 2C and return */
+        Context->Eip += 2;
+        return TRUE;
+    }
+#endif
 
     /* Get out of here if the Debugger isn't connected */
     if (KdDebuggerNotPresent) return FALSE;
 
-    /* Save old EIP value */
-#ifdef _M_IX86
-    EipOld = Context->Eip;
-#endif
-
+#ifdef KDBG
     /* Call KDBG if available */
     Return = KdbEnterDebuggerException(ExceptionRecord,
                                        PreviousMode,
                                        Context,
                                        TrapFrame,
                                        !SecondChance);
-
-    /* Bump EIP over int 3 if debugger did not already change it */
-    if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)
+#else /* not KDBG */
+    if (WrapperInitRoutine)
     {
-        //DPRINT1("Address: %p. Return: %d\n", EipOld, Return);
+        /* Call GDB */
+        Return = WrapperTable.KdpExceptionRoutine(ExceptionRecord,
+                                                  Context,
+                                                  TrapFrame);
     }
+#endif /* not KDBG */
 
     /* Debugger didn't handle it, please handle! */
     if (Return == kdHandleException) return FALSE;
@@ -211,6 +236,16 @@ KdpCallGdb(IN PKTRAP_FRAME TrapFrame,
 
     /* Debugger handled it */
     return TRUE;
+}
+
+BOOLEAN
+NTAPI
+KdIsThisAKdTrap(IN PEXCEPTION_RECORD ExceptionRecord,
+                IN PCONTEXT Context,
+                IN KPROCESSOR_MODE PreviousMode)
+{
+    /* KDBG has its own mechanism for ignoring user mode exceptions */
+    return FALSE;
 }
 
 /* PUBLIC FUNCTIONS *********************************************************/
@@ -335,13 +370,13 @@ NtQueryDebugFilterState(IN ULONG ComponentId,
             if (ComponentId == KdComponentTable[i].ComponentId)
             {
                 /* Check if mask are matching */
-                return (Level & KdComponentTable[i].Level) != 0;
+                return (Level & KdComponentTable[i].Level) ? TRUE : FALSE;
             }
         }
     }
 
     /* Entry not found in the table, use default mask */
-    return (Level & Kd_DEFAULT_MASK) != 0;
+    return (Level & Kd_DEFAULT_MASK) ? TRUE : FALSE;
 }
 
 NTSTATUS

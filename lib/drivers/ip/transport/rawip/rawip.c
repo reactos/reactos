@@ -11,6 +11,7 @@
 #include "precomp.h"
 
 NTSTATUS AddGenericHeaderIPv4(
+    PADDRESS_FILE AddrFile,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
     PIP_ADDRESS LocalAddress,
@@ -37,10 +38,10 @@ NTSTATUS AddGenericHeaderIPv4(
     TI_DbgPrint(MID_TRACE, ("Packet: %x NdisPacket %x\n",
 			    IPPacket, IPPacket->NdisPacket));
 
-    BufferSize = MaxLLHeaderSize + sizeof(IPv4_HEADER) + ExtraLength;
+    BufferSize = sizeof(IPv4_HEADER) + ExtraLength;
 
     GetDataPtr( IPPacket->NdisPacket,
-		MaxLLHeaderSize,
+		0,
 		(PCHAR *)&IPPacket->Header,
 		&IPPacket->ContigSize );
 
@@ -59,12 +60,12 @@ NTSTATUS AddGenericHeaderIPv4(
     /* Length of header and data */
     IPHeader->TotalLength = WH2N((USHORT)IPPacket->TotalSize);
     /* Identification */
-    IPHeader->Id = 0;
+    IPHeader->Id = (USHORT)Random();
     /* One fragment at offset 0 */
     IPHeader->FlagsFragOfs = 0;
-    /* Time-to-Live is 128 */
-    IPHeader->Ttl = 128;
-    /* User Datagram Protocol */
+    /* Time-to-Live */
+    IPHeader->Ttl = AddrFile->TTL;
+    /* Protocol */
     IPHeader->Protocol = Protocol;
     /* Checksum is 0 (for later calculation of this) */
     IPHeader->Checksum = 0;
@@ -82,6 +83,7 @@ NTSTATUS AddGenericHeaderIPv4(
 
 
 NTSTATUS BuildRawIpPacket(
+    PADDRESS_FILE AddrFile,
     PIP_PACKET Packet,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
@@ -107,15 +109,13 @@ NTSTATUS BuildRawIpPacket(
 
     /* FIXME: Assumes IPv4 */
     IPInitializePacket(Packet, IP_ADDRESS_V4);
-    if (!Packet)
-	return STATUS_INSUFFICIENT_RESOURCES;
 
     Packet->TotalSize = sizeof(IPv4_HEADER) + DataLen;
 
     /* Prepare packet */
     Status = AllocatePacketWithBuffer( &Packet->NdisPacket,
 				       NULL,
-				       Packet->TotalSize + MaxLLHeaderSize );
+				       Packet->TotalSize );
 
     if( !NT_SUCCESS(Status) ) return Status;
 
@@ -126,9 +126,9 @@ NTSTATUS BuildRawIpPacket(
     switch (RemoteAddress->Type) {
     case IP_ADDRESS_V4:
 	Status = AddGenericHeaderIPv4
-            (RemoteAddress, RemotePort,
+            (AddrFile, RemoteAddress, RemotePort,
              LocalAddress, LocalPort, Packet, DataLen,
-             IPPROTO_ICMP, /* XXX Figure out a better way to do this */
+             AddrFile->Protocol,
              0, (PVOID *)&Payload );
 	break;
     case IP_ADDRESS_V6:
@@ -195,6 +195,9 @@ NTSTATUS RawIPSendDatagram(
     USHORT RemotePort;
     NTSTATUS Status;
     PNEIGHBOR_CACHE_ENTRY NCE;
+    KIRQL OldIrql;
+
+    LockObject(AddrFile, &OldIrql);
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -209,17 +212,36 @@ NTSTATUS RawIPSendDatagram(
 	break;
 
     default:
+	UnlockObject(AddrFile, OldIrql);
 	return STATUS_UNSUCCESSFUL;
     }
+
+    TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
     {
-        if (!IPGetDefaultAddress(&LocalAddress))
-            return STATUS_UNSUCCESSFUL;
+        /* If the local address is unspecified (0),
+         * then use the unicast address of the
+         * interface we're sending over
+         */
+        if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+	     UnlockObject(AddrFile, OldIrql);
+	     return STATUS_NETWORK_UNREACHABLE;
+        }
+
+        LocalAddress = NCE->Interface->Unicast;
+    }
+    else
+    {
+        if(!(NCE = NBLocateNeighbor( &LocalAddress ))) {
+	     UnlockObject(AddrFile, OldIrql);
+	     return STATUS_INVALID_PARAMETER;
+        }
     }
 
-    Status = BuildRawIpPacket( &Packet,
+    Status = BuildRawIpPacket( AddrFile,
+                               &Packet,
                                &RemoteAddress,
                                RemotePort,
                                &LocalAddress,
@@ -227,15 +249,10 @@ NTSTATUS RawIPSendDatagram(
                                BufferData,
                                DataSize );
 
+    UnlockObject(AddrFile, OldIrql);
+
     if( !NT_SUCCESS(Status) )
 	return Status;
-
-    TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
-
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-        FreeNdisPacket(Packet.NdisPacket);
-	return STATUS_NETWORK_UNREACHABLE;
-    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
@@ -333,7 +350,7 @@ NTSTATUS RawIPStartup(VOID)
 #endif
 
   /* Register this protocol with IP layer */
-  IPRegisterProtocol(IPPROTO_ICMP, RawIpReceive);
+  IPRegisterProtocol(IPPROTO_RAW, RawIpReceive);
 
   return STATUS_SUCCESS;
 }
@@ -347,7 +364,7 @@ NTSTATUS RawIPShutdown(VOID)
  */
 {
   /* Deregister this protocol with IP layer */
-  IPRegisterProtocol(IPPROTO_ICMP, NULL);
+  IPRegisterProtocol(IPPROTO_RAW, NULL);
 
   return STATUS_SUCCESS;
 }

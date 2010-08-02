@@ -24,12 +24,14 @@ KeFindConfigurationEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
                          IN CONFIGURATION_TYPE Type,
                          IN PULONG ComponentKey OPTIONAL)
 {
+    PCONFIGURATION_COMPONENT_DATA NextLink = NULL;
+
     /* Start Search at Root */
     return KeFindConfigurationNextEntry(Child,
                                         Class,
                                         Type,
                                         ComponentKey,
-                                        NULL);
+                                        &NextLink);
 }
 
 /*

@@ -2,8 +2,7 @@
  * $Id$
  */
 
-#ifndef __INCLUDE_HAL_HALIRQ
-#define __INCLUDE_HAL_HALIRQ
+#pragma once
 
 #ifdef CONFIG_SMP
 
@@ -31,5 +30,3 @@
 #define IRQ2VECTOR(irq)		((irq) + IRQ_BASE)
 
 #endif
-
-#endif /* __INCLUDE_HAL_HALIRQ */

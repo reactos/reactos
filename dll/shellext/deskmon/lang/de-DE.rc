@@ -17,6 +17,6 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_USEDEFFRQUENCY "Verwende Hardware Standardeinstellung."
+  IDS_USEDEFFRQUENCY "Verwende Hardware-Standardeinstellung."
   IDS_FREQFMT "%u Hertz"
 END

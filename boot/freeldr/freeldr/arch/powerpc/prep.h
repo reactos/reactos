@@ -1,5 +1,4 @@
-#ifndef FREELDR_ARCH_POWERPC_PREP_H
-#define FREELDR_ARCH_POWERPC_PREP_H
+#pragma once
 
 extern struct _pci_desc pci1_desc;
 extern struct _idectl_desc ide1_desc;
@@ -27,5 +26,3 @@ void vga_setup
 ( PCONFIGURATION_COMPONENT_DATA pci_bus,
   struct _pci_desc *pci_desc, struct _vga_desc *vga_desc,
   int bus, int dev, int fn );
-
-#endif//FREELDR_ARCH_POWERPC_PREP_H

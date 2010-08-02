@@ -1425,7 +1425,7 @@ xmlSchematronReportSuccess(xmlSchematronValidCtxtPtr ctxt,
                         (pattern == NULL)?NULL:((const char *) pattern->name),
                         (const char *) path,
                         (const char *) report, 0, 0,
-                        msg);
+                        "%s", msg);
     } else {
 	xmlSchematronReportOutput(ctxt, cur, &msg[0]);
     }

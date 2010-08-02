@@ -1,5 +1,4 @@
-#ifndef LANG_BE_BY_H__
-#define LANG_BE_BY_H__
+#pragma once
 
 MUI_LAYOUTS beBYLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS beBYLayouts[] =
     { L"0419", L"00000419" },
     { NULL, NULL }
 };
-
-#endif

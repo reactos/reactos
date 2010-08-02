@@ -6,7 +6,7 @@
 	<include base="lsa_client">.</include>
 	<include base="eventlog_client">.</include>
 
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 
 	<define name="_ADVAPI32_" />
 	<library>scm_client</library>
@@ -14,7 +14,6 @@
 	<library>eventlog_client</library>
 	<library>rpcrt4</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>pseh</library>
 	<library>ntdll</library>
 	<pch>advapi32.h</pch>
@@ -60,5 +59,4 @@
 			<file>token.c</file>
 	</directory>
 	<file>advapi32.rc</file>
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

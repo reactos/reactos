@@ -13,7 +13,6 @@
 	<library>urlmon</library>
 	<library>ole32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>qmgr_local_interface</library>
 	<file>enum_files.c</file>

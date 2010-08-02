@@ -153,11 +153,7 @@ static const NodeImplVtbl HTMLGenericElementImplVtbl = {
 };
 
 static const tid_t HTMLGenericElement_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLGenericElement_tid,
     0
 };
@@ -169,7 +165,7 @@ static dispex_static_data_t HTMLGenericElement_dispex = {
     HTMLGenericElement_iface_tids
 };
 
-HTMLElement *HTMLGenericElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLGenericElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLGenericElement *ret;
 
@@ -178,8 +174,7 @@ HTMLElement *HTMLGenericElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLGenericElementVtbl = &HTMLGenericElementVtbl;
     ret->element.node.vtbl = &HTMLGenericElementImplVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLGENERIC(ret), &HTMLGenericElement_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLGenericElement_dispex);
 
     return &ret->element;
 }

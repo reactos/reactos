@@ -51,7 +51,7 @@ static HRESULT WINAPI schema_cache_QueryInterface( IXMLDOMSchemaCollection *ifac
 {
     schema_t *This = impl_from_IXMLDOMSchemaCollection( iface );
 
-    TRACE("%p %s %p\n", This, debugstr_guid( riid ), ppvObject );
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid( riid ), ppvObject );
 
     if ( IsEqualIID( riid, &IID_IUnknown ) ||
          IsEqualIID( riid, &IID_IDispatch ) ||
@@ -86,7 +86,7 @@ static ULONG WINAPI schema_cache_Release( IXMLDOMSchemaCollection *iface )
 
     if ( ref == 0 )
     {
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -189,13 +189,13 @@ static HRESULT WINAPI schema_cache_remove( IXMLDOMSchemaCollection *iface, BSTR 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI schema_cache_get_length( IXMLDOMSchemaCollection *iface, long *length )
+static HRESULT WINAPI schema_cache_get_length( IXMLDOMSchemaCollection *iface, LONG *length )
 {
     FIXME("stub\n");
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI schema_cache_get_namespaceURI( IXMLDOMSchemaCollection *iface, long index, BSTR *len )
+static HRESULT WINAPI schema_cache_get_namespaceURI( IXMLDOMSchemaCollection *iface, LONG index, BSTR *len )
 {
     FIXME("stub\n");
     return E_NOTIMPL;
@@ -233,7 +233,7 @@ static const struct IXMLDOMSchemaCollectionVtbl schema_vtbl =
 
 HRESULT SchemaCache_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 {
-    schema_t *schema = HeapAlloc( GetProcessHeap(), 0, sizeof (*schema) );
+    schema_t *schema = heap_alloc( sizeof (*schema) );
     if( !schema )
         return E_OUTOFMEMORY;
 

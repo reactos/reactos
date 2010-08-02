@@ -1,5 +1,5 @@
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -25,14 +25,17 @@ DoDeviceSync( SURFOBJ *Surface, PRECTL Rect, FLONG fl)
   if (!(Device->flFlags & PDEV_DRIVER_PUNTED_CALL) && (Surface->dhsurf))
   {
      if (Device->DriverFunctions.SynchronizeSurface)
-        return Device->DriverFunctions.SynchronizeSurface(Surface, Rect, fl);
+     {
+       Device->DriverFunctions.SynchronizeSurface(Surface, Rect, fl);
+     }
      else
      {
        if (Device->DriverFunctions.Synchronize)
-          return Device->DriverFunctions.Synchronize(Surface->dhpdev, Rect);
+       {
+         Device->DriverFunctions.Synchronize(Surface->dhpdev, Rect);
+       }
      }
   }
-  return;  
 }
 
 VOID
@@ -63,14 +66,34 @@ ULONG
 FASTCALL
 GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
 {
+  BOOL Hit = FALSE;
+  ULONG Cmd = 0, Size = 0;
   PDC_ATTR pdcattr = NULL;
 
   if (dc)
   {
-    pdcattr = dc->pdcattr;
+     pdcattr = dc->pdcattr;
   }
-  // The thread is approaching the end of sunset.
-  switch(pHdr->Cmd)
+
+  _SEH2_TRY
+  {
+     Cmd = pHdr->Cmd;
+     Size = pHdr->Size; // Return the full size of the structure.
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+     Hit = TRUE;
+  }
+  _SEH2_END;
+
+  if (Hit)
+  {
+     DPRINT1("WARNING! GdiBatch Fault!\n");
+     return 0;
+  }
+
+  // FYI! The thread is approaching the end of sunset.
+  switch(Cmd)
   {
      case GdiBCPatBlt: // Highest pri first!
         break;
@@ -83,9 +106,10 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      case GdiBCSetBrushOrg:
      {
         PGDIBSSETBRHORG pgSBO;
-        if(!dc) break;
+        if (!dc) break;
         pgSBO = (PGDIBSSETBRHORG) pHdr;
         pdcattr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
+        IntptlBrushOrigin(dc, pgSBO->ptlBrushOrigin.x, pgSBO->ptlBrushOrigin.y);
         break;
      }
      case GdiBCExtSelClipRgn:
@@ -93,13 +117,38 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      case GdiBCSelObj:
      {
         PGDIBSOBJECT pgO;
-        if(!dc) break;
+        PTEXTOBJ pOrgFnt, pNewFnt = NULL;
+        HFONT hOrgFont = NULL;
+
+        if (!dc) break;
         pgO = (PGDIBSOBJECT) pHdr;
-        TextIntRealizeFont((HFONT) pgO->hgdiobj, NULL);
-        pdcattr->ulDirty_ &= ~(DIRTY_CHARSET);
+
+        if (NT_SUCCESS(TextIntRealizeFont((HFONT)pgO->hgdiobj,NULL)))
+        {
+           /* LFONTOBJ use share and locking. */
+           pNewFnt = TEXTOBJ_LockText(pgO->hgdiobj);
+
+           pOrgFnt = dc->dclevel.plfnt;
+           if (pOrgFnt)
+           {
+              hOrgFont = pOrgFnt->BaseObject.hHmgr;
+           }
+           else
+           {
+              hOrgFont = pdcattr->hlfntNew;
+           }
+           dc->dclevel.plfnt = pNewFnt;
+           dc->hlfntCur = pgO->hgdiobj;
+           pdcattr->hlfntNew = pgO->hgdiobj;
+           pdcattr->ulDirty_ |= DIRTY_CHARSET;
+           pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+        }
+        if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
+        break;
      }
-     case GdiBCDelObj:
      case GdiBCDelRgn:
+        DPRINT("Delete Region Object!\n");
+     case GdiBCDelObj:
      {
         PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
         GreDeleteObject( pgO->hgdiobj );
@@ -109,7 +158,7 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
         break;
   }
 
-  return pHdr->Size; // Return the full size of the structure.
+  return Size; 
 }
 
 /*
@@ -143,8 +192,9 @@ NtGdiFlushUserBatch(VOID)
     HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
 
     /*  If hDC is zero and the buffer fills up with delete objects we need
-        to run anyway. So, hard code to the system batch limit. */
-    if ((hDC) || (GdiBatchCount >= GDI_BATCH_LIMIT))
+        to run anyway.
+     */
+    if (hDC || GdiBatchCount)
     {
       PCHAR pHdr = (PCHAR)&pTeb->GdiTebBatch.Buffer[0];
       PDC pDC = NULL;
@@ -157,8 +207,11 @@ NtGdiFlushUserBatch(VOID)
        // No need to init anything, just go!
        for (; GdiBatchCount > 0; GdiBatchCount--)
        {
+           ULONG Size;
            // Process Gdi Batch!
-           pHdr += GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
+           Size = GdiFlushUserBatch(pDC, (PGDIBATCHHDR) pHdr);
+           if (!Size) break;
+           pHdr += Size;
        }
 
        if (pDC)

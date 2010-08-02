@@ -797,7 +797,7 @@ Quickie:
     if (ValueCellToRelease) HvReleaseCell(Kcb->KeyHive, ValueCellToRelease);
     
     /* Free the buffer */
-    if (BufferAllocated) ExFreePool(Buffer);
+    if (BufferAllocated) CmpFree(Buffer, 0);
     
     /* Free the cell */
     if (CellToRelease) HvReleaseCell(Kcb->KeyHive, CellToRelease);

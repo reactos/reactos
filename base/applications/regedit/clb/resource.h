@@ -1,6 +1,3 @@
-#ifndef __CLB_RESOURCE_H
-#define __CLB_RESOURCE_H
+#pragma once
 
 #define IDD_COLUMNLISTBOXSTYLES 1700
-
-#endif /* __CLB_RESOURCE_H */

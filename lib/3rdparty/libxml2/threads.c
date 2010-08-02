@@ -26,9 +26,7 @@
 #endif
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
-#endif
-
-#ifdef HAVE_WIN32_THREADS
+#elif defined HAVE_WIN32_THREADS
 #include <windows.h>
 #ifndef HAVE_COMPILER_TLS
 #include <process.h>
@@ -412,7 +410,7 @@ xmlRMutexUnlock(xmlRMutexPtr tok ATTRIBUTE_UNUSED)
     if (tok->held == 0) {
         if (tok->waiters)
             pthread_cond_signal(&tok->cv);
-        tok->tid = 0;
+        memset(&tok->tid, 0, sizeof(tok->tid));
     }
     pthread_mutex_unlock(&tok->lock);
 #elif defined HAVE_WIN32_THREADS
@@ -457,7 +455,7 @@ __xmlGlobalInitMutexLock(void)
 
         /* Swap it into the global_init_lock */
 #ifdef InterlockedCompareExchangePointer
-        (void)InterlockedCompareExchangePointer(&global_init_lock, cs, NULL);
+        InterlockedCompareExchangePointer(&global_init_lock, cs, NULL);
 #else /* Use older void* version */
         InterlockedCompareExchange((void **) &global_init_lock,
                                    (void *) cs, NULL);
@@ -529,7 +527,8 @@ __xmlGlobalInitMutexUnlock(void)
 void
 __xmlGlobalInitMutexDestroy(void)
 {
-#if defined HAVE_WIN32_THREADS
+#ifdef HAVE_PTHREAD_H
+#elif defined HAVE_WIN32_THREADS
     if (global_init_lock != NULL) {
         DeleteCriticalSection(global_init_lock);
         free(global_init_lock);
@@ -593,8 +592,8 @@ xmlNewGlobalState(void)
 }
 #endif /* LIBXML_THREAD_ENABLED */
 
-
-#ifdef HAVE_WIN32_THREADS
+#ifdef HAVE_PTHREAD_H
+#elif defined HAVE_WIN32_THREADS
 #if !defined(HAVE_COMPILER_TLS)
 #if defined(LIBXML_STATIC) && !defined(LIBXML_STATIC_FOR_DLL)
 typedef struct _xmlGlobalStateCleanupHelperParams {
@@ -758,6 +757,8 @@ xmlGetGlobalState(void)
  * xmlGetThreadId:
  *
  * xmlGetThreadId() find the current thread ID number
+ * Note that this is likely to be broken on some platforms using pthreads
+ * as the specification doesn't mandate pthread_t to be an integer type
  *
  * Returns the current thread ID number
  */
@@ -765,9 +766,15 @@ int
 xmlGetThreadId(void)
 {
 #ifdef HAVE_PTHREAD_H
+    pthread_t id;
+    int ret;
+
     if (libxml_is_threaded == 0)
         return (0);
-    return ((int) pthread_self());
+    id = pthread_self();
+    /* horrible but preserves compat, see warning above */
+    memcpy(&ret, &id, sizeof(ret));
+    return (ret);
 #elif defined HAVE_WIN32_THREADS
     return GetCurrentThreadId();
 #elif defined HAVE_BEOS_THREADS
@@ -803,7 +810,7 @@ xmlIsMainThread(void)
     xmlGenericError(xmlGenericErrorContext, "xmlIsMainThread()\n");
 #endif
 #ifdef HAVE_PTHREAD_H
-    return (mainthread == pthread_self());
+    return (pthread_equal(mainthread,pthread_self()));
 #elif defined HAVE_WIN32_THREADS
     return (mainthread == GetCurrentThreadId());
 #elif defined HAVE_BEOS_THREADS
@@ -852,12 +859,6 @@ xmlUnlockLibrary(void)
 void
 xmlInitThreads(void)
 {
-#ifdef DEBUG_THREADS
-    xmlGenericError(xmlGenericErrorContext, "xmlInitThreads()\n");
-#endif
-#if defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
-    InitializeCriticalSection(&cleanup_helpers_cs);
-#endif
 #ifdef HAVE_PTHREAD_H
     if (libxml_is_threaded == -1) {
         if ((pthread_once != NULL) &&
@@ -884,6 +885,8 @@ xmlInitThreads(void)
             libxml_is_threaded = 0;
         }
     }
+#elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
+    InitializeCriticalSection(&cleanup_helpers_cs);
 #endif
 }
 
@@ -892,6 +895,14 @@ xmlInitThreads(void)
  *
  * xmlCleanupThreads() is used to to cleanup all the thread related
  * data of the libxml2 library once processing has ended.
+ *
+ * WARNING: if your application is multithreaded or has plugin support
+ *          calling this may crash the application if another thread or
+ *          a plugin is still using libxml2. It's sometimes very hard to
+ *          guess if libxml2 is in use in the application, some libraries
+ *          or plugins may use it without notice. In case of doubt abstain
+ *          from calling this function or do it just before calling exit()
+ *          to avoid leak reports from valgrind !
  */
 void
 xmlCleanupThreads(void)
@@ -899,7 +910,10 @@ xmlCleanupThreads(void)
 #ifdef DEBUG_THREADS
     xmlGenericError(xmlGenericErrorContext, "xmlCleanupThreads()\n");
 #endif
-#if defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
+#ifdef HAVE_PTHREAD_H
+    if ((libxml_is_threaded)  && (pthread_key_delete != NULL))
+        pthread_key_delete(globalkey);
+#elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
     if (globalkey != TLS_OUT_OF_INDEXES) {
         xmlGlobalStateCleanupHelperParams *p;
 
@@ -918,9 +932,6 @@ xmlCleanupThreads(void)
         globalkey = TLS_OUT_OF_INDEXES;
     }
     DeleteCriticalSection(&cleanup_helpers_cs);
-#elif defined HAVE_PTHREAD_H
-    if ((libxml_is_threaded)  && (pthread_key_delete != NULL))
-        pthread_key_delete(globalkey);
 #endif
 }
 
@@ -941,11 +952,9 @@ xmlOnceInit(void)
 #ifdef HAVE_PTHREAD_H
     (void) pthread_key_create(&globalkey, xmlFreeGlobalState);
     mainthread = pthread_self();
-#endif
-
-#if defined(HAVE_WIN32_THREADS)
+#elif defined(HAVE_WIN32_THREADS)
     if (!run_once.done) {
-        if (InterlockedIncrement((PLONG)&run_once.control) == 1) {
+        if (InterlockedIncrement(&run_once.control) == 1) {
 #if !defined(HAVE_COMPILER_TLS)
             globalkey = TlsAlloc();
 #endif
@@ -958,9 +967,7 @@ xmlOnceInit(void)
                 Sleep(0);
         }
     }
-#endif
-
-#ifdef HAVE_BEOS_THREADS
+#elif defined HAVE_BEOS_THREADS
     if (atomic_add(&run_once_init, 1) == 0) {
         globalkey = tls_allocate();
         tls_set(globalkey, NULL);
@@ -982,7 +989,8 @@ xmlOnceInit(void)
  *
  * Returns TRUE always
  */
-#if defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
+#ifdef HAVE_PTHREAD_H
+#elif defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
 #if defined(LIBXML_STATIC_FOR_DLL)
 BOOL XMLCALL
 xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -259,7 +259,7 @@ BackgroundWindow::BackgroundWindow(HWND hwnd)
 {
 	 // set background brush for the short moment of displaying the
 	 // background color while moving foreground windows
-	SetClassLong(hwnd, GCL_HBRBACKGROUND, COLOR_BACKGROUND+1);
+	SetClassLongPtr(hwnd, GCL_HBRBACKGROUND, COLOR_BACKGROUND+1);
 
 	_display_version = RegGetDWORDValue(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), TEXT("PaintDesktopVersion"), 1);
 }
@@ -506,24 +506,29 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 	InitDragDrop();
 }
 
+
+DesktopShellView::~DesktopShellView()
+{
+	if (FAILED(RevokeDragDrop(_hwnd)))
+		assert(0);
+}
+
+
 bool DesktopShellView::InitDragDrop()
 {
 	CONTEXT("DesktopShellView::InitDragDrop()");
 
-	_pDropTarget = new DesktopDropTarget(_hwnd);
+	DesktopDropTarget * pDropTarget = new DesktopDropTarget(_hwnd);
 
-	if (!_pDropTarget)
+	if (!pDropTarget)
 		return false;
 
-	_pDropTarget->AddRef();
+	pDropTarget->AddRef();
 
-	if (FAILED(RegisterDragDrop(_hwnd, _pDropTarget))) {
-		_pDropTarget->Release();
-		_pDropTarget = NULL;
+	if (FAILED(RegisterDragDrop(_hwnd, pDropTarget))) {
+		pDropTarget->Release();
 		return false;
 	}
-	else
-		_pDropTarget->Release();
 
 	FORMATETC ftetc;
 
@@ -532,7 +537,8 @@ bool DesktopShellView::InitDragDrop()
 	ftetc.tymed = TYMED_HGLOBAL;
 	ftetc.cfFormat = CF_HDROP;
 
-	_pDropTarget->AddSuportedFormat(ftetc);
+	pDropTarget->AddSuportedFormat(ftetc);
+	pDropTarget->Release();
 
 	return true;
 }

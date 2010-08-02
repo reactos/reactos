@@ -36,6 +36,8 @@ typedef INTERNET_PORT *LPINTERNET_PORT;
 #define INTERNET_SCHEME_HTTPS           2
 typedef int INTERNET_SCHEME, *LPINTERNET_SCHEME;
 
+#define ICU_ESCAPE  0x80000000
+
 /* flags for WinHttpOpen */
 #define WINHTTP_FLAG_ASYNC                  0x10000000
 

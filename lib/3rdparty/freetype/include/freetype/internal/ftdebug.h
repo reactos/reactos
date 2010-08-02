@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Debugging and logging component (specification).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2006, 2007 by                         */
+/*  Copyright 1996-2001, 2002, 2004, 2006, 2007, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -54,7 +54,7 @@ FT_BEGIN_HEADER
 #define FT_TRACE_DEF( x )  trace_ ## x ,
 
   /* defining the enumeration */
-  typedef enum
+  typedef enum  FT_Trace_
   {
 #include FT_INTERNAL_TRACE_H
     trace_count
@@ -92,7 +92,7 @@ FT_BEGIN_HEADER
 
 #else /* !FT_DEBUG_LEVEL_TRACE */
 
-#define FT_TRACE( level, varformat )  do ; while ( 0 )      /* nothing */
+#define FT_TRACE( level, varformat )  do { } while ( 0 )      /* nothing */
 
 #endif /* !FT_DEBUG_LEVEL_TRACE */
 
@@ -146,9 +146,11 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* You need two opening resp. closing parentheses!                       */
+  /* You need two opening and closing parentheses!                         */
   /*                                                                       */
   /* Example: FT_TRACE0(( "Value is %i", foo ))                            */
+  /*                                                                       */
+  /* Output of the FT_TRACEX macros is sent to stderr.                     */
   /*                                                                       */
   /*************************************************************************/
 
@@ -164,7 +166,9 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /*  Define the FT_ERROR macro                                            */
+  /* Define the FT_ERROR macro.                                            */
+  /*                                                                       */
+  /* Output of this macro is sent to stderr.                               */
   /*                                                                       */
   /*************************************************************************/
 
@@ -174,14 +178,14 @@ FT_BEGIN_HEADER
 
 #else  /* !FT_DEBUG_LEVEL_ERROR */
 
-#define FT_ERROR( varformat )  do ; while ( 0 )      /* nothing */
+#define FT_ERROR( varformat )  do { } while ( 0 )      /* nothing */
 
 #endif /* !FT_DEBUG_LEVEL_ERROR */
 
 
   /*************************************************************************/
   /*                                                                       */
-  /* Define the FT_ASSERT macro                                            */
+  /* Define the FT_ASSERT macro.                                           */
   /*                                                                       */
   /*************************************************************************/
 
@@ -197,28 +201,30 @@ FT_BEGIN_HEADER
 
 #else /* !FT_DEBUG_LEVEL_ERROR */
 
-#define FT_ASSERT( condition )  do ; while ( 0 )
+#define FT_ASSERT( condition )  do { } while ( 0 )
 
 #endif /* !FT_DEBUG_LEVEL_ERROR */
 
 
   /*************************************************************************/
   /*                                                                       */
-  /*  Define `FT_Message' and `FT_Panic' when needed                       */
+  /* Define `FT_Message' and `FT_Panic' when needed.                       */
   /*                                                                       */
   /*************************************************************************/
 
 #ifdef FT_DEBUG_LEVEL_ERROR
 
-#include "stdio.h"  /* for vprintf() */
+#include "stdio.h"  /* for vfprintf() */
 
   /* print a message */
   FT_BASE( void )
-  FT_Message( const char*  fmt, ... );
+  FT_Message( const char*  fmt,
+              ... );
 
   /* print a message and exit */
   FT_BASE( void )
-  FT_Panic( const char*  fmt, ... );
+  FT_Panic( const char*  fmt,
+            ... );
 
 #endif /* FT_DEBUG_LEVEL_ERROR */
 
@@ -229,8 +235,8 @@ FT_BEGIN_HEADER
 
 #if defined( _MSC_VER )      /* Visual C++ (and Intel C++) */
 
-  /* we disable the warning `conditional expression is constant' here */
-  /* in order to compile cleanly with the maximum level of warnings   */
+  /* We disable the warning `conditional expression is constant' here */
+  /* in order to compile cleanly with the maximum level of warnings.  */
 #pragma warning( disable : 4127 )
 
 #endif /* _MSC_VER */

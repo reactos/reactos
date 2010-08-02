@@ -393,6 +393,29 @@ IopCompleteRequest(IN PKAPC Apc,
             }
         }
 
+        /* Update transfer count for everything but create operation */
+        if (!(Irp->Flags & IRP_CREATE_OPERATION))
+        {
+            if (Irp->Flags & IRP_WRITE_OPERATION)
+            {
+                /* Update write transfer count */
+                IopUpdateTransferCount(IopWriteTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+            else if (Irp->Flags & IRP_READ_OPERATION)
+            {
+                /* Update read transfer count */
+                IopUpdateTransferCount(IopReadTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+            else
+            {
+                /* Update other transfer count */
+                IopUpdateTransferCount(IopOtherTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+        }
+
         /* Now that we've signaled the events, de-associate the IRP */
         IopUnQueueIrpFromThread(Irp);
 
@@ -689,12 +712,11 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 				/* Free the IRP and its MDL */
 				IoFreeMdl(Irp->MdlAddress);
 				IoFreeIrp(Irp);
-				Irp = NULL;
+
+                /* Fail */
+				_SEH2_YIELD(return NULL);
 			}
 			_SEH2_END;
-		
-            /* This is how we know if we failed during the probe */
-            if (!Irp) return NULL;
         }
         else
         {
@@ -885,12 +907,11 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                     /* Free the input buffer and IRP */
                     if (InputBuffer) ExFreePool(Irp->AssociatedIrp.SystemBuffer);
                     IoFreeIrp(Irp);
-                    Irp = NULL;
+
+                    /* Fail */
+                    _SEH2_YIELD(return NULL);
                 }
                 _SEH2_END;
-
-                /* This is how we know if probing failed */
-                if (!Irp) return NULL;
             }
             break;
 
@@ -1113,6 +1134,9 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     PDRIVER_OBJECT DriverObject;
     PIO_STACK_LOCATION StackPtr;
 
+    /* Make sure this is a valid IRP */
+    ASSERT(Irp->Type == IO_TYPE_IRP);
+
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
 
@@ -1190,15 +1214,24 @@ IofCompleteRequest(IN PIRP Irp,
     if (LastStackPtr->Control & SL_ERROR_RETURNED)
     {
         /* Get the error code */
-        ErrorCode = (NTSTATUS)LastStackPtr->Parameters.Others.Argument4;
+        ErrorCode = PtrToUlong(LastStackPtr->Parameters.Others.Argument4);
     }
 
-    /* Get the Current Stack and skip it */
-    StackPtr = IoGetCurrentIrpStackLocation(Irp);
-    IoSkipCurrentIrpStackLocation(Irp);
-
-    /* Loop the Stacks and complete the IRPs */
-    do
+    /*
+     * Start the loop with the current stack and point the IRP to the next stack
+     * and then keep incrementing the stack as we loop through. The IRP should
+     * always point to the next stack location w.r.t the one currently being
+     * analyzed, so completion routine code will see the appropriate value.
+     * Because of this, we must loop until the current stack location is +1 of
+     * the stack count, because when StackPtr is at the end, CurrentLocation is +1.
+     */
+    for (StackPtr = IoGetCurrentIrpStackLocation(Irp),
+         Irp->CurrentLocation++,
+         Irp->Tail.Overlay.CurrentStackLocation++;
+         Irp->CurrentLocation <= (Irp->StackCount + 1);
+         StackPtr++,
+         Irp->CurrentLocation++,
+         Irp->Tail.Overlay.CurrentStackLocation++)
     {
         /* Set Pending Returned */
         Irp->PendingReturned = StackPtr->Control & SL_PENDING_RETURNED;
@@ -1212,7 +1245,7 @@ IofCompleteRequest(IN PIRP Irp,
                 /* Update the error for the current stack */
                 ErrorCode = Irp->IoStatus.Status;
                 StackPtr->Control |= SL_ERROR_RETURNED;
-                LastStackPtr->Parameters.Others.Argument4 = (PVOID)ErrorCode;
+                LastStackPtr->Parameters.Others.Argument4 = UlongToPtr(ErrorCode);
                 LastStackPtr->Control |= SL_ERROR_RETURNED;
             }
         }
@@ -1261,11 +1294,7 @@ IofCompleteRequest(IN PIRP Irp,
             /* Clear the stack location */
             IopClearStackLocation(StackPtr);
         }
-
-        /* Move to next stack location and pointer */
-        IoSkipCurrentIrpStackLocation(Irp);
-        StackPtr++;
-    } while (Irp->CurrentLocation <= (Irp->StackCount + 1));
+    }
 
     /* Check if the IRP is an associated IRP */
     if (Irp->Flags & IRP_ASSOCIATED_IRP)
@@ -1528,7 +1557,7 @@ IoFreeIrp(IN PIRP Irp)
         if (Irp)
         {
            InterlockedPushEntrySList(&List->L.ListHead,
-                                     (PSINGLE_LIST_ENTRY)Irp);
+                                     (PSLIST_ENTRY)Irp);
         }
     }
 }
@@ -1586,7 +1615,7 @@ NTAPI
 IoGetRequestorProcessId(IN PIRP Irp)
 {
     /* Return the requestor process' id */
-    return (ULONG)(IoGetRequestorProcess(Irp)->UniqueProcessId);
+    return PtrToUlong(IoGetRequestorProcess(Irp)->UniqueProcessId);
 }
 
 /*
@@ -1758,5 +1787,5 @@ NTAPI
 IoSetTopLevelIrp(IN PIRP Irp)
 {
     /* Set the IRP */
-    PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
+    PsGetCurrentThread()->TopLevelIrp = (ULONG_PTR)Irp;
 }

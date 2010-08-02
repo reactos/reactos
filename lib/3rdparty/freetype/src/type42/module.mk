@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += TYPE42_DRIVER
 
 define TYPE42_DRIVER
-$(OPEN_DRIVER)t42_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, t42_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)type42    $(ECHO_DRIVER_DESC)Type 42 font files with no known extension$(ECHO_DRIVER_DONE)
 endef
 

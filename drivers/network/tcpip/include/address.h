@@ -4,8 +4,8 @@
  * FILE:        include/address.h
  * PURPOSE:     Address manipulation prototypes
  */
-#ifndef __ADDRESS_H
-#define __ADDRESS_H
+
+#pragma once
 
 /*
  * Initialize an IPv4 style address
@@ -15,12 +15,11 @@
  */
 #define AddrInitIPv4(IPAddress, RawAddress)           \
 {                                                     \
-    INIT_TAG((IPAddress), TAG('I','P','V','4'));      \
     (IPAddress)->Type                = IP_ADDRESS_V4; \
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
 }
 
-#ifdef DBG
+#if DBG
 
 PCHAR A2S(
     PIP_ADDRESS Address);
@@ -55,10 +54,8 @@ BOOLEAN AddrIsEqualIPv4(
     PIP_ADDRESS Address1,
     IPv4_RAW_ADDRESS Address2);
 
-BOOLEAN AddrLocateADEv4(
-    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address);
-
-BOOLEAN IPGetDefaultAddress( PIP_ADDRESS Address );
+PIP_INTERFACE AddrLocateInterface(
+    PIP_ADDRESS MatchAddress);
 
 PADDRESS_FILE AddrSearchFirst(
     PIP_ADDRESS Address,
@@ -77,7 +74,5 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask );
 
 VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source,
 		       PIP_ADDRESS Netmask );
-
-#endif /* __ADDRESS_H */
 
 /* EOF */

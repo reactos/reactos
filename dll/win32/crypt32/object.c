@@ -283,20 +283,13 @@ end:
     return ret;
 }
 
-static BOOL CRYPT_QuerySerializedStoreObject(DWORD dwObjectType,
- const void *pvObject, DWORD *pdwMsgAndCertEncodingType, DWORD *pdwContentType,
+static BOOL CRYPT_QuerySerializedStoreFromFile(LPCWSTR fileName,
+ DWORD *pdwMsgAndCertEncodingType, DWORD *pdwContentType,
  HCERTSTORE *phCertStore, HCRYPTMSG *phMsg)
 {
-    LPCWSTR fileName = pvObject;
     HANDLE file;
     BOOL ret = FALSE;
 
-    if (dwObjectType != CERT_QUERY_OBJECT_FILE)
-    {
-        FIXME("unimplemented for non-file type %d\n", dwObjectType);
-        SetLastError(E_INVALIDARG); /* FIXME: is this the correct error? */
-        return FALSE;
-    }
     TRACE("%s\n", debugstr_w(fileName));
     file = CreateFileW(fileName, GENERIC_READ, FILE_SHARE_READ, NULL,
      OPEN_EXISTING, 0, NULL);
@@ -320,6 +313,50 @@ static BOOL CRYPT_QuerySerializedStoreObject(DWORD dwObjectType,
     }
     TRACE("returning %d\n", ret);
     return ret;
+}
+
+static BOOL CRYPT_QuerySerializedStoreFromBlob(const CRYPT_DATA_BLOB *blob,
+ DWORD *pdwMsgAndCertEncodingType, DWORD *pdwContentType,
+ HCERTSTORE *phCertStore, HCRYPTMSG *phMsg)
+{
+    HCERTSTORE store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    BOOL ret;
+
+    TRACE("(%d, %p)\n", blob->cbData, blob->pbData);
+
+    ret = CRYPT_ReadSerializedStoreFromBlob(blob, store);
+    if (ret)
+    {
+        if (pdwMsgAndCertEncodingType)
+            *pdwMsgAndCertEncodingType = X509_ASN_ENCODING;
+        if (pdwContentType)
+            *pdwContentType = CERT_QUERY_CONTENT_SERIALIZED_STORE;
+        if (phCertStore)
+            *phCertStore = CertDuplicateStore(store);
+    }
+    CertCloseStore(store, 0);
+    TRACE("returning %d\n", ret);
+    return ret;
+}
+
+static BOOL CRYPT_QuerySerializedStoreObject(DWORD dwObjectType,
+ const void *pvObject, DWORD *pdwMsgAndCertEncodingType, DWORD *pdwContentType,
+ HCERTSTORE *phCertStore, HCRYPTMSG *phMsg)
+{
+    switch (dwObjectType)
+    {
+    case CERT_QUERY_OBJECT_FILE:
+        return CRYPT_QuerySerializedStoreFromFile(pvObject,
+         pdwMsgAndCertEncodingType, pdwContentType, phCertStore, phMsg);
+    case CERT_QUERY_OBJECT_BLOB:
+        return CRYPT_QuerySerializedStoreFromBlob(pvObject,
+         pdwMsgAndCertEncodingType, pdwContentType, phCertStore, phMsg);
+    default:
+        FIXME("unimplemented for type %d\n", dwObjectType);
+        SetLastError(E_INVALIDARG); /* FIXME: is this the correct error? */
+        return FALSE;
+    }
 }
 
 static BOOL CRYPT_QuerySignedMessage(const CRYPT_DATA_BLOB *blob,
@@ -562,11 +599,13 @@ static BOOL CRYPT_QueryMessageObject(DWORD dwObjectType, const void *pvObject,
     {
         if (pdwFormatType)
             *pdwFormatType = formatType;
-        if (phMsg)
-            *phMsg = msg;
         if (phCertStore)
             *phCertStore = CertOpenStore(CERT_STORE_PROV_MSG, encodingType, 0,
              0, msg);
+        if (phMsg)
+            *phMsg = msg;
+        else
+            CryptMsgClose(msg);
     }
     if (blob == &fileBlob)
         CryptMemFree(blob->pbData);
@@ -1080,7 +1119,7 @@ static BOOL WINAPI CRYPT_FormatBasicConstraints2(DWORD dwCertEncodingType,
     return ret;
 }
 
-static BOOL CRYPT_FormatHexStringWithPrefix(CRYPT_DATA_BLOB *blob, int id,
+static BOOL CRYPT_FormatHexStringWithPrefix(const CRYPT_DATA_BLOB *blob, int id,
  LPWSTR str, DWORD *pcbStr)
 {
     WCHAR buf[MAX_STRING_RESOURCE_LEN];
@@ -1114,13 +1153,13 @@ static BOOL CRYPT_FormatHexStringWithPrefix(CRYPT_DATA_BLOB *blob, int id,
     return ret;
 }
 
-static BOOL CRYPT_FormatKeyId(CRYPT_DATA_BLOB *keyId, LPWSTR str,
+static BOOL CRYPT_FormatKeyId(const CRYPT_DATA_BLOB *keyId, LPWSTR str,
  DWORD *pcbStr)
 {
     return CRYPT_FormatHexStringWithPrefix(keyId, IDS_KEY_ID, str, pcbStr);
 }
 
-static BOOL CRYPT_FormatCertSerialNumber(CRYPT_DATA_BLOB *serialNum, LPWSTR str,
+static BOOL CRYPT_FormatCertSerialNumber(const CRYPT_DATA_BLOB *serialNum, LPWSTR str,
  DWORD *pcbStr)
 {
     return CRYPT_FormatHexStringWithPrefix(serialNum, IDS_CERT_SERIAL_NUMBER,
@@ -2486,7 +2525,7 @@ static CryptFormatObjectFunc CRYPT_GetBuiltinFormatFunction(DWORD encodingType,
         SetLastError(ERROR_FILE_NOT_FOUND);
         return NULL;
     }
-    if (!HIWORD(lpszStructType))
+    if (IS_INTOID(lpszStructType))
     {
         switch (LOWORD(lpszStructType))
         {

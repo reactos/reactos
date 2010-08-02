@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <notepad.h>
@@ -51,7 +51,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 {
 	DWORD dwSize;
 	LPBYTE pBytes = NULL;
-	LPCWSTR pszText;
+	LPWSTR pszText;
 	LPWSTR pszAllocText = NULL;
 	DWORD dwPos, i;
 	DWORD dwCharCount;
@@ -110,7 +110,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 		/* fall through */
 
 	case ENCODING_UNICODE:
-		pszText = (LPCWSTR) &pBytes[dwPos];
+		pszText = (LPWSTR) &pBytes[dwPos];
 		dwCharCount = (dwSize - dwPos) / sizeof(WCHAR);
 		break;
 
@@ -173,6 +173,10 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 				adwEolnCount[EOLN_CR]++;
 			else
 				adwEolnCount[EOLN_LF]++;
+			break;
+
+		case '\0':
+			pszText[i] = ' ';
 			break;
 		}
 	}

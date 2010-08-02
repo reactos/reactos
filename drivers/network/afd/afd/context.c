@@ -33,9 +33,28 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, ContextSize );
 }
 
+NTSTATUS NTAPI
+AfdGetContextSize( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	           PIO_STACK_LOCATION IrpSp )
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
+
+    if (IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
+        return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, sizeof(ULONG));
+
+    RtlCopyMemory(Irp->UserBuffer,
+                  &FCB->ContextSize,
+                  sizeof(ULONG));
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, sizeof(ULONG));
+}
+        
 NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {

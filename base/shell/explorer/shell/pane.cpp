@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -42,7 +42,7 @@ enum IMAGE {
 #define IMAGE_HEIGHT		13
 
 
-static const LPTSTR g_pos_names[COLUMNS] = {
+static const TCHAR* g_pos_names[COLUMNS] = {
 	TEXT(""),			/* symbol */
 	TEXT("Name"),
 	TEXT("Type"),
@@ -141,7 +141,7 @@ bool Pane::create_header(HWND hparent, int id)
 	hdi.mask = HDI_TEXT|HDI_WIDTH|HDI_FORMAT;
 
 	for(int idx=0; idx<COLUMNS; idx++) {
-		hdi.pszText = g_pos_names[idx];
+		hdi.pszText = (TCHAR*)g_pos_names[idx];
 		hdi.fmt = HDF_STRING | g_pos_align[idx];
 		hdi.cxy = _widths[idx];
 		Header_InsertItem(hwnd, idx, &hdi);

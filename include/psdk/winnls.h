@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
+
 #define GEOID_NOT_AVAILABLE (-1)
 #define MAX_LEADBYTES 	12
 #define MAX_DEFAULTCHAR	2
@@ -13,6 +18,7 @@ extern "C" {
 #if (WINVER >= 0x0400)
 #define LOCALE_RETURN_NUMBER	0x20000000
 #endif
+#define LOCALE_RETURN_GENITIVE_NAMES  0x10000000
 #define LOCALE_ILANGUAGE	1
 #define LOCALE_SLANGUAGE	2
 #define LOCALE_SENGLANGUAGE	0x1001
@@ -169,6 +175,9 @@ extern "C" {
 #endif
 
 #define CP_ACP 0
+#ifdef _WINE
+#define CP_UNIXCP CP_ACP
+#endif
 #define CP_OEMCP 1
 #define CP_MACCP 2
 #define CP_THREAD_ACP 3
@@ -744,6 +753,11 @@ typedef LPNUMBERFMTA LPNUMBERFMT;
 #endif /* (WINVER >= 0x0500) */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

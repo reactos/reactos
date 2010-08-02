@@ -77,7 +77,7 @@ vfatFindDirSpace(
 {
     LARGE_INTEGER FileOffset;
     ULONG i, count, size, nbFree = 0;
-    PDIR_ENTRY pFatEntry;
+    PDIR_ENTRY pFatEntry = NULL;
     PVOID Context = NULL;
     NTSTATUS Status;
     ULONG SizeDirEntry;
@@ -469,8 +469,12 @@ FATAddEntry(
     CcSetDirtyPinnedData(Context, NULL);
     CcUnpinData(Context);
 
-    /* FIXME: check status */
-    vfatMakeFCBFromDirEntry(DeviceExt, ParentFcb, &DirContext, Fcb);
+    Status = vfatMakeFCBFromDirEntry(DeviceExt, ParentFcb, &DirContext, Fcb);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Buffer, TAG_VFAT);
+        return Status;
+    }
 
     DPRINT("new : entry=%11.11s\n", (*Fcb)->entry.Fat.Filename);
     DPRINT("new : entry=%11.11s\n", DirContext.DirEntry.Fat.Filename);
@@ -616,7 +620,7 @@ FATDelEntry(
     ULONG CurrentCluster = 0, NextCluster, i;
     PVOID Context = NULL;
     LARGE_INTEGER Offset;
-    PFAT_DIR_ENTRY pDirEntry;
+    PFAT_DIR_ENTRY pDirEntry = NULL;
 
     ASSERT(pFcb);
     ASSERT(pFcb->parentFcb);

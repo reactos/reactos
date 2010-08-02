@@ -21,7 +21,7 @@ CmCreateRootNode(
    SIZE_T NameSize;
 
    /* Allocate the cell */
-   NameSize = utf16_wcslen(Name) * sizeof(WCHAR);
+   NameSize = strlenW(Name) * sizeof(WCHAR);
    RootCellIndex = HvAllocateCell(Hive,
                                   FIELD_OFFSET(CM_KEY_NODE, Name) + NameSize,
                                   Stable,
@@ -82,7 +82,10 @@ CmpPrepareIndexOfKeys(
       for (i = 0; i < IndexCell->Count; i++)
       {
          PCM_KEY_INDEX SubIndexCell = HvGetCell(RegistryHive, IndexCell->List[i]);
-         CmpPrepareIndexOfKeys(RegistryHive, SubIndexCell);
+         if (SubIndexCell->Signature == CM_KEY_NODE_SIGNATURE)
+            CmpPrepareKey(RegistryHive, (PCM_KEY_NODE)SubIndexCell);
+         else
+            CmpPrepareIndexOfKeys(RegistryHive, SubIndexCell);
       }
    }
    else if (IndexCell->Signature == CM_KEY_FAST_LEAF ||

@@ -534,21 +534,15 @@ static BOOL CRYPT_FormatCPS(DWORD dwCertEncodingType,
     if ((ret = CryptDecodeObjectEx(dwCertEncodingType, X509_UNICODE_ANY_STRING,
      pbEncoded, cbEncoded, CRYPT_DECODE_ALLOC_FLAG, NULL, &cpsValue, &size)))
     {
-        LPCWSTR headingSep, sep;
-        DWORD headingSepLen, sepLen;
+        LPCWSTR sep;
+        DWORD sepLen;
 
         if (dwFormatStrType & CRYPT_FORMAT_STR_MULTI_LINE)
-        {
-            headingSep = colonCrlf;
             sep = crlf;
-        }
         else
-        {
-            headingSep = colonSpace;
             sep = commaSep;
-        }
+
         sepLen = strlenW(sep);
-        headingSepLen = strlenW(headingSep);
 
         if (dwFormatStrType & CRYPT_FORMAT_STR_MULTI_LINE)
         {

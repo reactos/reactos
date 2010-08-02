@@ -38,11 +38,8 @@ static NTSTATUS NTAPI SendComplete
 							Irp->IoStatus.Status,
 							Irp->IoStatus.Information));
 
-    ASSERT_IRQL(APC_LEVEL);
-
-    if( !SocketAcquireStateLock( FCB ) ) {
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
@@ -52,10 +49,13 @@ static NTSTATUS NTAPI SendComplete
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	       SendReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -81,7 +81,7 @@ static NTSTATUS NTAPI SendComplete
 			NextIrp->IoStatus.Information = 0;
 
 			if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
-
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
 
@@ -142,9 +142,9 @@ static NTSTATUS NTAPI SendComplete
 						  FCB );
     } else {
 		FCB->PollState |= AFD_EVENT_SEND;
+		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( TotalBytesCopied > 0 ) {
 		UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
@@ -179,14 +179,14 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 							Irp->IoStatus.Status,
 							Irp->IoStatus.Information));
 
-    if( !SocketAcquireStateLock( FCB ) ) {
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->SendIrp.InFlightRequest = NULL;
     /* Request is not in flight any longer */
 
     FCB->PollState |= AFD_EVENT_SEND;
+    FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
@@ -197,6 +197,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
@@ -223,15 +224,13 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_SEND;
-
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
         PAFD_SEND_INFO_UDP SendReq;
         PTDI_CONNECTION_INFORMATION TargetAddress;
 
         /* Check that the socket is bound */
-        if( FCB->State != SOCKET_STATE_BOUND )
+        if( FCB->State != SOCKET_STATE_BOUND || !FCB->RemoteAddress )
             return UnlockAndMaybeComplete( FCB, STATUS_INVALID_PARAMETER, Irp,
                                            0 );
 
@@ -249,9 +248,9 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                            Irp, 0 );
 		}
 
-        TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
+        Status = TdiBuildConnectionInfo( &TargetAddress, FCB->RemoteAddress );
 
-		if( TargetAddress ) {
+		if( NT_SUCCESS(Status) ) {
             Status = TdiSendDatagram
                 ( &FCB->SendIrp.InFlightRequest,
                   FCB->AddressFile.Object,
@@ -263,7 +262,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
                   FCB );
 
 			ExFreePool( TargetAddress );
-		} else Status = STATUS_NO_MEMORY;
+		}
 
         if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
@@ -393,11 +392,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_SEND;
-    FCB->PollState &= ~AFD_EVENT_SEND;
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 		return UnlockAndMaybeComplete
@@ -417,17 +411,19 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint
 		(MID_TRACE,("RemoteAddress #%d Type %d\n",
-					((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					TAAddressCount,
-					((PTRANSPORT_ADDRESS)SendReq->RemoteAddress)->
+					((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress)->
 					Address[0].AddressType));
 
-    TdiBuildConnectionInfo( &TargetAddress,
-							((PTRANSPORT_ADDRESS)SendReq->RemoteAddress) );
+    Status = TdiBuildConnectionInfo( &TargetAddress,
+							((PTRANSPORT_ADDRESS)SendReq->TdiConnection.RemoteAddress) );
 
     /* Check the size of the Address given ... */
 
-    if( TargetAddress ) {
+    if( NT_SUCCESS(Status) ) {
+		FCB->PollState &= ~AFD_EVENT_SEND;
+
 		Status = TdiSendDatagram
 			( &FCB->SendIrp.InFlightRequest,
 			  FCB->AddressFile.Object,
@@ -439,7 +435,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			  FCB );
 
 		ExFreePool( TargetAddress );
-    } else Status = STATUS_NO_MEMORY;
+    }
 
     if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 

@@ -21,6 +21,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "traffic.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(traffic);
@@ -41,4 +42,15 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     }
 
     return TRUE;
+}
+
+/*****************************************************************************
+ * TcRegisterClient [TRAFFIC.@]
+ */
+ULONG WINAPI TcRegisterClient(ULONG version, HANDLE context,
+                              PTCI_CLIENT_FUNC_LIST list, PHANDLE buffer)
+{
+    FIXME("(%u %p %p %p) stub\n", version, context, list, buffer);
+    if(buffer) *buffer = INVALID_HANDLE_VALUE;
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }

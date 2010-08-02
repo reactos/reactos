@@ -12,157 +12,14 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 
-VOID RunLoader(VOID)
-{
-	CHAR	SettingName[80];
-	CHAR	SettingValue[80];
-	ULONG_PTR	SectionId;
-	ULONG		OperatingSystemCount;
-	PCSTR	*OperatingSystemSectionNames;
-	PCSTR	*OperatingSystemDisplayNames;
-	ULONG		DefaultOperatingSystem;
-	LONG		TimeOut;
-	ULONG		SelectedOperatingSystem;
-
-	if (!FsOpenBootVolume())
-	{
-		UiMessageBoxCritical("Error opening boot partition for file access.");
-		return;
-	}
-
-	if (!IniFileInitialize())
-	{
-		UiMessageBoxCritical("Error initializing .ini file");
-		return;
-	}
-
-	if (!IniOpenSection("FreeLoader", &SectionId))
-	{
-		UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
-		return;
-	}
-	TimeOut = GetTimeOut();
-
-	if (!UiInitialize(TimeOut))
-	{
-		UiMessageBoxCritical("Unable to initialize UI.");
-		return;
-	}
-
-
-	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
-	{
-		UiMessageBox("Press ENTER to reboot.");
-		goto reboot;
-	}
-
-	if (OperatingSystemCount == 0)
-	{
-		UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
-		goto reboot;
-	}
-
-	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemSectionNames, OperatingSystemCount);
-
-	//
-	// Find all the message box settings and run them
-	//
-	UiShowMessageBoxesInSection("FreeLoader");
-
-	for (;;)
-	{
-
-		// Redraw the backdrop
-		UiDrawBackdrop();
-
-		// Show the operating system list menu
-		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem, FALSE, MainBootMenuKeyPressFilter))
-		{
-			UiMessageBox("Press ENTER to reboot.");
-			goto reboot;
-		}
-
-		TimeOut = -1;
-
-		// Try to open the operating system section in the .ini file
-		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
-		{
-			sprintf(SettingName, "Section [%s] not found in freeldr.ini.", OperatingSystemSectionNames[SelectedOperatingSystem]);
-			UiMessageBox(SettingName);
-			continue;
-		}
-
-		// Try to read the boot type
-		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, sizeof(SettingValue)))
-		{
-			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.", OperatingSystemSectionNames[SelectedOperatingSystem]);
-			UiMessageBox(SettingName);
-			continue;
-		}
-
-		// Install the drive mapper according to this sections drive mappings
-#ifdef __i386__
-		DriveMapMapDrivesInSection(OperatingSystemSectionNames[SelectedOperatingSystem]);
-#endif
-		if (_stricmp(SettingValue, "ReactOS") == 0)
-		{
-			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
-		}
-#ifdef FREELDR_REACTOS_SETUP
-		else if (_stricmp(SettingValue, "ReactOSSetup") == 0)
-		{
-			// In future we could pass the selected OS details through this
-			// to have different install methods, etc.
-			LoadReactOSSetup();
-		}
-		else if (_stricmp(SettingValue, "ReactOSSetup2") == 0)
-		{
-			// WinLdr-style boot
-			LoadReactOSSetup2();
-		}
-#endif
-#ifdef __i386__
-		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
-		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_NT4);
-		}
-		else if (_stricmp(SettingValue, "Windows2003") == 0)
-		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WS03);
-		}
-		else if (_stricmp(SettingValue, "Linux") == 0)
-		{
-			LoadAndBootLinux(OperatingSystemSectionNames[SelectedOperatingSystem], OperatingSystemDisplayNames[SelectedOperatingSystem]);
-		}
-		else if (_stricmp(SettingValue, "BootSector") == 0)
-		{
-			LoadAndBootBootSector(OperatingSystemSectionNames[SelectedOperatingSystem]);
-		}
-		else if (_stricmp(SettingValue, "Partition") == 0)
-		{
-			LoadAndBootPartition(OperatingSystemSectionNames[SelectedOperatingSystem]);
-		}
-		else if (_stricmp(SettingValue, "Drive") == 0)
-		{
-			LoadAndBootDrive(OperatingSystemSectionNames[SelectedOperatingSystem]);
-		}
-#endif
-	}
-
-
-reboot:
-	UiUnInitialize("Rebooting...");
-	return;
-}
-
-ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSystemCount)
+ULONG	 GetDefaultOperatingSystem(OperatingSystemItem* OperatingSystemList, ULONG	 OperatingSystemCount)
 {
 	CHAR	DefaultOSText[80];
 	PCSTR	DefaultOSName;
@@ -188,7 +45,7 @@ ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSy
 	{
 		for (Idx=0; Idx<OperatingSystemCount; Idx++)
 		{
-			if (_stricmp(DefaultOSName, OperatingSystemList[Idx]) == 0)
+			if (_stricmp(DefaultOSName, OperatingSystemList[Idx].SystemPartition) == 0)
 			{
 				DefaultOS = Idx;
 				break;
@@ -239,4 +96,197 @@ BOOLEAN MainBootMenuKeyPressFilter(ULONG KeyPress)
 
 	// We didn't handle the key
 	return FALSE;
+}
+
+VOID RunLoader(VOID)
+{
+	CHAR	SettingValue[80];
+	CHAR BootType[80];
+	ULONG_PTR	SectionId;
+	ULONG		OperatingSystemCount;
+	OperatingSystemItem*	OperatingSystemList;
+	PCSTR	*OperatingSystemDisplayNames;
+	PCSTR SectionName;
+	ULONG	i;
+	ULONG		DefaultOperatingSystem;
+	LONG		TimeOut;
+	ULONG		SelectedOperatingSystem;
+
+	// FIXME: if possible, only detect and register ARC devices...
+	if (!MachHwDetect())
+	{
+		UiMessageBoxCritical("Error when detecting hardware");
+		return;
+	}
+
+#ifdef _M_IX86
+	// Load additional SCSI driver (if any)
+	if (LoadBootDeviceDriver() != ESUCCESS)
+	{
+		UiMessageBoxCritical("Unable to load additional boot device driver");
+	}
+#endif
+
+	if (!IniFileInitialize())
+	{
+		UiMessageBoxCritical("Error initializing .ini file");
+		return;
+	}
+
+	if (!IniOpenSection("FreeLoader", &SectionId))
+	{
+		UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
+		return;
+	}
+	TimeOut = GetTimeOut();
+
+	if (!UiInitialize(TimeOut))
+	{
+		UiMessageBoxCritical("Unable to initialize UI.");
+		return;
+	}
+
+	OperatingSystemList = InitOperatingSystemList(&OperatingSystemCount);
+	if (!OperatingSystemList)
+	{
+		UiMessageBox("Unable to read operating systems section in freeldr.ini.\nPress ENTER to reboot.");
+		goto reboot;
+	}
+
+	if (OperatingSystemCount == 0)
+	{
+		UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
+		goto reboot;
+	}
+
+	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemList, OperatingSystemCount);
+
+	//
+	// Create list of display names
+	//
+	OperatingSystemDisplayNames = MmHeapAlloc(sizeof(PCSTR) * OperatingSystemCount);
+	if (!OperatingSystemDisplayNames)
+	{
+		goto reboot;
+	}
+	for (i = 0; i < OperatingSystemCount; i++)
+	{
+		OperatingSystemDisplayNames[i] = OperatingSystemList[i].LoadIdentifier;
+	}
+
+	//
+	// Find all the message box settings and run them
+	//
+	UiShowMessageBoxesInSection("FreeLoader");
+
+	for (;;)
+	{
+
+		// Redraw the backdrop
+		UiDrawBackdrop();
+
+		// Show the operating system list menu
+		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem, FALSE, MainBootMenuKeyPressFilter))
+		{
+			UiMessageBox("Press ENTER to reboot.");
+			goto reboot;
+		}
+
+		TimeOut = -1;
+
+		// Try to open the operating system section in the .ini file
+		SettingValue[0] = ANSI_NULL;
+		SectionName = OperatingSystemList[SelectedOperatingSystem].SystemPartition;
+		if (IniOpenSection(SectionName, &SectionId))
+		{
+			// Try to read the boot type
+			IniReadSettingByName(SectionId, "BootType", BootType, sizeof(BootType));
+		}
+		else
+			BootType[0] = ANSI_NULL;
+
+		if (BootType[0] == ANSI_NULL && SectionName[0] != ANSI_NULL)
+		{
+			// Try to infere boot type value
+#ifdef __i386__
+			ULONG FileId;
+			if (ArcOpen((CHAR*)SectionName, OpenReadOnly, &FileId) == ESUCCESS)
+			{
+				ArcClose(FileId);
+				strcpy(BootType, "BootSector");
+			}
+			else
+#endif
+			{
+				strcpy(BootType, "Windows");
+			}
+		}
+
+		// Get OS setting value
+		IniOpenSection("Operating Systems", &SectionId);
+		IniReadSettingByName(SectionId, SectionName, SettingValue, sizeof(SettingValue));
+
+#ifndef _M_ARM
+		// Install the drive mapper according to this sections drive mappings
+#ifdef __i386__
+		DriveMapMapDrivesInSection(SectionName);
+#endif
+		if (_stricmp(BootType, "ReactOS") == 0)
+		{
+			LoadAndBootReactOS(SectionName);
+		}
+#ifdef FREELDR_REACTOS_SETUP
+		else if (_stricmp(BootType, "ReactOSSetup") == 0)
+		{
+			// In future we could pass the selected OS details through this
+			// to have different install methods, etc.
+			LoadReactOSSetup();
+		}
+#if defined(__i386__) || defined(__x86_64__)
+		else if (_stricmp(BootType, "ReactOSSetup2") == 0)
+		{
+			// WinLdr-style boot
+			LoadReactOSSetup2();
+		}
+#endif
+#endif
+#ifdef __i386__
+		else if (_stricmp(BootType, "Windows") == 0)
+		{
+			LoadAndBootWindows(SectionName, SettingValue, 0);
+		}
+		else if (_stricmp(BootType, "WindowsNT40") == 0)
+		{
+			LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_NT4);
+		}
+		else if (_stricmp(BootType, "Windows2003") == 0)
+		{
+			LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
+		}
+		else if (_stricmp(BootType, "Linux") == 0)
+		{
+			LoadAndBootLinux(SectionName, OperatingSystemDisplayNames[SelectedOperatingSystem]);
+		}
+		else if (_stricmp(BootType, "BootSector") == 0)
+		{
+			LoadAndBootBootSector(SectionName);
+		}
+		else if (_stricmp(BootType, "Partition") == 0)
+		{
+			LoadAndBootPartition(SectionName);
+		}
+		else if (_stricmp(BootType, "Drive") == 0)
+		{
+			LoadAndBootDrive(SectionName);
+		}
+#endif
+#else
+        LoadAndBootWindows(SectionName, SettingValue, _WIN32_WINNT_WS03);
+#endif
+	}
+
+
+reboot:
+	UiUnInitialize("Rebooting...");
+	return;
 }

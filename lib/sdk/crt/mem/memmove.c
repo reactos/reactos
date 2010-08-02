@@ -1,10 +1,6 @@
-/*
- * $Id$
- */
-
 #include <string.h>
 
-
+/* NOTE: This code is duplicated in memcpy function */
 void * memmove(void *dest,const void *src,size_t count)
 {
     char *char_dest = (char *)dest;

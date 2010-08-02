@@ -53,7 +53,7 @@ BEGIN
                     WS_VISIBLE | WS_BORDER, 7, 7, 232, 120
     LTEXT           "Цветовая схема:", IDC_STATIC, 7, 139, 154, 10
     COMBOBOX        IDC_APPEARANCE_COLORSCHEME, 7, 150, 155, 200 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Effects...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
+    PUSHBUTTON      "&Эффекты...", IDC_APPEARANCE_EFFECTS, 182, 150, 56, 15
     PUSHBUTTON      "Дополнительно", IDC_APPEARANCE_ADVANCED, 168, 170, 70, 14
 END
 
@@ -98,24 +98,24 @@ END
 IDD_EFFAPPEARANCE DIALOGEX DISCARDABLE 0, 0, 285, 185
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE
-CAPTION "Effects"
+CAPTION "Эффекты"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "&Use the following transition effect for menus and tooltips:",IDC_EFFAPPEARANCE_ANIMATION,"button",
+    CONTROL         "&Применять следующий переходный эффект для меню и подсказок:",IDC_EFFAPPEARANCE_ANIMATION,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 5, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_ANIMATIONTYPE, 20, 25, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "U&se the following method to smooth edges of screen fonts:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
+    CONTROL         "Пр&именять следующий метод сглаживания для экранных шрифтов:",IDC_EFFAPPEARANCE_SMOOTHING,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 42, 285, 19
     COMBOBOX        IDC_EFFAPPEARANCE_SMOOTHINGTYPE, 20, 62, 80, 19 , CBS_DROPDOWNLIST | CBS_HASSTRINGS | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    CONTROL         "Us&e large icons",IDC_EFFAPPEARANCE_LARGEICONS,"button",
+    CONTROL         "Применять &крупные значки",IDC_EFFAPPEARANCE_LARGEICONS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 80, 285, 19
-    CONTROL         "Show sh&adows under menus",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
+    CONTROL         "Отображать &тени, отбрасываемые меню",IDC_EFFAPPEARANCE_SETDROPSHADOW,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
-    CONTROL         "Show &window contents while dragging",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
+    CONTROL         "&Отображать содержимое окна при перетаскивании",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
-    CONTROL         "&Hide underlined letters for keyboard navigation until I press the Alt key",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "Скр&ывать указатели вызова с клавиатуры до нажатия <Alt>",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Cancel", IDCANCEL, 226, 165, 50, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -178,13 +178,13 @@ END
 
 STRINGTABLE  DISCARDABLE
 BEGIN
-    IDS_SLIDEEFFECT "Slide effect"
-    IDS_FADEEFFECT  "Fade effect"
+    IDS_SLIDEEFFECT "Развертывание"
+    IDS_FADEEFFECT  "Затемнение"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STANDARDEFFECT  "Standard"
+    IDS_STANDARDEFFECT  "Обычный"
     IDS_CLEARTYPEEFFECT "ClearType"
 END
 
@@ -248,7 +248,7 @@ BEGIN
     IDS_ELEMENT_13 "Строка заголовка"
     IDS_ELEMENT_14 "Неактивные пункты меню"
     IDS_ELEMENT_15 "Диалог"
-    IDS_ELEMENT_16 "Scrollbar controls"
+    IDS_ELEMENT_16 "Полосы прокрутки"
     IDS_ELEMENT_17 "Рабочая область приложения"
     IDS_ELEMENT_18 "Small captionbar"
     IDS_ELEMENT_19 "Интервал между значками (гор.)"
@@ -259,7 +259,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DISPLAY_SETTINGS "Display settings"
-    IDS_APPLY_FAILED "Failed to apply new settings..."
-    IDS_APPLY_NEEDS_RESTART "You need to restart your computer to apply changes."
+    IDS_DISPLAY_SETTINGS "Параметры экрана"
+    IDS_APPLY_FAILED "Не удалось применить новые настройки..."
+    IDS_APPLY_NEEDS_RESTART "Вы должны перезагрузить компьютер для применения изменений."
 END

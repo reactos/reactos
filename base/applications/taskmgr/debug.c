@@ -18,15 +18,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
 
 void ProcessPage_OnDebug(void)
 {
-    LVITEM               lvitem;
-    ULONG                Index;
     DWORD                dwProcessId;
     WCHAR                strErrorText[260];
     HKEY                 hKey;
@@ -39,24 +37,9 @@ void ProcessPage_OnDebug(void)
     WCHAR                szTemp[256];
     WCHAR                szTempA[256];
 
+    dwProcessId = GetSelectedProcessId();
 
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
+    if (dwProcessId == 0)
         return;
 
     LoadStringW(hInst, IDS_MSG_WARNINGDEBUG, szTemp, 256);

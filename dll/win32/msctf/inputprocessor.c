@@ -32,8 +32,10 @@
 #include "shlwapi.h"
 #include "winerror.h"
 #include "objbase.h"
+#include "olectl.h"
 
 #include "wine/unicode.h"
+#include "wine/list.h"
 
 #include "msctf.h"
 #include "msctf_internal.h"
@@ -41,15 +43,35 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msctf);
 
 static const WCHAR szwLngp[] = {'L','a','n','g','u','a','g','e','P','r','o','f','i','l','e',0};
-static const WCHAR szwEnabled[] = {'E','n','a','b','l','e','d',0};
+static const WCHAR szwEnable[] = {'E','n','a','b','l','e',0};
 static const WCHAR szwTipfmt[] = {'%','s','\\','%','s',0};
 static const WCHAR szwFullLangfmt[] = {'%','s','\\','%','s','\\','%','s','\\','0','x','%','0','8','x','\\','%','s',0};
 
+static const WCHAR szwAssemblies[] = {'A','s','s','e','m','b','l','i','e','s',0};
+static const WCHAR szwDefault[] = {'D','e','f','a','u','l','t',0};
+static const WCHAR szwProfile[] = {'P','r','o','f','i','l','e',0};
+static const WCHAR szwDefaultFmt[] = {'%','s','\\','%','s','\\','0','x','%','0','8','x','\\','%','s',0};
+
+typedef struct tagInputProcessorProfilesSink {
+    struct list         entry;
+    union {
+        /* InputProcessorProfile Sinks */
+        IUnknown            *pIUnknown;
+        ITfLanguageProfileNotifySink *pITfLanguageProfileNotifySink;
+    } interfaces;
+} InputProcessorProfilesSink;
+
 typedef struct tagInputProcessorProfiles {
     const ITfInputProcessorProfilesVtbl *InputProcessorProfilesVtbl;
+    const ITfSourceVtbl *SourceVtbl;
+    /* const ITfInputProcessorProfileMgrVtbl *InputProcessorProfileMgrVtbl; */
+    /* const ITfInputProcessorProfilesExVtbl *InputProcessorProfilesExVtbl; */
+    /* const ITfInputProcessorProfileSubstituteLayoutVtbl *InputProcessorProfileSubstituteLayoutVtbl; */
     LONG refCount;
 
     LANGID  currentLanguage;
+
+    struct list     LanguageProfileNotifySink;
 } InputProcessorProfiles;
 
 typedef struct tagProfilesEnumGuid {
@@ -78,9 +100,30 @@ typedef struct tagEnumTfLanguageProfiles {
 static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut);
 static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut);
 
+static inline InputProcessorProfiles *impl_from_ITfSourceVtbl(ITfSource *iface)
+{
+    return (InputProcessorProfiles *)((char *)iface - FIELD_OFFSET(InputProcessorProfiles,SourceVtbl));
+}
+
+static void free_sink(InputProcessorProfilesSink *sink)
+{
+        IUnknown_Release(sink->interfaces.pIUnknown);
+        HeapFree(GetProcessHeap(),0,sink);
+}
+
 static void InputProcessorProfiles_Destructor(InputProcessorProfiles *This)
 {
+    struct list *cursor, *cursor2;
     TRACE("destroying %p\n", This);
+
+    /* free sinks */
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->LanguageProfileNotifySink)
+    {
+        InputProcessorProfilesSink* sink = LIST_ENTRY(cursor,InputProcessorProfilesSink,entry);
+        list_remove(cursor);
+        free_sink(sink);
+    }
+
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -106,7 +149,7 @@ static void add_userkey( REFCLSID rclsid, LANGID langid,
     if (!res && disposition == REG_CREATED_NEW_KEY)
     {
         DWORD zero = 0x0;
-        RegSetValueExW(key, szwEnabled, 0, REG_DWORD, (LPBYTE)&zero, sizeof(DWORD));
+        RegSetValueExW(key, szwEnable, 0, REG_DWORD, (LPBYTE)&zero, sizeof(DWORD));
     }
 
     if (!res)
@@ -121,6 +164,10 @@ static HRESULT WINAPI InputProcessorProfiles_QueryInterface(ITfInputProcessorPro
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfInputProcessorProfiles))
     {
         *ppvOut = This;
+    }
+    else if (IsEqualIID(iid, &IID_ITfSource))
+    {
+        *ppvOut = &This->SourceVtbl;
     }
 
     if (*ppvOut)
@@ -232,11 +279,11 @@ static HRESULT WINAPI InputProcessorProfiles_AddLanguageProfile(
     if (!res)
     {
         DWORD zero = 0x0;
-        RegSetValueExW(fmtkey, desc, 0, REG_SZ, (LPBYTE)pchDesc, cchDesc * sizeof(WCHAR));
-        RegSetValueExW(fmtkey, icnf, 0, REG_SZ, (LPBYTE)pchIconFile, cchFile * sizeof(WCHAR));
+        RegSetValueExW(fmtkey, desc, 0, REG_SZ, (const BYTE*)pchDesc, cchDesc * sizeof(WCHAR));
+        RegSetValueExW(fmtkey, icnf, 0, REG_SZ, (const BYTE*)pchIconFile, cchFile * sizeof(WCHAR));
         RegSetValueExW(fmtkey, icni, 0, REG_DWORD, (LPBYTE)&uIconIndex, sizeof(DWORD));
         if (disposition == REG_CREATED_NEW_KEY)
-            RegSetValueExW(fmtkey, szwEnabled, 0, REG_DWORD, (LPBYTE)&zero, sizeof(DWORD));
+            RegSetValueExW(fmtkey, szwEnable, 0, REG_DWORD, (LPBYTE)&zero, sizeof(DWORD));
         RegCloseKey(fmtkey);
 
         add_userkey(rclsid, langid, guidProfile);
@@ -270,36 +317,152 @@ static HRESULT WINAPI InputProcessorProfiles_GetDefaultLanguageProfile(
         ITfInputProcessorProfiles *iface, LANGID langid, REFGUID catid,
         CLSID *pclsid, GUID *pguidProfile)
 {
+    WCHAR fullkey[168];
+    WCHAR buf[39];
+    HKEY hkey;
+    DWORD count;
+    ULONG res;
     InputProcessorProfiles *This = (InputProcessorProfiles*)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+
+    TRACE("%p) %x %s %p %p\n",This, langid, debugstr_guid(catid),pclsid,pguidProfile);
+
+    if (!catid || !pclsid || !pguidProfile)
+        return E_INVALIDARG;
+
+    StringFromGUID2(catid, buf, 39);
+    sprintfW(fullkey, szwDefaultFmt, szwSystemCTFKey, szwAssemblies, langid, buf);
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, fullkey, 0, KEY_READ | KEY_WRITE,
+                &hkey ) != ERROR_SUCCESS)
+        return S_FALSE;
+
+    count = sizeof(buf);
+    res = RegQueryValueExW(hkey, szwDefault, 0, NULL, (LPBYTE)buf, &count);
+    if (res != ERROR_SUCCESS)
+    {
+        RegCloseKey(hkey);
+        return S_FALSE;
+    }
+    CLSIDFromString(buf,pclsid);
+
+    res = RegQueryValueExW(hkey, szwProfile, 0, NULL, (LPBYTE)buf, &count);
+    if (res == ERROR_SUCCESS)
+        CLSIDFromString(buf,pguidProfile);
+
+    RegCloseKey(hkey);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InputProcessorProfiles_SetDefaultLanguageProfile(
         ITfInputProcessorProfiles *iface, LANGID langid, REFCLSID rclsid,
         REFGUID guidProfiles)
 {
+    WCHAR fullkey[168];
+    WCHAR buf[39];
+    HKEY hkey;
+    GUID catid;
+    HRESULT hr;
+    ITfCategoryMgr *catmgr;
     InputProcessorProfiles *This = (InputProcessorProfiles*)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    static const GUID * tipcats[3] = { &GUID_TFCAT_TIP_KEYBOARD,
+                                       &GUID_TFCAT_TIP_SPEECH,
+                                       &GUID_TFCAT_TIP_HANDWRITING };
+
+    TRACE("%p) %x %s %s\n",This, langid, debugstr_guid(rclsid),debugstr_guid(guidProfiles));
+
+    if (!rclsid || !guidProfiles)
+        return E_INVALIDARG;
+
+    hr = CategoryMgr_Constructor(NULL,(IUnknown**)&catmgr);
+
+    if (FAILED(hr))
+        return hr;
+
+    if (ITfCategoryMgr_FindClosestCategory(catmgr, rclsid,
+            &catid, tipcats, 3) != S_OK)
+        hr = ITfCategoryMgr_FindClosestCategory(catmgr, rclsid,
+                &catid, NULL, 0);
+    ITfCategoryMgr_Release(catmgr);
+
+    if (FAILED(hr))
+        return E_FAIL;
+
+    StringFromGUID2(&catid, buf, 39);
+    sprintfW(fullkey, szwDefaultFmt, szwSystemCTFKey, szwAssemblies, langid, buf);
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, fullkey, 0, NULL, 0, KEY_READ | KEY_WRITE,
+                NULL, &hkey, NULL ) != ERROR_SUCCESS)
+        return E_FAIL;
+
+    StringFromGUID2(rclsid, buf, 39);
+    RegSetValueExW(hkey, szwDefault, 0, REG_SZ, (LPBYTE)buf, sizeof(buf));
+    StringFromGUID2(guidProfiles, buf, 39);
+    RegSetValueExW(hkey, szwProfile, 0, REG_SZ, (LPBYTE)buf, sizeof(buf));
+    RegCloseKey(hkey);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InputProcessorProfiles_ActivateLanguageProfile(
         ITfInputProcessorProfiles *iface, REFCLSID rclsid, LANGID langid,
         REFGUID guidProfiles)
 {
+    HRESULT hr;
+    BOOL enabled;
+    TF_LANGUAGEPROFILE LanguageProfile;
     InputProcessorProfiles *This = (InputProcessorProfiles*)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+
+    TRACE("(%p) %s %x %s\n",This,debugstr_guid(rclsid),langid,debugstr_guid(guidProfiles));
+
+    if (langid != This->currentLanguage) return E_INVALIDARG;
+
+    if (get_active_textservice(rclsid,NULL))
+    {
+        TRACE("Already Active\n");
+        return E_FAIL;
+    }
+
+    hr = ITfInputProcessorProfiles_IsEnabledLanguageProfile(iface, rclsid,
+            langid, guidProfiles, &enabled);
+    if (FAILED(hr) || !enabled)
+    {
+        TRACE("Not Enabled\n");
+        return E_FAIL;
+    }
+
+    LanguageProfile.clsid = *rclsid;
+    LanguageProfile.langid = langid;
+    LanguageProfile.guidProfile = *guidProfiles;
+
+    hr = add_active_textservice(&LanguageProfile);
+
+    return hr;
 }
 
 static HRESULT WINAPI InputProcessorProfiles_GetActiveLanguageProfile(
         ITfInputProcessorProfiles *iface, REFCLSID rclsid, LANGID *plangid,
         GUID *pguidProfile)
 {
+    TF_LANGUAGEPROFILE profile;
     InputProcessorProfiles *This = (InputProcessorProfiles*)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+
+    TRACE("(%p) %s %p %p\n",This,debugstr_guid(rclsid),plangid,pguidProfile);
+
+    if (!rclsid || !plangid || !pguidProfile)
+        return E_INVALIDARG;
+
+    if (get_active_textservice(rclsid, &profile))
+    {
+        *plangid = profile.langid;
+        *pguidProfile = profile.guidProfile;
+        return S_OK;
+    }
+    else
+    {
+        *pguidProfile = GUID_NULL;
+        return S_FALSE;
+    }
 }
 
 static HRESULT WINAPI InputProcessorProfiles_GetLanguageProfileDescription(
@@ -328,8 +491,22 @@ static HRESULT WINAPI InputProcessorProfiles_GetCurrentLanguage(
 static HRESULT WINAPI InputProcessorProfiles_ChangeCurrentLanguage(
         ITfInputProcessorProfiles *iface, LANGID langid)
 {
+    struct list *cursor;
     InputProcessorProfiles *This = (InputProcessorProfiles*)iface;
+    BOOL accept;
+
     FIXME("STUB:(%p)\n",This);
+
+    LIST_FOR_EACH(cursor, &This->LanguageProfileNotifySink)
+    {
+        InputProcessorProfilesSink* sink = LIST_ENTRY(cursor,InputProcessorProfilesSink,entry);
+        accept = TRUE;
+        ITfLanguageProfileNotifySink_OnLanguageChange(sink->interfaces.pITfLanguageProfileNotifySink, langid, &accept);
+        if (!accept)
+            return  E_FAIL;
+    }
+
+    /* TODO:  On successful language change call OnLanguageChanged sink */
     return E_NOTIMPL;
 }
 
@@ -337,8 +514,11 @@ static HRESULT WINAPI InputProcessorProfiles_GetLanguageList(
         ITfInputProcessorProfiles *iface, LANGID **ppLangId, ULONG *pulCount)
 {
     InputProcessorProfiles *This = (InputProcessorProfiles*)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    FIXME("Semi-STUB:(%p)\n",This);
+    *ppLangId = CoTaskMemAlloc(sizeof(LANGID));
+    **ppLangId = This->currentLanguage;
+    *pulCount = 1;
+    return S_OK;
 }
 
 static HRESULT WINAPI InputProcessorProfiles_EnumLanguageProfiles(
@@ -371,7 +551,7 @@ static HRESULT WINAPI InputProcessorProfiles_EnableLanguageProfile(
 
     if (!res)
     {
-        RegSetValueExW(key, szwEnabled, 0, REG_DWORD, (LPBYTE)&fEnable, sizeof(DWORD));
+        RegSetValueExW(key, szwEnable, 0, REG_DWORD, (LPBYTE)&fEnable, sizeof(DWORD));
         RegCloseKey(key);
     }
     else
@@ -405,7 +585,7 @@ static HRESULT WINAPI InputProcessorProfiles_IsEnabledLanguageProfile(
     if (!res)
     {
         DWORD count = sizeof(DWORD);
-        res = RegQueryValueExW(key, szwEnabled, 0, NULL, (LPBYTE)pfEnable, &count);
+        res = RegQueryValueExW(key, szwEnable, 0, NULL, (LPBYTE)pfEnable, &count);
         RegCloseKey(key);
     }
 
@@ -416,7 +596,7 @@ static HRESULT WINAPI InputProcessorProfiles_IsEnabledLanguageProfile(
         if (!res)
         {
             DWORD count = sizeof(DWORD);
-            res = RegQueryValueExW(key, szwEnabled, 0, NULL, (LPBYTE)pfEnable, &count);
+            res = RegQueryValueExW(key, szwEnable, 0, NULL, (LPBYTE)pfEnable, &count);
             RegCloseKey(key);
         }
     }
@@ -448,7 +628,7 @@ static HRESULT WINAPI InputProcessorProfiles_EnableLanguageProfileByDefault(
 
     if (!res)
     {
-        RegSetValueExW(key, szwEnabled, 0, REG_DWORD, (LPBYTE)&fEnable, sizeof(DWORD));
+        RegSetValueExW(key, szwEnable, 0, REG_DWORD, (LPBYTE)&fEnable, sizeof(DWORD));
         RegCloseKey(key);
     }
     else
@@ -493,6 +673,92 @@ static const ITfInputProcessorProfilesVtbl InputProcessorProfiles_InputProcessor
     InputProcessorProfiles_SubstituteKeyboardLayout
 };
 
+/*****************************************************
+ * ITfSource functions
+ *****************************************************/
+static HRESULT WINAPI IPPSource_QueryInterface(ITfSource *iface, REFIID iid, LPVOID *ppvOut)
+{
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+    return InputProcessorProfiles_QueryInterface((ITfInputProcessorProfiles *)This, iid, *ppvOut);
+}
+
+static ULONG WINAPI IPPSource_AddRef(ITfSource *iface)
+{
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+    return InputProcessorProfiles_AddRef((ITfInputProcessorProfiles*)This);
+}
+
+static ULONG WINAPI IPPSource_Release(ITfSource *iface)
+{
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+    return InputProcessorProfiles_Release((ITfInputProcessorProfiles *)This);
+}
+
+static HRESULT WINAPI IPPSource_AdviseSink(ITfSource *iface,
+        REFIID riid, IUnknown *punk, DWORD *pdwCookie)
+{
+    InputProcessorProfilesSink *ipps;
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+
+    TRACE("(%p) %s %p %p\n",This,debugstr_guid(riid),punk,pdwCookie);
+
+    if (!riid || !punk || !pdwCookie)
+        return E_INVALIDARG;
+
+    if (IsEqualIID(riid, &IID_ITfLanguageProfileNotifySink))
+    {
+        ipps = HeapAlloc(GetProcessHeap(),0,sizeof(InputProcessorProfilesSink));
+        if (!ipps)
+            return E_OUTOFMEMORY;
+        if (FAILED(IUnknown_QueryInterface(punk, riid, (LPVOID *)&ipps->interfaces.pITfLanguageProfileNotifySink)))
+        {
+            HeapFree(GetProcessHeap(),0,ipps);
+            return CONNECT_E_CANNOTCONNECT;
+        }
+        list_add_head(&This->LanguageProfileNotifySink,&ipps->entry);
+        *pdwCookie = generate_Cookie(COOKIE_MAGIC_IPPSINK, ipps);
+    }
+    else
+    {
+        FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
+        return E_NOTIMPL;
+    }
+
+    TRACE("cookie %x\n",*pdwCookie);
+
+    return S_OK;
+}
+
+static HRESULT WINAPI IPPSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
+{
+    InputProcessorProfilesSink *sink;
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+
+    TRACE("(%p) %x\n",This,pdwCookie);
+
+    if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_IPPSINK)
+        return E_INVALIDARG;
+
+    sink = (InputProcessorProfilesSink*)remove_Cookie(pdwCookie);
+    if (!sink)
+        return CONNECT_E_NOCONNECTION;
+
+    list_remove(&sink->entry);
+    free_sink(sink);
+
+    return S_OK;
+}
+
+static const ITfSourceVtbl InputProcessorProfiles_SourceVtbl =
+{
+    IPPSource_QueryInterface,
+    IPPSource_AddRef,
+    IPPSource_Release,
+
+    IPPSource_AdviseSink,
+    IPPSource_UnadviseSink,
+};
+
 HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 {
     InputProcessorProfiles *This;
@@ -504,8 +770,11 @@ HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut
         return E_OUTOFMEMORY;
 
     This->InputProcessorProfilesVtbl= &InputProcessorProfiles_InputProcessorProfilesVtbl;
+    This->SourceVtbl = &InputProcessorProfiles_SourceVtbl;
     This->refCount = 1;
     This->currentLanguage = GetUserDefaultLCID();
+
+    list_init(&This->LanguageProfileNotifySink);
 
     TRACE("returning %p\n", This);
     *ppOut = (IUnknown *)This;
@@ -756,8 +1025,7 @@ static INT next_LanguageProfile(EnumTfLanguageProfiles *This, CLSID clsid, TF_LA
 
         tflp->clsid = clsid;
         tflp->langid = This->langid;
-        /* FIXME */
-        tflp->fActive = FALSE;
+        tflp->fActive = get_active_textservice(&clsid, NULL);
         tflp->guidProfile = profile;
         if (ITfCategoryMgr_FindClosestCategory(This->catmgr, &clsid,
                 &tflp->catid, tipcats, 3) != S_OK)

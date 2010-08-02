@@ -210,7 +210,7 @@ static ULONG WINAPI AboutProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI AboutProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink* pOIProtSink, IInternetBindInfo* pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     AboutProtocol *This = PROTOCOL_THIS(iface);
     BINDINFO bindinfo;
@@ -230,7 +230,7 @@ static HRESULT WINAPI AboutProtocol_Start(IInternetProtocol *iface, LPCWSTR szUr
      * when the url does not have "about:" in the beginning.
      */
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     memset(&bindinfo, 0, sizeof(bindinfo));
@@ -575,7 +575,7 @@ static ULONG WINAPI ResProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink* pOIProtSink, IInternetBindInfo* pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     ResProtocol *This = PROTOCOL_THIS(iface);
     DWORD grfBINDF = 0, len;
@@ -587,7 +587,7 @@ static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     static const WCHAR wszRes[] = {'r','e','s',':','/','/'};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     memset(&bindinfo, 0, sizeof(bindinfo));
@@ -670,7 +670,7 @@ static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     FreeLibrary(hdll);
 
-    hres = FindMimeFromData(NULL, url_file, NULL, 0, NULL, 0, &mime, 0);
+    hres = FindMimeFromData(NULL, url_file, This->data, This->data_len, NULL, 0, &mime, 0);
     heap_free(url);
     if(SUCCEEDED(hres)) {
         IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_MIMETYPEAVAILABLE, mime);
@@ -938,6 +938,89 @@ static ProtocolFactory ResProtocolFactory = {
     &ResProtocolFactoryVtbl
 };
 
+/********************************************************************
+ * JSProtocol implementation
+ */
+
+static HRESULT WINAPI JSProtocolFactory_CreateInstance(IClassFactory *iface, IUnknown *pUnkOuter,
+        REFIID riid, void **ppv)
+{
+    FIXME("(%p)->(%p %s %p)\n", iface, pUnkOuter, debugstr_guid(riid), ppv);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI JSProtocolInfo_ParseUrl(IInternetProtocolInfo *iface, LPCWSTR pwzUrl,
+        PARSEACTION ParseAction, DWORD dwParseFlags, LPWSTR pwzResult, DWORD cchResult,
+        DWORD* pcchResult, DWORD dwReserved)
+{
+    TRACE("%p)->(%s %d %x %p %d %p %d)\n", iface, debugstr_w(pwzUrl), ParseAction,
+          dwParseFlags, pwzResult, cchResult, pcchResult, dwReserved);
+
+    switch(ParseAction) {
+    case PARSE_SECURITY_URL:
+        FIXME("PARSE_SECURITY_URL\n");
+        return E_NOTIMPL;
+    case PARSE_DOMAIN:
+        FIXME("PARSE_DOMAIN\n");
+        return E_NOTIMPL;
+    default:
+        return INET_E_DEFAULT_ACTION;
+    }
+
+    return S_OK;
+}
+
+static HRESULT WINAPI JSProtocolInfo_QueryInfo(IInternetProtocolInfo *iface, LPCWSTR pwzUrl,
+        QUERYOPTION QueryOption, DWORD dwQueryFlags, LPVOID pBuffer, DWORD cbBuffer, DWORD* pcbBuf,
+        DWORD dwReserved)
+{
+    TRACE("%p)->(%s %08x %08x %p %d %p %d)\n", iface, debugstr_w(pwzUrl), QueryOption, dwQueryFlags, pBuffer,
+          cbBuffer, pcbBuf, dwReserved);
+
+    switch(QueryOption) {
+    case QUERY_USES_NETWORK:
+        if(!pBuffer || cbBuffer < sizeof(DWORD))
+            return E_FAIL;
+
+        *(DWORD*)pBuffer = 0;
+        if(pcbBuf)
+            *pcbBuf = sizeof(DWORD);
+        break;
+
+    case QUERY_IS_SECURE:
+        FIXME("not supporte QUERY_IS_SECURE\n");
+        return E_NOTIMPL;
+
+    default:
+        return INET_E_USE_DEFAULT_PROTOCOLHANDLER;
+    }
+
+    return S_OK;
+}
+
+static const IInternetProtocolInfoVtbl JSProtocolInfoVtbl = {
+    InternetProtocolInfo_QueryInterface,
+    InternetProtocolInfo_AddRef,
+    InternetProtocolInfo_Release,
+    JSProtocolInfo_ParseUrl,
+    InternetProtocolInfo_CombineUrl,
+    InternetProtocolInfo_CompareUrl,
+    JSProtocolInfo_QueryInfo
+};
+
+static const IClassFactoryVtbl JSProtocolFactoryVtbl = {
+    ClassFactory_QueryInterface,
+    ClassFactory_AddRef,
+    ClassFactory_Release,
+    JSProtocolFactory_CreateInstance,
+    ClassFactory_LockServer
+};
+
+static ProtocolFactory JSProtocolFactory = {
+    &JSProtocolInfoVtbl,
+    &JSProtocolFactoryVtbl
+};
+
 HRESULT ProtocolFactory_Create(REFCLSID rclsid, REFIID riid, void **ppv)
 {
     ProtocolFactory *cf = NULL;
@@ -946,6 +1029,8 @@ HRESULT ProtocolFactory_Create(REFCLSID rclsid, REFIID riid, void **ppv)
         cf = &AboutProtocolFactory;
     else if(IsEqualGUID(&CLSID_ResProtocol, rclsid))
         cf = &ResProtocolFactory;
+    else if(IsEqualGUID(&CLSID_JSProtocol, rclsid))
+        cf = &JSProtocolFactory;
 
     if(!cf) {
         FIXME("not implemented protocol %s\n", debugstr_guid(rclsid));

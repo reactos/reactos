@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
@@ -59,7 +59,7 @@ BEGIN
 		MENUITEM SEPARATOR
         MENUITEM "&Anslut Nätverksregister...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
-        , GRAYED
+
         MENUITEM "&Koppla ifrån Nätverksregister...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED
@@ -103,10 +103,8 @@ BEGIN
     END
     POPUP "&Favoriter"
     BEGIN
-        MENUITEM "&Lägg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES
-        , GRAYED
-        MENUITEM "&Ta bort från Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE
-        , GRAYED
+        MENUITEM "&Lägg till i Favoriter",     ID_FAVOURITES_ADDTOFAVOURITES, GRAYED
+        MENUITEM "&Ta bort från Favoriter",    ID_FAVOURITES_REMOVEFAVOURITE, GRAYED
     END
     POPUP "&Hjälp"
     BEGIN
@@ -160,7 +158,16 @@ BEGIN
         MENUITEM "&Export",                         ID_TREE_EXPORT
         MENUITEM "&Permissions...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME, GRAYED
+        MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "&Copy", ID_HEXEDIT_COPY
+        MENUITEM "&Paste", ID_HEXEDIT_PASTE
+        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -376,8 +383,7 @@ END
  */
 
 IDD_EXPORTRANGE DIALOGEX DISCARDABLE  50, 50, 370, 50
-STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS |
-    WS_BORDER
+STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_BORDER
 FONT 8, "MS Shell Dlg"
 BEGIN
    GROUPBOX "Export Range",IDC_STATIC,2,0,366,48
@@ -438,7 +444,7 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "&Cancel",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "&Cancel",IDCANCEL,93,29,45,14
     LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
 END
 

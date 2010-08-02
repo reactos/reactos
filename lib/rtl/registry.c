@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
+#define TAG_RTLREGISTRY 'vrqR'
 
 extern SIZE_T RtlpAllocDeallocQueryBufferSize;
 
@@ -131,7 +131,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
     *InfoSize = 0;
 
     /* Check if there's no data */
-    if (KeyValueInfo->DataOffset == (ULONG)-1)
+    if (KeyValueInfo->DataOffset == MAXULONG)
     {
         /* Return proper status code */
         return (QueryTable->Flags & RTL_QUERY_REGISTRY_REQUIRED) ?
@@ -474,13 +474,23 @@ RtlpGetRegistryHandle(IN ULONG RelativeTo,
         /* Check if we need the current user key */
         if (RelativeTo == RTL_REGISTRY_USER)
         {
-            /* Get the path */
+            /* Get the user key path */
             Status = RtlFormatCurrentUserKeyPath(&KeyPath);
-            if (!NT_SUCCESS(Status)) return(Status);
 
-            /* Append it */
-            Status = RtlAppendUnicodeStringToString(&KeyName, &KeyPath);
-            RtlFreeUnicodeString (&KeyPath);
+            /* Check if it worked */
+            if (NT_SUCCESS(Status))
+            {
+                /* Append the user key path */
+                Status = RtlAppendUnicodeStringToString(&KeyName, &KeyPath);
+
+                /* Free the user key path */
+                RtlFreeUnicodeString (&KeyPath);
+            }
+            else
+            {
+                /* It didn't work so fall back to the default user key */
+                Status = RtlAppendUnicodeToString(&KeyName, RtlpRegPaths[RTL_REGISTRY_USER]);
+            }
         }
         else
         {

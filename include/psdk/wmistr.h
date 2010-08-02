@@ -1,6 +1,30 @@
 #ifndef _WMISTR_
 #define _WMISTR_
- 
+
+typedef struct _WNODE_HEADER
+{
+    ULONG BufferSize;
+    ULONG ProviderId;
+    union
+    {
+        ULONG64 HistoricalContext;
+        struct
+        {
+            ULONG Version;
+            ULONG Linkage;
+        };
+    };
+    union
+    {
+        ULONG CountLost;
+        HANDLE KernelHandle;
+        LARGE_INTEGER TimeStamp;
+    };
+    GUID Guid;
+    ULONG ClientContext;
+    ULONG Flags;
+} WNODE_HEADER, *PWNODE_HEADER;
+
 typedef enum
 {
     WMI_GET_ALL_DATA = 0,

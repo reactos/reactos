@@ -15,7 +15,6 @@
 	<library>shell32</library>
 	<library>ole32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>urlmon</library>
 	<library>uuid</library>
 	<library>ntdll</library>

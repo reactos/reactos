@@ -3,7 +3,8 @@
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            ntoskrnl/io/pnpmgr/pnpreport.c
  * PURPOSE:         Device Changes Reporting Functions
- * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
+ * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES ******************************************************************/
@@ -11,6 +12,134 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
+/* TYPES *******************************************************************/
+
+typedef struct _INTERNAL_WORK_QUEUE_ITEM
+{
+  WORK_QUEUE_ITEM WorkItem;
+  PDEVICE_OBJECT PhysicalDeviceObject;
+  PDEVICE_CHANGE_COMPLETE_CALLBACK Callback;
+  PVOID Context;
+  PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure;
+} INTERNAL_WORK_QUEUE_ITEM, *PINTERNAL_WORK_QUEUE_ITEM;
+
+NTSTATUS
+NTAPI
+IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
+                       IN ULONG CreateOptions,
+                       OUT PHANDLE Handle);
+
+NTSTATUS
+IopSetDeviceInstanceData(HANDLE InstanceKey,
+                         PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
+                                PVOID Context);
+
+NTSTATUS
+IopDetectResourceConflict(IN PCM_RESOURCE_LIST ResourceList);
+
+NTSTATUS
+PpSetCustomTargetEvent(IN PDEVICE_OBJECT DeviceObject,
+                       IN OUT PKEVENT SyncEvent OPTIONAL,
+                       IN OUT PNTSTATUS SyncStatus OPTIONAL,
+                       IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
+                       IN PVOID Context OPTIONAL,
+                       IN PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure);
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+PWCHAR
+IopGetInterfaceTypeString(INTERFACE_TYPE IfType)
+{
+    switch (IfType)
+    {
+       case Internal:
+         return L"Internal";
+
+       case Isa:
+         return L"Isa";
+
+       case Eisa:
+         return L"Eisa";
+
+       case MicroChannel:
+         return L"MicroChannel";
+
+       case TurboChannel:
+         return L"TurboChannel";
+
+       case PCIBus:
+         return L"PCIBus";
+
+       case VMEBus:
+         return L"VMEBus";
+
+       case NuBus:
+         return L"NuBus";
+
+       case PCMCIABus:
+         return L"PCMCIABus";
+
+       case CBus:
+         return L"CBus";
+
+       case MPIBus:
+         return L"MPIBus";
+
+       case MPSABus:
+         return L"MPSABus";
+
+       case ProcessorInternal:
+         return L"ProcessorInternal";
+
+       case PNPISABus:
+         return L"PNPISABus";
+
+       case PNPBus:
+         return L"PNPBus";
+
+       case Vmcs:
+         return L"Vmcs";
+
+       default:
+         DPRINT1("Invalid bus type: %d\n", IfType);
+         return NULL;
+    }
+}
+
+VOID
+IopReportTargetDeviceChangeAsyncWorker(PVOID Context)
+{
+  PINTERNAL_WORK_QUEUE_ITEM Item;
+
+  Item = (PINTERNAL_WORK_QUEUE_ITEM)Context;
+  PpSetCustomTargetEvent(Item->PhysicalDeviceObject, NULL, NULL, Item->Callback, Item->Context, Item->NotificationStructure);
+  ObDereferenceObject(Item->PhysicalDeviceObject);
+  ExFreePoolWithTag(Context, '  pP');
+}
+
+NTSTATUS
+PpSetCustomTargetEvent(IN PDEVICE_OBJECT DeviceObject,
+                       IN OUT PKEVENT SyncEvent OPTIONAL,
+                       IN OUT PNTSTATUS SyncStatus OPTIONAL,
+                       IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
+                       IN PVOID Context OPTIONAL,
+                       IN PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure)
+{
+    ASSERT(NotificationStructure != NULL);
+    ASSERT(DeviceObject != NULL);
+
+    /* That call is totally wrong but notifications handler must be fixed first */
+    IopNotifyPlugPlayNotification(DeviceObject,
+                                  EventCategoryTargetDeviceChange,
+                                  &GUID_PNP_CUSTOM_NOTIFICATION,
+                                  NotificationStructure,
+                                  NULL);
+    return STATUS_SUCCESS;
+}
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -30,29 +159,57 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
 {
     PDEVICE_NODE DeviceNode;
     PDEVICE_OBJECT Pdo;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
+    HANDLE InstanceKey;
+    ULONG RequiredLength;
+    UNICODE_STRING ValueName, ServiceName;
+    WCHAR HardwareId[256];
+    PWCHAR IfString;
+    ULONG IdLength;
 
-    DPRINT("__FUNCTION__ (DeviceObject %p, *DeviceObject %p)\n",
+    DPRINT("IoReportDetectedDevice (DeviceObject %p, *DeviceObject %p)\n",
       DeviceObject, DeviceObject ? *DeviceObject : NULL);
 
-    /* if *DeviceObject is not NULL, we must use it as a PDO, and don't create a new one */
+    /* Create the service name (eg. ACPI_HAL) */
+    ServiceName.Buffer = DriverObject->DriverName.Buffer +
+       sizeof(DRIVER_ROOT_NAME) / sizeof(WCHAR) - 1;
+    ServiceName.Length = DriverObject->DriverName.Length -
+       sizeof(DRIVER_ROOT_NAME) + sizeof(WCHAR);
+    ServiceName.MaximumLength = ServiceName.Length;
+
+    /* If the interface type is unknown, treat it as internal */
+    if (LegacyBusType == InterfaceTypeUndefined)
+        LegacyBusType = Internal;
+
+    /* Get the string equivalent of the interface type */
+    IfString = IopGetInterfaceTypeString(LegacyBusType);
+
+    /* If NULL is returned then it's a bad type */
+    if (!IfString)
+        return STATUS_INVALID_PARAMETER;
+
+    /* We use the caller's PDO if they supplied one */
     if (DeviceObject && *DeviceObject)
     {
         Pdo = *DeviceObject;
+        DeviceNode = IopGetDeviceNode(*DeviceObject);
     }
     else
     {
-        UNICODE_STRING ServiceName;
-        ServiceName.Buffer = DriverObject->DriverName.Buffer +
-          sizeof(DRIVER_ROOT_NAME) / sizeof(WCHAR) - 1;
-        ServiceName.Length = DriverObject->DriverName.Length -
-          sizeof(DRIVER_ROOT_NAME) + sizeof(WCHAR);
-        ServiceName.MaximumLength = ServiceName.Length;
+        /* Create the PDO */
+        Status = PnpRootCreateDevice(&ServiceName,
+                                     &Pdo,
+                                     NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("PnpRootCreateDevice() failed (Status 0x%08lx)\n", Status);
+            return Status;
+        }
 
-        /* create a new PDO and return it in *DeviceObject */
+        /* Create the device node for the new PDO */
         Status = IopCreateDeviceNode(IopRootDeviceNode,
+                                     Pdo,
                                      NULL,
-                                     &ServiceName,
                                      &DeviceNode);
 
         if (!NT_SUCCESS(Status))
@@ -60,17 +217,129 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
             DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
             return Status;
         }
+    }
 
-        Pdo = DeviceNode->PhysicalDeviceObject;
-        if (DeviceObject) *DeviceObject = Pdo;
-  }
+    /* We don't call AddDevice for devices reported this way */
+    IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
 
-    /* we don't need to call AddDevice and send IRP_MN_START_DEVICE */
-    return Status;
+    /* We don't send IRP_MN_START_DEVICE */
+    IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+
+    /* We need to get device IDs */
+#if 0
+    IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_QUERY_IDS);
+#endif
+
+    /* This is a legacy driver for this device */
+    IopDeviceNodeSetFlag(DeviceNode, DNF_LEGACY_DRIVER);
+
+    /* Perform a manual configuration of our device */
+    IopActionInterrogateDeviceStack(DeviceNode, DeviceNode->Parent);
+    IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+
+    /* Open a handle to the instance path key */
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Add DETECTEDInterfaceType\DriverName */
+    IdLength = 0;
+    IdLength += swprintf(&HardwareId[IdLength],
+                         L"DETECTED%ls\\%wZ",
+                         IfString,
+                         &ServiceName);
+    HardwareId[IdLength++] = UNICODE_NULL;
+
+    /* Add DETECTED\DriverName */
+    IdLength += swprintf(&HardwareId[IdLength],
+                         L"DETECTED\\%wZ",
+                         &ServiceName);
+    HardwareId[IdLength++] = UNICODE_NULL;
+
+    /* Terminate the string with another null */
+    HardwareId[IdLength] = UNICODE_NULL;
+
+    /* Store the value for CompatibleIDs */
+    RtlInitUnicodeString(&ValueName, L"CompatibleIDs");
+    Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_MULTI_SZ, HardwareId, IdLength * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+       DPRINT("Failed to write the compatible IDs: 0x%x\n", Status);
+       ZwClose(InstanceKey);
+       return Status;
+    }
+
+    /* Add a hardware ID if the driver didn't report one */
+    RtlInitUnicodeString(&ValueName, L"HardwareID");
+    if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+       /* Just use our most specific compatible ID */
+       IdLength = 0;
+       IdLength += swprintf(&HardwareId[IdLength],
+                            L"DETECTED%ls\\%wZ",
+                            IfString,
+                            &ServiceName);
+       HardwareId[++IdLength] = UNICODE_NULL;
+
+       /* Write the value to the registry */
+       Status = ZwSetValueKey(InstanceKey, &ValueName, 0, REG_SZ, HardwareId, IdLength * sizeof(WCHAR));
+       if (!NT_SUCCESS(Status))
+       {
+          DPRINT("Failed to write the hardware ID: 0x%x\n", Status);
+          ZwClose(InstanceKey);
+          return Status;
+       }
+    }
+
+    /* Assign the resources to the device node */
+    DeviceNode->BootResources = ResourceList;
+    DeviceNode->ResourceRequirements = ResourceRequirements;
+
+    /* Set appropriate flags */
+    if (DeviceNode->BootResources)
+       IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
+
+    if (!DeviceNode->ResourceRequirements && !DeviceNode->BootResources)
+       IopDeviceNodeSetFlag(DeviceNode, DNF_NO_RESOURCE_REQUIRED);
+
+    /* Write the resource information to the registry */
+    IopSetDeviceInstanceData(InstanceKey, DeviceNode);
+
+    /* If the caller didn't get the resources assigned for us, do it now */
+    if (!ResourceAssigned)
+    {
+       Status = IopAssignDeviceResources(DeviceNode);
+
+       /* See if we failed */
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT("Assigning resources failed: 0x%x\n", Status);
+           ZwClose(InstanceKey);
+           return Status;
+       }
+    }
+
+    /* Close the instance key handle */
+    ZwClose(InstanceKey);
+
+    /* Report the device's enumeration to umpnpmgr */
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
+                              &DeviceNode->InstancePath);
+
+    /* Report the device's arrival to umpnpmgr */
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                              &DeviceNode->InstancePath);
+
+    DPRINT1("Reported device: %S (%wZ)\n", HardwareId, &DeviceNode->InstancePath);
+
+    /* Return the PDO */
+    if (DeviceObject) *DeviceObject = Pdo;
+
+    return STATUS_SUCCESS;
 }
 
 /*
- * @unimplemented
+ * @halfplemented
  */
 NTSTATUS
 NTAPI
@@ -82,23 +351,35 @@ IoReportResourceForDetection(IN PDRIVER_OBJECT DriverObject,
                              IN ULONG DeviceListSize OPTIONAL,
                              OUT PBOOLEAN ConflictDetected)
 {
-    static int warned = 0;
-    if (!warned)
-    {
-        DPRINT1("IoReportResourceForDetection partly implemented\n");
-        warned = 1;
-    }
+    PCM_RESOURCE_LIST ResourceList;
+    NTSTATUS Status;
 
     *ConflictDetected = FALSE;
 
-    if (PopSystemPowerDeviceNode && DriverListSize > 0)
+    if (!DriverList && !DeviceList)
+        return STATUS_INVALID_PARAMETER;
+
+    /* Find the real list */
+    if (!DriverList)
+        ResourceList = DeviceList;
+    else
+        ResourceList = DriverList;
+
+    /* Look for a resource conflict */
+    Status = IopDetectResourceConflict(ResourceList);
+    if (Status == STATUS_CONFLICTING_ADDRESSES)
     {
-        /* We hope legacy devices will be enumerated by ACPI */
+        /* Oh noes */
         *ConflictDetected = TRUE;
-        return STATUS_CONFLICTING_ADDRESSES;
+    }
+    else if (NT_SUCCESS(Status))
+    {
+        /* Looks like we're good to go */
+
+        /* TODO: Claim the resources in the ResourceMap */
     }
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID
@@ -112,19 +393,57 @@ IopSetEvent(IN PVOID Context)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
                            IN PVOID NotificationStructure)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KEVENT NotifyEvent;
+    NTSTATUS Status, NotifyStatus;
+    PTARGET_DEVICE_CUSTOM_NOTIFICATION notifyStruct = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
+
+    ASSERT(notifyStruct);
+
+    /* Check for valid PDO */
+    if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+    }
+
+    /* FileObject must be null. PnP will fill in it */
+    ASSERT(notifyStruct->FileObject == NULL);
+
+    /* Do not handle system PnP events */
+    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    if (notifyStruct->Version != 1)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* Initialize even that will let us know when PnP will have finished notify */
+    KeInitializeEvent(&NotifyEvent, NotificationEvent, FALSE);
+
+    Status = PpSetCustomTargetEvent(PhysicalDeviceObject, &NotifyEvent, &NotifyStatus, NULL, NULL, notifyStruct);
+    /* If no error, wait for the notify to end and return the status of the notify and not of the event */
+    if (NT_SUCCESS(Status))
+    {
+        KeWaitForSingleObject(&NotifyEvent, Executive, KernelMode, FALSE, NULL);
+        Status = NotifyStatus;
+    }
+
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -133,6 +452,47 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
                                        IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
                                        IN PVOID Context OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PINTERNAL_WORK_QUEUE_ITEM Item = NULL;
+    PTARGET_DEVICE_CUSTOM_NOTIFICATION notifyStruct = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
+
+    ASSERT(notifyStruct);
+
+    /* Check for valid PDO */
+    if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+    }
+
+    /* FileObject must be null. PnP will fill in it */
+    ASSERT(notifyStruct->FileObject == NULL);
+
+    /* Do not handle system PnP events */
+    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    if (notifyStruct->Version != 1)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* We need to store all the data given by the caller with the WorkItem, so use our own struct */
+    Item = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNAL_WORK_QUEUE_ITEM), '  pP');
+    if (!Item) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Initialize all stuff */
+    ObReferenceObject(PhysicalDeviceObject);
+    Item->NotificationStructure = notifyStruct;
+    Item->PhysicalDeviceObject = PhysicalDeviceObject;
+    Item->Callback = Callback;
+    Item->Context = Context;
+    ExInitializeWorkItem(&(Item->WorkItem), (PWORKER_THREAD_ROUTINE)IopReportTargetDeviceChangeAsyncWorker, Item);
+
+    /* Finally, queue the item, our work here is done */
+    ExQueueWorkItem(&(Item->WorkItem), DelayedWorkQueue);
+
+    return STATUS_PENDING;
 }

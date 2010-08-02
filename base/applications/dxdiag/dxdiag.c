@@ -126,7 +126,6 @@ InitializeTabCtrl(HWND hwndDlg, PDXDIAG_CONTEXT pContext)
     pContext->hDialogs[4] = CreateDialogParamW(hInst, MAKEINTRESOURCEW(IDD_HELP_DIALOG), hTabCtrlWnd, HelpPageWndProc, (LPARAM)pContext);
 
     /* insert tab ctrl items */
-
     InsertTabCtrlItem(hTabCtrlWnd, 0, MAKEINTRESOURCEW(IDS_SYSTEM_DIALOG));
     InitializeDisplayAdapters(pContext);
     InitializeDirectSoundPage(pContext);
@@ -188,8 +187,19 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             if (LOWORD(wParam) == IDC_BUTTON_NEXT)
             {
-               //TODO
-               /* handle next button */
+               INT CurSel;
+
+               /* retrieve current page */
+               CurSel = TabCtrl_GetCurSel(hTabCtrlWnd);
+               CurSel++;
+
+               /* enable/disable next button */
+               EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT), 
+                            (CurSel != TabCtrl_GetItemCount(hTabCtrlWnd) - 1));
+               
+               /* switch to next page */
+               SendMessageW(hTabCtrlWnd, TCM_SETCURSEL, CurSel, 0L);
+                
                return TRUE;
             }
 
@@ -210,6 +220,12 @@ DxDiagWndProc(HWND hwndDlg, UINT message, WPARAM wParam, LPARAM lParam)
             pnmh = (LPNMHDR)lParam;
             if ((pnmh->hwndFrom == hTabCtrlWnd) && (pnmh->idFrom == IDC_TAB_CONTROL) && (pnmh->code == TCN_SELCHANGE))
             {
+               INT CurSel = TabCtrl_GetCurSel(hTabCtrlWnd);
+
+               /* enable/disable next button */
+               EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NEXT), 
+                            (CurSel != TabCtrl_GetItemCount(hTabCtrlWnd) - 1));
+
                 TabCtrl_OnSelChange(pContext);
             }
             break;

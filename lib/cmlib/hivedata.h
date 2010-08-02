@@ -5,8 +5,7 @@
  *            Copyright 2001 - 2005 Eric Kohl
  */
 
-#ifndef CMLIB_HIVEDATA_H
-#define CMLIB_HIVEDATA_H
+#pragma once
 
 //
 // Hive operations
@@ -80,7 +79,7 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 //
 // Cell Magic Values
 //
-#define HCELL_NIL                                       -1U
+#define HCELL_NIL                                       MAXULONG
 #define HCELL_CACHED                                    1
 
 #define HCELL_TYPE_MASK                0x80000000
@@ -305,5 +304,3 @@ typedef struct _HHIVE
 
 #define IsFreeCell(Cell)(Cell->Size >= 0)
 #define IsUsedCell(Cell)(Cell->Size < 0)
-
-#endif /* CMLIB_HIVEDATA_H */

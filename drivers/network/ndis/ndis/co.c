@@ -10,6 +10,34 @@
 
 #include "ndissys.h"
 
+/*
+ * @unimplemented
+ */
+NDIS_STATUS
+EXPORT
+NdisCoGetTapiCallId(
+    IN NDIS_HANDLE  NdisVcHandle,
+    IN OUT PVAR_STRING  TapiCallId)
+{
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+}
+
+/*
+ * @unimplemented
+ */
+NDIS_STATUS
+EXPORT
+NdisCoAssignInstanceName(
+    IN NDIS_HANDLE  NdisVcHandle,
+    IN PNDIS_STRING  BaseInstanceName,
+    OUT PNDIS_STRING  VcInstanceName)
+{
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+}
 
 /*
  * @unimplemented

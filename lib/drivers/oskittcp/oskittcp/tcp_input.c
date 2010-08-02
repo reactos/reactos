@@ -84,7 +84,6 @@ struct inpcbinfo tcbinfo;
  * Set DELACK for segments received in order, but ack immediately
  * when segments are out of order (so fast retransmit can work).
  */
-#ifdef TCP_ACK_HACK
 #define	TCP_REASS(tp, ti, m, so, flags) { \
 	if ((ti)->ti_seq == (tp)->rcv_nxt && \
 	    (tp)->seg_next == (struct tcpiphdr *)(tp) && \
@@ -104,24 +103,6 @@ struct inpcbinfo tcbinfo;
 		tp->t_flags |= TF_ACKNOW; \
 	} \
 }
-#else
-#define	TCP_REASS(tp, ti, m, so, flags) { \
-	if ((ti)->ti_seq == (tp)->rcv_nxt && \
-	    (tp)->seg_next == (struct tcpiphdr *)(tp) && \
-	    (tp)->t_state == TCPS_ESTABLISHED) { \
-		tp->t_flags |= TF_DELACK; \
-		(tp)->rcv_nxt += (ti)->ti_len; \
-		flags = (ti)->ti_flags & TH_FIN; \
-		tcpstat.tcps_rcvpack++;\
-		tcpstat.tcps_rcvbyte += (ti)->ti_len;\
-		sbappend(&(so)->so_rcv, (m)); \
-		sorwakeup(so); \
-	} else { \
-		(flags) = tcp_reass((tp), (ti), (m)); \
-		tp->t_flags |= TF_ACKNOW; \
-	} \
-}
-#endif
 #ifndef TUBA_INCLUDE
 
 int
@@ -592,7 +573,6 @@ findpcb:
 			 */
 			sbappend(&so->so_rcv, m);
 			sorwakeup(so);
-#ifdef TCP_ACK_HACK
 			/*
 			 * If this is a short packet, then ACK now - with Nagel
 			 *	congestion avoidance sender won't send more until
@@ -604,9 +584,6 @@ findpcb:
 			} else {
 				tp->t_flags |= TF_DELACK;
 			}
-#else
-			tp->t_flags |= TF_DELACK;
-#endif
 			return;
 		}
 	}
@@ -1984,7 +1961,14 @@ tcp_mss(tp, offer)
 
 	inp = tp->t_inpcb;
 	if ((rt = tcp_rtlookup(inp)) == NULL) {
+#ifndef __REACTOS__
 		tp->t_maxopd = tp->t_maxseg = tcp_mssdflt;
+#else
+		if (offer < tcp_mssdflt)
+			tp->t_maxopd = tp->t_maxseg = tcp_mssdflt;
+		else
+			tp->t_maxopd = tp->t_maxseg = min(offer, tcp_mssopt(tp));
+#endif
 		return;
 	}
 #ifndef __REACTOS__
@@ -2139,15 +2123,20 @@ int
 tcp_mssopt(tp)
 	struct tcpcb *tp;
 {
+#ifndef __REACTOS__
 	struct rtentry *rt;
 
 	rt = tcp_rtlookup(tp->t_inpcb);
 	if (rt == NULL)
 		return tcp_mssdflt;
-#ifndef __REACTOS__
+
 	return rt->rt_ifp->if_mtu - sizeof(struct tcpiphdr);
 #else
-	return tcp_mssdflt;
+	struct ifaddr *ifa = ifa_ifwithnet((struct sockaddr *)&tp->t_inpcb->inp_faddr);
+	if (ifa == NULL)
+		return tcp_mssdflt;
+
+	return ifa->ifa_mtu - sizeof(struct tcpiphdr);
 #endif
 }
 #endif /* TUBA_INCLUDE */

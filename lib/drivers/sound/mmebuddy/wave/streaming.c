@@ -17,14 +17,6 @@
 
 
 /*
-    Restrain ourselves from flooding the kernel device!
-*/
-
-#define SOUND_KERNEL_BUFFER_COUNT       10
-#define SOUND_KERNEL_BUFFER_SIZE        16384
-
-
-/*
     DoWaveStreaming
         Check if there is streaming to be done, and if so, do it.
 */
@@ -52,7 +44,7 @@ DoWaveStreaming(
     SND_ASSERT( FunctionTable->CommitWaveBuffer );
 
     /* No point in doing anything if no resources available to use */
-    if ( SoundDeviceInstance->OutstandingBuffers >= SOUND_KERNEL_BUFFER_COUNT )
+    if ( SoundDeviceInstance->OutstandingBuffers >= SoundDeviceInstance->BufferCount )
     {
         SND_TRACE(L"DoWaveStreaming: No available buffers to stream with - doing nothing\n");
         return;
@@ -67,11 +59,15 @@ DoWaveStreaming(
         return;
     }
 
-    while ( ( SoundDeviceInstance->OutstandingBuffers < SOUND_KERNEL_BUFFER_COUNT ) &&
+    while ( ( SoundDeviceInstance->OutstandingBuffers < SoundDeviceInstance->BufferCount ) &&
             ( Header ) )
     {
         HeaderExtension = (PWAVEHDR_EXTENSION) Header->reserved;
         SND_ASSERT( HeaderExtension );
+
+        /* Saniy checks */
+        SND_ASSERT(Header->dwFlags & WHDR_PREPARED);
+        SND_ASSERT(Header->dwFlags & WHDR_INQUEUE);
 
         /* Can never be *above* the length */
         SND_ASSERT( HeaderExtension->BytesCommitted <= Header->dwBufferLength );
@@ -81,6 +77,7 @@ DoWaveStreaming(
         {
             {
                 /* Move on to the next header */
+                SND_ASSERT(Header != Header->lpNext);
                 Header = Header->lpNext;
             }
         }
@@ -98,8 +95,8 @@ DoWaveStreaming(
             BytesRemaining = Header->dwBufferLength - HeaderExtension->BytesCommitted;
 
             /* We can commit anything up to the buffer size limit */
-            BytesToCommit = BytesRemaining > SOUND_KERNEL_BUFFER_SIZE ?
-                            SOUND_KERNEL_BUFFER_SIZE :
+            BytesToCommit = BytesRemaining > SoundDeviceInstance->FrameSize ?
+                            SoundDeviceInstance->FrameSize :
                             BytesRemaining;
 
             /* Should always have something to commit by this point */
@@ -174,9 +171,12 @@ CompleteIO(
     PWAVEHDR WaveHdr;
     PWAVEHDR_EXTENSION HdrExtension;
     MMRESULT Result;
+    DWORD Bytes;
 
     WaveHdr = (PWAVEHDR) SoundOverlapped->Header;
     SND_ASSERT( WaveHdr );
+
+    SND_ASSERT( ERROR_SUCCESS == dwErrorCode );
 
     HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
     SND_ASSERT( HdrExtension );
@@ -189,18 +189,48 @@ CompleteIO(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( MMSUCCESS(Result) );
 
-    HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
-    SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+    do
+	{
 
-    /* We have an available buffer now */
-    -- SoundDeviceInstance->OutstandingBuffers;
+        /* We have an available buffer now */
+        -- SoundDeviceInstance->OutstandingBuffers;
 
-    /* Did we finish a WAVEHDR and aren't looping? */
-    if ( HdrExtension->BytesCompleted == WaveHdr->dwBufferLength &&
-         SoundOverlapped->PerformCompletion )
-    {
-        CompleteWaveHeader(SoundDeviceInstance, WaveHdr);
-    }
+        /* Did we finish a WAVEHDR and aren't looping? */
+        if ( HdrExtension->BytesCompleted + dwNumberOfBytesTransferred >= WaveHdr->dwBufferLength &&
+            SoundOverlapped->PerformCompletion )
+        {
+            /* Wave buffer fully completed */
+            Bytes = WaveHdr->dwBufferLength - HdrExtension->BytesCompleted;
+
+            HdrExtension->BytesCompleted += Bytes;
+            dwNumberOfBytesTransferred -= Bytes;
+
+            CompleteWaveHeader(SoundDeviceInstance, WaveHdr);
+            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+        }
+		else
+		{
+            /* Partially completed */
+            HdrExtension->BytesCompleted += dwNumberOfBytesTransferred;
+            SND_TRACE(L"%d/%d bytes of wavehdr completed\n", HdrExtension->BytesCompleted, WaveHdr->dwBufferLength);
+            break;
+		}
+
+        /* Move to next wave header */
+        WaveHdr = WaveHdr->lpNext;
+
+        if (!WaveHdr)
+		{
+            /* No following WaveHdr */
+            SND_ASSERT(dwNumberOfBytesTransferred == 0);
+            break;
+		}
+
+        HdrExtension = (PWAVEHDR_EXTENSION) WaveHdr->reserved;
+        SND_ASSERT( HdrExtension );
+
+
+	}while(dwNumberOfBytesTransferred);
 
     DoWaveStreaming(SoundDeviceInstance);
 
@@ -270,8 +300,7 @@ StopStreaming(
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
-    /* FIXME: What about wave input? */
-    if ( DeviceType != WAVE_OUT_DEVICE_TYPE )
+    if ( DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceType != WAVE_IN_DEVICE_TYPE )
         return MMSYSERR_NOTSUPPORTED;
 
     return CallSoundThread(SoundDeviceInstance,

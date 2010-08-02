@@ -294,6 +294,12 @@ static struct regsvr_coclass const coclass_list[] = {
         "qedit.dll",
         "Both"
     },
+    {   &CLSID_SampleGrabber,
+        "Sample Grabber",
+        NULL,
+        "qedit.dll",
+        "Both"
+    },
     { NULL }                    /* list terminator */
 };
 
@@ -320,5 +326,5 @@ HRESULT WINAPI DllUnregisterServer(void)
     TRACE("\n");
 
     hr = unregister_coclasses(coclass_list);
-    return S_OK;
+    return hr;
 }

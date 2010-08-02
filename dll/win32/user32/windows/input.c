@@ -16,10 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
+ * FILE:            dll/win32/user32/windows/input.c
  * PURPOSE:         Input
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
@@ -110,30 +109,39 @@ BOOL WINAPI
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
-    LONG Style = GetWindowLongW(hWnd, GWL_STYLE);
+    // This will soon be moved to win32k.
+    BOOL Update;
+    LONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
     /* check if updating is needed */
     UINT bIsDisabled = (Style & WS_DISABLED);
-    if ( (bIsDisabled && bEnable) || (!bIsDisabled && !bEnable) )
-    {
-        if (bEnable)
-        {
-            Style &= ~WS_DISABLED;
-        }
-        else
-        {
-            Style |= WS_DISABLED;
-            /* Remove keyboard focus from that window if it had focus */
-            if (hWnd == GetFocus())
-            {
-               SetFocus(NULL);
-            }
-        }
-        NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
+    Update = bIsDisabled;
 
-        SendMessageA(hWnd, WM_ENABLE, (LPARAM) IsWindowEnabled(hWnd), 0);
+    if (bEnable)
+    {
+       Style &= ~WS_DISABLED;
+    }
+    else
+    {
+       Update = !bIsDisabled;
+
+       SendMessageW( hWnd, WM_CANCELMODE, 0, 0);
+
+       /* Remove keyboard focus from that window if it had focus */
+       if (hWnd == GetFocus())
+       {
+          SetFocus(NULL);
+       }
+       Style |= WS_DISABLED;
+    }
+
+    NtUserSetWindowLong(hWnd, GWL_STYLE, Style, FALSE);
+    
+    if (Update)
+    {
+        SendMessageW(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
     }
     // Return nonzero if it was disabled, or zero if it wasn't:
-    return IsWindowEnabled(hWnd);
+    return bIsDisabled;
 }
 
 
@@ -155,7 +163,7 @@ GetAsyncKeyState(int vKey)
 HKL WINAPI
 GetKeyboardLayout(DWORD idThread)
 {
-  return (HKL)NtUserCallOneParam((DWORD) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
+  return (HKL)NtUserCallOneParam((DWORD_PTR) idThread,  ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT);
 }
 
 
@@ -249,7 +257,7 @@ GetKeyboardLayoutNameW(LPWSTR pwszKLID)
 int WINAPI
 GetKeyboardType(int nTypeFlag)
 {
-return (int)NtUserCallOneParam((DWORD) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
+return (int)NtUserCallOneParam((DWORD_PTR) nTypeFlag,  ONEPARAM_ROUTINE_GETKEYBOARDTYPE);
 }
 
 
@@ -390,7 +398,7 @@ SwapMouseButton(
 int WINAPI
 ToAscii(UINT uVirtKey,
 	UINT uScanCode,
-	CONST PBYTE lpKeyState,
+	CONST BYTE *lpKeyState,
 	LPWORD lpChar,
 	UINT uFlags)
 {
@@ -404,7 +412,7 @@ ToAscii(UINT uVirtKey,
 int WINAPI
 ToAsciiEx(UINT uVirtKey,
 	  UINT uScanCode,
-	  CONST PBYTE lpKeyState,
+	  CONST BYTE *lpKeyState,
 	  LPWORD lpChar,
 	  UINT uFlags,
 	  HKL dwhkl)
@@ -426,7 +434,7 @@ ToAsciiEx(UINT uVirtKey,
 int WINAPI
 ToUnicode(UINT wVirtKey,
 	  UINT wScanCode,
-	  CONST PBYTE lpKeyState,
+	  CONST BYTE *lpKeyState,
 	  LPWSTR pwszBuff,
 	  int cchBuff,
 	  UINT wFlags)
@@ -442,13 +450,13 @@ ToUnicode(UINT wVirtKey,
 int WINAPI
 ToUnicodeEx(UINT wVirtKey,
 	    UINT wScanCode,
-	    CONST PBYTE lpKeyState,
+	    CONST BYTE *lpKeyState,
 	    LPWSTR pwszBuff,
 	    int cchBuff,
 	    UINT wFlags,
 	    HKL dwhkl)
 {
-  return NtUserToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff,
+  return NtUserToUnicodeEx( wVirtKey, wScanCode, (PBYTE)lpKeyState, pwszBuff, cchBuff,
 			    wFlags, dwhkl );
 }
 
@@ -492,7 +500,7 @@ SHORT WINAPI
 VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
-  return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, 0);
+  return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, TRUE);
 }
 
 
@@ -502,7 +510,7 @@ VkKeyScanExW(WCHAR ch,
 SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
-  return VkKeyScanExW(ch, GetKeyboardLayout(0));
+  return (SHORT) NtUserVkKeyScanEx(ch, 0, FALSE);
 }
 
 

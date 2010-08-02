@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT : See COPYING in the top level directory
@@ -506,7 +506,6 @@ QueryEventMessages(LPWSTR lpMachineName,
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
     LPWSTR lpSourceName;
     LPWSTR lpComputerName;
-    LPWSTR lpEventStr;
     LPWSTR lpData;
     BOOL bResult = TRUE; /* Read succeeded. */
 
@@ -608,9 +607,6 @@ QueryEventMessages(LPWSTR lpMachineName,
 
             // This ist the data section of the current event
             lpData = (LPWSTR)((LPBYTE)pevlr + pevlr->DataOffset);
-
-            // This is the text of the current event
-            lpEventStr = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
 
             // Compute the event type
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
@@ -761,6 +757,7 @@ InitInstance(HINSTANCE hInstance,
 {
     HIMAGELIST hSmall;
     LVCOLUMNW lvc = {0};
+    WCHAR szTemp[256];
 
     hInst = hInstance; // Store instance handle in our global variable
 
@@ -824,39 +821,75 @@ InitInstance(HINSTANCE hInstance,
     // Now set up the listview with its columns.
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
     lvc.cx = 90;
-    lvc.pszText = L"Type";
+    LoadStringW(hInstance,
+                IDS_COLUMNTYPE,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 0, &lvc);
 
     lvc.cx = 70;
-    lvc.pszText = L"Date";
+    LoadStringW(hInstance,
+                IDS_COLUMNDATE,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 1, &lvc);
 
     lvc.cx = 70;
-    lvc.pszText = L"Time";
+    LoadStringW(hInstance,
+                IDS_COLUMNTIME,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 2, &lvc);
 
     lvc.cx = 150;
-    lvc.pszText = L"Source";
+    LoadStringW(hInstance,
+                IDS_COLUMNSOURCE,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 3, &lvc);
 
     lvc.cx = 100;
-    lvc.pszText = L"Category";
+    LoadStringW(hInstance,
+                IDS_COLUMNCATEGORY,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 4, &lvc);
 
     lvc.cx = 60;
-    lvc.pszText = L"Event";
+    LoadStringW(hInstance,
+                IDS_COLUMNEVENT,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 5, &lvc);
 
     lvc.cx = 120;
-    lvc.pszText = L"User";
+    LoadStringW(hInstance,
+                IDS_COLUMNUSER,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 6, &lvc);
 
     lvc.cx = 100;
-    lvc.pszText = L"Computer";
+    LoadStringW(hInstance,
+                IDS_COLUMNCOMPUTER,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 7, &lvc);
 
     lvc.cx = 0;
-    lvc.pszText = L"Event Data";
+    LoadStringW(hInstance,
+                IDS_COLUMNEVENTDATA,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 8, &lvc);
 
     ShowWindow(hwndMainWindow, nCmdShow);

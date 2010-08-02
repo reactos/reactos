@@ -1,250 +1,120 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/misc.c
+ * PURPOSE:         KS Allocator functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "priv.h"
 
-/* ===============================================================
-    Misc. Helper Functions
-*/
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsCacheMedium(
-    IN  PUNICODE_STRING SymbolicLink,
-    IN  PKSPIN_MEDIUM Medium,
-    IN  ULONG PinDirection)
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    if (!Item)
+        return Item;
+
+    RtlZeroMemory(Item, NumberOfBytes);
+    return Item;
 }
 
-/*
-    @unimplemented
-*/
-
-KSDDKAPI NTSTATUS NTAPI
-KsDefaultDispatchPnp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
+VOID
+FreeItem(
+    IN PVOID Item)
 {
-    PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT1("KsDefaultDispatchPnp entered with func %x\n", IoStack->MinorFunction);
-
-    switch(IoStack->MinorFunction)
-    {
-        case IRP_MN_QUERY_DEVICE_RELATIONS:
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        case IRP_MN_REMOVE_DEVICE:
-            // FIXME
-            // destroy device header, detach device and delete device
-        case IRP_MN_START_DEVICE:
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-        case IRP_MN_CANCEL_STOP_DEVICE:
-        case IRP_MN_SURPRISE_REMOVAL:
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_SUCCESS;
-        default:
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            //Status = IoCallDriver(NULL /* PnpBaseObject */, Irp);
-    }
-
-    return Status;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsSetDevicePnpAndBaseObject(
-    IN  KSDEVICE_HEADER Header,
-    IN  PDEVICE_OBJECT PnpDeviceObject,
-    IN  PDEVICE_OBJECT BaseDevice)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsDefaultDispatchPower(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    UNIMPLEMENTED;
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsSetPowerDispatch(
-    IN  KSOBJECT_HEADER Header,
-    IN  PFNKSCONTEXT_DISPATCH PowerDispatch OPTIONAL,
-    IN  PVOID PowerContext OPTIONAL)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsReferenceBusObject(
-    IN  KSDEVICE_HEADER Header)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsDereferenceBusObject(
-    IN  KSDEVICE_HEADER Header)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsFreeObjectCreateItem(
-    IN  KSDEVICE_HEADER Header,
-    IN  PUNICODE_STRING CreateItem)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsFreeObjectCreateItemsByContext(
-    IN  KSDEVICE_HEADER Header,
-    IN  PVOID Context)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsLoadResource(
-    IN  PVOID ImageBase,
-    IN  POOL_TYPE PoolType,
-    IN  ULONG_PTR ResourceName,
-    IN  ULONG ResourceType,
-    OUT PVOID* Resource,
-    OUT PULONG ResourceSize)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsNullDriverUnload(
-    IN  PDRIVER_OBJECT DriverObject)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI NTSTATUS NTAPI
-KsPinDataIntersectionEx(
-    IN  PIRP Irp,
-    IN  PKSP_PIN Pin,
-    OUT PVOID Data,
-    IN  ULONG DescriptorsCount,
-    IN  const KSPIN_DESCRIPTOR* Descriptor,
-    IN  ULONG DescriptorSize,
-    IN  PFNKSINTERSECTHANDLEREX IntersectHandler OPTIONAL,
-    IN  PVOID HandlerContext OPTIONAL)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI PDEVICE_OBJECT NTAPI
-KsQueryDevicePnpObject(
-    IN  KSDEVICE_HEADER Header)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsRecalculateStackDepth(
-    IN  KSDEVICE_HEADER Header,
-    IN  BOOLEAN ReuseStackLocation)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsSetTargetDeviceObject(
-    IN  KSOBJECT_HEADER Header,
-    IN  PDEVICE_OBJECT TargetDevice OPTIONAL)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI VOID NTAPI
-KsSetTargetState(
-    IN  KSOBJECT_HEADER Header,
-    IN  KSTARGET_STATE TargetState)
-{
-    UNIMPLEMENTED;
+    ExFreePool(Item);
 }
 
 NTSTATUS
 NTAPI
-CompletionRoutine(
+KspForwardIrpSynchronousCompletion(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP  Irp,
     IN PVOID  Context)
 {
-    PIO_STATUS_BLOCK IoStatusBlock = (PIO_STATUS_BLOCK)Context;
+    if (Irp->PendingReturned == TRUE)
+    {
+        KeSetEvent ((PKEVENT) Context, IO_NO_INCREMENT, FALSE);
+    }
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
 
-    IoStatusBlock->Information = Irp->IoStatus.Information;
-    IoStatusBlock->Status = Irp->IoStatus.Status;
+
+NTSTATUS
+KspForwardIrpSynchronous(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    KEVENT Event;
+    NTSTATUS Status;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    /* initialize the notification event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+    IoSetCompletionRoutine(Irp, KspForwardIrpSynchronousCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+
+    /* now call the driver */
+    Status = IoCallDriver(DeviceHeader->KsDevice.NextDeviceObject, Irp);
+    /* did the request complete yet */
+    if (Status == STATUS_PENDING)
+    {
+        /* not yet, lets wait a bit */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        Status = Irp->IoStatus.Status;
+    }
+    return Status;
+}
+
+NTSTATUS
+KspCopyCreateRequest(
+    IN PIRP Irp,
+    IN LPWSTR ObjectClass,
+    IN OUT PULONG Size,
+    OUT PVOID * Result)
+{
+    PIO_STACK_LOCATION IoStack;
+    ULONG ObjectLength, ParametersLength;
+    PVOID Buffer;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get object class length */
+    ObjectLength = (wcslen(ObjectClass) + 2) * sizeof(WCHAR);
+
+    /* check for minium length requirement */
+    if (ObjectLength  + *Size > IoStack->FileObject->FileName.MaximumLength)
+        return STATUS_UNSUCCESSFUL;
+
+    /* extract parameters length */
+    ParametersLength = IoStack->FileObject->FileName.MaximumLength - ObjectLength;
+
+    /* allocate buffer */
+    Buffer = AllocateItem(NonPagedPool, ParametersLength);
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* copy parameters */
+    RtlMoveMemory(Buffer, &IoStack->FileObject->FileName.Buffer[ObjectLength / sizeof(WCHAR)], ParametersLength);
+
+    /* store result */
+    *Result = Buffer;
+    *Size = ParametersLength;
 
     return STATUS_SUCCESS;
 }
@@ -253,95 +123,88 @@ CompletionRoutine(
     @implemented
 */
 KSDDKAPI
-NTSTATUS
+PVOID
 NTAPI
-KsSynchronousIoControlDevice(
-    IN  PFILE_OBJECT FileObject,
-    IN  KPROCESSOR_MODE RequestorMode,
-    IN  ULONG IoControl,
-    IN  PVOID InBuffer,
-    IN  ULONG InSize,
-    OUT PVOID OutBuffer,
-    IN  ULONG OutSize,
-    OUT PULONG BytesReturned)
+KsGetObjectFromFileObject(
+    IN PFILE_OBJECT FileObject)
 {
-    PDEVICE_OBJECT DeviceObject;
-    KEVENT Event;
-    PIRP Irp;
-    IO_STATUS_BLOCK IoStatusBlock;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
+
+    /* return associated object */
+    return ObjectHeader->ObjectType;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+KSOBJECTTYPE
+NTAPI
+KsGetObjectTypeFromFileObject(
+    IN PFILE_OBJECT FileObject)
+{
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
+    /* return type */
+    return ObjectHeader->Type;
+}
+
+/*
+    @implemented
+*/
+KSOBJECTTYPE
+NTAPI
+KsGetObjectTypeFromIrp(
+    IN PIRP  Irp)
+{
+    PKSIOBJECT_HEADER ObjectHeader;
     PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status;
 
-    /* check for valid file object */
-    if (!FileObject)
-        return STATUS_INVALID_PARAMETER;
-
-    /* get device object to send the request to */
-    DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    if (!DeviceObject)
-        return STATUS_UNSUCCESSFUL;
-
-    /* initialize the event */
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* create the irp */
-    Irp =  IoBuildDeviceIoControlRequest(IoControl, DeviceObject, InBuffer, InSize, OutBuffer, OutSize, FALSE, &Event, &IoStatusBlock);
-
-    /* HACK */
-    IoStack = IoGetNextIrpStackLocation(Irp);
-    IoStack->FileObject = FileObject;
-
-    IoSetCompletionRoutine(Irp, CompletionRoutine, (PVOID)&IoStatusBlock, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(DeviceObject, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        KeWaitForSingleObject(&Event, Executive, RequestorMode, FALSE, NULL);
-        Status = IoStatusBlock.Status;
-    }
-
-    *BytesReturned = IoStatusBlock.Information;
-    return Status;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
+    /* return type */
+    return ObjectHeader->Type;
 }
-
 
 /*
     @implemented
 */
-KSDDKAPI
-VOID
+PUNKNOWN
 NTAPI
-KsAcquireDeviceSecurityLock(
-    IN KSDEVICE_HEADER DevHeader,
-    IN BOOLEAN Exclusive)
+KsGetOuterUnknown(
+    IN PVOID  Object)
 {
-    NTSTATUS Status;
-    PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    KeEnterCriticalRegion();
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    if (Exclusive)
-    {
-        Status = ExAcquireResourceExclusiveLite(&Header->SecurityLock, TRUE);
-    }
-    else
-    {
-        Status = ExAcquireResourceSharedLite(&Header->SecurityLock, TRUE);
-    }
+    /* return objects outer unknown */
+    return BasicHeader->OuterUnknown;
 }
 
 /*
     @implemented
 */
 KSDDKAPI
-VOID
+PVOID
 NTAPI
-KsReleaseDeviceSecurityLock(
-    IN KSDEVICE_HEADER DevHeader)
+KsGetParent(
+    IN PVOID Object)
 {
-    PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
-
-    ExReleaseResourceLite(&Header->SecurityLock);
-    KeLeaveCriticalRegion();
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+    /* sanity check */
+    ASSERT(BasicHeader->Parent.KsDevice != NULL);
+    /* return object type */
+    return (PVOID)BasicHeader->Parent.KsDevice;
 }
+
 

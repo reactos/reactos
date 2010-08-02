@@ -34,6 +34,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msrle32);
 
 static HINSTANCE MSRLE32_hModule = 0;
 
+#define compare_fourcc(fcc1, fcc2) (((fcc1)^(fcc2))&~0x20202020)
+
 #define ABS(a)                ((a) < 0 ? -(a) : (a))
 #define SQR(a)                ((a) * (a))
 
@@ -1114,7 +1116,7 @@ static CodecInfo* Open(LPICOPEN icinfo)
     return (LPVOID)0xFFFF0000;
   }
 
-  if (icinfo->fccType != ICTYPE_VIDEO) return NULL;
+  if (compare_fourcc(icinfo->fccType, ICTYPE_VIDEO)) return NULL;
 
   TRACE("(%p = {%u,0x%08X(%4.4s),0x%08X(%4.4s),0x%X,0x%X,...})\n", icinfo,
 	icinfo->dwSize,	icinfo->fccType, (char*)&icinfo->fccType,

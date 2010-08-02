@@ -6,8 +6,8 @@
  * DEFINES:     DBG     - Enable debug output
  *              NASSERT - Disable assertions
  */
-#ifndef __DEBUG_H
-#define __DEBUG_H
+
+#pragma once
 
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
@@ -33,7 +33,7 @@
 #define DEBUG_CPOINT   0x00800000
 #define DEBUG_ULTRA    0xFFFFFFFF
 
-#ifdef DBG
+#if DBG
 
 extern DWORD DebugTraceLevel;
 
@@ -56,18 +56,6 @@ extern DWORD DebugTraceLevel;
     }
 
 #endif /* _MSC_VER */
-
-#if 0
-#ifdef ASSERT
-#undef ASSERT
-#endif
-
-#ifdef NASSERT
-#define ASSERT(x)
-#else /* NASSERT */
-#define ASSERT(x) if (!(x)) { LA_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
-#endif /* NASSERT */
-#endif
 
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
@@ -108,7 +96,3 @@ extern DWORD DebugTraceLevel;
 #define CP CHECKPOINT
 
 #include <memtrack.h>
-
-#endif /* __DEBUG_H */
-
-/* EOF */

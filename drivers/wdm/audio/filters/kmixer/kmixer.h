@@ -1,11 +1,11 @@
-#ifndef KMIXER_H__
-#define KMIXER_H__
+#pragma once
 
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>
 #include <ksmedia.h>
-#define NDEBUG
+#include <swenum.h>
+#define YDEBUG
 #include <debug.h>
 
 #include <samplerate.h>
@@ -18,6 +18,14 @@ typedef struct
 
 }KMIXER_DEVICE_EXT, *PKMIXER_DEVICE_EXT;
 
+typedef struct
+{
+    KSPIN_LOCK Lock;
+
+
+}SUM_NODE_CONTEXT, *PSUM_NODE_CONTEXT;
+
+
 NTSTATUS
 NTAPI
 KMixAllocateDeviceHeader(
@@ -26,6 +34,3 @@ KMixAllocateDeviceHeader(
 NTSTATUS
 CreatePin(
     IN PIRP Irp);
-
-
-#endif

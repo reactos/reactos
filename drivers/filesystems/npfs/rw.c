@@ -51,7 +51,9 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
     PNPFS_DEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION IoStack;
     PNPFS_CCB Ccb;
-    BOOLEAN Complete = FALSE;
+    PLIST_ENTRY ListEntry;
+    PNPFS_THREAD_CONTEXT ThreadContext;
+    ULONG i;
 
     DPRINT("NpfsReadWriteCancelRoutine(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -67,27 +69,49 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
     switch(IoStack->MajorFunction)
     {
     case IRP_MJ_READ:
-        if (Ccb->ReadRequestListHead.Flink != &Context->ListEntry)
+        ListEntry = DeviceExt->ThreadListHead.Flink;
+        while (ListEntry != &DeviceExt->ThreadListHead)
         {
-            /* we are not the first in the list, remove an complete us */
-            RemoveEntryList(&Context->ListEntry);
-            Complete = TRUE;
+            ThreadContext = CONTAINING_RECORD(ListEntry, NPFS_THREAD_CONTEXT, ListEntry);
+            /* Real events start at index 1 */
+            for (i = 1; i < ThreadContext->Count; i++)
+            {
+                if (ThreadContext->WaitIrpArray[i] == Irp)
+                {
+                    ASSERT(ThreadContext->WaitObjectArray[i] == Context->WaitEvent);
+
+                    ThreadContext->WaitIrpArray[i] = NULL;
+
+                    RemoveEntryList(&Context->ListEntry);
+
+                    Irp->IoStatus.Status = STATUS_CANCELLED;
+                    Irp->IoStatus.Information = 0;
+
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+                    KeSetEvent(&ThreadContext->Event, IO_NO_INCREMENT, FALSE);
+
+                    ExReleaseFastMutex(&Ccb->DataListLock);
+                    KeUnlockMutex(&DeviceExt->PipeListLock);
+
+                    return;
+                }
+            }
+            ListEntry = ListEntry->Flink;
         }
-        else
-        {
-            KeSetEvent(&Ccb->ReadEvent, IO_NO_INCREMENT, FALSE);
-        }
+
+        RemoveEntryList(&Context->ListEntry);
+
+        ExReleaseFastMutex(&Ccb->DataListLock);
+        KeUnlockMutex(&DeviceExt->PipeListLock);
+
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
     default:
         ASSERT(FALSE);
-    }
-    ExReleaseFastMutex(&Ccb->DataListLock);
-    KeUnlockMutex(&DeviceExt->PipeListLock);
-    if (Complete)
-    {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 }
 
@@ -96,16 +120,11 @@ NpfsWaiterThread(PVOID InitContext)
 {
     PNPFS_THREAD_CONTEXT ThreadContext = (PNPFS_THREAD_CONTEXT) InitContext;
     ULONG CurrentCount;
-    ULONG Count = 0;
+    ULONG Count = 0, i;
     PIRP Irp = NULL;
-    PIRP NextIrp;
     NTSTATUS Status;
-    BOOLEAN Terminate = FALSE;
-    BOOLEAN Cancel = FALSE;
     PIO_STACK_LOCATION IoStack = NULL;
-    PNPFS_CONTEXT Context;
-    PNPFS_CONTEXT NextContext;
-    PNPFS_CCB Ccb;
+    KIRQL OldIrql;
 
     KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
 
@@ -113,29 +132,23 @@ NpfsWaiterThread(PVOID InitContext)
     {
         CurrentCount = ThreadContext->Count;
         KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
-        if (Irp)
+        IoAcquireCancelSpinLock(&OldIrql);
+        if (Irp && IoSetCancelRoutine(Irp, NULL) != NULL)
         {
-            if (Cancel)
+            IoReleaseCancelSpinLock(OldIrql);
+            IoStack = IoGetCurrentIrpStackLocation(Irp);
+            switch (IoStack->MajorFunction)
             {
-                Irp->IoStatus.Status = STATUS_CANCELLED;
-                Irp->IoStatus.Information = 0;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            }
-            else
-            {
-                switch (IoStack->MajorFunction)
-                {
                 case IRP_MJ_READ:
                     NpfsRead(IoStack->DeviceObject, Irp);
                     break;
                 default:
                     ASSERT(FALSE);
-                }
             }
         }
-        if (Terminate)
+        else
         {
-            break;
+            IoReleaseCancelSpinLock(OldIrql);
         }
         Status = KeWaitForMultipleObjects(CurrentCount,
             ThreadContext->WaitObjectArray,
@@ -150,7 +163,7 @@ NpfsWaiterThread(PVOID InitContext)
             ASSERT(FALSE);
         }
         KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
-        Count = Status - STATUS_SUCCESS;
+        Count = Status - STATUS_WAIT_0;
         ASSERT (Count < CurrentCount);
         if (Count > 0)
         {
@@ -159,47 +172,31 @@ NpfsWaiterThread(PVOID InitContext)
             ThreadContext->DeviceExt->EmptyWaiterCount++;
             ThreadContext->WaitObjectArray[Count] = ThreadContext->WaitObjectArray[ThreadContext->Count];
             ThreadContext->WaitIrpArray[Count] = ThreadContext->WaitIrpArray[ThreadContext->Count];
-
-            Cancel = (NULL == IoSetCancelRoutine(Irp, NULL));
-            Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
-            IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-            if (Cancel)
-            {
-                Ccb = IoStack->FileObject->FsContext2;
-                ExAcquireFastMutex(&Ccb->DataListLock);
-                RemoveEntryList(&Context->ListEntry);
-                switch (IoStack->MajorFunction)
-                {
-                case IRP_MJ_READ:
-                    if (!IsListEmpty(&Ccb->ReadRequestListHead))
-                    {
-                        /* put the next request on the wait list */
-                        NextContext = CONTAINING_RECORD(Ccb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
-                        ThreadContext->WaitObjectArray[ThreadContext->Count] = NextContext->WaitEvent;
-                        NextIrp = CONTAINING_RECORD(NextContext, IRP, Tail.Overlay.DriverContext);
-                        ThreadContext->WaitIrpArray[ThreadContext->Count] = NextIrp;
-                        ThreadContext->Count++;
-                        ThreadContext->DeviceExt->EmptyWaiterCount--;
-                    }
-                    break;
-                default:
-                    ASSERT(FALSE);
-                }
-                ExReleaseFastMutex(&Ccb->DataListLock);
-            }
         }
         else
         {
-            /* someone has add a new wait request */
+            /* someone has add a new wait request or cancelled an old one */
             Irp = NULL;
+
+            /* Look for cancelled requests */
+            for (i = 1; i < ThreadContext->Count; i++)
+            {
+                if (ThreadContext->WaitIrpArray[i] == NULL)
+                {
+                   ThreadContext->Count--;
+                   ThreadContext->DeviceExt->EmptyWaiterCount++;
+                   ThreadContext->WaitObjectArray[i] = ThreadContext->WaitObjectArray[ThreadContext->Count];
+                   ThreadContext->WaitIrpArray[i] = ThreadContext->WaitIrpArray[ThreadContext->Count];
+                }
+            }
         }
         if (ThreadContext->Count == 1 && ThreadContext->DeviceExt->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
         {
             /* it exist an other thread with empty wait slots, we can remove our thread from the list */
             RemoveEntryList(&ThreadContext->ListEntry);
             ThreadContext->DeviceExt->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
-            Terminate = TRUE;
+            KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
+            break;
         }
     }
     ExFreePool(ThreadContext);
@@ -332,10 +329,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
     if ((Ccb->OtherSide == NULL) && (Ccb->ReadDataAvailable == 0))
     {
         if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
-        {
-            DPRINT("File pipe broken\n");
             Status = STATUS_PIPE_BROKEN;
-        }
         else if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
             Status = STATUS_PIPE_LISTENING;
         else if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
@@ -443,7 +437,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                 {
                     break;
                 }
-                if ((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) && (Ccb->ReadDataAvailable == 0))
+                if (((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) || (!Ccb->OtherSide)) && (Ccb->ReadDataAvailable == 0))
                 {
                     DPRINT("PipeState: %x\n", Ccb->PipeState);
                     Status = STATUS_PIPE_BROKEN;
@@ -787,7 +781,16 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     }
 
     Status = STATUS_SUCCESS;
-    Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+    Buffer = MmGetSystemAddressForMdlSafe (Irp->MdlAddress, NormalPagePriority);
+
+    if (!Buffer)
+    {
+        DPRINT("MmGetSystemAddressForMdlSafe failed\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Length = 0;
+        goto done;
+
+    }
 
     ExAcquireFastMutex(&ReaderCcb->DataListLock);
 
@@ -800,13 +803,13 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     {
         if ((ReaderCcb->WriteQuotaAvailable == 0))
         {
-            KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
-            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE)
+            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE || !Ccb->OtherSide)
             {
                 Status = STATUS_PIPE_BROKEN;
                 ExReleaseFastMutex(&ReaderCcb->DataListLock);
                 goto done;
             }
+            KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
             ExReleaseFastMutex(&ReaderCcb->DataListLock);
 
             DPRINT("Write Waiting for buffer space (%S)\n", Fcb->PipeName.Buffer);
@@ -830,9 +833,15 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             * It's possible that the event was signaled because the
             * other side of pipe was closed.
             */
-            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE)
+            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE || !Ccb->OtherSide)
             {
                 DPRINT("PipeState: %x\n", Ccb->PipeState);
+                Status = STATUS_PIPE_BROKEN;
+                goto done;
+            }
+            /* Check that the pipe has not been closed */
+            if (ReaderCcb->PipeState != FILE_PIPE_CONNECTED_STATE || !ReaderCcb->OtherSide)
+            {
                 Status = STATUS_PIPE_BROKEN;
                 goto done;
             }

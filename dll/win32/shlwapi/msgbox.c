@@ -147,10 +147,10 @@ INT_PTR WINAPI SHMessageBoxCheckExA(HWND hWnd, HINSTANCE hInst, LPCSTR lpszName,
   WCHAR szNameBuff[MAX_PATH], szIdBuff[MAX_PATH];
   LPCWSTR szName = szNameBuff;
 
-  if (HIWORD(lpszName))
-    MultiByteToWideChar(CP_ACP, 0, lpszName, -1, szNameBuff, MAX_PATH);
-  else
+  if (IS_INTRESOURCE(lpszName))
     szName = (LPCWSTR)lpszName; /* Resource Id or NULL */
+  else
+    MultiByteToWideChar(CP_ACP, 0, lpszName, -1, szNameBuff, MAX_PATH);
 
   MultiByteToWideChar(CP_ACP, 0, lpszId, -1, szIdBuff, MAX_PATH);
 

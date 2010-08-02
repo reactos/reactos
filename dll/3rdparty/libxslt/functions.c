@@ -813,6 +813,7 @@ xsltElementAvailableFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	ctxt->error = XPATH_INVALID_ARITY;
 	return;
     }
+    xmlXPathStringFunction(ctxt, 1);
     if ((ctxt->value == NULL) || (ctxt->value->type != XPATH_STRING)) {
 	xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
 	    "element-available() : invalid arg expecting a string\n");
@@ -878,6 +879,7 @@ xsltFunctionAvailableFunction(xmlXPathParserContextPtr ctxt, int nargs){
 	ctxt->error = XPATH_INVALID_ARITY;
 	return;
     }
+    xmlXPathStringFunction(ctxt, 1);
     if ((ctxt->value == NULL) || (ctxt->value->type != XPATH_STRING)) {
 	xsltTransformError(xsltXPathGetTransformContext(ctxt), NULL, NULL,
 	    "function-available() : invalid arg expecting a string\n");

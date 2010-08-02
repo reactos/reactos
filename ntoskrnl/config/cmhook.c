@@ -116,7 +116,7 @@ CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
 
     Callback = ExAllocatePoolWithTag(PagedPool,
                                    sizeof(REGISTRY_CALLBACK),
-                                   TAG('C', 'M', 'c', 'b'));
+                                   'bcMC');
     if (Callback != NULL)
     {
         /* initialize the callback */

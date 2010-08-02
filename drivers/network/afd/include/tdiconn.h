@@ -1,5 +1,4 @@
-#ifndef _TDICONN_H
-#define _TDICONN_H
+#pragma once
 
 #ifdef _MSC_VER
 #include <ntddtdi.h>
@@ -29,5 +28,3 @@ NTSTATUS TdiBuildConnectionInfoPair
   PTRANSPORT_ADDRESS From,
   PTRANSPORT_ADDRESS To );
 PTA_ADDRESS TdiGetRemoteAddress( PTDI_CONNECTION_INFORMATION TdiConn );
-
-#endif/*_TDICONN_H*/

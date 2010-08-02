@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef __WINE_WINE_PORT_H
@@ -148,27 +148,6 @@ struct statfs;
 #endif
 
 
-/* Macros to define assembler functions somewhat portably */
-
-#ifdef __GNUC__
-# define __ASM_GLOBAL_FUNC(name,code) \
-      __asm__( ".align 4\n\t" \
-               ".globl " __ASM_NAME(#name) "\n\t" \
-               __ASM_FUNC(#name) "\n" \
-               __ASM_NAME(#name) ":\n\t" \
-               code );
-#else  /* __GNUC__ */
-# define __ASM_GLOBAL_FUNC(name,code) \
-      void __asm_dummy_##name(void) { \
-          asm( ".align 4\n\t" \
-               ".globl " __ASM_NAME(#name) "\n\t" \
-               __ASM_FUNC(#name) "\n" \
-               __ASM_NAME(#name) ":\n\t" \
-               code ); \
-      }
-#endif  /* __GNUC__ */
-
-
 /* Constructor functions */
 
 #ifdef __GNUC__
@@ -241,10 +220,6 @@ extern int getopt_long_only (int ___argc, char *const *___argv,
 #ifndef HAVE_GETPAGESIZE
 size_t getpagesize(void);
 #endif  /* HAVE_GETPAGESIZE */
-
-#ifndef HAVE_GETTID
-pid_t gettid(void);
-#endif /* HAVE_GETTID */
 
 #ifndef HAVE_LSTAT
 int lstat(const char *file_name, struct stat *buf);

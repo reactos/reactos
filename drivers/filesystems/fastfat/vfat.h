@@ -1,17 +1,9 @@
 #include <ntifs.h>
+#include <bugcodes.h>
 #include <ntdddisk.h>
 #include <debug.h>
 
-#ifdef __GNUC__
-#include <ccros.h>
-
 #define USE_ROS_CC_AND_FS
-#else
-#define KEBUGCHECK KeBugCheck
-#define KEBUGCHECKEX KeBugCheckEx
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-#define ROUND_UP(N, S) ROUND_DOWN((N) + (S) - 1, (S))
-#endif
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
@@ -411,14 +403,10 @@ typedef struct _VFATCCB
   UNICODE_STRING SearchPattern;
 } VFATCCB, *PVFATCCB;
 
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
-#define TAG_CCB TAG('V', 'C', 'C', 'B')
-#define TAG_FCB TAG('V', 'F', 'C', 'B')
-#define TAG_IRP TAG('V', 'I', 'R', 'P')
-#define TAG_VFAT TAG('V', 'F', 'A', 'T')
+#define TAG_CCB  'BCCV'
+#define TAG_FCB  'BCFV'
+#define TAG_IRP  'PRIV'
+#define TAG_VFAT 'TAFV'
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 

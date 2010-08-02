@@ -16,12 +16,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "avifile_private.h"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
-IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82
+IDD_SAVEOPTIONS DIALOG  43, 37, 226, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "圧縮オプション"
 FONT 9, "MS Shell Dlg"
@@ -39,7 +41,7 @@ BEGIN
     PUSHBUTTON      "キャンセル",IDCANCEL,170,61,50,14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_WAVESTREAMFORMAT	"Waveファイル: %s"
   IDS_WAVEFILETYPE	"Waveファイル"
@@ -51,5 +53,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Wine AVI-default-filehandler"
   IDS_UNCOMPRESSED      "未圧縮"
 }
-
-#pragma code_page(default)

@@ -1,5 +1,4 @@
-#ifndef LANG_AR_AE_H__
-#define LANG_AR_AE_H__
+#pragma once
 
 MUI_LAYOUTS arAELayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arAELayouts[] =
     { L"3801", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

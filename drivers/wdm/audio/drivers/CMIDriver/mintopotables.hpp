@@ -30,11 +30,14 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "mintopo.hpp"
 
+#if 0
 #ifndef STATIC_KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF
 #define STATIC_KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF\
     DEFINE_WAVEFORMATEX_GUID(WAVE_FORMAT_DOLBY_AC3_SPDIF)
 DEFINE_GUIDSTRUCT("00000092-0000-0010-8000-00aa00389b71", KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF);
-#define KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF DEFINE_GUIDNAMED(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
+#define KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF  DEFINE_GUIDNAMED( KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF )
+/* Warning - Recursive #define for KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF */
+#endif
 #endif
 
 NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest);
@@ -45,15 +48,17 @@ NTSTATUS NTAPI PropertyHandler_Private(PPCPROPERTY_REQUEST PropertyRequest);
 
 static KSDATARANGE PinDataRangesBridge[] =
 {
-   {
-      sizeof(KSDATARANGE),
-      0,
-      0,
-      0,
-      STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-      STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG),
-      STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)
-   }
+    {
+        {
+            sizeof(KSDATARANGE),
+            0,
+            0,
+            0,
+            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG) },
+            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE) }
+        }
+    }
 };
 
 static PKSDATARANGE PinDataRangePointersBridge[] =
@@ -63,14 +68,16 @@ static PKSDATARANGE PinDataRangePointersBridge[] =
 
 static KSDATARANGE WavePinDataRangesAC3Bridge[] =
 {
-	{
-        sizeof(KSDATARANGE),
-        0,
-        0,
-        0,
-        STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-        STATICGUIDOF(KSDATAFORMAT_SUBTYPE_AC3_AUDIO),
-        STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)
+    {
+        {
+            sizeof(KSDATARANGE),
+            0,
+            0,
+            0,
+            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_AC3_AUDIO) },
+            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE) }
+        }
     }
 };
 
@@ -96,7 +103,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSCATEGORY_AUDIO,                          // Category
             NULL,                                       // Name
-            0                                           // Reserved
+            { 0 }                                       // Reserved
         }
     },
 
@@ -115,7 +122,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSNODETYPE_SPDIF_INTERFACE,                // Category
             NULL,                                       // Name
-            0                                           // Reserved
+            { 0 }                                       // Reserved
         }
     },
 
@@ -134,7 +141,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_MICROPHONE,						// Category
 			NULL,										// Name
-			0											// Reserved
+            { 0 }                                       // Reserved
 		}
 	},
 
@@ -153,7 +160,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_CD_PLAYER,						// Category
 			NULL,										// Name
-			0											// Reserved
+            { 0 }                                       // Reserved
 		}
 	},
 
@@ -172,7 +179,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_LINE_CONNECTOR,					// Category
 			NULL,										// Name
-			0											// Reserved
+            { 0 }                                       // Reserved
 		}
 	},
 
@@ -191,7 +198,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_ANALOG_CONNECTOR,				// Category
 			NULL,										// Name
-			0											// Reserved
+            { 0 }                                       // Reserved
 		}
 	},
 
@@ -210,7 +217,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
 			KSPIN_COMMUNICATION_NONE,					// Communication
 			&KSNODETYPE_ANALOG_CONNECTOR,				// Category
 			&CMINAME_DAC,								// Name
-			0											// Reserved
+            { 0 }                                       // Reserved
 		}
 	},
 
@@ -229,7 +236,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSNODETYPE_SPEAKER,                        // Category
             NULL,                                       // Name
-            0                                           // Reserved
+            { 0 }                                       // Reserved
         }
     },
 
@@ -248,7 +255,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSCATEGORY_AUDIO,                          // Category
             NULL,                                       // Name
-            0                                           // Reserved
+            { 0 }                                       // Reserved
         }
     },
 
@@ -267,7 +274,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             &KSCATEGORY_AUDIO,                          // Category
             NULL,                                       // Name
-            0                                           // Reserved
+            { 0 }                                       // Reserved
         }
     },
 
@@ -286,7 +293,7 @@ static PCPIN_DESCRIPTOR MiniportPins[] =
             KSPIN_COMMUNICATION_NONE,                   // Communication
             NULL,                                       // Category
             NULL,                                       // Name
-            0                                           // Reserved
+            { 0 }                                       // Reserved
         }
     }
 };

@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Brian Palmer <brianp@sginet.com>
  *                  Hervé Poussineau
  */
-
+#ifndef _M_ARM
 #include <freeldr.h>
 
 VOID MiniTuiDrawBackdrop(VOID)
@@ -154,3 +154,4 @@ const UIVTBL MiniTuiVtbl =
 	TuiDisplayMenu,
 	MiniTuiDrawMenu,
 };
+#endif

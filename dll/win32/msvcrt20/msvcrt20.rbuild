@@ -6,10 +6,10 @@
 	<include base="msvcrt20">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="CRTDLL" />
 	<file>msvcrt20.c</file>
 	<library>wine</library>
 	<library>msvcrt</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

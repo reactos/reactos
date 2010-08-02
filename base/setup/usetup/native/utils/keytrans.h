@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
@@ -23,14 +23,11 @@
  * PROGRAMMER:      Tinus
  */
 
-#ifndef __KEYTRANS_H__
-#define __KEYTRANS_H__
+#pragma once
 
 #include <ntddkbd.h>
 
 NTSTATUS
 IntTranslateKey(PKEYBOARD_INPUT_DATA InputData, KEY_EVENT_RECORD *Event);
-
-#endif /* __KEYTRANS_H__ */
 
 /* EOF */

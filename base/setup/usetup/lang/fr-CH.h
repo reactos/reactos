@@ -1,5 +1,4 @@
-#ifndef LANG_FR_CH_H__
-#define LANG_FR_CH_H__
+#pragma once
 
 MUI_LAYOUTS frCHLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS frCHLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

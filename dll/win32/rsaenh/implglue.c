@@ -67,6 +67,18 @@ BOOL init_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext)
         case CALG_SHA:
             A_SHAInit(&pHashContext->sha);
             break;
+
+        case CALG_SHA_256:
+            SHA256_Init(&pHashContext->sha256);
+            break;
+
+        case CALG_SHA_384:
+            SHA384_Init(&pHashContext->sha384);
+            break;
+
+        case CALG_SHA_512:
+            SHA512_Init(&pHashContext->sha512);
+            break;
     }
 
     return TRUE;
@@ -93,6 +105,18 @@ BOOL update_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, CONST BYTE *pb
             A_SHAUpdate(&pHashContext->sha, pbData, dwDataLen);
             break;
         
+        case CALG_SHA_256:
+            SHA256_Update(&pHashContext->sha256, pbData, dwDataLen);
+            break;
+
+        case CALG_SHA_384:
+            SHA384_Update(&pHashContext->sha384, pbData, dwDataLen);
+            break;
+
+        case CALG_SHA_512:
+            SHA512_Update(&pHashContext->sha512, pbData, dwDataLen);
+            break;
+
         default:
             SetLastError(NTE_BAD_ALGID);
             return FALSE;
@@ -123,6 +147,18 @@ BOOL finalize_hash_impl(ALG_ID aiAlgid, HASH_CONTEXT *pHashContext, BYTE *pbHash
             A_SHAFinal(&pHashContext->sha, (PULONG)pbHashValue);
             break;
         
+        case CALG_SHA_256:
+            SHA256_Final(pbHashValue, &pHashContext->sha256);
+            break;
+
+        case CALG_SHA_384:
+            SHA384_Final(pbHashValue, &pHashContext->sha384);
+            break;
+
+        case CALG_SHA_512:
+            SHA512_Final(pbHashValue, &pHashContext->sha512);
+            break;
+
         default:
             SetLastError(NTE_BAD_ALGID);
             return FALSE;
@@ -306,6 +342,7 @@ BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContex
 
         case CALG_RSA_KEYX:
         case CALG_RSA_SIGN:
+        case CALG_SSL3_SHAMD5:
             outlen = inlen = (mp_count_bits(&pKeyContext->rsa.N)+7)/8;
             if (enc) {
                 if (rsa_exptmod(in, inlen, out, &outlen, dwKeySpec, &pKeyContext->rsa) != CRYPT_OK) {
@@ -361,7 +398,10 @@ BOOL gen_rand_impl(BYTE *pbBuffer, DWORD dwLen)
 BOOL export_public_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,DWORD *pdwPubExp)
 {
     mp_to_unsigned_bin(&pKeyContext->rsa.N, pbDest);
-    reverse_bytes(pbDest, dwKeyLen);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.N));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.N) < dwKeyLen)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.N), 0,
+               dwKeyLen - mp_unsigned_bin_size(&pKeyContext->rsa.N));
     *pdwPubExp = (DWORD)mp_get_int(&pKeyContext->rsa.e);
     return TRUE;
 }
@@ -396,25 +436,46 @@ BOOL export_private_key_impl(BYTE *pbDest, const KEY_CONTEXT *pKeyContext, DWORD
                              DWORD *pdwPubExp)
 {
     mp_to_unsigned_bin(&pKeyContext->rsa.N, pbDest);
-    reverse_bytes(pbDest, dwKeyLen);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.N));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.N) < dwKeyLen)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.N), 0,
+               dwKeyLen - mp_unsigned_bin_size(&pKeyContext->rsa.N));
     pbDest += dwKeyLen;
     mp_to_unsigned_bin(&pKeyContext->rsa.p, pbDest);
-    reverse_bytes(pbDest, (dwKeyLen+1)>>1);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.p));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.p) < (dwKeyLen+1)>>1)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.p), 0,
+               ((dwKeyLen+1)>>1) - mp_unsigned_bin_size(&pKeyContext->rsa.p));
     pbDest += (dwKeyLen+1)>>1;
     mp_to_unsigned_bin(&pKeyContext->rsa.q, pbDest);
-    reverse_bytes(pbDest, (dwKeyLen+1)>>1);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.q));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.q) < (dwKeyLen+1)>>1)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.q), 0,
+               ((dwKeyLen+1)>>1) - mp_unsigned_bin_size(&pKeyContext->rsa.q));
     pbDest += (dwKeyLen+1)>>1;
     mp_to_unsigned_bin(&pKeyContext->rsa.dP, pbDest);
-    reverse_bytes(pbDest, (dwKeyLen+1)>>1);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.dP));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.dP) < (dwKeyLen+1)>>1)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.dP), 0,
+               ((dwKeyLen+1)>>1) - mp_unsigned_bin_size(&pKeyContext->rsa.dP));
     pbDest += (dwKeyLen+1)>>1;
     mp_to_unsigned_bin(&pKeyContext->rsa.dQ, pbDest);
-    reverse_bytes(pbDest, (dwKeyLen+1)>>1);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.dQ));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.dQ) < (dwKeyLen+1)>>1)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.dQ), 0,
+               ((dwKeyLen+1)>>1) - mp_unsigned_bin_size(&pKeyContext->rsa.dQ));
     pbDest += (dwKeyLen+1)>>1;
     mp_to_unsigned_bin(&pKeyContext->rsa.qP, pbDest);
-    reverse_bytes(pbDest, (dwKeyLen+1)>>1);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.qP));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.qP) < (dwKeyLen+1)>>1)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.qP), 0,
+               ((dwKeyLen+1)>>1) - mp_unsigned_bin_size(&pKeyContext->rsa.qP));
     pbDest += (dwKeyLen+1)>>1;
     mp_to_unsigned_bin(&pKeyContext->rsa.d, pbDest);
-    reverse_bytes(pbDest, dwKeyLen);
+    reverse_bytes(pbDest, mp_unsigned_bin_size(&pKeyContext->rsa.d));
+    if (mp_unsigned_bin_size(&pKeyContext->rsa.d) < dwKeyLen)
+        memset(pbDest + mp_unsigned_bin_size(&pKeyContext->rsa.d), 0,
+               dwKeyLen - mp_unsigned_bin_size(&pKeyContext->rsa.d));
     *pdwPubExp = (DWORD)mp_get_int(&pKeyContext->rsa.e);
 
     return TRUE;

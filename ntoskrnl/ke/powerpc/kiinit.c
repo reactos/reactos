@@ -329,7 +329,7 @@ AppCpuInit:
     /* Check for break-in */
     if (KdPollBreakIn())
     {
-	DbgBreakPointWithStatus(1);
+	DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
     /* Raise to HIGH_LEVEL */
@@ -352,6 +352,6 @@ KiInitMachineDependent(VOID)
 
 void abort()
 {
-    KeBugCheck(0);
+    KeBugCheck(KMODE_EXCEPTION_NOT_HANDLED);
     while(1);
 }

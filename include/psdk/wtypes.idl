@@ -25,6 +25,12 @@ cpp_quote("#ifndef __wtypes_h__")
 cpp_quote("#define __wtypes_h__")
 cpp_quote("#endif")
 
+cpp_quote("#ifdef _MSC_VER")
+cpp_quote("#pragma warning(push)")
+cpp_quote("#pragma warning(disable:4201)")
+cpp_quote("#pragma warning(disable:4820)")
+cpp_quote("#endif")
+
 [
   uuid(D3980A60-910C-1068-9341-00DD010F2F1C),
   version(0.1),
@@ -91,6 +97,7 @@ typedef LONG_PTR LRESULT;
 
 typedef LONG HRESULT;
 typedef DWORD LCID;
+typedef USHORT LANGID;
 
 typedef unsigned __int64 DWORDLONG;
 typedef __int64 LONGLONG;
@@ -437,7 +444,7 @@ typedef struct tagRemHGLOBAL {
 typedef union _userHGLOBAL switch(long fContext) u {
   case WDT_INPROC_CALL: long               hInproc;
   case WDT_REMOTE_CALL: FLAGGED_BYTE_BLOB *hRemote;
-  default:              long               hGlobal;
+  case WDT_INPROC64_CALL: __int64          hInproc64;
 } userHGLOBAL;
 
 typedef [unique] userHGLOBAL *wireHGLOBAL;
@@ -453,7 +460,7 @@ typedef struct tagRemHMETAFILEPICT {
 typedef union _userHMETAFILE switch(long fContext) u {
   case WDT_INPROC_CALL: long       hInproc;
   case WDT_REMOTE_CALL: BYTE_BLOB *hRemote;
-  default:              long       hGlobal;
+  case WDT_INPROC64_CALL: __int64  hInproc64;
 } userHMETAFILE;
 
 typedef [unique] userHMETAFILE *wireHMETAFILE;
@@ -468,7 +475,7 @@ typedef struct _remoteMETAFILEPICT {
 typedef union _userHMETAFILEPICT switch(long fContext) u {
   case WDT_INPROC_CALL: long                hInproc;
   case WDT_REMOTE_CALL: remoteMETAFILEPICT *hRemote;
-  default:              long                hGlobal;
+  case WDT_INPROC64_CALL: __int64           hInproc64;
 } userHMETAFILEPICT;
 
 typedef [unique] userHMETAFILEPICT *wireHMETAFILEPICT;
@@ -481,7 +488,7 @@ typedef struct tagRemHENHMETAFILE {
 typedef union _userHENHMETAFILE switch(long fContext) u {
   case WDT_INPROC_CALL: long       hInproc;
   case WDT_REMOTE_CALL: BYTE_BLOB *hRemote;
-  default:              long       hGlobal;
+  case WDT_INPROC64_CALL: __int64  hInproc64;
 } userHENHMETAFILE;
 
 typedef [unique] userHENHMETAFILE *wireHENHMETAFILE;
@@ -506,7 +513,7 @@ typedef struct _userBITMAP {
 typedef union _userHBITMAP switch(long fContext) u {
   case WDT_INPROC_CALL: long        hInproc;
   case WDT_REMOTE_CALL: userBITMAP *hRemote;
-  default:              long        hGlobal;
+  case WDT_INPROC64_CALL: __int64   hInproc64;
 } userHBITMAP;
 
 typedef [unique] userHBITMAP *wireHBITMAP;
@@ -525,7 +532,7 @@ typedef struct tagrpcLOGPALETTE {
 typedef union _userHPALETTE switch(long fContext) u {
   case WDT_INPROC_CALL: long           hInproc;
   case WDT_REMOTE_CALL: rpcLOGPALETTE *hRemote;
-  default:              long           hGlobal;
+  case WDT_INPROC64_CALL: __int64      hInproc64;
 } userHPALETTE;
 
 typedef [unique] userHPALETTE *wireHPALETTE;
@@ -793,7 +800,7 @@ typedef struct tagQUERYCONTEXT
     DWORD dwVersionLo;
 } QUERYCONTEXT;
 
-typedef [v1_enum] enum tagTYSPEC
+typedef [v1_enum] enum tagTYSPEC 
 {
     TYSPEC_CLSID,
     TYSPEC_FILEEXT,
@@ -830,4 +837,17 @@ typedef union switch(DWORD tyspec)
         } ByObjectId;
 } uCLSSPEC;
 
+cpp_quote("#ifndef PROPERTYKEY_DEFINED")
+cpp_quote("#define PROPERTYKEY_DEFINED")
+typedef struct _tagpropertykey
+{
+    GUID fmtid;
+    DWORD pid;
+} PROPERTYKEY;
+cpp_quote("#endif /*PROPERTYKEY_DEFINED*/")
+
 } /* interface IWinTypes */
+
+cpp_quote("#ifdef _MSC_VER")
+cpp_quote("#pragma warning(pop)")
+cpp_quote("#endif")

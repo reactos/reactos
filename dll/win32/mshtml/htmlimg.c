@@ -28,6 +28,7 @@
 #include "wine/debug.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -39,7 +40,7 @@ typedef struct {
     nsIDOMHTMLImageElement *nsimg;
 } HTMLImgElement;
 
-#define HTMLIMG(x)  (&(x)->lpHTMLImgElementVtbl)
+#define HTMLIMG(x)  ((IHTMLImgElement*)  &(x)->lpHTMLImgElementVtbl)
 
 #define HTMLIMG_THIS(iface) DEFINE_THIS(HTMLImgElement, HTMLImgElement, iface)
 
@@ -192,28 +193,28 @@ static HRESULT WINAPI HTMLImgElement_get_border(IHTMLImgElement *iface, VARIANT 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_vspace(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_vspace(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_vspace(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_vspace(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_hspace(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_hspace(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_hspace(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_hspace(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -228,7 +229,7 @@ static HRESULT WINAPI HTMLImgElement_put_alt(IHTMLImgElement *iface, BSTR v)
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
-    nsAString_Init(&alt_str, v);
+    nsAString_InitDepend(&alt_str, v);
     nsres = nsIDOMHTMLImageElement_SetAlt(This->nsimg, &alt_str);
     nsAString_Finish(&alt_str);
     if(NS_FAILED(nsres))
@@ -268,7 +269,7 @@ static HRESULT WINAPI HTMLImgElement_put_src(IHTMLImgElement *iface, BSTR v)
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
-    nsAString_Init(&src_str, v);
+    nsAString_InitDepend(&src_str, v);
     nsres = nsIDOMHTMLImageElement_SetSrc(This->nsimg, &src_str);
     nsAString_Finish(&src_str);
     if(NS_FAILED(nsres))
@@ -295,7 +296,7 @@ static HRESULT WINAPI HTMLImgElement_get_src(IHTMLImgElement *iface, BSTR *p)
     }
 
     nsAString_GetData(&src_str, &src);
-    hres = nsuri_to_url(src, p);
+    hres = nsuri_to_url(src, TRUE, p);
     nsAString_Finish(&src_str);
 
     return hres;
@@ -388,15 +389,19 @@ static HRESULT WINAPI HTMLImgElement_get_align(IHTMLImgElement *iface, BSTR *p)
 static HRESULT WINAPI HTMLImgElement_put_onload(IHTMLImgElement *iface, VARIANT v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_node_event(&This->element.node, EVENTID_LOAD, &v);
 }
 
 static HRESULT WINAPI HTMLImgElement_get_onload(IHTMLImgElement *iface, VARIANT *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_node_event(&This->element.node, EVENTID_LOAD, p);
 }
 
 static HRESULT WINAPI HTMLImgElement_put_onerror(IHTMLImgElement *iface, VARIANT v)
@@ -437,36 +442,92 @@ static HRESULT WINAPI HTMLImgElement_put_name(IHTMLImgElement *iface, BSTR v)
 static HRESULT WINAPI HTMLImgElement_get_name(IHTMLImgElement *iface, BSTR *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString strName;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&strName, NULL);
+    nsres = nsIDOMHTMLImageElement_GetName(This->nsimg, &strName);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *str;
+
+        nsAString_GetData(&strName, &str);
+        *p = *str ? SysAllocString(str) : NULL;
+    }else {
+        ERR("GetName failed: %08x\n", nsres);
+    }
+    nsAString_Finish(&strName);
+
+    return NS_SUCCEEDED(nsres) ? S_OK : E_FAIL;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_width(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_width(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%d)\n", This, v);
+
+    nsres = nsIDOMHTMLImageElement_SetWidth(This->nsimg, v);
+    if(NS_FAILED(nsres)) {
+        ERR("SetWidth failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_width(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_width(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    PRInt32 width;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLImageElement_GetWidth(This->nsimg, &width);
+    if(NS_FAILED(nsres)) {
+        ERR("GetWidth failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = width;
+    return S_OK;
 }
 
-static HRESULT WINAPI HTMLImgElement_put_height(IHTMLImgElement *iface, long v)
+static HRESULT WINAPI HTMLImgElement_put_height(IHTMLImgElement *iface, LONG v)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%d)\n", This, v);
+
+    nsres = nsIDOMHTMLImageElement_SetHeight(This->nsimg, v);
+    if(NS_FAILED(nsres)) {
+        ERR("SetHeight failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
-static HRESULT WINAPI HTMLImgElement_get_height(IHTMLImgElement *iface, long *p)
+static HRESULT WINAPI HTMLImgElement_get_height(IHTMLImgElement *iface, LONG *p)
 {
     HTMLImgElement *This = HTMLIMG_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    PRInt32 height;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLImageElement_GetHeight(This->nsimg, &height);
+    if(NS_FAILED(nsres)) {
+        ERR("GetHeight failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = height;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLImgElement_put_start(IHTMLImgElement *iface, BSTR v)
@@ -572,19 +633,28 @@ static void HTMLImgElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
+static HRESULT HTMLImgElement_get_readystate(HTMLDOMNode *iface, BSTR *p)
+{
+    HTMLImgElement *This = HTMLIMG_NODE_THIS(iface);
+
+    return IHTMLImgElement_get_readyState(HTMLIMG(This), p);
+}
+
 #undef HTMLIMG_NODE_THIS
 
 static const NodeImplVtbl HTMLImgElementImplVtbl = {
     HTMLImgElement_QI,
-    HTMLImgElement_destructor
+    HTMLImgElement_destructor,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    HTMLImgElement_get_readystate
 };
 
 static const tid_t HTMLImgElement_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLImgElement_tid,
     0
 };
@@ -595,7 +665,7 @@ static dispex_static_data_t HTMLImgElement_dispex = {
     HTMLImgElement_iface_tids
 };
 
-HTMLElement *HTMLImgElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLImgElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLImgElement *ret = heap_alloc_zero(sizeof(HTMLImgElement));
     nsresult nsres;
@@ -607,8 +677,242 @@ HTMLElement *HTMLImgElement_Create(nsIDOMHTMLElement *nselem)
     if(NS_FAILED(nsres))
         ERR("Could not get nsIDOMHTMLImageElement: %08x\n", nsres);
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLIMG(ret), &HTMLImgElement_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLImgElement_dispex);
 
     return &ret->element;
+}
+
+#define HTMLIMGFACTORY_THIS(iface) DEFINE_THIS(HTMLImageElementFactory, HTMLImageElementFactory, iface)
+
+static HRESULT WINAPI HTMLImageElementFactory_QueryInterface(IHTMLImageElementFactory *iface,
+        REFIID riid, void **ppv)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+
+    *ppv = NULL;
+
+    if(IsEqualGUID(&IID_IUnknown, riid)) {
+        TRACE("(%p)->(IID_Unknown %p)\n", This, ppv);
+        *ppv = HTMLIMGFACTORY(This);
+    }else if(IsEqualGUID(&IID_IHTMLImageElementFactory, riid)) {
+        TRACE("(%p)->(IID_IHTMLImageElementFactory %p)\n", This, ppv);
+        *ppv = HTMLIMGFACTORY(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv))
+        return *ppv ? S_OK : E_NOINTERFACE;
+
+    if(*ppv) {
+        IUnknown_AddRef((IUnknown*)*ppv);
+        return S_OK;
+    }
+
+    WARN("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI HTMLImageElementFactory_AddRef(IHTMLImageElementFactory *iface)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI HTMLImageElementFactory_Release(IHTMLImageElementFactory *iface)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+        heap_free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI HTMLImageElementFactory_GetTypeInfoCount(IHTMLImageElementFactory *iface,
+        UINT *pctinfo)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pctinfo);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLImageElementFactory_GetTypeInfo(IHTMLImageElementFactory *iface,
+        UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLImageElementFactory_GetIDsOfNames(IHTMLImageElementFactory *iface,
+        REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid,
+        DISPID *rgDispId)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames,
+            cNames, lcid, rgDispId);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLImageElementFactory_Invoke(IHTMLImageElementFactory *iface,
+        DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
+        DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+        UINT *puArgErr)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
+            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    return E_NOTIMPL;
+}
+
+static LONG var_to_size(const VARIANT *v)
+{
+    switch(V_VT(v)) {
+    case VT_EMPTY:
+        return 0;
+    case VT_I4:
+        return V_I4(v);
+    case VT_BSTR: {
+        LONG ret;
+        HRESULT hres;
+
+        hres = VarI4FromStr(V_BSTR(v), 0, 0, &ret);
+        if(FAILED(hres)) {
+            FIXME("VarI4FromStr failed: %08x\n", hres);
+            return 0;
+        }
+        return ret;
+    }
+    default:
+        FIXME("unsupported size %s\n", debugstr_variant(v));
+    }
+    return 0;
+}
+
+static HRESULT WINAPI HTMLImageElementFactory_create(IHTMLImageElementFactory *iface,
+        VARIANT width, VARIANT height, IHTMLImgElement **img_elem)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    IHTMLImgElement *img;
+    HTMLElement *elem;
+    nsIDOMHTMLElement *nselem;
+    LONG l;
+    HRESULT hres;
+
+    static const PRUnichar imgW[] = {'I','M','G',0};
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_variant(&width),
+            debugstr_variant(&height), img_elem);
+
+    if(!This->window || !This->window->doc) {
+        WARN("NULL doc\n");
+        return E_UNEXPECTED;
+    }
+
+    *img_elem = NULL;
+
+    hres = create_nselem(This->window->doc, imgW, &nselem);
+    if(FAILED(hres))
+        return hres;
+
+    elem = HTMLElement_Create(This->window->doc, (nsIDOMNode*)nselem, FALSE);
+    if(!elem) {
+        ERR("HTMLElement_Create failed\n");
+        return E_FAIL;
+    }
+
+    hres = IHTMLElement_QueryInterface(HTMLELEM(elem), &IID_IHTMLImgElement, (void**)&img);
+    if(FAILED(hres)) {
+        ERR("IHTMLElement_QueryInterface failed: 0x%08x\n", hres);
+        return hres;
+    }
+
+    nsIDOMHTMLElement_Release(nselem);
+
+    l = var_to_size(&width);
+    if(l)
+        IHTMLImgElement_put_width(img, l);
+    l = var_to_size(&height);
+    if(l)
+        IHTMLImgElement_put_height(img, l);
+
+    *img_elem = img;
+    return S_OK;
+}
+
+static HRESULT HTMLImageElementFactory_value(IUnknown *iface, LCID lcid,
+        WORD flags, DISPPARAMS *params, VARIANT *res, EXCEPINFO *ei,
+        IServiceProvider *caller)
+{
+    HTMLImageElementFactory *This = HTMLIMGFACTORY_THIS(iface);
+    IHTMLImgElement *img;
+    VARIANT empty, *width, *height;
+    HRESULT hres;
+    int argc = params->cArgs - params->cNamedArgs;
+
+    V_VT(res) = VT_NULL;
+
+    V_VT(&empty) = VT_EMPTY;
+
+    width = argc >= 1 ? params->rgvarg + (params->cArgs - 1) : &empty;
+    height = argc >= 2 ? params->rgvarg + (params->cArgs - 2) : &empty;
+
+    hres = IHTMLImageElementFactory_create(HTMLIMGFACTORY(This), *width, *height, &img);
+    if(FAILED(hres))
+        return hres;
+
+    V_VT(res) = VT_DISPATCH;
+    V_DISPATCH(res) = (IDispatch*)img;
+
+    return S_OK;
+}
+
+#undef HTMLIMGFACTORY_THIS
+
+static const IHTMLImageElementFactoryVtbl HTMLImageElementFactoryVtbl = {
+    HTMLImageElementFactory_QueryInterface,
+    HTMLImageElementFactory_AddRef,
+    HTMLImageElementFactory_Release,
+    HTMLImageElementFactory_GetTypeInfoCount,
+    HTMLImageElementFactory_GetTypeInfo,
+    HTMLImageElementFactory_GetIDsOfNames,
+    HTMLImageElementFactory_Invoke,
+    HTMLImageElementFactory_create
+};
+
+static const tid_t HTMLImageElementFactory_iface_tids[] = {
+    IHTMLImageElementFactory_tid,
+    0
+};
+
+static const dispex_static_data_vtbl_t HTMLImageElementFactory_dispex_vtbl = {
+    HTMLImageElementFactory_value,
+    NULL,
+    NULL
+};
+
+static dispex_static_data_t HTMLImageElementFactory_dispex = {
+    &HTMLImageElementFactory_dispex_vtbl,
+    IHTMLImageElementFactory_tid,
+    NULL,
+    HTMLImageElementFactory_iface_tids
+};
+
+HTMLImageElementFactory *HTMLImageElementFactory_Create(HTMLWindow *window)
+{
+    HTMLImageElementFactory *ret;
+
+    ret = heap_alloc(sizeof(HTMLImageElementFactory));
+
+    ret->lpHTMLImageElementFactoryVtbl = &HTMLImageElementFactoryVtbl;
+    ret->ref = 1;
+    ret->window = window;
+
+    init_dispex(&ret->dispex, (IUnknown*)HTMLIMGFACTORY(ret), &HTMLImageElementFactory_dispex);
+
+    return ret;
 }

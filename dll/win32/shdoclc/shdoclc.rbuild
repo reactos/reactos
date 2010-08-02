@@ -5,6 +5,5 @@
 	<include base="shdocvw">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
-	<library>kernel32</library>
 	<file>rsrc.rc</file>
 </module>

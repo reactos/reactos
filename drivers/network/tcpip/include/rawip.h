@@ -4,8 +4,8 @@
  * FILE:        include/rawip.h
  * PURPOSE:     Raw IP types and constants
  */
-#ifndef __RAWIP_H
-#define __RAWIP_H
+
+#pragma once
 
 NTSTATUS RawIPSendDatagram(
     PADDRESS_FILE AddrFile,
@@ -14,7 +14,7 @@ NTSTATUS RawIPSendDatagram(
     ULONG DataSize,
     PULONG DataUsed);
 
-VOID RawIPReceive(
+VOID RawIpReceive(
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
 
@@ -25,6 +25,7 @@ NTSTATUS RawIPShutdown(
     VOID);
 
 NTSTATUS AddGenericHeaderIPv4(
+    PADDRESS_FILE AddrFile,
     PIP_ADDRESS RemoteAddress,
     USHORT RemotePort,
     PIP_ADDRESS LocalAddress,
@@ -34,7 +35,5 @@ NTSTATUS AddGenericHeaderIPv4(
     UINT Protocol,
     UINT ExtraLength,
     PVOID *NextHeader );
-
-#endif /* __RAWIP_H */
 
 /* EOF */

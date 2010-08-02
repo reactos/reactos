@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
@@ -24,8 +24,7 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#ifndef __FSLIST_H__
-#define __FSLIST_H__
+#pragma once
 
 #include <fmifs/fmifs.h>
 
@@ -75,7 +74,5 @@ ScrollDownFileSystemList(
 VOID
 ScrollUpFileSystemList(
     IN PFILE_SYSTEM_LIST List);
-
-#endif /* __FSLIST_H__ */
 
 /* EOF */

@@ -125,7 +125,10 @@ static UINT alter_add_column(MSIALTERVIEW *av)
         return r;
 
     if (check_column_exists(av->db, av->colinfo->table, av->colinfo->column))
+    {
+        columns->ops->delete(columns);
         return ERROR_BAD_QUERY_SYNTAX;
+    }
 
     r = MSI_OpenQuery(av->db, &view, query, av->colinfo->table, av->colinfo->column);
     if (r == ERROR_SUCCESS)
@@ -183,11 +186,12 @@ static UINT ALTER_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *col
 }
 
 static UINT ALTER_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name)
 {
     MSIALTERVIEW *av = (MSIALTERVIEW*)view;
 
-    TRACE("%p %d %p %p\n", av, n, name, type );
+    TRACE("%p %d %p %p %p %p\n", av, n, name, type, temporary, table_name );
 
     return ERROR_FUNCTION_FAILED;
 }
@@ -257,8 +261,11 @@ UINT ALTER_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR name, column_inf
         return ERROR_FUNCTION_FAILED;
 
     r = TABLE_CreateView( db, name, &av->table );
-    if (r != ERROR_SUCCESS || !av->table)
+    if (r != ERROR_SUCCESS)
+    {
+        msi_free( av );
         return r;
+    }
 
     if (colinfo)
         colinfo->table = name;

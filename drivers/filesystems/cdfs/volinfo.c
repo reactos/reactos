@@ -12,9 +12,9 @@
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
 *
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software
-*  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*  You should have received a copy of the GNU General Public License along
+*  with this program; if not, write to the Free Software Foundation, Inc.,
+*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 /* $Id$
 *
@@ -139,8 +139,12 @@ CdfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
 
 static NTSTATUS
-CdfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-                           PULONG BufferLength)
+CdfsGetFsDeviceInformation
+(
+    PDEVICE_OBJECT DeviceObject,
+    PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
+    PULONG BufferLength
+)
 {
     DPRINT("CdfsGetFsDeviceInformation()\n");
     DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
@@ -151,7 +155,7 @@ CdfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
         return(STATUS_BUFFER_OVERFLOW);
 
     FsDeviceInfo->DeviceType = FILE_DEVICE_CD_ROM;
-    FsDeviceInfo->Characteristics = 0; /* FIXME: fix this !! */
+    FsDeviceInfo->Characteristics = DeviceObject->Characteristics;
 
     DPRINT("FsdGetFsDeviceInformation() finished.\n");
 
@@ -203,7 +207,8 @@ CdfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
         break;
 
     case FileFsDeviceInformation:
-        Status = CdfsGetFsDeviceInformation(SystemBuffer,
+        Status = CdfsGetFsDeviceInformation(DeviceObject,
+            SystemBuffer,
             &BufferLength);
         break;
 

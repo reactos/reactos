@@ -12,13 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FAT_H
-#define __FAT_H
+#pragma once
 
 #include <pshpack1.h>
 typedef struct _FAT_BOOTSECTOR
@@ -144,35 +143,17 @@ typedef struct
 } FATX_DIRENTRY, * PFATX_DIRENTRY;
 #include <poppack.h>
 
+typedef struct _FAT_VOLUME_INFO *PFAT_VOLUME_INFO;
+
 typedef struct
 {
+	UCHAR	Attributes;		/* File attributes */
 	ULONG	FileSize;		/* File size */
 	ULONG	FilePointer;		/* File pointer */
 	ULONG*	FileFatChain;		/* File fat chain array */
 	ULONG	DriveNumber;
+	PFAT_VOLUME_INFO	Volume;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
-
-
-
-BOOLEAN	FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
-PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
-BOOLEAN	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-BOOLEAN	FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
-BOOLEAN	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
-FILE*	FatOpenFile(PCSTR FileName);
-ULONG	FatCountClustersInChain(ULONG StartCluster);
-ULONG*	FatGetClusterChainArray(ULONG StartCluster);
-BOOLEAN	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
-BOOLEAN	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
-BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
-BOOLEAN	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG		FatGetFileSize(FILE *FileHandle);
-VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG		FatGetFilePointer(FILE *FileHandle);
-BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-
 
 #define	ATTR_NORMAL		0x00
 #define	ATTR_READONLY	0x01
@@ -191,6 +172,4 @@ BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG Sector
 
 #define ISFATX(FT) ((FT) == FATX16 || (FT) == FATX32)
 
-extern const FS_VTBL FatVtbl;
-
-#endif // #defined __FAT_H
+const DEVVTBL* FatMount(ULONG DeviceId);

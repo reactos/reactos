@@ -17,6 +17,12 @@
 
 /* FIXME: NDK */
 #define HIGH_PRIORITY 31
+#define SXS_SUPPORT_FIXME
+
+NTSTATUS
+WINAPI
+BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
+                       IN PCLIENT_ID ClientId);
 
 /* FUNCTIONS *****************************************************************/
 static
@@ -158,55 +164,75 @@ CreateRemoteThread(HANDLE hProcess,
         return NULL;
     }
 
-    #ifdef SXS_SUPPORT_ENABLED
     /* Are we in the same process? */
-    if (Process = NtCurrentProcess())
+    if (hProcess == NtCurrentProcess())
     {
         PTEB Teb;
         PVOID ActivationContextStack;
-        PTHREAD_BASIC_INFORMATION ThreadBasicInfo;
-        PACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
+        THREAD_BASIC_INFORMATION ThreadBasicInfo;
+#ifndef SXS_SUPPORT_FIXME
+        ACTIVATION_CONTEXT_BASIC_INFORMATION ActivationCtxInfo;
         ULONG_PTR Cookie;
+#endif
+        ULONG retLen;
 
         /* Get the TEB */
         Status = NtQueryInformationThread(hThread,
-                                          ThreadBasicIformation,
+                                          ThreadBasicInformation,
                                           &ThreadBasicInfo,
                                           sizeof(ThreadBasicInfo),
-                                          NULL);
-
-        /* Allocate the Activation Context Stack */
-        Status = RtlAllocateActivationContextStack(&ActivationContextStack);
-        Teb = ThreadBasicInfo.TebBaseAddress;
-
-        /* Save it */
-        Teb->ActivationContextStackPointer = ActivationContextStack;
-
-        /* Query the Context */
-        Status = RtlQueryInformationActivationContext(1,
-                                                      0,
-                                                      NULL,
-                                                      ActivationContextBasicInformation,
-                                                      &ActivationCtxInfo,
-                                                      sizeof(ActivationCtxInfo),
-                                                      NULL);
-
-        /* Does it need to be activated? */
-        if (!ActivationCtxInfo.hActCtx)
+                                          &retLen);
+        if (NT_SUCCESS(Status))
         {
-            /* Activate it */
-            Status = RtlActivateActivationContextEx(1,
-                                                    Teb,
-                                                    ActivationCtxInfo.hActCtx,
-                                                    &Cookie);
+            /* Allocate the Activation Context Stack */
+            Status = RtlAllocateActivationContextStack(&ActivationContextStack);
         }
+
+        if (NT_SUCCESS(Status))
+        {
+            Teb = ThreadBasicInfo.TebBaseAddress;
+
+            /* Save it */
+            Teb->ActivationContextStackPointer = ActivationContextStack;
+#ifndef SXS_SUPPORT_FIXME
+            /* Query the Context */
+            Status = RtlQueryInformationActivationContext(1,
+                                                          0,
+                                                          NULL,
+                                                          ActivationContextBasicInformation,
+                                                          &ActivationCtxInfo,
+                                                          sizeof(ActivationCtxInfo),
+                                                          &retLen);
+            if (NT_SUCCESS(Status))
+            {
+                /* Does it need to be activated? */
+                if (!ActivationCtxInfo.hActCtx)
+                {
+                    /* Activate it */
+                    Status = RtlActivateActivationContext(1,
+                                                          ActivationCtxInfo.hActCtx,
+                                                          &Cookie);
+                    if (!NT_SUCCESS(Status))
+                        DPRINT1("RtlActivateActivationContext failed %x\n", Status);
+                }
+            }
+            else
+                DPRINT1("RtlQueryInformationActivationContext failed %x\n", Status);
+#endif
+        }
+        else
+            DPRINT1("RtlAllocateActivationContextStack failed %x\n", Status);
     }
-    #endif
 
-    /* FIXME: Notify CSR */
-
+    /* Notify CSR */
+    Status = BasepNotifyCsrOfThread(hThread, &ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+    
     /* Success */
-    if(lpThreadId) *lpThreadId = (DWORD)ClientId.UniqueThread;
+    if(lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
 
     /* Resume it if asked */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
@@ -226,7 +252,7 @@ WINAPI
 ExitThread(DWORD uExitCode)
 {
     NTSTATUS Status;
-    BOOLEAN LastThread;
+    ULONG LastThread;
 
     /*
      * Terminate process if this is the last thread
@@ -235,7 +261,7 @@ ExitThread(DWORD uExitCode)
     Status = NtQueryInformationThread(NtCurrentThread(),
                                       ThreadAmILastThread,
                                       &LastThread,
-                                      sizeof(BOOLEAN),
+                                      sizeof(LastThread),
                                       NULL);
     if (NT_SUCCESS(Status) && LastThread)
     {
@@ -250,8 +276,9 @@ ExitThread(DWORD uExitCode)
     NtCurrentTeb()->FreeStackOnTermination = TRUE;
     NtTerminateThread(NULL, uExitCode);
 
-    /* We will never reach this place. This silences the compiler */
-    ExitThread(uExitCode);
+    /* We should never reach this place */
+    DPRINT1("It should not happen\n");
+    while (TRUE) ;
 }
 
 /*
@@ -263,13 +290,13 @@ OpenThread(DWORD dwDesiredAccess,
            BOOL bInheritHandle,
            DWORD dwThreadId)
 {
-    NTSTATUS errCode;
+    NTSTATUS Status;
     HANDLE ThreadHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     CLIENT_ID ClientId ;
 
     ClientId.UniqueProcess = 0;
-    ClientId.UniqueThread = (HANDLE)dwThreadId;
+    ClientId.UniqueThread = ULongToHandle(dwThreadId);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
@@ -277,13 +304,13 @@ OpenThread(DWORD dwDesiredAccess,
                                NULL,
                                NULL);
 
-    errCode = NtOpenThread(&ThreadHandle,
-                           dwDesiredAccess,
-                           &ObjectAttributes,
-                           &ClientId);
-    if (!NT_SUCCESS(errCode))
+    Status = NtOpenThread(&ThreadHandle,
+                          dwDesiredAccess,
+                          &ObjectAttributes,
+                          &ClientId);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus (errCode);
+        SetLastErrorByStatus(Status);
         return NULL;
     }
 
@@ -306,9 +333,7 @@ BOOL
 WINAPI
 SwitchToThread(VOID)
 {
-    NTSTATUS Status;
-    Status = NtYieldExecution();
-    return Status != STATUS_NO_YIELD_PERFORMED;
+    return NtYieldExecution() != STATUS_NO_YIELD_PERFORMED;
 }
 
 
@@ -319,7 +344,7 @@ DWORD
 WINAPI
 GetCurrentThreadId(VOID)
 {
-    return (DWORD)(NtCurrentTeb()->ClientId).UniqueThread;
+    return HandleToUlong(NtCurrentTeb()->ClientId.UniqueThread);
 }
 
 /*
@@ -653,28 +678,37 @@ SetThreadPriorityBoost(IN HANDLE hThread,
 /*
  * @implemented
  */
-BOOL WINAPI
+BOOL
+WINAPI
 GetThreadSelectorEntry(IN HANDLE hThread,
-		       IN DWORD dwSelector,
-		       OUT LPLDT_ENTRY lpSelectorEntry)
+                       IN DWORD dwSelector,
+                       OUT LPLDT_ENTRY lpSelectorEntry)
 {
-  DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
-  NTSTATUS Status;
+#ifdef _M_IX86
+    DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
+    NTSTATUS Status;
 
-  DescriptionTableEntry.Selector = dwSelector;
-  Status = NtQueryInformationThread(hThread,
-                                    ThreadDescriptorTableEntry,
-                                    &DescriptionTableEntry,
-                                    sizeof(DESCRIPTOR_TABLE_ENTRY),
-                                    NULL);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
+    /* Set the selector and do the query */
+    DescriptionTableEntry.Selector = dwSelector;
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadDescriptorTableEntry,
+                                      &DescriptionTableEntry,
+                                      sizeof(DESCRIPTOR_TABLE_ENTRY),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    /* Success, return the selector */
+    *lpSelectorEntry = DescriptionTableEntry.Descriptor;
+    return TRUE;
+#else
+    DPRINT1("Calling GetThreadSelectorEntry!\n");
     return FALSE;
-  }
-
-  *lpSelectorEntry = DescriptionTableEntry.Descriptor;
-  return TRUE;
+#endif
 }
 
 /*
@@ -697,7 +731,7 @@ SetThreadIdealProcessor(HANDLE hThread,
         return -1;
     }
 
-    return dwIdealProcessor;
+    return (DWORD)Status;
 }
 
 /*
@@ -720,7 +754,7 @@ GetProcessIdOfThread(HANDLE Thread)
     return 0;
   }
 
-  return (DWORD)ThreadBasic.ClientId.UniqueProcess;
+  return HandleToUlong(ThreadBasic.ClientId.UniqueProcess);
 }
 
 /*
@@ -743,17 +777,17 @@ GetThreadId(HANDLE Thread)
     return 0;
   }
 
-  return (DWORD)ThreadBasic.ClientId.UniqueThread;
+  return HandleToUlong(ThreadBasic.ClientId.UniqueThread);
 }
 
 /*
  * @unimplemented
  */
 LANGID WINAPI
-SetThreadUILanguage(WORD wReserved)
+SetThreadUILanguage(LANGID LangId)
 {
-  DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", wReserved);
-  return 0;
+  DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", LangId);
+  return LangId;
 }
 
 static void CALLBACK
@@ -773,10 +807,13 @@ QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
 
   Status = NtQueueApcThread(hThread, IntCallUserApc, pfnAPC,
                             (PVOID)dwData, NULL);
-  if (Status)
+  if (!NT_SUCCESS(Status))
+  {
     SetLastErrorByStatus(Status);
+    return 0;
+  }
 
-  return NT_SUCCESS(Status);
+  return 1;
 }
 
 /*
@@ -942,16 +979,16 @@ RegisterWaitForSingleObject(
     ULONG dwFlags
     )
 {
-    NTSTATUS Status = RtlRegisterWait( phNewWaitObject,
-                                       hObject,
-                                       Callback,
-                                       Context,
-                                       dwMilliseconds,
-                                       dwFlags );
+    NTSTATUS Status = RtlRegisterWait(phNewWaitObject,
+                                      hObject,
+                                      Callback,
+                                      Context,
+                                      dwMilliseconds,
+                                      dwFlags);
 
-    if (Status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
     return TRUE;
@@ -974,18 +1011,19 @@ RegisterWaitForSingleObjectEx(
     NTSTATUS Status;
     HANDLE hNewWaitObject;
 
-    Status = RtlRegisterWait( &hNewWaitObject,
-                               hObject,
-                               Callback,
-                               Context,
-                               dwMilliseconds,
-                               dwFlags );
+    Status = RtlRegisterWait(&hNewWaitObject,
+                             hObject,
+                             Callback,
+                             Context,
+                             dwMilliseconds,
+                             dwFlags);
 
-    if (Status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return NULL;
     }
+
     return hNewWaitObject;
 }
 
@@ -999,12 +1037,14 @@ UnregisterWait(
     HANDLE WaitHandle
     )
 {
-    NTSTATUS Status = RtlDeregisterWaitEx( WaitHandle, NULL );
-    if (Status != STATUS_SUCCESS)
+    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, NULL);
+
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
+
     return TRUE;
 }
 
@@ -1019,12 +1059,14 @@ UnregisterWaitEx(
     HANDLE CompletionEvent
     )
 {
-    NTSTATUS Status = RtlDeregisterWaitEx( WaitHandle, CompletionEvent );
-    if (Status != STATUS_SUCCESS)
+    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, CompletionEvent);
+
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
+
     return TRUE;
 }
 

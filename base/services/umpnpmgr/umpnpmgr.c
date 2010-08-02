@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
@@ -23,19 +23,23 @@
  * PURPOSE:          User-mode Plug and Play manager
  * PROGRAMMER:       Eric Kohl
  *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   Colin Finck (colin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
 //#define HAVE_SLIST_ENTRY_IMPLEMENTED
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <stdio.h>
 #include <cmtypes.h>
 #include <cmfuncs.h>
 #include <rtlfuncs.h>
+#include <setypes.h>
 #include <umpnpmgr/sysguid.h>
 #include <wdmguid.h>
 #include <cfgmgr32.h>
 #include <regstr.h>
+#include <userenv.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -47,14 +51,16 @@
 
 /* GLOBALS ******************************************************************/
 
-static VOID CALLBACK
-ServiceMain(DWORD argc, LPTSTR *argv);
-
-static SERVICE_TABLE_ENTRY ServiceTable[2] =
+static VOID CALLBACK ServiceMain(DWORD argc, LPWSTR *argv);
+static WCHAR ServiceName[] = L"PlugPlay";
+static SERVICE_TABLE_ENTRYW ServiceTable[] =
 {
-    {TEXT("PlugPlay"), ServiceMain},
+    {ServiceName, ServiceMain},
     {NULL, NULL}
 };
+
+static SERVICE_STATUS_HANDLE ServiceStatusHandle;
+static SERVICE_STATUS ServiceStatus;
 
 static WCHAR szRootDeviceId[] = L"HTREE\\ROOT\\0";
 
@@ -131,7 +137,7 @@ RpcServerThread(LPVOID lpParameter)
 }
 
 
-void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
+void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
@@ -222,6 +228,7 @@ DWORD PNP_ReportLogOn(
     BOOL Admin,
     DWORD ProcessId)
 {
+    DWORD ReturnValue = CR_FAILURE;
     HANDLE hProcess;
 
     UNREFERENCED_PARAMETER(hBinding);
@@ -229,32 +236,38 @@ DWORD PNP_ReportLogOn(
 
     DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
-    if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);
-
     /* Get the users token */
-    hProcess = OpenProcess(PROCESS_ALL_ACCESS,
-                           TRUE,
-                           ProcessId);
-    if (hProcess != NULL)
-    {
-        if (hUserToken != NULL)
-        {
-            CloseHandle(hUserToken);
-            hUserToken = NULL;
-        }
+    hProcess = OpenProcess(PROCESS_ALL_ACCESS, TRUE, ProcessId);
 
-        OpenProcessToken(hProcess,
-                         TOKEN_ALL_ACCESS,
-                         &hUserToken);
-        CloseHandle(hProcess);
+    if(!hProcess)
+    {
+        DPRINT1("OpenProcess failed with error %u\n", GetLastError());
+        goto cleanup;
+    }
+
+    if (hUserToken)
+    {
+        CloseHandle(hUserToken);
+        hUserToken = NULL;
+    }
+
+    if(!OpenProcessToken(hProcess, TOKEN_ASSIGN_PRIMARY | TOKEN_DUPLICATE | TOKEN_QUERY, &hUserToken))
+    {
+        DPRINT1("OpenProcessToken failed with error %u\n", GetLastError());
+        goto cleanup;
     }
 
     /* Trigger the installer thread */
-    /*if (hInstallEvent != NULL)
-        SetEvent(hInstallEvent);*/
+    if (hInstallEvent)
+        SetEvent(hInstallEvent);
 
-    return CR_SUCCESS;
+    ReturnValue = CR_SUCCESS;
+
+cleanup:
+    if(hProcess)
+        CloseHandle(hProcess);
+
+    return ReturnValue;
 }
 
 
@@ -656,11 +669,11 @@ DWORD PNP_GetDeviceRegProp(
             case CM_DRP_BUSNUMBER:
                 PlugPlayData.Property = DevicePropertyBusNumber;
                 break;
+#endif
 
             case CM_DRP_ENUMERATOR_NAME:
-                PlugPlayData.Property = DevicePropertyEnumeratorName;
+                PlugPlayData.Property = 15; //DevicePropertyEnumeratorName;
                 break;
-#endif
 
             default:
                 return CR_INVALID_PROPERTY;
@@ -820,8 +833,24 @@ DWORD PNP_CreateKey(
     DWORD samDesired,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    HKEY hKey = 0;
+
+    if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                        pszSubKey,
+                        0,
+                        NULL,
+                        0,
+                        KEY_ALL_ACCESS,
+                        NULL,
+                        &hKey,
+                        NULL))
+        return CR_REGISTRY_ERROR;
+
+    /* FIXME: Set security key */
+
+    RegCloseKey(hKey);
+
+    return CR_SUCCESS;
 }
 
 
@@ -1074,48 +1103,102 @@ DWORD PNP_CreateDevInst(
 }
 
 
+static CONFIGRET
+MoveDeviceInstance(LPWSTR pszDeviceInstanceDestination,
+                   LPWSTR pszDeviceInstanceSource)
+{
+    DPRINT("MoveDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static CONFIGRET
+SetupDeviceInstance(LPWSTR pszDeviceInstance,
+                    DWORD ulFlags)
+{
+    DPRINT("SetupDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static CONFIGRET
+EnableDeviceInstance(LPWSTR pszDeviceInstance)
+{
+    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    CONFIGRET ret = CR_SUCCESS;
+    NTSTATUS Status;
+
+    DPRINT("Enable device instance\n");
+
+    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, pszDeviceInstance);
+    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+    if (!NT_SUCCESS(Status))
+        ret = NtStatusToCrError(Status);
+
+    return ret;
+}
+
+
+static CONFIGRET
+DisableDeviceInstance(LPWSTR pszDeviceInstance)
+{
+    DPRINT("DisableDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+static CONFIGRET
+ReenumerateDeviceInstance(LPWSTR pszDeviceInstance)
+{
+    DPRINT("ReenumerateDeviceInstance: not implemented\n");
+    /* FIXME */
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
 /* Function 29 */
-#define PNP_DEVINST_SETUP       0x3
-#define PNP_DEVINST_ENABLE      0x4
-#define PNP_DEVINST_REENUMERATE 0x7
 DWORD PNP_DeviceInstanceAction(
     handle_t hBinding,
-    DWORD ulMajorAction,
-    DWORD ulMinorAction,
+    DWORD ulAction,
+    DWORD ulFlags,
     LPWSTR pszDeviceInstance1,
     LPWSTR pszDeviceInstance2)
 {
     CONFIGRET ret = CR_SUCCESS;
 
     UNREFERENCED_PARAMETER(hBinding);
-    UNREFERENCED_PARAMETER(ulMinorAction);
-    UNREFERENCED_PARAMETER(pszDeviceInstance1);
-    UNREFERENCED_PARAMETER(pszDeviceInstance2);
 
     DPRINT("PNP_DeviceInstanceAction() called\n");
 
-    switch (ulMajorAction)
+    switch (ulAction)
     {
+        case PNP_DEVINST_MOVE:
+            ret = MoveDeviceInstance(pszDeviceInstance1,
+                                     pszDeviceInstance2);
+            break;
+
         case PNP_DEVINST_SETUP:
-            DPRINT("Setup device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = SetupDeviceInstance(pszDeviceInstance1,
+                                      ulFlags);
             break;
 
         case PNP_DEVINST_ENABLE:
-            DPRINT("Enable device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = EnableDeviceInstance(pszDeviceInstance1);
+            break;
+
+        case PNP_DEVINST_DISABLE:
+            ret = DisableDeviceInstance(pszDeviceInstance1);
             break;
 
         case PNP_DEVINST_REENUMERATE:
-            DPRINT("Reenumerate device instance\n");
-            /* FIXME */
-            ret = CR_CALL_NOT_IMPLEMENTED;
+            ret = ReenumerateDeviceInstance(pszDeviceInstance1);
             break;
 
         default:
-            DPRINT1("Unknown function %lu\n", ulMajorAction);
+            DPRINT1("Unknown device action %lu: not implemented\n", ulAction);
             ret = CR_CALL_NOT_IMPLEMENTED;
     }
 
@@ -1462,8 +1545,70 @@ DWORD PNP_HwProfFlags(
     DWORD ulNameLength,
     DWORD ulFlags)
 {
-    UNIMPLEMENTED;
-    return CR_CALL_NOT_IMPLEMENTED;
+    CONFIGRET ret = CR_SUCCESS;
+    WCHAR szKeyName[MAX_PATH];
+    HKEY hKey;
+    HKEY hDeviceKey;
+    DWORD dwSize;
+
+    UNREFERENCED_PARAMETER(hBinding);
+
+    DPRINT("PNP_HwProfFlags() called\n");
+
+    if (ulConfig == 0)
+    {
+        wcscpy(szKeyName,
+               L"System\\CurrentControlSet\\HardwareProfiles\\Current\\System\\CurrentControlSet\\Enum");
+    }
+    else
+    {
+        swprintf(szKeyName,
+                 L"System\\CurrentControlSet\\HardwareProfiles\\%04u\\System\\CurrentControlSet\\Enum",
+                 ulConfig);
+    }
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      szKeyName,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
+        return CR_REGISTRY_ERROR;
+
+    if (ulAction == PNP_GET_HWPROFFLAGS)
+    {
+         if (RegOpenKeyExW(hKey,
+                           pDeviceID,
+                           0,
+                           KEY_QUERY_VALUE,
+                           &hDeviceKey) != ERROR_SUCCESS)
+         {
+            *pulValue = 0;
+         }
+         else
+         {
+             dwSize = sizeof(DWORD);
+             if (!RegQueryValueExW(hDeviceKey,
+                                   L"CSConfigFlags",
+                                   NULL,
+                                   NULL,
+                                   (LPBYTE)pulValue,
+                                   &dwSize) != ERROR_SUCCESS)
+             {
+                 *pulValue = 0;
+             }
+
+             RegCloseKey(hDeviceKey);
+         }
+    }
+    else if (ulAction == PNP_SET_HWPROFFLAGS)
+    {
+        /* FIXME: not implemented yet */
+        ret = CR_CALL_NOT_IMPLEMENTED;
+    }
+
+    RegCloseKey(hKey);
+
+    return ret;
 }
 
 
@@ -1682,7 +1827,9 @@ DWORD PNP_QueryResConfList(
 
 /* Function 55 */
 DWORD PNP_SetHwProf(
-    handle_t hBinding)
+    handle_t hBinding,
+    DWORD ulHardwareProfile,
+    DWORD ulFlags)
 {
     UNIMPLEMENTED;
     return CR_CALL_NOT_IMPLEMENTED;
@@ -1900,18 +2047,29 @@ DWORD PNP_DeleteServiceDevices(
 }
 
 
-typedef BOOL (WINAPI *PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
-
 static BOOL
 InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
 {
     PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
-    HMODULE hNewDev = NULL;
-    PDEV_INSTALL_W DevInstallW;
     NTSTATUS Status;
     BOOL DeviceInstalled = FALSE;
+    DWORD BytesWritten;
+    DWORD Value;
+    HANDLE hPipe = INVALID_HANDLE_VALUE;
+    LPVOID Environment = NULL;
+    PROCESS_INFORMATION ProcessInfo;
+    STARTUPINFOW StartupInfo;
+    UUID RandomUuid;
+
+    /* The following lengths are constant (see below), they cannot overflow */
+    WCHAR CommandLine[116];
+    WCHAR InstallEventName[73];
+    WCHAR PipeName[74];
+    WCHAR UuidString[39];
 
     DPRINT("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
+
+    ZeroMemory(&ProcessInfo, sizeof(ProcessInfo));
 
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          DeviceInstance);
@@ -1934,34 +2092,109 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
         return TRUE;
     }
 
-    /* Install device */
-    SetEnvironmentVariableW(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+    /* Create a random UUID for the named pipe */
+    UuidCreate(&RandomUuid);
+    swprintf(UuidString, L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+        RandomUuid.Data1, RandomUuid.Data2, RandomUuid.Data3,
+        RandomUuid.Data4[0], RandomUuid.Data4[1], RandomUuid.Data4[2],
+        RandomUuid.Data4[3], RandomUuid.Data4[4], RandomUuid.Data4[5],
+        RandomUuid.Data4[6], RandomUuid.Data4[7]);
 
-    hNewDev = LoadLibraryW(L"newdev.dll");
-    if (!hNewDev)
+    /* Create the named pipe */
+    wcscpy(PipeName, L"\\\\.\\pipe\\PNP_Device_Install_Pipe_0.");
+    wcscat(PipeName, UuidString);
+    hPipe = CreateNamedPipeW(PipeName, PIPE_ACCESS_OUTBOUND, PIPE_TYPE_BYTE, 1, 512, 512, 0, NULL);
+
+    if(hPipe == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("Unable to load newdev.dll\n");
+        DPRINT1("CreateNamedPipeW failed with error %u\n", GetLastError());
         goto cleanup;
     }
 
-    DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
-    if (!DevInstallW)
+    /* Launch rundll32 to call ClientSideInstallW */
+    wcscpy(CommandLine, L"rundll32.exe newdev.dll,ClientSideInstall ");
+    wcscat(CommandLine, PipeName);
+
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+
+    if(hUserToken)
     {
-        DPRINT1("'DevInstallW' not found in newdev.dll\n");
+        /* newdev has to run under the environment of the current user */
+        if(!CreateEnvironmentBlock(&Environment, hUserToken, FALSE))
+        {
+            DPRINT1("CreateEnvironmentBlock failed with error %d\n", GetLastError());
+            goto cleanup;
+        }
+
+        if(!CreateProcessAsUserW(hUserToken, NULL, CommandLine, NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, Environment, NULL, &StartupInfo, &ProcessInfo))
+        {
+            DPRINT1("CreateProcessAsUserW failed with error %u\n", GetLastError());
+            goto cleanup;
+        }
+    }
+    else
+    {
+        /* FIXME: This is probably not correct, I guess newdev should never be run with SYSTEM privileges.
+
+           Still, we currently do that in 2nd stage setup and probably Console mode as well, so allow it here.
+           (ShowWizard is only set to FALSE for these two modes) */
+        ASSERT(!ShowWizard);
+
+        if(!CreateProcessW(NULL, CommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo))
+        {
+            DPRINT1("CreateProcessW failed with error %u\n", GetLastError());
+            goto cleanup;
+        }
+    }
+
+    /* Wait for the function to connect to our pipe */
+    if(!ConnectNamedPipe(hPipe, NULL))
+    {
+        DPRINT1("ConnectNamedPipe failed with error %u\n", GetLastError());
         goto cleanup;
     }
 
-    if (!DevInstallW(NULL, NULL, DeviceInstance, ShowWizard ? SW_SHOWNOACTIVATE : SW_HIDE))
+    /* Pass the data. The following output is partly compatible to Windows XP SP2 (researched using a modified newdev.dll to log this stuff) */
+    wcscpy(InstallEventName, L"Global\\PNP_Device_Install_Event_0.");
+    wcscat(InstallEventName, UuidString);
+
+    Value = sizeof(InstallEventName);
+    WriteFile(hPipe, &Value, sizeof(Value), &BytesWritten, NULL);
+    WriteFile(hPipe, InstallEventName, Value, &BytesWritten, NULL);
+
+    /* I couldn't figure out what the following value means under WinXP. It's usually 0 in my tests, but was also 5 once.
+       Therefore the following line is entirely ReactOS-specific. We use the value here to pass the ShowWizard variable. */
+    WriteFile(hPipe, &ShowWizard, sizeof(ShowWizard), &BytesWritten, NULL);
+
+    Value = (wcslen(DeviceInstance) + 1) * sizeof(WCHAR);
+    WriteFile(hPipe, &Value, sizeof(Value), &BytesWritten, NULL);
+    WriteFile(hPipe, DeviceInstance, Value, &BytesWritten, NULL);
+
+    /* Wait for newdev.dll to finish processing */
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+
+    /* The following check for success is probably not compatible to Windows, but should do its job */
+    if(!GetExitCodeProcess(ProcessInfo.hProcess, &Value))
     {
-        DPRINT1("DevInstallW('%S') failed\n", DeviceInstance);
+        DPRINT1("GetExitCodeProcess failed with error %u\n", GetLastError());
         goto cleanup;
     }
 
-    DeviceInstalled = TRUE;
+    DeviceInstalled = Value;
 
 cleanup:
-    if (hNewDev != NULL)
-        FreeLibrary(hNewDev);
+    if(hPipe != INVALID_HANDLE_VALUE)
+        CloseHandle(hPipe);
+
+    if(Environment)
+        DestroyEnvironmentBlock(Environment);
+
+    if(ProcessInfo.hProcess)
+        CloseHandle(ProcessInfo.hProcess);
+
+    if(ProcessInfo.hThread)
+        CloseHandle(ProcessInfo.hThread);
 
     return DeviceInstalled;
 }
@@ -2171,7 +2404,7 @@ PnpEventThread(LPVOID lpParameter)
             DWORD len;
             DWORD DeviceIdLength;
 
-            DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
@@ -2190,6 +2423,11 @@ PnpEventThread(LPVOID lpParameter)
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
+        }
+        else if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
+        {
+            DPRINT("Device arrival: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            /* FIXME: ? */
         }
         else
         {
@@ -2210,6 +2448,72 @@ PnpEventThread(LPVOID lpParameter)
 }
 
 
+static VOID
+UpdateServiceStatus(DWORD dwState)
+{
+    ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+    ServiceStatus.dwCurrentState = dwState;
+    ServiceStatus.dwControlsAccepted = 0;
+    ServiceStatus.dwWin32ExitCode = 0;
+    ServiceStatus.dwServiceSpecificExitCode = 0;
+    ServiceStatus.dwCheckPoint = 0;
+
+    if (dwState == SERVICE_START_PENDING ||
+        dwState == SERVICE_STOP_PENDING ||
+        dwState == SERVICE_PAUSE_PENDING ||
+        dwState == SERVICE_CONTINUE_PENDING)
+        ServiceStatus.dwWaitHint = 10000;
+    else
+        ServiceStatus.dwWaitHint = 0;
+
+    SetServiceStatus(ServiceStatusHandle,
+                     &ServiceStatus);
+}
+
+
+static DWORD WINAPI
+ServiceControlHandler(DWORD dwControl,
+                      DWORD dwEventType,
+                      LPVOID lpEventData,
+                      LPVOID lpContext)
+{
+    DPRINT1("ServiceControlHandler() called\n");
+
+    switch (dwControl)
+    {
+        case SERVICE_CONTROL_STOP:
+            DPRINT1("  SERVICE_CONTROL_STOP received\n");
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_PAUSE:
+            DPRINT1("  SERVICE_CONTROL_PAUSE received\n");
+            UpdateServiceStatus(SERVICE_PAUSED);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_CONTINUE:
+            DPRINT1("  SERVICE_CONTROL_CONTINUE received\n");
+            UpdateServiceStatus(SERVICE_RUNNING);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_INTERROGATE:
+            DPRINT1("  SERVICE_CONTROL_INTERROGATE received\n");
+            SetServiceStatus(ServiceStatusHandle,
+                             &ServiceStatus);
+            return ERROR_SUCCESS;
+
+        case SERVICE_CONTROL_SHUTDOWN:
+            DPRINT1("  SERVICE_CONTROL_SHUTDOWN received\n");
+            UpdateServiceStatus(SERVICE_STOPPED);
+            return ERROR_SUCCESS;
+
+        default :
+            DPRINT1("  Control %lu received\n");
+            return ERROR_CALL_NOT_IMPLEMENTED;
+    }
+}
+
+
 static VOID CALLBACK
 ServiceMain(DWORD argc, LPTSTR *argv)
 {
@@ -2220,6 +2524,17 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("ServiceMain() called\n");
+
+    ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
+                                                        ServiceControlHandler,
+                                                        NULL);
+    if (!ServiceStatusHandle)
+    {
+        DPRINT1("RegisterServiceCtrlHandlerExW() failed! (Error %lu)\n", GetLastError());
+        return;
+    }
+
+    UpdateServiceStatus(SERVICE_START_PENDING);
 
     hThread = CreateThread(NULL,
                            0,
@@ -2248,6 +2563,8 @@ ServiceMain(DWORD argc, LPTSTR *argv)
     if (hThread != NULL)
         CloseHandle(hThread);
 
+    UpdateServiceStatus(SERVICE_RUNNING);
+
     DPRINT("ServiceMain() done\n");
 }
 
@@ -2255,12 +2572,16 @@ ServiceMain(DWORD argc, LPTSTR *argv)
 int
 wmain(int argc, WCHAR *argv[])
 {
+    BOOLEAN OldValue;
     DWORD dwError;
 
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
 
     DPRINT("Umpnpmgr: main() started\n");
+
+    /* We need this privilege for using CreateProcessAsUserW */
+    RtlAdjustPrivilege(SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, TRUE, FALSE, &OldValue);
 
     hInstallEvent = CreateEvent(NULL, TRUE, SetupIsActive()/*FALSE*/, NULL);
     if (hInstallEvent == NULL)

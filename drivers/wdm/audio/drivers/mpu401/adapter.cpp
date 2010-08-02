@@ -18,6 +18,8 @@
 #include <portcls.h>
 #include <debug.h>
 
+WCHAR DeviceName[] = L"Uart";
+
 NTSTATUS
 NTAPI
 StartDevice(
@@ -68,7 +70,7 @@ StartDevice(
     }
 
     DPRINT1("Registering subdevice via PcRegisterSubdevice\n");
-    Status = PcRegisterSubdevice(pDeviceObject, L"Uart", port);
+    Status = PcRegisterSubdevice(pDeviceObject, DeviceName, port);
 
     if (!NT_SUCCESS(Status))
     {

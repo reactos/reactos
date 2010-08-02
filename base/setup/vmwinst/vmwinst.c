@@ -14,10 +14,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * VMware is a registered trademark of VMware, Inc.
-*
+ *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
  * FILE:        subsys/system/vmwinst/vmwinst.c
@@ -29,6 +29,7 @@
 #include <newdev.h>
 #include <stdio.h>
 #include <string.h>
+#include <pseh/pseh2.h>
 #include "vmwinst.h"
 #include <debug.h>
 
@@ -61,14 +62,6 @@ static LONG AbortInstall = 0;
 #define WM_INSTSTATUSUPDATE (WM_USER + 4)
 
 /* Helper functions */
-
-LONG CALLBACK VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo)
-{
-    /* we're not running in VMware, just terminate the process */
-    ExitProcess(ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_PRIV_INSTRUCTION);
-    return EXCEPTION_CONTINUE_EXECUTION;
-}
-
 BOOL
 DetectVMware(int *Version)
 {
@@ -77,16 +70,35 @@ DetectVMware(int *Version)
     magic = 0;
     ver = 0;
 
-    /* Try using a VMware I/O port. If not running in VMware this'll throw an
-    exception! */
-#ifndef _MSC_VER
-    __asm__ __volatile__("inl  %%dx, %%eax"
-        : "=a" (ver), "=b" (magic)
-        : "0" (0x564d5868), "d" (0x5658), "c" (0xa));
+	_SEH2_TRY
+	{
+		/* Try using a VMware I/O port. If not running in VMware this'll throw an
+		exception! */
+#if defined(__GNUC__)
+		__asm__ __volatile__("inl  %%dx, %%eax"
+			: "=a" (ver), "=b" (magic)
+			: "0" (0x564d5868), "d" (0x5658), "c" (0xa));
+#elif defined(_MSC_VER)
+		__asm
+		{
+			push ebx
+			mov  ecx, 0xa
+			mov  edx, 0x5658
+			mov  eax, 0x564d5868
+			in   eax, dx
+			mov  [ver],   eax
+			mov  [magic], ebx
+			pop  ebx
+		}
 #else
-#error PLEASE WRITE THIS IN ASSEMBLY
+#error TODO
 #endif
-
+	}
+	_SEH2_EXCEPT(_SEH2_GetExceptionCode() == EXCEPTION_PRIV_INSTRUCTION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+	{
+		return FALSE;
+	}
+	_SEH2_END;
 
     if(magic == 0x564d5868)
     {
@@ -99,7 +111,7 @@ DetectVMware(int *Version)
 
 /* try to open the file */
 static BOOL
-FileExists(WCHAR *Path, WCHAR *File)
+DoesFileExist(WCHAR *Path, WCHAR *File)
 {
     WCHAR FileName[MAX_PATH + 1];
     HANDLE FileHandle;
@@ -183,9 +195,9 @@ IsVMwareCDInDrive(WCHAR *Drv)
                 continue;
             }
 
-            if(FileExists(SrcPath, vmx_fb) &&
-                (FileExists(SrcPath, vmx_mode) || FileExists(SrcPath, vmx_mode_v6)) &&
-                FileExists(SrcPath, vmx_svga))
+            if(DoesFileExist(SrcPath, vmx_fb) &&
+                (DoesFileExist(SrcPath, vmx_mode) || DoesFileExist(SrcPath, vmx_mode_v6)) &&
+                DoesFileExist(SrcPath, vmx_svga))
             {
                 *Drv = Current;
                 return TRUE;
@@ -389,7 +401,7 @@ PageWelcomeProc(
                 {
                     if(DriverFilesFound)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CONFIG);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CONFIG);
                         return TRUE;
                     }
                     break;
@@ -421,7 +433,7 @@ PageInsertDiscProc(
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 break;
             case PSN_WIZNEXT:
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSTALLING_VMWARE_TOOLS);
+                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_INSTALLING_VMWARE_TOOLS);
                 break;
             }
             break;
@@ -567,13 +579,13 @@ PageInstallingProc(
                 {
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
                     InstTerminateInstaller(FALSE);
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
                     return -1;
                 }
                 else
                 {
                     SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, FALSE, 0);
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
                 }
                 break;
             }
@@ -713,12 +725,12 @@ PageConfigProc(
                 {
                     if(StartVMwConfigWizard)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
                         return TRUE;
                     }
                     if(DriverFilesFound)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -797,7 +809,7 @@ PageChooseActionProc(
                 break;
             case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
                     return TRUE;
                 }
             case PSN_WIZNEXT:
@@ -815,7 +827,7 @@ PageChooseActionProc(
 
                     UninstallDriver = (i == IDC_UNINSTALL);
 
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, SelPage[i - IDC_CONFIGSETTINGS]);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SelPage[i - IDC_CONFIGSETTINGS]);
                     return TRUE;
                 }
             }
@@ -849,7 +861,7 @@ PageSelectDriverProc(
                 break;
             case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
                     return TRUE;
                 }
             case PSN_WIZNEXT:
@@ -876,7 +888,7 @@ PageSelectDriverProc(
                         WCHAR Msg[1024];
                         LoadString(hAppInstance, (ActivateVBE ? IDS_FAILEDTOSELVBEDRIVER : IDS_FAILEDTOSELVGADRIVER), Msg, sizeof(Msg) / sizeof(WCHAR));
                         MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
                         return TRUE;
                     }
                     break;
@@ -925,7 +937,7 @@ PageDoUninstallProc(
                             WCHAR Msg[1024];
                             LoadString(hAppInstance, (ActivateVBE ? IDS_FAILEDTOSELVBEDRIVER : IDS_FAILEDTOSELVGADRIVER), Msg, sizeof(Msg) / sizeof(WCHAR));
                             MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-                            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
+                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
                             return TRUE;
                         }
                         ShowUninstNotice(GetParent(hwndDlg));
@@ -1036,28 +1048,15 @@ wWinMain(HINSTANCE hInstance,
          int nCmdShow)
 {
 
-    PVOID ExceptionHandler;
     int Version;
     WCHAR *lc;
 
     hAppInstance = hInstance;
 
-    /* Setup a vectored exception handler to protect the detection. Don't use SEH
-    here so we notice the next time someone removes support for vectored
-    exception handling from ros... */
-    if (!(ExceptionHandler = AddVectoredExceptionHandler(0,
-        VectoredExceptionHandler)))
-    {
-        return 1;
-    }
-
     if(!DetectVMware(&Version))
     {
         return 1;
     }
-
-    /* unregister the handler */
-    RemoveVectoredExceptionHandler(ExceptionHandler);
 
     lc = DestinationPath;
     lc += GetSystemDirectory(DestinationPath, MAX_PATH) - 1;
@@ -1071,9 +1070,9 @@ wWinMain(HINSTANCE hInstance,
 
     SetCurrentDirectory(DestinationPath);
 
-    DriverFilesFound = FileExists(DestinationPath, vmx_fb) &&
-        FileExists(DestinationPath, vmx_mode) &&
-        FileExists(DestinationDriversPath, vmx_svga);
+    DriverFilesFound = DoesFileExist(DestinationPath, vmx_fb) &&
+        DoesFileExist(DestinationPath, vmx_mode) &&
+        DoesFileExist(DestinationDriversPath, vmx_svga);
 
     StartVMwConfigWizard = DriverFilesFound && IsVmwSVGAEnabled();
 

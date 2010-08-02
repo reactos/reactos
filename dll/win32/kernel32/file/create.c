@@ -102,6 +102,12 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    PVOID EaBuffer = NULL;
    ULONG EaLength = 0;
 
+   if (!lpFileName || !lpFileName[0])
+   {
+       SetLastError( ERROR_PATH_NOT_FOUND );
+       return INVALID_HANDLE_VALUE;
+   }
+
    TRACE("CreateFileW(lpFileName %S)\n",lpFileName);
 
    /* validate & translate the creation disposition */
@@ -170,14 +176,14 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
    {
       if(dwDesiredAccess & GENERIC_ALL)
-         Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_FOR_RECOVERY;
+         Flags |= FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REMOTE_INSTANCE;
       else
       {
          if(dwDesiredAccess & GENERIC_READ)
             Flags |= FILE_OPEN_FOR_BACKUP_INTENT;
 
          if(dwDesiredAccess & GENERIC_WRITE)
-            Flags |= FILE_OPEN_FOR_RECOVERY;
+            Flags |= FILE_OPEN_REMOTE_INSTANCE;
       }
    }
    else

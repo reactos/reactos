@@ -4,6 +4,10 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="uniata">.</include>
 	<include base="uniata">inc</include>
+	<group compilerset="gcc">
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	</group>
 	<!-- define name="_DEBUG" /-->
 	<library>ntoskrnl</library>
 	<library>hal</library>
@@ -19,6 +23,5 @@
 
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
-		<file>ros_glue_asm.s</file>
 	</directory>
 </module>

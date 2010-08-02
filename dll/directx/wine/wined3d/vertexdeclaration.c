@@ -5,6 +5,7 @@
  * Copyright 2004 Jason Edmeades
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,16 +27,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_decl);
 
-#define GLINFO_LOCATION This->wineD3DDevice->adapter->gl_info
-
 static void dump_wined3dvertexelement(const WINED3DVERTEXELEMENT *element) {
-    TRACE("     Stream: %d\n", element->Stream);
-    TRACE("     Offset: %d\n", element->Offset);
-    TRACE("       Type: %s (%#x)\n", debug_d3ddecltype(element->Type), element->Type);
-    TRACE("     Method: %s (%#x)\n", debug_d3ddeclmethod(element->Method), element->Method);
-    TRACE("      Usage: %s (%#x)\n", debug_d3ddeclusage(element->Usage), element->Usage);
-    TRACE("Usage index: %d\n", element->UsageIndex);
-    TRACE("   Register: %d\n", element->Reg);
+    TRACE("     format: %s (%#x)\n", debug_d3dformat(element->format), element->format);
+    TRACE(" input_slot: %u\n", element->input_slot);
+    TRACE("     offset: %u\n", element->offset);
+    TRACE("output_slot: %u\n", element->output_slot);
+    TRACE("     method: %s (%#x)\n", debug_d3ddeclmethod(element->method), element->method);
+    TRACE("      usage: %s (%#x)\n", debug_d3ddeclusage(element->usage), element->usage);
+    TRACE("  usage_idx: %u\n", element->usage_idx);
 }
 
 /* *******************************************
@@ -67,14 +66,10 @@ static ULONG WINAPI IWineD3DVertexDeclarationImpl_Release(IWineD3DVertexDeclarat
     ULONG ref;
     TRACE("(%p) : Releasing from %d\n", This, This->ref);
     ref = InterlockedDecrement(&This->ref);
-    if (ref == 0) {
-        if(iface == This->wineD3DDevice->stateBlock->vertexDecl) {
-            /* See comment in PixelShader::Release */
-            IWineD3DDeviceImpl_MarkStateDirty(This->wineD3DDevice, STATE_VDECL);
-        }
-
-        HeapFree(GetProcessHeap(), 0, This->pDeclarationWine);
-        HeapFree(GetProcessHeap(), 0, This->ffp_valid);
+    if (!ref)
+    {
+        HeapFree(GetProcessHeap(), 0, This->elements);
+        This->parent_ops->wined3d_object_destroyed(This->parent);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -93,106 +88,84 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetParent(IWineD3DVertexDecl
     return WINED3D_OK;
 }
 
-static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDevice(IWineD3DVertexDeclaration *iface, IWineD3DDevice** ppDevice) {
-    IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
-    TRACE("(%p) : returning %p\n", This, This->wineD3DDevice);
-
-    *ppDevice = (IWineD3DDevice *) This->wineD3DDevice;
-    IWineD3DDevice_AddRef(*ppDevice);
-
-    return WINED3D_OK;
-}
-
-static HRESULT WINAPI IWineD3DVertexDeclarationImpl_GetDeclaration(IWineD3DVertexDeclaration *iface,
-        WINED3DVERTEXELEMENT *elements, UINT *element_count) {
-    IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
-    HRESULT hr = WINED3D_OK;
-
-    TRACE("(%p) : d3d version %d, elements %p, element_count %p\n",
-            This, ((IWineD3DImpl *)This->wineD3DDevice->wineD3D)->dxVersion, elements, element_count);
-
-    *element_count = This->declarationWNumElements;
-    if (elements) {
-        CopyMemory(elements, This->pDeclarationWine, This->declarationWNumElements * sizeof(WINED3DVERTEXELEMENT));
-    }
-
-    return hr;
-}
-
 static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
 {
-    switch(element->Usage)
+    switch(element->usage)
     {
         case WINED3DDECLUSAGE_POSITION:
         case WINED3DDECLUSAGE_POSITIONT:
-            switch(element->Type)
+            switch(element->format)
             {
-                case WINED3DDECLTYPE_FLOAT2:
-                case WINED3DDECLTYPE_FLOAT3:
-                case WINED3DDECLTYPE_FLOAT4:
-                case WINED3DDECLTYPE_SHORT2:
-                case WINED3DDECLTYPE_SHORT4:
-                case WINED3DDECLTYPE_FLOAT16_2:
-                case WINED3DDECLTYPE_FLOAT16_4:
+                case WINED3DFMT_R32G32_FLOAT:
+                case WINED3DFMT_R32G32B32_FLOAT:
+                case WINED3DFMT_R32G32B32A32_FLOAT:
+                case WINED3DFMT_R16G16_SINT:
+                case WINED3DFMT_R16G16B16A16_SINT:
+                case WINED3DFMT_R16G16_FLOAT:
+                case WINED3DFMT_R16G16B16A16_FLOAT:
                     return TRUE;
                 default:
                     return FALSE;
             }
 
         case WINED3DDECLUSAGE_BLENDWEIGHT:
-            switch(element->Type)
+            switch(element->format)
             {
-                case WINED3DDECLTYPE_D3DCOLOR:
-                case WINED3DDECLTYPE_UBYTE4:
-                case WINED3DDECLTYPE_SHORT2:
-                case WINED3DDECLTYPE_SHORT4:
-                case WINED3DDECLTYPE_FLOAT16_2:
-                case WINED3DDECLTYPE_FLOAT16_4:
+                case WINED3DFMT_R32_FLOAT:
+                case WINED3DFMT_R32G32_FLOAT:
+                case WINED3DFMT_R32G32B32_FLOAT:
+                case WINED3DFMT_R32G32B32A32_FLOAT:
+                case WINED3DFMT_B8G8R8A8_UNORM:
+                case WINED3DFMT_R8G8B8A8_UINT:
+                case WINED3DFMT_R16G16_SINT:
+                case WINED3DFMT_R16G16B16A16_SINT:
+                case WINED3DFMT_R16G16_FLOAT:
+                case WINED3DFMT_R16G16B16A16_FLOAT:
                     return TRUE;
                 default:
                     return FALSE;
             }
 
         case WINED3DDECLUSAGE_NORMAL:
-            switch(element->Type)
+            switch(element->format)
             {
-                case WINED3DDECLTYPE_FLOAT3:
-                case WINED3DDECLTYPE_FLOAT4:
-                case WINED3DDECLTYPE_SHORT4:
-                case WINED3DDECLTYPE_FLOAT16_4:
+                case WINED3DFMT_R32G32B32_FLOAT:
+                case WINED3DFMT_R32G32B32A32_FLOAT:
+                case WINED3DFMT_R16G16B16A16_SINT:
+                case WINED3DFMT_R16G16B16A16_FLOAT:
                     return TRUE;
                 default:
                     return FALSE;
             }
 
         case WINED3DDECLUSAGE_TEXCOORD:
-            switch(element->Type)
+            switch(element->format)
             {
-                case WINED3DDECLTYPE_FLOAT1:
-                case WINED3DDECLTYPE_FLOAT2:
-                case WINED3DDECLTYPE_FLOAT3:
-                case WINED3DDECLTYPE_FLOAT4:
-                case WINED3DDECLTYPE_SHORT2:
-                case WINED3DDECLTYPE_SHORT4:
-                case WINED3DDECLTYPE_FLOAT16_2:
-                case WINED3DDECLTYPE_FLOAT16_4:
+                case WINED3DFMT_R32_FLOAT:
+                case WINED3DFMT_R32G32_FLOAT:
+                case WINED3DFMT_R32G32B32_FLOAT:
+                case WINED3DFMT_R32G32B32A32_FLOAT:
+                case WINED3DFMT_R16G16_SINT:
+                case WINED3DFMT_R16G16B16A16_SINT:
+                case WINED3DFMT_R16G16_FLOAT:
+                case WINED3DFMT_R16G16B16A16_FLOAT:
                     return TRUE;
                 default:
                     return FALSE;
             }
 
         case WINED3DDECLUSAGE_COLOR:
-            switch(element->Type)
+            switch(element->format)
             {
-                case WINED3DDECLTYPE_FLOAT3:
-                case WINED3DDECLTYPE_FLOAT4:
-                case WINED3DDECLTYPE_D3DCOLOR:
-                case WINED3DDECLTYPE_UBYTE4:
-                case WINED3DDECLTYPE_SHORT4:
-                case WINED3DDECLTYPE_UBYTE4N:
-                case WINED3DDECLTYPE_SHORT4N:
-                case WINED3DDECLTYPE_USHORT4N:
-                case WINED3DDECLTYPE_FLOAT16_4:
+                case WINED3DFMT_R32G32B32_FLOAT:
+                case WINED3DFMT_R32G32B32A32_FLOAT:
+                case WINED3DFMT_B8G8R8A8_UNORM:
+                case WINED3DFMT_R8G8B8A8_UINT:
+                case WINED3DFMT_R16G16B16A16_SINT:
+                case WINED3DFMT_R8G8B8A8_UNORM:
+                case WINED3DFMT_R16G16B16A16_SNORM:
+                case WINED3DFMT_R16G16B16A16_UNORM:
+                case WINED3DFMT_R16G16B16A16_FLOAT:
                     return TRUE;
                 default:
                     return FALSE;
@@ -203,78 +176,7 @@ static BOOL declaration_element_valid_ffp(const WINED3DVERTEXELEMENT *element)
     }
 }
 
-static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVertexDeclaration *iface,
-        const WINED3DVERTEXELEMENT *elements, UINT element_count) {
-    IWineD3DVertexDeclarationImpl *This = (IWineD3DVertexDeclarationImpl *)iface;
-    HRESULT hr = WINED3D_OK;
-    int i;
-    char isPreLoaded[MAX_STREAMS];
-
-    TRACE("(%p) : d3d version %d\n", This, ((IWineD3DImpl *)This->wineD3DDevice->wineD3D)->dxVersion);
-    memset(isPreLoaded, 0, sizeof(isPreLoaded));
-
-    if (TRACE_ON(d3d_decl)) {
-        for (i = 0; i < element_count; ++i) {
-            dump_wined3dvertexelement(elements+i);
-        }
-    }
-
-    This->declarationWNumElements = element_count;
-    This->pDeclarationWine = HeapAlloc(GetProcessHeap(), 0, sizeof(WINED3DVERTEXELEMENT) * element_count);
-    This->ffp_valid = HeapAlloc(GetProcessHeap(), 0, sizeof(*This->ffp_valid) * element_count);
-    if (!This->pDeclarationWine || !This->ffp_valid) {
-        ERR("Memory allocation failed\n");
-        return WINED3DERR_OUTOFVIDEOMEMORY;
-    } else {
-        CopyMemory(This->pDeclarationWine, elements, sizeof(WINED3DVERTEXELEMENT) * element_count);
-    }
-
-    /* Do some static analysis on the elements to make reading the declaration more comfortable
-     * for the drawing code
-     */
-    This->num_streams = 0;
-    This->position_transformed = FALSE;
-    for (i = 0; i < element_count; ++i) {
-        This->ffp_valid[i] = declaration_element_valid_ffp(&This->pDeclarationWine[i]);
-
-        if(This->pDeclarationWine[i].Usage == WINED3DDECLUSAGE_POSITIONT) {
-            This->position_transformed = TRUE;
-        }
-
-        /* Find the Streams used in the declaration. The vertex buffers have to be loaded
-         * when drawing, but filter tesselation pseudo streams
-         */
-        if(This->pDeclarationWine[i].Stream >= MAX_STREAMS) continue;
-
-        if(This->pDeclarationWine[i].Type == WINED3DDECLTYPE_UNUSED) {
-            WARN("The application tries to use WINED3DDECLTYPE_UNUSED, returning E_FAIL\n");
-            /* The caller will release the vdecl, which will free This->pDeclarationWine */
-            return E_FAIL;
-        }
-
-        if(This->pDeclarationWine[i].Offset & 0x3) {
-            WARN("Declaration element %d is not 4 byte aligned(%d), returning E_FAIL\n", i, This->pDeclarationWine[i].Offset);
-            return E_FAIL;
-        }
-
-        if(!isPreLoaded[This->pDeclarationWine[i].Stream]) {
-            This->streams[This->num_streams] = This->pDeclarationWine[i].Stream;
-            This->num_streams++;
-            isPreLoaded[This->pDeclarationWine[i].Stream] = 1;
-        }
-
-        if (This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_2
-                || This->pDeclarationWine[i].Type == WINED3DDECLTYPE_FLOAT16_4)
-        {
-            if (!GL_SUPPORT(NV_HALF_FLOAT)) This->half_float_conv_needed = TRUE;
-        }
-    }
-
-    TRACE("Returning\n");
-    return hr;
-}
-
-const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
+static const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
 {
     /* IUnknown */
     IWineD3DVertexDeclarationImpl_QueryInterface,
@@ -282,7 +184,85 @@ const IWineD3DVertexDeclarationVtbl IWineD3DVertexDeclaration_Vtbl =
     IWineD3DVertexDeclarationImpl_Release,
     /* IWineD3DVertexDeclaration */
     IWineD3DVertexDeclarationImpl_GetParent,
-    IWineD3DVertexDeclarationImpl_GetDevice,
-    IWineD3DVertexDeclarationImpl_GetDeclaration,
-    IWineD3DVertexDeclarationImpl_SetDeclaration
 };
+
+HRESULT vertexdeclaration_init(IWineD3DVertexDeclarationImpl *declaration, IWineD3DDeviceImpl *device,
+        const WINED3DVERTEXELEMENT *elements, UINT element_count,
+        IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+{
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    WORD preloaded = 0; /* MAX_STREAMS, 16 */
+    unsigned int i;
+
+    if (TRACE_ON(d3d_decl))
+    {
+        for (i = 0; i < element_count; ++i)
+        {
+            dump_wined3dvertexelement(elements + i);
+        }
+    }
+
+    declaration->lpVtbl = &IWineD3DVertexDeclaration_Vtbl;
+    declaration->ref = 1;
+    declaration->parent = parent;
+    declaration->parent_ops = parent_ops;
+    declaration->device = device;
+    declaration->elements = HeapAlloc(GetProcessHeap(), 0, sizeof(*declaration->elements) * element_count);
+    if (!declaration->elements)
+    {
+        ERR("Failed to allocate elements memory.\n");
+        return E_OUTOFMEMORY;
+    }
+    declaration->element_count = element_count;
+
+    /* Do some static analysis on the elements to make reading the
+     * declaration more comfortable for the drawing code. */
+    for (i = 0; i < element_count; ++i)
+    {
+        struct wined3d_vertex_declaration_element *e = &declaration->elements[i];
+
+        e->format_desc = getFormatDescEntry(elements[i].format, gl_info);
+        e->ffp_valid = declaration_element_valid_ffp(&elements[i]);
+        e->input_slot = elements[i].input_slot;
+        e->offset = elements[i].offset;
+        e->output_slot = elements[i].output_slot;
+        e->method = elements[i].method;
+        e->usage = elements[i].usage;
+        e->usage_idx = elements[i].usage_idx;
+
+        if (e->usage == WINED3DDECLUSAGE_POSITIONT) declaration->position_transformed = TRUE;
+
+        /* Find the streams used in the declaration. The vertex buffers have
+         * to be loaded when drawing, but filter tesselation pseudo streams. */
+        if (e->input_slot >= MAX_STREAMS) continue;
+
+        if (!e->format_desc->gl_vtx_format)
+        {
+            FIXME("The application tries to use an unsupported format (%s), returning E_FAIL.\n",
+                    debug_d3dformat(elements[i].format));
+            HeapFree(GetProcessHeap(), 0, declaration->elements);
+            return E_FAIL;
+        }
+
+        if (e->offset & 0x3)
+        {
+            WARN("Declaration element %u is not 4 byte aligned(%u), returning E_FAIL.\n", i, e->offset);
+            HeapFree(GetProcessHeap(), 0, declaration->elements);
+            return E_FAIL;
+        }
+
+        if (!(preloaded & (1 << e->input_slot)))
+        {
+            declaration->streams[declaration->num_streams] = e->input_slot;
+            ++declaration->num_streams;
+            preloaded |= 1 << e->input_slot;
+        }
+
+        if (elements[i].format == WINED3DFMT_R16G16_FLOAT || elements[i].format == WINED3DFMT_R16G16B16A16_FLOAT)
+        {
+            if (!gl_info->supported[ARB_HALF_FLOAT_VERTEX]) declaration->half_float_conv_needed = TRUE;
+        }
+    }
+
+    return WINED3D_OK;
+}

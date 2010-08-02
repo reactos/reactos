@@ -60,9 +60,11 @@ typedef struct _xmlC14NCtx {
     xmlC14NPosition pos;
     int parent_is_doc;
     xmlC14NVisibleNsStackPtr ns_rendered;
+    
+    /* C14N mode */
+    xmlC14NMode mode;
 
     /* exclusive canonicalization */
-    int exclusive;
     xmlChar **inclusive_ns_prefixes;
 
     /* error number */
@@ -116,6 +118,9 @@ static xmlChar *xmlC11NNormalizeString(const xmlChar * input,
      (((ctx)->is_visible_callback != NULL) ? \
 	(ctx)->is_visible_callback((ctx)->user_data, \
 		(xmlNodePtr)(node), (xmlNodePtr)(parent)) : 1)
+
+#define 	xmlC14NIsExclusive( ctx ) \
+    ( (ctx)->mode == XML_C14N_EXCLUSIVE_1_0 )
 
 /************************************************************************
  *									*
@@ -234,7 +239,7 @@ xmlC14NErr(xmlC14NCtxPtr ctxt, xmlNodePtr node, int error,
     __xmlRaiseError(NULL, NULL, NULL,
 		    ctxt, node, XML_FROM_C14N, error,
 		    XML_ERR_ERROR, NULL, 0,
-		    NULL, NULL, NULL, 0, 0, msg);
+		    NULL, NULL, NULL, 0, 0, "%s", msg);
 }
 
 /************************************************************************
@@ -492,9 +497,7 @@ xmlC14NIsXmlNs(xmlNsPtr ns)
 {
     return ((ns != NULL) &&
             (xmlStrEqual(ns->prefix, BAD_CAST "xml")) &&
-            (xmlStrEqual(ns->href,
-                         BAD_CAST
-                         "http://www.w3.org/XML/1998/namespace")));
+            (xmlStrEqual(ns->href, XML_XML_NAMESPACE)));
 }
 
 
@@ -713,7 +716,7 @@ xmlExcC14NProcessNamespacesAxis(xmlC14NCtxPtr ctx, xmlNodePtr cur, int visible)
         return (-1);
     }
 
-    if(!ctx->exclusive) {
+    if(!xmlC14NIsExclusive(ctx)) {
         xmlC14NErrParam("processing namespaces axis (exc c14n)");
         return (-1);
 
@@ -845,6 +848,25 @@ xmlExcC14NProcessNamespacesAxis(xmlC14NCtxPtr ctx, xmlNodePtr cur, int visible)
 
 
 /**
+ * xmlC14NIsXmlAttr:
+ * @attr: 		the attr to check
+ *  		
+ * Checks whether the given attribute is a default "xml:" namespace
+ * with href="http://www.w3.org/XML/1998/namespace"
+ *
+ * Returns 1 if the node is default or 0 otherwise
+ */
+
+/* todo: make it a define? */
+static int
+xmlC14NIsXmlAttr(xmlAttrPtr attr)
+{
+    return ((attr->ns != NULL) && 
+           (xmlC14NIsXmlNs(attr->ns) != 0));
+}
+
+
+/**
  * xmlC14NAttrsCompare:
  * @attr1:		the pointer tls o first attr
  * @attr2: 		the pointer to second attr
@@ -925,7 +947,7 @@ xmlC14NPrintAttrs(const xmlAttrPtr attr, xmlC14NCtxPtr ctx)
     xmlOutputBufferWriteString(ctx->buf, (const char *) attr->name);
     xmlOutputBufferWriteString(ctx->buf, "=\"");
 
-    value = xmlNodeListGetString(attr->doc, attr->children, 1);
+    value = xmlNodeListGetString(ctx->doc, attr->children, 1);
     /* todo: should we log an error if value==NULL ? */
     if (value != NULL) {
         buffer = xmlC11NNormalizeAttr(value);
@@ -943,10 +965,133 @@ xmlC14NPrintAttrs(const xmlAttrPtr attr, xmlC14NCtxPtr ctx)
 }
 
 /**
+ * xmlC14NFindHiddenParentAttr:
+ *
+ * Finds an attribute in a hidden parent node.
+ * 
+ * Returns a pointer to the attribute node (if found) or NULL otherwise.
+ */
+static xmlAttrPtr
+xmlC14NFindHiddenParentAttr(xmlC14NCtxPtr ctx, xmlNodePtr cur, const xmlChar * name, const xmlChar * ns)
+{
+    xmlAttrPtr res;
+    while((cur != NULL) && (!xmlC14NIsVisible(ctx, cur, cur->parent))) {
+        res = xmlHasNsProp(cur, name, ns);
+        if(res != NULL) {
+            return res;
+        }
+
+        cur = cur->parent;
+    }
+
+    return NULL;
+}
+
+/**
+ * xmlC14NFixupBaseAttr:
+ *
+ * Fixes up the xml:base attribute
+ *
+ * Returns the newly created attribute or NULL
+ */
+static xmlAttrPtr
+xmlC14NFixupBaseAttr(xmlC14NCtxPtr ctx, xmlAttrPtr xml_base_attr)
+{    
+    xmlChar * res = NULL;
+    xmlNodePtr cur;
+    xmlAttrPtr attr;
+    xmlChar * tmp_str;
+    xmlChar * tmp_str2;
+    int tmp_str_len;
+
+    if ((ctx == NULL) || (xml_base_attr == NULL) || (xml_base_attr->parent == NULL)) {
+        xmlC14NErrParam("processing xml:base attribute");
+        return (NULL);
+    }
+
+    /* start from current value */
+    res = xmlNodeListGetString(ctx->doc, xml_base_attr->children, 1);
+    if(res == NULL) {
+        xmlC14NErrInternal("processing xml:base attribute - can't get attr value");
+        return (NULL);
+    }
+
+    /* go up the stack until we find a node that we rendered already */
+    cur = xml_base_attr->parent->parent;
+    while((cur != NULL) && (!xmlC14NIsVisible(ctx, cur, cur->parent))) {
+        attr = xmlHasNsProp(cur, BAD_CAST "base", XML_XML_NAMESPACE);
+        if(attr != NULL) {
+            /* get attr value */
+            tmp_str = xmlNodeListGetString(ctx->doc, attr->children, 1);
+            if(tmp_str == NULL) {
+                xmlFree(res);
+
+                xmlC14NErrInternal("processing xml:base attribute - can't get attr value");
+                return (NULL);
+            } 
+
+            /* we need to add '/' if our current base uri ends with '..' or '.' 
+            to ensure that we are forced to go "up" all the time */
+            tmp_str_len = xmlStrlen(tmp_str);
+            if(tmp_str_len > 1 && tmp_str[tmp_str_len - 2] == '.') {
+                tmp_str2 = xmlStrcat(tmp_str, BAD_CAST "/");
+                if(tmp_str2 == NULL) {
+                    xmlFree(tmp_str);
+                    xmlFree(res);
+
+                    xmlC14NErrInternal("processing xml:base attribute - can't modify uri");
+                    return (NULL);
+                }
+
+                tmp_str = tmp_str2;
+            }
+
+            /* build uri */
+            tmp_str2 = xmlBuildURI(res, tmp_str); 
+            if(tmp_str2 == NULL) {
+                xmlFree(tmp_str);
+                xmlFree(res);
+
+                xmlC14NErrInternal("processing xml:base attribute - can't construct uri");
+                return (NULL);
+            }
+
+            /* cleanup and set the new res */
+            xmlFree(tmp_str);
+            xmlFree(res);
+            res = tmp_str2;
+        }
+
+        /* next */
+        cur = cur->parent;
+    }
+
+    /* check if result uri is empty or not */
+    if((res == NULL) || xmlStrEqual(res, BAD_CAST "")) {
+        xmlFree(res);
+        return (NULL);
+    }
+
+    /* create and return the new attribute node */
+    attr = xmlNewNsProp(NULL, xml_base_attr->ns, BAD_CAST "base", res);
+    if(attr == NULL) {
+        xmlFree(res);
+
+        xmlC14NErrInternal("processing xml:base attribute - can't construct attribute");
+        return (NULL);
+    }
+ 
+    /* done */
+    xmlFree(res);
+    return (attr);
+}
+
+/**
  * xmlC14NProcessAttrsAxis:
  * @ctx: 		the C14N context
  * @cur:		the current node
  * @parent_visible:	the visibility of parent node
+ * @all_parents_visible: the visibility of all parent nodes
  *
  * Prints out canonical attribute axis of the current node to the
  * buffer from C14N context as follows 
@@ -978,7 +1123,13 @@ static int
 xmlC14NProcessAttrsAxis(xmlC14NCtxPtr ctx, xmlNodePtr cur, int parent_visible)
 {
     xmlAttrPtr attr;
-    xmlListPtr list;
+    xmlListPtr list;    
+    xmlAttrPtr attrs_to_delete = NULL;
+    
+    /* special processing for 1.1 spec */
+    xmlAttrPtr xml_base_attr = NULL;
+    xmlAttrPtr xml_lang_attr = NULL;
+    xmlAttrPtr xml_space_attr = NULL;
 
     if ((ctx == NULL) || (cur == NULL) || (cur->type != XML_ELEMENT_NODE)) {
         xmlC14NErrParam("processing attributes axis");
@@ -994,42 +1145,184 @@ xmlC14NProcessAttrsAxis(xmlC14NCtxPtr ctx, xmlNodePtr cur, int parent_visible)
         return (-1);
     }
 
-    /* 
-     * Add all visible attributes from current node. 
-     */
-    attr = cur->properties;
-    while (attr != NULL) {
-        /* check that attribute is visible */
-        if (xmlC14NIsVisible(ctx, attr, cur)) {
-            xmlListInsert(list, attr);
-        }
-        attr = attr->next;
-    }
-
-    /* 
-     * include attributes in "xml" namespace defined in ancestors
-     * (only for non-exclusive XML Canonicalization)
-     */
-    if (parent_visible && (!ctx->exclusive) && (cur->parent != NULL)
-        && (!xmlC14NIsVisible(ctx, cur->parent, cur->parent->parent))) {
-        /*
-         * If XPath node-set is not specified then the parent is always 
-         * visible!
+    switch(ctx->mode) {
+    case XML_C14N_1_0:
+        /* The processing of an element node E MUST be modified slightly when an XPath node-set is 
+         * given as input and the element's parent is omitted from the node-set. The method for processing 
+         * the attribute axis of an element E in the node-set is enhanced. All element nodes along E's 
+         * ancestor axis are examined for nearest occurrences of attributes in the xml namespace, such 
+         * as xml:lang and xml:space (whether or not they are in the node-set). From this list of attributes, 
+         * remove any that are in E's attribute axis (whether or not they are in the node-set). Then, 
+         * lexicographically merge this attribute list with the nodes of E's attribute axis that are in 
+         * the node-set. The result of visiting the attribute axis is computed by processing the attribute 
+         * nodes in this merged attribute list. 
          */
-        cur = cur->parent;
-        while (cur != NULL) {
-            attr = cur->properties;
-            while (attr != NULL) {
-                if ((attr->ns != NULL)
-                    && (xmlStrEqual(attr->ns->prefix, BAD_CAST "xml"))) {
-                    if (xmlListSearch(list, attr) == NULL) {
-                        xmlListInsert(list, attr);
-                    }
-                }
-                attr = attr->next;
+    
+        /* 
+         * Add all visible attributes from current node. 
+         */
+        attr = cur->properties;
+        while (attr != NULL) {
+            /* check that attribute is visible */
+            if (xmlC14NIsVisible(ctx, attr, cur)) {
+                xmlListInsert(list, attr);
             }
-            cur = cur->parent;
+            attr = attr->next;
         }
+
+        /* 
+         * Handle xml attributes
+         */
+        if (parent_visible && (cur->parent != NULL) && 
+            (!xmlC14NIsVisible(ctx, cur->parent, cur->parent->parent))) 
+        {
+            xmlNodePtr tmp;
+
+            /*
+             * If XPath node-set is not specified then the parent is always 
+             * visible!
+             */
+            tmp = cur->parent;
+            while (tmp != NULL) {
+                attr = tmp->properties;
+                while (attr != NULL) {
+                    if (xmlC14NIsXmlAttr(attr) != 0) {
+                        if (xmlListSearch(list, attr) == NULL) {
+                            xmlListInsert(list, attr);
+                        }
+                    }
+                    attr = attr->next;
+                }
+                tmp = tmp->parent;
+            }
+        }
+
+        /* done */
+        break;
+    case XML_C14N_EXCLUSIVE_1_0:
+        /* attributes in the XML namespace, such as xml:lang and xml:space 
+         * are not imported into orphan nodes of the document subset 
+         */
+
+        /* 
+         * Add all visible attributes from current node. 
+         */
+        attr = cur->properties;
+        while (attr != NULL) {
+            /* check that attribute is visible */
+            if (xmlC14NIsVisible(ctx, attr, cur)) {
+                xmlListInsert(list, attr);
+            }
+            attr = attr->next;
+        }
+
+        /* do nothing special for xml attributes */
+        break;
+    case XML_C14N_1_1:
+        /* The processing of an element node E MUST be modified slightly when an XPath node-set is 
+         * given as input and some of the element's ancestors are omitted from the node-set. 
+         *
+         * Simple inheritable attributes are attributes that have a value that requires at most a simple 
+         * redeclaration. This redeclaration is done by supplying a new value in the child axis. The 
+         * redeclaration of a simple inheritable attribute A contained in one of E's ancestors is done 
+         * by supplying a value to an attribute Ae inside E with the same name. Simple inheritable attributes 
+         * are xml:lang and xml:space.
+         * 
+         * The method for processing the attribute axis of an element E in the node-set is hence enhanced. 
+         * All element nodes along E's ancestor axis are examined for the nearest occurrences of simple 
+         * inheritable attributes in the xml namespace, such as xml:lang and xml:space (whether or not they 
+         * are in the node-set). From this list of attributes, any simple inheritable attributes that are 
+         * already in E's attribute axis (whether or not they are in the node-set) are removed. Then, 
+         * lexicographically merge this attribute list with the nodes of E's attribute axis that are in 
+         * the node-set. The result of visiting the attribute axis is computed by processing the attribute 
+         * nodes in this merged attribute list.
+         * 
+         * The xml:id attribute is not a simple inheritable attribute and no processing of these attributes is 
+         * performed.
+         * 
+         * The xml:base attribute is not a simple inheritable attribute and requires special processing beyond 
+         * a simple redeclaration.
+         * 
+         * Attributes in the XML namespace other than xml:base, xml:id, xml:lang, and xml:space MUST be processed 
+         * as ordinary attributes.
+         */
+
+        /* 
+         * Add all visible attributes from current node. 
+         */
+        attr = cur->properties;
+        while (attr != NULL) {
+            /* special processing for XML attribute kiks in only when we have invisible parents */
+            if ((!parent_visible) || (xmlC14NIsXmlAttr(attr) == 0)) {
+                /* check that attribute is visible */
+                if (xmlC14NIsVisible(ctx, attr, cur)) {
+                    xmlListInsert(list, attr);
+                }
+            } else {
+                int matched = 0;
+
+                /* check for simple inheritance attributes */
+                if((!matched) && (xml_lang_attr == NULL) && xmlStrEqual(attr->name, BAD_CAST "lang")) {
+                    xml_lang_attr = attr;
+                    matched = 1;
+                } 
+                if((!matched) && (xml_space_attr == NULL) && xmlStrEqual(attr->name, BAD_CAST "space")) {
+                    xml_space_attr = attr;
+                    matched = 1;
+                }
+
+                /* check for base attr */
+                if((!matched) && (xml_base_attr == NULL) && xmlStrEqual(attr->name, BAD_CAST "base")) {
+                    xml_base_attr = attr;
+                    matched = 1;
+                }
+
+                /* otherwise, it is a normal attribute, so just check if it is visible */
+                if((!matched) && xmlC14NIsVisible(ctx, attr, cur)) {
+                    xmlListInsert(list, attr);
+                }
+            }
+         
+            /* move to the next one */
+            attr = attr->next;
+        }
+            
+        /* special processing for XML attribute kiks in only when we have invisible parents */
+        if ((parent_visible)) {
+
+            /* simple inheritance attributes - copy */
+            if(xml_lang_attr == NULL) {
+                xml_lang_attr = xmlC14NFindHiddenParentAttr(ctx, cur->parent, BAD_CAST "lang", XML_XML_NAMESPACE);
+            }
+            if(xml_lang_attr != NULL) {
+                xmlListInsert(list, xml_lang_attr);
+            }
+            if(xml_space_attr == NULL) {
+                xml_space_attr = xmlC14NFindHiddenParentAttr(ctx, cur->parent, BAD_CAST "space", XML_XML_NAMESPACE);
+            }
+            if(xml_space_attr != NULL) {
+                xmlListInsert(list, xml_space_attr);
+            }
+
+            /* base uri attribute - fix up */
+            if(xml_base_attr == NULL) {
+                /* if we don't have base uri attribute, check if we have a "hidden" one above */
+                xml_base_attr = xmlC14NFindHiddenParentAttr(ctx, cur->parent, BAD_CAST "base", XML_XML_NAMESPACE);
+            }
+            if(xml_base_attr != NULL) {
+                xml_base_attr = xmlC14NFixupBaseAttr(ctx, xml_base_attr);
+                if(xml_base_attr != NULL) {                    
+                    xmlListInsert(list, xml_base_attr);
+
+                    /* note that we MUST delete returned attr node ourselves! */
+                    xml_base_attr->next = attrs_to_delete;
+                    attrs_to_delete = xml_base_attr;
+                }
+            }
+        }
+
+        /* done */
+        break;
     }
 
     /* 
@@ -1040,6 +1333,7 @@ xmlC14NProcessAttrsAxis(xmlC14NCtxPtr ctx, xmlNodePtr cur, int parent_visible)
     /* 
      * Cleanup
      */
+    xmlFreePropList(attrs_to_delete);
     xmlListDelete(list);
     return (0);
 }
@@ -1096,6 +1390,8 @@ xmlC14NCheckForRelativeNamespaces(xmlC14NCtxPtr ctx, xmlNodePtr cur)
  * xmlC14NProcessElementNode:
  * @ctx: 		the pointer to C14N context object
  * @cur:		the node to process
+ * @visible:    this node is visible
+ * @all_parents_visible: whether all the parents of this node are visible
  *  		
  * Canonical XML v 1.0 (http://www.w3.org/TR/xml-c14n)
  *
@@ -1159,7 +1455,7 @@ xmlC14NProcessElementNode(xmlC14NCtxPtr ctx, xmlNodePtr cur, int visible)
         xmlOutputBufferWriteString(ctx->buf, (const char *) cur->name);
     }
 
-    if (!ctx->exclusive) {
+    if (!xmlC14NIsExclusive(ctx)) {
         ret = xmlC14NProcessNamespacesAxis(ctx, cur, visible);
     } else {
         ret = xmlExcC14NProcessNamespacesAxis(ctx, cur, visible);
@@ -1457,9 +1753,10 @@ xmlC14NFreeCtx(xmlC14NCtxPtr ctx)
  *			or not
  * @user_data: 		the first parameter for @is_visible_callback function
  *			(in most cases, it is nodes set)
+ * @mode:   the c14n mode (see @xmlC14NMode)
  * @inclusive_ns_prefixe the list of inclusive namespace prefixes 
  *			ended with a NULL or NULL if there is no
- *			inclusive namespaces (only for exclusive 
+ *			inclusive namespaces (only for ` 
  *			canonicalization)
  * @with_comments: 	include comments in the result (!=0) or not (==0)
  * @buf: 		the output buffer to store canonical XML; this 
@@ -1473,7 +1770,7 @@ xmlC14NFreeCtx(xmlC14NCtxPtr ctx)
 static xmlC14NCtxPtr
 xmlC14NNewCtx(xmlDocPtr doc,  
 	      xmlC14NIsVisibleCallback is_visible_callback, void* user_data,
-              int exclusive, xmlChar ** inclusive_ns_prefixes,
+              xmlC14NMode mode, xmlChar ** inclusive_ns_prefixes,
               int with_comments, xmlOutputBufferPtr buf)
 {
     xmlC14NCtxPtr ctx = NULL;
@@ -1531,11 +1828,11 @@ xmlC14NNewCtx(xmlDocPtr doc,
     }
 
     /*
-     * Set "exclusive" flag, create a nodes set for namespaces
-     * stack and remember list of incluseve prefixes
+     * Set "mode" flag and remember list of incluseve prefixes
+     * for exclusive c14n
      */
-    if (exclusive) {
-        ctx->exclusive = 1;
+    ctx->mode = mode;
+    if(xmlC14NIsExclusive(ctx)) {
         ctx->inclusive_ns_prefixes = inclusive_ns_prefixes;
     }
     return (ctx);
@@ -1548,8 +1845,7 @@ xmlC14NNewCtx(xmlDocPtr doc,
  *			or not
  * @user_data: 		the first parameter for @is_visible_callback function
  *			(in most cases, it is nodes set)
- * @exclusive:		the exclusive flag (0 - non-exclusive canonicalization;
- *			otherwise - exclusive canonicalization)
+ * @mode:	the c14n mode (see @xmlC14NMode)
  * @inclusive_ns_prefixes: the list of inclusive namespace prefixes 
  *			ended with a NULL or NULL if there is no
  *			inclusive namespaces (only for exclusive 
@@ -1567,14 +1863,28 @@ xmlC14NNewCtx(xmlDocPtr doc,
  */
 int 		
 xmlC14NExecute(xmlDocPtr doc, xmlC14NIsVisibleCallback is_visible_callback,
-	 void* user_data, int exclusive, xmlChar **inclusive_ns_prefixes,
+	 void* user_data, int mode, xmlChar **inclusive_ns_prefixes,
 	 int with_comments, xmlOutputBufferPtr buf) {
 
     xmlC14NCtxPtr ctx;
+    xmlC14NMode c14n_mode = XML_C14N_1_0;
     int ret;
 
     if ((buf == NULL) || (doc == NULL)) {
         xmlC14NErrParam("executing c14n");
+        return (-1);
+    }
+
+    /* for backward compatibility, we have to have "mode" as "int" 
+       and here we check that user gives valid value */
+    switch(mode) {
+    case XML_C14N_1_0:
+    case XML_C14N_EXCLUSIVE_1_0:
+    case XML_C14N_1_1: 
+         c14n_mode = (xmlC14NMode)mode;
+         break;
+    default:       
+        xmlC14NErrParam("invalid mode for executing c14n");
         return (-1);
     }
 
@@ -1588,8 +1898,8 @@ xmlC14NExecute(xmlDocPtr doc, xmlC14NIsVisibleCallback is_visible_callback,
     }
 
     ctx = xmlC14NNewCtx(doc, is_visible_callback, user_data, 
-			exclusive, inclusive_ns_prefixes,
-                        with_comments, buf);
+	            c14n_mode, inclusive_ns_prefixes,
+                    with_comments, buf);
     if (ctx == NULL) {
         xmlC14NErr(NULL, (xmlNodePtr) doc, XML_C14N_CREATE_CTXT,
 		   "xmlC14NExecute: unable to create C14N context\n");
@@ -1637,8 +1947,7 @@ xmlC14NExecute(xmlDocPtr doc, xmlC14NIsVisibleCallback is_visible_callback,
  * @doc: 		the XML document for canonization
  * @nodes: 		the nodes set to be included in the canonized image
  *      		or NULL if all document nodes should be included
- * @exclusive:		the exclusive flag (0 - non-exclusive canonicalization;
- *			otherwise - exclusive canonicalization)
+ * @mode:		the c14n mode (see @xmlC14NMode)
  * @inclusive_ns_prefixes: the list of inclusive namespace prefixes 
  *			ended with a NULL or NULL if there is no
  *			inclusive namespaces (only for exclusive 
@@ -1656,12 +1965,12 @@ xmlC14NExecute(xmlDocPtr doc, xmlC14NIsVisibleCallback is_visible_callback,
  */
 int
 xmlC14NDocSaveTo(xmlDocPtr doc, xmlNodeSetPtr nodes,
-                 int exclusive, xmlChar ** inclusive_ns_prefixes,
+                 int mode, xmlChar ** inclusive_ns_prefixes,
                  int with_comments, xmlOutputBufferPtr buf) {
     return(xmlC14NExecute(doc, 
 			(xmlC14NIsVisibleCallback)xmlC14NIsNodeInNodeset,
 			nodes,
-			exclusive,
+			mode,
 			inclusive_ns_prefixes,
 			with_comments,
 			buf));
@@ -1673,8 +1982,7 @@ xmlC14NDocSaveTo(xmlDocPtr doc, xmlNodeSetPtr nodes,
  * @doc: 		the XML document for canonization
  * @nodes: 		the nodes set to be included in the canonized image
  *      		or NULL if all document nodes should be included
- * @exclusive:		the exclusive flag (0 - non-exclusive canonicalization;
- *			otherwise - exclusive canonicalization)
+ * @mode:		the c14n mode (see @xmlC14NMode)
  * @inclusive_ns_prefixes: the list of inclusive namespace prefixes 
  *			ended with a NULL or NULL if there is no
  *			inclusive namespaces (only for exclusive 
@@ -1692,7 +2000,7 @@ xmlC14NDocSaveTo(xmlDocPtr doc, xmlNodeSetPtr nodes,
  */
 int
 xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
-                     int exclusive, xmlChar ** inclusive_ns_prefixes,
+                     int mode, xmlChar ** inclusive_ns_prefixes,
                      int with_comments, xmlChar ** doc_txt_ptr)
 {
     int ret;
@@ -1717,7 +2025,7 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
     /*
      * canonize document and write to buffer
      */
-    ret = xmlC14NDocSaveTo(doc, nodes, exclusive, inclusive_ns_prefixes,
+    ret = xmlC14NDocSaveTo(doc, nodes, mode, inclusive_ns_prefixes,
                            with_comments, buf);
     if (ret < 0) {
         xmlC14NErrInternal("saving doc to output buffer");
@@ -1743,8 +2051,7 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
  * @doc: 		the XML document for canonization
  * @nodes: 		the nodes set to be included in the canonized image
  *      		or NULL if all document nodes should be included
- * @exclusive:		the exclusive flag (0 - non-exclusive canonicalization;
- *			otherwise - exclusive canonicalization)
+ * @mode:		the c14n mode (see @xmlC14NMode)
  * @inclusive_ns_prefixes: the list of inclusive namespace prefixes 
  *			ended with a NULL or NULL if there is no
  *			inclusive namespaces (only for exclusive 
@@ -1764,7 +2071,7 @@ xmlC14NDocDumpMemory(xmlDocPtr doc, xmlNodeSetPtr nodes,
  */
 int
 xmlC14NDocSave(xmlDocPtr doc, xmlNodeSetPtr nodes,
-               int exclusive, xmlChar ** inclusive_ns_prefixes,
+               int mode, xmlChar ** inclusive_ns_prefixes,
                int with_comments, const char *filename, int compression)
 {
     xmlOutputBufferPtr buf;
@@ -1791,7 +2098,7 @@ xmlC14NDocSave(xmlDocPtr doc, xmlNodeSetPtr nodes,
     /*
      * canonize document and write to buffer
      */
-    ret = xmlC14NDocSaveTo(doc, nodes, exclusive, inclusive_ns_prefixes,
+    ret = xmlC14NDocSaveTo(doc, nodes, mode, inclusive_ns_prefixes,
                            with_comments, buf);
     if (ret < 0) {
         xmlC14NErrInternal("cannicanize document to buffer");
@@ -1919,7 +2226,7 @@ xmlC11NNormalizeString(const xmlChar * input,
         }
         cur++;
     }
-    *out++ = 0;
+    *out = 0;
     return (buffer);
 }
 #endif /* LIBXML_OUTPUT_ENABLED */

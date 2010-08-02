@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* ids */
 
@@ -12,7 +11,5 @@
 #define IDC_LICENSE     106
 #define IDC_OK	        107
 #define IDC_CANCEL	108
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

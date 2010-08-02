@@ -3,7 +3,7 @@
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
  *
- * updated by Caemyr - Olaf Siejka (Jan, 2008) 
+ * updated by Caemyr - Olaf Siejka (Jan, 2008)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -113,8 +113,8 @@ CAPTION "Zale¿noœci"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
-  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
   LTEXT "Niektóre us³ugi s¹ zale¿ne od innych us³ug, sterowników systemowych i grup kolejnoœci ³adowania. Je¿eli sk³adnik systemu jest zatrzymany lub nie dzia³a prawid³owo, mo¿e to mieæ.", IDC_STATIC,8, 7, 238, 26
   LTEXT "Ta us³uga jest zale¿na od nastêpuj¹cych sk³adników systemu", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
@@ -198,7 +198,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Numer us³ugi: %d"
-  IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug Twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
+  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
+  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug Twojego wyboru) którejœ z póŸniejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeœli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

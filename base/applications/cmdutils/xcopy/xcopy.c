@@ -262,10 +262,12 @@ int wmain (int argc, WCHAR *argvW[])
 
     /* Extract required information from source specification */
     rc = XCOPY_ProcessSourceParm(suppliedsource, sourcestem, sourcespec, flags);
+    if (rc != RC_OK) return rc;
 
     /* Extract required information from destination specification */
     rc = XCOPY_ProcessDestParm(supplieddestination, destinationstem,
                                destinationspec, sourcespec, flags);
+    if (rc != RC_OK) return rc;
 
     /* Trace out the resulting information */
     WINE_TRACE("Resolved parameters:\n");

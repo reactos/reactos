@@ -40,11 +40,11 @@ END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Internet Zeit"
+CAPTION "Internetzeit"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Automatisch mit einem Internet Zeitserver synchronisieren", IDC_AUTOSYNC,
+    CONTROL         "Automatisch mit einem Internetzeitserver synchronisieren", IDC_AUTOSYNC,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
     LTEXT           "Server:", -1, 34, 22, 28, 13
     PUSHBUTTON      "Jetzt updaten", IDC_UPDATEBUTTON, 187, 22, 49, 14

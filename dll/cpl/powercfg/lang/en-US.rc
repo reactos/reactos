@@ -1,4 +1,5 @@
-// English (en) resources by Lohegrim (Lohnegrim at gmx dot net)
+// English (en-US) resources by Lohegrim (Lohnegrim at gmx dot net)
+// Updated: 2009-05-02 Jingjing Fu (jingjingf AT 188.com)
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
@@ -56,7 +57,7 @@ BEGIN
     LTEXT           "Unknown",IDC_ALARMPROG1, 154, 95, 84, 10
 
     GROUPBOX        "Critical battery alarm",-1, 6, 120, 239, 106
-    CONTROL         "Activate &low battery alarm when power level reaches:",IDC_ALARM2,
+    CONTROL         "Activate &critical battery alarm when power level reaches:",IDC_ALARM2,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP, 15, 131, 180, 15
     LTEXT           "unknown",IDC_ALARMVALUE2, 209, 133, 33, 10
     LTEXT           "0%",-1, 28, 154, 15, 10

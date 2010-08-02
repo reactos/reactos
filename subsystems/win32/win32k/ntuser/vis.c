@@ -12,11 +12,10 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
- * $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -25,7 +24,7 @@
  * PROGRAMMER:       Ge van Geldorp (ge@gse.nl)
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -39,22 +38,24 @@ VIS_ComputeVisibleRegion(
 {
    HRGN VisRgn, ClipRgn;
    PWINDOW_OBJECT PreviousWindow, CurrentWindow, CurrentSibling;
-   PWINDOW Wnd, CurrentWnd, PreviousWnd, CurrentSiblingWnd;
+   PWND Wnd, CurrentWnd, PreviousWnd, CurrentSiblingWnd;
 
    Wnd = Window->Wnd;
 
-   if (!(Wnd->Style & WS_VISIBLE))
+   if (!Wnd || !(Wnd->style & WS_VISIBLE))
    {
       return NULL;
    }
 
+   VisRgn = NULL;
+
    if (ClientArea)
    {
-      VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->ClientRect);
+      VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcClient);
    }
    else
    {
-      VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
+      VisRgn = IntSysCreateRectRgnIndirect(&Window->Wnd->rcWindow);
    }
 
    /*
@@ -65,79 +66,89 @@ VIS_ComputeVisibleRegion(
 
    PreviousWindow = Window;
    PreviousWnd = PreviousWindow->Wnd;
-   CurrentWindow = Window->Parent;
+   CurrentWindow = Window->spwndParent;
    while (CurrentWindow)
    {
-      CurrentWnd = CurrentWindow->Wnd;
-      if (!(CurrentWnd) || !(CurrentWnd->Style & WS_VISIBLE))
+      if ( CurrentWindow->state & WINDOWSTATUS_DESTROYING || // state2
+           CurrentWindow->state & WINDOWSTATUS_DESTROYED )
       {
-         GreDeleteObject(VisRgn);
+         DPRINT1("ATM the Current Window or Parent is dead!\n");
+         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
          return NULL;
       }
 
-      ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWnd->ClientRect);
-      NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
-      GreDeleteObject(ClipRgn);
+      CurrentWnd = CurrentWindow->Wnd;
+      if (!CurrentWnd || !(CurrentWnd->style & WS_VISIBLE))
+      {
+         if (VisRgn) REGION_FreeRgnByHandle(VisRgn);
+         return NULL;
+      }
 
-      if ((PreviousWnd->Style & WS_CLIPSIBLINGS) ||
+      ClipRgn = IntSysCreateRectRgnIndirect(&CurrentWnd->rcClient);
+      NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
+      REGION_FreeRgnByHandle(ClipRgn);
+
+      if ((PreviousWnd->style & WS_CLIPSIBLINGS) ||
           (PreviousWnd == Wnd && ClipSiblings))
       {
-         CurrentSibling = CurrentWindow->FirstChild;
-         while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
+         CurrentSibling = CurrentWindow->spwndChild;
+         while ( CurrentSibling != NULL && 
+                 CurrentSibling != PreviousWindow &&
+                 CurrentSibling->Wnd )
          {
             CurrentSiblingWnd = CurrentSibling->Wnd;
-            if ((CurrentSiblingWnd->Style & WS_VISIBLE) &&
+            if ((CurrentSiblingWnd->style & WS_VISIBLE) &&
                 !(CurrentSiblingWnd->ExStyle & WS_EX_TRANSPARENT))
             {
-               ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentSiblingWnd->WindowRect);
+               ClipRgn = IntSysCreateRectRgnIndirect(&CurrentSiblingWnd->rcWindow);
                /* Combine it with the window region if available */
-               if (CurrentSibling->WindowRegion && !(CurrentSiblingWnd->Style & WS_MINIMIZE))
+               if (CurrentSibling->hrgnClip && !(CurrentSiblingWnd->style & WS_MINIMIZE))
                {
-                  NtGdiOffsetRgn(ClipRgn, -CurrentSiblingWnd->WindowRect.left, -CurrentSiblingWnd->WindowRect.top);
-                  NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentSibling->WindowRegion, RGN_AND);
-                  NtGdiOffsetRgn(ClipRgn, CurrentSiblingWnd->WindowRect.left, CurrentSiblingWnd->WindowRect.top);
+                  NtGdiOffsetRgn(ClipRgn, -CurrentSiblingWnd->rcWindow.left, -CurrentSiblingWnd->rcWindow.top);
+                  NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentSibling->hrgnClip, RGN_AND);
+                  NtGdiOffsetRgn(ClipRgn, CurrentSiblingWnd->rcWindow.left, CurrentSiblingWnd->rcWindow.top);
                }
                NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
-               GreDeleteObject(ClipRgn);
+               REGION_FreeRgnByHandle(ClipRgn);
             }
-            CurrentSibling = CurrentSibling->NextSibling;
+            CurrentSibling = CurrentSibling->spwndNext;
          }
       }
 
       PreviousWindow = CurrentWindow;
       PreviousWnd = PreviousWindow->Wnd;
-      CurrentWindow = CurrentWindow->Parent;
+      CurrentWindow = CurrentWindow->spwndParent;
    }
 
    if (ClipChildren)
    {
-      CurrentWindow = Window->FirstChild;
-      while (CurrentWindow)
+      CurrentWindow = Window->spwndChild;
+      while (CurrentWindow && CurrentWindow->Wnd)
       {
          CurrentWnd = CurrentWindow->Wnd;
-         if ((CurrentWnd->Style & WS_VISIBLE) &&
+         if ((CurrentWnd->style & WS_VISIBLE) &&
              !(CurrentWnd->ExStyle & WS_EX_TRANSPARENT))
          {
-            ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWnd->WindowRect);
+            ClipRgn = IntSysCreateRectRgnIndirect(&CurrentWnd->rcWindow);
             /* Combine it with the window region if available */
-            if (CurrentWindow->WindowRegion && !(CurrentWnd->Style & WS_MINIMIZE))
+            if (CurrentWindow->hrgnClip && !(CurrentWnd->style & WS_MINIMIZE))
             {
-               NtGdiOffsetRgn(ClipRgn, -CurrentWnd->WindowRect.left, -CurrentWnd->WindowRect.top);
-               NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentWindow->WindowRegion, RGN_AND);
-               NtGdiOffsetRgn(ClipRgn, CurrentWnd->WindowRect.left, CurrentWnd->WindowRect.top);
+               NtGdiOffsetRgn(ClipRgn, -CurrentWnd->rcWindow.left, -CurrentWnd->rcWindow.top);
+               NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentWindow->hrgnClip, RGN_AND);
+               NtGdiOffsetRgn(ClipRgn, CurrentWnd->rcWindow.left, CurrentWnd->rcWindow.top);
             }
             NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_DIFF);
-            GreDeleteObject(ClipRgn);
+            REGION_FreeRgnByHandle(ClipRgn);
          }
-         CurrentWindow = CurrentWindow->NextSibling;
+         CurrentWindow = CurrentWindow->spwndNext;
       }
    }
 
-   if (Window->WindowRegion && !(Wnd->Style & WS_MINIMIZE))
+   if (Window->hrgnClip && !(Wnd->style & WS_MINIMIZE))
    {
-      NtGdiOffsetRgn(VisRgn, -Wnd->WindowRect.left, -Wnd->WindowRect.top);
-      NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
-      NtGdiOffsetRgn(VisRgn, Wnd->WindowRect.left, Wnd->WindowRect.top);
+      NtGdiOffsetRgn(VisRgn, -Wnd->rcWindow.left, -Wnd->rcWindow.top);
+      NtGdiCombineRgn(VisRgn, VisRgn, Window->hrgnClip, RGN_AND);
+      NtGdiOffsetRgn(VisRgn, Wnd->rcWindow.left, Wnd->rcWindow.top);
    }
 
    return VisRgn;
@@ -151,22 +162,22 @@ co_VIS_WindowLayoutChanged(
    HRGN Temp;
    PWINDOW_OBJECT Parent;
    USER_REFERENCE_ENTRY Ref;
-   PWINDOW Wnd, ParentWnd;
+   PWND Wnd, ParentWnd;
 
    ASSERT_REFS_CO(Window);
 
    Wnd = Window->Wnd;
 
-   Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
+   Temp = IntSysCreateRectRgn(0, 0, 0, 0);
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
 
-   Parent = Window->Parent;
+   Parent = Window->spwndParent;
    if(Parent)
    {
       ParentWnd = Parent->Wnd;
       NtGdiOffsetRgn(Temp,
-                     Wnd->WindowRect.left - ParentWnd->ClientRect.left,
-                     Wnd->WindowRect.top - ParentWnd->ClientRect.top);
+                     Wnd->rcWindow.left - ParentWnd->rcClient.left,
+                     Wnd->rcWindow.top - ParentWnd->rcClient.top);
 
       UserRefObjectCo(Parent, &Ref);
       co_UserRedrawWindow(Parent, NULL, Temp,
@@ -174,7 +185,7 @@ co_VIS_WindowLayoutChanged(
                           RDW_ALLCHILDREN);
       UserDerefObjectCo(Parent);
    }
-   GreDeleteObject(Temp);
+   REGION_FreeRgnByHandle(Temp);
 }
 
 /* EOF */

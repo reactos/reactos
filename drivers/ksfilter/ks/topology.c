@@ -1,8 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/topoology.c
+ * PURPOSE:         KS Allocator functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "priv.h"
 
-/* ===============================================================
-    Topology Functions
-*/
 
 NTSTATUS
 NTAPI
@@ -19,24 +25,33 @@ KspCreateObjectType(
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
 
-    Name.Length = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
+    /* calculate request length */
+    Name.Length = 0;
+    Name.MaximumLength = wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize +  2 * sizeof(WCHAR);
     Name.MaximumLength += sizeof(WCHAR);
-    Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
-
+    /* acquire request buffer */
+    Name.Buffer = AllocateItem(NonPagedPool, Name.MaximumLength);
+    /* check for success */
     if (!Name.Buffer)
     {
+        /* insufficient resources */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    wcscpy(Name.Buffer, ObjectType);
-    Name.Buffer[wcslen(ObjectType)] = '\\';
-
-    RtlMoveMemory(Name.Buffer + wcslen(ObjectType) +1, CreateParameters, CreateParametersSize);
-
+    /* build a request which looks like \{ObjectClass}\CreateParameters 
+     * For pins the parent is the reference string used in registration
+     * For clocks it is full path for pin\{ClockGuid}\ClockCreateParams
+     */
+    RtlAppendUnicodeToString(&Name, L"\\");
+    RtlAppendUnicodeToString(&Name, ObjectType);
+    RtlAppendUnicodeToString(&Name, L"\\");
+    /* append create parameters */
+    RtlMoveMemory(Name.Buffer + (Name.Length / sizeof(WCHAR)), CreateParameters, CreateParametersSize);
+    Name.Length += CreateParametersSize;
     Name.Buffer[Name.Length / 2] = L'\0';
+
     InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, ParentHandle, NULL);
-
-
+    /* create the instance */
     Status = IoCreateFile(NodeHandle,
                           DesiredAccess,
                           &ObjectAttributes,
@@ -45,15 +60,15 @@ KspCreateObjectType(
                           0,
                           0,
                           FILE_OPEN,
-                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          0,
                           NULL,
                           0,
                           CreateFileTypeNone,
                           NULL,
                           IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
 
-    // HACK HACK HACK HACK
-    //ExFreePool(Name.Buffer);
+    /* free request buffer */
+    FreeItem(Name.Buffer);
     return Status;
 }
 
@@ -69,7 +84,7 @@ KsCreateTopologyNode(
     OUT PHANDLE NodeHandle)
 {
     return KspCreateObjectType(ParentHandle,
-                               L"{0621061A-EE75-11D0-B915-00A0C9223196}",
+                               KSSTRING_TopologyNode,
                                (PVOID)NodeCreate,
                                sizeof(KSNODE_CREATE),
                                DesiredAccess,
@@ -77,16 +92,47 @@ KsCreateTopologyNode(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsValidateTopologyNodeCreateRequest(
     IN  PIRP Irp,
     IN  PKSTOPOLOGY Topology,
-    OUT PKSNODE_CREATE* NodeCreate)
+    OUT PKSNODE_CREATE* OutNodeCreate)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSNODE_CREATE NodeCreate;
+    ULONG Size;
+    NTSTATUS Status;
+
+    /* did the caller miss the topology */
+    if (!Topology)
+        return STATUS_INVALID_PARAMETER;
+
+    /* set create param  size */
+    Size = sizeof(KSNODE_CREATE);
+
+    /* fetch create parameters */
+    Status = KspCopyCreateRequest(Irp,
+                                  KSSTRING_TopologyNode,
+                                  &Size,
+                                  (PVOID*)&NodeCreate);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (NodeCreate->CreateFlags != 0 || (NodeCreate->Node >= Topology->TopologyNodesCount && NodeCreate->Node != MAXULONG))
+    {
+        /* invalid node create */
+        FreeItem(NodeCreate);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* store result */
+    *OutNodeCreate = NodeCreate;
+
+    return Status;
 }
 
 /*
@@ -106,13 +152,16 @@ KsTopologyPropertyHandler(
     UNICODE_STRING GuidString;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    KSMULTIPLE_ITEM * Item;
     KSP_NODE * Node;
     PIO_STACK_LOCATION IoStack;
     ULONG Size;
     NTSTATUS Status;
     HANDLE hKey;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT("KsTopologyPropertyHandler Irp %p Property %p Data %p Topology %p OutputLength %lu PropertyId %lu\n", Irp, Property, Data, Topology, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Property->Id);
 
     if (Property->Flags != KSPROPERTY_TYPE_GET)
     {
@@ -121,66 +170,26 @@ KsTopologyPropertyHandler(
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
     switch(Property->Id)
     {
         case KSPROPERTY_TOPOLOGY_CATEGORIES:
-            Size = sizeof(KSMULTIPLE_ITEM) + Topology->CategoriesCount * sizeof(GUID);
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
-            {
-                Irp->IoStatus.Information = Size;
-                Status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            }
-
-            Item = (KSMULTIPLE_ITEM*)Irp->UserBuffer;
-            Item->Size = Size;
-            Item->Count = Topology->CategoriesCount;
-
-            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->Categories, Topology->CategoriesCount * sizeof(GUID));
-            Irp->IoStatus.Information = Size;
-            Status = STATUS_SUCCESS;
-            break;
+            return KsHandleSizedListQuery(Irp, Topology->CategoriesCount, sizeof(GUID), Topology->Categories);
 
         case KSPROPERTY_TOPOLOGY_NODES:
-            Size = sizeof(KSMULTIPLE_ITEM) + Topology->TopologyNodesCount * sizeof(GUID);
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
-            {
-                Irp->IoStatus.Information = Size;
-                Status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            }
-
-            Item = (KSMULTIPLE_ITEM*)Irp->UserBuffer;
-            Item->Size = Size;
-            Item->Count = Topology->TopologyNodesCount;
-
-            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyNodes, Topology->TopologyNodesCount * sizeof(GUID));
-            Irp->IoStatus.Information = Size;
-            Status = STATUS_SUCCESS;
-            break;
+            return KsHandleSizedListQuery(Irp, Topology->TopologyNodesCount, sizeof(GUID), Topology->TopologyNodes);
 
         case KSPROPERTY_TOPOLOGY_CONNECTIONS:
-            Size = sizeof(KSMULTIPLE_ITEM) + Topology->TopologyConnectionsCount  * sizeof(GUID);
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
-            {
-                Irp->IoStatus.Information = Size;
-                Status = STATUS_BUFFER_TOO_SMALL;
-                break;
-            }
-
-            Item = (KSMULTIPLE_ITEM*)Irp->UserBuffer;
-            Item->Size = Size;
-            Item->Count = Topology->TopologyConnectionsCount;
-
-            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyConnections, Topology->TopologyConnectionsCount * sizeof(GUID));
-            Irp->IoStatus.Information = Size;
-            Status = STATUS_SUCCESS;
-            break;
+            return KsHandleSizedListQuery(Irp, Topology->TopologyConnectionsCount, sizeof(KSTOPOLOGY_CONNECTION), Topology->TopologyConnections);
 
         case KSPROPERTY_TOPOLOGY_NAME:
             Node = (KSP_NODE*)Property;
+
+            if (Node->NodeId >= Topology->TopologyNodesCount)
+            {
+                Irp->IoStatus.Information = 0;
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
 
             Status = RtlStringFromGUID(&Topology->TopologyNodesNames[Node->NodeId], &GuidString);
             if (!NT_SUCCESS(Status))
@@ -191,28 +200,32 @@ KsTopologyPropertyHandler(
 
             KeyName.Length = 0;
             KeyName.MaximumLength = LocalMachine.Length + GuidString.Length + sizeof(WCHAR);
-            KeyName.Buffer = ExAllocatePool(PagedPool, KeyName.MaximumLength);
+            KeyName.Buffer = AllocateItem(PagedPool, KeyName.MaximumLength);
             if (!KeyName.Buffer)
             {
                 Irp->IoStatus.Information = 0;
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                RtlFreeUnicodeString(&GuidString);
                 break;
             }
 
             RtlAppendUnicodeStringToString(&KeyName, &LocalMachine);
             RtlAppendUnicodeStringToString(&KeyName, &GuidString);
 
+            RtlFreeUnicodeString(&GuidString);
 
             InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
             Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
 
+            FreeItem(KeyName.Buffer);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
-                ExFreePool(KeyName.Buffer);
                 Irp->IoStatus.Information = 0;
                 break;
             }
-            ExFreePool(KeyName.Buffer);
+
             Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, NULL, 0, &Size);
             if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
             {
@@ -221,7 +234,8 @@ KsTopologyPropertyHandler(
                 break;
             }
 
-            KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePool(NonPagedPool, Size);
+            ASSERT(Size);
+            KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) AllocateItem(NonPagedPool, Size);
             if (!KeyInfo)
             {
                 Status = STATUS_NO_MEMORY;
@@ -231,7 +245,7 @@ KsTopologyPropertyHandler(
             Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, (PVOID)KeyInfo, Size, &Size);
             if (!NT_SUCCESS(Status))
             {
-                ExFreePool(KeyInfo);
+                FreeItem(KeyInfo);
                 ZwClose(hKey);
                 Irp->IoStatus.Information = 0;
                 break;
@@ -241,15 +255,15 @@ KsTopologyPropertyHandler(
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
                 Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
-                Status = STATUS_BUFFER_TOO_SMALL;
-                ExFreePool(KeyInfo);
+                Status = STATUS_MORE_ENTRIES;
+                FreeItem(KeyInfo);
                 break;
             }
 
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
              Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
-            ExFreePool(KeyInfo);
+            FreeItem(KeyInfo);
             break;
         default:
              Irp->IoStatus.Information = 0;
@@ -259,3 +273,4 @@ KsTopologyPropertyHandler(
 
     return Status;
 }
+

@@ -204,6 +204,27 @@ TIME_CompTimeZoneID( const TIME_ZONE_INFORMATION *pTZinfo, FILETIME *lpFileTime,
 }
 
 /***********************************************************************
+ *  TIME_TimeZoneID
+ *
+ *  Calculates whether daylight savings is on now.
+ *
+ *  PARAMS
+ *      pTzi [in] Timezone info.
+ *
+ *  RETURNS
+ *      TIME_ZONE_ID_INVALID    An error occurred
+ *      TIME_ZONE_ID_UNKNOWN    There are no transition time known
+ *      TIME_ZONE_ID_STANDARD   Current time is standard time
+ *      TIME_ZONE_ID_DAYLIGHT   Current time is daylight savings time
+ */
+static DWORD TIME_ZoneID( const TIME_ZONE_INFORMATION *pTzi )
+{
+    FILETIME ftTime;
+    GetSystemTimeAsFileTime( &ftTime);
+    return TIME_CompTimeZoneID( pTzi, &ftTime, FALSE);
+}
+
+/***********************************************************************
  *  TIME_GetTimezoneBias
  *
  *  Calculates the local time bias for a given time zone.
@@ -297,7 +318,10 @@ DosDateTimeToFileTime(WORD wFatDate,
     SystemTime.wMonth = pddate->Month;
     SystemTime.wYear = 1980 + pddate->Year;
 
-    SystemTimeToFileTime(&SystemTime,lpFileTime);
+    if (SystemTimeToFileTime(&SystemTime, lpFileTime) == FALSE)
+    {
+        return FALSE;
+    }
 
     return TRUE;
 }
@@ -534,7 +558,7 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
         return TIME_ZONE_ID_INVALID;
     }
 
-    return(SharedUserData->TimeZoneId);
+    return TIME_ZoneID(lpTimeZoneInformation);
 }
 
 
@@ -661,8 +685,8 @@ SystemTimeToTzSpecificLocalTime(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformati
  */
 BOOL
 WINAPI
-TzSpecificLocalTimeToSystemTime(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
-                                CONST SYSTEMTIME *lpLocalTime,
+TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
+                                LPSYSTEMTIME lpLocalTime,
                                 LPSYSTEMTIME lpUniversalTime)
 {
     FILETIME ft;

@@ -50,7 +50,7 @@ static inline httprequest *impl_from_IXMLHTTPRequest( IXMLHTTPRequest *iface )
 static HRESULT WINAPI httprequest_QueryInterface(IXMLHTTPRequest *iface, REFIID riid, void **ppvObject)
 {
     httprequest *This = impl_from_IXMLHTTPRequest( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
 
     if ( IsEqualGUID( riid, &IID_IXMLHTTPRequest) ||
          IsEqualGUID( riid, &IID_IDispatch) ||
@@ -83,7 +83,7 @@ static ULONG WINAPI httprequest_Release(IXMLHTTPRequest *iface)
     ref = InterlockedDecrement( &This->ref );
     if ( ref == 0 )
     {
-        HeapFree( GetProcessHeap(), 0, This );
+        heap_free( This );
     }
 
     return ref;
@@ -213,7 +213,7 @@ static HRESULT WINAPI httprequest_abort(IXMLHTTPRequest *iface)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI httprequest_get_status(IXMLHTTPRequest *iface, long *plStatus)
+static HRESULT WINAPI httprequest_get_status(IXMLHTTPRequest *iface, LONG *plStatus)
 {
     httprequest *This = impl_from_IXMLHTTPRequest( iface );
 
@@ -267,7 +267,7 @@ static HRESULT WINAPI httprequest_get_responseStream(IXMLHTTPRequest *iface, VAR
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI httprequest_get_readyState(IXMLHTTPRequest *iface, long *plState)
+static HRESULT WINAPI httprequest_get_readyState(IXMLHTTPRequest *iface, LONG *plState)
 {
     httprequest *This = impl_from_IXMLHTTPRequest( iface );
 
@@ -317,7 +317,7 @@ HRESULT XMLHTTPRequest_create(IUnknown *pUnkOuter, LPVOID *ppObj)
 
     TRACE("(%p,%p)\n", pUnkOuter, ppObj);
 
-    req = HeapAlloc( GetProcessHeap(), 0, sizeof (*req) );
+    req = heap_alloc( sizeof (*req) );
     if( !req )
         return E_OUTOFMEMORY;
 

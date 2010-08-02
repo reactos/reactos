@@ -83,7 +83,7 @@ BEGIN
    PUSHBUTTON    "A&ls Standard", IDC_BTN_SET_DEFAULT_BOOT, 120, 65, 63, 12
    PUSHBUTTON    "Nach &oben", IDC_BTN_MOVE_UP_BOOT_OPTION, 203, 65, 63, 12
    PUSHBUTTON    "Nach &unten", IDC_BTN_MOVE_DOWN_BOOT_OPTION, 286, 65, 63, 12
-   GROUPBOX "Boot Optionen", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
+   GROUPBOX "Bootoptionen", -1, 10, 80, 250, 90,0,WS_EX_TRANSPARENT
    CHECKBOX "/SA&FEBOOT", IDC_CBX_SAFE_BOOT, 15, 90, 55, 10
    CHECKBOX "/&NOGUIBOOT", IDC_CBX_NO_GUI_BOOT, 15, 105, 60, 10
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
@@ -149,7 +149,7 @@ BEGIN
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
     IDS_TOOLS_INFO_NAME      "Version"
-    IDS_TOOLS_INFO_DESCR     "Zeigt die installierte ReactOS Version an."
+    IDS_TOOLS_INFO_DESCR     "Zeigt die installierte ReactOS-Version an."
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Registrierungs-Editor"

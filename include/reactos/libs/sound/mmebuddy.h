@@ -156,6 +156,7 @@ struct _SOUND_DEVICE_INSTANCE;
 #define DEFINE_GETCAPS_FUNCTYPE(func_typename, caps_type) \
     typedef MMRESULT (*func_typename)( \
         IN  struct _SOUND_DEVICE* SoundDevice, \
+        IN  DWORD DeviceId, \
         OUT caps_type Capabilities, \
         IN  DWORD CapabilitiesSize);
 
@@ -183,6 +184,10 @@ typedef struct _SOUND_OVERLAPPED
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
     BOOL PerformCompletion;
+
+    DWORD OriginalBufferSize;
+    LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
 
 typedef MMRESULT (*WAVE_COMMIT_FUNC)(
@@ -192,6 +197,11 @@ typedef MMRESULT (*WAVE_COMMIT_FUNC)(
     IN  PSOUND_OVERLAPPED Overlap,
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
 
+typedef MMRESULT (*MMMIXERQUERY_FUNC) (
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN UINT uMsg,
+    IN LPVOID Parameter,
+    IN DWORD Flags);
 
 
 typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
@@ -201,6 +211,7 @@ typedef MMRESULT (*MMWAVEQUERYFORMATSUPPORT_FUNC)(
 
 typedef MMRESULT (*MMWAVESETFORMAT_FUNC)(
     IN  struct _SOUND_DEVICE_INSTANCE* Instance,
+    IN  DWORD DeviceId,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize);
 
@@ -221,6 +232,28 @@ typedef MMRESULT (*MMBUFFER_FUNC)(
     IN  PVOID Buffer,
     IN  DWORD Length);
 
+typedef MMRESULT(*MMGETPOS_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMTIME* Time);
+
+
+typedef MMRESULT(*MMSETSTATE_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  BOOL bStart);
+
+
+typedef MMRESULT(*MMQUERYDEVICEINTERFACESTRING_FUNC)(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize);
+
+typedef MMRESULT(*MMRESETSTREAM_FUNC)(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  BOOLEAN bStartReset);
+
 typedef struct _MMFUNCTION_TABLE
 {
     union
@@ -238,7 +271,14 @@ typedef struct _MMFUNCTION_TABLE
     MMWAVEQUERYFORMATSUPPORT_FUNC   QueryWaveFormatSupport;
     MMWAVESETFORMAT_FUNC            SetWaveFormat;
 
+    MMMIXERQUERY_FUNC               QueryMixerInfo;
+
     WAVE_COMMIT_FUNC                CommitWaveBuffer;
+
+    MMGETPOS_FUNC                   GetPos;
+    MMSETSTATE_FUNC                 SetState;
+    MMQUERYDEVICEINTERFACESTRING_FUNC     GetDeviceInterfaceString;
+    MMRESETSTREAM_FUNC               ResetStream;
 
     // Redundant
     //MMWAVEHEADER_FUNC               PrepareWaveHeader;
@@ -299,8 +339,8 @@ typedef struct _SOUND_DEVICE_INSTANCE
     {
         HDRVR Handle;
         DWORD Flags;
-        DWORD ClientCallback;
-        DWORD ClientCallbackInstanceData;
+        DWORD_PTR ClientCallback;
+        DWORD_PTR ClientCallbackInstanceData;
     } WinMM;
 
     /* DO NOT TOUCH THESE OUTSIDE OF THE SOUND THREAD */
@@ -319,6 +359,11 @@ typedef struct _SOUND_DEVICE_INSTANCE
     //PWAVEHDR CurrentWaveHeader;
     DWORD OutstandingBuffers;
     DWORD LoopsRemaining;
+    DWORD FrameSize;
+    DWORD BufferCount;
+    WAVEFORMATEX WaveFormatEx;
+    HANDLE hNotifyEvent;
+    HANDLE hStopEvent;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -355,8 +400,8 @@ ReleaseEntrypointMutex(
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD Message,
-    IN  DWORD Parameter);
+    IN  UINT Message,
+    IN  DWORD_PTR Parameter);
 
 MMRESULT
 MmeGetSoundDeviceCapabilities(
@@ -368,14 +413,37 @@ MmeGetSoundDeviceCapabilities(
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
+    IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT DWORD* PrivateHandle);
+    OUT DWORD_PTR* PrivateHandle);
 
 MMRESULT
 MmeCloseDevice(
-    IN  DWORD PrivateHandle);
+    IN  DWORD_PTR PrivateHandle);
+
+MMRESULT
+MmeGetPosition(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  DWORD_PTR PrivateHandle,
+    IN  MMTIME* Time,
+    IN  DWORD Size);
+
+MMRESULT
+MmeGetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize);
+
+
+MMRESULT
+MmeSetState(
+    IN  DWORD_PTR PrivateHandle,
+    IN  BOOL bStart);
+
 
 #define MmePrepareWaveHeader(private_handle, header) \
     PrepareWaveHeader((PSOUND_DEVICE_INSTANCE)private_handle, (PWAVEHDR)header)
@@ -388,7 +456,7 @@ MmeCloseDevice(
 
 MMRESULT
 MmeResetWavePlayback(
-    IN  DWORD PrivateHandle);
+    IN  DWORD_PTR PrivateHandle);
 
 
 /*
@@ -398,6 +466,7 @@ MmeResetWavePlayback(
 MMRESULT
 GetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD DeviceId,
     OUT PVOID Capabilities,
     IN  DWORD CapabilitiesSize);
 
@@ -499,8 +568,8 @@ MMRESULT
 SetSoundDeviceInstanceMmeData(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  HDRVR MmeHandle,
-    IN  DWORD ClientCallback,
-    IN  DWORD ClientCallbackData,
+    IN  DWORD_PTR ClientCallback,
+    IN  DWORD_PTR ClientCallbackData,
     IN  DWORD Flags);
 
 
@@ -564,6 +633,7 @@ QueryWaveDeviceFormatSupport(
 MMRESULT
 SetWaveDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD DeviceId,
     IN  LPWAVEFORMATEX Format,
     IN  DWORD FormatSize);
 

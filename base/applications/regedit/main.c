@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <regedit.h>
@@ -65,7 +65,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     WNDCLASSEX wcFrame;
     WNDCLASSEX wcChild;
     ATOM hFrameWndClass;
-    ATOM hChildWndClass;
 
     ZeroMemory(&wcFrame, sizeof(WNDCLASSEX));
     wcFrame.cbSize = sizeof(WNDCLASSEX);
@@ -93,7 +92,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcChild.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT), IMAGE_ICON,
                                               GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
-    hChildWndClass = RegisterClassEx(&wcChild); /* register child windows class */
+    RegisterClassEx(&wcChild); /* register child windows class */
 
     RegisterHexEditorClass(hInstance);
 

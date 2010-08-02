@@ -4,9 +4,6 @@
 	<directory name="audiosrv">
 		<xi:include href="audiosrv/audiosrv.rbuild" />
 	</directory>
-	<directory name="dhcp">
-		<xi:include href="dhcp/dhcp.rbuild" />
-	</directory>
 	<directory name="eventlog">
 		<xi:include href="eventlog/eventlog.rbuild" />
 	</directory>
@@ -21,6 +18,12 @@
 	</directory>
 	<directory name="tcpsvcs">
 		<xi:include href="tcpsvcs/tcpsvcs.rbuild" />
+	</directory>
+	<directory name="telnetd">
+		<xi:include href="telnetd/telnetd.rbuild" />
+	</directory>
+	<directory name="tftpd">
+		<xi:include href="tftpd/tftpd.rbuild" />
 	</directory>
 	<directory name="umpnpmgr">
 		<xi:include href="umpnpmgr/umpnpmgr.rbuild" />

@@ -24,6 +24,7 @@ import "msxml.idl";
 
 cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
 cpp_quote("#undef GetUserName")
+cpp_quote("#undef SetPort")
 cpp_quote("#endif")
 
 interface IInternetProtocolSink;
@@ -198,7 +199,9 @@ interface IBindStatusCallback : IUnknown
         BSCF_INTERMEDIATEDATANOTIFICATION = 0x02,
         BSCF_LASTDATANOTIFICATION = 0x04,
         BSCF_DATAFULLYAVAILABLE = 0x08,
-        BSCF_AVAILABLEDATASIZEUNKNOWN = 0x10
+        BSCF_AVAILABLEDATASIZEUNKNOWN = 0x10,
+        BSCF_SKIPDRAINDATAFORFILEURLS = 0x20,
+        BSCF_64BITLENGTHDOWNLOAD = 0x40
     } BSCF;
 
     typedef enum BINDSTATUS
@@ -307,6 +310,45 @@ interface IBindStatusCallback : IUnknown
         [in] REFIID riid,
         [in, iid_is(riid)] IUnknown* punk);
 }
+
+/*****************************************************************************
+ * IBindStatusCallbackEx interface
+ */
+[
+    object,
+    uuid(aaa74ef9-8ee7-4659-88d9-f8c504da73cc),
+    pointer_default(unique)
+]
+interface IBindStatusCallbackEx : IBindStatusCallback
+{
+    typedef [unique] IBindStatusCallbackEx *LPBINDSTATUSCALLBACKEX;
+
+    typedef enum {
+        BINDF2_DISABLEBASICOVERHTTP               = 0x00000001,
+        BINDF2_DISABLEAUTOCOOKIEHANDLING          = 0x00000002,
+        BINDF2_READ_DATA_GREATER_THAN_4GB         = 0x00000004,
+        BINDF2_DISABLE_HTTP_REDIRECT_XSECURITYID  = 0x00000008,
+        BINDF2_RESERVED_3                         = 0x20000000,
+        BINDF2_RESERVED_2                         = 0x40000000,
+        BINDF2_RESERVED_1                         = 0x80000000,
+    } BINDF2;
+
+    [local]
+    HRESULT GetBindInfoEx(
+            [out] DWORD *grfBINDF,
+            [in, out, unique] BINDINFO *pbindinfo,
+            [out] DWORD *grfBINDF2,
+            [out] DWORD *pdwReserved);
+
+    [call_as(GetBindInfoEx)]
+    HRESULT RemoteGetBindInfoEx(
+            [out] DWORD *grfBINDF,
+            [in, out, unique] RemBINDINFO *pbindinfo,
+            [in, out, unique] RemSTGMEDIUM *pstgmed,
+            [out] DWORD *grfBINDF2,
+            [out] DWORD *pdwReserved);
+}
+
 
 /*****************************************************************************
  * IAuthenticate interface
@@ -703,7 +745,7 @@ interface IInternetProtocolRoot : IUnknown
         [in] IInternetProtocolSink *pOIProtSink,
         [in] IInternetBindInfo *pOIBindInfo,
         [in] DWORD grfPI,
-        [in] DWORD dwReserved);
+        [in] HANDLE_PTR dwReserved);
 
     HRESULT Continue(
         [in] PROTOCOLDATA *pProtocolData);
@@ -1024,6 +1066,42 @@ cpp_quote("#define MAX_SIZE_SECURITY_ID 512")
         [in] DWORD dwFlags);
 }
 
+/*****************************************************************************
+ * IInternetHostSecurityManager interface
+ */
+cpp_quote("#define SID_SInternetHostSecurityManager IID_IInternetHostSecurityManager")
+
+[
+    local,
+    object,
+    uuid(3af280b6-cb3f-11d0-891e-00c04fb6bfc4),
+    pointer_default(unique)
+]
+interface IInternetHostSecurityManager : IUnknown
+{
+    HRESULT GetSecurityId(
+            [out, size_is(*pcbSecurityId)] BYTE *pbSecurityId,
+            [in, out] DWORD *pcbSecurityId,
+            [in] DWORD_PTR dwReserved);
+
+    HRESULT ProcessUrlAction(
+            [in] DWORD dwAction,
+            [out, size_is(cbPolicy)] BYTE *pPolicy,
+            [in] DWORD cbPolicy,
+            [in] BYTE *pContext,
+            [in] DWORD cbContext,
+            [in] DWORD dwFlags,
+            [in] DWORD dwReserved);
+
+    HRESULT QueryCustomPolicy(
+            [in] REFGUID guidKey,
+            [out, size_is(,*pcbPolicy)] BYTE **ppPolicy,
+            [out] DWORD *pcbPolicy,
+            [in] BYTE *pContext,
+            [in] DWORD cbContext,
+            [in] DWORD dwReserved);
+}
+
 cpp_quote("#define URLACTION_MIN                        0x00001000")
 cpp_quote("#define URLACTION_DOWNLOAD_MIN               0x00001000")
 cpp_quote("#define URLACTION_DOWNLOAD_SIGNED_ACTIVEX    0x00001001")
@@ -1153,6 +1231,7 @@ interface IInternetZoneManager : IUnknown
 
     typedef enum tagURLZONE
     {
+        URLZONE_INVALID         = -1,
         URLZONE_PREDEFINED_MIN  = 0,
         URLZONE_LOCAL_MACHINE   = 0,
         URLZONE_INTRANET        = 1,
@@ -1169,20 +1248,26 @@ interface IInternetZoneManager : IUnknown
         URLTEMPLATE_CUSTOM         = 0x00000,
         URLTEMPLATE_PREDEFINED_MIN = 0x10000,
         URLTEMPLATE_LOW            = 0x10000,
+        URLTEMPLATE_MEDLOW         = 0x10500,
         URLTEMPLATE_MEDIUM         = 0x11000,
+        URLTEMPLATE_MEDHIGH        = 0x11500,
         URLTEMPLATE_HIGH           = 0x12000,
         URLTEMPLATE_PREDEFINED_MAX = 0x20000,
     } URLTEMPLATE ;
 
     typedef enum {
-        ZAFLAGS_CUSTOM_EDIT            = 0x00000001,
-        ZAFLAGS_ADD_SITES              = 0x00000002,
-        ZAFLAGS_REQUIRE_VERIFICATION   = 0x00000004,
-        ZAFLAGS_INCLUDE_PROXY_OVERRIDE = 0x00000008,
-        ZAFLAGS_INCLUDE_INTRANET_SITES = 0x00000010,
-        ZAFLAGS_NO_UI                  = 0x00000020,
-        ZAFLAGS_SUPPORTS_VERIFICATION  = 0x00000040,
-        ZAFLAGS_UNC_AS_INTRANET        = 0x00000080,
+        ZAFLAGS_CUSTOM_EDIT              = 0x00000001,
+        ZAFLAGS_ADD_SITES                = 0x00000002,
+        ZAFLAGS_REQUIRE_VERIFICATION     = 0x00000004,
+        ZAFLAGS_INCLUDE_PROXY_OVERRIDE   = 0x00000008,
+        ZAFLAGS_INCLUDE_INTRANET_SITES   = 0x00000010,
+        ZAFLAGS_NO_UI                    = 0x00000020,
+        ZAFLAGS_SUPPORTS_VERIFICATION    = 0x00000040,
+        ZAFLAGS_UNC_AS_INTRANET          = 0x00000080,
+        ZAFLAGS_DETECT_INTRANET          = 0x00000100,
+        ZAFLAGS_USE_LOCKED_ZONES         = 0x00010000,
+        ZAFLAGS_VERIFY_TEMPLATE_SETTINGS = 0x00020000,
+        ZAFLAGS_NO_CACHE                 = 0x00040000,
     } ZAFLAGS ;
 
     enum {
@@ -1274,6 +1359,72 @@ interface IInternetZoneManager : IUnknown
         [in] DWORD dwZone,
         [in] DWORD dwReserved);
 }
+
+/*****************************************************************************
+ * IInternetZoneManagerEx interface
+ */
+[
+    local,
+    object,
+    uuid(A4C23339-8E06-431E-9BF4-7E711C085648),
+    pointer_default(unique)
+]
+interface IInternetZoneManagerEx : IInternetZoneManager
+{
+    HRESULT GetZoneActionPolicyEx(
+        [in]  DWORD dwZone,
+        [in]  DWORD dwAction,
+        [out] BYTE* pPolicy,
+        [in]  DWORD cbPolicy,
+        [in]  URLZONEREG urlZoneReg,
+        [in]  DWORD dwFlags);
+
+    HRESULT SetZoneActionPolicyEx(
+        [in] DWORD dwZone,
+        [in] DWORD dwAction,
+        [in] BYTE* pPolicy,
+        [in] DWORD cbPolicy,
+        [in] URLZONEREG urlZoneReg,
+        [in] DWORD dwFlags);
+
+}
+
+/*****************************************************************************
+ * IInternetZoneManagerEx2 interface
+ */
+
+cpp_quote("#define SECURITY_IE_STATE_GREEN 0")
+cpp_quote("#define SECURITY_IE_STATE_RED   1")
+
+[
+    local,
+    object,
+    uuid(EDC17559-DD5D-4846-8EEF-8BECBA5A4ABF),
+    pointer_default(unique)
+]
+interface IInternetZoneManagerEx2 : IInternetZoneManagerEx
+{
+    HRESULT GetZoneAttributesEx(
+        [in]              DWORD dwZone,
+        [in, out, unique] ZONEATTRIBUTES* pZoneAttributes,
+        [in]              DWORD dwFlags);
+
+    HRESULT GetZoneSecurityState(
+        [in]      DWORD dwZoneIndex,
+        [in]      BOOL fRespectPolicy,
+        [in, out] LPDWORD pdwState,
+        [in, out] BOOL *pfPolicyEncountered);
+
+    HRESULT GetIESecurityState(
+        [in]      BOOL fRespectPolicy,
+        [in, out] LPDWORD pdwState,
+        [in, out] BOOL *pfPolicyEncountered,
+        [in]      BOOL fNoCache);
+
+    HRESULT FixInsecureSettings(void);
+
+}
+
 
 typedef struct _tagSOFTDISTINFO
 {
@@ -1367,6 +1518,14 @@ typedef enum _tagINTERNETFEATURELIST
     FEATURE_ENTRY_COUNT
 } INTERNETFEATURELIST;
 
+typedef struct _tagPROTOCOLFILTERDATA {
+    DWORD cbSize;
+    IInternetProtocolSink *pProtocolSink;
+    IInternetProtocol *pProtocol;
+    IUnknown *pUnk;
+    DWORD dwFilterFlags;
+} PROTOCOLFILTERDATA;
+
 /*****************************************************************************
  * IUri interface
  */
@@ -1404,6 +1563,15 @@ interface IUri : IUnknown
         Uri_PROPERTY_ZONE = 18,
         Uri_PROPERTY_DWORD_LAST = Uri_PROPERTY_ZONE
     } Uri_PROPERTY;
+
+    typedef enum
+    {
+        Uri_HOST_UNKNOWN = 0,
+        Uri_HOST_DNS = 1,
+        Uri_HOST_IPV4 = 2,
+        Uri_HOST_IPV6 = 3,
+        Uri_HOST_IDN = 4
+    } Uri_HOST_TYPE;
 
     HRESULT GetPropertyBSTR(
         [in]  Uri_PROPERTY uriProp,
@@ -1489,6 +1657,175 @@ interface IUri : IUnknown
         [out] BOOL *pfEqual);
 }
 
+cpp_quote("HRESULT WINAPI CreateUri(LPCWSTR,DWORD,DWORD_PTR,IUri**);")
+cpp_quote("HRESULT WINAPI CreateUriWithFragment(LPCWSTR,LPCWSTR,DWORD,DWORD_PTR,IUri**);")
+cpp_quote("HRESULT WINAPI CreateUriFromMultiByteString(LPCSTR,DWORD,DWORD,DWORD,DWORD_PTR,IUri**);")
+
+cpp_quote("#define Uri_HAS_ABSOLUTE_URI    (1 << Uri_PROPERTY_ABSOLUTE_URI)")
+cpp_quote("#define Uri_HAS_AUTHORITY       (1 << Uri_PROPERTY_AUTHORITY)")
+cpp_quote("#define Uri_HAS_DISPLAY_URI     (1 << Uri_PROPERTY_DISPLAY_URI)")
+cpp_quote("#define Uri_HAS_DOMAIN          (1 << Uri_PROPERTY_DOMAIN)")
+cpp_quote("#define Uri_HAS_EXTENSION       (1 << Uri_PROPERTY_EXTENSION)")
+cpp_quote("#define Uri_HAS_FRAGMENT        (1 << Uri_PROPERTY_FRAGMENT)")
+cpp_quote("#define Uri_HAS_HOST            (1 << Uri_PROPERTY_HOST)")
+cpp_quote("#define Uri_HAS_PASSWORD        (1 << Uri_PROPERTY_PASSWORD)")
+cpp_quote("#define Uri_HAS_PATH            (1 << Uri_PROPERTY_PATH)")
+cpp_quote("#define Uri_HAS_QUERY           (1 << Uri_PROPERTY_QUERY)")
+cpp_quote("#define Uri_HAS_RAW_URI         (1 << Uri_PROPERTY_RAW_URI)")
+cpp_quote("#define Uri_HAS_SCHEME_NAME     (1 << Uri_PROPERTY_SCHEME_NAME)")
+cpp_quote("#define Uri_HAS_USER_NAME       (1 << Uri_PROPERTY_USER_NAME)")
+cpp_quote("#define Uri_HAS_PATH_AND_QUERY  (1 << Uri_PROPERTY_PATH_AND_QUERY)")
+cpp_quote("#define Uri_HAS_USER_INFO       (1 << Uri_PROPERTY_USER_INFO)")
+cpp_quote("#define Uri_HAS_HOST_TYPE       (1 << Uri_PROPERTY_HOST_TYPE)")
+cpp_quote("#define Uri_HAS_PORT            (1 << Uri_PROPERTY_PORT)")
+cpp_quote("#define Uri_HAS_SCHEME          (1 << Uri_PROPERTY_SCHEME)")
+cpp_quote("#define Uri_HAS_ZONE            (1 << Uri_PROPERTY_ZONE)")
+
+cpp_quote("#define Uri_CREATE_ALLOW_RELATIVE                  0x0001")
+cpp_quote("#define Uri_CREATE_ALLOW_IMPLICIT_WILDCARD_SCHEME  0x0002")
+cpp_quote("#define Uri_CREATE_ALLOW_IMPLICIT_FILE_SCHEME      0x0004")
+cpp_quote("#define Uri_CREATE_NOFRAG                          0x0008")
+cpp_quote("#define Uri_CREATE_NO_CANONICALIZE                 0x0010")
+cpp_quote("#define Uri_CREATE_CANONICALIZE                    0x0100")
+cpp_quote("#define Uri_CREATE_FILE_USE_DOS_PATH               0x0020")
+cpp_quote("#define Uri_CREATE_DECODE_EXTRA_INFO               0x0040")
+cpp_quote("#define Uri_CREATE_NO_DECODE_EXTRA_INFO            0x0080")
+cpp_quote("#define Uri_CREATE_CRACK_UNKNOWN_SCHEMES           0x0200")
+cpp_quote("#define Uri_CREATE_NO_CRACK_UNKNOWN_SCHEMES        0x0400")
+cpp_quote("#define Uri_CREATE_PRE_PROCESS_HTML_URI            0x0800")
+cpp_quote("#define Uri_CREATE_NO_PRE_PROCESS_HTML_URI         0x1000")
+cpp_quote("#define Uri_CREATE_IE_SETTINGS                     0x2000")
+cpp_quote("#define Uri_CREATE_NO_IE_SETTINGS                  0x4000")
+cpp_quote("#define Uri_CREATE_NO_ENCODE_FORBIDDEN_CHARACTERS  0x8000")
+
+cpp_quote("#define Uri_DISPLAY_NO_FRAGMENT  0x00000001")
+cpp_quote("#define Uri_PUNYCODE_IDN_HOST    0x00000002")
+cpp_quote("#define Uri_DISPLAY_IDN_HOST     0x00000004")
+
+cpp_quote("#define Uri_ENCODING_USER_INFO_AND_PATH_IS_PERCENT_ENCODED_UTF8   0x00000001")
+cpp_quote("#define Uri_ENCODING_USER_INFO_AND_PATH_IS_CP                     0x00000002")
+cpp_quote("#define Uri_ENCODING_HOST_IS_IDN                                  0x00000004")
+cpp_quote("#define Uri_ENCODING_HOST_IS_PERCENT_ENCODED_UTF8                 0x00000008")
+cpp_quote("#define Uri_ENCODING_HOST_IS_PERCENT_ENCODED_CP                   0x00000010")
+cpp_quote("#define Uri_ENCODING_QUERY_AND_FRAGMENT_IS_PERCENT_ENCODED_UTF8   0x00000020")
+cpp_quote("#define Uri_ENCODING_QUERY_AND_FRAGMENT_IS_CP                     0x00000040")
+cpp_quote("#define Uri_ENCODING_RFC (Uri_ENCODING_USER_INFO_AND_PATH_IS_PERCENT_ENCODED_UTF8|Uri_ENCODING_HOST_IS_PERCENT_ENCODED_UTF8|Uri_ENCODING_QUERY_AND_FRAGMENT_IS_PERCENT_ENCODED_UTF8)")
+
+cpp_quote("#define UriBuilder_USE_ORIGINAL_FLAGS  0x00000001")
+
+/*****************************************************************************
+ * IUriContainer interface
+ */
+[
+    local,
+    object,
+    uuid(a158a630-ed6f-45fb-b987-f68676f57752),
+    pointer_default(unique)
+]
+interface IUriContainer : IUnknown
+{
+    HRESULT GetIUri([out] IUri **ppIUri);
+}
+
+/*****************************************************************************
+ * IUriBuilder interface
+ */
+[
+    local,
+    object,
+    uuid(4221b2e1-8955-46c0-bd5b-de9897565de7),
+    pointer_default(unique)
+]
+interface IUriBuilder: IUnknown
+{
+    HRESULT CreateUriSimple(
+        [in]  DWORD       dwAllowEncodingPropertyMask,
+        [in]  DWORD_PTR   dwReserved,
+        [out] IUri      **ppIUri);
+
+    HRESULT CreateUri(
+        [in]  DWORD       dwCreateFlags,
+        [in]  DWORD       dwAllowEncodingPropertyMask,
+        [in]  DWORD_PTR   dwReserved,
+        [out] IUri      **ppIUri);
+
+    HRESULT CreateUriWithFlags(
+        [in]  DWORD       dwCreateFlags,
+        [in]  DWORD       dwUriBuilderFlags,
+        [in]  DWORD       dwAllowEncodingPropertyMask,
+        [in]  DWORD_PTR   dwReserved,
+        [out] IUri      **ppIUri);
+
+    HRESULT GetIUri(
+        [out] IUri **ppIUri);
+
+    HRESULT SetIUri(
+        [in, unique] IUri *pIUri);
+
+    HRESULT GetFragment(
+        [out] DWORD   *pcchFragment,
+        [out] LPCWSTR *ppwzFragment);
+
+    HRESULT GetHost(
+        [out] DWORD   *pcchHost,
+        [out] LPCWSTR *ppwzHost);
+
+    HRESULT GetPassword(
+        [out] DWORD   *pcchPassword,
+        [out] LPCWSTR *ppwzPassword);
+
+    HRESULT GetPath(
+        [out] DWORD   *pcchPath,
+        [out] LPCWSTR *ppwzPath);
+
+    HRESULT GetPort(
+        [out] BOOL  *pfHasPort,
+        [out] DWORD *pdwPort);
+
+    HRESULT GetQuery(
+        [out] DWORD   *pcchQuery,
+        [out] LPCWSTR *ppwzQuery);
+
+    HRESULT GetSchemeName(
+        [out] DWORD   *pcchSchemeName,
+        [out] LPCWSTR *ppwzSchemeName);
+
+    HRESULT GetUserName(
+        [out] DWORD   *pcchUserName,
+        [out] LPCWSTR *ppwzUserName);
+
+    HRESULT SetFragment(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetHost(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetPassword(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetPath(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetPort(
+        [in] BOOL  fHasPort,
+        [in] DWORD dwNewValue);
+
+    HRESULT SetQuery(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetSchemeName(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT SetUserName(
+        [in] LPCWSTR pwzNewValue);
+
+    HRESULT RemoveProperties(
+        [in] DWORD dwPropertyMask);
+
+    HRESULT HasBeenModified(
+        [out] BOOL *pfModified);
+};
+
 /*****************************************************************************
  * IInternetProtocolEx interface
  */
@@ -1508,11 +1845,23 @@ interface IInternetProtocolEx : IInternetProtocol
         [in] HANDLE *dwReserved);
 }
 
+cpp_quote("#define CONFIRMSAFETYACTION_LOADOBJECT  0x00000001")
+
+struct CONFIRMSAFETY
+{
+    CLSID clsid;
+    IUnknown *pUnk;
+    DWORD dwFlags;
+};
+
+cpp_quote("EXTERN_C const GUID GUID_CUSTOM_CONFIRMOBJECTSAFETY;")
+
 cpp_quote("DEFINE_GUID(CLSID_InternetSecurityManager, 0x7b8a2d94, 0x0ac9, 0x11d1, 0x89, 0x6c, 0x00, 0xc0, 0x4f, 0xB6, 0xbf, 0xc4);")
 cpp_quote("DEFINE_GUID(CLSID_InternetZoneManager, 0x7B8A2D95, 0x0AC9, 0x11D1, 0x89, 0x6C, 0x00, 0xC0, 0x4F, 0xB6, 0xBF, 0xC4);")
 cpp_quote("DEFINE_GUID(IID_IAsyncMoniker, 0x79EAC9D3, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
 cpp_quote("DEFINE_GUID(IID_IAsyncBindCtx, 0x79EAC9D4, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
 cpp_quote("DEFINE_GUID(CLSID_StdURLMoniker, 0x79EAC9E0, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
+cpp_quote("DEFINE_GUID(CLSID_DeCompMimeFilter, 0x8f6b0360, 0xb80d, 0x11d0, 0xa9,0xb3, 0x00,0x60,0x97,0x94,0x23,0x11);")
 
 cpp_quote("DEFINE_GUID(CLSID_CdlProtocol, 0x3dd53d40, 0x7b8b, 0x11D0, 0xb0,0x13, 0x00,0xaa,0x00,0x59,0xce,0x02);")
 cpp_quote("DEFINE_GUID(CLSID_FileProtocol, 0x79EAC9E7, 0xBAF9, 0x11CE, 0x8C,0x82, 0x00,0xAA,0x00,0x4B,0xA9,0x0B);")
@@ -1557,6 +1906,8 @@ cpp_quote("#define INET_E_DEFAULT_ACTION            INET_E_USE_DEFAULT_PROTOCOLH
 
 cpp_quote("HRESULT WINAPI CoGetClassObjectFromURL(REFCLSID, LPCWSTR, DWORD, DWORD, LPCWSTR, LPBINDCTX, DWORD, LPVOID, REFIID, LPVOID*);")
 cpp_quote("HRESULT WINAPI CreateURLMoniker(IMoniker *pmkContext, LPCWSTR szURL, IMoniker **ppmk);")
+cpp_quote("HRESULT WINAPI CreateURLMonikerEx(IMoniker*,LPCWSTR,IMoniker**,DWORD);")
+cpp_quote("HRESULT WINAPI CreateURLMonikerEx2(IMoniker*,IUri*,IMoniker**,DWORD);")
 cpp_quote("HRESULT WINAPI RegisterBindStatusCallback(IBindCtx *pbc, IBindStatusCallback *pbsc, IBindStatusCallback **ppbsc, DWORD dwReserved);")
 cpp_quote("HRESULT WINAPI CompareSecurityIds(BYTE*,DWORD,BYTE*,DWORD,DWORD);")
 cpp_quote("HRESULT WINAPI URLDownloadToFileA(LPUNKNOWN,LPCSTR,LPCSTR,DWORD,LPBINDSTATUSCALLBACK);")
@@ -1575,6 +1926,7 @@ cpp_quote("HRESULT WINAPI CoInternetCreateZoneManager(IServiceProvider*, IIntern
 cpp_quote("HRESULT WINAPI CoInternetParseUrl(LPCWSTR,PARSEACTION,DWORD,LPWSTR,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetQueryInfo(LPCWSTR,QUERYOPTION,DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST,DWORD,BOOL);")
+cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR,LPWSTR*,PSUACTION,DWORD);")
 cpp_quote("HRESULT WINAPI CreateFormatEnumerator(UINT,FORMATETC*,IEnumFORMATETC**);")
 cpp_quote("HRESULT WINAPI GetSoftwareUpdateInfo( LPCWSTR szDistUnit, LPSOFTDISTINFO psdi);")
 cpp_quote("HRESULT WINAPI FaultInIEFeature(HWND,uCLSSPEC*,QUERYCONTEXT*,DWORD);")

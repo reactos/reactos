@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="ftfd" type="kernelmodedll" entrypoint="FtfdEnableDriver@12" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="ftfd.dll" crt="libcntpr">
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>

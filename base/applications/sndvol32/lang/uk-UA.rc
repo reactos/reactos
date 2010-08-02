@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Sound Volume Control
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/sndvol32/Uk.rc
+ * FILE:        base/applications/sndvol32/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Volume Control
  * TRANSLATOR:  Artem Reznikov
  */
@@ -17,7 +17,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід", IDC_EXIT
     END
-    POPUP "&Довідка"
+    POPUP "До&відка"
     BEGIN
         MENUITEM "&Зміст", IDC_HELP_TOPICS
         MENUITEM SEPARATOR

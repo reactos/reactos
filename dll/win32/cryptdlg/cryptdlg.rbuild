@@ -8,7 +8,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>crypt32</library>
 	<library>cryptui</library>

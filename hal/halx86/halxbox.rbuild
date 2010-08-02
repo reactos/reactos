@@ -1,19 +1,18 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
-	<module name="halxbox" type="kernelmodedll" entrypoint="0">
-		<importlibrary base="hal" definition="hal.pspec" />
+	<module name="halxbox" type="kernelmodedll" entrypoint="HalInitSystem@8">
+		<importlibrary base="hal" definition="../hal.pspec" />
 		<include>include</include>
 		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
+		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<define name="SARCH_XBOX" />
 		<library>hal_generic</library>
+		<library>hal_generic_pcat</library>
 		<library>hal_generic_up</library>
 		<library>ntoskrnl</library>
-		<directory name="generic">
-			<file>pci.c</file>
-		</directory>
+		<library>libcntpr</library>
 		<directory name="xbox">
 			<file>halinit_xbox.c</file>
 			<file>part_xbox.c</file>

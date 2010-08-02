@@ -33,7 +33,7 @@ InsertAfterEntry(PLIST_ENTRY Previous,
 static PMM_REGION
 MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
               PVOID StartAddress, ULONG Length, ULONG NewType,
-              ULONG NewProtect, PMM_AVL_TABLE AddressSpace,
+              ULONG NewProtect, PMMSUPPORT AddressSpace,
               PMM_ALTER_REGION_FUNC AlterFunc)
 {
    PMM_REGION NewRegion1;
@@ -105,7 +105,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
 
 NTSTATUS
 NTAPI
-MmAlterRegion(PMM_AVL_TABLE AddressSpace, PVOID BaseAddress,
+MmAlterRegion(PMMSUPPORT AddressSpace, PVOID BaseAddress,
               PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length,
               ULONG NewType, ULONG NewProtect, PMM_ALTER_REGION_FUNC AlterFunc)
 {
@@ -238,13 +238,15 @@ MmAlterRegion(PMM_AVL_TABLE AddressSpace, PVOID BaseAddress,
 
 VOID
 NTAPI
-MmInitializeRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
+MmInitializeRegion(PLIST_ENTRY RegionListHead, SIZE_T Length, ULONG Type,
                    ULONG Protect)
 {
    PMM_REGION Region;
 
    Region = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_REGION),
                                   TAG_MM_REGION);
+   if (!Region) return;
+
    Region->Type = Type;
    Region->Protect = Protect;
    Region->Length = Length;

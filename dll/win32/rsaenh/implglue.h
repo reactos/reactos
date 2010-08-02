@@ -25,6 +25,7 @@
 #define __WINE_IMPLGLUE_H
 
 #include "tomcrypt.h"
+#include "sha2.h"
 
 /* Next typedef copied from dlls/advapi32/crypt_md4.c */
 typedef struct tagMD4_CTX {
@@ -57,6 +58,9 @@ typedef union tagHASH_CONTEXT {
     MD4_CTX md4;
     MD5_CTX md5;
     SHA_CTX sha;
+    SHA256_CTX sha256;
+    SHA384_CTX sha384;
+    SHA512_CTX sha512;
 } HASH_CONTEXT;
 
 typedef union tagKEY_CONTEXT {

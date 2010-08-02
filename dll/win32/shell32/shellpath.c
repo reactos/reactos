@@ -909,8 +909,6 @@ static const CSIDL_DATA CSIDL_Data[] =
     }
 };
 
-static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest);
-
 /* Gets the value named value from the registry key
  * rootKey\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders
  * (or from rootKey\userPrefix\... if userPrefix is not NULL) into path, which
@@ -926,7 +924,7 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
     HRESULT hr;
     WCHAR shellFolderPath[MAX_PATH], userShellFolderPath[MAX_PATH];
     LPCWSTR pShellFolderPath, pUserShellFolderPath;
-    DWORD dwDisp, dwType, dwPathLen = MAX_PATH;
+    DWORD dwDisp, dwType, dwPathLen;
     HKEY userShellFolderKey, shellFolderKey;
 
     TRACE("%p,%s,%s,%p\n",rootKey, debugstr_w(userPrefix), debugstr_w(value),
@@ -949,14 +947,14 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
         pShellFolderPath = szSHFolders;
     }
 
-    if (RegCreateKeyExW(rootKey, pShellFolderPath, 0, NULL, 0, KEY_ALL_ACCESS,
+    if (RegCreateKeyExW(rootKey, pShellFolderPath, 0, NULL, 0, KEY_SET_VALUE,
      NULL, &shellFolderKey, &dwDisp))
     {
         TRACE("Failed to create %s\n", debugstr_w(pShellFolderPath));
         return E_FAIL;
     }
     if (RegCreateKeyExW(rootKey, pUserShellFolderPath, 0, NULL, 0,
-     KEY_ALL_ACCESS, NULL, &userShellFolderKey, &dwDisp))
+     KEY_QUERY_VALUE, NULL, &userShellFolderKey, &dwDisp))
     {
         TRACE("Failed to create %s\n",
          debugstr_w(pUserShellFolderPath));
@@ -964,21 +962,25 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
         return E_FAIL;
     }
 
+    dwPathLen = MAX_PATH * sizeof(WCHAR);
+
     if (!RegQueryValueExW(userShellFolderKey, value, NULL, &dwType,
      (LPBYTE)path, &dwPathLen) && (dwType == REG_EXPAND_SZ || dwType == REG_SZ))
     {
         LONG ret;
 
-        path[dwPathLen / sizeof(WCHAR)] = '\0';
+        dwPathLen /= sizeof(WCHAR);
+
+        path[dwPathLen] = '\0';
         if (dwType == REG_EXPAND_SZ && path[0] == '%')
         {
             WCHAR szTemp[MAX_PATH];
 
-            _SHExpandEnvironmentStrings(path, szTemp);
-            lstrcpynW(path, szTemp, MAX_PATH);
+            dwPathLen = ExpandEnvironmentStringsW(path, szTemp, MAX_PATH);
+            lstrcpynW(path, szTemp, dwPathLen);
         }
-        ret = RegSetValueExW(shellFolderKey, value, 0, REG_SZ, (LPBYTE)path,
-         (wcslen(path) + 1) * sizeof(WCHAR));
+
+        ret = RegSetValueExW(shellFolderKey, value, 0, REG_SZ, (LPBYTE)path, dwPathLen * sizeof(WCHAR));
         if (ret != ERROR_SUCCESS)
             hr = HRESULT_FROM_WIN32(ret);
         else
@@ -986,6 +988,7 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
     }
     else
         hr = E_FAIL;
+
     RegCloseKey(shellFolderKey);
     RegCloseKey(userShellFolderKey);
     TRACE("returning 0x%08x\n", hr);
@@ -1008,7 +1011,9 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
  */
 static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
 {
+    DWORD dwSize;
     HRESULT hr;
+    HKEY hKey;
     WCHAR resourcePath[MAX_PATH];
     LPCWSTR pDefaultPath = NULL;
 
@@ -1018,6 +1023,18 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
         return E_INVALIDARG;
     if (!pszPath)
         return E_INVALIDARG;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        /* FIXME assume MAX_PATH size */
+        dwSize = MAX_PATH * sizeof(WCHAR);
+        if (RegQueryValueExW(hKey, CSIDL_Data[folder].szValueName, NULL, NULL, (LPBYTE)pszPath, &dwSize) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return S_OK;
+        }
+        RegCloseKey(hKey);
+    }
 
     if (CSIDL_Data[folder].szDefaultPath &&
      IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
@@ -1243,164 +1260,6 @@ static HRESULT _SHGetAllUsersProfilePath(DWORD dwFlags, BYTE folder,
     return hr;
 }
 
-static HRESULT _SHOpenProfilesKey(PHKEY pKey)
-{
-    LONG lRet;
-    DWORD disp;
-
-    lRet = RegCreateKeyExW(HKEY_LOCAL_MACHINE, ProfileListW, 0, NULL, 0,
-     KEY_ALL_ACCESS, NULL, pKey, &disp);
-    return HRESULT_FROM_WIN32(lRet);
-}
-
-/* Reads the value named szValueName from the key profilesKey (assumed to be
- * opened by _SHOpenProfilesKey) into szValue, which is assumed to be MAX_PATH
- * WCHARs in length.  If it doesn't exist, returns szDefault (and saves
- * szDefault to the registry).
- */
-static HRESULT _SHGetProfilesValue(HKEY profilesKey, LPCWSTR szValueName,
- LPWSTR szValue, LPCWSTR szDefault)
-{
-    HRESULT hr;
-    DWORD type, dwPathLen = MAX_PATH * sizeof(WCHAR);
-    LONG lRet;
-
-    TRACE("%p,%s,%p,%s\n", profilesKey, debugstr_w(szValueName), szValue,
-     debugstr_w(szDefault));
-    lRet = RegQueryValueExW(profilesKey, szValueName, NULL, &type,
-     (LPBYTE)szValue, &dwPathLen);
-    if (!lRet && (type == REG_SZ || type == REG_EXPAND_SZ) && dwPathLen
-     && *szValue)
-    {
-        dwPathLen /= sizeof(WCHAR);
-        szValue[dwPathLen] = '\0';
-        hr = S_OK;
-    }
-    else
-    {
-        /* Missing or invalid value, set a default */
-        lstrcpynW(szValue, szDefault, MAX_PATH);
-        TRACE("Setting missing value %s to %s\n", debugstr_w(szValueName),
-                                                  debugstr_w(szValue));
-        lRet = RegSetValueExW(profilesKey, szValueName, 0, REG_EXPAND_SZ,
-                              (LPBYTE)szValue,
-                              (wcslen(szValue) + 1) * sizeof(WCHAR));
-        if (lRet)
-            hr = HRESULT_FROM_WIN32(lRet);
-        else
-            hr = S_OK;
-    }
-    TRACE("returning 0x%08x (output value is %s)\n", hr, debugstr_w(szValue));
-    return hr;
-}
-
-/* Attempts to expand environment variables from szSrc into szDest, which is
- * assumed to be MAX_PATH characters in length.  Before referring to the
- * environment, handles a few variables directly, because the environment
- * variables may not be set when this is called (as during Wine's installation
- * when default values are being written to the registry).
- * The directly handled environment variables, and their source, are:
- * - ALLUSERSPROFILE, USERPROFILE: reads from the registry
- * - SystemDrive: uses GetSystemDirectoryW and uses the drive portion of its
- *   path
- * If one of the directly handled environment variables is expanded, only
- * expands a single variable, and only in the beginning of szSrc.
- */
-static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest)
-{
-    HRESULT hr;
-    WCHAR szTemp[MAX_PATH], szProfilesPrefix[MAX_PATH] = { 0 };
-    HKEY key = NULL;
-
-    TRACE("%s, %p\n", debugstr_w(szSrc), szDest);
-
-    if (!szSrc || !szDest) return E_INVALIDARG;
-
-    /* short-circuit if there's nothing to expand */
-    if (szSrc[0] != '%')
-    {
-        wcscpy(szDest, szSrc);
-        hr = S_OK;
-        goto end;
-    }
-    /* Get the profile prefix, we'll probably be needing it */
-    hr = _SHOpenProfilesKey(&key);
-    if (SUCCEEDED(hr))
-    {
-        WCHAR szDefaultProfilesPrefix[MAX_PATH];
-
-        GetWindowsDirectoryW(szDefaultProfilesPrefix, MAX_PATH);
-        PathAddBackslashW(szDefaultProfilesPrefix);
-        PathAppendW(szDefaultProfilesPrefix, szDefaultProfileDirW);
-        hr = _SHGetProfilesValue(key, ProfilesDirectoryW, szProfilesPrefix,
-         szDefaultProfilesPrefix);
-    }
-
-    *szDest = 0;
-    wcscpy(szTemp, szSrc);
-    while (SUCCEEDED(hr) && szTemp[0] == '%')
-    {
-        if (!strncmpiW(szTemp, AllUsersProfileW, wcslen(AllUsersProfileW)))
-        {
-            WCHAR szAllUsers[MAX_PATH];
-
-            wcscpy(szDest, szProfilesPrefix);
-            hr = _SHGetProfilesValue(key, AllUsersProfileValueW,
-             szAllUsers, AllUsersW);
-            PathAppendW(szDest, szAllUsers);
-            PathAppendW(szDest, szTemp + wcslen(AllUsersProfileW));
-        }
-        else if (!strncmpiW(szTemp, UserProfileW, wcslen(UserProfileW)))
-        {
-            WCHAR userName[MAX_PATH];
-            DWORD userLen = MAX_PATH;
-
-            wcscpy(szDest, szProfilesPrefix);
-            GetUserNameW(userName, &userLen);
-            PathAppendW(szDest, userName);
-            PathAppendW(szDest, szTemp + wcslen(UserProfileW));
-        }
-        else if (!strncmpiW(szTemp, SystemDriveW, wcslen(SystemDriveW)))
-        {
-            GetSystemDirectoryW(szDest, MAX_PATH);
-            if (szDest[1] != ':')
-            {
-                FIXME("non-drive system paths unsupported\n");
-                hr = E_FAIL;
-            }
-            else
-            {
-                wcscpy(szDest + 3, szTemp + wcslen(SystemDriveW) + 1);
-                hr = S_OK;
-            }
-        }
-        else
-        {
-            DWORD ret = ExpandEnvironmentStringsW(szSrc, szDest, MAX_PATH);
-
-            if (ret > MAX_PATH)
-                hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
-            else if (ret == 0)
-                hr = HRESULT_FROM_WIN32(GetLastError());
-            else
-                hr = S_OK;
-        }
-        if (SUCCEEDED(hr) && szDest[0] == '%')
-            wcscpy(szTemp, szDest);
-        else
-        {
-            /* terminate loop */
-            szTemp[0] = '\0';
-        }
-    }
-end:
-    if (key)
-        RegCloseKey(key);
-    TRACE("returning 0x%08x (input was %s, output is %s)\n", hr,
-     debugstr_w(szSrc), debugstr_w(szDest));
-    return hr;
-}
-
 /*************************************************************************
  * SHGetFolderPathW			[SHELL32.@]
  *
@@ -1557,9 +1416,20 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
 
     /* Expand environment strings if necessary */
     if (*szTemp == '%')
-        hr = _SHExpandEnvironmentStrings(szTemp, szBuildPath);
+    {
+        DWORD ExpandRet = ExpandEnvironmentStringsW(szTemp, szBuildPath, MAX_PATH);
+
+        if (ExpandRet > MAX_PATH)
+            hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+        else if (ExpandRet == 0)
+            hr = HRESULT_FROM_WIN32(GetLastError());
+        else
+            hr = S_OK;
+    }
     else
+    {
         wcscpy(szBuildPath, szTemp);
+    }
 
     if (FAILED(hr)) goto end;
 

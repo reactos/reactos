@@ -2,6 +2,7 @@
  * Regedit (Ukrainian resources)
  *
  * Copyright 2006,2007 Artem Reznikov
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -41,13 +42,13 @@ BEGIN
     END
     POPUP "&Довідка"
     BEGIN
-        MENUITEM "&Про програму",                     ID_HELP_ABOUT
+        MENUITEM "Пр&о програму",                     ID_HELP_ABOUT
     END
 END
 
 IDR_REGEDIT_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "&Файл"
+    POPUP "Фа&йл"
     BEGIN
         MENUITEM "&Імпорт...",                        ID_REGISTRY_IMPORTREGISTRYFILE
 
@@ -68,7 +69,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "В&ихід",                            ID_REGISTRY_EXIT
     END
-    POPUP "&Правка"
+    POPUP "Пра&вка"
     BEGIN
         MENUITEM "&Змінити",                          ID_EDIT_MODIFY
         MENUITEM SEPARATOR
@@ -79,11 +80,11 @@ BEGIN
             MENUITEM "&Рядкове значення",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",            ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення",               ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Мультирядкове значення",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "Роз&ширюване строкове значення",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+			MENUITEM "&Багаторядкове значення",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "Роз&ширюване рядкове значення",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Дозволи...",			ID_EDIT_PERMISSIONS
+        MENUITEM "Дозв&оли...",			ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "В&идалити\tDel",              ID_EDIT_DELETE
         MENUITEM "Перей&менувати",              ID_EDIT_RENAME
@@ -101,7 +102,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Оновити\tF5",                ID_VIEW_REFRESH
     END
-    POPUP "&Обране"
+    POPUP "Обр&ане"
     BEGIN
         MENUITEM "&Додати в обране",            ID_FAVOURITES_ADDTOFAVOURITES
         , GRAYED
@@ -112,7 +113,7 @@ BEGIN
     BEGIN
         MENUITEM "&Зміст\tF1",                  ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Про редактор реєстра",       ID_HELP_ABOUT
+        MENUITEM "&Про редактор реєстру",       ID_HELP_ABOUT
     END
 END
 
@@ -135,8 +136,8 @@ BEGIN
             MENUITEM "&Рядкове значення",           ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення",             ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Багаторядкове значення",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Розширюване рядкове значення",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -144,13 +145,13 @@ BEGIN
         MENUITEM "Розгорнути/Згорнути",             ID_TREE_EXPANDBRANCH
         POPUP "&Створити"
         BEGIN
-            MENUITEM "Кл&юч",                       ID_EDIT_NEW_KEY
+            MENUITEM "Роз&діл",                       ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Рядкове значення",           ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення",             ID_EDIT_NEW_DWORDVALUE
-            MENUITEM "&Multi-String Value",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Expandable String Value",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Багаторядкове значення",         ID_EDIT_NEW_MULTISTRINGVALUE
+            MENUITEM "&Розширюване рядкове значення",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "З&найти",                         ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -161,6 +162,15 @@ BEGIN
         MENUITEM "&Дозволи...",                     ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "&Копіювати ім'я розділу",         ID_EDIT_COPYKEYNAME
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "&Copy", ID_HEXEDIT_COPY
+        MENUITEM "&Paste", ID_HEXEDIT_PASTE
+        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -186,7 +196,7 @@ END
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Редагування мультирядкового значення"
+CAPTION "Редагування багаторядкового значення"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Назва значення:",IDC_STATIC,6,6,134,8
@@ -242,7 +252,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Редактор реєстра"
+    IDS_APP_TITLE           "Редактор реєстру"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
@@ -264,7 +274,7 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Додає нове рядкове значення"
     ID_EDIT_NEW_BINARYVALUE "Додає нове двійкове значення"
     ID_EDIT_NEW_DWORDVALUE  "Додає нове DWORD-значення"
-    ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до реєстра"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до реєстру"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Експортує весь реєстр або його частину в текстовий файл"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -278,7 +288,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Виходить з редактора реєстра"
+    ID_REGISTRY_EXIT        "Виходить з редактора реєстру"
     ID_FAVOURITES_ADDTOFAVOURITES "Додає розділ до обраного"
     ID_FAVOURITES_REMOVEFAVOURITE "Видаляє розділ з обраного"
     ID_VIEW_STATUSBAR       "Відображує або ховає рядок стану"
@@ -328,7 +338,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_FLT_REGFILE         "Registration File"
+    IDS_FLT_REGFILE         "Файл реєстру"
     IDS_FLT_REGFILES        "Файли реєстру"
     IDS_FLT_REGFILES_FLT    "*.reg"
     IDS_FLT_REGEDIT4        "Файли реєстру Win9x/NT4 (REGEDIT4)"
@@ -339,7 +349,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_ACCESS_FULLCONTROL        "Full Control"
+  IDS_ACCESS_FULLCONTROL        "Повний контроль"
   IDS_ACCESS_READ               "Читання"
   IDS_ACCESS_QUERYVALUE         "Запит значення"
   IDS_ACCESS_SETVALUE           "Установлення значення"
@@ -350,7 +360,7 @@ BEGIN
   IDS_ACCESS_DELETE             "Видалення"
   IDS_ACCESS_WRITEDAC           "Запис DAC"
   IDS_ACCESS_WRITEOWNER         "Запис власника"
-  IDS_ACCESS_READCONTROL        "Read Control"
+  IDS_ACCESS_READCONTROL        "Читання дозволу"
 END
 
 STRINGTABLE DISCARDABLE
@@ -438,7 +448,7 @@ CAPTION "Знайти"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "&Скасувати",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "&Скасувати",IDCANCEL,93,29,45,14
     LTEXT           "Пошук у реєстрі...",IDC_STATIC,33,12,83,8
 END
 

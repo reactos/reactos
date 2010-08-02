@@ -12,12 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -28,7 +28,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
                          IN OUT PVOID *CommitAddress,
                          IN OUT PSIZE_T CommitSize)
 {
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
     PW32HEAP_USER_MAPPING Mapping;
     PVOID UserBase = NULL;
     NTSTATUS Status;

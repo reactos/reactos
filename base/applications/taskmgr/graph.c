@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -102,7 +102,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         hdc = BeginPaint(hWnd, &ps);
 
-        WindowId = GetWindowLongW(hWnd, GWL_ID);
+        WindowId = GetWindowLongPtrW(hWnd, GWL_ID);
 
         switch (WindowId)
         {
@@ -296,7 +296,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
         rcBarRight.bottom -=3;
 
     }
-    
+
     SelectObject(hDC, hOldFont);
 }
 
@@ -403,7 +403,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
         rcBarRight.top += 3;
         rcBarRight.bottom += 3;
     }
-    
+
     SelectObject(hDC, hOldFont);
 }
 

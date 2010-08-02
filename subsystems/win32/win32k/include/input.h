@@ -1,5 +1,4 @@
-#ifndef _WIN32K_INPUT_H
-#define _WIN32K_INPUT_H
+#pragma once
 
 #include <internal/kbd.h>
 
@@ -14,6 +13,15 @@ typedef struct _KBL
   HKL hkl;
   DWORD klid; // Low word - language id. High word - device id.
 } KBL, *PKBL;
+
+typedef struct _ATTACHINFO
+{
+  struct _ATTACHINFO* paiNext;
+  PTHREADINFO pti1;
+  PTHREADINFO pti2;
+} ATTACHINFO, *PATTACHINFO;
+
+extern PATTACHINFO gpai;
 
 #define KBL_UNLOAD 1
 #define KBL_PRELOAD 2
@@ -33,10 +41,10 @@ BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
 
 BOOL UserInitDefaultKeyboardLayout();
 PKBL UserHklToKbl(HKL hKl);
+BOOL FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
+BOOL FASTCALL IntConnectThreadInput(PTHREADINFO,PTHREADINFO*,PUSER_MESSAGE_QUEUE*);
 
 #define ThreadHasInputAccess(W32Thread) \
   (TRUE)
 
 extern PTHREADINFO ptiRawInput;
-
-#endif /* _WIN32K_INPUT_H */

@@ -300,5 +300,124 @@ done:
     return dwError;
 }
 
-/* EOF */
 
+DWORD
+ScmReadDependencies(HKEY hServiceKey,
+                    LPWSTR *lpDependencies,
+                    DWORD *lpdwDependenciesLength)
+{
+    LPWSTR lpGroups = NULL;
+    LPWSTR lpServices = NULL;
+    DWORD dwGroupsLength = 0;
+    DWORD dwServicesLength = 0;
+    LPWSTR lpSrc;
+    LPWSTR lpDest;
+    DWORD len;
+    DWORD dwTotalLength;
+
+    *lpDependencies = NULL;
+    *lpdwDependenciesLength = 0;
+
+    /* Read the dependency values */
+    ScmReadString(hServiceKey,
+                  L"DependOnGroup",
+                  &lpGroups);
+
+    ScmReadString(hServiceKey,
+                  L"DependOnService",
+                  &lpServices);
+
+    /* Leave, if there are no dependencies */
+    if (lpGroups == NULL && lpServices == NULL)
+        return ERROR_SUCCESS;
+
+    /* Determine the total buffer size for the dependencies */
+    if (lpGroups)
+    {
+        DPRINT("Groups:\n");
+        lpSrc = lpGroups;
+        while (*lpSrc != 0)
+        {
+            DPRINT("  %S\n", lpSrc);
+
+            len = wcslen(lpSrc) + 1;
+            dwGroupsLength += len + 1;
+
+            lpSrc = lpSrc + len;
+        }
+    }
+
+    if (lpServices)
+    {
+        DPRINT("Services:\n");
+        lpSrc = lpServices;
+        while (*lpSrc != 0)
+        {
+            DPRINT("  %S\n", lpSrc);
+
+            len = wcslen(lpSrc) + 1;
+            dwServicesLength += len;
+
+            lpSrc = lpSrc + len;
+        }
+    }
+
+    dwTotalLength = dwGroupsLength + dwServicesLength + 1;
+    DPRINT("dwTotalLength: %lu\n", dwTotalLength);
+
+    /* Allocate the common buffer for the dependencies */
+    *lpDependencies = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwTotalLength * sizeof(WCHAR));
+    if (*lpDependencies == NULL)
+    {
+        if (lpGroups)
+            HeapFree(GetProcessHeap(), 0, lpGroups);
+
+        if (lpServices)
+            HeapFree(GetProcessHeap(), 0, lpServices);
+
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    /* Return the allocated buffer length in characters */
+    *lpdwDependenciesLength = dwTotalLength;
+
+    /* Copy the service dependencies into the common buffer */
+    lpDest = *lpDependencies;
+    if (lpServices)
+    {
+        memcpy(lpDest,
+               lpServices,
+               dwServicesLength * sizeof(WCHAR));
+
+        lpDest = lpDest + dwServicesLength;
+    }
+
+    /* Copy the group dependencies into the common buffer */
+    if (lpGroups)
+    {
+        lpSrc = lpGroups;
+        while (*lpSrc != 0)
+        {
+            len = wcslen(lpSrc) + 1;
+
+            *lpDest = SC_GROUP_IDENTIFIERW;
+            lpDest++;
+
+            wcscpy(lpDest, lpSrc);
+
+            lpDest = lpDest + len;
+            lpSrc = lpSrc + len;
+        }
+    }
+
+    /* Free the temporary buffers */
+    if (lpGroups)
+        HeapFree(GetProcessHeap(), 0, lpGroups);
+
+    if (lpServices)
+        HeapFree(GetProcessHeap(), 0, lpServices);
+
+    return ERROR_SUCCESS;
+}
+
+/* EOF */

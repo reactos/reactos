@@ -1,5 +1,4 @@
-#ifndef __CPL_USRMGR_RESOURCE_H__
-#define __CPL_USRMGR_RESOURCE_H__
+#pragma once
 
 #include <commctrl.h>
 
@@ -115,6 +114,3 @@
 #define IDM_USER_DELETE             133
 #define IDM_USER_RENAME             134
 #define IDM_USER_PROPERTIES         135
-
-#endif /* __CPL_USRMGR_RESOURCE_H__ */
-

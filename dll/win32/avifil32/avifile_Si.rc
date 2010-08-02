@@ -16,11 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "avifile_private.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
-IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82
+IDD_SAVEOPTIONS DIALOG  43, 37, 226, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Možnosti stiskanja"
 FONT 8, "MS Shell Dlg"
@@ -38,7 +40,7 @@ BEGIN
     PUSHBUTTON      "Prekliči",IDCANCEL,170,61,50,14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_WAVESTREAMFORMAT	"Waveform: %s"
   IDS_WAVEFILETYPE	"Waveform"
@@ -50,5 +52,3 @@ STRINGTABLE DISCARDABLE
   IDS_AVIFILETYPE	"Wine privzeti-upravljalec-AVI-datotek"
   IDS_UNCOMPRESSED      "nestisnjeno"
 }
-
-#pragma code_page(default)

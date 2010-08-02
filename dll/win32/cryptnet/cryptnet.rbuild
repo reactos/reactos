@@ -9,7 +9,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>crypt32</library>
-	<library>kernel32</library>
 	<library>wininet</library>
 	<library>ntdll</library>
 	<file>cryptnet_main.c</file>

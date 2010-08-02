@@ -13,9 +13,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -157,11 +157,13 @@ VOID LoadReactOSSetup2(VOID)
     CHAR  SystemPath[512], SearchPath[512];
     CHAR  FileName[512];
     CHAR  BootPath[512];
-    CHAR  LoadOptions[512];
-    LPCSTR BootOptions;
+    LPCSTR LoadOptions, BootOptions;
+    BOOLEAN BootFromFloppy;
+#if DBG
+    LPCSTR DbgOptions;
+#endif
     PVOID NtosBase = NULL, HalBase = NULL, KdComBase = NULL;
     BOOLEAN Status;
-    ULONG BootDevice;
     ULONG i, ErrorLine;
     HINF InfHandle;
     INFCONTEXT InfContext;
@@ -188,11 +190,14 @@ VOID LoadReactOSSetup2(VOID)
         NULL
     };
 
-    /* Get boot device number */
-    MachDiskGetBootDevice(&BootDevice);
+    /* Get boot path */
+    MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
+
+    /* And check if we booted from floppy */
+    BootFromFloppy = strstr(SystemPath, "fdisk") != NULL;
 
     /* Open 'txtsetup.sif' from any of source paths */
-    for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
+    for (i = BootFromFloppy ? 0 : 1; ; i++)
     {
         SourcePath = SourcePaths[i];
         if (!SourcePath)
@@ -200,16 +205,15 @@ VOID LoadReactOSSetup2(VOID)
             printf("Failed to open 'txtsetup.sif'\n");
             return;
         }
-        sprintf(FileName,"%s\\txtsetup.sif", SourcePath);
+        sprintf(FileName, "%s\\txtsetup.sif", SourcePath);
         if (InfOpenFile (&InfHandle, FileName, &ErrorLine))
+        {
+            sprintf(BootPath, "%s%s\\", SystemPath, SourcePath);
             break;
+        }
     }
 
-    /* If we didn't find it anywhere, then just use root */
-    if (!*SourcePath)
-        SourcePath = "\\";
-
-    /* Load options */
+    /* Get Load options - debug and non-debug */
     if (!InfFindFirstLine(InfHandle,
                           "SetupData",
                           "OsLoadOptions",
@@ -219,14 +223,29 @@ VOID LoadReactOSSetup2(VOID)
         return;
     }
 
-    if (!InfGetDataField (&InfContext, 1, &BootOptions))
+    if (!InfGetDataField (&InfContext, 1, &LoadOptions))
     {
         printf("Failed to get load options\n");
         return;
     }
 
-    /* Save source path */
-    strcpy(BootPath, SourcePath);
+    BootOptions = LoadOptions;
+
+#if DBG
+    /* Get debug load options and use them */
+    if (InfFindFirstLine(InfHandle,
+                         "SetupData",
+                         "DbgOsLoadOptions",
+                         &InfContext))
+    {
+        if (!InfGetDataField(&InfContext, 1, &DbgOptions))
+            DbgOptions = "";
+        else
+            BootOptions = DbgOptions;
+    }
+#endif
+
+    DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
 
     SetupUiInitialize();
     UiDrawStatusText("");
@@ -235,20 +254,10 @@ VOID LoadReactOSSetup2(VOID)
     /* Let user know we started loading */
     UiDrawStatusText("Loading...");
 
-    /* Try to open system drive */
-    FsOpenBootVolume();
-
-    /* Append a backslash to the bootpath if needed */
-    if ((strlen(BootPath)==0) || BootPath[strlen(BootPath)] != '\\')
-    {
-        strcat(BootPath, "\\");
-    }
-
     /* Construct the system path */
-    MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
-    strcat(SystemPath, SourcePath);
+    sprintf(SystemPath, "%s\\", SourcePath);
 
-    DPRINTM(DPRINT_WINDOWS,"SystemRoot: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
+    DPRINTM(DPRINT_WINDOWS,"BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
 
     /* Allocate and minimalistic-initialize LPB */
     AllocateAndInitLPB(&LoaderBlock);
@@ -312,15 +321,14 @@ VOID LoadReactOSSetup2(VOID)
     WinLdrSetupForNt(LoaderBlock, &GdtIdt, &PcrBasePage, &TssBasePage);
 
     /* Initialize Phase 1 - no drivers loading anymore */
-    LoadOptions[0] = 0;
-    WinLdrInitializePhase1(LoaderBlock, LoadOptions, SystemPath, BootPath, _WIN32_WINNT_WS03);
+    WinLdrInitializePhase1(LoaderBlock, (PCHAR)BootOptions, SystemPath, BootPath, _WIN32_WINNT_WS03);
 
     /* Save entry-point pointer and Loader block VAs */
     KiSystemStartup = (KERNEL_ENTRY_POINT)KernelDTE->EntryPoint;
     LoaderBlockVA = PaToVa(LoaderBlock);
 
     /* "Stop all motors", change videomode */
-    MachPrepareForReactOS(FALSE);
+    MachPrepareForReactOS(TRUE);
 
     /* Debugging... */
     //DumpMemoryAllocMap();

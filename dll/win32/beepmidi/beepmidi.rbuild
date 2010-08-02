@@ -2,7 +2,6 @@
 	<importlibrary definition="beepmidi.spec" />
 	<include base="beepmidi">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>winmm</library>
 	<file>beepmidi.c</file>

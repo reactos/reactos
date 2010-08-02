@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType CharMap cache (body)                                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,7 +22,6 @@
 #include "ftcmanag.h"
 #include FT_INTERNAL_MEMORY_H
 #include FT_INTERNAL_DEBUG_H
-#include FT_TRUETYPE_IDS_H
 
 #include "ftccback.h"
 #include "ftcerror.h"
@@ -86,9 +85,9 @@
 #define FTC_CMAP_INDICES_MAX  128
 
   /* compute a query/node hash */
-#define FTC_CMAP_HASH( faceid, index, charcode )           \
-          ( FTC_FACE_ID_HASH( faceid ) + 211 * ( index ) + \
-            ( (char_code) / FTC_CMAP_INDICES_MAX )       )
+#define FTC_CMAP_HASH( faceid, index, charcode )         \
+          ( FTC_FACE_ID_HASH( faceid ) + 211 * (index) + \
+            ( (charcode) / FTC_CMAP_INDICES_MAX )      )
 
   /* the charmap query */
   typedef struct  FTC_CMapQueryRec_
@@ -175,7 +174,7 @@
 
 
   /* compute the weight of a given cmap node */
-  FT_CALLBACK_DEF( FT_ULong )
+  FT_CALLBACK_DEF( FT_Offset )
   ftc_cmap_node_weight( FTC_Node   cnode,
                         FTC_Cache  cache )
   {
@@ -284,15 +283,27 @@
   {
     FTC_Cache         cache = FTC_CACHE( cmap_cache );
     FTC_CMapQueryRec  query;
-    FTC_CMapNode      node;
+    FTC_Node          node;
     FT_Error          error;
     FT_UInt           gindex = 0;
     FT_UInt32         hash;
+    FT_Int            no_cmap_change = 0;
 
+
+    if ( cmap_index < 0 )
+    {
+      /* Treat a negative cmap index as a special value, meaning that you */
+      /* don't want to change the FT_Face's character map through this    */
+      /* call.  This can be useful if the face requester callback already */
+      /* sets the face's charmap to the appropriate value.                */
+
+      no_cmap_change = 1;
+      cmap_index     = 0;
+    }
 
     if ( !cache )
     {
-      FT_ERROR(( "FTC_CMapCache_Lookup: bad arguments, returning 0!\n" ));
+      FT_TRACE0(( "FTC_CMapCache_Lookup: bad arguments, returning 0\n" ));
       return 0;
     }
 
@@ -311,7 +322,7 @@
      *        Adobe Acrobat Reader Pack, named `KozMinProVI-Regular.otf',
      *        which contains more than 5 charmaps.
      */
-    if ( cmap_index >= 16 )
+    if ( cmap_index >= 16 && !no_cmap_change )
     {
       FTC_OldCMapDesc  desc = (FTC_OldCMapDesc) face_id;
 
@@ -362,18 +373,21 @@
     FTC_CACHE_LOOKUP_CMP( cache, ftc_cmap_node_compare, hash, &query,
                           node, error );
 #else
-    error = FTC_Cache_Lookup( cache, hash, &query, (FTC_Node*) &node );
+    error = FTC_Cache_Lookup( cache, hash, &query, &node );
 #endif
     if ( error )
       goto Exit;
 
-    FT_ASSERT( (FT_UInt)( char_code - node->first ) < FTC_CMAP_INDICES_MAX );
+    FT_ASSERT( (FT_UInt)( char_code - FTC_CMAP_NODE( node )->first ) <
+                FTC_CMAP_INDICES_MAX );
 
     /* something rotten can happen with rogue clients */
-    if ( (FT_UInt)( char_code - node->first >= FTC_CMAP_INDICES_MAX ) )
+    if ( (FT_UInt)( char_code - FTC_CMAP_NODE( node )->first >=
+                    FTC_CMAP_INDICES_MAX ) )
       return 0;
 
-    gindex = node->indices[char_code - node->first];
+    gindex = FTC_CMAP_NODE( node )->indices[char_code -
+                                            FTC_CMAP_NODE( node )->first];
     if ( gindex == FTC_CMAP_UNKNOWN )
     {
       FT_Face  face;
@@ -381,7 +395,9 @@
 
       gindex = 0;
 
-      error = FTC_Manager_LookupFace( cache->manager, node->face_id, &face );
+      error = FTC_Manager_LookupFace( cache->manager,
+                                      FTC_CMAP_NODE( node )->face_id,
+                                      &face );
       if ( error )
         goto Exit;
 
@@ -393,16 +409,18 @@
         old  = face->charmap;
         cmap = face->charmaps[cmap_index];
 
-        if ( old != cmap )
+        if ( old != cmap && !no_cmap_change )
           FT_Set_Charmap( face, cmap );
 
         gindex = FT_Get_Char_Index( face, char_code );
 
-        if ( old != cmap )
+        if ( old != cmap && !no_cmap_change )
           FT_Set_Charmap( face, old );
       }
 
-      node->indices[char_code - node->first] = (FT_UShort)gindex;
+      FTC_CMAP_NODE( node )->indices[char_code -
+                                     FTC_CMAP_NODE( node )->first]
+        = (FT_UShort)gindex;
     }
 
   Exit:

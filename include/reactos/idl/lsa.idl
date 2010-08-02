@@ -11,7 +11,7 @@ typedef LSAPR_HANDLE *PLSAPR_HANDLE;
 
 cpp_quote("#ifndef _WINNT_H")
 typedef struct _LUID {
-    ULONG LowPart;
+    DWORD LowPart;
     LONG HighPart;
 } LUID, *PLUID;
 cpp_quote("#endif")
@@ -302,13 +302,11 @@ typedef struct _POLICY_MODIFICATION_INFO {
     LARGE_INTEGER ModifiedId;
     LARGE_INTEGER DatabaseCreationTime;
 } POLICY_MODIFICATION_INFO, *PPOLICY_MODIFICATION_INFO;
-cpp_quote("#endif")
 
-typedef struct _POLICY_FULL_SET_INFO {
+typedef struct _POLICY_AUDIT_FULL_SET_INFO {
     BOOL ShutDownOnFull;
-} POLICY_FULL_SET_INFO, *PPOLICY_FULL_SET_INFO;
+} POLICY_AUDIT_FULL_SET_INFO, *PPOLICY_AUDIT_FULL_SET_INFO;
 
-cpp_quote("#ifndef _NTSECAPI_H")
 typedef struct _POLICY_AUDIT_FULL_QUERY_INFO {
     BOOL ShutDownOnFull;
     BOOL LogIsFull;
@@ -323,23 +321,23 @@ typedef struct _LSAPR_POLICY_DNS_DOMAIN_INFO {
     PRPC_SID Sid;
 } LSAPR_POLICY_DNS_DOMAIN_INFO, *PLSAPR_POLICY_DNS_DOMAIN_INFO;
 
-/*typedef
+typedef
 [switch_type(POLICY_INFORMATION_CLASS)] union _LSAPR_POLICY_INFORMATION {
     [case(PolicyAuditLogInformation)] POLICY_AUDIT_LOG_INFO PolicyAuditLogInfo;
-    [case(PolicyAuditEventsInformation)] POLICY_AUDIT_EVENTS_INFO PolicyAuditEventsInfo;
-    [case(PolicyPrimaryDomainInformation)] POLICY_PRIMARY_DOM_INFO PolicyPrimaryDomInfo;
-    [case(PolicyPdAccountInformation)] POLICY_PD_ACCOUNT_INFO PolicyPdAccountInfo;
-    [case(PolicyAccountDomainInformation)] POLICY_ACCOUNT_DOM_INFO PolicyAccountDomainInfo;
+    [case(PolicyAuditEventsInformation)] LSAPR_POLICY_AUDIT_EVENTS_INFO PolicyAuditEventsInfo;
+    [case(PolicyPrimaryDomainInformation)] LSAPR_POLICY_PRIMARY_DOM_INFO PolicyPrimaryDomInfo;
+    [case(PolicyPdAccountInformation)] LSAPR_POLICY_PD_ACCOUNT_INFO PolicyPdAccountInfo;
+    [case(PolicyAccountDomainInformation)] LSAPR_POLICY_ACCOUNT_DOM_INFO PolicyAccountDomainInfo;
     [case(PolicyLsaServerRoleInformation)] POLICY_LSA_SERVER_ROLE_INFO PolicyServerRoleInfo;
-    [case(PolicyReplicaSourceInformation)] POLICY_REPLICA_SRCE_INFO PolicyReplicaSourceInfo;
+    [case(PolicyReplicaSourceInformation)] POLICY_LSA_REPLICA_SRCE_INFO PolicyReplicaSourceInfo;
     [case(PolicyDefaultQuotaInformation)] POLICY_DEFAULT_QUOTA_INFO PolicyDefaultQuotaInfo;
     [case(PolicyModificationInformation)] POLICY_MODIFICATION_INFO PolicyModificationInfo;
     [case(PolicyAuditFullSetInformation)] POLICY_AUDIT_FULL_SET_INFO PolicyAuditFullSetInfo;
     [case(PolicyAuditFullQueryInformation)] POLICY_AUDIT_FULL_QUERY_INFO PolicyAuditFullQueryInfo;
-    [case(PolicyDnsDomainInformation)] LSAPR_DNS_DOMAIN_INFO PolicyDnsDomainInfo;
-    [case(PolicyDnsDomainInformationInt)] LSAPR_DNS_DOMAIN_INFO PolicyDnsDomainInfoInt;
+    [case(PolicyDnsDomainInformation)] LSAPR_POLICY_DNS_DOMAIN_INFO PolicyDnsDomainInfo;
+    [case(PolicyDnsDomainInformationInt)] LSAPR_POLICY_DNS_DOMAIN_INFO PolicyDnsDomainInfoInt;
     [case(PolicyLocalAccountDomainInformation)] LSAPR_POLICY_ACCOUNT_DOM_INFO PolicyLocalAccountDomainInfo;
-} LSAPR_POLICY_INFORMATION, *PLSAPR_POLICY_INFORMATION;*/
+} LSAPR_POLICY_INFORMATION, *PLSAPR_POLICY_INFORMATION;
 
 typedef struct _LSAPR_TRUSTED_ENUM_BUFFER {
     DWORD EntriesRead;
@@ -622,7 +620,6 @@ interface lsarpc
 
     /* Function 5 */
     NTSTATUS LsarChangePassword(
-        [in] handle_t hBinding,  /* FIXME */
         [in] PRPC_UNICODE_STRING String1,
         [in] PRPC_UNICODE_STRING String2,
         [in] PRPC_UNICODE_STRING String3,
@@ -640,15 +637,13 @@ interface lsarpc
     NTSTATUS LsarQueryInformationPolicy(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [in] unsigned long PolicyInformation);
-        /* FIXME: should be [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation); */
+        [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation);
 
     /* Function 8 */
     NTSTATUS LsarSetInformationPolicy(
         [in] LSAPR_HANDLE PolicyHandle,
         [in] POLICY_INFORMATION_CLASS InformationClass,
-        [out] unsigned long *PolicyInformation);
-        /* FIXME: should be [out, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION *PolicyInformation); */
+        [in, switch_is(InformationClass)] PLSAPR_POLICY_INFORMATION PolicyInformation);
 
     /* Function 9 */
     NTSTATUS LsarClearAuditLog(
@@ -805,11 +800,11 @@ interface lsarpc
 
     /* Function 33 */
     NTSTATUS LsarLookupPrivilegeDisplayName(
-        [in] LSAPR_HANDLE PolicyHandle,  /* FIXME */
-        /*[in] PRPC_UNICODE_STRING Name,
+        [in] LSAPR_HANDLE PolicyHandle,
+        [in] PRPC_UNICODE_STRING Name,
         [in] USHORT ClientLanguage,
         [in] USHORT ClientSystemDefaultLanguage,
-        [out] PRPC_UNICODE_STRING *DisplayName,*/
+        [out] PRPC_UNICODE_STRING *DisplayName,
         [out] USHORT *LanguageReturned);
 
     /* Function 34 */
@@ -1078,7 +1073,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
     /* Function 76 */
     NTSTATUS LsarLookupSids3(
-        [in] handle_t hBinding, /* FIXME */
+        [in] LSAPR_HANDLE PolicyHandle,
         [in] PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         [out] PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
         [in, out] PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
@@ -1089,8 +1084,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
     /* Function 77 */
     NTSTATUS LsarLookupNames4(
-        [in] handle_t hBinding, /* FIXME */
-        [in] handle_t RpcHandle,
+        [in] LSAPR_HANDLE PolicyHandle,
         [in] DWORD Count,
         [in, size_is(Count)] PRPC_UNICODE_STRING Names,
         [out] PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,

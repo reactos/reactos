@@ -7,75 +7,47 @@
 		</xi:fallback>
 	</xi:include>
 
-	<xi:include href="baseaddress.rbuild" />
+    <xi:include href="ReactOS-generic.rbuild" />
 
-	<define name="__REACTOS__" />
+    <!-- <define name="_M_ARM" /> Already defined by toolchain -->
 	<define name="_ARM_" />
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
 
-	<if property="DBG" value="1">
-		<define name="DBG">1</define>
-		<define name="_SEH_ENABLE_TRACE" />
-		<property name="DBG_OR_KDBG" value="true" />
-	</if>
-	<if property="KDBG" value="1">
-		<define name="KDBG">1</define>
-		<property name="DBG_OR_KDBG" value="true" />
-	</if>
-	
-	<include>.</include>
-	<include>include</include>
-	<include root="intermediate">include</include>
-	<include>include/psdk</include>
-	<include root="intermediate">include/psdk</include>
-	<include>include/dxsdk</include>
-	<include root="intermediate">include/dxsdk</include>
-	<include>include/crt</include>
-	<include>include/crt/mingw32</include>
-	<include>include/ddk</include>
-	<include>include/GL</include>
-	<include>include/ndk</include>
-	<include>include/reactos</include>
-	<include root="intermediate">include/reactos</include>
-	<include root="intermediate">include/reactos/mc</include>
-	<include>include/reactos/libs</include>
-	<include>include/reactos/arm</include>
+    <define name="USE_COMPILER_EXCEPTIONS" />
 
-	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
+    <property name="WINEBUILD_FLAGS" value="--kill-at"/>
+
+    <include>include/reactos/arm</include>
 
 	<if property="SARCH" value="versatile">
 		<define name="BOARD_CONFIG_VERSATILE"/>
 	</if>
 
-	<if property="OPTIMIZE" value="1">
-		<compilerflag>-Os</compilerflag>
-		<compilerflag>-ftracer</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="2">
-		<compilerflag>-Os</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="3">
-		<compilerflag>-O1</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="4">
-		<compilerflag>-O2</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="5">
-		<compilerflag>-O3</compilerflag>
-	</if>
+	<group compilerset="gcc">
+		<if property="OPTIMIZE" value="1">
+			<compilerflag>-ftracer</compilerflag>
+		</if>
+		<compilerflag>-fms-extensions</compilerflag>
+        <compilerflag>-Wno-attributes</compilerflag>
+        <compilerflag>-U_UNICODE</compilerflag>
+        <compilerflag>-UUNICODE</compilerflag>
+	</group>
 
-	<define name="__MSVCRT__"/>
-	<compilerflag>-Wno-attributes</compilerflag>
-	<compilerflag>-fno-strict-aliasing</compilerflag>
-	<linkerflag>--strip-debug</linkerflag>
-	<linkerflag>-static</linkerflag>
-	
+
+	<define name="__MSVCRT__"/> <!-- DUBIOUS -->
+
+	<group linkerset="ld">
+        <linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
+        <linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>-file-alignment=0x1000</linkerflag>
+		<linkerflag>-section-alignment=0x1000</linkerflag>
+	</group>
+
 	<directory name="media">
 		<directory name="nls">
 			<xi:include href="media/nls/nls.rbuild" />
-		</directory>	
+		</directory>
 	</directory>
 	<directory name="lib">
 		<directory name="drivers">
@@ -102,6 +74,9 @@
 		<directory name="inflib">
 			<xi:include href="lib/inflib/inflib.rbuild" />
 		</directory>
+		<directory name="newinflib">
+			<xi:include href="lib/newinflib/inflib.rbuild" />
+		</directory>
 		<directory name="cmlib">
 			<xi:include href="lib/cmlib/cmlib.rbuild" />
 		</directory>
@@ -115,6 +90,9 @@
 			<directory name="crt">
 				<xi:include href="lib/sdk/crt/crt.rbuild" />
 				<xi:include href="lib/sdk/crt/libcntpr.rbuild" />
+			</directory>
+			<directory name="ioevent">
+				<xi:include href="lib/sdk/ioevent/ioevent.rbuild" />
 			</directory>
 			<directory name="nt">
 				<xi:include href="lib/sdk/nt/nt.rbuild" />
@@ -140,17 +118,7 @@
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 	</directory>
 	<directory name="hal">
-		<directory name="halarm">
-			<directory name="generic">
-				<xi:include href="hal/halarm/generic/generic.rbuild" />
-			</directory>
-			<directory name="up">
-				<xi:include href="hal/halarm/up/halup.rbuild" />
-			</directory>
-		</directory>
-		<directory name="hal">
-			<xi:include href="hal/hal/hal.rbuild" />
-		</directory>
+		<xi:include href="hal/hal.rbuild" />
 	</directory>
 	<directory name="boot">
 		<xi:include href="boot/boot.rbuild" />
@@ -180,13 +148,13 @@
 	<directory name="dll">
 		<directory name="ntdll">
 			<xi:include href="dll/ntdll/ntdll.rbuild" />
-		</directory>	
+		</directory>
 	</directory>
 	<directory name="base">
 		<directory name="system">
             <directory name="smss">
                 <xi:include href="base/system/smss/smss.rbuild" />
-            </directory>	
-		</directory>	
+            </directory>
+		</directory>
 	</directory>
 </project>

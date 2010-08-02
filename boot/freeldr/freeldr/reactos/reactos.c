@@ -14,10 +14,11 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+#ifndef _M_ARM
 
 #include <freeldr.h>
 #include <debug.h>
@@ -67,7 +68,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FilePointer = FsOpenFile(szFileName);
 
     /* Try under the system root in the main dir and drivers */
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
     strcpy(value, SystemRoot);
     if(value[strlen(value)-1] != '\\')
@@ -76,7 +77,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FilePointer = FsOpenFile(value);
     }
 
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
     strcpy(value, SystemRoot);
     if(value[strlen(value)-1] != '\\')
@@ -86,7 +87,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FilePointer = FsOpenFile(value);
     }
 
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
     strcpy(value, SystemRoot);
     if(value[strlen(value)-1] != '\\')
@@ -97,7 +98,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     }
 
     /* Make sure we did */
-    if (FilePointer == NULL) {
+    if (!FilePointer) {
 
         /* Fail if file wasn't opened */
         strcpy(value, szFileName);
@@ -201,7 +202,7 @@ FrLdrLoadNlsFile(PCSTR szFileName,
     FilePointer = FsOpenFile(szFileName);
 
     /* Make sure we did */
-    if (FilePointer == NULL) {
+    if (!FilePointer) {
 
         /* Fail if file wasn't opened */
         strcpy(value, szFileName);
@@ -330,7 +331,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
     if (rc != ERROR_SUCCESS) {
 
-        strcpy(szErrorOut, "Language Default setting exists, but isn't readable");
+        sprintf(szErrorOut, "Language Default setting exists, but isn't readable (%S)", szIdBuffer);
         return(FALSE);
     }
 
@@ -606,6 +607,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
     {
         //
+        // Append boot-time options
+        //
+        AppendBootTimeOptions(value);
+
+        //
         // Check if a ramdisk file was given
         //
         PCHAR File;
@@ -642,7 +648,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     LoaderBlock.DrivesAddr = reactos_arc_disk_info;
     LoaderBlock.RdAddr = (ULONG_PTR)gRamDiskBase;
     LoaderBlock.RdLength = gRamDiskSize;
-    LoaderBlock.MmapLength = (SIZE_T)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
+    LoaderBlock.MmapLength = (SIZE_T)MachVtbl.GetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
     if (LoaderBlock.MmapLength)
     {
         ULONG i;
@@ -717,12 +723,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     }
     else
     {
-        if (! MachDiskNormalizeSystemPath(SystemPath,
-                                          sizeof(SystemPath)))
-        {
-            UiMessageBox("Invalid system path");
-            return;
-        }
         /* copy system path into kernel command line */
         strcpy(reactos_kernel_cmdline, SystemPath);
     }
@@ -746,23 +746,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 
     UiDrawStatusText("Loading...");
 
-    //
-    // If we have a ramdisk, this will switch to the ramdisk disk routines
-    // which read from memory instead of using the firmware. This has to be done
-    // after hardware detection, since hardware detection will require using the
-    // real routines in order to perform disk-detection (just because we're on a
-    // ram-boot doesn't mean the user doesn't have actual disks installed too!)
-    //
-    RamDiskSwitchFromBios();
-
-    /*
-     * Try to open system drive
-     */
-    if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
-    {
-        UiMessageBox("Failed to open system drive.");
-        return;
-    }
+    /* Get boot path */
+    if (strchr(SystemPath, '\\') != NULL)
+        strcpy(szBootPath, strchr(SystemPath, '\\'));
+    else
+        szBootPath[0] = '\0';
 
     /* append a backslash */
     if ((strlen(szBootPath)==0) ||
@@ -847,7 +835,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	DPRINTM(DPRINT_REACTOS, "SystemHive: '%s'", szFileName);
 
     FilePointer = FsOpenFile(szFileName);
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
         UiMessageBox("Could not find the System hive!");
         return;
@@ -871,7 +859,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		UiMessageBox("Could not load the System hive!\n");
 		return;
 	}
-	DPRINTM(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
+	DPRINTM(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u\n", (unsigned)Base, (unsigned)Size);
 
     /*
      * Import the loaded system hive
@@ -901,6 +889,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
      * Load boot drivers
      */
     FrLdrLoadBootDrivers(szBootPath, 40);
+    UiDrawProgressBarCenter(100, 100, szLoadingMsg);
     //UiUnInitialize("Booting ReactOS...");
 
     //
@@ -913,5 +902,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     //
     FrLdrStartup(0x2badb002);
 }
+#endif
 
 /* EOF */

@@ -21,9 +21,17 @@
 #ifndef __DDKMAPI_INCLUDED__
 #define __DDKMAPI_INCLUDED__
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
 #if defined(_DXAPI_)
-  #define DXAPI DECLSPEC_EXPORT
+  #define DXAPI
 #else
   #define DXAPI DECLSPEC_IMPORT
 #endif
@@ -95,8 +103,8 @@
 #define DDNOTIFY_CLOSEVIDEOPORT                   0x0200
 #define DDNOTIFY_CLOSECAPTURE                     0x0400
 
-typedef DWORD (*LPDXAPI)(DWORD dwFunctionNum, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID  lpvOutBuffer, DWORD  cbOutBuffer);
-typedef ULONG (*LPDD_NOTIFYCALLBACK) (DWORD dwFlags, PVOID pContext, DWORD dwParam1, DWORD dwParam2);
+typedef DWORD (PASCAL *LPDXAPI)(DWORD dwFunctionNum, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID  lpvOutBuffer, DWORD  cbOutBuffer);
+typedef ULONG (PASCAL *LPDD_NOTIFYCALLBACK) (DWORD dwFlags, PVOID pContext, DWORD dwParam1, DWORD dwParam2);
 
 typedef struct _DDCAPBUFFINFO
 {
@@ -219,17 +227,17 @@ typedef struct _DDLOCKOUT
   DWORD  dwFormatFlags;
   DWORD  dwFormatFourCC;
   DWORD  dwFormatBitCount;
-  union
+  __GNU_EXTENSION union
   {
     DWORD  dwRBitMask;
     DWORD  dwYBitMask;
   };
-  union
+  __GNU_EXTENSION union
   {
     DWORD  dwGBitMask;
     DWORD  dwUBitMask;
   };
-  union
+  __GNU_EXTENSION union
   {
     DWORD  dwBBitMask;
     DWORD  dwVBitMask;

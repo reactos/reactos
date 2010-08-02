@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -38,17 +38,17 @@ SetWindowStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLong(hWnd,
-                              GWL_STYLE);
+    PrevStyle = GetWindowLongPtr(hWnd,
+                                 GWL_STYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLong(hWnd,
-                                  GWL_STYLE,
-                                  Style);
+        PrevStyle = SetWindowLongPtr(hWnd,
+                                     GWL_STYLE,
+                                     Style);
     }
 
     return PrevStyle;
@@ -63,17 +63,17 @@ SetWindowExStyle(IN HWND hWnd,
 
     ASSERT((~dwStyleMask & dwStyle) == 0);
 
-    PrevStyle = GetWindowLong(hWnd,
-                              GWL_EXSTYLE);
+    PrevStyle = GetWindowLongPtr(hWnd,
+                                 GWL_EXSTYLE);
     if (PrevStyle != 0 &&
         (PrevStyle & dwStyleMask) != dwStyle)
     {
         Style = PrevStyle & ~dwStyleMask;
         Style |= dwStyle;
 
-        PrevStyle = SetWindowLong(hWnd,
-                                  GWL_EXSTYLE,
-                                  Style);
+        PrevStyle = SetWindowLongPtr(hWnd,
+                                     GWL_EXSTYLE,
+                                     Style);
     }
 
     return PrevStyle;
@@ -284,7 +284,9 @@ _tWinMain(IN HINSTANCE hInstance,
                    TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"),
                    &hkExplorer) != ERROR_SUCCESS)
     {
-        /* FIXME - display error */
+        TCHAR Message[256];
+        LoadString(hInstance, IDS_STARTUP_ERROR, Message, 256);
+        MessageBox(NULL, Message, NULL, MB_ICONERROR);
         return 1;
     }
 

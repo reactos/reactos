@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "config.h"
@@ -48,6 +48,8 @@
 #include "resinfo.h"
 #include "route.h"
 #include "wine/debug.h"
+#include "dhcpcsdk.h"
+#include "dhcpcapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -100,10 +102,11 @@ DWORD getInterfaceGatewayByIndex(DWORD index)
 {
    DWORD ndx, retVal = 0, numRoutes = getNumRoutes();
    RouteTable *table = getRouteTable();
+   if (!table) return 0;
 
     for (ndx = 0; ndx < numRoutes; ndx++)
     {
-        if ((table->routes[ndx].ifIndex == (index - 1)) && (table->routes[ndx].dest == 0))
+        if ((table->routes[ndx].ifIndex == (index)) && (table->routes[ndx].dest == 0))
             retVal = table->routes[ndx].gateway;
     }
     HeapFree(GetProcessHeap(), 0, table);
@@ -643,9 +646,12 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
               DWORD addrLen = sizeof(ptr->Address), type;
               const char *ifname =
                   getInterfaceNameByIndex(table->indexes[ndx]);
+              if (!ifname) {
+                  ret = ERROR_OUTOFMEMORY;
+                  break;
+              }
 
               /* on Win98 this is left empty, but whatever */
-
               strncpy(ptr->AdapterName,ifname,sizeof(ptr->AdapterName));
               consumeInterfaceName(ifname);
               ptr->AdapterName[MAX_ADAPTER_NAME_LENGTH] = '\0';
@@ -783,6 +789,32 @@ DWORD WINAPI GetBestRoute(DWORD dwDestAddr, DWORD dwSourceAddr, PMIB_IPFORWARDRO
   return ret;
 }
 
+/******************************************************************
+ *    GetExtendedTcpTable (IPHLPAPI.@)
+ *
+ * Get the table of TCP endpoints available to the application.
+ *
+ * PARAMS
+ *  pTcpTable [Out]    table struct with the filtered TCP endpoints available to application
+ *  pdwSize   [In/Out] estimated size of the structure returned in pTcpTable, in bytes
+ *  bOrder    [In]     whether to order the table
+ *  ulAf	[in]	version of IP used by the TCP endpoints
+ *  TableClass [in]	type of the TCP table structure from TCP_TABLE_CLASS
+ *  Reserved [in]	reserved - this value must be zero
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: either ERROR_INSUFFICIENT_BUFFER or ERROR_INVALID_PARAMETER
+ *
+ * NOTES
+ */
+DWORD WINAPI GetExtendedTcpTable(PVOID pTcpTable, PDWORD pdwSize, BOOL bOrder, ULONG ulAf, TCP_TABLE_CLASS TableClass, ULONG Reserved)
+{
+	DWORD ret = NO_ERROR;
+	UNIMPLEMENTED;
+	return ret;	
+}
+
 
 /******************************************************************
  *    GetFriendlyIfIndex (IPHLPAPI.@)
@@ -904,8 +936,9 @@ DWORD WINAPI GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numInterfaces = getNumInterfaces();
+    ULONG size;
     TRACE("GetIfTable: numInterfaces = %d\n", (int)numInterfaces);
-    ULONG size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
+    size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
 
     if (!pIfTable || *pdwSize < size) {
       *pdwSize = size;
@@ -969,8 +1002,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numNonLoopbackInterfaces = getNumNonLoopbackInterfaces();
+    ULONG size;
     TRACE("numNonLoopbackInterfaces == 0x%x\n", numNonLoopbackInterfaces);
-    ULONG size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
+    size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
      sizeof(IP_ADAPTER_INDEX_MAP);
 
     if (!pIfTable || *dwOutBufLen < size) {
@@ -979,9 +1013,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     }
     else {
       InterfaceIndexTable *table = getNonLoopbackInterfaceIndexTable();
-      TRACE("table->numIndexes == 0x%x\n", table->numIndexes);
 
       if (table) {
+        TRACE("table->numIndexes == 0x%x\n", table->numIndexes);
         size = sizeof(IP_INTERFACE_INFO) + (table->numIndexes) *
          sizeof(IP_ADAPTER_INDEX_MAP);
         if (*dwOutBufLen < size) {
@@ -1472,6 +1506,33 @@ DWORD WINAPI GetNumberOfInterfaces(PDWORD pdwNumIf)
 
 
 /******************************************************************
+ *    GetOwnerModuleFromTcpEntry (IPHLPAPI.@)
+ *
+ * Get data about the module that issued the context bind for a specific IPv4 TCP endpoint in a MIB table row
+ *
+ * PARAMS
+ *  pTcpEntry [in]    pointer to a MIB_TCPROW_OWNER_MODULE structure
+ *  Class [in]    	TCPIP_OWNER_MODULE_INFO_CLASS enumeration value
+ *  Buffer [out]     	pointer a buffer containing a TCPIP_OWNER_MODULE_BASIC_INFO structure with the owner module data. 
+ *  pdwSize [in, out]	estimated size of the structure returned in Buffer, in bytes
+ *
+ * RETURNS
+ *  Success: NO_ERROR
+ *  Failure: ERROR_INSUFFICIENT_BUFFER, ERROR_INVALID_PARAMETER, ERROR_NOT_ENOUGH_MEMORY
+ * 	       ERROR_NOT_FOUND or ERROR_PARTIAL_COPY
+ *
+ * NOTES
+ * The type of data returned in Buffer is indicated by the value of the Class parameter.
+ */
+DWORD WINAPI GetOwnerModuleFromTcpEntry( PMIB_TCPROW_OWNER_MODULE pTcpEntry, TCPIP_OWNER_MODULE_INFO_CLASS Class, PVOID Buffer, PDWORD pdwSize)
+{
+	DWORD ret = NO_ERROR;
+	UNIMPLEMENTED;
+	return ret;	
+}
+
+
+/******************************************************************
  *    GetPerAdapterInfo (IPHLPAPI.@)
  *
  *
@@ -1880,19 +1941,26 @@ DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIP
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
  *
- * NOTES
- *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
- *  this function does nothing.
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
-  TRACE("AdapterInfo %p\n", AdapterInfo);
-  /* not a stub, never going to support this (and I never mark an adapter as
-     DHCP enabled, see GetAdaptersInfo, so this should never get called) */
-  return ERROR_NOT_SUPPORTED;
+  DWORD Status, Version = 0;
+
+  if (!AdapterInfo || !AdapterInfo->Name)
+      return ERROR_INVALID_PARAMETER;
+
+  /* Maybe we should do this in DllMain */
+  if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
+      return ERROR_PROC_NOT_FOUND;
+
+  if (DhcpReleaseIpAddressLease(AdapterInfo->Index))
+      Status = ERROR_SUCCESS;
+  else
+      Status = ERROR_PROC_NOT_FOUND;
+
+  DhcpCApiCleanup();
+
+  return Status;
 }
 
 
@@ -1907,20 +1975,26 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * NOTES
- *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
- *  this function does nothing.
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
-  TRACE("AdapterInfo %p\n", AdapterInfo);
-  /* not a stub, never going to support this (and I never mark an adapter as
-     DHCP enabled, see GetAdaptersInfo, so this should never get called) */
-  return ERROR_NOT_SUPPORTED;
+  DWORD Status, Version = 0;
+
+  if (!AdapterInfo || !AdapterInfo->Name)
+      return ERROR_INVALID_PARAMETER;
+
+  /* Maybe we should do this in DllMain */
+  if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
+      return ERROR_PROC_NOT_FOUND;
+
+  if (DhcpRenewIpAddressLease(AdapterInfo->Index))
+      Status = ERROR_SUCCESS;
+  else
+      Status = ERROR_PROC_NOT_FOUND;
+
+  DhcpCApiCleanup();
+
+  return Status;
 }
 
 
@@ -2052,15 +2126,54 @@ DWORD WINAPI SetIpForwardEntry(PMIB_IPFORWARDROW pRoute)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * FIXME
- *  Stub, returns NO_ERROR.
  */
 DWORD WINAPI SetIpNetEntry(PMIB_IPNETROW pArpEntry)
 {
-  FIXME("(pArpEntry %p): stub\n", pArpEntry);
-  /* same as CreateIpNetEntry here, could use SIOCSARP, not sure I want to */
-  return 0;
+  HANDLE tcpFile;
+  NTSTATUS status;
+  TCP_REQUEST_SET_INFORMATION_EX_ARP_ENTRY req =
+      TCP_REQUEST_SET_INFORMATION_INIT;
+  TDIEntityID id;
+  DWORD returnSize;
+  PMIB_IPNETROW arpBuff;
+
+  if (!pArpEntry)
+      return ERROR_INVALID_PARAMETER;
+
+  if (!NT_SUCCESS(openTcpFile( &tcpFile )))
+      return ERROR_NOT_SUPPORTED;
+
+  if (!NT_SUCCESS(getNthIpEntity( tcpFile, pArpEntry->dwIndex, &id )))
+  {
+      closeTcpFile(tcpFile);
+      return ERROR_INVALID_PARAMETER;
+  }
+
+  req.Req.ID.toi_class = INFO_CLASS_PROTOCOL;
+  req.Req.ID.toi_type = INFO_TYPE_PROVIDER;
+  req.Req.ID.toi_id = IP_MIB_ARPTABLE_ENTRY_ID;
+  req.Req.ID.toi_entity.tei_instance = id.tei_instance;
+  req.Req.ID.toi_entity.tei_entity = AT_ENTITY;
+  req.Req.BufferSize = sizeof(MIB_IPNETROW);
+  arpBuff = (PMIB_IPNETROW)&req.Req.Buffer[0];
+
+  RtlCopyMemory(arpBuff, pArpEntry, sizeof(MIB_IPNETROW));
+
+  status = DeviceIoControl( tcpFile,
+                            IOCTL_TCP_SET_INFORMATION_EX,
+                            &req,
+                            sizeof(req),
+                            NULL,
+                            0,
+                            &returnSize,
+                            NULL );
+
+  closeTcpFile(tcpFile);
+
+  if (status)
+     return NO_ERROR;
+  else
+     return ERROR_INVALID_PARAMETER;
 }
 
 
@@ -2174,12 +2287,196 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-DWORD WINAPI GetAdaptersAddresses(ULONG Family,DWORD Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
+DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
-    FIXME(":stub\n");
-    return 0L;
+    InterfaceIndexTable *indexTable;
+    IFInfo ifInfo;
+    int i;
+    ULONG ret, requiredSize = 0;
+    PIP_ADAPTER_ADDRESSES currentAddress;
+    PUCHAR currentLocation;
+    HANDLE tcpFile;
+
+    if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
+    if (Reserved) return ERROR_INVALID_PARAMETER;
+
+    indexTable = getNonLoopbackInterfaceIndexTable(); //I think we want non-loopback here
+    if (!indexTable)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ret = openTcpFile(&tcpFile);
+    if (!NT_SUCCESS(ret))
+        return ERROR_NO_DATA;
+
+    for (i = indexTable->numIndexes; i >= 0; i--)
+    {
+        if (NT_SUCCESS(getIPAddrEntryForIf(tcpFile,
+                                           NULL,
+                                           indexTable->indexes[i],
+                                           &ifInfo)))
+        {
+            /* The whole struct */
+            requiredSize += sizeof(IP_ADAPTER_ADDRESSES);
+
+            /* Friendly name */
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+                requiredSize += strlen((char *)ifInfo.if_info.ent.if_descr) + 1; //FIXME
+
+            /* Adapter name */
+            requiredSize += strlen((char *)ifInfo.if_info.ent.if_descr) + 1;
+
+            /* Unicast address */
+            if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+                requiredSize += sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+
+            /* FIXME: Implement multicast, anycast, and dns server stuff */
+
+            /* FIXME: Implement dns suffix and description */
+            requiredSize += 2 * sizeof(WCHAR);
+
+            /* We're only going to implement what's required for XP SP0 */
+        }
+    }
+
+    if (*pOutBufLen < requiredSize)
+    {
+        *pOutBufLen = requiredSize;
+        closeTcpFile(tcpFile);
+        free(indexTable);
+        return ERROR_BUFFER_OVERFLOW;
+    }
+
+    RtlZeroMemory(pAdapterAddresses, requiredSize);
+
+    /* Let's set up the pointers */
+    currentAddress = pAdapterAddresses;
+    for (i = indexTable->numIndexes; i >= 0; i--)
+    {
+        if (NT_SUCCESS(getIPAddrEntryForIf(tcpFile,
+                                           NULL,
+                                           indexTable->indexes[i],
+                                           &ifInfo)))
+        {
+            currentLocation = (PUCHAR)currentAddress + (ULONG_PTR)sizeof(IP_ADAPTER_ADDRESSES);
+
+            /* FIXME: Friendly name */
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            {
+                currentAddress->FriendlyName = (PVOID)currentLocation;
+                currentLocation += sizeof(WCHAR);
+            }
+
+            /* Adapter name */
+            currentAddress->AdapterName = (PVOID)currentLocation;
+            currentLocation += strlen((char *)ifInfo.if_info.ent.if_descr) + 1;
+
+            /* Unicast address */
+            if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+            {
+                currentAddress->FirstUnicastAddress = (PVOID)currentLocation;
+                currentLocation += sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+                currentAddress->FirstUnicastAddress->Address.lpSockaddr = (PVOID)currentLocation;
+                currentLocation += sizeof(struct sockaddr);
+            }
+
+            /* FIXME: Implement multicast, anycast, and dns server stuff */
+
+            /* FIXME: Implement dns suffix and description */
+            currentAddress->DnsSuffix = (PVOID)currentLocation;
+            currentLocation += sizeof(WCHAR);
+
+            currentAddress->Description = (PVOID)currentLocation;
+            currentLocation += sizeof(WCHAR);
+
+            currentAddress->Next = (PVOID)currentLocation;
+
+            /* We're only going to implement what's required for XP SP0 */
+
+            currentAddress = currentAddress->Next;
+        }
+    }
+
+    /* Terminate the last address correctly */
+    if (currentAddress)
+        currentAddress->Next = NULL;
+
+    /* Now again, for real this time */
+
+    currentAddress = pAdapterAddresses;
+    for (i = indexTable->numIndexes; i >= 0; i--)
+    {
+        if (NT_SUCCESS(getIPAddrEntryForIf(tcpFile,
+                                           NULL,
+                                           indexTable->indexes[i],
+                                           &ifInfo)))
+        {
+            /* Make sure we're not looping more than we hoped for */
+            ASSERT(currentAddress);
+
+            /* Alignment information */
+            currentAddress->Length = sizeof(IP_ADAPTER_ADDRESSES);
+            currentAddress->IfIndex = indexTable->indexes[i];
+
+            /* Adapter name */
+            strcpy(currentAddress->AdapterName, (char *)ifInfo.if_info.ent.if_descr);
+
+            if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+            {
+                currentAddress->FirstUnicastAddress->Length = sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+                currentAddress->FirstUnicastAddress->Flags = 0; //FIXME
+                currentAddress->FirstUnicastAddress->Next = NULL; //FIXME: Support more than one address per adapter
+                currentAddress->FirstUnicastAddress->Address.lpSockaddr->sa_family = AF_INET;
+                memcpy(currentAddress->FirstUnicastAddress->Address.lpSockaddr->sa_data,
+                       &ifInfo.ip_addr.iae_addr,
+                       sizeof(ifInfo.ip_addr.iae_addr));
+                currentAddress->FirstUnicastAddress->Address.iSockaddrLength = sizeof(ifInfo.ip_addr.iae_addr) + sizeof(USHORT);
+                currentAddress->FirstUnicastAddress->PrefixOrigin = IpPrefixOriginOther; //FIXME
+                currentAddress->FirstUnicastAddress->SuffixOrigin = IpPrefixOriginOther; //FIXME
+                currentAddress->FirstUnicastAddress->DadState = IpDadStatePreferred; //FIXME
+                currentAddress->FirstUnicastAddress->ValidLifetime = 0xFFFFFFFF; //FIXME
+                currentAddress->FirstUnicastAddress->PreferredLifetime = 0xFFFFFFFF; //FIXME
+                currentAddress->FirstUnicastAddress->LeaseLifetime = 0xFFFFFFFF; //FIXME
+            }
+
+            /* FIXME: Implement multicast, anycast, and dns server stuff */
+            currentAddress->FirstAnycastAddress = NULL;
+            currentAddress->FirstMulticastAddress = NULL;
+            currentAddress->FirstDnsServerAddress = NULL;
+
+            /* FIXME: Implement dns suffix, description, and friendly name */
+            currentAddress->DnsSuffix[0] = UNICODE_NULL;
+            currentAddress->Description[0] = UNICODE_NULL;
+            currentAddress->FriendlyName[0] = UNICODE_NULL;
+
+            /* Physical Address */
+            memcpy(currentAddress->PhysicalAddress, ifInfo.if_info.ent.if_physaddr, ifInfo.if_info.ent.if_physaddrlen);
+            currentAddress->PhysicalAddressLength = ifInfo.if_info.ent.if_physaddrlen;
+
+            /* Flags */
+            currentAddress->Flags = 0; //FIXME
+
+            /* MTU */
+            currentAddress->Mtu = ifInfo.if_info.ent.if_mtu;
+
+            /* Interface type */
+            currentAddress->IfType = ifInfo.if_info.ent.if_type;
+
+            /* Operational status */
+            currentAddress->OperStatus = ifInfo.if_info.ent.if_operstatus;
+
+            /* We're only going to implement what's required for XP SP0 */
+
+            /* Move to the next address */
+            currentAddress = currentAddress->Next;
+        }
+    }
+
+    closeTcpFile(tcpFile);
+    free(indexTable);
+
+    return NO_ERROR;
 }
 
 /*
@@ -2218,4 +2515,49 @@ DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
     return 0L;
 }
 
+/******************************************************************
+ *    GetIfTable2 (IPHLPAPI.@)
+ *
+ * PARAMS
+ *  pIfTable [In/Out]
+ */
+ 
+NETIOAPI_API WINAPI GetIfTable2(PMIB_IF_TABLE2 *pIfTable)
+{
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
 
+/******************************************************************
+ *    GetIfEntry2 (IPHLPAPI.@)
+ *
+ * PARAMS
+ *  pIfRow [In/Out]
+ */
+NETIOAPI_API WINAPI GetIfEntry2(IN OUT PMIB_IF_ROW2 pIfRow)
+{
+  TRACE("pIfRow %p\n", pIfRow);
+  if (!pIfRow)
+    return ERROR_INVALID_PARAMETER;
+    
+  UNIMPLEMENTED;
+  return ERROR_NOT_SUPPORTED;
+}
+
+DWORD WINAPI
+SetIpForwardEntryToStack(PMIB_IPFORWARDROW pRoute)
+{
+    FIXME("SetIpForwardEntryToStack() stub\n");
+    return 0L;
+}
+
+DWORD WINAPI
+NhGetInterfaceNameFromDeviceGuid(DWORD dwUnknown1,
+                                 DWORD dwUnknown2,
+                                 DWORD dwUnknown3,
+                                 DWORD dwUnknown4,
+                                 DWORD dwUnknown5)
+{
+    FIXME("NhGetInterfaceNameFromDeviceGuid() stub\n");
+    return 0L;
+}

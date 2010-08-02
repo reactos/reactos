@@ -176,7 +176,6 @@ static HRESULT FillBuffer(MPEGSplitterImpl *This, IMediaSample *pCurrentSample)
 
     /* Find the next valid header.. it <SHOULD> be right here */
     assert(parse_header(fbuf, &length, &This->position) == S_OK);
-    assert(length == len || length + 4 == len);
     IMediaSample_SetActualDataLength(pCurrentSample, length);
 
     /* Queue the next sample */
@@ -203,20 +202,20 @@ static HRESULT FillBuffer(MPEGSplitterImpl *This, IMediaSample *pCurrentSample)
             LONGLONG rtSampleStart = pin->rtNext - MEDIATIME_FROM_BYTES(4);
             LONGLONG rtSampleStop = rtSampleStart + MEDIATIME_FROM_BYTES(length + 4);
 
-            hr = IMemAllocator_GetBuffer(pin->pAlloc, &sample, NULL, NULL, 0);
-
             if (rtSampleStop > pin->rtStop)
                 rtSampleStop = MEDIATIME_FROM_BYTES(ALIGNUP(BYTES_FROM_MEDIATIME(pin->rtStop), pin->cbAlign));
 
-            IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
-            IMediaSample_SetPreroll(sample, 0);
-            IMediaSample_SetDiscontinuity(sample, 0);
-            IMediaSample_SetSyncPoint(sample, 1);
-            pin->rtCurrent = rtSampleStart;
-            pin->rtNext = rtSampleStop;
-
+            hr = IMemAllocator_GetBuffer(pin->pAlloc, &sample, NULL, NULL, 0);
             if (SUCCEEDED(hr))
+            {
+                IMediaSample_SetTime(sample, &rtSampleStart, &rtSampleStop);
+                IMediaSample_SetPreroll(sample, 0);
+                IMediaSample_SetDiscontinuity(sample, 0);
+                IMediaSample_SetSyncPoint(sample, 1);
+                pin->rtCurrent = rtSampleStart;
+                pin->rtNext = rtSampleStop;
                 hr = IAsyncReader_Request(pin->pReader, sample, 0);
+            }
             if (FAILED(hr))
                 FIXME("o_Ox%08x\n", hr);
         }
@@ -247,10 +246,7 @@ static HRESULT MPEGSplitter_process_sample(LPVOID iface, IMediaSample * pSample,
     BYTE *pbSrcStream;
     DWORD cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop, tAviStart = This->position;
-    Parser_OutputPin * pOutputPin;
     HRESULT hr;
-
-    pOutputPin = (Parser_OutputPin*)This->Parser.ppPins[1];
 
     hr = IMediaSample_GetTime(pSample, &tStart, &tStop);
     if (SUCCEEDED(hr))

@@ -31,13 +31,14 @@ MMRESULT HelloWorld(PSOUND_DEVICE_INSTANCE Instance, PVOID String)
     Standard MME driver entry-point for messages relating to wave audio
     output.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 wodMessage(
-    DWORD DeviceId,
-    DWORD Message,
-    DWORD PrivateHandle,
-    DWORD Parameter1,
-    DWORD Parameter2)
+    UINT DeviceId,
+    UINT Message,
+    DWORD_PTR PrivateHandle,
+    DWORD_PTR Parameter1,
+    DWORD_PTR Parameter2)
 {
     MMRESULT Result = MMSYSERR_NOTSUPPORTED;
 
@@ -68,7 +69,7 @@ wodMessage(
                                        DeviceId,
                                        (LPWAVEOPENDESC) Parameter1,
                                        Parameter2,
-                                       (DWORD*) PrivateHandle);
+                                       (DWORD_PTR*)PrivateHandle);
             break;
         }
 
@@ -113,6 +114,19 @@ wodMessage(
 
         case WODM_GETPOS :
         {
+            Result = MmeGetPosition(WAVE_OUT_DEVICE_TYPE, DeviceId, PrivateHandle, (MMTIME*)Parameter1, Parameter2);
+            break;
+        }
+
+        case DRV_QUERYDEVICEINTERFACESIZE :
+        {
+            Result = MmeGetDeviceInterfaceString(WAVE_OUT_DEVICE_TYPE, DeviceId, NULL, 0, (DWORD*)Parameter1); //FIXME DWORD_PTR
+            break;
+        }
+
+        case DRV_QUERYDEVICEINTERFACE :
+        {
+            Result = MmeGetDeviceInterfaceString(WAVE_OUT_DEVICE_TYPE, DeviceId, (LPWSTR)Parameter1, Parameter2, NULL); //FIXME DWORD_PTR
             break;
         }
     }

@@ -1,4 +1,4 @@
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -156,7 +156,7 @@ IntArc( DC *dc,
               arctype,
               pbrushPen);
 
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
@@ -174,7 +174,6 @@ IntArc( DC *dc,
         PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
            
     pbrushPen->ptPenWidth.x = PenOrigWidth;
-    SURFACE_UnlockSurface(psurf);
     PEN_UnlockPen(pbrushPen);
     DPRINT("IntArc Exit.\n");
     return ret;
@@ -248,9 +247,9 @@ IntGdiArcInternal(
   if (arctype == GdiTypeArcTo)
   {
      if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
-       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL);
+       IntGdiMoveToEx(dc, XStartArc, YStartArc, NULL, TRUE);
      else
-       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL);
+       IntGdiMoveToEx(dc, XEndArc, YEndArc, NULL, TRUE);
   }
   return Ret;
 }
@@ -295,7 +294,7 @@ IntGdiAngleArc( PDC pDC,
 
   if (result)
   {
-     IntGdiMoveToEx(pDC, x2, y2, NULL); // Dont forget Path.
+     IntGdiMoveToEx(pDC, x2, y2, NULL, TRUE);
   }
   return result;
 }

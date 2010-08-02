@@ -11,8 +11,8 @@
 #include <stdlib.h>
 
 #define WIN32_NO_STATUS
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -100,6 +100,7 @@ typedef struct _SOCKET_INFORMATION {
 	BOOL TrySAN;
 	SOCKADDR WSLocalAddress;
 	SOCKADDR WSRemoteAddress;
+	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
 
 
@@ -325,10 +326,10 @@ INT
 WSPAPI
 WSPSelect(
     IN      INT nfds,
-    IN OUT  LPFD_SET readfds,
-    IN OUT  LPFD_SET writefds,
-    IN OUT  LPFD_SET exceptfds,
-    IN      CONST LPTIMEVAL timeout,
+    IN OUT  fd_set *readfds,
+    IN OUT  fd_set *writefds,
+    IN OUT  fd_set *exceptfds,
+    IN      CONST struct timeval *timeout,
     OUT     LPINT lpErrno);
 
 INT
@@ -409,6 +410,8 @@ PSOCKET_INFORMATION GetSocketStructure(
 	SOCKET Handle
 );
 
+INT TranslateNtStatusError( NTSTATUS Status );
+
 VOID DeleteSocketStructure( SOCKET Handle );
 
 int GetSocketInformation(
@@ -464,11 +467,35 @@ SockReenableAsyncSelectEvent (
     IN PSOCKET_INFORMATION Socket,
     IN ULONG Event
     );
-    
-DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
-			    LPDWORD ReturnedBytes );
 
 typedef VOID (*PASYNC_COMPLETION_ROUTINE)(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock);
+    
+DWORD
+FORCEINLINE
+MsafdReturnWithErrno(NTSTATUS Status,
+                     LPINT Errno,
+                     DWORD Received,
+                     LPDWORD ReturnedBytes)
+{
+    if (Errno)
+    {
+        *Errno = TranslateNtStatusError(Status);
+
+        if (ReturnedBytes)
+            *ReturnedBytes = (*Errno == 0) ? Received : 0;
+
+        return (*Errno == 0) ? 0 : SOCKET_ERROR;
+    }
+    else
+    {
+        DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
+
+        if (ReturnedBytes)
+            *ReturnedBytes = (Status == STATUS_SUCCESS) ? Received : 0;
+
+        return (Status == STATUS_SUCCESS) ? 0 : SOCKET_ERROR;
+    }
+}
 
 #endif /* __MSAFD_H */
 

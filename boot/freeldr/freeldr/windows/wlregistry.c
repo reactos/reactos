@@ -42,34 +42,38 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                      IN LPCSTR DirectoryPath,
                      IN LPCSTR HiveName)
 {
-	PFILE FileHandle;
+	ULONG FileId;
 	CHAR FullHiveName[256];
-	BOOLEAN Status;
+	LONG Status;
+	FILEINFORMATION FileInfo;
 	ULONG HiveFileSize;
 	ULONG_PTR HiveDataPhysical;
 	PVOID HiveDataVirtual;
+	ULONG BytesRead;
+	LPCWSTR FsService;
 
 	/* Concatenate path and filename to get the full name */
 	strcpy(FullHiveName, DirectoryPath);
 	strcat(FullHiveName, HiveName);
 	//Print(L"Loading %s...\n", FullHiveName);
-	FileHandle = FsOpenFile(FullHiveName);
+	Status = ArcOpen(FullHiveName, OpenReadOnly, &FileId);
 
-	if (FileHandle == NULL)
+	if (Status != ESUCCESS)
 	{
 		UiMessageBox("Opening hive file failed!");
 		return FALSE;
 	}
 
 	/* Get the file length */
-	HiveFileSize = FsGetFileSize(FileHandle);
+	Status = ArcGetFileInformation(FileId, &FileInfo);
 
-	if (HiveFileSize == 0)
+	if (Status != ESUCCESS)
 	{
-		FsCloseFile(FileHandle);
+		ArcClose(FileId);
 		UiMessageBox("Hive file has 0 size!");
 		return FALSE;
 	}
+	HiveFileSize = FileInfo.EndingAddress.LowPart;
 
 	/* Round up the size to page boundary and alloc memory */
 	HiveDataPhysical = (ULONG_PTR)MmAllocateMemoryWithType(
@@ -78,7 +82,7 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	if (HiveDataPhysical == 0)
 	{
-		FsCloseFile(FileHandle);
+		ArcClose(FileId);
 		UiMessageBox("Unable to alloc memory for a hive!");
 		return FALSE;
 	}
@@ -91,22 +95,39 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	LoaderBlock->RegistryBase = HiveDataVirtual;
 
 	/* Finally read from file to the memory */
-	Status = FsReadFile(FileHandle, HiveFileSize, NULL, (PVOID)HiveDataPhysical);
-	FsCloseFile(FileHandle);
-	if (!Status)
+	Status = ArcRead(FileId, (PVOID)HiveDataPhysical, HiveFileSize, &BytesRead);
+	if (Status != ESUCCESS)
 	{
+		ArcClose(FileId);
 		UiMessageBox("Unable to read from hive file!");
 		return FALSE;
 	}
 
+	// Add boot filesystem driver to the list
+	FsService = FsGetServiceName(FileId);
+	if (FsService)
+	{
+		DPRINTM(DPRINT_WINDOWS, "  Adding filesystem service %S\n", FsService);
+		Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
+			L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
+			NULL,
+			(LPWSTR)FsService);
+		if (!Status)
+			DPRINTM(DPRINT_WINDOWS, " Failed to add filesystem service\n");
+	}
+	else
+	{
+		DPRINTM(DPRINT_WINDOWS, "  No required filesystem service\n");
+	}
+
+	ArcClose(FileId);
 	return TRUE;
 }
 
-BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                                    IN LPCSTR DirectoryPath)
+BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath)
 {
 	CHAR SearchPath[1024];
-	CHAR AnsiName[256], OemName[256], LangName[256];
 	BOOLEAN Status;
 
 	// There is a simple logic here: try to load usual hive (system), if it
@@ -139,16 +160,18 @@ BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		return FALSE;
 	}
 
+	return TRUE;
+}
+
+BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath)
+{
+	CHAR SearchPath[1024];
+	CHAR AnsiName[256], OemName[256], LangName[256];
+	BOOLEAN Status;
+
 	// Scan registry and prepare boot drivers list
 	WinLdrScanRegistry(LoaderBlock, DirectoryPath);
-
-	// Add boot filesystem driver to the list
-	//FIXME: Use corresponding driver instead of hardcoding
-	Status = WinLdrAddDriverToList(&LoaderBlock->BootDriverListHead,
-		L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\",
-		NULL,
-		L"fastfat");
-
 
 	// Get names of NLS files
 	Status = WinLdrGetNLSNames(AnsiName, OemName, LangName);
@@ -272,14 +295,16 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                   IN LPCSTR LanguageFileName)
 {
 	CHAR FileName[255];
-	PFILE AnsiFileHandle;
-	PFILE OemFileHandle;
-	PFILE LanguageFileHandle;
+	ULONG AnsiFileId;
+	ULONG OemFileId;
+	ULONG LanguageFileId;
 	ULONG AnsiFileSize, OemFileSize, LanguageFileSize;
 	ULONG TotalSize;
 	ULONG_PTR NlsDataBase;
 	PVOID NlsVirtual;
-	BOOLEAN Status, AnsiEqualsOem = FALSE;
+	BOOLEAN AnsiEqualsOem = FALSE;
+	FILEINFORMATION FileInfo;
+	ULONG BytesRead, Status;
 
 	/* There may be a case, when OEM and ANSI page coincide */
 	if (!strcmp(AnsiFileName, OemFileName))
@@ -289,14 +314,17 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//Print(L"Loading %s...\n", Filename);
 	strcpy(FileName, DirectoryPath);
 	strcat(FileName, AnsiFileName);
-	AnsiFileHandle = FsOpenFile(FileName);
+	Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
 
-	if (AnsiFileHandle == NULL)
+	if (Status != ESUCCESS)
 		goto Failure;
 
-	AnsiFileSize = FsGetFileSize(AnsiFileHandle);
+	Status = ArcGetFileInformation(AnsiFileId, &FileInfo);
+	if (Status != ESUCCESS)
+		goto Failure;
+	AnsiFileSize = FileInfo.EndingAddress.LowPart;
 	DPRINTM(DPRINT_WINDOWS, "AnsiFileSize: %d\n", AnsiFileSize);
-	FsCloseFile(AnsiFileHandle);
+	ArcClose(AnsiFileId);
 
 	/* Open OEM file and store its length */
 	if (AnsiEqualsOem)
@@ -308,13 +336,16 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		//Print(L"Loading %s...\n", Filename);
 		strcpy(FileName, DirectoryPath);
 		strcat(FileName, OemFileName);
-		OemFileHandle = FsOpenFile(FileName);
+		Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
 
-		if (OemFileHandle == NULL)
+		if (Status != ESUCCESS)
 			goto Failure;
 
-		OemFileSize = FsGetFileSize(OemFileHandle);
-		FsCloseFile(OemFileHandle);
+		Status = ArcGetFileInformation(OemFileId, &FileInfo);
+		if (Status != ESUCCESS)
+			goto Failure;
+		OemFileSize = FileInfo.EndingAddress.LowPart;
+		ArcClose(OemFileId);
 	}
 	DPRINTM(DPRINT_WINDOWS, "OemFileSize: %d\n", OemFileSize);
 
@@ -322,13 +353,16 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	//Print(L"Loading %s...\n", Filename);
 	strcpy(FileName, DirectoryPath);
 	strcat(FileName, LanguageFileName);
-	LanguageFileHandle = FsOpenFile(FileName);
+	Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
 
-	if (LanguageFileHandle == NULL)
+	if (Status != ESUCCESS)
 		goto Failure;
 
-	LanguageFileSize = FsGetFileSize(LanguageFileHandle);
-	FsCloseFile(LanguageFileHandle);
+	Status = ArcGetFileInformation(LanguageFileId, &FileInfo);
+	if (Status != ESUCCESS)
+		goto Failure;
+	LanguageFileSize = FileInfo.EndingAddress.LowPart;
+	ArcClose(LanguageFileId);
 	DPRINTM(DPRINT_WINDOWS, "LanguageFileSize: %d\n", LanguageFileSize);
 
 	/* Sum up all three length, having in mind that every one of them
@@ -361,50 +395,50 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	/* Now actually read the data into memory, starting with Ansi file */
 	strcpy(FileName, DirectoryPath);
 	strcat(FileName, AnsiFileName);
-	AnsiFileHandle = FsOpenFile(FileName);
+	Status = ArcOpen(FileName, OpenReadOnly, &AnsiFileId);
 
-	if (AnsiFileHandle == NULL)
+	if (Status != ESUCCESS)
 		goto Failure;
 
-	Status = FsReadFile(AnsiFileHandle, AnsiFileSize, NULL, VaToPa(LoaderBlock->NlsData->AnsiCodePageData));
+	Status = ArcRead(AnsiFileId, VaToPa(LoaderBlock->NlsData->AnsiCodePageData), AnsiFileSize, &BytesRead);
 
-	if (!Status)
+	if (Status != ESUCCESS)
 		goto Failure;
 
-	FsCloseFile(AnsiFileHandle);
+	ArcClose(AnsiFileId);
 
 	/* OEM now, if it doesn't equal Ansi of course */
 	if (!AnsiEqualsOem)
 	{
 		strcpy(FileName, DirectoryPath);
 		strcat(FileName, OemFileName);
-		OemFileHandle = FsOpenFile(FileName);
+		Status = ArcOpen(FileName, OpenReadOnly, &OemFileId);
 
-		if (OemFileHandle == NULL)
+		if (Status != ESUCCESS)
 			goto Failure;
 
-		Status = FsReadFile(OemFileHandle, OemFileSize, NULL, VaToPa(LoaderBlock->NlsData->OemCodePageData));
+		Status = ArcRead(OemFileId, VaToPa(LoaderBlock->NlsData->OemCodePageData), OemFileSize, &BytesRead);
 
-		if (!Status)
+		if (Status != ESUCCESS)
 			goto Failure;
 
-		FsCloseFile(OemFileHandle);
+		ArcClose(OemFileId);
 	}
 
 	/* finally the language file */
 	strcpy(FileName, DirectoryPath);
 	strcat(FileName, LanguageFileName);
-	LanguageFileHandle = FsOpenFile(FileName);
+	Status = ArcOpen(FileName, OpenReadOnly, &LanguageFileId);
 
-	if (LanguageFileHandle == NULL)
+	if (Status != ESUCCESS)
 		goto Failure;
 
-	Status = FsReadFile(LanguageFileHandle, LanguageFileSize, NULL, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData));
+	Status = ArcRead(LanguageFileId, VaToPa(LoaderBlock->NlsData->UnicodeCodePageData), LanguageFileSize, &BytesRead);
 
-	if (!Status)
+	if (Status != ESUCCESS)
 		goto Failure;
 
-	FsCloseFile(LanguageFileHandle);
+	ArcClose(LanguageFileId);
 
 	//
 	// THIS IS HAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACK

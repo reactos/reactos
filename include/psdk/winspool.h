@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
 #define DI_CHANNEL 1
 #define DI_CHANNEL_WRITE 2
 #define DI_READ_SPOOL_JOB 3
@@ -214,6 +218,23 @@ extern "C" {
 #define PORT_STATUS_TONER_LOW	10
 #define PORT_STATUS_WARMING_UP	11
 #define PORT_STATUS_POWER_SAVE	12
+
+typedef struct _PRINTER_NOTIFY_OPTIONS_TYPE {
+  WORD Type;
+  WORD Reserved0;
+  DWORD Reserved1;
+  DWORD Reserved2;
+  DWORD Count;
+  PWORD pFields;
+} PRINTER_NOTIFY_OPTIONS_TYPE, *PPRINTER_NOTIFY_OPTIONS_TYPE, *LPPRINTER_NOTIFY_OPTIONS_TYPE;
+
+typedef struct _PRINTER_NOTIFY_OPTIONS {
+  DWORD Version;
+  DWORD Flags;
+  DWORD Count;
+  PPRINTER_NOTIFY_OPTIONS_TYPE pTypes;
+} PRINTER_NOTIFY_OPTIONS, *PPRINTER_NOTIFY_OPTIONS, *LPPRINTER_NOTIFY_OPTIONS;
+
 #ifndef RC_INVOKED
 typedef struct _ADDJOB_INFO_1A {
 	LPSTR Path;
@@ -823,6 +844,7 @@ BOOL WINAPI EnumPrintProcessorDatatypesA(LPSTR,LPSTR,DWORD,PBYTE,DWORD,PDWORD,PD
 BOOL WINAPI EnumPrintProcessorDatatypesW(LPWSTR,LPWSTR,DWORD,PBYTE,DWORD,PDWORD,PDWORD);
 BOOL WINAPI EnumPrintProcessorsA(LPSTR,LPSTR,DWORD,PBYTE,DWORD,PDWORD,PDWORD);
 BOOL WINAPI EnumPrintProcessorsW(LPWSTR,LPWSTR,DWORD,PBYTE,DWORD,PDWORD,PDWORD);
+LONG WINAPI ExtDeviceMode(HWND,HANDLE,LPDEVMODEA,LPSTR,LPSTR,LPDEVMODEA,LPSTR,DWORD);
 BOOL WINAPI FindClosePrinterChangeNotification(HANDLE);
 HANDLE WINAPI FindFirstPrinterChangeNotification(HANDLE,DWORD,DWORD,PVOID);
 HANDLE WINAPI FindNextPrinterChangeNotification(HANDLE,PDWORD,PVOID,PVOID*);
@@ -845,6 +867,10 @@ BOOL WINAPI GetPrinterDriverDirectoryA(LPSTR,LPSTR,DWORD,LPBYTE,DWORD,LPDWORD);
 BOOL WINAPI GetPrinterDriverDirectoryW(LPWSTR,LPWSTR,DWORD,LPBYTE,DWORD,LPDWORD);
 BOOL WINAPI GetPrintProcessorDirectoryA(LPSTR,LPSTR,DWORD,LPBYTE,DWORD,LPDWORD);
 BOOL WINAPI GetPrintProcessorDirectoryW(LPWSTR,LPWSTR,DWORD,LPBYTE,DWORD,LPDWORD);
+#if NTDDI_VERSION >= NTDDI_WINXPSP2
+BOOL WINAPI IsValidDevmodeA(PDEVMODEA,size_t);
+BOOL WINAPI IsValidDevmodeW(PDEVMODEW,size_t);
+#endif
 BOOL WINAPI OpenPrinterA(LPSTR,PHANDLE,LPPRINTER_DEFAULTSA);
 BOOL WINAPI OpenPrinterW(LPWSTR,PHANDLE,LPPRINTER_DEFAULTSW);
 DWORD WINAPI PrinterMessageBoxA(HANDLE,DWORD,HWND,LPSTR,LPSTR,DWORD);
@@ -862,6 +888,11 @@ BOOL WINAPI SetPrinterA(HANDLE,DWORD,PBYTE,DWORD);
 BOOL WINAPI SetPrinterW(HANDLE,DWORD,PBYTE,DWORD);
 BOOL WINAPI SetPrinterDataA(HANDLE,LPSTR,DWORD,PBYTE,DWORD);
 BOOL WINAPI SetPrinterDataW(HANDLE,LPWSTR,DWORD,PBYTE,DWORD);
+#ifdef _WINE
+LPSTR WINAPI StartDocDlgA(HANDLE hPrinter, DOCINFOA *doc);
+LPWSTR WINAPI StartDocDlgW(HANDLE hPrinter, DOCINFOW *doc);
+#define StartDocDlg WINELIB_NAME_AW(StartDocDlg)
+#endif
 DWORD WINAPI StartDocPrinterA(HANDLE,DWORD,PBYTE);
 DWORD WINAPI StartDocPrinterW(HANDLE,DWORD,PBYTE);
 BOOL WINAPI StartPagePrinter(HANDLE);
@@ -934,6 +965,7 @@ typedef LPPROVIDOR_INFO_2W LPPROVIDOR_INFO_2;
 #define GetPrinterDriver GetPrinterDriverW
 #define GetPrinterDriverDirectory GetPrinterDriverDirectoryW
 #define GetPrintProcessorDirectory GetPrintProcessorDirectoryW
+#define IsValidDevmode IsValidDevmodeW
 #define OpenPrinter OpenPrinterW
 #define PrinterMessageBox PrinterMessageBoxW
 #define ResetPrinter ResetPrinterW
@@ -1003,6 +1035,7 @@ typedef PRINTER_DEFAULTSA PRINTER_DEFAULTS,*PPRINTER_DEFAULTS,*LPPRINTER_DEFAULT
 #define GetPrinterDriver GetPrinterDriverA
 #define GetPrinterDriverDirectory GetPrinterDriverDirectoryA
 #define GetPrintProcessorDirectory GetPrintProcessorDirectoryA
+#define IsValidDevmode IsValidDevmodeA
 #define OpenPrinter OpenPrinterA
 #define PrinterMessageBox PrinterMessageBoxA
 #define ResetPrinter ResetPrinterA
@@ -1013,6 +1046,9 @@ typedef PRINTER_DEFAULTSA PRINTER_DEFAULTS,*PPRINTER_DEFAULTS,*LPPRINTER_DEFAULT
 #define StartDocPrinter StartDocPrinterA
 #endif
 #endif /* RC_INVOKED */
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #ifdef __cplusplus
 }
 #endif

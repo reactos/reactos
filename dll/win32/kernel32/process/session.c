@@ -9,6 +9,9 @@
  *     2001-12-07 created
  */
 #include <k32.h>
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32session);
 
 DWORD ActiveConsoleSessionId = 0;
 
@@ -16,10 +19,14 @@ DWORD ActiveConsoleSessionId = 0;
 /*
  * @unimplemented
  */
-DWORD WINAPI
-DosPathToSessionPathW (DWORD SessionID, LPWSTR InPath, LPWSTR * OutPath)
+DWORD
+WINAPI
+DosPathToSessionPathW(DWORD SessionID,
+                      LPWSTR InPath,
+                      LPWSTR *OutPath)
 {
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*
@@ -35,67 +42,74 @@ DosPathToSessionPathW (DWORD SessionID, LPWSTR InPath, LPWSTR * OutPath)
  *
  * @unimplemented
  */
-DWORD WINAPI
-DosPathToSessionPathA (DWORD SessionId, LPSTR InPath, LPSTR * OutPath)
+DWORD
+WINAPI
+DosPathToSessionPathA(DWORD SessionId,
+                      LPSTR InPath,
+                      LPSTR *OutPath)
 {
-	//DosPathToSessionPathW (SessionId,InPathW,OutPathW);
-	return 0;
+    //DosPathToSessionPathW (SessionId,InPathW,OutPathW);
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*
  * @implemented
  */
-BOOL WINAPI ProcessIdToSessionId (IN  DWORD dwProcessId,
-				   OUT DWORD* pSessionId)
+BOOL
+WINAPI
+ProcessIdToSessionId(IN DWORD dwProcessId,
+                     OUT DWORD *pSessionId)
 {
-  PROCESS_SESSION_INFORMATION SessionInformation;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  CLIENT_ID ClientId;
-  HANDLE ProcessHandle;
-  NTSTATUS Status;
+    PROCESS_SESSION_INFORMATION SessionInformation;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    CLIENT_ID ClientId;
+    HANDLE ProcessHandle;
+    NTSTATUS Status;
 
-  if(IsBadWritePtr(pSessionId, sizeof(DWORD)))
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  ClientId.UniqueProcess = (HANDLE)dwProcessId;
-  ClientId.UniqueThread = 0;
-
-  InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
-
-  Status = NtOpenProcess(&ProcessHandle,
-                         PROCESS_QUERY_INFORMATION,
-                         &ObjectAttributes,
-                         &ClientId);
-  if(NT_SUCCESS(Status))
-  {
-    Status = NtQueryInformationProcess(ProcessHandle,
-                                       ProcessSessionInformation,
-                                       &SessionInformation,
-                                       sizeof(SessionInformation),
-                                       NULL);
-    NtClose(ProcessHandle);
-
-    if(NT_SUCCESS(Status))
+    if (IsBadWritePtr(pSessionId, sizeof(DWORD)))
     {
-      *pSessionId = SessionInformation.SessionId;
-      return TRUE;
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
-  }
 
-  SetLastErrorByStatus(Status);
-  return FALSE;
+    ClientId.UniqueProcess = UlongToHandle(dwProcessId);
+    ClientId.UniqueThread = 0;
+
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+
+    Status = NtOpenProcess(&ProcessHandle,
+                           PROCESS_QUERY_INFORMATION,
+                           &ObjectAttributes,
+                           &ClientId);
+    if (NT_SUCCESS(Status))
+    {
+        Status = NtQueryInformationProcess(ProcessHandle,
+                                           ProcessSessionInformation,
+                                           &SessionInformation,
+                                           sizeof(SessionInformation),
+                                           NULL);
+        NtClose(ProcessHandle);
+
+        if (NT_SUCCESS(Status))
+        {
+            *pSessionId = SessionInformation.SessionId;
+            return TRUE;
+        }
+    }
+
+    SetLastErrorByStatus(Status);
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-DWORD WINAPI
-WTSGetActiveConsoleSessionId (VOID)
+DWORD
+WINAPI
+WTSGetActiveConsoleSessionId(VOID)
 {
-	return ActiveConsoleSessionId;
+    return ActiveConsoleSessionId;
 }
 
 /* EOF */

@@ -18,14 +18,74 @@ const GUID KSCATEGORY_PREFERRED_WAVEOUT_DEVICE = {0xD6C5066EL, 0x72C1, 0x11D2, {
 const GUID KSCATEGORY_PREFERRED_WAVEIN_DEVICE  = {0xD6C50671L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
 const GUID KSCATEGORY_PREFERRED_MIDIOUT_DEVICE = {0xD6C50674L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
 
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
+{
+    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    if (!Item)
+        return Item;
+
+    RtlZeroMemory(Item, NumberOfBytes);
+    return Item;
+}
+
+VOID
+FreeItem(
+    IN PVOID Item)
+{
+    ExFreePool(Item);
+}
 
 
 VOID
 NTAPI
 SysAudio_Unload(IN PDRIVER_OBJECT DriverObject)
 {
-    DPRINT1("SysAudio_Unload called\n");
+    DPRINT("SysAudio_Unload called\n");
 }
+
+NTSTATUS
+NTAPI
+SysAudio_Shutdown(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PKSAUDIO_DEVICE_ENTRY DeviceEntry;
+    PSYSAUDIODEVEXT DeviceExtension;
+    PLIST_ENTRY Entry;
+
+    DPRINT("SysAudio_Shutdown called\n");
+
+    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
+
+    while(!IsListEmpty(&DeviceExtension->KsAudioDeviceList))
+    {
+        Entry = RemoveHeadList(&DeviceExtension->KsAudioDeviceList);
+        DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)CONTAINING_RECORD(Entry, KSAUDIO_DEVICE_ENTRY, Entry);
+
+        DPRINT("Freeing item %wZ\n", &DeviceEntry->DeviceName);
+
+        /* dereference audio device file object */
+        ObDereferenceObject(DeviceEntry->FileObject);
+
+        /* close audio device handle */
+        ZwClose(DeviceEntry->Handle);
+
+        /* free device string */
+        RtlFreeUnicodeString(&DeviceEntry->DeviceName);
+
+        /* free audio device entry */
+        FreeItem(DeviceEntry);
+    }
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -79,7 +139,7 @@ SysAudio_InstallDevice(
     SYSAUDIODEVEXT *DeviceExtension;
 
 
-    DPRINT1("SysAudio_InstallDevice called\n");
+    DPRINT("SysAudio_InstallDevice called\n");
 
     /* Create the device */
     Status = IoCreateDevice(DriverObject,
@@ -108,7 +168,7 @@ SysAudio_InstallDevice(
         if (!NT_SUCCESS(Status))
         {
             IoDeleteDevice(DeviceObject);
-            DPRINT("Failed to create sysaudio symlink!\n");
+            DPRINT1("Failed to create sysaudio symlink!\n");
             return Status;
         }
     }
@@ -118,7 +178,7 @@ SysAudio_InstallDevice(
     RtlZeroMemory(DeviceExtension, sizeof(SYSAUDIODEVEXT));
 
     /* Initialize the mutex */
-    KeInitializeMutex(&DeviceExtension->Mutex, 0);
+    KeInitializeSpinLock(&DeviceExtension->Lock);
 
     /* Initialize the ks audio device list */
     InitializeListHead(&DeviceExtension->KsAudioDeviceList);
@@ -140,23 +200,6 @@ SysAudio_InstallDevice(
         goto cleanup;
     }
 
-    /* allocate work item */
-    DeviceExtension->WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!DeviceExtension->WorkItem)
-    {
-        DPRINT1("Failed to allocate work item\n");
-        goto cleanup;
-    }
-
-    /* allocate work item context */
-    DeviceExtension->WorkerContext = ExAllocatePool(NonPagedPool, sizeof(PIN_WORKER_CONTEXT));
-    if (!DeviceExtension->WorkerContext)
-    {
-        DPRINT1("Failed to allocate work item context\n");
-        goto cleanup;
-    }
-
-
     /* Load kmixer */
     Status = SysAudioOpenKMixer(DeviceExtension);
     if (!NT_SUCCESS(Status))
@@ -169,6 +212,10 @@ SysAudio_InstallDevice(
      DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
      /* clear initializing flag */
      DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
+
+     /* register shutdown notfication */
+     IoRegisterShutdownNotification(DeviceObject);
+
 
     /* Done */
     return STATUS_SUCCESS;
@@ -192,7 +239,7 @@ DriverEntry(
     IN  PDRIVER_OBJECT DriverObject,
     IN  PUNICODE_STRING RegistryPath)
 {
-    DPRINT1("System audio graph builder (sysaudio) started\n");
+    DPRINT("System audio graph builder (sysaudio) started\n");
 
     /* Let ks handle these */
     KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CREATE);
@@ -209,6 +256,7 @@ DriverEntry(
 
     /* Sysaudio needs to do work on pnp, so handle it */
     DriverObject->MajorFunction[IRP_MJ_PNP] = SysAudio_Pnp;
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = SysAudio_Shutdown;
 
     /* Call our initialization function */
     return SysAudio_InstallDevice(DriverObject);

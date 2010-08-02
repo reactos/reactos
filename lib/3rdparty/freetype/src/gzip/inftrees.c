@@ -366,6 +366,9 @@ z_streamp z             /* for messages */
     if (r == Z_DATA_ERROR)
       z->msg = (char*)"oversubscribed distance tree";
     else if (r == Z_BUF_ERROR) {
+#if 0
+    {
+#endif
 #ifdef PKZIP_BUG_WORKAROUND
       r = Z_OK;
     }

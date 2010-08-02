@@ -73,6 +73,7 @@ struct chmUnitInfo
 };
 
 struct chmFile* chm_openW(const WCHAR *filename);
+struct chmFile *chm_dup(struct chmFile *oldHandle);
 
 /* close an ITS archive */
 void chm_close(struct chmFile *h);
@@ -109,23 +110,5 @@ int chm_enumerate_dir(struct chmFile *h,
                       int what,
                       CHM_ENUMERATOR e,
                       void *context);
-
-/* 
- * This function is specific to Unix-systems. Do not remove it!
- */
-static inline int
-ffs(int field)
-{
-    static const int index[] = { 1, 2, 29, 3, 30, 15, 25, 4, 31, 23, 21, 
-                                 16, 26, 18, 5, 9, 32, 28, 14, 24, 22, 20,
-                                 17, 8, 27, 13, 19, 7, 12, 6, 11, 10 };
-    unsigned int w = field;
-    if (w == 0)
-        return (0);
-    w &= -w;
-    w *= 125613361U;
-    w >>= 27;
-    return index[w];
-}
 
 #endif /* INCLUDED_CHMLIB_H */

@@ -126,7 +126,7 @@ HRESULT DSOUND_ReopenDevice(DirectSoundDevice *device, BOOL forcewave)
 		if (device->driver)
 			flags |= WAVE_DIRECTSOUND;
 
-		hres = mmErr(waveOutOpen(&(device->hwo), device->drvdesc.dnDevNode, device->pwfx, (DWORD_PTR)DSOUND_callback, (DWORD)device, flags));
+		hres = mmErr(waveOutOpen(&(device->hwo), device->drvdesc.dnDevNode, device->pwfx, (DWORD_PTR)DSOUND_callback, (DWORD_PTR)device, flags));
 		if (FAILED(hres)) {
 			WARN("waveOutOpen failed\n");
 			if (device->driver)

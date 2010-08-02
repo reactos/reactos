@@ -8,8 +8,17 @@
 	<define name="HAVE_WIN32_THREADS" />
 	<define name="_REENTRANT" />
 	<define name="LIBXML_STATIC" />
+	<define name="__MINGW32__" />
 	<include base="libxml2">include</include>
 	<include base="libxml2">.</include>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="getcwd">_getcwd</define>
+	<define name="close">_close</define>
+	<define name="write">_write</define>
+	<define name="read">_read</define>
+	<define name="open">_open</define>
+
 	<file>c14n.c</file>
 	<file>catalog.c</file>
 	<file>chvalid.c</file>

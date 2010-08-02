@@ -41,11 +41,21 @@ typedef struct tagHlpFileLink
     LPCSTR      string;         /* name of the file to for the link (NULL if same file) */
     LONG        hash;           /* topic index */
     unsigned    bClrChange : 1; /* true if the link is green & underlined */
+    unsigned    bHotSpot : 1;   /* true if the link is an hotspot (actually HLPFILE_HOTSPOTLINK) */
     unsigned    window;         /* window number for displaying the link (-1 is current) */
     DWORD       cpMin;
     DWORD       cpMax;
     struct tagHlpFileLink* next;
 } HLPFILE_LINK;
+
+typedef struct tagHlpFileHotSpotLink
+{
+    HLPFILE_LINK link;
+    unsigned    x;
+    unsigned    y;
+    unsigned    width;
+    unsigned    height;
+} HLPFILE_HOTSPOTLINK;
 
 typedef struct tagHlpFileMacro
 {

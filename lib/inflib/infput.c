@@ -37,7 +37,7 @@ Output(POUTPUTBUFFER OutBuf, PCTSTR Text)
     }
 
   /* Doesn't fit? */
-  Length = _tcslen(Text);
+  Length = (ULONG)_tcslen(Text);
   if (OutBuf->FreeSize < Length + 1 && INF_SUCCESS(OutBuf->Status))
     {
       DPRINT("Out of free space. TotalSize %u FreeSize %u Length %u\n",
@@ -145,8 +145,8 @@ InfpBuildFileBuffer(PINFCACHE Cache,
               NeedQuotes = FALSE;
               while (_T('\0') != *p && ! NeedQuotes)
                 {
-                  NeedQuotes = _T(',') == *p || _T(';') == *p ||
-                               _T('\\') == *p;
+                  NeedQuotes = (BOOLEAN)(_T(',') == *p || _T(';') == *p ||
+                                         _T('\\') == *p);
                   p++;
                 }
               if (NeedQuotes)

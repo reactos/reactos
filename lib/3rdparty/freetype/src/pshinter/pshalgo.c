@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (body).                                 */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 by                  */
+/*  Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -103,7 +103,7 @@
 
     if ( idx >= table->max_hints )
     {
-      FT_ERROR(( "psh_hint_table_record: invalid hint index %d\n", idx ));
+      FT_TRACE0(( "psh_hint_table_record: invalid hint index %d\n", idx ));
       return;
     }
 
@@ -137,7 +137,7 @@
     if ( table->num_hints < table->max_hints )
       table->sort_global[table->num_hints++] = hint;
     else
-      FT_ERROR(( "psh_hint_table_record: too many sorted hints!  BUG!\n" ));
+      FT_TRACE0(( "psh_hint_table_record: too many sorted hints!  BUG!\n" ));
   }
 
 
@@ -230,7 +230,7 @@
       FT_UInt  idx;
 
 
-      FT_ERROR(( "psh_hint_table_init: missing/incorrect hint masks!\n" ));
+      FT_TRACE0(( "psh_hint_table_init: missing/incorrect hint masks\n" ));
 
       count = table->max_hints;
       for ( idx = 0; idx < count; idx++ )
@@ -282,8 +282,8 @@
           {
             hint2 = sort[0];
             if ( psh_hint_overlap( hint, hint2 ) )
-              FT_ERROR(( "psh_hint_table_activate_mask:"
-                         " found overlapping hints\n" ))
+              FT_TRACE0(( "psh_hint_table_activate_mask:"
+                          " found overlapping hints\n" ))
           }
 #else
           count2 = 0;
@@ -295,8 +295,8 @@
             if ( count < table->max_hints )
               table->sort[count++] = hint;
             else
-              FT_ERROR(( "psh_hint_tableactivate_mask:"
-                         " too many active hints\n" ));
+              FT_TRACE0(( "psh_hint_tableactivate_mask:"
+                          " too many active hints\n" ));
           }
         }
       }
@@ -898,7 +898,7 @@
 
 #ifdef DEBUG_ZONES
 
-#include <stdio.h>
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
   static void
   psh_print_zone( PSH_Zone  zone )
@@ -2223,8 +2223,13 @@
       FT_Fixed  x_scale = dim_x->scale_mult;
       FT_Fixed  y_scale = dim_y->scale_mult;
 
+      FT_Fixed  old_x_scale = x_scale;
+      FT_Fixed  old_y_scale = y_scale;
+
       FT_Fixed  scaled;
       FT_Fixed  fitted;
+
+      FT_Bool  rescale = FALSE;
 
 
       scaled = FT_MulFix( globals->blues.normal_top.zones->org_ref, y_scale );
@@ -2232,6 +2237,8 @@
 
       if ( fitted != 0 && scaled != fitted )
       {
+        rescale = TRUE;
+
         y_scale = FT_MulDiv( y_scale, fitted, scaled );
 
         if ( fitted < scaled )
@@ -2239,43 +2246,47 @@
 
         psh_globals_set_scale( glyph->globals, x_scale, y_scale, 0, 0 );
       }
-    }
 
-    glyph->do_horz_hints = 1;
-    glyph->do_vert_hints = 1;
+      glyph->do_horz_hints = 1;
+      glyph->do_vert_hints = 1;
 
-    glyph->do_horz_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO ||
-                                       hint_mode == FT_RENDER_MODE_LCD  );
+      glyph->do_horz_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO ||
+                                         hint_mode == FT_RENDER_MODE_LCD  );
 
-    glyph->do_vert_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO  ||
-                                       hint_mode == FT_RENDER_MODE_LCD_V );
+      glyph->do_vert_snapping = FT_BOOL( hint_mode == FT_RENDER_MODE_MONO  ||
+                                         hint_mode == FT_RENDER_MODE_LCD_V );
 
-    glyph->do_stem_adjust   = FT_BOOL( hint_mode != FT_RENDER_MODE_LIGHT );
+      glyph->do_stem_adjust   = FT_BOOL( hint_mode != FT_RENDER_MODE_LIGHT );
 
-    for ( dimension = 0; dimension < 2; dimension++ )
-    {
-      /* load outline coordinates into glyph */
-      psh_glyph_load_points( glyph, dimension );
+      for ( dimension = 0; dimension < 2; dimension++ )
+      {
+        /* load outline coordinates into glyph */
+        psh_glyph_load_points( glyph, dimension );
 
-      /* compute local extrema */
-      psh_glyph_compute_extrema( glyph );
+        /* compute local extrema */
+        psh_glyph_compute_extrema( glyph );
 
-      /* compute aligned stem/hints positions */
-      psh_hint_table_align_hints( &glyph->hint_tables[dimension],
-                                  glyph->globals,
-                                  dimension,
-                                  glyph );
+        /* compute aligned stem/hints positions */
+        psh_hint_table_align_hints( &glyph->hint_tables[dimension],
+                                    glyph->globals,
+                                    dimension,
+                                    glyph );
 
-      /* find strong points, align them, then interpolate others */
-      psh_glyph_find_strong_points( glyph, dimension );
-      if ( dimension == 1 )
-        psh_glyph_find_blue_points( &globals->blues, glyph );
-      psh_glyph_interpolate_strong_points( glyph, dimension );
-      psh_glyph_interpolate_normal_points( glyph, dimension );
-      psh_glyph_interpolate_other_points( glyph, dimension );
+        /* find strong points, align them, then interpolate others */
+        psh_glyph_find_strong_points( glyph, dimension );
+        if ( dimension == 1 )
+          psh_glyph_find_blue_points( &globals->blues, glyph );
+        psh_glyph_interpolate_strong_points( glyph, dimension );
+        psh_glyph_interpolate_normal_points( glyph, dimension );
+        psh_glyph_interpolate_other_points( glyph, dimension );
 
-      /* save hinted coordinates back to outline */
-      psh_glyph_save_points( glyph, dimension );
+        /* save hinted coordinates back to outline */
+        psh_glyph_save_points( glyph, dimension );
+
+        if ( rescale )
+          psh_globals_set_scale( glyph->globals,
+                                 old_x_scale, old_y_scale, 0, 0 );
+      }
     }
 
   Exit:

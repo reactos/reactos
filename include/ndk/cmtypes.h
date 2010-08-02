@@ -54,7 +54,7 @@ Author:
 #define CmResourceTypeDma                       4
 #define CmResourceTypeDeviceSpecific            5
 #define CmResourceTypeBusNumber                 6
-#define CmResourceTypeMaximum                   7
+#define CmResourceTypeMemoryLarge               7
 #define CmResourceTypeNonArbitrated             128
 #define CmResourceTypeConfigData                128
 #define CmResourceTypeDevicePrivate             129
@@ -142,11 +142,14 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS
     KeyValuePartialInformationAlign64
 } KEY_VALUE_INFORMATION_CLASS;
 
-typedef enum _KEY_SET_INFORMATION_CLASS
-{
-    KeyWriteTimeInformation,
-    KeyUserFlagsInformation,
-    MaxKeySetInfoClass
+typedef enum _KEY_SET_INFORMATION_CLASS {
+  KeyWriteTimeInformation,
+  KeyWow64FlagsInformation,
+  KeyControlFlagsInformation,
+  KeySetVirtualizationInformation,
+  KeySetDebugInformation,
+  KeySetHandleTagsInformation,
+  MaxKeySetInfoClass
 } KEY_SET_INFORMATION_CLASS;
 
 #endif

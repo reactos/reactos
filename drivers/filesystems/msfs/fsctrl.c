@@ -1,8 +1,7 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       drivers/filesystems/ms/fsctrl.c
+ * FILE:       drivers/filesystems/msfs/fsctrl.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
  */
@@ -38,9 +37,6 @@ MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
     switch (IoStack->Parameters.FileSystemControl.FsControlCode)
     {
-#if 0
-
-#endif
     default:
         Status = STATUS_NOT_IMPLEMENTED;
     }

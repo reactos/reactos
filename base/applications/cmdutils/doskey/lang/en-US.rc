@@ -18,7 +18,7 @@ DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
   /MACROS             Displays macro definitions.\n\
   /MACROS:exename     Displays macro definitions for a specific program.\n\
   /MACROS:ALL         Displays macro definitions for all programs.\n\
-  /MACROFILE=filename Loads macro definitions from a file.\n\
+  /MACROFILE=file     Loads macro definitions from a file.\n\
   macroname           Specifies the name of a macro to create.\n\
   text                Specifies the replacement text for the macro.\n"
 

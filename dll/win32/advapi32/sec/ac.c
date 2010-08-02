@@ -581,6 +581,11 @@ SetEntriesInAclW(ULONG cCountOfExplicitEntries,
 {
     DWORD ErrorCode;
 
+    if (!NewAcl)
+    {
+        return ERROR_INVALID_PARAMETER;
+    }
+
     ErrorCode = CheckNtMartaPresent();
     if (ErrorCode == ERROR_SUCCESS)
     {
@@ -729,15 +734,7 @@ InternalTrusteeAToW(IN PTRUSTEE_A pTrusteeA,
                                             StrBuf,
                                             BufferSize) == 0)
                     {
-ConvertErr:
-                        ErrorCode = GetLastError();
-
-                        /* cleanup */
-                        RtlFreeHeap(RtlGetProcessHeap(),
-                                    0,
-                                    *pTrusteeW);
-
-                        return ErrorCode;
+                        goto ConvertErr;
                     }
                     oan->ptstrName = StrBuf;
                 }
@@ -757,6 +754,16 @@ NothingToConvert:
             break;
         }
     }
+
+    return ErrorCode;
+
+ConvertErr:
+    ErrorCode = GetLastError();
+
+    /* cleanup */
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                *pTrusteeW);
 
     return ErrorCode;
 }
@@ -930,15 +937,7 @@ InternalExplicitAccessAToW(IN ULONG cCountOfExplicitEntries,
                                                     StrBuf,
                                                     BufferSize) == 0)
                             {
-ConvertErr:
-                                ErrorCode = GetLastError();
-
-                                /* cleanup */
-                                RtlFreeHeap(RtlGetProcessHeap(),
-                                            0,
-                                            peaw);
-
-                                return ErrorCode;
+                                goto ConvertErr;
                             }
                             oan->ptstrName = StrBuf;
 
@@ -971,6 +970,16 @@ RawTrusteeCopy:
         else
             ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
     }
+
+    return ErrorCode;
+
+ConvertErr:
+    ErrorCode = GetLastError();
+
+    /* cleanup */
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                peaw);
 
     return ErrorCode;
 }
@@ -1042,8 +1051,10 @@ GetEffectiveRightsFromAclW(IN PACL pacl,
                            IN PTRUSTEE_W pTrustee,
                            OUT PACCESS_MASK pAccessRights)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    FIXME("%p %p %p - stub\n", pacl, pTrustee, pAccessRights);
+
+    *pAccessRights = STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL;
+    return ERROR_SUCCESS;
 }
 
 

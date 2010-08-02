@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="soundblaster" type="staticlibrary" allowwarnings="true">
+<module name="soundblaster" type="staticlibrary">
     <define name="__NTDRIVER__"/>
     <define name="KERNEL"/>
     <include base="soundblaster">.</include>

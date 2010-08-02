@@ -1,0 +1,24 @@
+﻿; UTF-8
+
+[Section]
+Name = ReactOS Build Environment AMD64 Addon
+Version = 1.4b
+Licence = GPL
+Description = Allows you to build the ReactOS AMD64 Source. For more instructions see ReactOS wiki.
+Size = 15.4MB
+Category = 7
+URLSite = http://reactos.org/wiki/Build_Environment/
+URLDownload = http://dreimer.bplaced.net/rosbe/RosBE64-1.4b.exe
+CDPath = none
+
+[Section.0407]
+Description = Erlaubt es Ihnen den ReactOS AMD64 Source Code zu kompilieren. Im ReactOS-Wiki finden Sie dazu nähere Anweisungen.
+
+[Section.040a]
+Description = Te permite compilar el código de ReactOS AMD64. Para más instrucciones consulta la wiki de ReactOS.
+
+[Section.0415]
+Description = Pozwala zbudować obraz płyty ReactOS AMD64 ze źródeł. Więcej informacji na Wiki ReactOS.
+
+[Section.0422]
+Description = Дозволяє зібрати ReactOS AMD64 з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.

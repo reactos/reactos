@@ -6,6 +6,7 @@
 	<include base="mpr">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<file>auth.c</file>
 	<file>mpr_main.c</file>
 	<file>multinet.c</file>
@@ -16,7 +17,6 @@
 	<library>wine</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

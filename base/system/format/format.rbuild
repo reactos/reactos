@@ -3,7 +3,6 @@
 <module name="format" type="win32cui" installbase="system32" installname="format.exe">
 	<include base="format">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>fmifs</library>
 	<file>format.rc</file>

@@ -44,9 +44,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000010
 HKLM,"SOFTWARE\Microsoft\Rpc",,0x00000012
 
 ; Version Information
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"5.0"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 3"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"2195"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"5.2"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 2"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"3790"
 
 
 ; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
@@ -55,29 +55,56 @@ HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\soffice.exe","GlobalFlag",0x00000000,"0x00000002"
 ;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\tlstest.exe","GlobalFlag",0x00000000,"0x00000002"
 
-; MME - TODO: Should not require full paths!
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midimapper",0x00000000,"c:\reactos\system32\midimap.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wavemapper",0x00000000,"c:\reactos\system32\msacm32.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midimapper",0x00000000,"midimap.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wavemapper",0x00000000,"msacm32.drv"
 ;HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","wave",0x00000000,"sndblst.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midi",0x00000000,"c:\reactos\system32\beepmidi.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msadpcm",0x00000000,"c:\reactos\system32\msadp32.acm"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msg711",0x00000000,"c:\reactos\system32\msg711.acm"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.imaadpcm",0x00000000,"c:\reactos\system32\imaadp32.acm"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.winemp3",0x00000000,"c:\reactos\system32\winemp3.acm"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.cvid",0x00000000,"c:\reactos\system32\iccvid.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.mrle",0x00000000,"c:\reactos\system32\msrle32.dll"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.msvc",0x00000000,"c:\reactos\system32\msvidc32.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","midi",0x00000000,"beepmidi.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msadpcm",0x00000000,"msadp32.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msg711",0x00000000,"msg711.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.msgsm610",0x00000000,"msgsm32.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.imaadpcm",0x00000000,"imaadp32.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","msacm.winemp3",0x00000000,"winemp3.acm"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.cvid",0x00000000,"iccvid.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.mrle",0x00000000,"msrle32.dll"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32","vidc.msvc",0x00000000,"msvidc32.dll"
 
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","AVIVideo",0x00000002,"mciavi32.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","CDAudio",0x00000002,"mcicda.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","Sequencer",0x00000002,"mciseq.dll"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI32","WaveAudio",0x00000002,"mciwave.dll"
 
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","avi",0x00000002,"avivideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","aifc",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","asf",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","asx",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","au",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","avi",0x00000002,"AVIVideo"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","cda",0x00000002,"CDAudio"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","lsf",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","lsx",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","m1v",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","m3u",0x00000002,"MPEGVideo"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mid",0x00000002,"Sequencer"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","midi",0x00000002,"Sequencer"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mp2",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mp2v",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mp3",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mpa",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mpe",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mpeg",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mpg",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mpv",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","mpv2",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","rmi",0x00000002,"MPEGVideo"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","rmi",0x00000002,"Sequencer"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","snd",0x00000002,"MPEGVideo"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wav",0x00000002,"WaveAudio"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wax",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wm",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wma",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wmp",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wmv",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wmx",0x00000002,"MPEGVideo"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\MCI Extensions","wvx",0x00000002,"MPEGVideo"
 
 ; Mesa OpenGL Driver
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\OpenGLDrivers","DefaultDriver",0x00000000,"Mesa"
@@ -1098,5 +1125,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\P
 
 ; Keyboard layout switcher
 ;HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run","kbswitch",0x00000000,"kbswitch.exe"
+
+; SvcHost services
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost", "netsvcs",0x00010000,"DHCP"
 
 ; EOF

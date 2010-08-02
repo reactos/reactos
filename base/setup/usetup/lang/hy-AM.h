@@ -1,5 +1,4 @@
-#ifndef LANG_HY_AM_H__
-#define LANG_HY_AM_H__
+#pragma once
 
 MUI_LAYOUTS hyAMLayouts[] =
 {
@@ -9,5 +8,3 @@ MUI_LAYOUTS hyAMLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

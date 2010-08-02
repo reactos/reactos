@@ -6,6 +6,7 @@
 	<include base="msvfw32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<file>mciwnd.c</file>
 	<file>msvideo_main.c</file>
 	<file>drawdib.c</file>
@@ -17,7 +18,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

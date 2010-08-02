@@ -53,7 +53,6 @@ KeInitExceptions(VOID)
 {
     ULONG i;
     USHORT FlippedSelector;
-    extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 
     /* Loop the IDT */
     for (i = 0; i <= MAXIMUM_IDTVECTOR; i++)
@@ -308,6 +307,40 @@ KiTagWordFnsaveToFxsave(USHORT TagWord)
 
 VOID
 NTAPI
+Ki386AdjustEsp0(IN PKTRAP_FRAME TrapFrame)
+{
+    PKTHREAD Thread;
+    ULONG_PTR Stack;
+    ULONG EFlags;
+    
+    /* Get the current thread's stack */
+    Thread = KeGetCurrentThread();
+    Stack = (ULONG_PTR)Thread->InitialStack;
+    
+    /* Check if we are in V8086 mode */
+    if (!(TrapFrame->EFlags & EFLAGS_V86_MASK))
+    {
+        /* Bias the stack for the V86 segments */
+        Stack -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) -
+                  FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
+    }
+    
+    /* Bias the stack for the FPU area */
+    Stack -= sizeof(FX_SAVE_AREA);
+    
+    /* Disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+    
+    /* Set new ESP0 value in the TSS */
+    KeGetPcr()->TSS->Esp0 = Stack;
+    
+    /* Restore old interrupt state */
+    __writeeflags(EFlags);
+}
+
+VOID
+NTAPI
 KeContextToTrapFrame(IN PCONTEXT Context,
                      IN OUT PKEXCEPTION_FRAME ExceptionFrame,
                      IN OUT PKTRAP_FRAME TrapFrame,
@@ -551,7 +584,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Handle the Debug Registers */
-    if ((ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    if (0 && (ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
     {
         /* Loop DR registers */
         for (i = 0; i < 4; i++)
@@ -773,6 +806,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
             /* Otherwise clear DR registers */
             Context->Dr0 =
             Context->Dr1 =
+            Context->Dr2 =
             Context->Dr3 =
             Context->Dr6 =
             Context->Dr7 = 0;
@@ -839,8 +873,8 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     /* Set the context flags */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
 
-    /* Check if User Mode or if the debugger is enabled */
-    if ((PreviousMode == UserMode) || (KdDebuggerEnabled))
+    /* Check if User Mode or if the kernel debugger is enabled */
+    if ((PreviousMode == UserMode) || (KeGetPcr()->KdVersionBlock))
     {
         /* Add the FPU Flag */
         Context.ContextFlags |= CONTEXT_FLOATING_POINT;
@@ -928,11 +962,18 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
         /* User mode exception, was it first-chance? */
         if (FirstChance)
         {
-            /* Make sure a debugger is present, and ignore user-mode if requested */
-            if ((KiDebugRoutine) &&
-                (!(PsGetCurrentProcess()->DebugPort)))
+            /* 
+             * Break into the kernel debugger unless a user mode debugger
+             * is present or user mode exceptions are ignored, except if this
+             * is a debug service which we must always pass to KD
+             */
+            if ((!(PsGetCurrentProcess()->DebugPort) &&
+                 !(KdIgnoreUmExceptions)) ||
+                 (KdIsThisAKdTrap(ExceptionRecord,
+                                  &Context,
+                                  PreviousMode)))
             {
-                /* Call the debugger */
+                /* Call the kernel debugger */
                 if (KiDebugRoutine(TrapFrame,
                                    ExceptionFrame,
                                    ExceptionRecord,
@@ -946,7 +987,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
             }
 
             /* Forward exception to user mode debugger */
-            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) goto Exit;
+            if (DbgkForwardException(ExceptionRecord, TRUE, FALSE)) return;
 
             /* Set up the user-stack */
 DispatchToUser:
@@ -1029,22 +1070,23 @@ DispatchToUser:
         }
 
         /* Try second chance */
-        if (DbgkForwardException(ExceptionRecord, TRUE, FALSE))
+        if (DbgkForwardException(ExceptionRecord, TRUE, TRUE))
         {
             /* Handled, get out */
-            goto Exit;
+            return;
         }
         else if (DbgkForwardException(ExceptionRecord, FALSE, TRUE))
         {
             /* Handled, get out */
-            goto Exit;
+            return;
         }
 
         /* 3rd strike, kill the process */
-        DPRINT1("Kill %.16s, ExceptionCode: %lx, ExceptionAddress: %lx\n",
+        DPRINT1("Kill %.16s, ExceptionCode: %lx, ExceptionAddress: %lx, BaseAddress: %lx\n",
                 PsGetCurrentProcess()->ImageFileName,
                 ExceptionRecord->ExceptionCode,
-                ExceptionRecord->ExceptionAddress);
+                ExceptionRecord->ExceptionAddress,
+                PsGetCurrentProcess()->SectionBaseAddress);
 
         ZwTerminateProcess(NtCurrentProcess(), ExceptionRecord->ExceptionCode);
         KeBugCheckEx(KMODE_EXCEPTION_NOT_HANDLED,
@@ -1061,9 +1103,64 @@ Handled:
                          TrapFrame,
                          Context.ContextFlags,
                          PreviousMode);
-Exit:
     return;
 }
+
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KiDispatchExceptionFromTrapFrame(IN NTSTATUS Code,
+                                 IN ULONG_PTR Address,
+                                 IN ULONG ParameterCount,
+                                 IN ULONG_PTR Parameter1,
+                                 IN ULONG_PTR Parameter2,
+                                 IN ULONG_PTR Parameter3,
+                                 IN PKTRAP_FRAME TrapFrame)
+{
+    EXCEPTION_RECORD ExceptionRecord;
+
+    /* Build the exception record */
+    ExceptionRecord.ExceptionCode = Code;
+    ExceptionRecord.ExceptionFlags = 0;
+    ExceptionRecord.ExceptionRecord = NULL;
+    ExceptionRecord.ExceptionAddress = (PVOID)Address;
+    ExceptionRecord.NumberParameters = ParameterCount;
+    if (ParameterCount)
+    {
+        /* Copy extra parameters */
+        ExceptionRecord.ExceptionInformation[0] = Parameter1;
+        ExceptionRecord.ExceptionInformation[1] = Parameter2;
+        ExceptionRecord.ExceptionInformation[2] = Parameter3;
+    }
+    
+    /* Now go dispatch the exception */
+    KiDispatchException(&ExceptionRecord,
+                        NULL,
+                        TrapFrame,
+                        TrapFrame->EFlags & EFLAGS_V86_MASK ?
+                        -1 : KiUserTrap(TrapFrame),
+                        TRUE);
+
+    /* Return from this trap */
+    KiEoiHelper(TrapFrame);
+}
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiSystemFatalException(IN ULONG ExceptionCode,
+                       IN PKTRAP_FRAME TrapFrame)
+{
+    /* Bugcheck the system */
+    KeBugCheckWithTf(UNEXPECTED_KERNEL_MODE_TRAP,
+                     ExceptionCode,
+                     0,
+                     0,
+                     0,
+                     TrapFrame);
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
@@ -1072,7 +1169,6 @@ NTSTATUS
 NTAPI
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
     ULONG OldEip;
     PTEB Teb = KeGetCurrentThread()->Teb;
     PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
@@ -1085,11 +1181,10 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Save exception code */
-        Status = ExceptionCode;
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the old EIP */
     OldEip = TrapFrame->Eip;

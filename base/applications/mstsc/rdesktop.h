@@ -13,13 +13,12 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __RDESKTOP_MSTSC_H
-#define __RDESKTOP_MSTSC_H
+#pragma once
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -127,5 +126,3 @@
 #ifndef MAKE_PROTO
 #include "proto.h"
 #endif
-
-#endif /* __RDESKTOP_MSTSC_H */

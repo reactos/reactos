@@ -48,7 +48,10 @@ typedef struct _ROS_LOADER_PARAMETER_BLOCK
     ULONG (*FrLdrDbgPrint)(const char *Format, ...);
 } ROS_LOADER_PARAMETER_BLOCK, *PROS_LOADER_PARAMETER_BLOCK;
 
-extern BOOLEAN AcpiTableDetected;
-extern ULONG MmFreeLdrPageDirectoryStart, MmFreeLdrPageDirectoryEnd;
+VOID
+NTAPI
+KiRosPrepareForSystemStartup(
+    IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock
+);
 
 #endif

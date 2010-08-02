@@ -13,6 +13,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDI_DEVMGR ICON "resources/devmgr.ico"
 
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
@@ -25,6 +26,7 @@ IDI_DEVMGR ICON "resources/devmgr.ico"
 #include "lang/no-NO.rc"
 #include "lang/pl-PL.rc"
 #include "lang/pt-BR.rc"
+#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"

@@ -1,5 +1,4 @@
-#ifndef __PRECOMP_H
-#define __PRECOMP_H
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -34,5 +33,3 @@ LoadAndFormatString(IN HINSTANCE hInstance,
 
 extern HINSTANCE hAppInstance;
 extern HANDLE hAppHeap;
-
-#endif /* __PRECOMP_H */

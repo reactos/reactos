@@ -4,7 +4,6 @@
 	<importlibrary definition="powercfg.spec" />
 	<include base="powercfg">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>powrprof</library>
 	<library>comctl32</library>

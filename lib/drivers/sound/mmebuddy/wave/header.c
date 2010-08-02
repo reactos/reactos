@@ -224,10 +224,10 @@ EnqueueWaveHeader(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
+    PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
+
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( Parameter );
-
-    PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
     /* Initialise */
     WaveHeader->lpNext = NULL;
@@ -248,10 +248,18 @@ EnqueueWaveHeader(
     {
         /* There are already queued headers - make this one the tail */
         SND_TRACE(L"Enqueued next wave header\n");
-        SoundDeviceInstance->TailWaveHeader->lpNext = WaveHeader;
-        SoundDeviceInstance->TailWaveHeader = WaveHeader;
 
-        DoWaveStreaming(SoundDeviceInstance);
+        /* FIXME - Make sure that the buffer has not already been added to the list */
+        if ( SoundDeviceInstance->TailWaveHeader != WaveHeader )
+        {
+            SND_ASSERT(SoundDeviceInstance->TailWaveHeader != WaveHeader);
+
+            SoundDeviceInstance->TailWaveHeader->lpNext = WaveHeader;
+            SoundDeviceInstance->TailWaveHeader = WaveHeader;
+            DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
+
+            DoWaveStreaming(SoundDeviceInstance);
+        }
     }
 
     DUMP_WAVEHDR_QUEUE(SoundDeviceInstance);
@@ -351,5 +359,5 @@ CompleteWaveHeader(
     /* Safe to do this without thread protection, as we're done with the header */
     NotifyMmeClient(SoundDeviceInstance,
                     DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_DONE : WIM_DATA,
-                    (DWORD) Header);
+                    (DWORD_PTR)Header);
 }

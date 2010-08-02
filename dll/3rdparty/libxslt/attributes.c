@@ -978,6 +978,13 @@ xsltAttributeInternal(xsltTransformContextPtr ctxt,
 	if (inst->children->name == xmlStringTextNoenc)
 	    copyTxt->name = xmlStringTextNoenc;	
 
+        /*
+         * since we create the attribute without content IDness must be
+         * asserted as a second step
+         */
+        if ((copyTxt->content != NULL) &&
+            (xmlIsID(attr->doc, attr->parent, attr)))
+            xmlAddID(NULL, attr->doc, copyTxt->content, attr);
     } else {
 	/*
 	* The sequence constructor might be complex, so instantiate it.

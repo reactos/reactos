@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript hinting algorithm (specification).                        */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003 by                                          */
+/*  Copyright 2001, 2002, 2003, 2008 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -32,7 +32,7 @@ FT_BEGIN_HEADER
   typedef struct PSH_HintRec_*  PSH_Hint;
 
   /* hint bit-flags */
-  typedef enum
+  typedef enum  PSH_Hint_Flags_
   {
     PSH_HINT_GHOST  = PS_HINT_FLAG_GHOST,
     PSH_HINT_BOTTOM = PS_HINT_FLAG_BOTTOM,

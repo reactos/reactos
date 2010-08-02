@@ -42,8 +42,11 @@ typedef unsigned char   BYTE;
 /* REACTOS FIXME */
 #undef DeleteFile
 /* This is deprecated and should be changed in the EXT2FS driver. */
+
+/* FIXME : Those two definitions already exist in wdm.h
 #define RtlLargeIntegerLessThan(a, b) (a).QuadPart < (b).QuadPart
 #define RtlLargeIntegerGreaterThan(a, b) (a).QuadPart > (b).QuadPart
+*/
 
 
 // the following include files should be in the inc sub-dir associated with this driver
@@ -115,9 +118,8 @@ extern Ext2Data				Ext2GlobalData;
 }
 
 #ifdef EXT2_POOL_WITH_TAG
-	#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
-		ExAllocatePoolWithTag( PoolType, NumberOfBytes, TAG ( 'E','x','t','2' ) ) 
+		ExAllocatePoolWithTag( PoolType, NumberOfBytes, '2txE' ) 
 #else
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
 		ExAllocatePool( PoolType, NumberOfBytes ) 

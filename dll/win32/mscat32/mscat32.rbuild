@@ -8,7 +8,6 @@
 	<file>main.c</file>
 	<library>wine</library>
 	<library>wintrust</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

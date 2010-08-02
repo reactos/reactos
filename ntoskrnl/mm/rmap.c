@@ -24,7 +24,7 @@ typedef struct _MM_RMAP_ENTRY
    struct _MM_RMAP_ENTRY* Next;
    PEPROCESS Process;
    PVOID Address;
-#ifdef DBG
+#if DBG
    PVOID Caller;
 #endif
 }
@@ -54,11 +54,11 @@ MmInitializeRmapList(VOID)
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_TYPE Page)
+MmWritePagePhysicalAddress(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
@@ -91,7 +91,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->VadRoot;
+      AddressSpace = &Process->Vm;
    }
    else
    {
@@ -149,7 +149,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
       Status = MmWritePageSectionView(AddressSpace, MemoryArea,
                                       Address, PageOp);
    }
-   else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
+   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
@@ -188,11 +188,11 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 
 NTSTATUS
 NTAPI
-MmPageOutPhysicalAddress(PFN_TYPE Page)
+MmPageOutPhysicalAddress(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
-   PMM_AVL_TABLE AddressSpace;
+   PMMSUPPORT AddressSpace;
    ULONG Type;
    PVOID Address;
    PEPROCESS Process;
@@ -202,7 +202,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
-   if (entry == NULL || MmGetLockCountPage(Page) != 0)
+   if (entry == NULL)
    {
       ExReleaseFastMutex(&RmapListLock);
       return(STATUS_UNSUCCESSFUL);
@@ -222,7 +222,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       {
          return Status;
       }
-      AddressSpace = &Process->VadRoot;
+      AddressSpace = &Process->Vm;
    }
    else
    {
@@ -274,7 +274,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
       Status = MmPageOutSectionView(AddressSpace, MemoryArea,
                                     Address, PageOp);
    }
-   else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
+   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
@@ -312,7 +312,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmSetCleanAllRmaps(PFN_TYPE Page)
+MmSetCleanAllRmaps(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
@@ -333,7 +333,7 @@ MmSetCleanAllRmaps(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmSetDirtyAllRmaps(PFN_TYPE Page)
+MmSetDirtyAllRmaps(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
@@ -354,7 +354,7 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
 
 BOOLEAN
 NTAPI
-MmIsDirtyPageRmap(PFN_TYPE Page)
+MmIsDirtyPageRmap(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
@@ -380,7 +380,7 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
+MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -396,7 +396,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    }
    new_entry->Address = Address;
    new_entry->Process = (PEPROCESS)Process;
-#ifdef DBG
+#if DBG
 #ifdef __GNUC__
    new_entry->Caller = __builtin_return_address(0);
 #else
@@ -416,7 +416,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    new_entry->Next = current_entry;
-#ifdef DBG
+#if DBG
    while (current_entry)
    {
       if (current_entry->Address == new_entry->Address && current_entry->Process == new_entry->Process)
@@ -450,7 +450,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
 
 VOID
 NTAPI
-MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
+MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
                  VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
                                        PVOID Address))
 {
@@ -491,7 +491,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
 
 VOID
 NTAPI
-MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
+MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;

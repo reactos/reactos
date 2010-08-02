@@ -23,12 +23,15 @@ NpfsQueryFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
     DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
 
     if (*BufferLength < sizeof(FILE_FS_DEVICE_INFORMATION))
+    {
+        *BufferLength = sizeof(FILE_FS_DEVICE_INFORMATION);
         return STATUS_BUFFER_OVERFLOW;
+    }
 
     FsDeviceInfo->DeviceType = FILE_DEVICE_NAMED_PIPE;
     FsDeviceInfo->Characteristics = 0;
 
-    *BufferLength -= sizeof(FILE_FS_DEVICE_INFORMATION);
+    *BufferLength = sizeof(FILE_FS_DEVICE_INFORMATION);
 
     DPRINT("NpfsQueryFsDeviceInformation() finished.\n");
 
@@ -44,7 +47,10 @@ NpfsQueryFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
     DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
 
     if (*BufferLength < sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8)
+    {
+        *BufferLength = (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
         return STATUS_BUFFER_OVERFLOW;
+    }
 
     FsAttributeInfo->FileSystemAttributes = FILE_CASE_PRESERVED_NAMES;
     FsAttributeInfo->MaximumComponentNameLength = 255;
@@ -53,7 +59,7 @@ NpfsQueryFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
         L"NPFS");
 
     DPRINT("NpfsQueryFsAttributeInformation() finished.\n");
-    *BufferLength -= (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
+    *BufferLength = (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + 8);
 
     return STATUS_SUCCESS;
 }
@@ -102,10 +108,8 @@ NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
     }
 
     Irp->IoStatus.Status = Status;
-    if (NT_SUCCESS(Status))
-        Irp->IoStatus.Information = Stack->Parameters.QueryVolume.Length - BufferLength;
-    else
-        Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Information = BufferLength;
+
     IoCompleteRequest(Irp,
         IO_NO_INCREMENT);
 

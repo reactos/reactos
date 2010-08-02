@@ -11,15 +11,13 @@
 #include <debug.h>
 
 NTSTATUS
-#ifndef _MSC_VER
 NTAPI
-#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath);
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = 0;
@@ -373,7 +371,7 @@ static NDIS_STATUS NTAPI MiniportInitialize(
          NdisCloseConfiguration(ConfigurationHandle);
     }
 
-    if (Status != NDIS_STATUS_SUCCESS)
+    if (Status != NDIS_STATUS_SUCCESS || RegNetworkAddressLength != DRIVER_LENGTH_OF_ADDRESS)
     {
         int i;
         for (i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
@@ -502,8 +500,6 @@ static NDIS_STATUS NTAPI MiniportQueryInformation(
     USHORT GenericUSHORT;
     NDIS_MEDIUM Medium   = NdisMedium802_3;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
-
-    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
@@ -673,8 +669,6 @@ static NDIS_STATUS NTAPI MiniportReset(
 {
     NDIS_STATUS NdisStatus = NDIS_STATUS_SUCCESS;
 
-    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
 #ifndef NOCARD
@@ -753,8 +747,6 @@ static NDIS_STATUS NTAPI MiniportSetInformation(
     ULONG GenericULONG;
     NDIS_STATUS Status   = NDIS_STATUS_SUCCESS;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
-
-    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
@@ -865,8 +857,6 @@ static NDIS_STATUS NTAPI MiniportTransferData(
     UINT RecvStop;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
 
-    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
-
     NDIS_DbgPrint(MAX_TRACE, ("Called. Packet (0x%X)  ByteOffset (0x%X)  BytesToTransfer (%d).\n",
         Packet, ByteOffset, BytesToTransfer));
 
@@ -927,9 +917,7 @@ static NDIS_STATUS NTAPI MiniportTransferData(
 
 
 NTSTATUS
-#ifndef _MSC_VER
 NTAPI
-#endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)
@@ -1005,7 +993,7 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to set DwordTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: DwordTest successfully set\n");
@@ -1019,7 +1007,7 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to set StringTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: StringTest successfully set\n");
@@ -1035,14 +1023,14 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to read DwordTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             if(ParameterValue->ParameterData.IntegerData != 0x12345678)
             {
                 DbgPrint("ne2000!MiniportInitialize: DwordTest value is wrong: 0x%x\n",
                     ParameterValue->ParameterData.IntegerData);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: DwordTest value was correctly read\n");
@@ -1053,7 +1041,7 @@ DriverEntry(
             if(Status != NDIS_STATUS_SUCCESS)
             {
                 DbgPrint("ne2000!MiniportInitialize: failed to read StringTest: 0x%x\n", Status);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             if(wcsncmp(ParameterValue->ParameterData.StringData.Buffer, L"Testing123",
@@ -1061,7 +1049,7 @@ DriverEntry(
             {
                 DbgPrint("ne2000!MiniportInitialize: StringTest value is wrong: %wZ\n",
                     &ParameterValue->ParameterData.StringData);
-                KeBugCheck(0);
+                DbgBreakPoint();
             }
 
             DbgPrint("ne2000!MiniportInitialize: StringTest value was correctly read\n");

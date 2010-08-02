@@ -36,6 +36,12 @@ WSPEventSelect(
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
+	if (!Socket)
+	{
+		NtClose(SockEvent);
+		*lpErrno = WSAENOTSOCK;
+		return SOCKET_ERROR;
+	}
 
 	/* Set Socket to Non-Blocking */
 	BlockMode = 1;
@@ -76,7 +82,7 @@ WSPEventSelect(
     }
 
     if (lNetworkEvents & FD_CLOSE) {
-	EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
+	EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE;
     }
 
     if (lNetworkEvents & FD_QOS) {
@@ -104,11 +110,15 @@ WSPEventSelect(
     /* Wait for return */
     if (Status == STATUS_PENDING) {
 	WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
 
     AFD_DbgPrint(MID_TRACE,("Waited\n"));
 
     NtClose( SockEvent );
+
+    if (Status != STATUS_SUCCESS)
+        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
     AFD_DbgPrint(MID_TRACE,("Closed event\n"));
 
@@ -148,6 +158,12 @@ WSPEnumNetworkEvents(
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       NtClose(SockEvent);
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     EnumReq.Event = hEventObject;
 
@@ -168,12 +184,15 @@ WSPEnumNetworkEvents(
     /* Wait for return */
     if (Status == STATUS_PENDING) {
 	WaitForSingleObject(SockEvent, INFINITE);
-	Status = STATUS_SUCCESS;
+	Status = IOSB.Status;
     }
 
     AFD_DbgPrint(MID_TRACE,("Waited\n"));
 
     NtClose( SockEvent );
+
+    if (Status != STATUS_SUCCESS)
+        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
     AFD_DbgPrint(MID_TRACE,("Closed event\n"));
     AFD_DbgPrint(MID_TRACE,("About to touch struct at %x (%d)\n", 
@@ -186,44 +205,49 @@ WSPEnumNetworkEvents(
     /* Set Events to wait for */
     if (EnumReq.PollEvents & AFD_EVENT_RECEIVE) {
 	lpNetworkEvents->lNetworkEvents |= FD_READ;
+	lpNetworkEvents->iErrorCode[FD_READ_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_READ_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_SEND) {
 	lpNetworkEvents->lNetworkEvents |= FD_WRITE;
+	lpNetworkEvents->iErrorCode[FD_WRITE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_WRITE_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_OOB_RECEIVE) {
         lpNetworkEvents->lNetworkEvents |= FD_OOB;
+	lpNetworkEvents->iErrorCode[FD_OOB_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_OOB_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_ACCEPT) {
 	lpNetworkEvents->lNetworkEvents |= FD_ACCEPT;
+	lpNetworkEvents->iErrorCode[FD_ACCEPT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_ACCEPT_BIT]);
     }
 
     if (EnumReq.PollEvents & 
 	(AFD_EVENT_CONNECT | AFD_EVENT_CONNECT_FAIL)) {
         lpNetworkEvents->lNetworkEvents |= FD_CONNECT;
+	lpNetworkEvents->iErrorCode[FD_CONNECT_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CONNECT_BIT]);
     }
 
     if (EnumReq.PollEvents & 
-	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT)) {
+	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) {
 	lpNetworkEvents->lNetworkEvents |= FD_CLOSE;
+	lpNetworkEvents->iErrorCode[FD_CLOSE_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_CLOSE_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_QOS) {
 	lpNetworkEvents->lNetworkEvents |= FD_QOS;
+	lpNetworkEvents->iErrorCode[FD_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_QOS_BIT]);
     }
 
     if (EnumReq.PollEvents & AFD_EVENT_GROUP_QOS) {
 	lpNetworkEvents->lNetworkEvents |= FD_GROUP_QOS;
+	lpNetworkEvents->iErrorCode[FD_GROUP_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_GROUP_QOS_BIT]);
     }
-
-    if( NT_SUCCESS(Status) ) *lpErrno = 0;
-    else *lpErrno = WSAEINVAL;
 
     AFD_DbgPrint(MID_TRACE,("Leaving\n"));
 
-    return 0;
+    return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, NULL);
 }
 
 /* EOF */

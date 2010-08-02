@@ -20,6 +20,182 @@
 
 static PWCHAR BaseKeyString = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\DeviceClasses\\";
 
+static
+NTSTATUS
+OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
+                                    IN ACCESS_MASK DesiredAccess,
+                                    IN OPTIONAL PHANDLE GuidKey,
+                                    IN OPTIONAL PHANDLE DeviceKey,
+                                    IN OPTIONAL PHANDLE InstanceKey)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR PathBuffer[MAX_PATH];
+    UNICODE_STRING BaseKeyU;
+    UNICODE_STRING GuidString, SubKeyName, ReferenceString;
+    PWCHAR StartPosition, EndPosition;
+    HANDLE ClassesKey;
+    PHANDLE GuidKeyRealP, DeviceKeyRealP, InstanceKeyRealP;
+    HANDLE GuidKeyReal, DeviceKeyReal, InstanceKeyReal;
+    NTSTATUS Status;
+
+    SubKeyName.Buffer = NULL;
+
+    if (GuidKey != NULL)
+        GuidKeyRealP = GuidKey;
+    else
+        GuidKeyRealP = &GuidKeyReal;
+
+    if (DeviceKey != NULL)
+        DeviceKeyRealP = DeviceKey;
+    else
+        DeviceKeyRealP = &DeviceKeyReal;
+
+    if (InstanceKey != NULL)
+        InstanceKeyRealP = InstanceKey;
+    else
+        InstanceKeyRealP = &InstanceKeyReal;
+
+    *GuidKeyRealP = INVALID_HANDLE_VALUE;
+    *DeviceKeyRealP = INVALID_HANDLE_VALUE;
+    *InstanceKeyRealP = INVALID_HANDLE_VALUE;
+
+    BaseKeyU.Buffer = PathBuffer;
+    BaseKeyU.Length = 0;
+    BaseKeyU.MaximumLength = MAX_PATH * sizeof(WCHAR);
+
+    RtlAppendUnicodeToString(&BaseKeyU, BaseKeyString);
+
+    /* Open the DeviceClasses key */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &BaseKeyU,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+    Status = ZwOpenKey(&ClassesKey,
+                       DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ\n", &BaseKeyU);
+        goto cleanup;
+    }
+
+    StartPosition = wcschr(SymbolicLinkName->Buffer, L'{');
+    EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
+    if (!StartPosition || !EndPosition || StartPosition > EndPosition)
+    {
+        DPRINT1("Bad symbolic link: %wZ\n", SymbolicLinkName);
+        return STATUS_INVALID_PARAMETER_1;
+    }
+    GuidString.Buffer = StartPosition;
+    GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &GuidString,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               ClassesKey,
+                               NULL);
+    Status = ZwOpenKey(GuidKeyRealP,
+                       DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                       &ObjectAttributes);
+    ZwClose(ClassesKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ%wZ (%x)\n", &BaseKeyU, &GuidString, Status);
+        goto cleanup;
+    }
+
+    SubKeyName.MaximumLength = SymbolicLinkName->Length + sizeof(WCHAR);
+    SubKeyName.Length = 0;
+    SubKeyName.Buffer = ExAllocatePool(PagedPool, SubKeyName.MaximumLength);
+    if (!SubKeyName.Buffer)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    RtlAppendUnicodeStringToString(&SubKeyName,
+                                   SymbolicLinkName);
+
+    SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    SubKeyName.Buffer[0] = L'#';
+    SubKeyName.Buffer[1] = L'#';
+    SubKeyName.Buffer[2] = L'?';
+    SubKeyName.Buffer[3] = L'#';
+
+    ReferenceString.Buffer = wcsrchr(SubKeyName.Buffer, '\\');
+    if (ReferenceString.Buffer != NULL)
+    {
+        ReferenceString.Buffer[0] = L'#';
+
+        SubKeyName.Length = (USHORT)((ULONG_PTR)(ReferenceString.Buffer) - (ULONG_PTR)SubKeyName.Buffer);
+        ReferenceString.Length = SymbolicLinkName->Length - SubKeyName.Length;
+    }
+    else
+    {
+        RtlInitUnicodeString(&ReferenceString, L"#");
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &SubKeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               *GuidKeyRealP,
+                               NULL);
+    Status = ZwOpenKey(DeviceKeyRealP,
+                       DesiredAccess | KEY_ENUMERATE_SUB_KEYS,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ%wZ\\%wZ\n", &BaseKeyU, &GuidString, &SubKeyName);
+        goto cleanup;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ReferenceString,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               *DeviceKeyRealP,
+                               NULL);
+    Status = ZwOpenKey(InstanceKeyRealP,
+                       DesiredAccess,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to open %wZ%wZ\\%wZ%\\%wZ (%x)\n", &BaseKeyU, &GuidString, &SubKeyName, &ReferenceString, Status);
+        goto cleanup;
+    }
+
+    Status = STATUS_SUCCESS;
+
+cleanup:
+    if (SubKeyName.Buffer != NULL)
+       ExFreePool(SubKeyName.Buffer);
+
+    if (NT_SUCCESS(Status))
+    {
+       if (!GuidKey)
+          ZwClose(*GuidKeyRealP);
+
+       if (!DeviceKey)
+          ZwClose(*DeviceKeyRealP);
+
+       if (!InstanceKey)
+          ZwClose(*InstanceKeyRealP);
+    }
+    else
+    {
+       if (*GuidKeyRealP != INVALID_HANDLE_VALUE)
+          ZwClose(*GuidKeyRealP);
+
+       if (*DeviceKeyRealP != INVALID_HANDLE_VALUE)
+          ZwClose(*DeviceKeyRealP);
+
+       if (*InstanceKeyRealP != INVALID_HANDLE_VALUE)
+          ZwClose(*InstanceKeyRealP);
+    }
+
+    return Status;
+}
 /*++
  * @name IoOpenDeviceInterfaceRegistryKey
  * @unimplemented
@@ -50,7 +226,37 @@ IoOpenDeviceInterfaceRegistryKey(IN PUNICODE_STRING SymbolicLinkName,
                                  IN ACCESS_MASK DesiredAccess,
                                  OUT PHANDLE DeviceInterfaceKey)
 {
-    return STATUS_NOT_IMPLEMENTED;
+   HANDLE InstanceKey, DeviceParametersKey;
+   NTSTATUS Status;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING DeviceParametersU = RTL_CONSTANT_STRING(L"Device Parameters");
+
+   Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
+                                                KEY_CREATE_SUB_KEY,
+                                                NULL,
+                                                NULL,
+                                                &InstanceKey);
+   if (!NT_SUCCESS(Status))
+       return Status;
+
+   InitializeObjectAttributes(&ObjectAttributes,
+                              &DeviceParametersU,
+                              OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
+                              InstanceKey,
+                              NULL);
+   Status = ZwCreateKey(&DeviceParametersKey,
+                        DesiredAccess,
+                        &ObjectAttributes,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        NULL);
+   ZwClose(InstanceKey);
+
+   if (NT_SUCCESS(Status))
+       *DeviceInterfaceKey = DeviceParametersKey;
+
+   return Status;
 }
 
 /*++
@@ -243,10 +449,11 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
     PKEY_BASIC_INFORMATION DeviceBi = NULL;
     PKEY_BASIC_INFORMATION ReferenceBi = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION bip = NULL;
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo;
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     BOOLEAN FoundRightPDO = FALSE;
-    ULONG i = 0, j, Size;
+    ULONG i = 0, j, Size, NeededLength, ActualLength, LinkedValue;
     UNICODE_STRING ReturnBuffer = { 0, 0, NULL };
     NTSTATUS Status;
 
@@ -400,7 +607,6 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 /* We have to check if the interface is enabled, by
                 * reading the Linked value in the Control subkey
                 */
-#if 0
                 InitializeObjectAttributes(
                     &ObjectAttributes,
                     &Control,
@@ -420,17 +626,63 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 }
                 else if (!NT_SUCCESS(Status))
                 {
-                    DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+                    DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
                     goto cleanup;
                 }
-#endif
-                /* FIXME: Read the Linked value
-                * If it doesn't exist => ERROR
-                * If it is not a REG_DWORD or Size != sizeof(ULONG) => ERROR
-                * If its value is 0, go to NextReferenceString
-                * At the moment, do as if it is active...
-                */
-                DPRINT1("Checking if device is enabled is not implemented yet!\n");
+
+                RtlInitUnicodeString(&KeyName, L"Linked");
+                Status = ZwQueryValueKey(ControlKey,
+                                         &KeyName,
+                                         KeyValuePartialInformation,
+                                         NULL,
+                                         0,
+                                         &NeededLength);
+                if (Status == STATUS_BUFFER_TOO_SMALL)
+                {
+                    ActualLength = NeededLength;
+                    PartialInfo = ExAllocatePool(NonPagedPool, ActualLength);
+                    if (!PartialInfo)
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        goto cleanup;
+                    }
+
+                    Status = ZwQueryValueKey(ControlKey,
+                                             &KeyName,
+                                             KeyValuePartialInformation,
+                                             PartialInfo,
+                                             ActualLength,
+                                             &NeededLength);
+                    if (!NT_SUCCESS(Status))
+                    {
+                        DPRINT1("ZwQueryValueKey #2 failed (%x)\n", Status);
+                        ExFreePool(PartialInfo);
+                        goto cleanup;
+                    }
+
+                    if (PartialInfo->Type != REG_DWORD || PartialInfo->DataLength != sizeof(ULONG))
+                    {
+                        DPRINT1("Bad registry read\n");
+                        ExFreePool(PartialInfo);
+                        goto cleanup;
+                    }
+
+                    RtlCopyMemory(&LinkedValue,
+                                  PartialInfo->Data,
+                                  PartialInfo->DataLength);
+
+                    ExFreePool(PartialInfo);
+                    if (LinkedValue == 0)
+                    {
+                        /* This interface isn't active */
+                        goto NextReferenceString;
+                    }
+                }
+                else
+                {
+                    DPRINT1("ZwQueryValueKey #1 failed (%x)\n", Status);
+                    goto cleanup;
+                }
             }
 
             /* Read the SymbolicLink string and add it into SymbolicLinkList */
@@ -498,7 +750,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                     goto cleanup;
                 }
                 RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
-                ExFreePool(ReturnBuffer.Buffer);
+                if (ReturnBuffer.Buffer)
+                    ExFreePool(ReturnBuffer.Buffer);
                 ReturnBuffer.Buffer = NewBuffer;
             }
             DPRINT("Adding symbolic link %wZ\n", &KeyName);
@@ -508,16 +761,17 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
                 DPRINT("RtlAppendUnicodeStringToString() failed with status 0x%08lx\n", Status);
                 goto cleanup;
             }
-            /* RtlAppendUnicodeStringToString added a NULL at the end of the
-            * destination string, but didn't increase the Length field.
-            * Do it for it.
-            */
-            ReturnBuffer.Length += sizeof(WCHAR);
+            /* RtlAppendUnicodeStringToString added a NULL at the end of the 	 
+	     * destination string, but didn't increase the Length field. 	 
+	     * Do it for it. 	 
+	     */ 	 
+	    ReturnBuffer.Length += sizeof(WCHAR);
 
 NextReferenceString:
             ExFreePool(ReferenceBi);
             ReferenceBi = NULL;
-            ExFreePool(bip);
+            if (bip)
+                ExFreePool(bip);
             bip = NULL;
             if (ReferenceKey != INVALID_HANDLE_VALUE)
             {
@@ -554,8 +808,11 @@ NextReferenceString:
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto cleanup;
         }
-        RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
-        ExFreePool(ReturnBuffer.Buffer);
+        if (ReturnBuffer.Buffer)
+        {
+            RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
+            ExFreePool(ReturnBuffer.Buffer);
+        }
         ReturnBuffer.Buffer = NewBuffer;
     }
     ReturnBuffer.Buffer[ReturnBuffer.Length / sizeof(WCHAR)] = UNICODE_NULL;
@@ -563,7 +820,7 @@ NextReferenceString:
     Status = STATUS_SUCCESS;
 
 cleanup:
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && ReturnBuffer.Buffer)
         ExFreePool(ReturnBuffer.Buffer);
     if (InterfaceKey != INVALID_HANDLE_VALUE)
         ZwClose(InterfaceKey);
@@ -573,9 +830,12 @@ cleanup:
         ZwClose(ReferenceKey);
     if (ControlKey != INVALID_HANDLE_VALUE)
         ZwClose(ControlKey);
-    ExFreePool(DeviceBi);
-    ExFreePool(ReferenceBi);
-    ExFreePool(bip);
+    if (DeviceBi)
+        ExFreePool(DeviceBi);
+    if (ReferenceBi)
+        ExFreePool(ReferenceBi);
+    if (bip)
+        ExFreePool(bip);
     return Status;
 }
 
@@ -881,19 +1141,14 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     }
     RtlAppendUnicodeToString(SymbolicLinkName, L"#");
     RtlAppendUnicodeStringToString(SymbolicLinkName, &GuidString);
-    if (ReferenceString && ReferenceString->Length)
-    {
-        RtlAppendUnicodeToString(SymbolicLinkName, L"\\");
-        RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
-    }
     SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
 
     /* Create symbolic link */
-    DPRINT1("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
+    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
     Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && ReferenceString == NULL)
     {
-        DPRINT("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
+        DPRINT1("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
         ZwClose(SubKey);
         ZwClose(InterfaceKey);
         ZwClose(ClassKey);
@@ -903,6 +1158,13 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         ExFreePool(SymbolicLinkName->Buffer);
         return Status;
     }
+
+    if (ReferenceString && ReferenceString->Length)
+    {
+        RtlAppendUnicodeToString(SymbolicLinkName, L"\\");
+        RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
+    }
+    SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
 
     /* Write symbolic link name in registry */
     SymbolicLinkName->Buffer[1] = '\\';
@@ -915,10 +1177,13 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         SymbolicLinkName->Length);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+        DPRINT1("ZwSetValueKey() failed with status 0x%08lx\n", Status);
         ExFreePool(SymbolicLinkName->Buffer);
     }
-    SymbolicLinkName->Buffer[1] = '?';
+    else
+    {
+        SymbolicLinkName->Buffer[1] = '?';
+    }
 
     ZwClose(SubKey);
     ZwClose(InterfaceKey);
@@ -958,10 +1223,15 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     PDEVICE_OBJECT PhysicalDeviceObject;
     PFILE_OBJECT FileObject;
     UNICODE_STRING GuidString;
+    UNICODE_STRING SymLink;
     PWCHAR StartPosition;
     PWCHAR EndPosition;
     NTSTATUS Status;
     LPCGUID EventGuid;
+    HANDLE InstanceHandle, ControlHandle;
+    UNICODE_STRING KeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    ULONG LinkedValue;
 
     if (SymbolicLinkName == NULL)
         return STATUS_INVALID_PARAMETER_1;
@@ -974,21 +1244,69 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     EndPosition = wcschr(SymbolicLinkName->Buffer, L'}');
     if (!StartPosition ||!EndPosition || StartPosition > EndPosition)
     {
-        DPRINT("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
+        DPRINT1("IoSetDeviceInterfaceState() returning STATUS_INVALID_PARAMETER_1\n");
         return STATUS_INVALID_PARAMETER_1;
     }
     GuidString.Buffer = StartPosition;
     GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
 
+    SymLink.Buffer = SymbolicLinkName->Buffer;
+    SymLink.MaximumLength = SymLink.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)SymLink.Buffer);
+    DPRINT("IoSetDeviceInterfaceState('%wZ', %d)\n", SymbolicLinkName, Enable);
+
+    Status = OpenRegistryHandlesFromSymbolicLink(SymbolicLinkName,
+                                                 KEY_CREATE_SUB_KEY,
+                                                 NULL,
+                                                 NULL,
+                                                 &InstanceHandle);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    RtlInitUnicodeString(&KeyName, L"Control");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               InstanceHandle,
+                               NULL);
+    Status = ZwCreateKey(&ControlHandle,
+                         KEY_SET_VALUE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    ZwClose(InstanceHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create the Control subkey\n");
+        return Status;
+    }
+
+    LinkedValue = (Enable ? 1 : 0);
+
+    RtlInitUnicodeString(&KeyName, L"Linked");
+    Status = ZwSetValueKey(ControlHandle,
+                           &KeyName,
+                           0,
+                           REG_DWORD,
+                           &LinkedValue,
+                           sizeof(ULONG));
+    ZwClose(ControlHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to write the Linked value\n");
+        return Status;
+    }
+
     /* Get pointer to the PDO */
     Status = IoGetDeviceObjectPointer(
-        SymbolicLinkName,
+        &SymLink,
         0, /* DesiredAccess */
         &FileObject,
         &PhysicalDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
+        DPRINT1("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
         return Status;
     }
 
@@ -1001,7 +1319,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         (PVOID)SymbolicLinkName);
 
     ObDereferenceObject(FileObject);
-
+    DPRINT("Status %x\n", Status);
     return STATUS_SUCCESS;
 }
 

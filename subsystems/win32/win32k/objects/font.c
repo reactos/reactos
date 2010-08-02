@@ -8,12 +8,95 @@
       
 /** Includes ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
+DWORD FASTCALL GreGetGlyphIndicesW(HDC,LPWSTR,INT,LPWORD,DWORD,DWORD);
+
 /** Internal ******************************************************************/
+
+DWORD
+FASTCALL
+GreGetKerningPairs(
+    HDC hDC,
+    ULONG NumPairs,
+    LPKERNINGPAIR krnpair)
+{
+  PDC dc;
+  PDC_ATTR pdcattr;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  DWORD Count;
+  KERNINGPAIR *pKP;
+
+  dc = DC_LockDc(hDC);
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  pdcattr = dc->pdcattr;
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
+  DC_UnlockDc(dc);
+
+  if (!TextObj)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TEXTOBJ_UnlockText(TextObj);
+
+  Count = ftGdiGetKerningPairs(FontGDI,0,NULL);
+
+  if ( Count && krnpair )
+  {
+     if (Count > NumPairs)
+     {
+        SetLastWin32Error(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+     }
+     pKP = ExAllocatePoolWithTag(PagedPool, Count * sizeof(KERNINGPAIR), TAG_GDITEXT);
+     if (!pKP)
+     {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+     }
+     ftGdiGetKerningPairs(FontGDI,Count,pKP);
+
+     RtlCopyMemory(krnpair, pKP, Count * sizeof(KERNINGPAIR));
+
+     ExFreePoolWithTag(pKP,TAG_GDITEXT);
+  }
+  return Count;
+}
+
+
+DWORD
+FASTCALL
+GreGetCharacterPlacementW(
+    HDC hdc,
+    LPWSTR pwsz,
+    INT nCount,
+    INT nMaxExtent,
+    LPGCP_RESULTSW pgcpw,
+    DWORD dwFlags)
+{
+  SIZE Size = {0,0};
+
+  if (!pgcpw)
+  {
+     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
+        return MAKELONG(Size.cx, Size.cy);
+     return 0;
+  }
+  UNIMPLEMENTED;
+  return 0;
+}
 
 INT
 FASTCALL
@@ -168,6 +251,49 @@ RealizeFontInit(HFONT hFont)
   return pTextObj;
 }
 
+HFONT
+FASTCALL
+GreSelectFont( HDC hDC, HFONT hFont)
+{
+    PDC pdc;
+    PDC_ATTR pdcattr;
+    PTEXTOBJ pOrgFnt, pNewFnt = NULL;
+    HFONT hOrgFont = NULL;
+
+    if (!hDC || !hFont) return NULL;
+
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
+    {
+        return NULL;
+    }
+
+    if (NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
+    {
+       /* LFONTOBJ use share and locking. */
+       pNewFnt = TEXTOBJ_LockText(hFont);
+       pdcattr = pdc->pdcattr;
+       pOrgFnt = pdc->dclevel.plfnt;
+       if (pOrgFnt)
+       {
+          hOrgFont = pOrgFnt->BaseObject.hHmgr;
+       }
+       else
+       {
+          hOrgFont = pdcattr->hlfntNew;
+       }
+       pdc->dclevel.plfnt = pNewFnt;
+       pdc->hlfntCur = hFont;
+       pdcattr->hlfntNew = hFont;
+       pdcattr->ulDirty_ |= DIRTY_CHARSET;
+       pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
+    }
+
+    if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
+    DC_UnlockDc(pdc);
+    return hOrgFont;
+}
+
 /** Functions ******************************************************************/
 
 INT
@@ -215,6 +341,23 @@ NtGdiAddFontResourceW(
 
   ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
   return Ret;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+APIENTRY
+NtGdiGetCharacterPlacementW(
+    IN HDC hdc,
+    IN LPWSTR pwsz,
+    IN INT nCount,
+    IN INT nMaxExtent,
+    IN OUT LPGCP_RESULTSW pgcpw,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return 0;
 }
 
 DWORD
@@ -618,7 +761,7 @@ NtGdiGetFontResourceInfoInternalW(
     SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
     SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  cbStringSize,
-                                                 TAG('R','T','S','U'));
+                                                 'RTSU');
     if (!SafeFileNames.Buffer)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -644,7 +787,7 @@ NtGdiGetFontResourceInfoInternalW(
     {
         SetLastNtError(Status);
         /* Free the string buffer for the safe filename */
-        ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
+        ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
         return FALSE;
     }
 
@@ -675,7 +818,7 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Free the string for the safe filenames */
-    ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
+    ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
 
     return bRet;
 }
@@ -833,30 +976,7 @@ NtGdiSelectFont(
     IN HDC hDC,
     IN HFONT hFont)
 {
-    PDC pDC;
-    PDC_ATTR pdcattr;
-    HFONT hOrgFont = NULL;
-
-    if (hDC == NULL || hFont == NULL) return NULL;
-
-    pDC = DC_LockDc(hDC);
-    if (!pDC)
-    {
-        return NULL;
-    }
-
-    pdcattr = pDC->pdcattr;
-
-    /* FIXME: what if not successful? */
-    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont,NULL)))
-    {
-        hOrgFont = pdcattr->hlfntNew;
-        pdcattr->hlfntNew = hFont;
-    }
-
-    DC_UnlockDc(pDC);
-
-    return hOrgFont;
+    return GreSelectFont(hDC, hFont);
 }
 
 

@@ -67,6 +67,19 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"DejaVu Sans"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"DejaVu Sans"
 
+[Font.CJK.Reg]
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"Liberation Sans"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier New",0x00000000,"FreeMono"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Times New Roman",0x00000000,"Liberation Serif"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Tahoma",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Sans Serif",0x00000000,"Tahoma"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS Shell Dlg 2",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS UI Gothic",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","MS UI Gothic 2",0x00000000,"Droid Sans Fallback"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Helv",0x00000000,"Tahoma"
+
 [Font.Unicode.Reg]
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Arial",0x00000000,"DejaVu Sans"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SysFontSubstitutes","Courier",0x00000000,"DejaVu Sans Mono"
@@ -234,38 +247,38 @@ AddReg = Font.Unicode.Reg
 ; cp932/cp932 Japanese
 [Font.CP932.96]
 AddReg = Font.Reg.96
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 [Font.CP932.120]
 AddReg = Font.Reg.120
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 ; cp936/cp936 Simplified Chinese
 [Font.CP936.96]
 AddReg = Font.Reg.96
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 [Font.CP936.120]
 AddReg = Font.Reg.120
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 ; cp949/cp949 Korean
 [Font.CP949.96]
 AddReg = Font.Reg.96
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 [Font.CP949.120]
 AddReg = Font.Reg.120
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 ; cp950/cp950 Traditional Chinese
 [Font.CP950.96]
 AddReg = Font.Reg.96
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 [Font.CP950.120]
 AddReg = Font.Reg.120
-AddReg = Font.Unicode.Reg
+AddReg = Font.CJK.Reg
 
 [Font Sizes]
 Small Fonts = 96

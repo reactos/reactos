@@ -86,43 +86,43 @@
  86 stub    ODBSetTryWaitValue
  89 stub    ODBCSharedPerfMon
  90 stub    ODBCSharedVSFlag
-106 stub    SQLColAttributesW
-107 stub    SQLConnectW
-108 stub    SQLDescribeColW
-110 stub    SQLErrorW
-111 stub    SQLExecDirectW
-117 stub    SQLGetCursorNameW
-119 stub    SQLPrepareW
-121 stub    SQLSetCursorNameW
-127 stub    SQLColAttributeW
-132 stub    SQLGetConnectAttrW
-133 stub    SQLGetDescFieldW
-134 stub    SQLGetDescRecW
-135 stub    SQLGetDiagFieldW
-136 stub    SQLGetDiagRecW
-138 stub    SQLGetStmtAttrW
-139 stub    SQLSetConnectAttrW
-140 stub    SQLColumnsW
-141 stub    SQLDriverConnectW
-142 stub    SQLGetConnectOptionW
-145 stub    SQLGetInfoW
-147 stub    SQLGetTypeInfoW
-150 stub    SQLSetConnectOptionW
-152 stub    SQLSpecialColumnsW
-153 stub    SQLStatisticsW
-154 stub    SQLTablesW
-155 stub    SQLBrowseConnectW
-156 stub    SQLColumnPrivilegesW
-157 stub    SQLDataSourcesW
-160 stub    SQLForeignKeysW
-162 stub    SQLNativeSqlW
-165 stub    SQLPrimaryKeysW
-166 stub    SQLProcedureColumnsW
-167 stub    SQLProceduresW
-170 stub    SQLTablePrivilegesW
-171 stub    SQLDriversW
-173 stub    SQLSetDescFieldW
-176 stub    SQLSetStmtAttrW
+106 stdcall SQLColAttributesW(long long long ptr long ptr ptr)
+107 stdcall SQLConnectW(long wstr long wstr long wstr long)
+108 stdcall SQLDescribeColW(long long wstr long ptr ptr ptr ptr ptr)
+110 stdcall SQLErrorW(long long long wstr ptr wstr long ptr)
+111 stdcall SQLExecDirectW(long wstr long)
+117 stdcall SQLGetCursorNameW(long wstr long ptr)
+119 stdcall SQLPrepareW(long wstr long)
+121 stdcall SQLSetCursorNameW(long wstr long)
+127 stdcall SQLColAttributeW(long long long ptr long ptr ptr)
+132 stdcall SQLGetConnectAttrW(long long ptr long ptr)
+133 stdcall SQLGetDescFieldW(long long long ptr long ptr)
+134 stdcall SQLGetDescRecW(long long wstr long ptr ptr ptr ptr ptr ptr ptr)
+135 stdcall SQLGetDiagFieldW(long long long long ptr long ptr)
+136 stdcall SQLGetDiagRecW(long long long wstr ptr wstr long ptr)
+138 stdcall SQLGetStmtAttrW(long long ptr long ptr)
+139 stdcall SQLSetConnectAttrW(long long ptr long)
+140 stdcall SQLColumnsW(long wstr long wstr long wstr long wstr long)
+141 stdcall SQLDriverConnectW(long long wstr long wstr long wstr long)
+142 stdcall SQLGetConnectOptionW(long long ptr)
+145 stdcall SQLGetInfoW(long long ptr long ptr)
+147 stdcall SQLGetTypeInfoW(long long)
+150 stdcall SQLSetConnectOptionW(long long long)
+152 stdcall SQLSpecialColumnsW(long long wstr long wstr long wstr long long long)
+153 stdcall SQLStatisticsW(long wstr long wstr long wstr long long long)
+154 stdcall SQLTablesW(long wstr long wstr long wstr long wstr long)
+155 stdcall SQLBrowseConnectW(long wstr long wstr long ptr)
+156 stdcall SQLColumnPrivilegesW(long wstr long wstr long wstr long wstr long)
+157 stdcall SQLDataSourcesW(long long wstr long ptr wstr long ptr)
+160 stdcall SQLForeignKeysW(long wstr long wstr long wstr long wstr long wstr long wstr long)
+162 stdcall SQLNativeSqlW(long wstr long wstr long ptr)
+165 stdcall SQLPrimaryKeysW(long wstr long wstr long wstr long)
+166 stdcall SQLProcedureColumnsW(long wstr long wstr long wstr long wstr long)
+167 stdcall SQLProceduresW(long wstr long wstr long wstr long)
+170 stdcall SQLTablePrivilegesW(long wstr long wstr long wstr long)
+171 stdcall SQLDriversW(long long wstr long ptr wstr long ptr)
+173 stdcall SQLSetDescFieldW(long long long ptr long)
+176 stdcall SQLSetStmtAttrW(long long ptr long)
 206 stub    SQLColAttributesA
 207 stub    SQLConnectA
 208 stub    SQLDescribeColA

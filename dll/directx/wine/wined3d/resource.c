@@ -5,6 +5,7 @@
  * Copyright 2003-2004 Raphael Junqueira
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,18 +27,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
-HRESULT resource_init(struct IWineD3DResourceClass *resource, WINED3DRESOURCETYPE resource_type,
-        IWineD3DDeviceImpl *device, UINT size, DWORD usage, WINED3DFORMAT format, WINED3DPOOL pool, IUnknown *parent)
+HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type,
+        IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct wined3d_format_desc *format_desc,
+        WINED3DPOOL pool, IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
 {
-    resource->wineD3DDevice = device;
+    struct IWineD3DResourceClass *resource = &((IWineD3DResourceImpl *)iface)->resource;
+
+    resource->device = device;
     resource->parent = parent;
     resource->resourceType = resource_type;
     resource->ref = 1;
     resource->pool = pool;
-    resource->format = format;
+    resource->format_desc = format_desc;
     resource->usage = usage;
     resource->size = size;
     resource->priority = 0;
+    resource->parent_ops = parent_ops;
     list_init(&resource->privateData);
 
     if (size)
@@ -67,6 +72,8 @@ HRESULT resource_init(struct IWineD3DResourceClass *resource, WINED3DRESOURCETYP
         WineD3DAdapterChangeGLRam(device, size);
     }
 
+    device_resource_add(device, iface);
+
     return WINED3D_OK;
 }
 
@@ -80,7 +87,7 @@ void resource_cleanup(IWineD3DResource *iface)
     TRACE("(%p) Cleaning up resource\n", This);
     if (This->resource.pool == WINED3DPOOL_DEFAULT) {
         TRACE("Decrementing device memory pool by %u\n", This->resource.size);
-        WineD3DAdapterChangeGLRam(This->resource.wineD3DDevice, -This->resource.size);
+        WineD3DAdapterChangeGLRam(This->resource.device, -This->resource.size);
     }
 
     LIST_FOR_EACH_SAFE(e1, e2, &This->resource.privateData) {
@@ -95,19 +102,7 @@ void resource_cleanup(IWineD3DResource *iface)
     This->resource.allocatedMemory = 0;
     This->resource.heapMemory = 0;
 
-    if (This->resource.wineD3DDevice != NULL) {
-        IWineD3DDevice_ResourceReleased((IWineD3DDevice *)This->resource.wineD3DDevice, iface);
-    }/* NOTE: this is not really an error for system memory resources */
-    return;
-}
-
-HRESULT resource_get_device(IWineD3DResource *iface, IWineD3DDevice** ppDevice)
-{
-    IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
-    TRACE("(%p) : returning %p\n", This, This->resource.wineD3DDevice);
-    *ppDevice = (IWineD3DDevice *) This->resource.wineD3DDevice;
-    IWineD3DDevice_AddRef(*ppDevice);
-    return WINED3D_OK;
+    if (This->resource.device) device_resource_released(This->resource.device, iface);
 }
 
 static PrivateData* resource_find_private_data(IWineD3DResourceImpl *This, REFGUID tag)
@@ -184,7 +179,8 @@ HRESULT resource_get_private_data(IWineD3DResource *iface, REFGUID refguid, void
 
     if (data->flags & WINED3DSPD_IUNKNOWN) {
         *(LPUNKNOWN *)pData = data->ptr.object;
-        if(((IWineD3DImpl *) This->resource.wineD3DDevice->wineD3D)->dxVersion != 7) {
+        if (((IWineD3DImpl *)This->resource.device->wined3d)->dxVersion != 7)
+        {
             /* D3D8 and D3D9 addref the private data, DDraw does not. This can't be handled in
              * ddraw because it doesn't know if the pointer returned is an IUnknown * or just a
              * Blob
@@ -250,12 +246,4 @@ HRESULT resource_get_parent(IWineD3DResource *iface, IUnknown **pParent)
     IUnknown_AddRef(This->resource.parent);
     *pParent = This->resource.parent;
     return WINED3D_OK;
-}
-
-void dumpResources(struct list *list) {
-    IWineD3DResourceImpl *resource;
-
-    LIST_FOR_EACH_ENTRY(resource, list, IWineD3DResourceImpl, resource.resource_list_entry) {
-        FIXME("Leftover resource %p with type %d,%s\n", resource, IWineD3DResource_GetType((IWineD3DResource *) resource), debug_d3dresourcetype(IWineD3DResource_GetType((IWineD3DResource *) resource)));
-    }
 }

@@ -127,6 +127,8 @@ i8042SynchReadPort(
 {
 	PPORT_DEVICE_EXTENSION DeviceExtension;
 
+	UNREFERENCED_PARAMETER(WaitForAck);
+
 	DeviceExtension = (PPORT_DEVICE_EXTENSION)Context;
 
 	return i8042ReadDataWait(DeviceExtension, Value);

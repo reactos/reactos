@@ -11,6 +11,7 @@
 #include <string.h>
 
 
+unsigned int _osplatform = 0;
 unsigned int _osver = 0;
 unsigned int _winminor = 0;
 unsigned int _winmajor = 0;

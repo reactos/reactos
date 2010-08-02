@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -35,13 +35,13 @@
 #include <sys/ioctl.h>
 #endif
 
+#include "winemm.h"
 #include "windef.h"
 #include "winbase.h"
 #include "mmsystem.h"
 #include "wingdi.h"
 #include "winuser.h"
 #include "winnls.h"
-#include "winemm.h"
 
 #include "mmddk.h"
 
@@ -49,7 +49,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(winmm);
 
-#define MAXJOYSTICK	(JOYSTICKID2 + 1)
+#define MAXJOYSTICK (JOYSTICKID2 + 30)
 #define JOY_PERIOD_MIN	(10)	/* min Capture time period */
 #define JOY_PERIOD_MAX	(1000)	/* max Capture time period */
 
@@ -74,14 +74,14 @@ static	BOOL JOY_LoadDriver(DWORD dwJoyID)
     if (JOY_Sticks[dwJoyID].hDriver)
 	return TRUE;
 
-    JOY_Sticks[dwJoyID].hDriver = OpenDriverA("joystick.drv", 0, dwJoyID);
+    JOY_Sticks[dwJoyID].hDriver = OpenDriverA("winejoystick.drv", 0, dwJoyID);
     return (JOY_Sticks[dwJoyID].hDriver != 0);
 }
 
 /**************************************************************************
  * 				JOY_Timer		[internal]
  */
-static	void	CALLBACK	JOY_Timer(HWND hWnd, UINT wMsg, UINT wTimer, DWORD dwTime)
+static	void	CALLBACK	JOY_Timer(HWND hWnd, UINT wMsg, UINT_PTR wTimer, DWORD dwTime)
 {
     int			i;
     WINE_JOYSTICK*	joy;
@@ -122,6 +122,19 @@ static	void	CALLBACK	JOY_Timer(HWND hWnd, UINT wMsg, UINT wTimer, DWORD dwTime)
 }
 
 /**************************************************************************
+ *                              joyConfigChanged        [WINMM.@]
+ */
+MMRESULT WINAPI joyConfigChanged(DWORD flags)
+{
+    FIXME("(%x) - stub\n", flags);
+
+    if (flags)
+	return JOYERR_PARMS;
+
+    return JOYERR_NOERROR;
+}
+
+/**************************************************************************
  * 				joyGetNumDevs		[WINMM.@]
  */
 UINT WINAPI joyGetNumDevs(void)
@@ -131,7 +144,7 @@ UINT WINAPI joyGetNumDevs(void)
 
     for (i = 0; i < MAXJOYSTICK; i++) {
 	if (JOY_LoadDriver(i)) {
-	    ret += SendDriverMessage(JOY_Sticks[i].hDriver, JDD_GETNUMDEVS, 0L, 0L);
+            ret += SendDriverMessage(JOY_Sticks[i].hDriver, JDD_GETNUMDEVS, 0, 0);
 	}
     }
     return ret;
@@ -148,7 +161,7 @@ MMRESULT WINAPI joyGetDevCapsW(UINT_PTR wID, LPJOYCAPSW lpCaps, UINT wSize)
     lpCaps->wPeriodMin = JOY_PERIOD_MIN; /* FIXME */
     lpCaps->wPeriodMax = JOY_PERIOD_MAX; /* FIXME (same as MS Joystick Driver) */
 
-    return SendDriverMessage(JOY_Sticks[wID].hDriver, JDD_GETDEVCAPS, (DWORD)lpCaps, wSize);
+    return SendDriverMessage(JOY_Sticks[wID].hDriver, JDD_GETDEVCAPS, (LPARAM)lpCaps, wSize);
 }
 
 /**************************************************************************
@@ -222,7 +235,7 @@ MMRESULT WINAPI joyGetPosEx(UINT wID, LPJOYINFOEX lpInfo)
     lpInfo->dwReserved1 = 0;
     lpInfo->dwReserved2 = 0;
 
-    return SendDriverMessage(JOY_Sticks[wID].hDriver, JDD_GETPOSEX, (DWORD)lpInfo, 0L);
+    return SendDriverMessage(JOY_Sticks[wID].hDriver, JDD_GETPOSEX, (LPARAM)lpInfo, 0);
 }
 
 /**************************************************************************
@@ -240,7 +253,7 @@ MMRESULT WINAPI joyGetPos(UINT wID, LPJOYINFO lpInfo)
     lpInfo->wZpos = 0;
     lpInfo->wButtons = 0;
 
-    return SendDriverMessage(JOY_Sticks[wID].hDriver, JDD_GETPOS, (DWORD)lpInfo, 0L);
+    return SendDriverMessage(JOY_Sticks[wID].hDriver, JDD_GETPOS, (LPARAM)lpInfo, 0);
 }
 
 /**************************************************************************

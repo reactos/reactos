@@ -145,17 +145,17 @@
 205 stub FDecodeID@12
 206 stub CchOfEncoding@4
 207 stdcall CbOfEncoded@4(ptr) CbOfEncoded
-208 stub MAPISendDocuments
-209 stdcall MAPILogon(long ptr ptr long long ptr)
-210 stdcall MAPILogoff(long long long long)
-211 stdcall MAPISendMail(long long ptr long long)
-212 stub MAPISaveMail
-213 stub MAPIReadMail
-214 stub MAPIFindNext
-215 stub MAPIDeleteMail
-217 stub MAPIAddress
-218 stub MAPIDetails
-219 stub MAPIResolveName
+208 stdcall MAPISendDocuments(ptr str str str long)
+209 stdcall MAPILogon(ptr str str long long ptr)
+210 stdcall MAPILogoff(ptr ptr long long)
+211 stdcall MAPISendMail(ptr ptr ptr long long)
+212 stdcall MAPISaveMail(ptr ptr ptr long long str)
+213 stdcall MAPIReadMail(ptr ptr str long long ptr)
+214 stdcall MAPIFindNext(ptr ptr str str long long ptr)
+215 stdcall MAPIDeleteMail(ptr ptr str long long)
+217 stdcall MAPIAddress(ptr ptr str long str long ptr long long ptr ptr)
+218 stdcall MAPIDetails(ptr ptr ptr long long)
+219 stdcall MAPIResolveName(ptr ptr str long long ptr)
 220 stub BMAPISendMail
 221 stub BMAPISaveMail
 222 stub BMAPIReadMail

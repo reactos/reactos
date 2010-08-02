@@ -8,7 +8,7 @@
  * This file is part of the ReactOS Operating System.
  *
  * Contributors:
- *  Created by Eric Kohl <ekohl@rz-online.de>
+ *  Created by Eric Kohl
  *
  *  THIS SOFTWARE IS NOT COPYRIGHTED
  *

@@ -31,14 +31,14 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-typedef struct {
+struct HTMLTable {
     HTMLElement element;
 
     const IHTMLTableVtbl  *lpHTMLTableVtbl;
 
     ConnectionPoint cp;
     nsIDOMHTMLTableElement *nstable;
-} HTMLTable;
+};
 
 #define HTMLTABLE(x)  (&(x)->lpHTMLTableVtbl)
 
@@ -96,14 +96,14 @@ static HRESULT WINAPI HTMLTable_Invoke(IHTMLTable *iface, DISPID dispIdMember,
             pVarResult, pExcepInfo, puArgErr);
 }
 
-static HRESULT WINAPI HTMLTable_put_cols(IHTMLTable *iface, long v)
+static HRESULT WINAPI HTMLTable_put_cols(IHTMLTable *iface, LONG v)
 {
     HTMLTable *This = HTMLTABLE_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTable_get_cols(IHTMLTable *iface, long *p)
+static HRESULT WINAPI HTMLTable_get_cols(IHTMLTable *iface, LONG *p)
 {
     HTMLTable *This = HTMLTABLE_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -319,14 +319,14 @@ static HRESULT WINAPI HTMLTable_get_height(IHTMLTable *iface, VARIANT *p)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTable_put_dataPageSize(IHTMLTable *iface, long v)
+static HRESULT WINAPI HTMLTable_put_dataPageSize(IHTMLTable *iface, LONG v)
 {
     HTMLTable *This = HTMLTABLE_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTable_get_dataPageSize(IHTMLTable *iface, long *p)
+static HRESULT WINAPI HTMLTable_get_dataPageSize(IHTMLTable *iface, LONG *p)
 {
     HTMLTable *This = HTMLTABLE_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -417,17 +417,17 @@ static HRESULT WINAPI HTMLTable_deleteCaption(IHTMLTable *iface)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTable_insertRow(IHTMLTable *iface, long index, IDispatch **row)
+static HRESULT WINAPI HTMLTable_insertRow(IHTMLTable *iface, LONG index, IDispatch **row)
 {
     HTMLTable *This = HTMLTABLE_THIS(iface);
-    FIXME("(%p)->(%ld %p)\n", This, index, row);
+    FIXME("(%p)->(%d %p)\n", This, index, row);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTable_deleteRow(IHTMLTable *iface, long index)
+static HRESULT WINAPI HTMLTable_deleteRow(IHTMLTable *iface, LONG index)
 {
     HTMLTable *This = HTMLTABLE_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, index);
+    FIXME("(%p)->(%d)\n", This, index);
     return E_NOTIMPL;
 }
 
@@ -558,11 +558,7 @@ static const NodeImplVtbl HTMLTableImplVtbl = {
 };
 
 static const tid_t HTMLTable_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLTable_tid,
     0
 };
@@ -574,7 +570,7 @@ static dispex_static_data_t HTMLTable_dispex = {
     HTMLTable_iface_tids
 };
 
-HTMLElement *HTMLTable_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLTable_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLTable *ret = heap_alloc_zero(sizeof(HTMLTable));
     nsresult nsres;
@@ -582,10 +578,9 @@ HTMLElement *HTMLTable_Create(nsIDOMHTMLElement *nselem)
     ret->element.node.vtbl = &HTMLTableImplVtbl;
     ret->lpHTMLTableVtbl = &HTMLTableVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLTABLE(ret), &HTMLTable_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLTable_dispex);
 
-    ConnectionPoint_Init(&ret->cp, &ret->element.cp_container, &DIID_HTMLTableEvents);
+    ConnectionPoint_Init(&ret->cp, &ret->element.cp_container, &DIID_HTMLTableEvents, NULL);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableElement, (void**)&ret->nstable);
     if(NS_FAILED(nsres))

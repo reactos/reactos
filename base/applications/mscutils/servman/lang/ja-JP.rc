@@ -1,0 +1,282 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "ファイル(&F)"
+  BEGIN
+    MENUITEM "エクスポート...", ID_EXPORT
+    MENUITEM SEPARATOR
+    MENUITEM "終了(&X)",        ID_EXIT
+  END
+  POPUP "操作"
+  BEGIN
+    MENUITEM "別のコンピュータへ接続...", ID_CONNECT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "開始",            ID_START, GRAYED
+    MENUITEM "停止",            ID_STOP, GRAYED
+    MENUITEM "一時停止",        ID_PAUSE, GRAYED
+    MENUITEM "再開",            ID_RESUME, GRAYED
+    MENUITEM "再起動",          ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "更新",            ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "編集...",         ID_EDIT, GRAYED
+    MENUITEM "作成...",         ID_CREATE, GRAYED
+    MENUITEM "削除...",         ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "プロパティ...",   ID_PROP, GRAYED
+  END
+  POPUP "表\示"
+  BEGIN
+    MENUITEM "大きいアイコン",  ID_VIEW_LARGE
+    MENUITEM "小さいアイコン",  ID_VIEW_SMALL
+    MENUITEM "一覧",            ID_VIEW_LIST
+    MENUITEM "詳細",            ID_VIEW_DETAILS
+    MENUITEM SEPARATOR
+    MENUITEM "カスタマイズ...", ID_VIEW_CUST, GRAYED
+  END
+  POPUP "ヘルプ"
+  BEGIN
+    MENUITEM "ヘルプ",          ID_HELP
+    MENUITEM "バージョン情報",  ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "開始",            ID_START, GRAYED
+    MENUITEM "停止",            ID_STOP, GRAYED
+    MENUITEM "一時停止",        ID_PAUSE, GRAYED
+    MENUITEM "再開",            ID_RESUME, GRAYED
+    MENUITEM "再起動",          ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "更新",            ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "編集...",         ID_EDIT, GRAYED
+    MENUITEM "削除...",         ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "プロパティ...",   ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ヘルプ...",       ID_HELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "サービス マネージャについて"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "サービス マネージャ v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 30
+  PUSHBUTTON "閉じる", IDOK, 75, 162, 44, 15
+  ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
+CAPTION "全般"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+  EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
+  PUSHBUTTON "開始", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "停止", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "一時停止", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "再開", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "サービス名:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "表\示名:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "説明:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "実行ファイルのパス:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "スタートアップの種類:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "サービスの状態:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
+  LTEXT "ここでサービスを開始するときに適用する開始パラメータを指定できます。",IDC_STATIC, 6,177,240,15
+  LTEXT "開始パラメータ:", IDC_STATIC, 6, 200, 58, 11
+  EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "編集", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+END
+
+IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+CAPTION "依存関係"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
+  LTEXT "他のサービス、システム ドライバ、読み込み順グループなどに依存しているサービスがあります。システム コンポーネントが停止するか、または正常に実行されない場合、依存するサービスが影響されている場合があります。", IDC_STATIC,8, 7, 238, 26
+  LTEXT "このサービスが依存するコンポーネント", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
+END
+
+IDD_DLG_CREATE DIALOGEX 6,6,225,209
+CAPTION "サービスの作成"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 10, 62, 210, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*サービス名 :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*表\示名 :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*実行ファイルのパス :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "説明 :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "OK", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "キャンセル", IDCANCEL, 176, 192, 46, 13
+  LTEXT "追加オプション (詳細はヘルプをクリック)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "ヘルプ", ID_CREATE_HELP, 10, 192, 44, 13
+END
+
+IDD_DLG_DELETE DIALOGEX 6,6,185,148
+CAPTION "サービスの削除"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "次のサービスを削除しますか? この操作は取り消せません!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "サービス名:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
+  EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+  PUSHBUTTON "はい", IDOK, 26, 129, 54, 13
+  DEFPUSHBUTTON "いいえ", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "他のサービスの停止"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "これらのサービスを停止しますか?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "はい", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "いいえ", IDCANCEL, 120, 129, 54, 14
+END
+
+IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
+CAPTION "オプション"
+FONT 9, "MS UI Gothic",0,0
+STYLE 0x10CF0000
+BEGIN
+  LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
+  PUSHBUTTON "Ok", IDOK, 75, 130, 44, 13
+END
+
+IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+CAPTION "サービス コントロール"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+BEGIN
+  CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
+  LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
+  LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
+  PUSHBUTTON "閉じる(&C)", IDOK, 100, 70, 54, 13
+END
+
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_FIRSTCOLUMN       "名前"
+  IDS_SECONDCOLUMN      "説明"
+  IDS_THIRDCOLUMN       "状態"
+  IDS_FOURTHCOLUMN      "スタートアップの種類"
+  IDS_FITHCOLUMN        "ログオン"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_SERVICES_STARTED  "開始"
+  IDS_SERVICES_STOPPED  "停止"
+  IDS_SERVICES_AUTO     "自動"
+  IDS_SERVICES_MAN      "手動"
+  IDS_SERVICES_DIS      "無効"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_NUM_SERVICES      "サービスの数: %d"
+  IDS_STOP_DEPENDS      "%s を停止する場合、これらのサービスも停止します"
+  IDS_NO_DEPENDS        "<依存関係なし>"
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP      "プロパティ"
+  IDS_TOOLTIP_REFRESH   "更新"
+  IDS_TOOLTIP_EXPORT    "一覧をエクスポート"
+  IDS_TOOLTIP_CREATE    "新しいサービスの作成"
+  IDS_TOOLTIP_DELETE    "既存のサービスの削除"
+  IDS_TOOLTIP_START     "サービスの開始"
+  IDS_TOOLTIP_STOP      "サービスの停止"
+  IDS_TOOLTIP_PAUSE     "サービスの一時停止"
+  IDS_TOOLTIP_RESTART   "サービスの再起動"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_PROGRESS_INFO_START   "ReactOS は次のサービスを開始しようとしています"
+  IDS_PROGRESS_INFO_STOP    "ReactOS は次のサービスを停止しようとしています"
+  IDS_PROGRESS_INFO_PAUSE   "ReactOS は次のサービスを一時停止しようとしています"
+  IDS_PROGRESS_INFO_RESUME  "ReactOS は次のサービスを再開しようとしています"
+  IDS_CREATE_SUCCESS        "サービスの作成に成功しました"
+  IDS_DELETE_SUCCESS        "サービスの削除に成功しました"
+  IDS_CREATE_REQ            "アスタリスクのついて\nいる項目は必須です"
+  IDS_DELETE_STOP           "サービスを削除する前に手動で停止してください!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HELP_OPTIONS "作成オプション:\r\n注意: オプション名はイコール記号を含んでいます。\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (既定値 = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (既定値 = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (既定値 = normal)\r\n group= <LoadOrderGroup>\r\n tag= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (既定値 = LocalSystem)\r\n password= <password>\r\n"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " 現在のリストをファイルにエクスポートします。"
+  IDS_HINT_EXIT         " このプログラムを終了します。"
+
+  IDS_HINT_CONNECT      " 他のコンピュータを管理します。"
+  IDS_HINT_START        " 選択したサービスを開始します。"
+  IDS_HINT_STOP         " 選択したサービスを停止します。"
+  IDS_HINT_PAUSE        " 選択したサービスを一時停止します。"
+  IDS_HINT_RESUME       " 選択したサービスを再開します。"
+  IDS_HINT_RESTART      " 選択したサービスを停止し、開始します。"
+  IDS_HINT_REFRESH      " サービスの一覧を更新します。"
+  IDS_HINT_EDIT         " 選択したサービスのプロパティを編集します。"
+  IDS_HINT_CREATE       " 新しいサービスを作成します。"
+  IDS_HINT_DELETE       " 選択したサービスを削除します。"
+  IDS_HINT_PROP         " 現在選択されている項目のプロパティ シートを開きます。"
+
+  IDS_HINT_LARGE        " アイテムを大きいアイコンで表\示します。"
+  IDS_HINT_SMALL        " アイテムを小さいアイコンで表\示します。"
+  IDS_HINT_LIST         " アイテムを一覧で表\示します。"
+  IDS_HINT_DETAILS      " 各アイテムの情報をウィンドウに表\示します。"
+  IDS_HINT_CUST         " 表\示をカスタマイズします。"
+
+  IDS_HINT_HELP         " ヘルプ ウィンドウを表\示します。"
+  IDS_HINT_ABOUT        " ReactOS サービス マネージャについて表\示します。"
+
+  IDS_HINT_SYS_RESTORE  " このウィンドウを通常の大きさに復元します。"
+  IDS_HINT_SYS_MOVE     " このウィンドウを移動します。"
+  IDS_HINT_SYS_SIZE     " このウィンドウの大きさを変更します。"
+  IDS_HINT_SYS_MINIMIZE " このウィンドウをアイコンに折りたたみます。"
+  IDS_HINT_SYS_MAXIMIZE " このウィンドウを画面いっぱいに開きます。"
+  IDS_HINT_SYS_CLOSE    " このウィンドウを閉じます。"
+END
+
+/* Application title */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "ReactOS サービス マネージャ"
+END

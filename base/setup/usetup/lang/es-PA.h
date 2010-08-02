@@ -1,5 +1,4 @@
-#ifndef LANG_ES_PA_H__
-#define LANG_ES_PA_H__
+#pragma once
 
 MUI_LAYOUTS esPALayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS esPALayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

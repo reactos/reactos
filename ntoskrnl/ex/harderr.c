@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ERR TAG('E', 'r', 'r', ' ')
+#define TAG_ERR ' rrE'
 
 /* GLOBALS ****************************************************************/
 
@@ -58,10 +58,26 @@ ExpSystemErrorHandler(IN NTSTATUS ErrorStatus,
                       IN PULONG_PTR Parameters,
                       IN BOOLEAN Shutdown)
 {
+    ULONG_PTR BugCheckParameters[MAXIMUM_HARDERROR_PARAMETERS] = {0, 0, 0, 0};
+    ULONG i;
+
+    /* Sanity check */
+    ASSERT(NumberOfParameters <= MAXIMUM_HARDERROR_PARAMETERS);
+
+    /*
+     * KeBugCheck expects MAXIMUM_HARDERROR_PARAMETERS parameters,
+     * but we might get called with less, so use a local buffer here.
+     */
+    for (i = 0; i < NumberOfParameters; i++)
+    {
+        /* Copy them over */
+        BugCheckParameters[i] = Parameters[i];
+    }
+
     /* FIXME: STUB */
     KeBugCheckEx(FATAL_UNHANDLED_HARD_ERROR,
                  ErrorStatus,
-                 0,
+                 (ULONG_PTR)BugCheckParameters,
                  0,
                  0);
     return STATUS_SUCCESS;
@@ -218,7 +234,8 @@ ExpRaiseHardError(IN NTSTATUS ErrorStatus,
         /* Setup the LPC Message */
         Message->h.u1.Length = (sizeof(HARDERROR_MSG) << 16) |
                                (sizeof(HARDERROR_MSG) - sizeof(PORT_MESSAGE));
-        Message->h.u2.ZeroInit = LPC_ERROR_EVENT;
+        Message->h.u2.ZeroInit = 0;
+        Message->h.u2.s2.Type = LPC_ERROR_EVENT;
         Message->Status = ErrorStatus &~ 0x10000000;
         Message->ValidResponseOptions = ValidResponseOptions;
         Message->UnicodeStringParameterMask = UnicodeStringParameterMask;
@@ -370,7 +387,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
                  IN ULONG ValidResponseOptions,
                  OUT PULONG Response)
 {
-    ULONG Size;
+    SIZE_T Size;
     UNICODE_STRING CapturedParams[MAXIMUM_HARDERROR_PARAMETERS];
     ULONG i;
     PULONG_PTR UserData = NULL, ParameterBase;
@@ -505,7 +522,7 @@ ExRaiseHardError(IN NTSTATUS ErrorStatus,
  *        Optional string parameter (can be only one per error code)
  *
  * @param Parameters
- *        Array of ULONG parameters for use in error message string
+ *        Array of ULONG_PTR parameters for use in error message string
  *
  * @param ValidResponseOptions
  *        See HARDERROR_RESPONSE_OPTION for possible values description
@@ -620,16 +637,15 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                 }
             }
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free captured buffer */
             if (SafeParams) ExFreePool(SafeParams);
-            Status = _SEH2_GetExceptionCode();
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* If we failed to capture/probe, bail out */
-        if (!NT_SUCCESS(Status)) return Status;
 
         /* Call the system function directly, because we probed */
         ExpRaiseHardError(ErrorStatus,
@@ -668,8 +684,9 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
             /* Return the response */
             *Response = SafeResponse;
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;

@@ -32,13 +32,17 @@ static void usage(const char *name) {
 	    name);
     fprintf(stderr, "where <mode> is one of following:\n");
     fprintf(stderr,
-	"--with-comments       \t XML file canonization w comments\n");
+	"--with-comments       \t XML file canonicalization v1.0 w comments \n");
     fprintf(stderr,
-	"--without-comments    \t XML file canonization w/o comments\n");
+	"--without-comments    \t XML file canonicalization v1.0 w/o comments\n");
     fprintf(stderr,
-    "--exc-with-comments   \t Exclusive XML file canonization w comments\n");
+	"--1-1-with-comments       \t XML file canonicalization v1.1 w comments\n");
     fprintf(stderr,
-    "--exc-without-comments\t Exclusive XML file canonization w/o comments\n");
+	"--1-1-without-comments    \t XML file canonicalization v1.1 w/o comments\n");
+    fprintf(stderr,
+    "--exc-with-comments   \t Exclusive XML file canonicalization v1.0 w comments\n");
+    fprintf(stderr,
+    "--exc-without-comments\t Exclusive XML file canonicalization v1.0 w/o comments\n");
 }
 
 static xmlXPathObjectPtr
@@ -49,7 +53,7 @@ static xmlChar **parse_list(xmlChar *str);
 /* static void print_xpath_nodes(xmlNodeSetPtr nodes); */
 
 static int 
-test_c14n(const char* xml_filename, int with_comments, int exclusive,
+test_c14n(const char* xml_filename, int with_comments, int mode,
 	const char* xpath_filename, xmlChar **inclusive_namespaces) {
     xmlDocPtr doc;
     xmlXPathObjectPtr xpath = NULL; 
@@ -96,7 +100,7 @@ test_c14n(const char* xml_filename, int with_comments, int exclusive,
     /* fprintf(stderr,"File \"%s\" loaded: start canonization\n", xml_filename); */
     ret = xmlC14NDocDumpMemory(doc, 
 	    (xpath) ? xpath->nodesetval : NULL, 
-	    exclusive, inclusive_namespaces,
+	    mode, inclusive_namespaces,
 	    with_comments, &result);
     if(ret >= 0) {
 	if(result != NULL) {
@@ -135,22 +139,26 @@ int main(int argc, char **argv) {
 	fprintf(stderr, "Error: wrong number of arguments.\n");
 	usage(argv[0]);
     } else if(strcmp(argv[1], "--with-comments") == 0) {
-	ret = test_c14n(argv[2], 1, 0, (argc > 3) ? argv[3] : NULL, NULL);
+	ret = test_c14n(argv[2], 1, XML_C14N_1_0, (argc > 3) ? argv[3] : NULL, NULL);
     } else if(strcmp(argv[1], "--without-comments") == 0) {
-	ret = test_c14n(argv[2], 0, 0, (argc > 3) ? argv[3] : NULL, NULL);
+	ret = test_c14n(argv[2], 0, XML_C14N_1_0, (argc > 3) ? argv[3] : NULL, NULL);
+    } else if(strcmp(argv[1], "--1-1-with-comments") == 0) {
+	ret = test_c14n(argv[2], 1, XML_C14N_1_1, (argc > 3) ? argv[3] : NULL, NULL);
+    } else if(strcmp(argv[1], "--1-1-without-comments") == 0) {
+	ret = test_c14n(argv[2], 0, XML_C14N_1_1, (argc > 3) ? argv[3] : NULL, NULL);
     } else if(strcmp(argv[1], "--exc-with-comments") == 0) {
 	xmlChar **list;
 	
 	/* load exclusive namespace from command line */
 	list = (argc > 4) ? parse_list((xmlChar *)argv[4]) : NULL;
-	ret = test_c14n(argv[2], 1, 1, (argc > 3) ? argv[3] : NULL, list);
+	ret = test_c14n(argv[2], 1, XML_C14N_EXCLUSIVE_1_0, (argc > 3) ? argv[3] : NULL, list);
 	if(list != NULL) xmlFree(list);
     } else if(strcmp(argv[1], "--exc-without-comments") == 0) {
 	xmlChar **list;
 	
 	/* load exclusive namespace from command line */
 	list = (argc > 4) ? parse_list((xmlChar *)argv[4]) : NULL;
-	ret = test_c14n(argv[2], 0, 1, (argc > 3) ? argv[3] : NULL, list);
+	ret = test_c14n(argv[2], 0, XML_C14N_EXCLUSIVE_1_0, (argc > 3) ? argv[3] : NULL, list);
 	if(list != NULL) xmlFree(list);
     } else {
 	fprintf(stderr, "Error: bad option.\n");
@@ -162,7 +170,7 @@ int main(int argc, char **argv) {
      */
     xmlCleanupParser();
     xmlMemoryDump();
-    
+
     return((ret >= 0) ? 0 : 1);
 }
 
@@ -172,7 +180,7 @@ int main(int argc, char **argv) {
 #define growBufferReentrant() {						\
     buffer_size *= 2;							\
     buffer = (xmlChar **)						\
-    		xmlRealloc(buffer, buffer_size * sizeof(xmlChar*));	\
+		xmlRealloc(buffer, buffer_size * sizeof(xmlChar*));	\
     if (buffer == NULL) {						\
 	perror("realloc failed");					\
 	return(NULL);							\
@@ -194,7 +202,6 @@ parse_list(xmlChar *str) {
     if((str[0] == '\'') && (str[len - 1] == '\'')) {
 	str[len - 1] = '\0';
 	str++;
-	len -= 2;
     }
     /*
      * allocate an translation buffer.
@@ -206,7 +213,7 @@ parse_list(xmlChar *str) {
 	return(NULL);
     }
     out = buffer;
-    
+
     while(*str != '\0') {
 	if (out - buffer > buffer_size - 10) {
 	    int indx = out - buffer;

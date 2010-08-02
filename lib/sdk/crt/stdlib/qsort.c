@@ -50,7 +50,7 @@
  */
 
 static void
-qst(size_t size, int (*compar)(const void*, const void*), char *base, char *max)
+qst(size_t size, int (__cdecl *compar)(const void*, const void*), char *base, char *max)
 {
   char c, *i, *j, *jj;
   int ii;
@@ -176,7 +176,7 @@ qst(size_t size, int (*compar)(const void*, const void*), char *base, char *max)
  * @implemented
  */
 void
-qsort(void *base0, size_t n, size_t size, int (*compar)(const void*, const void*))
+qsort(void *base0, size_t n, size_t size, int (__cdecl *compar)(const void*, const void*))
 {
   char *base = (char *)base0;
   char c, *i, *j, *lo, *hi;

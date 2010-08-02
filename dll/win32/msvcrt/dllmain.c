@@ -35,6 +35,7 @@ extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
 extern void _atexit_cleanup(void);
 
+extern unsigned int _osplatform;
 extern unsigned int _osver;
 extern unsigned int _winminor;
 extern unsigned int _winmajor;
@@ -60,17 +61,20 @@ BOOL
 WINAPI
 DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
 {
+    OSVERSIONINFOW osvi;
     switch (dwReason)
     {
     case DLL_PROCESS_ATTACH://1
         /* initialize version info */
         //DPRINT1("Process Attach %d\n", nAttachCount);
         //DPRINT1("Process Attach\n");
-        _osver = GetVersion();
-        _winmajor = (_osver >> 8) & 0xFF;
-        _winminor = _osver & 0xFF;
-        _winver = (_winmajor << 8) + _winminor;
-        _osver = (_osver >> 16) & 0xFFFF;
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+        GetVersionExW( &osvi );
+        _winver     = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
+        _winmajor   = osvi.dwMajorVersion;
+        _winminor   = osvi.dwMinorVersion;
+        _osplatform = osvi.dwPlatformId;
+        _osver      = osvi.dwBuildNumber;
         hHeap = HeapCreate(0, 100000, 0);
         if (hHeap == NULL)
             return FALSE;

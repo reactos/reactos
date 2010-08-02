@@ -13,20 +13,9 @@
 #include <stdio.h>
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 /* See winbase.h */
 #define PST_RS232 1
 #define COMMPROP_INITIALIZED 0xE73CF52E
-
-#ifndef _NTIFS_
-/* Why is it only defined in ntifs.h file? */
-NTSTATUS NTAPI
-IoAttachDeviceToDeviceStackSafe(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice,
-  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-#endif
 
 typedef enum
 {
@@ -108,9 +97,9 @@ typedef struct _WORKITEM_DATA
 	BOOLEAN ReadAtLeastOneByte;
 } WORKITEM_DATA, *PWORKITEM_DATA;
 
-#define SERIAL_TAG TAG('S', 'e', 'r', 'l')
+#define SERIAL_TAG 'lreS'
 
-#define INFINITE ((ULONG)-1)
+#define INFINITE MAXULONG
 
 /* Baud master clock */
 #define BAUD_CLOCK      1843200

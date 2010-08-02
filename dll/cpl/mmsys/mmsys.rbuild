@@ -3,7 +3,6 @@
 <module name="mmsys" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MMSYS}" installbase="system32" installname="mmsys.cpl" unicode="yes" crt="msvcrt">
 	<importlibrary definition="mmsys.spec" />
 	<include base="mmsys">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>devmgr</library>

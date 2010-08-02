@@ -4,8 +4,8 @@
  * FILE:        include/ne2000.h
  * PURPOSE:     NE2000 driver definitions
  */
-#ifndef __NE2000_H
-#define __NE2000_H
+
+#pragma once
 
 #define NDIS_MINIPORT_DRIVER 1
 #define NDIS_LEGACY_MINIPORT 1
@@ -55,7 +55,8 @@
 /* Interrupt Mask Register value */
 #define DRIVER_INTERRUPT_MASK   IMR_ALLE - IMR_RDCE
 
-
+/* Maximum number of interrupts handled per call to MiniportHandleInterrupt */
+#define INTERRUPT_LIMIT 10
 
 /* Global structures */
 
@@ -79,7 +80,7 @@ typedef struct _NIC_ADAPTER
     NDIS_MINIPORT_INTERRUPT Interrupt;
 
     /* I/O base address and interrupt number of adapter */
-    ULONG IoBaseAddress;
+    ULONG_PTR IoBaseAddress;
     ULONG InterruptLevel;
     ULONG InterruptVector;
     BOOLEAN InterruptShared;
@@ -221,30 +222,28 @@ VOID NICUpdateCounters(
 VOID NICReadDataAlign(
     PNIC_ADAPTER Adapter,
     PUSHORT Target,
-    ULONG Source,
+    ULONG_PTR Source,
     USHORT Length);
 
 VOID NICWriteDataAlign(
     PNIC_ADAPTER Adapter,
-    ULONG Target,
+    ULONG_PTR Target,
     PUSHORT Source,
     USHORT Length);
 
 VOID NICReadData(
     PNIC_ADAPTER Adapter,
     PUCHAR Target,
-    ULONG Source,
+    ULONG_PTR Source,
     USHORT Length);
 
 VOID NICWriteData(
     PNIC_ADAPTER Adapter,
-    ULONG Target,
+    ULONG_PTR Target,
     PUCHAR Source,
     USHORT Length);
 
 VOID NICTransmit(
     PNIC_ADAPTER Adapter);
-
-#endif /* __NE2000_H */
 
 /* EOF */

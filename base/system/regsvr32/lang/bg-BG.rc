@@ -4,18 +4,18 @@ LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
-/u -	Unregister server\n\
-/s -	Silent; display no message boxes\n\
-/c -	Console output\n\
-/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
-/n -	Do not call DllRegisterServer; this option must be used with /i"
+IDS_UsageMessage, "%s\n\nУпотреба: regsvr32 [/u] [/s] [/c] [/n] [/i[:ключ]] име_на_dll\n\
+/u -	Отписване (премахване на регистрацията) на сървъра\n\
+/s -	Безшумно; без показване на прозорци за съобщения\n\
+/c -	Изход към конзолата\n\
+/i -	Извикване на DllInstall с допълнителни ключове [ключ]; при използване с „/u“ извиква DllUninstall\n\
+/n -	Да не се извиква DllRegisterServer; този ключ да се използва с „/i“"
 
 IDS_NoDllSpecified,  "Не е указано име на DLL."
 
 IDS_InvalidFlag,     "Неразпознат стяг: %s"
 
-IDS_SwitchN_NoI,     "Неразпознат стяг: /n стрябва да се използва с ключа /i"
+IDS_SwitchN_NoI,     "Неразпознат стяг: /n трябва да се използва с ключа „/i“"
 
 IDS_DllNotLoaded,    "Неуспешно LoadLibrary('%s').\nGetLastError връща 0x%08x."
 

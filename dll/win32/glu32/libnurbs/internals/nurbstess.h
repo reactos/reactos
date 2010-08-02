@@ -112,7 +112,7 @@ protected:
 private:
 
     void		resetObjects( void );
-    int			do_check_knots( Knotvector *, char * );
+    int			do_check_knots( Knotvector *, const char * );
     void		do_nurbserror( int );
     void		do_bgncurve( O_curve * );
     void		do_endcurve( void );

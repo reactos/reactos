@@ -1,5 +1,4 @@
-#ifndef _SUBSYS_WIN32K_INCLUDE_CLEANUP_H
-#define _SUBSYS_WIN32K_INCLUDE_CLEANUP_H
+#pragma once
 
 NTSTATUS FASTCALL InitCleanupImpl(VOID);
 
@@ -16,5 +15,3 @@ IntUnicodeStringToNULLTerminated(PWSTR *Dest, PUNICODE_STRING Src);
 
 void FASTCALL
 IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING UnicodeString);
-
-#endif /* ndef _SUBSYS_WIN32K_INCLUDE_CLEANUP_H */

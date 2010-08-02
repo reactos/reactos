@@ -123,15 +123,15 @@ extern int OskitTCPSend( void *socket,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-extern int OskitTCPConnect( void *socket, void *connection,
+extern int OskitTCPConnect( void *socket,
 			    void *nam, OSK_UINT namelen );
 extern int OskitTCPClose( void *socket );
 
-extern int OskitTCPBind( void *socket, void *connection,
+extern int OskitTCPBind( void *socket,
 			 void *nam, OSK_UINT namelen );
 
 extern int OskitTCPAccept( void *socket, void **new_socket,
-			   void *addr_out,
+			   void *context, void *addr_out,
 			   OSK_UINT addr_len,
 			   OSK_UINT *out_addr_len,
 			   OSK_UINT finish_accept );
@@ -144,11 +144,27 @@ extern int OskitTCPRecv( void *connection,
 			 OSK_UINT *OutLen,
 			 OSK_UINT Flags );
 
-void OskitTCPGetAddress( void *socket,
+int OskitTCPGetAddress( void *socket,
 			 OSK_UINT *LocalAddress,
 			 OSK_UI16 *LocalPort,
 			 OSK_UINT *RemoteAddress,
 			 OSK_UI16 *RemotePort );
+
+int OskitTCPGetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int *size);
+
+int OskitTCPSetSockOpt(void *socket,
+                       int level,
+                       int optname,
+                       char *buffer,
+                       int size);
+
+int OskitTCPDisconnect(void *socket);
+
+int OskitTCPGetSocketError(void *socket);
 
 #undef errno
 
@@ -169,5 +185,31 @@ void fbsd_free( void *data, char *file, unsigned line, ... );
 #define OSK_MSG_OOB      0x01
 #define OSK_MSG_PEEK     0x02
 #define OSK_MSG_DONTWAIT 0x80
+
+#define	FREAD		0x0001
+#define	FWRITE		0x0002
+
+/* Don't define this unless your are insane or aicom */
+//#define LOCK_SPAM
+
+#ifdef LOCK_SPAM
+#define OSKLock() if (!KeTryToAcquireSpinLockAtDpcLevel(&OSKLock)) \
+                  { \
+                      DbgPrint("OSKLock WAIT (%s)\n", __FUNCTION__); \
+                      KeAcquireSpinLockAtDpcLevel(&OSKLock); \
+                  } \
+                  DbgPrint("OSKLock >>>> (%s)\n", __FUNCTION__)
+
+#define OSKUnlock() KeReleaseSpinLockFromDpcLevel(&OSKLock); \
+                    DbgPrint("OSKLock <<<< (%s)\n", __FUNCTION__)
+#else
+#define OSKLock() KeAcquireSpinLockAtDpcLevel(&OSKLock)
+#define OSKUnlock() KeReleaseSpinLockFromDpcLevel(&OSKLock)
+#endif
+
+#define OSKLockAndRaise(x) KeRaiseIrql(DISPATCH_LEVEL, x); \
+                           OSKLock()
+#define OSKUnlockAndLower(x) OSKUnlock(); \
+                             KeLowerIrql(x)
 
 #endif/*OSKITTCP_H*/

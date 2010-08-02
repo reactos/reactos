@@ -22,7 +22,7 @@
 MMRESULT
 CobbleDeviceName(
     DeviceType device_type,
-    DWORD device_id,
+    UINT device_id,
     PWCHAR out_device_name)
 {
     WCHAR base_device_name[MAX_DEVICE_NAME_LENGTH];
@@ -78,7 +78,7 @@ CobbleDeviceName(
 MMRESULT
 OpenKernelDevice(
     DeviceType device_type,
-    DWORD device_id,
+    UINT device_id,
     DWORD access,
     HANDLE* handle)
 {

@@ -10,8 +10,7 @@
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define CLASS_TAG TAG('K', 'b', 'd', 'C')
+#define CLASS_TAG 'CdbK'
 #define DPFLTR_CLASS_NAME_ID DPFLTR_KBDCLASS_ID
 
 typedef enum

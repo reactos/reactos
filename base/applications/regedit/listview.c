@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <regedit.h>
@@ -27,6 +27,7 @@
 
 int Image_String = 0;
 int Image_Bin = 0;
+INT iListViewSelect = -1;
 
 typedef struct tagLINE_INFO
 {
@@ -74,6 +75,29 @@ LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
         return NULL;
 
     return lineinfo->name;
+}
+
+VOID SetValueName(HWND hwndLV, LPCTSTR pszValueName)
+{
+    INT i, c;
+    LV_FINDINFO fi;
+
+    c = ListView_GetItemCount(hwndLV);
+    for(i = 0; i < c; i++)
+    {
+        ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
+    }
+    if (pszValueName == NULL)
+        i = 0;
+    else
+    {
+        fi.flags    = LVFI_STRING;
+        fi.psz      = pszValueName;
+        i = ListView_FindItem(hwndLV, -1, &fi);
+    }
+    ListView_SetItemState(hwndLV, i, LVIS_FOCUSED | LVIS_SELECTED,
+        LVIS_FOCUSED | LVIS_SELECTED);
+    iListViewSelect = i;
 }
 
 BOOL IsDefaultValue(HWND hwndLV, int i)
@@ -356,7 +380,7 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     if (g_columnToSort == 2) {
         /* FIXME: Sort on value */
     }
-    return g_invertSort ? _tcscmp(r->name, l->name) : _tcscmp(l->name, r->name);
+    return g_invertSort ? _tcsicmp(r->name, l->name) : _tcsicmp(l->name, r->name);
 }
 
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
@@ -497,6 +521,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     DWORD val_count;
     HKEY hNewKey;
     LONG errCode;
+    INT i, c;
     BOOL AddedDefault = FALSE;
 
     if (!hwndLV) return FALSE;
@@ -518,7 +543,8 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL,
                               &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
 
-    if (errCode == ERROR_SUCCESS) {
+    if (errCode == ERROR_SUCCESS)
+    {
         TCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(TCHAR));
         DWORD dwValNameLen = max_val_name_len;
         BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, max_val_size + sizeof(TCHAR));
@@ -532,9 +558,15 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
             /* Remove unwanted path from key name */
             TCHAR *pLastBl = _tcsrchr(ValName, TEXT('\\'));
-            if (pLastBl != NULL) ++pLastBl; else pLastBl = ValName;
+            if (pLastBl != NULL)
+                ++pLastBl;
+            else
+                pLastBl = ValName;
             /* Add a terminating 0 character. Usually this is only necessary for strings. */
-            ((TCHAR*)ValBuf)[dwValSize/sizeof(TCHAR)] = 0;
+            ValBuf[dwValSize] = 0;
+#ifdef UNICODE
+            ValBuf[dwValSize + 1] = 0;
+#endif
             AddEntryToList(hwndLV, pLastBl, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
@@ -552,7 +584,15 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     {
       AddEntryToList(hwndLV, _T(""), REG_SZ, NULL, 0, 0, FALSE);
     }
-    (void)ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
+    ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
+    c = ListView_GetItemCount(hwndLV);
+    for(i = 0; i < c; i++)
+    {
+        ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
+    }
+    ListView_SetItemState(hwndLV, iListViewSelect,
+        LVIS_FOCUSED | LVIS_SELECTED,
+        LVIS_FOCUSED | LVIS_SELECTED);
     RegCloseKey(hNewKey);
     SendMessage(hwndLV, WM_SETREDRAW, TRUE, 0);
 

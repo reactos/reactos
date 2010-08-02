@@ -418,7 +418,7 @@ typedef struct _EX_RUNDOWN_REF_CACHE_AWARE
     PVOID PoolToFree;
     ULONG RunRefSize;
     ULONG Number;
-} EX_RUNDOWN_REF_CACHE_AWARE, *PEX_RUNDOWN_REF_CACHE_AWARE;
+} EX_RUNDOWN_REF_CACHE_AWARE;
 
 //
 // Executive Rundown Wait Block
@@ -531,7 +531,7 @@ typedef struct _EPROFILE
     PKPROFILE ProfileObject;
     PVOID LockedBufferAddress;
     PMDL Mdl;
-    PVOID Segment;
+    ULONG_PTR Segment;
     KPROFILE_SOURCE ProfileSource;
     KAFFINITY Affinity;
 } EPROFILE, *PEPROFILE;
@@ -640,7 +640,7 @@ typedef struct _HARDERROR_MSG
     ULONG Response;
     ULONG NumberOfParameters;
     ULONG UnicodeStringParameterMask;
-    ULONG Parameters[MAXIMUM_HARDERROR_PARAMETERS];
+    ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];
 } HARDERROR_MSG, *PHARDERROR_MSG;
 
 //

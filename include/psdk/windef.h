@@ -1,14 +1,21 @@
 #ifndef _WINDEF_H
 #define _WINDEF_H
 
+#ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__
 #define __ROS_LONG64__
 #endif
 #endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4255)
 #endif
 
 #ifndef WINVER
@@ -57,8 +64,13 @@ extern "C" {
 #ifndef TRUE
 #define TRUE 1
 #endif
+
+#ifndef IN
 #define IN
+#endif
+#ifndef OUT
 #define OUT
+#endif
 #ifndef OPTIONAL
 #define OPTIONAL
 #endif
@@ -197,21 +209,18 @@ extern "C" {
 #define DBG_UNREFERENCED_PARAMETER(P)
 #define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
 
-#ifdef __GNUC__
+#ifndef __ANONYMOUS_DEFINED
+#define __ANONYMOUS_DEFINED
+
 #ifndef NONAMELESSUNION
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
+#ifdef __GNUC__
 #define _ANONYMOUS_UNION __extension__
 #define _ANONYMOUS_STRUCT __extension__
-#else
-#if defined(__cplusplus)
-#define _ANONYMOUS_UNION __extension__
-#endif /* __cplusplus */
-#endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
-#endif /* NONAMELESSUNION */
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
 #endif /* __GNUC__/__WATCOMC__ */
+#endif /* NONAMELESSUNION */
 
 #ifndef _ANONYMOUS_UNION
 #define _ANONYMOUS_UNION
@@ -256,6 +265,8 @@ extern "C" {
 #define DUMMYSTRUCTNAME5
 #endif
 
+#endif /* __ANONYMOUS_DEFINED */
+
 #ifndef NO_STRICT
 #ifndef STRICT
 #define STRICT 1
@@ -294,7 +305,7 @@ typedef long *LPLONG;
 typedef int *LPLONG;
 #endif
 typedef DWORD *PDWORD,*LPDWORD;
-typedef CONST void *PCVOID,*LPCVOID;
+typedef CONST void *LPCVOID;
 
 typedef unsigned int UINT,*PUINT,*LPUINT;
 
@@ -419,6 +430,10 @@ typedef struct tagPOINTS {
 	SHORT x;
 	SHORT y;
 } POINTS,*PPOINTS,*LPPOINTS;
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

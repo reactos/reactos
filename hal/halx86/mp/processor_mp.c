@@ -18,6 +18,19 @@
 #define NDEBUG
 #include <debug.h>
 
+KAFFINITY HalpActiveProcessors, HalpDefaultInterruptAffinity;
+ 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+HaliHaltSystem(VOID)
+{
+    /* Disable interrupts and halt the CPU */
+    _disable();
+    __halt();
+}
+
 /* FUNCTIONS *****************************************************************/
 
 VOID NTAPI

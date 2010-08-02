@@ -32,10 +32,12 @@ extern "C" {
     unsigned long UnwindFunc;
     unsigned long UnwindData[6];
   } _JUMP_BUFFER;
+
 #elif defined(__ia64__)
+
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
-    __int64 LowPart;
-    __int64 HighPart;
+    __MINGW_EXTENSION __int64 LowPart;
+    __MINGW_EXTENSION __int64 HighPart;
   } SETJMP_FLOAT128;
 
 #define _JBLEN 33
@@ -72,47 +74,49 @@ extern "C" {
     SETJMP_FLOAT128 FltS17;
     SETJMP_FLOAT128 FltS18;
     SETJMP_FLOAT128 FltS19;
-    __int64 FPSR;
-    __int64 StIIP;
-    __int64 BrS0;
-    __int64 BrS1;
-    __int64 BrS2;
-    __int64 BrS3;
-    __int64 BrS4;
-    __int64 IntS0;
-    __int64 IntS1;
-    __int64 IntS2;
-    __int64 IntS3;
-    __int64 RsBSP;
-    __int64 RsPFS;
-    __int64 ApUNAT;
-    __int64 ApLC;
-    __int64 IntSp;
-    __int64 IntNats;
-    __int64 Preds;
+    __MINGW_EXTENSION __int64 FPSR;
+    __MINGW_EXTENSION __int64 StIIP;
+    __MINGW_EXTENSION __int64 BrS0;
+    __MINGW_EXTENSION __int64 BrS1;
+    __MINGW_EXTENSION __int64 BrS2;
+    __MINGW_EXTENSION __int64 BrS3;
+    __MINGW_EXTENSION __int64 BrS4;
+    __MINGW_EXTENSION __int64 IntS0;
+    __MINGW_EXTENSION __int64 IntS1;
+    __MINGW_EXTENSION __int64 IntS2;
+    __MINGW_EXTENSION __int64 IntS3;
+    __MINGW_EXTENSION __int64 RsBSP;
+    __MINGW_EXTENSION __int64 RsPFS;
+    __MINGW_EXTENSION __int64 ApUNAT;
+    __MINGW_EXTENSION __int64 ApLC;
+    __MINGW_EXTENSION __int64 IntSp;
+    __MINGW_EXTENSION __int64 IntNats;
+    __MINGW_EXTENSION __int64 Preds;
 
   } _JUMP_BUFFER;
+
 #elif defined(__x86_64)
+
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
-    unsigned __int64 Part[2];
+    __MINGW_EXTENSION unsigned __int64 Part[2];
   } SETJMP_FLOAT128;
 
 #define _JBLEN 16
   typedef SETJMP_FLOAT128 _JBTYPE;
 
   typedef struct _JUMP_BUFFER {
-    unsigned __int64 Frame;
-    unsigned __int64 Rbx;
-    unsigned __int64 Rsp;
-    unsigned __int64 Rbp;
-    unsigned __int64 Rsi;
-    unsigned __int64 Rdi;
-    unsigned __int64 R12;
-    unsigned __int64 R13;
-    unsigned __int64 R14;
-    unsigned __int64 R15;
-    unsigned __int64 Rip;
-    unsigned __int64 Spare;
+    __MINGW_EXTENSION unsigned __int64 Frame;
+    __MINGW_EXTENSION unsigned __int64 Rbx;
+    __MINGW_EXTENSION unsigned __int64 Rsp;
+    __MINGW_EXTENSION unsigned __int64 Rbp;
+    __MINGW_EXTENSION unsigned __int64 Rsi;
+    __MINGW_EXTENSION unsigned __int64 Rdi;
+    __MINGW_EXTENSION unsigned __int64 R12;
+    __MINGW_EXTENSION unsigned __int64 R13;
+    __MINGW_EXTENSION unsigned __int64 R14;
+    __MINGW_EXTENSION unsigned __int64 R15;
+    __MINGW_EXTENSION unsigned __int64 Rip;
+    __MINGW_EXTENSION unsigned __int64 Spare;
     SETJMP_FLOAT128 Xmm6;
     SETJMP_FLOAT128 Xmm7;
     SETJMP_FLOAT128 Xmm8;
@@ -124,33 +128,44 @@ extern "C" {
     SETJMP_FLOAT128 Xmm14;
     SETJMP_FLOAT128 Xmm15;
   } _JUMP_BUFFER;
+
 #endif
+
 #ifndef _JMP_BUF_DEFINED
   typedef _JBTYPE jmp_buf[_JBLEN];
 #define _JMP_BUF_DEFINED
 #endif
 
-  void * __cdecl __attribute__ ((__nothrow__)) mingw_getsp(void);
-
+#ifdef _MSC_VER
+int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
+#else
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX
+#if defined(__x86_64)
+# define mingw_getsp() \
+  ({ void* value; __asm__ __volatile__("movq %%rsp, %[value]" : [value] "=r" (value)); value; })
+#elif defined(_X86_)
+# define mingw_getsp() \
+  ({ void* value; __asm__ __volatile__("movl %%esp, %[value]" : [value] "=r" (value)); value; })
+#endif
 #define setjmp(BUF) _setjmp((BUF),mingw_getsp())
-  int __cdecl __attribute__ ((__nothrow__)) _setjmp(jmp_buf _Buf,void *_Ctx);
+  int __cdecl __MINGW_NOTHROW _setjmp(jmp_buf _Buf,void *_Ctx);
 #else
 #undef setjmp
 #define setjmp(BUF) _setjmpex((BUF),mingw_getsp())
 #define setjmpex(BUF) _setjmpex((BUF),mingw_getsp())
-  int __cdecl __attribute__ ((__nothrow__)) _setjmpex(jmp_buf _Buf,void *_Ctx);
+  int __cdecl __MINGW_NOTHROW _setjmpex(jmp_buf _Buf,void *_Ctx);
 #endif
 #else
 #ifndef _INC_SETJMPEX
 #define setjmp _setjmp
 #endif
-  int __cdecl __attribute__ ((__nothrow__)) setjmp(jmp_buf _Buf);
+  int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
+#endif
 #endif
 
-  __declspec(noreturn) __attribute__ ((__nothrow__)) void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
-  __declspec(noreturn) __attribute__ ((__nothrow__)) void __cdecl longjmp(jmp_buf _Buf,int _Value);
+  __declspec(noreturn) __MINGW_NOTHROW void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
+  __declspec(noreturn) __MINGW_NOTHROW void __cdecl longjmp(jmp_buf _Buf,int _Value);
 
 #ifdef __cplusplus
 }

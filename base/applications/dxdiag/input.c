@@ -129,13 +129,13 @@ BOOL CALLBACK DirectInputEnumDevCb(
     ZeroMemory(&GuidPath, sizeof(DIPROPGUIDANDPATH));
     GuidPath.diph.dwSize = sizeof(DIPROPGUIDANDPATH);
     GuidPath.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-	GuidPath.diph.dwHow = DIPH_DEVICE;
+    GuidPath.diph.dwHow = DIPH_DEVICE;
     hResult = pDev->lpVtbl->GetProperty(pDev, DIPROP_GUIDANDPATH, (LPDIPROPHEADER)&GuidPath);
 
     ZeroMemory(&TypeName, sizeof(TypeName));
     TypeName.diph.dwSize = sizeof(TypeName);
     TypeName.diph.dwHeaderSize = sizeof(DIPROPHEADER);
-	TypeName.diph.dwHow = DIPH_DEVICE;
+    TypeName.diph.dwHow = DIPH_DEVICE;
     hResult = pDev->lpVtbl->GetProperty(pDev, DIPROP_GETPORTDISPLAYNAME, (LPDIPROPHEADER)&TypeName);
 
 
@@ -191,7 +191,7 @@ InitializeDirectInputDialog(HWND hwndDlg)
     Context.pObj = pObj;
     Context.hwndDlg = hwndDlg;
     InitListViewColumns(&Context);
-    hResult = pObj->lpVtbl->EnumDevices(pObj, DI8DEVCLASS_ALL, DirectInputEnumDevCb, (PVOID)&Context, DIEDFL_ALLDEVICES);
+    pObj->lpVtbl->EnumDevices(pObj, DI8DEVCLASS_ALL, DirectInputEnumDevCb, (PVOID)&Context, DIEDFL_ALLDEVICES);
 
     pObj->lpVtbl->Release(pObj);
 }

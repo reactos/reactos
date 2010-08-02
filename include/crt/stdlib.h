@@ -17,7 +17,11 @@ extern "C" {
 
 #ifndef NULL
 #ifdef __cplusplus
+#ifndef _WIN64
 #define NULL 0
+#else
+#define NULL 0LL
+#endif  /* W64 */
 #else
 #define NULL ((void *)0)
 #endif
@@ -92,22 +96,15 @@ extern "C" {
 
 #ifndef MB_CUR_MAX
 #define MB_CUR_MAX ___mb_cur_max_func()
-#ifndef __mb_cur_max
-#ifdef _MSVCRT_
-  extern int __mb_cur_max;
-#else
-#define __mb_cur_max	(*_imp____mb_cur_max)
-  extern int *_imp____mb_cur_max;
-#endif
-#endif
-#ifdef _MSVCRT_
-  extern int __mbcur_max;
-#define ___mb_cur_max_func() (__mb_cur_max)
-#else
-  extern int* _imp____mbcur_max;
-#define ___mb_cur_max_func() (*_imp____mb_cur_max)
-#endif
-#endif
+#ifdef _M_CEE_PURE
+  _CRTIMP int* __cdecl __p___mb_cur_max();
+  #define __mb_cur_max (*__p___mb_cur_max())
+#else /* !_M_CEE_PURE */
+  _CRTIMP extern int __mb_cur_max;
+#endif /* !_M_CEE_PURE */
+  _CRTIMP int __cdecl ___mb_cur_max_func(void);
+  _CRTIMP int __cdecl ___mb_cur_max_l_func(_locale_t);
+#endif /* !MB_CUR_MAX */
 
 #define __max(a,b) (((a) > (b)) ? (a) : (b))
 #define __min(a,b) (((a) < (b)) ? (a) : (b))
@@ -152,7 +149,7 @@ extern "C" {
   _CRTIMP extern char *_sys_errlist[];
   _CRTIMP extern int _sys_nerr;
 
-#if (defined(_X86_) && !defined(__x86_64))
+#if defined(_DLL) && defined(_M_IX86)
   _CRTIMP int *__cdecl __p___argc(void);
   _CRTIMP char ***__cdecl __p___argv(void);
   _CRTIMP wchar_t ***__cdecl __p___wargv(void);
@@ -161,138 +158,80 @@ extern "C" {
   _CRTIMP char **__cdecl __p__pgmptr(void);
   _CRTIMP wchar_t **__cdecl __p__wpgmptr(void);
 #endif
-#ifndef __argc
-#ifdef _MSVCRT_
-  extern int __argc;
-#else
-#define __argc (*_imp____argc)
-  extern int *_imp____argc;
-#endif
-#endif
-#ifndef __argv
-#ifdef _MSVCRT_
-  extern char **__argv;
-#else
-#define __argv	(*_imp____argv)
-  extern char ***_imp____argv;
-#endif
-#endif
-#ifndef __wargv
-#ifdef _MSVCRT_
-  extern wchar_t **__wargv;
-#else
-#define __wargv (*_imp____wargv)
-  extern wchar_t ***_imp____wargv;
-#endif
-#endif
 
-#ifdef _POSIX_
-  extern char **environ;
-#else
-#ifndef _environ
-#ifdef _MSVCRT_
-  extern char **_environ;
-#else
-#define _environ (*_imp___environ)
-  extern char ***_imp___environ;
-#endif
-#endif
+// FIXME: move inside _M_CEE_PURE section
+  _CRTIMP int *__cdecl __p___argc();
+  _CRTIMP char ***__cdecl __p___argv();
+  _CRTIMP wchar_t ***__cdecl __p___wargv();
+  _CRTIMP char ***__cdecl __p__environ();
+  _CRTIMP wchar_t ***__cdecl __p__wenviron();
+  _CRTIMP char **__cdecl __p__pgmptr();
+  _CRTIMP wchar_t **__cdecl __p__wpgmptr();
 
-#ifndef _wenviron
-#ifdef _MSVCRT_
-  extern wchar_t **_wenviron;
-#else
-#define _wenviron	(*_imp___wenviron)
-  extern wchar_t ***_imp___wenviron;
-#endif
-#endif
-#endif
-#ifndef _pgmptr
-#ifdef _MSVCRT_
-  extern char *_pgmptr;
-#else
-#define _pgmptr	(*_imp___pgmptr)
-  extern char **_imp___pgmptr;
-#endif
-#endif
+#ifdef _M_CEE_PURE
+  #define __argv (*__p___argv())
+  #define __argc (*__p___argc())
+  #define __wargv (*__p___wargv())
+  #define _environ   (*__p__environ())
+  #define _wenviron  (*__p__wenviron())
+  #define _pgmptr    (*__p__pgmptr())
+  #define _wpgmptr   (*__p__wpgmptr())
+#else /* !_M_CEE_PURE */
+  _CRTIMP extern int __argc;
+  _CRTIMP extern char **__argv;
+  _CRTIMP extern wchar_t **__wargv;
+  _CRTIMP extern char **_environ;
+  _CRTIMP extern wchar_t **_wenviron;
+  _CRTIMP extern char *_pgmptr;
+  _CRTIMP extern wchar_t *_wpgmptr;
+#endif /* !_M_CEE_PURE */
 
-#ifndef _wpgmptr
-#ifdef _MSVCRT_
-  extern wchar_t *_wpgmptr;
+  _CRTIMP errno_t __cdecl _get_environ(char***);
+  _CRTIMP errno_t __cdecl _get_wenviron(wchar_t***);
+  _CRTIMP errno_t __cdecl _get_pgmptr(char **_Value);
+  _CRTIMP errno_t __cdecl _get_wpgmptr(wchar_t **_Value);
+
+#ifdef _M_CEE_PURE
+  _CRTIMP int* __cdecl __p__fmode();
+  #define _fmode (*__p__fmode())
 #else
-#define _wpgmptr	(*_imp___wpgmptr)
-  extern wchar_t **_imp___wpgmptr;
-#endif
-#endif
-  errno_t __cdecl _get_pgmptr(char **_Value);
-  errno_t __cdecl _get_wpgmptr(wchar_t **_Value);
-#ifndef _fmode
-#ifdef _MSVCRT_
-  extern int _fmode;
-#else
-#define _fmode	(*_imp___fmode)
-  extern int *_imp___fmode;
-#endif
-#endif
+  _CRTIMP extern int _fmode;
+#endif /* !_M_CEE_PURE */
   _CRTIMP errno_t __cdecl _set_fmode(int _Mode);
   _CRTIMP errno_t __cdecl _get_fmode(int *_PMode);
 
-#ifndef _osplatform
-#ifdef _MSVCRT_
-  extern unsigned int _osplatform;
-#else
-#define _osplatform (*_imp___osplatform)
-  extern unsigned int *_imp___osplatform;
-#endif
-#endif
-
-#ifndef _osver
-#ifdef _MSVCRT_
-  extern unsigned int _osver;
-#else
-#define _osver	(*_imp___osver)
-  extern unsigned int *_imp___osver;
-#endif
-#endif
-
-#ifndef _winver
-#ifdef _MSVCRT_
-  extern unsigned int _winver;
-#else
-#define _winver	(*_imp___winver)
-  extern unsigned int *_imp___winver;
-#endif
-#endif
-
-#ifndef _winmajor
-#ifdef _MSVCRT_
-  extern unsigned int _winmajor;
-#else
-#define _winmajor	(*_imp___winmajor)
-  extern unsigned int *_imp___winmajor;
-#endif
-#endif
-
-#ifndef _winminor
-#ifdef _MSVCRT_
-  extern unsigned int _winminor;
-#else
-#define _winminor	(*_imp___winminor)
-  extern unsigned int *_imp___winminor;
-#endif
-#endif
+#ifdef _M_CEE_PURE
+  _CRTIMP unsigned int* __cdecl __p__osplatform();
+  _CRTIMP unsigned int* __cdecl __p__osver();
+  _CRTIMP unsigned int* __cdecl __p__winver();
+  _CRTIMP unsigned int* __cdecl __p__winmajor();
+  _CRTIMP unsigned int* __cdecl __p__winminor();
+#define _osplatform  (*__p__osplatform())
+#define _osver       (*__p__osver())
+#define _winver      (*__p__winver())
+#define _winmajor    (*__p__winmajor())
+#define _winminor    (*__p__winminor())
+#else /* !_M_CEE_PURE */
+  _CRTIMP extern unsigned int _osplatform;
+  _CRTIMP extern unsigned int _osver;
+  _CRTIMP extern unsigned int _winver;
+  _CRTIMP extern unsigned int _winmajor;
+  _CRTIMP extern unsigned int _winminor;
+#endif /* !_M_CEE_PURE */
 
   errno_t __cdecl _get_osplatform(unsigned int *_Value);
   errno_t __cdecl _get_osver(unsigned int *_Value);
   errno_t __cdecl _get_winver(unsigned int *_Value);
   errno_t __cdecl _get_winmajor(unsigned int *_Value);
   errno_t __cdecl _get_winminor(unsigned int *_Value);
+
 #ifndef _countof
 #ifndef __cplusplus
 #define _countof(_Array) (sizeof(_Array) / sizeof(_Array[0]))
 #else
   extern "C++" {
-    template <typename _CountofType,size_t _SizeOfArray> char (*__countof_helper(UNALIGNED _CountofType (&_Array)[_SizeOfArray]))[_SizeOfArray];
+    template <typename _CountofType,size_t _SizeOfArray> 
+       char (*__countof_helper(/*UNALIGNED*/ _CountofType (&_Array)[_SizeOfArray]))[_SizeOfArray];
 #define _countof(_Array) sizeof(*__countof_helper(_Array))
   }
 #endif
@@ -304,7 +243,7 @@ extern "C" {
   _CRTIMP __declspec(noreturn) void __cdecl _exit(int _Code);
 #if !defined __NO_ISOCEXT /* extern stub in static libmingwex.a */
   /* C99 function name */
-  void __cdecl __declspec(noreturn) _Exit(int); /* Declare to get noreturn attribute.  */
+  __declspec(noreturn) void __cdecl _Exit(int); /* Declare to get noreturn attribute.  */
   __CRT_INLINE void __cdecl _Exit(int status)
   {  _exit(status); }
 #endif
@@ -312,7 +251,7 @@ extern "C" {
 #pragma push_macro("abort")
 #undef abort
 #endif
-  void __cdecl __declspec(noreturn) abort(void);
+  __declspec(noreturn) void __cdecl abort(void);
 #if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("abort")
 #endif
@@ -327,7 +266,7 @@ extern "C" {
 #endif
 
 #if _INTEGRAL_MAX_BITS >= 64
-  __int64 __cdecl _abs64(__int64);
+  __MINGW_EXTENSION __int64 __cdecl _abs64(__int64);
 #endif
   int __cdecl atexit(void (__cdecl *)(void));
 #ifndef _CRT_ATOF_DEFINED
@@ -344,23 +283,27 @@ extern "C" {
   void *__cdecl bsearch(const void *_Key,const void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
   void __cdecl qsort(void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
 #endif
+
+#if !defined(__GNUC__) && !defined(__clang)
   unsigned short __cdecl _byteswap_ushort(unsigned short _Short);
-  /*unsigned long __cdecl _byteswap_ulong (unsigned long _Long); */
+  unsigned long __cdecl _byteswap_ulong (unsigned long _Long);
 #if _INTEGRAL_MAX_BITS >= 64
-  unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64 _Int64);
+  __MINGW_EXTENSION unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64 _Int64);
 #endif
+#endif
+
   div_t __cdecl div(int _Numerator,int _Denominator);
   char *__cdecl getenv(const char *_VarName);
   _CRTIMP char *__cdecl _itoa(int _Value,char *_Dest,int _Radix);
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP char *__cdecl _i64toa(__int64 _Val,char *_DstBuf,int _Radix);
-  _CRTIMP char *__cdecl _ui64toa(unsigned __int64 _Val,char *_DstBuf,int _Radix);
-  _CRTIMP __int64 __cdecl _atoi64(const char *_String);
-  _CRTIMP __int64 __cdecl _atoi64_l(const char *_String,_locale_t _Locale);
-  _CRTIMP __int64 __cdecl _strtoi64(const char *_String,char **_EndPtr,int _Radix);
-  _CRTIMP __int64 __cdecl _strtoi64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
-  _CRTIMP unsigned __int64 __cdecl _strtoui64(const char *_String,char **_EndPtr,int _Radix);
-  _CRTIMP unsigned __int64 __cdecl _strtoui64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP char *__cdecl _i64toa(__int64 _Val,char *_DstBuf,int _Radix);
+  __MINGW_EXTENSION _CRTIMP char *__cdecl _ui64toa(unsigned __int64 _Val,char *_DstBuf,int _Radix);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _atoi64(const char *_String);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _atoi64_l(const char *_String,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _strtoi64(const char *_String,char **_EndPtr,int _Radix);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _strtoi64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP unsigned __int64 __cdecl _strtoui64(const char *_String,char **_EndPtr,int _Radix);
+  __MINGW_EXTENSION _CRTIMP unsigned __int64 __cdecl _strtoui64_l(const char *_String,char **_EndPtr,int _Radix,_locale_t _Locale);
 #endif
   ldiv_t __cdecl ldiv(long _Numerator,long _Denominator);
   _CRTIMP char *__cdecl _ltoa(long _Value,char *_Dest,int _Radix);
@@ -444,14 +387,14 @@ extern "C" {
   _CRTIMP long __cdecl _wtol_l(const wchar_t *_Str,_locale_t _Locale);
 
 #if _INTEGRAL_MAX_BITS >= 64
-  _CRTIMP wchar_t *__cdecl _i64tow(__int64 _Val,wchar_t *_DstBuf,int _Radix);
-  _CRTIMP wchar_t *__cdecl _ui64tow(unsigned __int64 _Val,wchar_t *_DstBuf,int _Radix);
-  _CRTIMP __int64 __cdecl _wtoi64(const wchar_t *_Str);
-  _CRTIMP __int64 __cdecl _wtoi64_l(const wchar_t *_Str,_locale_t _Locale);
-  _CRTIMP __int64 __cdecl _wcstoi64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
-  _CRTIMP __int64 __cdecl _wcstoi64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
-  _CRTIMP unsigned __int64 __cdecl _wcstoui64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
-  _CRTIMP unsigned __int64 __cdecl _wcstoui64_l(const wchar_t *_Str ,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP wchar_t *__cdecl _i64tow(__int64 _Val,wchar_t *_DstBuf,int _Radix);
+  __MINGW_EXTENSION _CRTIMP wchar_t *__cdecl _ui64tow(unsigned __int64 _Val,wchar_t *_DstBuf,int _Radix);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wtoi64(const wchar_t *_Str);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wtoi64_l(const wchar_t *_Str,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wcstoi64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
+  __MINGW_EXTENSION _CRTIMP __int64 __cdecl _wcstoi64_l(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
+  __MINGW_EXTENSION _CRTIMP unsigned __int64 __cdecl _wcstoui64(const wchar_t *_Str,wchar_t **_EndPtr,int _Radix);
+  __MINGW_EXTENSION _CRTIMP unsigned __int64 __cdecl _wcstoui64_l(const wchar_t *_Str ,wchar_t **_EndPtr,int _Radix,_locale_t _Locale);
 #endif
 #endif
 
@@ -477,13 +420,15 @@ extern "C" {
   void __cdecl perror(const char *_ErrMsg);
 #endif
   _CRTIMP int __cdecl _putenv(const char *_EnvString);
+#if !defined(__GNUC__) && !defined(__clang)
   unsigned int __cdecl _rotl(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
-  unsigned __int64 __cdecl _rotl64(unsigned __int64 _Val,int _Shift);
+  __MINGW_EXTENSION unsigned __int64 __cdecl _rotl64(unsigned __int64 _Val,int _Shift);
 #endif
   unsigned int __cdecl _rotr(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
-  unsigned __int64 __cdecl _rotr64(unsigned __int64 _Val,int _Shift);
+  __MINGW_EXTENSION unsigned __int64 __cdecl _rotr64(unsigned __int64 _Val,int _Shift);
+#endif
 #endif
   _CRTIMP void __cdecl _searchenv(const char *_Filename,const char *_EnvVar,char *_ResultPath);
   _CRTIMP void __cdecl _splitpath(const char *_FullPath,char *_Drive,char *_Dir,char *_Filename,char *_Ext);
@@ -526,46 +471,48 @@ extern "C" {
 #define sys_errlist _sys_errlist
 #define sys_nerr _sys_nerr
 #define environ _environ
-  char *__cdecl ecvt(double _Val,int _NumOfDigits,int *_PtDec,int *_PtSign);
-  char *__cdecl fcvt(double _Val,int _NumOfDec,int *_PtDec,int *_PtSign);
-  char *__cdecl gcvt(double _Val,int _NumOfDigits,char *_DstBuf);
-  char *__cdecl itoa(int _Val,char *_DstBuf,int _Radix);
-  char *__cdecl ltoa(long _Val,char *_DstBuf,int _Radix);
-  int __cdecl putenv(const char *_EnvString);
-  void __cdecl swab(char *_Buf1,char *_Buf2,int _SizeInBytes);
-  char *__cdecl ultoa(unsigned long _Val,char *_Dstbuf,int _Radix);
+  _CRTIMP char *__cdecl ecvt(double _Val,int _NumOfDigits,int *_PtDec,int *_PtSign);
+  _CRTIMP char *__cdecl fcvt(double _Val,int _NumOfDec,int *_PtDec,int *_PtSign);
+  _CRTIMP char *__cdecl gcvt(double _Val,int _NumOfDigits,char *_DstBuf);
+  _CRTIMP char *__cdecl itoa(int _Val,char *_DstBuf,int _Radix);
+  _CRTIMP char *__cdecl ltoa(long _Val,char *_DstBuf,int _Radix);
+  _CRTIMP int __cdecl putenv(const char *_EnvString);
+  _CRTIMP void __cdecl swab(char *_Buf1,char *_Buf2,int _SizeInBytes);
+  _CRTIMP char *__cdecl ultoa(unsigned long _Val,char *_Dstbuf,int _Radix);
   onexit_t __cdecl onexit(onexit_t _Func);
 #endif
 #endif
 
 #if !defined __NO_ISOCEXT /* externs in static libmingwex.a */
 
-  typedef struct { long long quot, rem; } lldiv_t;
+  __MINGW_EXTENSION typedef struct { long long quot, rem; } lldiv_t;
 
-  lldiv_t __cdecl lldiv(long long, long long);
+  __MINGW_EXTENSION lldiv_t __cdecl lldiv(long long, long long);
 
-  __CRT_INLINE long long __cdecl llabs(long long _j) { return (_j >= 0 ? _j : -_j); }
+#ifndef _MSC_VER
+  __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(long long _j) { return (_j >= 0 ? _j : -_j); }
+#endif
 
-  long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);
-  unsigned long long  __cdecl strtoull(const char* __restrict__, char** __restrict__, int);
+  __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);
+  __MINGW_EXTENSION unsigned long long  __cdecl strtoull(const char* __restrict__, char** __restrict__, int);
 
   /* these are stubs for MS _i64 versions */
-  long long  __cdecl atoll (const char *);
+  __MINGW_EXTENSION long long  __cdecl atoll (const char *);
 
 #ifndef __STRICT_ANSI__
-  long long  __cdecl wtoll (const wchar_t *);
-  char *__cdecl lltoa (long long, char *, int);
-  char *__cdecl ulltoa (unsigned long long , char *, int);
-  wchar_t *__cdecl lltow (long long, wchar_t *, int);
-  wchar_t *__cdecl ulltow (unsigned long long, wchar_t *, int);
+  __MINGW_EXTENSION long long  __cdecl wtoll (const wchar_t *);
+  __MINGW_EXTENSION char *__cdecl lltoa (long long, char *, int);
+  __MINGW_EXTENSION char *__cdecl ulltoa (unsigned long long , char *, int);
+  __MINGW_EXTENSION wchar_t *__cdecl lltow (long long, wchar_t *, int);
+  __MINGW_EXTENSION wchar_t *__cdecl ulltow (unsigned long long, wchar_t *, int);
 
   /* __CRT_INLINE using non-ansi functions */
-  __CRT_INLINE long long  __cdecl atoll (const char * _c) { return _atoi64 (_c); }
-  __CRT_INLINE char *__cdecl lltoa (long long _n, char * _c, int _i) { return _i64toa (_n, _c, _i); }
-  __CRT_INLINE char *__cdecl ulltoa (unsigned long long _n, char * _c, int _i) { return _ui64toa (_n, _c, _i); }
-  __CRT_INLINE long long  __cdecl wtoll (const wchar_t * _w) { return _wtoi64 (_w); }
-  __CRT_INLINE wchar_t *__cdecl lltow (long long _n, wchar_t * _w, int _i) { return _i64tow (_n, _w, _i); }
-  __CRT_INLINE wchar_t *__cdecl ulltow (unsigned long long _n, wchar_t * _w, int _i) { return _ui64tow (_n, _w, _i); }
+  __MINGW_EXTENSION __CRT_INLINE long long  __cdecl atoll (const char * _c) { return _atoi64 (_c); }
+  __MINGW_EXTENSION __CRT_INLINE char *__cdecl lltoa (long long _n, char * _c, int _i) { return _i64toa (_n, _c, _i); }
+  __MINGW_EXTENSION __CRT_INLINE char *__cdecl ulltoa (unsigned long long _n, char * _c, int _i) { return _ui64toa (_n, _c, _i); }
+  __MINGW_EXTENSION __CRT_INLINE long long  __cdecl wtoll (const wchar_t * _w) { return _wtoi64 (_w); }
+  __MINGW_EXTENSION __CRT_INLINE wchar_t *__cdecl lltow (long long _n, wchar_t * _w, int _i) { return _i64tow (_n, _w, _i); }
+  __MINGW_EXTENSION __CRT_INLINE wchar_t *__cdecl ulltow (unsigned long long _n, wchar_t * _w, int _i) { return _ui64tow (_n, _w, _i); }
 #endif /* (__STRICT_ANSI__)  */
 
 #endif /* !__NO_ISOCEXT */

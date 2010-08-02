@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -269,8 +269,8 @@ TrayClockWnd_UpdateWnd(IN OUT PTRAY_CLOCK_WND_DATA This)
             NMHDR nmh;
 
             nmh.hwndFrom = This->hWnd;
-            nmh.idFrom = GetWindowLong(This->hWnd,
-                                       GWL_ID);
+            nmh.idFrom = GetWindowLongPtr(This->hWnd,
+                                          GWL_ID);
             nmh.code = NTNWM_REALIGN;
 
             SendMessage(This->hWndNotify,
@@ -716,11 +716,11 @@ TrayNotifyWnd_UpdateStyle(IN OUT PTRAY_NOTIFY_WND_DATA This)
     RECT rcClient = { 0, 0, 0, 0 };
 
     if (AdjustWindowRectEx(&rcClient,
-                           GetWindowLong(This->hWnd,
-                                         GWL_STYLE),
+                           GetWindowLongPtr(This->hWnd,
+                                            GWL_STYLE),
                            FALSE,
-                           GetWindowLong(This->hWnd,
-                                         GWL_EXSTYLE)))
+                           GetWindowLongPtr(This->hWnd,
+                                            GWL_EXSTYLE)))
     {
         This->szNonClient.cx = rcClient.right - rcClient.left;
         This->szNonClient.cy = rcClient.bottom - rcClient.top;

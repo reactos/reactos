@@ -4,7 +4,7 @@
  * FILE:            hal/halx86/generic/misc.c
  * PURPOSE:         Miscellanous Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -83,7 +83,7 @@ HalHandleNMI(IN PVOID NmiInfo)
 /*
  * @implemented
  */
-BOOLEAN
+UCHAR
 FASTCALL
 HalSystemVectorDispatchEntry(IN ULONG Vector,
                              OUT PKINTERRUPT_ROUTINE **FlatDispatch,

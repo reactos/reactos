@@ -5,8 +5,14 @@
 		<xi:include href="crt/crt.rbuild" />
 		<xi:include href="crt/libcntpr.rbuild" />
 	</directory>
+	<directory name="delayimp">
+		<xi:include href="delayimp/delayimp.rbuild" />
+	</directory>
 	<directory name="dxguid">
 		<xi:include href="dxguid/dxguid.rbuild" />
+	</directory>
+	<directory name="ioevent">
+		<xi:include href="ioevent/ioevent.rbuild" />
 	</directory>
 	<directory name="nt">
 		<xi:include href="nt/nt.rbuild" />

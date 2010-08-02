@@ -23,7 +23,7 @@ extern FT_Library gftlibrary;
 typedef struct
 {
     FT_UInt index;
-    FT_ULong charcode;
+    FT_ULong code;
 } FTFD_CHARPAIR;
 
 typedef struct
@@ -41,6 +41,7 @@ typedef struct
 {
     IFIMETRICS ifim;
     BYTE ajCharSet[16];
+    FONTSIM fontsim;
     WCHAR wszFamilyName[LF_FACESIZE];
     WCHAR wszFaceName[LF_FACESIZE];
     WCHAR wszStyleName[MAX_STYLESIZE];
@@ -50,13 +51,6 @@ typedef struct
 
 ULONG
 DbgPrint(IN PCHAR Format, IN ...);
-
-static __inline__
-void
-DbgBreakPoint(void)
-{
-    asm volatile ("int $3");
-}
 
 DHPDEV
 APIENTRY

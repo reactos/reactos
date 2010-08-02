@@ -43,7 +43,7 @@ NtCreateDebugObject(
     OUT PHANDLE DebugHandle,
     IN ACCESS_MASK DesiredAccess,
     IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN BOOLEAN KillProcessOnExit
+    IN ULONG Flags
 );
 
 NTSYSCALLAPI
@@ -99,7 +99,7 @@ ZwCreateDebugObject(
     OUT PHANDLE DebugHandle,
     IN ACCESS_MASK DesiredAccess,
     IN POBJECT_ATTRIBUTES ObjectAttributes,
-    IN BOOLEAN KillProcessOnExit
+    IN ULONG Flags
 );
 
 NTSYSAPI

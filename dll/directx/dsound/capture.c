@@ -428,7 +428,7 @@ DSOUND_capture_callback(HWAVEIN hwi, UINT msg, DWORD_PTR dwUser, DWORD_PTR dw1,
 	    if (This->state == STATE_STARTING)
 		This->state = STATE_CAPTURING;
 	    capture_CheckNotify(Moi, (DWORD_PTR)This->pwave[index].lpData - (DWORD_PTR)This->buffer, This->pwave[index].dwBufferLength);
-	    This->index = (++This->index) % This->nrofpwaves;
+	    This->index = (This->index + 1) % This->nrofpwaves;
 	    if ( (This->index == 0) && !(This->capture_buffer->flags & DSCBSTART_LOOPING) ) {
 		TRACE("end of buffer\n");
 		This->state = STATE_STOPPED;

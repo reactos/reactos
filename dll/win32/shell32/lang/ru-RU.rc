@@ -156,7 +156,7 @@ BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
 	LTEXT "Введите имя программы, папки, документа или ресурс Интернета, и ReactOS откроет их.", 12289, 36, 11, 182, 18
 	LTEXT "&Открыть:", 12305, 5, 39, 34, 10
-	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 40, 37, 183, 100
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 40, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "Отмена", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "Об&зор...", 12288, 170, 63, 50, 14, WS_TABSTOP
@@ -271,32 +271,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Тип:", -1, 15, 49, 40, 10
-	LTEXT "", 14002, 110, 49, 100, 10
+	LTEXT "", 14001, 110, 49, 100, 10
 
 	LTEXT "Файловая система:", -1, 15, 68, 86, 10
-	LTEXT "", 14003, 110, 68, 100, 10
+	LTEXT "", 14002, 110, 68, 100, 10
 
 	CONTROL "", 14013, "STATIC", SS_OWNERDRAW | SS_NOTIFY | SS_SUNKEN, 5, 90, 10, 10
 	LTEXT "Занято:", -1, 25, 90, 78, 10
-	LTEXT "", 14004, 110, 90, 120, 10
-	LTEXT "", 14005, 200, 90, 40, 10
+	LTEXT "", 14003, 110, 90, 120, 10
+	LTEXT "", 14004, 200, 90, 40, 10
 
 	CONTROL "", 14014, "STATIC", SS_OWNERDRAW | SS_NOTIFY | SS_SUNKEN, 5, 105, 10, 10
 	LTEXT "Свободно:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14005, 110, 105, 120, 10
+	LTEXT "", 14006, 200, 105, 40, 10
 
 	LTEXT "Емкость:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14007, 110, 125, 120, 10
+	LTEXT "", 14008, 200, 125, 40, 10
 
 	CONTROL "", 14015, "STATIC", SS_OWNERDRAW | SS_NOTIFY | SS_SUNKEN, 20, 140, 200, 20
 
-	LTEXT "Диск %s", 14010, 100, 170, 52, 10
-	PUSHBUTTON "Очистка диска", 14011, 166, 175, 64, 15, WS_TABSTOP
-	CHECKBOX "&Сжимать для экономии места", 14012, 15, 205, 180, 10, WS_DISABLED
+	LTEXT "Диск %s", 14009, 100, 170, 52, 10
+	PUSHBUTTON "Очистка диска", 14010, 166, 175, 64, 15, WS_TABSTOP
+	CHECKBOX "&Сжимать для экономии места", 14011, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "Разрешить &индексирование диска для быстрого поиска", 14012, 15, 220, 216, 10, WS_DISABLED
 END
 
@@ -358,7 +358,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Выбор программы"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -664,6 +664,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Вы действительно хотите перезагрузить ReactOS?"
 	IDS_SHUTDOWN_TITLE          "Выключить питание"
 	IDS_SHUTDOWN_PROMPT         "Закончить работу с ReactOS?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Главное меню\\Программы"
@@ -747,4 +749,7 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Установить новый шрифт..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Выделяемый по умолчанию размер"
+	IDS_COPY_OF                 "Copy of"
+
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 END

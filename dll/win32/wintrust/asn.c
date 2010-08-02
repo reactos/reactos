@@ -969,7 +969,7 @@ static BOOL CRYPT_AsnEncodeInteger(DWORD dwCertEncodingType,
     return ret;
 }
 
-BOOL WINAPI CRYPT_AsnEncodeInt(DWORD dwCertEncodingType,
+static BOOL WINAPI CRYPT_AsnEncodeInt(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const void *pvStructInfo, BYTE *pbEncoded,
  DWORD *pcbEncoded)
 {
@@ -1348,7 +1348,7 @@ static BOOL CRYPT_AsnDecodeSPCLinkInternal(DWORD dwCertEncodingType,
                     link->dwLinkChoice = SPC_FILE_LINK_CHOICE;
                     for (i = 0; i < dataLen / sizeof(WCHAR); i++)
                         link->u.pwszFile[i] =
-                         hton16(*(WORD *)(ptr + i * sizeof(WCHAR)));
+                         hton16(*(const WORD *)(ptr + i * sizeof(WCHAR)));
                     link->u.pwszFile[realDataLen / sizeof(WCHAR)] = '\0';
                     TRACE("returning file %s\n", debugstr_w(link->u.pwszFile));
                 }
@@ -1465,6 +1465,15 @@ struct AsnDecodeSequenceItem
     DWORD                 size;
 };
 
+/* Align up to a DWORD_PTR boundary
+ */
+#define ALIGN_DWORD_PTR(x) (((x) + sizeof(DWORD_PTR) - 1) & ~(sizeof(DWORD_PTR) - 1))
+
+#define FINALMEMBERSIZE(s, member) (sizeof(s) - offsetof(s, member))
+#define MEMBERSIZE(s, member, nextmember) \
+    (offsetof(s, nextmember) - offsetof(s, member))
+
+
 /* Decodes the items in a sequence, where the items are described in items,
  * the encoded data are in pbEncoded with length cbEncoded.  Decodes into
  * pvStructInfo.  nextData is a pointer to the memory location at which the
@@ -1516,10 +1525,13 @@ static BOOL CRYPT_AsnDecodeSequenceItems(DWORD dwCertEncodingType,
                          : NULL, &items[i].size);
                         if (ret)
                         {
-                            /* Account for alignment padding */
-                            if (items[i].size % sizeof(DWORD))
-                                items[i].size += sizeof(DWORD) -
-                                 items[i].size % sizeof(DWORD);
+                            if (items[i].size < items[i].minSize)
+                                items[i].size = items[i].minSize;
+                            else if (items[i].size > items[i].minSize)
+                            {
+                                /* Account for alignment padding */
+                                items[i].size = ALIGN_DWORD_PTR(items[i].size);
+                            }
                             TRACE("item %d size: %d\n", i, items[i].size);
                             if (nextData && items[i].hasPointer &&
                              items[i].size > items[i].minSize)
@@ -2079,15 +2091,6 @@ BOOL WINAPI WVTAsn1SpcIndirectDataContentDecode(DWORD dwCertEncodingType,
     return ret;
 }
 
-BOOL WINAPI WVTAsn1SpcSpOpusInfoDecode(DWORD dwCertEncodingType,
- LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
- void *pvStructInfo, DWORD *pcbStructInfo)
-{
-    FIXME("%p, %d, %08x, %p, %d\n", pbEncoded, cbEncoded, dwFlags,
-     pvStructInfo, *pcbStructInfo);
-    return FALSE;
-}
-
 static BOOL WINAPI CRYPT_AsnDecodeBMPString(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
  void *pvStructInfo, DWORD *pcbStructInfo)
@@ -2126,44 +2129,63 @@ static BOOL WINAPI CRYPT_AsnDecodeBMPString(DWORD dwCertEncodingType,
     return ret;
 }
 
-static BOOL CRYPT_AsnDecodeInteger(const BYTE *pbEncoded,
- DWORD cbEncoded, DWORD dwFlags, void *pvStructInfo, DWORD *pcbStructInfo)
+static BOOL WINAPI CRYPT_AsnDecodeProgramName(DWORD dwCertEncodingType,
+ LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
+ void *pvStructInfo, DWORD *pcbStructInfo)
 {
-    BOOL ret;
-    DWORD bytesNeeded, dataLen;
+    BOOL ret = FALSE;
+    DWORD dataLen;
+
+    TRACE("(%p, %d, %08x, %p, %d)\n", pbEncoded, cbEncoded, dwFlags,
+     pvStructInfo, pvStructInfo ? *pcbStructInfo : 0);
 
     if ((ret = CRYPT_GetLen(pbEncoded, cbEncoded, &dataLen)))
     {
         BYTE lenBytes = GET_LEN_BYTES(pbEncoded[1]);
 
-        bytesNeeded = dataLen + sizeof(CRYPT_INTEGER_BLOB);
-        if (!pvStructInfo)
-            *pcbStructInfo = bytesNeeded;
-        else if (*pcbStructInfo < bytesNeeded)
-        {
-            *pcbStructInfo = bytesNeeded;
-            SetLastError(ERROR_MORE_DATA);
-            ret = FALSE;
-        }
-        else
-        {
-            CRYPT_INTEGER_BLOB *blob = pvStructInfo;
-
-            *pcbStructInfo = bytesNeeded;
-            blob->cbData = dataLen;
-            assert(blob->pbData);
-            if (blob->cbData)
-            {
-                DWORD i;
-
-                for (i = 0; i < blob->cbData; i++)
-                {
-                    blob->pbData[i] = *(pbEncoded + 1 + lenBytes +
-                     dataLen - i - 1);
-                }
-            }
-        }
+        ret = CRYPT_AsnDecodeBMPString(dwCertEncodingType, lpszStructType,
+         pbEncoded + 1 + lenBytes, dataLen, dwFlags, pvStructInfo,
+         pcbStructInfo);
     }
+    return ret;
+}
+
+BOOL WINAPI WVTAsn1SpcSpOpusInfoDecode(DWORD dwCertEncodingType,
+ LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
+ void *pvStructInfo, DWORD *pcbStructInfo)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%p, %d, %08x, %p, %d\n", pbEncoded, cbEncoded, dwFlags,
+     pvStructInfo, *pcbStructInfo);
+
+    __TRY
+    {
+        struct AsnDecodeSequenceItem items[] = {
+         { ASN_CONSTRUCTOR | ASN_CONTEXT,
+           offsetof(SPC_SP_OPUS_INFO, pwszProgramName),
+           CRYPT_AsnDecodeProgramName, sizeof(LPCWSTR), TRUE, TRUE,
+           offsetof(SPC_SP_OPUS_INFO, pwszProgramName), 0 },
+         { ASN_CONSTRUCTOR | ASN_CONTEXT | 1,
+           offsetof(SPC_SP_OPUS_INFO, pMoreInfo),
+           CRYPT_AsnDecodeSPCLinkPointer, sizeof(PSPC_LINK), TRUE, TRUE,
+           offsetof(SPC_SP_OPUS_INFO, pMoreInfo), 0 },
+         { ASN_CONSTRUCTOR | ASN_CONTEXT | 2,
+           offsetof(SPC_SP_OPUS_INFO, pPublisherInfo),
+           CRYPT_AsnDecodeSPCLinkPointer, sizeof(PSPC_LINK), TRUE, TRUE,
+           offsetof(SPC_SP_OPUS_INFO, pPublisherInfo), 0 },
+        };
+
+        ret = CRYPT_AsnDecodeSequence(dwCertEncodingType, items,
+         sizeof(items) / sizeof(items[0]), pbEncoded, cbEncoded, dwFlags,
+         pvStructInfo, pcbStructInfo, NULL);
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        SetLastError(STATUS_ACCESS_VIOLATION);
+    }
+    __ENDTRY
+    TRACE("returning %d\n", ret);
     return ret;
 }
 
@@ -2173,15 +2195,18 @@ static BOOL WINAPI CRYPT_AsnDecodeInt(DWORD dwCertEncodingType,
  void *pvStructInfo, DWORD *pcbStructInfo)
 {
     BOOL ret;
-    BYTE buf[sizeof(CRYPT_INTEGER_BLOB) + sizeof(int)];
-    CRYPT_INTEGER_BLOB *blob = (CRYPT_INTEGER_BLOB *)buf;
-    DWORD size = sizeof(buf);
+    DWORD dataLen;
 
-    blob->pbData = buf + sizeof(CRYPT_INTEGER_BLOB);
-    ret = CRYPT_AsnDecodeInteger(pbEncoded, cbEncoded, 0, buf, &size);
-    if (ret)
+    if ((ret = CRYPT_GetLen(pbEncoded, cbEncoded, &dataLen)))
     {
-        if (!pvStructInfo)
+        BYTE lenBytes = GET_LEN_BYTES(pbEncoded[1]);
+
+        if (dataLen > sizeof(int))
+        {
+            SetLastError(CRYPT_E_ASN1_LARGE);
+            ret = FALSE;
+        }
+        else if (!pvStructInfo)
             *pcbStructInfo = sizeof(int);
         else if (*pcbStructInfo < sizeof(int))
         {
@@ -2195,23 +2220,21 @@ static BOOL WINAPI CRYPT_AsnDecodeInt(DWORD dwCertEncodingType,
             DWORD i;
 
             *pcbStructInfo = sizeof(int);
-            if (blob->pbData[blob->cbData - 1] & 0x80)
+            if (dataLen && pbEncoded[1 + lenBytes] & 0x80)
             {
                 /* initialize to a negative value to sign-extend */
                 val = -1;
             }
             else
                 val = 0;
-            for (i = 0; i < blob->cbData; i++)
+            for (i = 0; i < dataLen; i++)
             {
                 val <<= 8;
-                val |= blob->pbData[blob->cbData - i - 1];
+                val |= pbEncoded[1 + lenBytes + i];
             }
             memcpy(pvStructInfo, &val, sizeof(int));
         }
     }
-    else if (GetLastError() == ERROR_MORE_DATA)
-        SetLastError(CRYPT_E_ASN1_LARGE);
     return ret;
 }
 
@@ -2231,7 +2254,7 @@ BOOL WINAPI WVTAsn1CatMemberInfoDecode(DWORD dwCertEncodingType,
            CRYPT_AsnDecodeBMPString, sizeof(LPWSTR), FALSE, TRUE,
            offsetof(CAT_MEMBERINFO, pwszSubjGuid), 0 },
          { ASN_INTEGER, offsetof(CAT_MEMBERINFO, dwCertVersion),
-           CRYPT_AsnDecodeInt, sizeof(DWORD),
+           CRYPT_AsnDecodeInt, FINALMEMBERSIZE(CAT_MEMBERINFO, dwCertVersion),
            FALSE, FALSE, 0, 0 },
         };
 
@@ -2264,7 +2287,8 @@ BOOL WINAPI WVTAsn1CatNameValueDecode(DWORD dwCertEncodingType,
            CRYPT_AsnDecodeBMPString, sizeof(LPWSTR), FALSE, TRUE,
            offsetof(CAT_NAMEVALUE, pwszTag), 0 },
          { ASN_INTEGER, offsetof(CAT_NAMEVALUE, fdwFlags),
-           CRYPT_AsnDecodeInt, sizeof(DWORD), FALSE, FALSE, 0, 0 },
+           CRYPT_AsnDecodeInt, MEMBERSIZE(CAT_NAMEVALUE, fdwFlags, Value),
+           FALSE, FALSE, 0, 0 },
          { ASN_OCTETSTRING, offsetof(CAT_NAMEVALUE, Value),
            CRYPT_AsnDecodeOctets, sizeof(CRYPT_DER_BLOB), FALSE, TRUE,
            offsetof(CAT_NAMEVALUE, Value.pbData), 0 },
@@ -2338,9 +2362,11 @@ BOOL WINAPI WVTAsn1SpcFinancialCriteriaInfoDecode(DWORD dwCertEncodingType,
     {
         struct AsnDecodeSequenceItem items[] = {
          { ASN_BOOL, offsetof(SPC_FINANCIAL_CRITERIA, fFinancialInfoAvailable),
-           CRYPT_AsnDecodeBool, sizeof(BOOL), FALSE, FALSE, 0, 0 },
+           CRYPT_AsnDecodeBool, MEMBERSIZE(SPC_FINANCIAL_CRITERIA,
+           fFinancialInfoAvailable, fMeetsCriteria), FALSE, FALSE, 0, 0 },
          { ASN_BOOL, offsetof(SPC_FINANCIAL_CRITERIA, fMeetsCriteria),
-           CRYPT_AsnDecodeBool, sizeof(BOOL), FALSE, FALSE, 0, 0 },
+           CRYPT_AsnDecodeBool, FINALMEMBERSIZE(SPC_FINANCIAL_CRITERIA,
+           fMeetsCriteria), FALSE, FALSE, 0, 0 },
         };
 
         ret = CRYPT_AsnDecodeSequence(dwCertEncodingType, items,

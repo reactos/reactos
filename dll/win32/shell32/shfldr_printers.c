@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -35,7 +35,7 @@ typedef struct
     LPITEMIDLIST       pidl;
 } IExtractIconWImpl;
 
-#define _IExtractIconA_Offset ((int)(&(((IExtractIconWImpl*)0)->lpvtblExtractIconA)))
+#define _IExtractIconA_Offset ((INT_PTR)(&(((IExtractIconWImpl*)0)->lpvtblExtractIconA)))
 #define _ICOM_THIS_From_IExtractIconA(class, name) class* This = (class*)(((char*)name)-_IExtractIconA_Offset);
 
 static shvheader PrinterSFHeader[] = {
@@ -146,7 +146,7 @@ static HRESULT WINAPI IEI_Printers_fnGetIconLocation(
         *pwFlags = 0;
 
     lstrcpynW(szIconFile, swShell32Name, cchMax);
-    *piIndex = -IDI_SHELL_PRINTER; /* FIXME: other icons for default, network, print to file */
+    *piIndex = -IDI_SHELL_PRINTERS_FOLDER; /* FIXME: other icons for default, network, print to file */
 
     TRACE("-- %s %x\n", debugstr_w(szIconFile), *piIndex);
     return NOERROR;
@@ -305,7 +305,7 @@ typedef struct {
     int dwAttributes;        /* attributes returned by GetAttributesOf FIXME: use it */
 } IGenericSFImpl;
 
-#define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
+#define _IPersistFolder2_Offset ((INT_PTR)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
 
 #define _IUnknown_(This)    (IShellFolder*)&(This->lpVtbl)
@@ -333,7 +333,7 @@ static HRESULT WINAPI ISF_Printers_fnQueryInterface(
         IsEqualIID (riid, &IID_IShellFolder) ||
         IsEqualIID (riid, &IID_IShellFolder2))
     {
-        *ppvObj = This;
+        *ppvObj = _IShellFolder_(This);
     }
 
     else if (IsEqualIID (riid, &IID_IPersist) ||
@@ -609,12 +609,20 @@ static HRESULT WINAPI ISF_Printers_fnCreateViewObject (IShellFolder2 * iface,
 static HRESULT WINAPI ISF_Printers_fnGetAttributesOf (IShellFolder2 * iface,
                 UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
+    static const DWORD dwPrintersAttributes =
+        SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
+    HRESULT hr = S_OK;
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
     FIXME ("(%p)->(cidl=%d apidl=%p mask=0x%08lx): stub\n",
            This, cidl, apidl, *rgfInOut);
 
-    return E_NOTIMPL;
+    *rgfInOut &= dwPrintersAttributes;
+
+    *rgfInOut &= ~SFGAO_VALIDATE;
+
+    TRACE ("-- result=0x%08x\n", *rgfInOut);
+    return hr;
 }
 
 /**************************************************************************
@@ -669,6 +677,7 @@ static HRESULT WINAPI ISF_Printers_fnGetUIObjectOf (IShellFolder2 * iface,
 static HRESULT WINAPI ISF_Printers_fnGetDisplayNameOf (IShellFolder2 * iface,
                 LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
+    LPWSTR pszName;
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     PIDLPrinterStruct * p;
 
@@ -676,12 +685,34 @@ static HRESULT WINAPI ISF_Printers_fnGetDisplayNameOf (IShellFolder2 * iface,
     pdump (pidl);
 
     if (!strRet)
+    {
+        WARN("no strRet\n");
         return E_INVALIDARG;
+    }
+
+    if (_ILIsPrinter(pidl))
+    {
+        pszName = CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+        if (!pszName)
+            return E_OUTOFMEMORY;
+
+        if (LoadStringW(shell32_hInstance, IDS_PRINTERS, pszName, MAX_PATH))
+        {
+            pszName[MAX_PATH-1] = L'\0';
+            strRet->uType = STRRET_WSTR;
+            strRet->u.pOleStr = pszName;
+            return S_OK;
+        }
+        CoTaskMemFree(pszName);
+        return E_FAIL;
+    }
 
     p = _ILGetPrinterStruct(pidl);
     if (!p)
+    {
+        WARN("no printer struct\n");
         return E_INVALIDARG;
-
+    }
     strRet->u.pOleStr = SHAlloc(p->offsServer * sizeof(WCHAR));
     if (!strRet->u.pOleStr)
         return E_OUTOFMEMORY;

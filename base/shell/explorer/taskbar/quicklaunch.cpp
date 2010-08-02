@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -154,8 +154,6 @@ void QuickLaunchBar::AddShortcuts()
 	}
 	DeleteDC(hdc);
 
-	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&sep);
-
 	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
@@ -254,9 +252,7 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (entry) {	// entry is NULL for desktop switch buttons
 			HRESULT hr = entry->do_context_menu(_hwnd, screen_pt, _cm_ifs);
 
-			if (SUCCEEDED(hr))
-				AddShortcuts();	//refresh();
-			else
+			if (!SUCCEEDED(hr))
 				CHECKERROR(hr);
 		} else
 			goto def;

@@ -1,5 +1,8 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_NLS_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_NLS_H
+#pragma once
+
+#ifdef _WIN64
+#define InitializeSListHead RtlInitializeSListHead
+#endif
 
 NTSTATUS
 NTAPI
@@ -15,7 +18,5 @@ NTAPI
 RtlInitializeRangeListPackage(
     VOID
 );
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_NLS_H */
 
 /* EOF */

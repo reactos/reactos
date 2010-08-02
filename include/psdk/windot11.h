@@ -1,7 +1,9 @@
 #ifndef __WINDOT11_H__
 #define __WINDOT11_H__
 
+#ifndef _NTDDNDIS_
 #include <ntddndis.h>
+#endif
 #include <wlantypes.h>
 
 /* Enumerations */

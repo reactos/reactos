@@ -19,12 +19,12 @@ double _copysign (double __d, double __s)
   union
   {
       double*	__d;
-      double_t*	  d;
+      double_s*	  d;
   } d;
   union
   {
       double*	__s;
-      double_t*   s;
+      double_s*   s;
   } s;
   d.__d = &__d;
   s.__s = &__s;

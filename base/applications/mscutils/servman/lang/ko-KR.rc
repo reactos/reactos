@@ -109,8 +109,8 @@ CAPTION "종속성"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
-  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
   LTEXT "일부 서비스는 다른 서비스나 시스템 드라이버, 그룹 등에 종속되어 있습니다. 만약 시스템 컴포넌트가 정지되었거나 제대로 동작하지 않는다면, 종속된 서비스에 영향을 끼칠 수 있습니다.", IDC_STATIC,8, 7, 238, 26
   LTEXT "이 서비스는 다음 컴포넌트에 종속되어 있습니다.", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
@@ -194,7 +194,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "모든 서비스: %d"
-  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
+  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef __WINE_WINE_WINGDI16_H
@@ -26,6 +26,24 @@
 #include <wine/winbase16.h>
 
 #include <pshpack1.h>
+
+typedef struct
+{
+    INT16  lfHeight;
+    INT16  lfWidth;
+    INT16  lfEscapement;
+    INT16  lfOrientation;
+    INT16  lfWeight;
+    BYTE   lfItalic;
+    BYTE   lfUnderline;
+    BYTE   lfStrikeOut;
+    BYTE   lfCharSet;
+    BYTE   lfOutPrecision;
+    BYTE   lfClipPrecision;
+    BYTE   lfQuality;
+    BYTE   lfPitchAndFamily;
+    CHAR   lfFaceName[LF_FACESIZE];
+} LOGFONT16, *LPLOGFONT16;
 
 typedef struct
 {

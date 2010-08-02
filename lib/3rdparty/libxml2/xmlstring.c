@@ -366,7 +366,7 @@ xmlStrstr(const xmlChar *str, const xmlChar *val) {
  */
 
 const xmlChar *
-xmlStrcasestr(const xmlChar *str, xmlChar *val) {
+xmlStrcasestr(const xmlChar *str, const xmlChar *val) {
     int n;
     
     if (str == NULL) return(NULL);

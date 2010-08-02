@@ -20,19 +20,23 @@ RealEntryPoint:
 	mov	gs, ax
 	mov ss, ax
 
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset CheckPoint0
+	call writestr	
+
 	/* Setup a real mode stack */
 	mov	sp, stack16
 
 	/* Zero BootDrive and BootPartition */
 	xor eax, eax
-	mov _BootDrive, eax
-	mov _BootPartition, eax
+	mov BootDrive, eax
+	mov BootPartition, eax
 
 	/* Store the boot drive */
-	mov _BootDrive, dl
+	mov BootDrive, dl
 
 	/* Store the boot partition */
-	mov _BootPartition, dh
+	mov BootPartition, dh
 
 	/* Load the GDT */
 	lgdt gdtptr
@@ -41,17 +45,88 @@ RealEntryPoint:
 
 	call x86_16_EnableA20
 
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset CheckPoint1
+	call writestr	
+	
 	call x86_16_BuildPageTables
+	
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset CheckPoint2
+	call writestr	
 
-	/* Switch to long mode */
+	/* Check if CPU supports CPUID */
+	
+	pushfd
+	pop eax
+	mov ebx, eax
+	xor eax, 0x00200000
+	push eax
+	popfd
+	pushfd
+	pop eax
+	cmp eax,ebx
+	jz NO_CPUID_SUPPORT_DETECTED
+	
+	/* CPUID support detected - getting the PAE/PGE */	
+
+	mov eax,1 // Fn0000_0001 - PAE in EDX[6]
+	cpuid
+	xor eax,eax
+	and edx,0x00a0
+	test edx,edx // are PAE and PGE bits set?
+	jz NO_X64_SUPPORT_DETECTED
+	
+	/* PAE and PGE are here */
+	
+	xor edx, edx
+	mov eax, 0x80000001
+	cpuid
+	and edx, 0x20000000
+	test edx,edx
+	jz NO_X64_SUPPORT_DETECTED
+	
+	/* X64 Processor */
+	
+	/* checkPoint Charlie - where it all began... */
+	mov si, offset CheckPoint3
+	call writestr	
+
+	jmp switch64
+	
+NO_X64_SUPPORT_DETECTED:
+	mov  si, offset NotAnX64Processor	// Loading message
+	call writestr
+	jmp fail
+
+NO_CPUID_SUPPORT_DETECTED:
+	mov  si, offset NoCPUIDSupport	// Loading message
+   	call writestr
+
+fail:
+	jmp fail
+	nop
+	nop
+
+switch64:
 	call x86_16_SwitchToLong
 
 	.code64
 
+//	mov ax, LMODE_DS
+//	mov ds, ax
+//	mov word ptr ds:[0xb8000], 0x0e00 + '1'
+
 	/* GO! */
 	xor rcx, rcx
-	call _BootMain
+	call BootMain
 
+	/* Checkpoint */
+//	mov ax, LMODE_DS
+//	mov ds, ax
+//	mov word ptr ds:[0xb8002], 0x0e02 + '2'
+
+	
 	/* Return into real mode */
 	call x86_64_SwitchToReal
 	.code16
@@ -90,7 +165,6 @@ x86_16_EnableA20:
 	popa
 	ret
 
-
 /*
  * We define 512 2MB pages at the start of memory, so we can access the first 
  * 1 GB as if paging was disabled
@@ -100,14 +174,14 @@ x86_16_BuildPageTables:
 	push es
 
 	/* Get segment of pml4 */
-	mov eax, offset _pml4_startup
+	mov eax, offset pml4_startup
 	shr eax, 4
 	mov es, ax
 	cld
 	xor di, di
 
 	/* One entry in the PML4 pointing to PDP */
-	mov eax, offset _pdp_startup
+	mov eax, offset pdp_startup
 	or eax, 0x00f
 	stosd
 	/* clear rest */
@@ -116,7 +190,7 @@ x86_16_BuildPageTables:
 	rep stosd
 
 	/* One entry in the PDP pointing to PD */
-	mov eax, offset _pd_startup
+	mov eax, offset pd_startup
 	or eax, 0x00f
 	stosd
 	/* clear rest */
@@ -143,9 +217,39 @@ Bpt2:
 	popa
 	ret
 
+/*
+ * writechr,writestr
+ *
+ *
+ */
+writestr:
+	pushfd
+	pushad
+.top:
+	lodsb
+	and	al, al
+	jz	.end
+	call	writechr
+	jmp	short .top
+.end:
+	popad
+	popfd
+	ret
+	
+
+writechr:
+	pushf
+	pusha
+	mov	ah, 0x0E
+	xor	bx, bx
+	int	0x10
+	popa
+	popf
+	ret
 
 //.global x86_16_SwitchToLong
 x86_16_SwitchToLong:
+	
 	cli
 
 	xor	ax,ax
@@ -164,7 +268,7 @@ x86_16_SwitchToLong:
 	mov eax, 0x00a0			// Set PAE and PGE: 10100000b
 	mov cr4, eax
 
-	mov edx, offset _pml4_startup // Point cr3 at PML4
+	mov edx, offset pml4_startup // Point cr3 at PML4
 	mov cr3, edx
 
 	mov ecx, 0xC0000080		// Specify EFER MSR
@@ -190,8 +294,7 @@ LongCat:
 	/* Now return in long mode! */
 	ret
 
-
-/** 64 But functions **********************************************************/
+/** 64 Bit functions **********************************************************/
 .code64
 
 .global x86_64_SwitchToReal
@@ -203,25 +306,40 @@ x86_64_SwitchToReal:
 	/* Save 64-bit stack pointer */
 	mov	stack64, rsp
 
-	/* Step 1 - deactivate long mode, by disabling paging */
-	mov rax, cr0
-	and rax, 0x000000007fffffff //~0x80000000
-	mov cr0, rax
+//	mov ax, LMODE_DS
+//	mov ds, ax
+//	mov word ptr ds:[0xb8004], 0x0e00 + '3'
+
+	/* Step 1 - jump to compatibility segment */
+    ljmp jumpvector
+
+jumpvector:
+	.long	SwitchToReal1
+	.word	CMODE_CS
+
+SwitchToReal1:
+.code32
+
+//	mov word ptr ds:[0xb8006], 0x0e00 + '4'
+
+	/* Step 2 - deactivate long mode, by disabling paging */
+	mov eax, cr0
+	and eax, 0x000000007fffffff //~0x80000000
+	mov cr0, eax
 
 	/* Step 2 - disable long mode in EFER MSR */
-	mov rcx, 0xC0000080		// Specify EFER MSR
-	rdmsr					
-	and eax, ~0x00000100	// Disable EFER.LME
-	wrmsr
+//	mov ecx, 0xC0000080		// Specify EFER MSR
+//	rdmsr					
+//	and eax, ~0x00000100	// Disable EFER.LME
+//	wrmsr
 
-	.code32
-	/* jmp to 16-bit segment to set the limit correctly */
+	/* Step 3 - jump to 16-bit segment to set the limit correctly */
 	jmp RMODE_CS: offset SwitchToReal2
 
 SwitchToReal2:
 	.code16
 
-	/* Step 3 - Disable Protected Mode */
+	/* Step 4 - Disable Protected Mode */
 	mov eax, cr0
 	and eax, ~0x00000001
 	mov cr0, eax
@@ -230,6 +348,11 @@ SwitchToReal2:
 	jmp 0:offset BeReal
 
 BeReal:
+	/* Checkpoint */
+//	mov ax, 0xb800
+//	mov fs, ax
+//	mov word ptr fs:[0x0C], 0x0e00 + '7'
+
 	/* Restore segment registers */
 	mov ax, 0
 	mov ds, ax
@@ -238,7 +361,7 @@ BeReal:
 	mov gs, ax
 	mov ss, ax
 
-	/* Rstore 16 bit stack */
+	/* Restore 16 bit stack */
 	mov sp, stack16
 
 //	lidt	rmode_idtptr	/* Load IDTR with real mode value */
@@ -266,28 +389,60 @@ stack64:
 code64ret:
 	.quad 0
 
+.p2align	2
 gdt:
 	.quad 0x0000000000000000 /* 00: NULL descriptor */
 	.quad 0x0000000000000000 /* 08:  */
 	.quad 0x0020980000000000 /* 10: long mode cs */
-	.quad 0x0000900000000000 /* 18: long mode ds */
+	.quad 0x00cff3000000ffff /* 18: long mode ds */
 	.word	0xFFFF, 0x0000, 0x9E00, 0x0000 /* 16-bit real mode CS */
 	.word	0xFFFF, 0x0000, 0x9200, 0x0000 /* 16-bit real mode DS */
+	.quad 0x00CF9B000000FFFF /* 30: compat mode cs */
 
 /* GDT table pointer */
 gdtptr:
-	.word	0x2f		/* Limit */
+	.word	0x37		/* Limit */
 	.long	gdt			/* Base Address */
 
 
-.global _BootDrive
-_BootDrive:
+.global BootDrive
+BootDrive:
     .long 0
     
-.global _BootPartition
-_BootPartition:
+.global BootPartition
+BootPartition:
     .long 0
 
+.global NotAnX64Processor
+NotAnX64Processor:
+	.ascii "FreeLoader: No x64-compatible CPU detected! Exiting..."
+	.byte 0x0d, 0x0a, 0
+
+.global NoCPUIDSupport
+NoCPUIDSupport:
+	.ascii "FreeLoader: No CPUID instruction support detected! Exiting..."
+	.byte 0x0d, 0x0a, 0
+
+/////////////////////////// Checkpoint messages ///////////////////////////////
+.global CheckPoint0
+CheckPoint0:
+	.ascii "Starting FreeLoader..."
+	.byte 0x0d, 0x0a, 0
+	
+.global CheckPoint1
+CheckPoint1:
+	.ascii "FreeLoader[16-bit]: building page tables..."
+	.byte 0x0d, 0x0a, 0
+	
+.global CheckPoint2
+CheckPoint2:
+	.ascii "FreeLoader[16-bit]: checking CPU for x64 long mode..."
+	.byte 0x0d, 0x0a, 0
+
+.global CheckPoint3
+CheckPoint3:
+	.ascii "FreeLoader: Switching to x64 long mode..."
+	.byte 0x0d, 0x0a, 0
 
 ///////////////////////////////////////////////////////////////////////////////
 

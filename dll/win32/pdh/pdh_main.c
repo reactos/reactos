@@ -600,6 +600,24 @@ PDH_STATUS WINAPI PdhCollectQueryDataWithTime( PDH_HQUERY handle, LONGLONG *time
 }
 
 /***********************************************************************
+ *              PdhExpandWildCardPathA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandWildCardPathA( LPCSTR szDataSource, LPCSTR szWildCardPath, LPSTR mszExpandedPathList, LPDWORD pcchPathListLength, DWORD dwFlags )
+{
+    FIXME("%s, %s, %p, %p, 0x%x: stub\n", debugstr_a(szDataSource), debugstr_a(szWildCardPath), mszExpandedPathList, pcchPathListLength, dwFlags);
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhExpandWildCardPathW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhExpandWildCardPathW( LPCWSTR szDataSource, LPCWSTR szWildCardPath, LPWSTR mszExpandedPathList, LPDWORD pcchPathListLength, DWORD dwFlags )
+{
+    FIXME("%s, %s, %p, %p, 0x%x: stub\n", debugstr_w(szDataSource), debugstr_w(szWildCardPath), mszExpandedPathList, pcchPathListLength, dwFlags);
+    return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
  *              PdhGetCounterInfoA   (PDH.@)
  */
 PDH_STATUS WINAPI PdhGetCounterInfoA( PDH_HCOUNTER handle, BOOLEAN text, LPDWORD size, PPDH_COUNTER_INFO_A info )
@@ -704,6 +722,19 @@ PDH_STATUS WINAPI PdhGetCounterTimeBase( PDH_HCOUNTER handle, LONGLONG *base )
     *base = counter->base;
 
     LeaveCriticalSection( &pdh_handle_cs );
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ *              PdhGetDllVersion   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhGetDllVersion( LPDWORD version )
+{
+    if (!version)
+        return PDH_INVALID_ARGUMENT;
+
+    *version = PDH_VERSION;
+
     return ERROR_SUCCESS;
 }
 
@@ -1061,6 +1092,112 @@ PDH_STATUS WINAPI PdhValidatePathExW( PDH_HLOG source, LPCWSTR path )
 }
 
 /***********************************************************************
+ *              PdhMakeCounterPathA   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhMakeCounterPathA( PDH_COUNTER_PATH_ELEMENTS_A *e, LPSTR buffer,
+                                       LPDWORD buflen, DWORD flags )
+{
+    PDH_STATUS ret = PDH_MEMORY_ALLOCATION_FAILURE;
+    PDH_COUNTER_PATH_ELEMENTS_W eW;
+    WCHAR *bufferW;
+    DWORD buflenW;
+
+    TRACE("%p %p %p 0x%08x\n", e, buffer, buflen, flags);
+
+    if (!e || !buflen) return PDH_INVALID_ARGUMENT;
+
+    memset( &eW, 0, sizeof(eW) );
+    if (e->szMachineName    && !(eW.szMachineName    = pdh_strdup_aw( e->szMachineName ))) goto done;
+    if (e->szObjectName     && !(eW.szObjectName     = pdh_strdup_aw( e->szObjectName ))) goto done;
+    if (e->szInstanceName   && !(eW.szInstanceName   = pdh_strdup_aw( e->szInstanceName ))) goto done;
+    if (e->szParentInstance && !(eW.szParentInstance = pdh_strdup_aw( e->szParentInstance ))) goto done;
+    if (e->szCounterName    && !(eW.szCounterName    = pdh_strdup_aw( e->szCounterName ))) goto done;
+    eW.dwInstanceIndex = e->dwInstanceIndex;
+
+    buflenW = 0;
+    ret = PdhMakeCounterPathW( &eW, NULL, &buflenW, flags );
+    if (ret == PDH_MORE_DATA)
+    {
+        if ((bufferW = heap_alloc( buflenW * sizeof(WCHAR) )))
+        {
+            if (!(ret = PdhMakeCounterPathW( &eW, bufferW, &buflenW, flags )))
+            {
+                int len = WideCharToMultiByte(CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL);
+                if (*buflen >= len) WideCharToMultiByte(CP_ACP, 0, bufferW, -1, buffer, *buflen, NULL, NULL);
+                else ret = PDH_MORE_DATA;
+                *buflen = len;
+            }
+            heap_free( bufferW );
+        }
+        else
+            ret = PDH_MEMORY_ALLOCATION_FAILURE;
+    }
+
+done:
+    heap_free( eW.szMachineName );
+    heap_free( eW.szObjectName );
+    heap_free( eW.szInstanceName );
+    heap_free( eW.szParentInstance );
+    heap_free( eW.szCounterName );
+    return ret;
+}
+
+/***********************************************************************
+ *              PdhMakeCounterPathW   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhMakeCounterPathW( PDH_COUNTER_PATH_ELEMENTS_W *e, LPWSTR buffer,
+                                       LPDWORD buflen, DWORD flags )
+{
+    static const WCHAR bslash[] = {'\\',0};
+    static const WCHAR fslash[] = {'/',0};
+    static const WCHAR lparen[] = {'(',0};
+    static const WCHAR rparen[] = {')',0};
+    static const WCHAR fmt[]    = {'#','%','u',0};
+
+    WCHAR path[PDH_MAX_COUNTER_NAME], instance[12];
+    PDH_STATUS ret = ERROR_SUCCESS;
+    DWORD len;
+
+    TRACE("%p %p %p 0x%08x\n", e, buffer, buflen, flags);
+
+    if (flags) FIXME("unimplemented flags 0x%08x\n", flags);
+
+    if (!e || !e->szCounterName || !e->szObjectName || !buflen)
+        return PDH_INVALID_ARGUMENT;
+
+    path[0] = 0;
+    if (e->szMachineName)
+    {
+        strcatW(path, bslash);
+        strcatW(path, bslash);
+        strcatW(path, e->szMachineName);
+    }
+    strcatW(path, bslash);
+    strcatW(path, e->szObjectName);
+    if (e->szInstanceName)
+    {
+        strcatW(path, lparen);
+        if (e->szParentInstance)
+        {
+            strcatW(path, e->szParentInstance);
+            strcatW(path, fslash);
+        }
+        strcatW(path, e->szInstanceName);
+        sprintfW(instance, fmt, e->dwInstanceIndex);
+        strcatW(path, instance);
+        strcatW(path, rparen);
+    }
+    strcatW(path, bslash);
+    strcatW(path, e->szCounterName);
+
+    len = strlenW(path) + 1;
+    if (*buflen >= len) strcpyW(buffer, path);
+    else ret = PDH_MORE_DATA;
+    *buflen = len;
+    return ret;
+}
+
+/***********************************************************************
  *              PdhEnumObjectItemsA   (PDH.@)
  */
 PDH_STATUS WINAPI PdhEnumObjectItemsA(LPCSTR szDataSource, LPCSTR szMachineName, LPCSTR szObjectName,
@@ -1086,4 +1223,13 @@ PDH_STATUS WINAPI PdhEnumObjectItemsW(LPCWSTR szDataSource, LPCWSTR szMachineNam
          pcchInstanceListLength, dwDetailLevel, dwFlags);
 
     return PDH_NOT_IMPLEMENTED;
+}
+
+/***********************************************************************
+ *              PdhSetDefaultRealTimeDataSource   (PDH.@)
+ */
+PDH_STATUS WINAPI PdhSetDefaultRealTimeDataSource( DWORD source )
+{
+    FIXME("%u\n", source);
+    return ERROR_SUCCESS;
 }

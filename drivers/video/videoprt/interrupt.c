@@ -4,19 +4,18 @@
  * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -107,42 +106,68 @@ IntVideoPortSetupInterrupt(
 /*
  * @implemented
  */
-
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
+#ifndef _M_AMD64
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+    BOOLEAN InterruptValid;
 
-   TRACE_(VIDEOPRT, "VideoPortEnableInterrupt\n");
+    /* Get the device extension */
+    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    /* Fail if the driver didn't register an ISR */
+    if (!DeviceExtension->DriverExtension->InitializationData.HwInterrupt)
+    {
+        /* No ISR, no interrupts */
+        return ERROR_INVALID_FUNCTION;
+    }
 
-   Status = HalEnableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0,
-      DeviceExtension->InterruptLevel);
+    /* Re-enable the interrupt and return */
+    InterruptValid = HalEnableSystemInterrupt(DeviceExtension->InterruptVector,
+                                              0,
+                                              DeviceExtension->InterruptLevel);
 
-   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
+    /* Make sure the interrupt was valid */
+    ASSERT(InterruptValid == TRUE);
+
+    /* Return to caller */
+    return NO_ERROR;
+#else
+    /* FIXME: Function still present? If so what to use instead of HalEnableSystemInterrupt? */
+    UNIMPLEMENTED;
+    return ERROR_INVALID_FUNCTION;
+#endif
 }
 
 /*
  * @implemented
  */
-
-VP_STATUS NTAPI
+VP_STATUS
+NTAPI
 VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
+#ifndef _M_AMD64
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-   TRACE_(VIDEOPRT, "VideoPortDisableInterrupt\n");
+    /* Get the device extension */
+    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    /* Fail if the driver didn't register an ISR */
+    if (!DeviceExtension->DriverExtension->InitializationData.HwInterrupt)
+    {
+        /* No ISR, no interrupts */
+        return ERROR_INVALID_FUNCTION;
+    }
 
-   Status = HalDisableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0);
-
-   return Status ? NO_ERROR : ERROR_INVALID_PARAMETER;
+    /* Disable the interrupt and return */
+    HalDisableSystemInterrupt(DeviceExtension->InterruptVector,
+                              0);
+    return NO_ERROR;
+#else
+    /* FIXME: Function still present? If so what to use instead of HalDisableSystemInterrupt? */
+    UNIMPLEMENTED;
+    return ERROR_INVALID_FUNCTION;
+#endif
 }

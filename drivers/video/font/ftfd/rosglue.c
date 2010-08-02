@@ -8,17 +8,16 @@
  * NOTES:
  */
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <windef.h>
 #include <wingdi.h>
 #include <winddi.h>
-#include <stdarg.h>
-#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define TAG_FREETYPE  TAG('F', 'T', 'Y', 'P')
+#define TAG_FREETYPE  'PYTF'
 
 /*
  * First some generic routines

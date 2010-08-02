@@ -98,7 +98,7 @@ TH32FreeAllocatedResources(PRTL_DEBUG_INFORMATION HeapDebug,
   if(ProcThrdInfo != NULL)
   {
     NtFreeVirtualMemory(NtCurrentProcess(),
-                        ProcThrdInfo,
+                        &ProcThrdInfo,
                         &ProcThrdInfoSize,
                         MEM_RELEASE);
   }
@@ -225,8 +225,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
   HANDLE hSection;
   PTH32SNAPSHOT Snapshot;
   ULONG_PTR DataOffset;
-  ULONG ViewSize, i;
-  ULONG nProcesses = 0, nThreads = 0, nHeaps = 0, nModules = 0;
+  SIZE_T ViewSize;
+  ULONG i, nProcesses = 0, nThreads = 0, nHeaps = 0, nModules = 0;
   ULONG RequiredSnapshotSize = sizeof(TH32SNAPSHOT);
   PRTL_PROCESS_HEAPS hi = NULL;
   PRTL_PROCESS_MODULES mi = NULL;
@@ -400,11 +400,11 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
 
       ProcessListEntry->dwSize = sizeof(PROCESSENTRY32W);
       ProcessListEntry->cntUsage = 0; /* no longer used */
-      ProcessListEntry->th32ProcessID = (ULONG)ProcessInfo->UniqueProcessId;
+      ProcessListEntry->th32ProcessID = (ULONG_PTR)ProcessInfo->UniqueProcessId;
       ProcessListEntry->th32DefaultHeapID = 0; /* no longer used */
       ProcessListEntry->th32ModuleID = 0; /* no longer used */
       ProcessListEntry->cntThreads = ProcessInfo->NumberOfThreads;
-      ProcessListEntry->th32ParentProcessID = (ULONG)ProcessInfo->InheritedFromUniqueProcessId;
+      ProcessListEntry->th32ParentProcessID = (ULONG_PTR)ProcessInfo->InheritedFromUniqueProcessId;
       ProcessListEntry->pcPriClassBase = ProcessInfo->BasePriority;
       ProcessListEntry->dwFlags = 0; /* no longer used */
       if(ProcessInfo->ImageName.Buffer != NULL)
@@ -447,8 +447,8 @@ TH32CreateSnapshotSectionInitialize(DWORD dwFlags,
       {
         ThreadListEntry->dwSize = sizeof(THREADENTRY32);
         ThreadListEntry->cntUsage = 0; /* no longer used */
-        ThreadListEntry->th32ThreadID = (ULONG)ThreadInfo->ClientId.UniqueThread;
-        ThreadListEntry->th32OwnerProcessID = (ULONG)ThreadInfo->ClientId.UniqueProcess;
+        ThreadListEntry->th32ThreadID = (ULONG_PTR)ThreadInfo->ClientId.UniqueThread;
+        ThreadListEntry->th32OwnerProcessID = (ULONG_PTR)ThreadInfo->ClientId.UniqueProcess;
         ThreadListEntry->tpBasePri = ThreadInfo->BasePriority;
         ThreadListEntry->tpDeltaPri = 0; /* no longer used */
         ThreadListEntry->dwFlags = 0; /* no longer used */
@@ -670,7 +670,7 @@ Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lphl, sizeof(HEAPLIST32));
@@ -724,7 +724,7 @@ Heap32ListNext(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lphl, sizeof(HEAPLIST32));
@@ -811,7 +811,7 @@ Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpme, sizeof(MODULEENTRY32W));
@@ -898,7 +898,7 @@ Module32NextW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpme, sizeof(MODULEENTRY32W));
@@ -985,7 +985,7 @@ Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lppe, sizeof(PROCESSENTRY32W));
@@ -1074,7 +1074,7 @@ Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lppe, sizeof(PROCESSENTRY32W));
@@ -1128,7 +1128,7 @@ Thread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpte, sizeof(THREADENTRY32));
@@ -1182,7 +1182,7 @@ Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
   PTH32SNAPSHOT Snapshot;
   LARGE_INTEGER SOffset;
-  ULONG ViewSize;
+  SIZE_T ViewSize;
   NTSTATUS Status;
 
   CHECK_PARAM_SIZE(lpte, sizeof(THREADENTRY32));
@@ -1233,7 +1233,7 @@ Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 BOOL
 WINAPI
 Toolhelp32ReadProcessMemory(DWORD th32ProcessID,  LPCVOID lpBaseAddress,
-                            LPVOID lpBuffer, DWORD cbRead, LPDWORD lpNumberOfBytesRead)
+                            LPVOID lpBuffer, SIZE_T cbRead, SIZE_T* lpNumberOfBytesRead)
 {
   HANDLE hProcess = OpenProcess(PROCESS_VM_READ, FALSE, th32ProcessID);
   if(hProcess != NULL)

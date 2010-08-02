@@ -8,6 +8,5 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>riched20</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

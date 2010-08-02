@@ -17,11 +17,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __TRAYICON_H
-#define __TRAYICON_H
+#pragma once
 
 #define WM_ONTRAYICON   WM_USER + 5
 
@@ -29,5 +28,3 @@ HICON	TrayIcon_GetProcessorUsageIcon(void);
 BOOL	TrayIcon_ShellAddTrayIcon(void);
 BOOL	TrayIcon_ShellRemoveTrayIcon(void);
 BOOL	TrayIcon_ShellUpdateTrayIcon(void);
-
-#endif /* __TRAYICON_H */

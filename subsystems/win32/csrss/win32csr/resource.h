@@ -6,8 +6,7 @@
  * PURPOSE:         Resource #defines
  */
 
-#ifndef WIN32CSR_RESOURCE_H_INCLUDED
-#define WIN32CSR_RESOURCE_H_INCLUDED
+#pragma once
 
 #define IDD_END_NOW  10
 #define IDD_NOT_RESPONDING 11
@@ -48,9 +47,5 @@
 #define IDS_SCROLLPAGE_DOWN 308
 #define IDS_SCROLLUP 309
 #define IDS_SCROLLDOWN 310
-
-
-
-#endif /* WIN32CSR_RESOURCE_H_INCLUDED */
 
 /* EOF */

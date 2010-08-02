@@ -3,7 +3,7 @@
  * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/blue/blue.c
  * PURPOSE:              Console (blue screen) device driver
- * PROGRAMMER:           Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PROGRAMMER:           Eric Kohl
  * UPDATE HISTORY:
  *                       ??? Created
  */

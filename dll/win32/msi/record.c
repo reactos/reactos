@@ -64,7 +64,7 @@ static void MSI_FreeField( MSIFIELD *field )
     }
 }
 
-static void MSI_CloseRecord( MSIOBJECTHDR *arg )
+void MSI_CloseRecord( MSIOBJECTHDR *arg )
 {
     MSIRECORD *rec = (MSIRECORD *) arg;
     UINT i;
@@ -444,7 +444,6 @@ UINT MSI_RecordGetStringW(MSIRECORD *rec, UINT iField,
             lstrcpynW(szValue, rec->fields[iField].u.szwVal, *pcchValue);
         break;
     case MSIFIELD_NULL:
-        len = 1;
         if( szValue && *pcchValue > 0 )
             szValue[0] = 0;
     default:
@@ -662,7 +661,7 @@ static UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
     return ERROR_SUCCESS;
 }
 
-static UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
+UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
 {
     if ( (iField == 0) || (iField > rec->count) )
         return ERROR_INVALID_PARAMETER;
@@ -674,7 +673,7 @@ static UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
     return ERROR_SUCCESS;
 }
 
-static UINT MSI_RecordSetStreamFromFileW(MSIRECORD *rec, UINT iField, LPCWSTR szFilename)
+UINT MSI_RecordSetStreamFromFileW(MSIRECORD *rec, UINT iField, LPCWSTR szFilename)
 {
     IStream *stm = NULL;
     HRESULT r;
@@ -764,6 +763,12 @@ UINT MSI_RecordReadStream(MSIRECORD *rec, UINT iField, char *buf, LPDWORD sz)
 
     if( iField > rec->count)
         return ERROR_INVALID_PARAMETER;
+
+    if ( rec->fields[iField].type == MSIFIELD_NULL )
+    {
+        *sz = 0;
+        return ERROR_INVALID_DATA;
+    }
 
     if( rec->fields[iField].type != MSIFIELD_STREAM )
         return ERROR_INVALID_DATATYPE;
@@ -925,6 +930,7 @@ MSIRECORD *MSI_CloneRecord(MSIRECORD *rec)
                 msiobj_release(&clone->hdr);
                 return NULL;
             }
+            clone->fields[i].type = MSIFIELD_STREAM;
         }
         else
         {

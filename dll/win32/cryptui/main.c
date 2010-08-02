@@ -104,6 +104,7 @@ static void add_cert_to_view(HWND lv, PCCERT_CONTEXT cert, DWORD *allocatedLen,
     WCHAR dateFmt[80]; /* sufficient for LOCALE_SSHORTDATE */
     WCHAR date[80];
     SYSTEMTIME sysTime;
+    LPWSTR none;
 
     item.mask = LVIF_IMAGE | LVIF_PARAM | LVIF_TEXT;
     item.iItem = SendMessageW(lv, LVM_GETITEMCOUNT, 0, 0);
@@ -155,8 +156,9 @@ static void add_cert_to_view(HWND lv, PCCERT_CONTEXT cert, DWORD *allocatedLen,
     item.iSubItem = 2;
     SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
 
-    len = CertGetNameStringW(cert, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL,
-     NULL, 0);
+    if (!CertGetCertificateContextProperty(cert, CERT_FRIENDLY_NAME_PROP_ID,
+     NULL, &len))
+        len = LoadStringW(hInstance, IDS_FRIENDLY_NAME_NONE, (LPWSTR)&none, 0);
     if (len > *allocatedLen)
     {
         HeapFree(GetProcessHeap(), 0, *str);
@@ -166,9 +168,11 @@ static void add_cert_to_view(HWND lv, PCCERT_CONTEXT cert, DWORD *allocatedLen,
     }
     if (*str)
     {
-        CertGetNameStringW(cert, CERT_NAME_FRIENDLY_DISPLAY_TYPE, 0, NULL,
-         *str, len);
-        item.pszText = *str;
+        if (!CertGetCertificateContextProperty(cert, CERT_FRIENDLY_NAME_PROP_ID,
+         *str, &len))
+            item.pszText = none;
+        else
+            item.pszText = *str;
         item.iSubItem = 3;
         SendMessageW(lv, LVM_SETITEMTEXTW, item.iItem, (LPARAM)&item);
     }
@@ -348,6 +352,8 @@ static CERT_ENHKEY_USAGE *create_advanced_filter(void)
     return advancedUsage;
 }
 
+static int CALLBACK cert_mgr_sort_by_subject(LPARAM lp1, LPARAM lp2, LPARAM lp);
+
 static void show_store_certs(HWND hwnd, HCERTSTORE store)
 {
     HWND lv = GetDlgItem(hwnd, IDC_MGR_CERTS);
@@ -443,6 +449,8 @@ static void show_store_certs(HWND hwnd, HCERTSTORE store)
         HeapFree(GetProcessHeap(), 0, advanced->rgpszUsageIdentifier);
         HeapFree(GetProcessHeap(), 0, advanced);
     }
+    SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+     (LPARAM)cert_mgr_sort_by_subject);
 }
 
 static const WCHAR my[] = { 'M','y',0 };
@@ -1062,6 +1070,48 @@ static void cert_mgr_do_export(HWND hwnd)
     }
 }
 
+static int cert_mgr_sort_by_text(HWND lv, int col, int index1, int index2)
+{
+    LVITEMW item;
+    WCHAR buf1[MAX_STRING_LEN];
+    WCHAR buf2[MAX_STRING_LEN];
+
+    item.cchTextMax = sizeof(buf1) / sizeof(buf1[0]);
+    item.mask = LVIF_TEXT;
+    item.pszText = buf1;
+    item.iItem = index1;
+    item.iSubItem = col;
+    SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item);
+    item.pszText = buf2;
+    item.iItem = index2;
+    SendMessageW(lv, LVM_GETITEMW, 0, (LPARAM)&item);
+    return strcmpW(buf1, buf2);
+}
+
+static int CALLBACK cert_mgr_sort_by_subject(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    return cert_mgr_sort_by_text((HWND)lp, 0, lp1, lp2);
+}
+
+static int CALLBACK cert_mgr_sort_by_issuer(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    return cert_mgr_sort_by_text((HWND)lp, 1, lp1, lp2);
+}
+
+static int CALLBACK cert_mgr_sort_by_date(LPARAM lp1, LPARAM lp2, LPARAM lp)
+{
+    PCCERT_CONTEXT cert1 = (PCCERT_CONTEXT)lp1;
+    PCCERT_CONTEXT cert2 = (PCCERT_CONTEXT)lp2;
+    return CompareFileTime(&cert1->pCertInfo->NotAfter,
+     &cert2->pCertInfo->NotAfter);
+}
+
+static int CALLBACK cert_mgr_sort_by_friendly_name(LPARAM lp1, LPARAM lp2,
+ LPARAM lp)
+{
+    return cert_mgr_sort_by_text((HWND)lp, 3, lp1, lp2);
+}
+
 static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
  LPARAM lp)
 {
@@ -1139,6 +1189,35 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 
             if (lvk->wVKey == VK_DELETE)
                 cert_mgr_do_remove(hwnd);
+            break;
+        }
+        case LVN_COLUMNCLICK:
+        {
+            NMLISTVIEW *nmlv = (NMLISTVIEW *)lp;
+            HWND lv = GetDlgItem(hwnd, IDC_MGR_CERTS);
+
+            /* FIXME: doesn't support swapping sort order between ascending
+             * and descending.
+             */
+            switch (nmlv->iSubItem)
+            {
+            case 0:
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+                 (LPARAM)cert_mgr_sort_by_subject);
+                break;
+            case 1:
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+                (LPARAM)cert_mgr_sort_by_issuer);
+                break;
+            case 2:
+                SendMessageW(lv, LVM_SORTITEMS, 0,
+                 (LPARAM)cert_mgr_sort_by_date);
+                break;
+            case 3:
+                SendMessageW(lv, LVM_SORTITEMSEX, (WPARAM)lv,
+                 (LPARAM)cert_mgr_sort_by_friendly_name);
+                break;
+            }
             break;
         }
         }
@@ -1385,7 +1464,7 @@ static void enumerate_stores(HWND hwnd, CRYPTUI_ENUM_DATA *pEnumData)
 static void free_store_info(HWND tree)
 {
     HTREEITEM next = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_CHILD,
-     (LPARAM)NULL);
+     0);
 
     while (next)
     {
@@ -1473,7 +1552,7 @@ static LRESULT CALLBACK select_store_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         {
             HWND tree = GetDlgItem(hwnd, IDC_STORE_LIST);
             HTREEITEM selection = (HTREEITEM)SendMessageW(tree,
-             TVM_GETNEXTITEM, TVGN_CARET, (LPARAM)NULL);
+             TVM_GETNEXTITEM, TVGN_CARET, 0);
 
             selectInfo = (struct SelectStoreInfo *)GetWindowLongPtrW(hwnd,
              DWLP_USER);
@@ -2146,7 +2225,7 @@ static CRYPT_OBJID_BLOB *find_policy_qualifier(CERT_POLICIES_INFO *policies,
     return ret;
 }
 
-static WCHAR *get_cps_str_from_qualifier(CRYPT_OBJID_BLOB *qualifier)
+static WCHAR *get_cps_str_from_qualifier(const CRYPT_OBJID_BLOB *qualifier)
 {
     LPWSTR qualifierStr = NULL;
     CERT_NAME_VALUE *qualifierValue;
@@ -2167,7 +2246,7 @@ static WCHAR *get_cps_str_from_qualifier(CRYPT_OBJID_BLOB *qualifier)
     return qualifierStr;
 }
 
-static WCHAR *get_user_notice_from_qualifier(CRYPT_OBJID_BLOB *qualifier)
+static WCHAR *get_user_notice_from_qualifier(const CRYPT_OBJID_BLOB *qualifier)
 {
     LPWSTR str = NULL;
     CERT_POLICY_QUALIFIER_USER_NOTICE *qualifierValue;
@@ -2773,7 +2852,7 @@ static void add_v1_fields(HWND hwnd, struct detail_data *data)
         add_v1_field(hwnd, data, &v1_fields[i]);
 }
 
-static WCHAR *crypt_format_extension(PCERT_EXTENSION ext, DWORD formatStrType)
+static WCHAR *crypt_format_extension(const CERT_EXTENSION *ext, DWORD formatStrType)
 {
     WCHAR *str = NULL;
     DWORD size;
@@ -2788,7 +2867,7 @@ static WCHAR *crypt_format_extension(PCERT_EXTENSION ext, DWORD formatStrType)
     return str;
 }
 
-static WCHAR *field_format_extension_hex_with_ascii(PCERT_EXTENSION ext)
+static WCHAR *field_format_extension_hex_with_ascii(const CERT_EXTENSION *ext)
 {
     WCHAR *str = NULL;
 
@@ -3337,7 +3416,7 @@ static void show_cert_usages(HWND hwnd, struct edit_cert_data *data)
     DWORD size;
     RECT rc;
     LVCOLUMNW column;
-    PurposeSelection purposeSelection;
+    PurposeSelection purposeSelection = PurposeEnableAll;
 
     GetWindowRect(lv, &rc);
     column.mask = LVCF_WIDTH;
@@ -3986,7 +4065,7 @@ static void show_cert_chain(HWND hwnd, struct hierarchy_data *data)
     }
 }
 
-static void set_certificate_status(HWND hwnd, CRYPT_PROVIDER_CERT *cert)
+static void set_certificate_status(HWND hwnd, const CRYPT_PROVIDER_CERT *cert)
 {
     /* Select all the text in the control, the next update will replace it */
     SendMessageW(hwnd, EM_SETSEL, 0, -1);
@@ -4034,8 +4113,7 @@ static void show_dialog_for_selected_cert(HWND hwnd)
 
     memset(&item, 0, sizeof(item));
     item.mask = TVIF_HANDLE | TVIF_PARAM;
-    item.hItem = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_CARET,
-     (LPARAM)NULL);
+    item.hItem = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_CARET, 0);
     SendMessageW(tree, TVM_GETITEMW, 0, (LPARAM)&item);
     data = get_hierarchy_data_from_tree_item(tree, item.hItem);
     selection = lparam_to_index(data, item.lParam);
@@ -4137,7 +4215,7 @@ static LRESULT CALLBACK hierarchy_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         memset(&item, 0, sizeof(item));
         item.mask = TVIF_HANDLE | TVIF_PARAM;
         item.hItem = (HTREEITEM)SendMessageW(tree, TVM_GETNEXTITEM, TVGN_ROOT,
-         (LPARAM)NULL);
+         0);
         data = get_hierarchy_data_from_tree_item(tree, item.hItem);
         /* Delete the contents of the tree */
         SendMessageW(tree, TVM_DELETEITEM, 0, (LPARAM)TVI_ROOT);
@@ -4993,6 +5071,12 @@ static LRESULT CALLBACK import_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 
         data = (struct ImportWizData *)page->lParam;
         SetWindowLongPtrW(hwnd, DWLP_USER, (LPARAM)data);
+        if (data->fileName)
+        {
+            HWND fileNameEdit = GetDlgItem(hwnd, IDC_IMPORT_FILENAME);
+
+            SendMessageW(fileNameEdit, WM_SETTEXT, 0, (LPARAM)data->fileName);
+        }
         break;
     }
     case WM_NOTIFY:
@@ -5164,7 +5248,8 @@ static LRESULT CALLBACK import_store_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             selectInfo.dwSize = sizeof(selectInfo);
             selectInfo.parent = hwnd;
             selectInfo.dwFlags = CRYPTUI_ENABLE_SHOW_PHYSICAL_STORE;
-            selectInfo.pwszTitle = selectInfo.pwszTitle = NULL;
+            selectInfo.pwszTitle = NULL;
+            selectInfo.pwszText = NULL;
             selectInfo.pEnumData = &enumData;
             selectInfo.pfnSelectedStoreCallback = NULL;
             if ((store = CryptUIDlgSelectStoreW(&selectInfo)))
@@ -5383,10 +5468,15 @@ static BOOL show_import_ui(DWORD dwFlags, HWND hwndParent,
     data.dwFlags = dwFlags;
     data.pwszWizardTitle = pwszWizardTitle;
     if (pImportSrc)
+    {
         memcpy(&data.importSrc, pImportSrc, sizeof(data.importSrc));
+        data.fileName = (LPWSTR)pImportSrc->u.pwszFileName;
+    }
     else
+    {
         memset(&data.importSrc, 0, sizeof(data.importSrc));
-    data.fileName = NULL;
+        data.fileName = NULL;
+    }
     data.freeSource = FALSE;
     data.hDestCertStore = hDestCertStore;
     data.freeDest = FALSE;
@@ -5470,7 +5560,8 @@ static BOOL show_import_ui(DWORD dwFlags, HWND hwndParent,
     hdr.u4.pszbmWatermark = MAKEINTRESOURCEW(IDB_CERT_WATERMARK);
     hdr.u5.pszbmHeader = MAKEINTRESOURCEW(IDB_CERT_HEADER);
     PropertySheetW(&hdr);
-    HeapFree(GetProcessHeap(), 0, data.fileName);
+    if (data.fileName != data.importSrc.u.pwszFileName)
+        HeapFree(GetProcessHeap(), 0, data.fileName);
     if (data.freeSource &&
      data.importSrc.dwSubjectChoice == CRYPTUI_WIZ_IMPORT_SUBJECT_CERT_STORE)
         CertCloseStore(data.importSrc.u.hCertStore, 0);
@@ -5590,7 +5681,7 @@ static PCRYPT_KEY_PROV_INFO export_get_private_key_info(PCCERT_CONTEXT cert)
     return info;
 }
 
-static BOOL export_acquire_private_key(PCRYPT_KEY_PROV_INFO info,
+static BOOL export_acquire_private_key(const CRYPT_KEY_PROV_INFO *info,
  HCRYPTPROV *phProv)
 {
     BOOL ret;
@@ -5721,7 +5812,7 @@ static BOOL export_info_has_private_key(PCCRYPTUI_WIZ_EXPORT_INFO pExportInfo)
     return ret;
 }
 
-static void export_format_enable_controls(HWND hwnd, struct ExportWizData *data)
+static void export_format_enable_controls(HWND hwnd, const struct ExportWizData *data)
 {
     int defaultFormatID;
 
@@ -5862,7 +5953,7 @@ static LRESULT CALLBACK export_format_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
     return ret;
 }
 
-static void export_password_mismatch(HWND hwnd, struct ExportWizData *data)
+static void export_password_mismatch(HWND hwnd, const struct ExportWizData *data)
 {
     WCHAR title[MAX_STRING_LEN], error[MAX_STRING_LEN];
     LPCWSTR pTitle;
@@ -5967,7 +6058,7 @@ static LRESULT CALLBACK export_password_dlg_proc(HWND hwnd, UINT msg,
     return ret;
 }
 
-static LPWSTR export_append_extension(struct ExportWizData *data,
+static LPWSTR export_append_extension(const struct ExportWizData *data,
  LPWSTR fileName)
 {
     static const WCHAR cer[] = { '.','c','e','r',0 };
@@ -6293,7 +6384,7 @@ static LRESULT CALLBACK export_file_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
     return ret;
 }
 
-static void show_export_details(HWND lv, struct ExportWizData *data)
+static void show_export_details(HWND lv, const struct ExportWizData *data)
 {
     WCHAR text[MAX_STRING_LEN];
     LVITEMW item;
@@ -6771,7 +6862,7 @@ static LRESULT CALLBACK export_finish_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
 }
 
 static BOOL show_export_ui(DWORD dwFlags, HWND hwndParent,
- LPCWSTR pwszWizardTitle, PCCRYPTUI_WIZ_EXPORT_INFO pExportInfo, void *pvoid)
+ LPCWSTR pwszWizardTitle, PCCRYPTUI_WIZ_EXPORT_INFO pExportInfo, const void *pvoid)
 {
     PROPSHEETHEADERW hdr;
     PROPSHEETPAGEW pages[6];

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -58,8 +58,6 @@ static LPTSTR lpLeadNumFmtSamples[MAX_LEAD_ZEROES_SAMPLES] =
     {_T(",7"), _T("0,7")};
 static LPTSTR lpListSepSamples[MAX_LIST_SEP_SAMPLES] =
     {_T(";")};
-static LPTSTR lpUnitsSysSamples[MAX_UNITS_SYS_SAMPLES] =
-    {_T("Metrics"), _T("Americans")};
 
 
 /* Init num decimal separator control box */
@@ -69,6 +67,12 @@ InitNumDecimalSepCB(HWND hwndDlg, LCID lcid)
     TCHAR szNumSep[MAX_SAMPLES_STR_SIZE];
     INT nCBIndex;
     INT nRetCode;
+
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
+                CB_LIMITTEXT,
+                MAX_NUMBERDSYMBOL,
+                0);
 
     /* Get current decimal separator */
     GetLocaleInfo(lcid,
@@ -87,7 +91,7 @@ InitNumDecimalSepCB(HWND hwndDlg, LCID lcid)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERDSYMBOL),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)lpNumSepSamples[nCBIndex]);
     }
 
@@ -140,7 +144,7 @@ InitNumOfFracSymbCB(HWND hwndDlg, LCID lcid)
 
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNDIGDEC),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)szFracCount);
     }
 
@@ -159,6 +163,12 @@ InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
     INT nCBIndex;
     INT nRetCode;
 
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
+                CB_LIMITTEXT,
+                MAX_NUMBERSDIGITGRSYM,
+                0);
+
     /* Get current field separator */
     GetLocaleInfo(lcid,
                   LOCALE_STHOUSAND,
@@ -171,12 +181,12 @@ InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of field separators */
+    /* Create standard list of field separators */
     for (nCBIndex = 0; nCBIndex < MAX_FIELD_SEP_SAMPLES; nCBIndex++)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)lpFieldSepSamples[nCBIndex]);
     }
 
@@ -191,7 +201,7 @@ InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
                     CB_ADDSTRING,
-                    MAX_FIELD_SEP_SAMPLES+1,
+                    0,
                     (LPARAM)szFieldSep);
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
                     CB_SELECTSTRING,
@@ -200,7 +210,7 @@ InitNumFieldSepCB(HWND hwndDlg, LCID lcid)
     }
 }
 
-/* Init number of digidts in field control box */
+/* Init number of digits in field control box */
 static VOID
 InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
 {
@@ -221,14 +231,14 @@ InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of field digits num */
+    /* Create standard list of field digits num */
     for (nCBIndex = 0; nCBIndex < MAX_FIELD_DIG_SAMPLES; nCBIndex++)
     {
 
         pszFieldDigNumSmpl = InsSpacesFmt(SAMPLE_NUMBER, lpFieldDigNumSamples[nCBIndex]);
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)pszFieldDigNumSmpl);
         free(pszFieldDigNumSmpl);
     }
@@ -245,7 +255,7 @@ InitFieldDigNumCB(HWND hwndDlg, LCID lcid)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
                     CB_ADDSTRING,
-                    MAX_FIELD_DIG_SAMPLES+1,
+                    0,
                     (LPARAM)pszFieldDigNumSmpl);
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
                     CB_SELECTSTRING,
@@ -264,11 +274,17 @@ InitNegSignCB(HWND hwndDlg, LCID lcid)
     INT nCBIndex;
     INT nRetCode;
 
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
+                CB_LIMITTEXT,
+                MAX_NUMBERSNSIGNSYM,
+                0);
+
     /* Get current negative sign */
-    GetLocaleInfoW(lcid,
-                   LOCALE_SNEGATIVESIGN,
-                   szNegSign,
-                   MAX_SAMPLES_STR_SIZE);
+    GetLocaleInfo(lcid,
+                  LOCALE_SNEGATIVESIGN,
+                  szNegSign,
+                  MAX_SAMPLES_STR_SIZE);
 
     /* Clear all box content */
     SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
@@ -276,12 +292,12 @@ InitNegSignCB(HWND hwndDlg, LCID lcid)
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of signs */
+    /* Create standard list of signs */
     for (nCBIndex = 0; nCBIndex < MAX_NEG_SIGN_SAMPLES; nCBIndex++)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)lpNegSignSamples[nCBIndex]);
     }
 
@@ -296,7 +312,7 @@ InitNegSignCB(HWND hwndDlg, LCID lcid)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
                     CB_ADDSTRING,
-                    MAX_NUM_SEP_SAMPLES+1,
+                    0,
                     (LPARAM)szNegSign);
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
                     CB_SELECTSTRING,
@@ -341,22 +357,22 @@ InitNegNumFmtCB(HWND hwndDlg, LCID lcid)
                   szNegSign,
                   MAX_SAMPLES_STR_SIZE);
 
-    /* Create standart list of negative numbers formats */
+    /* Create standard list of negative numbers formats */
     for (nCBIndex = 0; nCBIndex < MAX_NEG_NUMBERS_SAMPLES; nCBIndex++)
     {
-        /* Replace standart separator to setted */
+        /* Replace standard separator to setted */
         pszResultStr = ReplaceSubStr(lpNegNumFmtSamples[nCBIndex],
                                      szNumSep,
                                      _T(","));
         _tcscpy(szNewSample, pszResultStr);
         free(pszResultStr);
-        /* Replace standart negative sign to setted */
+        /* Replace standard negative sign to setted */
         pszResultStr = ReplaceSubStr(szNewSample,
                                      szNegSign,
                                      _T("-"));
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNNUMFORMAT),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)pszResultStr);
         free(pszResultStr);
     }
@@ -396,7 +412,7 @@ InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
                   szNumSep,
                   MAX_SAMPLES_STR_SIZE);
 
-    /* Create list of standart leading zeroes formats */
+    /* Create list of standard leading zeroes formats */
     for (nCBIndex = 0; nCBIndex < MAX_LEAD_ZEROES_SAMPLES; nCBIndex++)
     {
         pszResultStr = ReplaceSubStr(lpLeadNumFmtSamples[nCBIndex],
@@ -404,7 +420,7 @@ InitLeadingZeroesCB(HWND hwndDlg, LCID lcid)
                                      _T(","));
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDISPLEADZER),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)pszResultStr);
         free(pszResultStr);
     }
@@ -424,6 +440,12 @@ InitListSepCB(HWND hwndDlg,
     INT nCBIndex;
     INT nRetCode;
 
+    /* Limit text length */
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
+                CB_LIMITTEXT,
+                MAX_NUMBERSLSEP,
+                0);
+
     /* Get current list separator */
     GetLocaleInfo(lcid,
                   LOCALE_SLIST,
@@ -436,12 +458,12 @@ InitListSepCB(HWND hwndDlg,
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create standart list of signs */
+    /* Create standard list of signs */
     for (nCBIndex = 0; nCBIndex < MAX_LIST_SEP_SAMPLES; nCBIndex++)
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
                     CB_ADDSTRING,
-                    nCBIndex,
+                    0,
                     (LPARAM)lpListSepSamples[nCBIndex]);
     }
 
@@ -456,7 +478,7 @@ InitListSepCB(HWND hwndDlg,
     {
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
                     CB_ADDSTRING,
-                    MAX_LIST_SEP_SAMPLES+1,
+                    0,
                     (LPARAM)szListSep);
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSLSEP),
                     CB_SELECTSTRING,
@@ -471,6 +493,7 @@ InitUnitsSysCB(HWND hwndDlg,
                LCID lcid)
 {
     TCHAR szUnitsSys[MAX_SAMPLES_STR_SIZE];
+    TCHAR szUnitName[128];
     INT nCBIndex;
 
     /* Get current system of units */
@@ -485,13 +508,15 @@ InitUnitsSysCB(HWND hwndDlg,
                 (WPARAM)0,
                 (LPARAM)0);
 
-    /* Create list of standart system of units */
+    /* Create list of standard system of units */
     for (nCBIndex = 0; nCBIndex < MAX_UNITS_SYS_SAMPLES; nCBIndex++)
     {
+        LoadString(hApplet, IDS_METRIC + nCBIndex, szUnitName, 128);
+
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSMEASSYS),
                     CB_ADDSTRING,
-                    0, //nCBIndex,
-                    (LPARAM)lpUnitsSysSamples[nCBIndex]);
+                    0,
+                    (LPARAM)szUnitName);
     }
 
     /* Set current item to value from registry */
@@ -585,7 +610,7 @@ SetNumFieldSep(HWND hwndDlg,
     TCHAR szFieldSep[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted field separator */
-    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDIGITGRSYM),
                 WM_GETTEXT,
                 (WPARAM)MAX_SAMPLES_STR_SIZE,
                 (LPARAM)szFieldSep);
@@ -596,21 +621,21 @@ SetNumFieldSep(HWND hwndDlg,
     return TRUE;
 }
 
-/* Set number of digidts in field  */
+/* Set number of digits in field  */
 static BOOL
 SetFieldDigNum(HWND hwndDlg,
                LCID lcid)
 {
-    INT nCurrSel;
+    TCHAR szFieldDigNum[MAX_SAMPLES_STR_SIZE];
 
     /* Get setted number of digidts in field */
-    nCurrSel=SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSNSIGNSYM),
-                         CB_GETCURSEL,
-                         (WPARAM)0,
-                         (LPARAM)0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSDGROUPING),
+                WM_GETTEXT,
+                (WPARAM)MAX_SAMPLES_STR_SIZE,
+                (LPARAM)szFieldDigNum);
 
-    /* Save number of digidts in field */
-    SetLocaleInfo(lcid, LOCALE_SGROUPING, lpFieldDigNumSamples[nCurrSel]);
+    /* Save number of digits in field */
+    SetLocaleInfo(lcid, LOCALE_SGROUPING, szFieldDigNum);
 
     return TRUE;
 }

@@ -531,16 +531,18 @@ Subdivider::nonSamplingSplit(
 		     patchlist.pspec[param].range[1] ) * 0.5;
 	split( source, left, right, param, mid );
 	Patchlist subpatchlist( patchlist, param, mid );
-	if( left.isnonempty() )
+	if( left.isnonempty() ) {
 	    if( subpatchlist.cullCheck() == CULL_TRIVIAL_REJECT ) 
 		freejarcs( left );
 	    else
 	        nonSamplingSplit( left, subpatchlist, subdivisions-1, param );
-	if( right.isnonempty() ) 
+	}
+	if( right.isnonempty() )  {
 	    if( patchlist.cullCheck() == CULL_TRIVIAL_REJECT ) 
 		freejarcs( right );
 	    else
 	        nonSamplingSplit( right, patchlist, subdivisions-1, param );
+	}
 
     } else {
 	// make bbox calls

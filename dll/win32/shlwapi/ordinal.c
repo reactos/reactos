@@ -42,10 +42,12 @@
 #include "mmsystem.h"
 #include "objbase.h"
 #include "exdisp.h"
+#include "shdeprecated.h"
 #include "shlobj.h"
 #include "shlwapi.h"
 #include "shellapi.h"
 #include "commdlg.h"
+#include "mlang.h"
 #include "mshtmhst.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -308,24 +310,22 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
   BSTR property;
   IEnumFORMATETC* pIEnumFormatEtc = NULL;
   VARIANTARG var;
-  HRESULT hRet;
-  IWebBrowserApp* pBrowser = NULL;
+  HRESULT hr;
+  IWebBrowserApp* pBrowser;
 
   TRACE("(%p, %p)\n", lpBC, lpUnknown);
 
-  /* Get An IWebBrowserApp interface from  lpUnknown */
-  hRet = IUnknown_QueryService(lpUnknown, &IID_IWebBrowserApp, &IID_IWebBrowserApp, (PVOID)&pBrowser);
-  if (FAILED(hRet) || !pBrowser)
-    return E_NOINTERFACE;
+  hr = IUnknown_QueryService(lpUnknown, &IID_IWebBrowserApp, &IID_IWebBrowserApp, (void**)&pBrowser);
+  if (FAILED(hr))
+    return hr;
 
   V_VT(&var) = VT_EMPTY;
 
   /* The property we get is the browsers clipboard enumerator */
   property = SysAllocString(szProperty);
-  hRet = IWebBrowserApp_GetProperty(pBrowser, property, &var);
+  hr = IWebBrowserApp_GetProperty(pBrowser, property, &var);
   SysFreeString(property);
-  if (FAILED(hRet))
-    return hRet;
+  if (FAILED(hr)) goto exit;
 
   if (V_VT(&var) == VT_EMPTY)
   {
@@ -339,7 +339,10 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
 
     if (!RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\Current"
                      "Version\\Internet Settings\\Accepted Documents", &hDocs))
-      return E_FAIL;
+    {
+      hr = E_FAIL;
+      goto exit;
+    }
 
     /* Get count of values in key */
     while (!dwRet)
@@ -354,7 +357,11 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     /* Note: dwCount = number of items + 1; The extra item is the end node */
     format = formatList = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(FORMATETC));
     if (!formatList)
-      return E_OUTOFMEMORY;
+    {
+      RegCloseKey(hDocs);
+      hr = E_OUTOFMEMORY;
+      goto exit;
+    }
 
     if (dwNumValues > 1)
     {
@@ -371,7 +378,12 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
         dwRet = RegEnumValueA(hDocs, dwCount, szKeyBuff, &dwKeySize, 0, &dwType,
                               (PBYTE)szValueBuff, &dwValueSize);
         if (!dwRet)
-          return E_FAIL;
+        {
+          HeapFree(GetProcessHeap(), 0, formatList);
+          RegCloseKey(hDocs);
+          hr = E_FAIL;
+          goto exit;
+        }
 
         format->cfFormat = RegisterClipboardFormatA(szValueBuff);
         format->ptd = NULL;
@@ -384,6 +396,8 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
       }
     }
 
+    RegCloseKey(hDocs);
+
     /* Terminate the (maybe empty) list, last entry has a cfFormat of 0 */
     format->cfFormat = 0;
     format->ptd = NULL;
@@ -392,20 +406,21 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     format->tymed = -1;
 
     /* Create a clipboard enumerator */
-    hRet = CreateFormatEnumerator(dwNumValues, formatList, &pIEnumFormatEtc);
-
-    if (FAILED(hRet) || !pIEnumFormatEtc)
-      return hRet;
+    hr = CreateFormatEnumerator(dwNumValues, formatList, &pIEnumFormatEtc);
+    HeapFree(GetProcessHeap(), 0, formatList);
+    if (FAILED(hr)) goto exit;
 
     /* Set our enumerator as the browsers property */
     V_VT(&var) = VT_UNKNOWN;
     V_UNKNOWN(&var) = (IUnknown*)pIEnumFormatEtc;
 
-    hRet = IWebBrowserApp_PutProperty(pBrowser, (BSTR)szProperty, var);
-    if (FAILED(hRet))
+    property = SysAllocString(szProperty);
+    hr = IWebBrowserApp_PutProperty(pBrowser, property, var);
+    SysFreeString(property);
+    if (FAILED(hr))
     {
        IEnumFORMATETC_Release(pIEnumFormatEtc);
-       goto RegisterDefaultAcceptHeaders_Exit;
+       goto exit;
     }
   }
 
@@ -419,28 +434,26 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
 
     /* Get an IEnumFormatEtc interface from the variants value */
     pIEnumFormatEtc = NULL;
-    hRet = IUnknown_QueryInterface(pIUnknown, &IID_IEnumFORMATETC,
-                                   (PVOID)&pIEnumFormatEtc);
-    if (hRet == S_OK && pIEnumFormatEtc)
+    hr = IUnknown_QueryInterface(pIUnknown, &IID_IEnumFORMATETC, (void**)&pIEnumFormatEtc);
+    if (hr == S_OK && pIEnumFormatEtc)
     {
       /* Clone and register the enumerator */
-      hRet = IEnumFORMATETC_Clone(pIEnumFormatEtc, &pClone);
-      if (hRet == S_OK && pClone)
+      hr = IEnumFORMATETC_Clone(pIEnumFormatEtc, &pClone);
+      if (hr == S_OK && pClone)
       {
         RegisterFormatEnumerator(lpBC, pClone, 0);
 
         IEnumFORMATETC_Release(pClone);
       }
 
-      /* Release the IEnumFormatEtc interface */
       IEnumFORMATETC_Release(pIUnknown);
     }
     IUnknown_Release(V_UNKNOWN(&var));
   }
 
-RegisterDefaultAcceptHeaders_Exit:
+exit:
   IWebBrowserApp_Release(pBrowser);
-  return hRet;
+  return hr;
 }
 
 /*************************************************************************
@@ -450,14 +463,14 @@ RegisterDefaultAcceptHeaders_Exit:
  *
  * PARAMS
  *  langbuf [O] Destination for language string
- *  buflen  [I] Length of langbuf
+ *  buflen  [I] Length of langbuf in characters
  *          [0] Success: used length of langbuf
  *
  * RETURNS
  *  Success: S_OK.   langbuf is set to the language string found.
  *  Failure: E_FAIL, If any arguments are invalid, error occurred, or Explorer
  *           does not contain the setting.
- *           E_INVALIDARG, If the buffer is not big enough
+ *           HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), If the buffer is not big enough
  */
 HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 {
@@ -468,49 +481,49 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 	'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
     static const WCHAR valueW[] = {
 	'A','c','c','e','p','t','L','a','n','g','u','a','g','e',0};
-    static const WCHAR enusW[] = {'e','n','-','u','s',0};
     DWORD mystrlen, mytype;
+    DWORD len;
     HKEY mykey;
-    HRESULT retval;
     LCID mylcid;
     WCHAR *mystr;
+    LONG lres;
+
+    TRACE("(%p, %p) *%p: %d\n", langbuf, buflen, buflen, buflen ? *buflen : -1);
 
     if(!langbuf || !buflen || !*buflen)
 	return E_FAIL;
 
     mystrlen = (*buflen > 20) ? *buflen : 20 ;
-    mystr = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * mystrlen);
+    len = mystrlen * sizeof(WCHAR);
+    mystr = HeapAlloc(GetProcessHeap(), 0, len);
+    mystr[0] = 0;
     RegOpenKeyW(HKEY_CURRENT_USER, szkeyW, &mykey);
-    if(RegQueryValueExW(mykey, valueW, 0, &mytype, (PBYTE)mystr, &mystrlen)) {
-        /* Did not find value */
-        mylcid = GetUserDefaultLCID();
-        /* somehow the mylcid translates into "en-us"
-         *  this is similar to "LOCALE_SABBREVLANGNAME"
-         *  which could be gotten via GetLocaleInfo.
-         *  The only problem is LOCALE_SABBREVLANGUAGE" is
-         *  a 3 char string (first 2 are country code and third is
-         *  letter for "sublanguage", which does not come close to
-         *  "en-us"
-         */
-        lstrcpyW(mystr, enusW);
-        mystrlen = lstrlenW(mystr);
-    } else {
-        /* handle returned string */
-        FIXME("missing code\n");
-    }
-    memcpy( langbuf, mystr, min(*buflen,strlenW(mystr)+1)*sizeof(WCHAR) );
-
-    if(*buflen > strlenW(mystr)) {
-	*buflen = strlenW(mystr);
-	retval = S_OK;
-    } else {
-	*buflen = 0;
-	retval = E_INVALIDARG;
-	SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    }
+    lres = RegQueryValueExW(mykey, valueW, 0, &mytype, (PBYTE)mystr, &len);
     RegCloseKey(mykey);
+    len = lstrlenW(mystr);
+
+    if (!lres && (*buflen > len)) {
+        lstrcpyW(langbuf, mystr);
+        *buflen = len;
+        HeapFree(GetProcessHeap(), 0, mystr);
+        return S_OK;
+    }
+
+    /* Did not find a value in the registry or the user buffer is too small */
+    mylcid = GetUserDefaultLCID();
+    LcidToRfc1766W(mylcid, mystr, mystrlen);
+    len = lstrlenW(mystr);
+
+    memcpy( langbuf, mystr, min(*buflen, len+1)*sizeof(WCHAR) );
     HeapFree(GetProcessHeap(), 0, mystr);
-    return retval;
+
+    if (*buflen > len) {
+        *buflen = len;
+        return S_OK;
+    }
+
+    *buflen = 0;
+    return __HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
 }
 
 /*************************************************************************
@@ -524,6 +537,8 @@ HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
     DWORD buflenW, convlen;
     HRESULT retval;
 
+    TRACE("(%p, %p) *%p: %d\n", langbuf, buflen, buflen, buflen ? *buflen : -1);
+
     if(!langbuf || !buflen || !*buflen) return E_FAIL;
 
     buflenW = *buflen;
@@ -533,11 +548,20 @@ HRESULT WINAPI GetAcceptLanguagesA( LPSTR langbuf, LPDWORD buflen)
     if (retval == S_OK)
     {
         convlen = WideCharToMultiByte(CP_ACP, 0, langbufW, -1, langbuf, *buflen, NULL, NULL);
+        convlen--;  /* do not count the terminating 0 */
     }
     else  /* copy partial string anyway */
     {
         convlen = WideCharToMultiByte(CP_ACP, 0, langbufW, *buflen, langbuf, *buflen, NULL, NULL);
-        if (convlen < *buflen) langbuf[convlen] = 0;
+        if (convlen < *buflen)
+        {
+            langbuf[convlen] = 0;
+            convlen--;  /* do not count the terminating 0 */
+        }
+        else
+        {
+            convlen = *buflen;
+        }
     }
     *buflen = buflenW ? convlen : 0;
 
@@ -1069,23 +1093,25 @@ HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup,
  * PARAMS
  *  hWnd   [I] Window to get value from
  *  offset [I] Offset of value
- *  wMask  [I] Mask for uiFlags
- *  wFlags [I] Bits to set in window value
+ *  mask   [I] Mask for flags
+ *  flags  [I] Bits to set in window value
  *
  * RETURNS
  *  The new value as it was set, or 0 if any parameter is invalid.
  *
  * NOTES
- *  Any bits set in uiMask are cleared from the value, then any bits set in
- *  uiFlags are set in the value.
+ *  Only bits specified in mask are affected - set if present in flags and
+ *  reset otherwise.
  */
-LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags)
+LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT mask, UINT flags)
 {
-  LONG ret = GetWindowLongA(hwnd, offset);
-  LONG newFlags = (wFlags & wMask) | (ret & ~wFlags);
+  LONG ret = GetWindowLongW(hwnd, offset);
+  LONG new_flags = (flags & mask) | (ret & ~mask);
 
-  if (newFlags != ret)
-    ret = SetWindowLongA(hwnd, offset, newFlags);
+  TRACE("%p %d %x %x\n", hwnd, offset, mask, flags);
+
+  if (new_flags != ret)
+    ret = SetWindowLongW(hwnd, offset, new_flags);
   return ret;
 }
 
@@ -1128,7 +1154,7 @@ HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent)
  * PARAMS
  *  lpUnkSink   [I] Sink for the connection point advise call
  *  riid        [I] REFIID of connection point to advise
- *  bAdviseOnly [I] TRUE = Advise only, FALSE = Unadvise first
+ *  fConnect    [I] TRUE = Connection being establisted, FALSE = broken
  *  lpUnknown   [I] Object supporting the IConnectionPointContainer interface
  *  lpCookie    [O] Pointer to connection point cookie
  *  lppCP       [O] Destination for the IConnectionPoint found
@@ -1140,7 +1166,7 @@ HWND WINAPI SHSetParentHwnd(HWND hWnd, HWND hWndParent)
  *           E_NOINTERFACE, if lpUnknown isn't an IConnectionPointContainer,
  *           Or an HRESULT error code if any call fails.
  */
-HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL bAdviseOnly,
+HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL fConnect,
                            IUnknown* lpUnknown, LPDWORD lpCookie,
                            IConnectionPoint **lppCP)
 {
@@ -1148,7 +1174,7 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
   IConnectionPointContainer* lpContainer;
   IConnectionPoint *lpCP;
 
-  if(!lpUnknown || (bAdviseOnly && !lpUnkSink))
+  if(!lpUnknown || (fConnect && !lpUnkSink))
     return E_FAIL;
 
   if(lppCP)
@@ -1162,9 +1188,10 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
 
     if (SUCCEEDED(hRet))
     {
-      if(!bAdviseOnly)
+      if(!fConnect)
         hRet = IConnectionPoint_Unadvise(lpCP, *lpCookie);
-      hRet = IConnectionPoint_Advise(lpCP, lpUnkSink, lpCookie);
+      else
+        hRet = IConnectionPoint_Advise(lpCP, lpUnkSink, lpCookie);
 
       if (FAILED(hRet))
         *lpCookie = 0;
@@ -1183,7 +1210,7 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
 /*************************************************************************
  *	@	[SHLWAPI.169]
  *
- * Release an interface.
+ * Release an interface and zero a supplied pointer.
  *
  * PARAMS
  *  lpUnknown [I] Object to release
@@ -1191,19 +1218,16 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL b
  * RETURNS
  *  Nothing.
  */
-DWORD WINAPI IUnknown_AtomicRelease(IUnknown ** lpUnknown)
+void WINAPI IUnknown_AtomicRelease(IUnknown ** lpUnknown)
 {
-    IUnknown *temp;
+    TRACE("(%p)\n", lpUnknown);
 
-    TRACE("(%p)\n",lpUnknown);
-
-    if(!lpUnknown || !*((LPDWORD)lpUnknown)) return 0;
-    temp = *lpUnknown;
-    *lpUnknown = NULL;
+    if(!lpUnknown || !*lpUnknown) return;
 
     TRACE("doing Release\n");
 
-    return IUnknown_Release(temp);
+    IUnknown_Release(*lpUnknown);
+    *lpUnknown = NULL;
 }
 
 /*************************************************************************
@@ -1240,9 +1264,10 @@ LPCSTR WINAPI PathSkipLeadingSlashesA(LPCSTR lpszSrc)
  */
 BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
 {
-  LPVOID lpUnknown1, lpUnknown2;
+  IUnknown *lpUnknown1, *lpUnknown2;
+  BOOL ret;
 
-  TRACE("%p %p\n", lpInt1, lpInt2);
+  TRACE("(%p %p)\n", lpInt1, lpInt2);
 
   if (!lpInt1 || !lpInt2)
     return FALSE;
@@ -1250,16 +1275,21 @@ BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
   if (lpInt1 == lpInt2)
     return TRUE;
 
-  if (FAILED(IUnknown_QueryInterface(lpInt1, &IID_IUnknown, &lpUnknown1)))
+  if (IUnknown_QueryInterface(lpInt1, &IID_IUnknown, (void**)&lpUnknown1) != S_OK)
     return FALSE;
 
-  if (FAILED(IUnknown_QueryInterface(lpInt2, &IID_IUnknown, &lpUnknown2)))
+  if (IUnknown_QueryInterface(lpInt2, &IID_IUnknown, (void**)&lpUnknown2) != S_OK)
+  {
+    IUnknown_Release(lpUnknown1);
     return FALSE;
+  }
 
-  if (lpUnknown1 == lpUnknown2)
-    return TRUE;
+  ret = lpUnknown1 == lpUnknown2;
 
-  return FALSE;
+  IUnknown_Release(lpUnknown1);
+  IUnknown_Release(lpUnknown2);
+
+  return ret;
 }
 
 /*************************************************************************
@@ -1319,36 +1349,32 @@ HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd)
 /*************************************************************************
  *      @	[SHLWAPI.173]
  *
- * Call a method on as as yet unidentified object.
+ * Call a SetOwner method of IShellService from specified object.
  *
  * PARAMS
- *  pUnk [I] Object supporting the unidentified interface,
- *  arg  [I] Argument for the call on the object.
+ *  iface [I] Object that supports IShellService
+ *  pUnk  [I] Argument for the SetOwner call
  *
  * RETURNS
- *  S_OK.
+ *  Corresponding return value from last call or E_FAIL for null input
  */
-HRESULT WINAPI IUnknown_SetOwner(IUnknown *pUnk, ULONG arg)
+HRESULT WINAPI IUnknown_SetOwner(IUnknown *iface, IUnknown *pUnk)
 {
-  static const GUID guid_173 = {
-    0x5836fb00, 0x8187, 0x11cf, { 0xa1,0x2b,0x00,0xaa,0x00,0x4a,0xe8,0x37 }
-  };
-  IMalloc *pUnk2;
+  IShellService *service;
+  HRESULT hr;
 
-  TRACE("(%p,%d)\n", pUnk, arg);
+  TRACE("(%p, %p)\n", iface, pUnk);
 
-  /* Note: arg may not be a ULONG and pUnk2 is for sure not an IMalloc -
-   *       We use this interface as its vtable entry is compatible with the
-   *       object in question.
-   * FIXME: Find out what this object is and where it should be defined.
-   */
-  if (pUnk &&
-      SUCCEEDED(IUnknown_QueryInterface(pUnk, &guid_173, (void**)&pUnk2)))
+  if (!iface) return E_FAIL;
+
+  hr = IUnknown_QueryInterface(iface, &IID_IShellService, (void**)&service);
+  if (hr == S_OK)
   {
-    IMalloc_Alloc(pUnk2, arg); /* Faked call!! */
-    IMalloc_Release(pUnk2);
+    hr = IShellService_SetOwner(service, pUnk);
+    IShellService_Release(service);
   }
-  return S_OK;
+
+  return hr;
 }
 
 /*************************************************************************
@@ -1455,7 +1481,6 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
   if (!lpUnknown)
     return E_FAIL;
 
-  /* Get an IServiceProvider interface from the object */
   hRet = IUnknown_QueryInterface(lpUnknown, &IID_IServiceProvider,
                                  (LPVOID*)&pService);
 
@@ -1468,10 +1493,127 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
 
     TRACE("(IServiceProvider*)%p returned (IUnknown*)%p\n", pService, *lppOut);
 
-    /* Release the IServiceProvider interface */
     IUnknown_Release(pService);
   }
   return hRet;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.484]
+ *
+ * Calls IOleCommandTarget::Exec() for specified service object.
+ *
+ * PARAMS
+ *  lpUnknown [I] Object to get an IServiceProvider interface from
+ *  service   [I] Service ID for IServiceProvider_QueryService() call
+ *  group     [I] Group ID for IOleCommandTarget::Exec() call
+ *  cmdId     [I] Command ID for IOleCommandTarget::Exec() call
+ *  cmdOpt    [I] Options flags for command
+ *  pIn       [I] Input arguments for command
+ *  pOut      [O] Output arguments for command
+ *
+ * RETURNS
+ *  Success: S_OK. lppOut contains an object providing the requested service
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  lpUnknown is expected to support the IServiceProvider interface.
+ */
+HRESULT WINAPI IUnknown_QueryServiceExec(IUnknown *lpUnknown, REFIID service,
+    const GUID *group, DWORD cmdId, DWORD cmdOpt, VARIANT *pIn, VARIANT *pOut)
+{
+    IOleCommandTarget *target;
+    HRESULT hr;
+
+    TRACE("%p %s %s %d %08x %p %p\n", lpUnknown, debugstr_guid(service),
+        debugstr_guid(group), cmdId, cmdOpt, pIn, pOut);
+
+    hr = IUnknown_QueryService(lpUnknown, service, &IID_IOleCommandTarget, (void**)&target);
+    if (hr == S_OK)
+    {
+        hr = IOleCommandTarget_Exec(target, group, cmdId, cmdOpt, pIn, pOut);
+        IOleCommandTarget_Release(target);
+    }
+
+    TRACE("<-- hr=0x%08x\n", hr);
+
+    return hr;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.514]
+ *
+ * Calls IProfferService methods to proffer/revoke specified service.
+ *
+ * PARAMS
+ *  lpUnknown [I]  Object to get an IServiceProvider interface from
+ *  service   [I]  Service ID for IProfferService::Proffer/Revoke calls
+ *  pService  [I]  Service to proffer. If NULL ::Revoke is called
+ *  pCookie   [IO] Group ID for IOleCommandTarget::Exec() call
+ *
+ * RETURNS
+ *  Success: S_OK. IProffer method returns S_OK
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  lpUnknown is expected to support the IServiceProvider interface.
+ */
+HRESULT WINAPI IUnknown_ProfferService(IUnknown *lpUnknown, REFGUID service, IServiceProvider *pService, DWORD *pCookie)
+{
+    IProfferService *proffer;
+    HRESULT hr;
+
+    TRACE("%p %s %p %p\n", lpUnknown, debugstr_guid(service), pService, pCookie);
+
+    hr = IUnknown_QueryService(lpUnknown, &IID_IProfferService, &IID_IProfferService, (void**)&proffer);
+    if (hr == S_OK)
+    {
+        if (pService)
+            hr = IProfferService_ProfferService(proffer, service, pService, pCookie);
+        else
+            hr = IProfferService_RevokeService(proffer, *pCookie);
+
+        IProfferService_Release(proffer);
+    }
+
+    return hr;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.479]
+ *
+ * Call an object's UIActivateIO method.
+ *
+ * PARAMS
+ *  unknown  [I] Object to call the UIActivateIO method on
+ *  activate [I] Parameter for UIActivateIO call
+ *  msg      [I] Parameter for UIActivateIO call
+ *
+ * RETURNS
+ *  Success: Value of UI_ActivateIO call
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  unknown is expected to support the IInputObject interface.
+ */
+HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg)
+{
+    IInputObject* object = NULL;
+    HRESULT ret;
+
+    if (!unknown)
+        return E_FAIL;
+
+    /* Get an IInputObject interface from the object */
+    ret = IUnknown_QueryInterface(unknown, &IID_IInputObject, (LPVOID*) &object);
+
+    if (ret == S_OK)
+    {
+        ret = IInputObject_UIActivateIO(object, activate, msg);
+        IUnknown_Release(object);
+    }
+
+    return ret;
 }
 
 /*************************************************************************
@@ -1490,6 +1632,8 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
 BOOL WINAPI SHLoadMenuPopup(HINSTANCE hInst, LPCWSTR szName)
 {
   HMENU hMenu;
+
+  TRACE("%p %s\n", hInst, debugstr_w(szName));
 
   if ((hMenu = LoadMenuW(hInst, szName)))
   {
@@ -1574,6 +1718,9 @@ void WINAPI SHPropagateMessage(HWND hWnd, UINT uiMsgId, WPARAM wParam, LPARAM lP
 DWORD WINAPI SHRemoveAllSubMenus(HMENU hMenu)
 {
   int iItemCount = GetMenuItemCount(hMenu) - 1;
+
+  TRACE("%p\n", hMenu);
+
   while (iItemCount >= 0)
   {
     HMENU hSubMenu = GetSubMenu(hMenu, iItemCount);
@@ -1599,6 +1746,7 @@ DWORD WINAPI SHRemoveAllSubMenus(HMENU hMenu)
  */
 UINT WINAPI SHEnableMenuItem(HMENU hMenu, UINT wItemID, BOOL bEnable)
 {
+  TRACE("%p, %u, %d\n", hMenu, wItemID, bEnable);
   return EnableMenuItem(hMenu, wItemID, bEnable ? MF_ENABLED : MF_GRAYED);
 }
 
@@ -1617,6 +1765,7 @@ UINT WINAPI SHEnableMenuItem(HMENU hMenu, UINT wItemID, BOOL bEnable)
  */
 DWORD WINAPI SHCheckMenuItem(HMENU hMenu, UINT uID, BOOL bCheck)
 {
+  TRACE("%p, %u, %d\n", hMenu, uID, bCheck);
   return CheckMenuItem(hMenu, uID, bCheck ? MF_CHECKED : MF_UNCHECKED);
 }
 
@@ -1648,6 +1797,8 @@ BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj,
   DWORD dwEffect = DROPEFFECT_LINK | DROPEFFECT_MOVE | DROPEFFECT_COPY;
   POINTL pt = { 0, 0 };
 
+  TRACE("%p %p 0x%08x %p %p\n", pDrop, pDataObj, grfKeyState, lpPt, pdwEffect);
+
   if (!lpPt)
     lpPt = &pt;
 
@@ -1656,7 +1807,7 @@ BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj,
 
   IDropTarget_DragEnter(pDrop, pDataObj, grfKeyState, *lpPt, pdwEffect);
 
-  if (*pdwEffect)
+  if (*pdwEffect != DROPEFFECT_NONE)
     return IDropTarget_Drop(pDrop, pDataObj, grfKeyState, *lpPt, pdwEffect);
 
   IDropTarget_DragLeave(pDrop);
@@ -1748,7 +1899,7 @@ HRESULT WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, BOOL fGotFocus)
   IOleControlSite* lpCSite = NULL;
   HRESULT hRet = E_FAIL;
 
-  TRACE("(%p,%s)\n", lpUnknown, fGotFocus ? "TRUE" : "FALSE");
+  TRACE("(%p, %d)\n", lpUnknown, fGotFocus);
   if (lpUnknown)
   {
     hRet = IUnknown_QueryInterface(lpUnknown, &IID_IOleControlSite,
@@ -2006,12 +2157,10 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
 {
   TRACE("(%p,%p)\n", lppDest, lpUnknown);
 
-  if (lppDest)
-    IUnknown_AtomicRelease(lppDest); /* Release existing interface */
+  IUnknown_AtomicRelease(lppDest);
 
   if (lpUnknown)
   {
-    /* Copy */
     IUnknown_AddRef(lpUnknown);
     *lppDest = lpUnknown;
   }
@@ -2201,12 +2350,6 @@ BOOL WINAPI FDSA_DeleteItem(FDSA_info *info, DWORD where)
     return TRUE;
 }
 
-
-typedef struct {
-    REFIID   refid;
-    DWORD    indx;
-} IFACE_INDEX_TBL;
-
 /*************************************************************************
  *      @	[SHLWAPI.219]
  *
@@ -2217,22 +2360,22 @@ typedef struct {
  *  Failure: E_POINTER or E_NOINTERFACE.
  */
 HRESULT WINAPI QISearch(
-	LPVOID w,           /* [in]   Table of interfaces */
-	IFACE_INDEX_TBL *x, /* [in]   Array of REFIIDs and indexes into the table */
+	void *base,         /* [in]   Table of interfaces */
+	const QITAB *table, /* [in]   Array of REFIIDs and indexes into the table */
 	REFIID riid,        /* [in]   REFIID to get interface for */
-	LPVOID *ppv)          /* [out]  Destination for interface pointer */
+	void **ppv)         /* [out]  Destination for interface pointer */
 {
 	HRESULT ret;
 	IUnknown *a_vtbl;
-	IFACE_INDEX_TBL *xmove;
+	const QITAB *xmove;
 
-	TRACE("(%p %p %s %p)\n", w,x,debugstr_guid(riid),ppv);
+	TRACE("(%p %p %s %p)\n", base, table, debugstr_guid(riid), ppv);
 	if (ppv) {
-	    xmove = x;
-	    while (xmove->refid) {
-		TRACE("trying (indx %d) %s\n", xmove->indx, debugstr_guid(xmove->refid));
-		if (IsEqualIID(riid, xmove->refid)) {
-		    a_vtbl = (IUnknown*)(xmove->indx + (LPBYTE)w);
+	    xmove = table;
+	    while (xmove->piid) {
+		TRACE("trying (offset %d) %s\n", xmove->dwOffset, debugstr_guid(xmove->piid));
+		if (IsEqualIID(riid, xmove->piid)) {
+		    a_vtbl = (IUnknown*)(xmove->dwOffset + (LPBYTE)base);
 		    TRACE("matched, returning (%p)\n", a_vtbl);
                     *ppv = a_vtbl;
 		    IUnknown_AddRef(a_vtbl);
@@ -2242,7 +2385,7 @@ HRESULT WINAPI QISearch(
 	    }
 
 	    if (IsEqualIID(riid, &IID_IUnknown)) {
-		a_vtbl = (IUnknown*)(x->indx + (LPBYTE)w);
+		a_vtbl = (IUnknown*)(table->dwOffset + (LPBYTE)base);
 		TRACE("returning first for IUnknown (%p)\n", a_vtbl);
                 *ppv = a_vtbl;
 		IUnknown_AddRef(a_vtbl);
@@ -2451,27 +2594,27 @@ HRESULT WINAPI IUnknown_GetSite(LPUNKNOWN lpUnknown, REFIID iid, PVOID *lppSite)
  *  dwExStyle  [I] Extra style flags
  *  dwStyle    [I] Style flags
  *  hMenu      [I] Window menu
- *  z          [I] Unknown
+ *  wnd_extra  [I] Window extra bytes value
  *
  * RETURNS
  *  Success: The window handle of the newly created window.
  *  Failure: 0.
  */
 HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
-                        DWORD dwStyle, HMENU hMenu, LONG z)
+                                  DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra)
 {
   static const char szClass[] = "WorkerA";
   WNDCLASSA wc;
   HWND hWnd;
 
-  TRACE("(0x%08x,%p,0x%08x,0x%08x,%p,0x%08x)\n",
-         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, z);
+  TRACE("(0x%08x, %p, 0x%08x, 0x%08x, %p, 0x%08lx)\n",
+         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, wnd_extra);
 
   /* Create Window class */
   wc.style         = 0;
   wc.lpfnWndProc   = DefWindowProcA;
   wc.cbClsExtra    = 0;
-  wc.cbWndExtra    = 4;
+  wc.cbWndExtra    = sizeof(LONG_PTR);
   wc.hInstance     = shlwapi_hInstance;
   wc.hIcon         = NULL;
   wc.hCursor       = LoadCursorA(NULL, (LPSTR)IDC_ARROW);
@@ -2479,19 +2622,17 @@ HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
 
-  SHRegisterClassA(&wc); /* Register class */
-
-  /* FIXME: Set extra bits in dwExStyle */
+  SHRegisterClassA(&wc);
 
   hWnd = CreateWindowExA(dwExStyle, szClass, 0, dwStyle, 0, 0, 0, 0,
                          hWndParent, hMenu, shlwapi_hInstance, 0);
   if (hWnd)
   {
-    SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, z);
+    SetWindowLongPtrW(hWnd, 0, wnd_extra);
 
-    if (wndProc)
-      SetWindowLongPtrA(hWnd, GWLP_WNDPROC, wndProc);
+    if (wndProc) SetWindowLongPtrA(hWnd, GWLP_WNDPROC, wndProc);
   }
+
   return hWnd;
 }
 
@@ -2674,7 +2815,7 @@ BOOL WINAPI GUIDFromStringA(LPCSTR idstr, CLSID *id)
  */
 BOOL WINAPI GUIDFromStringW(LPCWSTR idstr, CLSID *id)
 {
-    return SUCCEEDED(CLSIDFromString((LPOLESTR)idstr, id));
+    return SUCCEEDED(CLSIDFromString((LPCOLESTR)idstr, id));
 }
 
 /*************************************************************************
@@ -2749,18 +2890,21 @@ DWORD WINAPI WhichPlatform(void)
  * Unicode version of SHCreateWorkerWindowA.
  */
 HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
-                        DWORD dwStyle, HMENU hMenu, LONG z)
+                        DWORD dwStyle, HMENU hMenu, LONG msg_result)
 {
-  static const WCHAR szClass[] = { 'W', 'o', 'r', 'k', 'e', 'r', 'W', '\0' };
+  static const WCHAR szClass[] = { 'W', 'o', 'r', 'k', 'e', 'r', 'W', 0 };
   WNDCLASSW wc;
   HWND hWnd;
 
-  TRACE("(0x%08x,%p,0x%08x,0x%08x,%p,0x%08x)\n",
-         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, z);
+  TRACE("(0x%08x, %p, 0x%08x, 0x%08x, %p, 0x%08x)\n",
+         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, msg_result);
 
-  /* If our OS is natively ASCII, use the ASCII version */
-  if (!(GetVersion() & 0x80000000))  /* NT */
-    return SHCreateWorkerWindowA(wndProc, hWndParent, dwExStyle, dwStyle, hMenu, z);
+  /* If our OS is natively ANSI, use the ANSI version */
+  if (GetVersion() & 0x80000000)  /* not NT */
+  {
+    TRACE("fallback to ANSI, ver 0x%08x\n", GetVersion());
+    return SHCreateWorkerWindowA(wndProc, hWndParent, dwExStyle, dwStyle, hMenu, msg_result);
+  }
 
   /* Create Window class */
   wc.style         = 0;
@@ -2774,19 +2918,17 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
 
-  SHRegisterClassW(&wc); /* Register class */
-
-  /* FIXME: Set extra bits in dwExStyle */
+  SHRegisterClassW(&wc);
 
   hWnd = CreateWindowExW(dwExStyle, szClass, 0, dwStyle, 0, 0, 0, 0,
                          hWndParent, hMenu, shlwapi_hInstance, 0);
   if (hWnd)
   {
-    SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, z);
+    SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, msg_result);
 
-    if (wndProc)
-      SetWindowLongPtrW(hWnd, GWLP_WNDPROC, wndProc);
+    if (wndProc) SetWindowLongPtrW(hWnd, GWLP_WNDPROC, wndProc);
   }
+
   return hWnd;
 }
 
@@ -2806,7 +2948,8 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
  */
 HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl)
 {
-  return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
+    TRACE("%p %p %p\n", hWnd, lpFolder, lpApidl);
+    return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
 }
 
 /*************************************************************************
@@ -2892,26 +3035,55 @@ static HRESULT SHLWAPI_InvokeByIID(
 {
   IEnumConnections *enumerator;
   CONNECTDATA rgcd;
+  static DISPPARAMS empty = {NULL, NULL, 0, 0};
+  DISPPARAMS* params = dispParams;
 
   HRESULT result = IConnectionPoint_EnumConnections(iCP, &enumerator);
   if (FAILED(result))
     return result;
 
+  /* Invoke is never happening with an NULL dispParams */
+  if (!params)
+    params = &empty;
+
   while(IEnumConnections_Next(enumerator, 1, &rgcd, NULL)==S_OK)
   {
     IDispatch *dispIface;
-    if (SUCCEEDED(IUnknown_QueryInterface(rgcd.pUnk, iid, (LPVOID*)&dispIface)) ||
+    if ((iid && SUCCEEDED(IUnknown_QueryInterface(rgcd.pUnk, iid, (LPVOID*)&dispIface))) ||
         SUCCEEDED(IUnknown_QueryInterface(rgcd.pUnk, &IID_IDispatch, (LPVOID*)&dispIface)))
     {
-      IDispatch_Invoke(dispIface, dispId, &IID_NULL, 0, DISPATCH_METHOD, dispParams, NULL, NULL, NULL);
+      IDispatch_Invoke(dispIface, dispId, &IID_NULL, 0, DISPATCH_METHOD, params, NULL, NULL, NULL);
       IDispatch_Release(dispIface);
     }
+    IUnknown_Release(rgcd.pUnk);
   }
 
   IEnumConnections_Release(enumerator);
 
   return S_OK;
 }
+
+/*************************************************************************
+ *  IConnectionPoint_InvokeWithCancel   [SHLWAPI.283]
+ */
+HRESULT WINAPI IConnectionPoint_InvokeWithCancel( IConnectionPoint* iCP,
+                                                  DISPID dispId, DISPPARAMS* dispParams,
+                                                  DWORD unknown1, DWORD unknown2 )
+{
+    IID iid;
+    HRESULT result;
+
+    FIXME("(%p)->(0x%x %p %x %x) partial stub\n", iCP, dispId, dispParams, unknown1, unknown2);
+
+    result = IConnectionPoint_GetConnectionInterface(iCP, &iid);
+    if (SUCCEEDED(result))
+        result = SHLWAPI_InvokeByIID(iCP, &iid, dispId, dispParams);
+    else
+        result = SHLWAPI_InvokeByIID(iCP, NULL, dispId, dispParams);
+
+    return result;
+}
+
 
 /*************************************************************************
  *      @	[SHLWAPI.284]
@@ -2931,6 +3103,8 @@ HRESULT WINAPI IConnectionPoint_SimpleInvoke(
   result = IConnectionPoint_GetConnectionInterface(iCP, &iid);
   if (SUCCEEDED(result))
     result = SHLWAPI_InvokeByIID(iCP, &iid, dispId, dispParams);
+  else
+    result = SHLWAPI_InvokeByIID(iCP, NULL, dispId, dispParams);
 
   return result;
 }
@@ -3072,29 +3246,72 @@ BOOL WINAPI PlaySoundWrapW(LPCWSTR pszSound, HMODULE hmod, DWORD fdwSound)
 
 /*************************************************************************
  *      @	[SHLWAPI.294]
+ *
+ * Retrieve a key value from an INI file.  See GetPrivateProfileString for
+ * more information.
+ *
+ * PARAMS
+ *  appName   [I] The section in the INI file that contains the key
+ *  keyName   [I] The key to be retrieved
+ *  out       [O] The buffer into which the key's value will be copied
+ *  outLen    [I] The length of the `out' buffer
+ *  filename  [I] The location of the INI file
+ *
+ * RETURNS
+ *  Length of string copied into `out'.
  */
-BOOL WINAPI SHGetIniStringW(LPCWSTR str1, LPCWSTR str2, LPWSTR pStr, DWORD some_len, LPCWSTR lpStr2)
+DWORD WINAPI SHGetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPWSTR out,
+        DWORD outLen, LPCWSTR filename)
 {
-    FIXME("(%s,%s,%p,%08x,%s): stub!\n", debugstr_w(str1), debugstr_w(str2),
-        pStr, some_len, debugstr_w(lpStr2));
-    return TRUE;
+    INT ret;
+    WCHAR *buf;
+
+    TRACE("(%s,%s,%p,%08x,%s)\n", debugstr_w(appName), debugstr_w(keyName),
+        out, outLen, debugstr_w(filename));
+
+    if(outLen == 0)
+        return 0;
+
+    buf = HeapAlloc(GetProcessHeap(), 0, outLen * sizeof(WCHAR));
+    if(!buf){
+        *out = 0;
+        return 0;
+    }
+
+    ret = GetPrivateProfileStringW(appName, keyName, NULL, buf, outLen, filename);
+    if(ret)
+        strcpyW(out, buf);
+    else
+        *out = 0;
+
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    return strlenW(out);
 }
 
 /*************************************************************************
  *      @	[SHLWAPI.295]
  *
- * Called by ICQ2000b install via SHDOCVW:
- * str1: "InternetShortcut"
- * x: some unknown pointer
- * str2: "http://free.aol.com/tryaolfree/index.adp?139269"
- * str3: "C:\\WINDOWS\\Desktop.new2\\Free AOL & Unlimited Internet.url"
+ * Set a key value in an INI file.  See WritePrivateProfileString for
+ * more information.
  *
- * In short: this one maybe creates a desktop link :-)
+ * PARAMS
+ *  appName   [I] The section in the INI file that contains the key
+ *  keyName   [I] The key to be set
+ *  str       [O] The value of the key
+ *  filename  [I] The location of the INI file
+ *
+ * RETURNS
+ *   Success: TRUE
+ *   Failure: FALSE
  */
-BOOL WINAPI SHSetIniStringW(LPWSTR str1, LPVOID x, LPWSTR str2, LPWSTR str3)
+BOOL WINAPI SHSetIniStringW(LPCWSTR appName, LPCWSTR keyName, LPCWSTR str,
+        LPCWSTR filename)
 {
-    FIXME("(%s, %p, %s, %s), stub.\n", debugstr_w(str1), x, debugstr_w(str2), debugstr_w(str3));
-    return TRUE;
+    TRACE("(%s, %p, %s, %s)\n", debugstr_w(appName), keyName, debugstr_w(str),
+            debugstr_w(filename));
+
+    return WritePrivateProfileStringW(appName, keyName, str, filename);
 }
 
 /*************************************************************************
@@ -3290,12 +3507,12 @@ UINT WINAPI SHDefExtractIconWrapW(LPCWSTR pszIconFile, int iIndex, UINT uFlags, 
 HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, BOOL bInvokeDefault)
 {
   IContextMenu *iContext;
-  HRESULT hRet = E_FAIL;
+  HRESULT hRet;
 
-  TRACE("(%p,%p,%p,%d)\n", hWnd, lpFolder, lpApidl, bInvokeDefault);
+  TRACE("(%p, %p, %p, %d)\n", hWnd, lpFolder, lpApidl, bInvokeDefault);
 
   if (!lpFolder)
-    return hRet;
+    return E_FAIL;
 
   /* Get the context menu from the shell folder */
   hRet = IShellFolder_GetUIObjectOf(lpFolder, hWnd, 1, &lpApidl,
@@ -3315,7 +3532,7 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
       if (SUCCEEDED(hQuery))
       {
         if (bInvokeDefault &&
-            (dwDefaultId = GetMenuDefaultItem(hMenu, 0, 0)) != 0xFFFFFFFF)
+            (dwDefaultId = GetMenuDefaultItem(hMenu, 0, 0)) != (UINT)-1)
         {
           CMINVOKECOMMANDINFO cmIci;
           /* Invoke the default item */
@@ -3520,24 +3737,19 @@ BOOL WINAPI GetOpenFileNameWrapW(LPOPENFILENAMEW ofn)
  */
 HRESULT WINAPI SHIShellFolder_EnumObjects(LPSHELLFOLDER lpFolder, HWND hwnd, SHCONTF flags, IEnumIDList **ppenum)
 {
-    IPersist *persist;
-    HRESULT hr;
+    /* Windows attempts to get an IPersist interface and, if that fails, an
+     * IPersistFolder interface on the folder passed-in here.  If one of those
+     * interfaces is available, it then calls GetClassID on the folder... and
+     * then calls IShellFolder_EnumObjects no matter what, even crashing if
+     * lpFolder isn't actually an IShellFolder object.  The purpose of getting
+     * the ClassID is unknown, so we don't do it here.
+     *
+     * For discussion and detailed tests, see:
+     * "shlwapi: Be less strict on which type of IShellFolder can be enumerated"
+     * wine-devel mailing list, 3 Jun 2010
+     */
 
-    hr = IShellFolder_QueryInterface(lpFolder, &IID_IPersist, (LPVOID)&persist);
-    if(SUCCEEDED(hr))
-    {
-        CLSID clsid;
-        hr = IPersist_GetClassID(persist, &clsid);
-        if(SUCCEEDED(hr))
-        {
-            if(IsEqualCLSID(&clsid, &CLSID_ShellFSFolder))
-                hr = IShellFolder_EnumObjects(lpFolder, hwnd, flags, ppenum);
-            else
-                hr = E_FAIL;
-        }
-        IPersist_Release(persist);
-    }
-    return hr;
+    return IShellFolder_EnumObjects(lpFolder, hwnd, flags, ppenum);
 }
 
 /* INTERNAL: Map from HLS color space to RGB */
@@ -3724,7 +3936,7 @@ DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 HRESULT WINAPI CLSIDFromStringWrap(LPCWSTR idstr, CLSID *id)
 {
-    return CLSIDFromString((LPOLESTR)idstr, id);
+    return CLSIDFromString((LPCOLESTR)idstr, id);
 }
 
 /*************************************************************************
@@ -3844,6 +4056,8 @@ BOOL WINAPI IsOS(DWORD feature)
     case OS_APPLIANCE:
         FIXME("(OS_APPLIANCE) What should we return here?\n");
         return FALSE;
+    case 0x25: /*OS_VISTAORGREATER*/
+        ISOS_RETURN(platform == VER_PLATFORM_WIN32_NT && majorv >= 6)
     }
 
 #undef ISOS_RETURN
@@ -4083,18 +4297,24 @@ BOOL WINAPI SHIsLowMemoryMachine (DWORD x)
  */
 INT WINAPI GetMenuPosFromID(HMENU hMenu, UINT wID)
 {
- MENUITEMINFOW mi;
- INT nCount = GetMenuItemCount(hMenu), nIter = 0;
+    MENUITEMINFOW mi;
+    INT nCount = GetMenuItemCount(hMenu), nIter = 0;
 
- while (nIter < nCount)
- {
-   mi.cbSize = sizeof(mi);
-   mi.fMask = MIIM_ID;
-   if (GetMenuItemInfoW(hMenu, nIter, TRUE, &mi) && mi.wID == wID)
-     return nIter;
-   nIter++;
- }
- return -1;
+    TRACE("%p %u\n", hMenu, wID);
+
+    while (nIter < nCount)
+    {
+        mi.cbSize = sizeof(mi);
+        mi.fMask = MIIM_ID;
+        if (GetMenuItemInfoW(hMenu, nIter, TRUE, &mi) && mi.wID == wID)
+        {
+            TRACE("ret %d\n", nIter);
+            return nIter;
+        }
+        nIter++;
+    }
+
+    return -1;
 }
 
 /*************************************************************************
@@ -4104,6 +4324,7 @@ INT WINAPI GetMenuPosFromID(HMENU hMenu, UINT wID)
  */
 DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID)
 {
+    TRACE("%p %u\n", hMenu, uID);
     return GetMenuPosFromID(hMenu, uID);
 }
 
@@ -4182,10 +4403,10 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
 /***********************************************************************
  *		SHGetShellKey (SHLWAPI.@)
  */
-DWORD WINAPI SHGetShellKey(DWORD a, DWORD b, DWORD c)
+HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
 {
-    FIXME("(%x, %x, %x): stub\n", a, b, c);
-    return 0x50;
+    FIXME("(0x%08x, %s, %d): stub\n", flags, debugstr_w(sub_key), create);
+    return (HKEY)0x50;
 }
 
 /***********************************************************************
@@ -4304,8 +4525,8 @@ DWORD WINAPI GetUIVersion(void)
 INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
                                  LPCWSTR lpCaption, UINT uType, ...)
 {
-    WCHAR szText[100], szTitle[100];
-    LPCWSTR pszText = szText, pszTitle = szTitle;
+    WCHAR *szText = NULL, szTitle[100];
+    LPCWSTR pszText, pszTitle = szTitle;
     LPWSTR pszTemp;
     __ms_va_list args;
     int ret;
@@ -4320,7 +4541,22 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
         pszTitle = lpCaption;
 
     if (IS_INTRESOURCE(lpText))
-        LoadStringW(hInstance, LOWORD(lpText), szText, sizeof(szText)/sizeof(szText[0]));
+    {
+        const WCHAR *ptr;
+        UINT len = LoadStringW(hInstance, LOWORD(lpText), (LPWSTR)&ptr, 0);
+
+        if (len)
+        {
+            szText = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+            if (szText) LoadStringW(hInstance, LOWORD(lpText), szText, len + 1);
+        }
+        pszText = szText;
+        if (!pszText) {
+            WARN("Failed to load id %d\n", LOWORD(lpText));
+            __ms_va_end(args);
+            return 0;
+        }
+    }
     else
         pszText = lpText;
 
@@ -4330,22 +4566,10 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
     __ms_va_end(args);
 
     ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
+
+    HeapFree(GetProcessHeap(), 0, szText);
     LocalFree(pszTemp);
     return ret;
-}
-
-HRESULT WINAPI IUnknown_QueryServiceExec(IUnknown *unk, REFIID service, REFIID clsid,
-                                         DWORD x1, DWORD x2, DWORD x3, void **ppvOut)
-{
-    FIXME("%p %s %s %08x %08x %08x %p\n", unk,
-          debugstr_guid(service), debugstr_guid(clsid), x1, x2, x3, ppvOut);
-    return E_NOTIMPL;
-}
-
-HRESULT WINAPI IUnknown_ProfferService(IUnknown *unk, void *x0, void *x1, void *x2)
-{
-    FIXME("%p %p %p %p\n", unk, x0, x1, x2);
-    return E_NOTIMPL;
 }
 
 /***********************************************************************
@@ -4511,4 +4735,384 @@ free_sids:
     HeapFree(GetProcessHeap(), 0, sidlist);
 
     return psd;
+}
+
+/***********************************************************************
+ *             SHCreatePropertyBagOnRegKey [SHLWAPI.471]
+ *
+ * Creates a property bag from a registry key
+ *
+ * PARAMS
+ *  hKey       [I] Handle to the desired registry key
+ *  subkey     [I] Name of desired subkey, or NULL to open hKey directly
+ *  grfMode    [I] Optional flags
+ *  riid       [I] IID of requested property bag interface
+ *  ppv        [O] Address to receive pointer to the new interface
+ *
+ * RETURNS
+ *  success: 0
+ *  failure: error code
+ *
+ */
+HRESULT WINAPI SHCreatePropertyBagOnRegKey (HKEY hKey, LPCWSTR subkey,
+    DWORD grfMode, REFIID riid, void **ppv)
+{
+    FIXME("%p %s %d %s %p STUB\n", hKey, debugstr_w(subkey), grfMode,
+          debugstr_guid(riid), ppv);
+
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *             SHGetViewStatePropertyBag [SHLWAPI.515]
+ *
+ * Retrieves a property bag in which the view state information of a folder
+ * can be stored.
+ *
+ * PARAMS
+ *  pidl        [I] PIDL of the folder requested
+ *  bag_name    [I] Name of the property bag requested
+ *  flags       [I] Optional flags
+ *  riid        [I] IID of requested property bag interface
+ *  ppv         [O] Address to receive pointer to the new interface
+ *
+ * RETURNS
+ *  success: S_OK
+ *  failure: error code
+ *
+ */
+HRESULT WINAPI SHGetViewStatePropertyBag(LPCITEMIDLIST pidl, LPWSTR bag_name,
+    DWORD flags, REFIID riid, void **ppv)
+{
+    FIXME("%p %s %d %s %p STUB\n", pidl, debugstr_w(bag_name), flags,
+          debugstr_guid(riid), ppv);
+
+    return E_NOTIMPL;
+}
+
+/***********************************************************************
+ *             SHFormatDateTimeW [SHLWAPI.354]
+ *
+ * Produces a string representation of a time.
+ *
+ * PARAMS
+ *  fileTime   [I] Pointer to FILETIME structure specifying the time
+ *  flags      [I] Flags specifying the desired output
+ *  buf        [O] Pointer to buffer for output
+ *  size       [I] Number of characters that can be contained in buffer
+ *
+ * RETURNS
+ *  success: number of characters written to the buffer
+ *  failure: 0
+ *
+ */
+INT WINAPI SHFormatDateTimeW(const FILETIME UNALIGNED *fileTime, DWORD *flags,
+    LPWSTR buf, UINT size)
+{
+#define SHFORMATDT_UNSUPPORTED_FLAGS (FDTF_RELATIVE | FDTF_LTRDATE | FDTF_RTLDATE | FDTF_NOAUTOREADINGORDER)
+    DWORD fmt_flags = flags ? *flags : FDTF_DEFAULT;
+    SYSTEMTIME st;
+    FILETIME ft;
+    INT ret = 0;
+
+    TRACE("%p %p %p %u\n", fileTime, flags, buf, size);
+
+    if (!buf || !size)
+        return 0;
+
+    if (fmt_flags & SHFORMATDT_UNSUPPORTED_FLAGS)
+        FIXME("ignoring some flags - 0x%08x\n", fmt_flags & SHFORMATDT_UNSUPPORTED_FLAGS);
+
+    FileTimeToLocalFileTime(fileTime, &ft);
+    FileTimeToSystemTime(&ft, &st);
+
+    /* first of all date */
+    if (fmt_flags & (FDTF_LONGDATE | FDTF_SHORTDATE))
+    {
+        static const WCHAR sep1[] = {',',' ',0};
+        static const WCHAR sep2[] = {' ',0};
+
+        DWORD date = fmt_flags & FDTF_LONGDATE ? DATE_LONGDATE : DATE_SHORTDATE;
+        ret = GetDateFormatW(LOCALE_USER_DEFAULT, date, &st, NULL, buf, size);
+        if (ret >= size) return ret;
+
+        /* add separator */
+        if (ret < size && (fmt_flags & (FDTF_LONGTIME | FDTF_SHORTTIME)))
+        {
+            if ((fmt_flags & FDTF_LONGDATE) && (ret < size + 2))
+            {
+                if (ret < size + 2)
+                {
+                   lstrcatW(&buf[ret-1], sep1);
+                   ret += 2;
+                }
+            }
+            else
+            {
+                lstrcatW(&buf[ret-1], sep2);
+                ret++;
+            }
+        }
+    }
+    /* time part */
+    if (fmt_flags & (FDTF_LONGTIME | FDTF_SHORTTIME))
+    {
+        DWORD time = fmt_flags & FDTF_LONGTIME ? 0 : TIME_NOSECONDS;
+
+        if (ret) ret--;
+        ret += GetTimeFormatW(LOCALE_USER_DEFAULT, time, &st, NULL, &buf[ret], size - ret);
+    }
+
+    return ret;
+
+#undef SHFORMATDT_UNSUPPORTED_FLAGS
+}
+
+/***********************************************************************
+ *             SHFormatDateTimeA [SHLWAPI.353]
+ *
+ * See SHFormatDateTimeW.
+ *
+ */
+INT WINAPI SHFormatDateTimeA(const FILETIME UNALIGNED *fileTime, DWORD *flags,
+    LPSTR buf, UINT size)
+{
+    WCHAR *bufW;
+    INT retval;
+
+    if (!buf || !size)
+        return 0;
+
+    bufW = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * size);
+    retval = SHFormatDateTimeW(fileTime, flags, bufW, size);
+
+    if (retval != 0)
+        WideCharToMultiByte(CP_ACP, 0, bufW, -1, buf, size, NULL, NULL);
+
+    HeapFree(GetProcessHeap(), 0, bufW);
+    return retval;
+}
+
+/***********************************************************************
+ *             ZoneCheckUrlExW [SHLWAPI.231]
+ *
+ * Checks the details of the security zone for the supplied site. (?)
+ *
+ * PARAMS
+ *
+ *  szURL   [I] Pointer to the URL to check
+ *
+ *  Other parameters currently unknown.
+ *
+ * RETURNS
+ *  unknown
+ */
+
+INT WINAPI ZoneCheckUrlExW(LPWSTR szURL, PVOID pUnknown, DWORD dwUnknown2,
+    DWORD dwUnknown3, DWORD dwUnknown4, DWORD dwUnknown5, DWORD dwUnknown6,
+    DWORD dwUnknown7)
+{
+    FIXME("(%s,%p,%x,%x,%x,%x,%x,%x) STUB\n", debugstr_w(szURL), pUnknown, dwUnknown2,
+        dwUnknown3, dwUnknown4, dwUnknown5, dwUnknown6, dwUnknown7);
+
+    return 0;
+}
+
+/***********************************************************************
+ *             SHVerbExistsNA [SHLWAPI.196]
+ *
+ *
+ * PARAMS
+ *
+ *  verb [I] a string, often appears to be an extension.
+ *
+ *  Other parameters currently unknown.
+ *
+ * RETURNS
+ *  unknown
+ */
+INT WINAPI SHVerbExistsNA(LPSTR verb, PVOID pUnknown, PVOID pUnknown2, DWORD dwUnknown3)
+{
+    FIXME("(%s, %p, %p, %i) STUB\n",verb, pUnknown, pUnknown2, dwUnknown3);
+    return 0;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.538]
+ *
+ *  Undocumented:  Implementation guessed at via Name and behavior
+ *
+ * PARAMS
+ *  lpUnknown [I] Object to get an IServiceProvider interface from
+ *  riid      [I] Function requested for QueryService call
+ *  lppOut    [O] Destination for the service interface pointer
+ *
+ * RETURNS
+ *  Success: S_OK. lppOut contains an object providing the requested service
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  lpUnknown is expected to support the IServiceProvider interface.
+ */
+HRESULT WINAPI IUnknown_QueryServiceForWebBrowserApp(IUnknown* lpUnknown,
+        REFGUID riid, LPVOID *lppOut)
+{
+    FIXME("%p %s %p semi-STUB\n", lpUnknown, debugstr_guid(riid), lppOut);
+    return IUnknown_QueryService(lpUnknown,&IID_IWebBrowserApp,riid,lppOut);
+}
+
+/**************************************************************************
+ *  SHPropertyBag_ReadLONG (SHLWAPI.496)
+ *
+ * This function asks a property bag to read a named property as a LONG.
+ *
+ * PARAMS
+ *  ppb: a IPropertyBag interface
+ *  pszPropName:  Unicode string that names the property
+ *  pValue: address to receive the property value as a 32-bit signed integer
+ *
+ * RETURNS
+ *  0 for Success
+ */
+BOOL WINAPI SHPropertyBag_ReadLONG(IPropertyBag *ppb, LPCWSTR pszPropName, LPLONG pValue)
+{
+    VARIANT var;
+    HRESULT hr;
+    TRACE("%p %s %p\n", ppb,debugstr_w(pszPropName),pValue);
+    if (!pszPropName || !ppb || !pValue)
+        return E_INVALIDARG;
+    V_VT(&var) = VT_I4;
+    hr = IPropertyBag_Read(ppb, pszPropName, &var, NULL);
+    if (SUCCEEDED(hr))
+    {
+        if (V_VT(&var) == VT_I4)
+            *pValue = V_I4(&var);
+        else
+            hr = DISP_E_BADVARTYPE;
+    }
+    return hr;
+}
+
+/* return flags for SHGetObjectCompatFlags, names derived from registry value names */
+#define OBJCOMPAT_OTNEEDSSFCACHE           0x00000001
+#define OBJCOMPAT_NO_WEBVIEW               0x00000002
+#define OBJCOMPAT_UNBINDABLE               0x00000004
+#define OBJCOMPAT_PINDLL                   0x00000008
+#define OBJCOMPAT_NEEDSFILESYSANCESTOR     0x00000010
+#define OBJCOMPAT_NOTAFILESYSTEM           0x00000020
+#define OBJCOMPAT_CTXMENU_NOVERBS          0x00000040
+#define OBJCOMPAT_CTXMENU_LIMITEDQI        0x00000080
+#define OBJCOMPAT_COCREATESHELLFOLDERONLY  0x00000100
+#define OBJCOMPAT_NEEDSSTORAGEANCESTOR     0x00000200
+#define OBJCOMPAT_NOLEGACYWEBVIEW          0x00000400
+#define OBJCOMPAT_CTXMENU_XPQCMFLAGS       0x00001000
+#define OBJCOMPAT_NOIPROPERTYSTORE         0x00002000
+
+/* a search table for compatibility flags */
+struct objcompat_entry {
+    const WCHAR name[30];
+    DWORD value;
+};
+
+/* expected to be sorted by name */
+static const struct objcompat_entry objcompat_table[] = {
+    { {'C','O','C','R','E','A','T','E','S','H','E','L','L','F','O','L','D','E','R','O','N','L','Y',0},
+      OBJCOMPAT_COCREATESHELLFOLDERONLY },
+    { {'C','T','X','M','E','N','U','_','L','I','M','I','T','E','D','Q','I',0},
+      OBJCOMPAT_CTXMENU_LIMITEDQI },
+    { {'C','T','X','M','E','N','U','_','N','O','V','E','R','B','S',0},
+      OBJCOMPAT_CTXMENU_LIMITEDQI },
+    { {'C','T','X','M','E','N','U','_','X','P','Q','C','M','F','L','A','G','S',0},
+      OBJCOMPAT_CTXMENU_XPQCMFLAGS },
+    { {'N','E','E','D','S','F','I','L','E','S','Y','S','A','N','C','E','S','T','O','R',0},
+      OBJCOMPAT_NEEDSFILESYSANCESTOR },
+    { {'N','E','E','D','S','S','T','O','R','A','G','E','A','N','C','E','S','T','O','R',0},
+      OBJCOMPAT_NEEDSSTORAGEANCESTOR },
+    { {'N','O','I','P','R','O','P','E','R','T','Y','S','T','O','R','E',0},
+      OBJCOMPAT_NOIPROPERTYSTORE },
+    { {'N','O','L','E','G','A','C','Y','W','E','B','V','I','E','W',0},
+      OBJCOMPAT_NOLEGACYWEBVIEW },
+    { {'N','O','T','A','F','I','L','E','S','Y','S','T','E','M',0},
+      OBJCOMPAT_NOTAFILESYSTEM },
+    { {'N','O','_','W','E','B','V','I','E','W',0},
+      OBJCOMPAT_NO_WEBVIEW },
+    { {'O','T','N','E','E','D','S','S','F','C','A','C','H','E',0},
+      OBJCOMPAT_OTNEEDSSFCACHE },
+    { {'P','I','N','D','L','L',0},
+      OBJCOMPAT_PINDLL },
+    { {'U','N','B','I','N','D','A','B','L','E',0},
+      OBJCOMPAT_UNBINDABLE }
+};
+
+/**************************************************************************
+ *  SHGetObjectCompatFlags (SHLWAPI.476)
+ *
+ * Function returns an integer representation of compatibility flags stored
+ * in registry for CLSID under ShellCompatibility subkey.
+ *
+ * PARAMS
+ *  pUnk:  pointer to object IUnknown interface, idetifies CLSID
+ *  clsid: pointer to CLSID to retrieve data for
+ *
+ * RETURNS
+ *  0 on failure, flags set on success
+ */
+DWORD WINAPI SHGetObjectCompatFlags(IUnknown *pUnk, const CLSID *clsid)
+{
+    static const WCHAR compatpathW[] =
+        {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+         'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+         'S','h','e','l','l','C','o','m','p','a','t','i','b','i','l','i','t','y','\\',
+         'O','b','j','e','c','t','s','\\','%','s',0};
+    WCHAR strW[sizeof(compatpathW)/sizeof(WCHAR) + 38 /* { CLSID } */];
+    DWORD ret, length = sizeof(strW)/sizeof(WCHAR);
+    OLECHAR *clsid_str;
+    HKEY key;
+    INT i;
+
+    TRACE("%p %s\n", pUnk, debugstr_guid(clsid));
+
+    if (!pUnk && !clsid) return 0;
+
+    if (pUnk && !clsid)
+    {
+        FIXME("iface not handled\n");
+        return 0;
+    }
+
+    StringFromCLSID(clsid, &clsid_str);
+    sprintfW(strW, compatpathW, clsid_str);
+    CoTaskMemFree(clsid_str);
+
+    ret = RegOpenKeyW(HKEY_LOCAL_MACHINE, strW, &key);
+    if (ret != ERROR_SUCCESS) return 0;
+
+    /* now collect flag values */
+    ret = 0;
+    for (i = 0; RegEnumValueW(key, i, strW, &length, NULL, NULL, NULL, NULL) == ERROR_SUCCESS; i++)
+    {
+        INT left, right, res, x;
+
+        /* search in table */
+        left  = 0;
+        right = sizeof(objcompat_table) / sizeof(struct objcompat_entry) - 1;
+
+        while (right >= left) {
+            x = (left + right) / 2;
+            res = strcmpW(strW, objcompat_table[x].name);
+            if (res == 0)
+            {
+                ret |= objcompat_table[x].value;
+                break;
+            }
+            else if (res < 0)
+                right = x - 1;
+            else
+                left = x + 1;
+        }
+
+        length = sizeof(strW)/sizeof(WCHAR);
+    }
+
+    return ret;
 }

@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="iccvid" type="win32dll" baseaddress="${BASEADDRESS_ICCVID}" installbase="system32" installname="iccvid.dll" allowwarnings="true">
 	<importlibrary definition="iccvid.spec" />
 	<include base="iccvid">.</include>
@@ -7,6 +9,5 @@
 	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

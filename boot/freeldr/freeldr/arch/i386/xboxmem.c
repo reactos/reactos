@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * Note: much of this code was based on knowledge and/or code developed
  * by the Xbox Linux group: http://www.xbox-linux.org
@@ -45,14 +45,14 @@ XboxMemInit(VOID)
   InstalledMemoryMb = 64;
   memset(ControlRegion, TEST_PATTERN1, TEST_SIZE);
   memset(MembaseTop, TEST_PATTERN1, TEST_SIZE);
-  __asm__ ("wbinvd\n");
+  __wbinvd();
 
   if (0 == memcmp(MembaseTop, ControlRegion, TEST_SIZE))
     {
       /* Looks like there is memory .. maybe a 128MB box */
       memset(ControlRegion, TEST_PATTERN2, TEST_SIZE);
       memset(MembaseTop, TEST_PATTERN2, TEST_SIZE);
-      __asm__ ("wbinvd\n");
+      __wbinvd();
       if (0 == memcmp(MembaseTop, ControlRegion, TEST_SIZE))
         {
           /* Definitely looks like there is memory */

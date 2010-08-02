@@ -1,5 +1,4 @@
-#ifndef __MSGINA_H
-#define __MSGINA_H
+#pragma once
 
 #include <windows.h>
 #include <userenv.h>
@@ -31,7 +30,7 @@ typedef struct
 	HBITMAP hBitmap;
 } GINA_CONTEXT, *PGINA_CONTEXT;
 
-HINSTANCE hDllInstance;
+extern HINSTANCE hDllInstance;
 
 typedef BOOL (*PFGINA_INITIALIZE)(PGINA_CONTEXT);
 typedef BOOL (*PFGINA_DISPLAYSTATUSMESSAGE)(PGINA_CONTEXT, HDESK, DWORD, PWSTR, PWSTR);
@@ -59,7 +58,5 @@ DoLoginTasks(
 	IN PWSTR UserName,
 	IN PWSTR Domain,
 	IN PWSTR Password);
-
-#endif /* __MSGINA_H */
 
 /* EOF */

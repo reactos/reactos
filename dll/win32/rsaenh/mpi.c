@@ -42,6 +42,53 @@
 static const int KARATSUBA_MUL_CUTOFF = 88,  /* Min. number of digits before Karatsuba multiplication is used. */
                  KARATSUBA_SQR_CUTOFF = 128; /* Min. number of digits before Karatsuba squaring is used. */
 
+
+/* trim unused digits */
+static void mp_clamp(mp_int *a);
+
+/* compare |a| to |b| */
+static int mp_cmp_mag(const mp_int *a, const mp_int *b);
+
+/* Counts the number of lsbs which are zero before the first zero bit */
+static int mp_cnt_lsb(const mp_int *a);
+
+/* computes a = B**n mod b without division or multiplication useful for
+ * normalizing numbers in a Montgomery system.
+ */
+static int mp_montgomery_calc_normalization(mp_int *a, const mp_int *b);
+
+/* computes x/R == x (mod N) via Montgomery Reduction */
+static int mp_montgomery_reduce(mp_int *a, const mp_int *m, mp_digit mp);
+
+/* setups the montgomery reduction */
+static int mp_montgomery_setup(const mp_int *a, mp_digit *mp);
+
+/* Barrett Reduction, computes a (mod b) with a precomputed value c
+ *
+ * Assumes that 0 < a <= b*b, note if 0 > a > -(b*b) then you can merely
+ * compute the reduction as -1 * mp_reduce(mp_abs(a)) [pseudo code].
+ */
+static int mp_reduce(mp_int *a, const mp_int *b, const mp_int *c);
+
+/* reduces a modulo b where b is of the form 2**p - k [0 <= a] */
+static int mp_reduce_2k(mp_int *a, const mp_int *n, mp_digit d);
+
+/* determines k value for 2k reduction */
+static int mp_reduce_2k_setup(const mp_int *a, mp_digit *d);
+
+/* used to setup the Barrett reduction for a given modulus b */
+static int mp_reduce_setup(mp_int *a, const mp_int *b);
+
+/* set to a digit */
+static void mp_set(mp_int *a, mp_digit b);
+
+/* b = a*a  */
+static int mp_sqr(const mp_int *a, mp_int *b);
+
+/* c = a * a (mod b) */
+static int mp_sqrmod(const mp_int *a, mp_int *b, mp_int *c);
+
+
 static void bn_reverse(unsigned char *s, int len);
 static int s_mp_add(mp_int *a, mp_int *b, mp_int *c);
 static int s_mp_exptmod (const mp_int * G, const mp_int * X, mp_int * P, mp_int * Y);
@@ -3589,7 +3636,7 @@ ERR:
 }
 
 /* determines the setup value */
-int 
+static int
 mp_reduce_2k_setup(const mp_int *a, mp_digit *d)
 {
    int res, p;
@@ -3675,12 +3722,6 @@ int mp_shrink (mp_int * a)
     a->alloc = a->used;
   }
   return MP_OKAY;
-}
-
-/* get the size for an signed equivalent */
-int mp_signed_bin_size (const mp_int * a)
-{
-  return 1 + mp_unsigned_bin_size (a);
 }
 
 /* computes b = a*a */

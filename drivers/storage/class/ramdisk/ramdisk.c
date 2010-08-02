@@ -10,6 +10,7 @@
 
 #include <initguid.h>
 #include <ntddk.h>
+#include <ntifs.h>
 #include <ntdddisk.h>
 #include <ntddcdrm.h>
 #include <scsi.h>
@@ -26,6 +27,8 @@
 #include <stdio.h>
 #define NDEBUG
 #include <debug.h>
+
+#define DO_XIP   0x00020000
 
 /* GLOBALS ********************************************************************/
 
@@ -493,7 +496,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         Length = GuidString.Length + 32;
         Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                        Length,
-                                       TAG('R', 'a', 'm', 'd'));
+                                       'dmaR');
         if (!Buffer)
         {
             //
@@ -542,7 +545,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
             SymbolicLinkName.Length = GuidString.Length + 34;
             Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                            SymbolicLinkName.MaximumLength,
-                                           TAG('R', 'a', 'm', 'd'));
+                                           'dmaR');
             SymbolicLinkName.Buffer = Buffer;
             if (Buffer)
             {
@@ -618,7 +621,7 @@ RamdiskCreateDiskDevice(IN PRAMDISK_BUS_EXTENSION DeviceExtension,
         DiskLength = Input->DiskLength;
 		ExInitializeFastMutex(&DriveExtension->DiskListLock);
 	    IoInitializeRemoveLock(&DriveExtension->RemoveLock,
-                               TAG('R', 'a', 'm', 'd'),
+                               'dmaR',
                                0,
                                1);
         DriveExtension->DriveDeviceName = DeviceName;
@@ -1012,7 +1015,8 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
         IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = 0;
-        return IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        return;
     }
     
     //
@@ -1020,7 +1024,7 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
     //
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
-    return IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
 NTSTATUS
@@ -1810,7 +1814,7 @@ RamdiskQueryDeviceRelations(IN DEVICE_RELATION_TYPE Type,
                                                             Objects) +
                                                FinalCount *
                                                sizeof(PDEVICE_OBJECT),
-                                               TAG('R', 'a', 'm', 'd'));
+                                               'dmaR');
     if (!OurDeviceRelations)
     {
         //
@@ -2230,7 +2234,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 	    DeviceExtension->Type = RamdiskBus;
 		ExInitializeFastMutex(&DeviceExtension->DiskListLock);
 	    IoInitializeRemoveLock(&DeviceExtension->RemoveLock,
-                               TAG('R', 'a', 'm', 'd'),
+                               'dmaR',
                                0,
                                1);
 		InitializeListHead(&DeviceExtension->DiskList);
@@ -2307,7 +2311,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PCHAR BootDeviceName, CommandLine;
     PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     NTSTATUS Status;
-    DPRINT1("RAM Disk Driver Initialized\n");
+    DPRINT("RAM Disk Driver Initialized\n");
     
     //
     // Query ramdisk parameters
@@ -2321,7 +2325,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverRegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                       RegistryPath->Length +
                                                       sizeof(WCHAR),
-                                                      TAG('R', 'a', 'm', 'd'));
+                                                      'dmaR');
     if (!DriverRegistryPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
     RtlCopyUnicodeString(&DriverRegistryPath, RegistryPath);
     
@@ -2418,18 +2422,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                                         0,
                                         &PhysicalDeviceObject);
         if (NT_SUCCESS(Status))
-        {
-            //
-            // ReactOS Fix
-            // The ReactOS Plug and Play Manager is broken and does not create
-            // the required keys when reporting a detected device.
-            // We hack around this ourselves.
-            //
-            RtlCreateUnicodeString(&((PEXTENDED_DEVOBJ_EXTENSION)
-                                   PhysicalDeviceObject->DeviceObjectExtension)
-                                   ->DeviceNode->InstancePath,
-                                   L"Root\\UNKNOWN\\0000");
-            
+        {            
             //
             // Create the device object
             //

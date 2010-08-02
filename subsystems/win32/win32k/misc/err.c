@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -27,7 +27,7 @@
  *       06-06-2001  CSH  Created
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -50,7 +50,7 @@ SetLastWin32Error(DWORD Status)
 }
 
 NTSTATUS FASTCALL
-GetLastNtError()
+GetLastNtError(VOID)
 {
   PTEB Teb = PsGetCurrentThread()->Tcb.Teb;
 
@@ -59,24 +59,6 @@ GetLastNtError()
       return Teb->LastStatusValue;
     }
   return 0;
-}
-
-VOID
-APIENTRY
-W32kRaiseStatus(NTSTATUS Status)
-{
-    EXCEPTION_RECORD ExceptionRecord;
-
-    /* Create an exception record */
-    ExceptionRecord.ExceptionCode  = Status;
-    ExceptionRecord.ExceptionRecord = NULL;
-    ExceptionRecord.NumberParameters = 0;
-    ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-    RtlRaiseException(&ExceptionRecord);
-
-    /* If we returned, raise a status */
-    W32kRaiseStatus(Status);
 }
 
 /* EOF */

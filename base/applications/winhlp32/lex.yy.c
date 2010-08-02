@@ -380,9 +380,9 @@ static char *yy_last_accepting_cpos;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "macro.lex.l"
+#line 1 ".\\macro.lex.l"
 #define INITIAL 0
-#line 2 "macro.lex.l"
+#line 2 ".\\macro.lex.l"
 /*
  * Help Viewer
  *
@@ -407,15 +407,20 @@ char *yytext;
 #define YY_NO_UNPUT 1
 #define quote 1
 
-#line 26 "macro.lex.l"
+#line 26 ".\\macro.lex.l"
 #include "config.h"
 #include <assert.h>
+#include <stdarg.h>
 
 #ifndef HAVE_UNISTD_H
 #define YY_NO_UNISTD_H
 #endif
 
-#include "macro.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winhelp.h"
 
 #include "wine/debug.h"
 
@@ -428,6 +433,7 @@ struct lex_data {
     unsigned quote_stk_idx;
     LPSTR    cache_string[32];
     int      cache_used;
+    WINHELP_WINDOW* window;
 };
 static struct lex_data* lex_data = NULL;
 
@@ -436,7 +442,7 @@ struct lexret  yylval;
 #define YY_INPUT(buf,result,max_size)\
   if ((result = *lex_data->macroptr ? 1 : 0)) buf[0] = *lex_data->macroptr++;
 
-#line 440 "lex.yy.c"
+#line 446 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -587,10 +593,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
 
-#line 55 "macro.lex.l"
+#line 61 ".\\macro.lex.l"
 
 
-#line 594 "lex.yy.c"
+#line 600 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -675,32 +681,32 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 57 "macro.lex.l"
+#line 63 ".\\macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 10);	return INTEGER;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 58 "macro.lex.l"
+#line 64 ".\\macro.lex.l"
 yylval.integer = strtol(yytext, NULL, 16);	return INTEGER;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 60 "macro.lex.l"
+#line 66 ".\\macro.lex.l"
 return MACRO_Lookup(yytext, &yylval);
 	YY_BREAK
 case 4:
-#line 63 "macro.lex.l"
+#line 69 ".\\macro.lex.l"
 case 5:
-#line 64 "macro.lex.l"
+#line 70 ".\\macro.lex.l"
 case 6:
-#line 65 "macro.lex.l"
+#line 71 ".\\macro.lex.l"
 case 7:
-#line 66 "macro.lex.l"
+#line 72 ".\\macro.lex.l"
 case 8:
-#line 67 "macro.lex.l"
+#line 73 ".\\macro.lex.l"
 case 9:
 YY_RULE_SETUP
-#line 67 "macro.lex.l"
+#line 73 ".\\macro.lex.l"
 {
     if (lex_data->quote_stk_idx == 0 ||
         (yytext[0] == '\"' && lex_data->quote_stack[lex_data->quote_stk_idx - 1] != '\"') ||
@@ -735,34 +741,34 @@ YY_RULE_SETUP
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 99 "macro.lex.l"
+#line 105 ".\\macro.lex.l"
 *lex_data->strptr++ = yytext[0];
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 100 "macro.lex.l"
+#line 106 ".\\macro.lex.l"
 *lex_data->strptr++ = yytext[1];
 	YY_BREAK
 case YY_STATE_EOF(quote):
-#line 101 "macro.lex.l"
+#line 107 ".\\macro.lex.l"
 return 0;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 103 "macro.lex.l"
+#line 109 ".\\macro.lex.l"
 
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 104 "macro.lex.l"
+#line 110 ".\\macro.lex.l"
 return yytext[0];
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 105 "macro.lex.l"
+#line 111 ".\\macro.lex.l"
 ECHO;
 	YY_BREAK
-#line 766 "lex.yy.c"
+#line 772 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1648,7 +1654,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 105 "macro.lex.l"
+#line 111 ".\\macro.lex.l"
 
 
 #if 0
@@ -1693,7 +1699,7 @@ static const char* ts(int t)
     }
 }
 
-static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret);
+static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret);
 
 /******************************************************************
  *		MACRO_CheckArgs
@@ -1763,7 +1769,7 @@ CheckArgs_end:
  * Invokes boolean function fn, which arguments are defined by args
  * stores bool result into ret
  */
-static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
+static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 {
     void*       pa[2];
     int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
@@ -1775,8 +1781,18 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
 
     switch (strlen(args))
     {
-    case 0: *ret = (void*)(fn)();          break;
-    case 1: *ret = (void*)(fn)(pa[0]);     break;
+    case 0:
+    {
+        BOOL (WINAPI *func)(void) = fn;
+        *ret = (void *)(ULONG_PTR)func();
+        break;
+    }
+    case 1:
+    {
+        BOOL (WINAPI *func)(void *) = fn;
+        *ret = (void *)(ULONG_PTR)func( pa[0]);
+        break;
+    }
     default: WINE_FIXME("NIY\n");
     }
 
@@ -1788,7 +1804,7 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
  *
  *
  */
-static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
+static int MACRO_CallVoidFunc(void *fn, const char* args)
 {
     void*       pa[6];
     int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
@@ -1800,20 +1816,55 @@ static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
 
     switch (strlen(args))
     {
-    case 0: (fn)();                                     break;
-    case 1: (fn)(pa[0]);                                break;
-    case 2: (fn)(pa[0],pa[1]);                          break;
-    case 3: (fn)(pa[0],pa[1],pa[2]);                    break;
-    case 4: (fn)(pa[0],pa[1],pa[2],pa[3]);              break;
-    case 5: (fn)(pa[0],pa[1],pa[2],pa[3],pa[4]);        break;
-    case 6: (fn)(pa[0],pa[1],pa[2],pa[3],pa[4],pa[5]);  break;
+    case 0:
+    {
+        void (WINAPI *func)(void) = fn;
+        func();
+        break;
+    }
+    case 1:
+    {
+        void (WINAPI *func)(void*) = fn;
+        func( pa[0] );
+        break;
+    }
+    case 2:
+    {
+        void (WINAPI *func)(void*,void*) = fn;
+        func( pa[0], pa[1] );
+        break;
+    }
+    case 3:
+    {
+        void (WINAPI *func)(void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2] );
+        break;
+    }
+    case 4:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3] );
+        break;
+    }
+    case 5:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3], pa[4] );
+        break;
+    }
+    case 6:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3], pa[4], pa[5] );
+        break;
+    }
     default: WINE_FIXME("NIY\n");
     }
 
     return 1;
 }
 
-BOOL MACRO_ExecuteMacro(LPCSTR macro)
+BOOL MACRO_ExecuteMacro(WINHELP_WINDOW* window, LPCSTR macro)
 {
     struct lex_data     curr_lex_data, *prev_lex_data;
     BOOL ret = TRUE;
@@ -1826,6 +1877,7 @@ BOOL MACRO_ExecuteMacro(LPCSTR macro)
 
     memset(lex_data, 0, sizeof(*lex_data));
     lex_data->macroptr = macro;
+    lex_data->window = WINHELP_GrabWindow(window);
 
     while ((t = yylex()) != EMPTY)
     {
@@ -1840,13 +1892,15 @@ BOOL MACRO_ExecuteMacro(LPCSTR macro)
             break;
         default:
             WINE_WARN("got unexpected type %s\n", ts(t));
-            return 0;
+            YY_FLUSH_BUFFER;
+            ret = FALSE;
+            goto done;
         }
         switch (t = yylex())
         {
         case EMPTY:     goto done;
         case ';':       break;
-        default:        ret = FALSE; goto done;
+        default:        ret = FALSE; YY_FLUSH_BUFFER; goto done;
         }
     }
 
@@ -1854,8 +1908,14 @@ done:
     for (t = 0; t < lex_data->cache_used; t++)
         HeapFree(GetProcessHeap(), 0, lex_data->cache_string[t]);
     lex_data = prev_lex_data;
+    WINHELP_ReleaseWindow(window);
 
     return ret;
+}
+
+WINHELP_WINDOW* MACRO_CurrentWindow(void)
+{
+    return lex_data ? lex_data->window : Globals.active_win;
 }
 
 #ifndef yywrap

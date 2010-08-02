@@ -1,5 +1,4 @@
-#ifndef RESOURCE_H__
-#define RESOURCE_H__
+#pragma once
 
 /* dialog constants */
 #define IDD_MAIN_DIALOG	  100
@@ -142,6 +141,3 @@
 
 /* icon resource constants */
 #define IDI_APPICON        20000
-
-
-#endif

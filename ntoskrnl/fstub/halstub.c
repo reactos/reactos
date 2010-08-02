@@ -36,7 +36,7 @@ HAL_DISPATCH HalDispatchTable =
     (pHalStartMirroring)NULL,
     (pHalEndMirroring)NULL,
     (pHalMirrorPhysicalMemory)NULL,
-    (pHalEndOfBoot)NULL,
+    xHalEndOfBoot,
     (pHalMirrorVerify)NULL
 };
 
@@ -47,11 +47,11 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
     (pHalHandlerForConfigSpace)NULL,
     (pHalLocateHiberRanges)NULL,
     (pHalRegisterBusHandler)NULL,
-    (pHalSetWakeEnable)NULL,
+    xHalSetWakeEnable,
     (pHalSetWakeAlarm)NULL,
     (pHalTranslateBusAddress)NULL,
     (pHalAssignSlotResources)NULL,
-    (pHalHaltSystem)NULL,
+    xHalHaltSystem,
     (pHalFindBusAddressTranslation)NULL,
     (pHalResetDisplay)NULL,
     (pHalAllocateMapRegisters)NULL,
@@ -59,12 +59,41 @@ HAL_PRIVATE_DISPATCH HalPrivateDispatchTable =
     (pKdReleasePciDeviceForDebugging)NULL,
     (pKdGetAcpiTablePhase0)NULL,
     (pKdCheckPowerButton)NULL,
-    (pHalVectorToIDTEntry)NULL,
+    (pHalVectorToIDTEntry)xHalVectorToIDTEntry,
     (pKdMapPhysicalMemory64)NULL,
     (pKdUnmapVirtualAddress)NULL
 };
 
 /* FUNCTIONS *****************************************************************/
 
+UCHAR
+NTAPI
+xHalVectorToIDTEntry(IN ULONG Vector)
+{
+    /* Return the vector */
+    return Vector;
+}
 
-/* EOF */
+VOID
+NTAPI
+xHalHaltSystem(VOID)
+{
+    /* Halt execution */
+    while (TRUE);
+}
+
+VOID
+NTAPI
+xHalEndOfBoot(VOID)
+{
+    /* Nothing */
+    return;
+}
+
+VOID
+NTAPI
+xHalSetWakeEnable(IN BOOLEAN Enable)
+{
+    /* Nothing */
+    return;
+}

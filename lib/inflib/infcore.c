@@ -48,7 +48,7 @@ struct parser
   PINFCACHESECTION cur_section;   /* pointer to the section being parsed*/
   PINFCACHELINE    line;          /* current line */
   unsigned int     line_pos;      /* current line position in file */
-  unsigned int     error;         /* error code */
+  INFSTATUS        error;         /* error code */
   unsigned int     token_len;     /* current token len */
   TCHAR token[MAX_FIELD_LEN+1];   /* current token */
 };
@@ -181,8 +181,8 @@ InfpAddSection(PINFCACHE Cache,
     }
 
   /* Allocate and initialize the new section */
-  Size = FIELD_OFFSET(INFCACHESECTION,
-                      Name[_tcslen (Name) + 1]);
+  Size = (ULONG)FIELD_OFFSET(INFCACHESECTION,
+                             Name[_tcslen (Name) + 1]);
   Section = (PINFCACHESECTION)MALLOC (Size);
   if (Section == NULL)
     {
@@ -286,8 +286,8 @@ InfpAddFieldToLine(PINFCACHELINE Line,
   PINFCACHEFIELD Field;
   ULONG Size;
 
-  Size = FIELD_OFFSET(INFCACHEFIELD,
-                      Data[_tcslen(Data) + 1]);
+  Size = (ULONG)FIELD_OFFSET(INFCACHEFIELD,
+                             Data[_tcslen(Data) + 1]);
   Field = (PINFCACHEFIELD)MALLOC(Size);
   if (Field == NULL)
     {
@@ -382,7 +382,7 @@ __inline static int is_eol( struct parser *parser, const CHAR *ptr )
 /* push data from current token start up to pos into the current token */
 static int push_token( struct parser *parser, const CHAR *pos )
 {
-  unsigned int len = pos - parser->start;
+  UINT len = (UINT)(pos - parser->start);
   const CHAR *src = parser->start;
   TCHAR *dst = parser->token + parser->token_len;
 
@@ -391,7 +391,17 @@ static int push_token( struct parser *parser, const CHAR *pos )
 
   parser->token_len += len;
   for ( ; len > 0; len--, dst++, src++)
-    *dst = *src ? (TCHAR)*src : L' ';
+  {
+    if (*src)
+    {
+      *dst = *src;
+    }
+    else
+    {
+      *dst = _T(' ');
+    }
+  }
+
   *dst = 0;
   parser->start = pos;
 

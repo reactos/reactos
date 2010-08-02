@@ -43,7 +43,7 @@ typedef struct {
     LONG ref;
 
     nsIDOMRange *nsrange;
-    HTMLDocument *doc;
+    HTMLDocumentNode *doc;
 
     struct list entry;
 } HTMLTxtRange;
@@ -72,7 +72,7 @@ typedef enum {
     RU_TEXTEDIT
 } range_unit_t;
 
-static HTMLTxtRange *get_range_object(HTMLDocument *doc, IHTMLTxtRange *iface)
+static HTMLTxtRange *get_range_object(HTMLDocumentNode *doc, IHTMLTxtRange *iface)
 {
     HTMLTxtRange *iter;
 
@@ -177,12 +177,14 @@ static BOOL is_space_elem(nsIDOMNode *node)
     return ret;
 }
 
-static inline void wstrbuf_init(wstrbuf_t *buf)
+static inline BOOL wstrbuf_init(wstrbuf_t *buf)
 {
     buf->len = 0;
     buf->size = 16;
     buf->buf = heap_alloc(buf->size * sizeof(WCHAR));
+    if (!buf->buf) return FALSE;
     *buf->buf = 0;
+    return TRUE;
 }
 
 static inline void wstrbuf_finish(wstrbuf_t *buf)
@@ -549,13 +551,14 @@ HRESULT get_node_text(HTMLDOMNode *node, BSTR *ret)
     wstrbuf_t buf;
     HRESULT hres = S_OK;
 
-    wstrbuf_init(&buf);
+    if (!wstrbuf_init(&buf))
+        return E_OUTOFMEMORY;
     wstrbuf_append_node_rec(&buf, node->nsnode);
     if(buf.buf) {
         *ret = SysAllocString(buf.buf);
         if(!*ret)
             hres = E_OUTOFMEMORY;
-    }else {
+    } else {
         *ret = NULL;
     }
     wstrbuf_finish(&buf);
@@ -804,11 +807,11 @@ static WCHAR prev_char(HTMLTxtRange *This, const dompos_t *pos, dompos_t *new_po
     return 0;
 }
 
-static long move_next_chars(long cnt, const dompos_t *pos, BOOL col, const dompos_t *bound_pos,
+static LONG move_next_chars(LONG cnt, const dompos_t *pos, BOOL col, const dompos_t *bound_pos,
         BOOL *bounded, dompos_t *new_pos)
 {
     dompos_t iter, tmp;
-    long ret = 0;
+    LONG ret = 0;
     WCHAR c;
 
     if(bounded)
@@ -843,11 +846,11 @@ static long move_next_chars(long cnt, const dompos_t *pos, BOOL col, const dompo
     return ret;
 }
 
-static long move_prev_chars(HTMLTxtRange *This, long cnt, const dompos_t *pos, BOOL end,
+static LONG move_prev_chars(HTMLTxtRange *This, LONG cnt, const dompos_t *pos, BOOL end,
         const dompos_t *bound_pos, BOOL *bounded, dompos_t *new_pos)
 {
     dompos_t iter, tmp;
-    long ret = 0;
+    LONG ret = 0;
     BOOL prev_eq = FALSE;
     WCHAR c;
 
@@ -882,7 +885,7 @@ static long move_prev_chars(HTMLTxtRange *This, long cnt, const dompos_t *pos, B
     return ret;
 }
 
-static long find_prev_space(HTMLTxtRange *This, const dompos_t *pos, BOOL first_space, dompos_t *ret)
+static LONG find_prev_space(HTMLTxtRange *This, const dompos_t *pos, BOOL first_space, dompos_t *ret)
 {
     dompos_t iter, tmp;
     WCHAR c;
@@ -946,10 +949,10 @@ static int find_word_end(const dompos_t *pos, dompos_t *ret)
     return cnt;
 }
 
-static long move_next_words(long cnt, const dompos_t *pos, dompos_t *new_pos)
+static LONG move_next_words(LONG cnt, const dompos_t *pos, dompos_t *new_pos)
 {
     dompos_t iter, tmp;
-    long ret = 0;
+    LONG ret = 0;
     WCHAR c;
 
     c = get_pos_char(pos);
@@ -974,10 +977,10 @@ static long move_next_words(long cnt, const dompos_t *pos, dompos_t *new_pos)
     return ret;
 }
 
-static long move_prev_words(HTMLTxtRange *This, long cnt, const dompos_t *pos, dompos_t *new_pos)
+static LONG move_prev_words(HTMLTxtRange *This, LONG cnt, const dompos_t *pos, dompos_t *new_pos)
 {
     dompos_t iter, tmp;
-    long ret = 0;
+    LONG ret = 0;
 
     iter = *pos;
     dompos_addref(&iter);
@@ -1138,7 +1141,7 @@ static HRESULT WINAPI HTMLTxtRange_put_text(IHTMLTxtRange *iface, BSTR v)
     if(!This->doc)
         return MSHTML_E_NODOC;
 
-    nsAString_Init(&text_str, v);
+    nsAString_InitDepend(&text_str, v);
     nsres = nsIDOMHTMLDocument_CreateTextNode(This->doc->nsdoc, &text_str, &text_node);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
@@ -1171,9 +1174,10 @@ static HRESULT WINAPI HTMLTxtRange_get_text(IHTMLTxtRange *iface, BSTR *p)
     if(!This->nsrange)
         return S_OK;
 
-    wstrbuf_init(&buf);
+    if (!wstrbuf_init(&buf))
+        return E_OUTOFMEMORY;
     range_to_string(This, &buf);
-    if(buf.buf)
+    if (buf.buf)
         *p = SysAllocString(buf.buf);
     wstrbuf_finish(&buf);
 
@@ -1211,14 +1215,15 @@ static HRESULT WINAPI HTMLTxtRange_duplicate(IHTMLTxtRange *iface, IHTMLTxtRange
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     nsIDOMRange *nsrange = NULL;
+    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, Duplicate);
 
     nsIDOMRange_CloneRange(This->nsrange, &nsrange);
-    *Duplicate = HTMLTxtRange_Create(This->doc, nsrange);
+    hres = HTMLTxtRange_Create(This->doc, nsrange, Duplicate);
     nsIDOMRange_Release(nsrange);
 
-    return S_OK;
+    return hres;
 }
 
 static HRESULT WINAPI HTMLTxtRange_inRange(IHTMLTxtRange *iface, IHTMLTxtRange *Range,
@@ -1372,12 +1377,12 @@ static HRESULT WINAPI HTMLTxtRange_expand(IHTMLTxtRange *iface, BSTR Unit, VARIA
 }
 
 static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
-        long Count, long *ActualCount)
+        LONG Count, LONG *ActualCount)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     range_unit_t unit;
 
-    TRACE("(%p)->(%s %ld %p)\n", This, debugstr_w(Unit), Count, ActualCount);
+    TRACE("(%p)->(%s %d %p)\n", This, debugstr_w(Unit), Count, ActualCount);
 
     unit = string_to_unit(Unit);
     if(unit == RU_UNKNOWN)
@@ -1436,17 +1441,17 @@ static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
         FIXME("unimplemented unit %s\n", debugstr_w(Unit));
     }
 
-    TRACE("ret %ld\n", *ActualCount);
+    TRACE("ret %d\n", *ActualCount);
     return S_OK;
 }
 
 static HRESULT WINAPI HTMLTxtRange_moveStart(IHTMLTxtRange *iface, BSTR Unit,
-        long Count, long *ActualCount)
+        LONG Count, LONG *ActualCount)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     range_unit_t unit;
 
-    TRACE("(%p)->(%s %ld %p)\n", This, debugstr_w(Unit), Count, ActualCount);
+    TRACE("(%p)->(%s %d %p)\n", This, debugstr_w(Unit), Count, ActualCount);
 
     unit = string_to_unit(Unit);
     if(unit == RU_UNKNOWN)
@@ -1492,12 +1497,12 @@ static HRESULT WINAPI HTMLTxtRange_moveStart(IHTMLTxtRange *iface, BSTR Unit,
 }
 
 static HRESULT WINAPI HTMLTxtRange_moveEnd(IHTMLTxtRange *iface, BSTR Unit,
-        long Count, long *ActualCount)
+        LONG Count, LONG *ActualCount)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     range_unit_t unit;
 
-    TRACE("(%p)->(%s %ld %p)\n", This, debugstr_w(Unit), Count, ActualCount);
+    TRACE("(%p)->(%s %d %p)\n", This, debugstr_w(Unit), Count, ActualCount);
 
     unit = string_to_unit(Unit);
     if(unit == RU_UNKNOWN)
@@ -1545,23 +1550,20 @@ static HRESULT WINAPI HTMLTxtRange_moveEnd(IHTMLTxtRange *iface, BSTR Unit,
 static HRESULT WINAPI HTMLTxtRange_select(IHTMLTxtRange *iface)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
+    nsISelection *nsselection;
+    nsresult nsres;
 
     TRACE("(%p)\n", This);
 
-    if(This->doc->nscontainer) {
-        nsIDOMWindow *dom_window = NULL;
-        nsISelection *nsselection;
-
-        nsIWebBrowser_GetContentDOMWindow(This->doc->nscontainer->webbrowser, &dom_window);
-        nsIDOMWindow_GetSelection(dom_window, &nsselection);
-        nsIDOMWindow_Release(dom_window);
-
-        nsISelection_RemoveAllRanges(nsselection);
-        nsISelection_AddRange(nsselection, This->nsrange);
-
-        nsISelection_Release(nsselection);
+    nsres = nsIDOMWindow_GetSelection(This->doc->basedoc.window->nswindow, &nsselection);
+    if(NS_FAILED(nsres)) {
+        ERR("GetSelection failed: %08x\n", nsres);
+        return E_FAIL;
     }
 
+    nsISelection_RemoveAllRanges(nsselection);
+    nsISelection_AddRange(nsselection, This->nsrange);
+    nsISelection_Release(nsselection);
     return S_OK;
 }
 
@@ -1588,7 +1590,7 @@ static HRESULT WINAPI HTMLTxtRange_setEndPoint(IHTMLTxtRange *iface, BSTR how,
 }
 
 static HRESULT WINAPI HTMLTxtRange_compareEndPoints(IHTMLTxtRange *iface, BSTR how,
-        IHTMLTxtRange *SourceRange, long *ret)
+        IHTMLTxtRange *SourceRange, LONG *ret)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     HTMLTxtRange *src_range;
@@ -1615,17 +1617,17 @@ static HRESULT WINAPI HTMLTxtRange_compareEndPoints(IHTMLTxtRange *iface, BSTR h
 }
 
 static HRESULT WINAPI HTMLTxtRange_findText(IHTMLTxtRange *iface, BSTR String,
-        long count, long Flags, VARIANT_BOOL *Success)
+        LONG count, LONG Flags, VARIANT_BOOL *Success)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
-    FIXME("(%p)->(%s %ld %08lx %p)\n", This, debugstr_w(String), count, Flags, Success);
+    FIXME("(%p)->(%s %d %08x %p)\n", This, debugstr_w(String), count, Flags, Success);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTxtRange_moveToPoint(IHTMLTxtRange *iface, long x, long y)
+static HRESULT WINAPI HTMLTxtRange_moveToPoint(IHTMLTxtRange *iface, LONG x, LONG y)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 
@@ -1780,10 +1782,9 @@ static HRESULT WINAPI RangeCommandTarget_QueryStatus(IOleCommandTarget *iface, c
 
 static HRESULT exec_indent(HTMLTxtRange *This, VARIANT *in, VARIANT *out)
 {
+    nsIDOMHTMLElement *blockquote_elem, *p_elem;
     nsIDOMDocumentFragment *fragment;
-    nsIDOMElement *blockquote_elem, *p_elem;
     nsIDOMNode *tmp;
-    nsAString tag_str;
 
     static const PRUnichar blockquoteW[] = {'B','L','O','C','K','Q','U','O','T','E',0};
     static const PRUnichar pW[] = {'P',0};
@@ -1795,13 +1796,8 @@ static HRESULT exec_indent(HTMLTxtRange *This, VARIANT *in, VARIANT *out)
         return E_NOTIMPL;
     }
 
-    nsAString_Init(&tag_str, blockquoteW);
-    nsIDOMHTMLDocument_CreateElement(This->doc->nsdoc, &tag_str, &blockquote_elem);
-    nsAString_Finish(&tag_str);
-
-    nsAString_Init(&tag_str, pW);
-    nsIDOMDocument_CreateElement(This->doc->nsdoc, &tag_str, &p_elem);
-    nsAString_Finish(&tag_str);
+    create_nselem(This->doc, blockquoteW, &blockquote_elem);
+    create_nselem(This->doc, pW, &p_elem);
 
     nsIDOMRange_ExtractContents(This->nsrange, &fragment);
     nsIDOMElement_AppendChild(p_elem, (nsIDOMNode*)fragment, &tmp);
@@ -1850,9 +1846,13 @@ static const IOleCommandTargetVtbl OleCommandTargetVtbl = {
     RangeCommandTarget_Exec
 };
 
-IHTMLTxtRange *HTMLTxtRange_Create(HTMLDocument *doc, nsIDOMRange *nsrange)
+HRESULT HTMLTxtRange_Create(HTMLDocumentNode *doc, nsIDOMRange *nsrange, IHTMLTxtRange **p)
 {
-    HTMLTxtRange *ret = heap_alloc(sizeof(HTMLTxtRange));
+    HTMLTxtRange *ret;
+
+    ret = heap_alloc(sizeof(HTMLTxtRange));
+    if(!ret)
+        return E_OUTOFMEMORY;
 
     ret->lpHTMLTxtRangeVtbl = &HTMLTxtRangeVtbl;
     ret->lpOleCommandTargetVtbl = &OleCommandTargetVtbl;
@@ -1865,10 +1865,11 @@ IHTMLTxtRange *HTMLTxtRange_Create(HTMLDocument *doc, nsIDOMRange *nsrange)
     ret->doc = doc;
     list_add_head(&doc->range_list, &ret->entry);
 
-    return HTMLTXTRANGE(ret);
+    *p = HTMLTXTRANGE(ret);
+    return S_OK;
 }
 
-void detach_ranges(HTMLDocument *This)
+void detach_ranges(HTMLDocumentNode *This)
 {
     HTMLTxtRange *iter;
 

@@ -5,10 +5,10 @@
 	<include base="wlansvc_server">.</include>
 	<library>wlansvc_server</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>
+	<library>iphlpapi</library>
 	<file>wlansvc.c</file>
 	<file>rpcserver.c</file>
 </module>

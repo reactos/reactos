@@ -1,5 +1,4 @@
-#ifndef __COMCSUP_H
-#define __COMCSUP_H
+#pragma once
 
 /*
  ******************************************************************************
@@ -49,5 +48,3 @@ static __inline impl##Impl * \
 impl##Impl_from_##iface (iface *ifc) { \
     return (impl##Impl *)((ULONG_PTR)ifc - FIELD_OFFSET(impl##Impl, vtbl)); \
 }
-
-#endif /* __COMCSUP_H */

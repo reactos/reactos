@@ -16,17 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "shdoclc.h"
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
 #pragma code_page(65001)
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PRINT_HEADER_TEMPLATE "&w&bStran &p" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
@@ -247,5 +248,3 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Drsenje desno", IDM_SCROLL_RIGHT
     }
 }
-
-#pragma code_page(default)

@@ -1,23 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Scrollbars
@@ -29,7 +10,7 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -60,9 +41,9 @@ BOOL FASTCALL
 IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, RECTL *lprect)
 {
    BOOL vertical;
-   PWINDOW Wnd = Window->Wnd;
-   RECTL ClientRect = Window->Wnd->ClientRect;
-   RECTL WindowRect = Window->Wnd->WindowRect;
+   PWND Wnd = Window->Wnd;
+   RECTL ClientRect = Window->Wnd->rcClient;
+   RECTL WindowRect = Window->Wnd->rcWindow;
 
    switch (nBar)
    {
@@ -92,7 +73,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, RECTL *lprect)
 
       case SB_CTL:
          IntGetClientRect (Window, lprect);
-         vertical = ((Wnd->Style & SBS_VERT) != 0);
+         vertical = ((Wnd->style & SBS_VERT) != 0);
          break;
 
       default:
@@ -105,7 +86,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, RECTL *lprect)
 BOOL FASTCALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
-   PWINDOW Wnd = Window->Wnd;
+   PWND Wnd = Window->Wnd;
    INT Thumb, ThumbBox, ThumbPos, cxy, mx;
    RECTL ClientRect;
 
@@ -121,7 +102,7 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
          break;
       case SB_CTL:
          IntGetClientRect(Window, &ClientRect);
-         if(Wnd->Style & SBS_VERT)
+         if(Wnd->style & SBS_VERT)
          {
             Thumb = UserGetSystemMetrics(SM_CYVSCROLL);
             cxy = ClientRect.bottom - ClientRect.top;
@@ -186,7 +167,7 @@ IntUpdateSBInfo(PWINDOW_OBJECT Window, int wBar)
    LPSCROLLINFO psi;
 
    ASSERT(Window);
-   ASSERT(Window->Scroll);
+   ASSERT(Window->pSBInfo);
 
    sbi = IntGetScrollbarInfoFromWindow(Window, wBar);
    psi = IntGetScrollInfoFromWindow(Window, wBar);
@@ -247,6 +228,53 @@ co_IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
    }
 
    return TRUE;
+}
+
+BOOL FASTCALL
+NEWco_IntGetScrollInfo(
+  PWND pWnd,
+  INT nBar,
+  PSBDATA pSBData,
+  LPSCROLLINFO lpsi)
+{
+  UINT Mask;
+  PSBTRACK pSBTrack = pWnd->head.pti->pSBTrack;
+
+  if (!SBID_IS_VALID(nBar))
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     DPRINT1("Trying to get scrollinfo for unknown scrollbar type %d\n", nBar);
+     return FALSE;
+  }
+
+  Mask = lpsi->fMask;
+
+  if (0 != (Mask & SIF_PAGE))
+  {
+     lpsi->nPage = pSBData->page;
+  }
+
+  if (0 != (Mask & SIF_POS))
+  {
+     lpsi->nPos = pSBData->pos;
+  }
+
+  if (0 != (Mask & SIF_RANGE))
+  {
+     lpsi->nMin = pSBData->posMin;
+     lpsi->nMax = pSBData->posMax;
+  }
+
+  if (0 != (Mask & SIF_TRACKPOS))
+  {
+     if ( pSBTrack &&
+          pSBTrack->nBar == nBar &&
+          pSBTrack->spwndTrack == pWnd )
+        lpsi->nTrackPos = pSBTrack->posNew;
+     else
+        lpsi->nTrackPos = pSBData->pos;
+  }
+  return (Mask & SIF_ALL) !=0;
 }
 
 static DWORD FASTCALL
@@ -392,10 +420,10 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
    if (bRedraw)
    {
       RECTL UpdateRect = psbi->rcScrollBar;
-      UpdateRect.left -= Window->Wnd->ClientRect.left - Window->Wnd->WindowRect.left;
-      UpdateRect.right -= Window->Wnd->ClientRect.left - Window->Wnd->WindowRect.left;
-      UpdateRect.top -= Window->Wnd->ClientRect.top - Window->Wnd->WindowRect.top;
-      UpdateRect.bottom -= Window->Wnd->ClientRect.top - Window->Wnd->WindowRect.top;
+      UpdateRect.left -= Window->Wnd->rcClient.left - Window->Wnd->rcWindow.left;
+      UpdateRect.right -= Window->Wnd->rcClient.left - Window->Wnd->rcWindow.left;
+      UpdateRect.top -= Window->Wnd->rcClient.top - Window->Wnd->rcWindow.top;
+      UpdateRect.bottom -= Window->Wnd->rcClient.top - Window->Wnd->rcWindow.top;
       co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
    }
 
@@ -448,25 +476,25 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 
    ASSERT_REFS_CO(Window);
 
-   if(Window->Scroll)
+   if(Window->pSBInfo)
    {
       /* no need to create it anymore */
       return TRUE;
    }
 
    /* allocate memory for all scrollbars (HORZ, VERT, CONTROL) */
-   Size = 3 * (sizeof(WINDOW_SCROLLINFO));
-   if(!(Window->Scroll = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
+   Size = 3 * (sizeof(SBINFOEX));
+   if(!(Window->pSBInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
    {
       DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->hSelf);
       return FALSE;
    }
 
-   RtlZeroMemory(Window->Scroll, Size);
+   RtlZeroMemory(Window->pSBInfo, Size);
 
    Result = co_WinPosGetNonClientSize(Window,
-                                      &Window->Wnd->WindowRect,
-                                      &Window->Wnd->ClientRect);
+                                      &Window->Wnd->rcWindow,
+                                      &Window->Wnd->rcClient);
 
    for(s = SB_HORZ; s <= SB_VERT; s++)
    {
@@ -489,10 +517,10 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 BOOL FASTCALL
 IntDestroyScrollBars(PWINDOW_OBJECT Window)
 {
-   if(Window->Scroll)
+   if(Window->pSBInfo)
    {
-      ExFreePool(Window->Scroll);
-      Window->Scroll = NULL;
+      ExFreePool(Window->pSBInfo);
+      Window->pSBInfo = NULL;
       return TRUE;
    }
    return FALSE;
@@ -586,7 +614,11 @@ CLEANUP:
 
 BOOL
 APIENTRY
-NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
+NtUserSBGetParms(
+  HWND hWnd, 
+  int fnBar, 
+  PSBDATA pSBData,
+  LPSCROLLINFO lpsi)
 {
    NTSTATUS Status;
    PWINDOW_OBJECT Window;
@@ -705,7 +737,7 @@ NtUserEnableScrollBar(
    if(InfoH)
       Chg = (IntEnableScrollBar(TRUE, InfoH, wArrows) || Chg);
 
-   //if(Chg && (Window->Style & WS_VISIBLE))
+   //if(Chg && (Window->style & WS_VISIBLE))
    /* FIXME - repaint scrollbars */
 
    RETURN( TRUE);
@@ -748,7 +780,7 @@ NtUserSetScrollBarInfo(
    if(!SBID_IS_VALID(Obj))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d", Obj);
+      DPRINT1("Trying to set scrollinfo for unknown scrollbar type %d\n", Obj);
       RETURN( FALSE);
    }
 
@@ -829,7 +861,7 @@ DWORD FASTCALL
 co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 {
    DWORD Style, OldStyle;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 
@@ -867,20 +899,20 @@ co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
       return( TRUE);
    }
 
-   OldStyle = Wnd->Style;
+   OldStyle = Wnd->style;
    if(bShow)
-      Wnd->Style |= Style;
+      Wnd->style |= Style;
    else
-      Wnd->Style &= ~Style;
+      Wnd->style &= ~Style;
 
-   if(Wnd->Style != OldStyle)
+   if(Wnd->style != OldStyle)
    {
-      if(Wnd->Style & WS_HSCROLL)
+      if(Wnd->style & WS_HSCROLL)
          IntUpdateSBInfo(Window, SB_HORZ);
-      if(Wnd->Style & WS_VSCROLL)
+      if(Wnd->style & WS_VSCROLL)
          IntUpdateSBInfo(Window, SB_VERT);
 
-      if(Wnd->Style & WS_VISIBLE)
+      if(Wnd->style & WS_VISIBLE)
       {
          /* Frame has been changed, let the window redraw itself */
          co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |

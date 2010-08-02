@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #if defined(_TDI_)
-  #define TDIKRNLAPI DECLSPEC_EXPORT
+  #define TDIKRNLAPI
 #else
   #define TDIKRNLAPI DECLSPEC_IMPORT
 #endif
@@ -156,8 +156,8 @@ typedef struct _TDI_REQUEST_KERNEL_SET_INFO {
 #define TDI_EVENT_CHAINED_RECEIVE_EXPEDITED 9
 #define TDI_EVENT_ERROR_EX                  10
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_CONNECT)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_CONNECT)(
   IN PVOID  TdiEventContext,
   IN LONG  RemoteAddressLength,
   IN PVOID  RemoteAddress,
@@ -170,7 +170,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultConnectHandler(
   IN PVOID  TdiEventContext,
   IN LONG  RemoteAddressLength,
@@ -182,8 +182,8 @@ TdiDefaultConnectHandler(
   OUT CONNECTION_CONTEXT *ConnectionContext,
   OUT PIRP  *AcceptIrp);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_DISCONNECT)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_DISCONNECT)(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
   IN LONG  DisconnectDataLength,
@@ -194,7 +194,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultDisconnectHandler(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
@@ -204,26 +204,26 @@ TdiDefaultDisconnectHandler(
   IN PVOID  DisconnectInformation,
   IN ULONG  DisconnectFlags);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_ERROR)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_ERROR)(
   IN PVOID  TdiEventContext,
   IN NTSTATUS  Status);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_ERROR_EX)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_ERROR_EX)(
   IN PVOID  TdiEventContext,
   IN NTSTATUS  Status,
   IN PVOID  Buffer);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultErrorHandler(
   IN PVOID  TdiEventContext,
   IN NTSTATUS  Status);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_RECEIVE)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_RECEIVE)(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
   IN ULONG  ReceiveFlags,
@@ -235,7 +235,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultReceiveHandler(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
@@ -246,8 +246,8 @@ TdiDefaultReceiveHandler(
   IN PVOID  Tsdu,
   OUT PIRP  *IoRequestPacket);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_RECEIVE_DATAGRAM)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_RECEIVE_DATAGRAM)(
   IN PVOID  TdiEventContext,
   IN LONG  SourceAddressLength,
   IN PVOID  SourceAddress,
@@ -261,7 +261,7 @@ typedef NTSTATUS DDKAPI
   OUT PIRP  *IoRequestPacket);
 
 TDIKRNLAPI
-NTSTATUS DDKAPI
+NTSTATUS NTAPI
 TdiDefaultRcvDatagramHandler(
   IN PVOID  TdiEventContext,
   IN LONG  SourceAddressLength,
@@ -275,8 +275,8 @@ TdiDefaultRcvDatagramHandler(
   IN PVOID  Tsdu,
   OUT PIRP  *IoRequestPacket);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_RECEIVE_EXPEDITED)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_RECEIVE_EXPEDITED)(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
   IN ULONG  ReceiveFlags,
@@ -288,7 +288,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultRcvExpeditedHandler(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
@@ -299,8 +299,8 @@ TdiDefaultRcvExpeditedHandler(
   IN PVOID  Tsdu,
   OUT PIRP  *IoRequestPacket);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_CHAINED_RECEIVE)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_CHAINED_RECEIVE)(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
   IN ULONG  ReceiveFlags,
@@ -311,7 +311,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultChainedReceiveHandler(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
@@ -321,8 +321,8 @@ TdiDefaultChainedReceiveHandler(
   IN PMDL  Tsdu,
   IN PVOID  TsduDescriptor);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_CHAINED_RECEIVE_DATAGRAM)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_CHAINED_RECEIVE_DATAGRAM)(
   IN PVOID  TdiEventContext,
   IN LONG  SourceAddressLength,
   IN PVOID  SourceAddress,
@@ -336,7 +336,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultChainedRcvDatagramHandler(
   IN PVOID  TdiEventContext,
   IN LONG  SourceAddressLength,
@@ -349,8 +349,8 @@ TdiDefaultChainedRcvDatagramHandler(
   IN PMDL  Tsdu,
   IN PVOID  TsduDescriptor);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_CHAINED_RECEIVE_EXPEDITED)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_CHAINED_RECEIVE_EXPEDITED)(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
   IN ULONG  ReceiveFlags,
@@ -361,7 +361,7 @@ typedef NTSTATUS DDKAPI
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultChainedRcvExpeditedHandler(
   IN PVOID  TdiEventContext,
   IN CONNECTION_CONTEXT  ConnectionContext,
@@ -371,15 +371,15 @@ TdiDefaultChainedRcvExpeditedHandler(
   IN PMDL  Tsdu,
   IN PVOID  TsduDescriptor);
 
-typedef NTSTATUS DDKAPI
-(*PTDI_IND_SEND_POSSIBLE)(
+typedef NTSTATUS
+(NTAPI *PTDI_IND_SEND_POSSIBLE)(
   IN PVOID  TdiEventContext,
   IN PVOID  ConnectionContext,
   IN ULONG  BytesAvailable);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDefaultSendPossibleHandler(
   IN PVOID  TdiEventContext,
   IN PVOID  ConnectionContext,
@@ -397,7 +397,9 @@ TdiDefaultSendPossibleHandler(
   bIrpSp->DeviceObject  = (bDevObj);                                      \
   bIrpSp->FileObject    = (bFileObj);                                     \
   if (bCompRoutine)                                                       \
-    IoSetCompletionRoutine(bIrp, bCompRoutine, bContxt, TRUE, TRUE, TRUE) \
+  {                                                                       \
+    IoSetCompletionRoutine(bIrp, bCompRoutine, bContxt, TRUE, TRUE, TRUE);\
+  }                                                                       \
   else                                                                    \
     IoSetCompletionRoutine(bIrp, NULL, NULL, FALSE, FALSE, FALSE);        \
 }
@@ -609,7 +611,7 @@ TdiDefaultSendPossibleHandler(
 
 TDIKRNLAPI
 VOID
-DDKAPI
+NTAPI
 TdiBuildNetbiosAddress(
 	IN PUCHAR  NetbiosName,
 	IN BOOLEAN  IsGroupName,
@@ -617,7 +619,7 @@ TdiBuildNetbiosAddress(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiBuildNetbiosAddressEa(
   IN PUCHAR  Buffer,
   IN BOOLEAN  IsGroupName,
@@ -866,49 +868,49 @@ typedef struct _TDI_PNP_CONTEXT {
   UCHAR  ContextData[1];
 } TDI_PNP_CONTEXT, *PTDI_PNP_CONTEXT;
 
-typedef VOID DDKAPI
-(*TDI_ADD_ADDRESS_HANDLER)(
+typedef VOID
+(NTAPI *TDI_ADD_ADDRESS_HANDLER)(
   IN PTA_ADDRESS  Address);
 
-typedef VOID DDKAPI
-(*TDI_ADD_ADDRESS_HANDLER_V2)(
+typedef VOID
+(NTAPI *TDI_ADD_ADDRESS_HANDLER_V2)(
   IN PTA_ADDRESS  Address,
   IN PUNICODE_STRING  DeviceName,
   IN PTDI_PNP_CONTEXT  Context);
 
-typedef VOID DDKAPI
-(*TDI_BINDING_HANDLER)(
+typedef VOID
+(NTAPI *TDI_BINDING_HANDLER)(
   IN TDI_PNP_OPCODE  PnPOpcode,
   IN PUNICODE_STRING  DeviceName,
   IN PWSTR  MultiSZBindList);
 
-typedef VOID DDKAPI
-(*TDI_BIND_HANDLER)(
+typedef VOID
+(NTAPI *TDI_BIND_HANDLER)(
   IN PUNICODE_STRING  DeviceName);
 
-typedef VOID DDKAPI
-(*TDI_DEL_ADDRESS_HANDLER)(
+typedef VOID
+(NTAPI *TDI_DEL_ADDRESS_HANDLER)(
   IN PTA_ADDRESS  Address);
 
-typedef VOID DDKAPI
-(*TDI_DEL_ADDRESS_HANDLER_V2)(
+typedef VOID
+(NTAPI *TDI_DEL_ADDRESS_HANDLER_V2)(
   IN PTA_ADDRESS  Address,
   IN PUNICODE_STRING  DeviceName,
   IN PTDI_PNP_CONTEXT  Context);
 
-typedef NTSTATUS DDKAPI
-(*TDI_PNP_POWER_HANDLER)(
+typedef NTSTATUS
+(NTAPI *TDI_PNP_POWER_HANDLER)(
   IN PUNICODE_STRING  DeviceName,
   IN PNET_PNP_EVENT  PowerEvent,
   IN PTDI_PNP_CONTEXT  Context1,
   IN PTDI_PNP_CONTEXT  Context2);
 
-typedef VOID DDKAPI
-(*TDI_UNBIND_HANDLER)(
+typedef VOID
+(NTAPI *TDI_UNBIND_HANDLER)(
   IN PUNICODE_STRING  DeviceName);
 
-typedef VOID DDKAPI
-(*ProviderPnPPowerComplete)(
+typedef VOID
+(NTAPI *ProviderPnPPowerComplete)(
   IN PNET_PNP_EVENT  NetEvent,
   IN NTSTATUS  ProviderStatus);
 
@@ -962,7 +964,7 @@ typedef TDI_CLIENT_INTERFACE_INFO *PTDI_CLIENT_INTERFACE_INFO;
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiCopyBufferToMdl(
   IN PVOID  SourceBuffer,
   IN ULONG  SourceOffset,
@@ -984,7 +986,7 @@ TdiCopyBufferToMdl(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiCopyMdlChainToMdlChain (
   IN PMDL  SourceMdlChain,
   IN ULONG  SourceOffset,
@@ -994,7 +996,7 @@ TdiCopyMdlChainToMdlChain (
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiCopyMdlToBuffer(
   IN PMDL  SourceMdlChain,
   IN ULONG  SourceOffset,
@@ -1005,55 +1007,55 @@ TdiCopyMdlToBuffer(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDeregisterAddressChangeHandler(
   IN HANDLE  BindingHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDeregisterDeviceObject(
   IN HANDLE  DevRegistrationHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDeregisterNetAddress(
   IN HANDLE  AddrRegistrationHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDeregisterPnPHandlers(
   IN HANDLE  BindingHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiDeregisterProvider(
   IN HANDLE  ProviderHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiEnumerateAddresses(
   IN HANDLE  BindingHandle);
 
 TDIKRNLAPI
 VOID
-DDKAPI
+NTAPI
 TdiInitialize(
   VOID);
 
 TDIKRNLAPI
 VOID
-DDKAPI
+NTAPI
 TdiMapBuffer(
   IN PMDL  MdlChain);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiMapUserRequest(
   IN PDEVICE_OBJECT  DeviceObject,
   IN PIRP  Irp,
@@ -1061,14 +1063,14 @@ TdiMapUserRequest(
 
 TDIKRNLAPI
 BOOLEAN
-DDKAPI
+NTAPI
 TdiMatchPdoWithChainedReceiveContext(
   IN PVOID TsduDescriptor,
   IN PVOID PDO);
 
 TDIKRNLAPI
 VOID
-DDKAPI
+NTAPI
 TdiPnPPowerComplete(
   IN HANDLE  BindingHandle,
   IN PNET_PNP_EVENT  PowerEvent,
@@ -1076,7 +1078,7 @@ TdiPnPPowerComplete(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiPnPPowerRequest(
   IN PUNICODE_STRING  DeviceName,
   IN PNET_PNP_EVENT  PowerEvent,
@@ -1086,13 +1088,13 @@ TdiPnPPowerRequest(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiProviderReady(
   IN HANDLE  ProviderHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiRegisterAddressChangeHandler(
   IN TDI_ADD_ADDRESS_HANDLER  AddHandler,
   IN TDI_DEL_ADDRESS_HANDLER  DeleteHandler,
@@ -1100,14 +1102,14 @@ TdiRegisterAddressChangeHandler(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiRegisterDeviceObject(
   IN PUNICODE_STRING  DeviceName,
   OUT HANDLE  *DevRegistrationHandle);
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiRegisterNetAddress(
   IN PTA_ADDRESS  Address,
   IN PUNICODE_STRING  DeviceName,
@@ -1116,7 +1118,7 @@ TdiRegisterNetAddress(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiRegisterNotificationHandler(
   IN TDI_BIND_HANDLER  BindHandler,
   IN TDI_UNBIND_HANDLER  UnbindHandler,
@@ -1124,7 +1126,7 @@ TdiRegisterNotificationHandler(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiRegisterPnPHandlers(
   IN PTDI_CLIENT_INTERFACE_INFO  ClientInterfaceInfo,
   IN ULONG  InterfaceInfoSize,
@@ -1132,21 +1134,21 @@ TdiRegisterPnPHandlers(
 
 TDIKRNLAPI
 NTSTATUS
-DDKAPI
+NTAPI
 TdiRegisterProvider(
   IN PUNICODE_STRING  ProviderName,
   OUT HANDLE  *ProviderHandle);
 
 TDIKRNLAPI
 VOID
-DDKAPI
+NTAPI
 TdiReturnChainedReceives(
   IN PVOID  *TsduDescriptors,
   IN ULONG   NumberOfTsdus);
 
 TDIKRNLAPI
 VOID
-DDKAPI
+NTAPI
 TdiUnmapBuffer(
   IN PMDL  MdlChain);
 

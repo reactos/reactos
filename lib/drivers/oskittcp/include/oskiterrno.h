@@ -97,7 +97,7 @@ extern int errno;			/* global error number */
 /* non-blocking and interrupt i/o */
 #define	OSK_EAGAIN		35		/* Resource temporarily unavailable */
 #ifndef _POSIX_SOURCE
-#define	OSK_EWOULDBLOCK	EAGAIN		/* Operation would block */
+#define	OSK_EWOULDBLOCK	OSK_EAGAIN		/* Operation would block */
 #define	OSK_EINPROGRESS	36		/* Operation now in progress */
 #define	OSK_EALREADY	37		/* Operation already in progress */
 

@@ -496,7 +496,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
                            IN ULONG Slot,
                            IN OUT PCM_RESOURCE_LIST *pAllocatedResources)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(0);
     return STATUS_SUCCESS;
 }
 
@@ -656,7 +656,7 @@ HalpQueryPciRegistryInfo(VOID)
             /* Allocate the return structure */
             PciRegistryInfo = ExAllocatePoolWithTag(NonPagedPool,
                                                     sizeof(PCI_REGISTRY_INFO_INTERNAL),
-                                                    TAG('H', 'a', 'l', ' '));
+                                                    ' laH');
             if (!PciRegistryInfo) return NULL;
 
             /* Fill it out */

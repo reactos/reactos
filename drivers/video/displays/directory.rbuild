@@ -7,4 +7,7 @@
 	<directory name="vga">
 		<xi:include href="vga/vgaddi.rbuild" />
 	</directory>
+	<directory name="framebuf_new">
+		<xi:include href="framebuf_new/framebuf_new.rbuild" />
+	</directory>
 </group>

@@ -6,14 +6,14 @@
 	<include base="imm32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
+	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
 	<file>imm.c</file>
 	<file>version.rc</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

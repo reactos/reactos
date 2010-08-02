@@ -386,6 +386,8 @@ umss_bulkonly_transfer_data_complete(PURB purb, PVOID reference)
         {
             PULONG buf;
             buf = usb_alloc_mem(NonPagedPool, 32);
+            if (!buf) return;
+
             buf[0] = (ULONG) pdev_ext;
             buf[1] = (ULONG) purb->endp_handle;
 
@@ -548,6 +550,8 @@ umss_bulkonly_get_status_complete(IN PURB purb, IN PVOID context)
         pdev_ext->retry = FALSE;
 
         buf = usb_alloc_mem(NonPagedPool, 32);
+        if (!buf) return;
+
         buf[0] = (ULONG) pdev_ext;
         buf[1] = (ULONG) purb->endp_handle;
 
@@ -714,6 +718,8 @@ umss_bulkonly_send_sense_req(PUMSS_DEVICE_EXTENSION pdev_ext)
     pdev_ext->retry = TRUE;
 
     cbw = usb_alloc_mem(NonPagedPool, sizeof(COMMAND_BLOCK_WRAPPER));
+    if (!cbw) return STATUS_NO_MEMORY;
+
     RtlZeroMemory(cbw, sizeof(COMMAND_BLOCK_WRAPPER));
     pdev_ext->io_packet.flags &= ~IOP_FLAG_STAGE_MASK;
     pdev_ext->io_packet.flags |= IOP_FLAG_STAGE_SENSE;

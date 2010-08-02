@@ -1,5 +1,4 @@
-#ifndef LANG_FA_IR_H__
-#define LANG_FA_IR_H__
+#pragma once
 
 MUI_LAYOUTS faIRLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS faIRLayouts[] =
     { L"0429", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

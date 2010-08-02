@@ -7,13 +7,11 @@
 	<library>uuid</library>
 	<library>wine</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>ole32</library>
 	<library>msi</library>
 	<file>msiexec.c</file>
-	<file>rsrc.rc</file>
 	<file>service.c</file>
-	<file>version.rc</file>
+	<file>rsrc.rc</file>
 </module>

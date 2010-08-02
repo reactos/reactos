@@ -3,11 +3,16 @@
 	<include base="crypt32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="fdopen">_fdopen</define>
+	<define name="open">_open</define>
+	<define name="close">_close</define>
+
 	<library>wine</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>imagehlp</library>
 	<library>pseh</library>
@@ -36,6 +41,5 @@
 	<file>ctl.c</file>
 	<file>message.c</file>
 	<file>crypt32.rc</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<file>version.rc</file>
 </module>

@@ -5,8 +5,7 @@
  *            Copyright 2001 - 2005 Eric Kohl
  */
 
-#ifndef CMLIB_H
-#define CMLIB_H
+#pragma once
 
 //
 // Debug support switch
@@ -14,6 +13,7 @@
 #define _CMLIB_DEBUG_ 1
 
 #ifdef CMLIB_HOST
+    #include <wine/unicode.h>
     #include <host/typedefs.h>
     #include <stdio.h>
     #include <string.h>
@@ -59,6 +59,7 @@
         IN PRTL_BITMAP BitMapHeader);
 
     #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
+    #define UNREFERENCED_PARAMETER(P) {(P)=(P);}
 
     #define PKTHREAD PVOID
     #define PKGUARDED_MUTEX PVOID
@@ -87,7 +88,9 @@
     #define CMLTRACE(x, ...) DPRINT(__VA_ARGS__)
     #endif
 
-
+    #include <ntdef.h>
+    #undef DECLSPEC_IMPORT
+    #define DECLSPEC_IMPORT
     #include <ntddk.h>
 #endif
 
@@ -196,6 +199,22 @@ typedef struct _CMHIVE
 
 #endif
 
+typedef struct _HV_HIVE_CELL_PAIR
+{
+    PHHIVE Hive;
+    HCELL_INDEX Cell;
+} HV_HIVE_CELL_PAIR, *PHV_HIVE_CELL_PAIR;
+
+#define STATIC_CELL_PAIR_COUNT 4
+typedef struct _HV_TRACK_CELL_REF
+{
+    USHORT Count;
+    USHORT Max;
+    PHV_HIVE_CELL_PAIR CellArray;
+    HV_HIVE_CELL_PAIR StaticArray[STATIC_CELL_PAIR_COUNT];
+    USHORT StaticCount;
+} HV_TRACK_CELL_REF, *PHV_TRACK_CELL_REF;
+
 extern ULONG CmlibTraceLevel;
 
 /*
@@ -270,6 +289,12 @@ HvIsCellDirty(
     IN HCELL_INDEX Cell
 );
 
+BOOLEAN
+CMAPI
+HvHiveWillShrink(
+    IN PHHIVE RegistryHive
+);
+
 BOOLEAN CMAPI
 HvSyncHive(
    PHHIVE RegistryHive);
@@ -286,6 +311,21 @@ CmCreateRootNode(
 VOID CMAPI
 CmPrepareHive(
    PHHIVE RegistryHive);
+   
+   
+BOOLEAN
+CMAPI
+HvTrackCellRef(
+    PHV_TRACK_CELL_REF CellRef,
+    PHHIVE Hive,
+    HCELL_INDEX Cell
+);
+
+VOID
+CMAPI
+HvReleaseFreeCellRefArray(
+    PHV_TRACK_CELL_REF CellRef
+);
 
 /*
  * Private functions.
@@ -304,5 +344,3 @@ HvpCreateHiveFreeCellList(
 ULONG CMAPI
 HvpHiveHeaderChecksum(
    PHBASE_BLOCK HiveHeader);
-
-#endif /* CMLIB_H */

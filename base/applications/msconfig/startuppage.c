@@ -185,10 +185,10 @@ GetAutostartEntriesFromRegistry ( HKEY hRootKey, TCHAR* KeyName )
 
                     switch (PtrToLong(hRootKey))
                     {
-                    case PtrToLong(HKEY_LOCAL_MACHINE):
+                    case (ULONG_PTR)HKEY_LOCAL_MACHINE:
                         _tcscpy(Path, _T("HKLM\\\0"));
                         break;
-                    case PtrToLong(HKEY_CURRENT_USER):
+                    case (ULONG_PTR)HKEY_CURRENT_USER:
                         _tcscpy(Path, _T("HKCU\\\0"));
                         break;
                     default:

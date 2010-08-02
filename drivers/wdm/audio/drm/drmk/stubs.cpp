@@ -24,7 +24,8 @@
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmAddContentHandlers(
     IN  ULONG ContentId,
     IN  PVOID *paHandlers,
@@ -41,7 +42,8 @@ DrmAddContentHandlers(
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmCreateContentMixed(
     IN  PULONG paContentId,
     IN  ULONG cContentId,
@@ -57,7 +59,8 @@ DrmCreateContentMixed(
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmDestroyContent(
     IN  ULONG ContentId)
 {
@@ -72,7 +75,8 @@ DrmDestroyContent(
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmForwardContentToDeviceObject(
     IN  ULONG ContentId,
     IN  PVOID Reserved,
@@ -90,7 +94,8 @@ DrmForwardContentToDeviceObject(
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmForwardContentToFileObject(
     IN  ULONG ContentId,
     IN  PFILE_OBJECT FileObject)
@@ -106,7 +111,8 @@ DrmForwardContentToFileObject(
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmForwardContentToInterface(
     IN  ULONG ContentId,
     IN  PUNKNOWN pUnknown,
@@ -122,7 +128,8 @@ DrmForwardContentToInterface(
 /*
  * @unimplemented
  */
-NTAPI NTSTATUS
+NTSTATUS
+NTAPI
 DrmGetContentRights(
     IN  ULONG ContentId,
     OUT PDRMRIGHTS DrmRights)
@@ -130,4 +137,3 @@ DrmGetContentRights(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
-

@@ -1,5 +1,4 @@
-#ifndef __CPL_MAIN_H
-#define __CPL_MAIN_H
+#pragma once
 
 typedef enum
 {
@@ -45,7 +44,5 @@ PropSheetAddPage(HPROPSHEETPAGE hpage, LPARAM lParam);
 
 LONG APIENTRY
 MouseApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
-
-#endif /* __CPL_MAIN_H */
 
 /* EOF */

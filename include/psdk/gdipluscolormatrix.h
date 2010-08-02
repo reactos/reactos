@@ -45,7 +45,7 @@ enum ColorAdjustType
 struct ColorMap
 {
     Color oldColor;
-    Color newCOlor;
+    Color newColor;
 };
 
 #ifndef __cplusplus

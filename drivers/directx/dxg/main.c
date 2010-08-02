@@ -1,4 +1,3 @@
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,7 +117,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 
 NTSTATUS
 APIENTRY
-DxDdCleanupDxGraphics()
+DxDdCleanupDxGraphics(VOID)
 {
     DdHmgDestroy();
 
@@ -136,11 +135,4 @@ DxDdCleanupDxGraphics()
 
     return 0;
 }
-
-
-
-
-
-
-
 

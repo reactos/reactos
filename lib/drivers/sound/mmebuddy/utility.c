@@ -113,6 +113,10 @@ Win32ErrorToMmResult(
         case ERROR_INSUFFICIENT_BUFFER :
             return MMSYSERR_INVALPARAM;
 
+        case ERROR_INVALID_PARAMETER :
+            return MMSYSERR_INVALPARAM;
+
+
         default :
             return MMSYSERR_ERROR;
     }

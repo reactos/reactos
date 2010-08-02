@@ -11,6 +11,7 @@
  *
  * Copyright 1998,1999 Francis Beaudet
  * Copyright 1998,1999 Thuy Nguyen
+ * Copyright 2010 Vincent Povirk for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,10 +43,15 @@
 /*
  * Definitions for the file format offsets.
  */
+static const ULONG OFFSET_MINORVERSION       = 0x00000018;
+static const ULONG OFFSET_MAJORVERSION       = 0x0000001a;
+static const ULONG OFFSET_BYTEORDERMARKER    = 0x0000001c;
 static const ULONG OFFSET_BIGBLOCKSIZEBITS   = 0x0000001e;
 static const ULONG OFFSET_SMALLBLOCKSIZEBITS = 0x00000020;
+static const ULONG OFFSET_DIRSECTORCOUNT     = 0x00000028;
 static const ULONG OFFSET_BBDEPOTCOUNT	     = 0x0000002C;
 static const ULONG OFFSET_ROOTSTARTBLOCK     = 0x00000030;
+static const ULONG OFFSET_SMALLBLOCKLIMIT    = 0x00000038;
 static const ULONG OFFSET_SBDEPOTSTART	     = 0x0000003C;
 static const ULONG OFFSET_SBDEPOTCOUNT       = 0x00000040;
 static const ULONG OFFSET_EXTBBDEPOTSTART    = 0x00000044;
@@ -53,18 +59,20 @@ static const ULONG OFFSET_EXTBBDEPOTCOUNT    = 0x00000048;
 static const ULONG OFFSET_BBDEPOTSTART	     = 0x0000004C;
 static const ULONG OFFSET_PS_NAME            = 0x00000000;
 static const ULONG OFFSET_PS_NAMELENGTH	     = 0x00000040;
-static const ULONG OFFSET_PS_PROPERTYTYPE    = 0x00000042;
-static const ULONG OFFSET_PS_PREVIOUSPROP    = 0x00000044;
-static const ULONG OFFSET_PS_NEXTPROP        = 0x00000048;
-static const ULONG OFFSET_PS_DIRPROP	     = 0x0000004C;
+static const ULONG OFFSET_PS_STGTYPE         = 0x00000042;
+static const ULONG OFFSET_PS_LEFTCHILD       = 0x00000044;
+static const ULONG OFFSET_PS_RIGHTCHILD      = 0x00000048;
+static const ULONG OFFSET_PS_DIRROOT	     = 0x0000004C;
 static const ULONG OFFSET_PS_GUID            = 0x00000050;
-static const ULONG OFFSET_PS_TSS1	     = 0x00000064;
-static const ULONG OFFSET_PS_TSD1            = 0x00000068;
-static const ULONG OFFSET_PS_TSS2            = 0x0000006C;
-static const ULONG OFFSET_PS_TSD2            = 0x00000070;
+static const ULONG OFFSET_PS_CTIMELOW        = 0x00000064;
+static const ULONG OFFSET_PS_CTIMEHIGH       = 0x00000068;
+static const ULONG OFFSET_PS_MTIMELOW        = 0x0000006C;
+static const ULONG OFFSET_PS_MTIMEHIGH       = 0x00000070;
 static const ULONG OFFSET_PS_STARTBLOCK	     = 0x00000074;
 static const ULONG OFFSET_PS_SIZE	     = 0x00000078;
 static const WORD  DEF_BIG_BLOCK_SIZE_BITS   = 0x0009;
+static const WORD  MIN_BIG_BLOCK_SIZE_BITS   = 0x0009;
+static const WORD  MAX_BIG_BLOCK_SIZE_BITS   = 0x000c;
 static const WORD  DEF_SMALL_BLOCK_SIZE_BITS = 0x0006;
 static const WORD  DEF_BIG_BLOCK_SIZE        = 0x0200;
 static const WORD  DEF_SMALL_BLOCK_SIZE      = 0x0040;
@@ -72,36 +80,34 @@ static const ULONG BLOCK_EXTBBDEPOT          = 0xFFFFFFFC;
 static const ULONG BLOCK_SPECIAL             = 0xFFFFFFFD;
 static const ULONG BLOCK_END_OF_CHAIN        = 0xFFFFFFFE;
 static const ULONG BLOCK_UNUSED              = 0xFFFFFFFF;
-static const ULONG PROPERTY_NULL             = 0xFFFFFFFF;
+static const ULONG DIRENTRY_NULL             = 0xFFFFFFFF;
 
-#define PROPERTY_NAME_MAX_LEN    0x20
-#define PROPERTY_NAME_BUFFER_LEN 0x40
+#define DIRENTRY_NAME_MAX_LEN    0x20
+#define DIRENTRY_NAME_BUFFER_LEN 0x40
 
-#define PROPSET_BLOCK_SIZE 0x00000080
+#define RAW_DIRENTRY_SIZE 0x00000080
 
-/*
- * Property type of relation
- */
-#define PROPERTY_RELATION_PREVIOUS 0
-#define PROPERTY_RELATION_NEXT     1
-#define PROPERTY_RELATION_DIR      2
+#define HEADER_SIZE 512
+
+#define MIN_BIG_BLOCK_SIZE 0x200
+#define MAX_BIG_BLOCK_SIZE 0x1000
 
 /*
- * Property type constants
+ * Type of child entry link
  */
-#define PROPTYPE_STORAGE 0x01
-#define PROPTYPE_STREAM  0x02
-#define PROPTYPE_ROOT    0x05
+#define DIRENTRY_RELATION_PREVIOUS 0
+#define DIRENTRY_RELATION_NEXT     1
+#define DIRENTRY_RELATION_DIR      2
 
 /*
- * These defines assume a hardcoded blocksize. The code will assert
- * if the blocksize is different. Some changes will have to be done if it
- * becomes the case.
+ * type constant used in files for the root storage
  */
-#define BIG_BLOCK_SIZE           0x200
+#define STGTY_ROOT 0x05
+
 #define COUNT_BBDEPOTINHEADER    109
+
+/* FIXME: This value is stored in the header, but we hard-code it to 0x1000. */
 #define LIMIT_TO_USE_SMALL_BLOCK 0x1000
-#define NUM_BLOCKS_PER_DEPOT_BLOCK 128
 
 #define STGM_ACCESS_MODE(stgm)   ((stgm)&0x0000f)
 #define STGM_SHARE_MODE(stgm)    ((stgm)&0x000f0)
@@ -116,60 +122,39 @@ static const ULONG PROPERTY_NULL             = 0xFFFFFFFF;
  * module.
  */
 typedef struct StorageBaseImpl     StorageBaseImpl;
+typedef struct StorageBaseImplVtbl StorageBaseImplVtbl;
 typedef struct StorageImpl         StorageImpl;
 typedef struct BlockChainStream      BlockChainStream;
 typedef struct SmallBlockChainStream SmallBlockChainStream;
 typedef struct IEnumSTATSTGImpl      IEnumSTATSTGImpl;
-typedef struct StgProperty           StgProperty;
+typedef struct DirEntry              DirEntry;
 typedef struct StgStreamImpl         StgStreamImpl;
 
 /*
- * This utility structure is used to read/write the information in a storage
- * property.
+ * A reference to a directory entry in the file or a transacted cache.
  */
-struct StgProperty
+typedef ULONG DirRef;
+
+/*
+ * This utility structure is used to read/write the information in a directory
+ * entry.
+ */
+struct DirEntry
 {
-  WCHAR	         name[PROPERTY_NAME_MAX_LEN];
+  WCHAR	         name[DIRENTRY_NAME_MAX_LEN];
   WORD	         sizeOfNameString;
-  BYTE	         propertyType;
-  ULONG	         previousProperty;
-  ULONG	         nextProperty;
-  ULONG          dirProperty;
-  GUID           propertyUniqueID;
-  ULONG          timeStampS1;
-  ULONG          timeStampD1;
-  ULONG          timeStampS2;
-  ULONG          timeStampD2;
+  BYTE	         stgType;
+  DirRef         leftChild;
+  DirRef         rightChild;
+  DirRef         dirRootEntry;
+  GUID           clsid;
+  FILETIME       ctime;
+  FILETIME       mtime;
   ULONG          startingBlock;
   ULARGE_INTEGER size;
 };
 
-/*************************************************************************
- * Big Block File support
- *
- * The big block file is an abstraction of a flat file separated in
- * same sized blocks. The implementation for the methods described in
- * this section appear in stg_bigblockfile.c
- */
-
-typedef struct BigBlockFile BigBlockFile,*LPBIGBLOCKFILE;
-
-/*
- * Declaration of the functions used to manipulate the BigBlockFile
- * data structure.
- */
-BigBlockFile*  BIGBLOCKFILE_Construct(HANDLE hFile,
-                                      ILockBytes* pLkByt,
-                                      DWORD openFlags,
-                                      ULONG blocksize,
-                                      BOOL fileBased);
-void           BIGBLOCKFILE_Destructor(LPBIGBLOCKFILE This);
-HRESULT        BIGBLOCKFILE_EnsureExists(LPBIGBLOCKFILE This, ULONG index);
-HRESULT        BIGBLOCKFILE_SetSize(LPBIGBLOCKFILE This, ULARGE_INTEGER newSize);
-HRESULT        BIGBLOCKFILE_ReadAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
-           void* buffer, ULONG size, ULONG* bytesRead);
-HRESULT        BIGBLOCKFILE_WriteAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
-           const void* buffer, ULONG size, ULONG* bytesRead);
+HRESULT FileLockBytesImpl_Construct(HANDLE hFile, DWORD openFlags, LPCWSTR pwcsName, ILockBytes **pLockBytes);
 
 /*************************************************************************
  * Ole Convert support
@@ -177,6 +162,7 @@ HRESULT        BIGBLOCKFILE_WriteAt(LPBIGBLOCKFILE This, ULARGE_INTEGER offset,
 
 void OLECONVERT_CreateOleStream(LPSTORAGE pStorage);
 HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName);
+
 
 /****************************************************************************
  * Storage32BaseImpl definitions.
@@ -201,25 +187,29 @@ struct StorageBaseImpl
   struct list strmHead;
 
   /*
+   * Storage tracking list
+   */
+  struct list storageHead;
+
+  /*
    * Reference count of this object
    */
   LONG ref;
 
   /*
-   * Ancestor storage (top level)
+   * TRUE if this object has been invalidated
    */
-  StorageImpl* ancestorStorage;
+  int reverted;
 
   /*
-   * Index of the property for the root of
-   * this storage
+   * Index of the directory entry of this storage
    */
-  ULONG rootPropertySetIndex;
+  DirRef storageDirEntry;
 
   /*
-   * virtual Destructor method.
+   * virtual methods.
    */
-  void (*v_destructor)(StorageBaseImpl*);
+  const StorageBaseImplVtbl *baseVtbl;
 
   /*
    * flags that this storage was opened or created with
@@ -230,7 +220,106 @@ struct StorageBaseImpl
    * State bits appear to only be preserved while running. No in the stream
    */
   DWORD stateBits;
+
+  BOOL             create;     /* Was the storage created or opened.
+                                  The behaviour of STGM_SIMPLE depends on this */
+  /*
+   * If this storage was opened in transacted mode, the object that implements
+   * the transacted snapshot or cache.
+   */
+  StorageBaseImpl *transactedChild;
 };
+
+/* virtual methods for StorageBaseImpl objects */
+struct StorageBaseImplVtbl {
+  void (*Destroy)(StorageBaseImpl*);
+  void (*Invalidate)(StorageBaseImpl*);
+  HRESULT (*Flush)(StorageBaseImpl*);
+  HRESULT (*GetFilename)(StorageBaseImpl*,LPWSTR*);
+  HRESULT (*CreateDirEntry)(StorageBaseImpl*,const DirEntry*,DirRef*);
+  HRESULT (*WriteDirEntry)(StorageBaseImpl*,DirRef,const DirEntry*);
+  HRESULT (*ReadDirEntry)(StorageBaseImpl*,DirRef,DirEntry*);
+  HRESULT (*DestroyDirEntry)(StorageBaseImpl*,DirRef);
+  HRESULT (*StreamReadAt)(StorageBaseImpl*,DirRef,ULARGE_INTEGER,ULONG,void*,ULONG*);
+  HRESULT (*StreamWriteAt)(StorageBaseImpl*,DirRef,ULARGE_INTEGER,ULONG,const void*,ULONG*);
+  HRESULT (*StreamSetSize)(StorageBaseImpl*,DirRef,ULARGE_INTEGER);
+  HRESULT (*StreamLink)(StorageBaseImpl*,DirRef,DirRef);
+};
+
+static inline void StorageBaseImpl_Destroy(StorageBaseImpl *This)
+{
+  This->baseVtbl->Destroy(This);
+}
+
+static inline void StorageBaseImpl_Invalidate(StorageBaseImpl *This)
+{
+  This->baseVtbl->Invalidate(This);
+}
+
+static inline HRESULT StorageBaseImpl_Flush(StorageBaseImpl *This)
+{
+  return This->baseVtbl->Flush(This);
+}
+
+static inline HRESULT StorageBaseImpl_GetFilename(StorageBaseImpl *This, LPWSTR *result)
+{
+  return This->baseVtbl->GetFilename(This, result);
+}
+
+static inline HRESULT StorageBaseImpl_CreateDirEntry(StorageBaseImpl *This,
+  const DirEntry *newData, DirRef *index)
+{
+  return This->baseVtbl->CreateDirEntry(This, newData, index);
+}
+
+static inline HRESULT StorageBaseImpl_WriteDirEntry(StorageBaseImpl *This,
+  DirRef index, const DirEntry *data)
+{
+  return This->baseVtbl->WriteDirEntry(This, index, data);
+}
+
+static inline HRESULT StorageBaseImpl_ReadDirEntry(StorageBaseImpl *This,
+  DirRef index, DirEntry *data)
+{
+  return This->baseVtbl->ReadDirEntry(This, index, data);
+}
+
+static inline HRESULT StorageBaseImpl_DestroyDirEntry(StorageBaseImpl *This,
+  DirRef index)
+{
+  return This->baseVtbl->DestroyDirEntry(This, index);
+}
+
+/* Read up to size bytes from this directory entry's stream at the given offset. */
+static inline HRESULT StorageBaseImpl_StreamReadAt(StorageBaseImpl *This,
+  DirRef index, ULARGE_INTEGER offset, ULONG size, void *buffer, ULONG *bytesRead)
+{
+  return This->baseVtbl->StreamReadAt(This, index, offset, size, buffer, bytesRead);
+}
+
+/* Write size bytes to this directory entry's stream at the given offset,
+ * growing the stream if necessary. */
+static inline HRESULT StorageBaseImpl_StreamWriteAt(StorageBaseImpl *This,
+  DirRef index, ULARGE_INTEGER offset, ULONG size, const void *buffer, ULONG *bytesWritten)
+{
+  return This->baseVtbl->StreamWriteAt(This, index, offset, size, buffer, bytesWritten);
+}
+
+static inline HRESULT StorageBaseImpl_StreamSetSize(StorageBaseImpl *This,
+  DirRef index, ULARGE_INTEGER newsize)
+{
+  return This->baseVtbl->StreamSetSize(This, index, newsize);
+}
+
+/* Make dst point to the same stream that src points to. Other stream operations
+ * will not work properly for entries that point to the same stream, so this
+ * must be a very temporary state, and only one entry pointing to a given stream
+ * may be reachable at any given time. */
+static inline HRESULT StorageBaseImpl_StreamLink(StorageBaseImpl *This,
+  DirRef dst, DirRef src)
+{
+  return This->baseVtbl->StreamLink(This, dst, src);
+}
 
 /****************************************************************************
  * StorageBaseImpl stream list handlers
@@ -238,6 +327,9 @@ struct StorageBaseImpl
 
 void StorageBaseImpl_AddStream(StorageBaseImpl * stg, StgStreamImpl * strm);
 void StorageBaseImpl_RemoveStream(StorageBaseImpl * stg, StgStreamImpl * strm);
+
+/* Number of BlockChainStream objects to cache in a StorageImpl */
+#define BLOCKCHAIN_CACHE_SIZE 4
 
 /****************************************************************************
  * Storage32Impl definitions.
@@ -250,16 +342,6 @@ struct StorageImpl
   struct StorageBaseImpl base;
 
   /*
-   * The following data members are specific to the Storage32Impl
-   * class
-   */
-  HANDLE           hFile;      /* Physical support for the Docfile */
-  LPOLESTR         pwcsName;   /* Full path of the document file */
-
-  /* FIXME: should this be in Storage32BaseImpl ? */
-  WCHAR            filename[PROPERTY_NAME_BUFFER_LEN];
-
-  /*
    * File header
    */
   WORD  bigBlockSizeBits;
@@ -268,14 +350,18 @@ struct StorageImpl
   ULONG smallBlockSize;
   ULONG bigBlockDepotCount;
   ULONG rootStartBlock;
+  ULONG smallBlockLimit;
   ULONG smallBlockDepotStart;
   ULONG extBigBlockDepotStart;
   ULONG extBigBlockDepotCount;
   ULONG bigBlockDepotStart[COUNT_BBDEPOTINHEADER];
 
-  ULONG blockDepotCached[NUM_BLOCKS_PER_DEPOT_BLOCK];
+  ULONG blockDepotCached[MAX_BIG_BLOCK_SIZE / 4];
   ULONG indexBlockDepotCached;
   ULONG prevFreeBlock;
+
+  /* All small blocks before this one are known to be in use. */
+  ULONG firstFreeSmallBlock;
 
   /*
    * Abstraction of the big block chains for the chains of the header.
@@ -284,25 +370,44 @@ struct StorageImpl
   BlockChainStream* smallBlockDepotChain;
   BlockChainStream* smallBlockRootChain;
 
-  /*
-   * Pointer to the big block file abstraction
-   */
-  BigBlockFile* bigBlockFile;
+  /* Cache of block chain streams objects for directory entries */
+  BlockChainStream* blockChainCache[BLOCKCHAIN_CACHE_SIZE];
+  UINT blockChainToEvict;
+
+  ILockBytes* lockBytes;
 };
 
-BOOL StorageImpl_ReadProperty(
-            StorageImpl*    This,
-            ULONG           index,
-            StgProperty*    buffer);
+HRESULT StorageImpl_ReadRawDirEntry(
+            StorageImpl *This,
+            ULONG index,
+            BYTE *buffer);
 
-BOOL StorageImpl_WriteProperty(
+void UpdateRawDirEntry(
+    BYTE *buffer,
+    const DirEntry *newData);
+
+HRESULT StorageImpl_WriteRawDirEntry(
+            StorageImpl *This,
+            ULONG index,
+            const BYTE *buffer);
+
+HRESULT StorageImpl_ReadDirEntry(
+            StorageImpl*    This,
+            DirRef          index,
+            DirEntry*       buffer);
+
+HRESULT StorageImpl_WriteDirEntry(
             StorageImpl*        This,
-            ULONG               index,
-            const StgProperty*  buffer);
+            DirRef              index,
+            const DirEntry*     buffer);
 
 BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
                       StorageImpl* This,
                       SmallBlockChainStream** ppsbChain);
+
+SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
+                      StorageImpl* This,
+                      BlockChainStream** ppbbChain);
 
 /****************************************************************************
  * StgStreamImpl definitions.
@@ -337,27 +442,14 @@ struct StgStreamImpl
   DWORD grfMode;
 
   /*
-   * Index of the property that owns (points to) this stream.
+   * Index of the directory entry that owns (points to) this stream.
    */
-  ULONG              ownerProperty;
-
-  /*
-   * Helper variable that contains the size of the stream
-   */
-  ULARGE_INTEGER     streamSize;
+  DirRef             dirEntry;
 
   /*
    * This is the current position of the cursor in the stream
    */
   ULARGE_INTEGER     currentPosition;
-
-  /*
-   * The information in the stream is represented by a chain of small blocks
-   * or a chain of large blocks. Depending on the case, one of the two
-   * following variables points to that information.
-   */
-  BlockChainStream*      bigBlockChain;
-  SmallBlockChainStream* smallBlockChain;
 };
 
 /*
@@ -366,7 +458,7 @@ struct StgStreamImpl
 StgStreamImpl* StgStreamImpl_Construct(
 		StorageBaseImpl* parentStorage,
     DWORD            grfMode,
-    ULONG            ownerProperty);
+    DirRef           dirEntry);
 
 
 /******************************************************************************
@@ -376,15 +468,15 @@ StgStreamImpl* StgStreamImpl_Construct(
 
 #define htole32(x) RtlUlongByteSwap(x)
 #define htole16(x) RtlUshortByteSwap(x)
-#define le32toh(x) RtlUlongByteSwap(x)
-#define le16toh(x) RtlUshortByteSwap(x)
+#define lendian32toh(x) RtlUlongByteSwap(x)
+#define lendian16toh(x) RtlUshortByteSwap(x)
 
 #else
 
 #define htole32(x) (x)
 #define htole16(x) (x)
-#define le32toh(x) (x)
-#define le16toh(x) (x)
+#define lendian32toh(x) (x)
+#define lendian16toh(x) (x)
 
 #endif
 
@@ -403,8 +495,8 @@ void StorageUtl_WriteULargeInteger(BYTE* buffer, ULONG offset,
  const ULARGE_INTEGER *value);
 void StorageUtl_ReadGUID(const BYTE* buffer, ULONG offset, GUID* value);
 void StorageUtl_WriteGUID(BYTE* buffer, ULONG offset, const GUID* value);
-void StorageUtl_CopyPropertyToSTATSTG(STATSTG* destination, const StgProperty* source,
- int statFlags);
+void StorageUtl_CopyDirEntryToSTATSTG(StorageBaseImpl *storage,STATSTG* destination,
+ const DirEntry* source, int statFlags);
 
 /****************************************************************************
  * BlockChainStream definitions.
@@ -412,13 +504,22 @@ void StorageUtl_CopyPropertyToSTATSTG(STATSTG* destination, const StgProperty* s
  * The BlockChainStream class is a utility class that is used to create an
  * abstraction of the big block chains in the storage file.
  */
+struct BlockChainRun
+{
+  /* This represents a range of blocks that happen reside in consecutive sectors. */
+  ULONG firstSector;
+  ULONG firstOffset;
+  ULONG lastOffset;
+};
+
 struct BlockChainStream
 {
   StorageImpl* parentStorage;
   ULONG*       headOfStreamPlaceHolder;
-  ULONG        ownerPropertyIndex;
-  ULONG        lastBlockNoInSequence;
-  ULONG        lastBlockNoInSequenceIndex;
+  DirRef       ownerDirEntry;
+  struct BlockChainRun* indexCache;
+  ULONG        indexCacheLen;
+  ULONG        indexCacheSize;
   ULONG        tailIndex;
   ULONG        numBlocks;
 };
@@ -429,7 +530,7 @@ struct BlockChainStream
 BlockChainStream* BlockChainStream_Construct(
 		StorageImpl* parentStorage,
 		ULONG*         headOfStreamPlaceHolder,
-		ULONG          propertyIndex);
+		DirRef         dirEntry);
 
 void BlockChainStream_Destroy(
 		BlockChainStream* This);
@@ -461,15 +562,17 @@ BOOL BlockChainStream_SetSize(
 struct SmallBlockChainStream
 {
   StorageImpl* parentStorage;
-  ULONG          ownerPropertyIndex;
+  DirRef         ownerDirEntry;
+  ULONG*         headOfStreamPlaceHolder;
 };
 
 /*
  * Methods of the SmallBlockChainStream class.
  */
 SmallBlockChainStream* SmallBlockChainStream_Construct(
-	       StorageImpl* parentStorage,
-	       ULONG          propertyIndex);
+           StorageImpl*   parentStorage,
+           ULONG*         headOfStreamPlaceHolder,
+           DirRef         dirEntry);
 
 void SmallBlockChainStream_Destroy(
 	       SmallBlockChainStream* This);

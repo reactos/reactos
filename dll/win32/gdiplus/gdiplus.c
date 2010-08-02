@@ -58,11 +58,12 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
 
     switch(reason)
     {
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
-
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls( hinst );
+        break;
+
+    case DLL_PROCESS_DETACH:
+        free_installed_fonts();
         break;
     }
     return TRUE;
@@ -82,7 +83,7 @@ Status WINAPI GdiplusStartup(ULONG_PTR *token, const struct GdiplusStartupInput 
           input->DebugEventCallback, input->SuppressBackgroundThread,
           input->SuppressExternalCodecs);
 
-    if(input->GdiplusVersion != 1)
+    if(input->GdiplusVersion < 1 || input->GdiplusVersion > 2)
         return UnsupportedGdiplusVersion;
 
     if(input->SuppressBackgroundThread){
@@ -207,38 +208,37 @@ static void unstretch_angle(REAL * angle, REAL rad_x, REAL rad_y)
 INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle)
 {
-    INT i, count;
+    INT i;
     REAL end_angle, start_angle, endAngle;
 
     endAngle = startAngle + sweepAngle;
     unstretch_angle(&startAngle, x2 / 2.0, y2 / 2.0);
     unstretch_angle(&endAngle, x2 / 2.0, y2 / 2.0);
 
-    count = ceil(fabs(endAngle - startAngle) / M_PI_2) * 3 + 1;
-    /* don't make more than a full circle */
-    count = min(MAX_ARC_PTS, count);
-
-    if(count == 1)
-        return 0;
-    if(!points)
-        return count;
-
     /* start_angle and end_angle are the iterative variables */
     start_angle = startAngle;
 
-    for(i = 0; i < count - 1; i += 3){
+    for(i = 0; i < MAX_ARC_PTS - 1; i += 3){
         /* check if we've overshot the end angle */
         if( sweepAngle > 0.0 )
+        {
+            if (start_angle >= endAngle) break;
             end_angle = min(start_angle + M_PI_2, endAngle);
+        }
         else
+        {
+            if (start_angle <= endAngle) break;
             end_angle = max(start_angle - M_PI_2, endAngle);
+        }
 
-        add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
+        if (points)
+            add_arc_part(&points[i], x1, y1, x2, y2, start_angle, end_angle, i == 0);
 
         start_angle += M_PI_2 * (sweepAngle < 0.0 ? -1.0 : 1.0);
     }
 
-    return count;
+    if (i == 0) return 0;
+    else return i+1;
 }
 
 COLORREF ARGB2COLORREF(ARGB color)
@@ -252,6 +252,42 @@ COLORREF ARGB2COLORREF(ARGB color)
     return ((color & 0x0000ff) << 16) +
            (color & 0x00ff00) +
            ((color & 0xff0000) >> 16);
+}
+
+HBITMAP ARGB2BMP(ARGB color)
+{
+    HDC hdc;
+    BITMAPINFO bi;
+    HBITMAP result;
+    RGBQUAD *bits;
+    int alpha;
+
+    if ((color & 0xff000000) == 0xff000000) return 0;
+
+    hdc = CreateCompatibleDC(NULL);
+
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = 1;
+    bi.bmiHeader.biHeight = 1;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biXPelsPerMeter = 0;
+    bi.bmiHeader.biYPelsPerMeter = 0;
+    bi.bmiHeader.biClrUsed = 0;
+    bi.bmiHeader.biClrImportant = 0;
+
+    result = CreateDIBSection(hdc, &bi, DIB_RGB_COLORS, (void*)&bits, NULL, 0);
+
+    bits[0].rgbReserved = alpha = (color>>24)&0xff;
+    bits[0].rgbRed = ((color>>16)&0xff)*alpha/255;
+    bits[0].rgbGreen = ((color>>8)&0xff)*alpha/255;
+    bits[0].rgbBlue = (color&0xff)*alpha/255;
+
+    DeleteDC(hdc);
+
+    return result;
 }
 
 /* Like atan2, but puts angle in correct quadrant if dx is 0. */
@@ -359,8 +395,27 @@ BOOL lengthen_path(GpPath *path, INT len)
     return TRUE;
 }
 
+void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
+    BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride)
+{
+    UINT x, y;
+    for (y=0; y<height; y++)
+    {
+        const BYTE *src=src_bits+y*src_stride;
+        BYTE *dst=dst_bits+y*dst_stride;
+        for (x=0; x<width; x++)
+        {
+            BYTE alpha=src[3];
+            *dst++ = *src++ * alpha / 255;
+            *dst++ = *src++ * alpha / 255;
+            *dst++ = *src++ * alpha / 255;
+            *dst++ = *src++;
+        }
+    }
+}
+
 /* recursive deletion of GpRegion nodes */
-inline void delete_element(region_element* element)
+void delete_element(region_element* element)
 {
     switch(element->type)
     {
@@ -379,4 +434,16 @@ inline void delete_element(region_element* element)
             GdipFree(element->elementdata.combine.right);
             break;
     }
+}
+
+const char *debugstr_rectf(CONST RectF* rc)
+{
+    if (!rc) return "(null)";
+    return wine_dbg_sprintf("(%0.2f,%0.2f,%0.2f,%0.2f)", rc->X, rc->Y, rc->Width, rc->Height);
+}
+
+const char *debugstr_pointf(CONST PointF* pt)
+{
+    if (!pt) return "(null)";
+    return wine_dbg_sprintf("(%0.2f,%0.2f)", pt->X, pt->Y);
 }

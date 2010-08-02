@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -333,10 +333,10 @@ HICON get_window_icon_small(HWND hwnd)
 		SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
 
 	if (!hIcon)
-		hIcon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
+		hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
 
 	if (!hIcon)
-		hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
+		hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
 
 	if (!hIcon)
 		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hIcon);
@@ -358,10 +358,10 @@ HICON get_window_icon_big(HWND hwnd, bool allow_from_class)
 
 	if (allow_from_class) {
 		if (!hIcon)
-			hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
+			hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICON);
 
 		if (!hIcon)
-			hIcon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
+			hIcon = (HICON)GetClassLongPtr(hwnd, GCL_HICONSM);
 	}
 
 	if (!hIcon)

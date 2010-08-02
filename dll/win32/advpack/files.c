@@ -279,13 +279,13 @@ HRESULT WINAPI AdvInstallFileW(HWND hwnd, LPCWSTR lpszSourceDir, LPCWSTR lpszSou
     if (lpszDestFile)
     {
         dwLen = lstrlenW(lpszDestFile);
-        szDestFilename = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
+        szDestFilename = HeapAlloc(GetProcessHeap(), 0, (dwLen+1) * sizeof(WCHAR));
         lstrcpyW(szDestFilename, lpszDestFile);
     }
     else
     {
         dwLen = lstrlenW(lpszSourceFile);
-        szDestFilename = HeapAlloc(GetProcessHeap(), 0, dwLen * sizeof(WCHAR));
+        szDestFilename = HeapAlloc(GetProcessHeap(), 0, (dwLen+1) * sizeof(WCHAR));
         lstrcpyW(szDestFilename, lpszSourceFile);
     }
 
@@ -648,6 +648,18 @@ static DWORD fill_file_list(SESSION *session, LPCSTR szCabName, LPCSTR szFileLis
     return dwNumFound;
 }
 
+static void free_file_list(SESSION* session)
+{
+    struct FILELIST *next, *curr = session->FileList;
+
+    while (curr)
+    {
+        next = curr->next;
+        free_file_node(curr);
+        curr = next;
+    }
+}
+
 /***********************************************************************
  *             ExtractFilesA    (ADVPACK.@)
  *
@@ -728,24 +740,50 @@ HRESULT WINAPI ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir, DWORD Flags,
     session.Operation |= EXTRACT_EXTRACTFILES;
     res = pExtract(&session, CabName);
 
-    if (session.FileList)
-    {
-        struct FILELIST *curr = session.FileList;
-        struct FILELIST *next;
-
-        while (curr)
-        {
-            next = curr->next;
-            free_file_node(curr);
-            curr = next;
-        }
-    }
-
 done:
+    free_file_list(&session);
     FreeLibrary(hCabinet);
     HeapFree(GetProcessHeap(), 0, szConvertedList);
 
     return res;
+}
+
+/***********************************************************************
+ *             ExtractFilesW    (ADVPACK.@)
+ *
+ * Extracts the specified files from a cab archive into
+ * a destination directory.
+ *
+ * PARAMS
+ *   CabName   [I] Filename of the cab archive.
+ *   ExpandDir [I] Destination directory for the extracted files.
+ *   Flags     [I] Reserved.
+ *   FileList  [I] Optional list of files to extract.  See NOTES.
+ *   LReserved [I] Reserved.  Must be NULL.
+ *   Reserved  [I] Reserved.  Must be 0.
+ *
+ * RETURNS
+ *   Success: S_OK.
+ *   Failure: E_FAIL.
+ *
+ * NOTES
+ *   FileList is a colon-separated list of filenames.  If FileList is
+ *   non-NULL, only the files in the list will be extracted from the
+ *   cab file, otherwise all files will be extracted.  Any number of
+ *   spaces, tabs, or colons can be before or after the list, but
+ *   the list itself must only be separated by colons.
+ *
+ * BUGS
+ *   Unimplemented.
+ */
+HRESULT WINAPI ExtractFilesW(LPCWSTR CabName, LPCWSTR ExpandDir, DWORD Flags,
+                             LPCWSTR FileList, LPVOID LReserved, DWORD Reserved)
+{
+
+    FIXME("(%s, %s, %d, %s, %p, %d) stub!\n", debugstr_w(CabName), debugstr_w(ExpandDir),
+          Flags, debugstr_w(FileList), LReserved, Reserved);
+
+    return E_FAIL;
 }
 
 /***********************************************************************

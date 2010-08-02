@@ -42,7 +42,6 @@ typedef struct _SERVICE
     DWORD dwResumeCount;
     DWORD dwRefCount;
 
-    CLIENT_HANDLE hClient;
     SERVICE_STATUS Status;
     DWORD dwStartType;
     DWORD dwErrorControl;
@@ -92,6 +91,11 @@ DWORD ScmReadString(HKEY hServiceKey,
                     LPWSTR lpValueName,
                     LPWSTR *lpValue);
 
+DWORD
+ScmReadDependencies(HKEY hServiceKey,
+                    LPWSTR *lpDependencies,
+                    DWORD *lpdwDependenciesLength);
+
 
 /* database.c */
 
@@ -107,15 +111,18 @@ DWORD ScmStartService(PSERVICE Service,
 PSERVICE ScmGetServiceEntryByName(LPCWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPCWSTR lpDisplayName);
 PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
-PSERVICE ScmGetServiceEntryByClientHandle(HANDLE Handle);
 DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 DWORD ScmControlService(PSERVICE Service,
-                        DWORD dwControl,
-                        LPSERVICE_STATUS lpServiceStatus);
+                        DWORD dwControl);
+
+BOOL ScmLockDatabaseExclusive(VOID);
+BOOL ScmLockDatabaseShared(VOID);
+VOID ScmUnlockDatabase(VOID);
+
 
 /* driver.c */
 

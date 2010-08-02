@@ -492,7 +492,7 @@ static int comp_FindSubFile(void *p, const void *key,
                             int leaf, void** next)
 {
     *next = (char *)p+strlen(p)+(leaf?5:3);
-    WINE_TRACE("Comparing '%s' with '%s'\n", (char *)p, (char *)key);
+    WINE_TRACE("Comparing '%s' with '%s'\n", (char *)p, (const char *)key);
     return strcmp(p, key);
 }
 
@@ -761,6 +761,103 @@ static BOOL HLPFILE_RtfAddHexBytes(struct RtfData* rd, const void* _ptr, unsigne
     return TRUE;
 }
 
+static HLPFILE_LINK*       HLPFILE_AllocLink(struct RtfData* rd, int cookie,
+                                             const char* str, unsigned len, LONG hash,
+                                             unsigned clrChange, unsigned bHotSpot, unsigned wnd);
+
+/******************************************************************
+ *		HLPFILE_AddHotSpotLinks
+ *
+ */
+static void HLPFILE_AddHotSpotLinks(struct RtfData* rd, HLPFILE* file,
+                                    const BYTE* start, ULONG hs_size, ULONG hs_offset)
+{
+    unsigned    i, hs_num;
+    ULONG       hs_macro;
+    const char* str;
+
+    if (hs_size == 0 || hs_offset == 0) return;
+
+    start += hs_offset;
+    /* always 1 ?? */
+    hs_num = GET_USHORT(start, 1);
+    hs_macro = GET_UINT(start, 3);
+
+    str = (const char*)start + 7 + 15 * hs_num + hs_macro;
+    /* FIXME: should use hs_size to prevent out of bounds reads */
+    for (i = 0; i < hs_num; i++)
+    {
+        HLPFILE_HOTSPOTLINK*    hslink;
+
+        WINE_TRACE("%02x-%02x%02x {%s,%s}\n",
+                   start[7 + 15 * i + 0], start[7 + 15 * i + 1], start[7 + 15 * i + 2],
+                   str, str + strlen(str) + 1);
+        /* str points to two null terminated strings:
+         * hotspot name, then link name
+         */
+        str += strlen(str) + 1;     /* skip hotspot name */
+
+        hslink = NULL;
+        switch (start[7 + 15 * i + 0])
+        /* The next two chars always look like 0x04 0x00 ???
+         * What are they for ?
+         */
+        {
+        case 0xC8:
+            hslink = (HLPFILE_HOTSPOTLINK*)
+                HLPFILE_AllocLink(rd, hlp_link_macro, str, -1, 0, 0, 1, -1);
+            break;
+
+        case 0xE6:
+        case 0xE7:
+            hslink = (HLPFILE_HOTSPOTLINK*)
+                HLPFILE_AllocLink(rd, (start[7 + 15 * i + 0] & 1) ? hlp_link_link : hlp_link_popup,
+                                  file->lpszPath, -1, HLPFILE_Hash(str),
+                                  0, 1, -1);
+            break;
+
+        case 0xEE:
+        case 0xEF:
+            {
+                const char* win = strchr(str, '>');
+                int wnd = -1;
+                char* tgt = NULL;
+
+                if (win)
+                {
+                    for (wnd = file->numWindows - 1; wnd >= 0; wnd--)
+                    {
+                        if (!strcmp(win + 1, file->windows[wnd].name)) break;
+                    }
+                    if (wnd == -1)
+                        WINE_WARN("Couldn't find window info for %s\n", win);
+                    if ((tgt = HeapAlloc(GetProcessHeap(), 0, win - str + 1)))
+                    {
+                        memcpy(tgt, str, win - str);
+                        tgt[win - str] = '\0';
+                    }
+                }
+                hslink = (HLPFILE_HOTSPOTLINK*)
+                    HLPFILE_AllocLink(rd, (start[7 + 15 * i + 0] & 1) ? hlp_link_link : hlp_link_popup,
+                                      file->lpszPath, -1, HLPFILE_Hash(tgt ? tgt : str), 0, 1, wnd);
+                HeapFree(GetProcessHeap(), 0, tgt);
+                break;
+            }
+        default:
+            WINE_FIXME("unknown hotsport target 0x%x\n", start[7 + 15 * i + 0]);
+        }
+        if (hslink)
+        {
+            hslink->x      = GET_USHORT(start, 7 + 15 * i + 3);
+            hslink->y      = GET_USHORT(start, 7 + 15 * i + 5);
+            hslink->width  = GET_USHORT(start, 7 + 15 * i + 7);
+            hslink->height = GET_USHORT(start, 7 + 15 * i + 9);
+            /* target = GET_UINT(start, 7 + 15 * i + 11); */
+        }
+        str += strlen(str) + 1;
+    }
+}
+
 /******************************************************************
  *             HLPFILE_RtfAddTransparentBitmap
  *
@@ -848,7 +945,7 @@ static BOOL HLPFILE_RtfAddTransparentBitmap(struct RtfData* rd, const BITMAPINFO
  *		HLPFILE_RtfAddBitmap
  *
  */
-static BOOL HLPFILE_RtfAddBitmap(struct RtfData* rd, const BYTE* beg, BYTE type, BYTE pack)
+static BOOL HLPFILE_RtfAddBitmap(struct RtfData* rd, HLPFILE* file, const BYTE* beg, BYTE type, BYTE pack)
 {
     const BYTE*         ptr;
     const BYTE*         pict_beg;
@@ -859,6 +956,7 @@ static BOOL HLPFILE_RtfAddBitmap(struct RtfData* rd, const BYTE* beg, BYTE type,
     BOOL                clrImportant = FALSE;
     BOOL                ret = FALSE;
     char                tmp[256];
+    unsigned            hs_size, hs_offset;
 
     bi = HeapAlloc(GetProcessHeap(), 0, sizeof(*bi));
     if (!bi) return FALSE;
@@ -884,10 +982,11 @@ static BOOL HLPFILE_RtfAddBitmap(struct RtfData* rd, const BYTE* beg, BYTE type,
                bi->bmiHeader.biWidth, bi->bmiHeader.biHeight);
 
     csz = fetch_ulong(&ptr);
-    fetch_ulong(&ptr); /* hotspot size */
+    hs_size = fetch_ulong(&ptr);
 
-    off = GET_UINT(ptr, 0);     ptr += 4;
-    /* GET_UINT(ptr, 0); hotspot offset */ ptr += 4;
+    off = GET_UINT(ptr, 0); ptr += 4;
+    hs_offset = GET_UINT(ptr, 0); ptr += 4;
+    HLPFILE_AddHotSpotLinks(rd, file, beg, hs_size, hs_offset);
 
     /* now read palette info */
     if (type == 0x06)
@@ -947,9 +1046,9 @@ done:
  *		HLPFILE_RtfAddMetaFile
  *
  */
-static BOOL     HLPFILE_RtfAddMetaFile(struct RtfData* rd, const BYTE* beg, BYTE pack)
+static BOOL     HLPFILE_RtfAddMetaFile(struct RtfData* rd, HLPFILE* file, const BYTE* beg, BYTE pack)
 {
-    ULONG size, csize, off, hsoff;
+    ULONG               size, csize, off, hs_offset, hs_size;
     const BYTE*         ptr;
     const BYTE*         bits;
     BYTE*               alloc = NULL;
@@ -969,13 +1068,15 @@ static BOOL     HLPFILE_RtfAddMetaFile(struct RtfData* rd, const BYTE* beg, BYTE
 
     size = fetch_ulong(&ptr); /* decompressed size */
     csize = fetch_ulong(&ptr); /* compressed size */
-    fetch_ulong(&ptr); /* hotspot size */
+    hs_size = fetch_ulong(&ptr); /* hotspot size */
     off = GET_UINT(ptr, 0);
-    hsoff = GET_UINT(ptr, 4);
+    hs_offset = GET_UINT(ptr, 4);
     ptr += 8;
 
-    WINE_TRACE("sz=%u csz=%u offs=%u/%u,%u\n",
-               size, csize, off, (ULONG)(ptr - beg), hsoff);
+    HLPFILE_AddHotSpotLinks(rd, file, beg, hs_size, hs_offset);
+
+    WINE_TRACE("sz=%u csz=%u offs=%u/%u,%u/%u\n",
+               size, csize, off, (ULONG)(ptr - beg), hs_size, hs_offset);
 
     bits = HLPFILE_DecompressGfx(beg + off, csize, size, pack, &alloc);
     if (!bits) return FALSE;
@@ -1016,10 +1117,10 @@ static  BOOL    HLPFILE_RtfAddGfxByAddr(struct RtfData* rd, HLPFILE *hlpfile,
         {
         case 5: /* device dependent bmp */
         case 6: /* device independent bmp */
-            HLPFILE_RtfAddBitmap(rd, beg, type, pack);
+            HLPFILE_RtfAddBitmap(rd, hlpfile, beg, type, pack);
             break;
         case 8:
-            HLPFILE_RtfAddMetaFile(rd, beg, pack);
+            HLPFILE_RtfAddMetaFile(rd, hlpfile, beg, pack);
             break;
         default: WINE_FIXME("Unknown type %u\n", type); return FALSE;
         }
@@ -1061,32 +1162,36 @@ static  BOOL    HLPFILE_RtfAddGfxByIndex(struct RtfData* rd, HLPFILE *hlpfile,
  */
 static HLPFILE_LINK*       HLPFILE_AllocLink(struct RtfData* rd, int cookie,
                                              const char* str, unsigned len, LONG hash,
-                                             unsigned clrChange, unsigned wnd)
+                                             unsigned clrChange, unsigned bHotSpot, unsigned wnd)
 {
     HLPFILE_LINK*  link;
     char*          link_str;
+    unsigned       asz = bHotSpot ? sizeof(HLPFILE_HOTSPOTLINK) : sizeof(HLPFILE_LINK);
 
     /* FIXME: should build a string table for the attributes.link.lpszPath
      * they are reallocated for each link
      */
     if (len == -1) len = strlen(str);
-    link = HeapAlloc(GetProcessHeap(), 0, sizeof(HLPFILE_LINK) + len + 1);
+    link = HeapAlloc(GetProcessHeap(), 0, asz + len + 1);
     if (!link) return NULL;
 
     link->cookie     = cookie;
-    link->string     = link_str = (char*)(link + 1);
+    link->string     = link_str = (char*)link + asz;
     memcpy(link_str, str, len);
     link_str[len] = '\0';
     link->hash       = hash;
     link->bClrChange = clrChange ? 1 : 0;
+    link->bHotSpot   = bHotSpot;
     link->window     = wnd;
     link->next       = rd->first_link;
     rd->first_link   = link;
     link->cpMin      = rd->char_pos;
-    link->cpMax      = 0;
     rd->force_color  = clrChange;
     if (rd->current_link) WINE_FIXME("Pending link\n");
-    rd->current_link = link;
+    if (bHotSpot)
+        link->cpMax = rd->char_pos;
+    else
+        rd->current_link = link;
 
     WINE_TRACE("Link[%d] to %s@%08x:%d\n",
                link->cookie, link->string, link->hash, link->window);
@@ -1495,7 +1600,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             case 0xCC:
                 WINE_TRACE("macro => %s\n", format + 3);
                 HLPFILE_AllocLink(rd, hlp_link_macro, (const char*)format + 3,
-                                  GET_USHORT(format, 1), 0, !(*format & 4), -1);
+                                  GET_USHORT(format, 1), 0, !(*format & 4), 0, -1);
                 format += 3 + GET_USHORT(format, 1);
                 break;
 
@@ -1503,7 +1608,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             case 0xE1:
                 WINE_WARN("jump topic 1 => %u\n", GET_UINT(format, 1));
                 HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
-                                  page->file->lpszPath, -1, GET_UINT(format, 1), 1, -1);
+                                  page->file->lpszPath, -1, GET_UINT(format, 1), 1, 0, -1);
 
 
                 format += 5;
@@ -1515,7 +1620,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             case 0xE7:
                 HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
                                   page->file->lpszPath, -1, GET_UINT(format, 1),
-                                  !(*format & 4), -1);
+                                  !(*format & 4), 0, -1);
                 format += 5;
                 break;
 
@@ -1524,7 +1629,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             case 0xEE:
             case 0xEF:
                 {
-                    char*       ptr = (char*) format + 8;
+                    const char*       ptr = (const char*) format + 8;
                     BYTE        type = format[3];
                     int         wnd = -1;
 
@@ -1552,7 +1657,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
                         break;
                     }
                     HLPFILE_AllocLink(rd, (*format & 1) ? hlp_link_link : hlp_link_popup,
-                                      ptr, -1, GET_UINT(format, 4), !(*format & 4), wnd);
+                                      ptr, -1, GET_UINT(format, 4), !(*format & 4), 0, wnd);
                 }
                 format += 3 + GET_USHORT(format, 1);
                 break;
@@ -1659,16 +1764,6 @@ BOOL    HLPFILE_BrowsePage(HLPFILE_PAGE* page, struct RtfData* rd,
     if (!HLPFILE_RtfAddControl(rd, "{\\colortbl ;\\red0\\green128\\blue0;")) return FALSE;
     for (index = 0; index < hlpfile->numFonts; index++)
     {
-        const char* family;
-        switch (hlpfile->fonts[index].LogFont.lfPitchAndFamily & 0xF0)
-        {
-        case FF_MODERN:     family = "modern";  break;
-        case FF_ROMAN:      family = "roman";   break;
-        case FF_SWISS:      family = "swiss";   break;
-        case FF_SCRIPT:     family = "script";  break;
-        case FF_DECORATIVE: family = "decor";   break;
-        default:            family = "nil";     break;
-        }
         sprintf(tmp, "\\red%d\\green%d\\blue%d;",
                 GetRValue(hlpfile->fonts[index].color),
                 GetGValue(hlpfile->fonts[index].color),

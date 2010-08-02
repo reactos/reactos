@@ -1,0 +1,29 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "ファイル(&F)"
+	BEGIN
+		MENUITEM "開く(&O)...", IDM_OPEN_FILE
+		MENUITEM "閉じる(&C)", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "終了(&E)", IDM_EXIT
+	END
+	POPUP "ヘルプ(&H)"
+	BEGIN
+		MENUITEM "バージョン情報(&A)...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "すべてのサポートされたファイル (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "再生"
+	IDS_TOOLTIP_STOP "停止"
+	IDS_TOOLTIP_EJECT "取り出し"
+	IDS_TOOLTIP_BACKWARD "後ろへスキップ"
+	IDS_TOOLTIP_SEEKBACK "後ろへシーク"
+	IDS_TOOLTIP_SEEKFORW "前へシーク"
+	IDS_TOOLTIP_FORWARD "前へスキップ"
+	IDS_APPTITLE "ReactOS マルチメディア プレーヤー"
+END

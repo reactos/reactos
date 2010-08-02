@@ -12,15 +12,15 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           System setup
- * FILE:              lib/syssetup/install.c
+ * FILE:              dll/win32/syssetup/install.c
  * PROGRAMER:         Eric Kohl
  */
 
@@ -481,14 +481,18 @@ EnableUserModePnpManager(VOID)
     if (hSCManager == NULL)
         goto cleanup;
 
-    hService = OpenServiceW(hSCManager, L"PlugPlay", SERVICE_CHANGE_CONFIG | SERVICE_START);
+    hService = OpenServiceW(hSCManager,
+                            L"PlugPlay",
+                            SERVICE_CHANGE_CONFIG | SERVICE_START);
     if (hService == NULL)
         goto cleanup;
 
-    ret = ChangeServiceConfigW(
-        hService,
-        SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE,
-        NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+    ret = ChangeServiceConfigW(hService,
+                               SERVICE_NO_CHANGE,
+                               SERVICE_AUTO_START,
+                               SERVICE_NO_CHANGE,
+                               NULL, NULL, NULL,
+                               NULL, NULL, NULL, NULL);
     if (!ret)
         goto cleanup;
 
@@ -507,7 +511,7 @@ cleanup:
 }
 
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -759,7 +763,7 @@ CreateShortcuts(VOID)
 
     /* Create program startmenu shortcuts */
     CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("%SystemRoot%\\explorer.exe"), IDS_CMT_EXPLORER, TRUE);
-    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("%SystemRoot%\\system32\\downloader.exe"), IDS_CMT_DOWNLOADER, TRUE);
+    CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_DOWNLOADER, _T("%SystemRoot%\\system32\\rapps.exe"), IDS_CMT_DOWNLOADER, TRUE);
 
     /* Create administrative tools startmenu shortcuts */
     CreateShortcut(CSIDL_COMMON_ADMINTOOLS, NULL, IDS_SHORT_SERVICE, _T("%SystemRoot%\\system32\\servman.exe"), IDS_CMT_SERVMAN, TRUE);
@@ -776,6 +780,7 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_RDESKTOP, _T("%SystemRoot%\\system32\\mstsc.exe"), IDS_CMT_RDESKTOP, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNAP, _T("%SystemRoot%\\system32\\screenshot.exe"), IDS_CMT_SCREENSHOT, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WORDPAD, _T("%SystemRoot%\\system32\\wordpad.exe"), IDS_CMT_WORDPAD, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_PAINT, _T("%SystemRoot%\\system32\\paint.exe"), IDS_CMT_PAINT, TRUE);
     }
 
     /* Create System Tools subfolder and fill if the exe is available */
@@ -798,6 +803,7 @@ CreateShortcuts(VOID)
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MPLAY32, _T("%SystemRoot%\\system32\\mplay32.exe"), IDS_CMT_MPLAY32, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNDVOL32, _T("%SystemRoot%\\system32\\sndvol32.exe"), IDS_CMT_SNDVOL32, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SNDREC32, _T("%SystemRoot%\\system32\\sndrec32.exe"), IDS_CMT_SNDREC32, TRUE);
     }
 
     /* Create Games subfolder and fill if the exe is available */
@@ -805,6 +811,7 @@ CreateShortcuts(VOID)
     {
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SOLITAIRE, _T("%SystemRoot%\\system32\\sol.exe"), IDS_CMT_SOLITAIRE, TRUE);
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_WINEMINE, _T("%SystemRoot%\\system32\\winemine.exe"), IDS_CMT_WINEMINE, TRUE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_SPIDER, _T("%SystemRoot%\\system32\\spider.exe"), IDS_CMT_SPIDER, TRUE);
     }
 
     CoUninitialize();
@@ -848,6 +855,7 @@ InstallReactOS(HINSTANCE hInstance)
     DWORD LastError;
     HANDLE token;
     TOKEN_PRIVILEGES privs;
+    HKEY hKey;
 
     InitializeSetupActionLog(FALSE);
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
@@ -894,6 +902,29 @@ InstallReactOS(HINSTANCE hInstance)
 
     if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
     {
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                          0,
+                          KEY_WRITE,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            RegSetValueExW(hKey,
+                           L"PathName",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+            RegSetValueExW(hKey,
+                           L"SystemRoot",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+            RegCloseKey(hKey);
+        }
+
         PathAddBackslash(szBuffer);
         _tcscat(szBuffer, _T("system"));
         CreateDirectory(szBuffer, NULL);

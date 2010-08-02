@@ -1,0 +1,42 @@
+﻿; UTF-8
+
+[Section]
+Name = AC97 Driver for VirtualBox
+Version = 5.10.00.3610
+Licence = Unknown
+Description = Unzip in the "ReactOS" folder then restart ReactOS twice.
+Size = 186kB
+Category = 13
+URLSite = Unknown
+URLDownload = http://svn.reactos.org/packages/ac97_vbox.exe
+CDPath = none
+
+[Section.0407]
+Name = AC97 Treiber für VirtualBox
+Licence = Unbekannt
+Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+URLSite = Unbekannt
+
+[Section.040a]
+Name = Driver AC97 para VirtualBox
+Licence = Desconocida
+Description = Descomprimir en la carpeta "Reactos" y reiniciar Reactos dos veces.
+URLSite = Desconocida
+
+[Section.0415]
+Name = Sterownik AC97 dla VirtualBox
+Licence = Nieznana
+Description = Rozpakuj zawartość w folderze "ReactOS" i dwukrotnie zrestartuj system.
+URLSite = Nieznana
+
+[Section.0419]
+Name = Драйвер AC97 для VirtualBox
+Licence = Не указано
+Description = Разархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+URLSite = Не указано
+
+[Section.0422]
+Name = Драйвер AC97 для VirtualBox
+Licence = Невідома
+Description = Розархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+URLSite = Не вказано

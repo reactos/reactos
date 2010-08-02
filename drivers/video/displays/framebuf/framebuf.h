@@ -13,13 +13,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef FRAMEBUF_H
-#define FRAMEBUF_H
+#pragma once
 
 #include <stdarg.h>
 #include <windef.h>
@@ -68,10 +67,8 @@ typedef struct _PDEV
    DDPIXELFORMAT ddpfDisplay;
 } PDEV, *PPDEV;
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 #define DEVICE_NAME	L"framebuf"
-#define ALLOC_TAG	TAG('F','B','U','F')
+#define ALLOC_TAG	'FUBF'
 
 
 DHPDEV APIENTRY
@@ -162,5 +159,3 @@ IntSetPalette(
    IN PPALETTEENTRY ppalent,
    IN ULONG iStart,
    IN ULONG cColors);
-
-#endif /* FRAMEBUF_H */

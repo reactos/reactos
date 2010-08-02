@@ -103,7 +103,15 @@ static HRESULT WINAPI HTMLStyle3_get_layoutFlow(IHTMLStyle3 *iface, BSTR *p)
 static HRESULT WINAPI HTMLStyle3_put_zoom(IHTMLStyle3 *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE3_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    /* zoom property is IE CSS extension that is mostly used as a hack to workaround IE bugs.
+     * The value is set to 1 then. We can safely ignore setting zoom to 1. */
+    if(V_VT(&v) == VT_I4 && V_I4(&v) == 1)
+        return S_OK;
+
+    FIXME("stub for %s\n", debugstr_variant(&v));
     return E_NOTIMPL;
 }
 
@@ -117,15 +125,19 @@ static HRESULT WINAPI HTMLStyle3_get_zoom(IHTMLStyle3 *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle3_put_wordWrap(IHTMLStyle3 *iface, BSTR v)
 {
     HTMLStyle *This = HTMLSTYLE3_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    return set_nsstyle_attr(This->nsstyle, STYLEID_WORD_WRAP, v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle3_get_wordWrap(IHTMLStyle3 *iface, BSTR *p)
 {
     HTMLStyle *This = HTMLSTYLE3_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr(This->nsstyle, STYLEID_WORD_WRAP, p);
 }
 
 static HRESULT WINAPI HTMLStyle3_put_textUnderlinePosition(IHTMLStyle3 *iface, BSTR v)

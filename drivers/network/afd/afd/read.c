@@ -1,4 +1,4 @@
-/* $Id$
+ter/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -26,30 +26,64 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
-    UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
-
-    return !BytesAvailable &&
-        (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT));
+static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
+{
+	if( ( Status == STATUS_SUCCESS && !Information ) ||
+	   ( !NT_SUCCESS( Status ) ) )
+	{
+		/* The socket has been closed */
+		FCB->PollState |= AFD_EVENT_DISCONNECT;
+		FCB->PollStatus[FD_CLOSE_BIT] = Status;
+		
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
+	}
 }
 
-static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
-    if( !NT_SUCCESS(Status) || 
-		(Status == STATUS_SUCCESS && Information == 0) ) {
-        AFD_DbgPrint(MID_TRACE,("Looks like an EOF\n"));
-        FCB->PollState |= AFD_EVENT_DISCONNECT;
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
-    }
+static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
+    UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
+	
+    return !BytesAvailable &&
+	(FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT));
+}
+
+static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
+	NTSTATUS Status;
+
+	if( !FCB->ReceiveIrp.InFlightRequest ) {
+		AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
+
+		Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+							 FCB->Connection.Object,
+							 TDI_RECEIVE_NORMAL,
+							 FCB->Recv.Window,
+							 FCB->Recv.Size,
+							 &FCB->ReceiveIrp.Iosb,
+							 ReceiveComplete,
+							 FCB );
+
+        if( Status == STATUS_SUCCESS && FCB->ReceiveIrp.Iosb.Information )
+        {
+            FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
+            FCB->PollState |= AFD_EVENT_RECEIVE;
+            FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+			
+			PollReeval( FCB->DeviceExt, FCB->FileObject );
+        }
+		else
+		{
+			/* Check for EOF */
+			HandleEOFOnIrp(FCB, Status, FCB->ReceiveIrp.Iosb.Information);
+		}
+	}
 }
 
 static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 												   PAFD_RECV_INFO RecvReq,
 												   PUINT TotalBytesCopied ) {
-    UINT i, BytesToCopy = 0,
+    UINT i, BytesToCopy = 0, FcbBytesCopied = FCB->Recv.BytesUsed,
 		BytesAvailable =
 		FCB->Recv.Content - FCB->Recv.BytesUsed;
     PAFD_MAPBUF Map;
-    NTSTATUS Status;
     *TotalBytesCopied = 0;
 
 
@@ -81,17 +115,17 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 									BytesToCopy));
 
 			RtlCopyMemory( Map[i].BufferAddress,
-						   FCB->Recv.Window + FCB->Recv.BytesUsed,
+						   FCB->Recv.Window + FcbBytesCopied,
 						   BytesToCopy );
 
 			MmUnmapLockedPages( Map[i].BufferAddress, Map[i].Mdl );
 
             *TotalBytesCopied += BytesToCopy;
+			FcbBytesCopied += BytesToCopy;
+			BytesAvailable -= BytesToCopy;
 
-            if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK)) {
+            if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK))
                 FCB->Recv.BytesUsed += BytesToCopy;
-                BytesAvailable -= BytesToCopy;
-            }
 		}
     }
 
@@ -99,24 +133,8 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     if( FCB->Recv.BytesUsed == FCB->Recv.Content ) {
 		FCB->Recv.BytesUsed = FCB->Recv.Content = 0;
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
 
-		if( !FCB->ReceiveIrp.InFlightRequest ) {
-			AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
-
-			Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-								 FCB->Connection.Object,
-								 TDI_RECEIVE_NORMAL,
-								 FCB->Recv.Window,
-								 FCB->Recv.Size,
-								 &FCB->ReceiveIrp.Iosb,
-								 ReceiveComplete,
-								 FCB );
-
-            if( Status == STATUS_SUCCESS )
-                FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
-            HandleEOFOnIrp( FCB, Status, FCB->ReceiveIrp.Iosb.Information );
-		}
+        RefillSocketBuffer( FCB );
     }
 
     return STATUS_SUCCESS;
@@ -132,54 +150,59 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 
     AFD_DbgPrint(MID_TRACE,("%x %x\n", FCB, Irp));
 
+    /* Kick the user that receive would be possible now */
+    /* XXX Not implemented yet */
+
+    AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
+						FCB, FCB->Recv.Content));
+
     if( CantReadMore( FCB ) ) {
         /* Success here means that we got an EOF.  Complete a pending read
          * with zero bytes if we haven't yet overread, then kill the others.
          */
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
             NextIrpEntry =
-                RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+			RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
             NextIrp =
-                CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+			CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
             NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
             RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-
+			
             AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
                                     TotalBytesCopied));
             UnlockBuffers( RecvReq->BufferArray,
-                           RecvReq->BufferCount, FALSE );
+						  RecvReq->BufferCount, FALSE );
             Status = NextIrp->IoStatus.Status =
-                FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
+			FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
             if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+			(void)IoSetCancelRoutine(NextIrp, NULL);
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
             FCB->Overread = TRUE;
-            //FCB->PollState |= AFD_EVENT_DISCONNECT;
-            PollReeval( FCB->DeviceExt, FCB->FileObject );
         }
     } else {
 		/* Kick the user that receive would be possible now */
 		/* XXX Not implemented yet */
-
+		
 		AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
 								FCB, FCB->Recv.Content));
 		/*OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );*/
-
+		
 		/* Try to clear some requests */
 		while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
 			NextIrpEntry =
-				RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+			RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
 			NextIrp =
-				CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+			CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
 			NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
 			RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
-
+			
 			AFD_DbgPrint(MID_TRACE,("RecvReq @ %x\n", RecvReq));
-
+			
 			Status = TryToSatisfyRecvRequestFromBuffer
-				( FCB, RecvReq, &TotalBytesCopied );
-
+			( FCB, RecvReq, &TotalBytesCopied );
+			
 			if( Status == STATUS_PENDING ) {
 				AFD_DbgPrint(MID_TRACE,("Ran out of data for %x\n", NextIrp));
 				InsertHeadList(&FCB->PendingIrpList[FUNCTION_RECV],
@@ -189,7 +212,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 				AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
 										TotalBytesCopied));
 				UnlockBuffers( RecvReq->BufferArray,
-							   RecvReq->BufferCount, FALSE );
+							  RecvReq->BufferCount, FALSE );
 				NextIrp->IoStatus.Status = Status;
 				NextIrp->IoStatus.Information = TotalBytesCopied;
 				if( NextIrp == Irp ) { 
@@ -197,6 +220,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 					RetBytesCopied = TotalBytesCopied;
 				}
 				if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+				(void)IoSetCancelRoutine(NextIrp, NULL);
 				IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 			}
 		}
@@ -204,10 +228,10 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 
     if( FCB->Recv.Content ) {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
+        FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
-		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
     AFD_DbgPrint(MID_TRACE,("RetStatus for irp %x is %x\n", Irp, RetStatus));
 
@@ -232,8 +256,6 @@ NTSTATUS NTAPI ReceiveComplete
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    ASSERT_IRQL(APC_LEVEL);
-
     if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
 
@@ -254,23 +276,20 @@ NTSTATUS NTAPI ReceiveComplete
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 	SocketStateUnlock( FCB );
 	return STATUS_FILE_CLOSED;
     } else if( FCB->State == SOCKET_STATE_LISTENING ) {
         AFD_DbgPrint(MIN_TRACE,("!!! LISTENER GOT A RECEIVE COMPLETE !!!\n"));
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        Irp->IoStatus.Information = 0;
         SocketStateUnlock( FCB );
         return STATUS_INVALID_PARAMETER;
     }
-
-    HandleEOFOnIrp( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
+	
+	HandleEOFOnIrp( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
 
 	ReceiveActivity( FCB, NULL );
-
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
 		
     SocketStateUnlock( FCB );
 
@@ -305,9 +324,6 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 									   Irp, 0 );
     }
 
-    FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 									   Irp, 0 );
@@ -334,7 +350,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     Status = ReceiveActivity( FCB, Irp );
 
-    if( Status == STATUS_PENDING && RecvReq->AfdFlags & AFD_IMMEDIATE ) {
+    if( Status == STATUS_PENDING && (RecvReq->AfdFlags & AFD_IMMEDIATE) ) {
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         TotalBytesCopied = 0;
@@ -345,6 +361,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     } else if( Status == STATUS_PENDING ) {
         AFD_DbgPrint(MID_TRACE,("Leaving read irp\n"));
         IoMarkIrpPending( Irp );
+        (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
     } else {
         AFD_DbgPrint(MID_TRACE,("Completed with status %x\n", Status));
     }
@@ -464,11 +481,8 @@ PacketSocketRecvComplete(
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
-    if( !SocketAcquireStateLock( FCB ) ) {
-        Irp->IoStatus.Status = STATUS_FILE_CLOSED;
-        Irp->IoStatus.Information = 0;
+    if( !SocketAcquireStateLock( FCB ) )
         return STATUS_FILE_CLOSED;
-    }
 
     FCB->ReceiveIrp.InFlightRequest = NULL;
 
@@ -483,6 +497,7 @@ PacketSocketRecvComplete(
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(RecvReq->BufferArray, RecvReq->BufferCount, FALSE);
 	       if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+               (void)IoSetCancelRoutine(NextIrp, NULL);
 	       IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
         }
 
@@ -514,8 +529,6 @@ PacketSocketRecvComplete(
     } else Status = STATUS_NO_MEMORY;
 
     if( !NT_SUCCESS( Status ) ) {
-        Irp->IoStatus.Status = Status;
-        Irp->IoStatus.Information = 0;
 		if( DatagramRecv ) ExFreePool( DatagramRecv );
 		SocketStateUnlock( FCB );
 		return Status;
@@ -547,6 +560,7 @@ PacketSocketRecvComplete(
 			NextIrp->IoStatus.Information = DatagramRecv->Len;
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
             if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		} else {
 			AFD_DbgPrint(MID_TRACE,("Satisfying\n"));
@@ -557,6 +571,7 @@ PacketSocketRecvComplete(
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
             if ( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
 			AFD_DbgPrint(MID_TRACE,("Completing\n"));
+                        (void)IoSetCancelRoutine(NextIrp, NULL);
 			IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 		}
     }
@@ -564,10 +579,10 @@ PacketSocketRecvComplete(
     if( !IsListEmpty( &FCB->DatagramList ) ) {
 		AFD_DbgPrint(MID_TRACE,("Signalling\n"));
 		FCB->PollState |= AFD_EVENT_RECEIVE;
+        FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
-		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 		/* Now relaunch the datagram request */
@@ -602,8 +617,6 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
-
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 		return UnlockAndMaybeComplete
@@ -636,12 +649,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			Status = Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
 			Irp->IoStatus.Information = DatagramRecv->Len;
 
-			if( IsListEmpty( &FCB->DatagramList ) )
-				FCB->PollState &= ~AFD_EVENT_RECEIVE;
-			else
+			if( !IsListEmpty( &FCB->DatagramList ) ) {
 				FCB->PollState |= AFD_EVENT_RECEIVE;
-
-			PollReeval( FCB->DeviceExt, FCB->FileObject );
+                FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+			    PollReeval( FCB->DeviceExt, FCB->FileObject );
+            } else
+                FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
@@ -652,12 +665,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				( FCB, Irp, DatagramRecv,
 				  (PUINT)&Irp->IoStatus.Information );
 
-			if( IsListEmpty( &FCB->DatagramList ) )
-				FCB->PollState &= ~AFD_EVENT_RECEIVE;
-			else
+			if( !IsListEmpty( &FCB->DatagramList ) ) {
 				FCB->PollState |= AFD_EVENT_RECEIVE;
-
-			PollReeval( FCB->DeviceExt, FCB->FileObject );
+                FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+			    PollReeval( FCB->DeviceExt, FCB->FileObject );
+            } else
+                FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
@@ -667,11 +680,11 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
 		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 		return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     } else {
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
 }

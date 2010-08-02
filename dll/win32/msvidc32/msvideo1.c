@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -50,6 +50,7 @@ static HINSTANCE MSVIDC32_hModule;
 #define CRAM_MAGIC mmioFOURCC('C', 'R', 'A', 'M')
 #define MSVC_MAGIC mmioFOURCC('M', 'S', 'V', 'C')
 #define WHAM_MAGIC mmioFOURCC('W', 'H', 'A', 'M')
+#define compare_fourcc(fcc1, fcc2) (((fcc1)^(fcc2))&~0x20202020)
 
 #define PALETTE_COUNT 256
 #define LE_16(x)  ((((const uint8_t *)(x))[1] << 8) | ((const uint8_t *)(x))[0])
@@ -94,10 +95,18 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
     blocks_high = height / 4;
     total_blocks = blocks_wide * blocks_high;
     block_inc = 4;
+#ifdef ORIGINAL
     row_dec = stride + 4;
+#else
+    row_dec = - (stride - 4); /* such that -row_dec > 0 */
+#endif
 
     for (block_y = blocks_high; block_y > 0; block_y--) {
+#ifdef ORIGINAL
         block_ptr = ((block_y * 4) - 1) * stride;
+#else
+        block_ptr = ((blocks_high - block_y) * 4) * stride;
+#endif
         for (block_x = blocks_wide; block_x > 0; block_x--) {
             /* check if this block should be skipped */
             if (skip_blocks) {
@@ -130,16 +139,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
 
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
-                    {
-#if ORIGINAL
                         pixels[pixel_ptr++] = colors[(flags & 0x1) ^ 1];
-#else
-                        pixels[width*(height-(pixel_ptr/width)-1) + 
-                               pixel_ptr%width] = 
-                               colors[(flags & 0x1) ^ 1];
-                        pixel_ptr++;
-#endif
-                    }
                     pixel_ptr -= row_dec;
                 }
             } else if (byte_b >= 0x90) {
@@ -152,19 +152,9 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
 
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
-                    {
-#if ORIGINAL
-                        pixels[pixel_ptr++] = 
-                            colors[((pixel_y & 0x2) << 1) + 
+                        pixels[pixel_ptr++] =
+                            colors[((pixel_y & 0x2) << 1) +
                                 (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
-#else
-                        pixels[width*(height-(pixel_ptr/width)-1) + 
-                               pixel_ptr%width] = 
-                            colors[((pixel_y & 0x2) << 1) + 
-                                (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
-                        pixel_ptr++;
-#endif
-                    }
                     pixel_ptr -= row_dec;
                 }
             } else {
@@ -173,15 +163,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
 
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++)
-                    {
-#if ORIGINAL
                         pixels[pixel_ptr++] = colors[0];
-#else
-                        pixels[width*(height-(pixel_ptr/width)-1) + 
-                               pixel_ptr%width] = colors[0];
-                        pixel_ptr++;
-#endif
-                    }
                     pixel_ptr -= row_dec;
                 }
             }
@@ -217,10 +199,18 @@ msvideo1_decode_16bit( int width, int height, const unsigned char *buf, int buf_
     blocks_high = height / 4;
     total_blocks = blocks_wide * blocks_high;
     block_inc = 4;
+#ifdef ORIGINAL
     row_dec = stride + 4;
+#else
+    row_dec = - (stride - 4); /* such that -row_dec > 0 */
+#endif
 
     for (block_y = blocks_high; block_y > 0; block_y--) {
+#ifdef ORIGINAL
         block_ptr = ((block_y * 4) - 1) * stride;
+#else
+        block_ptr = ((blocks_high - block_y) * 4) * stride;
+#endif
         for (block_x = blocks_wide; block_x > 0; block_x--) {
             /* check if this block should be skipped */
             if (skip_blocks) {
@@ -271,8 +261,8 @@ msvideo1_decode_16bit( int width, int height, const unsigned char *buf, int buf_
 
                     for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                         for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
-                            pixels[pixel_ptr++] = 
-                                colors[((pixel_y & 0x2) << 1) + 
+                            pixels[pixel_ptr++] =
+                                colors[((pixel_y & 0x2) << 1) +
                                     (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
                         pixel_ptr -= row_dec;
                     }
@@ -385,8 +375,8 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
         info->mode_8bit = 0;
     else
     {
-        ERR("Bad output format\n");
-        return ICERR_BADPARAM;
+        info->mode_8bit = 0;
+        FIXME("Unsupported output format %i\n", in->bmiHeader.biBitCount);
     }
 
     return ICERR_OK;
@@ -395,7 +385,6 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
 static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD size )
 {
     LONG width, height, stride, sz;
-    WORD bit_per_pixel;
 
     TRACE("ICM_DECOMPRESS %p %p %d\n", info, icd, size);
 
@@ -406,8 +395,7 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
 
     width  = icd->lpbiInput->biWidth;
     height = icd->lpbiInput->biHeight;
-    bit_per_pixel = icd->lpbiInput->biBitCount;
-    stride = width*bit_per_pixel/8;
+    stride = width; /* in bytes or 16bit words */
     sz = icd->lpbiInput->biSizeImage;
 
     if (info->mode_8bit)
@@ -427,7 +415,6 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
 static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DWORD size )
 {
     LONG width, height, stride, sz;
-    WORD bit_per_pixel;
 
     TRACE("ICM_DECOMPRESSEX %p %p %d\n", info, icd, size);
 
@@ -438,8 +425,7 @@ static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DW
 
     width  = icd->lpbiSrc->biWidth;
     height = icd->lpbiSrc->biHeight;
-    bit_per_pixel = icd->lpbiSrc->biBitCount;
-    stride = width*bit_per_pixel/8;
+    stride = width;
     sz = icd->lpbiSrc->biSizeImage;
 
     if (info->mode_8bit)
@@ -502,12 +488,12 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
 
         TRACE("Opened\n");
 
-        if (icinfo && icinfo->fccType != ICTYPE_VIDEO) return 0;
+        if (icinfo && compare_fourcc(icinfo->fccType, ICTYPE_VIDEO)) return 0;
 
         info = HeapAlloc( GetProcessHeap(), 0, sizeof (Msvideo1Context) );
         if( info )
         {
-            memset( info, 0, sizeof info );
+            memset( info, 0, sizeof *info );
             info->dwMagic = CRAM_MAGIC;
         }
         r = (LRESULT) info;
@@ -559,6 +545,10 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
     case ICM_DECOMPRESSEX:
         r = CRAM_DecompressEx( info, (ICDECOMPRESSEX*) lParam1,
                                   (DWORD) lParam2 );
+        break;
+
+    case ICM_DECOMPRESS_END:
+        r = ICERR_OK;
         break;
 
     case ICM_COMPRESS_QUERY:

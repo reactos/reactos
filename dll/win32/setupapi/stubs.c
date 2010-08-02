@@ -42,33 +42,6 @@ DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
 }
 
 /***********************************************************************
- *		SetupInitializeFileLogW(SETUPAPI.@)
- */
-HSPFILELOG WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)
-{
-    FIXME("Stub %s, 0x%x\n",debugstr_w(LogFileName),Flags);
-    return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupInitializeFileLogA(SETUPAPI.@)
- */
-HSPFILELOG WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
-{
-    FIXME("Stub %s, 0x%x\n",debugstr_a(LogFileName),Flags);
-    return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupTerminateFileLog(SETUPAPI.@)
- */
-BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)
-{
-    FIXME ("Stub %p\n",FileLogHandle);
-    return TRUE;
-}
-
-/***********************************************************************
  *		RegistryDelnode(SETUPAPI.@)
  */
 BOOL WINAPI RegistryDelnode(DWORD x, DWORD y)
@@ -203,4 +176,48 @@ CMP_RegisterNotification(
 }
 
 
+/***********************************************************************
+ *		CMP_UnregisterNotification(SETUPAPI.@)
+ */
+CONFIGRET
+WINAPI
+CMP_UnregisterNotification(IN HDEVNOTIFY handle)
+{
+    FIXME ("Stub %p\n", handle);
+    return CR_SUCCESS;
+}
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_Size_ExA (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExA(PULONG len, LPGUID class, DEVINSTID_A id,
+                                                       ULONG flags, HMACHINE machine)
+{
+    FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_a(id), flags, machine);
+    return CR_FAILURE;
+}
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_Size_ExW (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(PULONG len, LPGUID class, DEVINSTID_W id,
+                                                       ULONG flags, HMACHINE machine)
+{
+    FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_w(id), flags, machine);
+    return CR_FAILURE;
+}
+
+WINSETUPAPI BOOL WINAPI SetupDiGetDeviceInterfaceAlias(IN HDEVINFO  DeviceInfoSet, IN PSP_DEVICE_INTERFACE_DATA  DeviceInterfaceData, IN CONST GUID *AliasInterfaceClassGuid, OUT PSP_DEVICE_INTERFACE_DATA  AliasDeviceInterfaceData)
+{
+    FIXME("%p %p %p %p %p stub\n", DeviceInfoSet, DeviceInterfaceData, AliasInterfaceClassGuid, AliasDeviceInterfaceData);
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+}
+
+WINSETUPAPI BOOL WINAPI SetupSetNonInteractiveMode(BOOL NonInteractiveFlag)
+{
+    FIXME("(%d) stub\n", NonInteractiveFlag);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
 

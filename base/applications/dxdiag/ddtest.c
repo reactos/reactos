@@ -151,7 +151,7 @@ BOOL DDPrimarySurfaceTest(HWND hWnd){
     {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
-			if (msg.message == WM_TIMER && TimerID == msg.wParam)
+            if (msg.message == WM_TIMER && TimerID == msg.wParam)
                 break;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -200,7 +200,7 @@ VOID DDRedrawFrame(LPDIRECTDRAWSURFACE lpDDSurface)
 
 
 BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
-    UINT TimerID, TimerIDUpdate;
+    UINT_PTR TimerID, TimerIDUpdate;
     LPDIRECTDRAW lpDD;
     LPDIRECTDRAWSURFACE lpDDPrimarySurface;
     LPDIRECTDRAWSURFACE lpDDBackBuffer;
@@ -288,6 +288,7 @@ BOOL DDOffscreenBufferTest(HWND hWnd, BOOL Fullscreen){
     /* set our timers, TimerID - for test timeout, TimerIDUpdate - for frame updating */
     TimerID = SetTimer(hWnd, -1, (UINT)TEST_DURATION, NULL);
     TimerIDUpdate = SetTimer(hWnd, 2, (UINT)10, NULL);
+    (void)TimerIDUpdate;
 
     while (TRUE)
     {

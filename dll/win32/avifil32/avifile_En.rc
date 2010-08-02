@@ -1,5 +1,5 @@
 /*
- * Copyright 2002 Michael Günnewig
+ * Copyright 2002 Michael GÃ¼nnewig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "avifile_private.h"
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-IDD_SAVEOPTIONS DIALOG FIXED IMPURE  43, 37, 226, 82
+IDD_SAVEOPTIONS DIALOG  43, 37, 226, 82
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Compress options"
 FONT 8, "MS Shell Dlg"
@@ -36,7 +38,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,170,61,50,14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_WAVESTREAMFORMAT	"Waveform: %s"
   IDS_WAVEFILETYPE	"Waveform"

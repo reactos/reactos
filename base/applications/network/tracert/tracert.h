@@ -13,7 +13,7 @@
 #define TTL_EXCEEDED 11
 
 #define MAX_PING_PACKET_SIZE 1024
-#define MAX_PING_DATA_SIZE (MAX_PING_PACKET_SIZE + sizeof(IPv4Header)
+#define MAX_PING_DATA_SIZE (MAX_PING_PACKET_SIZE + sizeof(IPv4Header))
 #define PACKET_SIZE 32
 #define ICMP_MIN_SIZE 8
 
@@ -50,20 +50,11 @@ typedef struct ICMPHeader
     USHORT seq; // not used in time exceeded
 } ICMP_HEADER, *PICMP_HEADER;
 
-/* ICMP Echo Reply Header, 12 bytes */
+/* ICMP Echo Reply Header */
 typedef struct EchoReplyHeader
 {
     struct ICMPHeader icmpheader;
-    struct timeval timestamp;
 } ECHO_REPLY_HEADER, *PECHO_REPLY_HEADER;
-
-/* ICMP Echo Reply Header, 12 bytes */
-typedef struct TTLExceedHeader
-{
-    struct ICMPHeader icmpheader;
-    struct IPv4Header ipheader;
-    struct ICMPHeader OrigIcmpHeader;
-} TTL_EXCEED_HEADER, *PTTL_EXCEED_HEADER;
 
 #include <poppack.h>
 

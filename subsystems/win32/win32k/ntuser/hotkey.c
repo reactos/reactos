@@ -12,12 +12,11 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          HotKey support
@@ -41,7 +40,7 @@ windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve noti
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -53,7 +52,7 @@ LIST_ENTRY gHotkeyList;
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS FASTCALL
-InitHotkeyImpl()
+InitHotkeyImpl(VOID)
 {
    InitializeListHead(&gHotkeyList);
 
@@ -63,7 +62,7 @@ InitHotkeyImpl()
 
 #if 0 //not used
 NTSTATUS FASTCALL
-CleanupHotKeys()
+CleanupHotKeys(VOID)
 {
 
    return STATUS_SUCCESS;
@@ -182,7 +181,7 @@ NtUserRegisterHotKey(HWND hWnd,
       {
          RETURN( FALSE);
       }
-      HotKeyThread = Window->OwnerThread;
+      HotKeyThread = Window->pti->pEThread;
    }
 
    /* Check for existing hotkey */

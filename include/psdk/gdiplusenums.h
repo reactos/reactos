@@ -181,6 +181,11 @@ enum ImageType
     ImageTypeMetafile
 };
 
+enum WarpMode {
+    WarpModePerspective,
+    WarpModeBilinear
+};
+
 enum WrapMode
 {
     WrapModeTile,
@@ -284,6 +289,13 @@ enum HotkeyPrefix
     HotkeyPrefixNone   = 0,
     HotkeyPrefixShow   = 1,
     HotkeyPrefixHide   = 2
+};
+
+enum PaletteFlags
+{
+    PaletteFlagsHasAlpha        = 1,
+    PaletteFlagsGrayScale       = 2,
+    PaletteFlagsHalftone        = 4
 };
 
 enum ImageCodecFlags
@@ -436,6 +448,7 @@ typedef enum DashStyle DashStyle;
 typedef enum MatrixOrder MatrixOrder;
 typedef enum ImageType ImageType;
 typedef enum ImageFlags ImageFlags;
+typedef enum WarpMode WarpMode;
 typedef enum WrapMode WrapMode;
 typedef enum MetafileType MetafileType;
 typedef enum LinearGradientMode LinearGradientMode;
@@ -449,6 +462,7 @@ typedef enum FontStyle FontStyle;
 typedef enum StringFormatFlags StringFormatFlags;
 typedef enum HotkeyPrefix HotkeyPrefix;
 typedef enum PenAlignment GpPenAlignment;
+typedef enum PaletteFlags PaletteFlags;
 typedef enum ImageCodecFlags ImageCodecFlags;
 typedef enum CombineMode CombineMode;
 typedef enum FlushIntention FlushIntention;

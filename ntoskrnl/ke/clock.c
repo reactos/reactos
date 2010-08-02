@@ -19,9 +19,7 @@ ULONGLONG KeBootTimeBias;
 volatile KSYSTEM_TIME KeTickCount = { 0, 0, 0 };
 ULONG KeMaximumIncrement;
 ULONG KeMinimumIncrement;
-ULONG KeTimeAdjustment;
 ULONG KeTimeIncrement;
-LONG KiTickOffset = 0;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -177,6 +175,7 @@ KeQueryTickCount(IN PLARGE_INTEGER TickCount)
     }
 }
 
+#ifndef _M_AMD64
 /*
  * @implemented
  */
@@ -219,6 +218,7 @@ KeQueryInterruptTime(VOID)
     /* Return the time value */
     return CurrentTime.QuadPart;
 }
+#endif
 
 /*
  * @implemented

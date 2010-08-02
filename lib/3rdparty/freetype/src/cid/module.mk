@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += TYPE1CID_DRIVER
 
 define TYPE1CID_DRIVER
-$(OPEN_DRIVER)t1cid_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, t1cid_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)cid       $(ECHO_DRIVER_DESC)Postscript CID-keyed fonts, no known extension$(ECHO_DRIVER_DONE)
 endef
 

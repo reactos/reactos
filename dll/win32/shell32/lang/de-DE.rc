@@ -157,7 +157,7 @@ BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
 	LTEXT "Geben Sie den Namen eines Programms, eines Ordners, eines Dokuments oder einer Internetressource an.", 12289, 36, 11, 182, 18
 	LTEXT "&Öffnen:", 12305, 7, 39, 24, 10
-	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
 	PUSHBUTTON "Abbrechen", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
 	PUSHBUTTON "&Durchsuchen...", 12288, 160, 63, 59, 14, WS_TABSTOP
@@ -273,32 +273,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Allgemein"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Typ:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "Dateisystem:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Belegter Speicher:", -1, 25, 90, 120, 10
-	LTEXT "", 14004, 110, 90, 120, 10
-	LTEXT "", 14005, 200, 90, 40, 10
+	LTEXT "", 14003, 110, 90, 120, 10
+	LTEXT "", 14004, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Freier Speicher:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14005, 110, 105, 120, 10
+	LTEXT "", 14006, 200, 105, 40, 10
 
 	LTEXT "Speicherkapazität:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14007, 110, 125, 120, 10
+	LTEXT "", 14008, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Laufwerk %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Bereinigen", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Laufwerk komprimieren, um Speicherplatz zu sparen", 14012, 15, 205, 180, 10, WS_DISABLED
+	LTEXT "Laufwerk %s", 14009, 100, 170, 50, 10
+	PUSHBUTTON "Bereinigen", 14010, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Laufwerk komprimieren, um Speicherplatz zu sparen", 14011, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "Laufwerk für schnelle Dateisuche indizieren", 14012, 15, 220, 165, 10, WS_DISABLED
 END
 
@@ -348,7 +348,7 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Papierkorb Einstellungen"
+CAPTION "Papierkorb-Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
@@ -361,17 +361,17 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Öffnen mit"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-	LTEXT "Wählen Sie das Programm, das zum Öffnen dieser Datei verwendet werden soll:", -1, 44, 12, 211, 10
-	LTEXT "Datei:    ", 14001, 44, 25, 188, 10
+	LTEXT "Wählen Sie das Programm, das zum Öffnen dieser Datei verwendet werden soll:", -1, 44, 12, 211, 18
+	LTEXT "Datei:    ", 14001, 44, 30, 188, 10
 	GROUPBOX "&Programme", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Dateityp &immer mit dem ausgewählten Programm öffnen", 14003, 20, 193, 225, 10
-	PUSHBUTTON "&Durchsuchen..", 14004, 198, 207, 50, 14
+	PUSHBUTTON "&Durchsuchen...", 14004, 188, 207, 60, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Abbrechen", 14006, 206, 236, 50, 14
 END
@@ -587,12 +587,12 @@ CAPTION "Anderes Symbol"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT "Dateiname:", -1, 7, 14, 208, 10
-    PUSHBUTTON      "Browse...",IDC_BUTTON_PATH, 148, 24,67,14
+    PUSHBUTTON      "Durchsuchen...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
     LTEXT "Symbole:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
-    PUSHBUTTON      "Cancel",IDCANCEL, 167, 181, 50, 14
+    PUSHBUTTON      "Abbrechen",IDCANCEL, 167, 181, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
@@ -669,6 +669,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Möchten Sie das System neu starten?"
 	IDS_SHUTDOWN_TITLE          "Herunterfahren"
 	IDS_SHUTDOWN_PROMPT         "Möchten Sie das System herunterfahren?"
+	IDS_LOGOFF_TITLE            "Ausloggen"
+	IDS_LOGOFF_PROMPT           "Möchten Sie sich ausloggen?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Startmenü\\Programme"
@@ -752,4 +754,7 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Neue Schriftart installieren..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Standardgröße"
+	IDS_COPY_OF                 "Kopie von"
+
+    IDS_SHLEXEC_NOASSOC         "Es ist kein Programm mit diesem Dateityp verknüpft."
 END

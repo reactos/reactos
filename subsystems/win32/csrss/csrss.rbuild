@@ -6,23 +6,17 @@
 		<include base="csrss">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
 		<include base="ReactOS">include/reactos/drivers</include>
+		<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 		<library>nt</library>
 		<library>ntdll</library>
-		<library>smdll</library>
-		<directory name="api">
-			<file>handle.c</file>
-			<file>process.c</file>
-			<file>user.c</file>
-			<file>wapi.c</file>
-		</directory>
-		<pch>csrss.h</pch>
+		<library>csrsrv</library>
 		<file>csrss.c</file>
-		<file>init.c</file>
-		<file>print.c</file>
-		<file>video.c</file>
 		<file>csrss.rc</file>
 	</module>
 	<directory name="win32csr">
 		<xi:include href="win32csr/win32csr.rbuild" />
+	</directory>
+	<directory name="csrsrv">
+		<xi:include href="csrsrv/csrsrv.rbuild" />
 	</directory>
 </group>

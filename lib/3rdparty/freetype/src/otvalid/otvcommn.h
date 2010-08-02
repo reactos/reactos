@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType common tables validation (specification).                   */
 /*                                                                         */
-/*  Copyright 2004, 2005 by                                                */
+/*  Copyright 2004, 2005, 2007, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -85,27 +85,27 @@ FT_BEGIN_HEADER
               FT_INVALID_TOO_SHORT;                  \
           FT_END_STMNT
 
-#define OTV_SIZE_CHECK( _size )                                        \
-          FT_BEGIN_STMNT                                               \
-            if ( _size > 0 && _size < table_size )                     \
-            {                                                          \
-              if ( valid->root->level == FT_VALIDATE_PARANOID )        \
-                FT_INVALID_OFFSET;                                     \
-              else                                                     \
-              {                                                        \
-                /* strip off `const' */                                \
-                FT_Byte*  pp = (FT_Byte*)_size ## _p;                  \
-                                                                       \
-                                                                       \
-                FT_TRACE3(( "\n"                                       \
-                            "Invalid offset to optional table `%s'!\n" \
-                            "Set to zero.\n"                           \
-                            "\n", #_size ));                           \
-                                                                       \
-                /* always assume 16bit entities */                     \
-                _size = pp[0] = pp[1] = 0;                             \
-              }                                                        \
-            }                                                          \
+#define OTV_SIZE_CHECK( _size )                                     \
+          FT_BEGIN_STMNT                                            \
+            if ( _size > 0 && _size < table_size )                  \
+            {                                                       \
+              if ( valid->root->level == FT_VALIDATE_PARANOID )     \
+                FT_INVALID_OFFSET;                                  \
+              else                                                  \
+              {                                                     \
+                /* strip off `const' */                             \
+                FT_Byte*  pp = (FT_Byte*)_size ## _p;               \
+                                                                    \
+                                                                    \
+                FT_TRACE3(( "\n"                                    \
+                            "Invalid offset to optional table `%s'" \
+                            " set to zero.\n"                       \
+                            "\n", #_size ));                        \
+                                                                    \
+                /* always assume 16bit entities */                  \
+                _size = pp[0] = pp[1] = 0;                          \
+              }                                                     \
+            }                                                       \
           FT_END_STMNT
 
 
@@ -192,12 +192,12 @@ FT_BEGIN_HEADER
             valid->func[2]       = OTV_FUNC( z ); \
           FT_END_STMNT
 
-#define OTV_INIT                do ; while ( 0 )
-#define OTV_ENTER               do ; while ( 0 )
-#define OTV_NAME_ENTER( name )  do ; while ( 0 )
-#define OTV_EXIT                do ; while ( 0 )
+#define OTV_INIT                do { } while ( 0 )
+#define OTV_ENTER               do { } while ( 0 )
+#define OTV_NAME_ENTER( name )  do { } while ( 0 )
+#define OTV_EXIT                do { } while ( 0 )
 
-#define OTV_TRACE( s )          do ; while ( 0 )
+#define OTV_TRACE( s )          do { } while ( 0 )
 
 #endif  /* !FT_DEBUG_LEVEL_TRACE */
 
@@ -215,7 +215,8 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( void )
   otv_Coverage_validate( FT_Bytes       table,
-                         OTV_Validator  valid );
+                         OTV_Validator  valid,
+                         FT_Int         expected_count );
 
   /* return first covered glyph */
   FT_LOCAL( FT_UInt )

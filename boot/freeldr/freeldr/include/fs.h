@@ -12,49 +12,50 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __FS_H
-#define __FS_H
+#pragma once
 
-
-//#define	EOF				-1
+typedef struct tagDEVVTBL
+{
+  ARC_CLOSE Close;
+  ARC_GET_FILE_INFORMATION GetFileInformation;
+  ARC_OPEN Open;
+  ARC_READ Read;
+  ARC_SEEK Seek;
+  LPCWSTR ServiceName;
+} DEVVTBL;
 
 #define	FS_FAT			1
 #define	FS_NTFS			2
 #define	FS_EXT2			3
-#define FS_REISER		4
 #define FS_ISO9660		5
-#define FS_PXE			6
 
-#define FILE			VOID
-#define PFILE			FILE *
+#define PFILE			ULONG
+
+VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
+LPCWSTR FsGetServiceName(ULONG FileId);
+VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
+VOID* FsGetDeviceSpecific(ULONG FileId);
+ULONG FsGetDeviceId(ULONG FileId);
+VOID FsInit(VOID);
+
+LONG ArcClose(ULONG FileId);
+LONG ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information);
+LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
+LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
+LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 
 VOID	FileSystemError(PCSTR ErrorString);
-BOOLEAN	FsOpenBootVolume();
-BOOLEAN	FsOpenSystemVolume(PCHAR SystemPath, PCHAR RemainingPath, PULONG BootDevice);
 PFILE	FsOpenFile(PCSTR FileName);
 VOID	FsCloseFile(PFILE FileHandle);
 BOOLEAN	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		FsGetFileSize(PFILE FileHandle);
 VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
-ULONG		FsGetFilePointer(PFILE FileHandle);
-BOOLEAN	FsIsEndOfFile(PFILE FileHandle);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
-typedef struct
-{
-	BOOLEAN (*OpenVolume)(UCHAR DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount);
-	PFILE (*OpenFile)(PCSTR FileName);
-	VOID (*CloseFile)(PFILE FileHandle);
-	BOOLEAN (*ReadFile)(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-	ULONG (*GetFileSize)(PFILE FileHandle);
-	VOID (*SetFilePointer)(PFILE FileHandle, ULONG NewFilePointer);
-	ULONG (*GetFilePointer)(PFILE FileHandle);
-} FS_VTBL;
-
-#endif // #defined __FS_H
+#define MAX_FDS 60

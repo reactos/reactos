@@ -173,10 +173,10 @@ NTSYSCALLAPI
 NTSTATUS
 NTAPI
 NtLockVirtualMemory(
-    HANDLE ProcessHandle,
-    PVOID BaseAddress,
-    SIZE_T NumberOfBytesToLock,
-    PSIZE_T NumberOfBytesLocked
+    IN HANDLE ProcessHandle,
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T NumberOfBytesToLock,
+    IN ULONG MapType
 );
 
 NTSTATUS
@@ -278,9 +278,9 @@ NTSTATUS
 NTAPI
 NtUnlockVirtualMemory(
     IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN SIZE_T  NumberOfBytesToUnlock,
-    OUT PSIZE_T NumberOfBytesUnlocked OPTIONAL
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T NumberOfBytesToUnlock,
+    IN ULONG MapType
 );
 
 NTSYSCALLAPI
@@ -367,10 +367,10 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockVirtualMemory(
-    HANDLE ProcessHandle,
-    PVOID BaseAddress,
-    SIZE_T NumberOfBytesToLock,
-    PSIZE_T NumberOfBytesLocked
+    IN HANDLE ProcessHandle,
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T NumberOfBytesToLock,
+    IN ULONG MapType
 );
 
 NTSYSAPI
@@ -448,9 +448,9 @@ NTSTATUS
 NTAPI
 ZwUnlockVirtualMemory(
     IN HANDLE ProcessHandle,
-    IN PVOID BaseAddress,
-    IN SIZE_T  NumberOfBytesToUnlock,
-    OUT PSIZE_T NumberOfBytesUnlocked OPTIONAL
+    IN OUT PVOID *BaseAddress,
+    IN OUT PSIZE_T NumberOfBytesToUnlock,
+    IN ULONG MapType
 );
 
 NTSYSAPI

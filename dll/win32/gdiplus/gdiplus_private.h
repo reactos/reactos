@@ -29,6 +29,7 @@
 
 #include "objbase.h"
 #include "ocidl.h"
+#include "wine/list.h"
 
 #include "gdiplus.h"
 
@@ -41,6 +42,7 @@
 #define TENSION_CONST (0.3)
 
 COLORREF ARGB2COLORREF(ARGB color);
+HBITMAP ARGB2BMP(ARGB color);
 extern INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle);
 extern REAL gdiplus_atan2(REAL dy, REAL dx);
@@ -52,22 +54,63 @@ extern void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
 extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
     REAL tension, REAL *x, REAL *y);
 
+extern void free_installed_fonts(void);
+
 extern BOOL lengthen_path(GpPath *path, INT len);
 
 extern GpStatus trace_path(GpGraphics *graphics, GpPath *path);
 
 typedef struct region_element region_element;
-extern inline void delete_element(region_element *element);
+extern void delete_element(region_element *element);
 
 static inline INT roundr(REAL x)
 {
-    return (INT) floor(x + 0.5);
+    return (INT) floorf(x + 0.5);
+}
+
+static inline INT ceilr(REAL x)
+{
+    return (INT) ceilf(x);
 }
 
 static inline REAL deg2rad(REAL degrees)
 {
     return M_PI * degrees / 180.0;
 }
+
+static inline ARGB color_over(ARGB bg, ARGB fg)
+{
+    BYTE b, g, r, a;
+    BYTE bg_alpha, fg_alpha;
+
+    fg_alpha = (fg>>24)&0xff;
+
+    if (fg_alpha == 0xff) return fg;
+
+    if (fg_alpha == 0) return bg;
+
+    bg_alpha = (((bg>>24)&0xff) * (0xff-fg_alpha)) / 0xff;
+
+    if (bg_alpha == 0) return fg;
+
+    a = bg_alpha + fg_alpha;
+    b = ((bg&0xff)*bg_alpha + (fg&0xff)*fg_alpha)/a;
+    g = (((bg>>8)&0xff)*bg_alpha + ((fg>>8)&0xff)*fg_alpha)/a;
+    r = (((bg>>16)&0xff)*bg_alpha + ((fg>>16)&0xff)*fg_alpha)/a;
+
+    return (a<<24)|(r<<16)|(g<<8)|b;
+}
+
+extern const char *debugstr_rectf(CONST RectF* rc);
+
+extern const char *debugstr_pointf(CONST PointF* pt);
+
+extern void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
+    BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride);
+
+extern GpStatus convert_pixels(UINT width, UINT height,
+    INT dst_stride, BYTE *dst_bits, PixelFormat dst_format,
+    INT src_stride, const BYTE *src_bits, PixelFormat src_format, ARGB *src_palette);
 
 struct GpPen{
     UINT style;
@@ -91,6 +134,8 @@ struct GpPen{
 struct GpGraphics{
     HDC hdc;
     HWND hwnd;
+    BOOL owndc;
+    GpImage *image;
     SmoothingMode smoothing;
     CompositingQuality compqual;
     InterpolationMode interpolation;
@@ -103,6 +148,8 @@ struct GpGraphics{
     BOOL busy;      /* hdc handle obtained by GdipGetDC */
     GpRegion *clip;
     UINT textcontrast; /* not used yet. get/set only */
+    struct list containers;
+    GraphicsContainer contid; /* last-issued container ID */
 };
 
 struct GpBrush{
@@ -121,6 +168,7 @@ struct GpHatch{
 struct GpSolidFill{
     GpBrush brush;
     ARGB color;
+    HBITMAP bmp;
 };
 
 struct GpPathGradient{
@@ -142,13 +190,21 @@ struct GpLineGradient{
     GpPointF endpoint;
     ARGB startcolor;
     ARGB endcolor;
+    RectF rect;
     GpWrapMode wrap;
     BOOL gamma;
+    REAL* blendfac;  /* blend factors */
+    REAL* blendpos;  /* blend positions */
+    INT blendcount;
+    ARGB* pblendcolor; /* preset blend colors */
+    REAL* pblendpos; /* preset blend positions */
+    INT pblendcount;
 };
 
 struct GpTexture{
     GpBrush brush;
     GpMatrix *transform;
+    GpImage *image;
     WrapMode wrap;  /* not used yet */
 };
 
@@ -186,7 +242,13 @@ struct GpAdustableArrowCap{
 struct GpImage{
     IPicture* picture;
     ImageType type;
+    GUID format;
     UINT flags;
+    UINT palette_flags;
+    UINT palette_count;
+    UINT palette_size;
+    ARGB *palette_entries;
+    REAL xres, yres;
 };
 
 struct GpMetafile{
@@ -203,14 +265,44 @@ struct GpBitmap{
     ImageLockMode lockmode;
     INT numlocks;
     BYTE *bitmapbits;   /* pointer to the buffer we passed in BitmapLockBits */
+    HBITMAP hbitmap;
+    HDC hdc;
+    BYTE *bits; /* actual image bits if this is a DIB */
+    INT stride; /* stride of bits if this is a DIB */
 };
 
 struct GpCachedBitmap{
     GpImage *image;
 };
 
+struct color_key{
+    BOOL enabled;
+    ARGB low;
+    ARGB high;
+};
+
+struct color_matrix{
+    BOOL enabled;
+    ColorMatrixFlags flags;
+    ColorMatrix colormatrix;
+    ColorMatrix graymatrix;
+};
+
+struct color_remap_table{
+    BOOL enabled;
+    INT mapsize;
+    GDIPCONST ColorMap *colormap;
+};
+
 struct GpImageAttributes{
     WrapMode wrap;
+    ARGB outside_color;
+    BOOL clamp;
+    struct color_key colorkeys[ColorAdjustTypeCount];
+    struct color_matrix colormatrices[ColorAdjustTypeCount];
+    struct color_remap_table colorremaptables[ColorAdjustTypeCount];
+    BOOL gamma_enabled[ColorAdjustTypeCount];
+    REAL gamma[ColorAdjustTypeCount];
 };
 
 struct GpFont{
@@ -233,11 +325,14 @@ struct GpStringFormat{
     INT tabcount;
     REAL firsttab;
     REAL *tabs;
+    CharacterRange *character_ranges;
+    INT range_count;
 };
 
 struct GpFontCollection{
     GpFontFamily **FontFamilies;
     INT count;
+    INT allocated;
 };
 
 struct GpFontFamily{

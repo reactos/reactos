@@ -61,6 +61,12 @@ ProcessExistingDevices()
                                                       0,
                                                       length);
 
+    if ( ! detail_data )
+    {
+        logmsg("ProcessExistingDevices() failed to allocate detail_data\n");
+        return TRUE;
+    }
+
     while (
     SetupDiEnumDeviceInterfaces(dev_info,
                                 NULL,

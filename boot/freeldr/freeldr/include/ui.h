@@ -12,14 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __UI_H
-#define __UI_H
-
+#pragma once
 
 extern	ULONG		UiScreenWidth;									// Screen Width
 extern	ULONG		UiScreenHeight;									// Screen Height
@@ -176,5 +174,3 @@ extern UIVTBL UiVtbl;
 #define D_HORZ	(0xcd)  /* Double horizontal line.*/
 #define VERT    (0xb3)  /* Single vertical line   */
 #define D_VERT  (0xba)  /* Double vertical line.  */
-
-#endif // #defined __UI_H

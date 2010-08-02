@@ -1,5 +1,4 @@
-#ifndef __RESOURCE_H_
-#define __RESOURCE_H_
+#pragma once
 
 /* Icons */
 #define IDI_MAIN    10
@@ -51,5 +50,3 @@
 #define IDC_SEEKBACK     1504
 #define IDC_SEEKFORW     1505
 #define IDC_FORWARD      1506
-
-#endif /* __RESOURCE_H_ */

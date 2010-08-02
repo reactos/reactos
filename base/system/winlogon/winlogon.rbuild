@@ -4,11 +4,11 @@
 	<include base="winlogon">.</include>
 	<library>wine</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>userenv</library>
 	<library>secur32</library>
+	<file>environment.c</file>
 	<file>sas.c</file>
 	<file>screensaver.c</file>
 	<file>setup.c</file>

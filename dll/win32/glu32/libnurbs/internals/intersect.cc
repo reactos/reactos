@@ -179,6 +179,13 @@ Subdivider::arc_split( Arc_ptr jarc, int param, REAL value, int dir )
     TrimVertex* v = jarc->pwlArc->pts;
 
     int		loc[3];
+
+#if defined(__GNUC__) && \
+	(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40400)
+	/* Silence incorrect GCC 4.4.0 warnings */
+	loc[0] = loc[1] = loc[2] = 0;
+#endif
+
     switch( pwlarc_intersect( jarc->pwlArc, param, value, dir, loc ) ) {
 
 		// When the parameter value lands on a vertex, life is sweet

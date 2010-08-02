@@ -43,7 +43,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 typedef struct tabSTORAGE
 {
     UINT str_index;
-    LPWSTR name;
     IStorage *storage;
 } STORAGE;
 
@@ -70,7 +69,7 @@ static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
     return TRUE;
 }
 
-static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPWSTR name, IStorage *stg)
+static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPCWSTR name, IStorage *stg)
 {
     STORAGE *storage;
 
@@ -78,14 +77,7 @@ static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPWSTR name, IStorage *stg)
     if (!storage)
         return NULL;
 
-    storage->name = strdupW(name);
-    if (!storage->name)
-    {
-        msi_free(storage);
-        return NULL;
-    }
-
-    storage->str_index = msi_addstringW(sv->db->strings, 0, storage->name, -1, 1, StringNonPersistent);
+    storage->str_index = msi_addstringW(sv->db->strings, name, -1, 1, StringNonPersistent);
     storage->storage = stg;
 
     if (storage->storage)
@@ -243,14 +235,19 @@ done:
     return r;
 }
 
-static UINT STORAGES_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, BOOL temporary)
+static UINT STORAGES_insert_row(struct tagMSIVIEW *view, MSIRECORD *rec, UINT row, BOOL temporary)
 {
     MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
 
     if (!storages_set_table_size(sv, ++sv->num_rows))
         return ERROR_FUNCTION_FAILED;
 
-    return STORAGES_set_row(view, sv->num_rows - 1, rec, 0);
+    if (row == -1)
+        row = sv->num_rows - 1;
+
+    /* FIXME have to readjust rows */
+
+    return STORAGES_set_row(view, row, rec, 0);
 }
 
 static UINT STORAGES_delete_row(struct tagMSIVIEW *view, UINT row)
@@ -283,15 +280,18 @@ static UINT STORAGES_get_dimensions(struct tagMSIVIEW *view, UINT *rows, UINT *c
     return ERROR_SUCCESS;
 }
 
-static UINT STORAGES_get_column_info(struct tagMSIVIEW *view,
-                                    UINT n, LPWSTR *name, UINT *type)
+static UINT STORAGES_get_column_info(struct tagMSIVIEW *view, UINT n,
+                                     LPWSTR *name, UINT *type, BOOL *temporary,
+                                     LPWSTR *table_name)
 {
     LPCWSTR name_ptr = NULL;
 
     static const WCHAR Name[] = {'N','a','m','e',0};
     static const WCHAR Data[] = {'D','a','t','a',0};
+    static const WCHAR _Storages[] = {'_','S','t','o','r','a','g','e','s',0};
 
-    TRACE("(%p, %d, %p, %p)\n", view, n, name, type);
+    TRACE("(%p, %d, %p, %p, %p, %p)\n", view, n, name, type, temporary,
+          table_name);
 
     if (n == 0 || n > NUM_STORAGES_COLS)
         return ERROR_INVALID_PARAMETER;
@@ -314,6 +314,19 @@ static UINT STORAGES_get_column_info(struct tagMSIVIEW *view,
         *name = strdupW(name_ptr);
         if (!*name) return ERROR_FUNCTION_FAILED;
     }
+
+    if (table_name)
+    {
+        *table_name = strdupW(_Storages);
+        if (!*table_name)
+        {
+            msi_free(name);
+            return ERROR_FUNCTION_FAILED;
+        }
+    }
+
+    if (temporary)
+        *temporary = FALSE;
 
     return ERROR_SUCCESS;
 }
@@ -361,7 +374,7 @@ static UINT storages_modify_assign(struct tagMSIVIEW *view, MSIRECORD *rec)
     if (r == ERROR_SUCCESS)
         return storages_modify_update(view, rec);
 
-    return STORAGES_insert_row(view, rec, FALSE);
+    return STORAGES_insert_row(view, rec, -1, FALSE);
 }
 
 static UINT STORAGES_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIRECORD *rec, UINT row)
@@ -377,7 +390,7 @@ static UINT STORAGES_modify(struct tagMSIVIEW *view, MSIMODIFY eModifyMode, MSIR
         break;
 
     case MSIMODIFY_INSERT:
-        r = STORAGES_insert_row(view, rec, FALSE);
+        r = STORAGES_insert_row(view, rec, -1, FALSE);
         break;
 
     case MSIMODIFY_UPDATE:
@@ -415,12 +428,12 @@ static UINT STORAGES_delete(struct tagMSIVIEW *view)
     {
         if (sv->storages[i]->storage)
             IStorage_Release(sv->storages[i]->storage);
-
         msi_free(sv->storages[i]);
     }
 
     msi_free(sv->storages);
     sv->storages = NULL;
+    msi_free(sv);
 
     return ERROR_SUCCESS;
 }
@@ -429,7 +442,7 @@ static UINT STORAGES_find_matching_rows(struct tagMSIVIEW *view, UINT col,
                                        UINT val, UINT *row, MSIITERHANDLE *handle)
 {
     MSISTORAGESVIEW *sv = (MSISTORAGESVIEW *)view;
-    UINT index = (UINT)*handle;
+    UINT index = PtrToUlong(*handle);
 
     TRACE("(%d, %d): %d\n", *row, col, val);
 
@@ -447,7 +460,7 @@ static UINT STORAGES_find_matching_rows(struct tagMSIVIEW *view, UINT col,
         index++;
     }
 
-    *handle = (MSIITERHANDLE)++index;
+    *handle = UlongToPtr(++index);
     if (index >= sv->num_rows)
         return ERROR_NO_MORE_ITEMS;
 
@@ -551,8 +564,10 @@ UINT STORAGES_CreateView(MSIDATABASE *db, MSIVIEW **view)
 
     rows = add_storages_to_table(sv);
     if (rows < 0)
+    {
+        msi_free( sv );
         return ERROR_FUNCTION_FAILED;
-
+    }
     sv->num_rows = rows;
 
     *view = (MSIVIEW *)sv;

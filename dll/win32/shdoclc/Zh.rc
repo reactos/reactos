@@ -18,18 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "shdoclc.h"
 
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
@@ -253,12 +254,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PRINT_HEADER_TEMPLATE "&w&bPage &p" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"
@@ -479,5 +480,3 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "向右滾動", IDM_SCROLL_RIGHT
     }
 }
-
-#pragma code_page(default)

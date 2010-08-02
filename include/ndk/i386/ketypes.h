@@ -27,10 +27,10 @@ Author:
 // KPCR Access for non-IA64 builds
 //
 #define K0IPCR                  ((ULONG_PTR)(KIP0PCRADDRESS))
-#define PCR                     ((volatile KPCR * const)K0IPCR)
+#define PCR                     ((KPCR * const)K0IPCR)
 #if defined(CONFIG_SMP) || defined(NT_BUILD)
 #undef  KeGetPcr
-#define KeGetPcr()              ((volatile KPCR * const)__readfsdword(0x1C))
+#define KeGetPcr()              ((KPCR * const)__readfsdword(FIELD_OFFSET(KPCR, SelfPcr)))
 #endif
 
 //
@@ -67,6 +67,11 @@ Author:
 #define KGDT_NMI_TSS            0x58
 
 //
+// Define the number of GDTs that can be queried by user mode
+//
+#define KGDT_NUMBER             10
+
+//
 // CR4
 //
 #define CR4_VME                 0x1
@@ -101,6 +106,17 @@ Author:
 #define EFLAG_ZERO              0x4000
 
 //
+// Legacy floating status word bit masks.
+//
+#define FSW_INVALID_OPERATION   0x1
+#define FSW_DENORMAL            0x2
+#define FSW_ZERO_DIVIDE         0x4
+#define FSW_OVERFLOW            0x8
+#define FSW_UNDERFLOW           0x10
+#define FSW_PRECISION           0x20
+#define FSW_STACK_FAULT         0x40
+
+//
 // IPI Types
 //
 #define IPI_APC                 1
@@ -119,17 +135,30 @@ Author:
 //
 // HAL Variables
 //
-#define INITIAL_STALL_COUNT     0x64
+#define INITIAL_STALL_COUNT     100
 
 //
 // IOPM Definitions
 //
+#define IOPM_COUNT              1
+#define IOPM_SIZE               8192
+#define IOPM_FULL_SIZE          8196
 #define IO_ACCESS_MAP_NONE      0
+#define IOPM_DIRECTION_MAP_SIZE 32
 #define IOPM_OFFSET             FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
 #define KiComputeIopmOffset(MapNumber)              \
     (MapNumber == IO_ACCESS_MAP_NONE) ?             \
         (USHORT)(sizeof(KTSS)) :                    \
         (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
+
+typedef UCHAR KIO_ACCESS_MAP[IOPM_SIZE];
+
+typedef KIO_ACCESS_MAP *PKIO_ACCESS_MAP;
+
+//
+// Size of the XMM register save area in the FXSAVE format
+//
+#define SIZE_OF_FX_REGISTERS    128
 
 //
 // Static Kernel-Mode Address start (use MM_KSEG0_BASE for actual)
@@ -190,6 +219,23 @@ typedef struct _KTRAP_FRAME
     ULONG V86Fs;
     ULONG V86Gs;
 } KTRAP_FRAME, *PKTRAP_FRAME;
+
+//
+// Defines the Callback Stack Layout for User Mode Callbacks
+//
+typedef struct _KCALLOUT_FRAME
+{
+    ULONG InitialStack;
+    ULONG TrapFrame;
+    ULONG CallbackStack;
+    ULONG Edi;
+    ULONG Esi;
+    ULONG Ebx;
+    ULONG Ebp;
+    ULONG ReturnAddress;
+    ULONG Result;
+    ULONG ResultLength;
+} KCALLOUT_FRAME, *PKCALLOUT_FRAME;
 
 //
 // LDT Entry Definition
@@ -333,7 +379,7 @@ typedef struct _FXSAVE_FORMAT
     ULONG DataSelector;
     ULONG MXCsr;
     ULONG MXCsrMask;
-    UCHAR RegisterArea[128];
+    UCHAR RegisterArea[SIZE_OF_FX_REGISTERS];
     UCHAR Reserved3[128];
     UCHAR Reserved4[224];
     UCHAR Align16Byte[8];
@@ -663,8 +709,8 @@ typedef struct _KIPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
-    UCHAR Reserved;
-    UCHAR L2CacheAssociativity;
+    UCHAR Spare0;
+    UCHAR SecondLevelCacheAssociativity;
     ULONG VdmAlert;
     ULONG KernelReserved[14];
     ULONG SecondLevelCacheSize;
@@ -681,8 +727,8 @@ typedef struct _KIPCR
 //
 typedef struct _KiIoAccessMap
 {
-    UCHAR DirectionMap[32];
-    UCHAR IoMap[8196];
+    UCHAR DirectionMap[IOPM_DIRECTION_MAP_SIZE];
+    UCHAR IoMap[IOPM_FULL_SIZE];
 } KIIO_ACCESS_MAP;
 
 typedef struct _KTSS
@@ -720,8 +766,8 @@ typedef struct _KTSS
     USHORT Reserved8;
     USHORT Flags;
     USHORT IoMapBase;
-    KIIO_ACCESS_MAP IoMaps[1];
-    UCHAR IntDirectionMap[32];
+    KIIO_ACCESS_MAP IoMaps[IOPM_COUNT];
+    UCHAR IntDirectionMap[IOPM_DIRECTION_MAP_SIZE];
 } KTSS, *PKTSS;
 
 //

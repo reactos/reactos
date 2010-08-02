@@ -14,8 +14,8 @@
  *		as published by the Free Software Foundation; either version
  *		2 of the License, or (at your option) any later version.
  */
-#ifndef _LINUX_TCP_H
-#define _LINUX_TCP_H
+
+#pragma once
 
 #include "linux.h"
 
@@ -183,5 +183,3 @@ struct tcp_info
 	__u32	tcpi_advmss;
 	__u32	tcpi_reordering;
 };
-
-#endif	/* _LINUX_TCP_H */

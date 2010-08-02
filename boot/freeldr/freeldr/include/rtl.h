@@ -12,13 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __STDLIB_H
-#define __STDLIB_H
+#pragma once
 
 #include <freeldr.h>
 
@@ -28,5 +27,3 @@ char *	convert_i64_to_ascii(char *buf, int c, unsigned long long num);
 void	PcBeep(void);
 void	delay(unsigned msec);
 void	sound(int freq);
-
-#endif  // defined __STDLIB_H

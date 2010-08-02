@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -96,7 +96,7 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 					XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 
 					bool mdi = XMLBool(explorer_options, "mdi", true);
-					bool separateFolders = XMLBool(explorer_options, "separate-folders", true);
+					bool separateFolders = XMLBool(explorer_options, "separate-folders", false);
 
 					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
 					LOG(FmtString(TEXT("MainFrameBase::OpenShellFolders(): pidl_abs=%s"), (LPCTSTR)FileSysShellPath(pidl_abs)));
@@ -153,6 +153,11 @@ MainFrameBase::MainFrameBase(HWND hwnd)
  :	super(hwnd)
 {
     HDC hDC = GetDC(NULL);
+#ifndef _NO_REBAR
+	//static TCHAR Title1[] = TEXT("Toolbar");
+	static TCHAR Title2[] = TEXT("Address :");
+#endif
+
     if (hDC)
     {
         DWORD ilMask;
@@ -264,7 +269,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 	rbBand.cyMaxChild = 0;
 	rbBand.cyIntegral = btn_hgt;
 
-	rbBand.lpText = NULL;//TEXT("Toolbar");
+	rbBand.lpText = NULL;//Title1
 	rbBand.hwndChild = _htoolbar;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;
@@ -273,7 +278,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 	rbBand.fStyle &= ~RBBS_HIDETITLE;
 	rbBand.fStyle |= RBBS_BREAK;
-    rbBand.lpText = TEXT("Address :");
+    rbBand.lpText = Title2;
 	rbBand.hwndChild = _haddrcombo;
 	rbBand.cxMinChild = 0;
 	rbBand.cyMinChild = btn_hgt;

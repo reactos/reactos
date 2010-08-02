@@ -1,5 +1,4 @@
-#ifndef LANG_SL_SI_H__
-#define LANG_SL_SI_H__
+#pragma once
 
 MUI_LAYOUTS slSILayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS slSILayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

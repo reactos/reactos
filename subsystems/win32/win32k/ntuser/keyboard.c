@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
@@ -28,7 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -42,7 +42,9 @@
 /* Key States */
 #define KS_DOWN_MASK     0xc0
 #define KS_DOWN_BIT      0x80
-#define KS_LOCK_BIT    0x01
+#define KS_LOCK_BIT      0x01
+/* Scan Codes */
+#define SC_KEY_UP        0x8000
 /* lParam bits */
 #define LP_EXT_BIT       (1<<24)
 /* From kbdxx.c -- Key changes with numlock */
@@ -69,11 +71,11 @@ NTSTATUS FASTCALL InitKeyboardImpl(VOID)
 static UINT DontDistinguishShifts( UINT ret )
 {
    if( ret == VK_LSHIFT || ret == VK_RSHIFT )
-      ret = VK_LSHIFT;
+      ret = VK_SHIFT;
    if( ret == VK_LCONTROL || ret == VK_RCONTROL )
-      ret = VK_LCONTROL;
+      ret = VK_CONTROL;
    if( ret == VK_LMENU || ret == VK_RMENU )
-      ret = VK_LMENU;
+      ret = VK_MENU;
    return ret;
 }
 
@@ -88,12 +90,12 @@ static VOID APIENTRY SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
          gQueueKeyStateTable[vk] ^= KS_LOCK_BIT;
    }
 
-   if (ext && vk == VK_LSHIFT)
-      vk = VK_RSHIFT;
-   if (ext && vk == VK_LCONTROL)
-      vk = VK_RCONTROL;
-   if (ext && vk == VK_LMENU)
-      vk = VK_RMENU;
+   if (vk == VK_SHIFT)
+      vk = ext ? VK_RSHIFT : VK_LSHIFT;
+   if (vk == VK_CONTROL)
+      vk = ext ? VK_RCONTROL : VK_LCONTROL;
+   if (vk == VK_MENU)
+      vk = ext ? VK_RMENU : VK_LMENU;
 
    if (down)
       gQueueKeyStateTable[vk] |= KS_DOWN_BIT;
@@ -419,7 +421,7 @@ CLEANUP:
 
 BOOL FASTCALL
 IntTranslateKbdMessage(LPMSG lpMsg,
-                       HKL dwhkl)
+                       UINT flags)
 {
    PTHREADINFO pti;
    static INT dead_char = 0;
@@ -435,14 +437,26 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    if( !keyLayout )
       return FALSE;
 
+   if (lpMsg->message < WM_KEYFIRST || lpMsg->message > WM_KEYLAST)
+      return FALSE;
    if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN)
       return FALSE;
 
-   ScanCode = (lpMsg->lParam >> 16) & 0xff;
-
    /* All messages have to contain the cursor point. */
-   IntGetCursorLocation(pti->Desktop->WindowStation,
-                        &NewMsg.pt);
+   NewMsg.pt = gpsi->ptCursor;
+
+    switch (lpMsg->wParam)
+    {
+    case VK_PACKET:
+        NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
+        NewMsg.hwnd = lpMsg->hwnd;
+        NewMsg.wParam = HIWORD(lpMsg->lParam);
+        NewMsg.lParam = LOWORD(lpMsg->lParam);
+        MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
+        return TRUE;
+    }
+
+   ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
    UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
                            gQueueKeyStateTable, wp, 2, 0,
@@ -628,11 +642,11 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
    switch( Type )
    {
       case 0:
-         if( Code == VK_RSHIFT )
+         if( Code == VK_SHIFT )
             Code = VK_LSHIFT;
-         if( Code == VK_RMENU )
+         if( Code == VK_MENU )
             Code = VK_LMENU;
-         if( Code == VK_RCONTROL )
+         if( Code == VK_CONTROL )
             Code = VK_LCONTROL;
          ret = VkToScan( Code, FALSE, keyLayout );
          break;
@@ -706,8 +720,13 @@ NtUserToUnicodeEx(
    DECLARE_RETURN(int);
 
    DPRINT("Enter NtUserSetKeyboardState\n");
-   UserEnterShared();//faxme: this syscall doesnt seem to need any locking...
+   UserEnterShared();//fixme: this syscall doesnt seem to need any locking...
 
+   /* Key up? */
+   if (wScanCode & SC_KEY_UP)
+   {
+      RETURN(0);
+   }
 
    if( !NT_SUCCESS(MmCopyFromCaller(KeyStateBuf,
                                     lpKeyState,
@@ -717,13 +736,13 @@ NtUserToUnicodeEx(
       RETURN(0);
    }
    
-   /* Virtual code is correct and key is pressed currently? */
-   if (wVirtKey < 0x100 && KeyStateBuf[wVirtKey] & KS_DOWN_BIT)
+   /* Virtual code is correct? */
+   if (wVirtKey < 0x100)
    {
       OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
       if( !OutPwszBuff )
       {
-         DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
+         DPRINT1( "ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
          RETURN(0);
       }
       RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
@@ -740,8 +759,6 @@ NtUserToUnicodeEx(
       MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
       ExFreePoolWithTag(OutPwszBuff, TAG_STRING);
    }
-   else
-      ret = 0;
 
    RETURN(ret);
 
@@ -785,12 +802,22 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    if( lParam & (1<<25) )
    {
       CareVk = VkCode = ScanToVk( ScanCode, ExtKey, keyLayout );
-      if( VkCode == VK_LSHIFT || VkCode == VK_RSHIFT )
-         VkCode = VK_LSHIFT;
-      if( VkCode == VK_LCONTROL || VkCode == VK_RCONTROL )
-         VkCode = VK_LCONTROL;
-      if( VkCode == VK_LMENU || VkCode == VK_RMENU )
-         VkCode = VK_LMENU;
+      switch (VkCode)
+      {
+          case VK_RSHIFT:
+              ScanCode |= 0x100;
+          case VK_LSHIFT:
+             VkCode = VK_SHIFT;
+             break;
+          case VK_LCONTROL:
+          case VK_RCONTROL:
+             VkCode = VK_CONTROL;
+             break;
+          case VK_LMENU:
+          case VK_RMENU:
+             VkCode = VK_MENU;
+             break;
+      }
    }
    else
    {
@@ -1000,22 +1027,31 @@ DWORD
 APIENTRY
 NtUserVkKeyScanEx(
    WCHAR wChar,
-   HKL KeyboardLayout,
-   DWORD Unknown2)
+   HKL hKeyboardLayout,
+   BOOL UsehKL ) // TRUE from KeyboardLayout, FALSE from pkbl = (THREADINFO)->KeyboardLayout
 {
-/* FIXME: currently, this routine doesnt seem to need any locking */
    PKBDTABLES KeyLayout;
    PVK_TO_WCHAR_TABLE vtwTbl;
    PVK_TO_WCHARS10 vkPtr;
    size_t size_this_entry;
    int nMod;
-   DWORD CapsMod = 0, CapsState = 0;
+   PKBL pkbl = NULL;
+   DWORD CapsMod = 0, CapsState = 0, Ret = -1;
 
-   DPRINT("NtUserVkKeyScanEx() wChar %d, KbdLayout 0x%p\n", wChar, KeyboardLayout);
+   DPRINT("NtUserVkKeyScanEx() wChar %d, KbdLayout 0x%p\n", wChar, hKeyboardLayout);
+   UserEnterShared();
 
-   if(!KeyboardLayout)
-      return -1;
-   KeyLayout = UserHklToKbl(KeyboardLayout)->KBTables;
+   if (UsehKL)
+   {
+      if ( !hKeyboardLayout || !(pkbl = UserHklToKbl(hKeyboardLayout)))
+      goto Exit;
+   }
+   else // From VkKeyScanAW it is FALSE so KeyboardLayout is white noise.
+   {
+     pkbl = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->KeyboardLayout;
+   }   
+
+   KeyLayout = pkbl->KBTables;
 
    for (nMod = 0; KeyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
    {
@@ -1038,13 +1074,16 @@ NtUserVkKeyScanEx(
                CapsMod = KeyLayout->pCharModifiers->ModNumber[CapsState];
                DPRINT("nMod %d wC %04x: CapsMod %08x CapsState %08x MaxModBits %08x\n",
                       nMod, wChar, CapsMod, CapsState, KeyLayout->pCharModifiers->wMaxModBits);
-               return ((CapsMod << 8)|(vkPtr->VirtualKey & 0xff));
+               Ret = ((CapsMod << 8)|(vkPtr->VirtualKey & 0xff));
+               goto Exit;
             }
          }
          vkPtr = (PVK_TO_WCHARS10)(((BYTE *)vkPtr) + size_this_entry);
       }
    }
-   return -1;
+Exit:
+   UserLeave();
+   return Ret;
 }
 
 

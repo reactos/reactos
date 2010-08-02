@@ -14,10 +14,9 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/* $Id: acledit.c 35011 2008-08-01 16:29:40Z sginsberg $
- *
+/*
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/acledit/acledit.c
  * PURPOSE:         Access Control List Editor

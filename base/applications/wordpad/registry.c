@@ -27,12 +27,14 @@
 static const WCHAR key_recentfiles[] = {'R','e','c','e','n','t',' ','f','i','l','e',
                                         ' ','l','i','s','t',0};
 static const WCHAR key_options[] = {'O','p','t','i','o','n','s',0};
+static const WCHAR key_settings[] = {'S','e','t','t','i','n','g','s',0};
 static const WCHAR key_rtf[] = {'R','T','F',0};
 static const WCHAR key_text[] = {'T','e','x','t',0};
 
 static const WCHAR var_file[] = {'F','i','l','e','%','d',0};
 static const WCHAR var_framerect[] = {'F','r','a','m','e','R','e','c','t',0};
 static const WCHAR var_barstate0[] = {'B','a','r','S','t','a','t','e','0',0};
+static const WCHAR var_wrap[] = {'W','r','a','p',0};
 static const WCHAR var_maximized[] = {'M','a','x','i','m','i','z','e','d',0};
 
 static LRESULT registry_get_handle(HKEY *hKey, LPDWORD action, LPCWSTR subKey)
@@ -94,9 +96,14 @@ void registry_set_options(HWND hMainWnd)
         RegSetValueExW(hKey, var_maximized, 0, REG_DWORD, (LPBYTE)&isMaximized, sizeof(DWORD));
 
         registry_set_pagemargins(hKey);
+        RegCloseKey(hKey);
     }
 
-    RegCloseKey(hKey);
+    if(registry_get_handle(&hKey, &action, key_settings) == ERROR_SUCCESS)
+    {
+        registry_set_previewpages(hKey);
+        RegCloseKey(hKey);
+    }
 }
 
 void registry_read_winrect(RECT* rc)
@@ -339,6 +346,13 @@ void registry_read_options(void)
         registry_read_pagemargins(hKey);
         RegCloseKey(hKey);
     }
+
+    if(registry_get_handle(&hKey, 0, key_settings) != ERROR_SUCCESS) {
+        registry_read_previewpages(NULL);
+    } else {
+        registry_read_previewpages(hKey);
+        RegCloseKey(hKey);
+    }
 }
 
 static void registry_read_formatopts(int index, LPCWSTR key, DWORD barState[], DWORD wordWrap[])
@@ -364,10 +378,22 @@ static void registry_read_formatopts(int index, LPCWSTR key, DWORD barState[], D
     if(!fetched)
         barState[index] = (1 << BANDID_TOOLBAR) | (1 << BANDID_FORMATBAR) | (1 << BANDID_RULER) | (1 << BANDID_STATUSBAR);
 
-    if(index == reg_formatindex(SF_RTF))
-        wordWrap[index] = ID_WORDWRAP_WINDOW;
-    else if(index == reg_formatindex(SF_TEXT))
-        wordWrap[index] = ID_WORDWRAP_NONE;
+    fetched = FALSE;
+    if(action == REG_OPENED_EXISTING_KEY)
+    {
+        DWORD size = sizeof(DWORD);
+        if(RegQueryValueExW(hKey, var_wrap, 0, NULL, (LPBYTE)&wordWrap[index],
+           &size) == ERROR_SUCCESS)
+            fetched = TRUE;
+    }
+
+    if (!fetched)
+    {
+        if(index == reg_formatindex(SF_RTF))
+            wordWrap[index] = ID_WORDWRAP_WINDOW;
+        else if(index == reg_formatindex(SF_TEXT))
+            wordWrap[index] = ID_WORDWRAP_NONE;
+    }
 
     RegCloseKey(hKey);
 }
@@ -378,7 +404,7 @@ void registry_read_formatopts_all(DWORD barState[], DWORD wordWrap[])
     registry_read_formatopts(reg_formatindex(SF_TEXT), key_text, barState, wordWrap);
 }
 
-static void registry_set_formatopts(int index, LPCWSTR key, DWORD barState[])
+static void registry_set_formatopts(int index, LPCWSTR key, DWORD barState[], DWORD wordWrap[])
 {
     HKEY hKey;
     DWORD action = 0;
@@ -387,13 +413,14 @@ static void registry_set_formatopts(int index, LPCWSTR key, DWORD barState[])
     {
         RegSetValueExW(hKey, var_barstate0, 0, REG_DWORD, (LPBYTE)&barState[index],
                        sizeof(DWORD));
-
+        RegSetValueExW(hKey, var_wrap, 0, REG_DWORD, (LPBYTE)&wordWrap[index],
+                       sizeof(DWORD));
         RegCloseKey(hKey);
     }
 }
 
-void registry_set_formatopts_all(DWORD barState[])
+void registry_set_formatopts_all(DWORD barState[], DWORD wordWrap[])
 {
-    registry_set_formatopts(reg_formatindex(SF_RTF), key_rtf, barState);
-    registry_set_formatopts(reg_formatindex(SF_TEXT), key_text, barState);
+    registry_set_formatopts(reg_formatindex(SF_RTF), key_rtf, barState, wordWrap);
+    registry_set_formatopts(reg_formatindex(SF_TEXT), key_text, barState, wordWrap);
 }

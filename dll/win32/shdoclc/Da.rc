@@ -16,15 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "shdoclc.h"
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_MESSAGE_BOX_TITLE, "Wine Internet Explorer"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PRINT_HEADER_TEMPLATE "&w&bSide &p" /* FIXME: should be "&w&bPage &p of &P" */
     IDS_PRINT_FOOTER_TEMPLATE "&u&b&d"

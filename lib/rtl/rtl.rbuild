@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
-<module name="rtl" type="staticlibrary">
+<module name="rtl" type="staticlibrary" crt="static">
 	<define name="_NTOSKRNL_" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
@@ -13,7 +12,6 @@
 			<file>except_asm.s</file>
 			<file>except.c</file>
 			<file>interlck.S</file>
-			<file>random_asm.S</file>
 			<file>rtlswap.S</file>
 			<file>rtlmem.s</file>
 			<file>res_asm.s</file>
@@ -29,23 +27,31 @@
 		<file>rtlswap.s</file>
 		<file>thread.c</file>
 	</directory>
-   	</if>
+	</if>
 	<if property="ARCH" value="arm">
 		<directory name="arm">
 			<file>debug_asm.S</file>
 		</directory>
-        <file>mem.c</file>
-        <file>memgen.c</file>
+		<file>mem.c</file>
+		<file>memgen.c</file>
 	</if>
-	<directory name="austin">
-		<file>avl.c</file>
-		<file>tree.c</file>
-	</directory>
-
+	<if property="ARCH" value="amd64">
+		<directory name="amd64">
+			<file>debug_asm.S</file>
+			<file>except_asm.S</file>
+			<file>slist.S</file>
+			<file>unwind.c</file>
+			<file>stubs.c</file>
+		</directory>
+		<file>mem.c</file>
+		<file>memgen.c</file>
+	</if>
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>actctx.c</file>
+	<file>assert.c</file>
 	<file>atom.c</file>
+	<file>avltable.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
 	<file>compress.c</file>
@@ -97,9 +103,5 @@
 	<file>version.c</file>
 	<file>wait.c</file>
 	<file>workitem.c</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>rtl.h</pch>
-	-->
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

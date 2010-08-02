@@ -438,9 +438,9 @@ xmlXIncludeParseFile(xmlXIncludeCtxtPtr ctxt, const char *URL) {
      * try to ensure that new documents included are actually
      * built with the same dictionary as the including document.
      */
-    if ((ctxt->doc != NULL) && (ctxt->doc->dict != NULL) &&
-        (pctxt->dict != NULL)) {
-	xmlDictFree(pctxt->dict);
+    if ((ctxt->doc != NULL) && (ctxt->doc->dict != NULL)) {
+       if (pctxt->dict != NULL)
+            xmlDictFree(pctxt->dict);
 	pctxt->dict = ctxt->doc->dict;
 	xmlDictReference(pctxt->dict);
     }
@@ -798,6 +798,10 @@ xmlXIncludeAddTxt(xmlXIncludeCtxtPtr ctxt, xmlNodePtr txt, const xmlURL url) {
  *									*
  ************************************************************************/
 
+static xmlNodePtr
+xmlXIncludeCopyNodeList(xmlXIncludeCtxtPtr ctxt, xmlDocPtr target,
+	                xmlDocPtr source, xmlNodePtr elem);
+
 /**
  * xmlXIncludeCopyNode:
  * @ctxt:  the XInclude context
@@ -818,7 +822,10 @@ xmlXIncludeCopyNode(xmlXIncludeCtxtPtr ctxt, xmlDocPtr target,
 	return(NULL);
     if (elem->type == XML_DTD_NODE)
 	return(NULL);
-    result = xmlDocCopyNode(elem, target, 1);
+    if (elem->type == XML_DOCUMENT_NODE)
+	result = xmlXIncludeCopyNodeList(ctxt, target, source, elem->children);
+    else
+        result = xmlDocCopyNode(elem, target, 1);
     return(result);
 }
 
@@ -967,7 +974,6 @@ xmlXIncludeCopyRange(xmlXIncludeCtxtPtr ctxt, xmlDocPtr target,
 		    if ((cur == start) && (index1 > 1)) {
 			content += (index1 - 1);
 			len -= (index1 - 1);
-			index1 = 0;
 		    } else {
 			len = index2;
 		    }
@@ -2423,7 +2429,42 @@ xmlXIncludeSetFlags(xmlXIncludeCtxtPtr ctxt, int flags) {
     ctxt->parseFlags = flags;
     return(0);
 }
- 
+
+/**
+ * xmlXIncludeProcessTreeFlagsData:
+ * @tree: an XML node
+ * @flags: a set of xmlParserOption used for parsing XML includes
+ * @data: application data that will be passed to the parser context
+ *        in the _private field of the parser context(s)
+ *
+ * Implement the XInclude substitution on the XML node @tree
+ *
+ * Returns 0 if no substitution were done, -1 if some processing failed
+ *    or the number of substitutions done.
+ */
+
+int
+xmlXIncludeProcessTreeFlagsData(xmlNodePtr tree, int flags, void *data) {
+    xmlXIncludeCtxtPtr ctxt;
+    int ret = 0;
+
+    if ((tree == NULL) || (tree->doc == NULL))
+        return(-1);
+
+    ctxt = xmlXIncludeNewContext(tree->doc);
+    if (ctxt == NULL)
+        return(-1);
+    ctxt->_private = data;
+    ctxt->base = xmlStrdup((xmlChar *)tree->doc->URL);
+    xmlXIncludeSetFlags(ctxt, flags);
+    ret = xmlXIncludeDoProcess(ctxt, tree->doc, tree);
+    if ((ret >= 0) && (ctxt->nbErrors > 0))
+        ret = -1;
+
+    xmlXIncludeFreeContext(ctxt);
+    return(ret);
+}
+
 /**
  * xmlXIncludeProcessFlagsData:
  * @doc: an XML document
@@ -2438,27 +2479,14 @@ xmlXIncludeSetFlags(xmlXIncludeCtxtPtr ctxt, int flags) {
  */
 int
 xmlXIncludeProcessFlagsData(xmlDocPtr doc, int flags, void *data) {
-    xmlXIncludeCtxtPtr ctxt;
     xmlNodePtr tree;
-    int ret = 0;
 
     if (doc == NULL)
 	return(-1);
     tree = xmlDocGetRootElement(doc);
     if (tree == NULL)
 	return(-1);
-    ctxt = xmlXIncludeNewContext(doc);
-    if (ctxt == NULL)
-	return(-1);
-    ctxt->_private = data;
-    ctxt->base = xmlStrdup((xmlChar *)doc->URL);
-    xmlXIncludeSetFlags(ctxt, flags);
-    ret = xmlXIncludeDoProcess(ctxt, doc, tree);
-    if ((ret >= 0) && (ctxt->nbErrors > 0))
-	ret = -1;
-
-    xmlXIncludeFreeContext(ctxt);
-    return(ret);
+    return(xmlXIncludeProcessTreeFlagsData(tree, flags, data));
 }
 
 /**

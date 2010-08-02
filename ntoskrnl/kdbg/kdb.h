@@ -1,18 +1,9 @@
-#ifndef NTOSKRNL_KDB_H
-#define NTOSKRNL_KDB_H
+#pragma once
 
 /* DEFINES *******************************************************************/
 
 #ifndef RTL_NUMBER_OF
 # define RTL_NUMBER_OF(x) (sizeof(x) / sizeof((x)[0]))
-#endif
-
-#ifndef STATIC
-#define STATIC static
-#endif
-
-#ifndef CONST
-#define CONST const
 #endif
 
 /* TYPES *********************************************************************/
@@ -150,16 +141,11 @@ KdbpRpnEvaluateParsedExpression(
 /* from kdb_symbols.c */
 
 BOOLEAN
-KdbpSymFindModuleByAddress(IN PVOID Address,
-                           OUT PKDB_MODULE_INFO pInfo);
-
-BOOLEAN
-KdbpSymFindModuleByName(IN LPCWSTR Name,
-                        OUT PKDB_MODULE_INFO pInfo);
-
-BOOLEAN
-KdbpSymFindModuleByIndex(IN INT Index,
-                         OUT PKDB_MODULE_INFO pInfo);
+KdbpSymFindModule(
+    IN PVOID Address  OPTIONAL,
+    IN LPCWSTR Name  OPTIONAL,
+    IN INT Index  OPTIONAL,
+    OUT PLDR_DATA_TABLE_ENTRY* pLdrEntry);
 
 /* from kdb.c */
 
@@ -277,6 +263,3 @@ VOID
 KbdDisableMouse();
 VOID
 KbdEnableMouse();
-
-#endif /* NTOSKRNL_KDB_H */
-

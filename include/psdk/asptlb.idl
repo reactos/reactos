@@ -1,0 +1,133 @@
+/*
+ * Copyright (C) 2010 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+import "objidl.idl";
+import "oaidl.idl";
+
+[
+    object,
+    dual,
+    uuid(D97A6DA0-A864-11cf-83BE-00A0C90C2BD8)
+]
+interface IRequestDictionary : IDispatch
+{
+    [propget]
+    HRESULT Item(IRequestDictionary *iface, [in, optional] VARIANT Var,
+        [retval, out] VARIANT *pVariantReturn);
+
+    [restricted, propget]
+    HRESULT _NewEnum(IRequestDictionary *iface, [retval, out] IUnknown **ppEnumReturn);
+
+    [propget]
+    HRESULT Count(IRequestDictionary *iface, [retval, out] int *cStrRet);
+
+    [propget]
+    HRESULT Key(IRequestDictionary *iface, [in] VARIANT VarKey, [retval, out]VARIANT *pvar);
+};
+
+[
+    object,
+    dual,
+    uuid(D97A6DA0-A864-11cf-83BE-00A0C90C2BD8)
+]
+interface IResponse : IDispatch
+{
+    [propget]
+    HRESULT Buffer(IResponse *iface, [retval, out] VARIANT_BOOL *fIsBuffering);
+
+    [propput]
+    HRESULT Buffer(IResponse *iface, [in] VARIANT_BOOL fIsBuffering);
+
+    [propget]
+    HRESULT ContentType(IResponse *iface, [retval, out] BSTR *pbstrContentTypeRet);
+
+    [propput]
+    HRESULT ContentType(IResponse *iface, [in] BSTR bstrContentType);
+
+    [propget]
+    HRESULT Expires(IResponse *iface, [retval, out] VARIANT *pvarExpiresMinutesRet);
+
+    [propput]
+    HRESULT Expires(IResponse *iface, [in] long lExpiresMinutes);
+
+    [propget]
+    HRESULT ExpiresAbsolute(IResponse *iface, [retval, out] VARIANT *pvarExpiresRet);
+
+    [propput]
+    HRESULT ExpiresAbsolute(IResponse *iface, [in] DATE dtExpires);
+
+    [propget]
+    HRESULT Cookies(IResponse *iface, [retval, out] IRequestDictionary **ppCookies);
+
+    [propget]
+    HRESULT Status(IResponse *iface, [retval][out] BSTR *pbstrStatusRet);
+
+    [propput]
+    HRESULT Status(IResponse *iface, [in] BSTR bstrStatus);
+
+    [hidden]
+    HRESULT Add(IResponse *iface, [in] BSTR bstrHeaderValue, [in] BSTR bstrHeaderName);
+
+    HRESULT AddHeader(IResponse *iface, [in] BSTR bstrHeaderName, [in] BSTR bstrHeaderValue);
+
+    HRESULT AppendToLog(IResponse *iface, [in] BSTR bstrLogEntry);
+
+    HRESULT BinaryWrite(IResponse *iface, [in] VARIANT varInput);
+
+    HRESULT Clear(IResponse *iface);
+
+    HRESULT End(IResponse *iface);
+
+    HRESULT Flush(IResponse *iface);
+
+    HRESULT Redirect(IResponse *iface, [in] BSTR bstrURL);
+
+    HRESULT Write(IResponse *iface, [in] VARIANT varText);
+
+    [hidden]
+    HRESULT WriteBlock(IResponse *iface, [in] short iBlockNumber);
+
+    HRESULT IsClientConnected(IResponse *iface, [retval, out] VARIANT_BOOL *pfIsClientConnected);
+
+    [propget]
+    HRESULT get_CharSet( IResponse *iface, [retval, out] BSTR *pbstrCharSetRet);
+
+    [propput]
+    HRESULT put_CharSet(IResponse *iface, [in] BSTR bstrCharSet);
+
+    HRESULT Pics(IResponse *iface, [in] BSTR bstrHeaderValue);
+
+    [propget]
+    HRESULT get_CacheControl(IResponse *iface, [retval, out] BSTR *pbstrCacheControl);
+
+    [propput]
+    HRESULT put_CacheControl(IResponse *iface, [in] BSTR bstrCacheControl);
+
+    [propget]
+    HRESULT get_CodePage(IResponse *iface, [retval, out] long *plvar);
+
+    [propput]
+    HRESULT put_CodePage(IResponse *iface, [in] long lvar);
+
+    [propget]
+    HRESULT get_LCID(IResponse *iface, [retval, out] long *plvar);
+
+    [propput]
+    HRESULT put_LCID(IResponse *iface, [in] long lvar);
+};

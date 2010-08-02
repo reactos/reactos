@@ -22,7 +22,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
 typedef struct {
-    const IInternetProtocolVtbl  *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl  *lpIInternetProtocolVtbl;
     const IInternetPriorityVtbl  *lpInternetPriorityVtbl;
 
     HANDLE file;
@@ -31,10 +31,9 @@ typedef struct {
     LONG ref;
 } FileProtocol;
 
-#define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
 #define PRIORITY(x)  ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(FileProtocol, InternetProtocol, iface)
+#define PROTOCOL_THIS(iface) DEFINE_THIS(FileProtocol, IInternetProtocol, iface)
 
 static HRESULT WINAPI FileProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -92,7 +91,7 @@ static ULONG WINAPI FileProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     FileProtocol *This = PROTOCOL_THIS(iface);
     BINDINFO bindinfo;
@@ -106,7 +105,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
 
     static const WCHAR wszFile[]  = {'f','i','l','e',':'};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     if(!szUrl || strlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)
@@ -142,7 +141,10 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, &null_char);
 
         file_name = url+sizeof(wszFile)/sizeof(WCHAR);
-        if(file_name[0] == '/' && file_name[1] == '/')
+
+        /* Strip both forward and back slashes */
+        if( (file_name[0] == '/' && file_name[1] == '/') ||
+            (file_name[0] == '\\' && file_name[1] == '\\'))
             file_name += 2;
         if(*file_name == '/')
             file_name++;
@@ -360,7 +362,7 @@ HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     ret = heap_alloc(sizeof(FileProtocol));
 
-    ret->lpInternetProtocolVtbl = &FileProtocolVtbl;
+    ret->lpIInternetProtocolVtbl = &FileProtocolVtbl;
     ret->lpInternetPriorityVtbl = &FilePriorityVtbl;
     ret->file = NULL;
     ret->priority = 0;

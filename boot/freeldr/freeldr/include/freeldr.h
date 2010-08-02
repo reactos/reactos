@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifndef __FREELDR_H
@@ -32,6 +32,7 @@
 #define NTOSAPI
 #define printf TuiPrintf
 #include <ntddk.h>
+#include <ntifs.h>
 #include <ioaccess.h>
 #include <arc/arc.h>
 #include <ketypes.h>
@@ -39,10 +40,12 @@
 #include <ndk/asm.h>
 #include <ndk/rtlfuncs.h>
 #include <ndk/ldrtypes.h>
+#include <ndk/halfuncs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <rosldr.h>
+#include <arcemul.h>
 #include <arch.h>
 #include <rtl.h>
 #include <disk.h>
@@ -59,7 +62,8 @@
 #include <reactos.h>
 #include <registry.h>
 #include <winldr.h>
-#include <fsrec.h>
+#include <ntdddisk.h>
+#include <internal/hal.h>
 /* file system headers */
 #include <fs/ext2.h>
 #include <fs/fat.h>
@@ -72,12 +76,14 @@
 #include <ui/tui.h>
 /* arch files */
 #if defined(_M_IX86)
+#include <arch/i386/custom.h>
+#include <arch/i386/drivemap.h>
 #include <arch/i386/hardware.h>
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
+#include <arch/i386/miscboot.h>
 #include <internal/i386/intrin_i.h>
-#include <internal/i386/ke.h>
 #elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
 #elif defined(_M_ARM)
@@ -87,6 +93,7 @@
 #elif defined(_M_AMD64)
 #include <arch/amd64/hardware.h>
 #include <arch/amd64/machpc.h>
+#include <internal/amd64/intrin_i.h>
 #endif
 /* misc files */
 #include <keycodes.h>
@@ -95,10 +102,7 @@
 #include <bget.h>
 #include <winerror.h>
 /* Needed by boot manager */
-#include <bootmgr.h>
 #include <oslist.h>
-#include <drivemap.h>
-#include <miscboot.h>
 #include <options.h>
 #include <linux.h>
 /* Externals */
@@ -108,15 +112,8 @@
 #include <comm.h>
 /* Swap */
 #include <bytesex.h>
-
-/* arch defines */
-#ifdef _X86_
-#define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
-#endif
-
-#ifdef _M_AMD64
-#define KeAmd64EraseFlags(x)     __asm__ __volatile__("pushq $0 ; popfq\n")
-#endif
+/* Internal shared PCI header */
+#include <drivers/pci/pci.h>
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);

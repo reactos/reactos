@@ -11,7 +11,6 @@
 	<define name="LIBRARYBUILD" />
 	<library>ntdll</library>
 	<library>opengl32</library>
-	<library>kernel32</library>
 	<library>gdi32</library>
 	<directory name="libnurbs">
 		<directory name="interface">

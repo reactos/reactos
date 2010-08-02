@@ -53,19 +53,26 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     return TRUE;
 }
 
-#define ATLVer1Size 100
+#define ATLVer1Size FIELD_OFFSET(_ATL_MODULEW, dwAtlBuildVer)
 
 HRESULT WINAPI AtlModuleInit(_ATL_MODULEW* pM, _ATL_OBJMAP_ENTRYW* p, HINSTANCE h)
 {
     INT i;
     UINT size;
 
-    FIXME("SEMI-STUB (%p %p %p)\n",pM,p,h);
+    //FIXME("SEMI-STUB (%p %p %p)\n",pM,p,h);
 
     size = pM->cbSize;
-    if  (size != sizeof(_ATL_MODULEW) && size != ATLVer1Size)
+    switch (size)
     {
-        FIXME("Unknown structure version (size %i)\n",size);
+    case ATLVer1Size:
+    case sizeof(_ATL_MODULEW):
+#ifdef _WIN64
+    case sizeof(_ATL_MODULEW) + sizeof(void *):
+#endif
+        break;
+    default:
+        WARN("Unknown structure version (size %i)\n",size);
         return E_INVALIDARG;
     }
 
@@ -95,6 +102,19 @@ HRESULT WINAPI AtlModuleInit(_ATL_MODULEW* pM, _ATL_OBJMAP_ENTRYW* p, HINSTANCE 
     }
 
     return S_OK;
+}
+
+static _ATL_OBJMAP_ENTRYW_V1 *get_objmap_entry( _ATL_MODULEW *mod, unsigned int index )
+{
+    _ATL_OBJMAP_ENTRYW_V1 *ret;
+
+    if (mod->cbSize == ATLVer1Size)
+        ret = (_ATL_OBJMAP_ENTRYW_V1 *)mod->m_pObjMap + index;
+    else
+        ret = (_ATL_OBJMAP_ENTRYW_V1 *)(mod->m_pObjMap + index);
+
+    if (!ret->pclsid) ret = NULL;
+    return ret;
 }
 
 HRESULT WINAPI AtlModuleLoadTypeLib(_ATL_MODULEW *pM, LPCOLESTR lpszIndex,
@@ -158,6 +178,7 @@ HRESULT WINAPI AtlModuleAddTermFunc(_ATL_MODULEW *pM, _ATL_TERMFUNC *pFunc, DWOR
 HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContext,
                                              DWORD dwFlags)
 {
+    _ATL_OBJMAP_ENTRYW_V1 *obj;
     HRESULT hRes = S_OK;
     int i=0;
 
@@ -166,10 +187,9 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
     if (pM == NULL)
         return E_INVALIDARG;
 
-    while(pM->m_pObjMap[i].pclsid != NULL)
+    while ((obj = get_objmap_entry( pM, i++ )))
     {
         IUnknown* pUnknown;
-        _ATL_OBJMAP_ENTRYW *obj = &(pM->m_pObjMap[i]);
         HRESULT rc;
 
         TRACE("Registering object %i\n",i);
@@ -185,7 +205,6 @@ HRESULT WINAPI AtlModuleRegisterClassObjects(_ATL_MODULEW *pM, DWORD dwClsContex
                     IUnknown_Release(pUnknown);
             }
         }
-        i++;
     }
 
    return hRes;
@@ -240,7 +259,7 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
         TRACE("Trying entry %i (%s %i %p)\n",i,debugstr_guid(pEntries[i].piid),
               pEntries[i].dw, pEntries[i].pFunc);
 
-        if (pEntries[i].piid && IsEqualGUID(iid,pEntries[i].piid))
+        if (!pEntries[i].piid || IsEqualGUID(iid,pEntries[i].piid))
         {
             TRACE("MATCH\n");
             if (pEntries[i].pFunc == (_ATL_CREATORARGFUNC*)1)
@@ -248,14 +267,15 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
                 TRACE("Offset\n");
                 *ppvObject = ((LPSTR)this+pEntries[i].dw);
                 IUnknown_AddRef((IUnknown*)*ppvObject);
-                rc = S_OK;
+                return S_OK;
             }
             else
             {
                 TRACE("Function\n");
-                rc = pEntries[i].pFunc(this, iid, ppvObject,0);
+                rc = pEntries[i].pFunc(this, iid, ppvObject, pEntries[i].dw);
+                if(rc==S_OK || pEntries[i].piid)
+                    return rc;
             }
-            break;
         }
         i++;
     }
@@ -269,6 +289,7 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
  */
 HRESULT WINAPI AtlModuleRegisterServer(_ATL_MODULEW* pM, BOOL bRegTypeLib, const CLSID* clsid)
 {
+    const _ATL_OBJMAP_ENTRYW_V1 *obj;
     int i;
     HRESULT hRes;
 
@@ -277,12 +298,10 @@ HRESULT WINAPI AtlModuleRegisterServer(_ATL_MODULEW* pM, BOOL bRegTypeLib, const
     if (pM == NULL)
         return E_INVALIDARG;
 
-    for (i = 0; pM->m_pObjMap[i].pclsid != NULL; i++) /* register CLSIDs */
+    for (i = 0; (obj = get_objmap_entry( pM, i )) != NULL; i++) /* register CLSIDs */
     {
-        if (!clsid || IsEqualCLSID(pM->m_pObjMap[i].pclsid, clsid))
+        if (!clsid || IsEqualCLSID(obj->pclsid, clsid))
         {
-            const _ATL_OBJMAP_ENTRYW *obj = &pM->m_pObjMap[i];
-
             TRACE("Registering clsid %s\n", debugstr_guid(obj->pclsid));
             hRes = obj->pfnUpdateRegistry(TRUE); /* register */
             if (FAILED(hRes))
@@ -351,6 +370,7 @@ HRESULT WINAPI AtlUnmarshalPtr(IStream *stm, const IID *iid, IUnknown **ppUnk)
 HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
                                        REFIID riid, LPVOID *ppv)
 {
+    _ATL_OBJMAP_ENTRYW_V1 *obj;
     int i;
     HRESULT hres = CLASS_E_CLASSNOTAVAILABLE;
 
@@ -359,12 +379,10 @@ HRESULT WINAPI AtlModuleGetClassObject(_ATL_MODULEW *pm, REFCLSID rclsid,
     if (pm == NULL)
         return E_INVALIDARG;
 
-    for (i = 0; pm->m_pObjMap[i].pclsid != NULL; i++)
+    for (i = 0; (obj = get_objmap_entry( pm, i )) != NULL; i++)
     {
-        if (IsEqualCLSID(pm->m_pObjMap[i].pclsid, rclsid))
+        if (IsEqualCLSID(obj->pclsid, rclsid))
         {
-            _ATL_OBJMAP_ENTRYW *obj = &pm->m_pObjMap[i];
-
             TRACE("found object %i\n", i);
             if (obj->pfnGetClassObject)
             {
@@ -429,6 +447,44 @@ HRESULT WINAPI AtlModuleUnregisterServer(_ATL_MODULEW *pm, const CLSID *clsid)
 }
 
 /***********************************************************************
+ *           AtlModuleRegisterWndClassInfoA           [ATL.@]
+ *
+ * See AtlModuleRegisterWndClassInfoW.
+ */
+ATOM WINAPI AtlModuleRegisterWndClassInfoA(_ATL_MODULEA *pm, _ATL_WNDCLASSINFOA *wci, WNDPROC *pProc)
+{
+    ATOM atom;
+
+    FIXME("%p %p %p semi-stub\n", pm, wci, pProc);
+
+    atom = wci->m_atom;
+    if (!atom)
+    {
+        WNDCLASSEXA wc;
+
+        TRACE("wci->m_wc.lpszClassName = %s\n", wci->m_wc.lpszClassName);
+
+        if (!wci->m_wc.lpszClassName)
+        {
+            sprintf(wci->m_szAutoName, "ATL%08lx", (UINT_PTR)wci);
+            TRACE("auto-generated class name %s\n", wci->m_szAutoName);
+            wci->m_wc.lpszClassName = wci->m_szAutoName;
+        }
+
+        atom = GetClassInfoExA(pm->m_hInst, wci->m_wc.lpszClassName, &wc);
+        if (!atom)
+            atom = RegisterClassExA(&wci->m_wc);
+
+        wci->pWndProc = wci->m_wc.lpfnWndProc;
+        wci->m_atom = atom;
+    }
+    *pProc = wci->pWndProc;
+
+    TRACE("returning 0x%04x\n", atom);
+    return atom;
+}
+
+/***********************************************************************
  *           AtlModuleRegisterWndClassInfoW           [ATL.@]
  *
  * PARAMS
@@ -461,8 +517,8 @@ ATOM WINAPI AtlModuleRegisterWndClassInfoW(_ATL_MODULEW *pm, _ATL_WNDCLASSINFOW 
 
         if (!wci->m_wc.lpszClassName)
         {
-            static const WCHAR szFormat[] = {'A','T','L','%','0','8','x',0};
-            sprintfW(wci->m_szAutoName, szFormat, (UINT)(UINT_PTR)wci);
+            static const WCHAR szFormat[] = {'A','T','L','%','0','8','l','x',0};
+            sprintfW(wci->m_szAutoName, szFormat, (UINT_PTR)wci);
             TRACE("auto-generated class name %s\n", debugstr_w(wci->m_szAutoName));
             wci->m_wc.lpszClassName = wci->m_szAutoName;
         }
@@ -494,6 +550,32 @@ void WINAPI AtlPixelToHiMetric(const SIZEL* lpPix, SIZEL* lpHiMetric)
     lpHiMetric->cx = 100 * lpPix->cx / GetDeviceCaps( dc, LOGPIXELSX );
     lpHiMetric->cy = 100 * lpPix->cy / GetDeviceCaps( dc, LOGPIXELSY );
     ReleaseDC( NULL, dc );
+}
+
+/***********************************************************************
+ *           AtlCreateTargetDC         [ATL.@]
+ */
+HDC WINAPI AtlCreateTargetDC( HDC hdc, DVTARGETDEVICE *dv )
+{
+    static const WCHAR displayW[] = {'d','i','s','p','l','a','y',0};
+    const WCHAR *driver = NULL, *device = NULL, *port = NULL;
+    DEVMODEW *devmode = NULL;
+
+    TRACE( "(%p, %p)\n", hdc, dv );
+
+    if (dv)
+    {
+        if (dv->tdDriverNameOffset) driver  = (WCHAR *)((char *)dv + dv->tdDriverNameOffset);
+        if (dv->tdDeviceNameOffset) device  = (WCHAR *)((char *)dv + dv->tdDeviceNameOffset);
+        if (dv->tdPortNameOffset)   port    = (WCHAR *)((char *)dv + dv->tdPortNameOffset);
+        if (dv->tdExtDevmodeOffset) devmode = (DEVMODEW *)((char *)dv + dv->tdExtDevmodeOffset);
+    }
+    else
+    {
+        if (hdc) return hdc;
+        driver = displayW;
+    }
+    return CreateDCW( driver, device, port, devmode );
 }
 
 /***********************************************************************

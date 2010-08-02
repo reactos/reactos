@@ -25,6 +25,9 @@
 	<directory name="rundll32">
 		<xi:include href="rundll32/rundll32.rbuild" />
 	</directory>
+	<directory name="runonce">
+		<xi:include href="runonce/runonce.rbuild" />
+	</directory>
 	<directory name="services">
 		<xi:include href="services/services.rbuild" />
 	</directory>

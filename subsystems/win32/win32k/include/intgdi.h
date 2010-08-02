@@ -1,5 +1,4 @@
-#ifndef _WIN32K_INTGDI_H
-#define _WIN32K_INTGDI_H
+#pragma once
 
 #include "region.h"
 
@@ -67,7 +66,8 @@ BOOL FASTCALL
 IntGdiMoveToEx(DC      *dc,
                int     X,
                int     Y,
-               LPPOINT Point);
+               LPPOINT Point,
+               BOOL    BypassPath);
 
 BOOL FASTCALL
 IntGdiPolyBezier(DC      *dc,
@@ -122,10 +122,15 @@ IntGdiPolyPolygon(DC      *dc,
                   PULONG  PolyCounts,
                   int     Count);
 
-BOOL FASTCALL IntGdiGradientFill(DC *dc,
+BOOL
+NTAPI
+GreGradientFill(
+    HDC hdc,
     PTRIVERTEX pVertex,
-    ULONG uVertex,
-    PVOID pMesh, ULONG uMesh, ULONG ulMode);
+    ULONG nVertex,
+    PVOID pMesh,
+    ULONG nMesh,
+    ULONG ulMode);
 
 /* DC functions */
 
@@ -154,17 +159,8 @@ IntGdiCombineTransform(LPXFORM XFormResult,
 BOOL FASTCALL
 IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
 
-BOOL FASTCALL
-IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes);
-
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object);
-
-BOOL FASTCALL
-IntGetSysColorPens(HPEN *Pens, UINT nPens);
-
-BOOL FASTCALL
-IntGetSysColors(COLORREF *Colors, UINT nColors);
 
 DWORD FASTCALL
 IntGetSysColor(INT nIndex);
@@ -266,7 +262,6 @@ GreStretchBltMask(IN HDC hdcDst,
                   IN INT cySrc,
                   IN DWORD dwRop,
                   IN DWORD dwBackColor,
-                  IN HDC hdcMask);
-
-#endif /* _WIN32K_INTGDI_H */
-
+                  IN HDC hdcMask,
+                  IN INT xMask,
+                  IN INT yMask);

@@ -354,7 +354,7 @@ void WINAPI NdrInterfacePointerFree(PMIDL_STUB_MESSAGE pStubMsg,
 /***********************************************************************
  *           NdrOleAllocate [RPCRT4.@]
  */
-void * WINAPI NdrOleAllocate(size_t Size)
+void * WINAPI NdrOleAllocate(SIZE_T Size)
 {
   if (!LoadCOM()) return NULL;
   return COM_MemAlloc(Size);
@@ -367,6 +367,30 @@ void WINAPI NdrOleFree(void *NodeToFree)
 {
   if (!LoadCOM()) return;
   COM_MemFree(NodeToFree);
+}
+
+/***********************************************************************
+ * Helper function to create a proxy.
+ * Probably similar to NdrpCreateProxy.
+ */
+HRESULT create_proxy(REFIID iid, IUnknown *pUnkOuter, IRpcProxyBuffer **pproxy, void **ppv)
+{
+    CLSID clsid;
+    IPSFactoryBuffer *psfac;
+    HRESULT r;
+
+    if(!LoadCOM()) return E_FAIL;
+
+    r = COM_GetPSClsid( iid, &clsid );
+    if(FAILED(r)) return r;
+
+    r = COM_GetClassObject( &clsid, CLSCTX_INPROC_SERVER, NULL, &IID_IPSFactoryBuffer, (void**)&psfac );
+    if(FAILED(r)) return r;
+
+    r = IPSFactoryBuffer_CreateProxy(psfac, pUnkOuter, iid, pproxy, ppv);
+
+    IPSFactoryBuffer_Release(psfac);
+    return r;
 }
 
 /***********************************************************************

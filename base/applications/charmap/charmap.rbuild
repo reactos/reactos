@@ -3,7 +3,6 @@
 <module name="charmap" type="win32gui" installbase="system32" installname="charmap.exe" unicode="yes">
 	<include base="charmap">.</include>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
 	<compilationunit name="unit.c">

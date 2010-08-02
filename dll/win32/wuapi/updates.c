@@ -144,7 +144,7 @@ static HRESULT WINAPI automatic_updates_Pause(
     IAutomaticUpdates *This )
 {
     FIXME("\n");
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI automatic_updates_Resume(

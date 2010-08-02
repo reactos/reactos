@@ -26,6 +26,7 @@ Author:
 #include <ldrtypes.h>
 #include <mmtypes.h>
 #include <obtypes.h>
+#include <rtltypes.h>
 #ifndef NTOS_MODE_USER
 #include <extypes.h>
 #include <setypes.h>
@@ -59,7 +60,11 @@ Author:
 #define FLG_ENABLE_CSRDEBUG                     0x00020000
 #define FLG_ENABLE_KDEBUG_SYMBOL_LOAD           0x00040000
 #define FLG_DISABLE_PAGE_KERNEL_STACKS          0x00080000
+#if (NTDDI_VERSION < NTDDI_WINXP)
 #define FLG_HEAP_ENABLE_CALL_TRACING            0x00100000
+#else
+#define FLG_ENABLE_SYSTEM_CRIT_BREAKS           0x00100000
+#endif
 #define FLG_HEAP_DISABLE_COALESCING             0x00200000
 #define FLG_ENABLE_CLOSE_EXCEPTIONS             0x00400000
 #define FLG_ENABLE_EXCEPTION_LOGGING            0x00800000
@@ -170,6 +175,25 @@ Author:
 #define JOB_OBJECT_ALL_ACCESS                   (STANDARD_RIGHTS_REQUIRED | \
                                                  SYNCHRONIZE | \
                                                  31)
+
+//
+// Job Limit Flags
+//
+#define JOB_OBJECT_LIMIT_WORKINGSET             0x1
+#define JOB_OBJECT_LIMIT_PROCESS_TIME           0x2
+#define JOB_OBJECT_LIMIT_JOB_TIME               0x4
+#define JOB_OBJECT_LIMIT_ACTIVE_PROCESS         0x8
+#define JOB_OBJECT_LIMIT_AFFINITY               0x10
+#define JOB_OBJECT_LIMIT_PRIORITY_CLASS         0x20
+#define JOB_OBJECT_LIMIT_PRESERVE_JOB_TIME      0x40
+#define JOB_OBJECT_LIMIT_SCHEDULING_CLASS       0x80
+#define JOB_OBJECT_LIMIT_PROCESS_MEMORY         0x100
+#define JOB_OBJECT_LIMIT_JOB_MEMORY             0x200
+#define JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION 0x400
+#define JOB_OBJECT_LIMIT_BREAKAWAY_OK           0x800
+#define JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK    0x1000
+#define JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE      0x2000
+
 
 //
 // Cross Thread Flags
@@ -568,131 +592,34 @@ typedef struct _PEB_FREE_BLOCK
 } PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
 
 //
-// Process Environment Block (PEB)
+// Initial PEB
 //
-typedef struct _PEB
+typedef struct _INITIAL_PEB
 {
-    UCHAR InheritedAddressSpace;
-    UCHAR ReadImageFileExecOptions;
-    UCHAR BeingDebugged;
-#if (NTDDI_VERSION >= NTDDI_WS03)
-    struct
-    {
-        UCHAR ImageUsesLargePages:1;
-    #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-        UCHAR IsProtectedProcess:1;
-        UCHAR IsLegacyProcess:1;
-        UCHAR SpareBits:5;
-    #else
-        UCHAR SpareBits:7;
-    #endif
-    };
-#else
-    BOOLEAN SpareBool;
-#endif
-    HANDLE Mutant;
-    PVOID ImageBaseAddress;
-    PPEB_LDR_DATA Ldr;
-    struct _RTL_USER_PROCESS_PARAMETERS *ProcessParameters;
-    PVOID SubSystemData;
-    PVOID ProcessHeap;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    struct _RTL_CRITICAL_SECTION *FastPebLock;
-    PVOID AltThunkSListPtr;
-    PVOID IFEOKey;
-    ULONG Spare;
+    BOOLEAN InheritedAddressSpace;
+    BOOLEAN ReadImageFileExecOptions;
+    BOOLEAN BeingDebugged;
     union
     {
-        PVOID* KernelCallbackTable;
-        PVOID UserSharedInfoPtr;
-    };
-    ULONG SystemReserved[1];
-    ULONG SpareUlong;
-#else
-    PVOID FastPebLock;
-    PPEBLOCKROUTINE FastPebLockRoutine;
-    PPEBLOCKROUTINE FastPebUnlockRoutine;
-    ULONG EnvironmentUpdateCount;
-    PVOID* KernelCallbackTable;
-    PVOID EventLogSection;
-    PVOID EventLog;
-#endif
-    PPEB_FREE_BLOCK FreeList;
-    ULONG TlsExpansionCounter;
-    PVOID TlsBitmap;
-    ULONG TlsBitmapBits[0x2];
-    PVOID ReadOnlySharedMemoryBase;
-    PVOID ReadOnlySharedMemoryHeap;
-    PVOID* ReadOnlyStaticServerData;
-    PVOID AnsiCodePageData;
-    PVOID OemCodePageData;
-    PVOID UnicodeCaseTableData;
-    ULONG NumberOfProcessors;
-    ULONG NtGlobalFlag;
-    LARGE_INTEGER CriticalSectionTimeout;
-    ULONG HeapSegmentReserve;
-    ULONG HeapSegmentCommit;
-    ULONG HeapDeCommitTotalFreeThreshold;
-    ULONG HeapDeCommitFreeBlockThreshold;
-    ULONG NumberOfHeaps;
-    ULONG MaximumNumberOfHeaps;
-    PVOID* ProcessHeaps;
-    PVOID GdiSharedHandleTable;
-    PVOID ProcessStarterHelper;
-    ULONG GdiDCAttributeList;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    struct _RTL_CRITICAL_SECTION *LoaderLock;
-#else
-    PVOID LoaderLock;
-#endif
-    ULONG OSMajorVersion;
-    ULONG OSMinorVersion;
-    USHORT OSBuildNumber;
-    USHORT OSCSDVersion;
-    ULONG OSPlatformId;
-    ULONG ImageSubSystem;
-    ULONG ImageSubSystemMajorVersion;
-    ULONG ImageSubSystemMinorVersion;
-    ULONG ImageProcessAffinityMask;
-    ULONG GdiHandleBuffer[0x22];
-    PPOST_PROCESS_INIT_ROUTINE PostProcessInitRoutine;
-    struct _RTL_BITMAP *TlsExpansionBitmap;
-    ULONG TlsExpansionBitmapBits[0x20];
-    ULONG SessionId;
-#if (NTDDI_VERSION >= NTDDI_WINXP)
-    ULARGE_INTEGER AppCompatFlags;
-    ULARGE_INTEGER AppCompatFlagsUser;
-    PVOID pShimData;
-    PVOID AppCompatInfo;
-    UNICODE_STRING CSDVersion;
-    struct _ACTIVATION_CONTEXT_DATA *ActivationContextData;
-    struct _ASSEMBLY_STORAGE_MAP *ProcessAssemblyStorageMap;
-    struct _ACTIVATION_CONTEXT_DATA *SystemDefaultActivationContextData;
-    struct _ASSEMBLY_STORAGE_MAP *SystemAssemblyStorageMap;
-    ULONG MinimumStackCommit;
-#endif
+        BOOLEAN BitField;
 #if (NTDDI_VERSION >= NTDDI_WS03)
-    PVOID *FlsCallback;
-    LIST_ENTRY FlsListHead;
-    struct _RTL_BITMAP *FlsBitmap;
-    ULONG FlsBitmapBits[4];
-    ULONG FlsHighIndex;
-#endif
+        struct
+        {
+            BOOLEAN ImageUsesLargePages:1;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PVOID WerRegistrationData;
-    PVOID WerShipAssertPtr;
+            BOOLEAN IsProtectedProcess:1;
+            BOOLEAN IsLegacyProcess:1;
+            BOOLEAN SpareBits:5;
+#else
+            BOOLEAN SpareBits:7;
 #endif
-} PEB, *PPEB;
-
-//
-// GDI Batch Descriptor
-//
-typedef struct _GDI_TEB_BATCH
-{
-    ULONG Offset;
-    HANDLE HDC;
-    ULONG Buffer[0x136];
-} GDI_TEB_BATCH, *PGDI_TEB_BATCH;
+        };
+#else
+        BOOLEAN SpareBool;
+#endif
+    };
+    HANDLE Mutant;
+} INITIAL_PEB, *PINITIAL_PEB;
 
 //
 // Initial TEB
@@ -722,146 +649,50 @@ typedef struct _TEB_ACTIVE_FRAME
     PTEB_ACTIVE_FRAME_CONTEXT Context;
 } TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;
 
+typedef struct _CLIENT_ID32
+{
+    ULONG UniqueProcess;
+    ULONG UniqueThread;
+} CLIENT_ID32, *PCLIENT_ID32;
+
+typedef struct _CLIENT_ID64
+{
+    ULONG64 UniqueProcess;
+    ULONG64 UniqueThread;
+} CLIENT_ID64, *PCLIENT_ID64;
+
+#if (NTDDI_VERSION < NTDDI_WS03)
+typedef struct _Wx86ThreadState
+{
+    PULONG  CallBx86Eip;
+    PVOID   DeallocationCpu;
+    BOOLEAN UseKnownWx86Dll;
+    CHAR    OleStubInvoked;
+} Wx86ThreadState, *PWx86ThreadState;
+#endif
+
+
 //
+// Process Environment Block (PEB)
 // Thread Environment Block (TEB)
 //
-typedef struct _TEB
-{
-    NT_TIB Tib;
-    PVOID EnvironmentPointer;
-    CLIENT_ID ClientId;
-    PVOID ActiveRpcHandle;
-    PVOID ThreadLocalStoragePointer;
-    struct _PEB *ProcessEnvironmentBlock;
-    ULONG LastErrorValue;
-    ULONG CountOfOwnedCriticalSections;
-    PVOID CsrClientThread;
-    struct _W32THREAD* Win32ThreadInfo;
-    ULONG User32Reserved[0x1A];
-    ULONG UserReserved[5];
-    PVOID WOW32Reserved;
-    LCID CurrentLocale;
-    ULONG FpSoftwareStatusRegister;
-    PVOID SystemReserved1[0x36];
-    LONG ExceptionCode;
-    struct _ACTIVATION_CONTEXT_STACK *ActivationContextStackPointer;
+#include "peb_teb.h"
+
 #ifdef _WIN64
-    UCHAR SpareBytes1[24];
-#else
-    UCHAR SpareBytes1[0x24];
+//
+// Explicit 32 bit PEB/TEB
+//
+#define EXPLICIT_32BIT
+#include "peb_teb.h"
+#undef EXPLICIT_32BIT
+
+//
+// Explicit 64 bit PEB/TEB
+//
+#define EXPLICIT_64BIT
+#include "peb_teb.h"
+#undef EXPLICIT_64BIT
 #endif
-    ULONG TxFsContext;
-    GDI_TEB_BATCH GdiTebBatch;
-    CLIENT_ID RealClientId;
-    PVOID GdiCachedProcessHandle;
-    ULONG GdiClientPID;
-    ULONG GdiClientTID;
-    PVOID GdiThreadLocalInfo;
-    SIZE_T Win32ClientInfo[62];
-    PVOID glDispatchTable[0xE9];
-    SIZE_T glReserved1[0x1D];
-    PVOID glReserved2;
-    PVOID glSectionInfo;
-    PVOID glSection;
-    PVOID glTable;
-    PVOID glCurrentRC;
-    PVOID glContext;
-    NTSTATUS LastStatusValue;
-    UNICODE_STRING StaticUnicodeString;
-    WCHAR StaticUnicodeBuffer[0x105];
-    PVOID DeallocationStack;
-    PVOID TlsSlots[0x40];
-    LIST_ENTRY TlsLinks;
-    PVOID Vdm;
-    PVOID ReservedForNtRpc;
-    PVOID DbgSsReserved[0x2];
-    ULONG HardErrorDisabled;
-#ifdef _WIN64
-    PVOID Instrumentation[11];
-#else
-    PVOID Instrumentation[9];
-#endif
-    GUID ActivityId;
-    PVOID SubProcessTag;
-    PVOID EtwTraceData;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PVOID EtwLocalData;
-#endif
-    PVOID WinSockData;
-    ULONG GdiBatchCount;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    BOOLEAN SpareBool0;
-    BOOLEAN SpareBool1;
-    BOOLEAN SpareBool2;
-#else
-    BOOLEAN InDbgPrint;
-    BOOLEAN FreeStackOnTermination;
-    BOOLEAN HasFiberData;
-#endif
-    UCHAR IdealProcessor;
-    ULONG GuaranteedStackBytes;
-    PVOID ReservedForPerf;
-    PVOID ReservedForOle;
-    ULONG WaitingOnLoaderLock;
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PVOID SavedPriorityState;
-#else
-    ULONG SparePointer1;
-#endif
-    ULONG SoftPatchPtr1;
-    ULONG SoftPatchPtr2;
-    PVOID *TlsExpansionSlots;
-    ULONG ImpersonationLocale;
-    ULONG IsImpersonating;
-    PVOID NlsCache;
-    PVOID pShimData;
-    ULONG HeapVirualAffinity;
-    PVOID CurrentTransactionHandle;
-    PTEB_ACTIVE_FRAME ActiveFrame;
-#if (NTDDI_VERSION >= NTDDI_WS03)
-    PVOID FlsData;
-#endif
-#if (NTDDI_VERSION >= NTDDI_LONGHORN)
-    PVOID PreferredLangauges;
-    PVOID UserPrefLanguages;
-    PVOID MergedPrefLanguages;
-    ULONG MuiImpersonation;
-    union
-    {
-        struct
-        {
-            USHORT SpareCrossTebFlags:16;
-        };
-        USHORT CrossTebFlags;
-    };
-    union
-    {
-        struct
-        {
-            USHORT DbgSafeThunkCall:1;
-            USHORT DbgInDebugPrint:1;
-            USHORT DbgHasFiberData:1;
-            USHORT DbgSkipThreadAttach:1;
-            USHORT DbgWerInShipAssertCode:1;
-            USHORT DbgIssuedInitialBp:1;
-            USHORT DbgClonedThread:1;
-            USHORT SpareSameTebBits:9;
-        };
-        USHORT SameTebFlags;
-    };
-    PVOID TxnScopeEntercallback;
-    PVOID TxnScopeExitCAllback;
-    PVOID TxnScopeContext;
-    ULONG LockCount;
-    ULONG ProcessRundown;
-    ULONGLONG LastSwitchTime;
-    ULONGLONG TotalSwitchOutTime;
-    LARGE_INTEGER WaitReasonBitMap;
-#else
-    UCHAR SafeThunkCall;
-    UCHAR BooleanSpare[3];
-#endif
-} TEB, *PTEB;
 
 #ifdef NTOS_MODE_USER
 
@@ -876,7 +707,7 @@ typedef struct _PROCESS_BASIC_INFORMATION
     KPRIORITY BasePriority;
     ULONG_PTR UniqueProcessId;
     ULONG_PTR InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
+} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
 typedef struct _PROCESS_ACCESS_TOKEN
 {
@@ -1017,7 +848,6 @@ typedef struct _PSP_RATE_APC
 typedef struct _ETHREAD
 {
     KTHREAD Tcb;
-    PVOID Padding;
     LARGE_INTEGER CreateTime;
     union
     {
@@ -1059,7 +889,7 @@ typedef struct _ETHREAD
 #endif
     PPS_IMPERSONATION_INFORMATION ImpersonationInfo;
     LIST_ENTRY IrpList;
-    ULONG TopLevelIrp;
+    ULONG_PTR TopLevelIrp;
     PDEVICE_OBJECT DeviceToVerify;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PPSP_RATE_APC RateControlApc;

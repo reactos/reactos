@@ -220,59 +220,59 @@ static HRESULT WINAPI InternetExplorer_get_Type(IWebBrowser2 *iface, BSTR *Type)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_Left(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI InternetExplorer_get_Left(IWebBrowser2 *iface, LONG *pl)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pl);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_put_Left(IWebBrowser2 *iface, long Left)
+static HRESULT WINAPI InternetExplorer_put_Left(IWebBrowser2 *iface, LONG Left)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, Left);
+    FIXME("(%p)->(%d)\n", This, Left);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_Top(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI InternetExplorer_get_Top(IWebBrowser2 *iface, LONG *pl)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pl);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_put_Top(IWebBrowser2 *iface, long Top)
+static HRESULT WINAPI InternetExplorer_put_Top(IWebBrowser2 *iface, LONG Top)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, Top);
+    FIXME("(%p)->(%d)\n", This, Top);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_Width(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI InternetExplorer_get_Width(IWebBrowser2 *iface, LONG *pl)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pl);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_put_Width(IWebBrowser2 *iface, long Width)
+static HRESULT WINAPI InternetExplorer_put_Width(IWebBrowser2 *iface, LONG Width)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, Width);
+    FIXME("(%p)->(%d)\n", This, Width);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_Height(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI InternetExplorer_get_Height(IWebBrowser2 *iface, LONG *pl)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pl);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_put_Height(IWebBrowser2 *iface, long Height)
+static HRESULT WINAPI InternetExplorer_put_Height(IWebBrowser2 *iface, LONG Height)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, Height);
+    FIXME("(%p)->(%d)\n", This, Height);
     return E_NOTIMPL;
 }
 
@@ -332,7 +332,7 @@ static HRESULT WINAPI InternetExplorer_get_Name(IWebBrowser2 *iface, BSTR *Name)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, long *pHWND)
+static HRESULT WINAPI InternetExplorer_get_HWND(IWebBrowser2 *iface, LONG *pHWND)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pHWND);
@@ -422,8 +422,25 @@ static HRESULT WINAPI InternetExplorer_get_MenuBar(IWebBrowser2 *iface, VARIANT_
 static HRESULT WINAPI InternetExplorer_put_MenuBar(IWebBrowser2 *iface, VARIANT_BOOL Value)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, Value);
-    return E_NOTIMPL;
+    HMENU menu = NULL;
+
+    TRACE("(%p)->(%x)\n", This, Value);
+
+    if((menu = GetMenu(This->frame_hwnd)))
+        DestroyMenu(menu);
+
+    menu = NULL;
+
+    if(Value)
+        menu = LoadMenuW(shdocvw_hinstance, MAKEINTRESOURCEW(IDR_BROWSE_MAIN_MENU));
+
+    if(!SetMenu(This->frame_hwnd, menu))
+    {
+        DestroyMenu(menu);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_get_FullScreen(IWebBrowser2 *iface, VARIANT_BOOL *pbFullScreen)

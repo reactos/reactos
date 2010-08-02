@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
@@ -23,14 +23,11 @@
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#ifndef __CHKDSK_H__
-#define __CHKDSK_H__
+#pragma once
 
 NTSTATUS
 ChkdskPartition(
     IN PUNICODE_STRING DriveRoot,
     IN PFILE_SYSTEM_ITEM FileSystem);
-
-#endif /* __CHKDSK_H__ */
 
 /* EOF */

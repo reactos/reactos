@@ -17,6 +17,7 @@ i8042Create(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	UNREFERENCED_PARAMETER(DeviceObject);
 	TRACE_(I8042PRT, "IRP_MJ_CREATE\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -30,6 +31,7 @@ i8042Cleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	UNREFERENCED_PARAMETER(DeviceObject);
 	TRACE_(I8042PRT, "IRP_MJ_CLEANUP\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -43,6 +45,7 @@ i8042Close(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	UNREFERENCED_PARAMETER(DeviceObject);
 	TRACE_(I8042PRT, "IRP_MJ_CLOSE\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;

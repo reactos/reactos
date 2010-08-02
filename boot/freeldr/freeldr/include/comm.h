@@ -14,19 +14,15 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __RS232_H
-#define __RS232_H
+#pragma once
 
 BOOLEAN Rs232PortInitialize(ULONG ComPort, ULONG BaudRate);
 BOOLEAN Rs232PortGetByte(PUCHAR ByteRecieved);
 BOOLEAN Rs232PortPollByte(PUCHAR ByteRecieved);
 VOID Rs232PortPutByte(UCHAR ByteToSend);
 BOOLEAN Rs232PortInUse(ULONG Base);
-
-
-#endif // defined __RS232_H

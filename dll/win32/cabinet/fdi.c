@@ -77,7 +77,7 @@ THOSE_ZIP_CONSTS;
 
 struct fdi_file {
   struct fdi_file *next;               /* next file in sequence          */
-  LPCSTR filename;                     /* output name of file            */
+  LPSTR filename;                     /* output name of file            */
   int    fh;                           /* open file handle or NULL       */
   cab_ULONG length;                    /* uncompressed length of file    */
   cab_ULONG offset;                    /* uncompressed offset in folder  */
@@ -2260,7 +2260,7 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
   return DECR_OK;
 }
 
-static void free_decompression_temps(HFDI hfdi, struct fdi_folder *fol,
+static void free_decompression_temps(HFDI hfdi, const struct fdi_folder *fol,
   fdi_decomp_state *decomp_state)
 {
   switch (fol->comp_type & cffoldCOMPTYPE_MASK) {
@@ -2279,9 +2279,10 @@ static void free_decompression_temps(HFDI hfdi, struct fdi_folder *fol,
   }
 }
 
-static void free_decompression_mem(HFDI hfdi, struct fdi_folder *fol,
+static void free_decompression_mem(HFDI hfdi,
   fdi_decomp_state *decomp_state, struct fdi_file *file)
 {
+  struct fdi_folder *fol;
   while (decomp_state) {
     fdi_decomp_state *prev_fds;
 
@@ -2300,7 +2301,7 @@ static void free_decompression_mem(HFDI hfdi, struct fdi_folder *fol,
     }
     while (CAB(firstfile)) {
       file = CAB(firstfile);
-      if (file->filename) PFDI_FREE(hfdi, (void *)file->filename);
+      if (file->filename) PFDI_FREE(hfdi, file->filename);
       CAB(firstfile) = CAB(firstfile)->next;
       PFDI_FREE(hfdi, file);
     }
@@ -2518,6 +2519,7 @@ BOOL __cdecl FDICopy(
   /* slight overestimation here to save CPU cycles in the developer's brain */
   if ((pathlen + filenamelen + 3) > MAX_PATH) {
     ERR("MAX_PATH exceeded.\n");
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_INT(hfdi)->perf->erfOper = FDIERROR_CABINET_NOT_FOUND;
     PFDI_INT(hfdi)->perf->erfType = ERROR_FILE_NOT_FOUND;
     PFDI_INT(hfdi)->perf->fError = TRUE;
@@ -2539,6 +2541,7 @@ BOOL __cdecl FDICopy(
   /* get a handle to the cabfile */
   cabhf = PFDI_OPEN(hfdi, fullpath, _O_RDONLY|_O_BINARY, _S_IREAD | _S_IWRITE);
   if (cabhf == -1) {
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_INT(hfdi)->perf->erfOper = FDIERROR_CABINET_NOT_FOUND;
     PFDI_INT(hfdi)->perf->fError = TRUE;
     SetLastError(ERROR_FILE_NOT_FOUND);
@@ -2547,6 +2550,7 @@ BOOL __cdecl FDICopy(
 
   if (cabhf == 0) {
     ERR("PFDI_OPEN returned zero for %s.\n", fullpath);
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_INT(hfdi)->perf->erfOper = FDIERROR_CABINET_NOT_FOUND;
     PFDI_INT(hfdi)->perf->erfType = ERROR_FILE_NOT_FOUND;
     PFDI_INT(hfdi)->perf->fError = TRUE;
@@ -2557,6 +2561,7 @@ BOOL __cdecl FDICopy(
   /* check if it's really a cabfile. Note that this doesn't implement the bug */
   if (!FDI_read_entries(hfdi, cabhf, &fdici, &(CAB(mii)))) {
     ERR("FDIIsCabinet failed.\n");
+    PFDI_FREE(hfdi, decomp_state);
     PFDI_CLOSE(hfdi, cabhf);
     return FALSE;
   }
@@ -2896,17 +2901,17 @@ BOOL __cdecl FDICopy(
   }
 
   free_decompression_temps(hfdi, fol, decomp_state);
-  free_decompression_mem(hfdi, fol, decomp_state, file);
+  free_decompression_mem(hfdi, decomp_state, file);
  
   return TRUE;
 
   bail_and_fail: /* here we free ram before error returns */
 
-  free_decompression_temps(hfdi, fol, decomp_state);
+  if (fol) free_decompression_temps(hfdi, fol, decomp_state);
 
   if (filehf) PFDI_CLOSE(hfdi, filehf);
 
-  free_decompression_mem(hfdi, fol, decomp_state, file);
+  free_decompression_mem(hfdi, decomp_state, file);
 
   return FALSE;
 }

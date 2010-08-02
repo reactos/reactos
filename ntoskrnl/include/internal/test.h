@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_TEST_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_TEST_H
+#pragma once
 
 typedef VOID
 NTAPI
@@ -35,5 +34,3 @@ PObReferenceObjectByHandle(
     PVOID* Object,
     POBJECT_HANDLE_INFORMATION HandleInformation
 );
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_TEST_H */

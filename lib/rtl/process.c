@@ -5,6 +5,7 @@
  * PURPOSE:           Process functions
  * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)
  *                    Ariadne (ariadne@xs4all.nl)
+ *                    Eric Kohl
  */
 
 /* INCLUDES ****************************************************************/
@@ -42,7 +43,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to read image file from disk\n");
-        return(Status);
+        return Status;
     }
 
     /* Now create a section for this image */
@@ -93,7 +94,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to reserve 1MB of space \n");
-            return(Status);
+            return Status;
         }
     }
 
@@ -117,7 +118,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to allocate Environment Block\n");
-            return(Status);
+            return Status;
         }
 
         /* Write the Environment Block */
@@ -143,7 +144,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to allocate Parameter Block\n");
-        return(Status);
+        return Status;
     }
 
     /* Write the Parameter Block */
@@ -244,7 +245,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     {
         DPRINT1("Could not create Kernel Process Object\n");
         ZwClose(hSection);
-        return(Status);
+        return Status;
     }
 
     /* Get some information on the image */
@@ -258,7 +259,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
         DPRINT1("Could not query Section Info\n");
         ZwClose(ProcessInfo->ProcessHandle);
         ZwClose(hSection);
-        return(Status);
+        return Status;
     }
 
     /* Get some information about the process */
@@ -272,7 +273,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
         DPRINT1("Could not query Process Info\n");
         ZwClose(ProcessInfo->ProcessHandle);
         ZwClose(hSection);
-        return(Status);
+        return Status;
     }
 
     /* Create Process Environment */
@@ -311,47 +312,83 @@ PVOID
 NTAPI
 RtlEncodePointer(IN PVOID Pointer)
 {
-  ULONG Cookie;
-  NTSTATUS Status;
+    ULONG Cookie;
+    NTSTATUS Status;
 
-  Status = ZwQueryInformationProcess(NtCurrentProcess(),
-                                     ProcessCookie,
-                                     &Cookie,
-                                     sizeof(Cookie),
-                                     NULL);
+    Status = ZwQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessCookie,
+                                       &Cookie,
+                                       sizeof(Cookie),
+                                       NULL);
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to receive the process cookie! Status: 0x%lx\n", Status);
+        return Pointer;
+    }
 
-  if(!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to receive the process cookie! Status: 0x%lx\n", Status);
-    return Pointer;
-  }
-
-  return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
+    return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
 }
 
 /*
- * @unimplemented
+ * @implemented
+ */
+PVOID
+NTAPI
+RtlDecodePointer(IN PVOID Pointer)
+{
+    return RtlEncodePointer(Pointer);
+}
+
+/*
+ * @implemented
  */
 PVOID
 NTAPI
 RtlEncodeSystemPointer(IN PVOID Pointer)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    return (PVOID)((ULONG_PTR)Pointer ^ SharedUserData->Cookie);
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
+ * NOTES:
+ *   Implementation based on the documentation from:
+ *   http://www.geoffchappell.com/studies/windows/win32/ntdll/api/rtl/peb/setprocessiscritical.htm
  */
-NTSYSAPI
-VOID
+NTSTATUS
 NTAPI
-RtlSetProcessIsCritical(
-    IN   BOOLEAN   NewValue,
-    OUT  PBOOLEAN  OldValue OPTIONAL,
-    IN   BOOLEAN   IsWinlogon)
+RtlSetProcessIsCritical(IN BOOLEAN NewValue,
+                        OUT PBOOLEAN OldValue OPTIONAL,
+                        IN BOOLEAN NeedBreaks)
 {
-	//TODO
+    ULONG BreakOnTermination = FALSE;
+
+    if (OldValue)
+        *OldValue = FALSE;
+
+    /* Fail, if the critical breaks flag is required but is not set */
+    if (NeedBreaks == TRUE &&
+        !(NtCurrentPeb()->NtGlobalFlag & FLG_ENABLE_SYSTEM_CRIT_BREAKS))
+        return STATUS_UNSUCCESSFUL;
+
+    if (OldValue)
+    {
+        /* Query and return the old break on termination flag for the process */
+        ZwQueryInformationProcess(NtCurrentProcess(),
+                                  ProcessBreakOnTermination,
+                                  &BreakOnTermination,
+                                  sizeof(ULONG),
+                                  NULL);
+        *OldValue = (BOOLEAN)BreakOnTermination;
+    }
+
+    /* Set the break on termination flag for the process */
+    BreakOnTermination = NewValue;
+    return ZwSetInformationProcess(NtCurrentProcess(),
+                                   ProcessBreakOnTermination,
+                                   &BreakOnTermination,
+                                   sizeof(ULONG));
 }
 
 ULONG

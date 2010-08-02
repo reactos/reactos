@@ -1,8 +1,7 @@
 // This is the STL wrapper for classlib/arrays.h from Borland's web site
 // It has been modified to be compatible with vc++ (Paul Branann 5/7/98)
 
-#ifndef STL_ARRAY_AS_VECTOR
-#define STL_ARRAY_AS_VECTOR
+#pragma once
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4786)
@@ -156,5 +155,3 @@ public:
 	}
 
 };
-
-#endif

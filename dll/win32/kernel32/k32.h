@@ -16,9 +16,9 @@
 #include <windows.h>
 #include <tlhelp32.h>
 
-#ifdef __GNUC__
-#include "intrin.h"
-#endif
+/* Redefine NTDDI_VERSION to 2K3 SP1 to get correct NDK definitions */
+#undef NTDDI_VERSION
+#define NTDDI_VERSION NTDDI_WS03SP1
 
 #include <ndk/ntndk.h>
 
@@ -27,6 +27,7 @@
 
 /* C Headers */
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <wchar.h>
 

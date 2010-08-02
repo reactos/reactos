@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H
+#pragma once
 
 /* GLOBAL VARIABLES *********************************************************/
 
@@ -18,15 +17,16 @@ extern ERESOURCE ExpFirmwareTableResource;
 extern LIST_ENTRY ExpFirmwareTableProviderListHead;
 extern BOOLEAN ExpIsWinPEMode;
 extern LIST_ENTRY ExpSystemResourcesList;
-ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
-ULONG ExpUnicodeCaseTableDataOffset;
-PVOID ExpNlsSectionPointer;
+extern ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
+extern ULONG ExpUnicodeCaseTableDataOffset;
+extern PVOID ExpNlsSectionPointer;
 extern CHAR NtBuildLab[];
 extern ULONG CmNtCSDVersion;
 extern ULONG NtGlobalFlag;
 extern ULONG ExpInitializationPhase;
 extern ULONG ExpAltTimeZoneBias;
 extern LIST_ENTRY ExSystemLookasideListHead;
+extern PCALLBACK_OBJECT PowerStateCallback;
 
 typedef struct _EXHANDLE
 {
@@ -158,6 +158,10 @@ ExRefreshTimeZoneInformation(
 VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID);
+
+VOID
+NTAPI
+ExSwapinWorkerThreads(IN BOOLEAN AllowSwap);
 
 VOID
 NTAPI
@@ -574,8 +578,8 @@ ExInsertFastReference(IN OUT PEX_FAST_REF FastRef,
     return TRUE;   
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 ExReleaseFastReference(IN PEX_FAST_REF FastRef,
                        IN PVOID Object)
 {
@@ -609,8 +613,8 @@ ExReleaseFastReference(IN PEX_FAST_REF FastRef,
     return TRUE;
 }
 
-EX_FAST_REF
 FORCEINLINE
+EX_FAST_REF
 ExSwapFastReference(IN PEX_FAST_REF FastRef,
                     IN PVOID Object)
 {
@@ -636,8 +640,8 @@ ExSwapFastReference(IN PEX_FAST_REF FastRef,
     return OldValue;
 }
 
-EX_FAST_REF
 FORCEINLINE
+EX_FAST_REF
 ExCompareSwapFastReference(IN PEX_FAST_REF FastRef,
                            IN PVOID Object,
                            IN PVOID OldObject)
@@ -874,10 +878,10 @@ ExWaitForUnblockPushLock(
 );
 
 /*++
- * @name ExInitializePushLock
+ * @name _ExInitializePushLock
  * INTERNAL MACRO
  *
- *     The ExInitializePushLock macro initializes a PushLock.
+ *     The _ExInitializePushLock macro initializes a PushLock.
  *
  * @params PushLock
  *         Pointer to the pushlock which is to be initialized.
@@ -889,11 +893,12 @@ ExWaitForUnblockPushLock(
  *--*/
 FORCEINLINE
 VOID
-ExInitializePushLock(IN PULONG_PTR PushLock)
+_ExInitializePushLock(IN PULONG_PTR PushLock)
 {
     /* Set the value to 0 */
     *PushLock = 0;
 }
+#define ExInitializePushLock _ExInitializePushLock
 
 /*++
  * @name ExAcquirePushLockExclusive
@@ -1252,7 +1257,7 @@ _ExReleaseFastMutexUnsafe(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
+        KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
 }
 
@@ -1293,7 +1298,7 @@ _ExReleaseFastMutex(IN OUT PFAST_MUTEX FastMutex)
     if (InterlockedIncrement(&FastMutex->Count) <= 0)
     {
         /* Someone was waiting for it, signal the waiter */
-        KeSetEventBoostPriority(&FastMutex->Gate, NULL);
+        KeSetEventBoostPriority(&FastMutex->Event, NULL);
     }
     
     /* Lower IRQL back */
@@ -1410,5 +1415,3 @@ XIPInit(
 
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
-
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

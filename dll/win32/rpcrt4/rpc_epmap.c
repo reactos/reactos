@@ -596,7 +596,7 @@ RPC_STATUS WINAPI TowerConstruct(
     return RPC_S_OK;
 }
 
-void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t len)
+void __RPC_FAR * __RPC_USER MIDL_user_allocate(SIZE_T len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
 }

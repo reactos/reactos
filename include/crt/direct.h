@@ -54,10 +54,10 @@ extern "C" {
 
 #define diskfree_t _diskfree_t
 
-  char *__cdecl getcwd(char *_DstBuf,int _SizeInBytes);
-  int __cdecl chdir(const char *_Path);
-  int __cdecl mkdir(const char *_Path);
-  int __cdecl rmdir(const char *_Path);
+  _CRTIMP char *__cdecl getcwd(char *_DstBuf,int _SizeInBytes);
+  _CRTIMP int __cdecl chdir(const char *_Path);
+  _CRTIMP int __cdecl mkdir(const char *_Path);
+  _CRTIMP int __cdecl rmdir(const char *_Path);
 #endif
 
 #ifdef __cplusplus

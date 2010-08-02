@@ -13,9 +13,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * PURPOSE:
  *     PCI configuration constants
@@ -23,8 +23,7 @@
  *     01-Sept-2003 vizzini - Created
  */
 
-#ifndef _PCI_
-#define _PCI_
+#pragma once
 
 /* PCI Config Space Offset Definitions */
 #define PCI_PCIID    0x0        /* pci id - query 32 bits */
@@ -67,5 +66,3 @@
 #define PCI_RTABORT  0x1000     /* received target abort */
 #define PCI_SERR     0x2000     /* signalled error */
 #define PCI_PERR     0x4000     /* parity error */
-
-#endif /* _PCI_ */

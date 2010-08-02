@@ -101,6 +101,8 @@ GpStatus WINGDIPAPI GdipClonePen(GpPen *pen, GpPen **clonepen)
     GdipCloneCustomLineCap(pen->customend, &(*clonepen)->customend);
     GdipCloneBrush(pen->brush, &(*clonepen)->brush);
 
+    TRACE("<-- %p\n", *clonepen);
+
     return Ok;
 }
 
@@ -153,6 +155,8 @@ GpStatus WINGDIPAPI GdipCreatePen2(GpBrush *brush, REAL width, GpUnit unit,
     gp_pen->brush = clone_brush;
 
     *pen = gp_pen;
+
+    TRACE("<-- %p\n", *pen);
 
     return Ok;
 }
@@ -389,6 +393,8 @@ GpStatus WINGDIPAPI GdipResetPenTransform(GpPen *pen)
 {
     static int calls;
 
+    TRACE("(%p)\n", pen);
+
     if(!pen)
         return InvalidParameter;
 
@@ -402,11 +408,29 @@ GpStatus WINGDIPAPI GdipScalePenTransform(GpPen *pen, REAL sx, REAL sy, GpMatrix
 {
     static int calls;
 
+    TRACE("(%p,%0.2f,%0.2f,%u)\n", pen, sx, sy, order);
+
     if(!pen)
         return InvalidParameter;
 
     if(!(calls++))
         FIXME("(%p, %.2f, %.2f, %d) stub\n", pen, sx, sy, order);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipMultiplyPenTransform(GpPen *pen, GDIPCONST GpMatrix *matrix,
+    GpMatrixOrder order)
+{
+    static int calls;
+
+    TRACE("(%p,%p,%u)\n", pen, matrix, order);
+
+    if(!pen)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
 
     return NotImplemented;
 }
@@ -433,6 +457,16 @@ GpStatus WINGDIPAPI GdipSetPenColor(GpPen *pen, ARGB argb)
         return NotImplemented;
 
     return GdipSetSolidFillColor(((GpSolidFill*)pen->brush), argb);
+}
+
+GpStatus WINGDIPAPI GdipGetPenCompoundCount(GpPen *pen, INT *count)
+{
+    FIXME("(%p, %p): stub\n", pen, count);
+
+    if (!pen || !count)
+        return InvalidParameter;
+
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipSetPenCompoundArray(GpPen *pen, GDIPCONST REAL *dash,

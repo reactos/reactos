@@ -660,8 +660,9 @@ BOOL WINAPI GetStandardColorSpaceProfileW( PCWSTR machine, DWORD id, PWSTR profi
     GetColorDirectoryW( machine, rgbprofile, &len );
 
     switch (id)
-    {
-        case SPACE_RGB: /* 'RGB ' */
+        case LCS_sRGB:
+        case LCS_WINDOWS_COLOR_SPACE: /* FIXME */
+        {
             lstrcatW( rgbprofile, rgbprofilefile );
             len = lstrlenW( rgbprofile ) * sizeof(WCHAR);
 

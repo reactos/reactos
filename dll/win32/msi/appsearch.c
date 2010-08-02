@@ -50,7 +50,7 @@ typedef struct tagMSISIGNATURE
     LPWSTR   Languages;
 }MSISIGNATURE;
 
-static void ACTION_VerStrToInteger(LPCWSTR verStr, PDWORD ms, PDWORD ls)
+void msi_parse_version_string(LPCWSTR verStr, PDWORD ms, PDWORD ls)
 {
     const WCHAR *ptr;
     int x1 = 0, x2 = 0, x3 = 0, x4 = 0;
@@ -109,13 +109,13 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
     minVersion = msi_dup_record_field(row,3);
     if (minVersion)
     {
-        ACTION_VerStrToInteger(minVersion, &sig->MinVersionMS, &sig->MinVersionLS);
+        msi_parse_version_string( minVersion, &sig->MinVersionMS, &sig->MinVersionLS );
         msi_free( minVersion );
     }
     maxVersion = msi_dup_record_field(row,4);
     if (maxVersion)
     {
-        ACTION_VerStrToInteger(maxVersion, &sig->MaxVersionMS, &sig->MaxVersionLS);
+        msi_parse_version_string( maxVersion, &sig->MaxVersionMS, &sig->MaxVersionLS );
         msi_free( maxVersion );
     }
     sig->MinSize = MSI_RecordGetInteger(row,5);
@@ -162,8 +162,6 @@ static LPWSTR app_search_file(LPWSTR path, MSISIGNATURE *sig)
     LPWSTR val = NULL;
     LPBYTE buffer;
 
-    static const WCHAR root[] = {'\\',0};
-
     if (!sig->File)
     {
         PathRemoveFileSpecW(path);
@@ -178,7 +176,8 @@ static LPWSTR app_search_file(LPWSTR path, MSISIGNATURE *sig)
     }
 
     attr = GetFileAttributesW(path);
-    if (attr == INVALID_FILE_ATTRIBUTES || attr == FILE_ATTRIBUTE_DIRECTORY)
+    if (attr == INVALID_FILE_ATTRIBUTES ||
+        (attr & FILE_ATTRIBUTE_DIRECTORY))
         return NULL;
 
     size = GetFileVersionInfoSizeW(path, &handle);
@@ -192,7 +191,7 @@ static LPWSTR app_search_file(LPWSTR path, MSISIGNATURE *sig)
     if (!GetFileVersionInfoW(path, 0, size, buffer))
         goto done;
 
-    if (!VerQueryValueW(buffer, root, (LPVOID)&info, &size) || !info)
+    if (!VerQueryValueW(buffer, szBackSlash, (LPVOID)&info, &size) || !info)
         goto done;
 
     if (sig->MinVersionLS || sig->MinVersionMS)
@@ -298,7 +297,8 @@ static UINT ACTION_AppSearchComponents(MSIPACKAGE *package, LPWSTR *appValue, MS
         lstrcatW(path, MSI_RecordGetString(rec, 2));
 
         attr = GetFileAttributesW(path);
-        if (attr != INVALID_FILE_ATTRIBUTES && attr != FILE_ATTRIBUTE_DIRECTORY)
+        if (attr != INVALID_FILE_ATTRIBUTES &&
+            !(attr & FILE_ATTRIBUTE_DIRECTORY))
             *appValue = strdupW(path);
     }
 
@@ -445,7 +445,8 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
     if (sz == 0)
         goto end;
 
-    if ((ptr = strchrW((LPWSTR)value, '"')) && (end = strchrW(++ptr, '"')))
+    if ((regType == REG_SZ || regType == REG_EXPAND_SZ) &&
+        (ptr = strchrW((LPWSTR)value, '"')) && (end = strchrW(++ptr, '"')))
         *end = '\0';
     else
         ptr = (LPWSTR)value;
@@ -462,7 +463,7 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNAT
         ACTION_ConvertRegValue(regType, value, sz, appValue);
         break;
     default:
-        FIXME("AppSearch unimplemented for type %d (key path %s, value %s)\n",
+        FIXME("unimplemented for type %d (key path %s, value %s)\n",
               type, debugstr_w(keyPath), debugstr_w(valueName));
     }
 end:
@@ -631,12 +632,11 @@ static UINT ACTION_FileVersionMatches(const MSISIGNATURE *sig, LPCWSTR filePath,
 
             if (buf)
             {
-                static const WCHAR rootW[] = { '\\',0 };
                 UINT versionLen;
                 LPVOID subBlock = NULL;
 
                 if (GetFileVersionInfoW(filePath, 0, size, buf))
-                    VerQueryValueW(buf, rootW, &subBlock, &versionLen);
+                    VerQueryValueW(buf, szBackSlash, &subBlock, &versionLen);
                 if (subBlock)
                 {
                     VS_FIXEDFILEINFO *info = subBlock;
@@ -739,9 +739,8 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
     size_t dirLen = lstrlenW(dir), fileLen = lstrlenW(sig->File);
     WCHAR subpath[MAX_PATH];
     WCHAR *buf;
+    DWORD len;
 
-    static const WCHAR dot[] = {'.',0};
-    static const WCHAR dotdot[] = {'.','.',0};
     static const WCHAR starDotStarW[] = { '*','.','*',0 };
 
     TRACE("Searching directory %s for file %s, depth %d\n", debugstr_w(dir),
@@ -755,7 +754,8 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
      * here.  Add two because we might need to add a backslash if the dir name
      * isn't backslash-terminated.
      */
-    buf = msi_alloc( (dirLen + max(fileLen, strlenW(starDotStarW)) + 2) * sizeof(WCHAR));
+    len = dirLen + max(fileLen, strlenW(starDotStarW)) + 2;
+    buf = msi_alloc(len * sizeof(WCHAR));
     if (!buf)
         return ERROR_OUTOFMEMORY;
 
@@ -790,8 +790,8 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
         if (hFind != INVALID_HANDLE_VALUE)
         {
             if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY &&
-                lstrcmpW(findData.cFileName, dot) &&
-                lstrcmpW(findData.cFileName, dotdot))
+                lstrcmpW(findData.cFileName, szDot) &&
+                lstrcmpW(findData.cFileName, szDotDot))
             {
                 lstrcpyW(subpath, dir);
                 PathAppendW(subpath, findData.cFileName);
@@ -802,8 +802,8 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
             while (rc == ERROR_SUCCESS && !*appValue &&
                    FindNextFileW(hFind, &findData) != 0)
             {
-                if (!lstrcmpW(findData.cFileName, dot) ||
-                    !lstrcmpW(findData.cFileName, dotdot))
+                if (!lstrcmpW(findData.cFileName, szDot) ||
+                    !lstrcmpW(findData.cFileName, szDotDot))
                     continue;
 
                 lstrcpyW(subpath, dir);
@@ -817,7 +817,7 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, LPWSTR *appValue,
         }
     }
 
-    if (!*appValue)
+    if (*appValue != buf)
         msi_free(buf);
 
     return rc;
@@ -901,7 +901,8 @@ static UINT ACTION_SearchDirectory(MSIPACKAGE *package, MSISIGNATURE *sig,
     }
 
     attr = GetFileAttributesW(val);
-    if ((attr & FILE_ATTRIBUTE_DIRECTORY) &&
+    if (attr != INVALID_FILE_ATTRIBUTES &&
+        (attr & FILE_ATTRIBUTE_DIRECTORY) &&
         val && val[lstrlenW(val) - 1] != '\\')
     {
         val = msi_realloc(val, (lstrlenW(val) + 2) * sizeof(WCHAR));
@@ -928,12 +929,13 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
         'D','r','L','o','c','a','t','o','r',' ',
         'w','h','e','r','e',' ',
         'S','i','g','n','a','t','u','r','e','_',' ','=',' ', '\'','%','s','\'',0};
-    LPWSTR parentName = NULL, parent = NULL;
+    LPWSTR parent = NULL;
+    LPCWSTR parentName;
     WCHAR path[MAX_PATH];
     WCHAR expanded[MAX_PATH];
     MSIRECORD *row;
     int depth;
-    DWORD sz;
+    DWORD sz, attr;
     UINT rc;
 
     TRACE("%s\n", debugstr_w(sig->Name));
@@ -948,14 +950,18 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
     }
 
     /* check whether parent is set */
-    parentName = msi_dup_record_field(row,2);
+    parentName = MSI_RecordGetString(row, 2);
     if (parentName)
     {
         MSISIGNATURE parentSig;
 
         rc = ACTION_AppSearchSigName(package, parentName, &parentSig, &parent);
         ACTION_FreeSignature(&parentSig);
-        msi_free(parentName);
+        if (!parent)
+        {
+            msiobj_release(&row->hdr);
+            return ERROR_SUCCESS;
+        }
     }
 
     sz = MAX_PATH;
@@ -966,11 +972,16 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
     else
         depth = MSI_RecordGetInteger(row,4);
 
-    ACTION_ExpandAnyPath(package, path, expanded, MAX_PATH);
+    if (sz)
+        ACTION_ExpandAnyPath(package, path, expanded, MAX_PATH);
+    else
+        strcpyW(expanded, path);
 
     if (parent)
     {
-        if (!(GetFileAttributesW(parent) & FILE_ATTRIBUTE_DIRECTORY))
+        attr = GetFileAttributesW(parent);
+        if (attr != INVALID_FILE_ATTRIBUTES &&
+            !(attr & FILE_ATTRIBUTE_DIRECTORY))
         {
             PathRemoveFileSpecW(parent);
             PathAddBackslashW(parent);
@@ -979,7 +990,7 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
         strcpyW(path, parent);
         strcatW(path, expanded);
     }
-    else
+    else if (sz)
         strcpyW(path, expanded);
 
     PathAddBackslashW(path);
@@ -1020,25 +1031,34 @@ static UINT ACTION_AppSearchSigName(MSIPACKAGE *package, LPCWSTR sigName,
 static UINT iterate_appsearch(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = param;
-    LPWSTR propName, sigName, value = NULL;
+    LPCWSTR propName, sigName;
+    LPWSTR value = NULL;
     MSISIGNATURE sig;
+    MSIRECORD *uirow;
     UINT r;
 
     /* get property and signature */
-    propName = msi_dup_record_field(row,1);
-    sigName = msi_dup_record_field(row,2);
+    propName = MSI_RecordGetString(row, 1);
+    sigName = MSI_RecordGetString(row, 2);
 
     TRACE("%s %s\n", debugstr_w(propName), debugstr_w(sigName));
 
     r = ACTION_AppSearchSigName(package, sigName, &sig, &value);
     if (value)
     {
-        MSI_SetPropertyW(package, propName, value);
+        r = msi_set_property( package->db, propName, value );
+        if (r == ERROR_SUCCESS && !strcmpW( propName, cszSourceDir ))
+            msi_reset_folders( package, TRUE );
+
         msi_free(value);
     }
     ACTION_FreeSignature(&sig);
-    msi_free(propName);
-    msi_free(sigName);
+
+    uirow = MSI_CreateRecord( 2 );
+    MSI_RecordSetStringW( uirow, 1, propName );
+    MSI_RecordSetStringW( uirow, 2, sigName );
+    ui_actiondata( package, szAppSearch, uirow );
+    msiobj_release( &uirow->hdr );
 
     return r;
 }
@@ -1051,6 +1071,14 @@ UINT ACTION_AppSearch(MSIPACKAGE *package)
         'A','p','p','S','e','a','r','c','h',0};
     MSIQUERY *view = NULL;
     UINT r;
+
+    if (check_unique_action(package, szAppSearch))
+    {
+        TRACE("Skipping AppSearch action: already done in UI sequence\n");
+        return ERROR_SUCCESS;
+    }
+    else
+        register_unique_action(package, szAppSearch);
 
     r = MSI_OpenQuery( package->db, &view, query );
     if (r != ERROR_SUCCESS)
@@ -1071,7 +1099,6 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     UINT r = ERROR_SUCCESS;
 
     static const WCHAR success[] = {'C','C','P','_','S','u','c','c','e','s','s',0};
-    static const WCHAR one[] = {'1',0};
 
     signature = MSI_RecordGetString(row, 1);
 
@@ -1081,7 +1108,7 @@ static UINT ITERATE_CCPSearch(MSIRECORD *row, LPVOID param)
     if (value)
     {
         TRACE("Found signature %s\n", debugstr_w(signature));
-        MSI_SetPropertyW(package, success, one);
+        msi_set_property(package->db, success, szOne);
         msi_free(value);
         r = ERROR_NO_MORE_ITEMS;
     }
@@ -1099,6 +1126,14 @@ UINT ACTION_CCPSearch(MSIPACKAGE *package)
         'C','C','P','S','e','a','r','c','h',0};
     MSIQUERY *view = NULL;
     UINT r;
+
+    if (check_unique_action(package, szCCPSearch))
+    {
+        TRACE("Skipping AppSearch action: already done in UI sequence\n");
+        return ERROR_SUCCESS;
+    }
+    else
+        register_unique_action(package, szCCPSearch);
 
     r = MSI_OpenQuery(package->db, &view, query);
     if (r != ERROR_SUCCESS)

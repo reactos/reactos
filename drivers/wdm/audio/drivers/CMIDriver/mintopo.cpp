@@ -29,18 +29,22 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "mintopo.hpp"
 #include "mintopotables.hpp"
 #define NTSTRSAFE_LIB //for Windows 2000 compatibility
-#include "NtStrsafe.h"
+#include "ntstrsafe.h"
 
-#pragma code_seg("PAGE")
+#ifdef _MSC_VER
+#pragma code_seg("PAGE") /* warning - ignored by GCC compiler */
+#endif
 
-NTSTATUS CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
+const GUID KSPROPSETID_CMI = {0x2B81CDBB, 0xEE6C, 0x4ECC, {0x8A, 0xA5, 0x9A, 0x18, 0x8B, 0x02, 0x3D, 0xFF}};
+
+HRESULT NTAPI CreateMiniportTopologyCMI(PUNKNOWN* Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
 	//PAGED_CODE();
 	//ASSERT(Unknown);
 	STD_CREATE_BODY_(CCMITopology,Unknown,UnknownOuter,PoolType,PMINIPORTTOPOLOGY);
 }
 
-STDMETHODIMP CCMITopology::NonDelegatingQueryInterface(REFIID Interface, PVOID* Object)
+STDMETHODIMP CCMITopology::QueryInterface(REFIID Interface, PVOID* Object)
 {
 	//PAGED_CODE();
 	//ASSERT(Object);
@@ -171,7 +175,7 @@ STDMETHODIMP CCMITopology::loadMixerSettingsFromRegistry()
 	PropertyRequest.ValueSize    = sizeof(DWORD);
 	PropertyRequest.PropertyItem = &PropertyItem;
 
-	for (int i=0;i < SIZEOF_ARRAY(TopologyNodes); i++) {
+	for ( UINT i=0; i < SIZEOF_ARRAY(TopologyNodes); i++ ) {
 		PropertyRequest.Node = i;
 
 		Channel = CHAN_LEFT;
@@ -308,7 +312,7 @@ STDMETHODIMP CCMITopology::storeMixerSettingsToRegistry()
 	PropertyRequest.ValueSize    = sizeof(DWORD);
 	PropertyRequest.PropertyItem = &PropertyItem;
 
-	for (int i=0;i < SIZEOF_ARRAY(TopologyNodes); i++) {
+	for ( UINT i=0; i < SIZEOF_ARRAY(TopologyNodes); i++ ) {
 		PropertyRequest.Node = i;
 		if (IsEqualGUIDAligned(*(TopologyNodes[i].Type), KSNODETYPE_VOLUME)) {
 			PropertyRequest.Node = i;
@@ -471,7 +475,8 @@ NTSTATUS NTAPI PropertyHandler_OnOff(PPCPROPERTY_REQUEST PropertyRequest)
 	CCMITopology *that = (CCMITopology *) ((PMINIPORTTOPOLOGY) PropertyRequest->MajorTarget);
 
 	NTSTATUS  ntStatus = STATUS_INVALID_PARAMETER;
-	UInt8     data, mask, reg;
+	//UInt8     data, mask, reg;
+	UInt8     mask, reg;
 	LONG      channel;
 
 	if (PropertyRequest->Node == ULONG(-1)) {
@@ -1040,7 +1045,7 @@ static NTSTATUS BasicSupportHandler(PPCPROPERTY_REQUEST PropertyRequest)
 
 			PKSPROPERTY_STEPPING_LONG Range = PKSPROPERTY_STEPPING_LONG(Members + 1);
 
-			for (int i=0;i<SIZEOF_ARRAY(VolTable);i++) {
+			for ( UINT i=0; i < SIZEOF_ARRAY(VolTable); i++ ) {
 				if (VolTable[i].node == PropertyRequest->Node) {
 					Range->Bounds.SignedMaximum = (VolTable[i].max << 16);
 					Range->Bounds.SignedMinimum = (VolTable[i].min << 16);
@@ -1108,7 +1113,7 @@ NTSTATUS NTAPI PropertyHandler_Level(PPCPROPERTY_REQUEST PropertyRequest)
 
 			PLONG Level = (PLONG)PropertyRequest->Value;
 
-			for (int i=0;i<SIZEOF_ARRAY(VolTable);i++)
+			for ( UINT i=0; i <SIZEOF_ARRAY(VolTable); i++ )
 			{
 				if (VolTable[i].node == PropertyRequest->Node) {
 					if (PropertyRequest->Verb & KSPROPERTY_TYPE_GET) {
@@ -1226,7 +1231,7 @@ NTSTATUS NTAPI PropertyHandler_CpuResources(PPCPROPERTY_REQUEST PropertyRequest)
 
 	NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
 
-	if (PropertyRequest->Node == (ULONG)-1) {
+	if (PropertyRequest->Node == MAXULONG) {
 		return ntStatus;
 	}
 	if (PropertyRequest->Node >= KSNODE_TOPO_INVALID) {

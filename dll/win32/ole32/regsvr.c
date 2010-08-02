@@ -408,9 +408,6 @@ static GUID const CLSID_StdOleLink = {
 static GUID const CLSID_PackagerMoniker = {
     0x00000308, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
 
-static GUID const CLSID_PSFactoryBuffer_actxprxy = {
-    0xB8DA6310, 0xE19B, 0x11D0, {0x93,0x3C,0x00,0xA0,0xC9,0x0D,0xCA,0xA9} };
-
 extern GUID const CLSID_Picture_Metafile;
 extern GUID const CLSID_Picture_Dib;
 
@@ -510,42 +507,35 @@ static struct regsvr_coclass const coclass_list[] = {
  *		interface list
  */
 
-#define INTERFACE_ENTRY(interface, base, clsid32) { &IID_##interface, #interface, base, sizeof(interface##Vtbl)/sizeof(void*), NULL, clsid32 }
-#define BAS_INTERFACE_ENTRY(interface, base) INTERFACE_ENTRY(interface, &IID_##base, NULL)
-#define ACTX_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, &CLSID_PSFactoryBuffer_actxprxy)
-#define LCL_INTERFACE_ENTRY(interface) INTERFACE_ENTRY(interface, NULL, NULL)
+#define INTERFACE_ENTRY(interface, base) { &IID_##interface, #interface, base, sizeof(interface##Vtbl)/sizeof(void*), NULL, NULL }
 
 static const struct regsvr_interface interface_list[] = {
-    LCL_INTERFACE_ENTRY(IUnknown),
-    LCL_INTERFACE_ENTRY(IMalloc),
-    LCL_INTERFACE_ENTRY(IMarshal),
-    BAS_INTERFACE_ENTRY(IMoniker, IPersistStream),
-    LCL_INTERFACE_ENTRY(IMessageFilter),
-    LCL_INTERFACE_ENTRY(IStdMarshalInfo),
-    LCL_INTERFACE_ENTRY(IExternalConnection),
-    LCL_INTERFACE_ENTRY(IMallocSpy),
-    LCL_INTERFACE_ENTRY(IMultiQI),
-    BAS_INTERFACE_ENTRY(IPersistStream, IPersist),
-    BAS_INTERFACE_ENTRY(IPersistStorage, IPersist),
-    BAS_INTERFACE_ENTRY(IPersistFile, IPersist),
-    LCL_INTERFACE_ENTRY(IDataAdviseHolder),
-    LCL_INTERFACE_ENTRY(IOleAdviseHolder),
-    BAS_INTERFACE_ENTRY(IOleInPlaceObject, IOleWindow),
-    BAS_INTERFACE_ENTRY(IOleInPlaceUIWindow, IOleWindow),
-    BAS_INTERFACE_ENTRY(IOleInPlaceActiveObject, IOleWindow),
-    BAS_INTERFACE_ENTRY(IOleInPlaceSite, IOleWindow),
-    BAS_INTERFACE_ENTRY(IOleContainer, IParseDisplayName),
-    BAS_INTERFACE_ENTRY(IOleItemContainer, IOleContainer),
-    LCL_INTERFACE_ENTRY(IDropSource),
-    BAS_INTERFACE_ENTRY(IAdviseSink2, IAdviseSink),
-    BAS_INTERFACE_ENTRY(IViewObject2, IViewObject),
-    BAS_INTERFACE_ENTRY(IOleCache2, IOleCache),
-    LCL_INTERFACE_ENTRY(IClientSecurity),
-    LCL_INTERFACE_ENTRY(IServerSecurity),
-    ACTX_INTERFACE_ENTRY(IEnumGUID),
-    ACTX_INTERFACE_ENTRY(IEnumCATEGORYINFO),
-    ACTX_INTERFACE_ENTRY(ICatRegister),
-    ACTX_INTERFACE_ENTRY(ICatInformation),
+    INTERFACE_ENTRY( IUnknown, NULL ),
+    INTERFACE_ENTRY( IMalloc, NULL ),
+    INTERFACE_ENTRY( IMarshal, NULL ),
+    INTERFACE_ENTRY( IMoniker, &IID_IPersistStream ),
+    INTERFACE_ENTRY( IMessageFilter, NULL ),
+    INTERFACE_ENTRY( IStdMarshalInfo, NULL ),
+    INTERFACE_ENTRY( IExternalConnection, NULL ),
+    INTERFACE_ENTRY( IMallocSpy, NULL ),
+    INTERFACE_ENTRY( IMultiQI, NULL ),
+    INTERFACE_ENTRY( IPersistStream, &IID_IPersist ),
+    INTERFACE_ENTRY( IPersistStorage, &IID_IPersist ),
+    INTERFACE_ENTRY( IPersistFile, &IID_IPersist ),
+    INTERFACE_ENTRY( IDataAdviseHolder, NULL ),
+    INTERFACE_ENTRY( IOleAdviseHolder, NULL ),
+    INTERFACE_ENTRY( IOleInPlaceObject, &IID_IOleWindow ),
+    INTERFACE_ENTRY( IOleInPlaceUIWindow, &IID_IOleWindow ),
+    INTERFACE_ENTRY( IOleInPlaceActiveObject, &IID_IOleWindow ),
+    INTERFACE_ENTRY( IOleInPlaceSite, &IID_IOleWindow ),
+    INTERFACE_ENTRY( IOleContainer, &IID_IParseDisplayName ),
+    INTERFACE_ENTRY( IOleItemContainer, &IID_IOleContainer ),
+    INTERFACE_ENTRY( IDropSource, NULL ),
+    INTERFACE_ENTRY( IAdviseSink2, &IID_IAdviseSink ),
+    INTERFACE_ENTRY( IViewObject2, &IID_IViewObject ),
+    INTERFACE_ENTRY( IOleCache2, &IID_IOleCache ),
+    INTERFACE_ENTRY( IClientSecurity, NULL ),
+    INTERFACE_ENTRY( IServerSecurity, NULL ),
     { NULL }			/* list terminator */
 };
 

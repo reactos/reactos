@@ -5,14 +5,18 @@
 	<include base="setupapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="pnp_client">.</include>
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="wcsnicmp">_wcsnicmp</define>
+
 	<define name="_SETUPAPI_" />
+	<define name="_CFGMGR32_" />
 	<library>pnp_client</library>
 	<library>uuid</library>
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>gdi32</library>
 	<library>comctl32</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>rpcrt4</library>
@@ -36,6 +40,4 @@
 	<file>stubs.c</file>
 	<file>rpc.c</file>
 	<file>setupapi.rc</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

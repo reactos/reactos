@@ -15,7 +15,7 @@
 @ stub TcQueryFlowA
 @ stub TcQueryFlowW
 @ stub TcQueryInterface
-@ stub TcRegisterClient
+@ stdcall TcRegisterClient(long ptr ptr ptr)
 @ stub TcSetFlowA
 @ stub TcSetFlowW
 @ stub TcSetInterface

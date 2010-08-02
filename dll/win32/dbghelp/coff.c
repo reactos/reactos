@@ -108,12 +108,18 @@ static int coff_add_file(struct CoffFileSet* coff_files, struct module* module,
 
     if (coff_files->nfiles + 1 >= coff_files->nfiles_alloc)
     {
-	coff_files->nfiles_alloc += 10;
-        coff_files->files = (coff_files->files) ?
-            HeapReAlloc(GetProcessHeap(), 0, coff_files->files,
-                        coff_files->nfiles_alloc * sizeof(struct CoffFile)) :
-            HeapAlloc(GetProcessHeap(), 0,
-                      coff_files->nfiles_alloc * sizeof(struct CoffFile));
+        if (coff_files->files)
+        {
+            coff_files->nfiles_alloc *= 2;
+            coff_files->files = HeapReAlloc(GetProcessHeap(), 0, coff_files->files,
+                                            coff_files->nfiles_alloc * sizeof(struct CoffFile));
+        }
+        else
+        {
+            coff_files->nfiles_alloc = 16;
+            coff_files->files = HeapAlloc(GetProcessHeap(), 0,
+                                          coff_files->nfiles_alloc * sizeof(struct CoffFile));
+        }
     }
     file = coff_files->files + coff_files->nfiles;
     file->startaddr = 0xffffffff;
@@ -132,7 +138,7 @@ static void coff_add_symbol(struct CoffFile* coff_file, struct symt* sym)
 {
     if (coff_file->neps + 1 >= coff_file->neps_alloc)
     {
-        coff_file->neps_alloc += 10;
+        coff_file->neps_alloc *= 2;
         coff_file->entries = (coff_file->entries) ?
             HeapReAlloc(GetProcessHeap(), 0, coff_file->entries,
                         coff_file->neps_alloc * sizeof(struct symt*)) :
@@ -389,6 +395,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
         {
             if (coff_files.files[j].entries != NULL)
             {
+                symt_cmp_addr_module = msc_dbg->module;
                 qsort(coff_files.files[j].entries, coff_files.files[j].neps,
                       sizeof(struct symt*), symt_cmp_addr);
             }
@@ -413,7 +420,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                     for (;;)
                     {
                         if (l+1 >= coff_files.files[j].neps) break;
-                        symt_get_info(coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
+                        symt_get_info(msc_dbg->module, coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
                         if (((msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress) < addr))
                             break;
                         l++;
@@ -426,7 +433,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                          * start of the function, so we need to subtract that offset
                          * first.
                          */
-                        symt_get_info(coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
+                        symt_get_info(msc_dbg->module, coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
                         symt_add_func_line(msc_dbg->module, (struct symt_function*)coff_files.files[j].entries[l+1], 
                                            coff_files.files[j].compiland->source, linepnt->Linenumber,
                                            msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress - addr);

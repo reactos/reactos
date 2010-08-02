@@ -1,27 +1,25 @@
 /*
- * PROJECT:         ReactOS HA:
+ * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/generic/sysinfo.c
  * PURPOSE:         HAL Information Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
-PUCHAR KdComPortInUse;
-
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
-HaliQuerySystemInformation(IN     HAL_QUERY_INFORMATION_CLASS InformationClass,
-                           IN     ULONG  BufferSize,
-                           IN OUT PVOID  Buffer,
-                              OUT PULONG ReturnedLength)
+HaliQuerySystemInformation(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
+                           IN ULONG BufferSize,
+                           IN OUT PVOID Buffer,
+                           OUT PULONG ReturnedLength)
 {
 #define REPORT_THIS_CASE(X) case X: DPRINT1("Unhandled case: %s\n", #X); break
 	switch (InformationClass)
@@ -51,6 +49,12 @@ HaliQuerySystemInformation(IN     HAL_QUERY_INFORMATION_CLASS InformationClass,
 		REPORT_THIS_CASE(HalPartitionIpiInterface);
 		REPORT_THIS_CASE(HalPlatformInformation);
 		REPORT_THIS_CASE(HalQueryProfileSourceList);
+		REPORT_THIS_CASE(HalInitLogInformation);
+		REPORT_THIS_CASE(HalFrequencyInformation);
+		REPORT_THIS_CASE(HalProcessorBrandString);
+		REPORT_THIS_CASE(HalHypervisorInformation);
+		REPORT_THIS_CASE(HalPlatformTimerInformation);
+		REPORT_THIS_CASE(HalAcpiAuditInformation);
 	}
 #undef REPORT_THIS_CASE
 
@@ -67,5 +71,3 @@ HaliSetSystemInformation(IN HAL_SET_INFORMATION_CLASS InformationClass,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
-
-/* EOF */

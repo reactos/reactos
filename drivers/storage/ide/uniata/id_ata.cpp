@@ -94,7 +94,7 @@ BOOLEAN WinVer_WDM_Model = FALSE;
 UCHAR g_foo = 0;
 
 BOOLEAN
-DDKAPI
+NTAPI
 AtapiResetController__(
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,
@@ -102,6 +102,7 @@ AtapiResetController__(
     );
 
 VOID
+NTAPI
 AtapiHwInitialize__(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG lChannel
@@ -114,7 +115,7 @@ AtapiHwInitialize__(
 #ifndef UNIATA_CORE
 
 VOID
-DDKAPI
+NTAPI
 AtapiCallBack_X(
     IN PVOID HwDeviceExtension
     );
@@ -128,18 +129,19 @@ AtapiCallBack_X(
 #endif
 
 RETTYPE_XXableInterrupts
-DDKAPI
+NTAPI
 AtapiInterruptDpc(
     IN PVOID HwDeviceExtension
     );
 
 RETTYPE_XXableInterrupts
-DDKAPI
+NTAPI
 AtapiEnableInterrupts__(
     IN PVOID HwDeviceExtension
     );
 
 VOID
+NTAPI
 AtapiQueueTimerDpc(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel,
@@ -148,7 +150,7 @@ AtapiQueueTimerDpc(
     );
 
 SCSI_ADAPTER_CONTROL_STATUS
-DDKAPI
+NTAPI
 AtapiAdapterControl(
     IN PVOID HwDeviceExtension,
     IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
@@ -158,6 +160,7 @@ AtapiAdapterControl(
 #endif //UNIATA_CORE
 
 BOOLEAN
+NTAPI
 AtapiCheckInterrupt__(
     IN PVOID HwDeviceExtension,
     IN UCHAR c
@@ -167,6 +170,7 @@ AtapiCheckInterrupt__(
 #ifndef UNIATA_CORE
 
 BOOLEAN
+NTAPI
 AtapiRegGetStringParameterValue(
     IN PWSTR RegistryPath,
     IN PWSTR Name,
@@ -236,7 +240,7 @@ VOID \
 DDKFASTAPI \
 AtapiWritePort##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN _type  data \
     ) \
 { \
@@ -268,7 +272,7 @@ VOID \
 DDKFASTAPI \
 AtapiWritePortEx##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN ULONG offs, \
     IN _type  data \
     ) \
@@ -301,7 +305,7 @@ _type \
 DDKFASTAPI \
 AtapiReadPort##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port \
+    IN ULONG_PTR _port \
     ) \
 { \
     PIORES res; \
@@ -332,7 +336,7 @@ _type \
 DDKFASTAPI \
 AtapiReadPortEx##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN ULONG offs \
     ) \
 { \
@@ -363,7 +367,7 @@ VOID \
 DDKFASTAPI \
 AtapiReadBuffer##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN PVOID Buffer, \
     IN ULONG Count,   \
     IN ULONG Timing   \
@@ -408,7 +412,7 @@ VOID \
 DDKFASTAPI \
 AtapiWriteBuffer##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN PVOID Buffer, \
     IN ULONG Count,   \
     IN ULONG Timing   \
@@ -533,10 +537,10 @@ WaitOnBaseBusy(
 {
     ULONG i;
     UCHAR Status;
-    for (i=0; i<200; i++) {
+    for (i=0; i<20000; i++) {
         GetBaseStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(10);
+            AtapiStallExecution(150);
             continue;
         } else {
             break;
@@ -636,11 +640,11 @@ WaitForDrq(
     for (i=0; i<1000; i++) {
         GetStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(10);
+            AtapiStallExecution(100);
         } else if (Status & IDE_STATUS_DRQ) {
             break;
         } else {
-            AtapiStallExecution(10);
+            AtapiStallExecution(200);
         }
     }
     return Status;
@@ -657,11 +661,11 @@ WaitShortForDrq(
     for (i=0; i<2; i++) {
         GetStatus(chan, Status);
         if (Status & IDE_STATUS_BUSY) {
-            AtapiStallExecution(10);
+            AtapiStallExecution(100);
         } else if (Status & IDE_STATUS_DRQ) {
             break;
         } else {
-            AtapiStallExecution(10);
+            AtapiStallExecution(100);
         }
     }
     return Status;
@@ -675,7 +679,7 @@ AtapiSoftReset(
     )
 {
     //ULONG c = chan->lChannel;
-    ULONG i;
+    ULONG i = 30 * 1000;
     UCHAR dma_status = 0;
     KdPrint2((PRINT_PREFIX "AtapiSoftReset:\n"));
     UCHAR statusByte2;
@@ -683,11 +687,19 @@ AtapiSoftReset(
     GetBaseStatus(chan, statusByte2);
     KdPrint2((PRINT_PREFIX "  statusByte2 %x:\n", statusByte2));
     SelectDrive(chan, DeviceNumber);
-    AtapiStallExecution(10000);
+    AtapiStallExecution(500);
     AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_RESET);
-    for (i = 0; i < 1000; i++) {
-        AtapiStallExecution(999);
+
+    // ReactOS modification: Already stop looping when we know that the drive has finished resetting.
+    // Not all controllers clear the IDE_STATUS_BUSY flag (e.g. not the VMware one), so ensure that
+    // the maximum waiting time (30 * i = 0.9 seconds) does not exceed the one of the original
+    // implementation. (which is around 1 second)
+    while ((AtapiReadPort1(chan, IDX_IO1_i_Status) & IDE_STATUS_BUSY) &&
+           i--)
+    {
+        AtapiStallExecution(30);
     }
+
     SelectDrive(chan, DeviceNumber);
     WaitOnBusy(chan);
     GetBaseStatus(chan, statusByte2);
@@ -718,6 +730,7 @@ AtapiSoftReset(
     Translate to 48-Lba form if required
 */
 UCHAR
+NTAPI
 AtaCommand48(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG DeviceNumber,
@@ -896,6 +909,7 @@ AtaCommand48(
     This is simply wrapper for AtaCommand48()
 */
 UCHAR
+NTAPI
 AtaCommand(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG DeviceNumber,
@@ -916,6 +930,7 @@ AtaCommand(
 } // end AtaCommand()
 
 LONG
+NTAPI
 AtaPio2Mode(LONG pio)
 {
     switch (pio) {
@@ -930,6 +945,7 @@ AtaPio2Mode(LONG pio)
 } // end AtaPio2Mode()
 
 LONG
+NTAPI
 AtaPioMode(PIDENTIFY_DATA2 ident)
 {
     if (ident->PioTimingsValid) {
@@ -950,6 +966,7 @@ AtaPioMode(PIDENTIFY_DATA2 ident)
 } // end AtaPioMode()
 
 LONG
+NTAPI
 AtaWmode(PIDENTIFY_DATA2 ident)
 {
     if (ident->MultiWordDMASupport & 0x04)
@@ -962,6 +979,7 @@ AtaWmode(PIDENTIFY_DATA2 ident)
 } // end AtaWmode()
 
 LONG
+NTAPI
 AtaUmode(PIDENTIFY_DATA2 ident)
 {
     if (!ident->UdmaModesValid)
@@ -987,7 +1005,7 @@ AtaUmode(PIDENTIFY_DATA2 ident)
 #ifndef UNIATA_CORE
 
 VOID
-DDKAPI
+NTAPI
 AtapiTimerDpc(
     IN PVOID HwDeviceExtension
     )
@@ -1067,6 +1085,7 @@ AtapiTimerDpc(
     cancels previous Dpc request (if any), but we need Dpc queue.
 */
 VOID
+NTAPI
 AtapiQueueTimerDpc(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel,
@@ -1128,6 +1147,7 @@ AtapiQueueTimerDpc(
 #endif //UNIATA_CORE
 
 VOID
+NTAPI
 UniataDumpATARegs(
     IN PHW_CHANNEL chan
     )
@@ -1175,6 +1195,7 @@ Return Value:
 
 --*/
 BOOLEAN
+NTAPI
 IssueIdentify(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -1769,6 +1790,7 @@ Return Value:
 
 --*/
 BOOLEAN
+NTAPI
 SetDriveParameters(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -1811,6 +1833,7 @@ SetDriveParameters(
 } // end SetDriveParameters()
 
 VOID
+NTAPI
 UniataForgetDevice(
     PHW_LU_EXTENSION   LunExt
     )
@@ -1833,7 +1856,7 @@ Return Value:
 
 --*/
 BOOLEAN
-DDKAPI
+NTAPI
 AtapiResetController(
     IN PVOID HwDeviceExtension,
     IN ULONG PathId
@@ -1845,6 +1868,7 @@ AtapiResetController(
 
 
 BOOLEAN
+NTAPI
 AtapiResetController__(
     IN PVOID HwDeviceExtension,
     IN ULONG PathId,
@@ -2023,16 +2047,16 @@ AtapiResetController__(
                 goto default_reset;
             offset = ((Channel & 1) << 7) + ((Channel & 2) << 8);
             /* disable PHY state change interrupt */
-            AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x148 + offset, 0);
+            AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x148 + offset, 0);
 
             UniataSataClearErr(HwDeviceExtension, j, UNIATA_SATA_IGNORE_CONNECT);
 
             /* reset controller part for this channel */
-            AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48,
-                 AtapiReadPortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48) | (0xc0 >> Channel));
+            AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48,
+                 AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48) | (0xc0 >> Channel));
             AtapiStallExecution(1000);
-            AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48,
-                 AtapiReadPortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48) & ~(0xc0 >> Channel));
+            AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48,
+                 AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48) & ~(0xc0 >> Channel));
 
 
             break; }
@@ -2193,6 +2217,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 MapError(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -2573,7 +2598,7 @@ Return Value:
 
 --*/
 BOOLEAN
-DDKAPI
+NTAPI
 AtapiHwInitialize(
     IN PVOID HwDeviceExtension
     )
@@ -2604,6 +2629,7 @@ AtapiHwInitialize(
 } // end AtapiHwInitialize()
 
 VOID
+NTAPI
 AtapiHwInitialize__(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG lChannel
@@ -2826,6 +2852,7 @@ AtapiHwInitialize__(
 #ifndef UNIATA_CORE
 
 VOID
+NTAPI
 AtapiHwInitializeChanger(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -2860,6 +2887,7 @@ Return Values:
 
 --*/
 ULONG
+NTAPI
 AtapiParseArgumentString(
     IN PCCH String,
     IN PCCH KeyWord
@@ -3026,6 +3054,7 @@ ContinueSearch:
     Timer callback
 */
 VOID
+NTAPI
 AtapiCallBack__(
     IN PVOID HwDeviceExtension,
     IN UCHAR lChannel
@@ -3056,7 +3085,7 @@ AtapiCallBack__(
         goto ReturnCallback;
     }
 
-#ifdef DBG
+#if DBG
     if (!IS_RDP((srb->Cdb[0]))) {
         KdPrint2((PRINT_PREFIX "AtapiCallBack: Invalid CDB marked as RDP - %#x\n", srb->Cdb[0]));
     }
@@ -3155,6 +3184,7 @@ ReturnCallback:
 } // end AtapiCallBack__()
 
 VOID
+NTAPI
 AtapiCallBack_X(
     IN PVOID HwDeviceExtension
     )
@@ -3180,7 +3210,7 @@ Return Value:
 
 --*/
 BOOLEAN
-DDKAPI
+NTAPI
 AtapiInterrupt(
     IN PVOID HwDeviceExtension
     )
@@ -3300,6 +3330,7 @@ AtapiInterrupt(
 #ifndef UNIATA_CORE
 
 BOOLEAN
+NTAPI
 AtapiInterrupt2(
     IN PKINTERRUPT Interrupt,
     IN PVOID Isr2HwDeviceExtension
@@ -3369,7 +3400,7 @@ AtapiInterrupt2(
 } // end AtapiInterrupt2()
 
 RETTYPE_XXableInterrupts
-DDKAPI
+NTAPI
 AtapiInterruptDpc(
     IN PVOID HwDeviceExtension
     )
@@ -3406,7 +3437,7 @@ AtapiInterruptDpc(
 
 
 RETTYPE_XXableInterrupts
-DDKAPI
+NTAPI
 AtapiEnableInterrupts__(
     IN PVOID HwDeviceExtension
     )
@@ -3470,6 +3501,7 @@ AtapiEnableInterrupts__(
 
 
 VOID
+NTAPI
 AtapiEnableInterrupts(
     IN PVOID HwDeviceExtension,
     IN ULONG c
@@ -3492,6 +3524,7 @@ AtapiEnableInterrupts(
 } // end AtapiEnableInterrupts()
 
 VOID
+NTAPI
 AtapiDisableInterrupts(
     IN PVOID HwDeviceExtension,
     IN ULONG c
@@ -3517,6 +3550,7 @@ AtapiDisableInterrupts(
     Check hardware for interrupt state
  */
 BOOLEAN
+NTAPI
 AtapiCheckInterrupt__(
     IN PVOID HwDeviceExtension,
     IN UCHAR c // logical channel
@@ -3585,7 +3619,7 @@ AtapiCheckInterrupt__(
         switch(ChipType) {
         case PROLD:
         case PRNEW:
-            status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x1c);
+            status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x1c);
             if (!DmaTransfer)
                 break;
             if (!(status &
@@ -3605,10 +3639,10 @@ AtapiCheckInterrupt__(
             }
             break;
         case PRMIO:
-            status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x0040);
+            status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x0040);
             if(ChipFlags & PRSATA) {
-                pr_status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x006c);
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x006c, pr_status & 0x000000ff);
+                pr_status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x006c);
+                AtapiWritePortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x006c, pr_status & 0x000000ff);
             }
             if(pr_status & (0x11 << Channel)) {
                 // TODO: reset channel
@@ -3634,11 +3668,11 @@ AtapiCheckInterrupt__(
 
         /* get and clear interrupt status */
         if(ChipFlags & NVQ) {
-            pr_status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs);
-            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs, (0x0fUL << shift) | 0x00f000f0);
+            pr_status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs);
+            AtapiWritePortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs, (0x0fUL << shift) | 0x00f000f0);
         } else {
-            pr_status = AtapiReadPortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs);
-            AtapiWritePortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs, (0x0f << shift));
+            pr_status = AtapiReadPortEx1(chan,(ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs);
+            AtapiWritePortEx1(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs, (0x0f << shift));
         }
         KdPrint2((PRINT_PREFIX "  pr_status %x\n", pr_status));
 
@@ -3895,6 +3929,7 @@ skip_dma_stat_check:
 
 
 BOOLEAN
+NTAPI
 AtapiInterrupt__(
     IN PVOID HwDeviceExtension,
     IN UCHAR c
@@ -4278,7 +4313,7 @@ continue_err:
         for (k = atapiDev ? 0 : 200; k; k--) {
             GetStatus(chan, statusByte);
             if (!(statusByte & IDE_STATUS_DRQ)) {
-                AtapiStallExecution(50);
+                AtapiStallExecution(100);
             } else {
                 break;
             }
@@ -5281,6 +5316,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 IdeSendSmartCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -5394,6 +5430,7 @@ IdeSendSmartCommand(
 #endif //UNIATA_CORE
 
 ULONGLONG
+NTAPI
 UniAtaCalculateLBARegs(
     PHW_LU_EXTENSION     LunExt,
     ULONG                startingSector,
@@ -5403,6 +5440,8 @@ UniAtaCalculateLBARegs(
     UCHAR                drvSelect,sectorNumber;
     USHORT               cylinder;
     ULONG                tmp;
+
+    (*max_bcount) = 0;
 
     if(LunExt->DeviceFlags & DFLAGS_LBA_ENABLED) {
         if(LunExt->LimitedTransferMode >= ATA_DMA) {
@@ -5428,12 +5467,12 @@ UniAtaCalculateLBARegs(
         KdPrint2((PRINT_PREFIX "UniAtaCalculateLBARegs: C:H:S=%#x:%#x:%#x, max_bc %#x\n",
             cylinder, drvSelect, sectorNumber, (*max_bcount)));
     }
-        (*max_bcount) = 0;
 
     return (ULONG)(sectorNumber&0xff) | (((ULONG)cylinder&0xffff)<<8) | (((ULONG)drvSelect&0xf)<<24);
 } // end UniAtaCalculateLBARegs()
 
 ULONGLONG
+NTAPI
 UniAtaCalculateLBARegsBack(
     PHW_LU_EXTENSION     LunExt,
     ULONGLONG            lba
@@ -5478,6 +5517,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 IdeReadWrite(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -5736,6 +5776,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 IdeVerify(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -5837,6 +5878,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 AtapiSendCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -6331,7 +6373,7 @@ make_reset:
         InterlockedExchange(&(chan->CheckIntr),
                                       CHECK_INTR_IDLE);
 
-        AtapiDisableInterrupts(deviceExtension, lChannel);
+        //AtapiDisableInterrupts(deviceExtension, lChannel);
 
         // Write ATAPI packet command.
         AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_PACKET);
@@ -6366,7 +6408,7 @@ make_reset:
 
     GetBaseStatus(chan, statusByte);
 
-    AtapiEnableInterrupts(deviceExtension, lChannel);
+    //AtapiEnableInterrupts(deviceExtension, lChannel);
 
     WriteBuffer(chan,
                 (PUSHORT)Srb->Cdb,
@@ -6409,6 +6451,7 @@ ULONG check_point = 0;
 #endif
 
 ULONG
+NTAPI
 IdeSendCommand(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -7003,6 +7046,7 @@ Arguments:
 
 --*/
 VOID
+NTAPI
 IdeMediaStatus(
     BOOLEAN EnableMSN,
     IN PVOID HwDeviceExtension,
@@ -7077,6 +7121,7 @@ Return Value:
 
 --*/
 ULONG
+NTAPI
 IdeBuildSenseBuffer(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -7129,6 +7174,7 @@ IdeBuildSenseBuffer(
 }// End of IdeBuildSenseBuffer
 
 VOID
+NTAPI
 UniataUserDeviceReset(
     PHW_DEVICE_EXTENSION deviceExtension,
     PHW_LU_EXTENSION LunExt,
@@ -7152,6 +7198,7 @@ UniataUserDeviceReset(
 } // end UniataUserDeviceReset()
 
 BOOLEAN
+NTAPI
 UniataNeedQueueing(
     PHW_DEVICE_EXTENSION deviceExtension,
     PHW_CHANNEL          chan,
@@ -7204,7 +7251,7 @@ Return Value:
 
 --*/
 BOOLEAN
-DDKAPI
+NTAPI
 AtapiStartIo(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -7214,6 +7261,7 @@ AtapiStartIo(
 } // end AtapiStartIo()
 
 BOOLEAN
+NTAPI
 AtapiStartIo__(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -8163,6 +8211,7 @@ complete_req:
 
 
 void
+NTAPI
 UniataInitAtaCommands()
 {
     int i;
@@ -8294,7 +8343,7 @@ Return Value:
 --*/
 extern "C"
 ULONG
-DDKAPI
+NTAPI
 DriverEntry(
     IN PVOID DriverObject,
     IN PVOID Argument2
@@ -8315,7 +8364,7 @@ DriverEntry(
     LARGE_INTEGER t0, t1;
 
     Connect_DbgPrint();
-    KdPrint2((PRINT_PREFIX (PCCHAR)ver_string));
+    KdPrint2((PRINT_PREFIX "%s", (PCCHAR)ver_string));
     a = (WCHAR)strlen(ver_string);
 
     g_opt_Verbose = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PrintLogo", 0);
@@ -8666,6 +8715,7 @@ DriverEntry(
 
 
 PSCSI_REQUEST_BLOCK
+NTAPI
 BuildMechanismStatusSrb(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -8707,6 +8757,7 @@ BuildMechanismStatusSrb(
 #endif //UNIATA_CORE
 
 PSCSI_REQUEST_BLOCK
+NTAPI
 BuildRequestSenseSrb (
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb
@@ -8748,6 +8799,7 @@ BuildRequestSenseSrb (
 #ifndef UNIATA_CORE
 
 ULONG
+NTAPI
 AtapiRegCheckDevLunValue(
     IN PVOID HwDeviceExtension,
     IN PCWCH NamePrefix,
@@ -8777,6 +8829,7 @@ AtapiRegCheckDevLunValue(
 } // end AtapiRegCheckDevLunValue()
 
 ULONG
+NTAPI
 EncodeVendorStr(
    OUT PWCHAR Buffer,
     IN PUCHAR Str,
@@ -8816,6 +8869,7 @@ EncodeVendorStr(
 } // end EncodeVendorStr()
 
 ULONG
+NTAPI
 AtapiRegCheckDevValue(
     IN PVOID HwDeviceExtension,
     IN ULONG chan,
@@ -8936,6 +8990,7 @@ AtapiRegCheckDevValue(
     Returns:    Registry Key value
  */
 ULONG
+NTAPI
 AtapiRegCheckParameterValue(
     IN PVOID HwDeviceExtension,
     IN PCWSTR PathSuffix,
@@ -9004,7 +9059,7 @@ AtapiRegCheckParameterValue(
 
 
 SCSI_ADAPTER_CONTROL_STATUS
-DDKAPI
+NTAPI
 AtapiAdapterControl(
     IN PVOID HwDeviceExtension,
     IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
@@ -9097,7 +9152,7 @@ AtapiAdapterControl(
 extern "C"
 NTHALAPI
 VOID
-DDKAPI
+NTAPI
 HalDisplayString (
     PUCHAR String
     );

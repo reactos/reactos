@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="audiosrv" type="win32cui" installbase="system32" installname="audiosrv.exe" unicode="yes">
 	<include base="audiosrv">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>setupapi</library>

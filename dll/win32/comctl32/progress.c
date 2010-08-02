@@ -27,6 +27,16 @@
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
  *
+ * TODO:
+ *
+ * Messages:
+ *    -- PBM_GETSTEP
+ *    -- PBM_SETSTATE
+ *    -- PBM_GETSTATE
+ *
+ * Styles:
+ *    -- PBS_SMOOTHREVERSE
+ *
  */
 
 #include <stdarg.h>
@@ -253,38 +263,22 @@ static const ProgressDrawProc drawProcClassic[8] = {
 static void draw_theme_bar_H (const ProgressDrawInfo* di, int start, int end)
 {
     RECT r;
-    int right = di->rect.left + end;
     r.left = di->rect.left + start;
     r.top = di->rect.top;
     r.bottom = di->rect.bottom;
-    while (r.left < right)
-    {
-        r.right = min (r.left + di->ledW, right);
-        DrawThemeBackground (di->theme, di->hdc, PP_CHUNK, 0, &r, NULL);
-        r.left = r.right;
-        r.right = min (r.left + di->ledGap, right);
-        DrawThemeBackground (di->theme, di->hdc, PP_BAR, 0, &di->bgRect, &r);
-        r.left = r.right;
-    }
+    r.right = di->rect.left + end;
+    DrawThemeBackground (di->theme, di->hdc, PP_CHUNK, 0, &r, NULL);
 }
 
-/* draw themed horizontal bar from 'start' to 'end' */
+/* draw themed vertical bar from 'start' to 'end' */
 static void draw_theme_bar_V (const ProgressDrawInfo* di, int start, int end)
 {
     RECT r;
-    int top = di->rect.bottom - end;
     r.left = di->rect.left;
     r.right = di->rect.right;
     r.bottom = di->rect.bottom - start;
-    while (r.bottom > top)
-    {
-        r.top = max (r.bottom - di->ledW, top);
-        DrawThemeBackground (di->theme, di->hdc, PP_CHUNKVERT, 0, &r, NULL);
-        r.bottom = r.top;
-        r.top = max (r.bottom - di->ledGap, top);
-        DrawThemeBackground (di->theme, di->hdc, PP_BARVERT, 0, &di->bgRect, &r);
-        r.bottom = r.top;
-    }
+    r.top = di->rect.bottom - end;
+    DrawThemeBackground (di->theme, di->hdc, PP_CHUNKVERT, 0, &r, NULL);
 }
 
 /* draw themed horizontal background from 'start' to 'end' */
@@ -703,10 +697,16 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	InvalidateRect(hwnd, NULL, TRUE);
 	return 0;
 
+    case PBM_GETBARCOLOR:
+	return infoPtr->ColorBar;
+
     case PBM_SETBKCOLOR:
         infoPtr->ColorBk = (COLORREF)lParam;
 	InvalidateRect(hwnd, NULL, TRUE);
 	return 0;
+
+    case PBM_GETBKCOLOR:
+	return infoPtr->ColorBk;
 
     case PBM_SETMARQUEE:
 	if(wParam != 0)

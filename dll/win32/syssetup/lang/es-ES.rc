@@ -12,9 +12,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 /*
@@ -65,6 +65,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Escriba su nombre completo y el nombre de su compañia u organización.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "No&mbre:", IDC_STATIC, 54, 37, 44, 8
@@ -79,11 +80,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Escriba un nombre para su equipo que sea de 63 caracteres o menos. "\
           "Si se encuentra conectado a una red, el nombre debe ser único.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "Nombre del &Equipo:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "El instalador creará un perfil de usuario en su equipo llamado Administrator. "\
           "Puede utilizar este perfil si necesita acceso completo a su equipo.",
           IDC_STATIC, 54, 57, 250, 25
@@ -101,6 +104,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Las opciones regionales y de idioma permiten configurar la manera en que se representan "\
           "fechas ,número ,monedas y horas. También puede agregar compatibilidad con otros idiomas "\
           "y cambiar la configuración de su ubicación.", IDC_STATIC, 53, 6, 253, 30
@@ -123,6 +127,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalación de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Fecha y Hora", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -218,28 +223,30 @@ BEGIN
     IDS_CMT_RDESKTOP    "Ejecutar Escritorio remoto"
     IDS_CMT_EVENTVIEW   "Ejecutar Visor de sucesos"
     IDS_CMT_MSCONFIG    "Ejecutar Utilidad de configuración del sistema"
+    IDS_CMT_PAINT       "Ejecutar Paint"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES			"Juegos"
-    IDS_CMT_SOLITAIRE	"Solitario"
-    IDS_CMT_WINEMINE	"Buscaminas"
+    IDS_GAMES                   "Juegos"
+    IDS_CMT_SOLITAIRE           "Solitario"
+    IDS_CMT_WINEMINE            "Buscaminas"
+    IDS_CMT_SPIDER      	"Solitario Spider"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Herramientas del sistema"
-	IDS_CMT_CHARMAP      "Mapa de caracteres"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+    IDS_SYS_TOOLS               "Herramientas del sistema"
+    IDS_CMT_CHARMAP             "Mapa de caracteres"
+    IDS_CMT_KBSWITCH            "Keyboard Layout Switcher"
+    IDS_CMT_DXDIAG              "Ejecutar el programa de diagnóstico de ReactX"
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accesibilidad"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+    IDS_SYS_ACCESSIBILITY       "Accesibilidad"
+    IDS_CMT_MAGNIFY             "Magnify"
 END
 
 STRINGTABLE
@@ -247,18 +254,19 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Entretenimiento"
     IDS_CMT_MPLAY32             "Ejecutar Reproductor multimedia"
     IDS_CMT_SNDVOL32            "Ejecutar Control de volumen"
+    IDS_CMT_SNDREC32            "Ejecutar Grabadora de sonidos"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP			"Instalación de ReactOS"
+    IDS_REACTOS_SETUP           "Instalación de ReactOS"
     IDS_UNKNOWN_ERROR           "Error desconocido"
     IDS_REGISTERING_COMPONENTS  "Registrando componentes..."
-    IDS_LOADLIBRARY_FAILED		"LoadLibrary falló: "
-    IDS_GETPROCADDR_FAILED		"GetProcAddr falló: "
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary falló: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr falló: "
     IDS_REGSVR_FAILED           "DllRegisterServer falló: "
-    IDS_DLLINSTALL_FAILED		"DllInstall falló: "
-    IDS_TIMEOUT					"Tiempo agotado durante la instalación"
+    IDS_DLLINSTALL_FAILED       "DllInstall falló: "
+    IDS_TIMEOUT                 "Tiempo agotado durante la instalación"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -266,10 +274,10 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Símbolo del sistema.lnk"
     IDS_SHORT_EXPLORER   "Explorador de ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Administrador de Servicios.lnk"
     IDS_SHORT_DEVICE     "Administrador de Dispositivos.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
+    IDS_SHORT_MPLAY32    "Reproductor multimedia.lnk"
     IDS_SHORT_CALC       "Calculadora.lnk"
     IDS_SHORT_REGEDIT    "Editor de registro.lnk"
     IDS_SHORT_NOTEPAD    "Bloc de notas.lnk"
@@ -281,21 +289,24 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Escritorio Remoto.lnk"
     IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_EVENTVIEW  "Visor de sucesos.lnk"
+    IDS_SHORT_MSCONFIG   "Configuración del sistema.lnk"
+    IDS_SHORT_SNDVOL32   "Control de volumen.lnk"
+    IDS_SHORT_SNDREC32   "Grabadora de sonidos.lnk"
+    IDS_SHORT_DXDIAG     "Diagnóstico de ReactX.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
+    IDS_SHORT_SPIDER     "Solitario Spider.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "El proceso de instalación no puede continuar hasta que no escriba su nombre."
-    IDS_WZD_SETCOMPUTERNAME  "El proceso de instalación no pudo configurar el nombre del equipo."
-    IDS_WZD_COMPUTERNAME  "El proceso de instalación no puede continuar hasta que no escriba un nombre para su equipo."
-    IDS_WZD_PASSWORDEMPTY  "¡Debe establecer una contraseña!"
-    IDS_WZD_PASSWORDMATCH  "La verificación no concuerda con la contraseña introducida. Por favor introduzca de nuevo la contraseña deseada."
-    IDS_WZD_PASSWORDCHAR  "La contraseña que ha introducido contiene carácteres inválidos. Por favor, introduzca uno de nuevo."
-    IDS_WZD_LOCALTIME    "El proceso de instalación no pudo configurar la hora del equipo."
+    IDS_WZD_NAME            "El proceso de instalación no puede continuar hasta que no escriba su nombre."
+    IDS_WZD_SETCOMPUTERNAME "El proceso de instalación no pudo configurar el nombre del equipo."
+    IDS_WZD_COMPUTERNAME    "El proceso de instalación no puede continuar hasta que no escriba un nombre para su equipo."
+    IDS_WZD_PASSWORDEMPTY   "¡Debe establecer una contraseña!"
+    IDS_WZD_PASSWORDMATCH   "La verificación no concuerda con la contraseña introducida. Por favor introduzca de nuevo la contraseña deseada."
+    IDS_WZD_PASSWORDCHAR    "La contraseña que ha introducido contiene carácteres inválidos. Por favor, introduzca uno de nuevo."
+    IDS_WZD_LOCALTIME       "El proceso de instalación no pudo configurar la hora del equipo."
 END
 
 STRINGTABLE

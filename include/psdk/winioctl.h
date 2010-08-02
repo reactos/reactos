@@ -1,14 +1,23 @@
-#ifndef _WINIOCTL_H
-#define _WINIOCTL_H
+#ifndef _WINIOCTL_
+#define _WINIOCTL_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4820)
+#endif
+
 #define HIST_NO_OF_BUCKETS               24
 #define HISTOGRAM_BUCKET_SIZE            sizeof(HISTOGRAM_BUCKET)
 #define DISK_HISTOGRAM_SIZE              sizeof(DISK_HISTOGRAM)
 #define CTL_CODE(t,f,m,a)                (((t)<<16)|((a)<<14)|((f)<<2)|(m))
 #define DEVICE_TYPE_FROM_CTL_CODE(c)     (((DWORD)((c)&0xffff0000))>>16)
+
+#ifndef _NTDDSTOR_H_
 #define IOCTL_STORAGE_BASE               FILE_DEVICE_MASS_STORAGE
 #define IOCTL_STORAGE_CHECK_VERIFY       CTL_CODE(IOCTL_STORAGE_BASE, 0x0200, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_STORAGE_CHECK_VERIFY2      CTL_CODE(IOCTL_STORAGE_BASE, 0x0200, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -27,6 +36,8 @@ extern "C" {
 #define IOCTL_STORAGE_RESET_DEVICE       CTL_CODE(IOCTL_STORAGE_BASE, 0x0401, METHOD_BUFFERED, FILE_READ_ACCESS)
 #define IOCTL_STORAGE_GET_DEVICE_NUMBER  CTL_CODE(IOCTL_STORAGE_BASE, 0x0420, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_STORAGE_PREDICT_FAILURE    CTL_CODE(IOCTL_STORAGE_BASE, 0x0440, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#endif
+
 #define IOCTL_DISK_BASE                  FILE_DEVICE_DISK
 #define IOCTL_DISK_GET_DRIVE_GEOMETRY    CTL_CODE(IOCTL_DISK_BASE,0,METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define IOCTL_DISK_GET_PARTITION_INFO    CTL_CODE(IOCTL_DISK_BASE,1,METHOD_BUFFERED,FILE_READ_ACCESS)
@@ -480,9 +491,13 @@ typedef struct _PERF_BIN {
   DWORD TypeOfBin;
   BIN_RANGE BinsRanges[1];
 } PERF_BIN,*PPERF_BIN;
+
+#ifndef _NTDDSTOR_H_
 typedef struct _PREVENT_MEDIA_REMOVAL {
   BOOLEAN PreventMediaRemoval;
 } PREVENT_MEDIA_REMOVAL,*PPREVENT_MEDIA_REMOVAL;
+#endif
+
 typedef struct RETRIEVAL_POINTERS_BUFFER {
   DWORD ExtentCount;
   LARGE_INTEGER StartingVcn;
@@ -551,7 +566,12 @@ typedef struct {
     ((t&PARTITION_NTFT)&&((t&~VALID_NTFT)==PARTITION_XINT13_EXTENDED))||\
     ((t&~PARTITION_NTFT)==PARTITION_EXTENDED)||\
     ((t&~PARTITION_NTFT)==PARTITION_XINT13_EXTENDED))
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif /* _WINIOCTL_ */

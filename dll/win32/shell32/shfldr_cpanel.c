@@ -204,17 +204,55 @@ ISF_ControlPanel_fnParseDisplayName(IShellFolder2 * iface,
 				   DWORD * pchEaten, LPITEMIDLIST * ppidl, DWORD * pdwAttributes)
 {
     ICPanelImpl *This = (ICPanelImpl *)iface;
+    WCHAR szElement[MAX_PATH];
+    LPCWSTR szNext = NULL;
+    LPITEMIDLIST pidlTemp = NULL;
+    HRESULT hr = S_OK;
+    CLSID clsid;
 
-    HRESULT hr = E_INVALIDARG;
+    TRACE ("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
+           This, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName),
+           pchEaten, ppidl, pdwAttributes);
 
-    FIXME("(%p)->(HWND=%p,%p,%p=%s,%p,pidl=%p,%p)\n",
-	   This, hwndOwner, pbc, lpszDisplayName, debugstr_w(lpszDisplayName), pchEaten, ppidl, pdwAttributes);
+    if (!lpszDisplayName || !ppidl)
+        return E_INVALIDARG;
 
     *ppidl = 0;
-    if (pchEaten)
-	*pchEaten = 0;
 
-    TRACE("(%p)->(-- ret=0x%08x)\n", This, hr);
+    if (pchEaten)
+        *pchEaten = 0;        /* strange but like the original */
+
+    if (lpszDisplayName[0] == ':' && lpszDisplayName[1] == ':')
+    {
+        szNext = GetNextElementW (lpszDisplayName, szElement, MAX_PATH);
+        TRACE ("-- element: %s\n", debugstr_w (szElement));
+        CLSIDFromString (szElement + 2, &clsid);
+        pidlTemp = _ILCreateGuid (PT_GUID, &clsid);
+    }
+    else if( (pidlTemp = SHELL32_CreatePidlFromBindCtx(pbc, lpszDisplayName)) )
+    {
+        *ppidl = pidlTemp;
+        return S_OK;
+    }
+
+    if (SUCCEEDED(hr) && pidlTemp)
+    {
+        if (szNext && *szNext)
+        {
+            hr = SHELL32_ParseNextElement(iface, hwndOwner, pbc,
+                    &pidlTemp, (LPOLESTR) szNext, pchEaten, pdwAttributes);
+        }
+        else
+        {
+            if (pdwAttributes && *pdwAttributes)
+                hr = SHELL32_GetItemAttributes(_IShellFolder_ (This),
+                                               pidlTemp, pdwAttributes);
+        }
+    }
+
+    *ppidl = pidlTemp;
+
+    TRACE ("(%p)->(-- ret=0x%08x)\n", This, hr);
 
     return hr;
 }
@@ -277,9 +315,6 @@ static PIDLCPanelStruct* _ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
- /**************************************************************************
- *		ISF_ControlPanel_fnEnumObjects
- */
 static BOOL SHELL_RegisterCPanelApp(IEnumIDList* list, LPCSTR path)
 {
     LPITEMIDLIST pidl;
@@ -979,8 +1014,8 @@ ExecuteAppletFromCLSID(LPOLESTR pOleStr)
     dwSize = sizeof(szCmd);
     if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, NULL, RRF_RT_REG_SZ, &dwType, (PVOID)szCmd, &dwSize) != ERROR_SUCCESS)
     {
-        ERR("RegGetValueW failed with %u\n", GetLastError());
-        return E_FAIL;
+        wcscpy(szCmd, L"%SystemRoot%\\Explorer.exe ::");
+        wcscat(szCmd, pOleStr);
     }
 
 #if 0
@@ -1260,8 +1295,8 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
        sei.hwnd = lpcmi->hwnd;
        sei.nShow = SW_SHOWNORMAL;
        sei.lpVerb = L"open";
-       ShellExecuteExW(&sei);
-       if (sei.hInstApp <= (HINSTANCE)32)
+
+       if (ShellExecuteExW(&sei) == FALSE)
           return E_FAIL;
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
@@ -1308,7 +1343,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
         }
         else
         {
-           FIXME("\n");
+           FIXME("Couldn't retrieve pointer to cpl structure\n");
            return E_FAIL;
         }
         if (SUCCEEDED(IShellLink_Constructor(NULL, &IID_IShellLinkA, (LPVOID*)&isl)))

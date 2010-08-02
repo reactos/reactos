@@ -18,6 +18,9 @@
 #ifndef __WINE_MPRRES_H__
 #define __WINE_MPRRES_H__
 
+#include <windef.h>
+#include <winuser.h>
+
 #define IDS_ENTIRENETWORK 1
 
 #define IDD_PROXYDLG     0x400

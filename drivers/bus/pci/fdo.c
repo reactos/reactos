@@ -16,6 +16,46 @@
 
 /*** PRIVATE *****************************************************************/
 
+static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
+
+static NTSTATUS NTAPI
+ForwardIrpAndWaitCompletion(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	IN PVOID Context)
+{
+	UNREFERENCED_PARAMETER(DeviceObject);
+	if (Irp->PendingReturned)
+		KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
+	return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
+NTSTATUS NTAPI
+ForwardIrpAndWait(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	KEVENT Event;
+	NTSTATUS Status;
+	PDEVICE_OBJECT LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Ldo;
+	ASSERT(LowerDevice);
+
+	KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	IoCopyCurrentIrpStackLocationToNext(Irp);
+
+	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
+
+	Status = IoCallDriver(LowerDevice, Irp);
+	if (Status == STATUS_PENDING)
+	{
+		Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+		if (NT_SUCCESS(Status))
+			Status = Irp->IoStatus.Status;
+	}
+
+	return Status;
+}
+
 static NTSTATUS
 FdoLocateChildDevice(
   PPCI_DEVICE *Device,
@@ -176,7 +216,7 @@ FdoQueryBusRelations(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+  PPDO_DEVICE_EXTENSION PdoDeviceExtension = NULL;
   PFDO_DEVICE_EXTENSION DeviceExtension;
   PDEVICE_RELATIONS Relations;
   PLIST_ENTRY CurrentEntry;
@@ -186,6 +226,8 @@ FdoQueryBusRelations(
   NTSTATUS ErrorStatus;
   ULONG Size;
   ULONG i;
+
+  UNREFERENCED_PARAMETER(IrpSp);
 
   DPRINT("Called\n");
 
@@ -236,8 +278,6 @@ FdoQueryBusRelations(
         ErrorOccurred = TRUE;
         break;
       }
-
-      Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
 
       Device->Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -432,6 +472,8 @@ FdoSetPower(
   PFDO_DEVICE_EXTENSION DeviceExtension;
   NTSTATUS Status;
 
+  UNREFERENCED_PARAMETER(Irp);
+
   DPRINT("Called\n");
 
   DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -464,7 +506,7 @@ FdoPnpControl(
 {
   PFDO_DEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpSp;
-  NTSTATUS Status;
+  NTSTATUS Status = Irp->IoStatus.Status;
 
   DPRINT("Called\n");
 
@@ -490,8 +532,13 @@ FdoPnpControl(
     break;
 #endif
   case IRP_MN_QUERY_DEVICE_RELATIONS:
+    if (IrpSp->Parameters.QueryDeviceRelations.Type != BusRelations)
+        break;
+
     Status = FdoQueryBusRelations(DeviceObject, Irp, IrpSp);
-    break;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 #if 0
   case IRP_MN_QUERY_PNP_DEVICE_STATE:
     Status = STATUS_NOT_IMPLEMENTED;
@@ -504,45 +551,47 @@ FdoPnpControl(
   case IRP_MN_QUERY_STOP_DEVICE:
     Status = STATUS_NOT_IMPLEMENTED;
     break;
-
-  case IRP_MN_REMOVE_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
 #endif
   case IRP_MN_START_DEVICE:
     DPRINT("IRP_MN_START_DEVICE received\n");
-    Status = FdoStartDevice(DeviceObject, Irp);
-    break;
+    Status = ForwardIrpAndWait(DeviceObject, Irp);
+    if (NT_SUCCESS(Status))
+       Status = FdoStartDevice(DeviceObject, Irp);
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
   case IRP_MN_STOP_DEVICE:
     /* Currently not supported */
     Status = STATUS_UNSUCCESSFUL;
-    break;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 #if 0
   case IRP_MN_SURPRISE_REMOVAL:
     Status = STATUS_NOT_IMPLEMENTED;
     break;
 #endif
+  case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
+    break;
+  case IRP_MN_REMOVE_DEVICE:
+    /* Detach the device object from the device stack */
+    IoDetachDevice(DeviceExtension->Ldo);
+
+    /* Delete the device object */
+    IoDeleteDevice(DeviceObject);
+
+    /* Return success */
+    Status = STATUS_SUCCESS;
+    break;
   default:
     DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
-    /* fall through */
-
-  case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-    /*
-     * Do NOT complete the IRP as it will be processed by the lower
-     * device object, which will complete the IRP
-     */
-    IoSkipCurrentIrpStackLocation(Irp);
-    Status = IoCallDriver(DeviceExtension->Ldo, Irp);
-    return Status;
     break;
   }
 
-
-  if (Status != STATUS_PENDING) {
-    if (Status != STATUS_NOT_IMPLEMENTED)
-      Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-  }
+  Irp->IoStatus.Status = Status;
+  IoSkipCurrentIrpStackLocation(Irp);
+  Status = IoCallDriver(DeviceExtension->Ldo, Irp);
 
   DPRINT("Leaving. Status 0x%X\n", Status);
 

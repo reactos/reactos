@@ -328,11 +328,12 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
                 WARN("ignoring another video stream\n");
             else
             {
-                wma->ash_audio = strh;
+                wma->ash_video = strh;
 
                 if (!MCIAVI_GetInfoVideo(wma, &mmckList, &mmckStream))
                     return FALSE;
                 wma->video_stream_n = stream_n;
+                wma->dwSet |= 4;
             }
         }
         else if (strh.fccType == streamtypeAUDIO)
@@ -342,11 +343,12 @@ BOOL MCIAVI_GetInfo(WINE_MCIAVI* wma)
                 WARN("ignoring another audio stream\n");
             else
             {
-                wma->ash_video = strh;
+                wma->ash_audio = strh;
 
                 if (!MCIAVI_GetInfoAudio(wma, &mmckList, &mmckStream))
                     return FALSE;
                 wma->audio_stream_n = stream_n;
+                wma->dwSet |= 3;
             }
         }
         else

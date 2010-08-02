@@ -13,9 +13,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #define _NTSYSTEM_
@@ -25,15 +25,11 @@
 extern ULONG PageDirectoryStart;
 extern ULONG PageDirectoryEnd;
 
-ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
-char					reactos_kernel_cmdline[255];	// Command line passed to kernel
-LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
-char					reactos_module_strings[64][256];	// Array to hold module names
-reactos_mem_data_t reactos_mem_data;
+extern CHAR szBootPath[255];
+extern CHAR SystemRoot[255];
+extern CHAR szHalName[255];
+
 extern char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE];
-char szBootPath[256];
-char szHalName[256];
-CHAR SystemRoot[255];
 extern ULONG_PTR KernelBase;
 extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
@@ -47,6 +43,7 @@ VOID LoadReactOSSetup(VOID)
     ULONG i;
     LPCSTR SourcePath;
     LPCSTR LoadOptions, DbgLoadOptions = "";
+    BOOLEAN BootFromFloppy;
     LPCSTR sourcePaths[] = {
       "", /* Only for floppy boot */
 #if defined(_M_IX86)
@@ -60,11 +57,12 @@ VOID LoadReactOSSetup(VOID)
       NULL };
     CHAR FileName[256];
 
-  HINF InfHandle;
-  ULONG ErrorLine;
-  INFCONTEXT InfContext;
+    HINF InfHandle;
+    ULONG ErrorLine;
+    INFCONTEXT InfContext;
     PIMAGE_NT_HEADERS NtHeader;
     PVOID LoadBase;
+    extern BOOLEAN FrLdrBootType;
 
   /* Setup multiboot information structure */
   LoaderBlock.CommandLine = reactos_kernel_cmdline;
@@ -72,7 +70,7 @@ VOID LoadReactOSSetup(VOID)
   LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
-  LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
+  LoaderBlock.MmapLength = (unsigned long)MachVtbl.GetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
   {
 #if defined (_M_IX86) || defined (_M_AMD64)
@@ -108,27 +106,20 @@ VOID LoadReactOSSetup(VOID)
 #endif
   UiDrawStatusText("");
 
-    extern BOOLEAN FrLdrBootType;
-    FrLdrBootType = TRUE;
+  FrLdrBootType = TRUE;
 
   /* Detect hardware */
   UiDrawStatusText("Detecting hardware...");
   LoaderBlock.ArchExtra = (ULONG_PTR)MachHwDetect();
   UiDrawStatusText("");
 
-  /* set boot device */
-  MachDiskGetBootDevice(&LoaderBlock.BootDevice);
-
-  /* Open boot drive */
-  if (!FsOpenBootVolume())
-    {
-      UiMessageBox("Failed to open boot drive.");
-      return;
-    }
+  /* Check if we booted from floppy */
+  MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
+  BootFromFloppy = strstr(reactos_kernel_cmdline, "fdisk") != NULL;
 
   UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
-  for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
+  for (i = BootFromFloppy ? 0 : 1; ; i++)
   {
     SourcePath = sourcePaths[i];
     if (!SourcePath)
@@ -143,7 +134,7 @@ VOID LoadReactOSSetup(VOID)
   if (!*SourcePath)
     SourcePath = "\\";
 
-#ifdef DBG
+#if DBG
   /* Get load options */
   if (InfFindFirstLine (InfHandle,
 			"SetupData",
@@ -198,16 +189,9 @@ VOID LoadReactOSSetup(VOID)
     LoaderBlock.KernelBase = KernelBase;
 
   /* Insert boot disk 2 */
-  if (MachDiskBootingFromFloppy())
+  if (BootFromFloppy)
     {
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
-
-      /* Open boot drive */
-      if (!FsOpenBootVolume())
-	{
-	  UiMessageBox("Failed to open boot drive.");
-	  return;
-	}
 
       /* FIXME: check volume label or disk marker file */
     }

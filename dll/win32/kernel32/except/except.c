@@ -124,10 +124,11 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
    return psz;
 }
 
-#ifdef _M_IX86
+
 static VOID
 _dump_context(PCONTEXT pc)
 {
+#ifdef _M_IX86
    /*
     * Print out the CPU registers
     */
@@ -138,14 +139,19 @@ _dump_context(PCONTEXT pc)
    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
 	    pc->Ebp, pc->Esi, pc->Esp);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
-}
+#elif defined(_M_AMD64)
+   DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
+   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+	    pc->SegFs&0xffff, pc->SegGs&0xfff);
+   DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
+   DbgPrint("RDX: %I64x   RBP: %I64x   RSI: %I64x   RSP: %I64x\n", pc->Rdx, pc->Rbp, pc->Rsi, pc->Rsp);
+   DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
+   DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
+   DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
 #else
 #warning Unknown architecture
-static VOID
-_dump_context(PCONTEXT pc)
-{
-}
 #endif
+}
 
 static LONG
 BasepCheckForReadOnlyResource(IN PVOID Ptr)
@@ -204,8 +210,70 @@ BasepCheckForReadOnlyResource(IN PVOID Ptr)
     return Ret;
 }
 
+static VOID
+PrintStackTrace(struct _EXCEPTION_POINTERS *ExceptionInfo)
+{
+    PVOID StartAddr;
+    CHAR szMod[128] = "";
+    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
+    PCONTEXT ContextRecord = ExceptionInfo->ContextRecord;
+
+    /* Print a stack trace. */
+    DbgPrint("Unhandled exception\n");
+    DbgPrint("ExceptionCode:    %8x\n", ExceptionRecord->ExceptionCode);
+
+    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+        ExceptionRecord->NumberParameters == 2)
+    {
+        DbgPrint("Faulting Address: %8x\n", ExceptionRecord->ExceptionInformation[1]);
+    }
+
+    _dump_context (ContextRecord);
+    _module_name_from_addr(ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod));
+    DbgPrint("Address:\n   %8x+%-8x   %s\n", 
+             (PVOID)StartAddr,
+             (ULONG_PTR)ExceptionRecord->ExceptionAddress - (ULONG_PTR)StartAddr,
+             szMod);
+#ifdef _M_IX86
+    DbgPrint("Frames:\n");
+
+    _SEH2_TRY
+    {
+        UINT i;
+        PULONG Frame = (PULONG)ContextRecord->Ebp;
+
+        for (i = 0; Frame[1] != 0 && Frame[1] != 0xdeadbeef && i < 128; i++)
+        {
+            if (IsBadReadPtr((PVOID)Frame[1], 4))
+            {
+                DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
+            }
+            else
+            {
+                _module_name_from_addr((const void*)Frame[1], &StartAddr,
+                                       szMod, sizeof(szMod));
+                DbgPrint("   %8x+%-8x   %s\n",
+                         (PVOID)StartAddr,
+                         (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr,
+                         szMod);
+            }
+
+            if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2))
+                break;
+
+            Frame = (PULONG)Frame[0];
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+#endif
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 LONG WINAPI
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
@@ -213,19 +281,20 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    LONG RetValue;
    HANDLE DebugPort = NULL;
    NTSTATUS ErrCode;
-   ULONG ErrorParameters[4];
+   ULONG_PTR ErrorParameters[4];
    ULONG ErrorResponse;
+   PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
 
-   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-       ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
+   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+       ExceptionRecord->NumberParameters >= 2)
    {
-      switch(ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
+      switch(ExceptionRecord->ExceptionInformation[0])
       {
       case EXCEPTION_WRITE_FAULT:
          /* Change the protection on some write attempts, some InstallShield setups
             have this bug */
          RetValue = BasepCheckForReadOnlyResource(
-            (PVOID)ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+            (PVOID)ExceptionRecord->ExceptionInformation[1]);
          if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
             return EXCEPTION_CONTINUE_EXECUTION;
          break;
@@ -253,77 +322,30 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
    if (GlobalTopLevelExceptionFilter)
    {
-      LONG ret = GlobalTopLevelExceptionFilter( ExceptionInfo );
+      LONG ret = GlobalTopLevelExceptionFilter(ExceptionInfo);
       if (ret != EXCEPTION_CONTINUE_SEARCH)
          return ret;
    }
 
    if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
-   {
-#ifdef _X86_
-      PULONG Frame;
-#endif
-      PVOID StartAddr;
-      CHAR szMod[128] = "";
-
-      /* Print a stack trace. */
-      DbgPrint("Unhandled exception\n");
-      DbgPrint("ExceptionCode:    %8x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-      if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-          ExceptionInfo->ExceptionRecord->NumberParameters == 2)
-      {
-         DbgPrint("Faulting Address: %8x\n", ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
-      }
-      DbgPrint("Address:          %8x   %s\n",
-         ExceptionInfo->ExceptionRecord->ExceptionAddress,
-         _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod)));
-      _dump_context ( ExceptionInfo->ContextRecord );
-#ifdef _X86_
-      DbgPrint("Frames:\n");
-      _SEH2_TRY
-      {
-         Frame = (PULONG)ExceptionInfo->ContextRecord->Ebp;
-         while (Frame[1] != 0 && Frame[1] != 0xdeadbeef)
-         {
-            if (IsBadReadPtr((PVOID)Frame[1], 4)) {
-              DbgPrint("   %8x%9s   %s\n", Frame[1], "<invalid address>"," ");
-            } else {
-              _module_name_from_addr((const void*)Frame[1], &StartAddr,
-                                     szMod, sizeof(szMod));
-              DbgPrint("   %8x+%-8x   %s\n",
-                      (PVOID)StartAddr,
-                      (ULONG_PTR)Frame[1] - (ULONG_PTR)StartAddr, szMod);
-            }
-            if (IsBadReadPtr((PVOID)Frame[0], sizeof(*Frame) * 2)) {
-              break;
-            }
-            Frame = (PULONG)Frame[0];
-         }
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-         DbgPrint("<error dumping stack trace: 0x%x>\n", _SEH2_GetExceptionCode());
-      }
-      _SEH2_END;
-#endif
-   }
+      PrintStackTrace(ExceptionInfo);
 
    /* Save exception code and address */
-   ErrorParameters[0] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionCode;
-   ErrorParameters[1] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+   ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
+   ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
 
-   if ((NTSTATUS)ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+   if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
    {
        /* get the type of operation that caused the access violation */
-       ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[0];
+       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[0];
    }
    else
    {
-       ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[2];
+       ErrorParameters[2] = ExceptionRecord->ExceptionInformation[2];
    }
 
    /* Save faulting address */
-   ErrorParameters[3] = ExceptionInfo->ExceptionRecord->ExceptionInformation[1];
+   ErrorParameters[3] = ExceptionRecord->ExceptionInformation[1];
 
    /* Raise the harderror */
    ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | 0x10000000,
@@ -395,7 +417,18 @@ RaiseException(IN DWORD dwExceptionCode,
     {
         DPRINT1("Delphi Exception at address: %p\n", ExceptionRecord.ExceptionInformation[0]);
         DPRINT1("Exception-Object: %p\n", ExceptionRecord.ExceptionInformation[1]);
-        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);        
+        DPRINT1("Exception text: %s\n", ExceptionRecord.ExceptionInformation[2]);
+    }
+
+    /* Trace the wine special error and show the modulename and functionname */
+    if (dwExceptionCode == 0x80000100 /*EXCEPTION_WINE_STUB*/)
+    {
+       /* Numbers of parameter must be equal to two */
+       if (ExceptionRecord.NumberParameters == 2)
+       {
+          DPRINT1("Missing function in   : %s\n", ExceptionRecord.ExceptionInformation[0]);
+          DPRINT1("with the functionname : %s\n", ExceptionRecord.ExceptionInformation[1]);
+       }
     }
 
     /* Raise the exception */

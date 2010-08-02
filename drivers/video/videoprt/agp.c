@@ -4,19 +4,18 @@
  * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -253,6 +252,7 @@ IntAgpCommitVirtual(
 {
    PVIDEO_PORT_AGP_VIRTUAL_MAPPING VirtualMapping;
    PVOID BaseAddress = NULL;
+   PHYSICAL_ADDRESS PhysicalAddress;
    NTSTATUS Status;
 
    TRACE_(VIDEOPRT, "AgpCommitVirtual - VirtualContext: 0x%x Pages: %d, Offset: 0x%x\n",
@@ -275,11 +275,11 @@ IntAgpCommitVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Release some virtual memory */
-      ULONG Size = Pages * PAGE_SIZE;
+      SIZE_T Size = Pages * PAGE_SIZE;
       ULONG OffsetInBytes = Offset * PAGE_SIZE;
       BaseAddress = (PVOID)((ULONG_PTR)VirtualMapping->MappedAddress +
                                        OffsetInBytes);
-      PHYSICAL_ADDRESS PhysicalAddress = VirtualMapping->AgpMapping->PhysicalAddress;
+      PhysicalAddress = VirtualMapping->AgpMapping->PhysicalAddress;
       PhysicalAddress.QuadPart += OffsetInBytes;
 
       Status = ZwFreeVirtualMemory(VirtualMapping->ProcessHandle,
@@ -349,7 +349,7 @@ IntAgpFreeVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Unmap the section view */
-      ULONG Size = Pages * PAGE_SIZE;
+      SIZE_T Size = Pages * PAGE_SIZE;
       ULONG OffsetInBytes = Offset * PAGE_SIZE;
       BaseAddress = (PVOID)((ULONG_PTR)VirtualMapping->MappedAddress +
                                        OffsetInBytes);
@@ -400,7 +400,7 @@ IntAgpReleaseVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Release the allocated virtual memory */
-      ULONG Size = VirtualMapping->AgpMapping->NumberOfPages * PAGE_SIZE;
+      SIZE_T Size = VirtualMapping->AgpMapping->NumberOfPages * PAGE_SIZE;
       Status = ZwFreeVirtualMemory(VirtualMapping->ProcessHandle,
                                    &VirtualMapping->MappedAddress,
                                    &Size, MEM_RELEASE);
@@ -452,7 +452,7 @@ IntAgpReserveVirtual(
    else /* ProcessHandle != NULL */
    {
       /* Reserve memory for usermode */
-      ULONG Size = AgpMapping->NumberOfPages * PAGE_SIZE;
+      SIZE_T Size = AgpMapping->NumberOfPages * PAGE_SIZE;
       MappedAddress = NULL;
       Status = ZwAllocateVirtualMemory(ProcessHandle, &MappedAddress, 0, &Size,
                                        MEM_RESERVE, PAGE_NOACCESS);
@@ -507,10 +507,16 @@ IntAgpGetInterface(
    AgpBusInterface = &DeviceExtension->AgpInterface;
    AgpInterface = (PVIDEO_PORT_AGP_INTERFACE_2)Interface;
 
-   ASSERT((Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 &&
-           Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2)) ||
-          (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1 &&
-           Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE)));
+   ASSERT(Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2 ||
+          Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1);
+   if (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_2)
+   {
+       ASSERT(Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE_2));
+   }
+   else if (Interface->Version == VIDEO_PORT_AGP_INTERFACE_VERSION_1)
+   {
+       ASSERT(Interface->Size >= sizeof(VIDEO_PORT_AGP_INTERFACE));
+   }
 
    if (DeviceExtension->NextDeviceObject == NULL)
    {

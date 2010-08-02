@@ -71,7 +71,7 @@ static void dump(const void* ptr, unsigned len)
     unsigned int i, j;
     char        msg[128];
     const char* hexof = "0123456789abcdef";
-    const BYTE* x = (const BYTE*)ptr;
+    const BYTE* x = ptr;
 
     for (i = 0; i < len; i += 16)
     {
@@ -95,7 +95,7 @@ static void dump(const void* ptr, unsigned len)
  * Process CodeView type information.
  */
 
-#define MAX_BUILTIN_TYPES	0x0480
+#define MAX_BUILTIN_TYPES	0x0604
 #define FIRST_DEFINABLE_TYPE    0x1000
 
 static struct symt*     cv_basic_types[MAX_BUILTIN_TYPES];
@@ -113,6 +113,7 @@ static struct cv_defined_module*cv_current_module;
 
 static void codeview_init_basic_types(struct module* module)
 {
+    struct symt_udt*    udt;
     /*
      * These are the common builtin types that are used by VC++.
      */
@@ -169,6 +170,12 @@ static void codeview_init_basic_types(struct module* module)
     cv_basic_types[T_32PINT8]   = &symt_new_pointer(module, cv_basic_types[T_INT8])->symt;
     cv_basic_types[T_32PUINT8]  = &symt_new_pointer(module, cv_basic_types[T_UINT8])->symt;
     cv_basic_types[T_32PHRESULT]= &symt_new_pointer(module, cv_basic_types[T_HRESULT])->symt;
+
+    /* The .pdb file can refer to 64 bit pointers values even on 32 bits applications. */
+    udt = symt_new_udt(module, "PVOID64", 8, UdtStruct);
+    symt_add_udt_element(module, udt, "ptr64_low", cv_basic_types[T_LONG], 0, 32);
+    symt_add_udt_element(module, udt, "ptr64_high", cv_basic_types[T_LONG], 32, 32);
+    cv_basic_types[0x603]= &udt->symt;
 }
 
 static int leaf_as_variant(VARIANT* v, const unsigned short int* leaf)
@@ -486,18 +493,23 @@ static int codeview_add_type(unsigned int typeno, struct symt* dt)
     if ((typeno >> 24) != 0)
         FIXME("No module index while inserting type-id assumption is wrong %x\n",
               typeno);
-    while (typeno - FIRST_DEFINABLE_TYPE >= cv_current_module->num_defined_types)
+    if (typeno - FIRST_DEFINABLE_TYPE >= cv_current_module->num_defined_types)
     {
-        cv_current_module->num_defined_types += 0x100;
         if (cv_current_module->defined_types)
+        {
+            cv_current_module->num_defined_types = max( cv_current_module->num_defined_types * 2,
+                                                        typeno - FIRST_DEFINABLE_TYPE + 1 );
             cv_current_module->defined_types = HeapReAlloc(GetProcessHeap(),
                             HEAP_ZERO_MEMORY, cv_current_module->defined_types,
                             cv_current_module->num_defined_types * sizeof(struct symt*));
+        }
         else
+        {
+            cv_current_module->num_defined_types = max( 256, typeno - FIRST_DEFINABLE_TYPE + 1 );
             cv_current_module->defined_types = HeapAlloc(GetProcessHeap(),
                             HEAP_ZERO_MEMORY,
                             cv_current_module->num_defined_types * sizeof(struct symt*));
-
+        }
         if (cv_current_module->defined_types == NULL) return FALSE;
     }
     if (cv_current_module->defined_types[typeno - FIRST_DEFINABLE_TYPE])
@@ -581,15 +593,8 @@ static struct symt* codeview_add_type_array(struct codeview_type_parse* ctp,
 {
     struct symt*        elem = codeview_fetch_type(ctp, elemtype, FALSE);
     struct symt*        index = codeview_fetch_type(ctp, indextype, FALSE);
-    DWORD               arr_max = 0;
 
-    if (elem)
-    {
-        DWORD64 elem_size;
-        symt_get_info(elem, TI_GET_LENGTH, &elem_size);
-        if (elem_size) arr_max = arr_len / (DWORD)elem_size;
-    }
-    return &symt_new_array(ctp->module, 0, arr_max, elem, index)->symt;
+    return &symt_new_array(ctp->module, 0, -arr_len, elem, index)->symt;
 }
 
 static int codeview_add_type_enum_field_list(struct module* module,
@@ -669,7 +674,7 @@ static void codeview_add_udt_element(struct codeview_type_parse* ctp,
     if (subtype)
     {
         DWORD64 elem_size = 0;
-        symt_get_info(subtype, TI_GET_LENGTH, &elem_size);
+        symt_get_info(ctp->module, subtype, TI_GET_LENGTH, &elem_size);
         symt_add_udt_element(ctp->module, symt, name, subtype,
                              value << 3, (DWORD)elem_size << 3);
     }
@@ -1357,48 +1362,72 @@ static void codeview_snarf_linetab(const struct msc_debug_info* msc_dbg, const B
 }
 
 static void codeview_snarf_linetab2(const struct msc_debug_info* msc_dbg, const BYTE* linetab, DWORD size,
-                                     const char* strimage, DWORD strsize)
+                                    const char* strimage, DWORD strsize)
 {
-    DWORD       offset;
     unsigned    i;
     DWORD       addr;
-    const struct codeview_linetab2_block* lbh;
-    const struct codeview_linetab2_file* fd;
+    const struct codeview_linetab2*     lt2;
+    const struct codeview_linetab2*     lt2_files = NULL;
+    const struct codeview_lt2blk_lines* lines_blk;
+    const struct codeview_linetab2_file*fd;
     unsigned    source;
     struct symt_function* func;
 
-    if (*(const DWORD*)linetab != 0x000000f4) return;
-    offset = *((const DWORD*)linetab + 1);
-
-    for (lbh = (const struct codeview_linetab2_block*)(linetab + 8 + offset);
-         (const BYTE*)lbh < linetab + size;
-         lbh = (const struct codeview_linetab2_block*)((const char*)lbh + 8 + lbh->size_of_block))
+    /* locate LT2_FILES_BLOCK (if any) */
+    lt2 = (const struct codeview_linetab2*)linetab;
+    while ((const BYTE*)(lt2 + 1) < linetab + size)
     {
-        if (lbh->header != 0x000000f2)
-        /* FIXME: should also check that whole lbh fits in linetab + size */
+        if (lt2->header == LT2_FILES_BLOCK)
         {
-            TRACE("block end %x\n", lbh->header);
+            lt2_files = lt2;
             break;
         }
-        addr = codeview_get_address(msc_dbg, lbh->seg, lbh->start);
-        TRACE("block from %04x:%08x #%x (%x lines)\n",
-               lbh->seg, lbh->start, lbh->size, lbh->nlines);
-        fd = (const struct codeview_linetab2_file*)(linetab + 8 + lbh->file_offset);
-        /* FIXME: should check that string is within strimage + strsize */
-        source = source_new(msc_dbg->module, NULL, strimage + fd->offset);
-        func = (struct symt_function*)symt_find_nearest(msc_dbg->module, addr);
-        /* FIXME: at least labels support line numbers */
-        if (!func || func->symt.tag != SymTagFunction)
+        lt2 = codeview_linetab2_next_block(lt2);
+    }
+    if (!lt2_files)
+    {
+        TRACE("No LT2_FILES_BLOCK found\n");
+        return;
+    }
+
+    lt2 = (const struct codeview_linetab2*)linetab;
+    while ((const BYTE*)(lt2 + 1) < linetab + size)
+    {
+        /* FIXME: should also check that whole lines_blk fits in linetab + size */
+        switch (lt2->header)
         {
-            WARN("--not a func at %04x:%08x %x tag=%d\n",
-                 lbh->seg, lbh->start, addr, func ? func->symt.tag : -1);
+        case LT2_LINES_BLOCK:
+            lines_blk = (const struct codeview_lt2blk_lines*)lt2;
+            /* FIXME: should check that file_offset is within the LT2_FILES_BLOCK we've seen */
+            addr = codeview_get_address(msc_dbg, lines_blk->seg, lines_blk->start);
+            TRACE("block from %04x:%08x #%x (%x lines)\n",
+                  lines_blk->seg, lines_blk->start, lines_blk->size, lines_blk->nlines);
+            fd = (const struct codeview_linetab2_file*)((const char*)lt2_files + 8 + lines_blk->file_offset);
+            /* FIXME: should check that string is within strimage + strsize */
+            source = source_new(msc_dbg->module, NULL, strimage + fd->offset);
+            func = (struct symt_function*)symt_find_nearest(msc_dbg->module, addr);
+            /* FIXME: at least labels support line numbers */
+            if (!func || func->symt.tag != SymTagFunction)
+            {
+                WARN("--not a func at %04x:%08x %x tag=%d\n",
+                     lines_blk->seg, lines_blk->start, addr, func ? func->symt.tag : -1);
+                break;
+            }
+            for (i = 0; i < lines_blk->nlines; i++)
+            {
+                symt_add_func_line(msc_dbg->module, func, source,
+                                   lines_blk->l[i].lineno ^ 0x80000000,
+                                   lines_blk->l[i].offset);
+            }
+            break;
+        case LT2_FILES_BLOCK: /* skip */
+            break;
+        default:
+            TRACE("Block end %x\n", lt2->header);
+            lt2 = (const struct codeview_linetab2*)((const char*)linetab + size);
             continue;
         }
-        for (i = 0; i < lbh->nlines; i++)
-        {
-            symt_add_func_line(msc_dbg->module, func, source,
-                               lbh->l[i].lineno ^ 0x80000000, lbh->l[i].offset - lbh->start);
-        }
+        lt2 = codeview_linetab2_next_block(lt2);
     }
 }
 
@@ -1897,8 +1926,7 @@ static int codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BYT
             {
                 symt_new_public(msc_dbg->module, compiland,
                                 terminate_string(&sym->data_v1.p_name),
-                                codeview_get_address(msc_dbg, sym->data_v1.segment, sym->data_v1.offset),
-                                1, TRUE /* FIXME */, TRUE /* FIXME */);
+                                codeview_get_address(msc_dbg, sym->data_v1.segment, sym->data_v1.offset), 1);
             }
             break;
 	case S_PUB_V2: /* FIXME is this really a 'data_v2' structure ?? */
@@ -1906,8 +1934,7 @@ static int codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BYT
             {
                 symt_new_public(msc_dbg->module, compiland,
                                 terminate_string(&sym->data_v2.p_name),
-                                codeview_get_address(msc_dbg, sym->data_v2.segment, sym->data_v2.offset),
-                                1, TRUE /* FIXME */, TRUE /* FIXME */);
+                                codeview_get_address(msc_dbg, sym->data_v2.segment, sym->data_v2.offset), 1);
             }
 	    break;
 
@@ -1916,8 +1943,7 @@ static int codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BYT
             {
                 symt_new_public(msc_dbg->module, compiland,
                                 sym->data_v3.name,
-                                codeview_get_address(msc_dbg, sym->data_v3.segment, sym->data_v3.offset),
-                                1, FALSE /* FIXME */, FALSE);
+                                codeview_get_address(msc_dbg, sym->data_v3.segment, sym->data_v3.offset), 1);
             }
             break;
         case S_PUB_FUNC1_V3:
@@ -1928,8 +1954,7 @@ static int codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BYT
             {
                 symt_new_public(msc_dbg->module, compiland,
                                 sym->data_v3.name,
-                                codeview_get_address(msc_dbg, sym->data_v3.segment, sym->data_v3.offset),
-                                1, TRUE /* FIXME */, TRUE);
+                                codeview_get_address(msc_dbg, sym->data_v3.segment, sym->data_v3.offset), 1);
             }
 #endif
             break;
@@ -2150,7 +2175,7 @@ static void pdb_convert_symbol_file(const PDB_SYMBOLS* symbols,
 {
     if (symbols->version < 19970000)
     {
-        const PDB_SYMBOL_FILE *sym_file = (const PDB_SYMBOL_FILE*)image;
+        const PDB_SYMBOL_FILE *sym_file = image;
         memset(sfile, 0, sizeof(*sfile));
         sfile->file        = sym_file->file;
         sfile->range.index = sym_file->range.index;
@@ -2217,7 +2242,8 @@ static void pdb_process_types(const struct msc_debug_info* msc_dbg,
         case 19950410:      /* VC 4.0 */
         case 19951122:
         case 19961031:      /* VC 5.0 / 6.0 */
-        case 19990903:
+        case 19990903:      /* VC 7.0 */
+        case 20040203:      /* VC 8.0 */
             break;
         default:
             ERR("-Unknown type info version %d\n", types.version);
@@ -2385,7 +2411,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
         imp = (const PDB_SYMBOL_IMPORT*)((const char*)symbols_image + sizeof(PDB_SYMBOLS) + 
                                          symbols->module_size + symbols->offset_size + 
                                          symbols->hash_size + symbols->srcmodule_size);
-        first = (const char*)imp;
+        first = imp;
         last = (const char*)imp + symbols->pdbimport_size;
         while (imp < (const PDB_SYMBOL_IMPORT*)last)
         {
@@ -2524,7 +2550,7 @@ static BOOL pdb_process_internal(const struct process* pcs,
             }
             file_name = (const char*)file + size;
             file_name += strlen(file_name) + 1;
-            file = (BYTE*)((DWORD)(file_name + strlen(file_name) + 1 + 3) & ~3);
+            file = (BYTE*)((DWORD_PTR)(file_name + strlen(file_name) + 1 + 3) & ~3);
         }
         /* finish the remaining public and global information */
         if (globalimage)

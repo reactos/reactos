@@ -23,7 +23,7 @@
 #include <windowsx.h>
 #include <winnls32.h>
 #include <ndk/ntndk.h>
-#include <ddk/ntstatus.h>
+#include <ntstatus.h>
 
 /* CSRSS Headers */
 #include <csrss/csrss.h>
@@ -42,15 +42,87 @@
 /* SEH Support with PSEH */
 #include <pseh/pseh2.h>
 
+#define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
+#define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId))
+
+/* Temporarily in here for now. */
+typedef struct _USERAPIHOOKINFO
+{
+  DWORD m_size;
+  LPCWSTR m_dllname1;
+  LPCWSTR m_funname1;
+  LPCWSTR m_dllname2;
+  LPCWSTR m_funname2;
+} USERAPIHOOKINFO,*PUSERAPIHOOKINFO;
+
+typedef LRESULT(CALLBACK *WNDPROC_OWP)(HWND,UINT,WPARAM,LPARAM,ULONG_PTR,PDWORD);
+
+typedef struct _UAHOWP
+{
+  BYTE*  MsgBitArray;
+  DWORD  Size;
+} UAHOWP, *PUAHOWP;
+
+typedef struct tagUSERAPIHOOK
+{
+  DWORD   size;
+  WNDPROC DefWindowProcA;
+  WNDPROC DefWindowProcW;
+  UAHOWP  DefWndProcArray;
+  FARPROC GetScrollInfo;
+  FARPROC SetScrollInfo;
+  FARPROC EnableScrollBar;
+  FARPROC AdjustWindowRectEx;
+  FARPROC SetWindowRgn;
+  WNDPROC_OWP PreWndProc;
+  WNDPROC_OWP PostWndProc;
+  UAHOWP  WndProcArray;
+  WNDPROC_OWP PreDefDlgProc;
+  WNDPROC_OWP PostDefDlgProc;
+  UAHOWP  DlgProcArray;
+  FARPROC GetSystemMetrics;
+  FARPROC SystemParametersInfoA;
+  FARPROC SystemParametersInfoW;
+  FARPROC ForceResetUserApiHook;
+  FARPROC DrawFrameControl;
+  FARPROC DrawCaption;
+  FARPROC MDIRedrawFrame;
+  FARPROC GetRealWindowOwner;
+} USERAPIHOOK, *PUSERAPIHOOK;
+
+typedef enum _UAPIHK
+{
+  uahLoadInit,
+  uahStop,
+  uahShutdown
+} UAPIHK, *PUAPIHK;
+
+extern RTL_CRITICAL_SECTION gcsUserApiHook;
+extern USERAPIHOOK guah;
+typedef DWORD (CALLBACK * USERAPIHOOKPROC)(UAPIHK State, ULONG_PTR Info);
+BOOL FASTCALL BeginIfHookedUserApiHook(VOID);
+BOOL FASTCALL EndUserApiHook(VOID);
+BOOL FASTCALL IsInsideUserApiHook(VOID);
+VOID FASTCALL ResetUserApiHook(PUSERAPIHOOK);
+BOOL FASTCALL IsMsgOverride(UINT,PUAHOWP);
+
+#define LOADUSERAPIHOOK \
+   if (!gfServerProcess &&                                \
+       !IsInsideUserApiHook() &&                          \
+       (gpsi->dwSRVIFlags & SRVINFO_APIHOOK) &&           \
+       !RtlIsThreadWithinLoaderCallout())                 \
+   {                                                      \
+      NtUserCallNoParam(NOPARAM_ROUTINE_LOADUSERAPIHOOK); \
+   }                                                      \
+
 /* FIXME: Use ntgdi.h then cleanup... */
-HGDIOBJ WINAPI  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-BOOL WINAPI NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
 LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
 extern PPROCESSINFO g_ppi;
 extern ULONG_PTR g_ulSharedDelta;
-extern PSERVERINFO g_psi;
+extern PSERVERINFO gpsi;
+extern BOOL gfServerProcess;
 
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
@@ -63,9 +135,11 @@ SharedPtrToUser(PVOID Ptr)
 static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
+    PCLIENTINFO pci;
+    PDESKTOPINFO pdi;
     GetW32ThreadInfo();
-    PCLIENTINFO pci = GetWin32ClientInfo();
-    PDESKTOPINFO pdi = pci->pDeskInfo;
+    pci = GetWin32ClientInfo();
+    pdi = pci->pDeskInfo;
 
     ASSERT(Ptr != NULL);
     ASSERT(pdi != NULL);
@@ -79,7 +153,7 @@ DesktopPtrToUser(PVOID Ptr)
         /* NOTE: This is slow as it requires a call to win32k. This should only be
                  neccessary if a thread wants to access an object on a different
                  desktop */
-        return NtUserGetDesktopMapping(Ptr);
+        return (PVOID)NtUserGetDesktopMapping(Ptr);
     }
 }
 
@@ -92,30 +166,31 @@ SharedPtrToKernel(PVOID Ptr)
 }
 
 static __inline BOOL
-IsThreadHooked(PW32THREADINFO ti)
+IsThreadHooked(PCLIENTINFO pci)
 {
-    return ti->fsHooks != 0;
+    return pci->fsHooks != 0;
 }
 
 static __inline PDESKTOPINFO
 GetThreadDesktopInfo(VOID)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
     PDESKTOPINFO di = NULL;
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)
-        di = DesktopPtrToUser(ti->pDeskInfo);
+        di = GetWin32ClientInfo()->pDeskInfo;
 
     return di;
 }
 
-PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
-PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
-PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);
-PWINDOW FASTCALL GetThreadDesktopWnd(VOID);
+PCALLPROCDATA FASTCALL ValidateCallProc(HANDLE hCallProc);
+PWND FASTCALL ValidateHwnd(HWND hwnd);
+PWND FASTCALL ValidateHwndOrDesk(HWND hwnd);
+PWND FASTCALL GetThreadDesktopWnd(VOID);
 PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
-PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
+PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
-BOOL FASTCALL TestWindowProcess(PWINDOW);
+BOOL FASTCALL TestWindowProcess(PWND);
+VOID UserGetWindowBorders(DWORD, DWORD, SIZE *, BOOL);

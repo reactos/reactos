@@ -26,7 +26,9 @@ Author:
 //
 // Page-related Macros
 //
+#ifndef PAGE_SIZE
 #define PAGE_SIZE                         0x1000
+#endif
 #define PAGE_SHIFT                        12L
 #define MM_ALLOCATION_GRANULARITY         0x10000
 #define MM_ALLOCATION_GRANULARITY_SHIFT   16L
@@ -45,90 +47,56 @@ C_ASSERT(MM_ALLOCATION_GRANULARITY >= PAGE_SIZE);
 //
 // Page Table Entry Definitions
 //
-typedef struct _HARDWARE_PTE_ARM
+typedef struct _HARDWARE_PDE_ARMV6
 {
-    union
-    {
-        union
-        {
-            struct
-            {
-                ULONG Type:2;
-                ULONG Unused:30;
-            } Fault;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Ignored:2;
-                ULONG Reserved:1;
-                ULONG Domain:4;
-                ULONG Ignored1:1;
-                ULONG BaseAddress:22;
-            } Coarse;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Reserved:1;
-                ULONG Domain:4;
-                ULONG Ignored:1;
-                ULONG Access:2;
-                ULONG Ignored1:8;
-                ULONG BaseAddress:12;
-            } Section;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Reserved:3;
-                ULONG Domain:4;
-                ULONG Ignored:3;
-                ULONG BaseAddress:20;
-            } Fine;
-        } L1;
-        union
-        {
-            struct
-            {
-                ULONG Type:2;
-                ULONG Unused:30;
-            } Fault;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Access1:2;
-                ULONG Access2:2;
-                ULONG Access3:2;
-                ULONG Ignored:4;
-                ULONG BaseAddress:16;
-            } Large;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Access1:2;
-                ULONG Access2:2;
-                ULONG Access3:2;
-                ULONG BaseAddress:20;
-            } Small;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Ignored:4;
-                ULONG BaseAddress:22;
-            } Tiny; 
-        } L2;
-        ULONG AsUlong;
-    };
-} HARDWARE_PTE_ARM, *PHARDWARE_PTE_ARM;
+    ULONG Valid:1;     // Only for small pages
+    ULONG LargePage:1; // Note, if large then Valid = 0
+    ULONG Buffered:1;
+    ULONG Cached:1;
+    ULONG NoExecute:1;
+    ULONG Domain:4;
+    ULONG Ecc:1;
+    ULONG PageFrameNumber:22;
+} HARDWARE_PDE_ARMV6, *PHARDWARE_PDE_ARMV6;
+
+typedef struct _HARDWARE_LARGE_PTE_ARMV6
+{
+    ULONG Valid:1;     // Only for small pages
+    ULONG LargePage:1; // Note, if large then Valid = 0
+    ULONG Buffered:1;
+    ULONG Cached:1;
+    ULONG NoExecute:1;
+    ULONG Domain:4;
+    ULONG Ecc:1;
+    ULONG Accessed:1;
+    ULONG Owner:1;
+    ULONG CacheAttributes:3;
+    ULONG ReadOnly:1;
+    ULONG Shared:1;
+    ULONG NonGlobal:1;
+    ULONG SuperLagePage:1;
+    ULONG Reserved:1;
+    ULONG PageFrameNumber:12;
+} HARDWARE_LARGE_PTE_ARMV6, *PHARDWARE_LARGE_PTE_ARMV6;
+
+typedef struct _HARDWARE_PTE_ARMV6
+{
+    ULONG NoExecute:1;
+    ULONG Valid:1;
+    ULONG Buffered:1;
+    ULONG Cached:1;
+    ULONG Accessed:1;
+    ULONG Owner:1;
+    ULONG CacheAttributes:3;
+    ULONG ReadOnly:1;
+    ULONG Shared:1;
+    ULONG NonGlobal:1;
+    ULONG PageFrameNumber:20;
+} HARDWARE_PTE_ARMV6, *PHARDWARE_PTE_ARMV6;
+
+C_ASSERT(sizeof(HARDWARE_PDE_ARMV6) == sizeof(ULONG));
+C_ASSERT(sizeof(HARDWARE_LARGE_PTE_ARMV6) == sizeof(ULONG));
+C_ASSERT(sizeof(HARDWARE_PTE_ARMV6) == sizeof(ULONG));
 
 typedef struct _MMPTE_SOFTWARE
 {
@@ -183,95 +151,54 @@ typedef struct _MMPTE_LIST
     ULONG filler1:1;
 } MMPTE_LIST;
 
-typedef struct _MMPTE_HARDWARE
+typedef union _MMPTE_HARDWARE
 {
-    union
+    struct
     {
-        union
-        {
-            struct
-            {
-                ULONG Type:2;
-                ULONG Unused:30;
-            } Fault;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Ignored:2;
-                ULONG Reserved:1;
-                ULONG Domain:4;
-                ULONG Ignored1:1;
-                ULONG BaseAddress:22;
-            } Coarse;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Reserved:1;
-                ULONG Domain:4;
-                ULONG Ignored:1;
-                ULONG Access:2;
-                ULONG Ignored1:8;
-                ULONG BaseAddress:12;
-            } Section;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Reserved:3;
-                ULONG Domain:4;
-                ULONG Ignored:3;
-                ULONG BaseAddress:20;
-            } Fine;
-        } L1;
-        union
-        {
-            struct
-            {
-                ULONG Type:2;
-                ULONG Unused:30;
-            } Fault;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Access1:2;
-                ULONG Access2:2;
-                ULONG Access3:2;
-                ULONG Ignored:4;
-                ULONG BaseAddress:16;
-            } Large;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Access1:2;
-                ULONG Access2:2;
-                ULONG Access3:2;
-                ULONG BaseAddress:20;
-            } Small;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Ignored:4;
-                ULONG BaseAddress:22;
-            } Tiny; 
-        } L2;
-        ULONG AsUlong;
+        ULONG NoExecute:1;
+        ULONG Valid:1;
+        ULONG Buffered:1;
+        ULONG Cached:1;
+        ULONG Access:1;
+        ULONG Owner:1;
+        ULONG CacheAttributes:3;
+        ULONG ReadOnly:1;
+        ULONG Shared:1;
+        ULONG NonGlobal:1;
+        ULONG PageFrameNumber:20;
     };
+    ULONG AsUlong;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
+
+typedef union _MMPDE_HARDWARE
+{
+    struct
+    {
+        ULONG Valid:1;
+        ULONG LargePage:1;
+        ULONG Buffered:1;
+        ULONG Cached:1;
+        ULONG NoExecute:1;
+        ULONG Domain:4;
+        ULONG Ecc:1;
+        ULONG PageFrameNumber:22;
+    };
+    ULONG AsUlong;
+} MMPDE_HARDWARE, *PMMPDE_HARDWARE;
+
+typedef struct _MMPDE
+{
+    union 
+    {
+        MMPDE_HARDWARE Hard;
+        ULONG Long;
+    } u;
+} MMPDE, *PMMPDE;
 
 //
 // Use the right PTE structure
 //
-#define HARDWARE_PTE        HARDWARE_PTE_ARM
-#define PHARDWARE_PTE       PHARDWARE_PTE_ARM
+#define HARDWARE_PTE        HARDWARE_PTE_ARMV6
+#define PHARDWARE_PTE       PHARDWARE_PTE_ARMV6
 
 #endif

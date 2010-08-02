@@ -200,7 +200,7 @@ LONG WINAPI SHRegCloseUSKey(
     if (hKey->HKLMkey)
         ret = RegCloseKey(hKey->HKLMkey);
     if (hKey->HKLMstart && hKey->HKLMstart != HKEY_LOCAL_MACHINE)
-        ret = RegCloseKey(hKey->HKCUstart);
+        ret = RegCloseKey(hKey->HKLMstart);
 
     HeapFree(GetProcessHeap(), 0, hKey);
     return ret;
@@ -331,8 +331,25 @@ LONG WINAPI SHRegEnumUSValueA(HUSKEY hUSKey, DWORD dwIndex, LPSTR pszValueName,
                               LPDWORD pcchValueNameLen, LPDWORD pdwType, LPVOID pvData,
                               LPDWORD pcbData, SHREGENUM_FLAGS enumRegFlags)
 {
-    FIXME("(%p, 0x%08x, %s, %p, %p, %p, %p, 0x%08x) stub\n", hUSKey, dwIndex,
-          debugstr_a(pszValueName), pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+    HKEY dokey;
+
+    TRACE("(%p, 0x%08x, %p, %p, %p, %p, %p, 0x%08x)\n", hUSKey, dwIndex,
+          pszValueName, pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+
+    if (((enumRegFlags == SHREGENUM_HKCU) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKCU))) {
+        return RegEnumValueA(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+
+    if (((enumRegFlags == SHREGENUM_HKLM) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKLM))) {
+        return RegEnumValueA(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+    FIXME("no support for SHREGENUM_BOTH\n");
     return ERROR_INVALID_FUNCTION;
 }
 
@@ -345,8 +362,25 @@ LONG WINAPI SHRegEnumUSValueW(HUSKEY hUSKey, DWORD dwIndex, LPWSTR pszValueName,
                               LPDWORD pcchValueNameLen, LPDWORD pdwType, LPVOID pvData,
                               LPDWORD pcbData, SHREGENUM_FLAGS enumRegFlags)
 {
-    FIXME("(%p, 0x%08x, %s, %p, %p, %p, %p, 0x%08x) stub\n", hUSKey, dwIndex,
-          debugstr_w(pszValueName), pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+    HKEY dokey;
+
+    TRACE("(%p, 0x%08x, %p, %p, %p, %p, %p, 0x%08x)\n", hUSKey, dwIndex,
+          pszValueName, pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+
+    if (((enumRegFlags == SHREGENUM_HKCU) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKCU))) {
+        return RegEnumValueW(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+
+    if (((enumRegFlags == SHREGENUM_HKLM) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKLM))) {
+        return RegEnumValueW(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+    FIXME("no support for SHREGENUM_BOTH\n");
     return ERROR_INVALID_FUNCTION;
 }
 
@@ -1133,68 +1167,6 @@ DWORD WINAPI SHGetValueA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue,
     /* SHQueryValueEx expands Environment strings */
     dwRet = SHQueryValueExA(hSubKey ? hSubKey : hKey, lpszValue, 0, pwType, pvData, pcbData);
     if (hSubKey) RegCloseKey(hSubKey);
-  }
-  return dwRet;
-}
-
-/*************************************************************************
- * SHRegGetValueA   [SHLWAPI.@]
- *
- * Get a value from the registry.
- *
- * PARAMS
- *   hKey       [I] Handle to registry key
- *   lpszSubKey [I] Name of sub key containing value to get
- *   lpszValue  [I] Name of value to get
- *   srrf       [I] Flags for restricting returned data
- *   pwType     [O] Pointer to the values type
- *   pvData     [O] Pointer to the values data
- *   pcbData    [O] Pointer to the values size
- *
- * RETURNS
- *   Success: ERROR_SUCCESS. Output parameters contain the details read.
- *   Failure: An error code from RegOpenKeyExA() or SHQueryValueExA().
- */
-DWORD WINAPI SHRegGetValueA(HKEY hKey, LPCSTR lpszSubKey, LPCSTR lpszValue, DWORD srrfFlags,
-                         LPDWORD pwType, LPVOID pvData, LPDWORD pcbData)
-{
-  DWORD dwRet = 0;
-  HKEY hSubKey = 0;
-
-  TRACE("(hkey=%p,%s,%s,%p,%p,%p)\n", hKey, debugstr_a(lpszSubKey),
-        debugstr_a(lpszValue), pwType, pvData, pcbData);
-  FIXME("Semi-Stub: Find meaning and implement handling of SRFF Flags 0x%08x\n", srrfFlags);
-
-  dwRet = RegOpenKeyExA(hKey, lpszSubKey, 0, KEY_QUERY_VALUE, &hSubKey);
-  if (! dwRet)
-  {
-    /* SHQueryValueEx expands Environment strings */
-    dwRet = SHQueryValueExA(hSubKey, lpszValue, 0, pwType, pvData, pcbData);
-    RegCloseKey(hSubKey);
-  }
-  return dwRet;
-}
-
-/*************************************************************************
- * SHReg GetRegValueW   [SHLWAPI.@]
- *
- * See SHGetValueA.
- */
-DWORD WINAPI SHRegGetValueW(HKEY hKey, LPCWSTR lpszSubKey, LPCWSTR lpszValue, DWORD srrfFlags,
-                         LPDWORD pwType, LPVOID pvData, LPDWORD pcbData)
-{
-  DWORD dwRet = 0;
-  HKEY hSubKey = 0;
-
-  TRACE("(hkey=%p,%s,%s,0x%08x, %p,%p,%p)\n", hKey, debugstr_w(lpszSubKey),
-        debugstr_w(lpszValue), srrfFlags,pwType, pvData, pcbData);
-  FIXME("Semi-Stub: Find meaning and implement handling of SRFF Flags 0x%08x\n", srrfFlags);
-
-  dwRet = RegOpenKeyExW(hKey, lpszSubKey, 0, KEY_QUERY_VALUE, &hSubKey);
-  if (! dwRet)
-  {
-    dwRet = SHQueryValueExW(hSubKey, lpszValue, 0, pwType, pvData, pcbData);
-    RegCloseKey(hSubKey);
   }
   return dwRet;
 }

@@ -12,13 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __DISK_H
-#define __DISK_H
+#pragma once
 
 #include <reactos/rosioctl.h>
 
@@ -127,16 +126,7 @@ VOID	DiskStopFloppyMotor(VOID);	// Implemented in i386disk.c
 extern ULONG BootDrive;
 extern ULONG BootPartition;
 
-BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector,
-                          PULONGLONG SectorCount, int *FsType);
-BOOLEAN DiskGetSystemVolume(char *SystemPath, char *RemainingPath,
-                            PULONG Device, PULONG DriveNumber,
-                            PULONGLONG StartSector,
-                            PULONGLONG SectorCount, int *FsType);
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
-VOID DiskGetBootDevice(PULONG BootDevice);
-BOOLEAN DiskBootingFromFloppy(VOID);
-BOOLEAN DiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -150,4 +140,4 @@ BOOLEAN	DiskGetFirstPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTIT
 BOOLEAN	DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN	DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord);
 
-#endif  // defined __DISK_H
+ULONG LoadBootDeviceDriver(VOID);

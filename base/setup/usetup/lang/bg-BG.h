@@ -1,5 +1,4 @@
-#ifndef LANG_BG_BG_H__
-#define LANG_BG_BG_H__
+#pragma once
 
 MUI_LAYOUTS bgBGLayouts[] =
 {
@@ -996,7 +995,7 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
     {
         8,
         12,
-        "Слагане на зареждач на твърдия диск (MBR).",
+        "Слагане на зареждач на твърдия диск (в MBR).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1486,8 +1485,14 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Настройката не можа да установи означителя на географското положение.\n"
+        "ENTER = Презапускане на компютъра"
+    },
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Натиснете клавиш, за да продължите.",
+        NULL
     },
     {
         NULL,
@@ -1627,7 +1632,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_TXTSETUPFAILED,
     "Не бе намерен раздел '%S'\nв TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Запис на файл: %S"},
+     "   Запис на файл: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Тече записване на файловете..."},
     {STRING_REGHIVEUPDATE,
@@ -1706,5 +1711,3 @@ MUI_STRING bgBGStrings[] =
     "Добавяне на клавиатурни подредби"},
     {0, 0}
 };
-
-#endif

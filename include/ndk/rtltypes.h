@@ -23,7 +23,8 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
-#include <pstypes.h>
+#include <mmtypes.h>
+#include <ldrtypes.h>
 
 //
 // Maximum Atom Length
@@ -435,7 +436,7 @@ extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
 // Callback for RTL Heap Enumeration
 //
 typedef NTSTATUS
-(*PHEAP_ENUMERATION_ROUTINE)(
+(NTAPI *PHEAP_ENUMERATION_ROUTINE)(
     IN PVOID HeapHandle,
     IN PVOID UserParam
 );
@@ -558,22 +559,7 @@ typedef NTSTATUS
 );
 
 //
-// Version Info redefinitions
-//
-typedef OSVERSIONINFOW RTL_OSVERSIONINFOW;
-typedef LPOSVERSIONINFOW PRTL_OSVERSIONINFOW;
-typedef OSVERSIONINFOEXW RTL_OSVERSIONINFOEXW;
-typedef LPOSVERSIONINFOEXW PRTL_OSVERSIONINFOEXW;
-
-//
-// Simple pointer definitions
-//
-typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
-typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
-
-//
 // Parameters for RtlCreateHeap
-// FIXME: Determine whether Length is SIZE_T or ULONG
 //
 typedef struct _RTL_HEAP_PARAMETERS
 {
@@ -760,6 +746,7 @@ typedef struct _RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED
 } RTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED,
   *PRTL_CALLER_ALLOCATED_ACTIVATION_CONTEXT_STACK_FRAME_EXTENDED;
 
+#if (NTDDI_VERSION >= NTDDI_WS03)
 typedef struct _ACTIVATION_CONTEXT_STACK
 {
     PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame;
@@ -769,6 +756,15 @@ typedef struct _ACTIVATION_CONTEXT_STACK
     ULONG StackId;
 } ACTIVATION_CONTEXT_STACK,
   *PACTIVATION_CONTEXT_STACK;
+#else
+typedef struct _ACTIVATION_CONTEXT_STACK
+{
+    ULONG Flags;
+    ULONG NextCookieSequenceNumber;
+    PVOID ActiveFrame;
+    LIST_ENTRY FrameListCache;
+} ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;
+#endif
 
 #endif
 
@@ -958,8 +954,11 @@ typedef struct _RTL_UNLOAD_EVENT_TRACE
 //
 typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
-    ULONG Flags;
-    struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+    union
+    {
+        ULONG Flags;
+        struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+    };
 } RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
 
 typedef struct _RTL_HANDLE_TABLE
@@ -1084,29 +1083,6 @@ typedef struct _RTL_RESOURCE
     ULONG TimeoutBoost;
     PVOID DebugInfo;
 } RTL_RESOURCE, *PRTL_RESOURCE;
-
-//
-// RTL Message Structures for PE Resources
-//
-typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
-{
-    USHORT Length;
-    USHORT Flags;
-    CHAR Text[1];
-} RTL_MESSAGE_RESOURCE_ENTRY, *PRTL_MESSAGE_RESOURCE_ENTRY;
-
-typedef struct _RTL_MESSAGE_RESOURCE_BLOCK
-{
-    ULONG LowId;
-    ULONG HighId;
-    ULONG OffsetToEntries;
-} RTL_MESSAGE_RESOURCE_BLOCK, *PRTL_MESSAGE_RESOURCE_BLOCK;
-
-typedef struct _RTL_MESSAGE_RESOURCE_DATA
-{
-    ULONG NumberOfBlocks;
-    RTL_MESSAGE_RESOURCE_BLOCK Blocks[1];
-} RTL_MESSAGE_RESOURCE_DATA, *PRTL_MESSAGE_RESOURCE_DATA;
 
 //
 // Structures for RtlCreateUserProcess

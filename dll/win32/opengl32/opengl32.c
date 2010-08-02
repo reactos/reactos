@@ -20,13 +20,13 @@ static DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd );
 
 
 /* global vars */
-/* Do not assume it have the free value -1 set, any value can be in here */
-DWORD OPENGL32_tls = -1U;
+/* Do not assume it have the free value MAXDWORD set, any value can be in here */
+DWORD OPENGL32_tls = MAXDWORD;
 GLPROCESSDATA OPENGL32_processdata;
 
 
 static BOOL
-OPENGL32_ThreadAttach()
+OPENGL32_ThreadAttach( void )
 {
     GLTHREADDATA* lpData = NULL;
     PROC *dispatchTable = NULL;
@@ -69,7 +69,7 @@ OPENGL32_ThreadAttach()
 
 
 static void
-OPENGL32_ThreadDetach()
+OPENGL32_ThreadDetach( void )
 {
     GLTHREADDATA* lpData = NULL;
     PROC *dispatchTable = NULL;
@@ -96,14 +96,14 @@ OPENGL32_ThreadDetach()
 
 
 static BOOL
-OPENGL32_ProcessAttach()
+OPENGL32_ProcessAttach( void )
 {
     SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
                                    NULL, /* lpSecurityDescriptor */
                                    TRUE /* bInheritHandle */ };
 
     OPENGL32_tls = TlsAlloc();
-    if (-1U == OPENGL32_tls)
+    if (OPENGL32_tls == MAXDWORD)
         return FALSE;
 
     memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
@@ -136,7 +136,7 @@ OPENGL32_ProcessAttach()
 
 
 static void
-OPENGL32_ProcessDetach()
+OPENGL32_ProcessDetach( void )
 {
     GLDRIVERDATA *icd, *icd2;
     GLDCDATA *dcdata, *dcdata2;
@@ -179,7 +179,7 @@ OPENGL32_ProcessDetach()
         CloseHandle( OPENGL32_processdata.dcdata_mutex );
 
     /* free TLS */
-    if (OPENGL32_tls != -1U)
+    if (OPENGL32_tls != MAXDWORD)
         TlsFree(OPENGL32_tls);
 }
 
@@ -472,8 +472,6 @@ OPENGL32_LoadICD( LPCWSTR driver )
     {
         if (!_wcsicmp( driver, icd->driver_name )) /* found */
         {
-            icd->refcount++;
-
             /* release mutex */
             if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
                 DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
@@ -484,8 +482,6 @@ OPENGL32_LoadICD( LPCWSTR driver )
 
     /* not found - try to load */
     icd = OPENGL32_LoadDriver( driver );
-    if (icd != NULL)
-        icd->refcount = 1;
 
     /* release mutex */
     if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
@@ -513,7 +509,7 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
         return FALSE; /* FIXME: do we have to expect such an error and handle it? */
     }
 
-    if (--icd->refcount == 0)
+    if (icd->refcount == 0)
         ret = OPENGL32_UnloadDriver( icd );
 
     /* release mutex */

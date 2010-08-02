@@ -1,0 +1,18 @@
+﻿; UTF-8
+
+[Section]
+Name = STEAM
+Version = 1.0
+Licence = Freeware
+Description = The STEAM Gaming platform used by many games these days.
+Size = 1.5MB
+Category = 4
+URLSite = http://steampowered.com/
+URLDownload = http://storefront.steampowered.com/download/SteamInstall.msi
+CDPath = none
+
+[Section.0407]
+Description = Die STEAM Spieleplattform, die von viele Spielen verwendet wird.
+
+[Section.0422]
+Description = Ігрова платформа, що використовується багатьма іграми.

@@ -14,16 +14,18 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#ifndef _M_ARM
 
 #include <freeldr.h>
 
 /* MACROS *******************************************************************/
 
-#ifdef DBG
+#if DBG
 
 #define DEFAULT_BAUD_RATE    19200
 
@@ -275,13 +277,15 @@ VOID Rs232PortPutByte(UCHAR ByteToSend)
 	WRITE_PORT_UCHAR (SER_THR(Rs232PortBase), ByteToSend);
 }
 
-#endif /* defined DBG */
+#endif /* DBG */
 
 BOOLEAN Rs232PortInUse(ULONG Base)
 {
-#ifdef DBG
+#if DBG
     return PortInitialized && Rs232PortBase == (PUCHAR)(ULONG_PTR)Base ? TRUE : FALSE;
 #else
     return FALSE;
 #endif
 }
+
+#endif /* not _M_ARM */

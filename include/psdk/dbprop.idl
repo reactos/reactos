@@ -30,7 +30,7 @@ interface IDBProperties : IUnknown {
 
     [call_as(GetProperties)] HRESULT RemoteGetProperties(
              [in] ULONG cPropertyIDSets,
-             [in, size_is(cPropertyIDSets)] const DBPROPIDSET rgPropertyIDSets[],
+             [in, unique, size_is(cPropertyIDSets)] const DBPROPIDSET *rgPropertyIDSets,
              [in, out] ULONG *pcPropertySets,
              [out, size_is(,*pcPropertySets)] DBPROPSET **prgPropertySets,
              [out] IErrorInfo **ppErrorInfoRem);
@@ -39,17 +39,18 @@ interface IDBProperties : IUnknown {
              [in] ULONG cPropertyIDSets,
              [in, size_is(cPropertyIDSets)] const DBPROPIDSET rgPropertyIDSets[],
              [in, out] ULONG *pcPropertyInfoSets,
-             [out, size_is(,*pcPropertyInfoSets)] DBPROPINFOSET **prgPropertyInfoSets);
+             [out, size_is(,*pcPropertyInfoSets)] DBPROPINFOSET **prgPropertyInfoSets,
+             [out, annotation("__deref_out_z_opt")] OLECHAR **ppDescBuffer);
 
     [call_as(GetPropertyInfo)] HRESULT RemoteGetPropertyInfo(
              [in] ULONG cPropertyIDSets,
-             [in,size_is(cPropertyIDSets)] const DBPROPIDSET *rgPropertyIDSets,
+             [in, unique, size_is(cPropertyIDSets)] const DBPROPIDSET *rgPropertyIDSets,
              [in, out] ULONG *pcPropertyInfoSets,
              [out, size_is(,*pcPropertyInfoSets)] DBPROPINFOSET **prgPropertyInfoSets,
              [in, out] ULONG *pcOffsets,
              [out, size_is(,*pcOffsets)] DBBYTEOFFSET **prgDescOffsets,
              [in, out] ULONG *pcbDescBuffer,
-             [out, size_is(,*pcbDescBuffer)] OLECHAR **ppDescBuffer,
+             [in, out, unique, size_is(,*pcbDescBuffer)] OLECHAR **ppDescBuffer,
              [out] IErrorInfo **ppErrorInfoRem);
 
     [local] HRESULT SetProperties(
@@ -58,7 +59,7 @@ interface IDBProperties : IUnknown {
 
     [call_as(SetProperties)] HRESULT RemoteSetProperties(
              [in] ULONG cPropertySets,
-             [in, out, size_is(cPropertySets)] DBPROPSET *rgPropertySets,
+             [in, unique, size_is(cPropertySets)] DBPROPSET *rgPropertySets,
              [in] ULONG cTotalProps,
              [out, size_is(cTotalProps)] DBPROPSTATUS *rgPropStatus,
              [out] IErrorInfo **ppErrorInfoRem);

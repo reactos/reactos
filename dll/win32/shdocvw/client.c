@@ -60,6 +60,9 @@ static HRESULT WINAPI ClientSite_QueryInterface(IOleClientSite *iface, REFIID ri
     }else if(IsEqualGUID(&IID_IDispatch, riid)) {
         TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
         *ppv = CLDISP(This);
+    }else if(IsEqualGUID(&IID_IPropertyNotifySink, riid)) {
+        TRACE("(%p)->(IID_IPropertyNotifySink %p)\n", This, ppv);
+        *ppv = PROPNOTIF(This);
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
         *ppv = SERVPROV(This);
@@ -70,7 +73,7 @@ static HRESULT WINAPI ClientSite_QueryInterface(IOleClientSite *iface, REFIID ri
         return S_OK;
     }
 
-    WARN("Unsupported intrface %s\n", debugstr_guid(riid));
+    WARN("Unsupported interface %s\n", debugstr_guid(riid));
 
     return E_NOINTERFACE;
 }

@@ -17,12 +17,14 @@
 
 /* FUNCTIONS ***************************************************************/
 
+#if !defined(_M_IX86) && !defined(_M_AMD64)
+
 /*
  * @implemented
  */
 VOID
 NTAPI
-RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
+RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord)
 {
     CONTEXT Context;
     NTSTATUS Status;
@@ -30,19 +32,14 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     /* Capture the context */
     RtlCaptureContext(&Context);
 
-#ifdef _M_IX86
-    /* Fixup ESP */
-    Context.Esp += sizeof(ULONG);
-#endif
-
     /* Save the exception address */
-    ExceptionRecord->ExceptionAddress = RtlpGetExceptionAddress();
+    ExceptionRecord->ExceptionAddress = _ReturnAddress();
 
     /* Write the context flag */
     Context.ContextFlags = CONTEXT_FULL;
 
     /* Check if user mode debugger is active */
-    if (RtlpCheckForActiveDebugger(FALSE))
+    if (RtlpCheckForActiveDebugger())
     {
         /* Raise an exception immediately */
         Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
@@ -66,12 +63,21 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     RtlRaiseStatus(Status);
 }
 
+#endif
+
+#if !defined(_M_IX86)
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4717) // RtlRaiseStatus is recursive by design
+#endif
+
 /*
  * @implemented
  */
 VOID
 NTAPI
-RtlRaiseStatus(NTSTATUS Status)
+RtlRaiseStatus(IN NTSTATUS Status)
 {
     EXCEPTION_RECORD ExceptionRecord;
     CONTEXT Context;
@@ -79,13 +85,8 @@ RtlRaiseStatus(NTSTATUS Status)
      /* Capture the context */
     RtlCaptureContext(&Context);
 
-#ifdef _M_IX86
-    /* Add one argument to ESP */
-    Context.Esp += sizeof(PVOID);
-#endif
-
     /* Create an exception record */
-    ExceptionRecord.ExceptionAddress = RtlpGetExceptionAddress();
+    ExceptionRecord.ExceptionAddress = _ReturnAddress();
     ExceptionRecord.ExceptionCode  = Status;
     ExceptionRecord.ExceptionRecord = NULL;
     ExceptionRecord.NumberParameters = 0;
@@ -95,7 +96,7 @@ RtlRaiseStatus(NTSTATUS Status)
     Context.ContextFlags = CONTEXT_FULL;
 
     /* Check if user mode debugger is active */
-    if (RtlpCheckForActiveDebugger(FALSE))
+    if (RtlpCheckForActiveDebugger())
     {
         /* Raise an exception immediately */
         ZwRaiseException(&ExceptionRecord, &Context, TRUE);
@@ -112,6 +113,12 @@ RtlRaiseStatus(NTSTATUS Status)
     /* If we returned, raise a status */
     RtlRaiseStatus(Status);
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
+#endif
 
 /*
  * @implemented

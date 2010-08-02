@@ -41,8 +41,7 @@ class CMiniportWaveCMI:
 #else
                                 public IMiniportWaveCyclic,
 #endif
-                                public IMiniportWaveCMI,
-                                public CUnknown
+                                public IMiniportWaveCMI
 {
 private:
     PCMIADAPTER             CMIAdapter;                 // Adapter common object.
@@ -56,7 +55,7 @@ private:
     CMI8738Info             *cm;
 	UInt32                  requestedChannelCount;
 	UInt32                  requestedChannelMask;
-
+    LONG m_Ref;
 
     CMiniportWaveStreamCMI  *stream[3];
     bool                    isStreamRunning[3];
@@ -72,8 +71,24 @@ private:
     NTSTATUS loadChannelConfigFromRegistry();
 	NTSTATUS storeChannelConfigToRegistry();
 public:
-    DECLARE_STD_UNKNOWN();
-    DEFINE_STD_CONSTRUCTOR(CMiniportWaveCMI);
+    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
+    STDMETHODIMP_(ULONG) AddRef()
+    {
+        InterlockedIncrement(&m_Ref);
+        return m_Ref;
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        InterlockedDecrement(&m_Ref);
+
+        if (!m_Ref)
+        {
+            delete this;
+            return 0;
+        }
+        return m_Ref;
+    }
+    CMiniportWaveCMI(IUnknown * OuterUnknown){}
     ~CMiniportWaveCMI();
 #ifdef WAVERT
     IMP_IMiniportWaveRT;
@@ -96,8 +111,7 @@ class CMiniportWaveStreamCMI:
 #else
                                       public IMiniportWaveCyclicStream,
 #endif
-                                      public IDrmAudioStream,
-                                      public CUnknown
+                                      public IDrmAudioStream
 {
 private:
     CMiniportWaveCMI  *Miniport;
@@ -119,6 +133,7 @@ private:
     UInt32            dmaSize;        // size of the DMA buffer in frames, NOT in bytes
     UInt32            currentChannelCount, currentSampleRate, currentResolution;
     bool              enableAC3Passthru, enableSPDIF;
+    LONG              m_Ref;
 
     NTSTATUS prepareStream();
     NTSTATUS setDACChannels();
@@ -126,8 +141,24 @@ private:
     NTSTATUS setupAC3Passthru();
 
 public:
-    DECLARE_STD_UNKNOWN();
-    DEFINE_STD_CONSTRUCTOR(CMiniportWaveStreamCMI);
+    STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
+    STDMETHODIMP_(ULONG) AddRef()
+    {
+        InterlockedIncrement(&m_Ref);
+        return m_Ref;
+    }
+    STDMETHODIMP_(ULONG) Release()
+    {
+        InterlockedDecrement(&m_Ref);
+
+        if (!m_Ref)
+        {
+            delete this;
+            return 0;
+        }
+        return m_Ref;
+    }
+    CMiniportWaveStreamCMI(IUnknown * OuterUnknown){}
     ~CMiniportWaveStreamCMI();
 #ifdef WAVERT
 	IMP_IMiniportWaveRTStream;

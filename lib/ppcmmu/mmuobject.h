@@ -1,5 +1,4 @@
-#ifndef _LIBMMU_MMUOBJECT_H
-#define _LIBMMU_MMUOBJECT_H
+#pragma once
 
 void initme();
 void mmusetramsize(paddr_t size);
@@ -13,5 +12,3 @@ void freevsid(int);
 void mmufreevsid(int vsid, int mask);
 int mmunitest();
 void callkernel(void *fun_ptr, void *arg);
-
-#endif/*_LIBMMU_MMUOBJECT_H*/

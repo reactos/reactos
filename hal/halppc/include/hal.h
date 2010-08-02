@@ -12,14 +12,13 @@
 #include <stdio.h>
 
 /* WDK HAL Compilation hack */
-#ifdef _MSC_VER
 #include <excpt.h>
 #include <ntdef.h>
 #undef _NTHAL_
 #undef DECLSPEC_IMPORT
 #define DECLSPEC_IMPORT
-#define __declspec(dllimport)
-#endif
+#undef NTSYSAPI
+#define NTSYSAPI __declspec(dllimport)
 
 /* IFS/DDK/NDK Headers */
 #include <ntifs.h>

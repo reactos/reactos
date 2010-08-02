@@ -7,7 +7,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>secur32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>lsamode.c</file>
 	<file>schannel_main.c</file>

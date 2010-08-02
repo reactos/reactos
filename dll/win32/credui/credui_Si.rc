@@ -18,11 +18,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
-IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
+IDD_CREDDIALOG DIALOG  0, 0, 213, 149
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "IDS_TITLEFORMAT"
 FONT 8, "MS Shell Dlg"
@@ -41,7 +43,7 @@ BEGIN
     PUSHBUTTON      "Prekliči",IDCANCEL,156,128,50,14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TITLEFORMAT     "Poveži se na %s"
     IDS_MESSAGEFORMAT   "Povezovanje na %s"
@@ -50,5 +52,3 @@ STRINGTABLE DISCARDABLE
     IDS_CAPSLOCKONTITLE "Caps Lock je vključen"
     IDS_CAPSLOCKON      "Vključen Caps Lock je lahko vzrok nepravilnega vnosa gesla.\n\nPritisnite tipko Caps Lock, s čimer ga izklopite\nin ponovno vnesite geslo."
 }
-
-#pragma code_page(default)

@@ -54,7 +54,14 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  */
 HRESULT WINAPI DwmIsCompositionEnabled(BOOL *enabled)
 {
-    FIXME("%p\n", enabled);
+    static int once;
+    if (!once)
+    {
+        FIXME("%p\n", enabled);
+        once = 1;
+    }
+    else
+        TRACE("%p\n", enabled);
 
     *enabled = FALSE;
     return S_OK;
@@ -111,6 +118,26 @@ HRESULT WINAPI DwmSetWindowAttribute(HWND hwnd, DWORD attributenum, LPCVOID attr
 }
 
 /**********************************************************************
+ *           DwmGetGraphicsStreamClient         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmGetGraphicsStreamClient(UINT uIndex, UUID *pClientUuid)
+{
+    FIXME("(%d, %p) stub\n", uIndex, pClientUuid);
+
+    return E_NOTIMPL;
+}
+
+/**********************************************************************
+ *           DwmGetTransportAttributes         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmGetTransportAttributes(BOOL *pfIsRemoting, BOOL *pfIsConnected, DWORD *pDwGeneration)
+{
+    FIXME("(%p, %p, %p) stub\n", pfIsRemoting, pfIsConnected, pDwGeneration);
+
+    return E_NOTIMPL;
+}
+
+/**********************************************************************
  *           DwmUnregisterThumbnail         (DWMAPI.@)
  */
 HRESULT WINAPI DwmUnregisterThumbnail(HTHUMBNAIL thumbnail)
@@ -128,4 +155,24 @@ HRESULT WINAPI DwmEnableMMCSS(BOOL enableMMCSS)
     FIXME("(%d) stub\n", enableMMCSS);
 
     return S_OK;
+}
+
+/**********************************************************************
+ *           DwmGetGraphicsStreamTransformHint         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmGetGraphicsStreamTransformHint(UINT uIndex, MilMatrix3x2D *pTransform)
+{
+    FIXME("(%d, %p) stub\n", uIndex, pTransform);
+
+    return E_NOTIMPL;
+}
+
+/**********************************************************************
+ *           DwmEnableBlurBehindWindow         (DWMAPI.@)
+ */
+HRESULT WINAPI DwmEnableBlurBehindWindow(HWND hWnd, const DWM_BLURBEHIND *pBlurBuf)
+{
+    FIXME("%p %p\n", hWnd, pBlurBuf);
+
+    return E_NOTIMPL;
 }

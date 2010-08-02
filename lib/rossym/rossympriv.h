@@ -7,8 +7,7 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#ifndef ROSSYMPRIV_H_INCLUDED
-#define ROSSYMPRIV_H_INCLUDED
+#pragma once
 
 typedef struct _ROSSYM_INFO {
   PROSSYM_ENTRY Symbols;
@@ -32,8 +31,4 @@ extern BOOLEAN RosSymZwSeekFile(PVOID FileContext, ULONG_PTR Position);
 #define ROSSYM_IS_VALID_NT_HEADERS(NtHeaders) (IMAGE_NT_SIGNATURE == (NtHeaders)->Signature \
                                                && IMAGE_NT_OPTIONAL_HDR_MAGIC == (NtHeaders)->OptionalHeader.Magic)
 
-
-#endif /* ROSSYMPRIV_H_INCLUDED */
-
 /* EOF */
-

@@ -1,5 +1,4 @@
-#ifndef LANG_AR_SY_H__
-#define LANG_AR_SY_H__
+#pragma once
 
 MUI_LAYOUTS arSYLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arSYLayouts[] =
     { L"2801", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

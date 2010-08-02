@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
+
 #define FOREGROUND_BLUE	1
 #define FOREGROUND_GREEN	2
 #define FOREGROUND_RED	4
@@ -218,8 +223,8 @@ BOOL WINAPI SetConsoleTextAttribute(HANDLE,WORD);
 BOOL WINAPI SetConsoleTitleA(LPCSTR);
 BOOL WINAPI SetConsoleTitleW(LPCWSTR);
 BOOL WINAPI SetConsoleWindowInfo(HANDLE,BOOL,const SMALL_RECT*);
-BOOL WINAPI WriteConsoleA(HANDLE,PCVOID,DWORD,PDWORD,PVOID);
-BOOL WINAPI WriteConsoleW(HANDLE,PCVOID,DWORD,PDWORD,PVOID);
+BOOL WINAPI WriteConsoleA(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
+BOOL WINAPI WriteConsoleW(HANDLE,CONST VOID*,DWORD,LPDWORD,LPVOID);
 BOOL WINAPI WriteConsoleInputA(HANDLE,const INPUT_RECORD*,DWORD,PDWORD);
 BOOL WINAPI WriteConsoleInputW(HANDLE,const INPUT_RECORD*,DWORD,PDWORD);
 BOOL WINAPI WriteConsoleOutputA(HANDLE,const CHAR_INFO*,COORD,COORD,PSMALL_RECT);
@@ -264,6 +269,10 @@ BOOL WINAPI WriteConsoleOutputCharacterW(HANDLE,LPCWSTR,DWORD,COORD,PDWORD);
 #define WriteConsoleInput WriteConsoleInputA
 #define WriteConsoleOutput WriteConsoleOutputA
 #define WriteConsoleOutputCharacter WriteConsoleOutputCharacterA
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #ifdef __cplusplus

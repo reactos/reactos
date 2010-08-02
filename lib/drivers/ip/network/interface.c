@@ -81,63 +81,26 @@ NTSTATUS GetInterfaceName( PIP_INTERFACE Interface,
     return Status;
 }
 
-/*
- * FUNCTION: Locates and returns an address entry using IPv4 adress as argument
- * ARGUMENTS:
- *     Address = Raw IPv4 address
- * RETURNS:
- *     Pointer to address entry if found, NULL if not found
- * NOTES:
- *     Only unicast addresses are considered.
- *     If found, the address is referenced
- */
-BOOLEAN AddrLocateADEv4(
-    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address)
+PIP_INTERFACE AddrLocateInterface(
+    PIP_ADDRESS MatchAddress)
 {
     KIRQL OldIrql;
-    BOOLEAN Matched = FALSE;
+    PIP_INTERFACE RetIF = NULL;
     IF_LIST_ITER(CurrentIF);
 
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     ForEachInterface(CurrentIF) {
-	if( AddrIsEqualIPv4( &CurrentIF->Unicast, MatchAddress ) ) {
-	    Address->Address.IPv4Address = MatchAddress;
-	    Matched = TRUE; break;
+	if( AddrIsEqual( &CurrentIF->Unicast, MatchAddress ) ||
+            AddrIsEqual( &CurrentIF->Broadcast, MatchAddress ) ) {
+            RetIF = CurrentIF;
+            break;
 	}
     } EndFor(CurrentIF);
 
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
-    return Matched;
-}
-
-BOOLEAN IPGetDefaultAddress( PIP_ADDRESS Address ) {
-    KIRQL OldIrql;
-    BOOLEAN Matched = FALSE;
-    IF_LIST_ITER(CurrentIF);
-
-    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-
-    /* Find the first 'real' interface */
-    ForEachInterface(CurrentIF) {
-	if( CurrentIF->Context ) {
-	    *Address = CurrentIF->Unicast;
-	    Matched = TRUE; break;
-	}
-    } EndFor(CurrentIF);
-
-    /* Not matched, use the first one */
-    if( !Matched ) {
-	ForEachInterface(CurrentIF) {
-	    *Address = CurrentIF->Unicast;
-	    Matched = TRUE; break;
-	} EndFor(CurrentIF);
-    }
-
-    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
-
-    return Matched;
+    return RetIF;
 }
 
 BOOLEAN HasPrefix(
@@ -180,6 +143,26 @@ BOOLEAN HasPrefix(
     return TRUE;
 }
 
+static PIP_INTERFACE GetDefaultInterface(VOID)
+{
+   KIRQL OldIrql;
+   IF_LIST_ITER(CurrentIF);
+
+   TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
+   ForEachInterface(CurrentIF) {
+      if (CurrentIF->Context) {
+          TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+          return CurrentIF;
+      }
+   } EndFor(CurrentIF);
+   TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+   /* There are no physical interfaces on the system
+    * so we must pick the loopback interface */
+
+   return Loopback;
+}
+
 PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 /*
  * FUNCTION: Checks all on-link prefixes to find out if an address is on-link
@@ -194,6 +177,9 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)\n", Address));
     TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)\n", A2S(Address)));
+
+    if (AddrIsUnspecified(Address))
+        return GetDefaultInterface();
 
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 

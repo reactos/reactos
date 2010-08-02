@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -55,8 +55,27 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     /* check wether we're already running or not */
     hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
-    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+    if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS)
+    {
+        /* Restore existing taskmanager and bring window to front */
+        /* Relies on the fact that the application title string and window title are the same */
+        HWND hTaskMgr;
+        TCHAR szTaskmgr[128];
+
+        LoadString(hInst, IDS_APP_TITLE, szTaskmgr, sizeof(szTaskmgr)/sizeof(TCHAR));
+        hTaskMgr = FindWindow(NULL, szTaskmgr);
+
+        if (hTaskMgr != NULL)
+        {
+            SendMessage(hTaskMgr, WM_SYSCOMMAND, SC_RESTORE, 0);
+            SetForegroundWindow(hTaskMgr);
+        }
+        return 0;
+    }
+    else if (!hMutex)
+    {
         return 1;
+    }
 
     /* Initialize global variables */
     hInst = hInstance;
@@ -250,7 +269,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
             GetCursorPos(&pt);
 
-            OnTop = ((GetWindowLongW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+            OnTop = ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
 
             hMenu = LoadMenuW(hInst, MAKEINTRESOURCEW(IDR_TRAY_POPUP));
             hPopupMenu = GetSubMenu(hMenu, 0);
@@ -267,6 +286,9 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             if(OnTop)
             {
               CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_CHECKED);
+            } else
+            {
+              CheckMenuItem(hPopupMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND | MF_UNCHECKED);
             }
 
             SetForegroundWindow(hMainWnd);
@@ -456,9 +478,9 @@ BOOL OnCreate(HWND hWnd)
         return FALSE;
 
     /* Create the status bar panes */
-    nParts[0] = 100;
-    nParts[1] = 210;
-    nParts[2] = 400;
+    nParts[0] = STATUS_SIZE1;
+    nParts[1] = STATUS_SIZE2;
+    nParts[2] = STATUS_SIZE3;
     SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
 
     /* Create tab pages */
@@ -635,8 +657,8 @@ void OnSize( WPARAM nType, int cx, int cy )
     SendMessageW(hStatusWnd, WM_SIZE, nType, MAKELPARAM(cx,rc.bottom - rc.top));
 
     /* Update the status bar pane sizes */
-    nParts[0] = bInMenuLoop ? -1 : 100;
-    nParts[1] = 210;
+    nParts[0] = bInMenuLoop ? -1 : STATUS_SIZE1;
+    nParts[1] = STATUS_SIZE2;
     nParts[2] = cx;
     SendMessageW(hStatusWnd, SB_SETPARTS, bInMenuLoop ? 1 : 3, (LPARAM) (LPINT) nParts);
 
@@ -703,7 +725,7 @@ void LoadSettings(void)
         TaskManagerSettings.ColumnSizeArray[i] = ColumnPresets[i].size;
     }
 
-    TaskManagerSettings.SortColumn = 1;
+    TaskManagerSettings.SortColumn = COLUMN_IMAGENAME;
     TaskManagerSettings.SortAscending = TRUE;
 
     /* Performance page settings */
@@ -758,7 +780,7 @@ void TaskManager_OnRestoreMainWindow(void)
 
     hMenu = GetMenu(hMainWnd);
     hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
-    OnTop = ((GetWindowLongW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
+    OnTop = ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0);
 
     OpenIcon(hMainWnd);
     SetForegroundWindow(hMainWnd);
@@ -789,8 +811,8 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
     bInMenuLoop = FALSE;
     /* Update the status bar pane sizes */
     GetClientRect(hWnd, &rc);
-    nParts[0] = 100;
-    nParts[1] = 210;
+    nParts[0] = STATUS_SIZE1;
+    nParts[1] = STATUS_SIZE2;
     nParts[2] = rc.right;
     SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
     SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)L"");
@@ -847,6 +869,7 @@ void TaskManager_OnTabWndSelChange(void)
     HMENU  hViewMenu;
     HMENU  hSubMenu;
     WCHAR  szTemp[256];
+    SYSTEM_INFO sysInfo;
 
     hMenu = GetMenu(hMainWnd);
     hViewMenu = GetSubMenu(hMenu, 2);
@@ -925,16 +948,28 @@ void TaskManager_OnTabWndSelChange(void)
             DeleteMenu(hMenu, 3, MF_BYPOSITION);
             DrawMenuBar(hMainWnd);
         }
-        hSubMenu = CreatePopupMenu();
 
-        LoadStringW(hInst, IDS_MENU_ONEGRAPHALLCPUS, szTemp, 256);
-        AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHALL, szTemp);
+        GetSystemInfo(&sysInfo);
 
-        LoadStringW(hInst, IDS_MENU_ONEGRAPHPERCPU, szTemp, 256);
-        AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, szTemp);
+        /* Hide CPU graph options on single CPU systems */
+        if (sysInfo.dwNumberOfProcessors > 1)
+        {
+            hSubMenu = CreatePopupMenu();
 
-        LoadStringW(hInst, IDS_MENU_CPUHISTORY, szTemp, 256);
-        AppendMenuW(hViewMenu, MF_STRING|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
+            LoadStringW(hInst, IDS_MENU_ONEGRAPHALLCPUS, szTemp, 256);
+            AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHALL, szTemp);
+
+            LoadStringW(hInst, IDS_MENU_ONEGRAPHPERCPU, szTemp, 256);
+            AppendMenuW(hSubMenu, MF_STRING, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, szTemp);
+
+            LoadStringW(hInst, IDS_MENU_CPUHISTORY, szTemp, 256);
+            AppendMenuW(hViewMenu, MF_STRING|MF_POPUP, (UINT_PTR) hSubMenu, szTemp);
+
+            if (TaskManagerSettings.CPUHistory_OneGraphPerCPU)
+                CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, MF_BYCOMMAND);
+            else
+                CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHALL, MF_BYCOMMAND);
+        }
 
         LoadStringW(hInst, IDS_MENU_SHOWKERNELTIMES, szTemp, 256);
         AppendMenuW(hViewMenu, MF_STRING, ID_VIEW_SHOWKERNELTIMES, szTemp);
@@ -943,10 +978,7 @@ void TaskManager_OnTabWndSelChange(void)
             CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_CHECKED);
         else
             CheckMenuItem(hViewMenu, ID_VIEW_SHOWKERNELTIMES, MF_BYCOMMAND|MF_UNCHECKED);
-        if (TaskManagerSettings.CPUHistory_OneGraphPerCPU)
-            CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, MF_BYCOMMAND);
-        else
-            CheckMenuRadioItem(hSubMenu, ID_VIEW_CPUHISTORY_ONEGRAPHALL, ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, ID_VIEW_CPUHISTORY_ONEGRAPHALL, MF_BYCOMMAND);
+
         /*
          * Give the tab control focus
          */

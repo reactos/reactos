@@ -1,0 +1,24 @@
+﻿; UTF-8
+
+[Section]
+Name = MinGW
+Version = 5.1.6
+Licence = Public domain/GPL
+Description = A Port of the GNU toolchain with GCC, GDB, GNU make, etc.
+Size = 155kb
+Category = 7
+URLSite = http://mingw.org/
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.6.exe
+CDPath = none
+
+[Section.0407]
+Description = Eine Portierung der GNU Werkzeugkette mit GCC, GDB, GNU make usw.
+
+[Section.040a]
+Description = Es una cadena de herramientas GNU con GCC, GDB, GNU make, etc.
+
+[Section.0415]
+Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narzędziami (GDB, make, itd.).
+
+[Section.0422]
+Description = Компілятор GCC для платформи Windows з додатковими інструментами GDB, GNU make, та ін.

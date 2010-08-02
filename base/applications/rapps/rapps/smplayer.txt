@@ -1,0 +1,27 @@
+﻿; UTF-8
+
+[Section]
+Name = SMPlayer
+Version = 0.6.9
+Licence = GPL
+Description = SMPlayer.
+Size = 14.2MB
+Category = 1
+URLSite = http://smplayer.sourceforge.net/
+URLDownload = http://downloads.sourceforge.net/project/smplayer/SMPlayer/0.6.9/smplayer-0.6.9-win32.exe
+CDPath = none
+
+[Section.0407]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=de
+
+[Section.040a]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=es
+Description = Interfaz gráfico para Mplayer (reproductor multimedia).
+
+[Section.0415]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
+Description = Graficzna nakładka na MPlayer, otwarty odtwarzacz filmów.
+
+[Section.0422]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=uk
+Description = Графічний інтерфейс для MPlayer (мультимедійний плеєр).

@@ -34,7 +34,6 @@
  */
 
 #include <windows.h>
-#include <winsock.h>
 
 #define WS_FD_SETSIZE FD_SETSIZE
 #define HAVE_GETPROTOBYNAME
@@ -110,8 +109,6 @@ typedef struct protoent WS_protoent;
 # include <resolv.h>
 #endif
 #endif
-
-#define CALLBACK __stdcall
 
 #include "wine/winbase16.h"
 #include "windef.h"

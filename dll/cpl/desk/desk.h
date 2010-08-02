@@ -1,5 +1,4 @@
-#ifndef __CPL_DESK_H__
-#define __CPL_DESK_H__
+#pragma once
 
 #define COBJMACROS
 #include <windows.h>
@@ -67,6 +66,7 @@ typedef struct _SETTINGS_ENTRY
 	DWORD dmBitsPerPel;
 	DWORD dmPelsWidth;
 	DWORD dmPelsHeight;
+	DWORD dmDisplayFrequency;
 } SETTINGS_ENTRY, *PSETTINGS_ENTRY;
 
 typedef struct _DISPLAY_DEVICE_ENTRY
@@ -95,6 +95,3 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY,LPCWSTR,UINT,IDataObject*);
 
 INT_PTR CALLBACK
 AdvGeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-#endif /* __CPL_DESK_H__ */
-

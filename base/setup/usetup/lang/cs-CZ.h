@@ -1,11 +1,10 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   preston
- * UPDATED:     2008-06-05
+ * UPDATED:     2010-05-25
  */
 
-#ifndef LANG_CS_CZ_H__
-#define LANG_CS_CZ_H__
+#pragma once
 
 MUI_LAYOUTS csCZLayouts[] =
 {
@@ -1353,7 +1352,7 @@ MUI_ERROR csCZErrorEntries[] =
           "\n"
           "Vytv ýen¡ nebo odstraåov n¡ odd¡l… m…§e tuto tabulku odd¡l… zniŸit.\n"
           "\n"
-          "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci."
+          "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci.\n"
           "  \x07  Stisknut¡m ENTER budete pokraŸovat v instalaci.",
           "F3= UkonŸit  ENTER = PokraŸovat"
     },
@@ -1482,8 +1481,14 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Nepodaýilo se nastavit geo id.\n"
+        "ENTER = Restartovat poŸ¡taŸ"
+    },
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Na zvolen‚m odd¡lu nen¡ dost voln‚ho m¡sta.\n"
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
+        NULL
     },
     {
         NULL,
@@ -1623,7 +1628,7 @@ MUI_STRING csCZStrings[] =
     {STRING_TXTSETUPFAILED,
     "Nepodaýilo se naj¡t sekci '%S' v souboru\n TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kop¡ruji soubor: %S"},
+     "   Kop¡ruji soubor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalace kop¡ruje soubory..."},
     {STRING_REGHIVEUPDATE,
@@ -1663,7 +1668,7 @@ MUI_STRING csCZStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Typ %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
     {STRING_HDDINFOUNK3,
@@ -1702,5 +1707,3 @@ MUI_STRING csCZStrings[] =
     "Pýid v m rozlo§en¡ kl ves"},
     {0, 0}
 };
-
-#endif

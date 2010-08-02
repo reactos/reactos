@@ -1,17 +1,26 @@
-@ stdcall SnmpSvcAddrIsIpx(ptr ptr)
-@ stdcall SnmpSvcAddrToSocket(ptr ptr)
-@ stdcall SnmpSvcGetEnterpriseOID(ptr ptr)
+@ stub SnmpSvcAddrIsIpx
+@ stub SnmpSvcAddrToSocket
+@ stub SnmpSvcBufRevAndCpy
+@ stub SnmpSvcBufRevInPlace
+@ stub SnmpSvcDecodeMessage
+@ stub SnmpSvcEncodeMessage
+@ stub SnmpSvcGenerateAuthFailTrap
+@ stub SnmpSvcGenerateColdStartTrap
+@ stub SnmpSvcGenerateLinkDownTrap
+@ stub SnmpSvcGenerateLinkUpTrap
+@ stub SnmpSvcGenerateTrap
+@ stub SnmpSvcGenerateWarmStartTrap
+@ stub SnmpSvcGetEnterpriseOID
 @ stdcall SnmpSvcGetUptime()
-@ stdcall SnmpSvcInitUptime()
-@ stdcall SnmpSvcSetLogLevel(long)
-@ stdcall SnmpSvcSetLogType(long)
-@ stdcall SnmpTfxClose(ptr ptr)
-@ stdcall SnmpTfxOpen(ptr ptr)
-@ stdcall SnmpTfxQuery(ptr ptr)
-@ stdcall SnmpUtilAnsiToUnicode(ptr ptr)
+@ stub SnmpSvcInitUptime
+@ stub SnmpSvcReleaseMessage
+@ stub SnmpSvcReportEvent
+@ stub SnmpSvcSetLogLevel
+@ stub SnmpSvcSetLogType
+@ stub SnmpUtilAnsiToUnicode
 @ stdcall SnmpUtilAsnAnyCpy(ptr ptr)
 @ stdcall SnmpUtilAsnAnyFree(ptr)
-@ cdecl SnmpUtilDbgPrint(long str)
+@ varargs SnmpUtilDbgPrint(long str)
 @ stdcall SnmpUtilIdsToA(ptr long)
 @ stdcall SnmpUtilMemAlloc(long)
 @ stdcall SnmpUtilMemFree(ptr)
@@ -28,9 +37,8 @@
 @ stdcall SnmpUtilOidToA(ptr)
 @ stdcall SnmpUtilPrintAsnAny(ptr)
 @ stdcall SnmpUtilPrintOid(ptr)
-@ stdcall SnmpUtilUTF8ToUnicode(ptr ptr)
-@ stdcall SnmpUtilUnicodeToAnsi(ptr ptr)
-@ stdcall SnmpUtilUnicodeToUTF8(ptr ptr)
+@ stub SnmpUtilStrlenW
+@ stub SnmpUtilUnicodeToAnsi
 @ stdcall SnmpUtilVarBindCpy(ptr ptr)
 @ stdcall SnmpUtilVarBindFree(ptr)
 @ stdcall SnmpUtilVarBindListCpy(ptr ptr)

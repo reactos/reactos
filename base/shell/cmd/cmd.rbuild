@@ -7,7 +7,6 @@
 		<define name="ANONYMOUSUNIONS" />
 		<define name="_DEBUG_MEM" />
 		<library>wine</library>
-		<library>kernel32</library>
 		<library>advapi32</library>
 		<library>user32</library>
 		<file>cmd.rc</file>

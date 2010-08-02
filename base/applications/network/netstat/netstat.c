@@ -14,9 +14,10 @@
  */
 
 #include <windows.h>
-#include <winsock.h>
+#include <winsock2.h>
 #include <tchar.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <iphlpapi.h>
 #include "netstat.h"
 

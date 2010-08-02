@@ -49,7 +49,7 @@ SUCH DAMAGE.
     Modified for ReactOS
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -713,8 +713,9 @@ app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush)
 }
 
 static
+POINT
 FASTCALL
-POINT app_boundary_point(Rect r, int angle)
+app_boundary_point(Rect r, int angle)
 {
 	int cx, cy;
 	double tangent;
@@ -1198,7 +1199,7 @@ IntFillRect( DC *dc,
 
   ASSERT(pbrush);
 
-  psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+  psurf = dc->dclevel.pSurface;
   if (psurf == NULL)
   {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1249,7 +1250,6 @@ IntFillRect( DC *dc,
          ROP3_TO_ROP4(ROP));
   }
 
-  SURFACE_UnlockSurface(psurf);
   return (int)Ret;
 }
 
@@ -1266,8 +1266,8 @@ IntFillArc( PDC dc,
 {
   PDC_ATTR pdcattr;
   PBRUSH pbrush;
-  int Start = ceill(StartArc);
-  int End   = ceill(EndArc);
+  int Start = ceil(StartArc);
+  int End   = ceil(EndArc);
   BOOL Chord = (arctype == GdiTypeChord), ret;
 
   pdcattr = dc->pdcattr;
@@ -1301,8 +1301,8 @@ IntDrawArc( PDC dc,
             ARCTYPE arctype,
             PBRUSH pbrush)
 {
-  int Start = ceill(StartArc);
-  int End   = ceill(EndArc);
+  int Start = ceil(StartArc);
+  int End   = ceil(EndArc);
   BOOL Chord = (arctype == GdiTypeChord);
   // Sort out alignment here.
   return app_draw_arc(dc, rect( XLeft, YLeft, Width, Height),

@@ -59,7 +59,7 @@ static CRITICAL_SECTION ndr_context_cs = { &ndr_context_debug, -1, 0, 0, 0, 0 };
 
 static struct context_handle_entry *get_context_entry(NDR_CCONTEXT CContext)
 {
-    struct context_handle_entry *che = (struct context_handle_entry*) CContext;
+    struct context_handle_entry *che = CContext;
 
     if (che->magic != NDR_CONTEXT_HANDLE_MAGIC)
         return NULL;
@@ -111,7 +111,7 @@ void WINAPI NDRCContextMarshall(NDR_CCONTEXT CContext, void *pBuff)
     }
     else
     {
-        ndr_context_handle *wire_data = (ndr_context_handle *)pBuff;
+        ndr_context_handle *wire_data = pBuff;
         wire_data->attributes = 0;
         wire_data->uuid = GUID_NULL;
     }

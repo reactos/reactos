@@ -49,8 +49,6 @@ int __fileno_setmode(int _fd, int _newmode);
 void sigabort_handler(int sig);
 
 void UnixTimeToFileTime(time_t unix_time, FILETIME* filetime, DWORD remainder);
-time_t FileTimeToUnixTime(const FILETIME* filetime, DWORD *remainder);
-
 
 #define __FILE_REC_MAX 20
 typedef struct __file_rec

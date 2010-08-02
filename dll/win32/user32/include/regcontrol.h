@@ -8,8 +8,7 @@
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:
  */
-#ifndef ROS_REGCONTROL_H
-#define ROS_REGCONTROL_H
+#pragma once
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -26,6 +25,7 @@ struct builtin_class_descr
     HBRUSH  brush;   /* brush or system color */
 };
 
+extern DWORD RegisterDefaultClasses;
 BOOL WINAPI RegisterSystemControls(VOID);
 
 extern const struct builtin_class_descr BUTTON_builtin_class;
@@ -42,4 +42,4 @@ extern const struct builtin_class_descr MENU_builtin_class;
 extern const struct builtin_class_descr SCROLL_builtin_class;
 extern const struct builtin_class_descr STATIC_builtin_class;
 
-#endif /* ROS_REGCONTROL_H */
+ATOM WINAPI RegisterClassExWOWW(WNDCLASSEXW *,LPDWORD,WORD,DWORD,BOOL);

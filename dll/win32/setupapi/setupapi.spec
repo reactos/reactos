@@ -4,7 +4,7 @@
 @ stdcall CMP_Init_Detection(long)
 @ stdcall CMP_RegisterNotification(ptr ptr long ptr)
 @ stdcall CMP_Report_LogOn(long long)
-@ stub CMP_UnregisterNotification
+@ stdcall CMP_UnregisterNotification(ptr)
 @ stdcall CMP_WaitNoPendingInstallEvents(long)
 @ stub CMP_WaitServicesAvailable
 @ stdcall CM_Add_Empty_Log_Conf(ptr ptr long long)
@@ -100,8 +100,8 @@
 @ stub CM_Get_Device_Interface_List_ExW
 @ stub CM_Get_Device_Interface_List_SizeA
 @ stub CM_Get_Device_Interface_List_SizeW
-@ stub CM_Get_Device_Interface_List_Size_ExA
-@ stub CM_Get_Device_Interface_List_Size_ExW
+@ stdcall CM_Get_Device_Interface_List_Size_ExA(ptr ptr str long ptr)
+@ stdcall CM_Get_Device_Interface_List_Size_ExW(ptr ptr wstr long ptr)
 @ stdcall CM_Get_First_Log_Conf(ptr long long)
 @ stdcall CM_Get_First_Log_Conf_Ex(ptr long long long)
 @ stdcall CM_Get_Global_State(ptr long)
@@ -192,8 +192,8 @@
 @ stdcall CM_Set_DevNode_Registry_PropertyW(long long ptr long long)
 @ stdcall CM_Set_DevNode_Registry_Property_ExA(long long ptr long long long)
 @ stdcall CM_Set_DevNode_Registry_Property_ExW(long long ptr long long long)
-@ stub CM_Set_HW_Prof
-@ stub CM_Set_HW_Prof_Ex
+@ stdcall CM_Set_HW_Prof(long long)
+@ stdcall CM_Set_HW_Prof_Ex(long long long)
 @ stdcall CM_Set_HW_Prof_FlagsA(str long long long)
 @ stdcall CM_Set_HW_Prof_FlagsW(wstr long long long)
 @ stdcall CM_Set_HW_Prof_Flags_ExA(str long long long long)
@@ -325,7 +325,7 @@
 @ stdcall SetupDiGetDeviceInstallParamsW(ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInstanceIdA(ptr ptr str long ptr)
 @ stdcall SetupDiGetDeviceInstanceIdW(ptr ptr wstr long ptr)
-@ stub SetupDiGetDeviceInterfaceAlias
+@ stdcall SetupDiGetDeviceInterfaceAlias(ptr ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInterfaceDetailA(long ptr ptr long ptr ptr)
 @ stdcall SetupDiGetDeviceInterfaceDetailW(long ptr ptr long ptr ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
@@ -363,7 +363,7 @@
 @ stdcall SetupDiOpenDeviceInfoA(ptr str long long ptr)
 @ stdcall SetupDiOpenDeviceInfoW(ptr wstr long long ptr)
 @ stdcall SetupDiOpenDeviceInterfaceA(ptr str long ptr)
-@ stub SetupDiOpenDeviceInterfaceRegKey
+@ stdcall SetupDiOpenDeviceInterfaceRegKey(ptr ptr long long)
 @ stdcall SetupDiOpenDeviceInterfaceW(ptr wstr long ptr)
 @ stdcall SetupDiRegisterCoDeviceInstallers(ptr ptr)
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)
@@ -390,8 +390,8 @@
 @ stdcall SetupDiUnremoveDevice(ptr ptr)
 @ stub SetupDuplicateDiskSpaceListA
 @ stub SetupDuplicateDiskSpaceListW
-@ stub SetupEnumInfSectionsA
-@ stub SetupEnumInfSectionsW
+@ stdcall SetupEnumInfSectionsA(long long ptr long ptr)
+@ stdcall SetupEnumInfSectionsW(long long ptr long ptr)
 @ stdcall SetupFindFirstLineA(long str str ptr)
 @ stdcall SetupFindFirstLineW(long wstr wstr ptr)
 @ stdcall SetupFindNextLine(ptr ptr)
@@ -520,7 +520,7 @@
 @ stdcall SetupSetFileQueueAlternatePlatformA(ptr ptr str)
 @ stdcall SetupSetFileQueueAlternatePlatformW(ptr ptr wstr)
 @ stdcall SetupSetFileQueueFlags(long long long)
-@ stub SetupSetNonInteractiveMode
+@ stdcall SetupSetNonInteractiveMode(long)
 @ stub SetupSetPlatformPathOverrideA
 @ stub SetupSetPlatformPathOverrideW
 @ stdcall SetupSetSourceListA(long ptr long)
@@ -528,8 +528,8 @@
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
 @ stub SetupUninstallNewlyCopiedInfs
-@ stub SetupUninstallOEMInfA
-@ stub SetupUninstallOEMInfW
+@ stdcall SetupUninstallOEMInfA(str long ptr)
+@ stdcall SetupUninstallOEMInfW(wstr long ptr)
 @ stub SetupVerifyInfFileA
 @ stub SetupVerifyInfFileW
 @ stdcall UnicodeToMultiByte(wstr long)

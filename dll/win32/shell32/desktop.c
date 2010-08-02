@@ -45,7 +45,7 @@ typedef struct _SHDESK
     HWND hWnd;
     HWND hWndShellView;
     HWND hWndDesktopListView;
-    IShellDesktop *ShellDesk;
+    IShellDesktopTray *ShellDesk;
     IShellView *DesktopView;
     IShellBrowser *DefaultShellBrowser;
     LPITEMIDLIST pidlDesktopDirectory;
@@ -104,7 +104,7 @@ static void
 SHDESK_Free(SHDESK *This)
 {
     if (This->ShellDesk != NULL)
-        IShellDesktop_Release(This->ShellDesk);
+        IShellDesktopTray_Release(This->ShellDesk);
 
     if (This->DesktopView != NULL)
     {
@@ -202,12 +202,12 @@ static PSHDESK
 SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
 {
     IShellFolder *psfDesktopFolder;
-    IShellDesktop *ShellDesk;
+    IShellDesktopTray *ShellDesk;
     CSFV csfv;
     SHDESK *This;
     HRESULT hRet;
 
-    ShellDesk = (IShellDesktop *)lpCreateStruct->lpCreateParams;
+    ShellDesk = (IShellDesktopTray *)lpCreateStruct->lpCreateParams;
     if (ShellDesk == NULL)
     {
         WARN("No IShellDesk interface provided!");
@@ -226,7 +226,7 @@ SHDESK_Create(HWND hWnd, LPCREATESTRUCT lpCreateStruct)
     This->Ref = 1;
     This->hWnd = hWnd;
     This->ShellDesk = ShellDesk;
-    IShellDesktop_AddRef(ShellDesk);
+    IShellDesktopTray_AddRef(ShellDesk);
 
     This->pidlDesktopDirectory = SHCloneSpecialIDList(This->hWnd, CSIDL_DESKTOPDIRECTORY, FALSE);
     hRet = SHGetSpecialFolderLocation(This->hWnd, CSIDL_DESKTOP, &This->pidlDesktop);
@@ -258,7 +258,7 @@ Fail:
 static HWND
 SHDESK_FindDesktopListView (SHDESK *This)
 {
-    return FindWindowEx (This->hWndShellView,
+    return FindWindowExW(This->hWndShellView,
                          NULL,
                          WC_LISTVIEW,
                          NULL);
@@ -410,10 +410,10 @@ SHDESK_SendControlMsg(IShellBrowser *iface, UINT id, UINT uMsg, WPARAM wParam, L
                                    id);
     if (hWnd != NULL)
     {
-        *pret = SendMessage(hWnd,
-                            uMsg,
-                            wParam,
-                            lParam);
+        *pret = SendMessageW(hWnd,
+                             uMsg,
+                             wParam,
+                             lParam);
         return S_OK;
     }
 
@@ -552,12 +552,12 @@ SHDESK_MessageLoop(SHDESK *This)
     MSG Msg;
     BOOL bRet;
 
-    while ((bRet = GetMessage(&Msg, NULL, 0, 0)) != 0)
+    while ((bRet = GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
         if (bRet != -1)
         {
             TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
+            DispatchMessageW(&Msg);
         }
     }
 
@@ -632,7 +632,7 @@ ProgmanWindowProc(IN HWND hwnd,
 
             case WM_CREATE:
             {
-                IShellDesktop_RegisterDesktopWindow(This->ShellDesk,
+                IShellDesktopTray_RegisterDesktopWindow(This->ShellDesk,
                                                     This->hWnd);
 
                 if (!SHDESK_CreateDeskWnd(This))
@@ -684,7 +684,7 @@ RegisterProgmanWindowClass(VOID)
     wcProgman.cbWndExtra = sizeof(PSHDESK);
     wcProgman.hInstance = shell32_hInstance;
     wcProgman.hIcon = NULL;
-    wcProgman.hCursor = LoadCursor(NULL,
+    wcProgman.hCursor = LoadCursorW(NULL,
                                    IDC_ARROW);
     wcProgman.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
     wcProgman.lpszMenuName = NULL;
@@ -698,7 +698,7 @@ RegisterProgmanWindowClass(VOID)
  * SHCreateDesktop			[SHELL32.200]
  *
  */
-HANDLE WINAPI SHCreateDesktop(IShellDesktop *ShellDesk)
+HANDLE WINAPI SHCreateDesktop(IShellDesktopTray *ShellDesk)
 {
     HWND hWndDesk;
     RECT rcDesk;
@@ -732,7 +732,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktop *ShellDesk)
         rcDesk.left, rcDesk.top, rcDesk.right, rcDesk.bottom,
         NULL, NULL, shell32_hInstance, (LPVOID)ShellDesk);
     if (hWndDesk != NULL)
-        return (HANDLE)GetWindowLongPtr(hWndDesk, 0);
+        return (HANDLE)GetWindowLongPtrW(hWndDesk, 0);
 
     return NULL;
 }

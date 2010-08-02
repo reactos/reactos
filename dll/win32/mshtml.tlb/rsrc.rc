@@ -21,4 +21,4 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: mshtml_tlb.tlb */
-1 TYPELIB LOADONCALL DISCARDABLE mshtml_tlb.tlb
+1 TYPELIB mshtml_tlb.tlb

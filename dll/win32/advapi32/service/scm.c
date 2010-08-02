@@ -131,61 +131,6 @@ SVCCTL_HANDLEW_unbind(SVCCTL_HANDLEW szMachineName,
 }
 
 
-handle_t __RPC_USER
-RPC_SERVICE_STATUS_HANDLE_bind(RPC_SERVICE_STATUS_HANDLE hServiceStatus)
-{
-    handle_t hBinding = NULL;
-    LPWSTR pszStringBinding;
-    RPC_STATUS status;
-
-    TRACE("RPC_SERVICE_STATUS_HANDLE_bind() called\n");
-
-    status = RpcStringBindingComposeW(NULL,
-                                      L"ncacn_np",
-                                      NULL,
-                                      L"\\pipe\\ntsvcs",
-                                      NULL,
-                                      &pszStringBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcStringBindingCompose returned 0x%x\n", status);
-        return NULL;
-    }
-
-    /* Set the binding handle that will be used to bind to the server. */
-    status = RpcBindingFromStringBindingW(pszStringBinding,
-                                          &hBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFromStringBinding returned 0x%x\n", status);
-    }
-
-    status = RpcStringFreeW(&pszStringBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcStringFree returned 0x%x\n", status);
-    }
-
-    return hBinding;
-}
-
-
-void __RPC_USER
-RPC_SERVICE_STATUS_HANDLE_unbind(RPC_SERVICE_STATUS_HANDLE hServiceStatus,
-                                 handle_t hBinding)
-{
-    RPC_STATUS status;
-
-    TRACE("RPC_SERVICE_STATUS_HANDLE_unbind() called\n");
-
-    status = RpcBindingFree(&hBinding);
-    if (status != RPC_S_OK)
-    {
-        ERR("RpcBindingFree returned 0x%x\n", status);
-    }
-}
-
-
 DWORD
 ScmRpcStatusToWinError(RPC_STATUS Status)
 {
@@ -258,7 +203,7 @@ ChangeServiceConfig2A(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfig2A() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfig2A() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -287,10 +232,8 @@ ChangeServiceConfig2W(SC_HANDLE hService,
     switch (dwInfoLevel)
     {
         case SERVICE_CONFIG_DESCRIPTION:
-        {
             Info.psd = (LPSERVICE_DESCRIPTIONW)&lpInfo;
             break;
-        }
 
         case SERVICE_CONFIG_FAILURE_ACTIONS:
             Info.psfa = (LPSERVICE_FAILURE_ACTIONSW)&lpInfo;
@@ -318,7 +261,7 @@ ChangeServiceConfig2W(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfig2W() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -392,7 +335,7 @@ ChangeServiceConfigA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfigA() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfigA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -466,7 +409,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RChangeServiceConfigW() failed (Error %lu)\n", dwError);
+        TRACE("RChangeServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -506,7 +449,7 @@ CloseServiceHandle(SC_HANDLE hSCObject)
 
     if (dwError)
     {
-        ERR("RCloseServiceHandle() failed (Error %lu)\n", dwError);
+        TRACE("RCloseServiceHandle() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -547,7 +490,7 @@ ControlService(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RControlService() failed (Error %lu)\n", dwError);
+        TRACE("RControlService() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -596,18 +539,15 @@ CreateServiceA(SC_HANDLE hSCManager,
                LPCSTR lpServiceStartName,
                LPCSTR lpPassword)
 {
-    SC_HANDLE RetVal = NULL;
-    LPWSTR lpServiceNameW = NULL;
-    LPWSTR lpDisplayNameW = NULL;
-    LPWSTR lpBinaryPathNameW = NULL;
-    LPWSTR lpLoadOrderGroupW = NULL;
-    LPWSTR lpDependenciesW = NULL;
-    LPWSTR lpServiceStartNameW = NULL;
-    LPWSTR lpPasswordW = NULL;
+    SC_HANDLE hService = NULL;
     DWORD dwDependenciesLength = 0;
+    DWORD dwError;
     DWORD dwLength;
-    int len;
     LPSTR lpStr;
+
+    TRACE("CreateServiceA() called\n");
+    TRACE("%p %s %s\n", hSCManager, 
+          lpServiceName, lpDisplayName);
 
     if (!hSCManager)
     {
@@ -615,55 +555,8 @@ CreateServiceA(SC_HANDLE hSCManager,
         return NULL;
     }
 
-    if (lpServiceName)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, NULL, 0);
-        lpServiceNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpServiceNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpServiceName, -1, lpServiceNameW, len);
-    }
-
-    if (lpDisplayName)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, NULL, 0);
-        lpDisplayNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpDisplayNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpDisplayName, -1, lpDisplayNameW, len);
-    }
-
-    if (lpBinaryPathName)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, NULL, 0);
-        lpBinaryPathNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpBinaryPathNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpBinaryPathName, -1, lpBinaryPathNameW, len);
-    }
-
-    if (lpLoadOrderGroup)
-    {
-        len = MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, NULL, 0);
-        lpLoadOrderGroupW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpLoadOrderGroupW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpLoadOrderGroup, -1, lpLoadOrderGroupW, len);
-    }
-
-    if (lpDependencies)
+    /* Calculate the Dependencies length*/
+    if (lpDependencies != NULL)
     {
         lpStr = (LPSTR)lpDependencies;
         while (*lpStr)
@@ -673,77 +566,44 @@ CreateServiceA(SC_HANDLE hSCManager,
             lpStr = lpStr + dwLength;
         }
         dwDependenciesLength++;
-
-        lpDependenciesW = HeapAlloc(GetProcessHeap(), 0, dwDependenciesLength * sizeof(WCHAR));
-        if (!lpDependenciesW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpDependencies, dwDependenciesLength, lpDependenciesW, dwDependenciesLength);
     }
 
-    if (lpServiceStartName)
+    /* FIXME: Encrypt the password */
+
+    RpcTryExcept
     {
-        len = MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, NULL, 0);
-        lpServiceStartNameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpServiceStartNameW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpServiceStartName, -1, lpServiceStartNameW, len);
+        /* Call to services.exe using RPC */
+        dwError = RCreateServiceA((SC_RPC_HANDLE)hSCManager,
+                                  (LPSTR)lpServiceName,
+                                  (LPSTR)lpDisplayName,
+                                  dwDesiredAccess,
+                                  dwServiceType,
+                                  dwStartType,
+                                  dwErrorControl,
+                                  (LPSTR)lpBinaryPathName,
+                                  (LPSTR)lpLoadOrderGroup,
+                                  lpdwTagId,
+                                  (LPBYTE)lpDependencies,
+                                  dwDependenciesLength,
+                                  (LPSTR)lpServiceStartName,
+                                  NULL,              /* FIXME: lpPassword */
+                                  0,                 /* FIXME: dwPasswordLength */
+                                  (SC_RPC_HANDLE *)&hService);
     }
-
-    if (lpPassword)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        len = MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, NULL, 0);
-        lpPasswordW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-        if (!lpPasswordW)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        MultiByteToWideChar(CP_ACP, 0, lpPassword, -1, lpPasswordW, len);
+        dwError = ScmRpcStatusToWinError(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        TRACE("RCreateServiceA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
     }
 
-    RetVal = CreateServiceW(hSCManager,
-                            lpServiceNameW,
-                            lpDisplayNameW,
-                            dwDesiredAccess,
-                            dwServiceType,
-                            dwStartType,
-                            dwErrorControl,
-                            lpBinaryPathNameW,
-                            lpLoadOrderGroupW,
-                            lpdwTagId,
-                            lpDependenciesW,
-                            lpServiceStartNameW,
-                            lpPasswordW);
-
-cleanup:
-    if (lpServiceNameW !=NULL)
-        HeapFree(GetProcessHeap(), 0, lpServiceNameW);
-
-    if (lpDisplayNameW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDisplayNameW);
-
-    if (lpBinaryPathNameW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpBinaryPathNameW);
-
-    if (lpLoadOrderGroupW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpLoadOrderGroupW);
-
-    if (lpDependenciesW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpDependenciesW);
-
-    if (lpServiceStartNameW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpServiceStartNameW);
-
-    if (lpPasswordW != NULL)
-        HeapFree(GetProcessHeap(), 0, lpPasswordW);
-
-    return RetVal;
+    return hService;
 }
 
 
@@ -828,7 +688,7 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RCreateServiceW() failed (Error %lu)\n", dwError);
+        TRACE("RCreateServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -862,7 +722,7 @@ DeleteService(SC_HANDLE hService)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RDeleteService() failed (Error %lu)\n", dwError);
+        TRACE("RDeleteService() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -905,25 +765,28 @@ EnumDependentServicesA(SC_HANDLE hService,
     }
     RpcEndExcept;
 
-    if (dwError != ERROR_SUCCESS)
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        ERR("REnumDependentServicesA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
+        lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
     }
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
-    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    if (dwError != ERROR_SUCCESS)
     {
-        if (lpStatusPtr->lpServiceName)
-            lpStatusPtr->lpServiceName =
-                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
-
-        if (lpStatusPtr->lpDisplayName)
-            lpStatusPtr->lpDisplayName =
-                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
-
-        lpStatusPtr++;
+        TRACE("REnumDependentServicesA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
     }
 
     TRACE("EnumDependentServicesA() done\n");
@@ -966,25 +829,28 @@ EnumDependentServicesW(SC_HANDLE hService,
     }
     RpcEndExcept;
 
-    if (dwError != ERROR_SUCCESS)
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        ERR("REnumDependentServicesW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
+        lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
     }
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
-    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    if (dwError != ERROR_SUCCESS)
     {
-        if (lpStatusPtr->lpServiceName)
-            lpStatusPtr->lpServiceName =
-                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
-
-        if (lpStatusPtr->lpDisplayName)
-            lpStatusPtr->lpDisplayName =
-                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
-
-        lpStatusPtr++;
+        TRACE("REnumDependentServicesW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
     }
 
     TRACE("EnumDependentServicesW() done\n");
@@ -1097,25 +963,28 @@ EnumServicesStatusA(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
-    if (dwError != ERROR_SUCCESS)
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        ERR("REnumServicesStatusA() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
+        lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+            if (lpStatusPtr->lpDisplayName)
+                lpStatusPtr->lpDisplayName =
+                    (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
     }
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUSA)lpServices;
-    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    if (dwError != ERROR_SUCCESS)
     {
-        if (lpStatusPtr->lpServiceName)
-            lpStatusPtr->lpServiceName =
-                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
-
-        if (lpStatusPtr->lpDisplayName)
-            lpStatusPtr->lpDisplayName =
-                (LPSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
-
-        lpStatusPtr++;
+        TRACE("REnumServicesStatusA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
     }
 
     TRACE("EnumServicesStatusA() done\n");
@@ -1168,25 +1037,28 @@ EnumServicesStatusW(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
-    if (dwError != ERROR_SUCCESS)
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
-        ERR("REnumServicesStatusW() failed (Error %lu)\n", dwError);
-        SetLastError(dwError);
-        return FALSE;
+        lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
+        for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+        {
+            if (lpStatusPtr->lpServiceName)
+                lpStatusPtr->lpServiceName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
+
+            if (lpStatusPtr->lpDisplayName)
+               lpStatusPtr->lpDisplayName =
+                    (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
+
+            lpStatusPtr++;
+        }
     }
 
-    lpStatusPtr = (LPENUM_SERVICE_STATUSW)lpServices;
-    for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
+    if (dwError != ERROR_SUCCESS)
     {
-        if (lpStatusPtr->lpServiceName)
-            lpStatusPtr->lpServiceName =
-                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpServiceName);
-
-        if (lpStatusPtr->lpDisplayName)
-            lpStatusPtr->lpDisplayName =
-                (LPWSTR)((ULONG_PTR)lpServices + (ULONG_PTR)lpStatusPtr->lpDisplayName);
-
-        lpStatusPtr++;
+        TRACE("REnumServicesStatusW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
     }
 
     TRACE("EnumServicesStatusW() done\n");
@@ -1230,7 +1102,6 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-
     RpcTryExcept
     {
         dwError = REnumServicesStatusExA((SC_RPC_HANDLE)hSCManager,
@@ -1250,13 +1121,7 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
-    if (dwError == ERROR_MORE_DATA)
-    {
-        WARN("Required buffer size %ul\n", *pcbBytesNeeded);
-        SetLastError(dwError);
-        return FALSE;
-    }
-    else if (dwError == ERROR_SUCCESS)
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
         lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSA)lpServices;
         for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
@@ -1272,9 +1137,10 @@ EnumServicesStatusExA(SC_HANDLE hSCManager,
             lpStatusPtr++;
         }
     }
-    else
+
+    if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumServicesStatusExA() failed (Error %lu)\n", dwError);
+        TRACE("REnumServicesStatusExA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1327,13 +1193,7 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
     }
     RpcEndExcept;
 
-    if (dwError == ERROR_MORE_DATA)
-    {
-        WARN("Required buffer size %ul\n", *pcbBytesNeeded);
-        SetLastError(dwError);
-        return FALSE;
-    }
-    else if (dwError == ERROR_SUCCESS)
+    if (dwError == ERROR_SUCCESS || dwError == ERROR_MORE_DATA)
     {
         lpStatusPtr = (LPENUM_SERVICE_STATUS_PROCESSW)lpServices;
         for (dwCount = 0; dwCount < *lpServicesReturned; dwCount++)
@@ -1349,9 +1209,10 @@ EnumServicesStatusExW(SC_HANDLE hSCManager,
             lpStatusPtr++;
         }
     }
-    else
+
+    if (dwError != ERROR_SUCCESS)
     {
-        ERR("REnumServicesStatusExW() failed (Error %lu)\n", dwError);
+        TRACE("REnumServicesStatusExW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1374,6 +1235,8 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
                        LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPSTR lpNameBuffer;
+    CHAR szEmptyName[] = "";
 
     TRACE("GetServiceDisplayNameA() called\n");
     TRACE("%p %s %p %p\n", hSCManager,
@@ -1385,14 +1248,21 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
-        *lpcchBuffer = 0;
+    if (!lpDisplayName || *lpcchBuffer < sizeof(CHAR))
+    {
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(CHAR);
+    }
+    else
+    {
+        lpNameBuffer = lpDisplayName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceDisplayNameA((SC_RPC_HANDLE)hSCManager,
                                           lpServiceName,
-                                          lpDisplayName,
+                                          lpNameBuffer,
                                           lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1400,13 +1270,11 @@ GetServiceDisplayNameA(SC_HANDLE hSCManager,
         /* HACK: because of a problem with rpcrt4, rpcserver is hacked to return 6 for ERROR_SERVICE_DOES_NOT_EXIST */
         dwError = ScmRpcStatusToWinError(RpcExceptionCode());
     }
-
-
     RpcEndExcept;
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceDisplayNameA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1427,6 +1295,8 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
                        LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPWSTR lpNameBuffer;
+    WCHAR szEmptyName[] = L"";
 
     TRACE("GetServiceDisplayNameW() called\n");
 
@@ -1436,14 +1306,21 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
-        *lpcchBuffer = 0;
+    if (!lpDisplayName || *lpcchBuffer < sizeof(WCHAR))
+    {
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(WCHAR);
+    }
+    else
+    {
+        lpNameBuffer = lpDisplayName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceDisplayNameW((SC_RPC_HANDLE)hSCManager,
                                           lpServiceName,
-                                          lpDisplayName,
+                                          lpNameBuffer,
                                           lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1454,7 +1331,7 @@ GetServiceDisplayNameW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1475,6 +1352,8 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
                    LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPSTR lpNameBuffer;
+    CHAR szEmptyName[] = "";
 
     TRACE("GetServiceKeyNameA() called\n");
 
@@ -1484,23 +1363,21 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
+    if (!lpServiceName || *lpcchBuffer < sizeof(CHAR))
     {
-        SetLastError(ERROR_INVALID_ADDRESS);
-
-        if (!lpServiceName)
-            *lpcchBuffer = 1;
-        return FALSE;
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(CHAR);
     }
-
-    if (!lpServiceName)
-        *lpcchBuffer = 0;
+    else
+    {
+        lpNameBuffer = lpServiceName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceKeyNameA((SC_RPC_HANDLE)hSCManager,
                                       lpDisplayName,
-                                      lpServiceName,
+                                      lpNameBuffer,
                                       lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1511,7 +1388,7 @@ GetServiceKeyNameA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceKeyNameA() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceKeyNameA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1532,6 +1409,8 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
                    LPDWORD lpcchBuffer)
 {
     DWORD dwError;
+    LPWSTR lpNameBuffer;
+    WCHAR szEmptyName[] = L"";
 
     TRACE("GetServiceKeyNameW() called\n");
 
@@ -1541,23 +1420,21 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
         return FALSE;
     }
 
-    if (!lpDisplayName)
+    if (!lpServiceName || *lpcchBuffer < sizeof(WCHAR))
     {
-        SetLastError(ERROR_INVALID_ADDRESS);
-
-        if (!lpServiceName)
-            *lpcchBuffer = 1;
-        return FALSE;
+        lpNameBuffer = szEmptyName;
+        *lpcchBuffer = sizeof(WCHAR);
     }
-
-    if (!lpServiceName)
-        *lpcchBuffer = 0;
+    else
+    {
+        lpNameBuffer = lpServiceName;
+    }
 
     RpcTryExcept
     {
         dwError = RGetServiceKeyNameW((SC_RPC_HANDLE)hSCManager,
                                       lpDisplayName,
-                                      lpServiceName,
+                                      lpNameBuffer,
                                       lpcchBuffer);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -1568,7 +1445,7 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RGetServiceKeyNameW() failed (Error %lu)\n", dwError);
+        TRACE("RGetServiceKeyNameW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1604,7 +1481,7 @@ LockServiceDatabase(SC_HANDLE hSCManager)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RLockServiceDatabase() failed (Error %lu)\n", dwError);
+        TRACE("RLockServiceDatabase() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1689,7 +1566,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenSCManagerA() failed (Error %lu)\n", dwError);
+        TRACE("ROpenSCManagerA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1734,7 +1611,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenSCManagerW() failed (Error %lu)\n", dwError);
+        TRACE("ROpenSCManagerW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1783,7 +1660,7 @@ OpenServiceA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("ROpenServiceA() failed (Error %lu)\n", dwError);
+        TRACE("ROpenServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1832,10 +1709,7 @@ OpenServiceW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        if (dwError == ERROR_SERVICE_DOES_NOT_EXIST)
-            WARN("ROpenServiceW() failed (Error %lu)\n", dwError);
-        else
-            ERR("ROpenServiceW() failed (Error %lu)\n", dwError);
+        TRACE("ROpenServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return NULL;
     }
@@ -1878,7 +1752,7 @@ QueryServiceConfigA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfigA() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfigA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -1947,10 +1821,7 @@ QueryServiceConfigW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        if (dwError == ERROR_INSUFFICIENT_BUFFER)
-            WARN("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
-        else
-            ERR("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfigW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2001,8 +1872,8 @@ QueryServiceConfig2A(SC_HANDLE hService,
 {
     DWORD dwError;
 
-    DbgPrint("QueryServiceConfig2A(hService %p, dwInfoLevel %lu, lpBuffer %p, cbBufSize %lu, pcbBytesNeeded %p)\n",
-           hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
+    TRACE("QueryServiceConfig2A(hService %p, dwInfoLevel %lu, lpBuffer %p, cbBufSize %lu, pcbBytesNeeded %p)\n",
+          hService, dwInfoLevel, lpBuffer, cbBufSize, pcbBytesNeeded);
 
     if (dwInfoLevel != SERVICE_CONFIG_DESCRIPTION &&
         dwInfoLevel != SERVICE_CONFIG_FAILURE_ACTIONS)
@@ -2035,7 +1906,7 @@ QueryServiceConfig2A(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfig2A() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfig2A() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2130,7 +2001,7 @@ QueryServiceConfig2W(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceConfig2W() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceConfig2W() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2208,7 +2079,7 @@ QueryServiceLockStatusA(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceLockStatusA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2256,7 +2127,7 @@ QueryServiceLockStatusW(SC_HANDLE hSCManager,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceLockStatusW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2307,7 +2178,7 @@ QueryServiceObjectSecurity(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        TRACE("QueryServiceObjectSecurity() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2375,7 +2246,7 @@ SetServiceObjectSecurity(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RServiceObjectSecurity() failed (Error %lu)\n", dwError);
+        TRACE("RServiceObjectSecurity() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2418,7 +2289,7 @@ QueryServiceStatus(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceStatus() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2466,7 +2337,7 @@ QueryServiceStatusEx(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RQueryServiceStatusEx() failed (Error %lu)\n", dwError);
+        TRACE("RQueryServiceStatusEx() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2501,7 +2372,7 @@ StartServiceA(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RStartServiceA() failed (Error %lu)\n", dwError);
+        TRACE("RStartServiceA() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2536,7 +2407,7 @@ StartServiceW(SC_HANDLE hService,
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RStartServiceW() failed (Error %lu)\n", dwError);
+        TRACE("RStartServiceW() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2570,7 +2441,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("RUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+        TRACE("RUnlockServiceDatabase() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }
@@ -2605,7 +2476,7 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 
     if (dwError != ERROR_SUCCESS)
     {
-        ERR("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
+        TRACE("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
         SetLastError(dwError);
         return FALSE;
     }

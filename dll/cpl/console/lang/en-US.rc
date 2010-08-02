@@ -2,7 +2,7 @@
  *
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/console/lang/en-US.rc
+ * FILE:            dll/cpl/console/lang/en-US.rc
  * PURPOSE:         English resource file
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@student.tugraz.at)
  */

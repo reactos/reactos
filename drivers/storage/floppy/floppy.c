@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * PROJECT:         ReactOS Floppy Driver
  * FILE:            floppy.c
@@ -520,7 +520,7 @@ static NTSTATUS NTAPI ConfigCallback(PVOID Context,
           if(AddressSpace == 0)
               gControllerInfo[gNumberOfControllers].BaseAddress = MmMapIoSpace(TranslatedAddress, FDC_PORT_BYTES, MmNonCached);
           else
-              gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)TranslatedAddress.u.LowPart;
+              gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)(ULONG_PTR)TranslatedAddress.QuadPart;
         }
 
       else if(PartialDescriptor->Type == CmResourceTypeDma)
@@ -686,19 +686,20 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
       return STATUS_IO_DEVICE_ERROR;
     }
 
-  /* Check if floppy drive exists */
-  if(HwSenseInterruptStatus(ControllerInfo) != STATUS_SUCCESS)
+  /* All controllers should support this so
+   * if we get something strange back then we
+   * know that this isn't a floppy controller
+   */
+  if (HwGetVersion(ControllerInfo) <= 0)
     {
-      WARN_(FLOPPY, "Floppy drive not detected!\n");
+      WARN_(FLOPPY, "InitController: unable to contact controller\n");
       return STATUS_NO_SUCH_DEVICE;
     }
 
-  INFO_(FLOPPY, "InitController: resetting the controller after floppy detection\n");
-
-  /* Reset the controller again after drive detection */
+  /* Reset the controller to avoid interrupt garbage on certain controllers */
   if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
-      WARN_(FLOPPY, "InitController: unable to reset controller\n");
+      WARN_(FLOPPY, "InitController: unable to reset controller #2\n");
       return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -971,7 +972,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	    }
 
 	  /* 3e: Set up the DPC */
-	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, DpcForIsr);
+	  IoInitializeDpcRequest(gControllerInfo[i].DriveInfo[j].DeviceObject, (PIO_DPC_ROUTINE)DpcForIsr);
 
 	  /* 3f: Point the device extension at our DriveInfo struct */
 	  gControllerInfo[i].DriveInfo[j].DeviceObject->DeviceExtension = &gControllerInfo[i].DriveInfo[j];

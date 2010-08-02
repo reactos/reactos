@@ -37,23 +37,27 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 static const WCHAR cszTargetDir[] = {'T','A','R','G','E','T','D','I','R',0};
 static const WCHAR cszDatabase[]={'D','A','T','A','B','A','S','E',0};
 
-const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
-const WCHAR cszSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
-const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
-const WCHAR cszbs[]={'\\',0};
-const WCHAR szLocalSid[] = {'S','-','1','-','5','-','1','8',0};
-
 LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
 {
     LPWSTR SystemFolder, dest, FilePath;
 
+    static const WCHAR szMicrosoft[] =
+        {'M','i','c','r','o','s','o','f','t','\\',0};
     static const WCHAR szInstaller[] = 
-        {'M','i','c','r','o','s','o','f','t','\\',
-         'I','n','s','t','a','l','l','e','r','\\',0};
-    static const WCHAR szFolder[] =
+        {'I','n','s','t','a','l','l','e','r','\\',0};
+    static const WCHAR szADFolder[] =
         {'A','p','p','D','a','t','a','F','o','l','d','e','r',0};
+    static const WCHAR szWFolder[] =
+        {'W','i','n','d','o','w','s','F','o','l','d','e','r',0};
 
-    SystemFolder = msi_dup_property( package, szFolder );
+    if(package->Context == MSIINSTALLCONTEXT_MACHINE)
+        SystemFolder = msi_dup_property( package->db, szWFolder );
+    else
+    {
+        LPWSTR ADTgt = msi_dup_property( package->db, szADFolder );
+        SystemFolder = build_directory_name(2, ADTgt, szMicrosoft);
+        msi_free(ADTgt);
+    }
 
     dest = build_directory_name(3, SystemFolder, szInstaller, package->ProductCode);
 
@@ -162,34 +166,15 @@ MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir )
     return NULL;
 }
 
-void msi_reset_folders( MSIPACKAGE *package, BOOL source )
-{
-    MSIFOLDER *folder;
-
-    LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
-    {
-        if ( source )
-        {
-            msi_free( folder->ResolvedSource );
-            folder->ResolvedSource = NULL;
-        }
-        else
-        {
-            msi_free( folder->ResolvedTarget );
-            folder->ResolvedTarget = NULL;
-        }
-    }
-}
-
 static LPWSTR get_source_root( MSIPACKAGE *package )
 {
     LPWSTR path, p;
 
-    path = msi_dup_property( package, cszSourceDir );
+    path = msi_dup_property( package->db, cszSourceDir );
     if (path)
         return path;
 
-    path = msi_dup_property( package, cszDatabase );
+    path = msi_dup_property( package->db, cszDatabase );
     if (path)
     {
         p = strrchrW(path,'\\');
@@ -290,19 +275,19 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         if (!f->ResolvedTarget && !f->Property)
         {
             LPWSTR check_path;
-            check_path = msi_dup_property( package, cszTargetDir );
+            check_path = msi_dup_property( package->db, cszTargetDir );
             if (!check_path)
             {
-                check_path = msi_dup_property( package, cszRootDrive );
+                check_path = msi_dup_property( package->db, cszRootDrive );
                 if (set_prop)
-                    MSI_SetPropertyW(package,cszTargetDir,check_path);
+                    msi_set_property( package->db, cszTargetDir, check_path );
             }
 
             /* correct misbuilt target dir */
             path = build_directory_name(2, check_path, NULL);
             clean_spaces_from_path( path );
             if (strcmpiW(path,check_path)!=0)
-                MSI_SetPropertyW(package,cszTargetDir,path);
+                msi_set_property( package->db, cszTargetDir, path );
             msi_free(check_path);
 
             f->ResolvedTarget = path;
@@ -335,11 +320,11 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
 
         TRACE("   internally set to %s\n",debugstr_w(path));
         if (set_prop)
-            MSI_SetPropertyW( package, name, path );
+            msi_set_property( package->db, name, path );
         return path;
     }
 
-    if (!source && load_prop && (path = msi_dup_property( package, name )))
+    if (!source && load_prop && (path = msi_dup_property( package->db, name )))
     {
         f->ResolvedTarget = strdupW( path );
         TRACE("   property set to %s\n", debugstr_w(path));
@@ -363,7 +348,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
         f->ResolvedTarget = strdupW( path );
         TRACE("target -> %s\n", debugstr_w(path));
         if (set_prop)
-            MSI_SetPropertyW(package,name,path);
+            msi_set_property( package->db, name, path );
     }
     else
     {
@@ -446,238 +431,6 @@ void msi_free_action_script(MSIPACKAGE *package, UINT script)
     package->script->ActionCount[script] = 0;
 }
 
-static void remove_tracked_tempfiles(MSIPACKAGE* package)
-{
-    struct list *item, *cursor;
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->tempfiles )
-    {
-        MSITEMPFILE *temp = LIST_ENTRY( item, MSITEMPFILE, entry );
-
-        list_remove( &temp->entry );
-        TRACE("deleting temp file %s\n", debugstr_w( temp->Path ));
-        if (!DeleteFileW( temp->Path ))
-            ERR("failed to delete %s\n", debugstr_w( temp->Path ));
-        msi_free( temp->Path );
-        msi_free( temp );
-    }
-}
-
-static void free_feature( MSIFEATURE *feature )
-{
-    struct list *item, *cursor;
-
-    LIST_FOR_EACH_SAFE( item, cursor, &feature->Children )
-    {
-        FeatureList *fl = LIST_ENTRY( item, FeatureList, entry );
-        list_remove( &fl->entry );
-        msi_free( fl );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &feature->Components )
-    {
-        ComponentList *cl = LIST_ENTRY( item, ComponentList, entry );
-        list_remove( &cl->entry );
-        msi_free( cl );
-    }
-    msi_free( feature->Feature );
-    msi_free( feature->Feature_Parent );
-    msi_free( feature->Directory );
-    msi_free( feature->Description );
-    msi_free( feature->Title );
-    msi_free( feature );
-}
-
-static void free_extension( MSIEXTENSION *ext )
-{
-    struct list *item, *cursor;
-
-    LIST_FOR_EACH_SAFE( item, cursor, &ext->verbs )
-    {
-        MSIVERB *verb = LIST_ENTRY( item, MSIVERB, entry );
-
-        list_remove( &verb->entry );
-        msi_free( verb->Verb );
-        msi_free( verb->Command );
-        msi_free( verb->Argument );
-        msi_free( verb );
-    }
-
-    msi_free( ext->Extension );
-    msi_free( ext->ProgIDText );
-    msi_free( ext );
-}
-
-/* Called when the package is being closed */
-void ACTION_free_package_structures( MSIPACKAGE* package)
-{
-    INT i;
-    struct list *item, *cursor;
-
-    TRACE("Freeing package action data\n");
-
-    remove_tracked_tempfiles(package);
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->features )
-    {
-        MSIFEATURE *feature = LIST_ENTRY( item, MSIFEATURE, entry );
-        list_remove( &feature->entry );
-        free_feature( feature );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->folders )
-    {
-        MSIFOLDER *folder = LIST_ENTRY( item, MSIFOLDER, entry );
-
-        list_remove( &folder->entry );
-        msi_free( folder->Parent );
-        msi_free( folder->Directory );
-        msi_free( folder->TargetDefault );
-        msi_free( folder->SourceLongPath );
-        msi_free( folder->SourceShortPath );
-        msi_free( folder->ResolvedTarget );
-        msi_free( folder->ResolvedSource );
-        msi_free( folder->Property );
-        msi_free( folder );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->components )
-    {
-        MSICOMPONENT *comp = LIST_ENTRY( item, MSICOMPONENT, entry );
-
-        list_remove( &comp->entry );
-        msi_free( comp->Component );
-        msi_free( comp->ComponentId );
-        msi_free( comp->Directory );
-        msi_free( comp->Condition );
-        msi_free( comp->KeyPath );
-        msi_free( comp->FullKeypath );
-        msi_free( comp );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->files )
-    {
-        MSIFILE *file = LIST_ENTRY( item, MSIFILE, entry );
-
-        list_remove( &file->entry );
-        msi_free( file->File );
-        msi_free( file->FileName );
-        msi_free( file->ShortName );
-        msi_free( file->LongName );
-        msi_free( file->Version );
-        msi_free( file->Language );
-        msi_free( file->TargetPath );
-        msi_free( file );
-    }
-
-    /* clean up extension, progid, class and verb structures */
-    LIST_FOR_EACH_SAFE( item, cursor, &package->classes )
-    {
-        MSICLASS *cls = LIST_ENTRY( item, MSICLASS, entry );
-
-        list_remove( &cls->entry );
-        msi_free( cls->clsid );
-        msi_free( cls->Context );
-        msi_free( cls->Description );
-        msi_free( cls->FileTypeMask );
-        msi_free( cls->IconPath );
-        msi_free( cls->DefInprocHandler );
-        msi_free( cls->DefInprocHandler32 );
-        msi_free( cls->Argument );
-        msi_free( cls->ProgIDText );
-        msi_free( cls );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->extensions )
-    {
-        MSIEXTENSION *ext = LIST_ENTRY( item, MSIEXTENSION, entry );
-
-        list_remove( &ext->entry );
-        free_extension( ext );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->progids )
-    {
-        MSIPROGID *progid = LIST_ENTRY( item, MSIPROGID, entry );
-
-        list_remove( &progid->entry );
-        msi_free( progid->ProgID );
-        msi_free( progid->Description );
-        msi_free( progid->IconPath );
-        msi_free( progid );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->mimes )
-    {
-        MSIMIME *mt = LIST_ENTRY( item, MSIMIME, entry );
-
-        list_remove( &mt->entry );
-        msi_free( mt->clsid );
-        msi_free( mt->ContentType );
-        msi_free( mt );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->appids )
-    {
-        MSIAPPID *appid = LIST_ENTRY( item, MSIAPPID, entry );
-
-        list_remove( &appid->entry );
-        msi_free( appid->AppID );
-        msi_free( appid->RemoteServerName );
-        msi_free( appid->LocalServer );
-        msi_free( appid->ServiceParameters );
-        msi_free( appid->DllSurrogate );
-        msi_free( appid );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->sourcelist_info )
-    {
-        MSISOURCELISTINFO *info = LIST_ENTRY( item, MSISOURCELISTINFO, entry );
-
-        list_remove( &info->entry );
-        msi_free( info->value );
-	msi_free( info );
-    }
-
-    LIST_FOR_EACH_SAFE( item, cursor, &package->sourcelist_media )
-    {
-        MSIMEDIADISK *info = LIST_ENTRY( item, MSIMEDIADISK, entry );
-
-        list_remove( &info->entry );
-        msi_free( info->volume_label );
-        msi_free( info->disk_prompt );
-	msi_free( info );
-    }
-
-    if (package->script)
-    {
-        for (i = 0; i < TOTAL_SCRIPTS; i++)
-            msi_free_action_script(package, i);
-
-        for (i = 0; i < package->script->UniqueActionsCount; i++)
-            msi_free(package->script->UniqueActions[i]);
-
-        msi_free(package->script->UniqueActions);
-        msi_free(package->script);
-    }
-
-    if (package->patch)
-    {
-        msi_free(package->patch->patchcode);
-        msi_free(package->patch->transforms);
-        msi_free(package->patch);
-    }
-
-    msi_free(package->BaseURL);
-    msi_free(package->PackagePath);
-    msi_free(package->ProductCode);
-    msi_free(package->ActionFormat);
-    msi_free(package->LastAction);
-
-    /* cleanup control event subscriptions */
-    ControlEvent_CleanupSubscriptions(package);
-}
-
 /*
  *  build_directory_name()
  *
@@ -724,7 +477,7 @@ LPWSTR build_directory_name(DWORD count, ...)
             continue;
         strcatW(dir, str);
         if( ((i+1)!=count) && dir[strlenW(dir)-1]!='\\')
-            strcatW(dir, cszbs);
+            strcatW(dir, szBackSlash);
     }
     return dir;
 }
@@ -840,28 +593,6 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, row);
 
     msiobj_release(&row->hdr);
-}
-
-BOOL ACTION_VerifyComponentForAction( const MSICOMPONENT* comp, INSTALLSTATE check )
-{
-    if (!comp)
-        return FALSE;
-
-    if (comp->ActionRequest == check)
-        return TRUE;
-    else
-        return FALSE;
-}
-
-BOOL ACTION_VerifyFeatureForAction( const MSIFEATURE* feature, INSTALLSTATE check )
-{
-    if (!feature)
-        return FALSE;
-
-    if (feature->ActionRequest == check)
-        return TRUE;
-    else
-        return FALSE;
 }
 
 void reduce_to_longfilename(WCHAR* filename)
@@ -992,7 +723,7 @@ UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
     if (!package->script)
         return FALSE;
 
-    TRACE("Registering Action %s as having fun\n",debugstr_w(action));
+    TRACE("Registering %s as unique action\n", debugstr_w(action));
     
     count = package->script->UniqueActionsCount;
     package->script->UniqueActionsCount++;

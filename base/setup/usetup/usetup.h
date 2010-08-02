@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __USETUP_H__
-#define __USETUP_H__
+#pragma once
 
 /* C Headers */
 #include <ctype.h>
@@ -51,6 +50,7 @@
 /* Internal Headers */
 #include "interface/consup.h"
 #include "partlist.h"
+#include "infros.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
@@ -122,12 +122,6 @@ typedef enum _PAGE_NUMBER
 #define POPUP_WAIT_ANY_KEY 1
 #define POPUP_WAIT_ENTER   2
 
-#define ROUND_DOWN(n, align) \
-    (((ULONG)n) & ~((align) - 1l))
-
-#define ROUND_UP(n, align) \
-    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
-
 #define LIST_FOR_EACH(elem, list, type, field) \
     for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
          &(elem)->field != (list) || (elem == NULL); \
@@ -150,7 +144,5 @@ typedef enum _PAGE_NUMBER
 \
   InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
-
-#endif /* __USETUP_H__*/
 
 /* EOF */

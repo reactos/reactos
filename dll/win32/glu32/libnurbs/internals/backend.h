@@ -65,7 +65,7 @@ public:
     void		surfbbox( long, REAL *, REAL * );
     void		surfgrid( REAL, REAL, long, REAL, REAL, long );
     void		surfmesh( long, long, long, long );
-    void		bgntmesh( char * );
+    void		bgntmesh( const char * );
     void		endtmesh( void );
     void		swaptmesh( void );
     void		tmeshvert( GridTrimVertex * );

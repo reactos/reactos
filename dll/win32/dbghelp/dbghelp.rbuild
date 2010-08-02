@@ -6,13 +6,25 @@
 	<include base="dbghelp">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<define name="HAVE_REGEX_H" />
+	<define name="_IMAGEHLP_SOURCE_" />
+	<if property="ARCH" value="amd64">
+		<define name="UNW_FLAG_NHANDLER">0</define>
+		<define name="UNW_FLAG_EHANDLER">1</define>
+		<define name="UNW_FLAG_UHANDLER">2</define>
+		<define name="UNW_FLAG_CHAININFO">3</define>
+	</if>
 	<file>coff.c</file>
+	<file>cpu_i386.c</file>
+	<file>cpu_ppc.c</file>
+	<file>cpu_x86_64.c</file>
+	<file>crc32.c</file>
 	<file>dbghelp.c</file>
 	<file>dwarf.c</file>
 	<file>elf_module.c</file>
 	<file>image.c</file>
-	<file>memory.c</file>
+	<file>macho_module.c</file>
 	<file>minidump.c</file>
 	<file>module.c</file>
 	<file>msc.c</file>
@@ -26,9 +38,9 @@
 	<file>storage.c</file>
 	<file>symbol.c</file>
 	<file>type.c</file>
+	<file>version.rc</file>
 	<library>wine</library>
 	<library>psapi</library>
-	<library>kernel32</library>
 	<library>version</library>
 	<library>ntdll</library>
 	<library>pseh</library>

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  *
@@ -27,7 +27,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -127,8 +127,8 @@ IntGdiModifyWorldTransform(
     CONST LPXFORM lpXForm,
     DWORD Mode)
 {
-    ASSERT(pDc);
     XFORM xformWorld2Wnd;
+    ASSERT(pDc);
 
     switch (Mode)
     {
@@ -165,6 +165,21 @@ IntGdiModifyWorldTransform(
     return TRUE;
 }
 
+// FIXME: Don't use floating point in the kernel!
+void IntWindowToViewPort(PDC_ATTR pdcattr, LPXFORM xformWnd2Vport)
+{
+    FLOAT scaleX, scaleY;
+
+    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
+    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
+    xformWnd2Vport->eM11 = scaleX;
+    xformWnd2Vport->eM12 = 0.0;
+    xformWnd2Vport->eM21 = 0.0;
+    xformWnd2Vport->eM22 = scaleY;
+    xformWnd2Vport->eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
+    xformWnd2Vport->eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+}
+
 // FIXME: Should be XFORML and use XFORMOBJ functions directly
 BOOL
 APIENTRY
@@ -198,7 +213,21 @@ NtGdiGetTransform(
                 MatrixS2XForm(XForm, &dc->dclevel.mxWorldToPage);
                 break;
 
+            case GdiWorldSpaceToDeviceSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxWorldToDevice);
+                break;
+
+            case GdiPageSpaceToDeviceSpace:
+                IntWindowToViewPort(dc->pdcattr, XForm);
+                break;
+
+            case GdiDeviceSpaceToWorldSpace:
+                MatrixS2XForm(XForm, &dc->dclevel.mxDeviceToWorld);
+                break;
+
             default:
+                DPRINT1("Unknown transform %lu\n", iXform);
+                Status = STATUS_INVALID_PARAMETER;
                 break;
         }
     }
@@ -674,38 +703,38 @@ IntGdiSetMapMode(
             /* Fall through */
 
         case MM_LOMETRIC:
-            pdcattr->szlWindowExt.cx = 3600;
-            pdcattr->szlWindowExt.cy = 2700;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = pdcattr->szlVirtualDeviceMm.cx * 10;
+            pdcattr->szlWindowExt.cy = pdcattr->szlVirtualDeviceMm.cy * 10;
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_HIMETRIC:
-            pdcattr->szlWindowExt.cx = 36000;
-            pdcattr->szlWindowExt.cy = 27000;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = pdcattr->szlVirtualDeviceMm.cx * 100;
+            pdcattr->szlWindowExt.cy = pdcattr->szlVirtualDeviceMm.cy * 100;
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_LOENGLISH:
-            pdcattr->szlWindowExt.cx = 1417;
-            pdcattr->szlWindowExt.cy = 1063;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(1000, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(1000, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_HIENGLISH:
-            pdcattr->szlWindowExt.cx = 14173;
-            pdcattr->szlWindowExt.cy = 10630;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(10000, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(10000, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_TWIPS:
-            pdcattr->szlWindowExt.cx = 20409;
-            pdcattr->szlWindowExt.cy = 15307;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(14400, pdcattr->szlVirtualDeviceMm.cx, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(14400, pdcattr->szlVirtualDeviceMm.cy, 254);
+            pdcattr->szlViewportExt.cx =  pdcattr->szlVirtualDevicePixel.cx;
+            pdcattr->szlViewportExt.cy = -pdcattr->szlVirtualDevicePixel.cy;
             break;
 
         case MM_ANISOTROPIC:
@@ -1010,7 +1039,20 @@ NtGdiSetVirtualResolution(
     PDC dc;
     PDC_ATTR pdcattr;
 
-    // Need test types for zeros and non zeros
+    /* Check parameters (all zeroes resets to real resolution) */
+    if (cxVirtualDevicePixel == 0 && cyVirtualDevicePixel == 0 &&
+        cxVirtualDeviceMm == 0 && cyVirtualDeviceMm == 0)
+    {
+        cxVirtualDevicePixel = NtGdiGetDeviceCaps(hdc, HORZRES);
+        cyVirtualDevicePixel = NtGdiGetDeviceCaps(hdc, VERTRES);
+        cxVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, HORZSIZE);
+        cyVirtualDeviceMm = NtGdiGetDeviceCaps(hdc, VERTSIZE);
+    }
+    else if (cxVirtualDevicePixel == 0 || cyVirtualDevicePixel == 0 || 
+             cxVirtualDeviceMm == 0 || cyVirtualDeviceMm == 0)
+    {
+        return FALSE;
+    }
 
     dc = DC_LockDc(hdc);
     if (!dc) return FALSE;
@@ -1051,25 +1093,15 @@ DC_InvertXform(const XFORM *xformSrc,
     return  TRUE;
 }
 
-
-// FIXME: Don't use floating point in the kernel!
 VOID FASTCALL
 DC_UpdateXforms(PDC dc)
 {
     XFORM  xformWnd2Vport;
-    FLOAT  scaleX, scaleY;
     PDC_ATTR pdcattr = dc->pdcattr;
     XFORM xformWorld2Vport, xformWorld2Wnd, xformVport2World;
 
     /* Construct a transformation to do the window-to-viewport conversion */
-    scaleX = (pdcattr->szlWindowExt.cx ? (FLOAT)pdcattr->szlViewportExt.cx / (FLOAT)pdcattr->szlWindowExt.cx : 0.0f);
-    scaleY = (pdcattr->szlWindowExt.cy ? (FLOAT)pdcattr->szlViewportExt.cy / (FLOAT)pdcattr->szlWindowExt.cy : 0.0f);
-    xformWnd2Vport.eM11 = scaleX;
-    xformWnd2Vport.eM12 = 0.0;
-    xformWnd2Vport.eM21 = 0.0;
-    xformWnd2Vport.eM22 = scaleY;
-    xformWnd2Vport.eDx  = (FLOAT)pdcattr->ptlViewportOrg.x - scaleX * (FLOAT)pdcattr->ptlWindowOrg.x;
-    xformWnd2Vport.eDy  = (FLOAT)pdcattr->ptlViewportOrg.y - scaleY * (FLOAT)pdcattr->ptlWindowOrg.y;
+    IntWindowToViewPort(pdcattr, &xformWnd2Vport);
 
     /* Combine with the world transformation */
     MatrixS2XForm(&xformWorld2Vport, &dc->dclevel.mxWorldToDevice);
@@ -1087,8 +1119,9 @@ DC_UpdateXforms(PDC dc)
         pdcattr->flXform |= DEVICE_TO_WORLD_INVALID;
     }
 
+    /* Update transformation matrices */
     XForm2MatrixS(&dc->dclevel.mxWorldToDevice, &xformWorld2Vport);
-
+    XForm2MatrixS(&dc->dclevel.mxDeviceToWorld, &xformVport2World);
 }
 
 LONG FASTCALL
@@ -1098,6 +1131,16 @@ IntCalcFillOrigin(PDC pdc)
     pdc->ptlFillOrigin.y = pdc->dclevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
 
     return pdc->ptlFillOrigin.y;
+}
+
+PPOINTL
+FASTCALL
+IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
+{
+    pdc->dclevel.ptlBrushOrigin.x = x;
+    pdc->dclevel.ptlBrushOrigin.y = y;
+    IntCalcFillOrigin(pdc);
+    return &pdc->dclevel.ptlBrushOrigin;
 }
 
 VOID
@@ -1151,8 +1194,8 @@ DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
     {
         // "This specifies that Windows should only match fonts that have the
         // same aspect ratio as the display.", Programming Windows, Fifth Ed.
-        AspectRatio->cx = pDC->ppdev->GDIInfo.ulLogPixelsX;
-        AspectRatio->cy = pDC->ppdev->GDIInfo.ulLogPixelsY;
+        AspectRatio->cx = pDC->ppdev->gdiinfo.ulLogPixelsX;
+        AspectRatio->cy = pDC->ppdev->gdiinfo.ulLogPixelsY;
     }
     else
     {

@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -165,6 +165,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copia il nome della chiave",  ID_EDIT_COPYKEYNAME
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "&Copy", ID_HEXEDIT_COPY
+        MENUITEM "&Paste", ID_HEXEDIT_PASTE
+        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+  END
 END
 
 
@@ -192,7 +201,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
 CAPTION "Modifica Multi-Stringa"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Name:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nome:",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
     LTEXT           "&Dati:",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_MULTILINE |
@@ -443,7 +452,7 @@ CAPTION "Trova"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "&Annulla",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "&Annulla",IDCANCEL,93,29,45,14
     LTEXT           "Ricerca in corso nel registro...",IDC_STATIC,33,12,83,8
 END
 

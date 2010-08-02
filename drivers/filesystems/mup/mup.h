@@ -1,9 +1,4 @@
-#ifndef MUP_H
-#define MUP_H
-
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
+#pragma once
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
@@ -28,5 +23,3 @@ MupCreate(PDEVICE_OBJECT DeviceObject,
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
 	    PUNICODE_STRING RegistryPath);
-
-#endif /* MUP_H */

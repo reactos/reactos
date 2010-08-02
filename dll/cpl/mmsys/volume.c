@@ -234,17 +234,18 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_SET_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
+        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
         return;
     }
 
-    if (mixerOpen(&pGlobalData->hMixer, 0, (DWORD)hwndDlg, 0, MIXER_OBJECTF_MIXER | CALLBACK_WINDOW) != MMSYSERR_NOERROR)
+    if (mixerOpen(&pGlobalData->hMixer, 0, PtrToUlong(hwndDlg), 0, MIXER_OBJECTF_MIXER | CALLBACK_WINDOW) != MMSYSERR_NOERROR)
     {
         MessageBox(hwndDlg, _T("Cannot open mixer"), NULL, MB_OK);
         return;
     }
 
     ZeroMemory(&mxc, sizeof(MIXERCAPS));
-    if (mixerGetDevCaps((UINT)pGlobalData->hMixer, &mxc, sizeof(MIXERCAPS)) != MMSYSERR_NOERROR)
+    if (mixerGetDevCaps(PtrToUint(pGlobalData->hMixer), &mxc, sizeof(MIXERCAPS)) != MMSYSERR_NOERROR)
     {
         MessageBox(hwndDlg, _T("mixerGetDevCaps failed"), NULL, MB_OK);
         return;
@@ -278,7 +279,7 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 VOID
 LaunchSoundControl(HWND hwndDlg)
 {
-    if ((INT)ShellExecuteW(NULL, L"open", L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL) > 32)
+    if ((INT_PTR)ShellExecuteW(NULL, L"open", L"sndvol32.exe", NULL, NULL, SW_SHOWNORMAL) > 32)
         return;
     MessageBox(hwndDlg, _T("Cannot run sndvol32.exe"), NULL, MB_OK);
 }
@@ -292,14 +293,38 @@ VolumeDlgProc(HWND hwndDlg,
               LPARAM lParam)
 {
     static IMGINFO ImgInfo;
+    PGLOBAL_DATA pGlobalData;
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    PGLOBAL_DATA pGlobalData;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
+
+
     switch(uMsg)
     {
+        case MM_MIXM_LINE_CHANGE:
+        {
+            GetMuteState(pGlobalData);
+            if (pGlobalData->muteVal)
+            {
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_CHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
+            }
+            else
+            {
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_CHECKBOX, BM_SETCHECK, (WPARAM)BST_UNCHECKED, (LPARAM)0);
+                SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconUnMuted);
+            }
+            break;
+        }
+        case MM_MIXM_CONTROL_CHANGE:
+        {
+            GetVolumeValue(pGlobalData);
+            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETSEL, (WPARAM)FALSE, (LPARAM)MAKELONG(pGlobalData->volumeMinimum, pGlobalData->volumeValue/VOLUME_DIVIDER));
+            SendDlgItemMessage(hwndDlg, IDC_VOLUME_TRACKBAR, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)pGlobalData->volumeValue/VOLUME_DIVIDER);
+            break;
+        }
         case WM_INITDIALOG:
         {
             pGlobalData = (GLOBAL_DATA*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(GLOBAL_DATA));

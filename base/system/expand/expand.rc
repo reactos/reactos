@@ -3,5 +3,3 @@
 #define REACTOS_STR_INTERNAL_NAME	"expand\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"expand.exe\0"
 #include <reactos/version.rc>
-
-#include "rsrc.rc"

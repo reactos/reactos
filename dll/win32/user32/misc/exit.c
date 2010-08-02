@@ -1,10 +1,9 @@
-/* $Id$
- *
+/* 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/exit.c
  * PURPOSE:         Shutdown related functions
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  */
 
 #include <user32.h>
@@ -101,7 +100,7 @@ RegisterServicesProcess(DWORD ServicesProcessId)
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(REGISTER_SERVICES_PROCESS, CSR_GUI);
-  Request.Data.RegisterServicesProcessRequest.ProcessId = (HANDLE)ServicesProcessId;
+  Request.Data.RegisterServicesProcessRequest.ProcessId = UlongToHandle(ServicesProcessId);
 
   Status = CsrClientCallServer(&Request,
                    NULL,

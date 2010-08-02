@@ -1,5 +1,4 @@
-#ifndef __CPL_DESK_RESOURCE_H__
-#define __CPL_DESK_RESOURCE_H__
+#pragma once
 
 /* metrics */
 #define PROPSHEETWIDTH                  246
@@ -185,7 +184,3 @@
 #define IDC_RESTART_RB                  5002
 #define IDC_WITHOUTREBOOT_RB            5003
 #define IDC_ASKME_RB                    5004
-
-#endif /* __CPL_DESK_RESOURCE_H__ */
-
-

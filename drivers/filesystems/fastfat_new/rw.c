@@ -1,10 +1,9 @@
 /*
  * PROJECT:         ReactOS FAT file system driver
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GNU GPLv3 as published by the Free Software Foundation
  * FILE:            drivers/filesystems/fastfat/rw.c
  * PURPOSE:         Read/write support
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
- *                  Alexey Vlasov
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,20 +17,57 @@ NTSTATUS
 NTAPI
 FatiRead(PFAT_IRP_CONTEXT IrpContext)
 {
-    CSHORT FcbType;
     ULONG NumberOfBytes;
+    LARGE_INTEGER ByteOffset;
+    PFILE_OBJECT FileObject;
+    TYPE_OF_OPEN OpenType;
+    PIO_STACK_LOCATION IrpSp = IrpContext->Stack;
+    PFCB Fcb;
+    PVCB Vcb;
+    PCCB Ccb;
+    PVOID Buffer;
+    LONG BytesRead;
 
-    FcbType = *((PCSHORT) IrpContext->FileObject->FsContext);
-    NumberOfBytes = IrpContext->Stack->Parameters.Read.Length;
+    FileObject = IrpSp->FileObject;
+    NumberOfBytes = IrpSp->Parameters.Read.Length;
+    ByteOffset = IrpSp->Parameters.Read.ByteOffset;
     if (NumberOfBytes == 0)
     {
         FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
         return STATUS_SUCCESS;
     }
-    //if (FcbType == FAT_NTC_VCB)
+    
+    OpenType = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
 
-    DPRINT1("FatiRead()\n");
-    return STATUS_NOT_IMPLEMENTED;
+    DPRINT("FatiRead() Fcb %p, Name %wZ, Offset %d, Length %d, Handle %p\n",
+        Fcb, &FileObject->FileName, ByteOffset.LowPart, NumberOfBytes, Fcb->FatHandle);
+
+    /* Perform actual read */
+
+    if (IrpContext->MinorFunction & IRP_MN_MDL)
+    {
+        DPRINT1("MDL read\n");
+    }
+    else
+    {
+        Buffer = FatMapUserBuffer(IrpContext->Irp);
+        DPRINT("Normal cached read, buffer %p\n");
+
+        /* Set offset */
+        FF_Seek(Fcb->FatHandle, ByteOffset.LowPart, FF_SEEK_SET);
+
+        /* Read */
+        BytesRead = FF_Read(Fcb->FatHandle, NumberOfBytes, 1, Buffer);
+        DPRINT("Read %d bytes\n", BytesRead);
+
+        /* Indicate we read requested amount of bytes */
+        IrpContext->Irp->IoStatus.Information = BytesRead;
+        IrpContext->Irp->IoStatus.Status = STATUS_SUCCESS;
+    }
+
+    /* Complete the request */
+    FatCompleteRequest(IrpContext, IrpContext->Irp, STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -74,7 +110,6 @@ FatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* Leave FsRtl critical region */
     FsRtlExitFileSystem();
 
-    DPRINT1("FatRead()\n");
     return Status;
 }
 

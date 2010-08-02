@@ -30,6 +30,7 @@ typedef struct _AFD_INFO {
     union {
         ULONG			        Ulong;
         LARGE_INTEGER	                LargeInteger;
+        BOOLEAN                         Boolean;
     }					Information;
     ULONG				Padding;
 } AFD_INFO, *PAFD_INFO;
@@ -61,7 +62,7 @@ typedef struct _AFD_POLL_INFO {
 typedef struct _AFD_ACCEPT_DATA {
     ULONG				UseSAN;
     ULONG				SequenceNumber;
-    ULONG				ListenHandle;
+    HANDLE				ListenHandle;
 } AFD_ACCEPT_DATA, *PAFD_ACCEPT_DATA;
 
 typedef struct _AFD_RECEIVED_ACCEPT_DATA {
@@ -107,9 +108,8 @@ typedef struct _AFD_SEND_INFO_UDP {
     PAFD_WSABUF				BufferArray;
     ULONG				BufferCount;
     ULONG				AfdFlags;
-    ULONG				Padding[9];
-    ULONG				SizeOfRemoteAddress;
-    PVOID				RemoteAddress;
+    TDI_REQUEST_SEND_DATAGRAM		TdiRequest;
+    TDI_CONNECTION_INFORMATION		TdiConnection;
 } AFD_SEND_INFO_UDP, *PAFD_SEND_INFO_UDP;
 
 typedef struct  _AFD_CONNECT_INFO {
@@ -135,6 +135,18 @@ typedef struct _AFD_DISCONNECT_INFO {
     LARGE_INTEGER			Timeout;
 } AFD_DISCONNECT_INFO, *PAFD_DISCONNECT_INFO;
 
+typedef struct _AFD_VALIDATE_GROUP_DATA
+{
+    LONG GroupId;
+    TRANSPORT_ADDRESS Address;
+} AFD_VALIDATE_GROUP_DATA, *PAFD_VALIDATE_GROUP_DATA;
+
+typedef struct _AFD_TDI_HANDLE_DATA
+{
+    HANDLE TdiAddressHandle;
+    HANDLE TdiConnectionHandle;
+} AFD_TDI_HANDLE_DATA, *PAFD_TDI_HANDLE_DATA;
+
 /* AFD Packet Endpoint Flags */
 #define AFD_ENDPOINT_CONNECTIONLESS	0x1
 #define AFD_ENDPOINT_MESSAGE_ORIENTED	0x10
@@ -143,9 +155,31 @@ typedef struct _AFD_DISCONNECT_INFO {
 #define AFD_ENDPOINT_C_ROOT		0x10000
 #define AFD_ENDPOINT_D_ROOT	        0x100000
 
+/* AFD TDI Query Flags */
+#define AFD_ADDRESS_HANDLE      0x1L
+#define AFD_CONNECTION_HANDLE   0x2L
+
+/* AFD event bits */
+#define AFD_EVENT_RECEIVE_BIT                   0
+#define AFD_EVENT_OOB_RECEIVE_BIT               1
+#define AFD_EVENT_SEND_BIT                      2
+#define AFD_EVENT_DISCONNECT_BIT                3
+#define AFD_EVENT_ABORT_BIT                     4
+#define AFD_EVENT_CLOSE_BIT                     5
+#define AFD_EVENT_CONNECT_BIT                   6
+#define AFD_EVENT_ACCEPT_BIT                    7
+#define AFD_EVENT_CONNECT_FAIL_BIT              8
+#define AFD_EVENT_QOS_BIT                       9
+#define AFD_EVENT_GROUP_QOS_BIT                 10
+#define AFD_EVENT_ROUTING_INTERFACE_CHANGE_BIT  11
+#define AFD_EVENT_ADDRESS_LIST_CHANGE_BIT       12
+#define AFD_MAX_EVENT                           13
+#define AFD_ALL_EVENTS                          ((1 << AFD_MAX_EVENT) - 1)
+
 /* AFD Info Flags */
+#define AFD_INFO_INLINING_MODE		0x01L
 #define AFD_INFO_BLOCKING_MODE		0x02L
-#define AFD_INFO_SENDS_IN_PROGRESS  0x04L
+#define AFD_INFO_SENDS_IN_PROGRESS	0x04L
 #define AFD_INFO_RECEIVE_WINDOW_SIZE	0x06L
 #define AFD_INFO_SEND_WINDOW_SIZE	0x07L
 #define AFD_INFO_GROUP_ID_TYPE	        0x10L
@@ -160,20 +194,23 @@ typedef struct _AFD_DISCONNECT_INFO {
 /* AFD Disconnect Flags */
 #define AFD_DISCONNECT_SEND		0x01L
 #define AFD_DISCONNECT_RECV		0x02L
-#define AFD_DISCONNECT_ABORT	0x04L
+#define AFD_DISCONNECT_ABORT		0x04L
+#define AFD_DISCONNECT_DATAGRAM		0x08L
 
 /* AFD Event Flags */
-#define AFD_EVENT_RECEIVE		0x1L
-#define AFD_EVENT_OOB_RECEIVE		0x2L
-#define AFD_EVENT_SEND			0x4L
-#define AFD_EVENT_DISCONNECT		0x8L
-#define AFD_EVENT_ABORT			0x10L
-#define AFD_EVENT_CLOSE			0x20L
-#define AFD_EVENT_CONNECT		0x40L
-#define AFD_EVENT_ACCEPT		0x80L
-#define AFD_EVENT_CONNECT_FAIL		0x100L
-#define AFD_EVENT_QOS			0x200L
-#define AFD_EVENT_GROUP_QOS		0x400L
+#define AFD_EVENT_RECEIVE                   (1 << AFD_EVENT_RECEIVE_BIT)
+#define AFD_EVENT_OOB_RECEIVE               (1 << AFD_EVENT_OOB_RECEIVE_BIT)
+#define AFD_EVENT_SEND                      (1 << AFD_EVENT_SEND_BIT)
+#define AFD_EVENT_DISCONNECT                (1 << AFD_EVENT_DISCONNECT_BIT)
+#define AFD_EVENT_ABORT                     (1 << AFD_EVENT_ABORT_BIT)
+#define AFD_EVENT_CLOSE                     (1 << AFD_EVENT_CLOSE_BIT)
+#define AFD_EVENT_CONNECT                   (1 << AFD_EVENT_CONNECT_BIT)
+#define AFD_EVENT_ACCEPT                    (1 << AFD_EVENT_ACCEPT_BIT)
+#define AFD_EVENT_CONNECT_FAIL              (1 << AFD_EVENT_CONNECT_FAIL_BIT)
+#define AFD_EVENT_QOS                       (1 << AFD_EVENT_QOS_BIT)
+#define AFD_EVENT_GROUP_QOS                 (1 << AFD_EVENT_GROUP_QOS_BIT)
+#define AFD_EVENT_ROUTING_INTERFACE_CHANGE  (1 << AFD_EVENT_ROUTING_INTERFACE_CHANGE_BIT)
+#define AFD_EVENT_ADDRESS_LIST_CHANGE       (1 << AFD_EVENT_ADDRESS_LIST_CHANGE_BIT)
 
 /* AFD SEND/RECV Flags */
 #define AFD_SKIP_FIO			0x1L
@@ -201,6 +238,7 @@ typedef struct _AFD_DISCONNECT_INFO {
 #define AFD_GET_PEER_NAME               12
 #define AFD_GET_TDI_HANDLES		13
 #define AFD_SET_INFO			14
+#define AFD_GET_CONTEXT_SIZE		15
 #define AFD_GET_CONTEXT			16
 #define AFD_SET_CONTEXT			17
 #define AFD_SET_CONNECT_DATA		18
@@ -220,6 +258,7 @@ typedef struct _AFD_DISCONNECT_INFO {
 #define AFD_ENUM_NETWORK_EVENTS         34
 #define AFD_DEFER_ACCEPT		35
 #define AFD_GET_PENDING_CONNECT_DATA	41
+#define AFD_VALIDATE_GROUP		42
 
 /* AFD IOCTLs */
 
@@ -253,6 +292,8 @@ typedef struct _AFD_DISCONNECT_INFO {
   _AFD_CONTROL_CODE(AFD_GET_TDI_HANDLES, METHOD_NEITHER)
 #define IOCTL_AFD_SET_INFO \
   _AFD_CONTROL_CODE(AFD_SET_INFO, METHOD_NEITHER)
+#define IOCTL_AFD_GET_CONTEXT_SIZE \
+  _AFD_CONTROL_CODE(AFD_GET_CONTEXT_SIZE, METHOD_NEITHER)
 #define IOCTL_AFD_GET_CONTEXT \
   _AFD_CONTROL_CODE(AFD_GET_CONTEXT, METHOD_NEITHER)
 #define IOCTL_AFD_SET_CONTEXT \
@@ -291,6 +332,8 @@ typedef struct _AFD_DISCONNECT_INFO {
   _AFD_CONTROL_CODE(AFD_GET_PENDING_CONNECT_DATA, METHOD_NEITHER)
 #define IOCTL_AFD_ENUM_NETWORK_EVENTS \
   _AFD_CONTROL_CODE(AFD_ENUM_NETWORK_EVENTS, METHOD_NEITHER)
+#define IOCTL_AFD_VALIDATE_GROUP \
+  _AFD_CONTROL_CODE(AFD_VALIDATE_GROUP, METHOD_NEITHER)
 
 typedef struct _AFD_SOCKET_INFORMATION {
     BOOL CommandChannel;

@@ -29,8 +29,8 @@ extern "C" {
   void *__cdecl memset(void *_Dst,int _Val,size_t _Size);
 
 #ifndef	NO_OLDNAMES
-  void *__cdecl memccpy(void *_Dst,const void *_Src,int _Val,size_t _Size);
-  int __cdecl memicmp(const void *_Buf1,const void *_Buf2,size_t _Size);
+  _CRTIMP void *__cdecl memccpy(void *_Dst,const void *_Src,int _Val,size_t _Size);
+  _CRTIMP int __cdecl memicmp(const void *_Buf1,const void *_Buf2,size_t _Size);
 #endif
 #endif
 

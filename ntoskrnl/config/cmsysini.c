@@ -1,12 +1,13 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/config/cmsysini.c
  * PURPOSE:         Configuration Manager - System Initialization Code
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROGRAMMERS:     ReactOS Portable Systems Group
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include "ntoskrnl.h"
 #define NDEBUG
@@ -23,17 +24,17 @@ LONG CmpLoadWorkerIncrement;
 PEPROCESS CmpSystemProcess;
 BOOLEAN HvShutdownComplete;
 PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
-BOOLEAN CmpFlushStarveWriters;
 BOOLEAN CmpFlushOnLockRelease;
 BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
-BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpWasSetupBoot;
+BOOLEAN CmpProfileLoaded;
 ULONG CmpTraceLevel = 0;
 
+extern LONG CmpFlushStarveWriters;
 extern BOOLEAN CmFirstTime;
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ******************************************************************/
 
 VOID
 NTAPI
@@ -63,7 +64,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     CmpLockRegistry();
 
     /* Make sure this is a valid key body */
-    if (KeyBody->Type == TAG('k', 'y', '0', '2'))
+    if (KeyBody->Type == '20yk')
     {
         /* Get the KCB */
         Kcb = KeyBody->KeyControlBlock;
@@ -100,7 +101,7 @@ CmpCloseKeyObject(IN PEPROCESS Process OPTIONAL,
     if (SystemHandleCount > 1) return;
 
     /* Make sure we're a valid key body */
-    if (KeyBody->Type == TAG('k', 'y', '0', '2'))
+    if (KeyBody->Type == '20yk')
     {
         /* Don't do anything if we don't have a notify block */
         if (!KeyBody->NotifyBlock) return;
@@ -964,7 +965,7 @@ CmpCreateRegistryRoot(VOID)
 
     /* Initialize the object */
     RootKey->KeyControlBlock = Kcb;
-    RootKey->Type = TAG('k', 'y', '0', '2');
+    RootKey->Type = '20yk';
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
 
@@ -1080,7 +1081,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
     PAGED_CODE();
 
     /* Get the hive index, make sure it makes sense */
-    i = (ULONG)StartContext;
+    i = PtrToUlong(StartContext);
     ASSERT(CmpMachineHiveList[i].Name != NULL);
 
     /* We were started */
@@ -1275,7 +1276,7 @@ CmpInitializeHiveList(IN USHORT Flag)
                                       0,
                                       NULL,
                                       CmpLoadHiveThread,
-                                      (PVOID)i);
+                                      UlongToPtr(i));
         if (NT_SUCCESS(Status))
         {
             /* We don't care about the handle -- the thread self-terminates */
@@ -1576,6 +1577,162 @@ CmInitSystem1(VOID)
 
 VOID
 NTAPI
+CmpFreeDriverList(IN PHHIVE Hive,
+                  IN PLIST_ENTRY DriverList)
+{
+    PLIST_ENTRY NextEntry, OldEntry;
+    PBOOT_DRIVER_NODE DriverNode;
+    PAGED_CODE();
+    
+    /* Parse the current list */
+    NextEntry = DriverList->Flink;
+    while (NextEntry != DriverList)
+    {
+        /* Get the driver node */
+        DriverNode = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_NODE, ListEntry.Link);
+        
+        /* Get the next entry now, since we're going to free it later */
+        OldEntry = NextEntry;
+        NextEntry = NextEntry->Flink;
+        
+        /* Was there a name? */
+        if (DriverNode->Name.Buffer)
+        {
+            /* Free it */
+            CmpFree(DriverNode->Name.Buffer, DriverNode->Name.Length);
+        }
+        
+        /* Was there a registry path? */
+        if (DriverNode->ListEntry.RegistryPath.Buffer)
+        {
+            /* Free it */
+            CmpFree(DriverNode->ListEntry.RegistryPath.Buffer, 
+                    DriverNode->ListEntry.RegistryPath.MaximumLength);
+        }
+        
+        /* Was there a file path? */
+        if (DriverNode->ListEntry.FilePath.Buffer)
+        {
+            /* Free it */
+            CmpFree(DriverNode->ListEntry.FilePath.Buffer,
+                    DriverNode->ListEntry.FilePath.MaximumLength);
+        }
+        
+        /* Now free the node, and move on */
+        CmpFree(OldEntry, sizeof(BOOT_DRIVER_NODE));
+    }
+}
+
+PUNICODE_STRING*
+NTAPI
+CmGetSystemDriverList(VOID)
+{
+    LIST_ENTRY DriverList;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    PCM_KEY_BODY KeyBody;
+    PHHIVE Hive;
+    HCELL_INDEX RootCell, ControlCell;
+    HANDLE KeyHandle;
+    UNICODE_STRING KeyName;
+    PLIST_ENTRY NextEntry;
+    ULONG i;
+    PUNICODE_STRING* ServicePath = NULL;
+    BOOLEAN Success, AutoSelect;
+    PBOOT_DRIVER_LIST_ENTRY DriverEntry;
+    PAGED_CODE();
+
+    /* Initialize the driver list */
+    InitializeListHead(&DriverList);
+    
+    /* Open the system hive key */
+    RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return NULL;
+    
+    /* Reference the key object to get the root hive/cell to access directly */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       KEY_QUERY_VALUE,
+                                       CmpKeyObjectType,
+                                       KernelMode,
+                                       (PVOID*)&KeyBody,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        NtClose(KeyHandle);
+        return NULL;
+    }
+    
+    /* Do all this under the registry lock */
+    CmpLockRegistryExclusive();
+    
+    /* Get the hive and key cell */
+    Hive = KeyBody->KeyControlBlock->KeyHive;
+    RootCell = KeyBody->KeyControlBlock->KeyCell;
+    
+    /* Open the current control set key */
+    RtlInitUnicodeString(&KeyName, L"Current");
+    ControlCell = CmpFindControlSet(Hive, RootCell, &KeyName, &AutoSelect);
+    if (ControlCell == HCELL_NIL) goto EndPath;
+    
+    /* Find all system drivers */
+    Success = CmpFindDrivers(Hive, ControlCell, SystemLoad, NULL, &DriverList);
+    if (!Success) goto EndPath;
+    
+    /* Sort by group/tag */
+    if (!CmpSortDriverList(Hive, ControlCell, &DriverList)) goto EndPath;
+    
+    /* Remove circular dependencies (cycles) and sort */
+    if (!CmpResolveDriverDependencies(&DriverList)) goto EndPath;
+    
+    /* Loop the list to count drivers */
+    for (i = 0, NextEntry = DriverList.Flink;
+         NextEntry != &DriverList;
+         i++, NextEntry = NextEntry->Flink);
+    
+    /* Allocate the array */
+    ServicePath = ExAllocatePool(NonPagedPool, (i + 1) * sizeof(PUNICODE_STRING));
+    if (!ServicePath) KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 2, 1, 0, 0);
+    
+    /* Loop the driver list */
+    for (i = 0, NextEntry = DriverList.Flink;
+         NextEntry != &DriverList;
+         i++, NextEntry = NextEntry->Flink)
+    {
+        /* Get the entry */
+        DriverEntry = CONTAINING_RECORD(NextEntry, BOOT_DRIVER_LIST_ENTRY, Link);
+
+        /* Allocate the path for the caller and duplicate the registry path */
+        ServicePath[i] = ExAllocatePool(NonPagedPool, sizeof(UNICODE_STRING));
+        RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+                                  &DriverEntry->RegistryPath,
+                                  ServicePath[i]);
+    }
+    
+    /* Terminate the list */
+    ServicePath[i] = NULL;
+    
+EndPath:
+    /* Free the driver list if we had one */
+    if (!IsListEmpty(&DriverList)) CmpFreeDriverList(Hive, &DriverList);
+    
+    /* Unlock the registry */
+    CmpUnlockRegistry();
+    
+    /* Close the key handle and dereference the object, then return the path */
+    ObDereferenceObject(KeyBody);
+    NtClose(KeyHandle);
+    return ServicePath;
+}
+
+VOID
+NTAPI
 CmpLockRegistryExclusive(VOID)
 {
     /* Enter a critical region and lock the registry */
@@ -1621,6 +1778,56 @@ CmpTestRegistryLockExclusive(VOID)
 {
     /* Test the lock */
     return !ExIsResourceAcquiredExclusiveLite(&CmpRegistryLock) ? FALSE : TRUE;
+}
+
+VOID
+NTAPI
+CmpLockHiveFlusherExclusive(IN PCMHIVE Hive)
+{
+    /* Lock the flusher. We should already be in a critical section */
+    CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(Hive);
+    ASSERT((ExIsResourceAcquiredShared(Hive->FlusherLock) == 0) &&
+           (ExIsResourceAcquiredExclusiveLite(Hive->FlusherLock) == 0));
+    ExAcquireResourceExclusiveLite(Hive->FlusherLock, TRUE);
+}
+
+VOID
+NTAPI
+CmpLockHiveFlusherShared(IN PCMHIVE Hive)
+{
+    /* Lock the flusher. We should already be in a critical section */
+    CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(Hive);
+    ASSERT((ExIsResourceAcquiredShared(Hive->FlusherLock) == 0) &&
+           (ExIsResourceAcquiredExclusiveLite(Hive->FlusherLock) == 0));
+    ExAcquireResourceSharedLite(Hive->FlusherLock, TRUE);
+}
+
+VOID
+NTAPI
+CmpUnlockHiveFlusher(IN PCMHIVE Hive)
+{
+    /* Sanity check */
+    CMP_ASSERT_REGISTRY_LOCK_OR_LOADING(Hive);
+    CMP_ASSERT_FLUSH_LOCK(Hive);
+
+    /* Release the lock */
+    ExReleaseResourceLite(Hive->FlusherLock);
+}
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockShared(IN PCMHIVE Hive)
+{
+    /* Test the lock */
+    return !ExIsResourceAcquiredSharedLite(Hive->FlusherLock) ? FALSE : TRUE;
+}
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockExclusive(IN PCMHIVE Hive)
+{
+    /* Test the lock */
+    return !ExIsResourceAcquiredExclusiveLite(Hive->FlusherLock) ? FALSE : TRUE;
 }
 
 VOID
@@ -1721,3 +1928,5 @@ CmShutdownSystem(VOID)
     if (!CmFirstTime) CmpShutdownWorkers();
     CmpDoFlushAll(TRUE);
 }
+
+/* EOF */

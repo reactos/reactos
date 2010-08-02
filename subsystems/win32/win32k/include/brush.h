@@ -1,5 +1,4 @@
-#ifndef __WIN32K_BRUSH_H
-#define __WIN32K_BRUSH_H
+#pragma once
 
 #include "gdiobj.h"
 
@@ -58,7 +57,7 @@ typedef struct _EBRUSHOBJ
 //    DWORD       dwUnknown2c;
 //    DWORD       dwUnknown30;
     SURFACE *   psurfTrg;
-//    PALETTE *   ppalSurf;
+    struct _PALETTE *   ppalSurf;
 //    PALETTE *   ppalDC;
 //    PALETTE *   ppal3;
 //    DWORD       dwUnknown44;
@@ -67,9 +66,6 @@ typedef struct _EBRUSHOBJ
     DWORD       ulUnique;
 //    DWORD       dwUnknown54;
 //    DWORD       dwUnknown58;
-
-    /* Ros specific */
-    XLATEOBJ *XlateObject;
 } EBRUSHOBJ, *PEBRUSHOBJ;
 
 /* GDI Brush Attributes */
@@ -105,19 +101,34 @@ typedef struct _EBRUSHOBJ
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
-VOID FASTCALL
-EBRUSHOBJ_vInit(EBRUSHOBJ *BrushInst, PBRUSH BrushObj, XLATEOBJ *XlateObj);
+struct _DC;
+
+VOID
+NTAPI
+EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *);
 
 VOID
 FASTCALL
-EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor, XLATEOBJ *pxlo);
+EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor);
 
 VOID
-FASTCALL
-EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo);
+NTAPI
+EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *pdc);
 
 BOOL
-FASTCALL
-EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo);
+NTAPI
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver);
 
-#endif
+VOID
+NTAPI
+EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo);
+
+PVOID
+NTAPI
+EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo);
+
+PVOID FASTCALL AllocateObjectAttr(VOID);
+
+VOID FASTCALL FreeObjectAttr(PVOID);
+
+BOOL FASTCALL IntGdiSetBrushOwner(PBRUSH,DWORD);

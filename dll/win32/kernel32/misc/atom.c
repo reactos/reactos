@@ -302,6 +302,11 @@ InternalGetAtomName(BOOLEAN Local,
         SetLastErrorByStatus(STATUS_BUFFER_OVERFLOW);
         return 0;
     }
+    if (!Atom)
+    {
+        SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
+        return 0;
+    }
 
     /* Check if this is a global query */
     if (Local)
@@ -339,6 +344,12 @@ InternalGetAtomName(BOOLEAN Local,
         AtomInfo = TempBuffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                                 0,
                                                 AtomInfoLength);
+
+        if (!AtomInfo)
+        {
+            SetLastErrorByStatus(STATUS_NO_MEMORY);
+            return 0;
+        }
 
         /* Query the name */
         Status = NtQueryInformationAtom(Atom,

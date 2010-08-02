@@ -212,39 +212,43 @@ static HRESULT WINAPI HTMLStyle2_get_bottom(IHTMLStyle2 *iface, VARIANT *p)
 static HRESULT WINAPI HTMLStyle2_put_right(IHTMLStyle2 *iface, VARIANT v)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_variant(&v));
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_variant(&v));
+
+    return set_nsstyle_attr_var(This->nsstyle, STYLEID_RIGHT, &v, 0);
 }
 
 static HRESULT WINAPI HTMLStyle2_get_right(IHTMLStyle2 *iface, VARIANT *p)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return get_nsstyle_attr_var(This->nsstyle, STYLEID_RIGHT, p, 0);
+}
+
+static HRESULT WINAPI HTMLStyle2_put_pixelBottom(IHTMLStyle2 *iface, LONG v)
+{
+    HTMLStyle *This = HTMLSTYLE2_THIS(iface);
+    FIXME("(%p)->(%d)\n", This, v);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLStyle2_get_pixelBottom(IHTMLStyle2 *iface, LONG *p)
+{
+    HTMLStyle *This = HTMLSTYLE2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLStyle2_put_pixelBottom(IHTMLStyle2 *iface, long v)
+static HRESULT WINAPI HTMLStyle2_put_pixelRight(IHTMLStyle2 *iface, LONG v)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLStyle2_get_pixelBottom(IHTMLStyle2 *iface, long *p)
-{
-    HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI HTMLStyle2_put_pixelRight(IHTMLStyle2 *iface, long v)
-{
-    HTMLStyle *This = HTMLSTYLE2_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI HTMLStyle2_get_pixelRight(IHTMLStyle2 *iface, long *p)
+static HRESULT WINAPI HTMLStyle2_get_pixelRight(IHTMLStyle2 *iface, LONG *p)
 {
     HTMLStyle *This = HTMLSTYLE2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);

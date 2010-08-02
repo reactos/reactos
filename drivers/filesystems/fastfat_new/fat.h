@@ -1,5 +1,4 @@
-#ifndef __FAT_H__
-#define __FAT_H__
+#pragma once
 
 //
 //  Might be a good idea to have this as a shared
@@ -288,5 +287,3 @@ typedef struct _LONG_FILE_NAME_ENTRY {
                                           FAT_DIRENT_ATTR_HIDDEN |    \
                                           FAT_DIRENT_ATTR_SYSTEM |    \
                                           FAT_DIRENT_ATTR_VOLUME_ID)
-
-#endif//__FAT_H__

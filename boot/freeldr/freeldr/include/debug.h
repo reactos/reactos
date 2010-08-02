@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 #include <reactos/debug.h>
 
@@ -35,11 +35,12 @@
 #define DPRINT_HWDETECT     0x00000400  // OR this with DebugPrintMask to enable hardware detection messages
 #define DPRINT_WINDOWS      0x00000800  // OR this with DebugPrintMask to enable messages from Windows loader
 #define DPRINT_PELOADER     0x00001000  // OR this with DebugPrintMask to enable messages from PE images loader
+#define DPRINT_SCSIPORT     0x00002000  // OR this with DebugPrintMask to enable messages from SCSI miniport
 
 extern char* g_file;
 extern int g_line;
 
-#ifdef DBG
+#if DBG && !defined(_M_ARM)
 
     VOID	DbgPrintMask(ULONG Mask, char *format, ...);
 	VOID	DebugInit(VOID);
@@ -47,7 +48,7 @@ extern int g_line;
 
 	VOID	DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length);
 
-	#define DPRINTM					        g_file=__FILE__;g_line=__LINE__;DbgPrintMask
+	#define DPRINTM							g_file=__FILE__, g_line=__LINE__, DbgPrintMask
 	#define BugCheck(_x_)					{ DbgPrintMask(DPRINT_WARNING, "Fatal Error: %s:%d(%s)\n", __FILE__, __LINE__, __FUNCTION__); DbgPrintMask _x_ ; for (;;); }
 	#define DbgDumpBuffer(_x_, _y_, _z_)	DebugDumpBuffer(_x_, _y_, _z_)
 
@@ -80,11 +81,11 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 
 #else
 
-	#define DebugInit()
+	#define DebugInit(x)
 	#define DPRINTM(_x_, ...)
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
-#endif // defined DBG
+#endif // DBG
 
 #endif // defined __DEBUG_H

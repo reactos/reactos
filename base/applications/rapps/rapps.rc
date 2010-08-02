@@ -1,0 +1,42 @@
+#include "rapps.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Applications Manager\0"
+#define REACTOS_STR_INTERNAL_NAME     "rapps\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "rapps.exe\0"
+#include <reactos/version.rc>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDI_MAIN ICON DISCARDABLE "res/main.ico"
+IDI_EXIT ICON DISCARDABLE "res/exit.ico"
+IDI_INSTALL ICON DISCARDABLE "res/install.ico"
+IDI_UNINSTALL ICON DISCARDABLE "res/uninstall.ico"
+IDI_SETTINGS ICON DISCARDABLE "res/settings.ico"
+IDI_MODIFY ICON DISCARDABLE "res/modify.ico"
+IDI_REFRESH ICON DISCARDABLE "res/refresh.ico"
+IDI_APPS ICON DISCARDABLE "res/apps.ico"
+IDI_APPUPD ICON DISCARDABLE "res/appupd.ico"
+IDI_CATEGORY ICON DISCARDABLE "res/cat.ico"
+
+/* Categories */
+IDI_CAT_AUDIO ICON DISCARDABLE "res/cats/audio.ico"
+IDI_CAT_DEVEL ICON DISCARDABLE "res/cats/devel.ico"
+IDI_CAT_DRIVERS ICON DISCARDABLE "res/cats/drivers.ico"
+IDI_CAT_EDU ICON DISCARDABLE "res/cats/edu.ico"
+IDI_CAT_ENGINEER ICON DISCARDABLE "res/cats/engineer.ico"
+IDI_CAT_FINANCE ICON DISCARDABLE "res/cats/finance.ico"
+IDI_CAT_GAMES ICON DISCARDABLE "res/cats/games.ico"
+IDI_CAT_GRAPHICS ICON DISCARDABLE "res/cats/graphics.ico"
+IDI_CAT_INTERNET ICON DISCARDABLE "res/cats/internet.ico"
+IDI_CAT_LIBS ICON DISCARDABLE "res/cats/libs.ico"
+IDI_CAT_OFFICE ICON DISCARDABLE "res/cats/office.ico"
+IDI_CAT_OTHER ICON DISCARDABLE "res/cats/other.ico"
+IDI_CAT_SCIENCE ICON DISCARDABLE "res/cats/science.ico"
+IDI_CAT_TOOLS ICON DISCARDABLE "res/cats/tools.ico"
+IDI_CAT_VIDEO ICON DISCARDABLE "res/cats/video.ico"
+
+1 24 DISCARDABLE "manifest.xml"
+
+#include <rappsmsg.rc>
+
+#include "rsrc.rc"

@@ -13,6 +13,7 @@
  */
 
 #include <k32.h>
+#include <wine/list.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -20,55 +21,6 @@
 #define STUB \
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
   DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
-
-/* Strustures and functions from include/wine/list.h */
-struct list
-{
-    struct list *next;
-    struct list *prev;
-};
-
-static inline void list_init( struct list *list )
-{
-    list->next = list->prev = list;
-}
-
-/* add an element before the specified one */
-static inline void list_add_before( struct list *elem, struct list *to_add )
-{
-    to_add->next = elem;
-    to_add->prev = elem->prev;
-    elem->prev->next = to_add;
-    elem->prev = to_add;
-}
-
-/* add element at the tail of the list */
-static inline void list_add_tail( struct list *list, struct list *elem )
-{
-    list_add_before( list, elem );
-}
-
-/* remove an element from its list */
-static inline void list_remove( struct list *elem )
-{
-    elem->next->prev = elem->prev;
-    elem->prev->next = elem->next;
-}
-
-/* get the next element */
-static inline struct list *list_next( const struct list *list, const struct list *elem )
-{
-    struct list *ret = elem->next;
-    if (elem->next == list) ret = NULL;
-    return ret;
-}
-
-/* get the first element */
-static inline struct list *list_head( const struct list *list )
-{
-    return list_next( list, list );
-}
-
 
 /*
  *  Data structure for updating resources.
@@ -145,6 +97,7 @@ static LPWSTR res_strdupW( LPCWSTR str )
         return (LPWSTR) (UINT_PTR) LOWORD(str);
     len = (lstrlenW( str ) + 1) * sizeof (WCHAR);
     ret = HeapAlloc( GetProcessHeap(), 0, len );
+    if (!ret) return NULL;
     memcpy( ret, str, len );
     return ret;
 }
@@ -264,16 +217,6 @@ static struct resource_data *allocate_resource_data( WORD Language, DWORD codepa
     return resdata;
 }
 
-/* get pointer to object containing list element */
-#define LIST_ENTRY(elem, type, field) \
-    ((type *)((char *)(elem) - (unsigned int)(&((type *)0)->field)))
-
-/* iterate through the list using a list entry */
-#define LIST_FOR_EACH_ENTRY(elem, list, type, field) \
-    for ((elem) = LIST_ENTRY((list)->next, type, field); \
-         &(elem)->field != (list); \
-         (elem) = LIST_ENTRY((elem)->field.next, type, field))
-
 static void add_resource_dir_entry( struct list *dir, struct resource_dir_entry *resdir )
 {
     struct resource_dir_entry *ent;
@@ -343,6 +286,7 @@ static BOOL update_add_resource( QUEUEDUPDATES *updates, LPCWSTR Type, LPCWSTR N
     if (!restype)
     {
         restype = HeapAlloc( GetProcessHeap(), 0, sizeof *restype );
+        if (!restype) return FALSE;
         restype->id = res_strdupW( Type );
         list_init( &restype->children );
         add_resource_dir_entry( &updates->root, restype );
@@ -352,6 +296,7 @@ static BOOL update_add_resource( QUEUEDUPDATES *updates, LPCWSTR Type, LPCWSTR N
     if (!resname)
     {
         resname = HeapAlloc( GetProcessHeap(), 0, sizeof *resname );
+        if (!resname) return FALSE;
         resname->id = res_strdupW( Name );
         list_init( &resname->children );
         add_resource_dir_entry( &restype->children, resname );
@@ -365,7 +310,7 @@ static BOOL update_add_resource( QUEUEDUPDATES *updates, LPCWSTR Type, LPCWSTR N
     if (existing)
     {
         if (!overwrite_existing)
-            return TRUE;
+            return FALSE;
         list_remove( &existing->entry );
         HeapFree( GetProcessHeap(), 0, existing );
     }
@@ -460,13 +405,6 @@ static IMAGE_SECTION_HEADER *get_resource_section( void *base, DWORD mapping_siz
         return NULL;
     }
 
-    /* check that the resources section is last */
-    if (i != num_sections - 1)
-    {
-        DPRINT("FIXME: .rsrc isn't the last section\n");
-        return NULL;
-    }
-
     return &sec[i];
 }
 
@@ -526,6 +464,7 @@ static LPWSTR resource_dup_string( const IMAGE_RESOURCE_DIRECTORY *root, const I
 
     string = (const IMAGE_RESOURCE_DIR_STRING_U*) (((const char *)root) + entry->NameOffset);
     s = HeapAlloc(GetProcessHeap(), 0, (string->Length + 1)*sizeof (WCHAR) );
+    if (!s) return NULL;
     memcpy( s, string->NameString, (string->Length + 1)*sizeof (WCHAR) );
     s[string->Length] = 0;
 
@@ -580,8 +519,11 @@ static BOOL enumerate_mapped_resources( QUEUEDUPDATES *updates,
 
                 resdata = allocate_resource_data( Lang, data->CodePage, p, data->Size, FALSE );
                 if (resdata)
-                    update_add_resource( updates, Type, Name, resdata, FALSE );
-            }
+                {
+                    if (!update_add_resource( updates, Type, Name, resdata, FALSE ))
+                        HeapFree( GetProcessHeap(), 0, resdata );
+                }
+			}
             res_free_str( Name );
         }
         res_free_str( Type );
@@ -619,6 +561,9 @@ static BOOL read_mapped_resources( QUEUEDUPDATES *updates, void *base, DWORD map
         return TRUE;
 
     DPRINT("found .rsrc at %08x, size %08x\n", sec[i].PointerToRawData, sec[i].SizeOfRawData);
+
+    if (!sec[i].PointerToRawData || sec[i].SizeOfRawData < sizeof(IMAGE_RESOURCE_DIRECTORY))
+        return TRUE;
 
     root = (void*) ((BYTE*)base + sec[i].PointerToRawData);
     enumerate_mapped_resources( updates, base, mapping_size, root );
@@ -1016,10 +961,15 @@ static BOOL write_raw_resources( QUEUEDUPDATES *updates )
     if (!sec)
         goto done;
 
-    if ((sec->SizeOfRawData + sec->PointerToRawData) != write_map->size)
+    if (!sec->PointerToRawData)  /* empty section */
     {
-        DPRINT("FIXME: .rsrc isn't at the end of the image %08x + %08x != %08x\n",
-            sec->SizeOfRawData, sec->PointerToRawData, write_map->size);
+        sec->PointerToRawData = write_map->size;
+        sec->SizeOfRawData = 0;
+    }
+    else if ((sec->SizeOfRawData + sec->PointerToRawData) != write_map->size)
+    {
+        DPRINT(".rsrc isn't at the end of the image %08x + %08x != %08x for %s\n",
+              sec->SizeOfRawData, sec->PointerToRawData, write_map->size, updates->pFileName);
         goto done;
     }
 

@@ -21,6 +21,11 @@
 #ifndef __WINE_MMREG_H
 #define __WINE_MMREG_H
 
+#ifndef RC_INVOKED
+#include "pshpack1.h"
+#endif
+
+
 /***********************************************************************
  * Defines/Enums
  */
@@ -127,6 +132,9 @@ typedef const struct _WAVEFORMATEX *LPCWAVEFORMATEX;
 #define  WAVE_FORMAT_OLICELP			0x1002	/*  Ing C. Olivetti & C., S.p.A.  */
 #define  WAVE_FORMAT_OLISBC			0x1003	/*  Ing C. Olivetti & C., S.p.A.  */
 #define  WAVE_FORMAT_OLIOPR			0x1004	/*  Ing C. Olivetti & C., S.p.A.  */
+
+#define   MM_UNMAPPED                   0xffff
+#define   MM_PID_UNMAPPED               MM_UNMAPPED
 
 #if !defined(WAVE_FORMAT_EXTENSIBLE)
 #define  WAVE_FORMAT_EXTENSIBLE			0xFFFE  /* Microsoft */
@@ -507,6 +515,10 @@ typedef struct tagEXBMINFOHEADER {
 #define ICTYPE_AUDIO		mmioFOURCC('a', 'u', 'd', 'c')
 #endif
 
+#endif
+
+#ifndef RC_INVOKED
+#include "poppack.h"
 #endif
 
 #endif /* __WINE_MMREG_H */

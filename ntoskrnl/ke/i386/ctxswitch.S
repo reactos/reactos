@@ -17,307 +17,7 @@
 #define Running 2
 #define WrDispatchInt 0x1F
 
-Dividend: .float 4195835.0
-Divisor:  .float 3145727.0
-Result1:  .float 0
-Result2:  .float 0
-
 /* FUNCTIONS ****************************************************************/
-
-.globl _KiIsNpxErrataPresent@0
-.func KiIsNpxErrataPresent@0
-_KiIsNpxErrataPresent@0:
-
-    /* Disable interrupts */
-    cli
-
-    /* Get CR0 and mask out FPU flags */
-    mov eax, cr0
-    mov ecx, eax
-    and eax, ~(CR0_MP + CR0_TS + CR0_EM)
-    mov cr0, eax
-
-    /* Initialize the FPU */
-    fninit
-
-    /* Do the divison and inverse multiplication */
-    fld qword ptr Dividend
-    fstp qword ptr Result1
-    fld qword ptr Divisor
-    fstp qword ptr Result2
-    fld qword ptr Result1
-    fdiv qword ptr Result2
-    fmul qword ptr Result2
-
-    /* Do the compare and check flags */
-    fcomp qword ptr Result1
-    fstsw ax
-    sahf
-
-    /* Restore CR0 and interrupts */
-    mov cr0, ecx
-    sti
-
-    /* Return errata status */
-    xor eax, eax
-    jz NoErrata
-    inc eax
-
-NoErrata:
-    ret
-.endfunc
-
-.globl _KiIsNpxPresent@0
-.func KiIsNpxPresent@0
-_KiIsNpxPresent@0:
-
-    /* Save stack */
-    push ebp
-
-    /* Get CR0 and mask out FPU flags */
-    mov eax, cr0
-    and eax, ~(CR0_MP + CR0_TS + CR0_EM + CR0_ET)
-
-    /* Initialize the FPU and assume FALSE for return */
-    xor edx, edx
-    fninit
-
-    /* Save magic value on stack */
-    mov ecx, 0x42424242
-    push ecx
-
-    /* Setup stack for FPU store */
-    mov ebp ,esp
-    fnstsw [ebp]
-
-    /* Now check if our magic got cleared */
-    cmp byte ptr [ebp], 0
-    jnz NoFpu
-
-    /* Enable FPU, set return to TRUE */
-    or eax, CR0_ET
-    mov edx, 1
-
-    /* If this is a 486 or higher, enable INT 16 as well */
-    cmp dword ptr fs:KPCR_PRCB_CPU_TYPE, 3
-    jbe NoFpu
-    or eax, CR0_NE
-
-NoFpu:
-    /* Set emulation enabled during the first boot phase and set the CR0 */
-    or eax, (CR0_EM + CR0_TS)
-    mov cr0, eax
-
-    /* Restore stack */
-    pop eax
-    pop ebp
-
-    /* Return true or false */
-    mov eax, edx
-    ret
-.endfunc
-
-.globl _KiFlushNPXState@4
-.func KiFlushNPXState@4
-_KiFlushNPXState@4:
-
-    /* Save volatiles and disable interrupts */
-    push esi
-    push edi
-    push ebx
-    pushfd
-    cli
-
-    /* Save the PCR and get the current thread */
-    mov edi, fs:[KPCR_SELF]
-    mov esi, [edi+KPCR_CURRENT_THREAD]
-
-    /* Check if we're already loaded */
-    cmp byte ptr [esi+KTHREAD_NPX_STATE], NPX_STATE_LOADED
-    je IsValid
-
-    /* Check if we're supposed to get it */
-    cmp dword ptr [esp+20], 0
-    je Return
-
-#ifdef DBG
-    /* Assert Fxsr support */
-    test byte ptr _KeI386FxsrPresent, 1
-    jnz AssertOk
-    int 3
-AssertOk:
-#endif
-
-    /* Get CR0 and test if it's valid */
-    mov ebx, cr0
-    test bl, CR0_MP + CR0_TS + CR0_EM
-    jz Cr0OK
-
-    /* Enable fnsave to work */
-    and ebx, ~(CR0_MP + CR0_TS + CR0_EM)
-    mov cr0, ebx
-
-Cr0OK:
-    /* Check if we are the NPX Thread */
-    mov eax, [edi+KPCR_NPX_THREAD]
-    or eax, eax
-    jz DontSave
-
-    /* Check if it's not loaded */
-    cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
-    jnz DontSave
-
-#ifdef DBG
-    /* We are the NPX Thread with an unloaded NPX State... this isn't normal! */
-    int 3
-#endif
-
-    /* Save the NPX State */
-    mov ecx, [eax+KTHREAD_INITIAL_STACK]
-    sub ecx, NPX_FRAME_LENGTH
-    fxsave [ecx]
-    mov byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
-
-DontSave:
-    /* Load the NPX State */
-    mov ecx, [esi+KTHREAD_INITIAL_STACK]
-    sub ecx, NPX_FRAME_LENGTH
-    fxrstor [ecx]
-
-    /* Get the CR0 state and destination */
-    mov edx, [ecx+FN_CR0_NPX_STATE]
-    mov ecx, [esp+20]
-    jmp DoneLoad
-
-IsValid:
-    /* We already have a valid state, flush it */
-    mov ebx, cr0
-    test bl, CR0_MP + CR0_TS + CR0_EM
-    jz Cr0OK2
-
-    /* Enable fnsave to work */
-    and ebx, ~(CR0_MP + CR0_TS + CR0_EM)
-    mov cr0, ebx
-
-Cr0OK2:
-    /* Get the kernel stack */
-    mov ecx, [esi+KTHREAD_INITIAL_STACK]
-    test byte ptr _KeI386FxsrPresent, 1
-    lea ecx, [ecx-NPX_FRAME_LENGTH]
-
-    /* Set the NPX State */
-    mov byte ptr [esi+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
-
-    /* Get Cr0 */
-    mov edx, [ecx+FN_CR0_NPX_STATE]
-    jz DoneLoad
-
-    /* Save the FX State */
-    fxsave [ecx]
-
-    /* Check if we also have to save it in the parameter */
-    mov ecx, [esp+20]
-    jecxz NoSave
-
-DoneLoad:
-    /* Save the Fn state in the parameter we got */
-    fnsave [ecx]
-    fwait
-
-NoSave:
-    /* Clear eax */
-    xor eax, eax
-
-    /* Add NPX State */
-    or ebx, NPX_STATE_NOT_LOADED
-
-    /* Clear the NPX thread */
-    mov [edi+KPCR_NPX_THREAD], eax
-
-    /* Add saved CR0 into NPX State, and set it */
-    or ebx, edx
-    mov cr0, ebx
-
-    /* Re-enable interrupts and return */
-Return:
-    popf
-    pop ebx
-    pop edi
-    pop esi
-    ret 4
-
-.endfunc
-
-/*++
- * KiThreadStartup
- *
- *     The KiThreadStartup routine is the beginning of any thread.
- *
- * Params:
- *     SystemRoutine - Pointer to the System Startup Routine. Either 
- *                     PspUserThreadStartup or PspSystemThreadStartup
- *
- *     StartRoutine - For Kernel Threads only, specifies the starting execution
- *                    point of the new thread.
- *
- *     StartContext - For Kernel Threads only, specifies a pointer to variable
- *                    context data to be sent to the StartRoutine above.
- *
- *     UserThread - Indicates whether or not this is a user thread. This tells
- *                  us if the thread has a context or not.
- *
- *     TrapFrame - Pointer to the KTHREAD to which the caller wishes to
- *           switch from.
- *
- * Returns:
- *     Should never return for a system thread. Returns through the System Call
- *     Exit Dispatcher for a user thread.
- *
- * Remarks:
- *     If a return from a system thread is detected, a bug check will occur.
- *
- *--*/
- .func KiThreadStartup@156
-.globl _KiThreadStartup@156
-_KiThreadStartup@156:
-
-    /*
-     * Clear all the non-volatile registers, so the thread won't be tempted to
-     * expect any static data (like some badly coded usermode/win9x apps do)
-     */
-    xor ebx, ebx
-    xor esi, esi
-    xor edi, edi
-    xor ebp, ebp
-
-    /* It's now safe to go to APC */
-    mov ecx, APC_LEVEL
-    call @KfLowerIrql@4
-
-    /* 
-     * Call the System Routine which is right on our stack now.
-     * After we pop the pointer, the Start Routine/Context will be on the 
-     * stack, as parameters to the System Routine
-     */
-    pop eax
-    call eax
-
-    /* The thread returned... was it a user-thread? */
-    pop ecx
-    or ecx, ecx
-    jz BadThread
-
-    /* Yes it was, set our trapframe for the System Call Exit Dispatcher */
-    mov ebp, esp
-
-    /* Exit back to user-mode */
-    jmp _KiServiceExit2
-
-BadThread:
-
-    /* A system thread returned...this is very bad! */
-    int 3
-.endfunc
 
 /*++
  * KiSwapContextInternal 
@@ -351,8 +51,8 @@ GetSwapLock:
     jz NotBusy
     pause
     jmp GetSwapLock
-#endif
 NotBusy:
+#endif
     /* Increase context switches (use ES for lazy load) */
     inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
 
@@ -365,7 +65,7 @@ NotBusy:
 
 AfterTrace:
 #ifdef CONFIG_SMP
-#ifdef DBG
+#if DBG
     /* Assert that we're on the right CPU */
     mov cl, [esi+KTHREAD_NEXT_PROCESSOR]
     cmp cl, [ebx+KPCR_PROCESSOR_NUMBER]
@@ -381,9 +81,9 @@ AfterTrace:
     /* Check NPX State */
     cmp byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_LOADED
     jz NpxLoaded
+SetStack:
 #endif
 
-SetStack:
     /* Set new stack */
     mov [edi+KTHREAD_KERNEL_STACK], esp
 
@@ -419,11 +119,11 @@ StackOk:
     lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
 
     /* Assert change went ok */
-#ifdef DBG
+#if DBG
     test [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
     jz WrongActiveCpu
     test [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
-    jz WrongActiveCpu
+    jnz WrongActiveCpu
 #endif
 #endif
 
@@ -548,7 +248,7 @@ LoadLdt:
 
 NewCr0:
 
-#ifdef DBG
+#if DBG
     /* Assert NPX State */
     test byte ptr [esi+KTHREAD_NPX_STATE], ~(NPX_STATE_NOT_LOADED)
     jnz InvalidNpx
@@ -563,8 +263,29 @@ NewCr0:
 #ifdef CONFIG_SMP
 NpxLoaded:
 
-    /* FIXME: TODO */
-    int 3
+    /* Mask out FPU flags */
+    and edx, ~(CR0_MP + CR0_EM + CR0_TS)
+
+    /* Get the NPX Frame */
+    mov ecx, [edi+KTHREAD_INITIAL_STACK]
+    sub ecx, NPX_FRAME_LENGTH
+
+    /* Check if we have a new CR0 */
+    cmp ebp, edx
+    jz Cr0Equal
+
+    /* We do, update it */
+    mov cr0, edx
+    mov ebp, edx
+
+Cr0Equal:
+
+    /* Save the NPX State */
+    fxsave [ecx]
+    mov byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
+
+    /* Clear the NPX Thread */
+    mov dword ptr [ebx+KPCR_NPX_THREAD], 0
 
     /* Jump back */
     jmp SetStack
@@ -589,7 +310,7 @@ BugCheckDpc:
     push ATTEMPTED_SWITCH_FROM_DPC
     call _KeBugCheckEx@20
 
-#ifdef DBG
+#if DBG
 InvalidNpx:
     int 3
 WrongActiveCpu:
@@ -656,6 +377,124 @@ WrongCpu:
 
     /* Clean stack */
     add esp, 4 * 4
+    ret
+.endfunc
+
+/* DPC INTERRUPT HANDLER ******************************************************/
+
+.globl _KiDispatchInterrupt@0
+.func KiDispatchInterrupt@0
+_KiDispatchInterrupt@0:
+
+    /* Preserve EBX */
+    push ebx
+
+    /* Get the PCR  and disable interrupts */
+    mov ebx, PCR[KPCR_SELF]
+    cli
+
+    /* Check if we have to deliver DPCs, timers, or deferred threads */
+    mov eax, [ebx+KPCR_PRCB_DPC_QUEUE_DEPTH]
+    or eax, [ebx+KPCR_PRCB_TIMER_REQUEST]
+    or eax, [ebx+KPCR_PRCB_DEFERRED_READY_LIST_HEAD]
+    jz CheckQuantum
+
+    /* Save stack pointer and exception list, then clear it */
+    push ebp
+    push dword ptr [ebx+KPCR_EXCEPTION_LIST]
+    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
+
+    /* Save the stack and switch to the DPC Stack */
+    mov edx, esp
+    mov esp, [ebx+KPCR_PRCB_DPC_STACK]
+    push edx
+
+    /* Deliver DPCs */
+    mov ecx, [ebx+KPCR_PRCB]
+    call @KiRetireDpcList@4
+
+    /* Restore stack and exception list */
+    pop esp
+    pop dword ptr [ebx+KPCR_EXCEPTION_LIST]
+    pop ebp
+
+CheckQuantum:
+
+    /* Re-enable interrupts */
+    sti
+
+    /* Check if we have quantum end */
+    cmp byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    jnz QuantumEnd
+
+    /* Check if we have a thread to swap to */
+    cmp byte ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+    je Return
+
+    /* Make space on the stack to save registers */
+    sub esp, 3 * 4
+    mov [esp+8], esi
+    mov [esp+4], edi
+    mov [esp+0], ebp
+
+    /* Get the current thread */
+    mov edi, [ebx+KPCR_CURRENT_THREAD]
+
+#ifdef CONFIG_SMP
+    /* Raise to synch level */
+    call _KeRaiseIrqlToSynchLevel@0
+
+    /* Set context swap busy */
+    mov byte ptr [edi+KTHREAD_SWAP_BUSY], 1
+
+    /* Acquire the PRCB Lock */
+    lock bts dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
+    jnb GetNext
+    lea ecx, [ebx+KPCR_PRCB_PRCB_LOCK]
+    call @KefAcquireSpinLockAtDpcLevel@4
+#endif
+
+GetNext:
+    /* Get the next thread and clear it */
+    mov esi, [ebx+KPCR_PRCB_NEXT_THREAD]
+    and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
+
+    /* Set us as the current running thread */
+    mov [ebx+KPCR_CURRENT_THREAD], esi
+    mov byte ptr [esi+KTHREAD_STATE_], Running
+    mov byte ptr [edi+KTHREAD_WAIT_REASON], WrDispatchInt
+
+    /* Put thread in ECX and get the PRCB in EDX */
+    mov ecx, edi
+    lea edx, [ebx+KPCR_PRCB_DATA]
+    call @KiQueueReadyThread@8
+
+    /* Set APC_LEVEL and do the swap */
+    mov cl, APC_LEVEL
+    call @KiSwapContextInternal@0
+
+#ifdef CONFIG_SMP
+    /* Lower IRQL back to dispatch */
+    mov cl, DISPATCH_LEVEL
+    call @KfLowerIrql@4
+#endif
+
+    /* Restore registers */
+    mov ebp, [esp+0]
+    mov edi, [esp+4]
+    mov esi, [esp+8]
+    add esp, 3*4
+
+Return:
+    /* All done */
+    pop ebx
+    ret
+
+QuantumEnd:
+    /* Disable quantum end and process it */
+    mov byte ptr [ebx+KPCR_PRCB_QUANTUM_END], 0
+    call _KiQuantumEnd@0
+    pop ebx
     ret
 .endfunc
 
@@ -762,7 +601,7 @@ SwapContext:
 
 #ifdef CONFIG_SMP
 SameThread:
-    /* Clear the next thread, and put the thready as ready after lock release */
+    /* Clear the next thread, and put the thread as ready after lock release */
     and dword ptr [ebx+KPCR_PRCB_NEXT_THREAD], 0
     and dword ptr [ebx+KPCR_PRCB_PRCB_LOCK], 0
     and byte ptr [edi+KTHREAD_STATE_], Ready
@@ -786,95 +625,26 @@ NoNextThread:
 #endif
 .endfunc
 
-.globl _Ki386AdjustEsp0@4
-.func Ki386AdjustEsp0@4
-_Ki386AdjustEsp0@4:
+/* FIXFIX: Move to C code ****/
+.globl _Ki386SetupAndExitToV86Mode@4
+.func Ki386SetupAndExitToV86Mode@4
+_Ki386SetupAndExitToV86Mode@4:
 
-    /* Get the current thread */
-    mov eax, [fs:KPCR_CURRENT_THREAD]
+    /* Enter V8086 mode */
+    pushad
+    sub esp, (12 + KTRAP_FRAME_LENGTH + NPX_FRAME_LENGTH)
+    mov ecx, esp
+    call @KiEnterV86Mode@4
+    jmp $
+.endfunc
 
-    /* Get trap frame and stack */
-    mov edx, [esp+4]
-    mov eax, [eax+KTHREAD_INITIAL_STACK]
+.globl @Ki386BiosCallReturnAddress@4
+@Ki386BiosCallReturnAddress@4:
 
-    /* Check if V86 */
-    test dword ptr [edx+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz 1f
-
-    /* Bias the stack */
-    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
-
-1:
-    /* Skip FX Save Area */
-    sub eax, SIZEOF_FX_SAVE_AREA
-
-    /* Disable interrupts */
-    pushf
-    cli
-
-    /* Adjust ESP0 */
-    mov edx, [fs:KPCR_TSS]
-    mov ss:[edx+KTSS_ESP0], eax
-
-    /* Enable interrupts and return */
-    popf
+    /* Exit V8086 mode */
+    call @KiExitV86Mode@4
+    mov esp, eax
+    add esp, (12 + KTRAP_FRAME_LENGTH + NPX_FRAME_LENGTH)
+    popad
     ret 4
-.endfunc
 
-.globl _KiSwapProcess@8
-.func KiSwapProcess@8
-_KiSwapProcess@8:
-
-    /* Get process pointers */
-    mov edx, [esp+4]
-    mov eax, [esp+8]
-
-#ifdef CONFIG_SMP
-    /* Update active processors */
-    mov ecx, fs:[KPCR_SET_MEMBER]
-    lock xor [edx+KPROCESS_ACTIVE_PROCESSORS], ecx
-    lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
-
-    /* Sanity check */
-#ifdef DBG
-    test dword ptr [edx+KPROCESS_ACTIVE_PROCESSORS], 0
-    jz WrongCpu1
-    test dword ptr [eax+KPROCESS_ACTIVE_PROCESSORS], 0
-    jnz WrongCpu2
-#endif
-#endif
-
-    /* Check if their LDTs changed */
-    mov ecx, [edx+KPROCESS_LDT_DESCRIPTOR0]
-    or ecx, [eax+KPROCESS_LDT_DESCRIPTOR0]
-    jnz NewLdt
-
-    /* Update CR3 */
-    mov eax, [edx+KPROCESS_DIRECTORY_TABLE_BASE]
-    mov cr3, eax
-
-    /* Get the KTSS */
-    mov ecx, fs:[KPCR_TSS]
-
-    /* Clear GS on process swap */
-    xor eax, eax
-    mov gs, ax
-
-    /* Update IOPM offset */
-    mov ax, [edx+KPROCESS_IOPM_OFFSET]
-    mov [ecx+KTSS_IOMAPBASE], ax
-
-    /* Return */
-    ret 8
-
-NewLdt:
-    /* FIXME: TODO */
-    int 3
-
-#ifdef DBG
-WrongCpu1:
-    int 3
-WrongCpu2:
-    int 3
-#endif
-.endfunc

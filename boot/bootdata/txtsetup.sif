@@ -11,17 +11,22 @@ Signature = "$ReactOS$"
 6 = Fonts
 7 = bin
 
+[DiskSpaceRequirements]
+; Required free system partition disk space in MB
+FreeSysPartDiskSpace=350
+
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
-atapi.sys=,,,,,,x,,,,,,4
+uniata.sys=,,,,,,x,,,,,,4
 buslogic.sys=,,,,,,x,,,,,,4
 blue.sys=,,,,,,x,,,,,,4
-bootvid.dll=,,,,,,,,,,,,4
+bootvid.dll=,,,,,,,,,,,,2
 c_437.nls=,,,,,,,,,,,,2
 c_1252.nls=,,,,,,,,,,,,2
 cdfs.sys=,,,,,,x,,,,,,4
 cdrom.sys=,,,,,,x,,,,,,4
 class2.sys=,,,,,,x,,,,,,4
+isapnp.sys=,,,,,,,,,,,,4
 kdcom.dll=,,,,,,,,,,,,2
 disk.sys=,,,,,,x,,,,,,4
 floppy.sys=,,,,,,x,,,,,,4
@@ -31,19 +36,21 @@ l_intl.nls=,,,,,,,,,,,,2
 ntfs.sys=,,,,,,,,,,,,4
 pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
-uniata.sys=,,,,,,,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
 ext2.sys=,,,,,,x,,,,,,4
 
 [HardwareIdsDatabase]
-*PNP0C08 = acpi
+;*PNP0A00 = isapnp
 *PNP0A03 = pci
+*PNP0C08 = acpi
+;PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
 pci = pci.sys
+isapnp = isapnp.sys
 
 [Cabinets]
 Cabinet=reactos.cab
@@ -51,7 +58,7 @@ Cabinet=reactos.cab
 [SetupData]
 DefaultPath = \ReactOS
 OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
+DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1 /FIRSTCHANCE /KDSERIAL"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
@@ -77,7 +84,7 @@ hal.dll=,,,,,,,,,,,,2
 
 [Files.pci_mp]
 ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
-halmp.dll=,,,,,,,,,,hal.dll,,2
+halmps.dll=,,,,,,,,,,hal.dll,,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<hight>,<width>,<bpp>
@@ -94,6 +101,18 @@ vbe_1024x768x8 = "VESA Display (1024x768x8)",,VBE,1024,768,8
 vbe_1024x768x16 = "VESA Display (1024x768x16)",,VBE,1024,768,16
 vbe_1024x768x24 = "VESA Display (1024x768x24)",,VBE,1024,768,24
 vbe_1024x768x32 = "VESA Display (1024x768x32)",,VBE,1024,768,32
+vbe_1152x864x8 = "VESA Display (1152x864x8)",,VBE,1152,864,8
+vbe_1152x864x16 = "VESA Display (1152x864x16)",,VBE,1152,864,16
+vbe_1152x864x24 = "VESA Display (1152x864x24)",,VBE,1152,864,24
+vbe_1152x864x32 = "VESA Display (1152x864x32)",,VBE,1152,864,32
+vbe_1280x1024x8 = "VESA Display (1280x1024x8)",,VBE,1280,1024,8
+vbe_1280x1024x16 = "VESA Display (1280x1024x16)",,VBE,1280,1024,16
+vbe_1280x1024x24 = "VESA Display (1280x1024x24)",,VBE,1280,1024,24
+vbe_1280x1024x32 = "VESA Display (1280x1024x32)",,VBE,1280,1024,32
+vbe_1600x1200x8 = "VESA Display (1600x1200x8)",,VBE,1600,1200,8
+vbe_1600x1200x16 = "VESA Display (1600x1200x16)",,VBE,1600,1200,16
+vbe_1600x1200x24 = "VESA Display (1600x1200x24)",,VBE,1600,1200,24
+vbe_1600x1200x32 = "VESA Display (1600x1200x32)",,VBE,1600,1200,32
 
 [Map.Display]
 ;<id> = <pnp id string>

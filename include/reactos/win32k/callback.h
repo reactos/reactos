@@ -7,7 +7,9 @@
 #define USER32_CALLBACK_LOADDEFAULTCURSORS    (3)
 #define USER32_CALLBACK_HOOKPROC              (4)
 #define USER32_CALLBACK_EVENTPROC             (5)
-#define USER32_CALLBACK_MAXIMUM               (5)
+#define USER32_CALLBACK_LOADMENU              (6)
+#define USER32_CALLBACK_CLIENTTHREADSTARTUP   (7)
+#define USER32_CALLBACK_MAXIMUM               (7)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -30,6 +32,13 @@ typedef struct _SENDASYNCPROC_CALLBACK_ARGUMENTS
   ULONG_PTR Context;
   LRESULT Result;
 } SENDASYNCPROC_CALLBACK_ARGUMENTS, *PSENDASYNCPROC_CALLBACK_ARGUMENTS;
+
+typedef struct _CALL_BACK_INFO
+{
+   SENDASYNCPROC CallBack;
+   ULONG_PTR Context;
+} CALL_BACK_INFO, * PCALL_BACK_INFO;
+
 
 typedef struct _HOOKPROC_CALLBACK_ARGUMENTS
 {
@@ -61,10 +70,13 @@ typedef struct _EVENTPROC_CALLBACK_ARGUMENTS
   DWORD dwEventThread;
   DWORD dwmsEventTime;
   WINEVENTPROC Proc;
-  BOOLEAN Ansi;
-  UINT ModuleNameLength;
-  WCHAR ModuleName[1];
 } EVENTPROC_CALLBACK_ARGUMENTS, *PEVENTPROC_CALLBACK_ARGUMENTS;
+
+typedef struct _LOADMENU_CALLBACK_ARGUMENTS
+{
+  HINSTANCE hModule;
+  WCHAR MenuName[1];
+} LOADMENU_CALLBACK_ARGUMENTS, *PLOADMENU_CALLBACK_ARGUMENTS;
 
 NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
@@ -78,5 +90,9 @@ NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

@@ -2,11 +2,10 @@
 	<importlibrary definition="ws2_32.spec" />
 	<include base="ws2_32">include</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="LE" />
+	<define name="WINSOCK_API_LINKAGE">DECLSPEC_EXPORT</define>
 	<library>wine</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>dnsapi</library>

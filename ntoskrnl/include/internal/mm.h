@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_INTERNAL_MM_H
-#define __INCLUDE_INTERNAL_MM_H
+#pragma once
 
 #include <internal/arch/mm.h>
 
@@ -7,28 +6,75 @@
 
 struct _EPROCESS;
 
-extern ULONG MiFreeSwapPages;
-extern ULONG MiUsedSwapPages;
-extern ULONG MmPagedPoolSize;
-extern ULONG MmTotalPagedPoolQuota;
-extern ULONG MmTotalNonPagedPoolQuota;
+extern PFN_NUMBER MiFreeSwapPages;
+extern PFN_NUMBER MiUsedSwapPages;
+extern SIZE_T MmPagedPoolSize;
+extern SIZE_T MmTotalPagedPoolQuota;
+extern SIZE_T MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
-extern ULONG MmNumberOfPhysicalPages;
+extern PFN_NUMBER MmNumberOfPhysicalPages;
+extern UCHAR MmDisablePagingExecutive;
+extern PFN_NUMBER MmLowestPhysicalPage;
+extern PFN_NUMBER MmHighestPhysicalPage;
+extern PFN_NUMBER MmAvailablePages;
+extern PFN_NUMBER MmResidentAvailablePages;
 
 extern PVOID MmPagedPoolBase;
-extern ULONG MmPagedPoolSize;
+extern SIZE_T MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
-extern ULONG MmHighestPhysicalPage;
-extern PVOID MmPfnDatabase;
+
+extern LIST_ENTRY MmLoadedUserImageList;
+
+extern KMUTANT MmSystemLoadLock;
+
+extern ULONG MmNumberOfPagingFiles;
+
+extern PVOID MmUnloadedDrivers;
+extern PVOID MmLastUnloadedDrivers;
+extern PVOID MmTriageActionTaken;
+extern PVOID KernelVerifier;
+extern MM_DRIVER_VERIFIER_DATA MmVerifierData;
+
+extern SIZE_T MmTotalCommitLimit;
+extern SIZE_T MmTotalCommittedPages;
+extern SIZE_T MmSharedCommit;
+extern SIZE_T MmDriverCommit;
+extern SIZE_T MmProcessCommit;
+extern SIZE_T MmPagedPoolCommit;
+extern SIZE_T MmPeakCommitment;
+extern SIZE_T MmtotalCommitLimitMaximum;
+
+extern PVOID MiDebugMapping;
+extern PMMPTE MmDebugPte;
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
 struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
-typedef ULONG PFN_TYPE, *PPFN_TYPE;
+
+//
+// MmDbgCopyMemory Flags
+//
+#define MMDBG_COPY_WRITE            0x00000001
+#define MMDBG_COPY_PHYSICAL         0x00000002
+#define MMDBG_COPY_UNSAFE           0x00000004
+#define MMDBG_COPY_CACHED           0x00000008
+#define MMDBG_COPY_UNCACHED         0x00000010
+#define MMDBG_COPY_WRITE_COMBINED   0x00000020
+
+//
+// Maximum chunk size per copy
+//
+#define MMDBG_COPY_MAX_SIZE         0x8
+
+#if defined(_X86_)
+#define MI_STATIC_MEMORY_AREAS              (14)
+#else
+#define MI_STATIC_MEMORY_AREAS              (13)
+#endif
 
 #define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
@@ -44,6 +90,8 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MEMORY_AREA_PAGED_POOL              (12)
 #define MEMORY_AREA_NO_ACCESS               (13)
 #define MEMORY_AREA_PEB_OR_TEB              (14)
+#define MEMORY_AREA_OWNED_BY_ARM3           (15)
+#define MEMORY_AREA_STATIC                  (0x80000000)
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING        (0x8)
 
@@ -59,28 +107,9 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
 
-#define HYPER_SPACE		                    (0xC0400000)
-
-#define MI_HYPERSPACE_PTES                  (256 - 1)
-#define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
-#define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
-                                             MI_HYPERSPACE_PTES * PAGE_SIZE)
-#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
-                                             PAGE_SIZE)
 
 /* Signature of free pool blocks */
-#define MM_FREE_POOL_TAG    TAG('F', 'r', 'p', 'l')
-
-#define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
-    ((x) / (4*1024*1024))
-
-#define PAGE_TO_SECTION_PAGE_TABLE_OFFSET(x) \
-    ((((x)) % (4*1024*1024)) / (4*1024))
-
-#define NR_SECTION_PAGE_TABLES              1024
-#define NR_SECTION_PAGE_ENTRIES             1024
-
-#define TEB_BASE                            0x7FFDE000
+#define MM_FREE_POOL_TAG    'lprF'
 
 /* Although Microsoft says this isn't hardcoded anymore,
    they won't be able to change it. Stuff depends on it */
@@ -103,7 +132,8 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MC_USER                             (1)
 #define MC_PPOOL                            (2)
 #define MC_NPPOOL                           (3)
-#define MC_MAXIMUM                          (4)
+#define MC_SYSTEM                           (4)
+#define MC_MAXIMUM                          (5)
 
 #define PAGED_POOL_MASK                     1
 #define MUST_SUCCEED_POOL_MASK              2
@@ -119,17 +149,6 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
  * Paged and non-paged pools are 8-byte aligned
  */
 #define MM_POOL_ALIGNMENT                   8
-
-/*
- * Maximum size of the kmalloc area (this is totally arbitary)
- */
-#define MM_KERNEL_MAP_SIZE                  (16*1024*1024)
-#define MM_KERNEL_MAP_BASE                  (0xf0c00000)
-
-/*
- * FIXME - different architectures have different cache line sizes...
- */
-#define MM_CACHE_LINE_SIZE                  32
 
 #define MM_ROUND_UP(x,s)                    \
     ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
@@ -276,45 +295,90 @@ typedef struct _MEMORY_AREA
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
-typedef struct
-{
-    ULONG NrTotalPages;
-    ULONG NrSystemPages;
-    ULONG NrUserPages;
-    ULONG NrFreePages;
-    ULONG NrDirtyPages;
-    ULONG NrLockedPages;
-    ULONG PagingRequestsInLastMinute;
-    ULONG PagingRequestsInLastFiveMinutes;
-    ULONG PagingRequestsInLastFifteenMinutes;
-} MM_STATS;
+//
+// These two mappings are actually used by Windows itself, based on the ASSERTS
+//
+#define StartOfAllocation ReadInProgress
+#define EndOfAllocation WriteInProgress
 
-typedef struct _PHYSICAL_PAGE
+typedef struct _MMPFNENTRY
 {
+    USHORT Modified:1;
+    USHORT ReadInProgress:1;                 // StartOfAllocation
+    USHORT WriteInProgress:1;                // EndOfAllocation
+    USHORT PrototypePte:1;                   // Zero
+    USHORT PageColor:4;                      // LockCount
+    USHORT PageLocation:3;                   // Consumer
+    USHORT RemovalRequested:1;
+    USHORT CacheAttribute:2;                 // Type
+    USHORT Rom:1;
+    USHORT ParityError:1;
+} MMPFNENTRY;
+
+typedef struct _MMPFN
+{
+    union
+    {
+        PFN_NUMBER Flink;                    // ListEntry.Flink
+        ULONG WsIndex;
+        PKEVENT Event;
+        NTSTATUS ReadStatus;
+        SINGLE_LIST_ENTRY NextStackPfn;
+    } u1;
+    PMMPTE PteAddress;                       // ListEntry.Blink
+    union
+    {
+        PFN_NUMBER Blink;
+        ULONG_PTR ShareCount;                // MapCount
+    } u2;
     union
     {
         struct
         {
-            ULONG Type: 2;
-            ULONG Consumer: 3;
-            ULONG Zero: 1;
-            ULONG StartOfAllocation: 1;
-            ULONG EndOfAllocation: 1;
-        }
-        Flags;
-        ULONG AllFlags;
+            USHORT ReferenceCount;           // ReferenceCount
+            MMPFNENTRY e1;
+        };
+        struct
+        {
+            USHORT ReferenceCount;
+            USHORT ShortFlags;
+        } e2;
+    } u3;
+    union
+    {
+        MMPTE OriginalPte;
+        LONG AweReferenceCount;              // RmapListHead
     };
+    union
+    {
+        ULONG_PTR EntireFrame;               // SavedSwapEntry
+        struct
+        {
+            ULONG_PTR PteFrame:25;
+            ULONG_PTR InPageError:1;
+            ULONG_PTR VerifierAllocation:1;
+            ULONG_PTR AweAllocation:1;
+            ULONG_PTR Priority:3;
+            ULONG_PTR MustBeCached:1;
+        };
+    } u4;
+} MMPFN, *PMMPFN;
 
-    LIST_ENTRY ListEntry;
-    ULONG ReferenceCount;
-    SWAPENTRY SavedSwapEntry;
-    ULONG LockCount;
-    ULONG MapCount;
-    struct _MM_RMAP_ENTRY* RmapListHead;
-}
-PHYSICAL_PAGE, *PPHYSICAL_PAGE;
+extern PMMPFN MmPfnDatabase;
 
-extern MM_STATS MmStats;
+typedef struct _MMPFNLIST
+{
+    PFN_NUMBER Total;
+    MMLISTS ListName;
+    PFN_NUMBER Flink;
+    PFN_NUMBER Blink;
+} MMPFNLIST, *PMMPFNLIST;
+
+extern MMPFNLIST MmZeroedPageListHead;
+extern MMPFNLIST MmFreePageListHead;
+extern MMPFNLIST MmStandbyPageListHead;
+extern MMPFNLIST MmModifiedPageListHead;
+extern MMPFNLIST MmModifiedNoWritePageListHead;
 
 typedef struct _MM_PAGEOP
 {
@@ -388,7 +452,7 @@ extern MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 
 typedef VOID
 (*PMM_ALTER_REGION_FUNC)(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID BaseAddress,
     ULONG Length,
     ULONG OldType,
@@ -402,9 +466,30 @@ typedef VOID
     PVOID Context,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     SWAPENTRY SwapEntry,
     BOOLEAN Dirty
+);
+
+//
+// Mm copy support for Kd
+//
+NTSTATUS
+NTAPI
+MmDbgCopyMemory(
+    IN ULONG64 Address,
+    IN PVOID Buffer,
+    IN ULONG Size,
+    IN ULONG Flags
+);
+
+//
+// Determines if a given address is a session address
+//
+BOOLEAN
+NTAPI
+MmIsSessionAddress(
+    IN PVOID Address
 );
 
 /* marea.c *******************************************************************/
@@ -412,7 +497,7 @@ typedef VOID
 NTSTATUS
 NTAPI
 MmCreateMemoryArea(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     ULONG Type,
     PVOID *BaseAddress,
     ULONG_PTR Length,
@@ -426,21 +511,21 @@ MmCreateMemoryArea(
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByAddress(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID Address
 );
 
 ULONG_PTR
 NTAPI
 MmFindGapAtAddress(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID Address
 );
 
 NTSTATUS
 NTAPI
 MmFreeMemoryArea(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PMM_FREE_PAGE_FUNC FreePage,
     PVOID FreePageContext
@@ -449,7 +534,7 @@ MmFreeMemoryArea(
 NTSTATUS
 NTAPI
 MmFreeMemoryAreaByPtr(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID BaseAddress,
     PMM_FREE_PAGE_FUNC FreePage,
     PVOID FreePageContext
@@ -457,12 +542,12 @@ MmFreeMemoryAreaByPtr(
 
 VOID
 NTAPI
-MmDumpMemoryAreas(PMM_AVL_TABLE AddressSpace);
+MmDumpMemoryAreas(PMMSUPPORT AddressSpace);
 
 PMEMORY_AREA
 NTAPI
 MmLocateMemoryAreaByRegion(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID Address,
     ULONG_PTR Length
 );
@@ -470,7 +555,7 @@ MmLocateMemoryAreaByRegion(
 PVOID
 NTAPI
 MmFindGap(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     ULONG_PTR Length,
     ULONG_PTR Granularity,
     BOOLEAN TopDown
@@ -480,7 +565,7 @@ VOID
 NTAPI
 MmReleaseMemoryAreaIfDecommitted(
     struct _EPROCESS *Process,
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID BaseAddress
 );
 
@@ -558,6 +643,24 @@ VOID
 NTAPI
 ExFreePagedPool(IN PVOID Block);
 
+BOOLEAN
+NTAPI
+ExpIsPoolTagDebuggable(ULONG Tag);
+
+PVOID
+NTAPI
+ExpAllocateDebugPool(
+    POOL_TYPE Type,
+    ULONG Size,
+    ULONG Tag,
+    PVOID Caller,
+    BOOLEAN EndOfPage
+);
+
+VOID
+NTAPI
+ExpFreeDebugPool(PVOID Block, BOOLEAN PagedPool);
+
 VOID
 NTAPI
 MmInitializePagedPool(VOID);
@@ -585,7 +688,7 @@ VOID
 NTAPI
 MmBuildMdlFromPages(
     PMDL Mdl,
-    PULONG Pages
+    PPFN_NUMBER Pages
 );
 
 /* mminit.c ******************************************************************/
@@ -635,7 +738,7 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(
     SWAPENTRY SwapEntry,
-    PFN_TYPE Page
+    PFN_NUMBER Page
 );
 
 BOOLEAN
@@ -646,7 +749,7 @@ NTSTATUS
 NTAPI
 MmWriteToSwapPage(
     SWAPENTRY SwapEntry,
-    PFN_TYPE Page
+    PFN_NUMBER Page
 );
 
 NTSTATUS
@@ -682,14 +785,19 @@ MmInitializeProcessAddressSpace(
 
 NTSTATUS
 NTAPI
-MmCreatePeb(struct _EPROCESS *Process);
+MmCreatePeb(
+    IN PEPROCESS Process,
+    IN PINITIAL_PEB InitialPeb,
+    OUT PPEB *BasePeb
+);
 
-PTEB
+NTSTATUS
 NTAPI
 MmCreateTeb(
-    struct _EPROCESS *Process,
-    PCLIENT_ID ClientId,
-    PINITIAL_TEB InitialTeb
+    IN PEPROCESS Process,
+    IN PCLIENT_ID ClientId,
+    IN PINITIAL_TEB InitialTeb,
+    OUT PTEB* BaseTeb
 );
 
 VOID
@@ -746,7 +854,7 @@ MmAccessFault(
 NTSTATUS
 NTAPI
 MmNotPresentFaultVirtualMemory(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
     PVOID Address,
     BOOLEAN Locked
@@ -755,7 +863,7 @@ MmNotPresentFaultVirtualMemory(
 NTSTATUS
 NTAPI
 MmPageOutVirtualMemory(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     struct _MM_PAGEOP* PageOp
@@ -767,7 +875,7 @@ MmQueryAnonMem(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
-    PULONG ResultLength
+    PSIZE_T ResultLength
 );
 
 VOID
@@ -780,7 +888,7 @@ MmFreeVirtualMemory(
 NTSTATUS
 NTAPI
 MmProtectAnonMem(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID BaseAddress,
     ULONG Length,
@@ -791,7 +899,7 @@ MmProtectAnonMem(
 NTSTATUS
 NTAPI
 MmWritePageVirtualMemory(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MArea,
     PVOID Address,
     PMM_PAGEOP PageOp
@@ -809,18 +917,18 @@ ExUnmapPage(PVOID Addr);
 
 PVOID
 NTAPI
-ExAllocatePageWithPhysPage(PFN_TYPE Page);
+ExAllocatePageWithPhysPage(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
 MiCopyFromUserPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     PVOID SourceAddress
 );
 
 NTSTATUS
 NTAPI
-MiZeroPage(PFN_TYPE Page);
+MiZeroPage(PFN_NUMBER Page);
 
 /* memsafe.s *****************************************************************/
 
@@ -891,7 +999,7 @@ NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(
     ULONG Consumer,
-    PFN_TYPE Page
+    PFN_NUMBER Page
 );
 
 NTSTATUS
@@ -899,7 +1007,7 @@ NTAPI
 MmRequestPageMemoryConsumer(
     ULONG Consumer,
     BOOLEAN MyWait,
-    PPFN_TYPE AllocatedPage
+    PPFN_NUMBER AllocatedPage
 );
 
 VOID
@@ -915,18 +1023,18 @@ MmRebalanceMemoryConsumers(VOID);
 VOID
 NTAPI
 MmSetRmapListHeadPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     struct _MM_RMAP_ENTRY* ListHead
 );
 
 struct _MM_RMAP_ENTRY*
 NTAPI
-MmGetRmapListHeadPage(PFN_TYPE Page);
+MmGetRmapListHeadPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
 MmInsertRmap(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     struct _EPROCESS *Process,
     PVOID Address
 );
@@ -934,7 +1042,7 @@ MmInsertRmap(
 VOID
 NTAPI
 MmDeleteAllRmaps(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     PVOID Context,
     VOID (*DeleteMapping)(PVOID Context, struct _EPROCESS *Process, PVOID Address)
 );
@@ -942,7 +1050,7 @@ MmDeleteAllRmaps(
 VOID
 NTAPI
 MmDeleteRmap(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     struct _EPROCESS *Process,
     PVOID Address
 );
@@ -953,100 +1061,83 @@ MmInitializeRmapList(VOID);
 
 VOID
 NTAPI
-MmSetCleanAllRmaps(PFN_TYPE Page);
+MmSetCleanAllRmaps(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmSetDirtyAllRmaps(PFN_TYPE Page);
+MmSetDirtyAllRmaps(PFN_NUMBER Page);
 
 BOOLEAN
 NTAPI
-MmIsDirtyPageRmap(PFN_TYPE Page);
+MmIsDirtyPageRmap(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_TYPE Page);
+MmWritePagePhysicalAddress(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmPageOutPhysicalAddress(PFN_TYPE Page);
+MmPageOutPhysicalAddress(PFN_NUMBER Page);
 
 /* freelist.c **********************************************************/
 
-#define ASSERT_PFN(x) ASSERT((x)->Flags.Type != 0)
-
 FORCEINLINE
-PPHYSICAL_PAGE
-MiGetPfnEntry(IN PFN_TYPE Pfn)
+PMMPFN
+MiGetPfnEntry(IN PFN_NUMBER Pfn)
 {
-    PPHYSICAL_PAGE Page;
-    extern PPHYSICAL_PAGE MmPageArray;
-    extern ULONG MmPageArraySize;
-
-    /* Mark MmPageArraySize as unreferenced, otherwise it will appear as an unused variable on a Release build */
-    UNREFERENCED_PARAMETER(MmPageArraySize);
+    PMMPFN Page;
+    extern RTL_BITMAP MiPfnBitMap;
 
     /* Make sure the PFN number is valid */
-    ASSERT(Pfn <= MmPageArraySize);
+    if (Pfn > MmHighestPhysicalPage) return NULL;
+    
+    /* Make sure this page actually has a PFN entry */
+    if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, Pfn))) return NULL;
 
     /* Get the entry */
-    Page = &MmPageArray[Pfn];
-
-    /* Make sure it's valid */
-    ASSERT_PFN(Page);
+    Page = &MmPfnDatabase[Pfn];
 
     /* Return it */
     return Page;
 };
 
-PFN_TYPE
-NTAPI
-MmGetLRUNextUserPage(PFN_TYPE PreviousPage);
+FORCEINLINE
+PFN_NUMBER
+MiGetPfnEntryIndex(IN PMMPFN Pfn1)
+{
+    //
+    // This will return the Page Frame Number (PFN) from the MMPFN
+    //
+    return Pfn1 - MmPfnDatabase;
+}
 
-PFN_TYPE
+PFN_NUMBER
+NTAPI
+MmGetLRUNextUserPage(PFN_NUMBER PreviousPage);
+
+PFN_NUMBER
 NTAPI
 MmGetLRUFirstUserPage(VOID);
 
 VOID
 NTAPI
-MmInsertLRULastUserPage(PFN_TYPE Page);
+MmInsertLRULastUserPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmRemoveLRUUserPage(PFN_TYPE Page);
+MmRemoveLRUUserPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmLockPage(PFN_TYPE Page);
+MmLockPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmLockPageUnsafe(PFN_TYPE Page);
-
-VOID
-NTAPI
-MmUnlockPage(PFN_TYPE Page);
+MmUnlockPage(PFN_NUMBER Page);
 
 ULONG
 NTAPI
-MmGetLockCountPage(PFN_TYPE Page);
-
-static
-__inline
-KIRQL
-NTAPI
-MmAcquirePageListLock()
-{
-	return KeAcquireQueuedSpinLock(LockQueuePfnLock);
-}
-
-FORCEINLINE
-VOID
-NTAPI
-MmReleasePageListLock(KIRQL oldIrql)
-{
-	KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
+MmGetLockCountPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
@@ -1054,13 +1145,20 @@ MmInitializePageList(
     VOID
 );
 
-PFN_TYPE
+VOID
+NTAPI
+MmDumpPfnDatabase(
+   VOID
+);
+
+PFN_NUMBER
 NTAPI
 MmGetContinuousPages(
     ULONG NumberOfBytes,
     PHYSICAL_ADDRESS LowestAcceptableAddress,
     PHYSICAL_ADDRESS HighestAcceptableAddress,
-    PHYSICAL_ADDRESS BoundaryAddressMultiple
+    PHYSICAL_ADDRESS BoundaryAddressMultiple,
+    BOOLEAN ZeroPages
 );
 
 NTSTATUS
@@ -1088,17 +1186,31 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page);
+MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
+                             IN PFN_NUMBER NumberOfPages);
+
+VOID
+NTAPI
+MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
+                        IN PFN_NUMBER NumberOfPages);
 
 //
 // ReactOS Compatibility Layer
 //
-PVOID
 FORCEINLINE
+PVOID
 MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
 {
     HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
     return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
+}
+
+FORCEINLINE
+PVOID
+MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
+{
+    PMMPFN Pfn1 = MiGetPfnEntry(Page);
+    return MiMapPagesToZeroInHyperSpace(&Pfn1, 1);
 }
 
 #define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);
@@ -1110,7 +1222,7 @@ NTAPI
 MmCreateVirtualMappingForKernel(
     PVOID Address,
     ULONG flProtect,
-    PPFN_TYPE Pages,
+    PPFN_NUMBER Pages,
     ULONG PageCount
 );
 
@@ -1127,7 +1239,7 @@ MmCreateVirtualMapping(
     struct _EPROCESS* Process,
     PVOID Address,
     ULONG flProtect,
-    PPFN_TYPE Pages,
+    PPFN_NUMBER Pages,
     ULONG PageCount
 );
 
@@ -1137,7 +1249,7 @@ MmCreateVirtualMappingUnsafe(
     struct _EPROCESS* Process,
     PVOID Address,
     ULONG flProtect,
-    PPFN_TYPE Pages,
+    PPFN_NUMBER Pages,
     ULONG PageCount
 );
 
@@ -1172,7 +1284,7 @@ MmDisableVirtualMapping(
     struct _EPROCESS *Process,
     PVOID Address,
     BOOLEAN* WasDirty,
-    PPFN_TYPE Page
+    PPFN_NUMBER Page
 );
 
 VOID
@@ -1212,7 +1324,7 @@ MmIsPageSwapEntry(
 VOID
 NTAPI
 MmTransferOwnershipPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     ULONG NewConsumer
 );
 
@@ -1223,11 +1335,10 @@ MmSetDirtyPage(
     PVOID Address
 );
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmAllocPage(
-    ULONG Consumer,
-    SWAPENTRY SavedSwapEntry
+    ULONG Consumer
 );
 
 LONG
@@ -1237,48 +1348,34 @@ MmAllocPagesSpecifyRange(
     PHYSICAL_ADDRESS LowestAddress,
     PHYSICAL_ADDRESS HighestAddress,
     ULONG NumberOfPages,
-    PPFN_TYPE Pages
+    PPFN_NUMBER Pages
 );
 
 VOID
 NTAPI
-MmDereferencePage(PFN_TYPE Page);
+MmDereferencePage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmReferencePage(PFN_TYPE Page);
-
-VOID
-NTAPI
-MmReferencePageUnsafe(PFN_TYPE Page);
+MmReferencePage(PFN_NUMBER Page);
 
 ULONG
 NTAPI
-MmGetReferenceCountPage(PFN_TYPE Page);
+MmGetReferenceCountPage(PFN_NUMBER Page);
 
 BOOLEAN
 NTAPI
-MmIsPageInUse(PFN_TYPE Page);
-
-VOID
-NTAPI
-MmSetFlagsPage(
-    PFN_TYPE Page,
-    ULONG Flags);
-
-ULONG
-NTAPI
-MmGetFlagsPage(PFN_TYPE Page);
+MmIsPageInUse(PFN_NUMBER Page);
 
 VOID
 NTAPI
 MmSetSavedSwapEntryPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     SWAPENTRY SavedSwapEntry);
 
 SWAPENTRY
 NTAPI
-MmGetSavedSwapEntryPage(PFN_TYPE Page);
+MmGetSavedSwapEntryPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
@@ -1298,7 +1395,7 @@ MmDeletePageTable(
     PVOID Address
 );
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(
     struct _EPROCESS *Process,
@@ -1310,14 +1407,14 @@ NTAPI
 MmCreateProcessAddressSpace(
     IN ULONG MinWs,
     IN PEPROCESS Dest,
-    IN PULONG DirectoryTableBase
+    IN PULONG_PTR DirectoryTableBase
 );
 
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
     IN PEPROCESS Process,
-    IN PULONG DirectoryTableBase
+    IN PULONG_PTR DirectoryTableBase
 );
 
 
@@ -1342,7 +1439,7 @@ MmDeleteVirtualMapping(
     PVOID Address,
     BOOLEAN FreePage,
     BOOLEAN* WasDirty,
-    PPFN_TYPE Page
+    PPFN_NUMBER Page
 );
 
 BOOLEAN
@@ -1354,11 +1451,11 @@ MmIsDirtyPage(
 
 VOID
 NTAPI
-MmMarkPageMapped(PFN_TYPE Page);
+MmMarkPageMapped(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmMarkPageUnmapped(PFN_TYPE Page);
+MmMarkPageUnmapped(PFN_NUMBER Page);
 
 VOID
 NTAPI
@@ -1390,7 +1487,7 @@ MmTrimUserMemory(
 NTSTATUS
 NTAPI
 MmAlterRegion(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PVOID BaseAddress,
     PLIST_ENTRY RegionListHead,
     PVOID StartAddress,
@@ -1452,13 +1549,13 @@ MmQuerySectionView(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
-    PULONG ResultLength
+    PSIZE_T ResultLength
 );
 
 NTSTATUS
 NTAPI
 MmProtectSectionView(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID BaseAddress,
     ULONG Length,
@@ -1469,7 +1566,7 @@ MmProtectSectionView(
 NTSTATUS
 NTAPI
 MmWritePageSectionView(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MArea,
     PVOID Address,
     PMM_PAGEOP PageOp
@@ -1482,7 +1579,7 @@ MmInitSectionImplementation(VOID);
 NTSTATUS
 NTAPI
 MmNotPresentFaultSectionView(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
     PVOID Address,
     BOOLEAN Locked
@@ -1491,7 +1588,7 @@ MmNotPresentFaultSectionView(
 NTSTATUS
 NTAPI
 MmPageOutSectionView(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     struct _MM_PAGEOP *PageOp
@@ -1504,7 +1601,7 @@ MmCreatePhysicalMemorySection(VOID);
 NTSTATUS
 NTAPI
 MmAccessFaultSectionView(
-    PMM_AVL_TABLE AddressSpace,
+    PMMSUPPORT AddressSpace,
     MEMORY_AREA* MemoryArea,
     PVOID Address,
     BOOLEAN Locked
@@ -1545,8 +1642,8 @@ MiQueryVirtualMemory(
     IN PVOID Address,
     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     OUT PVOID VirtualMemoryInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 /* sysldr.c ******************************************************************/
@@ -1608,42 +1705,40 @@ MiSyncForContextSwitch(
     IN PKTHREAD Thread
 );
 
-extern PMM_AVL_TABLE MmKernelAddressSpace;
+extern PMMSUPPORT MmKernelAddressSpace;
 
 FORCEINLINE
 VOID
-MmLockAddressSpace(PMM_AVL_TABLE AddressSpace)
+MmLockAddressSpace(PMMSUPPORT AddressSpace)
 {
-    KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
+    KeAcquireGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
 }
 
 FORCEINLINE
 VOID
-MmUnlockAddressSpace(PMM_AVL_TABLE AddressSpace)
+MmUnlockAddressSpace(PMMSUPPORT AddressSpace)
 {
-    KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot)->AddressCreationLock);
+    KeReleaseGuardedMutex(&CONTAINING_RECORD(AddressSpace, EPROCESS, Vm)->AddressCreationLock);
 }
 
 FORCEINLINE
 PEPROCESS
-MmGetAddressSpaceOwner(IN PMM_AVL_TABLE AddressSpace)
+MmGetAddressSpaceOwner(IN PMMSUPPORT AddressSpace)
 {
     if (AddressSpace == MmKernelAddressSpace) return NULL;
-    return CONTAINING_RECORD(AddressSpace, EPROCESS, VadRoot);
+    return CONTAINING_RECORD(AddressSpace, EPROCESS, Vm);
 }
 
 FORCEINLINE
-PMM_AVL_TABLE
+PMMSUPPORT
 MmGetCurrentAddressSpace(VOID)
 {
-    return &((PEPROCESS)KeGetCurrentThread()->ApcState.Process)->VadRoot;
+    return &((PEPROCESS)KeGetCurrentThread()->ApcState.Process)->Vm;
 }
 
 FORCEINLINE
-PMM_AVL_TABLE
+PMMSUPPORT
 MmGetKernelAddressSpace(VOID)
 {
     return MmKernelAddressSpace;
 }
-
-#endif

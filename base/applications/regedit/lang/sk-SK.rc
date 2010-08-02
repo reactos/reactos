@@ -147,6 +147,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copy Key Name",                  ID_EDIT_COPYKEYNAME
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "&Copy", ID_HEXEDIT_COPY
+        MENUITEM "&Paste", ID_HEXEDIT_PASTE
+        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+  END
 END
 
 
@@ -423,7 +432,7 @@ CAPTION "Find"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "&Zruöiù",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "&Zruöiù",IDCANCEL,93,29,45,14
     LTEXT           "Searching the registry...",IDC_STATIC,33,12,83,8
 END
 

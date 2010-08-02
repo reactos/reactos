@@ -20,9 +20,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "localspl_private.h"
+
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALPORT "지역 포트"
     IDS_LOCALMONITOR "지역 모니터"

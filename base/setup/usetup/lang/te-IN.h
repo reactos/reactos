@@ -1,5 +1,4 @@
-#ifndef LANG_TE_IN_H__
-#define LANG_TE_IN_H__
+#pragma once
 
 MUI_LAYOUTS teINLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS teINLayouts[] =
     { L"0439", L"00010439" },
     { NULL, NULL }
 };
-
-#endif

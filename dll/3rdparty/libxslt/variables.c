@@ -43,6 +43,10 @@ const xmlChar *xsltDocFragFake = (const xmlChar *) " fake node libxslt";
 const xmlChar *xsltComputingGlobalVarMarker =
  (const xmlChar *) " var/param being computed";
 
+#define XSLT_VAR_GLOBAL 1<<0
+#define XSLT_VAR_IN_SELECT 1<<1
+#define XSLT_TCTXT_VARIABLE(c) ((xsltStackElemPtr) (c)->contextVariable)
+
 /************************************************************************
  *									*
  *  Result Value Tree (Result Tree Fragment) interfaces			*

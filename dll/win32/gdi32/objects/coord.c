@@ -14,8 +14,8 @@
            __asm__ __volatile__ ("fistpl %0" : "=m" (out) : "t" (in) : "st");
 #else
 #define FLOAT_TO_INT(in,out) \
-          __asm fld in \
-          __asm fistp out
+          __asm fld in; \
+          __asm fistp out;
 #endif
 
 LONG

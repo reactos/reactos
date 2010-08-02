@@ -11,10 +11,10 @@
 #include <debug.h>
 
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
-ULONG ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
+ULONG_PTR ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
 
 static BOOLEAN ProbeAddressForNIC(
-    ULONG address)
+    ULONG_PTR address)
 /*
  * FUNCTION: Probes an address for a NIC
  * ARGUMENTS:
@@ -129,7 +129,7 @@ static BOOLEAN NICTestRAM(
  *     Start at 1KB and test for every 1KB up to 64KB
  */
 {
-    ULONG Base;
+    ULONG_PTR Base;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -266,9 +266,9 @@ static BOOLEAN NICReadSAPROM(
         for (i = 0; i < 16; i++)
             Adapter->SAPROM[i] = Buffer[i * 2];
 
-        /* Copy the station address */
+        /* Copy the permanent address */
         NdisMoveMemory(
-            (PVOID)&Adapter->StationAddress,
+            (PVOID)&Adapter->PermanentAddress,
             (PVOID)&Adapter->SAPROM,
             DRIVER_LENGTH_OF_ADDRESS);
 
@@ -479,7 +479,7 @@ NDIS_STATUS NICStop(
         NdisStallExecution(500);
     }
 
-#ifdef DBG
+#if DBG
     if (i == 4)
         NDIS_DbgPrint(MIN_TRACE, ("NIC was not reset after 2ms.\n"));
 #endif
@@ -686,7 +686,7 @@ VOID NICReadDataAlign(
         NdisStallExecution(4);
     }
 
-#ifdef DBG
+#if DBG
     if (Count == 0xFFFF)
         NDIS_DbgPrint(MIN_TRACE, ("Remote DMA did not complete.\n"));
 #endif
@@ -741,7 +741,7 @@ VOID NICWriteDataAlign(
         NdisStallExecution(4);
     }
 
-#ifdef DBG
+#if DBG
     if (Count == 0xFFFF)
         NDIS_DbgPrint(MIN_TRACE, ("Remote DMA did not complete.\n"));
 #endif
@@ -778,7 +778,7 @@ VOID NICWriteDataAlign(
         NdisStallExecution(4);
     }
 
-#ifdef DBG
+#if DBG
     if (Count == 0xFFFF)
         NDIS_DbgPrint(MIN_TRACE, ("Remote DMA did not complete.\n"));
 #endif
@@ -1184,7 +1184,7 @@ static VOID HandleReceive(
             NdisStallExecution(500);
         }
 
-#ifdef DBG
+#if DBG
         if (i == 4)
             NDIS_DbgPrint(MIN_TRACE, ("NIC was not reset after 2ms.\n"));
 #endif
@@ -1315,6 +1315,7 @@ VOID NTAPI MiniportHandleInterrupt(
     UCHAR ISRMask;
     UCHAR Mask;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+    UINT i = 0;
 
     ISRMask = Adapter->InterruptMask;
     NdisRawReadPortUchar(Adapter->IOBase + PG0_ISR, &ISRValue);
@@ -1323,12 +1324,14 @@ VOID NTAPI MiniportHandleInterrupt(
 
     Adapter->InterruptStatus |= (ISRValue & ISRMask);
 
-    if (ISRValue != 0x00)
-        /* Acknowledge interrupts */
-        NdisRawWritePortUchar(Adapter->IOBase + PG0_ISR, ISRValue);
-
     Mask = 0x01;
-    while (Adapter->InterruptStatus != 0x00) {
+    while (Adapter->InterruptStatus != 0x00 && i++ < INTERRUPT_LIMIT) {
+
+        if (ISRValue != 0x00) {
+            /* Acknowledge interrupts */
+            NdisRawWritePortUchar(Adapter->IOBase + PG0_ISR, ISRValue);
+            Mask = 0x01;
+        }
 
         NDIS_DbgPrint(MID_TRACE, ("Adapter->InterruptStatus (0x%X)  Mask (0x%X).\n",
             Adapter->InterruptStatus, Mask));
@@ -1409,12 +1412,6 @@ VOID NTAPI MiniportHandleInterrupt(
         NDIS_DbgPrint(MID_TRACE, ("ISRValue (0x%X).\n", ISRValue));
 
         Adapter->InterruptStatus |= (ISRValue & ISRMask);
-
-        if (ISRValue != 0x00) {
-            /* Acknowledge interrupts */
-            NdisRawWritePortUchar(Adapter->IOBase + PG0_ISR, ISRValue);
-            Mask = 0x01;
-        }
     }
 
     NICEnableInterrupts((PNIC_ADAPTER)MiniportAdapterContext);

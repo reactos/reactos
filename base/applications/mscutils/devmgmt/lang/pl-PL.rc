@@ -57,7 +57,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug twojego wyboru) którejµ z pó»niejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejš, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyµlnej gwarancji PRZYDATNO©CI HANDLOWEJ albo PRZYDATNO©CI DO OKRE©LONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoµciš wraz z niniejszym programem otrzyma³eµ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeµli nie - napisz do Free Software Foundation, Inc., 59 Temple Place, Fifth Floor, Boston, MA  02110-1301  USA."
+  IDS_LICENSE "Niniejszy program jest wolnym oprogramowaniem; mo¿esz go rozprowadzaæ dalej i/lub modyfikowaæ na warunkach Powszechnej Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego Oprogramowania - wed³ug wersji 2 tej Licencji lub (wed³ug twojego wyboru) którejµ z pó»niejszych wersji.\r\n\r\nNiniejszy program rozpowszechniany jest z nadziejš, i¿ bêdzie on u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyµlnej gwarancji PRZYDATNO©CI HANDLOWEJ albo PRZYDATNO©CI DO OKRE©LONYCH ZASTOSOWAÑ. W celu uzyskania bli¿szych informacji siêgnij do Powszechnej Licencji Publicznej GNU.\r\n\r\nZ pewnoµciš wraz z niniejszym programem otrzyma³eµ te¿ egzemplarz Powszechnej Licencji Publicznej GNU (GNU General Public License); jeµli nie - napisz do Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

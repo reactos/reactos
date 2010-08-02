@@ -48,7 +48,7 @@ typedef struct
     int         alias;
     UINT        dev_type;
     UINT        mode;
-    long        position;
+    LONG        position;
     SIZE        size; /* size of the original frame rect */
     int         zoom;
     LPWSTR      lpName;
@@ -158,7 +158,7 @@ static inline void MCIWND_notify_pos(MCIWndInfo *mwi)
 {
     if (mwi->dwStyle & MCIWNDF_NOTIFYPOS)
     {
-        long new_pos = SendMessageW(mwi->hWnd, MCIWNDM_GETPOSITIONW, 0, 0);
+        LONG new_pos = SendMessageW(mwi->hWnd, MCIWNDM_GETPOSITIONW, 0, 0);
         if (new_pos != mwi->position)
         {
             mwi->position = new_pos;
@@ -309,7 +309,7 @@ static LRESULT MCIWND_Create(HWND hWnd, LPCREATESTRUCTW cs)
         /* MCI wnd class is prepared to be embedded as an MDI child window */
         if (cs->dwExStyle & WS_EX_MDICHILD)
         {
-            MDICREATESTRUCTW *mdics = (MDICREATESTRUCTW *)cs->lpCreateParams;
+            MDICREATESTRUCTW *mdics = cs->lpCreateParams;
             lParam = mdics->lParam;
         }
         else
@@ -449,7 +449,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
 
     TRACE("%p %04x %08lx %08lx\n", hWnd, wMsg, wParam, lParam);
 
-    mwi = (MCIWndInfo*)GetWindowLongW(hWnd, 0);
+    mwi = (MCIWndInfo*)GetWindowLongPtrW(hWnd, 0);
     if (!mwi && wMsg != WM_CREATE)
         return DefWindowProcW(hWnd, wMsg, wParam, lParam);
 
@@ -568,7 +568,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
             hCursor = SetCursor(hCursor);
 
             mci_open.lpstrElementName = (LPWSTR)lParam;
-            wsprintfW(aliasW, formatW, (int)hWnd + 1);
+            wsprintfW(aliasW, formatW, HandleToLong(hWnd) + 1);
             mci_open.lpstrAlias = aliasW;
             mwi->lasterror = mciSendCommandW(mwi->mci, MCI_OPEN,
                                              MCI_OPEN_ELEMENT | MCI_OPEN_ALIAS | MCI_WAIT,
@@ -588,7 +588,7 @@ static LRESULT WINAPI MCIWndProc(HWND hWnd, UINT wMsg, WPARAM wParam, LPARAM lPa
             }
 
             mwi->mci = mci_open.wDeviceID;
-            mwi->alias = (int)hWnd + 1;
+            mwi->alias = HandleToLong(hWnd) + 1;
 
             mwi->lpName = HeapAlloc(GetProcessHeap(), 0, (strlenW((LPWSTR)lParam) + 1) * sizeof(WCHAR));
             strcpyW(mwi->lpName, (LPWSTR)lParam);
@@ -752,7 +752,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETLENGTH: %d\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETLENGTH: %ld\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -769,7 +769,7 @@ end_of_mci_open:
                 MCIWND_notify_error(mwi);
                 return 0;
             }
-            TRACE("MCIWNDM_GETSTART: %d\n", mci_status.dwReturn);
+            TRACE("MCIWNDM_GETSTART: %ld\n", mci_status.dwReturn);
             return mci_status.dwReturn;
         }
 
@@ -1298,30 +1298,23 @@ end_of_mci_open:
         }
 
     case MCI_SEEK:
+    case MCI_STEP:
         {
-            MCI_SEEK_PARMS mci_seek;
-
-            switch (lParam)
-            {
-            case MCIWND_START:
-                lParam = SendMessageW(hWnd, MCIWNDM_GETSTART, 0, 0);
-                break;
-
-            case MCIWND_END:
-                lParam = SendMessageW(hWnd, MCIWNDM_GETEND, 0, 0);
-                break;
-            }
+            MCI_SEEK_PARMS mci_seek; /* Layout is usable as MCI_XYZ_STEP_PARMS */
+            DWORD flags = MCI_STEP == wMsg ? 0 :
+                          MCIWND_START == lParam ? MCI_SEEK_TO_START :
+                          MCIWND_END   == lParam ? MCI_SEEK_TO_END : MCI_TO;
 
             mci_seek.dwTo = lParam;
-            mwi->lasterror = mciSendCommandW(mwi->mci, MCI_SEEK,
-                                             MCI_TO, (DWORD_PTR)&mci_seek);
+            mwi->lasterror = mciSendCommandW(mwi->mci, wMsg,
+                                             flags, (DWORD_PTR)&mci_seek);
             if (mwi->lasterror)
             {
                 MCIWND_notify_error(mwi);
                 return mwi->lasterror;
             }
             /* update window to reflect the state */
-            InvalidateRect(hWnd, NULL, TRUE);
+            else InvalidateRect(hWnd, NULL, TRUE);
             return 0;
         }
 
@@ -1364,15 +1357,9 @@ end_of_mci_open:
         }
 
     case MCI_PAUSE:
-    case MCI_STEP:
     case MCI_STOP:
     case MCI_RESUME:
         mci_generic_command(mwi, wMsg);
-        if (wMsg == MCI_STEP && !mwi->lasterror)
-        {
-            /* update window to reflect the state */
-            InvalidateRect(hWnd, NULL, TRUE);
-        }
         return mwi->lasterror;
 
     case MCI_CONFIGURE:

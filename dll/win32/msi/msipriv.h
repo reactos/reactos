@@ -32,6 +32,7 @@
 #include "objbase.h"
 #include "objidl.h"
 #include "winnls.h"
+#include "winver.h"
 #include "wine/list.h"
 #include "wine/debug.h"
 
@@ -43,6 +44,7 @@
 #define MSITYPE_KEY      0x2000
 #define MSITYPE_TEMPORARY 0x4000
 
+#define MAX_STREAM_NAME_LEN     62
 
 /* Install UI level mask for AND operation to exclude flags */
 #define INSTALLUILEVEL_MASK             0x0007
@@ -76,9 +78,11 @@ typedef struct tagMSIDATABASE
     UINT bytes_per_strref;
     LPWSTR path;
     LPWSTR deletefile;
+    LPWSTR localfile;
     LPCWSTR mode;
     struct list tables;
     struct list transforms;
+    struct list streams;
 } MSIDATABASE;
 
 typedef struct tagMSIVIEW MSIVIEW;
@@ -141,13 +145,16 @@ typedef struct tagMSIMEDIAINFO
     LPWSTR volume_label;
     BOOL is_continuous;
     BOOL is_extracted;
-    WCHAR source[MAX_PATH];
+    WCHAR sourcedir[MAX_PATH];
 } MSIMEDIAINFO;
 
 typedef struct tagMSIPATCHINFO
 {
+    struct list entry;
     LPWSTR patchcode;
     LPWSTR transforms;
+    LPWSTR localfile;
+    MSIPATCHSTATE state;
 } MSIPATCHINFO;
 
 typedef struct _column_info
@@ -199,7 +206,7 @@ typedef struct tagMSIVIEWOPS
     /*
      * Inserts a new row into the database from the records contents
      */
-    UINT (*insert_row)( struct tagMSIVIEW *view, MSIRECORD *record, BOOL temporary );
+    UINT (*insert_row)( struct tagMSIVIEW *view, MSIRECORD *record, UINT row, BOOL temporary );
 
     /*
      * Deletes a row from the database
@@ -227,11 +234,11 @@ typedef struct tagMSIVIEWOPS
     /*
      * get_column_info - returns the name and type of a specific column
      *
-     *  The name is HeapAlloc'ed by this function and should be freed by
-     *   the caller.
+     *  The name and tablename is HeapAlloc'ed by this function and should be
+     *  freed by the caller.
      *  The column information can be queried at any time.
      */
-    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type );
+    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type, BOOL *temporary, LPWSTR *tableName);
 
     /*
      * modify - not yet implemented properly
@@ -300,7 +307,7 @@ typedef struct tagMSIPACKAGE
 {
     MSIOBJECTHDR hdr;
     MSIDATABASE *db;
-    MSIPATCHINFO *patch;
+    struct list patches;
     struct list components;
     struct list features;
     struct list files;
@@ -340,6 +347,7 @@ typedef struct tagMSIPACKAGE
     unsigned char scheduled_action_running : 1;
     unsigned char commit_action_running : 1;
     unsigned char rollback_action_running : 1;
+    unsigned char need_reboot : 1;
 } MSIPACKAGE;
 
 typedef struct tagMSIPREVIEW
@@ -375,7 +383,6 @@ typedef struct tagMSIFEATURE
     INSTALLSTATE Action;
     struct list Children;
     struct list Components;
-    INT Cost;
 } MSIFEATURE;
 
 typedef struct tagMSICOMPONENT
@@ -463,6 +470,7 @@ typedef struct tagMSIFILE
     LPWSTR  TargetPath;
     BOOL IsCompressed;
     MSIFILEHASHINFO hash;
+    UINT disk_id;
 } MSIFILE;
 
 typedef struct tagMSITEMPFILE
@@ -550,6 +558,7 @@ struct tagMSIMIME
     struct list entry;
     LPWSTR ContentType;  /* Primary Key */
     MSIEXTENSION *Extension;
+    LPWSTR suffix;
     LPWSTR clsid;
     MSICLASS *Class;
     /* not in the table, set during installation */
@@ -605,6 +614,10 @@ DEFINE_GUID(CLSID_IMsiServerMessage, 0x000C101D,0x0000,0x0000,0xC0,0x00,0x00,0x0
 DEFINE_GUID(CLSID_IWineMsiRemoteCustomAction,0xBA26E6FA,0x4F27,0x4f56,0x95,0x3A,0x3F,0x90,0x27,0x20,0x18,0xAA);
 DEFINE_GUID(CLSID_IWineMsiRemotePackage,0x902b3592,0x9d08,0x4dfd,0xa5,0x93,0xd0,0x7c,0x52,0x54,0x64,0x21);
 
+DEFINE_GUID(CLSID_MsiTransform, 0x000c1082,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+DEFINE_GUID(CLSID_MsiDatabase,  0x000c1084,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+DEFINE_GUID(CLSID_MsiPatch,     0x000c1086,0x0000,0x0000,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+
 /* handle unicode/ascii output in the Msi* API functions */
 typedef struct {
     BOOL unicode;
@@ -643,7 +656,6 @@ extern void msiobj_unlock(MSIOBJECTHDR *);
 extern void msi_free_handle_table(void);
 
 extern void free_cached_tables( MSIDATABASE *db );
-extern void msi_free_transforms( MSIDATABASE *db );
 extern UINT MSI_CommitTables( MSIDATABASE *db );
 
 
@@ -654,8 +666,7 @@ enum StringPersistence
     StringNonPersistent = 1
 };
 
-extern BOOL msi_addstringW( string_table *st, UINT string_no, const WCHAR *data, int len, UINT refcount, enum StringPersistence persistence );
-
+extern BOOL msi_addstringW( string_table *st, const WCHAR *data, int len, USHORT refcount, enum StringPersistence persistence );
 extern UINT msi_string2idW( const string_table *st, LPCWSTR buffer, UINT *id );
 extern VOID msi_destroy_stringtable( string_table *st );
 extern const WCHAR *msi_string_lookup_id( const string_table *st, UINT id );
@@ -666,8 +677,6 @@ extern UINT msi_save_string_table( const string_table *st, IStorage *storage );
 extern BOOL TABLE_Exists( MSIDATABASE *db, LPCWSTR name );
 extern MSICONDITION MSI_DatabaseIsTablePersistent( MSIDATABASE *db, LPCWSTR table );
 
-extern UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
-                                  USHORT **pdata, UINT *psz );
 extern UINT read_stream_data( IStorage *stg, LPCWSTR stname, BOOL table,
                               BYTE **pdata, UINT *psz );
 extern UINT write_stream_data( IStorage *stg, LPCWSTR stname,
@@ -679,9 +688,13 @@ extern UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
                  LPCWSTR szTransformFile, int iErrorCond );
 extern void append_storage_to_db( MSIDATABASE *db, IStorage *stg );
 
+/* patch functions */
+extern UINT msi_check_patch_applicable( MSIPACKAGE *package, MSISUMMARYINFO *si );
+extern UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch );
+extern UINT msi_apply_patch_db( MSIPACKAGE *package, MSIDATABASE *patch_db, MSIPATCHINFO *patch );
+
 /* action internals */
 extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
-extern void ACTION_free_package_structures( MSIPACKAGE* );
 extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR);
 extern UINT ACTION_ForceReboot(MSIPACKAGE *package);
 extern UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable, INT iSequenceMode );
@@ -690,6 +703,7 @@ extern UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine,
                                     BOOL preserve_case );
 
 /* record internals */
+extern void MSI_CloseRecord( MSIOBJECTHDR * );
 extern UINT MSI_RecordSetIStream( MSIRECORD *, UINT, IStream *);
 extern UINT MSI_RecordGetIStream( MSIRECORD *, UINT, IStream **);
 extern const WCHAR *MSI_RecordGetString( const MSIRECORD *, UINT );
@@ -701,18 +715,22 @@ extern UINT MSI_RecordGetStringW( MSIRECORD * , UINT, LPWSTR, LPDWORD);
 extern UINT MSI_RecordGetStringA( MSIRECORD *, UINT, LPSTR, LPDWORD);
 extern int MSI_RecordGetInteger( MSIRECORD *, UINT );
 extern UINT MSI_RecordReadStream( MSIRECORD *, UINT, char *, LPDWORD);
+extern UINT MSI_RecordSetStream(MSIRECORD *, UINT, IStream *);
 extern UINT MSI_RecordGetFieldCount( const MSIRECORD *rec );
 extern UINT MSI_RecordStreamToFile( MSIRECORD *, UINT, LPCWSTR );
+extern UINT MSI_RecordSetStreamFromFileW( MSIRECORD *, UINT, LPCWSTR );
 extern UINT MSI_RecordCopyField( MSIRECORD *, UINT, MSIRECORD *, UINT );
 extern MSIRECORD *MSI_CloneRecord( MSIRECORD * );
 extern BOOL MSI_RecordsAreEqual( MSIRECORD *, MSIRECORD * );
 
 /* stream internals */
-extern UINT get_raw_stream( MSIHANDLE hdb, LPCWSTR stname, IStream **stm );
 extern void enum_stream_names( IStorage *stg );
+extern LPWSTR encode_streamname(BOOL bTable, LPCWSTR in);
 extern BOOL decode_streamname(LPCWSTR in, LPWSTR out);
 
 /* database internals */
+extern UINT db_get_raw_stream( MSIDATABASE *, LPCWSTR, IStream ** );
+void db_destroy_stream( MSIDATABASE *, LPCWSTR );
 extern UINT MSI_OpenDatabaseW( LPCWSTR, LPCWSTR, MSIDATABASE ** );
 extern UINT MSI_DatabaseOpenViewW(MSIDATABASE *, LPCWSTR, MSIQUERY ** );
 extern UINT MSI_OpenQuery( MSIDATABASE *, MSIQUERY **, LPCWSTR, ... );
@@ -727,7 +745,7 @@ extern UINT MSI_ViewFetch( MSIQUERY*, MSIRECORD ** );
 extern UINT MSI_ViewClose( MSIQUERY* );
 extern UINT MSI_ViewGetColumnInfo(MSIQUERY *, MSICOLINFO, MSIRECORD **);
 extern UINT MSI_ViewModify( MSIQUERY *, MSIMODIFY, MSIRECORD * );
-extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, UINT * );
+extern UINT VIEW_find_column( MSIVIEW *, LPCWSTR, LPCWSTR, UINT * );
 extern UINT msi_view_get_row(MSIDATABASE *, MSIVIEW *, UINT, MSIRECORD **);
 
 /* install internals */
@@ -737,18 +755,18 @@ extern UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel );
 extern MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *, LPCWSTR );
 extern UINT MSI_OpenPackageW( LPCWSTR szPackage, MSIPACKAGE **pPackage );
 extern UINT MSI_SetTargetPathW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
-extern UINT MSI_SetPropertyW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern INT MSI_ProcessMessage( MSIPACKAGE *, INSTALLMESSAGE, MSIRECORD * );
-extern UINT MSI_GetPropertyW( MSIPACKAGE *, LPCWSTR, LPWSTR, LPDWORD );
-extern UINT MSI_GetPropertyA(MSIPACKAGE *, LPCSTR, LPSTR, LPDWORD );
 extern MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *, LPCWSTR );
 extern UINT MSI_GetComponentStateW( MSIPACKAGE *, LPCWSTR, INSTALLSTATE *, INSTALLSTATE * );
 extern UINT MSI_GetFeatureStateW( MSIPACKAGE *, LPCWSTR, INSTALLSTATE *, INSTALLSTATE * );
 extern UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE*, LPCWSTR, INSTALLSTATE );
-extern LPCWSTR msi_download_file( LPCWSTR szUrl, LPWSTR filename );
+extern UINT msi_download_file( LPCWSTR szUrl, LPWSTR filename );
 extern UINT msi_package_add_info(MSIPACKAGE *, DWORD, DWORD, LPCWSTR, LPWSTR);
 extern UINT msi_package_add_media_disk(MSIPACKAGE *, DWORD, DWORD, DWORD, LPWSTR, LPWSTR);
 extern UINT msi_clone_properties(MSIPACKAGE *);
+extern UINT msi_set_context(MSIPACKAGE *);
+extern void msi_adjust_allusers_property(MSIPACKAGE *);
+extern UINT MSI_GetFeatureCost(MSIPACKAGE *, MSIFEATURE *, MSICOSTTREE, INSTALLSTATE, LPINT);
 
 /* for deformating */
 extern UINT MSI_FormatRecordW( MSIPACKAGE *, MSIRECORD *, LPWSTR, LPDWORD );
@@ -760,8 +778,8 @@ extern BOOL encode_base85_guid(GUID *,LPWSTR);
 extern BOOL decode_base85_guid(LPCWSTR,GUID*);
 extern UINT MSIREG_OpenUninstallKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_DeleteUninstallKey(LPCWSTR szProduct);
-extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
-                                  HKEY* key, BOOL create);
+extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, LPCWSTR szUserSid,
+                                  MSIINSTALLCONTEXT context, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
                                    HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
@@ -775,12 +793,15 @@ extern UINT MSIREG_OpenUserDataProductKey(LPCWSTR szProduct, MSIINSTALLCONTEXT d
                                           LPCWSTR szUserSid, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUserDataPatchKey(LPCWSTR szPatch, MSIINSTALLCONTEXT dwContext,
                                         HKEY *key, BOOL create);
+extern UINT MSIREG_OpenUserDataProductPatchesKey(LPCWSTR product, MSIINSTALLCONTEXT context,
+                                                 HKEY *key, BOOL create);
 extern UINT MSIREG_OpenInstallProps(LPCWSTR szProduct, MSIINSTALLCONTEXT dwContext,
                                     LPCWSTR szUserSid, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_DeleteProductKey(LPCWSTR szProduct);
 extern UINT MSIREG_DeleteUserProductKey(LPCWSTR szProduct);
+extern UINT MSIREG_DeleteUserDataPatchKey(LPCWSTR patch, MSIINSTALLCONTEXT context);
 extern UINT MSIREG_DeleteUserDataProductKey(LPCWSTR szProduct);
 extern UINT MSIREG_DeleteUserFeaturesKey(LPCWSTR szProduct);
 extern UINT MSIREG_DeleteUserDataComponentKey(LPCWSTR szComponent, LPCWSTR szUserSid);
@@ -793,6 +814,10 @@ extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name );
 extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
 
 extern DWORD msi_version_str_to_dword(LPCWSTR p);
+extern void msi_parse_version_string(LPCWSTR, PDWORD, PDWORD);
+extern VS_FIXEDFILEINFO *msi_get_disk_file_version(LPCWSTR);
+extern int msi_compare_file_versions(VS_FIXEDFILEINFO *, const WCHAR *);
+
 
 extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
 extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
@@ -819,6 +844,7 @@ extern UINT msi_spawn_error_dialog( MSIPACKAGE*, LPWSTR, LPWSTR );
 extern MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount );
 extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty );
 extern LPWSTR msi_get_suminfo_product( IStorage *stg );
+extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns );
 
 /* undocumented functions */
 UINT WINAPI MsiCreateAndVerifyInstallerDirectory( DWORD );
@@ -832,13 +858,14 @@ extern INSTALLUILEVEL gUILevel;
 extern HWND gUIhwnd;
 extern INSTALLUI_HANDLERA gUIHandlerA;
 extern INSTALLUI_HANDLERW gUIHandlerW;
+extern INSTALLUI_HANDLER_RECORD gUIHandlerRecord;
 extern DWORD gUIFilter;
 extern LPVOID gUIContext;
 extern WCHAR gszLogFile[MAX_PATH];
 extern HINSTANCE msi_hInstance;
 
 /* action related functions */
-extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script, BOOL force);
+extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script);
 extern UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT script);
 extern void ACTION_FinishCustomActions( const MSIPACKAGE* package);
 extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, UINT script, BOOL execute);
@@ -941,43 +968,51 @@ extern UINT ACTION_CCPSearch(MSIPACKAGE *package);
 extern UINT ACTION_FindRelatedProducts(MSIPACKAGE *package);
 extern UINT ACTION_InstallFiles(MSIPACKAGE *package);
 extern UINT ACTION_RemoveFiles(MSIPACKAGE *package);
+extern UINT ACTION_MoveFiles(MSIPACKAGE *package);
 extern UINT ACTION_DuplicateFiles(MSIPACKAGE *package);
+extern UINT ACTION_RemoveDuplicateFiles(MSIPACKAGE *package);
 extern UINT ACTION_RegisterClassInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
 extern UINT ACTION_RegisterFonts(MSIPACKAGE *package);
+extern UINT ACTION_UnregisterClassInfo(MSIPACKAGE *package);
+extern UINT ACTION_UnregisterExtensionInfo(MSIPACKAGE *package);
+extern UINT ACTION_UnregisterFonts(MSIPACKAGE *package);
+extern UINT ACTION_UnregisterMIMEInfo(MSIPACKAGE *package);
+extern UINT ACTION_UnregisterProgIdInfo(MSIPACKAGE *package);
 
 /* Helpers */
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
 extern LPWSTR msi_dup_record_field(MSIRECORD *row, INT index);
-extern LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop);
-extern int msi_get_property_int( MSIPACKAGE *package, LPCWSTR prop, int def );
+extern LPWSTR msi_dup_property( MSIDATABASE *db, LPCWSTR prop );
+extern UINT msi_set_property( MSIDATABASE *, LPCWSTR, LPCWSTR );
+extern UINT msi_get_property( MSIDATABASE *, LPCWSTR, LPWSTR, LPDWORD );
+extern int msi_get_property_int( MSIDATABASE *package, LPCWSTR prop, int def );
 extern LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
                       BOOL set_prop, BOOL load_prop, MSIFOLDER **folder);
 extern LPWSTR resolve_file_source(MSIPACKAGE *package, MSIFILE *file);
+extern void msi_reset_folders( MSIPACKAGE *package, BOOL source );
 extern MSICOMPONENT *get_loaded_component( MSIPACKAGE* package, LPCWSTR Component );
 extern MSIFEATURE *get_loaded_feature( MSIPACKAGE* package, LPCWSTR Feature );
 extern MSIFILE *get_loaded_file( MSIPACKAGE* package, LPCWSTR file );
 extern MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir );
-extern void msi_reset_folders( MSIPACKAGE *package, BOOL source );
 extern int track_tempfile(MSIPACKAGE *package, LPCWSTR path);
 extern UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
 extern void msi_free_action_script(MSIPACKAGE *package, UINT script);
 extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
 extern LPWSTR build_directory_name(DWORD , ...);
 extern BOOL create_full_pathW(const WCHAR *path);
-extern BOOL ACTION_VerifyComponentForAction(const MSICOMPONENT*, INSTALLSTATE);
-extern BOOL ACTION_VerifyFeatureForAction(const MSIFEATURE*, INSTALLSTATE);
 extern void reduce_to_longfilename(WCHAR*);
 extern LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
 extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature);
 extern UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
 extern BOOL check_unique_action(const MSIPACKAGE *, LPCWSTR);
 extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
-extern UINT msi_create_component_directories( MSIPACKAGE *package );
 extern UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
                         MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value);
+extern UINT msi_get_local_package_name(LPWSTR path, LPCWSTR suffix);
+extern UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace);
 
 /* media */
 
@@ -1019,12 +1054,75 @@ extern DWORD call_script(MSIHANDLE hPackage, INT type, LPCWSTR script, LPCWSTR f
 extern void ui_progress(MSIPACKAGE *, int, int, int, int);
 extern void ui_actiondata(MSIPACKAGE *, LPCWSTR, MSIRECORD *);
 
-/* string consts use a number of places  and defined in helpers.c*/
-extern const WCHAR cszSourceDir[];
-extern const WCHAR cszSOURCEDIR[];
-extern const WCHAR cszRootDrive[];
-extern const WCHAR cszbs[];
-extern const WCHAR szLocalSid[];
+/* common strings */
+static const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
+static const WCHAR cszSOURCEDIR[] = {'S','O','U','R','C','E','D','I','R',0};
+static const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
+static const WCHAR szLocalSid[] = {'S','-','1','-','5','-','1','8',0};
+static const WCHAR szEmpty[] = {0};
+static const WCHAR szAll[] = {'A','L','L',0};
+static const WCHAR szOne[] = {'1',0};
+static const WCHAR szZero[] = {'0',0};
+static const WCHAR szSpace[] = {' ',0};
+static const WCHAR szBackSlash[] = {'\\',0};
+static const WCHAR szForwardSlash[] = {'/',0};
+static const WCHAR szDot[] = {'.',0};
+static const WCHAR szDotDot[] = {'.','.',0};
+static const WCHAR szSemiColon[] = {';',0};
+static const WCHAR szPreselected[] = {'P','r','e','s','e','l','e','c','t','e','d',0};
+static const WCHAR szPatches[] = {'P','a','t','c','h','e','s',0};
+static const WCHAR szState[] = {'S','t','a','t','e',0};
+static const WCHAR szMsi[] = {'m','s','i',0};
+static const WCHAR szPatch[] = {'P','A','T','C','H',0};
+static const WCHAR szSourceList[] = {'S','o','u','r','c','e','L','i','s','t',0};
+static const WCHAR szInstalled[] = {'I','n','s','t','a','l','l','e','d',0};
+static const WCHAR szReinstall[] = {'R','E','I','N','S','T','A','L','L',0};
+static const WCHAR szReinstallMode[] = {'R','E','I','N','S','T','A','L','L','M','O','D','E',0};
+static const WCHAR szRemove[] = {'R','E','M','O','V','E',0};
+static const WCHAR szUserSID[] = {'U','s','e','r','S','I','D',0};
+static const WCHAR szProductCode[] = {'P','r','o','d','u','c','t','C','o','d','e',0};
+static const WCHAR szRegisterClassInfo[] = {'R','e','g','i','s','t','e','r','C','l','a','s','s','I','n','f','o',0};
+static const WCHAR szRegisterProgIdInfo[] = {'R','e','g','i','s','t','e','r','P','r','o','g','I','d','I','n','f','o',0};
+static const WCHAR szRegisterExtensionInfo[] = {'R','e','g','i','s','t','e','r','E','x','t','e','n','s','i','o','n','I','n','f','o',0};
+static const WCHAR szRegisterMIMEInfo[] = {'R','e','g','i','s','t','e','r','M','I','M','E','I','n','f','o',0};
+static const WCHAR szDuplicateFiles[] = {'D','u','p','l','i','c','a','t','e','F','i','l','e','s',0};
+static const WCHAR szRemoveDuplicateFiles[] = {'R','e','m','o','v','e','D','u','p','l','i','c','a','t','e','F','i','l','e','s',0};
+static const WCHAR szInstallFiles[] = {'I','n','s','t','a','l','l','F','i','l','e','s',0};
+static const WCHAR szRemoveFiles[] = {'R','e','m','o','v','e','F','i','l','e','s',0};
+static const WCHAR szFindRelatedProducts[] = {'F','i','n','d','R','e','l','a','t','e','d','P','r','o','d','u','c','t','s',0};
+static const WCHAR szAllUsers[] = {'A','L','L','U','S','E','R','S',0};
+static const WCHAR szCustomActionData[] = {'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
+static const WCHAR szUILevel[] = {'U','I','L','e','v','e','l',0};
+static const WCHAR szProductID[] = {'P','r','o','d','u','c','t','I','D',0};
+static const WCHAR szPIDTemplate[] = {'P','I','D','T','e','m','p','l','a','t','e',0};
+static const WCHAR szPIDKEY[] = {'P','I','D','K','E','Y',0};
+static const WCHAR szTYPELIB[] = {'T','Y','P','E','L','I','B',0};
+static const WCHAR szSumInfo[] = {5 ,'S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0};
+static const WCHAR szHCR[] = {'H','K','E','Y','_','C','L','A','S','S','E','S','_','R','O','O','T','\\',0};
+static const WCHAR szHCU[] = {'H','K','E','Y','_','C','U','R','R','E','N','T','_','U','S','E','R','\\',0};
+static const WCHAR szHLM[] = {'H','K','E','Y','_','L','O','C','A','L','_','M','A','C','H','I','N','E','\\',0};
+static const WCHAR szHU[] = {'H','K','E','Y','_','U','S','E','R','S','\\',0};
+static const WCHAR szWindowsFolder[] = {'W','i','n','d','o','w','s','F','o','l','d','e','r',0};
+static const WCHAR szAppSearch[] = {'A','p','p','S','e','a','r','c','h',0};
+static const WCHAR szMoveFiles[] = {'M','o','v','e','F','i','l','e','s',0};
+static const WCHAR szCCPSearch[] = {'C','C','P','S','e','a','r','c','h',0};
+static const WCHAR szUnregisterClassInfo[] = {'U','n','r','e','g','i','s','t','e','r','C','l','a','s','s','I','n','f','o',0};
+static const WCHAR szUnregisterExtensionInfo[] = {'U','n','r','e','g','i','s','t','e','r','E','x','t','e','n','s','i','o','n','I','n','f','o',0};
+static const WCHAR szUnregisterMIMEInfo[] = {'U','n','r','e','g','i','s','t','e','r','M','I','M','E','I','n','f','o',0};
+static const WCHAR szUnregisterProgIdInfo[] = {'U','n','r','e','g','i','s','t','e','r','P','r','o','g','I','d','I','n','f','o',0};
+static const WCHAR szRegisterFonts[] = {'R','e','g','i','s','t','e','r','F','o','n','t','s',0};
+static const WCHAR szUnregisterFonts[] = {'U','n','r','e','g','i','s','t','e','r','F','o','n','t','s',0};
+static const WCHAR szCLSID[] = {'C','L','S','I','D',0};
+static const WCHAR szProgID[] = {'P','r','o','g','I','D',0};
+static const WCHAR szVIProgID[] = {'V','e','r','s','i','o','n','I','n','d','e','p','e','n','d','e','n','t','P','r','o','g','I','D',0};
+static const WCHAR szAppID[] = {'A','p','p','I','D',0};
+static const WCHAR szDefaultIcon[] = {'D','e','f','a','u','l','t','I','c','o','n',0};
+static const WCHAR szInprocHandler[] = {'I','n','p','r','o','c','H','a','n','d','l','e','r',0};
+static const WCHAR szInprocHandler32[] = {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
+static const WCHAR szMIMEDatabase[] = {'M','I','M','E','\\','D','a','t','a','b','a','s','e','\\','C','o','n','t','e','n','t',' ','T','y','p','e','\\',0};
+static const WCHAR szLocalPackage[] = {'L','o','c','a','l','P','a','c','k','a','g','e',0};
+static const WCHAR szOriginalDatabase[] = {'O','r','i','g','i','n','a','l','D','a','t','a','b','a','s','e',0};
+static const WCHAR szUpgradeCode[] = {'U','p','g','r','a','d','e','C','o','d','e',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

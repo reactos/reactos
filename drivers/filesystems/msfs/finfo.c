@@ -1,8 +1,7 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       drivers/filesystems/ms/finfo.c
+ * FILE:       drivers/filesystems/msfs/finfo.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
  */
@@ -16,8 +15,8 @@
 
 #undef MAILSLOT_NO_MESSAGE
 #undef MAILSLOT_WAIT_FOREVER
-#define MAILSLOT_NO_MESSAGE	((ULONG)-1)
-#define MAILSLOT_WAIT_FOREVER	((ULONG)-1)
+#define MAILSLOT_NO_MESSAGE   MAXULONG
+#define MAILSLOT_WAIT_FOREVER MAXULONG
 
 
 /* FUNCTIONS *****************************************************************/
@@ -43,8 +42,10 @@ MsfsQueryMailslotInformation(PMSFS_FCB Fcb,
     }
     else
     {
-        /* FIXME: read size of first message (head) */
-        Buffer->NextMessageSize = 0;
+        PMSFS_MESSAGE Message = CONTAINING_RECORD(Fcb->MessageListHead.Flink,
+                                                  MSFS_MESSAGE,
+                                                  MessageListEntry);
+        Buffer->NextMessageSize = Message->Size;
     }
     KeReleaseSpinLock(&Fcb->MessageListLock, oldIrql);
 

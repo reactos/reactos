@@ -6,6 +6,11 @@
 	<file>mciqtz.c</file>
 	<file>version.rc</file>
 	<library>wine</library>
-	<library>kernel32</library>
+	<library>oleaut32</library>
+	<library>gdi32</library>
+	<library>ole32</library>
+	<library>winmm</library>
+	<library>user32</library>
 	<library>ntdll</library>
+	<library>strmiids</library>
 </module>

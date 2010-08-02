@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007
+ * Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009
  *   Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -281,7 +281,7 @@
 
   static FT_Error
   hash_insert( char*       key,
-               void*       data,
+               size_t      data,
                hashtable*  ht,
                FT_Memory   memory )
   {
@@ -415,18 +415,18 @@
 
 
   static FT_Error
-  _bdf_list_ensure( _bdf_list_t*  list,
-                    int           num_items )
+  _bdf_list_ensure( _bdf_list_t*   list,
+                    unsigned long  num_items ) /* same as _bdf_list_t.used */
   {
     FT_Error  error = BDF_Err_Ok;
 
 
-    if ( num_items > (int)list->size )
+    if ( num_items > list->size )
     {
-      int        oldsize = list->size;
-      int        newsize = oldsize + ( oldsize >> 1 ) + 4;
-      int        bigsize = FT_INT_MAX / sizeof ( char* );
-      FT_Memory  memory  = list->memory;
+      unsigned long  oldsize = list->size; /* same as _bdf_list_t.size */
+      unsigned long  newsize = oldsize + ( oldsize >> 1 ) + 4;
+      unsigned long  bigsize = (unsigned long)( FT_INT_MAX / sizeof ( char* ) );
+      FT_Memory      memory  = list->memory;
 
 
       if ( oldsize == bigsize )
@@ -614,8 +614,8 @@
   {
     _bdf_line_func_t  cb;
     unsigned long     lineno, buf_size;
-    int               refill, bytes, hold, to_skip;
-    int               start, end, cursor, avail;
+    int               refill, hold, to_skip;
+    ptrdiff_t         bytes, start, end, cursor, avail;
     char*             buf = 0;
     FT_Memory         memory = stream->memory;
     FT_Error          error = BDF_Err_Ok;
@@ -648,8 +648,8 @@
     {
       if ( refill )
       {
-        bytes  = (int)FT_Stream_TryRead( stream, (FT_Byte*)buf + cursor,
-                                         (FT_ULong)(buf_size - cursor) );
+        bytes  = (ptrdiff_t)FT_Stream_TryRead( stream, (FT_Byte*)buf + cursor,
+                                               (FT_ULong)(buf_size - cursor) );
         avail  = cursor + bytes;
         cursor = 0;
         refill = 0;
@@ -971,7 +971,7 @@
                        int          format,
                        bdf_font_t*  font )
   {
-    unsigned long    n;
+    size_t           n;
     bdf_property_t*  p;
     FT_Memory        memory = font->memory;
     FT_Error         error = BDF_Err_Ok;
@@ -991,7 +991,9 @@
     p = font->user_props + font->nuser_props;
     FT_ZERO( p );
 
-    n = (unsigned long)( ft_strlen( name ) + 1 );
+    n = ft_strlen( name ) + 1;
+    if ( n > FT_ULONG_MAX )
+      return BDF_Err_Invalid_Argument;
 
     if ( FT_NEW_ARRAY( p->name, n ) )
       goto Exit;
@@ -1003,7 +1005,7 @@
 
     n = _num_bdf_properties + font->nuser_props;
 
-    error = hash_insert( p->name, (void *)n, &(font->proptbl), memory );
+    error = hash_insert( p->name, n, &(font->proptbl), memory );
     if ( error )
       goto Exit;
 
@@ -1018,8 +1020,8 @@
   bdf_get_property( char*        name,
                     bdf_font_t*  font )
   {
-    hashnode       hn;
-    unsigned long  propid;
+    hashnode  hn;
+    size_t    propid;
 
 
     if ( name == 0 || *name == 0 )
@@ -1028,7 +1030,7 @@
     if ( ( hn = hash_lookup( name, &(font->proptbl) ) ) == 0 )
       return 0;
 
-    propid = (unsigned long)hn->data;
+    propid = hn->data;
     if ( propid >= _num_bdf_properties )
       return font->user_props + ( propid - _num_bdf_properties );
 
@@ -1131,11 +1133,11 @@
   _bdf_set_default_spacing( bdf_font_t*     font,
                             bdf_options_t*  opts )
   {
-    unsigned long  len;
-    char           name[256];
-    _bdf_list_t    list;
-    FT_Memory      memory;
-    FT_Error       error = BDF_Err_Ok;
+    size_t       len;
+    char         name[256];
+    _bdf_list_t  list;
+    FT_Memory    memory;
+    FT_Error     error = BDF_Err_Ok;
 
 
     if ( font == 0 || font->name == 0 || font->name[0] == 0 )
@@ -1150,7 +1152,7 @@
 
     font->spacing = opts->font_spacing;
 
-    len = (unsigned long)( ft_strlen( font->name ) + 1 );
+    len = ft_strlen( font->name ) + 1;
     /* Limit ourselves to 256 characters in the font name. */
     if ( len >= 256 )
     {
@@ -1261,7 +1263,7 @@
                      char*        name,
                      char*        value )
   {
-    unsigned long   propid;
+    size_t          propid;
     hashnode        hn;
     bdf_property_t  *prop, *fp;
     FT_Memory       memory = font->memory;
@@ -1273,7 +1275,7 @@
     {
       /* The property already exists in the font, so simply replace */
       /* the value of the property with the current value.          */
-      fp = font->props + (unsigned long)hn->data;
+      fp = font->props + hn->data;
 
       switch ( fp->format )
       {
@@ -1289,11 +1291,11 @@
         break;
 
       case BDF_INTEGER:
-        fp->value.int32 = _bdf_atol( value, 0, 10 );
+        fp->value.l = _bdf_atol( value, 0, 10 );
         break;
 
       case BDF_CARDINAL:
-        fp->value.card32 = _bdf_atoul( value, 0, 10 );
+        fp->value.ul = _bdf_atoul( value, 0, 10 );
         break;
 
       default:
@@ -1335,7 +1337,7 @@
       font->props_size++;
     }
 
-    propid = (unsigned long)hn->data;
+    propid = hn->data;
     if ( propid >= _num_bdf_properties )
       prop = font->user_props + ( propid - _num_bdf_properties );
     else
@@ -1359,11 +1361,11 @@
       break;
 
     case BDF_INTEGER:
-      fp->value.int32 = _bdf_atol( value, 0, 10 );
+      fp->value.l = _bdf_atol( value, 0, 10 );
       break;
 
     case BDF_CARDINAL:
-      fp->value.card32 = _bdf_atoul( value, 0, 10 );
+      fp->value.ul = _bdf_atoul( value, 0, 10 );
       break;
     }
 
@@ -1372,7 +1374,7 @@
     if ( ft_memcmp( name, "COMMENT", 7 ) != 0 ) {
       /* Add the property to the font property table. */
       error = hash_insert( fp->name,
-                           (void *)font->props_used,
+                           font->props_used,
                            (hashtable *)font->internal,
                            memory );
       if ( error )
@@ -1387,13 +1389,19 @@
     /* present, and the SPACING property should override the default       */
     /* spacing.                                                            */
     if ( ft_memcmp( name, "DEFAULT_CHAR", 12 ) == 0 )
-      font->default_char = fp->value.int32;
+      font->default_char = fp->value.l;
     else if ( ft_memcmp( name, "FONT_ASCENT", 11 ) == 0 )
-      font->font_ascent = fp->value.int32;
+      font->font_ascent = fp->value.l;
     else if ( ft_memcmp( name, "FONT_DESCENT", 12 ) == 0 )
-      font->font_descent = fp->value.int32;
+      font->font_descent = fp->value.l;
     else if ( ft_memcmp( name, "SPACING", 7 ) == 0 )
     {
+      if ( !fp->value.atom )
+      {
+        error = BDF_Err_Invalid_File_Format;
+        goto Exit;
+      }
+
       if ( fp->value.atom[0] == 'p' || fp->value.atom[0] == 'P' )
         font->spacing = BDF_PROPORTIONAL;
       else if ( fp->value.atom[0] == 'm' || fp->value.atom[0] == 'M' )
@@ -2038,7 +2046,7 @@
       p->memory    = 0;
 
       { /* setup */
-        unsigned long    i;
+        size_t           i;
         bdf_property_t*  prop;
 
 
@@ -2048,7 +2056,7 @@
         for ( i = 0, prop = (bdf_property_t*)_bdf_properties;
               i < _num_bdf_properties; i++, prop++ )
         {
-          error = hash_insert( prop->name, (void *)i,
+          error = hash_insert( prop->name, i,
                                &(font->proptbl), memory );
           if ( error )
             goto Exit;
@@ -2072,6 +2080,7 @@
       error = _bdf_list_split( &p->list, (char *)" +", line, linelen );
       if ( error )
         goto Exit;
+      /* at this point, `p->font' can't be NULL */
       p->cnt = p->font->props_size = _bdf_atoul( p->list.field[1], 0, 10 );
 
       if ( FT_NEW_ARRAY( p->font->props, p->cnt ) )
@@ -2465,7 +2474,7 @@
 
     hn = hash_lookup( name, (hashtable *)font->internal );
 
-    return hn ? ( font->props + (unsigned long)hn->data ) : 0;
+    return hn ? ( font->props + hn->data ) : 0;
   }
 
 

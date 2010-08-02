@@ -1,11 +1,10 @@
 /* TRANSLATOR:  M rio KaŸm r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  14-12-2008
+ * LastChange:  31-05-2010
  */
 
-#ifndef LANG_SK_SK_H__
-#define LANG_SK_SK_H__
+#pragma once
 
 MUI_LAYOUTS skSKLayouts[] =
 {
@@ -994,7 +993,7 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         8,
         12,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (MBR).",
+        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (zav dzac¡ sektor).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1349,12 +1348,13 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that can not be handled properly!\n"
+//          "Inçtal tor zistil, §e najmenej jeden pevnì disk obsahuje nekompatibiln£\n"
+          "Inçtal tor naçiel najmenej na jednom pevnom disku nekompatibiln£\n"
+          "tabu–ku oblast¡, s ktorou sa ned  spr vne zaobch dzaœ!\n"
           "\n"
           "Vytvorenie alebo odstr nenie oblast¡ m“§e zniŸiœ tabu–ku oblast¡.\n"
           "\n"
-          "  \x07  StlaŸte F3 pre skonŸenie inçtal cie."
+          "  \x07  StlaŸte F3 pre skonŸenie inçtal cie.\n"
           "  \x07  StlaŸte ENTER pre pokraŸovanie.",
           "F3 = SkonŸiœ  ENTER = PokraŸovaœ"
     },
@@ -1484,8 +1484,14 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Inçtal tor nemohol nastaviœ geo id.\n"
+        "ENTER = Reçtart poŸ¡taŸa"
+    },
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Na zvolenej part¡cii nie je dostatok vo–n‚ho miesta.\n"
+        "  * PokraŸujte stlaŸen¡m –ubovo–n‚ho kl vesu.",
+        NULL
     },
     {
         NULL,
@@ -1625,7 +1631,7 @@ MUI_STRING skSKStrings[] =
     {STRING_TXTSETUPFAILED,
     "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\nv s£bore TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kop¡ruje sa s£bor: %S"},
+     "   Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Inçtal tor kop¡ruje s£bory..."},
     {STRING_REGHIVEUPDATE,
@@ -1704,5 +1710,3 @@ MUI_STRING skSKStrings[] =
     "Prid vam rozlo§enia kl vesnice"},
     {0, 0}
 };
-
-#endif

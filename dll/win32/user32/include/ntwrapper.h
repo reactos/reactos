@@ -1,10 +1,10 @@
+#if defined(__GNUC__)
 #define EXTINLINE extern inline __attribute__((always_inline)) 
-
-EXTINLINE BOOL WINAPI
-EnableScrollBar(HWND hWnd, UINT wSBflags, UINT wArrows)
-{
-    return NtUserEnableScrollBar(hWnd, wSBflags, wArrows);
-}
+#elif defined(_MSC_VER)
+#define EXTINLINE extern __forceinline
+#else
+#error
+#endif
 
 EXTINLINE BOOL WINAPI
 GetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
@@ -85,7 +85,7 @@ RegisterTasklist(DWORD x)
 }
 
 EXTINLINE DWORD WINAPI
-DragObject(HWND hwnd1, HWND hwnd2, UINT u1, DWORD dw1, HCURSOR hc1)
+DragObject(HWND hwnd1, HWND hwnd2, UINT u1, ULONG_PTR dw1, HCURSOR hc1)
 {
     return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
 }
@@ -502,4 +502,9 @@ EXTINLINE BOOL WINAPI
 InvalidateRect(HWND hWnd, CONST RECT* lpRect, BOOL bErase)
 {
     return NtUserInvalidateRect(hWnd, lpRect, bErase);
+}
+
+EXTINLINE BOOL WINAPI ValidateRect( HWND hWnd, CONST RECT *lpRect)
+{
+   return NtUserValidateRect(hWnd, lpRect);
 }

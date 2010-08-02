@@ -13,9 +13,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * PURPOSE:
  *     PCNet hardware configuration constants
@@ -26,8 +26,7 @@
  *       PCNet II chip documentation (Am79C790A, pub# 19436).
  */
 
-#ifndef _PCNETHW_
-#define _PCNETHW_
+#pragma once
 
 /* when in 32-bit mode, most registers require the top 16 bits be 0. */
 #define MASK16(__x__) ((__x__) & 0x0000ffff)
@@ -250,6 +249,7 @@
 #define BCR2_DXCVRCTL  0x20     /* dxcvr control */
 #define BCR2_INTLEVEL  0x80     /* interrupt level/edge */
 #define BCR2_APROMWE   0x100    /* address prom write enable */
+#define BCR2_LEDPE     0x1000   /* LED programming enable */
 #define BCR2_TMAULOOP  0x4000   /* t-mau transmit on loopback */
 
 /* BCR4 bits */
@@ -263,6 +263,7 @@
 #define BCR4_PSE       0x80     /* pulse stretcher enable */
 #define BCR4_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR4_MPSE      0x200    /* magic packet status enable */
+#define BCR4_E100      0x1000   /* link speed */
 #define BCR4_LEDDIS    0x2000   /* led disable */
 #define BCR4_LEDPOL    0x4000   /* led polarity */
 #define BCR4_LEDOUT    0x8000   /* led output pin value */
@@ -278,6 +279,7 @@
 #define BCR5_PSE       0x80     /* pulse stretcher enable */
 #define BCR5_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR5_MPSE      0x200    /* magic packet status enable */
+#define BCR5_E100      0x1000   /* link speed */
 #define BCR5_LEDDIS    0x2000   /* led disable */
 #define BCR5_LEDPOL    0x4000   /* led polarity */
 #define BCR5_LEDOUT    0x8000   /* led output pin value */
@@ -293,6 +295,7 @@
 #define BCR6_PSE       0x80     /* pulse stretcher enable */
 #define BCR6_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR6_MPSE      0x200    /* magic packet status enable */
+#define BCR6_E100      0x1000   /* link speed */
 #define BCR6_LEDDIS    0x2000   /* led disable */
 #define BCR6_LEDPOL    0x4000   /* led polarity */
 #define BCR6_LEDOUT    0x8000   /* led output pin value */
@@ -308,6 +311,7 @@
 #define BCR7_PSE       0x80     /* pulse stretcher enable */
 #define BCR7_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR7_MPSE      0x200    /* magic packet status enable */
+#define BCR7_E100      0x1000   /* link speed */
 #define BCR7_LEDDIS    0x2000   /* led disable */
 #define BCR7_LEDPOL    0x4000   /* led polarity */
 #define BCR7_LEDOUT    0x8000   /* led output pin value */
@@ -409,5 +413,3 @@ typedef struct _TRANSMIT_DESCRIPTOR
 #define TD2_EXDEF       0x2000  /* excessive deferral */
 #define TD2_UFLO        0x4000  /* buffer underflow */
 #define TD2_BUFF        0x8000  /* buffer error */
-
-#endif /* _PCNETHW_ */

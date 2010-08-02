@@ -342,8 +342,8 @@ CsrApiRequestThread(IN PVOID Parameter)
     ULONG Reply;
 
     /* Probably because of the way GDI is loaded, this has to be done here */
-    Teb->GdiClientPID = HandleToUlong(Teb->Cid.UniqueProcess);
-    Teb->GdiClientTID = HandleToUlong(Teb->Cid.UniqueThread);
+    Teb->GdiClientPID = HandleToUlong(Teb->ClientId.UniqueProcess);
+    Teb->GdiClientTID = HandleToUlong(Teb->ClientId.UniqueThread);
 
     /* Set up the timeout for the connect (30 seconds) */
     TimeOut.QuadPart = -30 * 1000 * 1000 * 10;
@@ -374,7 +374,7 @@ CsrApiRequestThread(IN PVOID Parameter)
     while (TRUE)
     {
         /* Make sure the real CID is set */
-        Teb->RealClientId = Teb->Cid;
+        Teb->RealClientId = Teb->ClientId;
 
         /* Wait for a message to come through */
         Status = NtReplyWaitReceivePort(CsrApiPort,
@@ -525,7 +525,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                         /* Increase the static thread count */
                         _InterlockedIncrement((PLONG)&CsrpStaticThreadCount);
                     }
-                    _SEH_EXCEPT(CsrUnhandledExceptionFilter)
+                    _SEH2_EXCEPT(CsrUnhandledExceptionFilter(_SEH2_GetExceptionInformation()))
                     {
                         ReplyMsg = NULL;
                     }
@@ -751,7 +751,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     RemotePortView.ViewBase = NULL;
 
     /* Save the Process ID */
-    ConnectInfo->ProcessId = NtCurrentTeb()->Cid.UniqueProcess;
+    ConnectInfo->ProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
     Status = NtAcceptConnectPort(&hPort,
@@ -1072,7 +1072,7 @@ CsrConnectToUser(VOID)
     CsrClientThreadSetup();
 
     /* Save pointer to this thread in TEB */
-    CsrThread = CsrLocateThreadInProcess(NULL, &Teb->Cid);
+    CsrThread = CsrLocateThreadInProcess(NULL, &Teb->ClientId);
     if (CsrThread) Teb->CsrClientThread = CsrThread;
 
     /* Return it */
@@ -1346,7 +1346,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     if (!CaptureBuffer)
     {
         /* In this case, check only the Process ID */
-        if (NtCurrentTeb()->Cid.UniqueProcess ==
+        if (NtCurrentTeb()->ClientId.UniqueProcess ==
             ApiMessage->Header.ClientId.UniqueProcess)
         {
             /* There is a match, validation succeeded */

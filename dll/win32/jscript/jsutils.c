@@ -31,11 +31,14 @@ WINE_DECLARE_DEBUG_CHANNEL(heap);
 
 const char *debugstr_variant(const VARIANT *v)
 {
+    if(!v)
+        return "(null)";
+
     switch(V_VT(v)) {
     case VT_EMPTY:
-        return wine_dbg_sprintf("{VT_EMPTY}");
+        return "{VT_EMPTY}";
     case VT_NULL:
-        return wine_dbg_sprintf("{VT_NULL}");
+        return "{VT_NULL}";
     case VT_I4:
         return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
     case VT_R8:
@@ -175,7 +178,7 @@ jsheap_t *jsheap_mark(jsheap_t *heap)
 }
 
 /* ECMA-262 3rd Edition    9.1 */
-HRESULT to_primitive(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret)
+HRESULT to_primitive(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret, hint_t hint)
 {
     switch(V_VT(v)) {
     case VT_EMPTY:
@@ -189,8 +192,68 @@ HRESULT to_primitive(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret
         V_VT(ret) = VT_BSTR;
         V_BSTR(ret) = SysAllocString(V_BSTR(v));
         break;
-    case VT_DISPATCH:
-        return disp_propget(V_DISPATCH(v), DISPID_VALUE, ctx->lcid, ret, ei, NULL /*FIXME*/);
+    case VT_DISPATCH: {
+        DispatchEx *jsdisp;
+        DISPID id;
+        DISPPARAMS dp = {NULL, NULL, 0, 0};
+        HRESULT hres;
+
+        static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
+        static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
+
+        if(!V_DISPATCH(v)) {
+            V_VT(ret) = VT_NULL;
+            break;
+        }
+
+        jsdisp = iface_to_jsdisp((IUnknown*)V_DISPATCH(v));
+        if(!jsdisp) {
+            V_VT(ret) = VT_EMPTY;
+            return disp_propget(ctx, V_DISPATCH(v), DISPID_VALUE, ret, ei, NULL /*FIXME*/);
+        }
+
+        if(hint == NO_HINT)
+            hint = is_class(jsdisp, JSCLASS_DATE) ? HINT_STRING : HINT_NUMBER;
+
+        /* Native implementation doesn't throw TypeErrors, returns strange values */
+
+        hres = jsdisp_get_id(jsdisp, hint == HINT_STRING ? toStringW : valueOfW, 0, &id);
+        if(SUCCEEDED(hres)) {
+            hres = jsdisp_call(jsdisp, id, DISPATCH_METHOD, &dp, ret, ei, NULL /*FIXME*/);
+            if(FAILED(hres)) {
+                WARN("call error - forwarding exception\n");
+                jsdisp_release(jsdisp);
+                return hres;
+            }
+            else if(V_VT(ret) != VT_DISPATCH) {
+                jsdisp_release(jsdisp);
+                return S_OK;
+            }
+            else
+                IDispatch_Release(V_DISPATCH(ret));
+        }
+
+        hres = jsdisp_get_id(jsdisp, hint == HINT_STRING ? valueOfW : toStringW, 0, &id);
+        if(SUCCEEDED(hres)) {
+            hres = jsdisp_call(jsdisp, id, DISPATCH_METHOD, &dp, ret, ei, NULL /*FIXME*/);
+            if(FAILED(hres)) {
+                WARN("call error - forwarding exception\n");
+                jsdisp_release(jsdisp);
+                return hres;
+            }
+            else if(V_VT(ret) != VT_DISPATCH) {
+                jsdisp_release(jsdisp);
+                return S_OK;
+            }
+            else
+                IDispatch_Release(V_DISPATCH(ret));
+        }
+
+        jsdisp_release(jsdisp);
+
+        WARN("failed\n");
+        return throw_type_error(ctx, ei, IDS_TO_PRIMITIVE, NULL);
+    }
     default:
         FIXME("Unimplemented for vt %d\n", V_VT(v));
         return E_NOTIMPL;
@@ -211,7 +274,8 @@ HRESULT to_boolean(VARIANT *v, VARIANT_BOOL *b)
         *b = V_I4(v) ? VARIANT_TRUE : VARIANT_FALSE;
         break;
     case VT_R8:
-        *b = V_R8(v) ? VARIANT_TRUE : VARIANT_FALSE;
+        if(isnan(V_R8(v))) *b = VARIANT_FALSE;
+        else *b = V_R8(v) ? VARIANT_TRUE : VARIANT_FALSE;
         break;
     case VT_BSTR:
         *b = V_BSTR(v) && *V_BSTR(v) ? VARIANT_TRUE : VARIANT_FALSE;
@@ -355,7 +419,7 @@ HRESULT to_number(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret)
         VARIANT prim;
         HRESULT hres;
 
-        hres = to_primitive(ctx, v, ei, &prim);
+        hres = to_primitive(ctx, v, ei, &prim, HINT_NUMBER);
         if(FAILED(hres))
             return hres;
 
@@ -385,10 +449,14 @@ HRESULT to_integer(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret)
     if(FAILED(hres))
         return hres;
 
-    if(V_VT(&num) == VT_I4)
+    if(V_VT(&num) == VT_I4) {
         *ret = num;
-    else
+    }else if(isnan(V_R8(&num))) {
+        V_VT(ret) = VT_I4;
+        V_I4(ret) = 0;
+    }else {
         num_set_val(ret, V_R8(&num) >= 0.0 ? floor(V_R8(&num)) : -floor(-V_R8(&num)));
+    }
 
     return S_OK;
 }
@@ -403,7 +471,10 @@ HRESULT to_int32(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, INT *ret)
     if(FAILED(hres))
         return hres;
 
-    *ret = V_VT(&num) == VT_I4 ? V_I4(&num) : (INT)V_R8(&num);
+    if(V_VT(&num) == VT_I4)
+        *ret = V_I4(&num);
+    else
+        *ret = isnan(V_R8(&num)) || isinf(V_R8(&num)) ? 0 : (INT)V_R8(&num);
     return S_OK;
 }
 
@@ -417,7 +488,10 @@ HRESULT to_uint32(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, DWORD *ret)
     if(FAILED(hres))
         return hres;
 
-    *ret = V_VT(&num) == VT_I4 ? V_I4(&num) : (DWORD)V_R8(&num);
+    if(V_VT(&num) == VT_I4)
+        *ret = V_I4(&num);
+    else
+        *ret = isnan(V_R8(&num)) || isinf(V_R8(&num)) ? 0 : (DWORD)V_R8(&num);
     return S_OK;
 }
 
@@ -458,6 +532,8 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
     const WCHAR nullW[] = {'n','u','l','l',0};
     const WCHAR trueW[] = {'t','r','u','e',0};
     const WCHAR falseW[] = {'f','a','l','s','e',0};
+    const WCHAR NaNW[] = {'N','a','N',0};
+    const WCHAR InfinityW[] = {'-','I','n','f','i','n','i','t','y',0};
 
     switch(V_VT(v)) {
     case VT_EMPTY:
@@ -470,16 +546,23 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
         *str = int_to_bstr(V_I4(v));
         break;
     case VT_R8: {
-        VARIANT strv;
-        HRESULT hres;
+        if(isnan(V_R8(v)))
+            *str = SysAllocString(NaNW);
+        else if(isinf(V_R8(v)))
+            *str = SysAllocString(V_R8(v)<0 ? InfinityW : InfinityW+1);
+        else {
+            VARIANT strv;
+            HRESULT hres;
 
-        V_VT(&strv) = VT_EMPTY;
-        hres = VariantChangeTypeEx(&strv, v, MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT), 0, VT_BSTR);
-        if(FAILED(hres))
-            return hres;
+            V_VT(&strv) = VT_EMPTY;
+            hres = VariantChangeTypeEx(&strv, v, MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT), 0, VT_BSTR);
+            if(FAILED(hres))
+                return hres;
 
-        *str = V_BSTR(&strv);
-        return S_OK;
+            *str = V_BSTR(&strv);
+            return S_OK;
+        }
+        break;
     }
     case VT_BSTR:
         *str = SysAllocString(V_BSTR(v));
@@ -488,7 +571,7 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
         VARIANT prim;
         HRESULT hres;
 
-        hres = to_primitive(ctx, v, ei, &prim);
+        hres = to_primitive(ctx, v, ei, &prim, HINT_STRING);
         if(FAILED(hres))
             return hres;
 
@@ -508,14 +591,14 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
 }
 
 /* ECMA-262 3rd Edition    9.9 */
-HRESULT to_object(exec_ctx_t *ctx, VARIANT *v, IDispatch **disp)
+HRESULT to_object(script_ctx_t *ctx, VARIANT *v, IDispatch **disp)
 {
     DispatchEx *dispex;
     HRESULT hres;
 
     switch(V_VT(v)) {
     case VT_BSTR:
-        hres = create_string(ctx->parser->script, V_BSTR(v), SysStringLen(V_BSTR(v)), &dispex);
+        hres = create_string(ctx, V_BSTR(v), SysStringLen(V_BSTR(v)), &dispex);
         if(FAILED(hres))
             return hres;
 
@@ -523,18 +606,28 @@ HRESULT to_object(exec_ctx_t *ctx, VARIANT *v, IDispatch **disp)
         break;
     case VT_I4:
     case VT_R8:
-        hres = create_number(ctx->parser->script, v, &dispex);
+        hres = create_number(ctx, v, &dispex);
         if(FAILED(hres))
             return hres;
 
         *disp = (IDispatch*)_IDispatchEx_(dispex);
         break;
     case VT_DISPATCH:
-        IDispatch_AddRef(V_DISPATCH(v));
-        *disp = V_DISPATCH(v);
+        if(V_DISPATCH(v)) {
+            IDispatch_AddRef(V_DISPATCH(v));
+            *disp = V_DISPATCH(v);
+        }else {
+            DispatchEx *obj;
+
+            hres = create_object(ctx, NULL, &obj);
+            if(FAILED(hres))
+                return hres;
+
+            *disp = (IDispatch*)_IDispatchEx_(obj);
+        }
         break;
     case VT_BOOL:
-        hres = create_bool(ctx->parser->script, V_BOOL(v), &dispex);
+        hres = create_bool(ctx, V_BOOL(v), &dispex);
         if(FAILED(hres))
             return hres;
 

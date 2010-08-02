@@ -179,14 +179,14 @@ static HRESULT WINAPI HTMLTableRow_get_borderColorDark(IHTMLTableRow *iface, VAR
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTableRow_get_rowIndex(IHTMLTableRow *iface, long *p)
+static HRESULT WINAPI HTMLTableRow_get_rowIndex(IHTMLTableRow *iface, LONG *p)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTableRow_get_selectionRowIndex(IHTMLTableRow *iface, long *p)
+static HRESULT WINAPI HTMLTableRow_get_selectionRowIndex(IHTMLTableRow *iface, LONG *p)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -213,17 +213,17 @@ static HRESULT WINAPI HTMLTableRow_get_cells(IHTMLTableRow *iface, IHTMLElementC
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLTableRow_insertCell(IHTMLTableRow *iface, long index, IDispatch **row)
+static HRESULT WINAPI HTMLTableRow_insertCell(IHTMLTableRow *iface, LONG index, IDispatch **row)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
-    FIXME("(%p)->(%ld %p)\n", This, index, row);
+    FIXME("(%p)->(%d %p)\n", This, index, row);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTableRow_deleteCell(IHTMLTableRow *iface, long index)
+static HRESULT WINAPI HTMLTableRow_deleteCell(IHTMLTableRow *iface, LONG index)
 {
     HTMLTableRow *This = HTMLTABLEROW_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, index);
+    FIXME("(%p)->(%d)\n", This, index);
     return E_NOTIMPL;
 }
 
@@ -301,11 +301,7 @@ static const NodeImplVtbl HTMLTableRowImplVtbl = {
 };
 
 static const tid_t HTMLTableRow_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLTableRow_tid,
     0
 };
@@ -317,7 +313,7 @@ static dispex_static_data_t HTMLTableRow_dispex = {
     HTMLTableRow_iface_tids
 };
 
-HTMLElement *HTMLTableRow_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLTableRow_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLTableRow *ret = heap_alloc_zero(sizeof(HTMLTableRow));
     nsresult nsres;
@@ -325,8 +321,7 @@ HTMLElement *HTMLTableRow_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLTableRowVtbl = &HTMLTableRowVtbl;
     ret->element.node.vtbl = &HTMLTableRowImplVtbl;
 
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLTABLEROW(ret), &HTMLTableRow_dispex);
-    HTMLElement_Init(&ret->element);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLTableRow_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLTableRowElement, (void**)&ret->nsrow);
     if(NS_FAILED(nsres))

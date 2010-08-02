@@ -345,7 +345,11 @@ get_fs_structures:
 
 	mov	dl, [DriveNo]			; dl = boot drive
 	mov dh, 0					; dh = boot partition
-	jmp	0:0x8000			; jump into OSLoader
+	push 0						; push segment (0x0000)
+	mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
+	add eax, 0x8000				; RVA -> VA
+	push ax						; push offset
+	retf						; Transfer control to ROSLDR
 
 
 

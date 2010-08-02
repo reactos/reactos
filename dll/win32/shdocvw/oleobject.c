@@ -28,6 +28,7 @@
 #include "shdocvw.h"
 #include "htiframe.h"
 #include "idispids.h"
+#include "mshtmdid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -151,8 +152,16 @@ static HRESULT activate_inplace(WebBrowser *This, IOleClientSite *active_site)
                  SWP_NOZORDER | SWP_SHOWWINDOW);
 
     if(This->client) {
+        IOleContainer *container;
+
         IOleClientSite_ShowObject(This->client);
-        IOleClientSite_GetContainer(This->client, &This->container);
+
+        hres = IOleClientSite_GetContainer(This->client, &container);
+        if(SUCCEEDED(hres)) {
+            if(This->container)
+                IOleContainer_Release(This->container);
+            This->container = container;
+        }
     }
 
     if(This->doc_host.frame)
@@ -246,6 +255,36 @@ static HRESULT on_silent_change(WebBrowser *This)
     return S_OK;
 }
 
+static void release_client_site(WebBrowser *This)
+{
+    release_dochost_client(&This->doc_host);
+
+    if(This->shell_embedding_hwnd) {
+        DestroyWindow(This->shell_embedding_hwnd);
+        This->shell_embedding_hwnd = NULL;
+    }
+
+    if(This->inplace) {
+        IOleInPlaceSite_Release(This->inplace);
+        This->inplace = NULL;
+    }
+
+    if(This->container) {
+        IOleContainer_Release(This->container);
+        This->container = NULL;
+    }
+
+    if(This->uiwindow) {
+        IOleInPlaceUIWindow_Release(This->uiwindow);
+        This->uiwindow = NULL;
+    }
+
+    if(This->client) {
+        IOleClientSite_Release(This->client);
+        This->client = NULL;
+    }
+}
+
 /**********************************************************************
  * Implement the IOleObject interface for the WebBrowser control
  */
@@ -273,7 +312,9 @@ static ULONG WINAPI OleObject_Release(IOleObject *iface)
 static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE pClientSite)
 {
     WebBrowser *This = OLEOBJ_THIS(iface);
+    IDocHostUIHandler *hostui;
     IOleContainer *container;
+    IDispatch *disp;
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, pClientSite);
@@ -281,29 +322,7 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
     if(This->client == pClientSite)
         return S_OK;
 
-    if(This->doc_host.hwnd) {
-        DestroyWindow(This->doc_host.hwnd);
-        This->doc_host.hwnd = NULL;
-    }
-    if(This->shell_embedding_hwnd) {
-        DestroyWindow(This->shell_embedding_hwnd);
-        This->shell_embedding_hwnd = NULL;
-    }
-
-    if(This->inplace) {
-        IOleInPlaceSite_Release(This->inplace);
-        This->inplace = NULL;
-    }
-
-    if(This->doc_host.hostui) {
-        IDocHostUIHandler_Release(This->doc_host.hostui);
-        This->doc_host.hostui = NULL;
-    }
-
-    if(This->client)
-        IOleClientSite_Release(This->client);
-
-    This->client = pClientSite;
+    release_client_site(This);
 
     if(!pClientSite) {
         if(This->doc_host.document)
@@ -312,12 +331,17 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, LPOLECLIENTSITE
     }
 
     IOleClientSite_AddRef(pClientSite);
+    This->client = pClientSite;
 
-    IOleClientSite_QueryInterface(This->client, &IID_IDispatch,
-                                  (void**)&This->doc_host.client_disp);
+    hres = IOleClientSite_QueryInterface(This->client, &IID_IDispatch,
+            (void**)&disp);
+    if(SUCCEEDED(hres))
+        This->doc_host.client_disp = disp;
 
-    IOleClientSite_QueryInterface(This->client, &IID_IDocHostUIHandler,
-                                  (void**)&This->doc_host.hostui);
+    hres = IOleClientSite_QueryInterface(This->client, &IID_IDocHostUIHandler,
+            (void**)&hostui);
+    if(SUCCEEDED(hres))
+        This->doc_host.hostui = hostui;
 
     hres = IOleClientSite_GetContainer(This->client, &container);
     if(SUCCEEDED(hres)) {
@@ -614,7 +638,13 @@ static HRESULT WINAPI OleInPlaceObject_InPlaceDeactivate(IOleInPlaceObject *ifac
 {
     WebBrowser *This = INPLACEOBJ_THIS(iface);
     FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+
+    if(This->inplace) {
+        IOleInPlaceSite_Release(This->inplace);
+        This->inplace = NULL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI OleInPlaceObject_UIDeactivate(IOleInPlaceObject *iface)
@@ -722,6 +752,8 @@ static HRESULT WINAPI OleControl_OnAmbientPropertyChange(IOleControl *iface, DIS
         /* Unknown means multiple properties changed, so check them all.
          * BUT the Webbrowser OleControl object doesn't appear to do this.
          */
+        return S_OK;
+    case DISPID_AMBIENT_DLCONTROL:
         return S_OK;
     case DISPID_AMBIENT_OFFLINEIFNOTCONNECTED:
         return on_offlineconnected_change(This);
@@ -928,17 +960,6 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
     This->lpOleInPlaceActiveObjectVtbl = &OleInPlaceActiveObjectVtbl;
     This->lpOleCommandTargetVtbl     = &OleCommandTargetVtbl;
 
-    This->client = NULL;
-    This->inplace = NULL;
-    This->container = NULL;
-    This->frame_hwnd = NULL;
-    This->uiwindow = NULL;
-    This->shell_embedding_hwnd = NULL;
-
-    memset(&This->pos_rect, 0, sizeof(RECT));
-    memset(&This->clip_rect, 0, sizeof(RECT));
-    memset(&This->frameinfo, 0, sizeof(OLEINPLACEFRAMEINFO));
-
     /* Default size is 50x20 pixels, in himetric units */
     This->extent.cx = MulDiv( 50, 2540, dpi_x );
     This->extent.cy = MulDiv( 20, 2540, dpi_y );
@@ -946,10 +967,5 @@ void WebBrowser_OleObject_Init(WebBrowser *This)
 
 void WebBrowser_OleObject_Destroy(WebBrowser *This)
 {
-    if(This->client)
-        IOleObject_SetClientSite(OLEOBJ(This), NULL);
-    if(This->container)
-        IOleContainer_Release(This->container);
-    if(This->uiwindow)
-        IOleInPlaceUIWindow_Release(This->uiwindow);
+    release_client_site(This);
 }

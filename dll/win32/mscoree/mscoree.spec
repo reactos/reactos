@@ -7,7 +7,7 @@
 
 @ stub CallFunctionShim
 @ stub CloseCtrs
-@ stub ClrCreateManagedInstance
+@ stdcall ClrCreateManagedInstance(wstr ptr ptr)
 @ stub CoEEShutDownCOM
 @ stdcall CoInitializeCor(long)
 @ stub CoInitializeEE
@@ -31,8 +31,8 @@
 @ stub CreateDebuggingInterfaceFromVersion
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
-@ stub DllRegisterServer
-@ stub DllUnregisterServer
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stub EEDllGetClassObjectFromClass
 @ stub EEDllRegisterServer
 @ stub EEDllUnregisterServer
@@ -70,7 +70,7 @@
 @ stdcall LoadLibraryShim(ptr ptr ptr ptr)
 @ stub LoadLibraryWithPolicyShim
 @ stdcall LoadStringRCEx(long long ptr long long ptr)
-@ stub LockClrVersion
+@ stdcall LockClrVersion(ptr ptr ptr)
 @ stub MetaDataGetDispenser
 @ stdcall ND_CopyObjDst(ptr ptr long long)
 @ stdcall ND_CopyObjSrc(ptr long ptr long)
@@ -103,8 +103,8 @@
 @ stub StrongNameSignatureGeneration
 @ stub StrongNameSignatureGenerationEx
 @ stub StrongNameSignatureSize
-@ stub StrongNameSignatureVerification
-@ stub StrongNameSignatureVerificationEx
+@ stdcall StrongNameSignatureVerification(wstr long ptr)
+@ stdcall StrongNameSignatureVerificationEx(wstr long ptr)
 @ stub StrongNameSignatureVerificationFromImage
 @ stub StrongNameTokenFromAssembly
 @ stub StrongNameTokenFromAssemblyEx

@@ -46,6 +46,10 @@
 #        This is faster than the depends target which does a complete dependency
 #        check of the ReactOS codebase.
 #
+#    bootcdregtest
+#        This target builds an ISO (ReactOS-RegTest.ISO) which is used for unattended
+#        regression testing.
+#
 #
 # Accepted environment variables:
 #
@@ -112,6 +116,10 @@
 #        will go from 80 to 40MB, memory usage from 58 to 38MB and the install CD
 #        from 18 to 13MB. The variable defaults to no.
 #
+#    ROS_GENERATE_RSYM
+#        This variable controls generation of RSYM symbol data. The value can be
+#        either yes (to generate symbol data) or no. The variable defaults to yes.
+#
 #    ROS_RBUILDFLAGS
 #        Pass parameters to rbuild.
 #            -v           Be verbose.
@@ -148,6 +156,11 @@ $(error ReactOS's makefiles use GNU Make 3.80+ features, you have $(MAKE_VERSION
 endif
 # END of code borrowed from GMSL ( http://gmsl.sourceforge.net/ )
 
+define NL
+
+
+endef
+
 .PHONY: all
 .PHONY: clean
 .PHONY: world
@@ -160,11 +173,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-  ifeq ($(ARCH),i386)
-    ROS_AUTOMAKE=makefile.auto
-  else
-    ROS_AUTOMAKE=makefile-$(ARCH).auto
-  endif
+  ROS_AUTOMAKE=makefile-$(ARCH).auto
 endif
 
 all: $(ROS_AUTOMAKE)
@@ -220,15 +229,17 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_CC      =@echo $(QUOTE)[CC]       $<$(QUOTE)
   ECHO_HOSTCC  =@echo $(QUOTE)[HOST-CC]  $<$(QUOTE)
   ECHO_CL      =@echo $(QUOTE)[CL]       $<$(QUOTE)
-  ECHO_GAS     =@echo $(QUOTE)[GAS]      $<$(QUOTE)
+  ECHO_AS      =@echo $(QUOTE)[AS]       $<$(QUOTE)
   ECHO_NASM    =@echo $(QUOTE)[NASM]     $<$(QUOTE)
   ECHO_AR      =@echo $(QUOTE)[AR]       $@$(QUOTE)
   ECHO_HOSTAR  =@echo $(QUOTE)[HOST-AR]  $@$(QUOTE)
   ECHO_WINEBLD =@echo $(QUOTE)[WINEBLD]  $@$(QUOTE)
   ECHO_WRC     =@echo $(QUOTE)[WRC]      $@$(QUOTE)
+  ECHO_RC      =@echo $(QUOTE)[RC]       $@$(QUOTE)
+  ECHO_CVTRES  =@echo $(QUOTE)[CVTRES]   $@$(QUOTE)
   ECHO_WIDL    =@echo $(QUOTE)[WIDL]     $@$(QUOTE)
   ECHO_BIN2RES =@echo $(QUOTE)[BIN2RES]  $<$(QUOTE)
-  ECHO_DLLTOOL =@echo $(QUOTE)[DLLTOOL]  $@$(QUOTE)
+  ECHO_IMPLIB  =@echo $(QUOTE)[IMPLIB]   $@$(QUOTE)
   ECHO_LD      =@echo $(QUOTE)[LD]       $@$(QUOTE)
   ECHO_HOSTLD  =@echo $(QUOTE)[HOST-LD]  $@$(QUOTE)
   ECHO_LINK    =@echo $(QUOTE)[LINK]     $@$(QUOTE)
@@ -236,6 +247,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_OBJDUMP =@echo $(QUOTE)[OBJDUMP]  $@$(QUOTE)
   ECHO_RBUILD  =@echo $(QUOTE)[RBUILD]   $@$(QUOTE)
   ECHO_RSYM    =@echo $(QUOTE)[RSYM]     $@$(QUOTE)
+  ECHO_PEFIXUP =@echo $(QUOTE)[PEFIXUP]  $@$(QUOTE)
   ECHO_WMC     =@echo $(QUOTE)[WMC]      $@$(QUOTE)
   ECHO_NCI     =@echo $(QUOTE)[NCI]      $@$(QUOTE)
   ECHO_CABMAN  =@echo $(QUOTE)[CABMAN]   $<$(QUOTE)
@@ -247,6 +259,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_STRIP   =@echo $(QUOTE)[STRIP]    $@$(QUOTE)
   ECHO_RGENSTAT=@echo $(QUOTE)[RGENSTAT] $@$(QUOTE)
   ECHO_DEPENDS =@echo $(QUOTE)[DEPENDS]  $<$(QUOTE)
+  ECHO_RSP     =@echo $(QUOTE)[RSP]      $@$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
@@ -256,15 +269,17 @@ else
   ECHO_CPP     =
   ECHO_CC      =
   ECHO_HOSTCC  =
-  ECHO_GAS     =
+  ECHO_AS      =
   ECHO_NASM    =
   ECHO_AR      =
   ECHO_HOSTAR  =
   ECHO_WINEBLD =
   ECHO_WRC     =
+  ECHO_RC      =
+  ECHO_CVTRES  =
   ECHO_WIDL    =
   ECHO_BIN2RES =
-  ECHO_DLLTOOL =
+  ECHO_IMPLIB  =
   ECHO_LD      =
   ECHO_HOSTLD  =
   ECHO_NM      =
@@ -282,6 +297,7 @@ else
   ECHO_STRIP   =
   ECHO_RGENSTAT=
   ECHO_DEPENDS =
+  ECHO_RSP     =
 endif
 
 # Set host compiler/linker
@@ -315,6 +331,7 @@ ifeq ($(TARGET_CPP),)
 endif
 gcc = $(Q)$(TARGET_CC)
 gpp = $(Q)$(TARGET_CPP)
+gas = $(Q)$(TARGET_CC) -x assembler-with-cpp
 ld = $(Q)$(PREFIX_)ld
 nm = $(Q)$(PREFIX_)nm
 objdump = $(Q)$(PREFIX_)objdump
@@ -323,8 +340,6 @@ objcopy = $(Q)$(PREFIX_)objcopy
 dlltool = $(Q)$(PREFIX_)dlltool
 strip = $(Q)$(PREFIX_)strip
 windres = $(Q)$(PREFIX_)windres
-cl = $(Q)cl -nologo
-link = $(Q)link -nologo
 
 # Set utilities
 ifeq ($(OSTYPE),msys)
@@ -338,6 +353,7 @@ ifeq ($(HOST),mingw32-linux)
 	endif
 	export SEP = /
 	mkdir = -$(Q)mkdir -p
+	checkpoint = $(Q)touch
 	rm = $(Q)rm -f
 	cp = $(Q)cp
 	NUL = /dev/null
@@ -346,6 +362,7 @@ else # mingw32-windows
 	ROS_EMPTY =
 	export SEP = \$(ROS_EMPTY)
 	mkdir = -$(Q)mkdir
+	checkpoint = $(Q)copy /y NUL
 	rm = $(Q)del /f /q
 	cp = $(Q)copy /y
 	NUL = NUL
@@ -459,11 +476,6 @@ rgenstat: $(RGENSTAT_TARGET)
 	$(ECHO_RGENSTAT)
 	$(Q)$(RGENSTAT_TARGET) apistatus.lst apistatus.xml
 
-.PHONY: cb
-cb: $(ROS_BUILDENGINE)
-	$(ECHO_RBUILD)
-	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) cb
-
 .PHONY: msbuild
 msbuild: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
@@ -514,6 +526,11 @@ msvc9: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs9.00 -voversionconfiguration msvc
 
+.PHONY: msvc10
+msvc10: $(ROS_BUILDENGINE)
+	$(ECHO_RBUILD)
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -vs10.00 -voversionconfiguration msvc
+
 .PHONY: msvc6_clean
 msvc6_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
@@ -538,6 +555,11 @@ msvc8_clean: $(ROS_BUILDENGINE)
 msvc9_clean: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs9.00 -voversionconfiguration msvc
+
+.PHONY: msvc10_clean
+msvc10_clean: $(ROS_BUILDENGINE)
+	$(ECHO_RBUILD)
+	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) -c -vs10.00 -voversionconfiguration msvc
 
 .PHONY: msvc_clean
 msvc_clean: $(ROS_BUILDENGINE)

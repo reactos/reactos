@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "iccvid_private.h"
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_NAME "Cinepak videokodek"
     IDS_DESCRIPTION "Cinepak videokodek"

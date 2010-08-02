@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -109,7 +109,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	_hwndStartButton = hwndStart;
 
 	 // disable double clicks
-	SetClassLong(hwndStart, GCL_STYLE, GetClassLong(hwndStart, GCL_STYLE) & ~CS_DBLCLKS);
+	SetClassLongPtr(hwndStart, GCL_STYLE, GetClassLongPtr(hwndStart, GCL_STYLE) & ~CS_DBLCLKS);
 
 	 // create task bar
 	_hwndTaskBar = TaskBar::Create(_hwnd);
@@ -147,13 +147,13 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.cyMaxChild = (ULONG)-1;
 	rbBand.cyMinChild = REBARBAND_HEIGHT;
 	rbBand.cyIntegral = REBARBAND_HEIGHT + 3;	//@@ OK?
-	rbBand.cxMinChild = rbBand.cyIntegral * 3;
 	rbBand.fStyle = RBBS_VARIABLEHEIGHT|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
 
 	TCHAR QuickLaunchBand[] = _T("Quicklaunch");
 	rbBand.lpText = QuickLaunchBand;
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cx = 120;
+	rbBand.cx = 100;
+	rbBand.cxMinChild = 100;
 	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
@@ -161,6 +161,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	rbBand.lpText = TaskbarBand;
 	rbBand.hwndChild = _hwndTaskBar;
 	rbBand.cx = 200;	//pcs->cx-_taskbar_pos-quicklaunch_width-(notifyarea_width+1);
+	rbBand.cxMinChild = 50;
 	rbBand.wID = IDW_TASKTOOLBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif

@@ -1,13 +1,11 @@
-#ifndef __PCI_H
-#define __PCI_H
+#pragma once
 
 #include <ntifs.h>
 #include <wdmguid.h>
 #include <stdio.h>
 #include <ntddk.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define TAG_PCI TAG('P', 'C', 'I', '0')
+#define TAG_PCI '0ICP'
 
 typedef struct _PCI_DEVICE
 {
@@ -176,5 +174,3 @@ NTAPI
 DriverEntry(
   IN PDRIVER_OBJECT DriverObject,
   IN PUNICODE_STRING RegistryPath);
-
-#endif  /*  __PCI_H  */

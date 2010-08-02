@@ -2,8 +2,7 @@
  *
  */
 
-#ifndef __INTERNAL_HAL_APIC_H
-#define __INTERNAL_HAL_APIC_H
+#pragma once
 
 #define APIC_DEFAULT_BASE     0xFEE00000    /* Default Local APIC Base Register Address */
 
@@ -206,9 +205,4 @@ static __inline ULONG ThisCPU(VOID)
     return (APICRead(APIC_ID) & APIC_ID_MASK) >> 24;
 }
 
-
-#endif
-
-
 /* EOF */
-

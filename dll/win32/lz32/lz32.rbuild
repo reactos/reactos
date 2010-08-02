@@ -6,7 +6,6 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>version.rc</file>
 </module>

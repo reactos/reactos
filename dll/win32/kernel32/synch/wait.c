@@ -36,9 +36,9 @@ WaitForSingleObjectEx(IN HANDLE hHandle,
                       IN DWORD dwMilliseconds,
                       IN BOOL bAlertable)
 {
-  PLARGE_INTEGER TimePtr;
-  LARGE_INTEGER Time;
-  NTSTATUS Status;
+    PLARGE_INTEGER TimePtr;
+    LARGE_INTEGER Time;
+    NTSTATUS Status;
 
     /* Get real handle */
     hHandle = TranslateStdHandle(hHandle);

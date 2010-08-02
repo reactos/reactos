@@ -4,8 +4,8 @@
  * FILE:        include/udp.h
  * PURPOSE:     User Datagram Protocol definitions
  */
-#ifndef __UDP_H
-#define __UDP_H
+
+#pragma once
 
 #define UDP_STARTING_PORT 0x8000
 #define UDP_DYNAMIC_PORTS 0x8000
@@ -61,7 +61,5 @@ NTSTATUS UDPShutdown(
   VOID);
 UINT UDPAllocatePort( UINT HintPort );
 VOID UDPFreePort( UINT Port );
-
-#endif /* __UDP_H */
 
 /* EOF */

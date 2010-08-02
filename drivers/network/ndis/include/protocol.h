@@ -5,8 +5,7 @@
  * PURPOSE:     Definitions for routines used by NDIS protocol drivers
  */
 
-#ifndef __PROTOCOL_H
-#define __PROTOCOL_H
+#pragma once
 
 typedef struct _PROTOCOL_BINDING {
     LIST_ENTRY                    ListEntry;        /* Entry on global list */
@@ -49,7 +48,29 @@ ProIndicatePacket(
     PLOGICAL_ADAPTER Adapter,
     PNDIS_PACKET Packet);
 
-#endif /* __PROTOCOL_H */
+VOID NTAPI
+ProSendPackets(
+    IN  NDIS_HANDLE     NdisBindingHandle,
+    IN  PPNDIS_PACKET   PacketArray,
+    IN  UINT            NumberOfPackets);
+
+NTSTATUS
+NTAPI
+NdisIPnPQueryStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+NTSTATUS
+NTAPI
+NdisIPnPCancelStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+NDIS_STATUS
+proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet);
+
+VOID
+NTAPI
+ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protocol);
 
 /* EOF */
-

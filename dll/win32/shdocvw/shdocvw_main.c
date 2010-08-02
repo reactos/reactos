@@ -67,6 +67,31 @@ HRESULT get_typeinfo(ITypeInfo **typeinfo)
     return hres;
 }
 
+const char *debugstr_variant(const VARIANT *v)
+{
+    if(!v)
+        return "(null)";
+
+    switch(V_VT(v)) {
+    case VT_EMPTY:
+        return "{VT_EMPTY}";
+    case VT_NULL:
+        return "{VT_NULL}";
+    case VT_I4:
+        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
+    case VT_R8:
+        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
+    case VT_BSTR:
+        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
+    case VT_DISPATCH:
+        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
+    case VT_BOOL:
+        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
+    default:
+        return wine_dbg_sprintf("{vt %d}", V_VT(v));
+    }
+}
+
 /*************************************************************************
  * SHDOCVW DllMain
  */
@@ -405,4 +430,34 @@ HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpszDisplayName
     /* Guessing at parameter 3 based on IShellFolder's  ParseDisplayName */
     FIXME("stub: 0x%x %s %p %p\n",codepage,debugstr_w(lpszDisplayName),pbc,ppidl);
     return E_FAIL;
+}
+
+/******************************************************************
+ *  SHRestricted2W (SHDOCVW.159)
+ */
+DWORD WINAPI SHRestricted2W(DWORD res, LPCWSTR url, DWORD reserved)
+{
+    FIXME("(%d %s %d) stub\n", res, debugstr_w(url), reserved);
+    return 0;
+}
+
+/******************************************************************
+ * SHRestricted2A (SHDOCVW.158)
+ *
+ * See SHRestricted2W
+ */
+DWORD WINAPI SHRestricted2A(DWORD restriction, LPCSTR url, DWORD reserved)
+{
+    LPWSTR urlW = NULL;
+    DWORD res;
+
+    TRACE("(%d, %s, %d)\n", restriction, debugstr_a(url), reserved);
+    if (url) {
+        DWORD len = MultiByteToWideChar(CP_ACP, 0, url, -1, NULL, 0);
+        urlW = heap_alloc(len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, url, -1, urlW, len);
+    }
+    res = SHRestricted2W(restriction, urlW, reserved);
+    heap_free(urlW);
+    return res;
 }

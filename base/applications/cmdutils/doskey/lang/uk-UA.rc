@@ -1,0 +1,35 @@
+/*
+ * PROJECT:     ReactOS DOSKey
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/cmdutils/doskey/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS DOSKey
+ * TRANSLATOR:  Sakara Yevhen
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "Менеджер командного рядка для редагування налаштувань, історії та макросів.\n\
+\n\
+DOSKEY [/INSERT | /OVERSTRIKE] [/EXENAME=exe] [/HISTORY] [/LISTSIZE=size]\n\
+       [/REINSTALL] [/MACROS[:exe | :ALL]] [/MACROFILE=file] [macroname=[text]]\n\
+\n\
+  /INSERT             Дозвіл включення режиму.\n\
+  /OVERSTRIKE         Заборона включення режиму.\n\
+  /EXENAME=exename    Встановлення ім'я програми для перегляду/зміни історії\n\
+                      і макросів. Значення за замовчуванням cmd.exe.\n\
+  /HISTORY            Відображення історії команд.\n\
+  /LISTSIZE=size      Встановлення кількості команд за історію буфера.\n\
+  /REINSTALL          Очищення історії команд.\n\
+  /MACROS             Відображення макросі визначень.\n\
+  /MACROS:exename     Відображення макросі визначень для конкретної програми.\n\
+  /MACROS:ALL         Відображення макросі визначень для всіх програм.\n\
+  /MACROFILE=filename Завантаження макросі визначень з файлу.\n\
+  macroname           Визначення ім'я макросу для створення.\n\
+  text                Визначення заміни тексту в макросі.\n"
+
+IDS_INVALID_MACRO_DEF, "Недійсний макрос визначення: %s\n"
+
+END

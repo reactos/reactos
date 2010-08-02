@@ -18,385 +18,454 @@
 #pragma alloc_text(INIT, MmInitializePageList)
 #endif
 
-
-/* TYPES *******************************************************************/
-
-#define MM_PHYSICAL_PAGE_FREE    (0x1)
-#define MM_PHYSICAL_PAGE_USED    (0x2)
-#define MM_PHYSICAL_PAGE_BIOS    (0x3)
+#define MODULE_INVOLVED_IN_ARM3
+#include "ARM3/miarm.h"
 
 /* GLOBALS ****************************************************************/
 
-PPHYSICAL_PAGE MmPageArray;
-ULONG MmPageArraySize;
+//
+//
+// ReactOS to NT Physical Page Descriptor Entry Legacy Mapping Definitions
+//
+//        REACTOS                 NT
+//
+#define RmapListHead         AweReferenceCount
+#define PHYSICAL_PAGE        MMPFN
+#define PPHYSICAL_PAGE       PMMPFN
 
-/* List of pages allocated to the MC_USER Consumer */
-static LIST_ENTRY UserPageListHead;
-/* List of pages zeroed by the ZPW (MmZeroPageThreadMain) */
-static LIST_ENTRY FreeZeroedPageListHead;
-/* List of free pages, filled by MmGetReferenceCountPage and
- * and MmInitializePageList */
-static LIST_ENTRY FreeUnzeroedPageListHead;
+PPHYSICAL_PAGE MmPfnDatabase;
 
-static KEVENT ZeroPageThreadEvent;
+PFN_NUMBER MmAvailablePages;
+PFN_NUMBER MmResidentAvailablePages;
+PFN_NUMBER MmResidentAvailableAtInit;
+
+SIZE_T MmTotalCommitLimit;
+SIZE_T MmTotalCommittedPages;
+SIZE_T MmSharedCommit;
+SIZE_T MmDriverCommit;
+SIZE_T MmProcessCommit;
+SIZE_T MmPagedPoolCommit;
+SIZE_T MmPeakCommitment; 
+SIZE_T MmtotalCommitLimitMaximum;
+
+KEVENT ZeroPageThreadEvent;
 static BOOLEAN ZeroPageThreadShouldTerminate = FALSE;
-
-static ULONG UnzeroedPageCount = 0;
+static RTL_BITMAP MiUserPfnBitMap;
 
 /* FUNCTIONS *************************************************************/
 
-PFN_TYPE
+VOID
+NTAPI
+MiInitializeUserPfnBitmap(VOID)
+{
+    PVOID Bitmap;
+    
+    /* Allocate enough buffer for the PFN bitmap and align it on 32-bits */
+    Bitmap = ExAllocatePoolWithTag(NonPagedPool,
+                                   (((MmHighestPhysicalPage + 1) + 31) / 32) * 4,
+                                   '  mM');
+    ASSERT(Bitmap);
+
+    /* Initialize it and clear all the bits to begin with */
+    RtlInitializeBitMap(&MiUserPfnBitMap,
+                        Bitmap,
+                        MmHighestPhysicalPage + 1);
+    RtlClearAllBits(&MiUserPfnBitMap);
+}
+
+PFN_NUMBER
 NTAPI
 MmGetLRUFirstUserPage(VOID)
 {
-   PLIST_ENTRY NextListEntry;
-   PHYSICAL_PAGE* PageDescriptor;
-   KIRQL oldIrql;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   NextListEntry = UserPageListHead.Flink;
-   if (NextListEntry == &UserPageListHead)
-   {
-	  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-      return 0;
-   }
-   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
-   ASSERT_PFN(PageDescriptor);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return PageDescriptor - MmPageArray;
-}
-
-VOID
-NTAPI
-MmInsertLRULastUserPage(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Page = MiGetPfnEntry(Pfn);
-   ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
-   ASSERT(Page->Flags.Consumer == MC_USER);
-   InsertTailList(&UserPageListHead, &Page->ListEntry);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-PFN_TYPE
-NTAPI
-MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
-{
-   PLIST_ENTRY NextListEntry;
-   PHYSICAL_PAGE* PageDescriptor;
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Page = MiGetPfnEntry(PreviousPfn);
-   ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
-   ASSERT(Page->Flags.Consumer == MC_USER);
-   NextListEntry = Page->ListEntry.Flink;
-   if (NextListEntry == &UserPageListHead)
-   {
-	  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-      return 0;
-   }
-   PageDescriptor = CONTAINING_RECORD(NextListEntry, PHYSICAL_PAGE, ListEntry);
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return PageDescriptor - MmPageArray;
-}
-
-VOID
-NTAPI
-MmRemoveLRUUserPage(PFN_TYPE Page)
-{
-   RemoveEntryList(&MiGetPfnEntry(Page)->ListEntry);
-}
-
-PFN_TYPE
-NTAPI
-MmGetContinuousPages(ULONG NumberOfBytes,
-                     PHYSICAL_ADDRESS LowestAcceptableAddress,
-                     PHYSICAL_ADDRESS HighestAcceptableAddress,
-                     PHYSICAL_ADDRESS BoundaryAddressMultiple)
-{
-   ULONG NrPages;
-   ULONG i, j;
-   ULONG start;
-   ULONG last;
-   ULONG length;
-   ULONG boundary;
-   KIRQL oldIrql;
-
-   NrPages = PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-   last = min(HighestAcceptableAddress.LowPart / PAGE_SIZE, MmPageArraySize - 1);
-   boundary = BoundaryAddressMultiple.LowPart / PAGE_SIZE;
-
-   for (j = 0; j < 2; j++)
-   {
-      start = -1;
-      length = 0;
-      /* First try to allocate the pages above the 16MB area. This may fail
-       * because there are not enough continuous pages or we cannot allocate
-       * pages above the 16MB area because the caller has specify an upper limit.
-       * The second try uses the specified lower limit.
-       */
-      for (i = j == 0 ? 0x100000 / PAGE_SIZE : LowestAcceptableAddress.LowPart / PAGE_SIZE; i <= last; )
-      {
-         if (MiGetPfnEntry(i)->Flags.Type == MM_PHYSICAL_PAGE_FREE)
-         {
-            if (start == (ULONG)-1)
-            {
-               start = i;
-               length = 1;
-            }
-            else
-            {
-               length++;
-               if (boundary)
-               {
-                  if (start / boundary != i / boundary)
-                  {
-                      start = i;
-                      length = 1;
-                  }
-               }
-            }
-            if (length == NrPages)
-            {
-               break;
-            }
-         }
-         else
-         {
-            start = (ULONG)-1;
-         }
-         i++;
-      }
-
-      if (start != (ULONG)-1 && length == NrPages)
-      {
-         for (i = start; i < (start + length); i++)
-         {
-            PPHYSICAL_PAGE Page;
-            Page = MiGetPfnEntry(i);
-            RemoveEntryList(&Page->ListEntry);
-            if (MmPageArray[i].Flags.Zero == 0)
-            {
-               UnzeroedPageCount--;
-            }
-            MmStats.NrFreePages--;
-            MmStats.NrSystemPages++;
-            Page->Flags.Type = MM_PHYSICAL_PAGE_USED;
-            Page->Flags.Consumer = MC_NPPOOL;
-            Page->ReferenceCount = 1;
-            Page->LockCount = 0;
-            Page->MapCount = 0;
-            Page->SavedSwapEntry = 0;
-         }
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-         for (i = start; i < (start + length); i++)
-         {
-            if (MiGetPfnEntry(i)->Flags.Zero == 0)
-            {
-	       MiZeroPage(i);
-            }
-            else
-            {
-      	       MiGetPfnEntry(i)->Flags.Zero = 0;
-            }
-         }
-         return start;
-      }
-   }
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   return 0;
-}
-
-PFN_TYPE
-NTAPI
-MmAllocEarlyPage(VOID)
-{
-    PFN_TYPE Pfn;
-
-    /* Use one of our highest usable pages */
-    Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
-    MiFreeDescriptor->PageCount--;
-
+    ULONG Position;
+    KIRQL OldIrql;
+    
+    /* Find the first user page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, 0);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    if (Position == 0xFFFFFFFF) return 0;
+    
     /* Return it */
-    return Pfn;
+    return Position;
 }
 
 VOID
 NTAPI
-MmInitializePageList(VOID)
+MmInsertLRULastUserPage(PFN_NUMBER Pfn)
+{
+    KIRQL OldIrql;
+
+    /* Set the page as a user page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    RtlSetBit(&MiUserPfnBitMap, Pfn);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+}
+
+PFN_NUMBER
+NTAPI
+MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
+{
+    ULONG Position;
+    KIRQL OldIrql;
+    
+    /* Find the next user page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Position = RtlFindSetBits(&MiUserPfnBitMap, 1, PreviousPfn + 1);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    if (Position == 0xFFFFFFFF) return 0;
+    
+    /* Return it */
+    return Position;
+}
+
+VOID
+NTAPI
+MmRemoveLRUUserPage(PFN_NUMBER Page)
+{
+    /* Unset the page as a user page */
+    RtlClearBit(&MiUserPfnBitMap, Page);
+}
+
+BOOLEAN
+NTAPI
+MiIsPfnFree(IN PMMPFN Pfn1)
+{
+    /* Must be a free or zero page, with no references, linked */
+    return ((Pfn1->u3.e1.PageLocation <= StandbyPageList) &&
+            (Pfn1->u1.Flink) &&
+            (Pfn1->u2.Blink) &&
+            !(Pfn1->u3.e2.ReferenceCount));
+}
+
+BOOLEAN
+NTAPI
+MiIsPfnInUse(IN PMMPFN Pfn1)
+{
+    /* Standby list or higher, unlinked, and with references */
+    return !MiIsPfnFree(Pfn1);
+}
+
+PMDL
+NTAPI
+MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
+                      IN PHYSICAL_ADDRESS HighAddress,
+                      IN PHYSICAL_ADDRESS SkipBytes,
+                      IN SIZE_T TotalBytes,
+                      IN MI_PFN_CACHE_ATTRIBUTE CacheAttribute,
+                      IN ULONG MdlFlags)
+{
+    PMDL Mdl;
+    PFN_NUMBER PageCount, LowPage, HighPage, SkipPages, PagesFound = 0, Page;
+    PPFN_NUMBER MdlPage, LastMdlPage;
+    KIRQL OldIrql;
+    PPHYSICAL_PAGE Pfn1;
+    INT LookForZeroedPages;
+    ASSERT (KeGetCurrentIrql() <= APC_LEVEL);
+    
+    //
+    // Convert the low address into a PFN
+    //
+    LowPage = (PFN_NUMBER)(LowAddress.QuadPart >> PAGE_SHIFT);
+    
+    //
+    // Convert, and normalize, the high address into a PFN
+    //
+    HighPage = (PFN_NUMBER)(HighAddress.QuadPart >> PAGE_SHIFT);    
+    if (HighPage > MmHighestPhysicalPage) HighPage = MmHighestPhysicalPage;
+    
+    //
+    // Validate skipbytes and convert them into pages
+    //
+    if (BYTE_OFFSET(SkipBytes.LowPart)) return NULL;
+    SkipPages = (PFN_NUMBER)(SkipBytes.QuadPart >> PAGE_SHIFT);
+    
+    //
+    // Now compute the number of pages the MDL will cover
+    //
+    PageCount = (PFN_NUMBER)ADDRESS_AND_SIZE_TO_SPAN_PAGES(0, TotalBytes);
+    do
+    {
+        //
+        // Try creating an MDL for these many pages
+        //
+        Mdl = MmCreateMdl(NULL, NULL, PageCount << PAGE_SHIFT);
+        if (Mdl) break;
+        
+        //
+        // This function is not required to return the amount of pages requested
+        // In fact, it can return as little as 1 page, and callers are supposed
+        // to deal with this scenario. So re-attempt the allocation with less
+        // pages than before, and see if it worked this time.
+        //
+        PageCount -= (PageCount >> 4);
+    } while (PageCount);
+    
+    //
+    // Wow, not even a single page was around!
+    //
+    if (!Mdl) return NULL;
+    
+    //
+    // This is where the page array starts....
+    //
+    MdlPage = (PPFN_NUMBER)(Mdl + 1);
+    
+    //
+    // Lock the PFN database
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    //
+    // Are we looking for any pages, without discriminating?
+    //
+    if ((LowPage == 0) && (HighPage == MmHighestPhysicalPage))
+    {
+        //
+        // Well then, let's go shopping
+        //
+        while (PagesFound < PageCount)
+        {
+            //
+            // Do we have zeroed pages?
+            //
+            if (MmZeroedPageListHead.Total)
+            {
+                //
+                // Grab a zero page
+                //
+                Pfn1 = MiRemoveHeadList(&MmZeroedPageListHead);
+            }
+            else if (MmFreePageListHead.Total)
+            {
+                //
+                // Nope, grab an unzeroed page
+                //
+                Pfn1 = MiRemoveHeadList(&MmFreePageListHead);
+            }
+            else
+            {
+                //
+                // This is not good... hopefully we have at least SOME pages
+                //
+                ASSERT(PagesFound);
+                break;
+            }
+            
+            //
+            // Make sure it's really free
+            //
+            ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+            
+            //
+            // Allocate it and mark it
+            //
+            Pfn1->u3.e1.StartOfAllocation = 1;
+            Pfn1->u3.e1.EndOfAllocation = 1;
+            Pfn1->u3.e2.ReferenceCount = 1;
+            
+            //
+            // Decrease available pages
+            //
+            MmAvailablePages--;
+            
+            //
+            // Save it into the MDL
+            //
+            *MdlPage++ = MiGetPfnEntryIndex(Pfn1);
+            PagesFound++;
+        }
+    }
+    else
+    {
+        //
+        // You want specific range of pages. We'll do this in two runs
+        //
+        for (LookForZeroedPages = 1; LookForZeroedPages >= 0; LookForZeroedPages--)
+        {
+            //
+            // Scan the range you specified
+            //
+            for (Page = LowPage; Page < HighPage; Page++)
+            {
+                //
+                // Get the PFN entry for this page
+                //
+                Pfn1 = MiGetPfnEntry(Page);
+                ASSERT(Pfn1);
+                
+                //
+                // Make sure it's free and if this is our first pass, zeroed
+                //
+                if (MiIsPfnInUse(Pfn1)) continue;
+                if ((Pfn1->u3.e1.PageLocation == ZeroedPageList) != LookForZeroedPages) continue;
+                
+                //
+                // Sanity checks
+                //
+                ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+                
+                //
+                // Now setup the page and mark it
+                //
+                Pfn1->u3.e2.ReferenceCount = 1;
+                Pfn1->u3.e1.StartOfAllocation = 1;
+                Pfn1->u3.e1.EndOfAllocation = 1;
+                                
+                //
+                // Decrease available pages
+                //
+                MmAvailablePages--;
+                
+                //
+                // Save this page into the MDL
+                //
+                *MdlPage++ = Page;
+                if (++PagesFound == PageCount) break;
+            }
+            
+            //
+            // If the first pass was enough, don't keep going, otherwise, go again
+            //
+            if (PagesFound == PageCount) break;
+        }
+    }
+    
+    //
+    // Now release the PFN count
+    //
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    
+    //
+    // We might've found less pages, but not more ;-)
+    //
+    if (PagesFound != PageCount) ASSERT(PagesFound < PageCount);
+    if (!PagesFound)
+    {
+        //
+        // If we didn' tfind any pages at all, fail
+        //
+        DPRINT1("NO MDL PAGES!\n");
+        ExFreePool(Mdl);
+        return NULL;
+    }
+    
+    //
+    // Write out how many pages we found
+    //
+    Mdl->ByteCount = (ULONG)(PagesFound << PAGE_SHIFT);
+    
+    //
+    // Terminate the MDL array if there's certain missing pages
+    //
+    if (PagesFound != PageCount) *MdlPage = -1;
+    
+    //
+    // Now go back and loop over all the MDL pages
+    //
+    MdlPage = (PPFN_NUMBER)(Mdl + 1);
+    LastMdlPage = MdlPage + PagesFound;
+    while (MdlPage < LastMdlPage)
+    {
+        //
+        // Check if we've reached the end
+        //
+        Page = *MdlPage++;
+        if (Page == (PFN_NUMBER)-1) break;
+        
+        //
+        // Get the PFN entry for the page and check if we should zero it out
+        //
+        Pfn1 = MiGetPfnEntry(Page);
+        ASSERT(Pfn1);
+        if (Pfn1->u3.e1.PageLocation != ZeroedPageList) MiZeroPage(Page);
+        Pfn1->u3.e1.PageLocation = ActiveAndValid;
+    }
+    
+    //
+    // We're done, mark the pages as locked (should we lock them, though???)
+    //
+    Mdl->Process = NULL;
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED; 
+    return Mdl;
+}
+
+VOID
+NTAPI
+MmDumpPfnDatabase(VOID)
 {
     ULONG i;
-    ULONG Reserved;
-    NTSTATUS Status;
-    PFN_TYPE Pfn = 0;
-    PHYSICAL_PAGE UsedPage;
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR Md;
-
-    /* Initialize the page lists */
-    InitializeListHead(&UserPageListHead);
-    InitializeListHead(&FreeUnzeroedPageListHead);
-    InitializeListHead(&FreeZeroedPageListHead);
- 
-    /* Set the size and start of the PFN Database */
-    MmPageArray = (PHYSICAL_PAGE *)MmPfnDatabase;
-    MmPageArraySize = MmHighestPhysicalPage;
-    Reserved = PAGE_ROUND_UP((MmPageArraySize * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
-
-    /* Loop every page required to hold the PFN database */
-    for (i = 0; i < Reserved; i++)
+    PPHYSICAL_PAGE Pfn1;
+    PCHAR State = "????", Type = "Unknown";
+    KIRQL OldIrql;
+    ULONG Totals[5] = {0}, FreePages = 0;
+    
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+    
+    //
+    // Loop the PFN database
+    //
+    for (i = 0; i <= MmHighestPhysicalPage; i++)
     {
-        PVOID Address = (char*)MmPageArray + (i * PAGE_SIZE);
-
-        /* Check if FreeLDR has already allocated it for us */
-        if (!MmIsPagePresent(NULL, Address))
+        Pfn1 = MiGetPfnEntry(i);
+        if (!Pfn1) continue;
+        
+        //
+        // Get the type
+        //
+        if (MiIsPfnInUse(Pfn1))
         {
-            /* Use one of our highest usable pages */
-            Pfn = MmAllocEarlyPage();
-
-            /* Set the PFN */
-            Status = MmCreateVirtualMappingForKernel(Address,
-                                                     PAGE_READWRITE,
-                                                     &Pfn,
-                                                     1);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("Unable to create virtual mapping\n");
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
+            State = "Used";
         }
         else
         {
-            /* Setting the page protection is necessary to set the global bit */
-            MmSetPageProtect(NULL, Address, PAGE_READWRITE);
+            State = "Free";
+            Type = "Free";
+            FreePages++;
+            break;
         }
+        
+        //
+        // Pretty-print the page
+        //
+        DbgPrint("0x%08p:\t%04s\t%20s\t(%02d) [%08p])\n",
+                 i << PAGE_SHIFT,
+                 State,
+                 Type,
+                 Pfn1->u3.e2.ReferenceCount,
+                 Pfn1->RmapListHead);
     }
-
-    /* Clear the PFN database */
-    RtlZeroMemory(MmPageArray, (MmPageArraySize + 1) * sizeof(PHYSICAL_PAGE));
-
-    /* This is what a used page looks like */
-    RtlZeroMemory(&UsedPage, sizeof(UsedPage));
-    UsedPage.Flags.Type = MM_PHYSICAL_PAGE_USED;
-    UsedPage.Flags.Consumer = MC_NPPOOL;
-    UsedPage.ReferenceCount = 2;
-    UsedPage.MapCount = 1;
-
-    /* Loop the memory descriptors */
-    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        /* Get the descriptor */
-        Md = CONTAINING_RECORD(NextEntry,
-                               MEMORY_ALLOCATION_DESCRIPTOR,
-                               ListEntry);
-
-        /* Skip bad memory */
-        if ((Md->MemoryType == LoaderFirmwarePermanent) ||
-            (Md->MemoryType == LoaderBBTMemory) ||
-            (Md->MemoryType == LoaderSpecialMemory) ||
-            (Md->MemoryType == LoaderBad))
-        {
-            /* Loop every page part of the block but valid in the database */
-            for (i = 0; i < Md->PageCount; i++)
-            {
-                /* Skip memory we ignore completely */
-                if ((Md->BasePage + i) > MmPageArraySize) break;
-                
-                /* These are pages reserved by the BIOS/ROMs */
-                MmPageArray[Md->BasePage + i].Flags.Type = MM_PHYSICAL_PAGE_BIOS;
-                MmPageArray[Md->BasePage + i].Flags.Consumer = MC_NPPOOL;
-                MmStats.NrSystemPages++;
-            }
-        }
-        else if ((Md->MemoryType == LoaderFree) ||
-                 (Md->MemoryType == LoaderLoadedProgram) ||
-                 (Md->MemoryType == LoaderFirmwareTemporary) ||
-                 (Md->MemoryType == LoaderOsloaderStack))
-        {
-            /* Loop every page part of the block */
-            for (i = 0; i < Md->PageCount; i++)
-            {
-                /* Mark it as a free page */
-                MmPageArray[Md->BasePage + i].Flags.Type = MM_PHYSICAL_PAGE_FREE;
-                InsertTailList(&FreeUnzeroedPageListHead,
-                               &MmPageArray[Md->BasePage + i].ListEntry);
-                UnzeroedPageCount++;
-                MmStats.NrFreePages++;
-            }
-        }
-        else
-        {
-            /* Loop every page part of the block */
-            for (i = 0; i < Md->PageCount; i++)
-            {
-                /* Everything else is used memory */
-                MmPageArray[Md->BasePage + i] = UsedPage;
-                MmStats.NrSystemPages++;
-            }
-        }
-    }
-
-    /* Finally handle the pages describing the PFN database themselves */
-    for (i = (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount);
-         i < (MiFreeDescriptorOrg.BasePage + MiFreeDescriptorOrg.PageCount);
-         i++)
-    {
-        /* Ensure this page was not added previously */
-        ASSERT(MmPageArray[i].Flags.Type == 0);
-
-        /* Mark it as used kernel memory */
-        MmPageArray[i] = UsedPage;
-        MmStats.NrSystemPages++;
-    }
-
-    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
-
-    DPRINT("Pages: %x %x\n", MmStats.NrFreePages, MmStats.NrSystemPages);
-    MmStats.NrTotalPages = MmStats.NrFreePages + MmStats.NrSystemPages + MmStats.NrUserPages;
-    MmInitializeBalancer(MmStats.NrFreePages, MmStats.NrSystemPages);
+    
+    DbgPrint("Nonpaged Pool:       %d pages\t[%d KB]\n", Totals[MC_NPPOOL], (Totals[MC_NPPOOL] << PAGE_SHIFT) / 1024);
+    DbgPrint("Paged Pool:          %d pages\t[%d KB]\n", Totals[MC_PPOOL],  (Totals[MC_PPOOL]  << PAGE_SHIFT) / 1024);
+    DbgPrint("File System Cache:   %d pages\t[%d KB]\n", Totals[MC_CACHE],  (Totals[MC_CACHE]  << PAGE_SHIFT) / 1024);
+    DbgPrint("Process Working Set: %d pages\t[%d KB]\n", Totals[MC_USER],   (Totals[MC_USER]   << PAGE_SHIFT) / 1024);
+    DbgPrint("System:              %d pages\t[%d KB]\n", Totals[MC_SYSTEM], (Totals[MC_SYSTEM] << PAGE_SHIFT) / 1024);
+    DbgPrint("Free:                %d pages\t[%d KB]\n", FreePages,         (FreePages         << PAGE_SHIFT) / 1024);
+    
+    KeLowerIrql(OldIrql);
 }
 
 VOID
 NTAPI
-MmSetFlagsPage(PFN_TYPE Pfn, ULONG Flags)
-{
-   KIRQL oldIrql;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->AllFlags = Flags;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-VOID
-NTAPI
-MmSetRmapListHeadPage(PFN_TYPE Pfn, struct _MM_RMAP_ENTRY* ListHead)
+MmSetRmapListHeadPage(PFN_NUMBER Pfn, struct _MM_RMAP_ENTRY* ListHead)
 {
    KIRQL oldIrql;
     
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->RmapListHead = ListHead;
+   MiGetPfnEntry(Pfn)->RmapListHead = (LONG)ListHead;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
 struct _MM_RMAP_ENTRY*
 NTAPI
-MmGetRmapListHeadPage(PFN_TYPE Pfn)
+MmGetRmapListHeadPage(PFN_NUMBER Pfn)
 {
    KIRQL oldIrql;
    struct _MM_RMAP_ENTRY* ListHead;
     
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   ListHead = MiGetPfnEntry(Pfn)->RmapListHead;
+   ListHead = (struct _MM_RMAP_ENTRY*)MiGetPfnEntry(Pfn)->RmapListHead;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
     
    return(ListHead);
@@ -404,132 +473,51 @@ MmGetRmapListHeadPage(PFN_TYPE Pfn)
 
 VOID
 NTAPI
-MmMarkPageMapped(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   if (Pfn <= MmPageArraySize)
-   {
-	   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      Page = MiGetPfnEntry(Pfn);
-      if (Page->Flags.Type == MM_PHYSICAL_PAGE_FREE)
-      {
-         DPRINT1("Mapping non-used page\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      Page->MapCount++;
-      Page->ReferenceCount++;
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   }
-}
-
-VOID
-NTAPI
-MmMarkPageUnmapped(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   if (Pfn <= MmPageArraySize)
-   {
-	  oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      Page = MiGetPfnEntry(Pfn);
-      if (Page->Flags.Type == MM_PHYSICAL_PAGE_FREE)
-      {
-         DPRINT1("Unmapping non-used page\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (Page->MapCount == 0)
-      {
-         DPRINT1("Unmapping not mapped page\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      Page->MapCount--;
-      Page->ReferenceCount--;
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   }
-}
-
-ULONG
-NTAPI
-MmGetFlagsPage(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   ULONG Flags;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Flags = MiGetPfnEntry(Pfn)->AllFlags;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-
-   return(Flags);
-}
-
-
-VOID
-NTAPI
-MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SavedSwapEntry)
+MmSetSavedSwapEntryPage(PFN_NUMBER Pfn,  SWAPENTRY SwapEntry)
 {
    KIRQL oldIrql;
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->SavedSwapEntry = SavedSwapEntry;
+   MiGetPfnEntry(Pfn)->u1.WsIndex = SwapEntry;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
 SWAPENTRY
 NTAPI
-MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
+MmGetSavedSwapEntryPage(PFN_NUMBER Pfn)
 {
-   SWAPENTRY SavedSwapEntry;
+   SWAPENTRY SwapEntry;
    KIRQL oldIrql;
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   SavedSwapEntry = MiGetPfnEntry(Pfn)->SavedSwapEntry;
+   SwapEntry = MiGetPfnEntry(Pfn)->u1.WsIndex;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 
-   return(SavedSwapEntry);
+   return(SwapEntry);
 }
 
 VOID
 NTAPI
-MmReferencePageUnsafe(PFN_TYPE Pfn)
+MmReferencePage(PFN_NUMBER Pfn)
 {
-   KIRQL oldIrql;
    PPHYSICAL_PAGE Page;
 
-   DPRINT("MmReferencePageUnsafe(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
+   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   if (Pfn == 0 || Pfn > MmPageArraySize)
+   if (Pfn == 0 || Pfn > MmHighestPhysicalPage)
    {
       return;
    }
 
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
    Page = MiGetPfnEntry(Pfn);
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
-   {
-      DPRINT1("Referencing non-used page\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
+   ASSERT(Page);
 
-   Page->ReferenceCount++;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-VOID
-NTAPI
-MmReferencePage(PFN_TYPE Pfn)
-{
-   DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   MmReferencePageUnsafe(Pfn);
+   Page->u3.e2.ReferenceCount++;
 }
 
 ULONG
 NTAPI
-MmGetReferenceCountPage(PFN_TYPE Pfn)
+MmGetReferenceCountPage(PFN_NUMBER Pfn)
 {
    KIRQL oldIrql;
    ULONG RCount;
@@ -539,13 +527,9 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
    Page = MiGetPfnEntry(Pfn);
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
-   {
-      DPRINT1("Getting reference count for free page\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
+   ASSERT(Page);
 
-   RCount = Page->ReferenceCount;
+   RCount = Page->u3.e2.ReferenceCount;
 
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
    return(RCount);
@@ -553,408 +537,106 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 
 BOOLEAN
 NTAPI
-MmIsPageInUse(PFN_TYPE Pfn)
+MmIsPageInUse(PFN_NUMBER Pfn)
 {
-
-   DPRINT("MmIsPageInUse(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   return (MiGetPfnEntry(Pfn)->Flags.Type == MM_PHYSICAL_PAGE_USED);
+    return MiIsPfnInUse(MiGetPfnEntry(Pfn));
 }
 
 VOID
 NTAPI
-MmDereferencePage(PFN_TYPE Pfn)
+MiSetConsumer(IN PFN_NUMBER Pfn,
+              IN ULONG Type)
 {
-   KIRQL oldIrql;
+    MiGetPfnEntry(Pfn)->u3.e1.PageLocation = ActiveAndValid;
+}
+
+VOID
+NTAPI
+MmDereferencePage(PFN_NUMBER Pfn)
+{
    PPHYSICAL_PAGE Page;
 
    DPRINT("MmDereferencePage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
 
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
    Page = MiGetPfnEntry(Pfn);
+   ASSERT(Page);
 
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
+   Page->u3.e2.ReferenceCount--;
+   if (Page->u3.e2.ReferenceCount == 0)
    {
-      DPRINT1("Dereferencing free page\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (Page->ReferenceCount == 0)
-   {
-      DPRINT1("Derefrencing page with reference count 0\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-
-   Page->ReferenceCount--;
-   if (Page->ReferenceCount == 0)
-   {
-      MmStats.NrFreePages++;
-      MmStats.NrSystemPages--;
-      if (Page->Flags.Consumer == MC_USER) RemoveEntryList(&Page->ListEntry);
-      if (Page->RmapListHead != NULL)
-      {
-         DPRINT1("Freeing page with rmap entries.\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (Page->MapCount != 0)
-      {
-         DPRINT1("Freeing mapped page (0x%x count %d)\n",
-                  Pfn << PAGE_SHIFT, Page->MapCount);
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (Page->LockCount > 0)
-      {
-         DPRINT1("Freeing locked page\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (Page->SavedSwapEntry != 0)
-      {
-         DPRINT1("Freeing page with swap entry.\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
-      {
-         DPRINT1("Freeing page with flags %x\n",
-                  Page->Flags.Type);
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      Page->Flags.Type = MM_PHYSICAL_PAGE_FREE;
-      Page->Flags.Consumer = MC_MAXIMUM;
-      InsertTailList(&FreeUnzeroedPageListHead,
-                     &Page->ListEntry);
-      UnzeroedPageCount++;
-      if (UnzeroedPageCount > 8 && 0 == KeReadStateEvent(&ZeroPageThreadEvent))
+      MmAvailablePages++;
+      Page->u3.e1.PageLocation = FreePageList;
+      MiInsertInListTail(&MmFreePageListHead, Page);
+      if (MmFreePageListHead.Total > 8 && 0 == KeReadStateEvent(&ZeroPageThreadEvent))
       {
          KeSetEvent(&ZeroPageThreadEvent, IO_NO_INCREMENT, FALSE);
       }
    }
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
-ULONG
+PFN_NUMBER
 NTAPI
-MmGetLockCountPage(PFN_TYPE Pfn)
+MmAllocPage(ULONG Type)
 {
-   KIRQL oldIrql;
-   ULONG LockCount;
-   PPHYSICAL_PAGE Page;
-
-   DPRINT("MmGetLockCountPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-   Page = MiGetPfnEntry(Pfn);
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
-   {
-      DPRINT1("Getting lock count for free page\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-
-   LockCount = Page->LockCount;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-
-   return(LockCount);
-}
-
-VOID
-NTAPI
-MmLockPageUnsafe(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   DPRINT("MmLockPageUnsafe(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-   Page = MiGetPfnEntry(Pfn);
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
-   {
-      DPRINT1("Locking free page\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-
-   Page->LockCount++;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-VOID
-NTAPI
-MmLockPage(PFN_TYPE Pfn)
-{
-   DPRINT("MmLockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   MmLockPageUnsafe(Pfn);
-}
-
-VOID
-NTAPI
-MmUnlockPage(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   DPRINT("MmUnlockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-   Page = MiGetPfnEntry(Pfn);
-   if (Page->Flags.Type != MM_PHYSICAL_PAGE_USED)
-   {
-      DPRINT1("Unlocking free page\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-
-   Page->LockCount--;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-PFN_TYPE
-NTAPI
-MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
-{
-   PFN_TYPE PfnOffset;
-   PLIST_ENTRY ListEntry;
+   PFN_NUMBER PfnOffset;
    PPHYSICAL_PAGE PageDescriptor;
-   KIRQL oldIrql;
    BOOLEAN NeedClear = FALSE;
 
    DPRINT("MmAllocPage()\n");
 
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   if (IsListEmpty(&FreeZeroedPageListHead))
+   if (MmZeroedPageListHead.Total == 0)
    {
-      if (IsListEmpty(&FreeUnzeroedPageListHead))
-      {
+       if (MmFreePageListHead.Total == 0)
+       {
          /* Check if this allocation is for the PFN DB itself */
-         if (MmStats.NrTotalPages == 0) 
+         if (MmNumberOfPhysicalPages == 0) 
          {
-             /* Allocate an early page -- we'll account for it later */
-             KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-             PfnOffset = MmAllocEarlyPage();
-             MiZeroPage(PfnOffset);
-             return PfnOffset;
+             ASSERT(FALSE);
          }
 
          DPRINT1("MmAllocPage(): Out of memory\n");
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
          return 0;
       }
-      ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
-      UnzeroedPageCount--;
-
-      PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
+      PageDescriptor = MiRemoveHeadList(&MmFreePageListHead);
 
       NeedClear = TRUE;
    }
    else
    {
-      ListEntry = RemoveTailList(&FreeZeroedPageListHead);
-
-      PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
+      PageDescriptor = MiRemoveHeadList(&MmZeroedPageListHead);
    }
 
-   if (PageDescriptor->Flags.Type != MM_PHYSICAL_PAGE_FREE)
-   {
-      DPRINT1("Got non-free page from freelist\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (PageDescriptor->MapCount != 0)
-   {
-      DPRINT1("Got mapped page from freelist\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   if (PageDescriptor->ReferenceCount != 0)
-   {
-      DPRINT1("%d\n", PageDescriptor->ReferenceCount);
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
-   PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
-   PageDescriptor->Flags.Consumer = Consumer;
-   PageDescriptor->ReferenceCount = 1;
-   PageDescriptor->LockCount = 0;
-   PageDescriptor->MapCount = 0;
-   PageDescriptor->SavedSwapEntry = SavedSwapEntry;
+   PageDescriptor->u3.e2.ReferenceCount = 1;
 
-   MmStats.NrSystemPages++;
-   MmStats.NrFreePages--;
+   MmAvailablePages--;
 
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-
-   PfnOffset = PageDescriptor - MmPageArray;
-   if (NeedClear)
+   PfnOffset = MiGetPfnEntryIndex(PageDescriptor);
+   if ((NeedClear) && (Type != MC_SYSTEM))
    {
       MiZeroPage(PfnOffset);
    }
-   if (PageDescriptor->MapCount != 0)
-   {
-      DPRINT1("Returning mapped page.\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
+     
+   PageDescriptor->u3.e1.PageLocation = ActiveAndValid;
    return PfnOffset;
 }
 
-LONG
-NTAPI
-MmAllocPagesSpecifyRange(ULONG Consumer,
-                         PHYSICAL_ADDRESS LowestAddress,
-                         PHYSICAL_ADDRESS HighestAddress,
-                         ULONG NumberOfPages,
-                         PPFN_TYPE Pages)
-{
-   PPHYSICAL_PAGE PageDescriptor;
-   KIRQL oldIrql;
-   PFN_TYPE LowestPage, HighestPage;
-   PFN_TYPE pfn;
-   ULONG NumberOfPagesFound = 0;
-   ULONG i;
-
-   DPRINT("MmAllocPagesSpecifyRange()\n"
-          "    LowestAddress = 0x%08x%08x\n"
-          "    HighestAddress = 0x%08x%08x\n"
-          "    NumberOfPages = %d\n",
-          LowestAddress.u.HighPart, LowestAddress.u.LowPart,
-          HighestAddress.u.HighPart, HighestAddress.u.LowPart,
-          NumberOfPages);
-
-   if (NumberOfPages == 0)
-      return 0;
-
-   LowestPage = LowestAddress.LowPart / PAGE_SIZE;
-   HighestPage = HighestAddress.LowPart / PAGE_SIZE;
-   if ((HighestAddress.u.LowPart % PAGE_SIZE) != 0)
-      HighestPage++;
-
-   if (LowestPage >= MmPageArraySize)
-   {
-      DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
-      return -1;
-   }
-   if (HighestPage > MmPageArraySize)
-      HighestPage = MmPageArraySize;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   if (LowestPage == 0 && HighestPage == MmPageArraySize)
-   {
-      PLIST_ENTRY ListEntry;
-      while (NumberOfPagesFound < NumberOfPages)
-      {
-         if (!IsListEmpty(&FreeZeroedPageListHead))
-         {
-            ListEntry = RemoveTailList(&FreeZeroedPageListHead);
-         }
-         else if (!IsListEmpty(&FreeUnzeroedPageListHead))
-         {
-            ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
-            UnzeroedPageCount--;
-         }
-         else
-         {
-            if (NumberOfPagesFound == 0)
-            {
-				KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-               DPRINT1("MmAllocPagesSpecifyRange(): Out of memory\n");
-               return -1;
-            }
-            else
-            {
-               break;
-            }
-         }
-         PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
-
-         ASSERT(PageDescriptor->Flags.Type == MM_PHYSICAL_PAGE_FREE);
-         ASSERT(PageDescriptor->MapCount == 0);
-         ASSERT(PageDescriptor->ReferenceCount == 0);
-
-         /* Allocate the page */
-         PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
-         PageDescriptor->Flags.Consumer = Consumer;
-         PageDescriptor->ReferenceCount = 1;
-         PageDescriptor->LockCount = 0;
-         PageDescriptor->MapCount = 0;
-         PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
-
-         MmStats.NrSystemPages++;
-         MmStats.NrFreePages--;
-
-         /* Remember the page */
-         pfn = PageDescriptor - MmPageArray;
-         Pages[NumberOfPagesFound++] = pfn;
-         if(Consumer == MC_USER) MmInsertLRULastUserPage(pfn);
-      }
-   }
-   else
-   {
-      INT LookForZeroedPages;
-      for (LookForZeroedPages = 1; LookForZeroedPages >= 0; LookForZeroedPages--)
-      {
-         for (pfn = LowestPage; pfn < HighestPage; pfn++)
-         {
-            PageDescriptor = MmPageArray + pfn;
-
-            if (PageDescriptor->Flags.Type != MM_PHYSICAL_PAGE_FREE)
-               continue;
-            if (PageDescriptor->Flags.Zero != LookForZeroedPages)
-               continue;
-
-            ASSERT(PageDescriptor->MapCount == 0);
-            ASSERT(PageDescriptor->ReferenceCount == 0);
-
-            /* Allocate the page */
-            PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
-            PageDescriptor->Flags.Consumer = Consumer;
-            PageDescriptor->ReferenceCount = 1;
-            PageDescriptor->LockCount = 0;
-            PageDescriptor->MapCount = 0;
-            PageDescriptor->SavedSwapEntry = 0; /* FIXME: Do we need swap entries? */
-
-            if (!PageDescriptor->Flags.Zero)
-               UnzeroedPageCount--;
-            MmStats.NrSystemPages++;
-            MmStats.NrFreePages--;
-
-            /* Remember the page */
-            Pages[NumberOfPagesFound++] = pfn;
-            if (NumberOfPagesFound == NumberOfPages)
-               break;
-         }
-         if (NumberOfPagesFound == NumberOfPages)
-            break;
-      }
-   }
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-
-   /* Zero unzero-ed pages */
-   for (i = 0; i < NumberOfPagesFound; i++)
-   {
-      pfn = Pages[i];
-      if (MiGetPfnEntry(pfn)->Flags.Zero == 0)
-      {
-         MiZeroPage(pfn);
-      }
-      else
-      {
-         MiGetPfnEntry(pfn)->Flags.Zero = 0;
-      }
-   }
-
-   return NumberOfPagesFound;
-}
-
-static
 NTSTATUS
-MiZeroPageInternal(PFN_TYPE Page)
+NTAPI
+MiZeroPage(PFN_NUMBER Page)
 {
-   PVOID TempAddress;
-
-   TempAddress = MiMapPageToZeroInHyperSpace(Page);
-   if (TempAddress == NULL)
-   {
-      return(STATUS_NO_MEMORY);
-   }
-   memset(TempAddress, 0, PAGE_SIZE);
-   return(STATUS_SUCCESS);
+    KIRQL Irql;
+    PVOID TempAddress;
+    
+    Irql = KeRaiseIrqlToDpcLevel();
+    TempAddress = MiMapPageToZeroInHyperSpace(Page);
+    if (TempAddress == NULL)
+    {
+        return(STATUS_NO_MEMORY);
+    }
+    memset(TempAddress, 0, PAGE_SIZE);
+    MiUnmapPagesInZeroSpace(TempAddress, 1);
+    KeLowerIrql(Irql);
+    return(STATUS_SUCCESS);
 }
 
 NTSTATUS
@@ -963,9 +645,8 @@ MmZeroPageThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
    KIRQL oldIrql;
-   PLIST_ENTRY ListEntry;
    PPHYSICAL_PAGE PageDescriptor;
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
    ULONG Count;
 
    /* Free initial kernel memory */
@@ -982,11 +663,6 @@ MmZeroPageThreadMain(PVOID Ignored)
                                      KernelMode,
                                      FALSE,
                                      NULL);
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT1("ZeroPageThread: Wait failed\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
 
       if (ZeroPageThreadShouldTerminate)
       {
@@ -995,34 +671,24 @@ MmZeroPageThreadMain(PVOID Ignored)
       }
       Count = 0;
       oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      while (!IsListEmpty(&FreeUnzeroedPageListHead))
+      while (MmFreePageListHead.Total)
       {
-         ListEntry = RemoveTailList(&FreeUnzeroedPageListHead);
-         UnzeroedPageCount--;
-         PageDescriptor = CONTAINING_RECORD(ListEntry, PHYSICAL_PAGE, ListEntry);
+         PageDescriptor = MiRemoveHeadList(&MmFreePageListHead);
          /* We set the page to used, because MmCreateVirtualMapping failed with unused pages */
-         PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-         Pfn = PageDescriptor - MmPageArray;
-         Status = MiZeroPageInternal(Pfn);
+         Pfn = MiGetPfnEntryIndex(PageDescriptor);
+         Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         if (PageDescriptor->MapCount != 0)
-         {
-            DPRINT1("Mapped page on freelist.\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-         }
-	 PageDescriptor->Flags.Zero = 1;
-         PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_FREE;
          if (NT_SUCCESS(Status))
          {
-            InsertHeadList(&FreeZeroedPageListHead, ListEntry);
+            MiInsertZeroListAtBack(Pfn);
             Count++;
          }
          else
          {
-            InsertHeadList(&FreeUnzeroedPageListHead, ListEntry);
-            UnzeroedPageCount++;
+            MiInsertInListTail(&MmFreePageListHead, PageDescriptor);
+            PageDescriptor->u3.e1.PageLocation = FreePageList;
          }
 
       }

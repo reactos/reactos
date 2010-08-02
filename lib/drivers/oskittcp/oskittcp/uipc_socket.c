@@ -190,7 +190,7 @@ soclose(so)
 				goto drop;
 			while (so->so_state & SS_ISCONNECTED) {
 				error = tsleep((caddr_t)&so->so_timeo,
-				    PSOCK | PCATCH, netcls, so->so_linger);
+				    PSOCK | PCATCH, netcls, so->so_linger * 1000);
 				if (error)
 					break;
 			}
@@ -824,19 +824,6 @@ soshutdown(so, how)
 	register struct socket *so;
 	register int how;
 {
-    if (so == NULL)
-    {
-     	register struct protosw *pr = NULL;
-
-	how++;
-	if (how & FREAD)
-		sorflush(so);
-	if (how & FWRITE)
-		return ((*pr->pr_usrreq)(so, PRU_SHUTDOWN,
-		    (struct mbuf *)0, (struct mbuf *)0, (struct mbuf *)0));
-	return (0);
-    }
-
 	register struct protosw *pr = so->so_proto;
 
 	how++;

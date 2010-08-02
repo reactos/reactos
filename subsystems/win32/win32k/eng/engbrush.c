@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Brush Functions
@@ -7,12 +7,122 @@
  *                    Timo Kreuzer
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /** Internal functions ********************************************************/
+
+VOID
+NTAPI
+EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
+{
+    HPALETTE hpal = NULL;
+
+    ASSERT(pebo);
+    ASSERT(pbrush);
+    ASSERT(pdc);
+
+    pebo->BrushObject.flColorType = 0;
+    pebo->BrushObject.pvRbrush = NULL;
+    pebo->pbrush = pbrush;
+    pebo->pengbrush = NULL;
+    pebo->flattrs = pbrush->flAttrs;
+
+    /* Initialize 1 bpp fore and back colors */
+    pebo->crCurrentBack = pdc->pdcattr->crBackgroundClr;
+    pebo->crCurrentText = pdc->pdcattr->crForegroundClr;
+
+    pebo->psurfTrg = pdc->dclevel.pSurface;
+//    ASSERT(pebo->psurfTrg); // FIXME: some dcs don't have a surface
+
+    if (pebo->psurfTrg)
+        hpal = pebo->psurfTrg->hDIBPalette;
+    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
+    pebo->ppalSurf = PALETTE_ShareLockPalette(hpal);
+    if (!pebo->ppalSurf)
+        pebo->ppalSurf = &gpalRGB;
+
+    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
+    {
+        /* NULL brushes don't need a color */
+        pebo->BrushObject.iSolidColor = 0;
+    }
+    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
+    {
+        /* Set the RGB color */
+        EBRUSHOBJ_vSetSolidBrushColor(pebo, pbrush->BrushAttr.lbColor);
+    }
+    else
+    {
+        /* This is a pattern brush that needs realization */
+        pebo->BrushObject.iSolidColor = 0xFFFFFFFF;
+
+        /* Use foreground color of hatch brushes */
+        if (pbrush->flAttrs & GDIBRUSH_IS_HATCH)
+            pebo->crCurrentText = pbrush->BrushAttr.lbColor;
+    }
+}
+
+VOID
+FASTCALL
+EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor)
+{
+    ULONG iSolidColor;
+    EXLATEOBJ exlo;
+
+    /* Never use with non-solid brushes */
+    ASSERT(pebo->flattrs & GDIBRUSH_IS_SOLID);
+
+    /* Set the RGB color */
+    pebo->crRealize = crColor;
+    pebo->ulRGBColor = crColor;
+
+    /* Initialize an XLATEOBJ RGB -> surface */
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, pebo->ppalSurf, 0, 0, 0);
+
+    /* Translate the brush color to the target format */
+    iSolidColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
+    pebo->BrushObject.iSolidColor = iSolidColor;
+
+    /* Clean up the XLATEOBJ */
+    EXLATEOBJ_vCleanup(&exlo);
+}
+
+VOID
+NTAPI
+EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
+{
+    /* Check if there's a GDI realisation */
+    if (pebo->pengbrush)
+    {
+        EngDeleteSurface(pebo->pengbrush);
+        pebo->pengbrush = NULL;
+    }
+
+    /* Check if there's a driver's realisation */
+    if (pebo->BrushObject.pvRbrush)
+    {
+        /* Free allocated driver memory */
+        EngFreeMem(pebo->BrushObject.pvRbrush);
+        pebo->BrushObject.pvRbrush = NULL;
+    }
+
+    if (pebo->ppalSurf != &gpalRGB)
+        PALETTE_ShareUnlockPalette(pebo->ppalSurf);
+}
+
+VOID
+NTAPI
+EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
+{
+    /* Cleanup the brush */
+    EBRUSHOBJ_vCleanup(pebo);
+
+    /* Reinitialize */
+    EBRUSHOBJ_vInit(pebo, pbrush, pdc);
+}
 
 /**
  * This function is not exported, because it makes no sense for
@@ -33,8 +143,6 @@ EngRealizeBrush(
     POINTL ptlSrc = {0, 0};
     RECTL rclDest;
     ULONG lWidth;
-
-    rclDest = (RECTL){0, 0, psoPattern->sizlBitmap.cx, psoPattern->sizlBitmap.cy};
 
     /* Calculate width in bytes of the realized brush */
     lWidth = DIB_GetDIBWidthBytes(psoPattern->sizlBitmap.cx,
@@ -60,6 +168,9 @@ EngRealizeBrush(
     }
 
     /* Copy the bits to the new format bitmap */
+    rclDest.left = rclDest.top = 0;
+    rclDest.right = psoPattern->sizlBitmap.cx;
+    rclDest.bottom = psoPattern->sizlBitmap.cy;
     EngCopyBits(psoRealize, psoPattern, NULL, pxlo, &rclDest, &ptlSrc);
 
     /* Unlock the bitmap again */
@@ -71,135 +182,84 @@ EngRealizeBrush(
     return TRUE;
 }
 
-VOID
-FASTCALL
-EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
-{
-    ULONG iSolidColor;
-
-    ASSERT(pebo);
-    ASSERT(pbrush);
-
-    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
-    {
-        pebo->BrushObject.iSolidColor = 0;
-    }
-    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
-    {
-        /* Set the RGB color */
-        pebo->crRealize = pbrush->BrushAttr.lbColor;
-        pebo->ulRGBColor = pbrush->BrushAttr.lbColor;
-
-        /* Translate the brush color to the target format */
-        iSolidColor = XLATEOBJ_iXlate(pxlo, pbrush->BrushAttr.lbColor);
-        pebo->BrushObject.iSolidColor = iSolidColor;
-    }
-    else
-    {
-        /* This is a pattern brush that needs realization */
-        pebo->BrushObject.iSolidColor = 0xFFFFFFFF;
-//        EBRUSHOBJ_bRealizeBrush(pebo);
-    }
-
-//    pebo->psurfTrg = psurfTrg;
-    pebo->BrushObject.pvRbrush = pbrush->ulRealization;
-    pebo->BrushObject.flColorType = 0;
-    pebo->pbrush = pbrush;
-    pebo->flattrs = pbrush->flAttrs;
-    pebo->XlateObject = pxlo;
-}
-
-VOID
-FASTCALL
-EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor, XLATEOBJ *pxlo)
-{
-    ULONG iSolidColor;
-
-    /* Never use with non-solid brushes */
-    ASSERT(pebo->flattrs & GDIBRUSH_IS_SOLID);
-
-    /* Set the RGB color */
-    pebo->crRealize = crColor;
-    pebo->ulRGBColor = crColor;
-
-    /* Translate the brush color to the target format */
-    iSolidColor = XLATEOBJ_iXlate(pxlo, crColor);
-    pebo->BrushObject.iSolidColor = iSolidColor;
-
-    pebo->BrushObject.iSolidColor = iSolidColor;
-}
-
 BOOL
-FASTCALL
-EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo)
+NTAPI
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 {
     BOOL bResult;
-    PFN_DrvRealizeBrush pfnRealzizeBrush;
-    PSURFACE psurfTrg, psurfPattern, psurfMask;
-    PPDEVOBJ ppdev;
-    XLATEOBJ *pxlo;
+    PFN_DrvRealizeBrush pfnRealzizeBrush = NULL;
+    PSURFACE psurfPattern, psurfMask;
+    PPDEVOBJ ppdev = NULL;
+    EXLATEOBJ exlo;
 
-    psurfTrg = pebo->psurfTrg; // FIXME: all EBRUSHOBJs need a surface
-    ppdev = (PPDEVOBJ)psurfTrg->SurfObj.hdev; // FIXME: all SURFACEs need a PDEV
-
-    pfnRealzizeBrush = NULL;//ppdev->DriverFunctions.RealizeBrush;
-    if (!pfnRealzizeBrush)
+    // FIXME: all EBRUSHOBJs need a surface, see EBRUSHOBJ_vInit
+    if (!pebo->psurfTrg)
     {
-        pfnRealzizeBrush = EngRealizeBrush;
+        DPRINT1("Pattern brush has no target surface!\n");
+        return FALSE;
     }
 
-    psurfPattern = SURFACE_LockSurface(pebo->pbrush->hbmPattern);
+    ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
+
+    // FIXME: all SURFACEs need a PDEV
+    if (ppdev && bCallDriver)
+        pfnRealzizeBrush = ppdev->DriverFunctions.RealizeBrush;
+
+    if (!pfnRealzizeBrush)
+        pfnRealzizeBrush = EngRealizeBrush;
+
+    psurfPattern = SURFACE_ShareLockSurface(pebo->pbrush->hbmPattern);
+    ASSERT(psurfPattern);
 
     /* FIXME: implement mask */
     psurfMask = NULL;
 
-    // FIXME
-    pxlo = NULL;
+    /* Initialize XLATEOBJ for the brush */
+    EXLATEOBJ_vInitBrushXlate(&exlo,
+                              pebo->pbrush,
+                              pebo->psurfTrg,
+                              pebo->crCurrentText,
+                              pebo->crCurrentBack);
 
-    bResult = pfnRealzizeBrush(&pebo->BrushObject, 
+    /* Create the realization */
+    bResult = pfnRealzizeBrush(&pebo->BrushObject,
                                &pebo->psurfTrg->SurfObj,
-                               psurfPattern ? &psurfPattern->SurfObj : NULL,
+                               &psurfPattern->SurfObj,
                                psurfMask ? &psurfMask->SurfObj : NULL,
-                               pxlo,
+                               &exlo.xlo,
                                -1); // FIXME: what about hatch brushes?
 
-    if (psurfPattern)
-        SURFACE_UnlockSurface(psurfPattern);
+    /* Cleanup the XLATEOBJ */
+    EXLATEOBJ_vCleanup(&exlo);
 
+    /* Unlock surfaces */
+    if (psurfPattern)
+        SURFACE_ShareUnlockSurface(psurfPattern);
     if (psurfMask)
-        SURFACE_UnlockSurface(psurfMask);
+        SURFACE_ShareUnlockSurface(psurfMask);
 
     return bResult;
 }
 
-VOID
-FASTCALL
-EBRUSHOBJ_vUnrealizeBrush(EBRUSHOBJ *pebo)
+PVOID
+NTAPI
+EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo)
 {
-    /* Check if it's a GDI realisation */
-    if (pebo->pengbrush)
+    BOOL bResult;
+
+    if (!pebo->pengbrush)
     {
-        EngDeleteSurface(pebo->pengbrush);
+        bResult = EBRUSHOBJ_bRealizeBrush(pebo, FALSE);
+        if (!bResult)
+        {
+            if (pebo->pengbrush)
+                EngDeleteSurface(pebo->pengbrush);
+            pebo->pengbrush = NULL;
+        }
     }
-    else if (pebo->BrushObject.pvRbrush)
-    {
-        /* Free allocated driver memory */
-        EngFreeMem(pebo->BrushObject.pvRbrush);
-    }
+
+    return pebo->pengbrush;
 }
-
-
-
-VOID
-FASTCALL
-EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo)
-{
-    /* Unrealize the brush */
-    EBRUSHOBJ_vUnrealizeBrush(pebo);
-
-    EBRUSHOBJ_vInit(pebo, pbrush, pxlo);
-}
-
 
 
 /** Exported DDI functions ****************************************************/
@@ -212,7 +272,7 @@ BRUSHOBJ_pvAllocRbrush(
     IN BRUSHOBJ *pbo,
     IN ULONG cj)
 {
-    pbo->pvRbrush = EngAllocMem(0, cj, 'rbdG');
+    pbo->pvRbrush = EngAllocMem(0, cj, GDITAG_RBRUSH);
     return pbo->pvRbrush;
 }
 
@@ -223,7 +283,22 @@ PVOID APIENTRY
 BRUSHOBJ_pvGetRbrush(
     IN BRUSHOBJ *pbo)
 {
-    // FIXME: this is wrong! Read msdn.
+    EBRUSHOBJ *pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
+    BOOL bResult;
+
+    if (!pbo->pvRbrush)
+    {
+        bResult = EBRUSHOBJ_bRealizeBrush(pebo, TRUE);
+        if (!bResult)
+        {
+            if (pbo->pvRbrush)
+            {
+                EngFreeMem(pbo->pvRbrush);
+                pbo->pvRbrush = NULL;
+            }
+        }
+    }
+
     return pbo->pvRbrush;
 }
 

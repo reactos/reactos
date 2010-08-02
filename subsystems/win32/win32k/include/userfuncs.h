@@ -1,15 +1,10 @@
-#ifndef _WIN32K_USERFUNCS_H
-#define _WIN32K_USERFUNCS_H
-
-
-
-
+#pragma once
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 
 #define ASSERT_REFS_CO(_obj_) \
 { \
-   LONG ref = USER_BODY_TO_HEADER(_obj_)->RefCount;\
+   LONG ref = ((PHEAD)_obj_)->cLockObj;\
    if (!(ref >= 1)){ \
       DPRINT1("ASSERT: obj 0x%x, refs %i\n", _obj_, ref); \
       ASSERT(FALSE); \
@@ -21,7 +16,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 { \
    PSINGLE_LIST_ENTRY e; \
    BOOL gotit=FALSE; \
-   LONG ref = USER_BODY_TO_HEADER(_obj_)->RefCount;\
+   LONG ref = ((PHEAD)_obj_)->cLockObj;\
    if (!(ref >= 1)){ \
       DPRINT1("obj 0x%x, refs %i\n", _obj_, ref); \
       ASSERT(FALSE); \
@@ -38,7 +33,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 }
 #endif
 
-#define DUMP_REFS(obj) DPRINT1("obj 0x%x, refs %i\n",obj, USER_BODY_TO_HEADER(obj)->RefCount)
+#define DUMP_REFS(obj) DPRINT1("obj 0x%x, refs %i\n",obj, ((PHEAD)obj)->cLockObj)
 
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
 
@@ -53,7 +48,7 @@ UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point);
 
 /*************** FOCUS.C ***************/
 
-HWND FASTCALL UserGetActiveWindow();
+HWND FASTCALL UserGetActiveWindow(VOID);
 
 HWND FASTCALL UserGetForegroundWindow(VOID);
 
@@ -125,16 +120,12 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd);
 VOID FASTCALL
 co_DestroyThreadWindows(struct _ETHREAD *Thread);
 
-HWND FASTCALL UserGetShellWindow();
-
-HWND FASTCALL UserGetWindow(HWND hWnd, UINT Relationship);
+HWND FASTCALL UserGetShellWindow(VOID);
 
 HDC FASTCALL
 UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags);
 
 BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Wnd);
-
-LONG FASTCALL UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
 PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 
@@ -158,8 +149,5 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
 DWORD FASTCALL
 co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow);
-
-
-#endif /* _WIN32K_USERFUNCS_H */
 
 /* EOF */

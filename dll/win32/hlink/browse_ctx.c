@@ -155,6 +155,9 @@ static HRESULT WINAPI IHlinkBC_SetBrowseWindowInfo(IHlinkBrowseContext* iface,
     HlinkBCImpl  *This = (HlinkBCImpl*)iface;
     TRACE("(%p)->(%p)\n", This, phlbwi);
 
+    if(!phlbwi)
+        return E_INVALIDARG;
+
     heap_free(This->BrowseWindowInfo);
     This->BrowseWindowInfo = heap_alloc(phlbwi->cbSize);
     memcpy(This->BrowseWindowInfo, phlbwi, phlbwi->cbSize);
@@ -165,8 +168,18 @@ static HRESULT WINAPI IHlinkBC_SetBrowseWindowInfo(IHlinkBrowseContext* iface,
 static HRESULT WINAPI IHlinkBC_GetBrowseWindowInfo(IHlinkBrowseContext* iface,
         HLBWINFO *phlbwi)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HlinkBCImpl  *This = (HlinkBCImpl*)iface;
+    TRACE("(%p)->(%p)\n", This, phlbwi);
+
+    if(!phlbwi)
+        return E_INVALIDARG;
+
+    if(!This->BrowseWindowInfo)
+        phlbwi->cbSize = 0;
+    else
+        memcpy(phlbwi, This->BrowseWindowInfo, This->BrowseWindowInfo->cbSize);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IHlinkBC_SetInitialHlink(IHlinkBrowseContext* iface,
@@ -223,8 +236,19 @@ static HRESULT WINAPI IHlinkBC_QueryHlink( IHlinkBrowseContext* iface,
 static HRESULT WINAPI IHlinkBC_GetHlink( IHlinkBrowseContext* iface,
         ULONG uHLID, IHlink** ppihl)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HlinkBCImpl  *This = (HlinkBCImpl*)iface;
+
+    TRACE("(%p)->(%x %p)\n", This, uHLID, ppihl);
+
+    if(uHLID != HLID_CURRENT) {
+        FIXME("Only HLID_CURRENT implemented, given: %x\n", uHLID);
+        return E_NOTIMPL;
+    }
+
+    *ppihl = This->CurrentPage;
+    IHlink_AddRef(*ppihl);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI IHlinkBC_SetCurrentHlink( IHlinkBrowseContext* iface,

@@ -1,5 +1,4 @@
-#ifndef __INCLUDE_INTERNAL_CC_H
-#define __INCLUDE_INTERNAL_CC_H
+#pragma once
 
 typedef struct _PF_SCENARIO_ID
 {
@@ -116,7 +115,7 @@ typedef struct _BCB
     PVOID LazyWriteContext;
     KSPIN_LOCK BcbLock;
     ULONG RefCount;
-#if defined(DBG) || defined(KDBG)
+#if DBG
 	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
 #endif
 } BCB, *PBCB;
@@ -299,6 +298,19 @@ CcRosRequestCacheSegment(
 
 NTSTATUS
 NTAPI
-CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
+CcRosInitializeFileCache(
+    PFILE_OBJECT FileObject,
+    ULONG CacheSegmentSize,
+    PCACHE_MANAGER_CALLBACKS CallBacks,
+    PVOID LazyWriterContext
+);
 
-#endif
+NTSTATUS
+NTAPI
+CcRosReleaseFileCache(
+    PFILE_OBJECT FileObject
+);
+
+NTSTATUS
+NTAPI
+CcTryToInitializeFileCache(PFILE_OBJECT FileObject);

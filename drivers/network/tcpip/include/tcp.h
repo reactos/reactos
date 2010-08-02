@@ -4,8 +4,8 @@
  * FILE:        include/tcp.h
  * PURPOSE:     Transmission Control Protocol definitions
  */
-#ifndef __TCP_H
-#define __TCP_H
+
+#pragma once
 
 typedef VOID
 (*PTCP_COMPLETION_ROUTINE)( PVOID Context, NTSTATUS Status, ULONG Count );
@@ -59,6 +59,12 @@ typedef struct _SLEEPING_THREAD {
     KEVENT Event;
 } SLEEPING_THREAD, *PSLEEPING_THREAD;
 
+typedef struct _CLIENT_DATA {
+    BOOLEAN Unlocked;
+    KSPIN_LOCK Lock;
+    KIRQL OldIrql;
+} CLIENT_DATA, *PCLIENT_DATA;
+
 /* Retransmission timeout constants */
 
 /* Lower bound for retransmission timeout in TCP timer ticks */
@@ -84,18 +90,15 @@ typedef struct _SLEEPING_THREAD {
 #define SRF_FIN   TCP_FIN
 
 extern LONG TCP_IPIdentification;
-extern LIST_ENTRY SignalledConnections;
-extern LIST_ENTRY SleepingThreadsList;
-extern FAST_MUTEX SleepingThreadsLock;
-extern RECURSIVE_MUTEX TCPLock;
+extern CLIENT_DATA ClientInfo;
 
 /* accept.c */
 NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
 				    PCONNECTION_ENDPOINT Connection,
 				    PTDI_REQUEST_KERNEL Request );
 NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog );
-VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
-			      PCONNECTION_ENDPOINT Connection );
+BOOLEAN TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
+			         PCONNECTION_ENDPOINT Connection );
 NTSTATUS TCPAccept
 ( PTDI_REQUEST Request,
   PCONNECTION_ENDPOINT Listener,
@@ -109,6 +112,8 @@ VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 		    UINT Family, UINT Type, UINT Proto );
+
+VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection);
 
 PTCP_SEGMENT TCPCreateSegment(
   PIP_PACKET IPPacket,
@@ -158,13 +163,7 @@ NTSTATUS TCPSendData(
 
 NTSTATUS TCPClose( PCONNECTION_ENDPOINT Connection );
 
-PVOID TCPPrepareInterface( PIP_INTERFACE IF );
-
-VOID TCPDisposeInterfaceData( PVOID Data );
-
 NTSTATUS TCPTranslateError( int OskitError );
-
-VOID TCPTimeout();
 
 UINT TCPAllocatePort( UINT HintPort );
 
@@ -181,6 +180,4 @@ NTSTATUS TCPStartup(
 NTSTATUS TCPShutdown(
   VOID);
 
-VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );
-
-#endif /* __TCP_H */
+BOOLEAN TCPRemoveIRP( PCONNECTION_ENDPOINT Connection, PIRP Irp );

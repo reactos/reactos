@@ -13,9 +13,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -815,7 +815,7 @@ FrLdrCloseModule(ULONG_PTR ModuleBase,
     if (ModuleData) {
 
         /* Make sure this is the right module and that it hasn't been closed */
-        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == (ULONG_PTR)-1)) {
+        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == MAXULONG_PTR)) {
 
             /* Close the Module */
             ModuleData->ModEnd = ModuleData->ModStart + ModuleSize;

@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 #define IDC_STATIC  -1
 
@@ -33,6 +32,11 @@
 #define IDS_USERPROFILE_STATUS          75
 #define IDS_USERPROFILE_MODIFIED        76
 
+#define IDS_MESSAGEBOXTITLE             77
+#define IDS_WARNINITIALSIZE             78
+#define IDS_WARNMAXIMUMSIZE             79
+#define IDS_WARNINITIALRANGE            80
+#define IDS_WARNMAXIMUMRANGE            81
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100
@@ -56,12 +60,16 @@
 
 /* propsheet - advanced */
 #define IDD_PROPPAGEADVANCED            400
-#define IDC_ENVVAR                      401
-#define IDC_STAREC                      402
-#define IDC_PERFOR                      403
-#define IDC_USERPROFILE                 404
-#define IDC_ERRORREPORT                 405
+#define IDC_SYSSETTINGS                 401
+#define IDC_ENVVAR                      402
+#define IDC_STAREC                      403
+#define IDC_PERFOR                      404
+#define IDC_USERPROFILE                 405
+#define IDC_ERRORREPORT                 406
 
+/* system settings */
+#define IDD_SYSSETTINGS                 800
+#define IDC_REPORTASWORKSTATION         801
 
 /* user profiles */
 #define IDD_USERPROFILE                 500
@@ -152,5 +160,4 @@
 #define RC_LICENSE                      1502
 #define RTDATA                          1503
 
-
-#endif /* __CPL_RESOURCE_H */
+#define IDS_DEVS                        2000

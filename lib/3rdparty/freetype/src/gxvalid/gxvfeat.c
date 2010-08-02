@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    TrueTypeGX/AAT feat table validation (body).                         */
 /*                                                                         */
-/*  Copyright 2004, 2005 by suzuki toshiya, Masatake YAMATO, Red Hat K.K., */
+/*  Copyright 2004, 2005, 2008 by                                          */
+/*  suzuki toshiya, Masatake YAMATO, Red Hat K.K.,                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -59,7 +60,7 @@
 #define GXV_FEAT_DATA( field )  GXV_TABLE_DATA( feat, field )
 
 
-  typedef enum
+  typedef enum  GXV_FeatureFlagsMask_
   {
     GXV_FEAT_MASK_EXCLUSIVE_SETTINGS = 0x8000U,
     GXV_FEAT_MASK_DYNAMIC_DEFAULT    = 0x4000,
@@ -198,7 +199,7 @@
 
     FT_UShort  feature;
     FT_UShort  nSettings;
-    FT_UInt    settingTable;
+    FT_ULong   settingTable;
     FT_UShort  featureFlags;
 
     FT_Bool    exclusive;

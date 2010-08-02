@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  *****************************************************************************
  */
@@ -91,7 +91,7 @@ typedef struct {
 #define DRV_QUERYSTRINGID		(DRV_RESERVED + 14)
 #define DRV_QUERYSTRINGIDSIZE		(DRV_RESERVED + 15)
 #define DRV_QUERYIDFROMSTRINGID		(DRV_RESERVED + 16)
-#ifdef __WINESRC__
+#ifdef _WINE
 #define DRV_QUERYDSOUNDIFACE		(DRV_RESERVED + 20)
 #define DRV_QUERYDSOUNDDESC		(DRV_RESERVED + 21)
 #define DRV_QUERYDSOUNDGUID		(DRV_RESERVED + 22)
@@ -330,6 +330,9 @@ typedef JOYDEVMSGPROC *LPJOYDEVMSGPROC;
 
 #define MCI_MAX_DEVICE_TYPE_LENGTH 80
 
+#define MCI_OPEN_DRIVER                 0x0801
+#define MCI_CLOSE_DRIVER                0x0802
+
 #define MCI_FALSE                       (MCI_STRING_OFFSET + 19)
 #define MCI_TRUE                        (MCI_STRING_OFFSET + 20)
 
@@ -381,8 +384,8 @@ typedef JOYDEVMSGPROC *LPJOYDEVMSGPROC;
 #define MAKEMCIRESOURCE(wRet, wRes) MAKELRESULT((wRet), (wRes))
 
 typedef struct {
-	DWORD   		dwCallback;
-	DWORD   		dwInstance;
+	DWORD_PTR		dwCallback;
+	DWORD_PTR		dwInstance;
 	HMIDIOUT		hMidi;
 	DWORD   		dwFlags;
 } PORTALLOC, *LPPORTALLOC;
@@ -393,7 +396,7 @@ typedef struct {
 	DWORD_PTR		dwCallback;
 	DWORD_PTR		dwInstance;
 	UINT			uMappedDeviceID;
-	DWORD			dnDevNode;
+	DWORD_PTR		dnDevNode;
 } WAVEOPENDESC, *LPWAVEOPENDESC;
 
 typedef struct {
@@ -403,9 +406,9 @@ typedef struct {
 
 typedef struct {
 	HMIDI			hMidi;
-	DWORD			dwCallback;
-	DWORD			dwInstance;
-        DWORD          		dnDevNode;
+	DWORD_PTR		dwCallback;
+	DWORD_PTR		dwInstance;
+	DWORD_PTR		dnDevNode;
         DWORD          		cIds;
         MIDIOPENSTRMID 		rgIds;
 } MIDIOPENDESC, *LPMIDIOPENDESC;
@@ -413,9 +416,10 @@ typedef struct {
 typedef struct tMIXEROPENDESC
 {
 	HMIXEROBJ		hmx;
-        LPVOID			pReserved0;
-	DWORD			dwCallback;
-	DWORD			dwInstance;
+	LPVOID			pReserved0;
+	DWORD_PTR			dwCallback;
+	DWORD_PTR			dwInstance;
+	DWORD_PTR			dnDevNode;
 } MIXEROPENDESC, *LPMIXEROPENDESC;
 
 typedef struct {
@@ -432,8 +436,8 @@ typedef struct {
 	UINT			wType;			/* driver type (filled in by the driver) */
 } MCI_OPEN_DRIVER_PARMSW, *LPMCI_OPEN_DRIVER_PARMSW;
 
-DWORD 			WINAPI	mciGetDriverData(UINT uDeviceID);
-BOOL			WINAPI	mciSetDriverData(UINT uDeviceID, DWORD dwData);
+DWORD_PTR		WINAPI	mciGetDriverData(UINT uDeviceID);
+BOOL			WINAPI	mciSetDriverData(UINT uDeviceID, DWORD_PTR dwData);
 UINT			WINAPI	mciDriverYield(UINT uDeviceID);
 BOOL			WINAPI	mciDriverNotify(HWND hwndCallback, UINT uDeviceID,
 						UINT uStatus);
@@ -449,18 +453,18 @@ BOOL			WINAPI	mciFreeCommandResource(UINT uTable);
 #define DCB_TYPEMASK		0x0007
 #define DCB_NOSWITCH		0x0008			/* don't switch stacks for callback */
 
-BOOL		 	WINAPI	DriverCallback(DWORD dwCallBack, UINT uFlags, HDRVR hDev,
-					       UINT wMsg, DWORD dwUser, DWORD dwParam1, DWORD dwParam2);
+BOOL		 	APIENTRY	DriverCallback(DWORD_PTR dwCallBack, DWORD uFlags, HDRVR hDev,
+					       DWORD wMsg, DWORD_PTR dwUser, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 
 typedef void (*LPTASKCALLBACK)(DWORD dwInst);
 
 #define TASKERR_NOTASKSUPPORT 1
 #define TASKERR_OUTOFMEMORY   2
-MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD);
-void     WINAPI mmTaskBlock(HANDLE);
-BOOL     WINAPI mmTaskSignal(HANDLE);
+UINT WINAPI mmTaskCreate(LPTASKCALLBACK, HANDLE*, DWORD_PTR);
+void     WINAPI mmTaskBlock(DWORD);
+BOOL     WINAPI mmTaskSignal(DWORD);
 void     WINAPI mmTaskYield(void);
-HANDLE   WINAPI mmGetCurrentTask(void);
+DWORD   WINAPI mmGetCurrentTask(void);
 
 
 #define  WAVE_DIRECTSOUND               0x0080

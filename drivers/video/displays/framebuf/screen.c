@@ -13,12 +13,16 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include "framebuf.h"
+
+static LOGFONTW SystemFont = { 16, 7, 0, 0, 700, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH | FF_DONTCARE, L"System" };
+static LOGFONTW AnsiVariableFont = { 12, 9, 0, 0, 400, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_STROKE_PRECIS, PROOF_QUALITY, VARIABLE_PITCH | FF_DONTCARE, L"MS Sans Serif" };
+static LOGFONTW AnsiFixedFont = { 12, 9, 0, 0, 400, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_STROKE_PRECIS, PROOF_QUALITY, FIXED_PITCH | FF_DONTCARE, L"Courier" };
 
 /*
  * GetAvailableModes
@@ -118,9 +122,6 @@ IntInitScreenInfo(
    ULONG ModeInfoSize;
    PVIDEO_MODE_INFORMATION ModeInfo, ModeInfoPtr, SelectedMode = NULL;
    VIDEO_COLOR_CAPABILITIES ColorCapabilities;
-   LOGFONTW SystemFont = {16, 7, 0, 0, 700, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, VARIABLE_PITCH | FF_DONTCARE, L"System"};
-   LOGFONTW AnsiVariableFont = {12, 9, 0, 0, 400, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_STROKE_PRECIS, PROOF_QUALITY, VARIABLE_PITCH | FF_DONTCARE, L"MS Sans Serif"};
-   LOGFONTW AnsiFixedFont = {12, 9, 0, 0, 400, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_STROKE_PRECIS, PROOF_QUALITY, FIXED_PITCH | FF_DONTCARE, L"Courier"};
    ULONG Temp;
 
    /*
@@ -159,7 +160,7 @@ IntInitScreenInfo(
       while (ModeCount-- > 0)
       {
          if (ModeInfoPtr->Length > 0 &&
-	     pDevMode->dmPelsWidth == ModeInfoPtr->VisScreenWidth &&
+             pDevMode->dmPelsWidth == ModeInfoPtr->VisScreenWidth &&
              pDevMode->dmPelsHeight == ModeInfoPtr->VisScreenHeight &&
              pDevMode->dmBitsPerPel == (ModeInfoPtr->BitsPerPlane *
                                         ModeInfoPtr->NumberOfPlanes) &&

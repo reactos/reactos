@@ -1,0 +1,39 @@
+/*
+ * REG.EXE - Wine-compatible reg program.
+ * Polish language support
+ *
+ * Copyright 2008 Andrew Riedi
+ * Copyright 2008 Mikolaj Zalewski
+ * Copyright 2010 £ukasz Wojni³owicz
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "reg.h"
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_USAGE, "Sk³adnia tego polecenia:\n\nREG [ ADD | DELETE | QUERY ]\nREG polecenie /?\n"
+    STRING_ADD_USAGE, "REG ADD nazwa_klucza [/v nazwa_wartoœci | /ve] [/t typ] [/s separator] [/d dane] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE nazwa_klucza [/v nazwa_wartoœci | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY nazwa_klucza [/v nazwa_wartoœci | /ve] [/s]\n"
+    STRING_SUCCESS, "Operacja zakoñczona pomyœlnie\n"
+    STRING_INVALID_KEY, "B³¹d: Niew³aœciwa nazwa klucza\n"
+    STRING_INVALID_CMDLINE, "B³¹d: Niew³aœciwe parametry wiersza poleceñ\n"
+    STRING_NO_REMOTE, "B³¹d: Nie mo¿na dodaæ kluczy do zdalnej maszyny\n"
+    STRING_CANNOT_FIND, "B³¹d: System nie móg³ znaleŸæ podanej wartoœci lub klucza rejestru\n"
+}

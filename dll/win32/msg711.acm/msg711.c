@@ -832,16 +832,16 @@ static	LRESULT	G711_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
     switch (adfs->pwfxDst->wFormatTag)
     {
     case WAVE_FORMAT_PCM:
-        adfs->pwfxDst->nBlockAlign = adfs->pwfxDst->nChannels;
+        adfs->pwfxDst->nBlockAlign = adfs->pwfxDst->nChannels * 2;
         adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxDst->nBlockAlign;
         break;
     case WAVE_FORMAT_ALAW:
-        adfs->pwfxDst->nBlockAlign = adfs->pwfxDst->nChannels * 2;
-        adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxSrc->nChannels * 2;
+        adfs->pwfxDst->nBlockAlign = adfs->pwfxDst->nChannels;
+        adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxSrc->nChannels;
         break;
     case WAVE_FORMAT_MULAW:
-        adfs->pwfxDst->nBlockAlign =  adfs->pwfxDst->nChannels * 2;
-        adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxSrc->nChannels * 2;
+        adfs->pwfxDst->nBlockAlign = adfs->pwfxDst->nChannels;
+        adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxSrc->nChannels;
         break;
     default:
         FIXME("\n");
@@ -993,13 +993,13 @@ static	LRESULT G711_StreamSize(const ACMDRVSTREAMINSTANCE *adsi, PACMDRVSTREAMSI
 	    (adsi->pwfxDst->wFormatTag == WAVE_FORMAT_ALAW ||
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_MULAW))
         {
-	    adss->cbSrcLength = adss->cbDstLength / 2;
+	    adss->cbSrcLength = adss->cbDstLength * 2;
 	}
         else if ((adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_ALAW ||
                   adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MULAW) &&
                  adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
         {
-	    adss->cbSrcLength = adss->cbDstLength * 2;
+	    adss->cbSrcLength = adss->cbDstLength / 2;
 	}
         else if ((adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_ALAW ||
                   adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MULAW) &&
@@ -1019,13 +1019,13 @@ static	LRESULT G711_StreamSize(const ACMDRVSTREAMINSTANCE *adsi, PACMDRVSTREAMSI
 	    (adsi->pwfxDst->wFormatTag == WAVE_FORMAT_ALAW ||
              adsi->pwfxDst->wFormatTag == WAVE_FORMAT_MULAW))
         {
-	    adss->cbDstLength = adss->cbSrcLength * 2;
+	    adss->cbDstLength = adss->cbSrcLength / 2;
 	}
         else if ((adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_ALAW ||
                   adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MULAW) &&
                  adsi->pwfxDst->wFormatTag == WAVE_FORMAT_PCM)
         {
-	    adss->cbDstLength = adss->cbSrcLength / 2;
+	    adss->cbDstLength = adss->cbSrcLength * 2;
 	}
         else if ((adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_ALAW ||
                   adsi->pwfxSrc->wFormatTag == WAVE_FORMAT_MULAW) &&

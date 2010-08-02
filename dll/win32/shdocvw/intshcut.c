@@ -65,15 +65,53 @@ static inline InternetShortcut* impl_from_IPersistFile(IPersistFile *iface)
     return (InternetShortcut*)((char*)iface - FIELD_OFFSET(InternetShortcut, persistFile));
 }
 
-static BOOL StartLinkProcessor(LPCOLESTR szLink)
+static BOOL run_winemenubuilder( const WCHAR *args )
 {
-    static const WCHAR szFormat[] = {
-        'w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',
-        ' ','-','w',' ','-','u',' ','"','%','s','"',0 };
+    static const WCHAR menubuilder[] = {'\\','w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',0};
     LONG len;
     LPWSTR buffer;
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
+    BOOL ret;
+    WCHAR app[MAX_PATH];
+    void *redir;
+
+    GetSystemDirectoryW( app, MAX_PATH - sizeof(menubuilder)/sizeof(WCHAR) );
+    strcatW( app, menubuilder );
+
+    len = (strlenW( app ) + strlenW( args ) + 1) * sizeof(WCHAR);
+    buffer = heap_alloc( len );
+    if( !buffer )
+        return FALSE;
+
+    strcpyW( buffer, app );
+    strcatW( buffer, args );
+
+    TRACE("starting %s\n",debugstr_w(buffer));
+
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+
+    Wow64DisableWow64FsRedirection( &redir );
+    ret = CreateProcessW( app, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+    Wow64RevertWow64FsRedirection( redir );
+
+    heap_free( buffer );
+
+    if (ret)
+    {
+        CloseHandle( pi.hProcess );
+        CloseHandle( pi.hThread );
+    }
+
+    return ret;
+}
+
+static BOOL StartLinkProcessor( LPCOLESTR szLink )
+{
+    static const WCHAR szFormat[] = { ' ','-','w',' ','-','u',' ','"','%','s','"',0 };
+    LONG len;
+    LPWSTR buffer;
     BOOL ret;
 
     len = sizeof(szFormat) + lstrlenW( szLink ) * sizeof(WCHAR);
@@ -82,22 +120,8 @@ static BOOL StartLinkProcessor(LPCOLESTR szLink)
         return FALSE;
 
     wsprintfW( buffer, szFormat, szLink );
-
-    TRACE("starting %s\n",debugstr_w(buffer));
-
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(si);
-
-    ret = CreateProcessW( NULL, buffer, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
-
-    HeapFree( GetProcessHeap(), 0, buffer );
-
-    if (ret)
-    {
-        CloseHandle( pi.hProcess );
-        CloseHandle( pi.hThread );
-    }
-
+    ret = run_winemenubuilder( buffer );
+    heap_free( buffer );
     return ret;
 }
 
@@ -337,7 +361,7 @@ static HRESULT WINAPI PersistFile_Load(IPersistFile *pFile, LPCOLESTR pszFileNam
             {
                 CoTaskMemFree(url);
                 len *= 2;
-                url = CoTaskMemAlloc(len);
+                url = CoTaskMemAlloc(len*sizeof(WCHAR));
                 if (url == NULL)
                     break;
                 r = GetPrivateProfileStringW(str_header, str_URL, NULL, url, len, pszFileName);

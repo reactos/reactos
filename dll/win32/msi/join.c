@@ -117,8 +117,11 @@ static UINT JOIN_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStr
 
 static UINT JOIN_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
 {
-    FIXME("(%p, %d, %p): stub!\n", view, row, rec);
-    return ERROR_FUNCTION_FAILED;
+    MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+
+    TRACE("%p %d %p\n", jv, row, rec);
+
+    return msi_view_get_row( jv->db, view, row, rec );
 }
 
 static UINT JOIN_execute( struct tagMSIVIEW *view, MSIRECORD *record )
@@ -194,13 +197,14 @@ static UINT JOIN_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *cols
 }
 
 static UINT JOIN_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary,
+                LPWSTR *table_name )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
     JOINTABLE *table;
     UINT cols = 0;
 
-    TRACE("%p %d %p %p\n", jv, n, name, type );
+    TRACE("%p %d %p %p %p %p\n", jv, n, name, type, temporary, table_name );
 
     if (n == 0 || n > jv->columns)
         return ERROR_FUNCTION_FAILED;
@@ -208,7 +212,9 @@ static UINT JOIN_get_column_info( struct tagMSIVIEW *view,
     LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
     {
         if (n <= cols + table->columns)
-            return table->view->ops->get_column_info(table->view, n - cols, name, type);
+            return table->view->ops->get_column_info(table->view, n - cols,
+                                                     name, type, temporary,
+                                                     table_name);
 
         cols += table->columns;
     }
@@ -216,24 +222,134 @@ static UINT JOIN_get_column_info( struct tagMSIVIEW *view,
     return ERROR_FUNCTION_FAILED;
 }
 
-static UINT JOIN_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
-                         MSIRECORD *rec, UINT row )
+static UINT join_find_row( MSIJOINVIEW *jv, MSIRECORD *rec, UINT *row )
 {
-    TRACE("%p %d %p\n", view, eModifyMode, rec);
+    LPCWSTR str;
+    UINT i, id, data;
+
+    str = MSI_RecordGetString( rec, 1 );
+    msi_string2idW( jv->db->strings, str, &id );
+
+    for (i = 0; i < jv->rows; i++)
+    {
+        JOIN_fetch_int( &jv->view, i, 1, &data );
+
+        if (data == id)
+        {
+            *row = i;
+            return ERROR_SUCCESS;
+        }
+    }
+
     return ERROR_FUNCTION_FAILED;
+}
+
+static UINT JOIN_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
+{
+    MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
+    JOINTABLE *table;
+    UINT i, reduced_mask = 0, r = ERROR_SUCCESS, offset = 0, col_count;
+    MSIRECORD *reduced;
+
+    TRACE("%p %d %p %u %08x\n", jv, row, rec, rec->count, mask );
+
+    if (mask >= 1 << jv->columns)
+        return ERROR_INVALID_PARAMETER;
+
+    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    {
+        r = table->view->ops->get_dimensions( table->view, NULL, &col_count );
+        if (r != ERROR_SUCCESS)
+            return r;
+
+        reduced = MSI_CreateRecord( col_count );
+        if (!reduced)
+            return ERROR_FUNCTION_FAILED;
+
+        for (i = 0; i < col_count; i++)
+        {
+            r = MSI_RecordCopyField( rec, i + offset + 1, reduced, i + 1 );
+            if (r != ERROR_SUCCESS)
+                break;
+        }
+
+        offset += col_count;
+        reduced_mask = mask >> (jv->columns - offset) & ((1 << col_count) - 1);
+
+        if (r == ERROR_SUCCESS)
+            r = table->view->ops->set_row( table->view, row, reduced, reduced_mask );
+
+        msiobj_release( &reduced->hdr );
+    }
+
+    return r;
+}
+
+static UINT join_modify_update( struct tagMSIVIEW *view, MSIRECORD *rec )
+{
+    MSIJOINVIEW *jv = (MSIJOINVIEW *)view;
+    UINT r, row;
+
+    r = join_find_row( jv, rec, &row );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    return JOIN_set_row( view, row, rec, (1 << jv->columns) - 1 );
+}
+
+static UINT JOIN_modify( struct tagMSIVIEW *view, MSIMODIFY mode, MSIRECORD *rec, UINT row )
+{
+    UINT r;
+
+    TRACE("%p %d %p %u\n", view, mode, rec, row);
+
+    switch (mode)
+    {
+    case MSIMODIFY_UPDATE:
+        return join_modify_update( view, rec );
+
+    case MSIMODIFY_ASSIGN:
+    case MSIMODIFY_DELETE:
+    case MSIMODIFY_INSERT:
+    case MSIMODIFY_INSERT_TEMPORARY:
+    case MSIMODIFY_MERGE:
+    case MSIMODIFY_REPLACE:
+    case MSIMODIFY_SEEK:
+    case MSIMODIFY_VALIDATE:
+    case MSIMODIFY_VALIDATE_DELETE:
+    case MSIMODIFY_VALIDATE_FIELD:
+    case MSIMODIFY_VALIDATE_NEW:
+        r = ERROR_FUNCTION_FAILED;
+        break;
+
+    case MSIMODIFY_REFRESH:
+        r = ERROR_CALL_NOT_IMPLEMENTED;
+        break;
+
+    default:
+        WARN("%p %d %p %u - unknown mode\n", view, mode, rec, row );
+        r = ERROR_INVALID_PARAMETER;
+        break;
+    }
+
+    return r;
 }
 
 static UINT JOIN_delete( struct tagMSIVIEW *view )
 {
     MSIJOINVIEW *jv = (MSIJOINVIEW*)view;
-    JOINTABLE *table;
+    struct list *item, *cursor;
 
     TRACE("%p\n", jv );
 
-    LIST_FOR_EACH_ENTRY(table, &jv->tables, JOINTABLE, entry)
+    LIST_FOR_EACH_SAFE(item, cursor, &jv->tables)
     {
+        JOINTABLE* table = LIST_ENTRY(item, JOINTABLE, entry);
+
+        list_remove(&table->entry);
         table->view->ops->delete(table->view);
         table->view = NULL;
+        msi_free(table);
     }
 
     msi_free(jv);
@@ -252,7 +368,7 @@ static UINT JOIN_find_matching_rows( struct tagMSIVIEW *view, UINT col,
     if (col == 0 || col > jv->columns)
         return ERROR_INVALID_PARAMETER;
 
-    for (i = (UINT)*handle; i < jv->rows; i++)
+    for (i = PtrToUlong(*handle); i < jv->rows; i++)
     {
         if (view->ops->fetch_int( view, i, col, &row_value ) != ERROR_SUCCESS)
             continue;
@@ -337,17 +453,22 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )
 
         table = msi_alloc(sizeof(JOINTABLE));
         if (!table)
-            return ERROR_OUTOFMEMORY;
+        {
+            r = ERROR_OUTOFMEMORY;
+            goto end;
+        }
 
         r = TABLE_CreateView( db, tables, &table->view );
         if( r != ERROR_SUCCESS )
         {
             WARN("can't create table: %s\n", debugstr_w(tables));
+            msi_free(table);
             r = ERROR_BAD_QUERY_SYNTAX;
             goto end;
         }
 
-        r = table->view->ops->get_dimensions( table->view, NULL, &table->columns );
+        r = table->view->ops->get_dimensions( table->view, NULL,
+                                              &table->columns );
         if( r != ERROR_SUCCESS )
         {
             ERR("can't get table dimensions\n");

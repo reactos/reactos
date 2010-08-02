@@ -29,8 +29,7 @@ FT_BEGIN_HEADER
   *  be performed.  This is the default for non-latin glyphs!
   */
 
-  FT_CALLBACK_TABLE const AF_ScriptClassRec
-  af_dummy_script_class;
+  AF_DECLARE_SCRIPT_CLASS(af_dummy_script_class)
 
 /* */
 

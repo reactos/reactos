@@ -15,19 +15,19 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
-int usedHandles=0;
+//int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 
 
@@ -55,14 +55,14 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
 
-   DPRINT("handles used %i\n",usedHandles);
+   DPRINT("handles used %i\n",gpsi->cHandleEntries);
 
    if (ht->freelist)
    {
       entry = ht->freelist;
       ht->freelist = entry->ptr;
 
-      usedHandles++;
+      gpsi->cHandleEntries++;
       return entry;
    }
 
@@ -72,7 +72,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
           iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0;
  /**/
-      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", usedHandles, ht->nb_handles);
+      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
 //#if 0
       for(i = 0; i < ht->nb_handles; i++)
       {
@@ -131,7 +131,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 
    entry->generation = 1;
 
-   usedHandles++;
+   gpsi->cHandleEntries++;
 
    return entry;
 }
@@ -151,10 +151,11 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
    entry->type = 0;
+   entry->flags = 0;
    entry->pi = NULL;
    ht->freelist  = entry;
 
-   usedHandles--;
+   gpsi->cHandleEntries--;
 
    return ret;
 }
@@ -167,6 +168,7 @@ UserHandleOwnerByType(USER_OBJECT_TYPE type)
     switch (type)
     {
         case otWindow:
+        case otInputContext:
             pi = GetW32ThreadInfo();
             break;
 
@@ -198,6 +200,7 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
       return 0;
    entry->ptr  = object;
    entry->type = type;
+   entry->flags = 0;
    entry->pi = UserHandleOwnerByType(type);
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
@@ -248,26 +251,6 @@ void *get_user_object_handle(PUSER_HANDLE_TABLE ht,  HANDLE* handle, USER_OBJECT
    return entry->ptr;
 }
 
-/* free a user handle */
-BOOL UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
-{
-   PUSER_HANDLE_ENTRY entry;
-   PVOID object;
-
-   if (!(entry = handle_to_entry( ht, handle )))
-   {
-      SetLastNtError( STATUS_INVALID_HANDLE );
-      return FALSE;
-   }
-
-   object = free_user_entry(ht, entry );
-
-   /* We removed the handle, which was a reference! */
-   return UserDereferenceObject(object);
-
-   return TRUE;
-}
-
 /* return the next user handle after 'handle' that is of a given type */
 PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type )
 {
@@ -294,121 +277,12 @@ PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE 
    return NULL;
 }
 
-
-
-PVOID FASTCALL
-UserCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size)
-{
-
-   HANDLE hi;
-   PUSER_OBJECT_HEADER hdr = UserHeapAlloc(size + sizeof(USER_OBJECT_HEADER));//ExAllocatePool(PagedPool, size + sizeof(USER_OBJECT_HEADER));
-   if (!hdr)
-      return NULL;
-
-
-   hi = UserAllocHandle(ht, USER_HEADER_TO_BODY(hdr), type );
-   if (!hi)
-   {
-      //ExFreePool(hdr);
-       UserHeapFree(hdr);
-      return NULL;
-   }
-
-   RtlZeroMemory(hdr, size + sizeof(USER_OBJECT_HEADER));
-   hdr->hSelf = hi;
-   hdr->RefCount = 2; // we need this, because we create 2 refs: handle and pointer!
-
-   if (h)
-      *h = hi;
-   return USER_HEADER_TO_BODY(hdr);
-}
-
-BOOL FASTCALL
-UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
-{
-   PUSER_OBJECT_HEADER hdr;
-   PVOID body = UserGetObject(gHandleTable, h, type);
-   if (!body)
-      return FALSE;
-
-   hdr = USER_BODY_TO_HEADER(body);
-   ASSERT(hdr->RefCount >= 1);
-
-   hdr->destroyed = TRUE;
-   return UserFreeHandle(gHandleTable, h);
-}
-
-
-VOID FASTCALL UserReferenceObject(PVOID obj)
-{
-   PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
-
-   ASSERT(hdr->RefCount >= 0);
-
-   hdr->RefCount++;
-}
-
-
-PVOID FASTCALL UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
-{
-    PVOID object;
-
-    object = UserGetObject(gHandleTable, handle, type);
-    if(object)
-    {
-        UserReferenceObject(object);
-    }
-
-    return object;
-}
-
-
-HANDLE FASTCALL UserObjectToHandle(PVOID obj)
-{
-    PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
-    return hdr->hSelf;
-}
-
-
-BOOL FASTCALL UserDereferenceObject(PVOID obj)
-{
-   PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
-
-   ASSERT(hdr->RefCount >= 1);
-
-   hdr->RefCount--;
-
-   // You can not have a zero here!
-   if (!hdr->destroyed && hdr->RefCount == 0)
-   {
-      hdr->RefCount++; // BOUNCE!!!!!
-      DPRINT1("warning! Dereference to zero without deleting!\n");
-   }
-
-   if (hdr->RefCount == 0 && hdr->destroyed)
-   {
-//      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
-
-      memset(hdr, 0x55, sizeof(USER_OBJECT_HEADER));
-
-      return UserHeapFree(hdr);
-      //ExFreePool(hdr);
-
-      return TRUE;
-   }
-
-   return FALSE;
-}
-
-
-
-BOOL FASTCALL UserCreateHandleTable()
+BOOL FASTCALL UserCreateHandleTable(VOID)
 {
 
    PVOID mem;
 
    //FIXME: dont alloc all at once! must be mapped into umode also...
-   //mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024*2);
    mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
@@ -428,4 +302,185 @@ BOOL FASTCALL UserCreateHandleTable()
    UserInitHandleTable(gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
+}
+
+//
+// New
+//
+PVOID
+FASTCALL
+UserCreateObject( PUSER_HANDLE_TABLE ht,
+                  PDESKTOP pDesktop,
+                  HANDLE* h,
+                  USER_OBJECT_TYPE type,
+                  ULONG size)
+{
+   HANDLE hi;
+   PVOID Object;
+   PTHREADINFO pti;
+   PPROCESSINFO ppi;
+   BOOL dt;
+   PDESKTOP rpdesk = pDesktop;
+
+   pti = GetW32ThreadInfo();
+   ppi = pti->ppi;
+   if (!pDesktop) rpdesk = pti->rpdesk;
+
+   switch (type)
+   {
+//      case otWindow:
+//      case otMenu:
+//      case otHook:
+//      case otCallProc:
+      case otInputContext:
+         Object = DesktopHeapAlloc(rpdesk, size);
+         dt = TRUE;
+         break;
+
+      default:
+         Object = UserHeapAlloc(size);
+         dt = FALSE;
+         break;
+   }
+
+   if (!Object)
+      return NULL;
+
+
+   hi = UserAllocHandle(ht, Object, type );
+   if (!hi)
+   {
+      if (dt)
+         DesktopHeapFree(rpdesk, Object);
+      else
+         UserHeapFree(Object);
+      return NULL;
+   }
+
+   RtlZeroMemory(Object, size);
+
+   switch (type)
+   {
+        case otWindow:
+        case otHook:
+        case otInputContext:
+            ((PTHRDESKHEAD)Object)->rpdesk = rpdesk;
+            ((PTHRDESKHEAD)Object)->pSelf = Object;
+        case otEvent:
+            ((PTHROBJHEAD)Object)->pti = pti;
+            break;
+
+        case otMenu:
+        case otCallProc:
+            ((PPROCDESKHEAD)Object)->rpdesk = rpdesk;
+            ((PPROCDESKHEAD)Object)->pSelf = Object;            
+            break;
+
+        case otCursorIcon:
+            ((PPROCMARKHEAD)Object)->ppi = ppi;
+            break;
+
+        default:
+            break;
+   }
+   /* Now set default headers. */
+   ((PHEAD)Object)->h = hi;
+   ((PHEAD)Object)->cLockObj = 2; // we need this, because we create 2 refs: handle and pointer!
+
+   if (h)
+      *h = hi;
+   return Object;
+}
+
+
+BOOL
+FASTCALL
+UserDereferenceObject(PVOID object)
+{
+  PUSER_HANDLE_ENTRY entry;
+  USER_OBJECT_TYPE type;
+
+  ASSERT(((PHEAD)object)->cLockObj >= 1);
+
+  if ((INT)--((PHEAD)object)->cLockObj <= 0)
+  {
+     entry = handle_to_entry(gHandleTable, ((PHEAD)object)->h );
+
+     DPRINT("warning! Dereference to zero! Obj -> 0x%x\n", object);
+
+     ((PHEAD)object)->cLockObj = 0;
+
+     if (!(entry->flags & HANDLEENTRY_INDESTROY))
+        return TRUE;
+
+     type = entry->type;
+     free_user_entry(gHandleTable, entry );
+
+     switch (type)
+     {
+//        case otWindow:
+//        case otMenu:
+//        case otHook:
+//        case otCallProc:
+        case otInputContext:
+           return DesktopHeapFree(((PTHRDESKHEAD)object)->rpdesk, object);
+
+        default:
+           return UserHeapFree(object);
+     }
+  }
+  return FALSE;
+}
+
+BOOL
+FASTCALL
+UserFreeHandle(PUSER_HANDLE_TABLE ht,  HANDLE handle )
+{
+  PUSER_HANDLE_ENTRY entry;
+
+  if (!(entry = handle_to_entry( ht, handle )))
+  {
+     SetLastNtError( STATUS_INVALID_HANDLE );
+     return FALSE;
+  }
+
+  entry->flags = HANDLEENTRY_INDESTROY;
+
+  return UserDereferenceObject(entry->ptr);
+}
+
+BOOL
+FASTCALL
+UserDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
+{
+   PVOID body = UserGetObject(gHandleTable, h, type);
+   
+   if (!body) return FALSE;
+
+   ASSERT( ((PHEAD)body)->cLockObj >= 1);
+
+   return UserFreeHandle(gHandleTable, h);
+}
+
+VOID
+FASTCALL
+UserReferenceObject(PVOID obj)
+{
+   ASSERT(((PHEAD)obj)->cLockObj >= 0);
+
+   ((PHEAD)obj)->cLockObj++;
+}
+
+PVOID
+FASTCALL
+UserReferenceObjectByHandle(HANDLE handle, USER_OBJECT_TYPE type)
+{
+    PVOID object;
+
+    object = UserGetObject(gHandleTable, handle, type);
+    if (object)
+    {
+       UserReferenceObject(object);
+    }
+    return object;
 }

@@ -12,13 +12,14 @@
 #include <stdio.h>
 
 /* WDK HAL Compilation hack */
-#ifdef _MSC_VER
 #include <excpt.h>
 #include <ntdef.h>
-#undef _NTHAL_
-#undef DECLSPEC_IMPORT
-#define DECLSPEC_IMPORT
-#define __declspec(dllimport)
+#ifndef _MINIHAL_
+#undef NTSYSAPI
+#define NTSYSAPI __declspec(dllimport)
+#else
+#undef NTSYSAPI
+#define NTSYSAPI
 #endif
 
 /* IFS/DDK/NDK Headers */
@@ -26,16 +27,23 @@
 #include <bugcodes.h>
 #include <ntdddisk.h>
 #include <arc/arc.h>
-#include <iotypes.h>
-#include <kefuncs.h>
-#include <halfuncs.h>
-#include <iofuncs.h>
-#include <ldrtypes.h>
-#include <obfuncs.h>
+#include <ntndk.h>
+
+/* Internal shared PCI and ACPI header */
+#include <drivers/pci/pci.h>
+#include <drivers/acpi/acpi.h>
 
 /* Internal kernel headers */
-#include "internal/pci.h"
+#define KeGetCurrentThread _KeGetCurrentThread
+#ifdef _M_AMD64
+#include <internal/amd64/ke.h>
+#include <internal/amd64/mm.h>
+#include "internal/amd64/intrin_i.h"
+#else
+#include <internal/i386/ke.h>
+#include <internal/i386/mm.h>
 #include "internal/i386/intrin_i.h"
+#endif
 
 /* Internal HAL Headers */
 #include "apic.h"
@@ -45,5 +53,6 @@
 #include "halp.h"
 #include "mps.h"
 #include "ioapic.h"
+#include "halacpi.h"
 
 /* EOF */

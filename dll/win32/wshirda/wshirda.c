@@ -11,7 +11,7 @@
 
 #include <debug.h>
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MAX_TRACE;
@@ -91,7 +91,7 @@ WSHGetSocketInformation(
     IN  INT Level,
     IN  INT OptionName,
     OUT PCHAR OptionValue,
-    OUT INT OptionLength)
+    OUT LPINT OptionLength)
 {
     UNIMPLEMENTED
 

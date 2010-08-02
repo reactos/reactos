@@ -1,0 +1,15 @@
+﻿; UTF-8
+
+[Section]
+Name = Mono .net Development Framework
+Version = 2.6.7
+Licence = Unknown
+Description = Open Source .net Framework.
+Size = 72MB
+Category = 14
+URLSite = http://www.mono-project.com/Main_Page
+URLDownload = http://ftp.novell.com/pub/mono/archive/2.6.7/windows-installer/2/mono-2.6.7-gtksharp-2.12.10-win32-2.exe
+CDPath = none
+
+[Section.0422]
+Description = Відкритий .net Фреймворк.

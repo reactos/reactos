@@ -12,15 +12,15 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-
+#ifndef _M_ARM
+ 
 #include <freeldr.h>
 #include <debug.h>
-
 #ifdef __i386__
 #define	LINUX_READ_CHUNK_SIZE	0x20000			// Read 128k at a time
 
@@ -41,10 +41,40 @@ PVOID			LinuxInitrdLoadAddress = NULL;
 CHAR			LinuxBootDescription[80];
 CHAR			LinuxBootPath[260] = "";
 
+BOOLEAN RemoveQuotes(PCHAR QuotedString)
+{
+	CHAR	TempString[200];
+	PCHAR p;
+	PSTR Start;
+
+	//
+	// Skip spaces up to "
+	//
+	p = QuotedString;
+	while (*p == ' ' || *p == '"')
+		p++;
+	Start = p;
+
+	//
+	// Go up to next "
+	//
+	while (*p != '"' && *p != ANSI_NULL)
+		p++;
+	*p = ANSI_NULL;
+
+	//
+	// Copy result
+	//
+	strcpy(TempString, Start);
+	strcpy(QuotedString, TempString);
+
+	return TRUE;
+}
+
 VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 {
-	PFILE	LinuxKernel = NULL;
-	PFILE	LinuxInitrdFile = NULL;
+	PFILE	LinuxKernel = 0;
+	PFILE	LinuxInitrdFile = 0;
 	CHAR	TempString[260];
 
 	UiDrawBackdrop();
@@ -67,21 +97,9 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 		goto LinuxBootFailed;
 	}
 
-	// Open the boot volume
-	if (!MachDiskNormalizeSystemPath(LinuxBootPath, sizeof(LinuxBootPath)))
-	{
-		UiMessageBox("Invalid boot path");
-		goto LinuxBootFailed;
-	}
-	if (!FsOpenSystemVolume(LinuxBootPath, NULL, NULL))
-	{
-		UiMessageBox("Failed to open boot drive.");
-		goto LinuxBootFailed;
-	}
-
 	// Open the kernel
 	LinuxKernel = FsOpenFile(LinuxKernelName);
-	if (LinuxKernel == NULL)
+	if (!LinuxKernel)
 	{
 		sprintf(TempString, "Linux kernel \'%s\' not found.", LinuxKernelName);
 		UiMessageBox(TempString);
@@ -92,7 +110,7 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 	if (LinuxHasInitrd)
 	{
 		LinuxInitrdFile = FsOpenFile(LinuxInitrdName);
-		if (LinuxInitrdFile == NULL)
+		if (!LinuxInitrdFile)
 		{
 			sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
 			UiMessageBox(TempString);
@@ -178,11 +196,11 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 
 LinuxBootFailed:
 
-	if (LinuxKernel != NULL)
+	if (LinuxKernel)
 	{
 		FsCloseFile(LinuxKernel);
 	}
-	if (LinuxInitrdFile != NULL)
+	if (LinuxInitrdFile)
 	{
 		FsCloseFile(LinuxInitrdFile);
 	}
@@ -491,3 +509,4 @@ BOOLEAN LinuxReadInitrd(PFILE LinuxInitrdFile)
 	return TRUE;
 }
 #endif /* __i386__ */
+#endif

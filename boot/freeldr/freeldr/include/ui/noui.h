@@ -6,8 +6,7 @@
  * PROGRAMMERS:     Hervé Poussineau
  */
 
-#ifndef _NOUI_H_
-#define _NOUI_H_
+#pragma once
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
@@ -47,5 +46,3 @@ VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);
 
 BOOLEAN NoUiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 VOID NoUiDrawMenu(PUI_MENU_INFO MenuInfo);
-
-#endif /* _NOUI_H_ */

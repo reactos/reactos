@@ -15,25 +15,19 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef XBOXVMP_H
-#define XBOXVMP_H
+#pragma once
 
 /* INCLUDES *******************************************************************/
 
-#ifdef _MSC_VER
+#include "ntdef.h"
+#define PAGE_SIZE 4096
 #include "dderror.h"
 #include "devioctl.h"
-#define PAGE_SIZE 4096
-#else
-#include <ntddk.h>
-#endif
-
-#include "dderror.h"
 #include "miniport.h"
 #include "ntddvdeo.h"
 #include "video.h"
@@ -153,7 +147,5 @@ XboxVmpSetColorRegisters(
    PXBOXVMP_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,
    PSTATUS_BLOCK StatusBlock);
-
-#endif /* XBOXVMP_H */
 
 /* EOF */

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -33,7 +33,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -96,7 +96,7 @@ CleanupWindowStationImpl(VOID)
 BOOL FASTCALL
 IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
 {
-    WinStaObj->Clipboard = ExAllocatePool(PagedPool, sizeof(CLIPBOARDSYSTEM));
+    WinStaObj->Clipboard = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDSYSTEM), TAG_WINSTA);
     if (WinStaObj->Clipboard)
     {
         RtlZeroMemory(WinStaObj->Clipboard, sizeof(CLIPBOARDSYSTEM));
@@ -322,7 +322,7 @@ co_IntInitializeDesktopGraphics(VOID)
    gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
    gpsi->dmLogPixels   = NtGdiGetDeviceCaps(ScreenDeviceContext, LOGPIXELSY);
    // Font is realized and this dc was previously set to internal DC_ATTR.
-   gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, &gpsi->cySysFontChar);
+   gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, (DWORD*)&gpsi->cySysFontChar);
    gpsi->tmSysFont     = tmw;
 
    return TRUE;
@@ -395,7 +395,6 @@ NtUserCreateWindowStation(
    DWORD Unknown5,
    DWORD Unknown6)
 {
-   PSYSTEM_CURSORINFO CurInfo;
    UNICODE_STRING WindowStationName;
    UNICODE_STRING FullWindowStationName;
    PWINSTATION_OBJECT WindowStationObject;
@@ -483,6 +482,9 @@ NtUserCreateWindowStation(
       return 0;
    }
 
+   /* Zero out the buffer */
+   RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
+
    KeInitializeSpinLock(&WindowStationObject->Lock);
 
    InitializeListHead(&WindowStationObject->DesktopListHead);
@@ -519,71 +521,16 @@ NtUserCreateWindowStation(
 
    WindowStationObject->FlatMenu = FALSE;
 
-   if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
-   {
-      ExFreePool(FullWindowStationName.Buffer);
-      /* FIXME - Delete window station object */
-      ObDereferenceObject(WindowStationObject);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return 0;
-   }
-
-   CurInfo->Enabled = FALSE;
-   CurInfo->ButtonsDown = 0;
-   CurInfo->CursorClipInfo.IsClipped = FALSE;
-   CurInfo->LastBtnDown = 0;
-   CurInfo->CurrentCursorObject = NULL;
-   CurInfo->ShowingCursor = 0;
-
-   /* FIXME: Obtain the following information from the registry */
-
-   CurInfo->WheelScroLines = 3;
-   CurInfo->WheelScroChars = 3;
-   CurInfo->SwapButtons = FALSE;
-   CurInfo->DblClickSpeed = 500;
-   CurInfo->DblClickWidth = 4;
-   CurInfo->DblClickHeight = 4;
-
-   CurInfo->MouseSpeed = 10;
-   CurInfo->CursorAccelerationInfo.FirstThreshold  = 6;
-   CurInfo->CursorAccelerationInfo.SecondThreshold = 10;
-   CurInfo->CursorAccelerationInfo.Acceleration    = 1;
-
-   CurInfo->MouseHoverTime = 80;
-   CurInfo->MouseHoverWidth = 4;
-   CurInfo->MouseHoverHeight = 4;
-
-   WindowStationObject->ScreenSaverActive = FALSE;
-   WindowStationObject->ScreenSaverTimeOut = 10;
-   WindowStationObject->SystemCursor = CurInfo;
-   
-   RtlZeroMemory(&WindowStationObject->UserPreferences, sizeof(USERPREFERENCESMASK));
-   /* Set all fields with default value = 1 : */
-   WindowStationObject->UserPreferences.bMenuAnimation = 1;
-   WindowStationObject->UserPreferences.bComboBoxAnimation = 1;
-   WindowStationObject->UserPreferences.bListBoxSmoothScrolling = 1;
-   WindowStationObject->UserPreferences.bGradientCaptions = 1;
-   WindowStationObject->UserPreferences.bHotTracking = 1;
-   WindowStationObject->UserPreferences.bMenuFade = 1;
-   WindowStationObject->UserPreferences.bSelectionFade = 1;
-   WindowStationObject->UserPreferences.bMenuFade = 1;
-   WindowStationObject->UserPreferences.bTooltipAnimation = 1;
-   WindowStationObject->UserPreferences.bTooltipFade = 1;
-   WindowStationObject->UserPreferences.bCursorShadow = 1;
-   WindowStationObject->UserPreferences.bUiEffects = 1;
-
-   /* END FIXME loading from register */
-
    if (!IntSetupClipboard(WindowStationObject))
    {
        DPRINT1("WindowStation: Error Setting up the clipboard!!!\n");
    }
 
-   if (!IntSetupCurIconHandles(WindowStationObject))
+   if (InputWindowStation == NULL)
    {
-      DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");
-      /* FIXME: Complain more loudly? */
-      ExFreePool(FullWindowStationName.Buffer);
+      InputWindowStation = WindowStationObject;
+
+      InitCursorImpl();
    }
 
    DPRINT("Window station successfully created (%wZ)\n", &FullWindowStationName);
@@ -642,14 +589,14 @@ NtUserOpenWindowStation(
    InitializeObjectAttributes(
       &ObjectAttributes,
       &WindowStationName,
-      0,
+      OBJ_CASE_INSENSITIVE,
       NULL,
       NULL);
 
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExWindowStationObjectType,
-               UserMode,
+               KernelMode,
                NULL,
                dwDesiredAccess,
                NULL,
@@ -699,6 +646,11 @@ NtUserCloseWindowStation(
 
    DPRINT("About to close window station handle (0x%X)\n", hWinSta);
 
+	if (hWinSta == UserGetProcessWindowStation())
+	{
+		return FALSE;
+	}
+
    Status = IntValidateWindowStationHandle(
                hWinSta,
                KernelMode,
@@ -710,12 +662,6 @@ NtUserCloseWindowStation(
       DPRINT("Validation of window station handle (0x%X) failed\n", hWinSta);
       return FALSE;
    }
-
-#if 0
-   /* FIXME - free the cursor information when actually deleting the object!! */
-   ASSERT(Object->SystemCursor);
-   ExFreePool(Object->SystemCursor);
-#endif
 
    ObDereferenceObject(Object);
 
@@ -954,7 +900,7 @@ UserGetProcessWindowStation(VOID)
    {
       DPRINT1("Should use ObFindHandleForObject\n");
       pti = PsGetCurrentThreadWin32Thread();
-      Status = ObOpenObjectByPointer(pti->Desktop->WindowStation,
+      Status = ObOpenObjectByPointer(pti->rpdesk->rpwinstaParent,
                                      0,
                                      NULL,
                                      WINSTA_ALL_ACCESS,
@@ -1005,9 +951,9 @@ IntGetWinStaObj(VOID)
     */
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
-   if(Win32Thread != NULL && Win32Thread->Desktop != NULL)
+   if(Win32Thread != NULL && Win32Thread->rpdesk != NULL)
    {
-      WinStaObj = Win32Thread->Desktop->WindowStation;
+      WinStaObj = Win32Thread->rpdesk->rpwinstaParent;
       ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
    }
    else if((CurrentProcess = PsGetCurrentProcess()) != CsrProcess)

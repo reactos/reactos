@@ -247,7 +247,7 @@ BmfdLoadFontFile(
     ULONG cjView;
 
     DbgPrint("BmfdLoadFontFile()\n");
-    DbgBreakPoint();
+    __debugbreak();
 
     /* Check parameters */
     if (cFiles != 1)
@@ -323,7 +323,7 @@ BmfdQueryFontFile(
     PBMFD_FILE pfile = (PBMFD_FILE)iFile;
 
     DbgPrint("BmfdQueryFontFile()\n");
-//    DbgBreakPoint();
+//    __debugbreak();
 
     switch (ulMode)
     {
@@ -389,7 +389,7 @@ BmfdQueryFontTree(
 {
     PBMFD_FILE pfile = (PBMFD_FILE)iFile;
     PBMFD_FACE pface;
-    ULONG i, j, cjOffset, cjSize, cGlyphs, cRuns;
+    ULONG i, j, cjSize, cGlyphs, cRuns;
     CHAR ch, chFirst, ach[256];
     WCHAR wc, awc[256];
     PFD_GLYPHSET pGlyphSet;
@@ -397,7 +397,7 @@ BmfdQueryFontTree(
     HGLYPH * phglyphs;
 
     DbgPrint("DrvQueryFontTree(iMode=%ld)\n", iMode);
-//    DbgBreakPoint();
+//    __debugbreak();
 
     /* Check parameters, we only support QFT_GLYPHSET */
     if (!iFace || iFace > pfile->cNumFaces || iMode != QFT_GLYPHSET)
@@ -475,14 +475,13 @@ BmfdQueryFontTree(
     pwcrun[0].wcLow = awc[0];
     pwcrun[0].cGlyphs = 1;
     pwcrun[0].phg = phglyphs;
-    phglyphs[0] = (HGLYPH)pface->pCharTable;
+    phglyphs[0] = 0;
 
     /* Walk through all supported chars */
     for (i = 1, j = 0; i < cGlyphs; i++)
     {
-        /* Use pointer to glyph entry as hglyph */
-        cjOffset = (ach[i] - chFirst) * pface->cjEntrySize;
-        phglyphs[i] = (HGLYPH)(pface->pCharTable + cjOffset);
+        /* Use offset to glyph entry as hglyph */
+        phglyphs[i] = (ach[i] - chFirst) * pface->cjEntrySize;
 
         /* Check whether we can append the wchar to a run */
         if (awc[i] == awc[i - 1] + 1)
@@ -522,7 +521,7 @@ BmfdQueryFont(
     PANOSE panose = {0};
 
     DbgPrint("BmfdQueryFont()\n");
-//    DbgBreakPoint();
+//    __debugbreak();
 
     /* Validate parameters */
     if (iFace > pfile->cNumFaces || !pid)

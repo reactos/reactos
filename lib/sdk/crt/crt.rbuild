@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="chkstk" type="staticlibrary">
 	<directory name="except">
 		<if property="ARCH" value="i386">
@@ -19,13 +20,12 @@
 	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__MINGW_IMPORT">extern</define>
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
-	<define name="__NO_CTYPE_INLINES" />
+	<define name="_CRTBLD" />
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>
@@ -56,6 +56,7 @@
 		<file>checkesp.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
+		<file>except.c</file>
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -82,7 +83,6 @@
 		<file>copysign.c</file>
 		<file>fpclass.c</file>
 		<file>fpecode.c</file>
-		<file>fpreset.c</file>
 		<file>isnan.c</file>
 		<file>nafter.c</file>
 		<file>scalb.c</file>
@@ -90,6 +90,7 @@
 			<directory name="i386">
 				<file>clearfp.c</file>
 				<file>cntrlfp.c</file>
+				<file>fpreset.c</file>
 				<file>logb.c</file>
 				<file>statfp.c</file>
 			</directory>
@@ -98,6 +99,7 @@
 			<directory name="i386">
 				<file>clearfp.c</file>
 				<file>cntrlfp.c</file>
+				<file>fpreset.c</file>
 				<file>logb.c</file>
 				<file>statfp.c</file>
 			</directory>
@@ -111,19 +113,19 @@
 		<file>adjust.c</file>
 		<file>asin.c</file>
 		<file>cabs.c</file>
+		<file>cosf.c</file>
 		<file>cosh.c</file>
 		<file>div.c</file>
 		<file>fdivbug.c</file>
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
-		<file>j0_y0.c</file>
-		<file>j1_y1.c</file>
-		<file>jn_yn.c</file>
 		<file>ldiv.c</file>
+		<file>logf.c</file>
 		<file>modf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
+		<file>sinf.c</file>
 		<file>sinh.c</file>
 		<file>tanh.c</file>
 		<file>pow_asm.c</file>
@@ -142,9 +144,11 @@
 				<file>aullrem_asm.s</file>
 				<file>aullshr_asm.s</file>
 				<file>ceil_asm.s</file>
+				<file>ceilf.S</file>
 				<file>cos_asm.s</file>
 				<file>fabs_asm.s</file>
 				<file>floor_asm.s</file>
+				<file>floorf.S</file>
 				<file>ftol_asm.s</file>
 				<file>log_asm.s</file>
 				<file>log10_asm.s</file>
@@ -157,16 +161,42 @@
 				<file>ci.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
+				<file>fmodf.c</file>
 				<file>ldexp.c</file>
+				<file>sqrtf.c</file>
 			</directory>
+			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
+			<!--<file>j0_y0.c</file>
+			<file>j1_y1.c</file>
+			<file>jn_yn.c</file>-->
 		</if>
 		<if property="ARCH" value="amd64">
-			<directory name="i386">
-				<file>atan2.c</file>
-				<file>exp.c</file>
-				<file>fmod.c</file>
-				<file>ldexp.c</file>
+			<file>cos.c</file>
+			<file>sin.c</file>
+			<directory name="amd64">
+				<file>alldiv.S</file>
+				<file>atan.S</file>
+				<file>atan2.S</file>
+				<file>ceil.S</file>
+				<file>ceilf.S</file>
+				<file>exp.S</file>
+				<file>fabs.S</file>
+				<file>floor.S</file>
+				<file>floorf.S</file>
+				<file>fmod.S</file>
+				<file>fmodf.S</file>
+				<file>ldexp.S</file>
+				<file>log.S</file>
+				<file>log10.S</file>
+				<file>pow.S</file>
+				<file>sqrt.S</file>
+				<file>sqrtf.S</file>
+				<file>tan.S</file>
 			</directory>
+			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
+			<!--<file>j0_y0.c</file>
+			<file>j1_y1.c</file>
+			<file>jn_yn.c</file>-->
 		</if>
 		<ifnot property="ARCH" value="i386">
 			<file>stubs.c</file>
@@ -285,6 +315,11 @@
 				<file>setjmp.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="signal">
 		<file>signal.c</file>
@@ -315,7 +350,6 @@
 		<file>abort.c</file>
 		<file>atexit.c</file>
 		<file>ecvt.c</file>
-		<file>ecvtbuf.c</file>
 		<file>errno.c</file>
 		<file>fcvt.c</file>
 		<file>fcvtbuf.c</file>
@@ -323,7 +357,7 @@
 		<file>gcvt.c</file>
 		<file>getenv.c</file>
 		<file>makepath.c</file>
-		<file>malloc.c</file>
+		<file>makepath_s.c</file>
 		<file>mbtowc.c</file>
 		<file>mbstowcs.c</file>
 		<file>obsol.c</file>
@@ -336,6 +370,7 @@
 		<file>wputenv.c</file>
 		<file>wsenv.c</file>
 		<file>wmakpath.c</file>
+		<file>wmakpath_s.c</file>
 	</directory>
 	<directory name="string">
 		<if property="ARCH" value="i386">
@@ -428,18 +463,46 @@
 		<file>systime.c</file>
 	</directory>
 	<directory name="time">
+		<file>asctime.c</file>
 		<file>clock.c</file>
+		<file>ctime32.c</file>
+		<file>ctime64.c</file>
 		<file>ctime.c</file>
+		<file>difftime32.c</file>
+		<file>difftime64.c</file>
 		<file>difftime.c</file>
+		<file>ftime32.c</file>
+		<file>ftime64.c</file>
 		<file>ftime.c</file>
+		<file>futime32.c</file>
+		<file>futime64.c</file>
+		<file>futime.c</file>
+		<file>gmtime.c</file>
+		<file>localtime32.c</file>
+		<file>localtime64.c</file>
+		<file>localtime.c</file>
+		<file>mktime.c</file>
 		<file>strdate.c</file>
 		<file>strftime.c</file>
 		<file>strtime.c</file>
+		<file>time32.c</file>
+		<file>time64.c</file>
 		<file>time.c</file>
-		<file>tz_vars.c</file>
+		<file>timezone.c</file>
+		<file>tzname.c</file>
+		<file>utime32.c</file>
+		<file>utime64.c</file>
+		<file>utime.c</file>
+		<file>wasctime.c</file>
+		<file>wcsftime.c</file>
+		<file>wctime32.c</file>
+		<file>wctime64.c</file>
 		<file>wctime.c</file>
 		<file>wstrdate.c</file>
 		<file>wstrtime.c</file>
+		<file>wutime32.c</file>
+		<file>wutime64.c</file>
+		<file>wutime.c</file>
 	</directory>
 	<directory name="wstring">
 		<file>wcscoll.c</file>
@@ -459,3 +522,4 @@
 		<file>undname.c</file>
 	</directory>
 </module>
+</group>

@@ -431,19 +431,6 @@ ReadFileScatter(HANDLE hFile,
 /*
  * @unimplemented
  */
-ULONG
-WINAPI
-RemoveVectoredExceptionHandler(
-    PVOID VectoredHandlerHandle
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 VOID
 WINAPI
 RestoreLastError(
@@ -674,8 +661,14 @@ FindNextVolumeA(HANDLE handle,
                 LPSTR volume,
                 DWORD len)
 {
-    WCHAR *buffer = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    WCHAR *buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, len * sizeof(WCHAR));
     BOOL ret;
+
+    if (!buffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
 
     if ((ret = FindNextVolumeW( handle, buffer, len )))
     {
@@ -892,9 +885,9 @@ NlsGetCacheUpdateCount(VOID)
     return 0;
 }
 
-BOOL
+BOOLEAN
 WINAPI
-Wow64EnableWow64FsRedirection (BOOL Wow64EnableWow64FsRedirection)
+Wow64EnableWow64FsRedirection (BOOLEAN Wow64EnableWow64FsRedirection)
 {
     STUB;
     return FALSE;
@@ -1001,15 +994,6 @@ GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
 
 BOOL
 WINAPI
-GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
-                               IN OUT PDWORD ReturnLength)
-{
-    STUB;
-    return FALSE;
-}
-
-BOOL
-WINAPI
 GetNumaAvailableMemoryNode(IN UCHAR Node,
                            OUT PULONGLONG AvailableBytes)
 {
@@ -1063,7 +1047,7 @@ AddLocalAlternateComputerNameW(LPWSTR lpName, PNTSTATUS Status)
 
 NTSTATUS
 WINAPI
-BaseCleanupAppcompatCache()
+BaseCleanupAppcompatCache(VOID)
 {
     STUB;
     return STATUS_NOT_IMPLEMENTED;
@@ -1167,14 +1151,6 @@ GetLinguistLangSize(LPVOID lpUnknown)
 BOOL
 WINAPI
 OpenDataFile(HANDLE hFile, DWORD dwUnused)
-{
-    STUB;
-    return FALSE;
-}
-
-BOOL
-WINAPI
-OpenProfileUserMapping(VOID)
 {
     STUB;
     return FALSE;

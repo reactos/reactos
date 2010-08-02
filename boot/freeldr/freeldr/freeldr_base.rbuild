@@ -1,14 +1,17 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="freeldr_base" type="objectlibrary">
+<module name="freeldr_base" type="objectlibrary" crt="static">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
+	<define name="_BLDR_" />
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
-	<compilerflag>-fno-inline</compilerflag>
-	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+	<directory name="arcemul">
+		<file>mm.c</file>
+		<file>time.c</file>
+	</directory>
 	<directory name="cache">
 		<file>blocklist.c</file>
 		<file>cache.c</file>
@@ -20,12 +23,14 @@
 		<file>disk.c</file>
 		<file>partition.c</file>
 		<file>ramdisk.c</file>
+		<if property="ARCH" value="i386">
+			<file>scsiport.c</file>
+		</if>
 	</directory>
 	<directory name="fs">
 		<file>ext2.c</file>
 		<file>fat.c</file>
 		<file>fs.c</file>
-		<file>fsrec.c</file>
 		<file>iso.c</file>
 		<file>ntfs.c</file>
 	</directory>
@@ -51,6 +56,7 @@
 		<file>libsupp.c</file>
 	</directory>
 	<directory name="ui">
+	    <file>directui.c</file>
 		<file>gui.c</file>
 		<file>minitui.c</file>
 		<file>noui.c</file>
@@ -63,15 +69,13 @@
 		<file>palette.c</file>
 		<file>video.c</file>
 	</directory>
-	<if property="ARCH" value="i386">
-		<directory name="windows">
-			<file>conversion.c</file>
-			<file>peloader.c</file>
-			<file>winldr.c</file>
-			<file>wlmemory.c</file>
-			<file>wlregistry.c</file>
-		</directory>
-	</if>
+	<directory name="windows">
+		<file>conversion.c</file>
+		<file>peloader.c</file>
+		<file>winldr.c</file>
+		<file>wlmemory.c</file>
+		<file>wlregistry.c</file>
+	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
 	<file>version.c</file>
@@ -80,10 +84,7 @@
 	<directory name="include">
 		<pch>freeldr.h</pch>
 	</directory>
-	<file>drivemap.c</file>
-	<file>miscboot.c</file>
 	<file>options.c</file>
 	<file>linuxboot.c</file>
 	<file>oslist.c</file>
-	<file>custom.c</file>
 </module>

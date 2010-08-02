@@ -1,6 +1,6 @@
 /* $Id$
  *
- * COPYRIGHT:            See COPYING in the top level directory
+ * COPYRIGHT:            This file is in the public domain.
  * PROJECT:              ReactOS kernel
  * FILE:
  * PURPOSE:              Directx headers

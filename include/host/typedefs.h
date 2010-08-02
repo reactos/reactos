@@ -65,6 +65,7 @@ typedef PVOID HANDLE, HKEY, *PHKEY;
 typedef INT NTSTATUS, POOL_TYPE;
 typedef LONG HRESULT;
 typedef ULONG_PTR SIZE_T, *PSIZE_T;
+typedef WORD LANGID;
 
 #define MAXUSHORT USHRT_MAX
 
@@ -217,14 +218,25 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 #define MAKEWORD(a,b)           ((WORD)(((BYTE)(a))|(((WORD)((BYTE)(b)))<<8)))
 #define MAKELONG(a,b)           ((LONG)(((WORD)(a))|(((DWORD)((WORD)(b)))<<16)))
 
+#define MAXULONG 0xFFFFFFFF
+
 #define NT_SUCCESS(x)           ((x)>=0)
-#define FIELD_OFFSET(t,f)       ((LONG_PTR)&(((t*)0)->f))
+#if !defined(__GNUC__)
+#define FIELD_OFFSET(t,f)       ((LONG)(LONG_PTR)&(((t*) 0)->f))
+#else
+#define FIELD_OFFSET(t,f)       ((LONG)__builtin_offsetof(t,f))
+#endif
 #define RTL_CONSTANT_STRING(s)  { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define CONTAINING_RECORD(address, type, field)  ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 
 #define RtlZeroMemory(Destination, Length)            memset(Destination, 0, Length)
 #define RtlCopyMemory(Destination, Source, Length)    memcpy(Destination, Source, Length)
 #define RtlMoveMemory(Destination, Source, Length)    memmove(Destination, Source, Length)
+
+#define MAKELANGID(p,s)         ((((WORD)(s))<<10)|(WORD)(p))
+#define PRIMARYLANGID(l)        ((WORD)(l)&0x3ff)
+#define SUBLANGID(l)            ((WORD)(l)>>10)
+#define SUBLANG_NEUTRAL         0x00
 
 /* Prevent inclusion of some other headers */
 #define __INTERNAL_DEBUG

@@ -28,10 +28,32 @@
 typedef HRESULT (WINAPI _ATL_CREATORFUNC)(void* pv, REFIID riid, LPVOID* ppv);
 typedef HRESULT (WINAPI _ATL_CREATORARGFUNC)(void* pv, REFIID riid, LPVOID* ppv, DWORD dw);
 typedef HRESULT (WINAPI _ATL_MODULEFUNC)(DWORD dw);
-typedef LPCSTR (WINAPI _ATL_DESCRIPTIONFUNCA)();
-typedef LPCWSTR (WINAPI _ATL_DESCRIPTIONFUNCW)();
-typedef const struct _ATL_CATMAP_ENTRY* (_ATL_CATMAPFUNC)();
+typedef LPCSTR (WINAPI _ATL_DESCRIPTIONFUNCA)(void);
+typedef LPCWSTR (WINAPI _ATL_DESCRIPTIONFUNCW)(void);
+typedef const struct _ATL_CATMAP_ENTRY* (_ATL_CATMAPFUNC)(void);
 typedef void (WINAPI _ATL_TERMFUNC)(DWORD dw);
+
+typedef struct _ATL_OBJMAP_ENTRYA_V1_TAG
+{
+    const CLSID* pclsid;
+    HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
+    _ATL_CREATORFUNC* pfnGetClassObject;
+    _ATL_CREATORFUNC* pfnCreateInstance;
+    IUnknown* pCF;
+    DWORD dwRegister;
+    _ATL_DESCRIPTIONFUNCA* pfnGetObjectDescription;
+}_ATL_OBJMAP_ENTRYA_V1;
+
+typedef struct _ATL_OBJMAP_ENTRYW_V1_TAG
+{
+    const CLSID* pclsid;
+    HRESULT (WINAPI *pfnUpdateRegistry)(BOOL bRegister);
+    _ATL_CREATORFUNC* pfnGetClassObject;
+    _ATL_CREATORFUNC* pfnCreateInstance;
+    IUnknown* pCF;
+    DWORD dwRegister;
+    _ATL_DESCRIPTIONFUNCW* pfnGetObjectDescription;
+} _ATL_OBJMAP_ENTRYW_V1;
 
 typedef struct _ATL_OBJMAP_ENTRYA_TAG
 {

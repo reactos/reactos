@@ -35,6 +35,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 GpStatus WINGDIPAPI GdipCreateStringFormat(INT attr, LANGID lang,
     GpStringFormat **format)
 {
+    TRACE("(%i, %x, %p)\n", attr, lang, format);
+
     if(!format)
         return InvalidParameter;
 
@@ -46,10 +48,14 @@ GpStatus WINGDIPAPI GdipCreateStringFormat(INT attr, LANGID lang,
     (*format)->digitlang = LANG_NEUTRAL;
     (*format)->trimming = StringTrimmingCharacter;
     (*format)->digitsub = StringDigitSubstituteUser;
+    (*format)->character_ranges = NULL;
+    (*format)->range_count = 0;
     /* tabstops */
     (*format)->tabcount = 0;
     (*format)->firsttab = 0.0;
     (*format)->tabs = NULL;
+
+    TRACE("<-- %p\n", *format);
 
     return Ok;
 }
@@ -59,6 +65,7 @@ GpStatus WINGDIPAPI GdipDeleteStringFormat(GpStringFormat *format)
     if(!format)
         return InvalidParameter;
 
+    GdipFree(format->character_ranges);
     GdipFree(format->tabs);
     GdipFree(format);
 
@@ -139,14 +146,16 @@ GpStatus WINGDIPAPI GdipGetStringFormatLineAlign(GpStringFormat *format,
 }
 
 GpStatus WINGDIPAPI GdipGetStringFormatMeasurableCharacterRangeCount(
-        GDIPCONST GpStringFormat* format, INT* count)
+    GDIPCONST GpStringFormat *format, INT *count)
 {
     if (!(format && count))
         return InvalidParameter;
 
-    FIXME("stub: %p %p\n", format, count);
+    TRACE("%p %p\n", format, count);
 
-    return NotImplemented;
+    *count = format->range_count;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipGetStringFormatTabStopCount(GDIPCONST GpStringFormat *format,
@@ -189,6 +198,8 @@ GpStatus WINGDIPAPI GdipGetStringFormatTrimming(GpStringFormat *format,
 GpStatus WINGDIPAPI GdipSetStringFormatAlign(GpStringFormat *format,
     StringAlignment align)
 {
+    TRACE("(%p, %i)\n", format, align);
+
     if(!format)
         return InvalidParameter;
 
@@ -201,6 +212,8 @@ GpStatus WINGDIPAPI GdipSetStringFormatAlign(GpStringFormat *format,
 GpStatus WINGDIPAPI GdipSetStringFormatDigitSubstitution(GpStringFormat *format,
     LANGID language, StringDigitSubstitute substitute)
 {
+    TRACE("(%p, %x, %i)\n", format, language, substitute);
+
     if(!format)
         return InvalidParameter;
 
@@ -213,6 +226,8 @@ GpStatus WINGDIPAPI GdipSetStringFormatDigitSubstitution(GpStringFormat *format,
 GpStatus WINGDIPAPI GdipSetStringFormatHotkeyPrefix(GpStringFormat *format,
     INT hkpx)
 {
+    TRACE("(%p, %i)\n", format, hkpx);
+
     if(!format || hkpx < 0 || hkpx > 2)
         return InvalidParameter;
 
@@ -224,6 +239,8 @@ GpStatus WINGDIPAPI GdipSetStringFormatHotkeyPrefix(GpStringFormat *format,
 GpStatus WINGDIPAPI GdipSetStringFormatLineAlign(GpStringFormat *format,
     StringAlignment align)
 {
+    TRACE("(%p, %i)\n", format, align);
+
     if(!format)
         return InvalidParameter;
 
@@ -232,20 +249,33 @@ GpStatus WINGDIPAPI GdipSetStringFormatLineAlign(GpStringFormat *format,
     return Ok;
 }
 
-GpStatus WINGDIPAPI GdipSetStringFormatMeasurableCharacterRanges(GpStringFormat*
-        format, INT rangeCount, GDIPCONST CharacterRange* ranges)
+GpStatus WINGDIPAPI GdipSetStringFormatMeasurableCharacterRanges(
+    GpStringFormat *format, INT rangeCount, GDIPCONST CharacterRange *ranges)
 {
-    if (!(format && rangeCount && ranges))
+    CharacterRange *new_ranges;
+
+    if (!(format && ranges))
         return InvalidParameter;
 
-    FIXME("stub: %p, %d, %p\n", format, rangeCount, ranges);
+    TRACE("%p, %d, %p\n", format, rangeCount, ranges);
 
-    return NotImplemented;
+    new_ranges = GdipAlloc(rangeCount * sizeof(CharacterRange));
+    if (!new_ranges)
+        return OutOfMemory;
+
+    GdipFree(format->character_ranges);
+    format->character_ranges = new_ranges;
+    memcpy(format->character_ranges, ranges, sizeof(CharacterRange) * rangeCount);
+    format->range_count = rangeCount;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetStringFormatTabStops(GpStringFormat *format, REAL firsttab,
     INT count, GDIPCONST REAL *tabs)
 {
+    TRACE("(%p, %0.2f, %i, %p)\n", format, firsttab, count, tabs);
+
     if(!format || !tabs)
         return InvalidParameter;
 
@@ -276,6 +306,8 @@ GpStatus WINGDIPAPI GdipSetStringFormatTabStops(GpStringFormat *format, REAL fir
 GpStatus WINGDIPAPI GdipSetStringFormatTrimming(GpStringFormat *format,
     StringTrimming trimming)
 {
+    TRACE("(%p, %i)\n", format, trimming);
+
     if(!format)
         return InvalidParameter;
 
@@ -286,6 +318,8 @@ GpStatus WINGDIPAPI GdipSetStringFormatTrimming(GpStringFormat *format,
 
 GpStatus WINGDIPAPI GdipSetStringFormatFlags(GpStringFormat *format, INT flags)
 {
+    TRACE("(%p, %x)\n", format, flags);
+
     if(!format)
         return InvalidParameter;
 
@@ -314,6 +348,19 @@ GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat *format, GpSt
     }
     else
         (*newFormat)->tabs = NULL;
+
+    if(format->range_count > 0){
+        (*newFormat)->character_ranges = GdipAlloc(sizeof(CharacterRange) * format->range_count);
+        if(!(*newFormat)->character_ranges){
+            GdipFree((*newFormat)->tabs);
+            GdipFree(*newFormat);
+            return OutOfMemory;
+        }
+        memcpy((*newFormat)->character_ranges, format->character_ranges,
+               sizeof(CharacterRange) * format->range_count);
+    }
+    else
+        (*newFormat)->character_ranges = NULL;
 
     TRACE("%p %p\n",format,newFormat);
 

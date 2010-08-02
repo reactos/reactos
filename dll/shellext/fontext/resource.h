@@ -1,6 +1,3 @@
-#ifndef __RESOURCE__H
-#define __RESOURCE__H
+#pragma once
 
 #define IDS_REACTOS_FONTS_FOLDER 151
-
-#endif /* __RESOURCE__H */

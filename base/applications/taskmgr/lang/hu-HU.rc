@@ -161,20 +161,7 @@ END
 //
 // Dialog
 //
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Feladatkezelõ"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Feladatkezelõ /Task Manager/ v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -203,7 +190,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Folyamat befejezése",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "Minden felhasználó folya&matait jelenítse meg",IDC_SHOWALLPROCESSES,
@@ -215,7 +202,7 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "CPU használat",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "CPU használat",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Memória használat",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totals",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Commit Charge (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
@@ -225,48 +212,48 @@ BEGIN
     LTEXT           "Szálak száma",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Folyamatok",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Összesen",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Limit",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
+    LTEXT           "Limit",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
     LTEXT           "Legnagyobb",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Összesen",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "Elérhetõ",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
     LTEXT           "Rendszer gyorsítótár",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Összesen",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
     LTEXT           "Lapozóállományban",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
     LTEXT           "Nem lapozható",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "CPU használat",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Memória használat",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU használat megjelenítése",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
+    PUSHBUTTON      "CPU használat megjelenítése",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
 		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Memória használat megjelenítése",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
+    PUSHBUTTON      "Memória használat megjelenítése",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
                     WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU használata",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Memória használata",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -602,7 +589,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Alacsonyabb prioritásra kapcsolja a folyamatot"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Alacsony prioritásra kapcsolja a folyamatot"
-    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 

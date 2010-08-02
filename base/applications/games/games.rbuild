@@ -4,7 +4,9 @@
 <directory name="solitaire">
 	<xi:include href="solitaire/solitaire.rbuild" />
 </directory>
-
+<directory name="spider">
+	<xi:include href="spider/spider.rbuild" />
+</directory>
 <directory name="winemine">
 	<xi:include href="winemine/winemine.rbuild" />
 </directory>

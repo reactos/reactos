@@ -86,11 +86,27 @@ static const char *command_to_string(UINT command)
 #undef X
 }
 
+static BOOL resolve_filename(const WCHAR *filename, WCHAR *fullname, DWORD buflen)
+{
+    static const WCHAR helpW[] = {'\\','h','e','l','p','\\',0};
+
+    GetFullPathNameW(filename, buflen, fullname, NULL);
+    if (GetFileAttributesW(fullname) == INVALID_FILE_ATTRIBUTES)
+    {
+        GetWindowsDirectoryW(fullname, buflen);
+        strcatW(fullname, helpW);
+        strcatW(fullname, filename);
+    }
+    return (GetFileAttributesW(fullname) != INVALID_FILE_ATTRIBUTES);
+}
+
 /******************************************************************
  *		HtmlHelpW (HHCTRL.OCX.15)
  */
 HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR data)
 {
+    WCHAR fullname[MAX_PATH];
+
     TRACE("(%p, %s, command=%s, data=%lx)\n",
           caller, debugstr_w( filename ),
           command_to_string( command ), data);
@@ -119,13 +135,14 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
             filename = chm_file;
             index += 2; /* advance beyond "::" for calling NavigateToChm() later */
         }
-        else
+
+        if (!resolve_filename(filename, fullname, MAX_PATH))
         {
-            if (command!=HH_DISPLAY_SEARCH) /* FIXME - use HH_FTS_QUERYW structure in data */
-                index = (const WCHAR*)data;
+            WARN("can't find %s\n", debugstr_w(filename));
+            return 0;
         }
 
-        info = CreateHelpViewer(filename);
+        info = CreateHelpViewer(fullname);
         if(!info)
             return NULL;
 
@@ -147,7 +164,13 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
         if (!filename)
             return NULL;
 
-        info = CreateHelpViewer(filename);
+        if (!resolve_filename(filename, fullname, MAX_PATH))
+        {
+            WARN("can't find %s\n", debugstr_w(filename));
+            return 0;
+        }
+
+        info = CreateHelpViewer(fullname);
         if(!info)
             return NULL;
 
@@ -249,11 +272,40 @@ HWND WINAPI HtmlHelpA(HWND caller, LPCSTR filename, UINT command, DWORD_PTR data
 int WINAPI doWinMain(HINSTANCE hInstance, LPSTR szCmdLine)
 {
     MSG msg;
-    int len, buflen;
+    int len, buflen, mapid = -1;
     WCHAR *filename;
     char *endq = NULL;
 
     hh_process = TRUE;
+
+    /* Parse command line option of the HTML Help command.
+     *
+     * Note: The only currently handled action is "mapid",
+     *  which corresponds to opening a specific page.
+     */
+    while(*szCmdLine == '-')
+    {
+        LPSTR space, ptr;
+
+        ptr = szCmdLine + 1;
+        space = strchr(ptr, ' ');
+        if(!strncmp(ptr, "mapid", space-ptr))
+        {
+            char idtxt[10];
+
+            ptr += strlen("mapid")+1;
+            space = strchr(ptr, ' ');
+            memcpy(idtxt, ptr, space-ptr);
+            idtxt[space-ptr] = '\0';
+            mapid = atoi(idtxt);
+            szCmdLine = space+1;
+        }
+        else
+        {
+            FIXME("Unhandled HTML Help command line parameter! (%.*s)\n", (int)(space-szCmdLine), szCmdLine);
+            return 0;
+        }
+    }
 
     /* FIXME: Check szCmdLine for bad arguments */
     if (*szCmdLine == '\"')
@@ -268,7 +320,11 @@ int WINAPI doWinMain(HINSTANCE hInstance, LPSTR szCmdLine)
     MultiByteToWideChar(CP_ACP, 0, szCmdLine, len, filename, buflen);
     filename[buflen-1] = 0;
 
-    HtmlHelpW(GetDesktopWindow(), filename, HH_DISPLAY_TOPIC, 0);
+    /* Open a specific help topic */
+    if(mapid != -1)
+        HtmlHelpW(GetDesktopWindow(), filename, HH_HELP_CONTEXT, mapid);
+    else
+        HtmlHelpW(GetDesktopWindow(), filename, HH_DISPLAY_TOPIC, 0);
 
     heap_free(filename);
 

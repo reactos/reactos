@@ -3,7 +3,6 @@
 	<include base="security">.</include>
 	<define name="__SECURITY__" />
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<file>security.rc</file>
 </module>

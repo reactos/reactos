@@ -7,6 +7,7 @@
  */
 
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <tchar.h>
 #include <stdarg.h>
 #include <string.h>
@@ -53,7 +54,6 @@ typedef struct _ICMP_HEADER
 typedef struct _ICMP_ECHO_PACKET
 {
     ICMP_HEADER Icmp;
-    LARGE_INTEGER Timestamp;
 } ICMP_ECHO_PACKET, *PICMP_ECHO_PACKET;
 
 #pragma pack(1)
@@ -83,6 +83,7 @@ LARGE_INTEGER       SumRTT;
 LARGE_INTEGER       AvgRTT;
 LARGE_INTEGER       TicksPerMs; /* Ticks per millisecond */
 LARGE_INTEGER       TicksPerUs; /* Ticks per microsecond */
+LARGE_INTEGER       SentTime;
 BOOL                UsePerformanceCounter;
 
 #ifndef NDEBUG
@@ -218,10 +219,10 @@ static BOOL ParseCmdline(int argc, char* argv[])
                 case 'n': PingCount = GetULONG2(&argv[i][2], argv[i + 1], &i); break;
                 case 'l':
                     DataSize = GetULONG2(&argv[i][2], argv[i + 1], &i);
-                    if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET))
+                    if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET) - sizeof(IPv4_HEADER))
                     {
                         printf("Bad value for option -l, valid range is from 0 to %d.\n",
-                            ICMP_MAXSIZE - (int)sizeof(ICMP_ECHO_PACKET));
+                            ICMP_MAXSIZE - (int)sizeof(ICMP_ECHO_PACKET) - (int)sizeof(IPv4_HEADER));
                         return FALSE;
                    }
                     break;
@@ -314,6 +315,27 @@ static BOOL Setup(VOID)
         return FALSE;
     }
 
+    if (setsockopt(IcmpSock,
+                   IPPROTO_IP,
+                   IP_DONTFRAGMENT,
+                   (const char *)&DontFragment,
+                   sizeof(DontFragment)) == SOCKET_ERROR)
+    {
+         printf("setsockopt failed (%d).\n", WSAGetLastError());
+         return FALSE;
+    }
+
+    if (setsockopt(IcmpSock,
+                   IPPROTO_IP,
+                   IP_TTL,
+                   (const char *)&TTLValue,
+                   sizeof(TTLValue)) == SOCKET_ERROR)
+    {
+         printf("setsockopt failed (%d).\n", WSAGetLastError());
+         return FALSE;
+    }
+
+
     ZeroMemory(&Target, sizeof(Target));
     phe = NULL;
     Addr = inet_addr(TargetName);
@@ -338,7 +360,7 @@ static BOOL Setup(VOID)
         Target.sin_family = AF_INET;
 
     TargetIP = inet_ntoa(Target.sin_addr);
-    CurrentSeqNum = 0;
+    CurrentSeqNum = 1;
     SentCount = 0;
     LostCount = 0;
     MinRTT.QuadPart = 0;
@@ -437,9 +459,17 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
         return FALSE;
     }
 
+    if (from->sin_addr.s_addr != Target.sin_addr.s_addr)
+    {
+#ifndef NDEBUG
+        printf("Bad source address (%s should be %s)\n", inet_ntoa(from->sin_addr), inet_ntoa(Target.sin_addr));
+#endif /* !NDEBUG */
+        return FALSE;
+    }
+
     QueryTime(&LargeTime);
 
-    RelativeTime.QuadPart = (LargeTime.QuadPart - Icmp->Timestamp.QuadPart);
+    RelativeTime.QuadPart = (LargeTime.QuadPart - SentTime.QuadPart);
 
     if ((RelativeTime.QuadPart / TicksPerMs.QuadPart) < 1)
     {
@@ -497,10 +527,6 @@ static BOOL Ping(VOID)
     Packet->Icmp.SeqNum   = htons((USHORT)CurrentSeqNum);
     Packet->Icmp.Checksum = 0;
 
-    /* Timestamp is part of data area */
-    QueryTime(&Packet->Timestamp);
-
-    CopyMemory(Buffer, &Packet->Icmp, sizeof(ICMP_ECHO_PACKET) + DataSize);
     /* Calculate checksum for ICMP header and data area */
     Packet->Icmp.Checksum = Checksum((PUSHORT)&Packet->Icmp, sizeof(ICMP_ECHO_PACKET) + DataSize);
 
@@ -524,11 +550,11 @@ static BOOL Ping(VOID)
 
         Status = sendto(IcmpSock, Buffer, sizeof(ICMP_ECHO_PACKET) + DataSize,
             0, (SOCKADDR*)&Target, sizeof(Target));
+        QueryTime(&SentTime);
         SentCount++;
     }
     if (Status == SOCKET_ERROR)
     {
-        LostCount++;
         if (WSAGetLastError() == WSAEHOSTUNREACH)
             printf("Destination host unreachable.\n");
         else
@@ -543,44 +569,40 @@ static BOOL Ping(VOID)
     Timeval.tv_sec  = Timeout / 1000;
     Timeval.tv_usec = Timeout % 1000;
 
-    Status = select(0, &Fds, NULL, NULL, &Timeval);
-    if ((Status != SOCKET_ERROR) && (Status != 0))
-    {
-        Length = sizeof(From);
-        Status = recvfrom(IcmpSock, Buffer, Size, 0, &From, &Length);
+    do {
+        Status = select(0, &Fds, NULL, NULL, &Timeval);
+        if ((Status != SOCKET_ERROR) && (Status != 0))
+        {
+            Length = sizeof(From);
+            Status = recvfrom(IcmpSock, Buffer, Size, 0, &From, &Length);
 
 #ifndef NDEBUG
-        printf("Received packet\n");
-        DisplayBuffer(Buffer, Status);
-        printf("\n");
+            printf("Received packet\n");
+            DisplayBuffer(Buffer, Status);
+            printf("\n");
 #endif /* !NDEBUG */
-    }
-    else
-        LostCount++;
-    if (Status == SOCKET_ERROR)
-    {
-        if (WSAGetLastError() != WSAETIMEDOUT)
-        {
-            printf("Could not receive data (%d).\n", WSAGetLastError());
-            GlobalFree(Buffer);
-            return FALSE;
         }
-        Status = 0;
-    }
+        else
+            LostCount++;
+        if (Status == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != WSAETIMEDOUT)
+            {
+                printf("Could not receive data (%d).\n", WSAGetLastError());
+                GlobalFree(Buffer);
+                return FALSE;
+            }
+            Status = 0;
+        }
 
-    if (Status == 0)
-    {
-        printf("Request timed out.\n");
-        GlobalFree(Buffer);
-        return TRUE;
-    }
+        if (Status == 0)
+        {
+            printf("Request timed out.\n");
+            GlobalFree(Buffer);
+            return TRUE;
+        }
 
-    if (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From))
-    {
-        /* FIXME: Wait again as it could be another ICMP message type */
-        printf("Request timed out (incomplete datagram received).\n");
-        LostCount++;
-    }
+    } while (!DecodeResponse(Buffer, Status, (PSOCKADDR_IN)&From));
 
     GlobalFree(Buffer);
     return TRUE;
@@ -607,8 +629,9 @@ int main(int argc, char* argv[])
         while ((NeverStop) || (Count < PingCount))
         {
             Ping();
-            Sleep(Timeout);
             Count++;
+            if((NeverStop) || (Count < PingCount))
+                Sleep(Timeout);
         };
 
         Cleanup();

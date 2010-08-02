@@ -1,3 +1,15 @@
+I noticed two things:
+
+1) The painting isn't done quite properly in the top, right part (the
+empty menu/toolbar area part) of the explorer when in SDI mode.
+
+2) When you switch back and forth from SDI to MDI, the toolbar
+settings (i.e., which ones to show) are not conserved.
+
+I found these issues while running your explorer from Windows XP SP2's explorer.
+
+
+- update problem in folders opened from the desktop in SDI mode
 - Combobox to switch the second input field between "Filter" and "Command"
 - rewrite autostart code and include all possible autostart locations
 - read "DESCRIPT.ION" files to display file descriptions

@@ -16,217 +16,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-/* Needed for LookupAccountNameW implementation from Wine */
-
-typedef struct _AccountSid
-{
-    WELL_KNOWN_SID_TYPE type;
-    LPCWSTR account;
-    LPCWSTR domain;
-    SID_NAME_USE name_use;
-} AccountSid;
-
-static const WCHAR Account_Operators[] = { 'A','c','c','o','u','n','t',' ','O','p','e','r','a','t','o','r','s',0 };
-static const WCHAR Administrator[] = {'A','d','m','i','n','i','s','t','r','a','t','o','r',0 };
-static const WCHAR Administrators[] = { 'A','d','m','i','n','i','s','t','r','a','t','o','r','s',0 };
-static const WCHAR ANONYMOUS_LOGON[] = { 'A','N','O','N','Y','M','O','U','S',' ','L','O','G','O','N',0 };
-static const WCHAR Authenticated_Users[] = { 'A','u','t','h','e','n','t','i','c','a','t','e','d',' ','U','s','e','r','s',0 };
-static const WCHAR Backup_Operators[] = { 'B','a','c','k','u','p',' ','O','p','e','r','a','t','o','r','s',0 };
-static const WCHAR BATCH[] = { 'B','A','T','C','H',0 };
-static const WCHAR Blank[] = { 0 };
-static const WCHAR BUILTIN[] = { 'B','U','I','L','T','I','N',0 };
-static const WCHAR Cert_Publishers[] = { 'C','e','r','t',' ','P','u','b','l','i','s','h','e','r','s',0 };
-static const WCHAR CREATOR_GROUP[] = { 'C','R','E','A','T','O','R',' ','G','R','O','U','P',0 };
-static const WCHAR CREATOR_GROUP_SERVER[] = { 'C','R','E','A','T','O','R',' ','G','R','O','U','P',' ','S','E','R','V','E','R',0 };
-static const WCHAR CREATOR_OWNER[] = { 'C','R','E','A','T','O','R',' ','O','W','N','E','R',0 };
-static const WCHAR CREATOR_OWNER_SERVER[] = { 'C','R','E','A','T','O','R',' ','O','W','N','E','R',' ','S','E','R','V','E','R',0 };
-static const WCHAR DIALUP[] = { 'D','I','A','L','U','P',0 };
-static const WCHAR Digest_Authentication[] = { 'D','i','g','e','s','t',' ','A','u','t','h','e','n','t','i','c','a','t','i','o','n',0 };
-static const WCHAR DOMAIN[] = {'D','O','M','A','I','N',0};
-static const WCHAR Domain_Admins[] = { 'D','o','m','a','i','n',' ','A','d','m','i','n','s',0 };
-static const WCHAR Domain_Computers[] = { 'D','o','m','a','i','n',' ','C','o','m','p','u','t','e','r','s',0 };
-static const WCHAR Domain_Controllers[] = { 'D','o','m','a','i','n',' ','C','o','n','t','r','o','l','l','e','r','s',0 };
-static const WCHAR Domain_Guests[] = { 'D','o','m','a','i','n',' ','G','u','e','s','t','s',0 };
-static const WCHAR Domain_Users[] = { 'D','o','m','a','i','n',' ','U','s','e','r','s',0 };
-static const WCHAR Enterprise_Admins[] = { 'E','n','t','e','r','p','r','i','s','e',' ','A','d','m','i','n','s',0 };
-static const WCHAR ENTERPRISE_DOMAIN_CONTROLLERS[] = { 'E','N','T','E','R','P','R','I','S','E',' ','D','O','M','A','I','N',' ','C','O','N','T','R','O','L','L','E','R','S',0 };
-static const WCHAR Everyone[] = { 'E','v','e','r','y','o','n','e',0 };
-static const WCHAR Group_Policy_Creator_Owners[] = { 'G','r','o','u','p',' ','P','o','l','i','c','y',' ','C','r','e','a','t','o','r',' ','O','w','n','e','r','s',0 };
-static const WCHAR Guest[] = { 'G','u','e','s','t',0 };
-static const WCHAR Guests[] = { 'G','u','e','s','t','s',0 };
-static const WCHAR INTERACTIVE[] = { 'I','N','T','E','R','A','C','T','I','V','E',0 };
-static const WCHAR LOCAL[] = { 'L','O','C','A','L',0 };
-static const WCHAR LOCAL_SERVICE[] = { 'L','O','C','A','L',' ','S','E','R','V','I','C','E',0 };
-static const WCHAR NETWORK[] = { 'N','E','T','W','O','R','K',0 };
-static const WCHAR Network_Configuration_Operators[] = { 'N','e','t','w','o','r','k',' ','C','o','n','f','i','g','u','r','a','t','i','o','n',' ','O','p','e','r','a','t','o','r','s',0 };
-static const WCHAR NETWORK_SERVICE[] = { 'N','E','T','W','O','R','K',' ','S','E','R','V','I','C','E',0 };
-static const WCHAR NT_AUTHORITY[] = { 'N','T',' ','A','U','T','H','O','R','I','T','Y',0 };
-static const WCHAR NT_Pseudo_Domain[] = { 'N','T',' ','P','s','e','u','d','o',' ','D','o','m','a','i','n',0 };
-static const WCHAR NTML_Authentication[] = { 'N','T','M','L',' ','A','u','t','h','e','n','t','i','c','a','t','i','o','n',0 };
-static const WCHAR NULL_SID[] = { 'N','U','L','L',' ','S','I','D',0 };
-static const WCHAR Other_Organization[] = { 'O','t','h','e','r',' ','O','r','g','a','n','i','z','a','t','i','o','n',0 };
-static const WCHAR Performance_Log_Users[] = { 'P','e','r','f','o','r','m','a','n','c','e',' ','L','o','g',' ','U','s','e','r','s',0 };
-static const WCHAR Performance_Monitor_Users[] = { 'P','e','r','f','o','r','m','a','n','c','e',' ','M','o','n','i','t','o','r',' ','U','s','e','r','s',0 };
-static const WCHAR Power_Users[] = { 'P','o','w','e','r',' ','U','s','e','r','s',0 };
-static const WCHAR Pre_Windows_2000_Compatible_Access[] = { 'P','r','e','-','W','i','n','d','o','w','s',' ','2','0','0','0',' ','C','o','m','p','a','t','i','b','l','e',' ','A','c','c','e','s','s',0 };
-static const WCHAR Print_Operators[] = { 'P','r','i','n','t',' ','O','p','e','r','a','t','o','r','s',0 };
-static const WCHAR PROXY[] = { 'P','R','O','X','Y',0 };
-static const WCHAR RAS_and_IAS_Servers[] = { 'R','A','S',' ','a','n','d',' ','I','A','S',' ','S','e','r','v','e','r','s',0 };
-static const WCHAR Remote_Desktop_Users[] = { 'R','e','m','o','t','e',' ','D','e','s','k','t','o','p',' ','U','s','e','r','s',0 };
-static const WCHAR REMOTE_INTERACTIVE_LOGON[] = { 'R','E','M','O','T','E',' ','I','N','T','E','R','A','C','T','I','V','E',' ','L','O','G','O','N',0 };
-static const WCHAR Replicators[] = { 'R','e','p','l','i','c','a','t','o','r','s',0 };
-static const WCHAR RESTRICTED[] = { 'R','E','S','T','R','I','C','T','E','D',0 };
-static const WCHAR SChannel_Authentication[] = { 'S','C','h','a','n','n','e','l',' ','A','u','t','h','e','n','t','i','c','a','t','i','o','n',0 };
-static const WCHAR Schema_Admins[] = { 'S','c','h','e','m','a',' ','A','d','m','i','n','s',0 };
-static const WCHAR SELF[] = { 'S','E','L','F',0 };
-static const WCHAR Server_Operators[] = { 'S','e','r','v','e','r',' ','O','p','e','r','a','t','o','r','s',0 };
-static const WCHAR SERVICE[] = { 'S','E','R','V','I','C','E',0 };
-static const WCHAR SYSTEM[] = { 'S','Y','S','T','E','M',0 };
-static const WCHAR TERMINAL_SERVER_USER[] = { 'T','E','R','M','I','N','A','L',' ','S','E','R','V','E','R',' ','U','S','E','R',0 };
-static const WCHAR This_Organization[] = { 'T','h','i','s',' ','O','r','g','a','n','i','z','a','t','i','o','n',0 };
-static const WCHAR Users[] = { 'U','s','e','r','s',0 };
-
-static const AccountSid ACCOUNT_SIDS[] = {
-    { WinNullSid, NULL_SID, Blank, SidTypeWellKnownGroup },
-    { WinWorldSid, Everyone, Blank, SidTypeWellKnownGroup },
-    { WinLocalSid, LOCAL, Blank, SidTypeWellKnownGroup },
-    { WinCreatorOwnerSid, CREATOR_OWNER, Blank, SidTypeWellKnownGroup },
-    { WinCreatorGroupSid, CREATOR_GROUP, Blank, SidTypeWellKnownGroup },
-    { WinCreatorOwnerServerSid, CREATOR_OWNER_SERVER, Blank, SidTypeWellKnownGroup },
-    { WinCreatorGroupServerSid, CREATOR_GROUP_SERVER, Blank, SidTypeWellKnownGroup },
-    { WinNtAuthoritySid, NT_Pseudo_Domain, NT_Pseudo_Domain, SidTypeDomain },
-    { WinDialupSid, DIALUP, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinNetworkSid, NETWORK, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinBatchSid, BATCH, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinInteractiveSid, INTERACTIVE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinServiceSid, SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinAnonymousSid, ANONYMOUS_LOGON, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinProxySid, PROXY, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinEnterpriseControllersSid, ENTERPRISE_DOMAIN_CONTROLLERS, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinSelfSid, SELF, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinAuthenticatedUserSid, Authenticated_Users, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinRestrictedCodeSid, RESTRICTED, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinTerminalServerSid, TERMINAL_SERVER_USER, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinRemoteLogonIdSid, REMOTE_INTERACTIVE_LOGON, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinLocalSystemSid, SYSTEM, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinLocalServiceSid, LOCAL_SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinNetworkServiceSid, NETWORK_SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinBuiltinDomainSid, BUILTIN, BUILTIN, SidTypeDomain },
-    { WinBuiltinAdministratorsSid, Administrators, BUILTIN, SidTypeAlias },
-    { WinBuiltinUsersSid, Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinGuestsSid, Guests, BUILTIN, SidTypeAlias },
-    { WinBuiltinPowerUsersSid, Power_Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinAccountOperatorsSid, Account_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinSystemOperatorsSid, Server_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinPrintOperatorsSid, Print_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinBackupOperatorsSid, Backup_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinReplicatorSid, Replicators, BUILTIN, SidTypeAlias },
-    { WinBuiltinPreWindows2000CompatibleAccessSid, Pre_Windows_2000_Compatible_Access, BUILTIN, SidTypeAlias },
-    { WinBuiltinRemoteDesktopUsersSid, Remote_Desktop_Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinNetworkConfigurationOperatorsSid, Network_Configuration_Operators, BUILTIN, SidTypeAlias },
-    { WinNTLMAuthenticationSid, NTML_Authentication, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinDigestAuthenticationSid, Digest_Authentication, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinSChannelAuthenticationSid, SChannel_Authentication, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinThisOrganizationSid, This_Organization, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinOtherOrganizationSid, Other_Organization, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinBuiltinPerfMonitoringUsersSid, Performance_Monitor_Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinPerfLoggingUsersSid, Performance_Log_Users, BUILTIN, SidTypeAlias },
-};
-
-static const WCHAR SE_CREATE_TOKEN_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_ASSIGNPRIMARYTOKEN_NAME_W[] =
- { 'S','e','A','s','s','i','g','n','P','r','i','m','a','r','y','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_LOCK_MEMORY_NAME_W[] =
- { 'S','e','L','o','c','k','M','e','m','o','r','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_INCREASE_QUOTA_NAME_W[] =
- { 'S','e','I','n','c','r','e','a','s','e','Q','u','o','t','a','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_MACHINE_ACCOUNT_NAME_W[] =
- { 'S','e','M','a','c','h','i','n','e','A','c','c','o','u','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_TCB_NAME_W[] =
- { 'S','e','T','c','b','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SECURITY_NAME_W[] =
- { 'S','e','S','e','c','u','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_TAKE_OWNERSHIP_NAME_W[] =
- { 'S','e','T','a','k','e','O','w','n','e','r','s','h','i','p','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_LOAD_DRIVER_NAME_W[] =
- { 'S','e','L','o','a','d','D','r','i','v','e','r','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYSTEM_PROFILE_NAME_W[] =
- { 'S','e','S','y','s','t','e','m','P','r','o','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYSTEMTIME_NAME_W[] =
- { 'S','e','S','y','s','t','e','m','t','i','m','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_PROF_SINGLE_PROCESS_NAME_W[] =
- { 'S','e','P','r','o','f','i','l','e','S','i','n','g','l','e','P','r','o','c','e','s','s','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_INC_BASE_PRIORITY_NAME_W[] =
- { 'S','e','I','n','c','r','e','a','s','e','B','a','s','e','P','r','i','o','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CREATE_PAGEFILE_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','P','a','g','e','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CREATE_PERMANENT_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','P','e','r','m','a','n','e','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_BACKUP_NAME_W[] =
- { 'S','e','B','a','c','k','u','p','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_RESTORE_NAME_W[] =
- { 'S','e','R','e','s','t','o','r','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SHUTDOWN_NAME_W[] =
- { 'S','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_DEBUG_NAME_W[] =
- { 'S','e','D','e','b','u','g','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_AUDIT_NAME_W[] =
- { 'S','e','A','u','d','i','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYSTEM_ENVIRONMENT_NAME_W[] =
- { 'S','e','S','y','s','t','e','m','E','n','v','i','r','o','n','m','e','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CHANGE_NOTIFY_NAME_W[] =
- { 'S','e','C','h','a','n','g','e','N','o','t','i','f','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_REMOTE_SHUTDOWN_NAME_W[] =
- { 'S','e','R','e','m','o','t','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_UNDOCK_NAME_W[] =
- { 'S','e','U','n','d','o','c','k','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYNC_AGENT_NAME_W[] =
- { 'S','e','S','y','n','c','A','g','e','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_ENABLE_DELEGATION_NAME_W[] =
- { 'S','e','E','n','a','b','l','e','D','e','l','e','g','a','t','i','o','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_MANAGE_VOLUME_NAME_W[] =
- { 'S','e','M','a','n','a','g','e','V','o','l','u','m','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_IMPERSONATE_NAME_W[] =
- { 'S','e','I','m','p','e','r','s','o','n','a','t','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CREATE_GLOBAL_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','G','l','o','b','a','l','P','r','i','v','i','l','e','g','e',0 };
-
-static const WCHAR * const WellKnownPrivNames[SE_MAX_WELL_KNOWN_PRIVILEGE + 1] =
-{
-    NULL,
-    NULL,
-    SE_CREATE_TOKEN_NAME_W,
-    SE_ASSIGNPRIMARYTOKEN_NAME_W,
-    SE_LOCK_MEMORY_NAME_W,
-    SE_INCREASE_QUOTA_NAME_W,
-    SE_MACHINE_ACCOUNT_NAME_W,
-    SE_TCB_NAME_W,
-    SE_SECURITY_NAME_W,
-    SE_TAKE_OWNERSHIP_NAME_W,
-    SE_LOAD_DRIVER_NAME_W,
-    SE_SYSTEM_PROFILE_NAME_W,
-    SE_SYSTEMTIME_NAME_W,
-    SE_PROF_SINGLE_PROCESS_NAME_W,
-    SE_INC_BASE_PRIORITY_NAME_W,
-    SE_CREATE_PAGEFILE_NAME_W,
-    SE_CREATE_PERMANENT_NAME_W,
-    SE_BACKUP_NAME_W,
-    SE_RESTORE_NAME_W,
-    SE_SHUTDOWN_NAME_W,
-    SE_DEBUG_NAME_W,
-    SE_AUDIT_NAME_W,
-    SE_SYSTEM_ENVIRONMENT_NAME_W,
-    SE_CHANGE_NOTIFY_NAME_W,
-    SE_REMOTE_SHUTDOWN_NAME_W,
-    SE_UNDOCK_NAME_W,
-    SE_SYNC_AGENT_NAME_W,
-    SE_ENABLE_DELEGATION_NAME_W,
-    SE_MANAGE_VOLUME_NAME_W,
-    SE_IMPERSONATE_NAME_W,
-    SE_CREATE_GLOBAL_NAME_W,
-};
-
 
 /* Interface to ntmarta.dll ***************************************************/
 
@@ -289,7 +78,7 @@ CheckNtMartaPresent(VOID)
 {
     DWORD ErrorCode;
 
-    if (InterlockedCompareExchangePointer(&NtMarta,
+    if (InterlockedCompareExchangePointer((PVOID)&NtMarta,
                                           NULL,
                                           NULL) == NULL)
     {
@@ -300,7 +89,7 @@ CheckNtMartaPresent(VOID)
         if (ErrorCode == ERROR_SUCCESS)
         {
             /* try change the NtMarta pointer */
-            if (InterlockedCompareExchangePointer(&NtMarta,
+            if (InterlockedCompareExchangePointer((PVOID)&NtMarta,
                                                   &NtMartaStatic,
                                                   NULL) != NULL)
             {
@@ -329,7 +118,7 @@ CheckNtMartaPresent(VOID)
 VOID
 UnloadNtMarta(VOID)
 {
-    if (InterlockedExchangePointer(&NtMarta,
+    if (InterlockedExchangePointer((PVOID)&NtMarta,
                                    NULL) != NULL)
     {
         FreeLibrary(NtMartaStatic.hDllInstance);
@@ -885,102 +674,109 @@ GetUserNameA(LPSTR lpszName,
 BOOL
 WINAPI
 GetUserNameW(LPWSTR lpszName,
-             LPDWORD lpSize )
+             LPDWORD lpSize)
 {
-  HANDLE hToken = INVALID_HANDLE_VALUE;
-  DWORD tu_len = 0;
-  char* tu_buf = NULL;
-  TOKEN_USER* token_user = NULL;
-  DWORD an_len = 0;
-  SID_NAME_USE snu = SidTypeUser;
-  WCHAR* domain_name = NULL;
-  DWORD dn_len = 0;
+    HANDLE hToken = INVALID_HANDLE_VALUE;
+    DWORD tu_len = 0;
+    char* tu_buf = NULL;
+    TOKEN_USER* token_user = NULL;
+    DWORD an_len = 0;
+    SID_NAME_USE snu = SidTypeUser;
+    WCHAR* domain_name = NULL;
+    DWORD dn_len = 0;
 
-  if ( !OpenThreadToken ( GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken ) )
-  {
-    DWORD dwLastError = GetLastError();
-    if ( dwLastError != ERROR_NO_TOKEN
-      && dwLastError != ERROR_NO_IMPERSONATION_TOKEN )
+    if (!OpenThreadToken (GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken))
     {
-      /* don't call SetLastError(),
-         as OpenThreadToken() ought to have set one */
-      return FALSE;
-    }
-    if ( !OpenProcessToken ( GetCurrentProcess(), TOKEN_QUERY, &hToken ) )
-    {
-      /* don't call SetLastError(),
-         as OpenProcessToken() ought to have set one */
-      return FALSE;
-    }
-  }
-  tu_buf = LocalAlloc ( LMEM_FIXED, 36 );
-  if ( !tu_buf )
-  {
-    SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-    CloseHandle ( hToken );
-    return FALSE;
-  }
-  if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, 36, &tu_len ) || tu_len > 36 )
-  {
-    LocalFree ( tu_buf );
-    tu_buf = LocalAlloc ( LMEM_FIXED, tu_len );
-    if ( !tu_buf )
-    {
-      SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-      CloseHandle ( hToken );
-      return FALSE;
-    }
-    if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, tu_len, &tu_len ) )
-    {
-      /* don't call SetLastError(),
-         as GetTokenInformation() ought to have set one */
-      LocalFree ( tu_buf );
-      CloseHandle ( hToken );
-      return FALSE;
-    }
-  }
-  CloseHandle ( hToken );
-  token_user = (TOKEN_USER*)tu_buf;
+        DWORD dwLastError = GetLastError();
+        if (dwLastError != ERROR_NO_TOKEN
+            && dwLastError != ERROR_NO_IMPERSONATION_TOKEN)
+        {
+            /* don't call SetLastError(),
+               as OpenThreadToken() ought to have set one */
+            return FALSE;
+        }
 
-  an_len = *lpSize;
-  dn_len = 32;
-  domain_name = LocalAlloc ( LMEM_FIXED, dn_len * sizeof(WCHAR) );
-  if ( !domain_name )
-  {
-    LocalFree ( tu_buf );
-    SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-    return FALSE;
-  }
-  if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu )
-    || dn_len > 32 )
-  {
-    if ( dn_len > 32 )
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        {
+            /* don't call SetLastError(),
+               as OpenProcessToken() ought to have set one */
+            return FALSE;
+        }
+    }
+
+    tu_buf = LocalAlloc(LMEM_FIXED, 36);
+    if (!tu_buf)
     {
-      LocalFree ( domain_name );
-      domain_name = LocalAlloc ( LMEM_FIXED, dn_len * sizeof(WCHAR) );
-      if ( !domain_name )
-      {
-        LocalFree ( tu_buf );
-        SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        CloseHandle(hToken);
         return FALSE;
-      }
     }
-    an_len = *lpSize;
-    if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu ) )
-    {
-      /* don't call SetLastError(),
-         as LookupAccountSid() ought to have set one */
-      LocalFree ( domain_name );
-      LocalFree ( tu_buf );
-      *lpSize = an_len;
-      return FALSE;
-    }
-  }
 
-  LocalFree ( domain_name );
-  LocalFree ( tu_buf );
-  *lpSize = an_len + 1;
-  return TRUE;
+    if (!GetTokenInformation(hToken, TokenUser, tu_buf, 36, &tu_len) || tu_len > 36)
+    {
+        LocalFree(tu_buf);
+        tu_buf = LocalAlloc(LMEM_FIXED, tu_len);
+        if (!tu_buf)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        if (!GetTokenInformation(hToken, TokenUser, tu_buf, tu_len, &tu_len))
+        {
+            /* don't call SetLastError(),
+               as GetTokenInformation() ought to have set one */
+            LocalFree(tu_buf);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+    }
+
+    CloseHandle(hToken);
+    token_user = (TOKEN_USER*)tu_buf;
+
+    an_len = *lpSize;
+    dn_len = 32;
+    domain_name = LocalAlloc(LMEM_FIXED, dn_len * sizeof(WCHAR));
+    if (!domain_name)
+    {
+        LocalFree(tu_buf);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    if (!LookupAccountSidW(NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu)
+        || dn_len > 32)
+    {
+        if (dn_len > 32)
+        {
+            LocalFree(domain_name);
+            domain_name = LocalAlloc(LMEM_FIXED, dn_len * sizeof(WCHAR));
+            if (!domain_name)
+            {
+                LocalFree(tu_buf);
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+        }
+
+        an_len = *lpSize;
+        if (!LookupAccountSidW(NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu))
+        {
+            /* don't call SetLastError(),
+               as LookupAccountSid() ought to have set one */
+            LocalFree(domain_name);
+            LocalFree(tu_buf);
+            *lpSize = an_len;
+            return FALSE;
+        }
+    }
+
+    LocalFree(domain_name);
+    LocalFree(tu_buf);
+    *lpSize = an_len + 1;
+    return TRUE;
 }
 
 
@@ -999,129 +795,121 @@ LookupAccountSidA(LPCSTR lpSystemName,
                   LPDWORD cchReferencedDomainName,
                   PSID_NAME_USE peUse)
 {
-  UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
-  DWORD szName, szReferencedDomainName;
-  BOOL Ret;
+    UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
+    LPWSTR NameBuffer = NULL;
+    LPWSTR ReferencedDomainNameBuffer = NULL;
+    DWORD dwName, dwReferencedDomainName;
+    BOOL Ret;
 
-  /*
-   * save the buffer sizes the caller passed to us, as they may get modified and
-   * we require the original values when converting back to ansi
-   */
-  szName = *cchName;
-  szReferencedDomainName = *cchReferencedDomainName;
-
-  /*
-   * allocate buffers for the unicode strings to receive
-   */
-
-  if(szName > 0)
-  {
-    NameW.Length = 0;
-    NameW.MaximumLength = szName * sizeof(WCHAR);
-    NameW.Buffer = (PWSTR)LocalAlloc(LMEM_FIXED, NameW.MaximumLength);
-    if(NameW.Buffer == NULL)
-    {
-      SetLastError(ERROR_OUTOFMEMORY);
-      return FALSE;
-    }
-  }
-  else
-    NameW.Buffer = NULL;
-
-  if(szReferencedDomainName > 0)
-  {
-    ReferencedDomainNameW.Length = 0;
-    ReferencedDomainNameW.MaximumLength = szReferencedDomainName * sizeof(WCHAR);
-    ReferencedDomainNameW.Buffer = (PWSTR)LocalAlloc(LMEM_FIXED, ReferencedDomainNameW.MaximumLength);
-    if(ReferencedDomainNameW.Buffer == NULL)
-    {
-      if(szName > 0)
-      {
-        LocalFree(NameW.Buffer);
-      }
-      SetLastError(ERROR_OUTOFMEMORY);
-      return FALSE;
-    }
-  }
-  else
-    ReferencedDomainNameW.Buffer = NULL;
-
-  /*
-   * convert the system name to unicode - if present
-   */
-
-  if(lpSystemName != NULL)
-  {
-    ANSI_STRING SystemNameA;
-
-    RtlInitAnsiString(&SystemNameA, lpSystemName);
-    RtlAnsiStringToUnicodeString(&SystemNameW, &SystemNameA, TRUE);
-  }
-  else
-    SystemNameW.Buffer = NULL;
-
-  /*
-   * it's time to call the unicode version
-   */
-
-  Ret = LookupAccountSidW(SystemNameW.Buffer,
-                          lpSid,
-                          NameW.Buffer,
-                          cchName,
-                          ReferencedDomainNameW.Buffer,
-                          cchReferencedDomainName,
-                          peUse);
-  if(Ret)
-  {
     /*
-     * convert unicode strings back to ansi, don't forget that we can't convert
-     * more than 0xFFFF (USHORT) characters! Also don't forget to explicitly
-     * terminate the converted string, the Rtl functions don't do that!
+     * save the buffer sizes the caller passed to us, as they may get modified and
+     * we require the original values when converting back to ansi
      */
-    if(lpName != NULL)
+    dwName = *cchName;
+    dwReferencedDomainName = *cchReferencedDomainName;
+
+    /* allocate buffers for the unicode strings to receive */
+    if (dwName > 0)
     {
-      ANSI_STRING NameA;
+        NameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwName);
+        if (NameBuffer == NULL)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+    }
+    else
+        NameBuffer = NULL;
 
-      NameA.Length = 0;
-      NameA.MaximumLength = ((szName <= 0xFFFF) ? (USHORT)szName : 0xFFFF);
-      NameA.Buffer = lpName;
+    if (dwReferencedDomainName > 0)
+    {
+        ReferencedDomainNameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwReferencedDomainName);
+        if (ReferencedDomainNameBuffer == NULL)
+        {
+            if (dwName > 0)
+            {
+                LocalFree(NameBuffer);
+            }
 
-      RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
-      NameA.Buffer[NameA.Length] = '\0';
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+    }
+    else
+        ReferencedDomainNameBuffer = NULL;
+
+
+    /* convert the system name to unicode - if present */
+    if (lpSystemName != NULL)
+    {
+        ANSI_STRING SystemNameA;
+
+        RtlInitAnsiString(&SystemNameA, lpSystemName);
+        RtlAnsiStringToUnicodeString(&SystemNameW, &SystemNameA, TRUE);
+    }
+    else
+        SystemNameW.Buffer = NULL;
+
+    /* it's time to call the unicode version */
+    Ret = LookupAccountSidW(SystemNameW.Buffer,
+                            lpSid,
+                            NameBuffer,
+                            cchName,
+                            ReferencedDomainNameBuffer,
+                            cchReferencedDomainName,
+                            peUse);
+    if (Ret)
+    {
+        /*
+         * convert unicode strings back to ansi, don't forget that we can't convert
+         * more than 0xFFFF (USHORT) characters! Also don't forget to explicitly
+         * terminate the converted string, the Rtl functions don't do that!
+         */
+        if (lpName != NULL)
+        {
+            ANSI_STRING NameA;
+
+            NameA.Length = 0;
+            NameA.MaximumLength = ((dwName <= 0xFFFF) ? (USHORT)dwName : 0xFFFF);
+            NameA.Buffer = lpName;
+
+            RtlInitUnicodeString(&NameW, NameBuffer);
+            RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
+            NameA.Buffer[NameA.Length] = '\0';
+        }
+
+        if (lpReferencedDomainName != NULL)
+        {
+            ANSI_STRING ReferencedDomainNameA;
+
+            ReferencedDomainNameA.Length = 0;
+            ReferencedDomainNameA.MaximumLength = ((dwReferencedDomainName <= 0xFFFF) ?
+                                                   (USHORT)dwReferencedDomainName : 0xFFFF);
+            ReferencedDomainNameA.Buffer = lpReferencedDomainName;
+
+            RtlInitUnicodeString(&ReferencedDomainNameW, ReferencedDomainNameBuffer);
+            RtlUnicodeStringToAnsiString(&ReferencedDomainNameA, &ReferencedDomainNameW, FALSE);
+            ReferencedDomainNameA.Buffer[ReferencedDomainNameA.Length] = '\0';
+        }
     }
 
-    if(lpReferencedDomainName != NULL)
+    /* free previously allocated buffers */
+    if (SystemNameW.Buffer != NULL)
     {
-      ANSI_STRING ReferencedDomainNameA;
-
-      ReferencedDomainNameA.Length = 0;
-      ReferencedDomainNameA.MaximumLength = ((szReferencedDomainName <= 0xFFFF) ?
-                                             (USHORT)szReferencedDomainName : 0xFFFF);
-      ReferencedDomainNameA.Buffer = lpReferencedDomainName;
-
-      RtlUnicodeStringToAnsiString(&ReferencedDomainNameA, &ReferencedDomainNameW, FALSE);
-      ReferencedDomainNameA.Buffer[ReferencedDomainNameA.Length] = '\0';
+        RtlFreeUnicodeString(&SystemNameW);
     }
-  }
 
-  /*
-   * free previously allocated buffers
-   */
+    if (NameBuffer != NULL)
+    {
+        LocalFree(NameBuffer);
+    }
 
-  if(SystemNameW.Buffer != NULL)
-  {
-    RtlFreeUnicodeString(&SystemNameW);
-  }
-  if(NameW.Buffer != NULL)
-  {
-    LocalFree(NameW.Buffer);
-  }
-  if(ReferencedDomainNameW.Buffer != NULL)
-  {
-    LocalFree(ReferencedDomainNameW.Buffer);
-  }
+    if (ReferencedDomainNameBuffer != NULL)
+    {
+        LocalFree(ReferencedDomainNameBuffer);
+    }
 
-  return Ret;
+    return Ret;
 }
 
 
@@ -1139,85 +927,79 @@ LookupAccountSidW(LPCWSTR pSystemName,
                   LPDWORD pdwDomainName,
                   PSID_NAME_USE peUse)
 {
-	LSA_UNICODE_STRING SystemName;
-	LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
-	LSA_HANDLE PolicyHandle = NULL;
-	NTSTATUS Status;
-	PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
-	PLSA_TRANSLATED_NAME TranslatedName = NULL;
-	BOOL ret;
+    LSA_UNICODE_STRING SystemName;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
+    PLSA_TRANSLATED_NAME TranslatedName = NULL;
+    BOOL ret;
+    DWORD dwAccountName, dwDomainName;
 
-	RtlInitUnicodeString ( &SystemName, pSystemName );
-	Status = LsaOpenPolicy ( &SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle );
-	if ( !NT_SUCCESS(Status) )
-	{
-		SetLastError ( LsaNtStatusToWinError(Status) );
-		return FALSE;
-	}
-	Status = LsaLookupSids ( PolicyHandle, 1, &pSid, &ReferencedDomain, &TranslatedName );
+    RtlInitUnicodeString(&SystemName, pSystemName);
+    Status = LsaOpenPolicy(&SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
+        return FALSE;
+    }
 
-	LsaClose ( PolicyHandle );
+    Status = LsaLookupSids(PolicyHandle, 1, &pSid, &ReferencedDomain, &TranslatedName);
 
-	if ( !NT_SUCCESS(Status) || Status == STATUS_SOME_NOT_MAPPED )
-	{
-		SetLastError ( LsaNtStatusToWinError(Status) );
-		ret = FALSE;
-	}
-	else
-	{
-		ret = TRUE;
-		if ( TranslatedName )
-		{
-			DWORD dwSrcLen = TranslatedName->Name.Length / sizeof(WCHAR);
-			if ( *pdwAccountName <= dwSrcLen )
-			{
-				*pdwAccountName = dwSrcLen + 1;
-				ret = FALSE;
-			}
-			else
-			{
-				*pdwAccountName = dwSrcLen;
-				if (pAccountName)
-				{
-					RtlCopyMemory ( pAccountName, TranslatedName->Name.Buffer, TranslatedName->Name.Length );
-					pAccountName[TranslatedName->Name.Length / sizeof(WCHAR)] = L'\0';
-				}
-			}
-			if ( peUse )
-				*peUse = TranslatedName->Use;
-		}
+    LsaClose(PolicyHandle);
 
-		if ( ReferencedDomain )
-		{
-			if ( ReferencedDomain->Entries > 0 )
-			{
-				DWORD dwSrcLen = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
-				if ( *pdwDomainName <= dwSrcLen )
-				{
-					*pdwDomainName = dwSrcLen + 1;
-					ret = FALSE;
-				}
-				else
-				{
-					*pdwDomainName = dwSrcLen;
-					RtlCopyMemory ( pDomainName, ReferencedDomain->Domains[0].Name.Buffer, ReferencedDomain->Domains[0].Name.Length );
-					                pDomainName[ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR)] = L'\0';
-				}
-			}
-		}
+    if (!NT_SUCCESS(Status) || Status == STATUS_SOME_NOT_MAPPED)
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
+        ret = FALSE;
+    }
+    else
+    {
+        ret = TRUE;
 
-		if ( !ret )
-			SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	}
+        dwAccountName = TranslatedName->Name.Length / sizeof(WCHAR);
+        if (ReferencedDomain && ReferencedDomain->Entries > 0)
+            dwDomainName = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
+        else
+            dwDomainName = 0;
 
-	if ( ReferencedDomain )
-		LsaFreeMemory ( ReferencedDomain );
-	if ( TranslatedName )
-		LsaFreeMemory ( TranslatedName );
+        if (*pdwAccountName <= dwAccountName || *pdwDomainName <= dwDomainName)
+        {
+            /* One or two buffers are insufficient, add up a char for NULL termination */
+            *pdwAccountName = dwAccountName + 1;
+            *pdwDomainName = dwDomainName + 1;
+            ret = FALSE;
+        }
+        else
+        {
+            /* Lengths are sufficient, copy the data */
+            if (dwAccountName)
+                RtlCopyMemory(pAccountName, TranslatedName->Name.Buffer, dwAccountName * sizeof(WCHAR));
+            pAccountName[dwAccountName] = L'\0';
 
-	return ret;
+            if (dwDomainName)
+                RtlCopyMemory(pDomainName, ReferencedDomain->Domains[0].Name.Buffer, dwDomainName * sizeof(WCHAR));
+            pDomainName[dwDomainName] = L'\0';
+
+            *pdwAccountName = dwAccountName;
+            *pdwDomainName = dwDomainName;
+
+            if (peUse)
+                *peUse = TranslatedName->Use;
+        }
+
+        if (!ret)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
+
+    if (ReferencedDomain)
+        LsaFreeMemory(ReferencedDomain);
+
+    if (TranslatedName)
+        LsaFreeMemory(TranslatedName);
+
+    return ret;
 }
-
 
 
 /******************************************************************************
@@ -1279,7 +1061,7 @@ LookupAccountNameA(LPCSTR SystemName,
 /******************************************************************************
  * LookupAccountNameW [ADVAPI32.@]
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1291,78 +1073,94 @@ LookupAccountNameW(LPCWSTR lpSystemName,
                    LPDWORD cchReferencedDomainName,
                    PSID_NAME_USE peUse)
 {
-    /* Default implementation: Always return a default SID */
-    SID_IDENTIFIER_AUTHORITY identifierAuthority = {SECURITY_NT_AUTHORITY};
-    BOOL ret;
-    PSID pSid;
-    static const WCHAR dm[] = {'D','O','M','A','I','N',0};
-    unsigned int i;
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName;
+    UNICODE_STRING AccountName;
+    LSA_HANDLE PolicyHandle = NULL;
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomains = NULL;
+    PLSA_TRANSLATED_SID TranslatedSid = NULL;
+    PSID pDomainSid;
+    DWORD dwDomainNameLength;
+    DWORD dwSidLength;
+    UCHAR nSubAuthorities;
+    BOOL bResult;
+    NTSTATUS Status;
 
-    TRACE("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
+    TRACE("%s %s %p %p %p %p %p\n", lpSystemName, lpAccountName,
           Sid, cbSid, ReferencedDomainName, cchReferencedDomainName, peUse);
 
-    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    RtlInitUnicodeString(&SystemName,
+                         lpSystemName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
 
-    for (i = 0; i < (sizeof(ACCOUNT_SIDS) / sizeof(ACCOUNT_SIDS[0])); i++)
+    RtlInitUnicodeString(&AccountName,
+                         lpAccountName);
+
+    Status = LsaLookupNames(PolicyHandle,
+                            1,
+                            &AccountName,
+                            &ReferencedDomains,
+                            &TranslatedSid);
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status) || Status == STATUS_SOME_NOT_MAPPED)
     {
-        if (!wcscmp(lpAccountName, ACCOUNT_SIDS[i].account))
-        {
-            if (*cchReferencedDomainName)
-                *ReferencedDomainName = '\0';
-            *cchReferencedDomainName = 0;
-            *peUse = SidTypeWellKnownGroup;
-            return CreateWellKnownSid(ACCOUNT_SIDS[i].type, NULL, Sid, cbSid);
-        }
-    }
-
-    ret = AllocateAndInitializeSid(&identifierAuthority,
-        2,
-        SECURITY_BUILTIN_DOMAIN_RID,
-        DOMAIN_ALIAS_RID_ADMINS,
-        0, 0, 0, 0, 0, 0,
-        &pSid);
-
-    if (!ret)
-        return FALSE;
-
-    if (!RtlValidSid(pSid))
-    {
-        FreeSid(pSid);
-        return FALSE;
-    }
-
-    if (Sid != NULL && (*cbSid >= GetLengthSid(pSid)))
-        CopySid(*cbSid, Sid, pSid);
-
-    if (*cbSid < GetLengthSid(pSid))
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        ret = FALSE;
-    }
-
-    *cbSid = GetLengthSid(pSid);
-
-    if (ReferencedDomainName != NULL && (*cchReferencedDomainName > wcslen(dm)))
-        wcscpy(ReferencedDomainName, dm);
-
-    if ((*cchReferencedDomainName <= wcslen(dm)) || (!ret))
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        ret = FALSE;
-        *cchReferencedDomainName = wcslen(dm) + 1;
+        SetLastError(LsaNtStatusToWinError(Status));
+        bResult = FALSE;
     }
     else
     {
-        *cchReferencedDomainName = wcslen(dm);
+        pDomainSid = ReferencedDomains->Domains[TranslatedSid->DomainIndex].Sid;
+        nSubAuthorities = *GetSidSubAuthorityCount(pDomainSid);
+        dwSidLength = GetSidLengthRequired(nSubAuthorities + 1);
+
+        dwDomainNameLength = ReferencedDomains->Domains->Name.Length / sizeof(WCHAR);
+
+        if (*cbSid < dwSidLength ||
+            *cchReferencedDomainName < dwDomainNameLength + 1)
+        {
+            *cbSid = dwSidLength;
+            *cchReferencedDomainName = dwDomainNameLength + 1;
+
+            bResult = FALSE;
+        }
+        else
+        {
+            CopySid(*cbSid, Sid, pDomainSid);
+            *GetSidSubAuthorityCount(Sid) = nSubAuthorities + 1;
+            *GetSidSubAuthority(Sid, (DWORD)nSubAuthorities) = TranslatedSid->RelativeId;
+
+            RtlCopyMemory(ReferencedDomainName, ReferencedDomains->Domains->Name.Buffer, dwDomainNameLength * sizeof(WCHAR));
+            ReferencedDomainName[dwDomainNameLength] = L'\0';
+
+            *cchReferencedDomainName = dwDomainNameLength;
+
+            *peUse = TranslatedSid->Use;
+
+            bResult = TRUE;
+        }
+
+        if (bResult == FALSE)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
     }
 
-    FreeSid(pSid);
+    if (ReferencedDomains != NULL)
+        LsaFreeMemory(ReferencedDomains);
 
-    return ret;
+    if (TranslatedSid != NULL)
+        LsaFreeMemory(TranslatedSid);
+
+    return bResult;
 }
 
 
@@ -1387,8 +1185,8 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
         RtlCreateUnicodeStringFromAsciiz(&SystemName,
                                          (LPSTR)lpSystemName);
     }
-	else
-		SystemName.Buffer = NULL;
+    else
+        SystemName.Buffer = NULL;
 
     /* Check the privilege name is not NULL */
     if (lpName == NULL)
@@ -1417,76 +1215,53 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
 
 
 /**********************************************************************
- * LookupPrivilegeValueW				EXPORTED
+ * LookupPrivilegeValueW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-LookupPrivilegeValueW(LPCWSTR SystemName,
-                      LPCWSTR PrivName,
-                      PLUID Luid)
+LookupPrivilegeValueW(LPCWSTR lpSystemName,
+                      LPCWSTR lpPrivilegeName,
+                      PLUID lpLuid)
 {
-  static const WCHAR * const DefaultPrivNames[] =
-    {
-      L"SeCreateTokenPrivilege",
-      L"SeAssignPrimaryTokenPrivilege",
-      L"SeLockMemoryPrivilege",
-      L"SeIncreaseQuotaPrivilege",
-      L"SeMachineAccountPrivilege",
-      L"SeTcbPrivilege",
-      L"SeSecurityPrivilege",
-      L"SeTakeOwnershipPrivilege",
-      L"SeLoadDriverPrivilege",
-      L"SeSystemProfilePrivilege",
-      L"SeSystemtimePrivilege",
-      L"SeProfileSingleProcessPrivilege",
-      L"SeIncreaseBasePriorityPrivilege",
-      L"SeCreatePagefilePrivilege",
-      L"SeCreatePermanentPrivilege",
-      L"SeBackupPrivilege",
-      L"SeRestorePrivilege",
-      L"SeShutdownPrivilege",
-      L"SeDebugPrivilege",
-      L"SeAuditPrivilege",
-      L"SeSystemEnvironmentPrivilege",
-      L"SeChangeNotifyPrivilege",
-      L"SeRemoteShutdownPrivilege",
-      L"SeUndockPrivilege",
-      L"SeSyncAgentPrivilege",
-      L"SeEnableDelegationPrivilege",
-      L"SeManageVolumePrivilege",
-      L"SeImpersonatePrivilege",
-      L"SeCreateGlobalPrivilege"
-    };
-  unsigned Priv;
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName;
+    UNICODE_STRING PrivilegeName;
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
 
-  if (!ADVAPI_IsLocalComputer(SystemName))
+    TRACE("%S,%S,%p\n", lpSystemName, lpPrivilegeName, lpLuid);
+
+    RtlInitUnicodeString(&SystemName,
+                         lpSystemName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
 
-  if (NULL != SystemName && L'\0' != *SystemName)
+    RtlInitUnicodeString(&PrivilegeName,
+                         lpPrivilegeName);
+
+    Status = LsaLookupPrivilegeValue(PolicyHandle,
+                                     &PrivilegeName,
+                                     lpLuid);
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status))
     {
-      FIXME("LookupPrivilegeValueW: not implemented for remote system\n");
-      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-      return FALSE;
+        SetLastError(LsaNtStatusToWinError(Status));
+        return FALSE;
     }
 
-  for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
-    {
-      if (0 == _wcsicmp(PrivName, DefaultPrivNames[Priv]))
-        {
-          Luid->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
-          Luid->HighPart = 0;
-          return TRUE;
-        }
-    }
-
-  WARN("LookupPrivilegeValueW: no such privilege %S\n", PrivName);
-  SetLastError(ERROR_NO_SUCH_PRIVILEGE);
-  return FALSE;
+    return TRUE;
 }
 
 
@@ -1598,36 +1373,61 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
                      LPWSTR lpName,
                      LPDWORD cchName)
 {
-    size_t privNameLen;
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName;
+    PUNICODE_STRING PrivilegeName = NULL;
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
 
-    TRACE("%s,%p,%p,%p\n",debugstr_w(lpSystemName), lpLuid, lpName, cchName);
+    TRACE("%S,%p,%p,%p\n", lpSystemName, lpLuid, lpName, cchName);
 
-    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    RtlInitUnicodeString(&SystemName,
+                         lpSystemName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
 
-    if (lpLuid->HighPart || (lpLuid->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
-     lpLuid->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
+    Status = LsaLookupPrivilegeName(PolicyHandle,
+                                    lpLuid,
+                                    &PrivilegeName);
+    if (NT_SUCCESS(Status))
     {
-        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        if (PrivilegeName->Length + sizeof(WCHAR) > *cchName * sizeof(WCHAR))
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+
+            *cchName = (PrivilegeName->Length + sizeof(WCHAR)) / sizeof(WCHAR);
+        }
+        else
+        {
+            RtlMoveMemory(lpName,
+                          PrivilegeName->Buffer,
+                          PrivilegeName->Length);
+            lpName[PrivilegeName->Length / sizeof(WCHAR)] = 0;
+
+            *cchName = PrivilegeName->Length / sizeof(WCHAR);
+        }
+
+        LsaFreeMemory(PrivilegeName->Buffer);
+        LsaFreeMemory(PrivilegeName);
+    }
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
-    privNameLen = strlenW(WellKnownPrivNames[lpLuid->LowPart]);
-    /* Windows crashes if cchName is NULL, so will I */
-    if (*cchName <= privNameLen)
-    {
-        *cchName = privNameLen + 1;
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
-    }
-    else
-    {
-        strcpyW(lpName, WellKnownPrivNames[lpLuid->LowPart]);
-        *cchName = privNameLen;
-        return TRUE;
-    }
+
+    return TRUE;
 }
 
 
@@ -1874,29 +1674,26 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL *ppSacl,
                       PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
-    UNICODE_STRING ObjectName;
-    NTSTATUS Status;
-    DWORD Ret;
+    DWORD len;
+    LPWSTR wstr = NULL;
+    DWORD r;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
-                                              pObjectName);
-    if (!NT_SUCCESS(Status))
+    TRACE("%s %d %d %p %p %p %p %p\n", pObjectName, ObjectType, SecurityInfo,
+        ppsidOwner, ppsidGroup, ppDacl, ppSacl, ppSecurityDescriptor);
+
+    if( pObjectName )
     {
-        return RtlNtStatusToDosError(Status);
+        len = MultiByteToWideChar( CP_ACP, 0, pObjectName, -1, NULL, 0 );
+        wstr = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR));
+        MultiByteToWideChar( CP_ACP, 0, pObjectName, -1, wstr, len );
     }
 
-    Ret = GetNamedSecurityInfoW(ObjectName.Buffer,
-                                ObjectType,
-                                SecurityInfo,
-                                ppsidOwner,
-                                ppsidGroup,
-                                ppDacl,
-                                ppSacl,
-                                ppSecurityDescriptor);
+    r = GetNamedSecurityInfoW( wstr, ObjectType, SecurityInfo, ppsidOwner,
+                           ppsidGroup, ppDacl, ppSacl, ppSecurityDescriptor );
 
-    RtlFreeUnicodeString(&ObjectName);
+    HeapFree( GetProcessHeap(), 0, wstr );
 
-    return Ret;
+    return r;
 }
 
 
@@ -2495,6 +2292,56 @@ TreeResetNamedSecurityInfoA(LPSTR pObjectName,
 
     return Ret;
 #endif
+}
+
+/******************************************************************************
+ * SaferCreateLevel   [ADVAPI32.@]
+ */
+BOOL WINAPI SaferCreateLevel(DWORD ScopeId, DWORD LevelId, DWORD OpenFlags,
+                             SAFER_LEVEL_HANDLE* LevelHandle, LPVOID lpReserved)
+{
+    FIXME("(%u, %x, %u, %p, %p) stub\n", ScopeId, LevelId, OpenFlags, LevelHandle, lpReserved);
+    return FALSE;
+}
+
+/******************************************************************************
+ * SaferGetPolicyInformation   [ADVAPI32.@]
+ */
+BOOL WINAPI SaferGetPolicyInformation(DWORD scope, SAFER_POLICY_INFO_CLASS class, DWORD size,
+                                      PVOID buffer, PDWORD required, LPVOID lpReserved)
+{
+    FIXME("(%u %u %u %p %p %p) stub\n", scope, class, size, buffer, required, lpReserved);
+    return FALSE;
+}
+
+/******************************************************************************
+ * QueryWindows31FilesMigration [ADVAPI32.@]
+ *
+ * PARAMS
+ *   x1 []
+ */
+BOOL WINAPI
+QueryWindows31FilesMigration( DWORD x1 )
+{
+	FIXME("(%d):stub\n",x1);
+	return TRUE;
+}
+
+/******************************************************************************
+ * SynchronizeWindows31FilesAndWindowsNTRegistry [ADVAPI32.@]
+ *
+ * PARAMS
+ *   x1 []
+ *   x2 []
+ *   x3 []
+ *   x4 []
+ */
+BOOL WINAPI
+SynchronizeWindows31FilesAndWindowsNTRegistry( DWORD x1, DWORD x2, DWORD x3,
+                                               DWORD x4 )
+{
+	FIXME("(0x%08x,0x%08x,0x%08x,0x%08x):stub\n",x1,x2,x3,x4);
+	return TRUE;
 }
 
 /* EOF */

@@ -157,7 +157,7 @@ CsrLocateThreadInProcess(IN PCSR_PROCESS CsrProcess OPTIONAL,
     NextEntry = ListHead->Flink;
 
     /* Start the Loop */
-    while (NextEntry != NextEntry)
+    while (NextEntry != ListHead)
     {
         /* Get Thread Entry */
         FoundThread = CONTAINING_RECORD(NextEntry, CSR_THREAD, Link);

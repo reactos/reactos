@@ -20,4 +20,6 @@
 	<compilerflag>-meabi</compilerflag>
 	<compilerflag>-O2</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
+	<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
+	<compilerflag compiler="as">-gstabs+</compilerflag>
 </project>

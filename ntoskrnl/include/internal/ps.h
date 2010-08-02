@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _PS_DEBUG_                                      0x01
+#define _PS_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -52,9 +52,9 @@
             "Pointer Count [%p] @%d: %lx\n",                \
             x,                                              \
             __LINE__,                                       \
-            OBJECT_TO_OBJECT_HEADER(x)->PointerCount);
+            OBJECT_TO_OBJECT_HEADER(x)->PointerCount)
 #else
-#define PSTRACE(x, ...) DPRINT(__VA_ARGS__);
+#define PSTRACE(x, ...) DPRINT(__VA_ARGS__)
 #define PSREFTRACE(x)
 #endif
 
@@ -300,8 +300,9 @@ PspDestroyQuotaBlock(
     IN PEPROCESS Process
 );
 
+#if defined(_X86_)
 //
-// VDM Support
+// VDM and LDT Support
 //
 NTSTATUS
 NTAPI
@@ -314,6 +315,16 @@ NTAPI
 PspDeleteVdmObjects(
     IN PEPROCESS Process
 );
+
+NTSTATUS
+NTAPI
+PspQueryDescriptorThread(
+    IN PETHREAD Thread,
+    IN PVOID ThreadInformation,
+    IN ULONG ThreadInformationLength,
+    OUT PULONG ReturnLength OPTIONAL
+);
+#endif
 
 //
 // Job Routines
@@ -423,7 +434,9 @@ extern POBJECT_TYPE PsJobType;
 extern LARGE_INTEGER ShortPsLockDelay;
 extern UNICODE_STRING PsNtDllPathName;
 extern LIST_ENTRY PsLoadedModuleList;
-extern ULONG PsNtosImageBase;
+extern KSPIN_LOCK PsLoadedModuleSpinLock;
+extern ERESOURCE PsLoadedModuleResource;
+extern ULONG_PTR PsNtosImageBase;
 
 //
 // Inlined Functions

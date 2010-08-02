@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -28,10 +30,30 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Introduceți numele de utilizator și parola:", -1, 40, 6, 150, 15
  LTEXT "Proxy", -1, 40, 26, 50, 10
- LTEXT "Realm", -1, 40, 46, 50, 10
+ LTEXT "Domeniu", -1, 40, 46, 50, 10
  LTEXT "Utilizator", -1, 40, 66, 50, 10
  LTEXT "Parolă", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
+ LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Salvează această parolă (nesigur)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Renunță", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+IDD_AUTHDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Autentificare necesară"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Introduceți numele de utilizator și parola:", -1, 40, 6, 150, 15
+ LTEXT "Server", -1, 40, 26, 50, 10
+ LTEXT "Domeniu", -1, 40, 46, 50, 10
+ LTEXT "Utilizator", -1, 40, 66, 50, 10
+ LTEXT "Parolă", -1, 40, 86, 50, 10
+ LTEXT "" IDC_SERVER, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
@@ -45,5 +67,3 @@ STRINGTABLE DISCARDABLE
 {
   IDS_LANCONNECTION "Conexiune LAN"
 }
-
-#pragma code_page(default)

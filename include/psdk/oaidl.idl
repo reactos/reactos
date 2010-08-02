@@ -343,7 +343,7 @@ const USHORT PARAMFLAG_FHASDEFAULT  = 0x20;
 const USHORT PARAMFLAG_FHASCUSTDATA = 0x40;
 
 typedef struct tagIDLDESC {
-  ULONG dwReserved;
+  ULONG_PTR dwReserved;
   USHORT wIDLFlags;
 } IDLDESC, *LPIDLDESC;
 
@@ -404,8 +404,8 @@ typedef struct tagEXCEPINFO {
   BSTR bstrDescription;
   BSTR bstrHelpFile;
   DWORD dwHelpContext;
-  ULONG pvReserved;
-  ULONG pfnDeferredFillIn;
+  ULONG_PTR pvReserved;
+  ULONG_PTR pfnDeferredFillIn;
   SCODE scode;
 } EXCEPINFO;
 cpp_quote("#else")
@@ -989,7 +989,8 @@ interface ITypeLib : IUnknown
   typedef [v1_enum] enum tagSYSKIND {
     SYS_WIN16 = 0,
     SYS_WIN32,
-    SYS_MAC
+    SYS_MAC,
+    SYS_WIN64
   } SYSKIND;
 
   typedef [v1_enum] enum tagLIBFLAGS {

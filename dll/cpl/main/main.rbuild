@@ -3,7 +3,6 @@
 <module name="main" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl" unicode="yes" crt="msvcrt">
 	<importlibrary definition="main.spec" />
 	<include base="main">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>comctl32</library>

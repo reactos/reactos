@@ -1,7 +1,6 @@
 <module name="console" type="win32dll" baseaddress="${BASEADDRESS_CONSOLE}" installbase="system32" installname="console.dll" unicode="yes">
 	<importlibrary definition="console.spec" />
 	<include base="console">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>comctl32</library>
 	<library>gdi32</library>

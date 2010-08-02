@@ -100,7 +100,8 @@ ObpCreateDosDevicesDirectory(VOID)
     /* FIXME: Hack Hack! */
     ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(*ObSystemDeviceMap),
-                                              TAG('O', 'b', 'D', 'm'));
+                                              'mDbO');
+    if (!ObSystemDeviceMap) return STATUS_INSUFFICIENT_RESOURCES;
     RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
 
     /* Return status */

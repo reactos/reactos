@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+	<directory name="amstream">
+		<xi:include href="amstream/amstream.rbuild" />
+	</directory>
+	<!--<directory name="bdaplgin">
+		<xi:include href="bdaplgin/bdaplgin.rbuild" />
+	</directory>-->
 	<directory name="d3d8thk">
 		<xi:include href="d3d8thk/d3d8thk.rbuild" />
-	</directory>
-	<directory name="ddraw">
-		<xi:include href="ddraw/ddraw.rbuild" />
 	</directory>
 	<directory name="devenum">
 		<xi:include href="devenum/devenum.rbuild" />
@@ -15,6 +18,9 @@
 	</directory>
 	<directory name="dinput8">
 		<xi:include href="dinput8/dinput8.rbuild" />
+	</directory>
+	<directory name="dmusic">
+		<xi:include href="dmusic/dmusic.rbuild" />
 	</directory>
 	<directory name="dplay">
 		<xi:include href="dplay/dplay.rbuild" />
@@ -37,6 +43,12 @@
 	<directory name="msdmo">
 		<xi:include href="msdmo/msdmo.rbuild" />
 	</directory>
+	<!--<directory name="msdvbnp">
+		<xi:include href="msdvbnp/msdvbnp.rbuild" />
+	</directory>-->
+	<!--<directory name="msvidctl">
+		<xi:include href="msvidctl/msvidctl.rbuild" />
+	</directory>-->
 	<directory name="qedit">
 		<xi:include href="qedit/qedit.rbuild" />
 	</directory>

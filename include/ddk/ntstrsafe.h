@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         This file is in the public domain.
  * FILE:            include/ddk/ntstrsafe.h
  * PURPOSE:         Safe String Library for NT Code (Native/Kernel)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
@@ -33,10 +33,10 @@ typedef unsigned long DWORD;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringLengthWorkerA(IN PCHAR String,
+RtlStringLengthWorkerA(IN LPCSTR String,
                        IN SIZE_T MaxLength,
                        OUT PSIZE_T ReturnLength OPTIONAL)
 {
@@ -66,10 +66,10 @@ RtlStringLengthWorkerA(IN PCHAR String,
     return Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringValidateDestA(IN PCHAR Destination,
+RtlStringValidateDestA(IN LPSTR Destination,
                        IN SIZE_T Length,
                        OUT PSIZE_T ReturnLength OPTIONAL,
                        IN SIZE_T MaxLength)
@@ -95,32 +95,32 @@ RtlStringValidateDestA(IN PCHAR Destination,
     return Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringExValidateDestA(IN OUT PCHAR *Destination,
+RtlStringExValidateDestA(IN OUT LPSTR *Destination,
                          IN OUT PSIZE_T DestinationLength,
                          OUT PSIZE_T ReturnLength OPTIONAL,
                          IN SIZE_T MaxLength,
                          IN DWORD Flags)
 {
-    //ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
+    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
     return RtlStringValidateDestA(*Destination,
                                   *DestinationLength,
                                   ReturnLength,
                                   MaxLength);
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringExValidateSrcA(IN OUT PCCHAR *Source OPTIONAL,
+RtlStringExValidateSrcA(IN OUT LPCSTR *Source OPTIONAL,
                         IN OUT PSIZE_T ReturnLength OPTIONAL,
                         IN SIZE_T MaxLength,
                         IN DWORD Flags)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    //ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
+    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
 
     if ((ReturnLength) && (*ReturnLength >= MaxLength))
     {
@@ -130,13 +130,13 @@ RtlStringExValidateSrcA(IN OUT PCCHAR *Source OPTIONAL,
     return Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringVPrintfWorkerA(OUT PCHAR Destination,
+RtlStringVPrintfWorkerA(OUT LPSTR Destination,
                         IN SIZE_T Length,
                         OUT PSIZE_T NewLength OPTIONAL,
-                        IN PCCHAR Format,
+                        IN LPCSTR Format,
                         IN va_list argList)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -171,13 +171,13 @@ RtlStringVPrintfWorkerA(OUT PCHAR Destination,
     return Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringCopyWorkerA(OUT PCHAR Destination,
+RtlStringCopyWorkerA(OUT LPSTR Destination,
                      IN SIZE_T Length,
                      OUT PSIZE_T NewLength OPTIONAL,
-                     IN PCCHAR Source,
+                     IN LPCSTR Source,
                      IN SIZE_T CopyLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -208,11 +208,23 @@ RtlStringCopyWorkerA(OUT PCHAR Destination,
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+__inline
 NTSTATUS
 NTAPI
-RtlStringCbPrintfA(OUT PCHAR Destination,
+RtlStringCchCopyA(IN LPSTR Destination,
+                  IN SIZE_T cchDest,
+                  IN LPCSTR pszSrc)
+{
+    ASSERTMSG("RtlStringCchCopyA is UNIMPLEMENTED!\n", FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+__inline
+NTSTATUS
+NTAPI
+RtlStringCbPrintfA(OUT LPSTR Destination,
                    IN SIZE_T Length,
-                   IN PCHAR Format,
+                   IN LPCSTR Format,
                    ...)
 {
     NTSTATUS Status;
@@ -237,21 +249,22 @@ RtlStringCbPrintfA(OUT PCHAR Destination,
     return Status;
 }
 
+__inline
 NTSTATUS
 NTAPI
-RtlStringCbPrintfExA(OUT PCHAR Destination,
+RtlStringCbPrintfExA(OUT LPSTR Destination,
                      IN SIZE_T Length,
-                     OUT PCHAR *DestinationEnd OPTIONAL,
+                     OUT LPSTR *DestinationEnd OPTIONAL,
                      OUT PSIZE_T RemainingSize OPTIONAL,
                      IN DWORD Flags,
-                     IN PCCHAR Format,
+                     IN LPCSTR Format,
                      ...)
 {
     NTSTATUS Status;
     SIZE_T CharLength = Length / sizeof(CHAR), Remaining, LocalNewLength = 0;
     PCHAR LocalDestinationEnd;
     va_list argList;
-    //ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
+    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
 
     Status = RtlStringExValidateDestA(&Destination,
                                       &CharLength,
@@ -317,20 +330,20 @@ RtlStringCbPrintfExA(OUT PCHAR Destination,
     return Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringCbCopyExA(OUT PCHAR Destination,
+RtlStringCbCopyExA(OUT LPSTR Destination,
                    IN SIZE_T Length,
-                   IN PCCHAR Source,
-                   OUT PCHAR *DestinationEnd OPTIONAL,
+                   IN LPCSTR Source,
+                   OUT LPSTR *DestinationEnd OPTIONAL,
                    OUT PSIZE_T RemainingSize OPTIONAL,
                    IN DWORD Flags)
 {
     NTSTATUS Status;
     SIZE_T CharLength = Length / sizeof(CHAR), Copied = 0, Remaining;
     PCHAR LocalDestinationEnd;
-    //ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
+    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
 
     Status = RtlStringExValidateDestA(&Destination,
                                       &Length,
@@ -394,7 +407,7 @@ RtlStringCbCopyExA(OUT PCHAR Destination,
     return Status;
 }
 
-
+__inline
 NTSTATUS
 NTAPI
 RtlStringCbPrintfW(
@@ -403,17 +416,17 @@ RtlStringCbPrintfW(
     IN LPCWSTR pszFormat,
     ...)
 {
-    UNIMPLEMENTED
+    ASSERTMSG("RtlStringCbPrintfW is UNIMPLEMENTED!\n", FALSE);
     return STATUS_NOT_IMPLEMENTED;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringCbCatExA(IN OUT PCHAR Destination,
+RtlStringCbCatExA(IN OUT LPSTR Destination,
                   IN SIZE_T Length,
-                  IN PCCHAR Source,
-                  OUT PCHAR *DestinationEnd OPTIONAL,
+                  IN LPCSTR Source,
+                  OUT LPSTR *DestinationEnd OPTIONAL,
                   OUT PSIZE_T RemainingSize OPTIONAL,
                   IN DWORD Flags)
 {
@@ -421,7 +434,7 @@ RtlStringCbCatExA(IN OUT PCHAR Destination,
     SIZE_T CharLength = Length / sizeof(CHAR);
     SIZE_T DestinationLength, Remaining, Copied = 0;
     PCHAR LocalDestinationEnd;
-    //ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
+    ASSERTMSG("We don't support Extended Flags yet!\n", Flags == 0);
 
     Status = RtlStringExValidateDestA(&Destination,
                                       &CharLength,
@@ -481,12 +494,12 @@ RtlStringCbCatExA(IN OUT PCHAR Destination,
     return Status;
 }
 
-FORCEINLINE
+__inline
 NTSTATUS
 NTAPI
-RtlStringCbCopyA(OUT PCHAR Destination,
+RtlStringCbCopyA(OUT LPSTR Destination,
                  IN SIZE_T Length,
-                 IN PCCHAR Source)
+                 IN LPCSTR Source)
 {
     NTSTATUS Status;
     SIZE_T CharLength = Length / sizeof(CHAR);

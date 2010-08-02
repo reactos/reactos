@@ -1,5 +1,4 @@
-#ifndef _WIN32K_CARET_H
-#define _WIN32K_CARET_H
+#pragma once
 
 #include <include/win32.h>
 #include <include/window.h>
@@ -21,8 +20,5 @@ IntSwitchCaretShowing(PVOID Info);
 BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT WindowObject);
 
 BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject);
-
-
-#endif /* _WIN32K_CARET_H */
 
 /* EOF */

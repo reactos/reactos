@@ -690,7 +690,7 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 	}
 	cur++;
     }
-    *out++ = 0;
+    *out = 0;
     return(buffer);
 }
 
@@ -772,7 +772,7 @@ xmlEncodeSpecialChars(xmlDocPtr doc ATTRIBUTE_UNUSED, const xmlChar *input) {
 	}
 	cur++;
     }
-    *out++ = 0;
+    *out = 0;
     return(buffer);
 }
 

@@ -20,74 +20,122 @@
 VOID
 InitAudioDlg(HWND hwnd)
 {
-    WAVEOUTCAPS waveOutputPaps;
+    WAVEOUTCAPSW waveOutputPaps;
     WAVEINCAPS waveInputPaps;
     MIDIOUTCAPS midiOutCaps;
+    TCHAR szNoDevices[256];
     UINT DevsNum;
     UINT uIndex;
     HWND hCB;
     LRESULT Res;
 
+    LoadString(hApplet, IDS_NO_DEVICES, szNoDevices, sizeof(szNoDevices) / sizeof(TCHAR));
+
     // Init sound playback devices list
     hCB = GetDlgItem(hwnd, IDC_DEVICE_PLAY_LIST);
 
     DevsNum = waveOutGetNumDevs();
-    if (DevsNum < 1) return;
-
-    for (uIndex = 0; uIndex < DevsNum; uIndex++)
+    if (DevsNum < 1)
     {
-        if (waveOutGetDevCaps(uIndex, &waveOutputPaps, sizeof(waveOutputPaps)))
-            continue;
+        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+    }
+    else
+    {
+        WCHAR DefaultDevice[MAX_PATH] = {0};
+        HKEY hKey;
+        DWORD dwSize = sizeof(DefaultDevice);
+        UINT DefaultIndex = 0;
 
-        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveOutputPaps.szPname);
-
-        if (CB_ERR != Res)
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Multimedia\\Sound Mapper", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
-            SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-            // TODO: Getting default device
-            SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+            RegQueryValueExW(hKey, L"Playback", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
+            DefaultDevice[MAX_PATH-1] = L'\0';
+            RegCloseKey(hKey);
         }
+
+        for (uIndex = 0; uIndex < DevsNum; uIndex++)
+        {
+            if (waveOutGetDevCapsW(uIndex, &waveOutputPaps, sizeof(waveOutputPaps)))
+                continue;
+
+            Res = SendMessageW(hCB, CB_ADDSTRING, 0, (LPARAM) waveOutputPaps.szPname);
+
+            if (CB_ERR != Res)
+            {
+                SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
+                if (!wcsicmp(waveOutputPaps.szPname, DefaultDevice))
+                    DefaultIndex = Res;
+            }
+        }
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 
     // Init sound recording devices list
     hCB = GetDlgItem(hwnd, IDC_DEVICE_REC_LIST);
 
     DevsNum = waveInGetNumDevs();
-    if (DevsNum < 1) return;
-
-    for (uIndex = 0; uIndex < DevsNum; uIndex++)
+    if (DevsNum < 1)
     {
-        if (waveInGetDevCaps(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
-            continue;
+        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+    }
+    else
+    {
+        WCHAR DefaultDevice[MAX_PATH] = {0};
+        HKEY hKey;
+        DWORD dwSize = sizeof(DefaultDevice);
+        UINT DefaultIndex = 0;
 
-        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveInputPaps.szPname);
-
-        if (CB_ERR != Res)
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Multimedia\\Sound Mapper", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
         {
-            SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-            // TODO: Getting default device
-            SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+            RegQueryValueExW(hKey, L"Record", NULL, NULL, (LPBYTE)DefaultDevice, &dwSize);
+            DefaultDevice[MAX_PATH-1] = L'\0';
+            RegCloseKey(hKey);
         }
+
+
+        for (uIndex = 0; uIndex < DevsNum; uIndex++)
+        {
+            if (waveInGetDevCaps(uIndex, &waveInputPaps, sizeof(waveInputPaps)))
+                continue;
+
+            Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) waveInputPaps.szPname);
+
+            if (CB_ERR != Res)
+            {
+                SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
+                if (!wcsicmp(waveInputPaps.szPname, DefaultDevice))
+                    DefaultIndex = Res;
+            }
+        }
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) DefaultIndex, 0);
     }
 
     // Init MIDI devices list
     hCB = GetDlgItem(hwnd, IDC_DEVICE_MIDI_LIST);
 
     DevsNum = midiOutGetNumDevs();
-    if (DevsNum < 1) return;
-
-    for (uIndex = 0; uIndex < DevsNum; uIndex++)
+    if (DevsNum < 1)
     {
-        if (midiOutGetDevCaps(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
-            continue;
-
-        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) midiOutCaps.szPname);
-
-        if (CB_ERR != Res)
+        Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM)szNoDevices);
+        SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+    }
+    else
+    {
+        for (uIndex = 0; uIndex < DevsNum; uIndex++)
         {
-            SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
-            // TODO: Getting default device
-            SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+            if (midiOutGetDevCaps(uIndex, &midiOutCaps, sizeof(midiOutCaps)))
+                continue;
+
+            Res = SendMessage(hCB, CB_ADDSTRING, 0, (LPARAM) midiOutCaps.szPname);
+
+            if (CB_ERR != Res)
+            {
+                SendMessage(hCB, CB_SETITEMDATA, Res, (LPARAM) uIndex);
+                // TODO: Getting default device
+                SendMessage(hCB, CB_SETCURSEL, (WPARAM) Res, 0);
+            }
         }
     }
 }
@@ -107,7 +155,7 @@ GetDevNum(HWND hControl, DWORD Id)
     if (DevNum == (UINT) CB_ERR)
         return 0;
 
-    if (mixerGetID((HMIXEROBJ) DevNum, &DevNum, Id) != MMSYSERR_NOERROR)
+    if (mixerGetID((HMIXEROBJ)IntToPtr(DevNum), &DevNum, Id) != MMSYSERR_NOERROR)
         return 0;
 
     return DevNum;
@@ -128,9 +176,10 @@ AudioDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            UINT NumWavOut;
+            UINT NumWavOut = waveOutGetNumDevs();
 
-            NumWavOut = waveOutGetNumDevs();
+            InitAudioDlg(hwndDlg);
+
             if (!NumWavOut)
             {
                 EnableWindow(GetDlgItem(hwndDlg, IDC_DEVICE_PLAY_LIST),     FALSE);
@@ -143,10 +192,6 @@ AudioDlgProc(HWND hwndDlg,
                 EnableWindow(GetDlgItem(hwndDlg, IDC_ADV1_BTN),             FALSE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_VOLUME3_BTN),          FALSE);
                 EnableWindow(GetDlgItem(hwndDlg, IDC_ADV3_BTN),             FALSE);
-            }
-            else
-            {
-                InitAudioDlg(hwndDlg);
             }
         }
         break;

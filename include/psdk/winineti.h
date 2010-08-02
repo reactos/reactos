@@ -90,9 +90,11 @@ extern "C" {
 #endif
 
 DWORD       WINAPI DeleteIE3Cache(HWND,HINSTANCE,LPSTR,int);
+BOOL        WINAPI GetDiskInfoA(PCSTR,PDWORD,PDWORDLONG,PDWORDLONG);
 BOOL        WINAPI GetUrlCacheConfigInfoA(LPINTERNET_CACHE_CONFIG_INFOA,LPDWORD,DWORD);
 BOOL        WINAPI GetUrlCacheConfigInfoW(LPINTERNET_CACHE_CONFIG_INFOW,LPDWORD,DWORD);
 #define     GetUrlCacheConfigInfo WINELIB_NAME_AW(GetUrlCacheConfigInfo)
+BOOL        WINAPI IncrementUrlCacheHeaderData(DWORD,LPDWORD);
 BOOL        WINAPI InternetQueryFortezzaStatus(DWORD*,DWORD_PTR);
 BOOL        WINAPI IsUrlCacheEntryExpiredA(LPCSTR,DWORD,FILETIME*);
 BOOL        WINAPI IsUrlCacheEntryExpiredW(LPCWSTR,DWORD,FILETIME*);

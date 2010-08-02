@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 	.text
@@ -23,6 +23,10 @@
 #define ASM
 #include <arch.h>
 
+/* Only these flags are propagated into Int386() */
+#define FLAGS_PROP	(I386FLAG_CF | \
+                     I386FLAG_ZF | \
+                     I386FLAG_SF)
 
 Int386_REGS:
 
@@ -85,6 +89,7 @@ EXTERN(_Int386)
 	movl	$Int386_REGS,%edi
 	movl	Int386_regsin,%esi
 	movl	$0x24,%ecx
+	cld
 	rep
 	movsb
 
@@ -101,6 +106,16 @@ EXTERN(_Int386)
 	movw	%cs:Int386_gs,%ax
 	movw	%ax,%gs					/* GS register */
 
+	/* Prepare EFLAGS for recover */
+	pushf
+	movw	%cs:Int386_eflags, %ax
+	popw	%cx
+	andw	$FLAGS_PROP, %ax
+	andw	$~FLAGS_PROP, %cx
+	orw		%cx, %ax
+	pushw	%ax
+
+	/* Recover general purpose registers */
 	movl	%cs:Int386_eax,%eax		/* EAX register */
 	movl	%cs:Int386_ebx,%ebx		/* EBX register */
 	movl	%cs:Int386_ecx,%ecx		/* ECX register */
@@ -108,6 +123,9 @@ EXTERN(_Int386)
 
 	movl	%cs:Int386_esi,%esi		/* ESI register */
 	movl	%cs:Int386_edi,%edi		/* EDI register */
+
+	/* Recover previously prepared flags */
+	popf
 
 	/* Do not set the flags register */
 	/* only return its value in regsout */
@@ -149,6 +167,7 @@ Int386_vector_opcode:
 	movl	$Int386_REGS,%esi
 	movl	Int386_regsout,%edi
 	movl	$0x24,%ecx
+	cld
 	rep
 	movsb
 

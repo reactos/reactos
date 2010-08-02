@@ -1,18 +1,17 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/deviceio.c
- * PURPOSE:         Device I/O and Overlapped Result functions
- * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            kernel32/file/deviceio.c
+ * PURPOSE:         Device I/O Base Client Functionality
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
+
+/* INCLUDES *******************************************************************/
 
 #include <k32.h>
 #include <wine/debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
+/* FUNCTIONS ******************************************************************/
 
 /*
  * @implemented
@@ -21,131 +20,146 @@ BOOL
 WINAPI
 DeviceIoControl(IN HANDLE hDevice,
                 IN DWORD dwIoControlCode,
-                IN LPVOID lpInBuffer  OPTIONAL,
-                IN DWORD nInBufferSize  OPTIONAL,
-                OUT LPVOID lpOutBuffer  OPTIONAL,
-                IN DWORD nOutBufferSize  OPTIONAL,
-                OUT LPDWORD lpBytesReturned  OPTIONAL,
-                IN LPOVERLAPPED lpOverlapped  OPTIONAL)
+                IN LPVOID lpInBuffer OPTIONAL,
+                IN DWORD nInBufferSize OPTIONAL,
+                OUT LPVOID lpOutBuffer OPTIONAL,
+                IN DWORD nOutBufferSize OPTIONAL,
+                OUT LPDWORD lpBytesReturned OPTIONAL,
+                IN LPOVERLAPPED lpOverlapped OPTIONAL)
 {
-   BOOL FsIoCtl;
-   NTSTATUS Status;
+    BOOL FsIoCtl;
+    NTSTATUS Status;
+    PVOID ApcContext;
+    IO_STATUS_BLOCK Iosb;
 
-   FsIoCtl = ((dwIoControlCode >> 16) == FILE_DEVICE_FILE_SYSTEM);
+    /* Check what kind of IOCTL to send */
+    FsIoCtl = ((dwIoControlCode >> 16) == FILE_DEVICE_FILE_SYSTEM);
 
-   if (lpBytesReturned != NULL)
-     {
-        *lpBytesReturned = 0;
-     }
-
-   if (lpOverlapped != NULL)
-     {
-        PVOID ApcContext;
-
+    /* CHeck for async */
+    if (lpOverlapped != NULL)
+    {
+        /* Set pending status */
         lpOverlapped->Internal = STATUS_PENDING;
+
+        
+        /* Check if there's an APC context */
         ApcContext = (((ULONG_PTR)lpOverlapped->hEvent & 0x1) ? NULL : lpOverlapped);
 
+        
+        /* Send file system control? */
         if (FsIoCtl)
-          {
-             Status = NtFsControlFile(hDevice,
-                                      lpOverlapped->hEvent,
-                                      NULL,
-                                      ApcContext,
-                                      (PIO_STATUS_BLOCK)lpOverlapped,
-                                      dwIoControlCode,
-                                      lpInBuffer,
-                                      nInBufferSize,
-                                      lpOutBuffer,
-                                      nOutBufferSize);
-          }
+        {
+            /* Send it */
+            Status = NtFsControlFile(hDevice,
+                                     lpOverlapped->hEvent,
+                                     NULL,
+                                     ApcContext,
+                                     (PIO_STATUS_BLOCK)lpOverlapped,
+                                     dwIoControlCode,
+                                     lpInBuffer,
+                                     nInBufferSize,
+                                     lpOutBuffer,
+                                     nOutBufferSize);
+        }
         else
-          {
-             Status = NtDeviceIoControlFile(hDevice,
-                                            lpOverlapped->hEvent,
-                                            NULL,
-                                            ApcContext,
-                                            (PIO_STATUS_BLOCK)lpOverlapped,
-                                            dwIoControlCode,
-                                            lpInBuffer,
-                                            nInBufferSize,
-                                            lpOutBuffer,
-                                            nOutBufferSize);
-          }
+        {
+            /* Otherwise send a device control */
+            Status = NtDeviceIoControlFile(hDevice,
+                                           lpOverlapped->hEvent,
+                                           NULL,
+                                           ApcContext,
+                                           (PIO_STATUS_BLOCK)lpOverlapped,
+                                           dwIoControlCode,
+                                           lpInBuffer,
+                                           nInBufferSize,
+                                           lpOutBuffer,
+                                           nOutBufferSize);
+        }
 
-        /* return FALSE in case of failure and pending operations! */
-        if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
-          {
-             SetLastErrorByStatus(Status);
-             return FALSE;
-          }
-
-        if (lpBytesReturned != NULL)
-          {
-             *lpBytesReturned = lpOverlapped->InternalHigh;
-          }
-     }
-   else
-     {
-        IO_STATUS_BLOCK Iosb;
-
-        if (FsIoCtl)
-          {
-             Status = NtFsControlFile(hDevice,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      &Iosb,
-                                      dwIoControlCode,
-                                      lpInBuffer,
-                                      nInBufferSize,
-                                      lpOutBuffer,
-                                      nOutBufferSize);
-          }
-        else
-          {
-             Status = NtDeviceIoControlFile(hDevice,
-                                            NULL,
-                                            NULL,
-                                            NULL,
-                                            &Iosb,
-                                            dwIoControlCode,
-                                            lpInBuffer,
-                                            nInBufferSize,
-                                            lpOutBuffer,
-                                            nOutBufferSize);
-          }
-
-        /* wait in case operation is pending */
-        if (Status == STATUS_PENDING)
-          {
-             Status = NtWaitForSingleObject(hDevice,
-                                            FALSE,
-                                            NULL);
-             if (NT_SUCCESS(Status))
-               {
-                  Status = Iosb.Status;
-               }
-          }
-
-        if (NT_SUCCESS(Status))
-          {
-             /* lpBytesReturned must not be NULL here, in fact Win doesn't
-                check that case either and crashes (only after the operation
-                completed) */
-            if (!lpBytesReturned)
+        /* Check for or information instead of failure */
+        if (!(NT_ERROR(Status)) && (lpBytesReturned))
+        {
+            /* Protect with SEH */
+            _SEH2_TRY
             {
-                ERR("Bad caller: lpBytesReturned must not be NULL\n");
+                /* Return the bytes */
+                *lpBytesReturned = lpOverlapped->InternalHigh;
             }
-             *lpBytesReturned = Iosb.Information;
-          }
-        else
-          {
-             SetLastErrorByStatus(Status);
-             return FALSE;
-          }
-     }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Return zero bytes */
+                *lpBytesReturned = 0;
+            }
+            _SEH2_END;
+        }
 
-   return TRUE;
+        /* Now check for any kind of failure except pending*/
+        if (!(NT_SUCCESS(Status)) || (Status == STATUS_PENDING))
+        {
+            /* Fail */
+            SetLastErrorByStatus(Status);
+            return FALSE;
+        }
+    }
+    else
+    {
+        /* Sync case -- send file system code? */
+        if (FsIoCtl)
+        {
+            /* Do it */
+            Status = NtFsControlFile(hDevice,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &Iosb,
+                                     dwIoControlCode,
+                                     lpInBuffer,
+                                     nInBufferSize,
+                                     lpOutBuffer,
+                                     nOutBufferSize);
+        }
+        else
+        {
+            /* Send device code instead */
+            Status = NtDeviceIoControlFile(hDevice,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &Iosb,
+                                           dwIoControlCode,
+                                           lpInBuffer,
+                                           nInBufferSize,
+                                           lpOutBuffer,
+                                           nOutBufferSize);
+        }
+
+        /* Now check if the operation isn't done yet */
+        if (Status == STATUS_PENDING)
+        {
+            /* Wait for it and get the final status */
+            Status = NtWaitForSingleObject(hDevice, FALSE, NULL);
+            if (NT_SUCCESS(Status)) Status = Iosb.Status;
+        }
+
+        /* Check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* Return the byte count */
+            *lpBytesReturned = Iosb.Information;
+        }
+        else
+        {
+            /* Check for informational or warning failure */
+            if (!NT_ERROR(Status)) *lpBytesReturned = Iosb.Information;
+
+            /* Return a failure */
+            SetLastErrorByStatus(Status);
+            return FALSE;
+        }
+    }
+
+    /* Return success */
+    return TRUE;
 }
 
 
@@ -154,55 +168,62 @@ DeviceIoControl(IN HANDLE hDevice,
  */
 BOOL
 WINAPI
-GetOverlappedResult (
-  IN HANDLE   hFile,
-	IN LPOVERLAPPED	lpOverlapped,
-	OUT LPDWORD		lpNumberOfBytesTransferred,
-	IN BOOL		bWait
-	)
+GetOverlappedResult(IN HANDLE hFile,
+                    IN LPOVERLAPPED lpOverlapped,
+                    OUT LPDWORD lpNumberOfBytesTransferred,
+                    IN BOOL bWait)
 {
-	DWORD WaitStatus;
-  HANDLE hObject;
+    DWORD WaitStatus;
+    HANDLE hObject;
 
-  if (lpOverlapped->Internal == STATUS_PENDING)
-  {
-    if (!bWait)
+
+    /* Check for pending operation */
+    if (lpOverlapped->Internal == STATUS_PENDING)
     {
-      /* can't use SetLastErrorByStatus(STATUS_PENDING) here,
-      since STATUS_PENDING translates to ERROR_IO_PENDING */
-      SetLastError(ERROR_IO_INCOMPLETE);
-      return FALSE;
+        /* Check if the caller is okay with waiting */
+        if (!bWait)
+        {
+            /* Set timeout */
+            WaitStatus = WAIT_TIMEOUT;
+        }
+        else
+        {
+            /* Wait for the result */
+            hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
+            WaitStatus = WaitForSingleObject(hObject, INFINITE);
+        }
+
+
+        /* Check for timeout */
+        if (WaitStatus == WAIT_TIMEOUT)
+        {
+            /* We have to override the last error with INCOMPLETE instead */
+            SetLastError(ERROR_IO_INCOMPLETE);
+            return FALSE;
+        }
+
+
+        /* Fail if we had an error -- the last error is already set */
+        if (WaitStatus != 0) return FALSE;
     }
 
-    hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
 
-    /* Wine delivers pending APC's while waiting, but Windows does
-    not, nor do we... */
-    WaitStatus = WaitForSingleObject(hObject, INFINITE);
+    /* Return bytes transferred */
+    *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
 
-    if (WaitStatus == WAIT_FAILED)
+
+    /* Check for failure during I/O */
+    if (!NT_SUCCESS(lpOverlapped->Internal))
     {
-      WARN("Wait failed!\n");
-      /* WaitForSingleObjectEx sets the last error */
-      return FALSE;
+        /* Set the error and fail */
+        SetLastErrorByStatus(lpOverlapped->Internal);
+        return FALSE;
     }
-  }
 
-  if (!lpNumberOfBytesTransferred)
-  {
-      ERR("Bad caller: lpNumberOfBytesTransferred must not be NULL\n");
-  }
-  *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
 
-  if (!NT_SUCCESS(lpOverlapped->Internal))
-  {
-    SetLastErrorByStatus(lpOverlapped->Internal);
-    return FALSE;
-  }
-
-	return TRUE;
+    /* All done */
+    return TRUE;
 }
 
 /* EOF */
-
 

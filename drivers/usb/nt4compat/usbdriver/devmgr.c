@@ -26,6 +26,10 @@
 	PBYTE data_buf;\
 	int i;\
 	data_buf = usb_alloc_mem( NonPagedPool, ( pdEV )->desc_buf_size += 1024 );\
+	if (!data_buf)\
+	{\
+		goto LBL_OUT;\
+	}\
 	RtlZeroMemory( data_buf, ( pdEV )->desc_buf_size );\
 	for( i = 0; i < ( LONG )( puRB )->context; i++ )\
 	{\
@@ -798,7 +802,7 @@ dev_mgr_start_config_dev(PUSB_DEV pdev)
     //first, get device descriptor
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
     data_buf = usb_alloc_mem(NonPagedPool, 512);
-    if (purb == NULL)
+    if (purb == NULL || data_buf == NULL)
     {
         unlock_dev(pdev, TRUE);
         return FALSE;
@@ -1011,8 +1015,11 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
     }
 
 LBL_OUT:
-    usb_free_mem(purb);
-    purb = NULL;
+    if (purb)
+    {
+        usb_free_mem(purb);
+        purb = NULL;
+    }
 
     lock_dev(pdev, TRUE);
     if (dev_state(pdev) != USB_DEV_STATE_ZOMB)
@@ -1245,6 +1252,8 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
 
         pif->altif_count++;
         paltif = usb_alloc_mem(NonPagedPool, sizeof(USB_INTERFACE));
+        if (!paltif) return FALSE;
+
         RtlZeroMemory(paltif, sizeof(USB_INTERFACE));
         InsertTailList(&pif->altif_list, &paltif->altif_list);
         paltif->pif_drv = NULL;
@@ -1446,6 +1455,20 @@ dev_mgr_register_hcd(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
 
     dev_mgr->hcd_array[dev_mgr->hcd_count++] = hcd;
     return dev_mgr->hcd_count - 1;
+}
+
+VOID
+dev_mgr_deregister_hcd(PUSB_DEV_MANAGER dev_mgr, UCHAR hcd_id)
+{
+    UCHAR i;
+
+    if (dev_mgr == NULL || hcd_id >= MAX_HCDS - 1)
+        return;
+
+    for (i = hcd_id; i < dev_mgr->hcd_count - 1; i++)
+        dev_mgr->hcd_array[i] = dev_mgr->hcd_array[i + 1];
+
+    dev_mgr->hcd_count--;
 }
 
 BOOLEAN

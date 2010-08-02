@@ -222,6 +222,15 @@ enum msidbRemoveFileInstallMode
     msidbRemoveFileInstallModeOnBoth = 0x00000003,
 };
 
+enum
+{
+    msidbIniFileActionAddLine    = 0x00000000,
+    msidbIniFileActionCreateLine = 0x00000001,
+    msidbIniFileActionRemoveLine = 0x00000002,
+    msidbIniFileActionAddTag     = 0x00000003,
+    msidbIniFileActionRemoveTag  = 0x00000004
+};
+
 /*
  * Windows SDK braindamage alert
  *

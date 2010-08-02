@@ -124,30 +124,21 @@ static BOOL start_rpcss(void)
 {
     PROCESS_INFORMATION pi;
     STARTUPINFOW si;
-    static WCHAR cmd[6];
-    static const WCHAR rpcss[] = {'r','p','c','s','s',0};
+    WCHAR cmd[MAX_PATH];
+    static const WCHAR rpcss[] = {'\\','r','p','c','s','s','.','e','x','e',0};
     BOOL rslt;
+    void *redir;
 
     TRACE("\n");
 
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
     ZeroMemory(&si, sizeof(STARTUPINFOA));
     si.cb = sizeof(STARTUPINFOA);
+    GetSystemDirectoryW( cmd, MAX_PATH - sizeof(rpcss)/sizeof(WCHAR) );
+    strcatW( cmd, rpcss );
 
-    memcpy(cmd, rpcss, sizeof(rpcss));
-
-    rslt = CreateProcessW(
-                          NULL,           /* executable */
-                          cmd,            /* command line */
-                          NULL,           /* process security attributes */
-                          NULL,           /* primary thread security attributes */
-                          FALSE,          /* inherit handles */
-                          0,              /* creation flags */
-                          NULL,           /* use parent's environment */
-                          NULL,           /* use parent's current directory */
-                          &si,            /* STARTUPINFO pointer */
-                          &pi             /* PROCESS_INFORMATION */
-                          );
+    Wow64DisableWow64FsRedirection( &redir );
+    rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+    Wow64RevertWow64FsRedirection( redir );
 
     if (rslt)
     {
@@ -340,7 +331,7 @@ RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 }
 
 /***********************************************************************
- *        RunningObjectTable_Initialize
+ *        RunningObjectTable_Destroy
  */
 static HRESULT
 RunningObjectTableImpl_Destroy(void)
@@ -414,7 +405,7 @@ RunningObjectTableImpl_Release(IRunningObjectTable* iface)
  * grfFlags       [in] Registration options 
  * punkObject     [in] the object being registered
  * pmkObjectName  [in] the moniker of the object being registered
- * pdwRegister    [in] the value identifying the registration
+ * pdwRegister    [out] the value identifying the registration
  */
 static HRESULT WINAPI
 RunningObjectTableImpl_Register(IRunningObjectTable* iface, DWORD grfFlags,
@@ -1118,7 +1109,13 @@ HRESULT WINAPI MkParseDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
 
     TRACE("(%p, %s, %p, %p)\n", pbc, debugstr_w(szDisplayName), pchEaten, ppmk);
 
-    if (!(IsValidInterface((LPUNKNOWN) pbc)))
+    if (!pbc || !IsValidInterface((LPUNKNOWN) pbc))
+        return E_INVALIDARG;
+
+    if (!szDisplayName || !*szDisplayName)
+        return E_INVALIDARG;
+
+    if (!pchEaten || !ppmk)
         return E_INVALIDARG;
 
     *pchEaten = 0;
@@ -1660,7 +1657,7 @@ HRESULT MonikerMarshal_Create(IMoniker *inner, IUnknown **outer)
     return S_OK;
 }
 
-void * __RPC_USER MIDL_user_allocate(size_t size)
+void * __RPC_USER MIDL_user_allocate(SIZE_T size)
 {
     return HeapAlloc(GetProcessHeap(), 0, size);
 }

@@ -11,6 +11,263 @@
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 NTSTATUS
+PerformSampleRateConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    ULONG OldRate,
+    ULONG NewRate,
+    ULONG BytesPerSample,
+    ULONG NumChannels,
+    PVOID * Result,
+    PULONG ResultLength)
+{
+    KFLOATING_SAVE FloatSave;
+    NTSTATUS Status;
+    ULONG Index;
+    SRC_STATE * State;
+    SRC_DATA Data;
+    PUCHAR ResultOut;
+    int error;
+    PFLOAT FloatIn, FloatOut;
+    ULONG NumSamples;
+    ULONG NewSamples;
+
+    DPRINT("PerformSampleRateConversion OldRate %u NewRate %u BytesPerSample %u NumChannels %u Irql %u\n", OldRate, NewRate, BytesPerSample, NumChannels, KeGetCurrentIrql());
+
+    ASSERT(BytesPerSample == 1 || BytesPerSample == 2 || BytesPerSample == 4);
+
+    /* first acquire float save context */
+    Status = KeSaveFloatingPointState(&FloatSave);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("KeSaveFloatingPointState failed with %x\n", Status);
+        return Status;
+    }
+
+    NumSamples = BufferLength / (BytesPerSample * NumChannels);
+
+    FloatIn = ExAllocatePool(NonPagedPool, NumSamples * NumChannels * sizeof(FLOAT));
+    if (!FloatIn)
+    {
+        KeRestoreFloatingPointState(&FloatSave);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    NewSamples = lrintf(((FLOAT)NumSamples * ((FLOAT)NewRate / (FLOAT)OldRate))) + 2;
+
+    FloatOut = ExAllocatePool(NonPagedPool, NewSamples * NumChannels * sizeof(FLOAT));
+    if (!FloatOut)
+    {
+        ExFreePool(FloatIn);
+        KeRestoreFloatingPointState(&FloatSave);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ResultOut = ExAllocatePool(NonPagedPool, NewSamples * NumChannels * BytesPerSample);
+    if (!ResultOut)
+    {
+        ExFreePool(FloatIn);
+        ExFreePool(FloatOut);
+        KeRestoreFloatingPointState(&FloatSave);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    State = src_new(SRC_SINC_FASTEST, NumChannels, &error);
+    if (!State)
+    {
+        DPRINT1("KeSaveFloatingPointState failed with %x\n", Status);
+        KeRestoreFloatingPointState(&FloatSave);
+        ExFreePool(FloatIn);
+        ExFreePool(FloatOut);
+        ExFreePool(ResultOut);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* fixme use asm */
+    if (BytesPerSample == 1)
+    {
+        for(Index = 0; Index < NumSamples * NumChannels; Index++)
+            FloatIn[Index] = (float)(Buffer[Index] / (1.0 * 0x80));
+    }
+    else if (BytesPerSample == 2)
+    {
+        src_short_to_float_array((short*)Buffer, FloatIn, NumSamples * NumChannels);
+    }
+    else if (BytesPerSample == 4)
+    {
+        src_int_to_float_array((int*)Buffer, FloatIn, NumSamples * NumChannels);
+    }
+
+    Data.data_in = FloatIn;
+    Data.data_out = FloatOut;
+    Data.input_frames = NumSamples;
+    Data.output_frames = NewSamples;
+    Data.src_ratio = (double)NewRate / (double)OldRate;
+
+    error = src_process(State, &Data);
+    if (error)
+    {
+        DPRINT1("src_process failed with %x\n", error);
+        KeRestoreFloatingPointState(&FloatSave);
+        ExFreePool(FloatIn);
+        ExFreePool(FloatOut);
+        ExFreePool(ResultOut);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    if (BytesPerSample == 1)
+    {
+        /* FIXME perform over/under clipping */
+
+        for(Index = 0; Index < Data.output_frames_gen * NumChannels; Index++)
+            ResultOut[Index] = (lrintf(FloatOut[Index]) >> 24);
+    }
+    else if (BytesPerSample == 2)
+    {
+        PUSHORT Res = (PUSHORT)ResultOut;
+
+        src_float_to_short_array(FloatOut, (short*)Res, Data.output_frames_gen * NumChannels);
+    }
+    else if (BytesPerSample == 4)
+    {
+        PULONG Res = (PULONG)ResultOut;
+
+        src_float_to_int_array(FloatOut, (int*)Res, Data.output_frames_gen * NumChannels);
+    }
+
+
+    *Result = ResultOut;
+    *ResultLength = Data.output_frames_gen * BytesPerSample * NumChannels;
+    ExFreePool(FloatIn);
+    ExFreePool(FloatOut);
+    src_delete(State);
+    KeRestoreFloatingPointState(&FloatSave);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+PerformChannelConversion(
+    PUCHAR Buffer,
+    ULONG BufferLength,
+    ULONG OldChannels,
+    ULONG NewChannels,
+    ULONG BitsPerSample,
+    PVOID * Result,
+    PULONG ResultLength)
+{
+    ULONG Samples;
+    ULONG NewIndex, OldIndex;
+
+    Samples = BufferLength / (BitsPerSample / 8) / OldChannels;
+
+    if (NewChannels > OldChannels)
+    {
+        if (BitsPerSample == 8)
+        {
+            PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * sizeof(UCHAR));
+
+                do
+                {
+                    /* 2 channel stretched to 4 looks like LRLR */
+                     BufferOut[NewIndex+OldChannels + SubIndex] = Buffer[OldIndex + (SubIndex % OldChannels)];
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+        else if (BitsPerSample == 16)
+        {
+            PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * sizeof(USHORT));
+
+                do
+                {
+                     BufferOut[NewIndex+OldChannels + SubIndex] = Buffer[OldIndex + (SubIndex % OldChannels)];
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+        else if (BitsPerSample == 24)
+        {
+            PUCHAR BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * 3);
+
+                do
+                {
+                     RtlMoveMemory(&BufferOut[(NewIndex+OldChannels + SubIndex) * 3], &Buffer[(OldIndex + (SubIndex % OldChannels)) * 3], 3);
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+        else if (BitsPerSample == 32)
+        {
+            PULONG BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+            if (!BufferOut)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+            {
+                ULONG SubIndex = 0;
+
+                RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], OldChannels * sizeof(ULONG));
+
+                do
+                {
+                     BufferOut[NewIndex+OldChannels + SubIndex] = Buffer[OldIndex + (SubIndex % OldChannels)];
+                }while(SubIndex++ < NewChannels - OldChannels);
+            }
+            *Result = BufferOut;
+            *ResultLength = Samples * NewChannels;
+        }
+
+    }
+    else
+    {
+        PUSHORT BufferOut = ExAllocatePool(NonPagedPool, Samples * NewChannels);
+        if (!BufferOut)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        for(NewIndex = 0, OldIndex = 0; OldIndex < Samples * OldChannels; NewIndex += NewChannels, OldIndex += OldChannels)
+        {
+            /* TODO
+             * mix stream instead of just dumping part of it ;)
+             */
+            RtlMoveMemory(&BufferOut[NewIndex], &Buffer[OldIndex], NewChannels * (BitsPerSample/8));
+        }
+
+        *Result = BufferOut;
+        *ResultLength = Samples * NewChannels;
+    }
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 PerformQualityConversion(
     PUCHAR Buffer,
     ULONG BufferLength,
@@ -359,7 +616,6 @@ Pin_fnFastWrite(
                InputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.nSamplesPerSec,
                InputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.wBitsPerSample);
 
-
     if (InputFormat->WaveFormatEx.wBitsPerSample != OutputFormat->WaveFormatEx.wBitsPerSample)
     {
         Status = PerformQualityConversion(StreamHeader->Data,
@@ -370,7 +626,24 @@ Pin_fnFastWrite(
                                           &BufferLength);
         if (NT_SUCCESS(Status))
         {
-            //DPRINT1("Old BufferSize %u NewBufferSize %u\n", StreamHeader->DataUsed, BufferLength);
+            ExFreePool(StreamHeader->Data);
+            StreamHeader->Data = BufferOut;
+            StreamHeader->DataUsed = BufferLength;
+        }
+    }
+
+    if (InputFormat->WaveFormatEx.nChannels != OutputFormat->WaveFormatEx.nChannels)
+    {
+        Status = PerformChannelConversion(StreamHeader->Data,
+                                          StreamHeader->DataUsed,
+                                          InputFormat->WaveFormatEx.nChannels,
+                                          OutputFormat->WaveFormatEx.nChannels,
+                                          OutputFormat->WaveFormatEx.wBitsPerSample,
+                                          &BufferOut,
+                                          &BufferLength);
+
+        if (NT_SUCCESS(Status))
+        {
             ExFreePool(StreamHeader->Data);
             StreamHeader->Data = BufferOut;
             StreamHeader->DataUsed = BufferLength;
@@ -379,10 +652,23 @@ Pin_fnFastWrite(
 
     if (InputFormat->WaveFormatEx.nSamplesPerSec != OutputFormat->WaveFormatEx.nSamplesPerSec)
     {
-        /* sample format conversion must be done in a deferred routine */
-        DPRINT1("SampleRate conversion not available yet %u %u\n", InputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.nSamplesPerSec);
-        return FALSE;
+        Status = PerformSampleRateConversion(StreamHeader->Data,
+                                             StreamHeader->DataUsed,
+                                             InputFormat->WaveFormatEx.nSamplesPerSec,
+                                             OutputFormat->WaveFormatEx.nSamplesPerSec,
+                                             OutputFormat->WaveFormatEx.wBitsPerSample / 8,
+                                             OutputFormat->WaveFormatEx.nChannels,
+                                             &BufferOut,
+                                             &BufferLength);
+        if (NT_SUCCESS(Status))
+        {
+            ExFreePool(StreamHeader->Data);
+            StreamHeader->Data = BufferOut;
+            StreamHeader->DataUsed = BufferLength;
+        }
     }
+
+    IoStatus->Status = Status;
 
     if (NT_SUCCESS(Status))
         return TRUE;
@@ -430,9 +716,13 @@ CreatePin(
 
 void * calloc(size_t Elements, size_t ElementSize)
 {
-    PVOID Block = ExAllocatePool(NonPagedPool, Elements * ElementSize);
-    if (Block)
-        RtlZeroMemory(Block, Elements * ElementSize);
+    ULONG Index;
+    PUCHAR Block = ExAllocatePool(NonPagedPool, Elements * ElementSize);
+    if (!Block)
+        return NULL;
+
+    for(Index = 0; Index < Elements * ElementSize; Index++)
+        Block[Index] = 0;
 
     return Block;
 }
@@ -441,33 +731,3 @@ void free(PVOID Block)
 {
     ExFreePool(Block);
 }
-
-void *memset(
-   void* dest,
-   int c,
-   size_t count)
-{
-    RtlFillMemory(dest, count, c);
-    return dest;
-}
-
-void * memcpy(
-   void* dest,
-   const void* src,
-   size_t count)
-{
-    RtlCopyMemory(dest, src, count);
-    return dest;
-}
-
-void *memmove(
-   void* dest,
-   const void* src,
-   size_t count)
-{
-    RtlMoveMemory(dest, src, count);
-    return dest;
-}
-
-
-

@@ -109,13 +109,13 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
     WCHAR szText[MAX_PATH], szTitle[100], szFilter[100];
     OPENFILENAMEW ofn = {0};
 
-    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLong(hwndDlg, DWLP_USER);
+    PPICK_ICON_CONTEXT pIconContext = (PPICK_ICON_CONTEXT)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch(uMsg)
     {
     case WM_INITDIALOG:
         pIconContext = (PPICK_ICON_CONTEXT)lParam;
-        SetWindowLong(hwndDlg, DWLP_USER, (LONG)pIconContext);
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
         EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
@@ -344,7 +344,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                             else
                                 pdir[3] = '\0';
                             }
-                        if (ShellExecuteA(NULL, "open", psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
+                        if (ShellExecuteA(NULL, NULL, psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
                             char *pszSysMsg = NULL ;
                             FormatMessageA (
@@ -357,7 +357,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                                 ) ;
                             sprintf (szMsg, "Error: %s", pszSysMsg) ;
                             LocalFree ((HLOCAL)pszSysMsg) ;
-                            MessageBoxA (hwnd, szMsg, "Nix", MB_OK | MB_ICONEXCLAMATION) ;
+                            MessageBoxA (hwnd, szMsg, NULL, MB_OK | MB_ICONEXCLAMATION) ;
 
                             HeapFree(GetProcessHeap(), 0, psz);
                             HeapFree(GetProcessHeap(), 0, pdir);
@@ -612,9 +612,11 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 
 int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
-   UNIMPLEMENTED;
-   ExitWindowsEx(EWX_LOGOFF, 0);
-   return 0;
+    if (ConfirmDialog(hWndOwner, IDS_LOGOFF_PROMPT, IDS_LOGOFF_TITLE))
+    {
+        ExitWindowsEx(EWX_LOGOFF, 0);
+    }
+    return 0;
 }
 
 /*************************************************************************

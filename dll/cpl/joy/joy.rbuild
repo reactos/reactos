@@ -3,7 +3,6 @@
 <module name="joy" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_JOY}"  installbase="system32" installname="joy.cpl" unicode="yes">
 	<importlibrary definition="joy.spec" />
 	<include base="joy">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>comctl32</library>

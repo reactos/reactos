@@ -94,18 +94,6 @@ WINSTAAPI WinStationFreeGAPMemory(PVOID A,
 }
 
 VOID
-WINSTAAPI WinStationGetProcessSid(PVOID A,
-                                  PVOID B,
-                                  PVOID C,
-                                  PVOID D,
-                                  PVOID E,
-                                  PVOID F,
-                                  PVOID G)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
 WINSTAAPI WinStationIsHelpAssistantSession(PVOID A,
                                            PVOID B)
 {

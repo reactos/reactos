@@ -7,30 +7,96 @@
  *
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
+// Client Shutdown messages
+#define MCS_SHUTDOWNTIMERS  1
+#define MCS_QUERYENDSESSION 2
+// Client Shutdown returns
+#define MCSR_GOODFORSHUTDOWN  1
+#define MCSR_SHUTDOWNFINISHED 2
+#define MCSR_DONOTSHUTDOWN    3
+
+/*
+  Based on CSRSS and described in pages 1115 - 1118 "Windows Internals, Fifth Edition".
+  Apparently CSRSS sends out messages to do this w/o going into win32k internals.
+ */
+static
 LRESULT FASTCALL
-IntDefWinHandleSysCommand( PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam , BOOL Ansi)
+IntClientShutdown(
+   PWINDOW_OBJECT pWindow,
+   WPARAM wParam,
+   LPARAM lParam
+)
 {
-   DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Window->hSelf, wParam, lParam );
+   LPARAM lParams;
+   BOOL KillTimers;
+   INT i;
+   LRESULT lResult = MCSR_GOODFORSHUTDOWN;
+   HWND *List;
 
-   if (!ISITHOOKED(WH_CBT)) return 0;
+   lParams = wParam & (ENDSESSION_LOGOFF|ENDSESSION_CRITICAL|ENDSESSION_CLOSEAPP);
+   KillTimers = wParam & MCS_SHUTDOWNTIMERS ? TRUE : FALSE;
+/*
+   First, send end sessions to children.
+ */
+   List = IntWinListChildren(pWindow);
 
-//   if (!UserCallNextHookEx(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam, Ansi))
-      return 0;
-
-   switch (wParam & 0xfff0)
+   if (List)
    {
-       case SC_MOVE:
-       case SC_SIZE:
-  //      return UserCallNextHookEx(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam, Ansi);
-        break;
+      for (i = 0; List[i]; i++)
+      {
+          PWINDOW_OBJECT WndChild;
+
+          if (!(WndChild = UserGetWindowObject(List[i])) || !WndChild->Wnd)
+             continue;
+
+          if (wParam & MCS_QUERYENDSESSION)
+          {
+             if (!co_IntSendMessage(WndChild->hSelf, WM_QUERYENDSESSION, 0, lParams))
+             {
+                lResult = MCSR_DONOTSHUTDOWN;
+                break;
+             }
+          }
+          else          
+          {
+             co_IntSendMessage(WndChild->hSelf, WM_ENDSESSION, KillTimers, lParams);
+             if (KillTimers)
+             {
+                DestroyTimersForWindow(WndChild->pti, WndChild);
+             }
+             lResult = MCSR_SHUTDOWNFINISHED;
+          }
+      }
+      ExFreePool(List);
    }
-   return 1;
+   if (List && (lResult == MCSR_DONOTSHUTDOWN)) return lResult;
+/*
+   Send to the caller.
+ */
+   if (wParam & MCS_QUERYENDSESSION)
+   {
+      if (!co_IntSendMessage(pWindow->hSelf, WM_QUERYENDSESSION, 0, lParams))
+      {
+         lResult = MCSR_DONOTSHUTDOWN;
+      }
+   }
+   else          
+   {
+      co_IntSendMessage(pWindow->hSelf, WM_ENDSESSION, KillTimers, lParams);
+      if (KillTimers)
+      {
+         DestroyTimersForWindow(pWindow->pti, pWindow);
+      }
+      lResult = MCSR_SHUTDOWNFINISHED;
+   }
+   return lResult;
 }
+
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -42,7 +108,7 @@ IntDefWindowProc(
    LPARAM lParam,
    BOOL Ansi)
 {
-   PWINDOW Wnd;
+   PWND Wnd;
    LRESULT lResult = 0;
 
    if (Msg > WM_USER) return 0;
@@ -54,30 +120,70 @@ IntDefWindowProc(
    {
       case WM_SYSCOMMAND:
       {
-          lResult = IntDefWinHandleSysCommand( Window, wParam, lParam, Ansi );
-          break;
+         DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Window->hSelf, wParam, lParam );
+         if (!ISITHOOKED(WH_CBT)) break;
+         lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
+         break;
       }
       case WM_SHOWWINDOW:
       {
-         if ((Wnd->Style & WS_VISIBLE) && wParam) break;
-         if (!(Wnd->Style & WS_VISIBLE) && !wParam) break;
-         if (!Window->hOwner) break;
+         if ((Wnd->style & WS_VISIBLE) && wParam) break;
+         if (!(Wnd->style & WS_VISIBLE) && !wParam) break;
+         if (!Window->spwndOwner) break;
          if (LOWORD(lParam))
          {
             if (wParam)
             {
-               if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)) break;
-               Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
+               if (!(Wnd->state & WNDS_HIDDENPOPUP)) break;
+               Wnd->state &= ~WNDS_HIDDENPOPUP;
             }
             else
-                Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
+                Wnd->state |= WNDS_HIDDENPOPUP;
 
             co_WinPosShowWindow(Window, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
          }
       }
       break;
-   }
+      case WM_CLIENTSHUTDOWN:
+         return IntClientShutdown(Window, wParam, lParam);
 
+      case WM_CBT:
+      {
+         if (!ISITHOOKED(WH_CBT)) break;
+
+         switch (wParam)
+         {
+            case HCBT_MOVESIZE:
+            {
+               RECTL rt;
+
+               if (lParam)
+               {
+                  _SEH2_TRY
+                  {
+                      ProbeForRead((PVOID)lParam,
+                                   sizeof(RECT),
+                                   1);
+
+                      RtlCopyMemory(&rt,
+                                    (PVOID)lParam,
+                                    sizeof(RECT));
+                  }
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                  {
+                      lResult = 1;
+                  }
+                  _SEH2_END;
+               }
+               if (!lResult)
+                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam ? (LPARAM)&rt : 0);
+            }
+            break;
+         }
+         break;
+      }
+      break;
+   }
    return lResult;
 }
 

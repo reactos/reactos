@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ex/init.c
  * PURPOSE:         Executive Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@rz-online.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -68,7 +68,7 @@ PVOID ExpNlsTableBase;
 ULONG ExpAnsiCodePageDataOffset, ExpOemCodePageDataOffset;
 ULONG ExpUnicodeCaseTableDataOffset;
 NLSTABLEINFO ExpNlsTableInfo;
-ULONG ExpNlsTableSize;
+SIZE_T ExpNlsTableSize;
 PVOID ExpNlsSectionPointer;
 
 /* CMOS Timer Sanity */
@@ -196,7 +196,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NTSTATUS Status;
     HANDLE NlsSection;
     PVOID SectionBase = NULL;
-    ULONG ViewSize = 0;
+    SIZE_T ViewSize = 0;
     LARGE_INTEGER SectionOffset = {{0, 0}};
     PLIST_ENTRY ListHead, NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
@@ -235,7 +235,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Allocate the a new buffer since loader memory will be freed */
         ExpNlsTableBase = ExAllocatePoolWithTag(NonPagedPool,
                                                 ExpNlsTableSize,
-                                                TAG('R', 't', 'l', 'i'));
+                                                'iltR');
         if (!ExpNlsTableBase) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
         /* Copy the codepage data in its new location. */
@@ -303,7 +303,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                        KernelMode,
                                        &ExpNlsSectionPointer,
                                        NULL);
-    ZwClose(NlsSection);
+    ObCloseHandle(NlsSection, KernelMode);
     if (!NT_SUCCESS(Status))
     {
         /* Failed */
@@ -324,7 +324,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
-    ExFreePoolWithTag(ExpNlsTableBase, TAG('R', 't', 'l', 'i'));
+    ExFreePoolWithTag(ExpNlsTableBase, 'iltR');
     ExpNlsTableBase = SectionBase;
 
     /* Initialize the NLS Tables */
@@ -369,7 +369,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PCHAR *ProcessEnvironment)
 {
     NTSTATUS Status;
-    ULONG Size;
+    SIZE_T Size;
     PWSTR p;
     UNICODE_STRING NullString = RTL_CONSTANT_STRING(L"");
     UNICODE_STRING SmssName, Environment, SystemDriveString, DebugString;
@@ -466,7 +466,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
     /* Make sure the buffer is a valid string which within the given length */
     if ((NtInitialUserProcessBufferType != REG_SZ) ||
-        ((NtInitialUserProcessBufferLength != -1U) &&
+        ((NtInitialUserProcessBufferLength != MAXULONG) &&
          ((NtInitialUserProcessBufferLength < sizeof(WCHAR)) ||
           (NtInitialUserProcessBufferLength >
            sizeof(NtInitialUserProcessBuffer) - sizeof(WCHAR)))))
@@ -734,7 +734,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     BOOLEAN OverFlow = FALSE;
     CHAR NameBuffer[256];
-    ANSI_STRING SymbolString;
+    STRING SymbolString;
 
     /* Loop the driver list */
     NextEntry = LoaderBlock->LoadOrderListHead.Flink;
@@ -799,13 +799,13 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Check if the buffer was ok */
             if (!OverFlow)
             {
-                /* Initialize the ANSI_STRING for the debugger */
+                /* Initialize the STRING for the debugger */
                 RtlInitString(&SymbolString, NameBuffer);
 
                 /* Load the symbols */
                 DbgLoadImageSymbols(&SymbolString,
                                     LdrEntry->DllBase,
-                                    0xFFFFFFFF);
+                                    (ULONG_PTR)ZwCurrentProcess());
             }
         }
 
@@ -827,9 +827,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PCHAR CommandLine, PerfMem;
     ULONG PerfMemUsed;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
-    PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
-    ULONG Remaining = 0;
+    SIZE_T Remaining = 0;
     PCHAR RcEnd = NULL;
     CHAR VersionBuffer [65];
 
@@ -1044,7 +1044,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (NT_SUCCESS(Status))
         {
             /* Setup the string */
-            RtlInitAnsiString(&CsdString, MsgEntry->Text);
+            RtlInitAnsiString(&CsdString, (PCHAR)MsgEntry->Text);
 
             /* Remove trailing newline */
             while ((CsdString.Length > 0) &&
@@ -1188,7 +1188,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     KeServiceDescriptorTable[0].Count =
         ExAllocatePoolWithTag(NonPagedPool,
                               KiServiceLimit * sizeof(ULONG),
-                              TAG('C', 'a', 'l', 'l'));
+                              'llaC');
 
     /* Use it for the shadow table too */
     KeServiceDescriptorTableShadow[0].Count = KeServiceDescriptorTable[0].Count;
@@ -1226,22 +1226,11 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->NtMinorVersion = NtMinorVersion;
 
     /* Set the machine type */
-#if defined(_X86_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_I386;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_I386;
-#elif defined(_PPC_) // <3 Arty
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_POWERPC;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_POWERPC;
-#elif defined(_MIPS_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_R4000;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_R4000;
-#elif defined(_ARM_)
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARM;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARM;
-#else
-#error "Unsupported ReactOS Target"
-#endif
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
 }
+
+extern BOOLEAN AllowPagedPool;
 
 VOID
 NTAPI
@@ -1253,12 +1242,13 @@ Phase1InitializationDiscard(IN PVOID Context)
     LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime, Timeout;
     BOOLEAN SosEnabled, NoGuiBoot, ResetBias = FALSE, AlternateShell = FALSE;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
-    PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
     PCHAR CommandLine, Y2KHackRequired, SafeBoot, Environment;
     PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;
     ANSI_STRING TempString;
-    ULONG LastTzBias, Size, Length, YearHack = 0, Disposition, MessageCode = 0;
+    ULONG LastTzBias, Length, YearHack = 0, Disposition, MessageCode = 0;
+    SIZE_T Size;
     PRTL_USER_PROCESS_INFORMATION ProcessInfo;
     KEY_VALUE_PARTIAL_INFORMATION KeyPartialInfo;
     UNICODE_STRING KeyName, DebugString;
@@ -1269,7 +1259,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allocate the initialization buffer */
     InitBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                        sizeof(INIT_BUFFER),
-                                       TAG('I', 'n', 'i', 't'));
+                                       'tinI');
     if (!InitBuffer)
     {
         /* Bugcheck */
@@ -1338,14 +1328,14 @@ Phase1InitializationDiscard(IN PVOID Context)
     StringBuffer = InitBuffer->VersionBuffer;
     BeginBuffer = StringBuffer;
     EndBuffer = StringBuffer;
-    Length = 256;
+    Size = 256;
     if (CmCSDVersionString.Length)
     {
         /* Print the version string */
         Status = RtlStringCbPrintfExA(StringBuffer,
                                       255,
                                       &EndBuffer,
-                                      &Length,
+                                      &Size,
                                       0,
                                       ": %wZ",
                                       &CmCSDVersionString);
@@ -1358,7 +1348,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* No version */
-        Length = 255;
+        Size = 255;
     }
 
     /* Null-terminate the string */
@@ -1382,8 +1372,8 @@ Phase1InitializationDiscard(IN PVOID Context)
     {
         /* Create the banner message */
         Status = RtlStringCbPrintfA(EndBuffer,
-                                    Length,
-                                    MsgEntry->Text,
+                                    Size,
+                                    (PCHAR)MsgEntry->Text,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
                                     BeginBuffer);
@@ -1396,7 +1386,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     else
     {
         /* Use hard-coded banner message */
-        Status = RtlStringCbCopyA(EndBuffer, Length, "REACTOS (R)\n");
+        Status = RtlStringCbCopyA(EndBuffer, Size, "REACTOS (R)\n");
         if (!NT_SUCCESS(Status))
         {
             /* Bugcheck */
@@ -1408,7 +1398,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvDisplayString(EndBuffer);
 
     /* Initialize Power Subsystem in Phase 0 */
-    if (!PoInitSystem(0, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+    if (!PoInitSystem(0)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Check for Y2K hack */
     Y2KHackRequired = strstr(CommandLine, "YEAR");
@@ -1429,7 +1419,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         if (!ExpRealTimeIsUniversal)
         {
             /* Check if we don't have a valid bias */
-            if (ExpLastTimeZoneBias == -1U)
+            if (ExpLastTimeZoneBias == MAXULONG)
             {
                 /* Reset */
                 ResetBias = TRUE;
@@ -1498,7 +1488,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     Status = RtlStringCbPrintfA(StringBuffer,
                                 256,
                                 NT_SUCCESS(MsgStatus) ?
-                                MsgEntry->Text :
+                                (PCHAR)MsgEntry->Text :
                                 "%u System Processor [%u MB Memory] %Z\n",
                                 KeNumberProcessors,
                                 Size,
@@ -1624,7 +1614,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             else if (!strncmp(SafeBoot, "NETWORK", 7))
             {
                 /* With Networking */
-                InitSafeBootMode = 1;
+                InitSafeBootMode = 2;
                 SafeBoot += 7;
                 MessageCode = BOOTING_IN_SAFEMODE_NETWORK;
             }
@@ -1662,7 +1652,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString(MsgEntry->Text);
+                InbvDisplayString((PCHAR)MsgEntry->Text);
             }
         }
     }
@@ -1682,7 +1672,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString(MsgEntry->Text);
+                InbvDisplayString((PCHAR)MsgEntry->Text);
             }
 
             /* Setup boot logging */
@@ -1841,12 +1831,12 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(80);
 
     /* Initialize VDM support */
-#ifdef i386
+#if defined(_M_IX86)
     KeI386VdmInitialize();
 #endif
 
     /* Initialize Power Subsystem in Phase 1*/
-    if (!PoInitSystem(1, AcpiTableDetected)) KeBugCheck(INTERNAL_POWER_ERROR);
+    if (!PoInitSystem(1)) KeBugCheck(INTERNAL_POWER_ERROR);
 
     /* Initialize the Process Manager at Phase 1 */
     if (!PsInitSystem(LoaderBlock)) KeBugCheck(PROCESS1_INITIALIZATION_FAILED);
@@ -1870,6 +1860,9 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
+
+    /* Enough fun for now */
+    AllowPagedPool = FALSE;
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);

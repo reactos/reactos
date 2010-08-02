@@ -1,0 +1,28 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft Visual Basic 6.0 Common Controls
+Version = 6.0
+Licence = Unknown
+Description = File needed by some applications.
+Size = 914kB
+Category = 14
+URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=25437D98-51D0-41C1-BB14-64662F5F62FE&displaylang=en
+URLDownload = http://download.microsoft.com/download/3/a/5/3a5925ac-e779-4b1c-bb01-af67dc2f96fc/VisualBasic6-KB896559-v1-ENU.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Datei wird von einigen Anwendungen benötigt.
+
+[Section.040a]
+Licence = Desconocida
+Description = X es necesario para varias aplicaciones.
+
+[Section.0415]
+Licence = Nieznana
+Description = X jest używana przez część aplikacji.
+
+[Section.0422]
+Licence = Невідома
+Description = Файл потрібен декотрим програмам.

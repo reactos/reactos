@@ -10,6 +10,28 @@
 #else
 #undef HAVE_ERRNO_H
 #include <winsock2.h>
+
+/* the following is a workaround a problem for 'inline' keyword in said
+   header when compiled with Borland C++ 6 */
+#if defined(__BORLANDC__) && !defined(__cplusplus)
+#define inline __inline
+#define _inline __inline
+#endif
+
+#include <ws2tcpip.h>
+
+/* Check if ws2tcpip.h is a recent version which provides getaddrinfo() */
+#if defined(GetAddrInfo)
+#include <wspiapi.h>
+#define HAVE_GETADDRINFO
+#endif
+#endif
+
+#ifdef __MINGW32__
+/* Include <errno.h> here to ensure that it doesn't get included later
+ * (e.g. by iconv.h) and overwrites the definition of EWOULDBLOCK. */
+#include <errno.h>
+#undef EWOULDBLOCK
 #endif
 
 #if !defined SOCKLEN_T
@@ -51,8 +73,8 @@
 #define EDQUOT                  WSAEDQUOT
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
-/* These cause conflicts with the codes from errno.h. Since they are
-   not used in the relevant code (nanoftp, nanohttp), we can leave
+/* These cause conflicts with the codes from errno.h. Since they are 
+   not used in the relevant code (nanoftp, nanohttp), we can leave 
    them disabled.
 #define ENAMETOOLONG            WSAENAMETOOLONG
 #define ENOTEMPTY               WSAENOTEMPTY

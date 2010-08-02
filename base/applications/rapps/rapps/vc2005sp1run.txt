@@ -1,0 +1,28 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
+Version = 7.1
+Licence = Unknown
+Description = Visual Studio 2005 Runtime SP1.
+Size = 2.6MB
+Category = 14
+URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=200b2fd9-ae1a-4a14-984d-389c36f85647&displaylang=en
+URLDownload = http://download.microsoft.com/download/e/1/c/e1c773de-73ba-494a-a5ba-f24906ecf088/vcredist_x86.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Studio 2005 Laufzeitsystem SP1.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Studio 2005 SP1.
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Studio 2005 SP1.
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Studio 2005 SP1.

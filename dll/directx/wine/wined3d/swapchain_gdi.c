@@ -27,7 +27,8 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 WINE_DECLARE_DEBUG_CHANNEL(fps);
 
-static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB_DESTROYSURFACEFN D3DCB_DestroyRenderback) {
+static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface)
+{
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
     WINED3DDISPLAYMODE mode;
 
@@ -36,22 +37,27 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
     IWineD3DSwapChain_SetGammaRamp(iface, 0, &This->orig_gamma);
 
     /* release the ref to the front and back buffer parents */
-    if(This->frontBuffer) {
-        IWineD3DSurface_SetContainer(This->frontBuffer, 0);
-        if(D3DCB_DestroyRenderback(This->frontBuffer) > 0) {
-            FIXME("(%p) Something's still holding the front buffer\n",This);
+    if (This->front_buffer)
+    {
+        IWineD3DSurface_SetContainer((IWineD3DSurface *)This->front_buffer, NULL);
+        if (IWineD3DSurface_Release((IWineD3DSurface *)This->front_buffer) > 0)
+        {
+            WARN("(%p) Something's still holding the front buffer\n",This);
         }
     }
 
-    if(This->backBuffer) {
+    if (This->back_buffers)
+    {
         UINT i;
-        for(i = 0; i < This->presentParms.BackBufferCount; i++) {
-            IWineD3DSurface_SetContainer(This->backBuffer[i], 0);
-            if(D3DCB_DestroyRenderback(This->backBuffer[i]) > 0) {
-                FIXME("(%p) Something's still holding the back buffer\n",This);
+        for (i = 0; i < This->presentParms.BackBufferCount; ++i)
+        {
+            IWineD3DSurface_SetContainer((IWineD3DSurface *)This->back_buffers[i], NULL);
+            if (IWineD3DSurface_Release((IWineD3DSurface *)This->back_buffers[i]))
+            {
+                WARN("(%p) Something's still holding the back buffer\n",This);
             }
         }
-        HeapFree(GetProcessHeap(), 0, This->backBuffer);
+        HeapFree(GetProcessHeap(), 0, This->back_buffers);
     }
 
     /* Restore the screen resolution if we rendered in fullscreen
@@ -64,9 +70,10 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
         mode.Height = This->orig_height;
         mode.RefreshRate = 0;
         mode.Format = This->orig_fmt;
-        IWineD3DDevice_SetDisplayMode((IWineD3DDevice *) This->wineD3DDevice, 0, &mode);
+        IWineD3DDevice_SetDisplayMode((IWineD3DDevice *)This->device, 0, &mode);
     }
 
+    HeapFree(GetProcessHeap(), 0, This->context);
     HeapFree(GetProcessHeap(), 0, This);
 }
 
@@ -82,7 +89,7 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
  *****************************************************************************/
 void x11_copy_to_screen(IWineD3DSwapChainImpl *This, const RECT *rc)
 {
-    IWineD3DSurfaceImpl *front = (IWineD3DSurfaceImpl *) This->frontBuffer;
+    IWineD3DSurfaceImpl *front = This->front_buffer;
 
     if(front->resource.usage & WINED3DUSAGE_RENDERTARGET) {
         POINT offset = {0,0};
@@ -168,12 +175,13 @@ static HRESULT WINAPI IWineGDISwapChainImpl_Present(IWineD3DSwapChain *iface, CO
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *) iface;
     IWineD3DSurfaceImpl *front, *back;
 
-    if(!This->backBuffer) {
+    if (!This->back_buffers)
+    {
         WARN("Swapchain doesn't have a backbuffer, returning WINED3DERR_INVALIDCALL\n");
         return WINED3DERR_INVALIDCALL;
     }
-    front = (IWineD3DSurfaceImpl *) This->frontBuffer;
-    back = (IWineD3DSurfaceImpl *) This->backBuffer[0];
+    front = This->front_buffer;
+    back = This->back_buffers[0];
 
     /* Flip the DC */
     {
@@ -222,7 +230,7 @@ static HRESULT WINAPI IWineGDISwapChainImpl_Present(IWineD3DSwapChain *iface, CO
     /* FPS support */
     if (TRACE_ON(fps))
     {
-        static long prev_time, frames;
+        static LONG prev_time, frames;
 
         DWORD time = GetTickCount();
         frames++;

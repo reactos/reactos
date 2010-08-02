@@ -18,12 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "localspl_private.h"
+
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALPORT "本地端口"
     IDS_LOCALMONITOR "本地监视器"
@@ -31,10 +33,8 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALPORT "本地端口"
     IDS_LOCALMONITOR "本地監視器"
 }
-
-#pragma code_page(default)

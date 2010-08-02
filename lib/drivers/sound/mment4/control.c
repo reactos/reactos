@@ -101,7 +101,7 @@ GetNt4SoundDeviceCapabilities(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( ! MMSUCCESS(Result) );
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Choose the appropriate IOCTL */
@@ -117,6 +117,7 @@ GetNt4SoundDeviceCapabilities(
     {
         /* FIXME - need to support AUX and mixer devices */
         SND_ASSERT( FALSE );
+        IoCtl = 0;
     }
 
     /* Get the capabilities information from the driver */
@@ -200,6 +201,7 @@ QueryNt4WaveDeviceFormatSupport(
 MMRESULT
 SetNt4WaveDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  DWORD DeviceId,
     IN  LPWAVEFORMATEX Format,
     IN  DWORD FormatSize)
 {

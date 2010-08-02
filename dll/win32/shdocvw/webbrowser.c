@@ -22,6 +22,7 @@
 #include "wine/debug.h"
 #include "shdocvw.h"
 #include "exdispid.h"
+#include "mshtml.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -102,9 +103,15 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IWebBrowser2 *iface, REFIID riid
     }else if(IsEqualGUID(&IID_IHlinkFrame, riid)) {
         TRACE("(%p)->(IID_IHlinkFrame %p)\n", This, ppv);
         *ppv = HLINKFRAME(This);
+    }else if(IsEqualGUID(&IID_ITargetFrame2, riid)) {
+        TRACE("(%p)->(IID_ITargetFrame2 %p)\n", This, ppv);
+        *ppv = TARGETFRAME2(This);
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         *ppv = SERVPROV(This);
         TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
+    }else if(IsEqualGUID(&IID_IDataObject, riid)) {
+        *ppv = DATAOBJECT(This);
+        TRACE("(%p)->(IID_IDataObject %p)\n", This, ppv);
     }else if(IsEqualGUID(&IID_IQuickActivate, riid)) {
         TRACE("(%p)->(IID_IQuickActivate %p) returning NULL\n", This, ppv);
         return E_NOINTERFACE;
@@ -269,8 +276,9 @@ static HRESULT WINAPI WebBrowser_Navigate(IWebBrowser2 *iface, BSTR szUrl,
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
 
-    TRACE("(%p)->(%s %p %p %p %p)\n", This, debugstr_w(szUrl), Flags, TargetFrameName,
-          PostData, Headers);
+    TRACE("(%p)->(%s %s %s %s %s)\n", This, debugstr_w(szUrl), debugstr_variant(Flags),
+          debugstr_variant(TargetFrameName), debugstr_variant(PostData),
+          debugstr_variant(Headers));
 
     return navigate_url(&This->doc_host, szUrl, Flags, TargetFrameName, PostData, Headers);
 }
@@ -285,7 +293,7 @@ static HRESULT WINAPI WebBrowser_Refresh(IWebBrowser2 *iface)
 static HRESULT WINAPI WebBrowser_Refresh2(IWebBrowser2 *iface, VARIANT *Level)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, Level);
+    FIXME("(%p)->(%s)\n", This, debugstr_variant(Level));
     return E_NOTIMPL;
 }
 
@@ -293,7 +301,7 @@ static HRESULT WINAPI WebBrowser_Stop(IWebBrowser2 *iface)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI WebBrowser_get_Application(IWebBrowser2 *iface, IDispatch **ppDisp)
@@ -327,13 +335,28 @@ static HRESULT WINAPI WebBrowser_get_Container(IWebBrowser2 *iface, IDispatch **
 static HRESULT WINAPI WebBrowser_get_Document(IWebBrowser2 *iface, IDispatch **ppDisp)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
+    IDispatch *disp = NULL;
 
     TRACE("(%p)->(%p)\n", This, ppDisp);
 
-    *ppDisp = NULL;
-    if(This->doc_host.document)
-        IUnknown_QueryInterface(This->doc_host.document, &IID_IDispatch, (void**)ppDisp);
+    if(This->doc_host.document) {
+        HRESULT hres;
 
+        hres = IUnknown_QueryInterface(This->doc_host.document, &IID_IDispatch, (void**)&disp);
+        if(SUCCEEDED(hres)) {
+            IDispatch *html_doc;
+
+            /* Some broken apps cast returned IDispatch to IHTMLDocument2
+             * without QueryInterface call */
+            hres = IDispatch_QueryInterface(disp, &IID_IHTMLDocument2, (void**)&html_doc);
+            if(SUCCEEDED(hres)) {
+                IDispatch_Release(disp);
+                disp = html_doc;
+            }
+        }
+    }
+
+    *ppDisp = disp;
     return S_OK;
 }
 
@@ -351,7 +374,7 @@ static HRESULT WINAPI WebBrowser_get_Type(IWebBrowser2 *iface, BSTR *Type)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WebBrowser_get_Left(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI WebBrowser_get_Left(IWebBrowser2 *iface, LONG *pl)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
 
@@ -361,12 +384,12 @@ static HRESULT WINAPI WebBrowser_get_Left(IWebBrowser2 *iface, long *pl)
     return S_OK;
 }
 
-static HRESULT WINAPI WebBrowser_put_Left(IWebBrowser2 *iface, long Left)
+static HRESULT WINAPI WebBrowser_put_Left(IWebBrowser2 *iface, LONG Left)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
     RECT rect;
 
-    TRACE("(%p)->(%ld)\n", This, Left);
+    TRACE("(%p)->(%d)\n", This, Left);
 
     if(!This->inplace)
         return E_UNEXPECTED;
@@ -379,7 +402,7 @@ static HRESULT WINAPI WebBrowser_put_Left(IWebBrowser2 *iface, long Left)
     return IOleInPlaceSite_OnPosRectChange(This->inplace, &rect);
 }
 
-static HRESULT WINAPI WebBrowser_get_Top(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI WebBrowser_get_Top(IWebBrowser2 *iface, LONG *pl)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
 
@@ -389,12 +412,12 @@ static HRESULT WINAPI WebBrowser_get_Top(IWebBrowser2 *iface, long *pl)
     return S_OK;
 }
 
-static HRESULT WINAPI WebBrowser_put_Top(IWebBrowser2 *iface, long Top)
+static HRESULT WINAPI WebBrowser_put_Top(IWebBrowser2 *iface, LONG Top)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
     RECT rect;
 
-    TRACE("(%p)->(%ld)\n", This, Top);
+    TRACE("(%p)->(%d)\n", This, Top);
 
     if(!This->inplace)
         return E_UNEXPECTED;
@@ -407,7 +430,7 @@ static HRESULT WINAPI WebBrowser_put_Top(IWebBrowser2 *iface, long Top)
     return IOleInPlaceSite_OnPosRectChange(This->inplace, &rect);
 }
 
-static HRESULT WINAPI WebBrowser_get_Width(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI WebBrowser_get_Width(IWebBrowser2 *iface, LONG *pl)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
 
@@ -417,12 +440,12 @@ static HRESULT WINAPI WebBrowser_get_Width(IWebBrowser2 *iface, long *pl)
     return S_OK;
 }
 
-static HRESULT WINAPI WebBrowser_put_Width(IWebBrowser2 *iface, long Width)
+static HRESULT WINAPI WebBrowser_put_Width(IWebBrowser2 *iface, LONG Width)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
     RECT rect;
 
-    TRACE("(%p)->(%ld)\n", This, Width);
+    TRACE("(%p)->(%d)\n", This, Width);
 
     if(!This->inplace)
         return E_UNEXPECTED;
@@ -435,7 +458,7 @@ static HRESULT WINAPI WebBrowser_put_Width(IWebBrowser2 *iface, long Width)
    return IOleInPlaceSite_OnPosRectChange(This->inplace, &rect);
 }
 
-static HRESULT WINAPI WebBrowser_get_Height(IWebBrowser2 *iface, long *pl)
+static HRESULT WINAPI WebBrowser_get_Height(IWebBrowser2 *iface, LONG *pl)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
 
@@ -445,12 +468,12 @@ static HRESULT WINAPI WebBrowser_get_Height(IWebBrowser2 *iface, long *pl)
     return S_OK;
 }
 
-static HRESULT WINAPI WebBrowser_put_Height(IWebBrowser2 *iface, long Height)
+static HRESULT WINAPI WebBrowser_put_Height(IWebBrowser2 *iface, LONG Height)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
     RECT rect;
 
-    TRACE("(%p)->(%ld)\n", This, Height);
+    TRACE("(%p)->(%d)\n", This, Height);
 
     if(!This->inplace)
         return E_UNEXPECTED;
@@ -516,25 +539,31 @@ static HRESULT WINAPI WebBrowser_ClientToWindow(IWebBrowser2 *iface, int *pcx, i
 static HRESULT WINAPI WebBrowser_PutProperty(IWebBrowser2 *iface, BSTR szProperty, VARIANT vtValue)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(szProperty));
+    FIXME("(%p)->(%s %s)\n", This, debugstr_w(szProperty), debugstr_variant(&vtValue));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI WebBrowser_GetProperty(IWebBrowser2 *iface, BSTR szProperty, VARIANT *pvtValue)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(szProperty), pvtValue);
+    FIXME("(%p)->(%s %s)\n", This, debugstr_w(szProperty), debugstr_variant(pvtValue));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI WebBrowser_get_Name(IWebBrowser2 *iface, BSTR *Name)
 {
+    static const WCHAR sName[] = {'M','i','c','r','o','s','o','f','t',' ','W','e','b',
+                                  ' ','B','r','o','w','s','e','r',' ','C','o','n','t','r','o','l',0};
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, Name);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, Name);
+
+    *Name = SysAllocString(sName);
+
+    return S_OK;
 }
 
-static HRESULT WINAPI WebBrowser_get_HWND(IWebBrowser2 *iface, long *pHWND)
+static HRESULT WINAPI WebBrowser_get_HWND(IWebBrowser2 *iface, LONG *pHWND)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
 
@@ -724,8 +753,10 @@ static HRESULT WINAPI WebBrowser_Navigate2(IWebBrowser2 *iface, VARIANT *URL, VA
         VARIANT *TargetFrameName, VARIANT *PostData, VARIANT *Headers)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
+    LPCWSTR url;
 
-    TRACE("(%p)->(%p %p %p %p %p)\n", This, URL, Flags, TargetFrameName, PostData, Headers);
+    TRACE("(%p)->(%s %s %s %s %s)\n", This, debugstr_variant(URL), debugstr_variant(Flags),
+          debugstr_variant(TargetFrameName), debugstr_variant(PostData), debugstr_variant(Headers));
 
     if(!This->client)
         return E_FAIL;
@@ -733,12 +764,20 @@ static HRESULT WINAPI WebBrowser_Navigate2(IWebBrowser2 *iface, VARIANT *URL, VA
     if(!URL)
         return S_OK;
 
-    if(V_VT(URL) != VT_BSTR) {
+    switch (V_VT(URL))
+    {
+    case VT_BSTR:
+        url = V_BSTR(URL);
+        break;
+    case VT_BSTR|VT_BYREF:
+        url = *V_BSTRREF(URL);
+        break;
+    default:
         FIXME("Unsupported V_VT(URL) %d\n", V_VT(URL));
         return E_INVALIDARG;
     }
 
-    return navigate_url(&This->doc_host, V_BSTR(URL), Flags, TargetFrameName, PostData, Headers);
+    return navigate_url(&This->doc_host, url, Flags, TargetFrameName, PostData, Headers);
 }
 
 static HRESULT WINAPI WebBrowser_QueryStatusWB(IWebBrowser2 *iface, OLECMDID cmdID, OLECMDF *pcmdf)
@@ -752,7 +791,7 @@ static HRESULT WINAPI WebBrowser_ExecWB(IWebBrowser2 *iface, OLECMDID cmdID,
         OLECMDEXECOPT cmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%d %d %p %p)\n", This, cmdID, cmdexecopt, pvaIn, pvaOut);
+    FIXME("(%p)->(%d %d %s %p)\n", This, cmdID, cmdexecopt, debugstr_variant(pvaIn), pvaOut);
     return E_NOTIMPL;
 }
 
@@ -760,16 +799,18 @@ static HRESULT WINAPI WebBrowser_ShowBrowserBar(IWebBrowser2 *iface, VARIANT *pv
         VARIANT *pvarShow, VARIANT *pvarSize)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%p %p %p)\n", This, pvaClsid, pvarShow, pvarSize);
+    FIXME("(%p)->(%s %s %s)\n", This, debugstr_variant(pvaClsid), debugstr_variant(pvarShow),
+          debugstr_variant(pvarSize));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI WebBrowser_get_ReadyState(IWebBrowser2 *iface, READYSTATE *lpReadyState)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, lpReadyState);
 
-    *lpReadyState = READYSTATE_COMPLETE;
+    TRACE("(%p)->(%p)\n", This, lpReadyState);
+
+    *lpReadyState = This->doc_host.ready_state;
     return S_OK;
 }
 
@@ -1096,38 +1137,33 @@ static HRESULT WebBrowser_Create(INT version, IUnknown *pOuter, REFIID riid, voi
 
     TRACE("(%p %s %p) version=%d\n", pOuter, debugstr_guid(riid), ppv, version);
 
-    ret = heap_alloc(sizeof(WebBrowser));
+    ret = heap_alloc_zero(sizeof(WebBrowser));
 
     ret->lpWebBrowser2Vtbl = &WebBrowser2Vtbl;
     ret->lpServiceProviderVtbl = &ServiceProviderVtbl;
-    ret->ref = 0;
+    ret->ref = 1;
     ret->version = version;
 
     DocHost_Init(&ret->doc_host, (IDispatch*)WEBBROWSER2(ret));
 
-    ret->register_browser = VARIANT_FALSE;
     ret->visible = VARIANT_TRUE;
     ret->menu_bar = VARIANT_TRUE;
     ret->address_bar = VARIANT_TRUE;
     ret->status_bar = VARIANT_TRUE;
     ret->tool_bar = VARIANT_TRUE;
-    ret->full_screen = VARIANT_FALSE;
-    ret->theater_mode = VARIANT_FALSE;
 
     WebBrowser_OleObject_Init(ret);
     WebBrowser_ViewObject_Init(ret);
+    WebBrowser_DataObject_Init(ret);
     WebBrowser_Persist_Init(ret);
     WebBrowser_ClassInfo_Init(ret);
     WebBrowser_HlinkFrame_Init(ret);
 
-    hres = IWebBrowser_QueryInterface(WEBBROWSER(ret), riid, ppv);
-    if(SUCCEEDED(hres)) {
-        SHDOCVW_LockModule();
-    }else {
-        heap_free(ret);
-        return hres;
-    }
+    SHDOCVW_LockModule();
 
+    hres = IWebBrowser_QueryInterface(WEBBROWSER(ret), riid, ppv);
+
+    IWebBrowser2_Release(WEBBROWSER(ret));
     return hres;
 }
 

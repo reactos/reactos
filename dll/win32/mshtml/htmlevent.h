@@ -17,9 +17,12 @@
  */
 
 typedef enum {
+    EVENTID_BEFOREUNLOAD,
     EVENTID_BLUR,
     EVENTID_CHANGE,
     EVENTID_CLICK,
+    EVENTID_CONTEXTMENU,
+    EVENTID_DBLCLICK,
     EVENTID_DRAG,
     EVENTID_DRAGSTART,
     EVENTID_FOCUS,
@@ -31,33 +34,45 @@ typedef enum {
     EVENTID_MOUSEOVER,
     EVENTID_MOUSEUP,
     EVENTID_PASTE,
+    EVENTID_READYSTATECHANGE,
+    EVENTID_RESIZE,
     EVENTID_SELECTSTART,
     EVENTID_LAST
 } eventid_t;
 
 eventid_t str_to_eid(LPCWSTR);
-void check_event_attr(HTMLDocument*,nsIDOMElement*);
+void check_event_attr(HTMLDocumentNode*,nsIDOMElement*);
 void release_event_target(event_target_t*);
-void fire_event(HTMLDocument*,eventid_t,nsIDOMNode*);
-HRESULT set_event_handler(event_target_t**,HTMLDocument*,eventid_t,VARIANT*);
+void fire_event(HTMLDocumentNode*,eventid_t,BOOL,nsIDOMNode*,nsIDOMEvent*);
+HRESULT set_event_handler(event_target_t**,nsIDOMNode*,HTMLDocumentNode*,eventid_t,VARIANT*);
 HRESULT get_event_handler(event_target_t**,eventid_t,VARIANT*);
+HRESULT attach_event(event_target_t**,nsIDOMNode*,HTMLDocument*,BSTR,IDispatch*,VARIANT_BOOL*);
+HRESULT detach_event(event_target_t*,HTMLDocument*,BSTR,IDispatch*);
+HRESULT dispatch_event(HTMLDOMNode*,const WCHAR*,VARIANT*,VARIANT_BOOL*);
+HRESULT call_event(HTMLDOMNode*,eventid_t);
+void update_cp_events(HTMLWindow*,event_target_t**,cp_static_data_t*,nsIDOMNode*);
+
+static inline event_target_t **get_node_event_target(HTMLDOMNode *node)
+{
+    return node->vtbl->get_event_target ? node->vtbl->get_event_target(node) : &node->event_target;
+}
 
 static inline HRESULT set_node_event(HTMLDOMNode *node, eventid_t eid, VARIANT *var)
 {
-    return set_event_handler(&node->event_target, node->doc, eid, var);
+    return set_event_handler(get_node_event_target(node), node->nsnode, node->doc, eid, var);
 }
 
 static inline HRESULT get_node_event(HTMLDOMNode *node, eventid_t eid, VARIANT *var)
 {
-    return get_event_handler(&node->event_target, eid, var);
+    return get_event_handler(get_node_event_target(node), eid, var);
 }
 
 static inline HRESULT set_doc_event(HTMLDocument *doc, eventid_t eid, VARIANT *var)
 {
-    return set_event_handler(&doc->event_target, doc, eid, var);
+    return set_node_event(&doc->doc_node->node, eid, var);
 }
 
 static inline HRESULT get_doc_event(HTMLDocument *doc, eventid_t eid, VARIANT *var)
 {
-    return get_event_handler(&doc->event_target, eid, var);
+    return get_node_event(&doc->doc_node->node, eid, var);
 }

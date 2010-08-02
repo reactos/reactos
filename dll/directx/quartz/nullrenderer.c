@@ -43,6 +43,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 static const WCHAR wcsInputPinName[] = {'i','n','p','u','t',' ','p','i','n',0};
+static const WCHAR wcsAltInputPinName[] = {'I','n',0};
 
 static const IBaseFilterVtbl NullRenderer_Vtbl;
 static const IUnknownVtbl IInner_VTable;
@@ -472,11 +473,17 @@ static HRESULT WINAPI NullRenderer_FindPin(IBaseFilter * iface, LPCWSTR Id, IPin
 
     TRACE("(%p/%p)->(%p,%p)\n", This, iface, debugstr_w(Id), ppPin);
 
-    FIXME("NullRenderer::FindPin(...)\n");
+    if (!Id || !ppPin)
+        return E_POINTER;
 
-    /* FIXME: critical section */
-
-    return E_NOTIMPL;
+    if (!lstrcmpiW(Id,wcsInputPinName) || !lstrcmpiW(Id,wcsAltInputPinName))
+    {
+        *ppPin = (IPin *)This->pInputPin;
+        IPin_AddRef(*ppPin);
+        return S_OK;
+    }
+    *ppPin = NULL;
+    return VFW_E_NOT_FOUND;
 }
 
 static HRESULT WINAPI NullRenderer_QueryFilterInfo(IBaseFilter * iface, FILTER_INFO *pInfo)

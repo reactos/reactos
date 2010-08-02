@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="ole32" type="win32dll" baseaddress="${BASEADDRESS_OLE32}" installbase="system32" installname="ole32.dll" allowwarnings="true">
+<module name="ole32" type="win32dll" baseaddress="${BASEADDRESS_OLE32}" installbase="system32" installname="ole32.dll" allowwarnings="true" crt="MSVCRT">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="ole32.spec" />
 	<include base="ole32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="_OLE32_" />
 	<define name="ENTRY_PREFIX">OLE32_</define>
 	<define name="PROXY_CLSID">CLSID_PSFactoryBuffer</define>
@@ -20,7 +20,6 @@
 	<library>ole32_irot_client</library>
 	<library>ole32_proxy</library>
 	<library>rpcrt4</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>uuid</library>
 	<library>pseh</library>
@@ -36,6 +35,7 @@
 	<file>dictionary.c</file>
 	<file>enumx.c</file>
 	<file>errorinfo.c</file>
+	<file>filelockbytes.c</file>
 	<file>filemoniker.c</file>
 	<file>ftmarshal.c</file>
 	<file>git.c</file>
@@ -54,7 +54,6 @@
 	<file>pointermoniker.c</file>
 	<file>regsvr.c</file>
 	<file>rpc.c</file>
-	<file>stg_bigblockfile.c</file>
 	<file>stg_prop.c</file>
 	<file>stg_stream.c</file>
 	<file>storage32.c</file>
@@ -64,8 +63,6 @@
 	<file>dcom.idl</file>
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>

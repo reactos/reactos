@@ -35,7 +35,7 @@
 
 /** Includes ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -44,6 +44,7 @@
 #include <freetype/tttables.h>
 #include <freetype/fttrigon.h>
 #include <freetype/ftglyph.h>
+#include <freetype/ftbitmap.h>
 #include <freetype/ftoutln.h>
 #include <freetype/ftwinfnt.h>
 
@@ -75,15 +76,13 @@ static FAST_MUTEX FontListLock;
 static BOOL RenderingEnabled = TRUE;
 
 #define MAX_FONT_CACHE 256
-UINT Hits;
-UINT Misses;
 
 typedef struct _FONT_CACHE_ENTRY
 {
     LIST_ENTRY ListEntry;
     int GlyphIndex;
     FT_Face Face;
-    FT_Glyph Glyph;
+    FT_BitmapGlyph BitmapGlyph;
     int Height;
 } FONT_CACHE_ENTRY, *PFONT_CACHE_ENTRY;
 static LIST_ENTRY FontCacheListHead;
@@ -220,17 +219,17 @@ IntLoadSystemFonts(VOID)
 
     if (NT_SUCCESS(Status))
     {
-        DirInfoBuffer = ExAllocatePool(PagedPool, 0x4000);
+        DirInfoBuffer = ExAllocatePoolWithTag(PagedPool, 0x4000, TAG_FONT);
         if (DirInfoBuffer == NULL)
         {
             ZwClose(hDirectory);
             return;
         }
 
-        FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH * sizeof(WCHAR));
+        FileName.Buffer = ExAllocatePoolWithTag(PagedPool, MAX_PATH * sizeof(WCHAR), TAG_FONT);
         if (FileName.Buffer == NULL)
         {
-            ExFreePool(DirInfoBuffer);
+            ExFreePoolWithTag(DirInfoBuffer, TAG_FONT);
             ZwClose(hDirectory);
             return;
         }
@@ -274,8 +273,8 @@ IntLoadSystemFonts(VOID)
             bRestartScan = FALSE;
         }
 
-        ExFreePool(FileName.Buffer);
-        ExFreePool(DirInfoBuffer);
+        ExFreePoolWithTag(FileName.Buffer, TAG_FONT);
+        ExFreePoolWithTag(DirInfoBuffer, TAG_FONT);
         ZwClose(hDirectory);
     }
 }
@@ -423,7 +422,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
     if (Characteristics & FR_PRIVATE)
     {
-        PW32PROCESS Win32Process = PsGetCurrentProcessWin32Process();
+        PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
         IntLockProcessPrivateFonts(Win32Process);
         InsertTailList(&Win32Process->PrivateFontListHead, &Entry->ListEntry);
         IntUnLockProcessPrivateFonts(Win32Process);
@@ -568,6 +567,18 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
 }
 
 
+static BOOL face_has_symbol_charmap(FT_Face ft_face)
+{
+    int i;
+
+    for(i = 0; i < ft_face->num_charmaps; i++)
+    {
+        if(ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static void FASTCALL
 FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT_WinFNT_HeaderRec *pWin)
 {
@@ -646,10 +657,36 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     TM->tmOverhang = 0;
     TM->tmDigitizedAspectX = 96;
     TM->tmDigitizedAspectY = 96;
-    TM->tmFirstChar = pOS2->usFirstCharIndex;
-    TM->tmDefaultChar = pOS2->usDefaultChar ? pOS2->usDefaultChar : 0xffff;
-    TM->tmLastChar = pOS2->usLastCharIndex;
-    TM->tmBreakChar = L'\0' != pOS2->usBreakChar ? pOS2->usBreakChar : ' ';
+    if (face_has_symbol_charmap(Face) || (pOS2->usFirstCharIndex >= 0xf000 && pOS2->usFirstCharIndex < 0xf100))
+    {
+        USHORT cpOEM, cpAnsi;
+
+        EngGetCurrentCodePage(&cpOEM, &cpAnsi);
+        TM->tmFirstChar = 0;
+        switch(cpAnsi)
+        {
+        case 1257: /* Baltic */
+            TM->tmLastChar = 0xf8fd;
+            break;
+        default:
+            TM->tmLastChar = 0xf0ff;
+        }
+        TM->tmBreakChar = 0x20;
+        TM->tmDefaultChar = 0x1f;
+    }
+    else
+    {
+        TM->tmFirstChar = pOS2->usFirstCharIndex; /* Should be the first char in the cmap */
+        TM->tmLastChar = pOS2->usLastCharIndex;   /* Should be min(cmap_last, os2_last) */
+
+        if(pOS2->usFirstCharIndex <= 1)
+            TM->tmBreakChar = pOS2->usFirstCharIndex + 2;
+        else if (pOS2->usFirstCharIndex > 0xff)
+            TM->tmBreakChar = 0x20;
+        else
+            TM->tmBreakChar = pOS2->usFirstCharIndex;
+        TM->tmDefaultChar = TM->tmBreakChar - 1;
+    }
     TM->tmItalic = (Face->style_flags & FT_STYLE_FLAG_ITALIC) ? 255 : 0;
     TM->tmUnderlined = FontGDI->Underline;
     TM->tmStruckOut  = FontGDI->StrikeOut;
@@ -942,7 +979,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
 static PFONTGDI FASTCALL
 FindFaceNameInLists(PUNICODE_STRING FaceName)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     PFONTGDI Font;
 
     /* Search the process local list */
@@ -1313,7 +1350,7 @@ ftGdiGetRasterizerCaps(LPRASTERIZER_STATUS lprs)
 }
 
 
-FT_Glyph APIENTRY
+FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheGet(
     FT_Face Face,
     INT GlyphIndex,
@@ -1321,8 +1358,6 @@ ftGdiGlyphCacheGet(
 {
     PLIST_ENTRY CurrentEntry;
     PFONT_CACHE_ENTRY FontEntry;
-
-//   DbgPrint("CacheGet\n");
 
     CurrentEntry = FontCacheListHead.Flink;
     while (CurrentEntry != &FontCacheListHead)
@@ -1337,33 +1372,15 @@ ftGdiGlyphCacheGet(
 
     if (CurrentEntry == &FontCacheListHead)
     {
-//      DbgPrint("Miss! %x\n", FontEntry->Glyph);
-        /*
-              Misses++;
-              if (Misses>100) {
-                 DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
-                 Hits = Misses = 0;
-              }
-        */
         return NULL;
     }
 
     RemoveEntryList(CurrentEntry);
     InsertHeadList(&FontCacheListHead, CurrentEntry);
-
-//   DbgPrint("Hit! %x\n", FontEntry->Glyph);
-    /*
-       Hits++;
-
-          if (Hits>100) {
-             DbgPrint ("Hits: %d Misses: %d\n", Hits, Misses);
-             Hits = Misses = 0;
-          }
-    */
-    return FontEntry->Glyph;
+    return FontEntry->BitmapGlyph;
 }
 
-FT_Glyph APIENTRY
+FT_BitmapGlyph APIENTRY
 ftGdiGlyphCacheSet(
     FT_Face Face,
     INT GlyphIndex,
@@ -1374,48 +1391,59 @@ ftGdiGlyphCacheSet(
     FT_Glyph GlyphCopy;
     INT error;
     PFONT_CACHE_ENTRY NewEntry;
-
-//   DbgPrint("CacheSet.\n");
+    FT_Bitmap AlignedBitmap;
+    FT_BitmapGlyph BitmapGlyph;
 
     error = FT_Get_Glyph(GlyphSlot, &GlyphCopy);
     if (error)
     {
-        DbgPrint("Failure caching glyph.\n");
+        DPRINT1("Failure caching glyph.\n");
         return NULL;
     };
+
     error = FT_Glyph_To_Bitmap(&GlyphCopy, RenderMode, 0, 1);
     if (error)
     {
-        DbgPrint("Failure rendering glyph.\n");
+        DPRINT1("Failure rendering glyph.\n");
         return NULL;
     };
 
     NewEntry = ExAllocatePoolWithTag(PagedPool, sizeof(FONT_CACHE_ENTRY), TAG_FONT);
     if (!NewEntry)
     {
-        DbgPrint("Alloc failure caching glyph.\n");
+        DPRINT1("Alloc failure caching glyph.\n");
         FT_Done_Glyph(GlyphCopy);
         return NULL;
     }
 
+    BitmapGlyph = (FT_BitmapGlyph)GlyphCopy;
+    FT_Bitmap_New(&AlignedBitmap);
+    if(FT_Bitmap_Convert(GlyphSlot->library, &BitmapGlyph->bitmap, &AlignedBitmap, 4))
+    {
+        DPRINT1("Conversion failed\n");
+        FT_Done_Glyph((FT_Glyph)BitmapGlyph);
+        return NULL;
+    }
+
+    FT_Bitmap_Done(GlyphSlot->library, &BitmapGlyph->bitmap);
+    BitmapGlyph->bitmap = AlignedBitmap;
+
     NewEntry->GlyphIndex = GlyphIndex;
     NewEntry->Face = Face;
-    NewEntry->Glyph = GlyphCopy;
+    NewEntry->BitmapGlyph = BitmapGlyph;
     NewEntry->Height = Height;
 
     InsertHeadList(&FontCacheListHead, &NewEntry->ListEntry);
     if (FontCacheNumEntries++ > MAX_FONT_CACHE)
     {
         NewEntry = (PFONT_CACHE_ENTRY)FontCacheListHead.Blink;
-        FT_Done_Glyph(NewEntry->Glyph);
+        FT_Done_Glyph((FT_Glyph)NewEntry->BitmapGlyph);
         RemoveTailList(&FontCacheListHead);
         ExFreePool(NewEntry);
         FontCacheNumEntries--;
     }
 
-//   DbgPrint("Returning the glyphcopy: %x\n", GlyphCopy);
-
-    return GlyphCopy;
+    return BitmapGlyph;
 }
 
 
@@ -2100,7 +2128,7 @@ TextIntGetTextExtentPoint(PDC dc,
     PFONTGDI FontGDI;
     FT_Face face;
     FT_GlyphSlot glyph;
-    FT_Glyph realglyph;
+    FT_BitmapGlyph realglyph;
     INT error, n, glyph_index, i, previous;
     ULONGLONG TotalWidth = 0;
     FT_CharMap charmap, found = NULL;
@@ -2196,7 +2224,7 @@ TextIntGetTextExtentPoint(PDC dc,
             TotalWidth += delta.x;
         }
 
-        TotalWidth += realglyph->advance.x >> 10;
+        TotalWidth += realglyph->root.advance.x >> 10;
 
         if (((TotalWidth + 32) >> 6) <= MaxExtent && NULL != Fit)
         {
@@ -2716,7 +2744,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     NTSTATUS Status = STATUS_SUCCESS;
     PTEXTOBJ TextObj;
     UNICODE_STRING FaceName;
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     UINT MatchScore;
 
     if (!pTextObj)
@@ -3029,7 +3057,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     LOGFONTW LogFont;
     PFONTFAMILYINFO Info;
     DWORD Count;
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
 
     /* Make a safe copy */
     Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));
@@ -3121,8 +3149,7 @@ GreExtTextOutW(
     int error, glyph_index, n, i;
     FT_Face face;
     FT_GlyphSlot glyph;
-    FT_Glyph realglyph;
-    FT_BitmapGlyph realglyph2;
+    FT_BitmapGlyph realglyph;
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
@@ -3136,12 +3163,13 @@ GreExtTextOutW(
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
-    XLATEOBJ *XlateObj=NULL, *XlateObj2=NULL;
+    EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
     HPALETTE hDestPalette;
+    PPALETTE ppalDst;
     USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
@@ -3197,7 +3225,7 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+    psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
         goto fail;
@@ -3211,20 +3239,6 @@ GreExtTextOutW(
     RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
 
-    /* Create the brushes */
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, PAL_RGB, hDestPalette, NULL);
-    if ( !XlateObj )
-    {
-        goto fail;
-    }
-    XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, hDestPalette);
-    if ( !XlateObj2 )
-    {
-        goto fail;
-    }
-
     SourcePoint.x = 0;
     SourcePoint.y = 0;
     MaskRect.left = 0;
@@ -3234,11 +3248,18 @@ GreExtTextOutW(
 
     if ((fuOptions & ETO_OPAQUE) && lprc)
     {
-        DestRect.left   = lprc->left   + dc->ptlDCOrig.x;
-        DestRect.top    = lprc->top    + dc->ptlDCOrig.y;
-        DestRect.right  = lprc->right  + dc->ptlDCOrig.x;
-        DestRect.bottom = lprc->bottom + dc->ptlDCOrig.y;
+        DestRect.left   = lprc->left;
+        DestRect.top    = lprc->top;
+        DestRect.right  = lprc->right;
+        DestRect.bottom = lprc->bottom;
+
         IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
+
+        DestRect.left   += dc->ptlDCOrig.x;
+        DestRect.top    += dc->ptlDCOrig.y;
+        DestRect.right  += dc->ptlDCOrig.x;
+        DestRect.bottom += dc->ptlDCOrig.y;
+
         IntEngBitBlt(
             &psurf->SurfObj,
             NULL,
@@ -3394,7 +3415,7 @@ GreExtTextOutW(
                 TextWidth += delta.x;
             }
 
-            TextWidth += realglyph->advance.x >> 10;
+            TextWidth += realglyph->root.advance.x >> 10;
 
             previous = glyph_index;
             TempText++;
@@ -3416,6 +3437,15 @@ GreExtTextOutW(
     TextTop = YStart;
     BackgroundLeft = (RealXStart + 32) >> 6;
 
+    /* Create the xlateobj */
+    hDestPalette = psurf->hDIBPalette;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
+    ppalDst = PALETTE_LockPalette(hDestPalette);
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
+    PALETTE_UnlockPalette(ppalDst);
+
+
     /*
      * The main rendering loop.
      */
@@ -3435,7 +3465,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
                 IntUnLockFreeType;
-                goto fail;
+                goto fail2;
             }
             glyph = face->glyph;
             realglyph = ftGdiGlyphCacheSet(face,
@@ -3447,11 +3477,9 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
                 IntUnLockFreeType;
-                goto fail;
+                goto fail2;
             }
         }
-//      DbgPrint("realglyph: %x\n", realglyph);
-//      DbgPrint("TextLeft: %d\n", TextLeft);
 
         /* retrieve kerning distance and move pen position */
         if (use_kerning && previous && glyph_index && NULL == Dx)
@@ -3460,29 +3488,14 @@ GreExtTextOutW(
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
             TextLeft += delta.x;
         }
-//      DPRINT1("TextLeft: %d\n", TextLeft);
-//      DPRINT1("TextTop: %d\n", TextTop);
-
-        if (realglyph->format == ft_glyph_format_outline)
-        {
-            DbgPrint("Should already be done\n");
-//         error = FT_Render_Glyph(glyph, RenderMode);
-            error = FT_Glyph_To_Bitmap(&realglyph, RenderMode, 0, 0);
-            if (error)
-            {
-                DPRINT1("WARNING: Failed to render glyph!\n");
-                goto fail;
-            }
-        }
-        realglyph2 = (FT_BitmapGlyph)realglyph;
-
-//      DPRINT1("Pitch: %d\n", pitch);
-//      DPRINT1("Advance: %d\n", realglyph->advance.x);
+        DPRINT("TextLeft: %d\n", TextLeft);
+        DPRINT("TextTop: %d\n", TextTop);
+        DPRINT("Advance: %d\n", realglyph->root.advance.x);
 
         if (fuOptions & ETO_OPAQUE)
         {
             DestRect.left = BackgroundLeft;
-            DestRect.right = (TextLeft + (realglyph->advance.x >> 10) + 32) >> 6;
+            DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
             IntEngBitBlt(
@@ -3500,37 +3513,31 @@ GreExtTextOutW(
             BackgroundLeft = DestRect.right;
         }
 
-        DestRect.left = ((TextLeft + 32) >> 6) + realglyph2->left;
-        DestRect.right = DestRect.left + realglyph2->bitmap.width;
-        DestRect.top = TextTop + yoff - realglyph2->top;
-        DestRect.bottom = DestRect.top + realglyph2->bitmap.rows;
+        DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
+        DestRect.right = DestRect.left + realglyph->bitmap.width;
+        DestRect.top = TextTop + yoff - realglyph->top;
+        DestRect.bottom = DestRect.top + realglyph->bitmap.rows;
 
-        bitSize.cx = realglyph2->bitmap.width;
-        bitSize.cy = realglyph2->bitmap.rows;
-        MaskRect.right = realglyph2->bitmap.width;
-        MaskRect.bottom = realglyph2->bitmap.rows;
+        bitSize.cx = realglyph->bitmap.width;
+        bitSize.cy = realglyph->bitmap.rows;
+        MaskRect.right = realglyph->bitmap.width;
+        MaskRect.bottom = realglyph->bitmap.rows;
 
         /*
          * We should create the bitmap out of the loop at the biggest possible
          * glyph size. Then use memset with 0 to clear it and sourcerect to
          * limit the work of the transbitblt.
-         *
-         * FIXME: DIB bitmaps should have an lDelta which is a multiple of 4.
-         * Here we pass in the pitch from the FreeType bitmap, which is not
-         * guaranteed to be a multiple of 4. If it's not, we should expand
-         * the FreeType bitmap to a temporary bitmap.
          */
 
-        HSourceGlyph = EngCreateBitmap(bitSize, realglyph2->bitmap.pitch,
-                                       (realglyph2->bitmap.pixel_mode == ft_pixel_mode_grays) ?
-                                       BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
-                                       realglyph2->bitmap.buffer);
+        HSourceGlyph = EngCreateBitmap(bitSize, realglyph->bitmap.pitch,
+                                       BMF_8BPP, BMF_TOPDOWN,
+                                       realglyph->bitmap.buffer);
         if ( !HSourceGlyph )
         {
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             // FT_Done_Glyph(realglyph);
             IntUnLockFreeType;
-            goto fail;
+            goto fail2;
         }
         SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
         if ( !SourceGlyphSurf )
@@ -3538,7 +3545,7 @@ GreExtTextOutW(
             EngDeleteSurface((HSURF)HSourceGlyph);
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             IntUnLockFreeType;
-            goto fail;
+            goto fail2;
         }
 
         /*
@@ -3561,10 +3568,9 @@ GreExtTextOutW(
             SurfObj,
             SourceGlyphSurf,
             dc->rosdc.CombinedClip,
-            XlateObj,
-            XlateObj2,
+            &exloRGB2Dst.xlo,
+            &exloDst2RGB.xlo,
             &DestRect,
-            &SourcePoint,
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
             &BrushOrigin);
@@ -3579,13 +3585,13 @@ GreExtTextOutW(
 
         if (NULL == Dx)
         {
-            TextLeft += realglyph->advance.x >> 10;
-//         DbgPrint("new TextLeft: %d\n", TextLeft);
+            TextLeft += realglyph->root.advance.x >> 10;
+             DPRINT("new TextLeft: %d\n", TextLeft);
         }
         else
         {
             TextLeft += Dx[i<<DxShift] << 6;
-//         DbgPrint("new TextLeft2: %d\n", TextLeft);
+             DPRINT("new TextLeft2: %d\n", TextLeft);
         }
 
         if (DxShift)
@@ -3600,9 +3606,8 @@ GreExtTextOutW(
 
     IntUnLockFreeType;
 
-    EngDeleteXlate(XlateObj);
-    EngDeleteXlate(XlateObj2);
-    SURFACE_UnlockSurface(psurf);
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 good:
@@ -3610,15 +3615,12 @@ good:
 
     return TRUE;
 
+fail2:
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
 fail:
-    if ( XlateObj2 != NULL )
-        EngDeleteXlate(XlateObj2);
-    if ( XlateObj != NULL )
-        EngDeleteXlate(XlateObj);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
-    if (psurf != NULL)
-        SURFACE_UnlockSurface(psurf);
     DC_UnlockDc(dc);
 
     return FALSE;
@@ -3789,6 +3791,12 @@ NtGdiGetCharABCWidthsW(
     if (!NT_SUCCESS(Status))
     {
         SetLastWin32Error(Status);
+        return FALSE;
+    }
+
+    if (!Buffer)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -4050,6 +4058,98 @@ NtGdiGetCharWidthW(
     MmCopyToCaller(Buffer, SafeBuff, BufferSize);
     ExFreePool(SafeBuff);
     return TRUE;
+}
+
+DWORD
+FASTCALL
+GreGetGlyphIndicesW(
+    HDC hdc,
+    LPWSTR pwc,
+    INT cwc,
+    LPWORD pgi,
+    DWORD iMode,
+    DWORD Unknown)
+{
+    PDC dc;
+    PDC_ATTR pdcattr;
+    PTEXTOBJ TextObj;
+    PFONTGDI FontGDI;
+    HFONT hFont = 0;
+    OUTLINETEXTMETRICW *potm;
+    INT i;
+    FT_Face face;
+    WCHAR DefChar = 0xffff;
+    PWSTR Buffer = NULL;
+    ULONG Size;
+
+    if ((!pwc) && (!pgi)) return cwc;
+
+    dc = DC_LockDc(hdc);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return GDI_ERROR;
+    }
+    pdcattr = dc->pdcattr;
+    hFont = pdcattr->hlfntNew;
+    TextObj = RealizeFontInit(hFont);
+    DC_UnlockDc(dc);
+    if (!TextObj)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return GDI_ERROR;
+    }
+
+    FontGDI = ObjToGDI(TextObj->Font, FONT);
+    TEXTOBJ_UnlockText(TextObj);
+
+    Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+    if (!Buffer)
+    {
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        return GDI_ERROR;
+    }
+
+    if (iMode & GGI_MARK_NONEXISTING_GLYPHS) DefChar = 0x001f;  /* Indicate non existence */
+    else
+    {
+        Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+        potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+        if (!potm)
+        {
+            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            cwc = GDI_ERROR;
+            goto ErrorRet;
+        }
+        IntGetOutlineTextMetrics(FontGDI, Size, potm);
+        DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.
+        ExFreePool(potm);
+    }
+
+    IntLockFreeType;
+    face = FontGDI->face;
+
+    for (i = 0; i < cwc; i++)
+    {
+        Buffer[i] = FT_Get_Char_Index(face, pwc[i]);
+        if (Buffer[i] == 0)
+        {
+            if (DefChar == 0xffff && FT_IS_SFNT(face))
+            {
+                TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+                DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+            }
+            Buffer[i] = DefChar;
+        }
+    }
+
+    IntUnLockFreeType;
+
+    RtlCopyMemory( pgi, Buffer, cwc*sizeof(WORD));
+
+ErrorRet:
+    if (Buffer) ExFreePoolWithTag(Buffer, TAG_GDITEXT);
+    return cwc;
 }
 
 

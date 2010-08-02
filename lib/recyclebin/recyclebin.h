@@ -1,5 +1,4 @@
-#ifndef __RECYCLEBIN_H
-#define __RECYCLEBIN_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -297,5 +296,3 @@ GetDefaultRecycleBin(
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __RECYCLEBIN_H */

@@ -20,6 +20,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    PLIST_ENTRY CurrentEntry;
 
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
 			    InfoReq ? InfoReq->InformationClass : 0));
@@ -38,11 +39,13 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    break;
 
 	case AFD_INFO_GROUP_ID_TYPE:
-	    InfoReq->Information.Ulong = 0; /* What is group id */
+	    InfoReq->Information.LargeInteger.u.HighPart = FCB->GroupType;
+	    InfoReq->Information.LargeInteger.u.LowPart = FCB->GroupID;
+	    AFD_DbgPrint(MID_TRACE, ("Group ID: %d Group Type: %d\n", FCB->GroupID, FCB->GroupType));
 	    break;
 
 	case AFD_INFO_BLOCKING_MODE:
-	    InfoReq->Information.Ulong = 0;
+	    InfoReq->Information.Ulong = FCB->BlockingMode;
 	    break;
 
     case AFD_INFO_RECEIVE_CONTENT_SIZE:
@@ -52,6 +55,23 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             InfoReq->Information.Ulong = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
         break;
+
+	case AFD_INFO_SENDS_IN_PROGRESS:
+            InfoReq->Information.Ulong = 0;
+
+	    /* Count the queued sends */
+	    CurrentEntry = FCB->PendingIrpList[FUNCTION_SEND].Flink;
+	    while (CurrentEntry != &FCB->PendingIrpList[FUNCTION_SEND])
+	    {
+	         InfoReq->Information.Ulong++;
+	         CurrentEntry = CurrentEntry->Flink;
+	    }
+
+	    /* Count the send in progress */
+	    if (FCB->SendIrp.InFlightRequest)
+	        InfoReq->Information.Ulong++;
+
+            break;
 
 	default:
 	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",
@@ -67,6 +87,35 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
+}
+
+NTSTATUS NTAPI
+AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+            PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    _SEH2_TRY {
+      switch (InfoReq->InformationClass) {
+        case AFD_INFO_BLOCKING_MODE:
+          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Ulong));
+          FCB->BlockingMode = InfoReq->Information.Ulong;
+          break;
+        default:
+          AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
+          break;
+      }
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      Status = STATUS_INVALID_PARAMETER;
+    } _SEH2_END;
+
+    AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
+
+    return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
 }
 
 NTSTATUS NTAPI

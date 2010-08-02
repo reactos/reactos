@@ -100,22 +100,6 @@ WSPJoinLeaf(
     return (SOCKET)0;
 }
 
-
-INT
-WSPAPI
-WSPSetSockOpt(
-    IN  SOCKET s,
-    IN  INT level,
-    IN  INT optname,
-    IN  CONST CHAR FAR* optval,
-    IN  INT optlen,
-    OUT LPINT lpErrno)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
 INT
 WSPAPI
 WSPStringToAddress(

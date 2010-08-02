@@ -18,37 +18,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /*
  * @unimplemented
  */
-int
-WINAPI
-GetMouseMovePointsEx(
-  UINT cbSize,
-  LPMOUSEMOVEPOINT lppt,
-  LPMOUSEMOVEPOINT lpptBuf,
-  int nBufPoints,
-  DWORD resolution)
-{
-    if((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
-	{
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return -1;
-    }
-
-    if(!lppt || !lpptBuf)
-	{
-        SetLastError(ERROR_NOACCESS);
-        return -1;
-    }
-
-    UNIMPLEMENTED;
-
-    SetLastError(ERROR_POINT_NOT_FOUND);
-    return -1;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 WINAPI
 WaitForInputIdle(
@@ -160,7 +129,7 @@ UINT
 WINAPI
 UserRealizePalette ( HDC hDC )
 {
-  return NtUserCallOneParam((DWORD) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
+  return NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
 }
 
 
@@ -201,11 +170,11 @@ UserRealizePalette ( HDC hDC )
 static HPEN SysColorPens[COLOR_MENUBAR + 1];
 static HBRUSH SysColorBrushes[COLOR_MENUBAR + 1];
 
-DWORD
+DWORD_PTR
 WINAPI
 SetSysColorsTemp(const COLORREF *pPens,
                  const HBRUSH *pBrushes,
-				 DWORD n)
+				 DWORD_PTR n)
 {
     DWORD i;
 
@@ -214,7 +183,7 @@ SetSysColorsTemp(const COLORREF *pPens,
         /* allocate our structure to remember old colors */
         LPVOID pOldCol = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD)+n*sizeof(HPEN)+n*sizeof(HBRUSH));
         LPVOID p = pOldCol;
-        *(DWORD *)p = n; p = (char*)p + sizeof(DWORD);
+        *(DWORD_PTR *)p = n; p = (char*)p + sizeof(DWORD);
         memcpy(p, SysColorPens, n*sizeof(HPEN)); p = (char*)p + n*sizeof(HPEN);
         memcpy(p, SysColorBrushes, n*sizeof(HBRUSH)); p = (char*)p + n*sizeof(HBRUSH);
 
@@ -224,11 +193,11 @@ SetSysColorsTemp(const COLORREF *pPens,
             SysColorBrushes[i] = pBrushes[i];
         }
 
-        return (DWORD) pOldCol; /* FIXME: pointer truncation */
+        return (DWORD_PTR) pOldCol;
     }
     if (!pPens && !pBrushes) /* "restore" call */
     {
-        LPVOID pOldCol = (LPVOID)n; /* FIXME: not 64-bit safe */
+        LPVOID pOldCol = (LPVOID)n;
         LPVOID p = pOldCol;
         DWORD nCount = *(DWORD *)p;
         p = (char*)p + sizeof(DWORD);
@@ -511,25 +480,6 @@ WORD WINAPI InitializeWin32EntryTable(UCHAR* EntryTablePlus0x1000)
  * @unimplemented
  */
 BOOL WINAPI IsServerSideWindow(HWND wnd)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-typedef BOOL (CALLBACK *THEME_HOOK_FUNC) (DWORD state,PVOID arg2); //return type and 2nd parameter unknown
-/*
- * @unimplemented
- */
-BOOL WINAPI RegisterUserApiHook(HINSTANCE instance,THEME_HOOK_FUNC proc)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI UnregisterUserApiHook(VOID)
 {
   UNIMPLEMENTED;
   return FALSE;

@@ -1,7 +1,7 @@
 /*
  * Top level resource file for avifil32.dll
  *
- * Copyright 2002 Michael Günnewig
+ * Copyright 2002 Michael GÃ¼nnewig
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,10 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winver.h"
 #include "avifile_private.h"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
@@ -39,22 +35,26 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
  * in one of the specific files.
  */
 #include "avifile_Cs.rc"
-#include "avifile_Da.rc"
-#include "avifile_De.rc"
 #include "avifile_En.rc"
 #include "avifile_Es.rc"
-#include "avifile_Fr.rc"
 #include "avifile_Hu.rc"
 #include "avifile_It.rc"
-#include "avifile_Ja.rc"
-#include "avifile_Ko.rc"
 #include "avifile_Nl.rc"
 #include "avifile_No.rc"
 #include "avifile_Pl.rc"
-#include "avifile_Pt.rc"
-#include "avifile_Ru.rc"
-#include "avifile_Si.rc"
 #include "avifile_Sv.rc"
 #include "avifile_Tr.rc"
 #include "avifile_Uk.rc"
+
+/* UTF-8 */
+#include "avifile_Da.rc"
+#include "avifile_De.rc"
+#include "avifile_Fr.rc"
+#include "avifile_Ja.rc"
+#include "avifile_Ko.rc"
+#include "avifile_Lt.rc"
+#include "avifile_Pt.rc"
+#include "avifile_Ro.rc"
+#include "avifile_Ru.rc"
+#include "avifile_Si.rc"
 #include "avifile_Zh.rc"

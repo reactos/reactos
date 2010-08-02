@@ -1,5 +1,4 @@
-#ifndef INTERFACE_H__
-#define INTERFACE_H__
+#pragma once
 
 ///
 /// WDMAUD Interface Definition
@@ -25,23 +24,42 @@ typedef enum
 
 typedef struct
 {
+    KSSTREAM_HEADER Header;
     SOUND_DEVICE_TYPE DeviceType;
-    ULONG DeviceIndex;
+    ULONG_PTR DeviceIndex;
 
     HANDLE hDevice;
     ULONG DeviceCount;
-    KSSTATE State;
-    ULONG Volume;
-
-    ULONG BufferSize;
-    PUCHAR Buffer;
+    ULONG Flags;
 
     union
     {
+        MIXERCAPSW    MixCaps;
+        MIXERCONTROLDETAILS MixDetails;
+        MIXERLINECONTROLSW MixControls;
+        MIXERLINEW MixLine;
         WAVEFORMATEX WaveFormatEx;
         WAVEOUTCAPSW WaveOutCaps;
         AUXCAPSW     AuxCaps;
-        WAVEINCAPSW WaveInCaps;
+        WAVEINCAPSW  WaveInCaps;
+        ULONGLONG    Position;
+        struct
+        {
+            LPWSTR DeviceInterfaceString;
+            ULONG DeviceInterfaceStringSize;
+        }Interface;
+
+        struct
+        {
+            HANDLE hMixer;
+            ULONG NotificationType;
+            ULONG Value;
+        }MixerEvent;
+        KSSTATE State;
+        KSRESET ResetStream;
+        ULONG Volume;
+        ULONG FrameSize;
+        HANDLE hNotifyEvent;
     }u;
 
 }WDMAUD_DEVICE_INFO, *PWDMAUD_DEVICE_INFO;
@@ -204,5 +222,155 @@ typedef struct
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
+/// IOCTL_GETPOS
+///
+/// Description: This IOCTL retrieves the current playback / write position
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType and hDevice must be set
+/// Result:     The result is returned in Position
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
 
-#endif
+#define IOCTL_GETPOS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             9, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_GETFRAMESIZE
+///
+/// Description: This IOCTL retrieves the frame size requirements for an audio pin
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType and hDevice must be set
+/// Result:     The result is returned in FrameSize
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETFRAMESIZE \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             10, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_GETLINEINFO
+///
+/// Description: This IOCTL retrieves information on a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in MixLine
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETLINEINFO \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             11, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_GETLINECONTROLS
+///
+/// Description: This IOCTL retrieves controls of a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in MixControls
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETLINECONTROLS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             12, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_SETCONTROLDETAILS
+///
+/// Description: This IOCTL sets details of a control of a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_SETCONTROLDETAILS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             13, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_GETCONTROLDETAILS
+///
+/// Description: This IOCTL gets details of a control of a mixerline
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in MixDetails
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETCONTROLDETAILS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             14, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+
+/// IOCTL_QUERYDEVICEINTERFACESTRING
+///
+/// Description: This IOCTL queries the mixer / playback / recording device for its device interface string
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType, DeviceIndex must be set
+/// Result:     The size is returned in Interface.DeviceInterfaceStringSize and if a buffer is supplied in Interface.DeviceInterfaceString
+///             the device interface string is stored
+/// ReturnCode:  STATUS_SUCCESS indicates success
+
+#define IOCTL_QUERYDEVICEINTERFACESTRING \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             15, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_GET_MIXER_EVENT
+///
+/// Description: This IOCTL queries for wdmaud driver if there any new kernel streaming events available
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set
+/// Result:     The result is returned in the struct MixerInfo
+/// ReturnCode:  STATUS_SUCCESS indicates success
+
+#define IOCTL_GET_MIXER_EVENT \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             16, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_RESET_STREAM
+///
+/// Description: This IOCTL instructs wdmaud to reset a stream
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The hDevice member must be set and DeviceType
+/// ReturnCode:  STATUS_SUCCESS indicates success
+
+#define IOCTL_RESET_STREAM \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             17, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)

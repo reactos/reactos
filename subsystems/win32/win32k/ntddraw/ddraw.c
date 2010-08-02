@@ -8,7 +8,7 @@
  *       19/1-2006   Magnus Olsen
  */
 
-#include <w32k.h>
+#include <win32k.h>
 #include <debug.h>
 
 PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
@@ -22,7 +22,7 @@ extern EDD_DIRECTDRAW_GLOBAL edd_DdirectDraw_Global;
 
 DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
 HANDLE ghDxGraphics = NULL;
-ULONG gdwDirectDrawContext;
+ULONG gdwDirectDrawContext = 0;
 
 #define DXDBG 1
 

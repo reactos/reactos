@@ -35,16 +35,24 @@ typedef struct _GUID
 #define DECLSPEC_SELECTANY __declspec(selectany)
 #endif
 
+#ifndef EXTERN_C
+#ifdef __cplusplus
+#define EXTERN_C    extern "C"
+#else
+#define EXTERN_C    extern
+#endif
+#endif
+
 #undef DEFINE_GUID
 
 #ifdef INITGUID
 #ifdef __cplusplus
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        EXTERN_C const GUID name = \
+        EXTERN_C const GUID DECLSPEC_SELECTANY name = \
 	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #else
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        const GUID name = \
+        const GUID DECLSPEC_SELECTANY name = \
 	{ l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
 #endif
 #else
@@ -102,6 +110,16 @@ typedef GUID FMTID,*LPFMTID;
 #endif /* !defined(__cplusplus) && !defined(CINTERFACE) */
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
+
+__inline int InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+{
+    return (
+        ((unsigned long *) &rguid1)[0] == ((unsigned long *) &rguid2)[0] &&
+        ((unsigned long *) &rguid1)[1] == ((unsigned long *) &rguid2)[1] &&
+        ((unsigned long *) &rguid1)[2] == ((unsigned long *) &rguid2)[2] &&
+        ((unsigned long *) &rguid1)[3] == ((unsigned long *) &rguid2)[3]);
+}
+
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(&(rguid1), &(rguid2), sizeof(GUID)))
 #else /* defined(__cplusplus) && !defined(CINTERFACE) */
 #define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))

@@ -64,16 +64,21 @@
 # ifdef HAVE_SYS_POLL_H
 #  include <sys/poll.h>
 # endif
+# ifdef HAVE_SYS_FILIO_H
+#  include <sys/filio.h>
+# endif
+# ifdef HAVE_SYS_IOCTL_H
+#  include <sys/ioctl.h>
+# endif
 # define closesocket close
+# define ioctlsocket ioctl
 #endif /* defined(__MINGW32__) || defined (_MSC_VER) */
-
-#include <winsock2.h>
-#include <ws2tcpip.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
 #include "winerror.h"
+#include "wininet.h"
 #include "winternl.h"
 #include "wine/unicode.h"
 
@@ -83,11 +88,10 @@
 #include "wine/debug.h"
 
 #include "rpc_binding.h"
+#include "rpc_assoc.h"
 #include "rpc_message.h"
 #include "rpc_server.h"
 #include "epm_towers.h"
-
-#include "unix_func.h"
 
 #ifndef SOL_TCP
 # define SOL_TCP IPPROTO_TCP
@@ -207,7 +211,7 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
                 dwFlags |= SECURITY_DELEGATION;
                 break;
         }
-        if (Connection->QOS->qos->IdentityTracking == RPC_C_QOS_IDENTIFY_DYNAMIC)
+        if (Connection->QOS->qos->IdentityTracking == RPC_C_QOS_IDENTITY_DYNAMIC)
             dwFlags |= SECURITY_CONTEXT_TRACKING;
     }
     pipe = CreateFileA(pname, GENERIC_READ|GENERIC_WRITE, 0, NULL,
@@ -264,6 +268,17 @@ static RPC_STATUS rpcrt4_protseq_ncalrpc_open_endpoint(RpcServerProtseq* protseq
   RPC_STATUS r;
   LPSTR pname;
   RpcConnection *Connection;
+  char generated_endpoint[22];
+
+  if (!endpoint)
+  {
+    static LONG lrpc_nameless_id;
+    DWORD process_id = GetCurrentProcessId();
+    ULONG id = InterlockedIncrement(&lrpc_nameless_id);
+    snprintf(generated_endpoint, sizeof(generated_endpoint),
+             "LRPC%08x.%08x", process_id, id);
+    endpoint = generated_endpoint;
+  }
 
   r = RPCRT4_CreateConnection(&Connection, TRUE, protseq->Protseq, NULL,
                               endpoint, NULL, NULL, NULL);
@@ -311,6 +326,17 @@ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protse
   RPC_STATUS r;
   LPSTR pname;
   RpcConnection *Connection;
+  char generated_endpoint[21];
+
+  if (!endpoint)
+  {
+    static LONG np_nameless_id;
+    DWORD process_id = GetCurrentProcessId();
+    ULONG id = InterlockedExchangeAdd(&np_nameless_id, 1 );
+    snprintf(generated_endpoint, sizeof(generated_endpoint),
+             "\\\\pipe\\\\%08x.%03x", process_id, id);
+    endpoint = generated_endpoint;
+  }
 
   r = RPCRT4_CreateConnection(&Connection, TRUE, protseq->Protseq, NULL,
                               endpoint, NULL, NULL, NULL);
@@ -756,377 +782,10 @@ static RPC_STATUS rpcrt4_ncalrpc_parse_top_of_tower(const unsigned char *tower_d
 
 /**** ncacn_ip_tcp support ****/
 
-#ifdef HAVE_SOCKETPAIR
-
-typedef struct _RpcConnection_tcp
-{
-  RpcConnection common;
-  int sock;
-  int cancel_fds[2];
-} RpcConnection_tcp;
-
-static RpcConnection *rpcrt4_conn_tcp_alloc(void)
-{
-  RpcConnection_tcp *tcpc;
-  tcpc = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcConnection_tcp));
-  if (tcpc == NULL)
-    return NULL;
-  tcpc->sock = -1;
-  if (socketpair(PF_UNIX, SOCK_STREAM, 0, tcpc->cancel_fds) < 0)
-  {
-    ERR("socketpair() failed: %s\n", strerror(errno));
-    HeapFree(GetProcessHeap(), 0, tcpc);
-    return NULL;
-  }
-  return &tcpc->common;
-}
-
-static RPC_STATUS rpcrt4_ncacn_ip_tcp_open(RpcConnection* Connection)
-{
-  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-  int sock;
-  int ret;
-  struct addrinfo *ai;
-  struct addrinfo *ai_cur;
-  struct addrinfo hints;
-
-  TRACE("(%s, %s)\n", Connection->NetworkAddr, Connection->Endpoint);
-
-  if (tcpc->sock != -1)
-    return RPC_S_OK;
-
-  hints.ai_flags          = 0;
-  hints.ai_family         = PF_UNSPEC;
-  hints.ai_socktype       = SOCK_STREAM;
-  hints.ai_protocol       = IPPROTO_TCP;
-  hints.ai_addrlen        = 0;
-  hints.ai_addr           = NULL;
-  hints.ai_canonname      = NULL;
-  hints.ai_next           = NULL;
-
-  ret = getaddrinfo(Connection->NetworkAddr, Connection->Endpoint, &hints, &ai);
-  if (ret)
-  {
-    ERR("getaddrinfo for %s:%s failed: %s\n", Connection->NetworkAddr,
-      Connection->Endpoint, gai_strerror(ret));
-    return RPC_S_SERVER_UNAVAILABLE;
-  }
-
-  for (ai_cur = ai; ai_cur; ai_cur = ai_cur->ai_next)
-  {
-    int val;
-
-    if (TRACE_ON(rpc))
-    {
-      char host[256];
-      char service[256];
-      getnameinfo(ai_cur->ai_addr, ai_cur->ai_addrlen,
-        host, sizeof(host), service, sizeof(service),
-        NI_NUMERICHOST | NI_NUMERICSERV);
-      TRACE("trying %s:%s\n", host, service);
-    }
-
-    sock = socket(ai_cur->ai_family, ai_cur->ai_socktype, ai_cur->ai_protocol);
-    if (sock == -1)
-    {
-      WARN("socket() failed: %s\n", strerror(errno));
-      continue;
-    }
-
-    if (0>connect(sock, ai_cur->ai_addr, ai_cur->ai_addrlen))
-    {
-      WARN("connect() failed: %s\n", strerror(errno));
-      closesocket(sock);
-      continue;
-    }
-
-    /* RPC depends on having minimal latency so disable the Nagle algorithm */
-    val = 1;
-    setsockopt(sock, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
-    fcntl(sock, F_SETFL, O_NONBLOCK); /* make socket nonblocking */
-
-    tcpc->sock = sock;
-
-    freeaddrinfo(ai);
-    TRACE("connected\n");
-    return RPC_S_OK;
-  }
-
-  freeaddrinfo(ai);
-  ERR("couldn't connect to %s:%s\n", Connection->NetworkAddr, Connection->Endpoint);
-  return RPC_S_SERVER_UNAVAILABLE;
-}
-
-static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *protseq, LPSTR endpoint)
-{
-    RPC_STATUS status = RPC_S_CANT_CREATE_ENDPOINT;
-    int sock;
-    int ret;
-    struct addrinfo *ai;
-    struct addrinfo *ai_cur;
-    struct addrinfo hints;
-    RpcConnection *first_connection = NULL;
-
-    TRACE("(%p, %s)\n", protseq, endpoint);
-
-    hints.ai_flags          = AI_PASSIVE /* for non-localhost addresses */;
-    hints.ai_family         = PF_UNSPEC;
-    hints.ai_socktype       = SOCK_STREAM;
-    hints.ai_protocol       = IPPROTO_TCP;
-    hints.ai_addrlen        = 0;
-    hints.ai_addr           = NULL;
-    hints.ai_canonname      = NULL;
-    hints.ai_next           = NULL;
-
-    ret = getaddrinfo(NULL, endpoint, &hints, &ai);
-    if (ret)
-    {
-        ERR("getaddrinfo for port %s failed: %s\n", endpoint,
-            gai_strerror(ret));
-        if ((ret == EAI_SERVICE) || (ret == EAI_NONAME))
-            return RPC_S_INVALID_ENDPOINT_FORMAT;
-        return RPC_S_CANT_CREATE_ENDPOINT;
-    }
-
-    for (ai_cur = ai; ai_cur; ai_cur = ai_cur->ai_next)
-    {
-        RpcConnection_tcp *tcpc;
-        RPC_STATUS create_status;
-
-        if (TRACE_ON(rpc))
-        {
-            char host[256];
-            char service[256];
-            getnameinfo(ai_cur->ai_addr, ai_cur->ai_addrlen,
-                        host, sizeof(host), service, sizeof(service),
-                        NI_NUMERICHOST | NI_NUMERICSERV);
-            TRACE("trying %s:%s\n", host, service);
-        }
-
-        sock = socket(ai_cur->ai_family, ai_cur->ai_socktype, ai_cur->ai_protocol);
-        if (sock == -1)
-        {
-            WARN("socket() failed: %s\n", strerror(errno));
-            status = RPC_S_CANT_CREATE_ENDPOINT;
-            continue;
-        }
-
-        ret = bind(sock, ai_cur->ai_addr, ai_cur->ai_addrlen);
-        if (ret < 0)
-        {
-            WARN("bind failed: %s\n", strerror(errno));
-            closesocket(sock);
-            if (errno == EADDRINUSE)
-              status = RPC_S_DUPLICATE_ENDPOINT;
-            else
-              status = RPC_S_CANT_CREATE_ENDPOINT;
-            continue;
-        }
-        create_status = RPCRT4_CreateConnection((RpcConnection **)&tcpc, TRUE,
-                                                protseq->Protseq, NULL,
-                                                endpoint, NULL, NULL, NULL);
-        if (create_status != RPC_S_OK)
-        {
-            closesocket(sock);
-            status = create_status;
-            continue;
-        }
-
-        tcpc->sock = sock;
-        ret = listen(sock, protseq->MaxCalls);
-        if (ret < 0)
-        {
-            WARN("listen failed: %s\n", strerror(errno));
-            RPCRT4_DestroyConnection(&tcpc->common);
-            status = RPC_S_OUT_OF_RESOURCES;
-            continue;
-        }
-        /* need a non-blocking socket, otherwise accept() has a potential
-         * race-condition (poll() says it is readable, connection drops,
-         * and accept() blocks until the next connection comes...)
-         */
-        ret = fcntl(sock, F_SETFL, O_NONBLOCK);
-        if (ret < 0)
-        {
-            WARN("couldn't make socket non-blocking, error %d\n", ret);
-            RPCRT4_DestroyConnection(&tcpc->common);
-            status = RPC_S_OUT_OF_RESOURCES;
-            continue;
-        }
-
-        tcpc->common.Next = first_connection;
-        first_connection = &tcpc->common;
-    }
-
-    freeaddrinfo(ai);
-
-    /* if at least one connection was created for an endpoint then
-     * return success */
-    if (first_connection)
-    {
-        RpcConnection *conn;
-
-        /* find last element in list */
-        for (conn = first_connection; conn->Next; conn = conn->Next)
-            ;
-
-        EnterCriticalSection(&protseq->cs);
-        conn->Next = protseq->conn;
-        protseq->conn = first_connection;
-        LeaveCriticalSection(&protseq->cs);
-        
-        TRACE("listening on %s\n", endpoint);
-        return RPC_S_OK;
-    }
-
-    ERR("couldn't listen on port %s\n", endpoint);
-    return status;
-}
-
-static RPC_STATUS rpcrt4_conn_tcp_handoff(RpcConnection *old_conn, RpcConnection *new_conn)
-{
-  int ret;
-  struct sockaddr_in address;
-  socklen_t addrsize;
-  RpcConnection_tcp *server = (RpcConnection_tcp*) old_conn;
-  RpcConnection_tcp *client = (RpcConnection_tcp*) new_conn;
-
-  addrsize = sizeof(address);
-  ret = accept(server->sock, (struct sockaddr*) &address, &addrsize);
-  if (ret < 0)
-  {
-    ERR("Failed to accept a TCP connection: error %d\n", ret);
-    return RPC_S_OUT_OF_RESOURCES;
-  }
-  /* reset to blocking behaviour */
-  fcntl(ret, F_SETFL, 0);
-  client->sock = ret;
-  TRACE("Accepted a new TCP connection\n");
-  return RPC_S_OK;
-}
-
-static int rpcrt4_conn_tcp_read(RpcConnection *Connection,
-                                void *buffer, unsigned int count)
-{
-  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-  int bytes_read = 0;
-  do
-  {
-    int r = recv(tcpc->sock, (char *)buffer + bytes_read, count - bytes_read, 0);
-    if (!r)
-      return -1;
-    else if (r > 0)
-      bytes_read += r;
-    else if (errno != EAGAIN)
-    {
-      WARN("recv() failed: %s\n", strerror(errno));
-      return -1;
-    }
-    else
-    {
-      struct pollfd pfds[2];
-      pfds[0].fd = tcpc->sock;
-      pfds[0].events = POLLIN;
-      pfds[1].fd = tcpc->cancel_fds[0];
-      pfds[1].events = POLLIN;
-      if (poll(pfds, 2, -1 /* infinite */) == -1 && errno != EINTR)
-      {
-        ERR("poll() failed: %s\n", strerror(errno));
-        return -1;
-      }
-      if (pfds[1].revents & POLLIN) /* canceled */
-      {
-        char dummy;
-        read(pfds[1].fd, &dummy, sizeof(dummy));
-        return -1;
-      }
-    }
-  } while (bytes_read != count);
-  TRACE("%d %p %u -> %d\n", tcpc->sock, buffer, count, bytes_read);
-  return bytes_read;
-}
-
-static int rpcrt4_conn_tcp_write(RpcConnection *Connection,
-                                 const void *buffer, unsigned int count)
-{
-  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-  int bytes_written = 0;
-  do
-  {
-    int r = send(tcpc->sock, (const char *)buffer + bytes_written, count - bytes_written, 0);
-    if (r >= 0)
-      bytes_written += r;
-    else if (errno != EAGAIN)
-      return -1;
-    else
-    {
-      struct pollfd pfd;
-      pfd.fd = tcpc->sock;
-      pfd.events = POLLOUT;
-      if (poll(&pfd, 1, -1 /* infinite */) == -1 && errno != EINTR)
-      {
-        ERR("poll() failed: %s\n", strerror(errno));
-        return -1;
-      }
-    }
-  } while (bytes_written != count);
-  TRACE("%d %p %u -> %d\n", tcpc->sock, buffer, count, bytes_written);
-  return bytes_written;
-}
-
-static int rpcrt4_conn_tcp_close(RpcConnection *Connection)
-{
-  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-
-  TRACE("%d\n", tcpc->sock);
-
-  if (tcpc->sock != -1)
-    closesocket(tcpc->sock);
-  tcpc->sock = -1;
-  close(tcpc->cancel_fds[0]);
-  close(tcpc->cancel_fds[1]);
-  return 0;
-}
-
-static void rpcrt4_conn_tcp_cancel_call(RpcConnection *Connection)
-{
-    RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-    char dummy = 1;
-
-    TRACE("%p\n", Connection);
-
-    write(tcpc->cancel_fds[1], &dummy, 1);
-}
-
-static int rpcrt4_conn_tcp_wait_for_incoming_data(RpcConnection *Connection)
-{
-    RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
-    struct pollfd pfds[2];
-
-    TRACE("%p\n", Connection);
-
-    pfds[0].fd = tcpc->sock;
-    pfds[0].events = POLLIN;
-    pfds[1].fd = tcpc->cancel_fds[0];
-    pfds[1].events = POLLIN;
-    if (poll(pfds, 2, -1 /* infinite */) == -1 && errno != EINTR)
-    {
-      ERR("poll() failed: %s\n", strerror(errno));
-      return -1;
-    }
-    if (pfds[1].revents & POLLIN) /* canceled */
-    {
-      char dummy;
-      read(pfds[1].fd, &dummy, sizeof(dummy));
-      return -1;
-    }
-
-    return 0;
-}
-
-static size_t rpcrt4_ncacn_ip_tcp_get_top_of_tower(unsigned char *tower_data,
-                                                   const char *networkaddr,
-                                                   const char *endpoint)
+static size_t rpcrt4_ip_tcp_get_top_of_tower(unsigned char *tower_data,
+                                             const char *networkaddr,
+                                             unsigned char tcp_protid,
+                                             const char *endpoint)
 {
     twr_tcp_floor_t *tcp_floor;
     twr_ipv4_floor_t *ipv4_floor;
@@ -1146,7 +805,7 @@ static size_t rpcrt4_ncacn_ip_tcp_get_top_of_tower(unsigned char *tower_data,
     ipv4_floor = (twr_ipv4_floor_t *)tower_data;
 
     tcp_floor->count_lhs = sizeof(tcp_floor->protid);
-    tcp_floor->protid = EPM_PROTOCOL_TCP;
+    tcp_floor->protid = tcp_protid;
     tcp_floor->count_rhs = sizeof(tcp_floor->port);
 
     ipv4_floor->count_lhs = sizeof(ipv4_floor->protid);
@@ -1191,10 +850,11 @@ static size_t rpcrt4_ncacn_ip_tcp_get_top_of_tower(unsigned char *tower_data,
     return size;
 }
 
-static RPC_STATUS rpcrt4_ncacn_ip_tcp_parse_top_of_tower(const unsigned char *tower_data,
-                                                         size_t tower_size,
-                                                         char **networkaddr,
-                                                         char **endpoint)
+static RPC_STATUS rpcrt4_ip_tcp_parse_top_of_tower(const unsigned char *tower_data,
+                                                   size_t tower_size,
+                                                   char **networkaddr,
+                                                   unsigned char tcp_protid,
+                                                   char **endpoint)
 {
     const twr_tcp_floor_t *tcp_floor = (const twr_tcp_floor_t *)tower_data;
     const twr_ipv4_floor_t *ipv4_floor;
@@ -1214,7 +874,7 @@ static RPC_STATUS rpcrt4_ncacn_ip_tcp_parse_top_of_tower(const unsigned char *to
     ipv4_floor = (const twr_ipv4_floor_t *)tower_data;
 
     if ((tcp_floor->count_lhs != sizeof(tcp_floor->protid)) ||
-        (tcp_floor->protid != EPM_PROTOCOL_TCP) ||
+        (tcp_floor->protid != tcp_protid) ||
         (tcp_floor->count_rhs != sizeof(tcp_floor->port)) ||
         (ipv4_floor->count_lhs != sizeof(ipv4_floor->protid)) ||
         (ipv4_floor->protid != EPM_PROTOCOL_IP) ||
@@ -1258,6 +918,528 @@ static RPC_STATUS rpcrt4_ncacn_ip_tcp_parse_top_of_tower(const unsigned char *to
 
     return RPC_S_OK;
 }
+
+typedef struct _RpcConnection_tcp
+{
+  RpcConnection common;
+  int sock;
+#ifdef HAVE_SOCKETPAIR
+  int cancel_fds[2];
+#else
+  HANDLE sock_event;
+  HANDLE cancel_event;
+#endif
+} RpcConnection_tcp;
+
+#ifdef HAVE_SOCKETPAIR
+
+static BOOL rpcrt4_sock_wait_init(RpcConnection_tcp *tcpc)
+{
+  if (socketpair(PF_UNIX, SOCK_STREAM, 0, tcpc->cancel_fds) < 0)
+  {
+    ERR("socketpair() failed: %s\n", strerror(errno));
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static BOOL rpcrt4_sock_wait_for_recv(RpcConnection_tcp *tcpc)
+{
+  struct pollfd pfds[2];
+  pfds[0].fd = tcpc->sock;
+  pfds[0].events = POLLIN;
+  pfds[1].fd = tcpc->cancel_fds[0];
+  pfds[1].events = POLLIN;
+  if (poll(pfds, 2, -1 /* infinite */) == -1 && errno != EINTR)
+  {
+    ERR("poll() failed: %s\n", strerror(errno));
+    return FALSE;
+  }
+  if (pfds[1].revents & POLLIN) /* canceled */
+  {
+    char dummy;
+    read(pfds[1].fd, &dummy, sizeof(dummy));
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static BOOL rpcrt4_sock_wait_for_send(RpcConnection_tcp *tcpc)
+{
+  struct pollfd pfd;
+  pfd.fd = tcpc->sock;
+  pfd.events = POLLOUT;
+  if (poll(&pfd, 1, -1 /* infinite */) == -1 && errno != EINTR)
+  {
+    ERR("poll() failed: %s\n", strerror(errno));
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static void rpcrt4_sock_wait_cancel(RpcConnection_tcp *tcpc)
+{
+  char dummy = 1;
+
+  write(tcpc->cancel_fds[1], &dummy, 1);
+}
+
+static void rpcrt4_sock_wait_destroy(RpcConnection_tcp *tcpc)
+{
+  close(tcpc->cancel_fds[0]);
+  close(tcpc->cancel_fds[1]);
+}
+
+#else /* HAVE_SOCKETPAIR */
+
+static BOOL rpcrt4_sock_wait_init(RpcConnection_tcp *tcpc)
+{
+  static BOOL wsa_inited;
+  if (!wsa_inited)
+  {
+    WSADATA wsadata;
+    WSAStartup(MAKEWORD(2, 2), &wsadata);
+    /* Note: WSAStartup can be called more than once so we don't bother with
+     * making accesses to wsa_inited thread-safe */
+    wsa_inited = TRUE;
+  }
+  tcpc->sock_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+  tcpc->cancel_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+  if (!tcpc->sock_event || !tcpc->cancel_event)
+  {
+    ERR("event creation failed\n");
+    if (tcpc->sock_event) CloseHandle(tcpc->sock_event);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static BOOL rpcrt4_sock_wait_for_recv(RpcConnection_tcp *tcpc)
+{
+  HANDLE wait_handles[2];
+  DWORD res;
+  if (WSAEventSelect(tcpc->sock, tcpc->sock_event, FD_READ | FD_CLOSE) == SOCKET_ERROR)
+  {
+    ERR("WSAEventSelect() failed with error %d\n", WSAGetLastError());
+    return FALSE;
+  }
+  wait_handles[0] = tcpc->sock_event;
+  wait_handles[1] = tcpc->cancel_event;
+  res = WaitForMultipleObjects(2, wait_handles, FALSE, INFINITE);
+  switch (res)
+  {
+  case WAIT_OBJECT_0:
+    return TRUE;
+  case WAIT_OBJECT_0 + 1:
+    return FALSE;
+  default:
+    ERR("WaitForMultipleObjects() failed with error %d\n", GetLastError());
+    return FALSE;
+  }
+}
+
+static BOOL rpcrt4_sock_wait_for_send(RpcConnection_tcp *tcpc)
+{
+  DWORD res;
+  if (WSAEventSelect(tcpc->sock, tcpc->sock_event, FD_WRITE | FD_CLOSE) == SOCKET_ERROR)
+  {
+    ERR("WSAEventSelect() failed with error %d\n", WSAGetLastError());
+    return FALSE;
+  }
+  res = WaitForSingleObject(tcpc->sock_event, INFINITE);
+  switch (res)
+  {
+  case WAIT_OBJECT_0:
+    return TRUE;
+  default:
+    ERR("WaitForMultipleObjects() failed with error %d\n", GetLastError());
+    return FALSE;
+  }
+}
+
+static void rpcrt4_sock_wait_cancel(RpcConnection_tcp *tcpc)
+{
+  SetEvent(tcpc->cancel_event);
+}
+
+static void rpcrt4_sock_wait_destroy(RpcConnection_tcp *tcpc)
+{
+  CloseHandle(tcpc->sock_event);
+  CloseHandle(tcpc->cancel_event);
+}
+
+#endif
+
+static RpcConnection *rpcrt4_conn_tcp_alloc(void)
+{
+  RpcConnection_tcp *tcpc;
+  tcpc = HeapAlloc(GetProcessHeap(), 0, sizeof(RpcConnection_tcp));
+  if (tcpc == NULL)
+    return NULL;
+  tcpc->sock = -1;
+  if (!rpcrt4_sock_wait_init(tcpc))
+  {
+    HeapFree(GetProcessHeap(), 0, tcpc);
+    return NULL;
+  }
+  return &tcpc->common;
+}
+
+static RPC_STATUS rpcrt4_ncacn_ip_tcp_open(RpcConnection* Connection)
+{
+  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+  int sock;
+  int ret;
+  struct addrinfo *ai;
+  struct addrinfo *ai_cur;
+  struct addrinfo hints;
+
+  TRACE("(%s, %s)\n", Connection->NetworkAddr, Connection->Endpoint);
+
+  if (tcpc->sock != -1)
+    return RPC_S_OK;
+
+  hints.ai_flags          = 0;
+  hints.ai_family         = PF_UNSPEC;
+  hints.ai_socktype       = SOCK_STREAM;
+  hints.ai_protocol       = IPPROTO_TCP;
+  hints.ai_addrlen        = 0;
+  hints.ai_addr           = NULL;
+  hints.ai_canonname      = NULL;
+  hints.ai_next           = NULL;
+
+  ret = getaddrinfo(Connection->NetworkAddr, Connection->Endpoint, &hints, &ai);
+  if (ret)
+  {
+    ERR("getaddrinfo for %s:%s failed: %s\n", Connection->NetworkAddr,
+      Connection->Endpoint, gai_strerror(ret));
+    return RPC_S_SERVER_UNAVAILABLE;
+  }
+
+  for (ai_cur = ai; ai_cur; ai_cur = ai_cur->ai_next)
+  {
+    int val;
+    u_long nonblocking;
+
+    if (ai_cur->ai_family != AF_INET && ai_cur->ai_family != AF_INET6)
+    {
+      TRACE("skipping non-IP/IPv6 address family\n");
+      continue;
+    }
+
+    if (TRACE_ON(rpc))
+    {
+      char host[256];
+      char service[256];
+      getnameinfo(ai_cur->ai_addr, ai_cur->ai_addrlen,
+        host, sizeof(host), service, sizeof(service),
+        NI_NUMERICHOST | NI_NUMERICSERV);
+      TRACE("trying %s:%s\n", host, service);
+    }
+
+    sock = socket(ai_cur->ai_family, ai_cur->ai_socktype, ai_cur->ai_protocol);
+    if (sock == -1)
+    {
+      WARN("socket() failed: %s\n", strerror(errno));
+      continue;
+    }
+
+    if (0>connect(sock, ai_cur->ai_addr, ai_cur->ai_addrlen))
+    {
+      WARN("connect() failed: %s\n", strerror(errno));
+      closesocket(sock);
+      continue;
+    }
+
+    /* RPC depends on having minimal latency so disable the Nagle algorithm */
+    val = 1;
+    setsockopt(sock, SOL_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
+    nonblocking = 1;
+    ioctlsocket(sock, FIONBIO, &nonblocking);
+
+    tcpc->sock = sock;
+
+    freeaddrinfo(ai);
+    TRACE("connected\n");
+    return RPC_S_OK;
+  }
+
+  freeaddrinfo(ai);
+  ERR("couldn't connect to %s:%s\n", Connection->NetworkAddr, Connection->Endpoint);
+  return RPC_S_SERVER_UNAVAILABLE;
+}
+
+static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *protseq, LPSTR endpoint)
+{
+    RPC_STATUS status = RPC_S_CANT_CREATE_ENDPOINT;
+    int sock;
+    int ret;
+    struct addrinfo *ai;
+    struct addrinfo *ai_cur;
+    struct addrinfo hints;
+    RpcConnection *first_connection = NULL;
+
+    TRACE("(%p, %s)\n", protseq, endpoint);
+
+    hints.ai_flags          = AI_PASSIVE /* for non-localhost addresses */;
+    hints.ai_family         = PF_UNSPEC;
+    hints.ai_socktype       = SOCK_STREAM;
+    hints.ai_protocol       = IPPROTO_TCP;
+    hints.ai_addrlen        = 0;
+    hints.ai_addr           = NULL;
+    hints.ai_canonname      = NULL;
+    hints.ai_next           = NULL;
+
+    ret = getaddrinfo(NULL, endpoint ? endpoint : "0", &hints, &ai);
+    if (ret)
+    {
+        ERR("getaddrinfo for port %s failed: %s\n", endpoint,
+            gai_strerror(ret));
+        if ((ret == EAI_SERVICE) || (ret == EAI_NONAME))
+            return RPC_S_INVALID_ENDPOINT_FORMAT;
+        return RPC_S_CANT_CREATE_ENDPOINT;
+    }
+
+    for (ai_cur = ai; ai_cur; ai_cur = ai_cur->ai_next)
+    {
+        RpcConnection_tcp *tcpc;
+        RPC_STATUS create_status;
+        struct sockaddr_storage sa;
+        socklen_t sa_len;
+        char service[NI_MAXSERV];
+        u_long nonblocking;
+
+        if (ai_cur->ai_family != AF_INET && ai_cur->ai_family != AF_INET6)
+        {
+            TRACE("skipping non-IP/IPv6 address family\n");
+            continue;
+        }
+
+        if (TRACE_ON(rpc))
+        {
+            char host[256];
+            getnameinfo(ai_cur->ai_addr, ai_cur->ai_addrlen,
+                        host, sizeof(host), service, sizeof(service),
+                        NI_NUMERICHOST | NI_NUMERICSERV);
+            TRACE("trying %s:%s\n", host, service);
+        }
+
+        sock = socket(ai_cur->ai_family, ai_cur->ai_socktype, ai_cur->ai_protocol);
+        if (sock == -1)
+        {
+            WARN("socket() failed: %s\n", strerror(errno));
+            status = RPC_S_CANT_CREATE_ENDPOINT;
+            continue;
+        }
+
+        ret = bind(sock, ai_cur->ai_addr, ai_cur->ai_addrlen);
+        if (ret < 0)
+        {
+            WARN("bind failed: %s\n", strerror(errno));
+            closesocket(sock);
+            if (errno == EADDRINUSE)
+              status = RPC_S_DUPLICATE_ENDPOINT;
+            else
+              status = RPC_S_CANT_CREATE_ENDPOINT;
+            continue;
+        }
+
+        sa_len = sizeof(sa);
+        if (getsockname(sock, (struct sockaddr *)&sa, &sa_len))
+        {
+            WARN("getsockname() failed: %s\n", strerror(errno));
+            status = RPC_S_CANT_CREATE_ENDPOINT;
+            continue;
+        }
+
+        ret = getnameinfo((struct sockaddr *)&sa, sa_len,
+                          NULL, 0, service, sizeof(service),
+                          NI_NUMERICSERV);
+        if (ret)
+        {
+            WARN("getnameinfo failed: %s\n", gai_strerror(ret));
+            status = RPC_S_CANT_CREATE_ENDPOINT;
+            continue;
+        }
+
+        create_status = RPCRT4_CreateConnection((RpcConnection **)&tcpc, TRUE,
+                                                protseq->Protseq, NULL,
+                                                service, NULL, NULL, NULL);
+        if (create_status != RPC_S_OK)
+        {
+            closesocket(sock);
+            status = create_status;
+            continue;
+        }
+
+        tcpc->sock = sock;
+        ret = listen(sock, protseq->MaxCalls);
+        if (ret < 0)
+        {
+            WARN("listen failed: %s\n", strerror(errno));
+            RPCRT4_DestroyConnection(&tcpc->common);
+            status = RPC_S_OUT_OF_RESOURCES;
+            continue;
+        }
+        /* need a non-blocking socket, otherwise accept() has a potential
+         * race-condition (poll() says it is readable, connection drops,
+         * and accept() blocks until the next connection comes...)
+         */
+        nonblocking = 1;
+        ret = ioctlsocket(sock, FIONBIO, &nonblocking);
+        if (ret < 0)
+        {
+            WARN("couldn't make socket non-blocking, error %d\n", ret);
+            RPCRT4_DestroyConnection(&tcpc->common);
+            status = RPC_S_OUT_OF_RESOURCES;
+            continue;
+        }
+
+        tcpc->common.Next = first_connection;
+        first_connection = &tcpc->common;
+
+        /* since IPv4 and IPv6 share the same port space, we only need one
+         * successful bind to listen for both */
+        break;
+    }
+
+    freeaddrinfo(ai);
+
+    /* if at least one connection was created for an endpoint then
+     * return success */
+    if (first_connection)
+    {
+        RpcConnection *conn;
+
+        /* find last element in list */
+        for (conn = first_connection; conn->Next; conn = conn->Next)
+            ;
+
+        EnterCriticalSection(&protseq->cs);
+        conn->Next = protseq->conn;
+        protseq->conn = first_connection;
+        LeaveCriticalSection(&protseq->cs);
+        
+        TRACE("listening on %s\n", endpoint);
+        return RPC_S_OK;
+    }
+
+    ERR("couldn't listen on port %s\n", endpoint);
+    return status;
+}
+
+static RPC_STATUS rpcrt4_conn_tcp_handoff(RpcConnection *old_conn, RpcConnection *new_conn)
+{
+  int ret;
+  struct sockaddr_in address;
+  socklen_t addrsize;
+  RpcConnection_tcp *server = (RpcConnection_tcp*) old_conn;
+  RpcConnection_tcp *client = (RpcConnection_tcp*) new_conn;
+  u_long nonblocking;
+
+  addrsize = sizeof(address);
+  ret = accept(server->sock, (struct sockaddr*) &address, &addrsize);
+  if (ret < 0)
+  {
+    ERR("Failed to accept a TCP connection: error %d\n", ret);
+    return RPC_S_OUT_OF_RESOURCES;
+  }
+  nonblocking = 1;
+  ioctlsocket(ret, FIONBIO, &nonblocking);
+  client->sock = ret;
+  TRACE("Accepted a new TCP connection\n");
+  return RPC_S_OK;
+}
+
+static int rpcrt4_conn_tcp_read(RpcConnection *Connection,
+                                void *buffer, unsigned int count)
+{
+  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+  int bytes_read = 0;
+  while (bytes_read != count)
+  {
+    int r = recv(tcpc->sock, (char *)buffer + bytes_read, count - bytes_read, 0);
+    if (!r)
+      return -1;
+    else if (r > 0)
+      bytes_read += r;
+    else if (errno != EAGAIN)
+    {
+      WARN("recv() failed: %s\n", strerror(errno));
+      return -1;
+    }
+    else
+    {
+      if (!rpcrt4_sock_wait_for_recv(tcpc))
+        return -1;
+    }
+  }
+  TRACE("%d %p %u -> %d\n", tcpc->sock, buffer, count, bytes_read);
+  return bytes_read;
+}
+
+static int rpcrt4_conn_tcp_write(RpcConnection *Connection,
+                                 const void *buffer, unsigned int count)
+{
+  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+  int bytes_written = 0;
+  while (bytes_written != count)
+  {
+    int r = send(tcpc->sock, (const char *)buffer + bytes_written, count - bytes_written, 0);
+    if (r >= 0)
+      bytes_written += r;
+    else if (errno != EAGAIN)
+      return -1;
+    else
+    {
+      if (!rpcrt4_sock_wait_for_send(tcpc))
+        return -1;
+    }
+  }
+  TRACE("%d %p %u -> %d\n", tcpc->sock, buffer, count, bytes_written);
+  return bytes_written;
+}
+
+static int rpcrt4_conn_tcp_close(RpcConnection *Connection)
+{
+  RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+
+  TRACE("%d\n", tcpc->sock);
+
+  if (tcpc->sock != -1)
+    closesocket(tcpc->sock);
+  tcpc->sock = -1;
+  rpcrt4_sock_wait_destroy(tcpc);
+  return 0;
+}
+
+static void rpcrt4_conn_tcp_cancel_call(RpcConnection *Connection)
+{
+    RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+    TRACE("%p\n", Connection);
+    rpcrt4_sock_wait_cancel(tcpc);
+}
+
+static int rpcrt4_conn_tcp_wait_for_incoming_data(RpcConnection *Connection)
+{
+    RpcConnection_tcp *tcpc = (RpcConnection_tcp *) Connection;
+
+    TRACE("%p\n", Connection);
+
+    if (!rpcrt4_sock_wait_for_recv(tcpc))
+        return -1;
+    return 0;
+}
+
+static size_t rpcrt4_ncacn_ip_tcp_get_top_of_tower(unsigned char *tower_data,
+                                                   const char *networkaddr,
+                                                   const char *endpoint)
+{
+    return rpcrt4_ip_tcp_get_top_of_tower(tower_data, networkaddr,
+                                          EPM_PROTOCOL_TCP, endpoint);
+}
+
+#ifdef HAVE_SOCKETPAIR
 
 typedef struct _RpcServerProtseq_sock
 {
@@ -1398,7 +1580,160 @@ static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq
     return 1;
 }
 
+#else /* HAVE_SOCKETPAIR */
+
+typedef struct _RpcServerProtseq_sock
+{
+    RpcServerProtseq common;
+    HANDLE mgr_event;
+} RpcServerProtseq_sock;
+
+static RpcServerProtseq *rpcrt4_protseq_sock_alloc(void)
+{
+    RpcServerProtseq_sock *ps = HeapAlloc(GetProcessHeap(), 0, sizeof(*ps));
+    if (ps)
+    {
+        static BOOL wsa_inited;
+        if (!wsa_inited)
+        {
+            WSADATA wsadata;
+            WSAStartup(MAKEWORD(2, 2), &wsadata);
+            /* Note: WSAStartup can be called more than once so we don't bother with
+             * making accesses to wsa_inited thread-safe */
+            wsa_inited = TRUE;
+        }
+        ps->mgr_event = CreateEventW(NULL, FALSE, FALSE, NULL);
+    }
+    return &ps->common;
+}
+
+static void rpcrt4_protseq_sock_signal_state_changed(RpcServerProtseq *protseq)
+{
+    RpcServerProtseq_sock *sockps = CONTAINING_RECORD(protseq, RpcServerProtseq_sock, common);
+    SetEvent(sockps->mgr_event);
+}
+
+static void *rpcrt4_protseq_sock_get_wait_array(RpcServerProtseq *protseq, void *prev_array, unsigned int *count)
+{
+    HANDLE *objs = prev_array;
+    RpcConnection_tcp *conn;
+    RpcServerProtseq_sock *sockps = CONTAINING_RECORD(protseq, RpcServerProtseq_sock, common);
+
+    EnterCriticalSection(&protseq->cs);
+
+    /* open and count connections */
+    *count = 1;
+    conn = CONTAINING_RECORD(protseq->conn, RpcConnection_tcp, common);
+    while (conn)
+    {
+        if (conn->sock != -1)
+            (*count)++;
+        conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_tcp, common);
+    }
+
+    /* make array of connections */
+    if (objs)
+        objs = HeapReAlloc(GetProcessHeap(), 0, objs, *count*sizeof(HANDLE));
+    else
+        objs = HeapAlloc(GetProcessHeap(), 0, *count*sizeof(HANDLE));
+    if (!objs)
+    {
+        ERR("couldn't allocate objs\n");
+        LeaveCriticalSection(&protseq->cs);
+        return NULL;
+    }
+
+    objs[0] = sockps->mgr_event;
+    *count = 1;
+    conn = CONTAINING_RECORD(protseq->conn, RpcConnection_tcp, common);
+    while (conn)
+    {
+        if (conn->sock != -1)
+        {
+            int res = WSAEventSelect(conn->sock, conn->sock_event, FD_ACCEPT);
+            if (res == SOCKET_ERROR)
+                ERR("WSAEventSelect() failed with error %d\n", WSAGetLastError());
+            else
+            {
+                objs[*count] = conn->sock_event;
+                (*count)++;
+            }
+        }
+        conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_tcp, common);
+    }
+    LeaveCriticalSection(&protseq->cs);
+    return objs;
+}
+
+static void rpcrt4_protseq_sock_free_wait_array(RpcServerProtseq *protseq, void *array)
+{
+    HeapFree(GetProcessHeap(), 0, array);
+}
+
+static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq, unsigned int count, void *wait_array)
+{
+    HANDLE b_handle;
+    HANDLE *objs = wait_array;
+    DWORD res;
+    RpcConnection *cconn;
+    RpcConnection_tcp *conn;
+
+    if (!objs)
+        return -1;
+
+    do
+    {
+        /* an alertable wait isn't strictly necessary, but due to our
+         * overlapped I/O implementation in Wine we need to free some memory
+         * by the file user APC being called, even if no completion routine was
+         * specified at the time of starting the async operation */
+        res = WaitForMultipleObjectsEx(count, objs, FALSE, INFINITE, TRUE);
+    } while (res == WAIT_IO_COMPLETION);
+
+    if (res == WAIT_OBJECT_0)
+        return 0;
+    else if (res == WAIT_FAILED)
+    {
+        ERR("wait failed with error %d\n", GetLastError());
+        return -1;
+    }
+    else
+    {
+        b_handle = objs[res - WAIT_OBJECT_0];
+        /* find which connection got a RPC */
+        EnterCriticalSection(&protseq->cs);
+        conn = CONTAINING_RECORD(protseq->conn, RpcConnection_tcp, common);
+        while (conn)
+        {
+            if (b_handle == conn->sock_event) break;
+            conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_tcp, common);
+        }
+        cconn = NULL;
+        if (conn)
+            RPCRT4_SpawnConnection(&cconn, &conn->common);
+        else
+            ERR("failed to locate connection for handle %p\n", b_handle);
+        LeaveCriticalSection(&protseq->cs);
+        if (cconn)
+        {
+            RPCRT4_new_client(cconn);
+            return 1;
+        }
+        else return -1;
+    }
+}
+
 #endif  /* HAVE_SOCKETPAIR */
+
+static RPC_STATUS rpcrt4_ncacn_ip_tcp_parse_top_of_tower(const unsigned char *tower_data,
+                                                         size_t tower_size,
+                                                         char **networkaddr,
+                                                         char **endpoint)
+{
+    return rpcrt4_ip_tcp_parse_top_of_tower(tower_data, tower_size,
+                                            networkaddr, EPM_PROTOCOL_TCP,
+                                            endpoint);
+}
 
 static const struct connection_ops conn_protseq_list[] = {
   { "ncacn_np",
@@ -1427,7 +1762,6 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_ncalrpc_get_top_of_tower,
     rpcrt4_ncalrpc_parse_top_of_tower,
   },
-#ifdef HAVE_SOCKETPAIR
   { "ncacn_ip_tcp",
     { EPM_PROTOCOL_NCACN, EPM_PROTOCOL_TCP },
     rpcrt4_conn_tcp_alloc,
@@ -1441,7 +1775,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_ncacn_ip_tcp_get_top_of_tower,
     rpcrt4_ncacn_ip_tcp_parse_top_of_tower,
   }
-#endif
+
 };
 
 
@@ -1465,7 +1799,6 @@ static const struct protseq_ops protseq_list[] =
         rpcrt4_protseq_np_wait_for_new_connection,
         rpcrt4_protseq_ncalrpc_open_endpoint,
     },
-#ifdef HAVE_SOCKETPAIR
     {
         "ncacn_ip_tcp",
         rpcrt4_protseq_sock_alloc,
@@ -1475,7 +1808,6 @@ static const struct protseq_ops protseq_list[] =
         rpcrt4_protseq_sock_wait_for_new_connection,
         rpcrt4_protseq_ncacn_ip_tcp_open_endpoint,
     },
-#endif
 };
 
 #define ARRAYSIZE(a) (sizeof((a)) / sizeof((a)[0]))

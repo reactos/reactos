@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/sec/audit.c
  * PURPOSE:         Audit functions
- * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:
  *                  Created 07/19/2003
  */

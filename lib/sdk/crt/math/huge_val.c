@@ -3,4 +3,4 @@
 #include <internal/ieee.h>
 
 #undef _HUGE
-double_t _HUGE = { 0x00000, 0x00000, 0x7ff, 0x0 };
+double_s _HUGE = { 0x00000, 0x00000, 0x7ff, 0x0 };

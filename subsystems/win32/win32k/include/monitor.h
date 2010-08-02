@@ -1,20 +1,35 @@
-#ifndef _WIN32K_MONITOR_H
-#define _WIN32K_MONITOR_H
-
-//struct PDEVOBJ;
+#pragma once
 
 /* monitor object */
-typedef struct _MONITOR_OBJECT
+typedef struct _MONITOR
 {
-	HANDLE         Handle;     /* system object handle */
-	FAST_MUTEX     Lock;       /* R/W lock */
-
-	BOOL           IsPrimary;  /* wether this is the primary monitor */
-	UNICODE_STRING DeviceName; /* name of the monitor */
-	PDEVOBJ     *GdiDevice;  /* pointer to the GDI device to
-	                              which this monitor is attached */
-	struct _MONITOR_OBJECT *Prev, *Next; /* doubly linked list */
-} MONITOR_OBJECT, *PMONITOR_OBJECT;
+    HEAD head;
+//
+    FAST_MUTEX     Lock;       /* R/W lock */
+    UNICODE_STRING DeviceName; /* name of the monitor */
+    PDEVOBJ     *GdiDevice;    /* pointer to the GDI device to
+	                          which this monitor is attached */
+// This is the structure Windows uses:
+//    struct _MONITOR* pMonitorNext;
+    union  {        
+    DWORD   dwMONFlags;
+    struct {
+    DWORD   IsVisible:1;
+    DWORD   IsPalette:1;
+    DWORD   IsPrimary:1;  /* wether this is the primary monitor */
+    };};
+    RECT    rcMonitor;
+    RECT    rcWork;
+    HRGN    hrgnMonitor;
+    SHORT   Spare0;
+    SHORT   cWndStack;
+    HDEV    hDev;
+    HDEV    hDevReal;
+//    BYTE    DockTargets[4][7];
+// Use LIST_ENTRY
+    struct _MONITOR* Next; //Flink;
+    struct _MONITOR* Prev; //Blink;
+} MONITOR, *PMONITOR;
 
 /* functions */
 NTSTATUS InitMonitorImpl();
@@ -22,8 +37,7 @@ NTSTATUS CleanupMonitorImpl();
 
 NTSTATUS IntAttachMonitor(PDEVOBJ *pGdiDevice, ULONG DisplayNumber);
 NTSTATUS IntDetachMonitor(PDEVOBJ *pGdiDevice);
-PMONITOR_OBJECT FASTCALL UserGetMonitorObject(IN HMONITOR);
-
-#endif /* _WIN32K_MONITOR_H */
+PMONITOR FASTCALL UserGetMonitorObject(IN HMONITOR);
+PMONITOR FASTCALL IntGetPrimaryMonitor(VOID);
 
 /* EOF */

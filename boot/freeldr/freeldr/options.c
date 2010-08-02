@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -35,8 +35,12 @@ PCSTR	OptionsMenuList[] =
 
 	"SEPARATOR",
 
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	"Custom Boot",
+#endif
+#ifdef HAS_OPTION_MENU_REBOOT
 	"Reboot",
+#endif
 };
 
 enum OptionMenuItems
@@ -55,11 +59,24 @@ enum OptionMenuItems
 
 	SEPARATOR2 = 9,
 
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	CUSTOM_BOOT = 10,
+#endif
+#ifdef HAS_OPTION_MENU_REBOOT
 	REBOOT = 11,
+#endif
 };
 
 ULONG		OptionsMenuItemCount = sizeof(OptionsMenuList) / sizeof(OptionsMenuList[0]);
+
+BOOLEAN SafeMode = FALSE;
+BOOLEAN SafeModeWithNetworking = FALSE;
+BOOLEAN SafeModeWithCommandPrompt = FALSE;
+BOOLEAN BootLogging = FALSE;
+BOOLEAN VgaMode = FALSE;
+BOOLEAN LastKnownGoodConfiguration = FALSE;
+BOOLEAN DirectoryServicesRepairMode = FALSE;
+BOOLEAN DebuggingMode = FALSE;
 
 VOID DoOptionsMenu(VOID)
 {
@@ -77,41 +94,72 @@ VOID DoOptionsMenu(VOID)
 	switch (SelectedMenuItem)
 	{
 	case SAFE_MODE:
+		SafeMode = TRUE;
+		BootLogging = TRUE;
 		break;
 	case SAFE_MODE_WITH_NETWORKING:
+		SafeModeWithNetworking = TRUE;
+		BootLogging = TRUE;
 		break;
 	case SAFE_MODE_WITH_COMMAND_PROMPT:
+		SafeModeWithCommandPrompt = TRUE;
+		BootLogging = TRUE;
 		break;
 	//case SEPARATOR1:
 	//	break;
 	case ENABLE_BOOT_LOGGING:
+		BootLogging = TRUE;
 		break;
 	case ENABLE_VGA_MODE:
+		VgaMode = TRUE;
 		break;
 	case LAST_KNOWN_GOOD_CONFIGURATION:
+		LastKnownGoodConfiguration = TRUE;
 		break;
 	case DIRECTORY_SERVICES_RESTORE_MODE:
+		DirectoryServicesRepairMode = TRUE;
 		break;
 	case DEBUGGING_MODE:
+		DebuggingMode = TRUE;
 		break;
 	//case SEPARATOR2:
 	//	break;
+#ifdef HAS_OPTION_MENU_CUSTOM_BOOT
 	case CUSTOM_BOOT:
 		OptionMenuCustomBoot();
 		break;
+#endif
+#ifdef HAS_OPTION_MENU_REBOOT
 	case REBOOT:
 		OptionMenuReboot();
 		break;
+#endif
 	}
 }
 
-VOID OptionMenuReboot(VOID)
+VOID AppendBootTimeOptions(PCHAR BootOptions)
 {
-	UiMessageBox("The system will now reboot.");
+	if (SafeMode)
+		strcat(BootOptions, " /SAFEBOOT:MINIMAL /SOS"); //FIXME: NOGUIBOOT should also be specified
 
-#ifdef __i386__
-	DiskStopFloppyMotor();
-	SoftReboot();
-#else
-#endif
+	if (SafeModeWithNetworking)
+		strcat(BootOptions, " /SAFEBOOT:NETWORK /SOS"); //FIXME: NOGUIBOOT should also be specified
+
+	if (SafeModeWithCommandPrompt)
+		strcat(BootOptions, " /SAFEBOOT:MINIMAL(ALTERNATESHELL) /SOS"); //FIXME: NOGUIBOOT should also be specified
+
+	if (BootLogging)
+		strcat(BootOptions, " /BOOTLOG");
+
+	if (VgaMode)
+		strcat(BootOptions, " /BASEVIDEO");
+
+	if (LastKnownGoodConfiguration)
+		DbgPrint("Last known good configuration is not supported yet!\n");
+
+	if (DirectoryServicesRepairMode)
+		strcat(BootOptions, " /SAFEBOOT:DSREPAIR /SOS");
+
+	if (DebuggingMode)
+		strcat(BootOptions, " /DEBUG");
 }

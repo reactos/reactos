@@ -315,16 +315,21 @@ IRichEditOle_fnGetClipboardData(IRichEditOle *me, CHARRANGE *lpchrg,
                DWORD reco, LPDATAOBJECT *lplpdataobj)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
-    CHARRANGE tmpchrg;
+    ME_Cursor start;
+    int nChars;
 
     TRACE("(%p,%p,%d)\n",This, lpchrg, reco);
     if(!lplpdataobj)
         return E_INVALIDARG;
     if(!lpchrg) {
-        ME_GetSelection(This->editor, &tmpchrg.cpMin, &tmpchrg.cpMax);
-        lpchrg = &tmpchrg;
+        int nFrom, nTo, nStartCur = ME_GetSelectionOfs(This->editor, &nFrom, &nTo);
+        start = This->editor->pCursors[nStartCur];
+        nChars = nTo - nFrom;
+    } else {
+        ME_CursorFromCharOfs(This->editor, lpchrg->cpMin, &start);
+        nChars = lpchrg->cpMax - lpchrg->cpMin;
     }
-    return ME_GetDataObject(This->editor, lpchrg, lplpdataobj);
+    return ME_GetDataObject(This->editor, &start, nChars, lplpdataobj);
 }
 
 static LONG WINAPI IRichEditOle_fnGetLinkCount(IRichEditOle *me)
@@ -383,11 +388,10 @@ IRichEditOle_fnInsertObject(IRichEditOle *me, REOBJECT *reo)
     TRACE("(%p,%p)\n", This, reo);
 
     if (reo->cbStruct < sizeof(*reo)) return STG_E_INVALIDPARAMETER;
-    if (reo->poleobj)   IOleObject_AddRef(reo->poleobj);
-    if (reo->pstg)      IStorage_AddRef(reo->pstg);
-    if (reo->polesite)  IOleClientSite_AddRef(reo->polesite);
 
     ME_InsertOLEFromCursor(This->editor, reo, 0);
+    ME_CommitUndo(This->editor);
+    ME_UpdateRepaint(This->editor);
     return S_OK;
 }
 
@@ -524,7 +528,7 @@ ITextDocument_fnGetSelection(ITextDocument* me, ITextSelection** ppSel)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnGetStoryCount(ITextDocument* me, long* pCount)
+ITextDocument_fnGetStoryCount(ITextDocument* me, LONG* pCount)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -541,7 +545,7 @@ ITextDocument_fnGetStoryRanges(ITextDocument* me,
 }
 
 static HRESULT WINAPI
-ITextDocument_fnGetSaved(ITextDocument* me, long* pValue)
+ITextDocument_fnGetSaved(ITextDocument* me, LONG* pValue)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -549,7 +553,7 @@ ITextDocument_fnGetSaved(ITextDocument* me, long* pValue)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnSetSaved(ITextDocument* me, long Value)
+ITextDocument_fnSetSaved(ITextDocument* me, LONG Value)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -581,8 +585,8 @@ ITextDocument_fnNew(ITextDocument* me)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnOpen(ITextDocument* me, VARIANT* pVar, long Flags,
-    long CodePage)
+ITextDocument_fnOpen(ITextDocument* me, VARIANT* pVar, LONG Flags,
+    LONG CodePage)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -590,8 +594,8 @@ ITextDocument_fnOpen(ITextDocument* me, VARIANT* pVar, long Flags,
 }
 
 static HRESULT WINAPI
-ITextDocument_fnSave(ITextDocument* me, VARIANT* pVar, long Flags,
-    long CodePage)
+ITextDocument_fnSave(ITextDocument* me, VARIANT* pVar, LONG Flags,
+    LONG CodePage)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -599,7 +603,7 @@ ITextDocument_fnSave(ITextDocument* me, VARIANT* pVar, long Flags,
 }
 
 static HRESULT WINAPI
-ITextDocument_fnFreeze(ITextDocument* me, long* pCount)
+ITextDocument_fnFreeze(ITextDocument* me, LONG* pCount)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -607,7 +611,7 @@ ITextDocument_fnFreeze(ITextDocument* me, long* pCount)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnUnfreeze(ITextDocument* me, long* pCount)
+ITextDocument_fnUnfreeze(ITextDocument* me, LONG* pCount)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -631,7 +635,7 @@ ITextDocument_fnEndEditCollection(ITextDocument* me)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnUndo(ITextDocument* me, long Count, long* prop)
+ITextDocument_fnUndo(ITextDocument* me, LONG Count, LONG* prop)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -639,7 +643,7 @@ ITextDocument_fnUndo(ITextDocument* me, long Count, long* prop)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnRedo(ITextDocument* me, long Count, long* prop)
+ITextDocument_fnRedo(ITextDocument* me, LONG Count, LONG* prop)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
     FIXME("stub %p\n",This);
@@ -647,7 +651,7 @@ ITextDocument_fnRedo(ITextDocument* me, long Count, long* prop)
 }
 
 static HRESULT WINAPI
-ITextDocument_fnRange(ITextDocument* me, long cp1, long cp2,
+ITextDocument_fnRange(ITextDocument* me, LONG cp1, LONG cp2,
     ITextRange** ppRange)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
@@ -656,7 +660,7 @@ ITextDocument_fnRange(ITextDocument* me, long cp1, long cp2,
 }
 
 static HRESULT WINAPI
-ITextDocument_fnRangeFromPoint(ITextDocument* me, long x, long y,
+ITextDocument_fnRangeFromPoint(ITextDocument* me, LONG x, LONG y,
     ITextRange** ppRange)
 {
     IRichEditOleImpl *This = impl_from_ITextDocument(me);
@@ -813,7 +817,7 @@ static HRESULT WINAPI ITextSelection_fnSetText(
 
 static HRESULT WINAPI ITextSelection_fnGetChar(
     ITextSelection *me,
-    long *pch)
+    LONG *pch)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -825,7 +829,7 @@ static HRESULT WINAPI ITextSelection_fnGetChar(
 
 static HRESULT WINAPI ITextSelection_fnSetChar(
     ITextSelection *me,
-    long ch)
+    LONG ch)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -873,7 +877,7 @@ static HRESULT WINAPI ITextSelection_fnSetFormattedText(
 
 static HRESULT WINAPI ITextSelection_fnGetStart(
     ITextSelection *me,
-    long *pcpFirst)
+    LONG *pcpFirst)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -885,7 +889,7 @@ static HRESULT WINAPI ITextSelection_fnGetStart(
 
 static HRESULT WINAPI ITextSelection_fnSetStart(
     ITextSelection *me,
-    long cpFirst)
+    LONG cpFirst)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -897,7 +901,7 @@ static HRESULT WINAPI ITextSelection_fnSetStart(
 
 static HRESULT WINAPI ITextSelection_fnGetEnd(
     ITextSelection *me,
-    long *pcpLim)
+    LONG *pcpLim)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -909,7 +913,7 @@ static HRESULT WINAPI ITextSelection_fnGetEnd(
 
 static HRESULT WINAPI ITextSelection_fnSetEnd(
     ITextSelection *me,
-    long cpLim)
+    LONG cpLim)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -969,7 +973,7 @@ static HRESULT WINAPI ITextSelection_fnSetPara(
 
 static HRESULT WINAPI ITextSelection_fnGetStoryLength(
     ITextSelection *me,
-    long *pcch)
+    LONG *pcch)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -981,7 +985,7 @@ static HRESULT WINAPI ITextSelection_fnGetStoryLength(
 
 static HRESULT WINAPI ITextSelection_fnGetStoryType(
     ITextSelection *me,
-    long *pValue)
+    LONG *pValue)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -993,7 +997,7 @@ static HRESULT WINAPI ITextSelection_fnGetStoryType(
 
 static HRESULT WINAPI ITextSelection_fnCollapse(
     ITextSelection *me,
-    long bStart)
+    LONG bStart)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1005,8 +1009,8 @@ static HRESULT WINAPI ITextSelection_fnCollapse(
 
 static HRESULT WINAPI ITextSelection_fnExpand(
     ITextSelection *me,
-    long Unit,
-    long *pDelta)
+    LONG Unit,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1018,8 +1022,8 @@ static HRESULT WINAPI ITextSelection_fnExpand(
 
 static HRESULT WINAPI ITextSelection_fnGetIndex(
     ITextSelection *me,
-    long Unit,
-    long *pIndex)
+    LONG Unit,
+    LONG *pIndex)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1031,9 +1035,9 @@ static HRESULT WINAPI ITextSelection_fnGetIndex(
 
 static HRESULT WINAPI ITextSelection_fnSetIndex(
     ITextSelection *me,
-    long Unit,
-    long Index,
-    long Extend)
+    LONG Unit,
+    LONG Index,
+    LONG Extend)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1045,8 +1049,8 @@ static HRESULT WINAPI ITextSelection_fnSetIndex(
 
 static HRESULT WINAPI ITextSelection_fnSetRange(
     ITextSelection *me,
-    long cpActive,
-    long cpOther)
+    LONG cpActive,
+    LONG cpOther)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1059,7 +1063,7 @@ static HRESULT WINAPI ITextSelection_fnSetRange(
 static HRESULT WINAPI ITextSelection_fnInRange(
     ITextSelection *me,
     ITextRange *pRange,
-    long *pb)
+    LONG *pb)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1072,7 +1076,7 @@ static HRESULT WINAPI ITextSelection_fnInRange(
 static HRESULT WINAPI ITextSelection_fnInStory(
     ITextSelection *me,
     ITextRange *pRange,
-    long *pb)
+    LONG *pb)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1085,7 +1089,7 @@ static HRESULT WINAPI ITextSelection_fnInStory(
 static HRESULT WINAPI ITextSelection_fnIsEqual(
     ITextSelection *me,
     ITextRange *pRange,
-    long *pb)
+    LONG *pb)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1108,9 +1112,9 @@ static HRESULT WINAPI ITextSelection_fnSelect(
 
 static HRESULT WINAPI ITextSelection_fnStartOf(
     ITextSelection *me,
-    long Unit,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1122,9 +1126,9 @@ static HRESULT WINAPI ITextSelection_fnStartOf(
 
 static HRESULT WINAPI ITextSelection_fnEndOf(
     ITextSelection *me,
-    long Unit,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1136,9 +1140,9 @@ static HRESULT WINAPI ITextSelection_fnEndOf(
 
 static HRESULT WINAPI ITextSelection_fnMove(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1150,9 +1154,9 @@ static HRESULT WINAPI ITextSelection_fnMove(
 
 static HRESULT WINAPI ITextSelection_fnMoveStart(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1164,9 +1168,9 @@ static HRESULT WINAPI ITextSelection_fnMoveStart(
 
 static HRESULT WINAPI ITextSelection_fnMoveEnd(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1179,8 +1183,8 @@ static HRESULT WINAPI ITextSelection_fnMoveEnd(
 static HRESULT WINAPI ITextSelection_fnMoveWhile(
     ITextSelection *me,
     VARIANT *Cset,
-    long Count,
-    long *pDelta)
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1193,8 +1197,8 @@ static HRESULT WINAPI ITextSelection_fnMoveWhile(
 static HRESULT WINAPI ITextSelection_fnMoveStartWhile(
     ITextSelection *me,
     VARIANT *Cset,
-    long Count,
-    long *pDelta)
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1207,8 +1211,8 @@ static HRESULT WINAPI ITextSelection_fnMoveStartWhile(
 static HRESULT WINAPI ITextSelection_fnMoveEndWhile(
     ITextSelection *me,
     VARIANT *Cset,
-    long Count,
-    long *pDelta)
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1221,8 +1225,8 @@ static HRESULT WINAPI ITextSelection_fnMoveEndWhile(
 static HRESULT WINAPI ITextSelection_fnMoveUntil(
     ITextSelection *me,
     VARIANT *Cset,
-    long Count,
-    long *pDelta)
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1235,8 +1239,8 @@ static HRESULT WINAPI ITextSelection_fnMoveUntil(
 static HRESULT WINAPI ITextSelection_fnMoveStartUntil(
     ITextSelection *me,
     VARIANT *Cset,
-    long Count,
-    long *pDelta)
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1249,8 +1253,8 @@ static HRESULT WINAPI ITextSelection_fnMoveStartUntil(
 static HRESULT WINAPI ITextSelection_fnMoveEndUntil(
     ITextSelection *me,
     VARIANT *Cset,
-    long Count,
-    long *pDelta)
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1263,9 +1267,9 @@ static HRESULT WINAPI ITextSelection_fnMoveEndUntil(
 static HRESULT WINAPI ITextSelection_fnFindText(
     ITextSelection *me,
     BSTR bstr,
-    long cch,
-    long Flags,
-    long *pLength)
+    LONG cch,
+    LONG Flags,
+    LONG *pLength)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1278,9 +1282,9 @@ static HRESULT WINAPI ITextSelection_fnFindText(
 static HRESULT WINAPI ITextSelection_fnFindTextStart(
     ITextSelection *me,
     BSTR bstr,
-    long cch,
-    long Flags,
-    long *pLength)
+    LONG cch,
+    LONG Flags,
+    LONG *pLength)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1293,9 +1297,9 @@ static HRESULT WINAPI ITextSelection_fnFindTextStart(
 static HRESULT WINAPI ITextSelection_fnFindTextEnd(
     ITextSelection *me,
     BSTR bstr,
-    long cch,
-    long Flags,
-    long *pLength)
+    LONG cch,
+    LONG Flags,
+    LONG *pLength)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1307,9 +1311,9 @@ static HRESULT WINAPI ITextSelection_fnFindTextEnd(
 
 static HRESULT WINAPI ITextSelection_fnDelete(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1346,7 +1350,7 @@ static HRESULT WINAPI ITextSelection_fnCopy(
 static HRESULT WINAPI ITextSelection_fnPaste(
     ITextSelection *me,
     VARIANT *pVar,
-    long Format)
+    LONG Format)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1359,8 +1363,8 @@ static HRESULT WINAPI ITextSelection_fnPaste(
 static HRESULT WINAPI ITextSelection_fnCanPaste(
     ITextSelection *me,
     VARIANT *pVar,
-    long Format,
-    long *pb)
+    LONG Format,
+    LONG *pb)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1372,7 +1376,7 @@ static HRESULT WINAPI ITextSelection_fnCanPaste(
 
 static HRESULT WINAPI ITextSelection_fnCanEdit(
     ITextSelection *me,
-    long *pb)
+    LONG *pb)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1384,7 +1388,7 @@ static HRESULT WINAPI ITextSelection_fnCanEdit(
 
 static HRESULT WINAPI ITextSelection_fnChangeCase(
     ITextSelection *me,
-    long Type)
+    LONG Type)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1396,9 +1400,9 @@ static HRESULT WINAPI ITextSelection_fnChangeCase(
 
 static HRESULT WINAPI ITextSelection_fnGetPoint(
     ITextSelection *me,
-    long Type,
-    long *cx,
-    long *cy)
+    LONG Type,
+    LONG *cx,
+    LONG *cy)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1410,10 +1414,10 @@ static HRESULT WINAPI ITextSelection_fnGetPoint(
 
 static HRESULT WINAPI ITextSelection_fnSetPoint(
     ITextSelection *me,
-    long x,
-    long y,
-    long Type,
-    long Extend)
+    LONG x,
+    LONG y,
+    LONG Type,
+    LONG Extend)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1425,7 +1429,7 @@ static HRESULT WINAPI ITextSelection_fnSetPoint(
 
 static HRESULT WINAPI ITextSelection_fnScrollIntoView(
     ITextSelection *me,
-    long Value)
+    LONG Value)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1450,7 +1454,7 @@ static HRESULT WINAPI ITextSelection_fnGetEmbeddedObject(
 /*** ITextSelection methods ***/
 static HRESULT WINAPI ITextSelection_fnGetFlags(
     ITextSelection *me,
-    long *pFlags)
+    LONG *pFlags)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1462,7 +1466,7 @@ static HRESULT WINAPI ITextSelection_fnGetFlags(
 
 static HRESULT WINAPI ITextSelection_fnSetFlags(
     ITextSelection *me,
-    long Flags)
+    LONG Flags)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1474,7 +1478,7 @@ static HRESULT WINAPI ITextSelection_fnSetFlags(
 
 static HRESULT WINAPI ITextSelection_fnGetType(
     ITextSelection *me,
-    long *pType)
+    LONG *pType)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1486,10 +1490,10 @@ static HRESULT WINAPI ITextSelection_fnGetType(
 
 static HRESULT WINAPI ITextSelection_fnMoveLeft(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1501,10 +1505,10 @@ static HRESULT WINAPI ITextSelection_fnMoveLeft(
 
 static HRESULT WINAPI ITextSelection_fnMoveRight(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1516,10 +1520,10 @@ static HRESULT WINAPI ITextSelection_fnMoveRight(
 
 static HRESULT WINAPI ITextSelection_fnMoveUp(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1531,10 +1535,10 @@ static HRESULT WINAPI ITextSelection_fnMoveUp(
 
 static HRESULT WINAPI ITextSelection_fnMoveDown(
     ITextSelection *me,
-    long Unit,
-    long Count,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Count,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1546,9 +1550,9 @@ static HRESULT WINAPI ITextSelection_fnMoveDown(
 
 static HRESULT WINAPI ITextSelection_fnHomeKey(
     ITextSelection *me,
-    long Unit,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1560,9 +1564,9 @@ static HRESULT WINAPI ITextSelection_fnHomeKey(
 
 static HRESULT WINAPI ITextSelection_fnEndKey(
     ITextSelection *me,
-    long Unit,
-    long Extend,
-    long *pDelta)
+    LONG Unit,
+    LONG Extend,
+    LONG *pDelta)
 {
     ITextSelectionImpl *This = (ITextSelectionImpl *) me;
     if (!This->reOle)
@@ -1725,6 +1729,11 @@ void ME_GetOLEObjectSize(ME_Context *c, ME_Run *run, SIZE *pSize)
   if (run->ole_obj->sizel.cx != 0 || run->ole_obj->sizel.cy != 0)
   {
     convert_sizel(c, &run->ole_obj->sizel, pSize);
+    if (c->editor->nZoomNumerator != 0)
+    {
+      pSize->cx = MulDiv(pSize->cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+      pSize->cy = MulDiv(pSize->cy, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+    }
     return;
   }
 
@@ -1815,53 +1824,45 @@ void ME_DrawOLE(ME_Context *c, int x, int y, ME_Run *run,
     GetObjectW(stgm.u.hBitmap, sizeof(dibsect), &dibsect);
     hMemDC = CreateCompatibleDC(c->hDC);
     SelectObject(hMemDC, stgm.u.hBitmap);
-    if (!has_size && c->editor->nZoomNumerator == 0)
+    if (has_size)
     {
-      sz.cx = dibsect.dsBm.bmWidth;
-      sz.cy = dibsect.dsBm.bmHeight;
-      BitBlt(c->hDC, x, y - dibsect.dsBm.bmHeight,
+      convert_sizel(c, &run->ole_obj->sizel, &sz);
+    } else {
+      sz.cx = MulDiv(dibsect.dsBm.bmWidth, c->dpi.cx, 96);
+      sz.cy = MulDiv(dibsect.dsBm.bmHeight, c->dpi.cy, 96);
+    }
+    if (c->editor->nZoomNumerator != 0)
+    {
+      sz.cx = MulDiv(sz.cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+      sz.cy = MulDiv(sz.cy, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+    }
+    if (sz.cx == dibsect.dsBm.bmWidth && sz.cy == dibsect.dsBm.bmHeight)
+    {
+      BitBlt(c->hDC, x, y - sz.cy,
              dibsect.dsBm.bmWidth, dibsect.dsBm.bmHeight,
              hMemDC, 0, 0, SRCCOPY);
-    }
-    else
-    {
-      if (has_size)
-      {
-        convert_sizel(c, &run->ole_obj->sizel, &sz);
-      }
-      else
-      {
-        sz.cx = MulDiv(dibsect.dsBm.bmWidth,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-        sz.cy = MulDiv(dibsect.dsBm.bmHeight,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-      }
+    } else {
       StretchBlt(c->hDC, x, y - sz.cy, sz.cx, sz.cy,
-                 hMemDC, 0, 0, dibsect.dsBm.bmWidth, dibsect.dsBm.bmHeight, SRCCOPY);
+                 hMemDC, 0, 0, dibsect.dsBm.bmWidth,
+                 dibsect.dsBm.bmHeight, SRCCOPY);
     }
     if (!stgm.pUnkForRelease) DeleteObject(stgm.u.hBitmap);
     break;
   case TYMED_ENHMF:
     GetEnhMetaFileHeader(stgm.u.hEnhMetaFile, sizeof(emh), &emh);
-    if (!has_size && c->editor->nZoomNumerator == 0)
+    if (has_size)
     {
-      sz.cy = emh.rclBounds.bottom - emh.rclBounds.top;
-      sz.cx = emh.rclBounds.right - emh.rclBounds.left;
+      convert_sizel(c, &run->ole_obj->sizel, &sz);
+    } else {
+      sz.cy = MulDiv(emh.rclBounds.bottom - emh.rclBounds.top, c->dpi.cx, 96);
+      sz.cx = MulDiv(emh.rclBounds.right - emh.rclBounds.left, c->dpi.cy, 96);
     }
-    else
+    if (c->editor->nZoomNumerator != 0)
     {
-      if (has_size)
-      {
-        convert_sizel(c, &run->ole_obj->sizel, &sz);
-      }
-      else
-      {
-        sz.cy = MulDiv(emh.rclBounds.bottom - emh.rclBounds.top,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-        sz.cx = MulDiv(emh.rclBounds.right - emh.rclBounds.left,
-                       c->editor->nZoomNumerator, c->editor->nZoomDenominator);
-      }
+      sz.cx = MulDiv(sz.cx, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
+      sz.cy = MulDiv(sz.cy, c->editor->nZoomNumerator, c->editor->nZoomDenominator);
     }
+
     {
       RECT    rc;
 

@@ -1,5 +1,4 @@
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_KE_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_KE_H
+#pragma once
 
 /* INCLUDES *****************************************************************/
 
@@ -64,6 +63,14 @@ typedef struct _DPC_QUEUE_ENTRY
     PVOID Context;
 } DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 
+typedef struct _KNMI_HANDLER_CALLBACK
+{
+    struct _KNMI_HANDLER_CALLBACK* Next;
+    PNMI_CALLBACK Callback;
+    PVOID Context;
+    PVOID Handle;
+} KNMI_HANDLER_CALLBACK, *PKNMI_HANDLER_CALLBACK;
+
 typedef PCHAR
 (NTAPI *PKE_BUGCHECK_UNICODE_TO_ANSI)(
     IN PUNICODE_STRING Unicode,
@@ -71,10 +78,8 @@ typedef PCHAR
     IN ULONG Length
 );
 
-extern ULONG_PTR MmFreeLdrFirstKrnlPhysAddr;
-extern ULONG_PTR MmFreeLdrLastKrnlPhysAddr;
-extern ULONG_PTR MmFreeLdrLastKernelAddress;
-
+extern PKNMI_HANDLER_CALLBACK KiNmiCallbackListHead;
+extern KSPIN_LOCK KiNmiCallbackListLock;
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
@@ -82,42 +87,21 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern LARGE_INTEGER KeBootTime;
 extern ULONGLONG KeBootTimeBias;
 extern BOOLEAN ExCmosClockIsSane;
-extern ULONG KeI386NpxPresent;
-extern ULONG KeI386XMMIPresent;
-extern ULONG KeI386FxsrPresent;
-extern ULONG KiMXCsrMask;
-extern ULONG KeI386CpuType;
-extern ULONG KeI386CpuStep;
 extern ULONG KeProcessorArchitecture;
 extern ULONG KeProcessorLevel;
 extern ULONG KeProcessorRevision;
 extern ULONG KeFeatureBits;
-extern ULONG Ke386GlobalPagesEnabled;
-extern BOOLEAN KiI386PentiumLockErrataPresent;
 extern KNODE KiNode0;
 extern PKNODE KeNodeBlock[1];
 extern UCHAR KeNumberNodes;
 extern UCHAR KeProcessNodeSeed;
 extern ETHREAD KiInitialThread;
 extern EPROCESS KiInitialProcess;
-extern ULONG KiInterruptTemplate[KINTERRUPT_DISPATCH_CODES];
 extern PULONG KiInterruptTemplateObject;
 extern PULONG KiInterruptTemplateDispatch;
 extern PULONG KiInterruptTemplate2ndDispatch;
 extern ULONG KiUnexpectedEntrySize;
-#ifdef _M_IX86
-extern PVOID Ki386IopmSaveArea;
-extern ULONG KeI386EFlagsAndMaskV86;
-extern ULONG KeI386EFlagsOrMaskV86;
-extern BOOLEAN KeI386VirtualIntExtensions;
-extern KIDTENTRY KiIdt[];
-extern KGDTENTRY KiBootGdt[];
-extern KDESCRIPTOR KiGdtDescriptor;
-extern KDESCRIPTOR KiIdtDescriptor;
-extern KTSS KiBootTss;
-#endif
-extern UCHAR P0BootStack[];
-extern UCHAR KiDoubleFaultStack[];
+extern ULONG_PTR KiDoubleFaultStack;
 extern EX_PUSH_LOCK KernelAddressSpaceLock;
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
@@ -142,21 +126,20 @@ extern KEVENT KiSwapEvent;
 extern PKPRCB KiProcessorBlock[];
 extern ULONG KiMask32Array[MAXIMUM_PRIORITY];
 extern ULONG KiIdleSummary;
-extern VOID __cdecl KiTrap19(VOID);
-extern VOID __cdecl KiTrap8(VOID);
-extern VOID __cdecl KiTrap2(VOID);
-extern VOID __cdecl KiFastCallEntry(VOID);
 extern PVOID KeUserApcDispatcher;
 extern PVOID KeUserCallbackDispatcher;
 extern PVOID KeUserExceptionDispatcher;
 extern PVOID KeRaiseUserExceptionDispatcher;
-extern UCHAR KiDebugRegisterTrapOffsets[9];
-extern UCHAR KiDebugRegisterContextOffsets[9];
 extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
+extern LONG KiTickOffset;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 extern ULONG KiDPCTimeout;
+extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
+extern ULONGLONG BootCycles, BootCyclesEnd;
+extern ULONG ProcessCount;
+extern VOID __cdecl KiInterruptTemplate(VOID);
 
 /* MACROS *************************************************************************/
 
@@ -180,20 +163,103 @@ extern ULONG KiDPCTimeout;
 /* One of the Reserved Wait Blocks, this one is for the Thread's Timer */
 #define TIMER_WAIT_BLOCK 0x3L
 
-/* IOPM Definitions */
-#define IO_ACCESS_MAP_NONE 0
-#define IOPM_OFFSET FIELD_OFFSET(KTSS, IoMaps[0].IoMap)
-#define KiComputeIopmOffset(MapNumber)              \
-    (MapNumber == IO_ACCESS_MAP_NONE) ?             \
-        (USHORT)(sizeof(KTSS)) :                    \
-        (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
+#ifdef _M_ARM // FIXME: remove this once our headers are cleaned up
+// 
+// A system call ID is formatted as such:
+// .________________________________________________________________.
+// | 14 | 13 | 12 | 11 | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
+// |--------------|-------------------------------------------------|
+// | TABLE NUMBER |                  TABLE OFFSET                   |
+// \----------------------------------------------------------------/
+//
+//
+// The table number is then used as an index into the service descriptor table.
+#define TABLE_NUMBER_BITS 3
+#define TABLE_OFFSET_BITS 12
 
-#define SIZE_OF_FX_REGISTERS 32
+//
+// There are 2 tables (kernel and shadow, used by Win32K)
+//
+#define NUMBER_SERVICE_TABLES 2
+#define NTOS_SERVICE_INDEX   0
+#define WIN32K_SERVICE_INDEX 1
+
+//
+// NB. From assembly code, the table number must be computed as an offset into
+//     the service descriptor table.
+//     
+//     Each entry into the table is 16 bytes long on 32-bit architectures, and
+//     32 bytes long on 64-bit architectures.
+//
+//     Thus, Table Number 1 is offset 16 (0x10) on x86, and offset 32 (0x20) on
+//     x64.
+//
+#ifdef _WIN64
+#define BITS_PER_ENTRY 5 // (1 << 5) = 32 bytes
+#else
+#define BITS_PER_ENTRY 4 // (1 << 4) = 16 bytes
+#endif
+
+//
+// We want the table number, but leave some extra bits to we can have the offset
+// into the descriptor table.
+//
+#define SERVICE_TABLE_SHIFT (12 - BITS_PER_ENTRY)
+
+//
+// Now the table number (as an offset) is corrupted with part of the table offset
+// This mask will remove the extra unwanted bits, and give us the offset into the
+// descriptor table proper.
+//
+#define SERVICE_TABLE_MASK  (((1 << TABLE_NUMBER_BITS) - 1) << BITS_PER_ENTRY)
+
+//
+// To get the table offset (ie: the service call number), just keep the 12 bits
+//
+#define SERVICE_NUMBER_MASK ((1 << TABLE_OFFSET_BITS) - 1)
+
+//
+// We'll often need to check if this is a graphics call. This is done by comparing
+// the table number offset with the known Win32K table number offset.
+// This is usually index 1, so table number offset 0x10 (x86) or 0x20 (x64)
+//
+#define SERVICE_TABLE_TEST  (WIN32K_SERVICE_INDEX << BITS_PER_ENTRY)
+
+#endif
+
+#define KTS_SYSCALL_BIT (((KTRAP_STATE_BITS) { { .SystemCall   = TRUE } }).Bits)
+#define KTS_PM_BIT      (((KTRAP_STATE_BITS) { { .PreviousMode   = TRUE } }).Bits)
+#define KTS_SEG_BIT     (((KTRAP_STATE_BITS) { { .Segments  = TRUE } }).Bits)
+#define KTS_VOL_BIT     (((KTRAP_STATE_BITS) { { .Volatiles = TRUE } }).Bits)
+#define KTS_FULL_BIT    (((KTRAP_STATE_BITS) { { .Full = TRUE } }).Bits)
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
+VOID
+NTAPI
+CPUID(
+    IN ULONG InfoType,
+    OUT PULONG CpuInfoEax,
+    OUT PULONG CpuInfoEbx,
+    OUT PULONG CpuInfoEcx,
+    OUT PULONG CpuInfoEdx
+);
+
+LONGLONG
+FASTCALL
+RDMSR(
+    IN ULONG Register
+);
+
+VOID
+NTAPI
+WRMSR(
+    IN ULONG Register,
+    IN LONGLONG Value
+);
+
 /* Finds a new thread to run */
-NTSTATUS
+LONG_PTR
 FASTCALL
 KiSwapThread(
     IN PKTHREAD Thread,
@@ -245,7 +311,7 @@ FASTCALL
 KiExitDispatcher(KIRQL OldIrql);
 
 VOID
-NTAPI
+FASTCALL
 KiDeferredReadyThread(IN PKTHREAD Thread);
 
 PKTHREAD
@@ -271,13 +337,6 @@ PKTHREAD
 FASTCALL
 KiSelectNextThread(
     IN PKPRCB Prcb
-);
-
-VOID
-NTAPI
-CPUID(
-    OUT ULONG CpuInfo[4],
-    IN ULONG InfoType
 );
 
 BOOLEAN
@@ -397,7 +456,7 @@ KeInitializeProfile(
     KAFFINITY Affinity
 );
 
-VOID
+BOOLEAN
 NTAPI
 KeStartProfile(
     struct _KPROFILE* Profile,
@@ -478,6 +537,16 @@ KeInitThread(
     IN PCONTEXT Context,
     IN PVOID Teb,
     IN PKPROCESS Process
+);
+
+VOID
+NTAPI
+KiInitializeContextThread(
+    PKTHREAD Thread,
+    PKSYSTEM_ROUTINE SystemRoutine,
+    PKSTART_ROUTINE StartRoutine,
+    PVOID StartContext,
+    PCONTEXT Context
 );
 
 VOID
@@ -574,7 +643,7 @@ VOID
 FASTCALL
 KiUnwaitThread(
     IN PKTHREAD Thread,
-    IN NTSTATUS WaitStatus,
+    IN LONG_PTR WaitStatus,
     IN KPRIORITY Increment
 );
 
@@ -663,12 +732,6 @@ KiTimerExpiration(
 
 ULONG
 NTAPI
-KiComputeTimerTableIndex(
-    IN LONGLONG TimeValue
-);
-
-ULONG
-NTAPI
 KeSetProcess(
     struct _KPROCESS* Process,
     KPRIORITY Increment,
@@ -750,7 +813,7 @@ KiInitializeBugCheck(VOID);
 
 VOID
 NTAPI
-KiSystemStartupReal(
+KiSystemStartup(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
@@ -790,6 +853,7 @@ KeTrapFrameToContext(
     IN OUT PCONTEXT Context
 );
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckWithTf(
@@ -800,6 +864,10 @@ KeBugCheckWithTf(
     ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
+                              
+BOOLEAN
+NTAPI
+KiHandleNmi(VOID);
 
 VOID
 NTAPI
@@ -821,7 +889,7 @@ KeInvalidAccessAllowed(IN PVOID TrapInformation OPTIONAL);
 VOID
 NTAPI
 KeRosDumpStackFrames(
-    PULONG Frame,
+    PULONG_PTR Frame,
     ULONG FrameCount
 );
 
@@ -854,34 +922,51 @@ KiEndUnexpectedRange(
     VOID
 );
 
-VOID
+NTSTATUS
 NTAPI
-KiInterruptDispatch(
-    VOID
+KiRaiseException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PKTRAP_FRAME TrapFrame,
+    IN BOOLEAN SearchFrames
 );
 
-VOID
+NTSTATUS
 NTAPI
-KiChainedDispatch(
-    VOID
+KiContinue(
+    IN PCONTEXT Context,
+    IN PKEXCEPTION_FRAME ExceptionFrame,
+    IN PKTRAP_FRAME TrapFrame
 );
 
+DECLSPEC_NORETURN
 VOID
-NTAPI
-Ki386AdjustEsp0(
+FASTCALL
+KiServiceExit(
+    IN PKTRAP_FRAME TrapFrame,
+    IN NTSTATUS Status
+);
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiServiceExit2(
     IN PKTRAP_FRAME TrapFrame
 );
 
 VOID
-NTAPI
-Ki386SetupAndExitToV86Mode(
-    OUT PTEB VdmTeb
+FASTCALL
+KiInterruptDispatch(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
 );
 
 VOID
-NTAPI
-KeI386VdmInitialize(
-    VOID
+FASTCALL
+KiChainedDispatch(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKINTERRUPT Interrupt
 );
 
 VOID
@@ -889,17 +974,6 @@ NTAPI
 KiInitializeMachineType(
     VOID
 );
-
-//
-// We need to do major portability work
-//
-#ifdef _M_IX86
-VOID
-NTAPI
-KiFlushNPXState(
-    IN FLOATING_SAVE_AREA *SaveArea
-);
-#endif
 
 VOID
 NTAPI
@@ -952,51 +1026,9 @@ KiGetUserModeStackAddress(
     VOID
 );
 
-ULONG_PTR
-NTAPI
-Ki386EnableGlobalPage(IN volatile ULONG_PTR Context);
-
-VOID
-NTAPI
-KiInitializePAT(VOID);
-
-VOID
-NTAPI
-KiInitializeMTRR(IN BOOLEAN FinalCpu);
-
-VOID
-NTAPI
-KiAmdK6InitializeMTRR(VOID);
-
-VOID
-NTAPI
-KiRestoreFastSyscallReturnState(VOID);
-
-ULONG_PTR
-NTAPI
-Ki386EnableDE(IN ULONG_PTR Context);
-
-ULONG_PTR
-NTAPI
-Ki386EnableFxsr(IN ULONG_PTR Context);
-
-ULONG_PTR
-NTAPI
-Ki386EnableXMMIExceptions(IN ULONG_PTR Context);
-
 VOID
 NTAPI
 KiInitMachineDependent(VOID);
-
-VOID
-NTAPI
-KiI386PentiumLockErrataFixup(VOID);
-
-VOID
-WRMSR(
-    IN ULONG Register,
-    IN LONGLONG Value
-);
 
 BOOLEAN
 NTAPI
@@ -1038,6 +1070,13 @@ KiSaveProcessorControlState(
 );
 
 VOID
+NTAPI
+KiSaveProcessorState(
+    IN PKTRAP_FRAME TrapFrame,
+    IN PKEXCEPTION_FRAME ExceptionFrame
+);
+
+VOID
 FASTCALL
 KiRetireDpcList(
     IN PKPRCB Prcb
@@ -1050,17 +1089,29 @@ KiQuantumEnd(
 );
 
 VOID
-KiSystemService(
-    IN PKTHREAD Thread,
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Instruction
-);
-
-VOID
+FASTCALL
 KiIdleLoop(
     VOID
 );
 
-#include "ke_x.h"
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+KiSystemFatalException(
+    IN ULONG ExceptionCode,
+    IN PKTRAP_FRAME TrapFrame
+);
 
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_KE_H */
+PVOID
+NTAPI
+KiPcToFileHeader(IN PVOID Eip,
+                 OUT PLDR_DATA_TABLE_ENTRY *LdrEntry,
+                 IN BOOLEAN DriversOnly,
+                 OUT PBOOLEAN InKernel);
+
+PVOID
+NTAPI
+KiRosPcToUserFileHeader(IN PVOID Eip,
+                        OUT PLDR_DATA_TABLE_ENTRY *LdrEntry);
+
+#include "ke_x.h"

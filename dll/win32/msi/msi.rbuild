@@ -7,7 +7,7 @@
 	<include base="msi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>action.c</file>
 	<file>alter.c</file>
 	<file>appsearch.c</file>
@@ -68,7 +68,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>odbccp32</library>
 	<library>ntdll</library>
 	<library>pseh</library>

@@ -347,7 +347,7 @@ BOOL WINAPI RegisterShellHook(
  * ordinal. If you change the implementation here please update the code in
  * shlwapi as well.
  */
-int WINAPIV ShellMessageBoxW(
+int WINAPI ShellMessageBoxW(
 	HINSTANCE hInstance,
 	HWND hWnd,
 	LPCWSTR lpText,
@@ -383,7 +383,7 @@ int WINAPIV ShellMessageBoxW(
 	va_end(args);
 
 	ret = MessageBoxW(hWnd,pszTemp,pszTitle,uType);
-	LocalFree((HLOCAL)pszTemp);
+        LocalFree(pszTemp);
 	return ret;
 }
 
@@ -405,7 +405,7 @@ int WINAPIV ShellMessageBoxW(
  * NOTES
  *     Exported by ordinal
  */
-int WINAPIV ShellMessageBoxA(
+int WINAPI ShellMessageBoxA(
 	HINSTANCE hInstance,
 	HWND hWnd,
 	LPCSTR lpText,
@@ -441,16 +441,18 @@ int WINAPIV ShellMessageBoxA(
 	va_end(args);
 
 	ret = MessageBoxA(hWnd,pszTemp,pszTitle,uType);
-	LocalFree((HLOCAL)pszTemp);
+        LocalFree(pszTemp);
 	return ret;
 }
 
 /*************************************************************************
  * SHRegisterDragDrop				[SHELL32.86]
  *
- * Probably equivalent to RegisterDragDrop but under Windows 9x it could use the
+ * Probably equivalent to RegisterDragDrop but under Windows 95 it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
- * for details
+ * for details. Under Windows 98 this function initializes the true OLE when called
+ * the first time, on XP always returns E_OUTOFMEMORY and it got removed from Vista.
+ *
  *
  * NOTES
  *     exported by ordinal
@@ -471,7 +473,7 @@ HRESULT WINAPI SHRegisterDragDrop(
  *
  * Probably equivalent to RevokeDragDrop but under Windows 9x it could use the
  * shell32 built-in "mini-COM" without the need to load ole32.dll - see SHLoadOLE
- * for details
+ * for details. Function removed from Windows Vista.
  *
  * NOTES
  *     exported by ordinal
@@ -648,7 +650,7 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPCSTR doc_name, LPCSTR n
 
     /* Add the new entry into the MRU list
      */
-    return AddMRUData(mruhandle, (LPCVOID)buffer, *len);
+    return AddMRUData(mruhandle, buffer, *len);
 }
 
 /*************************************************************************
@@ -704,7 +706,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     /* See if we need to do anything.
      */
     datalen = 64;
-    ret=SHADD_get_policy( "NoRecentDocsHistory", &type, &data, &datalen);
+    ret=SHADD_get_policy( "NoRecentDocsHistory", &type, data, &datalen);
     if ((ret > 0) && (ret != ERROR_FILE_NOT_FOUND)) {
 	ERR("Error %d getting policy \"NoRecentDocsHistory\"\n", ret);
 	return;
@@ -799,15 +801,15 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
     switch (uFlags)
     {
     case SHARD_PIDL:
-	SHGetPathFromIDListA((LPCITEMIDLIST) pv, doc_name);
+        SHGetPathFromIDListA(pv, doc_name);
         break;
 
     case SHARD_PATHA:
-        lstrcpynA(doc_name, (LPCSTR)pv, MAX_PATH);
+        lstrcpynA(doc_name, pv, MAX_PATH);
         break;
 
     case SHARD_PATHW:
-        WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)pv, -1, doc_name, MAX_PATH, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, pv, -1, doc_name, MAX_PATH, NULL, NULL);
         break;
 
     default:
@@ -955,9 +957,9 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 
 	    /* Set the document path or pidl */
 	    if (uFlags == SHARD_PIDL) {
-		hres = IShellLinkA_SetIDList(psl, (LPCITEMIDLIST) pv);
+                hres = IShellLinkA_SetIDList(psl, pv);
 	    } else {
-		hres = IShellLinkA_SetPath(psl, (LPCSTR) pv);
+                hres = IShellLinkA_SetPath(psl, pv);
 	    }
 	    if(FAILED(hres)) {
 		/* bombed */
@@ -1124,7 +1126,7 @@ BOOL WINAPI DAD_DragEnter(HWND hwnd)
  * DAD_DragEnterEx				[SHELL32.131]
  *
  */
-BOOL WINAPI DAD_DragEnterEx(HWND hwnd, const POINT p)
+BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
 {
     FIXME("hwnd = %p (%d,%d)\n",hwnd,p.x,p.y);
     return FALSE;
@@ -1265,11 +1267,19 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
 {	FIXME("(%s)\n", bFullInit ? "true" : "false");
 	return 0;
 }
-/*************************************************************************
- * IsUserAdmin					[SHELL32.680] NT 4.0
- *
- */
 
+/*************************************************************************
+ * IsUserAnAdmin    [SHELL32.680] NT 4.0
+ *
+ * Checks whether the current user is a member of the Administrators group.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+ */
 BOOL WINAPI IsUserAnAdmin(VOID)
 {
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
@@ -1281,7 +1291,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
     BOOL bResult = FALSE;
 
     TRACE("\n");
-
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
     {
         return FALSE;
@@ -1331,7 +1340,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 
     FreeSid(lpSid);
     HeapFree(GetProcessHeap(), 0, lpGroups);
-
     return bResult;
 }
 
@@ -1666,6 +1674,14 @@ UINT WINAPI SHAddFromPropSheetExtArray(HPSXA hpsxa, LPFNADDPROPSHEETPAGE lpfnAdd
 }
 
 /*************************************************************************
+ *      SHCreatePropSheetExtArray	[SHELL32.168]
+ */
+HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
+{
+    return SHCreatePropSheetExtArrayEx(hKey, pszSubKey, max_iface, NULL);
+}
+
+/*************************************************************************
  *      SHCreatePropSheetExtArrayEx	[SHELL32.194]
  */
 HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj)
@@ -1699,7 +1715,7 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
     if (lRet == ERROR_SUCCESS)
     {
         /* Create and initialize the Property Sheet Extensions Array */
-        psxa = (PPSXA)LocalAlloc(LMEM_FIXED, FIELD_OFFSET(PSXA, pspsx[max_iface]));
+        psxa = LocalAlloc(LMEM_FIXED, FIELD_OFFSET(PSXA, pspsx[max_iface]));
         if (psxa)
         {
             ZeroMemory(psxa, FIELD_OFFSET(PSXA, pspsx[max_iface]));
@@ -1773,15 +1789,6 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
 }
 
 /*************************************************************************
- *      SHCreatePropSheetExtArray	[SHELL32.168]
- */
-HPSXA WINAPI SHCreatePropSheetExtArray(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface)
-{
-    return SHCreatePropSheetExtArrayEx(hKey, pszSubKey, max_iface, NULL);
-}
-
-
-/*************************************************************************
  *      SHReplaceFromPropSheetExtArray	[SHELL32.170]
  */
 UINT WINAPI SHReplaceFromPropSheetExtArray(HPSXA hpsxa, UINT uPageID, LPFNADDPROPSHEETPAGE lpfnReplaceWith, LPARAM lParam)
@@ -1829,7 +1836,7 @@ void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
             psxa->pspsx[i]->lpVtbl->Release(psxa->pspsx[i]);
         }
 
-        LocalFree((HLOCAL)psxa);
+        LocalFree(psxa);
     }
 }
 
@@ -1972,20 +1979,72 @@ BOOL WINAPI SHObjectProperties(HWND hwnd, DWORD dwType, LPCWSTR szObject, LPCWST
 BOOL WINAPI SHGetNewLinkInfoA(LPCSTR pszLinkTo, LPCSTR pszDir, LPSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    FIXME("%s, %s, %p, %p, 0x%08x - stub\n", debugstr_a(pszLinkTo), debugstr_a(pszDir),
-          pszName, pfMustCopy, uFlags);
+    WCHAR wszLinkTo[MAX_PATH];
+    WCHAR wszDir[MAX_PATH];
+    WCHAR wszName[MAX_PATH];
+    BOOL res;
 
-    return FALSE;
+    MultiByteToWideChar(CP_ACP, 0, pszLinkTo, -1, wszLinkTo, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, pszDir, -1, wszDir, MAX_PATH);
+
+    res = SHGetNewLinkInfoW(wszLinkTo, wszDir, wszName, pfMustCopy, uFlags);
+
+    if (res)
+        WideCharToMultiByte(CP_ACP, 0, wszName, -1, pszName, MAX_PATH, NULL, NULL);
+
+    return res;
 }
 
 BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName, BOOL *pfMustCopy,
                               UINT uFlags)
 {
-    FIXME("%s, %s, %p, %p, 0x%08x - stub\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
+    const WCHAR *basename;
+    WCHAR *dst_basename;
+    int i=2;
+    static const WCHAR lnkformat[] = {'%','s','.','l','n','k',0};
+    static const WCHAR lnkformatnum[] = {'%','s',' ','(','%','d',')','.','l','n','k',0};
+
+    TRACE("(%s, %s, %p, %p, 0x%08x)\n", debugstr_w(pszLinkTo), debugstr_w(pszDir),
           pszName, pfMustCopy, uFlags);
 
-    return FALSE;
+    *pfMustCopy = FALSE;
+
+    if (uFlags & SHGNLI_PIDL)
+    {
+        FIXME("SHGNLI_PIDL flag unsupported\n");
+        return FALSE;
+    }
+
+    if (uFlags)
+        FIXME("ignoring flags: 0x%08x\n", uFlags);
+
+    /* FIXME: should test if the file is a shortcut or DOS program */
+    if (GetFileAttributesW(pszLinkTo) == INVALID_FILE_ATTRIBUTES)
+        return FALSE;
+
+    basename = strrchrW(pszLinkTo, '\\');
+    if (basename)
+        basename = basename+1;
+    else
+        basename = pszLinkTo;
+
+    lstrcpynW(pszName, pszDir, MAX_PATH);
+    if (!PathAddBackslashW(pszName))
+        return FALSE;
+
+    dst_basename = pszName + strlenW(pszName);
+
+    snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, lnkformat, basename);
+
+    while (GetFileAttributesW(pszName) != INVALID_FILE_ATTRIBUTES)
+    {
+        snprintfW(dst_basename, pszName + MAX_PATH - dst_basename, lnkformatnum, basename, i);
+        i++;
+    }
+
+    return TRUE;
 }
+
 /*************************************************************************
  *              SHStartNetConnectionDialog (SHELL32.@)
  */
@@ -2184,12 +2243,21 @@ LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
     HRESULT         hr=E_FAIL;
     ULONG           dwAttr=sfgaoIn;
 
-    if (!pszName || !ppidl || !psfgaoOut)
+    if(!ppidl)
         return E_INVALIDARG;
+
+    if (!pszName || !psfgaoOut)
+    {
+        *ppidl = NULL;
+        return E_INVALIDARG;
+    }
 
     hr = SHGetDesktopFolder(&psfDesktop);
     if (FAILED(hr))
+    {
+        *ppidl = NULL;
         return hr;
+    }
 
     hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
 
@@ -2197,6 +2265,8 @@ LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
 
     if (SUCCEEDED(hr))
         *psfgaoOut = dwAttr;
+    else
+        *ppidl = NULL;
 
     return hr;
 }

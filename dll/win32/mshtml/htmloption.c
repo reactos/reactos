@@ -31,13 +31,13 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-typedef struct {
+struct HTMLOptionElement {
     HTMLElement element;
 
     const IHTMLOptionElementVtbl *lpHTMLOptionElementVtbl;
 
     nsIDOMHTMLOptionElement *nsoption;
-} HTMLOptionElement;
+};
 
 #define HTMLOPTION(x)  (&(x)->lpHTMLOptionElementVtbl)
 
@@ -98,15 +98,35 @@ static HRESULT WINAPI HTMLOptionElement_Invoke(IHTMLOptionElement *iface, DISPID
 static HRESULT WINAPI HTMLOptionElement_put_selected(IHTMLOptionElement *iface, VARIANT_BOOL v)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, v);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%x)\n", This, v);
+
+    nsres = nsIDOMHTMLOptionElement_SetSelected(This->nsoption, v != VARIANT_FALSE);
+    if(NS_FAILED(nsres)) {
+        ERR("SetSelected failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLOptionElement_get_selected(IHTMLOptionElement *iface, VARIANT_BOOL *p)
 {
     HTMLOptionElement *This = HTMLOPTION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    PRBool selected;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLOptionElement_GetSelected(This->nsoption, &selected);
+    if(NS_FAILED(nsres)) {
+        ERR("GetSelected failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = selected ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLOptionElement_put_value(IHTMLOptionElement *iface, BSTR v)
@@ -117,7 +137,7 @@ static HRESULT WINAPI HTMLOptionElement_put_value(IHTMLOptionElement *iface, BST
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(v));
 
-    nsAString_Init(&value_str, v);
+    nsAString_InitDepend(&value_str, v);
     nsres = nsIDOMHTMLOptionElement_SetValue(This->nsoption, &value_str);
     nsAString_Finish(&value_str);
     if(NS_FAILED(nsres))
@@ -209,7 +229,7 @@ static HRESULT WINAPI HTMLOptionElement_put_text(IHTMLOptionElement *iface, BSTR
         }
     }
 
-    nsAString_Init(&text_str, v);
+    nsAString_InitDepend(&text_str, v);
     nsres = nsIDOMHTMLDocument_CreateTextNode(This->element.node.doc->nsdoc, &text_str, &text_node);
     nsAString_Finish(&text_str);
     if(NS_FAILED(nsres)) {
@@ -324,11 +344,7 @@ static const NodeImplVtbl HTMLOptionElementImplVtbl = {
 };
 
 static const tid_t HTMLOptionElement_iface_tids[] = {
-    IHTMLDOMNode_tid,
-    IHTMLDOMNode2_tid,
-    IHTMLElement_tid,
-    IHTMLElement2_tid,
-    IHTMLElement3_tid,
+    HTMLELEMENT_TIDS,
     IHTMLOptionElement_tid,
     0
 };
@@ -339,7 +355,7 @@ static dispex_static_data_t HTMLOptionElement_dispex = {
     HTMLOptionElement_iface_tids
 };
 
-HTMLElement *HTMLOptionElement_Create(nsIDOMHTMLElement *nselem)
+HTMLElement *HTMLOptionElement_Create(HTMLDocumentNode *doc, nsIDOMHTMLElement *nselem)
 {
     HTMLOptionElement *ret = heap_alloc_zero(sizeof(HTMLOptionElement));
     nsresult nsres;
@@ -347,8 +363,7 @@ HTMLElement *HTMLOptionElement_Create(nsIDOMHTMLElement *nselem)
     ret->lpHTMLOptionElementVtbl = &HTMLOptionElementVtbl;
     ret->element.node.vtbl = &HTMLOptionElementImplVtbl;
 
-    HTMLElement_Init(&ret->element);
-    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLOPTION(ret), &HTMLOptionElement_dispex);
+    HTMLElement_Init(&ret->element, doc, nselem, &HTMLOptionElement_dispex);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLOptionElement, (void**)&ret->nsoption);
     if(NS_FAILED(nsres))
@@ -449,9 +464,7 @@ static HRESULT WINAPI HTMLOptionElementFactory_create(IHTMLOptionElementFactory 
         IHTMLOptionElement **optelem)
 {
     HTMLOptionElementFactory *This = HTMLOPTFACTORY_THIS(iface);
-    nsIDOMElement *nselem;
-    nsAString option_str;
-    nsresult nsres;
+    nsIDOMHTMLElement *nselem;
     HRESULT hres;
 
     static const PRUnichar optionW[] = {'O','P','T','I','O','N',0};
@@ -459,24 +472,20 @@ static HRESULT WINAPI HTMLOptionElementFactory_create(IHTMLOptionElementFactory 
     TRACE("(%p)->(%s %s %s %s %p)\n", This, debugstr_variant(&text), debugstr_variant(&value),
           debugstr_variant(&defaultselected), debugstr_variant(&selected), optelem);
 
-    if(!This->doc->nsdoc) {
-        WARN("NULL nsdoc\n");
+    if(!This->window || !This->window->doc) {
+        WARN("NULL doc\n");
         return E_UNEXPECTED;
     }
 
     *optelem = NULL;
 
-    nsAString_Init(&option_str, optionW);
-    nsres = nsIDOMHTMLDocument_CreateElement(This->doc->nsdoc, &option_str, &nselem);
-    nsAString_Finish(&option_str);
-    if(NS_FAILED(nsres)) {
-        ERR("CreateElement failed: %08x\n", nsres);
-        return E_FAIL;
-    }
+    hres = create_nselem(This->window->doc, optionW, &nselem);
+    if(FAILED(hres))
+        return hres;
 
-    hres = IHTMLDOMNode_QueryInterface(HTMLDOMNODE(get_node(This->doc, (nsIDOMNode*)nselem, TRUE)),
+    hres = IHTMLDOMNode_QueryInterface(HTMLDOMNODE(get_node(This->window->doc, (nsIDOMNode*)nselem, TRUE)),
             &IID_IHTMLOptionElement, (void**)optelem);
-    nsIDOMElement_Release(nselem);
+    nsIDOMHTMLElement_Release(nselem);
 
     if(V_VT(&text) == VT_BSTR)
         IHTMLOptionElement_put_text(*optelem, V_BSTR(&text));
@@ -509,7 +518,7 @@ static const IHTMLOptionElementFactoryVtbl HTMLOptionElementFactoryVtbl = {
     HTMLOptionElementFactory_create
 };
 
-HTMLOptionElementFactory *HTMLOptionElementFactory_Create(HTMLDocument *doc)
+HTMLOptionElementFactory *HTMLOptionElementFactory_Create(HTMLWindow *window)
 {
     HTMLOptionElementFactory *ret;
 
@@ -517,7 +526,7 @@ HTMLOptionElementFactory *HTMLOptionElementFactory_Create(HTMLDocument *doc)
 
     ret->lpHTMLOptionElementFactoryVtbl = &HTMLOptionElementFactoryVtbl;
     ret->ref = 1;
-    ret->doc = doc;
+    ret->window = window;
 
     return ret;
 }

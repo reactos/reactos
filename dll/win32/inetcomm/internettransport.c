@@ -20,18 +20,14 @@
 
 #define COBJMACROS
 
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "winuser.h"
-#include "winsock2.h"
 #include "ws2tcpip.h"
+#include "windef.h"
+#include "winnt.h"
 #include "objbase.h"
 #include "ole2.h"
 #include "mimeole.h"
+
+#include <stdio.h>
 
 #include "wine/debug.h"
 
@@ -171,14 +167,12 @@ HRESULT InternetTransport_HandsOffCallback(InternetTransport *This)
 
 HRESULT InternetTransport_DropConnection(InternetTransport *This)
 {
-    int ret;
-
     if (This->Status == IXP_DISCONNECTED)
         return IXP_E_NOT_CONNECTED;
 
-    ret = shutdown(This->Socket, SD_BOTH);
+    shutdown(This->Socket, SD_BOTH);
 
-    ret = closesocket(This->Socket);
+    closesocket(This->Socket);
 
     DestroyWindow(This->hwnd);
     This->hwnd = NULL;

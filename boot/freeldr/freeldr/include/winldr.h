@@ -13,21 +13,21 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __WINLDR_H
-#define __WINLDR_H
-
+#pragma once
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //
 // ReactOS Loading Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-VOID LoadAndBootWindows(PCSTR OperatingSystemName, USHORT OperatingSystemVersion);
+VOID LoadAndBootWindows(PCSTR OperatingSystemName,
+                        PSTR SettingsValue,
+                        USHORT OperatingSystemVersion);
 
 /* Entry-point to kernel */
 typedef VOID (NTAPI *KERNEL_ENTRY_POINT) (PLOADER_PARAMETER_BLOCK LoaderBlock);
@@ -77,8 +77,11 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
                    PVOID GdtIdt);
 
 // wlregistry.c
-BOOLEAN WinLdrLoadAndScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
-                                    IN LPCSTR DirectoryPath);
+BOOLEAN WinLdrInitSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath);
+
+BOOLEAN WinLdrScanSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
+                             IN LPCSTR DirectoryPath);
 
 
 /* FIXME: Should be moved to NDK, and respective ACPI header files */
@@ -103,6 +106,3 @@ typedef struct  /* Root System Descriptor Pointer */
 	CHAR             reserved [3];           /* reserved field must be 0 */
 } RSDP_DESCRIPTOR, *PRSDP_DESCRIPTOR;
 #include <poppack.h>
-
-
-#endif // defined __WINLDR_H

@@ -47,7 +47,10 @@ typedef enum _PinDirection
 cpp_quote("#define MAX_PIN_NAME    128")
 cpp_quote("#define MAX_FILTER_NAME 128")
 
+cpp_quote("#ifndef REFERENCE_TIME_DEFINED")
+cpp_quote("#define REFERENCE_TIME_DEFINED")
 typedef LONGLONG REFERENCE_TIME;
+cpp_quote("#endif")
 
 cpp_quote("#ifndef REFTIME_DEFINED")
 cpp_quote("#define REFTIME_DEFINED")
@@ -347,6 +350,22 @@ interface IReferenceClock : IUnknown
 }
 
 typedef IReferenceClock *PREFERENCECLOCK;
+
+
+[
+local,
+object,
+uuid(ebec459c-2eca-4d42-a8af-30df557614b8),
+pointer_default(unique)
+]
+interface IReferenceClockTimerControl : IUnknown {
+
+    HRESULT SetDefaultTimerResolution(
+        REFERENCE_TIME timerResolution);
+    HRESULT GetDefaultTimerResolution(
+        [out] REFERENCE_TIME* pTimerResolution);
+}
+
 
 /*
 [

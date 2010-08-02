@@ -2,9 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="freetype" type="staticlibrary" allowwarnings="true">
 	<include base="freetype">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTDRIVER__" />
-	<define name="__NO_CTYPE_INLINES" />
 	<define name="FT2_BUILD_LIBRARY"  />
 	<if property="NSWPAT" value="0">
 		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />
@@ -12,30 +10,28 @@
 	<if property="NSWPAT" value="1">
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
-	<if property="ARCH" value="i386">
-		<directory name="i386">
-			<file>setjmplongjmp.s</file>
-		</directory>
-	</if>
 	<directory name="src">
 		<directory name="base">
-			<file>ftsystem.c</file>
-			<file>ftinit.c</file>
-			<file>ftdebug.c</file>
-			<file>_ftbase_ros.c</file>
+			<file>ftbase.c</file>
 			<file>ftbbox.c</file>
-			<file>ftglyph.c</file>
 			<file>ftbdf.c</file>
 			<file>ftbitmap.c</file>
+			<file>ftdebug.c</file>
+			<file>ftgasp.c</file>
+			<file>ftglyph.c</file>
 			<file>ftgxval.c</file>
+			<file>ftinit.c</file>
+			<file>ftlcdfil.c</file>
 			<file>ftmm.c</file>
 			<file>ftotval.c</file>
 			<file>ftpatent.c</file>
 			<file>ftpfr.c</file>
 			<file>ftstroke.c</file>
 			<file>ftsynth.c</file>
+			<file>ftsystem.c</file>
 			<file>fttype1.c</file>
 			<file>ftwinfnt.c</file>
+			<file>ftxf86.c</file>
 		</directory>
 		<directory name="autofit">
 			<file>autofit.c</file>

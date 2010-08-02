@@ -12,27 +12,29 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI WNDOBJ Functions
- * FILE:              subsys/win32k/eng/window.c
+ * FILE:              subsystems/win32/win32k/eng/engwindow.c
  * PROGRAMER:         Gregor Anich
  * REVISION HISTORY:
  *                 16/11/2004: Created
  */
 
-/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows. */
+/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows.
+ */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
+
+INT gcountPWO = 0;
 
 /*
  * Calls the WNDOBJCHANGEPROC of the given WNDOBJ
@@ -82,11 +84,13 @@ IntEngWndUpdateClipObj(
   CLIPOBJ *ClipObj = NULL;
   CLIPOBJ *OldClipObj;
 
+  DPRINT("IntEngWndUpdateClipObj\n");
+
   hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
   if (hVisRgn != NULL)
   {
-    NtGdiOffsetRgn(hVisRgn, Window->Wnd->ClientRect.left, Window->Wnd->ClientRect.top);
-    visRgn = REGION_LockRgn(hVisRgn);
+    NtGdiOffsetRgn(hVisRgn, Window->Wnd->rcClient.left, Window->Wnd->rcClient.top);
+    visRgn = RGNOBJAPI_Lock(hVisRgn, NULL);
     if (visRgn != NULL)
     {
       if (visRgn->rdh.nCount > 0)
@@ -107,12 +111,13 @@ IntEngWndUpdateClipObj(
           }
         }
       }
-      REGION_UnlockRgn(visRgn);
+      RGNOBJAPI_Unlock(visRgn);
     }
     else
     {
       DPRINT1("Warning: Couldn't lock visible region of window DC\n");
     }
+    REGION_FreeRgnByHandle(hVisRgn);
   }
   else
   {
@@ -122,8 +127,8 @@ IntEngWndUpdateClipObj(
   if (ClipObj == NULL)
   {
     /* Fall back to client rect */
-    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->ClientRect,
-                                     &Window->Wnd->ClientRect);
+    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->rcClient,
+                                     &Window->Wnd->rcClient);
   }
 
   if (ClipObj == NULL)
@@ -133,8 +138,8 @@ IntEngWndUpdateClipObj(
   }
 
   RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
-  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->ClientRect, sizeof (RECT));
-  OldClipObj = InterlockedExchangePointer(&WndObjInt->ClientClipObj, ClipObj);
+  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->rcClient, sizeof (RECT));
+  OldClipObj = InterlockedExchangePointer((PVOID*)&WndObjInt->ClientClipObj, ClipObj);
   if (OldClipObj != NULL)
     IntEngDeleteClipRegion(OldClipObj);
 
@@ -150,44 +155,41 @@ IntEngWindowChanged(
   PWINDOW_OBJECT  Window,
   FLONG           flChanged)
 {
-  PLIST_ENTRY CurrentEntry;
   WNDGDI *Current;
+  HWND hWnd;
 
   ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
-  CurrentEntry = Window->WndObjListHead.Flink;
-  while (CurrentEntry != &Window->WndObjListHead)
-    {
-      Current = CONTAINING_RECORD(CurrentEntry, WNDGDI, ListEntry);
+  hWnd = Window->hSelf; // pWnd->head.h;
+  Current = (WNDGDI *)IntGetProp(Window, AtomWndObj);
 
-      if (Current->WndObj.pvConsumer != NULL)
-        {
-          /* Update the WNDOBJ */
-          switch (flChanged)
-            {
-            case WOC_RGN_CLIENT:
-              /* Update the clipobj and client rect of the WNDOBJ */
-              IntEngWndUpdateClipObj(Current, Window);
-              break;
+  if ( gcountPWO &&
+       Current &&
+       Current->Hwnd == hWnd &&
+       Current->WndObj.pvConsumer != NULL )
+  {
+     /* Update the WNDOBJ */
+     switch (flChanged)
+     {
+        case WOC_RGN_CLIENT:
+        /* Update the clipobj and client rect of the WNDOBJ */
+           IntEngWndUpdateClipObj(Current, Window);
+           break;
 
-            case WOC_DELETE:
-              /* FIXME: Should the WNDOBJs be deleted by win32k or by the driver? */
-              break;
-            }
+        case WOC_DELETE:
+        /* FIXME: Should the WNDOBJs be deleted by win32k or by the driver? */
+           break;
+     }
 
-          /* Call the change proc */
-          IntEngWndCallChangeProc(&Current->WndObj, flChanged);
+     /* Call the change proc */
+     IntEngWndCallChangeProc(&Current->WndObj, flChanged);
 
-          /* HACK: Send WOC_CHANGED after WOC_RGN_CLIENT */
-          if (flChanged == WOC_RGN_CLIENT)
-            {
-              IntEngWndCallChangeProc(&Current->WndObj, WOC_CHANGED);
-            }
-
-          CurrentEntry = CurrentEntry->Flink;
-        }
-    }
-
+     /* HACK: Send WOC_CHANGED after WOC_RGN_CLIENT */
+     if (flChanged == WOC_RGN_CLIENT)
+     {
+        IntEngWndCallChangeProc(&Current->WndObj, WOC_CHANGED);
+     }
+  }
 }
 
 /*
@@ -251,7 +253,8 @@ EngCreateWnd(
   WndObjInt->PixelFormat = iPixelFormat;
 
   /* associate object with window */
-  InsertTailList(&Window->WndObjListHead, &WndObjInt->ListEntry);
+  IntSetProp(Window, AtomWndObj, WndObjInt);
+  ++gcountPWO;
 
   DPRINT("EngCreateWnd: SUCCESS!\n");
 
@@ -289,15 +292,15 @@ EngDeleteWnd(
   /* Get window object */
   Window = UserGetWindowObject(WndObjInt->Hwnd);
   if (Window == NULL)
-    {
-      DPRINT1("Warning: Couldnt get window object for WndObjInt->Hwnd!!!\n");
-      RemoveEntryList(&WndObjInt->ListEntry);
-    }
+  {
+     DPRINT1("Warning: Couldnt get window object for WndObjInt->Hwnd!!!\n");
+  }
   else
-    {
-      /* Remove object from window */
-      RemoveEntryList(&WndObjInt->ListEntry);
-    }
+  {
+    /* Remove object from window */
+    IntRemoveProp(Window, AtomWndObj);
+    --gcountPWO;
+  }
 
   if (!calledFromUser){
      UserLeave();

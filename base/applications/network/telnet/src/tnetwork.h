@@ -1,8 +1,7 @@
 // This is a simple class to handle socket connections
 // (Paul Brannan 6/15/98)
 
-#ifndef __TNETWORK_H
-#define __TNETWORK_H
+#pragma once
 
 #include <windows.h>
 
@@ -24,7 +23,7 @@ public:
 	TNetwork(SOCKET s = 0): socket(s), local_echo(1), line_mode(1),
 		net_type(TN_NETSOCKET), naws_func((Naws_func_t)NULL),
 		local_address((char *)NULL) {}
-	~TNetwork() {if(local_address) delete local_address;}
+	~TNetwork() {if(local_address) delete[] local_address;}
 
 	void SetSocket(SOCKET s);
 	SOCKET GetSocket() {return socket;}
@@ -46,5 +45,3 @@ public:
 
 	void do_naws(int width, int height);
 };
-
-#endif

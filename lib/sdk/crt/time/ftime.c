@@ -1,34 +1,63 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/time/ftime.c
+ * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
+ * PROJECT:     ReactOS CRT library
+ * FILE:        lib/sdk/crt/time/ftime.c
  * PURPOSE:     Deprecated BSD library call
- * PROGRAMER:   Art Yerkes
- * UPDATE HISTORY:
- *              07/15/03 -- Created
+ * PROGRAMERS:  Timo Kreuzer
  */
-
 #include <precomp.h>
+#include <sec_api/time_s.h>
 #include <sys/timeb.h>
+#include "bitsfixup.h"
 
-/* ftime (3) -- Obsolete BSD library function included in the SUS for copat.
- * Also present in msvcrt.dll as _ftime
- * See: http://www.opengroup.org/onlinepubs/007904957/functions/ftime.html */
-/*
- * @implemented
+/******************************************************************************
+ * \name _ftime_s
+ * \brief Get the current time.
+ * \param [out] ptimeb Pointer to a structure of type struct _timeb that 
+ *        recieves the current time.
+ * \sa http://msdn.microsoft.com/en-us/library/95e68951.aspx
  */
-#undef _ftime
-void _ftime( struct _timeb *tm )
+errno_t
+_ftime_s(struct _timeb *ptimeb)
 {
-  int ret = 0;
-  SYSTEMTIME syst;
+    DWORD ret;
+    TIME_ZONE_INFORMATION TimeZoneInformation;
+    FILETIME SystemTime;
 
-  GetSystemTime( &syst );
+    /* Validate parameters */
+    if (!ptimeb)
+    {
+#if 0
+        _invalid_parameter(0,
+                           0,//__FUNCTION__,
+                           _CRT_WIDE(__FILE__),
+                           __LINE__,
+                           0);
+#endif
+        return EINVAL;
+    }
 
-  if( ret == 0 ) {
-    time( &tm->time );
-    tm->millitm = syst.wMilliseconds;
-//    tm->_timezone = 0; /* According to the open group, timezone and dstflag */
-    tm->dstflag = 0;  /* exist for compatibility, but are unspecified. */
-  }
+    ret = GetTimeZoneInformation(&TimeZoneInformation);
+    ptimeb->dstflag = (ret == TIME_ZONE_ID_DAYLIGHT) ? 1 : 0;
+    ptimeb->timezone = TimeZoneInformation.Bias;
+
+    GetSystemTimeAsFileTime(&SystemTime);
+    ptimeb->time = FileTimeToUnixTime(&SystemTime, &ptimeb->millitm);
+
+    return 0;
+}
+
+/******************************************************************************
+ * \name _ftime
+ * \brief Get the current time.
+ * \param [out] ptimeb Pointer to a structure of type struct _timeb that 
+ *        recieves the current time.
+ * \note This function is for compatability and simply calls the secure 
+ *       version _ftime_s().
+ * \sa http://msdn.microsoft.com/en-us/library/z54t9z5f.aspx
+ */
+void
+_ftime(struct _timeb *ptimeb)
+{
+    _ftime_s(ptimeb);
 }

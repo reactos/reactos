@@ -2,19 +2,23 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="mesa32" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_MESA32}" installbase="system32" installname="mesa32.dll" allowwarnings="true" crt="msvcrt">
 	<importlibrary definition="src/drivers/windows/icd/mesa.def" />
-	<linkerflag>-enable-stdcall-fixup</linkerflag>
-	<compilerflag>-w</compilerflag>
+	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>
+	<compilerflag compilerset="gcc">-w</compilerflag>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<define name="USE_EXTERNAL_DXTN_LIB" />
 	<library>gdi32</library>
 	<define name="BUILD_GL32" />
 	<define name="WIN32" />
 	<define name="USE_EXTERNAL_DXTN_LIB=1" />
-	<define name="USE_X86_ASM" />
-	<define name="USE_MMX_ASM" />
-	<define name="USE_SSE_ASM" />
+	<if property="ARCH" value="i386">
+		<define name="USE_X86_ASM" />
+		<define name="USE_MMX_ASM" />
+		<define name="USE_SSE_ASM" />
+	</if>
+	<ifnot property="ARCH" value="i386">
+		<define name="GL_NO_STDCALL" />
+	</ifnot>
 	<define name="USE_3DNOW_ASM" />
 	<include base="mesa32">include</include>
 	<include base="mesa32">src</include>
@@ -28,20 +32,24 @@
 	<include base="mesa32">src/shader/slang/OSDependent/Linux</include>
 	<include base="mesa32">src/shader/slang/OGLCompilersDLL</include>
 	<directory name="src">
+	<directory name="drivers">
+		<directory name="common">
+			<file>driverfuncs.c</file>
+		</directory>
+		<directory name="windows">
+			<directory name="gdi">
+				<file>wmesa.c</file>
+				<file>wgl.c</file>
+			</directory>
+			<directory name="icd">
+				<file>icd.c</file>
+			</directory>
+		</directory>
+	</directory>
 	<directory name="glapi">
 		<file>glapi_getproc.c</file>
 		<file>glapi.c</file>
 		<file>glthread.c</file>
-	</directory>
-	<directory name="math">
-		<file>m_debug_clip.c</file>
-		<file>m_debug_norm.c</file>
-		<file>m_debug_xform.c</file>
-		<file>m_eval.c</file>
-		<file>m_matrix.c</file>
-		<file>m_translate.c</file>
-		<file>m_vector.c</file>
-		<file>m_xform.c</file>
 	</directory>
 	<directory name="main">
 		<file>accum.c</file>
@@ -100,6 +108,9 @@
 		<file>readpix.c</file>
 		<file>renderbuffer.c</file>
 		<file>scissor.c</file>
+		<file>shaders.c</file>
+		<file>state.c</file>
+		<file>stencil.c</file>
 		<file>texcompress.c</file>
 		<file>texcompress_fxt1.c</file>
 		<file>texcompress_s3tc.c</file>
@@ -114,6 +125,17 @@
 		<file>texstate.c</file>
 		<file>texstore.c</file>
 		<file>varray.c</file>
+		<file>vtxfmt.c</file>
+	</directory>
+	<directory name="math">
+		<file>m_debug_clip.c</file>
+		<file>m_debug_norm.c</file>
+		<file>m_debug_xform.c</file>
+		<file>m_eval.c</file>
+		<file>m_matrix.c</file>
+		<file>m_translate.c</file>
+		<file>m_vector.c</file>
+		<file>m_xform.c</file>
 	</directory>
 	<directory name="shader">
 		<file>arbprogparse.c</file>
@@ -133,6 +155,29 @@
 		<file>prog_uniform.c</file>
 		<file>program.c</file>
 		<file>programopt.c</file>
+		<file>shader_api.c</file>
+		<directory name="slang">
+			<file>slang_builtin.c</file>
+			<file>slang_codegen.c</file>
+			<file>slang_compile.c</file>
+			<file>slang_compile_function.c</file>
+			<file>slang_compile_operation.c</file>
+			<file>slang_compile_struct.c</file>
+			<file>slang_compile_variable.c</file>
+			<file>slang_emit.c</file>
+			<file>slang_ir.c</file>
+			<file>slang_label.c</file>
+			<file>slang_link.c</file>
+			<file>slang_log.c</file>
+			<file>slang_mem.c</file>
+			<file>slang_preprocess.c</file>
+			<file>slang_print.c</file>
+			<file>slang_simplify.c</file>
+			<file>slang_storage.c</file>
+			<file>slang_typeinfo.c</file>
+			<file>slang_utility.c</file>
+			<file>slang_vartable.c</file>
+		</directory>
 		<directory name="grammar">
 			<file>grammar_mesa.c</file>
 		</directory>
@@ -168,41 +213,9 @@
 		<file>s_triangle.c</file>
 		<file>s_zoom.c</file>
 	</directory>
-	<directory name="main">
-		<file>shaders.c</file>
-	</directory>
-	<directory name="shader">
-		<file>shader_api.c</file>
-		<directory name="slang">
-			<file>slang_builtin.c</file>
-			<file>slang_codegen.c</file>
-			<file>slang_compile.c</file>
-			<file>slang_compile_function.c</file>
-			<file>slang_compile_operation.c</file>
-			<file>slang_compile_struct.c</file>
-			<file>slang_compile_variable.c</file>
-			<file>slang_emit.c</file>
-			<file>slang_ir.c</file>
-			<file>slang_label.c</file>
-			<file>slang_link.c</file>
-			<file>slang_log.c</file>
-			<file>slang_mem.c</file>
-			<file>slang_preprocess.c</file>
-			<file>slang_print.c</file>
-			<file>slang_simplify.c</file>
-			<file>slang_storage.c</file>
-			<file>slang_typeinfo.c</file>
-			<file>slang_utility.c</file>
-			<file>slang_vartable.c</file>
-		</directory>
-	</directory>
 	<directory name="swrast_setup">
 		<file>ss_context.c</file>
 		<file>ss_triangle.c</file>
-	</directory>
-	<directory name="main">
-		<file>state.c</file>
-		<file>stencil.c</file>
 	</directory>
 	<directory name="tnl">
 		<file>t_context.c</file>
@@ -222,7 +235,9 @@
 		<file>t_vertex.c</file>
 		<file>t_vertex_generic.c</file>
 		<file>t_vp_build.c</file>
-		<file>t_vertex_sse.c</file>
+		<if property="ARCH" value="i386">
+			<file>t_vertex_sse.c</file>
+		</if>
 	</directory>
 	<directory name="vbo">
 		<file>vbo_context.c</file>
@@ -240,52 +255,43 @@
 		<file>vbo_split_copy.c</file>
 		<file>vbo_split_inplace.c</file>
 	</directory>
-	<directory name="main">
-		<file>vtxfmt.c</file>
-	</directory>
-	<directory name="drivers">
-		<directory name="common">
-			<file>driverfuncs.c</file>
-		</directory>
-		<directory name="windows">
-			<directory name="gdi">
-				<file>wmesa.c</file>
-				<file>wgl.c</file>
+	<if property="ARCH" value="i386">
+		<directory name="x86">
+			<directory name="rtasm">
+				<file>x86sse.c</file>
 			</directory>
-			<directory name="icd">
-				<file>icd.c</file>
-			</directory>
+			<file>3dnow.c</file>
+			<file>3dnow_normal.S</file>
+			<file>3dnow_xform1.S</file>
+			<file>3dnow_xform2.S</file>
+			<file>3dnow_xform3.S</file>
+			<file>3dnow_xform4.S</file>
+			<file>common_x86.c</file>
+			<file>common_x86_asm.S</file>
+			<file>glapi_x86.S</file>
+			<file>mmx_blend.S</file>
+			<file>read_rgba_span_x86.S</file>
+			<file>sse_normal.S</file>
+			<file>sse_xform1.S</file>
+			<file>sse_xform2.S</file>
+			<file>sse_xform3.S</file>
+			<file>sse_xform4.S</file>
+			<file>x86.c</file>
+			<file>x86_cliptest.S</file>
+			<file>x86_xform2.S</file>
+			<file>x86_xform3.S</file>
+			<file>x86_xform4.S</file>
+			<file>sse.c</file>
 		</directory>
-	</directory>
-	<directory name="x86">
-		<directory name="rtasm">
-			<file>x86sse.c</file>
+	</if>
+
+	<if property="ARCH" value="amd64">
+		<directory name="x86-64">
+			<file>x86-64.c</file>
+			<!-- file>glapi_x86-64.S</file -->
+			<file>xform4.S</file>
 		</directory>
-		<file>3dnow.c</file>
-		<file>3dnow_normal.S</file>
-		<file>3dnow_xform1.S</file>
-		<file>3dnow_xform2.S</file>
-		<file>3dnow_xform3.S</file>
-		<file>3dnow_xform4.S</file>
-		<file>common_x86.c</file>
-		<file>common_x86_asm.S</file>
-		<file>glapi_x86.S</file>
-		<file>mmx_blend.S</file>
-		<file>read_rgba_span_x86.S</file>
-		<file>sse_normal.S</file>
-		<file>sse_xform1.S</file>
-		<file>sse_xform2.S</file>
-		<file>sse_xform3.S</file>
-		<file>sse_xform4.S</file>
-		<file>x86.c</file>
-		<file>x86_cliptest.S</file>
-		<file>x86_xform2.S</file>
-		<file>x86_xform3.S</file>
-		<file>x86_xform4.S</file>
-		<file>sse.c</file>
+	</if>
+
 	</directory>
-	<directory name="x86-64">
-		<file>x86-64.c</file>
-	</directory>
-</directory>
 </module>

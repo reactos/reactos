@@ -26,28 +26,29 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 typedef struct _D3DDECLTYPE_INFO {
     D3DDECLTYPE d3dType;
+    WINED3DFORMAT format;
     int         size;
     int         typesize;
 } D3DDECLTYPE_INFO;
 
 static D3DDECLTYPE_INFO const d3d_dtype_lookup[D3DDECLTYPE_UNUSED] = {
-   {D3DDECLTYPE_FLOAT1,    1, sizeof(float)},
-   {D3DDECLTYPE_FLOAT2,    2, sizeof(float)},
-   {D3DDECLTYPE_FLOAT3,    3, sizeof(float)},
-   {D3DDECLTYPE_FLOAT4,    4, sizeof(float)},
-   {D3DDECLTYPE_D3DCOLOR,  4, sizeof(BYTE)},
-   {D3DDECLTYPE_UBYTE4,    4, sizeof(BYTE)},
-   {D3DDECLTYPE_SHORT2,    2, sizeof(short int)},
-   {D3DDECLTYPE_SHORT4,    4, sizeof(short int)},
-   {D3DDECLTYPE_UBYTE4N,   4, sizeof(BYTE)},
-   {D3DDECLTYPE_SHORT2N,   2, sizeof(short int)},
-   {D3DDECLTYPE_SHORT4N,   4, sizeof(short int)},
-   {D3DDECLTYPE_USHORT2N,  2, sizeof(short int)},
-   {D3DDECLTYPE_USHORT4N,  4, sizeof(short int)},
-   {D3DDECLTYPE_UDEC3,     3, sizeof(short int)},
-   {D3DDECLTYPE_DEC3N,     3, sizeof(short int)},
-   {D3DDECLTYPE_FLOAT16_2, 2, sizeof(short int)},
-   {D3DDECLTYPE_FLOAT16_4, 4, sizeof(short int)}};
+   {D3DDECLTYPE_FLOAT1,    WINED3DFMT_R32_FLOAT,          1, sizeof(float)},
+   {D3DDECLTYPE_FLOAT2,    WINED3DFMT_R32G32_FLOAT,       2, sizeof(float)},
+   {D3DDECLTYPE_FLOAT3,    WINED3DFMT_R32G32B32_FLOAT,    3, sizeof(float)},
+   {D3DDECLTYPE_FLOAT4,    WINED3DFMT_R32G32B32A32_FLOAT, 4, sizeof(float)},
+   {D3DDECLTYPE_D3DCOLOR,  WINED3DFMT_B8G8R8A8_UNORM,     4, sizeof(BYTE)},
+   {D3DDECLTYPE_UBYTE4,    WINED3DFMT_R8G8B8A8_UINT,      4, sizeof(BYTE)},
+   {D3DDECLTYPE_SHORT2,    WINED3DFMT_R16G16_SINT,        2, sizeof(short int)},
+   {D3DDECLTYPE_SHORT4,    WINED3DFMT_R16G16B16A16_SINT,  4, sizeof(short int)},
+   {D3DDECLTYPE_UBYTE4N,   WINED3DFMT_R8G8B8A8_UNORM,     4, sizeof(BYTE)},
+   {D3DDECLTYPE_SHORT2N,   WINED3DFMT_R16G16_SNORM,       2, sizeof(short int)},
+   {D3DDECLTYPE_SHORT4N,   WINED3DFMT_R16G16B16A16_SNORM, 4, sizeof(short int)},
+   {D3DDECLTYPE_USHORT2N,  WINED3DFMT_R16G16_UNORM,       2, sizeof(short int)},
+   {D3DDECLTYPE_USHORT4N,  WINED3DFMT_R16G16B16A16_UNORM, 4, sizeof(short int)},
+   {D3DDECLTYPE_UDEC3,     WINED3DFMT_R10G10B10A2_UINT,   3, sizeof(short int)},
+   {D3DDECLTYPE_DEC3N,     WINED3DFMT_R10G10B10A2_SNORM,  3, sizeof(short int)},
+   {D3DDECLTYPE_FLOAT16_2, WINED3DFMT_R16G16_FLOAT,       2, sizeof(short int)},
+   {D3DDECLTYPE_FLOAT16_4, WINED3DFMT_R16G16B16A16_FLOAT, 4, sizeof(short int)}};
 
 #define D3D_DECL_SIZE(type)          d3d_dtype_lookup[type].size
 #define D3D_DECL_TYPESIZE(type)      d3d_dtype_lookup[type].typesize
@@ -86,8 +87,7 @@ HRESULT vdecl_convert_fvf(
 
     /* convert the declaration */
     elements = HeapAlloc(GetProcessHeap(), 0, size * sizeof(D3DVERTEXELEMENT9));
-    if (!elements) 
-        return D3DERR_OUTOFVIDEOMEMORY;
+    if (!elements) return D3DERR_OUTOFVIDEOMEMORY;
 
     elements[size-1] = end_element;
     idx = 0;
@@ -197,6 +197,8 @@ HRESULT vdecl_convert_fvf(
 static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_QueryInterface(LPDIRECT3DVERTEXDECLARATION9 iface, REFIID riid, LPVOID* ppobj) {
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
 
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppobj);
+
     if (IsEqualGUID(riid, &IID_IUnknown)
         || IsEqualGUID(riid, &IID_IDirect3DVertexDeclaration9)) {
         IDirect3DVertexDeclaration9_AddRef(iface);
@@ -213,10 +215,16 @@ static ULONG WINAPI IDirect3DVertexDeclaration9Impl_AddRef(LPDIRECT3DVERTEXDECLA
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) : AddRef from %d\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u.\n", iface, ref);
 
     if(ref == 1) {
         IDirect3DDevice9Ex_AddRef(This->parentDevice);
+        if (!This->convFVF)
+        {
+            wined3d_mutex_lock();
+            IWineD3DVertexDeclaration_AddRef(This->wineD3DVertexDeclaration);
+            wined3d_mutex_unlock();
+        }
     }
 
     return ref;
@@ -229,52 +237,51 @@ void IDirect3DVertexDeclaration9Impl_Destroy(LPDIRECT3DVERTEXDECLARATION9 iface)
         /* Should not happen unless wine has a bug or the application releases references it does not own */
         ERR("Destroying vdecl with ref != 0\n");
     }
-    EnterCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
     IWineD3DVertexDeclaration_Release(This->wineD3DVertexDeclaration);
-    LeaveCriticalSection(&d3d9_cs);
-    HeapFree(GetProcessHeap(), 0, This->elements);
-    HeapFree(GetProcessHeap(), 0, This);
+    wined3d_mutex_unlock();
 }
 
 static ULONG WINAPI IDirect3DVertexDeclaration9Impl_Release(LPDIRECT3DVERTEXDECLARATION9 iface) {
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) : ReleaseRef to %d\n", This, ref);
+    TRACE("%p decreasing refcount to %u.\n", iface, ref);
 
     if (ref == 0) {
         IDirect3DDevice9Ex *parentDevice = This->parentDevice;
 
         if(!This->convFVF) {
-            IDirect3DVertexDeclaration9Impl_Release(iface);
+            IDirect3DVertexDeclaration9Impl_Destroy(iface);
         }
+
+        /* Release the device last, as it may cause the device to be destroyed. */
         IDirect3DDevice9Ex_Release(parentDevice);
     }
     return ref;
 }
 
 /* IDirect3DVertexDeclaration9 Interface follow: */
-static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_GetDevice(LPDIRECT3DVERTEXDECLARATION9 iface, IDirect3DDevice9** ppDevice) {
+static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_GetDevice(IDirect3DVertexDeclaration9 *iface,
+        IDirect3DDevice9 **device)
+{
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
-    IWineD3DDevice *myDevice = NULL;
-    HRESULT hr = D3D_OK;
 
-    TRACE("(%p) : Relay\n", iface);
+    TRACE("iface %p, device %p.\n", iface, device);
 
-    EnterCriticalSection(&d3d9_cs);
-    hr = IWineD3DVertexDeclaration_GetDevice(This->wineD3DVertexDeclaration, &myDevice);
-    if (hr == D3D_OK && myDevice != NULL) {
-        hr = IWineD3DDevice_GetParent(myDevice, (IUnknown **)ppDevice);
-        IWineD3DDevice_Release(myDevice);
-    }
-    LeaveCriticalSection(&d3d9_cs);
-    return hr;
+    *device = (IDirect3DDevice9 *)This->parentDevice;
+    IDirect3DDevice9_AddRef(*device);
+
+    TRACE("Returning device %p.\n", *device);
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI IDirect3DVertexDeclaration9Impl_GetDeclaration(LPDIRECT3DVERTEXDECLARATION9 iface, D3DVERTEXELEMENT9* pDecl, UINT* pNumElements) {
     IDirect3DVertexDeclaration9Impl *This = (IDirect3DVertexDeclaration9Impl *)iface;
 
-    TRACE("(%p) : pDecl %p, pNumElements %p)\n", This, pDecl, pNumElements);
+    TRACE("iface %p, elements %p, element_count %p.\n", iface, pDecl, pNumElements);
 
     *pNumElements = This->element_count;
 
@@ -301,95 +308,109 @@ static const IDirect3DVertexDeclaration9Vtbl Direct3DVertexDeclaration9_Vtbl =
     IDirect3DVertexDeclaration9Impl_GetDeclaration
 };
 
-static UINT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elements, WINED3DVERTEXELEMENT **wined3d_elements) {
+static void STDMETHODCALLTYPE d3d9_vertexdeclaration_wined3d_object_destroyed(void *parent)
+{
+    IDirect3DVertexDeclaration9Impl *declaration = parent;
+    HeapFree(GetProcessHeap(), 0, declaration->elements);
+    HeapFree(GetProcessHeap(), 0, declaration);
+}
+
+static const struct wined3d_parent_ops d3d9_vertexdeclaration_wined3d_parent_ops =
+{
+    d3d9_vertexdeclaration_wined3d_object_destroyed,
+};
+
+static HRESULT convert_to_wined3d_declaration(const D3DVERTEXELEMENT9* d3d9_elements,
+        WINED3DVERTEXELEMENT **wined3d_elements, UINT *element_count)
+{
     const D3DVERTEXELEMENT9* element;
-    UINT element_count = 1;
+    UINT count = 1;
     UINT i;
 
     TRACE("d3d9_elements %p, wined3d_elements %p\n", d3d9_elements, wined3d_elements);
 
     element = d3d9_elements;
-    while (element++->Stream != 0xff && element_count++ < 128);
+    while (element++->Stream != 0xff && count++ < 128);
 
-    if (element_count == 128) {
-        return 0;
-    }
+    if (count == 128) return E_FAIL;
 
-    *wined3d_elements = HeapAlloc(GetProcessHeap(), 0, element_count * sizeof(WINED3DVERTEXELEMENT));
+    /* Skip the END element */
+    --count;
+
+    *wined3d_elements = HeapAlloc(GetProcessHeap(), 0, count * sizeof(WINED3DVERTEXELEMENT));
     if (!*wined3d_elements) {
         FIXME("Memory allocation failed\n");
-        return 0;
+        return D3DERR_OUTOFVIDEOMEMORY;
     }
 
-    for (i = 0; i < element_count; ++i) {
-        CopyMemory(*wined3d_elements + i, d3d9_elements + i, sizeof(D3DVERTEXELEMENT9));
-        (*wined3d_elements)[i].Reg = -1;
+    for (i = 0; i < count; ++i)
+    {
+        if (d3d9_elements[i].Type >= (sizeof(d3d_dtype_lookup) / sizeof(*d3d_dtype_lookup)))
+        {
+            WARN("Invalid element type %#x.\n", d3d9_elements[i].Type);
+            HeapFree(GetProcessHeap(), 0, *wined3d_elements);
+            return E_FAIL;
+        }
+        (*wined3d_elements)[i].format = d3d_dtype_lookup[d3d9_elements[i].Type].format;
+        (*wined3d_elements)[i].input_slot = d3d9_elements[i].Stream;
+        (*wined3d_elements)[i].offset = d3d9_elements[i].Offset;
+        (*wined3d_elements)[i].output_slot = ~0U;
+        (*wined3d_elements)[i].method = d3d9_elements[i].Method;
+        (*wined3d_elements)[i].usage = d3d9_elements[i].Usage;
+        (*wined3d_elements)[i].usage_idx = d3d9_elements[i].UsageIndex;
     }
 
-    return element_count;
+    *element_count = count;
+
+    return D3D_OK;
 }
 
-/* IDirect3DDevice9 IDirect3DVertexDeclaration9 Methods follow: */
-HRESULT  WINAPI  IDirect3DDevice9Impl_CreateVertexDeclaration(LPDIRECT3DDEVICE9EX iface, CONST D3DVERTEXELEMENT9* pVertexElements, IDirect3DVertexDeclaration9** ppDecl) {
-    
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    IDirect3DVertexDeclaration9Impl *object = NULL;
-    WINED3DVERTEXELEMENT* wined3d_elements;
+HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration9Impl *declaration,
+        IDirect3DDevice9Impl *device, const D3DVERTEXELEMENT9 *elements)
+{
+    WINED3DVERTEXELEMENT *wined3d_elements;
+    UINT wined3d_element_count;
     UINT element_count;
-    HRESULT hr = D3D_OK;
+    HRESULT hr;
 
-    TRACE("(%p) : Relay\n", iface);
-    if (NULL == ppDecl) {
-        WARN("(%p) : Caller passed NULL As ppDecl, returning D3DERR_INVALIDCALL\n",This);
-        return D3DERR_INVALIDCALL;
+    hr = convert_to_wined3d_declaration(elements, &wined3d_elements, &wined3d_element_count);
+    if (FAILED(hr))
+    {
+        WARN("Failed to create wined3d vertex declaration elements, hr %#x.\n", hr);
+        return hr;
     }
 
-    element_count = convert_to_wined3d_declaration(pVertexElements, &wined3d_elements);
-    if (!element_count) {
-        FIXME("(%p) : Error parsing vertex declaration\n", This);
-        return D3DERR_INVALIDCALL;
-    }
+    declaration->lpVtbl = &Direct3DVertexDeclaration9_Vtbl;
+    declaration->ref = 1;
 
-    /* Allocate the storage for the device */
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3DVertexDeclaration9Impl));
-    if (NULL == object) {
+    element_count = wined3d_element_count + 1;
+    declaration->elements = HeapAlloc(GetProcessHeap(), 0, element_count * sizeof(*declaration->elements));
+    if (!declaration->elements)
+    {
         HeapFree(GetProcessHeap(), 0, wined3d_elements);
-        FIXME("Allocation of memory failed, returning D3DERR_OUTOFVIDEOMEMORY\n");
+        ERR("Failed to allocate vertex declaration elements memory.\n");
         return D3DERR_OUTOFVIDEOMEMORY;
     }
+    memcpy(declaration->elements, elements, element_count * sizeof(*elements));
+    declaration->element_count = element_count;
 
-    object->lpVtbl = &Direct3DVertexDeclaration9_Vtbl;
-    object->ref = 0;
-
-    object->elements = HeapAlloc(GetProcessHeap(), 0, element_count * sizeof(D3DVERTEXELEMENT9));
-    if (!object->elements) {
-        HeapFree(GetProcessHeap(), 0, wined3d_elements);
-        HeapFree(GetProcessHeap(), 0, object);
-        ERR("Memory allocation failed\n");
-        return D3DERR_OUTOFVIDEOMEMORY;
-    }
-    CopyMemory(object->elements, pVertexElements, element_count * sizeof(D3DVERTEXELEMENT9));
-    object->element_count = element_count;
-
-    EnterCriticalSection(&d3d9_cs);
-    hr = IWineD3DDevice_CreateVertexDeclaration(This->WineD3DDevice, &object->wineD3DVertexDeclaration, (IUnknown *)object, wined3d_elements, element_count);
-    LeaveCriticalSection(&d3d9_cs);
-
+    wined3d_mutex_lock();
+    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, &declaration->wineD3DVertexDeclaration,
+            (IUnknown *)declaration, &d3d9_vertexdeclaration_wined3d_parent_ops,
+            wined3d_elements, wined3d_element_count);
+    wined3d_mutex_unlock();
     HeapFree(GetProcessHeap(), 0, wined3d_elements);
-
-    if (FAILED(hr)) {
-
-        /* free up object */
-        WARN("(%p) call to IWineD3DDevice_CreateVertexDeclaration failed\n", This);
-        HeapFree(GetProcessHeap(), 0, object->elements);
-        HeapFree(GetProcessHeap(), 0, object);
-    } else {
-        object->parentDevice = iface;
-        *ppDecl = (LPDIRECT3DVERTEXDECLARATION9) object;
-        IDirect3DVertexDeclaration9_AddRef(*ppDecl);
-         TRACE("(%p) : Created vertex declaration %p\n", This, object);
+    if (FAILED(hr))
+    {
+        HeapFree(GetProcessHeap(), 0, declaration->elements);
+        WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);
+        return hr;
     }
-    return hr;
+
+    declaration->parentDevice = (IDirect3DDevice9Ex *)device;
+    IDirect3DDevice9Ex_AddRef(declaration->parentDevice);
+
+    return D3D_OK;
 }
 
 HRESULT  WINAPI  IDirect3DDevice9Impl_SetVertexDeclaration(LPDIRECT3DDEVICE9EX iface, IDirect3DVertexDeclaration9* pDecl) {
@@ -397,11 +418,12 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_SetVertexDeclaration(LPDIRECT3DDEVICE9EX i
     IDirect3DVertexDeclaration9Impl *pDeclImpl = (IDirect3DVertexDeclaration9Impl *)pDecl;
     HRESULT hr = D3D_OK;
 
-    TRACE("(%p) : Relay\n", iface);
+    TRACE("iface %p, vertex declaration %p.\n", iface, pDecl);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_SetVertexDeclaration(This->WineD3DDevice, pDeclImpl == NULL ? NULL : pDeclImpl->wineD3DVertexDeclaration);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -410,14 +432,15 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_GetVertexDeclaration(LPDIRECT3DDEVICE9EX i
     IWineD3DVertexDeclaration* pTest = NULL;
     HRESULT hr = D3D_OK;
 
-    TRACE("(%p) : Relay+\n", iface);
+    TRACE("iface %p, declaration %p.\n", iface, ppDecl);
 
     if (NULL == ppDecl) {
       return D3DERR_INVALIDCALL;
     }
 
     *ppDecl = NULL;
-    EnterCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_GetVertexDeclaration(This->WineD3DDevice, &pTest);
     if (hr == D3D_OK && NULL != pTest) {
         IWineD3DVertexDeclaration_GetParent(pTest, (IUnknown **)ppDecl);
@@ -425,7 +448,8 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_GetVertexDeclaration(LPDIRECT3DDEVICE9EX i
     } else {
         *ppDecl = NULL;
     }
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     TRACE("(%p) : returning %p\n", This, *ppDecl);
     return hr;
 }

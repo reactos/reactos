@@ -102,9 +102,9 @@ NTSTATUS NTAPI Ext2ReadInode (
 		NumberOfBytesToRead = sizeof(EXT2_INODE);	//	LogicalBlockSize;
 
 		VolumeByteOffset.QuadPart = PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
-				* LogicalBlockSize + Index * sizeof(EXT2_INODE);
+				* LogicalBlockSize + Index * PtrVcb->InodeSize;
 		//VolumeByteOffset.QuadPart = PtrVcb->InodeTableBlock[ GroupNo ] * LogicalBlockSize +
-		//	Index * sizeof(EXT2_INODE);
+		//	Index * PtrVcb->InodeSize;
 		
 		TempOffset.QuadPart = Ext2Align64( VolumeByteOffset.QuadPart, LogicalBlockSize );
 		if( TempOffset.QuadPart != VolumeByteOffset.QuadPart )
@@ -752,7 +752,7 @@ NTSTATUS NTAPI Ext2WriteInode(
 		NumberOfBytesToRead = sizeof(EXT2_INODE);
 
 		VolumeByteOffset.QuadPart = PtrVcb->PtrGroupDescriptors[ GroupNo ].InodeTablesBlock
-				* LogicalBlockSize + Index * sizeof(EXT2_INODE);
+				* LogicalBlockSize + Index * PtrVcb->InodeSize;
 		
 		TempOffset.QuadPart = Ext2Align64( VolumeByteOffset.QuadPart, LogicalBlockSize );
 		if( TempOffset.QuadPart != VolumeByteOffset.QuadPart )

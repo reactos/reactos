@@ -4,12 +4,10 @@ Version: @VERSION@
 Release: 1
 License: MIT
 Group: Development/Libraries
-Source: ftp://xmlsoft.org/libxml2-%{version}.tar.gz
+Source: ftp://xmlsoft.org/libxml2/libxml2-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
-BuildRequires: python python-devel zlib-devel
+BuildRequires: python python-devel zlib-devel pkgconfig
 URL: http://xmlsoft.org/
-Prefix: %{_prefix}
-Docdir: %{_docdir}
 
 %description
 This library allows to manipulate XML files. It includes support 
@@ -62,14 +60,14 @@ at parse time or later once the document has been modified.
 
 %build
 %configure
-make
+make %{_smp_mflags}
 gzip -9 ChangeLog
 
 %install
 rm -fr %{buildroot}
 
 %makeinstall
-(cd doc/examples ; make clean ; rm -rf .deps)
+(cd doc/examples ; make clean ; rm -rf .deps Makefile)
 gzip -9 doc/libxml2-api.xml
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
@@ -91,17 +89,18 @@ rm -fr %{buildroot}
 %doc %{_mandir}/man3/libxml.3*
 
 %{_libdir}/lib*.so.*
-%{prefix}/bin/xmllint
-%{prefix}/bin/xmlcatalog
+%{_bindir}/xmllint
+%{_bindir}/xmlcatalog
 
 %files devel
 %defattr(-, root, root)
 
 %doc %{_mandir}/man1/xml2-config.1*
-%doc AUTHORS ChangeLog.gz NEWS README Copyright TODO
+%doc AUTHORS ChangeLog.gz NEWS README Copyright
 %doc doc/*.html doc/html doc/*.gif doc/*.png
 %doc doc/tutorial doc/libxml2-api.xml.gz
 %doc doc/examples
+%doc %dir %{_datadir}/gtk-doc/html/libxml2
 %doc %{_datadir}/gtk-doc/html/libxml2/*.devhelp
 %doc %{_datadir}/gtk-doc/html/libxml2/*.html
 %doc %{_datadir}/gtk-doc/html/libxml2/*.png
@@ -110,9 +109,9 @@ rm -fr %{buildroot}
 %{_libdir}/lib*.so
 %{_libdir}/*a
 %{_libdir}/*.sh
-%{prefix}/include/*
-%{prefix}/bin/xml2-config
-%{prefix}/share/aclocal/libxml.m4
+%{_includedir}/*
+%{_bindir}/xml2-config
+%{_datadir}/aclocal/libxml.m4
 %{_libdir}/pkgconfig/libxml-2.0.pc
 %files python
 %defattr(-, root, root)

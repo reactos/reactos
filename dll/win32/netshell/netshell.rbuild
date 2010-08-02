@@ -3,11 +3,11 @@
 	<importlibrary definition="netshell.spec" />
 	<include base="netshell">.</include>
 	<define name="_NETSHELL_" />
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<library>shlwapi</library>
 	<library>shell32</library>
 	<library>version</library>
 	<library>iphlpapi</library>
-	<library>kernel32</library>
 	<library>wine</library>
 	<library>ole32</library>
 	<library>user32</library>

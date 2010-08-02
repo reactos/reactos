@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include "config.h"
@@ -55,7 +55,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
+    TCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY req =
         TCP_REQUEST_SET_INFORMATION_INIT;
     IPRouteEntry *rte;
     TDIEntityID   id;
@@ -64,13 +64,14 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TRACE("Called.\n");
 
     if( NT_SUCCESS(status) ) {
-        status = getNthIpEntity( tcpFile, 0, &id );
+        status = getNthIpEntity( tcpFile, pRoute->dwForwardIfIndex, &id );
 
         if( NT_SUCCESS(status) ) {
             req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
             req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-            req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
-            req.Req.ID.toi_entity               = id;
+            req.Req.ID.toi_id                   = IP_MIB_ARPTABLE_ENTRY_ID;
+            req.Req.ID.toi_entity.tei_instance  = id.tei_instance;
+            req.Req.ID.toi_entity.tei_entity    = CL_NL_ENTITY;
             req.Req.BufferSize                  = sizeof(*rte);
             rte                                 =
                 (IPRouteEntry *)&req.Req.Buffer[0];
@@ -119,7 +120,7 @@ DWORD setIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
+    TCP_REQUEST_SET_INFORMATION_EX_ROUTE_ENTRY req =
         TCP_REQUEST_SET_INFORMATION_INIT;
     IPRouteEntry *rte;
     TDIEntityID   id;
@@ -128,13 +129,14 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TRACE("Called.\n");
 
     if( NT_SUCCESS(status) ) {
-        status = getNthIpEntity( tcpFile, 0, &id );
+        status = getNthIpEntity( tcpFile, pRoute->dwForwardIfIndex, &id );
 
         if( NT_SUCCESS(status) ) {
             req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
             req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-            req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
-            req.Req.ID.toi_entity               = id;
+            req.Req.ID.toi_id                   = IP_MIB_ARPTABLE_ENTRY_ID;
+            req.Req.ID.toi_entity.tei_instance  = id.tei_instance;
+            req.Req.ID.toi_entity.tei_entity    = CL_NL_ENTITY;
             req.Req.BufferSize                  = sizeof(*rte);
             rte                                 =
                 (IPRouteEntry *)&req.Req.Buffer[0];

@@ -1,5 +1,4 @@
-#ifndef __TNMISC_H
-#define __TNMISC_H
+#pragma once
 
 // Process-related functions
 BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
@@ -14,5 +13,3 @@ HWND TelnetGetConsoleWindow(void);
 bool SetIcon(HWND hConsoleWindow, HANDLE hIcon, LPARAM *pOldBIcon, LPARAM *pOldSIcon,
 			 const char *icondir);
 void ResetIcon(HWND hConsoleWindow, LPARAM oldBIcon, LPARAM oldSIcon);
-
-#endif

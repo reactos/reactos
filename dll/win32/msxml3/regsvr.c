@@ -47,7 +47,7 @@
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(ole);
+WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 /*
  * Near the bottom of this file are the exported DllRegisterServer and
@@ -515,8 +515,23 @@ static struct regsvr_coclass const coclass_list[] = {
         "Both",
         "Microsoft.FreeThreadedXMLDOM.1.0",
         "1.0"
+    },
+    {   &CLSID_FreeThreadedDOMDocument26,
+        "Free Threaded XML DOM Document 2.6",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Microsoft.FreeThreadedXMLDOM.1.0",
+        "1.0"
      },
-
+    {   &CLSID_FreeThreadedDOMDocument30,
+        "Free Threaded XML DOM Document 3.0",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Microsoft.FreeThreadedDOMDocument.1.0",
+        "1.0"
+     },
     {   &CLSID_XMLHTTPRequest,
 	"XML HTTP Request",
 	NULL,
@@ -548,6 +563,14 @@ static struct regsvr_coclass const coclass_list[] = {
 	"Msxml2.XMLSchemaCache",
         "3.0"
     },
+    {   &CLSID_XMLSchemaCache26,
+    "XML Schema Cache 2.6",
+    NULL,
+    "msxml3.dll",
+    "Both",
+    "Msxml2.XMLSchemaCache",
+    "2.6"
+    },
     {   &CLSID_XMLSchemaCache30,
 	"XML Schema Cache 3.0",
 	NULL,
@@ -570,6 +593,38 @@ static struct regsvr_coclass const coclass_list[] = {
         "msxml3.dll",
         "Both",
         "Msxml2.SAXXMLReader",
+        "3.0"
+    },
+    {   &CLSID_MXXMLWriter,
+        "IMXWriter interface",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Msxml2.MXXMLWriter",
+        "3.0"
+    },
+    {   &CLSID_MXXMLWriter30,
+        "IMXWriter interface 3.0",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Msxml2.MXXMLWriter",
+        "3.0"
+    },
+    {   &CLSID_SAXAttributes,
+        "SAX Attribute",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Msxml2.SAXAttributes",
+        NULL
+    },
+    {   &CLSID_SAXAttributes30,
+        "SAX Attribute 3.0",
+        NULL,
+        "msxml3.dll",
+        "Both",
+        "Msxml2.SAXAttributes",
         "3.0"
     },
     { NULL }			/* list terminator */
@@ -626,6 +681,16 @@ static struct progid const progid_list[] = {
 	&CLSID_DOMFreeThreadedDocument,
 	"Microsoft.FreeThreadedXMLDOM.1.0"
     },
+    {   "MSXML.FreeThreadedDOMDocument26",
+    "Free threaded XML DOM Document 2.6",
+    &CLSID_FreeThreadedDOMDocument26,
+    NULL
+    },
+    {   "MSXML.FreeThreadedDOMDocument30",
+    "Free threaded XML DOM Document 3.0",
+    &CLSID_FreeThreadedDOMDocument30,
+    NULL
+    },
     {   "Microsoft.XMLHTTP",
 	"XML HTTP Request",
 	&CLSID_XMLHTTPRequest,
@@ -656,6 +721,11 @@ static struct progid const progid_list[] = {
         &CLSID_XMLSchemaCache,
         "Msxml2.XMLSchemaCache.3.0"
     },
+    {   "Msxml2.XMLSchemaCache.2.6",
+        "XML Schema Cache 2.6",
+        &CLSID_XMLSchemaCache26,
+        "Msxml2.XMLSchemaCache.2.6"
+    },
     {   "Msxml2.XMLSchemaCache.3.0",
         "XML Schema Cache 3.0",
         &CLSID_XMLSchemaCache30,
@@ -671,12 +741,31 @@ static struct progid const progid_list[] = {
         &CLSID_SAXXMLReader30,
         NULL
     },
-
+    {   "Msxml2.MXXMLWriter",
+        "MXXMLWriter",
+        &CLSID_MXXMLWriter,
+        "Msxml2.MXXMLWriter.3.0"
+    },
+    {   "Msxml2.MXXMLWriter.3.0",
+        "MXXMLWriter 3.0",
+        &CLSID_MXXMLWriter30,
+        NULL
+    },
+    {   "Msxml2.SAXAttributes",
+        "SAX Attribute",
+        &CLSID_SAXAttributes,
+        NULL
+    },
+    {   "Msxml2.SAXAttributes.3.0",
+        "SAX Attribute 3.0",
+        &CLSID_SAXAttributes30,
+        NULL
+    },
     { NULL }			/* list terminator */
 };
 
 /***********************************************************************
- *		DllRegisterServer (OLEAUT32.@)
+ *		DllRegisterServer (MSXML3.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
@@ -703,7 +792,7 @@ HRESULT WINAPI DllRegisterServer(void)
 }
 
 /***********************************************************************
- *		DllUnregisterServer (OLEAUT32.@)
+ *		DllUnregisterServer (MSXML3.@)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {

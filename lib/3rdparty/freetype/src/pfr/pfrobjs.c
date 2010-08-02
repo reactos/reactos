@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by                        */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008 by                  */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,9 +41,14 @@
   FT_LOCAL_DEF( void )
   pfr_face_done( FT_Face  pfrface )     /* PFR_Face */
   {
-    PFR_Face   face   = (PFR_Face)pfrface;
-    FT_Memory  memory = pfrface->driver->root.memory;
+    PFR_Face   face = (PFR_Face)pfrface;
+    FT_Memory  memory;
 
+
+    if ( !face )
+      return;
+
+    memory = pfrface->driver->root.memory;
 
     /* we don't want dangling pointers */
     pfrface->family_name = NULL;

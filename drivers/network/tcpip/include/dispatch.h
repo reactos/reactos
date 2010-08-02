@@ -4,9 +4,14 @@
  * FILE:        include/dispatch.h
  * PURPOSE:     Dispatch routine prototypes
  */
-#ifndef __DISPATCH_H
-#define __DISPATCH_H
 
+#pragma once
+
+typedef struct _DISCONNECT_TYPE {
+    UINT Type;
+    PVOID Context;
+    PIRP Irp;
+} DISCONNECT_TYPE, *PDISCONNECT_TYPE;
 
 NTSTATUS DispTdiAccept(
     PIRP Irp);
@@ -64,6 +69,9 @@ NTSTATUS DispTdiDeleteIPAddress(
     PIRP Irp,
     PIO_STACK_LOCATION IrpSp);
 
-#endif /* __DISPATCH_H */
+VOID DispDoDisconnect(
+    PVOID Data);
+
+NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status );
 
 /* EOF */

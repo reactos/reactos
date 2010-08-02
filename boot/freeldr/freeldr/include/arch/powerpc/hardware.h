@@ -13,13 +13,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __POWERPC_HARDWARE_H_
-#define __POWERPC_HARDWARE_H_
+#pragma once
 
 #ifndef __REGISTRY_H
 #include "../../reactos/registry.h"
@@ -39,22 +38,6 @@
 //
 VOID
 NTAPI
-FldrSetComponentInformation(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN IDENTIFIER_FLAG Flags,
-    IN ULONG Key,
-    IN ULONG Affinity
-);
-
-VOID
-NTAPI
-FldrSetIdentifier(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PCHAR Identifier
-);
-
-VOID
-NTAPI
 FldrCreateSystemKey(
     OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
 );
@@ -63,21 +46,16 @@ VOID
 NTAPI
 FldrCreateComponentKey(
     IN PCONFIGURATION_COMPONENT_DATA SystemKey,
-    IN PWCHAR BusName,
-    IN ULONG BusNumber,
     IN CONFIGURATION_CLASS Class,
     IN CONFIGURATION_TYPE Type,
+    IN IDENTIFIER_FLAG Flags,
+    IN ULONG Key,
+    IN ULONG Affinity,
+    IN PCHAR IdentifierString,
+    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    IN ULONG Size,
     OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
-
-VOID
-NTAPI
-FldrSetConfigurationData(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size
-);
-
 
 /* PROTOTYPES ***************************************************************/
 
@@ -88,7 +66,5 @@ VOID StallExecutionProcessor(ULONG Microseconds);
 VOID HalpCalibrateStallExecution(VOID);
 
 ULONGLONG RDTSC(VOID);
-
-#endif /* __POWERPC_HARDWARE_H_ */
 
 /* EOF */

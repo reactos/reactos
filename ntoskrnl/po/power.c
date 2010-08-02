@@ -15,8 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-extern ULONG ExpInitialiationPhase;
-
 typedef struct _REQUEST_POWER_ITEM
 {
     PREQUEST_POWER_COMPLETE CompletionRoutine;
@@ -26,6 +24,8 @@ typedef struct _REQUEST_POWER_ITEM
 
 PDEVICE_NODE PopSystemPowerDeviceNode = NULL;
 BOOLEAN PopAcpiPresent = FALSE;
+POP_POWER_ACTION PopAction;
+WORK_QUEUE_ITEM PopShutdownWorkItem;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -47,9 +47,10 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
                                         RequestPowerItem->PowerState,
                                         RequestPowerItem->Context,
                                         &Irp->IoStatus);
-  
-    ExFreePool(&Irp->IoStatus);
+
     ExFreePool(Context);
+
+    IoFreeIrp(Irp);
 
     return STATUS_SUCCESS;
 }
@@ -126,8 +127,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
 
 BOOLEAN
 NTAPI
-PoInitSystem(IN ULONG BootPhase,
-             IN BOOLEAN HaveAcpiTable)
+PoInitSystem(IN ULONG BootPhase)
 {
     PVOID NotificationEntry;
     PCHAR CommandLine;
@@ -138,7 +138,7 @@ PoInitSystem(IN ULONG BootPhase,
     {
         /* Registry power button notification */
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
-                                       0, /* The registry has not been initialized yet */
+                                       PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                        (PVOID)&GUID_DEVICE_SYS_BUTTON,
                                        IopRootDeviceNode->
                                        PhysicalDeviceObject->DriverObject,
@@ -164,10 +164,17 @@ PoInitSystem(IN ULONG BootPhase,
     }
     else
     {
-        /* Otherwise check the LoaderBlock's Flag */
-        PopAcpiPresent = HaveAcpiTable;
+        /* Otherwise check if the LoaderBlock has a ACPI Table  */
+        PopAcpiPresent = KeLoaderBlock->Extension->AcpiTable != NULL ? TRUE : FALSE;
     }
 
+    
+    /* Initialize volume support */
+    InitializeListHead(&PopVolumeDevices);
+    KeInitializeGuardedMutex(&PopVolumeLock);
+    
+    /* Initialize support for dope */
+    KeInitializeSpinLock(&PopDopeGlobalLock);
     return TRUE;
 }
 
@@ -352,7 +359,6 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT TopDeviceObject;
     PIO_STACK_LOCATION Stack;
     PIRP Irp;
-    PIO_STATUS_BLOCK IoStatusBlock;
     PREQUEST_POWER_ITEM RequestPowerItem;
     NTSTATUS Status;
   
@@ -364,27 +370,19 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     RequestPowerItem = ExAllocatePool(NonPagedPool, sizeof(REQUEST_POWER_ITEM));
     if (!RequestPowerItem)
         return STATUS_INSUFFICIENT_RESOURCES;
-    IoStatusBlock = ExAllocatePool(NonPagedPool, sizeof(IO_STATUS_BLOCK));
-    if (!IoStatusBlock)
-    {
-        ExFreePool(RequestPowerItem);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
   
     /* Always call the top of the device stack */
     TopDeviceObject = IoGetAttachedDeviceReference(DeviceObject);
   
-    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
-                                       TopDeviceObject,
-                                       NULL,
-                                       0,
-                                       NULL,
-                                       NULL,
-                                       IoStatusBlock);
+    Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_POWER,
+                                        TopDeviceObject,
+                                        NULL,
+                                        0,
+                                        NULL,
+                                        NULL);
     if (!Irp)
     {
         ExFreePool(RequestPowerItem);
-        ExFreePool(IoStatusBlock);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
   
@@ -398,7 +396,10 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     if (MinorFunction == IRP_MN_WAIT_WAKE)
         Stack->Parameters.WaitWake.PowerState = PowerState.SystemState;
     else
-        Stack->Parameters.WaitWake.PowerState = PowerState.DeviceState;
+    {
+        Stack->Parameters.Power.Type = DevicePowerState;
+        Stack->Parameters.Power.State = PowerState;
+    }
   
     RequestPowerItem->CompletionRoutine = CompletionFunction;
     RequestPowerItem->PowerState = PowerState;
@@ -526,7 +527,7 @@ NtPowerInformation(IN POWER_INFORMATION_LEVEL PowerInformationLevel,
 
             /* Just zero the struct (and thus set BatteryState->BatteryPresent = FALSE) */
             RtlZeroMemory(BatteryState, sizeof(SYSTEM_BATTERY_STATE));
-            BatteryState->EstimatedTime = (ULONG)-1;
+            BatteryState->EstimatedTime = MAXULONG;
 
             Status = STATUS_SUCCESS;
             break;
@@ -588,6 +589,189 @@ NTAPI
 NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
                           OUT EXECUTION_STATE *PreviousFlags)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PKTHREAD Thread = KeGetCurrentThread();
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    EXECUTION_STATE PreviousState;
+    PAGED_CODE();
+
+    /* Validate flags */
+    if (esFlags & ~(ES_CONTINUOUS | ES_USER_PRESENT))
+    {
+        /* Fail the request */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check for user parameters */
+    if (PreviousMode != KernelMode)
+    {
+        /* Protect the probes */
+        _SEH2_TRY
+        {
+            /* Check if the pointer is valid */
+            ProbeForWriteUlong(PreviousFlags);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* It isn't -- fail */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* Save the previous state, always masking in the continous flag */
+    PreviousState = Thread->PowerState | ES_CONTINUOUS;
+
+    /* Check if we need to update the power state */
+    if (esFlags & ES_CONTINUOUS) Thread->PowerState = esFlags;
+
+    /* Protect the write back to user mode */
+    _SEH2_TRY
+    {
+        /* Return the previous flags */
+        *PreviousFlags = PreviousState;
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        /* Something's wrong, fail */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* All is good */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NtSetSystemPowerState(IN POWER_ACTION SystemAction,
+		              IN SYSTEM_POWER_STATE MinSystemState,
+		              IN ULONG Flags)
+{
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    POP_POWER_ACTION Action = {0};
+    NTSTATUS Status;
+
+    /* Check for invalid parameter combinations */
+    if ((MinSystemState >= PowerSystemMaximum) ||
+        (MinSystemState <= PowerSystemUnspecified) ||
+        (SystemAction > PowerActionWarmEject) ||
+        (SystemAction < PowerActionReserved) ||
+        (Flags & ~(POWER_ACTION_QUERY_ALLOWED  |  
+                   POWER_ACTION_UI_ALLOWED     | 
+                   POWER_ACTION_OVERRIDE_APPS  | 
+                   POWER_ACTION_LIGHTEST_FIRST | 
+                   POWER_ACTION_LOCK_CONSOLE   | 
+                   POWER_ACTION_DISABLE_WAKES  | 
+                   POWER_ACTION_CRITICAL)))
+    {
+        DPRINT1("NtSetSystemPowerState: Bad parameters!\n");
+        DPRINT1("                       SystemAction: 0x%x\n", SystemAction);
+        DPRINT1("                       MinSystemState: 0x%x\n", MinSystemState);
+        DPRINT1("                       Flags: 0x%x\n", Flags);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check for user caller */
+    if (PreviousMode != KernelMode)
+    {
+        /* Check for shutdown permission */
+        if (!SeSinglePrivilegeCheck(SeShutdownPrivilege, PreviousMode))
+        {
+            /* Not granted */
+            DPRINT1("ERROR: Privilege not held for shutdown\n");
+            //return STATUS_PRIVILEGE_NOT_HELD; HACK!
+        }
+
+        /* Do it as a kernel-mode caller for consistency with system state */
+        return ZwSetSystemPowerState (SystemAction, MinSystemState, Flags);
+    }
+
+    /* Read policy settings (partial shutdown vs. full shutdown) */
+    if (SystemAction == PowerActionShutdown) PopReadShutdownPolicy();
+
+    /* Disable lazy flushing of registry */
+    DPRINT1("Stopping lazy flush\n");
+    CmSetLazyFlushState(FALSE);
+
+    /* Setup the power action */
+    Action.Action = SystemAction;
+    Action.Flags = Flags;
+
+    /* Notify callbacks */
+    DPRINT1("Notifying callbacks\n");
+    ExNotifyCallback(PowerStateCallback, (PVOID)3, NULL);
+ 
+    /* Swap in any worker thread stacks */
+    DPRINT1("Swapping worker threads\n");
+    ExSwapinWorkerThreads(FALSE);
+    
+    /* Make our action global */
+    PopAction = Action;
+
+    /* Start power loop */
+    Status = STATUS_CANCELLED;
+    while (TRUE)
+    {
+        /* Break out if there's nothing to do */
+        if (Action.Action == PowerActionNone) break;
+
+        /* Check for first-pass or restart */
+        if (Status == STATUS_CANCELLED)
+        {
+            /* Check for shutdown action */
+            if ((PopAction.Action == PowerActionShutdown) ||
+                (PopAction.Action == PowerActionShutdownReset) ||
+                (PopAction.Action == PowerActionShutdownOff))
+            {
+                /* Set the action */
+                PopAction.Shutdown = TRUE;
+            }
+
+            /* Now we are good to go */
+            Status = STATUS_SUCCESS;
+        }
+
+        /* Check if we're still in an invalid status */
+        if (!NT_SUCCESS(Status)) break;
+
+        /* Flush all volumes and the registry */
+        DPRINT1("Flushing volumes\n");
+        PopFlushVolumes(PopAction.Shutdown);
+
+        /* Set IRP for drivers */
+        PopAction.IrpMinor = IRP_MN_SET_POWER;
+        if (PopAction.Shutdown)
+        {
+            DPRINT1("Queueing shutdown thread\n");
+            /* Check if we are running in the system context */
+            if (PsGetCurrentProcess() != PsInitialSystemProcess)
+            {
+                /* We're not, so use a worker thread for shutdown */
+                ExInitializeWorkItem(&PopShutdownWorkItem,
+                                     &PopGracefulShutdown,
+                                     NULL);
+
+                ExQueueWorkItem(&PopShutdownWorkItem, CriticalWorkQueue);
+                                
+                /* Spend us -- when we wake up, the system is good to go down */
+                KeSuspendThread(KeGetCurrentThread());
+                Status = STATUS_SYSTEM_SHUTDOWN;
+                goto Exit;
+
+            }
+            else
+            {
+                /* Do the shutdown inline */
+                PopGracefulShutdown(NULL);
+            }
+        }
+        
+        /* You should not have made it this far */
+        ASSERT(FALSE && "System is still up and running?!");
+        break;
+    }
+
+Exit:
+    /* We're done, return */
+    return Status;
 }

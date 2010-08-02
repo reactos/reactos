@@ -1,5 +1,4 @@
-#ifndef _TCPIP_INTERFACE_H
-#define _TCPIP_INTERFACE_H
+#pragma once
 
 #include <ip.h>
 
@@ -16,5 +15,3 @@ NTSTATUS GetInterfaceName( PIP_INTERFACE Interface, PCHAR NameBuffer,
 NTSTATUS GetInterfaceConnectionStatus( PIP_INTERFACE Interface,
                                        PULONG OperStatus );
 PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address);
-
-#endif//_TCPIP_INTERFACE_H

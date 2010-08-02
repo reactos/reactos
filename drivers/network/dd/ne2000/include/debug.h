@@ -6,8 +6,8 @@
  * DEFINES:     DBG     - Enable debug output
  *              NASSERT - Disable assertions
  */
-#ifndef __DEBUG_H
-#define __DEBUG_H
+
+#pragma once
 
 #define NORMAL_MASK    0x000000FF
 #define SPECIAL_MASK   0xFFFFFF00
@@ -18,7 +18,7 @@
 #define DEBUG_MEMORY   0x00000100
 #define DEBUG_ULTRA    0xFFFFFFFF
 
-#ifdef DBG
+#if DBG
 
 extern ULONG DebugTraceLevel;
 
@@ -43,18 +43,6 @@ extern ULONG DebugTraceLevel;
 #endif /* _MSC_VER */
 
 
-/* Assert is defined in ndis.h */
-#if 0
-#ifdef ASSERT
-#undef ASSERT
-#endif
-
-#ifdef NASSERT
-#define ASSERT(x)
-#else /* NASSERT */
-#define ASSERT(x) if (!(x)) { NDIS_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
-#endif /* NASSERT */
-#endif
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql() == (x))
 
@@ -90,7 +78,5 @@ extern ULONG DebugTraceLevel;
 
 #define CHECKPOINT \
     do { NDIS_DbgPrint(MIN_TRACE, ("%s:%d\n", __FILE__, __LINE__)); } while(0);
-
-#endif /* __DEBUG_H */
 
 /* EOF */

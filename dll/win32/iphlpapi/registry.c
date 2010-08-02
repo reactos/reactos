@@ -44,18 +44,19 @@ PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n ) {
   PWCHAR Value;
   DWORD ValueLen;
 
-  if (MaxAdapterName == -1) {
-    RegCloseKey( RegHandle );
+  if (MaxAdapterName == -1)
     return 0;
-  }
 
   ValueLen = MaxAdapterName;
   Value = (PWCHAR)HeapAlloc( GetProcessHeap(), 0, MaxAdapterName * sizeof(WCHAR) );
+  if (!Value) return 0;
+
   Status = RegEnumKeyExW( RegHandle, n, Value, &ValueLen,
 			  NULL, NULL, NULL, NULL );
-  if (Status != ERROR_SUCCESS)
+  if (Status != ERROR_SUCCESS) {
+    HeapFree(GetProcessHeap(), 0, Value);
     return 0;
-  else {
+  } else {
     Value[ValueLen] = 0;
     return Value;
   }

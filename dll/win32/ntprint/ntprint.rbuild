@@ -8,7 +8,6 @@
 	<file>ntprint.rc</file>
 	<library>wine</library>
 	<library>winspool</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

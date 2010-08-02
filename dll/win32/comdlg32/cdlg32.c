@@ -154,7 +154,6 @@ void COMDLG32_SetCommDlgExtendedError(DWORD err)
 
 /***********************************************************************
  *	CommDlgExtendedError			(COMDLG32.@)
- *	CommDlgExtendedError			(COMMDLG.26)
  *
  * Get the thread's local error value if a comdlg32 function fails.
  *	RETURNS

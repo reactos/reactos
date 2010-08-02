@@ -128,9 +128,9 @@ int CDECL _fstat64(int fd, struct __stat64* buf)
       _dosmaperr(ERROR_INVALID_PARAMETER);
       return -1;
     }
-    buf->st_mode = _S_IFREG | _S_IREAD;
+    buf->st_mode = _S_IFREG | ALL_S_IREAD;
     if (!(hfi.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
-      buf->st_mode |= _S_IWRITE;
+      buf->st_mode |= ALL_S_IWRITE;
     buf->st_size  = ((__int64)hfi.nFileSizeHigh << 32) + hfi.nFileSizeLow;
     RtlTimeToSecondsSince1970((LARGE_INTEGER *)&hfi.ftLastAccessTime, &dw);
     buf->st_atime = dw;

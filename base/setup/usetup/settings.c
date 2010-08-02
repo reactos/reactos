@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
@@ -241,7 +241,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                NULL);
 
     Status = NtOpenKey(&BusKey,
-                       KEY_ALL_ACCESS,
+                       KEY_ENUMERATE_SUB_KEYS,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
@@ -262,7 +262,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                    NULL);
 
         Status = NtOpenKey(&BusInstanceKey,
-                           KEY_ALL_ACCESS,
+                           KEY_ENUMERATE_SUB_KEYS,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
@@ -281,7 +281,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                    NULL);
 
         Status = NtOpenKey(&ControllerKey,
-                           KEY_ALL_ACCESS,
+                           KEY_ENUMERATE_SUB_KEYS,
                            &ObjectAttributes);
         if (NT_SUCCESS(Status))
         {
@@ -300,7 +300,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                            NULL);
 
                 Status = NtOpenKey(&ControllerInstanceKey,
-                                   KEY_ALL_ACCESS,
+                                   KEY_QUERY_VALUE,
                                    &ObjectAttributes);
                 if (!NT_SUCCESS(Status))
                 {
@@ -648,7 +648,7 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
                                NULL);
 
     Status =  NtOpenKey(&KeyHandle,
-                        KEY_ALL_ACCESS,
+                        KEY_SET_VALUE,
                         &ObjectAttributes);
 
     if (!NT_SUCCESS(Status))
@@ -825,6 +825,7 @@ CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
     PWCHAR UserData;
     const MUI_LAYOUTS * LayoutsList;
     ULONG uIndex = 0;
+    BOOL KeyboardLayoutsFound = FALSE;
 
     /* Get default layout id */
     if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLayout", &Context))
@@ -856,7 +857,7 @@ CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
                 /* FIXME: Handle error! */
                 DPRINT("INF_GetData() failed\n");
                 DestroyGenericList(List, FALSE);
-                break;
+                return NULL;
             }
 
             if (_wcsicmp(LayoutsList[uIndex].LayoutID, KeyName) == 0)
@@ -868,6 +869,9 @@ CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
                 if (UserData == NULL)
                 {
                     /* FIXME: Handle error! */
+                    DPRINT("RtlAllocateHeap() failed\n");
+                    DestroyGenericList(List, FALSE);
+                    return NULL;
                 }
 
                 wcscpy(UserData, KeyName);
@@ -877,13 +881,22 @@ CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
                                        Buffer,
                                        UserData,
                                        _wcsicmp(KeyName, DefaultKBLayout) ? FALSE : TRUE);
+                KeyboardLayoutsFound = TRUE;
             }
-            
+
         } while (SetupFindNextLine(&Context, &Context));
 
         uIndex++;
 
     } while (LayoutsList[uIndex].LangID != NULL);
+
+    /* FIXME: Handle this case */
+    if (!KeyboardLayoutsFound)
+    {
+        DPRINT1("No keyboard layouts have been found\n");
+        DestroyGenericList(List, FALSE);
+        return NULL;
+    }
 
     return List;
 }
@@ -963,7 +976,7 @@ SetGeoID(PWCHAR Id)
                                NULL);
 
     Status =  NtOpenKey(&KeyHandle,
-                          KEY_ALL_ACCESS,
+                        KEY_SET_VALUE,
 			  &ObjectAttributes);
     if(!NT_SUCCESS(Status))
     {

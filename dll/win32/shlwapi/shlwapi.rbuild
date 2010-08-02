@@ -5,7 +5,7 @@
 	<importlibrary definition="shlwapi.spec" />
 	<include base="shlwapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="__WINESRC__" />
 	<file>assoc.c</file>
 	<file>clist.c</file>
@@ -27,7 +27,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>oleaut32</library>
 	<library>ole32</library>
 	<library>comctl32</library>

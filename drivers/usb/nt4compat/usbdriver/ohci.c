@@ -72,24 +72,28 @@ extern USB_DEV_MANAGER g_dev_mgr;
  * The erratum (#4) description is incorrect.  AMD's workaround waits
  * till some bits (mostly reserved) are clear; ok for all revs.
  */
-#define read_roothub(hc, register, mask) ({ \
-	ULONG temp = OHCI_READ_PORT_ULONG(&((hc)->regs->roothub.register)); \
-	if (temp == -1) \
-		/*disable (hc)*/; \
-	/*else if (hc->flags & OHCI_QUIRK_AMD756) \
-		while (temp & mask) \
-			temp = ohci_readl (hc, &hc->regs->roothub.register); */ \
-	temp; })
+ULONG
+FORCEINLINE
+read_roothub(POHCI_DEV hc, PULONG reg, ULONG mask)
+{
+	ULONG temp = OHCI_READ_PORT_ULONG(reg);
+	if (temp == -1)
+		/*disable (hc)*/;
+	/*else if (hc->flags & OHCI_QUIRK_AMD756)
+		while (temp & mask)
+			temp = ohci_readl (hc, &hc->regs->roothub.register); */
+	return temp;
+}
 
 static ULONG roothub_a (POHCI_DEV hc)
-	{ return read_roothub (hc, a, 0xfc0fe000); }
+	{ return read_roothub (hc, &hc->regs->roothub.a, 0xfc0fe000); }
 /*
 static inline u32 roothub_b (struct ohci_hcd *hc)
 	{ return ohci_readl (hc, &hc->regs->roothub.b); }
 static inline u32 roothub_status (struct ohci_hcd *hc)
 	{ return ohci_readl (hc, &hc->regs->roothub.status); }
 static u32 roothub_portstatus (struct ohci_hcd *hc, int i)
-	{ return read_roothub (hc, portstatus [i], 0xffe0fce0); }
+	{ return read_roothub (hc, &hc->regs->roothub.portstatus [i], 0xffe0fce0); }
 */
 
 
@@ -236,7 +240,7 @@ PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
             //KeSynchronizeExecution(pdev_ext->ohci_int, ehci_cal_cpu_freq, NULL);
         }
     }
-    return NULL;
+    return pdev;
 }
 
 BOOLEAN ohci_mem_init (POHCI_DEVICE_EXTENSION dev_ext)
@@ -475,6 +479,8 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                                    pdev_ext->res_interrupt.level,
                                    pdev_ext->res_interrupt.vector, &irql, &affinity);
 
+    KeInitializeDpc(&pdev_ext->ehci_dpc, ehci_dpc_callback, (PVOID) pdev_ext->ehci);
+
     //connect the interrupt
     DbgPrint("ehci_alloc(): the int=0x%x\n", vector);
     if ((status = IoConnectInterrupt(&pdev_ext->ehci_int, ehci_isr, pdev_ext->ehci, NULL, //&pdev_ext->ehci->frame_list_lock,
@@ -486,8 +492,6 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         ehci_release(pdev);
         return NULL;
     }
-
-    KeInitializeDpc(&pdev_ext->ehci_dpc, ehci_dpc_callback, (PVOID) pdev_ext->ehci);
 #endif
 
     return pdev;
@@ -927,7 +931,7 @@ ohci_process_pending_endp(POHCI_DEV ehci)
         if (can_submit == STATUS_NO_MORE_ENTRIES)
         {
             //no enough bandwidth or tds
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
             InsertTailList(&temp_list, pthis);
         }
         else
@@ -1173,6 +1177,12 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 }
 
                 ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+                if (!ptimer)
+                {
+                    purb->status = STATUS_NO_MEMORY;
+                    break;
+                }
+
                 ptimer->threshold = 0;  // within [ 50ms, 60ms ], one tick is 10 ms
                 ptimer->context = (ULONG) purb;
                 ptimer->pdev = pdev;
@@ -1198,6 +1208,12 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
         case USB_ENDPOINT_XFER_INT:
         {
             ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+            if (!ptimer)
+            {
+                purb->status = STATUS_NO_MEMORY;
+                break;
+            }
+
             ptimer->threshold = RH_INTERVAL;
             ptimer->context = (ULONG) purb;
             ptimer->pdev = pdev;
@@ -1332,7 +1348,7 @@ ohci_submit_urb(POHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     }
 
     pending_endp->pendp = purb->pendp;
-    InsertTailList(&ehci->pending_endp_list, (PLIST_ENTRY) pending_endp);
+    InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
     unlock_dev(pdev, TRUE);
     unlock_pending_endp_list(&ehci->pending_endp_list_lock);
@@ -1342,7 +1358,7 @@ ohci_submit_urb(POHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
   LBL_OUT2:
     pdev->ref_count--;
-    RemoveEntryList((PLIST_ENTRY) purb);
+    RemoveEntryList(&purb->urb_link);
 
   LBL_OUT:
     unlock_dev(pdev, TRUE);

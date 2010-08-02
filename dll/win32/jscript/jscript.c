@@ -51,6 +51,7 @@ typedef struct {
     script_ctx_t *ctx;
     LONG thread_id;
     LCID lcid;
+    DWORD version;
 
     IActiveScriptSite *site;
 
@@ -70,6 +71,7 @@ void script_release(script_ctx_t *ctx)
         return;
 
     jsheap_free(&ctx->tmp_heap);
+    SysFreeString(ctx->last_match);
     heap_free(ctx);
 }
 
@@ -93,24 +95,20 @@ static HRESULT exec_global_code(JScript *This, parser_ctx_t *parser_ctx)
 {
     exec_ctx_t *exec_ctx;
     jsexcept_t jsexcept;
-    VARIANT var;
     HRESULT hres;
 
-    hres = create_exec_ctx((IDispatch*)_IDispatchEx_(This->ctx->script_disp), This->ctx->script_disp, NULL, &exec_ctx);
+    hres = create_exec_ctx(This->ctx, NULL, This->ctx->global, NULL, &exec_ctx);
     if(FAILED(hres))
         return hres;
 
     IActiveScriptSite_OnEnterScript(This->site);
 
     memset(&jsexcept, 0, sizeof(jsexcept));
-    hres = exec_source(exec_ctx, parser_ctx, parser_ctx->source, &jsexcept, &var);
+    hres = exec_source(exec_ctx, parser_ctx, parser_ctx->source, EXECT_PROGRAM, &jsexcept, NULL);
     VariantClear(&jsexcept.var);
     exec_release(exec_ctx);
-    if(SUCCEEDED(hres))
-        VariantClear(&var);
 
     IActiveScriptSite_OnLeaveScript(This->site);
-
     return hres;
 }
 
@@ -148,12 +146,6 @@ static HRESULT set_ctx_site(JScript *This)
 
     This->ctx->lcid = This->lcid;
 
-    if(!This->ctx->script_disp) {
-        hres = create_dispex(This->ctx, NULL, NULL, &This->ctx->script_disp);
-        if(FAILED(hres))
-            return hres;
-    }
-
     hres = init_global(This->ctx);
     if(FAILED(hres))
         return hres;
@@ -163,6 +155,105 @@ static HRESULT set_ctx_site(JScript *This)
 
     change_state(This, SCRIPTSTATE_INITIALIZED);
     return S_OK;
+}
+
+typedef struct {
+    const IServiceProviderVtbl *lpIServiceProviderVtbl;
+
+    LONG ref;
+
+    IServiceProvider *sp;
+} AXSite;
+
+#define SERVPROV(x)  ((IServiceProvider*) &(x)->lpIServiceProviderVtbl)
+
+#define SERVPROV_THIS(iface) DEFINE_THIS(AXSite, IServiceProvider, iface)
+
+static HRESULT WINAPI AXSite_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppv)
+{
+    AXSite *This = SERVPROV_THIS(iface);
+
+    if(IsEqualGUID(&IID_IUnknown, riid)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
+        *ppv = SERVPROV(This);
+    }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
+        TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
+        *ppv = SERVPROV(This);
+    }else {
+        TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI AXSite_AddRef(IServiceProvider *iface)
+{
+    AXSite *This = SERVPROV_THIS(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI AXSite_Release(IServiceProvider *iface)
+{
+    AXSite *This = SERVPROV_THIS(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref)
+        heap_free(This);
+
+    return ref;
+}
+
+static HRESULT WINAPI AXSite_QueryService(IServiceProvider *iface,
+        REFGUID guidService, REFIID riid, void **ppv)
+{
+    AXSite *This = SERVPROV_THIS(iface);
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_guid(guidService), debugstr_guid(riid), ppv);
+
+    return IServiceProvider_QueryService(This->sp, guidService, riid, ppv);
+}
+
+#undef SERVPROV_THIS
+
+static IServiceProviderVtbl AXSiteVtbl = {
+    AXSite_QueryInterface,
+    AXSite_AddRef,
+    AXSite_Release,
+    AXSite_QueryService
+};
+
+IUnknown *create_ax_site(script_ctx_t *ctx)
+{
+    IServiceProvider *sp;
+    AXSite *ret;
+    HRESULT hres;
+
+    hres = IActiveScriptSite_QueryInterface(ctx->site, &IID_IServiceProvider, (void**)&sp);
+    if(FAILED(hres)) {
+        ERR("Could not get IServiceProvider iface: %08x\n", hres);
+        return NULL;
+    }
+
+    ret = heap_alloc(sizeof(AXSite));
+    if(!ret) {
+        IServiceProvider_Release(sp);
+        return NULL;
+    }
+
+    ret->lpIServiceProviderVtbl = &AXSiteVtbl;
+    ret->ref = 1;
+    ret->sp = sp;
+
+    return (IUnknown*)SERVPROV(ret);
 }
 
 #define ACTSCRIPT_THIS(iface) DEFINE_THIS(JScript, IActiveScript, iface)
@@ -335,6 +426,11 @@ static HRESULT WINAPI JScript_Close(IActiveScript *iface)
         if(This->ctx->state == SCRIPTSTATE_DISCONNECTED)
             change_state(This, SCRIPTSTATE_INITIALIZED);
 
+        if(This->ctx->host_global) {
+            IDispatch_Release(This->ctx->host_global);
+            This->ctx->host_global = NULL;
+        }
+
         if(This->ctx->named_items) {
             named_item_t *iter, *iter2;
 
@@ -352,6 +448,11 @@ static HRESULT WINAPI JScript_Close(IActiveScript *iface)
             This->ctx->named_items = NULL;
         }
 
+        if(This->ctx->secmgr) {
+            IInternetHostSecurityManager_Release(This->ctx->secmgr);
+            This->ctx->secmgr = NULL;
+        }
+
         if(This->ctx->site) {
             IActiveScriptSite_Release(This->ctx->site);
             This->ctx->site = NULL;
@@ -360,13 +461,8 @@ static HRESULT WINAPI JScript_Close(IActiveScript *iface)
         if (This->site)
             change_state(This, SCRIPTSTATE_CLOSED);
 
-        if(This->ctx->script_disp) {
-            IDispatchEx_Release(_IDispatchEx_(This->ctx->script_disp));
-            This->ctx->script_disp = NULL;
-        }
-
         if(This->ctx->global) {
-            IDispatchEx_Release(_IDispatchEx_(This->ctx->global));
+            jsdisp_release(This->ctx->global);
             This->ctx->global = NULL;
         }
     }
@@ -407,6 +503,11 @@ static HRESULT WINAPI JScript_AddNamedItem(IActiveScript *iface,
             WARN("object does not implement IDispatch\n");
             return hres;
         }
+
+        if(This->ctx->host_global)
+            IDispatch_Release(This->ctx->host_global);
+        IDispatch_AddRef(disp);
+        This->ctx->host_global = disp;
     }
 
     item = heap_alloc(sizeof(*item));
@@ -449,12 +550,12 @@ static HRESULT WINAPI JScript_GetScriptDispatch(IActiveScript *iface, LPCOLESTR 
     if(!ppdisp)
         return E_POINTER;
 
-    if(This->thread_id != GetCurrentThreadId() || !This->ctx->script_disp) {
+    if(This->thread_id != GetCurrentThreadId() || !This->ctx->global) {
         *ppdisp = NULL;
         return E_UNEXPECTED;
     }
 
-    *ppdisp = (IDispatch*)_IDispatchEx_(This->ctx->script_disp);
+    *ppdisp = (IDispatch*)_IDispatchEx_(This->ctx->global);
     IDispatch_AddRef(*ppdisp);
     return S_OK;
 }
@@ -555,6 +656,8 @@ static HRESULT WINAPI JScriptParse_InitNew(IActiveScriptParse *iface)
 
     ctx->ref = 1;
     ctx->state = SCRIPTSTATE_UNINITIALIZED;
+    ctx->safeopt = This->safeopt;
+    ctx->version = This->version;
     jsheap_init(&ctx->tmp_heap);
 
     ctx = InterlockedCompareExchangePointer((void**)&This->ctx, ctx, NULL);
@@ -596,7 +699,7 @@ static HRESULT WINAPI JScriptParse_ParseScriptText(IActiveScriptParse *iface,
     if(This->thread_id != GetCurrentThreadId() || This->ctx->state == SCRIPTSTATE_CLOSED)
         return E_UNEXPECTED;
 
-    hres = script_parse(This->ctx, pstrCode, &parser_ctx);
+    hres = script_parse(This->ctx, pstrCode, pstrDelimiter, &parser_ctx);
     if(FAILED(hres))
         return hres;
 
@@ -662,7 +765,7 @@ static HRESULT WINAPI JScriptParseProcedure_ParseProcedureText(IActiveScriptPars
     if(This->thread_id != GetCurrentThreadId() || This->ctx->state == SCRIPTSTATE_CLOSED)
         return E_UNEXPECTED;
 
-    hres = script_parse(This->ctx, pstrCode, &parser_ctx);
+    hres = script_parse(This->ctx, pstrCode, pstrDelimiter, &parser_ctx);
     if(FAILED(hres)) {
         WARN("Parse failed %08x\n", hres);
         return hres;
@@ -718,8 +821,27 @@ static HRESULT WINAPI JScriptProperty_SetProperty(IActiveScriptProperty *iface, 
         VARIANT *pvarIndex, VARIANT *pvarValue)
 {
     JScript *This = ACTSCPPROP_THIS(iface);
-    FIXME("(%p)->(%x %p %p)\n", This, dwProperty, pvarIndex, pvarValue);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%x %s %s)\n", This, dwProperty, debugstr_variant(pvarIndex), debugstr_variant(pvarValue));
+
+    if(pvarIndex)
+        FIXME("unsupported pvarIndex\n");
+
+    switch(dwProperty) {
+    case SCRIPTPROP_INVOKEVERSIONING:
+        if(V_VT(pvarValue) != VT_I4 || V_I4(pvarValue) < 0 || V_I4(pvarValue) > 15) {
+            WARN("invalid value %s\n", debugstr_variant(pvarValue));
+            return E_INVALIDARG;
+        }
+
+        This->version = V_I4(pvarValue);
+        break;
+    default:
+        FIXME("Unimplemented property %x\n", dwProperty);
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
 }
 
 #undef ACTSCPPROP_THIS

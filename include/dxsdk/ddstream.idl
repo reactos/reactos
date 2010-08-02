@@ -19,7 +19,7 @@
 import "unknwn.idl";
 import "mmstream.idl";
 
-cpp_quote("#ifndef __WINE_DDRAW_H")
+cpp_quote("#ifndef __DDRAW_INCLUDED__")
 typedef void * LPDDSURFACEDESC;
 typedef struct tDDSURFACEDESC DDSURFACEDESC;
 interface IDirectDraw;

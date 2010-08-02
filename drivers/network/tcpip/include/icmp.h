@@ -4,8 +4,8 @@
  * FILE:        include/icmp.h
  * PURPOSE:     Internet Control Message Protocol definitions
  */
-#ifndef __ICMP_H
-#define __ICMP_H
+
+#pragma once
 
 typedef struct ICMP_HEADER {
     UCHAR Type;      /* ICMP message type */
@@ -48,6 +48,16 @@ typedef struct ICMP_HEADER {
 /* ICMP codes for ICMP_TYPE_PARAMETER */
 #define ICMP_CODE_TP_POINTER 1 /* Pointer indicates the error */
 
+NTSTATUS ICMPSendDatagram(
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR BufferData,
+    ULONG DataSize,
+    PULONG DataUsed );
+
+NTSTATUS ICMPStartup();
+
+NTSTATUS ICMPShutdown();
 
 VOID ICMPReceive(
     PIP_INTERFACE Interface,
@@ -63,7 +73,5 @@ VOID ICMPReply(
     PIP_PACKET IPPacket,
     UCHAR Type,
     UCHAR Code);
-
-#endif /* __ICMP_H */
 
 /* EOF */

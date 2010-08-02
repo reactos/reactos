@@ -160,20 +160,7 @@ END
 //
 // Dialog
 //
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Informazioni su Task Manager"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Task Manager v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -202,7 +189,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Termina Processo",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "&Mostra i processi di tutti gli utenti",IDC_SHOWALLPROCESSES,
@@ -214,7 +201,7 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Uso CPU",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "Uso CPU",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Uso MEM",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totali",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Carico scritture (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
@@ -224,48 +211,48 @@ BEGIN
     LTEXT           "Thread",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Processi",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totale",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Limite",IDS_COMMIT_CHARGE_LIMIT,12,184,21,8
+    LTEXT           "Limite",IDS_COMMIT_CHARGE_LIMIT,12,184,21,8,NOT WS_BORDER
     LTEXT           "Picco",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totale",IDS_PHYSICAL_MEMORY_TOTAL,132,131,27,8
     LTEXT           "Disponibile",IDS_PHYSICAL_MEMORY_AVAILABLE,132,140,35,8
     LTEXT           "Cache sistema",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,132,149,52,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totale",IDS_KERNEL_MEMORY_TOTAL,132,174,27,8
     LTEXT           "Paginata",IDS_KERNEL_MEMORY_PAGED,132,184,31,8
     LTEXT           "Non paginata",IDS_KERNEL_MEMORY_NONPAGED,132,193,48,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Storico uso CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Storico uso Memoria",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Visualizzazione uso CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
+    PUSHBUTTON      "Visualizzazione uso CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
 		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Visualizzazione uso MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
+    PUSHBUTTON      "Visualizzazione uso MEM",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
                     WS_EX_CLIENTEDGE
     PUSHBUTTON      "Storico uso CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Storico uso MEM",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -602,7 +589,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Assegna al processo la classe di priorità BELOW NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Assegna al processo la classe di priorità LOW"
-  IDS_LICENSE "Questo programma è software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma è distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILITÀ o UTILIZZABILITÀ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non è cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
 END
 
 

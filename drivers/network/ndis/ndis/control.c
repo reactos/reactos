@@ -29,6 +29,8 @@ NdisInitializeReadWriteLock(
  */
 {
   RtlZeroMemory(Lock, sizeof(NDIS_RW_LOCK));
+
+  KeInitializeSpinLock(&Lock->SpinLock);
 }
 
 
@@ -81,9 +83,9 @@ NdisAcquireReadWriteLock(
         if (Lock->Context != PsGetCurrentThread()) {
           /* Wait for the exclusive lock to be released. */
           Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount--;
-          KefAcquireSpinLockAtDpcLevel(&Lock->SpinLock);
+          KeAcquireSpinLockAtDpcLevel(&Lock->SpinLock);
           Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount++;
-          KefReleaseSpinLockFromDpcLevel(&Lock->SpinLock);
+          KeReleaseSpinLockFromDpcLevel(&Lock->SpinLock);
         }
       }
     }
@@ -122,7 +124,7 @@ NdisReleaseReadWriteLock(
     case 4: /* Exclusive write lock */
       Lock->Context = NULL;
       LockState->LockState = -1;
-      KfReleaseSpinLock(&Lock->SpinLock, LockState->OldIrql);
+      KeReleaseSpinLock(&Lock->SpinLock, LockState->OldIrql);
       return;
   }
 }
@@ -308,7 +310,7 @@ NdisWaitEvent(
   LARGE_INTEGER Timeout;
   NTSTATUS Status;
 
-  Timeout.QuadPart = MsToWait * -10000LL;
+  Timeout.QuadPart = Int32x32To64(MsToWait, -10000);
 
   Status = KeWaitForSingleObject(&Event->Event, Executive, KernelMode, TRUE, &Timeout);
 

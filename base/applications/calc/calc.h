@@ -1,5 +1,4 @@
-#ifndef __CALC_H__
-#define __CALC_H__
+#pragma once
 
 #include <windows.h>
 #include <tchar.h>
@@ -42,7 +41,7 @@
 #define IDC_STATIC  ((DWORD)-1)
 #endif
 
-#define CALC_VERSION        TEXT("1.10")
+#define CALC_VERSION        TEXT("1.11")
 
 #define MAX_CALC_SIZE       256
 
@@ -51,30 +50,6 @@
 #define SIZEOF(_ar)     (sizeof(_ar)/sizeof(_ar[1]))
 
 // RPN.C
-/*
-typedef struct _postfix_item_t {
-    unsigned int type;
-    union {
-#ifdef ENABLE_MULTI_PRECISION
-        mpfr_t       mf;
-#else
-        double       f;
-        INT64        i;
-#endif
-        struct {
-            unsigned short int code;
-            unsigned short int elem;
-        } action;
-    } number;
-    struct _postfix_item_t *next;
-} postfix_item_t;
-
-void flush_postfix(void);
-void infix2postfix(char *in_str);
-postfix_item_t *exec_postfix(void);
-*/
-
-//
 
 enum {
     RPN_OPERATOR_PARENT,
@@ -93,6 +68,8 @@ enum {
     RPN_OPERATOR_MOD,
     RPN_OPERATOR_POW,
     RPN_OPERATOR_SQR,
+
+    RPN_OPERATOR_NONE
 };
 
 typedef union {
@@ -124,7 +101,7 @@ void stop_rpn_engine(void);
 typedef struct {
     char *data;
     char *ptr;
-    int   wm_msg;
+    UINT  wm_msg;
 } sequence_t;
 
 typedef struct {
@@ -190,6 +167,7 @@ extern calc_t calc;
 
 #define MODIFIER_INV    0x01
 #define MODIFIER_HYP    0x02
+#define NO_CHAIN        0x04
 
 void apply_int_mask(calc_number_t *a);
 #ifdef ENABLE_MULTI_PRECISION
@@ -257,5 +235,3 @@ INT_PTR CALLBACK AboutDlgProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 void ConvExecute(HWND hWnd);
 void ConvAdjust(HWND hWnd, int n_cat);
 void ConvInit(HWND hWnd);
-
-#endif

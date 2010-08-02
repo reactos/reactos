@@ -40,12 +40,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
 typedef struct _domelem
 {
+    xmlnode node;
     const struct IXMLDOMElementVtbl *lpVtbl;
-    const struct IUnknownVtbl *lpInternalUnkVtbl;
-    IUnknown *pUnkOuter;
     LONG ref;
-    IUnknown *node_unk;
-    IXMLDOMNode *node;
 } domelem;
 
 static inline domelem *impl_from_IXMLDOMElement( IXMLDOMElement *iface )
@@ -53,14 +50,9 @@ static inline domelem *impl_from_IXMLDOMElement( IXMLDOMElement *iface )
     return (domelem *)((char*)iface - FIELD_OFFSET(domelem, lpVtbl));
 }
 
-static inline domelem *impl_from_InternalUnknown( IUnknown *iface )
-{
-    return (domelem *)((char*)iface - FIELD_OFFSET(domelem, lpInternalUnkVtbl));
-}
-
 static inline xmlNodePtr get_element( domelem *This )
 {
-    return xmlNodePtr_from_domnode( This->node, XML_ELEMENT_NODE );
+    return This->node.node;
 }
 
 static HRESULT WINAPI domelem_QueryInterface(
@@ -69,23 +61,58 @@ static HRESULT WINAPI domelem_QueryInterface(
     void** ppvObject )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
 
-    return IUnknown_QueryInterface(This->pUnkOuter, riid, ppvObject);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppvObject);
+
+    if ( IsEqualGUID( riid, &IID_IXMLDOMElement ) ||
+         IsEqualGUID( riid, &IID_IDispatch ) ||
+         IsEqualGUID( riid, &IID_IUnknown ) )
+    {
+        *ppvObject = &This->lpVtbl;
+    }
+    else if ( IsEqualGUID( riid, &IID_IXMLDOMNode ) )
+    {
+        *ppvObject = IXMLDOMNode_from_impl(&This->node);
+    }
+    else if(dispex_query_interface(&This->node.dispex, riid, ppvObject))
+    {
+        return *ppvObject ? S_OK : E_NOINTERFACE;
+    }
+    else
+    {
+        FIXME("interface %s not implemented\n", debugstr_guid(riid));
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef( (IUnknown*)*ppvObject );
+    return S_OK;
 }
 
 static ULONG WINAPI domelem_AddRef(
     IXMLDOMElement *iface )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IUnknown_AddRef(This->pUnkOuter);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
 }
 
 static ULONG WINAPI domelem_Release(
     IXMLDOMElement *iface )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IUnknown_Release(This->pUnkOuter);
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref) {
+        destroy_xmlnode(&This->node);
+        heap_free(This);
+    }
+
+    return ref;
 }
 
 static HRESULT WINAPI domelem_GetTypeInfoCount(
@@ -170,7 +197,7 @@ static HRESULT WINAPI domelem_get_nodeName(
     BSTR* p )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_nodeName( This->node, p );
+    return IXMLDOMNode_get_nodeName( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_get_nodeValue(
@@ -178,7 +205,7 @@ static HRESULT WINAPI domelem_get_nodeValue(
     VARIANT* var1 )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_nodeValue( This->node, var1 );
+    return IXMLDOMNode_get_nodeValue( IXMLDOMNode_from_impl(&This->node), var1 );
 }
 
 static HRESULT WINAPI domelem_put_nodeValue(
@@ -186,7 +213,7 @@ static HRESULT WINAPI domelem_put_nodeValue(
     VARIANT var1 )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_put_nodeValue( This->node, var1 );
+    return IXMLDOMNode_put_nodeValue( IXMLDOMNode_from_impl(&This->node), var1 );
 }
 
 static HRESULT WINAPI domelem_get_nodeType(
@@ -194,7 +221,7 @@ static HRESULT WINAPI domelem_get_nodeType(
     DOMNodeType* domNodeType )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_nodeType( This->node, domNodeType );
+    return IXMLDOMNode_get_nodeType( IXMLDOMNode_from_impl(&This->node), domNodeType );
 }
 
 static HRESULT WINAPI domelem_get_parentNode(
@@ -202,7 +229,7 @@ static HRESULT WINAPI domelem_get_parentNode(
     IXMLDOMNode** parent )
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_parentNode( This->node, parent );
+    return IXMLDOMNode_get_parentNode( IXMLDOMNode_from_impl(&This->node), parent );
 }
 
 static HRESULT WINAPI domelem_get_childNodes(
@@ -210,7 +237,7 @@ static HRESULT WINAPI domelem_get_childNodes(
     IXMLDOMNodeList** outList)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_childNodes( This->node, outList );
+    return IXMLDOMNode_get_childNodes( IXMLDOMNode_from_impl(&This->node), outList );
 }
 
 static HRESULT WINAPI domelem_get_firstChild(
@@ -218,7 +245,7 @@ static HRESULT WINAPI domelem_get_firstChild(
     IXMLDOMNode** domNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_firstChild( This->node, domNode );
+    return IXMLDOMNode_get_firstChild( IXMLDOMNode_from_impl(&This->node), domNode );
 }
 
 static HRESULT WINAPI domelem_get_lastChild(
@@ -226,7 +253,7 @@ static HRESULT WINAPI domelem_get_lastChild(
     IXMLDOMNode** domNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_lastChild( This->node, domNode );
+    return IXMLDOMNode_get_lastChild( IXMLDOMNode_from_impl(&This->node), domNode );
 }
 
 static HRESULT WINAPI domelem_get_previousSibling(
@@ -234,7 +261,7 @@ static HRESULT WINAPI domelem_get_previousSibling(
     IXMLDOMNode** domNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_previousSibling( This->node, domNode );
+    return IXMLDOMNode_get_previousSibling( IXMLDOMNode_from_impl(&This->node), domNode );
 }
 
 static HRESULT WINAPI domelem_get_nextSibling(
@@ -242,7 +269,7 @@ static HRESULT WINAPI domelem_get_nextSibling(
     IXMLDOMNode** domNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_nextSibling( This->node, domNode );
+    return IXMLDOMNode_get_nextSibling( IXMLDOMNode_from_impl(&This->node), domNode );
 }
 
 static HRESULT WINAPI domelem_get_attributes(
@@ -250,7 +277,7 @@ static HRESULT WINAPI domelem_get_attributes(
     IXMLDOMNamedNodeMap** attributeMap)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_attributes( This->node, attributeMap );
+    return IXMLDOMNode_get_attributes( IXMLDOMNode_from_impl(&This->node), attributeMap );
 }
 
 static HRESULT WINAPI domelem_insertBefore(
@@ -259,7 +286,7 @@ static HRESULT WINAPI domelem_insertBefore(
     IXMLDOMNode** outOldNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_insertBefore( This->node, newNode, var1, outOldNode );
+    return IXMLDOMNode_insertBefore( IXMLDOMNode_from_impl(&This->node), newNode, var1, outOldNode );
 }
 
 static HRESULT WINAPI domelem_replaceChild(
@@ -269,7 +296,7 @@ static HRESULT WINAPI domelem_replaceChild(
     IXMLDOMNode** outOldNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_replaceChild( This->node, newNode, oldNode, outOldNode );
+    return IXMLDOMNode_replaceChild( IXMLDOMNode_from_impl(&This->node), newNode, oldNode, outOldNode );
 }
 
 static HRESULT WINAPI domelem_removeChild(
@@ -277,7 +304,7 @@ static HRESULT WINAPI domelem_removeChild(
     IXMLDOMNode* domNode, IXMLDOMNode** oldNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_removeChild( This->node, domNode, oldNode );
+    return IXMLDOMNode_removeChild( IXMLDOMNode_from_impl(&This->node), domNode, oldNode );
 }
 
 static HRESULT WINAPI domelem_appendChild(
@@ -285,7 +312,7 @@ static HRESULT WINAPI domelem_appendChild(
     IXMLDOMNode* newNode, IXMLDOMNode** outNewNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_appendChild( This->node, newNode, outNewNode );
+    return IXMLDOMNode_appendChild( IXMLDOMNode_from_impl(&This->node), newNode, outNewNode );
 }
 
 static HRESULT WINAPI domelem_hasChildNodes(
@@ -293,7 +320,7 @@ static HRESULT WINAPI domelem_hasChildNodes(
     VARIANT_BOOL* pbool)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_hasChildNodes( This->node, pbool );
+    return IXMLDOMNode_hasChildNodes( IXMLDOMNode_from_impl(&This->node), pbool );
 }
 
 static HRESULT WINAPI domelem_get_ownerDocument(
@@ -301,7 +328,7 @@ static HRESULT WINAPI domelem_get_ownerDocument(
     IXMLDOMDocument** domDocument)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_ownerDocument( This->node, domDocument );
+    return IXMLDOMNode_get_ownerDocument( IXMLDOMNode_from_impl(&This->node), domDocument );
 }
 
 static HRESULT WINAPI domelem_cloneNode(
@@ -309,7 +336,7 @@ static HRESULT WINAPI domelem_cloneNode(
     VARIANT_BOOL pbool, IXMLDOMNode** outNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_cloneNode( This->node, pbool, outNode );
+    return IXMLDOMNode_cloneNode( IXMLDOMNode_from_impl(&This->node), pbool, outNode );
 }
 
 static HRESULT WINAPI domelem_get_nodeTypeString(
@@ -317,7 +344,7 @@ static HRESULT WINAPI domelem_get_nodeTypeString(
     BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_nodeTypeString( This->node, p );
+    return IXMLDOMNode_get_nodeTypeString( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_get_text(
@@ -325,7 +352,7 @@ static HRESULT WINAPI domelem_get_text(
     BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_text( This->node, p );
+    return IXMLDOMNode_get_text( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_put_text(
@@ -333,7 +360,7 @@ static HRESULT WINAPI domelem_put_text(
     BSTR p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_put_text( This->node, p );
+    return IXMLDOMNode_put_text( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_get_specified(
@@ -341,7 +368,7 @@ static HRESULT WINAPI domelem_get_specified(
     VARIANT_BOOL* pbool)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_specified( This->node, pbool );
+    return IXMLDOMNode_get_specified( IXMLDOMNode_from_impl(&This->node), pbool );
 }
 
 static HRESULT WINAPI domelem_get_definition(
@@ -349,7 +376,7 @@ static HRESULT WINAPI domelem_get_definition(
     IXMLDOMNode** domNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_definition( This->node, domNode );
+    return IXMLDOMNode_get_definition( IXMLDOMNode_from_impl(&This->node), domNode );
 }
 
 static HRESULT WINAPI domelem_get_nodeTypedValue(
@@ -357,7 +384,7 @@ static HRESULT WINAPI domelem_get_nodeTypedValue(
     VARIANT* var1)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_nodeTypedValue( This->node, var1 );
+    return IXMLDOMNode_get_nodeTypedValue( IXMLDOMNode_from_impl(&This->node), var1 );
 }
 
 static HRESULT WINAPI domelem_put_nodeTypedValue(
@@ -365,7 +392,7 @@ static HRESULT WINAPI domelem_put_nodeTypedValue(
     VARIANT var1)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_put_nodeTypedValue( This->node, var1 );
+    return IXMLDOMNode_put_nodeTypedValue( IXMLDOMNode_from_impl(&This->node), var1 );
 }
 
 static HRESULT WINAPI domelem_get_dataType(
@@ -373,7 +400,7 @@ static HRESULT WINAPI domelem_get_dataType(
     VARIANT* var1)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_dataType( This->node, var1 );
+    return IXMLDOMNode_get_dataType( IXMLDOMNode_from_impl(&This->node), var1 );
 }
 
 static HRESULT WINAPI domelem_put_dataType(
@@ -381,7 +408,7 @@ static HRESULT WINAPI domelem_put_dataType(
     BSTR p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_put_dataType( This->node, p );
+    return IXMLDOMNode_put_dataType( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_get_xml(
@@ -389,7 +416,7 @@ static HRESULT WINAPI domelem_get_xml(
     BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_xml( This->node, p );
+    return IXMLDOMNode_get_xml( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_transformNode(
@@ -397,7 +424,7 @@ static HRESULT WINAPI domelem_transformNode(
     IXMLDOMNode* domNode, BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_transformNode( This->node, domNode, p );
+    return IXMLDOMNode_transformNode( IXMLDOMNode_from_impl(&This->node), domNode, p );
 }
 
 static HRESULT WINAPI domelem_selectNodes(
@@ -405,7 +432,7 @@ static HRESULT WINAPI domelem_selectNodes(
     BSTR p, IXMLDOMNodeList** outList)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_selectNodes( This->node, p, outList );
+    return IXMLDOMNode_selectNodes( IXMLDOMNode_from_impl(&This->node), p, outList );
 }
 
 static HRESULT WINAPI domelem_selectSingleNode(
@@ -413,7 +440,7 @@ static HRESULT WINAPI domelem_selectSingleNode(
     BSTR p, IXMLDOMNode** outNode)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_selectSingleNode( This->node, p, outNode );
+    return IXMLDOMNode_selectSingleNode( IXMLDOMNode_from_impl(&This->node), p, outNode );
 }
 
 static HRESULT WINAPI domelem_get_parsed(
@@ -421,7 +448,7 @@ static HRESULT WINAPI domelem_get_parsed(
     VARIANT_BOOL* pbool)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_parsed( This->node, pbool );
+    return IXMLDOMNode_get_parsed( IXMLDOMNode_from_impl(&This->node), pbool );
 }
 
 static HRESULT WINAPI domelem_get_namespaceURI(
@@ -429,7 +456,7 @@ static HRESULT WINAPI domelem_get_namespaceURI(
     BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_namespaceURI( This->node, p );
+    return IXMLDOMNode_get_namespaceURI( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_get_prefix(
@@ -437,7 +464,7 @@ static HRESULT WINAPI domelem_get_prefix(
     BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_prefix( This->node, p );
+    return IXMLDOMNode_get_prefix( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_get_baseName(
@@ -445,7 +472,7 @@ static HRESULT WINAPI domelem_get_baseName(
     BSTR* p)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_get_baseName( This->node, p );
+    return IXMLDOMNode_get_baseName( IXMLDOMNode_from_impl(&This->node), p );
 }
 
 static HRESULT WINAPI domelem_transformNodeToObject(
@@ -453,7 +480,7 @@ static HRESULT WINAPI domelem_transformNodeToObject(
     IXMLDOMNode* domNode, VARIANT var1)
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
-    return IXMLDOMNode_transformNodeToObject( This->node, domNode, var1 );
+    return IXMLDOMNode_transformNodeToObject( IXMLDOMNode_from_impl(&This->node), domNode, var1 );
 }
 
 static HRESULT WINAPI domelem_get_tagName(
@@ -462,35 +489,24 @@ static HRESULT WINAPI domelem_get_tagName(
 {
     domelem *This = impl_from_IXMLDOMElement( iface );
     xmlNodePtr element;
-    DWORD len;
-    DWORD offset = 0;
-    LPWSTR str;
+    const xmlChar *prefix;
+    xmlChar *qname;
 
-    TRACE("%p\n", This );
+    TRACE("(%p)->(%p)\n", This, p );
 
-    if ( !This->node )
-        return E_FAIL;
+    if (!p) return E_INVALIDARG;
 
     element = get_element( This );
     if ( !element )
         return E_FAIL;
 
-    len = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, NULL, 0 );
-    if (element->ns)
-        len += MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->ns->prefix, -1, NULL, 0 );
-    str = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
-    if ( !str )
-        return E_OUTOFMEMORY;
-    if (element->ns)
-    {
-        offset = MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->ns->prefix, -1, str, len );
-        str[offset - 1] = ':';
-    }
-    MultiByteToWideChar( CP_UTF8, 0, (LPCSTR) element->name, -1, str + offset, len - offset );
-    *p = SysAllocString( str );
-    HeapFree( GetProcessHeap(), 0, str );
+    prefix = element->ns ? element->ns->prefix : NULL;
+    qname = xmlBuildQName(element->name, prefix, NULL, 0);
 
-    return S_OK;
+    *p = bstr_from_xmlChar(qname);
+    if (qname != element->name) xmlFree(qname);
+
+    return *p ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT WINAPI domelem_getAttribute(
@@ -502,7 +518,7 @@ static HRESULT WINAPI domelem_getAttribute(
     xmlChar *xml_name, *xml_value = NULL;
     HRESULT hr = S_FALSE;
 
-    TRACE("(%p)->(%s,%p)\n", This, debugstr_w(name), value);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(name), value);
 
     if(!value || !name)
         return E_INVALIDARG;
@@ -521,7 +537,7 @@ static HRESULT WINAPI domelem_getAttribute(
     else
         xml_value = xmlGetNsProp(element, xml_name, NULL);
 
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
     if(xml_value)
     {
         V_VT(value) = VT_BSTR;
@@ -543,7 +559,7 @@ static HRESULT WINAPI domelem_setAttribute(
     HRESULT hr;
     VARIANT var;
 
-    TRACE("(%p)->(%s, var)\n", This, debugstr_w(name));
+    TRACE("(%p)->(%s var)\n", This, debugstr_w(name));
 
     element = get_element( This );
     if ( !element )
@@ -563,8 +579,8 @@ static HRESULT WINAPI domelem_setAttribute(
     if(!xmlSetNsProp(element, NULL,  xml_name, xml_value))
         hr = E_FAIL;
 
-    HeapFree(GetProcessHeap(), 0, xml_value);
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_value);
+    heap_free(xml_name);
     VariantClear(&var);
 
     return hr;
@@ -574,8 +590,19 @@ static HRESULT WINAPI domelem_removeAttribute(
     IXMLDOMElement *iface,
     BSTR p)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    IXMLDOMNamedNodeMap *attr;
+    HRESULT hr;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(p));
+
+    hr = IXMLDOMElement_get_attributes(iface, &attr);
+    if (hr != S_OK) return hr;
+
+    hr = IXMLDOMNamedNodeMap_removeNamedItem(attr, p, NULL);
+    IXMLDOMNamedNodeMap_Release(attr);
+
+    return hr;
 }
 
 static HRESULT WINAPI domelem_getAttributeNode(
@@ -604,7 +631,7 @@ static HRESULT WINAPI domelem_getAttributeNode(
 
     if(!xmlValidateNameValue(xml_name))
     {
-        HeapFree(GetProcessHeap(), 0, xml_name);
+        heap_free(xml_name);
         return E_FAIL;
     }
 
@@ -615,7 +642,7 @@ static HRESULT WINAPI domelem_getAttributeNode(
         IUnknown_Release(unk);
     }
 
-    HeapFree(GetProcessHeap(), 0, xml_name);
+    heap_free(xml_name);
 
     return hr;
 }
@@ -625,7 +652,8 @@ static HRESULT WINAPI domelem_setAttributeNode(
     IXMLDOMAttribute* domAttribute,
     IXMLDOMAttribute** attributeNode)
 {
-    FIXME("\n");
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    FIXME("(%p)->(%p %p)\n", This, domAttribute, attributeNode);
     return E_NOTIMPL;
 }
 
@@ -634,7 +662,8 @@ static HRESULT WINAPI domelem_removeAttributeNode(
     IXMLDOMAttribute* domAttribute,
     IXMLDOMAttribute** attributeNode)
 {
-    FIXME("\n");
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    FIXME("(%p)->(%p %p)\n", This, domAttribute, attributeNode);
     return E_NOTIMPL;
 }
 
@@ -642,17 +671,28 @@ static HRESULT WINAPI domelem_getElementsByTagName(
     IXMLDOMElement *iface,
     BSTR bstrName, IXMLDOMNodeList** resultList)
 {
+    static const WCHAR xpathformat[] =
+            { '.','/','/','*','[','l','o','c','a','l','-','n','a','m','e','(',')','=','\'','%','s','\'',']',0 };
     domelem *This = impl_from_IXMLDOMElement( iface );
     LPWSTR szPattern;
     xmlNodePtr element;
     HRESULT hr;
 
-    TRACE("(%p)->(%s,%p)\n", This, debugstr_w(bstrName), resultList);
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(bstrName), resultList);
 
-    szPattern = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*(3+lstrlenW(bstrName)+1));
-    szPattern[0] = '.';
-    szPattern[1] = szPattern[2] = '/';
-    lstrcpyW(szPattern+3, bstrName);
+    if (bstrName[0] == '*' && bstrName[1] == 0)
+    {
+        szPattern = heap_alloc(sizeof(WCHAR)*5);
+        szPattern[0] = '.';
+        szPattern[1] = szPattern[2] = '/';
+        szPattern[3] = '*';
+        szPattern[4] = 0;
+    }
+    else
+    {
+        szPattern = heap_alloc(sizeof(WCHAR)*(21+lstrlenW(bstrName)+1));
+        wsprintfW(szPattern, xpathformat, bstrName);
+    }
     TRACE("%s\n", debugstr_w(szPattern));
 
     element = get_element(This);
@@ -660,7 +700,7 @@ static HRESULT WINAPI domelem_getElementsByTagName(
         hr = E_FAIL;
     else
         hr = queryresult_create(element, szPattern, resultList);
-    HeapFree(GetProcessHeap(), 0, szPattern);
+    heap_free(szPattern);
 
     return hr;
 }
@@ -668,7 +708,8 @@ static HRESULT WINAPI domelem_getElementsByTagName(
 static HRESULT WINAPI domelem_normalize(
     IXMLDOMElement *iface )
 {
-    FIXME("\n");
+    domelem *This = impl_from_IXMLDOMElement( iface );
+    FIXME("%p\n", This);
     return E_NOTIMPL;
 }
 
@@ -728,101 +769,32 @@ static const struct IXMLDOMElementVtbl domelem_vtbl =
     domelem_normalize,
 };
 
-static HRESULT WINAPI Internal_QueryInterface(
-    IUnknown *iface,
-    REFIID riid,
-    void** ppvObject )
-{
-    domelem *This = impl_from_InternalUnknown( iface );
-    TRACE("%p %s %p\n", This, debugstr_guid(riid), ppvObject);
-
-    if ( IsEqualGUID( riid, &IID_IXMLDOMElement ) ||
-         IsEqualGUID( riid, &IID_IDispatch ) ||
-         IsEqualGUID( riid, &IID_IUnknown ) )
-    {
-        *ppvObject = &This->lpVtbl;
-    }
-    else if ( IsEqualGUID( riid, &IID_IXMLDOMNode ) )
-    {
-        return IUnknown_QueryInterface(This->node_unk, riid, ppvObject);
-    }
-    else
-    {
-        FIXME("interface %s not implemented\n", debugstr_guid(riid));
-        return E_NOINTERFACE;
-    }
-
-    IUnknown_AddRef( (IUnknown*)*ppvObject );
-
-    return S_OK;
-}
-
-static ULONG WINAPI Internal_AddRef(
-    IUnknown *iface )
-{
-    domelem *This = impl_from_InternalUnknown( iface );
-    return InterlockedIncrement( &This->ref );
-}
-
-static ULONG WINAPI Internal_Release(
-    IUnknown *iface )
-{
-    domelem *This = impl_from_InternalUnknown( iface );
-    ULONG ref;
-
-    ref = InterlockedDecrement( &This->ref );
-    if ( ref == 0 )
-    {
-        IUnknown_Release( This->node_unk );
-        HeapFree( GetProcessHeap(), 0, This );
-    }
-
-    return ref;
-}
-
-static const struct IUnknownVtbl internal_unk_vtbl =
-{
-    Internal_QueryInterface,
-    Internal_AddRef,
-    Internal_Release
+static const tid_t domelem_iface_tids[] = {
+    IXMLDOMElement_tid,
+    0
 };
 
-IUnknown* create_element( xmlNodePtr element, IUnknown *pUnkOuter )
+static dispex_static_data_t domelem_dispex = {
+    NULL,
+    IXMLDOMElement_tid,
+    NULL,
+    domelem_iface_tids
+};
+
+IUnknown* create_element( xmlNodePtr element )
 {
     domelem *This;
-    HRESULT hr;
 
-    This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
+    This = heap_alloc( sizeof *This );
     if ( !This )
         return NULL;
 
     This->lpVtbl = &domelem_vtbl;
     This->ref = 1;
-    This->lpInternalUnkVtbl = &internal_unk_vtbl;
 
-    if(pUnkOuter)
-        This->pUnkOuter = pUnkOuter; /* Don't take a ref on outer Unknown */
-    else
-        This->pUnkOuter = (IUnknown *)&This->lpInternalUnkVtbl;
+    init_xmlnode(&This->node, element, (IUnknown*)&This->lpVtbl, &domelem_dispex);
 
-    This->node_unk = create_basic_node( element, (IUnknown*)&This->lpVtbl );
-    if(!This->node_unk)
-    {
-        HeapFree(GetProcessHeap(), 0, This);
-        return NULL;
-    }
-
-    hr = IUnknown_QueryInterface(This->node_unk, &IID_IXMLDOMNode, (LPVOID*)&This->node);
-    if(FAILED(hr))
-    {
-        IUnknown_Release(This->node_unk);
-        HeapFree( GetProcessHeap(), 0, This );
-        return NULL;
-    }
-    /* The ref on This->node is actually looped back into this object, so release it */
-    IXMLDOMNode_Release(This->node);
-
-    return (IUnknown*) &This->lpInternalUnkVtbl;
+    return (IUnknown*) &This->lpVtbl;
 }
 
 #endif

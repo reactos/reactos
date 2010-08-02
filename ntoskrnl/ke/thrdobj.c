@@ -818,11 +818,11 @@ KeInitThread(IN OUT PKTHREAD Thread,
     _SEH2_TRY
     {
         /* Initalize the Thread Context */
-        KeArchInitThreadWithContext(Thread,
-                                    SystemRoutine,
-                                    StartRoutine,
-                                    StartContext,
-                                    Context);
+        KiInitializeContextThread(Thread,
+                                  SystemRoutine,
+                                  StartRoutine,
+                                  StartContext,
+                                  Context);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1356,7 +1356,9 @@ KeTerminateThread(IN KPRIORITY Increment)
         SavedEntry = Entry;
 
         /* Now try to do the exchange */
-        Entry = InterlockedCompareExchangePointer(ListHead, ThreadAddr, Entry);
+        Entry = InterlockedCompareExchangePointer((PVOID*)ListHead,
+                                                  ThreadAddr,
+                                                  Entry);
 
         /* Break out if the change was succesful */
     } while (Entry != SavedEntry);

@@ -1,0 +1,5 @@
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS CSR Core Server\0"
+#define REACTOS_STR_INTERNAL_NAME	"csrsrv\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"csrsrv.dll\0"
+#include <reactos/version.rc>

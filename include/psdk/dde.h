@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************
  */
 #ifndef __WINE_DDE_H
@@ -26,6 +26,12 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4214)
+#pragma warning(disable:4820)
 #endif
 
 #define WM_DDE_INITIATE   0x3E0
@@ -82,6 +88,9 @@ BOOL        WINAPI UnpackDDElParam(UINT,LPARAM,PUINT_PTR,PUINT_PTR);
 BOOL        WINAPI FreeDDElParam(UINT,LPARAM);
 LPARAM      WINAPI ReuseDDElParam(LPARAM,UINT,UINT,UINT_PTR,UINT_PTR);
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

@@ -12,9 +12,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -57,6 +57,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Type your full name and the name of your company or organization.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "Na&me:", IDC_STATIC, 54, 37, 44, 8
@@ -71,11 +72,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Type a name for your computer that is 63 characters or less. "\
           "If you are on a network, your computer name must be unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computer Name:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Setup will create a user account on your computer called Administrator. "\
           "You can use this account if you need full access to your computer.",
           IDC_STATIC, 54, 57, 250, 25
@@ -93,6 +96,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "The system locale should match the language of the applications "\
           "you want to use. The user locale controls how numbers, "\
           "currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
@@ -114,6 +118,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Date and Time:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -209,6 +214,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Take screenshot"
     IDS_CMT_SERVMAN     "Launch Service Manager"
     IDS_CMT_WORDPAD     "Launch Document Editor"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -216,6 +222,7 @@ BEGIN
     IDS_GAMES           "Games"
     IDS_CMT_SOLITAIRE   "Solitaire"
     IDS_CMT_WINEMINE    "WineMine"
+	IDS_CMT_SPIDER      "Spider Solitaire"
 END
 
 STRINGTABLE
@@ -237,6 +244,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Entertainment"
     IDS_CMT_MPLAY32             "Launch Multimedia Player"
     IDS_CMT_SNDVOL32            "Launch Volume Control"
+    IDS_CMT_SNDREC32            "Launch Sound Recorder"
 END
 
 STRINGTABLE
@@ -258,7 +266,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Character Map.lnk"
     IDS_SHORT_CMD        "Command Prompt.lnk"
     IDS_SHORT_DEVICE     "Device Manager.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
     IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
@@ -272,9 +280,12 @@ BEGIN
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
+    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
+	IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
 END
 
 STRINGTABLE

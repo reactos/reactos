@@ -12,16 +12,16 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 
 #include <debug.h>
 
-#ifdef DBG
+#if DBG && !defined(_M_ARM)
 
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE
@@ -102,15 +102,14 @@ VOID DebugPrintChar(UCHAR Character)
 ULONG
 DbgPrint(const char *Format, ...)
 {
+	int i;
+	int Length;
 	va_list ap;
 	CHAR Buffer[512];
-	ULONG Length;
-	char *ptr = Buffer;
 
 	va_start(ap, Format);
-
-	/* Construct a string */
-	Length = _vsnprintf(Buffer, 512, Format, ap);
+	Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
+	va_end(ap);
 
 	/* Check if we went past the buffer */
 	if (Length == -1)
@@ -122,12 +121,11 @@ DbgPrint(const char *Format, ...)
 		Length = sizeof(Buffer);
 	}
 
-	while (*ptr)
+	for (i = 0; i < Length; i++)
 	{
-		DebugPrintChar(*ptr++);
+		DebugPrintChar(Buffer[i]);
 	}
 
-	va_end(ap);
 	return 0;
 }
 
@@ -161,7 +159,7 @@ VOID DebugPrintHeader(ULONG Mask)
 	    DbgPrint("CACHE: ");
 		break;
 	case DPRINT_REGISTRY:
-	    DbgPrint("REGISTER: ");
+	    DbgPrint("REGISTRY: ");
 		break;
 	case DPRINT_REACTOS:
 	    DbgPrint("REACTOS: ");
@@ -174,6 +172,12 @@ VOID DebugPrintHeader(ULONG Mask)
 		break;
 	case DPRINT_HWDETECT:
 	    DbgPrint("HWDETECT: ");
+		break;
+	case DPRINT_PELOADER:
+	    DbgPrint("PELOADER: ");
+		break;
+	case DPRINT_SCSIPORT:
+	    DbgPrint("SCSIPORT: ");
 		break;
 	default:
 	    DbgPrint("UNKNOWN: ");
@@ -196,10 +200,16 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 		return;
 	}
 
+	// Disable file/line for scsiport messages
+	if (Mask & DPRINT_SCSIPORT)
+	{
+		DebugStartOfLine = FALSE;
+	}
+
 	// Print the header if we have started a new line
 	if (DebugStartOfLine)
 	{
-        DbgPrint("(%s:%d) ", g_file, g_line);
+		DbgPrint("(%s:%d) ", g_file, g_line);
 		DebugPrintHeader(Mask);
 		DebugStartOfLine = FALSE;
 	}
@@ -207,6 +217,7 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 	va_start(ap, format);
 	vsprintf(Buffer, format, ap);
 	va_end(ap);
+
 	while (*ptr)
 	{
 		DebugPrintChar(*ptr++);
@@ -297,7 +308,7 @@ ULONG DbgPrint(PCCH Format, ...)
     return 0;
 }
 
-#endif // defined DBG
+#endif // DBG
 
 ULONG
 MsgBoxPrint(const char *Format, ...)
@@ -312,7 +323,7 @@ MsgBoxPrint(const char *Format, ...)
 	Length = _vsnprintf(Buffer, 512, Format, ap);
 
 	/* Check if we went past the buffer */
-	if (Length == -1U)
+	if (Length == MAXULONG)
 	{
 		/* Terminate it if we went over-board */
 		Buffer[sizeof(Buffer) - 1] = '\n';
@@ -329,3 +340,22 @@ MsgBoxPrint(const char *Format, ...)
 	return 0;
 }
 
+NTKERNELAPI
+DECLSPEC_NORETURN
+VOID
+NTAPI
+KeBugCheckEx(
+    IN ULONG  BugCheckCode,
+    IN ULONG_PTR  BugCheckParameter1,
+    IN ULONG_PTR  BugCheckParameter2,
+    IN ULONG_PTR  BugCheckParameter3,
+    IN ULONG_PTR  BugCheckParameter4)
+{
+    char Buffer[70];
+    sprintf(Buffer, "*** STOP: 0x%08lX (0x%08lX, 0x%08lX, 0x%08lX, 0x%08lX)",
+        BugCheckCode, BugCheckParameter1, BugCheckParameter2,
+        BugCheckParameter3, BugCheckParameter4);
+    UiMessageBoxCritical(Buffer);
+    assert(FALSE);
+    for (;;);
+}

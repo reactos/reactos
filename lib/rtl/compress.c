@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Compression and decompression functions
  * FILE:            lib/rtl/compress.c
- * PROGRAMER:       Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMER:       Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/

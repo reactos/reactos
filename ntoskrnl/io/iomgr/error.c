@@ -466,6 +466,8 @@ IopRaiseHardError(IN PKAPC Apc,
     //PVPB Vpb = (PVPB)SystemArgument1;
     //PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument2;
 
+    UNIMPLEMENTED;
+
     /* FIXME: UNIMPLEMENTED */
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     Irp->IoStatus.Information = 0;

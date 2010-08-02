@@ -5,8 +5,7 @@
  * PURPOSE:     Definitions for Ethernet filter
  */
 
-#ifndef __EFILTER_H
-#define __EFILTER_H
+#pragma once
 
 #define DECLARE_UNKNOWN_STRUCT(BaseName) \
   typedef struct _##BaseName BaseName, *P##BaseName;
@@ -76,7 +75,4 @@ NTAPI
 EthFilterDprIndicateReceiveComplete(
     IN  PETH_FILTER Filter);
 
-#endif /* __EFILTER_H */
-
 /* EOF */
-

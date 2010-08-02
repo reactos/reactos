@@ -110,7 +110,38 @@ BasepNotifyCsrOfCreation(ULONG dwCreationFlags,
         return CsrRequest.Status;
     }
 
-    /* REturn Success */
+    /* Return Success */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+WINAPI
+BasepNotifyCsrOfThread(IN HANDLE ThreadHandle,
+                       IN PCLIENT_ID ClientId)
+{
+    ULONG Request = CREATE_THREAD;
+    CSR_API_MESSAGE CsrRequest;
+    NTSTATUS Status;
+
+    DPRINT("BasepNotifyCsrOfThread: Thread: %lx, Handle %lx\n",
+            ClientId->UniqueThread, ThreadHandle);
+
+    /* Fill out the request */
+    CsrRequest.Data.CreateThreadRequest.ClientId = *ClientId;
+    CsrRequest.Data.CreateThreadRequest.ThreadHandle = ThreadHandle;
+
+    /* Call CSR */
+    Status = CsrClientCallServer(&CsrRequest,
+                                 NULL,
+                                 MAKE_CSR_API(Request, CSR_NATIVE),
+                                 sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrRequest.Status))
+    {
+        DPRINT1("Failed to tell csrss about new thread\n");
+        return CsrRequest.Status;
+    }
+
+    /* Return Success */
     return STATUS_SUCCESS;
 }
 
@@ -164,7 +195,13 @@ BasepCreateFirstThread(HANDLE ProcessHandle,
     {
         return NULL;
     }
-
+    
+    Status = BasepNotifyCsrOfThread(hThread, ClientId);
+    if (!NT_SUCCESS(Status))
+    {
+        ASSERT(FALSE);
+    }
+    
     /* Success */
     return hThread;
 }
@@ -288,7 +325,7 @@ BasepDuplicateAndWriteHandle(IN HANDLE ProcessHandle,
 {
     NTSTATUS Status;
     HANDLE DuplicatedHandle;
-    ULONG Dummy;
+    SIZE_T Dummy;
 
     DPRINT("BasepDuplicateAndWriteHandle. hProcess: %lx, Handle: %lx,"
            "Address: %p\n", ProcessHandle, StandardHandle, Address);
@@ -718,6 +755,16 @@ CreateProcessInternalW(HANDLE hToken,
         return FALSE;
     }
 
+    if (lpCurrentDirectory)
+    {
+        if ((GetFileAttributesW(lpCurrentDirectory) == INVALID_FILE_ATTRIBUTES) ||
+            !(GetFileAttributesW(lpCurrentDirectory) & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            SetLastError(ERROR_DIRECTORY);
+            return FALSE;
+        }
+    }
+
     /*
      * We're going to modify and mask out flags and stuff in lpStartupInfo,
      * so we'll use our own local copy for that.
@@ -1062,6 +1109,11 @@ GetAppName:
                                       &StartupInfo,
                                       lpProcessInformation);
 
+            case STATUS_OBJECT_NAME_NOT_FOUND:
+            case STATUS_OBJECT_PATH_NOT_FOUND:
+                SetLastErrorByStatus(Status);
+                goto Cleanup;
+
             default:
                 /* Invalid Image Type */
                 SetLastError(ERROR_BAD_EXE_FORMAT);
@@ -1162,23 +1214,26 @@ GetAppName:
                              hSection,
                              hDebug,
                              NULL);
-    if(!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to create process, status 0x%x\n", Status);
         SetLastErrorByStatus(Status);
         goto Cleanup;
     }
 
-    /* Set new class */
-    Status = NtSetInformationProcess(hProcess,
-                                     ProcessPriorityClass,
-                                     &PriorityClass,
-                                     sizeof(PROCESS_PRIORITY_CLASS));
-    if(!NT_SUCCESS(Status))
+    if (PriorityClass.PriorityClass != PROCESS_PRIORITY_CLASS_INVALID)
     {
-        DPRINT1("Unable to set new process priority, status 0x%x\n", Status);
-        SetLastErrorByStatus(Status);
-        goto Cleanup;
+        /* Set new class */
+        Status = NtSetInformationProcess(hProcess,
+                                         ProcessPriorityClass,
+                                         &PriorityClass,
+                                         sizeof(PROCESS_PRIORITY_CLASS));
+        if(!NT_SUCCESS(Status))
+        {
+            DPRINT1("Unable to set new process priority, status 0x%x\n", Status);
+            SetLastErrorByStatus(Status);
+            goto Cleanup;
+        }
     }
 
     /* Set Error Mode */
@@ -1357,6 +1412,18 @@ GetAppName:
                                      &RemoteParameters->StandardError);
     }
 
+    /* Notify CSRSS */
+    Status = BasepNotifyCsrOfCreation(dwCreationFlags,
+                                      (HANDLE)ProcessBasicInfo.UniqueProcessId,
+                                      bInheritHandles);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("CSR Notification Failed");
+        SetLastErrorByStatus(Status);
+        goto Cleanup;
+    }
+    
     /* Create the first thread */
     DPRINT("Creating thread for process (EntryPoint = 0x%p)\n",
             SectionImageInfo.TransferAddress);
@@ -1369,18 +1436,6 @@ GetAppName:
     {
         DPRINT1("Could not create Initial Thread\n");
         /* FIXME - set last error code */
-        goto Cleanup;
-    }
-
-    /* Notify CSRSS */
-    Status = BasepNotifyCsrOfCreation(dwCreationFlags,
-                                      (HANDLE)ProcessBasicInfo.UniqueProcessId,
-                                      bInheritHandles);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CSR Notification Failed");
-        SetLastErrorByStatus(Status);
         goto Cleanup;
     }
 

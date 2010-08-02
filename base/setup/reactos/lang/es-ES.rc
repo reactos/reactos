@@ -64,7 +64,7 @@ BEGIN
     PUSHBUTTON "&Borrar", IDC_PARTDELETE, 76,155,50,15
     PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
     PUSHBUTTON "&Opciones avanzadas...", IDC_PARTMOREOPTS, 218,155,80,15
-    LTEXT "Click Next to check the summary.", IDC_STATIC, 10, 180 ,277, 20
+    LTEXT "Presione Siguiente para verificar el resumen.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
@@ -147,8 +147,8 @@ BEGIN
     IDS_PROCESSSUBTITLE "Crear y formatear partición, copiar archivos, instalar e instalar el cargador de arranque"
     IDS_RESTARTTITLE    "Primera parte de la instalación finalizada"
     IDS_RESTARTSUBTITLE "La primera parte de la instalación ha sido completada, reinicie para continuar con la segunda parte"
-    IDS_SUMMARYTITLE    "Installation Summary"
-    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_SUMMARYTITLE    "Resumen de la instalación"
+    IDS_SUMMARYSUBTITLE "Lista las propiedades de la instalación para su verificación antes de aplicarlas al dispositivo instalado"
     IDS_ABORTSETUP      "ReactOS no está completamente instalado en su equipo. Si sale de la instalación ahora, tendrá que ejecutar el instalador otra vez para instalar Reactos. ¿Realmente quiere salir?"
     IDS_ABORTSETUP2     "¿Abortar instalación?"
 END

@@ -24,8 +24,6 @@ cpp_quote("#include <imm.h>")
 
 cpp_quote("#if 0")
 
-typedef WORD LANGID;
-
 typedef struct {
     LPSTR lpReading;
     LPSTR lpWord;

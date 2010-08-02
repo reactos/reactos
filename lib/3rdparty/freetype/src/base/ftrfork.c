@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (body).                             */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004, 2005, 2006, 2007, 2008, 2009 by                        */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  FT_Raccess_Get_HeaderInfo() and raccess_guess_darwin_hfsplus() are     */
@@ -132,6 +132,19 @@
   }
 
 
+  static int
+  ft_raccess_sort_ref_by_id( FT_RFork_Ref*  a,
+                             FT_RFork_Ref*  b )
+  {
+    if ( a->res_id < b->res_id )
+      return -1;
+    else if ( a->res_id > b->res_id )
+      return 1;
+    else
+      return 0;
+  }
+
+
   FT_BASE_DEF( FT_Error )
   FT_Raccess_Get_DataOffsets( FT_Library  library,
                               FT_Stream   stream,
@@ -141,12 +154,13 @@
                               FT_Long   **offsets,
                               FT_Long    *count )
   {
-    FT_Error   error;
-    int        i, j, cnt, subcnt;
-    FT_Long    tag_internal, rpos;
-    FT_Memory  memory = library->memory;
-    FT_Long    temp;
-    FT_Long    *offsets_internal;
+    FT_Error      error;
+    int           i, j, cnt, subcnt;
+    FT_Long       tag_internal, rpos;
+    FT_Memory     memory = library->memory;
+    FT_Long       temp;
+    FT_Long       *offsets_internal;
+    FT_RFork_Ref  *ref;
 
 
     error = FT_Stream_Seek( stream, map_offset );
@@ -179,28 +193,43 @@
         if ( error )
           return error;
 
-        if ( FT_NEW_ARRAY( offsets_internal, *count ) )
+        if ( FT_NEW_ARRAY( ref, *count ) )
           return error;
 
         for ( j = 0; j < *count; ++j )
         {
-          (void)FT_STREAM_SKIP( 2 ); /* resource id */
-          (void)FT_STREAM_SKIP( 2 ); /* rsource name */
-
+          if ( FT_READ_USHORT( ref[j].res_id ) )
+            goto Exit;
+          if ( FT_STREAM_SKIP( 2 ) ) /* resource name */
+            goto Exit;
           if ( FT_READ_LONG( temp ) )
-          {
-            FT_FREE( offsets_internal );
-            return error;
-          }
+            goto Exit;
+          if ( FT_STREAM_SKIP( 4 ) ) /* mbz */
+            goto Exit;
 
-          offsets_internal[j] = rdata_pos + ( temp & 0xFFFFFFL );
-
-          (void)FT_STREAM_SKIP( 4 ); /* mbz */
+          ref[j].offset = temp & 0xFFFFFFL;
         }
 
-        *offsets = offsets_internal;
+        ft_qsort( ref, *count, sizeof ( FT_RFork_Ref ),
+                  ( int(*)(const void*, const void*) )
+                  ft_raccess_sort_ref_by_id );
 
-        return FT_Err_Ok;
+        if ( FT_NEW_ARRAY( offsets_internal, *count ) )
+          goto Exit;
+
+        /* XXX: duplicated reference ID,
+         *      gap between reference IDs are acceptable?
+         *      further investigation on Apple implementation is needed.
+         */
+        for ( j = 0; j < *count; ++j )
+          offsets_internal[j] = rdata_pos + ref[j].offset;
+
+        *offsets = offsets_internal;
+        error    = FT_Err_Ok;
+
+      Exit:
+        FT_FREE( ref );
+        return error;
       }
     }
 
@@ -227,7 +256,7 @@
   typedef FT_Error
   (*raccess_guess_func)( FT_Library  library,
                          FT_Stream   stream,
-                         char *      base_file_name,
+                         char       *base_file_name,
                          char      **result_file_name,
                          FT_Long    *result_offset );
 
@@ -235,56 +264,63 @@
   static FT_Error
   raccess_guess_apple_double( FT_Library  library,
                               FT_Stream   stream,
-                              char *      base_file_name,
+                              char       *base_file_name,
                               char      **result_file_name,
                               FT_Long    *result_offset );
 
   static FT_Error
   raccess_guess_apple_single( FT_Library  library,
                               FT_Stream   stream,
-                              char *      base_file_name,
+                              char       *base_file_name,
                               char      **result_file_name,
                               FT_Long    *result_offset );
 
   static FT_Error
   raccess_guess_darwin_ufs_export( FT_Library  library,
                                    FT_Stream   stream,
-                                   char *      base_file_name,
+                                   char       *base_file_name,
                                    char      **result_file_name,
                                    FT_Long    *result_offset );
 
   static FT_Error
+  raccess_guess_darwin_newvfs( FT_Library  library,
+                               FT_Stream   stream,
+                               char       *base_file_name,
+                               char      **result_file_name,
+                               FT_Long    *result_offset );
+
+  static FT_Error
   raccess_guess_darwin_hfsplus( FT_Library  library,
                                 FT_Stream   stream,
-                                char *      base_file_name,
+                                char       *base_file_name,
                                 char      **result_file_name,
                                 FT_Long    *result_offset );
 
   static FT_Error
   raccess_guess_vfat( FT_Library  library,
                       FT_Stream   stream,
-                      char *      base_file_name,
+                      char       *base_file_name,
                       char      **result_file_name,
                       FT_Long    *result_offset );
 
   static FT_Error
   raccess_guess_linux_cap( FT_Library  library,
                            FT_Stream   stream,
-                           char *      base_file_name,
+                           char       *base_file_name,
                            char      **result_file_name,
                            FT_Long    *result_offset );
 
   static FT_Error
   raccess_guess_linux_double( FT_Library  library,
                               FT_Stream   stream,
-                              char *      base_file_name,
+                              char       *base_file_name,
                               char      **result_file_name,
                               FT_Long    *result_offset );
 
   static FT_Error
   raccess_guess_linux_netatalk( FT_Library  library,
                                 FT_Stream   stream,
-                                char *      base_file_name,
+                                char       *base_file_name,
                                 char      **result_file_name,
                                 FT_Long    *result_offset );
 
@@ -298,7 +334,7 @@
   static FT_Error
   raccess_guess_apple_generic( FT_Library  library,
                                FT_Stream   stream,
-                               char *      base_file_name,
+                               char       *base_file_name,
                                FT_Int32    magic,
                                FT_Long    *result_offset );
 
@@ -329,6 +365,7 @@
       raccess_guess_apple_double,
       raccess_guess_apple_single,
       raccess_guess_darwin_ufs_export,
+      raccess_guess_darwin_newvfs,
       raccess_guess_darwin_hfsplus,
       raccess_guess_vfat,
       raccess_guess_linux_cap,
@@ -339,7 +376,11 @@
     for ( i = 0; i < FT_RACCESS_N_RULES; i++ )
     {
       new_names[i] = NULL;
-      errors[i] = FT_Stream_Seek( stream, 0 );
+      if ( NULL != stream )
+        errors[i] = FT_Stream_Seek( stream, 0 );
+      else
+        errors[i] = FT_Err_Ok;
+
       if ( errors[i] )
         continue ;
 
@@ -354,14 +395,20 @@
   static FT_Error
   raccess_guess_apple_double( FT_Library  library,
                               FT_Stream   stream,
-                              char *      base_file_name,
+                              char       *base_file_name,
                               char      **result_file_name,
                               FT_Long    *result_offset )
   {
-    FT_Int32  magic = ( 0x00 << 24 | 0x05 << 16 | 0x16 << 8 | 0x07 );
+    FT_Int32  magic = ( 0x00 << 24 ) |
+                      ( 0x05 << 16 ) |
+                      ( 0x16 <<  8 ) |
+                        0x07;
 
 
     *result_file_name = NULL;
+    if ( NULL == stream )
+      return FT_Err_Cannot_Open_Stream;
+
     return raccess_guess_apple_generic( library, stream, base_file_name,
                                         magic, result_offset );
   }
@@ -370,14 +417,20 @@
   static FT_Error
   raccess_guess_apple_single( FT_Library  library,
                               FT_Stream   stream,
-                              char *      base_file_name,
+                              char       *base_file_name,
                               char      **result_file_name,
                               FT_Long    *result_offset )
   {
-    FT_Int32  magic = (0x00 << 24 | 0x05 << 16 | 0x16 << 8 | 0x00);
+    FT_Int32  magic = ( 0x00 << 24 ) |
+                      ( 0x05 << 16 ) |
+                      ( 0x16 <<  8 ) |
+                        0x00;
 
 
     *result_file_name = NULL;
+    if ( NULL == stream )
+      return FT_Err_Cannot_Open_Stream;
+
     return raccess_guess_apple_generic( library, stream, base_file_name,
                                         magic, result_offset );
   }
@@ -386,7 +439,7 @@
   static FT_Error
   raccess_guess_darwin_ufs_export( FT_Library  library,
                                    FT_Stream   stream,
-                                   char *      base_file_name,
+                                   char       *base_file_name,
                                    char      **result_file_name,
                                    FT_Long    *result_offset )
   {
@@ -416,7 +469,7 @@
   static FT_Error
   raccess_guess_darwin_hfsplus( FT_Library  library,
                                 FT_Stream   stream,
-                                char *      base_file_name,
+                                char       *base_file_name,
                                 char      **result_file_name,
                                 FT_Long    *result_offset )
   {
@@ -433,7 +486,7 @@
 
     memory = library->memory;
 
-    if ( base_file_len > FT_INT_MAX )
+    if ( base_file_len + 6 > FT_INT_MAX )
       return FT_Err_Array_Too_Large;
 
     if ( FT_ALLOC( newpath, base_file_len + 6 ) )
@@ -450,9 +503,45 @@
 
 
   static FT_Error
+  raccess_guess_darwin_newvfs( FT_Library  library,
+                               FT_Stream   stream,
+                               char       *base_file_name,
+                               char      **result_file_name,
+                               FT_Long    *result_offset )
+  {
+    /*
+      Only meaningful on systems with Mac OS X (> 10.1).
+     */
+    FT_Error   error;
+    char*      newpath;
+    FT_Memory  memory;
+    FT_Long    base_file_len = ft_strlen( base_file_name );
+
+    FT_UNUSED( stream );
+
+
+    memory = library->memory;
+
+    if ( base_file_len + 18 > FT_INT_MAX )
+      return FT_Err_Array_Too_Large;
+
+    if ( FT_ALLOC( newpath, base_file_len + 18 ) )
+      return error;
+
+    FT_MEM_COPY( newpath, base_file_name, base_file_len );
+    FT_MEM_COPY( newpath + base_file_len, "/..namedfork/rsrc", 18 );
+
+    *result_file_name = newpath;
+    *result_offset    = 0;
+
+    return FT_Err_Ok;
+  }
+
+
+  static FT_Error
   raccess_guess_vfat( FT_Library  library,
                       FT_Stream   stream,
-                      char *      base_file_name,
+                      char       *base_file_name,
                       char      **result_file_name,
                       FT_Long    *result_offset )
   {
@@ -479,7 +568,7 @@
   static FT_Error
   raccess_guess_linux_cap( FT_Library  library,
                            FT_Stream   stream,
-                           char *      base_file_name,
+                           char       *base_file_name,
                            char      **result_file_name,
                            FT_Long    *result_offset )
   {
@@ -505,7 +594,7 @@
   static FT_Error
   raccess_guess_linux_double( FT_Library  library,
                               FT_Stream   stream,
-                              char *      base_file_name,
+                              char       *base_file_name,
                               char      **result_file_name,
                               FT_Long    *result_offset )
   {
@@ -536,7 +625,7 @@
   static FT_Error
   raccess_guess_linux_netatalk( FT_Library  library,
                                 FT_Stream   stream,
-                                char *      base_file_name,
+                                char       *base_file_name,
                                 char      **result_file_name,
                                 FT_Long    *result_offset )
   {
@@ -568,7 +657,7 @@
   static FT_Error
   raccess_guess_apple_generic( FT_Library  library,
                                FT_Stream   stream,
-                               char *      base_file_name,
+                               char       *base_file_name,
                                FT_Int32    magic,
                                FT_Long    *result_offset )
   {
@@ -620,8 +709,12 @@
         return FT_Err_Ok;
       }
       else
-        FT_Stream_Skip( stream, 4 + 4 );    /* offset + length */
+      {
+        error = FT_Stream_Skip( stream, 4 + 4 );    /* offset + length */
+        if ( error )
+          return error;
       }
+    }
 
     return FT_Err_Unknown_File_Format;
   }
@@ -629,7 +722,7 @@
 
   static FT_Error
   raccess_guess_linux_double_from_file_name( FT_Library  library,
-                                             char *      file_name,
+                                             char       *file_name,
                                              FT_Long    *result_offset )
   {
     FT_Open_Args  args2;
@@ -659,9 +752,9 @@
                           const char  *insertion )
   {
     char*        new_name;
-    char*        tmp;
+    const char*  tmp;
     const char*  slash;
-    unsigned     new_length;
+    size_t       new_length;
     FT_Error     error = FT_Err_Ok;
 
     FT_UNUSED( error );
@@ -701,7 +794,7 @@
   FT_BASE_DEF( void )
   FT_Raccess_Guess( FT_Library  library,
                     FT_Stream   stream,
-                    char*       base_name,
+                    char       *base_name,
                     char      **new_names,
                     FT_Long    *offsets,
                     FT_Error   *errors )

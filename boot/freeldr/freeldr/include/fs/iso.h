@@ -12,13 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __ISO_H
-#define __ISO_H
+#pragma once
 
 #include <pshpack1.h>
 struct _DIR_RECORD
@@ -99,14 +98,4 @@ typedef struct
 	ULONG		DriveNumber;
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
-
-BOOLEAN	IsoOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-FILE*	IsoOpenFile(PCSTR FileName);
-BOOLEAN	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG		IsoGetFileSize(FILE *FileHandle);
-VOID	IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG		IsoGetFilePointer(FILE *FileHandle);
-
-extern const FS_VTBL Iso9660Vtbl;
-
-#endif // #defined __FAT_H
+const DEVVTBL* IsoMount(ULONG DeviceId);

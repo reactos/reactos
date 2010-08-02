@@ -3,8 +3,7 @@
  *
  */
 
-#ifndef __WIN32K_GDIOBJ_H
-#define __WIN32K_GDIOBJ_H
+#pragma once
 
 /* Public GDI Object/Handle definitions */
 #include <win32k/ntgdihdl.h>
@@ -44,7 +43,7 @@ typedef struct _BASEOBJECT
   ULONG       ulShareCount;
   USHORT      cExclusiveLock;
   USHORT      BaseFlags;
-  PW32THREAD  Tid;
+  PTHREADINFO Tid;
 } BASEOBJECT, *POBJ;
 
 typedef struct _CLIENTOBJ
@@ -82,12 +81,13 @@ PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCES
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
 
-BOOL FASTCALL  GreDeleteObject(HGDIOBJ hObject);
-BOOL FASTCALL  IsObjectDead(HGDIOBJ);
-BOOL FASTCALL  IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
+BOOL FASTCALL GreDeleteObject(HGDIOBJ hObject);
+BOOL FASTCALL IsObjectDead(HGDIOBJ);
+BOOL FASTCALL IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
+BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
 
 /*!
- * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. 
+ * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked.
  * You should unlock the object
  * as soon as you don't need to have access to it's data.
 
@@ -112,6 +112,7 @@ GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
     ASSERT(cLocks >= 0);
     if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
     {
+        GDIOBJ_SetOwnership(hobj, PsGetCurrentProcess());
         GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
     }
     return cLocks;
@@ -132,4 +133,5 @@ GDIOBJ_IncrementShareCount(POBJ Object)
 
 INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
 
-#endif
+#define GDIOBJ_GetKernelObj(Handle) \
+  ((PGDI_TABLE_ENTRY)&GdiHandleTable->Entries[GDI_HANDLE_GET_INDEX(Handle)])->KernelData

@@ -1,0 +1,24 @@
+﻿; UTF-8
+
+[Section]
+Name = Windows Media Encoder 9
+Version = 9.0
+Licence = Unknown
+Description = Windows Media Encoder 9
+Size = 9.5MB
+Category = 14
+URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyID=5691ba02-e496-465a-bba9-b2f1182cdf24
+URLDownload = http://download.microsoft.com/download/8/1/f/81f9402f-efdd-439d-b2a4-089563199d47/WMEncoder.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+
+[Section.040a]
+Licence = Desconocida
+
+[Section.0415]
+Licence = Nieznana
+
+[Section.0422]
+Licence = Невідома

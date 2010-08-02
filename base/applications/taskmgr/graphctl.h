@@ -17,11 +17,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GRAPH_CTRL_H__
-#define __GRAPH_CTRL_H__
+#pragma once
 
 #define MAX_PLOTS 4
 #define MAX_CTRLS 4
@@ -110,5 +109,3 @@ INT_PTR CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __GRAPH_CTRL_H__ */

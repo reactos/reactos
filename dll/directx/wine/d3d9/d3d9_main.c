@@ -25,15 +25,6 @@
 #include "initguid.h"
 #include "d3d9_private.h"
 
-static CRITICAL_SECTION_DEBUG d3d9_cs_debug =
-{
-    0, 0, &d3d9_cs,
-    { &d3d9_cs_debug.ProcessLocksList,
-    &d3d9_cs_debug.ProcessLocksList },
-    0, 0, { (DWORD_PTR)(__FILE__ ": d3d9_cs") }
-};
-CRITICAL_SECTION d3d9_cs = { &d3d9_cs_debug, -1, 0, 0, 0, 0 };
-
 WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 static int D3DPERF_event_level = 0;
@@ -42,14 +33,15 @@ void WINAPI DebugSetMute(void) {
     /* nothing to do */
 }
 
-IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
+IDirect3D9* WINAPI DECLSPEC_HOTPATCH Direct3DCreate9(UINT SDKVersion) {
     IDirect3D9Impl* object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirect3D9Impl));
 
     object->lpVtbl = &Direct3D9_Vtbl;
     object->ref = 1;
-    EnterCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
     object->WineD3D = WineDirect3DCreate(9, (IUnknown *)object);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
 
     TRACE("SDKVersion = %x, Created Direct3D object @ %p, WineObj @ %p\n", SDKVersion, object, object->WineD3D);
 
@@ -61,7 +53,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion) {
     return (IDirect3D9*) object;
 }
 
-HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
+HRESULT WINAPI DECLSPEC_HOTPATCH Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
     IDirect3D9 *ret;
     IDirect3D9Impl* object;
 
@@ -86,7 +78,9 @@ HRESULT WINAPI Direct3DCreate9Ex(UINT SDKVersion, IDirect3D9Ex **direct3d9ex) {
  */
 void* WINAPI Direct3DShaderValidatorCreate9(void)
 {
-    FIXME("stub\n");
+    static int once;
+
+    if (!once++) FIXME("stub\n");
     return NULL;
 }
 
@@ -107,7 +101,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
  *              D3DPERF_BeginEvent (D3D9.@)
  */
 int WINAPI D3DPERF_BeginEvent(D3DCOLOR color, LPCWSTR name) {
-    FIXME("(color %#x, name %s) : stub\n", color, debugstr_w(name));
+    TRACE("(color %#x, name %s) : stub\n", color, debugstr_w(name));
 
     return D3DPERF_event_level++;
 }
@@ -116,7 +110,7 @@ int WINAPI D3DPERF_BeginEvent(D3DCOLOR color, LPCWSTR name) {
  *              D3DPERF_EndEvent (D3D9.@)
  */
 int WINAPI D3DPERF_EndEvent(void) {
-    FIXME("(void) : stub\n");
+    TRACE("(void) : stub\n");
 
     return --D3DPERF_event_level;
 }

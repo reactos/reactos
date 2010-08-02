@@ -5,7 +5,7 @@
  * PURPOSE:         Deferred Procedure Call (DPC) Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Philip Susi (phreak@iag.net)
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -550,6 +550,9 @@ KiRetireDpcList(IN PKPRCB Prcb)
     PKDEFERRED_ROUTINE DeferredRoutine;
     PVOID DeferredContext, SystemArgument1, SystemArgument2;
     ULONG_PTR TimerHand;
+#ifdef CONFIG_SMP
+    KIRQL OldIrql;
+#endif
 
     /* Get data and list variables before starting anything else */
     DpcData = &Prcb->DpcData[DPC_NORMAL];
@@ -578,7 +581,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
         while (DpcData->DpcQueueDepth != 0)
         {
             /* Lock the DPC data and get the DPC entry*/
-            KefAcquireSpinLockAtDpcLevel(&DpcData->DpcLock);
+            KeAcquireSpinLockAtDpcLevel(&DpcData->DpcLock);
             DpcEntry = ListHead->Flink;
 
             /* Make sure we have an entry */
@@ -602,7 +605,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 Prcb->DebugDpcTime = 0;
 
                 /* Release the lock */
-                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+                KeReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
 
                 /* Re-enable interrupts */
                 _enable();
@@ -623,7 +626,7 @@ KiRetireDpcList(IN PKPRCB Prcb)
                 ASSERT(DpcData->DpcQueueDepth == 0);
 
                 /* Release DPC Lock */
-                KefReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
+                KeReleaseSpinLockFromDpcLevel(&DpcData->DpcLock);
             }
         }
 
@@ -631,12 +634,23 @@ KiRetireDpcList(IN PKPRCB Prcb)
         Prcb->DpcRoutineActive = FALSE;
         Prcb->DpcInterruptRequested = FALSE;
 
+#ifdef CONFIG_SMP
         /* Check if we have deferred threads */
         if (Prcb->DeferredReadyListHead.Next)
         {
-            /* FIXME: 2K3-style scheduling not implemeted */
-            ASSERT(FALSE);
+
+            /* Re-enable interrupts and raise to synch */
+            _enable();
+            OldIrql = KeRaiseIrqlToSynchLevel();
+
+            /* Process deferred threads */
+            KiProcessDeferredReadyList(Prcb);
+
+            /* Lower IRQL back and disable interrupts */
+            KeLowerIrql(OldIrql);
+            _disable();
         }
+#endif
     } while (DpcData->DpcQueueDepth != 0);
 }
 

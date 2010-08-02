@@ -12,12 +12,12 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_OTHER   "Anderer Adapter"
-  IDS_ETH     "Ethernet Adapter"
-  IDS_TOKEN   "Token Ring Adapter"
-  IDS_FDDI    "FDDI Adapter"
-  IDS_PPP     "PPP Adapter"
-  IDS_LOOP    "Loopback Adapter"
-  IDS_SLIP    "SLIP Adapter"
+  IDS_ETH     "Ethernet-Adapter"
+  IDS_TOKEN   "Token-Ring-Adapter"
+  IDS_FDDI    "FDDI-Adapter"
+  IDS_PPP     "PPP-Adapter"
+  IDS_LOOP    "Loopback-Adapter"
+  IDS_SLIP    "SLIP-Adapter"
 END
 
 STRINGTABLE DISCARDABLE
@@ -31,7 +31,7 @@ BEGIN
     \n \
     wobei\n \
         Adapter         Verbindungsname\n \
-                       (wildcards * und ? sind möglich, siehe Beispiele)\n \
+                       (Wildcards * und ? sind möglich, siehe Beispiele)\n \
     \n \
         Optionen:\n \
            /?           Zeigt die Hilfe an.\n \
@@ -61,6 +61,6 @@ BEGIN
         > ipconfig /renew EL*        ... Erneuert alle Verbindungen, deren Name\n \
                                          mit EL beginnt.\n \
         > ipconfig /release *Ver*    ... Gibt alle passenden Verbindungen frei,\n \
-                                         z.B. ""Lokale Vebindung 1"" oder\n \
-                                              ""Lokale Vebindung 2""\n"
+                                         z.B. ""Lokale Verbindung 1"" oder\n \
+                                              ""Lokale Verbindung 2""\n"
 END

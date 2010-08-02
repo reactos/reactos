@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libcntpr" type="staticlibrary">
-	<include base="crt">.</include>
-	<include base="crt">include</include>
-	<define name="__NO_CTYPE_INLINES" />
+	<include base="libcntpr">.</include>
+	<include base="libcntpr">include</include>
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
-	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_LIBCNT_" />
+	<define name="_CRTBLD" />
+	<define name="__CRT__NO_INLINE" />
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
 	</if>
@@ -16,6 +16,12 @@
 	<directory name="except">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>chkstk_asm.s</file>
+				<file>seh.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
 				<file>chkstk_asm.s</file>
 				<file>seh.s</file>
 			</directory>
@@ -54,6 +60,26 @@
 				<file>tan_asm.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<file>cos.c</file>
+			<file>sin.c</file>
+			<directory name="amd64">
+				<file>alldiv.S</file>
+				<file>atan.S</file>
+				<file>atan2.S</file>
+				<file>ceil.S</file>
+				<file>exp.S</file>
+				<file>fabs.S</file>
+				<file>floor.S</file>
+				<file>fmod.S</file>
+				<file>ldexp.S</file>
+				<file>log.S</file>
+				<file>log10.S</file>
+				<file>pow.S</file>
+				<file>sqrt.S</file>
+				<file>tan.S</file>
+			</directory>
+		</if>
 		<file>abs.c</file>
 		<file>div.c</file>
 		<file>labs.c</file>
@@ -83,6 +109,19 @@
 	<directory name="search">
 		<file>bsearch.c</file>
 		<file>lfind.c</file>
+	</directory>
+
+	<directory name="setjmp">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
 	</directory>
 
 	<directory name="stdlib">

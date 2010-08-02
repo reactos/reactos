@@ -21,7 +21,7 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Computer name functions
  * FILE:            lib/kernel32/misc/computername.c
- * PROGRAMER:       Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMER:       Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -92,10 +92,18 @@ GetComputerNameFromRegistry(LPWSTR RegistryKey,
         return FALSE;
     }
 
-    if (*nSize > (KeyInfo->DataLength / sizeof(WCHAR)))
+    if (lpBuffer && *nSize > (KeyInfo->DataLength / sizeof(WCHAR)))
     {
         *nSize = KeyInfo->DataLength / sizeof(WCHAR) - 1;
         lpBuffer[*nSize] = 0;
+    }
+    else
+    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+        ZwClose(KeyHandle);
+        *nSize = ReturnSize;
+        SetLastErrorByStatus(STATUS_BUFFER_OVERFLOW);
+        return FALSE;
     }
 
     RtlCopyMemory(lpBuffer, KeyInfo->Data, *nSize * sizeof(WCHAR));
@@ -254,7 +262,8 @@ GetComputerNameExA(COMPUTER_NAME_FORMAT NameType,
 
     if (!TempBuffer)
     {
-        return ERROR_OUTOFMEMORY;
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
     }
 
     AnsiString.MaximumLength = (USHORT)*nSize;
@@ -286,7 +295,11 @@ BOOL
 WINAPI
 GetComputerNameA(LPSTR lpBuffer, LPDWORD lpnSize)
 {
-    return GetComputerNameExA(ComputerNameNetBIOS, lpBuffer, lpnSize);
+    BOOL ret;
+    ret = GetComputerNameExA(ComputerNameNetBIOS, lpBuffer, lpnSize);    
+    if(!ret && GetLastError() == ERROR_MORE_DATA)
+      SetLastError(ERROR_BUFFER_OVERFLOW);
+      return ret;
 }
 
 
@@ -297,7 +310,11 @@ BOOL
 WINAPI
 GetComputerNameW(LPWSTR lpBuffer, LPDWORD lpnSize)
 {
-    return GetComputerNameExW(ComputerNameNetBIOS, lpBuffer, lpnSize);
+    BOOL ret;
+    ret=GetComputerNameExW(ComputerNameNetBIOS, lpBuffer, lpnSize);
+    if(!ret && GetLastError() == ERROR_MORE_DATA)
+      SetLastError(ERROR_BUFFER_OVERFLOW);
+    return ret;
 }
 
 

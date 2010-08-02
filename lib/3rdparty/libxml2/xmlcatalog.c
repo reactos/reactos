@@ -124,7 +124,6 @@ static void usershell(void) {
 	    free(cmdline);
 	    continue;
 	}
-	nbargs++;
 
 	/*
 	 * Parse the argument string
@@ -138,8 +137,6 @@ static void usershell(void) {
 	    arg[i++] = *cur++;
 	}
 	arg[i] = 0;
-	if (i != 0) 
-	    nbargs++;
 
 	/*
 	 * Parse the arguments

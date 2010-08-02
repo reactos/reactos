@@ -798,14 +798,14 @@ Ext2TotalBlocks(PEXT2_FILESYS Ext2Sys, ULONG DataBlocks)
 }
 
 
-NTSTATUS NTAPI
-Ext2Format(
-	IN PUNICODE_STRING DriveRoot,
-	IN FMIFS_MEDIA_FLAG MediaFlag,
-	IN PUNICODE_STRING Label,
-	IN BOOLEAN QuickFormat,
-	IN ULONG ClusterSize,
-	IN PFMIFSCALLBACK Callback)
+NTSTATUS
+NTAPI
+Ext2Format(IN PUNICODE_STRING DriveRoot,
+           IN FMIFS_MEDIA_FLAG MediaFlag,
+           IN PUNICODE_STRING Label,
+           IN BOOLEAN QuickFormat,
+           IN ULONG ClusterSize,
+           IN PFMIFSCALLBACK Callback)
 {
     BOOLEAN    bRet = FALSE;
     NTSTATUS   Status = STATUS_UNSUCCESSFUL;
@@ -814,6 +814,10 @@ Ext2Format(
     /* File Sys Structure */
     EXT2_FILESYS     FileSys;
     ULONG Percent;
+    ULONG rsv;
+    ULONG blocks;
+    ULONG start;
+    ULONG ret_blk;
 
 
     Callback(PROGRESS, 0, (PVOID)&Percent);
@@ -917,10 +921,8 @@ Ext2Format(
     }
 
     /* rsv must be a power of two (64kB is MD RAID sb alignment) */
-    ULONG rsv = 65536 / FileSys.blocksize;
-    ULONG blocks = Ext2Sb.s_blocks_count;
-    ULONG start;
-    ULONG ret_blk;
+    rsv = 65536 / FileSys.blocksize;
+    blocks = Ext2Sb.s_blocks_count;
 
 #ifdef ZAP_BOOTBLOCK
     zap_sector(&FileSys, 0, 2);
@@ -1000,15 +1002,15 @@ clean_up:
     return Status;
 }
 
-NTSTATUS WINAPI
-Ext2Chkdsk(
-	IN PUNICODE_STRING DriveRoot,
-	IN BOOLEAN FixErrors,
-	IN BOOLEAN Verbose,
-	IN BOOLEAN CheckOnlyIfDirty,
-	IN BOOLEAN ScanDrive,
-	IN PFMIFSCALLBACK Callback)
+NTSTATUS
+WINAPI
+Ext2Chkdsk(IN PUNICODE_STRING DriveRoot,
+           IN BOOLEAN FixErrors,
+           IN BOOLEAN Verbose,
+           IN BOOLEAN CheckOnlyIfDirty,
+           IN BOOLEAN ScanDrive,
+           IN PFMIFSCALLBACK Callback)
 {
-	UNIMPLEMENTED;
-	return STATUS_SUCCESS;
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
 }

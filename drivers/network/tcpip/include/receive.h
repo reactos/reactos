@@ -4,11 +4,13 @@
  * FILE:        include/receive.h
  * PURPOSE:     Internet Protocol receive prototypes
  */
-#ifndef __RECEIVE_H
-#define __RECEIVE_H
+
+#pragma once
 
 #include <ip.h>
 
+/* Number of timeout ticks before destroying the IPDR */
+#define MAX_TIMEOUT_COUNT 10
 
 /* IP datagram fragment descriptor. Used to store IP datagram fragments */
 typedef struct IP_FRAGMENT {
@@ -38,6 +40,7 @@ typedef struct IPDATAGRAM_REASSEMBLY {
     UINT HeaderSize;             /* Length of IP header */
     LIST_ENTRY FragmentListHead; /* IP fragment list */
     LIST_ENTRY HoleListHead;     /* IP datagram hole list */
+    UINT TimeoutCount;           /* Timeout counter */
 } IPDATAGRAM_REASSEMBLY, *PIPDATAGRAM_REASSEMBLY;
 
 
@@ -57,7 +60,5 @@ VOID IPDatagramReassemblyTimeout(
 VOID IPReceive(
     PIP_INTERFACE IF,
     PIP_PACKET IPPacket);
-
-#endif /* __RECEIVE_H */
 
 /* EOF */

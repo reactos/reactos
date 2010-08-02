@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -161,6 +161,15 @@ BEGIN
         MENUITEM "权限(&P)...",                 ID_TREE_PERMISSIONS, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "复制项名称(&C)",              ID_EDIT_COPYKEYNAME
+  END
+  POPUP ""
+  BEGIN
+        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "&Copy", ID_HEXEDIT_COPY
+        MENUITEM "&Paste", ID_HEXEDIT_PASTE
+        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
   END
 END
 
@@ -438,7 +447,7 @@ CAPTION "查找"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "取消(&C)",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "取消(&C)",IDCANCEL,93,29,45,14
     LTEXT           "正在搜索注册表...",IDC_STATIC,33,12,83,8
 END
 

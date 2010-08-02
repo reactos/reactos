@@ -22,7 +22,7 @@ BEGIN
 	BEGIN
 		MENUITEM "&Refresh",                  IDM_REFRESH
 	END
-	MENUITEM "&Options",                    ID_OPTIONS
+	MENUITEM "&Options",                          ID_OPTIONS
 	POPUP "&Help"
 	BEGIN
 		MENUITEM "H&elp",                     IDM_HELP
@@ -101,4 +101,17 @@ BEGIN
 	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
 	IDC_EVENTLOG_SUCCESS           "Success"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Unknown Event"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "Type"
+    IDS_COLUMNDATE      "Date"
+    IDS_COLUMNTIME      "Time"
+    IDS_COLUMNSOURCE    "Source"
+    IDS_COLUMNCATEGORY  "Category"
+    IDS_COLUMNEVENT     "Event"
+    IDS_COLUMNUSER      "User"
+    IDS_COLUMNCOMPUTER  "Computer"
+    IDS_COLUMNEVENTDATA "Event Data"
 END

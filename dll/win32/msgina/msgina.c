@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * PROJECT:         ReactOS msgina.dll
@@ -30,7 +30,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);
 
-extern HINSTANCE hDllInstance;
+HINSTANCE hDllInstance;
 
 extern GINA_UI GinaGraphicalUI;
 extern GINA_UI GinaTextUI;
@@ -415,8 +415,9 @@ DoLoginTasks(
 	IN PWSTR Password)
 {
 	LPWSTR ProfilePath = NULL;
+	LPWSTR lpEnvironment = NULL;
 	TOKEN_STATISTICS Stats;
-	PWLX_PROFILE_V1_0 pProfile = NULL;
+	PWLX_PROFILE_V2_0 pProfile = NULL;
 	DWORD cbStats, cbSize;
 	BOOL bResult;
 
@@ -449,14 +450,24 @@ DoLoginTasks(
 	}
 
 	/* Allocate memory for profile */
-	pProfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLX_PROFILE_V1_0));
+	pProfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLX_PROFILE_V2_0));
 	if (!pProfile)
 	{
 		WARN("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	pProfile->dwType = WLX_PROFILE_TYPE_V1_0;
+	pProfile->dwType = WLX_PROFILE_TYPE_V2_0;
 	pProfile->pszProfile = ProfilePath;
+
+	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 32 * sizeof(WCHAR));
+	if (!lpEnvironment)
+	{
+		WARN("HeapAlloc() failed\n");
+		goto cleanup;
+	}
+	wcscpy(lpEnvironment, L"LOGONSERVER=\\\\Test");
+
+	pProfile->pszEnvironment = lpEnvironment;
 
 	if (!GetTokenInformation(pgContext->UserToken,
 		TokenStatistics,
@@ -467,6 +478,7 @@ DoLoginTasks(
 		WARN("Couldn't get Authentication id from user token!\n");
 		goto cleanup;
 	}
+
 	*pgContext->pAuthenticationId = Stats.AuthenticationId; 
 	pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
 	pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
@@ -477,6 +489,10 @@ DoLoginTasks(
 	return TRUE;
 
 cleanup:
+	if (pProfile)
+	{
+		HeapFree(GetProcessHeap(), 0, pProfile->pszEnvironment);
+	}
 	HeapFree(GetProcessHeap(), 0, pProfile);
 	HeapFree(GetProcessHeap(), 0, ProfilePath);
 	return FALSE;

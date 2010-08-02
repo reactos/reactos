@@ -245,7 +245,7 @@ IopNotifyFileSystemChange(IN PDEVICE_OBJECT DeviceObject,
 
 VOID
 NTAPI
-IoShutdownRegisteredFileSystems(VOID)
+IopShutdownBaseFileSystems(IN PLIST_ENTRY ListHead)
 {
     PLIST_ENTRY ListEntry;
     PDEVICE_OBJECT DeviceObject;
@@ -260,8 +260,8 @@ IoShutdownRegisteredFileSystems(VOID)
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
     /* Get the first entry and start looping */
-    ListEntry = IopDiskFsListHead.Flink;
-    while (ListEntry != &IopDiskFsListHead)
+    ListEntry = ListHead->Flink;
+    while (ListEntry != ListHead)
     {
         /* Get the device object */
         DeviceObject = CONTAINING_RECORD(ListEntry,

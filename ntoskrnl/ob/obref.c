@@ -80,7 +80,7 @@ ObReferenceObjectEx(IN PVOID Object,
     /* Increment the reference count and return the count now */
     return InterlockedExchangeAdd(&OBJECT_TO_OBJECT_HEADER(Object)->
                                   PointerCount,
-                                  Count);
+                                  Count) + Count;
 }
 
 LONG
@@ -95,8 +95,8 @@ ObDereferenceObjectEx(IN PVOID Object,
     Header = OBJECT_TO_OBJECT_HEADER(Object);
 
     /* Check whether the object can now be deleted. */
-    NewCount = InterlockedExchangeAdd(&Header->PointerCount, -Count);
-    if (!Count) ObpDeferObjectDeletion(Header);
+    NewCount = InterlockedExchangeAdd(&Header->PointerCount, -Count) - Count;
+    if (!NewCount) ObpDeferObjectDeletion(Header);
 
     /* Return the current count */
     return NewCount;

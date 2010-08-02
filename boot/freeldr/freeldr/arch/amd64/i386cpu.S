@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 	.text
@@ -33,7 +33,7 @@
  *    0x00000400: Found 80486 CPU without CPUID support
  */
 
-EXTERN(_CpuidSupported)
+EXTERN(CpuidSupported)
 	.code32
 
 	pushl	%ecx			/* save ECX */
@@ -80,7 +80,7 @@ NoCpuid:
  * VOID GetCpuid(U32 Level, U32 *eax, U32 *ebx, U32 *ecx, U32 *edx);
  */
 
-EXTERN(_GetCpuid)
+EXTERN(GetCpuid)
 	.code32
 
 	pushl	%ebp
@@ -123,7 +123,7 @@ EXTERN(_GetCpuid)
  * U64 RDTSC(VOID);
  */
 
-EXTERN(_RDTSC)
+EXTERN(RDTSC)
 	.code32
 	rdtsc
 	ret

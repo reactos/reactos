@@ -8,6 +8,5 @@
 	<library>wine</library>
 	<library>crypt32</library>
 	<library>ole32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>

@@ -14,7 +14,7 @@
 #include <handle.h>
 #include <upcall.h>
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 //DWORD DebugTraceLevel = MIN_TRACE;
@@ -39,17 +39,7 @@ INT
 EXPORT
 WSAGetLastError(VOID)
 {
-    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
-
-    if (p)
-    {
-        return p->LastErrorValue;
-    }
-    else
-    {
-        /* FIXME: What error code should we use here? Can this even happen? */
-        return ERROR_BAD_ENVIRONMENT;
-    }
+    return GetLastError();
 }
 
 
@@ -60,10 +50,7 @@ VOID
 EXPORT
 WSASetLastError(IN INT iError)
 {
-    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
-
-    if (p)
-        p->LastErrorValue = iError;
+    SetLastError(iError);
 }
 
 
@@ -620,7 +607,7 @@ WSAAccept(IN     SOCKET s,
           OUT    LPSOCKADDR addr,
           IN OUT LPINT addrlen,
           IN     LPCONDITIONPROC lpfnCondition,
-          IN     DWORD dwCallbackData)
+          IN     DWORD_PTR dwCallbackData)
 {
     PCATALOG_ENTRY Provider;
     SOCKET Socket;
@@ -657,7 +644,7 @@ WSAAccept(IN     SOCKET s,
 
     if ( addr )
     {
-#ifdef DBG
+#if DBG
         LPSOCKADDR_IN sa = (LPSOCKADDR_IN)addr;
         WS_DbgPrint(MAX_TRACE,("Returned address: %d %s:%d (len %d)\n",
                                sa->sin_family,
@@ -885,11 +872,6 @@ DllMain(HANDLE hInstDll,
 
         case DLL_PROCESS_DETACH:
         {
-            p = NtCurrentTeb()->WinSockData;
-
-            if (p)
-              HeapFree(GlobalHeap, 0, p);
-
             DestroyCatalog();
 
             FreeProviderHandleTable();

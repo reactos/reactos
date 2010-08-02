@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
@@ -24,7 +24,7 @@
  * PROGRAMER:        Filip Navara <xnavara@volny.cz>
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -37,7 +37,7 @@ IntAddAtom(LPWSTR AtomName)
    RTL_ATOM Atom;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (pti->Desktop == NULL)
+   if (pti->rpdesk == NULL)
    {
       SetLastNtError(Status);
       return (RTL_ATOM)0;
@@ -61,7 +61,7 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
    ULONG Size = nSize;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (pti->Desktop == NULL)
+   if (pti->rpdesk == NULL)
    {
       SetLastNtError(Status);
       return 0;
@@ -77,6 +77,25 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
       return 0;
    }
    return Size;
+}
+
+RTL_ATOM FASTCALL
+IntAddGlobalAtom(LPWSTR lpBuffer, BOOL PinAtom)
+{
+   RTL_ATOM Atom;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   Status = RtlAddAtomToAtomTable(gAtomTable, lpBuffer, &Atom);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Error init Global Atom.\n");
+      return 0;
+   }
+
+   if ( Atom && PinAtom ) RtlPinAtomInAtomTable(gAtomTable, Atom);
+
+   return Atom;
 }
 
 /* EOF */

@@ -157,7 +157,14 @@ DWORD WINAPI fileTransfer(void *param)
 
         /* Check if it's the stop_event */
         if (WaitForMultipleObjects(2, events, FALSE, INFINITE) == WAIT_OBJECT_0)
+        {
+            LIST_FOR_EACH_ENTRY_SAFE(job, jobCur, &qmgr->jobs, BackgroundCopyJobImpl, entryFromQmgr)
+            {
+                list_remove(&job->entryFromQmgr);
+                IBackgroundCopyJob_Release((IBackgroundCopyJob *) job);
+            }
             return 0;
+        }
 
         /* Note that other threads may add files to the job list, but only
            this thread ever deletes them so we don't need to worry about jobs

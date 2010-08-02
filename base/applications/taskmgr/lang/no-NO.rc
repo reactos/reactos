@@ -160,26 +160,13 @@ END
 //
 // Dialog
 //
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Om Oppgavebehandling"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Oppgavebehandler v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "Oppgavebehandler"
+CAPTION "Oppgavebehandling"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -202,7 +189,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Liste2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Avslutt prosess",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "&Vis prosesser fra alle brukere",IDC_SHOWALLPROCESSES,
@@ -214,7 +201,7 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Prosessorbruk",IDC_CPU_USAGE_FRAME,5,5,70,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "Prosessorbruk",IDC_CPU_USAGE_FRAME,5,5,70,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Minnebruk",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totalt",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Tildelt minne (kb)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
@@ -224,48 +211,48 @@ BEGIN
     LTEXT           "Tråder",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Prosesser",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totalt",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Begrensninger",IDS_COMMIT_CHARGE_LIMIT,12,184,50,8
+    LTEXT           "Begrensninger",IDS_COMMIT_CHARGE_LIMIT,12,184,50,8,NOT WS_BORDER
     LTEXT           "Topp",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totalt",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "Tilgjengelig",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,40,8
     LTEXT           "Systembuffer",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,187,131,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,187,140,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,187,149,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Totalt",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
     LTEXT           "Sidevekslet",IDS_KERNEL_MEMORY_PAGED,137,184,54,8
     LTEXT           "Ikke sidevekslet",IDS_KERNEL_MEMORY_NONPAGED,137,193,85,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,187,174,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,187,184,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,187,193,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Logg for bruk av prosessor",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Logg for bruk av fysisk minne",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Vis prosessorbruk",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
+    PUSHBUTTON      "Vis prosessorbruk",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
 		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Vis minnebruk",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
+    PUSHBUTTON      "Vis minnebruk",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
                     WS_EX_CLIENTEDGE
     PUSHBUTTON      "Logg for prosessorbruk",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Minne bruk historie",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -602,7 +589,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Sett prosess til NEDENFOR NORMAL prioritet klasse"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Sett prosess til LAV prioritet klasse"
-    IDS_LICENSE             "Dette programet er gratis programvare; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 
@@ -660,9 +646,9 @@ BEGIN
     IDS_MSG_UNABLETERMINATEPRO    "Ikke i stand til å avslutte prosess"
     IDS_MSG_UNABLECHANGEPRIORITY  "Ikke i stand til endre prioritet"
     IDS_MSG_WARNINGCHANGEPRIORITY "ADVARSEL: Endring av prioritet klasse av denne prosess kan\nforutsake uønsket resultat inkluderer systemet kan bli ustabilt. Er du\nsikker på at du vil endre prioritet klassen?"
-    IDS_MSG_TRAYICONCPUUSAGE      "Bruk av CPU: %d%%"
+    IDS_MSG_TRAYICONCPUUSAGE      "Prosessorbruk: %d%%"
     IDS_STATUS_MEMUSAGE           "Tildelt minne: %dK / %dK"
-    IDS_STATUS_CPUUSAGE           "Bruk av CPU: %3d%%"
+    IDS_STATUS_CPUUSAGE           "Prosessorbruk: %3d%%"
     IDS_STATUS_PROCESSES          "Prosesser: %d"
     IDS_Not_Responding            "Ingen reaksjon"
     IDS_Running                   "Kjører"  

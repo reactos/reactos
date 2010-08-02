@@ -44,15 +44,18 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define __gnuc_va_list.  */
 
+#ifdef __GNUC__
 #ifndef __GNUC_VA_LIST
 #define __GNUC_VA_LIST
 typedef __builtin_va_list __gnuc_va_list;
+#endif
 #endif
 
 /* Define the standard macros for the user,
    if this invocation was from the user program.  */
 #ifdef _STDARG_H
 
+#ifdef __GNUC__
 #define va_start(v,l)	__builtin_va_start(v,l)
 #define va_end(v)	__builtin_va_end(v)
 #define va_arg(v,l)	__builtin_va_arg(v,l)
@@ -60,11 +63,12 @@ typedef __builtin_va_list __gnuc_va_list;
 #define va_copy(d,s)	__builtin_va_copy(d,s)
 #endif
 #define __va_copy(d,s)	__builtin_va_copy(d,s)
+#endif
 
 /* Define va_list, if desired, from __gnuc_va_list. */
 /* We deliberately do not define va_list when called from
    stdio.h, because ANSI C says that stdio.h is not supposed to define
-   va_list.  stdio.h needs to have access to that data type, 
+   va_list.  stdio.h needs to have access to that data type,
    but must not use that name.  It should use the name __gnuc_va_list,
    which is safe because it is reserved for the implementation.  */
 
@@ -76,6 +80,7 @@ typedef __builtin_va_list __gnuc_va_list;
 #undef _BSD_VA_LIST
 #endif
 
+#ifdef __GNUC__
 #if defined(__svr4__) || (defined(_SCO_DS) && !defined(__VA_LIST))
 /* SVR4.2 uses _VA_LIST for an internal alias for va_list,
    so we must avoid testing it and setting it here.
@@ -133,6 +138,7 @@ typedef __gnuc_va_list va_list;
 
 #endif /* not __svr4__ */
 
+#endif /* __GNUC__ */
 #endif /* _STDARG_H */
 
 #endif /* not _ANSI_STDARG_H_ */

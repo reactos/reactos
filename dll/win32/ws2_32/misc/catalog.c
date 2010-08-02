@@ -32,7 +32,7 @@ DereferenceProviderByPointer(PCATALOG_ENTRY Provider)
 {
     WS_DbgPrint(MAX_TRACE, ("Provider (0x%X).\n", Provider));
 
-#ifdef DBG
+#if DBG
     if (Provider->ReferenceCount <= 0)
     {
         WS_DbgPrint(MIN_TRACE, ("Provider at 0x%X has invalid reference count (%ld).\n",
@@ -146,6 +146,7 @@ LocateProvider(LPWSAPROTOCOL_INFOW lpProtocolInfo)
                 (lpProtocolInfo->iSocketType    == SOCK_RAW)))
             {
                 //LeaveCriticalSection(&CatalogLock);
+                lpProtocolInfo->dwCatalogEntryId = Provider->ProtocolInfo.dwCatalogEntryId;
                 WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X).\n", Provider));
                 return Provider;
             }

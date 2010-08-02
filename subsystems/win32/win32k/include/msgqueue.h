@@ -1,5 +1,4 @@
-#ifndef _WIN32K_MSGQUEUE_H
-#define _WIN32K_MSGQUEUE_H
+#pragma once
 
 #include "hook.h"
 
@@ -7,6 +6,7 @@
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
 #define MSQ_ISEVENT     2
+#define MSQ_SENTNOWAIT  0x80000000
 
 typedef struct _USER_MESSAGE
 {
@@ -29,6 +29,7 @@ typedef struct _USER_SENT_MESSAGE
   /* entry in the dispatching list of the sender's message queue */
   LIST_ENTRY DispatchingListEntry;
   INT HookMessage;
+  BOOL HasPackedLParam;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE_NOTIFY
@@ -40,16 +41,6 @@ typedef struct _USER_SENT_MESSAGE_NOTIFY
   UINT Msg;
   LIST_ENTRY ListEntry;
 } USER_SENT_MESSAGE_NOTIFY, *PUSER_SENT_MESSAGE_NOTIFY;
-
-typedef struct _TIMER_ENTRY{
-   LIST_ENTRY     ListEntry;
-   LARGE_INTEGER  ExpiryTime;
-   HWND           Wnd;
-   UINT_PTR       IDEvent;
-   UINT           Period;
-   TIMERPROC      TimerFunc;
-   UINT           Msg;
-} TIMER_ENTRY, *PTIMER_ENTRY;
 
 typedef struct _USER_MESSAGE_QUEUE
 {
@@ -66,8 +57,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY NotifyMessagesListHead;
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
-  /* List of timers, sorted on expiry time (earliest first) */
-  LIST_ENTRY TimerListHead;
   /* Lock for the hardware message list. */
   KMUTEX HardwareLock;
   /* Pointer to the current WM_MOUSEMOVE message */
@@ -139,7 +128,7 @@ BOOLEAN APIENTRY
 co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
-	       IN HWND Wnd,
+	       IN PWINDOW_OBJECT Window,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message);
@@ -158,7 +147,7 @@ MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
 VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
@@ -185,10 +174,24 @@ co_IntSendMessageTimeout(HWND hWnd,
                       UINT uFlags,
                       UINT uTimeout,
                       ULONG_PTR *uResult);
+
+LRESULT FASTCALL co_IntSendMessageNoWait(HWND hWnd,
+                        UINT Msg,
+                        WPARAM wParam,
+                        LPARAM lParam);
+LRESULT FASTCALL
+co_IntSendMessageWithCallBack(HWND hWnd,
+                              UINT Msg,
+                              WPARAM wParam,
+                              LPARAM lParam,
+                              SENDASYNCPROC CompletionCallback,
+                              ULONG_PTR CompletionCallbackContext,
+                              ULONG_PTR *uResult);
+
 LRESULT FASTCALL
 IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL
-IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
+IntTranslateKbdMessage(LPMSG lpMsg, UINT flags);
 
 VOID FASTCALL
 co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -196,6 +199,8 @@ VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg);
+BOOL FASTCALL
+MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL
 MsqIsDblClk(LPMSG Msg, BOOL Remove);
 HWND FASTCALL
@@ -247,36 +252,26 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
    (message) == WM_NCRBUTTON##code || \
    (message) == WM_NCXBUTTON##code )
 
+#define WM_NCMOUSEFIRST WM_NCMOUSEMOVE
+#define WM_NCMOUSELAST  (WM_NCMOUSEFIRST+(WM_MOUSELAST-WM_MOUSEFIRST))
+
+#define IS_MOUSE_MESSAGE(message) \
+    ((message >= WM_NCMOUSEFIRST && message <= WM_NCMOUSELAST) || \
+            (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST))
+
+#define IS_KBD_MESSAGE(message) \
+    (message == WM_KEYDOWN || message == WM_KEYUP)
+
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask);
 
 BOOL FASTCALL
 IntMsqClearWakeMask(VOID);
 
-BOOLEAN FASTCALL
-MsqSetTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
-            UINT_PTR IDEvent, UINT Period, TIMERPROC TimerFunc,
-            UINT Msg);
-BOOLEAN FASTCALL
-MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
-             UINT_PTR IDEvent, UINT Msg);
-BOOLEAN FASTCALL
-MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-                   HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
-                   MSG *Msg, BOOLEAN Restart);
-BOOLEAN FASTCALL
-MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
-                       HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
-                       PLARGE_INTEGER FirstTimerExpiry);
-VOID FASTCALL
-MsqRemoveTimersWindow(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd);
-
 static __inline LONG
 MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 {
     return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
 }
-
-#endif /* _WIN32K_MSGQUEUE_H */
 
 /* EOF */

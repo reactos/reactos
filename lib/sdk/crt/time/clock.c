@@ -1,28 +1,30 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/time/clock.c
- * PURPOSE:     Get elapsed time
- * PROGRAMER:   Ariadne
- * UPDATE HISTORY:
- *              28/12/98: Created
+ * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
+ * PROJECT:     ReactOS CRT library
+ * FILE:        lib/sdk/crt/time/clock.c
+ * PURPOSE:     Implementation of clock()
+ * PROGRAMER:   Timo Kreuzer
  */
-
 #include <precomp.h>
 
-/*
- * @implemented
- */
-clock_t clock ( void )
+ULARGE_INTEGER g_StartupTime;
+
+void
+initclock(void)
 {
-  FILETIME CreationTime;
-  FILETIME ExitTime;
-  FILETIME KernelTime;
-  FILETIME UserTime;
-  DWORD Remainder;
-
-  if (!GetProcessTimes(GetCurrentProcess(),&CreationTime,&ExitTime,&KernelTime,&UserTime))
-    return -1;
-
-  return FileTimeToUnixTime(&KernelTime,&Remainder) + FileTimeToUnixTime(&UserTime,&Remainder);
+    GetSystemTimeAsFileTime((FILETIME*)&g_StartupTime);
 }
+
+/******************************************************************************
+ * \name clock
+ * \brief Returns the current process's elapsed time.
+ */
+clock_t
+clock(void)
+{
+    ULARGE_INTEGER Time;
+
+    GetSystemTimeAsFileTime((FILETIME*)&Time);
+    Time.QuadPart -= g_StartupTime.QuadPart;
+    return FileTimeToUnixTime((FILETIME*)&Time, NULL);
+};

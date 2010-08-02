@@ -45,8 +45,8 @@
 //
 // CM_KEY_CONTROL_BLOCK Signatures
 //
-#define CM_KCB_SIGNATURE                                TAG('C', 'm', 'K', 'b')
-#define CM_KCB_INVALID_SIGNATURE                        TAG('C', 'm', 'F', '4')
+#define CM_KCB_SIGNATURE                                'bKmC'
+#define CM_KCB_INVALID_SIGNATURE                        '4FmC'
 
 //
 // CM_KEY_CONTROL_BLOCK Flags
@@ -622,6 +622,24 @@ CmCheckRegistry(
 );
 
 //
+// Hive List Routines
+//
+NTSTATUS
+NTAPI
+CmpAddToHiveFileList(
+    IN PCMHIVE Hive
+);
+
+//
+// Quota Routines
+//
+VOID
+NTAPI
+CmpSetGlobalQuotaAllowed(
+    VOID
+);
+
+//
 // Notification Routines
 //
 VOID
@@ -631,6 +649,13 @@ CmpReportNotify(
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN ULONG Filter
+);
+
+VOID
+NTAPI
+CmpFlushNotify(
+    IN PCM_KEY_BODY KeyBody,
+    IN BOOLEAN LockHeld
 );
 
 VOID
@@ -822,6 +847,36 @@ CmpUnlockRegistry(
     VOID
 );
 
+VOID
+NTAPI
+CmpLockHiveFlusherExclusive(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpLockHiveFlusherShared(
+    IN PCMHIVE Hive
+);
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockExclusive(
+    IN PCMHIVE Hive
+);
+
+BOOLEAN
+NTAPI
+CmpTestHiveFlusherLockShared(
+    IN PCMHIVE Hive
+);
+
+VOID
+NTAPI
+CmpUnlockHiveFlusher(
+    IN PCMHIVE Hive
+);
+
 //
 // Delay Functions
 //
@@ -976,6 +1031,13 @@ NTAPI
 CmpReleaseTwoKcbLockByKey(
     IN ULONG ConvKey1,
     IN ULONG ConvKey2
+);
+
+VOID
+NTAPI
+CmpFlushNotifiesOnKeyBodyList(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN BOOLEAN LockHeld
 );
 
 //
@@ -1301,7 +1363,7 @@ CmpCreateEvent(
 PVOID
 NTAPI
 CmpAllocate(
-    IN ULONG Size,
+    IN SIZE_T Size,
     IN BOOLEAN Paged,
     IN ULONG Tag
 );
@@ -1454,6 +1516,46 @@ CmShutdownSystem(
     VOID
 );
 
+VOID
+NTAPI
+CmSetLazyFlushState(
+    IN BOOLEAN Enable
+);
+
+//
+// Driver List Routines
+//
+PUNICODE_STRING*
+NTAPI
+CmGetSystemDriverList(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+CmpFindDrivers(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ControlSet,
+    IN SERVICE_LOAD_TYPE LoadType,
+    IN PWSTR BootFileSystem OPTIONAL,
+    IN PLIST_ENTRY DriverListHead
+);
+
+
+BOOLEAN
+NTAPI
+CmpSortDriverList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ControlSet,
+    IN PLIST_ENTRY DriverListHead
+);
+
+BOOLEAN
+NTAPI
+CmpResolveDriverDependencies(
+    IN PLIST_ENTRY DriverListHead
+);
+
 //
 // Global variables accessible from all of Cm
 //
@@ -1501,6 +1603,7 @@ extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
 extern BOOLEAN CmpNoWrite;
 extern BOOLEAN CmpForceForceFlush;
 extern BOOLEAN CmpWasSetupBoot;
+extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;

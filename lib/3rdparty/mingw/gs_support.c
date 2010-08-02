@@ -1,10 +1,17 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#define WIN32_NO_STATUS
+#include <stdlib.h>	/* abort () */
 #include <windows.h>
+#undef  WIN32_NO_STATUS
+#include <ntstatus.h>	/* STATUS macros */
 #ifdef _WIN64
 #include <intrin.h>
 #endif
@@ -22,10 +29,9 @@ PVOID RtlVirtualUnwind (ULONG HandlerType, ULONG64, ULONG64, PRUNTIME_FUNCTION,
 			PCONTEXT, PVOID *, PULONG64, PVOID);
 #endif
 
-typedef LONG NTSTATUS;
+typedef LONG NTSTATUS;	/* same as in ntdef.h / winternl.h */
 
 #define UNW_FLAG_NHANDLER 0x00
-#define STATUS_STACK_BUFFER_OVERRUN ((NTSTATUS)0xC0000409L)
 
 typedef union
 {
@@ -42,6 +48,8 @@ static const EXCEPTION_POINTERS GS_ExceptionPointers = {
 
 DECLSPEC_SELECTANY UINT_PTR __security_cookie = DEFAULT_SECURITY_COOKIE;
 DECLSPEC_SELECTANY UINT_PTR __security_cookie_complement = ~(DEFAULT_SECURITY_COOKIE);
+
+void __cdecl __security_init_cookie (void);
 
 void __cdecl
 __security_init_cookie (void)
@@ -86,17 +94,25 @@ __security_init_cookie (void)
   __security_cookie_complement = ~cookie;
 }
 
+
+#if defined(__GNUC__) /* wrap msvc intrinsics onto gcc builtins */
+#undef  _ReturnAddress
+#undef  _AddressOfReturnAddress
+#define _ReturnAddress()		__builtin_return_address(0)
+#define _AddressOfReturnAddress()	__builtin_frame_address (0)
+#endif /* __GNUC__ */
+
+__declspec(noreturn) void __cdecl __report_gsfailure (ULONGLONG);
+
 __declspec(noreturn) void __cdecl
 __report_gsfailure (ULONGLONG StackCookie)
 {
-  volatile UINT_PTR cookie[2];
+  volatile UINT_PTR cookie[2] __MINGW_ATTRIB_UNUSED;
 #ifdef _WIN64
   ULONG64 controlPC, imgBase, establisherFrame;
   PRUNTIME_FUNCTION fctEntry;
   PVOID hndData;
-#endif
 
-#ifdef _WIN64
   RtlCaptureContext (&GS_ContextRecord);
   controlPC = GS_ContextRecord.Rip;
   fctEntry = RtlLookupFunctionEntry (controlPC, &imgBase, NULL);
@@ -106,15 +122,15 @@ __report_gsfailure (ULONGLONG StackCookie)
 			&GS_ContextRecord, &hndData, &establisherFrame, NULL);
     }
   else
-#endif
+#endif /* _WIN64 */
     {
 #ifdef _WIN64
-      GS_ContextRecord.Rip = (ULONGLONG) __builtin_return_address (0);
-      GS_ContextRecord.Rsp = (ULONGLONG) __builtin_frame_address (0) + 8;
+      GS_ContextRecord.Rip = (ULONGLONG) _ReturnAddress();
+      GS_ContextRecord.Rsp = (ULONGLONG) _AddressOfReturnAddress() + 8;
 #else
-      GS_ContextRecord.Eip = (DWORD) __builtin_return_address (0);
-      GS_ContextRecord.Esp = (DWORD) __builtin_frame_address (0) + 4;
-#endif
+      GS_ContextRecord.Eip = (DWORD) _ReturnAddress();
+      GS_ContextRecord.Esp = (DWORD) _AddressOfReturnAddress() + 4;
+#endif /* _WIN64 */
     }
 
 #ifdef _WIN64
@@ -123,7 +139,7 @@ __report_gsfailure (ULONGLONG StackCookie)
 #else
   GS_ExceptionRecord.ExceptionAddress = (PVOID) GS_ContextRecord.Eip;
   GS_ContextRecord.Ecx = StackCookie;
-#endif
+#endif /* _WIN64 */
   GS_ExceptionRecord.ExceptionCode = STATUS_STACK_BUFFER_OVERRUN;
   GS_ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
   cookie[0] = __security_cookie;
@@ -133,3 +149,4 @@ __report_gsfailure (ULONGLONG StackCookie)
   TerminateProcess (GetCurrentProcess (), STATUS_STACK_BUFFER_OVERRUN);
   abort();
 }
+

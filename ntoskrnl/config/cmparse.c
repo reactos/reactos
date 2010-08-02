@@ -224,6 +224,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     ULONG StorageType;
     LARGE_INTEGER SystemTime;
     PCM_KEY_CONTROL_BLOCK Kcb;
+    PSECURITY_DESCRIPTOR NewDescriptor;
 
     /* Get the storage type */
     StorageType = Stable;
@@ -285,7 +286,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     
     /* Setup the key body */
     KeyBody = (PCM_KEY_BODY)(*Object);
-    KeyBody->Type = TAG('k', 'y', '0', '2');
+    KeyBody->Type = '20yk';
     KeyBody->KeyControlBlock = NULL;
 
     /* Check if we had a class */
@@ -360,6 +361,26 @@ CmpDoCreateChild(IN PHHIVE Hive,
     /* Link it with the KCB */
     EnlistKeyBodyWithKCB(KeyBody, 0);
 
+    /* Assign security */
+    Status = SeAssignSecurity(ParentDescriptor,
+                              AccessState->SecurityDescriptor,
+                              &NewDescriptor,
+                              TRUE,
+                              &AccessState->SubjectSecurityContext,
+                              &CmpKeyObjectType->TypeInfo.GenericMapping,
+                              CmpKeyObjectType->TypeInfo.PoolType);
+    if (NT_SUCCESS(Status))
+    {
+        Status = CmpSecurityMethod(*Object,
+                                   AssignSecurityDescriptor,
+                                   NULL,
+                                   NewDescriptor,
+                                   NULL,
+                                   NULL,
+                                   CmpKeyObjectType->TypeInfo.PoolType,
+                                   &CmpKeyObjectType->TypeInfo.GenericMapping);
+    }
+
 Quickie:
     /* Check if we got here because of failure */
     if (!NT_SUCCESS(Status))
@@ -392,15 +413,6 @@ CmpDoCreate(IN PHHIVE Hive,
     PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
-
-    /* Sanity check */
-#if 0
-    ASSERT((CmpIsKcbLockedExclusive(ParentKcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
-#endif
-
-    /* Acquire the flusher lock */
-    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
 
     /* Check if the parent is being deleted */
     if (ParentKcb->Delete)
@@ -439,7 +451,7 @@ CmpDoCreate(IN PHHIVE Hive,
         !(ParseContext->CreateOptions & REG_OPTION_VOLATILE))
     {
         /* Children of volatile parents must also be volatile */
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
         Status = STATUS_CHILD_MUST_BE_VOLATILE;
         goto Exit;
     }
@@ -534,7 +546,6 @@ CmpDoCreate(IN PHHIVE Hive,
 
 Exit:
     /* Release the flusher lock and return status */
-    ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
 }
 
@@ -680,12 +691,22 @@ CmpDoOpen(IN PHHIVE Hive,
         /* Get the key body and fill it out */
         KeyBody = (PCM_KEY_BODY)(*Object);       
         KeyBody->KeyControlBlock = Kcb;
-        KeyBody->Type = TAG('k', 'y', '0', '2');
+        KeyBody->Type = '20yk';
         KeyBody->ProcessID = PsGetCurrentProcessId();
         KeyBody->NotifyBlock = NULL;
         
         /* Link to the KCB */
         EnlistKeyBodyWithKCB(KeyBody, 0);
+
+        if (!ObCheckObjectAccess(*Object,
+                                 AccessState,
+                                 FALSE,
+                                 AccessMode,
+                                 &Status))
+        {
+            /* Access check failed */
+            ObDereferenceObject(*Object);
+        }
     }
     else
     {
@@ -716,9 +737,6 @@ CmpCreateLinkNode(IN PHHIVE Hive,
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
     PCM_KEY_CONTROL_BLOCK Kcb = ParentKcb;
-#if 0
-    CMP_ASSERT_REGISTRY_LOCK();
-#endif
 
     /* Link nodes only allowed on the master */
     if (Hive != &CmiVolatileHive->Hive)
@@ -728,10 +746,6 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         return STATUS_ACCESS_DENIED;
     }
     
-    /* Acquire the flusher locks */
-    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
-    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Context->ChildHive.KeyHive)->FlusherLock);
-
     /* Check if the parent is being deleted */
     if (ParentKcb->Delete)
     {
@@ -933,8 +947,6 @@ CmpCreateLinkNode(IN PHHIVE Hive,
     
 Exit:
     /* Release the flusher locks and return status */
-    ExReleasePushLock((PVOID)&((PCMHIVE)Context->ChildHive.KeyHive)->FlusherLock);
-    ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
 }
 

@@ -17,6 +17,10 @@
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     BOOLEAN LockFailed = FALSE;
 
+    ASSERT(IrpSp->Parameters.DeviceIoControl.Type3InputBuffer);
+    ASSERT(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+    ASSERT(!Irp->MdlAddress);
+
     Irp->MdlAddress =
 	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
@@ -40,6 +44,7 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 	    MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
 
 	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
+            MmUnlockPages( Irp->MdlAddress );
 	    IoFreeMdl( Irp->MdlAddress );
 	    Irp->MdlAddress = NULL;
 	    return NULL;
@@ -49,14 +54,10 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     } else return NULL;
 }
 
-VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
-    PVOID Buffer = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
-    if( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer == Buffer || Buffer == NULL ) {
-	MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer, Irp->MdlAddress );
-        MmUnlockPages( Irp->MdlAddress );
-        IoFreeMdl( Irp->MdlAddress );
-    }
-
+VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp )
+{
+    MmUnlockPages( Irp->MdlAddress );
+    IoFreeMdl( Irp->MdlAddress );
     Irp->MdlAddress = NULL;
 }
 
@@ -73,13 +74,14 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     BOOLEAN LockFailed = FALSE;
+    PAFD_MAPBUF MapBuf;
 
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
 
     if( NewBuf ) {
         RtlZeroMemory(NewBuf, Size * 2);
 
-	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
+	MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
         _SEH2_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
@@ -187,6 +189,9 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
 	      	 (PVOID*)&FileObjects[i].Handle,
 	      	 NULL );
 	}
+
+        if( !NT_SUCCESS(Status) )
+            FileObjects[i].Handle = 0;
     }
 
     if( !NT_SUCCESS(Status) ) {
@@ -209,98 +214,29 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     HandleArray = NULL;
 }
 
-/* Returns transitioned state or SOCKET_STATE_INVALID_TRANSITION */
-UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PVOID CurrentThread = KeGetCurrentThread();
-
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-
-    AFD_DbgPrint(MAX_TRACE,("Called on %x, attempting to lock\n", FCB));
-
-    /* Wait for the previous user to unlock the FCB state.  There might be
-     * multiple waiters waiting to change the state.  We need to check each
-     * time we get the event whether somebody still has the state locked */
-
+BOOLEAN SocketAcquireStateLock( PAFD_FCB FCB ) {
     if( !FCB ) return FALSE;
 
-    if( CurrentThread == FCB->CurrentThread ) {
-	FCB->LockCount++;
-	AFD_DbgPrint(MID_TRACE,
-		     ("Same thread, lock count %d\n", FCB->LockCount));
-	return TRUE;
-    } else {
-	AFD_DbgPrint(MID_TRACE,
-		     ("Thread %x opposes lock thread %x\n",
-		      CurrentThread, FCB->CurrentThread));
-    }
-
-
-    ExAcquireFastMutex( &FCB->Mutex );
-
-    while( FCB->Locked ) {
-	AFD_DbgPrint
-	    (MID_TRACE,("FCB %x is locked, waiting for notification\n",
-			FCB));
-	ExReleaseFastMutex( &FCB->Mutex );
-	Status = KeWaitForSingleObject( &FCB->StateLockedEvent,
-					UserRequest,
-					KernelMode,
-					FALSE,
-					NULL );
-	ExAcquireFastMutex( &FCB->Mutex );
-    }
-    FCB->Locked = TRUE;
-    FCB->CurrentThread = CurrentThread;
-    FCB->LockCount++;
-    ExReleaseFastMutex( &FCB->Mutex );
-
-    AFD_DbgPrint(MAX_TRACE,("Got lock (%d).\n", FCB->LockCount));
-
-    return TRUE;
+    return !KeWaitForMutexObject(&FCB->Mutex,
+                                 Executive,
+                                 KernelMode,
+                                 FALSE,
+                                 NULL);
 }
 
 VOID SocketStateUnlock( PAFD_FCB FCB ) {
-#ifdef DBG
-    PVOID CurrentThread = KeGetCurrentThread();
-#endif
-    ASSERT(FCB->LockCount > 0);
-    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-
-    ExAcquireFastMutex( &FCB->Mutex );
-    FCB->LockCount--;
-
-    if( !FCB->LockCount ) {
-	FCB->CurrentThread = NULL;
-	FCB->Locked = FALSE;
-
-	AFD_DbgPrint(MAX_TRACE,("Unlocked.\n"));
-	KePulseEvent( &FCB->StateLockedEvent, IO_NETWORK_INCREMENT, FALSE );
-    } else {
-	AFD_DbgPrint(MAX_TRACE,("New lock count: %d (Thr: %x)\n",
-				FCB->LockCount, CurrentThread));
-    }
-    ExReleaseFastMutex( &FCB->Mutex );
+    KeReleaseMutex(&FCB->Mutex, FALSE);
 }
 
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information ) {
-
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = Information;
-
-    if( Status == STATUS_PENDING ) {
-	/* We should firstly mark this IRP as pending, because
-	   otherwise it may be completed by StreamSocketConnectComplete()
-	   before we return from SocketStateUnlock(). */
-	IoMarkIrpPending( Irp );
-	SocketStateUnlock( FCB );
-    } else {
-	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
-	SocketStateUnlock( FCB );
-	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-    }
+    if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+    (void)IoSetCancelRoutine(Irp, NULL);
+    SocketStateUnlock( FCB );
+    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     return Status;
 }
 
@@ -318,7 +254,8 @@ NTSTATUS LostSocket( PIRP Irp ) {
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
-	IoMarkIrpPending(Irp);
-	Irp->IoStatus.Status = STATUS_PENDING;
-    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0 );
+    IoMarkIrpPending(Irp);
+    (void)IoSetCancelRoutine(Irp, AfdCancelHandler);
+    SocketStateUnlock( FCB );
+    return STATUS_PENDING;
 }

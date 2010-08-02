@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -61,7 +61,7 @@ static const shvheader AdminToolsSFHeader[] = {
 #define AdminToolsHELLVIEWCOLUMNS (4)
 
 
-#define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
+#define _IPersistFolder2_Offset ((INT_PTR)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
 
 #define _IUnknown_(This)    (IShellFolder*)&(This->lpVtbl)

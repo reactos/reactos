@@ -1,8 +1,8 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/lpc_x.h
-* PURPOSE:         Intenral Inlined Functions for Local Procedure Call
+* FILE:            ntoskrnl/include/internal/lpc_x.h
+* PURPOSE:         Internal Inlined Functions for Local Procedure Call
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
@@ -95,7 +95,7 @@
 //
 // Allocates a new message
 //
-FORCEINLINE
+static __inline
 PLPCP_MESSAGE
 LpcpAllocateFromPortZone(VOID)
 {

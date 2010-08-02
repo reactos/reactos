@@ -72,7 +72,7 @@ static WINE_HDD*       MSVIDEO_GetHddPtr(HDRAWDIB hd)
     return hdd;
 }
 
-static DWORD HDD_HandleRef = 1;
+static UINT_PTR HDD_HandleRef = 1;
 
 /***********************************************************************
  *		DrawDibOpen		[MSVFW32.@]

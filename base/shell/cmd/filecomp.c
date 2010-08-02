@@ -590,10 +590,20 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 		/* Start the search for all the files */
 		GetFullPathName(szBaseWord, MAX_PATH, szSearchPath, NULL);
+
+		/* Got a device path? Fallback to the the current dir plus the short path */
+		if (szSearchPath[0] == _T('\\') && szSearchPath[1] == _T('\\') &&
+		    szSearchPath[2] == _T('.') && szSearchPath[3] == _T('\\'))
+		{
+			GetCurrentDirectory(MAX_PATH, szSearchPath);
+			_tcscat(szSearchPath, _T("\\"));
+			_tcscat(szSearchPath, szBaseWord);
+		}
+
 		if(StartLength > 0)
-    {
+		{
 			_tcscat(szSearchPath,_T("*"));
-    }
+		}
 		_tcscpy(LastSearch,szSearchPath);
 		_tcscpy(LastPrefix,szPrefix);
 	}
@@ -703,7 +713,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 				LastSpace = i;
 
 		}
-		/* insert the quoation and move things around */
+		/* insert the quotation and move things around */
 		if(szPrefix[LastSpace + 1] != _T('\"') && LastSpace != -1)
 		{
 			memmove ( &szPrefix[LastSpace+1], &szPrefix[LastSpace], (_tcslen(szPrefix)-LastSpace+1) * sizeof(TCHAR) );
@@ -712,14 +722,17 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 			{
 				_tcscat(szPrefix,_T("\""));
 			}
-				szPrefix[LastSpace + 1] = _T('\"');
+			szPrefix[LastSpace + 1] = _T('\"');
 		}
 		else if(LastSpace == -1)
 		{
-			_tcscpy(szBaseWord,_T("\""));
-			_tcscat(szBaseWord,szPrefix);
-			_tcscpy(szPrefix,szBaseWord);
-
+			/* Add quotation only if none exists already */
+			if (szPrefix[0] != _T('\"'))
+			{
+				_tcscpy(szBaseWord,_T("\""));
+				_tcscat(szBaseWord,szPrefix);
+				_tcscpy(szPrefix,szBaseWord);
+			}
 		}
 	}
 

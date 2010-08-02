@@ -1,8 +1,8 @@
 /*
  * XCOPY - Wine-compatible xcopy program
- * English language support
+ * Italian language support
  *
- * Copyright (C) 2007 J. Edmeades
+ * Copyright (C) 2010 Luca Bennati
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,24 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "xcopy.h"
+
+/*UTF-8*/
+#pragma code_page(65001)
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 {
-    STRING_INVPARMS, "Numero di parametri non valido - Usare xcopy /? per l'aiuto\n"
-    STRING_INVPARM,  "Parametro non valido '%s' -  Usare xcopy /? per l'aiuto\n"
-    STRING_PAUSE,    "Premeress <invio> per iniziare la copia\n"
-    STRING_SIMCOPY,  "%d file(s) saranno copiati\n"
-    STRING_COPY,     "%d file(s) copiati\n"
-    STRING_QISDIR,   "'%s' � un file o una cartella ?\n" \
-                     "sulla destinazione?\n" \
+    STRING_INVPARMS, "Numero non valido di parametri - Digita xcopy /? per l'aiuto\n"
+    STRING_INVPARM,  "Parametro '%s' non valido -  Digita xcopy /? per l'aiuto\n"
+    STRING_PAUSE,    "Premi Invio per iniziare a copiare\n"
+    STRING_SIMCOPY,  "%d file sarebbero copiati\n"
+    STRING_COPY,     "%d file copiato/i\n"
+    STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n" \
+                     "nell'obiettivo?\n" \
                      "(F - File, C - Cartella)\n"
-    STRING_SRCPROMPT,"%s? (Si|No)\n"
-    STRING_OVERWRITE,"Sovrascrivere %s? (Si|No|Tutti)\n"
-    STRING_COPYFAIL, "Copia di '%s' su '%s' fallitocon r/c %d\n"
+    STRING_SRCPROMPT,"%s? (Sì|No)\n"
+    STRING_OVERWRITE,"Sovrascrivere %s? (Sì|No|Tutti)\n"
+    STRING_COPYFAIL, "La copia di '%s' in '%s' è fallita con r/c %d\n"
     STRING_OPENFAIL, "Impossibile aprire '%s'\n"
-    STRING_READFAIL, "Impossibile leggre '%s'\n"
+    STRING_READFAIL, "Errore durante la lettura di '%s'\n"
     STRING_YES_CHAR, "S"
     STRING_NO_CHAR,  "N"
     STRING_ALL_CHAR, "T"
@@ -44,36 +48,36 @@ STRINGTABLE
     STRING_DIR_CHAR, "C"
 
     STRING_HELP,
-"XCOPY - Copia i file sorgenti o un albero di cartelle su una destinazione\n\
+"XCOPY - Copia file(s) e alberi di cartelle sorgenti in una destinazione\n\
 \n\
 Sintassi:\n\
-XCOPY sorgente [destinazione] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY sorgente [destinazione] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Dove:\n\
 \n\
-[/I]  Assumere che sia una cartella se la destinazione non esiste e vengono \n\
-\t\tcopiati due o pi� file\n\
-[/S]  Copiare cartelle e sottocartelle\n\
-[/E]  Copiare cartelle e sottocartelle, comprese quelle vuote\n\
-[/Q]  Non elencare i nomi dei file durante la copia.\n\
-[/F]  Mostrare il percorso completo di sorgente e destinazione durante la copia\n\
-[/L]  Simulare l'operazione, mostrare i nomi dei file che sarebbero copiati\n\
-[/W]  Chidere conferma prima di iniziare la copia\n\
-[/T]  Creare una strutture di cartelle vuota senza copiare i file\n\
-[/Y]  Supprimere la richiesta di conferma per la sovrascrittura dei file\n\
-[/-Y] Abilitare la richiesta di conferma per la sovrascrittura dei file\n\
-[/P]  Chiedere conferma prima della copia di ogni file\n\
-[/N]  Copiare usando i nomi corti\n\
-[/U]  Copiare solo i file che esistono gi� nella destinazione\n\
-[/R]  Sovrascrivere i file in sola lettura\n\
-[/H]  Includere nella copia i file nascosti e quelli di sistema\n\
-[/C]  Continuare nella copia anche se si verificano errori\n\
-[/A]  Copiare solo i file con l'attributo di archivio attivo\n\
-[/M]  Copiare solo i file con l'attributo di archivio attivo e poi \n\
-\t\tlo disattiva\n\
-[/D | /D:m-d-y] Copiare i file nuovi o modificati dopo la data indicata.\n\
-\t\tSe non � indicata una data copiare solo se la destinazione e meno recente\n\
+[/I]  Assume una cartella se la destinazione non esiste e sono copiati 2 o\n\
+\tpiù file\n\
+[/S]  Copia le cartelle e le sottocartelle\n\
+[/E]  Copia le cartelle e le sottocartelle, includendo quelle vuote\n\
+[/Q]  Non mostra i nomi durante la copia, modalità silenziosa.\n\
+[/F]  Mostra i nomi completi della sorgente e della destinazione durante la copia\n\
+[/L]  Simula l'operazione, mostrando i nome che sarebbero copiati\n\
+[/W]  Richiede prima di iniziare l'operazione di copia\n\
+[/T]  Crea la struttura di cartelle vuote ma non copia i files\n\
+[/Y]  Disabilita le conferme quando sono sovrascritti files\n\
+[/-Y] Abilita le conferme quando sono sovrascritti files\n\
+[/P]  Chiede conferma per ogni file sorgente prima di copiare\n\
+[/N]  Copia usando i nomi abbreviati\n\
+[/U]  Copia solo files che sono già presenti nella destinazione\n\
+[/R]  Sovrascrive ogni file che abbia l'attributo Sola Lettura\n\
+[/H]  Include i file nascosti e di sistema nella copia\n\
+[/C]  Continua anche se accade un errore durante la copia\n\
+[/A]  Copia solo i file che abbiano l'attributo Archivio\n\
+[/M]  Copia solo i file che abbiano l'attributo Archivio, rimuovendo\n\
+\tl'attributo\n\
+[/D | /D:m-g-a] Copia i nuovi file o quelli modificati dopo la data fornita.\n\
+\t\tSe nessuna data è stata fornita, copia solo se la destinazione è più vecchia\n\
 \t\tdella sorgente\n\n"
 
 }

@@ -1,5 +1,4 @@
-#ifndef __TMOUSE_H
-#define __TMOUSE_H
+#pragma once
 
 #include "tnclip.h"
 #include <windows.h>
@@ -25,5 +24,3 @@ public:
 	TMouse(Tnclip &RefClipboard);
 	~TMouse();
 };
-
-#endif

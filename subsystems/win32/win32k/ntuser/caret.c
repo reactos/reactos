@@ -11,7 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -62,7 +62,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
 {
    /* Don't save the new value to the registry! */
    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PWINSTATION_OBJECT WinStaObject = pti->Desktop->WindowStation;
+   PWINSTATION_OBJECT WinStaObject = pti->rpdesk->rpwinstaParent;
 
    /* windows doesn't do this check */
    if((uMSeconds < MIN_CARETBLINKRATE) || (uMSeconds > MAX_CARETBLINKRATE))
@@ -73,6 +73,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
    }
 
    WinStaObject->CaretBlinkRate = uMSeconds;
+   gpsi->dtCaretBlink = uMSeconds;
 
    return TRUE;
 }
@@ -152,7 +153,7 @@ IntGetCaretBlinkTime(VOID)
    UINT Ret;
 
    pti = PsGetCurrentThreadWin32Thread();
-   WinStaObject = pti->Desktop->WindowStation;
+   WinStaObject = pti->rpdesk->rpwinstaParent;
 
    Ret = WinStaObject->CaretBlinkRate;
    if(!Ret)
@@ -189,7 +190,7 @@ co_IntSetCaretPos(int X, int Y)
          ThreadQueue->CaretInfo->Pos.x = X;
          ThreadQueue->CaretInfo->Pos.y = Y;
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
-         IntSetTimer(ThreadQueue->CaretInfo->hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
+         IntSetTimer(UserGetWindowObject(ThreadQueue->CaretInfo->hWnd), IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TMRF_SYSTEM);
       }
       return TRUE;
    }
@@ -245,7 +246,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window) ASSERT_REFS_CO(Window);
 
-   if(Window && Window->OwnerThread != PsGetCurrentThread())
+   if(Window && Window->pti->pEThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -280,7 +281,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window) ASSERT_REFS_CO(Window);
 
-   if(Window && Window->OwnerThread != PsGetCurrentThread())
+   if(Window && Window->pti->pEThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -302,7 +303,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
       {
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       }
-      IntSetTimer(ThreadQueue->CaretInfo->hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
+      IntSetTimer(UserGetWindowObject(ThreadQueue->CaretInfo->hWnd), IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TMRF_SYSTEM);
    }
 
    return TRUE;
@@ -332,7 +333,7 @@ NtUserCreateCaret(
       RETURN(FALSE);
    }
 
-   if(Window->OwnerThread != PsGetCurrentThread())
+   if(Window->pti->pEThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
@@ -355,6 +356,14 @@ NtUserCreateCaret(
    }
    else
    {
+      if (nWidth == 0)
+      {
+          nWidth = UserGetSystemMetrics(SM_CXBORDER);
+      }
+      if (nHeight == 0)
+      {
+          nHeight = UserGetSystemMetrics(SM_CYBORDER);
+      }
       ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
       ThreadQueue->CaretInfo->Size.cx = nWidth;
       ThreadQueue->CaretInfo->Size.cy = nHeight;

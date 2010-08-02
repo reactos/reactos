@@ -13,11 +13,11 @@
 #define _NO_COM
 
 /* DDK/NDK/SDK Headers */
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ddk/ntifs.h>
-#include <ddk/tvout.h>
-#include <ndk/ntndk.h>
+#include <ntddk.h>
+#include <ntddmou.h>
+#include <ntifs.h>
+#include <tvout.h>
+#include <ntndk.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -36,6 +36,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 #include <winerror.h>
 #include <wingdi.h>
+#define NT_BUILD_ENVIRONMENT
 #include <winddi.h>
 #include <winuser.h>
 #include <prntfont.h>
@@ -59,7 +60,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <ntgdi.h>
 
 /* Internal Win32K Header */
-#include "include/win32k.h"
+#include "include/win32kp.h"
 
 /* Undocumented stuff */
 typedef DRIVEROBJ *PDRIVEROBJ;
@@ -138,7 +139,7 @@ UserHeapReAlloc(PVOID lpMem,
 static __inline PVOID
 UserHeapAddressToUser(PVOID lpMem)
 {
-    PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
+    PPROCESSINFO W32Process = PsGetCurrentProcessWin32Process();
     return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)GlobalUserHeap) +
                    (ULONG_PTR)W32Process->HeapMappings.UserMapping);
 }
@@ -151,13 +152,13 @@ UserHeapAddressToUser(PVOID lpMem)
 
 #define LIST_FOR_EACH(elem, list, type, field) \
     for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
-         &(elem)->field != (list) || (elem == NULL); \
+         &(elem)->field != (list) && ((&((elem)->field)) != NULL); \
          (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
 
 #define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
     for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
-         &(cursor)->field != (list) || (cursor == NULL); \
+         &(cursor)->field != (list) && ((&((cursor)->field)) != NULL); \
          (cursor) = (cursor2), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
 

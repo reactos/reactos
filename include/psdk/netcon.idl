@@ -1,0 +1,412 @@
+/*
+ * Copyright 2009 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+import "unknwn.idl";
+import "wtypes.idl";
+/* import "prsht.idl"; */
+#endif
+
+cpp_quote("DEFINE_GUID(CLSID_NetSharingManager,0x5c63c1ad,0x3956,0x4ff8,0x84,0x86,0x40,0x03,0x47,0x58,0x31,0x5b);")
+
+[
+    object,
+    uuid(c08956a1-1cd3-11d1-b1c5-00805fc1270e),
+    pointer_default(unique)
+]
+interface INetConnection : IUnknown
+{
+    typedef enum tagNETCON_CHARACTERISTIC_FLAGS
+    {
+        NCCF_NONE               = 0x0000,
+        NCCF_ALL_USERS          = 0x0001,
+        NCCF_ALLOW_DUPLICATION  = 0x0002,
+        NCCF_ALLOW_REMOVAL      = 0x0004,
+        NCCF_ALLOW_RENAME       = 0x0008,
+        NCCF_INCOMING_ONLY      = 0x0020,
+        NCCF_OUTGOING_ONLY      = 0x0040,
+        NCCF_BRANDED            = 0x0080,
+        NCCF_SHARED             = 0x0100,
+        NCCF_BRIDGED            = 0x0200,
+        NCCF_FIREWALLED         = 0x0400,
+        NCCF_DEFAULT            = 0x0800,
+        NCCF_HOMENET_CAPABLE    = 0x1000,
+        NCCF_SHARED_PRIVATE     = 0x2000,
+        NCCF_QUARANTINED        = 0x4000,
+        NCCF_RESERVED           = 0x8000,
+        NCCF_BLUETOOTH_MASK  = 0x000F0000,
+        NCCF_LAN_MASK        = 0x00F00000
+    } NETCON_CHARACTERISTIC_FLAGS;
+
+    typedef enum tagNETCON_STATUS
+    {
+        NCS_DISCONNECTED,
+        NCS_CONNECTING,
+        NCS_CONNECTED,
+        NCS_DISCONNECTING,
+        NCS_HARDWARE_NOT_PRESENT,
+        NCS_HARDWARE_DISABLED,
+        NCS_HARDWARE_MALFUNCTION,
+        NCS_MEDIA_DISCONNECTED,
+        NCS_AUTHENTICATING,
+        NCS_AUTHENTICATION_SUCCEEDED,
+        NCS_AUTHENTICATION_FAILED,
+        NCS_INVALID_ADDRESS,
+        NCS_CREDENTIALS_REQUIRED
+    } NETCON_STATUS;
+
+    typedef enum tagNETCON_TYPE
+    {
+        NCT_DIRECT_CONNECT,
+        NCT_INBOUND,
+        NCT_INTERNET,
+        NCT_LAN,
+        NCT_PHONE,
+        NCT_TUNNEL,
+        NCT_BRIDGE
+    } NETCON_TYPE;
+
+    typedef enum tagNETCON_MEDIATYPE
+    {
+        NCM_NONE,
+        NCM_DIRECT,
+        NCM_ISDN,
+        NCM_LAN,
+        NCM_PHONE,
+        NCM_TUNNEL,
+        NCM_PPPOE,
+        NCM_BRIDGE,
+        NCM_SHAREDACCESSHOST_LAN,
+        NCM_SHAREDACCESSHOST_RAS
+    } NETCON_MEDIATYPE;
+
+    typedef struct tagNETCON_PROPERTIES
+    {
+        GUID              guidId;
+        [string] LPWSTR   pszwName;
+        [string] LPWSTR   pszwDeviceName;
+        NETCON_STATUS     Status;
+        NETCON_MEDIATYPE  MediaType;
+        DWORD             dwCharacter;
+        CLSID             clsidThisObject;
+        CLSID             clsidUiObject;
+    } NETCON_PROPERTIES;
+
+    HRESULT Connect();
+
+    HRESULT Disconnect();
+
+    HRESULT Delete();
+
+    HRESULT Duplicate(
+            [in, string] LPCWSTR pszwDuplicateName,
+            [out]        INetConnection **ppCon);
+
+    HRESULT GetProperties([out] NETCON_PROPERTIES **ppProps);
+
+    HRESULT GetUiObjectClassId([out, ref] CLSID *pclsid);
+
+    HRESULT Rename([in, string] LPCWSTR pszwNewName);
+}
+
+[
+    object,
+    uuid(24b7e9b5-e38f-4685-851b-00892cf5f940),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetSharingPortMappingProps : IDispatch
+{
+    [propget, id(1)]
+    HRESULT Name([out, retval] BSTR *pbstrName);
+
+    [propget, id(2)]
+    HRESULT IPProtocol([out, retval] UCHAR *pucIPProt);
+
+    [propget, id(3)]
+    HRESULT ExternalPort([out, retval] long *pusPort);
+
+    [propget, id(4)]
+    HRESULT InternalPort([out, retval] long *pusPort);
+
+    [propget, id(5)]
+    HRESULT Options([out, retval] long *pdwOptions);
+
+    [propget, id(6)]
+    HRESULT TargetName([out, retval] BSTR *pbstrTargetName);
+
+    [propget, id(7)]
+    HRESULT TargetIPAddress([out, retval] BSTR *pbstrTargetIPAddress);
+
+    [propget, id(8)]
+    HRESULT Enabled([out, retval] VARIANT_BOOL *pbool);
+}
+
+[
+    object,
+    uuid(c08956b1-1cd3-11d1-b1c5-00805fc1270e),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetSharingPortMapping : IDispatch
+{
+    [id(1)]
+    HRESULT Disable();
+
+    [id(2)]
+    HRESULT Enable();
+
+    [propget, id(3)]
+    HRESULT Properties([out, retval] INetSharingPortMappingProps **ppNSPMP);
+
+    [id(4)]
+    HRESULT Delete();
+};
+[
+    object,
+    uuid(02e4a2de-da20-4e34-89c8-ac22275a010b),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetSharingPortMappingCollection : IDispatch
+{
+    [propget, id(DISPID_NEWENUM), restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **pVal);
+
+    [propget, id(1)]
+    HRESULT Count([out, retval] long *pVal);
+}
+
+[
+    object,
+    uuid(c08956b6-1cd3-11d1-b1c5-00805fc1270e),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetSharingConfiguration : IDispatch
+{
+    typedef enum tagSHARINGCONNECTIONTYPE {
+        ICSSHARINGTYPE_PUBLIC,
+        ICSSHARINGTYPE_PRIVATE
+    } SHARINGCONNECTIONTYPE, *LPSHARINGCONNECTIONTYPE;
+
+    typedef enum tagSHARINGCONNECTION_ENUM_FLAGS {
+            ICSSC_DEFAULT,
+            ICSSC_ENABLED
+    } SHARINGCONNECTION_ENUM_FLAGS;
+
+    typedef enum tagICS_TARGETTYPE {
+            ICSTT_NAME,
+            ICSTT_IPADDRESS
+    }ICS_TARGETTYPE;
+
+    [propget, id(1)]
+    HRESULT SharingEnabled([out, retval] VARIANT_BOOL *pbEnabled);
+
+    [propget, id(2)]
+    HRESULT SharingConnectionType([out, retval] SHARINGCONNECTIONTYPE *pType);
+
+    [id(3)]
+    HRESULT DisableSharing();
+
+    [id(4)]
+    HRESULT EnableSharing([in] SHARINGCONNECTIONTYPE Type);
+
+    [propget, id(5)]
+    HRESULT InternetFirewallEnabled([out, retval] VARIANT_BOOL *pbEnabled);
+
+    [id(6)]
+    HRESULT DisableInternetFirewall();
+
+    [id(7)]
+    HRESULT EnableInternetFirewall();
+
+    [propget, id(8)]
+    HRESULT EnumPortMappings(
+        [in] SHARINGCONNECTION_ENUM_FLAGS Flags,
+        [out, retval] INetSharingPortMappingCollection **ppColl);
+
+    [id(9)]
+    HRESULT AddPortMapping(
+            [in] BSTR bstrName,
+            [in] UCHAR ucIPProtocol,
+            [in] USHORT usExternalPort,
+            [in] USHORT usInternalPort,
+            [in] DWORD dwOptions,
+            [in] BSTR bstrTargetNameOrIPAddress,
+            [in] ICS_TARGETTYPE eTargetType,
+            [out, retval] INetSharingPortMapping **ppMapping );
+
+    [id(10)]
+    HRESULT RemovePortMapping([in] INetSharingPortMapping *pMapping);
+}
+
+[
+    object,
+    uuid(c08956b4-1cd3-11d1-b1c5-00805fc1270e),
+    pointer_default(unique)
+]
+interface IEnumNetSharingPublicConnection : IUnknown
+{
+    HRESULT Next(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pceltFetched)] VARIANT *rgVar,
+            [out] ULONG *pceltFetched);
+
+    HRESULT Skip([in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone([out] IEnumNetSharingPublicConnection **ppenum);
+}
+
+[
+    object,
+    uuid(c08956b5-1cd3-11d1-b1c5-00805fc1270e),
+    pointer_default(unique)
+]
+interface IEnumNetSharingPrivateConnection : IUnknown
+{
+    HRESULT Next(
+            [in] ULONG celt,
+            [out, size_is(celt), length_is(*pCeltFetched)] VARIANT *rgVar,
+            [out] ULONG *pCeltFetched);
+
+    HRESULT Skip([in] ULONG celt);
+
+    HRESULT Reset();
+
+    HRESULT Clone([out] IEnumNetSharingPrivateConnection **ppenum);
+}
+
+[
+    object,
+    uuid(f4277c95-ce5b-463d-8167-5662d9bcaa72),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetConnectionProps : IDispatch
+{
+    [propget, id(1)]
+    HRESULT Guid([out, retval] BSTR *pbstrGuid);
+
+    [propget, id(2)]
+    HRESULT Name([out, retval] BSTR *pbstrName);
+
+    [propget, id(3)]
+    HRESULT DeviceName([out, retval] BSTR *pbstrDeviceName);
+
+    [propget, id(4)]
+    HRESULT Status([out, retval] NETCON_STATUS *pStatus);
+
+    [propget, id(5)]
+    HRESULT MediaType([out, retval] NETCON_MEDIATYPE *pMediaType);
+
+    [propget, id(6)]
+    HRESULT Characteristics([out, retval] DWORD *pdwFlags);
+}
+
+[
+    object,
+    uuid(7d7a6355-f372-4971-a149-bfc927be762a),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetSharingPublicConnectionCollection : IDispatch
+{
+    [propget, id(DISPID_NEWENUM), restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **pVal);
+
+    [propget, id(1)]
+    HRESULT Count([out, retval] long *pVal);
+}
+
+[
+    object,
+    uuid(33c4643c-7811-46fa-a89a-768597bd7223),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+ ]
+interface INetSharingEveryConnectionCollection : IDispatch
+{
+    [propget, id(DISPID_NEWENUM), restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **pVal);
+
+    [propget, id(1)]
+    HRESULT Count([out, retval] long *pVal);
+}
+
+[
+    object,
+    uuid(38ae69e0-4409-402a-a2cb-e965c727f840),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+ ]
+interface INetSharingPrivateConnectionCollection : IDispatch
+{
+    [propget, id(DISPID_NEWENUM), restricted]
+    HRESULT _NewEnum([out, retval] IUnknown **pVal);
+
+    [propget, id(1)]
+    HRESULT Count([out, retval] long *pVal);
+}
+
+[
+    object,
+    uuid(c08956b7-1cd3-11d1-b1c5-00805fc1270e),
+    oleautomation,
+    dual,
+    pointer_default(unique)
+]
+interface INetSharingManager : IDispatch
+{
+    [propget, id(1)]
+    HRESULT SharingInstalled([out, retval] VARIANT_BOOL *pbInstalled);
+
+    [propget, id(2)]
+    HRESULT EnumPublicConnections(
+            [in]  SHARINGCONNECTION_ENUM_FLAGS Flags,
+            [out, retval] INetSharingPublicConnectionCollection **ppColl);
+
+    [propget, id(3)]
+    HRESULT EnumPrivateConnections(
+            [in]  SHARINGCONNECTION_ENUM_FLAGS Flags,
+            [out, retval] INetSharingPrivateConnectionCollection **ppColl);
+
+    [propget, id(6)]
+    HRESULT INetSharingConfigurationForINetConnection(
+            [in] INetConnection *pNetConnection,
+            [out, retval] INetSharingConfiguration **ppNetSharingConfiguration);
+
+    [propget, id(7)]
+    HRESULT EnumEveryConnection([out, retval] INetSharingEveryConnectionCollection **ppColl);
+
+    [propget, id(8)]
+    HRESULT NetConnectionProps(
+            [in] INetConnection *pNetConnection,
+            [out, retval] INetConnectionProps **ppProps);
+}

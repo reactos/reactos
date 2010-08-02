@@ -12,216 +12,97 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 
-BOOLEAN InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer)
+static PCSTR CopyString(PCSTR Source)
 {
-	ULONG		Idx;
-	ULONG		CurrentOperatingSystemIndex;
-	CHAR	SettingName[260];
-	CHAR	SettingValue[260];
-	ULONG		OperatingSystemCount;
-	ULONG_PTR	SectionId;
-	ULONG_PTR	OperatingSystemSectionId;
-	ULONG		SectionSettingCount;
-	PCHAR	*OperatingSystemSectionNames;
-	PCHAR	*OperatingSystemDisplayNames;
+	PSTR Dest;
+
+	if (!Source)
+		return NULL;
+	Dest = MmHeapAlloc(strlen(Source) + 1);
+	if (Dest)
+	{
+		strcpy(Dest, Source);
+	}
+
+	return Dest;
+}
+
+OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer)
+{
+	ULONG Idx;
+	CHAR SettingName[260];
+	CHAR SettingValue[260];
+	ULONG_PTR SectionId;
+	PCHAR TitleStart, TitleEnd;
+	PCSTR OsLoadOptions;
+	ULONG Count;
+	OperatingSystemItem* Items;
 
 	//
 	// Open the [FreeLoader] section
 	//
 	if (!IniOpenSection("Operating Systems", &SectionId))
 	{
-		UiMessageBox("Section [Operating Systems] not found in freeldr.ini.");
-		return FALSE;
+		return NULL;
 	}
 
-	SectionSettingCount = IniGetNumSectionItems(SectionId);
-	OperatingSystemCount = CountOperatingSystems(SectionId);
+	//
+	// Count number of operating systems in the section
+	//
+	Count = IniGetNumSectionItems(SectionId);
 
 	//
 	// Allocate memory to hold operating system lists
 	//
-	if (!AllocateListMemory(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, OperatingSystemCount))
+	Items = MmHeapAlloc(Count * sizeof(OperatingSystemItem));
+	if (!Items)
 	{
-		return FALSE;
+		return NULL;
 	}
 
 	//
 	// Now loop through and read the operating system section and display names
 	//
-	CurrentOperatingSystemIndex = 0;
-	for (Idx=0; Idx<SectionSettingCount; Idx++)
+	for (Idx = 0; Idx < Count; Idx++)
 	{
 		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
 
-		if (IniOpenSection(SettingName, &OperatingSystemSectionId))
+		//
+		// Search start and end of the title
+		//
+		OsLoadOptions = NULL;
+		TitleStart = SettingValue;
+		while (*TitleStart == ' ' || *TitleStart == '"')
+			TitleStart++;
+		TitleEnd = TitleStart;
+		if (*TitleEnd != ANSI_NULL)
+			TitleEnd++;
+		while (*TitleEnd != ANSI_NULL && *TitleEnd != '"')
+			TitleEnd++;
+		if (*TitleEnd != ANSI_NULL)
 		{
-			// Copy the section name
-			strcpy(OperatingSystemSectionNames[CurrentOperatingSystemIndex], SettingName);
-
-			// Copy the display name
-			RemoveQuotes(SettingValue);
-			strcpy(OperatingSystemDisplayNames[CurrentOperatingSystemIndex], SettingValue);
-
-			CurrentOperatingSystemIndex++;
+			*TitleEnd = ANSI_NULL;
+			OsLoadOptions = TitleEnd + 1;
 		}
-	}
-
-	*OperatingSystemCountPointer = OperatingSystemCount;
-	*SectionNamesPointer = (PCSTR*)OperatingSystemSectionNames;
-	*DisplayNamesPointer = (PCSTR*)OperatingSystemDisplayNames;
-
-	return TRUE;
-}
-
-ULONG CountOperatingSystems(ULONG SectionId)
-{
-	ULONG		Idx;
-	CHAR	SettingName[260];
-	CHAR	SettingValue[260];
-	ULONG		OperatingSystemCount = 0;
-	ULONG		SectionSettingCount;
-
-	//
-	// Loop through and count the operating systems
-	//
-	SectionSettingCount = IniGetNumSectionItems(SectionId);
-	for (Idx=0; Idx<SectionSettingCount; Idx++)
-	{
-		IniReadSettingByNumber(SectionId, Idx, SettingName, sizeof(SettingName), SettingValue, sizeof(SettingValue));
-
-		if (IniOpenSection(SettingName, NULL))
-		{
-			OperatingSystemCount++;
-		}
-		else
-		{
-			sprintf(SettingName, "Operating System '%s' is listed in\nfreeldr.ini but doesn't have a [section].", SettingValue);
-			UiMessageBox(SettingName);
-		}
-	}
-
-	return OperatingSystemCount;
-}
-
-BOOLEAN AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount)
-{
-	ULONG		Idx;
-	PCHAR	*OperatingSystemSectionNames = NULL;
-	PCHAR	*OperatingSystemDisplayNames = NULL;
-
-	//
-	// Allocate memory to hold operating system list arrays
-	//
-	OperatingSystemSectionNames = MmHeapAlloc( sizeof(PCHAR) * OperatingSystemCount);
-	OperatingSystemDisplayNames = MmHeapAlloc( sizeof(PCHAR) * OperatingSystemCount);
-
-	//
-	// If either allocation failed then return FALSE
-	//
-	if ( (OperatingSystemSectionNames == NULL) || (OperatingSystemDisplayNames == NULL) )
-	{
-		if (OperatingSystemSectionNames != NULL)
-		{
-			MmHeapFree(OperatingSystemSectionNames);
-		}
-
-		if (OperatingSystemDisplayNames != NULL)
-		{
-			MmHeapFree(OperatingSystemDisplayNames);
-		}
-
-		return FALSE;
-	}
-
-	//
-	// Clear our newly allocated memory
-	//
-	memset(OperatingSystemSectionNames, 0, sizeof(PCHAR) * OperatingSystemCount);
-	memset(OperatingSystemDisplayNames, 0, sizeof(PCHAR) * OperatingSystemCount);
-
-	//
-	// Loop through each array element and allocate it's string memory
-	//
-	for (Idx=0; Idx<OperatingSystemCount; Idx++)
-	{
-		OperatingSystemSectionNames[Idx] = MmHeapAlloc(80);
-		OperatingSystemDisplayNames[Idx] = MmHeapAlloc(80);
 
 		//
-		// If it failed then jump to the cleanup code
+		// Copy the system partition, identifier and options
 		//
-		if ( (OperatingSystemSectionNames[Idx] == NULL) || (OperatingSystemDisplayNames[Idx] == NULL))
-		{
-			goto AllocateListMemoryFailed;
-		}
-	}
-
-	*SectionNamesPointer = OperatingSystemSectionNames;
-	*DisplayNamesPointer = OperatingSystemDisplayNames;
-
-	return TRUE;
-
-AllocateListMemoryFailed:
-
-	//
-	// Loop through each array element and free it's string memory
-	//
-	for (Idx=0; Idx<OperatingSystemCount; Idx++)
-	{
-		if (OperatingSystemSectionNames[Idx] != NULL)
-		{
-			MmHeapFree(OperatingSystemSectionNames[Idx]);
-		}
-
-		if (OperatingSystemDisplayNames[Idx] != NULL)
-		{
-			MmHeapFree(OperatingSystemDisplayNames[Idx]);
-		}
+		Items[Idx].SystemPartition = CopyString(SettingName);
+		Items[Idx].LoadIdentifier = CopyString(TitleStart);
+		Items[Idx].OsLoadOptions = CopyString(OsLoadOptions);
 	}
 
 	//
-	// Free operating system list arrays
+	// Return success
 	//
-	MmHeapFree(OperatingSystemSectionNames);
-	MmHeapFree(OperatingSystemDisplayNames);
-
-	return FALSE;
-}
-
-BOOLEAN RemoveQuotes(PCHAR QuotedString)
-{
-	CHAR	TempString[200];
-
-	//
-	// If this string is not quoted then return FALSE
-	//
-	if ((QuotedString[0] != '\"') && (QuotedString[strlen(QuotedString)-1] != '\"'))
-	{
-		return FALSE;
-	}
-
-	if (QuotedString[0] == '\"')
-	{
-		strcpy(TempString, (QuotedString + 1));
-	}
-	else
-	{
-		strcpy(TempString, QuotedString);
-	}
-
-	if (TempString[strlen(TempString)-1] == '\"')
-	{
-		TempString[strlen(TempString)-1] = '\0';
-	}
-
-	strcpy(QuotedString, TempString);
-
-	return TRUE;
+	*OperatingSystemCountPointer = Count;
+	return Items;
 }

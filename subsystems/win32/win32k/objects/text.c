@@ -8,12 +8,130 @@
       
 /** Includes ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/** Functions ******************************************************************/
+/** Functions *****************************************************************/
+
+/*
+   flOpts :
+   GetTextExtentPoint32W = 0
+   GetTextExtentPointW   = 1
+ */
+BOOL
+FASTCALL
+GreGetTextExtentW(
+    HDC hDC,
+    LPWSTR lpwsz,
+    INT cwc,
+    LPSIZE psize,
+    UINT flOpts)
+{
+  PDC pdc;
+  PDC_ATTR pdcattr;
+  BOOL Result;
+  PTEXTOBJ TextObj;
+
+  if (!cwc)
+  {
+     psize->cx = 0;
+     psize->cy = 0;
+     return TRUE;
+  }
+
+  pdc = DC_LockDc(hDC);
+  if (!pdc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+
+  pdcattr = pdc->pdcattr;
+
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
+  if ( TextObj )
+  {
+     Result = TextIntGetTextExtentPoint( pdc,
+                                         TextObj,
+                                         lpwsz,
+                                         cwc,
+                                         0,
+                                         NULL,
+                                         0,
+                                         psize);
+     TEXTOBJ_UnlockText(TextObj);
+  }
+  else
+     Result = FALSE;
+
+  DC_UnlockDc(pdc);
+  return Result;
+} 
+
+
+/*
+   fl :
+   GetTextExtentExPointW = 0 and everything else that uses this.
+   GetTextExtentExPointI = 1
+ */
+BOOL
+FASTCALL
+GreGetTextExtentExW(
+    HDC hDC,
+    LPWSTR String,
+    ULONG Count,
+    ULONG MaxExtent,
+    PULONG Fit,
+    PULONG Dx,
+    LPSIZE pSize,
+    FLONG fl)
+{
+  PDC pdc;
+  PDC_ATTR pdcattr;
+  BOOL Result;
+  PTEXTOBJ TextObj;
+
+  if ( (!String && Count ) || !pSize )
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  if ( !Count )
+  {
+     if ( Fit ) Fit = 0;  
+     return TRUE;
+  }
+      
+  pdc = DC_LockDc(hDC);
+  if (NULL == pdc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+  pdcattr = pdc->pdcattr;
+
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
+  if ( TextObj )
+  {
+     Result = TextIntGetTextExtentPoint( pdc,
+                                         TextObj,
+                                         String,
+                                         Count,
+                                         MaxExtent,
+                                         (LPINT)Fit,
+                                         (LPINT)Dx,
+                                         pSize);
+     TEXTOBJ_UnlockText(TextObj);
+  }
+  else
+     Result = FALSE;
+
+  DC_UnlockDc(pdc);
+  return Result;
+}
 
 DWORD
 APIENTRY
@@ -69,6 +187,8 @@ NtGdiGetRasterizerCaps(
            SetLastNtError(Status);
            return FALSE;
         }
+
+        return TRUE;
      }
   }
   return FALSE;
@@ -126,6 +246,12 @@ NtGdiGetTextCharsetInfo(
   return Ret;
 }
 
+
+/*
+   fl :
+   GetTextExtentExPointW = 0 and everything else that uses this.
+   GetTextExtentExPointI = 1
+ */
 W32KAPI
 BOOL
 APIENTRY
@@ -214,8 +340,14 @@ NtGdiGetTextExtentExW(
   TextObj = RealizeFontInit(pdcattr->hlfntNew);
   if ( TextObj )
   {
-    Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
-                                     NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
+    Result = TextIntGetTextExtentPoint( dc,
+                                        TextObj,
+                                        String,
+                                        Count,
+                                        MaxExtent,
+                                        NULL == UnsafeFit ? NULL : &Fit,
+                                        Dx,
+                                       &Size);
     TEXTOBJ_UnlockText(TextObj);
   }
   else
@@ -274,6 +406,12 @@ NtGdiGetTextExtentExW(
   return TRUE;
 }
 
+
+/*
+   flOpts :
+   GetTextExtentPoint32W = 0
+   GetTextExtentPointW   = 1
+ */
 BOOL
 APIENTRY
 NtGdiGetTextExtent(HDC hdc,
@@ -326,6 +464,7 @@ NtGdiGetTextFaceW(
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
+   INT fLen, ret;
 
    /* FIXME: Handle bAliasName */
 
@@ -341,16 +480,32 @@ NtGdiGetTextFaceW(
 
    TextObj = RealizeFontInit(hFont);
    ASSERT(TextObj != NULL);
-   Count = min(Count, wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName));
-   Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
-   TEXTOBJ_UnlockText(TextObj);
-   if (!NT_SUCCESS(Status))
+   fLen = wcslen(TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName) + 1;
+
+   if (FaceName != NULL)
    {
-      SetLastNtError(Status);
-      return 0;
+      Count = min(Count, fLen);
+      Status = MmCopyToCaller(FaceName, TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfFaceName, Count * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+      {
+         TEXTOBJ_UnlockText(TextObj);
+         SetLastNtError(Status);
+         return 0;
+      }
+      /* Terminate if we copied only part of the font name */
+      if (Count > 0 && Count < fLen)
+      {
+         FaceName[Count - 1] = '\0';
+      }
+      ret = Count;
+   }
+   else
+   {
+      ret = fLen; 
    }
 
-   return Count;
+   TEXTOBJ_UnlockText(TextObj);
+   return ret;
 }
 
 W32KAPI

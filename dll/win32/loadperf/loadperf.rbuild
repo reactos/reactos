@@ -7,7 +7,6 @@
 	<define name="__WINESRC__" />
 	<file>loadperf_main.c</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 

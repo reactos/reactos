@@ -1,23 +1,20 @@
-<module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" unicode="yes" crt="dll" allowwarnings="true">
+<module name="user32" type="win32dll" baseaddress="${BASEADDRESS_USER32}" installbase="system32" installname="user32.dll" unicode="yes" crt="dll">
 	<importlibrary definition="user32.pspec" />
 	<include base="user32">.</include>
 	<include base="user32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
-	<define name="_DISABLE_TIDENTS" />
+	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>imm32</library>
 	<library>win32ksys</library>
 	<library>pseh</library>
 	<library>ntdll</library>
-
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
+	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<directory name="include">
 		<pch>user32.h</pch>
 	</directory>
-	-->
 	<directory name="controls">
 		<file>button.c</file>
 		<file>combo.c</file>
@@ -44,24 +41,23 @@
 		<file>rtlstr.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
+		<file>usrapihk.c</file>
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
 		<file>wsprintf.c</file>
 	</directory>
 	<directory name="windows">
 		<file>accel.c</file>
-		<file>bitmap.c</file>
 		<file>caret.c</file>
 		<file>class.c</file>
 		<file>clipboard.c</file>
-		<file>cursor.c</file>
+		<file>cursoricon.c</file>
 		<file>dc.c</file>
 		<file>defwnd.c</file>
 		<file>dialog.c</file>
 		<file>draw.c</file>
 		<file>font.c</file>
 		<file>hook.c</file>
-		<file>icon.c</file>
 		<file>input.c</file>
 		<file>mdi.c</file>
 		<file>menu.c</file>
@@ -77,6 +73,4 @@
 		<file>winpos.c</file>
 	</directory>
 	<file>user32.rc</file>
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

@@ -319,6 +319,25 @@ LPWSTR WINAPI StrChrIW(LPCWSTR lpszStr, WCHAR ch)
 }
 
 /*************************************************************************
+ * StrChrNW	[SHLWAPI.@]
+ */
+LPWSTR WINAPI StrChrNW(LPCWSTR lpszStr, WCHAR ch, UINT cchMax)
+{
+  TRACE("(%s(%i),%i)\n", debugstr_wn(lpszStr,cchMax), cchMax, ch);
+
+  if (lpszStr)
+  {
+    while (*lpszStr && cchMax-- > 0)
+    {
+      if (*lpszStr == ch)
+        return (LPWSTR)lpszStr;
+      lpszStr++;
+    }
+  }
+  return NULL;
+}
+
+/*************************************************************************
  * StrCmpIW	[SHLWAPI.@]
  *
  * Compare two strings, ignoring case.
@@ -488,22 +507,32 @@ LPWSTR WINAPI StrCpyW(LPWSTR lpszStr, LPCWSTR lpszSrc)
  * Copy a string to another string, up to a maximum number of characters.
  *
  * PARAMS
- *  lpszStr  [O] Destination string
- *  lpszSrc  [I] Source string
- *  iLen     [I] Maximum number of chars to copy
+ *  dst    [O] Destination string
+ *  src    [I] Source string
+ *  count  [I] Maximum number of chars to copy
  *
  * RETURNS
- *  lpszStr.
+ *  dst.
  */
-LPWSTR WINAPI StrCpyNW(LPWSTR lpszStr, LPCWSTR lpszSrc, int iLen)
+LPWSTR WINAPI StrCpyNW(LPWSTR dst, LPCWSTR src, int count)
 {
-  TRACE("(%p,%s,%i)\n", lpszStr, debugstr_w(lpszSrc), iLen);
+  LPWSTR d = dst;
+  LPCWSTR s = src;
 
-  lstrcpynW(lpszStr, lpszSrc, iLen);
-  return lpszStr;
+  TRACE("(%p,%s,%i)\n", dst, debugstr_w(src), count);
+
+  if (s)
+  {
+    while ((count > 1) && *s)
+    {
+      count--;
+      *d++ = *s++;
+    }
+  }
+  if (count) *d = 0;
+
+  return dst;
 }
-
-
 
 /*************************************************************************
  * SHLWAPI_StrStrHelperA
@@ -555,7 +584,9 @@ LPSTR WINAPI StrStrA(LPCSTR lpszStr, LPCSTR lpszSearch)
  */
 LPWSTR WINAPI StrStrW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
 {
-    if (!lpszStr || !lpszSearch) return NULL;
+    TRACE("(%s, %s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
+
+    if (!lpszStr || !lpszSearch || !*lpszSearch) return NULL;
     return strstrW( lpszStr, lpszSearch );
 }
 
@@ -676,6 +707,75 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
     lpszStr++;
   }
   return NULL;
+}
+
+/*************************************************************************
+ * StrStrNW	[SHLWAPI.@]
+ *
+ * Find a substring within a string up to a given number of initial characters.
+ *
+ * PARAMS
+ *  lpFirst    [I] String to search in
+ *  lpSrch     [I] String to look for
+ *  cchMax     [I] Maximum number of initial search characters
+ *
+ * RETURNS
+ *  The start of lpFirst within lpSrch, or NULL if not found.
+ */
+LPWSTR WINAPI StrStrNW(LPCWSTR lpFirst, LPCWSTR lpSrch, UINT cchMax)
+{
+    UINT i;
+    int len;
+
+    TRACE("(%s, %s, %u)\n", debugstr_w(lpFirst), debugstr_w(lpSrch), cchMax);
+
+    if (!lpFirst || !lpSrch || !*lpSrch || !cchMax)
+        return NULL;
+
+    len = strlenW(lpSrch);
+
+    for (i = cchMax; *lpFirst && (i > 0); i--, lpFirst++)
+    {
+        if (!strncmpW(lpFirst, lpSrch, len))
+            return (LPWSTR)lpFirst;
+    }
+
+    return NULL;
+}
+
+/*************************************************************************
+ * StrStrNIW	[SHLWAPI.@]
+ *
+ * Find a substring within a string up to a given number of initial characters,
+ * ignoring case.
+ *
+ * PARAMS
+ *  lpFirst    [I] String to search in
+ *  lpSrch     [I] String to look for
+ *  cchMax     [I] Maximum number of initial search characters
+ *
+ * RETURNS
+ *  The start of lpFirst within lpSrch, or NULL if not found.
+ */
+LPWSTR WINAPI StrStrNIW(LPCWSTR lpFirst, LPCWSTR lpSrch, UINT cchMax)
+{
+    UINT i;
+    int len;
+
+    TRACE("(%s, %s, %u)\n", debugstr_w(lpFirst), debugstr_w(lpSrch), cchMax);
+
+    if (!lpFirst || !lpSrch || !*lpSrch || !cchMax)
+        return NULL;
+
+    len = strlenW(lpSrch);
+
+    for (i = cchMax; *lpFirst && (i > 0); i--, lpFirst++)
+    {
+        if (!strncmpiW(lpFirst, lpSrch, len))
+            return (LPWSTR)lpFirst;
+    }
+
+    return NULL;
 }
 
 /*************************************************************************
@@ -1386,7 +1486,7 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
 	    break;
 
 	  case STRRET_CSTR:
-              if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ) && len)
+              if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ))
                   dest[len-1] = 0;
 	    break;
 
@@ -1394,7 +1494,7 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
 	    if (pidl)
 	    {
               if (!MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->u.uOffset, -1,
-                                        dest, len ) && len)
+                                        dest, len ))
                   dest[len-1] = 0;
 	    }
 	    break;
@@ -2477,20 +2577,24 @@ DWORD WINAPI SHAnsiToUnicode(LPCSTR lpSrcStr, LPWSTR lpDstStr, int iLen)
  *  CodePage [I] Code page to use for the conversion
  *  lpSrcStr [I] Source Unicode string to convert
  *  lpDstStr [O] Destination for converted Ascii string
- *  lpiLen   [I/O] Input length of lpDstStr/destination for length of lpDstStr
+ *  dstlen   [I] Length of buffer at lpDstStr
  *
  * RETURNS
- *  Success: The number of characters that result from the conversion.
- *  Failure: 0.
+ *  Success: The length in bytes of the result at lpDstStr (including the terminator)
+ *  Failure: When using CP_UTF8, CP_UTF7 or 0xc350 as codePage, 0 is returned and
+ *           the result is not nul-terminated.
+ *           When using a different codepage, the length in bytes of the truncated
+ *           result at lpDstStr (including the terminator) is returned and
+ *           lpDstStr is always nul-terminated.
+ *
  */
-INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
-                             LPINT lpiLen)
+DWORD WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr, int dstlen)
 {
   static const WCHAR emptyW[] = { '\0' };
   int len , reqLen;
   LPSTR mem;
 
-  if (!lpDstStr || !lpiLen)
+  if (!lpDstStr || !dstlen)
     return 0;
 
   if (!lpSrcStr)
@@ -2509,41 +2613,41 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
   case CP_UTF8:
     {
       DWORD dwMode = 0;
-      INT nWideCharCount = len - 1;
+      INT lenW = len - 1;
+      INT needed = dstlen - 1;
+      HRESULT hr;
 
-      if (ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr,
-                                        &nWideCharCount, lpDstStr,
-                                        lpiLen) == S_OK)
+      /* try the user supplied buffer first */
+      hr = ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &lenW, lpDstStr, &needed);
+      if (hr == S_OK)
+      {
+        lpDstStr[needed] = '\0';
+        return needed + 1;
+      }
+
+      /* user buffer too small. exclude termination and copy as much as possible */
+      lenW = len;
+      hr = ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &lenW, NULL, &needed);
+      needed++;
+      mem = HeapAlloc(GetProcessHeap(), 0, needed);
+      if (!mem)
         return 0;
 
-      if (nWideCharCount < len - 1)
+      hr = ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &len, mem, &needed);
+      if (hr == S_OK)
       {
-        mem = HeapAlloc(GetProcessHeap(), 0, *lpiLen);
-        if (!mem)
-          return 0;
-
-        *lpiLen = 0;
-
-        if (ConvertINetUnicodeToMultiByte(&dwMode, CodePage, lpSrcStr, &len,
-                                          mem, lpiLen) != S_OK)
-        {
-          SHTruncateString(mem, *lpiLen);
-          lstrcpynA(lpDstStr, mem, *lpiLen + 1);
-          HeapFree(GetProcessHeap(), 0, mem);
-          return *lpiLen + 1;
-        }
-        HeapFree(GetProcessHeap(), 0, mem);
-        return *lpiLen;
+          reqLen = SHTruncateString(mem, dstlen);
+          if (reqLen > 0) memcpy(lpDstStr, mem, reqLen-1);
       }
-      lpDstStr[*lpiLen] = '\0';
-      return *lpiLen;
+      HeapFree(GetProcessHeap(), 0, mem);
+      return 0;
     }
   default:
     break;
   }
 
-  reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, lpDstStr,
-                               *lpiLen, NULL, NULL);
+  /* try the user supplied buffer first */
+  reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, lpDstStr, dstlen, NULL, NULL);
 
   if (!reqLen && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
   {
@@ -2556,12 +2660,12 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
         reqLen = WideCharToMultiByte(CodePage, 0, lpSrcStr, len, mem,
                                      reqLen, NULL, NULL);
 
-        reqLen = SHTruncateString(mem, *lpiLen);
+        reqLen = SHTruncateString(mem, dstlen -1);
         reqLen++;
 
-        lstrcpynA(lpDstStr, mem, *lpiLen);
-
+        lstrcpynA(lpDstStr, mem, reqLen);
         HeapFree(GetProcessHeap(), 0, mem);
+        lpDstStr[reqLen-1] = '\0';
       }
     }
   }
@@ -2586,9 +2690,7 @@ INT WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr,
  */
 INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT iLen)
 {
-    INT myint = iLen;
-
-    return SHUnicodeToAnsiCP(CP_ACP, lpSrcStr, lpDstStr, &myint);
+    return SHUnicodeToAnsiCP(CP_ACP, lpSrcStr, lpDstStr, iLen);
 }
 
 /*************************************************************************

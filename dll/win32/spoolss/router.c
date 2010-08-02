@@ -270,7 +270,7 @@ BOOL backend_load_all(void)
 
     EnterCriticalSection(&backend_cs);
 
-    /* if we failed before, dont try again */
+    /* if we failed before, don't try again */
     if (!failed && (used_backends == 0)) {
         pb = backend_load(localsplW, NULL, NULL);
 

@@ -128,7 +128,7 @@ BEGIN
 	LTEXT "バージョン " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "このReactOSのバージョンは次の方に公認されています:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "このReactOSのバージョンは次の方に登録されています:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -143,7 +143,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_SHELLFONT | WS_CHILD
 FONT 9, "MS UI Gothic"
 BEGIN
-	LTEXT "ReactOSは次の方々によってもたらされました:", IDC_STATIC, 0, 0, 180, 10
+	LTEXT "ReactOSは次の方々によって提供されています:", IDC_STATIC, 0, 0, 180, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -155,7 +155,7 @@ BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
 	LTEXT "実行するプログラム名、または開くフォルダや文書名、インターネット リソ\ース名を入力してください。", 12289, 36, 11, 182, 18
 	LTEXT "名前(&O):", 12305, 7, 39, 24, 10
-	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "キャンセル", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "参照(&B)...", 12288, 170, 63, 50, 14, WS_TABSTOP
@@ -220,7 +220,6 @@ BEGIN
 	AUTOCHECKBOX "隠しファイル(&H)", 14022, 126, 150, 50, 10
 END
 
-
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "全般"
@@ -271,32 +270,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "全般"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "種類:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "ファイルシステム:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "使用領域:", -1, 25, 90, 120, 10
-	LTEXT "", 14004, 110, 90, 120, 10
-	LTEXT "", 14005, 200, 90, 40, 10
+	LTEXT "", 14003, 110, 90, 120, 10
+	LTEXT "", 14004, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "空き領域:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14005, 110, 105, 120, 10
+	LTEXT "", 14006, 200, 105, 40, 10
 
 	LTEXT "容量:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14007, 110, 125, 120, 10
+	LTEXT "", 14008, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "ドライブ %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "ディスクのクリーンアップ", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "ドライブを圧縮してディスク領域を確保する", 14012, 15, 205, 180, 10, WS_DISABLED
+	LTEXT "ドライブ %s", 14009, 100, 170, 40, 10
+	PUSHBUTTON "ディスクのクリーンアップ", 14010, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "ドライブを圧縮してディスク領域を確保する", 14011, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "このディスクにインデックスを付けてファイル検索を速くする。", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
@@ -359,7 +358,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "開くプログラム"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
@@ -586,7 +585,7 @@ BEGIN
     LTEXT "ファイル名:", -1, 7, 14, 208, 10
     PUSHBUTTON      "参照...",IDC_BUTTON_PATH, 148, 24,67,14
     EDITTEXT        IDC_EDIT_PATH, 6, 24, 135, 15, ES_AUTOHSCROLL
-    LTEXT "Icons:", -1, 7, 47, 208, 10
+    LTEXT "アイコン:", -1, 7, 47, 208, 10
     LISTBOX         IDC_PICKICON_LIST,7,57,208,119,LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
     DEFPUSHBUTTON   "OK",IDOK, 107, 181,50, 14
     PUSHBUTTON      "キャンセル",IDCANCEL, 167, 181, 50, 14
@@ -634,12 +633,12 @@ BEGIN
 	IDS_SELECT                  "選択"
 	IDS_OPEN                    "開く"
 	IDS_CREATELINK              "ショートカットの作成(&L)"
-	IDS_COPY                    "コピー"
+	IDS_COPY                    "コピー(&C)"
 	IDS_DELETE                  "削除"
 	IDS_PROPERTIES              "プロパティ"
-	IDS_CUT                     "切り取り"
+	IDS_CUT                     "切り取り(&U)"
 	IDS_RESTORE                 "元に戻す"
-	IDS_FORMATDRIVE             "書式..."
+	IDS_FORMATDRIVE             "フォーマット..."
 	IDS_RENAME                  "名前の変更"
 	IDS_INSERT                  "挿入"
 
@@ -666,17 +665,19 @@ BEGIN
 	IDS_RESTART_PROMPT          "システムを再起動しますか?"
 	IDS_SHUTDOWN_TITLE          "シャットダウン"
 	IDS_SHUTDOWN_PROMPT         "シャットダウンしますか?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "スタート メニュー\\プログラム"
-	IDS_PERSONAL                "マイ ドキュメント"
-	IDS_FAVORITES               "お気に入り"
+	IDS_PERSONAL                "My Documents"
+	IDS_FAVORITES               "Favorites"
 	IDS_STARTUP                 "スタート メニュー\\プログラム\\スタートアップ"
 	IDS_RECENT                  "Recent"
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "スタート メニュー"
-	IDS_MYMUSIC                 "マイ ミュージック"
-	IDS_MYVIDEO                 "マイ ビデオ"
+	IDS_MYMUSIC                 "My Music"
+	IDS_MYVIDEO                 "My Videos"
 	IDS_DESKTOPDIRECTORY        "デスクトップ"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Templates"
@@ -687,13 +688,13 @@ BEGIN
 	IDS_COOKIES                 "Cookies"
 	IDS_HISTORY                 "History"
 	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "マイ ピクチャ"
+	IDS_MYPICTURES              "My Pictures"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "ドキュメント"
+	IDS_COMMON_DOCUMENTS        "Documents"
 	IDS_ADMINTOOLS              "スタート メニュー\\プログラム\\管理ツール"
-	IDS_COMMON_MUSIC            "ドキュメント\\マイ ミュージック"
-	IDS_COMMON_PICTURES         "ドキュメント\\マイ ピクチャ"
-	IDS_COMMON_VIDEO            "ドキュメント\\マイ ビデオ"
+	IDS_COMMON_MUSIC            "Documents\\My Music"
+	IDS_COMMON_PICTURES         "Documents\\My Pictures"
+	IDS_COMMON_VIDEO            "Documents\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 	IDS_NETWORKPLACE            "マイ ネットワーク"
 
@@ -706,11 +707,11 @@ BEGIN
 	IDS_OPEN_WITH               "プログラムから開く"
 	IDS_OPEN_WITH_CHOOSE        "プログラムの選択..."
 
-	IDS_SHELL_ABOUT_AUTHORS     "作者(&A)"
+	IDS_SHELL_ABOUT_AUTHORS     "制作者(&A)"
 	IDS_SHELL_ABOUT_BACK        "< 戻る(&B)"
-	FCIDM_SHVIEW_NEW 	    "新規作成"
-	FCIDM_SHVIEW_NEWFOLDER 	    "フォルダ(&F)"
-	FCIDM_SHVIEW_NEWLINK 	    "ショートカット(&L)"
+	FCIDM_SHVIEW_NEW            "新規作成"
+	FCIDM_SHVIEW_NEWFOLDER      "フォルダ(&F)"
+	FCIDM_SHVIEW_NEWLINK        "ショートカット(&L)"
 	IDS_FOLDER_OPTIONS          "フォルダ オプション"
 	IDS_RECYCLEBIN_LOCATION     "ごみ箱の場所"
 	IDS_RECYCLEBIN_DISKSPACE    "利用できる領域"
@@ -749,4 +750,6 @@ BEGIN
 	IDS_INSTALLNEWFONT          "新しいフォントのインストール..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "デフォルト アロケーション サイズ"
+	IDS_COPY_OF                 "コピー ～"
+    
 END

@@ -3,7 +3,6 @@
 <module name="sysdm" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_SYSDM}" installbase="system32" installname="sysdm.cpl" unicode="yes">
 	<importlibrary definition="sysdm.spec" />
 	<include base="sysdm">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>setupapi</library>
 	<library>user32</library>

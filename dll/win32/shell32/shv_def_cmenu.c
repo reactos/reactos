@@ -48,7 +48,7 @@ static LPIDefaultContextMenuImpl __inline impl_from_IContextMenu( IContextMenu2 
 }
 
 VOID INewItem_SetCurrentShellFolder(IShellFolder * psfParent); // HACK
-
+WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
 
 static
 HRESULT
@@ -277,7 +277,6 @@ SH_AddStaticEntryForFileClass(IDefaultContextMenuImpl * This, WCHAR * szExt)
            RegCloseKey(hKey);
         }
     }
-    RegCloseKey(hKey);
 }
 
 static
@@ -295,14 +294,14 @@ HasClipboardData()
       TRACE("pda=%p\n", pda);
 
       /* Set the FORMATETC structure*/
-      InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+      InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
       if(SUCCEEDED(IDataObject_GetData(pda,&formatetc,&medium)))
       {
           ret = TRUE;
+          ReleaseStgMedium(&medium);		  
       }
 
       IDataObject_Release(pda);
-      ReleaseStgMedium(&medium);
     }
 
     return ret;
@@ -1019,7 +1018,7 @@ DoPaste(
     if (OleGetClipboard(&pda) != S_OK)
         return E_FAIL;
 
-    InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+    InitFormatEtc(formatetc, RegisterClipboardFormatW(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
     hr = IDataObject_GetData(pda,&formatetc,&medium);
 
     if (FAILED(hr))
@@ -1052,7 +1051,12 @@ DoPaste(
         return E_FAIL;
     }
 
-    if (FAILED(IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfFrom)))
+    if (_ILIsDesktop(pidl))
+    {
+        /* use desktop shellfolder */
+        psfFrom = psfDesktop;
+    }
+    else if (FAILED(IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfFrom)))
     {
         ERR("no IShellFolder\n");
 
@@ -1072,9 +1076,31 @@ DoPaste(
     }
     else
     {
-        /* target folder is desktop because cidl is zero */
-        psfTarget = psfDesktop;
-        hr = S_OK;
+        IPersistFolder2 *ppf2 = NULL;
+        LPITEMIDLIST pidl;
+
+        /* cidl is zero due to explorer view */
+        hr = IShellFolder_QueryInterface (This->dcm.psf, &IID_IPersistFolder2, (LPVOID *) &ppf2);
+        if (SUCCEEDED(hr))
+        {
+            hr = IPersistFolder2_GetCurFolder (ppf2, &pidl);
+            IPersistFolder2_Release(ppf2);
+            if (SUCCEEDED(hr))
+            {
+                if (_ILIsDesktop(pidl))
+                {
+                    /* use desktop shellfolder */
+                    psfTarget = psfDesktop;
+                }
+                else
+                {
+                    /* retrieve target desktop folder */
+                    hr = IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfTarget);
+                }
+                TRACE("psfTarget %x %p, Desktop %u\n", hr, psfTarget, _ILIsDesktop(pidl));
+                ILFree(pidl);
+            }
+        }
     }
 
     if (FAILED(hr))
@@ -1133,6 +1159,7 @@ DoPaste(
     _ILFreeaPidl(apidl, lpcida->cidl);
     ReleaseStgMedium(&medium);
     IDataObject_Release(pda);
+    TRACE("CP result %x\n",hr);
     return S_OK;
 }
 
@@ -1270,11 +1297,11 @@ DoDelete(
     HRESULT hr;
     STRRET strTemp;
     WCHAR szPath[MAX_PATH];
+    LPWSTR wszPath, wszPos;
     SHFILEOPSTRUCTW op;
     int ret;
     LPSHELLBROWSER lpSB;
     HWND hwnd;
-
 
     hr = IShellFolder2_GetDisplayNameOf(This->dcm.psf, This->dcm.apidl[0], SHGDN_FORPARSING, &strTemp);
     if(hr != S_OK)
@@ -1289,20 +1316,26 @@ DoDelete(
         ERR("StrRetToBufW failed with %x\n", hr);
         return hr;
     }
-    /* FIXME
-     * implement deletion with multiple files
-     */
+
+    /* Only keep the base path */
+    wszPos = strrchrW(szPath, '\\');
+    if (wszPos != NULL)
+    {
+        *(wszPos + 1) = '\0';
+    }
+
+    wszPath = build_paths_list(szPath, This->dcm.cidl, This->dcm.apidl);
 
     ZeroMemory(&op, sizeof(op));
     op.hwnd = GetActiveWindow();
     op.wFunc = FO_DELETE;
-    op.pFrom = szPath;
+    op.pFrom = wszPath;
     op.fFlags = FOF_ALLOWUNDO;
     ret = SHFileOperationW(&op);
 
     if (ret)
     {
-        TRACE("SHFileOperation failed with %0x%x", GetLastError());
+        ERR("SHFileOperation failed with 0x%x for %s\n", GetLastError(), debugstr_w(wszPath));
         return S_OK;
     }
 
@@ -1321,6 +1354,7 @@ DoDelete(
     }
     NotifyShellViewWindow(lpcmi, TRUE);
 
+    HeapFree(GetProcessHeap(), 0, wszPath);
     return S_OK;
 
 }

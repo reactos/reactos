@@ -237,6 +237,8 @@ typedef struct tagMSIPATCHSEQUENCEINFOW
 
 #define MAX_FEATURE_CHARS 38
 
+#define ERROR_PATCH_TARGET_NOT_FOUND        1642
+
 /* Strings defined in msi.h */
 /* Advertised Information */
 
@@ -501,6 +503,10 @@ UINT WINAPI MsiGetPatchInfoExA(LPCSTR, LPCSTR, LPCSTR, MSIINSTALLCONTEXT, LPCSTR
 UINT WINAPI MsiGetPatchInfoExW(LPCWSTR, LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, LPCWSTR, LPWSTR, LPDWORD);
 #define     MsiGetPatchInfoEx WINELIB_NAME_AW(MsiGetPatchInfoEx)
 
+UINT WINAPI MsiGetPatchInfoA(LPCSTR, LPCSTR, LPSTR, LPDWORD);
+UINT WINAPI MsiGetPatchInfoW(LPCWSTR, LPCWSTR, LPWSTR, LPDWORD);
+#define     MsiGetPatchInfo WINELIB_NAME_AW(MsiGetPatchInfo)
+
 UINT WINAPI MsiEnableLogA(DWORD, LPCSTR, DWORD);
 UINT WINAPI MsiEnableLogW(DWORD, LPCWSTR, DWORD);
 #define     MsiEnableLog WINELIB_NAME_AW(MsiEnableLog)
@@ -595,6 +601,10 @@ UINT WINAPI MsiSourceListEnumSourcesA(LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, 
 UINT WINAPI MsiSourceListEnumSourcesW(LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPWSTR, LPDWORD);
 #define     MsiSourceListEnumSources WINELIB_NAME_AW(MsiSourceListEnumSources)
 
+UINT WINAPI MsiSourceListClearSourceA(LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR);
+UINT WINAPI MsiSourceListClearSourceW(LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, DWORD, LPCWSTR);
+#define     MsiSourceListClearSource WINELIB_NAME_AW(MsiSourceListClearSource)
+
 UINT WINAPI MsiSourceListClearAllA(LPCSTR, LPCSTR, DWORD);
 UINT WINAPI MsiSourceListClearAllW(LPCWSTR, LPCWSTR, DWORD);
 #define     MsiSourceListClearAll WINELIB_NAME_AW(MsiSourceListClearAll)
@@ -648,6 +658,10 @@ UINT WINAPI MsiInstallMissingComponentW(LPCWSTR, LPCWSTR, INSTALLSTATE);
 UINT WINAPI MsiDetermineApplicablePatchesA(LPCSTR, DWORD, PMSIPATCHSEQUENCEINFOA);
 UINT WINAPI MsiDetermineApplicablePatchesW(LPCWSTR, DWORD, PMSIPATCHSEQUENCEINFOW);
 #define     MsiDetermineApplicablePatches WINELIB_NAME_AW(MsiDetermineApplicablePatches)
+
+UINT WINAPI MsiApplyMultiplePatchesA(LPCSTR, LPCSTR, LPCSTR);
+UINT WINAPI MsiApplyMultiplePatchesW(LPCWSTR, LPCWSTR, LPCWSTR);
+#define     MsiApplyMultiplePatches WINELIB_NAME_AW(MsiApplyMultiplePatches)
 
 /* Non Unicode */
 UINT WINAPI MsiCloseHandle(MSIHANDLE);

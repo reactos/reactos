@@ -165,8 +165,8 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         }
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->dwOutOctets != IfEntry.dwOutOctets && pContext->Status  != 1)
         {
+            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
             pContext->Status = 1;
-            hIcon = LoadImage(netshell_hInstance, MAKEINTRESOURCE(IDI_NET_TRANSREC), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
         }
         else if (pContext->dwInOctets != IfEntry.dwInOctets && pContext->Status  != 2)
         {
@@ -196,7 +196,7 @@ UpdateLanStatus(HWND hwndDlg,  LANSTATUSUI_CONTEXT * pContext)
         }
     }
 
-    if (hwndDlg)
+    if (hwndDlg && hIcon)
     {
         hOldIcon = (HICON)SendDlgItemMessageW(hwndDlg, IDC_NETSTAT, STM_SETICON, (WPARAM)hIcon, 0);
         if (hOldIcon)
@@ -750,7 +750,7 @@ LANStatusUiDlg(
             if (lppsn->hdr.code == PSN_APPLY || lppsn->hdr.code == PSN_RESET)
             {
                 pContext = (LANSTATUSUI_CONTEXT*)GetWindowLongPtr(hwndDlg, DWLP_USER);
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
                 pContext->hwndDlg = NULL;
                 return TRUE;
             }
@@ -1198,7 +1198,7 @@ HRESULT WINAPI LanConnectStatusUI_Constructor (IUnknown * pUnkOuter, REFIID riid
     This->lpNetMan = NULL;
     This->pHead = NULL;
 
-    if (InterlockedCompareExchangePointer((volatile void **)&cached_This, This, NULL) != NULL)
+    if (InterlockedCompareExchangePointer((void **)&cached_This, This, NULL) != NULL)
     {
         CoTaskMemFree(This);
     }

@@ -25,6 +25,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winhttp.h"
+#include "wincrypt.h"
 
 #include "winhttp_private.h"
 
@@ -36,11 +37,17 @@ void set_last_error( DWORD error )
     SetLastError( error );
 }
 
+DWORD get_last_error( void )
+{
+    /* FIXME */
+    return GetLastError();
+}
+
 void send_callback( object_header_t *hdr, DWORD status, LPVOID info, DWORD buflen )
 {
     TRACE("%p, 0x%08x, %p, %u\n", hdr, status, info, buflen);
 
-    if (hdr->notify_mask & status) hdr->callback( hdr->handle, hdr->context, status, info, buflen );
+    if (hdr->callback && (hdr->notify_mask & status)) hdr->callback( hdr->handle, hdr->context, status, info, buflen );
 }
 
 /***********************************************************************
@@ -58,15 +65,46 @@ BOOL WINAPI WinHttpCheckPlatform( void )
 static void session_destroy( object_header_t *hdr )
 {
     session_t *session = (session_t *)hdr;
+    struct list *item, *next;
+    domain_t *domain;
 
     TRACE("%p\n", session);
 
+    LIST_FOR_EACH_SAFE( item, next, &session->cookie_cache )
+    {
+        domain = LIST_ENTRY( item, domain_t, entry );
+        delete_domain( domain );
+    }
     heap_free( session->agent );
     heap_free( session->proxy_server );
     heap_free( session->proxy_bypass );
     heap_free( session->proxy_username );
     heap_free( session->proxy_password );
     heap_free( session );
+}
+
+static BOOL session_query_option( object_header_t *hdr, DWORD option, LPVOID buffer, LPDWORD buflen )
+{
+    switch (option)
+    {
+    case WINHTTP_OPTION_REDIRECT_POLICY:
+    {
+        if (!buffer || *buflen < sizeof(DWORD))
+        {
+            *buflen = sizeof(DWORD);
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        *(DWORD *)buffer = hdr->redirect_policy;
+        *buflen = sizeof(DWORD);
+        return TRUE;
+    }
+    default:
+        FIXME("unimplemented option %u\n", option);
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
 }
 
 static BOOL session_set_option( object_header_t *hdr, DWORD option, LPVOID buffer, DWORD buflen )
@@ -82,22 +120,33 @@ static BOOL session_set_option( object_header_t *hdr, DWORD option, LPVOID buffe
     }
     case WINHTTP_OPTION_REDIRECT_POLICY:
     {
-        DWORD policy = *(DWORD *)buffer;
+        DWORD policy;
 
+        if (buflen != sizeof(policy))
+        {
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        policy = *(DWORD *)buffer;
         TRACE("0x%x\n", policy);
         hdr->redirect_policy = policy;
         return TRUE;
     }
+    case WINHTTP_OPTION_DISABLE_FEATURE:
+        set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
+        return FALSE;
     default:
         FIXME("unimplemented option %u\n", option);
-        return TRUE;
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
     }
 }
 
 static const object_vtbl_t session_vtbl =
 {
     session_destroy,
-    NULL,
+    session_query_option,
     session_set_option
 };
 
@@ -118,6 +167,8 @@ HINTERNET WINAPI WinHttpOpen( LPCWSTR agent, DWORD access, LPCWSTR proxy, LPCWST
     session->hdr.flags = flags;
     session->hdr.refs = 1;
     session->access = access;
+    session->hdr.redirect_policy = WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP;
+    list_init( &session->cookie_cache );
 
     if (agent && !(session->agent = strdupW( agent ))) goto end;
     if (proxy && !(session->proxy_server = strdupW( proxy ))) goto end;
@@ -202,10 +253,10 @@ HINTERNET WINAPI WinHttpConnect( HINTERNET hsession, LPCWSTR server, INTERNET_PO
     list_add_head( &session->hdr.children, &connect->hdr.entry );
 
     if (server && !(connect->hostname = strdupW( server ))) goto end;
-    connect->hostport = port ? port : (connect->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
+    connect->hostport = port;
 
     if (server && !(connect->servername = strdupW( server ))) goto end;
-    connect->serverport = port ? port : (connect->hdr.flags & WINHTTP_FLAG_SECURE ? 443 : 80);
+    connect->serverport = port;
 
     if (!(hconnect = alloc_handle( &connect->hdr ))) goto end;
     connect->hdr.handle = hconnect;
@@ -225,7 +276,7 @@ end:
 static void request_destroy( object_header_t *hdr )
 {
     request_t *request = (request_t *)hdr;
-    int i;
+    DWORD i;
 
     TRACE("%p\n", request);
 
@@ -251,15 +302,54 @@ static BOOL request_query_option( object_header_t *hdr, DWORD option, LPVOID buf
     {
     case WINHTTP_OPTION_SECURITY_FLAGS:
     {
-        DWORD flags = 0;
+        DWORD flags;
 
+        if (!buffer || *buflen < sizeof(flags))
+        {
+            *buflen = sizeof(flags);
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        flags = 0;
         if (hdr->flags & WINHTTP_FLAG_SECURE) flags |= SECURITY_FLAG_SECURE;
         *(DWORD *)buffer = flags;
+        *buflen = sizeof(flags);
+        return TRUE;
+    }
+    case WINHTTP_OPTION_SERVER_CERT_CONTEXT:
+    {
+        const CERT_CONTEXT *cert;
+        request_t *request = (request_t *)hdr;
+
+        if (!buffer || *buflen < sizeof(cert))
+        {
+            *buflen = sizeof(cert);
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        if (!(cert = netconn_get_certificate( &request->netconn ))) return FALSE;
+        *(CERT_CONTEXT **)buffer = (CERT_CONTEXT *)cert;
+        *buflen = sizeof(cert);
+        return TRUE;
+    }
+    case WINHTTP_OPTION_SECURITY_KEY_BITNESS:
+    {
+        if (!buffer || *buflen < sizeof(DWORD))
+        {
+            *buflen = sizeof(DWORD);
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        *(DWORD *)buffer = 128; /* FIXME */
         *buflen = sizeof(DWORD);
         return TRUE;
     }
     default:
         FIXME("unimplemented option %u\n", option);
+        set_last_error( ERROR_INVALID_PARAMETER );
         return FALSE;
     }
 }
@@ -277,30 +367,52 @@ static BOOL request_set_option( object_header_t *hdr, DWORD option, LPVOID buffe
     }
     case WINHTTP_OPTION_DISABLE_FEATURE:
     {
-        DWORD disable = *(DWORD *)buffer;
+        DWORD disable;
 
+        if (buflen != sizeof(DWORD))
+        {
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        disable = *(DWORD *)buffer;
         TRACE("0x%x\n", disable);
-        hdr->disable_flags &= disable;
+        hdr->disable_flags |= disable;
         return TRUE;
     }
     case WINHTTP_OPTION_AUTOLOGON_POLICY:
     {
-        DWORD policy = *(DWORD *)buffer;
+        DWORD policy;
 
+        if (buflen != sizeof(DWORD))
+        {
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        policy = *(DWORD *)buffer;
         TRACE("0x%x\n", policy);
         hdr->logon_policy = policy;
         return TRUE;
     }
     case WINHTTP_OPTION_REDIRECT_POLICY:
     {
-        DWORD policy = *(DWORD *)buffer;
+        DWORD policy;
 
+        if (buflen != sizeof(DWORD))
+        {
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
+        policy = *(DWORD *)buffer;
         TRACE("0x%x\n", policy);
         hdr->redirect_policy = policy;
         return TRUE;
     }
     default:
         FIXME("unimplemented option %u\n", option);
+        set_last_error( ERROR_INVALID_PARAMETER );
         return TRUE;
     }
 }
@@ -355,9 +467,26 @@ HINTERNET WINAPI WinHttpOpenRequest( HINTERNET hconnect, LPCWSTR verb, LPCWSTR o
 
     if (!netconn_init( &request->netconn, request->hdr.flags & WINHTTP_FLAG_SECURE )) goto end;
 
-    if (verb && !(request->verb = strdupW( verb ))) goto end;
-    if (object && !(request->path = strdupW( object ))) goto end;
-    if (version && !(request->version = strdupW( version ))) goto end;
+    if (!verb || !verb[0]) verb = getW;
+    if (!(request->verb = strdupW( verb ))) goto end;
+
+    if (object)
+    {
+        WCHAR *path, *p;
+        unsigned int len;
+
+        len = strlenW( object ) + 1;
+        if (object[0] != '/') len++;
+        if (!(p = path = heap_alloc( len * sizeof(WCHAR) ))) goto end;
+
+        if (object[0] != '/') *p++ = '/';
+        strcpyW( p, object );
+        request->path = path;
+    }
+    else if (!(request->path = strdupW( slashW ))) goto end;
+
+    if (!version || !version[0]) version = http1_1;
+    if (!(request->version = strdupW( version ))) goto end;
 
     if (!(hrequest = alloc_handle( &request->hdr ))) goto end;
     request->hdr.handle = hrequest;
@@ -394,19 +523,36 @@ static BOOL query_option( object_header_t *hdr, DWORD option, LPVOID buffer, LPD
 {
     BOOL ret = FALSE;
 
+    if (!buflen)
+    {
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
     switch (option)
     {
     case WINHTTP_OPTION_CONTEXT_VALUE:
     {
+        if (!buffer || *buflen < sizeof(DWORD_PTR))
+        {
+            *buflen = sizeof(DWORD_PTR);
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
         *(DWORD_PTR *)buffer = hdr->context;
         *buflen = sizeof(DWORD_PTR);
         return TRUE;
     }
     default:
-    {
         if (hdr->vtbl->query_option) ret = hdr->vtbl->query_option( hdr, option, buffer, buflen );
-        else FIXME("unimplemented option %u\n", option);
-    }
+        else
+        {
+            FIXME("unimplemented option %u\n", option);
+            set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
+            return FALSE;
+        }
+        break;
     }
     return ret;
 }
@@ -437,18 +583,34 @@ static BOOL set_option( object_header_t *hdr, DWORD option, LPVOID buffer, DWORD
 {
     BOOL ret = TRUE;
 
+    if (!buffer)
+    {
+        set_last_error( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
     switch (option)
     {
     case WINHTTP_OPTION_CONTEXT_VALUE:
     {
+        if (buflen != sizeof(DWORD_PTR))
+        {
+            set_last_error( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
+
         hdr->context = *(DWORD_PTR *)buffer;
         return TRUE;
     }
     default:
-    {
         if (hdr->vtbl->set_option) ret = hdr->vtbl->set_option( hdr, option, buffer, buflen );
-        else FIXME("unimplemented option %u\n", option);
-    }
+        else
+        {
+            FIXME("unimplemented option %u\n", option);
+            set_last_error( ERROR_WINHTTP_INCORRECT_HANDLE_TYPE );
+            return FALSE;
+        }
+        break;
     }
     return ret;
 }

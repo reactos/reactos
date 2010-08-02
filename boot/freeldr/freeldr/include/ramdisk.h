@@ -6,25 +6,22 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#ifndef _RAMDISK_
-#define _RAMDISK_
+#pragma once
 
 //
 // Ramdisk Routines
 //
 VOID
 NTAPI
-RamDiskSwitchFromBios(
-    VOID
-);
-
-VOID
-NTAPI
 RamDiskLoadVirtualFile(
     IN PCHAR FileName
 );
 
+VOID
+NTAPI
+RamDiskInitialize(
+    VOID
+);
+
 extern PVOID gRamDiskBase;
 extern ULONG gRamDiskSize;
-
-#endif

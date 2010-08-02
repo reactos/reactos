@@ -31,6 +31,7 @@ DbgPrint(
     IN ...
 );
 
+NTSYSAPI
 ULONG
 __cdecl
 DbgPrintEx(
@@ -50,7 +51,7 @@ RtlAssert(
     PCHAR Message
 );
 
-#endif
+#endif /* !defined(_RTLFUNCS_H) && !defined(_NTDDK_) */
 
 #ifndef assert
 #ifndef NASSERT
@@ -78,37 +79,35 @@ RtlAssert(
 
 /* Print stuff only on Debug Builds*/
 #define DPFLTR_DEFAULT_ID -1
-#ifdef DBG
+#if DBG
 
     /* These are always printed */
-    #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
+    #define DPRINT1(fmt, ...) do { \
+        if (DbgPrint("(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__))  \
+            DbgPrint("(%s:%d) DbgPrint() failed!\n", __FILE__, __LINE__); \
+    } while (0)
 
     /* These are printed only if NDEBUG is NOT defined */
     #ifndef NDEBUG
 
-        #define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
+        #define DPRINT(fmt, ...) do { \
+            if (DbgPrint("(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__))  \
+                DbgPrint("(%s:%d) DbgPrint() failed!\n", __FILE__, __LINE__); \
+        } while (0)
 
     #else
-        #ifdef _MSC_VER
-            static __inline void DPRINT ( const char* fmt, ... )
-            {
-                UNREFERENCED_PARAMETER(fmt);
-            }
-        #else
-            #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-        #endif
+
+        #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
+
     #endif
 
-    #define UNIMPLEMENTED       DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+    #define UNIMPLEMENTED         DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
-    /* The ##__VA_ARGS__ syntax is not a standard and was only tested with MSVC and GCC. If other compilers support them as well, add them to this #if block. */
-    #if defined(_MSC_VER) || defined(__GNUC__)
-        #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
-        #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
-        #define TRACE_(ch, fmt, ...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
-        #define INFO_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
-    #endif
-#else
+    #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define TRACE_(ch, fmt, ...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+    #define INFO_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) " fmt, __FILE__, __LINE__, ##__VA_ARGS__)
+#else /* not DBG */
 
     /* On non-debug builds, we never show these */
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
@@ -120,7 +119,7 @@ RtlAssert(
     #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define TRACE_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define INFO_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-#endif
+#endif /* not DBG */
 
 #define ASSERT_IRQL_LESS_OR_EQUAL(x) ASSERT(KeGetCurrentIrql()<=(x))
 #define ASSERT_IRQL_EQUAL(x) ASSERT(KeGetCurrentIrql()==(x))

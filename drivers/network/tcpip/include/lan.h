@@ -4,9 +4,8 @@
  * FILE:        include/lan.h
  * PURPOSE:     LAN adapter definitions
  */
-#ifndef __LAN_H
-#define __LAN_H
 
+#pragma once
 
 /* Media we support */
 #define MEDIA_ETH 0
@@ -92,8 +91,8 @@ NDIS_STATUS LANUnregisterAdapter(
 NTSTATUS LANRegisterProtocol(
     PNDIS_STRING Name);
 
-VOID LANUnregisterProtocol(
-    VOID);
+VOID NTAPI
+LANUnregisterProtocol(VOID);
 
 VOID LANStartup();
 VOID LANShutdown();
@@ -107,7 +106,5 @@ NDIS_STATUS NDISCall(
     NDIS_OID OID,
     PVOID Buffer,
     UINT Length);
-
-#endif /* __LAN_H */
 
 /* EOF */

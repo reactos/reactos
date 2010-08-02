@@ -27,7 +27,6 @@ typedef struct _OPENGL_INFO
     WCHAR DriverName[256];  /*!< Driver name */
 } OPENGL_INFO, *POPENGL_INFO;
 
-
 /*! \brief Append OpenGL Rendering Context (GLRC) to list
  *
  * \param glrc [IN] Pointer to GLRC to append to list
@@ -179,8 +178,11 @@ BOOL
 ROSGL_DeleteContext( GLRC *glrc )
 {
     /* unload icd */
-    if (glrc->icd != NULL)
+    if ((glrc->icd != NULL) && (!InterlockedDecrement((LONG*)&glrc->icd->refcount)))
+    {
+        /* This is the last context, remove the ICD*/
         ROSGL_DeleteDCDataForICD( glrc->icd );
+    }
 
     /* remove from list */
     ROSGL_RemoveContext( glrc );
@@ -400,7 +402,7 @@ ROSGL_ICDForHDC( HDC hdc )
         {
             WCHAR Buffer[256];
             snwprintf(Buffer, sizeof(Buffer)/sizeof(WCHAR),
-                      L"Couldn't load driver \"%s\".", driverName);
+                      L"Couldn't load driver \"%s\".", info.DriverName);
             MessageBox(WindowFromDC( hdc ), Buffer,
                        L"OPENGL32.dll: Warning",
                        MB_OK | MB_ICONWARNING);
@@ -413,7 +415,7 @@ ROSGL_ICDForHDC( HDC hdc )
                                                   NULL) != NULL)
             {
                 /* Too bad, somebody else was faster... */
-                OPENGL32_UnloadICD(drvdata);
+                DBGTRACE("ICD is already set!\n");
             }
         }
     }
@@ -502,6 +504,16 @@ ROSGL_SetContextCallBack( const ICDTable *table )
  */
 #define BUFFERDEPTH_SCORE(want, have) \
     ((want == 0) ? (0) : ((want < have) ? (1) : ((want > have) ? (3) : (0))))
+
+/* Score if we want and not have it */
+#define FLAG_SCORE(want, have, flag) \
+    (((want & ~have) & flag) ? (1) : (0))
+
+/* Score if what we want is different than what we have, except when
+   _DONTCARE was set */
+#define FLAG_SCORE_DONTCARE(want, have, flag) \
+    ((!(have & flag ## _DONTCARE)) && ((want & flag) != (have & flag)) ? (1) : (0))
+
 int
 APIENTRY
 rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
@@ -512,8 +524,6 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
     int best = 0;
     int score, bestScore = 0x7fff; /* used to choose a pfd if no exact match */
     int icdNumFormats;
-    const DWORD compareFlags = PFD_DRAW_TO_WINDOW | PFD_DRAW_TO_BITMAP |
-                               PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL;
 
     DBGTRACE( "Called!" );
 
@@ -555,18 +565,17 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
             continue;
         }
 
+        score = 0; /* higher is worse */
+
         /* compare flags */
-        if ((pfd->dwFlags & compareFlags) != (icdPfd.dwFlags & compareFlags))
-            continue;
-        if (!(pfd->dwFlags & PFD_DOUBLEBUFFER_DONTCARE) &&
-            ((pfd->dwFlags & PFD_DOUBLEBUFFER) != (icdPfd.dwFlags & PFD_DOUBLEBUFFER)))
-            continue;
-        if (!(pfd->dwFlags & PFD_STEREO_DONTCARE) &&
-            ((pfd->dwFlags & PFD_STEREO) != (icdPfd.dwFlags & PFD_STEREO)))
-            continue;
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_DRAW_TO_WINDOW);
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_DRAW_TO_BITMAP);
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_SUPPORT_GDI);
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_SUPPORT_OPENGL);
+        score += FLAG_SCORE_DONTCARE(pfd->dwFlags, icdPfd.dwFlags, PFD_DOUBLEBUFFER);
+        score += FLAG_SCORE_DONTCARE(pfd->dwFlags, icdPfd.dwFlags, PFD_STEREO);
 
         /* check other attribs */
-        score = 0; /* higher is worse */
         if (pfd->iPixelType != icdPfd.iPixelType)
             score += 5; /* this is really bad i think */
         if (pfd->iLayerType != icdPfd.iLayerType)
@@ -679,6 +688,9 @@ rosglCreateLayerContext( HDC hdc, int layer )
         /* FIXME: fallback? */
         return NULL;
     }
+    /* Don't forget to refcount it, icd will be released when last context is deleted */
+    InterlockedIncrement((LONG*)&icd->refcount);
+    
 
     /* create context */
     if (icd->DrvCreateLayerContext != NULL)
@@ -1188,31 +1200,32 @@ BOOL
 APIENTRY
 rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    BOOL ret = FALSE;
+
+    if(fuPlanes & WGL_SWAP_MAIN_PLANE)
+        ret = rosglSwapBuffers(hdc);
+
+    if(fuPlanes &~WGL_SWAP_MAIN_PLANE)
+        DBGTRACE("wglSwapLayerBuffers is not fully implemented\n");
+
+    return ret;
 }
 
 
 BOOL
 APIENTRY
-rosglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+rosglUseFontBitmapsA( HDC hdc, DWORD first, DWORD count, DWORD listBase )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontBitmapsA(hdc, first, count, listBase);
 }
 
 
 BOOL
 APIENTRY
-rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+rosglUseFontBitmapsW( HDC hdc, DWORD first, DWORD count, DWORD listBase )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontBitmapsW(hdc, first, count, listBase);
 }
-
 
 BOOL
 APIENTRY
@@ -1220,9 +1233,7 @@ rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                        FLOAT deviation, FLOAT extrusion, int format,
                        GLYPHMETRICSFLOAT *pgmf )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontOutlinesA(hdc, first, count, listBase, deviation, extrusion, format, pgmf);
 }
 
 
@@ -1232,9 +1243,7 @@ rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                        FLOAT deviation, FLOAT extrusion, int format,
                        GLYPHMETRICSFLOAT *pgmf )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    return IntUseFontOutlinesW(hdc, first, count, listBase, deviation, extrusion, format, pgmf);
 }
 
 #ifdef __cplusplus

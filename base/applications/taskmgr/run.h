@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * run.h - definitions necessary to use Microsoft's "Run" dialog
  * Undocumented Windows call
@@ -28,8 +28,7 @@
  * jholderness@geocities.com
  */
 
-#ifndef __RUN_H
-#define __RUN_H
+#pragma once
 
 void TaskManager_OnFileNew(void);
 
@@ -50,5 +49,3 @@ UINT    uFlags);
 #define	RFF_CALCDIRECTORY	0x04	/* Calculates the working directory from the file name. */
 #define	RFF_NOLABEL			0x08	/* Removes the edit box label. */
 #define	RFF_NOSEPARATEMEM	0x20	/* Removes the Separate Memory Space check box (Windows NT only). */
-
-#endif /* __RUN_H */

@@ -1,5 +1,4 @@
-#ifndef LANG_EN_US_H__
-#define LANG_EN_US_H__
+#pragma once
 
 MUI_LAYOUTS enUSLayouts[] =
 {
@@ -94,7 +93,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Press L to view the ReactOS Licensing Terms and Conditions",
+        "\x07  Press L to view the ReactOS Licensing Terms and Conditions.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -986,7 +985,7 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Install bootloader on the harddisk (bootsector).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1345,7 +1344,7 @@ MUI_ERROR enUSErrorEntries[] =
           "\n"
           "Creating or deleting partitions can destroy the partition table.\n"
           "\n"
-          "  \x07  Press F3 to quit Setup."
+          "  \x07  Press F3 to quit Setup.\n"
           "  \x07  Press ENTER to continue.",
           "F3= Quit  ENTER = Continue"
     },
@@ -1478,11 +1477,16 @@ MUI_ERROR enUSErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
 };
-
 
 MUI_PAGE enUSPages[] =
 {
@@ -1615,7 +1619,7 @@ MUI_STRING enUSStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copying file: %S"},
+     "   Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_REGHIVEUPDATE,
@@ -1694,5 +1698,3 @@ MUI_STRING enUSStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

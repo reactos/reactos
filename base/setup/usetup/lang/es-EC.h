@@ -1,5 +1,4 @@
-#ifndef LANG_ES_EC_H__
-#define LANG_ES_EC_H__
+#pragma once
 
 MUI_LAYOUTS esECLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS esECLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

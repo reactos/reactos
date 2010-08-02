@@ -13,13 +13,12 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef __UIMAIN_MSTSC_H
-#define __UIMAIN_MSTSC_H
+#pragma once
 
 /* in uimain.c */
 int
@@ -77,5 +76,3 @@ ui_set_modifier_state(int code);
 #define UI_MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #undef UI_MIN
 #define UI_MIN(a, b)  (((a) < (b)) ? (a) : (b))
-
-#endif /* __UIMAIN_MSTSC_H */

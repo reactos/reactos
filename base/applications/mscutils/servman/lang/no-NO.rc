@@ -106,8 +106,8 @@ CAPTION "Dependencies"
 FONT 8, "MS Shell Dlg",0,0
 STYLE DS_SHELLFONT | WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
 BEGIN
-  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
-  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" , WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 70, 236, 68
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", WS_BORDER | WS_CHILDWINDOW | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_DISABLEDRAGDROP, 8, 151, 234, 67
   LTEXT "Noen tjenester depend på andre tjenester, system drivere og laster system grupper. Hvis system komponenten er stoppet eller ikke kjøre riktig, dependant services can be affected.", IDC_STATIC,8, 7, 238, 26
   LTEXT "Denne tjenesten depends på følgende komponenter", IDC_STATIC, 8, 57, 236, 9
   LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
@@ -191,7 +191,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Num tjeneste: %d"
-  IDS_LICENSE "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  IDS_STOP_DEPENDS "When %s stops, these other services will also stop"
+  IDS_NO_DEPENDS "<No Dependencies>"
+  IDS_LICENSE "Dette programmet er gratis programvare; du kan distribuere det og/eller endre det under betingelsene av GNU General Public License som er utgitt av Free Software Foundation;  version 2 av lisensen, eller (etter din mening) alle senere versjoner.\r\n\r\nDette programmet er utgitt i håp for at det skal kunne brukes, men DET ER INGEN GARANTIER; uten heller forutsatt garantier av SALGBARHET eller SIKKETHET FOR EN ENKELTHET FORMÅL.  Se på GNU General Public Lisensen for mere detaljer.\r\n\r\nDu skal ha motatt en kopi av GNU General Public Lisensen sammen med denne programmet; hvis du ikke har motatt det, skriv til Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE

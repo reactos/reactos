@@ -48,6 +48,16 @@ BEGIN
     PUSHBUTTON  "Perfiles Hard&ware...", IDC_HARDWARE_PROFILE, 138, 190, 106, 15
 END
 
+IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Ajustes del sistema"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Información de la Versión ",IDC_STATIC,6,3,210,73
+    CONTROL         "Informar como Estación de trabajo",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
+    LTEXT           "ReactOS está diseñado como un Sistema Operativo servidor e informa como tal. Seleccione esta casilla para cambiar esto para aplicaciones.",IDC_STATIC,15,15,183,41
+    PUSHBUTTON      "Aceptar",IDOK,166,83,50,14
+END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -144,7 +154,7 @@ CAPTION "Inicio y recuperación"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX    "Inicio del sistema ", IDC_STATIC, 7, 12, 238, 95
-    LTEXT       "&Sistema operativo predeterminado:", IDC_STATIC, 14, 26, 100, 8
+    LTEXT       "&Sistema operativo predeterminado:", IDC_STATIC, 14, 26, 180, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     AUTOCHECKBOX "&Mostrar la lista de sistemas operativos durante:", IDC_STRECLIST, 14, 56, 165, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 180, 54, 29, 12, ES_NUMBER
@@ -154,7 +164,7 @@ BEGIN
     EDITTEXT    IDC_STRRECRECEDIT, 180, 68, 29, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "segundos", IDC_STATIC, 210, 70, 30, 8
-    LTEXT       "Para editar manualmente el archivo de opciones de inicio, haga clic en Editar.", IDC_STATIC, 14, 84, 187, 17
+    LTEXT       "Para editar manualmente el archivo de opciones de inicio, haga clic en Editar.", IDC_STATIC, 14, 84, 170, 17
     PUSHBUTTON  "&Editar", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Error del sistema ", IDC_STATIC, 7, 111, 238, 140
@@ -277,4 +287,9 @@ BEGIN
     IDS_USERPROFILE_TYPE "Tipo"
     IDS_USERPROFILE_STATUS "Estado"
     IDS_USERPROFILE_MODIFIED "Modificado"
+    IDS_MESSAGEBOXTITLE "Applet de sistema del panel de control"
+    IDS_WARNINITIALSIZE "Ingresar el tamaño inicial del archivo de paginación."
+    IDS_WARNMAXIMUMSIZE "Ingresar el tamaño máximo del archivo de paginación."
+    IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 2 MB y no puede exceder el espacio disponible en la unidad seleccionada."
+    IDS_WARNMAXIMUMRANGE "El tamaño máximo del archivo de paginación no puede ser inferior al tamaño inicial y no puede exceder el espacio disponible en la unidad seleccionada."
 END

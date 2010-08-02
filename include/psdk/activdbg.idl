@@ -22,6 +22,7 @@ import "activscp.idl";
 
 interface IDebugDocumentContext;
 interface IRemoteDebugApplication;
+interface IEnumDebugCodeContexts;
 
 /* FIXME: */
 interface IEnumDebugStackFrames;
@@ -78,6 +79,88 @@ typedef enum tagERRORRESUMEACTION {
     ERRORRESUMEACTION_AbortCallAndReturnErrorToCaller,
     ERRORRESUMEACTION_SkipErrorStatement,
 } ERRORRESUMEACTION;
+
+typedef WORD SOURCE_TEXT_ATTR;
+
+#ifdef INTEROPLIB
+enum enum_SOURCE_TEXT_ATTR
+{
+    SOURCETEXT_ATTR_KEYWORD        = 0x01,
+    SOURCETEXT_ATTR_COMMENT        = 0x02,
+    SOURCETEXT_ATTR_NONSOURCE      = 0x04,
+    SOURCETEXT_ATTR_OPERATOR       = 0x08,
+    SOURCETEXT_ATTR_NUMBER         = 0x10,
+    SOURCETEXT_ATTR_STRING         = 0x20,
+    SOURCETEXT_ATTR_FUNCTION_START = 0x40
+};
+#endif
+
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_KEYWORD         = 0x01;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_COMMENT         = 0x02;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_NONSOURCE       = 0x04;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_OPERATOR        = 0x08;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_NUMBER          = 0x10;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_STRING          = 0x20;
+const SOURCE_TEXT_ATTR SOURCETEXT_ATTR_FUNCTION_START  = 0x40;
+
+/************************************************************
+ *      interface IActiveScriptDebug32
+ */
+[
+    object,
+    uuid(51973c10-cb0c-11d0-b5c9-00a0244a0e7a),
+    pointer_default(unique)
+]
+interface IActiveScriptDebug32 : IUnknown
+{
+    HRESULT GetScriptTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT GetScriptletTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT EnumCodeContextsOfPosition(
+            [in] DWORD dwSourceContext,
+            [in] ULONG uCharacterOffset,
+            [in] ULONG uNumChars,
+            [out] IEnumDebugCodeContexts **ppescc);
+}
+
+[
+    object,
+    uuid(bc437e23-f5b8-47f4-bb79-7d1ce5483b86),
+    pointer_default(unique)
+]
+interface IActiveScriptDebug64 : IUnknown
+{
+    HRESULT GetScriptTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT GetScriptletTextAttributes(
+            [in, size_is(uNumCodeChars)] LPCOLESTR pstrCode,
+            [in] ULONG uNumCodeChars,
+            [in] LPCOLESTR pstrDelimiter,
+            [in] DWORD dwFlags,
+            [in, out, size_is(uNumCodeChars)] SOURCE_TEXT_ATTR *pattr);
+
+    HRESULT EnumCodeContextsOfPosition(
+           [in] DWORDLONG dwSourceContext,
+           [in] ULONG uCharacterOffset,
+           [in] ULONG uNumChars,
+           [out] IEnumDebugCodeContexts **ppescc);
+}
 
 /************************************************************
  *      interface IDebugDocumentInfo
@@ -473,6 +556,9 @@ interface IActiveScriptSiteDebug64 : IUnknown
 cpp_quote("#ifndef DISABLE_ACTIVDBG_INTERFACE_WRAPPERS")
 cpp_quote("#ifdef _WIN64")
 
+cpp_quote("#define IActiveScriptDebug IActiveScriptDebug64")
+cpp_quote("#define IID_IActiveScriptDebug IID_IActiveScriptDebug64")
+
 cpp_quote("#define IActiveScriptSiteDebug IActiveScriptSiteDebug64")
 cpp_quote("#define IID_IActiveScriptSiteDebug IID_IActiveScriptSiteDebug64")
 
@@ -480,6 +566,9 @@ cpp_quote("#define IDebugApplication IDebugApplication64")
 cpp_quote("#define IID_IDebugApplication IID_IDebugApplication64")
 
 cpp_quote("#else")
+
+cpp_quote("#define IActiveScriptDebug IActiveScriptDebug32")
+cpp_quote("#define IID_IActiveScriptDebug IID_IActiveScriptDebug32")
 
 cpp_quote("#define IActiveScriptSiteDebug IActiveScriptSiteDebug32")
 cpp_quote("#define IID_IActiveScriptSiteDebug IID_IActiveScriptSiteDebug32")

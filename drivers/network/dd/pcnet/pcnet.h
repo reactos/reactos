@@ -14,9 +14,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * REVISIONS:
  *     01-Sep-2003 vizzini - Created
@@ -25,8 +25,7 @@
  *     - this assumes 32-bit physical addresses
  */
 
-#ifndef _PCNET_H_
-#define _PCNET_H_
+#pragma once
 
 /* statistics struct */
 typedef struct _ADAPTER_STATS
@@ -60,6 +59,8 @@ typedef struct _ADAPTER
   ULONG_PTR PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
   NDIS_MEDIA_STATE MediaState;
+  UINT MediaSpeed;
+  BOOLEAN FullDuplex;
   NDIS_MINIPORT_TIMER MediaDetectionTimer;
   ULONG CurrentReceiveDescriptorIndex;
   ULONG CurrentPacketFilter;
@@ -129,6 +130,14 @@ NDIS_MEDIA_STATE
 NTAPI
 MiGetMediaState(PADAPTER Adapter);
 
+UINT
+NTAPI
+MiGetMediaSpeed(PADAPTER Adapter);
+
+BOOLEAN
+NTAPI
+MiGetMediaDuplex(PADAPTER Adapter);
+
 /* operational constants */
 #define NUMBER_OF_BUFFERS     0x20
 #define LOG_NUMBER_OF_BUFFERS 5         /* log2(NUMBER_OF_BUFFERS) */
@@ -139,18 +148,14 @@ MiGetMediaState(PADAPTER Adapter);
 /* flags */
 #define RESET_IN_PROGRESS 0x1
 
+/* Maximum number of interrupts handled per call to MiniportHandleInterrupt */
+#define INTERRUPT_LIMIT 10
+
 #if DBG
 #define BREAKPOINT DbgBreakPoint();
 #else
 #define BREAKPOINT
 #endif
 
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
 /* memory pool tag */
-#define PCNET_TAG TAG('P', 'c', 'N', 't')
-
-#endif // _PCNET_H_
-
+#define PCNET_TAG 'tNcP'

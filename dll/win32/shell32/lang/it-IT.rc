@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
@@ -156,7 +156,7 @@ BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
 	LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa internet, e ReactOS la aprirà.", 12289, 36, 11, 182, 18
 	LTEXT "&Apri:", 12305, 7, 39, 24, 10
-	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "Annulla", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "&Esplora...", 12288, 170, 63, 50, 14, WS_TABSTOP
@@ -271,32 +271,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Tipo:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "File system:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Spazio usato:", -1, 25, 90, 120, 10
-	LTEXT "", 14004, 110, 90, 120, 10
-	LTEXT "", 14005, 200, 90, 40, 10
+	LTEXT "", 14003, 110, 90, 120, 10
+	LTEXT "", 14004, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Spazio libero:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14005, 110, 105, 120, 10
+	LTEXT "", 14006, 200, 105, 40, 10
 
 	LTEXT "Capacità:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14007, 110, 125, 120, 10
+	LTEXT "", 14008, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Disco %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Pulitura disco", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Comprimere il disco per recuperare dello spazio", 14012, 15, 205, 180, 10, WS_DISABLED
+	LTEXT "Disco %s", 14009, 100, 170, 40, 10
+	PUSHBUTTON "Pulitura disco", 14010, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Comprimere il disco per recuperare dello spazio", 14011, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "Permettere di indicizzare questo disco al servizio di indicizzazione per avere ricerche dei file più rapide", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
@@ -359,7 +359,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Apri con"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -372,6 +372,16 @@ BEGIN
 	PUSHBUTTON "&Sfoglia...", 14004, 198, 207, 50, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Annulla", 14006, 206, 236, 50, 14
+END
+
+IDD_SH_FILE_COPY DIALOGEX 0, 0, 264, 45
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Copia in corso..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	PUSHBUTTON "Annulla", 14002, 195, 14, 60, 16 
+	CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
+	LTEXT "File", 14001,  8, 6, 169, 10
 END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
@@ -434,8 +444,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWIND
 CAPTION "Conferma della sovrascrittura dei file"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Si", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Si &tutti", 12807, 85, 122, 60, 14
+	DEFPUSHBUTTON "&Sì", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Sì &tutti", 12807, 85, 122, 60, 14
 	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
 	PUSHBUTTON "Annulla", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
@@ -555,13 +565,13 @@ BEGIN
 	LTEXT "&File system", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "Dimensione dell'unità di &Allocazione", -1, 7, 64, 170, 9
+	LTEXT "Dimensione dell'unità di &allocazione", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "&Etichetta del Volume", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Opzioni di &Formattazione", 4610, 7, 121, 170, 49
+	GROUPBOX "Opzioni di &formattazione", 4610, 7, 121, 170, 49
 	AUTOCHECKBOX "Formattazione &rapida", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "Abilita la &Compressione", 28675, 16, 152, 155, 10
+	AUTOCHECKBOX "Abilita la &compressione", 28675, 16, 152, 155, 10
 END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
@@ -645,7 +655,7 @@ BEGIN
 
 	IDS_CREATEFOLDER_DENIED     "Impossibile creare la cartella: Accesso negato."
 	IDS_CREATEFOLDER_CAPTION    "Errore durante la creazione della cartella"
-	IDS_DELETEITEM_CAPTION      "Confermare la cancallazione del file"
+	IDS_DELETEITEM_CAPTION      "Confermare la cancellazione del file"
 	IDS_DELETEFOLDER_CAPTION    "Confermare la cancellazione della cartella"
 	IDS_DELETEITEM_TEXT         "Sei sicuro di voler cancellare '%1'?"
 	IDS_DELETEMULTIPLE_TEXT     "Sei sicuro di voler cancellare questi %1 elementi?"
@@ -664,8 +674,10 @@ BEGIN
 	/* message box strings */
 	IDS_RESTART_TITLE           "Riavvia"
 	IDS_RESTART_PROMPT          "Volete riavviare il sistema?"
-	IDS_SHUTDOWN_TITLE          "Termina sessione"
-	IDS_SHUTDOWN_PROMPT         "Volete terminare la sessione di ReactOS?"
+	IDS_SHUTDOWN_TITLE          "Arresta sistema"
+	IDS_SHUTDOWN_PROMPT         "Volete arrestare il sistema?"
+	IDS_LOGOFF_TITLE            "Disconnetti"
+	IDS_LOGOFF_PROMPT           "Volete disconnettervi?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Avvio\\Programmi"
@@ -749,4 +761,7 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Installazione nuovi Font..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Dimensione predefinita di allocazione"
+	IDS_COPY_OF                 "Copia di"
+
+	IDS_SHLEXEC_NOASSOC         "Non c'è un programma configurato per aprire questo tipo di file."
 END

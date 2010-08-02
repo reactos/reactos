@@ -109,7 +109,7 @@ static HRESULT WINAPI IKsBufferPropertySetImpl_Get(
 	    S(prop).Set = *guidPropSet;
 	    S(prop).Id = dwPropID;
 	    S(prop).Flags = 0;	/* unused */
-	    S(prop).InstanceId = (ULONG)This->dsb->device;
+	    S(prop).InstanceId = (ULONG_PTR)This->dsb->device;
 
 	    hres = IDsDriverPropertySet_Get(ps, &prop, pInstanceData, cbInstanceData, pPropData, cbPropData, pcbReturned);
 
@@ -145,7 +145,7 @@ static HRESULT WINAPI IKsBufferPropertySetImpl_Set(
 	    S(prop).Set = *guidPropSet;
 	    S(prop).Id = dwPropID;
 	    S(prop).Flags = 0;	/* unused */
-	    S(prop).InstanceId = (ULONG)This->dsb->device;
+	    S(prop).InstanceId = (ULONG_PTR)This->dsb->device;
 	    hres = IDsDriverPropertySet_Set(ps,&prop,pInstanceData,cbInstanceData,pPropData,cbPropData);
 
 	    IDsDriverPropertySet_Release(ps);

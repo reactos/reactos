@@ -1,7 +1,13 @@
 #include "ntddk.h"
+#include "ntifs.h"
 #include "arc/arc.h"
 #include "halfuncs.h"
 #include "drivers/bootvid/bootvid.h"
+
+/* Define if FontData has upside down characters */
+#undef CHAR_GEN_UPSIDE_DOWN
+
+#define BOOTCHAR_HEIGHT             13
 
 //
 // Command Stream Definitions
@@ -43,4 +49,4 @@ extern ULONG curr_x;
 extern ULONG curr_y;
 extern ULONG_PTR VgaRegisterBase;
 extern ULONG_PTR VgaBase;
-extern UCHAR FontData[256 * 13];
+extern UCHAR FontData[256 * BOOTCHAR_HEIGHT];

@@ -1,7 +1,7 @@
 /**
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within this package.
+ * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
 #ifndef _INC_OSCALLS
@@ -30,6 +30,11 @@
 #endif
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4214)
+#endif
+
 typedef struct _FTIME
 {
   unsigned short twosecs : 5;
@@ -45,6 +50,10 @@ typedef struct _FDATE
   unsigned short month : 4;
   unsigned short year : 7;
 } FDATE;
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 typedef FDATE *PFDATE;
 

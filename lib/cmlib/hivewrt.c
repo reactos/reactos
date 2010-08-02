@@ -23,7 +23,7 @@ HvpWriteLog(
    PVOID BlockPtr;
    BOOLEAN Success;
 
-   DPRINT1("FIXME: HvpWriteLog doesn't do anything atm\n");
+   UNIMPLEMENTED;
    return TRUE;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
@@ -263,6 +263,14 @@ HvSyncHive(
    RtlClearAllBits(&RegistryHive->DirtyVector);
 
    return TRUE;
+}
+
+BOOLEAN
+CMAPI
+HvHiveWillShrink(IN PHHIVE RegistryHive)
+{
+    /* No shrinking yet */
+    return FALSE;
 }
 
 BOOLEAN CMAPI

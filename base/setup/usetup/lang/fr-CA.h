@@ -1,5 +1,4 @@
-#ifndef LANG_FR_CA_H__
-#define LANG_FR_CA_H__
+#pragma once
 
 MUI_LAYOUTS frCALayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS frCALayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

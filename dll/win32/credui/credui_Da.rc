@@ -2,6 +2,7 @@
  * Danish language resource file for Credentials UI
  *
  * Copyright 2008 Jens Albretsen
+ *           2010 Thomas Larsen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,9 +19,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
+#pragma code_page(65001)
+
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
+IDD_CREDDIALOG DIALOG  0, 0, 213, 149
 STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "IDS_TITLEFORMAT"
 FONT 8, "MS Shell Dlg"
@@ -39,12 +44,12 @@ BEGIN
     PUSHBUTTON      "Annuller",IDCANCEL,156,128,50,14
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TITLEFORMAT     "Tilslut til %s"
     IDS_MESSAGEFORMAT   "Tilslutter til %s"
     IDS_INCORRECTPASSWORDTITLE  "Tilslutning fejlede"
-    IDS_INCORRECTPASSWORD       "Vær sikker på at dit brugernavn\nog kodeord er korrekt."
-    IDS_CAPSLOCKONTITLE "Caps Lock er på"
-    IDS_CAPSLOCKON      "Caps Lock kan være skyld i at taster dit kodeord forkert.\n\nTryk på Caps Lock tasten for at slå det fra\nfør du indtaster dit kodeord."
+    IDS_INCORRECTPASSWORD       "VÃ¦r sikker pÃ¥ at dit brugernavn\nog kodeord er korrekt."
+    IDS_CAPSLOCKONTITLE "Caps Lock er pÃ¥"
+    IDS_CAPSLOCKON      "Du har sat Caps Lock til, dette kan vÃ¦re Ã¥rsagen til at du indtaster kodeordet forkert.\n\nTryk pÃ¥ Caps Lock tasten for at slÃ¥ det fra fÃ¸r du indtaster dit kodeord."
 }

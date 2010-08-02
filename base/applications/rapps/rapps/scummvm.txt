@@ -1,0 +1,24 @@
+﻿; UTF-8
+
+[Section]
+Name = ScummVM
+Version = 1.1.1
+Licence = GPL
+Description = Sam and Max, Day of the Tentacle, etc on ReactOS.
+Size = 3.3MB
+Category = 4
+URLSite = http://scummvm.org/
+URLDownload = http://dfn.dl.sourceforge.net/project/scummvm/scummvm/1.1.1/scummvm-1.1.1-win32.exe
+CDPath = none
+
+[Section.0407]
+Description = Sam and Max, Day of the Tentacle usw in ReactOS.
+
+[Section.040a]
+Description = Sam and Max, Day of the Tentacle en ReactOS.
+
+[Section.0415]
+Description = Program pozwalający uruchomić stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS.
+
+[Section.0422]
+Description = Дозволить грати Sam and Max, Day of the Tentacle та інші класичні ігри в ReactOS.

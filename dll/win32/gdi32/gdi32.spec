@@ -1,12 +1,12 @@
-@ stdcall AbortDoc(long)
-@ stdcall AbortPath(long)
+@ stdcall AbortDoc(ptr)
+@ stdcall AbortPath(ptr)
 @ stdcall AddFontMemResourceEx(ptr long ptr ptr)
 @ stdcall AddFontResourceA(str)
 @ stdcall AddFontResourceExA(str long ptr)
 @ stdcall AddFontResourceExW(wstr long ptr)
 @ stdcall AddFontResourceTracking(str long)
 @ stdcall AddFontResourceW(wstr)
-@ stdcall AngleArc(long long long long long long)
+@ stdcall AngleArc(ptr long long long long long)
 @ stdcall AnimatePalette(long long long ptr)
 @ stdcall AnyLinkedFonts() NtGdiAnyLinkedFonts
 @ stdcall Arc(long long long long long long long long long)
@@ -360,8 +360,8 @@
 @ stdcall GetColorSpace(long)
 @ stdcall GetCurrentObject(long long)
 @ stdcall GetCurrentPositionEx(long ptr)
-@ stdcall GetDCBrushColor(long)
-@ stdcall GetDCOrgEx(long ptr)
+@ stdcall GetDCBrushColor(ptr)
+@ stdcall GetDCOrgEx(ptr ptr)
 @ stdcall GetDCPenColor(long)
 @ stdcall GetDIBColorTable(long long long ptr)
 @ stdcall GetDIBits(long long long long ptr ptr long)
@@ -605,7 +605,7 @@
 @ stdcall XFORMOBJ_iGetXform(ptr ptr) NtGdiXFORMOBJ_iGetXform
 @ stdcall XLATEOBJ_cGetPalette(ptr long long ptr) NtGdiXLATEOBJ_cGetPalette
 @ stdcall XLATEOBJ_hGetColorTransform(ptr) NtGdiXLATEOBJ_hGetColorTransform
-@ stdcall XLATEOBJ_iXlate(ptr long)
+@ stdcall XLATEOBJ_iXlate(ptr long) NtGdiXLATEOBJ_iXlate
 @ stdcall XLATEOBJ_piVector(ptr)
 @ stdcall bInitSystemAndFontsDirectoriesW(wstr wstr)
 @ stdcall bMakePathNameW(wstr wstr wstr long)

@@ -15,34 +15,58 @@
 #define PAGE_TABLE_MASK 0x3ff
 #define BIG_PAGE_SIZE (1<<22)
 #define CR4_PAGE_SIZE_BIT 0x10
-#define PDE_PRESENT_BIT 1
-#define PDE_W_BIT 2
+#define PDE_PRESENT_BIT 0x01
+#define PDE_W_BIT 0x02
+#define PDE_PWT_BIT 0x08
+#define PDE_PCD_BIT 0x10
+#define PDE_ACCESSED_BIT 0x20
+#define PDE_DIRTY_BIT 0x40
 #define PDE_PS_BIT 0x80
+
+#define MI_KDBG_TMP_PAGE_1 (HYPER_SPACE + 0x400000 - PAGE_SIZE)
+#define MI_KDBG_TMP_PAGE_0 (MI_KDBG_TMP_PAGE_1 - PAGE_SIZE)
 
 /* VARIABLES ***************************************************************/
 
-extern ULONG MmGlobalKernelPageDirectory[1024];
 static BOOLEAN KdpPhysAccess = FALSE;
-ULONG_PTR IdentityMapAddrHigh, IdentityMapAddrLow;
-extern PFN_TYPE NTAPI MmAllocEarlyPage();
 
-ULONGLONG
-FASTCALL
-KdpPhysRead(ULONG_PTR Addr, LONG Len)
+static
+ULONG_PTR
+KdpPhysMap(ULONG_PTR PhysAddr, LONG Len)
 {
-    ULONGLONG Result = 0;
-    ULONG_PTR OldCR3 = __readcr3(), OldCR4 = __readcr4();
+    MMPTE TempPte;
+    PMMPTE PointerPte;
+    ULONG_PTR VirtAddr;
 
-    if (Addr & HIGH_PHYS_MASK)
+    TempPte.u.Long = PDE_PRESENT_BIT | PDE_W_BIT | PDE_PWT_BIT |
+                     PDE_PCD_BIT | PDE_ACCESSED_BIT | PDE_DIRTY_BIT;
+
+    if ((PhysAddr & (PAGE_SIZE - 1)) + Len > PAGE_SIZE)
     {
-        Addr &= ~HIGH_PHYS_MASK;
-        __writecr3(IdentityMapAddrHigh);
+        TempPte.u.Hard.PageFrameNumber = (PhysAddr >> PAGE_SHIFT) + 1;
+        PointerPte = MiAddressToPte(MI_KDBG_TMP_PAGE_1);
+        *PointerPte = TempPte;
+        VirtAddr = (ULONG_PTR)PointerPte << 10;
+        KeInvalidateTlbEntry((PVOID)VirtAddr);
     }
-    else
-        __writecr3(IdentityMapAddrLow);
 
-    __writecr4(OldCR4|CR4_PAGE_SIZE_BIT); // Turn on large page translation
-    __invlpg((PVOID)Addr);
+    TempPte.u.Hard.PageFrameNumber = PhysAddr >> PAGE_SHIFT;
+    PointerPte = MiAddressToPte(MI_KDBG_TMP_PAGE_0);
+    *PointerPte = TempPte;
+    VirtAddr = (ULONG_PTR)PointerPte << 10;
+    KeInvalidateTlbEntry((PVOID)VirtAddr);
+
+    return VirtAddr + (PhysAddr & (PAGE_SIZE - 1));
+}
+
+static
+ULONGLONG
+KdpPhysRead(ULONG_PTR PhysAddr, LONG Len)
+{
+    ULONG_PTR Addr;
+    ULONGLONG Result = 0;
+
+    Addr = KdpPhysMap(PhysAddr, Len);
 
     switch (Len)
     {
@@ -59,30 +83,17 @@ KdpPhysRead(ULONG_PTR Addr, LONG Len)
         Result = *((PUCHAR)Addr);
         break;
     }
-    __writecr4(OldCR4); // Turn off large page translation
-    __writecr3(OldCR3);
-    __invlpg((PVOID)Addr);
 
     return Result;
 }
 
-
+static
 VOID
-NTAPI
-KdpPhysWrite(ULONG_PTR Addr, LONG Len, ULONGLONG Value)
+KdpPhysWrite(ULONG_PTR PhysAddr, LONG Len, ULONGLONG Value)
 {
-    ULONG_PTR OldCR3 = __readcr3(), OldCR4 = __readcr4();
+    ULONG_PTR Addr;
 
-    if (Addr & HIGH_PHYS_MASK)
-    {
-        Addr &= ~HIGH_PHYS_MASK;
-        __writecr3(IdentityMapAddrHigh);
-    }
-    else
-        __writecr3(IdentityMapAddrLow);
-
-    __writecr4(OldCR4|CR4_PAGE_SIZE_BIT); // Turn on large page translation
-    __invlpg((PVOID)Addr);
+    Addr = KdpPhysMap(PhysAddr, Len);
 
     switch (Len)
     {
@@ -99,9 +110,6 @@ KdpPhysWrite(ULONG_PTR Addr, LONG Len, ULONGLONG Value)
         *((PUCHAR)Addr) = Value;
         break;
     }
-    __writecr4(OldCR4); // Turn off large page translation
-    __writecr3(OldCR3);    
-    __invlpg((PVOID)Addr);
 }
 
 BOOLEAN
@@ -201,47 +209,9 @@ KdpSafeWriteMemory(ULONG_PTR Addr, LONG Len, ULONGLONG Value)
 
 VOID
 NTAPI
-KdpEnableSafeMem()
+KdpEnableSafeMem(VOID)
 {
-    int i;
-    PULONG IdentityMapVirt;
-    PHYSICAL_ADDRESS IdentityMapPhys, Highest = { };
-
-    if (KdpPhysAccess)
-        return;
-
-    Highest.LowPart = (ULONG)-1;
-    /* Allocate a physical page and map it to copy the phys copy code onto */
-    IdentityMapVirt = (PULONG)MmAllocateContiguousMemory(2 * PAGE_SIZE, Highest);
-    IdentityMapPhys = MmGetPhysicalAddress(IdentityMapVirt);
-    IdentityMapAddrHigh = IdentityMapPhys.LowPart;
-
-    /* Copy the kernel space */
-    memcpy(IdentityMapVirt,
-           MmGlobalKernelPageDirectory,
-           PAGE_SIZE);
-
-    /* Set up 512 4Mb pages (high 2Gig identity mapped) */
-    for (i = 0; i < 512; i++)
-    {
-        IdentityMapVirt[i] = 
-            HIGH_PHYS_MASK | (i << 22) | PDE_PS_BIT | PDE_W_BIT | PDE_PRESENT_BIT;
-    }
-
-    /* Allocate a physical page and map it to copy the phys copy code onto */
-    IdentityMapAddrLow = IdentityMapAddrHigh + PAGE_SIZE;
-    IdentityMapVirt += PAGE_SIZE / sizeof(ULONG);
-
-    /* Copy the kernel space */
-    memcpy(IdentityMapVirt,
-           MmGlobalKernelPageDirectory,
-           PAGE_SIZE);
-
-    /* Set up 512 4Mb pages (low 2Gig identity mapped) */
-    for (i = 0; i < 512; i++)
-    {
-        IdentityMapVirt[i] = (i << 22) | PDE_PS_BIT | PDE_W_BIT | PDE_PRESENT_BIT;
-    }
-
     KdpPhysAccess = TRUE;
 }
+
+/* EOF */

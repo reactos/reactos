@@ -1,7 +1,7 @@
 /*
  * COM interfaces for shell objects
  *
- * Copyright (C) 2004 Maxime Bellengé
+ * Copyright (C) 2004 Maxime BellengÃ©
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,8 @@ import "shtypes.idl";
 import "servprov.idl";
 import "comcat.idl";
 
+#include <shdispid.h>
+
 /*****************************************************************************
  * IAutoComplete interface
  */
@@ -41,7 +43,7 @@ interface IAutoComplete : IUnknown
 		  [in] IUnknown *punkACL,
 		  [in] LPCOLESTR pwszRegKeyPath,
 		  [in] LPCOLESTR pwszQuickComplete);
-
+    
     HRESULT Enable( [in] BOOL fEnable );
 }
 
@@ -85,6 +87,29 @@ interface IFolderViewOC : IDispatch
 }
 
 [
+    uuid(62112aa2-ebe4-11cf-a5fb-0020afe7292d)
+]
+dispinterface DShellFolderViewEvents
+{
+    properties:
+    methods:
+    [id(DISPID_SELECTIONCHANGED)]
+    void SelectionChanged();
+
+    [id(DISPID_FILELISTENUMDONE)]
+    void EnumDone();
+
+    [id(DISPID_VERBINVOKED)]
+    VARIANT_BOOL VerbInvoked();
+
+    [id(DISPID_DEFAULTVERBINVOKED)]
+    VARIANT_BOOL DefaultVerbInvoked();
+
+    [id(DISPID_BEGINDRAG)]
+    VARIANT_BOOL BeginDrag();
+}
+
+[
     uuid(9ba05971-f6a8-11cf-a442-00a0c90a8f39),
     hidden
 ]
@@ -92,4 +117,30 @@ coclass ShellFolderViewOC
 {
     [default]         interface     IFolderViewOC;
     [default, source] dispinterface DShellFolderViewEvents;
+}
+
+/*****************************************************************************
+ * IAsyncOperation interface
+ */
+[
+    uuid(3d8b0590-f691-11d2-8ea9-006097df5bd4),
+    object,
+]
+
+interface IAsyncOperation : IUnknown
+{
+    typedef [unique] IAsyncOperation *LPASYNCOPERATION;
+
+    HRESULT SetAsyncMode([in] BOOL fDoOpAsync);
+
+    HRESULT GetAsyncMode([out] BOOL *pfIsOpAsync);
+
+    HRESULT StartOperation([in, unique, optional] IBindCtx *pbcReserved);
+
+    HRESULT InOperation([out] BOOL *pfInAsyncOp);
+
+    HRESULT EndOperation(
+            [in] HRESULT hResult,
+            [in, unique] IBindCtx *pbcReserved,
+            [in] DWORD dwEffects);
 }

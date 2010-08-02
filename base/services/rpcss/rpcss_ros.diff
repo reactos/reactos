@@ -1,8 +1,13 @@
 Index: rpcss_main.c
 ===================================================================
---- rpcss_main.c	(revision 37240)
-+++ rpcss_main.c	(working copy)
-@@ -62,7 +62,7 @@
+--- rpcss_main.c
++++ rpcss_main.c
+@@ -58,11 +58,11 @@
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(ole);
+ 
+-static HANDLE exit_event;
++HANDLE exit_event;
  
  //extern HANDLE __wine_make_process_system(void);
  

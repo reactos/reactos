@@ -166,9 +166,9 @@ static int sqliteKeywordCode(const WCHAR *z, int n){
 */
 static const char isIdChar[] = {
 /* x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 xA xB xC xD xE xF */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 0x */
+    0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 0x */
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 1x */
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  /* 2x */
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,  /* 2x */
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0,  /* 3x */
     0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  /* 4x */
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1,  /* 5x */
@@ -193,8 +193,8 @@ static const char isIdChar[] = {
 int sqliteGetToken(const WCHAR *z, int *tokenType){
   int i;
   switch( *z ){
-    case ' ': case '\t': case '\n': case '\f': case '\r': {
-      for(i=1; isspace(z[i]); i++){}
+    case ' ': case '\t': case '\n': case '\f': {
+      for(i=1; isspace(z[i]) && z[i] != '\r'; i++){}
       *tokenType = TK_SPACE;
       return i;
     }
@@ -254,13 +254,8 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
     case '`': case '\'': {
       int delim = z[0];
       for(i=1; z[i]; i++){
-        if( z[i]==delim ){
-          if( z[i+1]==delim ){
-            i++;
-          }else{
-            break;
-          }
-        }
+        if( z[i]==delim )
+          break;
       }
       if( z[i] ) i++;
       if( delim == '`' )

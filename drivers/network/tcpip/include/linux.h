@@ -1,5 +1,4 @@
-#ifndef _LINUX_TYPES_H
-#define _LINUX_TYPES_H
+#pragma once
 
 #include <ntddk.h>
 
@@ -1872,5 +1871,3 @@ struct pollfd {
 };
 
 #endif /* poll */
-
-#endif /* _LINUX_TYPES_H */

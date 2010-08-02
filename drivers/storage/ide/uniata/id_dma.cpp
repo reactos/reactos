@@ -53,6 +53,7 @@ static const CHAR retry_Udma[MAX_RETRIES+1] = {6, 2,-1,-1,-1,-1};
 PHYSICAL_ADDRESS ph4gb = {{0xFFFFFFFF, 0}};
 
 VOID
+NTAPI
 cyrix_timing (
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -60,6 +61,7 @@ cyrix_timing (
     );
 
 VOID
+NTAPI
 promise_timing (
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -67,6 +69,7 @@ promise_timing (
     );
 
 VOID
+NTAPI
 hpt_timing (
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -74,6 +77,7 @@ hpt_timing (
     );
 
 VOID
+NTAPI
 via82c_timing (
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -81,6 +85,7 @@ via82c_timing (
     );
 
 ULONG
+NTAPI
 hpt_cable80(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG channel            // physical channel number (0-1)
@@ -89,6 +94,7 @@ hpt_cable80(
 #define ATAPI_DEVICE(de, ldev)    (de->lun[ldev].DeviceFlags & DFLAGS_ATAPI_DEVICE)
 
 ULONG
+NTAPI
 AtapiVirtToPhysAddr_(
     IN PVOID HwDeviceExtension,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -124,6 +130,7 @@ AtapiVirtToPhysAddr_(
 } // end AtapiVirtToPhysAddr_()
 
 VOID
+NTAPI
 AtapiDmaAlloc(
     IN PVOID HwDeviceExtension,
     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
@@ -204,6 +211,7 @@ err_1:
 } // end AtapiDmaAlloc()
 
 BOOLEAN
+NTAPI
 AtapiDmaSetup(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -243,7 +251,7 @@ AtapiDmaSetup(
         return FALSE;
     }
     //KdPrint2((PRINT_PREFIX "  checkpoint 3\n" ));
-    if((ULONG)data & deviceExtension->AlignmentMask) {
+    if((ULONG_PTR)data & deviceExtension->AlignmentMask) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: unaligned data: %#x (%#x)\n", data, deviceExtension->AlignmentMask));
         return FALSE;
     }
@@ -285,7 +293,7 @@ retry_DB_IO:
         return FALSE;
     }
 
-    dma_count = min(count, (PAGE_SIZE - ((ULONG)data & PAGE_MASK)));
+    dma_count = min(count, (PAGE_SIZE - ((ULONG_PTR)data & PAGE_MASK)));
     data += dma_count;
     count -= dma_count;
     i = 0;
@@ -352,6 +360,7 @@ retry_DB_IO:
 } // end AtapiDmaSetup()
 
 BOOLEAN
+NTAPI
 AtapiDmaPioSync(
     PVOID  HwDeviceExtension,
     PSCSI_REQUEST_BLOCK Srb,
@@ -416,6 +425,7 @@ AtapiDmaPioSync(
 } // end AtapiDmaPioSync()
 
 BOOLEAN
+NTAPI
 AtapiDmaDBSync(
     PHW_CHANNEL chan,
     PSCSI_REQUEST_BLOCK Srb
@@ -436,6 +446,7 @@ AtapiDmaDBSync(
 } // end AtapiDmaDBSync()
 
 VOID
+NTAPI
 AtapiDmaStart(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -484,10 +495,10 @@ AtapiDmaStart(
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11) |
+                AtapiWritePortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) |
                           (Channel ? 0x08 : 0x02));
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       ((Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? 0x05000000 : 0x06000000) | (Srb->DataTransferLength >> 1)
                       );
             }
@@ -528,6 +539,7 @@ AtapiDmaStart(
 } // end AtapiDmaStart()
 
 UCHAR
+NTAPI
 AtapiDmaDone(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -550,10 +562,10 @@ AtapiDmaDone(
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                AtapiWritePortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
                           ~(Channel ? 0x08 : 0x02));
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       0
                       );
             }
@@ -589,6 +601,7 @@ AtapiDmaDone(
 } // end AtapiDmaDone()
 
 VOID
+NTAPI
 AtapiDmaReinit(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG ldev,
@@ -671,6 +684,7 @@ limit_pio:
 } // end AtapiDmaReinit()
 
 VOID
+NTAPI
 AtapiDmaInit__(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG ldev
@@ -706,6 +720,7 @@ AtapiDmaInit__(
 } // end AtapiDmaInit__()
 
 BOOLEAN
+NTAPI
 AtaSetTransferMode(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG DeviceNumber,
@@ -749,6 +764,7 @@ AtaSetTransferMode(
 } // end AtaSetTransferMode()
 
 VOID
+NTAPI
 AtapiDmaInit(
     IN PVOID HwDeviceExtension,
     IN ULONG DeviceNumber,
@@ -1067,18 +1083,18 @@ set_new_acard:
             apiomode = 4;
         for(i=udmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
                 return;
             }
         }
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
                 return;
             }
         }
         if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
+            AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
             return;
         }
         return;
@@ -1796,6 +1812,7 @@ try_generic_dma:
 
 
 VOID
+NTAPI
 cyrix_timing(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -1820,11 +1837,12 @@ cyrix_timing(
     case ATA_WDMA2:       reg24 = 0x00002020; break;
     case ATA_UDMA2:       reg24 = 0x00911030; break;
     }
-    AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x20, reg20);
-    AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x24, reg24);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x20, reg20);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x24, reg24);
 } // cyrix_timing()
 
 VOID
+NTAPI
 promise_timing(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -1888,6 +1906,7 @@ promise_timing(
 
 
 VOID
+NTAPI
 hpt_timing(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)
@@ -2032,6 +2051,7 @@ hpt_timing(
 #define FIT(v,min,max) (((v)>(max)?(max):(v))<(min)?(min):(v))
 
 VOID
+NTAPI
 via82c_timing(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG dev,               // physical device number (0-3)

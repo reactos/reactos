@@ -12,14 +12,13 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS gdi32.dll
- * FILE:            lib/gdi32/misc/misc.c
+ * FILE:            dll/win32/gdi32/misc/misc.c
  * PURPOSE:         Miscellaneous functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
@@ -27,6 +26,9 @@
  */
 
 #include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 PGDI_TABLE_ENTRY GdiHandleTable = NULL;
 PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable = NULL;
@@ -124,7 +126,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
   if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
     ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
-                                                                   GDI_HANDLE_GET_TYPE(hGdiObj))
+                                                                GDI_HANDLE_GET_TYPE(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
     if(pid == NULL || pid == CurrentProcessId)
@@ -146,7 +148,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
          }
          _SEH2_END
       }
-       else
+      else
          Result = FALSE; // Can not be zero.
       if (Result) *UserData = Entry->UserData;
       return Result;
@@ -156,12 +158,58 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
   return FALSE;
 }
 
-PLDC GdiGetLDC(HDC hDC)
+PLDC
+FASTCALL
+GdiGetLDC(HDC hDC)
 {
-    PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
-      return NULL;
-    return Dc_Attr->pvLDC;
+  PDC_ATTR Dc_Attr;
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
+  HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+  // Don't check the mask, just the object type.
+  if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
+       (pid == NULL || pid == CurrentProcessId) )
+  {
+     BOOL Result = TRUE;
+     if (Entry->UserData)
+     {
+        volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+        _SEH2_TRY
+        {
+          *Current = *Current;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+          Result = FALSE;
+        }
+        _SEH2_END
+     }
+     else
+        Result = FALSE;
+
+     if (Result)
+     {
+        Dc_Attr = (PDC_ATTR)Entry->UserData;
+        return Dc_Attr->pvLDC;
+     }
+  }
+  return NULL;
+}
+
+VOID GdiSAPCallback(PLDC pldc)
+{
+    DWORD Time, NewTime = GetTickCount();
+
+    Time = NewTime - pldc->CallBackTick;
+
+    if ( Time < SAPCALLBACKDELAY) return;
+
+    pldc->CallBackTick = NewTime;
+
+    if ( !pldc->pAbortProc(pldc->hDC, 0) )
+    {
+       CancelDC(pldc->hDC);
+       AbortDoc(pldc->hDC);
+    }
 }
 
 /*
@@ -233,5 +281,48 @@ GdiAddGlsBounds(HDC hdc,LPRECT prc)
 {
     //FIXME: Lookup what 0x8000 means
     return NtGdiSetBoundsRect(hdc, prc, 0x8000 |  DCB_ACCUMULATE ) ? TRUE : FALSE;
+}
+
+extern PGDIHANDLECACHE GdiHandleCache;
+
+HGDIOBJ
+FASTCALL
+hGetPEBHandle(HANDLECACHETYPE Type, COLORREF cr)
+{
+   int Number;
+   HANDLE Lock;
+   HGDIOBJ Handle = NULL;
+
+   Lock = InterlockedCompareExchangePointer( (PVOID*)&GdiHandleCache->ulLock,
+                                              NtCurrentTeb(),
+                                              NULL );
+   
+   if (Lock) return Handle;
+
+   Number = GdiHandleCache->ulNumHandles[Type];
+
+   if ( Number && Number <= CACHE_REGION_ENTRIES )
+   {
+      if ( Type == hctRegionHandle)
+      {
+         PRGN_ATTR pRgn_Attr;
+         HGDIOBJ *hPtr;
+         hPtr = GdiHandleCache->Handle + CACHE_BRUSH_ENTRIES+CACHE_PEN_ENTRIES;
+         Handle = hPtr[Number - 1];
+
+         if (GdiGetHandleUserData( Handle, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+         {
+            if (pRgn_Attr->AttrFlags & ATTR_CACHED)
+            {
+               DPRINT("Get Handle! Count %d PEB 0x%x\n", GdiHandleCache->ulNumHandles[Type], NtCurrentTeb()->ProcessEnvironmentBlock);
+               pRgn_Attr->AttrFlags &= ~ATTR_CACHED;
+               hPtr[Number - 1] = NULL;
+               GdiHandleCache->ulNumHandles[Type]--;
+            }
+         }
+      }
+   }
+   (void)InterlockedExchangePointer((PVOID*)&GdiHandleCache->ulLock, Lock);
+   return Handle;
 }
 

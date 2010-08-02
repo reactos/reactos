@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /*
@@ -40,7 +40,7 @@ void TaskManager_OnOptionsAlwaysOnTop(void)
      * Check or uncheck the always on top menu item
      * and update main window.
      */
-    if ((GetWindowLongW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0)
+    if ((GetWindowLongPtrW(hMainWnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0)
     {
         CheckMenuItem(hOptionsMenu, ID_OPTIONS_ALWAYSONTOP, MF_BYCOMMAND|MF_UNCHECKED);
         TaskManagerSettings.AlwaysOnTop = FALSE;

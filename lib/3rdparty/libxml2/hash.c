@@ -320,7 +320,6 @@ xmlHashFree(xmlHashTablePtr table, xmlHashDeallocator f) {
 		inside_table = 0;
 		iter = next;
 	    }
-	    inside_table = 0;
 	}
 	xmlFree(table->table);
     }

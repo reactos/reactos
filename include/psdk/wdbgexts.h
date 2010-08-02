@@ -11,7 +11,12 @@ enum
 #define KD_SECONDARY_VERSION_AMD64_OBSOLETE_CONTEXT_1   0
 #define KD_SECONDARY_VERSION_AMD64_OBSOLETE_CONTEXT_2   1
 #define KD_SECONDARY_VERSION_AMD64_CONTEXT              2
+
+#if defined(_AMD64_)
+#define CURRENT_KD_SECONDARY_VERSION                    KD_SECONDARY_VERSION_AMD64_CONTEXT
+#else
 #define CURRENT_KD_SECONDARY_VERSION                    KD_SECONDARY_VERSION_DEFAULT
+#endif
 
 #define DBGKD_VERS_FLAG_MP                              0x0001
 #define DBGKD_VERS_FLAG_DATA                            0x0002
@@ -20,7 +25,27 @@ enum
 #define DBGKD_VERS_FLAG_HSS                             0x0010
 #define DBGKD_VERS_FLAG_PARTITIONS                      0x0020
 
-#define KDBG_TAG                                        TAG('K', 'D', 'B', 'G')
+#define KDBG_TAG                                        'GBDK'
+
+typedef enum _DBGKD_MAJOR_TYPES
+{
+    DBGKD_MAJOR_NT,
+    DBGKD_MAJOR_XBOX,
+    DBGKD_MAJOR_BIG,
+    DBGKD_MAJOR_EXDI,
+    DBGKD_MAJOR_NTBD,
+    DBGKD_MAJOR_EFI,
+    DBGKD_MAJOR_TNT,
+    DBGKD_MAJOR_SINGULARITY,
+    DBGKD_MAJOR_HYPERVISOR,
+    DBGKD_MAJOR_COUNT
+} DBGKD_MAJOR_TYPES;
+
+//
+// The major type is in the high byte
+//
+#define DBGKD_MAJOR_TYPE(MajorVersion) \
+    ((DBGKD_MAJOR_TYPES)((MajorVersion) >> 8))
 
 typedef struct _DBGKD_GET_VERSION32
 {
@@ -159,7 +184,7 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT FramePointer;
     USHORT PaeEnabled:1;
     GCC_ULONG64 KiCallUserMode;
-    GCC_ULONG64 KeUserCallbackDispatcher;
+    ULONG64 KeUserCallbackDispatcher;
     GCC_ULONG64 PsLoadedModuleList;
     GCC_ULONG64 PsActiveProcessHead;
     GCC_ULONG64 PspCidTable;
@@ -280,7 +305,11 @@ typedef struct _KDDEBUGGER_DATA64
     USHORT Gdt64R3CmTeb;
     GCC_ULONG64 IopNumTriageDumpDataBlocks;
     GCC_ULONG64 IopTriageDumpDataBlocks;
+#if 0 // Longhorn/Vista and later
     GCC_ULONG64 VfCrashDataBlock;
+    GCC_ULONG64 MmBadPagesDetected;
+    GCC_ULONG64 MmZeroedPageSingleBitErrorsDetected;
+#endif
 } KDDEBUGGER_DATA64, *PKDDEBUGGER_DATA64;
 
 #endif

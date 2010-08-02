@@ -12,17 +12,18 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __OSLIST_H
-#define __OSLIST_H
+#pragma once
 
-BOOLEAN	InitOperatingSystemList(PCSTR **SectionNamesPointer, PCSTR **DisplayNamesPointer, ULONG* OperatingSystemCountPointer);
-ULONG		CountOperatingSystems(ULONG SectionId);
-BOOLEAN	AllocateListMemory(PCHAR **SectionNamesPointer, PCHAR **DisplayNamesPointer, ULONG OperatingSystemCount);
-BOOLEAN	RemoveQuotes(PCHAR QuotedString);
+typedef struct tagOperatingSystemItem
+{
+	PCSTR SystemPartition;
+	PCSTR LoadIdentifier;
+	PCSTR OsLoadOptions;
+} OperatingSystemItem;
 
-#endif // #defined __OSLIST_H
+OperatingSystemItem* InitOperatingSystemList(ULONG* OperatingSystemCountPointer);

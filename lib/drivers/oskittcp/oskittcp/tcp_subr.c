@@ -163,7 +163,6 @@ tcp_respond(tp, ti, m, ack, seq, flags)
 	tcp_seq ack, seq;
 	int flags;
 {
-	struct mbuf *n;
 	register int tlen;
 	int win = 0;
 	struct route *ro = 0;
@@ -222,18 +221,6 @@ tcp_respond(tp, ti, m, ack, seq, flags)
 		tcp_trace(TA_OUTPUT, 0, tp, ti, 0);
 #endif
 	(void) ip_output(m, NULL, ro, 0, NULL);
-#ifdef __REACTOS__
-	/* We allocated m, so we are responsible for freeing it. If the mbuf
-           contains a pointer to an external datablock, we (or rather, m_copy)
-           didn't allocate it but pointed it to the data to send. So we have
-           to cheat a little bit and keep M_FREE from freeing the external
-           data block */
-	while (NULL != m) {
-	    m->m_flags &= ~M_EXT;
-	    MFREE(m, n);
-	    m = n;
-	}
-#endif
 }
 
 /*

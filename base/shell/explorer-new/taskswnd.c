@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -1029,6 +1029,21 @@ TaskSwitchWnd_AddTask(IN OUT PTASK_SWITCH_WND This,
 }
 
 static BOOL
+TaskSwitchWnd_ActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
+                               IN OUT PTASK_ITEM TaskItem  OPTIONAL)
+{
+    if (TaskItem != NULL)
+    {
+        DbgPrint("Activate window 0x%p on button %d\n", TaskItem->hWnd, TaskItem->Index);
+    }
+
+    TaskSwitchWnd_CheckActivateTaskItem(This,
+                                        TaskItem);
+
+    return FALSE;
+}
+
+static BOOL
 TaskSwitchWnd_ActivateTask(IN OUT PTASK_SWITCH_WND This,
                            IN HWND hWnd)
 {
@@ -1042,19 +1057,13 @@ TaskSwitchWnd_ActivateTask(IN OUT PTASK_SWITCH_WND This,
                                                    hWnd);
     }
 
-    if (TaskItem != NULL)
-    {
-        DbgPrint("Activate window 0x%p on button %d\n", hWnd, TaskItem->Index);
-    }
-    else
+    if (TaskItem == NULL)
     {
         DbgPrint("Activate window 0x%p, could not find task\n", hWnd);
     }
 
-    TaskSwitchWnd_CheckActivateTaskItem(This,
-                                        TaskItem);
-
-    return FALSE;
+    return TaskSwitchWnd_ActivateTaskItem(This,
+                                          TaskItem);
 }
 
 static BOOL
@@ -1326,8 +1335,8 @@ TaskSwitchWnd_EnumWindowsProc(IN HWND hWnd,
         /* Don't list popup windows and also no tool windows */
         if (GetWindow(hWnd,
                       GW_OWNER) == NULL &&
-            !(GetWindowLong(hWnd,
-                            GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+            !(GetWindowLongPtr(hWnd,
+                               GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
         {
             TaskSwitchWnd_AddTask(This,
                                   hWnd);
@@ -1634,6 +1643,78 @@ TaskSwitchWnd_EnableGrouping(IN OUT PTASK_SWITCH_WND This,
                                     FALSE);
 }
 
+static VOID
+TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
+                                  IN OUT PTASK_ITEM TaskItem)
+{
+    BOOL bIsMinimized;
+    BOOL bIsActive;
+
+    if (IsWindow(TaskItem->hWnd))
+    {
+        bIsMinimized = IsIconic(TaskItem->hWnd);
+        bIsActive = (TaskItem == This->ActiveTaskItem);
+
+        if (!bIsMinimized && bIsActive)
+        {
+            PostMessage(TaskItem->hWnd,
+                        WM_SYSCOMMAND,
+                        SC_MINIMIZE,
+                        0);
+        }
+        else
+        {
+            if (bIsMinimized)
+            {
+                 PostMessage(TaskItem->hWnd,
+                             WM_SYSCOMMAND,
+                             SC_RESTORE,
+                             0);
+            }
+
+            SetForegroundWindow(TaskItem->hWnd);
+        }
+    }
+}
+
+static VOID
+TaskSwitchWnd_HandleTaskGroupClick(IN OUT PTASK_SWITCH_WND This,
+                                   IN OUT PTASK_GROUP TaskGroup)
+{
+    /* TODO: Show task group menu */
+}
+
+static BOOL
+TaskSwitchWnd_HandleButtonClick(IN OUT PTASK_SWITCH_WND This,
+                                IN WORD wIndex)
+{
+    PTASK_ITEM TaskItem;
+    PTASK_GROUP TaskGroup;
+
+    if (This->IsGroupingEnabled)
+    {
+        TaskGroup = FindTaskGroupByIndex(This,
+                                         (INT)wIndex);
+        if (TaskGroup != NULL && TaskGroup->IsCollapsed)
+        {
+            TaskSwitchWnd_HandleTaskGroupClick(This,
+                                               TaskGroup);
+            return TRUE;
+        }
+    }
+
+    TaskItem = FindTaskItemByIndex(This,
+                                   (INT)wIndex);
+    if (TaskItem != NULL)
+    {
+        TaskSwitchWnd_HandleTaskItemClick(This,
+                                          TaskItem);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static LRESULT
 TaskSwichWnd_HandleItemPaint(IN OUT PTASK_SWITCH_WND This,
                              IN OUT NMTBCUSTOMDRAW *nmtbcd)
@@ -1860,7 +1941,8 @@ TaskSwitchWndProc(IN HWND hwnd,
             {
                 if (lParam != 0 && (HWND)lParam == This->hWndToolbar)
                 {
-                    DbgPrint("WM_COMMAND %u:%u (%u)\n", (UINT)LOWORD(wParam), (UINT)HIWORD(wParam), (UINT)wParam);
+                    TaskSwitchWnd_HandleButtonClick(This,
+                                                    LOWORD(wParam));
                 }
                 break;
             }

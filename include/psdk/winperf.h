@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
 #define PERF_DATA_VERSION 1
 #define PERF_DATA_REVISION 1
 #define PERF_NO_INSTANCES -1
@@ -130,6 +134,9 @@ typedef struct _PERF_COUNTER_BLOCK {
 typedef DWORD(CALLBACK PM_OPEN_PROC)(LPWSTR);
 typedef DWORD(CALLBACK PM_COLLECT_PROC)(LPWSTR,PVOID*,PDWORD,PDWORD);
 typedef DWORD(CALLBACK PM_CLOSE_PROC)(void);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #ifdef __cplusplus
 }
 #endif

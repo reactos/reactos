@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -33,7 +33,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -45,7 +45,7 @@ static LONG NrGuiAppsRunning = 0;
 /* FUNCTIONS *****************************************************************/
 
 static BOOL FASTCALL
-co_AddGuiApp(PW32PROCESS W32Data)
+co_AddGuiApp(PPROCESSINFO W32Data)
 {
    W32Data->W32PF_flags |= W32PF_CREATEDWINORDC;
    if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
@@ -65,7 +65,7 @@ co_AddGuiApp(PW32PROCESS W32Data)
 }
 
 static void FASTCALL
-RemoveGuiApp(PW32PROCESS W32Data)
+RemoveGuiApp(PPROCESSINFO W32Data)
 {
    W32Data->W32PF_flags &= ~W32PF_CREATEDWINORDC;
    if (InterlockedDecrement(&NrGuiAppsRunning) == 0)
@@ -77,7 +77,7 @@ RemoveGuiApp(PW32PROCESS W32Data)
 BOOL FASTCALL
 co_IntGraphicsCheck(BOOL Create)
 {
-   PW32PROCESS W32Data;
+   PPROCESSINFO W32Data;
 
    W32Data = PsGetCurrentProcessWin32Process();
    if (Create)
@@ -102,7 +102,7 @@ VOID
 FASTCALL
 IntUserManualGuiCheck(LONG Check)
 {
-   PW32PROCESS W32Data;
+   PPROCESSINFO W32Data;
 
    DPRINT("Enter IntUserManualGuiCheck\n");
 

@@ -317,7 +317,7 @@
     {
       FT_Fixed  best_scale = warper->best_scale;
       FT_Pos    best_delta = warper->best_delta;
-
+     
 
       hints->xmin_delta = FT_MulFix( X1, best_scale - org_scale )
                           + best_delta;

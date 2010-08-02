@@ -18,8 +18,6 @@ ULONG CmpHashTableSize = 2048;
 PCM_KEY_HASH_TABLE_ENTRY CmpCacheTable;
 PCM_NAME_HASH_TABLE_ENTRY CmpNameCacheTable;
 
-BOOLEAN CmpHoldLazyFlush;
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -32,7 +30,7 @@ CmpInitializeCache(VOID)
     Length = CmpHashTableSize * sizeof(CM_KEY_HASH_TABLE_ENTRY);
     
     /* Allocate it */
-    CmpCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
+    CmpCacheTable = CmpAllocate(Length, TRUE, TAG_CM);
     if (!CmpCacheTable)
     {
         /* Take the system down */
@@ -53,7 +51,7 @@ CmpInitializeCache(VOID)
     Length = CmpHashTableSize * sizeof(CM_NAME_HASH_TABLE_ENTRY);
     
     /* Now allocate the name cache table */
-    CmpNameCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
+    CmpNameCacheTable = CmpAllocate(Length, TRUE, TAG_CM);
     if (!CmpNameCacheTable)
     {
         /* Take the system down */
@@ -236,7 +234,9 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
             if (Found)
             {
                 /* Reference it */
+                ASSERT(Ncb->RefCount != 0xFFFF);
                 Ncb->RefCount++;
+                break;
             }
         }
 
@@ -249,7 +249,7 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
     {
         /* Allocate one */
         NcbSize = FIELD_OFFSET(CM_NAME_CONTROL_BLOCK, Name) + Length;
-        Ncb = ExAllocatePoolWithTag(PagedPool, NcbSize, TAG_CM);
+        Ncb = CmpAllocate(NcbSize, TRUE, TAG_CM);
         if (!Ncb)
         {
             /* Release the lock and fail */
@@ -322,6 +322,7 @@ CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
     CmpAcquireNcbLockExclusiveByKey(ConvKey);
 
     /* Decrease the reference count */
+    ASSERT(Ncb->RefCount >= 1);
     if (!(--Ncb->RefCount))
     {
         /* Find the NCB in the table */
@@ -343,7 +344,7 @@ CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
         }
 
         /* Found it, now free it */
-        ExFreePool(Ncb);
+        CmpFree(Ncb, 0);
     }
 
     /* Release the lock */
@@ -446,12 +447,12 @@ CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb)
             if (CMP_IS_CELL_CACHED(CachedList[i]))
             {
                 /* Free it */
-                ExFreePool((PVOID)CMP_GET_CACHED_CELL(CachedList[i]));
+                CmpFree((PVOID)CMP_GET_CACHED_CELL(CachedList[i]), 0);
             }
         }
 
         /* Now free the list */
-        ExFreePool((PVOID)CMP_GET_CACHED_CELL(Kcb->ValueCache.ValueList));
+        CmpFree((PVOID)CMP_GET_CACHED_CELL(Kcb->ValueCache.ValueList), 0);
         Kcb->ValueCache.ValueList = HCELL_NIL;
     }
     else if (Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND)
@@ -490,7 +491,7 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     CmpDereferenceNameControlBlockWithLock(Kcb->NameBlock);
 
     /* Check if we have an index hint block and free it */
-    if (Kcb->ExtFlags & CM_KCB_SUBKEY_HINT) ExFreePool(Kcb->IndexHint);
+    if (Kcb->ExtFlags & CM_KCB_SUBKEY_HINT) CmpFree(Kcb->IndexHint, 0);
 
     /* Check if we were already deleted */
     Parent = Kcb->ParentKcb;
@@ -529,7 +530,7 @@ CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
         if (Kcb->ExtFlags & (CM_KCB_SUBKEY_HINT))
         {
             /* Kill it */
-            ExFreePool(Kcb->IndexHint);
+            CmpFree(Kcb->IndexHint, 0);
         }
         
         /* Remove subkey flags */
@@ -581,7 +582,7 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     NewRefCount = OldRefCount - 1;
    
     /* Check if we still have references */
-    if( (NewRefCount & 0xFFFF) > 0)
+    if ((NewRefCount & 0xFFFF) > 0)
     {
         /* Do the dereference */
         if (InterlockedCompareExchange((PLONG)&Kcb->RefCount,
@@ -931,9 +932,9 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
 
     /* Allocate the unicode string now */
-    KeyName = ExAllocatePoolWithTag(PagedPool,
-                                    NameLength + sizeof(UNICODE_STRING),
-                                    TAG_CM);
+    KeyName = CmpAllocate(NameLength + sizeof(UNICODE_STRING),
+                          TRUE,
+                          TAG_CM);
 
     if (!KeyName) return NULL;
 
@@ -954,7 +955,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
             MyKcb->ExtFlags & CM_KCB_KEY_NON_EXIST)
         {
             /* Failure */
-            ExFreePool(KeyName);
+            CmpFree(KeyName, 0);
             return NULL;
         }
 
@@ -967,7 +968,7 @@ CmpConstructName(IN PCM_KEY_CONTROL_BLOCK Kcb)
             if (!KeyNode)
             {
                 /* Failure */
-                ExFreePool(KeyName);
+                CmpFree(KeyName, 0);
                 return NULL;
             }
         }
@@ -1056,7 +1057,7 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     for (i = 0; i < 4; i++)
     {
         /* Add it into the list */
-        if (!InterlockedCompareExchangePointer(&KeyBody->KeyControlBlock->
+        if (!InterlockedCompareExchangePointer((PVOID*)&KeyBody->KeyControlBlock->
                                                KeyBodyArray[i],
                                                KeyBody,
                                                NULL))
@@ -1112,7 +1113,7 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     for (i = 0; i < 4; i++)
     {
         /* Add it into the list */
-        if (InterlockedCompareExchangePointer(&KeyBody->KeyControlBlock->
+        if (InterlockedCompareExchangePointer((VOID*)&KeyBody->KeyControlBlock->
                                               KeyBodyArray[i],
                                               NULL,
                                               KeyBody) == KeyBody)
@@ -1136,4 +1137,63 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
 
     /* Unlock it it if we did a manual lock */
     if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);
+}
+
+VOID
+NTAPI
+CmpFlushNotifiesOnKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                              IN BOOLEAN LockHeld)
+{
+    PLIST_ENTRY NextEntry, ListHead;
+    PCM_KEY_BODY KeyBody;
+
+    /* Sanity check */
+    LockHeld ? CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK() : CmpIsKcbLockedExclusive(Kcb);
+    while (TRUE)
+    {
+        /* Is the list empty? */
+        ListHead = &Kcb->KeyBodyListHead;
+        if (!IsListEmpty(ListHead))
+        {
+            /* Loop the list */
+            NextEntry = ListHead->Flink;
+            while (NextEntry != ListHead)
+            {
+                /* Get the key body */
+                KeyBody = CONTAINING_RECORD(NextEntry, CM_KEY_BODY, KeyBodyList);
+                ASSERT(KeyBody->Type == '20yk');
+
+                /* Check for notifications */
+                if (KeyBody->NotifyBlock)
+                {
+                    /* Is the lock held? */
+                    if (LockHeld)
+                    {
+                        /* Flush it */
+                        CmpFlushNotify(KeyBody, LockHeld);
+                        ASSERT(KeyBody->NotifyBlock == NULL);
+                        continue;
+                    }
+                    
+                    /* Lock isn't held, so we need to take a reference */
+                    if (ObReferenceObjectSafe(KeyBody))
+                    {
+                        /* Now we can flush */
+                        CmpFlushNotify(KeyBody, LockHeld);
+                        ASSERT(KeyBody->NotifyBlock == NULL);
+                        
+                        /* Release the reference we took */
+    				    ObDereferenceObjectDeferDelete(KeyBody);
+                        continue;
+                    }
+                }
+
+                /* Try the next entry */
+                NextEntry = NextEntry->Flink;
+            }
+        }
+        
+        /* List has been parsed, exit */
+        break;
+    }
 }

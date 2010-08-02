@@ -18,8 +18,7 @@
 //  DeleteKeyDef  : Deletes a key def from the list              //
 ///////////////////////////////////////////////////////////////////
 
-#ifndef __KEYTRANS_H
-#define __KEYTRANS_H
+#pragma once
 
 #include "tkeydef.h"
 #include "tkeymap.h"
@@ -93,5 +92,3 @@ private:
 	int currentKeyMap, mainKeyMap;				// AVS
 
 };
-
-#endif // __KEYTRANS_H

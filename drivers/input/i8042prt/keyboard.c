@@ -15,7 +15,6 @@
 
 /* GLOBALS *******************************************************************/
 
-static IO_WORKITEM_ROUTINE i8042DebugWorkItem;
 static IO_WORKITEM_ROUTINE i8042PowerWorkItem;
 
 /* This structure starts with the same layout as KEYBOARD_INDICATOR_TRANSLATION */
@@ -30,25 +29,6 @@ static LOCAL_KEYBOARD_INDICATOR_TRANSLATION IndicatorTranslation = { 3, {
 	{0x46, KEYBOARD_SCROLL_LOCK_ON}}};
 
 /* FUNCTIONS *****************************************************************/
-
-/* Debug stuff */
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
-static VOID NTAPI
-i8042DebugWorkItem(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PVOID Key)
-{
-	INFO_(I8042PRT, "Debug key: p\n", Key);
-
-	if (!Key)
-		return;
-
-	/* We hope kernel would understand this. If
-	 * that's not the case, nothing would happen.
-	 */
-	KdSystemDebugControl(TAG('R', 'o', 's', ' '), Key, 0, NULL, 0, NULL, KernelMode);
-}
 
 /*
  * These functions are callbacks for filter driver custom interrupt
@@ -213,12 +193,14 @@ i8042PowerWorkItem(
 
 	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)Context;
 
+	UNREFERENCED_PARAMETER(DeviceObject);
+
 	/* See http://blogs.msdn.com/doronh/archive/2006/09/08/746961.aspx */
 
 	/* Register GUID_DEVICE_SYS_BUTTON interface and report capability */
 	if (DeviceExtension->NewCaps != DeviceExtension->ReportedCaps)
 	{
-		WaitingIrp = InterlockedExchangePointer(&DeviceExtension->PowerIrp, NULL);
+		WaitingIrp = InterlockedExchangePointer((PVOID)&DeviceExtension->PowerIrp, NULL);
 		if (WaitingIrp)
 		{
 			/* Cancel the current power irp, as capability changed */
@@ -273,7 +255,7 @@ i8042PowerWorkItem(
 	}
 
 	/* Directly complete the IOCTL_GET_SYS_BUTTON_EVENT Irp (if any) */
-	WaitingIrp = InterlockedExchangePointer(&DeviceExtension->PowerIrp, NULL);
+	WaitingIrp = InterlockedExchangePointer((PVOID)&DeviceExtension->PowerIrp, NULL);
 	if (WaitingIrp)
 	{
 		PULONG pEvent = (PULONG)WaitingIrp->AssociatedIrp.SystemBuffer;
@@ -340,6 +322,10 @@ i8042KbdDpcRoutine(
 	ULONG KeysInBufferCopy;
 	KIRQL Irql;
 
+	UNREFERENCED_PARAMETER(Dpc);
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
+
 	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
@@ -362,26 +348,6 @@ i8042KbdDpcRoutine(
 	KeysInBufferCopy = DeviceExtension->KeysInBuffer;
 
 	KeReleaseInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt, Irql);
-
-	if (PortDeviceExtension->Settings.CrashOnCtrlScroll)
-	{
-		PKEYBOARD_INPUT_DATA InputData;
-		InputData = DeviceExtension->KeyboardBuffer + KeysInBufferCopy - 1;
-
-		/* Test for TAB + key combination */
-		if (InputData->MakeCode == 0x0F)
-			DeviceExtension->TabPressed = !(InputData->Flags & KEY_BREAK);
-		else if (DeviceExtension->TabPressed)
-		{
-			DeviceExtension->TabPressed = FALSE;
-
-			IoQueueWorkItem(
-				DeviceExtension->DebugWorkItem,
-				&i8042DebugWorkItem,
-				DelayedWorkQueue,
-				(PVOID)(ULONG_PTR)InputData->MakeCode);
-		}
-	}
 
 	TRACE_(I8042PRT, "Send a key\n");
 
@@ -447,7 +413,7 @@ i8042KbdDeviceControl(
 			else
 			{
 				WaitingIrp = InterlockedCompareExchangePointer(
-					&DeviceExtension->PowerIrp,
+					(PVOID)&DeviceExtension->PowerIrp,
 					Irp,
 					NULL);
 				/* Check if an Irp is already pending */
@@ -465,7 +431,7 @@ i8042KbdDeviceControl(
 					PowerKey = InterlockedExchange((PLONG)&DeviceExtension->LastPowerKey, 0);
 					if (PowerKey != 0)
 					{
-						(VOID)InterlockedCompareExchangePointer(&DeviceExtension->PowerIrp, NULL, Irp);
+						(VOID)InterlockedCompareExchangePointer((PVOID)&DeviceExtension->PowerIrp, NULL, Irp);
 						*(PULONG)Irp->AssociatedIrp.SystemBuffer = PowerKey;
 						Status = STATUS_SUCCESS;
 						Irp->IoStatus.Status = Status;
@@ -633,6 +599,38 @@ cleanup:
 			Status = STATUS_SUCCESS;
 			break;
 		}
+		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
+		{
+			DPRINT1("IOCTL_KEYBOARD_QUERY_ATTRIBUTES not implemented\n");
+#if 0
+            /* FIXME: KeyboardAttributes are not initialized anywhere */
+			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;
+				break;
+			}
+
+			*(PKEYBOARD_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->KeyboardAttributes;
+			Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
+			Status = STATUS_SUCCESS;
+			break;
+#endif
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
+		{
+			DPRINT1("IOCTL_KEYBOARD_QUERY_TYPEMATIC not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_KEYBOARD_SET_TYPEMATIC:
+		{
+			DPRINT1("IOCTL_KEYBOARD_SET_TYPEMATIC not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
 		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
 		{
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION\n");
@@ -755,9 +753,11 @@ i8042KbdInterruptService(
 	PPORT_DEVICE_EXTENSION PortDeviceExtension;
 	PKEYBOARD_INPUT_DATA InputData;
 	ULONG Counter;
-	UCHAR PortStatus, Output;
+	UCHAR PortStatus = 0, Output = 0;
 	BOOLEAN ToReturn = FALSE;
 	NTSTATUS Status;
+
+	UNREFERENCED_PARAMETER(Interrupt);
 
 	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)Context;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
@@ -789,7 +789,7 @@ i8042KbdInterruptService(
 	if (PortDeviceExtension->Settings.CrashOnCtrlScroll)
 	{
 		/* Test for CTRL + SCROLL LOCK twice */
-		static const UCHAR ScanCodes[] = { 0xe0, 0x1d, 0x46, 0xc6, 0x46, 0 };
+		static const UCHAR ScanCodes[] = { 0x1d, 0x46, 0xc6, 0x46, 0 };
 
 		if (Output == ScanCodes[DeviceExtension->ComboPosition])
 		{
@@ -797,10 +797,32 @@ i8042KbdInterruptService(
 			if (ScanCodes[DeviceExtension->ComboPosition] == 0)
 				KeBugCheck(MANUALLY_INITIATED_CRASH);
 		}
+		else if (Output == 0xfa)
+		{
+		    /* Ignore ACK */
+		}
 		else if (Output == ScanCodes[0])
 			DeviceExtension->ComboPosition = 1;
 		else
 			DeviceExtension->ComboPosition = 0;
+
+		/* Test for TAB + key combination */
+		if (InputData->MakeCode == 0x0F)
+			DeviceExtension->TabPressed = !(InputData->Flags & KEY_BREAK);
+		else if (DeviceExtension->TabPressed)
+		{
+			DeviceExtension->TabPressed = FALSE;
+
+			/* Send request to the kernel debugger. 
+			 * Unknown requests will be ignored. */
+			KdSystemDebugControl(' soR',
+			                     (PVOID)(ULONG_PTR)InputData->MakeCode,
+			                     0,
+			                     NULL,
+			                     0,
+			                     NULL,
+			                     KernelMode);
+		}
 	}
 
 	if (i8042KbdCallIsrHook(DeviceExtension, PortStatus, Output, &ToReturn))

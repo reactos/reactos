@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef __WINE_DSDRIVER_H
@@ -64,7 +64,7 @@ typedef struct _DSDRIVERDESC
     DWORD      	dwFlags;
     TCHAR	szDesc[256];
     TCHAR	szDrvname[256];
-    DWORD	dnDevNode;
+    DWORD_PTR	dnDevNode;
     WORD	wVxdId;
     WORD	wReserved;
     ULONG	ulDeviceNum;
@@ -120,7 +120,7 @@ typedef union _DSPROPERTY
 	GUID	Set;
 	ULONG	Id;
 	ULONG	Flags;
-	ULONG	InstanceId;
+	ULONG_PTR	InstanceId;
     } DUMMYSTRUCTNAME;
     ULONGLONG	Alignment;
 } DSPROPERTY,*PDSPROPERTY;

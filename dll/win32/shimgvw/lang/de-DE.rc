@@ -2,14 +2,14 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-	IDS_APPTITLE    "ReactOS Picture und Fax Viewer"
-    IDS_SETASDESKBG "Als Desktop Hintergrund einstellen"
+	IDS_APPTITLE    "ReactOS-Bild- und Faxansicht"
+    IDS_SETASDESKBG "Als Desktophintergrund setzen"
 
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC   "Nächstes Bild"
     IDS_TOOLTIP_PREV_PIC   "Vorheriges Bild"
-    IDS_TOOLTIP_ZOOM_IN    "Zoom In (+)"
-    IDS_TOOLTIP_ZOOM_OUT   "Zoom Out (-)"
+    IDS_TOOLTIP_ZOOM_IN    "Vergrößern (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Verkleinern (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Drehen im Uhrzeigersinn (Strg+K)"
     IDS_TOOLTIP_ROT_COUNCW "Drehen gegen den Uhrzeigersinn (Strg+L)"
     IDS_TOOLTIP_PRINT      "Drucken (Strg+P)"

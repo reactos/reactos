@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:       See COPYING in the top level directory
@@ -66,46 +66,6 @@ InfpFindFirstLineW(
 }
 
 BOOL WINAPI
-InfpFindNextLine(
-	IN PINFCONTEXT ContextIn,
-	OUT PINFCONTEXT ContextOut)
-{
-	return InfFindNextLine(ContextIn, ContextOut);
-}
-
-BOOL WINAPI
-InfpGetBinaryField(
-	IN PINFCONTEXT Context,
-    IN ULONG FieldIndex,
-	IN OUT BYTE* ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize)
-{
-	return InfGetBinaryField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
-}
-
-DWORD WINAPI
-InfpGetFieldCount(
-	IN PINFCONTEXT Context)
-{
-	return (DWORD)InfGetFieldCount(Context);
-}
-
-BOOL WINAPI
-InfpGetIntField(
-	IN PINFCONTEXT Context,
-	IN DWORD FieldIndex,
-	OUT PINT IntegerValue)
-{
-	LONG IntegerValueL;
-	BOOL ret;
-
-	ret = InfGetIntField(Context, FieldIndex, &IntegerValueL);
-	*IntegerValue = (INT)IntegerValueL;
-	return ret;
-}
-
-BOOL WINAPI
 InfpGetMultiSzFieldW(
 	IN PINFCONTEXT Context,
 	IN ULONG FieldIndex,
@@ -132,6 +92,7 @@ InfpOpenInfFileW(
 	IN PCWSTR FileName,
 	IN PCWSTR InfClass,
 	IN DWORD InfStyle,
+	IN LCID LocaleId,
 	OUT PUINT ErrorLine)
 {
 	HINF hInf = NULL;
@@ -143,6 +104,7 @@ InfpOpenInfFileW(
 	Status = InfOpenFile(
 		&hInf,
 		&FileNameU,
+		LocaleId,
 		&ErrorLineUL);
 	*ErrorLine = (UINT)ErrorLineUL;
 	if (!NT_SUCCESS(Status))
@@ -252,6 +214,7 @@ INF_OpenBufferedFileA(
 	IN ULONG FileSize,
 	IN PCSTR InfClass,
 	IN DWORD InfStyle,
+	IN LCID LocaleId,
 	OUT PUINT ErrorLine)
 {
 #ifdef __REACTOS__
@@ -263,6 +226,7 @@ INF_OpenBufferedFileA(
 		&hInf,
 		FileBuffer,
 		FileSize,
+		LocaleId,
 		&ErrorLineUL);
 	*ErrorLine = (UINT)ErrorLineUL;
 	if (!NT_SUCCESS(Status))

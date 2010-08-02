@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -94,9 +94,9 @@ void ExplorerGlobals::read_persistent()
 	_cfg_path.printf(TEXT("%s\\ros-explorer-cfg.xml"), _cfg_dir.c_str());
 
 	if (!_cfg.read_file(_cfg_path)) {
-		//if (_cfg._last_error != XML_ERROR_NO_ELEMENTS)
-		MessageBox(_hwndDesktop, _cfg._errors.str(),
-					TEXT("ROS Explorer - reading user settings"), MB_OK);
+		if (!_cfg._errors.empty())
+			MessageBox(_hwndDesktop, _cfg._errors.str(),
+						TEXT("ROS Explorer - reading user settings"), MB_OK);
 
 		_cfg.read_file(TEXT("explorer-cfg-template.xml"));
 	}

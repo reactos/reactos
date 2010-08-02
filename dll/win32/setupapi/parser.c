@@ -1359,6 +1359,75 @@ void WINAPI SetupCloseInfFile( HINF hinf )
 
 
 /***********************************************************************
+ *            SetupEnumInfSectionsA   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupEnumInfSectionsA( HINF hinf, UINT index, PSTR buffer, DWORD size, DWORD *need )
+{
+    struct inf_file *file = hinf;
+
+    for (file = hinf; file; file = file->next)
+    {
+        if (index < file->nb_sections)
+        {
+            DWORD len = WideCharToMultiByte( CP_ACP, 0, file->sections[index]->name, -1,
+                                             NULL, 0, NULL, NULL );
+            if (need) *need = len;
+            if (!buffer)
+            {
+                if (!size) return TRUE;
+                SetLastError( ERROR_INVALID_USER_BUFFER );
+                return FALSE;
+            }
+            if (len > size)
+            {
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                return FALSE;
+            }
+            WideCharToMultiByte( CP_ACP, 0, file->sections[index]->name, -1, buffer, size, NULL, NULL );
+            return TRUE;
+        }
+        index -= file->nb_sections;
+    }
+    SetLastError( ERROR_NO_MORE_ITEMS );
+    return FALSE;
+}
+
+
+/***********************************************************************
+ *            SetupEnumInfSectionsW   (SETUPAPI.@)
+ */
+BOOL WINAPI SetupEnumInfSectionsW( HINF hinf, UINT index, PWSTR buffer, DWORD size, DWORD *need )
+{
+    struct inf_file *file = hinf;
+
+    for (file = hinf; file; file = file->next)
+    {
+        if (index < file->nb_sections)
+        {
+            DWORD len = strlenW( file->sections[index]->name ) + 1;
+            if (need) *need = len;
+            if (!buffer)
+            {
+                if (!size) return TRUE;
+                SetLastError( ERROR_INVALID_USER_BUFFER );
+                return FALSE;
+            }
+            if (len > size)
+            {
+                SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                return FALSE;
+            }
+            memcpy( buffer, file->sections[index]->name, len * sizeof(WCHAR) );
+            return TRUE;
+        }
+        index -= file->nb_sections;
+    }
+    SetLastError( ERROR_NO_MORE_ITEMS );
+    return FALSE;
+}
+
+
+/***********************************************************************
  *            SetupGetLineCountA   (SETUPAPI.@)
  */
 LONG WINAPI SetupGetLineCountA( HINF hinf, PCSTR name )
@@ -1425,11 +1494,9 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
     struct inf_file *file = hinf;
     int section_index;
 
-    SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
     {
         if ((section_index = find_section( file, section )) == -1) continue;
-        SetLastError( ERROR_LINE_NOT_FOUND );
         if (index < file->sections[section_index]->nb_lines)
         {
             context->Inf        = hinf;
@@ -1444,6 +1511,7 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
         index -= file->sections[section_index]->nb_lines;
     }
     TRACE( "(%p,%s) not found\n", hinf, debugstr_w(section) );
+	SetLastError( ERROR_LINE_NOT_FOUND );
     return FALSE;
 }
 
@@ -1485,7 +1553,6 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
     struct inf_file *file;
     int section_index;
 
-    SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
     {
         if ((section_index = find_section( file, section )) == -1) continue;
@@ -1498,7 +1565,6 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
             ctx.Line       = -1;
             return SetupFindNextMatchLineW( &ctx, key, context );
         }
-        SetLastError( ERROR_LINE_NOT_FOUND );  /* found at least one section */
         if (file->sections[section_index]->nb_lines)
         {
             context->Inf        = hinf;
@@ -1512,6 +1578,7 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
         }
     }
     TRACE( "(%p,%s,%s): not found\n", hinf, debugstr_w(section), debugstr_w(key) );
+	SetLastError( ERROR_LINE_NOT_FOUND );
     return FALSE;
 }
 
@@ -1827,21 +1894,26 @@ BOOL WINAPI SetupGetIntField( PINFCONTEXT context, DWORD index, PINT result )
     char *end, *buffer = localbuff;
     DWORD required;
     INT res;
-    BOOL ret = FALSE;
+    BOOL ret;
 
-    if (!SetupGetStringFieldA( context, index, localbuff, sizeof(localbuff), &required ))
+    if (!(ret = SetupGetStringFieldA( context, index, localbuff, sizeof(localbuff), &required )))
     {
         if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) return FALSE;
         if (!(buffer = HeapAlloc( GetProcessHeap(), 0, required ))) return FALSE;
-        if (!SetupGetStringFieldA( context, index, buffer, required, NULL )) goto done;
+        if (!(ret = SetupGetStringFieldA( context, index, buffer, required, NULL ))) goto done;
     }
-    res = strtol( buffer, &end, 0 );
-    if (end != buffer && !*end)
+    /* The call to SetupGetStringFieldA succeeded. If buffer is empty we have an optional field */
+    if (!*buffer) *result = 0;
+    else
     {
-        *result = res;
-        ret = TRUE;
+        res = strtol( buffer, &end, 0 );
+        if (end != buffer && !*end) *result = res;
+        else
+        {
+            SetLastError( ERROR_INVALID_DATA );
+            ret = FALSE;
+        }
     }
-    else SetLastError( ERROR_INVALID_DATA );
 
  done:
     if (buffer != localbuff) HeapFree( GetProcessHeap(), 0, buffer );
@@ -1897,10 +1969,9 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
     }
     if (TRACE_ON(setupapi))
     {
-        TRACE( "%p/%p/%d/%d index %d returning",
+        TRACE( "%p/%p/%d/%d index %d returning:\n",
                context->Inf, context->CurrentInf, context->Section, context->Line, index );
-        for (i = index; i < line->nb_fields; i++) TRACE( " %02x", buffer[i - index] );
-        TRACE( "\n" );
+        for (i = index; i < line->nb_fields; i++) TRACE( " %02x\n", buffer[i - index] );
     }
     return TRUE;
 }

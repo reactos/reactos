@@ -1,16 +1,16 @@
-#ifndef _WIN32K_CURSORICON_H
-#define _WIN32K_CURSORICON_H
+#pragma once
 
 #define MAXCURICONHANDLES 4096
 
 typedef struct tagCURICON_PROCESS
 {
   LIST_ENTRY ListEntry;
-  PW32PROCESS Process;
+  PPROCESSINFO Process;
 } CURICON_PROCESS, *PCURICON_PROCESS;
 
 typedef struct _CURICON_OBJECT
 {
+  PROCMARKHEAD head;
   LIST_ENTRY ListEntry;
   HANDLE Self;
   LIST_ENTRY ProcessList;
@@ -41,13 +41,16 @@ typedef struct _CURSORACCELERATION_INFO
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
-  BOOL SwapButtons;
+  BOOL ClickLockActive;
+  DWORD ClickLockTime;
+//  BOOL SwapButtons;
   UINT ButtonsDown;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
+  INT ShowingCursor;
+/*
   UINT WheelScroLines;
   UINT WheelScroChars;
-  BYTE ShowingCursor;
   UINT DblClickSpeed;
   UINT DblClickWidth;
   UINT DblClickHeight;
@@ -58,7 +61,7 @@ typedef struct _SYSTEM_CURSORINFO
 
   UINT MouseSpeed;
   CURSORACCELERATION_INFO CursorAccelerationInfo;
-
+*/
   DWORD LastBtnDown;
   LONG LastBtnDownX;
   LONG LastBtnDownY;
@@ -66,27 +69,39 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL ScreenSaverRunning;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
-HCURSOR FASTCALL IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange);
-BOOL FASTCALL IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject);
-PCURICON_OBJECT FASTCALL IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
-VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
-
-BOOL FASTCALL IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
+BOOL InitCursorImpl();
+PCURICON_OBJECT IntCreateCurIconHandle();
+VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxWidth,
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
-int APIENTRY UserShowCursor(BOOL bShow);
+BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg);
 
-#define IntGetSysCursorInfo(WinStaObj) \
-  (PSYSTEM_CURSORINFO)((WinStaObj)->SystemCursor)
+int UserShowCursor(BOOL bShow);
+
+PSYSTEM_CURSORINFO IntGetSysCursorInfo();
 
 #define IntReleaseCurIconObject(CurIconObj) \
   UserDereferenceObject(CurIconObj)
 
-#endif /* _WIN32K_CURSORICON_H */
+ULONG
+NTAPI
+GreSetPointerShape(
+    HDC hdc,
+    HBITMAP hbmMask,
+    HBITMAP hbmColor,
+    LONG xHot,
+    LONG yHot,
+    LONG x,
+    LONG y);
+
+VOID
+NTAPI
+GreMovePointer(
+    HDC hdc,
+    LONG x,
+    LONG y);
 
 /* EOF */
-
-

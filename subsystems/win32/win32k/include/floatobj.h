@@ -1,5 +1,4 @@
-#ifndef _WIN32K_FLOATOBJ_H_
-#define _WIN32K_FLOATOBJ_H_
+#pragma once
 
 #if defined(_X86_)
 
@@ -65,10 +64,9 @@ _FLOATOBJ_Equal1(FLOATOBJ *pf)
 #define _FLOATOBJ_IsLong(pf) ((FLOAT)((LONG)*(pf)) == *(pf))
 #define _FLOATOBJ_Equal0(pf) (*(pf) == 0.)
 #define _FLOATOBJ_Equal1(pf) (*(pf) == 1.)
+#define _FLOATOBJ_GetFix(pf) ((LONG)(*(pf) * 16.))
 
 #define FLOATOBJ_Set0(fo) *(fo) = 0; 
 #define FLOATOBJ_Set1(fo) *(fo) = 1;
 
 #endif
-
-#endif /* not _WIN32K_FLOATOBJ_H_ */

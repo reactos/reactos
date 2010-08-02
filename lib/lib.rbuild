@@ -7,11 +7,17 @@
 	<directory name="sdk">
 		<xi:include href="sdk/sdk.rbuild" />
 	</directory>
+	<directory name="atl">
+		<xi:include href="atl/atl.rbuild" />
+	</directory>
 	<directory name="cmlib">
 		<xi:include href="cmlib/cmlib.rbuild" />
 	</directory>
 	<directory name="debugsup">
 		<xi:include href="debugsup/debugsup.rbuild" />
+	</directory>
+	<directory name="dnslib">
+		<xi:include href="dnslib/dnslib.rbuild" />
 	</directory>
 	<directory name="drivers">
 		<xi:include href="drivers/directory.rbuild" />
@@ -27,6 +33,12 @@
 	</directory>
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
+	</directory>
+	<directory name="lsalib">
+		<xi:include href="lsalib/lsalib.rbuild" />
+	</directory>
+	<directory name="newinflib">
+		<xi:include href="newinflib/inflib.rbuild" />
 	</directory>
 	<directory name="nls">
 		<xi:include href="nls/nls.rbuild" />
@@ -51,6 +63,9 @@
 	</directory>
 	<directory name="smlib">
 		<xi:include href="smlib/smlib.rbuild" />
+	</directory>
+	<directory name="tdilib">
+		<xi:include href="tdilib/tdilib.rbuild" />
 	</directory>
 	<directory name="win32ksys">
 		<xi:include href="win32ksys/win32ksys.rbuild" />

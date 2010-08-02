@@ -4,8 +4,8 @@
  * FILE:        include/router.h
  * PURPOSE:     IP routing definitions
  */
-#ifndef __ROUTER_H
-#define __ROUTER_H
+
+#pragma once
 
 #include <neighbor.h>
 
@@ -43,10 +43,8 @@ NTSTATUS RouterStartup(
 NTSTATUS RouterShutdown(
     VOID);
 
-UINT CountFIBs(VOID);
+UINT CountFIBs(PIP_INTERFACE IF);
 
-UINT CopyFIBs( PFIB_ENTRY Target );
-
-#endif /* __ROUTER_H */
+UINT CopyFIBs( PIP_INTERFACE IF, PFIB_ENTRY Target );
 
 /* EOF */

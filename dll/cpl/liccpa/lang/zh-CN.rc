@@ -2,13 +2,14 @@
  *  (Simplified Chinese resources)
  *  (简体中文资源)
  *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *  Updated: 2009-05-02 Jingjing Fu <jingjingf AT 188.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 IDD_PROPPAGE1 DIALOGEX DISCARDABLE  20, 40, 315, 104
 STYLE DS_MODALFRAME | WS_OVERLAPPED | WS_CAPTION | WS_VISIBLE | WS_SYSMENU
-CAPTION "Chose Licensing Mode"
+CAPTION "选择协议模式"
 FONT 9, "MS Shell Dlg"
 BEGIN
 	CONTROL "客户协议类型",                         100, "BUTTON", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 4, 4, 239, 94

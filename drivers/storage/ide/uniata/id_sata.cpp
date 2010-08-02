@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 UCHAR
+NTAPI
 UniataSataConnect(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel          // logical channel
@@ -61,6 +62,7 @@ UniataSataConnect(
 } // end UniataSataConnect()
 
 UCHAR
+NTAPI
 UniataSataPhyEnable(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel          // logical channel
@@ -118,6 +120,7 @@ UniataSataPhyEnable(
 } // end UniataSataPhyEnable()
 
 BOOLEAN
+NTAPI
 UniataSataClearErr(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel,          // logical channel
@@ -162,6 +165,7 @@ UniataSataClearErr(
 } // end UniataSataClearErr()
 
 BOOLEAN
+NTAPI
 UniataSataEvent(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel,          // logical channel
@@ -197,6 +201,7 @@ UniataSataEvent(
 } // end UniataSataEvent()
 
 BOOLEAN
+NTAPI
 UniataAhciInit(
     IN PVOID HwDeviceExtension
     )
@@ -213,20 +218,20 @@ UniataAhciInit(
     ULONGLONG base;
 
     /* reset AHCI controller */
-    AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC,
-        AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC) | AHCI_GHC_HR);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC,
+        AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) | AHCI_GHC_HR);
     AtapiStallExecution(1000000);
-    if(AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC) & AHCI_GHC_HR) {
+    if(AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) & AHCI_GHC_HR) {
         KdPrint2((PRINT_PREFIX "  AHCI reset failed\n"));
         return FALSE;
     }
 
     /* enable AHCI mode */
-    AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC,
-        AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC) | AHCI_GHC_AE);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC,
+        AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) | AHCI_GHC_AE);
 
-    CAP = AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_CAP);
-    PI = AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_PI);
+    CAP = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_CAP);
+    PI = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_PI);
     /* get the number of HW channels */
     for(i=PI, n=0; i; n++, i=i>>1);
     deviceExtension->NumberChannels =
@@ -237,14 +242,14 @@ UniataAhciInit(
     }
 
     /* clear interrupts */
-    AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_IS,
-        AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_IS));
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_IS,
+        AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_IS));
 
     /* enable AHCI interrupts */
-    AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC,
-        AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_GHC) | AHCI_GHC_IE);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC,
+        AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_GHC) | AHCI_GHC_IE);
 
-    version = AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_VS);
+    version = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_VS);
     KdPrint2((PRINT_PREFIX "  AHCI version %x%x.%x%x controller with %d ports (mask %x) detected\n",
 		  (version >> 24) & 0xff, (version >> 16) & 0xff,
 		  (version >> 8) & 0xff, version & 0xff, deviceExtension->NumberChannels, PI));
@@ -290,15 +295,15 @@ UniataAhciInit(
             KdPrint2((PRINT_PREFIX "  AHCI buffer allocation failed\n"));
             return FALSE;
         }
-        AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, offs + IDX_AHCI_P_CLB,
+        AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), offs + IDX_AHCI_P_CLB,
             (ULONG)(base & 0xffffffff));
-        AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, offs + IDX_AHCI_P_CLB + 4,
+        AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), offs + IDX_AHCI_P_CLB + 4,
             (ULONG)((base >> 32) & 0xffffffff));
 
         base = chan->AHCI_CL_PhAddr + ATA_AHCI_MAX_TAGS;
-        AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, offs + IDX_AHCI_P_FB,
+        AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), offs + IDX_AHCI_P_FB,
             (ULONG)(base & 0xffffffff));
-        AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, offs + IDX_AHCI_P_FB + 4,
+        AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), offs + IDX_AHCI_P_FB + 4,
             (ULONG)((base >> 32) & 0xffffffff));
 
         chan->ChannelCtrlFlags |= CTRFLAGS_NO_SLAVE;
@@ -308,6 +313,7 @@ UniataAhciInit(
 } // end UniataAhciInit()
 
 UCHAR
+NTAPI
 UniataAhciStatus(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel
@@ -322,25 +328,25 @@ UniataAhciStatus(
     SATA_SSTATUS_REG SStatus;
     SATA_SERROR_REG  SError;
     ULONG offs = sizeof(IDE_AHCI_REGISTERS) + Channel*sizeof(IDE_AHCI_PORT_REGISTERS);
-    ULONG base;
+    ULONG_PTR base;
     ULONG tag=0;
 
     KdPrint(("UniataAhciStatus:\n"));
 
-    hIS = AtapiReadPortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_IS);
+    hIS = AtapiReadPortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_IS);
     KdPrint((" hIS %x\n", hIS));
     hIS &= (1 << Channel);
     if(!hIS) {
         return 0;
     }
-    base = (ULONG)&deviceExtension->BaseIoAHCI_0 + offs;
+    base = (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0 + offs);
     IS.Reg      = AtapiReadPort4(chan, base + IDX_AHCI_P_IS);
     CI          = AtapiReadPort4(chan, base + IDX_AHCI_P_CI);
     SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
     SError.Reg  = AtapiReadPort4(chan, IDX_SATA_SError); 
 
     /* clear interrupt(s) */
-    AtapiWritePortEx4(NULL, (ULONG)&deviceExtension->BaseIoAHCI_0, IDX_AHCI_IS, hIS);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAHCI_0), IDX_AHCI_IS, hIS);
     AtapiWritePort4(chan, base + IDX_AHCI_P_IS, IS.Reg);
     AtapiWritePort4(chan, IDX_SATA_SError, SError.Reg);
 
@@ -367,6 +373,7 @@ UniataAhciStatus(
 } // end UniataAhciStatus()
 
 ULONG
+NTAPI
 UniataAhciSetupFIS(
     IN PHW_DEVICE_EXTENSION deviceExtension,
     IN ULONG DeviceNumber,
@@ -418,7 +425,14 @@ UniataAhciSetupFIS(
         deviceExtension->lun[ldev].IdentifyData.FeaturesSupport.Address48) {
         i++;
     } else {
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4333) // right shift by too large amount, data loss
+#endif
         fis[7] |= (plba[3] >> 24) & 0x0f;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
     }
 
     fis[8] = plba[3];

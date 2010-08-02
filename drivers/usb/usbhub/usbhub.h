@@ -6,7 +6,7 @@
 #include "../miniport/usb_wrapper.h"
 #include "../usbport/hub.h"
 
-#define USB_HUB_TAG TAG('u','s','b','h')
+#define USB_HUB_TAG 'hbsu'
 
 typedef struct _HUB_DEVICE_EXTENSION
 {

@@ -37,12 +37,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 static LONG dll_count;
 
 /* the UI level */
-INSTALLUILEVEL gUILevel = INSTALLUILEVEL_BASIC;
-HWND           gUIhwnd = 0;
-INSTALLUI_HANDLERA gUIHandlerA = NULL;
-INSTALLUI_HANDLERW gUIHandlerW = NULL;
-DWORD gUIFilter = 0;
-LPVOID gUIContext = NULL;
+INSTALLUILEVEL           gUILevel         = INSTALLUILEVEL_BASIC;
+HWND                     gUIhwnd          = 0;
+INSTALLUI_HANDLERA       gUIHandlerA      = NULL;
+INSTALLUI_HANDLERW       gUIHandlerW      = NULL;
+INSTALLUI_HANDLER_RECORD gUIHandlerRecord = NULL;
+DWORD                    gUIFilter        = 0;
+LPVOID                   gUIContext       = NULL;
 WCHAR gszLogFile[MAX_PATH];
 HINSTANCE msi_hInstance;
 

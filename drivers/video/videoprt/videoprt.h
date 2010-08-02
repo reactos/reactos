@@ -4,19 +4,18 @@
  * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -25,6 +24,7 @@
 
 #include <stdio.h>
 #include <ntddk.h>
+#define __BROKEN__
 #include <miniport.h>
 #include <video.h>
 #include <ntddvdeo.h>
@@ -36,8 +36,8 @@
 
 #include <debug.h>
 
-#define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
-#define TAG_VIDEO_PORT_BUFFER  TAG('V', 'p', 'm', '\0' )
+#define TAG_VIDEO_PORT  'PDIV'
+#define TAG_VIDEO_PORT_BUFFER  '\0mpV'
 
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {
@@ -103,6 +103,15 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
       HwDeviceExtension, \
       VIDEO_PORT_DEVICE_EXTENSION, \
       MiniPortDeviceExtension)
+
+typedef struct _VIDEO_PORT_EVENT
+{
+    /* Public part */
+    ENG_EVENT;
+
+    /* Private part */
+    KEVENT Event;
+} VIDEO_PORT_EVENT, *PVIDEO_PORT_EVENT;
 
 /* agp.c */
 

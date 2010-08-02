@@ -8,51 +8,25 @@
 
 /* INCLUDES ******************************************************************/
 
+/* This file is compiled twice. Once for UP and once for MP */
+
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
+#include <internal/spinlock.h>
+
 #undef KeAcquireSpinLock
 #undef KeReleaseSpinLock
-#undef KeLowerIrql
-#undef KeRaiseIrql
+
+/* GLOBALS *******************************************************************/
+
+ULONG HalpSystemHardwareFlags;
+KSPIN_LOCK HalpSystemHardwareLock;
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeLowerIrql(KIRQL NewIrql)
-{
-    /* Call the fastcall function */
-    KfLowerIrql(NewIrql);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeRaiseIrql(KIRQL NewIrql,
-            PKIRQL OldIrql)
-{
-    /* Call the fastcall function */
-    *OldIrql = KfRaiseIrql(NewIrql);
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeAcquireSpinLock(PKSPIN_LOCK SpinLock,
-                  PKIRQL OldIrql)
-{
-    /* Call the fastcall function */
-    *OldIrql = KfAcquireSpinLock(SpinLock);
-}
+#ifdef _M_IX86
 
 /*
  * @implemented
@@ -61,20 +35,14 @@ KIRQL
 FASTCALL
 KeAcquireSpinLockRaiseToSynch(PKSPIN_LOCK SpinLock)
 {
-    /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
-}
+    KIRQL OldIrql;
 
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeReleaseSpinLock(PKSPIN_LOCK SpinLock,
-                  KIRQL NewIrql)
-{
-    /* Call the fastcall function */
-    KfReleaseSpinLock(SpinLock, NewIrql);
+    /* Raise to sync */
+    KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock and return */
+    KxAcquireSpinLock(SpinLock);
+    return OldIrql;
 }
 
 /*
@@ -84,8 +52,12 @@ KIRQL
 FASTCALL
 KfAcquireSpinLock(PKSPIN_LOCK SpinLock)
 {
-    /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KIRQL OldIrql;
+
+    /* Raise to dispatch and acquire the lock */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    KxAcquireSpinLock(SpinLock);
+    return OldIrql;
 }
 
 /*
@@ -96,8 +68,9 @@ FASTCALL
 KfReleaseSpinLock(PKSPIN_LOCK SpinLock,
                   KIRQL OldIrql)
 {
-    /* Simply lower IRQL back */
-    KfLowerIrql(OldIrql);
+    /* Release the lock and lower IRQL back */
+    KxReleaseSpinLock(SpinLock);
+    KeLowerIrql(OldIrql);
 }
 
 /*
@@ -107,8 +80,14 @@ KIRQL
 FASTCALL
 KeAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
-    /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KIRQL OldIrql;
+
+    /* Raise to dispatch */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(KeGetCurrentPrcb()->LockQueue[LockNumber].Lock); // HACK
+    return OldIrql;
 }
 
 /*
@@ -118,8 +97,14 @@ KIRQL
 FASTCALL
 KeAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber)
 {
-    /* Simply raise to dispatch */
-    return KfRaiseIrql(DISPATCH_LEVEL);
+    KIRQL OldIrql;
+
+    /* Raise to synch */
+    KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(KeGetCurrentPrcb()->LockQueue[LockNumber].Lock); // HACK
+    return OldIrql;
 }
 
 /*
@@ -130,8 +115,15 @@ FASTCALL
 KeAcquireInStackQueuedSpinLock(IN PKSPIN_LOCK SpinLock,
                                IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-    /* Simply raise to dispatch */
-    LockHandle->OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    /* Set up the lock */
+    LockHandle->LockQueue.Next = NULL;
+    LockHandle->LockQueue.Lock = SpinLock;
+
+    /* Raise to dispatch */
+    KeRaiseIrql(DISPATCH_LEVEL, &LockHandle->OldIrql);
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
 }
 
 /*
@@ -142,8 +134,15 @@ FASTCALL
 KeAcquireInStackQueuedSpinLockRaiseToSynch(IN PKSPIN_LOCK SpinLock,
                                            IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
-    /* Simply raise to synch */
-    LockHandle->OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+    /* Set up the lock */
+    LockHandle->LockQueue.Next = NULL;
+    LockHandle->LockQueue.Lock = SpinLock;
+
+    /* Raise to synch */
+    KeRaiseIrql(SYNCH_LEVEL, &LockHandle->OldIrql);
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
 }
 
 /*
@@ -154,8 +153,11 @@ FASTCALL
 KeReleaseQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                         IN KIRQL OldIrql)
 {
-    /* Simply lower IRQL back */
-    KfLowerIrql(OldIrql);
+    /* Release the lock */
+    KxReleaseSpinLock(KeGetCurrentPrcb()->LockQueue[LockNumber].Lock); // HACK
+
+    /* Lower IRQL back */
+    KeLowerIrql(OldIrql);
 }
 
 /*
@@ -166,7 +168,8 @@ FASTCALL
 KeReleaseInStackQueuedSpinLock(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
     /* Simply lower IRQL back */
-    KfLowerIrql(LockHandle->OldIrql);
+    KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
+    KeLowerIrql(LockHandle->OldIrql);
 }
 
 /*
@@ -177,8 +180,13 @@ FASTCALL
 KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                                          IN PKIRQL OldIrql)
 {
-    /* Simply raise to dispatch */
-    *OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+#ifdef CONFIG_SMP
+    ASSERT(FALSE); // FIXME: Unused
+    while (TRUE);
+#endif
+
+    /* Simply raise to synch */
+    KeRaiseIrql(SYNCH_LEVEL, OldIrql);
 
     /* Always return true on UP Machines */
     return TRUE;
@@ -192,11 +200,50 @@ FASTCALL
 KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
                              OUT PKIRQL OldIrql)
 {
+#ifdef CONFIG_SMP
+    ASSERT(FALSE); // FIXME: Unused
+    while (TRUE);
+#endif
+
     /* Simply raise to dispatch */
-    *OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
+    KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
 
     /* Always return true on UP Machines */
     return TRUE;
 }
 
-/* EOF */
+#endif
+
+VOID
+NTAPI
+HalpAcquireSystemHardwareSpinLock(VOID)
+{
+    ULONG Flags;
+
+    /* Get flags and disable interrupts */
+    Flags = __readeflags();
+    _disable();
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(&HalpSystemHardwareLock);
+
+    /* We have the lock, save the flags now */
+    HalpSystemHardwareFlags = Flags;
+}
+
+VOID
+NTAPI
+HalpReleaseCmosSpinLock(VOID)
+{
+    ULONG Flags;
+
+    /* Get the flags */
+    Flags = HalpSystemHardwareFlags;
+
+    /* Release the lock */
+    KxReleaseSpinLock(&HalpSystemHardwareLock);
+
+    /* Restore the flags */
+    __writeeflags(Flags);
+}
+

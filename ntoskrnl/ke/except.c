@@ -1,9 +1,10 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/except.c
  * PURPOSE:         Platform independent exception handling
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROGRAMMERS:     ReactOS Portable Systems Group
+ *                  Alex Ionescu (alex.ionescu@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -95,15 +96,13 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     CONTEXT LocalContext;
     EXCEPTION_RECORD LocalExceptionRecord;
     ULONG ParameterCount, Size;
-    NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Set up SEH */
-    _SEH2_TRY
+    /* Check if we need to probe */
+    if (PreviousMode != KernelMode)
     {
-        /* Check the previous mode */
-        if (PreviousMode != KernelMode)
+        /* Set up SEH */
+        _SEH2_TRY
         {
-#if 0
             /* Probe the context */
             ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
 
@@ -112,14 +111,13 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                          FIELD_OFFSET(EXCEPTION_RECORD, NumberParameters) +
                          sizeof(ULONG),
                          sizeof(ULONG));
-#endif
+
             /* Validate the maximum parameters */
             if ((ParameterCount = ExceptionRecord->NumberParameters) >
                 EXCEPTION_MAXIMUM_PARAMETERS)
             {
                 /* Too large */
-                Status = STATUS_INVALID_PARAMETER;
-                _SEH2_LEAVE;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
             }
 
             /* Probe the entire parameters now*/
@@ -136,14 +134,17 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
             /* Update the parameter count */
             ExceptionRecord->NumberParameters = ParameterCount;
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Don't fail silently */
+            DPRINT1("KiRaiseException: Failed to Probe\n");
+            DbgBreakPoint();
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the exception code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Convert the context record */
     KeContextToTrapFrame(Context,
@@ -160,7 +161,84 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                         PreviousMode,
                         SearchFrames);
 
-    /* Return the status */
+    /* We are done */
+    return STATUS_SUCCESS;
+}
+
+/* SYSTEM CALLS ***************************************************************/
+
+NTSTATUS
+NTAPI
+NtRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
+                 IN PCONTEXT Context,
+                 IN BOOLEAN FirstChance)
+{
+    NTSTATUS Status;
+    PKTHREAD Thread;
+    PKTRAP_FRAME TrapFrame;
+
+    /* Get trap frame and link previous one*/
+    Thread = KeGetCurrentThread();
+    TrapFrame = Thread->TrapFrame;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
+    
+    /* Set exception list */
+#ifdef _M_IX86
+    KeGetPcr()->NtTib.ExceptionList = TrapFrame->ExceptionList;
+#endif
+    
+    /* Raise the exception */
+    Status = KiRaiseException(ExceptionRecord,
+                              Context,
+                              NULL,
+                              TrapFrame,
+                              FirstChance);
+    if (NT_SUCCESS(Status))
+    {
+        /* It was handled, so exit restoring all state */
+        KiServiceExit2(TrapFrame);
+    }
+    else
+    {
+        /* Exit with error */
+        KiServiceExit(TrapFrame, Status);
+    }
+    
+    /* We don't actually make it here */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtContinue(IN PCONTEXT Context,
+           IN BOOLEAN TestAlert)
+{
+    PKTHREAD Thread;
+    NTSTATUS Status;
+    PKTRAP_FRAME TrapFrame;
+    
+    /* Get trap frame and link previous one*/
+    Thread = KeGetCurrentThread();
+    TrapFrame = Thread->TrapFrame;
+    Thread->TrapFrame = KiGetLinkedTrapFrame(TrapFrame);
+    
+    /* Continue from this point on */
+    Status = KiContinue(Context, NULL, TrapFrame);
+    if (NT_SUCCESS(Status))
+    {
+        /* Check if alert was requested */
+        if (TestAlert) KeTestAlertThread(Thread->PreviousMode);
+        
+        /* Exit to new trap frame */
+        KiServiceExit2(TrapFrame);
+    }
+    else
+    {
+        /* Exit with an error */
+        KiServiceExit(TrapFrame, Status);
+    }
+    
+    /* We don't actually make it here */
     return Status;
 }
 

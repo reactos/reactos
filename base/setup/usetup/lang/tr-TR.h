@@ -1,5 +1,4 @@
-#ifndef LANG_TR_TR_H__
-#define LANG_TR_TR_H__
+#pragma once
 
 MUI_LAYOUTS trTRLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS trTRLayouts[] =
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
-
-#endif

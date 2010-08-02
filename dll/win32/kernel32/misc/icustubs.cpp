@@ -45,17 +45,17 @@ void WINAPI DeleteCriticalSection(PCRITICAL_SECTION p) { RtlDeleteCriticalSectio
 
 void free(void * memory)
 {
-	RtlFreeHeap(GetProcessHeap(), 0, memory);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, memory);
 }
 
 void * malloc(size_t size)
 {
-	return RtlAllocateHeap(GetProcessHeap(), 0, size);
+	return RtlAllocateHeap(RtlGetProcessHeap(), 0, size);
 }
 
 void * realloc(void * memory, size_t size)
 {
-	return RtlReAllocateHeap(GetProcessHeap(), 0, memory, size);
+	return RtlReAllocateHeap(RtlGetProcessHeap(), 0, memory, size);
 }
 
 int __cdecl _purecall()
@@ -65,7 +65,9 @@ int __cdecl _purecall()
 	return 0;
 }
 
+#if defined(__GNUC__)
 __attribute__((alias("_purecall"))) void __cxa_pure_virtual(void);
+#endif
 
 void _assert()
 {

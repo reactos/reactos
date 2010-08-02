@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /* DO NOT USE THE PRECOMPILED HEADER FOR THIS FILE! */
@@ -23,9 +23,5 @@
 #include <windows.h>
 #include <aclui.h>
 #include <objsel.h>
-
-#ifdef _MSC_VER
-#include <precomp.h>
-#endif
 
 /* NO CODE HERE, THIS IS JUST REQUIRED FOR THE GUID DEFINITIONS */

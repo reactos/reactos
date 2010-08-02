@@ -140,6 +140,8 @@
 @ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long) setupapi.CM_Open_Class_Key_ExW
 @ stdcall CM_Open_DevNode_Key(ptr long long long ptr long) setupapi.CM_Open_DevNode_Key
 @ stdcall CM_Open_DevNode_Key_Ex(ptr long long long ptr long long) setupapi.CM_Open_DevNode_Key_Ex
+@ stub CM_Query_And_Remove_SubTreeA
+@ stub CM_Query_And_Remove_SubTreeW
 @ stub CM_Query_Arbitrator_Free_Data # setupapi.CM_Query_Arbitrator_Free_Data
 @ stub CM_Query_Arbitrator_Free_Data_Ex # setupapi.CM_Query_Arbitrator_Free_Data_Ex
 @ stub CM_Query_Arbitrator_Free_Size # setupapi.CM_Query_Arbitrator_Free_Size

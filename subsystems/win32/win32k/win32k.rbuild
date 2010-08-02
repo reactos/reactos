@@ -1,19 +1,26 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k_base" type="objectlibrary">
-	<include base="win32k_base">.</include>
-	<include base="win32k_base">include</include>
-	<include base="win32k_base" root="intermediate">.</include>
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
+	<importlibrary definition="win32k.pspec" />
+	<library>pseh</library>
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<library>ftfd</library>
+	<library>dxguid</library>
+	<file>win32k.rc</file>
+	<include base="win32k">.</include>
+	<include base="win32k">include</include>
+	<include base="win32k" root="intermediate">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
+	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
+	<compilerflag compilerset="msc">/wd4276</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>pch.h</pch>
-	-->
 
 	<directory name="dib" root="intermediate">
 		<file>dib8gen.c</file>
@@ -28,8 +35,9 @@
 		<file>dib16bpp.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
-		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
+		<file>floodfill.c</file>
+		<file>stretchblt.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -44,15 +52,16 @@
 		</ifnot>
 	</directory>
 	<directory name="eng">
+		<file>alphablend.c</file>
 		<file>bitblt.c</file>
 		<file>engbrush.c</file>
+		<file>engevent.c</file>
 		<file>clip.c</file>
 		<file>copybits.c</file>
 		<file>debug.c</file>
 		<file>device.c</file>
 		<file>driverobj.c</file>
 		<file>error.c</file>
-		<file>event.c</file>
 		<file>float.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -61,15 +70,16 @@
 		</if>
 		<file>gradient.c</file>
 		<file>lineto.c</file>
+		<file>mapping.c</file>
 		<file>mem.c</file>
 		<file>engmisc.c</file>
 		<file>mouse.c</file>
 		<file>paint.c</file>
-		<file>palette.c</file>
 		<file>perfcnt.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
 		<file>string.c</file>
+		<file>stretchblt.c</file>
 		<file>surface.c</file>
 		<file>transblt.c</file>
 		<file>engwindow.c</file>
@@ -84,9 +94,11 @@
 	<directory name="misc">
 		<file>driver.c</file>
 		<file>err.c</file>
+		<file>file.c</file>
 		<file>math.c</file>
 		<file>rtlstr.c</file>
 		<file>copy.c</file>
+		<file>registry.c</file>
 		<file>usrheap.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -158,7 +170,6 @@
 		<file>bitmaps.c</file>
 		<file>brush.c</file>
 		<file>cliprgn.c</file>
-		<file>color.c</file>
 		<file>coord.c</file>
 		<file>dcattr.c</file>
 		<file>dclife.c</file>
@@ -176,7 +187,7 @@
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>
-		<file>palobj.c</file>
+		<file>palette.c</file>
 		<file>path.c</file>
 		<file>pen.c</file>
 		<file>polyfill.c</file>
@@ -190,19 +201,7 @@
 	</directory>
 	<directory name="stubs">
 		<file>stubs.c</file>
+		<file>umpdstubs.c</file>
 	</directory>
-
-	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
-</module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" crt="libcntpr">
-	<importlibrary definition="win32k.pspec" />
-	<library>win32k_base</library>
-	<library>pseh</library>
-	<library>ntoskrnl</library>
-	<library>hal</library>
-	<library>ftfd</library>
-	<library>dxguid</library>
-	<file>win32k.rc</file>
 </module>
 </group>

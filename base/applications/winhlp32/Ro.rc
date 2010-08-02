@@ -1,0 +1,132 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2009 Michael Stefaniuc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "winhelp_res.h"
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+/* Menu */
+
+MAIN_MENU MENU
+{
+ POPUP "&Fișier" {
+  MENUITEM "&Deschide",                      MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Tipărește",                     MNID_FILE_PRINT
+  MENUITEM "&Setare imprimantă",             MNID_FILE_SETUP
+  MENUITEM SEPARATOR
+  MENUITEM "&Ieșire",                        MNID_FILE_EXIT
+ }
+ POPUP "&Editare" {
+   MENUITEM "&Copiază...",                   MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Adnotează...",                 MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Se&mn de carte" {
+   MENUITEM "&Definește...",                 MNID_BKMK_DEFINE
+ }
+ POPUP "&Opțiuni" {
+   POPUP "&Ajutor întotdeauna vizibil"
+   BEGIN
+     MENUITEM "Implicit",                    MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Vizibil",                     MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Invizibil",                   MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "Istorie",                        MNID_OPTS_HISTORY
+  POPUP    "&Font"
+  BEGIN
+    MENUITEM "Mic",                          MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",                       MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Mare",                         MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Utilizează culorile sistemului", MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "&Ajutor" {
+   MENUITEM "Ajut&or despre ajutor",         MNID_HELP_HELPON
+   MENUITEM "În&totdeauna deasupra",         MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Informații...",                MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&Despre Wine",                  MNID_HELP_WINE
+#endif
+ }
+}
+
+IDD_INDEX DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Căutare"
+{
+    LTEXT  "Încă neimplementată", -1, 10, 10, 180, 150
+}
+
+/* Strings */
+STRINGTABLE
+{
+STID_WINE_HELP,         "Ajutor Wine"
+STID_WHERROR,           "EROARE"
+STID_WARNING,           "AVERTISMENT"
+STID_INFO,              "Informație"
+STID_NOT_IMPLEMENTED,   "Neimplementat"
+STID_HLPFILE_ERROR_s,   "Eroare la citirea fișierului de ajutor „%s”"
+STID_INDEX,             "&Index"
+STID_CONTENTS,          "Rezumat"
+STID_BACK,              "În&apoi"
+STID_ALL_FILES,         "Toate fișierele (*.*)"
+STID_HELP_FILES_HLP,    "Fișierele de ajutor (*.hlp)"
+STID_FILE_NOT_FOUND_s   "Fișierul „%s” nu poate fi găsit. Vreți să-l cautați?"
+STID_NO_RICHEDIT        "Nu am găsit o implementare pentru richedit... Abandonez"
+STID_PSH_INDEX,         "Subiecte de ajutor:"
+}
+
+CONTEXT_MENU MENU
+BEGIN
+  POPUP ""
+  BEGIN
+    MENUITEM "Adnotare...",                    MNID_CTXT_ANNOTATE
+    MENUITEM "Copiază",                        MNID_CTXT_COPY
+    MENUITEM "Tipărește...",                   MNID_CTXT_PRINT
+    POPUP "Fonturi"
+    BEGIN
+      MENUITEM "Mic",                          MNID_CTXT_FONTS_SMALL
+      MENUITEM "Normal",                       MNID_CTXT_FONTS_NORMAL
+      MENUITEM "Mare",                         MNID_CTXT_FONTS_LARGE
+    END
+    POPUP "Ajutorul întotdeauna vizibil"
+    BEGIN
+      MENUITEM "Implicit",                     MNID_CTXT_HELP_DEFAULT
+      MENUITEM "Vizibil",                      MNID_CTXT_HELP_VISIBLE
+      MENUITEM "Invizibil",                    MNID_CTXT_HELP_NONVISIBLE
+    END
+    MENUITEM "Utilizează culorile sistemului", MNID_CTXT_SYSTEM_COLORS
+  END
+END

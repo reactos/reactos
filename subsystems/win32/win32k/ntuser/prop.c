@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
@@ -27,16 +27,13 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
 /* STATIC FUNCTIONS **********************************************************/
 
-/* FUNCTIONS *****************************************************************/
-
-static
 PPROPERTY FASTCALL
 IntGetProp(PWINDOW_OBJECT Window, ATOM Atom)
 {
@@ -55,6 +52,49 @@ IntGetProp(PWINDOW_OBJECT Window, ATOM Atom)
    }
    return(NULL);
 }
+
+BOOL FASTCALL
+IntRemoveProp(PWINDOW_OBJECT Window, ATOM Atom)
+{
+   PPROPERTY Prop;
+   HANDLE Data;
+   Prop = IntGetProp(Window, Atom);
+
+   if (Prop == NULL)
+   {
+      return FALSE;
+   }
+   Data = Prop->Data;
+   RemoveEntryList(&Prop->PropListEntry);
+   UserHeapFree(Prop);
+   Window->Wnd->PropListItems--;
+   return TRUE;
+}
+
+BOOL FASTCALL
+IntSetProp(PWINDOW_OBJECT pWnd, ATOM Atom, HANDLE Data)
+{
+   PPROPERTY Prop;
+
+   Prop = IntGetProp(pWnd, Atom);
+
+   if (Prop == NULL)
+   {
+      Prop = UserHeapAlloc(sizeof(PROPERTY));
+      if (Prop == NULL)
+      {
+         return FALSE;
+      }
+      Prop->Atom = Atom;
+      InsertTailList(&pWnd->Wnd->PropListHead, &Prop->PropListEntry);
+      pWnd->Wnd->PropListItems++;
+   }
+
+   Prop->Data = Data;
+   return TRUE;
+}
+
+/* FUNCTIONS *****************************************************************/
 
 NTSTATUS APIENTRY
 NtUserBuildPropList(HWND hWnd,
@@ -163,32 +203,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
-
-static
-BOOL FASTCALL
-IntSetProp(PWINDOW_OBJECT pWnd, ATOM Atom, HANDLE Data)
-{
-   PPROPERTY Prop;
-
-   Prop = IntGetProp(pWnd, Atom);
-
-   if (Prop == NULL)
-   {
-      Prop = UserHeapAlloc(sizeof(PROPERTY));
-      if (Prop == NULL)
-      {
-         return FALSE;
-      }
-      Prop->Atom = Atom;
-      InsertTailList(&pWnd->Wnd->PropListHead, &Prop->PropListEntry);
-      pWnd->Wnd->PropListItems++;
-   }
-
-   Prop->Data = Data;
-   return TRUE;
-}
-
 
 BOOL APIENTRY
 NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)

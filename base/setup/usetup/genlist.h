@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  * COPYRIGHT:       See COPYING in the top level directory
@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __GENLIST_H__
-#define __GENLIST_H__
+#pragma once
 
 struct _GENERIC_LIST_ENTRY;
 typedef struct _GENERIC_LIST_ENTRY *PGENERIC_LIST_ENTRY;
@@ -96,7 +95,5 @@ RestoreGenericListState(PGENERIC_LIST List);
 
 VOID
 GenericListKeyPress (PGENERIC_LIST List, CHAR AsciChar);
-
-#endif /* __GENLIST_H__ */
 
 /* EOF */

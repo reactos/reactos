@@ -160,7 +160,7 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
     return S_OK;
   }
   /* It is not our lockbytes implementation, so use a more generic way */
-  hres = ILockBytes_Stat(plkbyt,&stbuf,0);
+  hres = ILockBytes_Stat(plkbyt,&stbuf,STATFLAG_NONAME);
   if (hres != S_OK) {
      ERR("Cannot ILockBytes_Stat, %x\n",hres);
      return hres;

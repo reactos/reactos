@@ -1,20 +1,13 @@
-#ifndef _WIN32K_WINPOS_H
-#define _WIN32K_WINPOS_H
-
-/* Undocumented flags. */
-#define SWP_NOCLIENTMOVE          0x0800
-#define SWP_NOCLIENTSIZE          0x1000
-
-#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000140)
+#pragma once
 
 #define IntPtInWindow(WndObject,x,y) \
-  ((x) >= (WndObject)->Wnd->WindowRect.left && \
-   (x) < (WndObject)->Wnd->WindowRect.right && \
-   (y) >= (WndObject)->Wnd->WindowRect.top && \
-   (y) < (WndObject)->Wnd->WindowRect.bottom && \
-   (!(WndObject)->WindowRegion || ((WndObject)->Wnd->Style & WS_MINIMIZE) || \
-    NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->Wnd->WindowRect.left), \
-                    (INT)((y) - (WndObject)->Wnd->WindowRect.top))))
+  ((x) >= (WndObject)->Wnd->rcWindow.left && \
+   (x) < (WndObject)->Wnd->rcWindow.right && \
+   (y) >= (WndObject)->Wnd->rcWindow.top && \
+   (y) < (WndObject)->Wnd->rcWindow.bottom && \
+   (!(WndObject)->hrgnClip || ((WndObject)->Wnd->style & WS_MINIMIZE) || \
+    NtGdiPtInRegion((WndObject)->hrgnClip, (INT)((x) - (WndObject)->Wnd->rcWindow.left), \
+                    (INT)((y) - (WndObject)->Wnd->rcWindow.top))))
 
 UINT
 FASTCALL co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent);
@@ -32,6 +25,8 @@ co_WinPosSetWindowPos(PWINDOW_OBJECT Wnd, HWND WndInsertAfter, INT x, INT y, INT
 		   INT cy, UINT flags);
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd);
+void FASTCALL
+co_WinPosSendSizeMove(PWINDOW_OBJECT Window);
 USHORT FASTCALL
 co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
 		      PWINDOW_OBJECT* Window);
@@ -39,5 +34,3 @@ VOID FASTCALL co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
 
 VOID FASTCALL WinPosInitInternalPos(PWINDOW_OBJECT WindowObject,
                                     POINT *pt, RECTL *RestoreRect);
-
-#endif /* _WIN32K_WINPOS_H */

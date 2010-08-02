@@ -232,3 +232,39 @@ GetNativeSystemInfo(
     // GetNativeSystemInfo should return PROCESSOR_ARCHITECTURE_AMD64
     GetSystemInfo(lpSystemInfo);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
+                               IN OUT PDWORD ReturnLength)
+{
+    NTSTATUS Status;
+
+    if (!ReturnLength)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    Status = NtQuerySystemInformation(SystemLogicalProcessorInformation,
+                                      Buffer,
+                                      *ReturnLength,
+                                      ReturnLength);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /*
+         * When NtQuerySystemInformation says STATUS_INFO_LENGTH_MISMATCH,
+         * return ERROR_INSUFFICIENT_BUFFER instead of ERROR_BAD_LENGTH.
+         */
+        SetLastErrorByStatus(Status == STATUS_INFO_LENGTH_MISMATCH
+                             ? STATUS_BUFFER_TOO_SMALL
+                             : Status);
+        return FALSE;
+    }
+
+    return TRUE;
+}

@@ -21,7 +21,7 @@ VOID
 CmdLineParse(IN PCHAR CmdLine)
 {
     PCHAR End, Setting;
-    ULONG Length;
+    ULONG Length, Offset = 0;
 
     //
     // Set defaults
@@ -76,6 +76,21 @@ CmdLineParse(IN PCHAR CmdLine)
                                         sizeof(ANSI_NULL),
                                         NULL,
                                         0);
+
+    //
+    // Get ramdisk offset
+    //
+    Setting = strstr(CmdLine, "rdoffset=");
+    if (Setting) Offset = strtoul(Setting +
+                                  sizeof("rdoffset=") -
+                                  sizeof(ANSI_NULL),
+                                  NULL,
+                                  0);
+
+    //
+    // Fix it up
+    //
+    gRamDiskBase = (PVOID)((ULONG_PTR)gRamDiskBase + Offset);
 }
 
 PCCH

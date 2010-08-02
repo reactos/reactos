@@ -1,26 +1,22 @@
 <?xml version="1.0"?>
-<!DOCTYPE directory SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="freeldr_arch" type="objectlibrary">
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<module name="freeldr_arch" type="objectlibrary" crt="static">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ReactOS">include/reactos/libs</include>
 	<include base="ReactOS">include/reactos/elf</include>
+	<define name="_BLDR_" />
 	<define name="_NTHAL_" />
-	<compilerflag>-fno-inline</compilerflag>
-	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
-
-	<if property="ARCH" value="arm">
-		<compilerflag>-ffreestanding</compilerflag>
-		<compilerflag>-fno-builtin</compilerflag>
-		<compilerflag>-Os</compilerflag>
-	</if>
-
+	<define name="_NTSYSTEM_" />
 	<directory name="arch">
 		<directory name="i386">
 			<if property="ARCH" value="i386">
 				<file>_alloca.S</file>
 				<file>archmach.c</file>
+				<file>custom.c</file>
+				<file>drivemap.c</file>
+				<file>halstub.c</file>
 				<file>hardware.c</file>
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
@@ -30,6 +26,8 @@
 				<file>i386vid.c</file>
 				<file>loader.c</file>
 				<file>machpc.c</file>
+				<file>miscboot.c</file>
+				<file>ntoskrnl.c</file>
 				<file>pccons.c</file>
 				<file>pcdisk.c</file>
 				<file>pcmem.c</file>
@@ -65,11 +63,8 @@
 		</directory>
 		<directory name="arm">
 			<if property="ARCH" value="arm">
-				<file>boot.s</file>
-				<file>ferouart.c</file>
-				<file>loader.c</file>
+				<file first="true">boot.s</file>
 				<file>macharm.c</file>
-				<file>versuart.c</file>
 			</if>
 		</directory>
 
@@ -94,5 +89,25 @@
 			</directory>
 		</if>
 
+	</directory>
+
+	<directory name="windows">
+    	<if property="ARCH" value="arm">
+    		<directory name="arm">
+    			<file>wlmemory.c</file>
+    		</directory>
+    	</if>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>ntsetup.c</file>
+				<file>wlmemory.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>ntsetup.c</file>
+				<file>wlmemory.c</file>
+			</directory>
+		</if>
 	</directory>
 </module>

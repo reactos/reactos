@@ -2,7 +2,6 @@
 	<importlibrary definition="authz.spec" />
 	<include base="authz">.</include>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<file>authz.c</file>
 	<file>clictx.c</file>

@@ -4,8 +4,7 @@
  *
  */
 
-#ifndef _BATCH_H_INCLUDED_
-#define _BATCH_H_INCLUDED_
+#pragma once
 
 typedef struct tagBATCHCONTEXT
 {
@@ -47,8 +46,6 @@ extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 LPTSTR FindArg (TCHAR, BOOL *);
 LPTSTR BatchParams (LPTSTR, LPTSTR);
 VOID   ExitBatch ();
-BOOL   Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
+INT    Batch (LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
 LPTSTR ReadBatchLine();
 VOID AddBatchRedirection(REDIRECTION **);
-
-#endif /* _BATCH_H_INCLUDED_ */

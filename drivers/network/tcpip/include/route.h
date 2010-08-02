@@ -4,8 +4,8 @@
  * FILE:        include/route.h
  * PURPOSE:     Routing cache definitions
  */
-#ifndef __ROUTE_H
-#define __ROUTE_H
+
+#pragma once
 
 #include <neighbor.h>
 #include <address.h>
@@ -15,7 +15,5 @@
 #include <arp.h>
 
 PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination);
-
-#endif /* __ROUTE_H */
 
 /* EOF */

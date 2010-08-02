@@ -28,19 +28,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
+extern HRESULT WINAPI QUARTZ_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
+extern HRESULT WINAPI QUARTZ_DllCanUnloadNow(void) DECLSPEC_HIDDEN;
+extern BOOL WINAPI QUARTZ_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
+
 static DWORD dll_ref = 0;
 
 /* For the moment, do nothing here. */
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
-    switch(fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hInstDLL);
-	    break;
-	case DLL_PROCESS_DETACH:
-	    break;
-    }
-    return TRUE;
+    return QUARTZ_DllMain( hInstDLL, fdwReason, lpv );
 }
 
 /******************************************************************************
@@ -172,36 +169,29 @@ static const IClassFactoryVtbl DSCF_Vtbl =
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     unsigned int i;
-    IClassFactoryImpl *factory;
-    
+
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    
-    if ( !IsEqualGUID( &IID_IClassFactory, riid )
-	 && ! IsEqualGUID( &IID_IUnknown, riid) )
-	return E_NOINTERFACE;
 
-    for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
+    if (IsEqualGUID( &IID_IClassFactory, riid ) || IsEqualGUID( &IID_IUnknown, riid))
     {
-	if (IsEqualGUID(object_creation[i].clsid, rclsid))
-	    break;
+        for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
+        {
+            if (IsEqualGUID(object_creation[i].clsid, rclsid))
+            {
+                IClassFactoryImpl *factory = CoTaskMemAlloc(sizeof(*factory));
+                if (factory == NULL) return E_OUTOFMEMORY;
+
+                factory->ITF_IClassFactory.lpVtbl = &DSCF_Vtbl;
+                factory->ref = 1;
+
+                factory->pfnCreateInstance = object_creation[i].pfnCreateInstance;
+
+                *ppv = &factory->ITF_IClassFactory;
+                return S_OK;
+            }
+        }
     }
-
-    if (i == sizeof(object_creation)/sizeof(object_creation[0]))
-    {
-	FIXME("%s: no class found.\n", debugstr_guid(rclsid));
-	return CLASS_E_CLASSNOTAVAILABLE;
-    }
-
-    factory = CoTaskMemAlloc(sizeof(*factory));
-    if (factory == NULL) return E_OUTOFMEMORY;
-
-    factory->ITF_IClassFactory.lpVtbl = &DSCF_Vtbl;
-    factory->ref = 1;
-
-    factory->pfnCreateInstance = object_creation[i].pfnCreateInstance;
-
-    *ppv = &(factory->ITF_IClassFactory);
-    return S_OK;
+    return QUARTZ_DllGetClassObject( rclsid, riid, ppv );
 }
 
 /***********************************************************************
@@ -209,7 +199,8 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    return dll_ref != 0 ? S_FALSE : S_OK;
+    if (dll_ref) return S_FALSE;
+    return QUARTZ_DllCanUnloadNow();
 }
 
 
@@ -224,6 +215,49 @@ static const struct {
 #include "uuids.h"
     { { 0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0} }, NULL }
 };
+
+/***********************************************************************
+ *              proxies
+ */
+HRESULT CALLBACK ICaptureGraphBuilder_FindInterface_Proxy( ICaptureGraphBuilder *This,
+                                                           const GUID *pCategory,
+                                                           IBaseFilter *pf,
+                                                           REFIID riid,
+                                                           void **ppint )
+{
+    return ICaptureGraphBuilder_RemoteFindInterface_Proxy( This, pCategory, pf,
+                                                           riid, (IUnknown **)ppint );
+}
+
+HRESULT __RPC_STUB ICaptureGraphBuilder_FindInterface_Stub( ICaptureGraphBuilder *This,
+                                                            const GUID *pCategory,
+                                                            IBaseFilter *pf,
+                                                            REFIID riid,
+                                                            IUnknown **ppint )
+{
+    return ICaptureGraphBuilder_FindInterface( This, pCategory, pf, riid, (void **)ppint );
+}
+
+HRESULT CALLBACK ICaptureGraphBuilder2_FindInterface_Proxy( ICaptureGraphBuilder2 *This,
+                                                            const GUID *pCategory,
+                                                            const GUID *pType,
+                                                            IBaseFilter *pf,
+                                                            REFIID riid,
+                                                            void **ppint )
+{
+    return ICaptureGraphBuilder2_RemoteFindInterface_Proxy( This, pCategory, pType,
+                                                            pf, riid, (IUnknown **)ppint );
+}
+
+HRESULT __RPC_STUB ICaptureGraphBuilder2_FindInterface_Stub( ICaptureGraphBuilder2 *This,
+                                                             const GUID *pCategory,
+                                                             const GUID *pType,
+                                                             IBaseFilter *pf,
+                                                             REFIID riid,
+                                                             IUnknown **ppint )
+{
+    return ICaptureGraphBuilder2_FindInterface( This, pCategory, pType, pf, riid, (void **)ppint );
+}
 
 /***********************************************************************
  *              qzdebugstr_guid (internal)

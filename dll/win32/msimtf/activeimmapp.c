@@ -642,13 +642,13 @@ static HRESULT WINAPI ActiveIMMApp_UnregisterWordW(IActiveIMMApp* This,
 static HRESULT WINAPI ActiveIMMApp_Activate(IActiveIMMApp* This,
         BOOL fRestoreLayout)
 {
-    //FIXME("Stub\n");
+    FIXME("Stub\n");
     return S_OK;
 }
 
 static HRESULT WINAPI ActiveIMMApp_Deactivate(IActiveIMMApp* This)
 {
-    //FIXME("Stub\n");
+    FIXME("Stub\n");
     return S_OK;
 }
 
@@ -662,7 +662,7 @@ static HRESULT WINAPI ActiveIMMApp_OnDefWindowProc(IActiveIMMApp* This,
 static HRESULT WINAPI ActiveIMMApp_FilterClientWindows(IActiveIMMApp* This,
         ATOM *aaClassList, UINT uSize)
 {
-    //FIXME("Stub\n");
+    FIXME("Stub\n");
     return S_OK;
 }
 

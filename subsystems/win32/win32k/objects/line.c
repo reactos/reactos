@@ -12,12 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -30,7 +30,8 @@ BOOL FASTCALL
 IntGdiMoveToEx(DC      *dc,
                int     X,
                int     Y,
-               LPPOINT Point)
+               LPPOINT Point,
+               BOOL    BypassPath)
 {
     BOOL  PathIsOpen;
     PDC_ATTR pdcattr = dc->pdcattr;
@@ -53,6 +54,8 @@ IntGdiMoveToEx(DC      *dc,
     pdcattr->ptfxCurrent = pdcattr->ptlCurrent;
     CoordLPtoDP(dc, &pdcattr->ptfxCurrent); // Update fx
     pdcattr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+
+    if (BypassPath) return TRUE;
 
     PathIsOpen = PATH_IsPathOpen(dc->dclevel);
 
@@ -113,7 +116,7 @@ IntGdiLineTo(DC  *dc,
        if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
           DC_vUpdateLineBrush(dc);
 
-        psurf = SURFACE_LockSurface( dc->rosdc.hBitmap );
+        psurf = dc->dclevel.pSurface;
         if (NULL == psurf)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -153,7 +156,6 @@ IntGdiLineTo(DC  *dc,
                                ROP2_TO_MIX(pdcattr->jROP2));
         }
 
-        SURFACE_UnlockSurface(psurf);
     }
 
     if (Ret)
@@ -263,7 +265,7 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
-            psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+            psurf = dc->dclevel.pSurface;
             /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
             ASSERT(psurf);
@@ -271,7 +273,7 @@ IntGdiPolyline(DC      *dc,
             RtlCopyMemory(Points, pt, Count * sizeof(POINT));
             IntLPtoDP(dc, Points, Count);
 
-            /* Offset the array of point by the dc->rosdc.DCOrg */
+            /* Offset the array of points by the DC origin */
             for (i = 0; i < Count; i++)
             {
                 Points[i].x += dc->ptlDCOrig.x;
@@ -285,7 +287,6 @@ IntGdiPolyline(DC      *dc,
                                  Count,
                                  ROP2_TO_MIX(pdcattr->jROP2));
 
-            SURFACE_UnlockSurface(psurf);
             EngFreeMem(Points);
         }
         else
@@ -439,7 +440,7 @@ NtGdiPolyDraw(
         {
             if ( lpbTypes[i] == PT_MOVETO )
             {
-                IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL );
+                IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL, FALSE );
                 lastmove.x = pdcattr->ptlCurrent.x;
                 lastmove.y = pdcattr->ptlCurrent.y;
             }

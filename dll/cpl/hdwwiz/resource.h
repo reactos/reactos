@@ -1,5 +1,4 @@
-#ifndef __CPL_RESOURCE_H
-#define __CPL_RESOURCE_H
+#pragma once
 
 /* Icons */
 #define IDI_CPLICON               100
@@ -56,7 +55,5 @@
 #define IDC_CONNECTED             504
 #define IDC_NOTCONNECTED          505
 #define IDC_TURNOFFCHECKBOX       506
-
-#endif /* __CPL_RESOURCE_H */
 
 /* EOF */

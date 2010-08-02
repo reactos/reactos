@@ -9,11 +9,7 @@
 	((pDeviceExt)->NtfsInfo.UCHARsPerCluster > PAGE_SIZE ? \
 	 (pDeviceExt)->NtfsInfo.UCHARsPerCluster : PAGE_SIZE)
 
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
-#define TAG_NTFS TAG('N', 'T', 'F', 'S')
+#define TAG_NTFS 'SFTN'
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
@@ -83,11 +79,11 @@ typedef struct _NTFS_INFO
 
 } NTFS_INFO, *PNTFS_INFO;
 
-#define NTFS_TYPE_CCB         TAG('F','S',0,2)
-#define NTFS_TYPE_FCB         TAG('F','S',0,3)
-#define	NTFS_TYPE_VCB         TAG('F','S',0,5)
-#define NTFS_TYPE_IRP_CONTEST TAG('F','S',0,6)
-#define NTFS_TYPE_GLOBAL_DATA TAG('F','S',0,7)
+#define NTFS_TYPE_CCB         '20SF'
+#define NTFS_TYPE_FCB         '30SF'
+#define	NTFS_TYPE_VCB         '50SF'
+#define NTFS_TYPE_IRP_CONTEST '60SF'
+#define NTFS_TYPE_GLOBAL_DATA '70SF'
 
 typedef struct
 {
@@ -165,7 +161,7 @@ typedef struct
   ULONG LastOffset;
 } NTFS_CCB, *PNTFS_CCB;
 
-#define TAG_CCB TAG('I', 'C', 'C', 'B')
+#define TAG_CCB 'BCCI'
 
 typedef struct
 {

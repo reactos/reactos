@@ -64,8 +64,9 @@ HCRYPTPROV CRYPT_GetDefaultProvider(void)
     {
         HCRYPTPROV prov;
 
-        CryptAcquireContextW(&prov, NULL, MS_ENHANCED_PROV_W, PROV_RSA_FULL,
-         CRYPT_VERIFYCONTEXT);
+        if (!CryptAcquireContextW(&prov, NULL, MS_ENH_RSA_AES_PROV_W,
+         PROV_RSA_AES, CRYPT_VERIFYCONTEXT))
+            return hDefProv;
         InterlockedCompareExchangePointer((PVOID *)&hDefProv, (PVOID)prov,
          NULL);
         if (hDefProv != prov)
@@ -160,8 +161,13 @@ BOOL WINAPI I_CryptSetTls(DWORD dwTlsIndex, LPVOID lpTlsValue)
 
 BOOL WINAPI I_CryptFreeTls(DWORD dwTlsIndex, DWORD unknown)
 {
+    BOOL ret;
+
     TRACE("(%d, %d)\n", dwTlsIndex, unknown);
-    return TlsFree(dwTlsIndex);
+
+    ret = TlsFree(dwTlsIndex);
+    if (!ret) SetLastError( E_INVALIDARG );
+    return ret;
 }
 
 BOOL WINAPI I_CryptGetOssGlobal(DWORD x)

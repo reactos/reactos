@@ -17,10 +17,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <notepad.h>
+
+LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static const TCHAR helpfile[]     = _T("notepad.hlp");
 static const TCHAR empty_str[]    = _T("");
@@ -398,7 +400,6 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
 {
     TCHAR szText[128];
     HWND hCombo;
-    OFNOTIFY *pNotify;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -438,15 +439,13 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
         case WM_NOTIFY:
             if (((NMHDR *) lParam)->code == CDN_FILEOK)
             {
-                pNotify = (OFNOTIFY *) lParam;
-
                 hCombo = GetDlgItem(hDlg, ID_ENCODING);
-				if (hCombo)
-	                Globals.iEncoding = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                if (hCombo)
+                    Globals.iEncoding = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
 
                 hCombo = GetDlgItem(hDlg, ID_EOLN);
-				if (hCombo)
-	                Globals.iEoln = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                if (hCombo)
+                    Globals.iEoln = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
             }
             break;
     }
@@ -695,6 +694,7 @@ VOID DIALOG_EditWrap(VOID)
     RECT rc, rcstatus;
     DWORD size;
     LPTSTR pTemp;
+    TCHAR buff[MAX_PATH];
 
     Globals.bWrapLongLines = !Globals.bWrapLongLines;
 
@@ -725,10 +725,13 @@ VOID DIALOG_EditWrap(VOID)
     Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, edit, NULL, dwStyle,
                          0, 0, rc.right, rc.bottom, Globals.hMainWnd,
                          NULL, Globals.hInstance, NULL);
-    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)FALSE);
+    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
     SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
     SetWindowText(Globals.hEdit, pTemp);
     SetFocus(Globals.hEdit);
+    Globals.EditProc = (WNDPROC) SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)EDIT_WndProc);
+    _stprintf(buff, Globals.szStatusBarLineCol, 1, 1);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
     HeapFree(GetProcessHeap(), 0, pTemp);
     DrawMenuBar(Globals.hMainWnd);
 }
@@ -802,11 +805,11 @@ static INT_PTR CALLBACK DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARA
     TCHAR szText[32];
 
     switch(uMsg) {
-	case WM_INITDIALOG:
+    case WM_INITDIALOG:
         hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-		_sntprintf(szText, SIZEOF(szText), _T("%d"), lParam);
+        _sntprintf(szText, SIZEOF(szText), _T("%d"), lParam);
         SetWindowText(hTextBox, szText);
-		break;
+        break;
     case WM_COMMAND:
         if (HIWORD(wParam) == BN_CLICKED)
         {
@@ -817,11 +820,11 @@ static INT_PTR CALLBACK DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARA
                 EndDialog(hwndDialog, _ttoi(szText));
                 bResult = TRUE;
             }
-			else if (LOWORD(wParam) == IDCANCEL)
-			{
+            else if (LOWORD(wParam) == IDCANCEL)
+            {
                 EndDialog(hwndDialog, 0);
                 bResult = TRUE;
-			}
+            }
         }
         break;
     }
@@ -856,7 +859,7 @@ VOID DIALOG_GoTo(VOID)
         Globals.hMainWnd, DIALOG_GoTo_DialogProc, nLine);
 
     if (nLine >= 1)
-	{
+    {
         for (i = 0; pszText[i] && (nLine > 1) && (i < nLength - 1); i++)
         {
             if (pszText[i] == '\n')
@@ -864,8 +867,8 @@ VOID DIALOG_GoTo(VOID)
         }
         SendMessage(Globals.hEdit, EM_SETSEL, i, i);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
-	}
-	HeapFree(GetProcessHeap(), 0, pszText);
+    }
+    HeapFree(GetProcessHeap(), 0, pszText);
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
@@ -879,7 +882,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     col  = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
     _stprintf(buff, Globals.szStatusBarLineCol, line+1, col+1);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, (WPARAM) SB_SIMPLEID, (LPARAM)buff);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
 }
 
 VOID DIALOG_ViewStatusBar(VOID)
@@ -963,11 +966,12 @@ AboutDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 VOID DIALOG_HelpAboutWine(VOID)
 {
-    static const TCHAR notepad[] = _T("Notepad\n");
     TCHAR szNotepad[MAX_STRING_LEN];
+    HICON notepadIcon = LoadIcon(Globals.hInstance, MAKEINTRESOURCE(IDI_NPICON));
 
     LoadString(Globals.hInstance, STRING_NOTEPAD, szNotepad, SIZEOF(szNotepad));
-    ShellAbout(Globals.hMainWnd, szNotepad, notepad, 0);
+    ShellAbout(Globals.hMainWnd, szNotepad, 0, notepadIcon);
+    DeleteObject(notepadIcon);
 }
 
 

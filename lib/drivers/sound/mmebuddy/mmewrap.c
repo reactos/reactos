@@ -15,6 +15,47 @@
 #include <sndtypes.h>
 #include <mmebuddy.h>
 
+
+/*
+    Sets the device into running or stopped state
+*/
+
+MMRESULT
+MmeSetState(
+    IN  DWORD_PTR PrivateHandle,
+    IN  BOOL bStart)
+{
+    MMRESULT Result;
+    PMMFUNCTION_TABLE FunctionTable;
+    PSOUND_DEVICE SoundDevice;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    VALIDATE_MMSYS_PARAMETER( IsValidSoundDeviceInstance(SoundDeviceInstance) );
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    /* Get the function table, and validate it */
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    SND_ASSERT( FunctionTable->SetState );
+    if ( FunctionTable->SetState == NULL )
+    {
+        /* FIXME */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+    /* Try change state */
+    Result = FunctionTable->SetState(SoundDeviceInstance, bStart);
+
+    return Result;
+}
+
 /*
     Call the client application when something interesting happens (MME API
     defines "interesting things" as device open, close, and buffer
@@ -23,8 +64,8 @@
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD Message,
-    IN  DWORD Parameter)
+    IN  UINT Message,
+    IN  DWORD_PTR Parameter)
 {
     SND_ASSERT( SoundDeviceInstance );
 
@@ -72,6 +113,7 @@ MmeGetSoundDeviceCapabilities(
         return Result;
 
     return GetSoundDeviceCapabilities(SoundDevice,
+                                      DeviceId,
                                       Capabilities,
                                       CapabilitiesSize);
 }
@@ -79,10 +121,10 @@ MmeGetSoundDeviceCapabilities(
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
+    IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT DWORD* PrivateHandle)
+    OUT DWORD_PTR* PrivateHandle)
 {
     MMRESULT Result;
 
@@ -121,15 +163,15 @@ MmeOpenWaveDevice(
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
-    Result = SetWaveDeviceFormat(SoundDeviceInstance, Format, sizeof(WAVEFORMATEX));
+    Result = SetWaveDeviceFormat(SoundDeviceInstance, DeviceId, Format, sizeof(WAVEFORMATEX));
     if ( ! MMSUCCESS(Result) )
     {
         /* TODO: Destroy sound instance */
         return TranslateInternalMmResult(Result);
     }
 
-    /* Store the device instance pointer in the private handle - is DWORD safe here? */
-    *PrivateHandle = (DWORD) SoundDeviceInstance;
+    /* Store the device instance pointer in the private handle */
+    *PrivateHandle = (DWORD_PTR)SoundDeviceInstance;
 
     /* Store the additional information we were given - FIXME: Need flags! */
     SetSoundDeviceInstanceMmeData(SoundDeviceInstance,
@@ -153,7 +195,7 @@ MmeOpenWaveDevice(
 
 MMRESULT
 MmeCloseDevice(
-    IN  DWORD PrivateHandle)
+    IN  DWORD_PTR PrivateHandle)
 {
     MMRESULT Result;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
@@ -193,7 +235,7 @@ MmeCloseDevice(
 
 MMRESULT
 MmeResetWavePlayback(
-    IN  DWORD PrivateHandle)
+    IN  DWORD_PTR PrivateHandle)
 {
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
 
@@ -204,3 +246,79 @@ MmeResetWavePlayback(
 
     return StopStreaming(SoundDeviceInstance);
 }
+
+MMRESULT
+MmeGetDeviceInterfaceString(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  LPWSTR Interface,
+    IN  DWORD  InterfaceLength,
+    OUT  DWORD * InterfaceSize)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( FunctionTable->GetDeviceInterfaceString == NULL )
+    {
+        /* querying device interface string / size not supported */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Call the driver */
+    Result = FunctionTable->GetDeviceInterfaceString(DeviceType, DeviceId, Interface, InterfaceLength, InterfaceSize);
+
+    return Result;
+}
+
+
+MMRESULT
+MmeGetPosition(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  DWORD_PTR PrivateHandle,
+    IN  MMTIME* Time,
+    IN  DWORD Size)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+        return MMSYSERR_INVALHANDLE;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( Size != sizeof(MMTIME) )
+        return MMSYSERR_INVALPARAM;
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( FunctionTable->GetPos == NULL )
+    {
+        /* This indicates bad practice, really! If you can open, why not close?! */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Call the driver */
+    Result = FunctionTable->GetPos(SoundDeviceInstance, Time);
+
+    return Result;
+}
+

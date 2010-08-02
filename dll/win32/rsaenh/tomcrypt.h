@@ -249,9 +249,6 @@ int mp_shrink(mp_int *a);
 #define mp_iseven(a) (((a)->used > 0 && (((a)->dp[0] & 1) == 0)) ? MP_YES : MP_NO)
 #define mp_isodd(a)  (((a)->used > 0 && (((a)->dp[0] & 1) == 1)) ? MP_YES : MP_NO)
 
-/* set to a digit */
-void mp_set(mp_int *a, mp_digit b);
-
 /* set a 32-bit const */
 int mp_set_int(mp_int *a, unsigned long b);
 
@@ -270,13 +267,7 @@ int mp_copy(const mp_int *a, mp_int *b);
 /* inits and copies, a = b */
 int mp_init_copy(mp_int *a, const mp_int *b);
 
-/* trim unused digits */
-void mp_clamp(mp_int *a);
-
 /* ---> digit manipulation <--- */
-
-/* Counts the number of lsbs which are zero before the first zero bit */
-int mp_cnt_lsb(const mp_int *a);
 
 /* I Love Earth! */
 
@@ -301,9 +292,6 @@ int mp_neg(mp_int *a, mp_int *b);
 /* compare a to b */
 int mp_cmp(const mp_int *a, const mp_int *b);
 
-/* compare |a| to |b| */
-int mp_cmp_mag(const mp_int *a, const mp_int *b);
-
 /* c = a + b */
 int mp_add(mp_int *a, mp_int *b, mp_int *c);
 
@@ -312,9 +300,6 @@ int mp_sub(mp_int *a, mp_int *b, mp_int *c);
 
 /* c = a * b */
 int mp_mul(const mp_int *a, const mp_int *b, mp_int *c);
-
-/* b = a*a  */
-int mp_sqr(const mp_int *a, mp_int *b);
 
 /* c = a mod b, 0 <= c < b  */
 int mp_mod(const mp_int *a, mp_int *b, mp_int *c);
@@ -344,9 +329,6 @@ int mp_submod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
 /* d = a * b (mod c) */
 int mp_mulmod(const mp_int *a, const mp_int *b, mp_int *c, mp_int *d);
 
-/* c = a * a (mod b) */
-int mp_sqrmod(const mp_int *a, mp_int *b, mp_int *c);
-
 /* c = 1/a (mod b) */
 int mp_invmod(const mp_int *a, mp_int *b, mp_int *c);
 
@@ -374,38 +356,11 @@ int mp_is_square(mp_int *arg, int *ret);
 /* computes the jacobi c = (a | n) (or Legendre if b is prime)  */
 int mp_jacobi(mp_int *a, mp_int *n, int *c);
 
-/* used to setup the Barrett reduction for a given modulus b */
-int mp_reduce_setup(mp_int *a, const mp_int *b);
-
-/* Barrett Reduction, computes a (mod b) with a precomputed value c
- *
- * Assumes that 0 < a <= b*b, note if 0 > a > -(b*b) then you can merely
- * compute the reduction as -1 * mp_reduce(mp_abs(a)) [pseudo code].
- */
-int mp_reduce(mp_int *a, const mp_int *b, const mp_int *c);
-
-/* setups the montgomery reduction */
-int mp_montgomery_setup(const mp_int *a, mp_digit *mp);
-
-/* computes a = B**n mod b without division or multiplication useful for
- * normalizing numbers in a Montgomery system.
- */
-int mp_montgomery_calc_normalization(mp_int *a, const mp_int *b);
-
-/* computes x/R == x (mod N) via Montgomery Reduction */
-int mp_montgomery_reduce(mp_int *a, const mp_int *m, mp_digit mp);
-
 /* returns 1 if a is a valid DR modulus */
 int mp_dr_is_modulus(mp_int *a);
 
 /* returns true if a can be reduced with mp_reduce_2k */
 int mp_reduce_is_2k(mp_int *a);
-
-/* determines k value for 2k reduction */
-int mp_reduce_2k_setup(const mp_int *a, mp_digit *d);
-
-/* reduces a modulo b where b is of the form 2**p - k [0 <= a] */
-int mp_reduce_2k(mp_int *a, const mp_int *n, mp_digit d);
 
 /* d = a**b (mod c) */
 int mp_exptmod(const mp_int *a, const mp_int *b, mp_int *c, mp_int *d);
@@ -466,7 +421,6 @@ int mp_unsigned_bin_size(const mp_int *a);
 int mp_read_unsigned_bin(mp_int *a, const unsigned char *b, int c);
 int mp_to_unsigned_bin(const mp_int *a, unsigned char *b);
 
-int mp_signed_bin_size(const mp_int *a);
 int mp_read_signed_bin(mp_int *a, unsigned char *b, int c);
 int mp_to_signed_bin(mp_int *a, unsigned char *b);
 

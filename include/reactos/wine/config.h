@@ -5,8 +5,14 @@
 
 #define __WINE_CONFIG_H
 
+/* Define to a function attribute for Microsoft hotpatch assembly prefix. */
+#define DECLSPEC_HOTPATCH
+
 /* Specifies the compiler flag that forces a short wchar_t */
 #define CC_FLAG_SHORT_WCHAR "-fshort-wchar"
+
+/* Define to 1 if you have the <mpg123.h> header file. */
+#define HAVE_MPG123_H 1
 
 /* Define if you have ALSA 1.x including devel headers */
 /* #undef HAVE_ALSA */
@@ -93,37 +99,43 @@
 #define HAVE_FPCLASS 1
 
 /* Define if FreeType 2 is installed */
-/* #undef HAVE_FREETYPE */
+#define HAVE_FREETYPE 1
 
 /* Define to 1 if you have the <freetype/freetype.h> header file. */
-/* #undef HAVE_FREETYPE_FREETYPE_H */
+#define HAVE_FREETYPE_FREETYPE_H 1
 
 /* Define to 1 if you have the <freetype/ftglyph.h> header file. */
-/* #undef HAVE_FREETYPE_FTGLYPH_H */
+#define HAVE_FREETYPE_FTGLYPH_H 1
+
+/* Define to 1 if you have the <freetype/ftlcdfil.h> header file. */
+#define HAVE_FREETYPE_FTLCDFIL_H 1
+
+/* Define to 1 if you have the <freetype/ftmodapi.h> header file. */
+#define HAVE_FREETYPE_FTMODAPI_H 1
 
 /* Define to 1 if you have the <freetype/ftnames.h> header file. */
 /* #undef HAVE_FREETYPE_FTNAMES_H */
 
 /* Define to 1 if you have the <freetype/ftoutln.h> header file. */
-/* #undef HAVE_FREETYPE_FTOUTLN_H */
+#define HAVE_FREETYPE_FTOUTLN_H 1
 
 /* Define to 1 if you have the <freetype/ftsnames.h> header file. */
-/* #undef HAVE_FREETYPE_FTSNAMES_H */
+#define HAVE_FREETYPE_FTSNAMES_H 1
 
 /* Define if you have the <freetype/fttrigon.h> header file. */
-/* #undef HAVE_FREETYPE_FTTRIGON_H */
+#define HAVE_FREETYPE_FTTRIGON_H 1
 
 /* Define to 1 if you have the <freetype/ftwinfnt.h> header file. */
-/* #undef HAVE_FREETYPE_FTWINFNT_H */
+#define HAVE_FREETYPE_FTWINFNT_H 1
 
 /* Define to 1 if you have the <freetype/internal/sfnt.h> header file. */
 /* #undef HAVE_FREETYPE_INTERNAL_SFNT_H */
 
 /* Define to 1 if you have the <freetype/ttnameid.h> header file. */
-/* #undef HAVE_FREETYPE_TTNAMEID_H */
+#define HAVE_FREETYPE_TTNAMEID_H 1
 
 /* Define to 1 if you have the <freetype/tttables.h> header file. */
-/* #undef HAVE_FREETYPE_TTTABLES_H */
+#define HAVE_FREETYPE_TTTABLES_H 1
 
 /* Define to 1 if the system has the type `fsblkcnt_t'. */
 /* #undef HAVE_FSBLKCNT_T */
@@ -138,7 +150,13 @@
 /* #undef HAVE_FSTATVFS */
 
 /* Define to 1 if you have the <ft2build.h> header file. */
-/* #undef HAVE_FT2BUILD_H */
+#define HAVE_FT2BUILD_H 1
+
+/* Define to 1 if you have the `FT_Load_Sfnt_Table' function. */
+/* #undef HAVE_FT_LOAD_SFNT_TABLE */
+
+/* Define to 1 if the system has the type `FT_TrueTypeEngineType'. */
+#define HAVE_FT_TRUETYPEENGINETYPE 1
 
 /* Define to 1 if you have the `ftruncate' function. */
 #define HAVE_FTRUNCATE 1
@@ -439,13 +457,17 @@
 /* Define to 1 if you have the <openssl/ssl.h> header file. */
 /* #undef HAVE_OPENSSL_SSL_H */
 
+/* Define to 1 if you have the `z' library (-lz). */
+#define HAVE_ZLIB 1
+
+/* Define to 1 if you have the <zlib.h> header file. */
+#define HAVE_ZLIB_H 1
+
 /* Define to 1 if you have the `pclose' function. */
 #define HAVE_PCLOSE 1
 
 /* Define to 1 if the system has the type `pid_t'. */
-#if !defined(_MSC_VER)
 #define HAVE_PID_T 1
-#endif
 
 /* Define to 1 if you have the <poll.h> header file. */
 /* #undef HAVE_POLL_H */
@@ -597,6 +619,21 @@
 #if !defined(_WIN32) && !defined(_WIN64)
 #define HAVE_STRNCASECMP 1
 #endif
+
+/* Define to 1 if you have the <tiffio.h> header file. */
+#define HAVE_TIFFIO_H 1
+
+/* Define to the soname of the libtiff library. */
+#define SONAME_LIBTIFF "libtiff"
+
+/* Define to 1 if you have the <png.h> header file. */
+#define HAVE_PNG_H 1
+
+/* Define to 1 if libpng has the png_set_expand_gray_1_2_4_to_8 function. */
+#define HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8 1
+
+/* Define to the soname of the libpng library. */
+#define SONAME_LIBPNG "libpng"
 
 /* Define to 1 if `direction' is member of `struct ff_effect'. */
 /* #undef HAVE_STRUCT_FF_EFFECT_DIRECTION */
@@ -977,11 +1014,36 @@
    `char[]'. */
 #define YYTEXT_POINTER 1
 
+/* Define to a macro to output a .cfi assembly pseudo-op */
+#define __ASM_CFI(str) str
+
+/* Define to a macro to define an assembly function */
+#ifndef NO_UNDERSCORE_PREFIX
+#define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl _" #name suffix "\n\t.def _" #name suffix "; .scl 2; .type 32; .endef\n_" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
+#else
+#define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.def " #name suffix "; .scl 2; .type 32; .endef\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
+#endif
+
 /* Define to a macro to generate an assembly function directive */
 #define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
 
+/* Define to a macro to generate an assembly function with C calling
+   convention */
+#define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(name,"",code)
+
 /* Define to a macro to generate an assembly name from a C symbol */
+#ifndef NO_UNDERSCORE_PREFIX
 #define __ASM_NAME(name) "_" name
+#else
+#define __ASM_NAME(name) name
+#endif
+
+/* Define to a macro to generate an stdcall suffix */
+#define __ASM_STDCALL(args) "@" #args
+
+/* Define to a macro to generate an assembly function with stdcall calling
+   convention */
+#define __ASM_STDCALL_FUNC(name,args,code) __ASM_DEFINE_FUNC(name,__ASM_STDCALL(args),code)
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */

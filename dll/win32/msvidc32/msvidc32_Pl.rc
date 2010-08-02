@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "msvidc32_private.h"
+
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_NAME "MS-CRAM"
     IDS_DESCRIPTION "Kodek Wine Video 1"

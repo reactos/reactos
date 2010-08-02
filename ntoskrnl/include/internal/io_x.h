@@ -91,6 +91,44 @@ IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
 
 static
 __inline
+VOID
+IopUpdateTransferCount(IN IOP_TRANSFER_TYPE Type, IN ULONG TransferCount)
+{
+    PLARGE_INTEGER CountToChange;
+    PLARGE_INTEGER TransferToChange;
+
+    /* Make sure I/O operations are being counted */
+    if (IoCountOperations)
+    {
+        if (Type == IopReadTransfer)
+        {
+            /* Increase read count */
+            CountToChange = &PsGetCurrentProcess()->ReadTransferCount;
+            TransferToChange = &IoReadTransferCount;
+        }
+        else if (Type == IopWriteTransfer)
+        {
+            /* Increase write count */
+            CountToChange = &PsGetCurrentProcess()->WriteTransferCount;
+            TransferToChange = &IoWriteTransferCount;
+        }
+        else
+        {
+            /* Increase other count */
+            CountToChange = &PsGetCurrentProcess()->OtherTransferCount;
+            TransferToChange = &IoOtherTransferCount;
+        }
+
+        /* Increase the process-wide count */
+        ExInterlockedAddLargeStatistic(CountToChange, TransferCount);
+
+        /* Increase global count */
+        ExInterlockedAddLargeStatistic(TransferToChange, TransferCount);
+    }
+}
+
+static
+__inline
 BOOLEAN
 IopValidateOpenPacket(IN POPEN_PACKET OpenPacket)
 {

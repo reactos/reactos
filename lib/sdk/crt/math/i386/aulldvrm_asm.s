@@ -89,7 +89,7 @@ __aulldvrm:
 #undef DVSRLO
 #undef DVSRHI
 #define DVNDLO  [esp + 8]       // stack address of dividend (a)
-#define DVNDHI  [esp + 8]       // stack address of dividend (a)
+#define DVNDHI  [esp + 12]       // stack address of dividend (a)
 #define DVSRLO  [esp + 16]      // stack address of divisor (b)
 #define DVSRHI  [esp + 20]      // stack address of divisor (b)
 

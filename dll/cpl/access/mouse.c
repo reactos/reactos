@@ -88,7 +88,7 @@ MouseKeysDlgProc(HWND hwndDlg,
             break;
 
         case WM_HSCROLL:
-            switch (GetWindowLong((HWND) lParam, GWL_ID))
+            switch (GetWindowLongPtr((HWND) lParam, GWL_ID))
             {
                 case IDC_MOUSEKEYS_SPEED_TRACK:
                     i = SendDlgItemMessage(hwndDlg, IDC_MOUSEKEYS_SPEED_TRACK, TBM_GETPOS, 0, 0);

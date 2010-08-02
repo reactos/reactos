@@ -18,9 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "localspl_private.h"
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALPORT "Lokale Poort"
     IDS_LOCALMONITOR "Lokale Monitor"

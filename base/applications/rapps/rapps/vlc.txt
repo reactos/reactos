@@ -1,0 +1,24 @@
+﻿; UTF-8
+
+[Section]
+Name = VLC media player
+Version = 1.1.1
+Licence = GPL
+Description = A media player.
+Size = 18.6MB
+Category = 1
+URLSite = http://www.videolan.org/vlc/
+URLDownload = http://ignum.dl.sourceforge.net/project/vlc/1.1.1/win32/vlc-1.1.1-win32.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Mediaplayer.
+
+[Section.040a]
+Description = Reproductor multimedia.
+
+[Section.0419]
+Description = Мультимедийный проигрыватель.
+
+[Section.0422]
+Description = Мультимедійний програвач.

@@ -37,7 +37,6 @@
  * FIXME: add to recent docs
  *
  * FIXME: flags not implemented: OFN_DONTADDTORECENT,
- * OFN_ENABLEINCLUDENOTIFY, OFN_ENABLESIZING,
  * OFN_NODEREFERENCELINKS, OFN_NOREADONLYRETURN,
  * OFN_NOTESTFILECREATE, OFN_USEMONIKERS
  *
@@ -83,7 +82,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 
 #define UNIMPLEMENTED_FLAGS \
 (OFN_DONTADDTORECENT |\
-OFN_ENABLEINCLUDENOTIFY | OFN_ENABLESIZING |\
 OFN_NODEREFERENCELINKS | OFN_NOREADONLYRETURN |\
 OFN_NOTESTFILECREATE /*| OFN_USEMONIKERS*/)
 
@@ -106,11 +104,6 @@ typedef struct tagLookInInfo
   int iMaxIndentation;
   UINT uSelectedItem;
 } LookInInfos;
-
-typedef struct tagFD32_PRIVATE
-{
-    OPENFILENAMEA *ofnA; /* original structure if 32bits ansi dialog */
-} FD32_PRIVATE, *PFD32_PRIVATE;
 
 
 /***********************************************************************
@@ -174,6 +167,7 @@ typedef struct tagFD32_PRIVATE
 
 const char FileOpenDlgInfosStr[] = "FileOpenDlgInfos"; /* windows property description string */
 static const char LookInInfosStr[] = "LookInInfos"; /* LOOKIN combo box property */
+static SIZE MemDialogSize = { 0, 0}; /* keep size of the (resizable) dialog */
 
 /***********************************************************************
  * Prototypes
@@ -182,7 +176,7 @@ static const char LookInInfosStr[] = "LookInInfos"; /* LOOKIN combo box property
 /* Internal functions used by the dialog */
 static LRESULT FILEDLG95_ResizeControls(HWND hwnd, WPARAM wParam, LPARAM lParam);
 static LRESULT FILEDLG95_FillControls(HWND hwnd, WPARAM wParam, LPARAM lParam);
-static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam);
+static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam);
 static LRESULT FILEDLG95_OnWMGetIShellBrowser(HWND hwnd);
 static BOOL    FILEDLG95_OnOpen(HWND hwnd);
 static LRESULT FILEDLG95_InitControls(HWND hwnd);
@@ -246,7 +240,7 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 {
 
     LRESULT lRes;
-    LPCVOID template;
+    LPVOID template;
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
     HRESULT hr;
@@ -271,6 +265,23 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
         COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
         return FALSE;
     }
+
+    /* msdn: explorer style dialogs permit sizing by default.
+     * The OFN_ENABLESIZING flag is only needed when a hook or
+     * custom tmeplate is provided */
+    if( (fodInfos->ofnInfos->Flags & OFN_EXPLORER) &&
+            !(fodInfos->ofnInfos->Flags & ( OFN_ENABLEHOOK | OFN_ENABLETEMPLATE | OFN_ENABLETEMPLATEHANDLE)))
+        fodInfos->ofnInfos->Flags |= OFN_ENABLESIZING;
+
+    if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
+    {
+        ((LPDLGTEMPLATEW)template)->style |= WS_SIZEBOX;
+        fodInfos->sizedlg.cx = fodInfos->sizedlg.cy = 0;
+        fodInfos->initial_size.x = fodInfos->initial_size.y = 0;
+    }
+    else
+        ((LPDLGTEMPLATEW)template)->style &= ~WS_SIZEBOX;
+
 
     /* old style hook messages */
     if (IsHooked(fodInfos))
@@ -548,13 +559,14 @@ static BOOL COMDLG32_GetDisplayNameOf(LPCITEMIDLIST pidl, LPWSTR pwszPath) {
 /***********************************************************************
  *      ArrangeCtrlPositions [internal]
  *
- * NOTE: Do not change anything here without a lot of testing.
+ * NOTE: Make sure to add testcases for any changes made here.
  */
 static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hide_help)
 {
     HWND hwndChild, hwndStc32;
     RECT rectParent, rectChild, rectStc32;
-    INT help_fixup = 0, child_height_fixup = 0, child_width_fixup = 0;
+    INT help_fixup = 0;
+    int chgx, chgy;
 
     /* Take into account if open as read only checkbox and help button
      * are hidden
@@ -617,24 +629,16 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
             /* move only if stc32 exist */
             if (hwndStc32 && rectChild.left > rectStc32.right)
             {
-                LONG old_left = rectChild.left;
-
                 /* move to the right of visible controls of the parent dialog */
                 rectChild.left += rectParent.right;
                 rectChild.left -= rectStc32.right;
-
-                child_width_fixup = rectChild.left - old_left;
             }
             /* move even if stc32 doesn't exist */
             if (rectChild.top >= rectStc32.bottom)
             {
-                LONG old_top = rectChild.top;
-
                 /* move below visible controls of the parent dialog */
                 rectChild.top += rectParent.bottom;
                 rectChild.top -= rectStc32.bottom - rectStc32.top;
-
-                child_height_fixup = rectChild.top - old_top;
             }
 
             SetWindowPos(hwndChild, 0, rectChild.left, rectChild.top,
@@ -669,50 +673,36 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
     /* here we have to use original parent size */
     GetClientRect(hwndParentDlg, &rectParent);
     GetClientRect(hwndChildDlg, &rectChild);
+    TRACE( "parent %s child %s stc32 %s\n", wine_dbgstr_rect( &rectParent),
+            wine_dbgstr_rect( &rectChild), wine_dbgstr_rect( &rectStc32));
 
     if (hwndStc32)
     {
-        rectChild.right += child_width_fixup;
-        rectChild.bottom += child_height_fixup;
-
-        if (rectParent.right > rectChild.right)
-        {
-            rectParent.right += rectChild.right;
-            rectParent.right -= rectStc32.right - rectStc32.left;
-        }
+        /* width */
+        if (rectParent.right > rectStc32.right - rectStc32.left)
+            chgx = rectChild.right - ( rectStc32.right - rectStc32.left);
         else
-        {
-            rectParent.right = rectChild.right;
-        }
-
-        if (rectParent.bottom > rectChild.bottom)
-        {
-            rectParent.bottom += rectChild.bottom;
-            rectParent.bottom -= rectStc32.bottom - rectStc32.top;
-        }
+            chgx = rectChild.right - rectParent.right;
+        /* height */
+        if (rectParent.bottom > rectStc32.bottom - rectStc32.top)
+            chgy = rectChild.bottom - ( rectStc32.bottom - rectStc32.top) - help_fixup;
         else
-        {
-            /* child dialog is higher, unconditionally set new dialog
-             * height to its size (help_fixup will be subtracted below)
+            /* Unconditionally set new dialog
+             * height to that of the child
              */
-            rectParent.bottom = rectChild.bottom + help_fixup;
-        }
+            chgy = rectChild.bottom - rectParent.bottom;
     }
     else
     {
-        rectParent.bottom += rectChild.bottom;
+        chgx = 0;
+        chgy = rectChild.bottom - help_fixup;
     }
-
-    /* finally use fixed parent size */
-    rectParent.bottom -= help_fixup;
-
     /* set the size of the parent dialog */
-    AdjustWindowRectEx(&rectParent, GetWindowLongW(hwndParentDlg, GWL_STYLE),
-                       FALSE, GetWindowLongW(hwndParentDlg, GWL_EXSTYLE));
+    GetWindowRect(hwndParentDlg, &rectParent);
     SetWindowPos(hwndParentDlg, 0,
                  0, 0,
-                 rectParent.right - rectParent.left,
-                 rectParent.bottom - rectParent.top,
+                 rectParent.right - rectParent.left + chgx,
+                 rectParent.bottom - rectParent.top + chgy,
                  SWP_NOMOVE | SWP_NOZORDER);
 }
 
@@ -784,11 +774,7 @@ static HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
           hChildDlg = CreateDialogIndirectParamA(hinst, template, hwnd,
               IsHooked(fodInfos) ? (DLGPROC)fodInfos->ofnInfos->lpfnHook : FileOpenDlgProcUserTemplate,
               (LPARAM)fodInfos->ofnInfos);
-      if(hChildDlg)
-      {
-        ShowWindow(hChildDlg,SW_SHOW);
-        return hChildDlg;
-      }
+      return hChildDlg;
     }
     else if( IsHooked(fodInfos))
     {
@@ -926,7 +912,7 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
                     WideCharToMultiByte(CP_ACP, 0, lpstrPath, -1, 
                                         (LPSTR)lParam, (int)wParam, NULL, NULL);
             }        
-            retval = lstrlenW(lpstrPath);
+            retval = lstrlenW(lpstrPath) + 1;
             break;
 
         case CDM_GETFOLDERIDLIST:
@@ -980,6 +966,177 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
 }
 
 /***********************************************************************
+ *          FILEDLG95_OnWMGetMMI
+ *
+ * WM_GETMINMAXINFO message handler for resizable dialogs
+ */
+static LRESULT FILEDLG95_OnWMGetMMI( HWND hwnd, LPMINMAXINFO mmiptr)
+{
+    FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
+    if( !(fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)) return FALSE;
+    if( fodInfos->initial_size.x || fodInfos->initial_size.y)
+    {
+        mmiptr->ptMinTrackSize = fodInfos->initial_size;
+    }
+    return TRUE;
+}
+
+/***********************************************************************
+ *          FILEDLG95_OnWMSize
+ *
+ * WM_SIZE message handler, resize the dialog. Re-arrange controls.
+ *
+ * FIXME: this could be made more elaborate. Now use a simple scheme
+ * where the file view is enlarged and the controls are either moved
+ * vertically or horizontally to get out of the way. Only the "grip"
+ * is moved in both directions to stay in the corner.
+ */
+static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam)
+{
+    RECT rc, rcview;
+    int chgx, chgy;
+    HWND ctrl;
+    HDWP hdwp;
+    FileOpenDlgInfos *fodInfos;
+
+    if( wParam != SIZE_RESTORED) return FALSE;
+    fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
+    if( !(fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)) return FALSE;
+    /* get the new dialog rectangle */
+    GetWindowRect( hwnd, &rc);
+    TRACE("Size from %d,%d to %d,%d\n", fodInfos->sizedlg.cx, fodInfos->sizedlg.cy,
+            rc.right -rc.left, rc.bottom -rc.top);
+    /* not initialized yet */
+    if( (fodInfos->sizedlg.cx == 0 && fodInfos->sizedlg.cy == 0) ||
+        ((fodInfos->sizedlg.cx == rc.right -rc.left) && /* no change */
+             (fodInfos->sizedlg.cy == rc.bottom -rc.top)))
+        return FALSE;
+    chgx = rc.right - rc.left - fodInfos->sizedlg.cx;
+    chgy = rc.bottom - rc.top - fodInfos->sizedlg.cy;
+    fodInfos->sizedlg.cx = rc.right - rc.left;
+    fodInfos->sizedlg.cy = rc.bottom - rc.top;
+    /* change the size of the view window */
+    GetWindowRect( fodInfos->ShellInfos.hwndView, &rcview);
+    MapWindowPoints( NULL, hwnd, (LPPOINT) &rcview, 2);
+    hdwp = BeginDeferWindowPos( 10);
+    DeferWindowPos( hdwp, fodInfos->ShellInfos.hwndView, NULL, 0, 0,
+            rcview.right - rcview.left + chgx,
+            rcview.bottom - rcview.top + chgy,
+            SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+    /* change position and sizes of the controls */
+    for( ctrl = GetWindow( hwnd, GW_CHILD); ctrl ; ctrl = GetWindow( ctrl, GW_HWNDNEXT))
+    {
+        int ctrlid = GetDlgCtrlID( ctrl);
+        GetWindowRect( ctrl, &rc);
+        MapWindowPoints( NULL, hwnd, (LPPOINT) &rc, 2);
+        if( ctrl == fodInfos->DlgInfos.hwndGrip)
+        {
+            DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top + chgy,
+                    0, 0,
+                    SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+        }
+        else if( rc.top > rcview.bottom)
+        {
+            /* if it was below the shell view
+             * move to bottom */
+            switch( ctrlid)
+            {
+                /* file name box and file types combo change also width */
+                case edt1:
+                case cmb1:
+                    DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
+                            rc.right - rc.left + chgx, rc.bottom - rc.top,
+                            SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+                    /* then these buttons must move out of the way */
+                case IDOK:
+                case IDCANCEL:
+                case pshHelp:
+                    DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top + chgy,
+                            0, 0,
+                            SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+                default:
+                DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
+                        0, 0,
+                        SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+            }
+        }
+        else if( rc.left > rcview.right)
+        {
+            /* if it was to the right of the shell view
+             * move to right */
+            DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top,
+                    0, 0,
+                    SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+        }
+        else
+            /* special cases */
+        {
+            switch( ctrlid)
+            {
+#if 0 /* this is Win2k, Win XP. Vista and Higher don't move/size these controls */
+                case IDC_LOOKIN:
+                    DeferWindowPos( hdwp, ctrl, NULL, 0, 0,
+                            rc.right - rc.left + chgx, rc.bottom - rc.top,
+                            SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+                case IDC_TOOLBARSTATIC:
+                case IDC_TOOLBAR:
+                    DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top,
+                            0, 0,
+                            SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+#endif
+                /* not resized in windows. Since wine uses this invisible control
+                 * to size the browser view it needs to be resized */
+                case IDC_SHELLSTATIC:
+                    DeferWindowPos( hdwp, ctrl, NULL, 0, 0,
+                            rc.right - rc.left + chgx,
+                            rc.bottom - rc.top + chgy,
+                            SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+            }
+        }
+    }
+    if(fodInfos->DlgInfos.hwndCustomDlg &&
+        (fodInfos->ofnInfos->Flags & (OFN_ENABLETEMPLATE | OFN_ENABLETEMPLATEHANDLE)))
+    {
+        for( ctrl = GetWindow( fodInfos->DlgInfos.hwndCustomDlg, GW_CHILD);
+                ctrl ; ctrl = GetWindow( ctrl, GW_HWNDNEXT))
+        {
+            GetWindowRect( ctrl, &rc);
+            MapWindowPoints( NULL, hwnd, (LPPOINT) &rc, 2);
+            if( rc.top > rcview.bottom)
+            {
+                /* if it was below the shell view
+                 * move to bottom */
+                DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
+                        rc.right - rc.left, rc.bottom - rc.top,
+                        SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+            }
+            else if( rc.left > rcview.right)
+            {
+                /* if it was to the right of the shell view
+                 * move to right */
+                DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top,
+                        rc.right - rc.left, rc.bottom - rc.top,
+                        SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+            }
+        }
+        /* size the custom dialog at the end: some applications do some
+         * control re-arranging at this point */
+        GetClientRect(hwnd, &rc);
+        DeferWindowPos( hdwp,fodInfos->DlgInfos.hwndCustomDlg, NULL,
+            0, 0, rc.right, rc.bottom, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+    }
+    EndDeferWindowPos( hdwp);
+    /* should not be needed */
+    RedrawWindow( hwnd, NULL, 0, RDW_ALLCHILDREN | RDW_INVALIDATE );
+    return TRUE;
+}
+
+/***********************************************************************
  *          FileOpenDlgProc95
  *
  * File open dialog procedure
@@ -987,7 +1144,7 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
 INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #if 0
-  TRACE("0x%04x 0x%04x\n", hwnd, uMsg);
+  TRACE("%p 0x%04x\n", hwnd, uMsg);
 #endif
 
   switch(uMsg)
@@ -995,6 +1152,9 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
     case WM_INITDIALOG:
       {
          FileOpenDlgInfos * fodInfos = (FileOpenDlgInfos *)lParam;
+         RECT rc, rcstc;
+         int gripx = GetSystemMetrics( SM_CYHSCROLL);
+         int gripy = GetSystemMetrics( SM_CYVSCROLL);
 
 	 /* Adds the FileOpenDlgInfos in the property list of the dialog
             so it will be easily accessible through a GetPropA(...) */
@@ -1002,19 +1162,72 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
          FILEDLG95_InitControls(hwnd);
 
+         if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
+         {
+             GetWindowRect( hwnd, &rc);
+             fodInfos->DlgInfos.hwndGrip =
+                 CreateWindowExA( 0, "SCROLLBAR", NULL,
+                     WS_CHILD | WS_GROUP | WS_VISIBLE | WS_CLIPSIBLINGS |
+                     SBS_SIZEGRIP | SBS_SIZEBOXBOTTOMRIGHTALIGN,
+                     rc.right - gripx, rc.bottom - gripy,
+                     gripx, gripy, hwnd, (HMENU) -1, COMDLG32_hInstance, NULL);
+         }
+
       	 fodInfos->DlgInfos.hwndCustomDlg =
      	   CreateTemplateDialog((FileOpenDlgInfos *)lParam, hwnd);
 
          FILEDLG95_ResizeControls(hwnd, wParam, lParam);
       	 FILEDLG95_FillControls(hwnd, wParam, lParam);
 
-         SendCustomDlgNotificationMessage(hwnd,CDN_INITDONE);
-         SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
-         SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
+         if( fodInfos->DlgInfos.hwndCustomDlg)
+             ShowWindow( fodInfos->DlgInfos.hwndCustomDlg, SW_SHOW);
+
+         if(fodInfos->ofnInfos->Flags & OFN_EXPLORER) {
+             SendCustomDlgNotificationMessage(hwnd,CDN_INITDONE);
+             SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
+         }
+
+         /* if the app has changed the position of the invisible listbox,
+          * change that of the listview (browser) as well */
+         GetWindowRect( fodInfos->ShellInfos.hwndView, &rc);
+         GetWindowRect( GetDlgItem( hwnd, IDC_SHELLSTATIC ), &rcstc);
+         if( !EqualRect( &rc, &rcstc))
+         {
+             MapWindowPoints( NULL, hwnd, (LPPOINT) &rcstc, 2);
+             SetWindowPos( fodInfos->ShellInfos.hwndView, NULL,
+                     rcstc.left, rcstc.top, rcstc.right - rcstc.left, rcstc.bottom - rcstc.top,
+                     SWP_NOACTIVATE | SWP_NOZORDER);
+         }
+
+         if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
+         {
+             GetWindowRect( hwnd, &rc);
+             fodInfos->sizedlg.cx = rc.right - rc.left;
+             fodInfos->sizedlg.cy = rc.bottom - rc.top;
+             fodInfos->initial_size.x = fodInfos->sizedlg.cx;
+             fodInfos->initial_size.y = fodInfos->sizedlg.cy;
+             GetClientRect( hwnd, &rc);
+             SetWindowPos( fodInfos->DlgInfos.hwndGrip, NULL,
+                     rc.right - gripx, rc.bottom - gripy,
+                     0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+             /* resize the dialog to the previous invocation */
+             if( MemDialogSize.cx && MemDialogSize.cy)
+                 SetWindowPos( hwnd, NULL,
+                         0, 0, MemDialogSize.cx, MemDialogSize.cy,
+                         SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+         }
+
+         if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+             SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
+
          return 0;
        }
+    case WM_SIZE:
+      return FILEDLG95_OnWMSize(hwnd, wParam);
+    case WM_GETMINMAXINFO:
+      return FILEDLG95_OnWMGetMMI( hwnd, (LPMINMAXINFO)lParam);
     case WM_COMMAND:
-      return FILEDLG95_OnWMCommand(hwnd, wParam, lParam);
+      return FILEDLG95_OnWMCommand(hwnd, wParam);
     case WM_DRAWITEM:
       {
         switch(((LPDRAWITEMSTRUCT)lParam)->CtlID)
@@ -1030,9 +1243,13 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
       return FILEDLG95_OnWMGetIShellBrowser(hwnd);
 
     case WM_DESTROY:
-      RemovePropA(hwnd, FileOpenDlgInfosStr);
-      return FALSE;
-
+      {
+          FileOpenDlgInfos * fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
+          if (fodInfos && fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
+              MemDialogSize = fodInfos->sizedlg;
+          RemovePropA(hwnd, FileOpenDlgInfosStr);
+          return FALSE;
+      }
     case WM_NOTIFY:
     {
 	LPNMHDR lpnmh = (LPNMHDR)lParam;
@@ -1105,15 +1322,16 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
    {VIEW_LIST,         FCIDM_TB_SMALLICON,  TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
    {VIEW_DETAILS,      FCIDM_TB_REPORTVIEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0 },
   };
-  TBADDBITMAP tba[2];
+  static const TBADDBITMAP tba = {HINST_COMMCTRL, IDB_VIEW_SMALL_COLOR};
+
   RECT rectTB;
   RECT rectlook;
-  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
-  tba[0].hInst = HINST_COMMCTRL;
-  tba[0].nID   = IDB_VIEW_SMALL_COLOR;
-  tba[1].hInst = COMDLG32_hInstance;
-  tba[1].nID   = 800;
+  HIMAGELIST toolbarImageList;
+  SHFILEINFOA shFileInfo;
+  ITEMIDLIST *desktopPidl;
+
+  FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
 
   TRACE("%p\n", fodInfos);
 
@@ -1162,9 +1380,20 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
 /* FIXME: use TB_LOADIMAGES when implemented */
 /*  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_LOADIMAGES, IDB_VIEW_SMALL_COLOR, HINST_COMMCTRL);*/
-  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 12, (LPARAM) &tba[0]);
-  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 1, (LPARAM) &tba[1]);
+  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_SETMAXTEXTROWS, 0, 0);
+  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 12, (LPARAM) &tba);
 
+  /* Retrieve and add desktop icon to the toolbar */
+  toolbarImageList = (HIMAGELIST)SendMessageW(fodInfos->DlgInfos.hwndTB, TB_GETIMAGELIST, 0, 0L);
+  SHGetSpecialFolderLocation(hwnd, CSIDL_DESKTOP, &desktopPidl);
+  SHGetFileInfoA((LPCSTR)desktopPidl, 0, &shFileInfo, sizeof(shFileInfo),
+    SHGFI_PIDL | SHGFI_ICON | SHGFI_SMALLICON);
+  ImageList_AddIcon(toolbarImageList, shFileInfo.hIcon);
+
+  DestroyIcon(shFileInfo.hIcon);
+  CoTaskMemFree(desktopPidl);
+
+  /* Finish Toolbar Construction */
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBUTTONSW, 9, (LPARAM) tbb);
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_AUTOSIZE, 0, 0);
 
@@ -1293,12 +1522,11 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
       if ( win98plus && handledPath == FALSE &&
            fodInfos->filter && *fodInfos->filter) {
 
-         BOOL   searchMore = TRUE;
          LPCWSTR lpstrPos = fodInfos->filter;
          WIN32_FIND_DATAW FindFileData;
          HANDLE hFind;
 
-         while (searchMore)
+         while (1)
          {
            /* filter is a list...  title\0ext\0......\0\0 */
 
@@ -1316,7 +1544,6 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
                lpstrPos += lstrlenW(lpstrPos) + 1;
 
            } else {
-               searchMore = FALSE;
 
                MemFree(fodInfos->initdir);
                fodInfos->initdir = MemAlloc(MAX_PATH*sizeof(WCHAR));
@@ -1325,6 +1552,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
                handledPath = TRUE;
                TRACE("No initial dir specified, but files of type %s found in current, so using it\n",
                  debugstr_w(lpstrPos));
+               FindClose(hFind);
                break;
            }
          }
@@ -1505,7 +1733,7 @@ void FILEDLG95_Clean(HWND hwnd)
  *
  * WM_COMMAND message handler
  */
-static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam)
 {
   WORD wNotifyCode = HIWORD(wParam); /* notification code */
   WORD wID = LOWORD(wParam);         /* item, control, or accelerator identifier */
@@ -1593,24 +1821,25 @@ static BOOL FILEDLG95_SendFileOK( HWND hwnd, FileOpenDlgInfos *fodInfos )
     /* ask the hook if we can close */
     if(IsHooked(fodInfos))
     {
-        LRESULT retval;
+        LRESULT retval = 0;
 
         TRACE("---\n");
         /* First send CDN_FILEOK as MSDN doc says */
-        retval = SendCustomDlgNotificationMessage(hwnd,CDN_FILEOK);
-        if (GetWindowLongPtrW(fodInfos->DlgInfos.hwndCustomDlg, DWLP_MSGRESULT))
+        if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+            retval = SendCustomDlgNotificationMessage(hwnd,CDN_FILEOK);
+        if( retval)
         {
             TRACE("canceled\n");
-            return (retval == 0);
+            return FALSE;
         }
 
         /* fodInfos->ofnInfos points to an ASCII or UNICODE structure as appropriate */
         retval = SendMessageW(fodInfos->DlgInfos.hwndCustomDlg,
                               fodInfos->HookMsg.fileokstring, 0, (LPARAM)fodInfos->ofnInfos);
-        if (GetWindowLongPtrW(fodInfos->DlgInfos.hwndCustomDlg, DWLP_MSGRESULT))
+        if( retval)
         {
             TRACE("canceled\n");
-            return (retval == 0);
+            return FALSE;
         }
     }
     return TRUE;
@@ -1760,15 +1989,15 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
   TRACE("hwnd=%p\n", hwnd);
 
+  /* try to browse the selected item */
+  if(BrowseSelectedFolder(hwnd))
+      return FALSE;
+
   /* get the files from the edit control */
   nFileCount = FILEDLG95_FILENAME_GetFileNames(hwnd, &lpstrFileList, &sizeUsed);
 
-  /* try if the user selected a folder in the shellview */
   if(nFileCount == 0)
-  {
-      BrowseSelectedFolder(hwnd);
       return FALSE;
-  }
 
   if(nFileCount > 1)
   {
@@ -1992,7 +2221,8 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           IPersistFolder2_Release(ppf2);
 	  if( ! COMDLG32_PIDL_ILIsEqual(pidlCurrent, fodInfos->ShellInfos.pidlAbsCurrent))
 	  {
-            if (SUCCEEDED(IShellBrowser_BrowseObject(fodInfos->Shell.FOIShellBrowser, pidlCurrent, SBSP_ABSOLUTE)))
+            if (SUCCEEDED(IShellBrowser_BrowseObject(fodInfos->Shell.FOIShellBrowser, pidlCurrent, SBSP_ABSOLUTE))
+                && fodInfos->ofnInfos->Flags & OFN_EXPLORER)
             {
               SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
             }
@@ -2073,7 +2303,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 	  LoadStringW(COMDLG32_hInstance, IDS_OVERWRITEFILE, lpstrOverwrite, 100);
 	  answer = MessageBoxW(hwnd, lpstrOverwrite, fodInfos->title,
 			       MB_YESNO | MB_ICONEXCLAMATION);
-	  if (answer == IDNO)
+	  if (answer == IDNO || answer == IDCANCEL)
 	  {
 	    ret = FALSE;
 	    goto ret;
@@ -2091,7 +2321,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           LoadStringW(COMDLG32_hInstance, IDS_CREATEFILE, lpstrCreate, 100);
           answer = MessageBoxW(hwnd, lpstrCreate, fodInfos->title,
                                MB_YESNO | MB_ICONEXCLAMATION);
-          if (answer == IDNO)
+          if (answer == IDNO || answer == IDCANCEL)
           {
             ret = FALSE;
             goto ret;
@@ -2295,7 +2525,8 @@ static BOOL FILEDLG95_SHELL_UpFolder(HWND hwnd)
                                           NULL,
                                           SBSP_PARENT)))
   {
-    SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
+    if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+        SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
     return TRUE;
   }
   return FALSE;
@@ -2317,7 +2548,8 @@ static BOOL FILEDLG95_SHELL_BrowseToDesktop(HWND hwnd)
 
   SHGetSpecialFolderLocation(0,CSIDL_DESKTOP,&pidl);
   hres = IShellBrowser_BrowseObject(fodInfos->Shell.FOIShellBrowser, pidl, SBSP_ABSOLUTE);
-  SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
+  if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+      SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
   COMDLG32_SHFree(pidl);
   return SUCCEEDED(hres);
 }
@@ -2495,7 +2727,8 @@ static BOOL FILEDLG95_FILETYPE_OnCommand(HWND hwnd, WORD wNotifyCode)
           len = lstrlenW(lpstrFilter)+1;
           fodInfos->ShellInfos.lpstrCurrentFilter = MemAlloc( len * sizeof(WCHAR) );
           lstrcpyW(fodInfos->ShellInfos.lpstrCurrentFilter,lpstrFilter);
-          SendCustomDlgNotificationMessage(hwnd,CDN_TYPECHANGE);
+          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+              SendCustomDlgNotificationMessage(hwnd,CDN_TYPECHANGE);
       }
 
       /* Refresh the actual view to display the included items*/
@@ -2788,6 +3021,8 @@ static BOOL FILEDLG95_LOOKIN_OnCommand(HWND hwnd, WORD wNotifyCode)
 
       iItem = CBGetCurSel(fodInfos->DlgInfos.hwndLookInCB);
 
+      if( iItem == CB_ERR) return FALSE;
+
       if(!(tmpFolder = (LPSFOLDER) CBGetItemDataPtr(fodInfos->DlgInfos.hwndLookInCB,
                                                iItem)))
 	return FALSE;
@@ -2797,7 +3032,8 @@ static BOOL FILEDLG95_LOOKIN_OnCommand(HWND hwnd, WORD wNotifyCode)
                                               tmpFolder->pidlItem,
                                               SBSP_ABSOLUTE)))
       {
-        SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
+        if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+            SendCustomDlgNotificationMessage(hwnd, CDN_FOLDERCHANGE);
         return TRUE;
       }
       break;
@@ -2965,7 +3201,7 @@ static int FILEDLG95_LOOKIN_RemoveMostExpandedItem(HWND hwnd)
   if(liInfos->iMaxIndentation <= 2)
     return -1;
 
-  if((iItemPos = FILEDLG95_LOOKIN_SearchItem(hwnd,(WPARAM)liInfos->iMaxIndentation,SEARCH_EXP)) >=0)
+  if((iItemPos = FILEDLG95_LOOKIN_SearchItem(hwnd,liInfos->iMaxIndentation,SEARCH_EXP)) >=0)
   {
     SFOLDER *tmpFolder = (LPSFOLDER) CBGetItemDataPtr(hwnd,iItemPos);
     COMDLG32_SHFree(tmpFolder->pidlItem);
@@ -3016,6 +3252,7 @@ static int FILEDLG95_LOOKIN_SearchItem(HWND hwnd,WPARAM searchArg,int iSearchMet
 static void FILEDLG95_LOOKIN_Clean(HWND hwnd)
 {
     FileOpenDlgInfos *fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
+    LookInInfos *liInfos = GetPropA(fodInfos->DlgInfos.hwndLookInCB,LookInInfosStr);
     int iPos;
     int iCount = CBGetCount(fodInfos->DlgInfos.hwndLookInCB);
 
@@ -3034,9 +3271,10 @@ static void FILEDLG95_LOOKIN_Clean(HWND hwnd)
     }
 
     /* LookInInfos structure */
+    MemFree(liInfos);
     RemovePropA(fodInfos->DlgInfos.hwndLookInCB,LookInInfosStr);
-
 }
+
 /***********************************************************************
  * FILEDLG95_FILENAME_FillFromSelection
  *
@@ -3120,7 +3358,7 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
       SetWindowTextW( fodInfos->DlgInfos.hwndFileName, lpstrAllFile );
        
       /* Select the file name like Windows does */ 
-      SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, (LPARAM)-1);
+      SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, -1);
     }
     HeapFree(GetProcessHeap(),0, lpstrAllFile );
 }
@@ -3130,7 +3368,7 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
  * Although shell32 is already linked the behaviour of exported StrRetToStrN
  * is dependent on whether emulated OS is unicode or not.
  */
-static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, LPITEMIDLIST pidl)
+static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, const ITEMIDLIST *pidl)
 {
 	switch (src->uType)
 	{
@@ -3471,7 +3709,8 @@ static BOOL BrowseSelectedFolder(HWND hwnd)
                MessageBoxW( hwnd, notexist, fodInfos->title, MB_OK | MB_ICONEXCLAMATION );
           }
           bBrowseSelFolder = TRUE;
-          SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
+          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
+              SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
       }
       COMDLG32_SHFree( pidlSelection );
   }
@@ -3501,10 +3740,10 @@ static void MemFree(void *mem)
  * by a 32 bits application
  *
  */
-static BOOL FD32_GetTemplate(PFD31_DATA lfs)
+BOOL FD32_GetTemplate(PFD31_DATA lfs)
 {
     LPOPENFILENAMEW ofnW = lfs->ofnW;
-    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
+    LPOPENFILENAMEA ofnA = lfs->ofnA;
     HANDLE hDlgTmpl;
 
     if (ofnW->Flags & OFN_ENABLETEMPLATEHANDLE)
@@ -3518,9 +3757,9 @@ static BOOL FD32_GetTemplate(PFD31_DATA lfs)
     else if (ofnW->Flags & OFN_ENABLETEMPLATE)
     {
 	HRSRC hResInfo;
-        if (priv->ofnA)
-	    hResInfo = FindResourceA(priv->ofnA->hInstance,
-				 priv->ofnA->lpTemplateName,
+        if (ofnA)
+	    hResInfo = FindResourceA(ofnA->hInstance,
+				 ofnA->lpTemplateName,
                                  (LPSTR)RT_DIALOG);
         else
 	    hResInfo = FindResourceW(ofnW->hInstance,
@@ -3557,155 +3796,10 @@ static BOOL FD32_GetTemplate(PFD31_DATA lfs)
 }
 
 
-/************************************************************************
- *                              FD32_Init          [internal]
- *      called from the common 16/32 code to initialize 32 bit data
- */
-static BOOL CALLBACK FD32_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
-{
-    BOOL IsUnicode = (BOOL) data;
-    PFD32_PRIVATE priv;
-
-    priv = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(FD32_PRIVATE));
-    lfs->private1632 = priv;
-    if (NULL == lfs->private1632) return FALSE;
-    if (IsUnicode)
-    {
-        lfs->ofnW = (LPOPENFILENAMEW) lParam;
-        if (lfs->ofnW->Flags & OFN_ENABLEHOOK)
-            if (lfs->ofnW->lpfnHook)
-                lfs->hook = TRUE;
-    }
-    else
-    {
-        priv->ofnA = (LPOPENFILENAMEA) lParam;
-        if (priv->ofnA->Flags & OFN_ENABLEHOOK)
-            if (priv->ofnA->lpfnHook)
-                lfs->hook = TRUE;
-        lfs->ofnW = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lfs->ofnW));
-        FD31_MapOfnStructA(priv->ofnA, lfs->ofnW, lfs->open);
-    }
-
-    if (! FD32_GetTemplate(lfs)) return FALSE;
-
-    return TRUE;
-}
-
-/***********************************************************************
- *                              FD32_CallWindowProc          [internal]
- *
- *      called from the common 16/32 code to call the appropriate hook
- */
-static BOOL CALLBACK FD32_CallWindowProc(const FD31_DATA *lfs, UINT wMsg, WPARAM wParam,
-                                 LPARAM lParam)
-{
-    BOOL ret;
-    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
-
-    if (priv->ofnA)
-    {
-        TRACE("Call hookA %p (%p, %04x, %08lx, %08lx)\n",
-               priv->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
-        ret = priv->ofnA->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
-        TRACE("ret hookA %p (%p, %04x, %08lx, %08lx)\n",
-               priv->ofnA->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
-        return ret;
-    }
-
-    TRACE("Call hookW %p (%p, %04x, %08lx, %08lx)\n",
-           lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
-    ret = lfs->ofnW->lpfnHook(lfs->hwnd, wMsg, wParam, lParam);
-    TRACE("Ret hookW %p (%p, %04x, %08lx, %08lx)\n",
-           lfs->ofnW->lpfnHook, lfs->hwnd, wMsg, wParam, lParam);
-    return ret;
-}
-
-/***********************************************************************
- *                              FD32_UpdateResult            [internal]
- *          update the real client structures if any
- */
-static void CALLBACK FD32_UpdateResult(const FD31_DATA *lfs)
-{
-    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
-    LPOPENFILENAMEW ofnW = lfs->ofnW;
-
-    if (priv->ofnA)
-    {
-        LPSTR lpszTemp;
-        if (ofnW->nMaxFile &&
-            !WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFile, -1,
-                                  priv->ofnA->lpstrFile, ofnW->nMaxFile, NULL, NULL ))
-            priv->ofnA->lpstrFile[ofnW->nMaxFile-1] = 0;
-
-        /* offsets are not guaranteed to be the same in WCHAR to MULTIBYTE conversion */
-        /* set filename offset */
-        lpszTemp = PathFindFileNameA(priv->ofnA->lpstrFile);
-        priv->ofnA->nFileOffset = (lpszTemp - priv->ofnA->lpstrFile);
-
-        /* set extension offset */
-        lpszTemp = PathFindExtensionA(priv->ofnA->lpstrFile);
-        priv->ofnA->nFileExtension = (*lpszTemp) ? (lpszTemp - priv->ofnA->lpstrFile) + 1 : 0;
-    }
-}
-
-/***********************************************************************
- *                              FD32_UpdateFileTitle            [internal]
- *          update the real client structures if any
- */
-static void CALLBACK FD32_UpdateFileTitle(const FD31_DATA *lfs)
-{
-    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
-    LPOPENFILENAMEW ofnW = lfs->ofnW;
-
-    if (priv->ofnA)
-    {
-        if (!WideCharToMultiByte( CP_ACP, 0, ofnW->lpstrFileTitle, -1,
-                                  priv->ofnA->lpstrFileTitle, ofnW->nMaxFileTitle, NULL, NULL ))
-            priv->ofnA->lpstrFileTitle[ofnW->nMaxFileTitle-1] = 0;
-    }
-}
-
-
-/***********************************************************************
- *                              FD32_SendLbGetCurSel         [internal]
- *          retrieve selected listbox item
- */
-static LRESULT CALLBACK FD32_SendLbGetCurSel(const FD31_DATA *lfs)
-{
-    return SendDlgItemMessageW(lfs->hwnd, lst1, LB_GETCURSEL, 0, 0);
-}
-
-
-/************************************************************************
- *                              FD32_Destroy          [internal]
- *      called from the common 16/32 code to cleanup 32 bit data
- */
-static void CALLBACK FD32_Destroy(const FD31_DATA *lfs)
-{
-    PFD32_PRIVATE priv = (PFD32_PRIVATE) lfs->private1632;
-
-    /* if ofnW has been allocated, have to free everything in it */
-    if (NULL != priv && NULL != priv->ofnA)
-    {
-        FD31_FreeOfnW(lfs->ofnW);
-        HeapFree(GetProcessHeap(), 0, lfs->ofnW);
-    }
-}
-
-static void FD32_SetupCallbacks(PFD31_CALLBACKS callbacks)
-{
-    callbacks->Init = FD32_Init;
-    callbacks->CWP = FD32_CallWindowProc;
-    callbacks->UpdateResult = FD32_UpdateResult;
-    callbacks->UpdateFileTitle = FD32_UpdateFileTitle;
-    callbacks->SendLbGetCurSel = FD32_SendLbGetCurSel;
-    callbacks->Destroy = FD32_Destroy;
-}
-
 /***********************************************************************
  *                              FD32_WMMeasureItem           [internal]
  */
-static LONG FD32_WMMeasureItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
+static LONG FD32_WMMeasureItem(LPARAM lParam)
 {
     LPMEASUREITEMSTRUCT lpmeasure;
 
@@ -3738,7 +3832,7 @@ static INT_PTR CALLBACK FD32_FileOpenDlgProc(HWND hWnd, UINT wMsg,
         return FD31_WMInitDialog(hWnd, wParam, lParam);
 
     case WM_MEASUREITEM:
-        return FD32_WMMeasureItem(hWnd, wParam, lParam);
+        return FD32_WMMeasureItem(lParam);
 
     case WM_DRAWITEM:
         return FD31_WMDrawItem(hWnd, wParam, lParam, !lfs->open, (DRAWITEMSTRUCT *)lParam);
@@ -3773,20 +3867,16 @@ static BOOL GetFileName31A(LPOPENFILENAMEA lpofn, /* address of structure with d
                            UINT dlgType /* type dialogue : open/save */
                            )
 {
-    HINSTANCE hInst;
     BOOL bRet = FALSE;
     PFD31_DATA lfs;
-    FD31_CALLBACKS callbacks;
 
     if (!lpofn || !FD31_Init()) return FALSE;
 
     TRACE("ofn flags %08x\n", lpofn->Flags);
-    FD32_SetupCallbacks(&callbacks);
-    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) FALSE);
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, FALSE);
     if (lfs)
     {
-        hInst = (HINSTANCE)GetWindowLongPtrW( lpofn->hwndOwner, GWLP_HINSTANCE );
-        bRet = DialogBoxIndirectParamA( hInst, lfs->template, lpofn->hwndOwner,
+        bRet = DialogBoxIndirectParamA( COMDLG32_hInstance, lfs->template, lpofn->hwndOwner,
                                         FD32_FileOpenDlgProc, (LPARAM)lfs);
         FD31_DestroyPrivate(lfs);
     }
@@ -3804,19 +3894,15 @@ static BOOL GetFileName31W(LPOPENFILENAMEW lpofn, /* address of structure with d
                            UINT dlgType /* type dialogue : open/save */
                            )
 {
-    HINSTANCE hInst;
     BOOL bRet = FALSE;
     PFD31_DATA lfs;
-    FD31_CALLBACKS callbacks;
 
     if (!lpofn || !FD31_Init()) return FALSE;
 
-    FD32_SetupCallbacks(&callbacks);
-    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, &callbacks, (DWORD) TRUE);
+    lfs = FD31_AllocPrivate((LPARAM) lpofn, dlgType, TRUE);
     if (lfs)
     {
-        hInst = (HINSTANCE)GetWindowLongPtrW( lpofn->hwndOwner, GWLP_HINSTANCE );
-        bRet = DialogBoxIndirectParamW( hInst, lfs->template, lpofn->hwndOwner,
+        bRet = DialogBoxIndirectParamW( COMDLG32_hInstance, lfs->template, lpofn->hwndOwner,
                                         FD32_FileOpenDlgProc, (LPARAM)lfs);
         FD31_DestroyPrivate(lfs);
     }

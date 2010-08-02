@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
@@ -36,19 +36,10 @@
 #undef MachVideoSync
 #undef MachBeep
 #undef MachPrepareForReactOS
-#undef MachGetMemoryMap
-#undef MachDiskGetBootVolume
-#undef MachDiskGetSystemVolume
 #undef MachDiskGetBootPath
-#undef MachDiskGetBootDevice
-#undef MachDiskBootingFromFloppy
-#undef MachDiskNormalizeSystemPath
 #undef MachDiskReadLogicalSectors
-#undef MachDiskGetPartitionEntry
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
-#undef MachRTCGetCurrentDateTime
-#undef MachHwDetect
 
 MACHVTBL MachVtbl;
 
@@ -85,7 +76,7 @@ MachVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init)
 VOID
 MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
-  return MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
+  MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
 }
 
 ULONG
@@ -97,7 +88,7 @@ MachVideoGetBufferSize(VOID)
 VOID
 MachVideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
-  return MachVtbl.VideoSetTextCursorPosition(X, Y);
+  MachVtbl.VideoSetTextCursorPosition(X, Y);
 }
 
 VOID
@@ -127,13 +118,13 @@ MachVideoIsPaletteFixed(VOID)
 VOID
 MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
-  return MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
+  MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID
 MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue)
 {
-  return MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
+  MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID
@@ -154,66 +145,16 @@ MachPrepareForReactOS(IN BOOLEAN Setup)
   MachVtbl.PrepareForReactOS(Setup);
 }
 
-ULONG
-MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize)
-{
-  return MachVtbl.GetMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
-}
-
-BOOLEAN
-MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
-{
-  return MachVtbl.DiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
-}
-
-BOOLEAN
-MachDiskGetSystemVolume(char *SystemPath,
-                        char *RemainingPath,
-                        PULONG Device,
-                        PULONG DriveNumber,
-                        PULONGLONG StartSector,
-                        PULONGLONG SectorCount,
-                        int *FsType)
-{
-  return MachVtbl.DiskGetSystemVolume(SystemPath, RemainingPath, Device,
-                                      DriveNumber, StartSector, SectorCount,
-                                      FsType);
-}
-
 BOOLEAN
 MachDiskGetBootPath(char *BootPath, unsigned Size)
 {
   return MachVtbl.DiskGetBootPath(BootPath, Size);
 }
 
-VOID
-MachDiskGetBootDevice(PULONG BootDevice)
-{
-  MachVtbl.DiskGetBootDevice(BootDevice);
-}
-
-BOOLEAN
-MachDiskBootingFromFloppy()
-{
-  return MachVtbl.DiskBootingFromFloppy();
-}
-
-BOOLEAN
-MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size)
-{
-  return MachVtbl.DiskNormalizeSystemPath(SystemPath, Size);
-}
-
 BOOLEAN
 MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
   return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
-}
-
-BOOLEAN
-MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
-{
-  return MachVtbl.DiskGetPartitionEntry(DriveNumber, PartitionNumber, PartitionTableEntry);
 }
 
 BOOLEAN
@@ -226,18 +167,6 @@ ULONG
 MachDiskGetCacheableBlockCount(ULONG DriveNumber)
 {
   return MachVtbl.DiskGetCacheableBlockCount(DriveNumber);
-}
-
-VOID
-MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second)
-{
-  MachVtbl.RTCGetCurrentDateTime(Year, Month, Day, Hour, Minute, Second);
-}
-
-VOID
-MachHwDetect(VOID)
-{
-  MachVtbl.HwDetect();
 }
 
 /* EOF */

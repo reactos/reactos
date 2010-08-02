@@ -1,5 +1,4 @@
-#ifndef _WIN32K_CLIPBOARD_H
-#define _WIN32K_CLIPBOARD_H
+#pragma once
 
 #include "window.h"
 #include <include/win32.h>
@@ -22,8 +21,8 @@ typedef struct _ClipboardElement
 
 typedef struct _CLIPBOARDSYSTEM
 {
-    PW32THREAD      ClipboardThread;
-    PW32THREAD      ClipboardOwnerThread;
+    PTHREADINFO     ClipboardThread;
+    PTHREADINFO     ClipboardOwnerThread;
     PWINDOW_OBJECT  ClipboardWindow;
     PWINDOW_OBJECT  ClipboardViewerWindow;
     PWINDOW_OBJECT  ClipboardOwnerWindow;
@@ -50,5 +49,3 @@ UINT APIENTRY IntEnumClipboardFormats(UINT format);
 UINT FASTCALL
 IntEnumClipboardFormats(UINT format);
 */
-
-#endif /* _WIN32K_CLIPBOARD_H */

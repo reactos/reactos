@@ -17,6 +17,11 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+#if 0
+//
+// FIXME: The queued spinlock routines are broken.
+//
+
 VOID
 FASTCALL
 KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
@@ -84,14 +89,95 @@ KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
 #endif
 }
 
+#else
+//
+// HACK: Hacked to work like normal spinlocks
+//
+
+VOID
+FASTCALL
+KeAcquireQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
+{
+#ifdef CONFIG_SMP
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
+    KxAcquireSpinLock(LockHandle->Lock);
+#endif
+}
+
+VOID
+FASTCALL
+KeReleaseQueuedSpinLockFromDpcLevel(IN PKSPIN_LOCK_QUEUE LockHandle)
+{
+#ifdef CONFIG_SMP
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
+    KxReleaseSpinLock(LockHandle->Lock);
+#endif
+}
+
+#endif
+
 /* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+KIRQL
+NTAPI
+KeAcquireInterruptSpinLock(IN PKINTERRUPT Interrupt)
+{
+    KIRQL OldIrql;
+
+    /* Raise IRQL */
+    KeRaiseIrql(Interrupt->SynchronizeIrql, &OldIrql);
+
+    /* Acquire spinlock on MP */
+    KeAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
+    return OldIrql;
+}
 
 /*
  * @implemented
  */
 VOID
 NTAPI
-KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
+                           IN KIRQL OldIrql)
+{
+    /* Release lock on MP */
+    KeReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
+
+    /* Lower IRQL */
+    KeLowerIrql(OldIrql);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+_KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* Clear it */
     *SpinLock = 0;
@@ -105,6 +191,17 @@ VOID
 NTAPI
 KeAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
     /* Do the inlined function */
     KxAcquireSpinLock(SpinLock);
 }
@@ -117,7 +214,18 @@ VOID
 NTAPI
 KeReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
-    /* Do the lined function */
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
 }
 
@@ -128,6 +236,17 @@ VOID
 FASTCALL
 KefAcquireSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
     /* Do the inlined function */
     KxAcquireSpinLock(SpinLock);
 }
@@ -139,7 +258,18 @@ VOID
 FASTCALL
 KefReleaseSpinLockFromDpcLevel(IN PKSPIN_LOCK SpinLock)
 {
-    /* Do the lined function */
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)SpinLock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Do the inlined function */
     KxReleaseSpinLock(SpinLock);
 }
 
@@ -189,7 +319,7 @@ KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
         return FALSE;
     }
 
-#ifdef DBG
+#if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (ULONG_PTR)KeGetCurrentThread() | 1;
 #endif
@@ -211,7 +341,23 @@ KeAcquireInStackQueuedSpinLockAtDpcLevel(IN PKSPIN_LOCK SpinLock,
     /* Set it up properly */
     LockHandle->LockQueue.Next = NULL;
     LockHandle->LockQueue.Lock = SpinLock;
+#if 0
     KeAcquireQueuedSpinLockAtDpcLevel(LockHandle->LockQueue.Next);
+#else
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->LockQueue.Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Acquire the lock */
+    KxAcquireSpinLock(LockHandle->LockQueue.Lock); // HACK
+#endif
 #endif
 }
 
@@ -223,41 +369,25 @@ FASTCALL
 KeReleaseInStackQueuedSpinLockFromDpcLevel(IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
 #ifdef CONFIG_SMP
+#if 0
     /* Call the internal function */
     KeReleaseQueuedSpinLockFromDpcLevel(LockHandle->LockQueue.Next);
+#else
+    /* Make sure we are at DPC or above! */
+    if (KeGetCurrentIrql() < DISPATCH_LEVEL)
+    {
+        /* We aren't -- bugcheck */
+        KeBugCheckEx(IRQL_NOT_GREATER_OR_EQUAL,
+                     (ULONG_PTR)LockHandle->LockQueue.Lock,
+                     KeGetCurrentIrql(),
+                     0,
+                     0);
+    }
+
+    /* Release the lock */
+    KxReleaseSpinLock(LockHandle->LockQueue.Lock); // HACK
 #endif
-}
-
-/*
- * @implemented
- */
-KIRQL
-NTAPI
-KeAcquireInterruptSpinLock(IN PKINTERRUPT Interrupt)
-{
-    KIRQL OldIrql;
-
-    /* Raise IRQL */
-    KeRaiseIrql(Interrupt->SynchronizeIrql, &OldIrql);
-
-    /* Acquire spinlock on MP */
-    KefAcquireSpinLockAtDpcLevel(Interrupt->ActualLock);
-    return OldIrql;
-}
-
-/*
- * @implemented
- */
-VOID
-NTAPI
-KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
-                           IN KIRQL OldIrql)
-{
-    /* Release lock on MP */
-    KefReleaseSpinLockFromDpcLevel(Interrupt->ActualLock);
-
-    /* Lower IRQL */
-    KeLowerIrql(OldIrql);
+#endif
 }
 
 /*
@@ -325,4 +455,21 @@ KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
     return TRUE;
 }
 
-/* EOF */
+#ifdef _M_IX86
+VOID
+NTAPI
+Kii386SpinOnSpinLock(PKSPIN_LOCK SpinLock, ULONG Flags)
+{
+    // FIXME: Handle flags
+    UNREFERENCED_PARAMETER(Flags);
+
+    /* Spin until it's unlocked */
+    while (*(volatile KSPIN_LOCK *)SpinLock & 1)
+    {
+        // FIXME: Check for timeout
+
+        /* Yield and keep looping */
+        YieldProcessor();
+    }
+}
+#endif

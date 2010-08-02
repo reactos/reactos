@@ -1,3 +1,4 @@
+#ifndef _M_ARM
 #include <freeldr.h>
 #include <debug.h>
 
@@ -65,7 +66,7 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
 
 ULONG_PTR
 NTAPI
-FrLdrLoadModule(FILE *ModuleImage,
+FrLdrLoadModule(PFILE ModuleImage,
                 LPCSTR ModuleName,
                 PULONG ModuleSize)
 {
@@ -177,7 +178,7 @@ FrLdrCloseModule(ULONG_PTR ModuleBase,
     if (ModuleData) {
         
         /* Make sure this is the right module and that it hasn't been closed */
-        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == (ULONG_PTR)-1)) {
+        if ((ModuleBase == ModuleData->ModStart) && (ModuleData->ModEnd == MAXULONG_PTR)) {
             
             /* Close the Module */
             ModuleData->ModEnd = ModuleData->ModStart + ModuleSize;
@@ -435,7 +436,7 @@ LdrPEFixupImports(IN PVOID DllBase,
 
 PVOID
 NTAPI
-FrLdrReadAndMapImage(IN FILE *Image,
+FrLdrReadAndMapImage(IN PFILE Image,
                      IN PCHAR Name,
                      IN ULONG ImageType)
 {
@@ -674,7 +675,7 @@ FrLdrReMapImage(IN PVOID Base,
 
 PVOID
 NTAPI
-FrLdrMapImage(IN FILE *Image,
+FrLdrMapImage(IN PFILE Image,
               IN PCHAR Name,
               IN ULONG ImageType)
 {
@@ -780,5 +781,5 @@ FrLdrMapImage(IN FILE *Image,
     /* Return the final mapped address */
     return LoadBase;
 }
-
+#endif
 /* EOF */

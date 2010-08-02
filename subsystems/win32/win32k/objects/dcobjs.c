@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for creation and destruction of DCs
@@ -6,65 +6,10 @@
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
-
-// HACK!
-static
-BOOLEAN
-IntUpdateBrushXlate(PDC pdc, XLATEOBJ **ppxlo, BRUSH *pbrush)
-{
-    SURFACE * psurf;
-    XLATEOBJ *pxlo = NULL;
-    HPALETTE hPalette = NULL;
-
-    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
-    if (psurf)
-    {
-        hPalette = psurf->hDIBPalette;
-        SURFACE_UnlockSurface(psurf);
-    }
-    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
-
-    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
-    {
-        pxlo = NULL;
-    }
-    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
-    {
-        pxlo = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
-    }
-    else
-    {
-        SURFACE *psurfPattern = SURFACE_LockSurface(pbrush->hbmPattern);
-        if (psurfPattern == NULL)
-            return FALSE;
-
-        /* Special case: 1bpp pattern */
-        if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
-        {
-            if (pdc->rosdc.bitsPerPixel != 1)
-                pxlo = IntEngCreateSrcMonoXlate(hPalette,
-                                                pdc->pdcattr->crBackgroundClr,
-                                                pbrush->BrushAttr.lbColor);
-        }
-        else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
-        {
-            pxlo = IntEngCreateXlate(0, 0, hPalette, psurfPattern->hDIBPalette);
-        }
-
-        SURFACE_UnlockSurface(psurfPattern);
-    }
-
-    if (*ppxlo != NULL)
-        EngDeleteXlate(*ppxlo);
-
-    *ppxlo = pxlo;
-    return TRUE;
-}
-
 
 VOID
 FASTCALL
@@ -72,7 +17,6 @@ DC_vUpdateFillBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
     PBRUSH pbrFill;
-    XLATEOBJ *pxlo = NULL;
 
     /* Check if the brush handle has changed */
     if (pdcattr->hbrush != pdc->dclevel.pbrFill->BaseObject.hHmgr)
@@ -85,11 +29,8 @@ DC_vUpdateFillBrush(PDC pdc)
             BRUSH_ShareUnlockBrush(pdc->dclevel.pbrFill);
             pdc->dclevel.pbrFill = pbrFill;
 
-            /* ROS HACK, should use surf xlate */
-            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlateBrush, pbrFill);
-
-            /* Update eboFill, realizing it, if needed */
-            EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pdc->rosdc.XlateBrush);
+            /* Mark eboFill as dirty */
+            pdcattr->ulDirty_ |= DIRTY_FILL;
         }
         else
         {
@@ -98,14 +39,19 @@ DC_vUpdateFillBrush(PDC pdc)
         }
     }
 
-    /* ROS HACK, should use surf xlate */
-    pxlo = pdc->rosdc.XlateBrush;
+    /* Check if the EBRUSHOBJ needs update */
+    if (pdcattr->ulDirty_ & DIRTY_FILL)
+    {
+        /* Update eboFill */
+        EBRUSHOBJ_vUpdate(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
+    }
 
     /* Check for DC brush */
     if (pdcattr->hbrush == StockObjects[DC_BRUSH])
     {
+        /* ROS HACK, should use surf xlate */
         /* Update the eboFill's solid color */
-        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr, pxlo);
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr);
     }
 
     /* Clear flags */
@@ -118,7 +64,6 @@ DC_vUpdateLineBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
     PBRUSH pbrLine;
-    XLATEOBJ *pxlo;
 
     /* Check if the pen handle has changed */
     if (pdcattr->hpen != pdc->dclevel.pbrLine->BaseObject.hHmgr)
@@ -131,11 +76,8 @@ DC_vUpdateLineBrush(PDC pdc)
             BRUSH_ShareUnlockBrush(pdc->dclevel.pbrLine);
             pdc->dclevel.pbrLine = pbrLine;
 
-            /* ROS HACK, should use surf xlate */
-            IntUpdateBrushXlate(pdc, &pdc->rosdc.XlatePen, pbrLine);
-
-            /* Update eboLine, realizing it, if needed */
-            EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pdc->rosdc.XlatePen);
+            /* Mark eboLine as dirty */
+            pdcattr->ulDirty_ |= DIRTY_LINE;
         }
         else
         {
@@ -144,14 +86,18 @@ DC_vUpdateLineBrush(PDC pdc)
         }
     }
 
-    /* ROS HACK, should use surf xlate */
-    pxlo = pdc->rosdc.XlatePen;
+    /* Check if the EBRUSHOBJ needs update */
+    if (pdcattr->ulDirty_ & DIRTY_LINE)
+    {
+        /* Update eboLine */
+        EBRUSHOBJ_vUpdate(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+    }
 
     /* Check for DC pen */
     if (pdcattr->hpen == StockObjects[DC_PEN])
     {
         /* Update the eboLine's solid color */
-        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr, pxlo);
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr);
     }
 
     /* Clear flags */
@@ -163,27 +109,12 @@ FASTCALL
 DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
-    XLATEOBJ *pxlo = NULL;
-    SURFACE *psurf;
-    HPALETTE hpal;
 
-//    psurf = pdc->dclevel.pSurface;
-    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
-    if (psurf)
-    {
-        hpal = psurf->hDIBPalette;
-        if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
-        pxlo = IntEngCreateXlate(0, PAL_RGB, hpal, NULL);
-        SURFACE_UnlockSurface(psurf);
-    }
+    if(pdcattr->ulDirty_ & DIRTY_TEXT)
+        EBRUSHOBJ_vUpdate(&pdc->eboText, pdc->eboText.pbrush, pdc);
 
     /* Update the eboText's solid color */
-    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr, pxlo);
-
-    if (pxlo)
-    {
-        EngDeleteXlate(pxlo);
-    }
+    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
 
     /* Clear flag */
     pdcattr->ulDirty_ &= ~DIRTY_TEXT;
@@ -194,34 +125,19 @@ FASTCALL
 DC_vUpdateBackgroundBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
-    XLATEOBJ *pxlo = NULL;
-    SURFACE *psurf;
-    HPALETTE hpal;
 
-//    psurf = pdc->dclevel.pSurface;
-    psurf = SURFACE_LockSurface(pdc->rosdc.hBitmap);
-    if (psurf)
-    {
-        hpal = psurf->hDIBPalette;
-        if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
-        pxlo = IntEngCreateXlate(0, PAL_RGB, hpal, NULL);
-        SURFACE_UnlockSurface(psurf);
-    }
+    if(pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pdc->eboBackground.pbrush, pdc);
 
     /* Update the eboBackground's solid color */
-    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr, pxlo);
-
-    if (pxlo)
-    {
-        EngDeleteXlate(pxlo);
-    }
+    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
 
     /* Clear flag */
     pdcattr->ulDirty_ &= ~DIRTY_BACKGROUND;
 }
 
-HPALETTE 
-FASTCALL 
+HPALETTE
+FASTCALL
 GdiSelectPalette(
     HDC hDC,
     HPALETTE hpal,
@@ -229,7 +145,7 @@ GdiSelectPalette(
 {
     PDC pdc;
     HPALETTE oldPal = NULL;
-    PPALGDI ppal;
+    PPALETTE ppal;
 
     // FIXME: mark the palette as a [fore\back]ground pal
     pdc = DC_LockDc(hDC);
@@ -239,7 +155,7 @@ GdiSelectPalette(
     }
 
     /* Check if this is a valid palette handle */
-    ppal = PALETTE_LockPalette(hpal);
+    ppal = PALETTE_ShareLockPalette(hpal);
     if (!ppal)
     {
         DC_UnlockDc(pdc);
@@ -247,66 +163,25 @@ GdiSelectPalette(
     }
 
     /* Is this a valid palette for this depth? */
-    if ((pdc->rosdc.bitsPerPixel <= 8 && ppal->Mode == PAL_INDEXED) ||
-        (pdc->rosdc.bitsPerPixel > 8  && ppal->Mode != PAL_INDEXED))
+	if ((BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
+					&& ppal->Mode == PAL_INDEXED) ||
+			(BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
     {
+        /* Get old palette, set new one */
         oldPal = pdc->dclevel.hpal;
         pdc->dclevel.hpal = hpal;
-    }
-    else if (pdc->rosdc.bitsPerPixel > 8 && ppal->Mode == PAL_INDEXED)
-    {
-        oldPal = pdc->dclevel.hpal;
-        pdc->dclevel.hpal = hpal;
+        DC_vSelectPalette(pdc, ppal);
+
+        /* Mark the brushes invalid */
+        pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE |
+                                  DIRTY_BACKGROUND | DIRTY_TEXT;
     }
 
-    PALETTE_UnlockPalette(ppal);
+    PALETTE_ShareUnlockPalette(ppal);
     DC_UnlockDc(pdc);
 
     return oldPal;
 }
-
-HBRUSH
-FASTCALL
-IntGdiSelectBrush(
-    PDC pDC,
-    HBRUSH hBrush)
-{
-    PDC_ATTR pdcattr;
-    HBRUSH hOrgBrush;
-
-    if (pDC == NULL || hBrush == NULL) return NULL;
-
-    pdcattr = pDC->pdcattr;
-
-    hOrgBrush = pdcattr->hbrush;
-    pdcattr->hbrush = hBrush;
-
-    DC_vUpdateFillBrush(pDC);
-
-    return hOrgBrush;
-}
-
-HPEN
-FASTCALL
-IntGdiSelectPen(
-    PDC pDC,
-    HPEN hPen)
-{
-    PDC_ATTR pdcattr;
-    HPEN hOrgPen = NULL;
-
-    if (pDC == NULL || hPen == NULL) return NULL;
-
-    pdcattr = pDC->pdcattr;
-
-    hOrgPen = pdcattr->hpen;
-    pdcattr->hpen = hPen;
-
-    DC_vUpdateLineBrush(pDC);
-
-    return hOrgPen;
-}
-
 
  /*
  * @implemented
@@ -328,7 +203,7 @@ NtGdiSelectBrush(
         return NULL;
     }
 
-//    hOrgBrush = IntGdiSelectBrush(pDC,hBrush);
+    /* Simply return the user mode value, without checking */
     hOrgBrush = pDC->pdcattr->hbrush;
     pDC->pdcattr->hbrush = hBrush;
     DC_vUpdateFillBrush(pDC);
@@ -358,7 +233,7 @@ NtGdiSelectPen(
         return NULL;
     }
 
-//    hOrgPen = IntGdiSelectPen(pDC, hPen);
+    /* Simply return the user mode value, without checking */
     hOrgPen = pDC->pdcattr->hpen;
     pDC->pdcattr->hpen = hPen;
     DC_vUpdateLineBrush(pDC);
@@ -382,7 +257,6 @@ NtGdiSelectBitmap(
     HBITMAP hOrgBmp;
     PSURFACE psurfBmp, psurfOld;
     HRGN hVisRgn;
-    PBRUSH pbrush;
 
     if (hDC == NULL || hBmp == NULL) return NULL;
 
@@ -411,59 +285,40 @@ NtGdiSelectBitmap(
     psurfOld = pDC->dclevel.pSurface;
     hOrgBmp = psurfOld ? psurfOld->BaseObject.hHmgr : NULL;
 
-    /* FIXME: ros hack */
-    hOrgBmp = pDC->rosdc.hBitmap;
-
-    pDC->rosdc.hBitmap = hBmp;
-
     /* Release the old bitmap, reference the new */
     DC_vSelectSurface(pDC, psurfBmp);
 
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
     psurfBmp->hDC = hDC;
 
-    // if we're working with a DIB, get the palette 
-    // [fixme: only create if the selected palette is null]
-    if (psurfBmp->hSecure)
+    /* FIXME; improve by using a region without a handle and selecting it */
+    hVisRgn = IntSysCreateRectRgn( 0,
+                                   0,
+                                   psurfBmp->SurfObj.sizlBitmap.cx,
+                                   psurfBmp->SurfObj.sizlBitmap.cy);
+
+    if(psurfBmp->hSecure)
     {
-//        pDC->rosdc.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
-        pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
+        /* Set DIBSECTION attribute */
+        pdcattr->ulDirty_ |= DC_DIBSECTION;
     }
     else
     {
-        pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
+        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
     }
-
-    /* FIXME; improve by using a region without a handle and selecting it */
-    hVisRgn = NtGdiCreateRectRgn(0,
-                                 0,
-                                 psurfBmp->SurfObj.sizlBitmap.cx,
-                                 psurfBmp->SurfObj.sizlBitmap.cy);
 
     /* Release the exclusive lock */
     SURFACE_UnlockSurface(psurfBmp);
 
-    /* Regenerate the XLATEOBJs. (hack!) */
-    pbrush = BRUSH_LockBrush(pdcattr->hbrush);
-    if (pbrush)
-    {
-        IntUpdateBrushXlate(pDC, &pDC->rosdc.XlateBrush, pbrush);
-        BRUSH_UnlockBrush(pbrush);
-    }
-
-    pbrush = PEN_LockPen(pdcattr->hpen);
-    if (pbrush)
-    {
-        IntUpdateBrushXlate(pDC, &pDC->rosdc.XlatePen, pbrush);
-        PEN_UnlockPen(pbrush);
-    }
+    /* Mark the brushes invalid */
+    pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE;
 
     DC_UnlockDc(pDC);
 
     if (hVisRgn)
     {
         GdiSelectVisRgn(hDC, hVisRgn);
-        GreDeleteObject(hVisRgn);
+        REGION_FreeRgnByHandle(hVisRgn);
     }
 
     return hOrgBmp;
@@ -481,7 +336,7 @@ NtGdiSelectClipPath(
     BOOL  success = FALSE;
     PDC_ATTR pdcattr;
     PDC pdc;
-    
+
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
@@ -541,11 +396,11 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
     }
     pdcattr = pdc->pdcattr;
 
-    if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-        IntGdiSelectBrush(pdc, pdcattr->hbrush);
+    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+        DC_vUpdateFillBrush(pdc);
 
-    if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-        IntGdiSelectPen(pdc, pdcattr->hpen);
+    if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+        DC_vUpdateLineBrush(pdc);
 
     switch(ObjectType)
     {
@@ -567,8 +422,11 @@ NtGdiGetDCObject(HDC hDC, INT ObjectType)
             break;
 
         case GDI_OBJECT_TYPE_BITMAP:
-            SelObject = pdc->rosdc.hBitmap;
+        {
+            SURFACE *psurf = pdc->dclevel.pSurface;
+            SelObject = psurf ? psurf->BaseObject.hHmgr : NULL;
             break;
+        }
 
         case GDI_OBJECT_TYPE_COLORSPACE:
             DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");

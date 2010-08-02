@@ -5,6 +5,7 @@
 	<define name="WIN32" />
 	<define name="_WINDOWS" />
 	<define name="_MBCS" />
+	<define name="HAVE_STAT" />
 	<define name="HAVE_WIN32_THREADS" />
 	<define name="_REENTRANT" />
 	<define name="_WINSOCKAPI_" />
@@ -30,5 +31,6 @@
 	<file>transform.c</file>
 	<file>variables.c</file>
 	<file>xslt.c</file>
+	<file>xsltlocale.c</file>
 	<file>xsltutils.c</file>
 </module>

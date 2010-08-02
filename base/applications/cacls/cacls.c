@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -180,14 +180,14 @@ BOOL
 PrintFileDacl(IN LPTSTR FilePath,
               IN LPTSTR FileName)
 {
-    SIZE_T Indent;
+    SIZE_T Length;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     DWORD SDSize = 0;
     TCHAR FullFileName[MAX_PATH + 1];
     BOOL Error = FALSE, Ret = FALSE;
 
-    Indent = _tcslen(FilePath) + _tcslen(FileName);
-    if (Indent++ > MAX_PATH - 1)
+    Length = _tcslen(FilePath) + _tcslen(FileName);
+    if (Length > MAX_PATH)
     {
         /* file name too long */
         SetLastError(ERROR_FILE_NOT_FOUND);
@@ -529,7 +529,6 @@ _tmain(int argc, const TCHAR *argv[])
         WIN32_FIND_DATA FindData;
         HANDLE hFind;
         DWORD LastError;
-        BOOL ContinueAccessDenied = FALSE;
 
         if (argc > 2)
         {
@@ -572,8 +571,7 @@ _tmain(int argc, const TCHAR *argv[])
                         {
                             LastError = GetLastError();
 
-                            if (LastError == ERROR_ACCESS_DENIED &&
-                                ContinueAccessDenied)
+                            if (LastError == ERROR_ACCESS_DENIED)
                             {
                                 PrintErrorMessage(LastError);
                             }

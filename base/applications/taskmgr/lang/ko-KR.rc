@@ -1,12 +1,13 @@
 /////////////////////////////////////////////////////////////////////////////
 // Korean translation
 /*
- *Korean translation by Seungju Kim(www.manatails007.org)
+ * Korean translation by Seungju Kim (www.manatails007.org)
  */
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+#pragma code_page(949)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -162,26 +163,13 @@ END
 //
 // Dialog
 //
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "작업 관리자 정보"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "작업 관리자 v1.0\nCopyright (C) 1999 - 2001\nby Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "확인",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "ReactOS 작업 관리자"
+CAPTION "작업 관리자"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -204,7 +192,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "작업 끝내기(&E)",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "모든 유저의 프로세스 보이기(&S)",IDC_SHOWALLPROCESSES,
@@ -216,7 +204,7 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "CPU 사용",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "CPU 사용",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "메모리 사용",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "합계",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "할당된 메모리 (K)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
@@ -226,48 +214,46 @@ BEGIN
     LTEXT           "쓰레드",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "프로세스",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "합계",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "한계",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8
+    LTEXT           "한계",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
     LTEXT           "최고",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "합계",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
     LTEXT           "사용 가능",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
     LTEXT           "시스템 캐시",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "합계",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
     LTEXT           "페이지됨",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
     LTEXT           "페이지 안됨",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "CPU 사용 기록",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "메모리 사용 기록",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU 사용 표시",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "메모리 사용 표시",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU 사용 표시",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "메모리 사용 표시",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU 사용 기록",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "메모리 사용 기록",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -538,7 +524,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "작업 관리자"
+    IDS_APP_TITLE           "작업 관리자" 
     IDC_TASKMGR             "작업 관리자"
     IDS_IDLE_PROCESS        "System Idle Process"
 END
@@ -604,7 +590,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "프로세스 우선 순위를 보통 미만으로 설정합니다"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "프로세스 우선 순위를 낮음으로 설정합니다"
-    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 
@@ -659,7 +644,6 @@ BEGIN
     IDS_MSG_WARNINGDEBUG          "경고: 이 프로세스를 디버그하면 데이터 손실이 발생할 수 있습니다.\n그래도 디버거를 부착하시겠습니까?"
     IDS_MSG_TASKMGRWARNING        "작업 관리자 경고"
     IDS_MSG_WARNINGTERMINATING    "경고: 프로세스를 종료하면 데이터 손실 및 시스템 불안정과\n같은 바람직하지 않은 결과를 가져올 수 있습니다. 프로세스를\n종료하기 전에 프로세스 상태나 데이터를 저장할 기회가\n없습니다.\n프로세스를 종료하시겠습니까?"
-
     IDS_MSG_UNABLETERMINATEPRO    "프로세스를 제거할 수 없음"
     IDS_MSG_UNABLECHANGEPRIORITY  "우선 순위를 바꿀 수 없음"
     IDS_MSG_WARNINGCHANGEPRIORITY "경고: 이 프로세스의 우선 순위 클래스를 변경하면 시스템 불안정을 포함하여\n예기치 않은 결과를 초래할 수도 있습니다.\n우선 순위 클래스를 변경하시겠습니까?"

@@ -47,9 +47,7 @@ ExInitializeSystemLookasideList(IN PGENERAL_LOOKASIDE List,
     List->Depth = 2;
     List->Allocate = ExAllocatePoolWithTag;
     List->Free = ExFreePool;
-    List->ListHead.Next.Next = NULL;
-    List->ListHead.Depth = 0;
-    List->ListHead.Sequence = 0;
+    InitializeSListHead(&List->ListHead);
     List->TotalAllocates = 0;
     List->AllocateHits = 0;
     List->TotalFrees = 0;
@@ -108,7 +106,7 @@ ExpInitLookasideLists()
         ExInitializeSystemLookasideList(&ExpSmallNPagedPoolLookasideLists[i],
                                         NonPagedPool,
                                         (i + 1) * 8,
-                                        TAG('P', 'o', 'o', 'l'),
+                                        'looP',
                                         256,
                                         &ExPoolLookasideListHead);
 
@@ -116,7 +114,7 @@ ExpInitLookasideLists()
         ExInitializeSystemLookasideList(&ExpSmallPagedPoolLookasideLists[i],
                                         PagedPool,
                                         (i + 1) * 8,
-                                        TAG('P', 'o', 'o', 'l'),
+                                        'looP',
                                         256,
                                         &ExPoolLookasideListHead);
     }

@@ -6,9 +6,11 @@
 #include <oleidl.h>
 #include <ole2.h>
 #include <shlobj.h>
+#include <shlobj_undoc.h>
 #include <shlwapi.h>
 #include <servprov.h>
 #include <shlguid.h>
+#include <shlguid_undoc.h>
 #include <ocidl.h>
 #include <objidl.h>
 #include <docobj.h>

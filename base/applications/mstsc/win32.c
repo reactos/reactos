@@ -13,20 +13,13 @@
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
 
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+   You should have received a copy of the GNU General Public License along
+   with this program; if not, write to the Free Software Foundation, Inc.,
+   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
 #include <winsock2.h> /* winsock2.h first */
 #include <precomp.h>
-
-//FIXME: remove eventually
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-#include <tchar.h>
-
 
 extern char g_username[];
 extern char g_hostname[];
@@ -89,7 +82,7 @@ uni_to_str(char * sizex, TCHAR * size1)
   int len;
   int i;
 
-  len = _tcslen(size1);
+  len = lstrlen(size1);
   for (i = 0; i < len; i++)
   {
     sizex[i] = (char)size1[i];
@@ -520,11 +513,11 @@ handle_WM_SIZING(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   height = (prect->bottom - prect->top) - (g_yoff + g_xoff);
   if (height < g_height || width < g_width)
   {
-    style = GetWindowLong(g_Wnd, GWL_STYLE);
+    style = GetWindowLongPtr(g_Wnd, GWL_STYLE);
     if (!(style & WS_HSCROLL))
     {
       style |= WS_HSCROLL | WS_VSCROLL;
-      SetWindowLong(g_Wnd, GWL_STYLE, style);
+      SetWindowLongPtr(g_Wnd, GWL_STYLE, style);
       g_xscroll = 0;
       g_yscroll = 0;
       SetScrollPos(g_Wnd, SB_HORZ, g_xscroll, 1);
@@ -533,12 +526,12 @@ handle_WM_SIZING(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   }
   else if (height >= g_height && width >= g_width)
   {
-    style = GetWindowLong(g_Wnd, GWL_STYLE);
+    style = GetWindowLongPtr(g_Wnd, GWL_STYLE);
     if (style & WS_HSCROLL)
     {
       style &= ~WS_HSCROLL;
       style &= ~WS_VSCROLL;
-      SetWindowLong(g_Wnd, GWL_STYLE, style);
+      SetWindowLongPtr(g_Wnd, GWL_STYLE, style);
       g_xscroll = 0;
       g_yscroll = 0;
     }

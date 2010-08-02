@@ -34,16 +34,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 /* Reads a string from the #STRINGS section in the CHM file */
 static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
 {
+    LPCSTR str;
+
     if(!chm->strings_stream)
         return NULL;
 
     if(chm->strings_size <= (offset >> BLOCK_BITS)) {
+        chm->strings_size = (offset >> BLOCK_BITS)+1;
         if(chm->strings)
             chm->strings = heap_realloc_zero(chm->strings,
-                    chm->strings_size = ((offset >> BLOCK_BITS)+1)*sizeof(char*));
+                    chm->strings_size*sizeof(char*));
         else
             chm->strings = heap_alloc_zero(
-                    chm->strings_size = ((offset >> BLOCK_BITS)+1)*sizeof(char*));
+                    chm->strings_size*sizeof(char*));
 
     }
 
@@ -71,7 +74,9 @@ static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
         }
     }
 
-    return chm->strings[offset >> BLOCK_BITS] + (offset & BLOCK_MASK);
+    str = chm->strings[offset >> BLOCK_BITS] + (offset & BLOCK_MASK);
+    TRACE("offset %#x => %s\n", offset, debugstr_a(str));
+    return str;
 }
 
 static BOOL ReadChmSystem(CHMInfo *chm)
@@ -233,11 +238,11 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
         info->WinType.pszIndex = strdupW(null);
         info->WinType.fsValidMembers=0;
         info->WinType.fsWinProperties=HHWIN_PROP_TRI_PANE;
-        info->WinType.pszCaption=strdupW(info->pCHMInfo->defTitle);
+        info->WinType.pszCaption=strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : null);
         info->WinType.dwStyles=WS_POPUP;
         info->WinType.dwExStyles=0;
         info->WinType.nShowState=SW_SHOW;
-        info->WinType.pszFile=strdupW(info->pCHMInfo->defTopic);
+        info->WinType.pszFile=strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : null);
         info->WinType.curNavType=HHWIN_NAVTYPE_TOC;
         return TRUE;
     }
@@ -362,15 +367,18 @@ IStream *GetChmStream(CHMInfo *info, LPCWSTR parent_chm, ChmPath *chm_file)
 /* Opens the CHM file for reading */
 CHMInfo *OpenCHM(LPCWSTR szFile)
 {
-    WCHAR file[MAX_PATH] = {0};
     HRESULT hres;
+    CHMInfo *ret;
 
     static const WCHAR wszSTRINGS[] = {'#','S','T','R','I','N','G','S',0};
 
-    CHMInfo *ret = heap_alloc_zero(sizeof(CHMInfo));
+    if (!(ret = heap_alloc_zero(sizeof(CHMInfo))))
+        return NULL;
 
-    GetFullPathNameW(szFile, sizeof(file)/sizeof(file[0]), file, NULL);
-    ret->szFile = strdupW(file);
+    if (!(ret->szFile = strdupW(szFile))) {
+        heap_free(ret);
+        return NULL;
+    }
 
     hres = CoCreateInstance(&CLSID_ITStorage, NULL, CLSCTX_INPROC_SERVER,
             &IID_IITStorage, (void **) &ret->pITStorage) ;
@@ -385,7 +393,6 @@ CHMInfo *OpenCHM(LPCWSTR szFile)
         WARN("Could not open storage: %08x\n", hres);
         return CloseCHM(ret);
     }
-
     hres = IStorage_OpenStream(ret->pStorage, wszSTRINGS, NULL, STGM_READ, 0,
             &ret->strings_stream);
     if(FAILED(hres)) {
@@ -423,6 +430,7 @@ CHMInfo *CloseCHM(CHMInfo *chm)
     heap_free(chm->defTitle);
     heap_free(chm->defTopic);
     heap_free(chm->defToc);
+    heap_free(chm->szFile);
     heap_free(chm);
 
     return NULL;

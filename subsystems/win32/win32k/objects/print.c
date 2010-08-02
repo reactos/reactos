@@ -12,13 +12,13 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$ */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -114,7 +114,7 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   SURFACE *psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
+   SURFACE *psurf = dc->dclevel.pSurface;
    INT Result;
 
    /* FIXME - Handle psurf == NULL !!!!!! */
@@ -139,7 +139,6 @@ IntGdiExtEscape(
          OutSize,
          (PVOID)OutData );
    }
-   SURFACE_UnlockSurface(psurf);
 
    return Result;
 }

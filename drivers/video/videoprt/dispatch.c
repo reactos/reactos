@@ -4,19 +4,18 @@
  * Copyright (C) 2002, 2003, 2004 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -358,11 +357,14 @@ IntVideoPortPnPStartDevice(
            FullList < AllocatedResources->List + AllocatedResources->Count;
            FullList++)
       {
+         INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n",
+                FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+
          /* FIXME: Is this ASSERT ok for resources from the PNP manager? */
-         ASSERT(FullList->InterfaceType == PCIBus &&
-                FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&
-                1 == FullList->PartialResourceList.Version &&
-                1 == FullList->PartialResourceList.Revision);
+         ASSERT(FullList->InterfaceType == PCIBus);
+         ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
+         ASSERT(1 == FullList->PartialResourceList.Version);
+         ASSERT(1 == FullList->PartialResourceList.Revision);
 	 for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
               Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
               Descriptor++)

@@ -8,8 +8,8 @@
 #endif
 
 #ifndef FILE_CHARACTERISTIC_PNP_DEVICE  // DDK 2003
-
 #define FILE_CHARACTERISTIC_PNP_DEVICE  0x00000800
+#endif // !FILE_CHARACTERISTIC_PNP_DEVICE
 
 typedef enum _SYSTEM_INFORMATION_CLASS {
     SystemBasicInformation,
@@ -126,8 +126,6 @@ typedef enum _SYSTEM_INFORMATION_CLASS {
     MaxSystemInfoClass,
 #endif //__REACTOS__
 } SYSTEM_INFORMATION_CLASS;
-
-#endif // !FILE_CHARACTERISTIC_PNP_DEVICE
 
 
 NTSYSAPI
@@ -629,12 +627,14 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
 
 NTHALAPI
 VOID
+NTAPI
 HalDisplayString (
     PUCHAR String
     );
 
 NTHALAPI
 VOID
+NTAPI
 HalQueryDisplayParameters (
     OUT PULONG WidthInCharacters,
     OUT PULONG HeightInLines,
@@ -644,6 +644,7 @@ HalQueryDisplayParameters (
 
 NTHALAPI
 VOID
+NTAPI
 HalSetDisplayParameters (
     IN ULONG CursorColumn,
     IN ULONG CursorRow

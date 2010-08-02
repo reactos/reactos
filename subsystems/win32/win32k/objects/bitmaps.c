@@ -12,13 +12,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* $Id$ */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -154,7 +153,7 @@ IntCreateCompatibleBitmap(
         {
             DIBSECTION dibs;
             INT Count;
-            PSURFACE psurf = SURFACE_LockSurface(Dc->rosdc.hBitmap);
+            PSURFACE psurf = Dc->dclevel.pSurface;
             Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
 
             if (Count)
@@ -218,12 +217,11 @@ IntCreateCompatibleBitmap(
                         {
                             /* Copy the color table */
                             UINT Index;
-                            PPALGDI PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
+                            PPALETTE PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
 
                             if (!PalGDI)
                             {
                                 ExFreePoolWithTag(bi, TAG_TEMP);
-                                SURFACE_UnlockSurface(psurf);
                                 SetLastWin32Error(ERROR_INVALID_HANDLE);
                                 return 0;
                             }
@@ -239,7 +237,6 @@ IntCreateCompatibleBitmap(
                             }
                             PALETTE_UnlockPalette(PalGDI);
                         }
-                        SURFACE_UnlockSurface(psurf);
 
                         Bmp = DIB_CreateDIBSection(Dc,
                                                    bi,
@@ -254,7 +251,6 @@ IntCreateCompatibleBitmap(
                     }
                 }
             }
-            SURFACE_UnlockSurface(psurf);
         }
     }
     return Bmp;
@@ -281,7 +277,7 @@ NtGdiCreateCompatibleBitmap(
     Dc = DC_LockDc(hDC);
 
     DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n",
-           hDC, Width, Height, Dc->ppdev->GDIInfo.cBitsPixel);
+           hDC, Width, Height, Dc->ppdev->gdiinfo.cBitsPixel);
 
     if (NULL == Dc)
     {
@@ -338,8 +334,9 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     BOOL bInRect = FALSE;
     SURFACE *psurf;
     SURFOBJ *pso;
-    HPALETTE Pal = 0;
-    XLATEOBJ *XlateObj;
+    HPALETTE hpal = 0;
+    PPALETTE ppal;
+    EXLATEOBJ exlo;
     HBITMAP hBmpTmp;
 
     dc = DC_LockDc(hDC);
@@ -361,27 +358,34 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     if (RECTL_bPointInRect(&dc->rosdc.CombinedClip->rclBounds, XPos, YPos))
     {
         bInRect = TRUE;
-        psurf = SURFACE_LockSurface(dc->rosdc.hBitmap);
-        pso = &psurf->SurfObj;
+        psurf = dc->dclevel.pSurface;
         if (psurf)
         {
-            Pal = psurf->hDIBPalette;
-            if (!Pal) Pal = pPrimarySurface->DevInfo.hpalDefault;
+            pso = &psurf->SurfObj;
+            hpal = psurf->hDIBPalette;
+            if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
+            ppal = PALETTE_ShareLockPalette(hpal);
 
-            /* FIXME: Verify if it shouldn't be PAL_BGR! */
-            XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, Pal);
-            if (XlateObj)
+            if (psurf->SurfObj.iBitmapFormat == BMF_1BPP && !psurf->hSecure)
             {
-                // check if this DC has a DIB behind it...
-                if (pso->pvScan0) // STYPE_BITMAP == pso->iType
-                {
-                    ASSERT(pso->lDelta);
-                    Result = XLATEOBJ_iXlate(XlateObj,
-                                             DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_GetPixel(pso, XPos, YPos));
-                }
-                EngDeleteXlate(XlateObj);
+                /* FIXME: palette should be gpalMono already ! */
+                EXLATEOBJ_vInitialize(&exlo, &gpalMono, &gpalRGB, 0, 0xffffff, 0);
             }
-            SURFACE_UnlockSurface(psurf);
+            else
+            {
+                EXLATEOBJ_vInitialize(&exlo, ppal, &gpalRGB, 0, 0xffffff, 0);
+            }
+
+            // check if this DC has a DIB behind it...
+            if (pso->pvScan0) // STYPE_BITMAP == pso->iType
+            {
+                ASSERT(pso->lDelta);
+                Result = XLATEOBJ_iXlate(&exlo.xlo,
+                                         DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_GetPixel(pso, XPos, YPos));
+            }
+
+            EXLATEOBJ_vCleanup(&exlo);
+            PALETTE_ShareUnlockPalette(ppal);
         }
     }
     DC_UnlockDc(dc);
@@ -499,10 +503,10 @@ NtGdiGetBitmapBits(
         return 0;
     }
 
-    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx, 
-             BitsPerFormat(psurf->SurfObj.iBitmapFormat)) * 
+    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx,
+             BitsPerFormat(psurf->SurfObj.iBitmapFormat)) *
              abs(psurf->SurfObj.sizlBitmap.cy);
-    
+
     /* If the bits vector is null, the function should return the read size */
     if (pUnsafeBits == NULL)
     {
@@ -549,7 +553,7 @@ IntSetBitmapBits(
         DPRINT("Calling device specific BitmapBits\n");
         if (psurf->DDBitmap->funcs->pBitmapBits)
         {
-            ret = psurf->DDBitmap->funcs->pBitmapBits(hBitmap, 
+            ret = psurf->DDBitmap->funcs->pBitmapBits(hBitmap,
                                                       (void *)Bits,
                                                       Bytes,
                                                       DDB_SET);
@@ -651,6 +655,61 @@ NtGdiSetBitmapDimension(
     return Ret;
 }
 
+VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
+{
+    PDC pdc = NULL;
+    RGBQUAD quad;
+    PALETTEENTRY palEntry;
+    UINT index;
+
+    switch (*Color >> 24)
+    {
+        case 0x10: /* DIBINDEX */
+            if (IntGetDIBColorTable(hDC, LOWORD(*Color), 1, &quad) == 1) 
+            {
+                *Color = RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
+            }
+            else
+            {
+                /* Out of color table bounds - use black */
+                *Color = RGB(0, 0, 0);
+            }
+            break;
+        case 0x02: /* PALETTERGB */
+            pdc = DC_LockDc(hDC);
+            if (pdc->dclevel.hpal != NtGdiGetStockObject(DEFAULT_PALETTE))
+            {
+                index = NtGdiGetNearestPaletteIndex(pdc->dclevel.hpal, *Color);
+                IntGetPaletteEntries(pdc->dclevel.hpal, index, 1, &palEntry);
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
+            }
+            else
+            {
+                /* Use the pure color */
+                *Color = *Color & 0x00FFFFFF;
+            }
+            DC_UnlockDc(pdc);
+            break;
+        case 0x01: /* PALETTEINDEX */
+            pdc = DC_LockDc(hDC);
+            if (IntGetPaletteEntries(pdc->dclevel.hpal, LOWORD(*Color), 1, &palEntry) == 1)
+            {
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
+            }
+            else
+            {
+                /* Index does not exist, use zero index */
+                IntGetPaletteEntries(pdc->dclevel.hpal, 0, 1, &palEntry);
+                *Color = RGB(palEntry.peRed, palEntry.peGreen, palEntry.peBlue);
+            }
+            DC_UnlockDc(pdc);
+            break;
+        default:
+            DPRINT("Unsupported color type %d passed\n", *Color >> 24);
+            break;
+    }   
+}
+
 BOOL APIENTRY
 GdiSetPixelV(
     HDC hDC,
@@ -658,22 +717,28 @@ GdiSetPixelV(
     INT Y,
     COLORREF Color)
 {
-    HBRUSH hbrush = NtGdiCreateSolidBrush(Color, NULL);
+    HBRUSH hBrush;
     HGDIOBJ OldBrush;
 
-    if (hbrush == NULL)
-        return(FALSE);
+    if ((Color & 0xFF000000) != 0)
+    {
+        IntHandleSpecialColorType(hDC, &Color);
+    }
 
-    OldBrush = NtGdiSelectBrush(hDC, hbrush);
+    hBrush = NtGdiCreateSolidBrush(Color, NULL);
+    if (hBrush == NULL)
+        return FALSE;
+
+    OldBrush = NtGdiSelectBrush(hDC, hBrush);
     if (OldBrush == NULL)
     {
-        GreDeleteObject(hbrush);
-        return(FALSE);
+        GreDeleteObject(hBrush);
+        return FALSE;
     }
 
     NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
     NtGdiSelectBrush(hDC, OldBrush);
-    GreDeleteObject(hbrush);
+    GreDeleteObject(hBrush);
 
     return TRUE;
 }

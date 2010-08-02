@@ -76,7 +76,7 @@ static HRESULT WINAPI ISF_MyDocuments_fnQueryInterface(
     else if (IsEqualIID (riid, &IID_IPersistFolder) ||
              IsEqualIID (riid, &IID_IPersistFolder2))
     {
-        *ppvObj = &This->lpPF2;
+        *ppvObj = (void *)&This->lpPF2;
     }
     if (*ppvObj)
     {

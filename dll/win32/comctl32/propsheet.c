@@ -330,7 +330,7 @@ static void PROPSHEET_CollectSheetInfoA(LPCPROPSHEETHEADERA lppsh,
      psInfo->ppshheader.pszCaption = NULL;
   else
   {
-     if (HIWORD(lppsh->pszCaption))
+     if (!IS_INTRESOURCE(lppsh->pszCaption))
      {
         int len = MultiByteToWideChar(CP_ACP, 0, lppsh->pszCaption, -1, NULL, 0);
         WCHAR *caption = Alloc( len*sizeof (WCHAR) );
@@ -373,7 +373,7 @@ static void PROPSHEET_CollectSheetInfoW(LPCPROPSHEETHEADERW lppsh,
      psInfo->ppshheader.pszCaption = NULL;
   else
   {
-     if (HIWORD(lppsh->pszCaption))
+     if (!IS_INTRESOURCE(lppsh->pszCaption))
      {
         int len = strlenW(lppsh->pszCaption);
         WCHAR *caption = Alloc( (len+1)*sizeof(WCHAR) );
@@ -553,7 +553,7 @@ static BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
     WCHAR *text;
     int len;
 
-    if ( !HIWORD( lppsp->pszTitle ) )
+    if (IS_INTRESOURCE( lppsp->pszTitle ))
     {
       if (!LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle,szTitle,sizeof(szTitle)/sizeof(szTitle[0]) ))
       {
@@ -904,7 +904,7 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo
    */
   hwndButton = GetDlgItem(hwndParent, IDCANCEL);
 
-  x = rcSheet.right - ((padding.x + buttonWidth) * (num_buttons - 1));
+  x += padding.x + buttonWidth;
 
   SetWindowPos(hwndButton, 0, x, y, 0, 0,
                SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
@@ -914,34 +914,25 @@ static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, const PropSheetInfo* psInfo
    */
   hwndButton = GetDlgItem(hwndParent, IDC_APPLY_BUTTON);
 
-  if (psInfo->hasApply)
-  {
-    if (psInfo->hasHelp)
-      x = rcSheet.right - ((padding.x + buttonWidth) * 2);
-    else
-      x = rcSheet.right - (padding.x + buttonWidth);
-
-    SetWindowPos(hwndButton, 0, x, y, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-    EnableWindow(hwndButton, FALSE);
-  }
+  if(psInfo->hasApply)
+    x += padding.x + buttonWidth;
   else
     ShowWindow(hwndButton, SW_HIDE);
+
+  SetWindowPos(hwndButton, 0, x, y, 0, 0,
+              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+  EnableWindow(hwndButton, FALSE);
 
   /*
    * Position Help button.
    */
   hwndButton = GetDlgItem(hwndParent, IDHELP);
 
-  if (psInfo->hasHelp)
-  {
-    x = rcSheet.right - (padding.x + buttonWidth);
+  x += padding.x + buttonWidth;
+  SetWindowPos(hwndButton, 0, x, y, 0, 0,
+              SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-    SetWindowPos(hwndButton, 0, x, y, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-  }
-  else
+  if(!psInfo->hasHelp)
     ShowWindow(hwndButton, SW_HIDE);
 
   return TRUE;
@@ -1206,7 +1197,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
     }
 
     item.pszText = (LPWSTR) psInfo->proppage[i].pszText;
-    SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, (WPARAM)i, (LPARAM)&item);
+    SendMessageW(hwndTabCtrl, TCM_INSERTITEMW, i, (LPARAM)&item);
   }
   SendMessageW(GetDlgItem(hwndTabCtrl, IDC_TABCONTROL), WM_SETREDRAW, 1, 0);
 
@@ -1379,10 +1370,10 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
                                 const PropSheetInfo * psInfo,
                                 LPCPROPSHEETPAGEW ppshpage)
 {
-  DLGTEMPLATE* pTemplate;
+  const DLGTEMPLATE* pTemplate;
   HWND hwndPage;
   DWORD resSize;
-  LPVOID temp = NULL;
+  DLGTEMPLATE* pTemplateCopy = NULL;
 
   TRACE("index %d\n", index);
 
@@ -1393,7 +1384,7 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 
   if (ppshpage->dwFlags & PSP_DLGINDIRECT)
     {
-      pTemplate = (DLGTEMPLATE*)ppshpage->u.pResource;
+      pTemplate = ppshpage->u.pResource;
       resSize = GetTemplateSize(pTemplate);
     }
   else if(ppshpage->dwFlags & PSP_INTERNAL_UNICODE)
@@ -1440,39 +1431,38 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
      * Make a copy of the dialog template to make it writable
      */
   }
-  temp = Alloc(resSize);
-  if (!temp)
+  pTemplateCopy = Alloc(resSize);
+  if (!pTemplateCopy)
     return FALSE;
   
-  TRACE("copying pTemplate %p into temp %p (%d)\n", pTemplate, temp, resSize);
-  memcpy(temp, pTemplate, resSize);
-  pTemplate = temp;
+  TRACE("copying pTemplate %p into pTemplateCopy %p (%d)\n", pTemplate, pTemplateCopy, resSize);
+  memcpy(pTemplateCopy, pTemplate, resSize);
 
-  if (((MyDLGTEMPLATEEX*)pTemplate)->signature == 0xFFFF)
+  if (((MyDLGTEMPLATEEX*)pTemplateCopy)->signature == 0xFFFF)
   {
-    ((MyDLGTEMPLATEEX*)pTemplate)->style |= WS_CHILD | WS_TABSTOP | DS_CONTROL;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~DS_MODALFRAME;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~WS_CAPTION;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~WS_SYSMENU;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~WS_POPUP;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~WS_DISABLED;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~WS_VISIBLE;
-    ((MyDLGTEMPLATEEX*)pTemplate)->style &= ~WS_THICKFRAME;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style |= WS_CHILD | WS_TABSTOP | DS_CONTROL;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~DS_MODALFRAME;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~WS_CAPTION;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~WS_SYSMENU;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~WS_POPUP;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~WS_DISABLED;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~WS_VISIBLE;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->style &= ~WS_THICKFRAME;
 
-    ((MyDLGTEMPLATEEX*)pTemplate)->exStyle |= WS_EX_CONTROLPARENT;
+    ((MyDLGTEMPLATEEX*)pTemplateCopy)->exStyle |= WS_EX_CONTROLPARENT;
   }
   else
   {
-    pTemplate->style |= WS_CHILD | WS_TABSTOP | DS_CONTROL;
-    pTemplate->style &= ~DS_MODALFRAME;
-    pTemplate->style &= ~WS_CAPTION;
-    pTemplate->style &= ~WS_SYSMENU;
-    pTemplate->style &= ~WS_POPUP;
-    pTemplate->style &= ~WS_DISABLED;
-    pTemplate->style &= ~WS_VISIBLE;
-    pTemplate->style &= ~WS_THICKFRAME;
+    pTemplateCopy->style |= WS_CHILD | WS_TABSTOP | DS_CONTROL;
+    pTemplateCopy->style &= ~DS_MODALFRAME;
+    pTemplateCopy->style &= ~WS_CAPTION;
+    pTemplateCopy->style &= ~WS_SYSMENU;
+    pTemplateCopy->style &= ~WS_POPUP;
+    pTemplateCopy->style &= ~WS_DISABLED;
+    pTemplateCopy->style &= ~WS_VISIBLE;
+    pTemplateCopy->style &= ~WS_THICKFRAME;
 
-    pTemplate->dwExtendedStyle |= WS_EX_CONTROLPARENT;
+    pTemplateCopy->dwExtendedStyle |= WS_EX_CONTROLPARENT;
   }
 
   if (psInfo->proppage[index].useCallback)
@@ -1481,18 +1471,18 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
 
   if(ppshpage->dwFlags & PSP_INTERNAL_UNICODE)
      hwndPage = CreateDialogIndirectParamW(ppshpage->hInstance,
-					pTemplate,
+					pTemplateCopy,
 					hwndParent,
 					ppshpage->pfnDlgProc,
 					(LPARAM)ppshpage);
   else
      hwndPage = CreateDialogIndirectParamA(ppshpage->hInstance,
-					pTemplate,
+					pTemplateCopy,
 					hwndParent,
 					ppshpage->pfnDlgProc,
 					(LPARAM)ppshpage);
   /* Free a no more needed copy */
-  Free(temp);
+  Free(pTemplateCopy);
 
   psInfo->proppage[index].hwndPage = hwndPage;
 
@@ -1549,6 +1539,7 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
 {
   HWND hwndTabCtrl;
   HWND hwndLineHeader;
+  HWND control;
   LPCPROPSHEETPAGEW ppshpage;
 
   TRACE("active_page %d, index %d\n", psInfo->active_page, index);
@@ -1569,6 +1560,10 @@ static BOOL PROPSHEET_ShowPage(HWND hwndDlg, int index, PropSheetInfo * psInfo)
   {
      PROPSHEET_SetTitleW(hwndDlg, psInfo->ppshheader.dwFlags,
                          psInfo->proppage[index].pszText);
+
+     control = GetNextDlgTabItem(psInfo->proppage[index].hwndPage, NULL, FALSE);
+     if(control != NULL)
+         SetFocus(control);
   }
 
   if (psInfo->active_page != -1)
@@ -1631,7 +1626,11 @@ static BOOL PROPSHEET_Back(HWND hwndDlg)
   if (idx >= 0 && idx < psInfo->nPages)
   {
      if (PROPSHEET_CanSetCurSel(hwndDlg))
+     {
+        SetFocus(GetDlgItem(hwndDlg, IDC_BACK_BUTTON));
+        SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
         PROPSHEET_SetCurSel(hwndDlg, idx, -1, 0);
+     }
   }
   return TRUE;
 }
@@ -1669,7 +1668,11 @@ static BOOL PROPSHEET_Next(HWND hwndDlg)
   if (idx < psInfo->nPages )
   {
      if (PROPSHEET_CanSetCurSel(hwndDlg) != FALSE)
+     {
+        SetFocus(GetDlgItem(hwndDlg, IDC_NEXT_BUTTON));
+        SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
         PROPSHEET_SetCurSel(hwndDlg, idx, 1, 0);
+     }
   }
 
   return TRUE;
@@ -1959,13 +1962,13 @@ static BOOL PROPSHEET_CanSetCurSel(HWND hwndDlg)
   PSHNOTIFY psn;
   BOOL res = FALSE;
 
-  TRACE("active_page %d\n", psInfo->active_page);
   if (!psInfo)
   {
      res = FALSE;
      goto end;
   }
 
+  TRACE("active_page %d\n", psInfo->active_page);
   if (psInfo->active_page < 0)
   {
      res = TRUE;
@@ -2127,7 +2130,7 @@ static void PROPSHEET_SetCurSelId(HWND hwndDlg, int id)
  */
 static void PROPSHEET_SetTitleA(HWND hwndDlg, DWORD dwStyle, LPCSTR lpszText)
 {
-  if(HIWORD(lpszText))
+  if(!IS_INTRESOURCE(lpszText))
   {
      WCHAR szTitle[256];
      MultiByteToWideChar(CP_ACP, 0, lpszText, -1,
@@ -2149,7 +2152,7 @@ static void PROPSHEET_SetTitleW(HWND hwndDlg, DWORD dwStyle, LPCWSTR lpszText)
   WCHAR szTitle[256];
 
   TRACE("%s (style %08x)\n", debugstr_w(lpszText), dwStyle);
-  if (HIWORD(lpszText) == 0) {
+  if (IS_INTRESOURCE(lpszText)) {
     if (!LoadStringW(psInfo->ppshheader.hInstance,
                      LOWORD(lpszText), szTitle, sizeof(szTitle)/sizeof(szTitle[0])))
       return;
@@ -2418,28 +2421,6 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   return FALSE;
 }
 
-BOOL CALLBACK
-EnumChildProc(HWND hwnd, LPARAM lParam)
-{
-    WCHAR szType[20];
-    RealGetWindowClassW(hwnd, szType, 20);
-
-    if (strcmpW(szType, WC_EDITW) == 0)
-    {
-        if (IsWindowEnabled(hwnd) && IsWindowVisible(hwnd))
-        {
-            SetFocus(hwnd);
-            return FALSE;
-        }
-    } 
-    else
-    {
-        EnumChildWindows(hwnd, EnumChildProc, 0);
-    }
-
-    return TRUE;
-}
-
 /******************************************************************************
  *            PROPSHEET_SetWizButtons
  *
@@ -2460,6 +2441,17 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   EnableWindow(hwndBack, FALSE);
   EnableWindow(hwndNext, FALSE);
   EnableWindow(hwndFinish, FALSE);
+
+  /* set the default pushbutton to an enabled button */
+  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
+  else if (dwFlags & PSWIZB_NEXT)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
+  else if (dwFlags & PSWIZB_BACK)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
+  else
+    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
+
 
   if (dwFlags & PSWIZB_BACK)
     EnableWindow(hwndBack, TRUE);
@@ -2490,31 +2482,6 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   }
   else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
     EnableWindow(hwndFinish, TRUE);
-
-  /* set the default pushbutton to an enabled button and give it focus */
-  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-    SetFocus(hwndFinish);
-  }
-  else if (dwFlags & PSWIZB_NEXT)
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
-    SetFocus(hwndNext);
-  }
-  else if (dwFlags & PSWIZB_BACK)
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
-    SetFocus(hwndBack);
-  }
-  else
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
-    SetFocus(GetDlgItem(hwndDlg, IDCANCEL));
-  }
-
-  /* Now try to find an edit control that deserves focus */
-  EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, 0);
 }
 
 /******************************************************************************
@@ -2522,7 +2489,7 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
  */
 static BOOL PROPSHEET_InsertPage(HWND hwndDlg, HPROPSHEETPAGE hpageInsertAfter, HPROPSHEETPAGE hpage)
 {
-    if (!HIWORD(hpageInsertAfter))
+    if (IS_INTRESOURCE(hpageInsertAfter))
         FIXME("(%p, %d, %p): stub\n", hwndDlg, LOWORD(hpageInsertAfter), hpage);
     else
         FIXME("(%p, %p, %p): stub\n", hwndDlg, hpageInsertAfter, hpage);
@@ -2585,6 +2552,8 @@ static LRESULT PROPSHEET_IndexToHwnd(HWND hwndDlg, int iPageIndex)
 {
     PropSheetInfo * psInfo = GetPropW(hwndDlg, PropSheetInfoStr);
     TRACE("(%p, %d)\n", hwndDlg, iPageIndex);
+    if (!psInfo)
+        return 0;
     if (iPageIndex<0 || iPageIndex>=psInfo->nPages) {
         WARN("%d out of range.\n", iPageIndex);
 	return 0;
@@ -2654,7 +2623,7 @@ static LRESULT PROPSHEET_IndexToId(HWND hwndDlg, int iPageIndex)
 	return 0;
     }
     psp = (LPCPROPSHEETPAGEW)psInfo->proppage[iPageIndex].hpage;
-    if (psp->dwFlags & PSP_DLGINDIRECT || HIWORD(psp->u.pszTemplate)) {
+    if (psp->dwFlags & PSP_DLGINDIRECT || !IS_INTRESOURCE(psp->u.pszTemplate)) {
         return 0;
     }
     return (LRESULT)psp->u.pszTemplate;
@@ -2714,7 +2683,7 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
 
   TRACE("\n");
   if (!psInfo) return;
-  if (HIWORD(psInfo->ppshheader.pszCaption))
+  if (!IS_INTRESOURCE(psInfo->ppshheader.pszCaption))
       Free ((LPVOID)psInfo->ppshheader.pszCaption);
 
   for (i = 0; i < psInfo->nPages; i++)
@@ -2970,7 +2939,7 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(
 
     if ( !(ppsp->dwFlags & PSP_DLGINDIRECT) )
     {
-        if (HIWORD( ppsp->u.pszTemplate ))
+        if (!IS_INTRESOURCE( ppsp->u.pszTemplate ))
         {
             int len = strlen(lpPropSheetPage->u.pszTemplate) + 1;
             char *template = Alloc( len );
@@ -2981,13 +2950,13 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(
 
     if (ppsp->dwFlags & PSP_USEICONID)
     {
-        if (HIWORD( ppsp->u2.pszIcon ))
+        if (!IS_INTRESOURCE( ppsp->u2.pszIcon ))
             PROPSHEET_AtoW(&ppsp->u2.pszIcon, lpPropSheetPage->u2.pszIcon);
     }
 
     if (ppsp->dwFlags & PSP_USETITLE)
     {
-        if (HIWORD( ppsp->pszTitle ))
+        if (!IS_INTRESOURCE( ppsp->pszTitle ))
             PROPSHEET_AtoW( &ppsp->pszTitle, lpPropSheetPage->pszTitle );
         else
             ppsp->pszTitle = load_string( ppsp->hInstance, ppsp->pszTitle );
@@ -3000,7 +2969,7 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(
 
     if (ppsp->dwFlags & PSP_USEHEADERTITLE)
     {
-        if (HIWORD( ppsp->pszHeaderTitle ))
+        if (!IS_INTRESOURCE( ppsp->pszHeaderTitle ))
             PROPSHEET_AtoW(&ppsp->pszHeaderTitle, lpPropSheetPage->pszHeaderTitle);
         else
             ppsp->pszHeaderTitle = load_string( ppsp->hInstance, ppsp->pszHeaderTitle );
@@ -3010,7 +2979,7 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageA(
 
     if (ppsp->dwFlags & PSP_USEHEADERSUBTITLE)
     {
-        if (HIWORD( ppsp->pszHeaderSubTitle ))
+        if (!IS_INTRESOURCE( ppsp->pszHeaderSubTitle ))
             PROPSHEET_AtoW(&ppsp->pszHeaderSubTitle, lpPropSheetPage->pszHeaderSubTitle);
         else
             ppsp->pszHeaderSubTitle = load_string( ppsp->hInstance, ppsp->pszHeaderSubTitle );
@@ -3036,7 +3005,7 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageW(LPCPROPSHEETPAGEW lpPropSheetPage
 
     if ( !(ppsp->dwFlags & PSP_DLGINDIRECT) )
     {
-        if (HIWORD( ppsp->u.pszTemplate ))
+        if (!IS_INTRESOURCE( ppsp->u.pszTemplate ))
         {
             int len = strlenW(lpPropSheetPage->u.pszTemplate) + 1;
             WCHAR *template = Alloc( len * sizeof (WCHAR) );
@@ -3047,7 +3016,7 @@ HPROPSHEETPAGE WINAPI CreatePropertySheetPageW(LPCPROPSHEETPAGEW lpPropSheetPage
 
     if ( ppsp->dwFlags & PSP_USEICONID )
     {
-        if (HIWORD( ppsp->u2.pszIcon ))
+        if (!IS_INTRESOURCE( ppsp->u2.pszIcon ))
         {
             int len = strlenW(lpPropSheetPage->u2.pszIcon) + 1;
             WCHAR *icon = Alloc( len * sizeof (WCHAR) );
@@ -3095,13 +3064,13 @@ BOOL WINAPI DestroyPropertySheetPage(HPROPSHEETPAGE hPropPage)
   if (!psp)
      return FALSE;
 
-  if ( !(psp->dwFlags & PSP_DLGINDIRECT) && HIWORD( psp->u.pszTemplate ) )
+  if (!(psp->dwFlags & PSP_DLGINDIRECT) && !IS_INTRESOURCE( psp->u.pszTemplate ))
      Free ((LPVOID)psp->u.pszTemplate);
 
-  if ( (psp->dwFlags & PSP_USEICONID) && HIWORD( psp->u2.pszIcon ) )
+  if ((psp->dwFlags & PSP_USEICONID) && !IS_INTRESOURCE( psp->u2.pszIcon ))
      Free ((LPVOID)psp->u2.pszIcon);
 
-  if ((psp->dwFlags & PSP_USETITLE) && HIWORD( psp->pszTitle ))
+  if ((psp->dwFlags & PSP_USETITLE) && !IS_INTRESOURCE( psp->pszTitle ))
      Free ((LPVOID)psp->pszTitle);
 
   Free(hPropPage);
@@ -3322,7 +3291,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 
 	if (ppshpage->dwFlags & PSP_USEHEADERTITLE) {
 	    SetRect(&r, 20, 10, 0, 0);
-	    if (HIWORD(ppshpage->pszHeaderTitle))
+            if (!IS_INTRESOURCE(ppshpage->pszHeaderTitle))
                 DrawTextW(hdc, ppshpage->pszHeaderTitle, -1, &r, DT_LEFT | DT_SINGLELINE | DT_NOCLIP);
 	    else
 	    {
@@ -3338,7 +3307,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	if (ppshpage->dwFlags & PSP_USEHEADERSUBTITLE) {
 	    SelectObject(hdc, psInfo->hFont);
 	    SetRect(&r, 40, 25, rzone.right - 69, rzone.bottom);
-	    if (HIWORD(ppshpage->pszHeaderTitle))
+            if (!IS_INTRESOURCE(ppshpage->pszHeaderTitle))
                 DrawTextW(hdc, ppshpage->pszHeaderSubTitle, -1, &r, DT_LEFT | DT_WORDBREAK);
 	    else
 	    {
@@ -3442,8 +3411,14 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       psInfo->hwnd = hwnd;
       SetWindowLongPtrW(hwnd, DWLP_USER, (DWORD_PTR)psInfo);
 
-      /* set up the Next and Back buttons by default */
-      PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
+      if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
+      {
+        /* set up the Next and Back buttons by default */
+        PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
+        SetFocus(GetDlgItem(hwnd, IDC_NEXT_BUTTON));
+      }
+      else
+        SetFocus(GetDlgItem(hwnd, IDOK));
 
       /* Set up fonts */
       SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);
@@ -3499,7 +3474,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
       }
 
-      if (!HIWORD(psInfo->ppshheader.pszCaption) &&
+      if (IS_INTRESOURCE(psInfo->ppshheader.pszCaption) &&
               psInfo->ppshheader.hInstance)
       {
          WCHAR szText[256];
@@ -3528,7 +3503,11 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
        * from which to switch to the next page */
       SendMessageW(hwndTabCtrl, TCM_SETCURSEL, psInfo->active_page, 0);
 
-      PROPSHEET_UnChanged(hwnd, (HWND)wParam);
+      PROPSHEET_UnChanged(hwnd, NULL);
+
+      /* wizards set their focus during init */
+      if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
+          return FALSE;
 
       return TRUE;
     }

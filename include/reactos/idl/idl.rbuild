@@ -2,11 +2,11 @@
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="pnp_server" type="rpcserver">
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>pnp.idl</file>
 </module>
 <module name="pnp_client" type="rpcclient">
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>pnp.idl</file>
 </module>
 <module name="scm_server" type="rpcserver">

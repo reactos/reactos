@@ -1,0 +1,28 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft Visual C++ 6 Redistributable Package
+Version = 6.0
+Licence = Unknown
+Description = Visual Studio 6 Runtime.
+Size = 1.7MB
+Category = 14
+URLSite = http://support.microsoft.com/kb/259403/
+URLDownload = http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/vc6redistsetup_enu.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Studio 6 Laufzeitsystem.
+
+[Section.040a]
+Licence = Desconocida
+Description = Librerias Visual Studio 2006.
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Studio 6.
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Studio 6.

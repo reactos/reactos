@@ -1,10 +1,9 @@
-#ifndef LANG_RU_RU_H__
-#define LANG_RU_RU_H__
+#pragma once
 
 MUI_LAYOUTS ruRULayouts[] =
 {
-    { L"0419", L"00000419" },
     { L"0409", L"00000409" },
+    { L"0419", L"00000419" },
     { NULL, NULL }
 };
 
@@ -987,7 +986,7 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     {
         8,
         12,
-        "Установка на жесткий диск (MBR).",
+        "Установка на жесткий диск (загрузочный сектор).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1479,6 +1478,12 @@ MUI_ERROR ruRUErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1616,7 +1621,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_TXTSETUPFAILED,
     "Программа установки не смогла найти секцию '%S'\nв файле TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Копирование: %S"},
+     "   Копирование: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Программа установки копирует файлы..."},
     {STRING_REGHIVEUPDATE,
@@ -1695,5 +1700,3 @@ MUI_STRING ruRUStrings[] =
     "Adding keyboard layouts"},
     {0, 0}
 };
-
-#endif

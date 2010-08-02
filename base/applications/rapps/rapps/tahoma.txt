@@ -1,0 +1,20 @@
+﻿; UTF-8
+
+[Section]
+Name = Microsoft Tahoma Font
+Version = 1.0
+Licence = Unknown
+Description = Tahoma Font pack needed by some apps (Steam).
+Size = 305kB
+Category = 14
+URLSite = http://support.microsoft.com/
+URLDownload = http://download.microsoft.com/download/office97pro/fonts/1/w95/en-us/tahoma32.exe
+CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Tahoma Font pack, der von einigen Anwendungen benötigt wird (Steam).
+
+[Section.0422]
+Licence = Невідома
+Description = Пакет шрифтів Tahoma, що необхідні деяким програмам (Steam).

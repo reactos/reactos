@@ -18,7 +18,7 @@
  * @implemented
  */
 HWINSTA WINAPI
-CreateWindowStationA(LPSTR lpwinsta,
+CreateWindowStationA(LPCSTR lpwinsta,
 		     DWORD dwReserved,
 		     ACCESS_MASK dwDesiredAccess,
 		     LPSECURITY_ATTRIBUTES lpsa)
@@ -52,7 +52,7 @@ CreateWindowStationA(LPSTR lpwinsta,
  * @implemented
  */
 HWINSTA WINAPI
-CreateWindowStationW(LPWSTR lpwinsta,
+CreateWindowStationW(LPCWSTR lpwinsta,
 		     DWORD dwReserved,
 		     ACCESS_MASK dwDesiredAccess,
 		     LPSECURITY_ATTRIBUTES lpsa)
@@ -88,8 +88,7 @@ EnumNamesW(HWINSTA WindowStation,
     */
    if (NULL == WindowStation && Desktops)
    {
-      SetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
+      WindowStation = GetProcessWindowStation();
    }
 
    /*
@@ -267,7 +266,7 @@ EnumWindowStationsW(WINSTAENUMPROCW EnumFunc,
  * @implemented
  */
 HWINSTA WINAPI
-OpenWindowStationA(LPSTR lpszWinSta,
+OpenWindowStationA(LPCSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {
@@ -299,7 +298,7 @@ OpenWindowStationA(LPSTR lpszWinSta,
  * @implemented
  */
 HWINSTA WINAPI
-OpenWindowStationW(LPWSTR lpszWinSta,
+OpenWindowStationW(LPCWSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {

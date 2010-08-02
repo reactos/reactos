@@ -26,7 +26,7 @@ BEGIN
     LTEXT "Operating System:", -1, 70, 90, 80, 10, SS_RIGHT
     LTEXT "Language:", -1, 70, 100, 80, 10, SS_RIGHT
     LTEXT "System Manufacturer:", -1, 70, 110, 80, 10, SS_RIGHT
-    LTEXT "System Modell:", -1, 70, 120, 80, 10, SS_RIGHT
+    LTEXT "System Model:", -1, 70, 120, 80, 10, SS_RIGHT
     LTEXT "BIOS:", -1, 70, 130, 80, 10, SS_RIGHT
     LTEXT "Processor:", -1, 70, 140, 80, 10, SS_RIGHT
     LTEXT "Memory:", -1, 70, 150, 80, 10, SS_RIGHT

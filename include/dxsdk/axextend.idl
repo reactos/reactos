@@ -266,7 +266,7 @@ interface IFilterMapper2 : IUnknown
 
     HRESULT UnregisterFilter
         ( [in] const CLSID *pclsidCategory,
-          [in] const OLECHAR *szInstance,
+          [in] LPCOLESTR szInstance,
           [in] REFCLSID Filter
         );
 
@@ -275,7 +275,7 @@ interface IFilterMapper2 : IUnknown
           [in] LPCWSTR Name,
           [in, out] IMoniker **ppMoniker,
           [in] const CLSID *pclsidCategory,
-          [in] const OLECHAR *szInstance,
+          [in] LPCOLESTR szInstance,
           [in] const REGFILTER2 *prf2
         );
 
@@ -317,7 +317,7 @@ typedef enum tagQualityMessageType
 typedef struct tagQuality
 {
     QualityMessageType Type;
-    long               Proportion;
+    LONG               Proportion;
     REFERENCE_TIME       Late;
     REFERENCE_TIME       TimeStamp;
 } Quality;
@@ -486,7 +486,7 @@ pointer_default(unique)
 interface IMediaEventSink : IUnknown
 {
     HRESULT Notify(
-        [in] long EventCode,
+        [in] LONG EventCode,
         [in] LONG_PTR EventParam1,
         [in] LONG_PTR EventParam2
     );
@@ -551,6 +551,21 @@ interface IFileSinkFilter2 : IFileSinkFilter
 }
 
 typedef IFileSinkFilter2 *PFILESINKFILTER2;
+
+[
+        object,
+        uuid(f90a6130-b658-11d2-ae49-0000f8754b99),
+        pointer_default(unique)
+]
+interface IAMDeviceRemoval : IUnknown
+{
+    HRESULT DeviceInfo(
+        [out] CLSID *pclsidInterfaceClass,
+        [out] LPWSTR *pwszSymbolicLink);
+    HRESULT Reassociate();
+    HRESULT Disassociate();
+}
+
 
 typedef enum
 {
@@ -779,6 +794,37 @@ interface IStreamBuilder : IUnknown
         );
 }
 
+[
+    object,
+    uuid(56a868af-0ad4-11ce-b03a-0020af0ba770),
+    pointer_default(unique)
+]
+interface IDistributorNotify : IUnknown
+{
+    HRESULT Stop(void);
+    HRESULT Pause(void);
+    HRESULT Run(REFERENCE_TIME tStart);
+    HRESULT SetSyncSource([in] IReferenceClock * pClock);
+    HRESULT NotifyGraphChange(void);
+}
+
+typedef enum
+{
+    AM_STREAM_INFO_START_DEFINED   = 0x01,
+    AM_STREAM_INFO_STOP_DEFINED    = 0x02,
+    AM_STREAM_INFO_DISCARDING      = 0x04,
+    AM_STREAM_INFO_STOP_SEND_EXTRA = 0x10
+} AM_STREAM_INFO_FLAGS;
+
+typedef struct
+{
+    REFERENCE_TIME tStart;
+    REFERENCE_TIME tStop;
+    DWORD dwStartCookie;
+    DWORD dwStopCookie;
+    DWORD dwFlags;
+}AM_STREAM_INFO;
+
 
 /*****************************************************************************
  * IAMStreamConfig interface
@@ -828,11 +874,11 @@ typedef enum tagVideoProcAmpFlags
 ]
 interface IAMVideoProcAmp : IUnknown
 {
-    HRESULT GetRange( [in] long Property, [out] long *pMin, [out] long *pMax,
-                     [out] long *pSteppingDelta, [out] long *pDefault,
-                     [out] long *pCapsFlags);
-    HRESULT Set( [in] long Property, [in] long lValue, [in] long Flags);
-    HRESULT Get( [in] long Property, [out] long *lValue, [out] long *Flags);
+    HRESULT GetRange( [in] LONG Property, [out] LONG *pMin, [out] LONG *pMax,
+                     [out] LONG *pSteppingDelta, [out] LONG *pDefault,
+                     [out] LONG *pCapsFlags);
+    HRESULT Set( [in] LONG Property, [in] LONG lValue, [in] LONG Flags);
+    HRESULT Get( [in] LONG Property, [out] LONG *lValue, [out] LONG *Flags);
 }
 
 
@@ -994,6 +1040,19 @@ interface ISeekingPassThru : IUnknown
     HRESULT Init( [in] BOOL bSupportRendering, [in] IPin *pPin);
 }
 
+[
+    local,
+    object,
+    uuid(4d5466b0-a49c-11d1-abe8-00a0c905f375),
+    pointer_default(unique)
+
+]
+interface IAMClockAdjust : IUnknown
+{
+    HRESULT SetClockDelta([in] REFERENCE_TIME rtDelta);
+};
+
+
 enum _AM_FILTER_MISC_FLAGS
 {
     AM_FILTER_MISC_FLAGS_IS_RENDERER = 0x1,
@@ -1010,3 +1069,49 @@ interface IAMFilterMiscFlags : IUnknown
 {
     ULONG GetMiscFlags();
 };
+
+[
+    local,
+    object,
+    uuid(56ED71A0-AF5F-11D0-B3F0-00AA003761C5),
+    pointer_default(unique)
+]
+interface IAMBufferNegotiation : IUnknown
+{
+     HRESULT SuggestAllocatorProperties (
+        [in] const ALLOCATOR_PROPERTIES *pprop);
+
+     HRESULT GetAllocatorProperties (
+        [out] ALLOCATOR_PROPERTIES *pprop);
+
+}
+
+#include <axextendenums.h>
+
+[
+    object,
+    uuid(36b73881-c2c8-11cf-8b46-00805f6cef60),
+    pointer_default(unique)
+]
+interface IAMStreamControl : IUnknown
+{
+    HRESULT StartAt( [in] REFERENCE_TIME * ptStart,
+                     [in] DWORD dwCookie );
+    HRESULT StopAt(  [in] REFERENCE_TIME * ptStop,
+                     [in] BOOL bSendExtra,
+                     [in] DWORD dwCookie );
+    HRESULT GetInfo( [out] AM_STREAM_INFO *pInfo);
+}
+
+typedef enum tagTVAudioMode
+{
+    AMTVAUDIO_MODE_MONO     = 0x0001,
+    AMTVAUDIO_MODE_STEREO   = 0x0002,
+    AMTVAUDIO_MODE_LANG_A   = 0x0010,
+    AMTVAUDIO_MODE_LANG_B   = 0x0020,
+    AMTVAUDIO_MODE_LANG_C   = 0x0040,
+    AMTVAUDIO_PRESET_STEREO = 0x0200,
+    AMTVAUDIO_PRESET_LANG_A = 0x1000,
+    AMTVAUDIO_PRESET_LANG_B = 0x2000,
+    AMTVAUDIO_PRESET_LANG_C = 0x4000,
+}TVAudioMode;

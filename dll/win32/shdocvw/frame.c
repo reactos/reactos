@@ -135,7 +135,7 @@ static HRESULT WINAPI InPlaceFrame_SetStatusText(IOleInPlaceFrame *iface,
                                                  LPCOLESTR pszStatusText)
 {
     DocHost *This = INPLACEFRAME_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, debugstr_w(pszStatusText));
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pszStatusText));
     return E_NOTIMPL;
 }
 

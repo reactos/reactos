@@ -41,7 +41,9 @@ static const struct {
 } InterfaceTable[] = {
 	{&CLSID_ShellFSFolder,	&IFSFolder_Constructor},
 	{&CLSID_MyComputer,	&ISF_MyComputer_Constructor},
+	{&CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
 	{&CLSID_ShellDesktop,	&ISF_Desktop_Constructor},
+	{&CLSID_ShellItem,	&IShellItem_Constructor},
 	{&CLSID_ShellLink,	&IShellLink_Constructor},
 	{&CLSID_DragDropHelper, &IDropTargetHelper_Constructor},
 	{&CLSID_ControlPanel,	&IControlPanel_Constructor},
@@ -52,7 +54,6 @@ static const struct {
 	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
 #endif
 	{&CLSID_MyDocuments,    &ISF_MyDocuments_Constructor},
-	{&CLSID_NetworkPlaces,  &ISF_NetworkPlaces_Constructor},
 	{&CLSID_FontsFolderShortcut, &ISF_Fonts_Constructor},
 	{&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_AdminFolderShortcut, &ISF_AdminTools_Constructor},
@@ -60,6 +61,7 @@ static const struct {
 	{&CLSID_OpenWith,       &SHEOW_Constructor},
 	{&dummy1,               &INewItem_Constructor},
 	{&CLSID_StartMenu,      &StartMenu_Constructor},
+	{&CLSID_MenuBandSite,   &MenuBandSite_Constructor},
 	{NULL,NULL}
 };
 
@@ -179,7 +181,7 @@ HRESULT WINAPI SHCoCreateInstance(
 	        FreeLibrary( hLibrary );
 		hres = E_ACCESSDENIED;
 	        goto end;
-	    } else if (! SUCCEEDED(hres = DllGetClassObject(myclsid, &IID_IClassFactory, (LPVOID*)&pcf))) {
+            } else if (FAILED(hres = DllGetClassObject(myclsid, &IID_IClassFactory, (LPVOID*)&pcf))) {
 		    TRACE("GetClassObject failed 0x%08x\n", hres);
 		    goto end;
 	    }
@@ -522,12 +524,12 @@ void WINAPI DragAcceptFiles(HWND hWnd, BOOL b)
 	LONG exstyle;
 
 	if( !IsWindow(hWnd) ) return;
-	exstyle = GetWindowLongA(hWnd,GWL_EXSTYLE);
+	exstyle = GetWindowLongPtrA(hWnd,GWL_EXSTYLE);
 	if (b)
 	  exstyle |= WS_EX_ACCEPTFILES;
 	else
 	  exstyle &= ~WS_EX_ACCEPTFILES;
-	SetWindowLongA(hWnd,GWL_EXSTYLE,exstyle);
+	SetWindowLongPtrA(hWnd,GWL_EXSTYLE,exstyle);
 }
 
 /*************************************************************************
@@ -536,7 +538,7 @@ void WINAPI DragAcceptFiles(HWND hWnd, BOOL b)
 void WINAPI DragFinish(HDROP h)
 {
 	TRACE("\n");
-	GlobalFree((HGLOBAL)h);
+	GlobalFree(h);
 }
 
 /*************************************************************************
@@ -549,7 +551,7 @@ BOOL WINAPI DragQueryPoint(HDROP hDrop, POINT *p)
 
 	TRACE("\n");
 
-	lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
+	lpDropFileStruct = GlobalLock(hDrop);
 
         *p = lpDropFileStruct->pt;
 	bRet = lpDropFileStruct->fNC;
@@ -570,7 +572,7 @@ UINT WINAPI DragQueryFileA(
 {
 	LPSTR lpDrop;
 	UINT i = 0;
-	DROPFILES *lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
+	DROPFILES *lpDropFileStruct = GlobalLock(hDrop);
 
 	TRACE("(%p, %x, %p, %u)\n",	hDrop,lFile,lpszFile,lLength);
 
@@ -625,7 +627,7 @@ UINT WINAPI DragQueryFileW(
 {
 	LPWSTR lpwDrop;
 	UINT i = 0;
-	DROPFILES *lpDropFileStruct = (DROPFILES *) GlobalLock(hDrop);
+	DROPFILES *lpDropFileStruct = GlobalLock(hDrop);
 
 	TRACE("(%p, %x, %p, %u)\n", hDrop,lFile,lpszwFile,lLength);
 

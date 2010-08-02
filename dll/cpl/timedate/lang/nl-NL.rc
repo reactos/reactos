@@ -1,3 +1,4 @@
+//update jansssens
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL  //vertaald door Lionel Lowie
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
@@ -32,24 +33,24 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "&Klok automatisch aanpassen aan zomertijd",
+    AUTOCHECKBOX "&Klok automatisch aanpassen aan zomertijd en wintertijd",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Internet Time"
+CAPTION "Internet Tijd"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Automatically synchronize with an Internet time server", IDC_AUTOSYNC,
+    COMBOBOX        IDC_SERVERLIST, 55, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Klok &automatisch met een tijdserver op het Internet synchroniseren.", IDC_AUTOSYNC,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
-    LTEXT           "Server:", -1, 34, 22, 28, 13
-    PUSHBUTTON      "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT           "Server:", -1, 24, 22, 28, 13
+    PUSHBUTTON      "&Nu synchroniseren", IDC_UPDATEBUTTON, 177, 22, 69, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Synchronazation can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
+    LTEXT           "De klok kan alleen gelijk worden gezet als de computer met het Internet in verbinding staat.", -1, 12, 114, 225, 25
 END
 
 
@@ -59,9 +60,9 @@ BEGIN
     IDS_CPLDESCRIPTION "Datum, tijd en tijdzone wijzigen."
     IDS_TIMEZONETEXT "Huidige tijdzone: %s"
     IDS_TIMEZONEINVALID "Ongelding"
-    IDS_TIMEZONEUNKNOWN "Niet gekend"
-    IDS_INETTIMESUCSYNC "The time has been successfully synchronized with %s on %s at %s"
-    IDS_INETTIMENEXTSYNC "Next synchronization: %s at %s"
-    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
-    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
+    IDS_TIMEZONEUNKNOWN "Niet bekend"
+    IDS_INETTIMESUCSYNC "De tijd is gesynchroniseerd met %s op %s om %s."
+    IDS_INETTIMENEXTSYNC "Volgende synchronisatie: %s om %s"
+    IDS_INETTIMESYNCING "ReactOS voert een synchronisatie met %s uit. Een ogenblik geduld."
+    IDS_INETTIMEERROR "Er is een fout opgetreden bij een poging om een synchronisatie met %s uit te voeren."
 END

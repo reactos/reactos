@@ -65,9 +65,9 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
         }
         DPRINT("Created Event: %p \n", hNewEvent);
 
-        if ((hEvent = (HANDLE)_InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
-                                                  (PVOID)hNewEvent,
-                                                  0))) {
+        if (_InterlockedCompareExchangePointer((PVOID*)&CriticalSection->LockSemaphore,
+                                               (PVOID)hNewEvent,
+                                                0)) {
 
             /* Some just created an event */
             DPRINT("Closing already created event: %p\n", hNewEvent);
@@ -117,12 +117,15 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     DPRINT("Waiting on Critical Section Event: %p %p\n",
             CriticalSection,
             CriticalSection->LockSemaphore);
-    CriticalSection->DebugInfo->EntryCount++;
+
+    if (CriticalSection->DebugInfo)
+        CriticalSection->DebugInfo->EntryCount++;
 
     for (;;) {
 
         /* Increase the number of times we've had contention */
-        CriticalSection->DebugInfo->ContentionCount++;
+        if (CriticalSection->DebugInfo)
+            CriticalSection->DebugInfo->ContentionCount++;
 
         /* Wait on the Event */
         Status = NtWaitForSingleObject(CriticalSection->LockSemaphore,

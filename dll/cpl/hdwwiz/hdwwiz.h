@@ -1,5 +1,4 @@
-#ifndef __CPL_HDWWIZ_H
-#define __CPL_HDWWIZ_H
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -18,7 +17,5 @@
 #define MAX_STR_SIZE 255
 
 extern HINSTANCE hApplet;
-
-#endif /* __CPL_HDWWIZ_H */
 
 /* EOF */

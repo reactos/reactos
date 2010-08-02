@@ -294,19 +294,17 @@ int WINAPI SysReAllocStringLen(BSTR* old, const OLECHAR* str, unsigned int len)
 	return 0;
 
     if (*old!=NULL) {
+      BSTR old_copy = *old;
       DWORD newbytelen = len*sizeof(WCHAR);
       DWORD *ptr = HeapReAlloc(GetProcessHeap(),0,((DWORD*)*old)-1,newbytelen+sizeof(WCHAR)+sizeof(DWORD));
       *old = (BSTR)(ptr+1);
       *ptr = newbytelen;
-      if (str) {
-        memmove(*old, str, newbytelen);
-        (*old)[len] = 0;
-      } else {
-	/* Subtle hidden feature: The old string data is still there
-	 * when 'in' is NULL!
-	 * Some Microsoft program needs it.
-	 */
-      }
+      /* Subtle hidden feature: The old string data is still there
+       * when 'in' is NULL!
+       * Some Microsoft program needs it.
+       */
+      if (str && old_copy!=str) memmove(*old, str, newbytelen);
+      (*old)[len] = 0;
     } else {
       /*
        * Allocate the new string
@@ -696,6 +694,7 @@ HRESULT WINAPI OleTranslateColor(
 
 extern HRESULT WINAPI OLEAUTPS_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
 extern BOOL WINAPI OLEAUTPS_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
+extern GUID const CLSID_PSFactoryBuffer DECLSPEC_HIDDEN;
 
 extern void _get_STDFONT_CF(LPVOID *);
 extern void _get_STDPIC_CF(LPVOID *);
@@ -728,7 +727,7 @@ static HRESULT WINAPI PSDispatchFacBuf_CreateProxy(IPSFactoryBuffer *iface, IUnk
     HRESULT hr;
 
     if (IsEqualIID(riid, &IID_IDispatch))
-        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, &IID_IPSFactoryBuffer, (void **)&pPSFB);
+        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, &IID_IPSFactoryBuffer, (void **)&pPSFB);
     else
         hr = TMARSHAL_DllGetClassObject(&CLSID_PSOAInterface, &IID_IPSFactoryBuffer, (void **)&pPSFB);
 
@@ -746,7 +745,7 @@ static HRESULT WINAPI PSDispatchFacBuf_CreateStub(IPSFactoryBuffer *iface, REFII
     HRESULT hr;
 
     if (IsEqualIID(riid, &IID_IDispatch))
-        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, &IID_IPSFactoryBuffer, (void **)&pPSFB);
+        hr = OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, &IID_IPSFactoryBuffer, (void **)&pPSFB);
     else
         hr = TMARSHAL_DllGetClassObject(&CLSID_PSOAInterface, &IID_IPSFactoryBuffer, (void **)&pPSFB);
 
@@ -790,11 +789,6 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	    return S_OK;
 	}
     }
-    if (IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
-        IsEqualCLSID(rclsid, &CLSID_PSTypeLib) ||
-        IsEqualCLSID(rclsid, &CLSID_PSEnumVariant)) {
-        return OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, iid, ppv);
-    }
     if (IsEqualCLSID(rclsid, &CLSID_PSDispatch) && IsEqualIID(iid, &IID_IPSFactoryBuffer)) {
         *ppv = &pPSDispatchFacBuf;
         IPSFactoryBuffer_AddRef((IPSFactoryBuffer *)*ppv);
@@ -805,6 +799,12 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	    return S_OK;
 	/*FALLTHROUGH*/
     }
+    if (IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
+        IsEqualCLSID(rclsid, &CLSID_PSTypeLib) ||
+        IsEqualCLSID(rclsid, &CLSID_PSDispatch) ||
+        IsEqualCLSID(rclsid, &CLSID_PSEnumVariant))
+        return OLEAUTPS_DllGetClassObject(&CLSID_PSFactoryBuffer, iid, ppv);
+
     return OLEAUTPS_DllGetClassObject(rclsid, iid, ppv);
 }
 

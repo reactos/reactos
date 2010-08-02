@@ -17,11 +17,46 @@
 /* GLOBALS ********************************************************************/
 
 ULONG IopDeviceObjectNumber = 0;
-
 LIST_ENTRY ShutdownListHead, LastChanceShutdownListHead;
 KSPIN_LOCK ShutdownListLock;
+extern LIST_ENTRY IopDiskFsListHead;
+extern LIST_ENTRY IopCdRomFsListHead;
+extern LIST_ENTRY IopTapeFsListHead;
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+IopReadyDeviceObjects(IN PDRIVER_OBJECT Driver)
+{
+    PDEVICE_OBJECT DeviceObject;
+    PAGED_CODE();
+
+    /* Set the driver as initialized */
+    Driver->Flags |= DRVO_INITIALIZED;
+    DeviceObject = Driver->DeviceObject;
+    while (DeviceObject)
+    {
+        /* Set every device as initialized too */
+        DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+        DeviceObject = DeviceObject->NextDevice;
+    }
+}
+
+VOID
+NTAPI
+IopDeleteDevice(IN PVOID ObjectBody)
+{
+    PDEVICE_OBJECT DeviceObject = ObjectBody;
+    PAGED_CODE();
+ 
+    /* TODO: Delete Device Node */
+
+    /* Dereference the driver object, referenced in IoCreateDevice */
+    if (DeviceObject->DriverObject)
+        ObDereferenceObject(DeviceObject->DriverObject);
+}
+
 
 PDEVICE_OBJECT
 NTAPI
@@ -80,7 +115,15 @@ IopAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
 
 VOID
 NTAPI
-IoShutdownRegisteredDevices(VOID)
+IoShutdownPnpDevices(VOID)
+{
+    /* This routine is only used by Driver Verifier to validate shutdown */
+    return;
+}
+
+VOID
+NTAPI
+IoShutdownSystem(IN ULONG Phase)
 {
     PLIST_ENTRY ListEntry;
     PDEVICE_OBJECT DeviceObject;
@@ -89,46 +132,108 @@ IoShutdownRegisteredDevices(VOID)
     PIRP Irp;
     KEVENT Event;
     NTSTATUS Status;
-
+        
     /* Initialize an event to wait on */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Get the first entry and start looping */
-    ListEntry = ExInterlockedRemoveHeadList(&ShutdownListHead,
-                                            &ShutdownListLock);
-    while (ListEntry)
+    
+    /* What phase? */
+    if (Phase == 0)
     {
-        /* Get the shutdown entry */
-        ShutdownEntry = CONTAINING_RECORD(ListEntry,
-                                          SHUTDOWN_ENTRY,
-                                          ShutdownList);
+        /* Shutdown PnP */
+        IoShutdownPnpDevices();
 
-        /* Get the attached device */
-        DeviceObject = IoGetAttachedDevice(ShutdownEntry->DeviceObject);
-
-        /* Build the shutdown IRP and call the driver */
-        Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
-                                           DeviceObject,
-                                           NULL,
-                                           0,
-                                           NULL,
-                                           &Event,
-                                           &StatusBlock);
-        Status = IoCallDriver(DeviceObject, Irp);
-        if (Status == STATUS_PENDING)
-        {
-            /* Wait on the driver */
-            KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
-        }
-
-        /* Free the shutdown entry and reset the event */
-        ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
-        KeClearEvent(&Event);
-
-        /* Go to the next entry */
+        /* Loop first-chance shutdown notifications */
         ListEntry = ExInterlockedRemoveHeadList(&ShutdownListHead,
                                                 &ShutdownListLock);
-     }
+        while (ListEntry)
+        {
+            /* Get the shutdown entry */
+            ShutdownEntry = CONTAINING_RECORD(ListEntry,
+                                              SHUTDOWN_ENTRY,
+                                              ShutdownList);
+
+            /* Get the attached device */
+            DeviceObject = IoGetAttachedDevice(ShutdownEntry->DeviceObject);
+
+            /* Build the shutdown IRP and call the driver */
+            Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
+                                               DeviceObject,
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               &Event,
+                                               &StatusBlock);
+            Status = IoCallDriver(DeviceObject, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                /* Wait on the driver */
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            }
+
+            /* Get rid of our reference to it */
+            ObDereferenceObject(DeviceObject);
+            
+            /* Free the shutdown entry and reset the event */
+            ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
+            KeClearEvent(&Event);
+
+            /* Go to the next entry */
+            ListEntry = ExInterlockedRemoveHeadList(&ShutdownListHead,
+                                                    &ShutdownListLock);
+         }
+    }
+    else if (Phase == 1)
+    {
+        /* Shutdown disk file systems */
+        IopShutdownBaseFileSystems(&IopDiskFsListHead);
+
+        /* Shutdown cdrom file systems */
+        IopShutdownBaseFileSystems(&IopCdRomFsListHead);
+
+        /* Shutdown tape filesystems */
+        IopShutdownBaseFileSystems(&IopTapeFsListHead);
+        
+        /* Loop last-chance shutdown notifications */
+        ListEntry = ExInterlockedRemoveHeadList(&LastChanceShutdownListHead,
+                                                &ShutdownListLock);
+        while (ListEntry)
+        {
+            /* Get the shutdown entry */
+            ShutdownEntry = CONTAINING_RECORD(ListEntry,
+                                              SHUTDOWN_ENTRY,
+                                              ShutdownList);
+
+            /* Get the attached device */
+            DeviceObject = IoGetAttachedDevice(ShutdownEntry->DeviceObject);
+
+            /* Build the shutdown IRP and call the driver */
+            Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
+                                               DeviceObject,
+                                               NULL,
+                                               0,
+                                               NULL,
+                                               &Event,
+                                               &StatusBlock);
+            Status = IoCallDriver(DeviceObject, Irp);
+            if (Status == STATUS_PENDING)
+            {
+                /* Wait on the driver */
+                KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+            }
+
+            /* Get rid of our reference to it */
+            ObDereferenceObject(DeviceObject);
+            
+            /* Free the shutdown entry and reset the event */
+            ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
+            KeClearEvent(&Event);
+
+            /* Go to the next entry */
+            ListEntry = ExInterlockedRemoveHeadList(&LastChanceShutdownListHead,
+                                                    &ShutdownListLock);
+         }
+
+    }
 }
 
 NTSTATUS
@@ -356,6 +461,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Unload it */
     if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+
+    /* Make object temporary so it can be deleted */
+    ObMakeTemporaryObject(DriverObject);
+
+    /* Dereference once more, referenced at driver object creation */
+    ObDereferenceObject(DriverObject);
+
 }
 
 VOID
@@ -821,6 +933,9 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     /* Set the Type and Size. Question: why is Size 0 on Windows? */
     DeviceObjectExtension->Type = IO_TYPE_DEVICE_OBJECT_EXTENSION;
     DeviceObjectExtension->Size = 0;
+    
+    /* Initialize with Power Manager */
+    PoInitializeDeviceObject(DeviceObjectExtension);
 
     /* Link the Object and Extension */
     DeviceObjectExtension->DeviceObject = CreatedDeviceObject;
@@ -910,6 +1025,9 @@ IoCreateDevice(IN PDRIVER_OBJECT DriverObject,
     ASSERT((DriverObject->Flags & DRVO_UNLOAD_INVOKED) == 0);
     CreatedDeviceObject->DriverObject = DriverObject;
     IopEditDeviceList(DriverObject, CreatedDeviceObject, IopAdd);
+    
+    /* Link with the power manager */
+    if (CreatedDeviceObject->Vpb) PoVolumeDevice(CreatedDeviceObject);
 
     /* Close the temporary handle and return to caller */
     ObCloseHandle(TempHandle, KernelMode);
@@ -1178,16 +1296,20 @@ IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 
     /* Make sure it's not getting deleted */
     DeviceExtension = IoGetDevObjExtension(DeviceObject);
-    if (DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
+    if (!(DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
                                            DOE_DELETE_PENDING |
                                            DOE_REMOVE_PENDING |
-                                           DOE_REMOVE_PROCESSED))
+                                           DOE_REMOVE_PROCESSED)))
     {
         /* Get the Lower Device Object */
         LowerDeviceObject = DeviceExtension->AttachedTo;
 
-        /* Reference it */
-        ObReferenceObject(LowerDeviceObject);
+        /* Check that we got a valid device object */
+        if (LowerDeviceObject)
+        {
+            /* We did so let's reference it */
+            ObReferenceObject(LowerDeviceObject);
+        }
     }
 
     /* Return it */
@@ -1325,6 +1447,9 @@ IoRegisterLastChanceShutdownNotification(IN PDEVICE_OBJECT DeviceObject)
 
     /* Set the DO */
     Entry->DeviceObject = DeviceObject;
+    
+    /* Reference it so it doesn't go away */
+    ObReferenceObject(DeviceObject);
 
     /* Insert it into the list */
     ExInterlockedInsertHeadList(&LastChanceShutdownListHead,
@@ -1353,6 +1478,9 @@ IoRegisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
     /* Set the DO */
     Entry->DeviceObject = DeviceObject;
+    
+    /* Reference it so it doesn't go away */
+    ObReferenceObject(DeviceObject);
 
     /* Insert it into the list */
     ExInterlockedInsertHeadList(&ShutdownListHead,
@@ -1394,6 +1522,9 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
             /* Free the entry */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
+            
+            /* Get rid of our reference to it */
+            ObDereferenceObject(DeviceObject);
         }
 
         /* Go to the next entry */
@@ -1418,6 +1549,9 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 
             /* Free the entry */
             ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
+            
+            /* Get rid of our reference to it */
+            ObDereferenceObject(DeviceObject);
         }
 
         /* Go to the next entry */

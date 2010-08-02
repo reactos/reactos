@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="riched20" type="win32dll" baseaddress="${BASEADDRESS_RICHED20}" installbase="system32" installname="riched20.dll" allowwarnings="true">
+<module name="riched20" type="win32dll" baseaddress="${BASEADDRESS_RICHED20}" installbase="system32" installname="riched20.dll" allowwarnings="true" crt="MSVCRT">
 	<importlibrary definition="riched20.spec" />
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="riched20">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<linkerflag>-enable-stdcall-fixup</linkerflag>
+	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
+	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>
 	<file>caret.c</file>
 	<file>clipboard.c</file>
 	<file>context.c</file>
@@ -35,7 +35,6 @@
 	<library>imm32</library>
 	<library>user32</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

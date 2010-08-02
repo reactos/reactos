@@ -210,3 +210,13 @@ OLESTATUS WINAPI OleSavedServerDoc(LHSERVERDOC hDoc)
     FIXME("(%d): stub.\n", hDoc);
     return OLE_OK;
 }
+
+/******************************************************************************
+ *		OleRevokeServer	[OLESVR32.3]
+ *
+ */
+OLESTATUS WINAPI OleRevokeServer(LHSERVER hServer)
+{
+    FIXME("(%d): stub.\n", hServer);
+    return OLE_OK;
+}

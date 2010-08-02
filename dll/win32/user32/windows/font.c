@@ -32,6 +32,8 @@
 
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(text);
+
 /* FUNCTIONS *****************************************************************/
 
 #ifndef NDEBUG
@@ -64,7 +66,7 @@ TabbedTextOutA(
   LPCSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions,
+  CONST INT *lpnTabStopPositions,
   int nTabOrigin)
 {
   LONG ret;
@@ -194,7 +196,7 @@ TabbedTextOutW(
   LPCWSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions,
+  CONST INT *lpnTabStopPositions,
   int nTabOrigin)
 {
   return TEXT_TabbedTextOut(hDC, X, Y, lpString, nCount, nTabPositions, lpnTabStopPositions, nTabOrigin, TRUE);
@@ -211,7 +213,7 @@ GetTabbedTextExtentA(
   LPCSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions)
+  CONST INT *lpnTabStopPositions)
 {
     LONG ret;
     DWORD len = MultiByteToWideChar(CP_ACP, 0, lpString, nCount, NULL, 0);
@@ -239,7 +241,7 @@ GetTabbedTextExtentW(
   LPCWSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions)
+  CONST INT *lpnTabStopPositions)
 {
    return TEXT_TabbedTextOut(hDC, 0, 0, lpString, nCount, nTabPositions, lpnTabStopPositions, 0, FALSE);
 }
@@ -343,7 +345,7 @@ static void TEXT_Ellipsify (HDC hdc, WCHAR *str, unsigned int max_len,
     unsigned int len_ellipsis;
     unsigned int lo, mid, hi;
 
-    len_ellipsis = wcslen (ELLIPSISW);
+    len_ellipsis = strlenW (ELLIPSISW);
     if (len_ellipsis > max_len) len_ellipsis = max_len;
     if (*len_str > max_len - len_ellipsis)
         *len_str = max_len - len_ellipsis;
@@ -368,7 +370,7 @@ static void TEXT_Ellipsify (HDC hdc, WCHAR *str, unsigned int max_len,
     /* Now this should take only a couple iterations at most. */
     for ( ; ; )
     {
-        wcsncpy (str + *len_str, ELLIPSISW, len_ellipsis);
+        memcpy(str + *len_str, ELLIPSISW, len_ellipsis*sizeof(WCHAR));
 
         if (!GetTextExtentExPointW (hdc, str, *len_str + len_ellipsis, width,
                                     NULL, NULL, size)) break;
@@ -383,8 +385,8 @@ static void TEXT_Ellipsify (HDC hdc, WCHAR *str, unsigned int max_len,
 
     if (modstr)
     {
-        wcsncpy (modstr, str, *len_str);
-        *(str+*len_str) = '\0';
+        memcpy (modstr, str, *len_str * sizeof(WCHAR));
+        modstr[*len_str] = '\0';
     }
 }
 
@@ -435,12 +437,12 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
                                 unsigned int *len_str, int width, SIZE *size,
                                 WCHAR *modstr, ellipsis_data *pellip)
 {
-    unsigned int len_ellipsis;
+    int len_ellipsis;
     int len_trailing;
     int len_under;
     WCHAR *lastBkSlash, *lastFwdSlash, *lastSlash;
 
-    len_ellipsis = wcslen (ELLIPSISW);
+    len_ellipsis = strlenW (ELLIPSISW);
     if (!max_len) return;
     if (len_ellipsis >= max_len) len_ellipsis = max_len - 1;
     if (*len_str + len_ellipsis >= max_len)
@@ -450,15 +452,15 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
          */
     str[*len_str] = '\0'; /* to simplify things */
 
-    lastBkSlash  = wcsrchr (str, BACK_SLASH);
-    lastFwdSlash = wcsrchr (str, FORWARD_SLASH);
+    lastBkSlash  = strrchrW (str, BACK_SLASH);
+    lastFwdSlash = strrchrW (str, FORWARD_SLASH);
     lastSlash = lastBkSlash > lastFwdSlash ? lastBkSlash : lastFwdSlash;
     if (!lastSlash) lastSlash = str;
     len_trailing = *len_str - (lastSlash - str);
 
     /* overlap-safe movement to the right */
     memmove (lastSlash+len_ellipsis, lastSlash, len_trailing * sizeof(WCHAR));
-    wcsncpy (lastSlash, ELLIPSISW, len_ellipsis);
+    memcpy (lastSlash, ELLIPSISW, len_ellipsis*sizeof(WCHAR));
     len_trailing += len_ellipsis;
     /* From this point on lastSlash actually points to the ellipsis in front
      * of the last slash and len_trailing includes the ellipsis
@@ -488,10 +490,42 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
 
     if (modstr)
     {
-        wcsncpy (modstr, str, *len_str);
-        *(str+*len_str) = '\0';
+        memcpy(modstr, str, *len_str * sizeof(WCHAR));
+        modstr[*len_str] = '\0';
     }
 }
+
+/* Check the character is Chinese, Japanese, Korean and/or Thai */
+inline BOOL IsCJKT(WCHAR wch)
+{
+    if (0x0E00 <= wch && wch <= 0x0E7F)
+        return TRUE;    /* Thai */
+
+    if (0x3000 <= wch && wch <= 0x9FFF)
+        return TRUE;    /* CJK */
+
+    if (0xAC00 <= wch && wch <= 0xD7FF)
+        return TRUE;    /* Korean */
+
+    if (0xFF00 <= wch && wch <= 0xFFEF)
+        return TRUE;    /* CJK */
+
+    return FALSE;
+}
+
+/* See http://en.wikipedia.org/wiki/Kinsoku_shori */
+static const WCHAR KinsokuClassA[] =
+{
+    0x2010, 0x2013, 0x2019, 0x201D, 0x203C, 0x2047, 0x2048, 0x2049, 0x3001, 
+    0x3002, 0x3005, 0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 
+    0x3019, 0x301C, 0x301F, 0x303B, 0x3041, 0x3043, 0x3045, 0x3047, 0x3049, 
+    0x3063, 0x3083, 0x3085, 0x3087, 0x308E, 0x3095, 0x3096, 0x30A0, 0x30A1, 
+    0x30A3, 0x30A5, 0x30A7, 0x30A9, 0x30C3, 0x30E3, 0x30E5, 0x30E7, 0x30EE, 
+    0x30F5, 0x30F6, 0x30FB, 0x30FC, 0x30FD, 0x30FE, 0x31F0, 0x31F1, 0x31F2, 
+    0x31F3, 0x31F4, 0x31F5, 0x31F6, 0x31F7, 0x31F8, 0x31F9, 0x31FA, 0x31FB, 
+    0x31FC, 0x31FD, 0x31FE, 0x31FF, 0xFF01, 0xFF09, 0xFF0C, 0xFF0E, 0xFF1A, 
+    0xFF1B, 0xFF1F, 0xFF3D, 0xFF5D, 0xFF60, 0
+};
 
 /*********************************************************************
  *                      TEXT_WordBreak (static)
@@ -574,9 +608,10 @@ static void TEXT_WordBreak (HDC hdc, WCHAR *str, unsigned int max_str,
         p--; /* the word just fitted */
     else
     {
-        while (p > str && *(--p) != SPACE)
+        while (p > str && *(--p) != SPACE && (!IsCJKT(p[1]) || 
+                p[1] == L'\0' || wcschr(KinsokuClassA, p[1]) != NULL))
             ;
-        word_fits = (p != str || *p == SPACE);
+        word_fits = (p != str || *p == SPACE || IsCJKT(p[1]));
     }
     /* If there was one or the first character didn't fit then */
     if (word_fits)
@@ -999,7 +1034,7 @@ static const WCHAR *TEXT_NextLineW( HDC hdc, const WCHAR *str, int *count,
  *   offset     [in] The offset of the underscored character within str
  *   rect       [in] Clipping rectangle (if not NULL)
  */
-/* WINE synced 22-May-2006 */
+/* Synced with wine 1.1.32 */
 static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int offset, const RECT *rect)
 {
     int prefix_x;
@@ -1044,13 +1079,13 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
  * the allowance in DrawTextExA.
  */
 #define MAX_BUFFER 1024
-/* WINE synced 22-May-2006 */
-/*
+/* 
  * @implemented
+ *
+ * Synced with wine 1.1.32
  */
-int WINAPI
-DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
-             LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
+INT WINAPI DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
+                        LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
 {
     SIZE size;
     const WCHAR *strPtr;
@@ -1067,16 +1102,33 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     int tabwidth /* to keep gcc happy */ = 0;
     int prefix_offset;
     ellipsis_data ellip;
+    int invert_y=0;
 
-#if 0
     TRACE("%s, %d, [%s] %08x\n", debugstr_wn (str, count), count,
         wine_dbgstr_rect(rect), flags);
 
    if (dtp) TRACE("Params: iTabLength=%d, iLeftMargin=%d, iRightMargin=%d\n",
           dtp->iTabLength, dtp->iLeftMargin, dtp->iRightMargin);
-#endif
 
-    if (!str || count == 0) return 0;
+    if (!str) return 0;
+
+    strPtr = str;
+
+    if (flags & DT_SINGLELINE)
+        flags &= ~DT_WORDBREAK;
+
+    GetTextMetricsW(hdc, &tm);
+    if (flags & DT_EXTERNALLEADING)
+	lh = tm.tmHeight + tm.tmExternalLeading;
+    else
+	lh = tm.tmHeight;
+
+    if (str[0] && count == 0)
+        return lh;
+
+    if (dtp && dtp->cbSize != sizeof(DRAWTEXTPARAMS))
+        return 0;
+
     if (count == -1)
     {
         count = strlenW(str);
@@ -1085,26 +1137,28 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
             if( flags & DT_CALCRECT)
             {
                 rect->right = rect->left;
-                rect->bottom = rect->top;
+                if( flags & DT_SINGLELINE)
+                    rect->bottom = rect->top + lh;
+                else
+                    rect->bottom = rect->top;
             }
-            return 0;
+            return lh;
         }
     }
-    strPtr = str;
 
-    if (flags & DT_SINGLELINE)
-        flags &= ~DT_WORDBREAK;
-
-    GetTextMetricsW(hdc, &tm);
-    if (flags & DT_EXTERNALLEADING)
-        lh = tm.tmHeight + tm.tmExternalLeading;
-    else
-        lh = tm.tmHeight;
+    if (GetGraphicsMode(hdc) == GM_COMPATIBLE)
+    {
+        SIZE window_ext, viewport_ext;
+        GetWindowExtEx(hdc, &window_ext);
+        GetViewportExtEx(hdc, &viewport_ext);
+        if ((window_ext.cy > 0) != (viewport_ext.cy > 0))
+            invert_y = 1;
+    }
 
     if (dtp)
     {
-        lmargin = dtp->iLeftMargin * tm.tmAveCharWidth;
-        rmargin = dtp->iRightMargin * tm.tmAveCharWidth;
+        lmargin = dtp->iLeftMargin;
+        rmargin = dtp->iRightMargin;
         if (!(flags & (DT_CENTER | DT_RIGHT)))
             x += lmargin;
         dtp->uiLengthDrawn = 0;     /* This param RECEIVES number of chars processed */
@@ -1113,7 +1167,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     if (flags & DT_EXPANDTABS)
     {
         int tabstop = ((flags & DT_TABSTOP) && dtp) ? dtp->iTabLength : 8;
-        tabwidth = tm.tmAveCharWidth * tabstop;
+	tabwidth = tm.tmAveCharWidth * tabstop;
     }
 
     if (flags & DT_CALCRECT) flags |= DT_NOCLIP;
@@ -1134,23 +1188,26 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 
     do
     {
-        len = sizeof(line)/sizeof(line[0]);
-        last_line = !(flags & DT_NOCLIP) && y + ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) > rect->bottom;
-        strPtr = TEXT_NextLineW(hdc, strPtr, &count, line, &len, width, flags, &size, last_line, &p_retstr, tabwidth, &prefix_offset, &ellip);
+	len = sizeof(line)/sizeof(line[0]);
+	if (invert_y)
+            last_line = !(flags & DT_NOCLIP) && y - ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) < rect->bottom;
+	else
+            last_line = !(flags & DT_NOCLIP) && y + ((flags & DT_EDITCONTROL) ? 2*lh-1 : lh) > rect->bottom;
+	strPtr = TEXT_NextLineW(hdc, strPtr, &count, line, &len, width, flags, &size, last_line, &p_retstr, tabwidth, &prefix_offset, &ellip);
 
-    if (flags & DT_CENTER)
-        x = (rect->left + rect->right - size.cx) / 2;
-    else if (flags & DT_RIGHT) x = rect->right - size.cx;
+	if (flags & DT_CENTER) x = (rect->left + rect->right -
+				    size.cx) / 2;
+	else if (flags & DT_RIGHT) x = rect->right - size.cx;
 
-    if (flags & DT_SINGLELINE)
-    {
-        if (flags & DT_VCENTER) y = rect->top +
-            (rect->bottom - rect->top) / 2 - size.cy / 2;
-        else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
-    }
+	if (flags & DT_SINGLELINE)
+	{
+	    if (flags & DT_VCENTER) y = rect->top +
+	    	(rect->bottom - rect->top) / 2 - size.cy / 2;
+	    else if (flags & DT_BOTTOM) y = rect->bottom - size.cy;
+        }
 
-    if (!(flags & DT_CALCRECT))
-    {
+	if (!(flags & DT_CALCRECT))
+	{
             const WCHAR *str = line;
             int xseg = x;
             while (len)
@@ -1168,12 +1225,11 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                 else
                     len_seg = len;
 
-                if (!(flags & DT_PREFIXONLY)&&
-                    !ExtTextOutW( hdc, xseg, y,
+                if (!ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
                                  ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
                                  rect, str, len_seg, NULL ))  return 0;
-                if (prefix_offset != -1 && prefix_offset < len_seg && !(flags & DT_HIDEPREFIX))
+                if (prefix_offset != -1 && prefix_offset < len_seg)
                 {
                     TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 1, str, prefix_offset, (flags & DT_NOCLIP) ? NULL : rect);
                 }
@@ -1205,7 +1261,10 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     else if (size.cx > max_width)
         max_width = size.cx;
 
-    y += lh;
+        if (invert_y)
+	    y -= lh;
+        else
+	    y += lh;
         if (dtp)
             dtp->uiLengthDrawn += len;
     }
@@ -1213,8 +1272,8 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
 
     if (flags & DT_CALCRECT)
     {
-        rect->right = rect->left + max_width;
-        rect->bottom = y;
+	rect->right = rect->left + max_width;
+	rect->bottom = y;
         if (dtp)
             rect->right += lmargin + rmargin;
     }
@@ -1226,6 +1285,10 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
     return y - rect->top;
 }
 
+DWORD
+WINAPI
+GdiGetCodePage(HDC hdc);
+
 /***********************************************************************
  *           DrawTextExA    (USER32.@)
  *
@@ -1234,11 +1297,11 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
  * string we return.
  *
  * @implemented
+ *
+ * Synced with wine 1.1.32
  */
-/* WINE synced 22-May-2006 */
-int WINAPI
-DrawTextExA( HDC hdc, LPSTR str, INT count,
-             LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
+INT WINAPI DrawTextExA( HDC hdc, LPSTR str, INT count,
+                        LPRECT rect, UINT flags, LPDRAWTEXTPARAMS dtp )
 {
    WCHAR *wstr;
    WCHAR *p;
@@ -1247,18 +1310,36 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
    DWORD wcount;
    DWORD wmax;
    DWORD amax;
+   UINT cp;
 
    if (!count) return 0;
+   if (!str && count > 0) return 0;
    if( !str || ((count == -1) && !(count = strlen(str))))
    {
+        int lh;
+        TEXTMETRICA tm;
+
+        if (dtp && dtp->cbSize != sizeof(DRAWTEXTPARAMS))
+            return 0;
+
+        GetTextMetricsA(hdc, &tm);
+        if (flags & DT_EXTERNALLEADING)
+            lh = tm.tmHeight + tm.tmExternalLeading;
+        else
+            lh = tm.tmHeight;
+
         if( flags & DT_CALCRECT)
         {
             rect->right = rect->left;
-            rect->bottom = rect->top;
+            if( flags & DT_SINGLELINE)
+                rect->bottom = rect->top + lh;
+            else
+                rect->bottom = rect->top;
         }
-        return 0;
+        return lh;
    }
-   wcount = MultiByteToWideChar( CP_ACP, 0, str, count, NULL, 0 );
+   cp = GdiGetCodePage( hdc );
+   wcount = MultiByteToWideChar( cp, 0, str, count, NULL, 0 );
    wmax = wcount;
    amax = count;
    if (flags & DT_MODIFYSTRING)
@@ -1269,7 +1350,7 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
    wstr = HeapAlloc(GetProcessHeap(), 0, wmax * sizeof(WCHAR));
    if (wstr)
    {
-       MultiByteToWideChar( CP_ACP, 0, str, count, wstr, wcount );
+       MultiByteToWideChar( cp, 0, str, count, wstr, wcount );
        if (flags & DT_MODIFYSTRING)
            for (i=4, p=wstr+wcount; i--; p++) *p=0xFFFE;
            /* Initialise the extra characters so that we can see which ones
@@ -1283,7 +1364,7 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
              * and so we need to measure it ourselves.
              */
             for (i=4, p=wstr+wcount; i-- && *p != 0xFFFE; p++) wcount++;
-            WideCharToMultiByte( CP_ACP, 0, wstr, wcount, str, amax, NULL, NULL );
+            WideCharToMultiByte( cp, 0, wstr, wcount, str, amax, NULL, NULL );
        }
        HeapFree(GetProcessHeap(), 0, wstr);
    }
@@ -1295,15 +1376,15 @@ DrawTextExA( HDC hdc, LPSTR str, INT count,
  *
  * @implemented
  */
-int WINAPI
-DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
+INT WINAPI DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
 {
     DRAWTEXTPARAMS dtp;
 
     memset (&dtp, 0, sizeof(dtp));
+    dtp.cbSize = sizeof(dtp);
     if (flags & DT_TABSTOP)
     {
-        dtp.iTabLength = (flags >> 8) && 0xff;
+        dtp.iTabLength = (flags >> 8) & 0xff;
         flags &= 0xffff00ff;
     }
     return DrawTextExW(hdc, (LPWSTR)str, count, rect, flags, &dtp);
@@ -1314,15 +1395,15 @@ DrawTextW( HDC hdc, LPCWSTR str, INT count, LPRECT rect, UINT flags )
  *
  * @implemented
  */
-int WINAPI
-DrawTextA( HDC hdc, LPCSTR str, INT count, LPRECT rect, UINT flags )
+INT WINAPI DrawTextA( HDC hdc, LPCSTR str, INT count, LPRECT rect, UINT flags )
 {
     DRAWTEXTPARAMS dtp;
 
     memset (&dtp, 0, sizeof(dtp));
+    dtp.cbSize = sizeof(dtp);
     if (flags & DT_TABSTOP)
     {
-        dtp.iTabLength = (flags >> 8) && 0xff;
+        dtp.iTabLength = (flags >> 8) & 0xff;
         flags &= 0xffff00ff;
     }
     return DrawTextExA( hdc, (LPSTR)str, count, rect, flags, &dtp );

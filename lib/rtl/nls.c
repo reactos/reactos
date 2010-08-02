@@ -33,6 +33,10 @@ PCHAR NlsUnicodeToOemTable =NULL;
 PWCHAR NlsDbcsUnicodeToOemTable = NULL;
 PUSHORT _NlsOemLeadByteInfo = NULL; /* exported */
 
+USHORT NlsOemDefaultChar = '\0';
+USHORT NlsUnicodeDefaultChar = 0;
+
+
 #define NlsOemLeadByteInfo              _NlsOemLeadByteInfo
 #define INIT_FUNCTION
 
@@ -341,7 +345,7 @@ NTSTATUS NTAPI
 RtlOemToUnicodeN (PWCHAR UnicodeString,
                   ULONG UnicodeSize,
                   PULONG ResultSize,
-                  PCHAR OemString,
+                  PCCH OemString,
                   ULONG OemSize)
 {
    ULONG Size = 0;
@@ -372,7 +376,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
 
       UCHAR Char;
       USHORT OemLeadByteInfo;
-      PCHAR OemEnd = OemString + OemSize;
+      PCCH OemEnd = OemString + OemSize;
 
       for (i = 0; i < UnicodeSize / sizeof(WCHAR) && OemString < OemEnd; i++)
       {
@@ -435,6 +439,10 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
    /* Set Unicode case map data */
    NlsUnicodeUpcaseTable = NlsTable->UpperCaseTable;
    NlsUnicodeLowercaseTable = NlsTable->LowerCaseTable;
+
+   /* set the default characters for RtlpDidUnicodeToOemWork */
+   NlsOemDefaultChar = NlsTable->OemTableInfo.DefaultChar;
+   NlsUnicodeDefaultChar = NlsTable->OemTableInfo.TransDefaultChar;
 }
 
 
@@ -561,7 +569,7 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
 NTSTATUS
 NTAPI
 RtlUnicodeToMultiByteSize(PULONG MbSize,
-                          PWCHAR UnicodeString,
+                          PCWCH UnicodeString,
                           ULONG UnicodeSize)
 {
     ULONG UnicodeLength = UnicodeSize / sizeof(WCHAR);
@@ -605,7 +613,7 @@ NTSTATUS NTAPI
 RtlUnicodeToOemN (PCHAR OemString,
                   ULONG OemSize,
                   PULONG ResultSize,
-                  PWCHAR UnicodeString,
+                  PCWCH UnicodeString,
                   ULONG UnicodeSize)
 {
    ULONG Size = 0;
@@ -754,7 +762,7 @@ NTSTATUS NTAPI
 RtlUpcaseUnicodeToMultiByteN (PCHAR MbString,
                               ULONG MbSize,
                               PULONG ResultSize,
-                              PWCHAR UnicodeString,
+                              PCWCH UnicodeString,
                               ULONG UnicodeSize)
 {
    WCHAR UpcaseChar;
@@ -798,7 +806,7 @@ NTSTATUS NTAPI
 RtlUpcaseUnicodeToOemN (PCHAR OemString,
                         ULONG OemSize,
                         PULONG ResultSize,
-                        PWCHAR UnicodeString,
+                        PCWCH UnicodeString,
                         ULONG UnicodeSize)
 {
    WCHAR UpcaseChar;

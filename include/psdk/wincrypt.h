@@ -21,12 +21,17 @@
 #ifndef __WINE_WINCRYPT_H
 #define __WINE_WINCRYPT_H
 
+#include <bcrypt.h>
+/* FIXME: #include <ncrypt.h> */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <bcrypt.h>
-/* FIXME: #include <ncrypt.h> */
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
 
 #ifdef _ADVAPI32_
 # define WINADVAPI
@@ -79,6 +84,9 @@ typedef struct _SCHANNEL_ALG {
   DWORD  dwFlags;
   DWORD  dwReserved;
 } SCHANNEL_ALG, *PSCHANNEL_ALG;
+
+
+#define CRYPT_IPSEC_HMAC_KEY 0x0100
 
 typedef struct _HMAC_INFO {
   ALG_ID HashAlgid;
@@ -1041,6 +1049,7 @@ typedef struct _CERT_CHAIN_PARA {
     DWORD            dwUrlRetrievalTimeout;
     BOOL             fCheckRevocationFreshnessTime;
     DWORD            dwRevocationFreshnessTime;
+    LPFILETIME       pftCacheResync;
 #endif
 } CERT_CHAIN_PARA, *PCERT_CHAIN_PARA;
 
@@ -1330,14 +1339,18 @@ typedef struct _CRYPT_URL_INFO {
     DWORD *rgcGroupEntry;
 } CRYPT_URL_INFO, *PCRYPT_URL_INFO;
 
-#define URL_OID_CERTIFICATE_ISSUER         ((LPCSTR)1)
-#define URL_OID_CERTIFICATE_CRL_DIST_POINT ((LPCSTR)2)
-#define URL_OID_CTL_ISSUER                 ((LPCSTR)3)
-#define URL_OID_CTL_NEXT_UPDATE            ((LPCSTR)4)
-#define URL_OID_CRL_ISSUER                 ((LPCSTR)5)
-#define URL_OID_CERTIFICATE_FRESHEST_CRL   ((LPCSTR)6)
-#define URL_OID_CRL_FRESHEST_CRL           ((LPCSTR)7)
-#define URL_OID_CROSS_CERT_DIST_POINT      ((LPCSTR)8)
+#define URL_OID_CERTIFICATE_ISSUER                  ((LPCSTR)1)
+#define URL_OID_CERTIFICATE_CRL_DIST_POINT          ((LPCSTR)2)
+#define URL_OID_CTL_ISSUER                          ((LPCSTR)3)
+#define URL_OID_CTL_NEXT_UPDATE                     ((LPCSTR)4)
+#define URL_OID_CRL_ISSUER                          ((LPCSTR)5)
+#define URL_OID_CERTIFICATE_FRESHEST_CRL            ((LPCSTR)6)
+#define URL_OID_CRL_FRESHEST_CRL                    ((LPCSTR)7)
+#define URL_OID_CROSS_CERT_DIST_POINT               ((LPCSTR)8)
+#define URL_OID_CERTIFICATE_OCSP                    ((LPCSTR)9)
+#define URL_OID_CERTIFICATE_OCSP_AND_CRL_DIST_POINT ((LPCSTR)10)
+#define URL_OID_CERTIFICATE_CRL_DIST_POINT_AND_OCSP ((LPCSTR)11)
+#define URL_OID_CROSS_CERT_SUBJECT_INFO_ACCESS      ((LPCSTR)12)
 
 #define URL_OID_GET_OBJECT_URL_FUNC "UrlDllGetObjectUrl"
 
@@ -2741,6 +2754,7 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define CRYPT_STRING_BASE64X509CRLHEADER 0x00000009
 #define CRYPT_STRING_HEXADDR             0x0000000a
 #define CRYPT_STRING_HEXASCIIADDR        0x0000000b
+#define CRYPT_STRING_NOCRLF              0x40000000
 #define CRYPT_STRING_NOCR                0x80000000
 
 /* OIDs */
@@ -2768,6 +2782,9 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_RSA_MD5RSA                    "1.2.840.113549.1.1.4"
 #define szOID_RSA_SHA1RSA                   "1.2.840.113549.1.1.5"
 #define szOID_RSA_SET0AEP_RSA               "1.2.840.113549.1.1.6"
+#define szOID_RSA_SHA256RSA                 "1.2.840.113549.1.1.11"
+#define szOID_RSA_SHA384RSA                 "1.2.840.113549.1.1.12"
+#define szOID_RSA_SHA512RSA                 "1.2.840.113549.1.1.13"
 #define szOID_RSA_DH                        "1.2.840.113549.1.3.1"
 #define szOID_RSA_data                      "1.2.840.113549.1.7.1"
 #define szOID_RSA_signedData                "1.2.840.113549.1.7.2"
@@ -2937,6 +2954,7 @@ typedef struct _CTL_FIND_SUBJECT_PARA
 #define szOID_POLICY_CONSTRAINTS            "2.5.29.36"
 #define szOID_ENHANCED_KEY_USAGE            "2.5.29.37"
 #define szOID_FRESHEST_CRL                  "2.5.29.46"
+#define szOID_INHIBIT_ANY_POLICY            "2.5.29.54"
 #define szOID_DOMAIN_COMPONENT              "0.9.2342.19200300.100.1.25"
 #define szOID_PKCS_12_FRIENDLY_NAME_ATTR     "1.2.840.113549.1.9.20"
 #define szOID_PKCS_12_LOCAL_KEY_ID           "1.2.840.113549.1.9.21"
@@ -3371,6 +3389,8 @@ typedef struct _CERT_CHAIN_ENGINE_CONFIG
     DWORD       dwUrlRetrievalTimeout;
     DWORD       MaximumCachedCertificates;
     DWORD       CycleDetectionModulus;
+    HCERTSTORE  hExclusiveRoot;
+    HCERTSTORE  hExclusiveRootTrustedPeople;
 } CERT_CHAIN_ENGINE_CONFIG, *PCERT_CHAIN_ENGINE_CONFIG;
 
 /* message-related definitions */
@@ -3816,7 +3836,11 @@ WINADVAPI BOOL WINAPI CryptGetUserKey (HCRYPTPROV, DWORD, HCRYPTKEY *);
 WINADVAPI BOOL WINAPI CryptHashData (HCRYPTHASH, CONST BYTE *, DWORD, DWORD);
 WINADVAPI BOOL WINAPI CryptHashSessionKey (HCRYPTHASH, HCRYPTKEY, DWORD);
 WINADVAPI BOOL WINAPI CryptImportKey (HCRYPTPROV, CONST BYTE *, DWORD, HCRYPTKEY, DWORD, HCRYPTKEY *);
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, DWORD);
+#else
+WINADVAPI BOOL WINAPI CryptReleaseContext (HCRYPTPROV, ULONG_PTR);
+#endif
 WINADVAPI BOOL WINAPI CryptSetHashParam (HCRYPTHASH, DWORD, CONST BYTE *, DWORD);
 WINADVAPI BOOL WINAPI CryptSetKeyParam (HCRYPTKEY, DWORD, CONST BYTE *, DWORD);
 WINADVAPI BOOL WINAPI CryptSetProviderA (LPCSTR, DWORD);
@@ -4044,6 +4068,13 @@ BOOL WINAPI CertAddEncodedCertificateToStore(HCERTSTORE hCertStore,
  DWORD dwCertEncodingType, const BYTE *pbCertEncoded, DWORD cbCertEncoded,
  DWORD dwAddDisposition, PCCERT_CONTEXT *ppCertContext);
 
+BOOL WINAPI CertAddEncodedCertificateToSystemStoreA(LPCSTR pszCertStoreName,
+ const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+BOOL WINAPI CertAddEncodedCertificateToSystemStoreW(LPCWSTR pszCertStoreName,
+ const BYTE *pbCertEncoded, DWORD cbCertEncoded);
+#define CertAddEncodedCertificateToSystemStore \
+ WINELIB_NAME_AW(CertAddEncodedCertificateToSystemStore)
+
 BOOL WINAPI CertAddEncodedCRLToStore(HCERTSTORE hCertStore,
  DWORD dwCertEncodingType, const BYTE *pbCrlEncoded, DWORD cbCrlEncoded,
  DWORD dwAddDisposition, PCCRL_CONTEXT *ppCrlContext);
@@ -4129,6 +4160,9 @@ BOOL WINAPI CertSerializeCRLStoreElement(PCCRL_CONTEXT pCrlContext,
 
 BOOL WINAPI CertSerializeCTLStoreElement(PCCTL_CONTEXT pCtlContext,
  DWORD dwFlags, BYTE *pbElement, DWORD *pcbElement);
+
+BOOL WINAPI CertGetIntendedKeyUsage(DWORD dwCertEncodingType,
+ PCERT_INFO pCertInfo, BYTE *pbKeyUsage, DWORD cbKeyUsage);
 
 BOOL WINAPI CertGetEnhancedKeyUsage(PCCERT_CONTEXT pCertContext, DWORD dwFlags,
  PCERT_ENHKEY_USAGE pUsage, DWORD *pcbUsage);
@@ -4445,6 +4479,10 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
  HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
  PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
 #define CryptRetrieveObjectByUrl WINELIB_NAME_AW(CryptRetrieveObjectByUrl)
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

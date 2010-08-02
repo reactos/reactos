@@ -9,7 +9,6 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>rsaenh</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>version.rc</file>
 </module>

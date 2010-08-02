@@ -25,6 +25,7 @@
 
 #include "windows.h"
 #include "commdlg.h"
+#include "shellapi.h"
 #include "winhelp.h"
 
 #include "wine/debug.h"
@@ -39,13 +40,21 @@ struct MacroDesc {
     const char* alias;
     BOOL        isBool;
     const char* arguments;
-    FARPROC     fn;
+    void       *fn;
 };
 
 static struct MacroDesc*MACRO_Loaded /* = NULL */;
 static unsigned         MACRO_NumLoaded /* = 0 */;
 
 /*******      helper functions     *******/
+
+static char* StrDup(const char* str)
+{
+    char* dst;
+    dst=HeapAlloc(GetProcessHeap(),0,strlen(str)+1);
+    strcpy(dst, str);
+    return dst;
+}
 
 static WINHELP_BUTTON**        MACRO_LookupButton(WINHELP_WINDOW* win, LPCSTR name)
 {
@@ -56,11 +65,14 @@ static WINHELP_BUTTON**        MACRO_LookupButton(WINHELP_WINDOW* win, LPCSTR na
     return b;
 }
 
+/******* some forward declarations *******/
+static void CALLBACK MACRO_JumpID(LPCSTR lpszPathWindow, LPCSTR topic_id);
+
 /******* real macro implementation *******/
 
 void CALLBACK MACRO_CreateButton(LPCSTR id, LPCSTR name, LPCSTR macro)
 {
-    WINHELP_WINDOW *win = Globals.active_win;
+    WINHELP_WINDOW *win = MACRO_CurrentWindow();
     WINHELP_BUTTON *button, **b;
     LONG            size;
     LPSTR           ptr;
@@ -107,7 +119,7 @@ void CALLBACK MACRO_DisableButton(LPCSTR id)
 
     WINE_TRACE("(\"%s\")\n", id);
 
-    b = MACRO_LookupButton(Globals.active_win, id);
+    b = MACRO_LookupButton(MACRO_CurrentWindow(), id);
     if (!*b) {WINE_FIXME("Couldn't find button '%s'\n", id); return;}
 
     EnableWindow((*b)->hWnd, FALSE);
@@ -119,7 +131,7 @@ static void CALLBACK MACRO_EnableButton(LPCSTR id)
 
     WINE_TRACE("(\"%s\")\n", id);
 
-    b = MACRO_LookupButton(Globals.active_win, id);
+    b = MACRO_LookupButton(MACRO_CurrentWindow(), id);
     if (!*b) {WINE_FIXME("Couldn't find button '%s'\n", id); return;}
 
     EnableWindow((*b)->hWnd, TRUE);
@@ -164,7 +176,7 @@ static void CALLBACK MACRO_AppendItem(LPCSTR str1, LPCSTR str2, LPCSTR str3, LPC
 
 static void CALLBACK MACRO_Back(void)
 {
-    WINHELP_WINDOW* win = Globals.active_win;
+    WINHELP_WINDOW* win = MACRO_CurrentWindow();
 
     WINE_TRACE("()\n");
 
@@ -174,7 +186,7 @@ static void CALLBACK MACRO_Back(void)
 
 static void CALLBACK MACRO_BackFlush(void)
 {
-    WINHELP_WINDOW* win = Globals.active_win;
+    WINHELP_WINDOW* win = MACRO_CurrentWindow();
 
     WINE_TRACE("()\n");
 
@@ -193,7 +205,7 @@ static void CALLBACK MACRO_BookmarkMore(void)
 
 static void CALLBACK MACRO_BrowseButtons(void)
 {
-    HLPFILE_PAGE*       page = Globals.active_win->page;
+    HLPFILE_PAGE*       page = MACRO_CurrentWindow()->page;
     ULONG               relative;
 
     WINE_TRACE("()\n");
@@ -209,7 +221,7 @@ static void CALLBACK MACRO_BrowseButtons(void)
 
 static void CALLBACK MACRO_ChangeButtonBinding(LPCSTR id, LPCSTR macro)
 {
-    WINHELP_WINDOW*     win = Globals.active_win;
+    WINHELP_WINDOW*     win = MACRO_CurrentWindow();
     WINHELP_BUTTON*     button;
     WINHELP_BUTTON**    b;
     LONG                size;
@@ -269,24 +281,32 @@ static void CALLBACK MACRO_CheckItem(LPCSTR str)
 static void CALLBACK MACRO_CloseSecondarys(void)
 {
     WINHELP_WINDOW *win;
+    WINHELP_WINDOW *next;
 
     WINE_TRACE("()\n");
-    for (win = Globals.win_list; win; win = win->next)
-        if (win->lpszName && lstrcmpi(win->lpszName, "main"))
-            DestroyWindow(win->hMainWnd);
+    for (win = Globals.win_list; win; win = next)
+    {
+        next = win->next;
+        if (lstrcmpi(win->info->name, "main"))
+            WINHELP_ReleaseWindow(win);
+    }
 }
 
 static void CALLBACK MACRO_CloseWindow(LPCSTR lpszWindow)
 {
     WINHELP_WINDOW *win;
+    WINHELP_WINDOW *next;
 
     WINE_TRACE("(\"%s\")\n", lpszWindow);
 
     if (!lpszWindow || !lpszWindow[0]) lpszWindow = "main";
 
-    for (win = Globals.win_list; win; win = win->next)
-        if (win->lpszName && !lstrcmpi(win->lpszName, lpszWindow))
-            DestroyWindow(win->hMainWnd);
+    for (win = Globals.win_list; win; win = next)
+    {
+        next = win->next;
+        if (!lstrcmpi(win->info->name, lpszWindow))
+            WINHELP_ReleaseWindow(win);
+    }
 }
 
 static void CALLBACK MACRO_Compare(LPCSTR str)
@@ -296,10 +316,12 @@ static void CALLBACK MACRO_Compare(LPCSTR str)
 
 static void CALLBACK MACRO_Contents(void)
 {
+    HLPFILE_PAGE*       page = MACRO_CurrentWindow()->page;
+
     WINE_TRACE("()\n");
 
-    if (Globals.active_win->page)
-        MACRO_JumpContents(Globals.active_win->page->file->lpszPath, NULL);
+    if (page)
+        MACRO_JumpContents(page->file->lpszPath, NULL);
 }
 
 static void CALLBACK MACRO_ControlPanel(LPCSTR str1, LPCSTR str2, LONG u)
@@ -342,9 +364,20 @@ static void CALLBACK MACRO_EndMPrint(void)
     WINE_FIXME("()\n");
 }
 
-static void CALLBACK MACRO_ExecFile(LPCSTR str1, LPCSTR str2, LONG u, LPCSTR str3)
+static void CALLBACK MACRO_ExecFile(LPCSTR pgm, LPCSTR args, LONG cmd_show, LPCSTR topic)
 {
-    WINE_FIXME("(\"%s\", \"%s\", %u, \"%s\")\n", str1, str2, u, str3);
+    HINSTANCE ret;
+
+    WINE_TRACE("(%s, %s, %u, %s)\n",
+               wine_dbgstr_a(pgm), wine_dbgstr_a(args), cmd_show, wine_dbgstr_a(topic));
+
+    ret = ShellExecuteA(Globals.active_win ? Globals.active_win->hMainWnd : NULL, "open",
+                        pgm, args, ".", cmd_show);
+    if ((DWORD_PTR)ret < 32)
+    {
+        WINE_WARN("Failed with %p\n", ret);
+        if (topic) MACRO_JumpID(NULL, topic);
+    }
 }
 
 static void CALLBACK MACRO_ExecProgram(LPCSTR str, LONG u)
@@ -357,7 +390,7 @@ void CALLBACK MACRO_Exit(void)
     WINE_TRACE("()\n");
 
     while (Globals.win_list)
-        DestroyWindow(Globals.win_list->hMainWnd);
+        WINHELP_ReleaseWindow(Globals.win_list);
 }
 
 static void CALLBACK MACRO_ExtAbleItem(LPCSTR str, LONG u)
@@ -420,7 +453,7 @@ static void CALLBACK MACRO_FocusWindow(LPCSTR lpszWindow)
     if (!lpszWindow || !lpszWindow[0]) lpszWindow = "main";
 
     for (win = Globals.win_list; win; win = win->next)
-        if (win->lpszName && !lstrcmpi(win->lpszName, lpszWindow))
+        if (!lstrcmpi(win->info->name, lpszWindow))
             SetFocus(win->hMainWnd);
 }
 
@@ -436,10 +469,13 @@ static void CALLBACK MACRO_GotoMark(LPCSTR str)
 
 void CALLBACK MACRO_HelpOn(void)
 {
-    LPCSTR      file;
+    WINHELP_WINDOW *win = MACRO_CurrentWindow();
+    LPCSTR      file = NULL;
 
     WINE_TRACE("()\n");
-    file = Globals.active_win->page->file->help_on_file;
+    if (win && win->page && win->page->file)
+        file = win->page->file->help_on_file;
+
     if (!file)
         file = (Globals.wVersion > 4) ? "winhlp32.hlp" : "winhelp.hlp";
 
@@ -465,12 +501,13 @@ void CALLBACK MACRO_History(void)
 
 static void CALLBACK MACRO_IfThen(BOOL b, LPCSTR t)
 {
-    if (b) MACRO_ExecuteMacro(t);
+    if (b) MACRO_ExecuteMacro(MACRO_CurrentWindow(), t);
 }
 
 static void CALLBACK MACRO_IfThenElse(BOOL b, LPCSTR t, LPCSTR f)
 {
-    if (b) MACRO_ExecuteMacro(t); else MACRO_ExecuteMacro(f);
+    if (b) MACRO_ExecuteMacro(MACRO_CurrentWindow(), t);
+    else MACRO_ExecuteMacro(MACRO_CurrentWindow(), f);
 }
 
 static BOOL CALLBACK MACRO_InitMPrint(void)
@@ -524,7 +561,10 @@ void CALLBACK MACRO_JumpHash(LPCSTR lpszPath, LPCSTR lpszWindow, LONG lHash)
     HLPFILE*    hlpfile;
 
     WINE_TRACE("(\"%s\", \"%s\", %u)\n", lpszPath, lpszWindow, lHash);
-    hlpfile = WINHELP_LookupHelpFile(lpszPath);
+    if (!lpszPath || !lpszPath[0])
+        hlpfile = MACRO_CurrentWindow()->page->file;
+    else
+        hlpfile = WINHELP_LookupHelpFile(lpszPath);
     WINHELP_OpenHelpWindow(HLPFILE_PageByHash, hlpfile, lHash,
                            WINHELP_GetWindowInfo(hlpfile, lpszWindow),
                            SW_NORMAL);
@@ -543,13 +583,17 @@ static void CALLBACK MACRO_JumpID(LPCSTR lpszPathWindow, LPCSTR topic_id)
     if ((ptr = strchr(lpszPathWindow, '>')) != NULL)
     {
         LPSTR   tmp;
-        size_t  sz = ptr - lpszPathWindow;
+        size_t  sz;
 
-        tmp = HeapAlloc(GetProcessHeap(), 0, sz + 1);
+        tmp = HeapAlloc(GetProcessHeap(), 0, strlen(lpszPathWindow) + 1);
         if (tmp)
         {
-            memcpy(tmp, lpszPathWindow, sz);
-            tmp[sz] = '\0';
+            strcpy(tmp, lpszPathWindow);
+            tmp[ptr - lpszPathWindow] = '\0';
+            ptr += tmp - lpszPathWindow; /* ptr now points to '>' in tmp buffer */
+            /* in some cases, we have a trailing space that we need to get rid of */
+            /* FIXME: check if it has to be done in lexer rather than here */
+            for (sz = strlen(ptr + 1); sz >= 1 && ptr[sz] == ' '; sz--) ptr[sz] = '\0';
             MACRO_JumpHash(tmp, ptr + 1, HLPFILE_Hash(topic_id));
             HeapFree(GetProcessHeap(), 0, tmp);
         }
@@ -591,12 +635,12 @@ static void CALLBACK MACRO_Next(void)
     WINHELP_WNDPAGE     wp;
 
     WINE_TRACE("()\n");
-    wp.page = Globals.active_win->page;
+    wp.page = MACRO_CurrentWindow()->page;
     wp.page = HLPFILE_PageByOffset(wp.page->file, wp.page->browse_fwd, &wp.relative);
     if (wp.page)
     {
         wp.page->file->wRefCount++;
-        wp.wininfo = Globals.active_win->info;
+        wp.wininfo = MACRO_CurrentWindow()->info;
         WINHELP_CreateHelpWindow(&wp, SW_NORMAL, TRUE);
     }
 }
@@ -631,12 +675,12 @@ static void CALLBACK MACRO_Prev(void)
     WINHELP_WNDPAGE     wp;
 
     WINE_TRACE("()\n");
-    wp.page = Globals.active_win->page;
+    wp.page = MACRO_CurrentWindow()->page;
     wp.page = HLPFILE_PageByOffset(wp.page->file, wp.page->browse_bwd, &wp.relative);
     if (wp.page)
     {
         wp.page->file->wRefCount++;
-        wp.wininfo = Globals.active_win->info;
+        wp.wininfo = MACRO_CurrentWindow()->info;
         WINHELP_CreateHelpWindow(&wp, SW_NORMAL, TRUE);
     }
 }
@@ -648,7 +692,7 @@ void CALLBACK MACRO_Print(void)
     WINE_TRACE("()\n");
 
     printer.lStructSize         = sizeof(printer);
-    printer.hwndOwner           = Globals.active_win->hMainWnd;
+    printer.hwndOwner           = MACRO_CurrentWindow()->hMainWnd;
     printer.hInstance           = Globals.hInstance;
     printer.hDevMode            = 0;
     printer.hDevNames           = 0;
@@ -679,7 +723,7 @@ void CALLBACK MACRO_PrinterSetup(void)
 
 static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR args)
 {
-    FARPROC             fn = NULL;
+    void               *fn = NULL;
     int                 size;
     WINHELP_DLL*        dll;
 
@@ -711,14 +755,14 @@ static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR 
         else if ((dll = HeapAlloc(GetProcessHeap(), 0, sizeof(*dll))))
         {
             dll->hLib = hLib;
-            dll->name = strdup(dll_name); /* FIXME */
+            dll->name = StrDup(dll_name); /* FIXME: never freed */
             dll->next = Globals.dlls;
             Globals.dlls = dll;
             dll->handler = (WINHELP_LDLLHandler)GetProcAddress(dll->hLib, "LDLLHandler");
             dll->class = dll->handler ? (dll->handler)(DW_WHATMSG, 0, 0) : DC_NOMSG;
             WINE_TRACE("Got class %x for DLL %s\n", dll->class, dll_name);
             if (dll->class & DC_INITTERM) dll->handler(DW_INIT, 0, 0);
-            if (dll->class & DC_CALLBACKS) dll->handler(DW_CALLBACKS, (DWORD)Callbacks, 0);
+            if (dll->class & DC_CALLBACKS) dll->handler(DW_CALLBACKS, (LONG_PTR)&Callbacks, 0);
         }
         else WINE_WARN("OOM\n");
     }
@@ -731,10 +775,10 @@ static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR 
     size = ++MACRO_NumLoaded * sizeof(struct MacroDesc);
     if (!MACRO_Loaded) MACRO_Loaded = HeapAlloc(GetProcessHeap(), 0, size);
     else MACRO_Loaded = HeapReAlloc(GetProcessHeap(), 0, MACRO_Loaded, size);
-    MACRO_Loaded[MACRO_NumLoaded - 1].name      = strdup(proc); /* FIXME */
+    MACRO_Loaded[MACRO_NumLoaded - 1].name      = StrDup(proc); /* FIXME: never freed */
     MACRO_Loaded[MACRO_NumLoaded - 1].alias     = NULL;
     MACRO_Loaded[MACRO_NumLoaded - 1].isBool    = 0;
-    MACRO_Loaded[MACRO_NumLoaded - 1].arguments = strdup(args); /* FIXME */
+    MACRO_Loaded[MACRO_NumLoaded - 1].arguments = StrDup(args); /* FIXME: never freed */
     MACRO_Loaded[MACRO_NumLoaded - 1].fn        = fn;
     WINE_TRACE("Added %s(%s) at %p\n", proc, args, fn);
 }
@@ -766,19 +810,23 @@ void CALLBACK MACRO_SetContents(LPCSTR str, LONG u)
 
 static void CALLBACK MACRO_SetHelpOnFile(LPCSTR str)
 {
+    HLPFILE_PAGE*       page = MACRO_CurrentWindow()->page;
+
     WINE_TRACE("(\"%s\")\n", str);
 
-    HeapFree(GetProcessHeap(), 0, Globals.active_win->page->file->help_on_file);
-    Globals.active_win->page->file->help_on_file = HeapAlloc(GetProcessHeap(), 0, strlen(str) + 1);
-    if (Globals.active_win->page->file->help_on_file)
-        strcpy(Globals.active_win->page->file->help_on_file, str);
+    HeapFree(GetProcessHeap(), 0, page->file->help_on_file);
+    page->file->help_on_file = HeapAlloc(GetProcessHeap(), 0, strlen(str) + 1);
+    if (page->file->help_on_file)
+        strcpy(page->file->help_on_file, str);
 }
 
 static void CALLBACK MACRO_SetPopupColor(LONG r, LONG g, LONG b)
 {
+    HLPFILE_PAGE*       page = MACRO_CurrentWindow()->page;
+
     WINE_TRACE("(%x, %x, %x)\n", r, g, b);
-    Globals.active_win->page->file->has_popup_color = TRUE;
-    Globals.active_win->page->file->popup_color = RGB(r, g, b);
+    page->file->has_popup_color = TRUE;
+    page->file->popup_color = RGB(r, g, b);
 }
 
 static void CALLBACK MACRO_ShellExecute(LPCSTR str1, LPCSTR str2, LONG u1, LONG u2, LPCSTR str3, LPCSTR str4)
@@ -836,97 +884,97 @@ static void CALLBACK MACRO_UpdateWindow(LPCSTR str1, LPCSTR str2)
  */
 
 static struct MacroDesc MACRO_Builtins[] = {
-    {"About",               NULL, 0, "",       (FARPROC)MACRO_About},
-    {"AddAccelerator",      "AA", 0, "UUS",    (FARPROC)MACRO_AddAccelerator},
-    {"ALink",               "AL", 0, "SUS",    (FARPROC)MACRO_ALink},
-    {"Annotate",            NULL, 0, "",       (FARPROC)MACRO_Annotate},
-    {"AppendItem",          NULL, 0, "SSSS",   (FARPROC)MACRO_AppendItem},
-    {"Back",                NULL, 0, "",       (FARPROC)MACRO_Back},
-    {"BackFlush",           "BF", 0, "",       (FARPROC)MACRO_BackFlush},
-    {"BookmarkDefine",      NULL, 0, "",       (FARPROC)MACRO_BookmarkDefine},
-    {"BookmarkMore",        NULL, 0, "",       (FARPROC)MACRO_BookmarkMore},
-    {"BrowseButtons",       NULL, 0, "",       (FARPROC)MACRO_BrowseButtons},
-    {"ChangeButtonBinding", "CBB",0, "SS",     (FARPROC)MACRO_ChangeButtonBinding},
-    {"ChangeEnable",        "CE", 0, "SS",     (FARPROC)MACRO_ChangeEnable},
-    {"ChangeItemBinding",   "CIB",0, "SS",     (FARPROC)MACRO_ChangeItemBinding},
-    {"CheckItem",           "CI", 0, "S",      (FARPROC)MACRO_CheckItem},
-    {"CloseSecondarys",     "CS", 0, "",       (FARPROC)MACRO_CloseSecondarys},
-    {"CloseWindow",         "CW", 0, "S",      (FARPROC)MACRO_CloseWindow},
-    {"Compare",             NULL, 0, "S",      (FARPROC)MACRO_Compare},
-    {"Contents",            NULL, 0, "",       (FARPROC)MACRO_Contents},
-    {"ControlPanel",        NULL, 0, "SSU",    (FARPROC)MACRO_ControlPanel},
-    {"CopyDialog",          NULL, 0, "",       (FARPROC)MACRO_CopyDialog},
-    {"CopyTopic",           "CT", 0, "",       (FARPROC)MACRO_CopyTopic},
-    {"CreateButton",        "CB", 0, "SSS",    (FARPROC)MACRO_CreateButton},
-    {"DeleteItem",          NULL, 0, "S",      (FARPROC)MACRO_DeleteItem},
-    {"DeleteMark",          NULL, 0, "S",      (FARPROC)MACRO_DeleteMark},
-    {"DestroyButton",       NULL, 0, "S",      (FARPROC)MACRO_DestroyButton},
-    {"DisableButton",       "DB", 0, "S",      (FARPROC)MACRO_DisableButton},
-    {"DisableItem",         "DI", 0, "S",      (FARPROC)MACRO_DisableItem},
-    {"EnableButton",        "EB", 0, "S",      (FARPROC)MACRO_EnableButton},
-    {"EnableItem",          "EI", 0, "S",      (FARPROC)MACRO_EnableItem},
-    {"EndMPrint",           NULL, 0, "",       (FARPROC)MACRO_EndMPrint},
-    {"ExecFile",            "EF", 0, "SSUS",   (FARPROC)MACRO_ExecFile},
-    {"ExecProgram",         "EP", 0, "SU",     (FARPROC)MACRO_ExecProgram},
-    {"Exit",                NULL, 0, "",       (FARPROC)MACRO_Exit},
-    {"ExtAbleItem",         NULL, 0, "SU",     (FARPROC)MACRO_ExtAbleItem},
-    {"ExtInsertItem",       NULL, 0, "SSSSUU", (FARPROC)MACRO_ExtInsertItem},
-    {"ExtInsertMenu",       NULL, 0, "SSSUU",  (FARPROC)MACRO_ExtInsertMenu},
-    {"FileExist",           "FE", 1, "S",      (FARPROC)MACRO_FileExist},
-    {"FileOpen",            "FO", 0, "",       (FARPROC)MACRO_FileOpen},
-    {"Find",                NULL, 0, "",       (FARPROC)MACRO_Find},
-    {"Finder",              "FD", 0, "",       (FARPROC)MACRO_Finder},
-    {"FloatingMenu",        NULL, 0, "",       (FARPROC)MACRO_FloatingMenu},
-    {"Flush",               "FH", 0, "",       (FARPROC)MACRO_Flush},
-    {"FocusWindow",         NULL, 0, "S",      (FARPROC)MACRO_FocusWindow},
-    {"Generate",            NULL, 0, "SUU",    (FARPROC)MACRO_Generate},
-    {"GotoMark",            NULL, 0, "S",      (FARPROC)MACRO_GotoMark},
-    {"HelpOn",              NULL, 0, "",       (FARPROC)MACRO_HelpOn},
-    {"HelpOnTop",           NULL, 0, "",       (FARPROC)MACRO_HelpOnTop},
-    {"History",             NULL, 0, "",       (FARPROC)MACRO_History},
-    {"InitMPrint",          NULL, 1, "",       (FARPROC)MACRO_InitMPrint},
-    {"InsertItem",          NULL, 0, "SSSSU",  (FARPROC)MACRO_InsertItem},
-    {"InsertMenu",          NULL, 0, "SSU",    (FARPROC)MACRO_InsertMenu},
-    {"IfThen",              "IF", 0, "BS",     (FARPROC)MACRO_IfThen},
-    {"IfThenElse",          "IE", 0, "BSS",    (FARPROC)MACRO_IfThenElse},
-    {"IsBook",              NULL, 1, "",       (FARPROC)MACRO_IsBook},
-    {"IsMark",              NULL, 1, "S",      (FARPROC)MACRO_IsMark},
-    {"IsNotMark",           "NM", 1, "S",      (FARPROC)MACRO_IsNotMark},
-    {"JumpContents",        NULL, 0, "SS",     (FARPROC)MACRO_JumpContents},
-    {"JumpContext",         "JC", 0, "SSU",    (FARPROC)MACRO_JumpContext},
-    {"JumpHash",            "JH", 0, "SSU",    (FARPROC)MACRO_JumpHash},
-    {"JumpHelpOn",          NULL, 0, "",       (FARPROC)MACRO_JumpHelpOn},
-    {"JumpID",              "JI", 0, "SS",     (FARPROC)MACRO_JumpID},
-    {"JumpKeyword",         "JK", 0, "SSS",    (FARPROC)MACRO_JumpKeyword},
-    {"KLink",               "KL", 0, "SUSS",   (FARPROC)MACRO_KLink},
-    {"Menu",                "MU", 0, "",       (FARPROC)MACRO_Menu},
-    {"MPrintHash",          NULL, 0, "U",      (FARPROC)MACRO_MPrintHash},
-    {"MPrintID",            NULL, 0, "S",      (FARPROC)MACRO_MPrintID},
-    {"Next",                NULL, 0, "",       (FARPROC)MACRO_Next},
-    {"NoShow",              NULL, 0, "",       (FARPROC)MACRO_NoShow},
-    {"PopupContext",        "PC", 0, "SU",     (FARPROC)MACRO_PopupContext},
-    {"PopupHash",           NULL, 0, "SU",     (FARPROC)MACRO_PopupHash},
-    {"PopupId",             "PI", 0, "SS",     (FARPROC)MACRO_PopupId},
-    {"PositionWindow",      "PW", 0, "IIUUUS", (FARPROC)MACRO_PositionWindow},
-    {"Prev",                NULL, 0, "",       (FARPROC)MACRO_Prev},
-    {"Print",               NULL, 0, "",       (FARPROC)MACRO_Print},
-    {"PrinterSetup",        NULL, 0, "",       (FARPROC)MACRO_PrinterSetup},
-    {"RegisterRoutine",     "RR", 0, "SSS",    (FARPROC)MACRO_RegisterRoutine},
-    {"RemoveAccelerator",   "RA", 0, "UU",     (FARPROC)MACRO_RemoveAccelerator},
-    {"ResetMenu",           NULL, 0, "",       (FARPROC)MACRO_ResetMenu},
-    {"SaveMark",            NULL, 0, "S",      (FARPROC)MACRO_SaveMark},
-    {"Search",              NULL, 0, "",       (FARPROC)MACRO_Search},
-    {"SetContents",         NULL, 0, "SU",     (FARPROC)MACRO_SetContents},
-    {"SetHelpOnFile",       NULL, 0, "S",      (FARPROC)MACRO_SetHelpOnFile},
-    {"SetPopupColor",       "SPC",0, "UUU",    (FARPROC)MACRO_SetPopupColor},
-    {"ShellExecute",        "SE", 0, "SSUUSS", (FARPROC)MACRO_ShellExecute},
-    {"ShortCut",            "SH", 0, "SSUUS",  (FARPROC)MACRO_ShortCut},
-    {"TCard",               NULL, 0, "U",      (FARPROC)MACRO_TCard},
-    {"Test",                NULL, 0, "U",      (FARPROC)MACRO_Test},
-    {"TestALink",           NULL, 1, "S",      (FARPROC)MACRO_TestALink},
-    {"TestKLink",           NULL, 1, "S",      (FARPROC)MACRO_TestKLink},
-    {"UncheckItem",         "UI", 0, "S",      (FARPROC)MACRO_UncheckItem},
-    {"UpdateWindow",        "UW", 0, "SS",     (FARPROC)MACRO_UpdateWindow},
+    {"About",               NULL, 0, "",       MACRO_About},
+    {"AddAccelerator",      "AA", 0, "UUS",    MACRO_AddAccelerator},
+    {"ALink",               "AL", 0, "SUS",    MACRO_ALink},
+    {"Annotate",            NULL, 0, "",       MACRO_Annotate},
+    {"AppendItem",          NULL, 0, "SSSS",   MACRO_AppendItem},
+    {"Back",                NULL, 0, "",       MACRO_Back},
+    {"BackFlush",           "BF", 0, "",       MACRO_BackFlush},
+    {"BookmarkDefine",      NULL, 0, "",       MACRO_BookmarkDefine},
+    {"BookmarkMore",        NULL, 0, "",       MACRO_BookmarkMore},
+    {"BrowseButtons",       NULL, 0, "",       MACRO_BrowseButtons},
+    {"ChangeButtonBinding", "CBB",0, "SS",     MACRO_ChangeButtonBinding},
+    {"ChangeEnable",        "CE", 0, "SS",     MACRO_ChangeEnable},
+    {"ChangeItemBinding",   "CIB",0, "SS",     MACRO_ChangeItemBinding},
+    {"CheckItem",           "CI", 0, "S",      MACRO_CheckItem},
+    {"CloseSecondarys",     "CS", 0, "",       MACRO_CloseSecondarys},
+    {"CloseWindow",         "CW", 0, "S",      MACRO_CloseWindow},
+    {"Compare",             NULL, 0, "S",      MACRO_Compare},
+    {"Contents",            NULL, 0, "",       MACRO_Contents},
+    {"ControlPanel",        NULL, 0, "SSU",    MACRO_ControlPanel},
+    {"CopyDialog",          NULL, 0, "",       MACRO_CopyDialog},
+    {"CopyTopic",           "CT", 0, "",       MACRO_CopyTopic},
+    {"CreateButton",        "CB", 0, "SSS",    MACRO_CreateButton},
+    {"DeleteItem",          NULL, 0, "S",      MACRO_DeleteItem},
+    {"DeleteMark",          NULL, 0, "S",      MACRO_DeleteMark},
+    {"DestroyButton",       NULL, 0, "S",      MACRO_DestroyButton},
+    {"DisableButton",       "DB", 0, "S",      MACRO_DisableButton},
+    {"DisableItem",         "DI", 0, "S",      MACRO_DisableItem},
+    {"EnableButton",        "EB", 0, "S",      MACRO_EnableButton},
+    {"EnableItem",          "EI", 0, "S",      MACRO_EnableItem},
+    {"EndMPrint",           NULL, 0, "",       MACRO_EndMPrint},
+    {"ExecFile",            "EF", 0, "SSUS",   MACRO_ExecFile},
+    {"ExecProgram",         "EP", 0, "SU",     MACRO_ExecProgram},
+    {"Exit",                NULL, 0, "",       MACRO_Exit},
+    {"ExtAbleItem",         NULL, 0, "SU",     MACRO_ExtAbleItem},
+    {"ExtInsertItem",       NULL, 0, "SSSSUU", MACRO_ExtInsertItem},
+    {"ExtInsertMenu",       NULL, 0, "SSSUU",  MACRO_ExtInsertMenu},
+    {"FileExist",           "FE", 1, "S",      MACRO_FileExist},
+    {"FileOpen",            "FO", 0, "",       MACRO_FileOpen},
+    {"Find",                NULL, 0, "",       MACRO_Find},
+    {"Finder",              "FD", 0, "",       MACRO_Finder},
+    {"FloatingMenu",        NULL, 0, "",       MACRO_FloatingMenu},
+    {"Flush",               "FH", 0, "",       MACRO_Flush},
+    {"FocusWindow",         NULL, 0, "S",      MACRO_FocusWindow},
+    {"Generate",            NULL, 0, "SUU",    MACRO_Generate},
+    {"GotoMark",            NULL, 0, "S",      MACRO_GotoMark},
+    {"HelpOn",              NULL, 0, "",       MACRO_HelpOn},
+    {"HelpOnTop",           NULL, 0, "",       MACRO_HelpOnTop},
+    {"History",             NULL, 0, "",       MACRO_History},
+    {"InitMPrint",          NULL, 1, "",       MACRO_InitMPrint},
+    {"InsertItem",          NULL, 0, "SSSSU",  MACRO_InsertItem},
+    {"InsertMenu",          NULL, 0, "SSU",    MACRO_InsertMenu},
+    {"IfThen",              "IF", 0, "BS",     MACRO_IfThen},
+    {"IfThenElse",          "IE", 0, "BSS",    MACRO_IfThenElse},
+    {"IsBook",              NULL, 1, "",       MACRO_IsBook},
+    {"IsMark",              NULL, 1, "S",      MACRO_IsMark},
+    {"IsNotMark",           "NM", 1, "S",      MACRO_IsNotMark},
+    {"JumpContents",        NULL, 0, "SS",     MACRO_JumpContents},
+    {"JumpContext",         "JC", 0, "SSU",    MACRO_JumpContext},
+    {"JumpHash",            "JH", 0, "SSU",    MACRO_JumpHash},
+    {"JumpHelpOn",          NULL, 0, "",       MACRO_JumpHelpOn},
+    {"JumpID",              "JI", 0, "SS",     MACRO_JumpID},
+    {"JumpKeyword",         "JK", 0, "SSS",    MACRO_JumpKeyword},
+    {"KLink",               "KL", 0, "SUSS",   MACRO_KLink},
+    {"Menu",                "MU", 0, "",       MACRO_Menu},
+    {"MPrintHash",          NULL, 0, "U",      MACRO_MPrintHash},
+    {"MPrintID",            NULL, 0, "S",      MACRO_MPrintID},
+    {"Next",                NULL, 0, "",       MACRO_Next},
+    {"NoShow",              "NS", 0, "",       MACRO_NoShow},
+    {"PopupContext",        "PC", 0, "SU",     MACRO_PopupContext},
+    {"PopupHash",           NULL, 0, "SU",     MACRO_PopupHash},
+    {"PopupId",             "PI", 0, "SS",     MACRO_PopupId},
+    {"PositionWindow",      "PW", 0, "IIUUUS", MACRO_PositionWindow},
+    {"Prev",                NULL, 0, "",       MACRO_Prev},
+    {"Print",               NULL, 0, "",       MACRO_Print},
+    {"PrinterSetup",        NULL, 0, "",       MACRO_PrinterSetup},
+    {"RegisterRoutine",     "RR", 0, "SSS",    MACRO_RegisterRoutine},
+    {"RemoveAccelerator",   "RA", 0, "UU",     MACRO_RemoveAccelerator},
+    {"ResetMenu",           NULL, 0, "",       MACRO_ResetMenu},
+    {"SaveMark",            NULL, 0, "S",      MACRO_SaveMark},
+    {"Search",              NULL, 0, "",       MACRO_Search},
+    {"SetContents",         NULL, 0, "SU",     MACRO_SetContents},
+    {"SetHelpOnFile",       NULL, 0, "S",      MACRO_SetHelpOnFile},
+    {"SetPopupColor",       "SPC",0, "UUU",    MACRO_SetPopupColor},
+    {"ShellExecute",        "SE", 0, "SSUUSS", MACRO_ShellExecute},
+    {"ShortCut",            "SH", 0, "SSUUS",  MACRO_ShortCut},
+    {"TCard",               NULL, 0, "U",      MACRO_TCard},
+    {"Test",                NULL, 0, "U",      MACRO_Test},
+    {"TestALink",           NULL, 1, "S",      MACRO_TestALink},
+    {"TestKLink",           NULL, 1, "S",      MACRO_TestKLink},
+    {"UncheckItem",         "UI", 0, "S",      MACRO_UncheckItem},
+    {"UpdateWindow",        "UW", 0, "SS",     MACRO_UpdateWindow},
     {NULL,                  NULL, 0, NULL,     NULL}
 };
 

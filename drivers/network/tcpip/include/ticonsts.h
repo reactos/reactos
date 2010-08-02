@@ -4,8 +4,8 @@
  * FILE:        include/ticonsts.h
  * PURPOSE:     TCP/IP protocol driver constants
  */
-#ifndef __TICONSTS_H
-#define __TICONSTS_H
+
+#pragma once
 
 /* NDIS version this driver supports */
 #define NDIS_VERSION_MAJOR 4
@@ -58,7 +58,5 @@
 #define IP_SUCCESS                 0x0000 /* Successful */
 #define IP_NO_RESOURCES            0x0001 /* Not enough free resources */
 #define IP_NO_ROUTE_TO_DESTINATION 0x0002 /* No route to destination */
-
-#endif /* __TICONSTS_H */
 
 /* EOF */

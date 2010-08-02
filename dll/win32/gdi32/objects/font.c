@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/gdi32/object/font.c
@@ -62,7 +61,9 @@ static const CHARSETINFO FONT_tci[MAXTCIINDEX] = {
 /***********************************************************************
  *              TEXTMETRIC conversion functions.
  */
-static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
+VOID
+FASTCALL
+FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
 {
     ptmA->tmHeight = ptmW->tmHeight;
     ptmA->tmAscent = ptmW->tmAscent;
@@ -75,10 +76,19 @@ static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
     ptmA->tmOverhang = ptmW->tmOverhang;
     ptmA->tmDigitizedAspectX = ptmW->tmDigitizedAspectX;
     ptmA->tmDigitizedAspectY = ptmW->tmDigitizedAspectY;
-    ptmA->tmFirstChar = ptmW->tmFirstChar > 255 ? 255 : ptmW->tmFirstChar;
-    ptmA->tmLastChar = ptmW->tmLastChar > 255 ? 255 : ptmW->tmLastChar;
-    ptmA->tmDefaultChar = ptmW->tmDefaultChar > 255 ? 255 : ptmW->tmDefaultChar;
-    ptmA->tmBreakChar = ptmW->tmBreakChar > 255 ? 255 : ptmW->tmBreakChar;
+    ptmA->tmFirstChar = min(ptmW->tmFirstChar, 255);
+    if (ptmW->tmCharSet == SYMBOL_CHARSET)
+    {
+        ptmA->tmFirstChar = 0x1e;
+        ptmA->tmLastChar = 0xff;  /* win9x behaviour - we need the OS2 table data to calculate correctly */
+    }
+    else
+    {
+        ptmA->tmFirstChar = ptmW->tmDefaultChar - 1;
+        ptmA->tmLastChar = min(ptmW->tmLastChar, 0xff);
+    }
+    ptmA->tmDefaultChar = ptmW->tmDefaultChar;
+    ptmA->tmBreakChar = ptmW->tmBreakChar;
     ptmA->tmItalic = ptmW->tmItalic;
     ptmA->tmUnderlined = ptmW->tmUnderlined;
     ptmA->tmStruckOut = ptmW->tmStruckOut;
@@ -107,6 +117,8 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     if(count == -1) count = strlen(str);
     lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
     strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
+    if (!strW)
+        return NULL;
     MultiByteToWideChar(cp, 0, str, count, strW, lenW);
     DPRINT("mapped %s -> %S\n", str, strW);
     if(plenW) *plenW = lenW;
@@ -114,168 +126,21 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     return strW;
 }
 
-
-static BOOL FASTCALL
-MetricsCharConvert(WCHAR w, UCHAR *b)
-  {
-  UNICODE_STRING WString;
-  WCHAR WBuf[2];
-  ANSI_STRING AString;
-  CHAR ABuf[2];
-  NTSTATUS Status;
-
-  if (L'\0' == w)
-    {
-      *b = '\0';
-    }
-  else
-    {
-      WBuf[0] = w;
-      WBuf[1] = L'\0';
-      RtlInitUnicodeString(&WString, WBuf);
-      ABuf[0] = '*';
-      ABuf[1] = L'\0';
-      RtlInitAnsiString(&AString, ABuf);
-
-      Status = RtlUnicodeStringToAnsiString(&AString, &WString, FALSE);
-      if (! NT_SUCCESS(Status))
-	{
-	  SetLastError(RtlNtStatusToDosError(Status));
-	  return FALSE;
-	}
-      *b = ABuf[0];
-    }
-
-  return TRUE;
-}
-
-BOOL FASTCALL
-TextMetricW2A(TEXTMETRICA *tma, TEXTMETRICW *tmw)
-{
-  UNICODE_STRING WString;
-  WCHAR WBuf[256];
-  ANSI_STRING AString;
-  CHAR ABuf[256];
-  UINT Letter;
-  NTSTATUS Status;
-
-  tma->tmHeight = tmw->tmHeight;
-  tma->tmAscent = tmw->tmAscent;
-  tma->tmDescent = tmw->tmDescent;
-  tma->tmInternalLeading = tmw->tmInternalLeading;
-  tma->tmExternalLeading = tmw->tmExternalLeading;
-  tma->tmAveCharWidth = tmw->tmAveCharWidth;
-  tma->tmMaxCharWidth = tmw->tmMaxCharWidth;
-  tma->tmWeight = tmw->tmWeight;
-  tma->tmOverhang = tmw->tmOverhang;
-  tma->tmDigitizedAspectX = tmw->tmDigitizedAspectX;
-  tma->tmDigitizedAspectY = tmw->tmDigitizedAspectY;
-
-  /* The Unicode FirstChar/LastChar need not correspond to the ANSI
-     FirstChar/LastChar. For example, if the font contains glyphs for
-     letters A-Z and an accented version of the letter e, the Unicode
-     FirstChar would be A and the Unicode LastChar would be the accented
-     e. If you just translate those to ANSI, the range would become
-     letters A-E instead of A-Z.
-     We translate all possible ANSI chars to Unicode and find the first
-     and last translated character which fall into the Unicode FirstChar/
-     LastChar range and return the corresponding ANSI char. */
-
-  /* Setup an Ansi string containing all possible letters (note: skip '\0' at
-     the beginning since that would be interpreted as end-of-string, handle
-     '\0' special later */
-  for (Letter = 1; Letter < 256; Letter++)
-    {
-    ABuf[Letter - 1] = (CHAR) Letter;
-    WBuf[Letter - 1] = L' ';
-    }
-  ABuf[255] = '\0';
-  WBuf[255] = L'\0';
-  RtlInitAnsiString(&AString, ABuf);
-  RtlInitUnicodeString(&WString, WBuf);
-
-  /* Find the corresponding Unicode characters */
-  Status = RtlAnsiStringToUnicodeString(&WString, &AString, FALSE);
-  if (! NT_SUCCESS(Status))
-    {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-    }
-
-  /* Scan for the first ANSI character which maps to an Unicode character
-     in the range */
-  tma->tmFirstChar = '\0';
-  if (L'\0' != tmw->tmFirstChar)
-    {
-      for (Letter = 1; Letter < 256; Letter++)
-	{
-	  if (tmw->tmFirstChar <= WBuf[Letter - 1] &&
-	      WBuf[Letter - 1] <= tmw->tmLastChar)
-	    {
-	      tma->tmFirstChar = (CHAR) Letter;
-	      break;
-	    }
-	}
-    }
-
-  /* Scan for the last ANSI character which maps to an Unicode character
-     in the range */
-  tma->tmLastChar = '\0';
-  if (L'\0' != tmw->tmLastChar)
-    {
-      for (Letter = 255; 0 < Letter; Letter--)
-	{
-	  if (tmw->tmFirstChar <= WBuf[Letter - 1] &&
-	      WBuf[Letter - 1] <= tmw->tmLastChar)
-	    {
-	      tma->tmLastChar = (CHAR) Letter;
-	      break;
-	    }
-	}
-    }
-
-  if (! MetricsCharConvert(tmw->tmDefaultChar, &tma->tmDefaultChar) ||
-      ! MetricsCharConvert(tmw->tmBreakChar, &tma->tmBreakChar))
-    {
-      return FALSE;
-    }
-
-  tma->tmItalic = tmw->tmItalic;
-  tma->tmUnderlined = tmw->tmUnderlined;
-  tma->tmStruckOut = tmw->tmStruckOut;
-  tma->tmPitchAndFamily = tmw->tmPitchAndFamily;
-  tma->tmCharSet = tmw->tmCharSet;
-
-  return TRUE;
-}
-
-BOOL FASTCALL
+VOID FASTCALL
 NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw)
 {
-  if (! TextMetricW2A((TEXTMETRICA *) tma, (TEXTMETRICW *) tmw))
-    {
-      return FALSE;
-    }
-
+  FONT_TextMetricWToA((TEXTMETRICW *) tmw, (TEXTMETRICA *) tma);
   tma->ntmFlags = tmw->ntmFlags;
   tma->ntmSizeEM = tmw->ntmSizeEM;
   tma->ntmCellHeight = tmw->ntmCellHeight;
   tma->ntmAvgWidth = tmw->ntmAvgWidth;
-
-  return TRUE;
 }
 
-BOOL FASTCALL
+VOID FASTCALL
 NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
 {
-  if (! NewTextMetricW2A(&tma->ntmTm, &tmw->ntmTm))
-    {
-      return FALSE;
-    }
-
+  NewTextMetricW2A(&tma->ntmTm, &tmw->ntmTm);
   tma->ntmFontSig = tmw->ntmFontSig;
-
-  return TRUE;
 }
 
 static int FASTCALL
@@ -289,6 +154,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
   int i;
   ENUMLOGFONTEXA EnumLogFontExA;
   NEWTEXTMETRICEXA NewTextMetricExA;
+  LOGFONTW lfW;
 
   Info = RtlAllocateHeap(GetProcessHeap(), 0,
                          INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO));
@@ -296,6 +162,15 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
     {
       return 0;
     }
+
+  if (!LogFont)
+    {
+        lfW.lfCharSet = DEFAULT_CHARSET;
+        lfW.lfPitchAndFamily = 0;
+        lfW.lfFaceName[0] = 0;
+        LogFont = &lfW;
+    }
+
   FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, INITIAL_FAMILY_COUNT);
   if (FontFamilyCount < 0)
     {
@@ -425,6 +300,69 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
   return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, FALSE);
 }
 
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetCharacterPlacementA(
+        HDC hdc,
+        LPCSTR lpString,
+        INT uCount,
+        INT nMaxExtent,
+        GCP_RESULTSA *lpResults,
+        DWORD dwFlags)
+{
+    WCHAR *lpStringW;
+    INT uCountW;
+    GCP_RESULTSW resultsW;
+    DWORD ret;
+    UINT font_cp;
+
+    if ( !lpString || uCount <= 0 || (nMaxExtent < 0 && nMaxExtent != -1 ) )
+    {
+       SetLastError(ERROR_INVALID_PARAMETER);
+       return 0;
+    }
+/*    TRACE("%s, %d, %d, 0x%08x\n",
+          debugstr_an(lpString, uCount), uCount, nMaxExtent, dwFlags);
+*/
+    /* both structs are equal in size */
+    memcpy(&resultsW, lpResults, sizeof(resultsW));
+
+    lpStringW = FONT_mbtowc(hdc, lpString, uCount, &uCountW, &font_cp);
+    if (lpStringW == NULL)
+    {
+        return 0;
+    }
+    if(lpResults->lpOutString)
+    {
+        resultsW.lpOutString = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*uCountW);
+        if (resultsW.lpOutString == NULL)
+        {
+            HeapFree(GetProcessHeap(), 0, lpStringW);
+            return 0;
+        }
+    }
+
+    ret = GetCharacterPlacementW(hdc, lpStringW, uCountW, nMaxExtent, &resultsW, dwFlags);
+
+    lpResults->nGlyphs = resultsW.nGlyphs;
+    lpResults->nMaxFit = resultsW.nMaxFit;
+
+    if(lpResults->lpOutString) {
+        WideCharToMultiByte(font_cp, 0, resultsW.lpOutString, uCountW,
+                            lpResults->lpOutString, uCount, NULL, NULL );
+    }
+
+    HeapFree(GetProcessHeap(), 0, lpStringW);
+    HeapFree(GetProcessHeap(), 0, resultsW.lpOutString);
+
+    return ret;
+}
+
+
 /*
  * @implemented
  */
@@ -507,6 +445,47 @@ GetCharacterPlacementW(
   return ret;
 }
 
+DWORD
+WINAPI
+NewGetCharacterPlacementW(
+	HDC hdc,
+	LPCWSTR lpString,
+	INT uCount,
+	INT nMaxExtent,
+	GCP_RESULTSW *lpResults,
+	DWORD dwFlags
+	)
+{
+  INT nSet;
+  SIZE Size = {0,0};
+
+  if ( !lpString || uCount <= 0 || (nMaxExtent < 0 && nMaxExtent != -1 ) )
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return 0;
+  }
+
+  if ( !lpResults )
+  {
+     if ( GetTextExtentPointW(hdc, lpString, uCount, &Size) )
+     {
+        return MAKELONG(Size.cx, Size.cy);
+     }
+     return 0;
+  }
+
+  nSet = uCount;
+  if ( nSet > lpResults->nGlyphs )
+     nSet = lpResults->nGlyphs;
+
+  return NtGdiGetCharacterPlacementW( hdc,
+                                      (LPWSTR)lpString,
+                                      nSet,
+                                      nMaxExtent,
+                                      lpResults,
+                                      dwFlags);
+}
+
 /*
  * @implemented
  *
@@ -553,7 +532,7 @@ GetCharWidthFloatW(HDC hdc,
                      iFirstChar,
   (ULONG)(iLastChar - iFirstChar + 1),
                   (PWCHAR) NULL,
-                              0, 
+                              0,
 	       (PVOID) pxBuffer);
 }
 
@@ -719,7 +698,7 @@ GetCharWidth32A(
                           wstr[0],
                           (ULONG) count,
                           (PWCHAR) wstr,
-                          GCW_NOFLOAT|GCW_WIN32, 
+                          GCW_NOFLOAT|GCW_WIN32,
                           (PVOID) lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
@@ -803,7 +782,7 @@ GetCharABCWidthsA(
         return FALSE;
     }
 
-    ret = NtGdiGetCharABCWidthsW( hdc, 
+    ret = NtGdiGetCharABCWidthsW( hdc,
                               wstr[0],
                               (ULONG)count,
                               (PWCHAR)wstr,
@@ -921,7 +900,7 @@ GetFontLanguageInfo(
      if ((Ret == ARABIC_CHARSET) || (Ret == HEBREW_CHARSET))
         Ret = (GCP_KASHIDA|GCP_DIACRITIC|GCP_LIGATE|GCP_GLYPHSHAPE|GCP_REORDER);
   }
-  Gcp = GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+  Gcp = GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR);
   if ( Gcp == GCP_ERROR)
      return Gcp;
   else
@@ -947,6 +926,10 @@ GetGlyphIndicesA(
     INT countW;
 
     lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
+
+    if (lpstrW == NULL)
+        return GDI_ERROR;
+
     Ret = NtGdiGetGlyphIndicesW(hdc, lpstrW, countW, pgi, flags);
     HeapFree(GetProcessHeap(), 0, lpstrW);
     return Ret;
@@ -971,7 +954,8 @@ GetGlyphOutlineA(
     LPWSTR p = NULL;
     DWORD ret;
     UINT c;
-    DPRINT1("GetGlyphOutlineA  uChar %x\n", uChar);
+    DPRINT("GetGlyphOutlineA uChar %x\n", uChar);
+    if (!lpgm || !lpmat2) return GDI_ERROR;
     if(!(uFormat & GGO_GLYPH_INDEX)) {
         int len;
         char mbchs[2];
@@ -984,7 +968,7 @@ GetGlyphOutlineA(
             mbchs[0] = (uChar & 0xff);
         }
         p = FONT_mbtowc(hdc, mbchs, len, NULL, NULL);
-	c = p[0];
+        c = p[0];
     } else
         c = uChar;
     ret = NtGdiGetGlyphOutline(hdc, c, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
@@ -1008,8 +992,8 @@ GetGlyphOutlineW(
 	CONST MAT2	*lpmat2
 	)
 {
-  DPRINT("GetGlyphOutlineW  uChar %x\n", uChar);
-  if (!lpgm & !lpmat2) return GDI_ERROR;
+  DPRINT("GetGlyphOutlineW uChar %x\n", uChar);
+  if (!lpgm || !lpmat2) return GDI_ERROR;
   if (!lpvBuffer) cbBuffer = 0;
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
@@ -1035,7 +1019,13 @@ GetOutlineTextMetricsA(
     if((ret = GetOutlineTextMetricsW(hdc, 0, NULL)) == 0)
         return 0;
     if(ret > sizeof(buf))
-	lpOTMW = HeapAlloc(GetProcessHeap(), 0, ret);
+    {
+        lpOTMW = HeapAlloc(GetProcessHeap(), 0, ret);
+        if (lpOTMW == NULL)
+        {
+            return 0;
+        }
+    }
     GetOutlineTextMetricsW(hdc, ret, lpOTMW);
 
     needed = sizeof(OUTLINETEXTMETRICA);
@@ -1063,10 +1053,16 @@ GetOutlineTextMetricsA(
 
     DPRINT("needed = %d\n", needed);
     if(needed > cbData)
+    {
         /* Since the supplied buffer isn't big enough, we'll alloc one
            that is and memcpy the first cbData bytes into the lpOTM at
            the end. */
         output = HeapAlloc(GetProcessHeap(), 0, needed);
+        if (output == NULL)
+        {
+            goto end;
+        }
+    }
 
     ret = output->otmSize = min(needed, cbData);
     FONT_TextMetricWToA( &lpOTMW->otmTextMetrics, &output->otmTextMetrics );
@@ -1249,6 +1245,10 @@ GetKerningPairsA( HDC hDC,
     if (!cPairs && !kern_pairA) return total_kern_pairs;
 
     kern_pairW = HeapAlloc(GetProcessHeap(), 0, total_kern_pairs * sizeof(*kern_pairW));
+    if (kern_pairW == NULL)
+    {
+        return 0;
+    }
     GetKerningPairsW(hDC, total_kern_pairs, kern_pairW);
 
     for (i = 0; i < total_kern_pairs; i++)
@@ -1681,7 +1681,7 @@ RemoveFontResourceExW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-DWORD
+LONG
 WINAPI
 GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
 {
@@ -1718,7 +1718,7 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
  *
  */
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1734,13 +1734,13 @@ TranslateCharsetInfo(
     int index = 0;
     switch (flags) {
     case TCI_SRCFONTSIG:
-	while (!(*lpSrc>>index & 0x0001) && index<MAXTCIINDEX) index++;
+      while (index < MAXTCIINDEX && !(*lpSrc>>index & 0x0001)) index++;
       break;
     case TCI_SRCCODEPAGE:
-      while (PtrToUlong(lpSrc) != FONT_tci[index].ciACP && index < MAXTCIINDEX) index++;
+      while (index < MAXTCIINDEX && PtrToUlong(lpSrc) != FONT_tci[index].ciACP) index++;
       break;
     case TCI_SRCCHARSET:
-      while (PtrToUlong(lpSrc) != FONT_tci[index].ciCharset && index < MAXTCIINDEX) index++;
+      while (index < MAXTCIINDEX && PtrToUlong(lpSrc) != FONT_tci[index].ciCharset) index++;
       break;
     default:
       return FALSE;

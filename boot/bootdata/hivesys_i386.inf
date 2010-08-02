@@ -3,6 +3,15 @@ Signature = "$ReactOS$"
 
 [AddReg]
 
+HKLM,"SYSTEM\CurrentControlSet\Control","CurrentUser",2,"USERNAME"
+HKLM,"SYSTEM\CurrentControlSet\Control","WaitToKillServiceTimeout",2,"20000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
+
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","NtfsDisable8dot3NameCreation",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win31FileSystem",0x00010001,0
+HKLM,"SYSTEM\CurrentControlSet\Control\FileSystem","Win95TruncatedExtensions",0x00010001,1
+
 ; Device classes (this list is incomplete... and should be generated from .inf files during installation)
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
@@ -35,6 +44,24 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName"
 
 ; Device classes key
 HKLM,"SYSTEM\CurrentControlSet\Control\DeviceClasses",,0x00000012
+
+; HAL Chipset Hacks
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10390530",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10390620",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10B90533",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","10B91533",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11060596",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11060686",0x00010001,0x5
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","1166004F",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11660050",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","11660200",0x00010001,0x1
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862410",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862420",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862440",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","8086244C",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80862480",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","8086248C",0x00010001,0x8
+HKLM,"SYSTEM\CurrentControlSet\Control\HAL","80867110",0x00010001,0x1
 
 ; Hardware profile settings
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB",,0x00000012
@@ -369,6 +396,80 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Text",0x00000000,"Korean"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000412","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5063"
 
+; Keyboard layouts
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000402",2,"bg"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000404",2,"ch"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000405",2,"cz"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000406",2,"dk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000407",2,"gr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000409",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040A",2,"sp"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040B",2,"su"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040C",2,"fr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040E",2,"hu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000040F",2,"is"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000410",2,"it"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000411",2,"jp"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000412",2,"ko"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000413",2,"nl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000414",2,"no"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000415",2,"pl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000416",2,"br"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000418",2,"ro"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000419",2,"ru"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041A",2,"yu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041B",2,"sl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041C",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041D",2,"sv"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000041F",2,"tr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000422",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000423",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000424",2,"yu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000425",2,"et"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000426",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000427",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000804",2,"ch"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000807",2,"sg"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000809",2,"uk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000080A",2,"la"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000080C",2,"be"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000813",2,"be"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000816",2,"po"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000C0C",2,"cf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00000C1A",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00001009",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0000100C",2,"sf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00001809",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010402",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010405",2,"cz"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010407",2,"gr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010409",2,"dv"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001040A",2,"sp"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001040E",2,"hu"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010410",2,"it"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010415",2,"pl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010419",2,"ru"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001041B",2,"sl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","0001041F",2,"tr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010426",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010C0C",2,"cf"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00010C1A",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00020408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00020409",2,"us"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00030409",2,"usl"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00040409",2,"usr"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybCodes","00050408",2,"gk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00000410",2,"141"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","0000041F",2,"179"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00010408",2,"220"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00010410",2,"142"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00010415",2,"214"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","0001041F",2,"440"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00020408",2,"319"
+
 ; Network
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Adapters"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"Net"
@@ -378,6 +479,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E974-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetService"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Protocol"
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetTrans"
+HKLM,"SYSTEM\CurrentControlSet\Control\NetworkProvider\Order","ProviderOrder",0x00000000,""
 
 ; NLS Files
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","37",0x00000000,"c_037.nls"
@@ -443,11 +545,20 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","ACP",0x00000000,"1252"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","OEMCP",0x00000000,"437"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\CodePage","MACCP",0x00000000,"10000"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","932",2,"F040-F9FC"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","936",2,"AAA1-AFFE,F8A1-FEFE,A140-A7A0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","949",2,"C9A1-C9FE,FEA1-FEFE"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","950",2,"FA40-FEFE,8E40-A0FE,8140-8DFE,C6A1-C8FE"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","Unicode",2,"E000-F8FF"
+
 ; NLS Language settings
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0402",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0403",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0404",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0804",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0c04",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","1004",0x00000000,"l_intl.nls"
+HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","1404",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0405",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0406",0x00000000,"l_intl.nls"
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","0407",0x00000000,"l_intl.nls"
@@ -689,6 +800,43 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021004",0x
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00021404",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale\Alternate Sorts","00030404",0x00000000,""
 
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82441FX",0x00030003,\
+01,00,00,00,86,80,37,12,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82439HX",0x00030003,\
+01,00,00,00,86,80,50,12,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82439TX",0x00030003,\
+01,00,00,00,86,80,00,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443LX/EX",0x00030003,\
+01,00,00,00,86,80,80,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443BX1",0x00030003,\
+01,00,00,00,86,80,90,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443BX2",0x00030003,\
+01,00,00,00,86,80,92,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Intel 82443GX",0x00030003,\
+01,00,00,00,86,80,a0,71,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","VIA Tech1",0x00030003,\
+01,00,00,00,06,11,01,05,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","VIA Tech2",0x00030003,\
+01,00,00,00,06,11,91,06,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Toshiba",0x00030003,\
+01,00,00,00,79,11,01,06,00,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Control\PnP\Pci\CardList","Ali",0x00030003,\
+01,00,00,00,b9,10,21,15,00,00,00,00,00,00,00,00
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","MajorVersion",0x00010001,2
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","MinorVersion",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print","PriorityClass",0x00010003,0
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Environments",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors",,0x00000012
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Monitors\Local Port","Driver",2,"localspl.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Print\Printers",,0x00000012
+
+HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductType",2,"WinNT"
+HKLM,"SYSTEM\CurrentControlSet\Control\ProductOptions","ProductSuite",0x00010002,""
+
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders","SecurityProviders",2,"schannel.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\SecurityProviders\SaslProfiles",,0x00000012
+
 ; Some installers check for SP6
 HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
 
@@ -713,6 +861,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Video Save", \
  "File System", \
  "Event log", \
+ "COM Infrastructure", \
  "NDIS", \
  "PNP_TDI", \
  "TDI", \
@@ -722,6 +871,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
 
 ; Set the timeout for directx/ReactX graphic surface lock see _EDD_DIRECTDRAW_GLOBAL struct for more info
 HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\DCI","Timeout",0x00010001,0x00000007
+HKLM,"SYSTEM\CurrentControlSet\Control\GraphicsDrivers\UseNewKey",,0x00000012
 
 ; Group order, the first DWORD is the count of entries, 
 ; the following dwords are the tag entries for the load order.
@@ -751,13 +901,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x0000
 
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\system32\wbem"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemDrive%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemDrive%\TEMP"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00020000,".COM;.EXE;.BAT;.CMD"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROCESSOR_ARCHITECTURE",0x00020000,"x86"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000000,".COM;.EXE;.BAT;.CMD"
 
 
 ; Known DLLs
@@ -782,9 +930,8 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","version",0x00
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wininet",0x00000000,"wininet.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","wldap32",0x00000000,"wldap32.dll"
 
-; Pagefile settings
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
- "C:\pagefile.sys"
+; Memory Management
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management",,0x00000012
 
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
@@ -809,13 +956,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Type",0x00010001,0x00000001
 
-; Atapi miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ImagePath",0x00020000,"system32\drivers\atapi.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Tag",0x00010001,0x00000010
+; UniATA/Atapi miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Group",0x00000000,"System Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ImagePath",0x00020000,"system32\drivers\uniata.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Tag",0x00010001,0x00000010
 
 ; Audio Service
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","DisplayName",0x00000000,"Audio Service"
@@ -823,6 +970,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Description",0x00000000,"P
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Group",0x00000000,"Audio"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Type",0x00010001,0x00000010
 
@@ -886,11 +1034,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 ; DHCP client service
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","DisplayName",0x00000000,"DHCP Client"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Attempts to obtain network settings automatically from an available DHCP server"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\dhcp.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ; Event logging service
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010
@@ -899,6 +1049,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Description",0x00000000,"Logs
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Group",0x00000000,"Event log"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ImagePath",0x00020000,"%SystemRoot%\system32\eventlog.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog","Type",0x00010001,0x00000010
 
@@ -998,6 +1149,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 
+; NMI device driver
+HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","ImagePath",0x00020000,"system32\drivers\nmidebug.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\NMIDebug","Type",0x00010001,0x00000001
+
 ; Packet driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Group",0x00000000,"PNP_TDI"
@@ -1005,12 +1163,197 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 
+; PCI Bus driver
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus 
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1045C621",0x00030003,04,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10950640",0x00030003,04,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80861230",0x00030003,04,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867010",0x00030003,04,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","104B0140",0x00030003,08,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11790603",0x00030003,08,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867113",0x00030003,08,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","497884C5",0x00030003,08,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11063040",0x00030003,08,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","0E111000",0x00030003,10,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","0E112000",0x00030003,10,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10390406",0x00030003,10,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80860482",0x00030003,00,40,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80860008",0x00030003,10,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10140002",0x00030003,10,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10800600",0x00030003,20,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10131100",0x00030003,40,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10B95219",0x00030003,80,00,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1C1C0001",0x00030003,00,01,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10970038",0x00030003,00,01,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","100BD001",0x00030003,00,04,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","808604A3",0x00030003,00,08,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10AA0000",0x00030003,00,08,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","533388D1",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11790605",0x00030003,00,10,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10131110",0x00030003,00,20,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11800478",0x00030003,00,20,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11800475",0x00030003,00,20,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11800476",0x00030003,00,20,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10040101",0x00030003,00,40,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10421000",0x00030003,00,40,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","104CAC12",0x00030003,00,00,01,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11800466",0x00030003,00,00,01,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10140095",0x00030003,00,00,04,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80862418",0x00030003,00,00,04,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80862428",0x00030003,00,00,04,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","8086244E",0x00030003,00,00,04,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80862448",0x00030003,00,00,04,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","8086122E",0x00030003,00,00,08,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867000",0x00030003,00,00,08,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867110",0x00030003,00,00,08,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867600",0x00030003,00,00,08,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024747",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024754",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338901",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","101300D6",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","104CAC15",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","110B0004",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1000000F",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","104CAC17",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10239397",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024742",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024744",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024749",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024750",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024751",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024755",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024757",0x00030003,00,00,40,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024759",0x00030003,00,00,40,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C42",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C44",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C47",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C49",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C50",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C51",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10025654",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10025655",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10025656",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","121A0003",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1045C861107B9300",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1045C8611045C861",0x00030003,00,00,40,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80861231",0x00030003,00,00,00,01,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","12730002",0x00030003,00,00,00,01,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1014007D",0x00030003,00,00,00,01,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","12850100",0x00030003,00,00,00,01,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","12176836",0x00030003,00,00,00,08,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","12176832",0x00030003,00,00,00,08,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","109107A0",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867800",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10c88005",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10c88006",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10c80005",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10c80006",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","102B1001",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DD0100",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10950646",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10950670",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10950648",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10110026",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","8086B154",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338904",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11068598",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11068605",0x00030003,00,00,00,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","11790609",0x00030003,00,00,00,40,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10140047",0x00030003,00,00,00,40,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","102B051B",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","102B0520",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","102B0521",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","102B1025",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","102B0525",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867121",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867123",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80867125",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","80861132",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","90050050",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","9005005F",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024752",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1002474F",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1002474D",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024753",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1002474C",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1002474E",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C4D",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C4E",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C52",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C53",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10239880",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE00A0",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE00A1",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE00A3",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE00B0",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE00B1",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE00B3",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0100",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0101",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0102",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0103",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0120",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0121",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0122",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0123",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0150",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0151",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0152",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0153",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0200",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0201",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0202",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0203",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","12D20018",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","12D20019",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10136003",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","3D3D000A",0x00030003,00,00,00,80,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024158",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024354",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024358",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024554",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024758",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024C54",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338810",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338811",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338812",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338814",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338880",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","533388B0",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","533388C0",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","533388C1",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","533388D0",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","533388F0",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","53338902",0x00030003,00,00,00,00,01,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","0E11B109",0x00030003,00,00,00,00,02,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","100C3202",0x00030003,00,8a,00,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10668002",0x00030003,00,00,30,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10660002",0x00030003,00,00,30,00,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10040102",0x00030003,00,40,00,02,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1045C814",0x00030003,00,00,40,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10024756",0x00030003,00,00,40,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1002475A",0x00030003,00,00,40,20,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","1000000B",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0020",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0028",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE0029",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002A",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002B",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002C",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002D",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002E",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","10DE002F",0x00030003,00,00,00,a0,00,00,00,00
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci\Parameters","101300D6101880D6",0x00030003,00,00,00,00,00,00,00,00
+
 ; Plug and Play manager
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","DisplayName",0x00000000,"Plug and Play"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Description",0x00000000,"Detects hardware changes and installs needed software if possible"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Group",0x00000000,"PlugPlay"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\umpnpmgr.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 
@@ -1018,8 +1361,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","DisplayName",0x00000000,"Remote Procedure Call"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Description",0x00000000,"RPC subsystem which is responsible for Remote procedure Calls on the local machine"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Group",0x00000000," RPC Service"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Group",0x00000000,"COM Infrastructure"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ImagePath",0x00020000,"%SystemRoot%\system32\rpcss.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Rpcss","Type",0x00010001,0x00000010
 
@@ -1058,8 +1402,19 @@ HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simpl
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ImagePath",0x00020000,"%SystemRoot%\system32\tcpsvcs.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
+
+; ReactOS Telnet Daemon
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Description",0x00000000,"ReactOS Telnet Daemon"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","DisplayName",0x00000000,"ReactOS Telnet Daemon"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Group",0x00000000,"Network"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ImagePath",0x00020000,"%SystemRoot%\system32\telnetd.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ObjectName",0x00000000,"LocalSystem"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
 
 ; Sound Blaster (NT4)
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Description",0x00000000,"Sound Blaster (NT4)"
@@ -1119,11 +1474,18 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
 
 ; USB uhci/ehci driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Group",0x00000000,"Base"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ImagePath",0x00020000,"system32\drivers\usbdriver.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Start",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ImagePath",0x00020000,"system32\drivers\usbdriver.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Type",0x00010001,0x00000001
+
+; USB storage driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Group",0x00000000,"Extended Base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ImagePath",0x00020000,"system32\drivers\usbstor.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Type",0x00010001,0x00000001
 
 ; Windows Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","DisplayName",0x00000000,"ReactOS Installer"
@@ -1131,6 +1493,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Con
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ImagePath",0x00020000,"system32\msiexec.exe /V"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Type",0x00010001,0x00000020
 

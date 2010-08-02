@@ -25,10 +25,10 @@ BEGIN
 	LTEXT "Auf &Kreditkartensignal:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
 	EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
 	CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
-	LTEXT "Sekuden warten", 1010, 165, 54, 60, 8, NOT WS_VISIBLE
+	LTEXT "Sekunden warten", 1010, 165, 54, 60, 8, NOT WS_VISIBLE
 	GROUPBOX "&Länder-/Regionauswahl", 1012, 6, 80, 225, 75
 	COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "&Port Einstellungen...", 1100, 107, 170, 125, 14
+	PUSHBUTTON "&Porteinstellungen...", 1100, 107, 170, 125, 14
 	DEFPUSHBUTTON "&Standardeinstellungen ändern...", 3, 107, 188, 125, 14
 END
 
@@ -87,11 +87,11 @@ BEGIN
 	AUTOCHECKBOX "&Telefonleitung verfügt über verschiedene Rufsignale", 1069, 19, 7, 177, 10
 	CTEXT "Rufsignalfolge", -1, 20, 21, 74, 8
 	CTEXT "Art des Anrufs", -1, 96, 21, 65, 8
-	LTEXT "&Einfaches klingeln:", 1088, 20, 37, 65, 8
+	LTEXT "&Einfaches Klingeln:", 1088, 20, 37, 65, 8
 	COMBOBOX 1091, 96, 37, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&Doppeltes klingeln:", 1089, 20, 57, 65, 8
+	LTEXT "&Doppeltes Klingeln:", 1089, 20, 57, 65, 8
 	COMBOBOX 1092, 96, 55, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "D&reifaches klingeln:", 1090, 20, 76, 65, 8
+	LTEXT "D&reifaches Klingeln:", 1090, 20, 76, 65, 8
 	COMBOBOX 1093, 96, 73, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -106,7 +106,7 @@ BEGIN
 	AUTOCHECKBOX "&Log mitschneiden", 1020, 18, 187, 98, 10
 	PUSHBUTTON "L&og ansehen", 1094, 138, 184, 75, 14, WS_DISABLED
 	GROUPBOX "Modeminformation", 1047, 10, 6, 217, 164
-	GROUPBOX "Logging", -1, 10, 173, 217, 32
+	GROUPBOX "Loggen", -1, 10, 173, 217, 32
 END
 
 IDD_PLEASE_WAIT DIALOGEX 0, 0, 195, 72
@@ -231,8 +231,8 @@ BEGIN
 	181 "Externes Modem"
 	182 "Internes Modem"
 	183 "PCMCIA Modem"
-	184 "Parallel Modem"
-	185 "Parallel Port"
+	184 "Parallelmodem"
+	185 "Parallelport"
 	200 "110"
 	201 "1200"
 	202 "2400"
@@ -283,7 +283,7 @@ BEGIN
 	460 "Es ist nicht genügend Arbeitsspeicher verfügbar, um das allgemeine Eigenschaftenfenster anzuzeigen.\nSchließen Sie einige Dateien, und wiederholen Sie den Vorgang."
 	461 "Es ist nicht genügend Arbeitsspeicher verfügbar, um das Eigenschaftenfenster für Modemeinstellungen anzuzeigen.\nSchließen Sie einige Dateien, und wiederholen Sie den Vorgang."
 	463 "Jede Anrufadresse muss auf \"Automatisch\" gesetzt oder einem eindeutigen Rufsignal zugeordnet werden.\n\nÄndern Sie die doppelt vergebene Rufsignale in andere."
-	465 "Standard EC"
+	465 "Standard-EC"
 	466 "Erzwungenes EC"
 	467 "Mobil"
 	468 "Deaktiviert"
@@ -609,5 +609,5 @@ BEGIN
 	6602 "Mazedonien, ehemalige jugoslawische Republik"
 	6603 "Bosnien und Herzegowina"
 	6604 "Serbien und Montenegro"
-	20013 "Hardware ID"
+	20013 "Hardware-ID"
 END

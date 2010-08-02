@@ -30,6 +30,15 @@ ScmSetServiceGroup(PSERVICE lpService,
     PLIST_ENTRY GroupEntry;
     PSERVICE_GROUP lpGroup;
 
+    DPRINT("ScmSetServiceGroup(%S)\n", lpGroupName);
+
+    if (lpService->lpGroup != NULL)
+    {
+        lpService->lpGroup->dwRefCount--;
+
+        /* FIXME: What do we have to do when dwRefCount is 0? */
+    }
+
     GroupEntry = GroupListHead.Flink;
     while (GroupEntry != &GroupListHead)
     {

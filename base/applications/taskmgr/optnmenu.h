@@ -17,15 +17,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /*
  * Menu item handlers for the options menu.
  */
 
-#ifndef __OPTNMENU_H
-#define __OPTNMENU_H
+#pragma once
 
 #define OPTIONS_MENU_INDEX    1
 
@@ -33,5 +32,3 @@ void TaskManager_OnOptionsAlwaysOnTop(void);
 void TaskManager_OnOptionsMinimizeOnUse(void);
 void TaskManager_OnOptionsHideWhenMinimized(void);
 void TaskManager_OnOptionsShow16BitTasks(void);
-
-#endif /* __OPTNMENU_H */

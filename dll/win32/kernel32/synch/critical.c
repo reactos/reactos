@@ -55,4 +55,30 @@ InitializeCriticalSectionAndSpinCount(OUT LPCRITICAL_SECTION lpCriticalSection,
     return TRUE;
 }
 
+/*
+ * @implemented
+ */
+BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection,
+                                       IN DWORD dwSpinCount,
+                                       IN DWORD flags )
+{
+    NTSTATUS Status;
+
+    /* FIXME: Flags ignored */
+
+    /* Initialize the critical section */
+    Status = RtlInitializeCriticalSectionAndSpinCount(
+        (PRTL_CRITICAL_SECTION)lpCriticalSection,
+        dwSpinCount);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Set failure code */
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    /* Success */
+    return TRUE;
+}
+
 /* EOF */

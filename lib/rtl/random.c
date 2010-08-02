@@ -132,37 +132,16 @@ RtlRandomEx( IN OUT PULONG Seed
  *  function and our function return a random number uniformly
  *  distributed over [0..MAXLONG-1].
  */
-ULONG NTAPI
-RtlUniform (PULONG Seed)
+ULONG
+NTAPI
+RtlUniform(IN PULONG Seed)
 {
-  ULONG Result;
+    ULONG Result;
 
-  /*
-   * Instead of the algorithm stated above, we use the algorithm
-   * below, which is totally equivalent (see the tests), but does
-   * not use a division and therefore is faster.
-   */
-  Result = *Seed * 0xffffffed + 0x7fffffc3;
+    /* Generate the random number */
+    Result = (*Seed * 0x7fffffed + 0x7fffffc3) % MAXLONG;
 
-  if (Result == 0xffffffff || Result == 0x7ffffffe)
-    {
-      Result = (Result + 2) & MAXLONG;
-    }
-  else if (Result == 0x7fffffff)
-    {
-      Result = 0;
-    }
-  else if ((Result & 0x80000000) == 0)
-    {
-      Result = Result + (~Result & 1);
-    }
-  else
-    {
-      Result = (Result + (Result & 1)) & MAXLONG;
-    }
-
-  *Seed = Result;
-
-  return Result;
+    /* Return it */
+    *Seed = Result;
+    return Result;
 }
-/* EOF */

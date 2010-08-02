@@ -5,8 +5,7 @@
  * PURPOSE:     Window management definitions
  */
 
-#ifndef __LIB_USER32_INCLUDE_MENU_H
-#define __LIB_USER32_INCLUDE_MENU_H
+#pragma once
 
 UINT
 MenuDrawMenuBar(HDC hDC, LPRECT Rect, HWND hWnd, BOOL Draw);
@@ -19,4 +18,5 @@ MenuTrackMouseMenuBar(HWND hWnd, ULONG Ht, POINT Pt);
 VOID
 MenuTrackKbdMenuBar(HWND hWnd, UINT wParam, WCHAR wChar);
 
-#endif /* __LIB_USER32_INCLUDE_MENU_H */
+LRESULT WINAPI PopupMenuWndProcA(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

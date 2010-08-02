@@ -2,6 +2,7 @@
  * MAPI Utility functions
  *
  * Copyright 2004 Jon Griffiths
+ * Copyright 2009 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -37,6 +38,7 @@
 #include "mapival.h"
 #include "xcmc.h"
 #include "msi.h"
+#include "util.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mapi);
 
@@ -45,6 +47,8 @@ static const BYTE digitsToHex[] = {
   0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
   0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,10,11,12,13,
   14,15 };
+
+MAPI_FUNCTIONS mapiFunctions;
 
 /**************************************************************************
  *  ScInitMapiUtil (MAPI32.33)
@@ -64,6 +68,9 @@ static const BYTE digitsToHex[] = {
  */
 SCODE WINAPI ScInitMapiUtil(ULONG ulReserved)
 {
+    if (mapiFunctions.ScInitMapiUtil)
+        return mapiFunctions.ScInitMapiUtil(ulReserved);
+
     FIXME("(0x%08x)stub!\n", ulReserved);
     if (ulReserved)
         return MAPI_E_INVALID_PARAMETER;
@@ -87,7 +94,10 @@ SCODE WINAPI ScInitMapiUtil(ULONG ulReserved)
  */
 VOID WINAPI DeinitMapiUtil(void)
 {
-    FIXME("()stub!\n");
+    if (mapiFunctions.DeinitMapiUtil)
+        mapiFunctions.DeinitMapiUtil();
+    else
+        FIXME("()stub!\n");
 }
 
 typedef LPVOID *LPMAPIALLOCBUFFER;
@@ -119,6 +129,9 @@ SCODE WINAPI MAPIAllocateBuffer(ULONG cbSize, LPVOID *lppBuffer)
     LPMAPIALLOCBUFFER lpBuff;
 
     TRACE("(%d,%p)\n", cbSize, lppBuffer);
+
+    if (mapiFunctions.MAPIAllocateBuffer)
+        return mapiFunctions.MAPIAllocateBuffer(cbSize, lppBuffer);
 
     if (!lppBuffer)
         return E_INVALIDARG;
@@ -160,6 +173,9 @@ SCODE WINAPI MAPIAllocateMore(ULONG cbSize, LPVOID lpOrig, LPVOID *lppBuffer)
 
     TRACE("(%d,%p,%p)\n", cbSize, lpOrig, lppBuffer);
 
+    if (mapiFunctions.MAPIAllocateMore)
+        return mapiFunctions.MAPIAllocateMore(cbSize, lpOrig, lppBuffer);
+
     if (!lppBuffer || !lpBuff || !--lpBuff)
         return E_INVALIDARG;
 
@@ -195,6 +211,9 @@ ULONG WINAPI MAPIFreeBuffer(LPVOID lpBuffer)
     LPMAPIALLOCBUFFER lpBuff = lpBuffer;
 
     TRACE("(%p)\n", lpBuffer);
+
+    if (mapiFunctions.MAPIFreeBuffer)
+        return mapiFunctions.MAPIFreeBuffer(lpBuffer);
 
     if (lpBuff && --lpBuff)
     {
@@ -235,6 +254,9 @@ HRESULT WINAPI WrapProgress(PVOID unk1, PVOID unk2, PVOID unk3, PVOID unk4, PVOI
  */
 HRESULT WINAPI HrThisThreadAdviseSink(LPMAPIADVISESINK lpSink, LPMAPIADVISESINK* lppNewSink)
 {
+    if (mapiFunctions.HrThisThreadAdviseSink)
+        return mapiFunctions.HrThisThreadAdviseSink(lpSink, lppNewSink);
+
     FIXME("(%p,%p)semi-stub\n", lpSink, lppNewSink);
 
     if (!lpSink || !lppNewSink)
@@ -691,6 +713,9 @@ HRESULT WINAPI OpenStreamOnFile(LPALLOCATEBUFFER lpAlloc, LPFREEBUFFER lpFree,
     TRACE("(%p,%p,0x%08x,%s,%s,%p)\n", lpAlloc, lpFree, ulFlags,
           debugstr_a((LPSTR)lpszPath), debugstr_a((LPSTR)lpszPrefix), lppStream);
 
+    if (mapiFunctions.OpenStreamOnFile)
+        return mapiFunctions.OpenStreamOnFile(lpAlloc, lpFree, ulFlags, lpszPath, lpszPrefix, lppStream);
+
     if (lppStream)
         *lppStream = NULL;
 
@@ -853,13 +878,17 @@ BOOL WINAPI FGetComponentPath(LPCSTR component, LPCSTR qualifier, LPSTR dll_path
 
     TRACE("%s %s %p %u %d\n", component, qualifier, dll_path, dll_path_length, install);
 
+    if (mapiFunctions.FGetComponentPath)
+        return mapiFunctions.FGetComponentPath(component, qualifier, dll_path, dll_path_length, install);
+
     dll_path[0] = 0;
 
     hmsi = LoadLibraryA("msi.dll");
     if (hmsi)
     {
-        FARPROC pMsiProvideQualifiedComponentA = GetProcAddress(hmsi, "MsiProvideQualifiedComponentA");
+        UINT (WINAPI *pMsiProvideQualifiedComponentA)(LPCSTR, LPCSTR, DWORD, LPSTR, LPDWORD);
 
+        pMsiProvideQualifiedComponentA = (void *)GetProcAddress(hmsi, "MsiProvideQualifiedComponentA");
         if (pMsiProvideQualifiedComponentA)
         {
             static const char * const fmt[] = { "%d\\NT", "%d\\95", "%d" };
@@ -898,7 +927,194 @@ HRESULT WINAPI HrQueryAllRows(LPMAPITABLE lpTable, LPSPropTagArray lpPropTags,
     LPSRestriction lpRestriction, LPSSortOrderSet lpSortOrderSet,
     LONG crowsMax, LPSRowSet *lppRows)
 {
+    if (mapiFunctions.HrQueryAllRows)
+        return mapiFunctions.HrQueryAllRows(lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
+
     FIXME("(%p, %p, %p, %p, %d, %p): stub\n", lpTable, lpPropTags, lpRestriction, lpSortOrderSet, crowsMax, lppRows);
     *lppRows = NULL;
     return MAPI_E_CALL_FAILED;
+}
+
+static HMODULE mapi_provider;
+static HMODULE mapi_ex_provider;
+
+/**************************************************************************
+ *  load_mapi_provider
+ *
+ * Attempts to load a MAPI provider from the specified registry key.
+ *
+ * Returns a handle to the loaded module in `mapi_provider' if successful.
+ */
+static void load_mapi_provider(HKEY hkeyMail, LPCWSTR valueName, HMODULE *mapi_provider)
+{
+    static const WCHAR mapi32_dll[] = {'m','a','p','i','3','2','.','d','l','l',0 };
+
+    DWORD dwType, dwLen = 0;
+    LPWSTR dllPath;
+
+    /* Check if we have a value set for DLLPath */
+    if ((RegQueryValueExW(hkeyMail, valueName, NULL, &dwType, NULL, &dwLen) == ERROR_SUCCESS) &&
+        ((dwType == REG_SZ) || (dwType == REG_EXPAND_SZ)) && (dwLen > 0))
+    {
+        dllPath = HeapAlloc(GetProcessHeap(), 0, dwLen);
+
+        if (dllPath)
+        {
+            RegQueryValueExW(hkeyMail, valueName, NULL, NULL, (LPBYTE)dllPath, &dwLen);
+
+            /* Check that this value doesn't refer to mapi32.dll (eg, as Outlook does) */
+            if (lstrcmpiW(dllPath, mapi32_dll) != 0)
+            {
+                if (dwType == REG_EXPAND_SZ)
+                {
+                    DWORD dwExpandLen;
+                    LPWSTR dllPathExpanded;
+
+                    /* Expand the path if necessary */
+                    dwExpandLen = ExpandEnvironmentStringsW(dllPath, NULL, 0);
+                    dllPathExpanded = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * dwExpandLen + 1);
+
+                    if (dllPathExpanded)
+                    {
+                        ExpandEnvironmentStringsW(dllPath, dllPathExpanded, dwExpandLen + 1);
+
+                        HeapFree(GetProcessHeap(), 0, dllPath);
+                        dllPath = dllPathExpanded;
+                    }
+                }
+
+                /* Load the DLL */
+                TRACE("loading %s\n", debugstr_w(dllPath));
+                *mapi_provider = LoadLibraryW(dllPath);
+            }
+
+            HeapFree(GetProcessHeap(), 0, dllPath);
+        }
+    }
+}
+
+/**************************************************************************
+ *  load_mapi_providers
+ *
+ * Scans the registry for MAPI providers and attempts to load a Simple and
+ * Extended MAPI library.
+ *
+ * Returns TRUE if at least one library loaded, FALSE otherwise.
+ */
+void load_mapi_providers(void)
+{
+    static const WCHAR regkey_mail[] = {
+        'S','o','f','t','w','a','r','e','\\','C','l','i','e','n','t','s','\\',
+        'M','a','i','l',0 };
+
+    static const WCHAR regkey_dllpath[] = {'D','L','L','P','a','t','h',0 };
+    static const WCHAR regkey_dllpath_ex[] = {'D','L','L','P','a','t','h','E','x',0 };
+    static const WCHAR regkey_backslash[] = { '\\', 0 };
+
+    HKEY hkeyMail;
+    DWORD dwType, dwLen = 0;
+    LPWSTR appName = NULL, appKey = NULL;
+
+    TRACE("()\n");
+
+    /* Open the Mail key */
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, regkey_mail, 0, KEY_READ, &hkeyMail) != ERROR_SUCCESS)
+        return;
+
+    /* Check if we have a default value set, and the length of it */
+    if ((RegQueryValueExW(hkeyMail, NULL, NULL, &dwType, NULL, &dwLen) != ERROR_SUCCESS) ||
+        !((dwType == REG_SZ) || (dwType == REG_EXPAND_SZ)) || (dwLen == 0))
+        goto cleanUp;
+
+    appName = HeapAlloc(GetProcessHeap(), 0, dwLen);
+
+    if (!appName)
+        goto cleanUp;
+
+    /* Get the value, and get the path to the app key */
+    RegQueryValueExW(hkeyMail, NULL, NULL, NULL, (LPBYTE)appName, &dwLen);
+
+    TRACE("appName: %s\n", debugstr_w(appName));
+
+    appKey = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * (lstrlenW(regkey_mail) +
+        lstrlenW(regkey_backslash) + lstrlenW(appName) + 1));
+
+    if (!appKey)
+        goto cleanUp;
+
+    lstrcpyW(appKey, regkey_mail);
+    lstrcatW(appKey, regkey_backslash);
+    lstrcatW(appKey, appName);
+
+    RegCloseKey(hkeyMail);
+
+    TRACE("appKey: %s\n", debugstr_w(appKey));
+
+    /* Open the app's key */
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, appKey, 0, KEY_READ, &hkeyMail) != ERROR_SUCCESS)
+        goto cleanUp;
+
+    /* Try to load the providers */
+    load_mapi_provider(hkeyMail, regkey_dllpath, &mapi_provider);
+    load_mapi_provider(hkeyMail, regkey_dllpath_ex, &mapi_ex_provider);
+
+    /* Now try to load our function pointers */
+    ZeroMemory(&mapiFunctions, sizeof(mapiFunctions));
+
+    /* Simple MAPI functions */
+    if (mapi_provider)
+    {
+        mapiFunctions.MAPIAddress = (void*) GetProcAddress(mapi_provider, "MAPIAddress");
+        mapiFunctions.MAPIDeleteMail = (void*) GetProcAddress(mapi_provider, "MAPIDeleteMail");
+        mapiFunctions.MAPIDetails = (void*) GetProcAddress(mapi_provider, "MAPIDetails");
+        mapiFunctions.MAPIFindNext = (void*) GetProcAddress(mapi_provider, "MAPIFindNext");
+        mapiFunctions.MAPILogoff = (void*) GetProcAddress(mapi_provider, "MAPILogoff");
+        mapiFunctions.MAPILogon = (void*) GetProcAddress(mapi_provider, "MAPILogon");
+        mapiFunctions.MAPIReadMail = (void*) GetProcAddress(mapi_provider, "MAPIReadMail");
+        mapiFunctions.MAPIResolveName = (void*) GetProcAddress(mapi_provider, "MAPIResolveName");
+        mapiFunctions.MAPISaveMail = (void*) GetProcAddress(mapi_provider, "MAPISaveMail");
+        mapiFunctions.MAPISendDocuments = (void*) GetProcAddress(mapi_provider, "MAPISendDocuments");
+        mapiFunctions.MAPISendMail = (void*) GetProcAddress(mapi_provider, "MAPISendMail");
+    }
+
+    /* Extended MAPI functions */
+    if (mapi_ex_provider)
+    {
+        mapiFunctions.MAPIInitialize = (void*) GetProcAddress(mapi_ex_provider, "MAPIInitialize");
+        mapiFunctions.MAPILogonEx = (void*) GetProcAddress(mapi_ex_provider, "MAPILogonEx");
+        mapiFunctions.MAPIUninitialize = (void*) GetProcAddress(mapi_ex_provider, "MAPIUninitialize");
+
+        mapiFunctions.DeinitMapiUtil = (void*) GetProcAddress(mapi_ex_provider, "DeinitMapiUtil@0");
+        mapiFunctions.DllCanUnloadNow = (void*) GetProcAddress(mapi_ex_provider, "DllCanUnloadNow");
+        mapiFunctions.DllGetClassObject = (void*) GetProcAddress(mapi_ex_provider, "DllGetClassObject");
+        mapiFunctions.FGetComponentPath = (void*) GetProcAddress(mapi_ex_provider, "FGetComponentPath");
+        mapiFunctions.HrThisThreadAdviseSink = (void*) GetProcAddress(mapi_ex_provider, "HrThisThreadAdviseSink@8");
+        mapiFunctions.HrQueryAllRows = (void*) GetProcAddress(mapi_ex_provider, "HrQueryAllRows@24");
+        mapiFunctions.MAPIAdminProfiles = (void*) GetProcAddress(mapi_ex_provider, "MAPIAdminProfiles");
+        mapiFunctions.MAPIAllocateBuffer = (void*) GetProcAddress(mapi_ex_provider, "MAPIAllocateBuffer");
+        mapiFunctions.MAPIAllocateMore = (void*) GetProcAddress(mapi_ex_provider, "MAPIAllocateMore");
+        mapiFunctions.MAPIFreeBuffer = (void*) GetProcAddress(mapi_ex_provider, "MAPIFreeBuffer");
+        mapiFunctions.MAPIGetDefaultMalloc = (void*) GetProcAddress(mapi_ex_provider, "MAPIGetDefaultMalloc@0");
+        mapiFunctions.MAPIOpenLocalFormContainer = (void *) GetProcAddress(mapi_ex_provider, "MAPIOpenLocalFormContainer");
+        mapiFunctions.OpenStreamOnFile = (void*) GetProcAddress(mapi_ex_provider, "OpenStreamOnFile@24");
+        mapiFunctions.ScInitMapiUtil = (void*) GetProcAddress(mapi_ex_provider, "ScInitMapiUtil@4");
+    }
+
+cleanUp:
+    RegCloseKey(hkeyMail);
+    HeapFree(GetProcessHeap(), 0, appKey);
+    HeapFree(GetProcessHeap(), 0, appName);
+}
+
+/**************************************************************************
+ *  unload_mapi_providers
+ *
+ * Unloads any loaded MAPI libraries.
+ */
+void unload_mapi_providers(void)
+{
+    TRACE("()\n");
+
+    FreeLibrary(mapi_provider);
+    FreeLibrary(mapi_ex_provider);
 }

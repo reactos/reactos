@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -156,9 +156,9 @@ FT_BEGIN_HEADER
   /*    caret_Slope_Run        :: The run coefficient of the cursor's      */
   /*                              slope.                                   */
   /*                                                                       */
-  /*    Reserved               :: 10 reserved bytes.                       */
+  /*    Reserved               :: 8~reserved bytes.                        */
   /*                                                                       */
-  /*    metric_Data_Format     :: Always 0.                                */
+  /*    metric_Data_Format     :: Always~0.                                */
   /*                                                                       */
   /*    number_Of_HMetrics     :: Number of HMetrics entries in the `hmtx' */
   /*                              table -- this value can be smaller than  */
@@ -281,9 +281,9 @@ FT_BEGIN_HEADER
   /*                               This value is `reserved' in vmtx        */
   /*                               version 1.0.                            */
   /*                                                                       */
-  /*    Reserved                :: 8 reserved bytes.                       */
+  /*    Reserved                :: 8~reserved bytes.                       */
   /*                                                                       */
-  /*    metric_Data_Format      :: Always 0.                               */
+  /*    metric_Data_Format      :: Always~0.                               */
   /*                                                                       */
   /*    number_Of_HMetrics      :: Number of VMetrics entries in the       */
   /*                               `vmtx' table -- this value can be       */
@@ -406,9 +406,9 @@ FT_BEGIN_HEADER
   /*    TT_Postscript                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure used to model a TrueType Postscript table.  All fields */
+  /*    A structure used to model a TrueType PostScript table.  All fields */
   /*    comply to the TrueType specification.  This structure does not     */
-  /*    reference the Postscript glyph names, which can be nevertheless    */
+  /*    reference the PostScript glyph names, which can be nevertheless    */
   /*    accessed with the `ttpost' module.                                 */
   /*                                                                       */
   typedef struct  TT_Postscript_
@@ -555,7 +555,7 @@ FT_BEGIN_HEADER
   /*    An enumeration used to specify the index of an SFNT table.         */
   /*    Used in the @FT_Get_Sfnt_Table API function.                       */
   /*                                                                       */
-  typedef enum
+  typedef enum  FT_Sfnt_Tag_
   {
     ft_sfnt_head = 0,
     ft_sfnt_maxp = 1,
@@ -578,7 +578,7 @@ FT_BEGIN_HEADER
   /*    FT_Get_Sfnt_Table                                                  */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Returns a pointer to a given SFNT table within a face.             */
+  /*    Return a pointer to a given SFNT table within a face.              */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face :: A handle to the source.                                    */
@@ -586,7 +586,7 @@ FT_BEGIN_HEADER
   /*    tag  :: The index of the SFNT table.                               */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    A type-less pointer to the table.  This will be 0 in case of       */
+  /*    A type-less pointer to the table.  This will be~0 in case of       */
   /*    error, or if the corresponding table was not found *OR* loaded     */
   /*    from the file.                                                     */
   /*                                                                       */
@@ -608,14 +608,14 @@ FT_BEGIN_HEADER
   *   FT_Load_Sfnt_Table
   *
   * @description:
-  *   Loads any font table into client memory.
+  *   Load any font table into client memory.
   *
   * @input:
   *   face ::
   *     A handle to the source face.
   *
   *   tag ::
-  *     The four-byte tag of the table to load.  Use the value 0 if you want
+  *     The four-byte tag of the table to load.  Use the value~0 if you want
   *     to access the whole font file.  Otherwise, you can use one of the
   *     definitions found in the @FT_TRUETYPE_TAGS_H file, or forge a new
   *     one with @FT_MAKE_TAG.
@@ -633,18 +633,18 @@ FT_BEGIN_HEADER
   *     If the `length' parameter is NULL, then try to load the whole table.
   *     Return an error code if it fails.
   *
-  *     Else, if `*length' is 0, exit immediately while returning the
+  *     Else, if `*length' is~0, exit immediately while returning the
   *     table's (or file) full size in it.
   *
   *     Else the number of bytes to read from the table or file, from the
   *     starting offset.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
   *   If you need to determine the table's length you should first call this
-  *   function with `*length' set to 0, as in the following example:
+  *   function with `*length' set to~0, as in the following example:
   *
   *     {
   *       FT_ULong  length = 0;
@@ -674,7 +674,7 @@ FT_BEGIN_HEADER
   *   FT_Sfnt_Table_Info
   *
   * @description:
-  *   Returns information on an SFNT table.
+  *   Return information on an SFNT table.
   *
   * @input:
   *   face ::
@@ -692,10 +692,10 @@ FT_BEGIN_HEADER
   *     The length of the SFNT table.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
-  *   SFNT tables with length zero are treated as missing by Windows.
+  *   SFNT tables with length zero are treated as missing.
   *
   */
   FT_EXPORT( FT_Error )
@@ -720,7 +720,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Return>                                                              */
   /*    The language ID of `charmap'.  If `charmap' doesn't belong to a    */
-  /*    TrueType/sfnt face, just return 0 as the default value.            */
+  /*    TrueType/sfnt face, just return~0 as the default value.            */
   /*                                                                       */
   FT_EXPORT( FT_ULong )
   FT_Get_CMap_Language_ID( FT_CharMap  charmap );

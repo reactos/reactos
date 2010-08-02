@@ -46,11 +46,37 @@ typedef struct _KKINIT_FRAME
 
 VOID
 NTAPI
-Ke386InitThreadWithContext(IN PKTHREAD Thread,
-                           IN PKSYSTEM_ROUTINE SystemRoutine,
-                           IN PKSTART_ROUTINE StartRoutine,
-                           IN PVOID StartContext,
-                           IN PCONTEXT ContextPointer)
+KiThreadStartup(VOID)
+{
+    PKTRAP_FRAME TrapFrame;
+    PKSTART_FRAME StartFrame;
+    PKUINIT_FRAME InitFrame;
+    
+    /* Get the start and trap frames */
+    InitFrame = KeGetCurrentThread()->KernelStack;
+    StartFrame = &InitFrame->StartFrame;
+    TrapFrame = &InitFrame->TrapFrame;
+
+    /* Lower to APC level */
+    KfLowerIrql(APC_LEVEL);
+    
+    /* Call the system routine */
+    StartFrame->SystemRoutine(StartFrame->StartRoutine, StartFrame->StartContext);
+    
+    /* If we returned, we better be a user thread */
+    if (!StartFrame->UserThread) DbgBreakPoint();
+    
+    /* Exit to user-mode */
+    KiServiceExit2(TrapFrame);
+}
+
+VOID
+NTAPI
+KiInitializeContextThread(IN PKTHREAD Thread,
+                          IN PKSYSTEM_ROUTINE SystemRoutine,
+                          IN PKSTART_ROUTINE StartRoutine,
+                          IN PVOID StartContext,
+                          IN PCONTEXT ContextPointer)
 {
     PFX_SAVE_AREA FxSaveArea;
     PFXSAVE_FORMAT FxSaveFormat;

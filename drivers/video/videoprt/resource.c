@@ -4,19 +4,18 @@
  * Copyright (C) 2002 - 2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; see the file COPYING.LIB.
- * If not, write to the Free Software Foundation,
- * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
 
@@ -164,7 +163,7 @@ IntVideoPortMapMemory(
       if (Status)
          *Status = NO_ERROR;
 
-      return (PVOID)TranslatedAddress.u.LowPart;
+      return (PVOID)(ULONG_PTR)TranslatedAddress.u.LowPart;
    }
 
    /* user space */
@@ -272,7 +271,7 @@ IntVideoPortUnmapMemory(
    Status = ZwUnmapViewOfSection(NtCurrentProcess(), MappedAddress);
    if (!NT_SUCCESS(Status))
    {
-      WARN_(VIDEOPRT, "Warning: Mapping for address 0x%x not found!\n", (ULONG)MappedAddress);
+      WARN_(VIDEOPRT, "Warning: Mapping for address 0x%p not found!\n", MappedAddress);
    }
 }
 
@@ -520,10 +519,13 @@ VideoPortGetAccessRanges(
            FullList < AllocatedResources->List + AllocatedResources->Count;
            FullList++)
       {
-         ASSERT(FullList->InterfaceType == PCIBus &&
-                FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&
-                1 == FullList->PartialResourceList.Version &&
-                1 == FullList->PartialResourceList.Revision);
+         INFO_(VIDEOPRT, "InterfaceType %u BusNumber List %u Device BusNumber %u Version %u Revision %u\n", 
+                FullList->InterfaceType, FullList->BusNumber, DeviceExtension->SystemIoBusNumber, FullList->PartialResourceList.Version, FullList->PartialResourceList.Revision);
+
+         ASSERT(FullList->InterfaceType == PCIBus);
+         ASSERT(FullList->BusNumber == DeviceExtension->SystemIoBusNumber);
+         ASSERT(1 == FullList->PartialResourceList.Version);
+         ASSERT(1 == FullList->PartialResourceList.Revision);
          for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
               Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
               Descriptor++)
@@ -735,7 +737,7 @@ VideoPortReleaseBuffer(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 
 PVOID NTAPI
@@ -745,8 +747,16 @@ VideoPortLockBuffer(
    IN ULONG Length,
    IN VP_LOCK_OPERATION Operation)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PMDL Mdl;
+
+    Mdl = IoAllocateMdl(BaseAddress, Length, FALSE, FALSE, NULL);
+    if (!Mdl)
+    {
+        return NULL;
+    }
+    /* FIXME use seh */
+    MmProbeAndLockPages(Mdl, KernelMode,Operation);
+    return Mdl;
 }
 
 /*
@@ -758,7 +768,11 @@ VideoPortUnlockBuffer(
    IN PVOID HwDeviceExtension,
    IN PVOID Mdl)
 {
-    UNIMPLEMENTED;
+    if (Mdl)
+    {
+        MmUnlockPages((PMDL)Mdl);
+        IoFreeMdl(Mdl);
+    }
 }
 
 /*

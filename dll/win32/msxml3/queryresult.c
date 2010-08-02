@@ -74,7 +74,7 @@ static HRESULT WINAPI queryresult_QueryInterface(
 {
     queryresult *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p %s %p\n", iface, debugstr_guid(riid), ppvObject);
+    TRACE("(%p)->(%s %p)\n", iface, debugstr_guid(riid), ppvObject);
 
     if(!ppvObject)
         return E_INVALIDARG;
@@ -212,12 +212,12 @@ static HRESULT WINAPI queryresult_Invoke(
 
 static HRESULT WINAPI queryresult_get_item(
         IXMLDOMNodeList* iface,
-        long index,
+        LONG index,
         IXMLDOMNode** listItem)
 {
     queryresult *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p %ld\n", This, index);
+    TRACE("(%p)->(%d %p)\n", This, index, listItem);
 
     if(!listItem)
         return E_INVALIDARG;
@@ -227,7 +227,7 @@ static HRESULT WINAPI queryresult_get_item(
     if (index < 0 || index >= xmlXPathNodeSetGetLength(This->result->nodesetval))
         return S_FALSE;
 
-    *listItem = create_node(This->result->nodesetval->nodeTab[index]);
+    *listItem = create_node(xmlXPathNodeSetItem(This->result->nodesetval, index));
     This->resultPos = index + 1;
 
     return S_OK;
@@ -235,11 +235,11 @@ static HRESULT WINAPI queryresult_get_item(
 
 static HRESULT WINAPI queryresult_get_length(
         IXMLDOMNodeList* iface,
-        long* listLength)
+        LONG* listLength)
 {
     queryresult *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p\n", This);
+    TRACE("(%p)->(%p)\n", This, listLength);
 
     if(!listLength)
         return E_INVALIDARG;
@@ -254,7 +254,7 @@ static HRESULT WINAPI queryresult_nextNode(
 {
     queryresult *This = impl_from_IXMLDOMNodeList( iface );
 
-    TRACE("%p %p\n", This, nextItem );
+    TRACE("(%p)->(%p)\n", This, nextItem );
 
     if(!nextItem)
         return E_INVALIDARG;
@@ -264,7 +264,7 @@ static HRESULT WINAPI queryresult_nextNode(
     if (This->resultPos >= xmlXPathNodeSetGetLength(This->result->nodesetval))
         return S_FALSE;
 
-    *nextItem = create_node(This->result->nodesetval->nodeTab[This->resultPos]);
+    *nextItem = create_node(xmlXPathNodeSetItem(This->result->nodesetval, This->resultPos));
     This->resultPos++;
     return S_OK;
 }
@@ -283,7 +283,8 @@ static HRESULT WINAPI queryresult__newEnum(
         IXMLDOMNodeList* iface,
         IUnknown** ppUnk)
 {
-    FIXME("\n");
+    queryresult *This = impl_from_IXMLDOMNodeList( iface );
+    FIXME("(%p)->(%p)\n", This, ppUnk);
     return E_NOTIMPL;
 }
 
@@ -366,7 +367,7 @@ static const tid_t queryresult_iface_tids[] = {
 };
 static dispex_static_data_t queryresult_dispex = {
     &queryresult_dispex_vtbl,
-    IXMLDOMNodeList_tid,
+    IXMLDOMSelection_tid,
     NULL,
     queryresult_iface_tids
 };
@@ -377,7 +378,6 @@ HRESULT queryresult_create(xmlNodePtr node, LPWSTR szQuery, IXMLDOMNodeList **ou
     xmlXPathContextPtr ctxt = xmlXPathNewContext(node->doc);
     xmlChar *str = xmlChar_from_wchar(szQuery);
     HRESULT hr;
-
 
     TRACE("(%p, %s, %p)\n", node, wine_dbgstr_w(szQuery), out);
 
@@ -411,9 +411,8 @@ HRESULT queryresult_create(xmlNodePtr node, LPWSTR szQuery, IXMLDOMNodeList **ou
 cleanup:
     if (This != NULL && FAILED(hr))
         IXMLDOMNodeList_Release( (IXMLDOMNodeList*) &This->lpVtbl );
-    if (ctxt != NULL)
-        xmlXPathFreeContext(ctxt);
-    HeapFree(GetProcessHeap(), 0, str);
+    xmlXPathFreeContext(ctxt);
+    heap_free(str);
     return hr;
 }
 

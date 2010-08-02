@@ -70,22 +70,6 @@ KPRIORITY PspPriorityTable[PROCESS_PRIORITY_CLASS_ABOVE_NORMAL + 1] =
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-NTSTATUS
-NTAPI
-PspDeleteLdt(PEPROCESS Process)
-{
-    /* FIXME */
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-PspDeleteVdmObjects(PEPROCESS Process)
-{
-    /* FIXME */
-    return STATUS_SUCCESS;
-}
-
 PETHREAD
 NTAPI
 PsGetNextProcessThread(IN PEPROCESS Process,
@@ -201,13 +185,13 @@ PspComputeQuantumAndPriority(IN PEPROCESS Process,
     if (Mode == PsProcessPriorityForeground)
     {
         /* Set the memory priority and use priority separation */
-        MemoryPriority = 2;
+        MemoryPriority = MEMORY_PRIORITY_FOREGROUND;
         i = PsPrioritySeparation;
     }
     else
     {
         /* Set the background memory priority and no separation */
-        MemoryPriority = 0;
+        MemoryPriority = MEMORY_PRIORITY_BACKGROUND;
         i = 0;
     }
 
@@ -379,6 +363,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     BOOLEAN Result, SdAllocated;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     SECURITY_SUBJECT_CONTEXT SubjectContext;
+    BOOLEAN NeedsPeb = FALSE;
+    INITIAL_PEB InitialPeb;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG,
             "ProcessHandle: %p Parent: %p\n", ProcessHandle, ParentProcess);
@@ -451,7 +437,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if we have a parent */
     if (Parent)
     {
-        /* Ineherit PID and Hard Error Processing */
+        /* Inherit PID and Hard Error Processing */
         Process->InheritedFromUniqueProcessId = Parent->UniqueProcessId;
         Process->DefaultHardErrorProcessing = Parent->
                                               DefaultHardErrorProcessing;
@@ -635,17 +621,27 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                                  SeAuditProcessCreationInfo.
                                                  ImageFileName);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        
+        //
+        // We need a PEB
+        //
+        NeedsPeb = TRUE;
     }
     else if (Parent)
     {
         /* Check if this is a child of the system process */
         if (Parent != PsInitialSystemProcess)
         {
+            //
+            // We need a PEB
+            //
+            NeedsPeb = TRUE;
+
             /* This is a clone! */
             ASSERTMSG("No support for cloning yet\n", FALSE);
         }
         else
-        {
+        {           
             /* This is the initial system process */
             Flags &= ~PS_LARGE_PAGES;
             Status = MmInitializeProcessAddressSpace(Process,
@@ -659,7 +655,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
             Process->SeAuditProcessCreationInfo.ImageFileName =
                 ExAllocatePoolWithTag(PagedPool,
                                       sizeof(OBJECT_NAME_INFORMATION),
-                                      TAG('S', 'e', 'P', 'a'));
+                                      'aPeS');
             if (!Process->SeAuditProcessCreationInfo.ImageFileName)
             {
                 /* Fail */
@@ -702,11 +698,34 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     }
 
     /* Create PEB only for User-Mode Processes */
-    if (Parent)
+    if ((Parent) && (NeedsPeb))
     {
-        /* Create it */
-        Status = MmCreatePeb(Process);
-        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        //
+        // Set up the initial PEB
+        //
+        RtlZeroMemory(&InitialPeb, sizeof(INITIAL_PEB));
+        InitialPeb.Mutant = (HANDLE)-1;
+        InitialPeb.ImageUsesLargePages = 0; // FIXME: Not yet supported
+        
+        //
+        // Create it only if we have an image section
+        //
+        if (SectionHandle)
+        {
+            //
+            // Create it
+            //
+            Status = MmCreatePeb(Process, &InitialPeb, &Process->Peb);
+            if (!NT_SUCCESS(Status)) goto CleanupWithRef;
+        }
+        else
+        {
+            //
+            // We have to clone it
+            //
+            ASSERTMSG("No support for cloning yet\n", FALSE);
+        }
+
     }
 
     /* The process can now be activated */
@@ -824,6 +843,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
     /* Run the Notification Routines */
     PspRunCreateProcessNotifyRoutines(Process, TRUE);
+    
+    /* If 12 processes have been created, enough of user-mode is ready */
+    if (++ProcessCount == 12) Ki386PerfEnd();
 
 CleanupWithRef:
     /*
@@ -1247,14 +1269,14 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
                   IN HANDLE ExceptionPort OPTIONAL,
                   IN BOOLEAN InJob)
 {
-    KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG,
             "ParentProcess: %p Flags: %lx\n", ParentProcess, Flags);
 
     /* Check if we came from user mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -1263,11 +1285,10 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Make sure there's a parent process */
@@ -1346,7 +1367,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     BOOLEAN HasObjectName = FALSE;
     PETHREAD Thread = NULL;
     PEPROCESS Process = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ACCESS_STATE AccessState;
     AUX_ACCESS_DATA AuxData;
     PAGED_CODE();
@@ -1383,11 +1404,10 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {

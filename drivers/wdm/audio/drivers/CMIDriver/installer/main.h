@@ -25,8 +25,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#pragma once
 
 #include <windows.h>
 #include <newdev.h>
@@ -76,6 +75,3 @@ const char DisplayIcon[] = _T("\\cmicontrol.exe,0");
 const char Uninstaller[] = _T("\\cmicontrol.exe /uninstall");
 const char Publisher[] = _T("Dogbert <dogber1@gmail.com>");
 const char URLInfoAbout[] = _T("http://cmediadrivers.googlepages.com/");
-
-
-#endif //_MAIN_H_

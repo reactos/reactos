@@ -1,12 +1,11 @@
-<module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" mangledsymbols="true" installbase="system32" installname="crtdll.dll" iscrt="true">
-	<importlibrary definition="crtdll.def" />
+<module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" installbase="system32" installname="crtdll.dll" iscrt="true">
+	<importlibrary definition="crtdll.spec" />
 	<include base="crtdll">.</include>
 	<include base="crt">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
-	<define name="__NO_CTYPE_INLINES" />
+	<define name="CRTDLL" />
 	<define name="_CTYPE_DISABLE_MACROS" />
 	<define name="_NO_INLINING" />
 
@@ -16,7 +15,6 @@
 
 	<library>crt</library>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>

@@ -28,11 +28,11 @@
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            subsystems/win32/win32k/objects/path.c
- * PURPOSE:         Freetype library support
+ * PURPOSE:         Path support
  * PROGRAMMER:
  */
 
-#include <w32k.h>
+#include <win32k.h>
 #include "math.h"
 
 #define NDEBUG
@@ -64,8 +64,9 @@ BOOL
 FASTCALL
 PATH_Delete(HPATH hPath)
 {
+  PPATH pPath;
   if (!hPath) return FALSE;
-  PPATH pPath = PATH_LockPath( hPath );
+  pPath = PATH_LockPath( hPath );
   if (!pPath) return FALSE;
   PATH_DestroyGdiPath( pPath );
   PATH_UnlockPath( pPath );
@@ -1490,7 +1491,7 @@ end:
         POINT pt;
         IntGetCurrentPositionEx(dc, &pt);
         IntDPtoLP(dc, &pt, 1);
-        IntGdiMoveToEx(dc, pt.x, pt.y, NULL);
+        IntGdiMoveToEx(dc, pt.x, pt.y, NULL, FALSE);
     }
     DPRINT("Leave %s, ret=%d\n", __FUNCTION__, ret);
     return ret;
@@ -1503,9 +1504,9 @@ BOOL
 FASTCALL
 PATH_WidenPath(DC *dc)
 {
-    INT i, j, numStrokes, numOldStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
+    INT i, j, numStrokes, penWidth, penWidthIn, penWidthOut, size, penStyle;
     BOOL ret = FALSE;
-    PPATH pPath, pNewPath, *pStrokes, *pOldStrokes, pUpPath, pDownPath;
+    PPATH pPath, pNewPath, *pStrokes = NULL, *pOldStrokes, pUpPath, pDownPath;
     EXTLOGPEN *elp;
     DWORD obj_type, joint, endcap, penType;
     PDC_ATTR pdcattr = dc->pdcattr;
@@ -1571,14 +1572,6 @@ PATH_WidenPath(DC *dc)
         penWidthOut++;
 
     numStrokes = 0;
-    numOldStrokes = 1;
-
-    pStrokes    = ExAllocatePoolWithTag(PagedPool, sizeof(PPATH), TAG_PATH);
-    pStrokes[0] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
-    PATH_InitGdiPath(pStrokes[0]);
-    pStrokes[0]->pFlags =   ExAllocatePoolWithTag(PagedPool, pPath->numEntriesUsed * sizeof(INT), TAG_PATH);
-    pStrokes[0]->pPoints =  ExAllocatePoolWithTag(PagedPool, pPath->numEntriesUsed * sizeof(POINT), TAG_PATH);
-    pStrokes[0]->numEntriesUsed = 0;
 
     for(i = 0, j = 0; i < pPath->numEntriesUsed; i++, j++)
     {
@@ -1600,11 +1593,17 @@ PATH_WidenPath(DC *dc)
                 }
                 numStrokes++;
                 j = 0;
-                pOldStrokes = pStrokes; // Save old pointer.
-                pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
-                RtlCopyMemory(pStrokes, pOldStrokes, numOldStrokes * sizeof(PPATH));
-                numOldStrokes = numStrokes; // Save orig count.
-                ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
+                if (numStrokes == 1)
+                   pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);                
+                else
+                {
+                   pOldStrokes = pStrokes; // Save old pointer.
+                   pStrokes = ExAllocatePoolWithTag(PagedPool, numStrokes * sizeof(PPATH), TAG_PATH);
+                   if (!pStrokes) return FALSE;
+                   RtlCopyMemory(pStrokes, pOldStrokes, numStrokes * sizeof(PPATH));
+                   ExFreePoolWithTag(pOldStrokes, TAG_PATH); // Free old pointer.
+                }
+                if (!pStrokes) return FALSE;
                 pStrokes[numStrokes - 1] = ExAllocatePoolWithTag(PagedPool, sizeof(PATH), TAG_PATH);
 
                 PATH_InitGdiPath(pStrokes[numStrokes - 1]);
@@ -2294,8 +2293,11 @@ NtGdiFillPath(HDC  hDC)
 
   pdcattr = dc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(dc,pdcattr->hbrush);
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+      DC_vUpdateLineBrush(dc);
+
+  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+      DC_vUpdateFillBrush(dc);
 
   ret = PATH_FillPath( dc, pPath );
   if ( ret )
@@ -2569,10 +2571,11 @@ NtGdiStrokeAndFillPath(HDC hDC)
 
   pdcattr = pDc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_BRUSH_DIRTY)
-     IntGdiSelectBrush(pDc,pdcattr->hbrush);
-  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(pDc,pdcattr->hpen);
+  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(pDc);
+
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(pDc);
 
   bRet = PATH_FillPath(pDc, pPath);
   if (bRet) bRet = PATH_StrokePath(pDc, pPath);
@@ -2608,8 +2611,8 @@ NtGdiStrokePath(HDC hDC)
 
   pdcattr = pDc->pdcattr;
 
-  if (pdcattr->ulDirty_ & DC_PEN_DIRTY)
-     IntGdiSelectPen(pDc,pdcattr->hpen);
+  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+     DC_vUpdateLineBrush(pDc);
 
   bRet = PATH_StrokePath(pDc, pPath);
   PATH_EmptyPath(pPath);

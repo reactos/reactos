@@ -1,9 +1,11 @@
 #ifndef _BASETSD_H
 #define _BASETSD_H
 
+#ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__
 #define __ROS_LONG64__
+#endif
 #endif
 #endif
 
@@ -11,6 +13,55 @@
 #ifndef __int64
 #define __int64 long long
 #endif
+#endif
+
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+#error Old MSVC compiler version.
+#endif
+
+#ifdef _MAC
+#error Not supported.
+#endif
+
+#if !defined(_X86_) && !defined(_AMD64_) && !defined(_IA64_) && !defined(_ALPHA_) && \
+    !defined(_ARM_) && !defined(_PPC_) && !defined(_MIPS_) && !defined(_68K_)
+
+#if defined(_M_AMD64) || defined(__x86_64__)
+#define _AMD64_
+#elif defined(_M_IX86) || defined(__i386__)
+#define _X86_
+#elif defined(_M_IA64) || defined(__ia64__)
+#define _IA64_
+#elif defined(_M_ALPHA) || defined(__alpha__)
+#define _ALPHA_
+#elif defined(_M_ARM) || defined(__arm__)
+#define _ARM_
+#elif defined(_M_PPC) || defined(__powerpc__)
+#define _PPC_
+#elif defined(_M_MRX000) || defined(__mips__)
+#define _MIPS_
+#elif defined(_M_M68K) || defined(__68k__)
+#define _68K_
+#endif
+
+#endif
+
+#if !defined(MIDL_PASS) && !defined(RC_INVOKED)
+ #define POINTER_64 __ptr64
+ #if defined(_WIN64)
+  #define POINTER_32 __ptr32
+ #else
+  #define POINTER_32
+ #endif
+#else
+ #define POINTER_64
+ #define POINTER_32
+#endif /* !defined(MIDL_PASS) && !defined(RC_INVOKED) */
+
+#if defined(_M_MRX000) || defined(_M_AMD64) || defined(_M_IA64)
+ typedef unsigned __int64 POINTER_64_INT;
+#else
+ typedef unsigned long POINTER_64_INT;
 #endif
 
 #if defined(_WIN64)
@@ -47,6 +98,13 @@
 #define MAXUHALF_PTR ((UHALF_PTR)~0)
 #define MAXHALF_PTR  ((HALF_PTR)(MAXUHALF_PTR >> 1))
 #define MINHALF_PTR  (~MAXHALF_PTR)
+
+#if _WIN32_WINNT >= 0x0600
+
+#define MAXUINT      ((UINT)~((UINT)0))
+#define MAXULONGLONG ((ULONGLONG)~((ULONGLONG)0))
+
+#endif
 
 #ifndef RC_INVOKED
 #ifdef __cplusplus
@@ -100,10 +158,10 @@ static inline void* ULongToPtr( const unsigned long ul )
     { return( (void*)(ULONG_PTR)ul ); }
 #endif /* !__midl */
 #else /*  !_WIN64 */
-#if 1// !defined(__ROS_LONG64__)
+#if !defined(__ROS_LONG64__)
 typedef int INT_PTR, *PINT_PTR;
 typedef unsigned int UINT_PTR, *PUINT_PTR;
-#else // WTF??? HACK of break
+#else
 typedef long INT_PTR, *PINT_PTR;
 typedef unsigned long UINT_PTR, *PUINT_PTR;
 #endif

@@ -21,12 +21,12 @@ long double modfl(long double __x, long double *__i)
 	union
 	{
 		long double*   __x;
-		long_double_t*   x;
+		long_double_s*   x;
 	} x;
 	union
 	{
 		long double*    __i;
-		long_double_t* iptr;
+		long_double_s* iptr;
 	} iptr;
 
 	int j0;

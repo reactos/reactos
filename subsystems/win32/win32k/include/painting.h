@@ -1,5 +1,4 @@
-#ifndef _WIN32K_PAINTING_H
-#define _WIN32K_PAINTING_H
+#pragma once
 
 #include <include/class.h>
 #include <include/msgqueue.h>
@@ -10,9 +9,7 @@ co_UserRedrawWindow(PWINDOW_OBJECT Wnd, const RECTL* UpdateRect, HRGN UpdateRgn,
 VOID FASTCALL
 IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags);
 BOOL FASTCALL
-IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax, PTHREADINFO Thread,
+IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax, PTHREADINFO Thread,
                    MSG *Message, BOOL Remove);
 INT FASTCALL UserRealizePalette(HDC);
 INT FASTCALL co_UserGetUpdateRgn(PWINDOW_OBJECT, HRGN, BOOL);
-
-#endif /* _WIN32K_PAINTING_H */

@@ -183,17 +183,21 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
             ConType = (LPTSTR)HeapAlloc(ProcessHeap,
                                         0,
                                         dwDataSize);
-            if (ConType == NULL)
-                return NULL;
-
-            if(RegQueryValueEx(hKey,
-                               _T("Name"),
-                               NULL,
-                               &dwType,
-                               (PBYTE)ConType,
-                               &dwDataSize) != ERROR_SUCCESS)
+            if (ConType)
             {
-                ConType = NULL;
+                if(RegQueryValueEx(hKey,
+                                   _T("Name"),
+                                   NULL,
+                                   &dwType,
+                                   (PBYTE)ConType,
+                                   &dwDataSize) != ERROR_SUCCESS)
+                {
+                    HeapFree(ProcessHeap,
+                             0,
+                             ConType);
+
+                    ConType = NULL;
+                }
             }
         }
     }
@@ -355,6 +359,7 @@ CLEANUP:
 
 VOID ShowInfo(BOOL bAll)
 {
+    MIB_IFROW mibEntry;
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL;
     ULONG adaptOutBufLen = 0;
@@ -437,6 +442,9 @@ VOID ShowInfo(BOOL bAll)
     {
         LPTSTR IntType, myConType;
 
+        mibEntry.dwIndex = pAdapter->Index;
+        GetIfEntry(&mibEntry);
+
         IntType = GetInterfaceTypeName(pAdapter->Type);
         myConType = GetConnectionType(pAdapter->AdapterName);
 
@@ -445,7 +453,7 @@ VOID ShowInfo(BOOL bAll)
         if (myConType != NULL) HeapFree(ProcessHeap, 0, myConType);
 
         /* check if the adapter is connected to the media */
-        if (_tcscmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0") == 0)
+        if (mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED && mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
         {
             _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
             pAdapter = pAdapter->Next;
@@ -456,7 +464,9 @@ VOID ShowInfo(BOOL bAll)
 
         if (bAll)
         {
-            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), GetConnectionDescription(pAdapter->AdapterName));
+            LPTSTR lpDesc = GetConnectionDescription(pAdapter->AdapterName);
+            _tprintf(_T("\tDescription . . . . . . . . . . . : %s\n"), lpDesc);
+            HeapFree(ProcessHeap, 0, lpDesc);
             _tprintf(_T("\tPhysical Address. . . . . . . . . : %s\n"), PrintMacAddr(pAdapter->Address));
             if (pAdapter->DhcpEnabled)
                 _tprintf(_T("\tDHCP Enabled. . . . . . . . . . . : Yes\n"));
@@ -515,6 +525,7 @@ VOID Release(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
     DWORD ret;
+    DWORD i;
 
     /* if interface is not given, query GetInterfaceInfo */
     if (Index == NULL)
@@ -530,8 +541,19 @@ VOID Release(LPTSTR Index)
 
             if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
             {
-                CopyMemory(&AdapterInfo, &pInfo->Adapter[0], sizeof(IP_ADAPTER_INDEX_MAP));
-                _tprintf(_T("name - %S\n"), pInfo->Adapter[0].Name);
+                for (i = 0; i < pInfo->NumAdapters; i++)
+                {
+                     CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+                     _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+
+                     /* Call IpReleaseAddress to release the IP address on the specified adapter. */
+                     if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
+                     {
+                         _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
+                         DoFormatMessage(ret);
+                     }
+                }
+
                 HeapFree(ProcessHeap, 0, pInfo);
             }
             else
@@ -556,15 +578,6 @@ VOID Release(LPTSTR Index)
          *      ipconfig /release *con* will release all cards with 'con' in their name
          */
     }
-
-
-    /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-    if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
-    {
-        _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
-        DoFormatMessage(ret);
-    }
-
 }
 
 
@@ -573,6 +586,7 @@ VOID Release(LPTSTR Index)
 VOID Renew(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
+    DWORD i;
 
     /* if interface is not given, query GetInterfaceInfo */
     if (Index == NULL)
@@ -603,8 +617,19 @@ VOID Renew(LPTSTR Index)
         /* Make a second call to GetInterfaceInfo to get the actual data we want */
         if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
         {
-            CopyMemory(&AdapterInfo, &pInfo->Adapter[0], sizeof(IP_ADAPTER_INDEX_MAP));
-            _tprintf(_T("name - %S\n"), pInfo->Adapter[0].Name);
+            for (i = 0; i < pInfo->NumAdapters; i++)
+            {
+                CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+                _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+
+
+                /* Call IpRenewAddress to renew the IP address on the specified adapter. */
+                if (IpRenewAddress(&AdapterInfo) != NO_ERROR)
+                {
+                    _tprintf(_T("\nAn error occured while renew interface %s : "), _T("*name*"));
+                    DoFormatMessage(0);
+                }
+            }
         }
         else
         {
@@ -622,14 +647,6 @@ VOID Renew(LPTSTR Index)
          * i.e. ipconfig /renew Eth* will renew all cards starting with Eth...
          *      ipconfig /renew *con* will renew all cards with 'con' in their name
          */
-    }
-
-
-    /* Call IpRenewAddress to renew the IP address on the specified adapter. */
-    if (IpRenewAddress(&AdapterInfo) != NO_ERROR)
-    {
-        _tprintf(_T("\nAn error occured while renew interface %s : "), _T("*name*"));
-        DoFormatMessage(0);
     }
 }
 
@@ -686,7 +703,7 @@ int main(int argc, char *argv[])
     ProcessHeap = GetProcessHeap();
 
     /* Parse command line for options we have been given. */
-    if ( (argc > 1)&&(argv[1][0]=='/') )
+    if ( (argc > 1)&&(argv[1][0]=='/' || argv[1][0]=='-') )
     {
         if( !_tcsicmp( &argv[1][1], _T("?") ))
         {

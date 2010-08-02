@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -362,11 +362,11 @@ ITrayWindowImpl_GetMinimumWindowSize(IN OUT ITrayWindowImpl *This,
     RECT rcMin = {0};
 
     AdjustWindowRectEx(&rcMin,
-                       GetWindowLong(This->hWnd,
-                                     GWL_STYLE),
+                       GetWindowLongPtr(This->hWnd,
+                                        GWL_STYLE),
                        FALSE,
-                       GetWindowLong(This->hWnd,
-                                     GWL_EXSTYLE));
+                       GetWindowLongPtr(This->hWnd,
+                                        GWL_EXSTYLE));
 
     *pRect = rcMin;
 }
@@ -1697,6 +1697,17 @@ OpenCommonStartMenuDirectory(IN HWND hWndOwner,
     }
 }
 
+static VOID
+OpenTaskManager(IN HWND hWndOwner)
+{
+    ShellExecute(hWndOwner,
+                 TEXT("open"),
+                 TEXT("taskmgr.exe"),
+                 NULL,
+                 NULL,
+                 SW_SHOWNORMAL);
+}
+
 static BOOL STDMETHODCALLTYPE
 ITrayWindowImpl_ExecContextMenuCmd(IN OUT ITrayWindow *iface,
                                    IN UINT uiCmd)
@@ -1727,6 +1738,11 @@ ITrayWindowImpl_ExecContextMenuCmd(IN OUT ITrayWindow *iface,
                                  !This->Locked);
             }
             break;
+
+        case ID_SHELL_CMD_OPEN_TASKMGR:
+            OpenTaskManager(This->hWnd);
+            break;
+
 
         default:
             DbgPrint("ITrayWindow::ExecContextMenuCmd(%u): Unhandled Command ID!\n", uiCmd);

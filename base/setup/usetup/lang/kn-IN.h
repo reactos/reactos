@@ -1,5 +1,4 @@
-#ifndef LANG_KN_IN_H__
-#define LANG_KN_IN_H__
+#pragma once
 
 MUI_LAYOUTS knINLayouts[] =
 {
@@ -8,5 +7,3 @@ MUI_LAYOUTS knINLayouts[] =
     { L"0439", L"00010439" },
     { NULL, NULL }
 };
-
-#endif

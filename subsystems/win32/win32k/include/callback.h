@@ -1,5 +1,4 @@
-#ifndef _WIN32K_CALLBACK_H
-#define _WIN32K_CALLBACK_H
+#pragma once
 
 #include <include/win32.h>
 
@@ -54,4 +53,6 @@ IntCbAllocateMemory(ULONG Size);
 VOID FASTCALL
 IntCbFreeMemory(PVOID Data);
 
-#endif /* _WIN32K_CALLBACK_H */
+HMENU APIENTRY co_IntCallLoadMenu(HINSTANCE,PUNICODE_STRING);
+
+NTSTATUS APIENTRY co_IntClientThreadSetup(VOID);

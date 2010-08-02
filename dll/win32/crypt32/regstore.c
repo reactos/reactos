@@ -479,6 +479,10 @@ static BOOL WINAPI CRYPT_RegControl(HCERTSTORE hCertStore, DWORD dwFlags,
         ret = CRYPT_RegFlushStore(store,
          dwFlags & CERT_STORE_CTRL_COMMIT_FORCE_FLAG);
         break;
+    case CERT_STORE_CTRL_AUTO_RESYNC:
+        FIXME("CERT_STORE_CTRL_AUTO_RESYNC: stub\n");
+        ret = TRUE;
+        break;
     default:
         FIXME("%d: stub\n", dwCtrlType);
         ret = FALSE;

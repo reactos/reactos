@@ -1,5 +1,4 @@
-#ifndef _KERNEL32_INCLUDE_KERNEL32_H
-#define _KERNEL32_INCLUDE_KERNEL32_H
+#pragma once
 
 #include "baseheap.h"
 
@@ -32,7 +31,7 @@
 #endif
 
 #define IsConsoleHandle(h) \
-  (((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
+  (((((ULONG_PTR)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
 
 #define HANDLE_DETACHED_PROCESS    (HANDLE)-2
 #define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
@@ -86,6 +85,8 @@ HANDLE WINAPI OpenConsoleW (LPCWSTR wsName,
 			     BOOL   bInheritHandle,
 			     DWORD  dwShareMode);
 
+BOOL WINAPI SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
+
 PTEB GetTeb(VOID);
 
 HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
@@ -109,8 +110,8 @@ BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 NTSTATUS
 WINAPI
 BasepCreateStack(HANDLE hProcess,
-                 ULONG StackReserve,
-                 ULONG StackCommit,
+                 SIZE_T StackReserve,
+                 SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb);
                  
 VOID
@@ -189,5 +190,9 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
 PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage);
 
-#endif /* ndef _KERNEL32_INCLUDE_KERNEL32_H */
+LPWSTR
+GetDllLoadPath(LPCWSTR lpModule);
 
+VOID
+WINAPI
+InitCommandLines(VOID);

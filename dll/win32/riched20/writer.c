@@ -295,10 +295,10 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
     }
     if (!ME_StreamOutRTFText(pStream, table[i].szFaceName, -1))
       return FALSE;
-    if (!ME_StreamOutPrint(pStream, ";}\r\n"))
+    if (!ME_StreamOutPrint(pStream, ";}"))
       return FALSE;
   }
-  if (!ME_StreamOutPrint(pStream, "}"))
+  if (!ME_StreamOutPrint(pStream, "}\r\n"))
     return FALSE;
 
   /* Output colors table if not empty */
@@ -406,12 +406,44 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
 
 static BOOL
 ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
-                         const ME_DisplayItem *para)
+                         ME_DisplayItem *para)
 {
   PARAFORMAT2 *fmt = para->member.para.pFmt;
   char props[STREAMOUT_BUFFER_SIZE] = "";
   int i;
-  
+
+  if (!editor->bEmulateVersion10) { /* v4.1 */
+    if (para->member.para.nFlags & MEPF_ROWSTART) {
+      pStream->nNestingLevel++;
+      if (pStream->nNestingLevel == 1) {
+        if (!ME_StreamOutRTFTableProps(editor, pStream, para))
+          return FALSE;
+      }
+      return TRUE;
+    } else if (para->member.para.nFlags & MEPF_ROWEND) {
+      pStream->nNestingLevel--;
+      if (pStream->nNestingLevel >= 1) {
+        if (!ME_StreamOutPrint(pStream, "{\\*\\nesttableprops"))
+          return FALSE;
+        if (!ME_StreamOutRTFTableProps(editor, pStream, para))
+          return FALSE;
+        if (!ME_StreamOutPrint(pStream, "\\nestrow}{\\nonesttables\\par}\r\n"))
+          return FALSE;
+      } else {
+        if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
+          return FALSE;
+      }
+      return TRUE;
+    }
+  } else { /* v1.0 - 3.0 */
+    if (para->member.para.pFmt->dwMask & PFM_TABLE &&
+        para->member.para.pFmt->wEffects & PFE_TABLE)
+    {
+      if (!ME_StreamOutRTFTableProps(editor, pStream, para))
+        return FALSE;
+    }
+  }
+
   /* TODO: Don't emit anything if the last PARAFORMAT2 is inherited */
   if (!ME_StreamOutPrint(pStream, "\\pard"))
     return FALSE;
@@ -762,25 +794,23 @@ ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars)
 }
 
 
-static BOOL
-ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nChars, int dwFormat)
+static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
+                            const ME_Cursor *start, int nChars, int dwFormat)
 {
-  ME_DisplayItem *p, *pEnd, *pPara;
-  int nOffset, nEndLen; 
-  
-  ME_RunOfsFromCharOfs(editor, nStart, &p, &nOffset);
-  ME_RunOfsFromCharOfs(editor, nStart+nChars, &pEnd, &nEndLen);
-  
-  pPara = ME_GetParagraph(p);
-  
+  ME_Cursor cursor = *start;
+  ME_DisplayItem *prev_para = cursor.pPara;
+  ME_Cursor endCur = cursor;
+
+  ME_MoveCursorChars(editor, &endCur, nChars);
+
   if (!ME_StreamOutRTFHeader(pStream, dwFormat))
     return FALSE;
 
-  if (!ME_StreamOutRTFFontAndColorTbl(pStream, p, pEnd))
+  if (!ME_StreamOutRTFFontAndColorTbl(pStream, cursor.pRun, endCur.pRun))
     return FALSE;
-  
+
   /* TODO: stylesheet table */
-  
+
   /* FIXME: maybe emit something smarter for the generator? */
   if (!ME_StreamOutPrint(pStream, "{\\*\\generator Wine Riched20 2.0.????;}"))
     return FALSE;
@@ -793,138 +823,98 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
 
   /* TODO: section formatting properties */
 
-  if (!ME_StreamOutRTFParaProps(editor, pStream, ME_GetParagraph(p)))
+  if (!ME_StreamOutRTFParaProps(editor, pStream, cursor.pPara))
     return FALSE;
 
-  while(1)
-  {
-    switch(p->type)
+  do {
+    if (cursor.pPara != prev_para)
     {
-      case diParagraph:
-        if (!editor->bEmulateVersion10) { /* v4.1 */
-          if (p->member.para.nFlags & MEPF_ROWSTART) {
-            pStream->nNestingLevel++;
-            if (pStream->nNestingLevel == 1) {
-              if (!ME_StreamOutRTFTableProps(editor, pStream, p))
-                return FALSE;
-            }
-          } else if (p->member.para.nFlags & MEPF_ROWEND) {
-            pStream->nNestingLevel--;
-            if (pStream->nNestingLevel >= 1) {
-              if (!ME_StreamOutPrint(pStream, "{\\*\\nesttableprops"))
-                return FALSE;
-              if (!ME_StreamOutRTFTableProps(editor, pStream, p))
-                return FALSE;
-              if (!ME_StreamOutPrint(pStream, "\\nestrow}{\\nonesttables\\par}\r\n"))
-                return FALSE;
-            } else {
-              if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
-                return FALSE;
-            }
-          } else if (!ME_StreamOutRTFParaProps(editor, pStream, p)) {
-            return FALSE;
-          }
-        } else { /* v1.0 - 3.0 */
-          if (p->member.para.pFmt->dwMask & PFM_TABLE &&
-              p->member.para.pFmt->wEffects & PFE_TABLE)
-          {
-            if (!ME_StreamOutRTFTableProps(editor, pStream, p))
-              return FALSE;
-          }
-          if (!ME_StreamOutRTFParaProps(editor, pStream, p))
-            return FALSE;
-        }
-        pPara = p;
-        break;
-      case diRun:
-        if (p == pEnd && !nEndLen)
-          break;
-        TRACE("flags %xh\n", p->member.run.nFlags);
-        /* TODO: emit embedded objects */
-        if (pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND))
-          break;
-        if (p->member.run.nFlags & MERF_GRAPHICS) {
-          FIXME("embedded objects are not handled\n");
-        } else if (p->member.run.nFlags & MERF_TAB) {
-          if (editor->bEmulateVersion10 && /* v1.0 - 3.0 */
-              pPara->member.para.pFmt->dwMask & PFM_TABLE &&
-              pPara->member.para.pFmt->wEffects & PFE_TABLE)
-          {
-            if (!ME_StreamOutPrint(pStream, "\\cell "))
-              return FALSE;
-          } else {
-            if (!ME_StreamOutPrint(pStream, "\\tab "))
-              return FALSE;
-          }
-        } else if (p->member.run.nFlags & MERF_ENDCELL) {
-          if (pStream->nNestingLevel > 1) {
-            if (!ME_StreamOutPrint(pStream, "\\nestcell "))
-              return FALSE;
-          } else {
-            if (!ME_StreamOutPrint(pStream, "\\cell "))
-              return FALSE;
-          }
-          nChars--;
-        } else if (p->member.run.nFlags & MERF_ENDPARA) {
-          if (pPara->member.para.pFmt->dwMask & PFM_TABLE &&
-              pPara->member.para.pFmt->wEffects & PFE_TABLE &&
-              !(pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)))
-          {
-            if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
-              return FALSE;
-          } else {
-            if (!ME_StreamOutPrint(pStream, "\r\n\\par"))
-              return FALSE;
-          }
-          /* Skip as many characters as required by current line break */
-          nChars = max(0, nChars - p->member.run.strText->nLen);
-        } else if (p->member.run.nFlags & MERF_ENDROW) {
-          if (!ME_StreamOutPrint(pStream, "\\line \r\n"))
-            return FALSE;
-          nChars--;
-        } else {
-          int nEnd;
-          
-          if (!ME_StreamOutPrint(pStream, "{"))
-            return FALSE;
-          TRACE("style %p\n", p->member.run.style);
-          if (!ME_StreamOutRTFCharProps(pStream, &p->member.run.style->fmt))
-            return FALSE;
-        
-          nEnd = (p == pEnd) ? nEndLen : ME_StrLen(p->member.run.strText);
-          if (!ME_StreamOutRTFText(pStream, p->member.run.strText->szData + nOffset, nEnd - nOffset))
-            return FALSE;
-          nOffset = 0;
-          if (!ME_StreamOutPrint(pStream, "}"))
-            return FALSE;
-        }
-        break;
-      default: /* we missed the last item */
-        assert(0);
+      prev_para = cursor.pPara;
+      if (!ME_StreamOutRTFParaProps(editor, pStream, cursor.pPara))
+        return FALSE;
     }
-    if (p == pEnd)
+
+    if (cursor.pRun == endCur.pRun && !endCur.nOffset)
       break;
-    p = ME_FindItemFwd(p, diRunOrParagraphOrEnd);
-  }
-  if (!ME_StreamOutPrint(pStream, "}"))
+    TRACE("flags %xh\n", cursor.pRun->member.run.nFlags);
+    /* TODO: emit embedded objects */
+    if (cursor.pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND))
+      continue;
+    if (cursor.pRun->member.run.nFlags & MERF_GRAPHICS) {
+      FIXME("embedded objects are not handled\n");
+    } else if (cursor.pRun->member.run.nFlags & MERF_TAB) {
+      if (editor->bEmulateVersion10 && /* v1.0 - 3.0 */
+          cursor.pPara->member.para.pFmt->dwMask & PFM_TABLE &&
+          cursor.pPara->member.para.pFmt->wEffects & PFE_TABLE)
+      {
+        if (!ME_StreamOutPrint(pStream, "\\cell "))
+          return FALSE;
+      } else {
+        if (!ME_StreamOutPrint(pStream, "\\tab "))
+          return FALSE;
+      }
+    } else if (cursor.pRun->member.run.nFlags & MERF_ENDCELL) {
+      if (pStream->nNestingLevel > 1) {
+        if (!ME_StreamOutPrint(pStream, "\\nestcell "))
+          return FALSE;
+      } else {
+        if (!ME_StreamOutPrint(pStream, "\\cell "))
+          return FALSE;
+      }
+      nChars--;
+    } else if (cursor.pRun->member.run.nFlags & MERF_ENDPARA) {
+      if (cursor.pPara->member.para.pFmt->dwMask & PFM_TABLE &&
+          cursor.pPara->member.para.pFmt->wEffects & PFE_TABLE &&
+          !(cursor.pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND|MEPF_CELL)))
+      {
+        if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
+          return FALSE;
+      } else {
+        if (!ME_StreamOutPrint(pStream, "\r\n\\par"))
+          return FALSE;
+      }
+      /* Skip as many characters as required by current line break */
+      nChars = max(0, nChars - cursor.pRun->member.run.strText->nLen);
+    } else if (cursor.pRun->member.run.nFlags & MERF_ENDROW) {
+      if (!ME_StreamOutPrint(pStream, "\\line \r\n"))
+        return FALSE;
+      nChars--;
+    } else {
+      int nEnd;
+
+      if (!ME_StreamOutPrint(pStream, "{"))
+        return FALSE;
+      TRACE("style %p\n", cursor.pRun->member.run.style);
+      if (!ME_StreamOutRTFCharProps(pStream, &cursor.pRun->member.run.style->fmt))
+        return FALSE;
+
+      nEnd = (cursor.pRun == endCur.pRun) ? endCur.nOffset : cursor.pRun->member.run.strText->nLen;
+      if (!ME_StreamOutRTFText(pStream, cursor.pRun->member.run.strText->szData + cursor.nOffset,
+                               nEnd - cursor.nOffset))
+        return FALSE;
+      cursor.nOffset = 0;
+      if (!ME_StreamOutPrint(pStream, "}"))
+        return FALSE;
+    }
+  } while (cursor.pRun != endCur.pRun && ME_NextRun(&cursor.pPara, &cursor.pRun));
+
+  if (!ME_StreamOutMove(pStream, "}\0", 2))
     return FALSE;
   return TRUE;
 }
 
 
-static BOOL
-ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nChars, DWORD dwFormat)
+static BOOL ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream,
+                             const ME_Cursor *start, int nChars, DWORD dwFormat)
 {
-  ME_DisplayItem *item;
+  ME_Cursor cursor = *start;
   int nLen;
   UINT nCodePage = CP_ACP;
   char *buffer = NULL;
   int nBufLen = 0;
   BOOL success = TRUE;
 
-  ME_RunOfsFromCharOfs(editor, nStart, &item, &nStart);
-
-  if (!item)
+  if (!cursor.pRun)
     return FALSE;
 
   if (dwFormat & SF_USECODEPAGE)
@@ -932,10 +922,10 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
 
   /* TODO: Handle SF_TEXTIZED */
 
-  while (success && nChars && item) {
-    nLen = min(nChars, ME_StrLen(item->member.run.strText) - nStart);
+  while (success && nChars && cursor.pRun) {
+    nLen = min(nChars, cursor.pRun->member.run.strText->nLen - cursor.nOffset);
 
-    if (!editor->bEmulateVersion10 && item->member.run.nFlags & MERF_ENDPARA)
+    if (!editor->bEmulateVersion10 && cursor.pRun->member.run.nFlags & MERF_ENDPARA)
     {
       static const WCHAR szEOL[2] = { '\r', '\n' };
 
@@ -946,27 +936,27 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
         success = ME_StreamOutMove(pStream, "\r\n", 2);
     } else {
       if (dwFormat & SF_UNICODE)
-        success = ME_StreamOutMove(pStream, (const char *)(item->member.run.strText->szData + nStart),
+        success = ME_StreamOutMove(pStream, (const char *)(cursor.pRun->member.run.strText->szData + cursor.nOffset),
                                    sizeof(WCHAR) * nLen);
       else {
         int nSize;
 
-        nSize = WideCharToMultiByte(nCodePage, 0, item->member.run.strText->szData + nStart,
+        nSize = WideCharToMultiByte(nCodePage, 0, cursor.pRun->member.run.strText->szData + cursor.nOffset,
                                     nLen, NULL, 0, NULL, NULL);
         if (nSize > nBufLen) {
           FREE_OBJ(buffer);
           buffer = ALLOC_N_OBJ(char, nSize);
           nBufLen = nSize;
         }
-        WideCharToMultiByte(nCodePage, 0, item->member.run.strText->szData + nStart,
+        WideCharToMultiByte(nCodePage, 0, cursor.pRun->member.run.strText->szData + cursor.nOffset,
                             nLen, buffer, nSize, NULL, NULL);
         success = ME_StreamOutMove(pStream, buffer, nSize);
       }
     }
 
     nChars -= nLen;
-    nStart = 0;
-    item = ME_FindItemFwd(item, diRun);
+    cursor.nOffset = 0;
+    cursor.pRun = ME_FindItemFwd(cursor.pRun, diRun);
   }
 
   FREE_OBJ(buffer);
@@ -974,24 +964,16 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
 }
 
 
-LRESULT
-ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, int nStart, int nTo, EDITSTREAM *stream)
+LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat,
+                          const ME_Cursor *start,
+                          int nChars, EDITSTREAM *stream)
 {
   ME_OutStream *pStream = ME_StreamOutInit(editor, stream);
 
-  if (nTo == -1)
-  {
-    nTo = ME_GetTextLength(editor);
-    /* Generate an end-of-paragraph at the end of SCF_ALL RTF output */
-    if (dwFormat & SF_RTF)
-      nTo++;
-  }
-  TRACE("from %d to %d\n", nStart, nTo);
-
   if (dwFormat & SF_RTF)
-    ME_StreamOutRTF(editor, pStream, nStart, nTo - nStart, dwFormat);
+    ME_StreamOutRTF(editor, pStream, start, nChars, dwFormat);
   else if (dwFormat & SF_TEXT || dwFormat & SF_TEXTIZED)
-    ME_StreamOutText(editor, pStream, nStart, nTo - nStart, dwFormat);
+    ME_StreamOutText(editor, pStream, start, nChars, dwFormat);
   if (!pStream->stream->dwError)
     ME_StreamOutFlush(pStream);
   return ME_StreamOutFree(pStream);
@@ -1000,13 +982,19 @@ ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, int nStart, int nTo, ED
 LRESULT
 ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream)
 {
-  int nStart, nTo;
+  ME_Cursor start;
+  int nChars;
 
-  if (dwFormat & SFF_SELECTION)
-    ME_GetSelection(editor, &nStart, &nTo);
-  else {
-    nStart = 0;
-    nTo = -1;
+  if (dwFormat & SFF_SELECTION) {
+    int nStart, nTo;
+    start = editor->pCursors[ME_GetSelectionOfs(editor, &nStart, &nTo)];
+    nChars = nTo - nStart;
+  } else {
+    ME_SetCursorToStart(editor, &start);
+    nChars = ME_GetTextLength(editor);
+    /* Generate an end-of-paragraph at the end of SCF_ALL RTF output */
+    if (dwFormat & SF_RTF)
+      nChars++;
   }
-  return ME_StreamOutRange(editor, dwFormat, nStart, nTo, stream);
+  return ME_StreamOutRange(editor, dwFormat, &start, nChars, stream);
 }

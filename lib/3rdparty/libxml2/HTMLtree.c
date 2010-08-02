@@ -160,13 +160,17 @@ found_content:
  */
 int
 htmlSetMetaEncoding(htmlDocPtr doc, const xmlChar *encoding) {
-    htmlNodePtr cur, meta;
-    const xmlChar *content;
+    htmlNodePtr cur, meta = NULL, head = NULL;
+    const xmlChar *content = NULL;
     char newcontent[100];
 
 
     if (doc == NULL)
 	return(-1);
+
+    /* html isn't a real encoding it's just libxml2 way to get entities */
+    if (!xmlStrcasecmp(encoding, BAD_CAST "html"))
+        return(-1);
 
     if (encoding != NULL) {
 	snprintf(newcontent, sizeof(newcontent), "text/html; charset=%s",
@@ -201,39 +205,24 @@ htmlSetMetaEncoding(htmlDocPtr doc, const xmlChar *encoding) {
 	if ((cur->type == XML_ELEMENT_NODE) && (cur->name != NULL)) {
 	    if (xmlStrcasecmp(cur->name, BAD_CAST"head") == 0)
 		break;
-	    if (xmlStrcasecmp(cur->name, BAD_CAST"meta") == 0)
+	    if (xmlStrcasecmp(cur->name, BAD_CAST"meta") == 0) {
+                head = cur->parent;
 		goto found_meta;
+            }
 	}
 	cur = cur->next;
     }
     if (cur == NULL)
 	return(-1);
 found_head:
-    if (cur->children == NULL) {
-	if (encoding == NULL)
-	    return(0);
-	meta = xmlNewDocNode(doc, NULL, BAD_CAST"meta", NULL);
-	xmlAddChild(cur, meta);
-	xmlNewProp(meta, BAD_CAST"http-equiv", BAD_CAST"Content-Type");
-	xmlNewProp(meta, BAD_CAST"content", BAD_CAST newcontent);
-	return(0);
-    }
+    head = cur;
+    if (cur->children == NULL)
+        goto create;
     cur = cur->children;
 
 found_meta:
-    if (encoding != NULL) {
-	/*
-	 * Create a new Meta element with the right attributes
-	 */
-
-	meta = xmlNewDocNode(doc, NULL, BAD_CAST"meta", NULL);
-	xmlAddPrevSibling(cur, meta);
-	xmlNewProp(meta, BAD_CAST"http-equiv", BAD_CAST"Content-Type");
-	xmlNewProp(meta, BAD_CAST"content", BAD_CAST newcontent);
-    }
-
     /*
-     * Search and destroy all the remaining the meta elements carrying
+     * Search and update all the remaining the meta elements carrying
      * encoding informations
      */
     while (cur != NULL) {
@@ -253,11 +242,11 @@ found_meta:
 			if ((!xmlStrcasecmp(attr->name, BAD_CAST"http-equiv"))
 			 && (!xmlStrcasecmp(value, BAD_CAST"Content-Type")))
 			    http = 1;
-			else 
+			else
                         {
                            if ((value != NULL) && 
-				(!xmlStrcasecmp(attr->name, BAD_CAST"content")))
-			      content = value;
+                               (!xmlStrcasecmp(attr->name, BAD_CAST"content")))
+			       content = value;
                         }
 		        if ((http != 0) && (content != NULL))
 			    break;
@@ -266,16 +255,36 @@ found_meta:
 		}
 		if ((http != 0) && (content != NULL)) {
 		    meta = cur;
-		    cur = cur->next;
-		    xmlUnlinkNode(meta);
-                    xmlFreeNode(meta);
-		    continue;
+		    break;
 		}
 
 	    }
 	}
 	cur = cur->next;
     }
+create:
+    if (meta == NULL) {
+        if ((encoding != NULL) && (head != NULL)) {
+            /*
+             * Create a new Meta element with the right attributes
+             */
+
+            meta = xmlNewDocNode(doc, NULL, BAD_CAST"meta", NULL);
+            if (head->children == NULL)
+                xmlAddChild(head, meta);
+            else
+                xmlAddPrevSibling(head->children, meta);
+            xmlNewProp(meta, BAD_CAST"http-equiv", BAD_CAST"Content-Type");
+            xmlNewProp(meta, BAD_CAST"content", BAD_CAST newcontent);
+        }
+    } else {
+        /* change the document only if there is a real encoding change */
+        if (xmlStrcasestr(content, encoding) == NULL) {
+            xmlSetProp(meta, BAD_CAST"content", BAD_CAST newcontent);
+        }
+    }
+
+
     return(0);
 }
 
@@ -1155,7 +1164,7 @@ htmlSaveFileFormat(const char *filename, xmlDocPtr cur,
 
     if ((cur == NULL) || (filename == NULL))
         return(-1);
-       
+
     xmlInitParser();
 
     if (encoding != NULL) {
@@ -1173,8 +1182,8 @@ htmlSaveFileFormat(const char *filename, xmlDocPtr cur,
 	    handler = xmlFindCharEncodingHandler(encoding);
 	    if (handler == NULL)
 		return(-1);
-            htmlSetMetaEncoding(cur, (const xmlChar *) encoding);
 	}
+        htmlSetMetaEncoding(cur, (const xmlChar *) encoding);
     } else {
 	htmlSetMetaEncoding(cur, (const xmlChar *) "UTF-8");
     }

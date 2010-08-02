@@ -28,7 +28,8 @@
 
 #define LOCALE_RETURN_NUMBER 0x20000000
 #define LOCALE_USE_CP_ACP 0x40000000
-#define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
+#define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|\
+                                    LOCALE_RETURN_NUMBER|LOCALE_RETURN_GENITIVE_NAMES)
 #define CALINFO_MAX_YEAR 2029
 
 //static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
@@ -52,6 +53,62 @@ typedef struct
 
 static const WCHAR szLocaleKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\NLS\\Locale";
 static const WCHAR szLangGroupsKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\NLS\\Language Groups";
+
+/***********************************************************************
+ *           is_genitive_name_supported
+ *
+ * Determine could LCTYPE basically support genitive name form or not.
+ */
+static BOOL is_genitive_name_supported( LCTYPE lctype )
+{
+    switch(lctype & 0xffff)
+    {
+    case LOCALE_SMONTHNAME1:
+    case LOCALE_SMONTHNAME2:
+    case LOCALE_SMONTHNAME3:
+    case LOCALE_SMONTHNAME4:
+    case LOCALE_SMONTHNAME5:
+    case LOCALE_SMONTHNAME6:
+    case LOCALE_SMONTHNAME7:
+    case LOCALE_SMONTHNAME8:
+    case LOCALE_SMONTHNAME9:
+    case LOCALE_SMONTHNAME10:
+    case LOCALE_SMONTHNAME11:
+    case LOCALE_SMONTHNAME12:
+    case LOCALE_SMONTHNAME13:
+         return TRUE;
+    default:
+         return FALSE;
+    }
+}
+
+/***********************************************************************
+ *		create_registry_key
+ *
+ * Create the Control Panel\\International registry key.
+ */
+static inline HANDLE create_registry_key(void)
+{
+    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
+                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
+    OBJECT_ATTRIBUTES attr;
+    UNICODE_STRING nameW;
+    HANDLE hkey;
+
+    if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hkey ) != STATUS_SUCCESS) return 0;
+
+    attr.Length = sizeof(attr);
+    attr.RootDirectory = hkey;
+    attr.ObjectName = &nameW;
+    attr.Attributes = 0;
+    attr.SecurityDescriptor = NULL;
+    attr.SecurityQualityOfService = NULL;
+    RtlInitUnicodeString( &nameW, intlW );
+
+    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hkey = 0;
+    NtClose( attr.RootDirectory );
+    return hkey;
+}
 
 /******************************************************************************
  * @implemented
@@ -162,8 +219,7 @@ EnumDateFormatsExA(
             break;
 
         default:
-            // FIXME: Unknown date format
-            SetLastError(ERROR_INVALID_PARAMETER);
+            SetLastError(ERROR_INVALID_FLAGS);
             return FALSE;
     }
     return TRUE;
@@ -231,8 +287,7 @@ EnumDateFormatsExW(
             break;
 
         default:
-            // FIXME: Unknown date format
-            SetLastError(ERROR_INVALID_PARAMETER);
+            SetLastError(ERROR_INVALID_FLAGS);
             return FALSE;
     }
     return TRUE;
@@ -277,7 +332,10 @@ static HANDLE NLS_RegOpenKey(HANDLE hRootKey, LPCWSTR szKeyName)
     InitializeObjectAttributes(&attr, &keyName, OBJ_CASE_INSENSITIVE, hRootKey, NULL);
 
     if (NtOpenKey( &hkey, KEY_ALL_ACCESS, &attr ) != STATUS_SUCCESS)
+    {
+        SetLastError( ERROR_BADDB );
         hkey = 0;
+    }
 
     return hkey;
 }
@@ -866,6 +924,12 @@ static BOOL NLS_EnumSystemLocales(ENUMSYSTEMLOCALES_CALLBACKS *lpProcs)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
+    }
+
+    /* Passing 0 flags behaves like LCID_SUPPORTED */
+    if (lpProcs->dwFlags == 0)
+    {
+        lpProcs->dwFlags = LCID_SUPPORTED;
     }
 
     switch (lpProcs->dwFlags)
@@ -1550,10 +1614,10 @@ GetGeoInfoA(
         case GEO_FRIENDLYNAME:
         {
             WCHAR szBuffer[MAX_PATH];
-            int Ret;
-        
-            Ret = NLS_GetGeoFriendlyName(Location, szBuffer, cchData);
             char szBufferA[sizeof(szBuffer)/sizeof(WCHAR)];
+            int Ret;
+
+            Ret = NLS_GetGeoFriendlyName(Location, szBuffer, cchData);
 
             WideCharToMultiByte(CP_ACP, 0, szBuffer, -1, szBufferA, sizeof(szBufferA), 0, 0);
             strcpy(lpGeoData, szBufferA);
@@ -1751,6 +1815,13 @@ GetLocaleInfoW (
         SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
     }
+    if (LCType & LOCALE_RETURN_GENITIVE_NAMES &&
+       !is_genitive_name_supported( LCType ))
+    {
+        SetLastError( ERROR_INVALID_FLAGS );
+        return 0;
+    }
+
     if (!cchData) lpLCData = NULL;
 
     if (Locale == LOCALE_NEUTRAL || Locale == LOCALE_SYSTEM_DEFAULT) Locale = GetSystemDefaultLCID();
@@ -1781,10 +1852,23 @@ GetLocaleInfoW (
         return 0;
 
     ch = LockResource( hMem );
-    for (i = 0; i < (int)(LCType & 0x0f); i++) ch += *ch + 1;
+    for (i = 0; i < (LCType & 0x0f); i++) ch += *ch + 1;
 
     if (uiFlags & LOCALE_RETURN_NUMBER) nRet = sizeof(UINT) / sizeof(WCHAR);
-    else nRet = (LCType == LOCALE_FONTSIGNATURE) ? *ch : *ch + 1;
+    else if (is_genitive_name_supported( LCType ) && *ch)
+    {
+        /* genitive form's stored after a null separator from a nominative */
+        for (i = 1; i <= *ch; i++) if (!ch[i]) break;
+
+        if (i <= *ch && (uiFlags & LOCALE_RETURN_GENITIVE_NAMES))
+        {
+            nRet = *ch - i + 1;
+            ch += i;
+        }
+        else nRet = i;
+    }
+    else
+        nRet = (LCType == LOCALE_FONTSIGNATURE) ? *ch : *ch + 1;
 
     if (!lpLCData) return nRet;
 
@@ -2092,6 +2176,12 @@ INT WINAPI GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
         SetLastError( ERROR_INVALID_PARAMETER );
         return 0;
     }
+    if (lctype & LOCALE_RETURN_GENITIVE_NAMES )
+    {
+        SetLastError( ERROR_INVALID_FLAGS );
+        return 0;
+    }
+
     if (!len) buffer = NULL;
 
     if (!(lenW = GetLocaleInfoW( lcid, lctype, NULL, 0 ))) return 0;
@@ -2234,35 +2324,6 @@ GetUserDefaultUILanguage(VOID)
 }
 
 
-/***********************************************************************
- *		create_registry_key
- *
- * Create the Control Panel\\International registry key.
- */
-static inline HANDLE create_registry_key(void)
-{
-    static const WCHAR intlW[] = {'C','o','n','t','r','o','l',' ','P','a','n','e','l','\\',
-                                  'I','n','t','e','r','n','a','t','i','o','n','a','l',0};
-    OBJECT_ATTRIBUTES attr;
-    UNICODE_STRING nameW;
-    HANDLE hkey;
-
-    if (RtlOpenCurrentUser( KEY_ALL_ACCESS, &hkey ) != STATUS_SUCCESS) return 0;
-
-    attr.Length = sizeof(attr);
-    attr.RootDirectory = hkey;
-    attr.ObjectName = &nameW;
-    attr.Attributes = 0;
-    attr.SecurityDescriptor = NULL;
-    attr.SecurityQualityOfService = NULL;
-    RtlInitUnicodeString( &nameW, intlW );
-
-    if (NtCreateKey( &hkey, KEY_ALL_ACCESS, &attr, 0, NULL, 0, NULL ) != STATUS_SUCCESS) hkey = 0;
-    NtClose( attr.RootDirectory );
-    return hkey;
-}
-
-
 /*
  * @unimplemented
  */
@@ -2337,6 +2398,8 @@ IsValidLanguageGroup(
     case LGRPID_SUPPORTED:
 
         hKey = NLS_RegOpenKey( 0, szLangGroupsKeyName );
+        if (!hKey)
+            break;
 
         swprintf( szValueName, szFormat, LanguageGroup );
 
@@ -2348,10 +2411,13 @@ IsValidLanguageGroup(
                 bInstalled = TRUE;
         }
 
-        if (hKey)
-            NtClose( hKey );
+        NtClose( hKey );
 
         break;
+
+    default:
+        DPRINT("Invalid flags: %lx\n", dwFlags);
+        return FALSE;
     }
 
     if ((dwFlags == LGRPID_SUPPORTED && bSupported) ||
@@ -2380,7 +2446,7 @@ IsValidLanguageGroup(
  */
 BOOL WINAPI
 IsValidLocale(LCID Locale,
-	      DWORD dwFlags)
+              DWORD dwFlags)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
@@ -2392,6 +2458,7 @@ IsValidLocale(LCID Locale,
     HANDLE KeyHandle;
     PWSTR ValueData;
     NTSTATUS Status;
+    BOOL Installed = FALSE;
 
     DPRINT("IsValidLocale() called\n");
 
@@ -2425,6 +2492,7 @@ IsValidLocale(LCID Locale,
     if (!NT_SUCCESS(Status))
     {
         DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+        SetLastError(ERROR_BADDB);
         return FALSE;
     }
 
@@ -2466,19 +2534,30 @@ IsValidLocale(LCID Locale,
 
     ValueData = (PWSTR)&KeyInfo->Data[0];
     if ((KeyInfo->Type == REG_SZ) &&
-        (KeyInfo->DataLength == 2 * sizeof(WCHAR)) &&
-        (ValueData[0] == L'1'))
+        (KeyInfo->DataLength == 2 * sizeof(WCHAR)))
     {
-        DPRINT("Locale is supported and installed\n");
-        RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
-        return TRUE;
+        /* Find out if there is support for the language group
+         * installed, to which this language belongs */
+        KeyHandle = NLS_RegOpenKey(0, szLangGroupsKeyName);
+        if (KeyHandle)
+        {
+            WCHAR Value[2];
+            if (NLS_RegGetDword(KeyHandle, ValueData, (LPDWORD) Value) &&
+                Value[0] == L'1')
+            {
+                Installed = TRUE;
+                DPRINT("Locale is supported and installed\n");
+            }
+
+            NtClose(KeyHandle);
+        }
     }
 
     RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
 
     DPRINT("IsValidLocale() called\n");
 
-    return FALSE;
+    return Installed;
 }
 
 /*
@@ -2533,6 +2612,8 @@ LCMapStringA (
         ret = wine_get_sortkey(dwMapFlags, srcW, srclenW, lpDestStr, cchDest);
         if (ret == 0)
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        else
+            ret++;
         goto map_string_exit;
     }
 

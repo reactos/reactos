@@ -3,13 +3,12 @@
 <module name="dinput" type="win32dll" baseaddress="${BASEADDRESS_DINPUT}" installbase="system32" installname="dinput.dll" unicode="yes">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="dinput.spec" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<include base="dinput">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ntdll</library>
-	<library>kernel32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>ole32</library>

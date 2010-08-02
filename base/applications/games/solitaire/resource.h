@@ -25,6 +25,14 @@
 #define IDC_CARDBACK2                   1252
 #define IDC_CARDBACK3                   1253
 #define IDC_CARDBACK4                   1254
+#define IDC_CARDBACK5                   1255
+#define IDC_CARDBACK6                   1256
+#define IDC_CARDBACK7                   1257
+#define IDC_CARDBACK8                   1258
+#define IDC_CARDBACK9                   1259
+#define IDC_CARDBACK10                  1260
+#define IDC_CARDBACK11                  1261
+#define IDC_CARDBACK12                  1262
 
 /* Strings */
 #define IDS_SOL_NAME                    1300

@@ -8,7 +8,7 @@ BEGIN
   GROUPBOX "Adaptertyp", -1, 7, 3, 237, 50
   LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20
   PUSHBUTTON "&Einstellungen", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
-  GROUPBOX "Adapter Information", -1, 7, 56, 237, 75
+  GROUPBOX "Adapter-Informationen", -1, 7, 56, 237, 75
   LTEXT "Chiptyp:", -1, 13, 68, 58, 8
   LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
   LTEXT "DAC Typ:", -1, 13, 80, 58, 8
@@ -17,7 +17,7 @@ BEGIN
   LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
   LTEXT "Zeichenfolge:", -1, 13, 104, 58, 8
   LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
-  LTEXT "BIOS Informationen:", -1, 13, 116, 58, 8
+  LTEXT "BIOS-Informationen:", -1, 13, 116, 58, 8
   LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
   PUSHBUTTON "Alle Modi auf&listen...", IDC_LISTALLMODES, 7, 139, 75, 14
 END

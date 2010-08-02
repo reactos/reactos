@@ -160,20 +160,7 @@ END
 //
 // Dialog
 //
-
-IDD_ABOUTBOX DIALOGEX DISCARDABLE  22, 17, 259, 210
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Info über Task-Manager"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    CONTROL         "Task Manager v1.0\nCopyright (C) 1999 - 2001\nvon Brian Palmer (brianp@reactos.org)",
-                    IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
-                    122,26
-    DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
-    ICON            IDI_TASKMANAGER,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
-                    ES_READONLY | WS_VSCROLL
-END
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -204,7 +191,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Prozess beenden",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "Prozesse aller &Benutzer anzeigen",IDC_SHOWALLPROCESSES,
@@ -216,7 +203,7 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "CPU-Auslastung",IDC_CPU_USAGE_FRAME,5,5,67,54,WS_TABSTOP, WS_EX_TRANSPARENT
+    GROUPBOX        "CPU-Auslastung",IDC_CPU_USAGE_FRAME,5,5,67,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Auslagerungsdatei",IDC_MEM_USAGE_FRAME,5,63,67,54,BS_LEFTTEXT, WS_EX_TRANSPARENT //5,63,60,54
     GROUPBOX        "Insgesamt",IDC_TOTALS_FRAME,5,122,117,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Zugesicherter Speicher (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,117,39,0,WS_EX_TRANSPARENT
@@ -226,46 +213,46 @@ BEGIN
     LTEXT           "Threads",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Prozesse",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,71,131,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,71,140,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,71,149,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Insgesamt",IDS_COMMIT_CHARGE_TOTAL,12,175,50,8 //27
-    LTEXT           "Grenzwert",IDS_COMMIT_CHARGE_LIMIT,12,184,50,8 //15
+    LTEXT           "Grenzwert",IDS_COMMIT_CHARGE_LIMIT,12,184,50,8,NOT WS_BORDER //15
     LTEXT           "Maximalwert",IDS_COMMIT_CHARGE_PEAK,12,193,50,8 //34
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,71,174,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,71,184,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,71,193,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Insgesamt",IDS_PHYSICAL_MEMORY_TOTAL,133,131,50,8 //27
     LTEXT           "Verfügbar",IDS_PHYSICAL_MEMORY_AVAILABLE,133,140,50,8 //30
     LTEXT           "Systemcache",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,133,149,46,8 //46
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,192,131,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,192,140,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,192,149,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Insgesamt",IDS_KERNEL_MEMORY_TOTAL,133,174,50,8 //27
     LTEXT           "Ausgelagert",IDS_KERNEL_MEMORY_PAGED,133,184,50,8 //21
     LTEXT           "Nicht ausgelagert",IDS_KERNEL_MEMORY_NONPAGED,133,193,60,8 //34
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,192,174,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,192,184,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,192,193,48,8,ES_RIGHT |
-                    ES_READONLY | ES_NUMBER | NOT WS_BORDER
+                    ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Verlauf der CPU-Auslastung",IDC_CPU_USAGE_HISTORY_FRAME,76,5,166,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Verlauf der Auslagerungsdateiauslastung",IDC_MEMORY_USAGE_HISTORY_FRAME,76,63,166,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU-Auslastungsanzeige",IDC_CPU_USAGE_GRAPH,12,17,47,37,0, WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Auslagerungsdateiauslastungsanzeige",IDC_MEM_USAGE_GRAPH,12,75,47,37,0, WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU-Auslastungsanzeige",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP, WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Auslagerungsdateiauslastungsanzeige",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP, WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU-Auslastungsverlaufsanzeige",IDC_CPU_USAGE_HISTORY_GRAPH,82,17,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Auslagerungsdateiauslastungs-Verlaufsanzeige",IDC_MEM_USAGE_HISTORY_GRAPH,82,75,
-                    153,37,0,WS_EX_CLIENTEDGE
+                    153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -587,7 +574,7 @@ BEGIN
     ID_FILE_NEW             "Führt ein neues Programm aus."
     ID_OPTIONS_ALWAYSONTOP  "Task-Manager bleibt im Vordergrund, wenn nicht minimiert."
     ID_OPTIONS_MINIMIZEONUSE
-                            "Task-Manager wird minimiert wenn ein SwitchTo-Vorgang durchgeführt wird."
+                            "Task-Manager wird minimiert, wenn ein SwitchTo-Vorgang durchgeführt wird."
     ID_OPTIONS_HIDEWHENMINIMIZED "Blendet den Task-Manager aus, wenn er minimiert ist."
     ID_VIEW_REFRESH         "Veranlasst den Task-Manager zur sofortigen Aktualisierung, unabhängig von der Geschwindigkeitseinstellung."
     ID_VIEW_LARGE           "Zeigt Tasks als große Symbole an."
@@ -610,9 +597,9 @@ BEGIN
     ID_WINDOWS_BRINGTOFRONT "Zeigt das Fenster im Vordergrund an, aber wechselt nicht zu diesem."
     ID_HELP_TOPICS          "Zeigt die Hilfethemen des Taskmanagers an."
     ID_HELP_ABOUT           "Zeigt Programminformationen, Versionsnummer und Copyright an."
-    ID_FILE_EXIT            "Beendet den Task-Manager."
+    ID_FILE_EXIT            "Beendet den Taskmanager."
     ID_OPTIONS_SHOW16BITTASKS
-                            "Zeigt die 16-Bit Tasks unter der zugehörigen ntvdm.exe an."
+                            "Zeigt die 16-Bit-Tasks unter der zugehörigen ntvdm.exe an."
     ID_VIEW_SELECTCOLUMNS   "Legt fest welche Spalten auf der Registerkarte Prozesse angezeigt werden."
     ID_VIEW_SHOWKERNELTIMES "Zeigt die Kernel-Zeiten in den Systemmonitordiagrammen an."
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
@@ -643,7 +630,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Legt die Priorität auf NIEDRIGER ALS NORMAL fest."
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Legt die Priorität auf NIEDRIG fest."
-    IDS_LICENSE             "Dieses Programm ist kostenlos; Sie können es frei verteilen mit od. ohne Änderungen unter der GNU Lesser General Public License wie es von der Free Software Foundation veröffentlicht wurde; entweder Version 2.1 der Lizenz, oder eine spätere Version (ihrer Wahl).\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -690,7 +676,7 @@ BEGIN
     IDS_MENU_SHOWKERNELTIMES      "&Kernel-Zeiten anzeigen"
     IDS_CREATENEWTASK             "Neuen Task erstellen"
     IDS_CREATENEWTASK_DESC        "Geben Sie Programme, Ordner, Dokumente oder Internetressourcen an, die geöffnet werden sollen."
-    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Änderung der Prozess Affinität nicht möglich"
+    IDS_MSG_ACCESSPROCESSAFF      "Zugriff auf die / Änderung der Prozessaffinität nicht möglich"
     IDS_MSG_PROCESSONEPRO         "Der Prozess muss eine Zugehörigkeit zu mindestens einem Prozessor aufweisen."
     IDS_MSG_INVALIDOPTION         "Ungültige Auswahl"
     IDS_MSG_UNABLEDEBUGPROCESS    "Kann Prozess nicht debuggen"

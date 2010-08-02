@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "devenum_private.h"
@@ -48,7 +48,7 @@ const WCHAR clsid_keyname[6] = { 'C', 'L', 'S', 'I', 'D', 0 };
  */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 {
-    TRACE("%p 0x%lx %p\n", hinstDLL, fdwReason, fImpLoad);
+    TRACE("%p 0x%x %p\n", hinstDLL, fdwReason, fImpLoad);
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
@@ -66,7 +66,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 /***********************************************************************
  *		DllGetClassObject (DEVENUM.@)
  */
-HRESULT WINAPI DEVENUM_DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
     TRACE("(%s, %s, %p)\n", debugstr_guid(rclsid), debugstr_guid(iid), ppv);
 
@@ -78,14 +78,14 @@ HRESULT WINAPI DEVENUM_DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *pp
         IsEqualGUID(rclsid, &CLSID_CDeviceMoniker))
         return IClassFactory_QueryInterface((IClassFactory*)&DEVENUM_ClassFactory, iid, ppv);
 
-    FIXME("\n\tCLSID:\t%s,\n\tIID:\t%s\n",debugstr_guid(rclsid),debugstr_guid(iid));
+    FIXME("CLSID: %s, IID: %s\n", debugstr_guid(rclsid), debugstr_guid(iid));
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
 /***********************************************************************
  *		DllCanUnloadNow (DEVENUM.@)
  */
-HRESULT WINAPI DEVENUM_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
     return dll_refs != 0 ? S_FALSE : S_OK;
 }
@@ -93,7 +93,7 @@ HRESULT WINAPI DEVENUM_DllCanUnloadNow(void)
 /***********************************************************************
  *		DllRegisterServer (DEVENUM.@)
  */
-HRESULT WINAPI DEVENUM_DllRegisterServer(void)
+HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT res;
     HKEY hkeyClsid = NULL;
@@ -139,7 +139,7 @@ HRESULT WINAPI DEVENUM_DllRegisterServer(void)
 /*** ActiveMovieFilter Categories ***/
 
     CoInitialize(NULL);
-
+    
     res = CoCreateInstance(&CLSID_FilterMapper2, NULL, CLSCTX_INPROC,
                            &IID_IFilterMapper2,  &mapvptr);
     if (SUCCEEDED(res))
@@ -154,7 +154,7 @@ HRESULT WINAPI DEVENUM_DllRegisterServer(void)
         static const WCHAR friendlyextrend[] = {'E','x','t','e','r','n','a','l',' ','R','e','n','d','e','r','e','r','s',0};
         static const WCHAR friendlydevctrl[] = {'D','e','v','i','c','e',' ','C','o','n','t','r','o','l',' ','F','i','l','t','e','r','s',0};
 
-        pMapper = (IFilterMapper2*)mapvptr;
+        pMapper = mapvptr;
 
         IFilterMapper2_CreateCategory(pMapper, &CLSID_VideoInputDeviceCategory, MERIT_DO_NOT_USE, friendlyvidcap);
         IFilterMapper2_CreateCategory(pMapper, &CLSID_LegacyAmFilterCategory, MERIT_NORMAL, friendlydshow);
@@ -278,9 +278,7 @@ HRESULT WINAPI DEVENUM_DllRegisterServer(void)
     if (hkeyClsid)
         RegCloseKey(hkeyClsid);
 
-    if (pszClsidDevMon)
-        CoTaskMemFree(pszClsidDevMon);
-
+    CoTaskMemFree(pszClsidDevMon);
     CoUninitialize();
 
     return res;
@@ -289,7 +287,7 @@ HRESULT WINAPI DEVENUM_DllRegisterServer(void)
 /***********************************************************************
  *		DllUnregisterServer (DEVENUM.@)
  */
-HRESULT WINAPI DEVENUM_DllUnregisterServer(void)
+HRESULT WINAPI DllUnregisterServer(void)
 {
 	FIXME("stub!\n");
 	return E_FAIL;
@@ -298,7 +296,6 @@ HRESULT WINAPI DEVENUM_DllUnregisterServer(void)
 static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWSTR pszThreadingModel)
 {
     HRESULT res = S_OK;
-    WCHAR dll_module[MAX_PATH];
     LPOLESTR clsidString = NULL;
     HKEY hkeyClsid;
     HKEY hkeySub;
@@ -307,17 +304,10 @@ static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWST
     int i;
     static const WCHAR wcszInproc32[] = {'I','n','p','r','o','c','S','e','r','v','e','r','3','2',0};
     static const WCHAR wcszThreadingModel[] = {'T','h','r','e','a','d','i','n','g','M','o','d','e','l',0};
+    static const WCHAR dll_module[] = {'d','e','v','e','n','u','m','.','d','l','l',0};
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, clsid_keyname, &hkeyClsid)
           == ERROR_SUCCESS ? S_OK : E_FAIL;
-
-    TRACE("HModule = %p\n", DEVENUM_hInstance);
-    i = GetModuleFileNameW(DEVENUM_hInstance, dll_module,
-                           sizeof(dll_module) / sizeof(WCHAR));
-    if (!i)
-	return HRESULT_FROM_WIN32(GetLastError());
-    if (i >= sizeof(dll_module) / sizeof(WCHAR))
-	return HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
 
     for (i = 0; i < count; i++)
     {
@@ -375,7 +365,7 @@ static HRESULT register_clsids(int count, const register_info * pRegInfo, LPCWST
 typedef HRESULT (WINAPI *DllRegisterServer_func)(void);
 
 /* calls DllRegisterServer() for the Quartz DLL */
-static void DEVENUM_RegisterQuartz()
+static void DEVENUM_RegisterQuartz(void)
 {
     HANDLE hDLL = LoadLibraryA("quartz.dll");
     DllRegisterServer_func pDllRegisterServer = NULL;
@@ -385,6 +375,6 @@ static void DEVENUM_RegisterQuartz()
     {
         HRESULT hr = pDllRegisterServer();
         if (FAILED(hr))
-            ERR("Failed to register Quartz. Error was 0x%lx)\n", hr);
+            ERR("Failed to register Quartz. Error was 0x%x)\n", hr);
     }
 }

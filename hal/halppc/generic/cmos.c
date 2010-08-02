@@ -4,7 +4,7 @@
  * FILE:            hal/halx86/generic/cmos.c
  * PURPOSE:         CMOS Access Routines (Real Time Clock and LastKnownGood)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
- *                  Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/

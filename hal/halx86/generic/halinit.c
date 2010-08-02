@@ -91,46 +91,92 @@ HalInitSystem(IN ULONG BootPhase,
             KeBugCheckEx(MISMATCHED_HAL, 1, Prcb->MajorVersion, 1, 0);
         }
 
+#ifndef _MINIHAL_
+        /* Initialize ACPI */
+        HalpSetupAcpiPhase0(LoaderBlock);
+
         /* Initialize the PICs */
-        HalpInitPICs();
+        HalpInitializePICs(TRUE);
+#endif
 
         /* Force initial PIC state */
         KfRaiseIrql(KeGetCurrentIrql());
 
-        /* Initialize the clock */
-        HalpInitializeClock();
+        /* Initialize CMOS lock */
+        KeInitializeSpinLock(&HalpSystemHardwareLock);
 
-        /* Setup busy waiting */
-        //HalpCalibrateStallExecution();
+        /* Initialize CMOS */
+        HalpInitializeCmos();
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
         HalSetSystemInformation = HaliSetSystemInformation;
         HalInitPnpDriver = NULL; // FIXME: TODO
+#ifndef _MINIHAL_
         HalGetDmaAdapter = HalpGetDmaAdapter;
+#else
+        HalGetDmaAdapter = NULL;
+#endif
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
+#ifndef _MINIHAL_
         HalResetDisplay = HalpBiosDisplayReset;
+#else
+        HalResetDisplay = NULL;
+#endif
+        HalHaltSystem = HaliHaltSystem;
 
-        /* Initialize the hardware lock (CMOS) */
-        KeInitializeSpinLock(&HalpSystemHardwareLock);
+        /* Register IRQ 2 */
+        HalpRegisterVector(IDT_INTERNAL,
+                           PRIMARY_VECTOR_BASE + 2,
+                           PRIMARY_VECTOR_BASE + 2,
+                           HIGH_LEVEL);
+
+        /* Setup I/O space */
+        HalpDefaultIoSpace.Next = HalpAddressUsageList;
+        HalpAddressUsageList = &HalpDefaultIoSpace;
+
+        /* Setup busy waiting */
+        HalpCalibrateStallExecution();
+
+#ifndef _MINIHAL_
+        /* Initialize the clock */
+        HalpInitializeClock();
+#endif
+
+        /*
+         * We could be rebooting with a pending profile interrupt,
+         * so clear it here before interrupts are enabled
+         */
+        HalStopProfileInterrupt(ProfileTime);
 
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
     }
     else if (BootPhase == 1)
     {
-        /* Initialize the default HAL stubs for bus handling functions */
-        HalpInitNonBusHandler();
+        /* Initialize bus handlers */
+        HalpInitBusHandlers();
 
-        /* Enable the clock interrupt */
-        ((PKIPCR)KeGetPcr())->IDT[0x30].ExtendedOffset =
-            (USHORT)(((ULONG_PTR)HalpClockInterrupt >> 16) & 0xFFFF);
-        ((PKIPCR)KeGetPcr())->IDT[0x30].Offset =
-            (USHORT)((ULONG_PTR)HalpClockInterrupt);
-        HalEnableSystemInterrupt(0x30, CLOCK2_LEVEL, Latched);
+#ifndef _MINIHAL_
+        /* Enable IRQ 0 */
+        HalpEnableInterruptHandler(IDT_DEVICE,
+                                   0,
+                                   PRIMARY_VECTOR_BASE,
+                                   CLOCK2_LEVEL,
+                                   HalpClockInterrupt,
+                                   Latched);
+
+        /* Enable IRQ 8 */
+        HalpEnableInterruptHandler(IDT_DEVICE,
+                                   0,
+                                   PRIMARY_VECTOR_BASE + 8,
+                                   PROFILE_LEVEL,
+                                   HalpProfileInterrupt,
+                                   Latched);
 
         /* Initialize DMA. NT does this in Phase 0 */
         HalpInitDma();
+#endif
 
         /* Do some HAL-specific initialization */
         HalpInitPhase1();
@@ -139,21 +185,3 @@ HalInitSystem(IN ULONG BootPhase,
     /* All done, return */
     return TRUE;
 }
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-HalReportResourceUsage(VOID)
-{
-    /* Initialize PCI bus. */
-    HalpInitializePciBus();
-
-    /* FIXME: This is done in ReactOS MP HAL only*/
-    //HaliReconfigurePciInterrupts();
-
-    /* FIXME: Report HAL Usage to kernel */
-}
-
-/* EOF */

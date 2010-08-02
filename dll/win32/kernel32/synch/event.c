@@ -72,10 +72,10 @@ CreateEventExW(IN LPSECURITY_ATTRIBUTES lpEventAttributes  OPTIONAL,
     /* Now check if we got a name */
     if (lpName) RtlInitUnicodeString(&ObjectName, lpName);
 
-	/* Check for invalid flags */
+    /* Check for invalid flags */
     if (dwFlags & ~(CREATE_EVENT_INITIAL_SET | CREATE_EVENT_MANUAL_RESET))
     {
-	    /* Fail */
+        /* Fail */
         SetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }

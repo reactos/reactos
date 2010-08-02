@@ -1,5 +1,4 @@
-#ifndef _WIN32K_MENU_H
-#define _WIN32K_MENU_H
+#pragma once
 
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
@@ -24,11 +23,12 @@ typedef struct _MENU_ITEM
   UNICODE_STRING Text;
   HBITMAP hbmpItem;
   RECTL Rect;
-  UINT XTab;
+  UINT dxTab;
 } MENU_ITEM, *PMENU_ITEM;
 
 typedef struct _MENU_OBJECT
 {
+  PROCDESKHEAD head;
   PEPROCESS Process;
   LIST_ENTRY ListEntry;
   PMENU_ITEM MenuItemList;
@@ -78,9 +78,6 @@ BOOL FASTCALL
 IntGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 BOOL FASTCALL
-IntIsMenu(HMENU hMenu);
-
-BOOL FASTCALL
 IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 int FASTCALL
@@ -100,7 +97,7 @@ IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECTL *rcRec
 DWORD APIENTRY UserInsertMenuItem(HMENU hMenu, UINT uItem, BOOL fByPosition, LPCMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
-IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
+IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL FASTCALL
 IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
@@ -112,5 +109,3 @@ InitMenuImpl(VOID);
 
 NTSTATUS FASTCALL
 CleanupMenuImpl(VOID);
-
-#endif /* _WIN32K_MENU_H */

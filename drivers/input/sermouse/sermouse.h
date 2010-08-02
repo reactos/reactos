@@ -4,8 +4,7 @@
 #include <ntddmou.h>
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define SERMOUSE_TAG TAG('S', 'M', 'o', 'u')
+#define SERMOUSE_TAG 'uoMS'
 
 typedef enum
 {

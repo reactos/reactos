@@ -7,9 +7,6 @@
 <directory name="appwiz">
 	<xi:include href="appwiz/appwiz.rbuild" />
 </directory>
-<directory name="appwiz-new">
-	<xi:include href="appwiz-new/appwiz.rbuild" />
-</directory>
 <directory name="console">
 	<xi:include href="console/console.rbuild" />
 </directory>

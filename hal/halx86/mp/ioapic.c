@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS kernel
- * FILE:                  hal/halx86/generic/ioapic.c
+ * FILE:                  hal/halx86/mp/ioapic.c
  * PURPOSE:               
  * PROGRAMMER:            
  */
@@ -32,7 +32,7 @@ ULONG IRQVectorMap[MAX_IRQ_SOURCE];             /* IRQ to vector map */
  * EISA conforming in the MP table, that means its trigger type must
  * be read in from the ELCR */
 
-#define default_EISA_trigger(idx)	(EISA_ELCR(IRQMap[idx].SrcBusIrq))
+#define default_EISA_trigger(idx)	(EISA_ELCR_Read(IRQMap[idx].SrcBusIrq))
 #define default_EISA_polarity(idx)	(0)
 
 /* ISA interrupts are always polarity zero edge triggered,
@@ -64,7 +64,7 @@ VOID IOAPICWrite(ULONG Apic, ULONG Offset, ULONG Value);
 /*
  * EISA Edge/Level control register, ELCR
  */
-static ULONG EISA_ELCR(ULONG irq)
+static ULONG EISA_ELCR_Read(ULONG irq)
 {
    if (irq < 16) 
    {
@@ -661,7 +661,7 @@ HaliReconfigurePciInterrupts(VOID)
 
 VOID Disable8259AIrq(ULONG irq)
 {
-    ULONG tmp;
+    UCHAR tmp;
 
     if (irq >= 8) 
     {

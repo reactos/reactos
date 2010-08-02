@@ -1,7 +1,6 @@
 #include "precomp.h"
 
 
-
 /*
  * @implemented
  */
@@ -91,7 +90,6 @@ GetTextCharset(HDC hdc)
 
 
 
-
 /*
  * @implemented
  */
@@ -109,7 +107,8 @@ GetTextMetricsA(
     return FALSE;
   }
 
-  return TextMetricW2A(lptm, &tmwi.TextMetric);
+  FONT_TextMetricWToA(&tmwi.TextMetric, lptm);
+  return TRUE;
 }
 
 
@@ -174,7 +173,7 @@ GetTextExtentPointW(
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
+  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 1);
 }
 
 
@@ -383,8 +382,23 @@ int
 WINAPI
 GetTextFaceA( HDC hdc, INT count, LPSTR name )
 {
-    INT res = GetTextFaceW(hdc, 0, NULL);
-    LPWSTR nameW = HeapAlloc( GetProcessHeap(), 0, res * 2 );
+    INT res;
+    LPWSTR nameW;
+
+    /* Validate parameters */
+    if (name && count <= 0)
+    {
+        /* Set last error and return failure */
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    res = GetTextFaceW(hdc, 0, NULL);
+    nameW = HeapAlloc( GetProcessHeap(), 0, res * 2 );
+    if (nameW == NULL)
+    {
+        return 0;
+    }
     GetTextFaceW( hdc, res, nameW );
 
     if (name)

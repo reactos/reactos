@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 	.text
@@ -35,7 +35,7 @@ _pnp_bios_entry_point:
 _pnp_bios_data_segment:
 	.word	0
 
-EXTERN(_PnpBiosSupported)
+EXTERN(PnpBiosSupported)
 	.code64
 
 	push rdi
@@ -113,7 +113,7 @@ _pnp_node_size:
 _pnp_node_count:
 	.word	0
 
-EXTERN(_PnpBiosGetDeviceNodeCount)
+EXTERN(PnpBiosGetDeviceNodeCount)
 	.code64
 
 	push rbp
@@ -182,7 +182,7 @@ _pnp_buffer_offset:
 _pnp_node_number:
 	.byte	0
 
-EXTERN(_PnpBiosGetDeviceNode)
+EXTERN(PnpBiosGetDeviceNode)
 	.code64
 
 	push rbp

@@ -7,7 +7,7 @@
  *                   Pablo Borobia <pborobia@gmail.com>
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -54,7 +54,7 @@ IntIsWindowInChain(PWINDOW_OBJECT window)
     return wce;
 }
 
-VOID FASTCALL printChain()
+VOID FASTCALL printChain(VOID)
 {
     /*test*/
     PCLIPBOARDCHAINELEMENT wce2 = WindowsChain;
@@ -75,7 +75,7 @@ IntAddWindowToChain(PWINDOW_OBJECT window)
     {
         wce = WindowsChain;
 
-        wce = ExAllocatePool(PagedPool, sizeof(CLIPBOARDCHAINELEMENT));
+        wce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDCHAINELEMENT), USERTAG_CLIPBOARD);
         if (wce == NULL)
         {
             SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -148,7 +148,7 @@ intIsFormatAvailable(UINT format)
 
 /* counts how many distinct format were are in the clipboard */
 DWORD FASTCALL
-IntCountClipboardFormats()
+IntCountClipboardFormats(VOID)
 {
     DWORD ret = 0;
     PCLIPBOARDELEMENT ce = ClipboardData;
@@ -167,7 +167,7 @@ intAddFormatedData(UINT format, HANDLE hData, DWORD size)
 {
     PCLIPBOARDELEMENT ce = NULL;
 
-    ce = ExAllocatePool(PagedPool, sizeof(CLIPBOARDELEMENT));
+    ce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDELEMENT), USERTAG_CLIPBOARD);
     if (ce == NULL)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -221,7 +221,7 @@ intRemoveFormatedData(UINT format)
 }
 
 VOID FASTCALL
-IntEmptyClipboardData()
+IntEmptyClipboardData(VOID)
 {
     PCLIPBOARDELEMENT ce = ClipboardData;
     PCLIPBOARDELEMENT tmp;
@@ -229,7 +229,10 @@ IntEmptyClipboardData()
     while(ce)
     {
         tmp = ce->next;
-        ExFreePool(ce->hData);
+		if (ce->hData)
+		{
+            ExFreePool(ce->hData);
+        }
 	    ExFreePool(ce);
 	    ce = tmp;
     }
@@ -319,7 +322,7 @@ synthesizeData(UINT format)
 }
 
 VOID FASTCALL
-freeSynthesizedData()
+freeSynthesizedData(VOID)
 {
     ExFreePool(synthesizedData);
 }
@@ -327,7 +330,7 @@ freeSynthesizedData()
 /*==============================================================*/
 
 BOOL FASTCALL
-intIsClipboardOpenByMe()
+intIsClipboardOpenByMe(VOID)
 {
     /* check if we open the clipboard */
     if (ClipboardThread && ClipboardThread == PsGetCurrentThreadWin32Thread())
@@ -886,7 +889,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
             if (!canSinthesize(uFormat))
             {
-                hCBData = ExAllocatePool(PagedPool, size);
+                hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
                 memcpy(hCBData, hMem, size);
                 intAddFormatedData(uFormat, hCBData, size);
                 DPRINT1("Data stored\n");
@@ -976,7 +979,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
                     size = bi.bmiHeader.biSizeImage + sizeof(BITMAPINFOHEADER);
 
-                    hCBData = ExAllocatePool(PagedPool, size);
+                    hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
                     memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER));
 
                     ret = NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
@@ -1130,7 +1133,7 @@ IntIncrementSequenceNumber(VOID)
     PWINSTATION_OBJECT WinStaObj;
 
     pti = PsGetCurrentThreadWin32Thread();
-    WinStaObj = pti->Desktop->WindowStation;
+    WinStaObj = pti->rpdesk->rpwinstaParent;
 
     WinStaObj->Clipboard->ClipboardSequenceNumber++;
 }
@@ -1149,7 +1152,7 @@ NtUserGetClipboardSequenceNumber(VOID)
 
     WinSta = UserGetProcessWindowStation();
 
-    Status = IntValidateWindowStationHandle(WinSta, UserMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
+    Status = IntValidateWindowStationHandle(WinSta, KernelMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
 
     if (!NT_SUCCESS(Status))
     {

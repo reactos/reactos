@@ -1,0 +1,22 @@
+/*
+ * PROJECT:     ReactOS FontView
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        rosapps/fontview/lang/zh-CN.rc
+ * PURPOSE:     Chinese (Simplified) Language File for FontView
+ * TRANSLATOR:  Elton Chung <elton328@gmail.com>
+ */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_QUIT, "结束" 
+	IDS_PRINT, "列印" 
+	IDS_STRING, "ReactOS给所有人一个自由的操作系统！1234567890" 
+	IDS_ERROR, "错误" 
+	IDS_ERROR_NOMEM, "没有足够的内存来完成操作。" 
+	IDS_ERROR_NOFONT, "％1不是一个有效的字体档案。" 
+	IDS_ERROR_NOCLASS, "窗口无法初始化。" 
+	IDS_ERROR_BADCMD, "没有提供字体文件。\n语法：\n  fontview.exe <字体档案>"  
+END
+

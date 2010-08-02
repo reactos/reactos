@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "../ARM3/miarm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
@@ -58,6 +59,56 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 }
 #endif
 
+const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
+
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN MmUnmapPageTable(PULONG Pt);
@@ -67,14 +118,8 @@ MiFlushTlb(PULONG Pt, PVOID Address)
 {
     if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
     {
-        __invlpg(Address);
+        KeInvalidateTlbEntry(Address);
     }
-}
-
-PULONG
-MmGetPageDirectory(VOID)
-{
-    return (PULONG)(ULONG_PTR)__readcr3();
 }
 
 static ULONG
@@ -118,144 +163,12 @@ ProtectToPTE(ULONG flProtect)
     return(Attributes);
 }
 
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process)
-{
-    PUSHORT LdtDescriptor;
-    ULONG LdtBase;
-    PULONG PageDir;
-    ULONG i;
-    
-    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
-    
-    LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor;
-    LdtBase = LdtDescriptor[1] |
-    ((LdtDescriptor[2] & 0xff) << 16) |
-    ((LdtDescriptor[3] & ~0xff) << 16);
-    
-    DPRINT("LdtBase: %x\n", LdtBase);
-    
-    if (LdtBase)
-    {
-        ExFreePool((PVOID) LdtBase);
-    }
-    
-    PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-    for (i = 0; i < ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i++)
-    {
-        if (PageDir[i] != 0)
-        {
-            MiZeroPage(PTE_TO_PFN(PageDir[i]));
-            MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[i]));
-        }
-    }
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
-    MmDeleteHyperspaceMapping(PageDir);
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-
-    Process->Pcb.DirectoryTableBase[0] = 0;
-    Process->Pcb.DirectoryTableBase[1] = 0;
-
-    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
-    return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG DirectoryTableBase)
-{
-    /* Share the directory base with the idle process */
-    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
-    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
-
-    /* Initialize the Addresss Space */
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->VadRoot.BalancedRoot.u1.Parent = NULL;
-
-    /* The process now has an address space */
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
-}
-
-BOOLEAN
-NTAPI
-MmCreateProcessAddressSpace(IN ULONG MinWs,
-                            IN PEPROCESS Process,
-                            IN PULONG DirectoryTableBase)
-{
-    NTSTATUS Status;
-    ULONG i, j;
-    PFN_TYPE Pfn[2];
-    PULONG PageDirectory;
-    
-    DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", MinWs, Process);
-    
-    for (i = 0; i < 2; i++)
-    {
-        Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
-        if (!NT_SUCCESS(Status))
-        {
-            for (j = 0; j < i; j++)
-            {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
-            }
-            
-            return FALSE;
-        }
-    }
-    
-    PageDirectory = MmCreateHyperspaceMapping(Pfn[0]);
-    
-    memcpy(PageDirectory + ADDR_TO_PDE_OFFSET(MmSystemRangeStart),
-           MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(MmSystemRangeStart),
-           (1024 - ADDR_TO_PDE_OFFSET(MmSystemRangeStart)) * sizeof(ULONG));
-    
-    DPRINT("Addr %x\n",ADDR_TO_PDE_OFFSET(PAGETABLE_MAP));
-    PageDirectory[ADDR_TO_PDE_OFFSET(PAGETABLE_MAP)] = PFN_TO_PTE(Pfn[0]) | PA_PRESENT | PA_READWRITE;
-    PageDirectory[ADDR_TO_PDE_OFFSET(HYPERSPACE)] = PFN_TO_PTE(Pfn[1]) | PA_PRESENT | PA_READWRITE;
-    
-    MmDeleteHyperspaceMapping(PageDirectory);
-    
-    DirectoryTableBase[0] = PFN_TO_PTE(Pfn[0]);
-    DirectoryTableBase[1] = 0;
-    DPRINT("Finished MmCopyMmInfo(): 0x%x\n", DirectoryTableBase[0]);
-    return TRUE;
-}
-
-VOID
-NTAPI
-MmDeletePageTable(PEPROCESS Process, PVOID Address)
-{
-    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-    
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeAttachProcess(&Process->Pcb);
-    }
-    
-    MiAddressToPde(Address)->u.Long = 0;
-    MiFlushTlb((PULONG)MiAddressToPde(Address),
-               MiAddressToPte(Address));
-    
-    if (Address >= MmSystemRangeStart)
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-        //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-    }
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeDetachProcess();
-    }
-}
-
 static PULONG
 MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
     ULONG PdeOffset = ADDR_TO_PDE_OFFSET(Address);
     NTSTATUS Status;
-    PFN_TYPE Pfn;
+    PFN_NUMBER Pfn;
     ULONG Entry;
     PULONG Pt, PageDir;
     
@@ -308,20 +221,19 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 {
                     return NULL;
                 }
-                Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+                Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
                 if (!NT_SUCCESS(Status) || Pfn == 0)
                 {
                     KeBugCheck(MEMORY_MANAGEMENT);
                 }
                 Entry = PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE;
-                if (Ke386GlobalPagesEnabled)
-                {
-                    Entry |= PA_GLOBAL;
-                }
                 if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
-                    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
                 }
+                InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+                RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
+                return (PULONG)MiAddressToPte(Address);
             }
             InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
         }
@@ -375,7 +287,7 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
     return 0;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
@@ -391,7 +303,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -453,13 +365,13 @@ MmRawDeleteVirtualMapping(PVOID Address)
 VOID
 NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
-                       BOOLEAN* WasDirty, PPFN_TYPE Page)
+                       BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
 {
     BOOLEAN WasValid = FALSE;
-    PFN_TYPE Pfn;
+    PFN_NUMBER Pfn;
     ULONG Pte;
     PULONG Pt;
     
@@ -492,7 +404,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     if (WasValid)
     {
         Pfn = PTE_TO_PFN(Pte);
-        MmMarkPageUnmapped(Pfn);
     }
     else
     {
@@ -685,87 +596,6 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 
 NTSTATUS
 NTAPI
-MmCreateVirtualMappingForKernel(PVOID Address,
-                                ULONG flProtect,
-                                PPFN_TYPE Pages,
-                                ULONG PageCount)
-{
-    ULONG Attributes;
-    ULONG i;
-    PVOID Addr;
-    ULONG PdeOffset, oldPdeOffset;
-    PULONG Pt;
-    ULONG Pte;
-    BOOLEAN NoExecute = FALSE;
-    
-    DPRINT("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
-           Address, flProtect, Pages, PageCount);
-    
-    if (Address < MmSystemRangeStart)
-    {
-        DPRINT1("MmCreateVirtualMappingForKernel is called for user space\n");
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    
-    Attributes = ProtectToPTE(flProtect);
-    if (Attributes & 0x80000000)
-    {
-        NoExecute = TRUE;
-    }
-    Attributes &= 0xfff;
-    if (Ke386GlobalPagesEnabled)
-    {
-        Attributes |= PA_GLOBAL;
-    }
-    
-    Addr = Address;
-    
-    oldPdeOffset = ADDR_TO_PDE_OFFSET(Addr);
-    Pt = MmGetPageTableForProcess(NULL, Addr, TRUE);
-    if (Pt == NULL)
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    Pt--;
-    
-    for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
-    {
-        if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
-        {
-            DPRINT1("Setting physical address but not allowing access at address "
-                    "0x%.8X with attributes %x/%x.\n",
-                    Addr, Attributes, flProtect);
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        
-        PdeOffset = ADDR_TO_PDE_OFFSET(Addr);
-        if (oldPdeOffset != PdeOffset)
-        {
-            Pt = MmGetPageTableForProcess(NULL, Addr, TRUE);
-            if (Pt == NULL)
-            {
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
-        }
-        else
-        {
-            Pt++;
-        }
-        oldPdeOffset = PdeOffset;
-        
-        Pte = *Pt;
-        if (Pte != 0)
-        {
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-    }
-    
-    return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
 MmCreatePageFileMapping(PEPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
@@ -795,10 +625,6 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
     Pte = *Pt;
-    if (PAGE_MASK((Pte)) != 0)
-    {
-        MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
-    }
     InterlockedExchangePte(Pt, SwapEntry << 1);
     if (Pte != 0)
     {
@@ -818,7 +644,7 @@ NTAPI
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
-                             PPFN_TYPE Pages,
+                             PPFN_NUMBER Pages,
                              ULONG PageCount)
 {
     ULONG Attributes;
@@ -871,10 +697,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     if (Address >= MmSystemRangeStart)
     {
         Attributes &= ~PA_USER;
-        if (Ke386GlobalPagesEnabled)
-        {
-            Attributes |= PA_GLOBAL;
-        }
     }
     else
     {
@@ -909,15 +731,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         oldPdeOffset = PdeOffset;
         
         Pte = *Pt;
-        MmMarkPageMapped(Pages[i]);
         if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        if (PAGE_MASK(Pte) != 0)
-        {
-            MmMarkPageUnmapped(PTE_TO_PFN(Pte));
         }
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         if (Pte != 0)
@@ -942,7 +759,7 @@ NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
-                       PPFN_TYPE Pages,
+                       PPFN_NUMBER Pages,
                        ULONG PageCount)
 {
     ULONG i;
@@ -1025,10 +842,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     if (Address >= MmSystemRangeStart)
     {
         Attributes &= ~PA_USER;
-        if (Ke386GlobalPagesEnabled)
-        {
-            Attributes |= PA_GLOBAL;
-        }
     }
     else
     {
@@ -1076,6 +889,18 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
     ULONG StartOffset, EndOffset, Offset;
     PULONG Pde;
+    
+    //
+    // Check if the process isn't there anymore
+    // This is probably a bad sign, since it means the caller is setting cr3 to
+    // 0 or something...
+    //
+    if ((PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]) == 0) && (Process != PsGetCurrentProcess()))
+    {
+        DPRINT1("Process: %16s is dead: %p\n", Process->ImageFileName, Process->Pcb.DirectoryTableBase[0]);
+        ASSERT(FALSE);
+        return;
+    }
 
     if (Address < MmSystemRangeStart)
     {
@@ -1106,8 +931,6 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
     }
 }
 
-extern MMPTE HyperTemplatePte;
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -1118,12 +941,6 @@ MmInitGlobalKernelPageDirectory(VOID)
     
     DPRINT("MmInitGlobalKernelPageDirectory()\n");
     
-    //
-    // Setup template
-    //
-    HyperTemplatePte.u.Long = (PA_PRESENT | PA_READWRITE | PA_DIRTY | PA_ACCESSED);
-    if (Ke386GlobalPagesEnabled) HyperTemplatePte.u.Long |= PA_GLOBAL;
-    
     for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
     {
         if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) &&
@@ -1131,56 +948,7 @@ MmInitGlobalKernelPageDirectory(VOID)
             0 == MmGlobalKernelPageDirectory[i] && 0 != CurrentPageDirectory[i])
         {
             MmGlobalKernelPageDirectory[i] = CurrentPageDirectory[i];
-            if (Ke386GlobalPagesEnabled)
-            {
-                MmGlobalKernelPageDirectory[i] |= PA_GLOBAL;
-                CurrentPageDirectory[i] |= PA_GLOBAL;
-            }
         }
-    }
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-MiInitPageDirectoryMap(VOID)
-{
-    MEMORY_AREA* kernel_map_desc = NULL;
-    MEMORY_AREA* hyperspace_desc = NULL;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PVOID BaseAddress;
-    NTSTATUS Status;
-    
-    DPRINT("MiInitPageDirectoryMap()\n");
-    
-    BoundaryAddressMultiple.QuadPart = 0;
-    BaseAddress = (PVOID)PAGETABLE_MAP;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
-                                &BaseAddress,
-                                0x400000,
-                                PAGE_READWRITE,
-                                &kernel_map_desc,
-                                TRUE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    BaseAddress = (PVOID)HYPERSPACE;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
-                                &BaseAddress,
-                                0x400000,
-                                PAGE_READWRITE,
-                                &hyperspace_desc,
-                                TRUE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
     }
 }
 

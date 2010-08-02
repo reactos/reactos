@@ -19,40 +19,45 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Содержание"
-    IDS_INDEX        "&Оглавление"
-    IDS_SEARCH       "&Поиск"
-    IDS_FAVORITES    "&Избранное"
+    IDS_CONTENTS     "&РЎРѕРґРµСЂР¶Р°РЅРёРµ"
+    IDS_INDEX        "&РћРіР»Р°РІР»РµРЅРёРµ"
+    IDS_SEARCH       "&РџРѕРёСЃРє"
+    IDS_FAVORITES    "&РР·Р±СЂР°РЅРЅРѕРµ"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "Показать"
-    IDTB_CONTRACT    "Спрятать"
-    IDTB_STOP        "Остановить"
-    IDTB_REFRESH     "Обновить"
-    IDTB_BACK        "Назад"
-    IDTB_HOME        "В начало"
-    IDTB_SYNC        "Синхронизировать"
-    IDTB_PRINT       "Печать"
-    IDTB_OPTIONS     "Настройки"
-    IDTB_FORWARD     "Вперёд"
-    IDTB_NOTES       "Записки"
-    IDTB_BROWSE_FWD  "Просмотр вперёд"
-    IDTB_BROWSE_BACK "Просмотр назад"
-    IDTB_CONTENTS    "Содержание"
-    IDTB_INDEX       "Оглавление"
-    IDTB_SEARCH      "Поиск"
-    IDTB_HISTORY     "История"
-    IDTB_FAVORITES   "Избранное"
-    IDTB_JUMP1       "Переход 1"
-    IDTB_JUMP2       "Переход 2"
-    IDTB_CUSTOMIZE   "Персонализовать"
-    IDTB_ZOOM        "Масштаб"
-    IDTB_TOC_NEXT    "Следующая глава"
-    IDTB_TOC_PREV    "Предыдущая глава"
+    IDTB_EXPAND      "РџРѕРєР°Р·Р°С‚СЊ"
+    IDTB_CONTRACT    "РЎРїСЂСЏС‚Р°С‚СЊ"
+    IDTB_STOP        "РћСЃС‚Р°РЅРѕРІРёС‚СЊ"
+    IDTB_REFRESH     "РћР±РЅРѕРІРёС‚СЊ"
+    IDTB_BACK        "РќР°Р·Р°Рґ"
+    IDTB_HOME        "Р’ РЅР°С‡Р°Р»Рѕ"
+    IDTB_SYNC        "РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ"
+    IDTB_PRINT       "РџРµС‡Р°С‚СЊ"
+    IDTB_OPTIONS     "РќР°СЃС‚СЂРѕР№РєРё"
+    IDTB_FORWARD     "Р’РїРµСЂС‘Рґ"
+    IDTB_NOTES       "Р—Р°РїРёСЃРєРё"
+    IDTB_BROWSE_FWD  "РџСЂРѕСЃРјРѕС‚СЂ РІРїРµСЂС‘Рґ"
+    IDTB_BROWSE_BACK "РџСЂРѕСЃРјРѕС‚СЂ РЅР°Р·Р°Рґ"
+    IDTB_CONTENTS    "РЎРѕРґРµСЂР¶Р°РЅРёРµ"
+    IDTB_INDEX       "РћРіР»Р°РІР»РµРЅРёРµ"
+    IDTB_SEARCH      "РџРѕРёСЃРє"
+    IDTB_HISTORY     "РСЃС‚РѕСЂРёСЏ"
+    IDTB_FAVORITES   "РР·Р±СЂР°РЅРЅРѕРµ"
+    IDTB_JUMP1       "РџРµСЂРµС…РѕРґ 1"
+    IDTB_JUMP2       "РџРµСЂРµС…РѕРґ 2"
+    IDTB_CUSTOMIZE   "РџРµСЂСЃРѕРЅР°Р»РёР·РѕРІР°С‚СЊ"
+    IDTB_ZOOM        "РњР°СЃС€С‚Р°Р±"
+    IDTB_TOC_NEXT    "РЎР»РµРґСѓСЋС‰Р°СЏ РіР»Р°РІР°"
+    IDTB_TOC_PREV    "РџСЂРµРґС‹РґСѓС‰Р°СЏ РіР»Р°РІР°"
 END

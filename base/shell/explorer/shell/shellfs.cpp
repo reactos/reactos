@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -172,7 +172,11 @@ bool ShellDirectory::get_path(PTSTR path, size_t path_count) const
 
 	SFGAOF attribs = SFGAO_FILESYSTEM;
 
-	if (FAILED(const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&_pidl, &attribs)))
+	// Split pidl into current and parent folder PIDLs
+	ShellPath pidlParent, pidlFolder;
+	_pidl.split(pidlParent, pidlFolder);
+
+	if (FAILED(const_cast<ShellFolder&>(_folder)->GetAttributesOf(1, (LPCITEMIDLIST*)&pidlFolder, &attribs)))
 		return false;
 
 	if (!(attribs & SFGAO_FILESYSTEM))

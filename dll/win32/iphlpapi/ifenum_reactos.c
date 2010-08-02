@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * Implementation notes
  * - Our bretheren use IOCTL_TCP_QUERY_INFORMATION_EX to get information
@@ -45,9 +45,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
-/* Globals */
-const PWCHAR TcpFileName = L"\\Device\\Tcp";
-
 /* Functions */
 
 /* I'm a bit skittish about maintaining this info in memory, as I'd rather
@@ -62,171 +59,6 @@ void interfaceMapInit(void)
 void interfaceMapFree(void)
 {
     /* Ditto. */
-}
-
-NTSTATUS openTcpFile(PHANDLE tcpFile) {
-    UNICODE_STRING fileName;
-    OBJECT_ATTRIBUTES objectAttributes;
-    IO_STATUS_BLOCK ioStatusBlock;
-    NTSTATUS status;
-
-    TRACE("called.\n");
-
-    /* Shamelessly ripped from CreateFileW */
-    RtlInitUnicodeString( &fileName, TcpFileName );
-
-    InitializeObjectAttributes( &objectAttributes,
-                                &fileName,
-                                OBJ_CASE_INSENSITIVE,
-                                NULL,
-                                NULL );
-
-    status = ZwCreateFile( tcpFile,
-                           SYNCHRONIZE | GENERIC_EXECUTE |
-                           GENERIC_READ | GENERIC_WRITE,
-                           &objectAttributes,
-                           &ioStatusBlock,
-                           NULL,
-                           FILE_ATTRIBUTE_NORMAL,
-                           FILE_SHARE_READ | FILE_SHARE_WRITE,
-                           FILE_OPEN_IF,
-                           FILE_SYNCHRONOUS_IO_NONALERT,
-                           0,
-                           0 );
-
-    /* String does not need to be freed: it points to the constant
-     * string we provided */
-
-    if (!NT_SUCCESS(status)) {
-        ERR("openTcpFile for <%wZ> failed: 0x%lx\n", &fileName, status);
-        *tcpFile = INVALID_HANDLE_VALUE;
-    }
-
-    return status;
-}
-
-void closeTcpFile( HANDLE h ) {
-    TRACE("called.\n");
-    ASSERT(h != INVALID_HANDLE_VALUE);
-    ZwClose( h );
-}
-
-/* A generic thing-getting function which interacts in the right way with
- * TDI.  This may seem oblique, but I'm using it to reduce code and hopefully
- * make this thing easier to debug.
- *
- * The things returned can be any of:
- *   TDIEntityID
- *   TDIObjectID
- *   IFEntry
- *   IPSNMPInfo
- *   IPAddrEntry
- *   IPInterfaceInfo
- */
-NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
-                            DWORD toiClass,
-                            DWORD toiType,
-                            DWORD toiId,
-                            DWORD teiEntity,
-			    DWORD teiInstance,
-                            DWORD fixedPart,
-                            DWORD entrySize,
-                            PVOID *tdiEntitySet,
-                            PDWORD numEntries ) {
-    TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
-    PVOID entitySet = 0;
-    NTSTATUS status = STATUS_SUCCESS;
-    DWORD allocationSizeForEntityArray = entrySize * MAX_TDI_ENTITIES,
-        arraySize = entrySize * MAX_TDI_ENTITIES;
-
-    TRACE("TdiGetSetOfThings(tcpFile %x,toiClass %x,toiType %x,toiId %x,"
-          "teiEntity %x,fixedPart %d,entrySize %d)\n",
-          (int)tcpFile,
-          (int)toiClass,
-          (int)toiType,
-          (int)toiId,
-          (int)teiEntity,
-          (int)fixedPart,
-          (int)entrySize );
-
-    req.ID.toi_class                = toiClass;
-    req.ID.toi_type                 = toiType;
-    req.ID.toi_id                   = toiId;
-    req.ID.toi_entity.tei_entity    = teiEntity;
-    req.ID.toi_entity.tei_instance  = teiInstance;
-
-    /* There's a subtle problem here...
-     * If an interface is added at this exact instant, (as if by a PCMCIA
-     * card insertion), the array will still not have enough entries after
-     * have allocated it after the first DeviceIoControl call.
-     *
-     * We'll get around this by repeating until the number of interfaces
-     * stabilizes.
-     */
-    do {
-        assert( !entitySet ); /* We must not have an entity set allocated */
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_QUERY_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  0,
-                                  0,
-                                  &allocationSizeForEntityArray,
-                                  NULL );
-
-        if(!NT_SUCCESS(status))
-        {
-            ERR("IOCTL Failed\n");
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        arraySize = allocationSizeForEntityArray;
-        entitySet = HeapAlloc( GetProcessHeap(), 0, arraySize );
-
-        if( !entitySet ) {
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            WARN("TdiGetSetOfThings() => %08x\n", (int)status);
-            return status;
-        }
-
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_QUERY_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  entitySet,
-                                  arraySize,
-                                  &allocationSizeForEntityArray,
-                                  NULL );
-
-        /* This is why we have the loop -- we might have added an adapter */
-        if( arraySize == allocationSizeForEntityArray )
-            break;
-
-        HeapFree( GetProcessHeap(), 0, entitySet );
-        entitySet = 0;
-
-        if(!status)
-        {
-            WARN("IOCTL Failed\n");
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        WARN("TdiGetSetOfThings(): Array changed size: %d -> %d.\n",
-               arraySize, allocationSizeForEntityArray );
-    } while( TRUE ); /* We break if the array we received was the size we
-                      * expected.  Therefore, we got here because it wasn't */
-
-    *numEntries = (arraySize - fixedPart) / entrySize;
-    *tdiEntitySet = entitySet;
-
-    WARN("TdiGetSetOfThings() => Success: %d things @ %08x\n",
-           (int)*numEntries, (int)entitySet);
-
-    return STATUS_SUCCESS;
-}
-
-VOID tdiFreeThingSet( PVOID things ) {
-    HeapFree( GetProcessHeap(), 0, things );
 }
 
 NTSTATUS tdiGetMibForIfEntity
@@ -280,34 +112,7 @@ NTSTATUS tdiGetMibForIfEntity
            entry->ent.if_descr);
     TRACE("} status %08x\n",status);
 
-    return status;
-}
-
-NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile,
-                            TDIEntityID **entitySet,
-                            PDWORD numEntities ) {
-    NTSTATUS status = tdiGetSetOfThings( tcpFile,
-                                         INFO_CLASS_GENERIC,
-                                         INFO_TYPE_PROVIDER,
-                                         ENTITY_LIST_ID,
-                                         GENERIC_ENTITY,
-					 0,
-                                         0,
-                                         sizeof(TDIEntityID),
-                                         (PVOID *)entitySet,
-                                         numEntities );
-    if( NT_SUCCESS(status) ) {
-        int i;
-
-        for( i = 0; i < *numEntities; i++ ) {
-            TRACE("%-4d: %04x:%08x\n",
-                   i,
-                   (*entitySet)[i].tei_entity,
-                   (*entitySet)[i].tei_instance );
-        }
-    }
-
-    return status;
+    return STATUS_SUCCESS;
 }
 
 BOOL isInterface( TDIEntityID *if_maybe ) {
@@ -315,7 +120,7 @@ BOOL isInterface( TDIEntityID *if_maybe ) {
         if_maybe->tei_entity == IF_ENTITY;
 }
 
-static BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
+BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
     IFEntrySafelySized entryInfo;
     NTSTATUS status;
 
@@ -323,36 +128,8 @@ static BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
                                    loop_maybe,
                                    &entryInfo );
 
-    return NT_SUCCESS(status) && (!entryInfo.ent.if_type ||
-        entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK);
-}
-
-NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
-    TCP_REQUEST_QUERY_INFORMATION_EX req = TCP_REQUEST_QUERY_INFORMATION_INIT;
-    NTSTATUS status = STATUS_SUCCESS;
-    DWORD returnSize;
-
-    TRACE("TdiGetEntityType(tcpFile %x,entityId %x)\n",
-           (DWORD)tcpFile, ent->tei_instance);
-
-    req.ID.toi_class                = INFO_CLASS_GENERIC;
-    req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-    req.ID.toi_id                   = ENTITY_TYPE_ID;
-    req.ID.toi_entity.tei_entity    = ent->tei_entity;
-    req.ID.toi_entity.tei_instance  = ent->tei_instance;
-
-    status = DeviceIoControl( tcpFile,
-                              IOCTL_TCP_QUERY_INFORMATION_EX,
-                              &req,
-                              sizeof(req),
-                              type,
-                              sizeof(*type),
-                              &returnSize,
-                              NULL );
-
-    TRACE("TdiGetEntityType() => %08x %08x\n", *type, status);
-
-    return (status ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
+    return NT_SUCCESS(status) &&
+           (entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK);
 }
 
 BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe ) {
@@ -374,9 +151,9 @@ BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe ) {
                               sizeof(type),
                               &returnSize,
                               NULL );
-
     if( !NT_SUCCESS(status) ) return FALSE;
-    return type == AT_ENTITY;
+
+    return (type & AT_ARP);
 }
 
 static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
@@ -386,7 +163,6 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
     TDIEntityID *entIDSet = 0;
     NTSTATUS status = tdiGetEntityIDSet( tcpFile, &entIDSet, &numEntities );
     IFInfo *infoSetInt = 0;
-    BOOL interfaceInfoComplete;
     int curInterf = 0, i;
 
     if (!NT_SUCCESS(status)) {
@@ -412,8 +188,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                     TDIEntityID ip_ent;
                     int j;
 
-                    interfaceInfoComplete = FALSE;
-		    status = getNthIpEntity( tcpFile, 0, &ip_ent );
+		    status = getNthIpEntity( tcpFile, curInterf, &ip_ent );
 		    if( NT_SUCCESS(status) )
 			status = tdiGetIpAddrsForIpEntity
 			    ( tcpFile, &ip_ent, &addrs, &numAddrs );
@@ -582,6 +357,8 @@ const char *getInterfaceNameByIndex(DWORD index)
 
             interfaceName = HeapAlloc( GetProcessHeap(), 0,
                                        strlen(adapter_name) + 1 );
+            if (!interfaceName) return NULL;
+
             strcpy( interfaceName, adapter_name );
         }
 
@@ -847,15 +624,14 @@ DWORD getInterfaceEntryByIndex(DWORD index, PMIB_IFROW entry)
 
 char *toIPAddressString(unsigned int addr, char string[16])
 {
-  if (string) {
     struct in_addr iAddr;
 
     iAddr.s_addr = addr;
-    /* extra-anal, just to make auditors happy */
-    strncpy(string, inet_ntoa(iAddr), 16);
-    string[16] = '\0';
-  }
-  return string;
+
+    if (string)
+        strncpy(string, inet_ntoa(iAddr), 16);
+  
+    return inet_ntoa(iAddr);
 }
 
 NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex,

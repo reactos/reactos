@@ -1,5 +1,4 @@
-#ifndef LANG_AR_OM_H__
-#define LANG_AR_OM_H__
+#pragma once
 
 MUI_LAYOUTS arOMLayouts[] =
 {
@@ -7,5 +6,3 @@ MUI_LAYOUTS arOMLayouts[] =
     { L"2001", L"00000401" },
     { NULL, NULL }
 };
-
-#endif

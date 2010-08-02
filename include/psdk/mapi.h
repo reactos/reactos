@@ -27,7 +27,7 @@ extern "C" {
 
 #ifndef __LHANDLE
 #define __LHANDLE
-typedef ULONG                   LHANDLE, *LPLHANDLE;
+typedef ULONG_PTR               LHANDLE, *LPLHANDLE;
 #endif
 #define lhSessionNull           ((LHANDLE)0)
 

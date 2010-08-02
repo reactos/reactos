@@ -1,38 +1,41 @@
-#ifndef _WIN32K_DESKTOP_H
-#define _WIN32K_DESKTOP_H
+#pragma once
 
 #include "msgqueue.h"
 #include "window.h"
 
 typedef struct _DESKTOP
 {
-    CSHORT Type;
-    CSHORT Size;
+    PDESKTOPINFO pDeskInfo;
     LIST_ENTRY ListEntry;
-
-    LIST_ENTRY PtiList;
-
     /* Pointer to the associated window station. */
-    struct _WINSTATION_OBJECT *WindowStation;
+    struct _WINSTATION_OBJECT *rpwinstaParent;
+    PWND spwndForeground;
+    PWND spwndTray;
+    PWND spwndMessage;
+    PWND spwndTooltip;
+    PSECTION_OBJECT hsectionDesktop;
+    PWIN32HEAP pheapDesktop;
+    ULONG_PTR ulHeapSize;
+    LIST_ENTRY PtiList;
+    /* use for tracking mouse moves. */
+    PWND spwndTrack;
+    DWORD htEx;
+    RECT rcMouseHover;
+    DWORD dwMouseHoverTime;
+
+    /* ReactOS */
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
-    /* Rectangle of the work area */
-    RECTL WorkArea;
     /* Handle of the desktop window. */
     HANDLE DesktopWindow;
     /* Thread blocking input */
     PVOID BlockInputThread;
-
     LIST_ENTRY ShellHookWindows;
-
-    PWIN32HEAP pheapDesktop;
-    PSECTION_OBJECT DesktopHeapSection;
-    PDESKTOPINFO DesktopInfo;
 } DESKTOP, *PDESKTOP;
 
 extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
-extern PWINDOWCLASS DesktopWindowClass;
+extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 extern BOOL g_PaintDesktopVersion;
 
@@ -63,9 +66,6 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 
 VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
-
-VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect);
 
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -109,31 +109,27 @@ IntValidateDesktopHandle(
    KPROCESSOR_MODE AccessMode,
    ACCESS_MASK DesiredAccess,
    PDESKTOP *Object);
-
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,
                     PUNICODE_STRING DesktopPath,
                     HWINSTA *hWinSta,
                     HDESK *hDesktop);
-
-BOOL FASTCALL
-IntDesktopUpdatePerUserSettings(BOOL bEnable);
-
+BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable);
 VOID APIENTRY UserRedrawDesktop(VOID);
-
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
-
 VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
+HDC FASTCALL UserGetDesktopDC(ULONG,BOOL,BOOL);
 
 #define IntIsActiveDesktop(Desktop) \
-  ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
+  ((Desktop)->rpwinstaParent->ActiveDesktop == (Desktop))
 
 #define GET_DESKTOP_NAME(d)                                             \
     OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d)) ?            \
     &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d))->Name) :   \
     NULL
 
+HWND FASTCALL IntGetMessageWindow(VOID);
 
 static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,
@@ -201,15 +197,15 @@ DesktopHeapGetUserDelta(VOID)
 {
     PW32HEAP_USER_MAPPING Mapping;
     PTHREADINFO pti;
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
     PWIN32HEAP pheapDesktop;
     ULONG_PTR Delta = 0;
 
     pti = PsGetCurrentThreadWin32Thread();
-    if (!pti->Desktop)
+    if (!pti->rpdesk)
         return 0;
 
-    pheapDesktop = pti->Desktop->pheapDesktop;
+    pheapDesktop = pti->rpdesk->pheapDesktop;
 
     W32Process = PsGetCurrentProcessWin32Process();
     Mapping = W32Process->HeapMappings.Next;
@@ -231,7 +227,7 @@ static __inline PVOID
 DesktopHeapAddressToUser(PVOID lpMem)
 {
     PW32HEAP_USER_MAPPING Mapping;
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
 
     W32Process = PsGetCurrentProcessWin32Process();
     Mapping = W32Process->HeapMappings.Next;
@@ -249,7 +245,5 @@ DesktopHeapAddressToUser(PVOID lpMem)
 
     return NULL;
 }
-
-#endif /* _WIN32K_DESKTOP_H */
 
 /* EOF */

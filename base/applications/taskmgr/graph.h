@@ -17,11 +17,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __GRAPH_H
-#define __GRAPH_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,5 +40,3 @@ INT_PTR CALLBACK	Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 #ifdef __cplusplus
 };
 #endif
-
-#endif /* __GRAPH_H */

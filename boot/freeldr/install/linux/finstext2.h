@@ -1,6 +1,4 @@
-#ifndef __FINSTEXT2_H
-#define __FINSTEXT2_H
-
+#pragma once
 
 #define PACKED			__attribute__((packed))
 
@@ -29,7 +27,3 @@ typedef struct
 	unsigned short	BootSignature;
 
 } PACKED EXT2_BOOTCODE, *PEXT2_BOOTCODE;
-
-
-
-#endif // defined __FINSTEXT2_H

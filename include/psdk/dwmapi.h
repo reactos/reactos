@@ -31,7 +31,31 @@ extern "C" {
 
 DECLARE_HANDLE(HTHUMBNAIL);
 
+typedef struct _MilMatrix3x2D
+{
+    DOUBLE S_11;
+    DOUBLE S_12;
+    DOUBLE S_21;
+    DOUBLE S_22;
+    DOUBLE DX;
+    DOUBLE DY;
+} MilMatrix3x2D;
+
+#define DWM_BB_ENABLE                 0x00000001
+#define DWM_BB_BLURREGION             0x00000002
+#define DWM_BB_TRANSITIONONMAXIMIZED  0x00000004
+
+typedef struct _DWM_BLURBEHIND
+{
+    DWORD dwFlags;
+    BOOL fEnable;
+    HRGN hRgnBlur;
+    BOOL fTransitionOnMaximized;
+} DWM_BLURBEHIND, *PDWM_BLURBEHIND;
+
+DWMAPI DwmEnableBlurBehindWindow(HWND, const DWM_BLURBEHIND *);
 DWMAPI DwmEnableComposition(UINT);
+DWMAPI DwmEnableMMCSS(BOOL);
 DWMAPI DwmExtendFrameIntoClientArea(HWND,const MARGINS*);
 DWMAPI DwmGetColorizationColor(DWORD*,BOOL);
 DWMAPI DwmIsCompositionEnabled(BOOL*);

@@ -9,13 +9,6 @@
 
 #define _INTEGRAL_MAX_BITS 64
 
-// ROS HACK!
-#ifndef _WIN64
- #ifndef _USE_32BIT_TIME_T
-  #define _USE_32BIT_TIME_T
- #endif
-#endif
-
 #ifndef MINGW64
 #define MINGW64
 #define MINGW64_VERSION	1.0
@@ -36,8 +29,10 @@
 # if !defined(__MINGW32__) && !defined(__MINGW64__) && !defined(__CYGWIN32__)
 #  define __declspec(x) __attribute__((x))
 # endif
-#else
-# define __attribute__(x) /* nothing */
+#endif
+
+#ifdef _MSC_VER
+#define __restrict__ /* nothing */
 #endif
 
 #if defined (__GNUC__) && defined (__GNUC_MINOR__)
@@ -48,19 +43,23 @@
 #define __MINGW_GNUC_PREREQ(major, minor)  0
 #endif
 
-#if !defined (_MSC_VER)
-#define __MINGW_MSC_PREREQ(major, minor)  0
+#if defined (_MSC_VER)
+#define __MINGW_MSC_PREREQ(major, minor) ((major * 100 + minor * 10) >= _MSC_VER)
+#else
+#define __MINGW_MSC_PREREQ(major, minor) 0
 #endif
 
 #define USE___UUIDOF	0
 
 #ifdef __cplusplus
 # define __CRT_INLINE inline
-#else
+#elif defined(_MSC_VER)
+# define __CRT_INLINE __inline
+#elif defined(__GNUC__)
 # if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-#  define __CRT_INLINE extern inline __attribute__((__gnu_inline__))
+#  define __CRT_INLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
 # else
-#  define __CRT_INLINE extern __inline__
+#  define __CRT_INLINE extern __inline__ __attribute__((__always_inline__))
 # endif
 #endif
 
@@ -78,9 +77,11 @@
 # define __unaligned
 #else
 # ifdef __GNUC__
-#  define __unaligned __attribute((packed))
+#  define __unaligned
+# elif defined(_MSC_VER) && !defined(_M_IA64) && !defined(_M_AMD64)
+#  define __unaligned
 # else
-#  define __UNUSED_PARAM(x) x
+#  define __unaligned
 # endif
 #endif
 
@@ -98,6 +99,9 @@
 #if __MINGW_GNUC_PREREQ (3, 0)
 #define __MINGW_ATTRIB_MALLOC __attribute__ ((__malloc__))
 #define __MINGW_ATTRIB_PURE __attribute__ ((__pure__))
+#elif __MINGW_MSC_PREREQ(14, 0)
+#define __MINGW_ATTRIB_MALLOC __declspec(noalias) __declspec(restrict)
+#define __MINGW_ATTRIB_PURE
 #else
 #define __MINGW_ATTRIB_MALLOC
 #define __MINGW_ATTRIB_PURE
@@ -112,6 +116,12 @@
 #define __MINGW_ATTRIB_NONNULL(arg)
 #endif /* GNUC >= 3.3 */
 
+#ifdef __GNUC__
+#define __MINGW_ATTRIB_UNUSED __attribute__ ((__unused__))
+#else
+#define __MINGW_ATTRIB_UNUSED
+#endif /* ATTRIBUTE_UNUSED */
+
 #if  __MINGW_GNUC_PREREQ (3, 1)
 #define __MINGW_ATTRIB_DEPRECATED __attribute__ ((__deprecated__))
 #elif __MINGW_MSC_PREREQ(12, 0)
@@ -119,7 +129,7 @@
 #else
 #define __MINGW_ATTRIB_DEPRECATED
 #endif
- 
+
 #if  __MINGW_GNUC_PREREQ (3, 3)
 #define __MINGW_NOTHROW __attribute__ ((__nothrow__))
 #elif __MINGW_MSC_PREREQ(12, 0) && defined (__cplusplus)
@@ -130,6 +140,14 @@
 
 /* TODO: Mark (almost) all CRT functions as __MINGW_NOTHROW.  This will
 allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
+
+#ifndef __MINGW_EXTENSION
+#if defined(__GNUC__) || defined(__GNUG__)
+#define __MINGW_EXTENSION       __extension__
+#else
+#define __MINGW_EXTENSION
+#endif
+#endif
 
 #ifndef __MSVCRT_VERSION__
 /*  High byte is the major version, low byte is the minor. */
@@ -145,10 +163,12 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 //#endif
 
 #ifdef __GNUC__
+#ifndef __clang__
 #define __int8 char
 #define __int16 short
 #define __int32 int
 #define __int64 long long
+#endif
 #ifdef _WIN64
    typedef int __int128 __attribute__ ((mode (TI)));
 # endif
@@ -172,33 +192,11 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define USE_MINGW_SETJMP_TWO_ARGS
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-  typedef __builtin_va_list __gnuc_va_list;
-#endif
-
-#ifndef _VA_LIST_DEFINED
-#define _VA_LIST_DEFINED
-  typedef __gnuc_va_list va_list;
-#endif
-
-/* Diable deprecation for now! */
+/* Disable deprecation for now! */
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE_CORE
 #ifdef __WINESRC__
 #define _CRT_NONSTDC_NO_DEPRECATE
-#endif
-
-#if (defined(_MSC_VER) && __STDC__)// || !defined(__WINESRC__)
-#define NO_OLDNAMES
-#endif
-
-#ifdef __cplusplus
-}
 #endif
 
 #define __crt_typefix(ctype)
@@ -207,26 +205,13 @@ extern "C" {
 #define _CRT_UNUSED(x) (void)x
 #endif
 
-/* These are here for intrin.h */
-#ifndef _SIZE_T_DEFINED
-#define _SIZE_T_DEFINED
-#ifdef _WIN64
-  typedef unsigned __int64 size_t;
+#ifdef _MSC_VER
+#define ATTRIB_NORETURN
 #else
-  typedef unsigned int size_t;
-#endif
+#define ATTRIB_NORETURN DECLSPEC_NORETURN
 #endif
 
-#ifndef _UINTPTR_T_DEFINED
-#define _UINTPTR_T_DEFINED
-#ifdef _WIN64
-  typedef unsigned __int64 uintptr_t;
-#else
-  typedef unsigned int uintptr_t;
-#endif
-#endif
-
-#include <mingw32/intrin.h>
+#include "_mingw_mac.h"
 
 #endif /* !_INC_MINGW */
 

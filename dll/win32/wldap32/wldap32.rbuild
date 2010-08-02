@@ -29,7 +29,6 @@
 	<file>wldap32.rc</file>
 	<library>wine</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

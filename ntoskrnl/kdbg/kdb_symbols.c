@@ -5,6 +5,7 @@
  * PURPOSE:         Getting symbol information...
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Colin Finck (colin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -16,12 +17,14 @@
 
 /* GLOBALS ******************************************************************/
 
-typedef struct _IMAGE_SYMBOL_INFO_CACHE {
-  LIST_ENTRY ListEntry;
-  ULONG RefCount;
-  UNICODE_STRING FileName;
-  PROSSYM_INFO RosSymInfo;
-} IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
+typedef struct _IMAGE_SYMBOL_INFO_CACHE
+{
+    LIST_ENTRY ListEntry;
+    ULONG RefCount;
+    UNICODE_STRING FileName;
+    PROSSYM_INFO RosSymInfo;
+}
+IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
 
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
@@ -30,172 +33,80 @@ BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
-/*! \brief Find a user-mode module...
- *
- * \param Address  If \a Address is not NULL the module containing \a Address
- *                 is searched.
- * \param Name     If \a Name is not NULL the module named \a Name will be
- *                 searched.
- * \param Index    If \a Index is >= 0 the Index'th module will be returned.
- * \param pInfo    Pointer to a KDB_MODULE_INFO which is filled.
- *
- * \retval TRUE   Module was found, \a pInfo was filled.
- * \retval FALSE  No module was found.
- *
- * \sa KdbpSymFindModule
- */
-STATIC BOOLEAN
-KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
-                      IN LPCWSTR Name  OPTIONAL,
-                      IN INT Index  OPTIONAL,
-                      OUT PKDB_MODULE_INFO pInfo)
+static BOOLEAN
+KdbpSymSearchModuleList(
+    IN PLIST_ENTRY current_entry,
+    IN PLIST_ENTRY end_entry,
+    IN PLONG Count,
+    IN PVOID Address,
+    IN LPCWSTR Name,
+    IN INT Index,
+    OUT PLDR_DATA_TABLE_ENTRY* pLdrEntry)
 {
-  PLIST_ENTRY current_entry;
-  PLDR_DATA_TABLE_ENTRY current;
-  PEPROCESS CurrentProcess;
-  PPEB Peb = NULL;
-  INT Count = 0;
-  INT Length;
-
-  if (!KdbpSymbolsInitialized)
-	  return FALSE;
-
-  CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != NULL)
+    while (current_entry && current_entry != end_entry)
     {
-      Peb = CurrentProcess->Peb;
-    }
+        *pLdrEntry = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
 
-  if (Peb == NULL || Peb->Ldr == NULL)
-    {
-      return FALSE;
-    }
-
-  current_entry = Peb->Ldr->InLoadOrderModuleList.Flink;
-
-  while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
-         current_entry != NULL)
-    {
-      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-      Length = min(current->BaseDllName.Length / sizeof(WCHAR), 255);
-      if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
-                               Address < (PVOID)((char *)current->DllBase + current->SizeOfImage))) ||
-          (Name != NULL && _wcsnicmp(current->BaseDllName.Buffer, Name, Length) == 0) ||
-          (Index >= 0 && Count++ == Index))
+        if ((Address && Address >= (PVOID)(*pLdrEntry)->DllBase && Address < (PVOID)((ULONG_PTR)(*pLdrEntry)->DllBase + (*pLdrEntry)->SizeOfImage)) ||
+            (Name && !_wcsnicmp((*pLdrEntry)->BaseDllName.Buffer, Name, (*pLdrEntry)->BaseDllName.Length / sizeof(WCHAR))) ||
+            (Index >= 0 && (*Count)++ == Index))
         {
-	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer, Length);
-	  pInfo->Name[Length] = L'\0';
-          pInfo->Base = (ULONG_PTR)current->DllBase;
-          pInfo->Size = current->SizeOfImage;
-          pInfo->RosSymInfo = current->PatchInformation;
-          return TRUE;
+            return TRUE;
         }
-      current_entry = current_entry->Flink;
+
+        current_entry = current_entry->Flink;
     }
 
-  return FALSE;
+    return FALSE;
 }
 
-/*! \brief Find a kernel-mode module...
+/*! \brief Find a module...
  *
- * Works like \a KdbpSymFindUserModule.
+ * \param Address      If \a Address is not NULL the module containing \a Address
+ *                     is searched.
+ * \param Name         If \a Name is not NULL the module named \a Name will be
+ *                     searched.
+ * \param Index        If \a Index is >= 0 the Index'th module will be returned.
+ * \param pLdrEntry    Pointer to a PLDR_DATA_TABLE_ENTRY which is filled.
  *
- * \sa KdbpSymFindUserModule
+ * \retval TRUE    Module was found, \a pLdrEntry was filled.
+ * \retval FALSE   No module was found.
  */
-STATIC BOOLEAN
-KdbpSymFindModule(IN PVOID Address  OPTIONAL,
-                  IN LPCWSTR Name  OPTIONAL,
-                  IN INT Index  OPTIONAL,
-                  OUT PKDB_MODULE_INFO pInfo)
+BOOLEAN
+KdbpSymFindModule(
+    IN PVOID Address  OPTIONAL,
+    IN LPCWSTR Name  OPTIONAL,
+    IN INT Index  OPTIONAL,
+    OUT PLDR_DATA_TABLE_ENTRY* pLdrEntry)
 {
-  PLIST_ENTRY current_entry;
-  PLDR_DATA_TABLE_ENTRY current;
-  INT Count = 0;
-  INT Length;
+    LONG Count = 0;
+    PEPROCESS CurrentProcess;
 
-  if (!KdbpSymbolsInitialized)
-	  return FALSE;
-
-  current_entry = PsLoadedModuleList.Flink;
-
-  while (current_entry != &PsLoadedModuleList)
+    /* First try to look up the module in the kernel module list. */
+    if(KdbpSymSearchModuleList(PsLoadedModuleList.Flink,
+                               &PsLoadedModuleList,
+                               &Count,
+                               Address,
+                               Name,
+                               Index,
+                               pLdrEntry))
     {
-      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-      Length = min(current->BaseDllName.Length / sizeof(WCHAR), 255);
-      if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
-                               Address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))) ||
-          (Name != NULL && _wcsnicmp(current->BaseDllName.Buffer, Name, Length) == 0) ||
-          (Index >= 0 && Count++ == Index))
-        {
-	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer, Length);
-	  pInfo->Name[Length] = L'\0';
-          pInfo->Base = (ULONG_PTR)current->DllBase;
-          pInfo->Size = current->SizeOfImage;
-          pInfo->RosSymInfo = current->PatchInformation;
-          return TRUE;
-        }
-      current_entry = current_entry->Flink;
+        return TRUE;
     }
 
-  return KdbpSymFindUserModule(Address, Name, Index-Count, pInfo);
-}
+    /* That didn't succeed. Try the module list of the current process now. */
+    CurrentProcess = PsGetCurrentProcess();
 
-/*! \brief Find module by address...
- *
- * \param Address  Any address inside the module to look for.
- * \param pInfo    Pointer to a KDB_MODULE_INFO struct which is filled on
- *                 success.
- *
- * \retval TRUE   Success - module found.
- * \retval FALSE  Failure - module not found.
- *
- * \sa KdbpSymFindModuleByName
- * \sa KdbpSymFindModuleByIndex
- */
-BOOLEAN
-KdbpSymFindModuleByAddress(IN PVOID Address,
-                           OUT PKDB_MODULE_INFO pInfo)
-{
-  return KdbpSymFindModule(Address, NULL, -1, pInfo);
-}
+    if(!CurrentProcess || !CurrentProcess->Peb || !CurrentProcess->Peb->Ldr)
+        return FALSE;
 
-/*! \brief Find module by name...
- *
- * \param Name   Name of the module to look for.
- * \param pInfo  Pointer to a KDB_MODULE_INFO struct which is filled on
- *               success.
- *
- * \retval TRUE   Success - module found.
- * \retval FALSE  Failure - module not found.
- *
- * \sa KdbpSymFindModuleByAddress
- * \sa KdbpSymFindModuleByIndex
- */
-BOOLEAN
-KdbpSymFindModuleByName(IN LPCWSTR Name,
-                        OUT PKDB_MODULE_INFO pInfo)
-{
-  return KdbpSymFindModule(NULL, Name, -1, pInfo);
-}
-
-/*! \brief Find module by index...
- *
- * \param Index  Index of the module to return.
- * \param pInfo  Pointer to a KDB_MODULE_INFO struct which is filled on
- *               success.
- *
- * \retval TRUE   Success - module found.
- * \retval FALSE  Failure - module not found.
- *
- * \sa KdbpSymFindModuleByName
- * \sa KdbpSymFindModuleByAddress
- */
-BOOLEAN
-KdbpSymFindModuleByIndex(IN INT Index,
-                         OUT PKDB_MODULE_INFO pInfo)
-{
-  return KdbpSymFindModule(NULL, NULL, Index, pInfo);
+    return KdbpSymSearchModuleList(CurrentProcess->Peb->Ldr->InLoadOrderModuleList.Flink,
+                                   &CurrentProcess->Peb->Ldr->InLoadOrderModuleList,
+                                   &Count,
+                                   Address,
+                                   Name,
+                                   Index,
+                                   pLdrEntry);
 }
 
 /*! \brief Print address...
@@ -210,35 +121,36 @@ KdbpSymFindModuleByIndex(IN INT Index,
  * \retval FALSE  No module containing \a Address was found, nothing was printed.
  */
 BOOLEAN
-KdbSymPrintAddress(IN PVOID Address)
+KdbSymPrintAddress(
+    IN PVOID Address)
 {
-  KDB_MODULE_INFO Info;
-  ULONG_PTR RelativeAddress;
-  NTSTATUS Status;
-  ULONG LineNumber;
-  CHAR FileName[256];
-  CHAR FunctionName[256];
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG_PTR RelativeAddress;
+    NTSTATUS Status;
+    ULONG LineNumber;
+    CHAR FileName[256];
+    CHAR FunctionName[256];
 
-  if (!KdbpSymbolsInitialized || !KdbpSymFindModuleByAddress(Address, &Info))
-    return FALSE;
+    if (!KdbpSymbolsInitialized || !KdbpSymFindModule(Address, NULL, -1, &LdrEntry))
+        return FALSE;
 
-  RelativeAddress = (ULONG_PTR) Address - Info.Base;
-  Status = KdbSymGetAddressInformation(Info.RosSymInfo,
-                                       RelativeAddress,
-                                       &LineNumber,
-                                       FileName,
-                                       FunctionName);
-  if (NT_SUCCESS(Status))
+    RelativeAddress = (ULONG_PTR)Address - (ULONG_PTR)LdrEntry->DllBase;
+    Status = KdbSymGetAddressInformation(LdrEntry->PatchInformation,
+                                         RelativeAddress,
+                                         &LineNumber,
+                                         FileName,
+                                         FunctionName);
+    if (NT_SUCCESS(Status))
     {
-      DbgPrint("<%ws:%x (%s:%d (%s))>",
-               Info.Name, RelativeAddress, FileName, LineNumber, FunctionName);
+        DbgPrint("<%wZ:%x (%s:%d (%s))>",
+            &LdrEntry->BaseDllName, RelativeAddress, FileName, LineNumber, FunctionName);
     }
-  else
+    else
     {
-      DbgPrint("<%ws:%x>", Info.Name, RelativeAddress);
+        DbgPrint("<%wZ:%x>", &LdrEntry->BaseDllName, RelativeAddress);
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -259,29 +171,21 @@ KdbSymPrintAddress(IN PVOID Address)
  * \retval STATUS_UNSUCCESSFUL  None of the requested information was found.
  */
 NTSTATUS
-KdbSymGetAddressInformation(IN PROSSYM_INFO RosSymInfo,
-                            IN ULONG_PTR RelativeAddress,
-                            OUT PULONG LineNumber  OPTIONAL,
-                            OUT PCH FileName  OPTIONAL,
-                            OUT PCH FunctionName  OPTIONAL)
+KdbSymGetAddressInformation(
+    IN PROSSYM_INFO RosSymInfo,
+    IN ULONG_PTR RelativeAddress,
+    OUT PULONG LineNumber  OPTIONAL,
+    OUT PCH FileName  OPTIONAL,
+    OUT PCH FunctionName  OPTIONAL)
 {
-  if (!KdbpSymbolsInitialized)
+    if (!KdbpSymbolsInitialized ||
+        !RosSymInfo ||
+        !RosSymGetAddressInformation(RosSymInfo, RelativeAddress, LineNumber, FileName, FunctionName))
     {
-	  return STATUS_UNSUCCESSFUL;
-	}
-
-  if (NULL == RosSymInfo)
-    {
-      return STATUS_UNSUCCESSFUL;
+        return STATUS_UNSUCCESSFUL;
     }
 
-  if (! RosSymGetAddressInformation(RosSymInfo, RelativeAddress, LineNumber,
-                                    FileName, FunctionName))
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /*! \brief Find cached symbol file.
@@ -296,38 +200,39 @@ KdbSymGetAddressInformation(IN PROSSYM_INFO RosSymInfo,
  *
  * \sa KdbpSymAddCachedFile
  */
-STATIC PROSSYM_INFO
-KdbpSymFindCachedFile(IN PUNICODE_STRING FileName)
+static PROSSYM_INFO
+KdbpSymFindCachedFile(
+    IN PUNICODE_STRING FileName)
 {
-  PIMAGE_SYMBOL_INFO_CACHE Current;
-  PLIST_ENTRY CurrentEntry;
-  KIRQL Irql;
+    PIMAGE_SYMBOL_INFO_CACHE Current;
+    PLIST_ENTRY CurrentEntry;
+    KIRQL Irql;
 
-  DPRINT("Looking for cached symbol file %wZ\n", FileName);
+    DPRINT("Looking for cached symbol file %wZ\n", FileName);
 
-  KeAcquireSpinLock(&SymbolFileListLock, &Irql);
+    KeAcquireSpinLock(&SymbolFileListLock, &Irql);
 
-  CurrentEntry = SymbolFileListHead.Flink;
-  while (CurrentEntry != (&SymbolFileListHead))
+    CurrentEntry = SymbolFileListHead.Flink;
+    while (CurrentEntry != (&SymbolFileListHead))
     {
-      Current = CONTAINING_RECORD(CurrentEntry, IMAGE_SYMBOL_INFO_CACHE, ListEntry);
+        Current = CONTAINING_RECORD(CurrentEntry, IMAGE_SYMBOL_INFO_CACHE, ListEntry);
 
-      DPRINT("Current->FileName %wZ FileName %wZ\n", &Current->FileName, FileName);
-      if (RtlEqualUnicodeString(&Current->FileName, FileName, TRUE))
+        DPRINT("Current->FileName %wZ FileName %wZ\n", &Current->FileName, FileName);
+        if (RtlEqualUnicodeString(&Current->FileName, FileName, TRUE))
         {
-          Current->RefCount++;
-          KeReleaseSpinLock(&SymbolFileListLock, Irql);
-          DPRINT("Found cached file!\n");
-          return Current->RosSymInfo;
+            Current->RefCount++;
+            KeReleaseSpinLock(&SymbolFileListLock, Irql);
+            DPRINT("Found cached file!\n");
+            return Current->RosSymInfo;
         }
 
-      CurrentEntry = CurrentEntry->Flink;
+        CurrentEntry = CurrentEntry->Flink;
     }
 
-  KeReleaseSpinLock(&SymbolFileListLock, Irql);
+    KeReleaseSpinLock(&SymbolFileListLock, Irql);
 
-  DPRINT("Cached file not found!\n");
-  return NULL;
+    DPRINT("Cached file not found!\n");
+    return NULL;
 }
 
 /*! \brief Add a symbol file to the cache.
@@ -337,28 +242,29 @@ KdbpSymFindCachedFile(IN PUNICODE_STRING FileName)
  *
  * \sa KdbpSymRemoveCachedFile
  */
-STATIC VOID
-KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
-		     IN PROSSYM_INFO RosSymInfo)
+static VOID
+KdbpSymAddCachedFile(
+    IN PUNICODE_STRING FileName,
+    IN PROSSYM_INFO RosSymInfo)
 {
-  PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
+    PIMAGE_SYMBOL_INFO_CACHE CacheEntry;
 
-  DPRINT("Adding symbol file: RosSymInfo = %p\n", RosSymInfo);
+    DPRINT("Adding symbol file: RosSymInfo = %p\n", RosSymInfo);
 
-  /* allocate entry */
-  CacheEntry = ExAllocatePoolWithTag(NonPagedPool, sizeof (IMAGE_SYMBOL_INFO_CACHE), TAG_KDBS);
-  ASSERT(CacheEntry);
-  RtlZeroMemory(CacheEntry, sizeof (IMAGE_SYMBOL_INFO_CACHE));
+    /* allocate entry */
+    CacheEntry = ExAllocatePoolWithTag(NonPagedPool, sizeof (IMAGE_SYMBOL_INFO_CACHE), TAG_KDBS);
+    ASSERT(CacheEntry);
+    RtlZeroMemory(CacheEntry, sizeof (IMAGE_SYMBOL_INFO_CACHE));
 
-  /* fill entry */
-  CacheEntry->FileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                                      FileName->Length,
-                                                      TAG_KDBS);
-  RtlCopyUnicodeString(&CacheEntry->FileName, FileName);
-  ASSERT(CacheEntry->FileName.Buffer);
-  CacheEntry->RefCount = 1;
-  CacheEntry->RosSymInfo = RosSymInfo;
-  InsertTailList(&SymbolFileListHead, &CacheEntry->ListEntry); /* FIXME: Lock list? */
+    /* fill entry */
+    CacheEntry->FileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                        FileName->Length,
+                                                        TAG_KDBS);
+    RtlCopyUnicodeString(&CacheEntry->FileName, FileName);
+    ASSERT(CacheEntry->FileName.Buffer);
+    CacheEntry->RefCount = 1;
+    CacheEntry->RosSymInfo = RosSymInfo;
+    InsertTailList(&SymbolFileListHead, &CacheEntry->ListEntry); /* FIXME: Lock list? */
 }
 
 /*! \brief Remove a symbol file (reference) from the cache.
@@ -371,39 +277,41 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
  *
  * \sa KdbpSymAddCachedFile
  */
-STATIC VOID
-KdbpSymRemoveCachedFile(IN PROSSYM_INFO RosSymInfo)
+static VOID
+KdbpSymRemoveCachedFile(
+    IN PROSSYM_INFO RosSymInfo)
 {
-  PIMAGE_SYMBOL_INFO_CACHE Current;
-  PLIST_ENTRY CurrentEntry;
-  KIRQL Irql;
+    PIMAGE_SYMBOL_INFO_CACHE Current;
+    PLIST_ENTRY CurrentEntry;
+    KIRQL Irql;
 
-  KeAcquireSpinLock(&SymbolFileListLock, &Irql);
+    KeAcquireSpinLock(&SymbolFileListLock, &Irql);
 
-  CurrentEntry = SymbolFileListHead.Flink;
-  while (CurrentEntry != (&SymbolFileListHead))
+    CurrentEntry = SymbolFileListHead.Flink;
+    while (CurrentEntry != (&SymbolFileListHead))
     {
-      Current = CONTAINING_RECORD(CurrentEntry, IMAGE_SYMBOL_INFO_CACHE, ListEntry);
+        Current = CONTAINING_RECORD(CurrentEntry, IMAGE_SYMBOL_INFO_CACHE, ListEntry);
 
-      if (Current->RosSymInfo == RosSymInfo) /* found */
+        if (Current->RosSymInfo == RosSymInfo) /* found */
         {
-          ASSERT(Current->RefCount > 0);
-          Current->RefCount--;
-          if (Current->RefCount < 1)
+            ASSERT(Current->RefCount > 0);
+            Current->RefCount--;
+            if (Current->RefCount < 1)
             {
-              RemoveEntryList(&Current->ListEntry);
-              RosSymDelete(Current->RosSymInfo);
-              ExFreePool(Current);
+                RemoveEntryList(&Current->ListEntry);
+                RosSymDelete(Current->RosSymInfo);
+                ExFreePool(Current);
             }
-          KeReleaseSpinLock(&SymbolFileListLock, Irql);
-          return;
+
+            KeReleaseSpinLock(&SymbolFileListLock, Irql);
+            return;
         }
 
-      CurrentEntry = CurrentEntry->Flink;
+        CurrentEntry = CurrentEntry->Flink;
     }
 
-  KeReleaseSpinLock(&SymbolFileListLock, Irql);
-  DPRINT1("Warning: Removing unknown symbol file: RosSymInfo = %p\n", RosSymInfo);
+    KeReleaseSpinLock(&SymbolFileListLock, Irql);
+    DPRINT1("Warning: Removing unknown symbol file: RosSymInfo = %p\n", RosSymInfo);
 }
 
 /*! \brief Loads a symbol file.
@@ -413,221 +321,76 @@ KdbpSymRemoveCachedFile(IN PROSSYM_INFO RosSymInfo)
  *
  * \sa KdbpSymUnloadModuleSymbols
  */
-STATIC VOID
-KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
-                         OUT PROSSYM_INFO *RosSymInfo)
+static VOID
+KdbpSymLoadModuleSymbols(
+    IN PUNICODE_STRING FileName,
+    OUT PROSSYM_INFO *RosSymInfo)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  HANDLE FileHandle;
-  NTSTATUS Status;
-  IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE FileHandle;
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
 
-  /* Allow KDB to break on module load */
-  KdbModuleLoaded(FileName);
+    /* Allow KDB to break on module load */
+    KdbModuleLoaded(FileName);
 
-  if (! LoadSymbols)
+    if (!LoadSymbols)
     {
-      *RosSymInfo = NULL;
-      return;
-    }
-
-  /*  Try to find cached (already loaded) symbol file  */
-  *RosSymInfo = KdbpSymFindCachedFile(FileName);
-  if (*RosSymInfo != NULL)
-    {
-      DPRINT("Found cached symbol file %wZ\n", FileName);
-      return;
-    }
-
-  /*  Open the file  */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             FileName,
-                             0,
-                             NULL,
-                             NULL);
-
-  DPRINT("Attempting to open image: %wZ\n", FileName);
-
-  Status = ZwOpenFile(&FileHandle,
-                      FILE_READ_ACCESS,
-                      &ObjectAttributes,
-                      &IoStatusBlock,
-                      FILE_SHARE_READ|FILE_SHARE_WRITE,
-                      FILE_SYNCHRONOUS_IO_NONALERT);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("Could not open image file: %wZ\n", FileName);
-      return;
-    }
-
-  DPRINT("Loading symbols from %wZ...\n", FileName);
-
-  if (! RosSymCreateFromFile(&FileHandle, RosSymInfo))
-    {
-      DPRINT("Failed to load symbols from %wZ\n", FileName);
-      return;
-    }
-
-  ZwClose(FileHandle);
-
-  DPRINT("Symbols loaded.\n");
-
-  /* add file to cache */
-  KdbpSymAddCachedFile(FileName, *RosSymInfo);
-
-  DPRINT("Installed symbols: %wZ %p\n", FileName, *RosSymInfo);
-}
-
-/*! \brief Unloads symbol info.
- *
- * \param RosSymInfo  Pointer to the symbol info to unload.
- *
- * \sa KdbpSymLoadModuleSymbols
- */
-STATIC VOID
-KdbpSymUnloadModuleSymbols(IN PROSSYM_INFO RosSymInfo)
-{
-  DPRINT("Unloading symbols\n");
-
-  if (RosSymInfo != NULL)
-    {
-      KdbpSymRemoveCachedFile(RosSymInfo);
-    }
-}
-
-/*! \brief Load symbol info for a user module.
- *
- * \param LdrModule Pointer to the module to load symbols for.
- */
-VOID
-KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
-{
-  static WCHAR Prefix[] = L"\\??\\";
-  UNICODE_STRING KernelName;
-  DPRINT("LdrModule %p\n", LdrModule);
-
-  LdrModule->PatchInformation = NULL;
-
-  KernelName.MaximumLength = sizeof(Prefix) + LdrModule->FullDllName.Length;
-  KernelName.Length = KernelName.MaximumLength - sizeof(WCHAR);
-  KernelName.Buffer = ExAllocatePoolWithTag(NonPagedPool, KernelName.MaximumLength, TAG_KDBS);
-  if (NULL == KernelName.Buffer)
-    {
-      return;
-    }
-  memcpy(KernelName.Buffer, Prefix, sizeof(Prefix) - sizeof(WCHAR));
-  memcpy(KernelName.Buffer + sizeof(Prefix) / sizeof(WCHAR) - 1, LdrModule->FullDllName.Buffer,
-         LdrModule->FullDllName.Length);
-  KernelName.Buffer[KernelName.Length / sizeof(WCHAR)] = L'\0';
-
-  KdbpSymLoadModuleSymbols(&KernelName, (PROSSYM_INFO*)&LdrModule->PatchInformation);
-
-  ExFreePool(KernelName.Buffer);
-}
-
-/*! \brief Frees all symbols loaded for a process.
- *
- * \param Process  Pointer to a process.
- */
-VOID
-KdbSymFreeProcessSymbols(IN PEPROCESS Process)
-{
-  PLIST_ENTRY CurrentEntry;
-  PLDR_DATA_TABLE_ENTRY Current;
-  PEPROCESS CurrentProcess;
-  PPEB Peb;
-
-  CurrentProcess = PsGetCurrentProcess();
-  if (CurrentProcess != Process)
-  {
-    KeAttachProcess(&Process->Pcb);
-  }
-  Peb = Process->Peb;
-  ASSERT(Peb);
-  ASSERT(Peb->Ldr);
-
-  CurrentEntry = Peb->Ldr->InLoadOrderModuleList.Flink;
-  while (CurrentEntry != &Peb->Ldr->InLoadOrderModuleList &&
-	 CurrentEntry != NULL)
-    {
-      Current = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-      KdbpSymUnloadModuleSymbols(Current->PatchInformation);
-
-      CurrentEntry = CurrentEntry->Flink;
-    }
-  if (CurrentProcess != Process)
-  {
-    KeDetachProcess();
-  }
-}
-
-/*! \brief Load symbol info for a driver.
- *
- * \param Filename  Filename of the driver.
- * \param Module    Pointer to the driver LDR_DATA_TABLE_ENTRY.
- */
-VOID
-KdbSymLoadDriverSymbols(IN PUNICODE_STRING Filename,
-                        IN PLDR_DATA_TABLE_ENTRY Module)
-{
-  /* Load symbols for the image if available */
-  DPRINT("Loading driver %wZ symbols (driver @ %08x)\n", Filename, Module->DllBase);
-
-  Module->PatchInformation = NULL;
-
-  KdbpSymLoadModuleSymbols(Filename, (PROSSYM_INFO*)&Module->PatchInformation);
-}
-
-/*! \brief Unloads symbol info for a driver.
- *
- * \param ModuleObject  Pointer to the driver LDR_DATA_TABLE_ENTRY.
- */
-VOID
-KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
-{
-  /* Unload symbols for module if available */
-  KdbpSymUnloadModuleSymbols(ModuleObject->PatchInformation);
-  ModuleObject->PatchInformation = NULL;
-}
-
-VOID
-KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName, IN PKD_SYMBOLS_INFO SymbolInfo)
-{
-    BOOLEAN Found = FALSE;
-    PLIST_ENTRY ListHead, NextEntry;
-    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
-
-    //DPRINT("KdbSymProcessSymbols(%Z)\n", AnsiFileName);
-
-    /* We use PsLoadedModuleList here, otherwise (in case of
-       using KeLoaderBlock) all our data will be just lost */
-    ListHead = &PsLoadedModuleList;
-
-    /* Found module we are interested in */
-    NextEntry = ListHead->Flink;
-    while (ListHead != NextEntry)
-    {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
-
-        if (SymbolInfo->BaseOfDll == LdrEntry->DllBase)
-        {
-            Found = TRUE;
-            break;
-        }
-
-        /* Go to the next one */
-        NextEntry = NextEntry->Flink;
-    }
-
-    /* Exit if we didn't find the module requested */
-    if (!Found)
+        *RosSymInfo = NULL;
         return;
+    }
 
-    DPRINT("Found LdrEntry=%p\n", LdrEntry);
+    /*  Try to find cached (already loaded) symbol file  */
+    *RosSymInfo = KdbpSymFindCachedFile(FileName);
+    if (*RosSymInfo)
+    {
+        DPRINT("Found cached symbol file %wZ\n", FileName);
+        return;
+    }
+
+    /*  Open the file  */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               FileName,
+                               0,
+                               NULL,
+                               NULL);
+
+    DPRINT("Attempting to open image: %wZ\n", FileName);
+
+    Status = ZwOpenFile(&FileHandle,
+                        FILE_READ_ACCESS,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ|FILE_SHARE_WRITE,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Could not open image file: %wZ\n", FileName);
+        return;
+    }
+
+    DPRINT("Loading symbols from %wZ...\n", FileName);
+
+    if (!RosSymCreateFromFile(&FileHandle, RosSymInfo))
+    {
+        DPRINT("Failed to load symbols from %wZ\n", FileName);
+        return;
+    }
+
+    ZwClose(FileHandle);
+
+    DPRINT("Symbols loaded.\n");
+
+    /* add file to cache */
+    KdbpSymAddCachedFile(FileName, *RosSymInfo);
+
+    DPRINT("Installed symbols: %wZ %p\n", FileName, *RosSymInfo);
+}
+
+VOID
+KdbSymProcessSymbols(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
     if (!LoadSymbols)
     {
         LdrEntry->PatchInformation = NULL;
@@ -635,10 +398,8 @@ KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName, IN PKD_SYMBOLS_INFO SymbolInf
     }
 
     /* Remove symbol info if it already exists */
-    if (LdrEntry->PatchInformation != NULL)
-    {
+    if (LdrEntry->PatchInformation)
         KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
-    }
 
     /* Load new symbol information */
     if (! RosSymCreateFromMem(LdrEntry->DllBase,
@@ -657,17 +418,19 @@ KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName, IN PKD_SYMBOLS_INFO SymbolInf
         KdbpSymAddCachedFile(&LdrEntry->FullDllName, LdrEntry->PatchInformation);
     }
 
-    DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
+    DPRINT("Installed symbols: %wZ@%p-%p %p\n",
            &LdrEntry->BaseDllName,
            LdrEntry->DllBase,
-           LdrEntry->SizeOfImage + (ULONG)LdrEntry->DllBase,
+           (PVOID)(LdrEntry->SizeOfImage + (ULONG_PTR)LdrEntry->DllBase),
            LdrEntry->PatchInformation);
 
 }
 
 VOID
 NTAPI
-KdbDebugPrint(PCH Message, ULONG Length)
+KdbDebugPrint(
+    PCH Message,
+    ULONG Length)
 {
     /* Nothing here */
 }
@@ -680,21 +443,20 @@ KdbDebugPrint(PCH Message, ULONG Length)
  */
 VOID
 NTAPI
-KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
-              ULONG BootPhase)
+KdbInitialize(
+    PKD_DISPATCH_TABLE DispatchTable,
+    ULONG BootPhase)
 {
     PCHAR p1, p2;
     SHORT Found = FALSE;
     CHAR YesNo;
-    LIST_ENTRY *ModuleEntry;
-    PLDR_DATA_TABLE_ENTRY DataTableEntry;
-    KD_SYMBOLS_INFO SymbolsInfo;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
 
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
     LoadSymbols = FALSE;
 
-#ifdef DBG
+#if DBG
     /* Load symbols only if we have 96Mb of RAM or more */
     if (MmNumberOfPhysicalPages >= 0x6000)
         LoadSymbols = TRUE;
@@ -762,30 +524,16 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 1)
     {
-        /* Load symbols for NTOSKRNL.EXE */
-        ModuleEntry = &KeLoaderBlock->LoadOrderListHead;
-        DataTableEntry = CONTAINING_RECORD(ModuleEntry,
-            LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        /* Load symbols for NTOSKRNL.EXE.
+           It is always the first module in PsLoadedModuleList. KeLoaderBlock can't be used here as its content is just temporary. */
+        LdrEntry = CONTAINING_RECORD(PsLoadedModuleList.Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        KdbSymProcessSymbols(LdrEntry);
 
-        SymbolsInfo.BaseOfDll = DataTableEntry->DllBase;
-        SymbolsInfo.CheckSum = DataTableEntry->CheckSum;
-        SymbolsInfo.ProcessId = 0;
-        SymbolsInfo.SizeOfImage = DataTableEntry->SizeOfImage;
+        /* Also load them for HAL.DLL. */
+        LdrEntry = CONTAINING_RECORD(PsLoadedModuleList.Flink->Flink, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+        KdbSymProcessSymbols(LdrEntry);
 
-        KdbSymProcessSymbols(NULL, &SymbolsInfo);
-
-        /* and HAL.DLL */
-        ModuleEntry = ModuleEntry->Flink;
-        DataTableEntry = CONTAINING_RECORD(ModuleEntry,
-            LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-        SymbolsInfo.BaseOfDll = DataTableEntry->DllBase;
-        SymbolsInfo.CheckSum = DataTableEntry->CheckSum;
-        SymbolsInfo.ProcessId = 0;
-        SymbolsInfo.SizeOfImage = DataTableEntry->SizeOfImage;
-
-        KdbSymProcessSymbols(NULL, &SymbolsInfo);
-		KdbpSymbolsInitialized = TRUE;
+        KdbpSymbolsInitialized = TRUE;
     }
 }
 

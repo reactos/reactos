@@ -299,7 +299,7 @@ static ULONG ShellLink_Release( IShellLinkImpl *This )
     if (This->pPidl)
         ILFree(This->pPidl);
 
-    LocalFree((HANDLE)This);
+    LocalFree(This);
 
     return 0;
 }
@@ -308,7 +308,7 @@ static HRESULT ShellLink_GetClassID( IShellLinkImpl *This, CLSID *pclsid )
 {
     TRACE("%p %p\n", This, pclsid);
 
-    memcpy( pclsid, &CLSID_ShellLink, sizeof (CLSID) );
+    *pclsid = CLSID_ShellLink;
     return S_OK;
 }
 
@@ -575,20 +575,20 @@ static HRESULT Stream_LoadString( IStream* stm, BOOL unicode, LPWSTR *pstr )
     /* convert to unicode if necessary */
     if( !unicode )
     {
-        count = MultiByteToWideChar( CP_ACP, 0, (LPSTR) temp, len, NULL, 0 );
+        count = MultiByteToWideChar( CP_ACP, 0, temp, len, NULL, 0 );
         str = HeapAlloc( GetProcessHeap(), 0, (count+1)*sizeof (WCHAR) );
         if( !str )
         {
             HeapFree( GetProcessHeap(), 0, temp );
             return E_OUTOFMEMORY;
         }
-        MultiByteToWideChar( CP_ACP, 0, (LPSTR) temp, len, str, count );
+        MultiByteToWideChar( CP_ACP, 0, temp, len, str, count );
         HeapFree( GetProcessHeap(), 0, temp );
     }
     else
     {
         count /= 2;
-        str = (LPWSTR) temp;
+        str = temp;
     }
     str[count] = 0;
 
@@ -627,7 +627,7 @@ static HRESULT Stream_ReadChunk( IStream* stm, LPVOID *data )
 
     TRACE("Read %d bytes\n",chunk->size);
 
-    *data = (LPVOID) chunk;
+    *data = chunk;
 
     return S_OK;
 }
@@ -676,7 +676,7 @@ static HRESULT Stream_LoadLocation( IStream *stm,
     char *p = NULL;
     LOCATION_INFO *loc;
     HRESULT r;
-    int n;
+    DWORD n;
 
     r = Stream_ReadChunk( stm, (LPVOID*) &p );
     if( FAILED(r) )
@@ -734,30 +734,30 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
 
     TRACE("%p\n",stm);
 
-    r = IStream_Read( stm, &buffer.cbSize, sizeof (DWORD), &count );
+    r = IStream_Read( stm, &buffer.dbh.cbSize, sizeof (DWORD), &count );
     if( FAILED( r ) )
         return r;
 
     /* make sure that we read the size of the structure even on error */
     size = sizeof buffer - sizeof (DWORD);
-    if( buffer.cbSize != sizeof buffer )
+    if( buffer.dbh.cbSize != sizeof buffer )
     {
         ERR("Ooops.  This structure is not as expected...\n");
         return E_FAIL;
     }
 
-    r = IStream_Read( stm, &buffer.dwSignature, size, &count );
+    r = IStream_Read( stm, &buffer.dbh.dwSignature, size, &count );
     if( FAILED( r ) )
         return r;
 
     if( count != size )
         return E_FAIL;
 
-    TRACE("magic %08x  string = %s\n", buffer.dwSignature, debugstr_w(buffer.szwDarwinID));
+    TRACE("magic %08x  string = %s\n", buffer.dbh.dwSignature, debugstr_w(buffer.szwDarwinID));
 
-    if( (buffer.dwSignature&0xffff0000) != 0xa0000000 )
+    if( (buffer.dbh.dwSignature&0xffff0000) != 0xa0000000 )
     {
-        ERR("Unknown magic number %08x in advertised shortcut\n", buffer.dwSignature);
+        ERR("Unknown magic number %08x in advertised shortcut\n", buffer.dbh.dwSignature);
         return E_FAIL;
     }
 
@@ -1031,8 +1031,8 @@ static EXP_DARWIN_LINK* shelllink_build_darwinid( LPCWSTR string, DWORD magic )
     EXP_DARWIN_LINK *buffer;
 
     buffer = LocalAlloc( LMEM_ZEROINIT, sizeof *buffer );
-    buffer->cbSize = sizeof *buffer;
-    buffer->dwSignature = magic;
+    buffer->dbh.cbSize = sizeof *buffer;
+    buffer->dbh.dwSignature = magic;
     lstrcpynW( buffer->szwDarwinID, string, MAX_PATH );
     WideCharToMultiByte(CP_ACP, 0, string, -1, buffer->szDarwinID, MAX_PATH, NULL, NULL );
 
@@ -1048,7 +1048,7 @@ static HRESULT Stream_WriteAdvertiseInfo( IStream* stm, LPCWSTR string, DWORD ma
 
     buffer = shelllink_build_darwinid( string, magic );
 
-    return IStream_Write( stm, buffer, buffer->cbSize, &count );
+    return IStream_Write( stm, buffer, buffer->dbh.cbSize, &count );
 }
 
 /************************************************************************
@@ -1073,7 +1073,7 @@ static HRESULT WINAPI IPersistStream_fnSave(
     memset(&header, 0, sizeof(header));
     header.dwSize = sizeof(header);
     header.fStartup = This->iShowCmd;
-    memcpy(&header.MagicGuid, &CLSID_ShellLink, sizeof(header.MagicGuid) );
+    header.MagicGuid = CLSID_ShellLink;
 
     header.wHotKey = This->wHotKey;
     header.nIcon = This->iIcoNdx;
@@ -1308,7 +1308,7 @@ HRESULT WINAPI IShellLink_ConstructFromFile( IUnknown* pUnkOuter, REFIID riid,
                 hr = E_FAIL;
 
 	    if (SUCCEEDED(hr))
-		*ppv = (IUnknown*) psl;
+		*ppv = psl;
 
 	    IPersistFile_Release(ppf);
 	}
@@ -1539,12 +1539,12 @@ static HRESULT SHELL_PidlGeticonLocationA(IShellFolder* psf, LPCITEMIDLIST pidl,
     if (SUCCEEDED(hr)) {
 	IExtractIconA* pei;
 
-	hr = IShellFolder_GetUIObjectOf(psf, 0, 1, (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconA, NULL, (LPVOID*)&pei);
+	hr = IShellFolder_GetUIObjectOf(psf, 0, 1, &pidlLast, &IID_IExtractIconA, NULL, (LPVOID*)&pei);
 
 	if (SUCCEEDED(hr)) {
-	    hr = pei->lpVtbl->GetIconLocation(pei, 0, pszIconPath, MAX_PATH, piIcon, NULL);
+	    hr = IExtractIconA_GetIconLocation(pei, 0, pszIconPath, MAX_PATH, piIcon, NULL);
 
-	    pei->lpVtbl->Release(pei);
+	    IExtractIconA_Release(pei);
 	}
 
 	IShellFolder_Release(psf);
@@ -1650,6 +1650,8 @@ static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
 
     TRACE("(%p)->(path=%s)\n",This, pszFile);
+
+    if (!pszFile) return E_INVALIDARG;
 
     str = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
     if( !str )
@@ -1919,12 +1921,12 @@ static HRESULT SHELL_PidlGeticonLocationW(IShellFolder* psf, LPCITEMIDLIST pidl,
     if (SUCCEEDED(hr)) {
 	IExtractIconW* pei;
 
-	hr = IShellFolder_GetUIObjectOf(psf, 0, 1, (LPCITEMIDLIST*)&pidlLast, &IID_IExtractIconW, NULL, (LPVOID*)&pei);
+	hr = IShellFolder_GetUIObjectOf(psf, 0, 1, &pidlLast, &IID_IExtractIconW, NULL, (LPVOID*)&pei);
 
 	if (SUCCEEDED(hr)) {
-	    hr = pei->lpVtbl->GetIconLocation(pei, 0, pszIconPath, MAX_PATH, piIcon, &wFlags);
+	    hr = IExtractIconW_GetIconLocation(pei, 0, pszIconPath, MAX_PATH, piIcon, &wFlags);
 
-	    pei->lpVtbl->Release(pei);
+	    IExtractIconW_Release(pei);
 	}
 
 	IShellFolder_Release(psf);
@@ -2169,6 +2171,8 @@ static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile
 
     TRACE("(%p)->(path=%s)\n",This, debugstr_w(pszFile));
 
+    if (!pszFile) return E_INVALIDARG;
+
     /* quotes at the ends of the string are stripped */
     len = wcslen(pszFile);
     if (pszFile[0] == '"' && pszFile[len-1] == '"')
@@ -2180,7 +2184,10 @@ static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile
 
     /* any other quote marks are invalid */
     if (wcschr(pszFile, '"'))
+    {
+        HeapFree(GetProcessHeap(), 0, unquoted);
         return S_FALSE;
+    }
 
     HeapFree(GetProcessHeap(), 0, This->sPath);
     This->sPath = NULL;
@@ -2633,7 +2640,7 @@ SH_ShellLinkDlgProc(
             {
                 //FIXME load localized error msg
                 MessageBoxW( hwndDlg, L"file not existing", szBuffer, MB_OK );
-                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
                 return TRUE;
             }
             ptr = wcsrchr(szBuffer, L'.');
@@ -2641,7 +2648,7 @@ SH_ShellLinkDlgProc(
             {
                 // FIXME load localized error msg
                 MessageBoxW( hwndDlg, L"You cannot create a link to a shortcut", L"Error", MB_ICONERROR );
-                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_INVALID_NOCHANGEPAGE );
                 return TRUE;
             }
 
@@ -2649,7 +2656,7 @@ SH_ShellLinkDlgProc(
 
             TRACE("This %p sLinkPath %S\n", This, This->sLinkPath);
             IPersistFile_fnSave( (IPersistFile*)&This->lpvtblPersistFile, This->sLinkPath, TRUE );
-            SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+            SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
             return TRUE;
        }
        break;
@@ -2665,6 +2672,9 @@ SH_ShellLinkDlgProc(
            case 14021:
                if (This->sIcoPath)
                     wcscpy(szBuffer, This->sIcoPath);
+               else
+                    wcscpy(szBuffer, This->sPath);
+
                IconIndex = This->iIcoNdx;
                if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
                {
@@ -2815,6 +2825,10 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
             wcscat( args, space );
             wcscat( args, iciex->lpParametersW );
         }
+    }
+    else if (This->sArgs != NULL)
+    {
+        args = strdupW( This->sArgs );
     }
 
     memset( &sei, 0, sizeof sei );

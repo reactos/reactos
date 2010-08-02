@@ -1,95 +1,103 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         Local Security Authority (LSA) Server
+ * FILE:            reactos/dll/win32/lsasrv/lsarpc.h
+ * PURPOSE:         RPC interface functions
+ *
+ * PROGRAMMERS:     Eric Kohl
+ */
+
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ntsecapi.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
 #include "lsasrv.h"
-#include "lsa_s.h"
 
-#include <wine/debug.h>
-
-#define POLICY_DELETE (RTL_HANDLE_VALID << 1)
-typedef struct _LSAR_POLICY_HANDLE
+typedef enum _LSA_DB_HANDLE_TYPE
 {
-    ULONG Flags;
+    LsaDbIgnoreHandle,
+    LsaDbPolicyHandle,
+    LsaDbAccountHandle
+} LSA_DB_HANDLE_TYPE, *PLSA_DB_HANDLE_TYPE;
+
+typedef struct _LSA_DB_HANDLE
+{
+    ULONG Signature;
+    LSA_DB_HANDLE_TYPE HandleType;
     LONG RefCount;
-    ACCESS_MASK AccessGranted;
-} LSAR_POLICY_HANDLE, *PLSAR_POLICY_HANDLE;
+    ACCESS_MASK Access;
+} LSA_DB_HANDLE, *PLSA_DB_HANDLE;
+
+#define LSAP_DB_SIGNATURE 0x12345678
 
 static RTL_CRITICAL_SECTION PolicyHandleTableLock;
-static RTL_HANDLE_TABLE PolicyHandleTable;
 
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
+
 /* FUNCTIONS ***************************************************************/
 
-/*static*/ NTSTATUS
-ReferencePolicyHandle(IN LSAPR_HANDLE ObjectHandle,
-                      IN ACCESS_MASK DesiredAccess,
-                      OUT PLSAR_POLICY_HANDLE *Policy)
+static LSAPR_HANDLE
+LsapCreateDbHandle(LSA_DB_HANDLE_TYPE HandleType,
+                   ACCESS_MASK DesiredAccess)
 {
-    PLSAR_POLICY_HANDLE ReferencedPolicy;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PLSA_DB_HANDLE DbHandle;
 
-    RtlEnterCriticalSection(&PolicyHandleTableLock);
+//    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    if (RtlIsValidIndexHandle(&PolicyHandleTable,
-                              (ULONG)ObjectHandle,
-                              (PRTL_HANDLE_TABLE_ENTRY*)&ReferencedPolicy) &&
-        !(ReferencedPolicy->Flags & POLICY_DELETE))
+    DbHandle = (PLSA_DB_HANDLE)RtlAllocateHeap(RtlGetProcessHeap(),
+                                               0,
+                                               sizeof(LSA_DB_HANDLE));
+    if (DbHandle != NULL)
     {
-        if (RtlAreAllAccessesGranted(ReferencedPolicy->AccessGranted,
-                                     DesiredAccess))
+        DbHandle->Signature = LSAP_DB_SIGNATURE;
+        DbHandle->RefCount = 1;
+        DbHandle->HandleType = HandleType;
+        DbHandle->Access = DesiredAccess;
+    }
+
+//    RtlLeaveCriticalSection(&PolicyHandleTableLock);
+
+    return (LSAPR_HANDLE)DbHandle;
+}
+
+
+static BOOL
+LsapValidateDbHandle(LSAPR_HANDLE Handle,
+                     LSA_DB_HANDLE_TYPE HandleType)
+{
+    PLSA_DB_HANDLE DbHandle = (PLSA_DB_HANDLE)Handle;
+    BOOL bValid = FALSE;
+
+    _SEH2_TRY
+    {
+        if (DbHandle->Signature == LSAP_DB_SIGNATURE)
         {
-            ReferencedPolicy->RefCount++;
-            *Policy = ReferencedPolicy;
+            if (HandleType == LsaDbIgnoreHandle)
+                bValid = TRUE;
+            else if (DbHandle->HandleType == HandleType)
+                bValid = TRUE;
         }
-        else
-            Status = STATUS_ACCESS_DENIED;
     }
-    else
-        Status = STATUS_INVALID_HANDLE;
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        bValid = FALSE;
+    }
+    _SEH2_END;
 
-    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
-    return Status;
+    return bValid;
 }
 
 
-/*static*/ VOID
-DereferencePolicyHandle(IN OUT PLSAR_POLICY_HANDLE Policy,
-                        IN BOOLEAN Delete)
-{
-    RtlEnterCriticalSection(&PolicyHandleTableLock);
-
-    if (Delete)
-    {
-        Policy->Flags |= POLICY_DELETE;
-        Policy->RefCount--;
-
-        ASSERT(Policy->RefCount != 0);
-    }
-
-    if (--Policy->RefCount == 0)
-    {
-        ASSERT(Policy->Flags & POLICY_DELETE);
-        RtlFreeHandle(&PolicyHandleTable,
-                      (PRTL_HANDLE_TABLE_ENTRY)Policy);
-    }
-
-    RtlLeaveCriticalSection(&PolicyHandleTableLock);
-}
 
 
-DWORD WINAPI
-LsapRpcThreadRoutine(LPVOID lpParameter)
+VOID
+LsarStartRpcServer(VOID)
 {
     RPC_STATUS Status;
 
-    TRACE("LsapRpcThreadRoutine() called");
+    RtlInitializeCriticalSection(&PolicyHandleTableLock);
+
+    TRACE("LsarStartRpcServer() called\n");
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     10,
@@ -98,7 +106,7 @@ LsapRpcThreadRoutine(LPVOID lpParameter)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
-        return 0;
+        return;
     }
 
     Status = RpcServerRegisterIf(lsarpc_v0_0_s_ifspec,
@@ -107,51 +115,17 @@ LsapRpcThreadRoutine(LPVOID lpParameter)
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerRegisterIf() failed (Status %lx)\n", Status);
-        return 0;
+        return;
     }
 
-    Status = RpcServerListen(1, 20, FALSE);
+    Status = RpcServerListen(1, 20, TRUE);
     if (Status != RPC_S_OK)
     {
         WARN("RpcServerListen() failed (Status %lx)\n", Status);
-        return 0;
+        return;
     }
 
-    TRACE("LsapRpcThreadRoutine() done\n");
-
-    return 0;
-}
-
-
-VOID
-LsarStartRpcServer(VOID)
-{
-    HANDLE hThread;
-
-    TRACE("LsarStartRpcServer() called");
-
-    RtlInitializeCriticalSection(&PolicyHandleTableLock);
-    RtlInitializeHandleTable(0x1000,
-                             sizeof(LSAR_POLICY_HANDLE),
-                             &PolicyHandleTable);
-
-    hThread = CreateThread(NULL,
-                           0,
-                           (LPTHREAD_START_ROUTINE)
-                           LsapRpcThreadRoutine,
-                           NULL,
-                           0,
-                           NULL);
-    if (!hThread)
-    {
-        WARN("Starting LsapRpcThreadRoutine-Thread failed!\n");
-    }
-    else
-    {
-        CloseHandle(hThread);
-    }
-
-    TRACE("LsarStartRpcServer() done");
+    TRACE("LsarStartRpcServer() done\n");
 }
 
 
@@ -162,48 +136,32 @@ void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hHandle)
 
 
 /* Function 0 */
-NTSTATUS
-LsarClose(LSAPR_HANDLE *ObjectHandle)
+NTSTATUS LsarClose(
+    LSAPR_HANDLE *ObjectHandle)
 {
-#if 0
-    PLSAR_POLICY_HANDLE Policy = NULL;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("0x%p\n", ObjectHandle);
 
-    Status = ReferencePolicyHandle(*ObjectHandle,
-                                   0,
-                                   &Policy);
-    if (NT_SUCCESS(Status))
+//    RtlEnterCriticalSection(&PolicyHandleTableLock);
+
+    if (LsapValidateDbHandle(*ObjectHandle, LsaDbIgnoreHandle))
     {
-        /* delete the handle */
-        DereferencePolicyHandle(Policy,
-                                TRUE);
-    }
-
-    return Status;
-#endif
-    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
-
-    TRACE("LsarClose called!\n");
-
-    /* This is our fake handle, don't go too much long way */
-    if (*ObjectHandle == (LSA_HANDLE)0xcafe)
-    {
+        RtlFreeHeap(RtlGetProcessHeap(), 0, *ObjectHandle);
         *ObjectHandle = NULL;
-        Status = STATUS_SUCCESS;
     }
+    else
+        Status = STATUS_INVALID_HANDLE;
 
-
-    TRACE("LsarClose done (Status: 0x%08lx)!\n", Status);
+//    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
     return Status;
 }
 
 
 /* Function 1 */
-NTSTATUS
-LsarDelete(LSAPR_HANDLE ObjectHandle)
+NTSTATUS LsarDelete(
+    LSAPR_HANDLE ObjectHandle)
 {
     /* Deprecated */
     return STATUS_NOT_SUPPORTED;
@@ -246,7 +204,7 @@ NTSTATUS LsarSetSecurityObject(
 
 /* Function 5 */
 NTSTATUS LsarChangePassword(
-    handle_t hBinding,  /* FIXME */
+    handle_t IDL_handle,
     PRPC_UNICODE_STRING String1,
     PRPC_UNICODE_STRING String2,
     PRPC_UNICODE_STRING String3,
@@ -265,13 +223,22 @@ NTSTATUS LsarOpenPolicy(
     ACCESS_MASK DesiredAccess,
     LSAPR_HANDLE *PolicyHandle)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+
     TRACE("LsarOpenPolicy called!\n");
 
-    *PolicyHandle = (LSAPR_HANDLE)0xcafe;
+    RtlEnterCriticalSection(&PolicyHandleTableLock);
+
+    *PolicyHandle = LsapCreateDbHandle(LsaDbPolicyHandle,
+                                       DesiredAccess);
+    if (*PolicyHandle == NULL)
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
     TRACE("LsarOpenPolicy done!\n");
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 
@@ -279,7 +246,7 @@ NTSTATUS LsarOpenPolicy(
 NTSTATUS LsarQueryInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long PolicyInformation)
+    PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -290,7 +257,7 @@ NTSTATUS LsarQueryInformationPolicy(
 NTSTATUS LsarSetInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
-    unsigned long *PolicyInformation)
+    PLSAPR_POLICY_INFORMATION PolicyInformation)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
@@ -364,8 +331,91 @@ NTSTATUS LsarLookupNames(
     LSAP_LOOKUP_LEVEL LookupLevel,
     DWORD *MappedCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
+    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"DOMAIN");
+    PLSAPR_REFERENCED_DOMAIN_LIST OutputDomains = NULL;
+    PLSA_TRANSLATED_SID OutputSids = NULL;
+    ULONG OutputSidsLength;
+    ULONG i;
+    PSID Sid;
+    ULONG SidLength;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupNames(%p, %lu, %p, %p, %p, %d, %p)\n",
+          PolicyHandle, Count, Names, ReferencedDomains, TranslatedSids,
+          LookupLevel, MappedCount);
+
+    TranslatedSids->Entries = Count;
+    TranslatedSids->Sids = NULL;
+    *ReferencedDomains = NULL;
+
+    OutputSidsLength = Count * sizeof(LSA_TRANSLATED_SID);
+    OutputSids = MIDL_user_allocate(OutputSidsLength);
+    if (OutputSids == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(OutputSids, OutputSidsLength);
+
+    OutputDomains = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
+    if (OutputDomains == NULL)
+    {
+        MIDL_user_free(OutputSids);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    OutputDomains->Entries = Count;
+    OutputDomains->Domains = MIDL_user_allocate(Count * sizeof(LSA_TRUST_INFORMATION));
+    if (OutputDomains->Domains == NULL)
+    {
+        MIDL_user_free(OutputDomains);
+        MIDL_user_free(OutputSids);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = RtlAllocateAndInitializeSid(&IdentifierAuthority,
+                                         2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &Sid);
+    if (!NT_SUCCESS(Status))
+    {
+        MIDL_user_free(OutputDomains->Domains);
+        MIDL_user_free(OutputDomains);
+        MIDL_user_free(OutputSids);
+        return Status;
+    }
+
+    SidLength = RtlLengthSid(Sid);
+
+    for (i = 0; i < Count; i++)
+    {
+        OutputDomains->Domains[i].Sid = MIDL_user_allocate(SidLength);
+        RtlCopyMemory(OutputDomains->Domains[i].Sid, Sid, SidLength);
+
+        OutputDomains->Domains[i].Name.Buffer = MIDL_user_allocate(DomainName.MaximumLength);
+        OutputDomains->Domains[i].Name.Length = DomainName.Length;
+        OutputDomains->Domains[i].Name.MaximumLength = DomainName.MaximumLength;
+        RtlCopyMemory(OutputDomains->Domains[i].Name.Buffer, DomainName.Buffer, DomainName.MaximumLength);
+    }
+
+    for (i = 0; i < Count; i++)
+    {
+        OutputSids[i].Use = SidTypeWellKnownGroup;
+        OutputSids[i].RelativeId = DOMAIN_ALIAS_RID_ADMINS;
+        OutputSids[i].DomainIndex = i;
+    }
+
+    *ReferencedDomains = OutputDomains;
+
+    *MappedCount = Count;
+
+    TranslatedSids->Entries = Count;
+    TranslatedSids->Sids = OutputSids;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -378,8 +428,87 @@ NTSTATUS LsarLookupSids(
     LSAP_LOOKUP_LEVEL LookupLevel,
     DWORD *MappedCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
+    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"DOMAIN");
+    PLSAPR_REFERENCED_DOMAIN_LIST OutputDomains = NULL;
+    PLSAPR_TRANSLATED_NAME OutputNames = NULL;
+    ULONG OutputNamesLength;
+    ULONG i;
+    PSID Sid;
+    ULONG SidLength;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupSids(%p, %p, %p, %p, %d, %p)\n",
+          PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
+          LookupLevel, MappedCount);
+
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = NULL;
+    *ReferencedDomains = NULL;
+
+    OutputNamesLength = SidEnumBuffer->Entries * sizeof(LSA_TRANSLATED_NAME);
+    OutputNames = MIDL_user_allocate(OutputNamesLength);
+    if (OutputNames == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(OutputNames, OutputNamesLength);
+
+    OutputDomains = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
+    if (OutputDomains == NULL)
+    {
+        MIDL_user_free(OutputNames);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    OutputDomains->Entries = SidEnumBuffer->Entries;
+    OutputDomains->Domains = MIDL_user_allocate(SidEnumBuffer->Entries * sizeof(LSA_TRUST_INFORMATION));
+    if (OutputDomains->Domains == NULL)
+    {
+        MIDL_user_free(OutputDomains);
+        MIDL_user_free(OutputNames);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = RtlAllocateAndInitializeSid(&IdentifierAuthority,
+                                         2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &Sid);
+    if (!NT_SUCCESS(Status))
+    {
+        MIDL_user_free(OutputDomains->Domains);
+        MIDL_user_free(OutputDomains);
+        MIDL_user_free(OutputNames);
+        return Status;
+    }
+
+    SidLength = RtlLengthSid(Sid);
+
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        OutputDomains->Domains[i].Sid = MIDL_user_allocate(SidLength);
+        RtlCopyMemory(OutputDomains->Domains[i].Sid, Sid, SidLength);
+
+        OutputDomains->Domains[i].Name.Buffer = MIDL_user_allocate(DomainName.MaximumLength);
+        OutputDomains->Domains[i].Name.Length = DomainName.Length;
+        OutputDomains->Domains[i].Name.MaximumLength = DomainName.MaximumLength;
+        RtlCopyMemory(OutputDomains->Domains[i].Name.Buffer, DomainName.Buffer, DomainName.MaximumLength);
+    }
+
+    Status = LsapLookupSids(SidEnumBuffer,
+                            OutputNames);
+
+    *ReferencedDomains = OutputDomains;
+
+    *MappedCount = SidEnumBuffer->Entries;
+
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = OutputNames;
+
+    return Status;
 }
 
 
@@ -554,8 +683,23 @@ NTSTATUS LsarLookupPrivilegeValue(
     PRPC_UNICODE_STRING Name,
     PLUID Value)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupPrivilegeValue(%p, %wZ, %p)\n",
+          PolicyHandle, Name, Value);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    {
+        ERR("Invalid handle\n");
+        return STATUS_INVALID_HANDLE;
+    }
+
+    TRACE("Privilege: %wZ\n", Name);
+
+    Status = LsarpLookupPrivilegeValue((PUNICODE_STRING)Name,
+                                       Value);
+
+    return Status;
 }
 
 
@@ -565,14 +709,30 @@ NTSTATUS LsarLookupPrivilegeName(
     PLUID Value,
     PRPC_UNICODE_STRING *Name)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupPrivilegeName(%p, %p, %p)\n",
+          PolicyHandle, Value, Name);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    {
+        ERR("Invalid handle\n");
+        return STATUS_INVALID_HANDLE;
+    }
+
+    Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
+
+    return Status;
 }
 
 
 /* Function 33 */
 NTSTATUS LsarLookupPrivilegeDisplayName(
-    LSAPR_HANDLE PolicyHandle,  /* FIXME */
+    LSAPR_HANDLE PolicyHandle,
+    PRPC_UNICODE_STRING Name,
+    USHORT ClientLanguage,
+    USHORT ClientSystemDefaultLanguage,
+    PRPC_UNICODE_STRING *DisplayName,
     USHORT *LanguageReturned)
 {
     UNIMPLEMENTED;
@@ -606,8 +766,14 @@ NTSTATUS LsarEnmuerateAccountRights(
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+        return STATUS_INVALID_HANDLE;
+
+    UserRights->Entries = 0;
+    UserRights->UserRights = NULL;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 
@@ -1044,7 +1210,7 @@ NTSTATUS CredrRename(
 
 /* Function 76 */
 NTSTATUS LsarLookupSids3(
-    handle_t hBinding,
+    LSAPR_HANDLE PolicyHandle,
     PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
     PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
@@ -1060,7 +1226,6 @@ NTSTATUS LsarLookupSids3(
 
 /* Function 77 */
 NTSTATUS LsarLookupNames4(
-    handle_t hBinding,
     handle_t RpcHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -1105,6 +1270,123 @@ NTSTATUS LsarAdtUnregisterSecurityEventSource(
 
 /* Function 81 */
 NTSTATUS LsarAdtReportSecurityEvent(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 82 */
+NTSTATUS CredrFindBestCredential(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 83 */
+NTSTATUS LsarSetAuditPolicy(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 84 */
+NTSTATUS LsarQueryAuditPolicy(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 85 */
+NTSTATUS LsarEnumerateAuditPolicy(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 86 */
+NTSTATUS LsarEnumerateAuditCategories(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 87 */
+NTSTATUS LsarEnumerateAuditSubCategories(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 88 */
+NTSTATUS LsarLookupAuditCategoryName(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 89 */
+NTSTATUS LsarLookupAuditSubCategoryName(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 90 */
+NTSTATUS LsarSetAuditSecurity(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 91 */
+NTSTATUS LsarQueryAuditSecurity(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 92 */
+NTSTATUS CredReadByTokenHandle(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 93 */
+NTSTATUS CredrRestoreCredentials(
+    handle_t hBinding)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/* Function 94 */
+NTSTATUS CredrBackupCredentials(
     handle_t hBinding)
 {
     UNIMPLEMENTED;

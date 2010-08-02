@@ -1,6 +1,4 @@
-
-#ifndef __WIN32K_REGION_H
-#define __WIN32K_REGION_H
+#pragma once
 
 #include "gdiobj.h"
 
@@ -27,6 +25,7 @@ typedef struct _ROSRGNDATA
 #define  REGION_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr((POBJ)pRgn)
 
 PROSRGNDATA FASTCALL REGION_AllocRgnWithHandle(INT n);
+PROSRGNDATA FASTCALL REGION_AllocUserRgnWithHandle(INT n);
 VOID FASTCALL REGION_UnionRectWithRgn(ROSRGNDATA *rgn, const RECTL *rect);
 INT FASTCALL REGION_GetRgnBox(PROSRGNDATA Rgn, RECTL *pRect);
 BOOL FASTCALL REGION_RectInRegion(PROSRGNDATA Rgn, const RECTL *rc);
@@ -44,12 +43,17 @@ VOID FASTCALL IntGdiReleaseVisRgn(PDC);
 INT APIENTRY IntGdiGetRgnBox(HRGN, RECTL*);
 BOOL FASTCALL IntGdiPaintRgn(PDC, HRGN );
 HRGN FASTCALL IntCreatePolyPolygonRgn(PPOINT, PULONG, INT, INT);
+INT FASTCALL IntGdiOffsetRgn(PROSRGNDATA,INT,INT);
 
 INT FASTCALL IntGdiCombineRgn(PROSRGNDATA, PROSRGNDATA, PROSRGNDATA, INT);
 INT FASTCALL REGION_Complexity(PROSRGNDATA);
-PROSRGNDATA FASTCALL IntGdiCreateRectRgn(INT, INT, INT, INT);
+PROSRGNDATA FASTCALL RGNOBJAPI_Lock(HRGN,PRGN_ATTR *);
+VOID FASTCALL RGNOBJAPI_Unlock(PROSRGNDATA);
+HRGN FASTCALL IntSysCreateRectRgn(INT,INT,INT,INT);
+PROSRGNDATA FASTCALL IntSysCreateRectpRgn(INT,INT,INT,INT);
 
-#define UnsafeIntCreateRectRgnIndirect(prc) \
-  NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
+#define IntSysCreateRectRgnIndirect(prc) \
+  IntSysCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)
 
-#endif /* not __WIN32K_REGION_H */
+#define IntSysCreateRectpRgnIndirect(prc) \
+  IntSysCreateRectpRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)

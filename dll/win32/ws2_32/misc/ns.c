@@ -7,7 +7,6 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
-#define __NO_CTYPE_INLINES
 #include <ctype.h>
 #include <ws2_32.h>
 #include <winbase.h>
@@ -33,10 +32,44 @@ WSAAddressToStringA(IN      LPSOCKADDR lpsaAddress,
                     OUT     LPSTR lpszAddressString,
                     IN OUT  LPDWORD lpdwAddressStringLength)
 {
-    UNIMPLEMENTED
+    DWORD size;
+    CHAR buffer[54]; /* 32 digits + 7':' + '[' + '%" + 5 digits + ']:' + 5 digits + '\0' */
+    CHAR *p;
 
-    WSASetLastError(WSASYSCALLFAILURE);
-    return SOCKET_ERROR;
+    if (!lpsaAddress) return SOCKET_ERROR;
+    if (!lpszAddressString || !lpdwAddressStringLength) return SOCKET_ERROR;
+
+    switch(lpsaAddress->sa_family)
+    {
+    case AF_INET:
+        if (dwAddressLength < sizeof(SOCKADDR_IN)) return SOCKET_ERROR;
+        sprintf( buffer, "%u.%u.%u.%u:%u",
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) >> 24 & 0xff),
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) >> 16 & 0xff),
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) >> 8 & 0xff),
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) & 0xff),
+               ntohs( ((SOCKADDR_IN *)lpsaAddress)->sin_port ) );
+
+        p = strchr( buffer, ':' );
+        if (!((SOCKADDR_IN *)lpsaAddress)->sin_port) *p = 0;
+        break;
+    default:
+        WSASetLastError(WSAEINVAL);
+        return SOCKET_ERROR;
+    }
+
+    size = strlen( buffer ) + 1;
+
+    if (*lpdwAddressStringLength <  size)
+    {
+        *lpdwAddressStringLength = size;
+        WSASetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    *lpdwAddressStringLength = size;
+    strcpy( lpszAddressString, buffer );
+    return 0;
 }
 
 
@@ -51,10 +84,28 @@ WSAAddressToStringW(IN      LPSOCKADDR lpsaAddress,
                     OUT     LPWSTR lpszAddressString,
                     IN OUT  LPDWORD lpdwAddressStringLength)
 {
-    UNIMPLEMENTED
+    INT   ret;
+    DWORD size;
+    WCHAR buffer[54]; /* 32 digits + 7':' + '[' + '%" + 5 digits + ']:' + 5 digits + '\0' */
+    CHAR bufAddr[54];
 
-    WSASetLastError(WSASYSCALLFAILURE);
-    return SOCKET_ERROR;
+    size = *lpdwAddressStringLength;
+    ret = WSAAddressToStringA(lpsaAddress, dwAddressLength, NULL, bufAddr, &size);
+
+    if (ret) return ret;
+
+    MultiByteToWideChar( CP_ACP, 0, bufAddr, size, buffer, sizeof( buffer )/sizeof(WCHAR));
+
+    if (*lpdwAddressStringLength <  size)
+    {
+        *lpdwAddressStringLength = size;
+        WSASetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    *lpdwAddressStringLength = size;
+    lstrcpyW( lpszAddressString, buffer );
+    return 0;
 }
 
 
@@ -632,15 +683,208 @@ struct hostent defined in w32api/include/winsock2.h
 
 void free_servent(struct servent* s)
 {
+    char* next;
     HFREE(s->s_name);
-    char* next = s->s_aliases[0];
+    next = s->s_aliases[0];
     while(next) { HFREE(next); next++; }
     s->s_port = 0;
     HFREE(s->s_proto);
     HFREE(s);
 }
 
+/* This function is far from perfect but it works enough */
+static
+LPHOSTENT
+FindEntryInHosts(IN CONST CHAR FAR* name)
+{
+    BOOL Found = FALSE;
+    HANDLE HostsFile;
+    CHAR HostsDBData[BUFSIZ] = { 0 };
+    PCHAR SystemDirectory = HostsDBData;
+    PCHAR HostsLocation = "\\drivers\\etc\\hosts";
+    PCHAR AddressStr, DnsName = NULL, AddrTerm, NameSt, NextLine, ThisLine, Comment;
+    UINT SystemDirSize = sizeof(HostsDBData) - 1, ValidData = 0;
+    DWORD ReadSize;
+    ULONG Address;
+    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
+    /* We assume that the parameters are valid */
+
+    if (!GetSystemDirectoryA(SystemDirectory, SystemDirSize))
+    {
+        WSASetLastError(WSANO_RECOVERY);
+        WS_DbgPrint(MIN_TRACE, ("Could not get windows system directory.\n"));
+        return NULL; /* Can't get system directory */
+    }
+
+    strncat(SystemDirectory,
+            HostsLocation,
+            SystemDirSize );
+
+    HostsFile = CreateFileA(SystemDirectory,
+                            GENERIC_READ,
+                            FILE_SHARE_READ,
+                            NULL,
+                            OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
+                            NULL);
+    if (HostsFile == INVALID_HANDLE_VALUE)
+    {
+        WSASetLastError(WSANO_RECOVERY);
+        return NULL;
+    }
+
+    while(!Found &&
+          ReadFile(HostsFile,
+                   HostsDBData + ValidData,
+                   sizeof(HostsDBData) - ValidData,
+                   &ReadSize,
+                   NULL))
+    {
+        ValidData += ReadSize;
+        ReadSize = 0;
+        NextLine = ThisLine = HostsDBData;
+
+        /* Find the beginning of the next line */
+        while(NextLine < HostsDBData + ValidData &&
+              *NextLine != '\r' && *NextLine != '\n' )
+        {
+            NextLine++;
+        }
+
+        /* Zero and skip, so we can treat what we have as a string */
+        if( NextLine > HostsDBData + ValidData )
+            break;
+
+        *NextLine = 0; NextLine++;
+
+        Comment = strchr( ThisLine, '#' );
+        if( Comment ) *Comment = 0; /* Terminate at comment start */
+
+        AddressStr = ThisLine;
+        /* Find the first space separating the IP address from the DNS name */
+        AddrTerm = strchr(ThisLine, ' ');
+        if (AddrTerm)
+        {
+           /* Terminate the address string */
+           *AddrTerm = 0;
+
+           /* Find the last space before the DNS name */
+           NameSt = strrchr(ThisLine, ' ');
+
+           /* If there is only one space (the one we removed above), then just use the address terminator */
+           if (!NameSt)
+               NameSt = AddrTerm;
+
+           /* Move from the space to the first character of the DNS name */
+           NameSt++;
+
+           DnsName = NameSt;
+
+           if (!strcmp(name, DnsName))
+           {
+               Found = TRUE;
+               break;
+           }
+        }
+
+        /* Get rid of everything we read so far */
+        while( NextLine <= HostsDBData + ValidData &&
+               isspace (*NextLine))
+        {
+            NextLine++;
+        }
+
+        if (HostsDBData + ValidData - NextLine <= 0)
+            break;
+
+        WS_DbgPrint(MAX_TRACE,("About to move %d chars\n",
+                    HostsDBData + ValidData - NextLine));
+
+        memmove(HostsDBData,
+                NextLine,
+                HostsDBData + ValidData - NextLine );
+        ValidData -= NextLine - HostsDBData;
+        WS_DbgPrint(MAX_TRACE,("Valid bytes: %d\n", ValidData));
+    }
+
+    CloseHandle(HostsFile);
+
+    if (!Found)
+    {
+        WS_DbgPrint(MAX_TRACE,("Not found\n"));
+        WSASetLastError(WSANO_DATA);
+        return NULL;
+    }
+
+    if( !p->Hostent )
+    {
+        p->Hostent = HeapAlloc(GlobalHeap, 0, sizeof(*p->Hostent));
+        if( !p->Hostent )
+        {
+            WSASetLastError( WSATRY_AGAIN );
+            return NULL;
+        }
+    }
+
+    p->Hostent->h_name = HeapAlloc(GlobalHeap, 0, strlen(DnsName));
+    if( !p->Hostent->h_name )
+    {
+        WSASetLastError( WSATRY_AGAIN );
+        return NULL;
+    }
+
+    RtlCopyMemory(p->Hostent->h_name,
+                  DnsName,
+                  strlen(DnsName));
+
+    p->Hostent->h_aliases = HeapAlloc(GlobalHeap, 0, sizeof(char *));
+    if( !p->Hostent->h_aliases )
+    {
+        WSASetLastError( WSATRY_AGAIN );
+        return NULL;
+    }
+
+    p->Hostent->h_aliases[0] = 0;
+
+    if (strstr(AddressStr, ":"))
+    {
+       DbgPrint("AF_INET6 NOT SUPPORTED!\n");
+       WSASetLastError(WSAEINVAL);
+       return NULL;
+    }
+    else
+       p->Hostent->h_addrtype = AF_INET;
+
+    p->Hostent->h_addr_list = HeapAlloc(GlobalHeap, 0, sizeof(char *));
+    if( !p->Hostent->h_addr_list )
+    {
+        WSASetLastError( WSATRY_AGAIN );
+        return NULL;
+    }
+
+    Address = inet_addr(AddressStr);
+    if (Address == INADDR_NONE)
+    {
+        WSASetLastError(WSAEINVAL);
+        return NULL;
+    }
+
+    p->Hostent->h_addr_list[0] = HeapAlloc(GlobalHeap, 0, sizeof(Address));
+    if( !p->Hostent->h_addr_list[0] )
+    {
+        WSASetLastError( WSATRY_AGAIN );
+        return NULL;
+    }
+
+    RtlCopyMemory(p->Hostent->h_addr_list[0],
+                  &Address,
+                  sizeof(Address));
+
+    p->Hostent->h_length = sizeof(Address);
+
+    return p->Hostent;
+}
 
 LPHOSTENT
 EXPORT
@@ -660,10 +904,12 @@ gethostbyname(IN  CONST CHAR FAR* name)
     DNS_STATUS dns_status = {0};
     /* include/WinDNS.h -- look up DNS_RECORD on MSDN */
     PDNS_RECORD dp = 0;
+    PWINSOCK_THREAD_BLOCK p;
+    LPHOSTENT Hostent;
 
     addr = GH_INVALID;
 
-    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
+    p = NtCurrentTeb()->WinSockData;
 
     if( !p )
     {
@@ -725,6 +971,12 @@ gethostbyname(IN  CONST CHAR FAR* name)
         case GH_RFC1123_DNS:
         /* DNS_TYPE_A: include/WinDNS.h */
         /* DnsQuery -- lib/dnsapi/dnsapi/query.c */
+
+        /* Look for the DNS name in the hosts file */
+        Hostent = FindEntryInHosts(name);
+        if (Hostent)
+           return Hostent;
+
         dns_status = DnsQuery_A(name,
                                 DNS_TYPE_A,
                                 DNS_QUERY_STANDARD,
@@ -992,7 +1244,7 @@ getservbyname(IN  CONST CHAR FAR* name,
         }
 
         /* Zero and skip, so we can treat what we have as a string */
-        if( NextLine >= ServiceDBData + ValidData )
+        if( NextLine > ServiceDBData + ValidData )
             break;
 
         *NextLine = 0; NextLine++;
@@ -1173,7 +1425,7 @@ getservbyport(IN  INT port,
                *NextLine != '\r' && *NextLine != '\n' ) NextLine++;
 
         /* Zero and skip, so we can treat what we have as a string */
-        if( NextLine >= ServiceDBData + ValidData )
+        if( NextLine > ServiceDBData + ValidData )
             break;
 
         *NextLine = 0; NextLine++;

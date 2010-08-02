@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  * COPYRIGHT:       See COPYING in the top level directory
@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __SETTINGS_H__
-#define __SETTINGS_H__
+#pragma once
 
 PGENERIC_LIST
 CreateComputerTypeList(HINF InfFile);
@@ -65,7 +64,5 @@ ProcessKeyboardLayoutFiles(PGENERIC_LIST List);
 
 BOOLEAN
 SetGeoID(PWCHAR Id);
-
-#endif /* __SETTINGS_H__ */
 
 /* EOF */

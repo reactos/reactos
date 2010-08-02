@@ -1,0 +1,67 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDC_MAGNIFIER MENU
+BEGIN
+    POPUP "&Файл"
+    BEGIN
+        MENUITEM "Из&ход",                       IDM_EXIT
+        MENUITEM "На&стройки",                    IDM_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "&За...",                  IDM_ABOUT
+    END
+END
+
+IDC_MAGNIFIER ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 22, 17, 220, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "За"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_ICON,IDC_MYICON,14,9,20,20
+    LTEXT           "Увеличител, версия 1,0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,48,24,125,22
+    PUSHBUTTON      "Добре",IDOK,162,48,50,14
+END
+
+IDD_DIALOGOPTIONS DIALOGEX 0, 0, 210, 182
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Настройки на увеличителя"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Изход",IDOK,96,161,50,14
+    PUSHBUTTON      "Помощ",IDC_BUTTON_HELP,38,161,50,14
+    LTEXT           "Увеличение:",IDC_STATIC,6,8,68,8
+    COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Проследяване",IDC_STATIC,7,25,195,59
+    GROUPBOX        "Представяне",IDC_STATIC,7,87,195,57
+    CONTROL         "Следване показалеца на мишката",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,164,10
+    CONTROL         "Следване съсредоточаването на клавиатурата",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,180,10
+    CONTROL         "Следване на словообработката",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,180,10
+    CONTROL         "Обръщане на цветовете",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,180,10
+    CONTROL         "Смаляване при пускане",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,180,10
+    CONTROL         "Показване на увеличителя",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,180,10
+END
+
+IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION
+CAPTION "Увеличителят на РеактОС"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Добре",IDOK,193,76,50,14
+    ICON            IDI_ICON,IDC_STATIC,7,17,20,20
+    LTEXT           "Целта на увеличителя е осигуряване на начална използваемост за потребители с малки зрителни недъзи. За всекидневна употреба повечето потребители със зрителни недъзи се нуждаят от по- добро увеличаващо средство.",IDC_STATIC,36,7,207,33
+    CONTROL         "Съобщението да не се показва повече",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,147,10
+END
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE           "Увеличително стъкло"
+END
+
+
+

@@ -18,12 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_TRUE  "真"
   IDS_FALSE "假"
@@ -35,7 +37,7 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_TRUE  "真"
   IDS_FALSE "假"
@@ -44,5 +46,3 @@ STRINGTABLE DISCARDABLE
   IDS_ON    "開"
   IDS_OFF   "關"
 }
-
-#pragma code_page(default)

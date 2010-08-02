@@ -30,6 +30,13 @@ extern "C" {
 
 #include <basetsd.h>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4255)
+#pragma warning(disable:4820)
+#endif
+
 #undef CONST_VTBL
 #ifdef CONST_VTABLE
 # define CONST_VTBL const
@@ -97,8 +104,8 @@ extern "C" {
 
 #define small char
 typedef unsigned char byte;
-#define hyper __int64
-#define MIDL_uhyper unsigned __int64
+typedef INT64 hyper;
+typedef UINT64 MIDL_uhyper;
 typedef unsigned char boolean;
 
 #define __RPC_CALLEE WINAPI
@@ -121,7 +128,7 @@ typedef unsigned char boolean;
    (RpcExceptionCode() == RPC_X_BAD_STUB_DATA) || \
    (RpcExceptionCode() == RPC_S_INVALID_BOUND))
 
-typedef struct
+typedef struct tagNDR_SCONTEXT
 {
   void *pad[2];
   void *userContext;
@@ -170,7 +177,6 @@ typedef struct _NDR_PIPE_MESSAGE *PNDR_PIPE_MESSAGE;
 typedef struct _NDR_ASYNC_MESSAGE *PNDR_ASYNC_MESSAGE;
 typedef struct _NDR_CORRELATION_INFO *PNDR_CORRELATION_INFO;
 
-#include <pshpack4.h>
 typedef struct _MIDL_STUB_MESSAGE
 {
   PRPC_MESSAGE RpcMsg;
@@ -195,7 +201,7 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG_PTR MaxCount;
   ULONG Offset;
   ULONG ActualCount;
-  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
   void (__RPC_API *pfnFree)(void *);
   unsigned char *StackTop;
   unsigned char *pPresentedType;
@@ -205,19 +211,19 @@ typedef struct _MIDL_STUB_MESSAGE
   struct _FULL_PTR_XLAT_TABLES *FullPtrXlatTables;
   ULONG FullPtrRefId;
   ULONG PointerLength;
-  int fInDontFree:1;
-  int fDontCallFreeInst:1;
-  int fInOnlyParam:1;
-  int fHasReturn:1;
-  int fHasExtensions:1;
-  int fHasNewCorrDesc:1;
-  int fIsIn:1;
-  int fIsOut:1;
-  int fIsOicf:1;
-  int fBufferValid:1;
-  int fHasMemoryValidateCallback:1;
-  int fInFree:1;
-  int fNeedMCCP:1;
+  unsigned int fInDontFree:1;
+  unsigned int fDontCallFreeInst:1;
+  unsigned int fInOnlyParam:1;
+  unsigned int fHasReturn:1;
+  unsigned int fHasExtensions:1;
+  unsigned int fHasNewCorrDesc:1;
+  unsigned int fIsIn:1;
+  unsigned int fIsOut:1;
+  unsigned int fIsOicf:1;
+  unsigned int fBufferValid:1;
+  unsigned int fHasMemoryValidateCallback:1;
+  unsigned int fInFree:1;
+  unsigned int fNeedMCCP:1;
   int fUnused:3;
   int fUnused2:16;
   DWORD dwDestContext;
@@ -247,7 +253,6 @@ typedef struct _MIDL_STUB_MESSAGE
   INT_PTR Reserved51_4;
   INT_PTR Reserved51_5;
 } MIDL_STUB_MESSAGE, *PMIDL_STUB_MESSAGE;
-#include <poppack.h>
 
 typedef void * (__RPC_API * GENERIC_BINDING_ROUTINE)(void *);
 typedef void (__RPC_API * GENERIC_UNBIND_ROUTINE)(void *, unsigned char *);
@@ -322,7 +327,7 @@ typedef struct _USER_MARSHAL_CB
 
 typedef struct _MALLOC_FREE_STRUCT
 {
-  void * (__WINE_ALLOC_SIZE(1) __RPC_USER *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_USER *pfnAllocate)(SIZE_T);
   void   (__RPC_USER *pfnFree)(void *);
 } MALLOC_FREE_STRUCT;
 
@@ -335,7 +340,7 @@ typedef struct _COMM_FAULT_OFFSETS
 typedef struct _MIDL_STUB_DESC
 {
   void *RpcInterfaceInformation;
-  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
   void (__RPC_API *pfnFree)(void *);
   union {
     handle_t *pAutoHandle;
@@ -385,7 +390,11 @@ typedef struct _MIDL_SYNTAX_INFO
 
 typedef void (__RPC_API *STUB_THUNK)( PMIDL_STUB_MESSAGE );
 
+#ifdef WINE_STRICT_PROTOTYPES
+typedef LONG (__RPC_API *SERVER_ROUTINE)(void);
+#else
 typedef LONG (__RPC_API *SERVER_ROUTINE)();
+#endif
 
 typedef struct _MIDL_SERVER_INFO_
 {
@@ -474,7 +483,7 @@ typedef struct _NDR_USER_MARSHAL_INFO_LEVEL1
 {
     void *Buffer;
     ULONG BufferSize;
-    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
+    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
     void (__RPC_API *pfnFree)(void *);
     struct IRpcChannelBuffer *pRpcChannelBuffer;
     ULONG_PTR Reserved[5];
@@ -678,7 +687,7 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
                             ULONG *pFaultStatus, RPC_STATUS Status_ );
 
 RPCRTAPI void* RPC_ENTRY
-  NdrOleAllocate( size_t Size ) __WINE_ALLOC_SIZE(1);
+  NdrOleAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrOleFree( void* NodeToFree );
 
@@ -739,16 +748,20 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI void RPC_ENTRY
   NdrRpcSmSetClientToOsf( PMIDL_STUB_MESSAGE pMessage );
 RPCRTAPI void * RPC_ENTRY
-  NdrRpcSmClientAllocate( size_t Size ) __WINE_ALLOC_SIZE(1);
+  NdrRpcSmClientAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrRpcSmClientFree( void *NodeToFree );
 RPCRTAPI void * RPC_ENTRY
-  NdrRpcSsDefaultAllocate( size_t Size ) __WINE_ALLOC_SIZE(1);
+  NdrRpcSsDefaultAllocate( SIZE_T Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrRpcSsDefaultFree( void *NodeToFree );
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   NdrGetUserMarshalInfo( ULONG *pFlags, ULONG InformationLevel, NDR_USER_MARSHAL_INFO *pMarshalInfo );
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

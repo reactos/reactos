@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /*
@@ -109,7 +109,7 @@ BOOL NLS_isSystemLocale(LCID lcid)
 }
 
 /**************************************************************************
- * NLS_isSystemLocale <internal>
+ * NLS_getDefaultLocale <internal>
  *
  * Return default system or user locale
  */
@@ -1023,7 +1023,7 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
   {
       lcid = NLS_getDefaultLocale(lcid);
   }
-  else if(!IsValidLocale(lcid, 0))
+  else if(!IsValidLocale(lcid, LCID_INSTALLED))
   {
       SetLastError(ERROR_INVALID_PARAMETER);
       return 0;
@@ -1403,8 +1403,17 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
           lpCurrencyStr,
           cchOut);
 
+  if(NLS_isSystemLocale(lcid))
+  {
+    lcid = NLS_getDefaultLocale(lcid);
+  }
+  else if(!IsValidLocale(lcid, LCID_INSTALLED))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return 0;
+  }
+
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpCurrencyStr) ||
-      !IsValidLocale(lcid, 0) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep ||
       !lpFormat->lpCurrencySymbol || lpFormat->NegativeOrder > 15 ||
       lpFormat->PositiveOrder > 3)))
@@ -1587,7 +1596,7 @@ GetCurrencyFormatW_Error:
 
     dwState |= NF_DIGITS_OUT;
     dwCurrentGroupCount++;
-    if (szSrc >= lpszValue && dwCurrentGroupCount == dwGroupCount)
+    if (szSrc >= lpszValue && dwCurrentGroupCount == dwGroupCount && *szSrc != '-')
     {
       LPWSTR lpszGrp = lpFormat->lpThousandSep + strlenW(lpFormat->lpThousandSep) - 1;
 

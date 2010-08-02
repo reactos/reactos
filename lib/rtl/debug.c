@@ -16,29 +16,29 @@
 
 /* PRIVATE FUNCTIONS ********************************************************/
 
-NTSTATUS
+ULONG
 NTAPI
-DebugPrint(IN PANSI_STRING DebugString,
+DebugPrint(IN PSTRING DebugString,
            IN ULONG ComponentId,
            IN ULONG Level)
 {
-    /* Call the INT2D Service */
+    /* Call the Debug Service */
     return DebugService(BREAKPOINT_PRINT,
                         DebugString->Buffer,
-                        DebugString->Length,
+                        UlongToPtr(DebugString->Length),
                         UlongToPtr(ComponentId),
                         UlongToPtr(Level));
 }
 
-NTSTATUS
+ULONG
 NTAPI
-DebugPrompt(IN PCSTRING Output,
+DebugPrompt(IN PSTRING Output,
             IN PSTRING Input)
 {
-    /* Call the INT2D Service */
+    /* Call the Debug Service */
     return DebugService(BREAKPOINT_PROMPT,
                         Output->Buffer,
-                        Output->Length,
+                        UlongToPtr(Output->Length),
                         Input->Buffer,
                         UlongToPtr(Input->MaximumLength));
 }
@@ -47,29 +47,29 @@ DebugPrompt(IN PCSTRING Output,
 
 ULONG
 NTAPI
-vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
+vDbgPrintExWithPrefixInternal(IN PCCH Prefix,
                               IN ULONG ComponentId,
                               IN ULONG Level,
-                              IN LPCSTR Format,
+                              IN PCCH Format,
                               IN va_list ap,
                               IN BOOLEAN HandleBreakpoint)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    ANSI_STRING DebugString;
+    NTSTATUS Status;
+    STRING DebugString;
     CHAR Buffer[512];
     ULONG Length, PrefixLength;
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Check if we should print it or not */
-    if ((ComponentId != -1U) &&
-        !(NtQueryDebugFilterState(ComponentId, Level)))
+    if ((ComponentId != MAXULONG) &&
+        (NtQueryDebugFilterState(ComponentId, Level)) != TRUE)
     {
         /* This message is masked */
-        return Status;
+        return STATUS_SUCCESS;
     }
 
     /* For user mode, don't recursively DbgPrint */
-    if (RtlpSetInDbgPrint(TRUE)) return Status;
+    if (RtlpSetInDbgPrint()) return STATUS_SUCCESS;
 
     /* Guard against incorrect pointers */
     _SEH2_TRY
@@ -90,14 +90,12 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail */
-        Length = PrefixLength = 0;
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Check if we went past the buffer */
-    if (Length == -1U)
+    if (Length == MAXULONG)
     {
         /* Terminate it if we went over-board */
         Buffer[sizeof(Buffer) - 1] = '\n';
@@ -116,7 +114,7 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
     DebugString.Buffer = Buffer;
 
     /* First, let the debugger know as well */
-    if (RtlpCheckForActiveDebugger(FALSE))
+    if (RtlpCheckForActiveDebugger())
     {
         /* Fill out an exception record */
         ExceptionRecord.ExceptionCode = DBG_PRINTEXCEPTION_C;
@@ -144,13 +142,13 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
         if (Status == STATUS_BREAKPOINT)
         {
             /* Breakpoint */
-            //DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+            DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
             Status = STATUS_SUCCESS;
         }
     }
 
-    /* In user-mode, remove the InDbgPrint Flag */
-    RtlpSetInDbgPrint(FALSE);
+    /* In user-mode, clear the InDbgPrint Flag */
+    RtlpClearInDbgPrint();
 
     /* Return */
     return Status;
@@ -161,10 +159,10 @@ vDbgPrintExWithPrefixInternal(IN LPCSTR Prefix,
  */
 ULONG
 NTAPI
-vDbgPrintExWithPrefix(IN LPCSTR Prefix,
+vDbgPrintExWithPrefix(IN PCCH Prefix,
                       IN ULONG ComponentId,
                       IN ULONG Level,
-                      IN LPCSTR Format,
+                      IN PCCH Format,
                       IN va_list ap)
 {
     /* Call the internal routine that also handles ControlC */
@@ -183,7 +181,7 @@ ULONG
 NTAPI
 vDbgPrintEx(IN ULONG ComponentId,
             IN ULONG Level,
-            IN LPCSTR Format,
+            IN PCCH Format,
             IN va_list ap)
 {
     /* Call the internal routine that also handles ControlC */
@@ -203,19 +201,19 @@ __cdecl
 DbgPrint(PCCH Format,
          ...)
 {
-    ULONG n;
+    ULONG Status;
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    n = vDbgPrintExWithPrefixInternal("",
-                                      -1,
-                                      DPFLTR_ERROR_LEVEL,
-                                      Format,
-                                      ap,
-                                      TRUE);
+    Status = vDbgPrintExWithPrefixInternal("",
+                                           -1,
+                                           DPFLTR_ERROR_LEVEL,
+                                           Format,
+                                           ap,
+                                           TRUE);
     va_end(ap);
-    return n;
+    return Status;
 }
 
 /*
@@ -228,19 +226,19 @@ DbgPrintEx(IN ULONG ComponentId,
            IN PCCH Format,
            ...)
 {
-    ULONG n;
+    ULONG Status;
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    n = vDbgPrintExWithPrefixInternal("",
-                                      ComponentId,
-                                      Level,
-                                      Format,
-                                      ap,
-                                      TRUE);
+    Status = vDbgPrintExWithPrefixInternal("",
+                                           ComponentId,
+                                           Level,
+                                           Format,
+                                           ap,
+                                           TRUE);
     va_end(ap);
-    return n;
+    return Status;
 }
 
 /*
@@ -248,22 +246,22 @@ DbgPrintEx(IN ULONG ComponentId,
  */
 ULONG
 __cdecl
-DbgPrintReturnControlC(PCH Format,
+DbgPrintReturnControlC(PCCH Format,
                        ...)
 {
-    ULONG n;
+    ULONG Status;
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
     va_start(ap, Format);
-    n = vDbgPrintExWithPrefixInternal("",
-                                      -1,
-                                      DPFLTR_ERROR_LEVEL,
-                                      Format,
-                                      ap,
-                                      FALSE);
+    Status = vDbgPrintExWithPrefixInternal("",
+                                           -1,
+                                           DPFLTR_ERROR_LEVEL,
+                                           Format,
+                                           ap,
+                                           FALSE);
     va_end(ap);
-    return n;
+    return Status;
 }
 
 /*
@@ -275,7 +273,7 @@ DbgPrompt(IN PCCH Prompt,
           OUT PCH Response,
           IN ULONG MaximumResponseLength)
 {
-    CSTRING Output;
+    STRING Output;
     STRING Input;
 
     /* Setup the input string */
@@ -284,7 +282,7 @@ DbgPrompt(IN PCCH Prompt,
 
     /* Setup the output string */
     Output.Length = strlen(Prompt);
-    Output.Buffer = Prompt;
+    Output.Buffer = (PCHAR)Prompt;
 
     /* Call the system service */
     return DebugPrompt(&Output, &Input);
@@ -318,9 +316,9 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
 /*
  * @implemented
  */
-NTSTATUS
+VOID
 NTAPI
-DbgLoadImageSymbols(IN PANSI_STRING Name,
+DbgLoadImageSymbols(IN PSTRING Name,
                     IN PVOID Base,
                     IN ULONG_PTR ProcessId)
 {
@@ -329,7 +327,7 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
 
     /* Setup the symbol data */
     SymbolInfo.BaseOfDll = Base;
-    SymbolInfo.ProcessId = (ULONG)ProcessId;
+    SymbolInfo.ProcessId = ProcessId;
 
     /* Get NT Headers */
     NtHeader = RtlImageNtHeader(Base);
@@ -342,12 +340,12 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
     else
     {
         /* No data available */
-        SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
+        SymbolInfo.CheckSum =
+        SymbolInfo.SizeOfImage = 0;
     }
 
     /* Load the symbols */
     DebugService2(Name, &SymbolInfo, BREAKPOINT_LOAD_SYMBOLS);
-    return STATUS_SUCCESS;
 }
 
 /*
@@ -355,7 +353,7 @@ DbgLoadImageSymbols(IN PANSI_STRING Name,
  */
 VOID
 NTAPI
-DbgUnLoadImageSymbols(IN PANSI_STRING Name,
+DbgUnLoadImageSymbols(IN PSTRING Name,
                       IN PVOID Base,
                       IN ULONG_PTR ProcessId)
 {
@@ -363,9 +361,29 @@ DbgUnLoadImageSymbols(IN PANSI_STRING Name,
 
     /* Setup the symbol data */
     SymbolInfo.BaseOfDll = Base;
-    SymbolInfo.ProcessId = (ULONG)ProcessId;
+    SymbolInfo.ProcessId = ProcessId;
     SymbolInfo.CheckSum = SymbolInfo.SizeOfImage = 0;
 
     /* Load the symbols */
     DebugService2(Name, &SymbolInfo, BREAKPOINT_UNLOAD_SYMBOLS);
+}
+
+/*
+ * @implemented
+ */
+VOID
+NTAPI
+DbgCommandString(IN PCCH Name,
+                 IN PCCH Command)
+{
+    STRING NameString, CommandString;
+
+    /* Setup the strings */
+    NameString.Buffer = (PCHAR)Name;
+    NameString.Length = strlen(Name);
+    CommandString.Buffer = (PCHAR)Command;
+    CommandString.Length = strlen(Command);
+
+    /* Send them to the debugger */
+    DebugService2(&NameString, &CommandString, BREAKPOINT_COMMAND_STRING);
 }

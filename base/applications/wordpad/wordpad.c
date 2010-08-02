@@ -52,15 +52,17 @@
 /* use LoadString */
 static const WCHAR wszAppTitle[] = {'W','i','n','e',' ','W','o','r','d','p','a','d',0};
 
-static const WCHAR wszRichEditClass[] = {'R','I','C','H','E','D','I','T','2','0','W',0};
 static const WCHAR wszMainWndClass[] = {'W','O','R','D','P','A','D','T','O','P',0};
 
 static const WCHAR stringFormat[] = {'%','2','d','\0'};
 
+const WCHAR wszPreviewWndClass[] = {'P','r','t','P','r','e','v','i','e','w',0};
+LRESULT CALLBACK preview_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 static HWND hMainWnd;
 static HWND hEditorWnd;
 static HWND hFindWnd;
-static HMENU hPopupMenu;
+static HMENU hColorPopupMenu;
 
 static UINT ID_FINDMSGSTRING;
 
@@ -73,10 +75,25 @@ static WCHAR wszFilter[MAX_STRING_LEN*4+6*3+5];
 static WCHAR wszDefaultFileName[MAX_STRING_LEN];
 static WCHAR wszSaveChanges[MAX_STRING_LEN];
 static WCHAR units_cmW[MAX_STRING_LEN];
-
-static char units_cmA[MAX_STRING_LEN];
+static WCHAR units_inW[MAX_STRING_LEN];
+static WCHAR units_inchW[MAX_STRING_LEN];
+static WCHAR units_ptW[MAX_STRING_LEN];
 
 static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam );
+
+typedef enum
+{
+    UNIT_CM,
+    UNIT_INCH,
+    UNIT_PT
+} UNIT;
+
+typedef struct
+{
+    int endPos;
+    BOOL wrapped;
+    WCHAR findBuffer[128];
+} FINDREPLACE_custom;
 
 /* Load string resources */
 static void DoLoadStrings(void)
@@ -86,7 +103,7 @@ static void DoLoadStrings(void)
     static const WCHAR files_txt[] = {'*','.','t','x','t','\0'};
     static const WCHAR files_all[] = {'*','.','*','\0'};
 
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
 
     LoadStringW(hInstance, STRING_RICHTEXT_FILES_RTF, p, MAX_STRING_LEN);
     p += lstrlenW(p) + 1;
@@ -112,8 +129,10 @@ static void DoLoadStrings(void)
     p = wszSaveChanges;
     LoadStringW(hInstance, STRING_PROMPT_SAVE_CHANGES, p, MAX_STRING_LEN);
 
-    LoadStringA(hInstance, STRING_UNITS_CM, units_cmA, MAX_STRING_LEN);
     LoadStringW(hInstance, STRING_UNITS_CM, units_cmW, MAX_STRING_LEN);
+    LoadStringW(hInstance, STRING_UNITS_IN, units_inW, MAX_STRING_LEN);
+    LoadStringW(hInstance, STRING_UNITS_INCH, units_inchW, MAX_STRING_LEN);
+    LoadStringW(hInstance, STRING_UNITS_PT, units_ptW, MAX_STRING_LEN);
 }
 
 /* Show a message box with resource strings */
@@ -236,8 +255,10 @@ static void set_caption(LPCWSTR wszNewFileName)
     HeapFree(GetProcessHeap(), 0, wszCaption);
 }
 
-static BOOL validate_endptr(LPCSTR endptr, BOOL units)
+static BOOL validate_endptr(LPCWSTR endptr, UNIT *punit)
 {
+    if(punit != NULL)
+        *punit = UNIT_CM;
     if(!endptr)
         return FALSE;
     if(!*endptr)
@@ -246,28 +267,45 @@ static BOOL validate_endptr(LPCSTR endptr, BOOL units)
     while(*endptr == ' ')
         endptr++;
 
-    if(!units)
+    if(punit == NULL)
         return *endptr == '\0';
 
-    /* FIXME: Allow other units and convert between them */
-    if(!lstrcmpA(endptr, units_cmA))
-        endptr += 2;
+    if(!lstrcmpW(endptr, units_cmW))
+    {
+        *punit = UNIT_CM;
+        endptr += lstrlenW(units_cmW);
+    }
+    else if (!lstrcmpW(endptr, units_inW))
+    {
+        *punit = UNIT_INCH;
+        endptr += lstrlenW(units_inW);
+    }
+    else if (!lstrcmpW(endptr, units_inchW))
+    {
+        *punit = UNIT_INCH;
+        endptr += lstrlenW(units_inchW);
+    }
+    else if (!lstrcmpW(endptr, units_ptW))
+    {
+        *punit = UNIT_PT;
+        endptr += lstrlenW(units_ptW);
+    }
 
     return *endptr == '\0';
 }
 
-static BOOL number_from_string(LPCWSTR string, float *num, BOOL units)
+static BOOL number_from_string(LPCWSTR string, float *num, UNIT *punit)
 {
     double ret;
-    char buffer[MAX_STRING_LEN];
-    char *endptr = buffer;
+    WCHAR *endptr;
 
-    WideCharToMultiByte(CP_ACP, 0, string, -1, buffer, MAX_STRING_LEN, NULL, NULL);
     *num = 0;
     errno = 0;
-    ret = strtod(buffer, &endptr);
+    ret = wcstod(string, &endptr);
 
-    if((ret == 0 && errno != 0) || endptr == buffer || !validate_endptr(endptr, units))
+    if (punit != NULL)
+        *punit = UNIT_CM;
+    if((ret == 0 && errno != 0) || endptr == string || !validate_endptr(endptr, punit))
     {
         return FALSE;
     } else
@@ -301,7 +339,7 @@ static void on_sizelist_modified(HWND hwndSizeList, LPWSTR wszNewFontSize)
     if(lstrcmpW(sizeBuffer, wszNewFontSize))
     {
         float size = 0;
-        if(number_from_string(wszNewFontSize, &size, FALSE)
+        if(number_from_string(wszNewFontSize, &size, NULL)
            && size > 0)
         {
             set_size(size);
@@ -645,7 +683,7 @@ static void set_toolbar_state(int bandId, BOOL show)
         REBARBANDINFOW rbbinfo;
         int index = SendMessageW(hwndReBar, RB_IDTOINDEX, BANDID_FONTLIST, 0);
 
-        rbbinfo.cbSize = sizeof(rbbinfo);
+        rbbinfo.cbSize = REBARBANDINFOW_V6_SIZE;
         rbbinfo.fMask = RBBIM_STYLE;
 
         SendMessageW(hwndReBar, RB_GETBANDINFO, index, (LPARAM)&rbbinfo);
@@ -684,8 +722,7 @@ static void set_bar_states(void)
 
 static void preview_exit(HWND hMainWnd)
 {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    HMENU hMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_MAINMENU));
+    HMENU hMenu = LoadMenuW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDM_MAINMENU));
     HWND hEditorWnd = GetDlgItem(hMainWnd, IDC_EDITOR);
 
     set_bar_states();
@@ -701,16 +738,7 @@ static void preview_exit(HWND hMainWnd)
 
 static void set_fileformat(WPARAM format)
 {
-    HICON hIcon;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
     fileFormat = format;
-
-    if(format & SF_TEXT)
-        hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_TXT));
-    else
-        hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_RTF));
-
-    SendMessageW(hMainWnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 
     set_bar_states();
     set_default_font();
@@ -870,7 +898,7 @@ static void DialogSaveFile(void)
     ZeroMemory(&sfn, sizeof(sfn));
 
     sfn.lStructSize = sizeof(sfn);
-    sfn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    sfn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_ENABLESIZING;
     sfn.hwndOwner = hMainWnd;
     sfn.lpstrFilter = wszFilter;
     sfn.lpstrFile = wszFile;
@@ -964,7 +992,7 @@ static void DialogOpenFile(void)
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
     ofn.hwndOwner = hMainWnd;
     ofn.lpstrFilter = wszFilter;
     ofn.lpstrFile = wszFile;
@@ -981,8 +1009,7 @@ static void DialogOpenFile(void)
 
 static void dialog_about(void)
 {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
-    HICON icon = LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
+    HICON icon = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON, 48, 48, LR_SHARED);
     ShellAboutW(hMainWnd, wszAppTitle, 0, icon);
 }
 
@@ -1089,7 +1116,7 @@ static void dialog_viewproperties(void)
     PROPSHEETPAGEW psp[2];
     PROPSHEETHEADERW psh;
     size_t i;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
     LPCPROPSHEETPAGEW ppsp = (LPCPROPSHEETPAGEW)&psp;
 
     psp[0].dwSize = sizeof(PROPSHEETPAGEW);
@@ -1194,13 +1221,11 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
 
     if(pFr->Flags & FR_FINDNEXT || pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL)
     {
-        DWORD flags = FR_DOWN;
-        FINDTEXTW ft;
-        static CHARRANGE cr;
-        LRESULT end, ret;
-        GETTEXTLENGTHEX gt;
-        LRESULT length;
-        int startPos;
+        FINDREPLACE_custom *custom_data = (FINDREPLACE_custom*)pFr->lCustData;
+        DWORD flags;
+        FINDTEXTEXW ft;
+        CHARRANGE sel;
+        LRESULT ret = -1;
         HMENU hMenu = GetMenu(hMainWnd);
         MENUITEMINFOW mi;
 
@@ -1209,69 +1234,69 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         mi.dwItemData = 1;
         SetMenuItemInfoW(hMenu, ID_FIND_NEXT, FALSE, &mi);
 
-        gt.flags = GTL_NUMCHARS;
-        gt.codepage = 1200;
-
-        length = SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0);
-
-        if(pFr->lCustData == -1)
+        /* Make sure find field is saved. */
+        if (pFr->lpstrFindWhat != custom_data->findBuffer)
         {
-            SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&startPos, (LPARAM)&end);
-            cr.cpMin = startPos;
-            pFr->lCustData = startPos;
-            cr.cpMax = length;
-            if(cr.cpMin == length)
-                cr.cpMin = 0;
-        } else
-        {
-            startPos = pFr->lCustData;
+            lstrcpynW(custom_data->findBuffer, pFr->lpstrFindWhat,
+                      sizeof(custom_data->findBuffer));
+            pFr->lpstrFindWhat = custom_data->findBuffer;
         }
 
-        if(cr.cpMax > length)
-        {
-            startPos = 0;
-            cr.cpMin = 0;
-            cr.cpMax = length;
+        SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&sel.cpMin, (LPARAM)&sel.cpMax);
+        if(custom_data->endPos == -1) {
+            custom_data->endPos = sel.cpMin;
+            custom_data->wrapped = FALSE;
         }
 
-        ft.chrg = cr;
+        flags = FR_DOWN | (pFr->Flags & (FR_MATCHCASE | FR_WHOLEWORD));
         ft.lpstrText = pFr->lpstrFindWhat;
 
-        if(pFr->Flags & FR_MATCHCASE)
-            flags |= FR_MATCHCASE;
-        if(pFr->Flags & FR_WHOLEWORD)
-            flags |= FR_WHOLEWORD;
-
-        ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, (WPARAM)flags, (LPARAM)&ft);
-
-        if(ret == -1)
+        /* Only replace existing selectino if it is an exact match. */
+        if (sel.cpMin != sel.cpMax &&
+            (pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL))
         {
-            if(cr.cpMax == length && cr.cpMax != startPos)
-            {
-                ft.chrg.cpMin = cr.cpMin = 0;
-                ft.chrg.cpMax = cr.cpMax = startPos;
-
-                ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, (WPARAM)flags, (LPARAM)&ft);
+            ft.chrg = sel;
+            SendMessageW(hEditorWnd, EM_FINDTEXTEXW, flags, (LPARAM)&ft);
+            if (ft.chrgText.cpMin == sel.cpMin && ft.chrgText.cpMax == sel.cpMax) {
+                SendMessageW(hEditorWnd, EM_REPLACESEL, TRUE, (LPARAM)pFr->lpstrReplaceWith);
+                SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&sel.cpMin, (LPARAM)&sel.cpMax);
             }
         }
 
-        if(ret == -1)
-        {
-            pFr->lCustData = -1;
-            MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_SEARCH_FINISHED), wszAppTitle,
-                        MB_OK | MB_ICONASTERISK);
-        } else
-        {
-            end = ret + lstrlenW(pFr->lpstrFindWhat);
-            cr.cpMin = end;
-            SendMessageW(hEditorWnd, EM_SETSEL, (WPARAM)ret, (LPARAM)end);
+        /* Search from the start of the selection, but exclude the first character
+         * from search if there is a selection. */
+        ft.chrg.cpMin = sel.cpMin;
+        if (sel.cpMin != sel.cpMax)
+            ft.chrg.cpMin++;
+
+        /* Search to the end, then wrap around and search from the start. */
+        if (!custom_data->wrapped) {
+            ft.chrg.cpMax = -1;
+            ret = SendMessageW(hEditorWnd, EM_FINDTEXTEXW, flags, (LPARAM)&ft);
+            if (ret == -1) {
+                custom_data->wrapped = TRUE;
+                ft.chrg.cpMin = 0;
+            }
+        }
+
+        if (ret == -1) {
+            ft.chrg.cpMax = custom_data->endPos + lstrlenW(pFr->lpstrFindWhat) - 1;
+            if (ft.chrg.cpMax > ft.chrg.cpMin)
+                ret = SendMessageW(hEditorWnd, EM_FINDTEXTEXW, flags, (LPARAM)&ft);
+        }
+
+        if (ret == -1) {
+            custom_data->endPos = -1;
+            EnableWindow(hMainWnd, FALSE);
+            MessageBoxWithResStringW(hFindWnd, MAKEINTRESOURCEW(STRING_SEARCH_FINISHED),
+                                     wszAppTitle, MB_OK | MB_ICONASTERISK | MB_TASKMODAL);
+            EnableWindow(hMainWnd, TRUE);
+        } else {
+            SendMessageW(hEditorWnd, EM_SETSEL, ft.chrgText.cpMin, ft.chrgText.cpMax);
             SendMessageW(hEditorWnd, EM_SCROLLCARET, 0, 0);
 
-            if(pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL)
-                SendMessageW(hEditorWnd, EM_REPLACESEL, TRUE, (LPARAM)pFr->lpstrReplaceWith);
-
-            if(pFr->Flags & FR_REPLACEALL)
-                handle_findmsg(pFr);
+            if (pFr->Flags & FR_REPLACEALL)
+                return handle_findmsg(pFr);
         }
     }
 
@@ -1280,15 +1305,46 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
 
 static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
 {
-    static WCHAR findBuffer[MAX_STRING_LEN];
+    static WCHAR selBuffer[128];
+    static WCHAR replaceBuffer[128];
+    static FINDREPLACE_custom custom_data;
+    static const WCHAR endl = '\r';
+    FINDTEXTW ft;
+
+    /* Allow only one search/replace dialog to open */
+    if(hFindWnd != NULL)
+    {
+        SetActiveWindow(hFindWnd);
+        return;
+    }
 
     ZeroMemory(fr, sizeof(FINDREPLACEW));
     fr->lStructSize = sizeof(FINDREPLACEW);
     fr->hwndOwner = hMainWnd;
     fr->Flags = FR_HIDEUPDOWN;
-    fr->lpstrFindWhat = findBuffer;
-    fr->lCustData = -1;
-    fr->wFindWhatLen = MAX_STRING_LEN*sizeof(WCHAR);
+    /* Find field is filled with the selected text if it is non-empty
+     * and stays within the same paragraph, otherwise the previous
+     * find field is used. */
+    SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&ft.chrg.cpMin,
+                 (LPARAM)&ft.chrg.cpMax);
+    ft.lpstrText = &endl;
+    if (ft.chrg.cpMin != ft.chrg.cpMax &&
+        SendMessageW(hEditorWnd, EM_FINDTEXTW, FR_DOWN, (LPARAM)&ft) == -1)
+    {
+        /* Use a temporary buffer for the selected text so that the saved
+         * find field is only overwritten when a find/replace is clicked. */
+        GETTEXTEX gt = {sizeof(selBuffer), GT_SELECTION, 1200, NULL, NULL};
+        SendMessageW(hEditorWnd, EM_GETTEXTEX, (WPARAM)&gt, (LPARAM)selBuffer);
+        fr->lpstrFindWhat = selBuffer;
+    } else {
+        fr->lpstrFindWhat = custom_data.findBuffer;
+    }
+    fr->lpstrReplaceWith = replaceBuffer;
+    custom_data.endPos = -1;
+    custom_data.wrapped = FALSE;
+    fr->lCustData = (LPARAM)&custom_data;
+    fr->wFindWhatLen = sizeof(custom_data.findBuffer);
+    fr->wReplaceWithLen = sizeof(replaceBuffer);
 
     if(replace)
         hFindWnd = ReplaceTextW(fr);
@@ -1296,9 +1352,25 @@ static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
         hFindWnd = FindTextW(fr);
 }
 
-static int current_units_to_twips(float number)
+static int units_to_twips(UNIT unit, float number)
 {
-    int twips = (int)(number * 1000.0 / (float)CENTMM_PER_INCH *  (float)TWIPS_PER_INCH);
+    int twips = 0;
+
+    switch(unit)
+    {
+    case UNIT_CM:
+        twips = (int)(number * 1000.0 / (float)CENTMM_PER_INCH * (float)TWIPS_PER_INCH);
+        break;
+
+    case UNIT_INCH:
+        twips = (int)(number * (float)TWIPS_PER_INCH);
+        break;
+
+    case UNIT_PT:
+        twips = (int)(number * (0.0138 * (float)TWIPS_PER_INCH));
+        break;
+    }
+
     return twips;
 }
 
@@ -1408,7 +1480,7 @@ static INT_PTR CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
     {
         case WM_INITDIALOG:
             {
-                HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd, GWLP_HINSTANCE);
+                HINSTANCE hInstance = GetModuleHandleW(0);
                 WCHAR buffer[MAX_STRING_LEN];
                 HWND hListWnd = GetDlgItem(hWnd, IDC_NEWFILE);
 
@@ -1453,8 +1525,7 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
     {
         case WM_INITDIALOG:
             {
-                HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hMainWnd,
-                                                                  GWLP_HINSTANCE);
+                HINSTANCE hInstance = GetModuleHandleW(0);
                 WCHAR buffer[MAX_STRING_LEN];
                 HWND hListWnd = GetDlgItem(hWnd, IDC_PARA_ALIGN);
                 HWND hLeftWnd = GetDlgItem(hWnd, IDC_PARA_LEFT);
@@ -1508,22 +1579,23 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
                         float num;
                         int ret = 0;
                         PARAFORMAT pf;
+                        UNIT unit;
 
                         index = SendMessageW(hListWnd, CB_GETCURSEL, 0, 0);
                         pf.wAlignment = ALIGNMENT_VALUES[index];
 
                         GetWindowTextW(hLeftWnd, buffer, MAX_STRING_LEN);
-                        if(number_from_string(buffer, &num, TRUE))
+                        if(number_from_string(buffer, &num, &unit))
                             ret++;
-                        pf.dxOffset = current_units_to_twips(num);
+                        pf.dxOffset = units_to_twips(unit, num);
                         GetWindowTextW(hRightWnd, buffer, MAX_STRING_LEN);
-                        if(number_from_string(buffer, &num, TRUE))
+                        if(number_from_string(buffer, &num, &unit))
                             ret++;
-                        pf.dxRightIndent = current_units_to_twips(num);
+                        pf.dxRightIndent = units_to_twips(unit, num);
                         GetWindowTextW(hFirstWnd, buffer, MAX_STRING_LEN);
-                        if(number_from_string(buffer, &num, TRUE))
+                        if(number_from_string(buffer, &num, &unit))
                             ret++;
-                        pf.dxStartIndent = current_units_to_twips(num);
+                        pf.dxStartIndent = units_to_twips(unit, num);
 
                         if(ret != 3)
                         {
@@ -1629,6 +1701,7 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                     {
                         HWND hTabWnd = GetDlgItem(hWnd, IDC_TABSTOPS);
                         WCHAR buffer[MAX_STRING_LEN];
+                        UNIT unit;
 
                         GetWindowTextW(hTabWnd, buffer, MAX_STRING_LEN);
                         append_current_units(buffer);
@@ -1638,7 +1711,7 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                             float number = 0;
                             int item_count = SendMessage(hTabWnd, CB_GETCOUNT, 0, 0);
 
-                            if(!number_from_string(buffer, &number, TRUE))
+                            if(!number_from_string(buffer, &number, &unit))
                             {
                                 MessageBoxWithResStringW(hWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
                                              wszAppTitle, MB_OK | MB_ICONINFORMATION);
@@ -1649,14 +1722,14 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                                 int i;
                                 float next_number = -1;
                                 int next_number_in_twips = -1;
-                                int insert_number = current_units_to_twips(number);
+                                int insert_number = units_to_twips(unit, number);
 
                                 /* linear search for position to insert the string */
                                 for(i = 0; i < item_count; i++)
                                 {
                                     SendMessageW(hTabWnd, CB_GETLBTEXT, i, (LPARAM)&buffer);
-                                    number_from_string(buffer, &next_number, TRUE);
-                                    next_number_in_twips = current_units_to_twips(next_number);
+                                    number_from_string(buffer, &next_number, &unit);
+                                    next_number_in_twips = units_to_twips(unit, next_number);
                                     if (insert_number <= next_number_in_twips)
                                         break;
                                 }
@@ -1697,6 +1770,7 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                         WCHAR buffer[MAX_STRING_LEN];
                         PARAFORMAT pf;
                         float number;
+                        UNIT unit;
 
                         pf.cbSize = sizeof(pf);
                         pf.dwMask = PFM_TABSTOPS;
@@ -1705,8 +1779,8 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
                                                 (LPARAM)&buffer) != CB_ERR &&
                                                         i < MAX_TAB_STOPS; i++)
                         {
-                            number_from_string(buffer, &number, TRUE);
-                            pf.rgxTabs[i] = current_units_to_twips(number);
+                            number_from_string(buffer, &number, &unit);
+                            pf.rgxTabs[i] = units_to_twips(unit, number);
                         }
                         pf.cTabCount = i;
                         SendMessageW(hEditorWnd, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
@@ -1720,33 +1794,10 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
     return FALSE;
 }
 
-static int context_menu(LPARAM lParam)
-{
-    int x = (int)(short)LOWORD(lParam);
-    int y = (int)(short)HIWORD(lParam);
-    HMENU hPop = GetSubMenu(hPopupMenu, 0);
-
-    if(x == -1)
-    {
-        int from = 0, to = 0;
-        POINTL pt;
-        SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&from, (LPARAM)&to);
-        SendMessageW(hEditorWnd, EM_POSFROMCHAR, (WPARAM)&pt, (LPARAM)to);
-        ClientToScreen(hEditorWnd, (POINT*)&pt);
-        x = pt.x;
-        y = pt.y;
-    }
-
-    TrackPopupMenu(hPop, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON,
-                   x, y, 0, hMainWnd, 0);
-
-    return 0;
-}
-
 static LRESULT OnCreate( HWND hWnd )
 {
     HWND hToolBarWnd, hFormatBarWnd,  hReBarWnd, hFontListWnd, hSizeListWnd, hRulerWnd;
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+    HINSTANCE hInstance = GetModuleHandleW(0);
     HANDLE hDLL;
     TBADDBITMAP ab;
     int nStdBitmaps = 0;
@@ -1796,7 +1847,7 @@ static LRESULT OnCreate( HWND hWnd )
 
     SendMessageW(hToolBarWnd, TB_AUTOSIZE, 0, 0);
 
-    rbb.cbSize = sizeof(rbb);
+    rbb.cbSize = REBARBANDINFOW_V6_SIZE;
     rbb.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_CHILD | RBBIM_STYLE | RBBIM_ID;
     rbb.fStyle = RBBS_CHILDEDGE | RBBS_BREAK | RBBS_NOGRIPPER;
     rbb.cx = 0;
@@ -1830,17 +1881,18 @@ static LRESULT OnCreate( HWND hWnd )
 
     hFormatBarWnd = CreateToolbarEx(hReBarWnd,
          CCS_NOPARENTALIGN | CCS_NOMOVEY | WS_VISIBLE | TBSTYLE_TOOLTIPS | TBSTYLE_BUTTON,
-         IDC_FORMATBAR, 7, hInstance, IDB_FORMATBAR, NULL, 0, 16, 16, 16, 16, sizeof(TBBUTTON));
+         IDC_FORMATBAR, 8, hInstance, IDB_FORMATBAR, NULL, 0, 16, 16, 16, 16, sizeof(TBBUTTON));
 
     AddButton(hFormatBarWnd, 0, ID_FORMAT_BOLD);
     AddButton(hFormatBarWnd, 1, ID_FORMAT_ITALIC);
     AddButton(hFormatBarWnd, 2, ID_FORMAT_UNDERLINE);
+    AddButton(hFormatBarWnd, 3, ID_FORMAT_COLOR);
     AddSeparator(hFormatBarWnd);
-    AddButton(hFormatBarWnd, 3, ID_ALIGN_LEFT);
-    AddButton(hFormatBarWnd, 4, ID_ALIGN_CENTER);
-    AddButton(hFormatBarWnd, 5, ID_ALIGN_RIGHT);
+    AddButton(hFormatBarWnd, 4, ID_ALIGN_LEFT);
+    AddButton(hFormatBarWnd, 5, ID_ALIGN_CENTER);
+    AddButton(hFormatBarWnd, 6, ID_ALIGN_RIGHT);
     AddSeparator(hFormatBarWnd);
-    AddButton(hFormatBarWnd, 6, ID_BULLET);
+    AddButton(hFormatBarWnd, 7, ID_BULLET);
 
     SendMessageW(hFormatBarWnd, TB_AUTOSIZE, 0, 0);
 
@@ -1867,7 +1919,7 @@ static LRESULT OnCreate( HWND hWnd )
         PostQuitMessage(1);
     }
 
-    hEditorWnd = CreateWindowExW(WS_EX_CLIENTEDGE, wszRichEditClass, NULL,
+    hEditorWnd = CreateWindowExW(WS_EX_CLIENTEDGE, RICHEDIT_CLASS20W, NULL,
       WS_CHILD|WS_VISIBLE|ES_SELECTIONBAR|ES_MULTILINE|ES_AUTOVSCROLL
       |ES_WANTRETURN|WS_VSCROLL|ES_NOHIDESEL|WS_HSCROLL,
       0, 0, 1000, 100, hWnd, (HMENU)IDC_EDITOR, hInstance, NULL);
@@ -1879,6 +1931,7 @@ static LRESULT OnCreate( HWND hWnd )
     }
     assert(hEditorWnd);
 
+    setup_richedit_olecallback(hEditorWnd);
     SetFocus(hEditorWnd);
     SendMessageW(hEditorWnd, EM_SETEVENTMASK, 0, ENM_SELCHANGE);
 
@@ -1995,6 +2048,15 @@ static LRESULT OnNotify( HWND hWnd, LPARAM lParam)
     return 0;
 }
 
+/* Copied from dlls/comdlg32/fontdlg.c */
+static const COLORREF textcolors[]=
+{
+    0x00000000L,0x00000080L,0x00008000L,0x00008080L,
+    0x00800000L,0x00800080L,0x00808000L,0x00808080L,
+    0x00c0c0c0L,0x000000ffL,0x0000ff00L,0x0000ffffL,
+    0x00ff0000L,0x00ff00ffL,0x00ffff00L,0x00FFFFFFL
+};
+
 static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
     HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
@@ -2012,7 +2074,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_FILE_NEW:
         {
-            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+            HINSTANCE hInstance = GetModuleHandleW(0);
             int ret = DialogBox(hInstance, MAKEINTRESOURCE(IDD_NEWFILE), hWnd,
                                 newfile_proc);
 
@@ -2092,7 +2154,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_PRINT_QUICK:
-        print_quick(wszFileName);
+        print_quick(hMainWnd, wszFileName);
         target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
         break;
 
@@ -2100,7 +2162,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         {
             int index = reg_formatindex(fileFormat);
             DWORD tmp = barState[index];
-            barState[index] = 0;
+            barState[index] = 1 << BANDID_STATUSBAR;
             set_bar_states();
             barState[index] = tmp;
             ShowWindow(hEditorWnd, FALSE);
@@ -2145,6 +2207,46 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         SendMessageW(hwndEditor, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&fmt);
         break;
         }
+
+    case ID_FORMAT_COLOR:
+    {
+        HWND hReBarWnd = GetDlgItem(hWnd, IDC_REBAR);
+        HWND hFormatBarWnd = GetDlgItem(hReBarWnd, IDC_FORMATBAR);
+        HMENU hPop;
+        RECT itemrc;
+        POINT pt;
+        int mid;
+        int itemidx = SendMessage(hFormatBarWnd, TB_COMMANDTOINDEX, ID_FORMAT_COLOR, 0);
+
+        SendMessage(hFormatBarWnd, TB_GETITEMRECT, itemidx, (LPARAM)&itemrc);
+        pt.x = itemrc.left;
+        pt.y = itemrc.bottom;
+        ClientToScreen(hFormatBarWnd, &pt);
+        hPop = GetSubMenu(hColorPopupMenu, 0);
+        mid = TrackPopupMenu(hPop, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_LEFTBUTTON |
+                                   TPM_RETURNCMD | TPM_NONOTIFY,
+                             pt.x, pt.y, 0, hWnd, 0);
+        if (mid >= ID_COLOR_FIRST && mid <= ID_COLOR_AUTOMATIC)
+        {
+            CHARFORMAT2W fmt;
+
+            ZeroMemory(&fmt, sizeof(fmt));
+            fmt.cbSize = sizeof(fmt);
+            SendMessageW(hwndEditor, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&fmt);
+
+            fmt.dwMask = CFM_COLOR;
+
+            if (mid < ID_COLOR_AUTOMATIC) {
+                fmt.crTextColor = textcolors[mid - ID_COLOR_FIRST];
+                fmt.dwEffects &= ~CFE_AUTOCOLOR;
+            } else {
+                fmt.dwEffects |= CFE_AUTOCOLOR;
+            }
+
+            SendMessageW(hwndEditor, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&fmt);
+        }
+        break;
+    }
 
     case ID_EDIT_CUT:
         PostMessageW(hwndEditor, WM_CUT, 0, 0);
@@ -2196,12 +2298,12 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_DEFCHARFORMAT:
         {
         CHARFORMAT2W cf;
-        LRESULT i;
+
         ZeroMemory(&cf, sizeof(cf));
         cf.cbSize = sizeof(cf);
         cf.dwMask = 0;
-        i = SendMessageW(hwndEditor, EM_GETCHARFORMAT,
-                        LOWORD(wParam) == ID_EDIT_CHARFORMAT, (LPARAM)&cf);
+        SendMessageW(hwndEditor, EM_GETCHARFORMAT,
+                     LOWORD(wParam) == ID_EDIT_CHARFORMAT, (LPARAM)&cf);
         return 0;
         }
 
@@ -2233,7 +2335,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_EDIT_READONLY:
         {
-        long nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
+        LONG nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
         if (nStyle & ES_READONLY)
             SendMessageW(hwndEditor, EM_SETREADONLY, 0, 0);
         else
@@ -2328,25 +2430,15 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_DATETIME:
-        {
-        HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-        DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_DATETIME), hWnd, datetime_proc);
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_DATETIME), hWnd, datetime_proc);
         break;
-        }
 
     case ID_PARAFORMAT:
-        {
-            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-            DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_PARAFORMAT), hWnd,
-                       paraformat_proc);
-        }
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_PARAFORMAT), hWnd, paraformat_proc);
         break;
 
     case ID_TABSTOPS:
-        {
-            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-            DialogBoxW(hInstance, MAKEINTRESOURCEW(IDD_TABSTOPS), hWnd, tabstops_proc);
-        }
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_TABSTOPS), hWnd, tabstops_proc);
         break;
 
     case ID_ABOUT:
@@ -2454,10 +2546,10 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
 {
     int nStatusSize = 0;
     RECT rc;
-    HWND hwndEditor = GetDlgItem(hWnd, IDC_EDITOR);
+    HWND hwndEditor = preview_isactive() ? GetDlgItem(hWnd, IDC_PREVIEW) : GetDlgItem(hWnd, IDC_EDITOR);
     HWND hwndStatusBar = GetDlgItem(hWnd, IDC_STATUSBAR);
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
-    HWND hRulerWnd = GetDlgItem(hWnd, IDC_RULER);
+    HWND hRulerWnd = GetDlgItem(hwndReBar, IDC_RULER);
     int rebarHeight = 0;
 
     if (hwndStatusBar)
@@ -2524,7 +2616,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         } else if(prompt_save_changes())
         {
             registry_set_options(hMainWnd);
-            registry_set_formatopts_all(barState);
+            registry_set_formatopts_all(barState, wordWrap);
             PostQuitMessage(0);
         }
         break;
@@ -2541,10 +2633,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         return OnSize( hWnd, wParam, lParam );
 
     case WM_CONTEXTMENU:
-        if((HWND)wParam == hEditorWnd)
-            return context_menu(lParam);
-        else
-            return DefWindowProcW(hWnd, msg, wParam, lParam);
+        return DefWindowProcW(hWnd, msg, wParam, lParam);
 
     case WM_DROPFILES:
         {
@@ -2557,9 +2646,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         }
         break;
     case WM_PAINT:
-        if(preview_isactive())
-            return print_preview(hWnd);
-        else
+        if(!preview_isactive())
             return DefWindowProcW(hWnd, msg, wParam, lParam);
 
     default:
@@ -2573,7 +2660,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
 {
     INITCOMMONCONTROLSEX classes = {8, ICC_BAR_CLASSES|ICC_COOL_CLASSES|ICC_USEREX_CLASSES};
     HACCEL hAccel;
-    WNDCLASSW wc;
+    WNDCLASSEXW wc;
     MSG msg;
     RECT rc;
     UINT_PTR hPrevRulerProc;
@@ -2587,17 +2674,33 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
 
     hAccel = LoadAcceleratorsW(hInstance, wszAccelTable);
 
-    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.cbSize = sizeof(wc);
+    wc.style = 0;
     wc.lpfnWndProc = WndProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 4;
     wc.hInstance = hInstance;
     wc.hIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD));
+    wc.hIconSm = LoadImageW(hInstance, MAKEINTRESOURCEW(IDI_WORDPAD), IMAGE_ICON,
+                            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
     wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = MAKEINTRESOURCEW(IDM_MAINMENU);
     wc.lpszClassName = wszMainWndClass;
-    RegisterClassW(&wc);
+    RegisterClassExW(&wc);
+
+    wc.style = 0;
+    wc.lpfnWndProc = preview_proc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = hInstance;
+    wc.hIcon = NULL;
+    wc.hIconSm = NULL;
+    wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
+    wc.hbrBackground = NULL;
+    wc.lpszMenuName = NULL;
+    wc.lpszClassName = wszPreviewWndClass;
+    RegisterClassExW(&wc);
 
     registry_read_winrect(&rc);
     hMainWnd = CreateWindowExW(0, wszMainWndClass, wszAppTitle, WS_CLIPCHILDREN|WS_OVERLAPPEDWINDOW,
@@ -2611,7 +2714,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     set_caption(NULL);
     set_bar_states();
     set_fileformat(SF_RTF);
-    hPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_POPUP));
+    hColorPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_COLOR_POPUP));
     get_default_printer_opts();
     target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);
 

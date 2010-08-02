@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
@@ -23,8 +23,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __PARTLIST_H__
-#define __PARTLIST_H__
+#pragma once
 
 /* We have to define it there, because it is not in the MS DDK */
 #define PARTITION_EXT2 0x83
@@ -43,7 +42,7 @@ typedef struct _PARTENTRY
 {
   LIST_ENTRY ListEntry;
 
-  CHAR DriveLetter;
+  CHAR DriveLetter[4];
   CHAR VolumeLabel[17];
   CHAR FileSystemName[9];
 
@@ -109,6 +108,7 @@ typedef struct _DISKENTRY
   BOOLEAN Modified;
 
   BOOLEAN NewDisk;
+  BOOLEAN NoMbr; /* MBR is absent */
 
   UNICODE_STRING DriverName;
 
@@ -132,9 +132,11 @@ typedef struct _PARTLIST
 
   PDISKENTRY CurrentDisk;
   PPARTENTRY CurrentPartition;
+  UCHAR      CurrentPartitionNumber;
 
   PDISKENTRY ActiveBootDisk;
   PPARTENTRY ActiveBootPartition;
+  UCHAR      ActiveBootPartitionNumber;
 
   LIST_ENTRY DiskListHead;
   LIST_ENTRY BiosDiskListHead;
@@ -218,7 +220,5 @@ CheckForLinuxFdiskPartitions (PPARTLIST List);
 
 BOOLEAN
 WritePartitionsToDisk (PPARTLIST List);
-
-#endif /* __PARTLIST_H__ */
 
 /* EOF */

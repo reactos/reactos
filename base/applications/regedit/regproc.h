@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 /******************************************************************************
@@ -91,10 +91,6 @@ LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTST
 #define RSF_LOOKATVALUES   0x00000004
 #define RSF_LOOKATDATA     0x00000008
 #define RSF_MATCHCASE      0x00010000
-
-LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
-    LPCTSTR pszSearchString, DWORD dwValueIndex,
-    DWORD dwSearchFlags, BOOL (*pfnCallback)(LPVOID), LPVOID lpParam);
 
 BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);
 

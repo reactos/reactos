@@ -1039,6 +1039,12 @@ xsltComputeSortResult(xsltTransformContextPtr ctxt, xmlNodePtr sort) {
 		}
 	    } else {
 		if (res->type == XPATH_STRING) {
+		    if (comp->locale != (xsltLocale)0) {
+			xmlChar *str = res->stringval;
+			res->stringval = (xmlChar *) xsltStrxfrm(comp->locale, str);
+			xmlFree(str);
+		    }
+
 		    results[i] = res;
 		} else {
 #ifdef WITH_XSLT_DEBUG_PROCESS
@@ -1191,6 +1197,11 @@ xsltDefaultSortFunction(xsltTransformContextPtr ctxt, xmlNodePtr *sorts,
 				results[j + incr]->floatval)
 			    tst = 1;
 			else tst = -1;
+		    } else if(comp->locale != (xsltLocale)0) {
+			tst = xsltLocaleStrcmp(
+			    comp->locale,
+			    (xsltLocaleChar *) results[j]->stringval,
+			    (xsltLocaleChar *) results[j + incr]->stringval); 
 		    } else {
 			tst = xmlStrcmp(results[j]->stringval,
 				     results[j + incr]->stringval); 
@@ -1245,6 +1256,11 @@ xsltDefaultSortFunction(xsltTransformContextPtr ctxt, xmlNodePtr *sorts,
 					res[j + incr]->floatval)
 				    tst = 1;
 				else tst = -1;
+			    } else if(comp->locale != (xsltLocale)0) {
+				tst = xsltLocaleStrcmp(
+				    comp->locale,
+				    (xsltLocaleChar *) res[j]->stringval,
+				    (xsltLocaleChar *) res[j + incr]->stringval); 
 			    } else {
 				tst = xmlStrcmp(res[j]->stringval,
 					     res[j + incr]->stringval); 

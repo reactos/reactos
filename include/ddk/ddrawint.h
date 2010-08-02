@@ -5,6 +5,14 @@
 #ifndef __DD_INCLUDED__
 #define __DD_INCLUDED__
 
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
 DEFINE_GUID( GUID_MiscellaneousCallbacks,  0xEFD60CC0, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
 DEFINE_GUID( GUID_Miscellaneous2Callbacks, 0x406B2F00, 0x3E5A, 0x11D1, 0xB6, 0x40, 0x00, 0xAA, 0x00, 0xA1, 0xF9, 0x6A);
@@ -81,14 +89,14 @@ typedef struct _VIDEOMEMORY
 {
     DWORD          dwFlags;
     FLATPTR        fpStart;
-    union
+    __GNU_EXTENSION union
     {
         FLATPTR    fpEnd;
         DWORD      dwWidth;
     };
     DDSCAPS        ddsCaps;
     DDSCAPS        ddsCapsAlt;
-    union
+    __GNU_EXTENSION union
     {
         struct _VMEMHEAP *lpHeap;
         DWORD      dwHeight;
@@ -128,13 +136,13 @@ typedef struct _DD_DIRECTDRAW_LOCAL
 
 typedef struct _DD_SURFACE_GLOBAL
 {
-    union
+    __GNU_EXTENSION union
     {
         DWORD        dwBlockSizeY;
         LONG         lSlicePitch;
     };
 
-    union
+    __GNU_EXTENSION union
     {
         PVIDEOMEMORY lpVidMemHeap;
         DWORD        dwBlockSizeX;
@@ -142,7 +150,7 @@ typedef struct _DD_SURFACE_GLOBAL
     };
 
     FLATPTR          fpVidMem;
-    union
+    __GNU_EXTENSION union
     {
         LONG         lPitch;
         DWORD        dwLinearSize;
@@ -174,12 +182,12 @@ typedef struct _DD_SURFACE_LOCAL
 	DWORD              dwFlags;
 	DDSCAPS            ddsCaps;
 	ULONG_PTR          dwReserved1;
-	union
+	__GNU_EXTENSION union
 	{
 		DDCOLORKEY     ddckCKSrcOverlay;
 		DDCOLORKEY     ddckCKSrcBlt;
 	};
-	union
+	__GNU_EXTENSION union
 	{
 		DDCOLORKEY     ddckCKDestOverlay;
 		DDCOLORKEY     ddckCKDestBlt;
@@ -591,7 +599,7 @@ typedef DWORD (WINAPI *PDD_CREATESURFACEEX)(PDD_CREATESURFACEEXDATA);
 typedef struct _DD_GETDRIVERSTATEDATA
 {
 	DWORD                     dwFlags;
-	union
+	__GNU_EXTENSION union
 	{
 		PDD_DIRECTDRAW_GLOBAL lpDD;
 		DWORD_PTR             dwhContext;

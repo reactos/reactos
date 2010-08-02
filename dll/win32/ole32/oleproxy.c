@@ -46,6 +46,8 @@
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
 {
+    HRESULT hr;
+
     *ppv = NULL;
     if (IsEqualIID(rclsid,&CLSID_DfMarshal)&&(
 		IsEqualIID(iid,&IID_IClassFactory) ||
@@ -70,5 +72,9 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
     if (IsEqualGUID(rclsid, &CLSID_StdComponentCategoriesMgr))
         return ComCatCF_Create(iid, ppv);
 
-    return OLE32_DllGetClassObject(rclsid, iid, ppv);
+    hr = OLE32_DllGetClassObject(rclsid, iid, ppv);
+    if (SUCCEEDED(hr))
+        return hr;
+
+    return Handler_DllGetClassObject(rclsid, iid, ppv);
 }

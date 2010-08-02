@@ -120,7 +120,7 @@ Bin::adopt()
  */
 
 void
-Bin::show( char *name )
+Bin::show( const char *name )
 {
 #ifndef NDEBUG
     dprintf( "%s\n", name );

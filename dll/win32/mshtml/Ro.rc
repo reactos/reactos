@@ -17,12 +17,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_HTMLDISABLED    "Afișarea de pagini HTML este în prezent dezactivată."
     IDS_HTMLDOCUMENT    "Document HTML"
@@ -30,18 +31,21 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "Instalez..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
+ID_DWL_DIALOG DIALOG  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalator Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Această aplicație încearcă să afișeze o pagină HTML. Wine are nevoie de Gecko (motorul de HTML Mozilla) pentru a afișa această pagină. Apăsați „Instalează” dacă doriți ca Wine să descarce și să instaleze Gecko în mod automat.", ID_DWL_STATUS, 10, 10, 240, 40, SS_LEFT
+    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
+          "to work correctly. Wine can automatically download and install it for you.\n\n" \
+          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+          ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
     CONTROL "Progres", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
     DEFPUSHBUTTON "&Instalează", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Renunță", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
-IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
+IDD_HYPERLINK DIALOG 0, 0, 250, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Hiperlegătură"
 FONT 8, "MS Shell Dlg"
@@ -55,4 +59,13 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON "Renunță", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
 }
 
-#pragma code_page(default)
+ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
+    EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Renunță", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
+}

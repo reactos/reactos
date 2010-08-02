@@ -1,5 +1,4 @@
-#ifndef _BASESRV_H_INCLUDED_
-#define _BASESRV_H_INCLUDED_
+#pragma once
 
 /* PSDK/NDK Headers */
 #include <stdio.h>
@@ -10,5 +9,3 @@
 
 #include <csr/server.h>
 #include <win/base.h>
-
-#endif /* ndef _BASESRV_H_INCLUDED_ */

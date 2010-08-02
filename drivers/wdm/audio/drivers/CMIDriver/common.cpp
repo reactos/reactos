@@ -27,7 +27,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "common.hpp"
 
-#pragma code_seg("PAGE")
+#ifdef _MSC_VER
+#pragma code_seg("PAGE") /* warning - ignored by GCC compiler */
+#endif
 
 NTSTATUS
 NewCMIAdapter(
@@ -36,10 +38,10 @@ NewCMIAdapter(
     PUNKNOWN UnknownOuter, 
     POOL_TYPE PoolType)
 {
-#if 0
+#if 1
 	//PAGED_CODE();
 	DBGPRINT(("NewCMIAdapter()"));
-	//ASSERT (Unknown);
+	ASSERT (Unknown);
 #endif
 	STD_CREATE_BODY_(CCMIAdapter, Unknown, UnknownOuter, PoolType, PCMIADAPTER);
 }
@@ -63,7 +65,7 @@ STDMETHODIMP_(NTSTATUS) CCMIAdapter::init(PRESOURCELIST ResourceList, PDEVICE_OB
 	DeviceObject = aDeviceObject;
 
 	cm.IOBase = 0;
-	for (int i=0;i<ResourceList->NumberOfPorts();i++) {
+	for ( UINT i=0; i < ResourceList->NumberOfPorts(); i++ ) {
 		if (ResourceList->FindTranslatedPort(i)->u.Port.Length == 0x100) {
 			cm.IOBase = (UInt32*)ResourceList->FindTranslatedPort(i)->u.Port.Start.QuadPart;
 		}
@@ -129,7 +131,7 @@ CCMIAdapter::~CCMIAdapter()
 	}
 }
 
-STDMETHODIMP_(NTSTATUS) CCMIAdapter::NonDelegatingQueryInterface(REFIID Interface, PVOID* Object)
+STDMETHODIMP_(NTSTATUS) CCMIAdapter::QueryInterface(REFIID Interface, PVOID* Object)
 {
     //PAGED_CODE();
 
@@ -357,7 +359,7 @@ STDMETHODIMP_(NTSTATUS) CCMIAdapter::loadSBMixerFromMemory()
 	//PAGED_CODE();
 	DBGPRINT(("CCMIAdapter[%p]::loadSBMixerFromMemory()", this));
 #endif
-	for (int i = 0; i<(sizeof(sbIndex)/sizeof(sbIndex[0]));i++) {
+	for ( UINT i = 0; i < (sizeof(sbIndex)/sizeof(sbIndex[0])); i++ ) {
 		writeUInt8(REG_SBINDEX, sbIndex[i]);
 		writeUInt8(REG_SBDATA, mixerCache[i]);
 	}
@@ -368,7 +370,9 @@ STDMETHODIMP_(NTSTATUS) CCMIAdapter::loadSBMixerFromMemory()
 /*
 ** non-paged code below
 */
-#pragma code_seg()
+#ifdef _MSC_VER
+#pragma code_seg() /* warning - ignored by GCC compiler */
+#endif
 
 STDMETHODIMP_(UInt8) CCMIAdapter::readUInt8(UInt8 reg)
 {
@@ -449,7 +453,7 @@ STDMETHODIMP_(void) CCMIAdapter::clearMixerBit(UInt8 index, UInt8 flag)
 	writeMixer(index, readMixer(index) & ~flag);
 }
 
-NTSTATUS CCMIAdapter::InterruptServiceRoutine(PINTERRUPTSYNC InterruptSync, PVOID DynamicContext)
+NTSTATUS NTAPI CCMIAdapter::InterruptServiceRoutine(PINTERRUPTSYNC InterruptSync, PVOID DynamicContext)
 {
 	UInt32 status, mask = 0;
 

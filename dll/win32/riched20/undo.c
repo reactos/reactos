@@ -203,7 +203,6 @@ void ME_CommitUndo(ME_TextEditor *editor) {
   }
 
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
-  ME_SendSelChange(editor);
 }
 
 /**
@@ -269,7 +268,6 @@ void ME_CommitCoalescingUndo(ME_TextEditor *editor)
     return;
 
   ME_AddUndoItem(editor, diUndoPotentialEndTransaction, NULL);
-  ME_SendSelChange(editor);
 }
 
 static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
@@ -298,17 +296,28 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
   }
   case diUndoSetCharFormat:
   {
-    ME_SetCharFormat(editor, pUItem->nStart, pUItem->nLen, &pItem->member.ustyle->fmt);
+    ME_Cursor start, end;
+    ME_CursorFromCharOfs(editor, pUItem->nStart, &start);
+    end = start;
+    ME_MoveCursorChars(editor, &end, pUItem->nLen);
+    ME_SetCharFormat(editor, &start, &end, &pItem->member.ustyle->fmt);
     break;
   }
   case diUndoInsertRun:
   {
-    ME_InsertRun(editor, pItem->member.run.nCharOfs, pItem);
+    ME_Cursor tmp;
+    ME_CursorFromCharOfs(editor, pItem->member.run.nCharOfs, &tmp);
+    ME_InsertRunAtCursor(editor, &tmp, pItem->member.run.style,
+                         pItem->member.run.strText->szData,
+                         pItem->member.run.strText->nLen,
+                         pItem->member.run.nFlags);
     break;
   }
   case diUndoDeleteRun:
   {
-    ME_InternalDeleteText(editor, pUItem->nStart, pUItem->nLen, TRUE);
+    ME_Cursor tmp;
+    ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
+    ME_InternalDeleteText(editor, &tmp, pUItem->nLen, TRUE);
     break;
   }
   case diUndoJoinParagraphs:
@@ -316,7 +325,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     ME_Cursor tmp;
     ME_CursorFromCharOfs(editor, pUItem->nStart, &tmp);
     /* the only thing that's needed is paragraph offset, so no need to split runs */
-    ME_JoinParagraphs(editor, ME_GetParagraph(tmp.pRun), TRUE);
+    ME_JoinParagraphs(editor, tmp.pPara, TRUE);
     break;
   }
   case diUndoSplitParagraph:
@@ -329,7 +338,7 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
     if (tmp.nOffset)
       tmp.pRun = ME_SplitRunSimple(editor, tmp.pRun, tmp.nOffset);
     assert(pUItem->eol_str);
-    this_para = ME_GetParagraph(tmp.pRun);
+    this_para = tmp.pPara;
     bFixRowStart = this_para->member.para.nFlags & MEPF_ROWSTART;
     if (bFixRowStart)
     {

@@ -1,5 +1,4 @@
-#ifndef MUI_H__
-#define MUI_H__
+#pragma once
 
 typedef struct
 {
@@ -137,4 +136,3 @@ MUIGetString(ULONG Number);
 #define STRING_MB                        54
 #define STRING_GB                        55
 #define STRING_ADDKBLAYOUTS              56
-#endif

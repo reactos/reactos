@@ -1,5 +1,4 @@
-#ifndef _WINSRV_H_INCLUDED_
-#define _WINSRV_H_INCLUDED_
+#pragma once
 
 /* PSDK/NDK Headers */
 #include <stdio.h>
@@ -11,5 +10,3 @@
 #include <csr/server.h>
 #include <win/base.h>
 #include <win/windows.h>
-
-#endif /* ndef _WINSRV_H_INCLUDED_ */

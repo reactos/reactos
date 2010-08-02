@@ -6,10 +6,14 @@
 	<include base="usp10">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<file>bidi.c</file>
 	<file>usp10.c</file>
+	<file>mirror.c</file>
+	<file>shape.c</file>
+	<file>shaping.c</file>
 	<library>wine</library>
 	<library>gdi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
+	<library>msvcrt</library>
 </module>
 </group>

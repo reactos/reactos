@@ -8,7 +8,6 @@
 	<define name="__WINESRC__" />
 	<file>rasapi.c</file>
 	<library>wine</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
 </group>

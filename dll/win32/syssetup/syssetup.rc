@@ -15,6 +15,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 
+IDI_ICON1 ICON "resources/1.ico"
+IDI_ICON2 ICON "resources/2.ico"
+IDI_ICON3 ICON "resources/3.ico"
+IDI_ICON4 ICON "resources/4.ico"
+IDI_ICON5 ICON "resources/5.ico"
+
 
 STRINGTABLE
 BEGIN
@@ -31,6 +37,9 @@ BEGIN
                     "FreeBSD - http://www.freebsd.org\n"\
                     "adns - http://adns.jgaa.com\n"\
                     "ICU - http://www.icu-project.org/\n"\
+                    "GraphApp - http://enchantia.com/software/graphapp/\n"\
+                    "Ext2 - http://winext2fsd.sourceforge.net/\n"\
+                    "X - http://www.x.org/\n"\
                     ""
 END
 
@@ -49,6 +58,7 @@ IDR_GPL RT_TEXT "COPYING"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"
+#include "lang/et-EE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
@@ -60,4 +70,5 @@ IDR_GPL RT_TEXT "COPYING"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
 #include "lang/zh-CN.rc"
+#include "lang/ro-RO.rc"
 #include "lang/ru-RU.rc"

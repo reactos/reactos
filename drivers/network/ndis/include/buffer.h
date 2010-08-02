@@ -4,8 +4,8 @@
  * FILE:        include/buffer.h
  * PURPOSE:     Buffer management routine definitions
  */
-#ifndef __BUFFER_H
-#define __BUFFER_H
+
+#pragma once
 
 #include "ndissys.h"
 
@@ -25,6 +25,12 @@ typedef struct _NDIS_BUFFER_POOL
     NETWORK_HEADER Buffers[0];
 } NDIS_BUFFER_POOL, *PNDIS_BUFFER_POOL;
 
+typedef struct _NDISI_PACKET_POOL {
+  NDIS_SPIN_LOCK  SpinLock;
+  struct _NDIS_PACKET *FreeList;
+  UINT  PacketLength;
+  UCHAR  Buffer[1];
+} NDISI_PACKET_POOL, * PNDISI_PACKET_POOL;
 
 UINT CopyBufferToBufferChain(
     PNDIS_BUFFER DstBuffer,
@@ -50,7 +56,5 @@ UINT CopyPacketToBufferChain(
     PNDIS_PACKET SrcPacket,
     UINT SrcOffset,
     UINT Length);
-
-#endif /* __BUFFER_H */
 
 /* EOF */

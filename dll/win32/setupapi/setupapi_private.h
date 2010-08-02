@@ -45,11 +45,6 @@
 
 #include <pseh/pseh2.h>
 
-/* This hack definition is necessary as long as setupapi 
-   depends on Wine "compatibility" headers */
-typedef ULONG RESOURCEID;
-typedef RESOURCEID *PRESOURCEID;
-
 #include <pnp_c.h>
 #include "rpc_private.h"
 #include "resource.h"
@@ -60,6 +55,8 @@ typedef RESOURCEID *PRESOURCEID;
 
 #define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
 #define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
+
+#define CMP_MAGIC  0x01234567
 
 struct DeviceInterface /* Element of DeviceInfo.InterfaceListHead */
 {
@@ -226,6 +223,13 @@ struct ClassImageList
     INT* IconIndexes;
 };
 
+struct FileLog /* HSPFILELOG */
+{
+    DWORD ReadOnly;
+    DWORD SystemLog;
+    LPWSTR LogName;
+};
+
 extern HINSTANCE hInstance;
 #define RC_STRING_MAX_SIZE 256
 
@@ -283,6 +287,13 @@ CreateDeviceInfo(
     IN LPCGUID pClassGuid,
     OUT struct DeviceInfo **pDeviceInfo);
 
+LONG
+SETUP_CreateDevicesList(
+    IN OUT struct DeviceInfoSet *list,
+    IN PCWSTR MachineName OPTIONAL,
+    IN CONST GUID *Class OPTIONAL,
+    IN PCWSTR Enumerator OPTIONAL);
+
 /* driver.c */
 
 struct InfFileDetails *
@@ -326,6 +337,10 @@ DWORD
 FreeFunctionPointer(
     IN HMODULE ModulePointer,
     IN PVOID FunctionPointer);
+
+DWORD
+WINAPI
+pSetupStringFromGuid(LPGUID lpGUID, PWSTR pString, DWORD dwStringLen);
 
 DWORD WINAPI CaptureAndConvertAnsiArg(LPCSTR pSrc, LPWSTR *pDst);
 

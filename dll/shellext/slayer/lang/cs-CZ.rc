@@ -1,6 +1,6 @@
 /* FILE:        dll/shellext/slayer/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-27
+ * UPDATED:     2010-05-25
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -32,7 +32,7 @@ BEGIN
   PUSHBUTTON "&Upravit...", IDC_EDIT, 162,24,60,14, WS_DISABLED
   PUSHBUTTON "S&mazat", IDC_DELETE, 162,42,60,14, WS_DISABLED
   PUSHBUTTON "&OK", IDOK, 95,116,60,14
-  PUSHBUTTON "&Storno", IDCANCEL, 162,116,60,14
+  PUSHBUTTON "Storno", IDCANCEL, 162,116,60,14
 END
 
 STRINGTABLE

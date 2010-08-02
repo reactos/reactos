@@ -1,5 +1,4 @@
-#ifndef __STRUCT_H__
-#define __STRUCT_H__
+#pragma once
 
 typedef struct _FAT_SCAN_CONTEXT *PFAT_SCAN_CONTEXT;
 typedef struct _FAT_IO_CONTEXT *PFAT_IO_CONTEXT;
@@ -7,6 +6,19 @@ typedef struct _FAT_IRP_CONTEXT *PFAT_IRP_CONTEXT;
 typedef PVOID PBCB;
 
 typedef NTSTATUS (*PFAT_OPERATION_HANDLER) (PFAT_IRP_CONTEXT);
+
+/* Node type stuff */
+typedef CSHORT FAT_NODE_TYPE;
+typedef FAT_NODE_TYPE *PFAT_NODE_TYPE;
+
+#define FatNodeType(Ptr) (*((PFAT_NODE_TYPE)(Ptr)))
+
+/* Node type codes */
+#define FAT_NTC_VCB      (CSHORT) '00VF'
+#define FAT_NTC_FCB      (CSHORT)   'CF'
+#define FAT_NTC_DCB      (CSHORT)   'DF'
+#define FAT_NTC_ROOT_DCB (CSHORT)  'RFD'
+#define FAT_NTC_CCB      (CSHORT)  'BCC'
 
 typedef struct _FAT_GLOBAL_DATA
 {
@@ -23,6 +35,10 @@ typedef struct _FAT_GLOBAL_DATA
     BOOLEAN Win31FileSystem;
     /* Jan 1, 1980 System Time */
     LARGE_INTEGER DefaultFileTime;
+
+    /* FullFAT integration */
+    FF_IOMAN *Ioman;
+    FF_ERROR FF_Error;
 } FAT_GLOBAL_DATA;
 
 typedef struct _FAT_PAGE_CONTEXT
@@ -116,7 +132,17 @@ typedef struct _FAT_METHODS {
     PFAT_SETFAT_VALUE_RUN_ROUTINE SetValueRun;
 } FAT_METHODS, *PFAT_METHODS;
 
-#define FAT_NTC_VCB  (USHORT) TAG('F', 'V', 0, 0)
+#define VCB_STATE_FLAG_LOCKED        0x01
+#define VCB_STATE_FLAG_DIRTY         0x02
+#define VCB_STATE_MOUNTED_DIRTY      0x04
+#define VCB_STATE_CREATE_IN_PROGRESS 0x08
+
+typedef enum _VCB_CONDITION
+{
+    VcbGood,
+    VcbNotMounted,
+    VcbBad
+} VCB_CONDITION;
 
 /* Volume Control Block */
 typedef struct _VCB
@@ -129,6 +155,13 @@ typedef struct _VCB
     PDEVICE_OBJECT TargetDeviceObject;
     LIST_ENTRY VcbLinks;
     PVPB Vpb;
+    ULONG State;
+    VCB_CONDITION Condition;
+    ERESOURCE Resource;
+
+    /* Direct volume access */
+    ULONG DirectOpenCount;
+    SHARE_ACCESS ShareAccess;
 
     /* Notifications support */
     PNOTIFY_SYNC NotifySync;
@@ -148,10 +181,16 @@ typedef struct _VCB
     ULONG RootDirentSectors;
     LONGLONG BeyondLastClusterInFat;
     FAT_METHODS Methods;
-    /*  Root Directory Fcb: */
-    struct _FCB *RootFcb;
 
+    /*  Root Directory Control block */
+    struct _FCB *RootDcb;
+
+    /* Counters */
     ULONG MediaChangeCount;
+    ULONG OpenFileCount;
+
+    /* FullFAT integration */
+    FF_IOMAN *Ioman;
 } VCB, *PVCB;
 
 #define VcbToVolumeDeviceObject(xVcb) \
@@ -191,13 +230,28 @@ enum _FCB_NAME_TYPE {
 } FCB_NAME_TYPE;
 
 typedef struct _FCB_NAME_LINK {
+    struct _FCB *Fcb;
     RTL_SPLAY_LINKS Links;
-    UNICODE_STRING String;
-    UCHAR Type;
+    union
+    {
+        OEM_STRING Ansi;
+        UNICODE_STRING String;
+    } Name;
+    BOOLEAN IsDosName;
 } FCB_NAME_LINK, *PFCB_NAME_LINK;
 
-#define FAT_NTC_FCB	(USHORT) 'CF'
-#define FAT_NTC_DCB	(USHORT) 'DF'
+typedef enum _FCB_CONDITION
+{
+    FcbGood,
+    FcbBad,
+    FcbNeedsToBeVerified
+} FCB_CONDITION;
+
+#define FCB_STATE_HAS_NAMES         0x01
+#define FCB_STATE_HAS_UNICODE_NAME  0x02
+#define FCB_STATE_PAGEFILE          0x04
+#define FCB_STATE_DELAY_CLOSE       0x08
+#define FCB_STATE_TRUNCATE_ON_CLOSE 0x10
 
 typedef struct _FCB
 {
@@ -208,34 +262,71 @@ typedef struct _FCB
     * FCB into paged and non paged parts
     * (as it is done in MS implementation
     */
-    FAST_MUTEX HeaderMutex;
+    FAST_MUTEX HeaderMutex; // nonpaged!
     SECTION_OBJECT_POINTERS SectionObjectPointers;
-    ERESOURCE Resource;
-    ERESOURCE PagingIoResource;
+    ERESOURCE Resource; // nonpaged!
+    ERESOURCE PagingIoResource; // nonpaged!
 
-    FILE_LOCK Lock;
+    /* First cluster in the fat allocation chain */
+    ULONG FirstClusterOfFile;
+    /* A list of all FCBs of that DCB */
+    LIST_ENTRY ParentDcbLinks;
     /* Reference to the Parent Dcb*/
     struct _FCB *ParentFcb;
     /* Pointer to a Vcb */
     PVCB Vcb;
+    /* Fcb state */
+    ULONG State;
+    /* Fcb condition */
+    FCB_CONDITION Condition;
+    /* Share access */
+    SHARE_ACCESS ShareAccess;
     /* Mcb mapping Vbo->Lbo */
     LARGE_MCB Mcb;
     ULONG FirstCluster;
-    /* Links into FCB Trie */
-    FCB_NAME_LINK FileName[0x2];
+    /* Links into FCB Tree */
+    FCB_NAME_LINK ShortName;
+    FCB_NAME_LINK LongName;
     /* Buffer for the short name */
-    WCHAR ShortNameBuffer[0xc];
+    CHAR ShortNameBuffer[0xc];
+    /* Full file name */
+    UNICODE_STRING FullFileName;
+    /* Long name with exact case */
+    UNICODE_STRING ExactCaseLongName;
+    /* Hint for the filename length */
+    ULONG FileNameLength;
+    /* A copy of fat attribute byte */
+    UCHAR DirentFatFlags;
     /* File basic info */
     FILE_BASIC_INFORMATION BasicInfo;
+    /* FullFAT file handle */
+    FF_FILE *FatHandle;
+    /* The file has outstanding async writes */
+    ULONG OutstandingAsyncWrites;
+    /* The outstanding async writes sync event */
+    PKEVENT OutstandingAsyncEvent;
+    /* Counters */
+    ULONG OpenCount;
     union
     {
         struct
         {
+            /* File and Op locks */
+            FILE_LOCK Lock;
+            OPLOCK Oplock;
+        } Fcb;
+
+        struct
+        {
+            /* A list of all FCBs/DCBs opened under this DCB */
+            LIST_ENTRY ParentDcbList;
             /* Directory data stream (just handy to have it). */
             PFILE_OBJECT StreamFileObject;
             /* Bitmap to search for free dirents. */
-            /* RTL_BITMAP Bitmap; */
-            PRTL_SPLAY_LINKS SplayLinks;
+            RTL_BITMAP FreeBitmap;
+            /* Names */
+            PRTL_SPLAY_LINKS SplayLinksAnsi;
+            PRTL_SPLAY_LINKS SplayLinksUnicode;
         } Dcb;
     };
 } FCB, *PFCB;
@@ -279,17 +370,36 @@ typedef struct _FAT_FIND_DIRENT_CONTEXT
 
 typedef struct _CCB
 {
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
+
     LARGE_INTEGER CurrentByteOffset;
     ULONG Entry;
     UNICODE_STRING SearchPattern;
     UCHAR Flags;
 } CCB, *PCCB;
 
+typedef enum _TYPE_OF_OPEN
+{
+    UnopenedFileObject,
+    UserFileOpen,
+    UserDirectoryOpen,
+    UserVolumeOpen,
+    VirtualVolumeFile,
+    DirectoryFile,
+    EaFile
+} TYPE_OF_OPEN;
+
+typedef enum _FILE_TIME_INDEX
+{
+    FileCreationTime = 0,
+    FileLastAccessTime,
+    FileLastWriteTime,
+    FileChangeTime
+} FILE_TIME_INDEX;
 
 #define CCB_SEARCH_RETURN_SINGLE_ENTRY      0x01
 #define CCB_SEARCH_PATTERN_LEGAL_8DOT3      0x02
 #define CCB_SEARCH_PATTERN_HAS_WILD_CARD    0x04
 #define CCB_DASD_IO                         0x10
 extern FAT_GLOBAL_DATA FatGlobalData;
-
-#endif//__STRUCT_H__ 

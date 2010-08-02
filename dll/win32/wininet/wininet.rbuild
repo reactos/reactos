@@ -6,18 +6,25 @@
 	<importlibrary definition="wininet.spec" />
 	<include base="wininet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="zlib">.</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
+
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="close">_close</define>
+
 	<library>wine</library>
 	<library>mpr</library>
 	<library>shlwapi</library>
 	<library>shell32</library>
 	<library>user32</library>
 	<library>advapi32</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>secur32</library>
 	<library>crypt32</library>
 	<library>ws2_32</library>
+	<library>zlib</library>
+	<library>pseh</library>
 	<file>cookie.c</file>
 	<file>dialogs.c</file>
 	<file>ftp.c</file>

@@ -802,7 +802,7 @@ SerialDeviceControl(
 				 * as pending, it might be possible to complete the
 				 * Irp before pending it, leading to a crash! */
 				WaitingIrp = InterlockedCompareExchangePointer(
-					&DeviceExtension->WaitOnMaskIrp,
+					(PVOID)&DeviceExtension->WaitOnMaskIrp,
 					Irp,
 					NULL);
 

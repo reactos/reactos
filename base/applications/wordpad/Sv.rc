@@ -16,11 +16,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Arkiv"
     BEGIN
@@ -46,7 +48,7 @@ BEGIN
         MENUITEM "Ta &bort\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Markera allt\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Sök...\tCrtl+F",             ID_FIND
+        MENUITEM "&Sök...\tCtrl+F",             ID_FIND
         MENUITEM "Sök &nästa\tF3",              ID_FIND_NEXT
         MENUITEM "&Ersätt...\tCtrl+H",          ID_REPLACE
         MENUITEM SEPARATOR
@@ -93,7 +95,7 @@ BEGIN
     END
 END
 
-IDM_POPUP MENU DISCARDABLE
+IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -106,7 +108,31 @@ BEGIN
     END
 END
 
-IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
+IDM_COLOR_POPUP MENU
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Svart"     ID_COLOR_BLACK
+        MENUITEM "Rödbrun"   ID_COLOR_MAROON
+        MENUITEM "Grön"      ID_COLOR_GREEN
+        MENUITEM "Oliv"      ID_COLOR_OLIVE
+        MENUITEM "Navy"      ID_COLOR_NAVY
+        MENUITEM "Lila"      ID_COLOR_PURPLE
+        MENUITEM "Teal"      ID_COLOR_TEAL
+        MENUITEM "Grå"       ID_COLOR_GRAY
+        MENUITEM "Silver"    ID_COLOR_SILVER
+        MENUITEM "Röd"       ID_COLOR_RED
+        MENUITEM "Lime"      ID_COLOR_LIME
+        MENUITEM "Gul"       ID_COLOR_YELLOW
+        MENUITEM "Blå"       ID_COLOR_BLUE
+        MENUITEM "Fuchsia"   ID_COLOR_FUCHSIA
+        MENUITEM "Aqua"      ID_COLOR_AQUA
+        MENUITEM "Vit"       ID_COLOR_WHITE
+        MENUITEM "Automatic" ID_COLOR_AUTOMATIC
+    END
+END
+
+IDD_DATETIME DIALOG 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Datum och tid"
 FONT 10, "MS Sans Serif"
@@ -117,7 +143,7 @@ BEGIN
     PUSHBUTTON   "&Avbryt",IDCANCEL,87,26,40,12
 END
 
-IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
+IDD_NEWFILE DIALOG 30, 20, 140, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Ny"
 FONT 10, "MS Sans Serif"
@@ -128,7 +154,7 @@ BEGIN
     PUSHBUTTON   "&Avbryt",IDCANCEL,97,26,40,12
 END
 
-IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
+IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Formatera stycke"
 FONT 8, "MS Shell Dlg"
@@ -146,7 +172,7 @@ BEGIN
     PUSHBUTTON "&Avbryt", IDCANCEL, 137, 33, 50, 15
 END
 
-IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulatorer"
 FONT 8, "MS Shell Dlg"
@@ -160,7 +186,7 @@ BEGIN
     PUSHBUTTON "Ta bort a&lla", ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
-IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
@@ -177,7 +203,7 @@ BEGIN
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_RICHTEXT_FILES_RTF,     "Rich text-format (*.rtf)"
     STRING_TEXT_FILES_TXT,         "Textdokument (*.txt)"
@@ -185,48 +211,55 @@ BEGIN
     STRING_ALL_FILES,              "Alla filer (*.*)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_ALIGN_LEFT,            "Vänsterställt"
     STRING_ALIGN_RIGHT,           "Högerställt"
     STRING_ALIGN_CENTER,          "Centrerat"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_NEWFILE_RICHTEXT,     "Rich text-dokument"
     STRING_NEWFILE_TXT,          "Textdokument"
     STRING_NEWFILE_TXT_UNICODE,  "Textdokument (Unicode)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_PRINTER_FILES_PRN,        "Skrivarfiler (*.PRN)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_VIEWPROPS_TITLE,          "Alternativ"
     STRING_VIEWPROPS_TEXT,           "Text"
     STRING_VIEWPROPS_RICHTEXT,       "Rich text"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_PREVIEW_PRINT,            "Skriv ut"
     STRING_PREVIEW_NEXTPAGE,         "Nästa sida"
     STRING_PREVIEW_PREVPAGE,         "Föregående sida"
     STRING_PREVIEW_TWOPAGES,         "Två sidor"
     STRING_PREVIEW_ONEPAGE,          "En sida"
+    STRING_PREVIEW_ZOOMIN,           "Zooma in"
+    STRING_PREVIEW_ZOOMOUT,          "Zooma ut"
     STRING_PREVIEW_CLOSE,            "Stäng"
+    STRING_PREVIEW_PAGE,             "Sida"
+    STRING_PREVIEW_PAGES,            "Sidor"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_UNITS_CM,             "cm"
+    STRING_UNITS_IN,             "in"
+    STRING_UNITS_INCH,           "tum"
+    STRING_UNITS_PT,             "pt"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Dokument"
     STRING_PROMPT_SAVE_CHANGES,  "Spara ändringar i '%s'?"
@@ -244,5 +277,3 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "Utskrift ej implementerat."
     STRING_MAX_TAB_STOPS,            "Kan ej lägga till mer än 32 tabbstopp."
 END
-
-#pragma code_page(default)

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /*
  * COPYRIGHT:        See COPYING in the top level directory
@@ -32,8 +32,6 @@
 
 #define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
                                     (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
-
-#define VOLUME_IS_DIRTY 0x00000001
 
 static NTSTATUS
 VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
@@ -425,7 +423,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
                            ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize,
                            NULL,
                            FILE_DEVICE_DISK_FILE_SYSTEM,
-                           0,
+                           DeviceToMount->Characteristics,
                            FALSE,
                            &DeviceObject);
    if (!NT_SUCCESS(Status))
@@ -586,6 +584,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       }
    }
    VolumeFcb->Flags |= VCB_IS_DIRTY;
+
+   FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
 
    Status = STATUS_SUCCESS;
 ByeBye:
@@ -773,30 +773,6 @@ VfatMoveFile(PVFAT_IRP_CONTEXT IrpContext)
    return STATUS_INVALID_DEVICE_REQUEST;
 }
 
-#ifdef USE_ROS_CC_AND_FS
-static NTSTATUS
-VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
-{
-   PDEVICE_EXTENSION DeviceExt;
-   PROS_QUERY_LCN_MAPPING LcnQuery;
-   PIO_STACK_LOCATION Stack;
-
-   DPRINT("VfatRosQueryLcnMapping(IrpContext %p)\n", IrpContext);
-
-   DeviceExt = IrpContext->DeviceExt;
-   Stack = IrpContext->Stack;
-   if (IrpContext->Irp->AssociatedIrp.SystemBuffer == NULL ||
-       Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ROS_QUERY_LCN_MAPPING))
-   {
-      return STATUS_BUFFER_TOO_SMALL;
-   }
-   LcnQuery = (PROS_QUERY_LCN_MAPPING)(IrpContext->Irp->AssociatedIrp.SystemBuffer);
-   LcnQuery->LcnDiskOffset.QuadPart = DeviceExt->FatInfo.dataStart * DeviceExt->FatInfo.BytesPerSector;
-   IrpContext->Irp->IoStatus.Information = sizeof(ROS_QUERY_LCN_MAPPING);
-   return(STATUS_SUCCESS);
-}
-#endif
-
 static NTSTATUS
 VfatIsVolumeDirty(PVFAT_IRP_CONTEXT IrpContext)
 {
@@ -877,11 +853,6 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
             case FSCTL_MOVE_FILE:
                Status = VfatMoveFile(IrpContext);
                break;
-#ifdef USE_ROS_CC_AND_FS
-            case FSCTL_ROS_QUERY_LCN_MAPPING:
-               Status = VfatRosQueryLcnMapping(IrpContext);
-               break;
-#endif
             case FSCTL_IS_VOLUME_DIRTY:
                Status = VfatIsVolumeDirty(IrpContext);
                break;

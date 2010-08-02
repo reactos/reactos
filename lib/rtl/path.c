@@ -394,7 +394,6 @@ static ULONG get_full_path_helper(
    ULONG size)
 {
     ULONG                       reqsize = 0, mark = 0, dep = 0, deplen;
-    RTL_PATH_TYPE               type;
     LPWSTR                      ins_str = NULL;
     LPCWSTR                     ptr;
     const UNICODE_STRING*       cd;
@@ -409,7 +408,7 @@ static ULONG get_full_path_helper(
     //cd = &((PCURDIR)&NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->CurrentDirectory.DosPath)->DosPath;
     cd = &NtCurrentTeb()->ProcessEnvironmentBlock->ProcessParameters->CurrentDirectory.DosPath;
 
-    switch (type = RtlDetermineDosPathNameType_U(name))
+    switch (RtlDetermineDosPathNameType_U(name))
     {
     case RtlPathTypeUncAbsolute:              /* \\foo   */
         ptr = skip_unc_prefix( name );

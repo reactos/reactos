@@ -44,6 +44,7 @@ static struct cp_extra_info_t g_cpextrainfo[] =
     {936, {0x40, 0xfe, 0, 0}},
     {949, {0x41, 0xfe, 0, 0}},
     {950, {0x40, 0x7e, 0xa1, 0xfe, 0, 0}},
+    {1361, {0x31, 0x7e, 0x81, 0xfe, 0, 0}},
     {20932, {1, 255, 0, 0}},  /* seems to give different results on different systems */
     {0, {1, 255, 0, 0}}       /* match all with FIXME */
 };
@@ -234,7 +235,8 @@ find_best_locale_proc(HMODULE hModule, LPCSTR type, LPCSTR name, WORD LangID, LO
     res->match_flags = flags;
     res->found_lang_id = LangID;
   }
-  if (flags & (FOUND_LANGUAGE & FOUND_COUNTRY & FOUND_CODEPAGE))
+  if ((flags & (FOUND_LANGUAGE | FOUND_COUNTRY | FOUND_CODEPAGE)) ==
+        (FOUND_LANGUAGE | FOUND_COUNTRY | FOUND_CODEPAGE))
   {
     TRACE(":found exact locale match\n");
     return STOP_LOOKING;
@@ -316,7 +318,7 @@ static void msvcrt_set_ctype(unsigned int codepage, LCID lcid)
   {
     int i;
     char str[3];
-    unsigned char *traverse = (unsigned char *)cp.LeadByte;
+    unsigned char *traverse = cp.LeadByte;
 
     memset(MSVCRT_current_ctype, 0, sizeof(MSVCRT__ctype));
     MSVCRT___lc_codepage = codepage;
@@ -387,8 +389,8 @@ char *setlocale(int category, const char *locale)
   {
     MSVCRT_current_lc_all[0] = 'C';
     MSVCRT_current_lc_all[1] = '\0';
-    MSVCRT___lc_codepage = 1252;
-    MSVCRT___lc_collate_cp = 1252;
+    MSVCRT___lc_codepage = GetACP();
+    MSVCRT___lc_collate_cp = GetACP();
 
     switch (category) {
     case MSVCRT_LC_ALL:
@@ -898,4 +900,19 @@ unsigned int * CDECL ___unguarded_readlc_active_add_func(void)
 unsigned int CDECL ___setlc_active_func(void)
 {
   return __setlc_active;
+}
+
+/*********************************************************************
+ *              __crtGetStringTypeW(MSVCRT.@)
+ *
+ * This function was accepting different number of arguments in older
+ * versions of msvcrt.
+ */
+BOOL CDECL __crtGetStringTypeW(DWORD unk, DWORD type,
+        wchar_t *buffer, int len, WORD *out)
+{
+    FIXME("(unk %x, type %x, wstr %p(%d), %p) partial stub\n",
+            unk, type, buffer, len, out);
+
+    return GetStringTypeW(type, buffer, len, out);
 }

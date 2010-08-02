@@ -41,6 +41,8 @@ extern "C" {
 #define WRITE_PORT_USHORT(p, v) __outword (H2I(p), (v))
 #define WRITE_PORT_ULONG(p, v) __outdword (H2I(p), (v))
 
+#define MEMORY_BARRIER()    
+
 #elif defined(_PPC_) || defined(_MIPS_) || defined(_ARM_)
 
 #define READ_REGISTER_UCHAR(r)      (*(volatile UCHAR * const)(r))

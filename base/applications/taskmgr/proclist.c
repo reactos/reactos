@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -74,10 +74,11 @@ ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
          */
         rcClip.left = LVIR_BOUNDS;
         SendMessageW(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcClip);
-        rcClip.left = LVIR_BOUNDS;
+        rcItem.left = LVIR_BOUNDS;
         SendMessageW(hWnd, LVM_GETITEMRECT, ListView_GetItemCount(hWnd) - 1, (LPARAM)&rcItem);
         rcClip.bottom = rcItem.bottom;
-        rcClip.left = LVIR_ICON;
+	rcClip.right = rcItem.right;
+        rcItem.left = LVIR_ICON;
         SendMessageW(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcItem);
         rcClip.left = rcItem.right;
 

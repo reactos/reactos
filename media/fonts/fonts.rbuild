@@ -30,6 +30,7 @@
 	<installfile installbase="fonts">LiberationSerif-Italic.ttf</installfile>
 	<installfile installbase="fonts">LiberationSerif-Regular.ttf</installfile>
 	<installfile installbase="fonts">Marlett.ttf</installfile>
+	<installfile installbase="fonts">symbol.ttf</installfile>
 	<installfile installbase="fonts">tahoma.ttf</installfile>
 	<installfile installbase="fonts">tahomabd.ttf</installfile>
 </group>

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -40,9 +40,6 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS NTAPI
-DriverEntry(PDRIVER_OBJECT DriverObject,
-	    PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION: Called by the system to initalize the driver
  * ARGUMENTS:
@@ -50,56 +47,59 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
+NTSTATUS NTAPI
+DriverEntry(PDRIVER_OBJECT DriverObject,
+            PUNICODE_STRING RegistryPath)
 {
-  PDEVICE_OBJECT DeviceObject;
-  NTSTATUS Status;
-  UNICODE_STRING DeviceName;
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    UNICODE_STRING DeviceName;
 
-  DPRINT("MUP 0.0.1\n");
+    DPRINT("MUP 0.0.1\n");
 
-  RtlInitUnicodeString(&DeviceName,
-		       L"\\Device\\Mup");
-  Status = IoCreateDevice(DriverObject,
-			  sizeof(DEVICE_EXTENSION),
-			  &DeviceName,
-			  FILE_DEVICE_MULTI_UNC_PROVIDER,
-			  0,
-			  FALSE,
-			  &DeviceObject);
-  if (!NT_SUCCESS(Status))
+    RtlInitUnicodeString(&DeviceName,
+                         L"\\Device\\Mup");
+    Status = IoCreateDevice(DriverObject,
+                            sizeof(DEVICE_EXTENSION),
+                            &DeviceName,
+                            FILE_DEVICE_MULTI_UNC_PROVIDER,
+                            0,
+                            FALSE,
+                            &DeviceObject);
+    if (!NT_SUCCESS(Status))
     {
-      return(Status);
+        return Status;
     }
 
-  /* Initialize driver data */
-  DeviceObject->Flags |= DO_DIRECT_IO;
-//  DriverObject->MajorFunction[IRP_MJ_CLOSE] = NtfsClose;
-  DriverObject->MajorFunction[IRP_MJ_CREATE] = MupCreate;
-  DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] = MupCreate;
-  DriverObject->MajorFunction[IRP_MJ_CREATE_MAILSLOT] = MupCreate;
-//  DriverObject->MajorFunction[IRP_MJ_READ] = NtfsRead;
-//  DriverObject->MajorFunction[IRP_MJ_WRITE] = NtfsWrite;
-//  DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
-//    NtfsFileSystemControl;
-//  DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
-//    NtfsDirectoryControl;
-//  DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
-//    NtfsQueryInformation;
-//  DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
-//    NtfsQueryVolumeInformation;
-//  DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
-//    NtfsSetVolumeInformation;
+    /* Initialize driver data */
+    DeviceObject->Flags |= DO_DIRECT_IO;
+//    DriverObject->MajorFunction[IRP_MJ_CLOSE] = NtfsClose;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = MupCreate;
+    DriverObject->MajorFunction[IRP_MJ_CREATE_NAMED_PIPE] = MupCreate;
+    DriverObject->MajorFunction[IRP_MJ_CREATE_MAILSLOT] = MupCreate;
+//    DriverObject->MajorFunction[IRP_MJ_READ] = NtfsRead;
+//    DriverObject->MajorFunction[IRP_MJ_WRITE] = NtfsWrite;
+//    DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
+//        NtfsFileSystemControl;
+//    DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
+//        NtfsDirectoryControl;
+//    DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
+//        NtfsQueryInformation;
+//    DriverObject->MajorFunction[IRP_MJ_QUERY_VOLUME_INFORMATION] =
+//        NtfsQueryVolumeInformation;
+//    DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
+//        NtfsSetVolumeInformation;
 
-  DriverObject->DriverUnload = NULL;
+    DriverObject->DriverUnload = NULL;
 
 
-  /* Initialize global data */
-//  DeviceExtensionNtfsGlobalData = DeviceObject->DeviceExtension;
-//  RtlZeroMemory(NtfsGlobalData,
-//		sizeof(NTFS_GLOBAL_DATA));
-//  NtfsGlobalData->DriverObject = DriverObject;
-//  NtfsGlobalData->DeviceObject = DeviceObject;
+    /* Initialize global data */
+//    DeviceExtensionNtfsGlobalData = DeviceObject->DeviceExtension;
+//    RtlZeroMemory(NtfsGlobalData,
+//                  sizeof(NTFS_GLOBAL_DATA));
+//    NtfsGlobalData->DriverObject = DriverObject;
+//    NtfsGlobalData->DeviceObject = DeviceObject;
 
-  return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 

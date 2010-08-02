@@ -15491,6 +15491,18 @@ extern __typeof (xmlXIncludeProcessTreeFlags) xmlXIncludeProcessTreeFlags__inter
 
 #if defined(LIBXML_XINCLUDE_ENABLED)
 #ifdef bottom_xinclude
+#undef xmlXIncludeProcessTreeFlagsData
+extern __typeof (xmlXIncludeProcessTreeFlagsData) xmlXIncludeProcessTreeFlagsData __attribute((alias("xmlXIncludeProcessTreeFlagsData__internal_alias")));
+#else
+#ifndef xmlXIncludeProcessTreeFlagsData
+extern __typeof (xmlXIncludeProcessTreeFlagsData) xmlXIncludeProcessTreeFlagsData__internal_alias __attribute((visibility("hidden")));
+#define xmlXIncludeProcessTreeFlagsData xmlXIncludeProcessTreeFlagsData__internal_alias
+#endif
+#endif
+#endif
+
+#if defined(LIBXML_XINCLUDE_ENABLED)
+#ifdef bottom_xinclude
 #undef xmlXIncludeSetFlags
 extern __typeof (xmlXIncludeSetFlags) xmlXIncludeSetFlags __attribute((alias("xmlXIncludeSetFlags__internal_alias")));
 #else

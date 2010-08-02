@@ -12,15 +12,15 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #include <freeldr.h>
 #include <debug.h>
 
-#ifdef DBG
+#if DBG
 VOID		DumpMemoryAllocMap(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DBG
@@ -69,14 +69,14 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-#ifdef DBG
+#if DBG
 	DPRINTM(DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd);
 	DPRINTM(DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer);
 #endif // DBG
 
 	// Update LoaderPagesSpanned count
-	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
-		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
+	if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
 	// Now return the pointer
 	return MemPointer;
@@ -169,14 +169,14 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)StartPageNumber * MM_PAGE_SIZE);
 
-#ifdef DBG
+#if DBG
 	DPRINTM(DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, StartPageNumber);
 	DPRINTM(DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer);
 #endif // DBG
 
 	// Update LoaderPagesSpanned count
-	if ((((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT) > LoaderPagesSpanned)
-		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize) >> PAGE_SHIFT);
+	if ((((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT) > LoaderPagesSpanned)
+		LoaderPagesSpanned = (((ULONG_PTR)MemPointer + MemorySize + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
 	// Now return the pointer
 	return MemPointer;
@@ -242,7 +242,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-#ifdef DBG
+#if DBG
 	DPRINTM(DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd);
 	DPRINTM(DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer);
 #endif // DBG
@@ -259,7 +259,7 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 {
 }
 
-#ifdef DBG
+#if DBG
 
 VOID DumpMemoryAllocMap(VOID)
 {
@@ -337,11 +337,6 @@ VOID DumpMemoryAllocMap(VOID)
 }
 #endif // DBG
 
-ULONG GetSystemMemorySize(VOID)
-{
-	return (TotalPagesInLookupTable * MM_PAGE_SIZE);
-}
-
 PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
 {
 	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTableAddress;
@@ -349,4 +344,55 @@ PPAGE_LOOKUP_TABLE_ITEM MmGetMemoryMap(ULONG *NoEntries)
 	*NoEntries = TotalPagesInLookupTable;
 
 	return RealPageLookupTable;
+}
+
+#undef ExAllocatePoolWithTag
+NTKERNELAPI
+PVOID
+NTAPI
+ExAllocatePoolWithTag(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes,
+    IN ULONG Tag)
+{
+    return MmHeapAlloc(NumberOfBytes);
+}
+
+#undef ExFreePool
+NTKERNELAPI
+VOID
+NTAPI
+ExFreePool(
+    IN PVOID P)
+{
+    MmHeapFree(P);
+}
+
+PVOID
+NTAPI
+RtlAllocateHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN SIZE_T Size)
+{
+    PVOID ptr;
+
+    ptr = MmHeapAlloc(Size);
+    if (ptr && (Flags & HEAP_ZERO_MEMORY))
+    {
+        RtlZeroMemory(ptr, Size);
+    }
+
+    return ptr;
+}
+
+BOOLEAN
+NTAPI
+RtlFreeHeap(
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
+    IN PVOID HeapBase)
+{
+    MmHeapFree(HeapBase);
+    return TRUE;
 }

@@ -1,5 +1,4 @@
-#ifndef __CPL_JOY_H
-#define __CPL_JOY_H
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -34,7 +33,5 @@ typedef struct
 extern HINSTANCE hApplet;
 
 void ShowLastWin32Error(HWND hWndOwner);
-
-#endif /* __CPL_JOY_H */
 
 /* EOF */

@@ -191,7 +191,7 @@ static HRESULT WINAPI IErrorInfoImpl_QueryInterface(
 	VOID**     ppvoid)
 {
 	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
-	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvoid);
+	TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppvoid);
 
 	*ppvoid = NULL;
 
@@ -237,6 +237,10 @@ static ULONG WINAPI IErrorInfoImpl_Release(
 	if (!ref)
 	{
 	  TRACE("-- destroying IErrorInfo(%p)\n",This);
+
+          ERRORINFO_SysFreeString(This->bstrSource);
+          ERRORINFO_SysFreeString(This->bstrDescription);
+          ERRORINFO_SysFreeString(This->bstrHelpFile);
 	  HeapFree(GetProcessHeap(),0,This);
 	  return 0;
 	}

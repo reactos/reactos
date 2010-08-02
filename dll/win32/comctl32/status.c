@@ -167,7 +167,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     pt.x = lpRect->right - 1;
     pt.y = lpRect->bottom - 1;
 
-    hPenFace = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DFACE ));
+    hPenFace = CreatePen( PS_SOLID, 1, comctl32_color.clr3dFace);
     hOldPen = SelectObject( hdc, hPenFace );
     MoveToEx (hdc, pt.x - 12, pt.y, NULL);
     LineTo (hdc, pt.x, pt.y);
@@ -176,7 +176,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     pt.x--;
     pt.y--;
 
-    hPenShadow = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DSHADOW ));
+    hPenShadow = CreatePen( PS_SOLID, 1, comctl32_color.clr3dShadow);
     SelectObject( hdc, hPenShadow );
     for (i = 1; i < 11; i += 4) {
 	MoveToEx (hdc, pt.x - i, pt.y, NULL);
@@ -186,7 +186,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
 	LineTo (hdc, pt.x + 1, pt.y - i - 2);
     }
 
-    hPenHighlight = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DHIGHLIGHT ));
+    hPenHighlight = CreatePen( PS_SOLID, 1, comctl32_color.clr3dHilight);
     SelectObject( hdc, hPenHighlight );
     for (i = 3; i < 13; i += 4) {
 	MoveToEx (hdc, pt.x - i, pt.y, NULL);
@@ -233,7 +233,7 @@ STATUSBAR_DrawPart (const STATUS_INFO *infoPtr, HDC hdc, const STATUSWINDOWPART 
 	dis.hDC = hdc;
 	dis.rcItem = r;
 	dis.itemData = (ULONG_PTR)part->text;
-	SendMessageW (infoPtr->Notify, WM_DRAWITEM, (WPARAM)dis.CtlID, (LPARAM)&dis);
+       SendMessageW (infoPtr->Notify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
     } else {
 	if (part->hIcon) {
 	   INT cy = r.bottom - r.top;
@@ -333,7 +333,7 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
 
 
 static int
-STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const LPPOINT pt)
+STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const POINT *pt)
 {
     int i;
     if (infoPtr->simple)
@@ -728,7 +728,7 @@ STATUSBAR_SetParts (STATUS_INFO *infoPtr, INT count, LPINT parts)
 
 static BOOL
 STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
-		    LPCWSTR text, BOOL isW)
+		    LPWSTR text, BOOL isW)
 {
     STATUSWINDOWPART *part=NULL;
     BOOL changed = FALSE;
@@ -759,7 +759,7 @@ STATUSBAR_SetTextT (STATUS_INFO *infoPtr, INT nPart, WORD style,
     if (style & SBT_OWNERDRAW) {
         if (!(oldStyle & SBT_OWNERDRAW))
             Free (part->text);
-        part->text = (LPWSTR)text;
+        part->text = text;
     } else {
 	LPWSTR ntext;
 	WCHAR  *idx;
@@ -1016,12 +1016,17 @@ STATUSBAR_WMGetText (const STATUS_INFO *infoPtr, INT size, LPWSTR buf)
 
     len = strlenW (infoPtr->parts[0].text);
 
-    if (size > len) {
+    if (!size)
+        return len;
+    else if (size > len) {
         strcpyW (buf, infoPtr->parts[0].text);
 	return len;
     }
-
-    return -1;
+    else {
+        memcpy (buf, infoPtr->parts[0].text, (size - 1) * sizeof(WCHAR));
+        buf[size - 1] = 0;
+        return size - 1;
+    }
 }
 
 
@@ -1157,7 +1162,7 @@ STATUSBAR_NotifyFormat (STATUS_INFO *infoPtr, HWND from, INT cmd)
 
 
 static LRESULT
-STATUSBAR_SendMouseNotify(const STATUS_INFO *infoPtr, UINT code, LPARAM lParam)
+STATUSBAR_SendMouseNotify(const STATUS_INFO *infoPtr, UINT code, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     NMMOUSE  nm;
 
@@ -1170,7 +1175,12 @@ STATUSBAR_SendMouseNotify(const STATUS_INFO *infoPtr, UINT code, LPARAM lParam)
     nm.dwItemSpec = STATUSBAR_InternalHitTest(infoPtr, &nm.pt);
     nm.dwItemData = 0;
     nm.dwHitInfo = 0x30000;     /* seems constant */
-    SendMessageW(infoPtr->Notify, WM_NOTIFY, 0, (LPARAM)&nm);
+
+    /* Do default processing if WM_NOTIFY returns zero */
+    if(!SendMessageW(infoPtr->Notify, WM_NOTIFY, nm.hdr.idFrom, (LPARAM)&nm))
+    {
+      return DefWindowProcW(infoPtr->Self, msg, wParam, lParam);
+    }
     return 0;
 }
 
@@ -1238,10 +1248,10 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    return STATUSBAR_SetParts (infoPtr, (INT)wParam, (LPINT)lParam);
 
 	case SB_SETTEXTA:
-	    return STATUSBAR_SetTextT (infoPtr, nPart, wParam & 0xff00, (LPCWSTR)lParam, FALSE);
+	    return STATUSBAR_SetTextT (infoPtr, nPart, wParam & 0xff00, (LPWSTR)lParam, FALSE);
 
 	case SB_SETTEXTW:
-	    return STATUSBAR_SetTextT (infoPtr, nPart, wParam & 0xff00, (LPCWSTR)lParam, TRUE);
+	    return STATUSBAR_SetTextT (infoPtr, nPart, wParam & 0xff00, (LPWSTR)lParam, TRUE);
 
 	case SB_SETTIPTEXTA:
 	    return STATUSBAR_SetTipTextA (infoPtr, (INT)wParam, (LPSTR)lParam);
@@ -1271,10 +1281,10 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    return STATUSBAR_GetTextLength (infoPtr, 0);
 
 	case WM_LBUTTONDBLCLK:
-            return STATUSBAR_SendMouseNotify(infoPtr, NM_DBLCLK, lParam);
+            return STATUSBAR_SendMouseNotify(infoPtr, NM_DBLCLK, msg, wParam, lParam);
 
 	case WM_LBUTTONUP:
-	    return STATUSBAR_SendMouseNotify(infoPtr, NM_CLICK, lParam);
+	    return STATUSBAR_SendMouseNotify(infoPtr, NM_CLICK, msg, wParam, lParam);
 
 	case WM_MOUSEMOVE:
 	    return STATUSBAR_Relay2Tip (infoPtr, msg, wParam, lParam);
@@ -1298,10 +1308,10 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	    return STATUSBAR_WMPaint (infoPtr, (HDC)wParam);
 
 	case WM_RBUTTONDBLCLK:
-	    return STATUSBAR_SendMouseNotify(infoPtr, NM_RDBLCLK, lParam);
+	    return STATUSBAR_SendMouseNotify(infoPtr, NM_RDBLCLK, msg, wParam, lParam);
 
 	case WM_RBUTTONUP:
-	    return STATUSBAR_SendMouseNotify(infoPtr, NM_RCLICK, lParam);
+	    return STATUSBAR_SendMouseNotify(infoPtr, NM_RCLICK, msg, wParam, lParam);
 
 	case WM_SETFONT:
 	    return STATUSBAR_WMSetFont (infoPtr, (HFONT)wParam, LOWORD(lParam));
@@ -1312,6 +1322,10 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 	    if (STATUSBAR_WMSize (infoPtr, (WORD)wParam)) return 0;
             return DefWindowProcW (hwnd, msg, wParam, lParam);
+
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
+            return 0;
 
         case WM_THEMECHANGED:
             return theme_changed (infoPtr);

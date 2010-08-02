@@ -14,13 +14,12 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef __I386_MACHPC_H_
-#define __I386_MACHPC_H_
+#pragma once
 
 #ifndef __MEMORY_H
 #include "mm.h"
@@ -29,8 +28,8 @@
 VOID PcMachInit(const char *CmdLine);
 
 VOID PcConsPutChar(int Ch);
-BOOLEAN PcConsKbHit();
-int PcConsGetCh();
+BOOLEAN PcConsKbHit(VOID);
+int PcConsGetCh(VOID);
 
 VOID PcVideoClearScreen(UCHAR Attr);
 VIDEODISPLAYMODE PcVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init);
@@ -54,10 +53,8 @@ BOOLEAN PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTI
 BOOLEAN PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
 
-VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+TIMEINFO* PcGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA PcHwDetect(VOID);
-
-#endif /* __I386_MACHPC_H_ */
 
 /* EOF */

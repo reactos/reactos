@@ -268,7 +268,7 @@ static HRESULT WINAPI MimeInternat_FindCharset(IMimeInternational *iface, LPCSTR
 
         if(SUCCEEDED(hr))
             *phCharset = add_charset(&This->charsets, &mlang_info,
-                                     (HCHARSET)InterlockedIncrement(&This->next_charset_handle));
+                                     UlongToHandle(InterlockedIncrement(&This->next_charset_handle)));
     }
 
     LeaveCriticalSection(&This->cs);

@@ -93,10 +93,10 @@ hard:
 
 // must redefine A and B since esp has been altered
 
-#define A2LO  [esp + 4]       // stack address of a
-#define A2HI  [esp + 8]       // stack address of a
-#define B2LO  [esp + 12]      // stack address of b
-#define B2HI  [esp + 16]      // stack address of b
+#define A2LO  [esp + 8]       // stack address of a
+#define A2HI  [esp + 12]       // stack address of a
+#define B2LO  [esp + 16]      // stack address of b
+#define B2HI  [esp + 20]      // stack address of b
 
         mul     ecx             //eax has AHI, ecx has BLO, so AHI * BLO
         mov     ebx,eax         //save result

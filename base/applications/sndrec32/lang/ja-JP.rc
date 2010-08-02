@@ -1,0 +1,54 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDC_REACTOS_SNDREC32 ACCELERATORS
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 196, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "reactOS_sndrec32 に関する情報"
+FONT 9, "MS UI Gothic", 0, 0, 0x1
+BEGIN
+    ICON            128,IDC_REACTOS_SNDREC32,19,14,21,20
+    LTEXT           "reactOS_sndrec32, バージョン 1.0",IDC_STATIC,56,16,114,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2009",IDC_STATIC,55,25,114,8
+    DEFPUSHBUTTON   "OK",IDOK,139,54,50,14,WS_GROUP
+END
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "ファイル"
+    BEGIN
+        MENUITEM "新規作成",                    ID_NEW
+        MENUITEM "開く...",                     ID_FILE_OPEN
+        MENUITEM "上書き保存",                  ID_FILE_SAVE, GRAYED
+        MENUITEM "名前をつけて保存...",         ID_FILE_SAVEAS, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "終了",                        ID_EXIT
+    END
+    MENUITEM "todo1",                       0
+    MENUITEM "todo2",                       0
+    POPUP "?"
+    BEGIN
+        MENUITEM "バージョン情報...",                    ID__ABOUT
+    END
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE           "サウンド レコーダ"
+    IDC_REACTOS_SNDREC32    "REACTOS_SNDREC32"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_STRPOS              "位置: %.2f 秒"
+    IDS_STRDUR              "長さ: %.2f 秒"
+    IDS_STRBUF              "バッファ: %.2f kb"
+    IDS_STRFMT              "%.1f kHz %u ビット"
+    IDS_STRMONO             "モノラル"
+    IDS_STRSTEREO           "ステレオ"
+    IDS_STRCHAN             "%s"
+END

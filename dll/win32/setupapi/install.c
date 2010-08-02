@@ -96,9 +96,9 @@ struct needs_callback_info
 
 typedef BOOL (*iterate_fields_func)( HINF hinf, PCWSTR field, void *arg );
 static BOOL GetLineText( HINF hinf, PCWSTR section_name, PCWSTR key_name, PWSTR *value);
-typedef HRESULT WINAPI (*COINITIALIZE)(IN LPVOID pvReserved);
-typedef HRESULT WINAPI (*COCREATEINSTANCE)(IN REFCLSID rclsid, IN LPUNKNOWN pUnkOuter, IN DWORD dwClsContext, IN REFIID riid, OUT LPVOID *ppv);
-typedef HRESULT WINAPI (*COUNINITIALIZE)(VOID);
+typedef HRESULT (WINAPI *COINITIALIZE)(IN LPVOID pvReserved);
+typedef HRESULT (WINAPI *COCREATEINSTANCE)(IN REFCLSID rclsid, IN LPUNKNOWN pUnkOuter, IN DWORD dwClsContext, IN REFIID riid, OUT LPVOID *ppv);
+typedef HRESULT (WINAPI *COUNINITIALIZE)(VOID);
 
 /* Unicode constants */
 static const WCHAR AddService[] = {'A','d','d','S','e','r','v','i','c','e',0};
@@ -250,7 +250,7 @@ static void append_multi_sz_value( HKEY hkey, const WCHAR *value, const WCHAR *s
     if (total != size)
     {
         TRACE( "setting value %s to %s\n", debugstr_w(value), debugstr_w(buffer) );
-        RegSetValueExW( hkey, value, 0, REG_MULTI_SZ, (BYTE *)buffer, total );
+        RegSetValueExW( hkey, value, 0, REG_MULTI_SZ, (BYTE *)buffer, total + sizeof(WCHAR) );
     }
  done:
     HeapFree( GetProcessHeap(), 0, buffer );
@@ -2228,8 +2228,8 @@ cleanup:
     MyFree(SourceInfFileNameW);
     MyFree(OEMSourceMediaLocationW);
     MyFree(DestinationInfFileNameW);
-
     TRACE("Returning %d\n", ret);
+    if (ret) SetLastError(ERROR_SUCCESS);
     return ret;
 }
 
@@ -2518,5 +2518,6 @@ cleanup:
     }
 
     TRACE("Returning %d\n", ret);
+    if (ret) SetLastError(ERROR_SUCCESS);
     return ret;
 }

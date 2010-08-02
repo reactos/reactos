@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="normaliz_redist_data" type="staticlibrary">
 	<include base="icu4ros">icu/source/common</include>
 	<directory name="data"><file>icudt38.c</file></directory>
@@ -8,10 +9,12 @@
 	<library>normalize</library>
 	<library>idna</library>
 	<library>normaliz_redist_data</library>
-	<library>kernel32</library>
-	<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	</group>
 	<include base="icu4ros">icu/source/common</include>
 	<importlibrary definition="normaliz.def" />
 	<file>normaliz.cpp</file>
 </module>
+</group>

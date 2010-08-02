@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 
@@ -158,7 +158,7 @@ String Context::getStackTrace() const
 
 BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 {
-#ifdef __STDC_WANT_SECURE_LIB__
+#if defined(__STDC_WANT_SECURE_LIB__) && defined(_MS_VER)
 	SYSTEMTIME stime;
 	struct tm tm_;
 	struct tm* tm = &tm_;

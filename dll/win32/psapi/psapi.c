@@ -83,7 +83,7 @@ EnumProcessesCallback(IN PSYSTEM_PROCESS_INFORMATION CurrentProcess,
   }
 
   /* return current process */
-  *Context->lpidProcess = (DWORD)CurrentProcess->UniqueProcessId;
+  *Context->lpidProcess = (DWORD_PTR)CurrentProcess->UniqueProcessId;
 
   /* go to next array slot */
   Context->lpidProcess++;
@@ -587,7 +587,7 @@ typedef struct _INTERNAL_ENUM_PAGE_FILES_CONTEXT
 } INTERNAL_ENUM_PAGE_FILES_CONTEXT, *PINTERNAL_ENUM_PAGE_FILES_CONTEXT;
 
 
-static BOOL
+static BOOL CALLBACK
 InternalAnsiPageFileCallback(LPVOID pContext,
                              PENUM_PAGE_FILE_INFORMATION pPageFileInfo,
                              LPCWSTR lpFilename)

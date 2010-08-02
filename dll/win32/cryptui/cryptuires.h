@@ -18,6 +18,10 @@
 #ifndef __CRYPTUIRES_H_
 #define __CRYPTUIRES_H_
 
+#include <windef.h>
+#include <winuser.h>
+#include <commctrl.h>
+
 #define IDS_CERTIFICATE 1000
 #define IDS_CERTIFICATEINFORMATION 1001
 #define IDS_CERT_INFO_BAD_SIG 1002
@@ -112,6 +116,7 @@
 #define IDS_WARN_REMOVE_DEFAULT 1092
 #define IDS_WARN_REMOVE_PLURAL_DEFAULT 1093
 #define IDS_CERT_MGR 1094
+#define IDS_FRIENDLY_NAME_NONE 1095
 
 #define IDS_PURPOSE_SERVER_AUTH 1100
 #define IDS_PURPOSE_CLIENT_AUTH 1101

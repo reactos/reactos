@@ -5,7 +5,7 @@
  *  Proofread 1998 by David Lee Lambert
  *  Copyright 2002 Sylvain Petreolle
  *  Copyright 2004 David Kredba
- *  Copyright 2008 Radek Liska 
+ *  Copyright 2008 Radek Liska
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -74,7 +74,7 @@ BEGIN
         MENUITEM "Vybrat vš&e\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "È&as/Datum\tF5",      CMD_TIME_DATE
     END
-    POPUP "F&ormat"
+    POPUP "F&ormát"
     BEGIN
         MENUITEM "Zalo&mit dlouhé øádky", CMD_WRAP
         MENUITEM "&Písmo...",             CMD_FONT
@@ -85,12 +85,12 @@ BEGIN
     END
     POPUP "&Nápovìda"
     BEGIN
-        MENUITEM "&Obsah",            CMD_HELP_CONTENTS
+        MENUITEM "O&bsah",            CMD_HELP_CONTENTS
         MENUITEM "&Najít...",         CMD_HELP_SEARCH
-        MENUITEM "&Pomoc k nápovìdì", CMD_HELP_ON_HELP
+        MENUITEM "Pomoc k ná&povìdì", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&O programu"        CMD_ABOUT
-        MENUITEM "Inf&o...",          CMD_ABOUT_WINE
+        MENUITEM "&O programu..."     CMD_ABOUT
+        MENUITEM "In&fo...",          CMD_ABOUT_WINE
     END
 END
 
@@ -155,7 +155,7 @@ BEGIN
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Zavøít",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -163,7 +163,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -205,5 +205,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Line %d, column %d"
+STRING_LINE_COLUMN,                             "Øádek %d, sloupec %d"
 END

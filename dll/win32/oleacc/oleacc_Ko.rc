@@ -1,5 +1,5 @@
 /*
- * English resources for oleacc
+ * Korean resources for oleacc
  *
  * Copyright 2008 Nikolay Sivov
  * Copyright 2008 YunSong Hwang
@@ -19,9 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "oleacc.h"
+
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "알 수 없는 객체" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "제목바"

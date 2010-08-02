@@ -1,5 +1,4 @@
-#ifndef __CPL_DESK_H__
-#define __CPL_DESK_H__
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
@@ -45,6 +44,3 @@ CheckAccountName(HWND hwndDlg,
 /* userprops.c */
 BOOL
 UserProperties(HWND hwndDlg);
-
-#endif /* __CPL_DESK_H__ */
-

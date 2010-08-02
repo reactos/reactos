@@ -504,7 +504,7 @@ fprintf(stderr, "xsltInitDocKeyTable %s\n", name);
 	XSLT_TRACE(ctxt,XSLT_TRACE_KEYS,xsltGenericDebug(xsltGenericDebugContext,
 	     "xsltInitDocKeyTable: did not found %s\n", name));
 #endif
-	xsltTransformError(ctxt, NULL, keyd->inst,
+	xsltTransformError(ctxt, NULL, keyd? keyd->inst : NULL,
 	    "Failed to find key definition for %s\n", name);
 	ctxt->state = XSLT_STATE_STOPPED;
         return(-1);
@@ -517,10 +517,13 @@ fprintf(stderr, "xsltInitDocKeyTable %s done\n", name);
 
 /**
  * xsltInitAllDocKeys:
+ * @ctxt: transformation context
  *
  * INTERNAL ROUTINE ONLY
  *
  * Check if any keys on the current document need to be computed
+ *
+ * Returns 0 in case of success, -1 in case of failure
  */
 int
 xsltInitAllDocKeys(xsltTransformContextPtr ctxt)

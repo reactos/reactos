@@ -15,11 +15,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#pragma once
 
 #include "resource.h"
 
@@ -36,6 +35,7 @@
 #define PM_MODIFYVALUE  0
 #define PM_NEW          1
 #define PM_TREECONTEXT  2
+#define PM_HEXEDIT      3
 
 #define MAX_NEW_KEY_LEN 128
 
@@ -124,5 +124,3 @@ extern void DestroyMainMenu( void );
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
 extern BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath);
-
-#endif /* __MAIN_H__ */

@@ -11,7 +11,6 @@
 	<library>wine</library>
 	<library>winspool</library>
 	<library>user32</library>
-	<library>kernel32</library>
 	<library>uuid</library>
 	<library>ntdll</library>
 </module>

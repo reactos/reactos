@@ -2,7 +2,7 @@
     ReactOS Kernel-Mode COM
     by Andrew Greenwood
 
-    Please see COPYING in the top-level directory for license information.
+    This file is in the public domain.
 */
 
 #ifndef _UNKNOWN_H_
@@ -33,7 +33,7 @@ extern "C" {
 #define __IUnknown_INTERFACE_DEFINED__
 DEFINE_GUID(
     IID_IUnknown,
-    0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x46);
+    0x00000000, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46);
 
 #undef INTERFACE
 #define INTERFACE IUnknown
@@ -80,7 +80,7 @@ typedef IUnknown *PUNKNOWN;
     Constructor callback definition
 */
 
-typedef HRESULT (*PFNCREATEINSTANCE)(
+typedef HRESULT (NTAPI *PFNCREATEINSTANCE)(
     OUT PUNKNOWN* Unknown,
     IN  REFCLSID ClassId,
     IN  PUNKNOWN OuterUnknown,

@@ -1,5 +1,3 @@
-
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,7 +24,7 @@ BOOL
 FASTCALL
 VerifyObjectOwner(PDD_ENTRY pEntry)
 {
-    DWORD Pid = (DWORD) PsGetCurrentProcessId() & 0xFFFFFFFC;
+    DWORD Pid = (DWORD)(DWORD_PTR)PsGetCurrentProcessId() & 0xFFFFFFFC;
     DWORD check = pEntry->ObjectOwner.ulObj & 0xFFFFFFFE;
     return ( (check == Pid) || (!check));
 }
@@ -46,7 +44,7 @@ VerifyObjectOwner(PDD_ENTRY pEntry)
 *--*/
 BOOL
 FASTCALL
-DdHmgCreate()
+DdHmgCreate(VOID)
 {
     gpentDdHmgr = EngAllocMem(FL_ZERO_MEMORY, gcSizeDdHmgr, TAG_THDD);
     ghFreeDdHmgr = 0;
@@ -92,7 +90,7 @@ DdHmgCreate()
 *--*/
 BOOL
 FASTCALL
-DdHmgDestroy()
+DdHmgDestroy(VOID)
 {
     gcMaxDdHmgr = 0;
     gcSizeDdHmgr = 0;
@@ -144,10 +142,10 @@ DdHmgDestroy()
 *--*/
 PVOID
 FASTCALL
-DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned)
+DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 {
 
-    DWORD Index = (DWORD)DdHandle & 0x1FFFFF;
+    DWORD Index = (DWORD)(DWORD_PTR)DdHandle & 0x1FFFFF;
     PDD_ENTRY pEntry = NULL;
     PVOID Object = NULL;
 

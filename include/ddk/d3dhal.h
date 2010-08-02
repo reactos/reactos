@@ -16,11 +16,20 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef _D3DHAL_H_
 #define _D3DHAL_H_
+
+/* Helper macro to enable gcc's extension.  */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -787,7 +796,7 @@ typedef struct _DD_GETD3DQUERYCOUNTDATA
 typedef struct _DD_GETD3DQUERYDATA
 {
     DD_GETDRIVERINFO2DATA gdi2;
-    union
+    __GNU_EXTENSION union
     {
         DWORD dwQueryIndex;
         D3DQUERYTYPE QueryType;

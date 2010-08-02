@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  * COPYRIGHT:       See COPYING in the top level directory
@@ -24,8 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#ifndef __BOOTSUP_H__
-#define __BOOTSUP_H__
+#pragma once
 
 NTSTATUS
 CreateFreeLoaderIniForDos(PWCHAR IniPath,
@@ -82,7 +81,5 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 NTSTATUS
 InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
 			   PUNICODE_STRING DestinationArcPath);
-
-#endif /* __BOOTSUP_H__ */
 
 /* EOF */

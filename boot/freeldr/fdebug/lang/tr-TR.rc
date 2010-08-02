@@ -171,7 +171,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE             "Bu program özgür bir yazýlýmdýr; Özgür Yazýlým Vakfý'nýn (Free Software Foundation) yayýnladýðý GNU Genel Kamu Lisansý'nýn 2. versiyonu yada (dilerseniz) herhangi bir sonraki versiyonunun kurallarýna uyarak daðýtabilir ve deðiþtirebilirsiniz.\r\n\r\nBu program faydalý olacaðý umularak daðýtýlmaktadýr, fakat HÝÇBÝR GARANTÝ VERÝLMEZ; ve TÝCARÝ YADA DÝÐER AMAÇLARA UYGUNLUÐU hakkýnda açýktan yada imalý bir bildirim yapýlmaz.  Ayrýntýlar için lütfen GNU Genel Kamu Lisansý'ný (General Public License) inceleyiniz.\r\n\r\nBu programla birlikte GNU Genel Kamu Lisansý'nýn da bir kopyasýnýn size verilmiþ olmasý gerekir; aksi söz konusu ise, Özgür Yazýlým Vakfý'na yazýnýz: Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Bu program özgür bir yazýlýmdýr; Özgür Yazýlým Vakfý'nýn (Free Software Foundation) yayýnladýðý GNU Genel Kamu Lisansý'nýn 2. versiyonu yada (dilerseniz) herhangi bir sonraki versiyonunun kurallarýna uyarak daðýtabilir ve deðiþtirebilirsiniz.\r\n\r\nBu program faydalý olacaðý umularak daðýtýlmaktadýr, fakat HÝÇBÝR GARANTÝ VERÝLMEZ; ve TÝCARÝ YADA DÝÐER AMAÇLARA UYGUNLUÐU hakkýnda açýktan yada imalý bir bildirim yapýlmaz.  Ayrýntýlar için lütfen GNU Genel Kamu Lisansý'ný (General Public License) inceleyiniz.\r\n\r\nBu programla birlikte GNU Genel Kamu Lisansý'nýn da bir kopyasýnýn size verilmiþ olmasý gerekir; aksi söz konusu ise, Özgür Yazýlým Vakfý'na yazýnýz: Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
 
 #endif    // Turkish resources

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <precomp.h>
@@ -114,7 +114,7 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR *filext)
     {
         /* the file extension is unknown, so default to string "FileExtension File" */
         SendMessageW(hDlgCtrl, WM_GETTEXT, (WPARAM)MAX_PATH, (LPARAM)value);
-        swprintf(name, value, &filext[1]);
+        swprintf(name, L"%s %s", &filext[1], value);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)name);
         return TRUE;
     }
@@ -327,13 +327,13 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER l
 
     if (SHFileGeneralGetFileTimeString(&accessed_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14017);
+        hDlgCtrl = GetDlgItem(hwndDlg, 14019);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
     }
 
     if (SHFileGeneralGetFileTimeString(&write_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14019);
+        hDlgCtrl = GetDlgItem(hwndDlg, 14017);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
     }
 
@@ -536,7 +536,7 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wOriginalFilename, &str, lang, code);
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductName, &str, lang, code);
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductVersion, &str, lang, code);
-    SetWindowLong(hwndDlg, DWL_USER, (LONG)pBuf);
+    SetWindowLongPtr(hwndDlg, DWL_USER, (LONG_PTR)pBuf);
 
     /* select first item */
     hDlgCtrl = GetDlgItem(hwndDlg, 14009);
@@ -610,7 +610,7 @@ SH_FileVersionDlgProc(HWND hwndDlg,
         break;
 
         case WM_DESTROY:
-            buf = (LPVOID) GetWindowLong(hwndDlg, DWL_USER);
+            buf = (LPVOID) GetWindowLongPtr(hwndDlg, DWL_USER);
             HeapFree(GetProcessHeap(), 0, buf);
             break;
 
@@ -733,9 +733,12 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
     TRACE("EnumPropSheetExt szName %s\n", debugstr_w(szName));
 
     hpsxa[0] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages, pDataObj);
-    hpsxa[1] = NULL;
-
     Pages = SHAddFromPropSheetExtArray(hpsxa[0], AddShellPropSheetExCallback, (LPARAM)pinfo);
+
+    hpsxa[1] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"*", NumPages-Pages, pDataObj);
+    Pages += SHAddFromPropSheetExtArray(hpsxa[1], AddShellPropSheetExCallback, (LPARAM)pinfo);
+
+    hpsxa[2] = NULL;
 
     if (pOffset)
     {
@@ -746,8 +749,8 @@ EnumPropSheetExt(LPWSTR wFileName, PROPSHEETHEADERW *pinfo, int NumPages, HPSXA 
         {
             TRACE("EnumPropSheetExt szName %s, pOffset %s\n", debugstr_w(szName), debugstr_w(pOffset));
             szName[(sizeof(szName) / sizeof(WCHAR)) - 1] = L'\0';
-            hpsxa[1] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages - Pages, pDataObj);
-            Pages += SHAddFromPropSheetExtArray(hpsxa[1], AddShellPropSheetExCallback, (LPARAM)pinfo);
+            hpsxa[2] = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, szName, NumPages - Pages, pDataObj);
+            Pages += SHAddFromPropSheetExtArray(hpsxa[2], AddShellPropSheetExCallback, (LPARAM)pinfo);
         }
     }
 
@@ -774,7 +777,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     WCHAR wFileName[MAX_PATH];
     DWORD dwHandle = 0;
     WCHAR *pFileName;
-    HPSXA hpsxa[2];
+    HPSXA hpsxa[3];
     INT_PTR res;
     IDataObject *pDataObj = NULL;
     HRESULT hResult;
@@ -807,7 +810,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
 
     if (PathIsDirectoryW(wFileName))
     {
-        return SH_ShowFolderProperties(wFileName);
+        return SH_ShowFolderProperties(wFileName, pidlFolder, apidl);
     }
 
     if (wcslen(wFileName) == 3)
@@ -845,6 +848,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
         {
             hpsxa[0] = NULL;
             hpsxa[1] = NULL;
+            hpsxa[2] = NULL;
         }
     }
 
@@ -865,6 +869,7 @@ SH_ShowPropertiesDialog(WCHAR *lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST *api
     {
         SHDestroyPropSheetExtArray(hpsxa[0]);
         SHDestroyPropSheetExtArray(hpsxa[1]);
+        SHDestroyPropSheetExtArray(hpsxa[2]);
         IDataObject_Release(pDataObj);
     }
 

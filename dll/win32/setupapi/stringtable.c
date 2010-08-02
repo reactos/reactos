@@ -602,18 +602,19 @@ StringTableLookUpStringEx(HSTRING_TABLE hStringTable,
                           LPWSTR lpString,
                           DWORD dwFlags,
                           LPVOID lpExtraData,
-                          LPDWORD lpReserved)
+                          DWORD dwReserved)
 {
     PSTRING_TABLE pStringTable;
     DWORD i;
 
-    TRACE("%p %s %lx\n", (PVOID)hStringTable, debugstr_w(lpString), dwFlags);
+    TRACE("%p %s %x %p, %x\n", hStringTable, debugstr_w(lpString), dwFlags,
+          lpExtraData, dwReserved);
 
     pStringTable = (PSTRING_TABLE)hStringTable;
     if (pStringTable == NULL)
     {
         ERR("Invalid hStringTable!\n");
-        return (DWORD)-1;
+        return ~0u;
     }
 
     /* Search for existing string in the string table */
@@ -625,10 +626,8 @@ StringTableLookUpStringEx(HSTRING_TABLE hStringTable,
             {
                 if (!lstrcmpW(pStringTable->pSlots[i].pString, lpString))
                 {
-                    memcpy(lpExtraData,
-                           pStringTable->pSlots[i].pData,
-                           pStringTable->pSlots[i].dwSize);
-                    *lpReserved = 0;
+                    if (lpExtraData)
+                        memcpy(lpExtraData, pStringTable->pSlots[i].pData, dwReserved);
                     return i + 1;
                 }
             }
@@ -636,17 +635,14 @@ StringTableLookUpStringEx(HSTRING_TABLE hStringTable,
             {
                 if (!lstrcmpiW(pStringTable->pSlots[i].pString, lpString))
                 {
-                    memcpy(lpExtraData,
-                           pStringTable->pSlots[i].pData,
-                           pStringTable->pSlots[i].dwSize);
-                    *lpReserved = 0;
+                    if (lpExtraData)
+                        memcpy(lpExtraData, pStringTable->pSlots[i].pData, dwReserved);
                     return i + 1;
                 }
             }
         }
     }
-
-    return (DWORD)-1;
+    return ~0u;
 }
 
 

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 /* $Id: ntmarta.c 31176 2007-12-12 07:04:12Z weiden $
  *
@@ -1236,7 +1236,7 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     DWORD ObjectsPresent;
     BOOL needToClean;
     PSID pSid1, pSid2;
-    ULONG i;
+    ULONG i, j;
     LSA_HANDLE PolicyHandle = NULL;
     BOOL bRet;
     DWORD LastErr;
@@ -1295,11 +1295,11 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             case REVOKE_ACCESS:
             case SET_ACCESS:
                 /* Discard all accesses for the trustee... */
-                for (i = 0; i < SizeInformation.AceCount; i++)
+                for (j = 0; j < SizeInformation.AceCount; j++)
                 {
-                    if (!pKeepAce[i])
+                    if (!pKeepAce[j])
                         continue;
-                    if (!GetAce(OldAcl, i, (PVOID*)&pAce))
+                    if (!GetAce(OldAcl, j, (PVOID*)&pAce))
                     {
                         Ret = GetLastError();
                         goto Cleanup;
@@ -1308,7 +1308,7 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                     pSid2 = AccpGetAceSid(pAce);
                     if (RtlEqualSid(pSid1, pSid2))
                     {
-                        pKeepAce[i] = FALSE;
+                        pKeepAce[j] = FALSE;
                         SizeInformation.AclBytesInUse -= pAce->AceSize;
                     }
                 }

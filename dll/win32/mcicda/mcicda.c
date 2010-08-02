@@ -420,7 +420,8 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
     if (dwFlags & MCI_OPEN_ELEMENT) {
         if (dwFlags & MCI_OPEN_ELEMENT_ID) {
             WARN("MCI_OPEN_ELEMENT_ID %p! Abort\n", lpOpenParms->lpstrElementName);
-            return MCIERR_NO_ELEMENT_ALLOWED;
+            ret = MCIERR_NO_ELEMENT_ALLOWED;
+            goto the_error;
         }
         TRACE("MCI_OPEN_ELEMENT element name: %s\n", debugstr_w(lpOpenParms->lpstrElementName));
         if (!isalpha(lpOpenParms->lpstrElementName[0]) || lpOpenParms->lpstrElementName[1] != ':' ||
@@ -464,8 +465,15 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
     /* now, open the handle */
     root[0] = root[1] = '\\'; root[2] = '.'; root[3] = '\\'; root[4] = drive; root[5] = ':'; root[6] = '\0';
     wmcda->handle = CreateFileW(root, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
-    if (wmcda->handle != 0)
-        return 0;
+    if (wmcda->handle == INVALID_HANDLE_VALUE)
+        goto the_error;
+
+    if (dwFlags & MCI_NOTIFY) {
+	TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpOpenParms->dwCallback);
+	mciDriverNotify(HWND_32(LOWORD(lpOpenParms->dwCallback)),
+			wmcda->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
+    }
+    return 0;
 
  the_error:
     --wmcda->nUseCount;
@@ -482,6 +490,8 @@ static DWORD MCICDA_Close(UINT wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParm
     TRACE("(%04X, %08X, %p);\n", wDevID, dwParam, lpParms);
 
     if (wmcda == NULL) 	return MCIERR_INVALID_DEVICE_ID;
+
+    MCICDA_Stop(wDevID, MCI_WAIT, NULL);
 
     if (--wmcda->nUseCount == 0) {
 	CloseHandle(wmcda->handle);
@@ -555,7 +565,7 @@ static DWORD MCICDA_GetDevCaps(UINT wDevID, DWORD dwFlags,
 
 static DWORD CDROM_Audio_GetSerial(CDROM_TOC* toc)
 {
-    unsigned long serial = 0;
+    DWORD serial = 0;
     int i;
     WORD wMagic;
     DWORD dwStart, dwEnd;

@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 	.text
@@ -34,10 +34,7 @@
     .globl _startup_pagedirectory
     .globl _lowmem_pagetable
     .globl _kernel_pagetable
-    .globl _hyperspace_pagetable
     .globl _apic_pagetable
-    .globl _kpcr_pagetable
-    .globl _kuser_pagetable
 
     .globl _PageDirectoryEnd
 
@@ -64,16 +61,7 @@ _lowmem_pagetable:
 _kernel_pagetable:
 	.fill 2*4096, 1, 0
 
-_hyperspace_pagetable:
-	.fill 4096, 1, 0
-	
 _apic_pagetable:
 	.fill 4096, 1, 0
-
-_kpcr_pagetable:
-	.fill 4096, 1, 0   
-
-_kuser_pagetable:
-	.fill 4096, 1, 0   
 
 _PageDirectoryEnd:

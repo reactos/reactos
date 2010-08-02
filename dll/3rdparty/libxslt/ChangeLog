@@ -1,3 +1,113 @@
+Fri Jul 24 10:16:24 CEST 2009 Daniel Veillard <veillard@redhat.com>
+
+	* libxslt/attributes.c: fix an IDness issue when building the tree
+
+Tue May 12 09:03:46 CEST 2009 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: adapt the extra version detection code to git
+	* libxslt.doap: adding RDF dope file
+
+Fri Jan 23 19:02:28 PST 2009 William Brack <wbrack@mmm.com.hk>
+
+	* libexslt/strings.c: Fixed indexing error reported by
+	  Ron Burk on the mailing list.
+
+Fri Nov 14 15:06:55 CET 2008 Daniel Veillard <veillard@redhat.com>
+
+	* python/Makefile.am libxslt/Makefile.am configure.in
+	  libexslt/Makefile.am: applied patch from Roumen Petrov for
+	  mingw cross compilation problems raised by Rich Jones
+
+Tue Oct 28 11:55:27 CET 2008 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in Makefile.am: patch from Richard Jones to build
+	  shared libs with MinGW cross-compiler
+
+Tue Oct  7 18:16:08 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* libxslt/pattern.c: prevent some unchecked pointer accesses, patch
+	  by Jake Goulding
+
+Wed Aug  6 20:10:08 HKT 2008 William Brack <wbrack@mmm.com.hk>
+
+	* Minor cleanup of "typo" and some compilation warnings:
+	  tests/namespaces/tst7.xsl: fixed typo detected by new libxml2 code
+	  libxslt/keys.c, libxslt/xsltlocale.c, libexslt/date.c: trivial
+	  changes for gcc warnings.
+
+Fri Aug  1 10:16:48 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* libxslt/xsltconfig.h.in libxslt/xslt.c libxslt/extensions.c
+	  libxslt/xsltlocale.c libxslt/preproc.c libxslt/xsltutils.c
+	  libxslt/xsltlocale.h libxslt/win32config.h configure.in
+	  config.h.in win32/configure.js: big patch from Roumen Petrov
+	  finishing xsl:sort lang support with many portability issues
+	  fixed and feedback from Nick Wellnhofer and Rob Richards
+
+Fri Aug  1 07:54:02 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* libexslt/crypto.c: fix for CVE-2008-2935 libexslt RC4
+	  encryption/decryption functions
+
+Mon Jul 28 14:46:27 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: fix my static linking setup on x86_64
+
+Sun Jul 27 13:52:10 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* libxslt/xslt.c: avoid a quadratic behaviour when hitting duplicates
+	  exclude-result-prefixes declarations, should fix #544906
+
+Sat Jul 26 12:43:18 PST 2008 William Brack <wbrack@mmm.com.hk>
+
+	*configure.in: fixed option --with-debugger with patch from
+	 Arun Ragnavan #544829
+
+Sat Jul 12 16:36:58 PST 2008 William Brack <wbrack@mmm.com.hk>
+
+	* libexslt/math.c: fixed incorrect argument popping in
+	  exsltMathAtan2Function #541965
+
+Thu Jul 10 10:04:28 PST 2008 William Brack <wbrack@mmm.com.hk>
+
+	* libxslt/functions.c: patch from Ron Burk to fix problem
+	  with string check for element-available and
+	  function-available #530891.
+
+Tue Jun 24 23:55:48 PST 2008 William Brack <wbrack@mmm.com.hk>
+
+	* libxslt/attrvt.c: added code to handle literal within an
+	  AVT #539741.
+	* tests/docs/Makefile.am tests/docs/bug-168.xsl
+	* tests/general/Makefile.am tests/general/bug-168.* add a
+	  test for this bug to the regression suite.
+
+Fri Jun 13 10:58:52 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* libxslt/libxslt.h libexslt/libexslt.h libexslt/exslt.h: patch
+	  from Roumen Petrov fixing include path when compiling outside
+	  source tree
+
+Thu Jun 12 11:23:23 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* libxslt/xsltconfig.h.in libxslt/xsltlocale.h configure.in
+	  config.h.in win32/configure.js: patch from Nick Wellnhofer and
+	  Roumen Petrov to fix some portability problems on the previous
+	  xsl:sort locale patch
+
+Tue Jun  3 18:26:26 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* configure.in libxslt/extra.c libxslt/Makefile.am libxslt/preproc.c
+	  libxslt/xsltInternals.h libxslt/xsltlocale.c libxslt/xsltlocale.h
+	  libxslt/xsltutils.c win32/Makefile.mingw win32/Makefile.msvc: patch
+	  from Nick Wellnhofer adding xsl:sort lang support using the locale
+	  support from the C library.
+
+Tue Jun  3 18:14:55 CEST 2008 Daniel Veillard <daniel@veillard.com>
+
+	* libxslt/extensions.h: as Ralf Junker pointed out
+	  xsltExtFunctionLookup was defined but never implemented, removing it
+
 Tue May 13 17:51:05 CEST 2008 Daniel Veillard <daniel@veillard.com>
 
 	* configure.in doc/*: release of 1.1.24

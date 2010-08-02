@@ -12,9 +12,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 /* $Id$
  *
@@ -27,7 +27,7 @@
  *                 3/7/1999: Created
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -347,9 +347,9 @@ IntEngGradientFillTriangle(
     }
   }
 
-  DbgPrint("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
+  DPRINT1("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
   /* FIXME: commented out because of an endless loop - fix triangles first */
-  DbgPrint("FIXME: IntEngGradientFillTriangle is broken");
+  DPRINT1("FIXME: IntEngGradientFillTriangle is broken\n");
 
   if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &psoOutput))
   {
@@ -476,12 +476,11 @@ EngGradientFill(
     IN ULONG  ulMode)
 {
   ULONG i;
-  CLIPOBJ *pcoPriv = NULL;
   BOOL ret = FALSE;
 
   if (!pco)
   {
-    pco = pcoPriv = IntEngCreateClipRegion(0, 0, prclExtents);
+    pco = IntEngCreateClipRegion(0, 0, prclExtents);
     if (!pco)
     {
       return FALSE;
@@ -524,11 +523,6 @@ EngGradientFill(
       ret = TRUE;
       break;
     }
-  }
-
-  if (pcoPriv)
-  {
-    IntEngDeleteClipRegion(pcoPriv);
   }
 
   return ret;

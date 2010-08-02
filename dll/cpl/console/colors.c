@@ -44,9 +44,9 @@ ColorsProc(
 	LPNMUPDOWN lpnmud;
     LPPSHNOTIFY lppsn;
 	LPDRAWITEMSTRUCT drawItem;
-	DWORD red = -1;
-	DWORD green = -1;
-	DWORD blue = -1;
+	DWORD red = MAXDWORD;
+	DWORD green = MAXDWORD;
+	DWORD blue = MAXDWORD;
 
 	pConInfo = (PConsoleInfo) GetWindowLongPtr(hwndDlg, DWLP_USER);
 
@@ -93,7 +93,7 @@ ColorsProc(
 				else
 				{
 					/* options have already been applied */
-					SetWindowLong(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
+					SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR);
 					return TRUE;
 				}
 				return TRUE;
@@ -116,7 +116,7 @@ ColorsProc(
 				break;
 			}
 
-			if (red == -1U)
+			if (red == MAXDWORD)
 			{
 				red = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_RED), UDM_GETPOS, 0, 0);
 				if (HIWORD(red))
@@ -127,7 +127,7 @@ ColorsProc(
 				red = LOBYTE(red);
 			}
 
-			if (green == -1U)
+			if (green == MAXDWORD)
 			{
 				green = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_GREEN), UDM_GETPOS, 0, 0);
 				if (HIWORD(green))
@@ -138,7 +138,7 @@ ColorsProc(
 				green = LOBYTE(green);
 			}
 
-			if (blue == -1U)
+			if (blue == MAXDWORD)
 			{
 				blue = SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_COLOR_BLUE), UDM_GETPOS, 0, 0);
 				if (HIWORD(blue))
@@ -231,6 +231,7 @@ ColorsProc(
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
 				pConInfo->ActiveStaticControl = index;
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 				break;
 			}
 		}

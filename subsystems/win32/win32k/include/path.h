@@ -1,5 +1,4 @@
-#ifndef _WIN32K_PATH_H
-#define _WIN32K_PATH_H
+#pragma once
 
   /* DCPATH flPath */
 #define DCPATH_ACTIVE    0x0001
@@ -71,5 +70,3 @@ BOOL FASTCALL PATH_ExtTextOut(PDC dc,INT x,INT y,UINT flags,const RECTL *lprc,LP
 
 VOID FASTCALL IntGdiCloseFigure(PPATH pPath);
 BOOL FASTCALL PATH_Delete(HPATH hPath);
-
-#endif /* _WIN32K_PATH_H */

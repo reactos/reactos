@@ -342,12 +342,21 @@ OnNotify(PMAIN_WND_INFO Info,
         case NM_DBLCLK:
         {
             HTREEITEM hSelected = TreeView_GetSelection(Info->hTreeView);
+            TV_HITTESTINFO HitTest;
 
             if (!TreeView_GetChild(Info->hTreeView,
                                    hSelected))
             {
-                OpenPropSheet(Info->hTreeView,
-                              hSelected);
+                if (GetCursorPos(&HitTest.pt) &&
+                    ScreenToClient(Info->hTreeView, &HitTest.pt))
+                {
+                    if (TreeView_HitTest(Info->hTreeView, &HitTest))
+                    {
+                        if (HitTest.hItem == hSelected)
+                            OpenPropSheet(Info->hTreeView,
+                                          hSelected);
+                    }
+                }
             }
         }
         break;

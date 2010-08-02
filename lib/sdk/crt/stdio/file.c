@@ -76,6 +76,7 @@ int *__p___mb_cur_max(void);
 #define WX_OPEN           0x01
 #define WX_ATEOF          0x02
 #define WX_READEOF        0x04  /* like ATEOF, but for underlying file rather than buffer */
+#define WX_READCR         0x08  /* underlying file is at \r */
 #define WX_DONTINHERIT    0x10
 #define WX_APPEND         0x20
 #define WX_TEXT           0x80
@@ -306,18 +307,19 @@ void msvcrt_init_io(void)
   InitializeCriticalSection(&FILE_cs);
   FILE_cs.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": FILE_cs");
   GetStartupInfoA(&si);
-  if (si.cbReserved2 != 0 && si.lpReserved2 != NULL)
+  if (si.cbReserved2 >= sizeof(unsigned int) && si.lpReserved2 != NULL)
   {
-    char*       wxflag_ptr;
+    BYTE*       wxflag_ptr;
     HANDLE*     handle_ptr;
+    unsigned int count;
 
-    fdend = *(unsigned*)si.lpReserved2;
+    count = *(unsigned*)si.lpReserved2;
+    wxflag_ptr = si.lpReserved2 + sizeof(unsigned);
+    handle_ptr = (HANDLE*)(wxflag_ptr + count);
 
-    wxflag_ptr = (char*)(si.lpReserved2 + sizeof(unsigned));
-    handle_ptr = (HANDLE*)(wxflag_ptr + fdend * sizeof(char));
-
-    fdend = min(fdend, sizeof(fdesc) / sizeof(fdesc[0]));
-    for (i = 0; i < fdend; i++)
+    count = min(count, (si.cbReserved2 - sizeof(unsigned)) / (sizeof(HANDLE) + 1));
+    count = min(count, sizeof(fdesc) / sizeof(fdesc[0]));
+    for (i = 0; i < count; i++)
     {
       if ((*wxflag_ptr & WX_OPEN) && *handle_ptr != INVALID_HANDLE_VALUE)
       {
@@ -331,6 +333,7 @@ void msvcrt_init_io(void)
       }
       wxflag_ptr++; handle_ptr++;
     }
+    fdend = max( 3, count );
     for (fdstart = 3; fdstart < fdend; fdstart++)
         if (fdesc[fdstart].handle == INVALID_HANDLE_VALUE) break;
   }
@@ -900,10 +903,21 @@ int CDECL fseek(FILE* file, long offset, int whence)
 {
   /* Flush output if needed */
   if(file->_flag & _IOWRT)
-	flush_buffer(file);
+    flush_buffer(file);
 
   if(whence == SEEK_CUR && file->_flag & _IOREAD ) {
-	offset -= file->_cnt;
+    offset -= file->_cnt;
+    if (fdesc[file->_file].wxflag & WX_TEXT) {
+        /* Black magic correction for CR removal */
+        int i;
+        for (i=0; i<file->_cnt; i++) {
+            if (file->_ptr[i] == '\n')
+                offset--;
+        }
+        /* Black magic when reading CR at buffer boundary*/
+        if(fdesc[file->_file].wxflag & WX_READCR)
+            offset--;
+    }
   }
   /* Discard buffered input */
   file->_cnt = 0;
@@ -1489,7 +1503,7 @@ int CDECL _wopen(const wchar_t *path,int flags,...)
     free(patha);
     return retval;
   }
-
+  free(patha);
   _dosmaperr(GetLastError());
   return -1;
 }
@@ -1555,27 +1569,6 @@ int CDECL _rmtmp(void)
 }
 
 /*********************************************************************
- * (internal) remove_cr
- *
- * Translate all \r\n to \n inplace.
- * return the number of \r removed
- * Corner cases required by some apps:
- *   \r\r\n -> \r\n
- * BUG: should save state across calls somehow, so CR LF that
- * straddles buffer boundary gets recognized properly?
- */
-static unsigned int remove_cr(char *buf, unsigned int count)
-{
-    unsigned int i, j;
-
-    for (i=0, j=0; j < count; j++)
-        if ((buf[j] != '\r') || ((j+1) < count && buf[j+1] != '\n'))
-	    buf[i++] = buf[j];
-
-    return count - i;
-}
-
-/*********************************************************************
  * (internal) read_i
  */
 static int read_i(int fd, void *buf, unsigned int count)
@@ -1583,6 +1576,9 @@ static int read_i(int fd, void *buf, unsigned int count)
   DWORD num_read;
   char *bufstart = buf;
   HANDLE hand = fdtoh(fd);
+
+  if (count == 0)
+    return 0;
 
   if (fdesc[fd].wxflag & WX_READEOF) {
      fdesc[fd].wxflag |= WX_ATEOF;
@@ -1600,25 +1596,47 @@ static int read_i(int fd, void *buf, unsigned int count)
    */
     if (ReadFile(hand, bufstart, count, &num_read, NULL))
     {
-        if (fdesc[fd].wxflag & WX_TEXT)
-        {
-            int i;
-            /* in text mode, a ctrl-z signals EOF */
-            for (i=0; i<num_read; i++)
-            {
-                if (bufstart[i] == 0x1a)
-                {
-                    num_read = i;
-                    fdesc[fd].wxflag |= (WX_ATEOF|WX_READEOF);
-                    TRACE(":^Z EOF %s\n",debugstr_an(buf,num_read));
-                    break;
-                }
-            }
-        }
         if (count != 0 && num_read == 0)
         {
             fdesc[fd].wxflag |= (WX_ATEOF|WX_READEOF);
             TRACE(":EOF %s\n",debugstr_an(buf,num_read));
+        }
+        else if (fdesc[fd].wxflag & WX_TEXT)
+        {
+              DWORD i, j;
+            if (bufstart[num_read-1] == '\r')
+            {
+                if(count == 1)
+                {
+                    fdesc[fd].wxflag  &=  ~WX_READCR;
+                    ReadFile(hand, bufstart, 1, &num_read, NULL);
+                }
+                else
+                {
+                    fdesc[fd].wxflag  |= WX_READCR;
+                    num_read--;
+                }
+            }
+	    else
+	     fdesc[fd].wxflag  &=  ~WX_READCR;
+            for (i=0, j=0; i<num_read; i++)
+            {
+                /* in text mode, a ctrl-z signals EOF */
+                if (bufstart[i] == 0x1a)
+                {
+                    fdesc[fd].wxflag |= (WX_ATEOF|WX_READEOF);
+                    TRACE(":^Z EOF %s\n",debugstr_an(buf,num_read));
+                    break;
+                }
+                /* in text mode, strip \r if followed by \n.
+                 * BUG: should save state across calls somehow, so CR LF that
+                 * straddles buffer boundary gets recognized properly?
+                 */
+		if ((bufstart[i] != '\r')
+                ||  ((i+1) < num_read && bufstart[i+1] != '\n'))
+		    bufstart[j++] = bufstart[i];
+            }
+            num_read = j;
         }
     }
     else
@@ -1648,10 +1666,6 @@ int CDECL _read(int fd, void *buf, unsigned int count)
 {
   int num_read;
   num_read = read_i(fd, buf, count);
-  if (num_read>0 && fdesc[fd].wxflag & WX_TEXT)
-  {
-      num_read -= remove_cr(buf,num_read);
-  }
   return num_read;
 }
 
@@ -1953,17 +1967,13 @@ int CDECL fgetc(FILE* file)
 {
   unsigned char *i;
   unsigned int j;
-  do {
-    if (file->_cnt>0) {
-      file->_cnt--;
-      i = (unsigned char *)file->_ptr++;
-      j = *i;
-    } else
-      j = _filbuf(file);
-    if (!(fdesc[file->_file].wxflag & WX_TEXT)
-    || ((j != '\r') || (file->_cnt && file->_ptr[0] != '\n')))
-        return j;
-  } while(1);
+  if (file->_cnt>0) {
+    file->_cnt--;
+    i = (unsigned char *)file->_ptr++;
+    j = *i;
+  } else
+    j = _filbuf(file);
+  return j;
 }
 
 /*********************************************************************
@@ -2298,11 +2308,13 @@ int CDECL _flsbuf(int c, FILE* file)
   }
   if(file->_bufsiz) {
         int res=flush_buffer(file);
-	return res?res : fputc(c, file);
+    return res?res : fputc(c, file);
   } else {
-	unsigned char cc=c;
+    unsigned char cc=c;
         int len;
-	len = _write(file->_file, &cc, 1);
+        /* set _cnt to 0 for unbuffered FILEs */
+        file->_cnt = 0;
+        len = _write(file->_file, &cc, 1);
         if (len == 1) return c & 0xff;
         file->_flag |= _IOERR;
         return EOF;
@@ -2334,8 +2346,6 @@ size_t CDECL fread(void *ptr, size_t size, size_t nmemb, FILE* file)
 	memcpy(ptr, file->_ptr, pcnt);
 	file->_cnt -= pcnt;
 	file->_ptr += pcnt;
-	if (fdesc[file->_file].wxflag & WX_TEXT)
-            pcnt -= remove_cr(ptr,pcnt);
 	read += pcnt ;
 	rcnt -= pcnt ;
         ptr = (char*)ptr + pcnt;
@@ -2434,8 +2444,35 @@ FILE* CDECL freopen(const char *path, const char *mode,FILE* file)
  */
 FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode,FILE* file)
 {
-    FIXME("UNIMPLEMENTED stub!\n");
-    return NULL;
+  int open_flags, stream_flags, fd;
+
+  TRACE(":path (%p) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file->_file);
+
+  LOCK_FILES();
+  if (!file || ((fd = file->_file) < 0) || fd > fdend)
+    file = NULL;
+  else
+  {
+    fclose(file);
+    /* map mode string to open() flags. "man fopen" for possibilities. */
+    if (get_flags((char*)mode, &open_flags, &stream_flags) == -1)
+      file = NULL;
+    else
+    {
+      fd = _wopen(path, open_flags, _S_IREAD | _S_IWRITE);
+      if (fd < 0)
+        file = NULL;
+      else if (init_fp(file, fd, stream_flags) == -1)
+      {
+          file->_flag = 0;
+          WARN(":failed-last error (%d)\n",GetLastError());
+          _dosmaperr(GetLastError());
+          file = NULL;
+      }
+    }
+  }
+  UNLOCK_FILES();
+  return file;
 }
 
 /*********************************************************************
@@ -2464,17 +2501,26 @@ int CDECL fsetpos(FILE* file, const fpos_t *pos)
  */
 LONG CDECL ftell(FILE* file)
 {
+  /* TODO: just call fgetpos and return lower half of result */
   int off=0;
   long pos;
-  if(file->_bufsiz)  {
-	if( file->_flag & _IOWRT ) {
-		off = file->_ptr - file->_base;
-	} else {
-		off = -file->_cnt;
-	}
-  }
   pos = _tell(file->_file);
-  if(pos == -1) return pos;
+  if(pos == -1) return -1;
+  if(file->_bufsiz)  {
+    if( file->_flag & _IOWRT ) {
+        off = file->_ptr - file->_base;
+    } else {
+        off = -file->_cnt;
+        if (fdesc[file->_file].wxflag & WX_TEXT) {
+            /* Black magic correction for CR removal */
+            int i;
+            for (i=0; i<file->_cnt; i++) {
+                if (file->_ptr[i] == '\n')
+                    off--;
+            }
+        }
+    }
+  }
   return off + pos;
 }
 
@@ -2483,22 +2529,25 @@ LONG CDECL ftell(FILE* file)
  */
 int CDECL fgetpos(FILE* file, fpos_t *pos)
 {
-  /* This code has been lifted form the ftell function */
   int off=0;
-
   *pos = _lseeki64(file->_file,0,SEEK_CUR);
-
-  if (*pos == -1) return -1;
-  
+  if(*pos == -1) return -1;
   if(file->_bufsiz)  {
-	if( file->_flag & _IOWRT ) {
-		off = file->_ptr - file->_base;
-	} else {
-		off = -file->_cnt;
-	}
+    if( file->_flag & _IOWRT ) {
+        off = file->_ptr - file->_base;
+    } else {
+        off = -file->_cnt;
+        if (fdesc[file->_file].wxflag & WX_TEXT) {
+            /* Black magic correction for CR removal */
+            int i;
+            for (i=0; i<file->_cnt; i++) {
+                if (file->_ptr[i] == '\n')
+                    off--;
+            }
+        }
+    }
   }
   *pos += off;
-  
   return 0;
 }
 

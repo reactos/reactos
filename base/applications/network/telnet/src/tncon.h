@@ -1,5 +1,4 @@
-#ifndef __TNCON_H
-#define __TNCON_H
+#pragma once
 
 #include "tparams.h"
 #include "tnclip.h"
@@ -30,5 +29,3 @@ BOOL WINAPI ControlEventHandler(DWORD);
 
 // Bryan Montgomery 10/14/98
 void setTNetwork(TNetwork);
-
-#endif

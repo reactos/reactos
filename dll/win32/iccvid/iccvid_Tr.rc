@@ -16,9 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "iccvid_private.h"
+
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_NAME "Cinepak Vidyo חצzücü"
     IDS_DESCRIPTION "Cinepak Vidyo חצzücü"

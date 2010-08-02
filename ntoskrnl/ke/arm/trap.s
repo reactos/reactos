@@ -127,7 +127,6 @@
     TRAP_EPILOG 0 // NotFromSystemCall
     ENTRY_END KiExceptionExit
 
-
     NESTED_ENTRY KiServiceExit
     PROLOG_END KiServiceExit
     //

@@ -97,7 +97,7 @@ static void SF_RegisterClipFmt (IGenericSFImpl * This)
     TRACE ("(%p)\n", This);
 
     if (!This->cfShellIDList) {
-        This->cfShellIDList = RegisterClipboardFormatA (CFSTR_SHELLIDLIST);
+        This->cfShellIDList = RegisterClipboardFormatW (CFSTR_SHELLIDLIST);
     }
 }
 
@@ -1260,16 +1260,17 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
     WCHAR szTargetPath[MAX_PATH];
     SHFILEOPSTRUCTW op;
     LPITEMIDLIST pidl;
-    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList;
-    int res;
+    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList, pszFileName;
+    int res, length;
+    HRESULT hr;
     STRRET strRet;
 
     IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)->(%p,%u,%p)\n", This, pSFFrom, cidl, apidl);
 
-    IShellFolder_QueryInterface (pSFFrom, &IID_IPersistFolder2, (LPVOID *) & ppf2);
-    if (ppf2) 
+    hr = IShellFolder_QueryInterface (pSFFrom, &IID_IPersistFolder2, (LPVOID *) & ppf2);
+    if (SUCCEEDED(hr))
     {
         if (FAILED(IPersistFolder2_GetCurFolder (ppf2, &pidl)))
         {
@@ -1349,8 +1350,26 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
 
         res = SHFileOperationW(&op);
 
-        HeapFree(GetProcessHeap(), 0, pszSrc);
-        HeapFree(GetProcessHeap(), 0, pszTarget);
+        if (res == DE_SAMEFILE)
+        {
+            length = wcslen(szTargetPath);
+
+            pszFileName = wcsrchr(pszSrcList, '\\');
+            pszFileName++;
+
+            if (LoadStringW(shell32_hInstance, IDS_COPY_OF, pszTarget, MAX_PATH - length))
+            {
+                wcscat(szTargetPath, L" ");
+            }
+
+            wcscat(szTargetPath, pszFileName);
+            op.pTo = szTargetPath;
+
+            res = SHFileOperationW(&op);
+        }
+
+        HeapFree(GetProcessHeap(), 0, pszSrcList);
+        HeapFree(GetProcessHeap(), 0, pszTargetList);
 
         if (res)
             return E_FAIL;
@@ -1559,7 +1578,7 @@ IFSFldr_PersistFolder3_GetFolderTargetInfo (IPersistFolder3 * iface,
 {
     IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
     FIXME ("(%p)->(%p)\n", This, ppfti);
-    ZeroMemory (ppfti, sizeof (ppfti));
+    ZeroMemory (ppfti, sizeof (*ppfti));
     return E_NOTIMPL;
 }
 

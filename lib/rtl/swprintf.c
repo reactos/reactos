@@ -226,7 +226,9 @@ numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precis
 	{
         x = num;
 		tmp[i++] = digits[do_div(&x,base)];
+#ifndef _M_ARM // Missing __floatdidf in CeGCC 0.55 -- GCC 4.4
 		num = x;
+#endif
     }
 	if (i > precision)
 		precision = i;
@@ -459,7 +461,10 @@ int __cdecl _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list ar
 
 		/* get the conversion qualifier */
 		qualifier = -1;
-		if (*fmt == L'h' || *fmt == L'l' || *fmt == L'L' || *fmt == L'w') {
+        if (*fmt == L'l' && *(fmt+1) == L'l') {
+            qualifier = L'I';
+            fmt += 2;
+		} else if (*fmt == L'h' || *fmt == L'l' || *fmt == L'L' || *fmt == L'w') {
 			qualifier = *fmt;
 			++fmt;
 		} else if (*fmt == L'I' && *(fmt+1) == L'6' && *(fmt+2) == L'4') {

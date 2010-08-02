@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <regedit.h>
@@ -87,10 +87,9 @@ static void OnPaint(HWND hWnd)
 {
     PAINTSTRUCT ps;
     RECT rt;
-    HDC hdc;
 
     GetClientRect(hWnd, &rt);
-    hdc = BeginPaint(hWnd, &ps);
+    BeginPaint(hWnd, &ps);
     FillRect(ps.hdc, &rt, GetSysColorBrush(COLOR_BTNFACE));
     EndPaint(hWnd, &ps);
 }
@@ -298,17 +297,6 @@ LRESULT CALLBACK AddressBarProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			break;
 	}
 	return CallWindowProc(oldwndproc, hwnd, uMsg, wParam, lParam);
-}
-
-/* fix coords to top-left when SHIFT-F10 is pressed */
-void FixPointIfContext(POINTS *pt, HWND hWnd)
-{
-    if (pt->x == -1 && pt->y == -1) {
-        POINT p = { 0, 0 };
-        ClientToScreen(hWnd, &p);
-        pt->x = (WORD)(p.x);
-        pt->y = (WORD)(p.y);
-    }
 }
 
 /*******************************************************************************
@@ -578,16 +566,29 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
     case WM_CONTEXTMENU:
     {
-      POINTS pt;
+      POINT pt;
       if((HWND)wParam == pChildWnd->hListWnd)
       {
         int i, cnt;
         BOOL IsDefault;
-        pt.x = LOWORD(lParam);
-		pt.y = HIWORD(lParam);
+        pt.x = (short) LOWORD(lParam);
+        pt.y = (short) HIWORD(lParam);
         cnt = ListView_GetSelectedCount(pChildWnd->hListWnd);
         i = ListView_GetNextItem(pChildWnd->hListWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
-        FixPointIfContext(&pt, pChildWnd->hListWnd);
+        if (pt.x == -1 && pt.y == -1)
+        {
+            RECT rc;
+            if (i != -1)
+            {
+                rc.left = LVIR_BOUNDS;
+                SendMessage(pChildWnd->hListWnd, LVM_GETITEMRECT, i, (LPARAM) &rc);
+                pt.x = rc.left + 8;
+                pt.y = rc.top + 8;
+            }
+            else
+                pt.x = pt.y = 0;
+            ClientToScreen(pChildWnd->hListWnd, &pt);
+        }
         if(i == -1)
         {
           TrackPopupMenu(GetSubMenu(hPopupMenus, PM_NEW), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
@@ -621,14 +622,33 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         int iLastPos;
         WORD wID;
 
-        pt.x = LOWORD(lParam);
-		pt.y = HIWORD(lParam);
-        hti.pt.x = pt.x;
-        hti.pt.y = pt.y;
-        ScreenToClient(pChildWnd->hTreeWnd, &hti.pt);
-        (void)TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
+        pt.x = (short) LOWORD(lParam);
+        pt.y = (short) HIWORD(lParam);
 
-        if ((hti.flags & TVHT_ONITEM) != 0 || (pt.x == -1 && pt.y == -1))
+        if (pt.x == -1 && pt.y == -1)
+        {
+            RECT rc;
+            hti.hItem = TreeView_GetSelection(pChildWnd->hTreeWnd);
+            if (hti.hItem != NULL)
+            {
+                TreeView_GetItemRect(pChildWnd->hTreeWnd, hti.hItem, &rc, TRUE);
+                pt.x = rc.left + 8;
+                pt.y = rc.top + 8;
+                ClientToScreen(pChildWnd->hTreeWnd, &pt);
+                hti.flags = TVHT_ONITEM;
+            }
+            else
+                hti.flags = 0;
+        }
+        else
+        {
+            hti.pt.x = pt.x;
+            hti.pt.y = pt.y;
+            ScreenToClient(pChildWnd->hTreeWnd, &hti.pt);
+            (void)TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
+        }
+
+        if (hti.flags & TVHT_ONITEM)
         {
           hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
           (void)TreeView_SelectItem(pChildWnd->hTreeWnd, hti.hItem);
@@ -689,7 +709,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
               s += _tcslen(s) + 1;
 			}
 		  }
-          FixPointIfContext(&pt, pChildWnd->hTreeWnd);
           TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, pChildWnd->hWnd, NULL);
         }
       }

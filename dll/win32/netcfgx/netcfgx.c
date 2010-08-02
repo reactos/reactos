@@ -290,6 +290,7 @@ InstallAdditionalServices(
 	IN HWND hWnd)
 {
 	BOOL ret;
+	UNICODE_STRING TcpipServicePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Tcpip");
 
 	/* Install TCP/IP protocol */
 	ret = InstallInfSection(
@@ -302,6 +303,17 @@ InstallAdditionalServices(
 		DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
 		return GetLastError();
 	}
+	else if (ret)
+	{
+		/* Start the TCP/IP driver */
+		ret = NtLoadDriver(&TcpipServicePath);
+		if (ret)
+		{
+			/* This isn't really fatal but we want to warn anyway */
+			DPRINT1("NtLoadDriver(TCPIP) failed with NTSTATUS 0x%lx\n", (NTSTATUS)ret);
+		}
+	}
+        
 
 	/* You can add here more clients (SMB...) and services (DHCP server...) */
 
@@ -324,8 +336,7 @@ InstallNetDevice(
 	HKEY hNetworkKey = NULL;
 	HKEY hLinkageKey = NULL;
 	HKEY hConnectionKey = NULL;
-	DWORD dwShowIcon, dwLength;
-	SP_DEVINSTALL_PARAMS_W installParams;
+	DWORD dwShowIcon, dwLength, dwValue;
 
 	/* Get Instance ID */
 	if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
@@ -406,6 +417,13 @@ InstallNetDevice(
 		goto cleanup;
 	}
 	rc = RegSetValueExW(hKey, L"SubnetMask", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+        dwValue = 1;
+	rc = RegSetValueExW(hKey, L"EnableDHCP", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
@@ -550,31 +568,6 @@ InstallNetDevice(
 		goto cleanup;
 	}
 
-	/* HACK: hpoussin, Dec 2005. TCP/IP driver is not able to manage devices
-	 * which are installed after its startup. So, we have to reboot to take
-	 * this new netcard into account.
-	 */
-	/* Should we reboot? */
-	installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
-	if (!SetupDiGetDeviceInstallParamsW(
-		DeviceInfoSet,
-		DeviceInfoData,
-		&installParams))
-	{
-		rc = GetLastError();
-		DPRINT("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", rc);
-		goto cleanup;
-	}
-	installParams.Flags |= DI_NEEDRESTART;
-	if (!SetupDiSetDeviceInstallParamsW(
-		DeviceInfoSet,
-		DeviceInfoData,
-		&installParams))
-	{
-		rc = GetLastError();
-		DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", rc);
-		goto cleanup;
-	}
 	rc = ERROR_SUCCESS;
 
 cleanup:

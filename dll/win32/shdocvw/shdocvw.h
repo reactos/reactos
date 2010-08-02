@@ -37,8 +37,11 @@
 #include "exdisp.h"
 #include "mshtmhst.h"
 #include "hlink.h"
+#include "htiframe.h"
 
 #include "wine/unicode.h"
+#include "resource.h"
+
 
 /**********************************************************************
  * Shell Instance Objects
@@ -78,6 +81,7 @@ struct DocHost {
     const IOleDocumentSiteVtbl    *lpOleDocumentSiteVtbl;
     const IOleCommandTargetVtbl   *lpOleCommandTargetVtbl;
     const IDispatchVtbl           *lpDispatchVtbl;
+    const IPropertyNotifySinkVtbl *lpIPropertyNotifySinkVtbl;
     const IServiceProviderVtbl    *lpServiceProviderVtbl;
 
     /* Interfaces of InPlaceFrame object */
@@ -91,6 +95,7 @@ struct DocHost {
 
     IUnknown *document;
     IOleDocumentView *view;
+    IUnknown *doc_navigate;
 
     HWND hwnd;
     HWND frame_hwnd;
@@ -100,6 +105,11 @@ struct DocHost {
     VARIANT_BOOL silent;
     VARIANT_BOOL offline;
     VARIANT_BOOL busy;
+
+    READYSTATE ready_state;
+    READYSTATE doc_state;
+    DWORD prop_notif_cookie;
+    BOOL is_prop_notif;
 
     ConnectionPointContainer cps;
 };
@@ -119,7 +129,9 @@ struct WebBrowser {
     const IOleInPlaceActiveObjectVtbl   *lpOleInPlaceActiveObjectVtbl;
     const IOleCommandTargetVtbl         *lpOleCommandTargetVtbl;
     const IHlinkFrameVtbl               *lpHlinkFrameVtbl;
+    const ITargetFrame2Vtbl             *lpITargetFrame2Vtbl;
     const IServiceProviderVtbl          *lpServiceProviderVtbl;
+    const IDataObjectVtbl               *lpDataObjectVtbl;
 
     LONG ref;
 
@@ -177,6 +189,8 @@ struct InternetExplorer {
 #define ACTIVEOBJ(x)    ((IOleInPlaceActiveObject*)     &(x)->lpOleInPlaceActiveObjectVtbl)
 #define OLECMD(x)       ((IOleCommandTarget*)           &(x)->lpOleCommandTargetVtbl)
 #define HLINKFRAME(x)   ((IHlinkFrame*)                 &(x)->lpHlinkFrameVtbl)
+#define DATAOBJECT(x)   ((IDataObject*)                 &(x)->lpDataObjectVtbl)
+#define TARGETFRAME2(x) ((ITargetFrame2*)               &(x)->lpITargetFrame2Vtbl)
 
 #define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
 #define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
@@ -184,12 +198,14 @@ struct InternetExplorer {
 #define DOCHOSTUI2(x)   ((IDocHostUIHandler2*)          &(x)->lpDocHostUIHandlerVtbl)
 #define DOCSITE(x)      ((IOleDocumentSite*)            &(x)->lpOleDocumentSiteVtbl)
 #define CLDISP(x)       ((IDispatch*)                   &(x)->lpDispatchVtbl)
+#define PROPNOTIF(x)    ((IPropertyNotifySink*)         &(x)->lpIPropertyNotifySinkVtbl)
 #define SERVPROV(x)     ((IServiceProvider*)            &(x)->lpServiceProviderVtbl)
 
 #define INPLACEFRAME(x) ((IOleInPlaceFrame*)            &(x)->lpOleInPlaceFrameVtbl)
 
 void WebBrowser_OleObject_Init(WebBrowser*);
 void WebBrowser_ViewObject_Init(WebBrowser*);
+void WebBrowser_DataObject_Init(WebBrowser*);
 void WebBrowser_Persist_Init(WebBrowser*);
 void WebBrowser_ClassInfo_Init(WebBrowser*);
 void WebBrowser_HlinkFrame_Init(WebBrowser*);
@@ -199,6 +215,7 @@ void WebBrowser_OleObject_Destroy(WebBrowser*);
 void DocHost_Init(DocHost*,IDispatch*);
 void DocHost_ClientSite_Init(DocHost*);
 void DocHost_Frame_Init(DocHost*);
+void release_dochost_client(DocHost*);
 
 void DocHost_Release(DocHost*);
 void DocHost_ClientSite_Release(DocHost*);
@@ -211,10 +228,11 @@ HRESULT WebBrowserV2_Create(IUnknown*,REFIID,void**);
 
 void create_doc_view_hwnd(DocHost*);
 void deactivate_document(DocHost*);
-void object_available(DocHost*);
+HRESULT dochost_object_available(DocHost*,IUnknown*);
 void call_sink(ConnectionPoint*,DISPID,DISPPARAMS*);
 HRESULT navigate_url(DocHost*,LPCWSTR,const VARIANT*,const VARIANT*,VARIANT*,VARIANT*);
 HRESULT go_home(DocHost*);
+void set_doc_state(DocHost*,READYSTATE);
 
 #define WM_DOCHOSTTASK (WM_USER+0x300)
 void push_dochost_task(DocHost*,task_header_t*,task_proc_t,BOOL);
@@ -226,6 +244,8 @@ void InternetExplorer_WebBrowser_Init(InternetExplorer*);
 HRESULT CUrlHistory_Create(IUnknown*,REFIID,void**);
 
 HRESULT InternetShortcut_Create(IUnknown*,REFIID,void**);
+
+HRESULT TaskbarList_Create(IUnknown*,REFIID,void**);
 
 #define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
@@ -244,11 +264,18 @@ HRESULT register_class_object(BOOL);
 HRESULT get_typeinfo(ITypeInfo**);
 DWORD register_iexplore(BOOL);
 
+const char *debugstr_variant(const VARIANT*);
+
 /* memory allocation functions */
 
 static inline void *heap_alloc(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+static inline void *heap_alloc_zero(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
 static inline void *heap_realloc(void *mem, size_t len)

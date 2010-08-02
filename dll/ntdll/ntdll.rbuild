@@ -4,16 +4,15 @@
 	<module name="ntsys" type="staticlibrary">
 		<importlibrary definition="def/ntsys.pspec" dllname="ntdll.dll" root="intermediate" />
 	</module>
-	<module name="ntdll" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
+	<module name="ntdll" type="nativedll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
-		<importlibrary definition="def/ntdll_$(ARCH).def" />
+		<importlibrary definition="def/ntdll.pspec" />
 		<include base="ntdll">include</include>
 		<include base="ntdll" root="intermediate"></include>
 		<include base="ReactOS">include/reactos/subsys</include>
 		<define name="__NTDLL__" />
-		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTOSKRNL_" />
-		<define name="__NO_CTYPE_INLINES" />
+		<define name="CRTDLL" />
 		<library>rtl</library>
 		<library>ntdllsys</library>
 		<library>libcntpr</library>
@@ -33,6 +32,11 @@
 					<file>dispatch.S</file>
 				</directory>
 			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>stubs.c</file>
+				</directory>
+			</if>
 			<if property="ARCH" value="arm">
 				<directory name="arm">
 					<file>stubs_asm.s</file>
@@ -48,6 +52,7 @@
 		<directory name="ldr">
 			<file>startup.c</file>
 			<file>utils.c</file>
+			<file>actctx.c</file>
 		</directory>
 		<directory name="rtl">
 			<file>libsupp.c</file>

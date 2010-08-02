@@ -5,8 +5,7 @@
  *      IRC: irc.freenode.net #reactos-pl;
  */
 
-#ifndef LANG_PL_PL_H__
-#define LANG_PL_PL_H__
+#pragma once
 
 MUI_LAYOUTS plPLLayouts[] =
 {
@@ -1487,6 +1486,12 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Brak wystarczaj¥cej wolnej przestrzeni w wybranej partycji.\n"
+        "  * Naci˜nij dowolny klawisz aby kontynuowa†.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1624,7 +1629,7 @@ MUI_STRING plPLStrings[] =
     {STRING_TXTSETUPFAILED,
     "Instalator nie byˆ w stanie odnale«† sekji '%S'\nw pliku TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kopiowanie plik¢w: %S"},
+     "   Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalator kopiuje pliki..."},
     {STRING_REGHIVEUPDATE,
@@ -1703,5 +1708,3 @@ MUI_STRING plPLStrings[] =
     "Dodawanie ukˆad¢w klawiatury"},
     {0, 0}
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __WIN32K_COORD_H
-#define __WIN32K_COORD_H
+#pragma once
 
 #include <include/dc.h>
 
@@ -19,6 +18,6 @@ IntGdiModifyWorldTransform(PDC pDc,
                            DWORD Mode);
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
-void FASTCALL IntFixIsotropicMapping(PDC dc);
-
-#endif
+void FASTCALL IntFixIsotropicMapping(PDC);
+LONG FASTCALL IntCalcFillOrigin(PDC);
+PPOINTL FASTCALL IntptlBrushOrigin(PDC pdc,LONG,LONG);

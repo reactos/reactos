@@ -25,12 +25,17 @@
 %{
 #include "config.h"
 #include <assert.h>
+#include <stdarg.h>
 
 #ifndef HAVE_UNISTD_H
 #define YY_NO_UNISTD_H
 #endif
 
-#include "macro.h"
+#include "windef.h"
+#include "winbase.h"
+#include "wingdi.h"
+#include "winuser.h"
+#include "winhelp.h"
 
 #include "wine/debug.h"
 
@@ -43,6 +48,7 @@ struct lex_data {
     unsigned quote_stk_idx;
     LPSTR    cache_string[32];
     int      cache_used;
+    WINHELP_WINDOW* window;
 };
 static struct lex_data* lex_data = NULL;
 
@@ -146,7 +152,7 @@ static const char* ts(int t)
     }
 }
 
-static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret);
+static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret);
 
 /******************************************************************
  *		MACRO_CheckArgs
@@ -216,7 +222,7 @@ CheckArgs_end:
  * Invokes boolean function fn, which arguments are defined by args
  * stores bool result into ret
  */
-static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
+static int MACRO_CallBoolFunc(void *fn, const char* args, void** ret)
 {
     void*       pa[2];
     int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
@@ -228,8 +234,18 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
 
     switch (strlen(args))
     {
-    case 0: *ret = (void*)(fn)();          break;
-    case 1: *ret = (void*)(fn)(pa[0]);     break;
+    case 0:
+    {
+        BOOL (WINAPI *func)(void) = fn;
+        *ret = (void *)(ULONG_PTR)func();
+        break;
+    }
+    case 1:
+    {
+        BOOL (WINAPI *func)(void *) = fn;
+        *ret = (void *)(ULONG_PTR)func( pa[0]);
+        break;
+    }
     default: WINE_FIXME("NIY\n");
     }
 
@@ -241,7 +257,7 @@ static int MACRO_CallBoolFunc(FARPROC fn, const char* args, void** ret)
  *
  *
  */
-static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
+static int MACRO_CallVoidFunc(void *fn, const char* args)
 {
     void*       pa[6];
     int         idx = MACRO_CheckArgs(pa, sizeof(pa)/sizeof(pa[0]), args);
@@ -253,20 +269,55 @@ static int MACRO_CallVoidFunc(FARPROC fn, const char* args)
 
     switch (strlen(args))
     {
-    case 0: (fn)();                                     break;
-    case 1: (fn)(pa[0]);                                break;
-    case 2: (fn)(pa[0],pa[1]);                          break;
-    case 3: (fn)(pa[0],pa[1],pa[2]);                    break;
-    case 4: (fn)(pa[0],pa[1],pa[2],pa[3]);              break;
-    case 5: (fn)(pa[0],pa[1],pa[2],pa[3],pa[4]);        break;
-    case 6: (fn)(pa[0],pa[1],pa[2],pa[3],pa[4],pa[5]);  break;
+    case 0:
+    {
+        void (WINAPI *func)(void) = fn;
+        func();
+        break;
+    }
+    case 1:
+    {
+        void (WINAPI *func)(void*) = fn;
+        func( pa[0] );
+        break;
+    }
+    case 2:
+    {
+        void (WINAPI *func)(void*,void*) = fn;
+        func( pa[0], pa[1] );
+        break;
+    }
+    case 3:
+    {
+        void (WINAPI *func)(void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2] );
+        break;
+    }
+    case 4:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3] );
+        break;
+    }
+    case 5:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3], pa[4] );
+        break;
+    }
+    case 6:
+    {
+        void (WINAPI *func)(void*,void*,void*,void*,void*,void*) = fn;
+        func( pa[0], pa[1], pa[2], pa[3], pa[4], pa[5] );
+        break;
+    }
     default: WINE_FIXME("NIY\n");
     }
 
     return 1;
 }
 
-BOOL MACRO_ExecuteMacro(LPCSTR macro)
+BOOL MACRO_ExecuteMacro(WINHELP_WINDOW* window, LPCSTR macro)
 {
     struct lex_data     curr_lex_data, *prev_lex_data;
     BOOL ret = TRUE;
@@ -279,6 +330,7 @@ BOOL MACRO_ExecuteMacro(LPCSTR macro)
 
     memset(lex_data, 0, sizeof(*lex_data));
     lex_data->macroptr = macro;
+    lex_data->window = WINHELP_GrabWindow(window);
 
     while ((t = yylex()) != EMPTY)
     {
@@ -293,13 +345,15 @@ BOOL MACRO_ExecuteMacro(LPCSTR macro)
             break;
         default:
             WINE_WARN("got unexpected type %s\n", ts(t));
-            return 0;
+            YY_FLUSH_BUFFER;
+            ret = FALSE;
+            goto done;
         }
         switch (t = yylex())
         {
         case EMPTY:     goto done;
         case ';':       break;
-        default:        ret = FALSE; goto done;
+        default:        ret = FALSE; YY_FLUSH_BUFFER; goto done;
         }
     }
 
@@ -307,8 +361,14 @@ done:
     for (t = 0; t < lex_data->cache_used; t++)
         HeapFree(GetProcessHeap(), 0, lex_data->cache_string[t]);
     lex_data = prev_lex_data;
+    WINHELP_ReleaseWindow(window);
 
     return ret;
+}
+
+WINHELP_WINDOW* MACRO_CurrentWindow(void)
+{
+    return lex_data ? lex_data->window : Globals.active_win;
 }
 
 #ifndef yywrap

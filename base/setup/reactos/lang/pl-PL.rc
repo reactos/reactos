@@ -66,25 +66,25 @@ BEGIN
     LISTBOX IDC_PARTITION, 20,12,278,142,LBS_HASSTRINGS | WS_VSCROLL
     PUSHBUTTON "&Stwórz", IDC_PARTCREATE, 20,155,50,15
     PUSHBUTTON "&Usuñ", IDC_PARTDELETE, 76,155,50,15
-    PUSHBUTTON "D&river", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
+    PUSHBUTTON "s&terownik", IDC_DEVICEDRIVER, 162,155,50,15, WS_DISABLED
     PUSHBUTTON "&Opcje zaawansowane...", IDC_PARTMOREOPTS, 218,155,80,15
     LTEXT "Naciœnij Dalej aby rozpocz¹æ proces instalacji.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PARTITION DIALOGEX DISCARDABLE  0, 0, 145, 90
 STYLE WS_VISIBLE|WS_CAPTION|WS_THICKFRAME
-CAPTION "Create Partition"
+CAPTION "Stwórz partycjê"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "",IDC_UPDOWN1,"msctls_updown32", WS_VISIBLE,104,22,9,13
-    CONTROL "Create and format partition",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
-    LTEXT "Size:",IDC_STATIC, 13,24,27,9
+    CONTROL "Stwórz i sformatuj partycjê",IDC_STATIC,"Button",BS_GROUPBOX,7,5,129,57
+    LTEXT "Rozmiar:",IDC_STATIC, 13,24,27,9
     EDITTEXT IDC_PARTSIZE,52,23,53,13, WS_VISIBLE|WS_TABSTOP
     LTEXT "GB",IDC_UNIT, 117,24,14,9
-    LTEXT "Filesystem:",IDC_STATIC,13,46,35,9
+    LTEXT "System plików:",IDC_STATIC,13,46,35,9
     CONTROL "",IDC_FSTYPE,"ComboBox",WS_VISIBLE|WS_TABSTOP|CBS_DROPDOWNLIST,52,42,79,50
     PUSHBUTTON "&OK",IDOK,35,68,47,15, WS_VISIBLE|WS_TABSTOP
-    PUSHBUTTON "&Cancel",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
+    PUSHBUTTON "&Anuluj",IDCANCEL,87,68,47,15, WS_VISIBLE|WS_TABSTOP
 END
 
 IDD_BOOTOPTIONS DIALOGEX DISCARDABLE  0, 0, 305, 105
@@ -105,11 +105,11 @@ END
 
 IDD_SUMMARYPAGE DIALOGEX 0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Instalator ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "Installation summary", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
-    LTEXT "Click Next to start the installation process.", IDC_STATIC, 10, 180 ,277, 20
+    CONTROL "Podsumowanie instalacji", IDC_ACTION, "Button", BS_GROUPBOX, 10,0,297,172
+    LTEXT "Kliknij Dalej aby rozpocz¹æ proces instalacji.", IDC_STATIC, 10, 180 ,277, 20
 END
 
 IDD_PROCESSPAGE DIALOGEX 0, 0, 317, 193
@@ -151,8 +151,8 @@ BEGIN
     IDS_PROCESSSUBTITLE "Przygotuj i sformatuj partycjê, skopiuj pliki, skopiuj i zainstaluj bootloader"
     IDS_RESTARTTITLE    "Pierwszy etap instalacji zakoñczony sukcesem"
     IDS_RESTARTSUBTITLE "Pierwszy etap instalacji zosta³ zakoñczony, uruchom ponownie komputer aby przejœæ do drugiego etapu"
-    IDS_SUMMARYTITLE    "Installation Summary"
-    IDS_SUMMARYSUBTITLE "List installation properties to check before apply to the installation device"
+    IDS_SUMMARYTITLE    "Podsumowanie instalacji"
+    IDS_SUMMARYSUBTITLE "SprawdŸ ustawienia instalacji przed dokonaniem zmian na dysku"
     IDS_ABORTSETUP      "Instalacja ReactOS nie zosta³a ukoñczona na tym komputerze. Jeœli teraz zakoñczysz instalacjê, bêdziesz musia³ uruchomiæ Instalator ponownie, aby zainstalowaæ Reactos. Na pewno zakoñczyæ?"
     IDS_ABORTSETUP2     "Przerwaæ instalacjê?"
 END

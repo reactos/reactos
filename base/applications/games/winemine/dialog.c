@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <windows.h>
@@ -141,7 +141,7 @@ INT_PTR CALLBACK TimesDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
                         SetDlgItemText( hDlg, (IDC_NAME1) + i, pBoard->szBestName[i] );
                         SetDlgItemText( hDlg, (IDC_TIME1) + i, szTimes );
                     }
-                    
+
                     /* Write the changes to the registry
                        As we write to the same registry key as MS WinMine does, we have to start at 1 for the registry keys */
                     for( i = 0; i < 3; i++ )
