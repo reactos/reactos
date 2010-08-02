@@ -25,7 +25,7 @@ typedef struct _GDI_OBJ_ATTR_ENTRY
   RGN_ATTR Attr[GDIOBJATTRFREE];
 } GDI_OBJ_ATTR_ENTRY, *PGDI_OBJ_ATTR_ENTRY;
 
-static const ULONG HatchBrushes[NB_HATCH_STYLES][8] =
+static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
 {
     {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF}, /* HS_HORIZONTAL */
     {0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7}, /* HS_VERTICAL   */
@@ -256,8 +256,7 @@ IntGdiCreateDIBBrush(
     PBRUSH pbrush;
     HBITMAP hPattern;
     ULONG_PTR DataPtr;
-    PSURFACE psurfPattern;
-    HPALETTE hpal ;
+    PVOID pvDIBits;
 
     if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
     {
@@ -267,25 +266,17 @@ IntGdiCreateDIBBrush(
 
     DataPtr = (ULONG_PTR)BitmapInfo + DIB_BitmapInfoSize(BitmapInfo, ColorSpec);
 
-    hPattern = GreCreateBitmap(BitmapInfo->bmiHeader.biWidth,
-                                  BitmapInfo->bmiHeader.biHeight,
-                                  BitmapInfo->bmiHeader.biPlanes,
-                                  BitmapInfo->bmiHeader.biBitCount,
-                                  (PVOID)DataPtr);
+    hPattern = DIB_CreateDIBSection(NULL, BitmapInfo, ColorSpec, &pvDIBits, NULL, 0, 0);
     if (hPattern == NULL)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
-
-    psurfPattern = SURFACE_LockSurface(hPattern);
-    ASSERT(psurfPattern != NULL);
-	if(ColorSpec == DIB_PAL_COLORS) DPRINT1("FIXME, unsupported color spec!\n");
-    hpal = BuildDIBPalette(BitmapInfo);
-    psurfPattern->ppal = PALETTE_ShareLockPalette(hpal);
-    /* Lazy delete palette, it will be freed when its shared reference is zeroed */
-    GreDeleteObject(hpal);
-    SURFACE_UnlockSurface(psurfPattern);
+	RtlCopyMemory(pvDIBits,
+		          (PVOID)DataPtr,
+				  DIB_GetDIBImageBytes(BitmapInfo->bmiHeader.biWidth,
+                                       BitmapInfo->bmiHeader.biHeight,
+                                       BitmapInfo->bmiHeader.biBitCount * BitmapInfo->bmiHeader.biPlanes));
 
     pbrush = BRUSH_AllocBrushWithHandle();
     if (pbrush == NULL)

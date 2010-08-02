@@ -284,14 +284,24 @@ NtGdiSelectBitmap(
     }
 
     /* Get the handle for the old bitmap */
-    psurfOld = pDC->dclevel.pSurface;
-    hOrgBmp = psurfOld ? psurfOld->BaseObject.hHmgr : NULL;
+    ASSERT(pDC->dclevel.pSurface);
+    hOrgBmp = pDC->dclevel.pSurface->BaseObject.hHmgr;
+
+	/* Lock it, to be sure while we mess with it*/
+	psurfOld = SURFACE_LockSurface(hOrgBmp);
+
+	/* Reset hdc, this surface isn't selected anymore */
+	psurfOld->hdc = NULL;
 
     /* Release the old bitmap, reference the new */
     DC_vSelectSurface(pDC, psurfBmp);
 
+	/* And unlock it, now we're done */
+	SURFACE_UnlockSurface(psurfOld);
+
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
     psurfBmp->hdc = hDC;
+
 
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,

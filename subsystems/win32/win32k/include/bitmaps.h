@@ -32,7 +32,8 @@ GreCreateBitmapEx(
     IN ULONG iFormat,
     IN USHORT fjBitmap,
     IN ULONG cjBits,
-    IN OPTIONAL PVOID pvBits);
+    IN OPTIONAL PVOID pvBits,
+	IN FLONG flags);
 
 HBITMAP
 FASTCALL

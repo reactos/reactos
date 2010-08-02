@@ -76,14 +76,14 @@ GreCreateBitmapEx(
     IN ULONG iFormat,
     IN USHORT fjBitmap,
     IN ULONG cjSizeImage,
-    IN OPTIONAL PVOID pvBits)
+    IN OPTIONAL PVOID pvBits,
+	IN FLONG flags)
 {
     PSURFACE psurf;
     SURFOBJ *pso;
     HBITMAP hbmp;
     PVOID pvCompressedBits;
     SIZEL sizl;
-    FLONG fl = 0;
 
     /* Verify format */
     if (iFormat < BMF_1BPP || iFormat > BMF_PNG) return NULL;
@@ -107,7 +107,7 @@ GreCreateBitmapEx(
         pvCompressedBits = pvBits;
         pvBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
         Decompress4bpp(sizl, pvCompressedBits, pvBits, pso->lDelta);
-        fl |= BMF_RLE_HACK;
+        fjBitmap |= BMF_RLE_HACK;
     }
     else if (iFormat == BMF_8RLE)
     {
@@ -115,8 +115,11 @@ GreCreateBitmapEx(
         pvCompressedBits = pvBits;
         pvBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
         Decompress8bpp(sizl, pvCompressedBits, pvBits, pso->lDelta);
-        fl |= BMF_RLE_HACK;
+        fjBitmap |= BMF_RLE_HACK;
     }
+
+	/* Mark as API bitmap */
+	psurf->flags |= (flags | API_BITMAP);
 
     /* Set the bitmap bits */
     if (!SURFACE_bSetBitmapBits(psurf, fjBitmap, cjWidthBytes, pvBits))
@@ -127,14 +130,14 @@ GreCreateBitmapEx(
         return NULL;
     }
 
-    /* Mark as API bitmap */
-    psurf->flags |= API_BITMAP;
-
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
     return hbmp;
 }
 
+/* Creates a DDB surface,
+ * as in CreateCompatibleBitmap or CreateBitmap.
+ */
 HBITMAP
 APIENTRY
 GreCreateBitmap(
@@ -151,7 +154,8 @@ GreCreateBitmap(
                              BitmapFormat(cBitsPixel * cPlanes, BI_RGB),
                              0, /* no bitmap flags */
                              0, /* auto size */
-                             pvBits);
+                             pvBits,
+							 DDB_SURFACE /* DDB */);
 }
 
 HBITMAP
@@ -163,10 +167,7 @@ NtGdiCreateBitmap(
     IN UINT cBitsPixel,
     IN OPTIONAL LPBYTE pUnsafeBits)
 {
-    PSURFACE psurf;
-    SURFOBJ *pso;
     HBITMAP hbmp;
-    FLONG fl = 0;
     ULONG cjWidthBytes, iFormat;
 
     /* NOTE: Windows also doesn't store nr. of planes separately! */
@@ -185,7 +186,7 @@ NtGdiCreateBitmap(
     }
 
     /* Make sure that cjBits will not overflow */
-    cjWidthBytes = DIB_GetDIBWidthBytes(nWidth, cBitsPixel);
+    cjWidthBytes = BITMAP_GetWidthBytes(nWidth, cBitsPixel);
     if ((ULONGLONG)cjWidthBytes * nHeight >= 0x100000000ULL)
     {
         DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
@@ -194,30 +195,12 @@ NtGdiCreateBitmap(
         return NULL;
     }
 
-    /* Allocate a surface */
-    psurf = SURFACE_AllocSurface(STYPE_BITMAP, nWidth, nHeight, iFormat);
-    if (!psurf)
-    {
-        DPRINT1("SURFACE_AllocSurface failed.\n");
-        EngSetLastError(ERROR_OUTOFMEMORY);
-        return NULL;
-    }
+	/* cBitsPixel = cBitsPixel * cPlanes now! */
+	hbmp = GreCreateBitmap(nWidth, nHeight, 1, cBitsPixel, NULL);
 
-    /* Get the handle for the bitmap and the surfobj */
-    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
-    pso = &psurf->SurfObj;
-
-    /* Allocate the bitmap bits */
-    if (!SURFACE_bSetBitmapBits(psurf, fl, 0, NULL))
-    {
-        /* Bail out if that failed */
-        DPRINT1("SURFACE_bSetBitmapBits failed.\n");
-        SURFACE_FreeSurfaceByHandle(hbmp);
-        return NULL;
-    }
-    
     if (pUnsafeBits)
     {
+		PSURFACE psurf = SURFACE_LockSurface(hbmp);
         _SEH2_TRY
         {
             ProbeForRead(pUnsafeBits, cjWidthBytes * nHeight, 1);
@@ -225,17 +208,15 @@ NtGdiCreateBitmap(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+			SURFACE_UnlockSurface(psurf);
             SURFACE_FreeSurfaceByHandle(hbmp);
             _SEH2_YIELD(return NULL;)
         }
         _SEH2_END
+
+		SURFACE_UnlockSurface(psurf);
     }
 
-    /* Mark as API bitmap */
-    psurf->flags |= API_BITMAP;
-
-    /* Unlock the surface and return */
-    SURFACE_UnlockSurface(psurf);
     return hbmp;
 }
 
@@ -931,7 +912,8 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
 							Bitmap->SurfObj.iBitmapFormat,
 							Bitmap->SurfObj.fjBitmap,
 							Bitmap->SurfObj.cjBits,
-							NULL);
+							NULL,
+							Bitmap->flags);
 
 
     if (res)
@@ -1051,5 +1033,6 @@ NtGdiGetDCforBitmap(
     }
     return hdc;
 }
+
 
 /* EOF */

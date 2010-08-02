@@ -1463,10 +1463,20 @@ DIB_CreateDIBSection(
 
     if (usage == DIB_PAL_COLORS)
     {
-		PPALETTE pdcPal ;
-        pdcPal = PALETTE_LockPalette(dc->dclevel.hpal);
-		hpal = DIB_MapPaletteColors(pdcPal, bmi);
-		PALETTE_UnlockPalette(pdcPal);
+		if(dc)
+		{
+			PPALETTE pdcPal ;
+			pdcPal = PALETTE_LockPalette(dc->dclevel.hpal);
+			hpal = DIB_MapPaletteColors(pdcPal, bmi);
+			PALETTE_UnlockPalette(pdcPal);
+		}
+		else
+		{
+			/* For DIB Brushes */
+			DPRINT1("FIXME : Unsupported DIB_PAL_COLORS without a DC to map colors.\n");
+			/* HACK */
+			hpal = (HPALETTE) 0xFFFFFFFF;
+		}
     }
     else 
 	{
@@ -1475,7 +1485,7 @@ DIB_CreateDIBSection(
 
 	if(!hpal)
 	{
-		DPRINT1("Error : Could not create a aplette for the DIB.\n");
+		DPRINT1("Error : Could not create a palette for the DIB.\n");
 		goto cleanup;
 	}
 
@@ -1489,7 +1499,8 @@ DIB_CreateDIBSection(
                             BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
                               (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
                             bi->biSizeImage,
-                            bm.bmBits);
+                            bm.bmBits,
+							0);
     if (!res)
     {
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
@@ -1512,9 +1523,13 @@ DIB_CreateDIBSection(
     bmp->flags = API_BITMAP;
     bmp->biClrImportant = bi->biClrImportant;
 
-	bmp->ppal = PALETTE_ShareLockPalette(hpal);
-    /* Lazy delete hpal, it will be freed at surface release */
-    GreDeleteObject(hpal);
+	/* HACK */
+	if(hpal != (HPALETTE)0xFFFFFFFF)
+	{
+		bmp->ppal = PALETTE_ShareLockPalette(hpal);
+		/* Lazy delete hpal, it will be freed at surface release */
+		GreDeleteObject(hpal);
+	}
 
     // Clean up in case of errors
 cleanup:
