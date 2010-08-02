@@ -1,4 +1,4 @@
-ter/* $Id$
+/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
