@@ -1,8 +1,0 @@
-#include "resource.h"
-
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DllNotLoaded,   "Erro ao carregar '%s'"
-    IDS_MissingEntry,   "Está faltando a entrada:%s\nem %s"
-END

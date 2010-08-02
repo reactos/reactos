@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="kbdpo" type="keyboardlayout" entrypoint="0" installbase="system32" installname="kbdpo.dll">
-	<importlibrary definition="kbdpo.spec" />
-	<include base="ntoskrnl">include</include>
-	<file>kbdpo.c</file>
-	<file>kbdpo.rc</file>
-</module>

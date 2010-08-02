@@ -1,5 +1,0 @@
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS US Dvorak Keyboard Layout\0"
-#define REACTOS_STR_INTERNAL_NAME	"kbddv\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"kbddv.dll\0"
-#include <reactos/version.rc>
