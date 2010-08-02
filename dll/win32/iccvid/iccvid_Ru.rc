@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_NAME "Видео кодер-декодер Cinepak"
     IDS_DESCRIPTION "Видео кодер-декодер Cinepak"

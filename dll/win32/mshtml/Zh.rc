@@ -2,6 +2,7 @@
  * mshtml (Simplified and Traditional Chinese Resources)
  *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -25,7 +26,7 @@
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_HTMLDISABLED    "HTML 功能目前已被停用."
     IDS_HTMLDOCUMENT    "HTML 文件"
@@ -33,21 +34,20 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "正在安装..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
+ID_DWL_DIALOG DIALOG  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Wine Gecko 安装"
 FONT 9, "MS Shell Dlg"
 {
-    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
-          "to work correctly. Wine can automatically download and install it for you.\n\n" \
-          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+    LTEXT "Wine 未找到到用于支持嵌入 HTML 的 Gecko 引擎。Wine 可以自动并下载安装它。\n\n" \
+          "注意: 推荐您安装为发行版定制的软件包。具体参看 http://wiki.winehq.org/Gecko。",
           ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
-    CONTROL "Progress", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12
+    CONTROL "进度", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12
     DEFPUSHBUTTON "安装(&I)", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
     PUSHBUTTON "取消(&C)", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
-IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
+IDD_HYPERLINK DIALOG 0, 0, 250, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "超链接"
 FONT 9, "MS Shell Dlg"
@@ -61,9 +61,20 @@ FONT 9, "MS Shell Dlg"
     PUSHBUTTON "取消", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
 }
 
+ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
+    EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "确定", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "取消", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
+}
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_HTMLDISABLED    "HTML 功能目前已被停用."
     IDS_HTMLDOCUMENT    "HTML 檔案"
@@ -71,7 +82,7 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "正在安裝..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 85
+ID_DWL_DIALOG DIALOG  0, 0, 260, 85
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Wine Gecko 安裝"
 FONT 9, "MS Shell Dlg"
@@ -84,7 +95,7 @@ FONT 9, "MS Shell Dlg"
     PUSHBUTTON "取消(&C)", IDCANCEL, 140, 60, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
-IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
+IDD_HYPERLINK DIALOG 0, 0, 250, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "超鏈接"
 FONT 9, "MS Shell Dlg"

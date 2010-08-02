@@ -3305,6 +3305,9 @@ extern "C" {
 #define TVIF_SELECTEDIMAGE 0x20
 #define TVIF_CHILDREN 0x40
 #define TVIF_INTEGRAL 0x80
+#define TVIF_STATEEX  0x100
+#define TVIF_EXPANDEDIMAGE 0x200
+#define TVIF_DI_SETITEM	0x1000
 #define TVIS_SELECTED 0x2
 #define TVIS_CUT 0x4
 #define TVIS_DROPHILITED 0x8
@@ -3365,19 +3368,22 @@ extern "C" {
     int iIntegral;
   } TVITEMEXA,*LPTVITEMEXA;
 
-  typedef struct tagTVITEMEXW {
-    UINT mask;
-    HTREEITEM hItem;
-    UINT state;
-    UINT stateMask;
-    LPWSTR pszText;
-    int cchTextMax;
-    int iImage;
-    int iSelectedImage;
-    int cChildren;
-    LPARAM lParam;
-    int iIntegral;
-  } TVITEMEXW,*LPTVITEMEXW;
+typedef struct tagTVITEMEXW {
+      UINT mask;
+      HTREEITEM hItem;
+      UINT state;
+      UINT stateMask;
+      LPWSTR pszText;
+      INT cchTextMax;
+      INT iImage;
+      INT iSelectedImage;
+      INT cChildren;
+      LPARAM lParam;
+      INT iIntegral;
+      UINT uStateEx;        /* _WIN32_IE >= 0x600 */
+      HWND hwnd;            /* _WIN32_IE >= 0x600 */
+      INT iExpandedImage;   /* _WIN32_IE >= 0x600 */
+} TVITEMEXW, *LPTVITEMEXW;
 #ifdef UNICODE
   typedef TVITEMEXW TVITEMEX;
   typedef LPTVITEMEXW LPTVITEMEX;

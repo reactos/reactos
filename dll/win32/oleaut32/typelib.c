@@ -6017,11 +6017,14 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
     unsigned int var_index;
     TYPEKIND type_kind;
     HRESULT hres;
-    const TLBFuncDesc *pFuncInfo;
+    const TLBFuncDesc *pFuncInfo = This->funclist;
 
     TRACE("(%p)(%p,id=%d,flags=0x%08x,%p,%p,%p,%p)\n",
       This,pIUnk,memid,wFlags,pDispParams,pVarResult,pExcepInfo,pArgErr
     );
+
+    if( pFuncInfo->funcdesc.wFuncFlags == FUNCFLAG_FRESTRICTED )
+        return DISP_E_MEMBERNOTFOUND;
 
     if (!pDispParams)
     {
@@ -6491,7 +6494,7 @@ func_fail:
             WARN("Could not search inherited interface!\n");
         }
     }
-    ERR("did not find member id %d, flags 0x%x!\n", memid, wFlags);
+    WARN("did not find member id %d, flags 0x%x!\n", memid, wFlags);
     return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -7654,9 +7657,9 @@ static HRESULT WINAPI ITypeComp_fnBind(
     ITypeInfoImpl *This = info_impl_from_ITypeComp(iface);
     const TLBFuncDesc *pFDesc;
     const TLBVarDesc *pVDesc;
-    HRESULT hr = DISP_E_MEMBERNOTFOUND;
+    HRESULT hr = S_OK;
 
-    TRACE("(%s, %x, 0x%x, %p, %p, %p)\n", debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
+    TRACE("(%p)->(%s, %x, 0x%x, %p, %p, %p)\n", This, debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
 
     *pDescKind = DESCKIND_NONE;
     pBindPtr->lpfuncdesc = NULL;
@@ -7716,7 +7719,7 @@ static HRESULT WINAPI ITypeComp_fnBind(
         }
         WARN("Could not search inherited interface!\n");
     }
-    WARN("did not find member with name %s, flags 0x%x!\n", debugstr_w(szName), wFlags);
+    TRACE("did not find member with name %s, flags 0x%x\n", debugstr_w(szName), wFlags);
     return hr;
 }
 

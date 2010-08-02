@@ -22,7 +22,7 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Fout bij het omzetten van het object naar een primitief type"
     IDS_INVALID_CALL_ARG    "Ongeldige procedure-aanroep of argument"

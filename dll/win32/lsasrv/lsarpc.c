@@ -1,17 +1,15 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         Local Security Authority (LSA) Server
+ * FILE:            reactos/dll/win32/lsasrv/lsarpc.h
+ * PURPOSE:         RPC interface functions
+ *
+ * PROGRAMMERS:     Eric Kohl
+ */
+
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ntsecapi.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
-#include <string.h>
-
 #include "lsasrv.h"
-#include "lsa_s.h"
-
-#include <wine/debug.h>
 
 typedef enum _LSA_DB_HANDLE_TYPE
 {
@@ -432,7 +430,6 @@ NTSTATUS LsarLookupSids(
 {
     SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
     static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"DOMAIN");
-    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
     PLSAPR_REFERENCED_DOMAIN_LIST OutputDomains = NULL;
     PLSAPR_TRANSLATED_NAME OutputNames = NULL;
     ULONG OutputNamesLength;
@@ -501,16 +498,8 @@ NTSTATUS LsarLookupSids(
         RtlCopyMemory(OutputDomains->Domains[i].Name.Buffer, DomainName.Buffer, DomainName.MaximumLength);
     }
 
-
-    for (i = 0; i < SidEnumBuffer->Entries; i++)
-    {
-        OutputNames[i].Use = SidTypeWellKnownGroup;
-        OutputNames[i].DomainIndex = i;
-        OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
-        OutputNames[i].Name.Length = UserName.Length;
-        OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
-        RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
-    }
+    Status = LsapLookupSids(SidEnumBuffer,
+                            OutputNames);
 
     *ReferencedDomains = OutputDomains;
 
@@ -519,7 +508,7 @@ NTSTATUS LsarLookupSids(
     TranslatedNames->Entries = SidEnumBuffer->Entries;
     TranslatedNames->Names = OutputNames;
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 

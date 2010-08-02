@@ -162,6 +162,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "S&chlüsselnamen kopieren",                  ID_EDIT_COPYKEYNAME
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "&Ausschneiden", ID_HEXEDIT_CUT
+        MENUITEM "&Kopieren", ID_HEXEDIT_COPY
+        MENUITEM "&Einfügen", ID_HEXEDIT_PASTE
+        MENUITEM "&Löschen", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "A&lles auswählen", ID_HEXEDIT_SELECT_ALL
+  END
 END
 
 

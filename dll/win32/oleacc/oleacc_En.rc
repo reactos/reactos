@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "unknown object" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "title bar"

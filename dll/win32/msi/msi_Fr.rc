@@ -26,7 +26,7 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Le paquet d'installation spécifié n'a pu être ouvert. Veuillez vérifier le chemin du fichier et réessayer."
 	5 "Le chemin %s est introuvable"

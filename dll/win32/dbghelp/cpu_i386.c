@@ -98,7 +98,7 @@ enum st_mode {stm_start, stm_32bit, stm_16bit, stm_done};
 #define curr_switch (frame->Reserved[__CurrentSwitch])
 #define next_switch (frame->Reserved[__NextSwitch])
 
-static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
+static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
 {
     STACK32FRAME        frame32;
     STACK16FRAME        frame16;
@@ -107,6 +107,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
     DWORD               p;
     WORD                val;
     BOOL                do_switch;
+    unsigned            deltapc = 1;
 
     /* sanity check */
     if (curr_mode >= stm_done) return FALSE;
@@ -132,6 +133,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
 
         /* Init done */
         curr_mode = (frame->AddrPC.Mode == AddrModeFlat) ? stm_32bit : stm_16bit;
+        deltapc = 0;
 
         /* cur_switch holds address of WOW32Reserved field in TEB in debuggee
          * address space
@@ -191,6 +193,21 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
          * we will get it in the next frame
          */
         memset(&frame->AddrBStore, 0, sizeof(frame->AddrBStore));
+#ifdef __i386__
+        if (curr_mode == stm_32bit)
+        {
+            DWORD_PTR       xframe;
+
+            if (dwarf2_virtual_unwind(csw, frame->AddrPC.Offset - deltapc, context, &xframe))
+            {
+                frame->AddrStack.Mode = frame->AddrFrame.Mode = frame->AddrReturn.Mode = AddrModeFlat;
+                frame->AddrStack.Offset = context->Esp = xframe;
+                frame->AddrFrame.Offset = context->Ebp;
+                frame->AddrReturn.Offset = context->Eip;
+                goto done_pep;
+            }
+        }
+#endif
     }
     else
     {
@@ -317,6 +334,18 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
             }
             else
             {
+#ifdef __i386__
+                DWORD_PTR       xframe;
+
+                if (dwarf2_virtual_unwind(csw, frame->AddrPC.Offset - deltapc, context, &xframe))
+                {
+                    frame->AddrStack.Mode = frame->AddrFrame.Mode = frame->AddrReturn.Mode = AddrModeFlat;
+                    frame->AddrStack.Offset = context->Esp = xframe;
+                    frame->AddrFrame.Offset = context->Ebp;
+                    frame->AddrReturn.Offset = context->Eip;
+                    goto done_pep;
+                }
+#endif
                 frame->AddrStack.Offset = frame->AddrFrame.Offset + 2 * sizeof(DWORD);
                 /* "pop up" previous EBP value */
                 if (!sw_read_mem(csw, frame->AddrFrame.Offset,
@@ -381,6 +410,23 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
         sw_read_mem(csw, frame->AddrFrame.Offset + 2 * sizeof(DWORD),
                     frame->Params, sizeof(frame->Params));
     }
+#ifdef __i386__
+    if (context)
+    {
+#define SET(field, seg, reg) \
+        switch (frame->field.Mode) \
+        { \
+        case AddrModeFlat: context->reg = frame->field.Offset; break; \
+        case AddrMode1616: context->seg = frame->field.Segment; context->reg = frame->field.Offset; break; \
+        default: assert(0); \
+        }
+        SET(AddrStack,  SegSs, Esp);
+        SET(AddrFrame,  SegSs, Ebp);
+        SET(AddrReturn, SegCs, Eip);
+#undef SET
+    }
+done_pep:
+#endif
 
     frame->Far = TRUE;
     frame->Virtual = TRUE;
@@ -404,9 +450,132 @@ done_err:
     return FALSE;
 }
 
+static unsigned i386_map_dwarf_register(unsigned regno)
+{
+    unsigned    reg;
+
+    switch (regno)
+    {
+    case  0: reg = CV_REG_EAX; break;
+    case  1: reg = CV_REG_ECX; break;
+    case  2: reg = CV_REG_EDX; break;
+    case  3: reg = CV_REG_EBX; break;
+    case  4: reg = CV_REG_ESP; break;
+    case  5: reg = CV_REG_EBP; break;
+    case  6: reg = CV_REG_ESI; break;
+    case  7: reg = CV_REG_EDI; break;
+    case  8: reg = CV_REG_EIP; break;
+    case  9: reg = CV_REG_EFLAGS; break;
+    case 10: reg = CV_REG_CS;  break;
+    case 11: reg = CV_REG_SS;  break;
+    case 12: reg = CV_REG_DS;  break;
+    case 13: reg = CV_REG_ES;  break;
+    case 14: reg = CV_REG_FS;  break;
+    case 15: reg = CV_REG_GS;  break;
+    case 16: case 17: case 18: case 19:
+    case 20: case 21: case 22: case 23:
+        reg = CV_REG_ST0 + regno - 16; break;
+    case 24: reg = CV_REG_CTRL; break;
+    case 25: reg = CV_REG_STAT; break;
+    case 26: reg = CV_REG_TAG; break;
+/*
+reg: fiseg 27
+reg: fioff 28
+reg: foseg 29
+reg: fooff 30
+reg: fop   31
+*/
+    case 32: case 33: case 34: case 35:
+    case 36: case 37: case 38: case 39:
+        reg = CV_REG_XMM0 + regno - 32; break;
+    case 40: reg = CV_REG_MXCSR; break;
+    default:
+        FIXME("Don't know how to map register %d\n", regno);
+        return 0;
+    }
+    return reg;
+}
+
+static void* i386_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
+{
+#ifdef __i386__
+    switch (regno)
+    {
+    case CV_REG_EAX: *size = sizeof(ctx->Eax); return &ctx->Eax;
+    case CV_REG_EDX: *size = sizeof(ctx->Edx); return &ctx->Edx;
+    case CV_REG_ECX: *size = sizeof(ctx->Ecx); return &ctx->Ecx;
+    case CV_REG_EBX: *size = sizeof(ctx->Ebx); return &ctx->Ebx;
+    case CV_REG_ESI: *size = sizeof(ctx->Esi); return &ctx->Esi;
+    case CV_REG_EDI: *size = sizeof(ctx->Edi); return &ctx->Edi;
+    case CV_REG_EBP: *size = sizeof(ctx->Ebp); return &ctx->Ebp;
+    case CV_REG_ESP: *size = sizeof(ctx->Esp); return &ctx->Esp;
+    case CV_REG_EIP: *size = sizeof(ctx->Eip); return &ctx->Eip;
+
+    case CV_REG_ST0 + 0: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[0*sizeof(long double)];
+    case CV_REG_ST0 + 1: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[1*sizeof(long double)];
+    case CV_REG_ST0 + 2: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[2*sizeof(long double)];
+    case CV_REG_ST0 + 3: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[3*sizeof(long double)];
+    case CV_REG_ST0 + 4: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[4*sizeof(long double)];
+    case CV_REG_ST0 + 5: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[5*sizeof(long double)];
+    case CV_REG_ST0 + 6: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[6*sizeof(long double)];
+    case CV_REG_ST0 + 7: *size = sizeof(long double); return &ctx->FloatSave.RegisterArea[7*sizeof(long double)];
+
+    case CV_REG_EFLAGS: *size = sizeof(ctx->EFlags); return &ctx->EFlags;
+    case CV_REG_ES: *size = sizeof(ctx->SegEs); return &ctx->SegEs;
+    case CV_REG_CS: *size = sizeof(ctx->SegCs); return &ctx->SegCs;
+    case CV_REG_SS: *size = sizeof(ctx->SegSs); return &ctx->SegSs;
+    case CV_REG_DS: *size = sizeof(ctx->SegDs); return &ctx->SegDs;
+    case CV_REG_FS: *size = sizeof(ctx->SegFs); return &ctx->SegFs;
+    case CV_REG_GS: *size = sizeof(ctx->SegGs); return &ctx->SegGs;
+
+    }
+#endif
+    FIXME("Unknown register %x\n", regno);
+    return NULL;
+}
+
+static const char* i386_fetch_regname(unsigned regno)
+{
+    switch (regno)
+    {
+    case CV_REG_EAX: return "eax";
+    case CV_REG_EDX: return "edx";
+    case CV_REG_ECX: return "ecx";
+    case CV_REG_EBX: return "ebx";
+    case CV_REG_ESI: return "esi";
+    case CV_REG_EDI: return "edi";
+    case CV_REG_EBP: return "ebp";
+    case CV_REG_ESP: return "esp";
+    case CV_REG_EIP: return "eip";
+
+    case CV_REG_ST0 + 0: return "st0";
+    case CV_REG_ST0 + 1: return "st1";
+    case CV_REG_ST0 + 2: return "st2";
+    case CV_REG_ST0 + 3: return "st3";
+    case CV_REG_ST0 + 4: return "st4";
+    case CV_REG_ST0 + 5: return "st5";
+    case CV_REG_ST0 + 6: return "st6";
+    case CV_REG_ST0 + 7: return "st7";
+
+    case CV_REG_EFLAGS: return "eflags";
+    case CV_REG_ES: return "es";
+    case CV_REG_CS: return "cs";
+    case CV_REG_SS: return "ss";
+    case CV_REG_DS: return "ds";
+    case CV_REG_FS: return "fs";
+    case CV_REG_GS: return "gs";
+    }
+    FIXME("Unknown register %x\n", regno);
+    return NULL;
+}
+
 struct cpu cpu_i386 = {
     IMAGE_FILE_MACHINE_I386,
     4,
     i386_get_addr,
     i386_stack_walk,
+    NULL,
+    i386_map_dwarf_register,
+    i386_fetch_context_reg,
+    i386_fetch_regname,
 };

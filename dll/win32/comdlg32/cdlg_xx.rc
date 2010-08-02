@@ -34,7 +34,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
  * different character set or if the distribution of characters looks wrong.
  * It is rendered illegibly small and is used to make a mock-up of a document.
  */
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_FAKEDOCTEXT
         "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. \
@@ -60,7 +60,7 @@ STRINGTABLE DISCARDABLE
 
 
 /* @makedep: pd32_collate.ico */
-PD32_COLLATE ICON DISCARDABLE LOADONCALL pd32_collate.ico
+PD32_COLLATE ICON pd32_collate.ico
 
 /* @makedep: pd32_nocollate.ico */
 PD32_NOCOLLATE ICON pd32_nocollate.ico
@@ -90,4 +90,4 @@ HDISK ICON hdisk.ico
 NETWORK ICON network.ico
 
 /* @makedep: fontpics.bmp */
-38 BITMAP DISCARDABLE LOADONCALL fontpics.bmp
+38 BITMAP fontpics.bmp

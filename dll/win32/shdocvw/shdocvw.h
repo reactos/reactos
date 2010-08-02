@@ -40,6 +40,8 @@
 #include "htiframe.h"
 
 #include "wine/unicode.h"
+#include "resource.h"
+
 
 /**********************************************************************
  * Shell Instance Objects

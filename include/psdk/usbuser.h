@@ -342,6 +342,8 @@ typedef struct _USBUSER_REFRESH_HCT_REG {
 
 #include <poppack.h>
 
+#endif /* _WIN32_WINNT >= 0x0501 */
+
 #ifdef __cplusplus
 }
 #endif

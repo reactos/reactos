@@ -2421,28 +2421,6 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   return FALSE;
 }
 
-BOOL CALLBACK
-EnumChildProc(HWND hwnd, LPARAM lParam)
-{
-    WCHAR szType[20];
-    RealGetWindowClassW(hwnd, szType, 20);
-
-    if (strcmpW(szType, WC_EDITW) == 0)
-    {
-        if (IsWindowEnabled(hwnd) && IsWindowVisible(hwnd))
-        {
-            SetFocus(hwnd);
-            return FALSE;
-        }
-    } 
-    else
-    {
-        EnumChildWindows(hwnd, EnumChildProc, 0);
-    }
-
-    return TRUE;
-}
-
 /******************************************************************************
  *            PROPSHEET_SetWizButtons
  *
@@ -2463,6 +2441,17 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   EnableWindow(hwndBack, FALSE);
   EnableWindow(hwndNext, FALSE);
   EnableWindow(hwndFinish, FALSE);
+
+  /* set the default pushbutton to an enabled button */
+  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
+  else if (dwFlags & PSWIZB_NEXT)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
+  else if (dwFlags & PSWIZB_BACK)
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
+  else
+    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
+
 
   if (dwFlags & PSWIZB_BACK)
     EnableWindow(hwndBack, TRUE);
@@ -2493,31 +2482,6 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   }
   else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
     EnableWindow(hwndFinish, TRUE);
-
-  /* set the default pushbutton to an enabled button and give it focus */
-  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
-    SetFocus(hwndFinish);
-  }
-  else if (dwFlags & PSWIZB_NEXT)
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
-    SetFocus(hwndNext);
-  }
-  else if (dwFlags & PSWIZB_BACK)
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
-    SetFocus(hwndBack);
-  }
-  else
-  {
-    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
-    SetFocus(GetDlgItem(hwndDlg, IDCANCEL));
-  }
-
-  /* Now try to find an edit control that deserves focus */
-  EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, 0);
 }
 
 /******************************************************************************
@@ -3447,9 +3411,14 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       psInfo->hwnd = hwnd;
       SetWindowLongPtrW(hwnd, DWLP_USER, (DWORD_PTR)psInfo);
 
-      /* set up the Next and Back buttons by default */
-      PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
-      SetFocus(GetDlgItem(hwnd, IDC_NEXT_BUTTON));
+      if (psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD)
+      {
+        /* set up the Next and Back buttons by default */
+        PROPSHEET_SetWizButtons(hwnd, PSWIZB_BACK|PSWIZB_NEXT);
+        SetFocus(GetDlgItem(hwnd, IDC_NEXT_BUTTON));
+      }
+      else
+        SetFocus(GetDlgItem(hwnd, IDOK));
 
       /* Set up fonts */
       SystemParametersInfoW (SPI_GETICONTITLELOGFONT, 0, &logFont, 0);

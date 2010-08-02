@@ -179,6 +179,8 @@ static NTSTATUS FASTCALL
 ConioProcessChar(PCSRSS_CONSOLE Console,
                  PINPUT_RECORD InputEvent)
 {
+    ConsoleInput *ConInRec;
+
     /* Check for pause or unpause */
     if (InputEvent->EventType == KEY_EVENT && InputEvent->Event.KeyEvent.bKeyDown)
     {
@@ -207,7 +209,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     }
 
     /* add event to the queue */
-    ConsoleInput *ConInRec = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ConsoleInput));
+    ConInRec = RtlAllocateHeap(Win32CsrApiHeap, 0, sizeof(ConsoleInput));
     if (ConInRec == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
     ConInRec->InputEvent = *InputEvent;

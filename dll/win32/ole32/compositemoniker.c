@@ -101,7 +101,7 @@ CompositeMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
     /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
+    if ( ppvObject==0 )
 	return E_INVALIDARG;
 
     /* Initialize the return parameter */
@@ -1504,7 +1504,7 @@ EnumMonikerImpl_QueryInterface(IEnumMoniker* iface,REFIID riid,void** ppvObject)
     TRACE("(%p,%p,%p)\n",This,riid,ppvObject);
 
     /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
+    if ( ppvObject==0 )
 	return E_INVALIDARG;
 
     /* Initialize the return parameter */

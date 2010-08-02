@@ -160,6 +160,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "キー名のコピー(&C)",          ID_EDIT_COPYKEYNAME
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "切り取り(&C)", ID_HEXEDIT_CUT
+        MENUITEM "コピー(&C)", ID_HEXEDIT_COPY
+        MENUITEM "貼\り付け(&P)", ID_HEXEDIT_PASTE
+        MENUITEM "削除(&D)", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "すべて選択(&A)", ID_HEXEDIT_SELECT_ALL
+  END
 END
 
 

@@ -27,7 +27,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "unknown object" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "смуга назви"

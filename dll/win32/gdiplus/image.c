@@ -2212,6 +2212,58 @@ GpStatus WINGDIPAPI GdipGetMetafileHeaderFromMetafile(GpMetafile * metafile,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromEmf(HENHMETAFILE hEmf,
+    MetafileHeader *header)
+{
+    static int calls;
+
+    if(!hEmf || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromFile(GDIPCONST WCHAR *filename,
+    MetafileHeader *header)
+{
+    static int calls;
+
+    TRACE("(%s,%p)\n", debugstr_w(filename), header);
+
+    if(!filename || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetMetafileHeaderFromStream(IStream *stream,
+    MetafileHeader *header)
+{
+    static int calls;
+
+    TRACE("(%p,%p)\n", stream, header);
+
+    if(!stream || !header)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    memset(header, 0, sizeof(MetafileHeader));
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipGetAllPropertyItems(GpImage *image, UINT size,
     UINT num, PropertyItem* items)
 {

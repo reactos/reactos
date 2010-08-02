@@ -28,7 +28,9 @@
 #endif
 #include <windef.h>
 #include <winbase.h>
-#include <wine/exception.h>
+#ifndef _NTNDK_
+#include <exception.h> // ROS Hack
+#endif
 /* Standard data types */
 
 typedef unsigned short  BOOL16;

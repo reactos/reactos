@@ -205,6 +205,12 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define _CRT_UNUSED(x) (void)x
 #endif
 
+#ifdef _MSC_VER
+#define ATTRIB_NORETURN
+#else
+#define ATTRIB_NORETURN DECLSPEC_NORETURN
+#endif
+
 #include "_mingw_mac.h"
 
 #endif /* !_INC_MINGW */

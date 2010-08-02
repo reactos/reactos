@@ -44,6 +44,7 @@
 #define MSITYPE_KEY      0x2000
 #define MSITYPE_TEMPORARY 0x4000
 
+#define MAX_STREAM_NAME_LEN     62
 
 /* Install UI level mask for AND operation to exclude flags */
 #define INSTALLUILEVEL_MASK             0x0007
@@ -153,6 +154,7 @@ typedef struct tagMSIPATCHINFO
     LPWSTR patchcode;
     LPWSTR transforms;
     LPWSTR localfile;
+    MSIPATCHSTATE state;
 } MSIPATCHINFO;
 
 typedef struct _column_info
@@ -763,6 +765,7 @@ extern UINT msi_package_add_info(MSIPACKAGE *, DWORD, DWORD, LPCWSTR, LPWSTR);
 extern UINT msi_package_add_media_disk(MSIPACKAGE *, DWORD, DWORD, DWORD, LPWSTR, LPWSTR);
 extern UINT msi_clone_properties(MSIPACKAGE *);
 extern UINT msi_set_context(MSIPACKAGE *);
+extern void msi_adjust_allusers_property(MSIPACKAGE *);
 extern UINT MSI_GetFeatureCost(MSIPACKAGE *, MSIFEATURE *, MSICOSTTREE, INSTALLSTATE, LPINT);
 
 /* for deformating */
@@ -862,7 +865,7 @@ extern WCHAR gszLogFile[MAX_PATH];
 extern HINSTANCE msi_hInstance;
 
 /* action related functions */
-extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script, BOOL force);
+extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, UINT script);
 extern UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action, UINT script);
 extern void ACTION_FinishCustomActions( const MSIPACKAGE* package);
 extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, UINT script, BOOL execute);
@@ -1009,6 +1012,7 @@ extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
 extern UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
                         MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value);
 extern UINT msi_get_local_package_name(LPWSTR path, LPCWSTR suffix);
+extern UINT msi_set_sourcedir_props(MSIPACKAGE *package, BOOL replace);
 
 /* media */
 
@@ -1118,6 +1122,7 @@ static const WCHAR szInprocHandler32[] = {'I','n','p','r','o','c','H','a','n','d
 static const WCHAR szMIMEDatabase[] = {'M','I','M','E','\\','D','a','t','a','b','a','s','e','\\','C','o','n','t','e','n','t',' ','T','y','p','e','\\',0};
 static const WCHAR szLocalPackage[] = {'L','o','c','a','l','P','a','c','k','a','g','e',0};
 static const WCHAR szOriginalDatabase[] = {'O','r','i','g','i','n','a','l','D','a','t','a','b','a','s','e',0};
+static const WCHAR szUpgradeCode[] = {'U','p','g','r','a','d','e','C','o','d','e',0};
 
 /* memory allocation macro functions */
 static void *msi_alloc( size_t len ) __WINE_ALLOC_SIZE(1);

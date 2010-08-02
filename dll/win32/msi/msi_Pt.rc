@@ -26,7 +26,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "O pacote de instalação especificado não pôde ser aberto. Por favor, verifique o arquivo e tente novamente."
 	5 "caminho %s não encontrado"
@@ -67,7 +67,7 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "The specified installation package could not be opened.  Please check the file path and try again."
 	5 "localização %s não encontrada"

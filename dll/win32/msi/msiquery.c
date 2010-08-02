@@ -733,7 +733,10 @@ UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
     r = StgOpenStorage( szTransformFile, NULL,
            STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
     if ( FAILED(r) )
+    {
+        WARN("failed to open transform 0x%08x\n", r);
         return ret;
+    }
 
     r = IStorage_Stat( stg, &stat, STATFLAG_NONAME );
     if ( FAILED( r ) )

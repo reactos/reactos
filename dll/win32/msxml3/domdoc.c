@@ -415,22 +415,20 @@ static HRESULT WINAPI domdoc_IPersistStreamInit_Load(
 }
 
 static HRESULT WINAPI domdoc_IPersistStreamInit_Save(
-    IPersistStreamInit *iface, LPSTREAM pStm, BOOL fClearDirty)
+    IPersistStreamInit *iface, IStream *stream, BOOL clr_dirty)
 {
     domdoc *This = impl_from_IPersistStreamInit(iface);
-    HRESULT hr;
     BSTR xmlString;
+    HRESULT hr;
 
-    TRACE("(%p)->(%p %d)\n", This, pStm, fClearDirty);
+    TRACE("(%p)->(%p %d)\n", This, stream, clr_dirty);
 
     hr = IXMLDOMNode_get_xml( IXMLDOMNode_from_impl(&This->node), &xmlString );
     if(hr == S_OK)
     {
-        DWORD count;
-        DWORD len = strlenW(xmlString) * sizeof(WCHAR);
+        DWORD len = SysStringLen(xmlString) * sizeof(WCHAR);
 
-        hr = IStream_Write( pStm, xmlString, len, &count );
-
+        hr = IStream_Write( stream, xmlString, len, NULL );
         SysFreeString(xmlString);
     }
 

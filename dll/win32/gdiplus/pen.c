@@ -419,6 +419,22 @@ GpStatus WINGDIPAPI GdipScalePenTransform(GpPen *pen, REAL sx, REAL sy, GpMatrix
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipMultiplyPenTransform(GpPen *pen, GDIPCONST GpMatrix *matrix,
+    GpMatrixOrder order)
+{
+    static int calls;
+
+    TRACE("(%p,%p,%u)\n", pen, matrix, order);
+
+    if(!pen)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipSetPenBrushFill(GpPen *pen, GpBrush *brush)
 {
     TRACE("(%p, %p)\n", pen, brush);
@@ -441,6 +457,16 @@ GpStatus WINGDIPAPI GdipSetPenColor(GpPen *pen, ARGB argb)
         return NotImplemented;
 
     return GdipSetSolidFillColor(((GpSolidFill*)pen->brush), argb);
+}
+
+GpStatus WINGDIPAPI GdipGetPenCompoundCount(GpPen *pen, INT *count)
+{
+    FIXME("(%p, %p): stub\n", pen, count);
+
+    if (!pen || !count)
+        return InvalidParameter;
+
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipSetPenCompoundArray(GpPen *pen, GDIPCONST REAL *dash,

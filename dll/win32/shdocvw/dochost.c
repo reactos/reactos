@@ -820,5 +820,5 @@ void DocHost_Release(DocHost *This)
 
     ConnectionPointContainer_Destroy(&This->cps);
 
-    CoTaskMemFree(This->url);
+    heap_free(This->url);
 }

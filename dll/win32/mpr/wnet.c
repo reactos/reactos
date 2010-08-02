@@ -29,6 +29,8 @@
 #include "npapi.h"
 #include "winreg.h"
 #include "winuser.h"
+#define WINE_MOUNTMGR_EXTENSIONS
+#include "ddk/mountmgr.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "mprres.h"
@@ -1754,6 +1756,52 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
     return ret;
 }
 
+/* find the network connection for a given drive; helper for WNetGetConnection */
+static DWORD get_drive_connection( WCHAR letter, LPWSTR remote, LPDWORD size )
+{
+    char buffer[1024];
+    struct mountmgr_unix_drive *data = (struct mountmgr_unix_drive *)buffer;
+    HANDLE mgr;
+    DWORD ret = WN_NOT_CONNECTED;
+
+    if ((mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, GENERIC_READ|GENERIC_WRITE,
+                            FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                            0, 0 )) == INVALID_HANDLE_VALUE)
+    {
+        ERR( "failed to open mount manager err %u\n", GetLastError() );
+        return ret;
+    }
+    memset( data, 0, sizeof(*data) );
+    data->letter = letter;
+    if (DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_UNIX_DRIVE, data, sizeof(*data),
+                         data, sizeof(buffer), NULL, NULL ))
+    {
+        char *p, *mount_point = buffer + data->mount_point_offset;
+        DWORD len;
+
+        if (data->mount_point_offset && !strncmp( mount_point, "unc/", 4 ))
+        {
+            mount_point += 2;
+            mount_point[0] = '\\';
+            for (p = mount_point; *p; p++) if (*p == '/') *p = '\\';
+
+            len = MultiByteToWideChar( CP_UNIXCP, 0, mount_point, -1, NULL, 0 );
+            if (len > *size)
+            {
+                *size = len;
+                ret = WN_MORE_DATA;
+            }
+            else
+            {
+                *size = MultiByteToWideChar( CP_UNIXCP, 0, mount_point, -1, remote, *size);
+                ret = WN_SUCCESS;
+            }
+        }
+    }
+    CloseHandle( mgr );
+    return ret;
+}
+
 /**************************************************************************
  * WNetGetConnectionW [MPR.@]
  *
@@ -1782,31 +1830,8 @@ DWORD WINAPI WNetGetConnectionW( LPCWSTR lpLocalName,
             switch(GetDriveTypeW(lpLocalName))
             {
             case DRIVE_REMOTE:
-            {
-                static const WCHAR unc[] = { 'u','n','c','\\' };
-                WCHAR rremote[MAX_PATH], *remote = rremote;
-                if (!QueryDosDeviceW( lpLocalName, remote, MAX_PATH )) remote[0] = 0;
-                else if (!strncmpW(remote, unc, 4))
-                {
-                    remote += 2;
-                    remote[0] = '\\';
-                }
-                else if (remote[0] != '\\' || remote[1] != '\\')
-                    FIXME("Don't know how to convert %s to an unc\n", debugstr_w(remote));
-
-                if (strlenW(remote) + 1 > *lpBufferSize)
-                {
-                    *lpBufferSize = strlenW(remote) + 1;
-                    ret = WN_MORE_DATA;
-                }
-                else
-                {
-                    strcpyW( lpRemoteName, remote );
-                    *lpBufferSize = strlenW(lpRemoteName) + 1;
-                    ret = WN_SUCCESS;
-                }
+                ret = get_drive_connection( lpLocalName[0], lpRemoteName, lpBufferSize );
                 break;
-            }
             case DRIVE_REMOVABLE:
             case DRIVE_FIXED:
             case DRIVE_CDROM:

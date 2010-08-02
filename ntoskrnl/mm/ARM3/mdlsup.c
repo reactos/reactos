@@ -813,6 +813,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Assume failure and check for non-mapped pages
         //
         *MdlPages = -1;
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Should be checking the PPE and PXE */
+        ASSERT(FALSE);
+#endif
         while ((PointerPde->u.Hard.Valid == 0) ||
                (PointerPte->u.Hard.Valid == 0))
         {

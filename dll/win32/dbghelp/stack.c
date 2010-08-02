@@ -95,10 +95,11 @@ static inline void addr_64to32(const ADDRESS64* addr64, ADDRESS* addr32)
 
 BOOL sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz)
 {
+    DWORD bytes_read = 0;
     if (csw->is32)
-        return csw->u.s32.f_read_mem(csw->hProcess, addr, ptr, sz, NULL);
+        return csw->u.s32.f_read_mem(csw->hProcess, addr, ptr, sz, &bytes_read);
     else
-        return csw->u.s64.f_read_mem(csw->hProcess, addr, ptr, sz, NULL);
+        return csw->u.s64.f_read_mem(csw->hProcess, addr, ptr, sz, &bytes_read);
 }
 
 DWORD64 sw_xlat_addr(struct cpu_stack_walk* csw, ADDRESS64* addr)
@@ -180,7 +181,7 @@ BOOL WINAPI StackWalk(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
     csw.u.s32.f_tabl_acs = (FunctionTableAccessRoutine) ? FunctionTableAccessRoutine : SymFunctionTableAccess;
     csw.u.s32.f_modl_bas = (GetModuleBaseRoutine) ? GetModuleBaseRoutine : SymGetModuleBase;
 
-    if ((ret = cpu->stack_walk(&csw, &frame64)))
+    if ((ret = cpu->stack_walk(&csw, &frame64, ctx)))
     {
         addr_64to32(&frame64.AddrPC,     &frame32->AddrPC);
         addr_64to32(&frame64.AddrReturn, &frame32->AddrReturn);
@@ -236,7 +237,7 @@ BOOL WINAPI StackWalk64(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
     csw.u.s64.f_tabl_acs = (FunctionTableAccessRoutine) ? FunctionTableAccessRoutine : SymFunctionTableAccess64;
     csw.u.s64.f_modl_bas = (GetModuleBaseRoutine) ? GetModuleBaseRoutine : SymGetModuleBase64;
 
-    if (!cpu->stack_walk(&csw, frame)) return FALSE;
+    if (!cpu->stack_walk(&csw, frame, ctx)) return FALSE;
 
     /* we don't handle KdHelp */
     frame->KdHelp.Thread = 0xC000FADE;

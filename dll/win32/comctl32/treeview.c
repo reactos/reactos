@@ -76,6 +76,7 @@ typedef struct _TREEITEM    /* HTREEITEM is a _TREEINFO *. */
   int       cchTextMax;
   int       iImage;
   int       iSelectedImage;
+  int       iExpandedImage;
   int       cChildren;
   LPARAM    lParam;
   int       iIntegral;      /* item height multiplier (1 is normal) */
@@ -246,6 +247,10 @@ static inline BOOL item_changed (const TREEVIEW_ITEM *tiOld, const TREEVIEW_ITEM
     /* Selected image has changed and it's not a callback */
     if ((tvChange->mask & TVIF_SELECTEDIMAGE) && (tiOld->iSelectedImage != tiNew->iSelectedImage) &&
 	tiNew->iSelectedImage != I_IMAGECALLBACK)
+	return TRUE;
+
+    if ((tvChange->mask & TVIF_EXPANDEDIMAGE) && (tiOld->iExpandedImage != tiNew->iExpandedImage) &&
+	tiNew->iExpandedImage != I_IMAGECALLBACK)
 	return TRUE;
 
     /* Text has changed and it's not a callback */
@@ -801,6 +806,9 @@ TREEVIEW_UpdateDispInfo(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     if (mask & TVIF_SELECTEDIMAGE)
 	wineItem->iSelectedImage = callback.item.iSelectedImage;
 
+    if (mask & TVIF_EXPANDEDIMAGE)
+	wineItem->iExpandedImage = callback.item.iExpandedImage;
+
     if (mask & TVIF_CHILDREN)
 	wineItem->cChildren = callback.item.cChildren;
 
@@ -997,6 +1005,7 @@ TREEVIEW_AllocateItem(const TREEVIEW_INFO *infoPtr)
      * inc/dec to toggle the images. */
     newItem->iImage = 0;
     newItem->iSelectedImage = 0;
+    newItem->iExpandedImage = 0;
 
     if (DPA_InsertPtr(infoPtr->items, INT_MAX, newItem) == -1)
     {
@@ -1173,6 +1182,16 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	    callbackClear |= TVIF_SELECTEDIMAGE;
     }
 
+    if (tvItem->mask & TVIF_EXPANDEDIMAGE)
+    {
+	wineItem->iExpandedImage = tvItem->iExpandedImage;
+
+	if (wineItem->iExpandedImage == I_IMAGECALLBACK)
+	    callbackSet |= TVIF_EXPANDEDIMAGE;
+	else
+	    callbackClear |= TVIF_EXPANDEDIMAGE;
+    }
+
     if (tvItem->mask & TVIF_PARAM)
 	wineItem->lParam = tvItem->lParam;
 
@@ -1187,6 +1206,11 @@ TREEVIEW_DoSetItemT(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	      tvItem->stateMask);
 	wineItem->state &= ~tvItem->stateMask;
 	wineItem->state |= (tvItem->state & tvItem->stateMask);
+    }
+
+    if (tvItem->mask & TVIF_STATEEX)
+    {
+        FIXME("New extended state: %x\n", tvItem->uStateEx);
     }
 
     wineItem->callbackMask |= callbackSet;
@@ -2076,6 +2100,9 @@ TREEVIEW_GetItemT(const TREEVIEW_INFO *infoPtr, LPTVITEMEXW tvItem, BOOL isW)
     if (tvItem->mask & TVIF_SELECTEDIMAGE)
 	tvItem->iSelectedImage = wineItem->iSelectedImage;
 
+    if (tvItem->mask & TVIF_EXPANDEDIMAGE)
+	tvItem->iExpandedImage = wineItem->iExpandedImage;
+
     if (tvItem->mask & TVIF_STATE)
         /* Careful here - Windows ignores the stateMask when you get the state
  	    That contradicts the documentation, but makes more common sense, masking
@@ -2539,8 +2566,8 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem
 			   ILD_NORMAL);
 	}
 
-	/* Now, draw the normal image; can be either selected or
-	 * non-selected image.
+	/* Now, draw the normal image; can be either selected,
+	 * non-selected or expanded image.
 	 */
 
 	if ((wineItem->state & TVIS_SELECTED) && (wineItem->iSelectedImage >= 0))
@@ -2548,9 +2575,14 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem
 	    /* The item is currently selected */
 	    imageIndex = wineItem->iSelectedImage;
 	}
+	else if ((wineItem->state & TVIS_EXPANDED) && (wineItem->iExpandedImage >= 0))
+	{
+	    /* The item is currently not selected but expanded */
+	    imageIndex = wineItem->iExpandedImage;
+	}
 	else
 	{
-	    /* The item is not selected */
+	    /* The item is not selected and not expanded */
 	    imageIndex = wineItem->iImage;
 	}
 
@@ -3283,6 +3315,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     LONG orgNextTop = 0;
     RECT scrollRect;
     TREEVIEW_ITEM *nextItem, *tmpItem;
+    BOOL sendsNotifications;
 
     TRACE("(%p, %p, partial=%d, %d\n", infoPtr, wineItem, bExpandPartial, bUser);
 
@@ -3305,30 +3338,20 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 
     TRACE("TVE_EXPAND %p %s\n", wineItem, TREEVIEW_ItemName(wineItem));
 
-    if (bUser || ((wineItem->cChildren != 0) &&
-                  !(wineItem->state & TVIS_EXPANDEDONCE)))
+    sendsNotifications = bUser || ((wineItem->cChildren != 0) &&
+                                    !(wineItem->state & TVIS_EXPANDEDONCE));
+    if (sendsNotifications)
     {
 	if (!TREEVIEW_SendExpanding(infoPtr, wineItem, TVE_EXPAND))
 	{
 	    TRACE("  TVN_ITEMEXPANDING returned TRUE, exiting...\n");
 	    return FALSE;
 	}
-
-        if (!wineItem->firstChild)
-            return FALSE;
-
-	wineItem->state |= TVIS_EXPANDED;
-	TREEVIEW_SendExpanded(infoPtr, wineItem, TVE_EXPAND);
-	wineItem->state |= TVIS_EXPANDEDONCE;
     }
-    else
-    {
-        if (!wineItem->firstChild)
-            return FALSE;
+    if (!wineItem->firstChild)
+        return FALSE;
 
-	/* this item has already been expanded */
-	wineItem->state |= TVIS_EXPANDED;
-    }
+    wineItem->state |= TVIS_EXPANDED;
 
     if (bExpandPartial)
 	FIXME("TVE_EXPANDPARTIAL not implemented\n");
@@ -3386,6 +3409,11 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
                 }
             }
         }
+    }
+
+    if (sendsNotifications) {
+        TREEVIEW_SendExpanded(infoPtr, wineItem, TVE_EXPAND);
+        wineItem->state |= TVIS_EXPANDEDONCE;
     }
 
     return TRUE;

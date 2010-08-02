@@ -1986,32 +1986,8 @@ TOOLTIPS_NCHitTest (const TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TOOLTIPS_NotifyFormat (TOOLTIPS_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    TTTOOL_INFO *toolPtr = infoPtr->tools;
-    INT nResult;
+    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
 
-    TRACE("hwnd=%p wParam=%lx lParam=%lx\n", infoPtr->hwndSelf, wParam, lParam);
-
-    if (lParam == NF_QUERY) {
-        if (toolPtr->bNotifyUnicode) {
-            return NFR_UNICODE;
-        } else {
-            return NFR_ANSI;
-        }
-    }
-    else if (lParam == NF_REQUERY) {
-        nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
-                    (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
-        if (nResult == NFR_ANSI) {
-            toolPtr->bNotifyUnicode = FALSE;
-            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
-        } else if (nResult == NFR_UNICODE) {
-            toolPtr->bNotifyUnicode = TRUE;
-            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
-        } else {
-            TRACE (" -- WM_NOTIFYFORMAT returns: error!\n");
-        }
-        return nResult;
-    }
     return 0;
 }
 

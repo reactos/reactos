@@ -489,7 +489,9 @@ extern "C" {
 
   __MINGW_EXTENSION lldiv_t __cdecl lldiv(long long, long long);
 
+#ifndef _MSC_VER
   __MINGW_EXTENSION __CRT_INLINE long long __cdecl llabs(long long _j) { return (_j >= 0 ? _j : -_j); }
+#endif
 
   __MINGW_EXTENSION long long  __cdecl strtoll(const char* __restrict__, char** __restrict, int);
   __MINGW_EXTENSION unsigned long long  __cdecl strtoull(const char* __restrict__, char** __restrict__, int);

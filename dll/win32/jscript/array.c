@@ -677,29 +677,31 @@ static HRESULT sort_cmp(script_ctx_t *ctx, DispatchEx *cmp_func, VARIANT *v1, VA
             *cmp = V_I4(&tmp);
         else
             *cmp = V_R8(&tmp) > 0.0 ? 1 : -1;
-    }else if(is_num_vt(V_VT(v1))) {
-        if(is_num_vt(V_VT(v2))) {
-            DOUBLE d = num_val(v1)-num_val(v2);
-            if(d > 0.0)
-                *cmp = 1;
-            else if(d < -0.0)
-                *cmp = -1;
-            else
-                *cmp = 0;
-        }else {
-            *cmp = -1;
-        }
-    }else if(is_num_vt(V_VT(v2))) {
-        *cmp = 1;
-    }else if(V_VT(v1) == VT_BSTR) {
-        if(V_VT(v2) == VT_BSTR)
-            *cmp = strcmpW(V_BSTR(v1), V_BSTR(v2));
+    }else if(V_VT(v1) == VT_EMPTY) {
+        *cmp = V_VT(v2) == VT_EMPTY ? 0 : 1;
+    }else if(V_VT(v2) == VT_EMPTY) {
+        *cmp = -1;
+    }else if(is_num_vt(V_VT(v1)) && is_num_vt(V_VT(v2))) {
+        DOUBLE d = num_val(v1)-num_val(v2);
+        if(d > 0.0)
+            *cmp = 1;
         else
-            *cmp = -1;
-    }else if(V_VT(v2) == VT_BSTR) {
-        *cmp = 1;
+            *cmp = d < -0.0 ? -1 : 0;
     }else {
-        *cmp = 0;
+        BSTR x, y;
+
+        hres = to_string(ctx, v1, ei, &x);
+        if(FAILED(hres))
+            return hres;
+
+        hres = to_string(ctx, v2, ei, &y);
+        if(SUCCEEDED(hres)) {
+            *cmp = strcmpW(x, y);
+            SysFreeString(y);
+        }
+        SysFreeString(x);
+        if(FAILED(hres))
+            return hres;
     }
 
     return S_OK;

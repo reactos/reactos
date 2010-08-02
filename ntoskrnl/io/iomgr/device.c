@@ -29,8 +29,8 @@ VOID
 NTAPI
 IopReadyDeviceObjects(IN PDRIVER_OBJECT Driver)
 {
-    PAGED_CODE();
     PDEVICE_OBJECT DeviceObject;
+    PAGED_CODE();
 
     /* Set the driver as initialized */
     Driver->Flags |= DRVO_INITIALIZED;

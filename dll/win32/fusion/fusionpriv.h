@@ -433,6 +433,7 @@ HRESULT assembly_release(ASSEMBLY *assembly);
 HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name);
 HRESULT assembly_get_path(ASSEMBLY *assembly, LPWSTR *path);
 HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version);
+BYTE assembly_get_architecture(ASSEMBLY *assembly);
 HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token);
 
 static inline LPWSTR strdupW(LPCWSTR src)

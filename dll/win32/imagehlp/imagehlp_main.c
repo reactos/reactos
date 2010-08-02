@@ -18,16 +18,12 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <stdarg.h>
 
-
-/* INCLUDES ******************************************************************/
-
-#include "precomp.h"
-
-#define _WINNT_H
+#include "windef.h"
+#include "winbase.h"
+#include "imagehlp.h"
 #include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
 
 /**********************************************************************/
 HANDLE IMAGEHLP_hHeap = NULL;
@@ -35,7 +31,7 @@ HANDLE IMAGEHLP_hHeap = NULL;
 /***********************************************************************
  *           DllMain (IMAGEHLP.init)
  */
-BOOL IMAGEAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
   switch(fdwReason)
     {
@@ -51,4 +47,28 @@ BOOL IMAGEAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
       break;
     }
   return TRUE;
+}
+
+/***********************************************************************
+ *           MarkImageAsRunFromSwap (IMAGEHLP.@)
+ * FIXME
+ *   No documentation available.
+ */
+
+/***********************************************************************
+ *           TouchFileTimes (IMAGEHLP.@)
+ */
+BOOL WINAPI TouchFileTimes(HANDLE FileHandle, LPSYSTEMTIME lpSystemTime)
+{
+  FILETIME FileTime;
+  SYSTEMTIME SystemTime;
+
+  if(lpSystemTime == NULL)
+  {
+    GetSystemTime(&SystemTime);
+    lpSystemTime = &SystemTime;
+  }
+
+  return (SystemTimeToFileTime(lpSystemTime, &FileTime) &&
+          SetFileTime(FileHandle, NULL, NULL, &FileTime));
 }

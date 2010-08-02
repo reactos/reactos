@@ -1,5 +1,5 @@
 /*
- * Copyright 2006 Jacek Caban for CodeWeavers
+ * Copyright 2006-2010 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,7 @@
  */
 
 #include <stdarg.h>
+#include <math.h>
 
 #define COBJMACROS
 
@@ -32,6 +33,251 @@
 #include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+
+typedef struct {
+    DispatchEx dispex;
+    const IHTMLRectVtbl *lpIHTMLRectVtbl;
+
+    LONG ref;
+
+    nsIDOMClientRect *nsrect;
+} HTMLRect;
+
+#define HTMLRECT(x)  ((IHTMLRect*)  &(x)->lpIHTMLRectVtbl)
+
+#define HTMLRECT_THIS(iface) DEFINE_THIS(HTMLRect, IHTMLRect, iface)
+
+static HRESULT WINAPI HTMLRect_QueryInterface(IHTMLRect *iface, REFIID riid, void **ppv)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+
+    if(IsEqualGUID(&IID_IUnknown, riid)) {
+        TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
+        *ppv = HTMLRECT(This);
+    }else if(IsEqualGUID(&IID_IHTMLRect, riid)) {
+        TRACE("(%p)->(IID_IHTMLRect %p)\n", This, ppv);
+        *ppv = HTMLRECT(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
+    }else {
+        FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppv);
+        *ppv = NULL;
+        return E_NOINTERFACE;
+    }
+
+    IUnknown_AddRef((IUnknown*)*ppv);
+    return S_OK;
+}
+
+static ULONG WINAPI HTMLRect_AddRef(IHTMLRect *iface)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    LONG ref = InterlockedIncrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    return ref;
+}
+
+static ULONG WINAPI HTMLRect_Release(IHTMLRect *iface)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    LONG ref = InterlockedDecrement(&This->ref);
+
+    TRACE("(%p) ref=%d\n", This, ref);
+
+    if(!ref) {
+        if(This->nsrect)
+            nsIDOMClientRect_Release(This->nsrect);
+        heap_free(This);
+    }
+
+    return ref;
+}
+
+static HRESULT WINAPI HTMLRect_GetTypeInfoCount(IHTMLRect *iface, UINT *pctinfo)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pctinfo);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLRect_GetTypeInfo(IHTMLRect *iface, UINT iTInfo,
+        LCID lcid, ITypeInfo **ppTInfo)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
+}
+
+static HRESULT WINAPI HTMLRect_GetIDsOfNames(IHTMLRect *iface, REFIID riid,
+        LPOLESTR *rgszNames, UINT cNames, LCID lcid, DISPID *rgDispId)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
+}
+
+static HRESULT WINAPI HTMLRect_Invoke(IHTMLRect *iface, DISPID dispIdMember,
+        REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
+        VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid, wFlags, pDispParams,
+            pVarResult, pExcepInfo, puArgErr);
+}
+
+static HRESULT WINAPI HTMLRect_put_left(IHTMLRect *iface, LONG v)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    FIXME("(%p)->(%d)\n", This, v);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLRect_get_left(IHTMLRect *iface, LONG *p)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    float left;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMClientRect_GetLeft(This->nsrect, &left);
+    if(NS_FAILED(nsres)) {
+        ERR("GetLeft failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = floor(left+0.5);
+    return S_OK;
+}
+
+static HRESULT WINAPI HTMLRect_put_top(IHTMLRect *iface, LONG v)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    FIXME("(%p)->(%d)\n", This, v);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLRect_get_top(IHTMLRect *iface, LONG *p)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    float top;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMClientRect_GetTop(This->nsrect, &top);
+    if(NS_FAILED(nsres)) {
+        ERR("GetTop failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = floor(top+0.5);
+    return S_OK;
+}
+
+static HRESULT WINAPI HTMLRect_put_right(IHTMLRect *iface, LONG v)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    FIXME("(%p)->(%d)\n", This, v);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLRect_get_right(IHTMLRect *iface, LONG *p)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    float right;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMClientRect_GetRight(This->nsrect, &right);
+    if(NS_FAILED(nsres)) {
+        ERR("GetRight failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = floor(right+0.5);
+    return S_OK;
+}
+
+static HRESULT WINAPI HTMLRect_put_bottom(IHTMLRect *iface, LONG v)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    FIXME("(%p)->(%d)\n", This, v);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HTMLRect_get_bottom(IHTMLRect *iface, LONG *p)
+{
+    HTMLRect *This = HTMLRECT_THIS(iface);
+    float bottom;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMClientRect_GetBottom(This->nsrect, &bottom);
+    if(NS_FAILED(nsres)) {
+        ERR("GetBottom failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = floor(bottom+0.5);
+    return S_OK;
+}
+
+#undef HTMLRECT_THIS
+
+static const IHTMLRectVtbl HTMLRectVtbl = {
+    HTMLRect_QueryInterface,
+    HTMLRect_AddRef,
+    HTMLRect_Release,
+    HTMLRect_GetTypeInfoCount,
+    HTMLRect_GetTypeInfo,
+    HTMLRect_GetIDsOfNames,
+    HTMLRect_Invoke,
+    HTMLRect_put_left,
+    HTMLRect_get_left,
+    HTMLRect_put_top,
+    HTMLRect_get_top,
+    HTMLRect_put_right,
+    HTMLRect_get_right,
+    HTMLRect_put_bottom,
+    HTMLRect_get_bottom
+};
+
+static const tid_t HTMLRect_iface_tids[] = {
+    IHTMLRect_tid,
+    0
+};
+static dispex_static_data_t HTMLRect_dispex = {
+    NULL,
+    IHTMLRect_tid,
+    NULL,
+    HTMLRect_iface_tids
+};
+
+static HRESULT create_html_rect(nsIDOMClientRect *nsrect, IHTMLRect **ret)
+{
+    HTMLRect *rect;
+
+    rect = heap_alloc_zero(sizeof(HTMLRect));
+    if(!rect)
+        return E_OUTOFMEMORY;
+
+    rect->lpIHTMLRectVtbl = &HTMLRectVtbl;
+    rect->ref = 1;
+
+    init_dispex(&rect->dispex, (IUnknown*)HTMLRECT(rect), &HTMLRect_dispex);
+
+    nsIDOMClientRect_AddRef(nsrect);
+    rect->nsrect = nsrect;
+
+    *ret = HTMLRECT(rect);
+    return S_OK;
+}
 
 #define HTMLELEM2_THIS(iface) DEFINE_THIS(HTMLElement, HTMLElement2, iface)
 
@@ -364,8 +610,31 @@ static HRESULT WINAPI HTMLElement2_getClientRects(IHTMLElement2 *iface, IHTMLRec
 static HRESULT WINAPI HTMLElement2_getBoundingClientRect(IHTMLElement2 *iface, IHTMLRect **pRect)
 {
     HTMLElement *This = HTMLELEM2_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pRect);
-    return E_NOTIMPL;
+    nsIDOMNSElement *nselem;
+    nsIDOMClientRect *nsrect;
+    nsresult nsres;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, pRect);
+
+    nsres = nsIDOMHTMLElement_QueryInterface(This->node.nsnode, &IID_nsIDOMNSElement,
+            (void**)&nselem);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNSElement iface: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMNSElement_GetBoundingClientRect(nselem, &nsrect);
+    nsIDOMNSElement_Release(nselem);
+    if(NS_FAILED(nsres) || !nsrect) {
+        ERR("GetBoindingClientRect failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    hres = create_html_rect(nsrect, pRect);
+
+    nsIDOMClientRect_Release(nsrect);
+    return hres;
 }
 
 static HRESULT WINAPI HTMLElement2_setExpression(IHTMLElement2 *iface, BSTR propname,

@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Fejl ved konvertering af objekt til primitiv type"
     IDS_INVALID_CALL_ARG    "Ugyldig procedure kald eller argument"

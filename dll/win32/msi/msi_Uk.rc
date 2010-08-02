@@ -27,7 +27,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Не вдалося відкрити вказаний пакет інсталяції.  Перевірте шлях до файлу та спробуйте знов."
 	5 "шлях %s не знайдено"

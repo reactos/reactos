@@ -1072,6 +1072,14 @@ PciExecuteCriticalSystemRoutine(
 
 BOOLEAN
 NTAPI
+PciCreateIoDescriptorFromBarLimit(
+    PIO_RESOURCE_DESCRIPTOR ResourceDescriptor,
+    IN PULONG BarArray,
+    IN BOOLEAN Rom
+);
+
+BOOLEAN
+NTAPI
 PciIsSlotPresentInParentMethod(
     IN PPCI_PDO_EXTENSION PdoExtension,
     IN ULONG Method

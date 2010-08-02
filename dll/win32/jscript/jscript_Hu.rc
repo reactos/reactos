@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Hiba az objektum primitív típusra való konvertálásánál"
     IDS_INVALID_CALL_ARG    "Érvénytelen eljáráshívás vagy argmentum"

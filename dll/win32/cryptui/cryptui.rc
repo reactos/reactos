@@ -26,25 +26,25 @@
 #include "cryptuires.h"
 
 /* @makedep: smallicons.bmp */
-IDB_SMALL_ICONS BITMAP LOADONCALL DISCARDABLE smallicons.bmp
+IDB_SMALL_ICONS BITMAP smallicons.bmp
 
 /* @makedep: cert.bmp */
-IDB_CERT BITMAP LOADONCALL DISCARDABLE cert.bmp
+IDB_CERT BITMAP cert.bmp
 
 /* @makedep: certerror.bmp */
-IDB_CERT_ERROR BITMAP LOADONCALL DISCARDABLE certerror.bmp
+IDB_CERT_ERROR BITMAP certerror.bmp
 
 /* @makedep: certwarning.bmp */
-IDB_CERT_WARNING BITMAP LOADONCALL DISCARDABLE certwarning.bmp
+IDB_CERT_WARNING BITMAP certwarning.bmp
 
 /* @makedep: checks.bmp */
-IDB_CHECKS BITMAP LOADONCALL DISCARDABLE checks.bmp
+IDB_CHECKS BITMAP checks.bmp
 
 /* @makedep: certwatermark.bmp */
-IDB_CERT_WATERMARK BITMAP LOADONCALL DISCARDABLE certwatermark.bmp
+IDB_CERT_WATERMARK BITMAP certwatermark.bmp
 
 /* @makedep: certheader.bmp */
-IDB_CERT_HEADER BITMAP LOADONCALL DISCARDABLE certheader.bmp
+IDB_CERT_HEADER BITMAP certheader.bmp
 
 #include "cryptui_En.rc"
 #include "cryptui_Ko.rc"
@@ -56,5 +56,7 @@ IDB_CERT_HEADER BITMAP LOADONCALL DISCARDABLE certheader.bmp
 #include "cryptui_It.rc"
 #include "cryptui_Lt.rc"
 #include "cryptui_Nl.rc"
+#include "cryptui_No.rc"
 #include "cryptui_Pt.rc"
 #include "cryptui_Ro.rc"
+#include "cryptui_Uk.rc"

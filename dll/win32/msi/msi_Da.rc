@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Kunne ikke åbne den specificerede installationspakke. Kontroller stien og prøv igen."
 	5 "kunne ikke finden stien '%s'."

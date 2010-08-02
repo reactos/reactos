@@ -24,7 +24,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Eroare la convertirea obiectului la un tip primitiv"
     IDS_INVALID_CALL_ARG    "Apel de procedură sau argument nevalid"

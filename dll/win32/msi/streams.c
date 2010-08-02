@@ -37,7 +37,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 
 #define NUM_STREAMS_COLS    2
-#define MAX_STREAM_NAME_LEN 62
 
 typedef struct tabSTREAM
 {

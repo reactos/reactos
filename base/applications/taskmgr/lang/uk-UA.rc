@@ -160,6 +160,7 @@ END
 //
 // Dialog
 //
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -338,65 +339,65 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,175,119,41,10
 END
 
-IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
+IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 227, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Вибір стовпців"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    DEFPUSHBUTTON   "Так",IDOK,84,178,50,14
-    PUSHBUTTON      "Ні",IDCANCEL,138,178,50,14
-    LTEXT           "Виберіть стовпці, які слід відображати на вкладці Процес диспетчера завдань.",
+    DEFPUSHBUTTON   "ОК",IDOK,116,178,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,170,178,50,14
+    LTEXT           "Виберіть стовпці, які слід відображати на вкладці Процеси диспетчера завдань.",
                     IDC_STATIC,7,7,181,17
     CONTROL         "&Ім'я образу",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
     CONTROL         "Іденти&ф. процесу (PID)",IDC_PID,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,39,91,10
     CONTROL         "&Використання ЦП",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,50,53,10
+                    WS_TABSTOP,7,50,71,10
     CONTROL         "&Час ЦП",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
     CONTROL         "&Пам'ять - використання",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,72,63,10
+                    WS_TABSTOP,7,72,92,10
     CONTROL         "Пам'ять - змі&на",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
     CONTROL         "Пам'ять - &максимум",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
     CONTROL         "П&омилок сторінки",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,105,53,10
+                    WS_TABSTOP,7,105,73,10
     CONTROL         "О&б'єкти USER",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
     CONTROL         "Кількість читань",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,127,49,10
+                    WS_TABSTOP,7,127,68,10
     CONTROL         "Прочитано байтів",IDC_IOREADBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,138,72,10
     CONTROL         "Код се&ансу",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
     CONTROL         "Ім'&я користувача",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,160,51,10
+                    WS_TABSTOP,7,160,70,10
     CONTROL         "Помилок &сторінки - зміна",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
     CONTROL         "Об'єм віртуал&ьної пам'яті",IDC_VIRTUALMEMORYSIZE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,39,100,10
     CONTROL         "Виванта&жуваний пул",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,50,53,10
+                    WS_TABSTOP,107,50,88,10
     CONTROL         "Невивантаж&уваний пул",IDC_NONPAGEDPOOL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,61,96,10
     CONTROL         "Базови&й пріоритет",IDC_BASEPRIORITY,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,72,75,10
     CONTROL         "Лічильник &дескрипторів",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,83,59,10
+                    WS_TABSTOP,107,83,98,10
     CONTROL         "&Лічильник потоків",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,94,59,10
+                    WS_TABSTOP,107,94,79,10
     CONTROL         "Об'&єкти GDI",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
     CONTROL         "Кількість записів",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,116,49,10
+                    WS_TABSTOP,107,116,73,10
     CONTROL         "Записано байтів",IDC_IOWRITEBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,127,67,10
     CONTROL         "Інший ввід-вивід",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,138,46,10
-    CONTROL         "Інших байтів під час вводу-виводу",IDC_IOOTHERBYTES,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
+                    WS_TABSTOP,107,138,71,10
+    CONTROL         "Інших байтів при вводі-виводі",IDC_IOOTHERBYTES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,107,149,114,10
 END
 
 
@@ -522,7 +523,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "Диспетчер завдань"
     IDC_TASKMGR             "Диспетчер завдань"
-    IDS_IDLE_PROCESS        "Недіяння системи"
+    IDS_IDLE_PROCESS        "Бездіяльність системи"
 END
 
 STRINGTABLE DISCARDABLE

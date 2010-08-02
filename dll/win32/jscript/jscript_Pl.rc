@@ -20,7 +20,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "B³¹d przy przekszta³caniu obiektu do typu podstawowego"
     IDS_INVALID_CALL_ARG    "Niew³aœciwe wywo³anie procedury lub argument"

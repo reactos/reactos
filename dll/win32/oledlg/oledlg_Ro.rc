@@ -24,7 +24,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 314, 151
+UIINSERTOBJECT DIALOG  0, 0, 314, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Inserare obiect"
 FONT 8, "MS Shell Dlg"
@@ -51,7 +51,7 @@ BEGIN
     EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_RESULTOBJDESC     "Inserați un nou obiect %s în document"
   IDS_RESULTFILEOBJDESC "Inserați conținutul fișierului ca pe un obiect în document, astfel încât să îl puteți activa utilizând programul care l-a creat."
@@ -60,7 +60,7 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMODCAPTION  "Adaugă un control"
 }
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 324, 140
+IDD_PASTESPECIAL4 DIALOG 3, 15, 324, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Inserare specială"
 FONT 8, "MS Shell Dlg"
@@ -86,7 +86,7 @@ BEGIN
     CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PS_PASTE_DATA                   "Inserează conținutul din clipboard în document ca %s."
     IDS_PS_PASTE_OBJECT                 "Inserează conținutul din clipboard în document astfel încât să îl puteți activa utilizând %s."

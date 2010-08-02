@@ -4,6 +4,13 @@
 
 #pragma once
 
+
+#ifdef _MSC_VER
+#define REGISTERCALL FASTCALL
+#else
+#define REGISTERCALL __attribute__((regparm(3)))
+#endif
+
 typedef struct _HAL_BIOS_FRAME
 {
     ULONG SegSs;
@@ -28,10 +35,9 @@ VOID
 );
 
 typedef
-FASTCALL
 VOID
-DECLSPEC_NORETURN
-(*PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(
+ATTRIB_NORETURN
+(FASTCALL *PHAL_SW_INTERRUPT_HANDLER_2ND_ENTRY)(
     IN PKTRAP_FRAME TrapFrame
 );
 
@@ -409,15 +415,14 @@ typedef struct _PIC_MASK
 
 typedef
 BOOLEAN
-__attribute__((regparm(3)))
-(*PHAL_DISMISS_INTERRUPT)(
+( REGISTERCALL *PHAL_DISMISS_INTERRUPT)(
     IN KIRQL Irql,
     IN ULONG Irq,
     OUT PKIRQL OldIrql
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrqGeneric(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -425,7 +430,7 @@ HalpDismissIrqGeneric(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq15(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -433,7 +438,7 @@ HalpDismissIrq15(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq13(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -441,7 +446,7 @@ HalpDismissIrq13(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq07(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -449,7 +454,7 @@ HalpDismissIrq07(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrqLevel(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -457,7 +462,7 @@ HalpDismissIrqLevel(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq15Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -465,7 +470,7 @@ HalpDismissIrq15Level(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq13Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -473,7 +478,7 @@ HalpDismissIrq13Level(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq07Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -558,8 +563,8 @@ VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
 VOID HalpApcInterrupt(VOID);
 VOID HalpDispatchInterrupt(VOID);
 VOID HalpDispatchInterrupt2(VOID);
-VOID FASTCALL DECLSPEC_NORETURN HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
-VOID FASTCALL DECLSPEC_NORETURN HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+DECLSPEC_NORETURN VOID FASTCALL HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
+DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame);
 
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
