@@ -1258,7 +1258,7 @@ GreCreateDIBitmapInternal(
 
     if (!hDc) /* 1bpp monochrome bitmap */
     {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
-        hdcDest = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
+        hdcDest = NtGdiCreateCompatibleDC(0);
         if(!hdcDest)
         {
             return NULL;

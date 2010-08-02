@@ -149,10 +149,6 @@ W32kMapViewOfSection(
     return pvBase;
 }
 
-// FIXME: this should go to dibobj.c
-
-
-
 HBITMAP
 NTAPI
 UserLoadImage(PCWSTR pwszName)
@@ -213,8 +209,9 @@ UserLoadImage(PCWSTR pwszName)
     {
 		/* Could be BITMAPCOREINFO */
 		BITMAPINFO* pConvertedInfo;
+		HDC hdc;
 
-		pvBits = (PVOID)((PCHAR)pbmi + pbmfh->bfOffBits);
+		pvBits = (PVOID)((PCHAR)pbmfh + pbmfh->bfOffBits);
 
 		pConvertedInfo = DIB_ConvertBitmapInfo(pbmi, DIB_RGB_COLORS);
 		if(!pConvertedInfo)
@@ -223,19 +220,19 @@ UserLoadImage(PCWSTR pwszName)
 			goto leave;
 		}
 
-        // FIXME: use Gre... so that the BITMAPINFO doesn't get probed
-        hbmp = NtGdiCreateDIBitmapInternal(NULL,
-                                           pConvertedInfo->bmiHeader.biWidth,
-                                           pConvertedInfo->bmiHeader.biHeight,
-                                           CBM_INIT,
-                                           pvBits,
-                                           pbmi,
-                                           DIB_RGB_COLORS,
-                                           pConvertedInfo->bmiHeader.biSize,
-                                           pConvertedInfo->bmiHeader.biSizeImage,
-                                           0,
-                                           0);
+		hdc = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
 
+        hbmp = GreCreateDIBitmapInternal(hdc,
+                                         pConvertedInfo->bmiHeader.biWidth,
+				                         pConvertedInfo->bmiHeader.biHeight,
+                                         CBM_INIT,
+                                         pvBits,
+                                         pConvertedInfo,
+                                         DIB_RGB_COLORS,
+                                         0,
+                                         0);
+
+		NtGdiDeleteObjectApp(hdc);
 		DIB_FreeConvertedBitmapInfo(pConvertedInfo, pbmi);
     }
 	else

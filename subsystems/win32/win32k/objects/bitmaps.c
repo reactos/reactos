@@ -971,30 +971,36 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
             pds->dsBmih.biHeight = pds->dsBm.bmHeight;
             pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
             pds->dsBmih.biBitCount = pds->dsBm.bmBitsPixel;
-            switch (psurf->SurfObj.iBitmapFormat)
-            {
-                /* FIXME: What about BI_BITFIELDS? */
-                case BMF_1BPP:
-                case BMF_4BPP:
-                case BMF_8BPP:
-                case BMF_16BPP:
-                case BMF_24BPP:
-                case BMF_32BPP:
-                   pds->dsBmih.biCompression = BI_RGB;
-                   break;
-                case BMF_4RLE:
-                   pds->dsBmih.biCompression = BI_RLE4;
-                   break;
-                case BMF_8RLE:
-                   pds->dsBmih.biCompression = BI_RLE8;
-                   break;
-                case BMF_JPEG:
-                   pds->dsBmih.biCompression = BI_JPEG;
-                   break;
-                case BMF_PNG:
-                   pds->dsBmih.biCompression = BI_PNG;
-                   break;
-            }
+			if(psurf->ppal->Mode & PAL_BITFIELDS)
+			{
+				pds->dsBmih.biCompression = BI_BITFIELDS;
+			}
+			else
+			{
+				switch (psurf->SurfObj.iBitmapFormat)
+				{
+					case BMF_1BPP:
+					case BMF_4BPP:
+					case BMF_8BPP:
+					case BMF_16BPP:
+					case BMF_24BPP:
+					case BMF_32BPP:
+					   pds->dsBmih.biCompression = BI_RGB;
+					   break;
+					case BMF_4RLE:
+					   pds->dsBmih.biCompression = BI_RLE4;
+					   break;
+					case BMF_8RLE:
+					   pds->dsBmih.biCompression = BI_RLE8;
+					   break;
+					case BMF_JPEG:
+					   pds->dsBmih.biCompression = BI_JPEG;
+					   break;
+					case BMF_PNG:
+					   pds->dsBmih.biCompression = BI_PNG;
+					   break;
+				}
+			}
             pds->dsBmih.biSizeImage = psurf->SurfObj.cjBits;
             pds->dsBmih.biXPelsPerMeter = 0;
             pds->dsBmih.biYPelsPerMeter = 0;
