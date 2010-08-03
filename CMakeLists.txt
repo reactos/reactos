@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(REACTOS)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+
 add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
