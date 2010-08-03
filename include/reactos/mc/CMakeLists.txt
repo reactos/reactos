@@ -5,7 +5,7 @@ MACRO (MACRO_ADD_MESSAGE_HEADERS)
     get_filename_component(FILE ${_in_FILE} NAME_WE)
     add_custom_command(
       OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
-      COMMAND ${MINGW_PREFIX}windmc ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos
+      COMMAND ${MINGW_PREFIX}windmc ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos
     )
     set_source_files_properties(
       ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc
