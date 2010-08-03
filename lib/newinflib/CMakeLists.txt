@@ -1,4 +1,3 @@
-include_directories(.)
 
 SET(GLOBAL_FILES infcore.c infget.c infput.c)
 

@@ -1,6 +1,4 @@
 
-include_directories(.)
-
 add_definitions(-D_NTOSKRNL_)
 add_definitions(-DNO_RTL_INLINES)
 add_definitions(-D_NTSYSTEM_)

@@ -1,5 +1,5 @@
-include_directories(.)
-include_directories(./include)
+
+include_directories(include)
 
 add_definitions(-D__MINGW32__ -DLIBXML_STATIC -D_REENTRANT -DHAVE_WIN32_THREADS -D_MBCS -D_WINDOWS -DWIN32 -DHAVE_CONFIG_H)
 add_definitions(-D_DLL -D__USE_CRTIMP)

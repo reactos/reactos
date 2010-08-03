@@ -1,5 +1,5 @@
-include_directories(./src)
-include_directories(./adns_win32)
+include_directories(src)
+include_directories(adns_win32)
 
 add_definitions(-DADNS_JGAA_WIN32)
 

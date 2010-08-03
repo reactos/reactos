@@ -1,9 +1,9 @@
 
-include_directories(BEFORE include/freebsd)
-include_directories(BEFORE include/freebsd/sys/include)
 include_directories(BEFORE include/freebsd/src/sys)
-include_directories(BEFORE include/freebsd/dev/include)
-include_directories(BEFORE include/freebsd/net/include)
+include_directories(include/freebsd)
+include_directories(include/freebsd/sys/include)
+include_directories(include/freebsd/dev/include)
+include_directories(include/freebsd/net/include)
 
 include_directories(include)
 
