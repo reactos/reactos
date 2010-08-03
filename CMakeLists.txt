@@ -75,6 +75,7 @@ include_directories(./include/reactos/libs)
 
 add_subdirectory(include/psdk)
 add_subdirectory(include/dxsdk)
+add_subdirectory(include/reactos/idl)
 add_subdirectory(include/reactos/mc)
 
 add_subdirectory(base)
@@ -109,8 +110,6 @@ ADD_CUSTOM_COMMAND(
   COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
   DEPENDS native-nci ${nci_folders}
 )
-
-SET_SOURCE_FILES_PROPERTIES(${nci_output} PROPERTIES GENERATED TRUE)
 
 ADD_CUSTOM_TARGET(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
 ADD_CUSTOM_TARGET(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
