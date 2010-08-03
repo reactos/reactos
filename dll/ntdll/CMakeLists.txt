@@ -1,16 +1,14 @@
+add_definitions(-D__NTDLL__)
+add_definitions(-D_NTOSKRNL_)
+add_definitions(-DCRTDLL)
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${REACTOS_BINARY_DIR}/dll/ntdll/ntsys.a
-  COMMAND ${MINGW_PREFIX}gcc ${CMAKE_C_FLAGS} -xc -E ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec > ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.spec
-  COMMAND native-winebuild -o ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.stubs.c --pedll ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.spec --filename ntdll.dll
-  COMMAND ${MINGW_PREFIX}gcc -o ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.stubs.o ${CMAKE_C_FLAGS} -c ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.stubs.c
-  COMMAND native-winebuild -o ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.auto.def --def -E ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.spec --filename ntdll.dll
-  COMMAND ${MINGW_PREFIX}dlltool --def ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.auto.def --kill-at --output-lib ${REACTOS_BINARY_DIR}/dll/ntdll/ntsys.a
-  COMMAND ${MINGW_PREFIX}ar -rc ${REACTOS_BINARY_DIR}/dll/ntdll/ntsys.a ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys_ntsys.stubs.o
-  DEPENDS native-winebuild
-)
+file(GLOB_RECURSE SOURCE *.c)
+list(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/ldr/elf.c ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/dispatch.c)
+list(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/amd64/stubs.c)
 
-SET_SOURCE_FILES_PROPERTIES(${REACTOS_BINARY_DIR}/dll/ntdll/ntsys.a PROPERTIES GENERATED TRUE)
+file(GLOB_RECURSE ARCH_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/dispatch/${ARCH}/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/dispatch/${ARCH}/*.s")
 
-ADD_CUSTOM_TARGET(ntsys ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/ntsys.a)
-add_dependencies(ntsys ntsys_pspec)
+add_library(ntdll SHARED ${ARCH_SOURCE} ${SOURCE})
+
+target_link_libraries(ntdll rtl ntdllsys libcntpr pseh debugsup_ntdll)
+add_dependencies(ntdll ntstatus version)
