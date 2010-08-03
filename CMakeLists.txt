@@ -16,12 +16,15 @@ include_directories(./include/reactos/wine)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl winebuild wmc wrc nci pefixup rsym FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
-# Activate support for asm source files
+# Activate support for assembly source files
 enable_language(ASM)
+
+# Activate language support for resource files
+enable_language(RC)
 
 set(IMPORT_EXECUTABLES "${REACTOS_SOURCE_DIR}/build/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
 include(${IMPORT_EXECUTABLES})
@@ -40,7 +43,10 @@ add_definitions(-DUSE_COMPILER_EXCEPTIONS)
 add_definitions(-D_USE_32BIT_TIME_T)
 
 # Compiler Core
-add_definitions(-gstabs+ -pipe -fms-extensions -fno-set-stack-executable)
+add_definitions(-pipe -fms-extensions -fno-set-stack-executable)
+
+# Debugging (Note: DWARF-4 on 4.5.1 when we ship)
+add_definitions(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types)
 
 # Tuning
 add_definitions(-march=pentium -mtune=i686)
