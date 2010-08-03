@@ -2,23 +2,13 @@
 include_directories(.)
 include_directories(./include)
 
-add_definitions(-D_CRTBLD)
-
 file(GLOB_RECURSE CRT_SOURCE "*.c")
 LIST(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stdio/findgen.c)
 LIST(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strtold.c)
 
 add_library(crt ${CRT_SOURCE})
-set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
+add_definitions(-D__MINGW_IMPORT=extern -DUSE_MSVCRT_PREFIX -D_MSVCRT_LIB_ -D_MSVCRT_ -D_MT -D_CRTBLD)
 add_dependencies(crt psdk)
-
-get_directory_property(defines COMPILE_DEFINITIONS)
-
-foreach(arg ${defines})
-  set(result_defs "${result_defs} -D${arg}")
-endforeach(arg ${defines})
-
-set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> ${result_defs} -D__ASM__ <FLAGS> -c <SOURCE>")
 
 if(ARCH MATCHES i386)
 set(LIBCNTPR_SOURCE 
@@ -124,7 +114,6 @@ else()
 endif()
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
-
-set_property(TARGET libcntpr PROPERTY COMPILE_DEFINITIONS NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)
-
+remove_definitions(-D__MINGW_IMPORT=extern -DUSE_MSVCRT_PREFIX -D_MSVCRT_LIB_ -D_MSVCRT_ -D_MT -D_CRTBLD)
+add_definitions(-DNO_RTL_INLINES -D_NTSYSTEM_ -D_NTDLLBUILD_ -D_LIBCNT_ -D__CRT__NO_INLINE)
 add_dependencies(libcntpr psdk)
