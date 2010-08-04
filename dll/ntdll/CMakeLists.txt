@@ -1,3 +1,4 @@
+
 add_definitions(-D__NTDLL__)
 add_definitions(-D_NTOSKRNL_)
 add_definitions(-DCRTDLL)
@@ -17,7 +18,7 @@ file(GLOB_RECURSE ARCH_SOURCE
 add_library(ntdll SHARED
             ${ARCH_SOURCE} ${SOURCE}
             ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.rc
-            ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h.gch)
+            ${CMAKE_CURRENT_BINARY_DIR}/ntdll_ntdll.h.gch)
 
 set_target_properties(ntdll PROPERTIES LINK_FLAGS "-Wl,-entry,0")
 
