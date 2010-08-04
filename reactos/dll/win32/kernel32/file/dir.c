@@ -972,7 +972,7 @@ ContainsPath(LPCWSTR name)
 {
     if (RtlDetermineDosPathNameType_U(name) != RtlPathTypeRelative) return TRUE;
     if (name[0] != '.') return FALSE;
-    if (name[1] == '/' || name[1] == '\\') return TRUE;
+    if (name[1] == '/' || name[1] == '\\' || name[1] == '\0') return TRUE;
     return (name[1] == '.' && (name[2] == '/' || name[2] == '\\'));
 }
 
