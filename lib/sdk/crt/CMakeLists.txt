@@ -1,4 +1,3 @@
-
 include_directories(./include)
 
 add_definitions(-D_CRTBLD)
@@ -7,8 +6,11 @@ file(GLOB_RECURSE CRT_SOURCE "*.c")
 LIST(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stdio/findgen.c)
 LIST(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strtold.c)
 
-add_library(crt ${CRT_SOURCE})
+SET_SOURCE_FILES_PROPERTIES(${CMAKE_CURRENT_BINARY_DIR}/precomp.h.gch PROPERTIES GENERATED ON)
+
+add_library(crt ${CRT_SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h.gch)
 set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
+add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
 add_dependencies(crt psdk)
 
 if(ARCH MATCHES i386)
