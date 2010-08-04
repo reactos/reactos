@@ -5,6 +5,7 @@ include(CMakeMacros.cmake)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 add_definitions(-D__REACTOS__)
 
