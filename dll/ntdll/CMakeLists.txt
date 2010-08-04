@@ -15,7 +15,7 @@ list(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/amd64/stubs.c)
 
 file(GLOB_RECURSE ARCH_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/dispatch/${ARCH}/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/dispatch/${ARCH}/*.s")
 
-add_library(ntdll SHARED ${ARCH_SOURCE} ${SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.rc)
-
+add_library(ntdll SHARED ${ARCH_SOURCE} ${SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.rc  ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h.gch)
 target_link_libraries(ntdll rtl ntdllsys libcntpr pseh)
+add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
 add_dependencies(ntdll ntstatus version)
