@@ -2119,8 +2119,8 @@ FASTCALL
 TextIntGetTextExtentPoint(PDC dc,
                           PTEXTOBJ TextObj,
                           LPCWSTR String,
-                          int Count,
-                          int MaxExtent,
+                          INT Count,
+                          ULONG MaxExtent,
                           LPINT Fit,
                           LPINT Dx,
                           LPSIZE Size)

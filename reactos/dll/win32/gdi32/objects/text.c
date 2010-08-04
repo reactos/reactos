@@ -192,6 +192,13 @@ GetTextExtentExPointW(
 	LPSIZE  lpSize
 	)
 {
+
+  if(nMaxExtent < -1)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
   return NtGdiGetTextExtentExW (
     hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 }
@@ -215,6 +222,12 @@ GetTextExtentExPointA(
   NTSTATUS Status;
   LPWSTR lpszStrW;
   BOOL rc = 0;
+
+  if(nMaxExtent < -1)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
 
   Status = HEAP_strdupA2W ( &lpszStrW, lpszStr );
   if (!NT_SUCCESS (Status))
