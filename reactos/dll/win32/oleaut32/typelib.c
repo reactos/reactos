@@ -903,6 +903,49 @@ end:
     return result;
 }
 
+/******************************************************************************
+ *		RegisterTypeLibForUser	[OLEAUT32.442]
+ * Adds information about a type library to the user registry
+ * NOTES
+ *    Docs: ITypeLib FAR * ptlib
+ *    Docs: OLECHAR FAR* szFullPath
+ *    Docs: OLECHAR FAR* szHelpDir
+ *
+ * RETURNS
+ *    Success: S_OK
+ *    Failure: Status
+ */
+HRESULT WINAPI RegisterTypeLibForUser(
+     ITypeLib * ptlib,     /* [in] Pointer to the library*/
+     OLECHAR * szFullPath, /* [in] full Path of the library*/
+     OLECHAR * szHelpDir)  /* [in] dir to the helpfile for the library,
+							 may be NULL*/
+{
+    FIXME("(%p, %s, %s) registering the typelib system-wide\n", ptlib,
+          debugstr_w(szFullPath), debugstr_w(szHelpDir));
+    return RegisterTypeLib(ptlib, szFullPath, szHelpDir);
+}
+
+/******************************************************************************
+ *	UnRegisterTypeLibForUser	[OLEAUT32.443]
+ * Removes information about a type library from the user registry
+ *
+ * RETURNS
+ *    Success: S_OK
+ *    Failure: Status
+ */
+HRESULT WINAPI UnRegisterTypeLibForUser(
+    REFGUID libid,	/* [in] GUID of the library */
+    WORD wVerMajor,	/* [in] major version */
+    WORD wVerMinor,	/* [in] minor version */
+    LCID lcid,	/* [in] locale id */
+    SYSKIND syskind)
+{
+    FIXME("(%s, %u, %u, %u, %u) unregistering the typelib system-wide\n",
+          debugstr_guid(libid), wVerMajor, wVerMinor, lcid, syskind);
+    return UnRegisterTypeLib(libid, wVerMajor, wVerMinor, lcid, syskind);
+}
+
 /*======================= ITypeLib implementation =======================*/
 
 typedef struct tagTLBCustData
@@ -6017,13 +6060,13 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
     unsigned int var_index;
     TYPEKIND type_kind;
     HRESULT hres;
-    const TLBFuncDesc *pFuncInfo = This->funclist;
+    const TLBFuncDesc *pFuncInfo;
 
     TRACE("(%p)(%p,id=%d,flags=0x%08x,%p,%p,%p,%p)\n",
       This,pIUnk,memid,wFlags,pDispParams,pVarResult,pExcepInfo,pArgErr
     );
 
-    if( pFuncInfo->funcdesc.wFuncFlags == FUNCFLAG_FRESTRICTED )
+    if( This->TypeAttr.wTypeFlags & TYPEFLAG_FRESTRICTED )
         return DISP_E_MEMBERNOTFOUND;
 
     if (!pDispParams)
@@ -6045,7 +6088,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
      * FUNCDESC for dispinterfaces and we want the real function description */
     for (pFuncInfo = This->funclist; pFuncInfo; pFuncInfo=pFuncInfo->next)
         if ((memid == pFuncInfo->funcdesc.memid) &&
-            (wFlags & pFuncInfo->funcdesc.invkind))
+            (wFlags & pFuncInfo->funcdesc.invkind) &&
+            (pFuncInfo->funcdesc.wFuncFlags & FUNCFLAG_FRESTRICTED) == 0)
             break;
 
     if (pFuncInfo) {
