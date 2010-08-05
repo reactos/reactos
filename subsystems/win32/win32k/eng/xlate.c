@@ -65,10 +65,10 @@ EXLATEOBJ_iXlateRGBtoBGR(PEXLATEOBJ pxlo, ULONG iColor)
     ULONG iNewColor;
 
     /* Copy green */
-    iNewColor = iColor & 0x00ff00;
+    iNewColor = iColor & 0xff00ff00;
 
     /* Mask red and blue */
-    iColor &= 0xff00ff;
+    iColor &= 0x00ff00ff;
 
     /* Shift and copy red and blue */
     iNewColor |= iColor >> 16;

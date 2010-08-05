@@ -869,17 +869,12 @@ StretchDIBits(HDC hdc,
     }
   }
 #endif
-  if ( iUsage ) // Save time, we only look at non RGB.
-  {
-     pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage,
-                                      &ConvertedInfoSize, FALSE);
-     if (!pConvertedInfo)
-     {
+    pConvertedInfo = ConvertBitmapInfo(lpBitsInfo, iUsage,
+                                  &ConvertedInfoSize, FALSE);
+    if (!pConvertedInfo)
+    {
         return 0;
-     }
-  }
-  else
-     pConvertedInfo = (PBITMAPINFO)lpBitsInfo;
+    }
 
   cjBmpScanSize = DIB_BitmapBitsSize((LPBITMAPINFO)pConvertedInfo);
 

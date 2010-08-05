@@ -5,7 +5,7 @@ NTSTATUS _MmCopyFromCaller( PVOID Target, PVOID Source, UINT Bytes ) {
 
     _SEH2_TRY
     {
-        /* ProbeForRead(Source,Bytes,1); */
+        ProbeForRead(Source,Bytes,1);
         RtlCopyMemory(Target,Source,Bytes);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
