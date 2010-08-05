@@ -1585,13 +1585,13 @@ static const IUnknownVtbl UnknownVtbl =
     Unknown_Release
 };
 
-static IUnknown Unknown2 = { &UnknownVtbl };
+static IUnknown Unknown = { &UnknownVtbl };
 
 static void test_OleLockRunning(void)
 {
     HRESULT hr;
 
-    hr = OleLockRunning((LPUNKNOWN)&Unknown2, TRUE, FALSE);
+    hr = OleLockRunning((LPUNKNOWN)&Unknown, TRUE, FALSE);
     ok(hr == S_OK, "OleLockRunning failed 0x%08x\n", hr);
 }
 

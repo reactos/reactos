@@ -35,8 +35,6 @@
 
 #include "wine/test.h"
 
-extern const IID GUID_NULL;
-
 /* functions that are not present on all versions of Windows */
 HRESULT (WINAPI * pCoInitializeEx)(LPVOID lpReserved, DWORD dwCoInit);
 HRESULT (WINAPI * pCoGetObjectContext)(REFIID riid, LPVOID *ppv);

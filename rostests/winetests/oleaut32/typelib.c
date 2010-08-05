@@ -56,7 +56,18 @@
 
 #define ok_ole_success(hr, func) ok(hr == S_OK, #func " failed with error 0x%08x\n", hr)
 
+static HRESULT WINAPI (*pRegisterTypeLibForUser)(ITypeLib*,OLECHAR*,OLECHAR*);
+static HRESULT WINAPI (*pUnRegisterTypeLibForUser)(REFGUID,WORD,WORD,LCID,SYSKIND);
+
 static const WCHAR wszStdOle2[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
+
+static void init_function_pointers(void)
+{
+    HMODULE hmod = GetModuleHandleA("oleaut32.dll");
+
+    pRegisterTypeLibForUser = (void *)GetProcAddress(hmod, "RegisterTypeLibForUser");
+    pUnRegisterTypeLibForUser = (void *)GetProcAddress(hmod, "UnRegisterTypeLibForUser");
+}
 
 static void ref_count_test(LPCWSTR type_lib)
 {
@@ -108,6 +119,7 @@ static void test_TypeComp(void)
     static WCHAR wszOLE_COLOR[] = {'O','L','E','_','C','O','L','O','R',0};
     static WCHAR wszClone[] = {'C','l','o','n','e',0};
     static WCHAR wszclone[] = {'c','l','o','n','e',0};
+    static WCHAR wszJunk[] = {'J','u','n','k',0};
 
     hr = LoadTypeLib(wszStdOle2, &pTypeLib);
     ok_ole_success(hr, LoadTypeLib);
@@ -282,6 +294,17 @@ static void test_TypeComp(void)
     ok(bindptr.lpfuncdesc != NULL, "bindptr.lpfuncdesc should not have been set to NULL\n");
     ITypeInfo_ReleaseFuncDesc(pTypeInfo, bindptr.lpfuncdesc);
     ITypeInfo_Release(pTypeInfo);
+
+    /* tests non-existent members */
+    desckind = 0xdeadbeef;
+    bindptr.lptcomp = (ITypeComp*)0xdeadbeef;
+    pTypeInfo = (ITypeInfo*)0xdeadbeef;
+    ulHash = LHashValOfNameSys(SYS_WIN32, LOCALE_NEUTRAL, wszJunk);
+    hr = ITypeComp_Bind(pTypeComp, wszJunk, ulHash, 0, &pTypeInfo, &desckind, &bindptr);
+    ok_ole_success(hr, ITypeComp_Bind);
+    ok(desckind == DESCKIND_NONE, "desckind should have been DESCKIND_NONE, was: %d\n", desckind);
+    ok(pTypeInfo == NULL, "pTypeInfo should have been NULL, was: %p\n", pTypeInfo);
+    ok(bindptr.lptcomp == NULL, "bindptr should have been NULL, was: %p\n", bindptr.lptcomp);
 
     ITypeComp_Release(pTypeComp);
     ITypeInfo_Release(pFontTypeInfo);
@@ -477,31 +500,69 @@ static void test_TypeInfo(void)
        "ITypeInfo_GetIDsOfNames should have returned DISP_E_UNKNOWNNAME instead of 0x%08x\n",
        hr);
 
-    /* test invalid memberid */
-    dispparams.cNamedArgs = 0;
     dispparams.cArgs = 0;
     dispparams.rgdispidNamedArgs = NULL;
     dispparams.rgvarg = NULL;
+
+            /* test dispparams not NULL */
+
+    /* invalid member id -- wrong flags -- cNamedArgs not bigger than cArgs */
+    dispparams.cNamedArgs = 0;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, 0xdeadbeef, DISPATCH_PROPERTYGET, &dispparams, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    /* invalid member id -- correct flags -- cNamedArgs not bigger than cArgs */
     hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, 0xdeadbeef, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
     ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+
+    /* invalid member id -- wrong flags -- cNamedArgs bigger than cArgs */
+    dispparams.cNamedArgs = 1;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, 0xdeadbeef, DISPATCH_PROPERTYGET, &dispparams, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    /* invalid member id -- correct flags -- cNamedArgs bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, 0xdeadbeef, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+
 
     hr = ITypeInfo_GetIDsOfNames(pTypeInfo, &pwszClone, 1, &dispidMember);
     ok_ole_success(hr, ITypeInfo_GetIDsOfNames);
 
-    /* test correct memberid, but wrong flags */
+    /* correct member id -- wrong flags -- cNamedArgs not bigger than cArgs */
+    dispparams.cNamedArgs = 0;
     hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, &dispparams, NULL, NULL, NULL);
     ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs not bigger than cArgs
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
+    ok(hr == 0x8002000e, "ITypeInfo_Invoke should have returned 0x8002000e instead of 0x%08x\n", hr); */
 
-    /* test NULL dispparams */
-    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, NULL, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
-
-    /* test dispparams->cNamedArgs being bigger than dispparams->cArgs */
+    /* correct member id -- wrong flags -- cNamedArgs bigger than cArgs */
     dispparams.cNamedArgs = 1;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, &dispparams, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs bigger than cArgs */
     hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
     ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
 
+            /* test NULL dispparams */
+
+    /* correct member id -- wrong flags -- cNamedArgs not bigger than cArgs */
+    dispparams.cNamedArgs = 0;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, NULL, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs not bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, NULL, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+
+    /* correct member id -- wrong flags -- cNamedArgs bigger than cArgs */
+    dispparams.cNamedArgs = 1;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, NULL, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, NULL, NULL, NULL, NULL);
+    ok(hr == E_INVALIDARG, "ITypeInfo_Invoke should have returned E_INVALIDARG instead of 0x%08x\n", hr);
+
     ITypeInfo_Release(pTypeInfo);
+
+
 
     hr = ITypeLib_GetTypeInfoOfGuid(pTypeLib, &IID_IDispatch, &pTypeInfo);
     ok_ole_success(hr, ITypeLib_GetTypeInfoOfGuid); 
@@ -528,11 +589,41 @@ static void test_TypeInfo(void)
         VariantClear(&var);
     }
 
-    /* test invoking a method with a [restricted] keyword */
-    hr = ITypeInfo_Invoke(pTypeInfo, NULL, dispidMember, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
-    todo_wine {
+            /* test invoking a method with a [restricted] keyword  */
+
+    /* correct member id -- wrong flags -- cNamedArgs not bigger than cArgs */
+    dispparams.cNamedArgs = 0;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, &dispparams, NULL, NULL, NULL);
     ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
-    }
+    /* correct member id -- correct flags -- cNamedArgs not bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+
+    /* correct member id -- wrong flags -- cNamedArgs bigger than cArgs */
+    dispparams.cNamedArgs = 1;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, &dispparams, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+
+            /* test NULL dispparams */
+
+    /* correct member id -- wrong flags -- cNamedArgs not bigger than cArgs */
+    dispparams.cNamedArgs = 0;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, NULL, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs not bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, NULL, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+
+    /* correct member id -- wrong flags -- cNamedArgs bigger than cArgs */
+    dispparams.cNamedArgs = 1;
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_PROPERTYGET, NULL, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
+    /* correct member id -- correct flags -- cNamedArgs bigger than cArgs */
+    hr = ITypeInfo_Invoke(pTypeInfo, (void *)0xdeadbeef, dispidMember, DISPATCH_METHOD, NULL, NULL, NULL, NULL);
+    ok(hr == DISP_E_MEMBERNOTFOUND, "ITypeInfo_Invoke should have returned DISP_E_MEMBERNOTFOUND instead of 0x%08x\n", hr);
 
     ITypeInfo_Release(pTypeInfo);
     ITypeLib_Release(pTypeLib);
@@ -2094,7 +2185,7 @@ static void test_create_typelibs(void)
 }
 
 
-static void test_register_typelib(void)
+static void test_register_typelib(BOOL system_registration)
 {
     HRESULT hr;
     WCHAR filename[MAX_PATH];
@@ -2124,13 +2215,32 @@ static void test_register_typelib(void)
         { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE }
     };
 
+    trace("Starting %s typelib registration tests\n",
+          system_registration ? "system" : "user");
+
+    if (!system_registration && (!pRegisterTypeLibForUser || !pUnRegisterTypeLibForUser))
+    {
+        win_skip("User typelib registration functions are not available\n");
+        return;
+    }
+
     filenameA = create_test_typelib(3);
     MultiByteToWideChar(CP_ACP, 0, filenameA, -1, filename, MAX_PATH);
 
     hr = LoadTypeLibEx(filename, REGKIND_NONE, &typelib);
     ok(SUCCEEDED(hr), "got %08x\n", hr);
 
-    hr = RegisterTypeLib(typelib, filename, NULL);
+    if (system_registration)
+        hr = RegisterTypeLib(typelib, filename, NULL);
+    else
+        hr = pRegisterTypeLibForUser(typelib, filename, NULL);
+    if (hr == TYPE_E_REGISTRYACCESS)
+    {
+        win_skip("Insufficient privileges to register typelib in the registry\n");
+        ITypeLib_Release(typelib);
+        DeleteFileA(filenameA);
+        return;
+    }
     ok(SUCCEEDED(hr), "got %08x\n", hr);
 
     count = ITypeLib_GetTypeInfoCount(typelib);
@@ -2193,7 +2303,10 @@ static void test_register_typelib(void)
         ITypeInfo_Release(typeinfo);
     }
 
-    hr = UnRegisterTypeLib(&LIBID_register_test, 1, 0, LOCALE_NEUTRAL, sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);
+    if (system_registration)
+        hr = UnRegisterTypeLib(&LIBID_register_test, 1, 0, LOCALE_NEUTRAL, sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);
+    else
+        hr = pUnRegisterTypeLibForUser(&LIBID_register_test, 1, 0, LOCALE_NEUTRAL, sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);
     ok(SUCCEEDED(hr), "got %08x\n", hr);
 
     ITypeLib_Release(typelib);
@@ -2203,6 +2316,8 @@ static void test_register_typelib(void)
 START_TEST(typelib)
 {
     const char *filename;
+
+    init_function_pointers();
 
     ref_count_test(wszStdOle2);
     test_TypeComp();
@@ -2218,7 +2333,8 @@ START_TEST(typelib)
         DeleteFile( filename );
     }
 
-    test_register_typelib();
+    test_register_typelib(TRUE);
+    test_register_typelib(FALSE);
     test_create_typelibs();
 
 }

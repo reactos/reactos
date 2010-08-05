@@ -31,8 +31,7 @@
 
 #include "wine/test.h"
 
-static int droptarget_addref_called;
-static int droptarget_release_called;
+static int droptarget_refs;
 
 /* helper macros to make tests a bit leaner */
 #define ok_ole_success(hr, func) ok(hr == S_OK, func " failed with error 0x%08x\n", hr)
@@ -54,14 +53,14 @@ static HRESULT WINAPI DropTarget_QueryInterface(IDropTarget* iface, REFIID riid,
 
 static ULONG WINAPI DropTarget_AddRef(IDropTarget* iface)
 {
-    droptarget_addref_called++;
-    return 2;
+    droptarget_refs++;
+    return droptarget_refs;
 }
 
 static ULONG WINAPI DropTarget_Release(IDropTarget* iface)
 {
-    droptarget_release_called++;
-    return 1;
+    droptarget_refs--;
+    return droptarget_refs;
 }
 
 static HRESULT WINAPI DropTarget_DragEnter(IDropTarget* iface,
@@ -314,10 +313,10 @@ static void test_Register_Revoke(void)
     hr = RegisterDragDrop((HWND)0xdeadbeef, &DropTarget);
     ok(hr == DRAGDROP_E_INVALIDHWND, "RegisterDragDrop with garbage hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);
 
-    ok(droptarget_addref_called == 0, "DropTarget_AddRef shouldn't have been called\n");
+    ok(droptarget_refs == 0, "DropTarget refs should be zero not %d\n", droptarget_refs);
     hr = RegisterDragDrop(hwnd, &DropTarget);
     ok_ole_success(hr, "RegisterDragDrop");
-    ok(droptarget_addref_called == 1, "DropTarget_AddRef should have been called once, not %d times\n", droptarget_addref_called);
+    ok(droptarget_refs >= 1, "DropTarget refs should be at least one\n");
 
     prop = GetPropA(hwnd, "OleDropTargetInterface");
     ok(prop == &DropTarget, "expected IDropTarget pointer %p, got %p\n", &DropTarget, prop);
@@ -325,15 +324,15 @@ static void test_Register_Revoke(void)
     hr = RegisterDragDrop(hwnd, &DropTarget);
     ok(hr == DRAGDROP_E_ALREADYREGISTERED, "RegisterDragDrop with already registered hwnd should return DRAGDROP_E_ALREADYREGISTERED instead of 0x%08x\n", hr);
 
-    ok(droptarget_release_called == 0, "DropTarget_Release shouldn't have been called\n");
+    ok(droptarget_refs >= 1, "DropTarget refs should be at least one\n");
     OleUninitialize();
-    ok(droptarget_release_called == 0, "DropTarget_Release shouldn't have been called\n");
+    ok(droptarget_refs >= 1, "DropTarget refs should be at least one\n");
 
     hr = RevokeDragDrop(hwnd);
     ok_ole_success(hr, "RevokeDragDrop");
-    ok(droptarget_release_called == 1 ||
-        broken(droptarget_release_called == 0), /* NT4 */
-        "DropTarget_Release should have been called once, not %d times\n", droptarget_release_called);
+    ok(droptarget_refs == 0 ||
+       broken(droptarget_refs == 1), /* NT4 */
+       "DropTarget refs should be zero not %d\n", droptarget_refs);
 
     hr = RevokeDragDrop(NULL);
     ok(hr == DRAGDROP_E_INVALIDHWND, "RevokeDragDrop with NULL hwnd should return DRAGDROP_E_INVALIDHWND instead of 0x%08x\n", hr);

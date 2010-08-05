@@ -216,6 +216,13 @@ test_pic_with_stream(LPSTREAM stream, unsigned int imgsize)
 	ok(hres == S_OK,"IPicture_get_Handle does not return S_OK, but 0x%08x\n", hres);
 	ok(handle != 0, "IPicture_get_Handle returns a NULL handle, but it should be non NULL\n");
 
+        if (handle)
+        {
+            BITMAP bmp;
+            GetObject((HGDIOBJ)handle, sizeof(BITMAP), &bmp);
+            todo_wine ok(bmp.bmBits != 0, "not a dib\n");
+        }
+
 	width = 0;
 	hres = IPicture_get_Width (pic, &width);
 	ok(hres == S_OK,"IPicture_get_Width does not return S_OK, but 0x%08x\n", hres);
@@ -932,11 +939,11 @@ static HRESULT WINAPI NoStatStreamImpl_QueryInterface(
   NoStatStreamImpl* const This=(NoStatStreamImpl*)iface;
   if (ppvObject==0) return E_INVALIDARG;
   *ppvObject = 0;
-  if (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0)
+  if (IsEqualIID(&IID_IUnknown, riid))
   {
     *ppvObject = This;
   }
-  else if (memcmp(&IID_IStream, riid, sizeof(IID_IStream)) == 0)
+  else if (IsEqualIID(&IID_IStream, riid))
   {
     *ppvObject = This;
   }

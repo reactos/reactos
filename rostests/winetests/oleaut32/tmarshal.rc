@@ -28,10 +28,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "wine/wine_common_ver.rc"
 
 /* @makedep: tmarshal.tlb */
-1 TYPELIB LOADONCALL DISCARDABLE tmarshal.tlb
+1 TYPELIB tmarshal.tlb
 
 /* @makedep: test_tlb.tlb */
-2 TYPELIB LOADONCALL DISCARDABLE test_tlb.tlb
+2 TYPELIB test_tlb.tlb
 
 /* @makedep: test_reg.tlb */
-3 TYPELIB LOADONCALL DISCARDABLE test_reg.tlb
+3 TYPELIB test_reg.tlb
