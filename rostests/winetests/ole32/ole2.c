@@ -22,7 +22,7 @@
 #define CONST_VTABLE
 
 #include <stdarg.h>
-
+#define NOCRYPT
 #include "windef.h"
 #include "winbase.h"
 #include "objbase.h"
