@@ -126,9 +126,9 @@
 @ cdecl __RTDynamicCast(ptr long ptr ptr long) MSVCRT___RTDynamicCast
 @ cdecl __RTtypeid(ptr) MSVCRT___RTtypeid
 @ cdecl __STRINGTOLD(ptr ptr str long)
-# @ cdecl ___lc_codepage_func()
+@ cdecl ___lc_codepage_func()
 # @ cdecl ___lc_collate_cp_func()
-# @ cdecl ___lc_handle_func()
+@ cdecl ___lc_handle_func()
 # @ cdecl ___mb_cur_max_func() MSVCRT___mb_cur_max_func
 @ cdecl ___setlc_active_func() 
 @ cdecl ___unguarded_readlc_active_add_func()
@@ -151,10 +151,10 @@
 @ cdecl __isascii(long) __isascii
 @ cdecl __iscsym(long) __iscsym
 @ cdecl __iscsymf(long) __iscsymf
-@ extern __lc_codepage __lc_codepage
+@ extern __lc_codepage MSVCRT___lc_codepage
 @ stub __lc_collate
-@ extern __lc_collate_cp __lc_collate_cp
-@ extern __lc_handle __lc_handle
+@ extern __lc_collate_cp MSVCRT___lc_collate_cp
+@ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
 # stub __libm_sse2_acos
 # stub __libm_sse2_acosf
