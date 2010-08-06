@@ -124,8 +124,8 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     appalSurfaceDefault[BMF_4BPP] = gppalDefault;
     appalSurfaceDefault[BMF_8BPP] = gppalDefault;
     appalSurfaceDefault[BMF_16BPP] = &gpalRGB565;
-    appalSurfaceDefault[BMF_24BPP] = &gpalRGB;
-    appalSurfaceDefault[BMF_32BPP] = &gpalRGB;
+    appalSurfaceDefault[BMF_24BPP] = &gpalBGR;
+    appalSurfaceDefault[BMF_32BPP] = &gpalBGR;
     appalSurfaceDefault[BMF_4RLE] = gppalDefault;
     appalSurfaceDefault[BMF_8RLE] = gppalDefault;
     appalSurfaceDefault[BMF_JPEG] = &gpalRGB;
