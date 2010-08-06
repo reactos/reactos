@@ -73,11 +73,24 @@ CdfsGetPVDData(PUCHAR Buffer,
     /* Extract the volume label */
     pc = Pvd->VolumeId;
     pw = CdInfo->VolumeLabel;
-    for (i = 0; i < MAXIMUM_VOLUME_LABEL_LENGTH && *pc != ' '; i++)
+    for (i = 0; i < MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR); i++)
     {
         *pw++ = (WCHAR)*pc++;
     }
     *pw = 0;
+
+    /* Trim trailing spaces */
+    while (pw > CdInfo->VolumeLabel)
+    {
+        if (*--pw != ' ') break;
+
+        /* Remove the space */
+        *pw = '\0';
+
+        /* Decrease size */
+        i--;
+    }
+
     CdInfo->VolumeLabelLength = i * sizeof(WCHAR);
 
     CdInfo->VolumeSpaceSize = Pvd->VolumeSpaceSizeL;

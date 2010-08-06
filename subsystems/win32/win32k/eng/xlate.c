@@ -83,17 +83,17 @@ EXLATEOBJ_iXlateRGBto555(PEXLATEOBJ pxlo, ULONG iColor)
 {
     ULONG iNewColor;
 
-    /* Copy red */
-    iColor <<= 7;
-    iNewColor = iColor & 0x7C00;
+    /* Copy blue */
+    iColor >>= 3;
+    iNewColor = iColor & 0x1F;
 
     /* Copy green */
-    iColor >>= 13;
+    iColor >>= 3;
     iNewColor |= iColor & 0x3E0;
 
-    /* Copy green */
-    iColor >>= 13;
-    iNewColor |= iColor & 0x1F;
+    /* Copy red */
+    iColor >>= 3;
+    iNewColor |= iColor & 0x7C00;
 
     return iNewColor;
 }
@@ -104,17 +104,17 @@ EXLATEOBJ_iXlateBGRto555(PEXLATEOBJ pxlo, ULONG iColor)
 {
     ULONG iNewColor;
 
-    /* Copy blue */
-    iColor >>= 3;
-    iNewColor = iColor & 0x1f;
+    /* Copy red */
+    iColor <<= 7;
+    iNewColor = iColor & 0x7C00;
 
     /* Copy green */
-    iColor >>= 3;
+    iColor >>= 13;
     iNewColor |= (iColor & 0x3E0);
 
-    /* Copy red */
-    iColor >>= 3;
-    iNewColor |= (iColor & 0x7C00);
+    /* Copy blue */
+    iColor >>= 13;
+    iNewColor |= (iColor & 0x1F);
 
     return iNewColor;
 }
@@ -122,27 +122,6 @@ EXLATEOBJ_iXlateBGRto555(PEXLATEOBJ pxlo, ULONG iColor)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlateRGBto565(PEXLATEOBJ pxlo, ULONG iColor)
-{
-    ULONG iNewColor;
-
-    /* Copy red */
-    iColor <<= 8;
-    iNewColor = iColor & 0xF800;
-
-    /* Copy green */
-    iColor >>= 13;
-    iNewColor |= iColor & 0x7E0;
-
-    /* Copy green */
-    iColor >>= 14;
-    iNewColor |= iColor & 0x1F;
-
-    return iNewColor;
-}
-
-ULONG
-FASTCALL
-EXLATEOBJ_iXlateBGRto565(PEXLATEOBJ pxlo, ULONG iColor)
 {
     ULONG iNewColor;
 
@@ -163,6 +142,27 @@ EXLATEOBJ_iXlateBGRto565(PEXLATEOBJ pxlo, ULONG iColor)
 
 ULONG
 FASTCALL
+EXLATEOBJ_iXlateBGRto565(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy red */
+    iColor <<= 8;
+    iNewColor = iColor & 0xF800;
+
+    /* Copy green */
+    iColor >>= 13;
+    iNewColor |= iColor & 0x7E0;
+
+    /* Copy green */
+    iColor >>= 14;
+    iNewColor |= iColor & 0x1F;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
 EXLATEOBJ_iXlateRGBtoPal(PEXLATEOBJ pexlo, ULONG iColor)
 {
     return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
@@ -171,26 +171,6 @@ EXLATEOBJ_iXlateRGBtoPal(PEXLATEOBJ pexlo, ULONG iColor)
 ULONG
 FASTCALL
 EXLATEOBJ_iXlate555toRGB(PEXLATEOBJ pxlo, ULONG iColor)
-{
-    ULONG iNewColor;
-
-    /* Copy blue */
-    iNewColor = gajXlate5to8[iColor & 0x1F] << 16;
-
-    /* Copy green */
-    iColor >>= 5;
-    iNewColor |= gajXlate5to8[iColor & 0x1F] << 8;
-
-    /* Copy red */
-    iColor >>= 5;
-    iNewColor |= gajXlate5to8[iColor & 0x1F];
-
-    return iNewColor;
-}
-
-ULONG
-FASTCALL
-EXLATEOBJ_iXlate555toBGR(PEXLATEOBJ pxlo, ULONG iColor)
 {
     ULONG iNewColor;
 
@@ -204,6 +184,26 @@ EXLATEOBJ_iXlate555toBGR(PEXLATEOBJ pxlo, ULONG iColor)
     /* Copy red */
     iColor >>= 5;
     iNewColor |= gajXlate5to8[iColor & 0x1F] << 16;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate555toBGR(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = gajXlate5to8[iColor & 0x1F] << 16;
+
+    /* Copy green */
+    iColor >>= 5;
+    iNewColor |= gajXlate5to8[iColor & 0x1F] << 8;
+
+    /* Copy red */
+    iColor >>= 5;
+    iNewColor |= gajXlate5to8[iColor & 0x1F];
 
     return iNewColor;
 }
@@ -260,7 +260,7 @@ EXLATEOBJ_iXlate565toRGB(PEXLATEOBJ pexlo, ULONG iColor)
     ULONG iNewColor;
 
     /* Copy blue */
-    iNewColor = gajXlate5to8[iColor & 0x1F] << 16;
+    iNewColor = gajXlate5to8[iColor & 0x1F];
 
     /* Copy green */
     iColor >>= 5;
@@ -268,7 +268,7 @@ EXLATEOBJ_iXlate565toRGB(PEXLATEOBJ pexlo, ULONG iColor)
 
     /* Copy red */
     iColor >>= 6;
-    iNewColor |= gajXlate5to8[iColor & 0x1F];
+    iNewColor |= gajXlate5to8[iColor & 0x1F] << 16;
 
     return iNewColor;
 }
@@ -280,15 +280,15 @@ EXLATEOBJ_iXlate565toBGR(PEXLATEOBJ pexlo, ULONG iColor)
     ULONG iNewColor;
 
     /* Copy blue */
-    iNewColor = gajXlate5to8[iColor & 0x1F];
+    iNewColor = gajXlate5to8[iColor & 0x1F] << 16;
 
     /* Copy green */
     iColor >>= 5;
     iNewColor |= gajXlate6to8[iColor & 0x3F] << 8;
 
-    /* Copy blue */
+    /* Copy red */
     iColor >>= 6;
-    iNewColor |= gajXlate5to8[iColor & 0x1F] << 16;
+    iNewColor |= gajXlate5to8[iColor & 0x1F];
 
     return iNewColor;
 }

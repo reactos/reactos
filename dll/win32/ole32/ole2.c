@@ -409,6 +409,7 @@ HRESULT WINAPI RegisterDragDrop(HWND hwnd, LPDROPTARGET pDropTarget)
   HRESULT hr;
   IStream *stream;
   HANDLE map;
+  IUnknown *unk;
 
   TRACE("(%p,%p)\n", hwnd, pDropTarget);
 
@@ -449,7 +450,15 @@ HRESULT WINAPI RegisterDragDrop(HWND hwnd, LPDROPTARGET pDropTarget)
   hr = CreateStreamOnHGlobal(NULL, TRUE, &stream);
   if(FAILED(hr)) return hr;
 
-  hr = CoMarshalInterface(stream, &IID_IDropTarget, (IUnknown*)pDropTarget, MSHCTX_LOCAL, NULL, MSHLFLAGS_TABLESTRONG);
+  hr = IDropTarget_QueryInterface(pDropTarget, &IID_IUnknown, (void**)&unk);
+  if(FAILED(hr))
+  {
+      IStream_Release(stream);
+      return hr;
+  }
+  hr = CoMarshalInterface(stream, &IID_IDropTarget, unk, MSHCTX_LOCAL, NULL, MSHLFLAGS_TABLESTRONG);
+  IUnknown_Release(unk);
+
   if(SUCCEEDED(hr))
   {
     hr = create_map_from_stream(stream, &map);
