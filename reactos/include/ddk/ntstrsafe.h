@@ -33,7 +33,7 @@ typedef unsigned long DWORD;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringLengthWorkerA(IN LPCSTR String,
@@ -66,7 +66,7 @@ RtlStringLengthWorkerA(IN LPCSTR String,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringValidateDestA(IN LPSTR Destination,
@@ -95,7 +95,7 @@ RtlStringValidateDestA(IN LPSTR Destination,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringExValidateDestA(IN OUT LPSTR *Destination,
@@ -111,7 +111,7 @@ RtlStringExValidateDestA(IN OUT LPSTR *Destination,
                                   MaxLength);
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringExValidateSrcA(IN OUT LPCSTR *Source OPTIONAL,
@@ -130,7 +130,7 @@ RtlStringExValidateSrcA(IN OUT LPCSTR *Source OPTIONAL,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringVPrintfWorkerA(OUT LPSTR Destination,
@@ -171,7 +171,7 @@ RtlStringVPrintfWorkerA(OUT LPSTR Destination,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCopyWorkerA(OUT LPSTR Destination,
@@ -208,7 +208,7 @@ RtlStringCopyWorkerA(OUT LPSTR Destination,
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCchCopyA(IN LPSTR Destination,
@@ -219,7 +219,7 @@ RtlStringCchCopyA(IN LPSTR Destination,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCbPrintfA(OUT LPSTR Destination,
@@ -249,7 +249,7 @@ RtlStringCbPrintfA(OUT LPSTR Destination,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCbPrintfExA(OUT LPSTR Destination,
@@ -330,7 +330,7 @@ RtlStringCbPrintfExA(OUT LPSTR Destination,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCbCopyExA(OUT LPSTR Destination,
@@ -407,7 +407,7 @@ RtlStringCbCopyExA(OUT LPSTR Destination,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCbPrintfW(
@@ -420,7 +420,7 @@ RtlStringCbPrintfW(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCbCatExA(IN OUT LPSTR Destination,
@@ -494,7 +494,7 @@ RtlStringCbCatExA(IN OUT LPSTR Destination,
     return Status;
 }
 
-__inline
+static __inline
 NTSTATUS
 NTAPI
 RtlStringCbCopyA(OUT LPSTR Destination,
