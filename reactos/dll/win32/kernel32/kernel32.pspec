@@ -578,16 +578,16 @@
 @ stdcall GetNativeSystemInfo(ptr)
 ;@ stdcall -arch=x86_64 GetNextUmsListItem
 @ stdcall GetNextVDMCommand(long)
-@ stdcall GetNlsSectionName(long long double str str double) ; missing in Win 7
-@ stdcall GetNumaAvailableMemory(ptr double ptr) ; missing in Win 7
-@ stdcall GetNumaAvailableMemoryNode(double ptr)
+@ stdcall GetNlsSectionName(long long long str str long) ; missing in Win 7
+@ stdcall GetNumaAvailableMemory(ptr long ptr) ; missing in Win 7
+@ stdcall GetNumaAvailableMemoryNode(long ptr)
 ;@ stdcall GetNumaAvailableMemoryNodeEx ; Win 7
 @ stdcall GetNumaHighestNodeNumber(ptr)
 ;@ stdcall GetNumaNodeNumberFromHandle ; Win 7
-@ stdcall GetNumaNodeProcessorMask(double ptr)
+@ stdcall GetNumaNodeProcessorMask(long ptr)
 ;@ stdcall GetNumaNodeProcessorMaskEx ; Win 7
-@ stdcall GetNumaProcessorMap(ptr double ptr) ; missing in Win 7
-@ stdcall GetNumaProcessorNode(double ptr)
+@ stdcall GetNumaProcessorMap(ptr long ptr) ; missing in Win 7
+@ stdcall GetNumaProcessorNode(long ptr)
 ;@ stdcall GetNumaProcessorNodeEx ; Win 7
 ;@ stdcall GetNumaProximityNode ; Win 7
 ;@ stdcall GetNumaProximityNodeEx ; Win 7
@@ -613,7 +613,7 @@
 @ stdcall GetPrivateProfileStructW(wstr wstr ptr long wstr)
 @ stdcall GetProcAddress(long str)
 @ stdcall GetProcessAffinityMask(long ptr ptr)
-@ stdcall GetProcessFlags(long)
+//@ stdcall GetProcessFlags(long)
 ;@ stdcall GetProcessDEPPolicy ; Win 7
 ;@ stdcall GetProcessGroupAffinity ; Win 7
 @ stdcall GetProcessHandleCount(long ptr)
@@ -630,7 +630,7 @@
 @ stdcall GetProcessWorkingSetSize(long ptr ptr)
 ;@ stdcall GetProcessWorkingSetSizeEx ; Win 7
 ;@ stdcall GetProcessorSystemCycleTime ; Win 7
-@ stdcall GetProductInfo(long long long long ptr)
+;@ stdcall GetProductInfo(long long long long ptr) ; Win 7
 @ stub GetProductName
 @ stdcall GetProfileIntA(str str long)
 @ stdcall GetProfileIntW(wstr wstr long)
@@ -681,7 +681,7 @@
 @ stdcall GetTempPathA(long ptr)
 @ stdcall GetTempPathW(long ptr)
 @ stdcall GetThreadContext(long ptr)
-@ stdcall GetThreadErrorMode()
+;@ stdcall GetThreadErrorMode() ; Win 7
 ;@ stdcall GetThreadGroupAffinity ; Win 7
 @ stdcall GetThreadIOPendingFlag(long ptr)
 @ stdcall GetThreadId(ptr)
@@ -896,8 +896,7 @@
 @ stdcall LockFile(long long long long long)
 @ stdcall LockFileEx(long long long long long ptr)
 @ stdcall LockResource(long)
-@ stdcall MakeCriticalSectionGlobal(ptr)
-
+;@ stdcall MakeCriticalSectionGlobal(ptr) // ???
 @ stdcall MapUserPhysicalPages(ptr long ptr)
 @ stdcall MapUserPhysicalPagesScatter(ptr long ptr)
 @ stdcall MapViewOfFile(long long long long long)
@@ -920,7 +919,7 @@
 @ stdcall NeedCurrentDirectoryForExePathA(str)
 @ stdcall NeedCurrentDirectoryForExePathW(wstr)
 ;@ stdcall NlsCheckPolicy ; Win 7
-@ stdcall NlsConvertIntegerToString(double double double wstr double) ; missing in Win 7
+@ stdcall NlsConvertIntegerToString(long long long wstr long) ; missing in Win 7
 ;@ stdcall NlsEventDataDescCreate ; Win 7
 @ stdcall NlsGetCacheUpdateCount()
 @ stub NlsResetProcessLocale ; missing in XP SP3 and Win 7
@@ -1074,7 +1073,7 @@
 @ stdcall RegisterWaitForSingleObjectEx(long ptr ptr long long)
 @ stdcall RegisterWowBaseHandlers(long)
 @ stdcall RegisterWowExec(long)
-@ stdcall ReinitializeCriticalSection(ptr)
+;@ stdcall ReinitializeCriticalSection(ptr) ; ???
 @ stdcall ReleaseActCtx(ptr)
 @ stdcall ReleaseMutex(long)
 ;@ stdcall ReleaseMutexWhenCallbackReturns ntdll.TpCallbackReleaseMutexOnCompletion ; Win 7
@@ -1218,7 +1217,7 @@
 @ stdcall SetLocaleInfoA(long long str)
 @ stdcall SetLocaleInfoW(long long wstr)
 @ stdcall SetMailslotInfo(long long)
-@ stdcall SetMessageWaitingIndicator(long double)
+@ stdcall SetMessageWaitingIndicator(ptr long)
 ;@ stdcall SetNamedPipeAttribute ; Win 7
 @ stdcall SetNamedPipeHandleState(long ptr ptr ptr)
 @ stdcall SetPriorityClass(long long)
@@ -1242,7 +1241,7 @@
 @ stdcall SetTermsrvAppInstallMode(long)
 @ stdcall SetThreadAffinityMask(long long)
 @ stdcall SetThreadContext(long ptr)
-@ stdcall SetThreadErrorMode(long ptr)
+;@ stdcall SetThreadErrorMode(long ptr) ; Win 7
 @ stdcall SetThreadExecutionState(long)
 ;@ stdcall SetThreadGroupAffinity ; Win 7
 @ stdcall SetThreadIdealProcessor(long long)
@@ -1313,7 +1312,7 @@
 @ stdcall UTUnRegister(long)
 ;@ stdcall -arch=x86_64 UmsThreadYield
 @ stdcall UnhandledExceptionFilter(ptr)
-@ stdcall UninitializeCriticalSection(ptr)
+;@ stdcall UninitializeCriticalSection(ptr) ; ???
 @ stdcall UnlockFile(long long long long long)
 @ stdcall UnlockFileEx(long long long long ptr)
 @ stdcall UnmapViewOfFile(ptr)
