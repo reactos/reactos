@@ -350,8 +350,13 @@ KdpPrintString(LPSTR String,
 {
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
-
+    CHAR Buffer[32];
     if (!KdpDebugMode.Value) return 0;
+
+    /* Build process name and PID/TID buffer */
+    sprintf(Buffer, "[%s (%p:%p)]: ",
+            PsGetCurrentProcess()->ImageFileName,
+            PsGetCurrentProcessId(), PsGetCurrentThreadId());
 
     /* Call the registered handlers */
     CurrentEntry = KdProviders.Flink;
@@ -361,6 +366,9 @@ KdpPrintString(LPSTR String,
         CurrentTable = CONTAINING_RECORD(CurrentEntry,
                                          KD_DISPATCH_TABLE,
                                          KdProvidersList);
+                                         
+        /* Send the process name */
+        CurrentTable->KdpPrintRoutine(Buffer, sizeof(Buffer));
 
         /* Call it */
         CurrentTable->KdpPrintRoutine(String, Length);
@@ -371,7 +379,13 @@ KdpPrintString(LPSTR String,
 
     /* Call the Wrapper Routine */
     if (WrapperTable.KdpPrintRoutine)
+    {
+        /* Send the process name */
+        WrapperTable.KdpPrintRoutine(Buffer, sizeof(Buffer));
+        
+        /* Send the message */
         WrapperTable.KdpPrintRoutine(String, Length);
+    }
 
     /* Return the Length */
     return Length;
