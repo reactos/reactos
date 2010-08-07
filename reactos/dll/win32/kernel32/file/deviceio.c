@@ -9,7 +9,8 @@
 /* INCLUDES *******************************************************************/
 
 #include <k32.h>
-#include <wine/debug.h>
+#define NDEBUG
+#include <reactos/debug.h>
 
 /* FUNCTIONS ******************************************************************/
 
