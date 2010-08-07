@@ -16,6 +16,8 @@
 #define NDEBUG
 #include <debug.h>
 
+static ULONG gDebugChannel = kernel32file;
+
 /* FUNCTIONS ****************************************************************/
 
 /* Check whether a file is an OS/2 or a very old Windows executable

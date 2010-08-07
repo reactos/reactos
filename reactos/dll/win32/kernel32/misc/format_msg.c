@@ -22,6 +22,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
+static ULONG gDebugChannel = resource;
 
 struct format_args
 {

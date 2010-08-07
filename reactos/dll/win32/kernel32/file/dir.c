@@ -18,6 +18,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
+static ULONG gDebugChannel = kernel32file;
 
 UNICODE_STRING DllDirectory = {0, 0, NULL};
 

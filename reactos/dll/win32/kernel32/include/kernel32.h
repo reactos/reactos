@@ -1,9 +1,19 @@
 #pragma once
 
-#define TRACE       DPRINT
-#define WARN        DPRINT1
-#define FIXME       DPRINT1
-#define ERR         DPRINT1
+//
+// Kernel32 Filter IDs
+//
+#define kernel32file            200
+#define kernel32ver             201
+#define actctx                  202
+#define resource                203
+#define kernel32session         204
+
+#define TRACE(fmt, ...)         TRACE__(gDebugChannel, fmt, ##__VA_ARGS__)
+#define WARN(fmt, ...)          WARN__(gDebugChannel, fmt, ##__VA_ARGS__)
+#define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
+#define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
+
 #define debugstr_a  
 #define debugstr_w
 #define wine_dbgstr_w  
