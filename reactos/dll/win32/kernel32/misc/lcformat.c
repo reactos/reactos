@@ -30,12 +30,8 @@
  */
 
 #include <k32.h>
-
-#include "wine/config.h"
-#include "wine/unicode.h"
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(nls);
+#define NDEBUG
+#include <debug.h>
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
 #define TIME_TIMEVARSONLY 0x0200  /* only time stuff: hHmst */

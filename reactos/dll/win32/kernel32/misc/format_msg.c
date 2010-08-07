@@ -20,12 +20,8 @@
  */
 
 #include <k32.h>
-
-
-#include "wine/unicode.h"
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(resource);
+#define NDEBUG
+#include <debug.h>
 
 struct format_args
 {

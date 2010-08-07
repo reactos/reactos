@@ -13,10 +13,8 @@
 /* synched with wine 1.1.26 */
 
 #include <k32.h>
-
-#include "wine/debug.h"
-
-WINE_DEFAULT_DEBUG_CHANNEL(actctx);
+#define NDEBUG
+#include <debug.h>
 
 #define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
 

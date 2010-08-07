@@ -9,9 +9,8 @@
  *     2001-12-07 created
  */
 #include <k32.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32session);
+#define NDEBUG
+#include <debug.h>
 
 DWORD ActiveConsoleSessionId = 0;
 
