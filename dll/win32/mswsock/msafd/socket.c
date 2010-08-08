@@ -693,6 +693,12 @@ WSPSocket(INT AddressFamily,
     ServiceFlags = lpProtocolInfo->dwServiceFlags1;
     ProviderFlags = lpProtocolInfo->dwProviderFlags;
     ProviderId = lpProtocolInfo->ProviderId;
+	
+	/* HACK: We don't set this flag properly ATM */
+    if(SocketType == SOCK_DGRAM || SocketType == SOCK_RAW)
+    {
+        ServiceFlags |= XP1_CONNECTIONLESS;
+    }
 
     /* Create the actual socket */
     ErrorCode = SockSocket(AddressFamily,
