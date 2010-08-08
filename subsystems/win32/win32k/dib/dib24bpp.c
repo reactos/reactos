@@ -509,28 +509,22 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
     SrcX = SourceRect->left;
     while (++Cols <= DestRect->right - DestRect->left)
     {
+      SrcPixel.ul = DIB_GetSource(Source, SrcX, SrcY, ColorTranslation);
+      SrcPixel.col.red = (SrcPixel.col.red * BlendFunc.SourceConstantAlpha) / 255;
+      SrcPixel.col.green = (SrcPixel.col.green * BlendFunc.SourceConstantAlpha) / 255;
+      SrcPixel.col.blue = (SrcPixel.col.blue * BlendFunc.SourceConstantAlpha) / 255;
       if (!(BlendFunc.AlphaFormat & AC_SRC_ALPHA))
       {
-        SrcPixel.ul = DIB_GetSource(Source, SrcX, SrcY, ColorTranslation);
-        SrcPixel.col.red *= BlendFunc.SourceConstantAlpha  / 255;
-        SrcPixel.col.green *= BlendFunc.SourceConstantAlpha  / 255;
-        SrcPixel.col.blue *= BlendFunc.SourceConstantAlpha / 255;
-        Alpha = BlendFunc.SourceConstantAlpha ;
+          Alpha = BlendFunc.SourceConstantAlpha ;
       }
       else
       {
-        SrcPixel.ul = DIB_GetSourceIndex(Source, SrcX, SrcY);
-        SrcPixel.col.red *= BlendFunc.SourceConstantAlpha  / 255;
-        SrcPixel.col.green *= BlendFunc.SourceConstantAlpha  / 255;
-        SrcPixel.col.blue *= BlendFunc.SourceConstantAlpha / 255;
-        SrcPixel.col.alpha *= BlendFunc.SourceConstantAlpha / 255;
-
-        Alpha = SrcPixel.col.alpha;
+        Alpha = (SrcPixel.col.alpha * BlendFunc.SourceConstantAlpha) / 255;
       }
 
-      DstPixel.col.red = (*Dst) * (255 - Alpha) / 255 + SrcPixel.col.red ;
-      DstPixel.col.green = *(Dst+1) * (255 - Alpha) / 255 + SrcPixel.col.green ;
-      DstPixel.col.blue = *(Dst+2) * (255 - Alpha) / 255 + SrcPixel.col.blue ;
+      DstPixel.col.red = Clamp8((*Dst * (255 - Alpha)) / 255 + SrcPixel.col.red) ;
+      DstPixel.col.green = Clamp8((*(Dst+1) * (255 - Alpha) / 255 + SrcPixel.col.green)) ;
+      DstPixel.col.blue = Clamp8((*(Dst+2) * (255 - Alpha)) / 255 + SrcPixel.col.blue) ;
       *Dst++ = DstPixel.col.red;
       *Dst++ = DstPixel.col.green;
       *Dst++ = DstPixel.col.blue;

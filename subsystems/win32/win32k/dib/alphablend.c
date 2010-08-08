@@ -90,21 +90,18 @@ DIB_XXBPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
     while(DstX < DestRect->right)
     {
       SrcPixel32.ul = DIB_GetSource(Source, SrcX, SrcY, &exloSrcRGB.xlo);
-      SrcPixel32.col.red *= BlendFunc.SourceConstantAlpha  / 255;
-      SrcPixel32.col.green *= BlendFunc.SourceConstantAlpha  / 255;
-      SrcPixel32.col.blue *= BlendFunc.SourceConstantAlpha / 255;
-      SrcPixel32.col.alpha = (32 == SrcBpp) ?
-                        SrcPixel32.col.alpha * BlendFunc.SourceConstantAlpha / 255 :
-                        BlendFunc.SourceConstantAlpha ;
+      SrcPixel32.col.red = (SrcPixel32.col.red * BlendFunc.SourceConstantAlpha) / 255;
+      SrcPixel32.col.green = (SrcPixel32.col.green * BlendFunc.SourceConstantAlpha) / 255;
+      SrcPixel32.col.blue = (SrcPixel32.col.blue * BlendFunc.SourceConstantAlpha) / 255;
 
       Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
-           SrcPixel32.col.alpha : BlendFunc.SourceConstantAlpha ;
+           (SrcPixel32.col.alpha * BlendFunc.SourceConstantAlpha) / 255 :
+           BlendFunc.SourceConstantAlpha ;
 
       DstPixel32.ul = DIB_GetSource(Dest, DstX, DstY, &exloDstRGB.xlo);
-      DstPixel32.col.red = Clamp8(DstPixel32.col.red * (255 - Alpha) / 255 + SrcPixel32.col.red) ;
-      DstPixel32.col.green = Clamp8(DstPixel32.col.green * (255 - Alpha) / 255 + SrcPixel32.col.green) ;
-      DstPixel32.col.blue = Clamp8(DstPixel32.col.blue * (255 - Alpha) / 255 + SrcPixel32.col.blue) ;
-      DstPixel32.col.alpha = Clamp8(DstPixel32.col.alpha * (255 - Alpha) / 255 + SrcPixel32.col.alpha) ;
+      DstPixel32.col.red = Clamp8((DstPixel32.col.red * (255 - Alpha)) / 255 + SrcPixel32.col.red) ;
+      DstPixel32.col.green = Clamp8((DstPixel32.col.green * (255 - Alpha)) / 255 + SrcPixel32.col.green) ;
+      DstPixel32.col.blue = Clamp8((DstPixel32.col.blue * (255 - Alpha)) / 255 + SrcPixel32.col.blue) ;
       DstPixel32.ul = XLATEOBJ_iXlate(&exloRGBSrc.xlo, DstPixel32.ul);
       pfnDibPutPixel(Dest, DstX, DstY, XLATEOBJ_iXlate(ColorTranslation, DstPixel32.ul));
 
