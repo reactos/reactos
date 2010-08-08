@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  GraphCtrl.h
+ *  graphctl.h
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *

@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  endproc.cpp
+ *  endproc.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2005         Klemens Friedl <frik85@reactos.at>

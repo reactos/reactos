@@ -116,9 +116,9 @@ void TaskManager_OnEnterMenuLoop(HWND hWnd);
 void TaskManager_OnExitMenuLoop(HWND hWnd);
 void TaskManager_OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu);
 void TaskManager_OnViewUpdateSpeed(DWORD);
-void TaskManager_OnViewRefresh(void);
 void TaskManager_OnTabWndSelChange(void);
 LPTSTR GetLastErrorText( LPTSTR lpszBuf, DWORD dwSize );
+DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread);
 
 #ifdef __cplusplus
 }

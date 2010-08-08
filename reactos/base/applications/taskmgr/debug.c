@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  debug.cpp
+ *  debug.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2005         Klemens Friedl <frik85@reactos.at>
