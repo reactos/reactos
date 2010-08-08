@@ -1328,17 +1328,8 @@ UserDrawIconEx(
         BYTE Alpha;
         INT i, j;
         PSURFACE psurf;
-        PBYTE pBits, ptr ;
+        PBYTE ptr ;
         HBITMAP hMemBmp = NULL;
-
-        pBits = ExAllocatePoolWithTag(PagedPool,
-                                      bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
-                                      TAG_BITMAP);
-        if (pBits == NULL)
-        {
-            Ret = FALSE;
-            goto CleanupAlpha;
-        }
 
         hMemBmp = BITMAP_CopyBitmap(hbmColor);
         if(!hMemBmp)
@@ -1353,16 +1344,12 @@ UserDrawIconEx(
             DPRINT1("SURFACE_LockSurface failed!\n");
             goto CleanupAlpha;
         }
-        /* get color bits */
-        IntGetBitmapBits(psurf,
-                         bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
-                         pBits);
 
         /* premultiply with the alpha channel value */
-        for (i = 0; i < abs(bmpColor.bmHeight); i++)
+        for (i = 0; i < psurf->SurfObj.sizlBitmap.cy; i++)
         {
-			ptr = pBits + i*bmpColor.bmWidthBytes;
-            for (j = 0; j < bmpColor.bmWidth; j++)
+			ptr = (PBYTE)psurf->SurfObj.pvScan0 + i*psurf->SurfObj.lDelta;
+            for (j = 0; j < psurf->SurfObj.sizlBitmap.cx; j++)
             {
                 Alpha = ptr[3];
                 ptr[0] *= Alpha / 0xff;
@@ -1373,10 +1360,6 @@ UserDrawIconEx(
             }
         }
 
-        /* set mem bits */
-        IntSetBitmapBits(psurf,
-                         bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
-                         pBits);
         SURFACE_UnlockSurface(psurf);
 
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
@@ -1395,11 +1378,9 @@ UserDrawIconEx(
                               NULL);
         NtGdiSelectBitmap(hMemDC, hTmpBmp);
     CleanupAlpha:
-        if(pBits) ExFreePoolWithTag(pBits, TAG_BITMAP);
         if(hMemBmp) NtGdiDeleteObjectApp(hMemBmp);
 		if(Ret) goto done;
     }
-
 
     if (diFlags & DI_MASK)
     {

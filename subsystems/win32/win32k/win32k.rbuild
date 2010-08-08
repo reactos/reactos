@@ -38,6 +38,7 @@
 		<file>dib.c</file>
 		<file>floodfill.c</file>
 		<file>stretchblt.c</file>
+		<file>alphablend.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">

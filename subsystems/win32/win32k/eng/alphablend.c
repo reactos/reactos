@@ -25,10 +25,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
               IN PRECTL SourceRect,
               IN BLENDOBJ *BlendObj)
 {
-    RECTL              SourceStretchedRect;
-    SIZEL              SourceStretchedSize;
-    HBITMAP            SourceStretchedBitmap = 0;
-    SURFOBJ*           SourceStretchedObj = NULL;
     RECTL              InputRect;
     RECTL              OutputRect;
     RECTL              ClipRect;
@@ -39,7 +35,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
     INTENG_ENTER_LEAVE EnterLeaveDest;
     SURFOBJ*           InputObj;
     SURFOBJ*           OutputObj;
-    LONG               Width;
     LONG               ClippingType;
     RECT_ENUM          RectEnum;
     BOOL               EnumMore;
@@ -111,61 +106,9 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
         return TRUE;
     }
 
-    /* Stretch source if needed */
-    if (OutputRect.right - OutputRect.left != InputRect.right - InputRect.left ||
-            OutputRect.bottom - OutputRect.top != InputRect.bottom - InputRect.top)
-    {
-        SourceStretchedSize.cx = OutputRect.right - OutputRect.left;
-        SourceStretchedSize.cy = OutputRect.bottom - OutputRect.top;
-        Width = DIB_GetDIBWidthBytes(SourceStretchedSize.cx, BitsPerFormat(psoSource->iBitmapFormat));
-        /* FIXME: Maybe it is a good idea to use EngCreateDeviceBitmap and IntEngStretchBlt
-                  if possible to get a HW accelerated stretch. */
-        SourceStretchedBitmap = EngCreateBitmap(SourceStretchedSize, Width, psoSource->iBitmapFormat,
-                                                BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
-        if (SourceStretchedBitmap == 0)
-        {
-            DPRINT1("EngCreateBitmap failed!\n");
-            return FALSE;
-        }
-        SourceStretchedObj = EngLockSurface((HSURF)SourceStretchedBitmap);
-        if (SourceStretchedObj == NULL)
-        {
-            DPRINT1("EngLockSurface failed!\n");
-            EngDeleteSurface((HSURF)SourceStretchedBitmap);
-            return FALSE;
-        }
-
-        SourceStretchedRect.left = 0;
-        SourceStretchedRect.right = SourceStretchedSize.cx;
-        SourceStretchedRect.top = 0;
-        SourceStretchedRect.bottom = SourceStretchedSize.cy;
-        if (!IntEngStretchBlt(SourceStretchedObj, psoSource, NULL, NULL, NULL,
-                           &SourceStretchedRect, SourceRect,
-                           NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY)))
-        {
-            DPRINT1("EngStretchBlt failed!\n");
-            EngUnlockSurface(SourceStretchedObj);
-            EngDeleteSurface((HSURF)SourceStretchedBitmap);
-            return FALSE;
-        }
-        InputRect.top = SourceStretchedRect.top;
-        InputRect.bottom = SourceStretchedRect.bottom;
-        InputRect.left = SourceStretchedRect.left;
-        InputRect.right = SourceStretchedRect.right;
-        psoSource = SourceStretchedObj;
-    }
-
     /* Now call the DIB function */
     if (!IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE, &Translate, &InputObj))
     {
-        if (SourceStretchedObj != NULL)
-        {
-            EngUnlockSurface(SourceStretchedObj);
-        }
-        if (SourceStretchedBitmap != 0)
-        {
-            EngDeleteSurface((HSURF)SourceStretchedBitmap);
-        }
         return FALSE;
     }
     InputRect.left +=  Translate.x;
@@ -175,15 +118,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
 
     if (!IntEngEnter(&EnterLeaveDest, psoDest, &OutputRect, FALSE, &Translate, &OutputObj))
     {
-        IntEngLeave(&EnterLeaveSource);
-        if (SourceStretchedObj != NULL)
-        {
-            EngUnlockSurface(SourceStretchedObj);
-        }
-        if (SourceStretchedBitmap != 0)
-        {
-            EngDeleteSurface((HSURF)SourceStretchedBitmap);
-        }
         return FALSE;
     }
     OutputRect.left += Translate.x;
@@ -252,15 +186,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
 
     IntEngLeave(&EnterLeaveDest);
     IntEngLeave(&EnterLeaveSource);
-
-    if (SourceStretchedObj != NULL)
-    {
-        EngUnlockSurface(SourceStretchedObj);
-    }
-    if (SourceStretchedBitmap != 0)
-    {
-        EngDeleteSurface((HSURF)SourceStretchedBitmap);
-    }
 
     return Ret;
 }

@@ -32,7 +32,7 @@ DIB_4BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
   PBYTE  addr = (PBYTE)SurfObj->pvScan0 + (x1>>1) + y * SurfObj->lDelta;
   LONG  cx = x1;
 
-  while(cx < x2) 
+  while(cx < x2)
   {
     *addr = (*addr & notmask[x1&1]) | (c << ((1-(x1&1))<<2));
     if((++x1 & 1) == 0)
@@ -48,7 +48,7 @@ DIB_4BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   int  lDelta = SurfObj->lDelta;
 
   addr += (x>>1) + y1 * lDelta;
-  while(y1++ < y2) 
+  while(y1++ < y2)
   {
     *addr = (*addr & notmask[x&1]) | (c << ((1-(x&1))<<2));
     addr += lDelta;
@@ -81,8 +81,8 @@ DIB_4BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           if(DIB_1BPP_GetPixel(BltInfo->SourceSurface, sx, sy) == 0)
           {
             DIB_4BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, 0));
-          } 
-          else 
+          }
+          else
           {
             DIB_4BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, 1));
           }
@@ -372,15 +372,6 @@ DIB_4BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  return FALSE;
-}
-
-BOOLEAN
-DIB_4BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
-                    RECTL* SourceRect, CLIPOBJ* ClipRegion,
-                    XLATEOBJ* ColorTranslation, BLENDOBJ* BlendObj)
-{
-  UNIMPLEMENTED;
   return FALSE;
 }
 
