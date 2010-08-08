@@ -42,6 +42,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     RtlZeroMemory(&FatGlobalData, sizeof(FAT_GLOBAL_DATA));
     FatGlobalData.DriverObject = DriverObject;
     FatGlobalData.DiskDeviceObject = DeviceObject;
+    FatGlobalData.SystemProcess = PsGetCurrentProcess();
 
     /* Fill major function handlers */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = FatClose;
@@ -317,7 +318,7 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
 
             TypeOfOpen = (*Ccb == NULL ? DirectoryFile : UserDirectoryOpen);
 
-            DPRINT1("Referencing a directory: %wZ\n", &(*FcbOrDcb)->FullFileName);
+            DPRINT("Referencing a directory: %wZ\n", &(*FcbOrDcb)->FullFileName);
             break;
 
         /* File */
@@ -508,6 +509,19 @@ FatMapUserBuffer(PIRP Irp)
         return Irp->UserBuffer;
     else
         return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+}
+
+BOOLEAN
+NTAPI
+FatIsTopLevelIrp(IN PIRP Irp)
+{
+    if (!IoGetTopLevelIrp())
+    {
+        IoSetTopLevelIrp(Irp);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /* EOF */

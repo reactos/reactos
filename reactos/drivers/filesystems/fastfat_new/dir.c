@@ -82,9 +82,6 @@ FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
     ExInitializeFastMutex(&Dcb->HeaderMutex);
     FsRtlSetupAdvancedHeader(&Dcb->Header, &Dcb->HeaderMutex);
 
-    /* Initialize MCB */
-    FsRtlInitializeLargeMcb(&Dcb->Mcb, NonPagedPool);
-
     /* Set up first cluster field depending on FAT type */
     if (TRUE/*FatIsFat32(Vcb)*/)
     {

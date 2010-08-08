@@ -201,6 +201,10 @@ FatInitializeVcb(IN PFAT_IRP_CONTEXT IrpContext,
         goto FatInitializeVcbCleanup;
     }
 
+    /* Increase internal / residual open counter */
+    InterlockedIncrement((PLONG)&(Vcb->InternalOpenCount));
+    InterlockedIncrement((PLONG)&(Vcb->ResidualOpenCount));
+
     /* Set up notifications */
     FsRtlNotifyInitializeSync(&Vcb->NotifySync);
     InitializeListHead(&Vcb->NotifyList);

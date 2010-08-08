@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "fastfat.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -77,8 +77,8 @@ FatiQueryFsSizeInfo(PVCB Vcb,
     Buffer->SectorsPerAllocationUnit = Vcb->Bpb.SectorsPerCluster;
     Buffer->BytesPerSector = Vcb->Bpb.BytesPerSector;
 
-    DPRINT1("Total %d, free %d, SPC %d, BPS %d\n", Partition->FreeClusterCount,
-        Partition->NumClusters, Vcb->Bpb.SectorsPerCluster, Vcb->Bpb.BytesPerSector);
+    DPRINT1("Total %d, free %d, SPC %d, BPS %d\n", Partition->NumClusters,
+        Partition->FreeClusterCount, Vcb->Bpb.SectorsPerCluster, Vcb->Bpb.BytesPerSector);
 
     return Status;
 }
@@ -226,6 +226,16 @@ FatReadStreamFile(PVCB Vcb,
     {
         ASSERT(FALSE);
     }
+}
+
+BOOLEAN
+NTAPI
+FatCheckForDismount(IN PFAT_IRP_CONTEXT IrpContext,
+                    PVCB Vcb,
+                    IN BOOLEAN Force)
+{
+    /* We never allow deletion of a volume for now */
+    return FALSE;
 }
 
 /* EOF */

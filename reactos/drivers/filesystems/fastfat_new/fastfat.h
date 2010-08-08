@@ -36,6 +36,22 @@
     ExReleaseResourceLite(&(FatGlobalData.Resource)); \
 }
 
+#define FatIsFastIoPossible(FCB) ((BOOLEAN)                                                \
+    (((FCB)->Condition != FcbGood || !FsRtlOplockIsFastIoPossible(&(FCB)->Fcb.Oplock)) ?   \
+        FastIoIsNotPossible                                                                \
+    :                                                                                      \
+        (!FsRtlAreThereCurrentFileLocks(&(FCB)->Fcb.Lock) &&                               \
+         ((FCB)->OutstandingAsyncWrites == 0) &&                                           \
+         !FlagOn((FCB)->Vcb->State, VCB_STATE_FLAG_WRITE_PROTECTED) ?                      \
+            FastIoIsPossible                                                               \
+        :                                                                                  \
+            FastIoIsQuestionable                                                           \
+        )                                                                                  \
+    )                                                                                      \
+)
+
+#define IsFileObjectReadOnly(FO) (!((FO)->WriteAccess | (FO)->DeleteAccess))
+
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -66,6 +82,12 @@ FatReadStreamFile(PVCB Vcb,
                   ULONG ByteSize,
                   PBCB *Bcb,
                   PVOID *Buffer);
+
+BOOLEAN
+NTAPI
+FatCheckForDismount(IN PFAT_IRP_CONTEXT IrpContext,
+                    PVCB Vcb,
+                    IN BOOLEAN Force);
 
 /*  -----------------------------------------------------------  dir.c  */
 
@@ -205,6 +227,9 @@ FatSetFileObject(PFILE_OBJECT FileObject,
 PVOID FASTCALL
 FatMapUserBuffer(PIRP Irp);
 
+BOOLEAN NTAPI
+FatIsTopLevelIrp(IN PIRP Irp);
+
 /* --------------------------------------------------------- fullfat.c */
 
 FF_T_SINT32
@@ -284,6 +309,10 @@ FatCreateFcb(
     IN PFCB ParentDcb,
     IN FF_FILE *FileHandle);
 
+VOID NTAPI
+FatDeleteFcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PFCB Fcb);
+
 IO_STATUS_BLOCK NTAPI
 FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
                     IN PFILE_OBJECT FileObject,
@@ -318,6 +347,10 @@ FatRemoveNames(IN PFAT_IRP_CONTEXT IrpContext,
 
 PCCB NTAPI
 FatCreateCcb();
+
+VOID NTAPI
+FatDeleteCcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PCCB Ccb);
 
 VOID NTAPI
 FatSetFullNameInFcb(PFCB Fcb,
