@@ -95,6 +95,40 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
         ((Fcb->Entry.FileFlags & FILE_FLAG_READONLY) ? FILE_ATTRIBUTE_READONLY : 0);
 }
 
+BOOLEAN
+CdfsIsNameLegalDOS8Dot3(IN PUNICODE_STRING FileName
+    )
+{
+    ULONG i;
+    STRING DbcsName;
+    CHAR DbcsNameBuffer[12];
+
+    for (i = 0; i < FileName->Length / sizeof(WCHAR) ; i++)
+    {
+        /* Don't allow spaces in FileName */
+        if (FileName->Buffer[i] == L' ')
+            return FALSE;
+    }
+#if 0    
+    /* If FileName is finishing with a dot, remove it */
+    if (FileName->Buffer[FileName->Length / sizeof(WCHAR) - 1] == '.')
+    {
+        FileName->Length -= sizeof(WCHAR);
+    }
+#endif
+    /* Finally, convert the string to call the FsRtl function */
+    DbcsName.MaximumLength = 12;
+    DbcsName.Buffer = DbcsNameBuffer;
+    if (!NT_SUCCESS(RtlUnicodeStringToCountedOemString(&DbcsName,
+                                                       FileName,
+                                                       FALSE )))
+    {
+
+        return FALSE;
+    }
+    return FsRtlIsFatDbcsLegal(DbcsName, FALSE, FALSE, FALSE);
+}
+
 VOID
 CdfsShortNameCacheGet
 (PFCB DirectoryFcb, 
@@ -102,7 +136,6 @@ CdfsShortNameCacheGet
  PUNICODE_STRING LongName, 
  PUNICODE_STRING ShortName)
 {
-    BOOLEAN HasSpaces;
     PLIST_ENTRY Entry;
     PCDFS_SHORT_NAME ShortNameEntry;
     GENERATE_NAME_CONTEXT Context = { 0 };
@@ -132,8 +165,7 @@ CdfsShortNameCacheGet
     }
 
     /* Cache miss */
-    if ((RtlIsNameLegalDOS8Dot3(LongName, NULL, &HasSpaces) == FALSE) ||
-        (HasSpaces == TRUE))
+    if (!CdfsIsNameLegalDOS8Dot3(LongName))
     {
         RtlGenerate8dot3Name(LongName, FALSE, &Context, ShortName);
     }
