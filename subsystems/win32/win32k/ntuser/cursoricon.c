@@ -1352,9 +1352,9 @@ UserDrawIconEx(
             for (j = 0; j < psurf->SurfObj.sizlBitmap.cx; j++)
             {
                 Alpha = ptr[3];
-                ptr[0] *= Alpha / 0xff;
-                ptr[1] *= Alpha / 0xff;
-                ptr[2] *= Alpha / 0xff;
+                ptr[0] = (ptr[0] * Alpha) / 0xff;
+                ptr[1] = (ptr[1] * Alpha) / 0xff;
+                ptr[2] = (ptr[2] * Alpha) / 0xff;
 
 				ptr += 4;
             }
