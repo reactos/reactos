@@ -1,5 +1,4 @@
 
-
 #ifndef __DDRAW_INCLUDED__
 #define __DDRAW_INCLUDED__
 
@@ -41,6 +40,15 @@
 #ifndef _HRESULT_DEFINED
 #define _HRESULT_DEFINED
   typedef long HRESULT;
+#endif
+#endif
+
+/* Helper macro to enable gcc's extension. */
+#ifndef __GNU_EXTENSION
+#ifdef __GNUC__
+#define __GNU_EXTENSION __extension__
+#else
+#define __GNU_EXTENSION
 #endif
 #endif
 
@@ -2561,7 +2569,7 @@ DECLARE_INTERFACE_( IDirectDrawSurface3, IUnknown )
 #undef INTERFACE
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #ifdef ENABLE_NAMELESS_UNION_PRAGMA
@@ -2569,6 +2577,3 @@ DECLARE_INTERFACE_( IDirectDrawSurface3, IUnknown )
 #endif
 
 #endif
-
-
-
