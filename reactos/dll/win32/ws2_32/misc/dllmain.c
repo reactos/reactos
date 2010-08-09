@@ -459,7 +459,7 @@ select(IN      INT nfds,
 
         DereferenceProviderByPointer(Provider);
 
-        if (Errno != NO_ERROR)
+        if (Count == SOCKET_ERROR)
         {
             WSASetLastError(Errno);
             return SOCKET_ERROR;
