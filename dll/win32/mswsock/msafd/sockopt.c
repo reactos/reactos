@@ -517,7 +517,7 @@ WSPSetSockOpt(IN SOCKET Handle,
     PSOCKET_INFORMATION Socket;
     INT ErrorCode;
     PWINSOCK_TEB_DATA ThreadData;
-
+	
     /* Enter prolog */
     ErrorCode = SockEnterApiFast(&ThreadData);
     if (ErrorCode != NO_ERROR)
@@ -526,7 +526,7 @@ WSPSetSockOpt(IN SOCKET Handle,
         *lpErrno = ErrorCode;
         return SOCKET_ERROR;
     }
-
+	
     /* Get the socket structure */
     Socket = SockFindAndReferenceSocket(Handle, TRUE);
     if (!Socket)
@@ -535,10 +535,10 @@ WSPSetSockOpt(IN SOCKET Handle,
         *lpErrno = WSAENOTSOCK;
         return SOCKET_ERROR;
     }
-
+	
     /* Lock the socket */
     EnterCriticalSection(&Socket->Lock);
-
+	
     /* Make sure we're not closed */
     if (Socket->SharedData.State == SocketClosed)
     {
@@ -546,7 +546,7 @@ WSPSetSockOpt(IN SOCKET Handle,
         ErrorCode = WSAENOTSOCK;
         goto error;
     }
-
+	
     /* Validate the pointer */
     if (!OptionValue)
     {
@@ -554,7 +554,7 @@ WSPSetSockOpt(IN SOCKET Handle,
         ErrorCode = WSAEFAULT;
         goto error;
     }
-
+	
     /* Validate option */
     if (!IsValidOptionForSocket(Socket, Level, OptionName))
     {
@@ -562,28 +562,143 @@ WSPSetSockOpt(IN SOCKET Handle,
         ErrorCode = WSAENOPROTOOPT;
         goto error;
     }
-
-    /* FIXME: Write code */
-
+	
+	/* Check the Level first */
+    switch (Level)
+    {
+			/* Handle SOL_SOCKET */
+        case SOL_SOCKET:
+			
+			/* Now check the Option */
+			switch (OptionName)
+		{
+			case SO_RCVBUF:
+				
+				/* Validate the size */
+				if (OptionLength < sizeof(INT))
+				{
+					/* Size is too small, fail */
+					ErrorCode = WSAEFAULT;
+					goto error;
+				}
+				
+				/* Set the data */
+				Socket->SharedData.SizeOfRecvBuffer = *(PINT)OptionValue;
+				
+				/* FIXME: Tell AFD */
+				break;
+				
+			case SO_SNDBUF:
+				
+				/* Validate the size */
+				if (OptionLength < sizeof(INT))
+				{
+					/* Size is too small, fail */
+					ErrorCode = WSAEFAULT;
+					goto error;
+				}
+				
+				/* Set the data */
+				Socket->SharedData.SizeOfSendBuffer = *(PINT)OptionValue;
+				
+				/* FIXME: Tell AFD */
+				break;
+				
+			case SO_BROADCAST:
+				
+				/* Validate the size */
+				if (OptionLength < sizeof(INT))
+				{
+					/* Size is too small, fail */
+					ErrorCode = WSAEFAULT;
+					goto error;
+				}
+				
+				/* Set the data */
+				Socket->SharedData.Broadcast = *(PINT)OptionValue;
+				break;
+				
+			case SO_DEBUG:
+				
+				/* Validate the size */
+				if (OptionLength < sizeof(INT))
+				{
+					/* Size is too small, fail */
+					ErrorCode = WSAEFAULT;
+					goto error;
+				}
+				
+				/* Set the data */
+				Socket->SharedData.Debug = *(PINT)OptionValue;
+				break;
+				
+			case SO_CONDITIONAL_ACCEPT:
+			case SO_DONTLINGER:
+			case SO_DONTROUTE:
+			case SO_ERROR:
+			case SO_GROUP_PRIORITY:
+			case SO_KEEPALIVE:
+			case SO_LINGER:
+			case SO_OOBINLINE:
+			case SO_REUSEADDR:
+				
+				/* Unsupported */
+				
+			default:
+				
+				/* Unsupported by us, give it to the helper */
+				ErrorCode = SockGetTdiHandles(Socket);
+				if (ErrorCode != NO_ERROR) goto error;
+				
+				/* Call the helper */
+				ErrorCode = Socket->HelperData->WSHSetSocketInformation(Socket->HelperContext,
+																		Handle,
+																		Socket->TdiAddressHandle,
+																		Socket->TdiConnectionHandle,
+																		Level,
+																		OptionName,
+																		(PCHAR)OptionValue,
+																		OptionLength);
+				if (ErrorCode != NO_ERROR) goto error;
+				break;
+		}
+			break;
+			
+        default:
+			
+            /* Unsupported by us, give it to the helper */
+            ErrorCode = SockGetTdiHandles(Socket);
+            if (ErrorCode != NO_ERROR) goto error;
+			
+            /* Call the helper */
+            ErrorCode = Socket->HelperData->WSHSetSocketInformation(Socket->HelperContext,
+                                                                    Handle,
+                                                                    Socket->TdiAddressHandle,
+                                                                    Socket->TdiConnectionHandle,
+                                                                    Level,
+                                                                    OptionName,
+                                                                    (PCHAR)OptionValue,
+                                                                    OptionLength);
+            if (ErrorCode != NO_ERROR) goto error;
+            break;
+    }
+	
 error:
-
+	/* Dereference and unlock the socket */
+	LeaveCriticalSection(&Socket->Lock);
+	SockDereferenceSocket(Socket);
+	
     /* Check if this is the failure path */
     if (ErrorCode != NO_ERROR)
     {
-        /* Dereference and unlock the socket */
-        LeaveCriticalSection(&Socket->Lock);
-        SockDereferenceSocket(Socket);
-
         /* Return error */
         *lpErrno = ErrorCode;
         return SOCKET_ERROR;
     }
-
+	
     /* Update the socket's state in AFD */
     ErrorCode = SockSetHandleContext(Socket);
-    if (ErrorCode != NO_ERROR) goto error;
-
+	
     /* Return success */
-    return NO_ERROR;
+    return ErrorCode;
 }
-
