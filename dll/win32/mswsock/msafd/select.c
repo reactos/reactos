@@ -13,7 +13,7 @@
      (s->SharedData.AsyncEvents & e))
 
 #define HANDLES_IN_SET(s) \
-    s == NULL ? 0 : (s->fd_count & 0xFFFF)
+(((s) == NULL) ? 0 : ((s)->fd_count & 0xFFFF))
 
 /* DATA **********************************************************************/
 
