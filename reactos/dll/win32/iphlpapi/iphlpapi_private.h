@@ -32,7 +32,7 @@
 #include "wine/debug.h"
 
 //#include "ntddndis.h"
-#include "ddk/tdiinfo.h"
+#include "tdiinfo.h"
 #include "tcpioctl.h"
 
 #include "tdilib.h"
