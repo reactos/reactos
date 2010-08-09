@@ -32,7 +32,7 @@ PCI_CONFIGURATOR PciConfigurators[] =
         PPBridge_SaveCurrentSettings,
         PPBridge_ChangeResourceSettings,
         PPBridge_GetAdditionalResourceDescriptors,
-        PPBridge_ResetDevice  
+        PPBridge_ResetDevice
     },
     {
         Cardbus_MassageHeaderForLimitsDetermination,
@@ -44,7 +44,7 @@ PCI_CONFIGURATOR PciConfigurators[] =
         Cardbus_ResetDevice
     }
 };
- 
+
 /* FUNCTIONS ******************************************************************/
 
 /*
@@ -715,10 +715,10 @@ PciWriteLimitsAndRestoreCurrent(IN PVOID Reserved,
 
     /* Write the limit discovery header */
     PciWriteDeviceConfig(PdoExtension, PciData, 0, PCI_COMMON_HDR_LENGTH);
-    
+
     /* Now read what the device indicated the limits are */
     PciReadDeviceConfig(PdoExtension, PciData, 0, PCI_COMMON_HDR_LENGTH);
-    
+
     /* Then write back the original configuration header */
     PciWriteDeviceConfig(PdoExtension, Current, 0, PCI_COMMON_HDR_LENGTH);
 
@@ -735,7 +735,7 @@ PciWriteLimitsAndRestoreCurrent(IN PVOID Reserved,
 
     /* Copy back the original status that was saved as well */
     Current->Status = Context->Status;
-    
+
     /* Call the configurator to restore any other data that might've changed */
     Context->Configurator->RestoreCurrent(Context);
 }
@@ -915,6 +915,62 @@ PciGetFunctionLimits(IN PPCI_PDO_EXTENSION PdoExtension,
     /* Enumeration is completed, free the PCI headers and return the status */
     ExFreePoolWithTag(PciData, 0);
     return Status;
+}
+
+VOID
+NTAPI
+PciProcessBus(IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    PPCI_PDO_EXTENSION PdoExtension;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PAGED_CODE();
+
+    /* Get the PDO Extension */
+    PhysicalDeviceObject = DeviceExtension->PhysicalDeviceObject;
+    PdoExtension = (PPCI_PDO_EXTENSION)PhysicalDeviceObject->DeviceExtension;
+
+    /* Cheeck if this is the root bus */
+    if (!PCI_IS_ROOT_FDO(DeviceExtension))
+    {
+        /* Not really handling this year */
+        UNIMPLEMENTED;
+        while (TRUE);
+
+        /* Check for PCI bridges with the ISA bit set, or required */
+        if ((PdoExtension) &&
+            (PciClassifyDeviceType(PdoExtension) == PciTypePciBridge) &&
+            ((PdoExtension->Dependent.type1.IsaBitRequired) ||
+             (PdoExtension->Dependent.type1.IsaBitSet)))
+        {
+            /* We'll need to do some legacy support */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+    }
+    else
+    {
+        /* Scan all of the root bus' children bridges */
+        for (PdoExtension = DeviceExtension->ChildBridgePdoList;
+             PdoExtension;
+             PdoExtension = PdoExtension->NextBridge)
+        {
+            /* Find any that have the VGA decode bit on */
+            if (PdoExtension->Dependent.type1.VgaBitSet)
+            {
+                /* Again, some more legacy support we'll have to do */
+                UNIMPLEMENTED;
+                while (TRUE);
+            }
+        }
+    }
+
+    /* Check for ACPI systems where the OS assigns bus numbers */
+    if (PciAssignBusNumbers)
+    {
+        /* Not yet supported */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
 }
 
 NTSTATUS
@@ -1363,7 +1419,8 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
         }
     }
 
-    /* Enumeration is completed */
+    /* Enumeration completed, do a final pass now that all devices are found */
+    if (ProcessFlag) PciProcessBus(DeviceExtension);
     return STATUS_SUCCESS;
 }
 

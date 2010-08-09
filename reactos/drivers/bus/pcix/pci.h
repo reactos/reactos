@@ -103,6 +103,18 @@ typedef enum _PCI_SIGNATURE
 } PCI_SIGNATURE, *PPCI_SIGNATURE;
 
 //
+// Driver-handled PCI Device Types
+//
+typedef enum _PCI_DEVICE_TYPES
+{
+    PciTypeInvalid,
+    PciTypeHostBridge,
+    PciTypePciBridge,
+    PciTypeCardbusBridge,
+    PciTypeDevice
+} PCI_DEVICE_TYPES;
+
+//
 // Device Extension Logic States
 //
 typedef enum _PCI_STATE
@@ -1064,6 +1076,12 @@ PciCanDisableDecodes(
     IN BOOLEAN ForPowerDown
 );
 
+PCI_DEVICE_TYPES
+NTAPI
+PciClassifyDeviceType(
+    IN PPCI_PDO_EXTENSION PdoExtension
+);
+
 ULONG_PTR
 NTAPI
 PciExecuteCriticalSystemRoutine(
@@ -1607,6 +1625,7 @@ extern PCI_INTERFACE TranslatorInterfaceInterrupt;
 extern PDRIVER_OBJECT PciDriverObject;
 extern PWATCHDOG_TABLE WdTable;
 extern PPCI_HACK_ENTRY PciHackTable;
+extern BOOLEAN PciAssignBusNumbers;
 extern BOOLEAN PciEnableNativeModeATA;
 
 /* Exported by NTOS, should this go in the NDK? */
