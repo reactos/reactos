@@ -175,37 +175,16 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 	if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
 	             SourceDC, 0, 0, SRCCOPY)) goto fail;
 
-	/* Check if we can use alpha blending */
-	if (ShortcutBitmapInfo.bmBitsPixel == 32)
-	{
-		/* Use alpha blending to make sure the target alpha channel stays valid */
-		if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
-		if (!GdiAlphaBlend(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-		                ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-		                ShortcutDC, 0, 0, ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-		                (BLENDFUNCTION){AC_SRC_OVER, 0, 255, AC_SRC_ALPHA})) goto fail;
-	}
-	else
-	{
-		/* Copy the source xor bitmap to the target and clear out part of it by using
-		   the shortcut mask */
-		if (! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-		             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-		         ShortcutDC, 0, 0, SRCAND))
-		{
-			goto fail;
-		}
-
-		if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
-
-		/* Now put in the shortcut xor mask */
-		if (! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-		             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-		         ShortcutDC, 0, 0, SRCINVERT))
-		{
-			goto fail;
-		}
-	}
+    /* Copy the source xor bitmap to the target and clear out part of it by using
+       the shortcut mask */
+    if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
+    if (!MaskBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
+                 ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+                 ShortcutDC, 0, 0, ShortcutIconInfo.hbmMask, 0, 0, 
+                 MAKEROP4(SRCCOPY, 0xAA0000)))
+    {
+        goto fail;
+    }
 
 	/* Clean up, we're not goto'ing to 'fail' after this so we can be lazy and not set
 	   handles to NULL */
