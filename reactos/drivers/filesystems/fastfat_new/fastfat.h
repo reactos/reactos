@@ -51,6 +51,18 @@
 )
 
 #define IsFileObjectReadOnly(FO) (!((FO)->WriteAccess | (FO)->DeleteAccess))
+#define IsFileDeleted(FCB) (FlagOn((FCB)->State, FCB_STATE_DELETE_ON_CLOSE) && ((FCB)->UncleanCount == 0))
+
+BOOLEAN
+FORCEINLINE
+FatIsIoRangeValid(IN LARGE_INTEGER Start, IN ULONG Length)
+{
+    /* Check if it's more than 32bits, or if the length causes 32bit overflow.
+       FAT-specific! */
+
+    return !(Start.HighPart || Start.LowPart + Length < Start.LowPart);
+}
+
 
 NTSYSAPI
 NTSTATUS
@@ -229,6 +241,13 @@ FatMapUserBuffer(PIRP Irp);
 
 BOOLEAN NTAPI
 FatIsTopLevelIrp(IN PIRP Irp);
+
+VOID NTAPI
+FatNotifyReportChange(IN PFAT_IRP_CONTEXT IrpContext,
+                      IN PVCB Vcb,
+                      IN PFCB Fcb,
+                      IN ULONG Filter,
+                      IN ULONG Action);
 
 /* --------------------------------------------------------- fullfat.c */
 

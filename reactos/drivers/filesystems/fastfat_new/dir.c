@@ -188,9 +188,98 @@ FatiOpenExistingDcb(IN PFAT_IRP_CONTEXT IrpContext,
                     IN BOOLEAN DeleteOnClose)
 {
     IO_STATUS_BLOCK Iosb = {{0}};
+    PCCB Ccb;
 
-    Iosb.Status = STATUS_NOT_IMPLEMENTED;
-    UNIMPLEMENTED;
+    /* Exclusively lock this FCB */
+    FatAcquireExclusiveFcb(IrpContext, Dcb);
+
+    /* Check if it's a delete-on-close of a root DCB */
+    if (FatNodeType(Dcb) == FAT_NTC_ROOT_DCB && DeleteOnClose)
+    {
+        Iosb.Status = STATUS_CANNOT_DELETE;
+
+        /* Release the lock and return */
+        FatReleaseFcb(IrpContext, Dcb);
+        return Iosb;
+    }
+
+    /*if (NoEaKnowledge && NodeType(Dcb) != FAT_NTC_ROOT_DCB &&
+        !FatIsFat32(Vcb))
+    {
+        UNIMPLEMENTED;
+    }*/
+
+    /* Check the create disposition and desired access */
+    if ((CreateDisposition != FILE_OPEN) &&
+        (CreateDisposition != FILE_OPEN_IF))
+    {
+        Iosb.Status = STATUS_OBJECT_NAME_COLLISION;
+
+        /* Release the lock and return */
+        FatReleaseFcb(IrpContext, Dcb);
+        return Iosb;
+    }
+
+#if 0
+    if (!FatCheckFileAccess(IrpContext,
+                            Dcb->DirentFatFlags,
+                            DesiredAccess))
+    {
+        Iosb.Status = STATUS_ACCESS_DENIED;
+        try_return( Iosb );
+    }
+#endif
+
+    /* If it's already opened - check share access */
+    if (Dcb->OpenCount > 0)
+    {
+        Iosb.Status = IoCheckShareAccess(*DesiredAccess,
+                                         ShareAccess,
+                                         FileObject,
+                                         &Dcb->ShareAccess,
+                                         TRUE);
+
+        if (!NT_SUCCESS(Iosb.Status))
+        {
+            /* Release the lock and return */
+            FatReleaseFcb(IrpContext, Dcb);
+            return Iosb;
+        }
+    }
+    else
+    {
+        IoSetShareAccess(*DesiredAccess,
+                         ShareAccess,
+                         FileObject,
+                         &Dcb->ShareAccess);
+    }
+
+    /* Set the file object */
+    Ccb = FatCreateCcb(IrpContext);
+    FatSetFileObject(FileObject,
+                     UserDirectoryOpen,
+                     Dcb,
+                     Ccb);
+
+    /* Increase counters */
+    Dcb->UncleanCount++;
+    Dcb->OpenCount++;
+    Vcb->OpenFileCount++;
+    if (IsFileObjectReadOnly(FileObject)) Vcb->ReadOnlyCount++;
+
+    /* Set delete on close */
+    if (DeleteOnClose)
+        SetFlag(Ccb->Flags, CCB_DELETE_ON_CLOSE);
+
+    /* Clear delay close flag */
+    ClearFlag(Dcb->State, FCB_STATE_DELAY_CLOSE);
+
+    /* That's it */
+    Iosb.Status = STATUS_SUCCESS;
+    Iosb.Information = FILE_OPENED;
+
+    /* Release the lock */
+    FatReleaseFcb(IrpContext, Dcb);
 
     return Iosb;
 }

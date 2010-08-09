@@ -135,13 +135,29 @@ FatiQueryVolumeInfo(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
         /* Call FsVolumeInfo handler */
         Status = FatiQueryFsVolumeInfo(Vcb, Buffer, &Length);
         break;
+
     case FileFsSizeInformation:
         /* Call FsVolumeInfo handler */
         Status = FatiQueryFsSizeInfo(Vcb, Buffer, &Length);
         break;
-    default:
-        DPRINT1("Volume information class %d is not supported!\n", InfoClass);
+
+    case FileFsDeviceInformation:
+        UNIMPLEMENTED
+        //Status = FatiQueryFsDeviceInfo(IrpContext, Vcb, Buffer, &Length);
+        break;
+
+    case FileFsAttributeInformation:
         UNIMPLEMENTED;
+        //Status = FatiQueryFsAttributeInfo(IrpContext, Vcb, Buffer, &Length);
+        break;
+
+    case FileFsFullSizeInformation:
+        UNIMPLEMENTED;
+        //Status = FatiQueryFsFullSizeInfo(IrpContext, Vcb, Buffer, &Length);
+        break;
+
+    default:
+        Status = STATUS_INVALID_PARAMETER;
     }
 
     /* Set IoStatus.Information to amount of filled bytes */
@@ -175,11 +191,7 @@ FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     FsRtlEnterFileSystem();
 
     /* Set Top Level IRP if not set */
-    if (IoGetTopLevelIrp() == NULL)
-    {
-        IoSetTopLevelIrp(Irp);
-        TopLevel = TRUE;
-    }
+    TopLevel = FatIsTopLevelIrp(Irp);
 
     /* Build an irp context */
     IrpContext = FatBuildIrpContext(Irp, CanWait);

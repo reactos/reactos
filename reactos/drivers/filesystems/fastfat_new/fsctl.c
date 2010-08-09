@@ -15,11 +15,179 @@
 
 NTSTATUS
 NTAPI
+FatOplockRequest(IN PFAT_IRP_CONTEXT IrpContext,
+                 IN PIRP Irp)
+{
+    NTSTATUS Status;
+    DPRINT1("Oplock request!\n");
+
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+    FatCompleteRequest(IrpContext, Irp, Status);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+FatMarkVolumeDirty(IN PFAT_IRP_CONTEXT IrpContext,
+                   IN PIRP Irp)
+{
+    NTSTATUS Status;
+    DPRINT1("Marking volume as dirty\n");
+
+    Status = STATUS_SUCCESS;
+    FatCompleteRequest(IrpContext, Irp, Status);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 FatUserFsCtrl(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
 {
-    DPRINT1("FatUserFsCtrl()\n");
-    FatCompleteRequest(IrpContext, Irp, STATUS_INVALID_DEVICE_REQUEST);
-    return STATUS_INVALID_DEVICE_REQUEST;
+    PIO_STACK_LOCATION IrpSp;
+    NTSTATUS Status;
+    ULONG Code;
+
+    /* Get current IRP stack location */
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    Code = IrpSp->Parameters.FileSystemControl.FsControlCode;
+
+    /* Set the wait flag */
+    if (Irp->RequestorMode != KernelMode &&
+        (Code & 3) == METHOD_NEITHER)
+    {
+        SetFlag(IrpContext->Flags, IRPCONTEXT_CANWAIT);
+    }
+
+    /* Branch according to the code */
+    switch (Code)
+    {
+    case FSCTL_REQUEST_OPLOCK_LEVEL_1:
+    case FSCTL_REQUEST_OPLOCK_LEVEL_2:
+    case FSCTL_REQUEST_BATCH_OPLOCK:
+    case FSCTL_OPLOCK_BREAK_ACKNOWLEDGE:
+    case FSCTL_OPBATCH_ACK_CLOSE_PENDING:
+    case FSCTL_OPLOCK_BREAK_NOTIFY:
+    case FSCTL_OPLOCK_BREAK_ACK_NO_2:
+    case FSCTL_REQUEST_FILTER_OPLOCK :
+        Status = FatOplockRequest(IrpContext, Irp);
+        break;
+
+    case FSCTL_LOCK_VOLUME:
+        //Status = FatLockVolume( IrpContext, Irp );
+        DPRINT1("FSCTL_LOCK_VOLUME\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_UNLOCK_VOLUME:
+        //Status = FatUnlockVolume( IrpContext, Irp );
+        DPRINT1("FSCTL_UNLOCK_VOLUME\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_DISMOUNT_VOLUME:
+        //Status = FatDismountVolume( IrpContext, Irp );
+        DPRINT1("FSCTL_DISMOUNT_VOLUME\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_MARK_VOLUME_DIRTY:
+        Status = FatMarkVolumeDirty(IrpContext, Irp);
+        break;
+
+    case FSCTL_IS_VOLUME_DIRTY:
+        //Status = FatIsVolumeDirty( IrpContext, Irp );
+        DPRINT1("FSCTL_IS_VOLUME_DIRTY\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_IS_VOLUME_MOUNTED:
+        //Status = FatIsVolumeMounted( IrpContext, Irp );
+        DPRINT1("FSCTL_IS_VOLUME_MOUNTED\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_IS_PATHNAME_VALID:
+        //Status = FatIsPathnameValid( IrpContext, Irp );
+        DPRINT1("FSCTL_IS_PATHNAME_VALID\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_QUERY_RETRIEVAL_POINTERS:
+        //Status = FatQueryRetrievalPointers( IrpContext, Irp );
+        DPRINT1("FSCTL_QUERY_RETRIEVAL_POINTERS\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_QUERY_FAT_BPB:
+        //Status = FatQueryBpb( IrpContext, Irp );
+        DPRINT1("FSCTL_QUERY_FAT_BPB\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_FILESYSTEM_GET_STATISTICS:
+        //Status = FatGetStatistics( IrpContext, Irp );
+        DPRINT1("FSCTL_FILESYSTEM_GET_STATISTICS\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_GET_VOLUME_BITMAP:
+        //Status = FatGetVolumeBitmap( IrpContext, Irp );
+        DPRINT1("FSCTL_GET_VOLUME_BITMAP\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_GET_RETRIEVAL_POINTERS:
+        //Status = FatGetRetrievalPointers( IrpContext, Irp );
+        DPRINT1("FSCTL_GET_RETRIEVAL_POINTERS\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_MOVE_FILE:
+        //Status = FatMoveFile( IrpContext, Irp );
+        DPRINT1("FSCTL_MOVE_FILE\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    case FSCTL_ALLOW_EXTENDED_DASD_IO:
+        //Status = FatAllowExtendedDasdIo( IrpContext, Irp );
+        DPRINT1("FSCTL_ALLOW_EXTENDED_DASD_IO\n");
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+        break;
+
+    default:
+        DPRINT1("FatUserFsCtrl(), unhandled fs control code 0x%x\n", Code);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        FatCompleteRequest(IrpContext, Irp, Status);
+    }
+
+    //(((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
+
+    // 9c040
+    //    1 1     0   0   0
+    //    6 4     8   4   0
+    // 10011100000001000000
+    // DT = 1001 = 9
+    // Access = 11 = 3
+    // Function = 10000 = 16
+    // Method = 0
+
+    return Status;
 }
 
 NTSTATUS

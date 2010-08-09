@@ -524,4 +524,32 @@ FatIsTopLevelIrp(IN PIRP Irp)
     return FALSE;
 }
 
+VOID
+NTAPI
+FatNotifyReportChange(IN PFAT_IRP_CONTEXT IrpContext,
+                      IN PVCB Vcb,
+                      IN PFCB Fcb,
+                      IN ULONG Filter,
+                      IN ULONG Action)
+{
+    if (Fcb->FullFileName.Buffer == NULL)
+        FatSetFullFileNameInFcb(IrpContext, Fcb);
+
+    ASSERT(Fcb->FullFileName.Length != 0 );
+    ASSERT(Fcb->FileNameLength != 0 );
+    ASSERT(Fcb->FullFileName.Length > Fcb->FileNameLength );
+    ASSERT(Fcb->FullFileName.Buffer[(Fcb->FullFileName.Length - Fcb->FileNameLength)/sizeof(WCHAR) - 1] == L'\\' );
+
+    FsRtlNotifyFullReportChange(Vcb->NotifySync,
+                                &Vcb->NotifyList,
+                                (PSTRING)&Fcb->FullFileName,
+                                (USHORT)(Fcb->FullFileName.Length -
+                                         Fcb->FileNameLength),
+                                NULL,
+                                NULL,
+                                Filter,
+                                Action,
+                                NULL);
+}
+
 /* EOF */
