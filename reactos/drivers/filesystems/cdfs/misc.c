@@ -96,31 +96,37 @@ CdfsFileFlagsToAttributes(PFCB Fcb,
 }
 
 BOOLEAN
-CdfsIsNameLegalDOS8Dot3(IN PUNICODE_STRING FileName
+CdfsIsNameLegalDOS8Dot3(IN UNICODE_STRING FileName
     )
 {
     ULONG i;
     STRING DbcsName;
     CHAR DbcsNameBuffer[12];
 
-    for (i = 0; i < FileName->Length / sizeof(WCHAR) ; i++)
+    /* 8dot3 filename is max 12 length */
+    if (FileName.Length / sizeof(WCHAR) > 12)
+    {
+        return FALSE;
+    }
+
+    for (i = 0; i < FileName.Length / sizeof(WCHAR) ; i++)
     {
         /* Don't allow spaces in FileName */
-        if (FileName->Buffer[i] == L' ')
+        if (FileName.Buffer[i] == L' ')
             return FALSE;
     }
-#if 0    
+
     /* If FileName is finishing with a dot, remove it */
-    if (FileName->Buffer[FileName->Length / sizeof(WCHAR) - 1] == '.')
+    if (FileName.Buffer[FileName.Length / sizeof(WCHAR) - 1] == '.')
     {
-        FileName->Length -= sizeof(WCHAR);
+        FileName.Length -= sizeof(WCHAR);
     }
-#endif
+
     /* Finally, convert the string to call the FsRtl function */
     DbcsName.MaximumLength = 12;
     DbcsName.Buffer = DbcsNameBuffer;
     if (!NT_SUCCESS(RtlUnicodeStringToCountedOemString(&DbcsName,
-                                                       FileName,
+                                                       &FileName,
                                                        FALSE )))
     {
 
@@ -165,7 +171,7 @@ CdfsShortNameCacheGet
     }
 
     /* Cache miss */
-    if (!CdfsIsNameLegalDOS8Dot3(LongName))
+    if (!CdfsIsNameLegalDOS8Dot3(*LongName))
     {
         RtlGenerate8dot3Name(LongName, FALSE, &Context, ShortName);
     }
