@@ -73,7 +73,7 @@ CdfsGetPVDData(PUCHAR Buffer,
     /* Extract the volume label */
     pc = Pvd->VolumeId;
     pw = CdInfo->VolumeLabel;
-    for (i = 0; i < MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR); i++)
+    for (i = 0; i < (MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)) - 1; i++)
     {
         *pw++ = (WCHAR)*pc++;
     }
