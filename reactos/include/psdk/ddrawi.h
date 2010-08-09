@@ -1999,7 +1999,7 @@ typedef struct _DDRAWI_DDRAWCLIPPER_LCL {
 #ifndef _NO_COM
   IUnknown *pUnkOuter;
 #else
-  PVOID *pUnkOuter;
+  PVOID pUnkOuter;
 #endif
   LPDDRAWI_DIRECTDRAW_INT lpDD_int;
   ULONG_PTR dwReserved1;
