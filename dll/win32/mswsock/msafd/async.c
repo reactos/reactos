@@ -170,7 +170,7 @@ SockAsyncThread(PVOID Context)
             {
                 /* Call the routine */
                 SockHandleAsyncIndication(AsyncCompletionRoutine,
-                                          Context,
+                                          AsyncContext,
                                           &IoStatusBlock);
             }
             else
