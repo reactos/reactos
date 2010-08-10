@@ -26,7 +26,7 @@ SockCreateAsyncQueuePort(VOID)
     Status = NtCreateIoCompletion(&SockAsyncQueuePort,
                                   IO_COMPLETION_ALL_ACCESS,
                                   NULL,
-                                  -1);
+                                  0);
     
     /* Protect Handle */    
     HandleFlags.ProtectFromClose = TRUE;
