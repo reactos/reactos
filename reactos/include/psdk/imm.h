@@ -119,36 +119,12 @@ typedef struct tagIMEMENUITEMINFOW
 DECL_WINELIB_TYPE_AW(IMEMENUITEMINFO)
 DECL_WINELIB_TYPE_AW(LPIMEMENUITEMINFO)
 
-
 typedef struct _tagCOMPOSITIONFORM
 {
 				DWORD   dwStyle;
 				POINT ptCurrentPos;
 				RECT  rcArea;
 } COMPOSITIONFORM, *LPCOMPOSITIONFORM;
-
-typedef struct _tagINPUTCONTEXT {
-    HWND                hWnd;
-    BOOL                fOpen;
-    POINT               ptStatusWndPos;
-    POINT               ptSoftKbdPos;
-    DWORD               fdwConversion;
-    DWORD               fdwSentence;
-    union   {
-        LOGFONTA        A;
-        LOGFONTW        W;
-    } lfFont;
-    COMPOSITIONFORM     cfCompForm;
-    CANDIDATEFORM       cfCandForm[4];
-    HIMCC               hCompStr;
-    HIMCC               hCandInfo;
-    HIMCC               hGuideLine;
-    HIMCC               hPrivate;
-    DWORD               dwNumMsgBuf;
-    HIMCC               hMsgBuf;
-    DWORD               fdwInit;
-    DWORD               dwReserve[3];
-} INPUTCONTEXT, *LPINPUTCONTEXT;
 
 typedef struct _tagIMEINFO {
     DWORD       dwPrivateDataSize;
@@ -233,7 +209,6 @@ typedef struct tagCANDIDATEINFO {
 #define NI_SETCANDIDATE_PAGESIZE        0x0017
 #define NI_IMEMENUSELECTED              0x0018
 
-LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
 BOOL  WINAPI ImmUnlockIMC(HIMC);
 DWORD WINAPI ImmGetIMCLockCount(HIMC);
 HIMCC  WINAPI ImmCreateIMCC(DWORD);
