@@ -466,7 +466,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 
 	/* This a open operation for the volume itself */
 	if (FileObject->FileName.Length == 0 &&
-		FileObject->RelatedFileObject == NULL)
+		(FileObject->RelatedFileObject == NULL || FileObject->RelatedFileObject->FsContext2 != NULL))
 	{
 		if (RequestedDisposition == FILE_CREATE ||
 			RequestedDisposition == FILE_OVERWRITE_IF ||
@@ -474,10 +474,13 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		{
 			return(STATUS_ACCESS_DENIED);
 		}
+#if 0
+        /* In spite of what is shown in WDK, it seems that Windows FAT driver doesn't perform that test */
 		if (RequestedOptions & FILE_DIRECTORY_FILE)
 		{
 			return(STATUS_NOT_A_DIRECTORY);
 		}
+#endif
 		pFcb = DeviceExt->VolumeFcb;
 		pCcb = ExAllocateFromNPagedLookasideList(&VfatGlobalData->CcbLookasideList);
 		if (pCcb == NULL)
