@@ -750,8 +750,10 @@ WSPSelect(INT nfds,
         /* Fill out handle info */
         HandleArray->Handle = (SOCKET)readfds->fd_array[i];
         HandleArray->Events = AFD_EVENT_RECEIVE | 
-                              AFD_EVENT_DISCONNECT |
-                              AFD_EVENT_ABORT;
+		                      AFD_EVENT_DISCONNECT |
+		                      AFD_EVENT_CLOSE |
+		                      AFD_EVENT_ABORT |
+		                      AFD_EVENT_ACCEPT;
 
         /* Move to the next one */
         HandleArray++;
@@ -760,7 +762,7 @@ WSPSelect(INT nfds,
     {
         /* Fill out handle info */
         HandleArray->Handle = (SOCKET)writefds->fd_array[i];
-        HandleArray->Events = AFD_EVENT_SEND;
+        HandleArray->Events = AFD_EVENT_SEND | AFD_EVENT_CONNECT;
 
         /* Move to the next one */
         HandleArray++;
@@ -776,7 +778,7 @@ WSPSelect(INT nfds,
     }
     
     /* Check if a timeout was given */
-    if (timeout) 
+    if (!timeout) 
     {
         /* Inifinte Timeout */
         PollInfo->Timeout.u.LowPart = -1;
