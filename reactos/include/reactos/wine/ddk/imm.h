@@ -1,6 +1,8 @@
 
-#include <psdk/wingdi.h>
+#ifndef _WINE_IMM_H_
+#define _WINE_IMM_H_
 
+#include <psdk/wingdi.h>
 #include <psdk/imm.h>
 
 typedef struct _tagINPUTCONTEXT {
@@ -27,3 +29,5 @@ typedef struct _tagINPUTCONTEXT {
 } INPUTCONTEXT, *LPINPUTCONTEXT;
 
 LPINPUTCONTEXT WINAPI ImmLockIMC(HIMC);
+
+#endif /* _WINE_IMM_H_ */
