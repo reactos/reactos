@@ -642,7 +642,7 @@ WSAAccept(IN     SOCKET s,
     if (Socket == INVALID_SOCKET)
         WSASetLastError(Errno);
 
-    if ( addr )
+    if ( addr && addrlen )
     {
 #if DBG
         LPSOCKADDR_IN sa = (LPSOCKADDR_IN)addr;
