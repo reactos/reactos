@@ -27,7 +27,7 @@ typedef struct _NDIS_M_DRIVER_BLOCK {
     PDRIVER_OBJECT                  DriverObject;             /* Driver object of miniport */
     LIST_ENTRY                      DeviceList;               /* Adapters created by miniport */
     PUNICODE_STRING                 RegistryPath;             /* SCM Registry key */
-#if !defined(_MSC_VER) && defined(__NDIS_H)
+#if !defined(_MSC_VER) && defined(_NDIS_)
 } NDIS_M_DRIVER_BLOCK_COMPATIBILITY_HACK_DONT_USE;
 #else
 } NDIS_M_DRIVER_BLOCK, *PNDIS_M_DRIVER_BLOCK;

@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDCDRM_H
-#define __NTDDCDRM_H
+#ifndef _NTDDCDRM_
+#define _NTDDCDRM_
 
 #include "ntddstor.h"
 
@@ -342,4 +342,4 @@ typedef struct __RAW_READ_INFO {
 }
 #endif
 
-#endif /* __NTDDCDRM_H */
+#endif /* _NTDDCDRM_ */

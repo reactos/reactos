@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDD8042_H
-#define __NTDD8042_H
+#ifndef _NTDD8042_
+#define _NTDD8042_
 
 #include "ntddkbd.h"
 #include "ntddmou.h"
@@ -205,4 +205,4 @@ typedef struct _INTERNAL_I8042_HOOK_MOUSE {
 }
 #endif
 
-#endif /* __NTDD8042_H */
+#endif /* _NTDD8042_ */

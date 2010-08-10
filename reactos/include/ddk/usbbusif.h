@@ -8,7 +8,7 @@
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
-#if !defined(_USBBUSIF_)
+#if !defined(_HUBBUSIF_)
 typedef PVOID PUSB_DEVICE_HANDLE;
 #endif
 

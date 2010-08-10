@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDNDIS_H
-#define __NTDDNDIS_H
+#ifndef _NTDDNDIS_
+#define _NTDDNDIS_
 
 #ifdef __cplusplus
 extern "C" {
@@ -326,7 +326,7 @@ typedef enum _NDIS_MEDIA_STATE {
   NdisMediaStateDisconnected
 } NDIS_MEDIA_STATE, *PNDIS_MEDIA_STATE;
 
-#ifndef __NDIS_H
+#ifndef _NDIS_
 typedef int NDIS_STATUS, *PNDIS_STATUS;
 #endif
 
@@ -379,4 +379,4 @@ typedef struct _NDIS_CO_LINK_SPEED {
 }
 #endif
 
-#endif /* __NTDDNDIS_H */
+#endif /* _NTDDNDIS_ */

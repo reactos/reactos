@@ -16,7 +16,7 @@ WmiTraceMessage(
 #endif
 #endif /* RUN_WPP */
 
- #if (NTDDI_VERSION >= NTDDI_WINXP)
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
 NTSTATUS

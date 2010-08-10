@@ -29,8 +29,8 @@
  *          NDIS51_MINIPORT      - Building NDIS 5.1 miniport driver
  */
 
-#ifndef __NDIS_H
-#define __NDIS_H
+#ifndef _NDIS_
+#define _NDIS_
 
 #ifndef NDIS_WDM
 #define NDIS_WDM 0
@@ -5987,6 +5987,6 @@ typedef	NDIS_WAN_MAC_CHARACTERISTICS    *PNDIS_WAN_MAC_CHARACTERISTICS;
 }
 #endif
 
-#endif /* __NDIS_H */
+#endif /* _NDIS_ */
 
 /* EOF */

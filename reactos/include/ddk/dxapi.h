@@ -1,5 +1,5 @@
 ULONG
-DxApiGetVersion();
+DxApiGetVersion(void);
 
 ULONG
 DxApi(

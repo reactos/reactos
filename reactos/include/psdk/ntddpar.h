@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDPAR_H
-#define __NTDDPAR_H
+#ifndef _NTDDPAR_
+#define _NTDDPAR_
 
 #ifdef __cplusplus
 extern "C" {
@@ -110,4 +110,4 @@ typedef struct _PARCLASS_NEGOTIATION_MASK {
 }
 #endif
 
-#endif /* __NTDDPAR_H */
+#endif /* _NTDDPAR_ */

@@ -20,8 +20,10 @@
  *
  */
 
-#ifndef __NDISTAPI_H
-#define __NDISTAPI_H
+#pragma once
+
+#ifndef _NDIS_TAPI_
+#define _NDIS_TAPI_
 
 #include "ndis.h"
 
@@ -1301,4 +1303,4 @@ typedef struct _CO_AF_TAPI_MAKE_CALL_PARAMETERS {
 }
 #endif
 
-#endif /* __NDISTAPI_H */
+#endif /* _NDIS_TAPI_ */

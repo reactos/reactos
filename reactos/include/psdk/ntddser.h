@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDSER_H
-#define __NTDDSER_H
+#ifndef _NTDDSER_
+#define _NTDDSER_
 
 #ifdef __cplusplus
 extern "C" {
@@ -444,4 +444,4 @@ typedef struct _SERIALCONFIG {
 }
 #endif
 
-#endif /* __NTDDSER_H */
+#endif /* _NTDDSER_ */
