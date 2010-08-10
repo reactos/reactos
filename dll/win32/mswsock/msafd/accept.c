@@ -895,6 +895,7 @@ WSPAccept(SOCKET Handle,
 
     /* Dereference the socket and clear its pointer for error code logic */
     SockDereferenceSocket(Socket);
+	LeaveCriticalSection(&Socket->Lock);
     Socket = NULL;
 
 error:
