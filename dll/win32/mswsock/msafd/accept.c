@@ -825,9 +825,6 @@ WSPAccept(SOCKET Handle,
                   Socket->SharedData.SizeOfLocalAddress);
     AcceptedSocket->SharedData.SizeOfLocalAddress = Socket->SharedData.SizeOfLocalAddress;
 
-    /* We can release the accepted socket's lock now */
-    LeaveCriticalSection(&AcceptedSocket->Lock);
-
     /* Send IOCTL to Accept */
     AcceptData.UseSAN = SockSanEnabled;
     Status = NtDeviceIoControlFile(Socket->WshContext.Handle,
@@ -894,8 +891,8 @@ WSPAccept(SOCKET Handle,
                                                            &ErrorCode);
 
     /* Dereference the socket and clear its pointer for error code logic */
-    SockDereferenceSocket(Socket);
 	LeaveCriticalSection(&Socket->Lock);
+	SockDereferenceSocket(Socket);
     Socket = NULL;
 
 error:
@@ -919,7 +916,7 @@ error:
     if (AcceptedSocket)
     {
         /* Check if the accepted socket also has a handle */
-        if (ErrorCode == NO_ERROR)
+        if (ErrorCode != NO_ERROR)
         {
             /* Close the socket */
             SockCloseSocket(AcceptedSocket);
