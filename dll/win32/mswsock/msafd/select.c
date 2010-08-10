@@ -75,7 +75,7 @@ SockCheckAndInitAsyncSelectHelper(VOID)
     }
 
     /* Check if the port exists, and if not, create it */
-    if (SockAsyncQueuePort) SockCreateAsyncQueuePort();
+    if (!SockAsyncQueuePort) SockCreateAsyncQueuePort();
 
     /* 
      * Now Set up the Completion Port Information 
