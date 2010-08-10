@@ -47,7 +47,7 @@ WSPListen(SOCKET Handle,
     EnterCriticalSection(&Socket->Lock);
 
     /* If the socket is connection-less, fail */
-    if (MSAFD_IS_DGRAM_SOCK(Socket));
+    if (MSAFD_IS_DGRAM_SOCK(Socket))
     {
         /* Fail */
         ErrorCode = WSAEOPNOTSUPP;
@@ -61,9 +61,9 @@ WSPListen(SOCKET Handle,
         ErrorCode = NO_ERROR;
         goto error;
     }
-    else if (Socket->SharedData.State != SocketConnected)
+    else if (Socket->SharedData.State != SocketBound)
     {
-        /* If we're not connected, fail */
+        /* If we're not bound, fail */
         ErrorCode = WSAEINVAL;
         goto error;
     }
