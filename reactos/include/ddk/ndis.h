@@ -36,15 +36,6 @@
 #define NDIS_WDM 0
 #endif
 
-/* Helper macro to enable gcc's extension.  */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
-#endif
-
 #include "ntddk.h"
 #include "netpnp.h"
 #include "ntstatus.h"
@@ -280,7 +271,7 @@ typedef struct _NET_PNP_EVENT {
 #else
 #define NDIS_SUPPORT_NDIS61      0
 #endif
-#endif // !defined(NDIS_SUPPORT_NDIS61)
+#endif /* !defined(NDIS_SUPPORT_NDIS61) */
 
 #if !defined(NDIS_SUPPORT_NDIS620)
 
@@ -312,9 +303,9 @@ typedef struct _NET_PNP_EVENT {
 #endif
 
 #if defined(NDIS_WRAPPER)
-  #define NDISAPI
+#define NDISAPI
 #else
-  #define NDISAPI DECLSPEC_IMPORT
+#define NDISAPI DECLSPEC_IMPORT
 #endif
 
 typedef PVOID QUEUED_CLOSE; //FIXME : Doesn't exist in public headers
@@ -695,7 +686,7 @@ typedef CM_PARTIAL_RESOURCE_LIST NDIS_RESOURCE_LIST, *PNDIS_RESOURCE_LIST;
 #define	NDIS_GUID_TO_STATUS               0x00000002
 #define	NDIS_GUID_ANSI_STRING             0x00000004
 #define	NDIS_GUID_UNICODE_STRING          0x00000008
-#define	NDIS_GUID_ARRAY	                  0x00000010
+#define	NDIS_GUID_ARRAY                   0x00000010
 
 #if NDIS_LEGACY_DRIVER
 
@@ -1002,7 +993,7 @@ typedef enum _NDIS_PNP_DEVICE_STATE {
 
 #define	NDIS_DEVICE_NOT_STOPPABLE                 0x00000001
 #define	NDIS_DEVICE_NOT_REMOVEABLE                0x00000002
-#define	NDIS_DEVICE_NOT_SUSPENDABLE	              0x00000004
+#define	NDIS_DEVICE_NOT_SUSPENDABLE               0x00000004
 #define NDIS_DEVICE_DISABLE_PM                    0x00000008
 #define NDIS_DEVICE_DISABLE_WAKE_UP               0x00000010
 #define NDIS_DEVICE_DISABLE_WAKE_ON_RECONNECT     0x00000020
@@ -1053,12 +1044,12 @@ typedef struct _CO_CALL_MANAGER_PARAMETERS {
 /* CO_MEDIA_PARAMETERS.Flags constants */
 #define RECEIVE_TIME_INDICATION           0x00000001
 #define USE_TIME_STAMPS                   0x00000002
-#define TRANSMIT_VC	                      0x00000004
+#define TRANSMIT_VC                       0x00000004
 #define RECEIVE_VC                        0x00000008
 #define INDICATE_ERRED_PACKETS            0x00000010
 #define INDICATE_END_OF_TX                0x00000020
 #define RESERVE_RESOURCES_VC              0x00000040
-#define	ROUND_DOWN_FLOW	                  0x00000080
+#define	ROUND_DOWN_FLOW                   0x00000080
 #define	ROUND_UP_FLOW                     0x00000100
 
 typedef struct _CO_MEDIA_PARAMETERS {

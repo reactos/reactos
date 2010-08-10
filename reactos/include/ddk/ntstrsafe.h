@@ -520,4 +520,4 @@ RtlStringCbCopyA(OUT LPSTR Destination,
     return Status;
 }
 
-#endif
+#endif /* _NTSTRSAFE_H_INCLUDED_ */

@@ -28,9 +28,9 @@ extern "C" {
 #endif
 
 #if defined(_APCUPS_)
-  #define UPSAPI
+#define UPSAPI
 #else
-  #define UPSAPI DECLSPEC_IMPORT
+#define UPSAPI DECLSPEC_IMPORT
 #endif
 
 
@@ -72,14 +72,14 @@ UPSAPI
 VOID
 NTAPI
 UPSTurnOff(
-  IN DWORD  aTurnOffDelay);
+  IN DWORD aTurnOffDelay);
 
 UPSAPI
 VOID
 NTAPI
 UPSWaitForStateChange(
-  IN DWORD  aCurrentState,
-  IN DWORD  anInterval);
+  IN DWORD aCurrentState,
+  IN DWORD anInterval);
 
 #ifdef __cplusplus
 }

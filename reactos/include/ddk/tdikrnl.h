@@ -30,17 +30,17 @@ extern "C" {
 #endif
 
 #if defined(_TDI_)
-  #define TDIKRNLAPI
+#define TDIKRNLAPI
 #else
-  #define TDIKRNLAPI DECLSPEC_IMPORT
+#define TDIKRNLAPI DECLSPEC_IMPORT
 #endif
 
 
 typedef struct _TDI_REQUEST_KERNEL {
-  ULONG  RequestFlags;
-  PTDI_CONNECTION_INFORMATION  RequestConnectionInformation;
-  PTDI_CONNECTION_INFORMATION  ReturnConnectionInformation;
-  PVOID  RequestSpecific;
+  ULONG RequestFlags;
+  PTDI_CONNECTION_INFORMATION RequestConnectionInformation;
+  PTDI_CONNECTION_INFORMATION ReturnConnectionInformation;
+  PVOID RequestSpecific;
 } TDI_REQUEST_KERNEL, *PTDI_REQUEST_KERNEL;
 
 /* Request codes */
@@ -72,7 +72,7 @@ typedef struct _TDI_REQUEST_KERNEL {
 
 /* TdiAssociateAddress */
 typedef struct _TDI_REQUEST_KERNEL_ASSOCIATE {
-  HANDLE  AddressHandle;
+  HANDLE AddressHandle;
 } TDI_REQUEST_KERNEL_ASSOCIATE, *PTDI_REQUEST_KERNEL_ASSOCIATE;
 
 /* TdiDisassociateAddress */
@@ -81,8 +81,8 @@ typedef TDI_REQUEST_KERNEL TDI_REQUEST_KERNEL_DISASSOCIATE,
 
 /* TdiAccept */
 typedef struct _TDI_REQUEST_KERNEL_ACCEPT {
-  PTDI_CONNECTION_INFORMATION  RequestConnectionInformation;
-  PTDI_CONNECTION_INFORMATION  ReturnConnectionInformation;
+  PTDI_CONNECTION_INFORMATION RequestConnectionInformation;
+  PTDI_CONNECTION_INFORMATION ReturnConnectionInformation;
 } TDI_REQUEST_KERNEL_ACCEPT, *PTDI_REQUEST_KERNEL_ACCEPT;
 
 /* TdiConnect */
@@ -99,49 +99,48 @@ typedef TDI_REQUEST_KERNEL TDI_REQUEST_KERNEL_LISTEN,
 
 /* TdiReceive */
 typedef struct _TDI_REQUEST_KERNEL_RECEIVE {
-  ULONG  ReceiveLength;
-  ULONG  ReceiveFlags;
+  ULONG ReceiveLength;
+  ULONG ReceiveFlags;
 } TDI_REQUEST_KERNEL_RECEIVE, *PTDI_REQUEST_KERNEL_RECEIVE;
 
 /* TdiReceiveDatagram */
 typedef struct _TDI_REQUEST_KERNEL_RECEIVEDG {
-  ULONG  ReceiveLength;
-  PTDI_CONNECTION_INFORMATION  ReceiveDatagramInformation;
-  PTDI_CONNECTION_INFORMATION  ReturnDatagramInformation;
-  ULONG  ReceiveFlags;
+  ULONG ReceiveLength;
+  PTDI_CONNECTION_INFORMATION ReceiveDatagramInformation;
+  PTDI_CONNECTION_INFORMATION ReturnDatagramInformation;
+  ULONG ReceiveFlags;
 } TDI_REQUEST_KERNEL_RECEIVEDG, *PTDI_REQUEST_KERNEL_RECEIVEDG;
 
 /* TdiSend */
 typedef struct _TDI_REQUEST_KERNEL_SEND {
-  ULONG  SendLength;
-  ULONG  SendFlags;
+  ULONG SendLength;
+  ULONG SendFlags;
 } TDI_REQUEST_KERNEL_SEND, *PTDI_REQUEST_KERNEL_SEND;
 
 /* TdiSendDatagram */
 typedef struct _TDI_REQUEST_KERNEL_SENDDG {
-  ULONG  SendLength;
-  PTDI_CONNECTION_INFORMATION  SendDatagramInformation;
+  ULONG SendLength;
+  PTDI_CONNECTION_INFORMATION SendDatagramInformation;
 } TDI_REQUEST_KERNEL_SENDDG, *PTDI_REQUEST_KERNEL_SENDDG;
 
 /* TdiSetEventHandler */
 typedef struct _TDI_REQUEST_KERNEL_SET_EVENT {
-  LONG  EventType;
-  PVOID  EventHandler;
-  PVOID  EventContext;
+  LONG EventType;
+  PVOID EventHandler;
+  PVOID EventContext;
 } TDI_REQUEST_KERNEL_SET_EVENT, *PTDI_REQUEST_KERNEL_SET_EVENT;
 
 /* TdiQueryInformation */
 typedef struct _TDI_REQUEST_KERNEL_QUERY_INFO {
-  LONG  QueryType;
-  PTDI_CONNECTION_INFORMATION  RequestConnectionInformation;
+  LONG QueryType;
+  PTDI_CONNECTION_INFORMATION RequestConnectionInformation;
 } TDI_REQUEST_KERNEL_QUERY_INFORMATION, *PTDI_REQUEST_KERNEL_QUERY_INFORMATION;
 
 /* TdiSetInformation */
 typedef struct _TDI_REQUEST_KERNEL_SET_INFO {
-  LONG  SetType;
-  PTDI_CONNECTION_INFORMATION  RequestConnectionInformation;
+  LONG SetType;
+  PTDI_CONNECTION_INFORMATION RequestConnectionInformation;
 } TDI_REQUEST_KERNEL_SET_INFORMATION, *PTDI_REQUEST_KERNEL_SET_INFORMATION;
-
 
 /* Event types */
 #define TDI_EVENT_CONNECT                   0
@@ -158,133 +157,133 @@ typedef struct _TDI_REQUEST_KERNEL_SET_INFO {
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_CONNECT)(
-  IN PVOID  TdiEventContext,
-  IN LONG  RemoteAddressLength,
-  IN PVOID  RemoteAddress,
-  IN LONG  UserDataLength,
-  IN PVOID  UserData,
-  IN LONG  OptionsLength,
-  IN PVOID  Options,
-  OUT CONNECTION_CONTEXT  *ConnectionContext,
-  OUT PIRP  *AcceptIrp);
+  IN PVOID TdiEventContext,
+  IN LONG RemoteAddressLength,
+  IN PVOID RemoteAddress,
+  IN LONG UserDataLength,
+  IN PVOID UserData,
+  IN LONG OptionsLength,
+  IN PVOID Options,
+  OUT CONNECTION_CONTEXT *ConnectionContext,
+  OUT PIRP *AcceptIrp);
 
 TDIKRNLAPI
 NTSTATUS
 NTAPI
 TdiDefaultConnectHandler(
-  IN PVOID  TdiEventContext,
-  IN LONG  RemoteAddressLength,
-  IN PVOID  RemoteAddress,
-  IN LONG  UserDataLength,
-  IN PVOID  UserData,
-  IN LONG  OptionsLength,
-  IN PVOID  Options,
+  IN PVOID TdiEventContext,
+  IN LONG RemoteAddressLength,
+  IN PVOID RemoteAddress,
+  IN LONG UserDataLength,
+  IN PVOID UserData,
+  IN LONG OptionsLength,
+  IN PVOID Options,
   OUT CONNECTION_CONTEXT *ConnectionContext,
-  OUT PIRP  *AcceptIrp);
+  OUT PIRP *AcceptIrp);
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_DISCONNECT)(
-  IN PVOID  TdiEventContext,
-  IN CONNECTION_CONTEXT  ConnectionContext,
-  IN LONG  DisconnectDataLength,
-  IN PVOID  DisconnectData,
-  IN LONG  DisconnectInformationLength,
-  IN PVOID  DisconnectInformation,
-  IN ULONG  DisconnectFlags);
+  IN PVOID TdiEventContext,
+  IN CONNECTION_CONTEXT ConnectionContext,
+  IN LONG DisconnectDataLength,
+  IN PVOID DisconnectData,
+  IN LONG DisconnectInformationLength,
+  IN PVOID DisconnectInformation,
+  IN ULONG DisconnectFlags);
 
 TDIKRNLAPI
 NTSTATUS
 NTAPI
 TdiDefaultDisconnectHandler(
-  IN PVOID  TdiEventContext,
-  IN CONNECTION_CONTEXT  ConnectionContext,
-  IN LONG  DisconnectDataLength,
-  IN PVOID  DisconnectData,
-  IN LONG  DisconnectInformationLength,
-  IN PVOID  DisconnectInformation,
-  IN ULONG  DisconnectFlags);
+  IN PVOID TdiEventContext,
+  IN CONNECTION_CONTEXT ConnectionContext,
+  IN LONG DisconnectDataLength,
+  IN PVOID DisconnectData,
+  IN LONG DisconnectInformationLength,
+  IN PVOID DisconnectInformation,
+  IN ULONG DisconnectFlags);
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_ERROR)(
-  IN PVOID  TdiEventContext,
-  IN NTSTATUS  Status);
+  IN PVOID TdiEventContext,
+  IN NTSTATUS Status);
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_ERROR_EX)(
-  IN PVOID  TdiEventContext,
-  IN NTSTATUS  Status,
-  IN PVOID  Buffer);
+  IN PVOID TdiEventContext,
+  IN NTSTATUS Status,
+  IN PVOID Buffer);
 
 TDIKRNLAPI
 NTSTATUS
 NTAPI
 TdiDefaultErrorHandler(
-  IN PVOID  TdiEventContext,
-  IN NTSTATUS  Status);
+  IN PVOID TdiEventContext,
+  IN NTSTATUS Status);
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_RECEIVE)(
-  IN PVOID  TdiEventContext,
-  IN CONNECTION_CONTEXT  ConnectionContext,
-  IN ULONG  ReceiveFlags,
-  IN ULONG  BytesIndicated,
-  IN ULONG  BytesAvailable,
-  OUT ULONG  *BytesTaken,
-  IN PVOID  Tsdu,
-  OUT PIRP  *IoRequestPacket);
+  IN PVOID TdiEventContext,
+  IN CONNECTION_CONTEXT ConnectionContext,
+  IN ULONG ReceiveFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket);
 
 TDIKRNLAPI
 NTSTATUS
 NTAPI
 TdiDefaultReceiveHandler(
-  IN PVOID  TdiEventContext,
-  IN CONNECTION_CONTEXT  ConnectionContext,
-  IN ULONG  ReceiveFlags,
-  IN ULONG  BytesIndicated,
-  IN ULONG  BytesAvailable,
-  OUT ULONG  *BytesTaken,
-  IN PVOID  Tsdu,
-  OUT PIRP  *IoRequestPacket);
+  IN PVOID TdiEventContext,
+  IN CONNECTION_CONTEXT ConnectionContext,
+  IN ULONG ReceiveFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket);
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_RECEIVE_DATAGRAM)(
-  IN PVOID  TdiEventContext,
-  IN LONG  SourceAddressLength,
-  IN PVOID  SourceAddress,
-  IN LONG  OptionsLength,
-  IN PVOID  Options,
-  IN ULONG  ReceiveDatagramFlags,
-  IN ULONG  BytesIndicated,
-  IN ULONG  BytesAvailable,
-  OUT ULONG  *BytesTaken,
-  IN PVOID  Tsdu,
-  OUT PIRP  *IoRequestPacket);
+  IN PVOID TdiEventContext,
+  IN LONG SourceAddressLength,
+  IN PVOID SourceAddress,
+  IN LONG OptionsLength,
+  IN PVOID Options,
+  IN ULONG ReceiveDatagramFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket);
 
 TDIKRNLAPI
 NTSTATUS NTAPI
 TdiDefaultRcvDatagramHandler(
-  IN PVOID  TdiEventContext,
-  IN LONG  SourceAddressLength,
-  IN PVOID  SourceAddress,
-  IN LONG  OptionsLength,
-  IN PVOID  Options,
-  IN ULONG  ReceiveDatagramFlags,
-  IN ULONG  BytesIndicated,
-  IN ULONG  BytesAvailable,
-  OUT ULONG  *BytesTaken,
-  IN PVOID  Tsdu,
-  OUT PIRP  *IoRequestPacket);
+  IN PVOID TdiEventContext,
+  IN LONG SourceAddressLength,
+  IN PVOID SourceAddress,
+  IN LONG OptionsLength,
+  IN PVOID Options,
+  IN ULONG ReceiveDatagramFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket);
 
 typedef NTSTATUS
 (NTAPI *PTDI_IND_RECEIVE_EXPEDITED)(
-  IN PVOID  TdiEventContext,
-  IN CONNECTION_CONTEXT  ConnectionContext,
-  IN ULONG  ReceiveFlags,
-  IN ULONG  BytesIndicated,
-  IN ULONG  BytesAvailable,
-  OUT ULONG  *BytesTaken,
-  IN PVOID  Tsdu,
-  OUT PIRP  *IoRequestPacket);
+  IN PVOID TdiEventContext,
+  IN CONNECTION_CONTEXT ConnectionContext,
+  IN ULONG ReceiveFlags,
+  IN ULONG BytesIndicated,
+  IN ULONG BytesAvailable,
+  OUT ULONG *BytesTaken,
+  IN PVOID Tsdu,
+  OUT PIRP *IoRequestPacket);
 
 TDIKRNLAPI
 NTSTATUS

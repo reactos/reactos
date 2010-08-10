@@ -83,7 +83,7 @@ typedef ULONG_PTR HDRV_CALL;
 #define NDIS_STATUS_TAPI_DISCONNECTMODE_CONGESTION    ((NDIS_STATUS)0xC0012029L)
 #define NDIS_STATUS_TAPI_DISCONNECTMODE_INCOMPATIBLE  ((NDIS_STATUS)0xC001202AL)
 #define NDIS_STATUS_TAPI_DISCONNECTMODE_UNAVAIL       ((NDIS_STATUS)0xC001202BL)
-#define NDIS_STATUS_TAPI_RECV_DIGIT					          ((NDIS_STATUS)0x40010020L)
+#define NDIS_STATUS_TAPI_RECV_DIGIT                   ((NDIS_STATUS)0x40010020L)
 
 #define LINE_ADDRESSSTATE                 0L
 #define LINE_CALLINFO                     1L
@@ -605,614 +605,611 @@ typedef ULONG_PTR HDRV_CALL;
 #define LINETRANSLATERESULT_NOTRANSLATION 0x00000800
 #endif
 
-
-typedef struct  _NDIS_VAR_DATA_DESC {
-	USHORT  Length;
-	USHORT  MaximumLength;
-	LONG  Offset;
+typedef struct _NDIS_VAR_DATA_DESC {
+  USHORT Length;
+  USHORT MaximumLength;
+  LONG Offset;
 } NDIS_VAR_DATA_DESC, *PNDIS_VAR_DATA_DESC;
 
 typedef struct _LINE_DIAL_PARAMS {
-	ULONG  ulDialPause;
-	ULONG  ulDialSpeed;
-	ULONG  ulDigitDuration;
-	ULONG  ulWaitForDialtone;
+  ULONG ulDialPause;
+  ULONG ulDialSpeed;
+  ULONG ulDigitDuration;
+  ULONG ulWaitForDialtone;
 } LINE_DIAL_PARAMS, *PLINE_DIAL_PARAMS;
 
 typedef struct _LINE_ADDRESS_CAPS {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  ulLineDeviceID;
-	ULONG  ulAddressSize;
-	ULONG  ulAddressOffset;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
-	ULONG  ulAddressSharing;
-	ULONG  ulAddressStates;
-	ULONG  ulCallInfoStates;
-	ULONG  ulCallerIDFlags;
-	ULONG  ulCalledIDFlags;
-	ULONG  ulConnectedIDFlags;
-	ULONG  ulRedirectionIDFlags;
-	ULONG  ulRedirectingIDFlags;
-	ULONG  ulCallStates;
-	ULONG  ulDialToneModes;
-	ULONG  ulBusyModes;
-	ULONG  ulSpecialInfo;
-	ULONG  ulDisconnectModes;
-	ULONG  ulMaxNumActiveCalls;
-	ULONG  ulMaxNumOnHoldCalls;
-	ULONG  ulMaxNumOnHoldPendingCalls;
-	ULONG  ulMaxNumConference;
-	ULONG  ulMaxNumTransConf;
-	ULONG  ulAddrCapFlags;
-	ULONG  ulCallFeatures;
-	ULONG  ulRemoveFromConfCaps;
-	ULONG  ulRemoveFromConfState;
-	ULONG  ulTransferModes;
-	ULONG  ulParkModes;
-	ULONG  ulForwardModes;
-	ULONG  ulMaxForwardEntries;
-	ULONG  ulMaxSpecificEntries;
-	ULONG  ulMinFwdNumRings;
-	ULONG  ulMaxFwdNumRings;
-	ULONG  ulMaxCallCompletions;
-	ULONG  ulCallCompletionConds;
-	ULONG  ulCallCompletionModes;
-	ULONG  ulNumCompletionMessages;
-	ULONG  ulCompletionMsgTextEntrySize;
-	ULONG  ulCompletionMsgTextSize;
-	ULONG  ulCompletionMsgTextOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG ulLineDeviceID;
+  ULONG ulAddressSize;
+  ULONG ulAddressOffset;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
+  ULONG ulAddressSharing;
+  ULONG ulAddressStates;
+  ULONG ulCallInfoStates;
+  ULONG ulCallerIDFlags;
+  ULONG ulCalledIDFlags;
+  ULONG ulConnectedIDFlags;
+  ULONG ulRedirectionIDFlags;
+  ULONG ulRedirectingIDFlags;
+  ULONG ulCallStates;
+  ULONG ulDialToneModes;
+  ULONG ulBusyModes;
+  ULONG ulSpecialInfo;
+  ULONG ulDisconnectModes;
+  ULONG ulMaxNumActiveCalls;
+  ULONG ulMaxNumOnHoldCalls;
+  ULONG ulMaxNumOnHoldPendingCalls;
+  ULONG ulMaxNumConference;
+  ULONG ulMaxNumTransConf;
+  ULONG ulAddrCapFlags;
+  ULONG ulCallFeatures;
+  ULONG ulRemoveFromConfCaps;
+  ULONG ulRemoveFromConfState;
+  ULONG ulTransferModes;
+  ULONG ulParkModes;
+  ULONG ulForwardModes;
+  ULONG ulMaxForwardEntries;
+  ULONG ulMaxSpecificEntries;
+  ULONG ulMinFwdNumRings;
+  ULONG ulMaxFwdNumRings;
+  ULONG ulMaxCallCompletions;
+  ULONG ulCallCompletionConds;
+  ULONG ulCallCompletionModes;
+  ULONG ulNumCompletionMessages;
+  ULONG ulCompletionMsgTextEntrySize;
+  ULONG ulCompletionMsgTextSize;
+  ULONG ulCompletionMsgTextOffset;
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00010004)
-	ULONG  ulAddressFeatures;
+  ULONG ulAddressFeatures;
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00020000)
-	ULONG  ulPredictiveAutoTransferStates;
-	ULONG  ulNumCallTreatments;
-	ULONG  ulCallTreatmentListSize;
-	ULONG  ulCallTreatmentListOffset;
-	ULONG  ulDeviceClassesSize;
-	ULONG  ulDeviceClassesOffset;
-	ULONG  ulMaxCallDataSize;
-	ULONG  ulCallFeatures2;
-	ULONG  ulMaxNoAnswerTimeout;
-	ULONG  ulConnectedModes;
-	ULONG  ulOfferingModes;
-	ULONG  ulAvailableMediaModes;
+  ULONG ulPredictiveAutoTransferStates;
+  ULONG ulNumCallTreatments;
+  ULONG ulCallTreatmentListSize;
+  ULONG ulCallTreatmentListOffset;
+  ULONG ulDeviceClassesSize;
+  ULONG ulDeviceClassesOffset;
+  ULONG ulMaxCallDataSize;
+  ULONG ulCallFeatures2;
+  ULONG ulMaxNoAnswerTimeout;
+  ULONG ulConnectedModes;
+  ULONG ulOfferingModes;
+  ULONG ulAvailableMediaModes;
 #endif
-#endif
+#endif /* (NDIS_TAPI_CURRENT_VERSION >= 0x00010004) */
 } LINE_ADDRESS_CAPS, *PLINE_ADDRESS_CAPS;
 
 typedef struct _LINE_ADDRESS_STATUS {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  ulNumInUse;
-	ULONG  ulNumActiveCalls;
-	ULONG  ulNumOnHoldCalls;
-	ULONG  ulNumOnHoldPendCalls;
-	ULONG  ulAddressFeatures;
-	ULONG  ulNumRingsNoAnswer;
-	ULONG  ulForwardNumEntries;
-	ULONG  ulForwardSize;
-	ULONG  ulForwardOffset;
-	ULONG  ulTerminalModesSize;
-	ULONG  ulTerminalModesOffset;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG ulNumInUse;
+  ULONG ulNumActiveCalls;
+  ULONG ulNumOnHoldCalls;
+  ULONG ulNumOnHoldPendCalls;
+  ULONG ulAddressFeatures;
+  ULONG ulNumRingsNoAnswer;
+  ULONG ulForwardNumEntries;
+  ULONG ulForwardSize;
+  ULONG ulForwardOffset;
+  ULONG ulTerminalModesSize;
+  ULONG ulTerminalModesOffset;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
 } LINE_ADDRESS_STATUS, *PLINE_ADDRESS_STATUS;
 
 typedef struct _LINE_CALL_INFO {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  hLine;
-	ULONG  ulLineDeviceID;
-	ULONG  ulAddressID;
-	ULONG  ulBearerMode;
-	ULONG  ulRate;
-	ULONG  ulMediaMode;
-	ULONG  ulAppSpecific;
-	ULONG  ulCallID;
-	ULONG  ulRelatedCallID;
-	ULONG  ulCallParamFlags;
-	ULONG  ulCallStates;
-	ULONG  ulMonitorDigitModes;
-	ULONG  ulMonitorMediaModes;
-	LINE_DIAL_PARAMS  DialParams;
-	ULONG  ulOrigin;
-	ULONG  ulReason;
-	ULONG  ulCompletionID;
-	ULONG  ulNumOwners;
-	ULONG  ulNumMonitors;
-	ULONG  ulCountryCode;
-	ULONG  ulTrunk;
-	ULONG  ulCallerIDFlags;
-	ULONG  ulCallerIDSize;
-	ULONG  ulCallerIDOffset;
-	ULONG  ulCallerIDNameSize;
-	ULONG  ulCallerIDNameOffset;
-	ULONG  ulCalledIDFlags;
-	ULONG  ulCalledIDSize;
-	ULONG  ulCalledIDOffset;
-	ULONG  ulCalledIDNameSize;
-	ULONG  ulCalledIDNameOffset;
-	ULONG  ulConnectedIDFlags;
-	ULONG  ulConnectedIDSize;
-	ULONG  ulConnectedIDOffset;
-	ULONG  ulConnectedIDNameSize;
-	ULONG  ulConnectedIDNameOffset;
-	ULONG  ulRedirectionIDFlags;
-	ULONG  ulRedirectionIDSize;
-	ULONG  ulRedirectionIDOffset;
-	ULONG  ulRedirectionIDNameSize;
-	ULONG  ulRedirectionIDNameOffset;
-	ULONG  ulRedirectingIDFlags;
-	ULONG  ulRedirectingIDSize;
-	ULONG  ulRedirectingIDOffset;
-	ULONG  ulRedirectingIDNameSize;
-	ULONG  ulRedirectingIDNameOffset;
-	ULONG  ulAppNameSize;
-	ULONG  ulAppNameOffset;
-	ULONG  ulDisplayableAddressSize;
-	ULONG  ulDisplayableAddressOffset;
-	ULONG  ulCalledPartySize;
-	ULONG  ulCalledPartyOffset;
-	ULONG  ulCommentSize;
-	ULONG  ulCommentOffset;
-	ULONG  ulDisplaySize;
-	ULONG  ulDisplayOffset;
-	ULONG  ulUserUserInfoSize;
-	ULONG  ulUserUserInfoOffset;
-	ULONG  ulHighLevelCompSize;
-	ULONG  ulHighLevelCompOffset;
-	ULONG  ulLowLevelCompSize;
-	ULONG  ulLowLevelCompOffset;
-	ULONG  ulChargingInfoSize;
-	ULONG  ulChargingInfoOffset;
-	ULONG  ulTerminalModesSize;
-	ULONG  ulTerminalModesOffset;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG hLine;
+  ULONG ulLineDeviceID;
+  ULONG ulAddressID;
+  ULONG ulBearerMode;
+  ULONG ulRate;
+  ULONG ulMediaMode;
+  ULONG ulAppSpecific;
+  ULONG ulCallID;
+  ULONG ulRelatedCallID;
+  ULONG ulCallParamFlags;
+  ULONG ulCallStates;
+  ULONG ulMonitorDigitModes;
+  ULONG ulMonitorMediaModes;
+  LINE_DIAL_PARAMS DialParams;
+  ULONG ulOrigin;
+  ULONG ulReason;
+  ULONG ulCompletionID;
+  ULONG ulNumOwners;
+  ULONG ulNumMonitors;
+  ULONG ulCountryCode;
+  ULONG ulTrunk;
+  ULONG ulCallerIDFlags;
+  ULONG ulCallerIDSize;
+  ULONG ulCallerIDOffset;
+  ULONG ulCallerIDNameSize;
+  ULONG ulCallerIDNameOffset;
+  ULONG ulCalledIDFlags;
+  ULONG ulCalledIDSize;
+  ULONG ulCalledIDOffset;
+  ULONG ulCalledIDNameSize;
+  ULONG ulCalledIDNameOffset;
+  ULONG ulConnectedIDFlags;
+  ULONG ulConnectedIDSize;
+  ULONG ulConnectedIDOffset;
+  ULONG ulConnectedIDNameSize;
+  ULONG ulConnectedIDNameOffset;
+  ULONG ulRedirectionIDFlags;
+  ULONG ulRedirectionIDSize;
+  ULONG ulRedirectionIDOffset;
+  ULONG ulRedirectionIDNameSize;
+  ULONG ulRedirectionIDNameOffset;
+  ULONG ulRedirectingIDFlags;
+  ULONG ulRedirectingIDSize;
+  ULONG ulRedirectingIDOffset;
+  ULONG ulRedirectingIDNameSize;
+  ULONG ulRedirectingIDNameOffset;
+  ULONG ulAppNameSize;
+  ULONG ulAppNameOffset;
+  ULONG ulDisplayableAddressSize;
+  ULONG ulDisplayableAddressOffset;
+  ULONG ulCalledPartySize;
+  ULONG ulCalledPartyOffset;
+  ULONG ulCommentSize;
+  ULONG ulCommentOffset;
+  ULONG ulDisplaySize;
+  ULONG ulDisplayOffset;
+  ULONG ulUserUserInfoSize;
+  ULONG ulUserUserInfoOffset;
+  ULONG ulHighLevelCompSize;
+  ULONG ulHighLevelCompOffset;
+  ULONG ulLowLevelCompSize;
+  ULONG ulLowLevelCompOffset;
+  ULONG ulChargingInfoSize;
+  ULONG ulChargingInfoOffset;
+  ULONG ulTerminalModesSize;
+  ULONG ulTerminalModesOffset;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00020000)
-	ULONG  ulCallTreatment;
-	ULONG  ulCallDataSize;
-	ULONG  ulCallDataOffset;
-	ULONG  ulSendingFlowspecSize;
-	ULONG  ulSendingFlowspecOffset;
-	ULONG  ulReceivingFlowspecSize;
-	ULONG  ulReceivingFlowspecOffset;
+  ULONG ulCallTreatment;
+  ULONG ulCallDataSize;
+  ULONG ulCallDataOffset;
+  ULONG ulSendingFlowspecSize;
+  ULONG ulSendingFlowspecOffset;
+  ULONG ulReceivingFlowspecSize;
+  ULONG ulReceivingFlowspecOffset;
 #endif
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00030000)
-	ULONG  ulCallerIDAddressType;
-	ULONG  ulCalledIDAddressType;
-	ULONG  ulConnectedIDAddressType;
-	ULONG  ulRedirectionIDAddressType;
-	ULONG  ulRedirectingIDAddressType;
+  ULONG ulCallerIDAddressType;
+  ULONG ulCalledIDAddressType;
+  ULONG ulConnectedIDAddressType;
+  ULONG ulRedirectionIDAddressType;
+  ULONG ulRedirectingIDAddressType;
 #endif
 } LINE_CALL_INFO, *PLINE_CALL_INFO;
 
 typedef struct _LINE_CALL_PARAMS {
-  ULONG  ulTotalSize;
-	ULONG  ulBearerMode;
-	ULONG  ulMinRate;
-	ULONG  ulMaxRate;
-	ULONG  ulMediaMode;
-	ULONG  ulCallParamFlags;
-	ULONG  ulAddressMode;
-	ULONG  ulAddressID;
-	LINE_DIAL_PARAMS  DialParams;
-	ULONG  ulOrigAddressSize;
-	ULONG  ulOrigAddressOffset;
-	ULONG  ulDisplayableAddressSize;
-	ULONG  ulDisplayableAddressOffset;
-	ULONG  ulCalledPartySize;
-	ULONG  ulCalledPartyOffset;
-	ULONG  ulCommentSize;
-	ULONG  ulCommentOffset;
-	ULONG  ulUserUserInfoSize;
-	ULONG  ulUserUserInfoOffset;
-	ULONG  ulHighLevelCompSize;
-	ULONG  ulHighLevelCompOffset;
-	ULONG  ulLowLevelCompSize;
-	ULONG  ulLowLevelCompOffset;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
+  ULONG ulTotalSize;
+  ULONG ulBearerMode;
+  ULONG ulMinRate;
+  ULONG ulMaxRate;
+  ULONG ulMediaMode;
+  ULONG ulCallParamFlags;
+  ULONG ulAddressMode;
+  ULONG ulAddressID;
+  LINE_DIAL_PARAMS DialParams;
+  ULONG ulOrigAddressSize;
+  ULONG ulOrigAddressOffset;
+  ULONG ulDisplayableAddressSize;
+  ULONG ulDisplayableAddressOffset;
+  ULONG ulCalledPartySize;
+  ULONG ulCalledPartyOffset;
+  ULONG ulCommentSize;
+  ULONG ulCommentOffset;
+  ULONG ulUserUserInfoSize;
+  ULONG ulUserUserInfoOffset;
+  ULONG ulHighLevelCompSize;
+  ULONG ulHighLevelCompOffset;
+  ULONG ulLowLevelCompSize;
+  ULONG ulLowLevelCompOffset;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00020000)
-	ULONG  ulPredictiveAutoTransferStates;
-	ULONG  ulTargetAddressSize;
-	ULONG  ulTargetAddressOffset;
-	ULONG  ulSendingFlowspecSize;
-	ULONG  ulSendingFlowspecOffset;
-	ULONG  ulReceivingFlowspecSize;
-	ULONG  ulReceivingFlowspecOffset;
-	ULONG  ulDeviceClassSize;
-	ULONG  ulDeviceClassOffset;
-	ULONG  ulDeviceConfigSize;
-	ULONG  ulDeviceConfigOffset;
-	ULONG  ulCallDataSize;
-	ULONG  ulCallDataOffset;
-	ULONG  ulNoAnswerTimeout;
-	ULONG  ulCallingPartyIDSize;
-	ULONG  ulCallingPartyIDOffset;
+  ULONG ulPredictiveAutoTransferStates;
+  ULONG ulTargetAddressSize;
+  ULONG ulTargetAddressOffset;
+  ULONG ulSendingFlowspecSize;
+  ULONG ulSendingFlowspecOffset;
+  ULONG ulReceivingFlowspecSize;
+  ULONG ulReceivingFlowspecOffset;
+  ULONG ulDeviceClassSize;
+  ULONG ulDeviceClassOffset;
+  ULONG ulDeviceConfigSize;
+  ULONG ulDeviceConfigOffset;
+  ULONG ulCallDataSize;
+  ULONG ulCallDataOffset;
+  ULONG ulNoAnswerTimeout;
+  ULONG ulCallingPartyIDSize;
+  ULONG ulCallingPartyIDOffset;
 #endif
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00030000)
-  ULONG  ulAddressType;
+  ULONG ulAddressType;
 #endif
 } LINE_CALL_PARAMS, *PLINE_CALL_PARAMS;
 
 typedef struct _LINE_CALL_STATUS {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  ulCallState;
-	ULONG  ulCallStateMode;
-	ULONG  ulCallPrivilege;
-	ULONG  ulCallFeatures;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG ulCallState;
+  ULONG ulCallStateMode;
+  ULONG ulCallPrivilege;
+  ULONG ulCallFeatures;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
 } LINE_CALL_STATUS, *PLINE_CALL_STATUS;
 
 typedef struct _LINE_DEV_CAPS {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  ulProviderInfoSize;
-	ULONG  ulProviderInfoOffset;
-	ULONG  ulSwitchInfoSize;
-	ULONG  ulSwitchInfoOffset;
-	ULONG  ulPermanentLineID;
-	ULONG  ulLineNameSize;
-	ULONG  ulLineNameOffset;
-	ULONG  ulStringFormat;
-	ULONG  ulAddressModes;
-	ULONG  ulNumAddresses;
-	ULONG  ulBearerModes;
-	ULONG  ulMaxRate;
-	ULONG  ulMediaModes;
-	ULONG  ulGenerateToneModes;
-	ULONG  ulGenerateToneMaxNumFreq;
-	ULONG  ulGenerateDigitModes;
-	ULONG  ulMonitorToneMaxNumFreq;
-	ULONG  ulMonitorToneMaxNumEntries;
-	ULONG  ulMonitorDigitModes;
-	ULONG  ulGatherDigitsMinTimeout;
-	ULONG  ulGatherDigitsMaxTimeout;
-	ULONG  ulMedCtlDigitMaxListSize;
-	ULONG  ulMedCtlMediaMaxListSize;
-	ULONG  ulMedCtlToneMaxListSize;
-	ULONG  ulMedCtlCallStateMaxListSize;
-	ULONG  ulDevCapFlags;
-	ULONG  ulMaxNumActiveCalls;
-	ULONG  ulAnswerMode;
-	ULONG  ulRingModes;
-	ULONG  ulLineStates;
-	ULONG  ulUUIAcceptSize;
-	ULONG  ulUUIAnswerSize;
-	ULONG  ulUUIMakeCallSize;
-	ULONG  ulUUIDropSize;
-	ULONG  ulUUISendUserUserInfoSize;
-	ULONG  ulUUICallInfoSize;
-	LINE_DIAL_PARAMS  MinDialParams;
-	LINE_DIAL_PARAMS  MaxDialParams;
-	LINE_DIAL_PARAMS  DefaultDialParams;
-	ULONG  ulNumTerminals;
-	ULONG  ulTerminalCapsSize;
-	ULONG  ulTerminalCapsOffset;
-	ULONG  ulTerminalTextEntrySize;
-	ULONG  ulTerminalTextSize;
-	ULONG  ulTerminalTextOffset;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG ulProviderInfoSize;
+  ULONG ulProviderInfoOffset;
+  ULONG ulSwitchInfoSize;
+  ULONG ulSwitchInfoOffset;
+  ULONG ulPermanentLineID;
+  ULONG ulLineNameSize;
+  ULONG ulLineNameOffset;
+  ULONG ulStringFormat;
+  ULONG ulAddressModes;
+  ULONG ulNumAddresses;
+  ULONG ulBearerModes;
+  ULONG ulMaxRate;
+  ULONG ulMediaModes;
+  ULONG ulGenerateToneModes;
+  ULONG ulGenerateToneMaxNumFreq;
+  ULONG ulGenerateDigitModes;
+  ULONG ulMonitorToneMaxNumFreq;
+  ULONG ulMonitorToneMaxNumEntries;
+  ULONG ulMonitorDigitModes;
+  ULONG ulGatherDigitsMinTimeout;
+  ULONG ulGatherDigitsMaxTimeout;
+  ULONG ulMedCtlDigitMaxListSize;
+  ULONG ulMedCtlMediaMaxListSize;
+  ULONG ulMedCtlToneMaxListSize;
+  ULONG ulMedCtlCallStateMaxListSize;
+  ULONG ulDevCapFlags;
+  ULONG ulMaxNumActiveCalls;
+  ULONG ulAnswerMode;
+  ULONG ulRingModes;
+  ULONG ulLineStates;
+  ULONG ulUUIAcceptSize;
+  ULONG ulUUIAnswerSize;
+  ULONG ulUUIMakeCallSize;
+  ULONG ulUUIDropSize;
+  ULONG ulUUISendUserUserInfoSize;
+  ULONG ulUUICallInfoSize;
+  LINE_DIAL_PARAMS MinDialParams;
+  LINE_DIAL_PARAMS MaxDialParams;
+  LINE_DIAL_PARAMS DefaultDialParams;
+  ULONG ulNumTerminals;
+  ULONG ulTerminalCapsSize;
+  ULONG ulTerminalCapsOffset;
+  ULONG ulTerminalTextEntrySize;
+  ULONG ulTerminalTextSize;
+  ULONG ulTerminalTextOffset;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00010004)
-	ULONG  ulLineFeatures;
+  ULONG ulLineFeatures;
 #endif
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00020000)
-	ULONG  ulSettableDevStatus;
-	ULONG  ulDeviceClassesSize;
-	ULONG  ulDeviceClassesOffset;
+  ULONG ulSettableDevStatus;
+  ULONG ulDeviceClassesSize;
+  ULONG ulDeviceClassesOffset;
 #endif
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00020002)
-  GUID  PermanentLineGuid;
+  GUID PermanentLineGuid;
 #endif
 #if (NDIS_TAPI_CURRENT_VERSION >= 0x00030000)
-	ULONG  ulAddressTypes;
-	GUID  ProtocolGuid;
-	ULONG  ulAvailableTracking;
+  ULONG ulAddressTypes;
+  GUID ProtocolGuid;
+  ULONG ulAvailableTracking;
 #endif
 } LINE_DEV_CAPS, *PLINE_DEV_CAPS;
 
 typedef struct _LINE_DEV_STATUS {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  ulNumOpens;
-	ULONG  ulOpenMediaModes;
-	ULONG  ulNumActiveCalls;
-	ULONG  ulNumOnHoldCalls;
-	ULONG  ulNumOnHoldPendCalls;
-	ULONG  ulLineFeatures;
-	ULONG  ulNumCallCompletions;
-	ULONG  ulRingMode;
-	ULONG  ulSignalLevel;
-	ULONG  ulBatteryLevel;
-	ULONG  ulRoamMode;
-	ULONG  ulDevStatusFlags;
-	ULONG  ulTerminalModesSize;
-	ULONG  ulTerminalModesOffset;
-	ULONG  ulDevSpecificSize;
-	ULONG  ulDevSpecificOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG ulNumOpens;
+  ULONG ulOpenMediaModes;
+  ULONG ulNumActiveCalls;
+  ULONG ulNumOnHoldCalls;
+  ULONG ulNumOnHoldPendCalls;
+  ULONG ulLineFeatures;
+  ULONG ulNumCallCompletions;
+  ULONG ulRingMode;
+  ULONG ulSignalLevel;
+  ULONG ulBatteryLevel;
+  ULONG ulRoamMode;
+  ULONG ulDevStatusFlags;
+  ULONG ulTerminalModesSize;
+  ULONG ulTerminalModesOffset;
+  ULONG ulDevSpecificSize;
+  ULONG ulDevSpecificOffset;
 } LINE_DEV_STATUS, *PLINE_DEV_STATUS;
 
 typedef struct _LINE_EXTENSION_ID {
-	ULONG  ulExtensionID0;
-	ULONG  ulExtensionID1;
-	ULONG  ulExtensionID2;
-	ULONG  ulExtensionID3;
+  ULONG ulExtensionID0;
+  ULONG ulExtensionID1;
+  ULONG ulExtensionID2;
+  ULONG ulExtensionID3;
 } LINE_EXTENSION_ID, *PLINE_EXTENSION_ID;
 
 typedef struct _VAR_STRING {
-	ULONG  ulTotalSize;
-	ULONG  ulNeededSize;
-	ULONG  ulUsedSize;
-	ULONG  ulStringFormat;
-	ULONG  ulStringSize;
-	ULONG  ulStringOffset;
+  ULONG ulTotalSize;
+  ULONG ulNeededSize;
+  ULONG ulUsedSize;
+  ULONG ulStringFormat;
+  ULONG ulStringSize;
+  ULONG ulStringOffset;
 } VAR_STRING, *PVAR_STRING;
 
 typedef struct _NDIS_TAPI_ANSWER {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulUserUserInfoSize;
-  IN UCHAR  UserUserInfo[1];
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulUserUserInfoSize;
+  IN UCHAR UserUserInfo[1];
 } NDIS_TAPI_ANSWER, *PNDIS_TAPI_ANSWER;
 
 typedef struct _NDIS_TAPI_CLOSE {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
 } NDIS_TAPI_CLOSE, *PNDIS_TAPI_CLOSE;
 
 typedef struct _NDIS_TAPI_CLOSE_CALL {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
 } NDIS_TAPI_CLOSE_CALL, *PNDIS_TAPI_CLOSE_CALL;
 
 typedef struct _NDIS_TAPI_CONDITIONAL_MEDIA_DETECTION {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulMediaModes;
-  IN LINE_CALL_PARAMS  LineCallParams;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulMediaModes;
+  IN LINE_CALL_PARAMS LineCallParams;
 } NDIS_TAPI_CONDITIONAL_MEDIA_DETECTION, *PNDIS_TAPI_CONDITIONAL_MEDIA_DETECTION;
 
 typedef struct _NDIS_TAPI_DROP {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulUserUserInfoSize;
-  IN UCHAR  UserUserInfo[1];
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulUserUserInfoSize;
+  IN UCHAR UserUserInfo[1];
 } NDIS_TAPI_DROP, *PNDIS_TAPI_DROP;
 
 typedef struct _NDIS_TAPI_PROVIDER_SHUTDOWN {
-  IN ULONG  ulRequestID;
+  IN ULONG ulRequestID;
 } NDIS_TAPI_PROVIDER_SHUTDOWN, *PNDIS_TAPI_PROVIDER_SHUTDOWN;
 
 typedef struct _NDIS_TAPI_SET_APP_SPECIFIC {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulAppSpecific;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulAppSpecific;
 } NDIS_TAPI_SET_APP_SPECIFIC, *PNDIS_TAPI_SET_APP_SPECIFIC;
 
 typedef struct _NDIS_TAPI_SET_CALL_PARAMS {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulBearerMode;
-  IN ULONG  ulMinRate;
-  IN ULONG  ulMaxRate;
-  IN BOOLEAN  bSetLineDialParams;
-  IN LINE_DIAL_PARAMS  LineDialParams;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulBearerMode;
+  IN ULONG ulMinRate;
+  IN ULONG ulMaxRate;
+  IN BOOLEAN bSetLineDialParams;
+  IN LINE_DIAL_PARAMS LineDialParams;
 } NDIS_TAPI_SET_CALL_PARAMS, *PNDIS_TAPI_SET_CALL_PARAMS;
 
 typedef struct _NDIS_TAPI_SET_DEFAULT_MEDIA_DETECTION {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulMediaModes;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulMediaModes;
 } NDIS_TAPI_SET_DEFAULT_MEDIA_DETECTION, *PNDIS_TAPI_SET_DEFAULT_MEDIA_DETECTION;
 
 typedef struct _NDIS_TAPI_SET_DEV_CONFIG {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN ULONG  ulDeviceClassSize;
-  IN ULONG  ulDeviceClassOffset;
-  IN ULONG  ulDeviceConfigSize;
-  IN UCHAR  DeviceConfig[1];
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN ULONG ulDeviceClassSize;
+  IN ULONG ulDeviceClassOffset;
+  IN ULONG ulDeviceConfigSize;
+  IN UCHAR DeviceConfig[1];
 } NDIS_TAPI_SET_DEV_CONFIG, *PNDIS_TAPI_SET_DEV_CONFIG;
 
 typedef struct _NDIS_TAPI_SET_MEDIA_MODE {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulMediaMode;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulMediaMode;
 } NDIS_TAPI_SET_MEDIA_MODE, *PNDIS_TAPI_SET_MEDIA_MODE;
 
 typedef struct _NDIS_TAPI_SET_STATUS_MESSAGES {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulLineStates;
-  IN ULONG  ulAddressStates;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulLineStates;
+  IN ULONG ulAddressStates;
 } NDIS_TAPI_SET_STATUS_MESSAGES, *PNDIS_TAPI_SET_STATUS_MESSAGES;
 
 typedef struct _NDIS_TAPI_ACCEPT {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulUserUserInfoSize;
-  IN UCHAR  UserUserInfo[1];
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulUserUserInfoSize;
+  IN UCHAR UserUserInfo[1];
 } NDIS_TAPI_ACCEPT, *PNDIS_TAPI_ACCEPT;
 
 typedef struct _NDIS_TAPI_DIAL {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulDestAddressSize;
-  IN CHAR  szDestAddress[1];
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulDestAddressSize;
+  IN CHAR szDestAddress[1];
 } NDIS_TAPI_DIAL, *PNDIS_TAPI_DIAL;
 
 typedef struct _NDIS_TAPI_EVENT {
-  IN HTAPI_LINE  htLine;
-  IN HTAPI_CALL  htCall;
-  IN ULONG  ulMsg;
-  IN ULONG  ulParam1;
-  IN ULONG  ulParam2;
-  IN ULONG  ulParam3;
+  IN HTAPI_LINE htLine;
+  IN HTAPI_CALL htCall;
+  IN ULONG ulMsg;
+  IN ULONG ulParam1;
+  IN ULONG ulParam2;
+  IN ULONG ulParam3;
 } NDIS_TAPI_EVENT, *PNDIS_TAPI_EVENT;
 
 typedef struct _NDIS_TAPI_OPEN {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN HTAPI_LINE  htLine;
-  OUT HDRV_LINE  hdLine;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN HTAPI_LINE htLine;
+  OUT HDRV_LINE hdLine;
 } NDIS_TAPI_OPEN, *PNDIS_TAPI_OPEN;
 
 typedef struct _NDIS_TAPI_SECURE_CALL {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
 } NDIS_TAPI_SECURE_CALL, *PNDIS_TAPI_SECURE_CALL;
 
 typedef struct _NDIS_TAPI_SELECT_EXT_VERSION {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulExtVersion;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulExtVersion;
 } NDIS_TAPI_SELECT_EXT_VERSION, *PNDIS_TAPI_SELECT_EXT_VERSION;
 
 typedef struct _NDIS_TAPI_SEND_USER_USER_INFO {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulUserUserInfoSize;
-  IN UCHAR  UserUserInfo[1];
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulUserUserInfoSize;
+  IN UCHAR UserUserInfo[1];
 } NDIS_TAPI_SEND_USER_USER_INFO, *PNDIS_TAPI_SEND_USER_USER_INFO;
 
-
 typedef struct _NDIS_TAPI_CONFIG_DIALOG {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN ULONG  ulDeviceClassSize;
-  IN ULONG  ulDeviceClassOffset;
-  IN ULONG  ulLibraryNameTotalSize;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN ULONG ulDeviceClassSize;
+  IN ULONG ulDeviceClassOffset;
+  IN ULONG ulLibraryNameTotalSize;
   OUT ULONG ulLibraryNameNeededSize;
-  OUT CHAR  szLibraryName[1];
+  OUT CHAR szLibraryName[1];
 } NDIS_TAPI_CONFIG_DIALOG, *PNDIS_TAPI_CONFIG_DIALOG;
 
 typedef struct _NDIS_TAPI_DEV_SPECIFIC {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulAddressID;
-  IN HDRV_CALL  hdCall;
-  IN OUT ULONG  ulParamsSize;
-  IN OUT UCHAR  Params[1];
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulAddressID;
+  IN HDRV_CALL hdCall;
+  IN OUT ULONG ulParamsSize;
+  IN OUT UCHAR Params[1];
 } NDIS_TAPI_DEV_SPECIFIC, *PNDIS_TAPI_DEV_SPECIFIC;
 
 typedef struct _NDIS_TAPI_GET_ADDRESS_CAPS {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN ULONG  ulAddressID;
-  IN ULONG  ulExtVersion;
-  OUT LINE_ADDRESS_CAPS  LineAddressCaps;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN ULONG ulAddressID;
+  IN ULONG ulExtVersion;
+  OUT LINE_ADDRESS_CAPS LineAddressCaps;
 } NDIS_TAPI_GET_ADDRESS_CAPS, *PNDIS_TAPI_GET_ADDRESS_CAPS;
 
 typedef struct _NDIS_TAPI_GET_ADDRESS_ID {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  OUT ULONG  ulAddressID;
-  IN ULONG  ulAddressMode;
-  IN ULONG  ulAddressSize;
-  IN CHAR  szAddress[1];
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  OUT ULONG ulAddressID;
+  IN ULONG ulAddressMode;
+  IN ULONG ulAddressSize;
+  IN CHAR szAddress[1];
 } NDIS_TAPI_GET_ADDRESS_ID, *PNDIS_TAPI_GET_ADDRESS_ID;
 
 typedef struct _NDIS_TAPI_GET_ADDRESS_STATUS {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulAddressID;
-  OUT LINE_ADDRESS_STATUS  LineAddressStatus;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulAddressID;
+  OUT LINE_ADDRESS_STATUS LineAddressStatus;
 } NDIS_TAPI_GET_ADDRESS_STATUS, *PNDIS_TAPI_GET_ADDRESS_STATUS;
 
 typedef struct _NDIS_TAPI_GET_CALL_ADDRESS_ID {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  OUT ULONG  ulAddressID;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  OUT ULONG ulAddressID;
 } NDIS_TAPI_GET_CALL_ADDRESS_ID, *PNDIS_TAPI_GET_CALL_ADDRESS_ID;
 
 typedef struct _NDIS_TAPI_GET_CALL_INFO {
-  ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  OUT LINE_CALL_INFO  LineCallInfo;
+  ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  OUT LINE_CALL_INFO LineCallInfo;
 } NDIS_TAPI_GET_CALL_INFO, *PNDIS_TAPI_GET_CALL_INFO;
 
 typedef struct _NDIS_TAPI_GET_CALL_STATUS {
-  IN ULONG  ulRequestID;
-  IN HDRV_CALL  hdCall;
-  OUT LINE_CALL_STATUS  LineCallStatus;
+  IN ULONG ulRequestID;
+  IN HDRV_CALL hdCall;
+  OUT LINE_CALL_STATUS LineCallStatus;
 } NDIS_TAPI_GET_CALL_STATUS, *PNDIS_TAPI_GET_CALL_STATUS;
 
 typedef struct _NDIS_TAPI_GET_DEV_CAPS {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN ULONG  ulExtVersion;
-  OUT LINE_DEV_CAPS  LineDevCaps;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN ULONG ulExtVersion;
+  OUT LINE_DEV_CAPS LineDevCaps;
 } NDIS_TAPI_GET_DEV_CAPS, *PNDIS_TAPI_GET_DEV_CAPS;
 
 typedef struct _NDIS_TAPI_GET_DEV_CONFIG {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN ULONG  ulDeviceClassSize;
-  IN ULONG  ulDeviceClassOffset;
-  OUT VAR_STRING  DeviceConfig;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN ULONG ulDeviceClassSize;
+  IN ULONG ulDeviceClassOffset;
+  OUT VAR_STRING DeviceConfig;
 } NDIS_TAPI_GET_DEV_CONFIG, *PNDIS_TAPI_GET_DEV_CONFIG;
 
 typedef struct _NDIS_TAPI_GET_EXTENSION_ID {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  OUT LINE_EXTENSION_ID  LineExtensionID;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  OUT LINE_EXTENSION_ID LineExtensionID;
 } NDIS_TAPI_GET_EXTENSION_ID, *PNDIS_TAPI_GET_EXTENSION_ID;
 
 typedef struct _NDIS_TAPI_GET_ID {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN ULONG  ulAddressID;
-  IN HDRV_CALL  hdCall;
-  IN ULONG  ulSelect;
-  IN ULONG  ulDeviceClassSize;
-  IN ULONG  ulDeviceClassOffset;
-  OUT VAR_STRING  DeviceID;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN ULONG ulAddressID;
+  IN HDRV_CALL hdCall;
+  IN ULONG ulSelect;
+  IN ULONG ulDeviceClassSize;
+  IN ULONG ulDeviceClassOffset;
+  OUT VAR_STRING DeviceID;
 } NDIS_TAPI_GET_ID, *PNDIS_TAPI_GET_ID;
 
 typedef struct _NDIS_TAPI_GET_LINE_DEV_STATUS {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  OUT LINE_DEV_STATUS  LineDevStatus;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  OUT LINE_DEV_STATUS LineDevStatus;
 } NDIS_TAPI_GET_LINE_DEV_STATUS, *PNDIS_TAPI_GET_LINE_DEV_STATUS;
 
 typedef struct _NDIS_TAPI_MAKE_CALL {
-  IN ULONG  ulRequestID;
-  IN HDRV_LINE  hdLine;
-  IN HTAPI_CALL  htCall;
-  OUT HDRV_CALL  hdCall;
-  IN ULONG  ulDestAddressSize;
-  IN ULONG  ulDestAddressOffset;
-  IN BOOLEAN  bUseDefaultLineCallParams;
-  IN LINE_CALL_PARAMS  LineCallParams;
+  IN ULONG ulRequestID;
+  IN HDRV_LINE hdLine;
+  IN HTAPI_CALL htCall;
+  OUT HDRV_CALL hdCall;
+  IN ULONG ulDestAddressSize;
+  IN ULONG ulDestAddressOffset;
+  IN BOOLEAN bUseDefaultLineCallParams;
+  IN LINE_CALL_PARAMS LineCallParams;
 } NDIS_TAPI_MAKE_CALL, *PNDIS_TAPI_MAKE_CALL;
 
 typedef struct _NDIS_TAPI_NEGOTIATE_EXT_VERSION {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceID;
-  IN ULONG  ulLowVersion;
-  IN ULONG  ulHighVersion;
-  OUT ULONG  ulExtVersion;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceID;
+  IN ULONG ulLowVersion;
+  IN ULONG ulHighVersion;
+  OUT ULONG ulExtVersion;
 } NDIS_TAPI_NEGOTIATE_EXT_VERSION, *PNDIS_TAPI_NEGOTIATE_EXT_VERSION;
 
 typedef struct _NDIS_TAPI_PROVIDER_INITIALIZE {
-  IN ULONG  ulRequestID;
-  IN ULONG  ulDeviceIDBase;
-  OUT ULONG  ulNumLineDevs;
-  OUT ULONG  ulProviderID;
+  IN ULONG ulRequestID;
+  IN ULONG ulDeviceIDBase;
+  OUT ULONG ulNumLineDevs;
+  OUT ULONG ulProviderID;
 } NDIS_TAPI_PROVIDER_INITIALIZE, *PNDIS_TAPI_PROVIDER_INITIALIZE;
-
 
 #define CO_TAPI_VERSION                   NDIS_TAPI_CURRENT_VERSION
 
@@ -1223,50 +1220,49 @@ typedef struct _NDIS_TAPI_PROVIDER_INITIALIZE {
 #define AF_TAPI_SAP_TYPE                  0x00008000
 
 typedef struct _CO_TAPI_ADDRESS_CAPS {
-  IN ULONG  ulLineID;
-  IN ULONG  ulAddressID;
-  OUT ULONG  ulFlags;
-  OUT LINE_ADDRESS_CAPS  LineAddressCaps;
+  IN ULONG ulLineID;
+  IN ULONG ulAddressID;
+  OUT ULONG ulFlags;
+  OUT LINE_ADDRESS_CAPS LineAddressCaps;
 } CO_TAPI_ADDRESS_CAPS, *PCO_TAPI_ADDRESS_CAPS;
 
 /* CO_TAPI_CM_CAPS.ulFlags constants */
 #define CO_TAPI_FLAG_PER_LINE_CAPS        0x00000001
 
 typedef struct _CO_TAPI_CM_CAPS {
-  OUT ULONG  ulCoTapiVersion;
-  OUT ULONG  ulNumLines;
-  OUT ULONG  ulFlags;
+  OUT ULONG ulCoTapiVersion;
+  OUT ULONG ulNumLines;
+  OUT ULONG ulFlags;
 } CO_TAPI_CM_CAPS, *PCO_TAPI_CM_CAPS;
 
 typedef struct _CO_TAPI_CALL_DIAGNOSTICS {
-  OUT ULONG  ulOrigin;
-  OUT ULONG  ulReason;
-  OUT NDIS_VAR_DATA_DESC  DiagInfo;
+  OUT ULONG ulOrigin;
+  OUT ULONG ulReason;
+  OUT NDIS_VAR_DATA_DESC DiagInfo;
 } CO_TAPI_CALL_DIAGNOSTICS, *PCO_TAPI_CALL_DIAGNOSTICS;
-
 
 /* CO_TAPI_LINE_CAPS.ulFlags constants */
 #define CO_TAPI_FLAG_PER_ADDRESS_CAPS     0x00000001
 
 typedef struct _CO_TAPI_LINE_CAPS {
-  IN ULONG  ulLineID;
-  OUT ULONG  ulFlags;
-  OUT LINE_DEV_CAPS  LineDevCaps;
+  IN ULONG ulLineID;
+  OUT ULONG ulFlags;
+  OUT LINE_DEV_CAPS LineDevCaps;
 } CO_TAPI_LINE_CAPS, *PCO_TAPI_LINE_CAPS;
 
 typedef struct _CO_TAPI_TRANSLATE_NDIS_CALLPARAMS {
-  IN ULONG  ulFlags;
-  IN NDIS_VAR_DATA_DESC  NdisCallParams;
-  OUT NDIS_VAR_DATA_DESC  LineCallInfo;
+  IN ULONG ulFlags;
+  IN NDIS_VAR_DATA_DESC NdisCallParams;
+  OUT NDIS_VAR_DATA_DESC LineCallInfo;
 } CO_TAPI_TRANSLATE_NDIS_CALLPARAMS, *PCO_TAPI_TRANSLATE_NDIS_CALLPARAMS;
 
 typedef struct _CO_TAPI_TRANSLATE_TAPI_CALLPARAMS {
-  IN ULONG  ulLineID;
-  IN ULONG  ulAddressID;
-  IN ULONG  ulFlags;
-  IN NDIS_VAR_DATA_DESC  DestAddress;
-  IN NDIS_VAR_DATA_DESC  LineCallParams;
-  OUT NDIS_VAR_DATA_DESC  NdisCallParams;
+  IN ULONG ulLineID;
+  IN ULONG ulAddressID;
+  IN ULONG ulFlags;
+  IN NDIS_VAR_DATA_DESC DestAddress;
+  IN NDIS_VAR_DATA_DESC LineCallParams;
+  OUT NDIS_VAR_DATA_DESC NdisCallParams;
 } CO_TAPI_TRANSLATE_TAPI_CALLPARAMS, *PCO_TAPI_TRANSLATE_TAPI_CALLPARAMS;
 
 /* CO_TAPI_TRANSLATE_SAP.ulLineID constants */
@@ -1276,27 +1272,27 @@ typedef struct _CO_TAPI_TRANSLATE_TAPI_CALLPARAMS {
 #define CO_TAPI_ADDRESS_ID_UNSPECIFIED    0xFFFFFFFF
 
 typedef struct _CO_TAPI_TRANSLATE_SAP {
-  IN ULONG  ulLineID;
-  IN ULONG  ulAddressID;
-  IN ULONG  ulMediaModes;
-  IN ULONG  Reserved;
-  OUT ULONG  NumberOfSaps;
-  OUT NDIS_VAR_DATA_DESC  NdisSapParams[1];
+  IN ULONG ulLineID;
+  IN ULONG ulAddressID;
+  IN ULONG ulMediaModes;
+  IN ULONG Reserved;
+  OUT ULONG NumberOfSaps;
+  OUT NDIS_VAR_DATA_DESC NdisSapParams[1];
 } CO_AF_TAPI_SAP, *PCO_AF_TAPI_SAP;
 
 typedef struct _CO_AF_TAPI_INCOMING_CALL_PARAMETERS {
-  IN  ULONG  ulLineID;
-  IN  ULONG  ulAddressID;
-  IN  ULONG  ulFlags;
-  IN  NDIS_VAR_DATA_DESC  LineCallInfo;
+  IN ULONG ulLineID;
+  IN ULONG ulAddressID;
+  IN ULONG ulFlags;
+  IN NDIS_VAR_DATA_DESC LineCallInfo;
 } CO_AF_TAPI_INCOMING_CALL_PARAMETERS, *PCO_AF_TAPI_INCOMING_CALL_PARAMETERS;
 
 typedef struct _CO_AF_TAPI_MAKE_CALL_PARAMETERS {
-  IN  ULONG  ulLineID;
-  IN  ULONG  ulAddressID;
-  IN  ULONG  ulFlags;
-  IN  NDIS_VAR_DATA_DESC  DestAddress;
-  IN  NDIS_VAR_DATA_DESC  LineCallParams;
+  IN ULONG ulLineID;
+  IN ULONG ulAddressID;
+  IN ULONG ulFlags;
+  IN NDIS_VAR_DATA_DESC DestAddress;
+  IN NDIS_VAR_DATA_DESC LineCallParams;
 } CO_AF_TAPI_MAKE_CALL_PARAMETERS, *PCO_AF_TAPI_MAKE_CALL_PARAMETERS;
 
 #ifdef __cplusplus
