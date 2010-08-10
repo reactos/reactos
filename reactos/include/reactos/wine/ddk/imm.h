@@ -3,6 +3,25 @@
 #define _WINE_IMM_H_
 
 #include <psdk/wingdi.h>
+
+#ifdef WINE_NO_UNICODE_MACROS
+# define WINELIB_NAME_AW(func) \
+    func##_must_be_suffixed_with_W_or_A_in_this_context \
+    func##_must_be_suffixed_with_W_or_A_in_this_context
+#else  /* WINE_NO_UNICODE_MACROS */
+# ifdef UNICODE
+#  define WINELIB_NAME_AW(func) func##W
+# else
+#  define WINELIB_NAME_AW(func) func##A
+# endif
+#endif  /* WINE_NO_UNICODE_MACROS */
+
+#ifdef WINE_NO_UNICODE_MACROS
+# define DECL_WINELIB_TYPE_AW(type)  /* nothing */
+#else
+# define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
+#endif
+
 #include <psdk/imm.h>
 
 typedef struct _tagINPUTCONTEXT {
