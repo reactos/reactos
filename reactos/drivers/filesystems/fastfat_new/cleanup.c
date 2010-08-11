@@ -303,12 +303,11 @@ FatiCleanup(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
                 if (FlagOn(Fcb->State, FCB_STATE_DELETE_ON_CLOSE) &&
                     Fcb->Header.AllocationSize.LowPart == 0)
                 {
-                    UNIMPLEMENTED;
-                    /*FatNotifyReportChange(IrpContext,
+                    FatNotifyReportChange(IrpContext,
                                           Vcb,
                                           Fcb,
                                           FILE_NOTIFY_CHANGE_FILE_NAME,
-                                          FILE_ACTION_REMOVED );*/
+                                          FILE_ACTION_REMOVED);
                 }
 
                 /* Remove the entry from the splay table if the file was deleted */

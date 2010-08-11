@@ -85,6 +85,25 @@ FatiQueryFsSizeInfo(PVCB Vcb,
 
 NTSTATUS
 NTAPI
+FatiQueryFsDeviceInfo(PVCB Vcb,
+                      PFILE_FS_DEVICE_INFORMATION Buffer,
+                      PLONG Length)
+{
+    /* Deduct the minimum written length */
+    *Length -= sizeof(FILE_FS_DEVICE_INFORMATION);
+
+    /* Zero it */
+    RtlZeroMemory(Buffer, sizeof(FILE_FS_DEVICE_INFORMATION));
+
+    /* Set values */
+    Buffer->DeviceType = FILE_DEVICE_DISK;
+    Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 FatiQueryVolumeInfo(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
 {
     PFILE_OBJECT FileObject;
@@ -142,8 +161,7 @@ FatiQueryVolumeInfo(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
         break;
 
     case FileFsDeviceInformation:
-        UNIMPLEMENTED
-        //Status = FatiQueryFsDeviceInfo(IrpContext, Vcb, Buffer, &Length);
+        Status = FatiQueryFsDeviceInfo(Vcb, Buffer, &Length);
         break;
 
     case FileFsAttributeInformation:
