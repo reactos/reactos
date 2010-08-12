@@ -1944,12 +1944,12 @@ WSPIoctl(IN  SOCKET Handle,
             }
             *lpErrno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, (PULONG)lpvOutBuffer, NULL);
 			if (*lpErrno != NO_ERROR)
+				return SOCKET_ERROR;
+			else
 			{
 				*lpcbBytesReturned = sizeof(ULONG);
-				return SOCKET_ERROR;
-			}
-			else
 				return NO_ERROR;
+			}
         default:
 			*lpErrno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
 													Handle,
