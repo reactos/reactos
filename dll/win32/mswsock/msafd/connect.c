@@ -22,7 +22,7 @@ IsSockaddrEqualToZero(IN const struct sockaddr* SocketAddress,
     for (i = 0; i < SocketAddressLength; i++)
     {
         /* Make sure it's 0 */
-        if (*(PULONG)SocketAddress + i)return FALSE;
+        if (*(PULONG)(SocketAddress + i)) return FALSE;
     }
 
     /* All zeroes, succees! */
@@ -171,6 +171,7 @@ SockDoConnectReal(IN PSOCKET_INFORMATION Socket,
     /* Set the SAN State */
     ConnectInfo->UseSAN = SockSanEnabled;
 
+#if 0
     /* Check if this is a non-blocking streaming socket */
     if ((Socket->SharedData.NonBlocking) && !(MSAFD_IS_DGRAM_SOCK(Socket)))
     {
@@ -185,6 +186,7 @@ SockDoConnectReal(IN PSOCKET_INFORMATION Socket,
         Status = 0;
     }
     else
+#endif
     {
         /* Start the connect loop */
         do
@@ -386,8 +388,11 @@ SockDoConnect(SOCKET Handle,
         (MSAFD_IS_DGRAM_SOCK(Socket)) && 
         (IsSockaddrEqualToZero(SocketAddress, SocketAddressLength)))
     {
-        /* Disconnect the socket and return */
-        return UnconnectDatagramSocket(Socket);
+        /* Disconnect the socket */
+        ErrorCode = UnconnectDatagramSocket(Socket);
+		
+		/* Cleanup and return */
+		goto error;
     }
 
     /* Make sure the Address Family is valid */
@@ -412,6 +417,7 @@ SockDoConnect(SOCKET Handle,
             {
                 /* Fail: SO_BROADCAST must be set first in WinSock 2.0+ */
                 ErrorCode = WSAEACCES;
+				goto error;
             }
         }
 
