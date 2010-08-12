@@ -213,7 +213,8 @@ WSPIoctl(IN SOCKET Handle,
     PSOCKET_INFORMATION Socket;
     INT ErrorCode;
     PWINSOCK_TEB_DATA ThreadData;
-
+	BOOLEAN Blocking;
+	
     /* Enter prolog */
     ErrorCode = SockEnterApiFast(&ThreadData);
     if (ErrorCode != NO_ERROR)
@@ -222,7 +223,7 @@ WSPIoctl(IN SOCKET Handle,
         *lpErrno = ErrorCode;
         return SOCKET_ERROR;
     }
-
+	
     /* Get the socket structure */
     Socket = SockFindAndReferenceSocket(Handle, TRUE);
     if (!Socket)
@@ -231,14 +232,13 @@ WSPIoctl(IN SOCKET Handle,
         ErrorCode = WSAENOTSOCK;
         goto error;
     }
-
+	
     /* Lock the socket */
     EnterCriticalSection(&Socket->Lock);
-
+	
     switch(dwIoControlCode) {
-        
-        case FIONBIO:
-
+			
+        case FIONBIO:			
             /* Check if the Buffer is OK */
             if(cbInBuffer < sizeof(ULONG))
             {
@@ -246,16 +246,25 @@ WSPIoctl(IN SOCKET Handle,
                 ErrorCode = WSAEFAULT;
                 goto error;
             }
-
-            return 0;
-
+			
+			Blocking = (*(PULONG)lpvInBuffer) ? TRUE : FALSE;
+			
+			Socket->SharedData.NonBlocking = Blocking;
+			
+			ErrorCode = SockSetInformation(Socket,
+										   AFD_INFO_BLOCKING_MODE,
+										   &Blocking,
+										   NULL,
+										   NULL);
+            break;
+			
         default:
-
+			
             /* Unsupported for now */
-            *lpErrno = WSAEINVAL;
-            return SOCKET_ERROR;
+            ErrorCode = WSAEINVAL;
+			break;
     }
-
+	
 error:
     /* Check if we had a socket */
     if (Socket)
@@ -264,7 +273,7 @@ error:
         LeaveCriticalSection(&Socket->Lock);
         SockDereferenceSocket(Socket);
     }
-
+	
     /* Check for error */
     if (ErrorCode != NO_ERROR)
     {
@@ -272,7 +281,7 @@ error:
         *lpErrno = ErrorCode;
         return SOCKET_ERROR;
     }
-
+	
     /* Return to caller */
     return NO_ERROR;
 }
