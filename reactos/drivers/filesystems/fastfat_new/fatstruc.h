@@ -39,6 +39,16 @@ typedef struct _FAT_GLOBAL_DATA
     /* Jan 1, 1980 System Time */
     LARGE_INTEGER DefaultFileTime;
 
+    /* Queued close */
+    ULONG AsyncCloseCount;
+    ULONG DelayedCloseCount;
+    LIST_ENTRY AsyncCloseList;
+    LIST_ENTRY DelayedCloseList;
+    PIO_WORKITEM FatCloseItem;
+
+    /* Various flags */
+    BOOLEAN AsyncCloseActive;
+
     /* FullFAT integration */
     FF_IOMAN *Ioman;
     FF_ERROR FF_Error;
@@ -171,6 +181,8 @@ typedef struct _VCB
     VCB_CONDITION Condition;
     ERESOURCE Resource;
     struct _CLOSE_CONTEXT *CloseContext;
+    LIST_ENTRY AsyncCloseList;
+    LIST_ENTRY DelayedCloseList;
 
     /* Direct volume access */
     SHARE_ACCESS ShareAccess;
@@ -239,6 +251,18 @@ typedef struct _VOLUME_DEVICE_OBJECT
         VCB Vcb; /* Must be the last entry! */
     };
 } VOLUME_DEVICE_OBJECT, *PVOLUME_DEVICE_OBJECT;
+
+typedef enum _TYPE_OF_OPEN
+{
+    UnopenedFileObject,
+    UserFileOpen,
+    UserDirectoryOpen,
+    UserVolumeOpen,
+    VirtualVolumeFile,
+    DirectoryFile,
+    EaFile
+} TYPE_OF_OPEN;
+
 //
 //  Short name always exists in FAT
 //
@@ -342,8 +366,6 @@ typedef struct _FCB
             PFILE_OBJECT DirectoryFile;
             /* Directory data stream (just handy to have it). */
             //PFILE_OBJECT StreamFileObject;
-            /* Bitmap to search for free dirents. */
-            RTL_BITMAP FreeBitmap;
             /* Names */
             PRTL_SPLAY_LINKS SplayLinksAnsi;
             PRTL_SPLAY_LINKS SplayLinksUnicode;
@@ -388,28 +410,6 @@ typedef struct _FAT_FIND_DIRENT_CONTEXT
     BOOLEAN Valid8dot3Name;
 } FAT_FIND_DIRENT_CONTEXT, *PFAT_FIND_DIRENT_CONTEXT;
 
-typedef struct _CCB
-{
-    CSHORT NodeTypeCode;
-    CSHORT NodeByteSize;
-
-    LARGE_INTEGER CurrentByteOffset;
-    ULONG Entry;
-    UNICODE_STRING SearchPattern;
-    UCHAR Flags;
-} CCB, *PCCB;
-
-typedef enum _TYPE_OF_OPEN
-{
-    UnopenedFileObject,
-    UserFileOpen,
-    UserDirectoryOpen,
-    UserVolumeOpen,
-    VirtualVolumeFile,
-    DirectoryFile,
-    EaFile
-} TYPE_OF_OPEN;
-
 typedef struct _CLOSE_CONTEXT
 {
     LIST_ENTRY GlobalLinks;
@@ -420,6 +420,18 @@ typedef struct _CLOSE_CONTEXT
     TYPE_OF_OPEN TypeOfOpen;
     BOOLEAN Free;
 } CLOSE_CONTEXT, *PCLOSE_CONTEXT;
+
+typedef struct _CCB
+{
+    CSHORT NodeTypeCode;
+    CSHORT NodeByteSize;
+
+    LARGE_INTEGER CurrentByteOffset;
+    ULONG Entry;
+    UNICODE_STRING SearchPattern;
+    UCHAR Flags;
+    CLOSE_CONTEXT CloseContext;
+} CCB, *PCCB;
 
 typedef enum _FILE_TIME_INDEX
 {
@@ -432,9 +444,10 @@ typedef enum _FILE_TIME_INDEX
 #define CCB_SEARCH_RETURN_SINGLE_ENTRY      0x01
 #define CCB_SEARCH_PATTERN_LEGAL_8DOT3      0x02
 #define CCB_SEARCH_PATTERN_HAS_WILD_CARD    0x04
-#define CCB_DASD_IO                         0x10
-#define CCB_READ_ONLY                       0x20
-#define CCB_DELETE_ON_CLOSE                 0x40
-#define CCB_COMPLETE_DISMOUNT               0x80
+#define CCB_DASD_IO                         0x08
+#define CCB_READ_ONLY                       0x10
+#define CCB_DELETE_ON_CLOSE                 0x20
+#define CCB_COMPLETE_DISMOUNT               0x40
+#define CCB_CLOSE_CONTEXT                   0x80
 
 extern FAT_GLOBAL_DATA FatGlobalData;

@@ -171,7 +171,7 @@ FatUserFsCtrl(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
         break;
 
     default:
-        DPRINT1("FatUserFsCtrl(), unhandled fs control code 0x%x\n", Code);
+        DPRINT("FatUserFsCtrl(), unhandled fs control code 0x%x\n", Code);
         Status = STATUS_INVALID_DEVICE_REQUEST;
         FatCompleteRequest(IrpContext, Irp, Status);
     }

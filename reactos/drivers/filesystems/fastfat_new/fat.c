@@ -163,6 +163,10 @@ FatInitializeVcb(IN PFAT_IRP_CONTEXT IrpContext,
     /* Initialize VCB's resource */
     ExInitializeResourceLite(&Vcb->Resource);
 
+    /* Initialize close queue lists */
+    InitializeListHead(&Vcb->AsyncCloseList);
+    InitializeListHead(&Vcb->DelayedCloseList);
+
     /* Initialize CC */
     CcInitializeCacheMap(Vcb->StreamFileObject,
                          (PCC_FILE_SIZES)&Vcb->Header.AllocationSize,
@@ -242,6 +246,9 @@ FatUninitializeVcb(IN PVCB Vcb)
         ObDereferenceObject(Vcb->StreamFileObject);
         Vcb->StreamFileObject = NULL;
     }
+
+    /* Free ContextClose if it's not freed up already */
+    if (Vcb->CloseContext) ExFreePool(Vcb->CloseContext);
 
     /* Free notifications stuff */
     FsRtlNotifyUninitializeSync(&Vcb->NotifySync);

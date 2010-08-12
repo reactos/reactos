@@ -111,13 +111,6 @@ FatCreateRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
 #endif
         UNIMPLEMENTED;
     }
-
-    /* Initialize free dirent bitmap */
-    RtlInitializeBitMap(&Dcb->Dcb.FreeBitmap, NULL, 0);
-
-    /* Fill the dirent bitmap */
-    DPRINT1("Filling the free dirent bitmap is missing\n");
-    //FatCheckFreeDirentBitmap( IrpContext, Dcb );
 }
 
 PFCB

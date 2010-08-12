@@ -14,6 +14,7 @@
 /* GLOBALS ******************************************************************/
 
 FAT_GLOBAL_DATA FatGlobalData;
+FAST_MUTEX FatCloseQueueMutex;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -108,6 +109,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Initialize synchronization resource for the global data */
     ExInitializeResourceLite(&FatGlobalData.Resource);
+
+    /* Initialize queued close stuff */
+    InitializeListHead(&FatGlobalData.AsyncCloseList);
+    InitializeListHead(&FatGlobalData.DelayedCloseList);
+    FatGlobalData.FatCloseItem = IoAllocateWorkItem(DeviceObject);
+    ExInitializeFastMutex(&FatCloseQueueMutex);
 
     /* Initialize global VCB list */
     InitializeListHead(&FatGlobalData.VcbListHead);

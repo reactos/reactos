@@ -11,6 +11,16 @@
 #define NDEBUG
 #include "fastfat.h"
 
+VOID NTAPI
+FatQueueClose(IN PCLOSE_CONTEXT CloseContext,
+              IN BOOLEAN DelayClose);
+
+PCLOSE_CONTEXT NTAPI
+FatRemoveClose(PVCB Vcb OPTIONAL,
+               PVCB LastVcbHint OPTIONAL);
+
+const ULONG FatMaxDelayedCloseCount = 16;
+
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -246,8 +256,8 @@ FatiClose(IN PFAT_IRP_CONTEXT IrpContext,
     PVCB Vcb;
     PFCB Fcb;
     PCCB Ccb;
-    BOOLEAN TopLevel, Wait, VcbDeleted = FALSE;
-    NTSTATUS Status;
+    BOOLEAN TopLevel, Wait, VcbDeleted = FALSE, DelayedClose = FALSE;
+    NTSTATUS Status = STATUS_SUCCESS;
     PCLOSE_CONTEXT CloseContext = NULL;
 
     TopLevel = FatIsTopLevelIrp(Irp);
@@ -265,16 +275,57 @@ FatiClose(IN PFAT_IRP_CONTEXT IrpContext,
     /* It's possible to wait only if we are top level or not a system process */
     Wait = TopLevel && (PsGetCurrentProcess() != FatGlobalData.SystemProcess);
 
-    /* Call the common handler */
-    Status = FatiCommonClose(Vcb, Fcb, Ccb, TypeOfOpen, Wait, &VcbDeleted);
-
-    if (((TypeOfOpen == UserFileOpen ||
-        TypeOfOpen == UserDirectoryOpen) &&
+    /* Determine if it's a delayed close, by flags first */
+    if ((TypeOfOpen == UserFileOpen || TypeOfOpen == UserDirectoryOpen) &&
         (Fcb->State & FCB_STATE_DELAY_CLOSE) &&
-        !FatGlobalData.ShutdownStarted) ||
-        Status == STATUS_PENDING)
+        !FatGlobalData.ShutdownStarted)
     {
-        DPRINT1("TODO: Queue a pending close request\n");
+        DelayedClose = TRUE;
+    }
+
+    /* If close is not delayed, try to perform the close operation */
+    if (!DelayedClose)
+        Status = FatiCommonClose(Vcb, Fcb, Ccb, TypeOfOpen, Wait, &VcbDeleted);
+
+    /* We have to delay close if either it's defined by a flag or it was not possible
+       to perform it synchronously */
+    if (DelayedClose || Status == STATUS_PENDING)
+    {
+        DPRINT1("Queuing a pending close, Vcb %p, Fcb %p, Ccb %p\n", Vcb, Fcb, Ccb);
+
+        /* Check if a close context should be allocated */
+        if (TypeOfOpen == VirtualVolumeFile)
+        {
+            ASSERT(Vcb->CloseContext != NULL);
+            CloseContext = Vcb->CloseContext;
+            Vcb->CloseContext = NULL;
+            CloseContext->Free = TRUE;
+        }
+        else if (TypeOfOpen == DirectoryFile ||
+                 TypeOfOpen == EaFile)
+        {
+            UNIMPLEMENTED;
+            //CloseContext = FatAllocateCloseContext(Vcb);
+            //ASSERT(CloseContext != NULL);
+            CloseContext->Free = TRUE;
+        }
+        else
+        {
+            //TODO: FatDeallocateCcbStrings( Ccb );
+
+            /* Set CloseContext to a buffer inside Ccb */
+            CloseContext = &Ccb->CloseContext;
+            CloseContext->Free = FALSE;
+            SetFlag(Ccb->Flags, CCB_CLOSE_CONTEXT);
+        }
+
+        /* Save all info in the close context */
+        CloseContext->Vcb = Vcb;
+        CloseContext->Fcb = Fcb;
+        CloseContext->TypeOfOpen = TypeOfOpen;
+
+        /* Queue the close */
+        FatQueueClose(CloseContext, (BOOLEAN)(Fcb && FlagOn(Fcb->State, FCB_STATE_DELAY_CLOSE)));
     }
     else
     {
@@ -349,6 +400,252 @@ FatClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     FsRtlExitFileSystem();
 
     return Status;
+}
+
+VOID
+NTAPI
+FatPendingClose(IN PVCB Vcb OPTIONAL)
+{
+    PCLOSE_CONTEXT CloseContext;
+    PVCB CurrentVcb = NULL;
+    PVCB LastVcb = NULL;
+    BOOLEAN FreeContext;
+    ULONG Loops = 0;
+
+    /* Do the top-level IRP trick */
+    if (!Vcb) IoSetTopLevelIrp((PIRP)FSRTL_FSP_TOP_LEVEL_IRP);
+
+    while ((CloseContext = FatRemoveClose(Vcb, LastVcb)))
+    {
+        if (!Vcb)
+        {
+            if (!FatGlobalData.ShutdownStarted)
+            {
+                if (CloseContext->Vcb != CurrentVcb)
+                {
+                    Loops = 0;
+
+                    /* Release previous VCB */
+                    if (CurrentVcb)
+                        ExReleaseResourceLite(&CurrentVcb->Resource);
+
+                    /* Lock the new VCB */
+                    CurrentVcb = CloseContext->Vcb;
+                    (VOID)ExAcquireResourceExclusiveLite(&CurrentVcb->Resource, TRUE);
+                }
+                else
+                {
+                    /* Try to lock */
+                    if (++Loops >= 20)
+                    {
+                        if (ExGetSharedWaiterCount(&CurrentVcb->Resource) +
+                            ExGetExclusiveWaiterCount(&CurrentVcb->Resource))
+                        {
+                            ExReleaseResourceLite(&CurrentVcb->Resource);
+                            (VOID)ExAcquireResourceExclusiveLite(&CurrentVcb->Resource, TRUE);
+                        }
+
+                        Loops = 0;
+                    }
+                }
+
+                /* Check open count */
+                if (CurrentVcb->OpenFileCount <= 1)
+                {
+                    ExReleaseResourceLite(&CurrentVcb->Resource);
+                    CurrentVcb = NULL;
+                }
+            }
+            else if (CurrentVcb)
+            {
+                ExReleaseResourceLite(&CurrentVcb->Resource);
+                CurrentVcb = NULL;
+            }
+        }
+
+        LastVcb = CurrentVcb;
+
+        /* Remember if we should free the context */
+        FreeContext = CloseContext->Free;
+
+        FatiCommonClose(CloseContext->Vcb,
+                        CloseContext->Fcb,
+                        (FreeContext ? NULL : CONTAINING_RECORD(CloseContext, CCB, CloseContext)),
+                        CloseContext->TypeOfOpen,
+                        TRUE,
+                        NULL);
+
+        /* Free context if necessary */
+        if (FreeContext) ExFreePool(CloseContext);
+    }
+
+    /* Release VCB if necessary */
+    if (CurrentVcb) ExReleaseResourceLite(&CurrentVcb->Resource);
+
+    /* Reset top level IRP */
+    if (!Vcb) IoSetTopLevelIrp( NULL );
+}
+
+VOID
+NTAPI
+FatCloseWorker(IN PDEVICE_OBJECT DeviceObject,
+               IN PVOID Context)
+{
+    FsRtlEnterFileSystem();
+
+    FatPendingClose((PVCB)Context);
+
+    FsRtlExitFileSystem();
+}
+
+VOID
+NTAPI
+FatQueueClose(IN PCLOSE_CONTEXT CloseContext,
+              IN BOOLEAN DelayClose)
+{
+    BOOLEAN RunWorker = FALSE;
+
+    /* Acquire the close lists mutex */
+    ExAcquireFastMutexUnsafe(&FatCloseQueueMutex);
+
+    /* Add it to the desired list */
+    if (DelayClose)
+    {
+        InsertTailList(&FatGlobalData.DelayedCloseList,
+                       &CloseContext->GlobalLinks);
+        InsertTailList(&CloseContext->Vcb->DelayedCloseList,
+                       &CloseContext->VcbLinks);
+
+        FatGlobalData.DelayedCloseCount++;
+
+        if (FatGlobalData.DelayedCloseCount > FatMaxDelayedCloseCount &&
+            !FatGlobalData.AsyncCloseActive)
+        {
+            FatGlobalData.AsyncCloseActive = TRUE;
+            RunWorker = TRUE;
+        }
+    }
+    else
+    {
+        InsertTailList(&FatGlobalData.AsyncCloseList,
+                       &CloseContext->GlobalLinks);
+        InsertTailList(&CloseContext->Vcb->AsyncCloseList,
+                       &CloseContext->VcbLinks);
+
+        FatGlobalData.AsyncCloseCount++;
+
+        if (!FatGlobalData.AsyncCloseActive)
+        {
+            FatGlobalData.AsyncCloseActive = TRUE;
+            RunWorker = TRUE;
+        }
+    }
+
+    /* Release the close lists mutex */
+    ExReleaseFastMutexUnsafe(&FatCloseQueueMutex);
+
+    if (RunWorker)
+        IoQueueWorkItem(FatGlobalData.FatCloseItem, FatCloseWorker, CriticalWorkQueue, NULL);
+}
+
+PCLOSE_CONTEXT
+NTAPI
+FatRemoveClose(PVCB Vcb OPTIONAL,
+               PVCB LastVcbHint OPTIONAL)
+{
+    PLIST_ENTRY Entry;
+    PCLOSE_CONTEXT CloseContext;
+    BOOLEAN IsWorker = FALSE;
+
+    /* Acquire the close lists mutex */
+    ExAcquireFastMutexUnsafe(&FatCloseQueueMutex);
+
+    if (!Vcb) IsWorker = TRUE;
+
+    if (Vcb == NULL && LastVcbHint != NULL)
+    {
+        // TODO: A very special case of overflowing the queue
+        UNIMPLEMENTED;
+    }
+
+    /* Usual processing from a worker thread */
+    if (!Vcb)
+    {
+TryToCloseAgain:
+
+        /* Is there anything in the async close list */
+        if (!IsListEmpty(&FatGlobalData.AsyncCloseList))
+        {
+            Entry = RemoveHeadList(&FatGlobalData.AsyncCloseList);
+            FatGlobalData.AsyncCloseCount--;
+
+            CloseContext = CONTAINING_RECORD(Entry,
+                                             CLOSE_CONTEXT,
+                                             GlobalLinks);
+
+            RemoveEntryList(&CloseContext->VcbLinks);
+        } else if (!IsListEmpty(&FatGlobalData.DelayedCloseList) &&
+                   (FatGlobalData.DelayedCloseCount > FatMaxDelayedCloseCount/2 ||
+                   FatGlobalData.ShutdownStarted))
+        {
+            /* In case of a shutdown or when delayed queue is filled at half - perform closing */
+            Entry = RemoveHeadList(&FatGlobalData.DelayedCloseList);
+            FatGlobalData.DelayedCloseCount--;
+
+            CloseContext = CONTAINING_RECORD(Entry,
+                                             CLOSE_CONTEXT,
+                                             GlobalLinks);
+            RemoveEntryList(&CloseContext->VcbLinks);
+        }
+        else
+        {
+            /* Nothing to close */
+            CloseContext = NULL;
+            if (IsWorker) FatGlobalData.AsyncCloseActive = FALSE;
+        }
+    }
+    else
+    {
+        if (!IsListEmpty(&Vcb->AsyncCloseList))
+        {
+            /* Is there anything in the async close list */
+            Entry = RemoveHeadList(&Vcb->AsyncCloseList);
+            FatGlobalData.AsyncCloseCount--;
+
+            CloseContext = CONTAINING_RECORD(Entry,
+                                             CLOSE_CONTEXT,
+                                             VcbLinks);
+
+            RemoveEntryList(&CloseContext->GlobalLinks);
+        }
+        else if (!IsListEmpty(&Vcb->DelayedCloseList))
+        {
+            /* Process delayed close list */
+            Entry = RemoveHeadList(&Vcb->DelayedCloseList);
+            FatGlobalData.DelayedCloseCount--;
+
+            CloseContext = CONTAINING_RECORD(Entry,
+                                             CLOSE_CONTEXT,
+                                             VcbLinks);
+
+            RemoveEntryList(&CloseContext->GlobalLinks);
+        }
+        else if (LastVcbHint)
+        {
+            /* Try again */
+            goto TryToCloseAgain;
+        }
+        else
+        {
+            /* Nothing to close */
+            CloseContext = NULL;
+        }
+    }
+
+    /* Release the close lists mutex */
+    ExReleaseFastMutexUnsafe(&FatCloseQueueMutex);
+
+    return CloseContext;
 }
 
 /* EOF */

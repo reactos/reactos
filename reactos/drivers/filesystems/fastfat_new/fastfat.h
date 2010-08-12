@@ -16,6 +16,7 @@
 #define TAG_FCB  'BCFV'
 #define TAG_IRP  'PRIV'
 #define TAG_VFAT 'TAFV'
+#define TAG_FSD_CLOSE_CONTEXT 'CLCV'
 
 
 /* Global resource acquire/release */
@@ -182,6 +183,8 @@ VOID NTAPI
 FatNoopRelease(IN PVOID Context);
 
 /* ---------------------------------------------------------  fastfat.c */
+
+extern FAST_MUTEX FatCloseQueueMutex;
 
 PFAT_IRP_CONTEXT NTAPI
 FatBuildIrpContext(PIRP Irp, BOOLEAN CanWait);
