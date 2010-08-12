@@ -163,7 +163,7 @@ SockAsyncThread(PVOID Context)
                                       &IoStatusBlock,
                                       &Timeout);
         /* Check for success */
-        if (NT_SUCCESS(Status))
+        if (Status == STATUS_SUCCESS)
         {
             /* Check if this isn't the termination command */
             if (AsyncCompletionRoutine != (PVOID)-1)
@@ -180,7 +180,7 @@ SockAsyncThread(PVOID Context)
                 InterlockedDecrement(&SockAsyncThreadReferenceCount);
             }
         }
-        else if ((SockAsyncThreadReferenceCount > 1) && (NT_ERROR(Status)))
+        else if ((SockAsyncThreadReferenceCount > 1) && (NT_ERROR(Status) || Status == STATUS_TIMEOUT))
         {
             /* It Failed, sleep for a second */
             Sleep(1000);
