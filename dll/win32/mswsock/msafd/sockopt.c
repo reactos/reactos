@@ -213,7 +213,7 @@ WSPIoctl(IN SOCKET Handle,
     PSOCKET_INFORMATION Socket;
     INT ErrorCode;
     PWINSOCK_TEB_DATA ThreadData;
-	BOOLEAN Blocking;
+	BOOLEAN Blocking, NeedsCompletion;
 	
     /* Enter prolog */
     ErrorCode = SockEnterApiFast(&ThreadData);
@@ -240,7 +240,7 @@ WSPIoctl(IN SOCKET Handle,
 			
         case FIONBIO:			
             /* Check if the Buffer is OK */
-            if(cbInBuffer < sizeof(ULONG))
+            if(cbInBuffer < sizeof(ULONG) || IS_INTRESOURCE(lpvInBuffer))
             {
                 /* Fail */
                 ErrorCode = WSAEFAULT;
@@ -258,10 +258,43 @@ WSPIoctl(IN SOCKET Handle,
 										   NULL);
             break;
 			
-        default:
+		case FIONREAD:
+            if(cbOutBuffer < sizeof(ULONG) || IS_INTRESOURCE(lpvOutBuffer))
+            {
+                *lpErrno = WSAEFAULT;
+                return SOCKET_ERROR;
+            }
+
+            ErrorCode = SockGetInformation(Socket,
+								           AFD_INFO_RECEIVE_CONTENT_SIZE,
+										   NULL,
+										   0,
+									       NULL,
+									       (PULONG)lpvOutBuffer,
+									       NULL);
 			
-            /* Unsupported for now */
-            ErrorCode = WSAEINVAL;
+			if (ErrorCode == NO_ERROR) *lpcbBytesReturned = sizeof(ULONG);
+			break;
+			
+        default:
+			/* Unsupported by us, give it to the helper */
+			ErrorCode = SockGetTdiHandles(Socket);
+			if (ErrorCode != NO_ERROR) goto error;
+
+			/* Call the helper */
+			ErrorCode = Socket->HelperData->WSHIoctl(Socket->HelperContext,
+													 Handle,
+													 Socket->TdiAddressHandle,
+													 Socket->TdiConnectionHandle,
+													 dwIoControlCode,
+													 lpvInBuffer,
+													 cbInBuffer,
+													 lpvOutBuffer,
+													 cbOutBuffer,
+													 lpcbBytesReturned,
+													 lpOverlapped,
+													 lpCompletionRoutine,
+													 (LPBOOL)&NeedsCompletion);
 			break;
     }
 	
