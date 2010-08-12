@@ -27,7 +27,7 @@ SockCoreAccept(IN PSOCKET_INFORMATION Socket,
     HANDLE EventObject = NULL;
     ULONG AsyncEvents = 0, NetworkEvents = 0;
     CHAR HelperBuffer[256];
-
+	
     /* Set the new state */
     AcceptedSocket->SharedData.State = SocketConnected;
 
@@ -82,8 +82,7 @@ SockCoreAccept(IN PSOCKET_INFORMATION Socket,
                                                     HelperContextSize);
             if (!HelperContext)
             {
-                /* Unlock the socket and fail */
-                LeaveCriticalSection(&Socket->Lock);
+                /* Fail */
                 return WSAENOBUFS;
             }
         }
@@ -98,9 +97,6 @@ SockCoreAccept(IN PSOCKET_INFORMATION Socket,
                                                                   HelperContext,
                                                                   &HelperContextSize);
     }
-
-    /* We're done with the old socket, so we can release the lock */
-    LeaveCriticalSection(&Socket->Lock);
 
     /* Get the TDI Handles for the new socket */
     ErrorCode = SockGetTdiHandles(AcceptedSocket);
@@ -311,6 +307,7 @@ WSPAccept(SOCKET Handle,
                                 NULL,
                                 &Timeout,
                                 lpErrno);
+
         if (ReturnValue == SOCKET_ERROR)
         {
             /* Fail */
@@ -412,10 +409,13 @@ WSPAccept(SOCKET Handle,
             if (Status == STATUS_PENDING)
             {
                 /* Wait for completion */
+				LeaveCriticalSection(&Socket->Lock);
                 SockWaitForSingleObject(ThreadData->EventHandle,
                                         Handle,
                                         NO_BLOCKING_HOOK,
                                         NO_TIMEOUT);
+				EnterCriticalSection(&Socket->Lock);
+
                 /* Get new status */
                 Status = IoStatusBlock.Status;
             }
@@ -462,10 +462,13 @@ WSPAccept(SOCKET Handle,
                 if (Status == STATUS_PENDING)
                 {
                     /* Wait for completion */
+					LeaveCriticalSection(&Socket->Lock);
                     SockWaitForSingleObject(ThreadData->EventHandle,
                                             Handle,
                                             NO_BLOCKING_HOOK,
                                             NO_TIMEOUT);
+					EnterCriticalSection(&Socket->Lock);
+
                     /* Get new status */
                     Status = IoStatusBlock.Status;
                 }

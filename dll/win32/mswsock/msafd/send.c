@@ -246,7 +246,7 @@ WSPSendTo(SOCKET Handle,
     INT SockaddrLength;
     PSOCKADDR Sockaddr;
     SOCKADDR_INFO SocketInfo;
-
+	
     /* Enter prolog */
     ErrorCode = SockEnterApiFast(&ThreadData);
     if (ErrorCode != NO_ERROR)
@@ -377,6 +377,8 @@ WSPSendTo(SOCKET Handle,
             /* Make sure it's still unbound */
             if (Socket->SharedData.State == SocketOpen)
             {
+				LeaveCriticalSection(&Socket->Lock);
+
                 /* Bind it */
                 ReturnValue = WSPBind(Handle,
                                       Sockaddr,
@@ -387,12 +389,13 @@ WSPSendTo(SOCKET Handle,
             {
                 /* It's bound now, fake success */
                 ReturnValue = NO_ERROR;
+				
+				LeaveCriticalSection(&Socket->Lock);
             }
 
-            /* Release the lock and free memory */
-            LeaveCriticalSection(&Socket->Lock);
+            /* Free memory */
             RtlFreeHeap(SockPrivateHeap, 0, Sockaddr);
-
+			
             /* Check if we failed */
             if (ReturnValue == SOCKET_ERROR) goto error;
         }

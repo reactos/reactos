@@ -72,6 +72,7 @@ SockEventSelectHelper(IN PSOCKET_INFORMATION Socket,
 
     /* Send close event. Note, this includes both aborts and disconnects */
     if (Events & FD_CLOSE) PollInfo.Events |= AFD_EVENT_DISCONNECT |
+		                                      AFD_EVENT_CLOSE |
                                               AFD_EVENT_ABORT;
 
     /* Send PnP events related to live network hardware changes */
@@ -99,10 +100,12 @@ SockEventSelectHelper(IN PSOCKET_INFORMATION Socket,
     if (Status == STATUS_PENDING)
     {
         /* Wait for completion */
+		LeaveCriticalSection(&Socket->Lock);
         SockWaitForSingleObject(ThreadData->EventHandle,
                                 Socket->Handle,
                                 NO_BLOCKING_HOOK,
                                 NO_TIMEOUT);
+		EnterCriticalSection(&Socket->Lock);
 
         /* Get new status */
         Status = IoStatusBlock.Status;
@@ -273,10 +276,12 @@ WSPEnumNetworkEvents(IN SOCKET Handle,
     if (Status == STATUS_PENDING)
     {
         /* Wait for completion */
+		LeaveCriticalSection(&Socket->Lock);
         SockWaitForSingleObject(ThreadData->EventHandle,
                                 Socket->Handle,
                                 NO_BLOCKING_HOOK,
                                 NO_TIMEOUT);
+		EnterCriticalSection(&Socket->Lock);
 
         /* Get new status */
         Status = IoStatusBlock.Status;
@@ -411,7 +416,11 @@ WSPEnumNetworkEvents(IN SOCKET Handle,
 
 error:
     /* Dereference the socket, if we have one here */
-    if (Socket) SockDereferenceSocket(Socket);
+    if (Socket)
+	{
+		LeaveCriticalSection(&Socket->Lock);
+		SockDereferenceSocket(Socket);
+	}
 
     /* Check for error */
     if (ErrorCode != NO_ERROR)
