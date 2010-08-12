@@ -1910,6 +1910,7 @@ WSPIoctl(IN  SOCKET Handle,
          OUT LPINT lpErrno)
 {
     PSOCKET_INFORMATION Socket = NULL;
+	BOOLEAN NeedsCompletion;
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
@@ -1918,6 +1919,8 @@ WSPIoctl(IN  SOCKET Handle,
        *lpErrno = WSAENOTSOCK;
        return SOCKET_ERROR;
     }
+	
+	*lpcbBytesReturned = 0;
 
     switch( dwIoControlCode )
     {
@@ -1928,17 +1931,44 @@ WSPIoctl(IN  SOCKET Handle,
                 return SOCKET_ERROR;
             }
             Socket->SharedData.NonBlocking = *((PULONG)lpvInBuffer) ? 1 : 0;
-            return SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, (PULONG)lpvInBuffer, NULL);
+            *lpErrno = SetSocketInformation(Socket, AFD_INFO_BLOCKING_MODE, (PULONG)lpvInBuffer, NULL);
+			if (*lpErrno != NO_ERROR)
+				return SOCKET_ERROR;
+			else
+				return NO_ERROR;
         case FIONREAD:
             if( cbOutBuffer < sizeof(INT) || IS_INTRESOURCE(lpvOutBuffer) )
             {
                 *lpErrno = WSAEFAULT;
                 return SOCKET_ERROR;
             }
-            return GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, (PULONG)lpvOutBuffer, NULL);
+            *lpErrno = GetSocketInformation(Socket, AFD_INFO_RECEIVE_CONTENT_SIZE, (PULONG)lpvOutBuffer, NULL);
+			if (*lpErrno != NO_ERROR)
+			{
+				*lpcbBytesReturned = sizeof(ULONG);
+				return SOCKET_ERROR;
+			}
+			else
+				return NO_ERROR;
         default:
-            *lpErrno = WSAEINVAL;
-            return SOCKET_ERROR;
+			*lpErrno = Socket->HelperData->WSHIoctl(Socket->HelperContext,
+													Handle,
+													Socket->TdiAddressHandle,
+													Socket->TdiConnectionHandle,
+													dwIoControlCode,
+													lpvInBuffer,
+													cbInBuffer,
+													lpvOutBuffer,
+													cbOutBuffer,
+													lpcbBytesReturned,
+													lpOverlapped,
+													lpCompletionRoutine,
+													(LPBOOL)&NeedsCompletion);
+			
+			if (*lpErrno != NO_ERROR)
+				return SOCKET_ERROR;
+			else
+				return NO_ERROR;
     }
 }
 
