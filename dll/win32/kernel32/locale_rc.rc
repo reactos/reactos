@@ -48,11 +48,11 @@
 
 #include "nls/cat.nls"   /* 0x0403  LANG_CATALAN, SUBLANG_DEFAULT */
 
-#include "nls/cht.nls"   /* 0x0404  LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL */
+//#include "nls/cht.nls"   /* 0x0404  LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL */
 #include "nls/chs.nls"   /* 0x0804  LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED */
-#include "nls/zhh.nls"   /* 0x0c04  LANG_CHINESE, SUBLANG_CHINESE_HONGKONG */
+//#include "nls/zhh.nls"   /* 0x0c04  LANG_CHINESE, SUBLANG_CHINESE_HONGKONG */
 #include "nls/zhi.nls"   /* 0x1004  LANG_CHINESE, SUBLANG_CHINESE_SINGAPORE */
-#include "nls/zhm.nls"   /* 0x1404  LANG_CHINESE, SUBLANG_CHINESE_MACAU */
+//#include "nls/zhm.nls"   /* 0x1404  LANG_CHINESE, SUBLANG_CHINESE_MACAU */
 
 #include "nls/csy.nls"   /* 0x0405  LANG_CZECH, SUBLANG_DEFAULT */
 
@@ -119,7 +119,7 @@
 #include "nls/ita.nls"   /* 0x0410  LANG_ITALIAN, SUBLANG_ITALIAN */
 #include "nls/its.nls"   /* 0x0810  LANG_ITALIAN, SUBLANG_ITALIAN_SWISS */
 
-#include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_DEFAULT */
+//#include "nls/jpn.nls"   /* 0x0411  LANG_JAPANESE, SUBLANG_DEFAULT */
 
 #include "nls/kor.nls"   /* 0x0412  LANG_KOREAN, SUBLANG_KOREAN */
 

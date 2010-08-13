@@ -84,25 +84,6 @@ static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0
 static const char hex[16] = "0123456789ABCDEF";
 
 
-static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
-{
-    const WCHAR *end;
-    for (end = ptr + n; ptr < end; ptr++)
-        if (*ptr == ch)
-            return (WCHAR *)(ULONG_PTR)ptr;
-    return NULL;
-}
-
-static __inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
-{
-    const WCHAR *end;
-    WCHAR *ret = NULL;
-    for (end = ptr + n; ptr < end; ptr++)
-        if (*ptr == ch)
-            ret = (WCHAR *)(ULONG_PTR)ptr;
-    return ret;
-}
-
 /***********************************************************************
  *           PROFILE_CopyEntry
  *
