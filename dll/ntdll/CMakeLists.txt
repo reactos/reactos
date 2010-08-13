@@ -1,4 +1,6 @@
 
+set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
 add_definitions(-D__NTDLL__)
 add_definitions(-D_NTOSKRNL_)
 add_definitions(-DCRTDLL)
@@ -23,7 +25,7 @@ add_library(ntdll SHARED
 set_target_properties(ntdll PROPERTIES LINK_FLAGS "-Wl,-entry,0")
 
 target_link_libraries(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.def
-                      rtl 
+                      -Wl,--whole-archive rtl -Wl,--no-whole-archive
                       ntdllsys
                       libcntpr
                       pseh)

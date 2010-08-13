@@ -157,6 +157,7 @@ DbgUiStopDebugging(
     IN HANDLE Process
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 DbgUiWaitStateChange(
