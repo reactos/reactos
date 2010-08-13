@@ -7,6 +7,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
+set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
+set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
+ 
 add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
@@ -15,9 +18,9 @@ add_definitions(-DTARGET_i386)
 add_definitions(-fshort-wchar)
 
 include_directories(${REACTOS_SOURCE_DIR}/tools/unicode)
-include_directories(./include)
-include_directories(./include/reactos)
-include_directories(./include/reactos/wine)
+include_directories(include)
+include_directories(include/reactos)
+include_directories(include/reactos/wine)
 
 add_subdirectory(tools)
 add_subdirectory(lib)
@@ -61,7 +64,10 @@ add_definitions(-march=pentium -mtune=i686)
 add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-error=uninitialized -Wno-unused-value  -Winvalid-pch)
 
 # Optimizations
-add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-optimize-sibling-calls)
+add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+
+# C++ Flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
 
 include_directories(include)
 include_directories(include/psdk)
