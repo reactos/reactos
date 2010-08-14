@@ -14,15 +14,17 @@ typedef FAT_NODE_TYPE *PFAT_NODE_TYPE;
 #define FatNodeType(Ptr) (*((PFAT_NODE_TYPE)(Ptr)))
 
 /* Node type codes */
-#define FAT_NTC_VCB      (CSHORT) '00VF'
-#define FAT_NTC_FCB      (CSHORT)   'CF'
-#define FAT_NTC_DCB      (CSHORT)   'DF'
-#define FAT_NTC_ROOT_DCB (CSHORT)  'RFD'
-#define FAT_NTC_CCB      (CSHORT)  'BCC'
+#define FAT_NTC_VCB         (CSHORT) '00VF'
+#define FAT_NTC_FCB         (CSHORT)   'CF'
+#define FAT_NTC_DCB         (CSHORT)   'DF'
+#define FAT_NTC_ROOT_DCB    (CSHORT)  'RFD'
+#define FAT_NTC_CCB         (CSHORT)  'BCC'
+#define FAT_NTC_IRP_CONTEXT (CSHORT)  'PRI'
 
 typedef struct _FAT_GLOBAL_DATA
 {
     ERESOURCE Resource;
+    PEPROCESS SystemProcess;
     PDRIVER_OBJECT DriverObject;
     PDEVICE_OBJECT DiskDeviceObject;
     LIST_ENTRY VcbListHead;
@@ -33,8 +35,19 @@ typedef struct _FAT_GLOBAL_DATA
     CACHE_MANAGER_CALLBACKS CacheMgrCallbacks;
     CACHE_MANAGER_CALLBACKS CacheMgrNoopCallbacks;
     BOOLEAN Win31FileSystem;
+    BOOLEAN ShutdownStarted;
     /* Jan 1, 1980 System Time */
     LARGE_INTEGER DefaultFileTime;
+
+    /* Queued close */
+    ULONG AsyncCloseCount;
+    ULONG DelayedCloseCount;
+    LIST_ENTRY AsyncCloseList;
+    LIST_ENTRY DelayedCloseList;
+    PIO_WORKITEM FatCloseItem;
+
+    /* Various flags */
+    BOOLEAN AsyncCloseActive;
 
     /* FullFAT integration */
     FF_IOMAN *Ioman;
@@ -82,6 +95,10 @@ typedef struct _FAT_PAGE_CONTEXT
 
 typedef struct _FAT_IRP_CONTEXT
 {
+    /*  Type and size of this record (must be FAT_NTC_IRP_CONTEXT) */
+    FAT_NODE_TYPE NodeTypeCode;
+    CSHORT NodeByteSize;
+
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
     UCHAR MajorFunction;
@@ -132,10 +149,15 @@ typedef struct _FAT_METHODS {
     PFAT_SETFAT_VALUE_RUN_ROUTINE SetValueRun;
 } FAT_METHODS, *PFAT_METHODS;
 
-#define VCB_STATE_FLAG_LOCKED        0x01
-#define VCB_STATE_FLAG_DIRTY         0x02
-#define VCB_STATE_MOUNTED_DIRTY      0x04
-#define VCB_STATE_CREATE_IN_PROGRESS 0x08
+#define VCB_STATE_FLAG_LOCKED               0x001
+#define VCB_STATE_FLAG_DIRTY                0x002
+#define VCB_STATE_MOUNTED_DIRTY             0x004
+#define VCB_STATE_CREATE_IN_PROGRESS        0x008
+#define VCB_STATE_FLAG_CLOSE_IN_PROGRESS    0x010
+#define VCB_STATE_FLAG_DELETED_FCB          0x020
+#define VCB_STATE_FLAG_DISMOUNT_IN_PROGRESS 0x040
+#define VCB_STATE_FLAG_DEFERRED_FLUSH       0x080
+#define VCB_STATE_FLAG_WRITE_PROTECTED      0x100
 
 typedef enum _VCB_CONDITION
 {
@@ -158,10 +180,13 @@ typedef struct _VCB
     ULONG State;
     VCB_CONDITION Condition;
     ERESOURCE Resource;
+    struct _CLOSE_CONTEXT *CloseContext;
+    LIST_ENTRY AsyncCloseList;
+    LIST_ENTRY DelayedCloseList;
 
     /* Direct volume access */
-    ULONG DirectOpenCount;
     SHARE_ACCESS ShareAccess;
+    PFILE_OBJECT FileObjectWithVcbLocked;
 
     /* Notifications support */
     PNOTIFY_SYNC NotifySync;
@@ -186,8 +211,13 @@ typedef struct _VCB
     struct _FCB *RootDcb;
 
     /* Counters */
-    ULONG MediaChangeCount;
+    ULONG DirectOpenCount;
     ULONG OpenFileCount;
+    ULONG ReadOnlyCount;
+    ULONG InternalOpenCount;
+    ULONG ResidualOpenCount;
+    ULONG DirectAccessOpenCount;
+    ULONG MediaChangeCount;
 
     /* FullFAT integration */
     FF_IOMAN *Ioman;
@@ -221,6 +251,18 @@ typedef struct _VOLUME_DEVICE_OBJECT
         VCB Vcb; /* Must be the last entry! */
     };
 } VOLUME_DEVICE_OBJECT, *PVOLUME_DEVICE_OBJECT;
+
+typedef enum _TYPE_OF_OPEN
+{
+    UnopenedFileObject,
+    UserFileOpen,
+    UserDirectoryOpen,
+    UserVolumeOpen,
+    VirtualVolumeFile,
+    DirectoryFile,
+    EaFile
+} TYPE_OF_OPEN;
+
 //
 //  Short name always exists in FAT
 //
@@ -252,6 +294,7 @@ typedef enum _FCB_CONDITION
 #define FCB_STATE_PAGEFILE          0x04
 #define FCB_STATE_DELAY_CLOSE       0x08
 #define FCB_STATE_TRUNCATE_ON_CLOSE 0x10
+#define FCB_STATE_DELETE_ON_CLOSE   0x20
 
 typedef struct _FCB
 {
@@ -281,8 +324,6 @@ typedef struct _FCB
     FCB_CONDITION Condition;
     /* Share access */
     SHARE_ACCESS ShareAccess;
-    /* Mcb mapping Vbo->Lbo */
-    LARGE_MCB Mcb;
     ULONG FirstCluster;
     /* Links into FCB Tree */
     FCB_NAME_LINK ShortName;
@@ -307,6 +348,8 @@ typedef struct _FCB
     PKEVENT OutstandingAsyncEvent;
     /* Counters */
     ULONG OpenCount;
+    ULONG UncleanCount;
+    ULONG NonCachedUncleanCount;
     union
     {
         struct
@@ -318,12 +361,11 @@ typedef struct _FCB
 
         struct
         {
-            /* A list of all FCBs/DCBs opened under this DCB */
-            LIST_ENTRY ParentDcbList;
+            LIST_ENTRY ParentDcbList; /* A list of all FCBs/DCBs opened under this DCB */
+            ULONG DirectoryFileOpenCount; /* Sector-based access to the dir */
+            PFILE_OBJECT DirectoryFile;
             /* Directory data stream (just handy to have it). */
-            PFILE_OBJECT StreamFileObject;
-            /* Bitmap to search for free dirents. */
-            RTL_BITMAP FreeBitmap;
+            //PFILE_OBJECT StreamFileObject;
             /* Names */
             PRTL_SPLAY_LINKS SplayLinksAnsi;
             PRTL_SPLAY_LINKS SplayLinksUnicode;
@@ -368,6 +410,17 @@ typedef struct _FAT_FIND_DIRENT_CONTEXT
     BOOLEAN Valid8dot3Name;
 } FAT_FIND_DIRENT_CONTEXT, *PFAT_FIND_DIRENT_CONTEXT;
 
+typedef struct _CLOSE_CONTEXT
+{
+    LIST_ENTRY GlobalLinks;
+    LIST_ENTRY VcbLinks;
+
+    PVCB Vcb;
+    PFCB Fcb;
+    TYPE_OF_OPEN TypeOfOpen;
+    BOOLEAN Free;
+} CLOSE_CONTEXT, *PCLOSE_CONTEXT;
+
 typedef struct _CCB
 {
     CSHORT NodeTypeCode;
@@ -377,18 +430,8 @@ typedef struct _CCB
     ULONG Entry;
     UNICODE_STRING SearchPattern;
     UCHAR Flags;
+    CLOSE_CONTEXT CloseContext;
 } CCB, *PCCB;
-
-typedef enum _TYPE_OF_OPEN
-{
-    UnopenedFileObject,
-    UserFileOpen,
-    UserDirectoryOpen,
-    UserVolumeOpen,
-    VirtualVolumeFile,
-    DirectoryFile,
-    EaFile
-} TYPE_OF_OPEN;
 
 typedef enum _FILE_TIME_INDEX
 {
@@ -401,5 +444,10 @@ typedef enum _FILE_TIME_INDEX
 #define CCB_SEARCH_RETURN_SINGLE_ENTRY      0x01
 #define CCB_SEARCH_PATTERN_LEGAL_8DOT3      0x02
 #define CCB_SEARCH_PATTERN_HAS_WILD_CARD    0x04
-#define CCB_DASD_IO                         0x10
+#define CCB_DASD_IO                         0x08
+#define CCB_READ_ONLY                       0x10
+#define CCB_DELETE_ON_CLOSE                 0x20
+#define CCB_COMPLETE_DISMOUNT               0x40
+#define CCB_CLOSE_CONTEXT                   0x80
+
 extern FAT_GLOBAL_DATA FatGlobalData;

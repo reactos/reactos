@@ -166,7 +166,7 @@ extern FLATPTR WINAPI
 
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif

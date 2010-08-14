@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDTAPE_H
-#define __NTDDTAPE_H
+#ifndef _NTDDTAPE_
+#define _NTDDTAPE_
 
 #include "ntddstor.h"
 
@@ -71,4 +71,4 @@ typedef enum _TAPE_DRIVE_PROBLEM_TYPE {
 }
 #endif
 
-#endif /* __NTDDTAPE_H */
+#endif /* _NTDDTAPE_ */

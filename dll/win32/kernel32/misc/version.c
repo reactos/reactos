@@ -9,10 +9,9 @@
 
 #include <k32.h>
 #include <reactos/buildno.h>
-
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32Ver);
+#define NDEBUG
+#include <debug.h>
+static ULONG gDebugChannel = kernel32ver;
 
 #define UNICODIZE1(x) L##x
 #define UNICODIZE(x) UNICODIZE1(x)

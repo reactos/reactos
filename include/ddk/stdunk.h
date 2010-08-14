@@ -13,15 +13,6 @@
 
 #include <punknown.h>
 
-/* Helper macro to enable gcc's extension.  */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
-#endif
-
 /* ===============================================================
     INonDelegatingUnknown interface
 */

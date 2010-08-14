@@ -10,13 +10,12 @@
  */
 
 #include <k32.h>
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 #define NANOS_TO_100NS(nanos) (((LONGLONG)(nanos)) / 100)
 #define MICROS_TO_100NS(micros) (((LONGLONG)(micros)) * NANOS_TO_100NS(1000))
 #define MILLIS_TO_100NS(milli) (((LONGLONG)(milli)) * MICROS_TO_100NS(1000))
-
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /*
  * @implemented

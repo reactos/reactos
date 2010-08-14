@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDCDVD_H
-#define __NTDDCDVD_H
+#ifndef _NTDDCDVD_
+#define _NTDDCDVD_
 
 #include "ntddstor.h"
 
@@ -205,4 +205,4 @@ typedef struct _DVD_REGION {
 }
 #endif
 
-#endif /* __NTDDCDVD_H */
+#endif /* _NTDDCDVD_ */

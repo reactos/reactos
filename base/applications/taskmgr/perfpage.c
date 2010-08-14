@@ -51,11 +51,14 @@ HWND  hPerformancePageTotalsHandleCountEdit;          /*  Total Handles Edit Con
 HWND  hPerformancePageTotalsProcessCountEdit;         /*  Total Processes Edit Control */
 HWND  hPerformancePageTotalsThreadCountEdit;          /*  Total Threads Edit Control */
 
+#ifdef RUN_PERF_PAGE
+static HANDLE hPerformanceThread = NULL;
+static DWORD  dwPerformanceThread;
+#endif
 
 static int     nPerformancePageWidth;
 static int     nPerformancePageHeight;
 static int     lastX, lastY;
-static HANDLE  hPerformancePageEvent = NULL;    /*  When this event becomes signaled then we refresh the performance page */
 DWORD WINAPI   PerformancePageRefreshThread(void *lpParameter);
 
 void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference, int pos)
@@ -94,12 +97,12 @@ void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference,
     InvalidateRect(hCntrl, NULL, TRUE);
 }
 
-void AdjustControlPostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+static void AdjustControlPostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
 {
     AdjustFrameSize(hCntrl, hDlg, nXDifference, nYDifference, 0);
 }
 
-void AdjustCntrlPos(int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
+static void AdjustCntrlPos(int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
 {
     AdjustFrameSize(GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference, 0);
 }
@@ -110,9 +113,6 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     RECT  rc;
     int   nXDifference;
     int   nYDifference;
-#ifdef RUN_PERF_PAGE
-    HANDLE  hRefreshThread = NULL;
-#endif
 /*     HDC hdc; */
 /*     PAINTSTRUCT ps; */
 
@@ -121,7 +121,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
         GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
 #ifdef RUN_PERF_PAGE
-        CloseHandle(hRefreshThread);
+        EndLocalThread(&hPerformanceThread, dwPerformanceThread);
 #endif
         break;
 
@@ -192,7 +192,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         GraphCtrl_SetPlotColor(&PerformancePageMemUsageHistoryGraph, 0, RGB(255, 255, 0)) ;
         /*  Start our refresh thread */
 #ifdef RUN_PERF_PAGE
-        hRefreshThread = CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, NULL);
+        hPerformanceThread = CreateThread(NULL, 0, PerformancePageRefreshThread, NULL, 0, &dwPerformanceThread);
 #endif
 
         /*
@@ -303,9 +303,11 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void RefreshPerformancePage(void)
 {
+#ifdef RUN_PERF_PAGE
     /*  Signal the event so that our refresh thread */
     /*  will wake up and refresh the performance page */
-    SetEvent(hPerformancePageEvent);
+    PostThreadMessage(dwPerformanceThread, WM_TIMER, 0, 0);
+#endif
 }
 
 DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
@@ -332,35 +334,21 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
     WCHAR  Text[260];
     WCHAR  szMemUsage[256];
 
-    /*  Create the event */
-    hPerformancePageEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
-
-    /*  If we couldn't create the event then exit the thread */
-    if (!hPerformancePageEvent)
-        return 0;
+    MSG    msg;
 
     LoadStringW(hInst, IDS_STATUS_MEMUSAGE, szMemUsage, 256);
 
     while (1)
     {
-        DWORD  dwWaitVal;
-
         int nBarsUsed1;
         int nBarsUsed2;
 
-        /*  Wait on the event */
-        dwWaitVal = WaitForSingleObject(hPerformancePageEvent, INFINITE);
-
-        /*  If the wait failed then the event object must have been */
-        /*  closed and the task manager is exiting so exit this thread */
-        if (dwWaitVal == WAIT_FAILED)
+        /*  Wait for an the event or application close */
+        if (GetMessage(&msg, NULL, 0, 0) <= 0)
             return 0;
 
-        if (dwWaitVal == WAIT_OBJECT_0)
+        if (msg.message == WM_TIMER)
         {
-            /*  Reset our event */
-            ResetEvent(hPerformancePageEvent);
-
             /*
              *  Update the commit charge info
              */
@@ -449,8 +437,6 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
             nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
 
-
-
             GraphCtrl_AppendPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage, 0.0, 0.0);
             GraphCtrl_AppendPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2, 0.0, 0.0);
             /* PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ; */
@@ -458,7 +444,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             InvalidateRect(hPerformancePageCpuUsageHistoryGraph, NULL, FALSE);
         }
     }
-        return 0;
+    return 0;
 }
 
 void PerformancePage_OnViewShowKernelTimes(void)

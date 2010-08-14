@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDVDEO_H
-#define __NTDDVDEO_H
+#ifndef _NTDDVDEO_
+#define _NTDDVDEO_
 
 #ifdef __cplusplus
 extern "C" {
@@ -473,4 +473,4 @@ typedef struct _ENG_EVENT
 }
 #endif
 
-#endif /* __NTDDVDEO_H */
+#endif /* _NTDDVDEO_ */

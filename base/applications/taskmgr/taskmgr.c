@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- * TaskMgr.c : Defines the entry point for the application.
+ * taskmgr.c : Defines the entry point for the application.
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *                2005         Klemens Friedl <frik85@reactos.at>
@@ -856,11 +856,6 @@ void TaskManager_OnViewUpdateSpeed(DWORD dwSpeed)
     SetUpdateSpeed(hMainWnd);
 }
 
-void TaskManager_OnViewRefresh(void)
-{
-    PostMessageW(hMainWnd, WM_TIMER, 0, 0);
-}
-
 void TaskManager_OnTabWndSelChange(void)
 {
     int    i;
@@ -1012,3 +1007,27 @@ LPWSTR GetLastErrorText(LPWSTR lpszBuf, DWORD dwSize)
     }
     return lpszBuf;
 }
+
+DWORD EndLocalThread(HANDLE *hThread, DWORD dwThread)
+{
+    DWORD dwExitCodeThread = 0;
+
+    if (*hThread != NULL) {
+        PostThreadMessage(dwThread,WM_QUIT,0,0);
+        for (;;) {
+            MSG msg;
+
+            if (WAIT_OBJECT_0 == WaitForSingleObject(*hThread, 500))
+                break;
+            while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
+        }
+        GetExitCodeThread(*hThread, &dwExitCodeThread);
+        CloseHandle(*hThread);
+        *hThread = NULL;
+    }
+    return dwExitCodeThread;
+}
+

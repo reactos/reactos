@@ -367,7 +367,7 @@ typedef HRESULT (*LPDDENUMVIDEOCALLBACK)(LPDDVIDEOPORTCAPS, LPVOID);
 #endif
 
 #ifdef __cplusplus
-};
+}
 #endif
 #endif
 #endif

@@ -415,7 +415,7 @@ WinMain(
 
 	/* Tell kernel that CurrentControlSet is good (needed
 	 * to support Last good known configuration boot) */
-	NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED);
+	NtInitializeRegistry(CM_BOOT_FLAG_ACCEPTED | 1);
 
 	/* Message loop for the SAS window */
 	while (GetMessageW(&Msg, WLSession->SASWindow, 0, 0))

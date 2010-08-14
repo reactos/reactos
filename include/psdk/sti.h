@@ -173,7 +173,7 @@ DECLARE_INTERFACE_(IStillImageW, IUnknown)
 #endif
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #include <poppack.h>

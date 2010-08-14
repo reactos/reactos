@@ -1851,6 +1851,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Update progress bar */
     InbvUpdateProgressBar(90);
 
+    /* Enough fun for now */
+    AllowPagedPool = FALSE;
+
     /* Launch initial process */
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
@@ -1860,9 +1863,6 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
-
-    /* Enough fun for now */
-    AllowPagedPool = FALSE;
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);

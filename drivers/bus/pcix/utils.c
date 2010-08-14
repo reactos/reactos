@@ -1041,6 +1041,24 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
     return !(HackFlags & PCI_HACK_NO_PM_CAPS);
 }
 
+PCI_DEVICE_TYPES
+NTAPI
+PciClassifyDeviceType(IN PPCI_PDO_EXTENSION PdoExtension)
+{
+    ASSERT(PdoExtension->ExtensionType == PciPdoExtensionType);
+
+    /* Differenriate between devices and bridges */
+    if (PdoExtension->BaseClass != PCI_CLASS_BRIDGE_DEV) return PciTypeDevice;
+
+    /* The PCI Bus driver handles only CardBus and PCI bridges (plus host) */
+    if (PdoExtension->SubClass == PCI_SUBCLASS_BR_HOST) return PciTypeHostBridge;
+    if (PdoExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) return PciTypePciBridge;
+    if (PdoExtension->SubClass == PCI_SUBCLASS_BR_CARDBUS) return PciTypeCardbusBridge;
+
+    /* Any other kind of bridge is treated like a device */
+    return PciTypeDevice;
+}
+
 ULONG_PTR
 NTAPI
 PciExecuteCriticalSystemRoutine(IN ULONG_PTR IpiContext)

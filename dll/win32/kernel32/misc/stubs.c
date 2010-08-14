@@ -958,17 +958,6 @@ SetThreadStackGuarantee(IN OUT PULONG StackSizeInBytes)
     return FALSE;
 }
 
-HANDLE
-WINAPI
-ReOpenFile(IN HANDLE hOriginalFile,
-           IN DWORD dwDesiredAccess,
-           IN DWORD dwShareMode,
-           IN DWORD dwFlags)
-{
-    STUB;
-    return INVALID_HANDLE_VALUE;
-}
-
 BOOL
 WINAPI
 SetProcessWorkingSetSizeEx(IN HANDLE hProcess,
@@ -1255,6 +1244,137 @@ SetConsoleOS2OemFormat(BOOL bUnknown)
 BOOL
 WINAPI
 UnregisterConsoleIME(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BaseCheckRunApp(IN DWORD Unknown1,
+                IN DWORD Unknown2,
+                IN DWORD Unknown3,
+                IN DWORD Unknown4,
+                IN DWORD Unknown5,
+                IN DWORD Unknown6,
+                IN DWORD Unknown7,
+                IN DWORD Unknown8,
+                IN DWORD Unknown9,
+                IN DWORD Unknown10)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+BasepCheckWinSaferRestrictions(IN DWORD Unknown1,
+                               IN DWORD Unknown2,
+                               IN DWORD Unknown3,
+                               IN DWORD Unknown4,
+                               IN DWORD Unknown5,
+                               IN DWORD Unknown6)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+NumaVirtualQueryNode(IN DWORD Unknown1,
+                     IN DWORD Unknown2,
+                     IN DWORD Unknown3,
+                     IN DWORD Unknown4)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+ReOpenFile(IN HANDLE hOriginalFile,
+           IN DWORD dwDesiredAccess,
+           IN DWORD dwShareMode,
+           IN DWORD dwFlags)
+{
+   STUB;
+   return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetLastConsoleEventActive(VOID)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetConsoleCommandHistoryMode(IN DWORD dwMode)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetLocalPrimaryComputerNameA(IN DWORD Unknown1,
+                             IN DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+SetLocalPrimaryComputerNameW(IN DWORD Unknown1,
+                             IN DWORD Unknown2)
+{
+    STUB;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+WINAPI
+SetTermsrvAppInstallMode(IN BOOL bInstallMode)
+{
+    STUB;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+TermsrvAppInstallMode(VOID)
 {
     STUB;
     return FALSE;

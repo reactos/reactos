@@ -435,11 +435,11 @@ EngBitBlt(SURFOBJ *DestObj,
         clippingType = ClipRegion->iDComplexity;
     }
 
-    if (R4_MASK == rop4)
+    /*if (R4_MASK == rop4)
     {
         BltRectFunc = BltMask;
     }
-    else if (ROP3_TO_ROP4(PATCOPY) == rop4)
+    else */if (ROP3_TO_ROP4(PATCOPY) == rop4)
     {
         if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
             BltRectFunc = CallDibBitBlt;

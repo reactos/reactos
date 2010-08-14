@@ -1242,7 +1242,7 @@ typedef struct _KDEVICE_QUEUE {
   CSHORT Size;
   LIST_ENTRY DeviceListHead;
   KSPIN_LOCK Lock;
-  #if defined(_AMD64_)
+# if defined(_AMD64_)
   _ANONYMOUS_UNION union {
     BOOLEAN Busy;
     _ANONYMOUS_STRUCT struct {
@@ -1250,9 +1250,9 @@ typedef struct _KDEVICE_QUEUE {
       LONG64 Hint:56;
     } DUMMYSTRUCTNAME;
   } DUMMYUNIONNAME;
-  #else
+# else
   BOOLEAN Busy;
-  #endif
+# endif
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
 #define TIMER_EXPIRED_INDEX_BITS        6
@@ -1374,9 +1374,9 @@ typedef struct _KTIMER {
   ULARGE_INTEGER DueTime;
   LIST_ENTRY TimerListEntry;
   struct _KDPC *Dpc;
-  #if !defined(_X86_)
+# if !defined(_X86_)
   ULONG Processor;
-  #endif
+# endif
   ULONG Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
 
@@ -5692,30 +5692,35 @@ typedef struct _SCATTER_GATHER_ELEMENT {
   ULONG_PTR Reserved;
 } SCATTER_GATHER_ELEMENT, *PSCATTER_GATHER_ELEMENT;
 
-#if defined(_MSC_EXTENSIONS)
+#if defined(_MSC_EXTENSIONS) || defined(__GNUC__)
 
+#if defined(_MSC_VER)
 #if _MSC_VER >= 1200
 #pragma warning(push)
 #endif
 #pragma warning(disable:4200)
+#endif /* _MSC_VER */
+
 typedef struct _SCATTER_GATHER_LIST {
   ULONG NumberOfElements;
   ULONG_PTR Reserved;
   SCATTER_GATHER_ELEMENT Elements[1];
 } SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
+#if defined(_MSC_VER)
 #if _MSC_VER >= 1200
 #pragma warning(pop)
 #else
 #pragma warning(default:4200)
 #endif
+#endif /* _MSC_VER */
 
-#else
+#else /* defined(_MSC_EXTENSIONS) || defined(__GNUC__) */
 
 struct _SCATTER_GATHER_LIST;
 typedef struct _SCATTER_GATHER_LIST SCATTER_GATHER_LIST, *PSCATTER_GATHER_LIST;
 
-#endif
+#endif /* defined(_MSC_EXTENSIONS) || defined(__GNUC__) */
 
 typedef NTSTATUS
 (NTAPI DRIVER_ADD_DEVICE)(
@@ -7803,9 +7808,15 @@ _KeQueryTickCount(
   OUT PLARGE_INTEGER CurrentCount)
 {
   for (;;) {
+#ifdef NONAMELESSUNION
+    CurrentCount->s.HighPart = KeTickCount.High1Time;
+    CurrentCount->s.LowPart = KeTickCount.LowPart;
+    if (CurrentCount->s.HighPart == KeTickCount.High2Time) break;
+#else
     CurrentCount->HighPart = KeTickCount.High1Time;
     CurrentCount->LowPart = KeTickCount.LowPart;
     if (CurrentCount->HighPart == KeTickCount.High2Time) break;
+#endif
     YieldProcessor();
   }
 }
@@ -12748,7 +12759,11 @@ IoSkipCurrentIrpStackLocation(
 {
   ASSERT(Irp->CurrentLocation <= Irp->StackCount);
   Irp->CurrentLocation++;
+#ifdef NONAMELESSUNION
+  Irp->Tail.Overlay.s.u.CurrentStackLocation++;
+#else
   Irp->Tail.Overlay.CurrentStackLocation++;
+#endif
 }
 
 FORCEINLINE
@@ -12758,7 +12773,11 @@ IoSetNextIrpStackLocation(
 {
   ASSERT(Irp->CurrentLocation > 0);
   Irp->CurrentLocation--;
+#ifdef NONAMELESSUNION
+  Irp->Tail.Overlay.s.u.CurrentStackLocation--;
+#else
   Irp->Tail.Overlay.CurrentStackLocation--;
+#endif
 }
 
 FORCEINLINE
@@ -12767,7 +12786,11 @@ IoGetNextIrpStackLocation(
   IN PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation > 0);
+#ifdef NONAMELESSUNION
+  return ((Irp)->Tail.Overlay.s.u.CurrentStackLocation - 1 );
+#else
   return ((Irp)->Tail.Overlay.CurrentStackLocation - 1 );
+#endif
 }
 
 FORCEINLINE
@@ -12858,7 +12881,11 @@ IoGetCurrentIrpStackLocation(
   IN PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation <= Irp->StackCount + 1);
+#ifdef NONAMELESSUNION
+  return Irp->Tail.Overlay.s.u.CurrentStackLocation;
+#else
   return Irp->Tail.Overlay.CurrentStackLocation;
+#endif
 }
 
 FORCEINLINE
@@ -13243,7 +13270,11 @@ ExpInterlockedPushEntrySList(
 
 #else /* !defined(_WIN64) */
 
+#ifdef NONAMELESSUNION
+#define ExQueryDepthSList(listhead) (listhead)->s.Depth
+#else
 #define ExQueryDepthSList(listhead) (listhead)->Depth
+#endif
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
@@ -13300,6 +13331,15 @@ ExAllocateFromPagedLookasideList(
   PVOID Entry;
 
   Lookaside->L.TotalAllocates++;
+#ifdef NONAMELESSUNION
+  Entry = InterlockedPopEntrySList(&Lookaside->L.u.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.u2.AllocateMisses++;
+    Entry = (Lookaside->L.u4.Allocate)(Lookaside->L.Type,
+                                       Lookaside->L.Size,
+                                       Lookaside->L.Tag);
+  }
+#else /* NONAMELESSUNION */
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
     Lookaside->L.AllocateMisses++;
@@ -13307,6 +13347,7 @@ ExAllocateFromPagedLookasideList(
                                     Lookaside->L.Size,
                                     Lookaside->L.Tag);
   }
+#endif /* NONAMELESSUNION */
   return Entry;
 }
 
@@ -13317,12 +13358,21 @@ ExFreeToPagedLookasideList(
   IN PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
+#ifdef NONAMELESSUNION
+  if (ExQueryDepthSList(&Lookaside->L.u.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.u3.FreeMisses++;
+    (Lookaside->L.u5.Free)(Entry);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->L.u.ListHead, (PSLIST_ENTRY)Entry);
+  }
+#else /* NONAMELESSUNION */
   if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
     Lookaside->L.FreeMisses++;
     (Lookaside->L.Free)(Entry);
   } else {
     InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
   }
+#endif /* NONAMELESSUNION */
 }
 
 #endif /* _WIN2K_COMPAT_SLIST_USAGE */
@@ -13936,6 +13986,16 @@ ExAllocateFromLookasideListEx(
   PVOID Entry;
 
   Lookaside->L.TotalAllocates += 1;
+#ifdef NONAMELESSUNION
+  Entry = InterlockedPopEntrySList(&Lookaside->L.u.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.u2.AllocateMisses += 1;
+    Entry = (Lookaside->L.u4.AllocateEx)(Lookaside->L.Type,
+                                         Lookaside->L.Size,
+                                         Lookaside->L.Tag,
+                                         Lookaside);
+  }
+#else /* NONAMELESSUNION */
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
     Lookaside->L.AllocateMisses += 1;
@@ -13944,6 +14004,7 @@ ExAllocateFromLookasideListEx(
                                       Lookaside->L.Tag,
                                       Lookaside);
   }
+#endif /* NONAMELESSUNION */
   return Entry;
 }
 
@@ -13986,6 +14047,20 @@ ExAllocateFromNPagedLookasideList(
   PVOID Entry;
 
   Lookaside->L.TotalAllocates++;
+#ifdef NONAMELESSUNION
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+  Entry = ExInterlockedPopEntrySList(&Lookaside->L.u.ListHead,
+                                     &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
+  Entry = InterlockedPopEntrySList(&Lookaside->L.u.ListHead);
+#endif
+  if (Entry == NULL) {
+    Lookaside->L.u2.AllocateMisses++;
+    Entry = (Lookaside->L.u4.Allocate)(Lookaside->L.Type,
+                                       Lookaside->L.Size,
+                                       Lookaside->L.Tag);
+  }
+#else /* NONAMELESSUNION */
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
   Entry = ExInterlockedPopEntrySList(&Lookaside->L.ListHead,
                                      &Lookaside->Lock__ObsoleteButDoNotDelete);
@@ -13998,6 +14073,7 @@ ExAllocateFromNPagedLookasideList(
                                     Lookaside->L.Size,
                                     Lookaside->L.Tag);
   }
+#endif /* NONAMELESSUNION */
   return Entry;
 }
 
@@ -14007,6 +14083,20 @@ ExFreeToNPagedLookasideList(
   IN PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
+#ifdef NONAMELESSUNION
+  if (ExQueryDepthSList(&Lookaside->L.u.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.u3.FreeMisses++;
+    (Lookaside->L.u5.Free)(Entry);
+  } else {
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+      ExInterlockedPushEntrySList(&Lookaside->L.u.ListHead,
+                                  (PSLIST_ENTRY)Entry,
+                                  &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
+      InterlockedPushEntrySList(&Lookaside->L.u.ListHead, (PSLIST_ENTRY)Entry);
+#endif
+   }
+#else /* NONAMELESSUNION */
   if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
     Lookaside->L.FreeMisses++;
     (Lookaside->L.Free)(Entry);
@@ -14019,6 +14109,7 @@ ExFreeToNPagedLookasideList(
       InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
 #endif
    }
+#endif /* NONAMELESSUNION */
 }
 
 /******************************************************************************
@@ -14225,7 +14316,7 @@ WmiTraceMessage(
 #endif
 #endif /* RUN_WPP */
 
- #if (NTDDI_VERSION >= NTDDI_WINXP)
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
 NTSTATUS

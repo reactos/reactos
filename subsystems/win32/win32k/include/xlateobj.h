@@ -48,4 +48,6 @@ VOID NTAPI EXLATEOBJ_vInitXlateFromDCs(PEXLATEOBJ pexlo, PDC pdcSrc, PDC pdcDst)
 VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(PEXLATEOBJ pexlo, PPALETTE ppalDst, ULONG Color0, ULONG Color1);
 VOID NTAPI EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo);
 
+extern XLATEOBJ* gpxloTrivial;
+
 //#define XLATEOBJ_iXlate(pxo, Color) ((EXLATEOBJ*)pxo)->pfnXlate(pxo, Color)

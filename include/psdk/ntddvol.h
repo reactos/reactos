@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDVOL_H
-#define __NTDDVOL_H
+#ifndef _NTDDVOL_
+#define _NTDDVOL_
 
 #ifdef __cplusplus
 extern "C" {
@@ -132,4 +132,4 @@ typedef struct _VOLUME_FAILOVER_SET {
 }
 #endif
 
-#endif /* __NTDDVOL_H */
+#endif /* _NTDDVOL_ */

@@ -263,11 +263,7 @@ FatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     FsRtlEnterFileSystem();
 
     /* Set Top Level IRP if not set */
-    if (IoGetTopLevelIrp() == NULL)
-    {
-        IoSetTopLevelIrp(Irp);
-        TopLevel = TRUE;
-    }
+    TopLevel = FatIsTopLevelIrp(Irp);
 
     /* Build an irp context */
     IrpContext = FatBuildIrpContext(Irp, CanWait);
@@ -286,10 +282,392 @@ FatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 NTSTATUS
 NTAPI
+FatSetEndOfFileInfo(IN PFAT_IRP_CONTEXT IrpContext,
+                    IN PIRP Irp,
+                    IN PFILE_OBJECT FileObject,
+                    IN PVCB Vcb,
+                    IN PFCB Fcb)
+{
+    PFILE_END_OF_FILE_INFORMATION Buffer;
+    ULONG NewFileSize;
+    ULONG InitialFileSize;
+    ULONG InitialValidDataLength;
+    //ULONG InitialValidDataToDisk;
+    BOOLEAN CacheMapInitialized = FALSE;
+    BOOLEAN ResourceAcquired = FALSE;
+    NTSTATUS Status;
+
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+
+    if (FatNodeType(Fcb) != FAT_NTC_FCB)
+    {
+        /* Trying to change size of a dir */
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        return Status;
+    }
+
+    /* Validate new size */
+    if (!FatIsIoRangeValid(Buffer->EndOfFile, 0))
+    {
+        Status = STATUS_DISK_FULL;
+        return Status;
+    }
+
+    NewFileSize = Buffer->EndOfFile.LowPart;
+
+    /* Lookup allocation size if needed */
+    if (Fcb->Header.AllocationSize.QuadPart == (LONGLONG)-1)
+        UNIMPLEMENTED;//FatLookupFileAllocationSize(IrpContext, Fcb);
+
+    /* Cache the file if there is a data section */
+    if (FileObject->SectionObjectPointer->DataSectionObject &&
+        (FileObject->SectionObjectPointer->SharedCacheMap == NULL) &&
+        !FlagOn(Irp->Flags, IRP_PAGING_IO))
+    {
+        if (FlagOn(FileObject->Flags, FO_CLEANUP_COMPLETE))
+        {
+            /* This is a really weird condition */
+            UNIMPLEMENTED;
+            //Raise(STATUS_FILE_CLOSED);
+        }
+
+        /*  Initialize the cache map */
+        CcInitializeCacheMap(FileObject,
+                             (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
+                             FALSE,
+                             &FatGlobalData.CacheMgrCallbacks,
+                             Fcb);
+
+        CacheMapInitialized = TRUE;
+    }
+
+    /* Lazy write case */
+    if (IoGetCurrentIrpStackLocation(Irp)->Parameters.SetFile.AdvanceOnly)
+    {
+        if (!IsFileDeleted(Fcb) &&
+            (Fcb->Condition == FcbGood))
+        {
+            /* Clamp the new file size */
+            if (NewFileSize >= Fcb->Header.FileSize.LowPart)
+                NewFileSize = Fcb->Header.FileSize.LowPart;
+
+            ASSERT(NewFileSize <= Fcb->Header.AllocationSize.LowPart);
+
+            /* Never reduce the file size here! */
+
+            // TODO: Actually change file size
+            DPRINT1("Actually changing file size is missing\n");
+
+            /* Notify about file size change */
+            FatNotifyReportChange(IrpContext,
+                                  Vcb,
+                                  Fcb,
+                                  FILE_NOTIFY_CHANGE_SIZE,
+                                  FILE_ACTION_MODIFIED);
+        }
+        else
+        {
+            DPRINT1("Cannot set size on deleted file\n");
+        }
+
+        Status = STATUS_SUCCESS;
+        return Status;
+    }
+
+    if ( NewFileSize > Fcb->Header.AllocationSize.LowPart )
+    {
+        // TODO: Increase file size
+        DPRINT1("Actually changing file size is missing\n");
+    }
+
+    if (Fcb->Header.FileSize.LowPart != NewFileSize)
+    {
+        if (NewFileSize < Fcb->Header.FileSize.LowPart)
+        {
+            if (!MmCanFileBeTruncated(FileObject->SectionObjectPointer,
+                                      &Buffer->EndOfFile))
+            {
+                Status = STATUS_USER_MAPPED_FILE;
+
+                /* Free up resources if necessary */
+                if (CacheMapInitialized)
+                    CcUninitializeCacheMap(FileObject, NULL, NULL);
+
+                return Status;
+            }
+
+            ResourceAcquired = ExAcquireResourceExclusiveLite(Fcb->Header.PagingIoResource, TRUE);
+        }
+
+        /* Set new file sizes */
+        InitialFileSize = Fcb->Header.FileSize.LowPart;
+        InitialValidDataLength = Fcb->Header.ValidDataLength.LowPart;
+        //InitialValidDataToDisk = Fcb->ValidDataToDisk;
+
+        Fcb->Header.FileSize.LowPart = NewFileSize;
+
+        /* Adjust valid data length if new size is less than that */
+        if (Fcb->Header.ValidDataLength.LowPart > NewFileSize)
+            Fcb->Header.ValidDataLength.LowPart = NewFileSize;
+
+        //if (Fcb->ValidDataToDisk > NewFileSize)
+        //    Fcb->ValidDataToDisk = NewFileSize;
+
+        DPRINT1("New file size is 0x%08lx\n", NewFileSize);
+
+        /* Update cache mapping */
+        CcSetFileSizes(FileObject,
+                       (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
+
+        /* Notify about size change */
+        FatNotifyReportChange(IrpContext,
+                              Vcb,
+                              Fcb,
+                              FILE_NOTIFY_CHANGE_SIZE,
+                              FILE_ACTION_MODIFIED);
+
+        /* Set truncate on close flag */
+        SetFlag(Fcb->State, FCB_STATE_TRUNCATE_ON_CLOSE);
+    }
+
+    /* Set modified flag */
+    FileObject->Flags |= FO_FILE_MODIFIED;
+
+    /* Free up resources if necessary */
+    if (CacheMapInitialized)
+        CcUninitializeCacheMap(FileObject, NULL, NULL);
+
+    if (ResourceAcquired)
+        ExReleaseResourceLite(Fcb->Header.PagingIoResource);
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+FatiSetInformation(IN PFAT_IRP_CONTEXT IrpContext,
+                   IN PIRP Irp)
+{
+    PFILE_OBJECT FileObject;
+    PIO_STACK_LOCATION IrpSp;
+    FILE_INFORMATION_CLASS InfoClass;
+    TYPE_OF_OPEN TypeOfOpen;
+    PVCB Vcb;
+    PFCB Fcb;
+    PCCB Ccb;
+    LONG Length;
+    PVOID Buffer;
+    NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN VcbAcquired = FALSE, FcbAcquired = FALSE;
+
+    /* Get IRP stack location */
+    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    /* Get the file object */
+    FileObject = IrpSp->FileObject;
+
+    /* Copy variables to something with shorter names */
+    InfoClass = IrpSp->Parameters.SetFile.FileInformationClass;
+    Length = IrpSp->Parameters.SetFile.Length;
+    Buffer = Irp->AssociatedIrp.SystemBuffer;
+
+    DPRINT("FatiSetInformation\n", 0);
+    DPRINT("\tIrp                  = %08lx\n", Irp);
+    DPRINT("\tLength               = %08lx\n", Length);
+    DPRINT("\tFileInformationClass = %08lx\n", InfoClass);
+    DPRINT("\tFileObject           = %08lx\n", IrpSp->Parameters.SetFile.FileObject);
+    DPRINT("\tBuffer               = %08lx\n", Buffer);
+
+    TypeOfOpen = FatDecodeFileObject(FileObject, &Vcb, &Fcb, &Ccb);
+
+    DPRINT("Vcb %p, Fcb %p, Ccb %p, open type %d\n", Vcb, Fcb, Ccb, TypeOfOpen);
+
+    switch (TypeOfOpen)
+    {
+    case UserVolumeOpen:
+        Status = STATUS_INVALID_PARAMETER;
+        /* Complete request and return status */
+        FatCompleteRequest(IrpContext, Irp, Status);
+        return Status;
+    case UserFileOpen:
+        /* Check oplocks */
+        if (!FlagOn(Fcb->State, FCB_STATE_PAGEFILE) &&
+            ((InfoClass == FileEndOfFileInformation) ||
+            (InfoClass == FileAllocationInformation)))
+        {
+            Status = FsRtlCheckOplock(&Fcb->Fcb.Oplock,
+                                      Irp,
+                                      IrpContext,
+                                      NULL,
+                                      NULL);
+
+            if (Status != STATUS_SUCCESS)
+            {
+                /* Complete request and return status */
+                FatCompleteRequest(IrpContext, Irp, Status);
+                return Status;
+            }
+
+            /* Update Fast IO flag */
+            Fcb->Header.IsFastIoPossible = FatIsFastIoPossible(Fcb);
+        }
+        break;
+
+    case UserDirectoryOpen:
+        break;
+
+    default:
+        Status = STATUS_INVALID_PARAMETER;
+        /* Complete request and return status */
+        FatCompleteRequest(IrpContext, Irp, Status);
+        return Status;
+    }
+
+    /* If it's a root DCB - fail */
+    if (FatNodeType(Fcb) == FAT_NTC_ROOT_DCB)
+    {
+        if (InfoClass == FileDispositionInformation)
+            Status = STATUS_CANNOT_DELETE;
+        else
+            Status = STATUS_INVALID_PARAMETER;
+
+        /* Complete request and return status */
+        FatCompleteRequest(IrpContext, Irp, Status);
+        return Status;
+    }
+
+    /* Acquire the volume lock if needed */
+    if (InfoClass == FileDispositionInformation ||
+        InfoClass == FileRenameInformation)
+    {
+        if (!FatAcquireExclusiveVcb(IrpContext, Vcb))
+        {
+            UNIMPLEMENTED;
+        }
+
+        VcbAcquired = TRUE;
+    }
+
+    /* Acquire FCB lock */
+    if (!FlagOn(Fcb->State, FCB_STATE_PAGEFILE))
+    {
+        if (!FatAcquireExclusiveFcb(IrpContext, Fcb))
+        {
+            UNIMPLEMENTED;
+        }
+
+        FcbAcquired = TRUE;
+    }
+
+    // TODO: VerifyFcb
+
+    switch (InfoClass)
+    {
+    case FileBasicInformation:
+        //Status = FatSetBasicInfo(IrpContext, Irp, Fcb, Ccb);
+        DPRINT1("FileBasicInformation\n");
+        break;
+
+    case FileDispositionInformation:
+        if (FlagOn(Vcb->State, VCB_STATE_FLAG_DEFERRED_FLUSH) &&
+            !FlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT))
+        {
+            UNIMPLEMENTED;
+        }
+        else
+        {
+            //Status = FatSetDispositionInfo(IrpContext, Irp, FileObject, Fcb);
+            DPRINT1("FileDispositionInformation\n");
+        }
+
+        break;
+
+    case FileRenameInformation:
+        if (!FlagOn(IrpContext->Flags, IRPCONTEXT_CANWAIT))
+        {
+            UNIMPLEMENTED;
+        }
+        else
+        {
+            //Status = FatSetRenameInfo(IrpContext, Irp, Vcb, Fcb, Ccb);
+            DPRINT1("FileRenameInformation\n");
+
+            /* NOTE: Request must not be completed here!
+            That's why Irp/IrpContext are set to NULL */
+            if (Status == STATUS_PENDING)
+            {
+                Irp = NULL;
+                IrpContext = NULL;
+            }
+        }
+        break;
+
+    case FilePositionInformation:
+        //Status = FatSetPositionInfo(IrpContext, Irp, FileObject);
+        DPRINT1("FilePositionInformation\n");
+        break;
+
+    case FileLinkInformation:
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        break;
+
+    case FileAllocationInformation:
+        //Status = FatSetAllocationInfo(IrpContext, Irp, Fcb, FileObject);
+        DPRINT1("FileAllocationInformation\n");
+        break;
+
+    case FileEndOfFileInformation:
+        Status = FatSetEndOfFileInfo(IrpContext, Irp, FileObject, Vcb, Fcb);
+        break;
+
+    default:
+        Status = STATUS_INVALID_PARAMETER;
+    }
+
+    /* Release locks */
+    if (FcbAcquired) FatReleaseFcb(IrpContext, Fcb);
+    if (VcbAcquired) FatReleaseVcb(IrpContext, Vcb);
+
+    /* Complete request and return status */
+    FatCompleteRequest(IrpContext, Irp, Status);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 FatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
-    DPRINT1("FatSetInformation()\n");
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    BOOLEAN TopLevel, CanWait;
+    PFAT_IRP_CONTEXT IrpContext;
+
+    CanWait = TRUE;
+    TopLevel = FALSE;
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+
+    /* Get CanWait flag */
+    if (IoGetCurrentIrpStackLocation(Irp)->FileObject != NULL)
+        CanWait = IoIsOperationSynchronous(Irp);
+
+    /* Enter FsRtl critical region */
+    FsRtlEnterFileSystem();
+
+    /* Set Top Level IRP if not set */
+    TopLevel = FatIsTopLevelIrp(Irp);
+
+    /* Build an irp context */
+    IrpContext = FatBuildIrpContext(Irp, CanWait);
+
+    /* Perform the actual read */
+    Status = FatiSetInformation(IrpContext, Irp);
+
+    /* Restore top level Irp */
+    if (TopLevel) IoSetTopLevelIrp(NULL);
+
+    /* Leave FsRtl critical region */
+    FsRtlExitFileSystem();
+
+    return Status;
 }
 
 /* EOF */

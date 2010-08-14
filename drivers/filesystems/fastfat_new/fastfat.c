@@ -14,6 +14,7 @@
 /* GLOBALS ******************************************************************/
 
 FAT_GLOBAL_DATA FatGlobalData;
+FAST_MUTEX FatCloseQueueMutex;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -42,6 +43,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     RtlZeroMemory(&FatGlobalData, sizeof(FAT_GLOBAL_DATA));
     FatGlobalData.DriverObject = DriverObject;
     FatGlobalData.DiskDeviceObject = DeviceObject;
+    FatGlobalData.SystemProcess = PsGetCurrentProcess();
 
     /* Fill major function handlers */
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = FatClose;
@@ -107,6 +109,12 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     /* Initialize synchronization resource for the global data */
     ExInitializeResourceLite(&FatGlobalData.Resource);
+
+    /* Initialize queued close stuff */
+    InitializeListHead(&FatGlobalData.AsyncCloseList);
+    InitializeListHead(&FatGlobalData.DelayedCloseList);
+    FatGlobalData.FatCloseItem = IoAllocateWorkItem(DeviceObject);
+    ExInitializeFastMutex(&FatCloseQueueMutex);
 
     /* Initialize global VCB list */
     InitializeListHead(&FatGlobalData.VcbListHead);
@@ -317,7 +325,7 @@ FatDecodeFileObject(IN PFILE_OBJECT FileObject,
 
             TypeOfOpen = (*Ccb == NULL ? DirectoryFile : UserDirectoryOpen);
 
-            DPRINT1("Referencing a directory: %wZ\n", &(*FcbOrDcb)->FullFileName);
+            DPRINT("Referencing a directory: %wZ\n", &(*FcbOrDcb)->FullFileName);
             break;
 
         /* File */
@@ -508,6 +516,47 @@ FatMapUserBuffer(PIRP Irp)
         return Irp->UserBuffer;
     else
         return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+}
+
+BOOLEAN
+NTAPI
+FatIsTopLevelIrp(IN PIRP Irp)
+{
+    if (!IoGetTopLevelIrp())
+    {
+        IoSetTopLevelIrp(Irp);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+VOID
+NTAPI
+FatNotifyReportChange(IN PFAT_IRP_CONTEXT IrpContext,
+                      IN PVCB Vcb,
+                      IN PFCB Fcb,
+                      IN ULONG Filter,
+                      IN ULONG Action)
+{
+    if (Fcb->FullFileName.Buffer == NULL)
+        FatSetFullFileNameInFcb(IrpContext, Fcb);
+
+    ASSERT(Fcb->FullFileName.Length != 0 );
+    ASSERT(Fcb->FileNameLength != 0 );
+    ASSERT(Fcb->FullFileName.Length > Fcb->FileNameLength );
+    ASSERT(Fcb->FullFileName.Buffer[(Fcb->FullFileName.Length - Fcb->FileNameLength)/sizeof(WCHAR) - 1] == L'\\' );
+
+    FsRtlNotifyFullReportChange(Vcb->NotifySync,
+                                &Vcb->NotifyList,
+                                (PSTRING)&Fcb->FullFileName,
+                                (USHORT)(Fcb->FullFileName.Length -
+                                         Fcb->FileNameLength),
+                                NULL,
+                                NULL,
+                                Filter,
+                                Action,
+                                NULL);
 }
 
 /* EOF */

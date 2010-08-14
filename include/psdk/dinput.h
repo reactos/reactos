@@ -1975,7 +1975,7 @@ extern const DIDATAFORMAT c_dfDIKeyboard;
 extern const DIDATAFORMAT c_dfDIJoystick;
 extern const DIDATAFORMAT c_dfDIJoystick2;
 #ifdef __cplusplus
-};
+}
 #endif
 
 /*****************************************************************************
@@ -2285,7 +2285,7 @@ HRESULT WINAPI DirectInputCreateW(HINSTANCE,DWORD,LPDIRECTINPUTW *,LPUNKNOWN);
 HRESULT WINAPI DirectInputCreateEx(HINSTANCE,DWORD,REFIID,LPVOID *,LPUNKNOWN);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* __WINE_DINPUT_H */

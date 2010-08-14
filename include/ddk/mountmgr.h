@@ -15,13 +15,12 @@ DEFINE_GUID(MOUNTDEV_MOUNTED_DEVICE_GUID, 0x53F5630D, 0xB6BF, 0x11D0, 0x94, 0xF2
 #define IOCTL_MOUNTMGR_DEFINE_UNIX_DRIVE CTL_CODE(MOUNTMGRCONTROLTYPE, 32, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #define IOCTL_MOUNTMGR_QUERY_UNIX_DRIVE  CTL_CODE(MOUNTMGRCONTROLTYPE, 33, METHOD_BUFFERED, FILE_READ_ACCESS)
 
-struct mountmgr_unix_drive
-{
-    ULONG  size;
-    ULONG  type;
-    WCHAR  letter;
-    USHORT mount_point_offset;
-    USHORT device_offset;
+struct mountmgr_unix_drive {
+  ULONG size;
+  ULONG type;
+  WCHAR letter;
+  USHORT mount_point_offset;
+  USHORT device_offset;
 };
 
 #define IOCTL_MOUNTMGR_CREATE_POINT \
@@ -51,20 +50,22 @@ struct mountmgr_unix_drive
 #define IOCTL_MOUNTDEV_QUERY_DEVICE_NAME \
   CTL_CODE(MOUNTDEVCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#define MOUNTMGR_IS_DRIVE_LETTER(s) ((s)->Length == 28 && (s)->Buffer[0] == '\\' && (s)->Buffer[1] == 'D' && \
-                                     (s)->Buffer[2] == 'o' && (s)->Buffer[3] == 's' && (s)->Buffer[4] == 'D' && \
-                                     (s)->Buffer[5] == 'e' && \ (s)->Buffer[6] == 'v' && (s)->Buffer[7] == 'i' && \
-                                     (s)->Buffer[8] == 'c' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == 's' && \
-                                     (s)->Buffer[11] == '\\' && (s)->Buffer[12] >= 'A' && \
-                                     (s)->Buffer[12] <= 'Z' && (s)->Buffer[13] == ':')
+#define MOUNTMGR_IS_DRIVE_LETTER(s)                                             \
+  ((s)->Length == 28 && (s)->Buffer[0] == '\\' && (s)->Buffer[1] == 'D' &&      \
+   (s)->Buffer[2] == 'o' && (s)->Buffer[3] == 's' && (s)->Buffer[4] == 'D' &&   \
+   (s)->Buffer[5] == 'e' && \ (s)->Buffer[6] == 'v' && (s)->Buffer[7] == 'i' && \
+   (s)->Buffer[8] == 'c' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == 's' &&  \
+   (s)->Buffer[11] == '\\' && (s)->Buffer[12] >= 'A' &&                         \
+   (s)->Buffer[12] <= 'Z' && (s)->Buffer[13] == ':')
 
-#define MOUNTMGR_IS_VOLUME_NAME(s) (((s)->Length == 96 || ((s)->Length == 98 && (s)->Buffer[48] == '\\')) && \
-                                     (s)->Buffer[0] == '\\'&& ((s)->Buffer[1] == '?' || (s)->Buffer[1] == '\\') && \
-                                     (s)->Buffer[2] == '?' && (s)->Buffer[3] == '\\' && (s)->Buffer[4] == 'V' && \
-                                     (s)->Buffer[5] == 'o' && (s)->Buffer[6] == 'l' && (s)->Buffer[7] == 'u' && \
-                                     (s)->Buffer[8] == 'm' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == '{' &&  \
-                                     (s)->Buffer[19] == '-' && (s)->Buffer[24] == '-' && (s)->Buffer[29] == '-' && \
-                                     (s)->Buffer[34] == '-' && (s)->Buffer[47] == '}')
+#define MOUNTMGR_IS_VOLUME_NAME(s)                                               \
+  (((s)->Length == 96 || ((s)->Length == 98 && (s)->Buffer[48] == '\\')) &&      \
+   (s)->Buffer[0] == '\\'&& ((s)->Buffer[1] == '?' || (s)->Buffer[1] == '\\') && \
+   (s)->Buffer[2] == '?' && (s)->Buffer[3] == '\\' && (s)->Buffer[4] == 'V' &&   \
+   (s)->Buffer[5] == 'o' && (s)->Buffer[6] == 'l' && (s)->Buffer[7] == 'u' &&    \
+   (s)->Buffer[8] == 'm' && (s)->Buffer[9] == 'e' && (s)->Buffer[10] == '{' &&   \
+   (s)->Buffer[19] == '-' && (s)->Buffer[24] == '-' && (s)->Buffer[29] == '-' && \
+   (s)->Buffer[34] == '-' && (s)->Buffer[47] == '}')
 
 typedef struct _MOUNTMGR_CREATE_POINT_INPUT {
   USHORT SymbolicLinkNameOffset;
@@ -128,10 +129,14 @@ typedef struct _MOUNTDEV_NAME {
 #define IOCTL_MOUNTMGR_QUERY_DOS_VOLUME_PATHS \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 13, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '\\')
-#define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '\\')
-#define MOUNTMGR_IS_NT_VOLUME_NAME(s) ( MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '?')
-#define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '?')
+#define MOUNTMGR_IS_DOS_VOLUME_NAME(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '\\')
+#define MOUNTMGR_IS_DOS_VOLUME_NAME_WB(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '\\')
+#define MOUNTMGR_IS_NT_VOLUME_NAME(s) \
+  ( MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 96 && (s)->Buffer[1] == '?')
+#define MOUNTMGR_IS_NT_VOLUME_NAME_WB(s) \
+  (MOUNTMGR_IS_VOLUME_NAME(s) && (s)->Length == 98 && (s)->Buffer[1] == '?')
 
 typedef struct _MOUNTMGR_VOLUME_PATHS {
   ULONG MultiSzLength;
@@ -171,7 +176,7 @@ typedef struct _MOUNTMGR_SET_AUTO_MOUNT {
 #define IOCTL_MOUNTMGR_TRACELOG_CACHE \
   CTL_CODE(MOUNTMGRCONTROLTYPE, 18, METHOD_BUFFERED, FILE_READ_ACCESS)
 
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #endif /* _MOUNTMGR_ */
 

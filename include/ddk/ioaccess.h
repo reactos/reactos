@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #define H2I(p) PtrToUshort(p)
-    
+
 #ifndef NO_PORT_MACROS
 
 #if defined(_X86_) || defined(_M_AMD64)
@@ -41,7 +41,7 @@ extern "C" {
 #define WRITE_PORT_USHORT(p, v) __outword (H2I(p), (v))
 #define WRITE_PORT_ULONG(p, v) __outdword (H2I(p), (v))
 
-#define MEMORY_BARRIER()    
+#define MEMORY_BARRIER()
 
 #elif defined(_PPC_) || defined(_MIPS_) || defined(_ARM_)
 
@@ -59,10 +59,15 @@ extern "C" {
 #define WRITE_PORT_ULONG(p, v)      WRITE_REGISTER_ULONG(p, (ULONG) (v))
 
 #else
-    
+
 #error Unsupported architecture
 
 #endif
 
 #endif /* NO_PORT_MACROS */
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif /* __IOACCESS_H */

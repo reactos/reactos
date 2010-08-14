@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  graph.cpp
+ *  graph.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *

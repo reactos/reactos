@@ -209,7 +209,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PDHCP_ADAPTER Adapter = NULL;
     HANDLE AdapterStateChangedEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
-    int i, AdapterCount = 0;
+    int i, AdapterCount = 0, Broadcast;
 
     /* FIXME: Kill this thread when the service is stopped */
 
@@ -285,6 +285,15 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                         socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
 
                     if (DhcpSocket != INVALID_SOCKET) {
+						
+						/* Allow broadcast on this socket */
+						Broadcast = 1;
+						setsockopt(DhcpSocket,
+								   SOL_SOCKET,
+								   SO_BROADCAST,
+								   (const char *)&Broadcast,
+								   sizeof(Broadcast));
+						
                         Adapter->ListenAddr.sin_family = AF_INET;
                         Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
                         Adapter->BindStatus =

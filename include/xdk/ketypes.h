@@ -678,7 +678,7 @@ typedef struct _KDEVICE_QUEUE {
   CSHORT Size;
   LIST_ENTRY DeviceListHead;
   KSPIN_LOCK Lock;
-  #if defined(_AMD64_)
+# if defined(_AMD64_)
   _ANONYMOUS_UNION union {
     BOOLEAN Busy;
     _ANONYMOUS_STRUCT struct {
@@ -686,9 +686,9 @@ typedef struct _KDEVICE_QUEUE {
       LONG64 Hint:56;
     } DUMMYSTRUCTNAME;
   } DUMMYUNIONNAME;
-  #else
+# else
   BOOLEAN Busy;
-  #endif
+# endif
 } KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
 #define TIMER_EXPIRED_INDEX_BITS        6
@@ -810,9 +810,9 @@ typedef struct _KTIMER {
   ULARGE_INTEGER DueTime;
   LIST_ENTRY TimerListEntry;
   struct _KDPC *Dpc;
-  #if !defined(_X86_)
+# if !defined(_X86_)
   ULONG Processor;
-  #endif
+# endif
   ULONG Period;
 } KTIMER, *PKTIMER, *RESTRICTED_POINTER PRKTIMER;
 

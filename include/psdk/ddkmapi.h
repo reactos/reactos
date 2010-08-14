@@ -21,22 +21,11 @@
 #ifndef __DDKMAPI_INCLUDED__
 #define __DDKMAPI_INCLUDED__
 
-/* Helper macro to enable gcc's extension.  */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
-#endif
-
 #if defined(_DXAPI_)
-  #define DXAPI
+#define DXAPI
 #else
-  #define DXAPI DECLSPEC_IMPORT
+#define DXAPI DECLSPEC_IMPORT
 #endif
-
-
 
 #define DXAPI_MAJORVERSION                1
 #define DXAPI_MINORVERSION                0
@@ -106,234 +95,202 @@
 typedef DWORD (PASCAL *LPDXAPI)(DWORD dwFunctionNum, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID  lpvOutBuffer, DWORD  cbOutBuffer);
 typedef ULONG (PASCAL *LPDD_NOTIFYCALLBACK) (DWORD dwFlags, PVOID pContext, DWORD dwParam1, DWORD dwParam2);
 
-typedef struct _DDCAPBUFFINFO
-{
-    DWORD dwFieldNumber;
-    DWORD bPolarity;
-    LARGE_INTEGER liTimeStamp;
-    DWORD ddRVal;
-} DDCAPBUFFINFO, * LPDDCAPBUFFINFO;
+typedef struct _DDCAPBUFFINFO {
+  DWORD dwFieldNumber;
+  DWORD bPolarity;
+  LARGE_INTEGER liTimeStamp;
+  DWORD ddRVal;
+} DDCAPBUFFINFO, *LPDDCAPBUFFINFO;
 
-typedef struct _DDADDVPCAPTUREBUFF
-{
-    HANDLE hCapture;
-    DWORD dwFlags;
-    PMDL pMDL;
-    PKEVENT pKEvent;
-    LPDDCAPBUFFINFO lpBuffInfo;
-} DDADDVPCAPTUREBUFF, * LPDDADDVPCAPTUREBUFF;
+typedef struct _DDADDVPCAPTUREBUFF {
+  HANDLE hCapture;
+  DWORD dwFlags;
+  PMDL pMDL;
+  PKEVENT pKEvent;
+  LPDDCAPBUFFINFO lpBuffInfo;
+} DDADDVPCAPTUREBUFF, *LPDDADDVPCAPTUREBUFF;
 
-typedef struct _DDCLOSEHANDLE
-{
-    HANDLE  hHandle;
+typedef struct _DDCLOSEHANDLE {
+  HANDLE hHandle;
 } DDCLOSEHANDLE, *LPDDCLOSEHANDLE;
 
-typedef struct _DDFLIPOVERLAY
-{
-    HANDLE hDirectDraw;
-    HANDLE hCurrentSurface;
-    HANDLE hTargetSurface;
-    DWORD dwFlags;
+typedef struct _DDFLIPOVERLAY {
+  HANDLE hDirectDraw;
+  HANDLE hCurrentSurface;
+  HANDLE hTargetSurface;
+  DWORD dwFlags;
 } DDFLIPOVERLAY, *LPDDFLIPOVERLAY;
 
-typedef struct _DDFLIPVIDEOPORT
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
-  HANDLE  hCurrentSurface;
-  HANDLE  hTargetSurface;
-  DWORD  dwFlags;
+typedef struct _DDFLIPVIDEOPORT {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
+  HANDLE hCurrentSurface;
+  HANDLE hTargetSurface;
+  DWORD dwFlags;
 } DDFLIPVIDEOPORT, *LPDDFLIPVIDEOPORT;
 
-typedef struct _DDGETAUTOFLIPIN
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
+typedef struct _DDGETAUTOFLIPIN {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
 } DDGETAUTOFLIPIN, *LPDDGETAUTOFLIPIN;
 
-typedef struct _DDGETAUTOFLIPOUT
-{
-  DWORD  ddRVal;
-  HANDLE  hVideoSurface;
-  HANDLE  hVBISurface;
-  BOOL  bPolarity;
+typedef struct _DDGETAUTOFLIPOUT {
+  DWORD ddRVal;
+  HANDLE hVideoSurface;
+  HANDLE hVBISurface;
+  BOOL bPolarity;
 } DDGETAUTOFLIPOUT, *LPDDGETAUTOFLIPOUT;
 
-typedef struct _DDGETPOLARITYIN
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
+typedef struct _DDGETPOLARITYIN {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
 } DDGETPOLARITYIN, *LPDDGETPOLARITYIN;
 
-typedef struct _DDGETPOLARITYOUT
-{
-  DWORD  ddRVal;
-  BOOL  bPolarity;
+typedef struct _DDGETPOLARITYOUT {
+  DWORD ddRVal;
+  BOOL bPolarity;
 } DDGETPOLARITYOUT, *LPDDGETPOLARITYOUT;
 
-typedef struct _DDGETSURFACESTATEIN
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hSurface;
+typedef struct _DDGETSURFACESTATEIN {
+  HANDLE hDirectDraw;
+  HANDLE hSurface;
 } DDGETSURFACESTATEIN, *LPDDGETSURFACESTATEIN;
 
-typedef struct _DDGETSURFACESTATEOUT
-{
-  DWORD  ddRVal;
-  DWORD  dwStateCaps;
-  DWORD  dwStateStatus;
+typedef struct _DDGETSURFACESTATEOUT {
+  DWORD ddRVal;
+  DWORD dwStateCaps;
+  DWORD dwStateStatus;
 } DDGETSURFACESTATEOUT, *LPDDGETSURFACESTATEOUT;
 
-typedef struct _DDGETFIELDNUMIN
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
+typedef struct _DDGETFIELDNUMIN {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
 } DDGETFIELDNUMIN, *LPDDGETFIELDNUMIN;
 
-typedef struct _DDGETFIELDNUMOUT
-{
-  DWORD  ddRVal;
-  DWORD  dwFieldNum;
+typedef struct _DDGETFIELDNUMOUT {
+  DWORD ddRVal;
+  DWORD dwFieldNum;
 } DDGETFIELDNUMOUT, *LPDDGETFIELDNUMOUT;
 
-typedef struct _DDGETKERNELCAPSOUT
-{
-  DWORD  ddRVal;
-  DWORD  dwCaps;
-  DWORD  dwIRQCaps;
+typedef struct _DDGETKERNELCAPSOUT {
+  DWORD ddRVal;
+  DWORD dwCaps;
+  DWORD dwIRQCaps;
 } DDGETKERNELCAPSOUT, *LPDDGETKERNELCAPSOUT;
 
-typedef struct _DDGETVERSIONNUMBER
-{
-  DWORD  ddRVal;
-  DWORD  dwMajorVersion;
-  DWORD  dwMinorVersion;
+typedef struct _DDGETVERSIONNUMBER {
+  DWORD ddRVal;
+  DWORD dwMajorVersion;
+  DWORD dwMinorVersion;
 } DDGETVERSIONNUMBER, *LPDDGETVERSIONNUMBER;
 
-typedef struct _DDLOCKIN
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hSurface;
+typedef struct _DDLOCKIN {
+  HANDLE hDirectDraw;
+  HANDLE hSurface;
 } DDLOCKIN, *LPDDLOCKIN;
 
-typedef struct _DDLOCKOUT
-{
-  DWORD  ddRVal;
-  DWORD  dwSurfHeight;
-  DWORD  dwSurfWidth;
-  LONG  lSurfPitch;
-  PVOID  lpSurface;
-  DWORD  SurfaceCaps;
-  DWORD  dwFormatFlags;
-  DWORD  dwFormatFourCC;
-  DWORD  dwFormatBitCount;
-  __GNU_EXTENSION union
-  {
-    DWORD  dwRBitMask;
-    DWORD  dwYBitMask;
+typedef struct _DDLOCKOUT {
+  DWORD ddRVal;
+  DWORD dwSurfHeight;
+  DWORD dwSurfWidth;
+  LONG lSurfPitch;
+  PVOID lpSurface;
+  DWORD SurfaceCaps;
+  DWORD dwFormatFlags;
+  DWORD dwFormatFourCC;
+  DWORD dwFormatBitCount;
+  __GNU_EXTENSION union {
+    DWORD dwRBitMask;
+    DWORD dwYBitMask;
   };
-  __GNU_EXTENSION union
-  {
-    DWORD  dwGBitMask;
-    DWORD  dwUBitMask;
+  __GNU_EXTENSION union {
+    DWORD dwGBitMask;
+    DWORD dwUBitMask;
   };
-  __GNU_EXTENSION union
-  {
-    DWORD  dwBBitMask;
-    DWORD  dwVBitMask;
+  __GNU_EXTENSION union {
+    DWORD dwBBitMask;
+    DWORD dwVBitMask;
   };
 } DDLOCKOUT, *LPDDLOCKOUT;
 
 
-typedef struct _DDOPENDIRECTDRAWIN
-{
+typedef struct _DDOPENDIRECTDRAWIN {
   ULONG_PTR dwDirectDrawHandle;
-  LPDD_NOTIFYCALLBACK  pfnDirectDrawClose;
-  PVOID  pContext;
+  LPDD_NOTIFYCALLBACK pfnDirectDrawClose;
+  PVOID pContext;
 } DDOPENDIRECTDRAWIN, *LPDDOPENDIRECTDRAWIN;
 
-typedef struct _DDOPENDIRECTDRAWOUT
-{
-  DWORD  ddRVal;
-  HANDLE  hDirectDraw;
+typedef struct _DDOPENDIRECTDRAWOUT {
+  DWORD ddRVal;
+  HANDLE hDirectDraw;
 } DDOPENDIRECTDRAWOUT, *LPDDOPENDIRECTDRAWOUT;
 
-typedef struct _DDOPENSURFACEIN
-{
-  HANDLE  hDirectDraw;
-  ULONG_PTR  dwSurfaceHandle;
-  LPDD_NOTIFYCALLBACK  pfnSurfaceClose;
-  PVOID  pContext;
+typedef struct _DDOPENSURFACEIN {
+  HANDLE hDirectDraw;
+  ULONG_PTR dwSurfaceHandle;
+  LPDD_NOTIFYCALLBACK pfnSurfaceClose;
+  PVOID pContext;
 } DDOPENSURFACEIN, *LPDDOPENSURFACEIN;
 
-typedef struct _DDOPENSURFACEOUT
-{
-  DWORD  ddRVal;
-  HANDLE  hSurface;
+typedef struct _DDOPENSURFACEOUT {
+  DWORD ddRVal;
+  HANDLE hSurface;
 } DDOPENSURFACEOUT, *LPDDOPENSURFACEOUT;
 
-typedef struct _DDOPENVIDEOPORTIN
-{
-  HANDLE  hDirectDraw;
-  ULONG  dwVideoPortHandle;
-  LPDD_NOTIFYCALLBACK  pfnVideoPortClose;
-  PVOID  pContext;
+typedef struct _DDOPENVIDEOPORTIN {
+  HANDLE hDirectDraw;
+  ULONG dwVideoPortHandle;
+  LPDD_NOTIFYCALLBACK pfnVideoPortClose;
+  PVOID pContext;
 } DDOPENVIDEOPORTIN, *LPDDOPENVIDEOPORTIN;
 
-typedef struct _DDOPENVIDEOPORTOUT
-{
-  DWORD  ddRVal;
-  HANDLE  hVideoPort;
+typedef struct _DDOPENVIDEOPORTOUT {
+  DWORD ddRVal;
+  HANDLE hVideoPort;
 } DDOPENVIDEOPORTOUT, *LPDDOPENVIDEOPORTOUT;
 
-typedef struct _DDOPENVPCAPTUREDEVICEIN
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
-  DWORD  dwStartLine;
-  DWORD  dwEndLine;
-  DWORD  dwCaptureEveryNFields;
-  LPDD_NOTIFYCALLBACK  pfnCaptureClose;
-  PVOID  pContext;
-  DWORD  dwFlags;
-} DDOPENVPCAPTUREDEVICEIN, * LPDDOPENVPCAPTUREDEVICEIN;
+typedef struct _DDOPENVPCAPTUREDEVICEIN {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
+  DWORD dwStartLine;
+  DWORD dwEndLine;
+  DWORD dwCaptureEveryNFields;
+  LPDD_NOTIFYCALLBACK pfnCaptureClose;
+  PVOID pContext;
+  DWORD dwFlags;
+} DDOPENVPCAPTUREDEVICEIN, *LPDDOPENVPCAPTUREDEVICEIN;
 
-typedef struct _DDOPENVPCAPTUREDEVICEOUT
-{
-  DWORD  ddRVal;
-  HANDLE  hCapture;
-} DDOPENVPCAPTUREDEVICEOUT, * LPDDOPENVPCAPTUREDEVICEOUT;
+typedef struct _DDOPENVPCAPTUREDEVICEOUT {
+  DWORD ddRVal;
+  HANDLE hCapture;
+} DDOPENVPCAPTUREDEVICEOUT, *LPDDOPENVPCAPTUREDEVICEOUT;
 
-typedef struct _DDREGISTERCALLBACK
-{
-  HANDLE  hDirectDraw;
-  ULONG  dwEvents;
-  LPDD_NOTIFYCALLBACK  pfnCallback;
-  ULONG_PTR  dwParam1;
-  ULONG_PTR  dwParam2;
-  PVOID  pContext;
+typedef struct _DDREGISTERCALLBACK {
+  HANDLE hDirectDraw;
+  ULONG dwEvents;
+  LPDD_NOTIFYCALLBACK pfnCallback;
+  ULONG_PTR dwParam1;
+  ULONG_PTR dwParam2;
+  PVOID pContext;
 } DDREGISTERCALLBACK, *LPDDREGISTERCALLBACK;
 
-typedef struct _DDSETSURFACETATE
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hSurface;
-  DWORD  dwState;
-  DWORD  dwStartField;
+typedef struct _DDSETSURFACETATE {
+  HANDLE hDirectDraw;
+  HANDLE hSurface;
+  DWORD dwState;
+  DWORD dwStartField;
 } DDSETSURFACESTATE, *LPDDSETSURFACESTATE;
 
-typedef struct _DDSETFIELDNUM
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
-  DWORD  dwFieldNum;
+typedef struct _DDSETFIELDNUM {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
+  DWORD dwFieldNum;
 } DDSETFIELDNUM, *LPDDSETFIELDNUM;
 
-typedef struct _DDSETSKIPFIELD
-{
-  HANDLE  hDirectDraw;
-  HANDLE  hVideoPort;
-  DWORD  dwStartField;
+typedef struct _DDSETSKIPFIELD {
+  HANDLE hDirectDraw;
+  HANDLE hVideoPort;
+  DWORD dwStartField;
 } DDSETSKIPFIELD, *LPDDSETSKIPFIELD;
 
 
@@ -346,5 +303,5 @@ DxApi(IN DWORD dwFunctionNum,
       OUT DWORD cbOutBuffer);
 
 
-
 #endif /* __DDKMAPI_INCLUDED__ */
+

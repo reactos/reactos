@@ -72,7 +72,9 @@ FatiOpenRootDcb(IN PFAT_IRP_CONTEXT IrpContext,
 
         /* Increment counters */
         Dcb->OpenCount++;
+        Dcb->UncleanCount++;
         Vcb->OpenFileCount++;
+        if (IsFileObjectReadOnly(FileObject)) Vcb->ReadOnlyCount++;
 
         /* Set success statuses */
         Iosb.Status = STATUS_SUCCESS;
@@ -186,7 +188,7 @@ FatiOverwriteFile(PFAT_IRP_CONTEXT IrpContext,
         CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->Header.AllocationSize);
 
         // TODO: Actually truncate the file
-        DPRINT1("TODO: Actually truncate the file with a fullfat handle %x\n", Fcb->FatHandle);
+        DPRINT1("TODO: Actually truncate file '%wZ' with a fullfat handle %x\n", &Fcb->FullFileName, Fcb->FatHandle);
 
         /* Release the paging resource */
         ExReleaseResourceLite(Fcb->Header.PagingIoResource);
@@ -288,6 +290,12 @@ FatiOpenExistingDir(IN PFAT_IRP_CONTEXT IrpContext,
                      Fcb,
                      FatCreateCcb());
 
+    /* Increase counters */
+    Fcb->UncleanCount++;
+    Fcb->OpenCount++;
+    Vcb->OpenFileCount++;
+    if (IsFileObjectReadOnly(FileObject)) Vcb->ReadOnlyCount++;
+
     Iosb.Status = STATUS_SUCCESS;
     Iosb.Information = FILE_OPENED;
 
@@ -319,6 +327,7 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
     PFCB Fcb;
     NTSTATUS Status;
     FF_FILE *FileHandle;
+    FF_ERROR FfError;
 
     /* Check for create file option and fail */
     if (CreateDisposition == FILE_CREATE)
@@ -341,20 +350,22 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
     }
 
     /* Open the file with FullFAT */
-    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, NULL);
+    FileHandle = FF_Open(Vcb->Ioman, AnsiName.Buffer, FF_MODE_READ, &FfError);
 
     if (!FileHandle)
     {
+        DPRINT1("Failed to open file '%s', error %ld\n", AnsiName.Buffer, FfError);
         Iosb.Status = STATUS_OBJECT_NAME_NOT_FOUND; // FIXME: A shortcut for now
         return Iosb;
     }
+    DPRINT1("Succeeded opening file '%s'\n", AnsiName.Buffer);
 
     /* Create a new FCB for this file */
     Fcb = FatCreateFcb(IrpContext, Vcb, ParentDcb, FileHandle);
 
     // TODO: Check if overwrite is needed
 
-    // This is usual file open branch, without overwriting!
+    // TODO: This is usual file open branch, without overwriting!
     /* Set context and section object pointers */
     FatSetFileObject(FileObject,
                      UserFileOpen,
@@ -364,6 +375,13 @@ FatiOpenExistingFile(IN PFAT_IRP_CONTEXT IrpContext,
 
     Iosb.Status = STATUS_SUCCESS;
     Iosb.Information = FILE_OPENED;
+
+
+    /* Increase counters */
+    Fcb->UncleanCount++;
+    Fcb->OpenCount++;
+    if (FlagOn(FileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING)) Fcb->NonCachedUncleanCount++;
+    if (IsFileObjectReadOnly(FileObject)) Vcb->ReadOnlyCount++;
 
     return Iosb;
 }
@@ -397,7 +415,7 @@ FatiOpenVolume(IN PFAT_IRP_CONTEXT IrpContext,
         // and opened handles count is not 0
         //if (!FlagOn(ShareAccess, FILE_SHARE_READ)
 
-        DPRINT1("Exclusive voume open\n");
+        DPRINT1("Exclusive volume open\n");
 
         // TODO: Flush the volume
         VolumeFlushed = TRUE;
@@ -450,6 +468,7 @@ FatiOpenVolume(IN PFAT_IRP_CONTEXT IrpContext,
     /* Increase direct open count */
     Vcb->DirectOpenCount++;
     Vcb->OpenFileCount++;
+    if (IsFileObjectReadOnly(FileObject)) Vcb->ReadOnlyCount++;
 
     /* Set no buffering flag */
     FileObject->Flags |= FO_NO_INTERMEDIATE_BUFFERING;
@@ -720,7 +739,7 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
         /* Set parent DCB */
         ParentDcb = RelatedDcb;
 
-        DPRINT1("Opening file '%wZ' relatively to '%wZ'\n", &FileName, &ParentDcb->FullFileName);
+        DPRINT("Opening file '%wZ' relatively to '%wZ'\n", &FileName, &ParentDcb->FullFileName);
     }
     else
     {
@@ -1136,6 +1155,12 @@ FatiCreate(IN PFAT_IRP_CONTEXT IrpContext,
                                 FALSE,
                                 DeleteOnClose,
                                 OpenedAsDos);
+
+    /* In case of success set cache supported flag */
+    if (NT_SUCCESS(Iosb.Status) && !NoIntermediateBuffering)
+    {
+        SetFlag(FileObject->Flags, FO_CACHE_SUPPORTED);
+    }
 
     Irp->IoStatus.Information = Iosb.Information;
 
