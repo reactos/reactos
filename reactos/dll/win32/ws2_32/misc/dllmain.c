@@ -586,13 +586,15 @@ ioctlsocket(IN     SOCKET s,
             IN     LONG cmd,
             IN OUT ULONG FAR* argp)
 {
+	ULONG tmp;
+	
     return WSAIoctl(s,
                     cmd,
                     argp,
                     sizeof(ULONG),
                     argp,
                     sizeof(ULONG),
-                    argp,
+                    &tmp,
                     0,
                     0);
 }
