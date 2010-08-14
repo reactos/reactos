@@ -32,7 +32,7 @@ set_target_properties(user32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(user32
     ${CMAKE_CURRENT_SOURCE_DIR}/user32.def
-    ${REACTOS_SOURCE_DIR}/lib/3rdparty/libwine/libwine.a
+    wine
     ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a
     ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
     imm32
