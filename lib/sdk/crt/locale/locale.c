@@ -755,38 +755,20 @@ int CDECL _setmbcp(int cp)
 
 
 /*********************************************************************
- *		__lc_collate_cp (MSVCRT.@)
- *
- * @unimplemented
+ *      ___lc_handle_func (MSVCRT.@)
  */
-void __lc_collate_cp(int cp)
+HANDLE * CDECL ___lc_handle_func(void)
 {
-FIXME("__lc_collate_cp - stub\n");
-return;
+    return MSVCRT___lc_handle;
 }
 
 
 /*********************************************************************
- *		__lc_handle (MSVCRT.@)
- *
- * @unimplemented
+ *      ___lc_codepage_func (MSVCRT.@)
  */
-void __lc_handle(void)
+int CDECL ___lc_codepage_func(void)
 {
-FIXME("__lc_handle - stub\n");
-return;
-}
-
-
-/*********************************************************************
- *		__lc_codepage (MSVCRT.@)
- *
- * @unimplemented
- */
-void __lc_codepage(void)
-{
-FIXME("__lc_codepage - stub\n");
-return;
+    return MSVCRT___lc_codepage;
 }
 
 
