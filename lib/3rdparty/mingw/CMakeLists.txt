@@ -35,33 +35,30 @@ set(MINGW_COMMON_SOURCE
 )
 
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
-target_link_libraries(mingw_common oldnames)
-
+target_link_libraries(mingw_common oldnames ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
 set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
-
 add_dependencies(mingw_common psdk)
-
 
 add_library(mingw_main crt0_c.c crtexe.c dllargv.c)
 set_property(TARGET mingw_main PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
 add_dependencies(mingw_main psdk)
 
-add_library(mingw_wmain crt0_c.c crtexe.c dllargv.c)
+add_library(mingw_wmain crt0_w.c crtexe.c dllargv.c)
 set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
 add_dependencies(mingw_wmain psdk)
 
 add_library(mingw_dllmain crtdll.c dllargv.c)
 add_dependencies(mingw_dllmain psdk)
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a
-  COMMAND ${MINGW_PREFIX}dlltool --def ${REACTOS_SOURCE_DIR}/lib/3rdparty/mingw/moldname-msvcrt.def --kill-at --output-lib ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a
-  COMMAND ${MINGW_PREFIX}ar -rc ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
+  COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
+  COMMAND ${MINGW_PREFIX}ar -rc ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
 )
 
-SET_SOURCE_FILES_PROPERTIES(${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a PROPERTIES GENERATED TRUE)
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a PROPERTIES GENERATED TRUE)
 
-ADD_CUSTOM_TARGET(oldnames ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a)
+add_custom_target(oldnames ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
 
 add_library(getopt getopt.c)
 set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
