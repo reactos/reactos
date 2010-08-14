@@ -1047,14 +1047,12 @@ IoCancelThreadIo(IN PETHREAD Thread)
     NextEntry = ListHead->Flink;
     while (ListHead != NextEntry)
     {
-        /* Get the IRP */
+        /* Get the IRP and move to the next entry */
         Irp = CONTAINING_RECORD(NextEntry, IRP, ThreadListEntry);
+        NextEntry = NextEntry->Flink;
 
         /* Cancel it */
         IoCancelIrp(Irp);
-
-        /* Move to the next entry */
-        NextEntry = NextEntry->Flink;
     }
 
      /* Wait 100 milliseconds */
