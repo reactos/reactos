@@ -49,14 +49,190 @@ PCI_CONFIGURATOR PciConfigurators[] =
 
 /* FUNCTIONS ******************************************************************/
 
+PCM_RESOURCE_LIST
+NTAPI
+PciAllocateCmResourceList(IN ULONG Count,
+                          IN ULONG BusNumber)
+{
+    SIZE_T Size;
+    PCM_RESOURCE_LIST ResourceList;
+
+    /* Calculate the final size of the list, including each descriptor */
+    Size = sizeof(CM_RESOURCE_LIST);
+    if (Count > 1) Size = sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (Count - 1) +
+                          sizeof(CM_RESOURCE_LIST);
+
+    /* Allocate the list */
+    ResourceList = ExAllocatePoolWithTag(PagedPool, Size, 'BicP');
+    if (!ResourceList) return NULL;
+
+    /* Initialize it */
+    RtlZeroMemory(ResourceList, Size);
+    ResourceList->Count = 1;
+    ResourceList->List[0].BusNumber = BusNumber;
+    ResourceList->List[0].InterfaceType = PCIBus;
+    ResourceList->List[0].PartialResourceList.Version = 1;
+    ResourceList->List[0].PartialResourceList.Revision = 1;
+    ResourceList->List[0].PartialResourceList.Count = Count;
+
+    /* Return it */
+    return ResourceList;
+}
+
 NTSTATUS
 NTAPI
 PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
                   OUT PCM_RESOURCE_LIST *Buffer)
 {
-    /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    PPCI_FUNCTION_RESOURCES PciResources;
+    BOOLEAN HaveVga, HaveMemSpace, HaveIoSpace;
+    USHORT BridgeControl, PciCommand;
+    ULONG Count, i;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Partial, Resource, LastResource;
+    PCM_RESOURCE_LIST ResourceList;
+    UCHAR InterruptLine;
+    PAGED_CODE();
+
+    /* Assume failure */
+    Count = 0;
+    HaveVga = FALSE;
+    *Buffer = NULL;
+
+    /* Make sure there's some resources to query */
+    PciResources = PdoExtension->Resources;
+    if (!PciResources) return STATUS_SUCCESS;
+
+    /* Read the decodes */
+    PciReadDeviceConfig(PdoExtension,
+                        &PciCommand,
+                        FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                        sizeof(USHORT));
+
+    /* Check which ones are turned on */
+    HaveIoSpace = PciCommand & PCI_ENABLE_IO_SPACE;
+    HaveMemSpace = PciCommand & PCI_ENABLE_MEMORY_SPACE;
+
+    /* Loop maximum possible descriptors */
+    for (i = 0; i < 7; i++)
+    {
+        /* Check if the decode for this descriptor is actually turned on */
+        Partial = &PciResources->Current[i];
+        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
+            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        {
+            /* One more fully active descriptor */
+            Count++;
+        }
+    }
+
+    /* If there's an interrupt pin associated, check at least one decode is on */
+    if ((PdoExtension->InterruptPin) && ((HaveMemSpace) || (HaveIoSpace)))
+    {
+        /* Read the interrupt line for the pin, add a descriptor if it's valid */
+        InterruptLine = PdoExtension->AdjustedInterruptLine;
+        if ((InterruptLine) && (InterruptLine != -1)) Count++;
+    }
+
+    /* Check for PCI bridge */
+    if (PdoExtension->HeaderType == PCI_BRIDGE_TYPE)
+    {
+        /* Read bridge settings, check if VGA is present */
+        PciReadDeviceConfig(PdoExtension,
+                            &BridgeControl,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.BridgeControl),
+                            sizeof(USHORT));
+        if (BridgeControl & PCI_ENABLE_BRIDGE_VGA)
+        {
+            /* Remember for later */
+            HaveVga = TRUE;
+
+            /* One memory descriptor for 0xA0000, plus the two I/O port ranges */
+            if (HaveMemSpace) Count++;
+            if (HaveIoSpace) Count += 2;
+        }
+    }
+
+    /* If there's no descriptors in use, there's no resources, so return */
+    if (!Count) return STATUS_SUCCESS;
+
+    /* Allocate a resource list to hold the resources */
+    ResourceList = PciAllocateCmResourceList(Count,
+                                             PdoExtension->ParentFdoExtension->BaseBus);
+    if (!ResourceList) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* This is where the descriptors will be copied into */
+    Resource = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+    LastResource = Resource + Count + 1;
+
+    /* Loop maximum possible descriptors */
+    for (i = 0; i < 7; i++)
+    {
+        /* Check if the decode for this descriptor is actually turned on */
+        Partial = &PciResources->Current[i];
+        if (((HaveMemSpace) && (Partial->Type == CmResourceTypeMemory)) ||
+            ((HaveIoSpace) && (Partial->Type == CmResourceTypePort)))
+        {
+            /* Copy the descriptor into the resource list */
+            *Resource++ = *Partial;
+        }
+    }
+
+    /* Check if earlier the code detected this was a PCI bridge with VGA on it */
+    if (HaveVga)
+    {
+        /* Are the memory decodes enabled? */
+        if (HaveMemSpace)
+        {
+            /* Build a memory descriptor for a 128KB framebuffer at 0xA0000 */
+            Resource->Flags = CM_RESOURCE_MEMORY_READ_WRITE;
+            Resource->u.Generic.Start.HighPart = 0;
+            Resource->Type = CmResourceTypeMemory;
+            Resource->u.Generic.Start.LowPart = 0xA0000;
+            Resource->u.Generic.Length = 0x20000;
+            Resource++;
+        }
+
+        /* Are the I/O decodes enabled? */
+        if (HaveIoSpace)
+        {
+            /* Build an I/O descriptor for the graphic ports at 0x3B0 */
+            Resource->Type = CmResourceTypePort;
+            Resource->Flags = CM_RESOURCE_PORT_POSITIVE_DECODE | CM_RESOURCE_PORT_10_BIT_DECODE;
+            Resource->u.Port.Start.QuadPart = 0x3B0u;
+            Resource->u.Port.Length = 0xC;
+            Resource++;
+
+            /* Build an I/O descriptor for the graphic ports at 0x3C0 */
+            Resource->Type = CmResourceTypePort;
+            Resource->Flags = CM_RESOURCE_PORT_POSITIVE_DECODE | CM_RESOURCE_PORT_10_BIT_DECODE;
+            Resource->u.Port.Start.QuadPart = 0x3C0u;
+            Resource->u.Port.Length = 0x20;
+            Resource++;
+        }
+    }
+
+    /* If there's an interrupt pin associated, check at least one decode is on */
+    if ((PdoExtension->InterruptPin) && ((HaveMemSpace) || (HaveIoSpace)))
+    {
+         /* Read the interrupt line for the pin, check if it's valid */
+         InterruptLine = PdoExtension->AdjustedInterruptLine;
+         if ((InterruptLine) && (InterruptLine != -1))
+         {
+             /* Make sure there's still space */
+             ASSERT(Resource < LastResource);
+
+             /* Add the interrupt descriptor */
+             Resource->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
+             Resource->Type = CmResourceTypeInterrupt;
+             Resource->ShareDisposition = CmResourceShareShared;
+             Resource->u.Interrupt.Affinity = -1;
+             Resource->u.Interrupt.Level = InterruptLine;
+             Resource->u.Interrupt.Vector = InterruptLine;
+        }
+    }
+
+    /* Return the resouce list */
+    *Buffer = ResourceList;
     return STATUS_SUCCESS;
 }
 
