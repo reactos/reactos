@@ -246,9 +246,99 @@ PciDebugDumpQueryCapabilities(IN PDEVICE_CAPABILITIES DeviceCaps)
     /* Dump and convert the power state mappings */
     for (i = PowerSystemWorking; i < PowerSystemMaximum; i++)
         DbgPrint(" %s", DevicePowerStates[DeviceCaps->DeviceState[i]]);
-        
+
     /* Finish the dump */
     DbgPrint(" ]\n");
+}
+
+PCHAR
+NTAPI
+PciDebugCmResourceTypeToText(IN UCHAR Type)
+{
+    /* What kind of resource it this? */
+    switch (Type)
+    {
+        /* Pick the correct identifier string based on the type */
+        case CmResourceTypeDeviceSpecific: return "CmResourceTypeDeviceSpecific";
+        case CmResourceTypePort: return "CmResourceTypePort";
+        case CmResourceTypeInterrupt: return "CmResourceTypeInterrupt";
+        case CmResourceTypeMemory: return "CmResourceTypeMemory";
+        case CmResourceTypeDma: return "CmResourceTypeDma";
+        case CmResourceTypeBusNumber: return "CmResourceTypeBusNumber";
+        case CmResourceTypeConfigData: return "CmResourceTypeConfigData";
+        case CmResourceTypeDevicePrivate: return "CmResourceTypeDevicePrivate";
+        case CmResourceTypePcCardConfig: return "CmResourceTypePcCardConfig";
+        default: return "*** INVALID RESOURCE TYPE ***";
+    }
+}
+
+VOID
+NTAPI
+PciDebugPrintIoResource(IN PIO_RESOURCE_DESCRIPTOR Descriptor)
+{
+    ULONG i;
+    PULONG Data;
+
+    /* Print out the header */
+    DPRINT1("     IoResource Descriptor dump:  Descriptor @0x%x\n", Descriptor);
+    DPRINT1("        Option           = 0x%x\n", Descriptor->Option);
+    DPRINT1("        Type             = %d (%s)\n", Descriptor->Type, PciDebugCmResourceTypeToText(Descriptor->Type));
+    DPRINT1("        ShareDisposition = %d\n", Descriptor->ShareDisposition);
+    DPRINT1("        Flags            = 0x%04X\n", Descriptor->Flags);
+
+    /* Loop private data */
+    Data = (PULONG)&Descriptor->u.DevicePrivate;
+    for (i = 0; i < 6; i += 3)
+    {
+        /* Dump it in 32-bit triplets */
+        DPRINT1("        Data[%d] = %08x  %08x  %08x\n", i, Data[0], Data[1], Data[2]);
+    }
+}
+
+VOID
+NTAPI
+PciDebugPrintIoResReqList(IN PIO_RESOURCE_REQUIREMENTS_LIST Requirements)
+{
+    ULONG AlternativeLists;
+    PIO_RESOURCE_LIST List;
+    ULONG Count;
+    PIO_RESOURCE_DESCRIPTOR Descriptor;
+
+    /* Make sure there's a list */
+    if (!Requirements) return;
+
+    /* Grab the main list and the alternates as well */
+    AlternativeLists = Requirements->AlternativeLists;
+    List = Requirements->List;
+
+    /* Print out the initial header*/
+    DPRINT1("  IO_RESOURCE_REQUIREMENTS_LIST (PCI Bus Driver)\n");
+    DPRINT1("     InterfaceType        %d\n", Requirements->InterfaceType);
+    DPRINT1("     BusNumber            0x%x\n", Requirements->BusNumber);
+    DPRINT1("     SlotNumber           %d (0x%x), (d/f = 0x%x/0x%x)\n",
+            Requirements->SlotNumber,
+            Requirements->SlotNumber,
+            ((PCI_SLOT_NUMBER*)&Requirements->SlotNumber)->u.bits.DeviceNumber,
+            ((PCI_SLOT_NUMBER*)&Requirements->SlotNumber)->u.bits.FunctionNumber);
+    DPRINT1("     AlternativeLists     %d\n", AlternativeLists);
+
+    /* Scan alternative lists */
+    while (AlternativeLists--)
+    {
+        /* Get the descriptor array, and the count of descriptors */
+        Descriptor = List->Descriptors;
+        Count = List->Count;
+
+        /* Print out each descriptor */
+        DPRINT1("\n     List[%d].Count = %d\n", AlternativeLists, Count);
+        while (Count--) PciDebugPrintIoResource(Descriptor++);
+
+        /* Should've reached a new list now */
+        List = (PIO_RESOURCE_LIST)Descriptor;
+    }
+
+    /* Terminate the dump */
+    DPRINT1("\n");
 }
 
 /* EOF */

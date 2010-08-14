@@ -49,6 +49,39 @@ PCI_CONFIGURATOR PciConfigurators[] =
 
 /* FUNCTIONS ******************************************************************/
 
+PIO_RESOURCE_REQUIREMENTS_LIST
+NTAPI
+PciAllocateIoRequirementsList(IN ULONG Count,
+                              IN ULONG BusNumber,
+                              IN ULONG SlotNumber)
+{
+    SIZE_T Size;
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
+    /* Calculate the final size of the list, including each descriptor */
+    Size = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+    if (Count > 1) Size = sizeof(IO_RESOURCE_DESCRIPTOR) * (Count - 1) +
+                          sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+
+    /* Allocate the list */
+    RequirementsList = ExAllocatePoolWithTag(PagedPool, Size, 'BicP');
+    if (!RequirementsList) return NULL;
+
+    /* Initialize it */
+    RtlZeroMemory(RequirementsList, Size);
+    RequirementsList->AlternativeLists = 1;
+    RequirementsList->BusNumber = BusNumber;
+    RequirementsList->SlotNumber = SlotNumber;
+    RequirementsList->InterfaceType = PCIBus;
+    RequirementsList->ListSize = Size;
+    RequirementsList->List[0].Count = Count;
+    RequirementsList->List[0].Version = 1;
+    RequirementsList->List[0].Revision = 1;
+
+    /* Return it */
+    return RequirementsList;
+}
+
 PCM_RESOURCE_LIST
 NTAPI
 PciAllocateCmResourceList(IN ULONG Count,
@@ -275,12 +308,83 @@ PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
 
 NTSTATUS
 NTAPI
+PciBuildRequirementsList(IN PPCI_PDO_EXTENSION PdoExtension,
+                         IN PPCI_COMMON_HEADER PciData,
+                         OUT PIO_RESOURCE_REQUIREMENTS_LIST* Buffer)
+{
+    PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+    {
+        /* There aren't, so use the zero descriptor */
+        RequirementsList = PciZeroIoResourceRequirements;
+
+        /* Does it actually exist yet? */
+        if (!PciZeroIoResourceRequirements)
+        {
+            /* Allocate it, and use it for future use */
+            RequirementsList = PciAllocateIoRequirementsList(0, 0, 0);
+            PciZeroIoResourceRequirements = RequirementsList;
+            if (!PciZeroIoResourceRequirements) return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Return the zero requirements list to the caller */
+        *Buffer = RequirementsList;
+        DPRINT1("PCI - build resource reqs - early out, 0 resources\n");
+        return STATUS_SUCCESS;
+    }
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
                      IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *RequirementsList)
 {
-    /* Not yet implemented */
-    UNIMPLEMENTED;
-    while (TRUE);
+    NTSTATUS Status;
+    PCI_COMMON_HEADER PciHeader;
+    PAGED_CODE();
+
+    /* Check if the PDO has any resources, or at least an interrupt pin */
+    if ((PdoExtension->Resources) || (PdoExtension->InterruptPin))
+    {
+        /* Read the current PCI header */
+        PciReadDeviceConfig(PdoExtension, &PciHeader, 0, PCI_COMMON_HDR_LENGTH);
+
+        /* Use it to build a list of requirements */
+        Status = PciBuildRequirementsList(PdoExtension, &PciHeader, RequirementsList);
+        if (!NT_SUCCESS(Status)) return Status;
+
+        /* Is this a Compaq PCI Hotplug Controller (r17) on a PAE system ? */
+        if ((PciHeader.VendorID == 0xE11) &&
+            (PciHeader.DeviceID == 0xA0F7) &&
+            (PciHeader.RevisionID == 17) &&
+            (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
+        {
+            /* Have not tested this on eVb's machine yet */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+
+        /* Check if the requirements are actually the zero list */
+        if (*RequirementsList == PciZeroIoResourceRequirements)
+        {
+            /* A simple NULL will sufficie for the PnP Manager */
+            *RequirementsList = NULL;
+            DPRINT1("Returning NULL requirements list\n");
+        }
+        else
+        {
+            /* Otherwise, print out the requirements list */
+            PciDebugPrintIoResReqList(*RequirementsList);
+        }
+    }
+    else
+    {
+        /* There aren't any resources, so simply return NULL */
+        DPRINT1("PciQueryRequirements returning NULL requirements list\n");
+        *RequirementsList = NULL;
+    }
+
+    /* This call always succeeds (but maybe with no requirements) */
     return STATUS_SUCCESS;
 }
 

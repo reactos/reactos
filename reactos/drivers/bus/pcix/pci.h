@@ -1255,6 +1255,12 @@ PciDebugDumpQueryCapabilities(
     IN PDEVICE_CAPABILITIES DeviceCaps
 );
 
+VOID
+NTAPI
+PciDebugPrintIoResReqList(
+    IN PIO_RESOURCE_REQUIREMENTS_LIST Requirements
+);
+
 //
 // Interface Support
 //
