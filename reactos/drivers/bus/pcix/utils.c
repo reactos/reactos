@@ -1306,4 +1306,455 @@ PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
     }
 }
 
+NTSTATUS
+NTAPI
+PciQueryBusInformation(IN PPCI_PDO_EXTENSION PdoExtension,
+                       IN PPNP_BUS_INFORMATION* Buffer)
+{
+    PPNP_BUS_INFORMATION BusInfo;
+
+    /* Allocate a structure for the bus information */
+    BusInfo = ExAllocatePoolWithTag(PagedPool,
+                                    sizeof(PNP_BUS_INFORMATION),
+                                    'BicP');
+    if (!BusInfo) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Write the correct GUID and bus type identifier, and fill the bus number */
+    BusInfo->BusTypeGuid = GUID_BUS_TYPE_PCI;
+    BusInfo->LegacyBusType = PCIBus;
+    BusInfo->BusNumber = PdoExtension->ParentFdoExtension->BaseBus;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciDetermineSlotNumber(IN PPCI_PDO_EXTENSION PdoExtension,
+                       OUT PULONG SlotNumber)
+{
+    PPCI_FDO_EXTENSION ParentExtension;
+    ULONG ResultLength;
+    NTSTATUS Status;
+    PSLOT_INFO SlotInfo;
+
+    /* Check if a $PIR from the BIOS is used (legacy IRQ routing) */
+    ParentExtension = PdoExtension->ParentFdoExtension;
+    DPRINT1("Slot lookup for %d.%d.%d\n",
+            ParentExtension ? ParentExtension->BaseBus : -1,
+            PdoExtension->Slot.u.bits.DeviceNumber,
+            PdoExtension->Slot.u.bits.FunctionNumber);
+    if ((PciIrqRoutingTable) && (ParentExtension))
+    {
+        /* Read every slot information entry */
+        SlotInfo = &PciIrqRoutingTable->Slot[0];
+        DPRINT1("PIR$ %p is %lx bytes, slot 0 is at: %lx\n",
+                PciIrqRoutingTable, PciIrqRoutingTable->TableSize, SlotInfo);
+        while (SlotInfo < (PSLOT_INFO)((ULONG_PTR)PciIrqRoutingTable +
+                                       PciIrqRoutingTable->TableSize))
+        {
+            DPRINT1("Slot Info: %d.%d->#%d\n",
+                    SlotInfo->BusNumber,
+                    SlotInfo->DeviceNumber,
+                    SlotInfo->SlotNumber);
+                    
+            /* Check if this slot information matches the PDO being queried */
+            if ((ParentExtension->BaseBus == SlotInfo->BusNumber) &&
+                (PdoExtension->Slot.u.bits.DeviceNumber == SlotInfo->DeviceNumber >> 3) &&
+                (SlotInfo->SlotNumber))
+            {
+                /* We found it, return it and return success */
+                *SlotNumber = SlotInfo->SlotNumber;
+                return STATUS_SUCCESS;
+            }
+            
+            /* Try the next slot */
+            SlotInfo++;
+        }
+    }
+
+    /* Otherwise, grab the parent FDO and check if it's the root */
+    if (PCI_IS_ROOT_FDO(ParentExtension))
+    {
+        /* The root FDO doesn't have a slot number */
+        Status = STATUS_UNSUCCESSFUL;
+    }
+    else
+    {
+        /* Otherwise, query the slot/UI address/number as a device property */
+        Status = IoGetDeviceProperty(ParentExtension->PhysicalDeviceObject,
+                                     DevicePropertyUINumber,
+                                     sizeof(ULONG),
+                                     SlotNumber,
+                                     &ResultLength);
+    }
+
+    /* Return the status of this endeavour */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PciGetDeviceCapabilities(IN PDEVICE_OBJECT DeviceObject,
+                         IN OUT PDEVICE_CAPABILITIES DeviceCapability)
+{
+    PIRP Irp;
+    NTSTATUS Status;
+    KEVENT Event;
+    PDEVICE_OBJECT AttachedDevice;
+    PIO_STACK_LOCATION IoStackLocation;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PAGED_CODE();
+
+    /* Zero out capabilities and set undefined values to start with */
+    RtlZeroMemory(DeviceCapability, sizeof(DEVICE_CAPABILITIES));
+    DeviceCapability->Size = sizeof(DEVICE_CAPABILITIES);
+    DeviceCapability->Version = 1;
+    DeviceCapability->Address = -1;
+    DeviceCapability->UINumber = -1;
+
+    /* Build the wait event for the IOCTL */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Find the device the PDO is attached to */
+    AttachedDevice = IoGetAttachedDeviceReference(DeviceObject);
+
+    /* And build an IRP for it */
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_PNP,
+                                       AttachedDevice,
+                                       NULL,
+                                       0,
+                                       NULL,
+                                       &Event,
+                                       &IoStatusBlock);
+    if (!Irp)
+    {
+        /* The IRP failed, fail the request as well */
+        ObDereferenceObject(AttachedDevice);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Set default status */
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+
+    /* Get a stack location in this IRP */
+    IoStackLocation = IoGetNextIrpStackLocation(Irp);
+    ASSERT(IoStackLocation);
+
+    /* Initialize it as a query capabilities IRP, with no completion routine */
+    RtlZeroMemory(IoStackLocation, sizeof(IO_STACK_LOCATION));
+    IoStackLocation->MajorFunction = IRP_MJ_PNP;
+    IoStackLocation->MinorFunction = IRP_MN_QUERY_CAPABILITIES;
+    IoStackLocation->Parameters.DeviceCapabilities.Capabilities = DeviceCapability;
+    IoSetCompletionRoutine(Irp, NULL, NULL, FALSE, FALSE, FALSE);
+
+    /* Send the IOCTL to the driver */
+    Status = IoCallDriver(AttachedDevice, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for a response and update the actual status */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = Irp->IoStatus.Status;
+    }
+
+    /* Done, dereference the attached device and return the final result */
+    ObDereferenceObject(AttachedDevice);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PciQueryPowerCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
+                          IN PDEVICE_CAPABILITIES DeviceCapability)
+{
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    DEVICE_CAPABILITIES AttachedCaps;
+    DEVICE_POWER_STATE NewPowerState, DevicePowerState, DeviceWakeLevel, DeviceWakeState;
+    SYSTEM_POWER_STATE SystemWakeState, DeepestWakeState, CurrentState;
+    
+    /* Nothing is known at first */
+    DeviceWakeState = PowerDeviceUnspecified;
+    SystemWakeState = DeepestWakeState = PowerSystemUnspecified;
+
+    /* Get the PCI capabilities for the parent PDO */
+    DeviceObject = PdoExtension->ParentFdoExtension->PhysicalDeviceObject;
+    Status = PciGetDeviceCapabilities(DeviceObject, &AttachedCaps);
+    ASSERT(NT_SUCCESS(Status));
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if there's not an existing device state for S0 */
+    if (!AttachedCaps.DeviceState[PowerSystemWorking])
+    {
+        /* Set D0<->S0 mapping */
+        AttachedCaps.DeviceState[PowerSystemWorking] = PowerDeviceD0;
+    }
+
+    /* Check if there's not an existing device state for S3 */
+    if (!AttachedCaps.DeviceState[PowerSystemShutdown])
+    {
+        /* Set D3<->S3 mapping */
+        AttachedCaps.DeviceState[PowerSystemShutdown] = PowerDeviceD3;
+    }
+
+    /* Check for a PDO with broken, or no, power capabilities */
+    if (PdoExtension->HackFlags & PCI_HACK_NO_PM_CAPS)
+    {
+        /* Unknown wake device states */
+        DeviceCapability->DeviceWake = PowerDeviceUnspecified;
+        DeviceCapability->SystemWake = PowerSystemUnspecified;
+
+        /* No device state support */
+        DeviceCapability->DeviceD1 = FALSE;
+        DeviceCapability->DeviceD2 = FALSE;
+
+        /* No waking from any low-power device state is supported */
+        DeviceCapability->WakeFromD0 = FALSE;
+        DeviceCapability->WakeFromD1 = FALSE;
+        DeviceCapability->WakeFromD2 = FALSE;
+        DeviceCapability->WakeFromD3 = FALSE;
+
+        /* For the rest, copy whatever the parent PDO had */
+        RtlCopyMemory(DeviceCapability->DeviceState,
+                      AttachedCaps.DeviceState,
+                      sizeof(DeviceCapability->DeviceState));
+        return STATUS_SUCCESS;
+    }
+    
+    /* The PCI Device has power capabilities, so read which ones are supported */
+    DeviceCapability->DeviceD1 = PdoExtension->PowerCapabilities.Support.D1;
+    DeviceCapability->DeviceD2 = PdoExtension->PowerCapabilities.Support.D2;
+    DeviceCapability->WakeFromD0 = PdoExtension->PowerCapabilities.Support.PMED0;
+    DeviceCapability->WakeFromD1 = PdoExtension->PowerCapabilities.Support.PMED1;
+    DeviceCapability->WakeFromD2 = PdoExtension->PowerCapabilities.Support.PMED2;
+
+    /* Can the attached device wake from D3? */
+    if (AttachedCaps.DeviceWake != PowerDeviceD3)
+    {
+        /* It can't, so check if this PDO supports hot D3 wake */
+        DeviceCapability->WakeFromD3 = PdoExtension->PowerCapabilities.Support.PMED3Hot;
+    }
+    else
+    {
+        /* It can, is this the root bus? */
+        if (PCI_IS_ROOT_FDO(PdoExtension->ParentFdoExtension))
+        {
+            /* This is the root bus, so just check if it supports hot D3 wake */
+            DeviceCapability->WakeFromD3 = PdoExtension->PowerCapabilities.Support.PMED3Hot;
+        }
+        else
+        {
+            /* Take the minimums? -- need to check with briang at work */
+            UNIMPLEMENTED;
+        }
+    }
+
+    /* Now loop each system power state to determine its device state mapping */
+    for (CurrentState = PowerSystemWorking;
+         CurrentState < PowerSystemMaximum;
+         CurrentState++)
+    {
+        /* Read the current mapping from the attached device */
+        DevicePowerState = AttachedCaps.DeviceState[CurrentState];
+        NewPowerState = DevicePowerState;
+        
+        /* The attachee suports D1, but this PDO does not */
+        if ((NewPowerState == PowerDeviceD1) &&
+            !(PdoExtension->PowerCapabilities.Support.D1))
+        {
+            /* Fall back to D2 */
+            NewPowerState = PowerDeviceD2;
+        }
+        
+        /* The attachee supports D2, but this PDO does not */
+        if ((NewPowerState == PowerDeviceD2) &&
+            !(PdoExtension->PowerCapabilities.Support.D2))
+        {
+            /* Fall back to D3 */
+            NewPowerState = PowerDeviceD3;
+        }
+        
+        /* Set the mapping based on the best state supported */
+        DeviceCapability->DeviceState[CurrentState] = NewPowerState;
+        
+        /* Check if sleep states are being processed, and a mapping was found */
+        if ((CurrentState < PowerSystemHibernate) &&
+            (NewPowerState != PowerDeviceUnspecified))
+        {
+            /* Save this state as being the deepest one found until now */
+            DeepestWakeState = CurrentState;
+        }
+        
+        /* 
+         * Finally, check if the computed sleep state is within the states that
+         * this device can wake the system from, and if it's higher or equal to
+         * the sleep state mapping that came from the attachee, assuming that it
+         * had a valid mapping to begin with.
+         *
+         * It this is the case, then make sure that the computed sleep state is
+         * matched by the device's ability to actually wake from that state.
+         *
+         * For devices that support D3, the PCI device only needs Hot D3 as long
+         * as the attachee's state is less than D3. Otherwise, if the attachee
+         * might also be at D3, this would require a Cold D3 wake, so check that
+         * the device actually support this.
+         */
+        if ((CurrentState < AttachedCaps.SystemWake) &&
+            (NewPowerState >= DevicePowerState) &&
+            (DevicePowerState != PowerDeviceUnspecified) &&
+            (((NewPowerState == PowerDeviceD0) && (DeviceCapability->WakeFromD0)) ||
+             ((NewPowerState == PowerDeviceD1) && (DeviceCapability->WakeFromD1)) ||
+             ((NewPowerState == PowerDeviceD2) && (DeviceCapability->WakeFromD2)) ||
+             ((NewPowerState == PowerDeviceD3) &&
+              (PdoExtension->PowerCapabilities.Support.PMED3Hot) &&
+              ((DevicePowerState < PowerDeviceD3) ||
+               (PdoExtension->PowerCapabilities.Support.PMED3Cold)))))
+        {
+            /* The mapping is valid, so this will be the lowest wake state */
+            SystemWakeState = CurrentState;
+            DeviceWakeState = NewPowerState;
+        }
+    }
+    
+    /* Read the current wake level */
+    DeviceWakeLevel = PdoExtension->PowerState.DeviceWakeLevel;
+    
+    /* Check if the attachee's wake levels are valid, and the PDO's is higher */
+    if ((AttachedCaps.SystemWake != PowerSystemUnspecified) &&
+        (AttachedCaps.DeviceWake != PowerDeviceUnspecified) &&
+        (DeviceWakeLevel != PowerDeviceUnspecified) &&
+        (DeviceWakeLevel >= AttachedCaps.DeviceWake))
+    {
+        /* Inherit the system wake from the attachee, and this PDO's wake level */
+        DeviceCapability->SystemWake = AttachedCaps.SystemWake;
+        DeviceCapability->DeviceWake = DeviceWakeLevel;
+
+        /* Now check if the wake level is D0, but the PDO doesn't support it */
+        if ((DeviceCapability->DeviceWake == PowerDeviceD0) &&
+            !(DeviceCapability->WakeFromD0))
+        {
+            /* Bump to D1 */
+            DeviceCapability->DeviceWake = PowerDeviceD1;
+        }
+        
+        /* Now check if the wake level is D1, but the PDO doesn't support it */
+        if ((DeviceCapability->DeviceWake == PowerDeviceD1) &&
+            !(DeviceCapability->WakeFromD1))
+        {
+            /* Bump to D2 */
+            DeviceCapability->DeviceWake = PowerDeviceD2;
+        }
+    
+        /* Now check if the wake level is D2, but the PDO doesn't support it */
+        if ((DeviceCapability->DeviceWake == PowerDeviceD2) &&
+            !(DeviceCapability->WakeFromD2))
+        {
+            /* Bump it to D3 */
+            DeviceCapability->DeviceWake = PowerDeviceD3;
+        }
+        
+        /* Now check if the wake level is D3, but the PDO doesn't support it */
+        if ((DeviceCapability->DeviceWake == PowerDeviceD3) &&
+            !(DeviceCapability->WakeFromD3))
+        {
+            /* Then no valid wake state exists */
+            DeviceCapability->DeviceWake = PowerDeviceUnspecified;
+            DeviceCapability->SystemWake = PowerSystemUnspecified;
+        }
+
+        /* Check if no valid wake state was found */
+        if ((DeviceCapability->DeviceWake == PowerDeviceUnspecified) ||
+            (DeviceCapability->SystemWake == PowerSystemUnspecified))
+        {
+            /* Check if one was computed earlier */
+            if ((SystemWakeState != PowerSystemUnspecified) &&
+                (DeviceWakeState != PowerDeviceUnspecified))
+            {
+                /* Use the wake state that had been computed earlier */
+                DeviceCapability->DeviceWake = DeviceWakeState;
+                DeviceCapability->SystemWake = SystemWakeState;
+                
+                /* If that state was D3, then the device supports Hot/Cold D3 */
+                if (DeviceWakeState == PowerDeviceD3) DeviceCapability->WakeFromD3 = TRUE;
+            }
+        }
+        
+        /*
+         * Finally, check for off states (lower than S3, such as hibernate) and
+         * make sure that the device both supports waking from D3 as well as
+         * supports a Cold wake
+         */
+        if ((DeviceCapability->SystemWake > PowerSystemSleeping3) &&
+            ((DeviceCapability->DeviceWake != PowerDeviceD3) ||
+             !(PdoExtension->PowerCapabilities.Support.PMED3Cold)))
+        {
+            /* It doesn't, so pick the computed lowest wake state from earlier */
+            DeviceCapability->SystemWake = DeepestWakeState;
+        }
+        
+        /* Set the PCI Specification mandated maximum latencies for transitions */
+        DeviceCapability->D1Latency = 0;
+        DeviceCapability->D2Latency = 2;
+        DeviceCapability->D3Latency = 100;
+        
+        /* Sanity check */
+        ASSERT(DeviceCapability->DeviceState[PowerSystemWorking] == PowerDeviceD0);
+    }
+    else
+    {
+        /* No valid sleep states, no latencies to worry about */
+        DeviceCapability->D1Latency = 0;
+        DeviceCapability->D2Latency = 0;
+        DeviceCapability->D3Latency = 0;
+    }
+    
+    /* This function always succeeds, even without power management support */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciQueryCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
+                     IN OUT PDEVICE_CAPABILITIES DeviceCapability)
+{
+    NTSTATUS Status;
+
+    /* A PDO ID is never unique, and its address is its function and device */
+    DeviceCapability->UniqueID = FALSE;
+    DeviceCapability->Address = PdoExtension->Slot.u.bits.FunctionNumber |
+                                (PdoExtension->Slot.u.bits.DeviceNumber << 16);
+
+    /* Check for host bridges */
+    if ((PdoExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+        (PdoExtension->SubClass == PCI_SUBCLASS_BR_HOST))
+    {
+        /* Raw device opens to a host bridge are acceptable */
+        DeviceCapability->RawDeviceOK = TRUE;
+    }
+    else
+    {
+        /* Otherwise, other PDOs cannot be directly opened */
+        DeviceCapability->RawDeviceOK = FALSE;
+    }
+
+    /* PCI PDOs are pretty fixed things */
+    DeviceCapability->LockSupported = FALSE;
+    DeviceCapability->EjectSupported = FALSE;
+    DeviceCapability->Removable = FALSE;
+    DeviceCapability->DockDevice = FALSE;
+
+    /* The slot number is stored as a device property, go query it */
+    PciDetermineSlotNumber(PdoExtension, &DeviceCapability->UINumber);
+
+    /* Finally, query and power capabilities and convert them for PnP usage */
+    Status = PciQueryPowerCapabilities(PdoExtension, DeviceCapability);
+
+    /* Dump the capabilities if it all worked, and return the status */
+    if (NT_SUCCESS(Status)) PciDebugDumpQueryCapabilities(DeviceCapability);
+    return Status;
+}
+
 /* EOF */

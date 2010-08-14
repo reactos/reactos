@@ -80,6 +80,11 @@
 #define PCI_VERIFIER_CODES                  0x04
 
 //
+// PCI ID Buffer ANSI Strings
+//
+#define MAX_ANSI_STRINGS                    0x08
+
+//
 // Device Extension, Interface, Translator and Arbiter Signatures
 //
 typedef enum _PCI_SIGNATURE
@@ -409,6 +414,19 @@ typedef struct _PCI_VERIFIER_DATA
     ULONG AssertionControl;
     PCHAR DebuggerMessageText;
 } PCI_VERIFIER_DATA, *PPCI_VERIFIER_DATA;
+
+//
+// PCI ID Buffer Descriptor
+//
+typedef struct _PCI_ID_BUFFER
+{
+    ULONG Count;
+    ANSI_STRING Strings[MAX_ANSI_STRINGS];
+    ULONG StringSize[MAX_ANSI_STRINGS];
+    ULONG TotalLength;
+    PCHAR CharBuffer;
+    CHAR BufferData[256];
+} PCI_ID_BUFFER, *PPCI_ID_BUFFER;
 
 //
 // PCI Configuration Callbacks
@@ -1111,6 +1129,20 @@ PciDecodeEnable(
     OUT PUSHORT Command
 );
 
+NTSTATUS
+NTAPI
+PciQueryBusInformation(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPNP_BUS_INFORMATION* Buffer
+);
+
+NTSTATUS
+NTAPI
+PciQueryCapabilities(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PDEVICE_CAPABILITIES DeviceCapability
+);
+
 //
 // Configuration Routines
 //
@@ -1215,6 +1247,12 @@ VOID
 NTAPI
 PciDebugDumpCommonConfig(
     IN PPCI_COMMON_HEADER PciData
+);
+
+VOID
+NTAPI
+PciDebugDumpQueryCapabilities(
+    IN PDEVICE_CAPABILITIES DeviceCaps
 );
 
 //
@@ -1452,6 +1490,34 @@ PciQueryDeviceRelations(
     IN OUT PDEVICE_RELATIONS *pDeviceRelations
 );
 
+NTSTATUS
+NTAPI
+PciQueryResources(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    OUT PCM_RESOURCE_LIST *Buffer
+);
+
+NTSTATUS
+NTAPI
+PciQueryTargetDeviceRelations(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PDEVICE_RELATIONS *pDeviceRelations
+);
+
+NTSTATUS
+NTAPI
+PciQueryEjectionRelations(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PDEVICE_RELATIONS *pDeviceRelations
+);
+
+NTSTATUS
+NTAPI
+PciQueryRequirements(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *RequirementsList
+);
+
 //
 // Identification Functions
 //
@@ -1460,6 +1526,23 @@ NTAPI
 PciGetDeviceDescriptionMessage(
     IN UCHAR BaseClass,
     IN UCHAR SubClass
+);
+
+NTSTATUS
+NTAPI
+PciQueryDeviceText(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN DEVICE_TEXT_TYPE QueryType,
+    IN ULONG Locale,
+    OUT PWCHAR *Buffer
+);
+
+NTSTATUS
+NTAPI
+PciQueryId(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN BUS_QUERY_ID_TYPE QueryType,
+    OUT PWCHAR *Buffer
 );
 
 //
@@ -1627,6 +1710,8 @@ extern PWATCHDOG_TABLE WdTable;
 extern PPCI_HACK_ENTRY PciHackTable;
 extern BOOLEAN PciAssignBusNumbers;
 extern BOOLEAN PciEnableNativeModeATA;
+extern PPCI_IRQ_ROUTING_TABLE PciIrqRoutingTable;
+extern BOOLEAN PciRunningDatacenter;
 
 /* Exported by NTOS, should this go in the NDK? */
 extern NTSYSAPI BOOLEAN InitSafeBootMode;

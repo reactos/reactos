@@ -49,6 +49,26 @@ PCHAR PoCodes[] =
     "QUERY_POWER",
 };
 
+PCHAR SystemPowerStates[] =
+{
+    "Unspecified",
+    "Working",
+    "Sleeping1",
+    "Sleeping2",
+    "Sleeping3",
+    "Hibernate",
+    "Shutdown"
+};
+
+PCHAR DevicePowerStates[] =
+{
+    "Unspecified",
+    "D0",
+    "D1",
+    "D2",
+    "D3"
+};
+
 ULONG PciBreakOnPdoPowerIrp, PciBreakOnFdoPowerIrp;
 ULONG PciBreakOnPdoPnpIrp, PciBreakOnFdoPnpIrp;
 
@@ -192,6 +212,43 @@ PciDebugDumpCommonConfig(IN PPCI_COMMON_HEADER PciData)
         /* Dump each DWORD and its offset */
         DPRINT1("  %02x - %08x\n", i, *(PULONG)((ULONG_PTR)PciData + i));
     }
+}
+
+VOID
+NTAPI
+PciDebugDumpQueryCapabilities(IN PDEVICE_CAPABILITIES DeviceCaps)
+{
+    ULONG i;
+
+    /* Dump the capabilities */
+    DPRINT1("Capabilities\n  Lock:%d, Eject:%d, Remove:%d, Dock:%d, UniqueId:%d\n",
+            DeviceCaps->LockSupported,
+            DeviceCaps->EjectSupported,
+            DeviceCaps->Removable,
+            DeviceCaps->DockDevice,
+            DeviceCaps->UniqueID);
+    DbgPrint("  SilentInstall:%d, RawOk:%d, SurpriseOk:%d\n",
+             DeviceCaps->SilentInstall,
+             DeviceCaps->RawDeviceOK,
+             DeviceCaps->SurpriseRemovalOK);
+    DbgPrint("  Address %08x, UINumber %08x, Latencies D1 %d, D2 %d, D3 %d\n",
+             DeviceCaps->Address,
+             DeviceCaps->UINumber,
+             DeviceCaps->D1Latency,
+             DeviceCaps->D2Latency,
+             DeviceCaps->D3Latency);
+
+    /* Dump and convert the wake levels */
+    DbgPrint("  System Wake: %s, Device Wake: %s\n  DeviceState[PowerState] [",
+             SystemPowerStates[min(DeviceCaps->SystemWake, PowerSystemMaximum)],
+             DevicePowerStates[min(DeviceCaps->DeviceWake, PowerDeviceMaximum)]);
+
+    /* Dump and convert the power state mappings */
+    for (i = PowerSystemWorking; i < PowerSystemMaximum; i++)
+        DbgPrint(" %s", DevicePowerStates[DeviceCaps->DeviceState[i]]);
+        
+    /* Finish the dump */
+    DbgPrint(" ]\n");
 }
 
 /* EOF */

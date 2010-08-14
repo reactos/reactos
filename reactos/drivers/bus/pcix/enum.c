@@ -14,6 +14,8 @@
 
 /* GLOBALS ********************************************************************/
 
+PIO_RESOURCE_REQUIREMENTS_LIST PciZeroIoResourceRequirements;
+
 PCI_CONFIGURATOR PciConfigurators[] =
 {
     {
@@ -46,6 +48,65 @@ PCI_CONFIGURATOR PciConfigurators[] =
 };
 
 /* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+NTAPI
+PciQueryResources(IN PPCI_PDO_EXTENSION PdoExtension,
+                  OUT PCM_RESOURCE_LIST *Buffer)
+{
+    /* Not yet implemented */
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciQueryTargetDeviceRelations(IN PPCI_PDO_EXTENSION PdoExtension,
+                              IN OUT PDEVICE_RELATIONS *pDeviceRelations)
+{
+    PDEVICE_RELATIONS DeviceRelations;
+    PAGED_CODE();
+
+    /* If there were existing relations, free them */
+    if (*pDeviceRelations) ExFreePoolWithTag(*pDeviceRelations, 0);
+
+    /* Allocate a new structure for the relations */
+    DeviceRelations = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(DEVICE_RELATIONS),
+                                            'BicP');
+    if (!DeviceRelations) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Only one relation: the PDO */
+    DeviceRelations->Count = 1;
+    DeviceRelations->Objects[0] = PdoExtension->PhysicalDeviceObject;
+    ObReferenceObject(DeviceRelations->Objects[0]);
+
+    /* Return the new relations */
+    *pDeviceRelations = DeviceRelations;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciQueryEjectionRelations(IN PPCI_PDO_EXTENSION PdoExtension,
+                          IN OUT PDEVICE_RELATIONS *pDeviceRelations)
+{
+    /* Not yet implemented */
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+NTSTATUS
+NTAPI
+PciQueryRequirements(IN PPCI_PDO_EXTENSION PdoExtension,
+                     IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *RequirementsList)
+{
+    /* Not yet implemented */
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
 
 /*
  * 7. The IO/MEM/Busmaster decodes are disabled for the device.
