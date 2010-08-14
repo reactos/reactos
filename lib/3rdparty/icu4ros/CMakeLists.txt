@@ -7,8 +7,6 @@ add_definitions(-DU_HAVE_INTTYPES_H)
 add_definitions(-DUCONFIG_NO_FILE_IO=1)
 add_definitions(-DICU_NO_USER_DATA_OVERRIDE=1)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
-
 set(SOURCE 
   "stubs.cpp"
   "icu/source/common/bmpset.cpp"
