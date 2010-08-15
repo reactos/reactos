@@ -38,7 +38,7 @@
 
 #include <win32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static PAGED_LOOKASIDE_LIST gProcessLookasideList;
@@ -1217,92 +1217,71 @@ UserDrawIconEx(
     HBRUSH hbrFlickerFreeDraw,
     UINT diFlags)
 {
-    PSURFACE psurfColor = NULL, psurfMask, psurfDst = NULL;
-    HGDIOBJ hObjs[3];
-    PGDIOBJ pObjs[3];
+    BOOL Ret = FALSE;
+    HBITMAP hbmMask, hbmColor;
+    BITMAP bmpColor, bm;
     BOOL DoFlickerFree;
-    PDC pdc;
-    HSURF hsurfDst = NULL;
-    RECTL rcSrc, rcDst;
-    CLIPOBJ clo, *pclo;
-    EXLATEOBJ exlo;
-    BOOL bAlpha = FALSE, Ret = FALSE, bStretch;
+    INT iOldBkColor = 0, iOldTxtColor = 0;
+
+    HDC hMemDC, hDestDC = hDc;
+    HGDIOBJ hOldOffBrush = 0;
+    HGDIOBJ hOldOffBmp = 0;
+    HBITMAP hTmpBmp = 0, hOffBmp = 0;
+    BOOL bAlpha = FALSE;
+    INT x=xLeft, y=yTop;
+
+    hbmMask = pIcon->IconInfo.hbmMask;
+    hbmColor = pIcon->IconInfo.hbmColor;
 
     if (istepIfAniCur)
         DPRINT1("NtUserDrawIconEx: istepIfAniCur is not supported!\n");
 
-    DPRINT("Flags : 0x%08x\n", diFlags);
-
-    hObjs[0] = pIcon->IconInfo.hbmMask;
-    hObjs[1] = pIcon->IconInfo.hbmColor;
-    hObjs[2] = hDc;
-    GDIOBJ_LockMultipleObjs(3, hObjs, pObjs);
-    psurfMask = pObjs[0];
-    psurfColor = pObjs[1];
-    pdc = pObjs[2];
-
-    if (!pIcon->IconInfo.hbmMask
-         || !psurfMask)
+    if (!hbmMask || !IntGdiGetObject(hbmMask, sizeof(BITMAP), (PVOID)&bm))
     {
-        DPRINT1("No hbmMask?!\n");
-        if(pdc) DC_UnlockDc(pdc);
-        if(psurfColor) SURFACE_UnlockSurface(psurfColor);
         return FALSE;
     }
 
-    if (pIcon->IconInfo.hbmColor
-         && !psurfColor)
+    if (hbmColor && !IntGdiGetObject(hbmColor, sizeof(BITMAP), (PVOID)&bmpColor))
     {
-        DPRINT1("Unable to lock the color Bitmap?!\n");
-        SURFACE_UnlockSurface(psurfMask);
-        if(pdc) DC_UnlockDc(pdc);
         return FALSE;
     }
 
-    if(!psurfColor)
+    if(!(hMemDC = NtGdiCreateCompatibleDC(hDc)))
     {
-        DPRINT("Monochrome Icon\n");
-        psurfColor = psurfMask;
-        RECTL_vSetRect(&rcSrc, 0, pIcon->Size.cy, pIcon->Size.cx, 2*pIcon->Size.cy);
-    }
-    else
-    {
-        DPRINT("Color Icon\n");
-        RECTL_vSetRect(&rcSrc, 0, 0, pIcon->Size.cx, pIcon->Size.cy);
-    }
-
-    if(!pdc)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        SURFACE_UnlockSurface(psurfMask);
-        if(psurfColor != psurfMask) SURFACE_UnlockSurface(psurfColor);
-        DPRINT1("Invalid DC!\n");
+        DPRINT1("NtGdiCreateCompatibleDC failed!\n");
         return FALSE;
     }
 
     /* Check for alpha */
-    if ((BitsPerFormat(psurfColor->SurfObj.iBitmapFormat) == 32)
+    if (hbmColor
+            && (bmpColor.bmBitsPixel == 32)
             && (diFlags & DI_IMAGE))
     {
+        SURFACE *psurfOff = NULL;
         PFN_DIB_GetPixel fnSource_GetPixel = NULL;
         INT i, j;
 
         /* In order to correctly display 32 bit icons Windows first scans the image,
            because information about transparency is not stored in any image's headers */
-        fnSource_GetPixel = DibFunctionsForBitmapFormat[psurfColor->SurfObj.iBitmapFormat].DIB_GetPixel;
-        if (fnSource_GetPixel)
+        psurfOff = SURFACE_LockSurface(hbmColor);
+        if (psurfOff)
         {
-            for (i = 0; i < psurfColor->SurfObj.sizlBitmap.cx; i++)
+            fnSource_GetPixel = DibFunctionsForBitmapFormat[psurfOff->SurfObj.iBitmapFormat].DIB_GetPixel;
+            if (fnSource_GetPixel)
             {
-                for (j = 0; j < psurfColor->SurfObj.sizlBitmap.cy; j++)
+                for (i = 0; i < psurfOff->SurfObj.sizlBitmap.cx; i++)
                 {
-                    bAlpha = ((BYTE)(fnSource_GetPixel(&psurfColor->SurfObj, i, j) >> 24) & 0xff);
+                    for (j = 0; j < psurfOff->SurfObj.sizlBitmap.cy; j++)
+                    {
+                        bAlpha = ((BYTE)(fnSource_GetPixel(&psurfOff->SurfObj, i, j) >> 24) & 0xff);
+                        if (bAlpha)
+                            break;
+                    }
                     if (bAlpha)
                         break;
                 }
-                if (bAlpha)
-                    break;
             }
+            SURFACE_UnlockSurface(psurfOff);
         }
     }
 
@@ -1314,90 +1293,45 @@ UserDrawIconEx(
         cyHeight = ((diFlags & DI_DEFAULTSIZE) ?
                     UserGetSystemMetrics(SM_CYICON) : pIcon->Size.cy);
 
-    /* Check stretching */
-    bStretch = (pIcon->Size.cx != cxWidth) || (pIcon->Size.cy != cyHeight);
-
     DoFlickerFree = (hbrFlickerFreeDraw &&
                      (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
 
     if (DoFlickerFree)
     {
-        EBRUSHOBJ ebo;
-        PBRUSH pBrush ;
-        POINTL ptBrushOrig;
-
-        pBrush = BRUSH_LockBrush(hbrFlickerFreeDraw);
-        if(!pBrush)
+        hDestDC = NtGdiCreateCompatibleDC(hDc);
+        if(!hDestDC)
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            DPRINT1("Invalid brush!\n");
-            goto cleanup;
-        }
-
-        hsurfDst = IntCreateCompatibleBitmap(pdc, cxWidth, cyHeight);
-        if(!hsurfDst)
-        {
-            DPRINT1("Error : Failed to allocate the offscreen surface\n");
-            goto cleanup;
-        }
-        psurfDst = SURFACE_LockSurface(hsurfDst);
-        if(!psurfDst)
-        {
-            DPRINT1("Error : Failed to lock the offScreen bitmap\n");
-            goto cleanup;
-        }
-        RECTL_vSetRect(&rcDst, 0, 0, cxWidth, cyHeight);
-
-        ptBrushOrig.x = pBrush->ptOrigin.x;
-        ptBrushOrig.y = pBrush->ptOrigin.y;
-
-        EBRUSHOBJ_vInit(&ebo, pBrush, pdc);
-
-        clo.iDComplexity =  DC_TRIVIAL;
-        pclo = &clo;
-
-        IntEngBitBlt(&psurfDst->SurfObj, NULL, NULL, pclo, NULL, &rcDst, NULL,
-                     NULL, &ebo.BrushObject, &ptBrushOrig, ROP3_TO_ROP4(PATCOPY));
-
-        EBRUSHOBJ_vCleanup(&ebo);
-        BRUSH_UnlockBrush(pBrush);
-    }
-    else
-    {
-        RECT rcBmp;
-        RECTL_vSetRect(&rcDst, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
-        IntLPtoDP(pdc, (LPPOINT)&rcDst, 2);
-        RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-
-        DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcDst );
-
-        if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-            DC_vUpdateFillBrush(pdc);
-
-        psurfDst = pdc->dclevel.pSurface;
-        pclo = pdc->rosdc.CombinedClip;
-        RECTL_vSetRect(&rcBmp, 0, 0, psurfDst->SurfObj.sizlBitmap.cx, psurfDst->SurfObj.sizlBitmap.cy);
-        if(!RECTL_bIntersectRect(&rcDst, &rcDst, &rcBmp))
-        {
+            DPRINT1("NtGdiCreateCompatibleDC failed!\n");
             Ret = FALSE;
-            goto done;
+            goto Cleanup ;
         }
+        hOffBmp = NtGdiCreateCompatibleBitmap(hDc, cxWidth, cyHeight);
+        if(!hOffBmp)
+        {
+            DPRINT1("NtGdiCreateCompatibleBitmap failed!\n");
+            goto Cleanup ;
+        }
+        hOldOffBmp = NtGdiSelectBitmap(hDestDC, hOffBmp);
+        hOldOffBrush = NtGdiSelectBrush(hDestDC, hbrFlickerFreeDraw);
+        NtGdiPatBlt(hDestDC, 0, 0, cxWidth, cyHeight, PATCOPY);
+        NtGdiSelectBrush(hDestDC, hOldOffBrush);
+        x=y=0;
     }
 
-    /* Optimization : use directly the palette of the DC,
-     * so we XLATE only once, and then we directly copy bits */
-    EXLATEOBJ_vInitialize(&exlo, psurfColor->ppal, pdc->dclevel.pSurface->ppal, 0, 0, 0xFFFFFFFF);
+    /* Set Background/foreground colors */
+    iOldTxtColor = IntGdiSetTextColor(hDc, 0); //black
+    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF); //white
 
 	if(bAlpha && (diFlags & DI_IMAGE))
 	{
 		BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
         BYTE Alpha;
         INT i, j;
-        PSURFACE psurf = NULL;
+        PSURFACE psurf;
         PBYTE ptr ;
         HBITMAP hMemBmp = NULL;
 
-        hMemBmp = BITMAP_CopyBitmap(pIcon->IconInfo.hbmColor);
+        hMemBmp = BITMAP_CopyBitmap(hbmColor);
         if(!hMemBmp)
         {
             DPRINT1("BITMAP_CopyBitmap failed!");
@@ -1426,116 +1360,109 @@ UserDrawIconEx(
             }
         }
 
-        DPRINT("Performing alpha blending\n");
-        Ret = IntEngAlphaBlend(&psurfDst->SurfObj,
-                               &psurf->SurfObj,
-                               pclo,
-                               &exlo.xlo,
-                               &rcDst,
-                               &rcSrc,
-                               (BLENDOBJ*)&pixelblend);
+        SURFACE_UnlockSurface(psurf);
 
+        hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
+
+        Ret = NtGdiAlphaBlend(hDestDC,
+					          x,
+						      y,
+                              cxWidth,
+                              cyHeight,
+                              hMemDC,
+                              0,
+                              0,
+                              pIcon->Size.cx,
+                              pIcon->Size.cy,
+                              pixelblend,
+                              NULL);
+        NtGdiSelectBitmap(hMemDC, hTmpBmp);
     CleanupAlpha:
-        if(psurf) SURFACE_UnlockSurface(psurf);
         if(hMemBmp) NtGdiDeleteObjectApp(hMemBmp);
 		if(Ret) goto done;
-        else DPRINT1("IntEngAlphaBlend failed!\n");
     }
 
-    if (diFlags & DI_IMAGE)
+    if (diFlags & DI_MASK)
     {
-        POINTL ptMaskOrig = {0,0};
-        if(bStretch)
+        hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
+        NtGdiStretchBlt(hDestDC,
+                        x,
+                        y,
+                        cxWidth,
+                        cyHeight,
+                        hMemDC,
+                        0,
+                        0,
+                        pIcon->Size.cx,
+                        pIcon->Size.cy,
+                        SRCAND,
+                        0);
+        NtGdiSelectBitmap(hMemDC, hTmpBmp);
+    }
+
+    if(diFlags & DI_IMAGE)
+    {
+		if (hbmColor)
         {
-            DPRINT("Stretching\n");
-            Ret = IntEngStretchBlt(&psurfDst->SurfObj,
-                                   &psurfColor->SurfObj,
-                                   (diFlags & DI_MASK) ? &psurfMask->SurfObj : NULL,
-                                   pclo,
-                                   &exlo.xlo,
-                                   &rcDst,
-                                   &rcSrc,
-                                   (diFlags & DI_MASK) ? &ptMaskOrig : NULL,
-                                   NULL,
-                                   NULL,
-                                   (diFlags & DI_MASK) ? R4_MASK : ROP3_TO_ROP4(SRCCOPY));
-            if(!Ret) DPRINT1("IntEngStretchBlt Failed\n");
+            DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
+            hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmColor);
+            NtGdiStretchBlt(hDestDC,
+                            x,
+                            y,
+                            cxWidth,
+                            cyHeight,
+                            hMemDC,
+                            0,
+                            0,
+                            pIcon->Size.cx,
+                            pIcon->Size.cy,
+                            rop,
+                            0);
+            NtGdiSelectBitmap(hMemDC, hTmpBmp);
         }
         else
         {
-            DPRINT("Blting\n");
-            Ret = IntEngBitBlt(&psurfDst->SurfObj,
-                               &psurfColor->SurfObj,
-                               (diFlags & DI_MASK) ? &psurfMask->SurfObj : NULL,
-                               pclo,
-                               &exlo.xlo,
-                               &rcDst,
-                               (PPOINTL)&rcSrc,
-                               (diFlags & DI_MASK) ? &ptMaskOrig : NULL,
-                               NULL,
-                               NULL,
-                               (diFlags & DI_MASK) ? R4_MASK : ROP3_TO_ROP4(SRCCOPY));
-            if(!Ret) DPRINT1("IntEngBitBlt Failed\n");
+            /* Mask bitmap holds the information in its second half */
+            DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
+            hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
+            NtGdiStretchBlt(hDestDC,
+                            x,
+                            y,
+                            cxWidth,
+                            cyHeight,
+                            hMemDC,
+                            0,
+                            pIcon->Size.cy,
+                            pIcon->Size.cx,
+                            pIcon->Size.cy,
+                            rop,
+                            0);
+            NtGdiSelectBitmap(hMemDC, hTmpBmp);
         }
-    }
-    else
-    {
-        DPRINT1("Uh? Calling DrawIcon without anything to draw? diFlags %d\n", diFlags);
     }
 
 done:
-    if(DoFlickerFree && Ret)
+    if(hDestDC != hDc)
     {
-        POINTL ptSrc = {0,0};
-        RECTL rcBmp;
-
-        RECTL_vSetRect(&rcDst, xLeft, yTop, xLeft + cxWidth, yTop + cyHeight);
-
-        IntLPtoDP(pdc, (LPPOINT)&rcDst, 2);
-
-        RECTL_vOffsetRect(&rcDst, pdc->ptlDCOrig.x, pdc->ptlDCOrig.y);
-        DC_vPrepareDCsForBlit(pdc, rcDst, NULL, rcDst );
-
-        if (pdc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-            DC_vUpdateFillBrush(pdc);
-
-        RECTL_vSetRect(&rcBmp, 0, 0,
-                       pdc->dclevel.pSurface->SurfObj.sizlBitmap.cx,
-                       pdc->dclevel.pSurface->SurfObj.sizlBitmap.cy);
-
-        if(RECTL_bIntersectRect(&rcDst, &rcDst, &rcBmp))
-        {
-            /* Copy everything */
-            DPRINT("Copying bits from offscreen buffer\n");
-            Ret = IntEngCopyBits(&pdc->dclevel.pSurface->SurfObj,
-                                 &psurfDst->SurfObj,
-                                 pdc->rosdc.CombinedClip,
-                                 gpxloTrivial,
-                                 &rcDst,
-                                 &ptSrc);
-            if(!Ret) DPRINT1("IntEngCopyBits Failed\n");
-        }
-
-        DC_vFinishBlit(pdc, NULL);
+        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, cyHeight, hDestDC, 0, 0, SRCCOPY, 0, 0);
     }
 
-    if(!DoFlickerFree) DC_vFinishBlit(pdc, NULL);
-    EXLATEOBJ_vCleanup(&exlo);
+    /* Restore foreground and background colors */
+    IntGdiSetBkColor(hDc, iOldBkColor);
+    IntGdiSetTextColor(hDc, iOldTxtColor);
 
-cleanup:
-    if(psurfColor != psurfMask)
-        SURFACE_UnlockSurface(psurfColor);
-    SURFACE_UnlockSurface(psurfMask);
-    if(hsurfDst)
+    Ret = TRUE ;
+
+Cleanup:
+    NtGdiDeleteObjectApp(hMemDC);
+    if(hDestDC != hDc)
     {
-        if(psurfDst) SURFACE_UnlockSurface(psurfDst);
-        GreDeleteObject(hsurfDst);
+        if(hOldOffBmp) NtGdiSelectBitmap(hDestDC, hOldOffBmp);
+        NtGdiDeleteObjectApp(hDestDC);
+        if(hOffBmp) NtGdiDeleteObjectApp(hOffBmp);
     }
-    DC_UnlockDc(pdc);
 
-    DPRINT("return %s\n", Ret ? "TRUE" : "FALSE") ;
-
-    return Ret ;
+    return Ret;
 }
 
 /*

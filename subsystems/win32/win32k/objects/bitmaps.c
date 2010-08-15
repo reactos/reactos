@@ -953,8 +953,6 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         if (resBitmap)
         {
             IntSetBitmapBits(resBitmap, Bitmap->SurfObj.cjBits, Bitmap->SurfObj.pvBits);
-            resBitmap->ppal = Bitmap->ppal;
-            GDIOBJ_IncrementShareCount((POBJ)Bitmap->ppal);
 			SURFACE_UnlockSurface(resBitmap);
         }
         else
