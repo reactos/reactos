@@ -1175,6 +1175,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     Irp->RequestorMode = PreviousMode;
     Irp->UserIosb = IoStatusBlock;
     Irp->UserEvent = Event;
+    Irp->UserBuffer = Buffer;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
     Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;

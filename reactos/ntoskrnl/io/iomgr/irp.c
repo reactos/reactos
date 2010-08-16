@@ -1415,7 +1415,6 @@ IofCompleteRequest(IN PIRP Irp,
     else
     {
         /* The IRP just got canceled... does a thread still own it? */
-        Thread = Irp->Tail.Overlay.Thread;
         if (Thread)
         {
             /* Yes! There is still hope! Initialize the APC */
@@ -1576,7 +1575,7 @@ IoGetPagingIoPriority(IN PIRP Irp)
     Flags = Irp->Flags;
 
     /* Check what priority it has */
-    if (Flags & 0x8000) // FIXME: Undocumented flag
+    if (Flags & IRP_CLASS_CACHE_OPERATION)
     {
         /* High priority */
         Priority = IoPagingPriorityHigh;
@@ -1604,7 +1603,12 @@ NTAPI
 IoGetRequestorProcess(IN PIRP Irp)
 {
     /* Return the requestor process */
-    return Irp->Tail.Overlay.Thread->ThreadsProcess;
+    if (Irp->Tail.Overlay.Thread)
+    {
+        return Irp->Tail.Overlay.Thread->ThreadsProcess;
+    }
+
+    return NULL;
 }
 
 /*
@@ -1614,8 +1618,15 @@ ULONG
 NTAPI
 IoGetRequestorProcessId(IN PIRP Irp)
 {
+    PEPROCESS Process;
+
     /* Return the requestor process' id */
-    return PtrToUlong(IoGetRequestorProcess(Irp)->UniqueProcessId);
+    if ((Process = IoGetRequestorProcess(Irp)))
+    {
+        return PtrToUlong(Process->UniqueProcessId);
+    }
+
+    return 0;
 }
 
 /*
@@ -1626,9 +1637,17 @@ NTAPI
 IoGetRequestorSessionId(IN PIRP Irp,
                         OUT PULONG pSessionId)
 {
+    PEPROCESS Process;
+
     /* Return the session */
-    *pSessionId = IoGetRequestorProcess(Irp)->Session;
-    return STATUS_SUCCESS;
+    if ((Process = IoGetRequestorProcess(Irp)))
+    {
+        *pSessionId = Process->Session;
+        return STATUS_SUCCESS;
+    }
+
+    *pSessionId = (ULONG)-1;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
