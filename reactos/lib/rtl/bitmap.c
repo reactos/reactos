@@ -51,7 +51,7 @@ RtlpGetLengthOfRunClear(
     IN ULONG MaxLength)
 {
     ULONG Value, BitPos, Length;
-    PULONG Buffer, MaxBuffer;
+    PULONG Buffer, BufferEnd;
 
     /* Calculate positions */
     Buffer = BitMapHeader->Buffer + StartingIndex / 32;
@@ -59,22 +59,22 @@ RtlpGetLengthOfRunClear(
 
     /* Calculate the maximum length */
     MaxLength = min(MaxLength, BitMapHeader->SizeOfBitMap - StartingIndex);
-    MaxBuffer = Buffer + (BitPos + MaxLength + 31) / 32;
+    BufferEnd = Buffer + (BitPos + MaxLength + 31) / 32;
 
     /* Clear the bits that don't belong to this run */
     Value = *Buffer++ >> BitPos << BitPos;
 
     /* Skip all clear ULONGs */
-    while (Value == 0 && Buffer < MaxBuffer)
+    while (Value == 0)
     {
-        Value = *Buffer++;
-    }
+        /* Did we reach the end? */
+        if (Buffer == BufferEnd)
+        {
+            /* Return maximum length */
+            return MaxLength;
+        }
 
-    /* Did we reach the end? */
-    if (Value == 0)
-    {
-        /* Return maximum length */
-        return MaxLength;
+        Value = *Buffer++;
     }
 
     /* We hit a set bit, check how many clear bits are left */
@@ -100,7 +100,7 @@ RtlpGetLengthOfRunSet(
     IN ULONG MaxLength)
 {
     ULONG InvValue, BitPos, Length;
-    PULONG Buffer, MaxBuffer;
+    PULONG Buffer, BufferEnd;
 
     /* Calculate positions */
     Buffer = BitMapHeader->Buffer + StartingIndex / 32;
@@ -108,22 +108,22 @@ RtlpGetLengthOfRunSet(
 
     /* Calculate the maximum length */
     MaxLength = min(MaxLength, BitMapHeader->SizeOfBitMap - StartingIndex);
-    MaxBuffer = Buffer + (BitPos + MaxLength + 31) / 32;
+    BufferEnd = Buffer + (BitPos + MaxLength + 31) / 32;
 
     /* Get the inversed value, clear bits that don't belong to the run */
     InvValue = ~(*Buffer++) >> BitPos << BitPos;
 
     /* Skip all set ULONGs */
-    while (InvValue == 0 && Buffer < MaxBuffer)
+    while (InvValue == 0)
     {
-        InvValue = ~(*Buffer++);
-    }
+        /* Did we reach the end? */
+        if (Buffer == BufferEnd)
+        {
+            /* Yes, return maximum */
+            return MaxLength;
+        }
 
-    /* Did we reach the end? */
-    if (InvValue == 0)
-    {
-        /* Yes, return maximum */
-        return MaxLength;
+        InvValue = ~(*Buffer++);
     }
 
     /* We hit a clear bit, check how many set bits are left */
@@ -603,7 +603,7 @@ RtlFindNextForwardRunSet(
     *StartingRunIndex = FromIndex + Length;
 
     /* Now return the length of the run */
-    return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex, MAXULONG);
+    return RtlpGetLengthOfRunSet(BitMapHeader, FromIndex + Length, MAXULONG);
 }
 
 ULONG
@@ -622,8 +622,62 @@ RtlFindLastBackwardRunClear(
     IN ULONG FromIndex,
     IN PULONG StartingRunIndex)
 {
-    UNIMPLEMENTED;
-    return 0;
+    ULONG Value, InvValue, BitPos;
+    PULONG Buffer;
+
+    /* Make sure we don't go past the end */
+    FromIndex = min(FromIndex, BitMapHeader->SizeOfBitMap - 1);
+
+    /* Calculate positions */
+    Buffer = BitMapHeader->Buffer + FromIndex / 32;
+    BitPos = 31 - (FromIndex & 31);
+
+    /* Get the inversed value, clear bits that don't belong to the run */
+    InvValue = ~(*Buffer--) << BitPos >> BitPos;
+
+    /* Skip all set ULONGs */
+    while (InvValue == 0)
+    {
+        /* Did we already reach past the first ULONG? */
+        if (Buffer < BitMapHeader->Buffer)
+        {
+            /* Yes, nothing found */
+            return 0;
+        }
+
+        InvValue = ~(*Buffer--);
+    }
+
+    /* We hit a clear bit, check how many set bits are left */
+    BitScanReverse(&BitPos, InvValue);
+
+    /* Calculate last bit position */
+    FromIndex = (Buffer + 1 - BitMapHeader->Buffer) * 32 + BitPos;
+
+    Value = ~InvValue << (31-BitPos) >> (31-BitPos);
+
+    /* Skip all clear ULONGs */
+    while (Value == 0 && Buffer >= BitMapHeader->Buffer)
+    {
+        Value = *Buffer--;
+    }
+
+    if (Value != 0)
+    {
+        /* We hit a set bit, check how many clear bits are left */
+        BitScanReverse(&BitPos, Value);
+
+        /* Calculate Starting Index */
+        *StartingRunIndex = (Buffer + 1 - BitMapHeader->Buffer) * 32 + BitPos + 1;
+    }
+    else
+    {
+        /* We reached the start of the bitmap */
+        *StartingRunIndex = 0;
+    }
+
+    /* Return length of the run */
+    return FromIndex - *StartingRunIndex;
 }
 
 
