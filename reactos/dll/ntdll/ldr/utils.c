@@ -1388,7 +1388,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
   ULONG Count, ProtectSize, OldProtect, OldProtect2;
   PVOID Page, ProtectPage, ProtectPage2;
   PUSHORT TypeOffset;
-  ULONG_PTR Delta;
+  LONG_PTR Delta;
   NTSTATUS Status;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
