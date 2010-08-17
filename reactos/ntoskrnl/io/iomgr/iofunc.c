@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <ioevent.h>
 #define NDEBUG
 #include <debug.h>
 #include "internal/io_i.h"
@@ -3223,12 +3224,13 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     PFILE_OBJECT FileObject;
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
-    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT DeviceObject, TargetDeviceObject;
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     NTSTATUS Status;
     IO_STATUS_BLOCK KernelIosb;
+    TARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
@@ -3277,6 +3279,10 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Get target device for notification */
+    Status = IoGetRelatedTargetDevice(FileObject, &TargetDeviceObject);
+    if (!NT_SUCCESS(Status)) TargetDeviceObject = NULL;
+
     /* Check if we should use Sync IO or not */
     if (FileObject->Flags & FO_SYNCHRONOUS_IO)
     {
@@ -3290,6 +3296,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
         if (!Event)
         {
             ObDereferenceObject(FileObject);
+            if (TargetDeviceObject) ObDereferenceObject(TargetDeviceObject);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
@@ -3304,7 +3311,11 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 
     /* Allocate the IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return IopCleanupFailedIrp(FileObject, NULL, Event);
+    if (!Irp)
+    {
+        if (TargetDeviceObject) ObDereferenceObject(TargetDeviceObject);
+        return IopCleanupFailedIrp(FileObject, NULL, Event);
+    }
 
     /* Set up the IRP */
     Irp->RequestorMode = PreviousMode;
@@ -3339,6 +3350,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     {
         /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
+        if (TargetDeviceObject) ObDereferenceObject(TargetDeviceObject);
         _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
@@ -3369,6 +3381,17 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
                                            PreviousMode,
                                            &KernelIosb,
                                            IoStatusBlock);
+    }
+
+    if (TargetDeviceObject && NT_SUCCESS(Status))
+    {
+        /* Time to report change */
+        NotificationStructure.Version = 1;
+        NotificationStructure.Size = sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION);
+        NotificationStructure.Event = GUID_IO_VOLUME_NAME_CHANGE;
+        NotificationStructure.FileObject = NULL;
+        NotificationStructure.NameBufferOffset = - 1;
+        Status = IoReportTargetDeviceChange(TargetDeviceObject, &NotificationStructure);
     }
 
     /* Return status */
