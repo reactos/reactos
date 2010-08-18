@@ -100,6 +100,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    DriverObject->MajorFunction[IRP_MJ_LOCK_CONTROL] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_CLEANUP] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = VfatBuildRequest;
+   DriverObject->MajorFunction[IRP_MJ_PNP] = VfatBuildRequest;
 
    DriverObject->DriverUnload = NULL;
 

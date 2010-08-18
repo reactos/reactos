@@ -21,6 +21,7 @@
 	<file>fsctl.c</file>
 	<file>iface.c</file>
 	<file>misc.c</file>
+	<file>pnp.c</file>
 	<file>rw.c</file>
 	<file>shutdown.c</file>
 	<file>string.c</file>

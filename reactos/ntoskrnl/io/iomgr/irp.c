@@ -18,6 +18,8 @@
 #undef IoCallDriver
 #undef IoCompleteRequest
 
+PIRP IopDeadIrp;
+
 /* PRIVATE FUNCTIONS  ********************************************************/
 
 VOID
@@ -112,10 +114,9 @@ IopAbortInterruptedIrp(IN PKEVENT EventObject,
 
 VOID
 NTAPI
-IopRemoveThreadIrp(VOID)
+IopDisassociateThreadIrp(VOID)
 {
-    KIRQL OldIrql;
-    PIRP DeadIrp;
+    KIRQL OldIrql, LockIrql;
     PETHREAD IrpThread;
     PLIST_ENTRY IrpEntry;
     PIO_ERROR_LOG_PACKET ErrorLogEntry;
@@ -134,36 +135,41 @@ IopRemoveThreadIrp(VOID)
         return;
     }
 
+    /* Ensure no one will come disturb */
+    LockIrql = KeAcquireQueuedSpinLock(LockQueueIoCompletionLock);
+
     /* Get the misbehaving IRP */
     IrpEntry = IrpThread->IrpList.Flink;
-    DeadIrp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
+    IopDeadIrp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
     IOTRACE(IO_IRP_DEBUG,
             "%s - Deassociating IRP %p for %p\n",
             __FUNCTION__,
-            DeadIrp,
+            IopDeadIrp,
             IrpThread);
 
     /* Don't cancel the IRP if it's already been completed far */
-    if (DeadIrp->CurrentLocation == (DeadIrp->StackCount + 2))
+    if (IopDeadIrp->CurrentLocation == (IopDeadIrp->StackCount + 2))
     {
         /* Return */
+        KeReleaseQueuedSpinLock(LockQueueIoCompletionLock, LockIrql);
         KeLowerIrql(OldIrql);
         return;
     }
 
     /* Disown the IRP! */
-    DeadIrp->Tail.Overlay.Thread = NULL;
+    IopDeadIrp->Tail.Overlay.Thread = NULL;
     RemoveHeadList(&IrpThread->IrpList);
-    InitializeListHead(&DeadIrp->ThreadListEntry);
+    InitializeListHead(&IopDeadIrp->ThreadListEntry);
 
     /* Get the stack location and check if it's valid */
-    IoStackLocation = IoGetCurrentIrpStackLocation(DeadIrp);
-    if (DeadIrp->CurrentLocation <= DeadIrp->StackCount)
+    IoStackLocation = IoGetCurrentIrpStackLocation(IopDeadIrp);
+    if (IopDeadIrp->CurrentLocation <= IopDeadIrp->StackCount)
     {
         /* Get the device object */
         DeviceObject = IoStackLocation->DeviceObject;
     }
 
+    KeReleaseQueuedSpinLock(LockQueueIoCompletionLock, LockIrql);
     /* Lower IRQL now, since we have the pointers we need */
     KeLowerIrql(OldIrql);
 
@@ -176,7 +182,7 @@ IopRemoveThreadIrp(VOID)
         if (ErrorLogEntry)
         {
             /* Write the entry */
-            ErrorLogEntry->ErrorCode = 0xBAADF00D; /* FIXME */
+            ErrorLogEntry->ErrorCode = IO_DRIVER_CANCEL_TIMEOUT;
             IoWriteErrorLogEntry(ErrorLogEntry);
         }
     }
@@ -982,14 +988,12 @@ NTAPI
 IoCancelIrp(IN PIRP Irp)
 {
     KIRQL OldIrql;
-    KIRQL IrqlAtEntry;
     PDRIVER_CANCEL CancelRoutine;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRP %p\n",
             __FUNCTION__,
             Irp);
     ASSERT(Irp->Type == IO_TYPE_IRP);
-    IrqlAtEntry = KeGetCurrentIrql();
 
     /* Acquire the cancel lock and cancel the IRP */
     IoAcquireCancelSpinLock(&OldIrql);
@@ -1005,7 +1009,7 @@ IoCancelIrp(IN PIRP Irp)
             /* It is, bugcheck */
             KeBugCheckEx(CANCEL_STATE_IN_COMPLETED_IRP,
                          (ULONG_PTR)Irp,
-                         0,
+                         (ULONG_PTR)CancelRoutine,
                          0,
                          0);
         }
@@ -1013,7 +1017,6 @@ IoCancelIrp(IN PIRP Irp)
         /* Set the cancel IRQL And call the routine */
         Irp->CancelIrql = OldIrql;
         CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
-	ASSERT(IrqlAtEntry == KeGetCurrentIrql());
         return TRUE;
     }
 
@@ -1034,6 +1037,11 @@ IoCancelThreadIo(IN PETHREAD Thread)
     LARGE_INTEGER Interval;
     PLIST_ENTRY ListHead, NextEntry;
     PIRP Irp;
+    PAGED_CODE();
+
+    /* Windows isn't using given thread, but using current. */
+    Thread = PsGetCurrentThread();
+
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRPs for Thread %p\n",
             __FUNCTION__,
@@ -1077,7 +1085,7 @@ IoCancelThreadIo(IN PETHREAD Thread)
         {
             /* Print out a message and remove the IRP */
             DPRINT1("Broken driver did not complete!\n");
-            IopRemoveThreadIrp();
+            IopDisassociateThreadIrp();
         }
 
         /* Raise the IRQL Again */
