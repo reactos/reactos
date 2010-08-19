@@ -831,8 +831,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Check for bad RAM */
             case LoaderBad:
             
-                DPRINT1("You have damaged RAM modules. Stopping boot\n");
-                while (TRUE);
+                DPRINT1("You either have specified /BURNMEMORY or damaged RAM modules.\n");
                 break;
 
             /* Check for free RAM */
