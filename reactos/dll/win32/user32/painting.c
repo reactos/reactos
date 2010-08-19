@@ -911,10 +911,13 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
     const DWORD user_flags = clip_flags | DCX_NORESETATTRS; /* flags that can be set by user */
     struct dce *dce;
     BOOL bUpdateVisRgn = TRUE;
+    BOOL bWndVisible;
     HWND parent;
+    HWND desktop = GetDesktopWindow();
     LONG window_style = GetWindowLongW( hwnd, GWL_STYLE );
+    LONG parent_style;
 
-    if (!hwnd) hwnd = GetDesktopWindow();
+    if (!hwnd) hwnd = desktop;
     else hwnd = WIN_GetFullHandle( hwnd );
 
     TRACE("hwnd %p, hrgnClip %p, flags %08x\n", hwnd, hrgnClip, flags);
@@ -942,17 +945,18 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 
     if (flags & DCX_WINDOW) flags &= ~DCX_CLIPCHILDREN;
 
-    parent = GetAncestor( hwnd, GA_PARENT );
-    if (!parent || (parent == GetDesktopWindow()))
+    if ( !(parent = GetAncestor( hwnd, GA_PARENT)) ) parent = desktop;
+    if (parent == desktop)
         flags = (flags & ~DCX_PARENTCLIP) | DCX_CLIPSIBLINGS;
+    parent_style = GetWindowLongW( parent, GWL_STYLE );
+    bWndVisible = (window_style & WS_VISIBLE) && (parent_style & WS_VISIBLE);
 
     /* it seems parent clip is ignored when clipping siblings or children */
     if (flags & (DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN)) flags &= ~DCX_PARENTCLIP;
 
     if( flags & DCX_PARENTCLIP )
     {
-        LONG parent_style = GetWindowLongW( parent, GWL_STYLE );
-        if( (window_style & WS_VISIBLE) && (parent_style & WS_VISIBLE) )
+        if (bWndVisible)
         {
             flags &= ~DCX_CLIPCHILDREN;
             if (parent_style & WS_CLIPSIBLINGS) flags |= DCX_CLIPSIBLINGS;
@@ -1036,7 +1040,7 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 
     if (SetHookFlags( dce->hdc, DCHF_VALIDATEVISRGN )) bUpdateVisRgn = TRUE;  /* DC was dirty */
 
-    if (bUpdateVisRgn) update_visible_region( dce );
+    if (bWndVisible && bUpdateVisRgn) update_visible_region( dce );
 
     TRACE("(%p,%p,0x%x): returning %p\n", hwnd, hrgnClip, flags, dce->hdc);
     return dce->hdc;
