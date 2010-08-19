@@ -129,6 +129,7 @@ int OskitTCPSocket( void *context,
     if( !error ) {
 	so->so_connection = context;
 	so->so_state |= SS_NBIO;
+    so->so_options |= SO_DONTROUTE;
 	*aso = so;
     }
     OSKUnlock();
