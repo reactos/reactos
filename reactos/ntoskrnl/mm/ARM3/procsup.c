@@ -121,6 +121,7 @@ AfterFound:
     Vad->EndingVpn =  ((*Base) + Size - 1) >> PAGE_SHIFT;
     Vad->u3.Secured.StartVpn = *Base;
     Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
+    Vad->u1.Parent = NULL;
     
     /* FIXME: Should setup VAD bitmap */
     Status = STATUS_SUCCESS;
