@@ -1683,7 +1683,7 @@ continue_execution:
         /* Clear dr6 status flags. */
         TrapFrame->Dr6 &= ~0x0000e00f;
 
-        if (!KdbEnteredOnSingleStep && KdbSingleStepOver)
+        if (!(KdbEnteredOnSingleStep && KdbSingleStepOver))
         {
             /* Skip the current instruction */
             Context->Eip++;
