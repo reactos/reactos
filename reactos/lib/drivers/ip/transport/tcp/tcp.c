@@ -35,20 +35,20 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                Connection, Connection->SocketContext));
 
         /* Things that can happen when we try the initial connection */
-        if( Connection->SignalState & SEL_CONNECT ) {
+        if( Connection->SignalState & (SEL_CONNECT | SEL_FIN) ) {
             while (!IsListEmpty(&Connection->ConnectRequest)) {
                Entry = RemoveHeadList( &Connection->ConnectRequest );
 
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
 
-               Bucket->Status = STATUS_SUCCESS;
+               Bucket->Status = (Connection->SignalState & SEL_CONNECT) ? STATUS_SUCCESS : STATUS_CANCELLED;
                Bucket->Information = 0;
 
                InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
            }
        }
 
-       if( Connection->SignalState & SEL_ACCEPT ) {
+       if( Connection->SignalState & (SEL_ACCEPT | SEL_FIN) ) {
            /* Handle readable on a listening socket --
             * TODO: Implement filtering
             */
@@ -90,7 +90,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
       }
 
       /* Things that happen after we're connected */
-      if( Connection->SignalState & SEL_READ ) {
+      if( Connection->SignalState & (SEL_READ | SEL_FIN) ) {
           TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
                                  IsListEmpty(&Connection->ReceiveRequest) ?
                                  "empty" : "nonempty"));
@@ -145,7 +145,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                }
            }
        }
-       if( Connection->SignalState & SEL_WRITE ) {
+       if( Connection->SignalState & (SEL_WRITE | SEL_FIN) ) {
            TI_DbgPrint(DEBUG_TCP,("Writeable: irp list %s\n",
                                   IsListEmpty(&Connection->SendRequest) ?
                                   "empty" : "nonempty"));
