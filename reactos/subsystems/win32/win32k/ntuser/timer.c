@@ -30,7 +30,7 @@ static LONG TimeLast = 0;
 static FAST_MUTEX     Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
-static ULONG          HintIndex = 0;
+static ULONG          HintIndex = 1;
 
 ERESOURCE TimerLock;
 
@@ -97,9 +97,11 @@ RemoveTimer(PTIMER pTmr)
      RemoveEntryList(&pTmr->ptmrList);
      if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM)))
      {
-        DPRINT("Clearing Bit %d)\n", pTmr->nID);
+        UINT_PTR IDEvent;
+
+        IDEvent = NUM_WINDOW_LESS_TIMERS - pTmr->nID;
         IntLockWindowlessTimerBitmap();
-        RtlClearBit(&WindowLessTimersBitMap, pTmr->nID);
+        RtlClearBit(&WindowLessTimersBitMap, IDEvent);
         IntUnlockWindowlessTimerBitmap();
      }
      UserDereferenceObject(pTmr);
@@ -155,7 +157,7 @@ FindSystemTimer(PMSG pMsg)
        break;
 
     pLE = pTmr->ptmrList.Flink;
-    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);    
+    pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   TimerLeave();
 
@@ -200,7 +202,7 @@ IntSetTimer( PWINDOW_OBJECT Window,
                   INT Type)
 {
   PTIMER pTmr;
-  UINT Ret= IDEvent;
+  UINT Ret = IDEvent;
   LARGE_INTEGER DueTime;
   DueTime.QuadPart = (LONGLONG)(-5000000);
 
@@ -227,8 +229,10 @@ IntSetTimer( PWINDOW_OBJECT Window,
      Elapse = 10;
   }
 
+  /* Passing an IDEvent of 0 and the SetTimer returns 1.
+     It will create the timer with an ID of 0 */
   if ((Window) && (IDEvent == 0))
-     IDEvent = 1;
+     Ret = 1;
 
   pTmr = FindTimer(Window, IDEvent, Type);
 
@@ -243,11 +247,13 @@ IntSetTimer( PWINDOW_OBJECT Window,
          IntUnlockWindowlessTimerBitmap();
          DPRINT1("Unable to find a free window-less timer id\n");
          SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+         ASSERT(FALSE);
          return 0;
       }
 
+      IDEvent = NUM_WINDOW_LESS_TIMERS - IDEvent;
       Ret = IDEvent;
-      //HintIndex = IDEvent + 1;
+
       IntUnlockWindowlessTimerBitmap();
   }
 
@@ -271,7 +277,7 @@ IntSetTimer( PWINDOW_OBJECT Window,
      pTmr->cmsRate = Elapse;
      pTmr->pfn     = TimerFunc;
      pTmr->nID     = IDEvent;
-     pTmr->flags   = Type|TMRF_INIT; // Set timer to Init mode.
+     pTmr->flags   = Type|TMRF_INIT;
   }
   else
   {
@@ -319,6 +325,7 @@ SystemTimerSet( PWINDOW_OBJECT Window,
   if (Window && Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
      SetLastWin32Error(ERROR_ACCESS_DENIED);
+     DPRINT("SysemTimerSet: Access Denied!\n");
      return 0;
   }
   return IntSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
@@ -509,9 +516,6 @@ IntKillTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, BOOL SystemTimer)
    DPRINT("IntKillTimer Window %x id %p systemtimer %s\n",
           Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
-   if ((Window) && (IDEvent == 0))
-      IDEvent = 1;
-
    pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0);
 
    if (pTmr)
@@ -532,7 +536,7 @@ InitTimerImpl(VOID)
    ExInitializeFastMutex(&Mutex);
 
    BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
-   WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
+   WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(NonPagedPool, BitmapBytes, TAG_TIMERBMP);
    if (WindowLessTimersBitMapBuffer == NULL)
    {
       return STATUS_UNSUCCESSFUL;
