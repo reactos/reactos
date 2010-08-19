@@ -64,6 +64,13 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 {
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
+    
+   if (!DriverObject)
+   {
+      /* Special case for bus driven devices */
+      DeviceNode->Flags |= DNF_ADDED;
+      return STATUS_SUCCESS;
+   }
 
    if (!DriverObject->DriverExtension->AddDevice)
    {
@@ -1897,11 +1904,15 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    {
       /* We don't need to worry about loading the driver because we're
        * being driven in raw mode so our parent must be loaded to get here */
-      Status = IopStartDevice(DeviceNode);
-      if (!NT_SUCCESS(Status))
+      Status = IopInitializeDevice(DeviceNode, NULL);
+      if (NT_SUCCESS(Status))
       {
-          DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
-                  &DeviceNode->InstancePath, Status);
+          Status = IopStartDevice(DeviceNode);
+          if (!NT_SUCCESS(Status))
+          {
+              DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
+                      &DeviceNode->InstancePath, Status);
+          }
       }
    }
    else
