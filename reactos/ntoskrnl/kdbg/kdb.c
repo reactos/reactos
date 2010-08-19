@@ -1413,6 +1413,8 @@ KdbEnterDebuggerException(
             /* Delete the temporary breakpoint which was used to step over or into the instruction. */
             KdbpDeleteBreakPoint(-1, BreakPoint);
 
+            TrapFrame->Eip--;
+
             if (--KdbNumSingleSteps > 0)
             {
                 if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
@@ -1681,8 +1683,11 @@ continue_execution:
         /* Clear dr6 status flags. */
         TrapFrame->Dr6 &= ~0x0000e00f;
 
-        /* Skip the current instruction */
-        Context->Eip++;
+        if (!KdbEnteredOnSingleStep && KdbSingleStepOver)
+        {
+            /* Skip the current instruction */
+            Context->Eip++;
+        }
     }
 
     return ContinueType;
