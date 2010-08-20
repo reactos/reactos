@@ -136,10 +136,20 @@ PoInitSystem(IN ULONG BootPhase)
     /* Check if this is phase 1 init */
     if (BootPhase == 1)
     {
-        /* Registry power button notification */
+        /* Register power button notification */
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                        (PVOID)&GUID_DEVICE_SYS_BUTTON,
+                                       IopRootDeviceNode->
+                                       PhysicalDeviceObject->DriverObject,
+                                       PopAddRemoveSysCapsCallback,
+                                       NULL,
+                                       &NotificationEntry);
+        
+        /* Register lid notification */
+        IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                       PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                       (PVOID)&GUID_DEVICE_LID,
                                        IopRootDeviceNode->
                                        PhysicalDeviceObject->DriverObject,
                                        PopAddRemoveSysCapsCallback,
