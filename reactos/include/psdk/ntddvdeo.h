@@ -468,6 +468,15 @@ typedef struct _ENG_EVENT
     ULONG fFlags;
 } ENG_EVENT, *PENG_EVENT;
 
+typedef struct _DISPLAY_BRIGHTNESS {
+  UCHAR ucDisplayPolicy;
+  UCHAR ucACBrightness;
+  UCHAR ucDCBrightness;
+} DISPLAY_BRIGHTNESS, *PDISPLAY_BRIGHTNESS;
+
+#define DISPLAYPOLICY_AC                0x00000001
+#define DISPLAYPOLICY_DC                0x00000002
+#define DISPLAYPOLICY_BOTH              0x00000003
 
 #ifdef __cplusplus
 }
