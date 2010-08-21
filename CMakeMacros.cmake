@@ -40,3 +40,14 @@ MACRO(add_pch _target_name _header_filename _src_list)
         DEPENDS ${_header_filename})
 
 ENDMACRO(add_pch _target_name _header_filename _src_list)
+
+MACRO(spec2def _target_name _spec_file _def_file)
+
+    add_custom_command(
+        OUTPUT ${_def_file}
+        COMMAND native-winebuild -o ${_def_file} --def -E ${_spec_file} --filename ${_target_name}.dll
+        DEPENDS native-winebuild)
+    set_source_files_properties(${_def_file} PROPERTIES GENERATED TRUE)
+    add_custom_target(${_target_name}_def ALL DEPENDS ${_def_file})
+
+ENDMACRO(spec2def _target_name _spec_file _def_file)
