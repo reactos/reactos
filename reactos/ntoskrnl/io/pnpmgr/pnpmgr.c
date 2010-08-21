@@ -3327,8 +3327,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             ASSERT(EnumeratorNameEnd);
             
             /* This is the format of the returned data */
-            PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * 2,
-                            &DeviceNode->ChildBusNumber);
+            PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
+                            DeviceInstanceName);
             
         case DevicePropertyAddress:
 
