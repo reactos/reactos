@@ -773,7 +773,7 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
 
   if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
 
-  ObjType = GDI_HANDLE_GET_TYPE(DCHandle) >> GDI_ENTRY_UPPER_SHIFT;
+  ObjType = GDI_OBJECT_GET_TYPE_INDEX((ULONG_PTR)DCHandle);
 
   if (GreGetObjectOwner( DCHandle, ObjType))
   {
