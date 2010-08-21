@@ -49,6 +49,18 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     hDC = NewDC->BaseObject.hHmgr;
 
+    /* Allocate a Vis region */
+    NewDC->prgnVis = IntSysCreateRectpRgn(0, 0, 1, 1);
+    if (!NewDC->prgnVis)
+    {
+        DPRINT1("IntSysCreateRectpRgn failed\n");
+        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
+        {
+            ASSERT(FALSE);
+        }
+        return NULL;
+    }
+
     NewDC->pdcattr = &NewDC->dcattr;
     DC_AllocateDcAttr(hDC);
 
@@ -661,7 +673,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
     PDC pdcNew, pdcOld;
     PDC_ATTR pdcattrNew, pdcattrOld;
     HDC hdcNew, DisplayDC = NULL;
-    HRGN hVisRgn;
     UNICODE_STRING DriverName;
     DWORD Layout = 0;
     HSURF hsurf;
@@ -742,12 +753,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
         NtGdiDeleteObjectApp(DisplayDC);
     }
 
-    hVisRgn = IntSysCreateRectRgn(0, 0, 1, 1);
-    if (hVisRgn)
-    {
-        GdiSelectVisRgn(hdcNew, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
-    }
     if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
 
     DC_InitDC(hdcNew);
