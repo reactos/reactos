@@ -2621,6 +2621,7 @@ IopUpdateRootKey(VOID)
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE hEnum, hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
    NTSTATUS Status;
+   ULONG Disposition;
 
    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
    Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
@@ -2642,27 +2643,32 @@ IopUpdateRootKey(VOID)
    if (IopIsAcpiComputer())
    {
       InitializeObjectAttributes(&ObjectAttributes, &HalAcpiDevice, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hRoot, NULL);
-      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+      Status = ZwCreateKey(&hHalAcpiDevice, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, &Disposition);
       ZwClose(hRoot);
       if (!NT_SUCCESS(Status))
          return Status;
-      InitializeObjectAttributes(&ObjectAttributes, &HalAcpiId, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiDevice, NULL);
-      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
-      ZwClose(hHalAcpiDevice);
-      if (!NT_SUCCESS(Status))
-         return Status;
-      Status = ZwSetValueKey(hHalAcpiId, &DeviceDescU, 0, REG_SZ, HalAcpiDeviceDesc.Buffer, HalAcpiDeviceDesc.MaximumLength);
-      if (NT_SUCCESS(Status))
-         Status = ZwSetValueKey(hHalAcpiId, &HardwareIDU, 0, REG_MULTI_SZ, HalAcpiHardwareID.Buffer, HalAcpiHardwareID.MaximumLength);
-      if (NT_SUCCESS(Status))
+      if (Disposition == REG_CREATED_NEW_KEY)
       {
-          InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiId, NULL);
-          Status = ZwCreateKey(&hLogConf, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+          InitializeObjectAttributes(&ObjectAttributes, &HalAcpiId, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiDevice, NULL);
+          Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+          ZwClose(hHalAcpiDevice);
+          if (!NT_SUCCESS(Status))
+              return Status;
+          Status = ZwSetValueKey(hHalAcpiId, &DeviceDescU, 0, REG_SZ, HalAcpiDeviceDesc.Buffer, HalAcpiDeviceDesc.MaximumLength);
           if (NT_SUCCESS(Status))
-              ZwClose(hLogConf);
+              Status = ZwSetValueKey(hHalAcpiId, &HardwareIDU, 0, REG_MULTI_SZ, HalAcpiHardwareID.Buffer, HalAcpiHardwareID.MaximumLength);
+          if (NT_SUCCESS(Status))
+          {
+              InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiId, NULL);
+              Status = ZwCreateKey(&hLogConf, 0, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+              if (NT_SUCCESS(Status))
+                  ZwClose(hLogConf);
+          }
+          ZwClose(hHalAcpiId);
+          return Status;
       }
-      ZwClose(hHalAcpiId);
-      return Status;
+      ZwClose(hHalAcpiDevice);
+      return STATUS_SUCCESS;
    }
    else
    {
