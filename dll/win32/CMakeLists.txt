@@ -1,7 +1,10 @@
 
 add_subdirectory(acledit)
 add_subdirectory(aclui)
+add_subdirectory(activeds)
 add_subdirectory(advapi32)
+add_subdirectory(advpack)
+add_subdirectory(authz)
 add_subdirectory(gdi32)
 add_subdirectory(kernel32)
 add_subdirectory(msvcrt)
