@@ -165,8 +165,10 @@ DC_Cleanup(PVOID ObjectBody)
     DC_vSelectPalette(pDC, NULL);
 
     /* Dereference default brushes */
-    BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
-    BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
+    if (pDC->eboText.pbrush)
+        BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
+    if (pDC->eboBackground.pbrush)
+        BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
 
     /* Cleanup the dc brushes */
     EBRUSHOBJ_vCleanup(&pDC->eboFill);
@@ -205,12 +207,12 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         }
         if (pDC->prgnVis)
         {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
+            Index = GDI_HANDLE_GET_INDEX(pDC->prgnVis->BaseObject.hHmgr);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
             //
-            if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) return FALSE;
+            if (!GDIOBJ_SetOwnership(pDC->prgnVis->BaseObject.hHmgr, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
         {   // FIXME! HAX!!!
