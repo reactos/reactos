@@ -2123,7 +2123,8 @@ TextIntGetTextExtentPoint(PDC dc,
                           ULONG MaxExtent,
                           LPINT Fit,
                           LPINT Dx,
-                          LPSIZE Size)
+                          LPSIZE Size,
+                          FLONG fl)
 {
     PFONTGDI FontGDI;
     FT_Face face;
@@ -2195,7 +2196,11 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        glyph_index = FT_Get_Char_Index(face, *String);
+        if (fl & GTEF_INDICES)
+            glyph_index = *String;
+        else
+            glyph_index = FT_Get_Char_Index(face, *String);
+
         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
                                              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
         {
@@ -4238,16 +4243,17 @@ NtGdiGetGlyphIndicesW(
     IntLockFreeType;
     face = FontGDI->face;
 
+    if (DefChar == 0xffff && FT_IS_SFNT(face))
+    {
+        TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+        DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+    }
+
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
+        Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]); // FIXME: unsafe!
         if (Buffer[i] == 0)
         {
-            if (DefChar == 0xffff && FT_IS_SFNT(face))
-            {
-                TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-                DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
-            }
             Buffer[i] = DefChar;
         }
     }

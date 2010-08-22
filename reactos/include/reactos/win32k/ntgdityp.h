@@ -192,6 +192,9 @@ typedef DWORD LFTYPE;
 #define GCABCW_NOFLOAT 0x0001
 #define GCABCW_INDICES 0x0002
 
+// NtGdiGetTextExtent* flags (reactos own)
+#define GTEF_INDICES 0x1
+
 /* CAPS1 support */
 #define CAPS1             94
 //#define C1_TRANSPARENT    0x0001

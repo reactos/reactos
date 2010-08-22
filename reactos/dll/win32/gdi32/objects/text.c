@@ -173,7 +173,7 @@ GetTextExtentPointW(
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 1);
+  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
 }
 
 
@@ -299,7 +299,7 @@ GetTextExtentExPointI(HDC hdc,
                       LPINT alpDx,
                       LPSIZE lpSize)
 {
-    return NtGdiGetTextExtentExW(hdc,pgiIn,cgi,nMaxExtent,(ULONG *)lpnFit, (PULONG) alpDx,lpSize,1);
+    return NtGdiGetTextExtentExW(hdc,pgiIn,cgi,nMaxExtent,(ULONG *)lpnFit, (PULONG) alpDx,lpSize,GTEF_INDICES);
 }
 
 /*
@@ -312,7 +312,7 @@ GetTextExtentPointI(HDC hdc,
                     int cgi,
                     LPSIZE lpSize)
 {
-    return NtGdiGetTextExtent(hdc,pgiIn,cgi,lpSize,2);
+    return NtGdiGetTextExtent(hdc,pgiIn,cgi,lpSize,GTEF_INDICES);
 }
 
 /*
