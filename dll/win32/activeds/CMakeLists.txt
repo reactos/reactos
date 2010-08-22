@@ -3,7 +3,7 @@ set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FL
 
 add_definitions(-D__WINESRC__)
 
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(activeds ${CMAKE_CURRENT_SOURCE_DIR}/activeds.spec ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
 
