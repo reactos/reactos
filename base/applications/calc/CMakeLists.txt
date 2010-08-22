@@ -5,13 +5,14 @@ set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,-entry,_WinMainCRTStart
 add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
 
-file(GLOB_RECURSE SOURCE *.c)
-list(REMOVE_ITEM SOURCE
-     ${CMAKE_CURRENT_SOURCE_DIR}/fun_mpfr.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/rpn_mpfr.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/utl_mpfr.c)
-
-add_executable(calc WIN32 ${SOURCE} ${CMAKE_CURRENT_SOURCE_DIR}/resource.rc)
+add_executable(calc WIN32 
+    about.c
+    convert.c
+    function.c
+    rpn.c
+    utl.c
+    winmain.c
+    resource.rc)
 
 target_link_libraries(calc mingw_wmain
                       ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
