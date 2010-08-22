@@ -122,47 +122,24 @@ static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
 
 void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
 			     PVOID Data, EnumNameServersFunc cb ) {
-    PWCHAR NameServerString =
-	QueryRegistryValueString(RegHandle, L"DhcpNameServer");
+    PWCHAR *NameServerString =
+	QueryRegistryValueStringMulti(RegHandle, L"DhcpNameServer");
+    DWORD i;
 
     if (!NameServerString)
-		NameServerString = QueryRegistryValueString(RegHandle, L"NameServer");
-
-    if (NameServerString) {
-    /* Now, count the non-empty comma separated */
-	DWORD ch;
-	DWORD LastNameStart = 0;
-	for (ch = 0; NameServerString[ch]; ch++) {
-	    if (NameServerString[ch] == ',') {
-		if (ch - LastNameStart > 0) { /* Skip empty entries */
-		    PWCHAR NameServer =
-			malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
-		    if (NameServer) {
-			memcpy(NameServer,NameServerString + LastNameStart,
-				   (ch - LastNameStart) * sizeof(WCHAR));
-			NameServer[ch - LastNameStart] = 0;
-			cb( Interface, NameServer, Data );
-			free(NameServer);
-			LastNameStart = ch +1;
-		    }
-		}
-		LastNameStart = ch + 1; /* The first one after the comma */
-	    }
-	}
-	if (ch - LastNameStart > 0) { /* A last name? */
-	    PWCHAR NameServer = malloc(((ch - LastNameStart) + 1) * sizeof(WCHAR));
-            if (NameServer) {
-	        memcpy(NameServer,NameServerString + LastNameStart,
-		       (ch - LastNameStart) * sizeof(WCHAR));
-	        NameServer[ch - LastNameStart] = 0;
-	        cb( Interface, NameServer, Data );
-	        free(NameServer);
-            }
-	}
-	ConsumeRegValueString(NameServerString);
+		NameServerString = QueryRegistryValueStringMulti(RegHandle, L"NameServer");
+    
+    if (!NameServerString) return;
+    
+    for (i = 0; NameServerString[i]; i++)
+    {
+        cb(Interface, NameServerString[i], Data);
+        
+        HeapFree(GetProcessHeap(), 0, NameServerString[i]);
     }
+    
+    HeapFree(GetProcessHeap(), 0, NameServerString);
 }
-
 static void CreateNameServerListEnumNamesFuncCount( PWCHAR Interface,
 						    PWCHAR Server,
 						    PVOID _Data ) {
