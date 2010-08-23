@@ -569,9 +569,7 @@ VOID NTAPI ProtocolBindAdapter(
  *     SystemSpecific1: Pointer to a registry path with protocol-specific configuration information
  *     SystemSpecific2: Unused & must not be touched
  */
-{
-    /* XXX confirm that this is still true, or re-word the following comment */
-    /* we get to ignore BindContext because we will never pend an operation with NDIS */
+{    
     TI_DbgPrint(DEBUG_DATALINK, ("Called with registry path %wZ for %wZ\n", SystemSpecific1, DeviceName));
     *Status = LANRegisterAdapter(DeviceName, SystemSpecific1);
 }
@@ -952,10 +950,13 @@ BOOLEAN BindAdapter(
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ParameterHandle;
     PKEY_VALUE_PARTIAL_INFORMATION KeyValueInfo;
+    WCHAR Buffer[150];
     UNICODE_STRING IPAddress = RTL_CONSTANT_STRING(L"IPAddress");
     UNICODE_STRING Netmask = RTL_CONSTANT_STRING(L"SubnetMask");
     UNICODE_STRING Gateway = RTL_CONSTANT_STRING(L"DefaultGateway");
     UNICODE_STRING EnableDhcp = RTL_CONSTANT_STRING(L"EnableDHCP");
+    UNICODE_STRING Prefix = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\");
+    UNICODE_STRING TcpipRegistryPath;
     UNICODE_STRING RegistryDataU;
     ANSI_STRING RegistryDataA;
 
@@ -1009,9 +1010,19 @@ BOOLEAN BindAdapter(
 
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));
+    
+    TcpipRegistryPath.MaximumLength = sizeof(WCHAR) * 150;
+    TcpipRegistryPath.Length = 0;
+    TcpipRegistryPath.Buffer = Buffer;
+    
+    RtlAppendUnicodeStringToString(&TcpipRegistryPath,
+                                   &Prefix);
+    
+    RtlAppendUnicodeStringToString(&TcpipRegistryPath,
+                                   &IF->Name);
 
     InitializeObjectAttributes(&ObjectAttributes,
-                               RegistryPath,
+                               &TcpipRegistryPath,
                                OBJ_CASE_INSENSITIVE,
                                0,
                                NULL);
@@ -1019,6 +1030,7 @@ BOOLEAN BindAdapter(
     AddrInitIPv4(&DefaultMask, 0);
 
     Status = ZwOpenKey(&ParameterHandle, KEY_READ, &ObjectAttributes);
+
     if (!NT_SUCCESS(Status))
     {
         IF->Unicast = DefaultMask;
@@ -1040,7 +1052,7 @@ BOOLEAN BindAdapter(
                                  KeyValueInfo,
                                  sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG),
                                  &Unused);
-        if (NT_SUCCESS(Status) && KeyValueInfo->DataLength == sizeof(ULONG) && (*(PULONG)KeyValueInfo->Data) != 0)
+        if (NT_SUCCESS(Status) && KeyValueInfo->DataLength == sizeof(ULONG) && (*(PULONG)KeyValueInfo->Data) == 0)
         {
             RegistryDataU.MaximumLength = 16 + sizeof(WCHAR);
             RegistryDataU.Buffer = (PWCHAR)KeyValueInfo->Data;
