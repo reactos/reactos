@@ -507,25 +507,24 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         char *nsbuf;
         int i, addrs =
             new_lease->options[DHO_DOMAIN_NAME_SERVERS].len / sizeof(ULONG);
-        int len = 0;
 
-        nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) + 1 );
+        nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
 
         if( nsbuf) {
-            memset(nsbuf, 0, addrs * sizeof(IP_ADDRESS_STRING) + 1);
+            nsbuf[0] = 0;
             for( i = 0; i < addrs; i++ ) {
                 nameserver.len = sizeof(ULONG);
                 memcpy( nameserver.iabuf,
                         new_lease->options[DHO_DOMAIN_NAME_SERVERS].data +
                         (i * sizeof(ULONG)), sizeof(ULONG) );
                 strcat( nsbuf, piaddr(nameserver) );
-                len += strlen(nsbuf) + 1;
+                if( i != addrs-1 ) strcat( nsbuf, "," );
             }
 
             DH_DbgPrint(MID_TRACE,("Setting DhcpNameserver: %s\n", nsbuf));
 
-            RegSetValueExA( RegKey, "DhcpNameServer", 0, REG_MULTI_SZ,
-                           (LPBYTE)nsbuf, len + 1 );
+            RegSetValueExA( RegKey, "DhcpNameServer", 0, REG_SZ,
+                           (LPBYTE)nsbuf, strlen(nsbuf) + 1 );
             free( nsbuf );
         }
 
