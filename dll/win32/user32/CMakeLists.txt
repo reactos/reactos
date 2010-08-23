@@ -35,7 +35,7 @@ target_link_libraries(user32
     wine
     ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a
     ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-    imm32
+    -limm32
     win32ksys
     pseh
     ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
