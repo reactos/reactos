@@ -49,18 +49,6 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     hDC = NewDC->BaseObject.hHmgr;
 
-    /* Allocate a Vis region */
-    NewDC->prgnVis = IntSysCreateRectpRgn(0, 0, 1, 1);
-    if (!NewDC->prgnVis)
-    {
-        DPRINT1("IntSysCreateRectpRgn failed\n");
-        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
-        {
-            ASSERT(FALSE);
-        }
-        return NULL;
-    }
-
     NewDC->pdcattr = &NewDC->dcattr;
     DC_AllocateDcAttr(hDC);
 
@@ -145,6 +133,18 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
     NewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
+
+    /* Allocate a Vis region */
+    NewDC->prgnVis = IntSysCreateRectpRgn(0, 0, 1, 1);
+    if (!NewDC->prgnVis)
+    {
+        DPRINT1("IntSysCreateRectpRgn failed\n");
+        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
+        {
+            ASSERT(FALSE);
+        }
+        return NULL;
+    }
 
     return NewDC;
 }
