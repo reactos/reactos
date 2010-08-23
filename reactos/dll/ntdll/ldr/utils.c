@@ -88,10 +88,10 @@ static __inline LONG LdrpDecrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEA
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    LoadCount = Module->LoadCount;
-   if (Module->LoadCount > 0 && Module->LoadCount != LDRP_PROCESS_CREATION_TIME)
-     {
+    if (Module->LoadCount > 0 && Module->LoadCount != LDRP_PROCESS_CREATION_TIME)
+    {
        Module->LoadCount--;
-     }
+    }
    if (!Locked)
      {
        RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
@@ -107,10 +107,10 @@ static __inline LONG LdrpIncrementLoadCount(PLDR_DATA_TABLE_ENTRY Module, BOOLEA
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
      }
    LoadCount = Module->LoadCount;
-   if (Module->LoadCount != LDRP_PROCESS_CREATION_TIME)
-     {
+    if (Module->LoadCount != LDRP_PROCESS_CREATION_TIME)
+    {
        Module->LoadCount++;
-     }
+    }
    if (!Locked)
      {
        RtlLeaveCriticalSection(NtCurrentPeb()->LoaderLock);
@@ -3464,54 +3464,15 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
 }
 
 
-PIMAGE_BASE_RELOCATION NTAPI
-LdrProcessRelocationBlock(IN ULONG_PTR Address,
-			  IN ULONG Count,
-			  IN PUSHORT TypeOffset,
-			  IN LONG_PTR Delta)
+PIMAGE_BASE_RELOCATION
+NTAPI
+LdrProcessRelocationBlock(
+    IN ULONG_PTR Address,
+    IN ULONG Count,
+    IN PUSHORT TypeOffset,
+    IN LONG_PTR Delta)
 {
-  SHORT Offset;
-  USHORT Type;
-  USHORT i;
-  PUSHORT ShortPtr;
-  PULONG LongPtr;
-
-  for (i = 0; i < Count; i++)
-    {
-      Offset = *TypeOffset & 0xFFF;
-      Type = *TypeOffset >> 12;
-
-      switch (Type)
-        {
-          case IMAGE_REL_BASED_ABSOLUTE:
-            break;
-
-          case IMAGE_REL_BASED_HIGH:
-            ShortPtr = (PUSHORT)((ULONG_PTR)Address + Offset);
-            *ShortPtr += HIWORD(Delta);
-            break;
-
-          case IMAGE_REL_BASED_LOW:
-            ShortPtr = (PUSHORT)((ULONG_PTR)Address + Offset);
-            *ShortPtr += LOWORD(Delta);
-            break;
-
-          case IMAGE_REL_BASED_HIGHLOW:
-            LongPtr = (PULONG)((ULONG_PTR)Address + Offset);
-            *LongPtr += Delta;
-            break;
-
-          case IMAGE_REL_BASED_HIGHADJ:
-          case IMAGE_REL_BASED_MIPS_JMPADDR:
-          default:
-            DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
-            return NULL;
-        }
-
-      TypeOffset++;
-    }
-
-  return (PIMAGE_BASE_RELOCATION)TypeOffset;
+    return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
 
 NTSTATUS
