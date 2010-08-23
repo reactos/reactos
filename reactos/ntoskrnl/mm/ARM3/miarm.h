@@ -1050,21 +1050,24 @@ MiCheckForConflictingNode(
     IN PMM_AVL_TABLE Table
 );
 
-NTSTATUS
+TABLE_SEARCH_RESULT
 NTAPI
 MiFindEmptyAddressRangeDownTree(
     IN SIZE_T Length,
     IN ULONG_PTR BoundaryAddress,
     IN ULONG_PTR Alignment,
     IN PMM_AVL_TABLE Table,
-    OUT PULONG_PTR Base
+    OUT PULONG_PTR Base,
+    OUT PMMADDRESS_NODE *Parent
 );
 
 VOID
 NTAPI
 MiInsertNode(
+    IN PMM_AVL_TABLE Table,
     IN PMMADDRESS_NODE NewNode,
-    IN PMM_AVL_TABLE Table
+    PMMADDRESS_NODE Parent,
+    TABLE_SEARCH_RESULT Result
 );
 
 VOID
