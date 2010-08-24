@@ -10,8 +10,8 @@
 		<xi:include href="dciman32api/dciman32api.rbuild" />
 	</directory>
 
-	<directory name="gdi32api">
-		<xi:include href="gdi32api/gdi32api.rbuild" />
+	<directory name="gdi32">
+		<xi:include href="gdi32/gdi32_apitest.rbuild" />
 	</directory>
 
 	<directory name="user32api">
