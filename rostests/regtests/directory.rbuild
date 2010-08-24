@@ -7,4 +7,7 @@
 	<directory name="crt">
 		<xi:include href="crt/crt_regtest.rbuild" />
 	</directory>
+	<directory name="bugs">
+		<xi:include href="bugs/bugs_regtest.rbuild" />
+	</directory>
 </group>
