@@ -6,16 +6,16 @@
 		<file>apitest.c</file>
 	</module>
 
-	<directory name="dciman32api">
-		<xi:include href="dciman32api/dciman32api.rbuild" />
+	<directory name="dciman32">
+		<xi:include href="dciman32/dciman32_apitest.rbuild" />
 	</directory>
 
 	<directory name="gdi32">
 		<xi:include href="gdi32/gdi32_apitest.rbuild" />
 	</directory>
 
-	<directory name="user32api">
-		<xi:include href="user32api/user32api.rbuild" />
+	<directory name="user32">
+		<xi:include href="user32/user32_apitest.rbuild" />
 	</directory>
 
 	<if property="ARCH" value="i386">
@@ -29,6 +29,6 @@
 	</if>
 
 	<directory name="ws2_32">
-		<xi:include href="ws2_32/ws2_32.rbuild" />
+		<xi:include href="ws2_32/ws2_32_apitest.rbuild" />
 	</directory>
 </group>

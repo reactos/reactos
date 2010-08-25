@@ -11,24 +11,22 @@
 
 #include <winsock2.h>
 
-#include "../apitest.h"
-
 /* Simple macro for executing a socket command and doing cleanup operations in case of a failure */
 #define SCKTEST(_cmd_) \
     iResult = _cmd_; \
-    TEST(iResult != SOCKET_ERROR); \
+    ok(iResult != SOCKET_ERROR, "iResult = %d\n", iResult); \
     if(iResult == SOCKET_ERROR) \
     { \
         printf("Winsock error code is %u\n", WSAGetLastError()); \
         closesocket(sck); \
         WSACleanup(); \
-        return APISTATUS_ASSERTION_FAILED; \
+        return 0; \
     }
 
 /* helpers.c */
-int CreateSocket(PTESTINFO pti, SOCKET* sck);
-int ConnectToReactOSWebsite(PTESTINFO pti, SOCKET sck);
-int GetRequestAndWait(PTESTINFO pti, SOCKET sck);
+int CreateSocket(SOCKET* sck);
+int ConnectToReactOSWebsite(SOCKET sck);
+int GetRequestAndWait(SOCKET sck);
 
 /* ws2_32.c */
 extern HANDLE g_hHeap;

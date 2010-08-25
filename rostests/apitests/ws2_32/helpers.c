@@ -6,25 +6,27 @@
  * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
  */
 
+#include <stdio.h>
+#include <wine/test.h>
 #include "ws2_32.h"
 
-int CreateSocket(PTESTINFO pti, SOCKET* psck)
+int CreateSocket(SOCKET* psck)
 {
     /* Create the socket */
     *psck = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    TEST(*psck != INVALID_SOCKET);
+    ok(*psck != INVALID_SOCKET, "*psck = %d\n", *psck);
 
     if(*psck == INVALID_SOCKET)
     {
         printf("Winsock error code is %u\n", WSAGetLastError());
         WSACleanup();
-        return APISTATUS_ASSERTION_FAILED;
+        return 0;
     }
 
-    return APISTATUS_NORMAL;
+    return 1;
 }
 
-int ConnectToReactOSWebsite(PTESTINFO pti, SOCKET sck)
+int ConnectToReactOSWebsite(SOCKET sck)
 {
     int iResult;
     struct hostent* host;
@@ -38,11 +40,11 @@ int ConnectToReactOSWebsite(PTESTINFO pti, SOCKET sck)
     sa.sin_port = htons(80);
 
     SCKTEST(connect(sck, (struct sockaddr *)&sa, sizeof(sa)));
-
-    return APISTATUS_NORMAL;
+    
+    return 1;
 }
 
-int GetRequestAndWait(PTESTINFO pti, SOCKET sck)
+int GetRequestAndWait(SOCKET sck)
 {
     const char szGetRequest[] = "GET / HTTP/1.0\r\n\r\n";
     int iResult;
@@ -50,7 +52,7 @@ int GetRequestAndWait(PTESTINFO pti, SOCKET sck)
 
     /* Send the GET request */
     SCKTEST(send(sck, szGetRequest, strlen(szGetRequest), 0));
-    TEST(iResult == strlen(szGetRequest));
+    ok(iResult == strlen(szGetRequest), "iResult = %d\n", iResult);
 
     /* Shutdown the SEND connection */
     SCKTEST(shutdown(sck, SD_SEND));
@@ -60,6 +62,6 @@ int GetRequestAndWait(PTESTINFO pti, SOCKET sck)
     FD_SET(sck, &readable);
 
     SCKTEST(select(0, &readable, NULL, NULL, NULL));
-
-    return APISTATUS_NORMAL;
+    
+    return 1;
 }
