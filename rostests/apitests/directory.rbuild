@@ -14,6 +14,10 @@
 		<xi:include href="gdi32/gdi32_apitest.rbuild" />
 	</directory>
 
+	<directory name="ntdll">
+		<xi:include href="ntdll/ntdll_apitest.rbuild" />
+	</directory>
+
 	<directory name="user32">
 		<xi:include href="user32/user32_apitest.rbuild" />
 	</directory>
