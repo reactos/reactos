@@ -29,6 +29,8 @@ NTSTATUS VfatPnp(PVFAT_IRP_CONTEXT IrpContext)
     case IRP_MN_REMOVE_DEVICE:
     case IRP_MN_CANCEL_REMOVE_DEVICE:
       Status = STATUS_NOT_IMPLEMENTED;
+      IrpContext->Irp->IoStatus.Status = Status;
+      IoCompleteRequest(IrpContext->Irp, IO_NO_INCREMENT);
       break;
     default:
       IoSkipCurrentIrpStackLocation(IrpContext->Irp);
