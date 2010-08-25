@@ -268,5 +268,4 @@
 
 <!-- fixme: wpickclick.rbuild -->
 
-<!-- fixme: zwcontinue -->
 </group>
