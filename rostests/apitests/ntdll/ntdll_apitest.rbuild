@@ -8,6 +8,7 @@
 	<library>pseh</library>
 	<file>testlist.c</file>
 
+	<file>RtlInitializeBitmap.c</file>
 	<file>ZwContinue.c</file>
 	<if property="ARCH" value="i386">
 		<directory name="i386">
