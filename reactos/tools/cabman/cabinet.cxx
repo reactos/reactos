@@ -20,10 +20,9 @@
 #include <string.h>
 #if !defined(WIN32)
 # include <dirent.h>
-#endif
-#if defined(__FreeBSD__) || defined(__APPLE__)
 # include <sys/stat.h>
-#endif // __FreeBSD__
+# include <sys/types.h>
+#endif
 #include "cabinet.h"
 #include "raw.h"
 #include "mszip.h"
