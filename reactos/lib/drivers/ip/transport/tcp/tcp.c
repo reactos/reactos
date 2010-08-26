@@ -234,7 +234,10 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
        /* If the socket is dead, remove the reference we added for oskit */
        if (Connection->SignalState & SEL_FIN)
+       {
+           Connection->SocketContext = NULL;
            DereferenceObject(Connection);
+       }
 }
 
 VOID ConnectionFree(PVOID Object) {
@@ -663,17 +666,15 @@ NTSTATUS TCPClose
     KIRQL OldIrql;
     NTSTATUS Status;
     PVOID Socket;
+    PADDRESS_FILE AddressFile = NULL;
+    PCONNECTION_ENDPOINT AddressConnection = NULL;
 
-    /* We don't rely on SocketContext == NULL for socket
-     * closure anymore but we still need it to determine
-     * if we caused the closure
-     */
     LockObject(Connection, &OldIrql);
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
 
     /* Don't try to close again if the other side closed us already */
-    if (!(Connection->SignalState & SEL_FIN))
+    if (Socket)
     {
        /* We need to close here otherwise oskit will never indicate
         * SEL_FIN and we will never fully close the connection */
@@ -693,11 +694,26 @@ NTSTATUS TCPClose
     }
 
     if (Connection->AddressFile)
-        DereferenceObject(Connection->AddressFile);
+    {
+        LockObjectAtDpcLevel(Connection->AddressFile);
+        if (Connection->AddressFile->Connection == Connection)
+        {
+            AddressConnection = Connection->AddressFile->Connection;
+            Connection->AddressFile->Connection = NULL;
+        }
+        UnlockObjectFromDpcLevel(Connection->AddressFile);
+
+        AddressFile = Connection->AddressFile;
+        Connection->AddressFile = NULL;
+    }
 
     UnlockObject(Connection, OldIrql);
 
     DereferenceObject(Connection);
+    if (AddressConnection)
+        DereferenceObject(AddressConnection);
+    if (AddressFile)
+        DereferenceObject(AddressFile);
 
     return Status;
 }
