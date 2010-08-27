@@ -106,6 +106,7 @@ rtalloc1(dst, report, ignflags)
 	int report;
 	u_long ignflags;
 {
+#ifndef __REACTOS__
 	register struct radix_node_head *rnh = rt_tables[dst->sa_family];
 	register struct rtentry *rt;
 	register struct radix_node *rn;
@@ -142,6 +143,9 @@ rtalloc1(dst, report, ignflags)
 	}
 	splx(s);
 	return (newrt);
+#else
+    return NULL;
+#endif
 }
 
 void

@@ -114,6 +114,12 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 		DbgPrint ( line );
 }
 
+void InitializeSocketFlags(struct socket *so)
+{
+    so->so_state |= SS_NBIO;
+    so->so_options |= SO_DONTROUTE;
+}
+
 /* From uipc_syscalls.c */
 
 int OskitTCPSocket( void *context,
@@ -128,8 +134,7 @@ int OskitTCPSocket( void *context,
     int error = socreate(domain, &so, type, proto);
     if( !error ) {
 	so->so_connection = context;
-	so->so_state |= SS_NBIO;
-    so->so_options |= SO_DONTROUTE;
+    InitializeSocketFlags(so);
 	*aso = so;
     }
     OSKUnlock();
@@ -171,7 +176,7 @@ int OskitTCPRecv( void *connection,
 		       &tcp_flags );
     OSKUnlock();
 
-    *OutLen = Len - uio.uio_resid;
+    if (error == 0) *OutLen = Len - uio.uio_resid;
 
     return error;
 }
@@ -318,7 +323,7 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     error = sosend( socket, NULL, &uio, NULL, NULL, 0 );
     OSKUnlock();
 
-    *OutLen = Len - uio.uio_resid;
+    if (error == 0) *OutLen = Len - uio.uio_resid;
 
     return error;
 }
@@ -400,7 +405,8 @@ int OskitTCPAccept( void *socket,
         if (error)
             goto out;
 
-	so->so_state |= SS_NBIO | SS_ISCONNECTED;
+        InitializeSocketFlags(so);
+        so->so_state |= SS_ISCONNECTED;
         so->so_q = so->so_q0 = NULL;
         so->so_qlen = so->so_q0len = 0;
         so->so_head = 0;

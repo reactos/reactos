@@ -1973,31 +1973,26 @@ tcp_mss(tp, offer)
 	struct tcpcb *tp;
 	int offer;
 {
+#ifndef __REACTOS__
 	register struct rtentry *rt;
 	struct ifnet *ifp = NULL;
-	register int rtt, mss;
+    struct rmxp_tao *taop;
+    register int rtt;
+#endif
+	register int mss;
 	u_long bufsize;
 	struct inpcb *inp;
 	struct socket *so;
-	struct rmxp_tao *taop;
 	int origoffer = offer;
 
 	inp = tp->t_inpcb;
-	if ((rt = tcp_rtlookup(inp)) == NULL) {
+    so = inp->inp_socket;
 #ifndef __REACTOS__
+	if ((rt = tcp_rtlookup(inp)) == NULL) {
 		tp->t_maxopd = tp->t_maxseg = tcp_mssdflt;
-#else
-		if (offer < tcp_mssdflt)
-			tp->t_maxopd = tp->t_maxseg = tcp_mssdflt;
-		else
-			tp->t_maxopd = tp->t_maxseg = min(offer, tcp_mssopt(tp));
-#endif
 		return;
 	}
-#ifndef __REACTOS__
 	ifp = rt->rt_ifp;
-#endif
-	so = inp->inp_socket;
 
 	taop = rmx_taop(rt->rt_rmx);
 	/*
@@ -2006,6 +2001,7 @@ tcp_mss(tp, offer)
 	 */
 	if (offer == -1)
 		offer = taop->tao_mssopt;
+#endif
 	/*
 	 * Offer == 0 means that there was no MSS on the SYN segment,
 	 * in this case we use tcp_mssdflt.
@@ -2020,6 +2016,7 @@ tcp_mss(tp, offer)
 		 * funny things may happen in tcp_output.
 		 */
 		offer = max(offer, 64);
+#ifndef __REACTOS__
 	taop->tao_mssopt = offer;
 
 	/*
@@ -2060,6 +2057,10 @@ tcp_mss(tp, offer)
 		if (!in_localaddr(inp->inp_faddr))
 			mss = min(mss, tcp_mssdflt);
 	}
+#else
+    mss = tcp_mssopt(tp);
+    mss = min(mss, tcp_mssdflt);
+#endif
 	mss = min(mss, offer);
 	/*
 	 * maxopd stores the maximum length of data AND options
@@ -2097,7 +2098,7 @@ tcp_mss(tp, offer)
 	 * number of mss units; if the mss is larger than
 	 * the socket buffer, decrease the mss.
 	 */
-#ifdef RTV_SPIPE
+#if defined(RTV_SPIPE) && !defined(__REACTOS__)
 	if ((bufsize = rt->rt_rmx.rmx_sendpipe) == 0)
 #endif
 		bufsize = so->so_snd.sb_hiwat;
@@ -2111,7 +2112,7 @@ tcp_mss(tp, offer)
 	}
 	tp->t_maxseg = mss;
 
-#ifdef RTV_RPIPE
+#if defined(RTV_RPIPE) && !defined(__REACTOS__)
 	if ((bufsize = rt->rt_rmx.rmx_recvpipe) == 0)
 #endif
 		bufsize = so->so_rcv.sb_hiwat;
@@ -2121,12 +2122,15 @@ tcp_mss(tp, offer)
 			bufsize = sb_max;
 		(void)sbreserve(&so->so_rcv, bufsize);
 	}
+#ifndef __REACTOS__
 	/*
 	 * Don't force slow-start on local network.
 	 */
 	if (!in_localaddr(inp->inp_faddr))
+#endif
 		tp->snd_cwnd = mss;
 
+#ifndef __REACTOS__
 	if (rt->rt_rmx.rmx_ssthresh) {
 		/*
 		 * There's some sort of gateway or interface
@@ -2137,6 +2141,7 @@ tcp_mss(tp, offer)
 		tp->snd_ssthresh = max(2 * mss, rt->rt_rmx.rmx_ssthresh);
 		tcpstat.tcps_usedssthresh++;
 	}
+#endif
 }
 
 /*
