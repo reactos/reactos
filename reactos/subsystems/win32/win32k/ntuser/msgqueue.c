@@ -350,6 +350,10 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Win
    PWINDOW_OBJECT CaptureWindow = NULL;
    HWND hCaptureWin;
 
+   /* FIXME: Mouse message can be sent before the Desktop is up and running in which case ScopeWin (Desktop) is 0.
+             Is this the best fix? */
+   if (ScopeWin == 0) return FALSE;
+
    ASSERT_REFS_CO(ScopeWin);
 
    /*
