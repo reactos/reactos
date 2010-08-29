@@ -68,7 +68,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Guardar en&lace como...",  IDM_SAVETARGET
         MENUITEM "&Imprimir enlace",         IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "M&ostrar imagen"           IDM_SHOWPICTURE
+        MENUITEM "M&ostrar imagen",          IDM_SHOWPICTURE
         MENUITEM "G&uardar imagen como...",  IDM_SAVEPICTURE
         MENUITEM "&Enviar por correo...",    IDM_MP_EMAILPICTURE
         MENUITEM "I&mprimir imagen...",      IDM_MP_PRINTPICTURE
@@ -132,7 +132,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "&Guardar enlace como...",     IDM_SAVETARGET
         MENUITEM "&Imprimir enlace",            IDM_PRINTTARGET
         MENUITEM SEPARATOR
-        MENUITEM "Cor&tar"                      IDM_CUT
+        MENUITEM "Cor&tar",                     IDM_CUT
         MENUITEM "&Copiar",                     IDM_COPY
         MENUITEM "C&opiar acceso directo",      IDM_COPYSHORTCUT
         MENUITEM "&Pegar",                      IDM_PASTE
@@ -160,7 +160,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "Pon&er como fondo",           IDM_SETWALLPAPER
         MENUITEM "Aña&dir al escritorio...",    IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
-        MENUITEM "Cor&tar"                      IDM_CUT
+        MENUITEM "Cor&tar",                     IDM_CUT
         MENUITEM "&Copiar",                     IDM_COPY
         MENUITEM "C&opiar acceso directo",      IDM_COPYSHORTCUT
         MENUITEM "Pe&gar",                      IDM_PASTE
@@ -224,7 +224,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "Desplazar &aquí",   IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "&Principio"         IDM_SCROLL_TOP
+        MENUITEM "&Principio",         IDM_SCROLL_TOP
         MENUITEM "&Final",            IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
         MENUITEM "Página a&rriba",    IDM_SCROLL_PAGEUP
