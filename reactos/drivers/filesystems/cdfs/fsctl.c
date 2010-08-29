@@ -359,7 +359,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
     Vpb->SerialNumber = CdInfo.SerialNumber;
     Vpb->VolumeLabelLength = CdInfo.VolumeLabelLength;
-    RtlCopyMemory(Vpb->VolumeLabel, CdInfo.VolumeLabel, CdInfo.VolumeLabelLength * sizeof(WCHAR));
+    RtlCopyMemory(Vpb->VolumeLabel, CdInfo.VolumeLabel, CdInfo.VolumeLabelLength);
     RtlCopyMemory(&DeviceExt->CdInfo, &CdInfo, sizeof(CDINFO));
 
     NewDeviceObject->Vpb = DeviceToMount->Vpb;
