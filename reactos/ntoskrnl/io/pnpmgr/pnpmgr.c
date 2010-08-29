@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define ENABLE_ACPI
+//#define ENABLE_ACPI
 
 /* GLOBALS *******************************************************************/
 
