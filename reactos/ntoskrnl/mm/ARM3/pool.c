@@ -33,6 +33,150 @@ BOOLEAN MmProtectFreedNonPagedPool;
 
 VOID
 NTAPI
+MiProtectFreeNonPagedPool(IN PVOID VirtualAddress,
+						  IN ULONG PageCount)
+{
+    PMMPTE PointerPte, LastPte;
+    MMPTE TempPte;
+
+    /* If pool is physical, can't protect PTEs */
+    if (MI_IS_PHYSICAL_ADDRESS(VirtualAddress)) return;
+
+    /* Get PTE pointers and loop */
+    PointerPte = MiAddressToPte(VirtualAddress);
+    LastPte = PointerPte + PageCount;
+    do
+    {
+        /* Capture the PTE for safety */
+        TempPte = *PointerPte;
+
+        /* Mark it as an invalid PTE, set proto bit to recognize it as pool */
+        TempPte.u.Hard.Valid = 0;
+        TempPte.u.Soft.Prototype = 1;
+        MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+    } while (++PointerPte < LastPte);
+	
+    /* Flush the TLB */
+    KeFlushEntireTb(TRUE, TRUE);
+}
+
+BOOLEAN
+NTAPI
+MiUnProtectFreeNonPagedPool(IN PVOID VirtualAddress,
+	   					  	IN ULONG PageCount)
+{
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+    PFN_NUMBER UnprotectedPages = 0;
+
+    /* If pool is physical, can't protect PTEs */
+    if (MI_IS_PHYSICAL_ADDRESS(VirtualAddress)) return FALSE;
+    
+    /* Get, and capture the PTE */
+    PointerPte = MiAddressToPte(VirtualAddress);
+    TempPte = *PointerPte;
+    
+    /* Loop protected PTEs */
+    while ((TempPte.u.Hard.Valid == 0) && (TempPte.u.Soft.Prototype == 1))
+    {
+        /* Unprotect the PTE */
+        TempPte.u.Hard.Valid = 1;
+        TempPte.u.Soft.Prototype = 0;
+        MI_WRITE_VALID_PTE(PointerPte, TempPte);
+        
+        /* One more page */
+        if (++UnprotectedPages == PageCount) break;
+        
+        /* Capture next PTE */
+        TempPte = *(++PointerPte);
+    }
+    
+    /* Return if any pages were unprotected */
+    return UnprotectedPages ? TRUE : FALSE;
+}
+
+VOID
+FORCEINLINE
+MiProtectedPoolUnProtectLinks(IN PLIST_ENTRY Links,
+                              OUT PVOID* PoolFlink,
+                              OUT PVOID* PoolBlink)
+{
+    BOOLEAN Safe;
+    PVOID PoolVa;
+    
+    /* Initialize variables */
+    *PoolFlink = *PoolBlink = NULL;
+    
+    /* Check if the list has entries */
+    if (IsListEmpty(Links) == FALSE)
+    {
+        /* We are going to need to forward link to do an insert */
+        PoolVa = Links->Flink;
+        
+        /* So make it safe to access */
+        Safe = MiUnProtectFreeNonPagedPool(PoolVa, 1);
+        if (Safe) PoolFlink = PoolVa;
+    }
+    
+    /* Are we going to need a backward link too? */
+    if (Links != Links->Blink)
+    {
+        /* Get the head's backward link for the insert */
+        PoolVa = Links->Blink;
+        
+        /* Make it safe to access */
+        Safe = MiUnProtectFreeNonPagedPool(PoolVa, 1);
+        if (Safe) PoolBlink = PoolVa;
+    }
+}
+
+VOID
+FORCEINLINE
+MiProtectedPoolProtectLinks(IN PVOID PoolFlink,
+                            IN PVOID PoolBlink)
+{
+    /* Reprotect the pages, if they got unprotected earlier */
+    if (PoolFlink) MiProtectFreeNonPagedPool(PoolFlink, 1);
+    if (PoolBlink) MiProtectFreeNonPagedPool(PoolBlink, 1);
+}
+
+VOID
+NTAPI
+MiProtectedPoolInsertList(IN PLIST_ENTRY ListHead,
+                          IN PLIST_ENTRY Entry,
+                          IN BOOLEAN Critical)
+{
+    PVOID PoolFlink, PoolBlink;
+    
+    /* Make the list accessible */
+    MiProtectedPoolUnProtectLinks(ListHead, &PoolFlink, &PoolBlink);
+    
+    /* Now insert in the right position */
+    Critical ? InsertHeadList(ListHead, Entry) : InsertTailList(ListHead, Entry);
+    
+    /* And reprotect the pages containing the free links */
+    MiProtectedPoolProtectLinks(PoolFlink, PoolBlink);
+}
+
+VOID
+NTAPI
+MiProtectedPoolRemoveEntryList(IN PLIST_ENTRY Entry)
+{
+    PVOID PoolFlink, PoolBlink;
+    
+    /* Make the list accessible */
+    MiProtectedPoolUnProtectLinks(Entry, &PoolFlink, &PoolBlink);
+    
+    /* Now remove */
+    RemoveEntryList(Entry);
+    
+    /* And reprotect the pages containing the free links */
+    if (PoolFlink) MiProtectFreeNonPagedPool(PoolFlink, 1);
+    if (PoolBlink) MiProtectFreeNonPagedPool(PoolBlink, 1);
+}
+
+VOID
+NTAPI
 MiInitializeNonPagedPoolThresholds(VOID)
 {
     PFN_NUMBER Size = MmMaximumNonPagedPoolInPages;
@@ -245,7 +389,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     // Handle paged pool
     //
-    if (PoolType == PagedPool)
+    if ((PoolType & BASE_POOL_TYPE_MASK) == PagedPool)
     {
         //
         // Lock the paged pool mutex
@@ -755,12 +899,21 @@ MiFreePoolPages(IN PVOID StartingVa)
     }
     else
     {
+        /* Sanity check */
+        ASSERT((ULONG_PTR)StartingVa + NumberOfPages <= (ULONG_PTR)MmNonPagedPoolEnd);
+        
+        /* Check if protected pool is enabled */
+        if (MmProtectFreedNonPagedPool)
+        {
+            /* The freed block will be merged, it must be made accessible */
+            MiUnProtectFreeNonPagedPool(MiPteToAddress(PointerPte), 0);
+        }
+        
         //
         // Otherwise, our entire allocation must've fit within the initial non 
         // paged pool, or the expansion nonpaged pool, so get the PFN entry of
         // the next allocation
         //
-        ASSERT((ULONG_PTR)StartingVa + NumberOfPages <= (ULONG_PTR)MmNonPagedPoolEnd);
         if (PointerPte->u.Hard.Valid == 1)
         {
             //
@@ -791,11 +944,13 @@ MiFreePoolPages(IN PVOID StartingVa)
                                          (NumberOfPages << PAGE_SHIFT));
         ASSERT(FreeEntry->Owner == FreeEntry);
         
-        //
-        // Consume this entry's pages, and remove it from its free list
-        //
+        /* Consume this entry's pages */
         FreePages += FreeEntry->Size;
-        RemoveEntryList (&FreeEntry->List);
+        
+        /* Remove the item from the list, depending if pool is protected */
+        MmProtectFreedNonPagedPool ?
+            MiProtectedPoolRemoveEntryList(&FreeEntry->List) :
+            RemoveEntryList(&FreeEntry->List);
     }
     
     //
@@ -819,6 +974,15 @@ MiFreePoolPages(IN PVOID StartingVa)
         // Otherwise, get the PTE for the page right before our allocation
         //
         PointerPte -= NumberOfPages + 1;
+        
+        /* Check if protected pool is enabled */
+        if (MmProtectFreedNonPagedPool)
+        {
+            /* The freed block will be merged, it must be made accessible */
+            MiUnProtectFreeNonPagedPool(MiPteToAddress(PointerPte), 0);
+        }
+        
+        /* Check if this is valid pool, or a guard page */
         if (PointerPte->u.Hard.Valid == 1)
         {
             //
@@ -848,6 +1012,13 @@ MiFreePoolPages(IN PVOID StartingVa)
         FreeEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)StartingVa - PAGE_SIZE);
         FreeEntry = FreeEntry->Owner;
         
+        /* Check if protected pool is enabled */
+        if (MmProtectFreedNonPagedPool)
+        {
+            /* The freed block will be merged, it must be made accessible */
+            MiUnProtectFreeNonPagedPool(FreeEntry, 0);
+        }
+        
         //
         // Check if the entry is small enough to be indexed on a free list
         // If it is, we'll want to re-insert it, since we're about to
@@ -855,10 +1026,10 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         if (FreeEntry->Size < (MI_MAX_FREE_PAGE_LISTS - 1))
         {
-            //
-            // Remove the list from where it is now
-            //
-            RemoveEntryList(&FreeEntry->List);
+            /* Remove the item from the list, depending if pool is protected */
+            MmProtectFreedNonPagedPool ?
+                MiProtectedPoolRemoveEntryList(&FreeEntry->List) :
+                RemoveEntryList(&FreeEntry->List);
             
             //
             // Update its size
@@ -871,10 +1042,10 @@ MiFreePoolPages(IN PVOID StartingVa)
             i = (ULONG)(FreeEntry->Size - 1);
             if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
             
-            //
-            // Do it
-            //
-            InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
+            /* Insert the entry into the free list head, check for prot. pool */
+            MmProtectFreedNonPagedPool ?
+                MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE) :
+                InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
         }
         else
         {
@@ -902,10 +1073,10 @@ MiFreePoolPages(IN PVOID StartingVa)
         i = FreeEntry->Size - 1;
         if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
         
-        //
-        // And insert us
-        //
-        InsertTailList (&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
+        /* Insert the entry into the free list head, check for prot. pool */
+        MmProtectFreedNonPagedPool ?
+            MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE) :
+            InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
     }
     
     //
@@ -927,6 +1098,13 @@ MiFreePoolPages(IN PVOID StartingVa)
         NextEntry->Owner = FreeEntry;    
         NextEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)NextEntry + PAGE_SIZE);
     } while (NextEntry != LastEntry);
+    
+    /* Is freed non paged pool protected? */
+    if (MmProtectFreedNonPagedPool)
+    {
+        /* Protect the freed pool! */
+        MiProtectFreeNonPagedPool(FreeEntry, FreeEntry->Size);
+    }
     
     //
     // We're done, release the lock and let the caller know how much we freed
