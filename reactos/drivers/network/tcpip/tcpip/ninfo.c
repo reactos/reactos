@@ -21,15 +21,21 @@ TDI_STATUS InfoTdiQueryGetRouteTable( PIP_INTERFACE IF, PNDIS_BUFFER Buffer, PUI
     KIRQL OldIrql;
     UINT RtCount = CountFIBs(IF);
     UINT Size = sizeof( IPROUTE_ENTRY ) * RtCount;
-    PFIB_ENTRY RCache =
-	ExAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount ),
-	RCacheCur = RCache;
-    PIPROUTE_ENTRY RouteEntries = ExAllocatePool( NonPagedPool, Size ),
-	RtCurrent = RouteEntries;
+    PFIB_ENTRY RCache, RCacheCur;
+    PIPROUTE_ENTRY RouteEntries, RtCurrent;
     UINT i;
 
-    TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d, RCache = %08x\n",
-			    RtCount, RCache));
+    TI_DbgPrint(DEBUG_INFO, ("Called, routes = %d\n",
+			    RtCount));
+    
+    if (RtCount == 0)
+        return InfoCopyOut(NULL, 0, NULL, BufferSize);
+
+    RouteEntries = ExAllocatePool( NonPagedPool, Size );
+    RtCurrent = RouteEntries;
+
+    RCache = ExAllocatePool( NonPagedPool, sizeof( FIB_ENTRY ) * RtCount );
+    RCacheCur = RCache;
 
     if( !RCache || !RouteEntries ) {
 	if( RCache ) ExFreePool( RCache );
