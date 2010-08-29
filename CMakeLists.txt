@@ -89,6 +89,7 @@ add_subdirectory(include/reactos/mc)
 
 add_subdirectory(base)
 add_subdirectory(dll)
+add_subdirectory(hal)
 add_subdirectory(lib)
 
 # nci generated intermediate files
