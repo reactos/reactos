@@ -298,6 +298,7 @@ MiInitializeNonPagedPool(VOID)
     FreeEntry = MmNonPagedPoolStart;
     FirstEntry = FreeEntry;
     FreeEntry->Size = PoolPages;
+    FreeEntry->Signature = MM_FREE_POOL_SIGNATURE;
     FreeEntry->Owner = FirstEntry;
 
     //
@@ -316,6 +317,7 @@ MiInitializeNonPagedPool(VOID)
         //
         FreeEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)FreeEntry + PAGE_SIZE);
         FreeEntry->Owner = FirstEntry;
+        FreeEntry->Signature = MM_FREE_POOL_SIGNATURE;
     }
 
     //
@@ -626,6 +628,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Grab the entry and see if it can handle our allocation
             //
             FreeEntry = CONTAINING_RECORD(NextEntry, MMFREE_POOL_ENTRY, List);
+            ASSERT(FreeEntry->Signature == MM_FREE_POOL_SIGNATURE);
             if (FreeEntry->Size >= SizeInPages)
             {
                 //
@@ -964,6 +967,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         FreeEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)StartingVa +
                                          (NumberOfPages << PAGE_SHIFT));
+        ASSERT(FreeEntry->Signature == MM_FREE_POOL_SIGNATURE);
         ASSERT(FreeEntry->Owner == FreeEntry);
         
         /* Consume this entry's pages */
@@ -1032,6 +1036,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         // Get the free entry descriptor for that given page range
         //
         FreeEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)StartingVa - PAGE_SIZE);
+        ASSERT(FreeEntry->Signature == MM_FREE_POOL_SIGNATURE);
         FreeEntry = FreeEntry->Owner;
         
         /* Check if protected pool is enabled */
@@ -1118,6 +1123,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         // Link back to the parent free entry, and keep going
         //
         NextEntry->Owner = FreeEntry;
+        NextEntry->Signature = MM_FREE_POOL_SIGNATURE;
         NextEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)NextEntry + PAGE_SIZE);
     } while (NextEntry != LastEntry);
     
