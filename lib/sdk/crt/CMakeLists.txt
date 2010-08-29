@@ -3,173 +3,560 @@ include_directories(include)
 
 add_definitions(-D_CRTBLD)
 
-file(GLOB_RECURSE CRT_SOURCE "*.c")
+list(APPEND CRT_SOURCE
+    conio/cgets.c
+    conio/cprintf.c
+    conio/cputs.c
+    conio/getch.c
+    conio/getche.c
+    conio/kbhit.c
+    conio/putch.c
+    conio/ungetch.c
+    direct/chdir.c
+    direct/chdrive.c
+    direct/getcwd.c
+    direct/getdcwd.c
+    direct/getdfree.c
+    direct/getdrive.c
+    direct/mkdir.c
+    direct/rmdir.c
+    direct/wchdir.c
+    direct/wgetcwd.c
+    direct/wgetdcwd.c
+    direct/wmkdir.c
+    direct/wrmdir.c
+    except/abnorter.c
+    except/checkesp.c
+    except/cpp.c
+    except/cppexcept.c
+    except/except.c
+    except/matherr.c
+    except/${ARCH}/seh.s
+    except/xcptfil.c
+    float/chgsign.c
+    float/copysign.c
+    float/fpclass.c
+    float/fpecode.c
+    float/isnan.c
+    float/nafter.c
+    float/scalb.c
+    float/${ARCH}/clearfp.c
+    float/${ARCH}/cntrlfp.c
+    float/${ARCH}/fpreset.c
+    float/${ARCH}/logb.c
+    float/${ARCH}/statfp.c
+    locale/locale.c
+    math/acos.c
+    math/adjust.c
+    math/asin.c
+    math/cabs.c
+    math/cosf.c
+    math/cosh.c
+    math/div.c
+    math/fdivbug.c
+    math/frexp.c
+    math/huge_val.c
+    math/hypot.c
+    math/ldiv.c
+    math/logf.c
+    math/modf.c
+    math/rand.c
+    math/s_modf.c
+    math/sinf.c
+    math/sinh.c
+    math/tanh.c
+    math/pow_asm.c
+    mbstring/hanzen.c
+    mbstring/ischira.c
+    mbstring/iskana.c
+    mbstring/iskmoji.c
+    mbstring/iskpun.c
+    mbstring/islead.c
+    mbstring/islwr.c
+    mbstring/ismbal.c
+    mbstring/ismbaln.c
+    mbstring/ismbc.c
+    mbstring/ismbgra.c
+    mbstring/ismbkaln.c
+    mbstring/ismblead.c
+    mbstring/ismbpri.c
+    mbstring/ismbpun.c
+    mbstring/ismbtrl.c
+    mbstring/isuppr.c
+    mbstring/jistojms.c
+    mbstring/jmstojis.c
+    mbstring/mbbtype.c
+    mbstring/mbccpy.c
+    mbstring/mbclen.c
+    mbstring/mbscat.c
+    mbstring/mbschr.c
+    mbstring/mbscmp.c
+    mbstring/mbscoll.c
+    mbstring/mbscpy.c
+    mbstring/mbscspn.c
+    mbstring/mbsdec.c
+    mbstring/mbsdup.c
+    mbstring/mbsicmp.c
+    mbstring/mbsicoll.c
+    mbstring/mbsinc.c
+    mbstring/mbslen.c
+    mbstring/mbslwr.c
+    mbstring/mbsncat.c
+    mbstring/mbsnccnt.c
+    mbstring/mbsncmp.c
+    mbstring/mbsncoll.c
+    mbstring/mbsncpy.c
+    mbstring/mbsnextc.c
+    mbstring/mbsnicmp.c
+    mbstring/mbsnicoll.c
+    mbstring/mbsninc.c
+    mbstring/mbsnset.c
+    mbstring/mbspbrk.c
+    mbstring/mbsrchr.c
+    mbstring/mbsrev.c
+    mbstring/mbsset.c
+    mbstring/mbsspn.c
+    mbstring/mbsspnp.c
+    mbstring/mbsstr.c
+    mbstring/mbstok.c
+    mbstring/mbstrlen.c
+    mbstring/mbsupr.c
+    mem/memcmp.c
+    mem/memccpy.c
+    mem/memicmp.c
+    misc/amsg.c
+    misc/assert.c
+    misc/crtmain.c
+    misc/environ.c
+    misc/getargs.c
+    misc/initterm.c
+    misc/lock.c
+    misc/purecall.c
+    misc/stubs.c
+    misc/tls.c
+    process/_cwait.c
+    process/_system.c
+    process/dll.c
+    process/process.c
+    process/procid.c
+    process/thread.c
+    process/threadid.c
+    process/threadx.c
+    process/wprocess.c
+    search/bsearch.c
+    search/lfind.c
+    search/lsearch.c
+    setjmp/${ARCH}/setjmp.s
+    signal/signal.c
+    signal/xcptinfo.c
+    stdio/access.c
+    stdio/file.c
+    stdio/find.c
+    stdio/find64.c
+    stdio/findi64.c
+    stdio/fmode.c
+    stdio/lnx_sprintf.c
+    stdio/perror.c
+    stdio/popen.c
+    stdio/stat.c
+    stdio/stat64.c
+    stdio/waccess.c
+    stdio/wfind.c
+    stdio/wfind64.c
+    stdio/wfindi64.c
+    stdio/wpopen.c
+    stdio/wstat.c
+    stdio/wstat64.c
+    stdlib/_exit.c
+    stdlib/abort.c
+    stdlib/atexit.c
+    stdlib/ecvt.c
+    stdlib/errno.c
+    stdlib/fcvt.c
+    stdlib/fcvtbuf.c
+    stdlib/fullpath.c
+    stdlib/gcvt.c
+    stdlib/getenv.c
+    stdlib/makepath.c
+    stdlib/makepath_s.c
+    stdlib/mbtowc.c
+    stdlib/mbstowcs.c
+    stdlib/obsol.c
+    stdlib/putenv.c
+    stdlib/qsort.c
+    stdlib/rot.c
+    stdlib/senv.c
+    stdlib/swab.c
+    stdlib/wfulpath.c
+    stdlib/wputenv.c
+    stdlib/wsenv.c
+    stdlib/wmakpath.c
+    stdlib/wmakpath_s.c
+    string/atof.c
+    string/atoi.c
+    string/atoi64.c
+    string/atol.c
+    string/ctype.c
+    string/itoa.c
+    string/itow.c
+    string/lasttok.c
+    string/scanf.c
+    string/splitp.c
+    string/strcoll.c
+    string/strcspn.c
+    string/strdup.c
+    string/strerror.c
+    string/stricmp.c
+    string/string.c
+    string/strlwr.c
+    string/strncoll.c
+    string/strnicmp.c
+    string/strpbrk.c
+    string/strrev.c
+    string/strset.c
+    string/strspn.c
+    string/strstr.c
+    string/strtod.c
+    string/strtoi64.c
+    string/strtok.c
+    string/strtol.c
+    string/strtoul.c
+    string/strtoull.c
+    string/strupr.c
+    string/strxfrm.c
+    string/wcs.c
+    string/wcstol.c
+    string/wcstoul.c
+    string/wsplitp.c
+    string/wtoi.c
+    string/wtoi64.c
+    string/wtol.c
+    sys_stat/systime.c
+    time/asctime.c
+    time/clock.c
+    time/ctime32.c
+    time/ctime64.c
+    time/ctime.c
+    time/difftime32.c
+    time/difftime64.c
+    time/difftime.c
+    time/ftime32.c
+    time/ftime64.c
+    time/ftime.c
+    time/futime32.c
+    time/futime64.c
+    time/futime.c
+    time/gmtime.c
+    time/localtime32.c
+    time/localtime64.c
+    time/localtime.c
+    time/mktime.c
+    time/strdate.c
+    time/strftime.c
+    time/strtime.c
+    time/time32.c
+    time/time64.c
+    time/time.c
+    time/timezone.c
+    time/tzname.c
+    time/utime32.c
+    time/utime64.c
+    time/utime.c
+    time/wasctime.c
+    time/wcsftime.c
+    time/wctime32.c
+    time/wctime64.c
+    time/wctime.c
+    time/wstrdate.c
+    time/wstrtime.c
+    time/wutime32.c
+    time/wutime64.c
+    time/wutime.c
+    wstring/wcscoll.c
+    wstring/wcscspn.c
+    wstring/wcsicmp.c
+    wstring/wcslwr.c
+    wstring/wcsnicmp.c
+    wstring/wcsspn.c
+    wstring/wcsstr.c
+    wstring/wcstok.c
+    wstring/wcsupr.c
+    wstring/wcsxfrm.c
+    wstring/wlasttok.c
+    wine/heap.c
+    wine/undname.c)
 
-if(NOT ARCH MATCHES i386)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/except/i386/unwind.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/*.c)
-if(NOT ARCH MATCHES amd64)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/float/i386/*.c)
-endif(NOT ARCH MATCHES amd64)
-else(NOT ARCH MATCHES i386)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/stubs.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/mem/memchr.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/mem/memcpy.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/mem/memmove.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/mem/memset.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strcat.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strchr.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strcmp.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strcpy.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strlen.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strncat.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strncmp.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strncpy.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strnlen.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strrchr.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcscat.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcschr.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcscmp.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcscpy.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcslen.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcsncat.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcsncmp.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcsncpy.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcsnlen.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcsrchr.c)
-endif(NOT ARCH MATCHES i386)
+if(ARCH MATCHES i386)
+list(APPEND CRT_SOURCE except/i386/prolog.s except/i386/unwind.c)
+elseif(ARCH MATCHES amd64)
+list(APPEND CRT_SOURCE chkstk_asm.s)
+endif(ARCH MATCHES i386)
 
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/abs.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/cos.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/j0_y0.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/j1_y1.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/jn_yn.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/labs.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/rand_nt.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/math/sin.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stdio/findgen.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stdlib/atold.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stdlib/malloc.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/mbstowcs_nt.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strtold.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/wcstombs_nt.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/witoa.c)
-list(REMOVE_ITEM CRT_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/witow.c)
+if(ARCH MATCHES i386)
+list(APPEND CRT_SOURCE
+    math/i386/alldiv_asm.s
+    math/i386/alldvrm_asm.s
+    math/i386/allmul_asm.s
+    math/i386/allrem_asm.s
+    math/i386/allshl_asm.s
+    math/i386/allshr_asm.s
+    math/i386/atan_asm.s
+    math/i386/aulldiv_asm.s
+    math/i386/aulldvrm_asm.s
+    math/i386/aullrem_asm.s
+    math/i386/aullshr_asm.s
+    math/i386/ceil_asm.s
+    math/i386/ceilf.S
+    math/i386/cos_asm.s
+    math/i386/fabs_asm.s
+    math/i386/floor_asm.s
+    math/i386/floorf.S
+    math/i386/ftol_asm.s
+    math/i386/log_asm.s
+    math/i386/log10_asm.s
+    math/i386/pow_asm.s
+    math/i386/sin_asm.s
+    math/i386/sqrt_asm.s
+    math/i386/tan_asm.s
+    math/i386/atan2.c
+    math/i386/ci.c
+    math/i386/exp.c
+    math/i386/fmod.c
+    math/i386/fmodf.c
+    math/i386/ldexp.c
+    math/i386/sqrtf.c
+    mem/i386/memchr_asm.s
+    mem/i386/memcpy_asm.s
+    mem/i386/memmove_asm.s
+    mem/i386/memset_asm.s
+    string/i386/strcat_asm.s
+    string/i386/strchr_asm.s
+    string/i386/strcmp_asm.s
+    string/i386/strcpy_asm.s
+    string/i386/strlen_asm.s
+    string/i386/strncat_asm.s
+    string/i386/strncmp_asm.s
+    string/i386/strncpy_asm.s
+    string/i386/strnlen_asm.s
+    string/i386/strrchr_asm.s
+    string/i386/wcscat_asm.s
+    string/i386/wcschr_asm.s
+    string/i386/wcscmp_asm.s
+    string/i386/wcscpy_asm.s
+    string/i386/wcslen_asm.s
+    string/i386/wcsncat_asm.s
+    string/i386/wcsncmp_asm.s
+    string/i386/wcsncpy_asm.s
+    string/i386/wcsnlen_asm.s
+    string/i386/wcsrchr_asm.s)
+else()
+list(APPEND CRT_SOURCE
+    math/stubs.c
+    mem/memchr.c
+    mem/memcpy.c
+    mem/memmove.c
+    mem/memset.c
+    string/strcat.c
+    string/strchr.c
+    string/strcmp.c
+    string/strcpy.c
+    string/strlen.c
+    string/strncat.c
+    string/strncmp.c
+    string/strncpy.c
+    string/strnlen.c
+    string/strrchr.c
+    string/wcscat.c
+    string/wcschr.c
+    string/wcscmp.c
+    string/wcscpy.c
+    string/wcslen.c
+    string/wcsncat.c
+    string/wcsncmp.c
+    string/wcsncpy.c
+    string/wcsnlen.c
+    string/wcsrchr.c)
+endif(ARCH MATCHES i386)
 
-file(GLOB_RECURSE CRT_ASM_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/except/${ARCH}/*.s" 
-                                 "${CMAKE_CURRENT_SOURCE_DIR}/math/${ARCH}/*.s"
-                                 "${CMAKE_CURRENT_SOURCE_DIR}/mem/${ARCH}/*.s"
-                                 "${CMAKE_CURRENT_SOURCE_DIR}/string/${ARCH}/*.s"
-                                 "${CMAKE_CURRENT_SOURCE_DIR}/setjmp/${ARCH}/*.s")
+if(ARCH MATCHES amd64)
+list(APPEND CRT_SOURCE
+    math/cos.c
+    math/sin.c
+    math/amd64/alldiv.S
+    math/amd64/atan.S
+    math/amd64/atan2.S
+    math/amd64/ceil.S
+    math/amd64/ceilf.S
+    math/amd64/exp.S
+    math/amd64/fabs.S
+    math/amd64/floor.S
+    math/amd64/floorf.S
+    math/amd64/fmod.S
+    math/amd64/fmodf.S
+    math/amd64/ldexp.S
+    math/amd64/log.S
+    math/amd64/log10.S
+    math/amd64/pow.S
+    math/amd64/sqrt.S
+    math/amd64/sqrtf.S
+    math/amd64/tan.S)
+endif(ARCH MATCHES amd64)
 
-add_library(crt ${CRT_SOURCE} ${CRT_ASM_SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/crt_precomp.h.gch)
+add_library(crt ${CRT_SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/crt_precomp.h.gch)
 
 set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
 add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
 add_dependencies(crt psdk)
 
+list(APPEND LIBCNTPR_SOURCE
+    except/${ARCH}/chkstk_asm.s
+    except/${ARCH}/seh.s
+    math/abs.c
+    math/div.c
+    math/labs.c
+    math/rand_nt.c
+    mem/memccpy.c
+    mem/memcmp.c
+    mem/memicmp.c
+    search/bsearch.c
+    search/lfind.c
+    setjmp/${ARCH}/setjmp.s
+    stdlib/qsort.c
+    string/ctype.c
+    string/scanf.c
+    string/strcspn.c
+    string/stricmp.c
+    string/strnicmp.c
+    string/strlwr.c
+    string/strrev.c
+    string/strset.c
+    string/strstr.c
+    string/strupr.c
+    string/strpbrk.c
+    string/strspn.c
+    string/atoi64.c
+    string/atoi.c
+    string/atol.c
+    string/itoa.c
+    string/itow.c
+    string/mbstowcs_nt.c
+    string/splitp.c
+    string/strtol.c
+    string/strtoul.c
+    string/strtoull.c
+    string/wcs.c
+    string/wcstol.c
+    string/wcstombs_nt.c
+    string/wcstoul.c
+    string/wsplitp.c
+    string/wtoi64.c
+    string/wtoi.c
+    string/wtol.c
+    wstring/wcsicmp.c
+    wstring/wcslwr.c
+    wstring/wcsnicmp.c
+    wstring/wcsupr.c
+    wstring/wcscspn.c
+    wstring/wcsspn.c
+    wstring/wcsstr.c)
+
 if(ARCH MATCHES i386)
-set(LIBCNTPR_SOURCE 
-  ${CMAKE_CURRENT_SOURCE_DIR}/except/i386/chkstk_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/except/i386/seh.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/alldiv_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/alldvrm_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/allmul_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/allrem_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/allshl_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/allshr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/atan_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/aulldiv_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/aulldvrm_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/aullrem_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/aullshr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/ceil_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/cos_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/fabs_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/floor_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/ftol_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/log_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/pow_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/sin_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/sqrt_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/tan_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/i386/ci.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/abs.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/div.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/labs.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/math/rand_nt.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/i386/memchr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/i386/memcpy_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/i386/memmove_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/i386/memset_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/memccpy.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/memcmp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/mem/memicmp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/search/bsearch.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/search/lfind.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/setjmp/i386/setjmp.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/stdlib/qsort.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strcat_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strchr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strcmp_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strcpy_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strlen_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strncat_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strncmp_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strncpy_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strnlen_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/strrchr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcscat_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcschr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcscmp_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcscpy_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcslen_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcsncat_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcsncmp_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcsncpy_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcsnlen_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/i386/wcsrchr_asm.s
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/ctype.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/scanf.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strcspn.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/stricmp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strnicmp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strlwr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strrev.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strset.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strstr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strupr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strpbrk.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strspn.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/atoi64.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/atoi.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/atol.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/itoa.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/itow.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/mbstowcs_nt.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/splitp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strtol.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strtoul.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/strtoull.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wcs.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wcstol.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wcstombs_nt.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wcstoul.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wsplitp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wtoi64.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wtoi.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/string/wtol.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcsicmp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcslwr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcsnicmp.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcsupr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcscspn.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcsspn.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/wstring/wcsstr.c
-)
+list(APPEND LIBCNTPR_SOURCE
+    math/i386/alldiv_asm.s
+    math/i386/alldvrm_asm.s
+    math/i386/allmul_asm.s
+    math/i386/allrem_asm.s
+    math/i386/allshl_asm.s
+    math/i386/allshr_asm.s
+    math/i386/atan_asm.s
+    math/i386/aulldiv_asm.s
+    math/i386/aulldvrm_asm.s
+    math/i386/aullrem_asm.s
+    math/i386/aullshr_asm.s
+    math/i386/ceil_asm.s
+    math/i386/cos_asm.s
+    math/i386/fabs_asm.s
+    math/i386/floor_asm.s
+    math/i386/ftol_asm.s
+    math/i386/log_asm.s
+    math/i386/pow_asm.s
+    math/i386/sin_asm.s
+    math/i386/sqrt_asm.s
+    math/i386/tan_asm.s
+    math/i386/ci.c)
+elseif(ARCH MATCHES amd64)
+list(APPEND LIBCNTPR_SOURCE
+    math/cos.c
+    math/sin.c
+    math/amd64/alldiv.S
+    math/amd64/atan.S
+    math/amd64/atan2.S
+    math/amd64/ceil.S
+    math/amd64/exp.S
+    math/amd64/fabs.S
+    math/amd64/floor.S
+    math/amd64/fmod.S
+    math/amd64/ldexp.S
+    math/amd64/log.S
+    math/amd64/log10.S
+    math/amd64/pow.S
+    math/amd64/sqrt.S
+    math/amd64/tan.S)
+endif(ARCH MATCHES i386)
+
+if(ARCH MATCHES i386)
+list(APPEND LIBCNTPR_SOURCE
+    mem/i386/memchr_asm.s
+    mem/i386/memcpy_asm.s
+    mem/i386/memmove_asm.s
+    mem/i386/memset_asm.s
+    string/i386/strcat_asm.s
+    string/i386/strchr_asm.s
+    string/i386/strcmp_asm.s
+    string/i386/strcpy_asm.s
+    string/i386/strlen_asm.s
+    string/i386/strncat_asm.s
+    string/i386/strncmp_asm.s
+    string/i386/strncpy_asm.s
+    string/i386/strnlen_asm.s
+    string/i386/strrchr_asm.s
+    string/i386/wcscat_asm.s
+    string/i386/wcschr_asm.s
+    string/i386/wcscmp_asm.s
+    string/i386/wcscpy_asm.s
+    string/i386/wcslen_asm.s
+    string/i386/wcsncat_asm.s
+    string/i386/wcsncmp_asm.s
+    string/i386/wcsncpy_asm.s
+    string/i386/wcsnlen_asm.s
+    string/i386/wcsrchr_asm.s)
 else()
-#TBD
-endif()
+list(APPEND LIBCNTPR_SOURCE
+    mem/memchr.c
+    mem/memcpy.c
+    mem/memmove.c
+    mem/memset.c
+    string/strcat.c
+    string/strchr.c
+    string/strcmp.c
+    string/strcpy.c
+    string/strlen.c
+    string/strncat.c
+    string/strncmp.c
+    string/strncpy.c
+    string/strnlen.c
+    string/strrchr.c
+    string/wcscat.c
+    string/wcschr.c
+    string/wcscmp.c
+    string/wcscpy.c
+    string/wcslen.c
+    string/wcsncat.c
+    string/wcsncmp.c
+    string/wcsncpy.c
+    string/wcsnlen.c
+    string/wcsrchr.c)
+endif(ARCH MATCHES i386)
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
 set_property(TARGET libcntpr PROPERTY COMPILE_DEFINITIONS NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)
