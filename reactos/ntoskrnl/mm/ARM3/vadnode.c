@@ -108,6 +108,11 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
+    if (Table->NodeHint == Node)
+    {
+        Table->NodeHint = MiGetPreviousNode(Table->NodeHint);
+    }
+
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
     
