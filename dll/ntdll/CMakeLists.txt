@@ -5,22 +5,34 @@ add_definitions(-D__NTDLL__)
 add_definitions(-D_NTOSKRNL_)
 add_definitions(-DCRTDLL)
 
-include_directories(BEFORE ./include)
+include_directories(BEFORE include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-file(GLOB_RECURSE SOURCE *.c)
-list(REMOVE_ITEM SOURCE
-     ${CMAKE_CURRENT_SOURCE_DIR}/ldr/elf.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/dispatch.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/amd64/stubs.c)
-file(GLOB_RECURSE ARCH_SOURCE
-    "${CMAKE_CURRENT_SOURCE_DIR}/dispatch/${ARCH}/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/dispatch/${ARCH}/*.s")
+list(APPEND SOURCE
+    csr/api.c
+    csr/capture.c
+    csr/connect.c
+    dbg/dbgui.c
+    ldr/startup.c
+    ldr/utils.c
+    ldr/actctx.c
+    rtl/libsupp.c
+    rtl/version.c
+    def/ntdll.rc)
+
+if(ARCH MATCHES i386)
+list(APPEND SOURCE dispatch/i386/dispatch.S)
+elseif(ARCH MATCHES amd64)
+list(APPEND SOURCE dispatch/amd64/stubs.c)
+elseif(ARCH MATCHES arm)
+list(APPEND SOURCE dispatch/arm/stubs_asm.s)
+else()
+list(APPEND SOURCE dispatch/dispatch.c)
+endif(ARCH MATCHES i386)
 
 add_library(ntdll SHARED
-            ${ARCH_SOURCE} ${SOURCE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.rc
-            ${CMAKE_CURRENT_BINARY_DIR}/ntdll_ntdll.h.gch)
+    ${SOURCE}
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_ntdll.h.gch)
 
 set_target_properties(ntdll PROPERTIES LINK_FLAGS "-Wl,-entry,0")
 
