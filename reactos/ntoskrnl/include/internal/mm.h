@@ -435,6 +435,9 @@ typedef struct _MMFREE_POOL_ENTRY
     struct _MMFREE_POOL_ENTRY *Owner;
 } MMFREE_POOL_ENTRY, *PMMFREE_POOL_ENTRY;
 
+/* Signature of a freed block */
+#define MM_FREE_POOL_SIGNATURE 'ARM3'
+
 /* Paged pool information */
 typedef struct _MM_PAGED_POOL_INFO
 {

@@ -615,6 +615,13 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         NextEntry = NextHead->Flink;
         while (NextEntry != NextHead)
         {
+            /* Is freed non paged pool enabled */
+            if (MmProtectFreedNonPagedPool)
+            {
+                /* We need to be able to touch this page, unprotect it */
+                MiUnProtectFreeNonPagedPool(NextEntry, 0);
+            }
+            
             //
             // Grab the entry and see if it can handle our allocation
             //
@@ -632,23 +639,31 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 BaseVa = (PVOID)((ULONG_PTR)FreeEntry +
                                  (FreeEntry->Size  << PAGE_SHIFT));
                 
-                //
-                // This is not a free page segment anymore
-                //
-                RemoveEntryList(&FreeEntry->List);
+                /* Remove the item from the list, depending if pool is protected */
+                MmProtectFreedNonPagedPool ?
+                    MiProtectedPoolRemoveEntryList(&FreeEntry->List) :
+                    RemoveEntryList(&FreeEntry->List);
                 
                 //
                 // However, check if its' still got space left
                 //
                 if (FreeEntry->Size != 0)
                 {
-                    //
-                    // Insert it back into a different list, based on its pages
-                    //
+                    /* Check which list to insert this entry into */
                     i = FreeEntry->Size - 1;
                     if (i >= MI_MAX_FREE_PAGE_LISTS) i = MI_MAX_FREE_PAGE_LISTS - 1;
-                    InsertTailList (&MmNonPagedPoolFreeListHead[i],
-                                    &FreeEntry->List);
+
+                    /* Insert the entry into the free list head, check for prot. pool */
+                    MmProtectFreedNonPagedPool ?
+                        MiProtectedPoolInsertList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List, TRUE) :
+                        InsertTailList(&MmNonPagedPoolFreeListHead[i], &FreeEntry->List);
+                        
+                    /* Is freed non paged pool protected? */
+                    if (MmProtectFreedNonPagedPool)
+                    {
+                        /* Protect the freed pool! */
+                        MiProtectFreeNonPagedPool(FreeEntry, FreeEntry->Size);
+                    }
                 }
                 
                 //
@@ -698,6 +713,13 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Try the next free page entry
             //
             NextEntry = FreeEntry->List.Flink;
+            
+            /* Is freed non paged pool protected? */
+            if (MmProtectFreedNonPagedPool)
+            {
+                /* Protect the freed pool! */
+                MiProtectFreeNonPagedPool(FreeEntry, FreeEntry->Size);
+            }
         }
     } while (++NextHead < LastHead);
     
@@ -1095,7 +1117,7 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // Link back to the parent free entry, and keep going
         //
-        NextEntry->Owner = FreeEntry;    
+        NextEntry->Owner = FreeEntry;
         NextEntry = (PMMFREE_POOL_ENTRY)((ULONG_PTR)NextEntry + PAGE_SIZE);
     } while (NextEntry != LastEntry);
     
