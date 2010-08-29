@@ -1164,18 +1164,9 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
         /* Remove this VAD from the tree */
         ASSERT(VadTree->NumberGenericTableElements >= 1);
-        DPRINT("Removing node for VAD: %lx %lx\n", Vad->StartingVpn, Vad->EndingVpn);
         MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
         DPRINT("Moving on: %d\n", VadTree->NumberGenericTableElements);
 
-        /* Check if this VAD was the hint */
-        if (VadTree->NodeHint == Vad)
-        {
-            /* Get a new hint, unless we're empty now, in which case nothing */
-            VadTree->NodeHint = VadTree->BalancedRoot.RightChild;
-            if (!VadTree->NumberGenericTableElements) VadTree->NodeHint = NULL;
-        }
-        
         /* Only PEB/TEB VADs supported for now */
         ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
         ASSERT(Vad->u.VadFlags.VadType == VadNone);

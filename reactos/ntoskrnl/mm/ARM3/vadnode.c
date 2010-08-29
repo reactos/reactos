@@ -108,11 +108,21 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
+    DPRINT("Removing address node: %lx %lx\n", Node->StartingVpn, Node->EndingVpn);
+
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
     
     /* Decrease element count */
     Table->NumberGenericTableElements--;
+
+    /* Check if this node was the hint */
+    if (Table->NodeHint == Node)
+    {
+        /* Get a new hint, unless we're empty now, in which case nothing */
+        if (!Table->NumberGenericTableElements) Table->NodeHint = NULL;
+        else Table->NodeHint = Table->BalancedRoot.RightChild;
+    }
 }
 
 PMMADDRESS_NODE
