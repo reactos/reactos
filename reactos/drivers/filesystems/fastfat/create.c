@@ -125,7 +125,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 	ExReleaseResourceLite (&DeviceExt->DirResource);
 
 	FileOffset.QuadPart = 0;
-	if (CcMapData(pFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+	if (CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
 	{
 		while (TRUE)
 		{
@@ -155,7 +155,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
 			{
 				CcUnpinData(Context);
 				FileOffset.u.LowPart += PAGE_SIZE;
-				if (!CcMapData(pFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+				if (!CcMapData(pFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
 				{
 					Context = NULL;
 					break;

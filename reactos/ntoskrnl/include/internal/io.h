@@ -1073,7 +1073,7 @@ IopParseDevice(
     IN ULONG Attributes,
     IN OUT PUNICODE_STRING CompleteName,
     IN OUT PUNICODE_STRING RemainingName,
-    IN OUT PVOID Context OPTIONAL,
+    IN OUT PVOID Context,
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
     OUT PVOID *Object
 );

@@ -95,6 +95,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         CdfsQueryVolumeInformation;
     DriverObject->MajorFunction[IRP_MJ_SET_VOLUME_INFORMATION] =
         CdfsSetVolumeInformation;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
+        CdfsDeviceControl;
 
     DriverObject->DriverUnload = NULL;
 
