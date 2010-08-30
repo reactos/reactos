@@ -4,14 +4,98 @@ add_definitions(-DNO_RTL_INLINES)
 add_definitions(-D_NTSYSTEM_)
 add_definitions(-D_NTDLLBUILD_)
 
-file(GLOB_RECURSE ARCH_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${ARCH}/*.c ${CMAKE_CURRENT_SOURCE_DIR}/${ARCH}/*.S)
-file(GLOB SOURCE "*.c")
+list(APPEND SOURCE
+    access.c
+    acl.c
+    actctx.c
+    assert.c
+    atom.c
+    avltable.c
+    bitmap.c
+    bootdata.c
+    compress.c
+    condvar.c
+    crc32.c
+    critical.c
+    dbgbuffer.c
+    debug.c
+    dos8dot3.c
+    encode.c
+    env.c
+    error.c
+    exception.c
+    generictable.c
+    handle.c
+    heap.c
+    image.c
+    interlck.c
+    message.c
+    largeint.c
+    luid.c
+    network.c
+    nls.c
+    path.c
+    ppb.c
+    process.c
+    propvar.c
+    qsort.c
+    random.c
+    rangelist.c
+    registry.c
+    res.c
+    resource.c
+    sd.c
+    security.c
+    slist.c
+    sid.c
+    sprintf.c
+    srw.c
+    swprintf.c
+    splaytree.c
+    thread.c
+    time.c
+    timezone.c
+    timerqueue.c
+    unicode.c
+    unicodeprefix.c
+    vectoreh.c
+    version.c
+    wait.c
+    workitem.c)
 
-list(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/avlsupp.c
-                        ${CMAKE_CURRENT_SOURCE_DIR}/mem.c
-                        ${CMAKE_CURRENT_SOURCE_DIR}/memgen.c)
+if(ARCH MATCHES i386)
+list(APPEND SOURCE
+    i386/debug_asm.S
+    i386/except_asm.s
+    i386/except.c
+    i386/interlck.S
+    i386/rtlmem.s
+    i386/res_asm.s
+    i386/thread.c)
+elseif(ARCH MATCHES amd64)
+list(APPEND SOURCE
+    amd64/debug_asm.S
+    amd64/except_asm.S
+    amd64/slist.S
+    amd64/unwind.c
+    amd64/stubs.c
+    mem.c
+    memgen.c)
+elseif(ARCH MATCHES arm)
+list(APPEND SOURCE
+    arm/debug_asm.S
+    mem.c
+    memgen.c)
+elseif(ARCH MATCHES powerpc)
+list(APPEND SOURCE
+    powerpc/debug.c
+    powerpc/except.c
+    powerpc/interlocked.c
+    powerpc/rtlmem.s
+    powerpc/rtlswap.s
+    powerpc/thread.c)
+endif(ARCH MATCHES i386)
 
-add_library(rtl ${ARCH_SOURCE} ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch)
+add_library(rtl ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch)
 add_pch(rtl ${CMAKE_CURRENT_SOURCE_DIR}/rtl.h ${SOURCE})
 add_dependencies(rtl psdk)
-
