@@ -9,7 +9,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
- 
+
 add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
@@ -39,7 +39,19 @@ set(IMPORT_EXECUTABLES "${REACTOS_SOURCE_DIR}/build/ImportExecutables.cmake" CAC
 include(${IMPORT_EXECUTABLES})
 
 # Debug Options
-add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE -DKDBG=1)
+set(_WINKD_ 0)
+set(KDBG 1)
+set(DBG 1)
+
+add_definitions(-DDBG=${DBG} -DKDBG=${KDBG})
+
+if(DBG MATCHES 1)
+add_definitions(-D_SEH_ENABLE_TRACE)
+endif(DBG MATCHES 1)
+
+if((DBG MATCHES 1) OR (KDBG MATCHES 1))
+set(DBG_OR_KDBG true)
+endif((DBG MATCHES 1) OR (KDBG MATCHES 1))
 
 # Version Options
 add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_WINDOWS=0x502 -D_SETUPAPI_VER=0x502)
@@ -72,6 +84,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
 include_directories(include)
 include_directories(include/psdk)
 include_directories(include/dxsdk)
+include_directories(${REACTOS_BINARY_DIR}/include)
 include_directories(${REACTOS_BINARY_DIR}/include/dxsdk)
 include_directories(${REACTOS_BINARY_DIR}/include/psdk)
 include_directories(${REACTOS_BINARY_DIR}/include/reactos)
@@ -91,6 +104,7 @@ add_subdirectory(base)
 add_subdirectory(dll)
 add_subdirectory(hal)
 add_subdirectory(lib)
+add_subdirectory(ntoskrnl)
 
 # nci generated intermediate files
 
