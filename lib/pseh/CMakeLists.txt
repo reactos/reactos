@@ -1,6 +1,17 @@
-file(GLOB_RECURSE ARCH_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${ARCH}/*.c ${CMAKE_CURRENT_SOURCE_DIR}/${ARCH}/*.S)
-file(GLOB SOURCE "*.c")
 
-add_library(pseh ${ARCH_SOURCE} ${SOURCE})
+list(APPEND SOURCE framebased.c)
+
+if(ARCH MATCHES i386)
+list(APPEND SOURCE
+    i386/framebased.S
+    i386/framebased-gcchack.c
+    i386/framebased-gcchack-asm.S)
+elseif(ARCH MATCHES amd64)
+list(APPEND SOURCE amd64/framebased.S)
+elseif(ARCH MATCHES powerpc)
+list(APPEND SOURCE powerpc/framebased.S)
+endif(ARCH MATCHES i386)
+
+add_library(pseh ${SOURCE})
 add_dependencies(pseh psdk)
 
