@@ -139,6 +139,7 @@ LONG OpenChildKeyRead( HANDLE RegHandle,
 PWCHAR GetNthChildKeyName( HANDLE RegHandle, DWORD n );
 void ConsumeChildKeyName( PWCHAR Name );
 PWCHAR QueryRegistryValueString( HANDLE RegHandle, PWCHAR ValueName );
+PWCHAR *QueryRegistryValueStringMulti( HANDLE RegHandle, PWCHAR ValueName );
 void ConsumeRegValueString( PWCHAR NameServer );
 BOOL isInterface( TDIEntityID *if_maybe );
 BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe );

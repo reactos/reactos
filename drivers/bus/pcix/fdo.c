@@ -295,9 +295,23 @@ PciFdoIrpQueryCapabilities(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PDEVICE_CAPABILITIES Capabilities;
+    PAGED_CODE();
+    ASSERT_FDO(DeviceExtension);
+    
+    /* Get the capabilities */
+    Capabilities = IoStackLocation->Parameters.DeviceCapabilities.Capabilities;
+    
+    /* Inherit wake levels and power mappings from the higher-up capabilities */
+    DeviceExtension->PowerState.SystemWakeLevel = Capabilities->SystemWake;
+    DeviceExtension->PowerState.DeviceWakeLevel = Capabilities->DeviceWake;
+    RtlCopyMemory(DeviceExtension->PowerState.SystemStateMapping,
+                  Capabilities->DeviceState,
+                  sizeof(DeviceExtension->PowerState.SystemStateMapping));
+
+    /* Dump the capabilities and return success */
+    PciDebugDumpQueryCapabilities(Capabilities);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

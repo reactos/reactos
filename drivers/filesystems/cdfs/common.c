@@ -197,8 +197,11 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
         DeviceToVerify = IoGetDeviceToVerify(PsGetCurrentThread());
         IoSetDeviceToVerify(PsGetCurrentThread(), NULL);
 
-        NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
-        DPRINT1("IoVerifyVolume() returned (Status %lx)\n", NewStatus);
+        if (DeviceToVerify)
+        {
+            NewStatus = IoVerifyVolume(DeviceToVerify, FALSE);
+            DPRINT1("IoVerifyVolume() returned (Status %lx)\n", NewStatus);
+        }
     }
 
     DPRINT("Returning Status %x\n", Status);

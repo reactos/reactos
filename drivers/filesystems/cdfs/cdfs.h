@@ -277,13 +277,17 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 		     IN OUT PULONG pOutputBufferSize,
 		     IN BOOLEAN Override);
 
-
 /* create.c */
 
 NTSTATUS NTAPI
 CdfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp);
 
+/* devctrl.c */
+
+NTSTATUS NTAPI
+CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
+                  PIRP Irp);
 
 /* dirctl.c */
 

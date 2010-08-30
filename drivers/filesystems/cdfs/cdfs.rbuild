@@ -10,6 +10,7 @@
 	<file>close.c</file>
 	<file>common.c</file>
 	<file>create.c</file>
+   <file>devctrl.c</file>
 	<file>dirctl.c</file>
 	<file>fcb.c</file>
 	<file>finfo.c</file>

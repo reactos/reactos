@@ -1135,9 +1135,9 @@ CheckDllState:
                               ImageFileDirectory->Length);
 
                 /* Now add the import name and null-terminate it */
-                RtlAppendStringToString((PSTRING)&DllName,
-                                        (PSTRING)&NameString);
-                DllName.Buffer[(DllName.MaximumLength - 1) / sizeof(WCHAR)] = UNICODE_NULL;
+                RtlAppendUnicodeStringToString(&DllName,
+                                               &NameString);
+                DllName.Buffer[DllName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Load the image */
                 Status = MmLoadSystemImage(&DllName,

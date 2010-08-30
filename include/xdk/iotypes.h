@@ -1793,6 +1793,9 @@ $if (_WDMDDK_)
 #define IRP_DEFER_IO_COMPLETION         0x00000800
 #define IRP_OB_QUERY_NAME               0x00001000
 #define IRP_HOLD_DEVICE_QUEUE           0x00002000
+/* The following 2 are missing in latest WDK */
+#define IRP_RETRY_IO_COMPLETION         0x00004000
+#define IRP_CLASS_CACHE_OPERATION       0x00008000
 
 #define IRP_QUOTA_CHARGED                 0x01
 #define IRP_ALLOCATED_MUST_SUCCEED        0x02

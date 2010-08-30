@@ -200,9 +200,32 @@ PciPdoIrpQueryDeviceRelations(IN PIRP Irp,
                               IN PIO_STACK_LOCATION IoStackLocation,
                               IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Are ejection relations being queried? */
+    if (IoStackLocation->Parameters.QueryDeviceRelations.Type == EjectionRelations)
+    {
+        /* Call the worker function */
+        Status = PciQueryEjectionRelations(DeviceExtension,
+                                           (PDEVICE_RELATIONS*)&Irp->
+                                           IoStatus.Information);
+    }
+    else if (IoStackLocation->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
+    {
+        /* The only other relation supported is the target device relation */
+        Status = PciQueryTargetDeviceRelations(DeviceExtension,
+                                               (PDEVICE_RELATIONS*)&Irp->
+                                               IoStatus.Information);
+    }
+    else
+    {
+        /* All other relations are unsupported */
+        Status = STATUS_NOT_SUPPORTED;
+    }
+
+    /* Return either the result of the worker function, or unsupported status */
+    return Status;
 }
 
 NTSTATUS
@@ -211,9 +234,12 @@ PciPdoIrpQueryCapabilities(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryCapabilities(DeviceExtension,
+                                IoStackLocation->
+                                Parameters.DeviceCapabilities.Capabilities);
 }
 
 NTSTATUS
@@ -222,9 +248,11 @@ PciPdoIrpQueryResources(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryResources(DeviceExtension,
+                            (PCM_RESOURCE_LIST*)&Irp->IoStatus.Information);
 }
 
 NTSTATUS
@@ -233,9 +261,12 @@ PciPdoIrpQueryResourceRequirements(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryRequirements(DeviceExtension,
+                                (PIO_RESOURCE_REQUIREMENTS_LIST*)&Irp->
+                                IoStatus.Information);
 }
 
 NTSTATUS
@@ -244,9 +275,15 @@ PciPdoIrpQueryDeviceText(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryDeviceText(DeviceExtension,
+                              IoStackLocation->
+                              Parameters.QueryDeviceText.DeviceTextType,
+                              IoStackLocation->
+                              Parameters.QueryDeviceText.LocaleId,
+                              (PWCHAR*)&Irp->IoStatus.Information);
 }
 
 NTSTATUS
@@ -255,9 +292,12 @@ PciPdoIrpQueryId(IN PIRP Irp,
                  IN PIO_STACK_LOCATION IoStackLocation,
                  IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryId(DeviceExtension,
+                      IoStackLocation->Parameters.QueryId.IdType,
+                      (PWCHAR*)&Irp->IoStatus.Information);
 }
 
 NTSTATUS
@@ -266,9 +306,12 @@ PciPdoIrpQueryBusInformation(IN PIRP Irp,
                              IN PIO_STACK_LOCATION IoStackLocation,
                              IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryBusInformation(DeviceExtension,
+                                  (PPNP_BUS_INFORMATION*)&Irp->
+                                  IoStatus.Information);
 }
 
 NTSTATUS

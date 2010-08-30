@@ -620,10 +620,28 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             return STATUS_SUCCESS;
         }
         
-        //
-        // We don't implement prototype PTEs
-        //
-        ASSERT(TempPte.u.Soft.Prototype == 0);
+        /* Check one kind of prototype PTE */
+        if (TempPte.u.Soft.Prototype)
+        {
+            /* The one used for protected pool... */
+            ASSERT(MmProtectFreedNonPagedPool == TRUE);
+            
+            /* Make sure protected pool is on, and that this is a pool address */
+            if ((MmProtectFreedNonPagedPool) &&
+                (((Address >= MmNonPagedPoolStart) &&
+                  (Address < (PVOID)((ULONG_PTR)MmNonPagedPoolStart +
+                                     MmSizeOfNonPagedPoolInBytes))) ||
+                 ((Address >= MmNonPagedPoolExpansionStart) &&
+                  (Address < MmNonPagedPoolEnd))))
+            {
+                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                KeBugCheckEx(DRIVER_CAUGHT_MODIFYING_FREED_POOL,
+                             (ULONG_PTR)Address,
+                             StoreInstruction,
+                             Mode,
+                             4);
+            }
+        }
         
         //
         // We don't implement transition PTEs

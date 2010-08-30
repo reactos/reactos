@@ -55,6 +55,8 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     ULONG RandomCoeff;
     ULONG_PTR StartAddress, EndAddress;
     LARGE_INTEGER CurrentTime;
+    TABLE_SEARCH_RESULT Result = TableFoundNode;
+    PMMADDRESS_NODE Parent;
     
     /* Allocate a VAD */
     Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
@@ -93,26 +95,29 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
         StartAddress -= RandomCoeff;
         EndAddress = StartAddress + ROUND_TO_PAGES(Size) - 1;
 
-        /* See if this VA range can be obtained */
-        if (!MiCheckForConflictingNode(StartAddress >> PAGE_SHIFT,
-                                       EndAddress >> PAGE_SHIFT,
-                                       &Process->VadRoot))
-        {
-            /* No conflict, use this address */
-            *Base = StartAddress;
-            goto AfterFound;
-        }
+        /* Try to find something below the random upper margin */
+        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
+                                                 EndAddress,
+                                                 PAGE_SIZE,
+                                                 &Process->VadRoot,
+                                                 Base,
+                                                 &Parent);
+    }
+
+    /* Check for success. TableFoundNode means nothing free. */
+    if (Result == TableFoundNode)
+    {
+        /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
+        Result = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
+                                                 (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1,
+                                                 PAGE_SIZE,
+                                                 &Process->VadRoot,
+                                                 Base,
+                                                 &Parent);
+        /* Bail out, if still nothing free was found */
+        if (Result == TableFoundNode) return STATUS_NO_MEMORY;
     }
     
-    /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
-    Status = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
-                                             (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1,
-                                             PAGE_SIZE,
-                                             &Process->VadRoot,
-                                             Base);
-    ASSERT(NT_SUCCESS(Status));
-    
-AfterFound:
     /* Validate that it came from the VAD ranges */
     ASSERT(*Base >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
     
@@ -121,6 +126,7 @@ AfterFound:
     Vad->EndingVpn =  ((*Base) + Size - 1) >> PAGE_SHIFT;
     Vad->u3.Secured.StartVpn = *Base;
     Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
+    Vad->u1.Parent = NULL;
     
     /* FIXME: Should setup VAD bitmap */
     Status = STATUS_SUCCESS;
@@ -131,8 +137,8 @@ AfterFound:
     /* Insert the VAD */
     ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
     Process->VadRoot.NodeHint = Vad;
-    MiInsertNode((PVOID)Vad, &Process->VadRoot);
-    
+    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
+
     /* Release the working set */
     MiUnlockProcessWorkingSet(Process, Thread);
 
@@ -1158,18 +1164,9 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
 
         /* Remove this VAD from the tree */
         ASSERT(VadTree->NumberGenericTableElements >= 1);
-        DPRINT("Removing node for VAD: %lx %lx\n", Vad->StartingVpn, Vad->EndingVpn);
         MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
         DPRINT("Moving on: %d\n", VadTree->NumberGenericTableElements);
 
-        /* Check if this VAD was the hint */
-        if (VadTree->NodeHint == Vad)
-        {
-            /* Get a new hint, unless we're empty now, in which case nothing */
-            VadTree->NodeHint = VadTree->BalancedRoot.RightChild;
-            if (!VadTree->NumberGenericTableElements) VadTree->NodeHint = NULL;
-        }
-        
         /* Only PEB/TEB VADs supported for now */
         ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
         ASSERT(Vad->u.VadFlags.VadType == VadNone);

@@ -1747,7 +1747,7 @@ static int TcpTableSorter(const void *a, const void *b)
  */
 DWORD WINAPI GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
 {
-  DWORD ret = NO_ERROR;
+  DWORD ret = ERROR_NO_DATA;
 
   TRACE("pTcpTable %p, pdwSize %p, bOrder %d\n", pTcpTable, pdwSize,
    (DWORD)bOrder);
@@ -1764,18 +1764,31 @@ DWORD WINAPI GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
       ret = ERROR_INSUFFICIENT_BUFFER;
     }
     else {
-      PMIB_TCPTABLE pTcpTable = getTcpTable();
-	  if (pTcpTable)
+      PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+	  if (pOurTcpTable)
       {
         size = sizeof(MIB_TCPTABLE);
-        if (pTcpTable->dwNumEntries > 1)
-          size += (pTcpTable->dwNumEntries - 1) * sizeof(MIB_TCPROW);
-        *pdwSize = size;
+        if (pOurTcpTable->dwNumEntries > 1)
+            size += (pOurTcpTable->dwNumEntries - 1) * sizeof(MIB_TCPROW);
+          
+        if (*pdwSize < size)
+        {
+            *pdwSize = size;
 
-	    if (bOrder)
-          qsort(pTcpTable->table, pTcpTable->dwNumEntries,
-               sizeof(MIB_TCPROW), TcpTableSorter);
-        ret = NO_ERROR;
+            ret = ERROR_INSUFFICIENT_BUFFER;
+        }
+        else
+        {
+            memcpy(pTcpTable, pOurTcpTable, size);
+            
+            if (bOrder)
+                qsort(pTcpTable->table, pTcpTable->dwNumEntries,
+                      sizeof(MIB_TCPROW), TcpTableSorter);
+            
+            ret = NO_ERROR;
+        }
+          
+        free(pOurTcpTable);
 	  }
    	}
   }

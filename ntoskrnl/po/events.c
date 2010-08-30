@@ -79,6 +79,15 @@ PopGetSysButtonCompletion(
 		if (SysButton & SYS_BUTTON_LID) DbgPrint(" LID");
 		if (SysButton == 0) DbgPrint(" WAKE");
 		DbgPrint(" )\n");
+        
+        if (SysButton & SYS_BUTTON_POWER)
+        {
+            /* FIXME: Read registry for the action we should perform here */
+            DPRINT1("Initiating shutdown after power button event\n");
+            
+            ZwShutdownSystem(ShutdownNoReboot);
+        }
+            
 	}
 
 	/* Allocate a new workitem to send the next IOCTL_GET_SYS_BUTTON_EVENT */

@@ -75,7 +75,7 @@ GreGetKerningPairs(
   return Count;
 }
 
-
+#if 0
 DWORD
 FASTCALL
 GreGetCharacterPlacementW(
@@ -90,13 +90,14 @@ GreGetCharacterPlacementW(
 
   if (!pgcpw)
   {
-     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
+     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 0))
         return MAKELONG(Size.cx, Size.cy);
      return 0;
   }
   UNIMPLEMENTED;
   return 0;
 }
+#endif
 
 INT
 FASTCALL
@@ -167,7 +168,7 @@ IntGetCharDimensions(HDC hdc, PTEXTMETRICW ptm, PDWORD height)
      DC_UnlockDc(pdc);
      return 0;
   }
-  Good = TextIntGetTextExtentPoint(pdc, TextObj, alphabet, 52, 0, NULL, 0, &sz);
+  Good = TextIntGetTextExtentPoint(pdc, TextObj, alphabet, 52, 0, NULL, 0, &sz, 0);
   TEXTOBJ_UnlockText(TextObj);
   DC_UnlockDc(pdc);
 

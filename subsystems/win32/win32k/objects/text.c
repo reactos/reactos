@@ -15,6 +15,7 @@
 
 /** Functions *****************************************************************/
 
+#if 0
 /*
    flOpts :
    GetTextExtentPoint32W = 0
@@ -60,7 +61,8 @@ GreGetTextExtentW(
                                          0,
                                          NULL,
                                          0,
-                                         psize);
+                                         psize,
+                                         flOpts);
      TEXTOBJ_UnlockText(TextObj);
   }
   else
@@ -123,7 +125,8 @@ GreGetTextExtentExW(
                                          MaxExtent,
                                          (LPINT)Fit,
                                          (LPINT)Dx,
-                                         pSize);
+                                         pSize,
+                                         fl);
      TEXTOBJ_UnlockText(TextObj);
   }
   else
@@ -132,6 +135,7 @@ GreGetTextExtentExW(
   DC_UnlockDc(pdc);
   return Result;
 }
+#endif
 
 DWORD
 APIENTRY
@@ -347,7 +351,8 @@ NtGdiGetTextExtentExW(
                                         MaxExtent,
                                         NULL == UnsafeFit ? NULL : &Fit,
                                         Dx,
-                                       &Size);
+                                       &Size,
+                                       fl);
     TEXTOBJ_UnlockText(TextObj);
   }
   else
@@ -420,7 +425,7 @@ NtGdiGetTextExtent(HDC hdc,
                    LPSIZE psize,
                    UINT flOpts)
 {
-  return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, 0, NULL, NULL, psize, 0);
+  return NtGdiGetTextExtentExW(hdc, lpwsz, cwc, 0, NULL, NULL, psize, flOpts);
 }
 
 BOOL
