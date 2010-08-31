@@ -102,6 +102,7 @@ add_subdirectory(include/reactos/mc)
 
 add_subdirectory(base)
 add_subdirectory(dll)
+add_subdirectory(drivers)
 add_subdirectory(hal)
 add_subdirectory(lib)
 add_subdirectory(ntoskrnl)
