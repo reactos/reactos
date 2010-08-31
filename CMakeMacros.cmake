@@ -51,3 +51,27 @@ MACRO(spec2def _target_name _spec_file _def_file)
     add_custom_target(${_target_name}_def ALL DEPENDS ${_def_file})
 
 ENDMACRO(spec2def _target_name _spec_file _def_file)
+
+MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
+
+    get_filename_component(OBJECT_PATH ${_object_file} PATH)
+    file(MAKE_DIRECTORY ${OBJECT_PATH})
+    get_directory_property(defines COMPILE_DEFINITIONS)
+    get_directory_property(includes INCLUDE_DIRECTORIES)
+
+    foreach(arg ${defines})
+        set(result_defs ${result_defs} -D${arg})
+    endforeach(arg ${defines})
+
+    foreach(arg ${includes})
+        set(result_incs -I${arg} ${result_incs})
+    endforeach(arg ${includes})
+
+    add_custom_command(
+        OUTPUT ${_object_file}
+        COMMAND nasm -o ${_object_file} ${result_incs} ${result_defs} -f bin ${_asm_file}
+        DEPENDS native-winebuild)
+    set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
+    add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
+
+ENDMACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
