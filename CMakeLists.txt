@@ -21,11 +21,12 @@ include_directories(${REACTOS_SOURCE_DIR}/tools/unicode)
 include_directories(include)
 include_directories(include/reactos)
 include_directories(include/reactos/wine)
+include_directories(${REACTOS_BINARY_DIR}/include)
 
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl winebuild nci FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci buildno FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
@@ -142,6 +143,12 @@ ADD_CUSTOM_TARGET(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/nt
 ADD_CUSTOM_TARGET(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
 ADD_CUSTOM_TARGET(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
 ADD_CUSTOM_TARGET(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
+
+file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
+ADD_CUSTOM_COMMAND(OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
+                   COMMAND native-buildno ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
+                   DEPENDS ${REACTOS_SOURCE_DIR}/include/reactos/version.h) 
+ADD_CUSTOM_TARGET(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
 
 endif()
 

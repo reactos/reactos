@@ -17,4 +17,4 @@ target_link_libraries(acledit
     ${CMAKE_CURRENT_BINARY_DIR}/acledit.def
     ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
 
-add_dependencies(acledit acledit_def psdk)
+add_dependencies(acledit acledit_def psdk buildno_header)
