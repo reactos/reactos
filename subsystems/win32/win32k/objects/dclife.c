@@ -89,8 +89,6 @@ DC_AllocDcWithHandle()
 void
 DC_InitHack(PDC pdc)
 {
-    HRGN hVisRgn;
-
     TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
     pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
@@ -98,14 +96,8 @@ DC_InitHack(PDC pdc)
     ASSERT(pdc->dclevel.ppal);
 
     /* Select regions */
-    // FIXME: too complicated, broken error handling
     pdc->rosdc.hClipRgn = NULL;
     pdc->rosdc.hGCClipRgn = NULL;
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
-    ASSERT(hVisRgn);
-    GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
-    GreDeleteObject(hVisRgn);
-    ASSERT(pdc->prgnVis);
 }
 
 VOID
@@ -234,8 +226,11 @@ DC_vInitDc(
 
     /* Setup regions */
     pdc->prgnAPI = NULL;
-    pdc->prgnVis = NULL; // FIXME
-    pdc->prgnRao = NULL;
+	pdc->prgnRao = NULL;
+    /* Allocate a Vis region */
+    pdc->prgnVis = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
+	ASSERT(pdc->prgnVis);
+	GDIOBJ_CopyOwnership(pdc->BaseObject.hHmgr, pdc->prgnVis->BaseObject.hHmgr);
 
     /* Setup palette */
     pdc->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
