@@ -1061,7 +1061,6 @@ NtGdiExtFloodFill(
     PDC dc;
     PDC_ATTR   pdcattr;
     SURFACE    *psurf = NULL;
-    PPALETTE   ppal;
     EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
@@ -1106,16 +1105,7 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
-    if (psurf->ppal)
-    {
-        ppal = psurf->ppal;
-        GDIOBJ_IncrementShareCount(&ppal->BaseObject);
-    }
-    else
-        // Destination palette obtained from the hDC
-        ppal = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
-
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, psurf->ppal, 0, 0xffffff, 0);
 
     /* Only solid fills supported for now
      * How to support pattern brushes and non standard surfaces (not offering dib functions):
@@ -1125,7 +1115,6 @@ NtGdiExtFloodFill(
     Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
 
     EXLATEOBJ_vCleanup(&exlo);
-    PALETTE_ShareUnlockPalette(ppal);
 
 cleanup:
     DC_UnlockDc(dc);

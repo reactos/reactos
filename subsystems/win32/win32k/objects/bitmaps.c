@@ -430,7 +430,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     BOOL bInRect = FALSE;
     SURFACE *psurf;
     SURFOBJ *pso;
-    PPALETTE ppal;
     EXLATEOBJ exlo;
     HBITMAP hBmpTmp;
 
@@ -456,25 +455,8 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
         psurf = dc->dclevel.pSurface;
         if (psurf)
         {
-            pso = &psurf->SurfObj;
-            if (psurf->ppal)
-            {
-                ppal = psurf->ppal;
-                GDIOBJ_IncrementShareCount(&ppal->BaseObject);
-            }
-            else
-                ppal = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
-
-            if (psurf->SurfObj.iBitmapFormat == BMF_1BPP && !psurf->hSecure)
-            {
-                /* FIXME: palette should be gpalMono already ! */
-                EXLATEOBJ_vInitialize(&exlo, &gpalMono, &gpalRGB, 0, 0xffffff, 0);
-            }
-            else
-            {
-                EXLATEOBJ_vInitialize(&exlo, ppal, &gpalRGB, 0, 0xffffff, 0);
-            }
-
+			pso = &psurf->SurfObj;
+            EXLATEOBJ_vInitialize(&exlo, psurf->ppal, &gpalRGB, 0, 0xffffff, 0);
             // check if this DC has a DIB behind it...
             if (pso->pvScan0) // STYPE_BITMAP == pso->iType
             {
@@ -484,7 +466,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
             }
 
             EXLATEOBJ_vCleanup(&exlo);
-            PALETTE_ShareUnlockPalette(ppal);
         }
     }
     DC_UnlockDc(dc);

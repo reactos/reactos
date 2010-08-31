@@ -3173,7 +3173,6 @@ GreExtTextOutW(
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
-    PPALETTE ppalDst;
     USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
@@ -3443,21 +3442,10 @@ GreExtTextOutW(
     psurf = dc->dclevel.pSurface ;
     SurfObj = &psurf->SurfObj ;
 
-    /* Create the xlateobj */
-    if (psurf->ppal)
-    {
-        ppalDst = psurf->ppal;
-        GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
-    }
-    else
-        // Destination palette obtained from the hDC
-        ppalDst = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
-    ASSERT(ppalDst);
-    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
-    EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
-    PALETTE_ShareUnlockPalette(ppalDst);
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
 
-    if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
+	if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
         DC_vUpdateBackgroundBrush(dc) ;
 
     if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)

@@ -328,7 +328,6 @@ NtGdiTransparentBlt(
     PGDIOBJ apObj[2];
     RECTL rcDest, rcSrc;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
-    PPALETTE PalSourceGDI;
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
@@ -394,25 +393,10 @@ NtGdiTransparentBlt(
         goto done;
     }
 
-    if (BitmapSrc->ppal)
-    {
-        GDIOBJ_IncrementShareCount(&BitmapSrc->ppal->BaseObject);
-        PalSourceGDI = BitmapSrc->ppal ;
-    }
-    else
-        PalSourceGDI = PALETTE_ShareLockPalette(pPrimarySurface->devinfo.hpalDefault) ;
-
-    if(!PalSourceGDI)
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        goto done;
-    }
-
     /* Translate Transparent (RGB) Color to the source palette */
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalSourceGDI, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, BitmapSrc->ppal, 0, 0, 0);
     TransparentColor = XLATEOBJ_iXlate(&exlo.xlo, (ULONG)TransColor);
     EXLATEOBJ_vCleanup(&exlo);
-    PALETTE_ShareUnlockPalette(PalSourceGDI);
 
     EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
