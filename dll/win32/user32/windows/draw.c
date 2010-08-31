@@ -1373,9 +1373,9 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
     }
 
     if (flags & DSS_DISABLED)
-        hbrtmp = CreateSolidBrush(GetSysColor(COLOR_3DHILIGHT));
+        hbrtmp = GetSysColorBrush(COLOR_3DHILIGHT);
     else if (flags & DSS_DEFAULT)
-        hbrtmp = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
+        hbrtmp = GetSysColorBrush(COLOR_3DSHADOW);
 
     /* Draw light or dark shadow */
     if (flags & (DSS_DISABLED|DSS_DEFAULT))
@@ -1388,13 +1388,11 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
         if(!BitBlt(hdc, x+1, y+1, cx, cy, memdc, 0, 0, 0x00B8074A))
             goto cleanup;
         SelectObject(hdc, hbsave);
-        DeleteObject(hbrtmp);
-        hbrtmp = 0;
     }
 
     if (flags & DSS_DISABLED)
     {
-        hbr = hbrtmp = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
+        hbr = hbrtmp = GetSysColorBrush(COLOR_3DSHADOW);
         if(!hbrtmp)
             goto cleanup;
     }
@@ -1418,8 +1416,6 @@ cleanup:
         SelectObject(hdc, hbsave);
     if(hbmsave)
         SelectObject(memdc, hbmsave);
-    if(hbrtmp)
-        DeleteObject(hbrtmp);
     if(hbm)
         DeleteObject(hbm);
     if(memdc)
