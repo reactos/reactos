@@ -1,0 +1,13 @@
+
+set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
+add_library(scsiport SHARED scsiport.c stubs.c scsiport.rc)
+
+set_target_properties(scsiport PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols" SUFFIX ".sys")
+
+target_link_libraries(scsiport
+    ${CMAKE_CURRENT_SOURCE_DIR}/scsiport_i386.def
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
+    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+
+add_dependencies(scsiport psdk bugcodes)
