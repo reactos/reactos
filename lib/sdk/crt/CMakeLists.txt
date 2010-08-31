@@ -560,4 +560,4 @@ endif(ARCH MATCHES i386)
 
 add_library(libcntpr ${LIBCNTPR_SOURCE})
 set_property(TARGET libcntpr PROPERTY COMPILE_DEFINITIONS NO_RTL_INLINES _NTSYSTEM_ _NTDLLBUILD_ _LIBCNT_ __CRT__NO_INLINE)
-add_dependencies(libcntpr psdk)
+add_dependencies(libcntpr psdk buildno_header)
