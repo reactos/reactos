@@ -1006,8 +1006,8 @@ NtUserSetCursorContents(
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
 
         SURFACE_UnlockSurface(psurfBmp);
-        GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
     }
+	GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
 
     Ret = TRUE;
 
