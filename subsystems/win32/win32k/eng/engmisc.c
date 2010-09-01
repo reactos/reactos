@@ -64,7 +64,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     /* Allocate a temporary bitmap */
     BitmapSize.cx = DestRect->right - DestRect->left;
     BitmapSize.cy = DestRect->bottom - DestRect->top;
-    Width = DIB_GetDIBWidthBytes(BitmapSize.cx, BitsPerFormat(psoDest->iBitmapFormat));
+    Width = WIDTH_BYTES_ALIGN32(BitmapSize.cx, BitsPerFormat(psoDest->iBitmapFormat));
     EnterLeave->OutputBitmap = EngCreateBitmap(BitmapSize, Width,
                                                psoDest->iBitmapFormat,
                                                BMF_TOPDOWN | BMF_NOZEROINIT, NULL);

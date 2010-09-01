@@ -11,8 +11,6 @@ DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
                        LONG *height, WORD *planes, WORD *bpp, DWORD *compr, DWORD *size );
 INT APIENTRY
 DIB_GetDIBImageBytes (INT  width, INT height, INT depth);
-INT FASTCALL
-DIB_GetDIBWidthBytes (INT width, INT depth);
 HPALETTE FASTCALL
 DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi);
 

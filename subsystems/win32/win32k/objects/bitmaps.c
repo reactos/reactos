@@ -55,7 +55,7 @@ UnsafeSetBitmapBits(
     pjDst = psurf->SurfObj.pvScan0;
     pjSrc = pvBits;
     lDeltaDst = psurf->SurfObj.lDelta;
-    lDeltaSrc = BITMAP_GetWidthBytes(nWidth, cBitsPixel);
+    lDeltaSrc = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
 
     while (nHeight--)
     {
@@ -186,7 +186,7 @@ NtGdiCreateBitmap(
     }
 
     /* Make sure that cjBits will not overflow */
-    cjWidthBytes = BITMAP_GetWidthBytes(nWidth, cBitsPixel);
+    cjWidthBytes = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
     if ((ULONGLONG)cjWidthBytes * nHeight >= 0x100000000ULL)
     {
         DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
@@ -581,7 +581,7 @@ UnsafeGetBitmapBits(
     pjSrc = psurf->SurfObj.pvScan0;
     pjDst = pvBits;
     lDeltaSrc = psurf->SurfObj.lDelta;
-    lDeltaDst = BITMAP_GetWidthBytes(nWidth, cBitsPixel);
+    lDeltaDst = WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel);
 
     while (nHeight--)
     {
@@ -613,7 +613,7 @@ NtGdiGetBitmapBits(
         return 0;
     }
 
-    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx,
+    bmSize = WIDTH_BYTES_ALIGN16(psurf->SurfObj.sizlBitmap.cx,
              BitsPerFormat(psurf->SurfObj.iBitmapFormat)) *
              abs(psurf->SurfObj.sizlBitmap.cy);
 
@@ -858,40 +858,6 @@ BITMAP_GetRealBitsPixel(UINT nBitsPixel)
     return 0;
 }
 
-INT FASTCALL
-BITMAP_GetWidthBytes(INT bmWidth, INT bpp)
-{
-#if 0
-    switch (bpp)
-    {
-    case 1:
-        return 2 * ((bmWidth+15) >> 4);
-
-    case 24:
-        bmWidth *= 3; /* fall through */
-    case 8:
-        return bmWidth + (bmWidth & 1);
-
-    case 32:
-        return bmWidth * 4;
-
-    case 16:
-    case 15:
-        return bmWidth * 2;
-
-    case 4:
-        return 2 * ((bmWidth+3) >> 2);
-
-    default:
-        DPRINT ("stub");
-    }
-
-    return -1;
-#endif
-
-    return ((bmWidth * bpp + 15) & ~15) >> 3;
-}
-
 HBITMAP FASTCALL
 BITMAP_CopyBitmap(HBITMAP hBitmap)
 {
@@ -963,7 +929,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
     pBitmap->bmHeight = psurf->SurfObj.sizlBitmap.cy;
     pBitmap->bmPlanes = 1;
     pBitmap->bmBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
-	pBitmap->bmWidthBytes = BITMAP_GetWidthBytes(pBitmap->bmWidth, pBitmap->bmBitsPixel);
+	pBitmap->bmWidthBytes = WIDTH_BYTES_ALIGN16(pBitmap->bmWidth, pBitmap->bmBitsPixel);
 
     /* Check for DIB section */
     if (psurf->hSecure)
@@ -971,7 +937,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
         /* Set bmBits in this case */
         pBitmap->bmBits = psurf->SurfObj.pvBits;
 		/* DIBs data are 32 bits aligned */
-		pBitmap->bmWidthBytes = DIB_GetDIBWidthBytes(pBitmap->bmWidth, pBitmap->bmBitsPixel);
+		pBitmap->bmWidthBytes = WIDTH_BYTES_ALIGN32(pBitmap->bmWidth, pBitmap->bmBitsPixel);
 
         if (Count >= sizeof(DIBSECTION))
         {

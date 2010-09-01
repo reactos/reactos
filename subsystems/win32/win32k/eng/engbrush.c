@@ -144,7 +144,7 @@ EngRealizeBrush(
     ULONG lWidth;
 
     /* Calculate width in bytes of the realized brush */
-    lWidth = DIB_GetDIBWidthBytes(psoPattern->sizlBitmap.cx,
+    lWidth = WIDTH_BYTES_ALIGN32(psoPattern->sizlBitmap.cx,
                                   BitsPerFormat(psoDst->iBitmapFormat));
 
     /* Allocate a bitmap */

@@ -480,7 +480,7 @@ NtGdiSetDIBitsToDeviceInternal(
     SourceSize.cx = bmi->bmiHeader.biWidth;
     SourceSize.cy = ScanLines;
 
-    DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+    DIBWidth = WIDTH_BYTES_ALIGN32(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
     hSourceBitmap = EngCreateBitmap(SourceSize,
                                     DIBWidth,
@@ -1390,7 +1390,7 @@ DIB_CreateDIBSection(
     bm.bmType = 0;
     bm.bmWidth = bi->biWidth;
     bm.bmHeight = effHeight;
-    bm.bmWidthBytes = ovr_pitch ? ovr_pitch : (ULONG) DIB_GetDIBWidthBytes(bm.bmWidth, bi->biBitCount);
+    bm.bmWidthBytes = ovr_pitch ? ovr_pitch : WIDTH_BYTES_ALIGN32(bm.bmWidth, bi->biBitCount);
 
     bm.bmPlanes = bi->biPlanes;
     bm.bmBitsPixel = bi->biBitCount;
@@ -1603,18 +1603,6 @@ DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
 }
 
 /***********************************************************************
- *           DIB_GetDIBWidthBytes
- *
- * Return the width of a DIB bitmap in bytes. DIB bitmap data is 32-bit aligned.
- * http://www.microsoft.com/msdn/sdk/platforms/doc/sdk/win32/struc/src/str01.htm
- * 11/16/1999 (RJJ) lifted from wine
- */
-INT FASTCALL DIB_GetDIBWidthBytes(INT width, INT depth)
-{
-    return ((width * depth + 31) & ~31) >> 3;
-}
-
-/***********************************************************************
  *           DIB_GetDIBImageBytes
  *
  * Return the number of bytes used to hold the image in a DIB bitmap.
@@ -1623,7 +1611,7 @@ INT FASTCALL DIB_GetDIBWidthBytes(INT width, INT depth)
 
 INT APIENTRY DIB_GetDIBImageBytes(INT  width, INT height, INT depth)
 {
-    return DIB_GetDIBWidthBytes(width, depth) * (height < 0 ? -height : height);
+    return WIDTH_BYTES_ALIGN32(width, depth) * (height < 0 ? -height : height);
 }
 
 /***********************************************************************
