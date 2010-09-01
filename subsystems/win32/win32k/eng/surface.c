@@ -200,17 +200,16 @@ SURFACE_bSetBitmapBits(
     cBitsPixel = gajBitsPerFormat[pso->iBitmapFormat];
 
     /* Is a width in bytes given? */
-    if (!ulWidth)
+    if (ulWidth)
     {
-        /* Calculate width from the bitmap width in pixels */
-        ulWidth = DIB_GetDIBWidthBytes(psurf->SurfObj.sizlBitmap.cx, cBitsPixel);
+        /* Align the width (Windows compatibility, drivers expect that) */
+        ulWidth = WIDTH_BYTES_ALIGN32((ulWidth << 3) / cBitsPixel, cBitsPixel);
     }
 	else
 	{
-		/* Align the width (windows compatibility, drivers expect that) */
-    	ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
+        /* Calculate width from the bitmap width in pixels */
+        ulWidth = WIDTH_BYTES_ALIGN32(pso->sizlBitmap.cx, cBitsPixel);
 	}
-
 
     /* Calculate the bitmap size in bytes */
     pso->cjBits = ulWidth * pso->sizlBitmap.cy;

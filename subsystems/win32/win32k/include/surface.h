@@ -128,3 +128,7 @@ SURFACE_bSetBitmapBits(
 ULONG FASTCALL BitmapFormat (WORD Bits, DWORD Compression);
 extern UCHAR gajBitsPerFormat[];
 #define BitsPerFormat(Format) gajBitsPerFormat[Format]
+
+#define WIDTH_BYTES_ALIGN32(cx, bpp) ((((cx) * (bpp) + 31) & ~31) >> 3)
+#define WIDTH_BYTES_ALIGN16(cx, bpp) ((((cx) * (bpp) + 15) & ~15) >> 3)
+
