@@ -1030,13 +1030,24 @@ NtGdiStretchDIBitsInternal(
     HBITMAP hBitmap;
     BOOL fastpath = FALSE;
     NTSTATUS Status = STATUS_SUCCESS;
-
+	PBYTE safeBits ;
 
     if (!Bits || !BitsInfo)
         return 0;
 
-    if (!(pdc = DC_LockDc(hDC))) return 0;
+	safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
+	if(!safeBits)
+	{
+		SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+		return 0;
+	}
 
+    if (!(pdc = DC_LockDc(hDC)))
+	{
+		ExFreePoolWithTag(safeBits, TAG_DIB);
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		return 0;
+	}
 
     _SEH2_TRY
     {
@@ -1047,6 +1058,7 @@ NtGdiStretchDIBitsInternal(
             DPRINT1("Invalid bitmap\n");
             Status = STATUS_INVALID_PARAMETER;
         }
+		RtlCopyMemory(safeBits, Bits, cjMaxBits);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1088,19 +1100,24 @@ NtGdiStretchDIBitsInternal(
     {
         /* fast path */
         DPRINT1("using fast path\n");
-        ret = IntSetDIBits( pdc, hBitmap, 0, height, Bits, BitsInfo, Usage);
+        ret = IntSetDIBits( pdc, hBitmap, 0, height, safeBits, BitsInfo, Usage);
     }
     else
     {
         /* slow path - need to use StretchBlt */
         HBITMAP hOldBitmap;
-        HPALETTE hpal = NULL;
         HDC hdcMem;
         PVOID pvBits;
 
         hdcMem = NtGdiCreateCompatibleDC( hDC );
         hBitmap = DIB_CreateDIBSection(pdc, BitsInfo, Usage, &pvBits, NULL, 0, 0);
-        RtlCopyMemory(pvBits, Bits, cjMaxBits);
+		if(!hBitmap)
+		{
+			DPRINT1("Error, failed to create a DIB section\n");
+			NtGdiDeleteObjectApp(hdcMem);
+			goto cleanup;
+		}
+        RtlCopyMemory(pvBits, safeBits, cjMaxBits);
         hOldBitmap = NtGdiSelectBitmap( hdcMem, hBitmap );
 
         /* Origin for DIBitmap may be bottom left (positive biHeight) or top
@@ -1108,15 +1125,15 @@ NtGdiStretchDIBitsInternal(
         ret = NtGdiStretchBlt( hDC, XDest, YDest, DestWidth, DestHeight,
                              hdcMem, XSrc, abs(height) - SrcHeight - YSrc,
                              SrcWidth, SrcHeight, ROP, 0 );
-        if(hpal)
-            GdiSelectPalette(hdcMem, hpal, FALSE);
-        if(ret)
+        
+		if(ret)
             ret = SrcHeight;
         NtGdiSelectBitmap( hdcMem, hOldBitmap );
         NtGdiDeleteObjectApp( hdcMem );
         GreDeleteObject( hBitmap );
     }
 cleanup:
+	ExFreePoolWithTag(safeBits, TAG_DIB);
     DC_UnlockDc(pdc);
     return ret;
 }
