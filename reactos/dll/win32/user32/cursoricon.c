@@ -1065,8 +1065,6 @@ static HCURSOR CURSORICON_CreateIconFromANI( const LPBYTE bits, DWORD bits_size,
 
     TRACE("bits %p, bits_size %d\n", bits, bits_size);
 
-    if (!bits) return 0;
-
     riff_find_chunk( ANI_ACON_ID, ANI_RIFF_ID, &root_chunk, &ACON_chunk );
     if (!ACON_chunk.data)
     {
@@ -1105,6 +1103,7 @@ static HCURSOR CURSORICON_CreateIconFromANI( const LPBYTE bits, DWORD bits_size,
         width, height, depth );
 
     frame_bits = HeapAlloc( GetProcessHeap(), 0, entry->dwDIBSize );
+    if (!frame_bits) return 0;
     memcpy( frame_bits, icon_data + entry->dwDIBOffset, entry->dwDIBSize );
 
     if (!header.width || !header.height)
@@ -1142,6 +1141,8 @@ HICON WINAPI CreateIconFromResourceEx( LPBYTE bits, UINT cbSize,
     TRACE_(cursor)("%p (%u bytes), ver %08x, %ix%i %s %s\n",
                    bits, cbSize, dwVersion, width, height,
                    bIcon ? "icon" : "cursor", (cFlag & LR_MONOCHROME) ? "mono" : "" );
+
+    if (!bits) return 0;
 
     if (bIcon)
     {

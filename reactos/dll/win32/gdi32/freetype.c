@@ -2226,7 +2226,7 @@ HANDLE WineEngAddFontMemResourceEx(PVOID pbFont, DWORD cbFont, PVOID pdv, DWORD 
         {
             TRACE("AddFontToList failed\n");
             HeapFree(GetProcessHeap(), 0, pFontCopy);
-            return NULL;
+            return 0;
         }
         /* FIXME: is the handle only for use in RemoveFontMemResourceEx or should it be a true handle?
          * For now return something unique but quite random

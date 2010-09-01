@@ -1829,7 +1829,7 @@ DECL_HANDLER(get_desktop_window)
 DECL_HANDLER(set_window_owner)
 {
     struct window *win = get_window( req->handle );
-    struct window *owner = NULL;
+    struct window *owner = NULL, *ptr;
 
     if (!win) return;
     if (req->owner && !(owner = get_window( req->owner ))) return;
@@ -1838,6 +1838,17 @@ DECL_HANDLER(set_window_owner)
         set_error( STATUS_ACCESS_DENIED );
         return;
     }
+
+    /* make sure owner is not a successor of window */
+    for (ptr = owner; ptr; ptr = ptr->owner ? get_window( ptr->owner ) : NULL)
+    {
+        if (ptr == win)
+        {
+            set_error( STATUS_INVALID_PARAMETER );
+            return;
+        }
+    }
+
     reply->prev_owner = win->owner;
     reply->full_owner = win->owner = owner ? owner->handle : 0;
 }

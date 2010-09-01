@@ -836,6 +836,7 @@ static size_t pack_message( HWND hwnd, UINT message, WPARAM wparam, LPARAM lpara
         push_data( data, &data->ps.cis, sizeof(data->ps.cis) );
         return 0;
     }
+    case WM_WINE_SETWINDOWPOS:
     case WM_WINDOWPOSCHANGING:
     case WM_WINDOWPOSCHANGED:
     {
@@ -1016,9 +1017,6 @@ static size_t pack_message( HWND hwnd, UINT message, WPARAM wparam, LPARAM lpara
         push_data( data, header, header->dbch_size );
         return 0;
     }
-    case WM_WINE_SETWINDOWPOS:
-        push_data( data, (WINDOWPOS *)lparam, sizeof(WINDOWPOS) );
-        return 0;
     case WM_WINE_KEYBOARD_LL_HOOK:
     {
         struct hook_extra_info *h_extra = (struct hook_extra_info *)lparam;

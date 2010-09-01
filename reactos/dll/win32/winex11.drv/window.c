@@ -2672,7 +2672,7 @@ LRESULT CDECL X11DRV_SysCommand( HWND hwnd, WPARAM wparam, LPARAM lparam )
      * with a ButtonPress event */
     wine_tsx11_lock();
     XUngrabPointer( display, CurrentTime );
-    XSendEvent(display, root_window, False, SubstructureNotifyMask, &xev);
+    XSendEvent(display, root_window, False, SubstructureNotifyMask | SubstructureRedirectMask, &xev);
     wine_tsx11_unlock();
     return 0;
 }

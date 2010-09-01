@@ -152,7 +152,8 @@ static int X11DRV_nores_GetCurrentMode(void)
 
 static LONG X11DRV_nores_SetCurrentMode(int mode)
 {
-    TRACE("Ignoring mode change request\n");
+    if (mode == 0) return DISP_CHANGE_SUCCESSFUL;
+    TRACE("Ignoring mode change request mode=%d\n", mode);
     return DISP_CHANGE_FAILED;
 }
 

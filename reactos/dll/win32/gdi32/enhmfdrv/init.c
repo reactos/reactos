@@ -285,10 +285,8 @@ HDC WINAPI CreateEnhMetaFileA(
 
     hReturnDC = CreateEnhMetaFileW(hdc, filenameW, rect, descriptionW);
 
-    if(filenameW)
-        HeapFree( GetProcessHeap(), 0, filenameW );
-    if(descriptionW)
-        HeapFree( GetProcessHeap(), 0, descriptionW );
+    HeapFree( GetProcessHeap(), 0, filenameW );
+    HeapFree( GetProcessHeap(), 0, descriptionW );
 
     return hReturnDC;
 }

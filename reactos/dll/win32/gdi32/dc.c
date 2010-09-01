@@ -1445,7 +1445,7 @@ WORD WINAPI SetHookFlags( HDC hdc, WORD flags )
     else if (flags & DCHF_VALIDATEVISRGN || !flags)
         ret = InterlockedExchange( &dc->dirty, 0 );
 
-    GDI_ReleaseObj( dc );
+    GDI_ReleaseObj( hdc );
     return ret;
 }
 

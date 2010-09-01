@@ -31,7 +31,6 @@
  *  Styles
  *  - BS_NOTIFY: is it complete?
  *  - BS_RIGHTBUTTON: same as BS_LEFTTEXT
- *  - BS_TYPEMASK
  *
  *  Messages
  *  - WM_CHAR: Checks a (manual or automatic) check box on '+' or '=', clears it on '-' key.
@@ -191,7 +190,7 @@ static inline void set_button_font( HWND hwnd, HFONT font )
 
 static inline UINT get_button_type( LONG window_style )
 {
-    return (window_style & 0x0f);
+    return (window_style & BS_TYPEMASK);
 }
 
 /* paint a button of any type */
@@ -273,8 +272,8 @@ LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
         /* XP turns a BS_USERBUTTON into BS_PUSHBUTTON */
         if (btn_type == BS_USERBUTTON )
         {
-            style = (style & ~0x0f) | BS_PUSHBUTTON;
-            WIN_SetStyle( hWnd, style, 0x0f & ~style );
+            style = (style & ~BS_TYPEMASK) | BS_PUSHBUTTON;
+            WIN_SetStyle( hWnd, style, BS_TYPEMASK & ~style );
         }
         set_button_state( hWnd, BUTTON_UNCHECKED );
         return 0;
@@ -459,10 +458,10 @@ LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
         break;
 
     case BM_SETSTYLE:
-        if ((wParam & 0x0f) >= MAX_BTN_TYPE) break;
-        btn_type = wParam & 0x0f;
-        style = (style & ~0x0f) | btn_type;
-        WIN_SetStyle( hWnd, style, 0x0f & ~style );
+        if ((wParam & BS_TYPEMASK) >= MAX_BTN_TYPE) break;
+        btn_type = wParam & BS_TYPEMASK;
+        style = (style & ~BS_TYPEMASK) | btn_type;
+        WIN_SetStyle( hWnd, style, BS_TYPEMASK & ~style );
 
         /* Only redraw if lParam flag is set.*/
         if (lParam)
@@ -547,7 +546,7 @@ static UINT BUTTON_BStoDT( DWORD style, DWORD ex_style )
 
    /* "Convert" pushlike buttons to pushbuttons */
    if (style & BS_PUSHLIKE)
-      style &= ~0x0F;
+      style &= ~BS_TYPEMASK;
 
    if (!(style & BS_MULTILINE))
       dtStyle |= DT_SINGLELINE;
@@ -988,7 +987,7 @@ static void BUTTON_CheckAutoRadioButton( HWND hwnd )
     {
         if (!sibling) break;
         if ((hwnd != sibling) &&
-            ((GetWindowLongW( sibling, GWL_STYLE) & 0x0f) == BS_AUTORADIOBUTTON))
+            ((GetWindowLongW( sibling, GWL_STYLE) & BS_TYPEMASK) == BS_AUTORADIOBUTTON))
             SendMessageW( sibling, BM_SETCHECK, BUTTON_UNCHECKED, 0 );
         sibling = GetNextDlgGroupItem( parent, sibling, FALSE );
     } while (sibling != start);

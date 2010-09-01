@@ -1070,6 +1070,12 @@ BOOL WINAPI GetClassInfoExA( HINSTANCE hInstance, LPCSTR name, WNDCLASSEXA *wc )
 
     TRACE("%p %s %p\n", hInstance, debugstr_a(name), wc);
 
+    if (!wc)
+    {
+        SetLastError( ERROR_NOACCESS );
+        return FALSE;
+    }
+
     if (!hInstance) hInstance = user32_module;
 
     if (!IS_INTRESOURCE(name))
@@ -1114,6 +1120,12 @@ BOOL WINAPI GetClassInfoExW( HINSTANCE hInstance, LPCWSTR name, WNDCLASSEXW *wc 
     CLASS *classPtr;
 
     TRACE("%p %s %p\n", hInstance, debugstr_w(name), wc);
+
+    if (!wc)
+    {
+        SetLastError( ERROR_NOACCESS );
+        return FALSE;
+    }
 
     if (!hInstance) hInstance = user32_module;
 
