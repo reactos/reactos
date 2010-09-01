@@ -21,11 +21,14 @@ void _ReadBarrier(void);
 void _WriteBarrier(void);
 #pragma intrinsic(_WriteBarrier)
 
+char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand);
 #pragma intrinsic(_InterlockedCompareExchange8)
 short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand);
 #pragma intrinsic(_InterlockedCompareExchange16)
 long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 #pragma intrinsic(_InterlockedCompareExchange)
+#if defined(_AMD64_) || defined(_IA64_)
+void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand);
 #pragma intrinsic(_InterlockedCompareExchangePointer)
 void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);
 #pragma intrinsic(_InterlockedExchangePointer)
