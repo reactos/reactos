@@ -208,7 +208,7 @@ SURFACE_bSetBitmapBits(
 	else
 	{
 		/* Align the width (windows compatibility, drivers expect that) */
-    	((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
+    	ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
 	}
 
 
