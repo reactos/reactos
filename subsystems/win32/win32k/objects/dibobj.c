@@ -1219,11 +1219,27 @@ NtGdiCreateDIBitmapInternal(
     IN HANDLE hcmXform)
 {
     NTSTATUS Status = STATUS_SUCCESS;
+	PBYTE safeBits = NULL;
+	HBITMAP hbmResult = NULL;
+
+	if(pjInit && (fInit == CBM_INIT))
+	{
+		safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
+		if(!safeBits)
+		{
+			SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+			return NULL;
+		}
+	}
 
     _SEH2_TRY
     {
         if(pbmi) ProbeForRead(pbmi, cjMaxInitInfo, 1);
-        if(pjInit && (fInit == CBM_INIT)) ProbeForRead(pjInit, cjMaxBits, 1);
+        if(pjInit && (fInit == CBM_INIT))
+		{
+			ProbeForRead(pjInit, cjMaxBits, 1);
+			RtlCopyMemory(safeBits, pjInit, cjMaxBits);
+		}
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1234,18 +1250,22 @@ NtGdiCreateDIBitmapInternal(
     if(!NT_SUCCESS(Status))
     {
         SetLastNtError(Status);
-        return NULL;
+		goto cleanup;
     }
 
-    return GreCreateDIBitmapInternal(hDc,
-                                     cx,
-                                     cy,
-                                     fInit,
-                                     pjInit,
-                                     pbmi,
-                                     iUsage,
-                                     fl,
-                                     hcmXform);
+    hbmResult =  GreCreateDIBitmapInternal(hDc,
+					                       cx,
+						                   cy,
+									       fInit,
+                                           safeBits,
+                                           pbmi,
+                                           iUsage,
+                                           fl,
+                                           hcmXform);
+
+cleanup:
+	ExFreePoolWithTag(safeBits, TAG_DIB);
+	return hbmResult;
 }
 
 HBITMAP
