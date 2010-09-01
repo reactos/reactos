@@ -158,7 +158,7 @@ BltPatCopy(SURFOBJ* Dest,
     // These functions are assigned if we're working with a DIB
     // The assigned functions depend on the bitsPerPixel of the DIB
 
-    DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_ColorFill(Dest, DestRect, pbo ? (pbo->iSolidColor &0x00ffffff): 0);
+    DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_ColorFill(Dest, DestRect, pbo ? pbo->iSolidColor : 0);
 
     return TRUE;
 }
