@@ -269,6 +269,7 @@ extern "C" {
 #define BS_MULTILINE	0x2000
 #define BS_NOTIFY	0x4000
 #define BS_OWNERDRAW	0xb
+#define BS_TYPEMASK	0xFL
 #define BS_PUSHBUTTON	0
 #define BS_PUSHLIKE	4096
 #define BS_RADIOBUTTON 4
