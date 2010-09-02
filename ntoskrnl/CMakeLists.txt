@@ -1,8 +1,8 @@
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -I${REACTOS_SOURCE_DIR} -I${CMAKE_CURRENT_SOURCE_DIR}/include -O coff -o <OBJECT> ")
 
-set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -Wl,-L${REACTOS_BINARY_DIR}/lib/3rdparty/mingw")
-set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,-entry,_KiSystemStartup@4 -Wl,--image-base,0x80800000 -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds")
+set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,-entry,_KiSystemStartup@4 -Wl,--image-base,0x80800000 -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds -Wl,--subsystem,native")
 
 add_definitions(-D__NTOSKRNL__)
 add_definitions(-D_NTOSKRNL_)

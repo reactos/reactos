@@ -154,7 +154,7 @@ elseif(ARCH MATCHES amd64)
 list(APPEND SETUPLDR_MAIN_SOURCE freeldr/freeldr/windows/setupldr2.c)
 endif(ARCH MATCHES i386)
 
-set_source_files_properties(${SETUPLDR_MAIN_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_NTHAL_;FREELDR_REACTOS_SETUP" COMPILE_FLAGS "-ffreestanding -fno-builtin -fno-inline -fno-zero-initialized-in-bss")
+set_source_files_properties(${SETUPLDR_MAIN_SOURCE} PROPERTIES COMPILE_FLAGS "-ffreestanding -fno-builtin -fno-inline -fno-zero-initialized-in-bss")
 
 set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
@@ -169,7 +169,7 @@ add_library(freeldr SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/freeldr_freeldr.h.gch
     ${FREELDR_SOURCE})
 
-set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000" SUFFIX ".sys")
 
 if(ARCH MATCHES i386)
 target_link_libraries(freeldr mini_hal)
@@ -189,11 +189,9 @@ list(APPEND SETUPLDR_SOURCE
     ${FREELDR_ARCH_SOURCE}
     ${SETUPLDR_MAIN_SOURCE})
 
-add_library(setupldr SHARED
-    ${CMAKE_CURRENT_BINARY_DIR}/freeldr_freeldr.h.gch
-    ${SETUPLDR_SOURCE})
+add_library(setupldr SHARED ${SETUPLDR_SOURCE})
 
-set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 
 if(ARCH MATCHES i386)
 target_link_libraries(setupldr mini_hal)
@@ -204,4 +202,3 @@ target_link_libraries(setupldr
     cmlib
     rtl
     libcntpr)
-add_pch(setupldr ${CMAKE_CURRENT_SOURCE_DIR}/freeldr/freeldr/include/freeldr.h ${SETUPLDR_SOURCE})
