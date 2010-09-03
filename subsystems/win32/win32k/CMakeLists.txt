@@ -1,0 +1,190 @@
+
+set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
+include_directories(.)
+include_directories(include)
+include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
+include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+
+add_definitions(-DLANGPACK)
+add_definitions(-D_WIN32K_)
+
+list(APPEND SOURCE
+    dib/dib1bpp.c
+    dib/dib4bpp.c
+    dib/dib8bpp.c
+    dib/dib16bpp.c
+    dib/dib24bpp.c
+    dib/dib32bpp.c
+    dib/dib.c
+    dib/floodfill.c
+    dib/stretchblt.c
+    eng/alphablend.c
+    eng/bitblt.c
+    eng/engbrush.c
+    eng/engevent.c
+    eng/clip.c
+    eng/copybits.c
+    eng/debug.c
+    eng/device.c
+    eng/driverobj.c
+    eng/error.c
+    eng/float.c
+    eng/gradient.c
+    eng/lineto.c
+    eng/mapping.c
+    eng/mem.c
+    eng/engmisc.c
+    eng/mouse.c
+    eng/paint.c
+    eng/perfcnt.c
+    eng/semaphor.c
+    eng/sort.c
+    eng/string.c
+    eng/stretchblt.c
+    eng/surface.c
+    eng/transblt.c
+    eng/engwindow.c
+    eng/xlate.c
+    ldr/loader.c
+    main/dllmain.c
+    misc/driver.c
+    misc/err.c
+    misc/file.c
+    misc/math.c
+    misc/rtlstr.c
+    misc/copy.c
+    misc/registry.c
+    misc/usrheap.c
+    ntddraw/ddraw.c
+    ntddraw/dd.c
+    ntddraw/ddsurf.c
+    ntddraw/d3d.c
+    ntddraw/dvp.c
+    ntddraw/mocomp.c
+    ntddraw/eng.c
+    ntddraw/dxeng.c
+    ntuser/accelerator.c
+    ntuser/callback.c
+    ntuser/callproc.c
+    ntuser/caret.c
+    ntuser/class.c
+    ntuser/clipboard.c
+    ntuser/csr.c
+    ntuser/cursoricon.c
+    ntuser/defwnd.c
+    ntuser/desktop.c
+    ntuser/display.c
+    ntuser/event.c
+    ntuser/focus.c
+    ntuser/guicheck.c
+    ntuser/hook.c
+    ntuser/hotkey.c
+    ntuser/input.c
+    ntuser/keyboard.c
+    ntuser/kbdlayout.c
+    ntuser/menu.c
+    ntuser/message.c
+    ntuser/metric.c
+    ntuser/misc.c
+    ntuser/monitor.c
+    ntuser/msgqueue.c
+    ntuser/ntstubs.c
+    ntuser/ntuser.c
+    ntuser/painting.c
+    ntuser/prop.c
+    ntuser/scrollbar.c
+    ntuser/session.c
+    ntuser/simplecall.c
+    ntuser/sysparams.c
+    ntuser/timer.c
+    ntuser/useratom.c
+    ntuser/vis.c
+    ntuser/windc.c
+    ntuser/window.c
+    ntuser/winpos.c
+    ntuser/winsta.c
+    ntuser/object.c
+    objects/arc.c
+    objects/bezier.c
+    objects/bitblt.c
+    objects/bitmaps.c
+    objects/brush.c
+    objects/cliprgn.c
+    objects/coord.c
+    objects/dcattr.c
+    objects/dclife.c
+    objects/dcobjs.c
+    objects/dcstate.c
+    objects/dcutil.c
+    objects/device.c
+    objects/dibobj.c
+    objects/drawing.c
+    objects/fillshap.c
+    objects/font.c
+    objects/freetype.c
+    objects/gdibatch.c
+    objects/gdiobj.c
+    objects/icm.c
+    objects/line.c
+    objects/metafile.c
+    objects/palette.c
+    objects/path.c
+    objects/pen.c
+    objects/polyfill.c
+    objects/print.c
+    objects/rect.c
+    objects/region.c
+    objects/stockobj.c
+    objects/text.c
+    objects/wingl.c
+    objects/xformobj.c
+    stubs/stubs.c
+    stubs/umpdstubs.c
+    win32k.rc)
+
+list(APPEND GENDIB_GENERATED
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib8gen.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib16gen.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dib/dib32gen.c)
+
+set_source_files_properties(${GENDIB_GENERATED} PROPERTIES GENERATED TRUE)
+
+list(APPEND SOURCE ${GENDIB_GENERATED})
+
+if(ARCH MATCHES i386)
+list(APPEND SOURCE
+    dib/i386/dib24bpp_hline.s
+    dib/i386/dib32bpp_hline.s
+    dib/i386/dib32bpp_colorfill.s
+    eng/i386/floatobj.S
+    misc/i386/cos_asm.s
+    misc/i386/sin_asm.s
+    misc/i386/atan2_asm.s
+    misc/i386/floor_asm.s
+    misc/i386/ceil_asm.s)
+else()
+list(APPEND SOURCE
+    dib/dib24bppc.c
+    dib/dib32bppc.c)
+endif(ARCH MATCHES i386)
+
+add_library(win32k SHARED
+    ${CMAKE_CURRENT_BINARY_DIR}/win32k_pch.h.gch
+    ${SOURCE})
+
+set_target_properties(win32k PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
+
+target_link_libraries(win32k
+    ${CMAKE_CURRENT_SOURCE_DIR}/win32k_i386.def
+    pseh
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
+    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a
+    ${REACTOS_SOURCE_DIR}/drivers/video/font/ftfd/libftfd.a
+    dxguid
+    libcntpr)
+
+add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
+add_dependencies(win32k psdk gendib_generated bugcodes subsystem_napi buildno_header)

@@ -26,7 +26,7 @@ include_directories(${REACTOS_BINARY_DIR}/include)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl winebuild nci buildno FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci buildno gendib FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
@@ -108,48 +108,61 @@ add_subdirectory(drivers)
 add_subdirectory(hal)
 add_subdirectory(lib)
 add_subdirectory(ntoskrnl)
+add_subdirectory(subsystems)
 
 # nci generated intermediate files
 
 set(nci_output 
-  ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
-  ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
-  ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
-  ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
-  ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
-  ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec
-)
+    ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
+    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
+    ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
+    ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
+    ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
+    ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
 
-# stupid nci tool can't create folders itself, se we're gonna create them for it
 set(nci_folders
-  ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
-  ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
-  ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
-  ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/include/internal
-  ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/ex
-  ${CMAKE_CURRENT_BINARY_DIR}/subsystems/win32/win32k/include
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
+    ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
+    ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
+    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/include/internal
+    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/ex
+    ${CMAKE_CURRENT_BINARY_DIR}/subsystems/win32/win32k/include)
 
 file(MAKE_DIRECTORY ${nci_folders})
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${nci_output}
-  COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
-  DEPENDS native-nci ${nci_folders}
-)
+add_custom_command(
+    OUTPUT ${nci_output}
+    COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
+    DEPENDS native-nci ${nci_folders})
 
-ADD_CUSTOM_TARGET(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
-ADD_CUSTOM_TARGET(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
-ADD_CUSTOM_TARGET(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
-ADD_CUSTOM_TARGET(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
-ADD_CUSTOM_TARGET(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
-ADD_CUSTOM_TARGET(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
+add_custom_target(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
+add_custom_target(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
+add_custom_target(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
+add_custom_target(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
+add_custom_target(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
+add_custom_target(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
 
 file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/include/reactos)
-ADD_CUSTOM_COMMAND(OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
-                   COMMAND native-buildno ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
-                   DEPENDS ${REACTOS_SOURCE_DIR}/include/reactos/version.h) 
-ADD_CUSTOM_TARGET(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
+
+add_custom_command(
+    OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
+    COMMAND native-buildno ${REACTOS_BINARY_DIR}/include/reactos/buildno.h
+    DEPENDS ${REACTOS_SOURCE_DIR}/include/reactos/version.h)
+
+add_custom_target(buildno_header ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/buildno.h)
+
+file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib)
+
+list(APPEND OUTPUT_FILES
+    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib8gen.c
+    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib16gen.c
+    ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib/dib32gen.c)
+
+add_custom_command(
+    OUTPUT ${OUTPUT_FILES}
+    COMMAND native-gendib ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/dib
+    DEPENDS native-gendib) 
+
+add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
 
 endif()
-
