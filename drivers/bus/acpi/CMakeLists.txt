@@ -124,8 +124,6 @@ add_library(acpica
 
 set_target_properties(acpica PROPERTIES COMPILE_DEFINITIONS "ACPI_USE_LOCAL_CACHE")
 
-spec2def(acpi ${CMAKE_CURRENT_SOURCE_DIR}/acpi.spec ${CMAKE_CURRENT_BINARY_DIR}/acpi.def)
-
 add_library(acpi SHARED
     busmgr/bus.c
     busmgr/button.c
