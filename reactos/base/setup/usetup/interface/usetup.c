@@ -2450,29 +2450,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                 CheckActiveBootPartition(PartitionList);
             }
 
-            /* Install MBR if necessary */
-            if (DiskEntry->NoMbr &&
-                DiskEntry->BiosDiskNumber == 0)
-            {
-                wcscpy(PathBuffer, SourceRootPath.Buffer);
-                wcscat(PathBuffer, L"\\loader\\dosmbr.bin");
-
-                DPRINT("Install MBR bootcode: %S ==> %S\n",
-                       PathBuffer, DestinationRootPath.Buffer);
-
-                /* Install MBR bootcode */
-                Status = InstallMbrBootCodeToDisk(PathBuffer,
-                                                  DestinationRootPath.Buffer);
-                if (!NT_SUCCESS (Status))
-                {
-                    DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
-                            Status);
-                    return FALSE;
-                }
-
-                DiskEntry->NoMbr = FALSE;
-            }
-
             if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
             {
                 /* FIXME: Install boot code. This is a hack! */
@@ -3621,7 +3598,10 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
 {
     UCHAR PartitionType;
     NTSTATUS Status;
+    WCHAR DestinationDevicePathBuffer[MAX_PATH];
+    WCHAR SourceMbrPathBuffer[MAX_PATH];
 
+    /* Step 1: Write the VBR */
     PartitionType = PartitionList->ActiveBootPartition->
         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
     if ((PartitionType == PARTITION_FAT_12) ||
@@ -3640,8 +3620,6 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
             MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
             return QUIT_PAGE;
         }
-
-        return SUCCESS_PAGE;
     }
     else
     {
@@ -3649,7 +3627,28 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
-    return BOOT_LOADER_HARDDISK_PAGE;
+    /* Step 2: Write the MBR */
+    swprintf(DestinationDevicePathBuffer,
+             L"\\Device\\Harddisk%d\\Partition0",
+             PartitionList->ActiveBootDisk->DiskNumber);
+    
+    wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
+    wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
+        
+    DPRINT("Install MBR bootcode: %S ==> %S\n",
+            SourceMbrPathBuffer, DestinationDevicePathBuffer);
+
+    Status = InstallMbrBootCodeToDisk(SourceMbrPathBuffer,
+                                      DestinationDevicePathBuffer);
+    if (!NT_SUCCESS (Status))
+    {
+        DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
+                Status);
+        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    return SUCCESS_PAGE;
 }
 
 
