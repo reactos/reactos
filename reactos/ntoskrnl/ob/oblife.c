@@ -107,6 +107,15 @@ ObpDeallocateObject(IN PVOID Object)
                 /* Add the SD charge too */
                 if (Header->Flags & OB_FLAG_SECURITY) PagedPoolCharge += 2048;
             }
+            
+            /* Return the quota */
+            DPRINT("FIXME: Should return quotas: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
+#if 0
+            PsReturnSharedPoolQuota(ObjectHeader->QuotaBlockCharged,
+                                    PagedPoolCharge,
+                                    NonPagedPoolCharge);
+#endif
+            
         }
     }
 

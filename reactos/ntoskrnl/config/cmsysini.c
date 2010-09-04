@@ -1194,6 +1194,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
             if (CmHive->Hive.Cluster != ClusterSize) ASSERT(FALSE);
 
             /* Set the file size */
+            DPRINT("FIXME: Should set file size: %lx\n", Length);
             //if (!CmpFileSetSize((PHHIVE)CmHive, HFILE_TYPE_PRIMARY, Length, Length))
             {
                 /* This shouldn't fail */
@@ -1232,7 +1233,7 @@ CmpInitializeHiveList(IN USHORT Flag)
     UNICODE_STRING TempName, FileName, RegName;
     HANDLE Thread;
     NTSTATUS Status;
-    ULONG FileStart, RegStart, i;
+    ULONG RegStart, i;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
@@ -1247,7 +1248,6 @@ CmpInitializeHiveList(IN USHORT Flag)
     CmpGetRegistryPath(ConfigPath);
     RtlInitUnicodeString(&TempName, ConfigPath);
     RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
-    FileStart = FileName.Length;
 
     /* And build the registry root path */
     RtlInitUnicodeString(&TempName, L"\\REGISTRY\\");

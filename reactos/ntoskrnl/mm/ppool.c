@@ -719,10 +719,7 @@ RPoolAlloc ( PR_POOL pool, rulong NumberOfBytes, rulong Tag, rulong align )
 {
 	PR_USED NewBlock;
 	PR_FREE BestBlock,
-		NextBlock,
-		PreviousBlock,
-		BestPreviousBlock,
-		CurrentBlock;
+        CurrentBlock;
 	void* BestAlignedAddr;
 	int que,
 		queBytes = NumberOfBytes;
@@ -785,8 +782,6 @@ try_again:
 	 */
 	BestBlock = NULL;
 	Alignment = pool->Alignments[align];
-	PreviousBlock = NULL;
-	BestPreviousBlock = NULL,
 	CurrentBlock = pool->FirstFree;
 	BestAlignedAddr = NULL;
 
@@ -802,7 +797,6 @@ try_again:
 		if ( Addr == AlignedAddr )
 		{
 			BestAlignedAddr = AlignedAddr;
-			BestPreviousBlock = PreviousBlock;
 			BestBlock = CurrentBlock;
 			break;
 		}
@@ -820,12 +814,10 @@ try_again:
 				|| BestBlock->Size > CurrentBlock->Size )
 			{
 				BestAlignedAddr = AlignedAddr;
-				BestPreviousBlock = PreviousBlock;
 				BestBlock = CurrentBlock;
 			}
 		}
 
-		PreviousBlock = CurrentBlock;
 		CurrentBlock = CurrentBlock->NextFree;
 	}
 
@@ -876,7 +868,6 @@ try_again:
 				NewFreeBlock, NewFreeBlock->Size, BestBlock->Size, BestBlock->NextFree );*/
 
 			/* we want the following code to use our size-aligned block */
-			BestPreviousBlock = BestBlock;
 			BestBlock = NewFreeBlock;
 
 			//VerifyPagedPool();
@@ -893,7 +884,7 @@ try_again:
 		/*
 		 * Create the new free block.
 		 */
-		NextBlock = RFreeSplit ( pool, BestBlock, BlockSize );
+		RFreeSplit ( pool, BestBlock, BlockSize );
 		//ASSERT_SIZE ( NextBlock->Size );
 	}
 	/*
@@ -919,7 +910,9 @@ static void
 RPoolFree ( PR_POOL pool, void* Addr )
 {
 	PR_USED UsedBlock;
+#ifndef R_RZ
 	rulong UsedSize;
+#endif
 	PR_FREE FreeBlock;
 	rulong UserSize;
 	int que;
@@ -936,11 +929,11 @@ RPoolFree ( PR_POOL pool, void* Addr )
 	R_ASSERT_PTR(pool,Addr);
 
 	UsedBlock = RBodyToHdr(Addr);
-	UsedSize = UsedBlock->Size;
 	FreeBlock = (PR_FREE)UsedBlock;
 #if R_RZ
 	UserSize = UsedBlock->UserSize;
 #else
+	UsedSize = UsedBlock->Size;
 	UserSize = UsedSize - sizeof(R_USED) - 2*R_RZ;
 #endif//R_RZ
 

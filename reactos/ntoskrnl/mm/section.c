@@ -2963,7 +2963,6 @@ MmspPageAlignSegments
 {
    ULONG i;
    ULONG LastSegment;
-   BOOLEAN Initialized;
    PMM_SECTION_SEGMENT EffectiveSegment;
 
    if (Flags & EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED)
@@ -2972,7 +2971,6 @@ MmspPageAlignSegments
       return TRUE;
    }
 
-   Initialized = FALSE;
    LastSegment = 0;
    EffectiveSegment = &ImageSectionObject->Segments[LastSegment];
 
@@ -3711,7 +3709,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    PROS_SECTION_OBJECT Section;
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
-   PMMSUPPORT AddressSpace;
    NTSTATUS Status;
    ULONG tmpProtect;
    ACCESS_MASK DesiredAccess;
@@ -3786,8 +3783,6 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    {
       return(Status);
    }
-
-   AddressSpace = &Process->Vm;
 
    /* Convert NT Protection Attr to Access Mask */
    if (Protect == PAGE_READONLY)
@@ -4033,7 +4028,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
    }
    MmUnlockSectionSegment(Segment);
    ObDereferenceObject(Section);
-   return(STATUS_SUCCESS);
+   return(Status);
 }
 
 /*

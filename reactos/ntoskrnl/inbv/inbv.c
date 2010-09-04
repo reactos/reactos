@@ -552,7 +552,7 @@ VOID
 NTAPI
 DisplayBootBitmap(IN BOOLEAN SosMode)
 {
-    PVOID Header, Band, Bar, Text, Screen;
+    PVOID Header, Band, Text, Screen;
     ROT_BAR_TYPE TempRotBarSelection = RB_UNSPECIFIED;
     UCHAR Buffer[64];
     
@@ -615,7 +615,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
             /* Workstation product, display appropriate status bar color */
-            Bar = InbvGetResourceAddress(IDB_BAR_PRO);
+            InbvGetResourceAddress(IDB_BAR_PRO);
         }
         else
         {
@@ -637,7 +637,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
             }
             
             /* Server product, display appropriate status bar color */
-            Bar = InbvGetResourceAddress(IDB_BAR_SERVER);
+            InbvGetResourceAddress(IDB_BAR_SERVER);
         }
         
         /* Make sure we had a logo */

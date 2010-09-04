@@ -604,13 +604,11 @@ RawSetInformation(IN PVCB Vcb,
                   IN PIO_STACK_LOCATION IoStackLocation)
 {
     NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
-    PULONG Length;
     PFILE_POSITION_INFORMATION Buffer;
     PDEVICE_OBJECT DeviceObject;
     PAGED_CODE();
 
     /* Get information from the IRP */
-    Length = &IoStackLocation->Parameters.QueryFile.Length;
     Buffer = Irp->AssociatedIrp.SystemBuffer;
 
     /* We only handle this request */

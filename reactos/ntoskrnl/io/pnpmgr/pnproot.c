@@ -799,10 +799,8 @@ PdoQueryCapabilities(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IrpSp)
 {
-    PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_CAPABILITIES DeviceCapabilities;
 
-    DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
 
     if (DeviceCapabilities->Version != 1)

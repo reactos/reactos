@@ -715,7 +715,6 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
                        PLDR_DATA_TABLE_ENTRY *ModuleObject)
 {
     NTSTATUS Status;
-    PLDR_DATA_TABLE_ENTRY NewEntry;
     UNICODE_STRING BaseName, BaseDirectory;
     PLOAD_IMPORTS LoadedImports = (PVOID)-2;
     PCHAR MissingApiName, Buffer;
@@ -762,8 +761,6 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
     BaseDirectory = *FileName;
     BaseDirectory.Length -= BaseName.Length;
     BaseDirectory.MaximumLength = BaseDirectory.Length;
-
-    NewEntry = LdrEntry;
 
     /* Resolve imports */
     MissingApiName = Buffer;

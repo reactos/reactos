@@ -653,8 +653,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG oldPdeOffset, PdeOffset;
     PULONG Pt = NULL;
     ULONG Pte;
-    BOOLEAN NoExecute = FALSE;
-    
     DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
     
@@ -689,10 +687,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     }
     
     Attributes = ProtectToPTE(flProtect);
-    if (Attributes & 0x80000000)
-    {
-        NoExecute = TRUE;
-    }
     Attributes &= 0xfff;
     if (Address >= MmSystemRangeStart)
     {
@@ -826,7 +820,6 @@ NTAPI
 MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
     ULONG Attributes = 0;
-    BOOLEAN NoExecute = FALSE;
     PULONG Pt;
     
     DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
@@ -834,10 +827,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     
     Attributes = ProtectToPTE(flProtect);
 
-    if (Attributes & 0x80000000)
-    {
-        NoExecute = TRUE;
-    }
     Attributes &= 0xfff;
     if (Address >= MmSystemRangeStart)
     {
