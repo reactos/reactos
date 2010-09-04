@@ -112,7 +112,7 @@ add_subdirectory(subsystems)
 
 # nci generated intermediate files
 
-set(nci_output 
+list(APPEND nci_output 
     ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
     ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
     ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
@@ -120,7 +120,7 @@ set(nci_output
     ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
     ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
 
-set(nci_folders
+list(APPEND nci_folders
     ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
     ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
     ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
