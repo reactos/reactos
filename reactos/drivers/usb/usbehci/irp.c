@@ -37,6 +37,7 @@ QueueURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp)
 
     if (Irp->Cancel && IoSetCancelRoutine(Irp, NULL))
     {
+        DPRINT1("Cancelled!!!!???\n");
         KeReleaseSpinLock(&DeviceExtension->IrpQueueLock, OldIrql);
         Irp->IoStatus.Status = STATUS_CANCELLED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -175,15 +176,18 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                         LONG i, j;
 
                         DPRINT1("USB CONFIG DESC\n");
-
                         if (Urb->UrbControlDescriptorRequest.TransferBufferLength >= UsbDevice->ActiveConfig->ConfigurationDescriptor.wTotalLength)
                         {
                             Urb->UrbControlDescriptorRequest.TransferBufferLength = UsbDevice->ActiveConfig->ConfigurationDescriptor.wTotalLength;
                         }
                         else
                         {
-                            DPRINT1("Buffer to small!!!\n");
-                            //ASSERT(FALSE);
+                            DPRINT1("TransferBufferLenth %x is too small!!!\n", Urb->UrbControlDescriptorRequest.TransferBufferLength);
+                            if (Urb->UrbControlDescriptorRequest.TransferBufferLength < sizeof(USB_CONFIGURATION_DESCRIPTOR))
+                            {
+                                DPRINT1("Bail!\n");
+                                break;
+                            }
                         }
 
                         ASSERT(Urb->UrbControlDescriptorRequest.TransferBuffer);
@@ -191,6 +195,14 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
 
                         /* Copy the Configuration Descriptor */
                         RtlCopyMemory(BufPtr, &UsbDevice->ActiveConfig->ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
+
+                        /* If there is no room for all the configs then bail */
+                        if (!(Urb->UrbControlDescriptorRequest.TransferBufferLength > sizeof(USB_CONFIGURATION_DESCRIPTOR)))
+                        {
+                            DPRINT1("Bail!\n");
+                            break;
+                        }
+
                         BufPtr += sizeof(USB_CONFIGURATION_DESCRIPTOR);
                         for (i = 0; i < UsbDevice->ActiveConfig->ConfigurationDescriptor.bNumInterfaces; i++)
                         {
@@ -348,6 +360,8 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                             {
 
                                 PUSB_HUB_DESCRIPTOR UsbHubDescr = Urb->UrbControlVendorClassRequest.TransferBuffer;
+
+                                DPRINT1("Length %x\n", Urb->UrbControlVendorClassRequest.TransferBufferLength);
                                 ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
                                 /* FIXME: Handle more than root hub? */
                                 if(Urb->UrbControlVendorClassRequest.TransferBufferLength >= sizeof(USB_HUB_DESCRIPTOR))
@@ -383,7 +397,6 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                     case USB_REQUEST_GET_STATUS:
                     {
                         DPRINT1("DEVICE: USB_REQUEST_GET_STATUS for port %d\n", Urb->UrbControlVendorClassRequest.Index);
-
                         if (Urb->UrbControlVendorClassRequest.Index == 1)
                         {
                             ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
@@ -401,12 +414,17 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
             }
             case URB_FUNCTION_CLASS_OTHER:
             {
+
+                /* FIXME: Each one of these needs to make sure that the index value is a valid for a port (1-8) and return STATUS_UNSUCCESSFUL is not */
+
                 switch (Urb->UrbControlVendorClassRequest.Request)
                 {
                     case USB_REQUEST_GET_STATUS:
                     {
                         DPRINT1("OTHER: USB_REQUEST_GET_STATUS for port %d\n", Urb->UrbControlVendorClassRequest.Index);
                         ASSERT(Urb->UrbControlVendorClassRequest.TransferBuffer != 0);
+                        DPRINT1("PortStatus %x\n", DeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus);
+                        DPRINT1("PortChange %x\n", DeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortChange);
                         ((PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer)[0] = DeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortStatus;
                         ((PUSHORT)Urb->UrbControlVendorClassRequest.TransferBuffer)[1] = DeviceExtension->Ports[Urb->UrbControlVendorClassRequest.Index-1].PortChange;
                         break;
@@ -443,7 +461,12 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension)
                             }
                             case PORT_ENABLE:
                             {
-                                DPRINT1("Unhandled Set Feature\n");
+                                DPRINT1("PORT_ENABLE not implemented\n");
+                                break;
+                            }
+                            case PORT_POWER:
+                            {
+                                DPRINT1("PORT_POWER not implemented\n");
                                 break;
                             }
                             default:

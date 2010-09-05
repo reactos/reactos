@@ -390,6 +390,9 @@ typedef struct _FDO_DEVICE_EXTENSION
     PHYSICAL_ADDRESS PeriodicFramListPhysAddr;
     PHYSICAL_ADDRESS AsyncListQueueHeadPtrPhysAddr;
 
+    FAST_MUTEX AsyncListMutex;
+    FAST_MUTEX FrameListMutex;
+
     BOOLEAN AsyncComplete;
 
     PULONG ResourceBase;

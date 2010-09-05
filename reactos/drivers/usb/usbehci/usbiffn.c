@@ -14,6 +14,7 @@
 PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub)
 {
     PUSB_DEVICE UsbDevicePointer = NULL;
+
     UsbDevicePointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEVICE), USB_POOL_TAG);
 
     if (!UsbDevicePointer)
@@ -42,14 +43,14 @@ VOID
 USB_BUSIFFN
 InterfaceReference(PVOID BusContext)
 {
-    DPRINT1("InterfaceReference called\n");
+    DPRINT1("Ehci: InterfaceReference called\n");
 }
 
 VOID
 USB_BUSIFFN
 InterfaceDereference(PVOID BusContext)
 {
-    DPRINT1("InterfaceDereference called\n");
+    DPRINT1("Ehci: InterfaceDereference called\n");
 }
 
 /* Bus Interface Hub V5 Functions */
@@ -65,7 +66,7 @@ CreateUsbDevice(PVOID BusContext,
     PUSB_DEVICE UsbDevice;
     LONG i = 0;
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
-    DPRINT("CreateUsbDevice: HubDeviceHandle %x, PortStatus %x, PortNumber %x\n", HubDeviceHandle, PortStatus, PortNumber);
+    DPRINT1("Ehci: CreateUsbDevice: HubDeviceHandle %x, PortStatus %x, PortNumber %x\n", HubDeviceHandle, PortStatus, PortNumber);
 
     if (PdoDeviceExtension->UsbDevices[0] != HubDeviceHandle)
     {
@@ -116,7 +117,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     PUCHAR Ptr;
     LONG i, j, k;
 
-    DPRINT1("InitializeUsbDevice called, device %x\n", DeviceHandle);
+    DPRINT1("Ehci: InitializeUsbDevice called, device %x\n", DeviceHandle);
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
@@ -141,6 +142,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     /* Set the device address */
     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
     CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
+    CtrlSetup.bmRequestType._BM.Reserved = 0;
     CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_HOST_TO_DEVICE;
     CtrlSetup.bRequest = USB_REQUEST_SET_ADDRESS;
     CtrlSetup.wValue.W = UsbDevice->Address;
@@ -209,6 +211,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
                                                       sizeof(USB_CONFIGURATION) + sizeof(PVOID) * ConfigDesc->bNumInterfaces,
                                                       USB_POOL_TAG);
         UsbDevice->Configs[i]->Device = UsbDevice;
+
         RtlCopyMemory(&UsbDevice->Configs[0]->ConfigurationDescriptor,
                       ConfigDesc, sizeof(USB_CONFIGURATION_DESCRIPTOR));
         Ptr += ConfigDesc->bLength;
@@ -252,7 +255,7 @@ GetUsbDescriptors(PVOID BusContext,
                   PULONG ConfigDescriptorBufferLength)
 {
     PUSB_DEVICE UsbDevice;
-    DPRINT1("GetUsbDescriptor %x, %x, %x, %x\n", DeviceDescriptorBuffer, *DeviceDescriptorBufferLength, ConfigDescriptorBuffer, *ConfigDescriptorBufferLength);
+    DPRINT1("Ehci: GetUsbDescriptor %x, %x, %x, %x\n", DeviceDescriptorBuffer, *DeviceDescriptorBufferLength, ConfigDescriptorBuffer, *ConfigDescriptorBufferLength);
 
     UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
 
@@ -267,6 +270,7 @@ GetUsbDescriptors(PVOID BusContext,
         RtlCopyMemory(DeviceDescriptorBuffer, &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
         *DeviceDescriptorBufferLength = sizeof(USB_DEVICE_DESCRIPTOR);
     }
+
     if ((ConfigDescriptorBuffer) && (ConfigDescriptorBufferLength))
     {
         RtlCopyMemory(ConfigDescriptorBuffer, &UsbDevice->ActiveConfig->ConfigurationDescriptor, sizeof(USB_CONFIGURATION_DESCRIPTOR));
@@ -340,7 +344,7 @@ NTSTATUS
 USB_BUSIFFN
 RestoreUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE OldDeviceHandle, PUSB_DEVICE_HANDLE NewDeviceHandle)
 {
-    DPRINT1("RestoreUsbDevice called\n");
+    DPRINT1("Ehci: RestoreUsbDevice called\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -348,7 +352,7 @@ NTSTATUS
 USB_BUSIFFN
 GetPortHackFlags(PVOID BusContext, PULONG Flags)
 {
-    DPRINT1("GetPortHackFlags called\n");
+    DPRINT1("Ehci: GetPortHackFlags called\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -365,7 +369,7 @@ QueryDeviceInformation(PVOID BusContext,
     ULONG SizeNeeded;
     LONG i;
 
-    DPRINT1("QueryDeviceInformation (%x, %x, %x, %d, %x\n", BusContext, DeviceHandle, DeviceInformationBuffer, DeviceInformationBufferLength, LengthReturned);
+    DPRINT1("Ehci: QueryDeviceInformation (%x, %x, %x, %d, %x\n", BusContext, DeviceHandle, DeviceInformationBuffer, DeviceInformationBufferLength, LengthReturned);
 
     UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
 
@@ -418,7 +422,7 @@ GetControllerInformation(PVOID BusContext,
 {
     PUSB_CONTROLLER_INFORMATION_0 ControllerInfo;
 
-    DPRINT1("GetControllerInformation called\n");
+    DPRINT1("Ehci: GetControllerInformation called\n");
 
     ControllerInfo = ControllerInformationBuffer;
 
@@ -447,7 +451,7 @@ NTSTATUS
 USB_BUSIFFN
 ControllerSelectiveSuspend(PVOID BusContext, BOOLEAN Enable)
 {
-    DPRINT1("ControllerSelectiveSuspend called\n");
+    DPRINT1("Ehci: ControllerSelectiveSuspend called\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -464,13 +468,16 @@ GetExtendedHubInformation(PVOID BusContext,
     PPDO_DEVICE_EXTENSION PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     PFDO_DEVICE_EXTENSION FdoDeviceExntension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
     LONG i;
-    DPRINT1("GetExtendedHubInformation\n");
+    DPRINT1("Ehci: GetExtendedHubInformation BusContext %x, PDO %x\n", BusContext, HubPhysicalDeviceObject);
     /* Set the default return value */
     *LengthReturned = 0;
-    /* Caller must have set InformationLevel to 0 */
+
+    DPRINT1("InformationLevel %x\n", UsbExtHubInfo->InformationLevel);
+
+    /* Caller is suppose to have set InformationLevel to 0. However usbehci from MS seems to ignore this */
     if (UsbExtHubInfo->InformationLevel != 0)
     {
-        return STATUS_NOT_SUPPORTED;
+        DPRINT1("InformationLevel should really be set to 0. Ignoring\n");
     }
 
     UsbExtHubInfo->NumberOfPorts = 8;
@@ -496,7 +503,7 @@ GetRootHubSymbolicName(PVOID BusContext,
                        ULONG HubSymNameBufferLength,
                        PULONG HubSymNameActualLength)
 {
-    DPRINT1("GetRootHubSymbolicName called\n");
+    DPRINT1("Ehci: GetRootHubSymbolicName called\n");
 
     if (HubSymNameBufferLength < 16)
         return STATUS_UNSUCCESSFUL;
@@ -512,7 +519,7 @@ GetDeviceBusContext(PVOID HubBusContext, PVOID DeviceHandle)
 {
     PUSB_DEVICE UsbDevice;
 
-    DPRINT1("GetDeviceBusContext called\n");
+    DPRINT1("Ehci: GetDeviceBusContext called\n");
     UsbDevice = DeviceHandleToUsbDevice(HubBusContext, DeviceHandle);
 
     if (!UsbDevice)
@@ -528,7 +535,7 @@ NTSTATUS
 USB_BUSIFFN
 Initialize20Hub(PVOID BusContext, PUSB_DEVICE_HANDLE HubDeviceHandle, ULONG TtCount)
 {
-    DPRINT1("Initialize20Hub called, HubDeviceHandle: %x\n", HubDeviceHandle);
+    DPRINT1("Ehci: Initialize20Hub called, HubDeviceHandle: %x\n", HubDeviceHandle);
 
     /* FIXME: */
     /* Create the Irp Queue for SCE */
@@ -541,7 +548,7 @@ USB_BUSIFFN
 RootHubInitNotification(PVOID BusContext, PVOID CallbackContext, PRH_INIT_CALLBACK CallbackRoutine)
 {
     PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-    DPRINT1("RootHubInitNotification %x, %x, %x\n", BusContext, CallbackContext, CallbackRoutine);
+    DPRINT1("Ehci: RootHubInitNotification %x, %x, %x\n", BusContext, CallbackContext, CallbackRoutine);
 
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     PdoDeviceExtension->CallbackContext = CallbackContext;
@@ -579,7 +586,7 @@ VOID
 USB_BUSIFFN
 SetDeviceHandleData(PVOID BusContext, PVOID DeviceHandle, PDEVICE_OBJECT UsbDevicePdo)
 {
-    DPRINT1("SetDeviceHandleData called\n");
+    DPRINT1("Ehci: SetDeviceHandleData called\n");
 }
 
 
@@ -589,7 +596,7 @@ VOID
 USB_BUSIFFN
 GetUSBDIVersion(PVOID BusContext, PUSBD_VERSION_INFORMATION VersionInformation, PULONG HcdCapabilites)
 {
-    DPRINT1("GetUSBDIVersion called\n");
+    DPRINT1("Ehci: GetUSBDIVersion called\n");
     return;
 }
 
@@ -597,7 +604,7 @@ NTSTATUS
 USB_BUSIFFN
 QueryBusTime(PVOID BusContext, PULONG CurrentFrame)
 {
-    DPRINT1("QueryBusTime called\n");
+    DPRINT1("Ehci: QueryBusTime called\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -605,7 +612,7 @@ NTSTATUS
 USB_BUSIFFN
 SubmitIsoOutUrb(PVOID BusContext, PURB Urb)
 {
-    DPRINT1("SubmitIsoOutUrb called\n");
+    DPRINT1("Ehci: SubmitIsoOutUrb called\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -617,7 +624,7 @@ QueryBusInformation(PVOID BusContext,
                     PULONG BusInformationBufferLength,
                     PULONG BusInformationActualLength)
 {
-    DPRINT1("QueryBusInformation called\n");
+    DPRINT1("Ehci: QueryBusInformation called\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -625,7 +632,7 @@ BOOLEAN
 USB_BUSIFFN
 IsDeviceHighSpeed(PVOID BusContext)
 {
-    DPRINT1("IsDeviceHighSpeed called\n");
+    DPRINT1("Ehci: IsDeviceHighSpeed called\n");
     return TRUE;
 }
 
@@ -633,6 +640,6 @@ NTSTATUS
 USB_BUSIFFN
 EnumLogEntry(PVOID BusContext, ULONG DriverTag, ULONG EnumTag, ULONG P1, ULONG P2)
 {
-    DPRINT1("EnumLogEntry called\n");
+    DPRINT1("Ehci: EnumLogEntry called\n");
     return STATUS_SUCCESS;
 }

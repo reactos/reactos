@@ -125,6 +125,8 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
 
     DPRINT1("ExecuteControlRequest: Buffer %x, Length %x\n", Buffer, BufferLength);
 
+    ExAcquireFastMutex(&DeviceExtension->AsyncListMutex);
+
     Base = (ULONG) DeviceExtension->ResourceMemory;
 
     /* Set up the QUEUE HEAD in memory */
@@ -141,6 +143,7 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
 
     QueueHead->EndPointCapabilities2.PortNumber = Port;
     QueueHead->EndPointCapabilities1.DeviceAddress = Address;
+
 
     CtrlSetup->bmRequestType._BM.Recipient = SetupPacket->bmRequestType._BM.Recipient;
     CtrlSetup->bmRequestType._BM.Type = SetupPacket->bmRequestType._BM.Type;
@@ -207,6 +210,9 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
         else
             DPRINT1("Unable to copy data to buffer\n");
     }
+
+
+    ExReleaseFastMutex(&DeviceExtension->AsyncListMutex);
 
     return TRUE;
 }
