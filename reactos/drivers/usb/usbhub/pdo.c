@@ -5,6 +5,7 @@
  * PURPOSE:         IRP_MJ_PNP operations for PDOs
  *
  * PROGRAMMERS:     Copyright 2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *                  2010 Michael Martin (michael.martin@reactos.org)
  */
 
 #define NDEBUG
@@ -22,7 +23,7 @@ UsbhubInternalDeviceControlPdo(
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
 
-	DPRINT("Usbhub: UsbhubInternalDeviceControlPdo() called\n");
+	DPRINT1("Usbhub: UsbhubInternalDeviceControlPdo() called\n");
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	Status = Irp->IoStatus.Status;
@@ -33,7 +34,7 @@ UsbhubInternalDeviceControlPdo(
 		{
 			PHUB_DEVICE_EXTENSION DeviceExtension;
 
-			DPRINT("Usbhub: IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
+			DPRINT1("Usbhub: IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
 			if (Irp->AssociatedIrp.SystemBuffer == NULL
 				|| Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
 			{
@@ -71,28 +72,30 @@ UsbhubPdoStartDevice(
 	IN PIRP Irp)
 {
 	PHUB_DEVICE_EXTENSION DeviceExtension;
-	NTSTATUS Status;
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	/* Register and activate device interface */
+/*
 	Status = IoRegisterDeviceInterface(
 		DeviceObject,
 		DeviceExtension->dev->descriptor.bDeviceClass == USB_CLASS_HUB ?
 			&GUID_DEVINTERFACE_USB_HUB :
 			&GUID_DEVINTERFACE_USB_DEVICE,
-		NULL, /* Reference string */
+		NULL,
 		&DeviceExtension->SymbolicLinkName);
+*/
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Usbhub: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
+		DPRINT1("Usbhub: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
-	Status = IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, TRUE);
+	//Status = IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, TRUE);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Usbhub: IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
+		DPRINT1("Usbhub: IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
@@ -119,25 +122,25 @@ UsbhubPdoQueryId(
 	{
 		case BusQueryDeviceID:
 		{
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
 			SourceString = &DeviceExtension->DeviceId;
 			break;
 		}
 		case BusQueryHardwareIDs:
 		{
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
 			SourceString = &DeviceExtension->HardwareIds;
 			break;
 		}
 		case BusQueryCompatibleIDs:
 		{
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
 			SourceString = &DeviceExtension->CompatibleIds;
 			break;
 		}
 		case BusQueryInstanceID:
 		{
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
 			SourceString = &DeviceExtension->InstanceId;
 			break;
 		}
@@ -167,57 +170,20 @@ UsbhubPdoQueryDeviceText(
 	DeviceTextType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.DeviceTextType;
 	LocaleId = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.LocaleId;
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
+DPRINT1("Usbhub: UsbhubPdoQueryDeviceText\n");
 	switch (DeviceTextType)
 	{
 		case DeviceTextDescription:
 		case DeviceTextLocationInformation:
 		{
-			unsigned short size;
-			int ret;
-			PWCHAR buf;
-			PWCHAR bufret;
-
 			if (DeviceTextType == DeviceTextDescription)
-				DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
+				DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 			else
-				DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
+				DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
 
-			if (!DeviceExtension->dev->descriptor.iProduct)
-				return STATUS_NOT_SUPPORTED;
+/*			if (!DeviceExtension->dev->descriptor.iProduct)
+				return STATUS_NOT_SUPPORTED;*/
 
-			ret = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, &size, sizeof(size));
-			if (ret < 2)
-			{
-				DPRINT("Usbhub: usb_get_string() failed with error %d\n", ret);
-				return STATUS_IO_DEVICE_ERROR;
-			}
-			size &= 0xff;
-			buf = ExAllocatePool(PagedPool, size);
-			if (buf == NULL)
-			{
-				DPRINT("Usbhub: ExAllocatePool() failed\n");
-				return STATUS_INSUFFICIENT_RESOURCES;
-			}
-			ret = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, buf, size);
-			if (ret < 0)
-			{
-				DPRINT("Usbhub: usb_get_string() failed with error %d\n", ret);
-				ExFreePool(buf);
-				return STATUS_IO_DEVICE_ERROR;
-			}
-			bufret = ExAllocatePool(PagedPool, size - 2 /* size of length identifier */ + 2 /* final NULL */);
-			if (bufret == NULL)
-			{
-				DPRINT("Usbhub: ExAllocatePool() failed\n");
-				ExFreePool(buf);
-				return STATUS_INSUFFICIENT_RESOURCES;
-			}
-
-			RtlCopyMemory(bufret, &buf[1], size - 2);
-			bufret[(size - 1) / sizeof(WCHAR)] = 0;
-			*Information = (ULONG_PTR)bufret;
-			ExFreePool(buf);
 			return STATUS_SUCCESS;
 		}
 		default:
@@ -243,7 +209,7 @@ UsbhubPnpPdo(
 	{
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			Status = UsbhubPdoStartDevice(DeviceObject, Irp);
 			break;
 		}
@@ -251,7 +217,7 @@ UsbhubPnpPdo(
 		{
 			PDEVICE_CAPABILITIES DeviceCapabilities;
 			ULONG i;
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
 
 			DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
 			/* FIXME: capabilities can change with connected device */
@@ -279,11 +245,11 @@ UsbhubPnpPdo(
 		{
 			PCM_RESOURCE_LIST ResourceList;
 
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
 			ResourceList = ExAllocatePool(PagedPool, sizeof(CM_RESOURCE_LIST));
 			if (!ResourceList)
 			{
-				DPRINT("Usbhub: ExAllocatePool() failed\n");
+				DPRINT1("Usbhub: ExAllocatePool() failed\n");
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 			}
 			else
@@ -298,11 +264,11 @@ UsbhubPnpPdo(
 		{
 			PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
 
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
 			ResourceList = ExAllocatePool(PagedPool, sizeof(IO_RESOURCE_REQUIREMENTS_LIST));
 			if (!ResourceList)
 			{
-				DPRINT("Usbhub: ExAllocatePool() failed\n");
+				DPRINT1("Usbhub: ExAllocatePool() failed\n");
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 			}
 			else
