@@ -993,18 +993,24 @@ static MUI_ENTRY skSKBootLoaderEntries[] =
     {
         8,
         12,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na pevnì disk (zav dzac¡ sektor).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Nainçtalovaœ zav dzaŸ syst‚mu na disketu.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Nainçtalovaœ zav dzaŸ syst‚mu na disketu.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "PreskoŸiœ inçtal ciu zav dzaŸa syst‚mu.",
         TEXT_STYLE_NORMAL
     },

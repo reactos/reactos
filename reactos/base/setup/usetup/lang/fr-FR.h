@@ -998,18 +998,24 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         8,
         12,
-        "Installer le chargeur de d‚marrage sur le disque dur (MBR).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Installer le chargeur de d‚marrage sur une disquette.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Installer le chargeur de d‚marrage sur une disquette.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Ne pas installer le chargeur de d‚marrage.",
         TEXT_STYLE_NORMAL
     },

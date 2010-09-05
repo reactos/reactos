@@ -2156,6 +2156,28 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 #endif
 }
 
+NTSTATUS
+InstallVBRToPartition(PUNICODE_STRING SystemRootPath,
+                      PUNICODE_STRING SourceRootPath,
+                      PUNICODE_STRING DestinationArcPath,
+                      UCHAR PartitionType)
+{
+    if ((PartitionType == PARTITION_FAT_12) ||
+        (PartitionType == PARTITION_FAT_16) ||
+        (PartitionType == PARTITION_HUGE) ||
+        (PartitionType == PARTITION_XINT13) ||
+        (PartitionType == PARTITION_FAT32) ||
+        (PartitionType == PARTITION_FAT32_XINT13))
+    {
+        return InstallFatBootcodeToPartition(SystemRootPath,
+                                             SourceRootPath,
+                                             DestinationArcPath,
+                                             PartitionType);
+    }
+    
+    return STATUS_UNSUCCESSFUL;
+}
+
 
 NTSTATUS
 InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,

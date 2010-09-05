@@ -986,18 +986,24 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         8,
         12,
-        "Boot-Loader auf der Festplatte installieren (Bootsektor).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Boot-Loader auf einer Diskette installieren.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Boot-Loader auf einer Diskette installieren.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Boot-Loader nicht installieren.",
         TEXT_STYLE_NORMAL
     },

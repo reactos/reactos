@@ -994,18 +994,24 @@ static MUI_ENTRY plPLBootLoaderEntries[] =
     {
         8,
         12,
-        " Wgraj bootloader na dysk twardy (MBR).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        " Wgraj bootloader na dyskietk©.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        " Wgraj bootloader na dyskietk©.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         " Pomiä wgrywanie bootloadera.",
         TEXT_STYLE_NORMAL
     },

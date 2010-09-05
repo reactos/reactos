@@ -3480,7 +3480,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     /* Unattended install on hdd? */
     if (IsUnattendedSetup && UnattendMBRInstallType == 2)
     {
-        return BOOT_LOADER_HARDDISK_PAGE;
+        return BOOT_LOADER_HARDDISK_MBR_PAGE;
     }
 
     MUIDisplayPage(BOOT_LOADER_PAGE);
@@ -3497,9 +3497,9 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
             Line++;
             if (Line<12)
-                Line=14;
+                Line=15;
 
-            if (Line>14)
+            if (Line>15)
                 Line=12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
@@ -3511,9 +3511,9 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
             Line--;
             if (Line<12)
-                Line=14;
+                Line=15;
 
-            if (Line>14)
+            if (Line>15)
                 Line=12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
@@ -3530,13 +3530,17 @@ BootLoaderPage(PINPUT_RECORD Ir)
         {
             if (Line == 12)
             {
-                return BOOT_LOADER_HARDDISK_PAGE;
+                return BOOT_LOADER_HARDDISK_MBR_PAGE;
             }
             else if (Line == 13)
             {
-                return BOOT_LOADER_FLOPPY_PAGE;
+                return BOOT_LOADER_HARDDISK_VBR_PAGE;
             }
             else if (Line == 14)
+            {
+                return BOOT_LOADER_FLOPPY_PAGE;
+            }
+            else if (Line == 15)
             {
                 return SUCCESS_PAGE;
             }
@@ -3592,9 +3596,30 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
     return BOOT_LOADER_FLOPPY_PAGE;
 }
 
+static PAGE_NUMBER
+BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
+{
+    UCHAR PartitionType;
+    NTSTATUS Status;
+    
+    PartitionType = PartitionList->ActiveBootPartition->
+                    PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
+    
+    Status = InstallVBRToPartition(&SystemRootPath,
+                                   &SourceRootPath,
+                                   &DestinationArcPath,
+                                   PartitionType);
+    if (!NT_SUCCESS(Status))
+    {
+        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+    
+    return SUCCESS_PAGE;
+}
 
 static PAGE_NUMBER
-BootLoaderHarddiskPage(PINPUT_RECORD Ir)
+BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
 {
     UCHAR PartitionType;
     NTSTATUS Status;
@@ -3604,24 +3629,12 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
     /* Step 1: Write the VBR */
     PartitionType = PartitionList->ActiveBootPartition->
         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
-    if ((PartitionType == PARTITION_FAT_12) ||
-        (PartitionType == PARTITION_FAT_16) ||
-        (PartitionType == PARTITION_HUGE) ||
-        (PartitionType == PARTITION_XINT13) ||
-        (PartitionType == PARTITION_FAT32) ||
-        (PartitionType == PARTITION_FAT32_XINT13))
-    {
-        Status = InstallFatBootcodeToPartition(&SystemRootPath,
-                                               &SourceRootPath,
-                                               &DestinationArcPath,
-                                               PartitionType);
-        if (!NT_SUCCESS(Status))
-        {
-            MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
-            return QUIT_PAGE;
-        }
-    }
-    else
+
+    Status = InstallVBRToPartition(&SystemRootPath,
+                                   &SourceRootPath,
+                                   &DestinationArcPath,
+                                   PartitionType);
+    if (!NT_SUCCESS(Status))
     {
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
@@ -3915,8 +3928,12 @@ RunUSetup(VOID)
                 Page = BootLoaderFloppyPage(&Ir);
                 break;
 
-            case BOOT_LOADER_HARDDISK_PAGE:
-                Page = BootLoaderHarddiskPage(&Ir);
+            case BOOT_LOADER_HARDDISK_MBR_PAGE:
+                Page = BootLoaderHarddiskMbrPage(&Ir);
+                break;
+                
+            case BOOT_LOADER_HARDDISK_VBR_PAGE:
+                Page = BootLoaderHarddiskVbrPage(&Ir);
                 break;
 
             /* Repair pages */
