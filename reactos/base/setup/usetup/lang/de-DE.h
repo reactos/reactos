@@ -578,7 +578,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         9,
-        "Der PC wird automatisch neunstarten, wenn der Vorgang beendet ist.",
+        "Der PC wird automatisch neustarten, wenn der Vorgang beendet ist.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -986,13 +986,13 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Boot-Loader auf der Festplatte installieren (MBR und VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Boot-Loader auf der Festplatte installieren (nur VBR).",
         TEXT_STYLE_NORMAL
     },
     {
