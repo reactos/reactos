@@ -36,11 +36,9 @@ static BOOL APIENTRY FillSolidUnlocked(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
-  SURFACE *psurf;
 
   ASSERT(pso);
   ASSERT(pRect);
-  psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
   MouseSafetyOnDrawStart(pso, pRect->left, pRect->top, pRect->right, pRect->bottom);
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);

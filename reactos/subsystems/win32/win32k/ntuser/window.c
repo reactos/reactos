@@ -1562,12 +1562,11 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWINDOW_OBJECT ParentWindow, DWORD* d
    /* default positioning for overlapped windows */
     if(!(Cs->style & (WS_POPUP | WS_CHILD)))
    {
-      RECTL rc, WorkArea;
+      RECTL WorkArea;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
       UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
 
-      rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
 
       if (IS_DEFAULT(Cs->x))
@@ -2971,9 +2970,8 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 
             for (;;)
             {
-               PWINDOW_OBJECT Parent, Old;
+               PWINDOW_OBJECT Parent;
 
-               Old = WndAncestor;
                Parent = IntGetParent(WndAncestor);
 
                if (!Parent)
@@ -3075,7 +3073,6 @@ NtUserGetInternalWindowPos( HWND hWnd,
                             LPPOINT ptIcon)
 {
    PWINDOW_OBJECT Window;
-   PWND Wnd;
    DWORD Ret = 0;
    BOOL Hit = FALSE;
    WINDOWPLACEMENT wndpl;
@@ -3087,7 +3084,6 @@ NtUserGetInternalWindowPos( HWND hWnd,
       Hit = FALSE;
       goto Exit;
    }
-   Wnd = Window->Wnd;
 
    _SEH2_TRY
    {
@@ -4435,7 +4431,6 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    if ((DesktopWindow = UserGetWindowObject(IntGetDesktopWindow())))
    {
       PTHREADINFO pti;
-      USHORT Hit;
 
       pt.x = X;
       pt.y = Y;
@@ -4445,7 +4440,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       UserRefObjectCo(DesktopWindow, &Ref);
 
       pti = PsGetCurrentThreadWin32Thread();
-      Hit = co_WinPosWindowFromPoint(DesktopWindow, pti->MessageQueue, &pt, &Window);
+      co_WinPosWindowFromPoint(DesktopWindow, pti->MessageQueue, &pt, &Window);
 
       if(Window)
       {

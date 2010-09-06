@@ -430,7 +430,6 @@ IntTranslateKbdMessage(LPMSG lpMsg,
    MSG NewMsg = { 0 };
    PKBDTABLES keyLayout;
    BOOL Result = FALSE;
-   DWORD ScanCode = 0;
 
    pti = PsGetCurrentThreadWin32Thread();
    keyLayout = pti->KeyboardLayout->KBTables;
@@ -455,8 +454,6 @@ IntTranslateKbdMessage(LPMSG lpMsg,
         MsqPostMessage(pti->MessageQueue, &NewMsg, FALSE, QS_KEY);
         return TRUE;
     }
-
-   ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
    UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
                            gQueueKeyStateTable, wp, 2, 0,

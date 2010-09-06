@@ -322,7 +322,6 @@ NtGdiTransparentBlt(
     SURFACE *BitmapDest, *BitmapSrc = NULL;
     HPALETTE SourcePalette = 0, DestPalette = 0;
     PPALETTE PalDestGDI, PalSourceGDI;
-    USHORT PalDestMode, PalSrcMode;
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
@@ -387,7 +386,6 @@ NtGdiTransparentBlt(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         goto done;
     }
-    PalSrcMode = PalSourceGDI->Mode;
     PALETTE_UnlockPalette(PalSourceGDI);
 
     if(DestPalette != SourcePalette)
@@ -397,12 +395,10 @@ NtGdiTransparentBlt(
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             goto done;
         }
-        PalDestMode = PalDestGDI->Mode;
         PALETTE_UnlockPalette(PalDestGDI);
     }
     else
     {
-        PalDestMode = PalSrcMode;
         PalDestGDI = PalSourceGDI;
     }
 

@@ -109,7 +109,6 @@ UserSetCursor(
     PCURICON_OBJECT OldCursor;
     HCURSOR hOldCursor = (HCURSOR)0;
     HDC hdcScreen;
-    BOOL bResult;
 	
 	CurInfo = IntGetSysCursorInfo();
 
@@ -141,13 +140,13 @@ UserSetCursor(
         CurInfo->CurrentCursorObject = NewCursor;
 
         /* Call GDI to set the new screen cursor */
-        bResult = GreSetPointerShape(hdcScreen,
-                                     NewCursor->IconInfo.hbmMask,
-                                     NewCursor->IconInfo.hbmColor,
-                                     NewCursor->IconInfo.xHotspot,
-                                     NewCursor->IconInfo.yHotspot,
-                                     gpsi->ptCursor.x,
-                                     gpsi->ptCursor.y);
+        GreSetPointerShape(hdcScreen,
+                           NewCursor->IconInfo.hbmMask,
+                           NewCursor->IconInfo.hbmColor,
+                           NewCursor->IconInfo.xHotspot,
+                           NewCursor->IconInfo.yHotspot,
+                           gpsi->ptCursor.x,
+                           gpsi->ptCursor.y);
 
 
     }

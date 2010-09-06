@@ -302,7 +302,9 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     PSECTION_OBJECT SectionObject;
     ULONG ViewSize = 0;
     LARGE_INTEGER SectionSize;
+#if 0 // Wine code
     FT_Fixed XScale, YScale;
+#endif
     UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
     /* Open the font file */
@@ -395,9 +397,9 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     FontGDI->face = Face;
 
     /* FIXME: Complete text metrics */
+#if 0 /* This (Wine) code doesn't seem to work correctly for us */
     XScale = Face->size->metrics.x_scale;
     YScale = Face->size->metrics.y_scale;
-#if 0 /* This (Wine) code doesn't seem to work correctly for us */
     FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
     FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
     FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) -

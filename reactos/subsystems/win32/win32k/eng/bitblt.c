@@ -307,11 +307,9 @@ EngBitBlt(SURFOBJ *DestObj,
     POINTL             Pt;
     ULONG              Direction;
     BOOL               UsesSource;
-    BOOL               UsesPattern;
     POINTL             AdjustedBrushOrigin;
 
     UsesSource = ROP4_USES_SOURCE(rop4);
-    UsesPattern = ROP4_USES_PATTERN(rop4);
     if (R4_NOOP == rop4)
     {
         /* Copy destination onto itself: nop */

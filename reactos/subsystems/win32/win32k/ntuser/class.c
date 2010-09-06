@@ -588,7 +588,7 @@ IntMakeCloneBaseClass(IN OUT PCLS Class,
                       IN OUT PCLS *BaseClassLink,
                       IN OUT PCLS *CloneLink)
 {
-    PCLS Clone, BaseClass;
+    PCLS Clone;
 
     ASSERT(Class->pclsBase != Class);
     ASSERT(Class->pclsBase->pclsClone != NULL);
@@ -600,8 +600,6 @@ IntMakeCloneBaseClass(IN OUT PCLS Class,
     /* unlink the clone */
     *CloneLink = Class->pclsNext;
     Class->pclsClone = Class->pclsBase->pclsClone;
-
-    BaseClass = Class->pclsBase;
 
     /* update the class information to make it a base class */
     Class->pclsBase = Class;
@@ -1818,8 +1816,6 @@ UserGetClassInfo(IN PCLS Class,
                  IN BOOL Ansi,
                  HINSTANCE hInstance)
 {
-    PPROCESSINFO pi;
-
     if (!Class) return FALSE;
 
     lpwcx->style = Class->style;
@@ -1827,8 +1823,6 @@ UserGetClassInfo(IN PCLS Class,
     // If fnId is set, clear the global bit. See wine class test check_style.
     if (Class->fnid)
        lpwcx->style &= ~CS_GLOBALCLASS;
-
-    pi = GetW32ProcessInfo();
 
     lpwcx->lpfnWndProc = IntGetClassWndProc(Class, Ansi);
     
