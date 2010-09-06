@@ -1953,11 +1953,13 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
                         OUT PTOKEN_PRIVILEGES PreviousState OPTIONAL,
                         OUT PULONG ReturnLength OPTIONAL)
 {
-    //  PLUID_AND_ATTRIBUTES Privileges;
+    PLUID_AND_ATTRIBUTES CapturedPrivileges = NULL;
     KPROCESSOR_MODE PreviousMode;
+    ULONG CapturedCount = 0;
+    ULONG CapturedLength = 0;
+    ULONG NewStateSize = 0;
     ULONG PrivilegeCount;
     PTOKEN Token;
-    //  ULONG Length;
     ULONG i;
     ULONG j;
     ULONG k;
@@ -1973,30 +1975,95 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
 
     DPRINT ("NtAdjustPrivilegesToken() called\n");
 
-    //  PrivilegeCount = NewState->PrivilegeCount;
     PreviousMode = KeGetPreviousMode ();
-    //  SeCaptureLuidAndAttributesArray(NewState->Privileges,
-    //                                  PrivilegeCount,
-    //                                  PreviousMode,
-    //                                  NULL,
-    //                                  0,
-    //                                  NonPagedPool,
-    //                                  1,
-    //                                  &Privileges,
-    //                                  &Length);
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe NewState */
+            if (DisableAllPrivileges == FALSE)
+            {
+                ProbeForRead(NewState,
+                             sizeof(TOKEN_PRIVILEGES),
+                             sizeof(ULONG));
 
-    Status = ObReferenceObjectByHandle (TokenHandle,
-                                        TOKEN_ADJUST_PRIVILEGES | (PreviousState != NULL ? TOKEN_QUERY : 0),
-                                        SepTokenObjectType,
-                                        PreviousMode,
-                                        (PVOID*)&Token,
-                                        NULL);
+                CapturedCount = NewState->PrivilegeCount;
+                NewStateSize = (ULONG)sizeof(TOKEN_PRIVILEGES) +
+                               ((CapturedCount - ANYSIZE_ARRAY) * (ULONG)sizeof(LUID_AND_ATTRIBUTES));
+
+                ProbeForRead(NewState,
+                             NewStateSize,
+                             sizeof(ULONG));
+            }
+
+            /* Probe PreviousState and ReturnLength */
+            if (PreviousState != NULL)
+            {
+                ProbeForWrite(PreviousState,
+                              BufferLength,
+                              sizeof(ULONG));
+
+                ProbeForWrite(ReturnLength,
+                              sizeof(ULONG),
+                              sizeof(ULONG));
+            }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        if (DisableAllPrivileges == FALSE)
+            CapturedCount = NewState->PrivilegeCount;
+    }
+
+    if (DisableAllPrivileges == FALSE)
+    {
+        _SEH2_TRY
+        {
+            /* Capture the new state array of privileges */
+            Status = SeCaptureLuidAndAttributesArray(NewState->Privileges,
+                                                     CapturedCount,
+                                                     PreviousMode,
+                                                     NULL,
+                                                     0,
+                                                     PagedPool,
+                                                     TRUE,
+                                                     &CapturedPrivileges,
+                                                     &CapturedLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    /* Reference the token */
+    Status = ObReferenceObjectByHandle(TokenHandle,
+                                       TOKEN_ADJUST_PRIVILEGES | (PreviousState != NULL ? TOKEN_QUERY : 0),
+                                       SepTokenObjectType,
+                                       PreviousMode,
+                                       (PVOID*)&Token,
+                                       NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1 ("Failed to reference token (Status %lx)\n", Status);
-        //      SeReleaseLuidAndAttributesArray(Privileges,
-        //                                      PreviousMode,
-        //                                      0);
+
+        /* Release the captured privileges */
+        if (CapturedPrivileges != NULL)
+            SeReleaseLuidAndAttributesArray(CapturedPrivileges,
+                                            PreviousMode,
+                                            TRUE);
+
         return Status;
     }
 
@@ -2061,20 +2128,20 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
         Count = 0;
         for (i = 0; i < Token->PrivilegeCount; i++)
         {
-            for (j = 0; j < NewState->PrivilegeCount; j++)
+            for (j = 0; j < CapturedCount; j++)
             {
-                if (Token->Privileges[i].Luid.LowPart == NewState->Privileges[j].Luid.LowPart &&
-                    Token->Privileges[i].Luid.HighPart == NewState->Privileges[j].Luid.HighPart)
+                if (Token->Privileges[i].Luid.LowPart == CapturedPrivileges[j].Luid.LowPart &&
+                    Token->Privileges[i].Luid.HighPart == CapturedPrivileges[j].Luid.HighPart)
                 {
                     DPRINT ("Found privilege\n");
 
                     if ((Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) !=
-                        (NewState->Privileges[j].Attributes & SE_PRIVILEGE_ENABLED))
+                        (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED))
                     {
                         DPRINT ("Attributes differ\n");
                         DPRINT ("Current attributes %lx  desired attributes %lx\n",
                                 Token->Privileges[i].Attributes,
-                                NewState->Privileges[j].Attributes);
+                                CapturedPrivileges[j].Attributes);
 
                         /* Save current privilege */
                         if (PreviousState != NULL)
@@ -2100,7 +2167,7 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
                         /* Update current privlege */
                         Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
                         Token->Privileges[i].Attributes |=
-                        (NewState->Privileges[j].Attributes & SE_PRIVILEGE_ENABLED);
+                        (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED);
                         DPRINT ("New attributes %lx\n",
                                 Token->Privileges[i].Attributes);
                     }
@@ -2110,7 +2177,7 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
             }
         }
 
-        Status = Count < NewState->PrivilegeCount ? STATUS_NOT_ALL_ASSIGNED : STATUS_SUCCESS;
+        Status = Count < CapturedCount ? STATUS_NOT_ALL_ASSIGNED : STATUS_SUCCESS;
     }
 
     if (ReturnLength != NULL)
@@ -2119,11 +2186,14 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
         (sizeof(LUID_AND_ATTRIBUTES) * (k - 1));
     }
 
+    /* Dereference the token */
     ObDereferenceObject (Token);
 
-    //  SeReleaseLuidAndAttributesArray(Privileges,
-    //                                  PreviousMode,
-    //                                  0);
+    /* Release the captured privileges */
+    if (CapturedPrivileges != NULL)
+        SeReleaseLuidAndAttributesArray(CapturedPrivileges,
+                                        PreviousMode,
+                                        TRUE);
 
     DPRINT ("NtAdjustPrivilegesToken() done\n");
 
