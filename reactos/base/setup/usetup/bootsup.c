@@ -31,6 +31,75 @@
 
 #define SECTORSIZE 512
 
+#include <pshpack1.h>
+typedef struct _FAT_BOOTSECTOR
+{
+	UCHAR		JumpBoot[3];				// Jump instruction to boot code
+	CHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
+	USHORT		BytesPerSector;				// Bytes per sector
+	UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
+	USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
+	UCHAR		NumberOfFats;				// Number of FAT tables
+	USHORT		RootDirEntries;				// Number of root directory entries (fat12/16)
+	USHORT		TotalSectors;				// Number of total sectors on the drive, 16-bit
+	UCHAR		MediaDescriptor;			// Media descriptor byte
+	USHORT		SectorsPerFat;				// Sectors per FAT table (fat12/16)
+	USHORT		SectorsPerTrack;			// Number of sectors in a track
+	USHORT		NumberOfHeads;				// Number of heads on the disk
+	ULONG		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
+	ULONG		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
+	UCHAR		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
+	UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
+	UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
+	ULONG		VolumeSerialNumber;			// Volume serial number
+	CHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
+	CHAR		FileSystemType[8];			// One of the strings "FAT12   ", "FAT16   ", or "FAT     "
+
+	UCHAR		BootCodeAndData[448];		// The remainder of the boot sector
+
+	USHORT		BootSectorMagic;			// 0xAA55
+
+} FAT_BOOTSECTOR, *PFAT_BOOTSECTOR;
+
+typedef struct _FAT32_BOOTSECTOR
+{
+	UCHAR		JumpBoot[3];				// Jump instruction to boot code
+	CHAR		OemName[8];					// "MSWIN4.1" for MS formatted volumes
+	USHORT		BytesPerSector;				// Bytes per sector
+	UCHAR		SectorsPerCluster;			// Number of sectors in a cluster
+	USHORT		ReservedSectors;			// Reserved sectors, usually 1 (the bootsector)
+	UCHAR		NumberOfFats;				// Number of FAT tables
+	USHORT		RootDirEntries;				// Number of root directory entries (fat12/16)
+	USHORT		TotalSectors;				// Number of total sectors on the drive, 16-bit
+	UCHAR		MediaDescriptor;			// Media descriptor byte
+	USHORT		SectorsPerFat;				// Sectors per FAT table (fat12/16)
+	USHORT		SectorsPerTrack;			// Number of sectors in a track
+	USHORT		NumberOfHeads;				// Number of heads on the disk
+	ULONG		HiddenSectors;				// Hidden sectors (sectors before the partition start like the partition table)
+	ULONG		TotalSectorsBig;			// This field is the new 32-bit total count of sectors on the volume
+	ULONG		SectorsPerFatBig;			// This field is the FAT32 32-bit count of sectors occupied by ONE FAT. BPB_FATSz16 must be 0
+	USHORT		ExtendedFlags;				// Extended flags (fat32)
+	USHORT		FileSystemVersion;			// File system version (fat32)
+	ULONG		RootDirStartCluster;		// Starting cluster of the root directory (fat32)
+	USHORT		FsInfo;						// Sector number of FSINFO structure in the reserved area of the FAT32 volume. Usually 1.
+	USHORT		BackupBootSector;			// If non-zero, indicates the sector number in the reserved area of the volume of a copy of the boot record. Usually 6.
+	UCHAR		Reserved[12];				// Reserved for future expansion
+	UCHAR		DriveNumber;				// Int 0x13 drive number (e.g. 0x80)
+	UCHAR		Reserved1;					// Reserved (used by Windows NT). Code that formats FAT volumes should always set this byte to 0.
+	UCHAR		BootSignature;				// Extended boot signature (0x29). This is a signature byte that indicates that the following three fields in the boot sector are present.
+	ULONG		VolumeSerialNumber;			// Volume serial number
+	CHAR		VolumeLabel[11];			// Volume label. This field matches the 11-byte volume label recorded in the root directory
+	CHAR		FileSystemType[8];			// Always set to the string "FAT32   "
+
+	UCHAR		BootCodeAndData[420];		// The remainder of the boot sector
+
+	USHORT		BootSectorMagic;			// 0xAA55
+
+} FAT32_BOOTSECTOR, *PFAT32_BOOTSECTOR;
+#include <poppack.h>
+
+extern PPARTLIST PartitionList;
+
 /* FUNCTIONS ****************************************************************/
 
 
@@ -1094,53 +1163,53 @@ NTSTATUS
 InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			  PWSTR RootPath)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
-  UNICODE_STRING Name;
-  HANDLE FileHandle;
-  NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    UNICODE_STRING Name;
+    HANDLE FileHandle;
+    NTSTATUS Status;
   PPARTITION_SECTOR OrigBootSector;
   PPARTITION_SECTOR NewBootSector;
 
-  /* Allocate buffer for original bootsector */
+    /* Allocate buffer for original bootsector */
   OrigBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
 				                      0,
                                                       sizeof(PARTITION_SECTOR));
   if (OrigBootSector == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
 
-  /* Read current boot sector into buffer */
+    /* Read current boot sector into buffer */
   RtlInitUnicodeString(&Name,
 		       RootPath);
 
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &Name,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &Name,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
 
-  Status = NtOpenFile(&FileHandle,
-		      GENERIC_READ,
-		      &ObjectAttributes,
-		      &IoStatusBlock,
-		      0,
-		      FILE_SYNCHRONOUS_IO_NONALERT);
+    Status = NtOpenFile(&FileHandle,
+                        GENERIC_READ,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        0,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }
 
-  Status = NtReadFile(FileHandle,
-		      NULL,
-		      NULL,
-		      NULL,
-		      &IoStatusBlock,
+    Status = NtReadFile(FileHandle,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &IoStatusBlock,
 		      OrigBootSector,
-		      SECTORSIZE,
-		      NULL,
-		      NULL);
-  NtClose(FileHandle);
+                        SECTORSIZE,
+                        NULL,
+                        NULL);
+    NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1256,11 +1325,12 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
   UNICODE_STRING Name;
   HANDLE FileHandle;
   NTSTATUS Status;
-  PUCHAR OrigBootSector;
-  PUCHAR NewBootSector;
+  PFAT_BOOTSECTOR OrigBootSector;
+  PFAT_BOOTSECTOR NewBootSector;
+  PARTITION_INFORMATION *PartInfo;
 
   /* Allocate buffer for original bootsector */
-  OrigBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
+  OrigBootSector = RtlAllocateHeap(ProcessHeap,
 					   0,
 					   SECTORSIZE);
   if (OrigBootSector == NULL)
@@ -1306,7 +1376,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 
 
   /* Allocate buffer for new bootsector */
-  NewBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
+  NewBootSector = RtlAllocateHeap(ProcessHeap,
 					  0,
 					  SECTORSIZE);
   if (NewBootSector == NULL)
@@ -1356,9 +1426,12 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
   }
 
   /* Adjust bootsector (copy a part of the FAT16 BPB) */
-  memcpy((NewBootSector + 3),
-	 (OrigBootSector + 3),
-	 59);  /* FAT16 BPB length*/
+  memcpy(&NewBootSector->BytesPerSector,
+         &OrigBootSector->BytesPerSector,
+         51); /* FAT16 BPB length */
+
+  PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
+  NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1416,13 +1489,14 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
   UNICODE_STRING Name;
   HANDLE FileHandle;
   NTSTATUS Status;
-  PUCHAR OrigBootSector;
-  PUCHAR NewBootSector;
+  PFAT32_BOOTSECTOR OrigBootSector;
+  PFAT32_BOOTSECTOR NewBootSector;
   LARGE_INTEGER FileOffset;
   USHORT BackupBootSector;
+  PARTITION_INFORMATION *PartInfo;
 
   /* Allocate buffer for original bootsector */
-  OrigBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
+  OrigBootSector = RtlAllocateHeap(ProcessHeap,
 					   0,
 					   SECTORSIZE);
   if (OrigBootSector == NULL)
@@ -1468,7 +1542,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 
 
   /* Allocate buffer for new bootsector (2 sectors) */
-  NewBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
+  NewBootSector = RtlAllocateHeap(ProcessHeap,
 					  0,
 					  2 * SECTORSIZE);
   if (NewBootSector == NULL)
@@ -1518,12 +1592,15 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
   }
 
   /* Adjust bootsector (copy a part of the FAT32 BPB) */
-  memcpy((NewBootSector + 3),
-	 (OrigBootSector + 3),
-	 87); /* FAT32 BPB length */
+  memcpy(&NewBootSector->BytesPerSector,
+         &OrigBootSector->BytesPerSector,
+         79); /* FAT32 BPB length */
+
+  PartInfo = &PartitionList->CurrentPartition->PartInfo[PartitionList->CurrentPartitionNumber];
+  NewBootSector->HiddenSectors = PartInfo->HiddenSectors;
 
   /* Get the location of the backup boot sector */
-  BackupBootSector = (OrigBootSector[0x33] << 8) + OrigBootSector[0x32];
+  BackupBootSector = OrigBootSector->BackupBootSector;
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1599,7 +1676,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 		       NULL,
 		       NULL,
 		       &IoStatusBlock,
-		       (NewBootSector + SECTORSIZE),
+		       ((PUCHAR)NewBootSector + SECTORSIZE),
 		       SECTORSIZE,
 		       &FileOffset,
 		       NULL);

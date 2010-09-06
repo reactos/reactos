@@ -51,10 +51,9 @@ WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
 HANDLE hPnpThread = INVALID_HANDLE_VALUE;
+PPARTLIST PartitionList = NULL;
 
 /* LOCALS *******************************************************************/
-
-static PPARTLIST PartitionList = NULL;
 
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
 
