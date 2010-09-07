@@ -1636,7 +1636,6 @@ LoadBootDeviceDriver(VOID)
     }
 
     /* Add freeldr.sys to list of loaded executables */
-    RtlZeroMemory(FreeldrDTE, sizeof(LDR_DATA_TABLE_ENTRY));
     Status = WinLdrAllocateDataTableEntry(&LoaderBlock, "scsiport.sys",
         "FREELDR.SYS", &ImageDosHeader, &FreeldrDTE);
     if (!Status)
