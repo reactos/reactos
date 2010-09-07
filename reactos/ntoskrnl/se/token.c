@@ -1962,8 +1962,6 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
     PTOKEN Token;
     ULONG i;
     ULONG j;
-    ULONG k;
-    ULONG Count;
     NTSTATUS Status;
 
     PAGED_CODE();
@@ -2074,7 +2072,7 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
         {
             if (Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED)
             {
-                DPRINT("Attribute enabled\n");
+                DPRINT("Privilege enabled\n");
 
                 ChangeCount++;
             }
@@ -2137,40 +2135,30 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
         }
     }
 
-
-    if (PreviousState != NULL)
-        PreviousState->PrivilegeCount = 0;
-
-    k = 0;
-    if (DisableAllPrivileges == TRUE)
+    /* Change the privilege attributes */
+    ChangeCount = 0;
+    for (i = 0; i < Token->PrivilegeCount; i++)
     {
-        for (i = 0; i < Token->PrivilegeCount; i++)
+        if (DisableAllPrivileges == TRUE)
         {
             if (Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED)
             {
-                DPRINT ("Attributes enabled\n");
+                DPRINT ("Privilege enabled\n");
 
-                /* Save current privilege */
+                /* Save the current privilege */
                 if (PreviousState != NULL)
                 {
-                    PreviousState->PrivilegeCount++;
-                    PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
-                    PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
-
-                    k++;
+                    PreviousState->Privileges[ChangeCount].Luid = Token->Privileges[i].Luid;
+                    PreviousState->Privileges[ChangeCount].Attributes = Token->Privileges[i].Attributes;
                 }
 
-                /* Update current privlege */
+                /* Disable the current privlege */
                 Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
+
+                ChangeCount++;
             }
         }
-
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        Count = 0;
-        for (i = 0; i < Token->PrivilegeCount; i++)
+        else
         {
             for (j = 0; j < CapturedCount; j++)
             {
@@ -2179,6 +2167,7 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
                 {
                     DPRINT ("Found privilege\n");
 
+                    /* Check whether the attributes differ */
                     if ((Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) !=
                         (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED))
                     {
@@ -2187,32 +2176,33 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
                                 Token->Privileges[i].Attributes,
                                 CapturedPrivileges[j].Attributes);
 
-                        /* Save current privilege */
+                        /* Save the current privilege */
                         if (PreviousState != NULL)
                         {
-                            PreviousState->PrivilegeCount++;
-                            PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
-                            PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
-
-                            k++;
+                            PreviousState->Privileges[ChangeCount].Luid = Token->Privileges[i].Luid;
+                            PreviousState->Privileges[ChangeCount].Attributes = Token->Privileges[i].Attributes;
                         }
 
-                        /* Update current privlege */
+                        /* Update the current privlege */
                         Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
                         Token->Privileges[i].Attributes |=
                         (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED);
                         DPRINT ("New attributes %lx\n",
                                 Token->Privileges[i].Attributes);
-                    }
 
-                    Count++;
+                        ChangeCount++;
+                    }
                 }
             }
         }
-
-        Status = (Count < CapturedCount) ? STATUS_NOT_ALL_ASSIGNED : STATUS_SUCCESS;
     }
 
+    /* Set the number of saved privileges */
+    if (PreviousState != NULL)
+        PreviousState->PrivilegeCount = ChangeCount;
+
+    /* Set the status */
+    Status = (ChangeCount < CapturedCount) ? STATUS_NOT_ALL_ASSIGNED : STATUS_SUCCESS;
 
     /* Dereference the token */
     ObDereferenceObject (Token);
