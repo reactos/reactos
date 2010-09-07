@@ -998,13 +998,13 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Installer le chargeur de d‚marrage sur le disque (MBR et VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Installer le chargeur de d‚marrage sur le disque (VBR seulement).",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1096,7 +1096,7 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Veuillez s‚lectionner une disposition … installer par d‚faut.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1487,18 +1487,18 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "Setup n'a pas pu ajouter les dispositions de clavier au registre.\n"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Setup n'a pas pu d‚finir la geo id.\n"
+        "ENTER = Red‚marrer l'ordinateur"
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        "Pas assez d'espace libre dans la partition s‚lectionn‚e.\n"
+        "  * Appuyez sur n'importe quelle touche pour continuer.",
         NULL
     },
     {
@@ -1715,6 +1715,6 @@ MUI_STRING frFRStrings[] =
     {STRING_GB,
     "Go"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "Ajout des dispositions clavier"},
     {0, 0}
 };
