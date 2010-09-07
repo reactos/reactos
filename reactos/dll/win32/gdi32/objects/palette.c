@@ -86,34 +86,36 @@ GetSystemPaletteEntries(HDC hDC,
                         UINT cEntries,
                         LPPALETTEENTRY ppe)
 {
-     PALETTEENTRY ippe[256];
-     // Make this work!
-     if ((INT)cEntries < 0 ) return 0;
+    PALETTEENTRY ippe[256];
 
-     if ( GetDeviceCaps(hDC, RASTERCAPS) & RC_PALETTE )
-        return NtGdiDoPalette(hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
-     else
-     {
-        if (ppe)
+    if ((INT)cEntries >= 0)
+    {
+        if (GetDeviceCaps(hDC, RASTERCAPS) & RC_PALETTE)
         {
-           RtlZeroMemory( &ippe, sizeof(ippe) );
-           RtlCopyMemory( &ippe, &sys_pal_template, 10 * sizeof(PALETTEENTRY) );
-           RtlCopyMemory( &ippe + 246 , &sys_pal_template + 10 , 10 * sizeof(PALETTEENTRY) );
-
-           if (iStartIndex < 256)
-           {
-              UINT Index = 256 - iStartIndex;
-
-              if ( Index > cEntries ) Index = cEntries;
-
-              RtlCopyMemory( ppe, 
-                            &ippe[iStartIndex],
-                             Index*sizeof(PALETTEENTRY));
-           }
+            return NtGdiDoPalette(hDC,
+                                  iStartIndex,
+                                  cEntries,
+                                  ppe,
+                                  GdiPalGetSystemEntries,
+                                  FALSE);
         }
-     }
+        else if (ppe)
+        {
+            RtlCopyMemory(ippe, sys_pal_template, 10 * sizeof(PALETTEENTRY));
+            RtlCopyMemory(&ippe[246], &sys_pal_template[10], 10 * sizeof(PALETTEENTRY));
+            RtlZeroMemory(&ippe[10], sizeof(ippe) - 20 * sizeof(PALETTEENTRY));
+            
+            if (iStartIndex < 256)
+            {
+                RtlCopyMemory(ppe, 
+                              &ippe[iStartIndex],
+                              min(256 - iStartIndex, cEntries) *
+                              sizeof(PALETTEENTRY));
+            }
+        }
+    }
 
-     return 0;
+    return 0;
 }
 
 UINT
