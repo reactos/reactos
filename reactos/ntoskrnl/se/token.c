@@ -2117,6 +2117,15 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Dereference the token */
+            ObDereferenceObject(Token);
+
+            /* Release the captured privileges */
+            if (CapturedPrivileges != NULL)
+                SeReleaseLuidAndAttributesArray(CapturedPrivileges,
+                                                PreviousMode,
+                                                TRUE);
+
             /* Return the exception code */
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
@@ -2125,7 +2134,10 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
         /* Fail, if the buffer length is smaller than the required length */
         if (BufferLength < RequiredLength)
         {
+            /* Dereference the token */
             ObDereferenceObject(Token);
+
+            /* Release the captured privileges */
             if (CapturedPrivileges != NULL)
                 SeReleaseLuidAndAttributesArray(CapturedPrivileges,
                                                 PreviousMode,
@@ -2137,69 +2149,87 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
 
     /* Change the privilege attributes */
     ChangeCount = 0;
-    for (i = 0; i < Token->PrivilegeCount; i++)
+    _SEH2_TRY
     {
-        if (DisableAllPrivileges == TRUE)
+        for (i = 0; i < Token->PrivilegeCount; i++)
         {
-            if (Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED)
+            if (DisableAllPrivileges == TRUE)
             {
-                DPRINT ("Privilege enabled\n");
-
-                /* Save the current privilege */
-                if (PreviousState != NULL)
+                if (Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED)
                 {
-                    PreviousState->Privileges[ChangeCount].Luid = Token->Privileges[i].Luid;
-                    PreviousState->Privileges[ChangeCount].Attributes = Token->Privileges[i].Attributes;
-                }
+                    DPRINT("Privilege enabled\n");
 
-                /* Disable the current privlege */
-                Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
-
-                ChangeCount++;
-            }
-        }
-        else
-        {
-            for (j = 0; j < CapturedCount; j++)
-            {
-                if (Token->Privileges[i].Luid.LowPart == CapturedPrivileges[j].Luid.LowPart &&
-                    Token->Privileges[i].Luid.HighPart == CapturedPrivileges[j].Luid.HighPart)
-                {
-                    DPRINT ("Found privilege\n");
-
-                    /* Check whether the attributes differ */
-                    if ((Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) !=
-                        (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED))
+                    /* Save the current privilege */
+                    if (PreviousState != NULL)
                     {
-                        DPRINT ("Attributes differ\n");
-                        DPRINT ("Current attributes %lx  New attributes %lx\n",
-                                Token->Privileges[i].Attributes,
-                                CapturedPrivileges[j].Attributes);
+                        PreviousState->Privileges[ChangeCount].Luid = Token->Privileges[i].Luid;
+                        PreviousState->Privileges[ChangeCount].Attributes = Token->Privileges[i].Attributes;
+                    }
 
-                        /* Save the current privilege */
-                        if (PreviousState != NULL)
+                    /* Disable the current privlege */
+                    Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
+
+                    ChangeCount++;
+                }
+            }
+            else
+            {
+                for (j = 0; j < CapturedCount; j++)
+                {
+                    if (Token->Privileges[i].Luid.LowPart == CapturedPrivileges[j].Luid.LowPart &&
+                        Token->Privileges[i].Luid.HighPart == CapturedPrivileges[j].Luid.HighPart)
+                    {
+                        DPRINT("Found privilege\n");
+
+                        /* Check whether the attributes differ */
+                        if ((Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) !=
+                            (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED))
                         {
-                            PreviousState->Privileges[ChangeCount].Luid = Token->Privileges[i].Luid;
-                            PreviousState->Privileges[ChangeCount].Attributes = Token->Privileges[i].Attributes;
+                            DPRINT("Attributes differ\n");
+                            DPRINT("Current attributes %lx  New attributes %lx\n",
+                                   Token->Privileges[i].Attributes,
+                                   CapturedPrivileges[j].Attributes);
+
+                            /* Save the current privilege */
+                            if (PreviousState != NULL)
+                            {
+                                PreviousState->Privileges[ChangeCount].Luid = Token->Privileges[i].Luid;
+                                PreviousState->Privileges[ChangeCount].Attributes = Token->Privileges[i].Attributes;
+                            }
+
+                            /* Update the current privlege */
+                            Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
+                            Token->Privileges[i].Attributes |=
+                            (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED);
+                            DPRINT("New attributes %lx\n",
+                                   Token->Privileges[i].Attributes);
+
+                            ChangeCount++;
                         }
-
-                        /* Update the current privlege */
-                        Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
-                        Token->Privileges[i].Attributes |=
-                        (CapturedPrivileges[j].Attributes & SE_PRIVILEGE_ENABLED);
-                        DPRINT ("New attributes %lx\n",
-                                Token->Privileges[i].Attributes);
-
-                        ChangeCount++;
                     }
                 }
             }
         }
-    }
 
-    /* Set the number of saved privileges */
-    if (PreviousState != NULL)
-        PreviousState->PrivilegeCount = ChangeCount;
+        /* Set the number of saved privileges */
+        if (PreviousState != NULL)
+            PreviousState->PrivilegeCount = ChangeCount;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Dereference the token */
+        ObDereferenceObject(Token);
+
+        /* Release the captured privileges */
+        if (CapturedPrivileges != NULL)
+            SeReleaseLuidAndAttributesArray(CapturedPrivileges,
+                                            PreviousMode,
+                                            TRUE);
+
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     /* Set the status */
     Status = (ChangeCount < CapturedCount) ? STATUS_NOT_ALL_ASSIGNED : STATUS_SUCCESS;
