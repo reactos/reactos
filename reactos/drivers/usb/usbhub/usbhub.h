@@ -79,14 +79,23 @@ typedef struct _HUB_DEVICE_EXTENSION
 
     ULONG HubCount;
 
+    ULONG PortStatus[256];
+
     USB_BUS_INTERFACE_HUB_V5 HubInterface;
     USB_BUS_INTERFACE_USBDI_V2 UsbDInterface;
 
     USB_HUB_DESCRIPTOR HubDescriptor;
     USB_DEVICE_DESCRIPTOR HubDeviceDescriptor;
-    USB_CONFIGURATION_DESCRIPTOR HubConfig;
-    USB_EXTHUB_INFORMATION_0 UsbExtHubInfo;
 
+    USB_CONFIGURATION_DESCRIPTOR HubConfigDescriptor;
+    USB_INTERFACE_DESCRIPTOR HubInterfaceDescriptor;
+    USB_ENDPOINT_DESCRIPTOR HubEndPointDescriptor;
+
+    USB_EXTHUB_INFORMATION_0 UsbExtHubInfo;
+    USB_DEVICE_INFORMATION_0 DeviceInformation;
+
+    USBD_CONFIGURATION_HANDLE ConfigurationHandle;
+    USBD_PIPE_HANDLE PipeHandle;
     /* Fields valid only when IsFDO == FALSE */
     UNICODE_STRING DeviceId;          // REG_SZ
     UNICODE_STRING InstanceId;        // REG_SZ
