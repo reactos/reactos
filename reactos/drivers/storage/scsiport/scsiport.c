@@ -1994,7 +1994,10 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
           break;
 
       case RequestTimerCall:
-          DPRINT1("UNIMPLEMENTED SCSI Notification called: RequestTimerCall!\n");
+          DPRINT("Notify: RequestTimerCall\n");
+          DeviceExtension->InterruptData.Flags |= SCSI_PORT_TIMER_NEEDED;
+          DeviceExtension->InterruptData.HwScsiTimer = (PHW_TIMER)va_arg(ap, PHW_TIMER);
+          DeviceExtension->InterruptData.MiniportTimerValue = (ULONG)va_arg(ap, ULONG);
           break;
 
       case BusChangeDetected:
@@ -4802,6 +4805,7 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     BOOLEAN NeedToStartIo;
     PSCSI_REQUEST_BLOCK_INFO SrbInfo;
+    LARGE_INTEGER TimerValue;
 
     DPRINT("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
            Dpc, DpcDeviceObject, DpcIrp, DpcContext);
@@ -4842,10 +4846,26 @@ TryAgain:
     }
 
     /* Check if timer is needed */
-    if (InterruptData.Flags & SCIS_PORT_TIMER_NEEDED)
+    if (InterruptData.Flags & SCSI_PORT_TIMER_NEEDED)
     {
-        /* TODO: Implement */
-        ASSERT(FALSE);
+        /* Save the timer routine */
+        DeviceExtension->HwScsiTimer = InterruptData.HwScsiTimer;
+
+        if (InterruptData.MiniportTimerValue == 0)
+        {
+            /* Cancel the timer */
+            KeCancelTimer(&DeviceExtension->MiniportTimer);
+        }
+        else
+        {
+            /* Convert timer value */
+            TimerValue.QuadPart = Int32x32To64(InterruptData.MiniportTimerValue, -10);
+
+            /* Set the timer */
+            KeSetTimer(&DeviceExtension->MiniportTimer,
+                       TimerValue,
+                       &DeviceExtension->MiniportTimerDpc);
+        }
     }
 
     /* If it's ready for the next request */
@@ -5599,8 +5619,31 @@ SpiMiniportTimerDpc(IN struct _KDPC *Dpc,
                     IN PVOID SystemArgument1,
                     IN PVOID SystemArgument2)
 {
-    DPRINT1("Miniport timer DPC\n");
-    ASSERT(FALSE);
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+
+    DPRINT("Miniport timer DPC\n");
+
+    DeviceExtension = ((PDEVICE_OBJECT)DeviceObject)->DeviceExtension;
+
+    /* Acquire the spinlock */
+    KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
+
+    /* Call the timer routine */
+    if (DeviceExtension->HwScsiTimer != NULL)
+    {
+        DeviceExtension->HwScsiTimer(&DeviceExtension->MiniPortDeviceExtension);
+    }
+
+    /* Release the spinlock */
+    KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+
+    if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
+    {
+        ScsiPortDpcForIsr(NULL,
+                          DeviceExtension->DeviceObject,
+                          NULL,
+                          NULL);
+    }
 }
 
 static NTSTATUS
