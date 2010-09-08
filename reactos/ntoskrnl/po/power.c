@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Hervé Poussineau (hpoussin@reactos.com)
+ *                  Hervï¿½ Poussineau (hpoussin@reactos.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -52,7 +52,7 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
 
     IoFreeIrp(Irp);
 
-    return STATUS_SUCCESS;
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 VOID
