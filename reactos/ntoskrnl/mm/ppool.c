@@ -910,7 +910,7 @@ static void
 RPoolFree ( PR_POOL pool, void* Addr )
 {
 	PR_USED UsedBlock;
-#ifndef R_RZ
+#if !R_RZ
 	rulong UsedSize;
 #endif
 	PR_FREE FreeBlock;
