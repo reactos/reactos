@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/po/power.c
  * PURPOSE:         Power Manager
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Hervï¿½ Poussineau (hpoussin@reactos.com)
+ *                  Hervé Poussineau (hpoussin@reactos.com)
  */
 
 /* INCLUDES ******************************************************************/
