@@ -795,6 +795,18 @@ HalpInitBusHandlers(
     VOID
 );
 
+NTSTATUS
+NTAPI
+HaliInitPnpDriver(
+    VOID
+);
+
+VOID
+NTAPI
+HalpDebugPciDumpBus(
+    VOID
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP
