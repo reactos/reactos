@@ -1217,22 +1217,16 @@ KiHandleNmi(VOID)
     BOOLEAN Handled = FALSE;
     PKNMI_HANDLER_CALLBACK NmiData;
 
-    //
-    // Parse the list of callbacks
-    //
+    /* Parse the list of callbacks */
     NmiData = KiNmiCallbackListHead;
     while (NmiData)
     {
-        //
-        // Save if this callback has handled it -- all it takes is one
-        //
+        /* Save if this callback has handled it -- all it takes is one */
         Handled |= NmiData->Callback(NmiData->Context, Handled);
         NmiData = NmiData->Next;
     }
 
-    //
-    // Has anyone handled this?
-    //
+    /* Has anyone handled this? */
     return Handled;
 }
 
@@ -1390,24 +1384,18 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
     PKNMI_HANDLER_CALLBACK NmiData, Next;
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
-    //
-    // Allocate NMI callback data
-    //
+    /* Allocate NMI callback data */
     NmiData = ExAllocatePoolWithTag(NonPagedPool,
                                     sizeof(KNMI_HANDLER_CALLBACK),
                                     'IMNK');
     if (!NmiData) return NULL;
 
-    //
-    // Fill in the information
-    //
+    /* Fill in the information */
     NmiData->Callback = CallbackRoutine;
     NmiData->Context = Context;
     NmiData->Handle = NmiData;
 
-    //
-    // Insert it into NMI callback list
-    //
+    /* Insert it into NMI callback list */
     KiAcquireNmiListLock(&OldIrql);
     NmiData->Next = KiNmiCallbackListHead;
     Next = InterlockedCompareExchangePointer((PVOID*)&KiNmiCallbackListHead,
@@ -1416,9 +1404,7 @@ KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
     ASSERT(Next == NmiData->Next);
     KiReleaseNmiListLock(OldIrql);
 
-    //
-    // Return the opaque "handle"
-    //
+    /* Return the opaque "handle" */
     return NmiData->Handle;
 }
 

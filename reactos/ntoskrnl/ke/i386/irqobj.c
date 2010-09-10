@@ -365,7 +365,7 @@ KeInitializeInterrupt(IN PKINTERRUPT Interrupt,
     Interrupt->DispatchCount = MAXULONG;
 
     /* Loop the template in memory */
-    for (i = 0; i < KINTERRUPT_DISPATCH_CODES; i++)
+    for (i = 0; i < DISPATCH_LENGTH; i++)
     {
         /* Copy the dispatch code */
         *DispatchCode++ = ((PULONG)KiInterruptTemplate)[i];

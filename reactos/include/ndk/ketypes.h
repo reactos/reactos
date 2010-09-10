@@ -108,16 +108,18 @@ Author:
 #define KI_EXCEPTION_INTERNAL           0x10000000
 #define KI_EXCEPTION_ACCESS_VIOLATION   (KI_EXCEPTION_INTERNAL | 0x04)
 
+#ifndef NTOS_MODE_USER
 //
 // Number of dispatch codes supported by KINTERRUPT
 //
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
-#define KINTERRUPT_DISPATCH_CODES       135
+#define DISPATCH_LENGTH                 135
 #else
-#define KINTERRUPT_DISPATCH_CODES       106
+#define DISPATCH_LENGTH                 106
 #endif
 
-#ifdef NTOS_MODE_USER
+#define SharedUserdata                  ((KUSER_SHARED_DATA *CONST)(USER_SHARED_DATA|KSEG0_BASE))
+#else
 
 //
 // KPROCESSOR_MODE Type
@@ -643,7 +645,7 @@ typedef struct _KINTERRUPT
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG Rsvd1;
 #endif
-    ULONG DispatchCode[KINTERRUPT_DISPATCH_CODES];
+    ULONG DispatchCode[DISPATCH_LENGTH];
 } KINTERRUPT;
 
 //
@@ -1026,6 +1028,8 @@ extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;
 extern ULONG NTSYSAPI KeDcacheFlushCount;
 extern ULONG NTSYSAPI KeIcacheFlushCount;
+extern ULONG NTSYSAPI KiBugCheckData[];
+extern BOOLEAN NTSYSAPI KiEnableTimerWatchdog;
 
 //
 // Exported System Service Descriptor Tables
