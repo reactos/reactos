@@ -1028,7 +1028,7 @@ extern ULONG NTSYSAPI KeMaximumIncrement;
 extern ULONG NTSYSAPI KeMinimumIncrement;
 extern ULONG NTSYSAPI KeDcacheFlushCount;
 extern ULONG NTSYSAPI KeIcacheFlushCount;
-extern ULONG NTSYSAPI KiBugCheckData[];
+extern ULONG_PTR NTSYSAPI KiBugCheckData[];
 extern BOOLEAN NTSYSAPI KiEnableTimerWatchdog;
 
 //
