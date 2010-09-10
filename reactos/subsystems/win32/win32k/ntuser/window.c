@@ -2184,7 +2184,7 @@ CLEANUP:
        /* If the window was created, the class will be dereferenced by co_UserDestroyWindow */
        if (Window) 
             co_UserDestroyWindow(Window);
-       else
+       else if (Class)
            IntDereferenceClass(Class, pti->pDeskInfo, pti->ppi);
    }
 
