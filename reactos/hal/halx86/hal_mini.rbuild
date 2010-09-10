@@ -15,7 +15,6 @@
 					<file>cmosbus.c</file>
 					<file>isabus.c</file>
 					<file>pcibus.c</file>
-					<file>pcidata.c</file>
 					<file>sysbus.c</file>
 				</directory>
 				<file>bussupp.c</file>
