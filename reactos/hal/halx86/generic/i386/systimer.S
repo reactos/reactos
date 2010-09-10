@@ -20,9 +20,6 @@ _HalpPerfCounterLow:        .long 0
 _HalpPerfCounterHigh:       .long 0
 _HalpSystemHardwareFlags:   .long 0
 
-_UnhandledMsg:
-    .asciz "\n\x7\x7!!! Unhandled or Unexpected Code at line: %lx!!!\n"
-
 /* FUNCTIONS *****************************************************************/
 
 .global _HalpCalibrateStallExecution@0
@@ -389,6 +386,9 @@ LoopPostInt:
     /* Read 8254 timer */
     mov al, 0
     out 0x43, al
+    in al, 0x92
+    or al, _HalpPerfCounterCutoff
+    out 0x92, al
     jmp $+2
     in al, 0x40
     jmp $+2

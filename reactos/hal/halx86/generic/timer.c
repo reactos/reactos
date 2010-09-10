@@ -14,6 +14,7 @@
 
 /* GLOBALS *******************************************************************/
 
+ULONG HalpPerfCounterCutoff;
 BOOLEAN HalpClockSetMSRate;
 ULONG HalpCurrentTimeIncrement;
 ULONG HalpCurrentRollOver;
@@ -71,34 +72,26 @@ HalpInitializeClock(VOID)
     Flags = __readeflags();
     _disable();
     
-    //
-    // Program the PIT for binary mode
-    //
+    /* Program the PIT for binary mode */
     TimerControl.BcdMode = FALSE;
 
-    //
-    // Program the PIT to generate a normal rate wave (Mode 3) on channel 0.
-    // Channel 0 is used for the IRQ0 clock interval timer, and channel
-    // 1 is used for DRAM refresh.
-    //
-    // Mode 2 gives much better accuracy than Mode 3.
-    //
+    /*
+     * Program the PIT to generate a normal rate wave (Mode 3) on channel 0.
+     * Channel 0 is used for the IRQ0 clock interval timer, and channel
+     * 1 is used for DRAM refresh.
+     *
+     * Mode 2 gives much better accuracy than Mode 3.
+     */
     TimerControl.OperatingMode = PitOperatingMode2;
     TimerControl.Channel = PitChannel0;
     
-    //
-    // Set the access mode that we'll use to program the reload value.
-    //
+    /* Set the access mode that we'll use to program the reload value */
     TimerControl.AccessMode = PitAccessModeLowHigh;
     
-    //
-    // Now write the programming bits
-    //
+    /* Now write the programming bits */
     __outbyte(TIMER_CONTROL_PORT, TimerControl.Bits);
     
-    //
-    // Next we write the reload value for channel 0
-    //
+    /* Next we write the reload value for channel 0 */
     __outbyte(TIMER_CHANNEL0_DATA_PORT, RollOver & 0xFF);
     __outbyte(TIMER_CHANNEL0_DATA_PORT, RollOver >> 8);
 
@@ -125,6 +118,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     {
         /* Update the performance counter */
         HalpPerfCounter.QuadPart += HalpCurrentRollOver;
+        HalpPerfCounterCutoff = KiEnableTimerWatchdog;
         
         /* Check if someone changed the time rate */
         if (HalpClockSetMSRate)
