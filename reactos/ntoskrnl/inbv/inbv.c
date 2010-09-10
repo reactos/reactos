@@ -37,7 +37,6 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     LDR_RESOURCE_INFO ResourceInfo;
-    ULONG Size;
     NTSTATUS Status;
     PVOID Data = NULL;
 
@@ -64,7 +63,7 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     if (NextEntry != ListHead)
     {
         /* Try to find the resource */
-        ResourceInfo.Type = 2;
+        ResourceInfo.Type = 2; //RT_BITMAP;
         ResourceInfo.Name = ResourceId;
         ResourceInfo.Language = 0;
         Status = LdrFindResource_U(LdrEntry->DllBase,
@@ -77,7 +76,8 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             Status = LdrAccessResource(LdrEntry->DllBase,
                                        ResourceDataEntry,
                                        &Data,
-                                       &Size);
+                                       NULL);
+            if (Data) KiBugCheckData[4] ^= RtlComputeCrc32(0, Data, PAGE_SIZE);
             if (!NT_SUCCESS(Status)) Data = NULL;
         }
     }
@@ -134,27 +134,38 @@ VOID
 NTAPI
 InbvAcquireLock(VOID)
 {
-    /* Check if we're below dispatch level */
-    InbvOldIrql = KeGetCurrentIrql();
-    if (InbvOldIrql < DISPATCH_LEVEL)
+    KIRQL OldIrql;
+
+    /* Check if we're at dispatch level or lower */
+    OldIrql = KeGetCurrentIrql();
+    if (OldIrql <= DISPATCH_LEVEL)
     {
+        /* Loop until the lock is free */
+        while (!KeTestSpinLock(&BootDriverLock));
+
         /* Raise IRQL to dispatch level */
-        KeRaiseIrql(DISPATCH_LEVEL, &InbvOldIrql);
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     }
 
     /* Acquire the lock */
     KiAcquireSpinLock(&BootDriverLock);
+    InbvOldIrql = OldIrql;
 }
 
 VOID
 NTAPI
 InbvReleaseLock(VOID)
 {
+    KIRQL OldIrql;
+
+    /* Capture the old IRQL */
+    OldIrql = InbvOldIrql;
+
     /* Release the driver lock */
     KiReleaseSpinLock(&BootDriverLock);
 
-    /* If we were below dispatch level, lower IRQL back */
-    if (InbvOldIrql < DISPATCH_LEVEL) KeLowerIrql(InbvOldIrql);
+    /* If we were at dispatch level or lower, restore the old IRQL */
+    if (InbvOldIrql <= DISPATCH_LEVEL) KeLowerIrql(OldIrql);
 }
 
 VOID
@@ -561,7 +572,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
     {
         /* Reset the progress bar */
         InbvAcquireLock();
-        RotBarSelection = 0;
+        RotBarSelection = RB_UNSPECIFIED;
         InbvReleaseLock();
     }
 
