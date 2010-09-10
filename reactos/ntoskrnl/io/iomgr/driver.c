@@ -481,8 +481,7 @@ IopInitializeDriverModule(
        DriverName.Length > 0 ? &DriverName : NULL,
        DriverEntry,
        &RegistryKey,
-       ModuleObject->DllBase,
-       ModuleObject->SizeOfImage,
+       ModuleObject,
        &Driver);
    RtlFreeUnicodeString(&RegistryKey);
 
@@ -1388,8 +1387,7 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
-                IN PVOID DllBase,
-                IN ULONG SizeOfImage,
+                PLDR_DATA_TABLE_ENTRY ModuleObject,
                 OUT PDRIVER_OBJECT *pDriverObject)
 {
     WCHAR NameBuffer[100];
@@ -1451,7 +1449,7 @@ try_again:
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
-
+    DriverObject->DriverSection = ModuleObject;
     /* Loop all Major Functions */
     for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
@@ -1525,8 +1523,8 @@ try_again:
     ZwClose(hDriver);
 
     DriverObject->HardwareDatabase = &IopHardwareDatabaseKey;
-    DriverObject->DriverStart = DllBase;
-    DriverObject->DriverSize = SizeOfImage;
+    DriverObject->DriverStart = ModuleObject ? ModuleObject->DllBase : 0;
+    DriverObject->DriverSize = ModuleObject ? ModuleObject->SizeOfImage : 0;
 
     /* Finally, call its init function */
     DPRINT("RegistryKey: %wZ\n", RegistryPath);
@@ -1536,6 +1534,7 @@ try_again:
     {
         /* If it didn't work, then kill the object */
         DPRINT1("'%wZ' initialization failed, status (0x%08lx)\n", DriverName, Status);
+        DriverObject->DriverSection = NULL;
         ObMakeTemporaryObject(DriverObject);
         ObDereferenceObject(DriverObject);
     }
@@ -1581,7 +1580,7 @@ IoCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                IN PDRIVER_INITIALIZE InitializationFunction)
 {
    PDRIVER_OBJECT DriverObject;
-   return IopCreateDriver(DriverName, InitializationFunction, NULL, 0, 0, &DriverObject);
+   return IopCreateDriver(DriverName, InitializationFunction, NULL, NULL, &DriverObject);
 }
 
 /*
@@ -1895,6 +1894,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
         */
 
        Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
+
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
@@ -1933,9 +1933,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
                return;
            }
        }
-
-       /* Store its DriverSection, so that it could be unloaded */
-       DriverObject->DriverSection = ModuleObject;
 
        /* Initialize and start device */
        IopInitializeDevice(DeviceNode, DriverObject);
