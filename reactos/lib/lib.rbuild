@@ -13,6 +13,9 @@
 	<directory name="cmlib">
 		<xi:include href="cmlib/cmlib.rbuild" />
 	</directory>
+	<directory name="cportlib">
+		<xi:include href="cportlib/cportlib.rbuild" />
+	</directory>
 	<directory name="debugsup">
 		<xi:include href="debugsup/debugsup.rbuild" />
 	</directory>
