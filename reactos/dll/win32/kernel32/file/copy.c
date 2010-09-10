@@ -15,7 +15,10 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
+
+#if DBG
 static ULONG gDebugChannel = kernel32file;
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
