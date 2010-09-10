@@ -200,6 +200,7 @@ PspLookupKernelUserEntryPoints(VOID)
         Status = PspLookupSystemDllEntryPoint("KiFastSystemCallRet",
                                               (PVOID)&SharedUserData->
                                               SystemCallReturn);
+        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -207,10 +208,11 @@ PspLookupKernelUserEntryPoints(VOID)
         Status = PspLookupSystemDllEntryPoint("KiIntSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Set the test instruction */
-    if (!NT_SUCCESS(Status)) SharedUserData->TestRetInstruction = 0xC3;
+    SharedUserData->TestRetInstruction = 0xC3;
 
     /* Return the status */
     return Status;
