@@ -167,7 +167,7 @@ StartLsass(VOID)
 	LPCWSTR ServiceString = L"lsass.exe";
 	BOOL res;
 
-	/* Start the service control manager (services.exe) */
+	/* Start the local security authority subsystem (lsass.exe) */
 	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
 	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.lpReserved = NULL;
