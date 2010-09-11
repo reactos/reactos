@@ -804,7 +804,10 @@ HaliInitPnpDriver(
 VOID
 NTAPI
 HalpDebugPciDumpBus(
-    VOID
+    IN ULONG i,
+    IN ULONG j,
+    IN ULONG k,
+    IN PPCI_COMMON_CONFIG PciData
 );
 
 #ifdef _M_AMD64
