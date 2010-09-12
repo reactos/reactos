@@ -45,9 +45,10 @@ LsapInitLsa(VOID)
             hEvent = OpenEventW(GENERIC_WRITE,
                                 FALSE,
                                 L"LSA_RPC_SERVER_ACTIVE");
-            if (hEvent != NULL)
+            if (hEvent == NULL)
             {
-               ERR("Could not open the notification event!");
+               ERR("Could not open the notification event (Error %lu)\n", GetLastError());
+               return STATUS_UNSUCCESSFUL;
             }
         }
     }

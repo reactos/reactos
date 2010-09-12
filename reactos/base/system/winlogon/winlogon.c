@@ -199,6 +199,43 @@ StartLsass(VOID)
 	return res;
 }
 
+
+static VOID
+WaitForLsass(VOID)
+{
+    HANDLE hEvent;
+    DWORD dwError;
+
+    hEvent = CreateEventW(NULL,
+                          TRUE,
+                          FALSE,
+                          L"LSA_RPC_SERVER_ACTIVE");
+    if (hEvent == NULL)
+    {
+        dwError = GetLastError();
+        TRACE("WL: Failed to create the notication event (Error %lu)\n", dwError);
+
+        if (dwError == ERROR_ALREADY_EXISTS)
+        {
+            hEvent = OpenEventW(SYNCHRONIZE,
+                                FALSE,
+                                L"LSA_RPC_SERVER_ACTIVE");
+            if (hEvent == NULL)
+            {
+               ERR("WL: Could not open the notification event (Error %lu)\n", GetLastError());
+               return;
+            }
+        }
+    }
+
+    TRACE("WL: Wait for the LSA server!\n");
+    WaitForSingleObject(hEvent, INFINITE);
+    TRACE("WL: LSA server running!\n");
+
+    CloseHandle(hEvent);
+}
+
+
 BOOL
 DisplayStatusMessage(
 	IN PWLSESSION Session,
@@ -347,6 +384,10 @@ WinMain(
 	}
 
 	DisplayStatusMessage(WLSession, WLSession->WinlogonDesktop, IDS_REACTOSISSTARTINGUP);
+
+
+	/* Wait for the LSA server */
+	WaitForLsass();
 
 #if 0
 	/* Connect to NetLogon service (lsass.exe) */
