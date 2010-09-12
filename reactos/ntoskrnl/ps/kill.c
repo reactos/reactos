@@ -301,8 +301,6 @@ PspDeleteProcess(IN PVOID ObjectBody)
         /* Detach */
         KeUnstackDetachProcess(&ApcState);
 
-        RemoveEntryList(&Process->MmProcessLinks);
-
         /* Completely delete the Address Space */
         MmDeleteProcessAddressSpace(Process);
     }
