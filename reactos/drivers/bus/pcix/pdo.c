@@ -127,7 +127,7 @@ PciPdoIrpStartDevice(IN PIRP Irp,
     if (((DeviceExtension->BaseClass == PCI_CLASS_PRE_20) &&
          (DeviceExtension->SubClass == PCI_SUBCLASS_PRE_20_VGA)) ||
         ((DeviceExtension->BaseClass == PCI_CLASS_DISPLAY_CTLR) &&
-         (DeviceExtension->SubClass -= PCI_SUBCLASS_VID_VGA_CTLR)))
+         (DeviceExtension->SubClass == PCI_SUBCLASS_VID_VGA_CTLR)))
     {
         /* Always force it on */
         DeviceExtension->CommandEnables |= (PCI_ENABLE_IO_SPACE |
