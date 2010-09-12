@@ -341,4 +341,60 @@ PciDebugPrintIoResReqList(IN PIO_RESOURCE_REQUIREMENTS_LIST Requirements)
     DPRINT1("\n");
 }
 
+VOID
+NTAPI
+PciDebugPrintPartialResource(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialResource)
+{
+    /* Dump all the data in the partial */
+    DPRINT1("     Partial Resource Descriptor @0x%x\n", PartialResource);
+    DPRINT1("        Type             = %d (%s)\n", PartialResource->Type, PciDebugCmResourceTypeToText(PartialResource->Type));
+    DPRINT1("        ShareDisposition = %d\n", PartialResource->ShareDisposition);
+    DPRINT1("        Flags            = 0x%04X\n", PartialResource->Flags);
+    DPRINT1("        Data[%d] = %08x  %08x  %08x\n",
+            0,
+            PartialResource->u.Generic.Start.LowPart,
+            PartialResource->u.Generic.Start.HighPart,
+            PartialResource->u.Generic.Length);
+}
+
+VOID
+NTAPI
+PciDebugPrintCmResList(IN PCM_RESOURCE_LIST PartialList)
+{
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    ULONG Count, i, ListCount;
+
+    /* Make sure there's something to dump */
+    if (!PartialList) return;
+
+    /* Get the full list count */
+    ListCount = PartialList->Count;
+    FullDescriptor = PartialList->List;
+    DPRINT1("  CM_RESOURCE_LIST (PCI Bus Driver) (List Count = %d)\n", PartialList->Count);
+    
+    /* Loop full list */
+    for (i = 0; i < ListCount; i++)
+    {
+        /* Loop full descriptor */
+        DPRINT1("     InterfaceType        %d\n", FullDescriptor->InterfaceType);
+        DPRINT1("     BusNumber            0x%x\n", FullDescriptor->BusNumber);
+
+        /* Get partial count and loop partials */
+        Count = FullDescriptor->PartialResourceList.Count;
+        for (PartialDescriptor = FullDescriptor->PartialResourceList.PartialDescriptors;
+             Count;
+             PartialDescriptor = PciNextPartialDescriptor(PartialDescriptor))
+        {
+            /* Print each partial */
+            PciDebugPrintPartialResource(PartialDescriptor);
+            Count--;
+        }
+    }
+
+    /* Done printing data */
+    DPRINT1("\n");
+}
+
+
 /* EOF */

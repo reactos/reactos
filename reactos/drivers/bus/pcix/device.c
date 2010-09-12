@@ -267,7 +267,8 @@ Device_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
 
 VOID
 NTAPI
-Device_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
+Device_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
+                   IN PPCI_COMMON_HEADER PciData)
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
@@ -276,7 +277,8 @@ Device_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
 VOID
 NTAPI
-Device_ChangeResourceSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+Device_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
+                              IN PPCI_COMMON_HEADER PciData)
 {
     /* Not yet implemented */
     UNIMPLEMENTED;
