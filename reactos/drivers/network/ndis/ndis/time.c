@@ -247,16 +247,21 @@ NdisMSetPeriodicTimer(
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsPeriod, -10000);
-
+    
+  /* Lock the miniport block */
   KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
-  /* If KeSetTimer(Ex) returns FALSE then the timer is not in the system's queue (and not in ours either) */
-  if (!KeSetTimerEx(&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc))
-  {
-      /* Add the timer at the head of the timer queue */
-      Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
-      Timer->Miniport->TimerQueue = Timer;
-  }
+
+  /* Attempt to dequeue the timer */
+  DequeueMiniportTimer(Timer);
+
+  /* Add the timer at the head of the timer queue */
+  Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
+  Timer->Miniport->TimerQueue = Timer;
+
+  /* Unlock the miniport block */
   KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
+
+  KeSetTimerEx(&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
 }
 
 
@@ -288,15 +293,20 @@ NdisMSetTimer(
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
 
+  /* Lock the miniport block */
   KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
-  /* If KeSetTimer(Ex) returns FALSE then the timer is not in the system's queue (and not in ours either) */
-  if (!KeSetTimer(&Timer->Timer, Timeout, &Timer->Dpc))
-  {
-      /* Add the timer at the head of the timer queue */
-      Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
-      Timer->Miniport->TimerQueue = Timer;
-  }
+
+  /* Attempt to dequeue the timer */
+  DequeueMiniportTimer(Timer);
+
+  /* Add the timer at the head of the timer queue */
+  Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
+  Timer->Miniport->TimerQueue = Timer;
+
+  /* Unlock the miniport block */
   KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
+
+  KeSetTimer(&Timer->Timer, Timeout, &Timer->Dpc);
 }
 
 
