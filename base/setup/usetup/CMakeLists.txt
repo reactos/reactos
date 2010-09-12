@@ -1,0 +1,35 @@
+
+set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -Wl,-L${REACTOS_BINARY_DIR}/lib/3rdparty/mingw")
+set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,-entry,_NtProcessStartup -Wl,--enable-stdcall-fixup -Wl,--enable-auto-image-base -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds")
+
+add_executable(usetup WIN32
+    interface/usetup.c
+    interface/devinst.c
+    interface/consup.c
+    native/utils/keytrans.c
+    native/utils/console.c
+    native/fslist.c
+    native/console.c
+    bootsup.c
+    cabinet.c
+    chkdsk.c
+    drivesup.c
+    filesup.c
+    filequeue.c
+    format.c
+    fslist.c
+    genlist.c
+    inffile.c
+    inicache.c
+    mui.c
+    partlist.c
+    progress.c
+    registry.c
+    settings.c
+)
+
+include_directories(${REACTOS_SOURCE_DIR}/lib/newinflib)
+include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+target_link_libraries(usetup mingw_main zlib newinflib ext2lib vfatlib ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a
+                      mingw_common -lmsvcrt)
