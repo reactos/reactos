@@ -49,7 +49,7 @@ EXPORTS
   FT_Get_Char_Index
   FT_Get_Charmap_Index
   FT_Get_CID_From_Glyph_Index
-  FT_Get_CID_Is_Internally_CID_keyed
+  FT_Get_CID_Is_Internally_CID_Keyed
   FT_Get_CID_Registry_Ordering_Supplement
   FT_Get_First_Char
   FT_Get_FSType_Flags
