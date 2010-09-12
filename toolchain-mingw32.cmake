@@ -1,12 +1,20 @@
 
+if(NOT ARCH)
 set(ARCH i386)
+endif(NOT ARCH)
 
 # Choose the right MinGW prefix
-if (CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+if(ARCH MATCHES i386)
+
+if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 set(MINGW_PREFIX "" CACHE STRING "MinGW Prefix")
 else()
 set(MINGW_PREFIX "mingw32-" CACHE STRING "MinGW Prefix")
-endif()
+endif(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
+
+elseif(ARCH MATCHES amd64)
+set(MINGW_PREFIX "x86_64-w64-mingw32-" CACHE STRING "MinGW Prefix")
+endif(ARCH MATCHES i386)
 
 # the name of the target operating system
 SET(CMAKE_SYSTEM_NAME Windows)
@@ -23,7 +31,8 @@ SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS
 
 # Use stdcall fixups, and don't link with anything by default unless we say so
 set(CMAKE_C_STANDARD_LIBRARIES -lgcc CACHE STRING "libgcc") # We should add the environment libgcc here
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds")
+#-Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at")
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 
