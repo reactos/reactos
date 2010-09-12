@@ -3,14 +3,18 @@ set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FL
 
 spec2def(bootvid ${CMAKE_CURRENT_SOURCE_DIR}/bootvid.spec ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def)
 
-list(APPEND SOURCE
-    ${ARCH}/bootvid.c
-    ${ARCH}/bootdata.c
-    bootvid.rc)
+list(APPEND SOURCE bootvid.rc)
 
-if(ARCH MATCHES i386)
-list(APPEND SOURCE i386/vga.c)
-endif(ARCH MATCHES i386)
+if(ARCH MATCHES i386 OR ARCH MATCHES amd64)
+list(APPEND SOURCE
+    i386/bootvid.c
+    i386/bootdata.c
+    i386/vga.c)
+elseif(ARCH MATCHES arm)
+list(APPEND SOURCE
+    arm/bootvid.c
+    arm/bootdata.c)
+endif(ARCH MATCHES i386 OR ARCH MATCHES amd64)
 
 add_library(bootvid SHARED ${CMAKE_CURRENT_BINARY_DIR}/bootvid_precomp.h.gch ${SOURCE})
 

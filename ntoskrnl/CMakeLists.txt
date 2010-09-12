@@ -23,7 +23,6 @@ list(APPEND SOURCE
     cc/mdl.c
     cc/pin.c
     cc/view.c
-    config/${ARCH}/cmhardwr.c
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c
@@ -251,6 +250,7 @@ list(APPEND SOURCE
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
+    config/i386/cmhardwr.c
     ex/i386/interlck_asm.S
     ex/i386/fastinterlck_asm.S
     ex/i386/ioport.S
@@ -280,6 +280,7 @@ list(APPEND SOURCE
     vdm/vdmexec.c)
 elseif(ARCH MATCHES amd64)
 list(APPEND SOURCE
+    config/i386/cmhardwr.c
     ex/amd64/fastinterlck.c
     ke/amd64/boot.S
     ke/amd64/context.c
@@ -298,6 +299,7 @@ list(APPEND SOURCE
     ps/amd64/psctx.c)
 elseif(ARCH MATCHES arm)
 list(APPEND SOURCE
+    config/arm/cmhardwr.c
     ke/arm/boot.s
     ke/arm/cpu.c
     ke/arm/ctxswtch.s
@@ -314,6 +316,7 @@ list(APPEND SOURCE
     rtl/arm/rtlexcpt.c)
 elseif(ARCH MATCHES powerpc)
 list(APPEND SOURCE
+    config/powerpc/cmhardwr.c
     ke/powerpc/main_asm.S
     ke/powerpc/cpu.c
     ke/powerpc/exp.c

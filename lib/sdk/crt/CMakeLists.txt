@@ -40,11 +40,6 @@ list(APPEND CRT_SOURCE
     float/isnan.c
     float/nafter.c
     float/scalb.c
-    float/${ARCH}/clearfp.c
-    float/${ARCH}/cntrlfp.c
-    float/${ARCH}/fpreset.c
-    float/${ARCH}/logb.c
-    float/${ARCH}/statfp.c
     locale/locale.c
     math/acos.c
     math/adjust.c
@@ -287,9 +282,23 @@ list(APPEND CRT_SOURCE
     wine/undname.c)
 
 if(ARCH MATCHES i386)
-list(APPEND CRT_SOURCE except/i386/prolog.s except/i386/unwind.c)
+list(APPEND CRT_SOURCE
+    except/i386/chkstk_asm.s
+    except/i386/prolog.s
+    except/i386/unwind.c
+    float/i386/clearfp.c
+    float/i386/cntrlfp.c
+    float/i386/fpreset.c
+    float/i386/logb.c
+    float/i386/statfp.c)
 elseif(ARCH MATCHES amd64)
-list(APPEND CRT_SOURCE chkstk_asm.s)
+list(APPEND CRT_SOURCE
+    except/amd64/chkstk_asm.s
+    float/i386/clearfp.c
+    float/i386/cntrlfp.c
+    float/i386/fpreset.c
+    float/i386/logb.c
+    float/i386/statfp.c)
 endif(ARCH MATCHES i386)
 
 if(ARCH MATCHES i386)
