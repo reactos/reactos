@@ -1607,7 +1607,6 @@ extern BOOLEAN CmpProfileLoaded;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
 extern BOOLEAN CmpHoldLazyFlush;
-extern UNICODE_STRING CmRegistryMachineSystemName;
 
 //
 // Inlined functions
