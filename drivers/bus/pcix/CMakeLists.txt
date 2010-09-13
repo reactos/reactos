@@ -1,0 +1,50 @@
+
+set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
+list(APPEND SOURCE
+    arb/ar_busno.c
+    arb/ar_memio.c
+    arb/arb_comn.c
+    arb/tr_irq.c
+    intrface/agpintrf.c
+    intrface/busintrf.c
+    intrface/cardbus.c
+    intrface/devhere.c
+    intrface/ideintrf.c
+    intrface/intrface.c
+    intrface/lddintrf.c
+    intrface/locintrf.c
+    intrface/pmeintf.c
+    intrface/routintf.c
+    pci/busno.c
+    pci/config.c
+    pci/devhere.c
+    pci/id.c
+    pci/ppbridge.c
+    pci/romimage.c
+    pci/state.c
+    debug.c
+    device.c
+    dispatch.c
+    enum.c
+    fdo.c
+    guid.c
+    hookhal.c
+    init.c
+    pcivrify.c
+    pdo.c
+    power.c
+    usage.c
+    utils.c
+    pci.rc)
+
+add_library(pcix SHARED ${CMAKE_CURRENT_BINARY_DIR}/pcix_pci.h.gch ${SOURCE})
+
+set_target_properties(pcix PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
+
+target_link_libraries(pcix
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
+    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+
+add_pch(pcix ${CMAKE_CURRENT_SOURCE_DIR}/pci.h ${SOURCE})
+add_dependencies(pcix pcix_def psdk pciclass)
