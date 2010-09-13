@@ -32,5 +32,6 @@
 		<library>cmlib</library>
 		<library>rtl</library>
 		<library>libcntpr</library>
+		<library>cportlib</library>
 	</module>
 </ifnot>

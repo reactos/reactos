@@ -513,6 +513,10 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
+    
+   	/* Setup redirection support */
+	extern void WinLdrSetupEms(IN PCHAR BootOptions);
+	WinLdrSetupEms(BootOptions);
 
 	/* Detect hardware */
 	UseRealHeap = TRUE;
@@ -597,6 +601,10 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Save final value of LoaderPagesSpanned */
 	LoaderBlockVA->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
+    
+    /* Set headless block pointer */
+    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
+    LoaderBlockVA->Extension->HeadlessLoaderBlock = PaToVa(&LoaderRedirectionInformation);
 
 	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);

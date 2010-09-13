@@ -14,6 +14,7 @@
 	<library>setupldr_main</library>
 	<library>rossym</library>
 	<library>cmlib</library>
+	<library>cportlib</library>
 	<library>rtl</library>
 	<library>libcntpr</library>
 </module>
