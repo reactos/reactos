@@ -969,7 +969,7 @@ BOOL WINAPI GetTextExtentPoint32W(
  *    Success: TRUE
  *    Failure: FALSE
  */
-BOOL WINAPI GetTextExtentExPointI( HDC hdc, const WORD *indices, INT count, INT max_ext,
+BOOL WINAPI GetTextExtentExPointI( HDC hdc, LPWORD indices, int count, int max_ext,
                                    LPINT nfit, LPINT dxs, LPSIZE size )
 {
     BOOL ret = FALSE;
@@ -1010,7 +1010,7 @@ BOOL WINAPI GetTextExtentExPointI( HDC hdc, const WORD *indices, INT count, INT 
  *    Success: TRUE
  *    Failure: FALSE
  */
-BOOL WINAPI GetTextExtentPointI( HDC hdc, const WORD *indices, INT count, LPSIZE size )
+BOOL WINAPI GetTextExtentPointI( HDC hdc, LPWORD indices, int count, LPSIZE size )
 {
     return GetTextExtentExPointI( hdc, indices, count, 0, NULL, NULL, size );
 }
