@@ -1406,6 +1406,9 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
     /*  check for unpartitioned space  */
     m = PartEntry->UnpartitionedLength; 
     m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+
+    DPRINT1("Unpartitioned space is %lu MB\n", m);
+
     if( m > RequiredPartitionDiskSpace)
     {
         return TRUE;
@@ -1417,7 +1420,7 @@ IsDiskSizeValid(PPARTENTRY PartEntry)
     if (m < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
-        DPRINT1("Partition is too small, required disk space is %lu MB\n", RequiredPartitionDiskSpace);
+        DPRINT1("Partition is too small (%lu MB), required disk space is %lu MB\n", m, RequiredPartitionDiskSpace);
         return FALSE;
     }
     else
