@@ -1401,26 +1401,24 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 static BOOL
 IsDiskSizeValid(PPARTENTRY PartEntry)
 {
-    ULONGLONG m;
+    ULONGLONG m1, m2;
 
     /*  check for unpartitioned space  */
-    m = PartEntry->UnpartitionedLength; 
-    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    m1 = PartEntry->UnpartitionedLength; 
+    m1 = (m1 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
 
-    DPRINT1("Unpartitioned space is %lu MB\n", m);
-
-    if( m > RequiredPartitionDiskSpace)
+    if( m1 > RequiredPartitionDiskSpace)
     {
         return TRUE;
     }
 
     /* check for partitioned space */
-    m = PartEntry->PartInfo[0].PartitionLength.QuadPart;
-    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if (m < RequiredPartitionDiskSpace)
+    m2 = PartEntry->PartInfo[0].PartitionLength.QuadPart;
+    m2 = (m2 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    if (m2 < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
-        DPRINT1("Partition is too small (%lu MB), required disk space is %lu MB\n", m, RequiredPartitionDiskSpace);
+        DPRINT1("Partition is too small(unpartitioned: %I64u MB, partitioned: %I64u MB), required disk space is %lu MB\n", m1, m2, RequiredPartitionDiskSpace);
         return FALSE;
     }
     else
