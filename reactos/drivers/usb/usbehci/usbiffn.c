@@ -30,7 +30,7 @@ PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent
         DPRINT1("This is the root hub\n");
     }
 
-    UsbDevicePointer->Address = DeviceNumber;
+    UsbDevicePointer->Address = 0;// DeviceNumber;
     UsbDevicePointer->Port = Port;
     UsbDevicePointer->ParentDevice = Parent;
 
@@ -85,8 +85,6 @@ CreateUsbDevice(PVOID BusContext,
         if (PdoDeviceExtension->UsbDevices[i] == NULL)
         {
             PdoDeviceExtension->UsbDevices[i] = (PUSB_DEVICE)UsbDevice;
-            PdoDeviceExtension->UsbDevices[i]->Address = i + 1;
-            PdoDeviceExtension->UsbDevices[i]->Port = PortNumber;
             break;
         }
         i++;
@@ -140,6 +138,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     Ptr = Buffer;
 
     /* Set the device address */
+/*
     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
     CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
     CtrlSetup.bmRequestType._BM.Reserved = 0;
@@ -151,6 +150,8 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
 
     DPRINT1("Setting Address to %x\n", UsbDevice->Address);
     ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, 0, UsbDevice->Port, NULL, 0);
+
+*/
 
     /* Get the Device Descriptor */
     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
@@ -536,7 +537,6 @@ USB_BUSIFFN
 Initialize20Hub(PVOID BusContext, PUSB_DEVICE_HANDLE HubDeviceHandle, ULONG TtCount)
 {
     DPRINT1("Ehci: Initialize20Hub called, HubDeviceHandle: %x\n", HubDeviceHandle);
-
     /* FIXME: */
     /* Create the Irp Queue for SCE */
     /* Should queue be created for each device or each enpoint??? */

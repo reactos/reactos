@@ -361,10 +361,13 @@ typedef struct _FDO_DEVICE_EXTENSION
     ULONG Vector;
     KIRQL Irql;
 
+    KTIMER UpdateTimer;
     KINTERRUPT_MODE Mode;
     BOOLEAN IrqShared;
     PKINTERRUPT EhciInterrupt;
     KDPC DpcObject;
+    KDPC TimerDpcObject;
+
     KAFFINITY Affinity;
 
     ULONG MapRegisters;
@@ -465,13 +468,22 @@ BOOLEAN
 ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, UCHAR Address, ULONG Port, PVOID Buffer, ULONG BufferLength);
 
 VOID
+RequestURBCancel (PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);
+
+VOID
+RemoveUrbRequest(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PIRP Irp);
+
+VOID
 QueueURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);
 
 VOID
 CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension);
 
-VOID
-URBRequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS
+HandleUrbRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);
 
 PUSB_DEVICE
 DeviceHandleToUsbDevice(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PUSB_DEVICE_HANDLE DeviceHandle);
+
+BOOLEAN
+ResetPort(PFDO_DEVICE_EXTENSION FdoDeviceExtension, UCHAR Port);

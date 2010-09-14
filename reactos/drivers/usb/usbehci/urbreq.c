@@ -144,7 +144,6 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
     QueueHead->EndPointCapabilities2.PortNumber = Port;
     QueueHead->EndPointCapabilities1.DeviceAddress = Address;
 
-
     CtrlSetup->bmRequestType._BM.Recipient = SetupPacket->bmRequestType._BM.Recipient;
     CtrlSetup->bmRequestType._BM.Type = SetupPacket->bmRequestType._BM.Type;
     CtrlSetup->bmRequestType._BM.Dir = SetupPacket->bmRequestType._BM.Dir;
@@ -201,7 +200,7 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
     UsbCmd->Run = FALSE;
     WRITE_REGISTER_ULONG((PULONG)(Base + EHCI_USBCMD), tmp);
 
-    if (CtrlSetup->bmRequestType._BM.Dir == BMREQUEST_DEVICE_TO_HOST)
+    if (SetupPacket->bmRequestType._BM.Dir == BMREQUEST_DEVICE_TO_HOST)
     {
         if ((Buffer) && (BufferLength))
         {
@@ -210,7 +209,6 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
         else
             DPRINT1("Unable to copy data to buffer\n");
     }
-
 
     ExReleaseFastMutex(&DeviceExtension->AsyncListMutex);
 

@@ -125,20 +125,56 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     {
         case IOCTL_INTERNAL_USB_SUBMIT_URB:
         {
+            PUSB_DEVICE UsbDevice = NULL;
             URB *Urb;
+            ULONG i;
 
             Urb = (PURB) Stack->Parameters.Others.Argument1;
 
+            UsbDevice = Urb->UrbHeader.UsbdDeviceHandle;
+
+            if (UsbDevice == NULL)
+                UsbDevice = PdoDeviceExtension->UsbDevices[0];
+
             if ((Urb->UrbHeader.Function == URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER) &&
-                (Urb->UrbHeader.UsbdDeviceHandle == PdoDeviceExtension->UsbDevices[0]))
+                (UsbDevice == PdoDeviceExtension->UsbDevices[0]))
             {
-                    PdoDeviceExtension->HaltQueue = TRUE;
+                if (Urb->UrbBulkOrInterruptTransfer.PipeHandle == &UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor)
+                {
+                    DPRINT1("PipeHandle doesnt match SCE PipeHandle\n");
+                }
+
+                /* Queue the Irp first */
+                QueueURBRequest(PdoDeviceExtension, Irp);
+
+                /* Check if there is any connected devices */
+                for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
+                {
+                    if (PdoDeviceExtension->Ports[i].PortChange == 0x01)
+                    {
+                        DPRINT1("Inform hub driver that port %d has changed\n", i+1);
+                        ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((i + 1) & 7);
+                        Information = 0;
+                        Status = STATUS_SUCCESS;
+                        /* Assume URB success */
+                        Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+                        /* Set the DeviceHandle to the Internal Device */
+                        Urb->UrbHeader.UsbdDeviceHandle = UsbDevice;
+
+                        /* Request handled, Remove it from the queue */
+                        RemoveUrbRequest(PdoDeviceExtension, Irp);
+                        break;
+                    }
+                }
+                if (Status == STATUS_SUCCESS) break;
+                DPRINT1("Queueing IRP\n");
+                IoMarkIrpPending(Irp);
+                Status = STATUS_PENDING;
+                break;
             }
-            /* Queue all request for now, kernel thread will complete them */
-            QueueURBRequest(PdoDeviceExtension, Irp);
-            Information = 0;
-            IoMarkIrpPending(Irp);
-            Status = STATUS_PENDING;
+
+            Status = HandleUrbRequest(PdoDeviceExtension, Irp);
+
             break;
         }
         case IOCTL_INTERNAL_USB_CYCLE_PORT:
@@ -222,8 +258,11 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO Arg1 %x, Arg2 %x\n", Stack->Parameters.Others.Argument1, Stack->Parameters.Others.Argument2);
             if (Stack->Parameters.Others.Argument1)
                 *(PVOID *)Stack->Parameters.Others.Argument1 = FdoDeviceExtension->Pdo;
+
+            /* Windows usbehci driver gives the Pdo in both Arguments. */
             if (Stack->Parameters.Others.Argument2)
-                *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
+                //*(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
+                *(PVOID *)Stack->Parameters.Others.Argument2 = FdoDeviceExtension->Pdo;
 
             Information = 0;
             Status = STATUS_SUCCESS;
@@ -378,7 +417,7 @@ PdoDispatchPnp(
             /* Create the root hub */
             RootHubDevice = InternalCreateUsbDevice(1, 0, NULL, TRUE);
 
-            for (i = 0; i < 8; i++)
+            for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
             {
                 PdoDeviceExtension->Ports[i].PortStatus = USB_PORT_STATUS_HIGH_SPEED | 0x8000;
                 PdoDeviceExtension->Ports[i].PortChange = 0;
@@ -432,7 +471,7 @@ PdoDispatchPnp(
             PdoDeviceExtension->UsbDevices[0] = RootHubDevice;
 
             /* Create a thread to handle the URB's */
-
+/*
             Status = PsCreateSystemThread(&PdoDeviceExtension->ThreadHandle,
                                           THREAD_ALL_ACCESS,
                                           NULL,
@@ -443,7 +482,7 @@ PdoDispatchPnp(
 
             if (!NT_SUCCESS(Status))
                 DPRINT1("Failed Thread Creation with Status: %x\n", Status);
-
+*/
             Status = IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_HUB, NULL, &InterfaceSymLinkName);
             if (!NT_SUCCESS(Status))
             {
