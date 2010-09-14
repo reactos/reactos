@@ -16,6 +16,24 @@
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
+
+typedef struct _USB_LANGUAGEID_DESCRIPTOR {
+  UCHAR bLength;
+  UCHAR bDescriptorType;
+  WCHAR wLANGIDs[1];
+} USB_LANGUAGEID_DESCRIPTOR, *PUSB_LANGUAGEID_DESCRIPTOR;
+
+typedef struct _PORTSTATUSANDCHANGE
+{
+    USHORT Status;
+    USHORT Change;
+} PORTSTATUSANDCHANGE, *PPORTSTATUSANDCHANGE;
+
+NTSTATUS
+QueryRootHub(IN PDEVICE_OBJECT Pdo, IN ULONG IoControlCode, OUT PVOID OutParameter1, OUT PVOID OutParameter2);
+NTSTATUS
+WaitForUsbDeviceArrivalNotification(PDEVICE_OBJECT DeviceObject);
+
 VOID DumpDeviceDescriptor(PUSB_DEVICE_DESCRIPTOR DeviceDescriptor)
 {
     DPRINT1("Dumping Device Descriptor %x\n", DeviceDescriptor);
@@ -81,19 +99,309 @@ VOID DumpFullConfigurationDescriptor(PUSB_CONFIGURATION_DESCRIPTOR Configuration
     }
 
 }
+
+VOID
+WorkerThread(IN PVOID Context)
+{
+    PHUB_DEVICE_EXTENSION DeviceExtension;
+    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context, Pdo;
+    PHUB_CHILDDEVICE_EXTENSION PdoExtension;
+    PURB Urb;
+    PORTSTATUSANDCHANGE PortStatusAndChange;
+    int PortLoop, DeviceCount;
+    NTSTATUS Status;
+    USB_DEVICE_DESCRIPTOR DevDesc;
+    USB_CONFIGURATION_DESCRIPTOR ConfigDesc;
+    ULONG DevDescSize, ConfigDescSize;
+    PUSB_STRING_DESCRIPTOR StringDesc;
+    USB_LANGUAGEID_DESCRIPTOR LanguageIdDescriptor;
+
+    DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* Determine where in the children array to store this device info */
+    for (DeviceCount = 0; DeviceCount < USB_MAXCHILDREN; DeviceCount++)
+    {
+        if (DeviceExtension->UsbChildren[DeviceCount] == NULL)
+        {
+            break;
+        }
+    }
+
+    DPRINT("Storing Device Info at %x\n", DeviceCount);
+    Urb = ExAllocatePoolWithTag(NonPagedPool, sizeof(URB), USB_HUB_TAG);
+    if (!Urb)
+    {
+        DPRINT1("Failed to allocate memory for URB!\n");
+        ASSERT(FALSE);
+    }
+
+    RtlZeroMemory(Urb, sizeof(URB));
+
+    for (PortLoop = 0; PortLoop < DeviceExtension->UsbExtHubInfo.NumberOfPorts; PortLoop++)
+    {
+        /* Get the port status */
+        UsbBuildVendorRequest(Urb,
+                            URB_FUNCTION_CLASS_OTHER,
+                            sizeof(Urb->UrbControlVendorClassRequest),
+                            USBD_TRANSFER_DIRECTION_OUT,
+                            0,
+                            USB_REQUEST_GET_STATUS,
+                            0,
+                            PortLoop + 1,
+                            &PortStatusAndChange,
+                            0,
+                            sizeof(PORTSTATUSANDCHANGE),
+                            0);
+        Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to get PortStatus!\n");
+            return;
+        }
+
+        DPRINT("Notification Port %x:\n", PortLoop + 1);
+        DPRINT("Status %x\n", PortStatusAndChange.Status);
+        DPRINT("Change %x\n", PortStatusAndChange.Change);
+
+        if (PortStatusAndChange.Change == USB_PORT_STATUS_RESET)
+        {
+            /* Clear the Reset */
+            UsbBuildVendorRequest(Urb,
+                                  URB_FUNCTION_CLASS_OTHER,
+                                  sizeof(Urb->UrbControlVendorClassRequest),
+                                  USBD_TRANSFER_DIRECTION_IN,
+                                  0,
+                                  USB_REQUEST_CLEAR_FEATURE,
+                                  C_PORT_RESET,
+                                  PortLoop + 1,
+                                  &PortStatusAndChange,
+                                  0,
+                                  sizeof(PORTSTATUSANDCHANGE),
+                                  0);
+
+            Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to Clear the Port Reset with Status %x!\n", Status);
+                return;
+            }
+            UsbBuildVendorRequest(Urb, URB_FUNCTION_CLASS_OTHER,
+                                  sizeof(Urb->UrbControlVendorClassRequest),
+                                  USBD_TRANSFER_DIRECTION_OUT,
+                                  0,
+                                  USB_REQUEST_GET_STATUS,
+                                  0,
+                                  PortLoop + 1,
+                                  &PortStatusAndChange,
+                                  0,
+                                  sizeof(PORTSTATUSANDCHANGE),
+                                  0);
+
+            Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+            DPRINT("Status %x\n", PortStatusAndChange.Status);
+            DPRINT("Change %x\n", PortStatusAndChange.Change);
+
+            /* Create the UsbDevice */
+            Status = DeviceExtension->HubInterface.CreateUsbDevice(DeviceExtension->RootHubPdo,
+                                                                   (PVOID)&DeviceExtension->UsbChildren[DeviceCount],
+                                                                   DeviceExtension->RootHubUsbDevice,
+                                                                   PortStatusAndChange.Status,
+                                                                   PortLoop + 1);
+            DPRINT1("CreateUsbDevice Status %x\n", Status);
+
+            Status = DeviceExtension->HubInterface.InitializeUsbDevice(DeviceExtension->RootHubPdo, DeviceExtension->UsbChildren[DeviceCount]);
+            DPRINT1("InitializeUsbDevice Status %x\n", Status);
+
+            DevDescSize = sizeof(USB_DEVICE_DESCRIPTOR);
+            ConfigDescSize = sizeof(USB_CONFIGURATION_DESCRIPTOR);
+            Status = DeviceExtension->HubInterface.GetUsbDescriptors(DeviceExtension->RootHubPdo,
+                                                                     DeviceExtension->UsbChildren[DeviceCount],
+                                                                     (PUCHAR)&DevDesc,
+                                                                     &DevDescSize,
+                                                                     (PUCHAR)&ConfigDesc,
+                                                                     &ConfigDescSize);
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to Get Usb Deccriptors %x!\n", Status);
+            }
+
+            DumpDeviceDescriptor(&DevDesc);
+
+            Status = IoCreateDevice(DeviceObject->DriverObject,
+                                    sizeof(HUB_CHILDDEVICE_EXTENSION),
+                                    NULL,
+                                    FILE_DEVICE_CONTROLLER,
+                                    FILE_AUTOGENERATED_DEVICE_NAME,
+                                    FALSE,
+                                    &DeviceExtension->Children[DeviceCount]);
+
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("UsbHub; IoCreateDevice failed with status %x\n",Status);
+                return;
+            }
+
+            Pdo = DeviceExtension->Children[DeviceCount];
+            DPRINT1("Created New Device with %x\n", Pdo);
+            Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
+
+            PdoExtension = Pdo->DeviceExtension;
+
+            RtlZeroMemory(PdoExtension, sizeof(HUB_CHILDDEVICE_EXTENSION));
+
+            PdoExtension->DeviceId = ExAllocatePoolWithTag(NonPagedPool, 32 * sizeof(WCHAR), USB_HUB_TAG);
+            RtlZeroMemory(PdoExtension->DeviceId, 32 * sizeof(WCHAR));
+            swprintf(PdoExtension->DeviceId, L"USB\\Vid_%04x&Pid_%04x", DevDesc.idVendor, DevDesc.idProduct);
+
+
+            /* Get the LANGids */
+            RtlZeroMemory(&LanguageIdDescriptor, sizeof(USB_LANGUAGEID_DESCRIPTOR));
+            UsbBuildGetDescriptorRequest(Urb,
+                                         sizeof(Urb->UrbControlDescriptorRequest),
+                                         USB_STRING_DESCRIPTOR_TYPE,
+                                         0,
+                                         0,
+                                         &LanguageIdDescriptor,
+                                         NULL,
+                                         sizeof(USB_LANGUAGEID_DESCRIPTOR),
+                                         NULL);
+
+            Urb->UrbHeader.UsbdDeviceHandle = DeviceExtension->UsbChildren[DeviceCount];
+
+            Status = QueryRootHub(DeviceExtension->RootHubPdo, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+            /* Get the length of the SerialNumber */
+            StringDesc = ExAllocatePoolWithTag(PagedPool, 64, USB_HUB_TAG);
+            RtlZeroMemory(StringDesc, 64);
+            StringDesc->bLength = 0;
+            StringDesc->bDescriptorType = 0;
+
+            UsbBuildGetDescriptorRequest(Urb,
+                                         sizeof(Urb->UrbControlDescriptorRequest),
+                                         USB_STRING_DESCRIPTOR_TYPE,
+                                         DevDesc.iSerialNumber,
+                                         LanguageIdDescriptor.wLANGIDs[0],
+                                         StringDesc,
+                                         NULL,
+                                         64,
+                                         NULL);
+
+            Urb->UrbHeader.UsbdDeviceHandle = DeviceExtension->UsbChildren[DeviceCount];
+
+            Status = QueryRootHub(DeviceExtension->RootHubPdo, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+            PdoExtension->InstanceId = ExAllocatePoolWithTag(NonPagedPool, (StringDesc->bLength + 1) * sizeof(WCHAR), USB_HUB_TAG);
+            DPRINT1("PdoExtension->InstanceId %x\n",PdoExtension->InstanceId);
+
+            RtlZeroMemory(PdoExtension->InstanceId, (StringDesc->bLength + 1) * sizeof(WCHAR));
+            RtlCopyMemory(PdoExtension->InstanceId, &StringDesc->bString[0], StringDesc->bLength);
+            DPRINT1("------>SerialNumber %S\n", PdoExtension->InstanceId);
+
+
+
+            RtlZeroMemory(StringDesc, 64);
+            StringDesc->bLength = 0;
+            StringDesc->bDescriptorType = 0;
+
+            UsbBuildGetDescriptorRequest(Urb,
+                                         sizeof(Urb->UrbControlDescriptorRequest),
+                                         USB_STRING_DESCRIPTOR_TYPE,
+                                         DevDesc.iProduct,
+                                         LanguageIdDescriptor.wLANGIDs[0],
+                                         StringDesc,
+                                         NULL,
+                                         64,
+                                         NULL);
+
+            Urb->UrbHeader.UsbdDeviceHandle = DeviceExtension->UsbChildren[DeviceCount];
+
+            Status = QueryRootHub(DeviceExtension->RootHubPdo, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+            PdoExtension->TextDescription = ExAllocatePoolWithTag(NonPagedPool, (StringDesc->bLength + 1) * sizeof(WCHAR), USB_HUB_TAG);
+
+            RtlZeroMemory(PdoExtension->TextDescription, (StringDesc->bLength + 1) * sizeof(WCHAR));
+            RtlCopyMemory(PdoExtension->TextDescription, &StringDesc->bString[0], StringDesc->bLength);
+            ExFreePool(StringDesc);
+            DPRINT1("------>TextDescription %S\n", PdoExtension->TextDescription);
+
+            PdoExtension->IsFDO = FALSE;
+            PdoExtension->Parent = DeviceObject;
+            Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
+            IoInvalidateDeviceRelations(DeviceExtension->RootHubPdo, BusRelations);
+            return;
+        }
+
+        /* Is a device connected to this port */
+        if (PortStatusAndChange.Change == USB_PORT_STATUS_CONNECT)
+        {
+            /* Clear the Connect from ProtChange */
+            UsbBuildVendorRequest(Urb,
+                                URB_FUNCTION_CLASS_OTHER,
+                                sizeof(Urb->UrbControlVendorClassRequest),
+                                USBD_TRANSFER_DIRECTION_IN,
+                                0,
+                                USB_REQUEST_CLEAR_FEATURE,
+                                C_PORT_CONNECTION,
+                                PortLoop + 1,
+                                &PortStatusAndChange,
+                                0,
+                                sizeof(PORTSTATUSANDCHANGE),
+                                0);
+
+            Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to Clear the Port Connect!\n");
+                return;
+            }
+
+            /* Send the miniport controller a SCE request so when the port resets we can be informed */
+            WaitForUsbDeviceArrivalNotification(DeviceObject);
+
+            UsbBuildVendorRequest(Urb,
+                                URB_FUNCTION_CLASS_OTHER,
+                                sizeof(Urb->UrbControlVendorClassRequest),
+                                USBD_TRANSFER_DIRECTION_IN,
+                                0,
+                                USB_REQUEST_SET_FEATURE,
+                                PORT_RESET,
+                                PortLoop + 1,
+                                &PortStatusAndChange,
+                                0,
+                                sizeof(PORTSTATUSANDCHANGE),
+                                0);
+
+            Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to Reset the port!\n");
+                return;
+            }
+            /* At this point the miniport will complete another SCE to inform of Reset completed */
+        }
+    }
+}
+
 NTSTATUS
 DeviceArrivalCompletion(PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
-
     PHUB_DEVICE_EXTENSION DeviceExtension;
     LONG i;
 
     DeviceExtension = (PHUB_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
 
-    /* FIXME: Need to use the number of ports returned from miniport at device start */
-    for (i=0; i < 8; i++)
-        DPRINT1("Port %x DeviceExtension->PortStatus %x\n",i, DeviceExtension->PortStatus[i]);
+    for (i=0; i < DeviceExtension->UsbExtHubInfo.NumberOfPorts; i++)
+        DPRINT1("Port %x DeviceExtension->PortStatus %x\n",i+1, DeviceExtension->PortStatus[i]);
 
+    if (Irp->PendingReturned)
+        IoMarkIrpPending(Irp);
+
+    ExInitializeWorkItem(&DeviceExtension->WorkItem, (PWORKER_THREAD_ROUTINE)WorkerThread, Context);
+    ExQueueWorkItem(&DeviceExtension->WorkItem, DelayedWorkQueue);
     return STATUS_SUCCESS;
 }
 
@@ -147,7 +455,8 @@ WaitForUsbDeviceArrivalNotification(PDEVICE_OBJECT DeviceObject)
     Stack->Parameters.Others.Argument1 = Urb;
     Stack->Parameters.Others.Argument2 = NULL;
 
-    IoSetCompletionRoutineEx(DeviceExtension->RootHubPdo, Irp, (PIO_COMPLETION_ROUTINE)DeviceArrivalCompletion, DeviceObject, TRUE, TRUE, TRUE);
+    //IoSetCompletionRoutineEx(DeviceExtension->RootHubPdo, Irp, (PIO_COMPLETION_ROUTINE)DeviceArrivalCompletion, DeviceObject, TRUE, TRUE, TRUE);
+    IoSetCompletionRoutine(Irp, (PIO_COMPLETION_ROUTINE)DeviceArrivalCompletion, DeviceObject, TRUE, TRUE, TRUE);
 
     Status = IoCallDriver(DeviceExtension->RootHubPdo, Irp);
 
@@ -193,7 +502,7 @@ QueryRootHub(IN PDEVICE_OBJECT Pdo, IN ULONG IoControlCode, OUT PVOID OutParamet
 
     if (Status == STATUS_PENDING)
     {
-        DPRINT("Usbhub: Operation pending\n");
+        DPRINT1("Usbhub: Operation pending\n");
         KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
         Status = IoStatus.Status;
     }
@@ -273,33 +582,22 @@ UsbhubFdoQueryBusRelations(IN PDEVICE_OBJECT DeviceObject, OUT PDEVICE_RELATIONS
 {
     PHUB_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_RELATIONS DeviceRelations;
-    PDEVICE_OBJECT Pdo;
-    PHUB_DEVICE_EXTENSION PdoExtension;
     ULONG i;
     ULONG Children = 0;
     ULONG NeededSize;
 
     DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     DPRINT1("USBHUB: Query Bus Relations\n");
+
     /* Create PDOs that are missing */
     for (i = 0; i < USB_MAXCHILDREN; i++)
     {
 
-        if (DeviceExtension->Children[i] == NULL)
+        if (DeviceExtension->UsbChildren[i] == NULL)
         {
             continue;
         }
         Children++;
-        Pdo = DeviceExtension->Children[i];
-        Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-
-        PdoExtension = Pdo->DeviceExtension;
-
-        RtlZeroMemory(PdoExtension, sizeof(HUB_DEVICE_EXTENSION));
-
-        PdoExtension->IsFDO = FALSE;
-
-        Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
     }
 
     /* Fill returned structure */
@@ -364,6 +662,7 @@ UsbhubPnpFdo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
             QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO, &DeviceExtension->RootHubPdo, &DeviceExtension->RootHubFdo);
             ASSERT(DeviceExtension->RootHubPdo);
             ASSERT(DeviceExtension->RootHubFdo);
+            DPRINT1("RootPdo %x, RootFdo %x\n", DeviceExtension->RootHubPdo, DeviceExtension->RootHubFdo);
 
             /* Send the START_DEVICE irp down to the PDO of RootHub */
             Status = ForwardIrpAndWait(DeviceExtension->RootHubPdo, Irp);
@@ -416,13 +715,13 @@ UsbhubPnpFdo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
                                                                  &Result);
 
 
-            DPRINT1("Status %x, Result %x\n", Status, Result);
-            DPRINT1("InformationLevel %x\n", DeviceExtension->DeviceInformation.InformationLevel);
-            DPRINT1("ActualLength %x\n", DeviceExtension->DeviceInformation.ActualLength);
-            DPRINT1("PortNumber %x\n", DeviceExtension->DeviceInformation.PortNumber);
-            DPRINT1("DeviceDescriptor %x\n", DeviceExtension->DeviceInformation.DeviceDescriptor);
-            DPRINT1("HubAddress %x\n", DeviceExtension->DeviceInformation.HubAddress);
-            DPRINT1("NumberofPipes %x\n", DeviceExtension->DeviceInformation.NumberOfOpenPipes);
+            DPRINT("Status %x, Result %x\n", Status, Result);
+            DPRINT("InformationLevel %x\n", DeviceExtension->DeviceInformation.InformationLevel);
+            DPRINT("ActualLength %x\n", DeviceExtension->DeviceInformation.ActualLength);
+            DPRINT("PortNumber %x\n", DeviceExtension->DeviceInformation.PortNumber);
+            DPRINT("DeviceDescriptor %x\n", DeviceExtension->DeviceInformation.DeviceDescriptor);
+            DPRINT("HubAddress %x\n", DeviceExtension->DeviceInformation.HubAddress);
+            DPRINT("NumberofPipes %x\n", DeviceExtension->DeviceInformation.NumberOfOpenPipes);
 
             /* Get roothubs device descriptor */
             UsbBuildGetDescriptorRequest(Urb,
@@ -458,6 +757,7 @@ UsbhubPnpFdo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
             Urb->UrbHeader.UsbdDeviceHandle = DeviceExtension->RootHubUsbDevice;
 
             Status = QueryRootHub(DeviceExtension->RootHubPdo, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Usbhub: Failed to get RootHub Configuration with status %x\n", Status);
@@ -513,8 +813,6 @@ UsbhubPnpFdo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
             Status = QueryRootHub(DeviceExtension->RootHubPdo, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
 
-            DPRINT1("Status %x\n", Status);
-
             DeviceExtension->ConfigurationHandle = Urb->UrbSelectConfiguration.ConfigurationHandle;
             DeviceExtension->PipeHandle = Urb->UrbSelectConfiguration.Interface.Pipes[0].PipeHandle;
             DPRINT1("Configuration Handle %x\n", DeviceExtension->ConfigurationHandle);
@@ -523,6 +821,52 @@ UsbhubPnpFdo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 
             DPRINT1("Status %x\n", Status);
 
+            {
+                int PortLoop;
+                USHORT PortStatusAndChange[2];
+
+                for (PortLoop=0; PortLoop< DeviceExtension->UsbExtHubInfo.NumberOfPorts; PortLoop++)
+                {
+                    DPRINT1("Port %x\n", PortLoop);
+                    UsbBuildVendorRequest(Urb,
+                                          URB_FUNCTION_CLASS_OTHER,
+                                          sizeof(Urb->UrbControlVendorClassRequest),
+                                          USBD_TRANSFER_DIRECTION_IN,
+                                          0,
+                                          USB_REQUEST_SET_FEATURE,
+                                          PORT_POWER,
+                                          1,
+                                          0,
+                                          0,
+                                          0,
+                                          0);
+
+                    Urb->UrbOSFeatureDescriptorRequest.MS_FeatureDescriptorIndex = PortLoop + 1;
+                    Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+                    DPRINT1("Status %x\n", Status);
+
+                    UsbBuildVendorRequest(Urb,
+                                          URB_FUNCTION_CLASS_OTHER,
+                                          sizeof(Urb->UrbControlVendorClassRequest),
+                                          USBD_TRANSFER_DIRECTION_OUT,
+                                          0,
+                                          USB_REQUEST_GET_STATUS,
+                                          0,
+                                          PortLoop + 1,
+                                          &PortStatusAndChange,
+                                          0,
+                                        sizeof(PortStatusAndChange),
+                                        0);
+                    Status = QueryRootHub(DeviceObject, IOCTL_INTERNAL_USB_SUBMIT_URB, Urb, NULL);
+
+                    DPRINT1("Status %x\n", Status);
+                    DPRINT1("PortStatus = %x\n", PortStatusAndChange[0]);
+                    DPRINT1("PortChange = %x\n", PortStatusAndChange[1]);
+                }
+            }
+
+            ExFreePool(Urb);
             break;
         }
 

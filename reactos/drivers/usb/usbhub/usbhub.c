@@ -56,7 +56,8 @@ UsbhubAddDevice(
 
     DeviceExtension->IsFDO = TRUE;
     Fdo->Flags |= DO_POWER_PAGABLE;
-    Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
+    //Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
+    DeviceExtension->LowerDevice = IoAttachDeviceToDeviceStack(Fdo, Pdo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Usbhub: IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
