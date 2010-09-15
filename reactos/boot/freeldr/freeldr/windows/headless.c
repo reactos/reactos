@@ -237,11 +237,6 @@ WinLdrInitializeHeadlessPort(VOID)
 			StallExecutionProcessor(WinLdrTerminalDelay);
 		}
 	}
-	else
-	{
-		/* The port was bogus, so don't give any information to the kernel */
-		RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
-	}
 }
 
 VOID
@@ -249,6 +244,9 @@ WinLdrSetupEms(IN PCHAR BootOptions)
 {
 	PCHAR RedirectPort;
 
+    /* Start fresh */
+	RtlZeroMemory(&LoaderRedirectionInformation, sizeof(HEADLESS_LOADER_BLOCK));
+        
 	/* Use a direction port if one was given, or use ACPI to detect one instead */
 	RedirectPort = strstr(BootOptions, "/redirect=");
 

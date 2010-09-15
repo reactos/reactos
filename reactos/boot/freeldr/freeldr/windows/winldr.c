@@ -203,6 +203,25 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		/* See KiRosFrldrLpbToNtLpb for details */
 		Extension->AcpiTable = (PVOID)1;
 	}
+    
+    /* Set headless block pointer */
+    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
+    extern BOOLEAN WinLdrTerminalConnected;
+    if (WinLdrTerminalConnected)
+    {
+        Extension->HeadlessLoaderBlock = MmHeapAlloc(sizeof(HEADLESS_LOADER_BLOCK));
+        if (Extension->HeadlessLoaderBlock == NULL)
+        {
+            UiMessageBox("Failed to allocate HLB Extension!");
+            while (TRUE);
+            return;
+        }
+        RtlCopyMemory(
+            Extension->HeadlessLoaderBlock,
+            &LoaderRedirectionInformation,
+            sizeof(HEADLESS_LOADER_BLOCK));
+        Extension->HeadlessLoaderBlock = PaToVa(Extension->HeadlessLoaderBlock);
+    }
 
 	/* Load drivers database */
 	strcpy(MiscFiles, BootPath);
@@ -215,6 +234,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	if (LoaderBlock->SetupLdrBlock)
 		LoaderBlock->SetupLdrBlock = PaToVa(LoaderBlock->SetupLdrBlock);
+
 }
 
 BOOLEAN
@@ -601,10 +621,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 
 	/* Save final value of LoaderPagesSpanned */
 	LoaderBlockVA->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
-    
-    /* Set headless block pointer */
-    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
-    LoaderBlockVA->Extension->HeadlessLoaderBlock = PaToVa(&LoaderRedirectionInformation);
 
 	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);
