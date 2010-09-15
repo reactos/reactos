@@ -33,6 +33,33 @@
 #endif
 
 //
+// Well-known messages that Io and Pnp post to the kernel log
+//
+typedef enum _HEADLESS_LOG_MESSAGE
+{
+	HeadlessLogDriverLoad = 1,
+	HeadlessLogDriverSuccess,
+	HeadlessLogDriverFailed,
+	HeadlessLogEventFailed,
+	HeadlessLogObjectFailed,
+	HeadlessLogDirectoryFailed,
+	HeadlessLogPnpFailed,
+	HeadlessLogPnpFailed2,
+	HeadlessLogBootDriversFailed,
+	HeadlessLogNtdllFailed,
+	HeadlessLogSystemDriversFailed,
+	HeadlessLogReassignSystemRootFailed,
+	HeadlessLogProtectSystemRootFailed,
+	HeadlessLogConvertSystemRootFailed,
+	HeadlessLogConvertDeviceNameFailed,
+	HeadlessLogGroupOrderListFailed,
+	HeadlessLogGroupTableFailed
+	//
+	// There are more, but not applicable to ReactOS, I believe
+	//
+} HEADLESS_LOG_MESSAGE;
+
+//
 // Headless Log Entry
 //
 typedef struct _HEADLESS_LOG_ENTRY
@@ -122,6 +149,11 @@ typedef enum _HEADLESS_CMD
 	HeadlessCmdQueryGUID,
 	HeadlessCmdPutData
 } HEADLESS_CMD, *PHEADLESS_CMD;
+
+typedef struct _HEADLESS_CMD_PUT_STRING
+{
+	UCHAR String[1];
+} HEADLESS_CMD_PUT_STRING, *PHEADLESS_CMD_PUT_STRING;
 
 NTSTATUS
 NTAPI
