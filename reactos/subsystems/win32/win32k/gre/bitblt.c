@@ -585,7 +585,7 @@ GreSetDIBits(
 
     // Create source surface
     SourceSize.cx = bmi->bmiHeader.biWidth;
-    SourceSize.cy = ScanLines;
+    SourceSize.cy = abs(ScanLines);
 
     // Determine width of DIB
     DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
@@ -654,10 +654,9 @@ GreSetDIBits(
 
     // Determine destination rectangle
     DestRect.left	= 0;
-    DestRect.top	= abs(bmi->bmiHeader.biHeight) - StartScan - ScanLines;
+    DestRect.top	= abs(bmi->bmiHeader.biHeight) - StartScan - SourceSize.cy;
     DestRect.right	= SourceSize.cx;
-    DestRect.bottom	= DestRect.top + ScanLines;
-
+    DestRect.bottom	= DestRect.top + SourceSize.cy;
     copyBitsResult = GreCopyBits(DestSurf, SourceSurf, NULL, &exlo.xlo, &DestRect, &ZeroPoint);
 
     // If it succeeded, return number of scanlines copies
