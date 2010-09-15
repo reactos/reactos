@@ -7,18 +7,18 @@
 		</xi:fallback>
 	</xi:include>
 
-    <xi:include href="ReactOS-generic.rbuild" />
+	<xi:include href="ReactOS-generic.rbuild" />
 
-    <!-- <define name="_M_ARM" /> Already defined by toolchain -->
+	<!-- <define name="_M_ARM" /> Already defined by toolchain -->
 	<define name="_ARM_" />
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
 
-    <define name="USE_COMPILER_EXCEPTIONS" />
+	<define name="USE_COMPILER_EXCEPTIONS" />
 
-    <property name="WINEBUILD_FLAGS" value="--kill-at"/>
+	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
 
-    <include>include/reactos/arm</include>
+	<include>include/reactos/arm</include>
 
 	<if property="SARCH" value="versatile">
 		<define name="BOARD_CONFIG_VERSATILE"/>
@@ -29,17 +29,17 @@
 			<compilerflag>-ftracer</compilerflag>
 		</if>
 		<compilerflag>-fms-extensions</compilerflag>
-        <compilerflag>-Wno-attributes</compilerflag>
-        <compilerflag>-U_UNICODE</compilerflag>
-        <compilerflag>-UUNICODE</compilerflag>
+		<compilerflag>-Wno-attributes</compilerflag>
+		<compilerflag>-U_UNICODE</compilerflag>
+		<compilerflag>-UUNICODE</compilerflag>
 	</group>
 
 
 	<define name="__MSVCRT__"/> <!-- DUBIOUS -->
 
 	<group linkerset="ld">
-        <linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
-        <linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
 		<linkerflag>-file-alignment=0x1000</linkerflag>
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 	</group>
@@ -53,7 +53,10 @@
 		<directory name="drivers">
 			<directory name="csq">
 				<xi:include href="lib/drivers/csq/csq.rbuild" />
-            </directory>
+			</directory>
+		</directory>
+		<directory name="cportlib">
+			<xi:include href="lib/cportlib/cportlib.rbuild" />
 		</directory>
 		<directory name="debugsup">
 			<xi:include href="lib/debugsup/debugsup.rbuild" />
@@ -152,9 +155,9 @@
 	</directory>
 	<directory name="base">
 		<directory name="system">
-            <directory name="smss">
-                <xi:include href="base/system/smss/smss.rbuild" />
-            </directory>
+			<directory name="smss">
+				<xi:include href="base/system/smss/smss.rbuild" />
+			</directory>
 		</directory>
 	</directory>
 </project>
