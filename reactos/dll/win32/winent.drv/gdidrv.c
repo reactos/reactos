@@ -730,7 +730,23 @@ UINT CDECL RosDrv_SetDIBColorTable( NTDRV_PDEVICE *physDev, UINT start, UINT cou
 INT CDECL RosDrv_SetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT startscan,
                             UINT lines, LPCVOID bits, const BITMAPINFO *info, UINT coloruse )
 {
-    return RosGdiSetDIBits(physDev->hKernelDC, hbitmap, startscan, lines, bits, info, coloruse);
+    LONG height, width, tmpheight;
+    WORD infoBpp, compression;
+
+    /* Perform extensive parameter checking */
+    if (DIB_GetBitmapInfo( &info->bmiHeader, &width, &height,
+        &infoBpp, &compression ) == -1)
+        return 0;
+
+    tmpheight = height;
+    if (height < 0) height = -height;
+    if (!lines || (startscan >= height))
+        return 0;
+
+    if (startscan + lines > height) lines = height - startscan;
+
+    return RosGdiSetDIBits(physDev->hKernelDC, hbitmap, startscan,
+        tmpheight >= 0 ? lines : -lines, bits, info, coloruse);
 }
 
 INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest, DWORD cx,
@@ -790,7 +806,7 @@ INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest
     if (!cx || !cy) return lines;
 
     return RosGdiSetDIBitsToDevice(physDev->hKernelDC, pt.x, pt.y, cx, cy,
-        xSrc, ySrc, startscan, lines, bits, info, coloruse);
+        xSrc, ySrc, startscan, top_down ? -lines : lines, bits, info, coloruse);
 }
 
 void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN clip_rgn )
