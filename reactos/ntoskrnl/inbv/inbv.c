@@ -259,8 +259,13 @@ InbvDisplayString(IN PCHAR String)
         /* Make sure we're installed and display the string */
         if (InbvBootDriverInstalled) VidDisplayString((PUCHAR) String);
 
-        /* Call Headless (We don't support headless for now)
-        HeadlessDispatch(DISPLAY_STRING); */
+        /* Print the string on the EMS port */
+		HeadlessDispatch(
+			HeadlessCmdPutString,
+			String,
+			strlen(String) + sizeof(ANSI_NULL),
+			NULL,
+			NULL);
 
         /* Release the lock */
         InbvReleaseLock();

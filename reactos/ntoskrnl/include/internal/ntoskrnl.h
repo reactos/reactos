@@ -88,6 +88,7 @@
 #include "inbv.h"
 #include "vdm.h"
 #include "hal.h"
+#include "hdl.h"
 #include "arch/intrin_i.h"
 
 /*
