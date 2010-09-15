@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef DECLSPEC_EXPORT
+#define DECLSPEC_EXPORT __declspec(dllexport)
+#endif
+
 typedef struct _USBD_INTERFACE_LIST_ENTRY {
   PUSB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
   PUSBD_INTERFACE_INFORMATION Interface;
