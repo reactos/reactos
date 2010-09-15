@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/fdo.c
  * PURPOSE:     USB EHCI device driver.
  * PROGRAMMERS:
- *              Michael Martin (mjmartin@reactos.org)
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/

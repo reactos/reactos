@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/usbiffn.c
  * PURPOSE:     Direct Call Interface Functions.
  * PROGRAMMERS:
- *              Michael Martin (mjmartin@reactos.org)
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #include "usbehci.h"

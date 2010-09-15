@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/common.c
  * PURPOSE:     Common operations in FDO/PDO.
  * PROGRAMMERS:
- *              Michael Martin (mjmartin@reactos.org)
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #define INITGUID

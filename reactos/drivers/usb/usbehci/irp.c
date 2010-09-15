@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/irp.c
  * PURPOSE:     IRP Handling.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #include "usbehci.h"

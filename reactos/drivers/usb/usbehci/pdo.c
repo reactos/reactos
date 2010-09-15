@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/pdo.c
  * PURPOSE:     USB EHCI device driver.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #define INITGUID
