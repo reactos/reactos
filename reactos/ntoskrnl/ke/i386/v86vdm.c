@@ -76,17 +76,17 @@ KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
     {
         /* Save EFlags */
         Esp -= 4;
-        *(PULONG)(Esp - 2) = V86EFlags;
+        *(PULONG)Esp = V86EFlags;
     }
     else
     {
-        Esp -= 2;
         /* Save EFLags */
+        Esp -= 2;
         *(PUSHORT)Esp = (USHORT)V86EFlags;
     }
     
     /* Set new ESP and EIP */
-    TrapFrame->HardwareEsp = (USHORT)Esp;
+    TrapFrame->HardwareEsp = Esp - (TrapFrame->HardwareSegSs << 4);
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
     
     /* We're done */
@@ -115,12 +115,10 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
         /* Read EFlags */
         EFlags = *(PUSHORT)Esp;
         Esp += 2;
-        /* Read correct flags and use correct stack address */
-        EFlags &= 0xFFFF;
     }
     
     /* Set new ESP */
-    TrapFrame->HardwareEsp = (USHORT)Esp;
+    TrapFrame->HardwareEsp = Esp - (TrapFrame->HardwareSegSs << 4);
     
     /* Mask out IOPL from the flags */
     EFlags &= ~EFLAGS_IOPL;
