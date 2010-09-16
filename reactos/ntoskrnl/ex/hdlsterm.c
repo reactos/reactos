@@ -194,25 +194,22 @@ HdlspPutString(
 	HdlspSendStringAtBaud(HeadlessGlobals->TmpBuffer);
 }
 
-/*
- * @unimplemented
- */
 NTSTATUS
 NTAPI
-HeadlessDispatch(
-    IN HEADLESS_CMD Command,
-    IN PVOID InputBuffer,
-    IN SIZE_T InputBufferSize,
-    OUT PVOID OutputBuffer,
-    OUT PSIZE_T OutputBufferSize
+HdlspDispatch(
+	IN HEADLESS_CMD Command,
+	IN PVOID InputBuffer,
+	IN SIZE_T InputBufferSize,
+	OUT PVOID OutputBuffer,
+	OUT PSIZE_T OutputBufferSize
 	)
 {
 	NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 	ASSERT(HeadlessGlobals != NULL);
 //	ASSERT(HeadlessGlobals->PageLockHandle != NULL);
-	
+
 	/* FIXME: This should be using the headless spinlock */
-	
+
 	/* Ignore non-reentrant commands */
 	if ((Command != HeadlessCmdAddLogEntry) &&
 		(Command != HeadlessCmdStartBugCheck) &&
@@ -224,7 +221,7 @@ HeadlessDispatch(
 		/* Don't allow these commands next time */
 		HeadlessGlobals->ProcessingCmd = TRUE;
 	}
-	
+
 	/* Handle each command */
 	switch (Command)
 	{
@@ -241,7 +238,7 @@ HeadlessDispatch(
 				Status = STATUS_INVALID_PARAMETER;
 				goto Reset;
 			}
-			
+
 			/* Terminal should be on */
 			if (HeadlessGlobals->TerminalEnabled)
 			{
@@ -249,7 +246,7 @@ HeadlessDispatch(
 				PHEADLESS_CMD_PUT_STRING PutString = (PVOID)InputBuffer;
 				HdlspPutString(PutString->String);
 			}
-			
+
 			/* Return success either way */
 			Status = STATUS_SUCCESS;
 			break;
@@ -304,10 +301,51 @@ Reset:
 	{
 		ASSERT(HeadlessGlobals->ProcessingCmd == TRUE);
 		HeadlessGlobals->ProcessingCmd = FALSE;
-    }
+	}
 
 	//UNIMPLEMENTED;
 	return STATUS_SUCCESS;
 }
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+HeadlessDispatch(
+	IN HEADLESS_CMD Command,
+	IN PVOID InputBuffer,
+	IN SIZE_T InputBufferSize,
+	OUT PVOID OutputBuffer,
+	OUT PSIZE_T OutputBufferSize
+	)
+{
+	/* Check for stubs that will expect something even with headless off */
+	if (!HeadlessGlobals)
+	{
+		/* Don't allow the SAC to connect */
+		if (Command == HeadlessCmdEnableTerminal) return STATUS_UNSUCCESSFUL;
+
+		/* Send bogus reply */
+		if ((Command == HeadlessCmdQueryInformation) ||
+			(Command == HeadlessCmdGetByte) ||
+			(Command == HeadlessCmdGetLine) ||
+			(Command == HeadlessCmdCheckForReboot) ||
+			(Command == HeadlessCmdTerminalPoll))
+		{
+			if (!(OutputBuffer) || !(OutputBufferSize)) return STATUS_INVALID_PARAMETER;
+			RtlZeroMemory(OutputBuffer, *OutputBufferSize);
+		}
+		return STATUS_SUCCESS;
+	}
+	
+	/* Do the real work */
+	return HdlspDispatch(
+		Command, 
+		InputBuffer,
+		InputBufferSize,
+		OutputBuffer,
+		OutputBufferSize);
+}    
 
 /* EOF */
