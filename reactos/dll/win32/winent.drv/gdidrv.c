@@ -18,6 +18,7 @@
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "winent.h"
+#include <pseh/pseh2.h>
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);
@@ -732,6 +733,8 @@ INT CDECL RosDrv_SetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT starts
 {
     LONG height, width, tmpheight;
     WORD infoBpp, compression;
+    PVOID safeBits = NULL;
+    INT result, bitsSize;
 
     /* Perform extensive parameter checking */
     if (DIB_GetBitmapInfo( &info->bmiHeader, &width, &height,
@@ -745,8 +748,34 @@ INT CDECL RosDrv_SetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT starts
 
     if (startscan + lines > height) lines = height - startscan;
 
-    return RosGdiSetDIBits(physDev->hKernelDC, hbitmap, startscan,
-        tmpheight >= 0 ? lines : -lines, bits, info, coloruse);
+    /* Create a safe copy of bits */
+    bitsSize = DIB_GetDIBWidthBytes( width, infoBpp ) * height;
+
+    if ( bits )
+    {
+        safeBits = HeapAlloc( GetProcessHeap(), 0, bitsSize );
+        if (safeBits)
+        {
+            _SEH2_TRY
+            {
+                RtlCopyMemory( safeBits, bits, bitsSize );
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                ERR("StretchDIBits failed to read bits 0x%p, size: %d\n", bits, bitsSize);
+            }
+            _SEH2_END
+        }
+    }
+
+    result = RosGdiSetDIBits(physDev->hKernelDC, hbitmap, startscan,
+        lines, safeBits, info, coloruse);
+
+    /* Free safe copy of bits */
+    if ( safeBits )
+        HeapFree( GetProcessHeap(), 0, safeBits );
+
+    return result;
 }
 
 INT CDECL RosDrv_SetDIBitsToDevice( NTDRV_PDEVICE *physDev, INT xDest, INT yDest, DWORD cx,
@@ -958,6 +987,11 @@ int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
     DWORD size;
 
     return DIB_GetBitmapInfoEx( header, width, height, &planes, bpp, compr, &size);    
+}
+
+INT DIB_GetDIBWidthBytes(INT width, INT depth)
+{
+    return ((width * depth + 31) & ~31) >> 3;
 }
 
 /* EOF */
