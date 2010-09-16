@@ -568,6 +568,7 @@ GreSetDIBits(
     HPALETTE    DDB_Palette, DIB_Palette;
     ULONG       DIB_Palette_Type;
     INT         DIBWidth;
+    NTSTATUS    Status = STATUS_SUCCESS;
 
     // Check parameters
     if (!(bitmap = SURFACE_LockSurface(hBitmap)))
@@ -589,6 +590,24 @@ GreSetDIBits(
 
     // Determine width of DIB
     DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+
+    /* Probe the user buffer */
+    _SEH2_TRY
+    {
+        ProbeForRead(Bits, DIBWidth * SourceSize.cy, 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+        DPRINT1("Caught an exception 0x%08X!\n", Status);
+    }
+    _SEH2_END
+
+    if (!NT_SUCCESS(Status))
+    {
+        SURFACE_UnlockSurface(bitmap);
+        return 0;
+    }
 
     SourceBitmap = EngCreateBitmap(SourceSize,
                                    DIBWidth,
