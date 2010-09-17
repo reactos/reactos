@@ -38,6 +38,7 @@ struct window_class
     int             local;           /* local class? */
     atom_t          atom;            /* class atom */
     mod_handle_t    instance;        /* module instance */
+    user_handle_t   background;      /* background brush handle */
     unsigned int    style;           /* class style */
     int             win_extra;       /* number of window extra bytes */
     client_ptr_t    client_ptr;      /* pointer to class in client address space */
@@ -178,6 +179,7 @@ DECL_HANDLER(create_class)
     }
     class->atom       = atom;
     class->instance   = req->instance;
+    class->background = req->background;
     class->style      = req->style;
     class->win_extra  = req->win_extra;
     class->client_ptr = req->client_ptr;
@@ -245,6 +247,7 @@ DECL_HANDLER(set_class_info)
     reply->old_extra     = class->nb_extra_bytes;
     reply->old_win_extra = class->win_extra;
     reply->old_instance  = class->instance;
+    reply->old_background= class->background;
 
     if (req->flags & SET_CLASS_ATOM)
     {
@@ -257,4 +260,5 @@ DECL_HANDLER(set_class_info)
     if (req->flags & SET_CLASS_INSTANCE) class->instance = req->instance;
     if (req->flags & SET_CLASS_EXTRA) memcpy( class->extra_bytes + req->extra_offset,
                                               &req->extra_value, req->extra_size );
+    if (req->flags & SET_CLASS_BKGND) class->background = req->background;
 }
