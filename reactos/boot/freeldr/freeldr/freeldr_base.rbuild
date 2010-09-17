@@ -43,14 +43,16 @@
 		<file>meminit.c</file>
 		<file>mm.c</file>
 	</directory>
-	<directory name="reactos">
-		<file>registry.c</file>
-		<file>arcname.c</file>
-		<file>archwsup.c</file>
-		<file>binhive.c</file>
-		<file>reactos.c</file>
-        <file>imageldr.c</file>
-	</directory>
+	<if property="ARCH" value="i386">
+		<directory name="reactos">
+			<file>registry.c</file>
+			<file>arcname.c</file>
+			<file>archwsup.c</file>
+			<file>binhive.c</file>
+			<file>reactos.c</file>
+			<file>imageldr.c</file>
+		</directory>
+	</if>
 	<directory name="rtl">
 		<file>bget.c</file>
 		<file>libsupp.c</file>
