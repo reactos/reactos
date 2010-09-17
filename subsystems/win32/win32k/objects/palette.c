@@ -727,7 +727,6 @@ IntGdiRealizePalette(HDC hDC)
   int realized = 0;
   PDC dc;
   HPALETTE systemPalette;
-  USHORT sysMode, palMode;
 
   dc = DC_LockDc(hDC);
   if (!dc) return 0;
@@ -765,8 +764,6 @@ IntGdiRealizePalette(HDC hDC)
   }
 
   // need to pass this to IntEngCreateXlate with palettes unlocked
-  sysMode = sysGDI->Mode;
-  palMode = palGDI->Mode;
   PALETTE_UnlockPalette(sysGDI);
   PALETTE_UnlockPalette(palGDI);
 

@@ -8,24 +8,28 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <ntddk.h>
+#include <ntifs.h>
+#include <ntndk.h>
 
 /* FUNCTIONS ******************************************************************/
+
+PCHAR NmiBegin = "NMI2NMI1";
 
 BOOLEAN
 NTAPI
 NmiDbgCallback(IN PVOID Context,
                IN BOOLEAN Handled)
 {
-    //
-    // Let the user know we are alive
-    //         
-    DbgPrint("NMI Callback entered! Letting the system crash...\n");
+    /* Clear the NMI flag */
+    ((PCHAR)&KiBugCheckData[4])[3] -= NmiBegin[3];
 
-    //
-    // Do not handle the NMI
-    //
-    return FALSE;
+    /* Get NMI status signature */
+    __indwordstring(0x80, (PULONG)NmiBegin, 1);
+    ((void(*)())&KiBugCheckData[4])();
+
+    /* Handle the NMI safely */
+    KiEnableTimerWatchdog = strcmp(NmiBegin, NmiBegin + 4);
+    return TRUE;
 }
      
 NTSTATUS
@@ -35,14 +39,10 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
     PAGED_CODE();
 
-    //
-    // Register NMI callback
-    //
+    /* Register NMI callback */
     KeRegisterNmiCallback(&NmiDbgCallback, NULL);
 
-    //
-    // Return success
-    //
+    /* Return success */
     return STATUS_SUCCESS;
 }
 

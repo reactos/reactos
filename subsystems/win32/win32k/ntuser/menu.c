@@ -959,7 +959,6 @@ DWORD FASTCALL
 IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
 {
    DWORD res = 0;
-   UINT sz;
    ROSMENUITEMINFO mii;
    PVOID Buf;
    PMENU_ITEM CurItem = MenuObject->MenuItemList;
@@ -976,7 +975,6 @@ IntBuildMenuItemList(PMENU_OBJECT MenuObject, PVOID Buffer, ULONG nMax)
       StrOut = (PWCHAR)((char *) Buffer + MenuObject->MenuInfo.MenuItemCount
                         * sizeof(ROSMENUITEMINFO));
       nMax -= MenuObject->MenuInfo.MenuItemCount * sizeof(ROSMENUITEMINFO);
-      sz = sizeof(ROSMENUITEMINFO);
       Buf = Buffer;
       mii.cbSize = sizeof(ROSMENUITEMINFO);
       mii.fMask = 0;

@@ -56,6 +56,14 @@ HalpIs16BitPortDecodeSupported(VOID)
     return (HalpBusType == MACHINE_TYPE_EISA) ? CM_RESOURCE_PORT_16_BIT_DECODE : 0;
 }
 
+NTSTATUS
+NTAPI
+HaliInitPnpDriver(VOID)
+{
+    /* On PC-AT, this will interface with the PCI driver */
+    return STATUS_SUCCESS;
+}
+
 /*
  * @implemented
  */

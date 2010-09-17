@@ -298,10 +298,10 @@ PciFdoIrpQueryCapabilities(IN PIRP Irp,
     PDEVICE_CAPABILITIES Capabilities;
     PAGED_CODE();
     ASSERT_FDO(DeviceExtension);
-    
+
     /* Get the capabilities */
     Capabilities = IoStackLocation->Parameters.DeviceCapabilities.Capabilities;
-    
+
     /* Inherit wake levels and power mappings from the higher-up capabilities */
     DeviceExtension->PowerState.SystemWakeLevel = Capabilities->SystemWake;
     DeviceExtension->PowerState.DeviceWakeLevel = Capabilities->DeviceWake;

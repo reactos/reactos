@@ -20,7 +20,6 @@
  */
 
 #include "videoprt.h"
-#include "internal/i386/v86m.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

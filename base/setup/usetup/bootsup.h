@@ -79,6 +79,12 @@ InstallFatBootcodeToPartition(PUNICODE_STRING SystemRootPath,
 			      UCHAR PartitionType);
 
 NTSTATUS
+InstallVBRToPartition(PUNICODE_STRING SystemRootPath,
+                      PUNICODE_STRING SourceRootPath,
+                      PUNICODE_STRING DestinationArcPath,
+                      UCHAR PartitionType);
+
+NTSTATUS
 InstallFatBootcodeToFloppy(PUNICODE_STRING SourceRootPath,
 			   PUNICODE_STRING DestinationArcPath);
 

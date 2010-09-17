@@ -111,7 +111,7 @@ HalInitSystem(IN ULONG BootPhase,
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
         HalSetSystemInformation = HaliSetSystemInformation;
-        HalInitPnpDriver = NULL; // FIXME: TODO
+        HalInitPnpDriver = HaliInitPnpDriver;
 #ifndef _MINIHAL_
         HalGetDmaAdapter = HalpGetDmaAdapter;
 #else

@@ -124,8 +124,7 @@ VOID LoadCurrentTheme(THEME* theme)
 	theme->Effects.bTooltipFade	   = theme->Effects.bMenuFade;
 
 	/* show content of windows during dragging */
-	//SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, theme->Effects.bDragFullWindows, NULL, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
-	SystemParametersInfoW(SPI_GETDRAGFULLWINDOWS, 0, &theme->Effects.bDragFullWindows, 0);
+	SystemParametersInfo(SPI_GETDRAGFULLWINDOWS, 0, &theme->Effects.bDragFullWindows, 0);
 
 	/* "Hide underlined letters for keyboard navigation until I press the Alt key" */
 	SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &theme->Effects.bKeyboardCues, 0);
@@ -307,7 +306,7 @@ VOID ApplyTheme(THEME* theme, INT ThemeId)
 	 */
 	theme->Effects.bTooltipAnimation  = theme->Effects.bMenuAnimation;
 	theme->Effects.bTooltipFade	   = theme->Effects.bMenuFade;
-	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, theme->Effects.bDragFullWindows, NULL, SPIF_UPDATEINIFILE|SPIF_SENDCHANGE);
+	SystemParametersInfo(SPI_SETDRAGFULLWINDOWS, theme->Effects.bDragFullWindows, (PVOID)&theme->Effects.bDragFullWindows, SPIF_SENDCHANGE | SPIF_UPDATEINIFILE);
 	UPDATE_USERPREF(KEYBOARDCUES, &theme->Effects.bKeyboardCues);
 	//UPDATE_USERPREF(ACTIVEWINDOWTRACKING, &theme->Effects.bActiveWindowTracking);
 	//UPDATE_USERPREF(MENUANIMATION, &theme->Effects.bMenuAnimation);

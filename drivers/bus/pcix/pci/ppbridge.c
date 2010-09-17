@@ -668,7 +668,8 @@ PPBridge_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
 
 VOID
 NTAPI
-PPBridge_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
+PPBridge_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
+                     IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
     while (TRUE);
@@ -676,7 +677,8 @@ PPBridge_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
 VOID
 NTAPI
-PPBridge_ChangeResourceSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
+                                IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
     while (TRUE);

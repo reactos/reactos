@@ -75,6 +75,7 @@
 		<file>winldr.c</file>
 		<file>wlmemory.c</file>
 		<file>wlregistry.c</file>
+		<file>headless.c</file>
 	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>

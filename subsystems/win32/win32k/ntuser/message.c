@@ -1873,7 +1873,6 @@ UserSendNotifyMessage( HWND hWnd,
      ULONG_PTR PResult;
      PTHREADINFO pti;
      PWINDOW_OBJECT Window;
-     MSG Message;
 
       if ( !(Window = UserGetWindowObject(hWnd)) ) return FALSE;
 
@@ -1885,11 +1884,6 @@ UserSendNotifyMessage( HWND hWnd,
       }
       else
       { // Handle message and callback.
-         Message.hwnd = hWnd;
-         Message.message = Msg;
-         Message.wParam = wParam;
-         Message.lParam = lParam;
-
          Result = co_IntSendMessageTimeoutSingle( hWnd,
                                                   Msg,
                                                   wParam,

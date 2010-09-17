@@ -103,7 +103,6 @@ IntCalcWindowRgn(PWINDOW_OBJECT Window, BOOL Client)
 {
    PWND Wnd;
    HRGN hRgnWindow;
-   UINT RgnType;
 
    Wnd = Window->Wnd;
    if (Client)
@@ -116,7 +115,7 @@ IntCalcWindowRgn(PWINDOW_OBJECT Window, BOOL Client)
       NtGdiOffsetRgn(hRgnWindow,
          -Wnd->rcWindow.left,
          -Wnd->rcWindow.top);
-      RgnType = NtGdiCombineRgn(hRgnWindow, hRgnWindow, Window->hrgnClip, RGN_AND);
+      NtGdiCombineRgn(hRgnWindow, hRgnWindow, Window->hrgnClip, RGN_AND);
       NtGdiOffsetRgn(hRgnWindow,
          Wnd->rcWindow.left,
          Wnd->rcWindow.top);
@@ -728,15 +727,13 @@ co_IntFixCaret(PWINDOW_OBJECT Window, RECTL *lprc, UINT flags)
    if (WndCaret == Window ||
          ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window, WndCaret)))
    {
-      POINT pt, FromOffset, ToOffset, Offset;
+      POINT pt, FromOffset, ToOffset;
       RECTL rcCaret;
 
       pt.x = CaretInfo->Pos.x;
       pt.y = CaretInfo->Pos.y;
       IntGetClientOrigin(WndCaret, &FromOffset);
       IntGetClientOrigin(Window, &ToOffset);
-      Offset.x = FromOffset.x - ToOffset.x;
-      Offset.y = FromOffset.y - ToOffset.y;
       rcCaret.left = pt.x;
       rcCaret.top = pt.y;
       rcCaret.right = pt.x + CaretInfo->Size.cx;

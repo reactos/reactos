@@ -340,7 +340,6 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
                      OUT PULONG ResultLength,
                      OUT PNTSTATUS Status)
 {
-    PHHIVE Hive;
     PKEY_VALUE_INFORMATION Info = (PKEY_VALUE_INFORMATION)KeyValueInformation;
     PCELL_DATA CellData;
     USHORT NameSize;
@@ -350,8 +349,7 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
     HCELL_INDEX CellToRelease = HCELL_NIL;
     VALUE_SEARCH_RETURN_TYPE Result = SearchSuccess;
 
-    /* Get the hive and cell data */
-    Hive = Kcb->KeyHive;
+    /* Get the value data */
     CellData = (PCELL_DATA)ValueKey;
 
     /* Check if the value is compressed */

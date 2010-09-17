@@ -71,4 +71,34 @@ InbvIndicateProgress(
     VOID
 );
            
+VOID
+NTAPI
+InbvPortEnableFifo(
+	IN ULONG PortId,
+	IN BOOLEAN Enable
+);
+
+VOID
+NTAPI
+InbvPortPutByte(
+	IN ULONG PortId,
+	IN BOOLEAN Output
+);
+
+VOID
+NTAPI
+InbvPortTerminate(
+	IN ULONG PortId
+);
+
+BOOLEAN
+NTAPI
+InbvPortInitialize(
+	IN ULONG BaudRate,
+	IN ULONG PortNumber,
+	IN PUCHAR PortAddress,
+	OUT PULONG PortId,
+	IN BOOLEAN IsMMIODevice
+);
+
 extern BOOLEAN InbvBootDriverInstalled;

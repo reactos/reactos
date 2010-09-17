@@ -36,11 +36,9 @@ BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
-  SURFACE *psurf;
 
   ASSERT(pso);
   ASSERT(pRect);
-  psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
   for (y = pRect->top; y < pRect->bottom; y++)

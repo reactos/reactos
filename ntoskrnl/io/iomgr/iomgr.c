@@ -490,6 +490,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize PnP manager */
     IopInitializePlugPlayServices();
 
+    /* Initialize HAL Root Bus Driver */
+    HalInitPnpDriver();
+
     /* Load boot start drivers */
     IopInitializeBootDrivers();
 

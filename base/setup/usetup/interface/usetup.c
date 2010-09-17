@@ -51,10 +51,9 @@ WCHAR DefaultLanguage[20];
 WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
 HANDLE hPnpThread = INVALID_HANDLE_VALUE;
+PPARTLIST PartitionList = NULL;
 
 /* LOCALS *******************************************************************/
-
-static PPARTLIST PartitionList = NULL;
 
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
 
@@ -1402,23 +1401,24 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 static BOOL
 IsDiskSizeValid(PPARTENTRY PartEntry)
 {
-    ULONGLONG m;
+    ULONGLONG m1, m2;
 
     /*  check for unpartitioned space  */
-    m = PartEntry->UnpartitionedLength; 
-    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if( m > RequiredPartitionDiskSpace)
+    m1 = PartEntry->UnpartitionedLength; 
+    m1 = (m1 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+
+    if( m1 > RequiredPartitionDiskSpace)
     {
         return TRUE;
     }
 
     /* check for partitioned space */
-    m = PartEntry->PartInfo[0].PartitionLength.QuadPart;
-    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if (m < RequiredPartitionDiskSpace)
+    m2 = PartEntry->PartInfo[0].PartitionLength.QuadPart;
+    m2 = (m2 + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    if (m2 < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
-        DPRINT1("Partition is too small, required disk space is %lu MB\n", RequiredPartitionDiskSpace);
+        DPRINT1("Partition is too small(unpartitioned: %I64u MB, partitioned: %I64u MB), required disk space is %lu MB\n", m1, m2, RequiredPartitionDiskSpace);
         return FALSE;
     }
     else
@@ -2448,29 +2448,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                 PartEntry->New = FALSE;
 
                 CheckActiveBootPartition(PartitionList);
-            }
-
-            /* Install MBR if necessary */
-            if (DiskEntry->NoMbr &&
-                DiskEntry->BiosDiskNumber == 0)
-            {
-                wcscpy(PathBuffer, SourceRootPath.Buffer);
-                wcscat(PathBuffer, L"\\loader\\dosmbr.bin");
-
-                DPRINT("Install MBR bootcode: %S ==> %S\n",
-                       PathBuffer, DestinationRootPath.Buffer);
-
-                /* Install MBR bootcode */
-                Status = InstallMbrBootCodeToDisk(PathBuffer,
-                                                  DestinationRootPath.Buffer);
-                if (!NT_SUCCESS (Status))
-                {
-                    DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
-                            Status);
-                    return FALSE;
-                }
-
-                DiskEntry->NoMbr = FALSE;
             }
 
             if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
@@ -3503,7 +3480,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     /* Unattended install on hdd? */
     if (IsUnattendedSetup && UnattendMBRInstallType == 2)
     {
-        return BOOT_LOADER_HARDDISK_PAGE;
+        return BOOT_LOADER_HARDDISK_MBR_PAGE;
     }
 
     MUIDisplayPage(BOOT_LOADER_PAGE);
@@ -3520,9 +3497,9 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
             Line++;
             if (Line<12)
-                Line=14;
+                Line=15;
 
-            if (Line>14)
+            if (Line>15)
                 Line=12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
@@ -3534,9 +3511,9 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
             Line--;
             if (Line<12)
-                Line=14;
+                Line=15;
 
-            if (Line>14)
+            if (Line>15)
                 Line=12;
 
             CONSOLE_InvertTextXY(8, Line, 60, 1);
@@ -3553,13 +3530,17 @@ BootLoaderPage(PINPUT_RECORD Ir)
         {
             if (Line == 12)
             {
-                return BOOT_LOADER_HARDDISK_PAGE;
+                return BOOT_LOADER_HARDDISK_MBR_PAGE;
             }
             else if (Line == 13)
             {
-                return BOOT_LOADER_FLOPPY_PAGE;
+                return BOOT_LOADER_HARDDISK_VBR_PAGE;
             }
             else if (Line == 14)
+            {
+                return BOOT_LOADER_FLOPPY_PAGE;
+            }
+            else if (Line == 15)
             {
                 return SUCCESS_PAGE;
             }
@@ -3615,41 +3596,72 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
     return BOOT_LOADER_FLOPPY_PAGE;
 }
 
-
 static PAGE_NUMBER
-BootLoaderHarddiskPage(PINPUT_RECORD Ir)
+BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
     UCHAR PartitionType;
     NTSTATUS Status;
+    
+    PartitionType = PartitionList->ActiveBootPartition->
+                    PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
+    
+    Status = InstallVBRToPartition(&SystemRootPath,
+                                   &SourceRootPath,
+                                   &DestinationArcPath,
+                                   PartitionType);
+    if (!NT_SUCCESS(Status))
+    {
+        MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+    
+    return SUCCESS_PAGE;
+}
 
+static PAGE_NUMBER
+BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
+{
+    UCHAR PartitionType;
+    NTSTATUS Status;
+    WCHAR DestinationDevicePathBuffer[MAX_PATH];
+    WCHAR SourceMbrPathBuffer[MAX_PATH];
+
+    /* Step 1: Write the VBR */
     PartitionType = PartitionList->ActiveBootPartition->
         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
-    if ((PartitionType == PARTITION_FAT_12) ||
-        (PartitionType == PARTITION_FAT_16) ||
-        (PartitionType == PARTITION_HUGE) ||
-        (PartitionType == PARTITION_XINT13) ||
-        (PartitionType == PARTITION_FAT32) ||
-        (PartitionType == PARTITION_FAT32_XINT13))
-    {
-        Status = InstallFatBootcodeToPartition(&SystemRootPath,
-                                               &SourceRootPath,
-                                               &DestinationArcPath,
-                                               PartitionType);
-        if (!NT_SUCCESS(Status))
-        {
-            MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
-            return QUIT_PAGE;
-        }
 
-        return SUCCESS_PAGE;
-    }
-    else
+    Status = InstallVBRToPartition(&SystemRootPath,
+                                   &SourceRootPath,
+                                   &DestinationArcPath,
+                                   PartitionType);
+    if (!NT_SUCCESS(Status))
     {
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
 
-    return BOOT_LOADER_HARDDISK_PAGE;
+    /* Step 2: Write the MBR */
+    swprintf(DestinationDevicePathBuffer,
+             L"\\Device\\Harddisk%d\\Partition0",
+             PartitionList->ActiveBootDisk->DiskNumber);
+    
+    wcscpy(SourceMbrPathBuffer, SourceRootPath.Buffer);
+    wcscat(SourceMbrPathBuffer, L"\\loader\\dosmbr.bin");
+        
+    DPRINT("Install MBR bootcode: %S ==> %S\n",
+            SourceMbrPathBuffer, DestinationDevicePathBuffer);
+
+    Status = InstallMbrBootCodeToDisk(SourceMbrPathBuffer,
+                                      DestinationDevicePathBuffer);
+    if (!NT_SUCCESS (Status))
+    {
+        DPRINT1("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
+                Status);
+        MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    return SUCCESS_PAGE;
 }
 
 
@@ -3916,8 +3928,12 @@ RunUSetup(VOID)
                 Page = BootLoaderFloppyPage(&Ir);
                 break;
 
-            case BOOT_LOADER_HARDDISK_PAGE:
-                Page = BootLoaderHarddiskPage(&Ir);
+            case BOOT_LOADER_HARDDISK_MBR_PAGE:
+                Page = BootLoaderHarddiskMbrPage(&Ir);
+                break;
+                
+            case BOOT_LOADER_HARDDISK_VBR_PAGE:
+                Page = BootLoaderHarddiskVbrPage(&Ir);
                 break;
 
             /* Repair pages */

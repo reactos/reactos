@@ -57,14 +57,12 @@ BOOL FASTCALL
 IntRemoveProp(PWINDOW_OBJECT Window, ATOM Atom)
 {
    PPROPERTY Prop;
-   HANDLE Data;
    Prop = IntGetProp(Window, Atom);
 
    if (Prop == NULL)
    {
       return FALSE;
    }
-   Data = Prop->Data;
    RemoveEntryList(&Prop->PropListEntry);
    UserHeapFree(Prop);
    Window->Wnd->PropListItems--;

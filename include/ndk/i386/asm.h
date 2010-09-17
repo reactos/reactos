@@ -68,29 +68,6 @@ Author:
 #endif
 
 //
-// KV86M_REGISTERS Offsets
-//
-#define KV86M_REGISTERS_EBP                     0x0
-#define KV86M_REGISTERS_EDI                     0x4
-#define KV86M_REGISTERS_ESI                     0x8
-#define KV86M_REGISTERS_EDX                     0xC
-#define KV86M_REGISTERS_ECX                     0x10
-#define KV86M_REGISTERS_EBX                     0x14
-#define KV86M_REGISTERS_EAX                     0x18
-#define KV86M_REGISTERS_DS                      0x1C
-#define KV86M_REGISTERS_ES                      0x20
-#define KV86M_REGISTERS_FS                      0x24
-#define KV86M_REGISTERS_GS                      0x28
-#define KV86M_REGISTERS_EIP                     0x2C
-#define KV86M_REGISTERS_CS                      0x30
-#define KV86M_REGISTERS_EFLAGS                  0x34
-#define KV86M_REGISTERS_ESP                     0x38
-#define KV86M_REGISTERS_SS                      0x3C
-#define TF_SAVED_EXCEPTION_STACK                0x8C
-#define TF_REGS                                 0x90
-#define TF_ORIG_EBP                             0x94
-
-//
 // TSS Offsets
 //
 #define KTSS_ESP0                               0x4

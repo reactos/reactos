@@ -158,7 +158,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
-    ULONG OldCount;
     KIRQL OldIrql;
 
     /* Check for kernel stack size that's too big */
@@ -519,7 +518,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // We PDE-aligned the nonpaged system start VA, so haul some extra PTEs!
     //
     PointerPte = MiAddressToPte(MmNonPagedSystemStart);
-    OldCount = MmNumberOfSystemPtes;
     MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
                            PointerPte;
     MmNumberOfSystemPtes--;

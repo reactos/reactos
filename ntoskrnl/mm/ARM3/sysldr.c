@@ -559,7 +559,20 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ULONG_PTR OldBaseTop, Delta;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
-    ULONG ImportSize, i;
+    ULONG ImportSize;
+    //
+    // FIXME: MINGW-W64 must fix LD to generate drivers that Windows can load,
+    // since a real version of Windows would fail at this point, but they seem
+    // busy implementing features such as "HotPatch" support in GCC 4.6 instead,
+    // a feature which isn't even used by Windows. Priorities, priorities...
+    // Please note that Microsoft WDK EULA and license prohibits using
+    // the information contained within it for the generation of "non-Windows"
+    // drivers, which is precisely what LD will generate, since an LD driver
+    // will not load on Windows.
+    //
+#ifdef _WORKING_LINKER_
+    ULONG i;
+#endif
     PULONG_PTR ImageThunk;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
 
@@ -599,7 +612,6 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         }
 #else
         /* Get the import table */
-        i = ImportSize;
         ImportDescriptor = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                         TRUE,
                                                         IMAGE_DIRECTORY_ENTRY_IMPORT,

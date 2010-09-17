@@ -986,18 +986,24 @@ static MUI_ENTRY jaJPBootLoaderEntries[] =
     {
         8,
         12,
-        "ÌÞ°ÄÛ°ÀÞ¦ Ê°ÄÞÃÞ¨½¸ (ÌÞ°Ä¾¸À)Æ ²Ý½Ä°Ù ½Ù¡",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "ÌÞ°ÄÛ°ÀÞ¦ ÌÛ¯Ëß° ÃÞ¨½¸Æ ²Ý½Ä°Ù ½Ù¡",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "ÌÞ°ÄÛ°ÀÞ¦ ÌÛ¯Ëß° ÃÞ¨½¸Æ ²Ý½Ä°Ù ½Ù¡",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "ÌÞ°ÄÛ°ÀÞÉ ²Ý½Ä°Ù¦ ½·¯Ìß ½Ù¡",
         TEXT_STYLE_NORMAL
     },

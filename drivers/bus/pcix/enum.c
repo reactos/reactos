@@ -49,6 +49,244 @@ PCI_CONFIGURATOR PciConfigurators[] =
 
 /* FUNCTIONS ******************************************************************/
 
+BOOLEAN
+NTAPI
+PciComputeNewCurrentSettings(IN PPCI_PDO_EXTENSION PdoExtension,
+                             IN PCM_RESOURCE_LIST ResourceList)
+{
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Partial, InterruptResource;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR BaseResource, CurrentDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PreviousDescriptor;
+    CM_PARTIAL_RESOURCE_DESCRIPTOR ResourceArray[7];
+    PCM_FULL_RESOURCE_DESCRIPTOR FullList;
+    BOOLEAN DrainPartial, RangeChange;
+    ULONG i, j;
+    PPCI_FUNCTION_RESOURCES PciResources;
+    PAGED_CODE();
+
+    /* Make sure we have either no resources, or at least one */
+    ASSERT((ResourceList == NULL) || (ResourceList->Count == 1));
+
+    /* Initialize no partial, interrupt descriptor, or range change */
+    Partial = NULL;
+    InterruptResource = NULL;
+    RangeChange = FALSE;
+
+    /* Check if there's not actually any resources */
+    if (!(ResourceList) || !(ResourceList->Count))
+    {
+        /* Then just return the hardware update state */
+        return PdoExtension->UpdateHardware;
+    }
+
+    /* Print the new specified resource list */
+    PciDebugPrintCmResList(ResourceList);
+
+    /* Clear the temporary resource array */
+    for (i = 0; i < 7; i++) ResourceArray[i].Type = CmResourceTypeNull;
+
+    /* Loop the full resource descriptor */
+    FullList = ResourceList->List;
+    for (i = 0; i < ResourceList->Count; i++)
+    {
+        /* Initialize loop variables */
+        DrainPartial = FALSE;
+        BaseResource = NULL;
+
+        /* Loop the partial descriptors */
+        Partial = FullList->PartialResourceList.PartialDescriptors;
+        for (j = 0; j < FullList->PartialResourceList.Count; j++)
+        {
+            /* Check if we were supposed to drain a partial due to device data */
+            if (DrainPartial)
+            {
+                /* Draining complete, move on to the next descriptor then */
+                DrainPartial--;
+                continue;
+            }
+
+            /* Check what kind of descriptor this was */
+            switch (Partial->Type)
+            {
+                /* Base BAR resources */
+                case CmResourceTypePort:
+                case CmResourceTypeMemory:
+
+                    /* Set it as the base */
+                    ASSERT(BaseResource == NULL);
+                    BaseResource = Partial;
+                    break;
+
+                /* Interrupt resource */
+                case CmResourceTypeInterrupt:
+
+                    /* Make sure it's a compatible (and the only) PCI interrupt */
+                    ASSERT(InterruptResource == NULL);
+                    ASSERT(Partial->u.Interrupt.Level == Partial->u.Interrupt.Vector);
+                    InterruptResource = Partial;
+
+                    /* Only 255 interrupts on x86/x64 hardware */
+                    if (Partial->u.Interrupt.Level < 256)
+                    {
+                        /* Use the passed interrupt line */
+                        PdoExtension->AdjustedInterruptLine = Partial->u.Interrupt.Level;
+                    }
+                    else
+                    {
+                        /* Invalid vector, so ignore it */
+                        PdoExtension->AdjustedInterruptLine = 0;
+                    }
+
+                    break;
+
+                /* Check for specific device data */
+                case CmResourceTypeDevicePrivate:
+
+                    /* Check what kind of data this was */
+                    switch (Partial->u.DevicePrivate.Data[0])
+                    {
+                        /* Not used in the driver yet */
+                        case 1:
+                            UNIMPLEMENTED;
+                            while (TRUE);
+                            break;
+
+                        /* Not used in the driver yet */
+                        case 2:
+                            UNIMPLEMENTED;
+                            while (TRUE);
+                            break;
+
+                        /* A drain request */
+                        case 3:
+                            /* Shouldn't be a base resource, this is a drain */
+                            ASSERT(BaseResource == NULL);
+                            DrainPartial = Partial->u.DevicePrivate.Data[1];
+                            ASSERT(DrainPartial == TRUE);
+                            break;
+                    }
+                    break;
+            }
+
+            /* Move to the next descriptor */
+            Partial = PciNextPartialDescriptor(Partial);
+        }
+
+        /* We should be starting a new list now */
+        ASSERT(BaseResource == NULL);
+        FullList = (PVOID)Partial;
+    }
+
+    /* Check the current assigned PCI resources */
+    PciResources = PdoExtension->Resources;
+    if (!PciResources) return FALSE;
+
+    //if... // MISSING CODE
+    UNIMPLEMENTED;
+    DPRINT1("Missing sanity checking code!\n");
+
+    /* Loop all the PCI function resources */
+    for (i = 0; i < 7; i++)
+    {
+        /* Get the current function resource descriptor, and the new one */
+        CurrentDescriptor = &PciResources->Current[i];
+        Partial = &ResourceArray[i];
+
+        /* Previous is current during the first loop iteration */
+        PreviousDescriptor = &PciResources->Current[(i == 0) ? (0) : (i - 1)];
+
+        /* Check if this new descriptor is different than the old one */
+        if (((Partial->Type != CurrentDescriptor->Type) ||
+             (Partial->Type != CmResourceTypeNull)) &&
+            ((Partial->u.Generic.Start.QuadPart !=
+              CurrentDescriptor->u.Generic.Start.QuadPart) ||
+             (Partial->u.Generic.Length != CurrentDescriptor->u.Generic.Length)))
+        {
+            /* Record a change */
+            RangeChange = TRUE;
+
+            /* Was there a range before? */
+            if (CurrentDescriptor->Type != CmResourceTypeNull)
+            {
+                /* Print it */
+                DbgPrint("      Old range-\n");
+                PciDebugPrintPartialResource(CurrentDescriptor);
+            }
+            else
+            {
+                /* There was no range */
+                DbgPrint("      Previously unset range\n");
+            }
+
+            /* Print new one */
+            DbgPrint("      changed to\n");
+            PciDebugPrintPartialResource(Partial);
+
+            /* Update to new range */
+            CurrentDescriptor->Type = Partial->Type;
+            PreviousDescriptor->u.Generic.Start = Partial->u.Generic.Start;
+            PreviousDescriptor->u.Generic.Length = Partial->u.Generic.Length;
+            CurrentDescriptor = PreviousDescriptor;
+        }
+    }
+
+    /* Either the hardware was updated, or a resource range changed */
+    return ((RangeChange) || (PdoExtension->UpdateHardware));
+}
+
+VOID
+NTAPI
+PcipUpdateHardware(IN PVOID Context,
+                   IN PVOID Context2)
+{
+    PPCI_PDO_EXTENSION PdoExtension = Context;
+    PPCI_COMMON_HEADER PciData = Context2;
+
+    /* Check if we're allowed to disable decodes */
+    PciData->Command = PdoExtension->CommandEnables;
+    if (!(PdoExtension->HackFlags & PCI_HACK_PRESERVE_COMMAND))
+    {
+        /* Disable all decodes */
+        PciData->Command &= ~(PCI_ENABLE_IO_SPACE |
+                              PCI_ENABLE_MEMORY_SPACE |
+                              PCI_ENABLE_BUS_MASTER |
+                              PCI_ENABLE_WRITE_AND_INVALIDATE);
+    }
+
+    /* Update the device configuration */
+    PciData->Status = 0;
+    PciWriteDeviceConfig(PdoExtension, PciData, 0, PCI_COMMON_HDR_LENGTH);
+
+    /* Turn decodes back on */
+    PciDecodeEnable(PdoExtension, TRUE, &PdoExtension->CommandEnables);
+}
+
+VOID
+NTAPI
+PciUpdateHardware(IN PPCI_PDO_EXTENSION PdoExtension,
+                  IN PPCI_COMMON_HEADER PciData)
+{
+    PCI_IPI_CONTEXT Context;
+
+    /* Check for critical devices and PCI Debugging devices */
+    if ((PdoExtension->HackFlags & PCI_HACK_CRITICAL_DEVICE) ||
+        (PdoExtension->OnDebugPath))
+    {
+        /* Build the context and send an IPI */
+        Context.RunCount = 1;
+        Context.Barrier = 1;
+        Context.Context = PciData;
+        Context.Function = PcipUpdateHardware;
+        Context.DeviceExtension = PdoExtension;
+        KeIpiGenericCall(PciExecuteCriticalSystemRoutine, (ULONG_PTR)&Context);
+    }
+    else
+    {
+        /* Just to the update inline */
+        PcipUpdateHardware(PdoExtension, PciData);
+    }
+}
+
 PIO_RESOURCE_REQUIREMENTS_LIST
 NTAPI
 PciAllocateIoRequirementsList(IN ULONG Count,
@@ -666,8 +904,8 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
                      * Controller to Native Mode" in the Storage section of the
                      * Windows Driver Kit for more details.
                      */
-                    PdoExtension->SwitchedIDEToNativeMode =
-                        PciConfigureIdeController(PdoExtension, PciData, 1);
+                    PdoExtension->IDEInNativeMode =
+                        PciConfigureIdeController(PdoExtension, PciData, TRUE);
                 }
 
                 /* Is native mode enabled after all? */
@@ -1044,8 +1282,9 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
 VOID
 NTAPI
 PciWriteLimitsAndRestoreCurrent(IN PVOID Reserved,
-                                IN PPCI_CONFIGURATOR_CONTEXT Context)
+                                IN PVOID Context2)
 {
+    PPCI_CONFIGURATOR_CONTEXT Context = Context2;
     PPCI_COMMON_HEADER PciData, Current;
     PPCI_PDO_EXTENSION PdoExtension;
 
@@ -1140,7 +1379,7 @@ PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
         /* For these devices, an IPI must be sent to force high-IRQL discovery */
         IpiContext.Barrier = 1;
         IpiContext.RunCount = 1;
-        IpiContext.PdoExtension = PdoExtension;
+        IpiContext.DeviceExtension = PdoExtension;
         IpiContext.Function = PciWriteLimitsAndRestoreCurrent;
         IpiContext.Context = Context;
         KeIpiGenericCall(PciExecuteCriticalSystemRoutine, (ULONG_PTR)&IpiContext);
@@ -1883,6 +2122,124 @@ PciQueryDeviceRelations(IN PPCI_FDO_EXTENSION DeviceExtension,
     /* Return the final count and the new buffer */
     NewRelations->Count += PdoCount;
     *pDeviceRelations = NewRelations;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciSetResources(IN PPCI_PDO_EXTENSION PdoExtension,
+                IN BOOLEAN DoReset,
+                IN BOOLEAN SomethingSomethingDarkSide)
+{
+    PPCI_FDO_EXTENSION FdoExtension;
+    UCHAR NewCacheLineSize, NewLatencyTimer;
+    PCI_COMMON_HEADER PciData;
+    BOOLEAN Native;
+    PPCI_CONFIGURATOR Configurator;
+
+    /* Get the FDO and read the configuration data */
+    FdoExtension = PdoExtension->ParentFdoExtension;
+    PciReadDeviceConfig(PdoExtension, &PciData, 0, PCI_COMMON_HDR_LENGTH);
+
+    /* Make sure this is still the same device */
+    if (!PcipIsSameDevice(PdoExtension, &PciData))
+    {
+        /* Fail */
+        ASSERTMSG(FALSE, "PCI Set resources - not same device");
+        return STATUS_DEVICE_DOES_NOT_EXIST;
+    }
+
+    /* Nothing to set for a host bridge */
+    if ((PdoExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+        (PdoExtension->SubClass == PCI_SUBCLASS_BR_HOST))
+    {
+        /* Fake success */
+        return STATUS_SUCCESS;
+    }
+
+    /* Check if an IDE controller is being reset */
+    if ((DoReset) &&
+        (PdoExtension->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+        (PdoExtension->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR))
+    {
+        /* Turn off native mode */
+        Native = PciConfigureIdeController(PdoExtension, &PciData, FALSE);
+        ASSERT(Native == PdoExtension->IDEInNativeMode);
+    }
+
+    /* Check for update of a hotplug device, or first configuration of one */
+    if ((PdoExtension->NeedsHotPlugConfiguration) &&
+        (FdoExtension->HotPlugParameters.Acquired))
+    {
+        /* Don't have hotplug devices to test with yet, QEMU 0.14 should */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Locate the correct resource configurator for this type of device */
+    Configurator = &PciConfigurators[PdoExtension->HeaderType];
+
+    /* Apply the settings change */
+    Configurator->ChangeResourceSettings(PdoExtension, &PciData);
+
+    /* Assume no update needed */
+    PdoExtension->UpdateHardware = FALSE;
+
+    /* Check if a reset is needed */
+    if (DoReset)
+    {
+        /* Reset resources */
+        Configurator->ResetDevice(PdoExtension, &PciData);
+        PciData.u.type0.InterruptLine = PdoExtension->RawInterruptLine;
+    }
+
+    /* Check if the latency timer changed */
+    NewLatencyTimer = PdoExtension->SavedLatencyTimer;
+    if (PciData.LatencyTimer != NewLatencyTimer)
+    {
+        /* Debug notification */
+        DPRINT1("PCI (pdox %08x) changing latency from %02x to %02x.\n",
+                PdoExtension,
+                PciData.LatencyTimer,
+                NewLatencyTimer);
+    }
+
+    /* Check if the cache line changed */
+    NewCacheLineSize = PdoExtension->SavedCacheLineSize;
+    if (PciData.CacheLineSize != NewCacheLineSize)
+    {
+        /* Debug notification */
+        DPRINT1("PCI (pdox %08x) changing cache line size from %02x to %02x.\n",
+                PdoExtension,
+                PciData.CacheLineSize,
+                NewCacheLineSize);
+    }
+
+    /* Inherit data from PDO extension */
+    PciData.LatencyTimer = PdoExtension->SavedLatencyTimer;
+    PciData.CacheLineSize = PdoExtension->SavedCacheLineSize;
+    PciData.u.type0.InterruptLine = PdoExtension->RawInterruptLine;
+
+    /* Apply any resource hacks required */
+    PciApplyHacks(FdoExtension,
+                  &PciData,
+                  PdoExtension->Slot,
+                  PCI_HACK_FIXUP_BEFORE_UPDATE,
+                  PdoExtension);
+
+    /* Check if I/O space was disabled by administrator or driver */
+    if (PdoExtension->IoSpaceNotRequired)
+    {
+        /* Don't turn on the decode */
+        PdoExtension->CommandEnables &= ~PCI_ENABLE_IO_SPACE;
+    }
+
+    /* Update the device with the new settings */
+    PciUpdateHardware(PdoExtension, &PciData);
+
+    /* Update complete */
+    PdoExtension->RawInterruptLine = PciData.u.type0.InterruptLine;
+    PdoExtension->NeedsHotPlugConfiguration = FALSE;
     return STATUS_SUCCESS;
 }
 

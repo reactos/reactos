@@ -98,9 +98,9 @@ BOOL
 FASTCALL
 PATH_FillPath( PDC dc, PPATH pPath )
 {
-  INT   mapMode, graphicsMode;
-  SIZE  ptViewportExt, ptWindowExt;
-  POINTL ptViewportOrg, ptWindowOrg;
+  //INT   mapMode, graphicsMode;
+  //SIZE  ptViewportExt, ptWindowExt;
+  //POINTL ptViewportOrg, ptWindowOrg;
   XFORM xform;
   HRGN  hrgn;
   PDC_ATTR pdcattr = dc->pdcattr;
@@ -122,11 +122,11 @@ PATH_FillPath( PDC dc, PPATH pPath )
      */
 
     /* Save the information about the old mapping mode */
-    mapMode = pdcattr->iMapMode;
-    ptViewportExt = pdcattr->szlViewportExt;
-    ptViewportOrg = pdcattr->ptlViewportOrg;
-    ptWindowExt   = pdcattr->szlWindowExt;
-    ptWindowOrg   = pdcattr->ptlWindowOrg;
+    //mapMode = pdcattr->iMapMode;
+    //ptViewportExt = pdcattr->szlViewportExt;
+    //ptViewportOrg = pdcattr->ptlViewportOrg;
+    //ptWindowExt   = pdcattr->szlWindowExt;
+    //ptWindowOrg   = pdcattr->ptlWindowOrg;
 
     /* Save world transform
      * NB: The Windows documentation on world transforms would lead one to
@@ -143,7 +143,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
 //    pdcattr->ptlWindowOrg.x = 0;
 //    pdcattr->ptlWindowOrg.y = 0;
 
-    graphicsMode = pdcattr->iGraphicsMode;
+   // graphicsMode = pdcattr->iGraphicsMode;
 //    pdcattr->iGraphicsMode = GM_ADVANCED;
 //    IntGdiModifyWorldTransform( dc, &xform, MWT_IDENTITY );
 //    pdcattr->iGraphicsMode =  graphicsMode;
@@ -159,7 +159,7 @@ PATH_FillPath( PDC dc, PPATH pPath )
 //    pdcattr->ptlWindowOrg   = ptWindowOrg;
 
     /* Go to GM_ADVANCED temporarily to restore the world transform */
-    graphicsMode = pdcattr->iGraphicsMode;
+    //graphicsMode = pdcattr->iGraphicsMode;
 //    pdcattr->iGraphicsMode = GM_ADVANCED;
 //    IntGdiModifyWorldTransform( dc, &xform, MWT_MAX+1 );
 //    pdcattr->iGraphicsMode = graphicsMode;

@@ -42,9 +42,14 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         return MmSharedUserDataPte;
     }
     
-    /* Find the VAD, it must exist, since we only handle PEB/TEB */
+    /* Find the VAD, it might not exist if the address is bogus */
     Vad = MiLocateAddress(VirtualAddress);
-    ASSERT(Vad);
+    if (!Vad)
+    {
+        /* Bogus virtual address */
+        *ProtectCode = MM_NOACCESS;
+        return NULL;
+    }
     
     /* This must be a TEB/PEB VAD */
     ASSERT(Vad->u.VadFlags.PrivateMemory == TRUE);
@@ -726,8 +731,23 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
     /* Check if this address range belongs to a valid allocation (VAD) */
     ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
-    ASSERT(ProtectionCode != MM_NOACCESS);
-
+    if (ProtectionCode == MM_NOACCESS)
+    {
+        /* This is a bogus VA */
+        Status = STATUS_ACCESS_VIOLATION;
+        
+        /* Could be a not-yet-mapped paged pool page table */
+#if (_MI_PAGING_LEVELS == 2) 
+        MiCheckPdeForPagedPool(Address);
+#endif
+        /* See if that fixed it */
+        if (PointerPte->u.Hard.Valid == 1) Status = STATUS_SUCCESS;
+        
+        /* Return the status */
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return Status;
+    }
+    
     /* Did we get a prototype PTE back? */
     if (!ProtoPte)
     {

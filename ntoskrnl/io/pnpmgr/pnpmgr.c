@@ -3655,7 +3655,7 @@ IoInvalidateDeviceRelations(
     PIO_WORKITEM WorkItem;
     PINVALIDATE_DEVICE_RELATION_DATA Data;
 
-    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
+    Data = ExAllocatePool(NonPagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
     if (!Data)
         return;
     WorkItem = IoAllocateWorkItem(DeviceObject);

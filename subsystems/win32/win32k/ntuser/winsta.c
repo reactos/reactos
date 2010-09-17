@@ -995,7 +995,6 @@ IntGetWinStaObj(VOID)
 BOOL APIENTRY
 NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
-   HANDLE hOld;
    PWINSTATION_OBJECT NewWinSta;
    NTSTATUS Status;
 
@@ -1028,7 +1027,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
     */
 
    /* FIXME - dereference the old window station, etc... */
-   hOld = InterlockedExchangePointer(&PsGetCurrentProcess()->Win32WindowStation, hWindowStation);
+   InterlockedExchangePointer(&PsGetCurrentProcess()->Win32WindowStation, hWindowStation);
 
    DPRINT("PsGetCurrentProcess()->Win32WindowStation 0x%X\n",
           PsGetCurrentProcess()->Win32WindowStation);

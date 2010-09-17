@@ -986,18 +986,24 @@ static MUI_ENTRY itITBootLoaderEntries[] =
     {
         8,
         12,
-        "Installazione del bootloader sul disco fisso (settore di avvio).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Installazione del bootloader su un disco floppy.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Installazione del bootloader su un disco floppy.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Salta l'installazione del bootloader.",
         TEXT_STYLE_NORMAL
     },

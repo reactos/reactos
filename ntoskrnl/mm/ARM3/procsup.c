@@ -389,7 +389,6 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
 {
     PKTHREAD Thread = KeGetCurrentThread();
     PMMPTE LimitPte, NewLimitPte, LastPte;
-    PFN_NUMBER StackPages;
     KIRQL OldIrql;
     MMPTE TempPte, InvalidPte;
     PFN_NUMBER PageFrameIndex;
@@ -430,7 +429,6 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Calculate the number of new pages
     //
     LimitPte--;
-    StackPages = (LimitPte - NewLimitPte + 1);
     
     /* Setup the temporary invalid PTE */
     MI_MAKE_SOFTWARE_PTE(&InvalidPte, MM_NOACCESS);

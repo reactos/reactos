@@ -89,8 +89,6 @@ UserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
-    NTSTATUS Status;
-
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
 // Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
 // Create Event for Diconnect Desktop.
@@ -109,7 +107,7 @@ UserInitialize(
    
 //    Callback to User32 Client Thread Setup
 
-    Status = co_IntClientThreadSetup();
+    co_IntClientThreadSetup();
 
 // }
 // Set Global SERVERINFO Error flags.
