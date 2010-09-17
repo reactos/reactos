@@ -26,7 +26,7 @@ include_directories(${REACTOS_BINARY_DIR}/include)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl winebuild nci buildno gendib FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci buildno gendib cdmake FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
