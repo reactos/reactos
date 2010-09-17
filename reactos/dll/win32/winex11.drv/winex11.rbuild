@@ -47,6 +47,8 @@
 	<library>advapi32</library>
 	<library>msvcrt</library>
 	<library>wine</library>
+	<library>ole32</library>
+	<library>shell32</library>
 	<library>comctl32</library>
 	<library>imm32</library>
 	<library>gdi32</library>
@@ -54,5 +56,6 @@
 	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>
+	<library>uuid</library>
 	<library>win32ksys</library>
 </module>
