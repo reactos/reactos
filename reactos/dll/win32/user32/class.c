@@ -148,6 +148,11 @@ static BOOL set_server_info( HWND hwnd, INT offset, LONG_PTR newval, UINT size )
             req->flags = SET_CLASS_INSTANCE;
             req->instance = wine_server_client_ptr( (void *)newval );
             break;
+        case GCLP_HBRBACKGROUND:
+            req->flags = SET_CLASS_BKGND;
+            req->background = wine_server_client_ptr( (void *)newval );
+            break;
+
         default:
             assert( offset >= 0 );
             req->flags = SET_CLASS_EXTRA;
@@ -295,7 +300,7 @@ static CLASS *CLASS_FindClass( LPCWSTR name, HINSTANCE hinstance )
  *
  * The real RegisterClass() functionality.
  */
-static CLASS *CLASS_RegisterClass( LPCWSTR name, HINSTANCE hInstance, BOOL local,
+static CLASS *CLASS_RegisterClass( LPCWSTR name, HINSTANCE hInstance, HBRUSH hBackground, BOOL local,
                                    DWORD style, INT classExtra, INT winExtra )
 {
     CLASS *classPtr;
@@ -323,6 +328,7 @@ static CLASS *CLASS_RegisterClass( LPCWSTR name, HINSTANCE hInstance, BOOL local
         req->local      = local;
         req->style      = style;
         req->instance   = wine_server_client_ptr( hInstance );
+        req->background = wine_server_client_ptr( hBackground );
         req->extra      = classExtra;
         req->win_extra  = winExtra;
         req->client_ptr = wine_server_client_ptr( classPtr );
@@ -343,6 +349,7 @@ static CLASS *CLASS_RegisterClass( LPCWSTR name, HINSTANCE hInstance, BOOL local
     classPtr->cbWndExtra  = winExtra;
     classPtr->cbClsExtra  = classExtra;
     classPtr->hInstance   = hInstance;
+    classPtr->hbrBackground = hBackground;
 
     /* Other non-null values must be set by caller */
 
@@ -363,11 +370,10 @@ static void register_builtin( const struct builtin_class_descr *descr )
 {
     CLASS *classPtr;
 
-    if (!(classPtr = CLASS_RegisterClass( descr->name, user32_module, FALSE,
+    if (!(classPtr = CLASS_RegisterClass( descr->name, user32_module, descr->brush, FALSE,
                                           descr->style, 0, descr->extra ))) return;
 
     classPtr->hCursor       = LoadCursorA( 0, (LPSTR)descr->cursor );
-    classPtr->hbrBackground = descr->brush;
     classPtr->winproc       = BUILTIN_WINPROC( descr->proc );
     release_class_ptr( classPtr );
 }
@@ -499,12 +505,12 @@ ATOM WINAPI RegisterClassExA( const WNDCLASSEXA* wc )
         WCHAR name[MAX_ATOM_LEN + 1];
 
         if (!MultiByteToWideChar( CP_ACP, 0, wc->lpszClassName, -1, name, MAX_ATOM_LEN + 1 )) return 0;
-        classPtr = CLASS_RegisterClass( name, instance, !(wc->style & CS_GLOBALCLASS),
+        classPtr = CLASS_RegisterClass( name, instance, wc->hbrBackground, !(wc->style & CS_GLOBALCLASS),
                                         wc->style, wc->cbClsExtra, wc->cbWndExtra );
     }
     else
     {
-        classPtr = CLASS_RegisterClass( (LPCWSTR)wc->lpszClassName, instance,
+        classPtr = CLASS_RegisterClass( (LPCWSTR)wc->lpszClassName, instance, wc->hbrBackground,
                                         !(wc->style & CS_GLOBALCLASS), wc->style,
                                         wc->cbClsExtra, wc->cbWndExtra );
     }
@@ -518,7 +524,6 @@ ATOM WINAPI RegisterClassExA( const WNDCLASSEXA* wc )
     classPtr->hIcon         = wc->hIcon;
     classPtr->hIconSm       = wc->hIconSm;
     classPtr->hCursor       = wc->hCursor;
-    classPtr->hbrBackground = wc->hbrBackground;
     classPtr->winproc       = WINPROC_AllocProc( wc->lpfnWndProc, FALSE );
     CLASS_SetMenuNameA( classPtr, wc->lpszMenuName );
     release_class_ptr( classPtr );
@@ -543,7 +548,7 @@ ATOM WINAPI RegisterClassExW( const WNDCLASSEXW* wc )
     }
     if (!(instance = wc->hInstance)) instance = GetModuleHandleW( NULL );
 
-    if (!(classPtr = CLASS_RegisterClass( wc->lpszClassName, instance, !(wc->style & CS_GLOBALCLASS),
+    if (!(classPtr = CLASS_RegisterClass( wc->lpszClassName, instance, wc->hbrBackground, !(wc->style & CS_GLOBALCLASS),
                                           wc->style, wc->cbClsExtra, wc->cbWndExtra )))
         return 0;
 
@@ -556,7 +561,6 @@ ATOM WINAPI RegisterClassExW( const WNDCLASSEXW* wc )
     classPtr->hIcon         = wc->hIcon;
     classPtr->hIconSm       = wc->hIconSm;
     classPtr->hCursor       = wc->hCursor;
-    classPtr->hbrBackground = wc->hbrBackground;
     classPtr->winproc       = WINPROC_AllocProc( wc->lpfnWndProc, TRUE );
     CLASS_SetMenuNameW( classPtr, wc->lpszMenuName );
     release_class_ptr( classPtr );
@@ -662,7 +666,6 @@ static ULONG_PTR CLASS_GetClassLong( HWND hwnd, INT offset, UINT size,
             {
                 switch(offset)
                 {
-                case GCLP_HBRBACKGROUND:
                 case GCLP_HCURSOR:
                 case GCLP_HICON:
                 case GCLP_HICONSM:
@@ -683,6 +686,9 @@ static ULONG_PTR CLASS_GetClassLong( HWND hwnd, INT offset, UINT size,
                     break;
                 case GCLP_HMODULE:
                     retvalue = (ULONG_PTR)wine_server_get_ptr( reply->old_instance );
+                    break;
+                case GCLP_HBRBACKGROUND:
+                    retvalue = (ULONG_PTR)wine_server_get_ptr( reply->old_background );
                     break;
                 case GCW_ATOM:
                     retvalue = reply->old_atom;
