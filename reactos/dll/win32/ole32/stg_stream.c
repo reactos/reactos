@@ -295,6 +295,9 @@ static HRESULT WINAPI StgStreamImpl_Write(
    */
   This->currentPosition.u.LowPart += *pcbWritten;
 
+  if (SUCCEEDED(res))
+    res = StorageBaseImpl_Flush(This->parentStorage);
+
   TRACE("<-- S_OK, written %u\n", *pcbWritten);
   return res;
 }
@@ -417,6 +420,10 @@ static HRESULT WINAPI StgStreamImpl_SetSize(
   }
 
   hr = StorageBaseImpl_StreamSetSize(This->parentStorage, This->dirEntry, libNewSize);
+
+  if (SUCCEEDED(hr))
+    hr = StorageBaseImpl_Flush(This->parentStorage);
+
   return hr;
 }
 
