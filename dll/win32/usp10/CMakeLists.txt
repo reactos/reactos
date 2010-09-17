@@ -19,7 +19,7 @@ set_target_properties(usp10 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 target_link_libraries(usp10
     ${CMAKE_CURRENT_BINARY_DIR}/usp10.def
     wine
-    ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a
+    -lgdi32
     mingw_common)
 
 add_dependencies(usp10 usp10_def psdk)

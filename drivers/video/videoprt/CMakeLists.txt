@@ -30,8 +30,8 @@ set_target_properties(videoprt PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 
 
 target_link_libraries(videoprt
     ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_pch(videoprt ${CMAKE_CURRENT_SOURCE_DIR}/videoprt.h ${SOURCE})
 add_dependencies(videoprt videoprt_def psdk bugcodes buildno_header)

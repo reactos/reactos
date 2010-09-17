@@ -24,7 +24,7 @@ target_link_libraries(mapi32
     -lshell32
     -luuid
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a)
+    -luser32
+    -ladvapi32)
 
 add_dependencies(mapi32 mapi32_def psdk)

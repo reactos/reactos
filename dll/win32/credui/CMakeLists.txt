@@ -15,8 +15,8 @@ target_link_libraries(credui
     ${CMAKE_CURRENT_BINARY_DIR}/credui.def
     wine
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
+    -ladvapi32
+    -luser32
     -lcomctl32)
 
 add_dependencies(credui credui_def psdk)

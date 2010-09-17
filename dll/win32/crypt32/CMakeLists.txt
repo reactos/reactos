@@ -48,8 +48,8 @@ target_link_libraries(crypt32
     wine
     pseh
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -luser32
+    -ladvapi32
+    -lmsvcrt)
 
 add_dependencies(crypt32 crypt32_def psdk)

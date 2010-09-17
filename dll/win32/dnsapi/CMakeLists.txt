@@ -29,12 +29,12 @@ set_target_properties(dnsapi PROPERTIES LINK_FLAGS "-Wl,-entry,0")
 target_link_libraries(dnsapi
     ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def
     adns
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
+    -luser32
     -lws2_32
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a
+    -lmsvcrt
     -liphlpapi
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(dnsapi ${CMAKE_CURRENT_SOURCE_DIR}/dnsapi/precomp.h ${SOURCE})
 add_dependencies(dnsapi dnsapi_def psdk)

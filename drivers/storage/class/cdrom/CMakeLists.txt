@@ -8,9 +8,9 @@ add_library(cdrom SHARED cdrom.c findscsi.c cdrom.rc)
 set_target_properties(cdrom PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
 
 target_link_libraries(cdrom
-    ${REACTOS_SOURCE_DIR}/drivers/storage/class/class2/libclass2.a
-    ${REACTOS_SOURCE_DIR}/drivers/storage/scsiport/libscsiport.a
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lclass2
+    -lscsiport
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(cdrom psdk bugcodes)

@@ -411,14 +411,14 @@ set_target_properties(ntoskrnl PROPERTIES LINK_FLAGS "-Wl,-entry,_KiSystemStartu
 target_link_libraries(ntoskrnl
     ${CMAKE_CURRENT_SOURCE_DIR}/ntoskrnl_i386.def
     csq
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a
+    -lhal
     pseh
     cmlib
     rtl
     rossym
     libcntpr
-    ${REACTOS_SOURCE_DIR}/drivers/base/kdcom/libkdcom.a
-    ${REACTOS_SOURCE_DIR}/drivers/base/bootvid/libbootvid.a
+    -lkdcom
+    -lbootvid
     wdmguid
     ioevent)
 

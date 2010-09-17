@@ -27,10 +27,10 @@ target_link_libraries(iphlpapi
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi.def
     wine
     tdilib
-    ${REACTOS_SOURCE_DIR}/dll/win32/dhcpcsvc/libdhcpcsvc.a 
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
+    -ldhcpcsvc
+    -ladvapi32
     -lws2_32
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -lmsvcrt)
 
 add_dependencies(iphlpapi iphlpapi_def psdk)

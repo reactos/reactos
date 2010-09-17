@@ -17,9 +17,9 @@ add_library(uniata SHARED
 set_target_properties(uniata PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
 
 target_link_libraries(uniata
-    ${REACTOS_SOURCE_DIR}/drivers/storage/scsiport/libscsiport.a 
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a
+    -lscsiport
+    -lntoskrnl
+    -lhal
     -lgcc)
 
 add_dependencies(uniata psdk bugcodes buildno_header)

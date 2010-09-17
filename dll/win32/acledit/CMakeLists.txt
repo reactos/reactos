@@ -15,6 +15,6 @@ set_target_properties(acledit PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(acledit
     ${CMAKE_CURRENT_BINARY_DIR}/acledit.def
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lntdll)
 
 add_dependencies(acledit acledit_def psdk buildno_header)

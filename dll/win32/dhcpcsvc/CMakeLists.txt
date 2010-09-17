@@ -29,13 +29,13 @@ set_target_properties(dhcpcsvc PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(dhcpcsvc
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a
+    -lmsvcrt
     -lws2_32
     -liphlpapi
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
+    -ladvapi32
     oldnames
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/include/rosdhcp.h ${SOURCE})
 add_dependencies(dhcpcsvc dhcpcsvc_def psdk)

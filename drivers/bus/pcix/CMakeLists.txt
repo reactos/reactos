@@ -43,8 +43,8 @@ add_library(pcix SHARED ${CMAKE_CURRENT_BINARY_DIR}/pcix_pci.h.gch ${SOURCE})
 set_target_properties(pcix PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
 
 target_link_libraries(pcix
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_pch(pcix ${CMAKE_CURRENT_SOURCE_DIR}/pci.h ${SOURCE})
 add_dependencies(pcix pcix_def psdk pciclass)

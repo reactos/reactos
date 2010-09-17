@@ -16,6 +16,6 @@ target_link_libraries(msvcrt20
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20.def
     wine
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -lmsvcrt)
 
 add_dependencies(msvcrt20 msvcrt20_def psdk)

@@ -20,6 +20,6 @@ target_link_libraries(sndblst
     -lwinmm
     -ladvapi32
     -lkernel32  
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lntdll)
 
 add_dependencies(sndblst sndblst_def psdk)

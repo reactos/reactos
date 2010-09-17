@@ -9,6 +9,6 @@ set_target_properties(wmilib PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-bas
 
 target_link_libraries(wmilib
     ${CMAKE_CURRENT_BINARY_DIR}/wmilib.def
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a)
+    -lntoskrnl)
 
 add_dependencies(wmilib wmilib_def psdk buildno_header bugcodes)

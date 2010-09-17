@@ -22,8 +22,8 @@ set_target_properties(bootvid PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-ba
 
 target_link_libraries(bootvid
     ${CMAKE_CURRENT_BINARY_DIR}/bootvid.def
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_pch(bootvid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(bootvid bootvid_def psdk buildno_header bugcodes)

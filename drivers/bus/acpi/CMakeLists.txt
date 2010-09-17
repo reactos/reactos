@@ -144,7 +144,7 @@ set_target_properties(acpi PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,
 target_link_libraries(acpi
     wdmguid
     acpica
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(acpi psdk bugcodes)

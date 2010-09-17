@@ -25,8 +25,8 @@ target_link_libraries(crtdll
     ${CMAKE_CURRENT_BINARY_DIR}/crtdll.def
     wine
     crt
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(crtdll ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(crtdll crtdll_def psdk)

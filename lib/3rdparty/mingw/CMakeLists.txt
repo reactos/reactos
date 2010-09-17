@@ -35,7 +35,7 @@ set(MINGW_COMMON_SOURCE
 )
 
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
-target_link_libraries(mingw_common oldnames ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+target_link_libraries(mingw_common oldnames -lkernel32 -lntdll)
 set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 add_dependencies(mingw_common psdk)
 

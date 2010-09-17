@@ -22,8 +22,8 @@ target_link_libraries(imaadp32.acm
     ${CMAKE_CURRENT_BINARY_DIR}/imaadp32.acm.def
     wine
     -lwinmm
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
+    -luser32
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -lmsvcrt)
 
 add_dependencies(imaadp32.acm imaadp32.acm_def psdk)

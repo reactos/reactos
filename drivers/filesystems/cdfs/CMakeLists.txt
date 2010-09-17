@@ -23,8 +23,8 @@ add_library(cdfs SHARED ${CMAKE_CURRENT_BINARY_DIR}/cdfs_cdfs.h.gch ${SOURCE})
 set_target_properties(cdfs PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
 
 target_link_libraries(cdfs
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_pch(cdfs ${CMAKE_CURRENT_SOURCE_DIR}/cdfs.h ${SOURCE})
 add_dependencies(cdfs psdk bugcodes)

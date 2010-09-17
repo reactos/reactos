@@ -17,7 +17,7 @@ add_library(i8042prt SHARED
 set_target_properties(i8042prt PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols" SUFFIX ".sys")
 
 target_link_libraries(i8042prt
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(i8042prt psdk bugcodes)

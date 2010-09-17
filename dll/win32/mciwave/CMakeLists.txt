@@ -18,7 +18,7 @@ target_link_libraries(mciwave
     wine
     -lwinmm
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -luser32
+    -lmsvcrt)
 
 add_dependencies(mciwave mciwave_def psdk)

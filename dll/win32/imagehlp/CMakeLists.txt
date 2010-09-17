@@ -24,9 +24,9 @@ set_target_properties(imagehlp PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 target_link_libraries(imagehlp
     ${CMAKE_CURRENT_BINARY_DIR}/imagehlp.def
     wine
-    ${REACTOS_SOURCE_DIR}/dll/win32/dbghelp/libdbghelp.a
+    -ldbghelp
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -lmsvcrt)
 
 add_pch(imagehlp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(imagehlp imagehlp_def psdk)

@@ -17,8 +17,8 @@ set_target_properties(imm32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 target_link_libraries(imm32
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def
     wine
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
+    -ladvapi32
+    -luser32
     mingw_common)
 
 add_dependencies(imm32 imm32_def psdk)

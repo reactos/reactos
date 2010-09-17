@@ -107,7 +107,7 @@ set_target_properties(kernel32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/kernel32.def
     pseh
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lntdll)
 
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
 add_dependencies(kernel32 errcodes version)

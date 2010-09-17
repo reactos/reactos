@@ -20,8 +20,8 @@ set_target_properties(fmifs PROPERTIES LINK_FLAGS "-Wl,-entry,_InitializeFmIfs@1
 
 target_link_libraries(fmifs
     ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(fmifs fmifs_def psdk)

@@ -22,8 +22,8 @@ target_link_libraries(fusion
     wine
     mingw_common
     -lshlwapi
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/dbghelp/libdbghelp.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a)
+    -ladvapi32
+    -ldbghelp
+    -luser32)
 
 add_dependencies(fusion fusion_def psdk)

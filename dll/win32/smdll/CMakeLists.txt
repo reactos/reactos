@@ -13,6 +13,6 @@ add_library(smdll SHARED
 target_link_libraries(smdll
     ${CMAKE_CURRENT_BINARY_DIR}/smdll.def
     smlib
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lntdll)
 
 add_dependencies(smdll smdll_def psdk)

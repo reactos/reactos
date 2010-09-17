@@ -30,8 +30,8 @@ target_link_libraries(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.def
     wine
     pseh
     rpcrt4
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
 add_dependencies(advapi32 svcctl_client lsa_client eventlogrpc_client version)

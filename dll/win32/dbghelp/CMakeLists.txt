@@ -51,6 +51,6 @@ target_link_libraries(dbghelp
     -lpsapi
     -lversion
     pseh
-    ${REACTOS_SOURCE_DIR}/dll/win32/msvcrt/libmsvcrt.a)
+    -lmsvcrt)
 
 add_dependencies(dbghelp dbghelp_def psdk)

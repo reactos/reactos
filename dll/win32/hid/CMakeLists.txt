@@ -15,8 +15,8 @@ set_target_properties(hid PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(hid
     ${CMAKE_CURRENT_BINARY_DIR}/hid.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(hid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(hid hid_def psdk)

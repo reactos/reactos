@@ -13,8 +13,8 @@ set_target_properties(avicap32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(avicap32
     ${CMAKE_CURRENT_BINARY_DIR}/avicap32.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
+    -ladvapi32
+    -luser32
     wine
     mingw_common
     -lversion)

@@ -14,11 +14,10 @@ add_executable(calc WIN32
     winmain.c
     resource.rc)
 
-target_link_libraries(calc mingw_wmain
-                      ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
-                      ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-                      ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a
-                      mingw_common
+target_link_libraries(calc mingw_wmain mingw_common
+                      -ladvapi32
+                      -luser32
+                      -lgdi32
                       -lmsvcrt)
 
 add_dependencies(calc psdk)

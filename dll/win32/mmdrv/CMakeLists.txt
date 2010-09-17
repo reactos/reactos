@@ -20,7 +20,7 @@ set_target_properties(mmdrv PROPERTIES LINK_FLAGS "-Wl,-entry,0")
 target_link_libraries(mmdrv
     ${CMAKE_CURRENT_BINARY_DIR}/mmdrv.def
     -lwinmm
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a)
+    -luser32
+    -lkernel32)
 
 add_dependencies(mmdrv mmdrv_def psdk)

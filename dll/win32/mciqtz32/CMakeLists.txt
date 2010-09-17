@@ -19,7 +19,7 @@ target_link_libraries(mciqtz32
     -lole32
     strmiids
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a)
+    -luser32
+    -lgdi32)
 
 add_dependencies(mciqtz32 mciqtz32_def psdk)

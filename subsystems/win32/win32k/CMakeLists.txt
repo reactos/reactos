@@ -180,9 +180,9 @@ set_target_properties(win32k PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 target_link_libraries(win32k
     ${CMAKE_CURRENT_SOURCE_DIR}/win32k_i386.def
     pseh
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a
-    ${REACTOS_SOURCE_DIR}/drivers/video/font/ftfd/libftfd.a
+    -lntoskrnl
+    -lhal
+    -lftfd
     dxguid
     libcntpr)
 

@@ -13,7 +13,7 @@ set_target_properties(floppy PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 
 target_link_libraries(floppy
     csq
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(floppy psdk bugcodes buildno_header)

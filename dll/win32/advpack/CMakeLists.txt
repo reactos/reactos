@@ -20,6 +20,6 @@ target_link_libraries(advpack
     -lole32
     -lsetupapi
     -lversion
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a)
+    -ladvapi32)
 
 add_dependencies(advpack advpack_def psdk)

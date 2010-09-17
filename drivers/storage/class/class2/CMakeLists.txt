@@ -11,8 +11,8 @@ set_target_properties(class2 PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 
 target_link_libraries(class2
     ${CMAKE_CURRENT_BINARY_DIR}/class2.def
-    ${REACTOS_SOURCE_DIR}/drivers/storage/scsiport/libscsiport.a 
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lscsiport
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(class2 class2_def psdk bugcodes)

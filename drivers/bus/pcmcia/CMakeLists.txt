@@ -10,7 +10,7 @@ add_library(pcmcia SHARED
 set_target_properties(pcmcia PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
 
 target_link_libraries(pcmcia
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(pcmcia psdk bugcodes buildno_header)

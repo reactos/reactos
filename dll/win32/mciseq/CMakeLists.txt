@@ -16,6 +16,6 @@ target_link_libraries(mciseq
     wine
     -lwinmm
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a)
+    -luser32)
 
 add_dependencies(mciseq mciseq_def psdk)

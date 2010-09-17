@@ -18,6 +18,6 @@ set_target_properties(mswsock PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 target_link_libraries(mswsock
     ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def
     -lws2_32
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a)
+    -lkernel32)
 
 add_dependencies(mswsock mswsock_def psdk)

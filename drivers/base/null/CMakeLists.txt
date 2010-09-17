@@ -7,7 +7,7 @@ set_target_properties(null PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,
 
 target_link_libraries(null
     pseh
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(null psdk bugcodes)

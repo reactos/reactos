@@ -12,7 +12,7 @@ set_target_properties(kdcom PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-base
 
 target_link_libraries(kdcom
     ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(kdcom kdcom_def psdk buildno_header bugcodes)

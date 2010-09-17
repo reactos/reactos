@@ -12,7 +12,7 @@ set_target_properties(beepmidi PROPERTIES LINK_FLAGS "-Wl,-entry,0")
 target_link_libraries(beepmidi
     ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def
     -lwinmm
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_dependencies(beepmidi beepmidi_def psdk)

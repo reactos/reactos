@@ -14,9 +14,9 @@ set_target_properties(lpk PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(lpk
     ${CMAKE_CURRENT_BINARY_DIR}/lpk.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
+    -luser32
     -lusp10
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_dependencies(lpk lpk_def psdk)

@@ -15,6 +15,6 @@ target_link_libraries(faultrep
     ${CMAKE_CURRENT_BINARY_DIR}/faultrep.def
     wine
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a)
+    -ladvapi32)
 
 add_dependencies(faultrep faultrep_def psdk)

@@ -30,6 +30,9 @@ export(TARGETS widl winebuild nci buildno gendib FILE ${CMAKE_BINARY_DIR}/Import
 
 else()
 
+# Linking
+link_directories("${REACTOS_SOURCE_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
+
 # Activate support for assembly source files
 enable_language(ASM)
 

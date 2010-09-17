@@ -14,7 +14,7 @@ set_target_properties(cards PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(cards
     ${CMAKE_CURRENT_BINARY_DIR}/cards.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a)
+    -luser32
+    -lgdi32)
 
 add_dependencies(cards cards_def psdk)

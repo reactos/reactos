@@ -22,7 +22,7 @@ target_link_libraries(mciavi32
     -lmsvfw32
     -lwinmm
     mingw_common
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a)
+    -luser32
+    -lgdi32)
 
 add_dependencies(mciavi32 mciavi32_def psdk)

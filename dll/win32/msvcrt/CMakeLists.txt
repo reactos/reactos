@@ -25,8 +25,8 @@ target_link_libraries(msvcrt ${CMAKE_CURRENT_SOURCE_DIR}/msvcrt.def
                       crt
                       wine
                       pseh
-                      ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-                      ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+                      -lkernel32
+                      -lntdll)
 
 add_pch(msvcrt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(msvcrt psdk)

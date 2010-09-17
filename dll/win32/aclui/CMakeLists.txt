@@ -17,15 +17,15 @@ set_target_properties(aclui PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(aclui
     ${CMAKE_CURRENT_BINARY_DIR}/aclui.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/user32/libuser32.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/gdi32/libgdi32.a
+    -luser32
+    -lgdi32
     -lcomctl32
     -lole32
     -loleaut32
-    ${REACTOS_SOURCE_DIR}/dll/win32/advapi32/libadvapi32.a
+    -ladvapi32
     -luxtheme
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a
-    ${REACTOS_SOURCE_DIR}/dll/ntdll/libntdll.a)
+    -lkernel32
+    -lntdll)
 
 add_pch(aclui ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(aclui aclui_def psdk)

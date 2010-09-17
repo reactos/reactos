@@ -7,7 +7,7 @@ set_target_properties(scsiport PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 
 
 target_link_libraries(scsiport
     ${CMAKE_CURRENT_SOURCE_DIR}/scsiport_i386.def
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(scsiport psdk bugcodes)

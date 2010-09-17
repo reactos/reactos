@@ -11,6 +11,6 @@ set_target_properties(modemui PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(modemui
     ${CMAKE_CURRENT_BINARY_DIR}/modemui.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a)
+    -lkernel32)
 
 add_dependencies(modemui modemui_def psdk)

@@ -13,6 +13,6 @@ set_target_properties(batt PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
 
 target_link_libraries(batt
     ${CMAKE_CURRENT_BINARY_DIR}/batt.def
-    ${REACTOS_SOURCE_DIR}/dll/win32/kernel32/libkernel32.a)
+    -lkernel32)
 
 add_dependencies(batt batt_def psdk)

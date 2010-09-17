@@ -61,7 +61,7 @@ set_target_properties(hal PROPERTIES LINK_FLAGS "-Wl,-entry,_HalInitSystem@8 -Wl
 
 target_link_libraries(hal
     ${CMAKE_CURRENT_SOURCE_DIR}/halx86/hal_i386.def
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
+    -lntoskrnl
     libcntpr)
 
 list(APPEND MINI_HAL_SOURCE

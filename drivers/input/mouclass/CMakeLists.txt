@@ -10,7 +10,7 @@ set_target_properties(mouclass PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 
 
 target_link_libraries(mouclass
     pseh
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(mouclass psdk bugcodes)

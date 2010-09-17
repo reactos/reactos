@@ -11,7 +11,7 @@ set_target_properties(kbdclass PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 
 
 target_link_libraries(kbdclass
     pseh
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/libntoskrnl.a
-    ${REACTOS_SOURCE_DIR}/hal/halx86/libhal.a)
+    -lntoskrnl
+    -lhal)
 
 add_dependencies(kbdclass psdk bugcodes)

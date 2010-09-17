@@ -40,10 +40,10 @@ target_link_libraries(shlwapi
     -lole32
     -lcomctl32
     -lcomdlg32
-    ${REACTOS_SOURCE_DIR}/dll/win32/mpr/libmpr.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/mlang/libmlang.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/urlmon/liburlmon.a
-    ${REACTOS_SOURCE_DIR}/dll/win32/shell32/libshell32.a
+    -lmpr
+    -lmlang
+    -lurlmon
+    -lshell32
     -lwinmm
     -lversion
     mingw_common)
