@@ -3956,6 +3956,7 @@ struct create_class_request
     atom_t         atom;
     unsigned int   style;
     mod_handle_t   instance;
+    user_handle_t  background;
     int            extra;
     int            win_extra;
     client_ptr_t   client_ptr;
@@ -3994,6 +3995,7 @@ struct set_class_info_request
     unsigned int   style;
     int            win_extra;
     mod_handle_t   instance;
+    user_handle_t  background;
     int            extra_offset;
     data_size_t    extra_size;
     lparam_t       extra_value;
@@ -4006,6 +4008,7 @@ struct set_class_info_reply
     int            old_extra;
     int            old_win_extra;
     mod_handle_t   old_instance;
+    user_handle_t  old_background;
     lparam_t       old_extra_value;
 };
 #define SET_CLASS_ATOM      0x0001
@@ -4013,6 +4016,7 @@ struct set_class_info_reply
 #define SET_CLASS_WINEXTRA  0x0004
 #define SET_CLASS_INSTANCE  0x0008
 #define SET_CLASS_EXTRA     0x0010
+#define SET_CLASS_BKGND     0x0020
 
 
 
