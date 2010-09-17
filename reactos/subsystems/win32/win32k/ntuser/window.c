@@ -1661,10 +1661,14 @@ PWINDOW_OBJECT FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
                                                (PHANDLE)&hWnd,
                                                otWindow,
                                                sizeof(WINDOW_OBJECT));
+   if (!Window)
+   {
+      goto AllocError;
+   }
 
    Wnd = DesktopHeapAlloc(pti->rpdesk, sizeof(WND) + Class->cbwndExtra);
 
-   if(!Window || !Wnd)
+   if (!Wnd)
    {
       goto AllocError;
    }
