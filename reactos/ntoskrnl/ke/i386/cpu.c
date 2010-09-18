@@ -105,6 +105,17 @@ RDMSR(IN ULONG Register)
     return __readmsr(Register);
 }
 
+/* NSC/Cyrix CPU configuration register index */
+#define CX86_CCR1 0xc1
+
+/* NSC/Cyrix CPU indexed register access macros */
+#define getCx86(reg) ({ WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23); })
+
+#define setCx86(reg, data) do { \
+   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); \
+   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23,(data)); \
+} while (0)
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -241,7 +252,7 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4], Dummy;
+    ULONG Reg[4], Dummy, Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -352,7 +363,22 @@ KiGetFeatureBits(VOID)
         /* Cyrix CPUs */
         case CPU_CYRIX:
 
-            /* FIXME: CMPXCGH8B */
+            /* Workaround the "COMA" bug on 6x family of Cyrix CPUs */
+            if (Prcb->CpuType == 6 &&
+                Prcb->CpuStep <= 1)
+            {
+                /* Get CCR1 value */
+                Ccr1 = getCx86(CX86_CCR1);
+
+                /* Enable the NO_LOCK bit */
+                Ccr1 |= 0x10;
+
+                /* Set the new CCR1 value */
+                setCx86(CX86_CCR1, Ccr1);
+            }
+
+            /* Set the current features */
+            CpuFeatures = Reg[3];
 
             break;
 
