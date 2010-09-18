@@ -1,7 +1,4 @@
 
-set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES> -Wl,-L${REACTOS_BINARY_DIR}/lib/3rdparty/mingw")
-set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,-entry,_NtProcessStartup -Wl,--enable-stdcall-fixup -Wl,--enable-auto-image-base -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds")
-
 include_directories(${REACTOS_SOURCE_DIR}/lib/newinflib)
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
@@ -40,3 +37,7 @@ target_link_libraries(usetup
     vfatlib
     mingw_common
     -lmsvcrt)
+
+set_target_properties(usetup PROPERTIES LINK_FLAGS "-Wl,-entry,_NtProcessStartup@4")
+
+add_dependencies(usetup psdk buildno_header)
