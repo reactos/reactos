@@ -71,6 +71,7 @@ add_definitions(-D_USE_32BIT_TIME_T)
 
 # Compiler Core
 add_definitions(-pipe -fms-extensions)
+set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
 # Debugging (Note: DWARF-4 on 4.5.1 when we ship)
 add_definitions(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types)
