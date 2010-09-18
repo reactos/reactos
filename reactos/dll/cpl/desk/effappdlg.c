@@ -28,7 +28,7 @@ UpdateControls(HWND hwndDlg, GLOBALS *g)
     g->ThemeAdv.Effects.bKeyboardCues = (state == BST_CHECKED) ? TRUE : FALSE;
     state = SendDlgItemMessage(hwndDlg, IDC_EFFAPPEARANCE_DRAGFULLWINDOWS, BM_GETCHECK, 0, 0);
     g->ThemeAdv.Effects.bDragFullWindows = (state == BST_CHECKED) ? TRUE : FALSE;
-
+    g->bHasChanged = TRUE;
 }
 
 
@@ -105,12 +105,12 @@ EffAppearanceDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				case IDOK:
 					SaveCurrentValues(hwndDlg, g);
-					EndDialog(hwndDlg, 0);
+					EndDialog(hwndDlg, IDOK);
 					break;
 
 				case IDCANCEL:
 					g->ThemeAdv = g->Theme;
-					EndDialog(hwndDlg, 0);
+					EndDialog(hwndDlg, IDCANCEL);
 					break;
 
 				case IDC_EFFAPPEARANCE_ANIMATION:

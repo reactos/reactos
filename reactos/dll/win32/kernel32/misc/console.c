@@ -1371,20 +1371,6 @@ SetConsolePalette(DWORD Unknown0,
     return FALSE;
 }
 
-
-/*
- * @unimplemented (Undocumented)
- */
-BOOL
-WINAPI
-SetLastConsoleEventActive(VOID)
-{
-    DPRINT1("SetLastConsoleEventActive() UNIMPLEMENTED!\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
 /*
  * @unimplemented (Undocumented)
  */

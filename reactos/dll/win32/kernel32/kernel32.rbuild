@@ -6,7 +6,6 @@
 	<include base="kernel32" root="intermediate">.</include>
 	<include base="kernel32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
-	<library>wine</library>
 	<library>pseh</library>
 	<library>normalize</library>
 	<library>ntdll</library>

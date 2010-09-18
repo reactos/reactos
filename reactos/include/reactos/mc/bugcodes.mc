@@ -1311,6 +1311,16 @@ restart your computer, press F8 to select Advanced Startup Options,
 and then select Safe Mode.
 .
 
+MessageId=0xC6
+Severity=Success
+Facility=System
+SymbolicName=DRIVER_CAUGHT_MODIFYING_FREED_POOL
+Language=English
+A device driver attempting to corrupt the system has been caught.
+The faulty driver currently on the kernel stack must be replaced
+with a working version.
+.
+
 MessageId=0xC8
 Severity=Success
 Facility=System

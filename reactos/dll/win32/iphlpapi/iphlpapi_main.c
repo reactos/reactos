@@ -1747,7 +1747,7 @@ static int TcpTableSorter(const void *a, const void *b)
  */
 DWORD WINAPI GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
 {
-  DWORD ret = NO_ERROR;
+  DWORD ret = ERROR_NO_DATA;
 
   TRACE("pTcpTable %p, pdwSize %p, bOrder %d\n", pTcpTable, pdwSize,
    (DWORD)bOrder);
@@ -1764,18 +1764,31 @@ DWORD WINAPI GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
       ret = ERROR_INSUFFICIENT_BUFFER;
     }
     else {
-      PMIB_TCPTABLE pTcpTable = getTcpTable();
-	  if (pTcpTable)
+      PMIB_TCPTABLE pOurTcpTable = getTcpTable();
+	  if (pOurTcpTable)
       {
         size = sizeof(MIB_TCPTABLE);
-        if (pTcpTable->dwNumEntries > 1)
-          size += (pTcpTable->dwNumEntries - 1) * sizeof(MIB_TCPROW);
-        *pdwSize = size;
+        if (pOurTcpTable->dwNumEntries > 1)
+            size += (pOurTcpTable->dwNumEntries - 1) * sizeof(MIB_TCPROW);
+          
+        if (*pdwSize < size)
+        {
+            *pdwSize = size;
 
-	    if (bOrder)
-          qsort(pTcpTable->table, pTcpTable->dwNumEntries,
-               sizeof(MIB_TCPROW), TcpTableSorter);
-        ret = NO_ERROR;
+            ret = ERROR_INSUFFICIENT_BUFFER;
+        }
+        else
+        {
+            memcpy(pTcpTable, pOurTcpTable, size);
+            
+            if (bOrder)
+                qsort(pTcpTable->table, pTcpTable->dwNumEntries,
+                      sizeof(MIB_TCPROW), TcpTableSorter);
+            
+            ret = NO_ERROR;
+        }
+          
+        free(pOurTcpTable);
 	  }
    	}
   }
@@ -2291,6 +2304,7 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
  */
 DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
+#if 0
     InterfaceIndexTable *indexTable;
     IFInfo ifInfo;
     int i;
@@ -2477,6 +2491,15 @@ DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_AD
     free(indexTable);
 
     return NO_ERROR;
+#else
+    if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
+    if (!pAdapterAddresses || *pOutBufLen == 0)
+      return ERROR_BUFFER_OVERFLOW;
+    if (Reserved) return ERROR_INVALID_PARAMETER;
+
+    FIXME(":stub\n");
+    return ERROR_NO_DATA;
+#endif
 }
 
 /*

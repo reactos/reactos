@@ -149,10 +149,72 @@ FatCreateFcb(IN PFAT_IRP_CONTEXT IrpContext,
     Fcb->Header.ValidDataLength.LowPart = FileHandle->Filesize;
     Fcb->FatHandle = FileHandle;
 
+    /* Initialize locks */
+    FsRtlInitializeFileLock(&Fcb->Fcb.Lock, NULL, NULL);
+    FsRtlInitializeOplock(&Fcb->Fcb.Oplock);
+
     /* Set names */
     FatSetFcbNames(IrpContext, Fcb);
 
     return Fcb;
+}
+
+VOID
+NTAPI
+FatDeleteFcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PFCB Fcb)
+{
+    DPRINT("FatDeleteFcb %p\n", Fcb);
+
+    if (Fcb->OpenCount != 0)
+    {
+        DPRINT1("Trying to delete FCB with OpenCount %d\n", Fcb->OpenCount);
+        ASSERT(FALSE);
+    }
+
+    if ((Fcb->Header.NodeTypeCode == FAT_NTC_DCB) ||
+        (Fcb->Header.NodeTypeCode == FAT_NTC_ROOT_DCB))
+    {
+        /* Make sure it's a valid deletion */
+        ASSERT(Fcb->Dcb.DirectoryFileOpenCount == 0);
+        ASSERT(IsListEmpty(&Fcb->Dcb.ParentDcbList));
+        ASSERT(Fcb->Dcb.DirectoryFile == NULL);
+    }
+    else
+    {
+        /* Free locks */
+        FsRtlUninitializeFileLock(&Fcb->Fcb.Lock);
+        FsRtlUninitializeOplock(&Fcb->Fcb.Oplock);
+    }
+
+    /* Release any possible filter contexts */
+    FsRtlTeardownPerStreamContexts(&Fcb->Header);
+
+    /* Remove from parents queue */
+    if (Fcb->Header.NodeTypeCode != FAT_NTC_ROOT_DCB)
+    {
+        RemoveEntryList(&(Fcb->ParentDcbLinks));
+    }
+
+    /* Free FullFAT handle */
+    if (Fcb->FatHandle) FF_Close(Fcb->FatHandle);
+
+    /* Remove from the splay table */
+    if (FlagOn(Fcb->State, FCB_STATE_HAS_NAMES))
+        FatRemoveNames(IrpContext, Fcb);
+
+    /* Free file name buffers */
+    if (Fcb->Header.NodeTypeCode != FAT_NTC_ROOT_DCB)
+    {
+        if (Fcb->FullFileName.Buffer)
+            ExFreePool(Fcb->FullFileName.Buffer);
+    }
+
+    if (Fcb->ExactCaseLongName.Buffer)
+        ExFreePool(Fcb->ExactCaseLongName.Buffer);
+
+    /* Free this FCB, finally */
+    ExFreePool(Fcb);
 }
 
 PCCB
@@ -170,6 +232,17 @@ FatCreateCcb()
     Ccb->NodeByteSize = sizeof(CCB);
 
     return Ccb;
+}
+
+VOID
+NTAPI
+FatDeleteCcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PCCB Ccb)
+{
+    // TODO: Deallocate CCB strings, if any
+
+    /* Free the CCB */
+    ExFreePool(Ccb);
 }
 
 IO_STATUS_BLOCK
@@ -443,8 +516,11 @@ SuccComplete:
         ClearFlag(Fcb->State, FCB_STATE_DELAY_CLOSE);
 
         /* Increase counters */
+        Fcb->UncleanCount++;
         Fcb->OpenCount++;
         Vcb->OpenFileCount++;
+        if (IsFileObjectReadOnly(FileObject)) Vcb->ReadOnlyCount++;
+        if (FlagOn(FileObject->Flags, FO_NO_INTERMEDIATE_BUFFERING)) Fcb->NonCachedUncleanCount++;
 
         // TODO: Handle DeleteOnClose and OpenedAsDos by storing those flags in CCB
     }

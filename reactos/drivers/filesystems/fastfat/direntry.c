@@ -66,7 +66,7 @@ FATIsDirectoryEmpty(PVFATFCB Fcb)
                 CcUnpinData(Context);
             }
 
-            if (!CcMapData(Fcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&FatDirEntry))
+            if (!CcMapData(Fcb->FileObject, &FileOffset, sizeof(FAT_DIR_ENTRY), TRUE, &Context, (PVOID*)&FatDirEntry))
             {
                 return TRUE;
             }
@@ -120,7 +120,7 @@ FATXIsDirectoryEmpty(PVFATFCB Fcb)
                 CcUnpinData(Context);
             }
 
-            if (!CcMapData(Fcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&FatXDirEntry))
+            if (!CcMapData(Fcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY), TRUE, &Context, (PVOID*)&FatXDirEntry))
             {
                 return TRUE;
             }

@@ -79,6 +79,7 @@ XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* FIXME: TODO */
     DPRINT1("ReactOS does not yet support eXecute In Place boot technology\n");
+    DPRINT("%s MB requested (XIP = %s)\n", XipMegs, XipBoot);
 }
 
 /* EOF */

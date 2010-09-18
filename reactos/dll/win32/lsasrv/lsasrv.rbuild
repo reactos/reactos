@@ -12,5 +12,6 @@
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
 	<file>privileges.c</file>
+	<file>sids.c</file>
 	<file>lsasrv.rc</file>
 </module>

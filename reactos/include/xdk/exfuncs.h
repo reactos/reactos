@@ -114,7 +114,11 @@ ExpInterlockedPushEntrySList(
 
 #else /* !defined(_WIN64) */
 
+#ifdef NONAMELESSUNION
+#define ExQueryDepthSList(listhead) (listhead)->s.Depth
+#else
 #define ExQueryDepthSList(listhead) (listhead)->Depth
+#endif
 
 NTKERNELAPI
 PSINGLE_LIST_ENTRY
@@ -171,6 +175,15 @@ ExAllocateFromPagedLookasideList(
   PVOID Entry;
 
   Lookaside->L.TotalAllocates++;
+#ifdef NONAMELESSUNION
+  Entry = InterlockedPopEntrySList(&Lookaside->L.u.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.u2.AllocateMisses++;
+    Entry = (Lookaside->L.u4.Allocate)(Lookaside->L.Type,
+                                       Lookaside->L.Size,
+                                       Lookaside->L.Tag);
+  }
+#else /* NONAMELESSUNION */
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
     Lookaside->L.AllocateMisses++;
@@ -178,6 +191,7 @@ ExAllocateFromPagedLookasideList(
                                     Lookaside->L.Size,
                                     Lookaside->L.Tag);
   }
+#endif /* NONAMELESSUNION */
   return Entry;
 }
 
@@ -188,12 +202,21 @@ ExFreeToPagedLookasideList(
   IN PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
+#ifdef NONAMELESSUNION
+  if (ExQueryDepthSList(&Lookaside->L.u.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.u3.FreeMisses++;
+    (Lookaside->L.u5.Free)(Entry);
+  } else {
+    InterlockedPushEntrySList(&Lookaside->L.u.ListHead, (PSLIST_ENTRY)Entry);
+  }
+#else /* NONAMELESSUNION */
   if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
     Lookaside->L.FreeMisses++;
     (Lookaside->L.Free)(Entry);
   } else {
     InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
   }
+#endif /* NONAMELESSUNION */
 }
 
 #endif /* _WIN2K_COMPAT_SLIST_USAGE */
@@ -1002,6 +1025,16 @@ ExAllocateFromLookasideListEx(
   PVOID Entry;
 
   Lookaside->L.TotalAllocates += 1;
+#ifdef NONAMELESSUNION
+  Entry = InterlockedPopEntrySList(&Lookaside->L.u.ListHead);
+  if (Entry == NULL) {
+    Lookaside->L.u2.AllocateMisses += 1;
+    Entry = (Lookaside->L.u4.AllocateEx)(Lookaside->L.Type,
+                                         Lookaside->L.Size,
+                                         Lookaside->L.Tag,
+                                         Lookaside);
+  }
+#else /* NONAMELESSUNION */
   Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
   if (Entry == NULL) {
     Lookaside->L.AllocateMisses += 1;
@@ -1010,6 +1043,7 @@ ExAllocateFromLookasideListEx(
                                       Lookaside->L.Tag,
                                       Lookaside);
   }
+#endif /* NONAMELESSUNION */
   return Entry;
 }
 
@@ -1052,6 +1086,20 @@ ExAllocateFromNPagedLookasideList(
   PVOID Entry;
 
   Lookaside->L.TotalAllocates++;
+#ifdef NONAMELESSUNION
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+  Entry = ExInterlockedPopEntrySList(&Lookaside->L.u.ListHead,
+                                     &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
+  Entry = InterlockedPopEntrySList(&Lookaside->L.u.ListHead);
+#endif
+  if (Entry == NULL) {
+    Lookaside->L.u2.AllocateMisses++;
+    Entry = (Lookaside->L.u4.Allocate)(Lookaside->L.Type,
+                                       Lookaside->L.Size,
+                                       Lookaside->L.Tag);
+  }
+#else /* NONAMELESSUNION */
 #if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
   Entry = ExInterlockedPopEntrySList(&Lookaside->L.ListHead,
                                      &Lookaside->Lock__ObsoleteButDoNotDelete);
@@ -1064,6 +1112,7 @@ ExAllocateFromNPagedLookasideList(
                                     Lookaside->L.Size,
                                     Lookaside->L.Tag);
   }
+#endif /* NONAMELESSUNION */
   return Entry;
 }
 
@@ -1073,6 +1122,20 @@ ExFreeToNPagedLookasideList(
   IN PVOID Entry)
 {
   Lookaside->L.TotalFrees++;
+#ifdef NONAMELESSUNION
+  if (ExQueryDepthSList(&Lookaside->L.u.ListHead) >= Lookaside->L.Depth) {
+    Lookaside->L.u3.FreeMisses++;
+    (Lookaside->L.u5.Free)(Entry);
+  } else {
+#if defined(_WIN2K_COMPAT_SLIST_USAGE) && defined(_X86_)
+      ExInterlockedPushEntrySList(&Lookaside->L.u.ListHead,
+                                  (PSLIST_ENTRY)Entry,
+                                  &Lookaside->Lock__ObsoleteButDoNotDelete);
+#else
+      InterlockedPushEntrySList(&Lookaside->L.u.ListHead, (PSLIST_ENTRY)Entry);
+#endif
+   }
+#else /* NONAMELESSUNION */
   if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) {
     Lookaside->L.FreeMisses++;
     (Lookaside->L.Free)(Entry);
@@ -1085,6 +1148,7 @@ ExFreeToNPagedLookasideList(
       InterlockedPushEntrySList(&Lookaside->L.ListHead, (PSLIST_ENTRY)Entry);
 #endif
    }
+#endif /* NONAMELESSUNION */
 }
 
-$endif  (_WDMDDK_)
+$endif (_WDMDDK_)

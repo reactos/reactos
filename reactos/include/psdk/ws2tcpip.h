@@ -528,10 +528,9 @@ char *
 gai_strerrorA(
   IN int ecode)
 {
-  DWORD dwMsgLen;
   static char buff[GAI_STRERROR_BUFFER_SIZE + 1];
 
-  dwMsgLen = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
+  FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM
                            |FORMAT_MESSAGE_IGNORE_INSERTS
                            |FORMAT_MESSAGE_MAX_WIDTH_MASK,
                             NULL,
@@ -549,10 +548,9 @@ WCHAR *
 gai_strerrorW(
   IN int ecode)
 {
-  DWORD dwMsgLen;
   static WCHAR buff[GAI_STRERROR_BUFFER_SIZE + 1];
 
-  dwMsgLen = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
+  FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
                            |FORMAT_MESSAGE_IGNORE_INSERTS
                            |FORMAT_MESSAGE_MAX_WIDTH_MASK,
                             NULL,

@@ -237,12 +237,13 @@ BOOL DisplayOutput()
         ShowUdpStatistics();
         return EXIT_SUCCESS;
     }
-    else //if (bDoShowAllCons)
+    else
     {
         _tprintf(_T("\nActive Connections\n"));
         _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
         ShowTcpTable();
-        ShowUdpTable();
+		if (bDoShowAllCons)
+            ShowUdpTable();
     }
     return EXIT_SUCCESS;
 }
@@ -422,21 +423,22 @@ VOID ShowTcpTable()
     CHAR Remote[ADDRESSLEN];
 
     /* Get the table of TCP endpoints */
-    dwSize = 0;
-    error = GetTcpTable(NULL, &dwSize, TRUE);
-    if (error != ERROR_INSUFFICIENT_BUFFER)
+    dwSize = sizeof (MIB_TCPTABLE);
+    /* Should also work when we get new connections between 2 GetTcpTable()
+     * calls: */
+    do
+    {
+        tcpTable = (PMIB_TCPTABLE) HeapAlloc(GetProcessHeap(), 0, dwSize);
+        error = GetTcpTable(tcpTable, &dwSize, TRUE);
+        if ( error != NO_ERROR )
+            HeapFree(GetProcessHeap(), 0, tcpTable);
+    }
+    while  ( error == ERROR_INSUFFICIENT_BUFFER );
+
+    if (error != NO_ERROR)
     {
         printf("Failed to snapshot TCP endpoints.\n");
         DoFormatMessage(error);
-        exit(EXIT_FAILURE);
-    }
-    tcpTable = (PMIB_TCPTABLE) HeapAlloc(GetProcessHeap(), 0, dwSize);
-    error = GetTcpTable(tcpTable, &dwSize, TRUE );
-    if (error)
-    {
-        printf("Failed to snapshot TCP endpoints table.\n");
-        DoFormatMessage(error);
-        HeapFree(GetProcessHeap(), 0, tcpTable);
         exit(EXIT_FAILURE);
     }
 

@@ -49,7 +49,7 @@ i8042MouQueuePacket(
 
 	DeviceExtension->MouseComplete = TRUE;
 	DeviceExtension->MouseInBuffer++;
-	if (DeviceExtension->MouseInBuffer > DeviceExtension->Common.PortDeviceExtension->Settings.MouseDataQueueSize)
+	if (DeviceExtension->MouseInBuffer >= DeviceExtension->Common.PortDeviceExtension->Settings.MouseDataQueueSize)
 	{
 		WARN_(I8042PRT, "Mouse buffer overflow\n");
 		DeviceExtension->MouseInBuffer--;

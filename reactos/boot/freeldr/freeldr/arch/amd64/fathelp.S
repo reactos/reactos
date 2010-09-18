@@ -4,8 +4,12 @@
 
 .intel_syntax noprefix
 
+//org 8000h
+
+.text
+
 .code16
-.section .text16, "x"
+
 
 #define BootSectorStackTop		0x7bf2
 #define DataAreaStartHigh		0x2
@@ -37,6 +41,8 @@
 #define VolumeLabel				43
 #define FileSystem				54
 
+#define BootPartition			0x7dfd
+
 
 // This code will be stored in the first 512 bytes
 // of freeldr.sys. The first 3 bytes will be a jmp
@@ -45,16 +51,14 @@
 //
 // This code is loaded at 0000:8000 so we have to
 // encode a jmp instruction to jump to 0000:8200
-//.org 0x8000
 
-.global mainCRTStartup	// For Mingw32 builds where the linker looks for this symbol
-mainCRTStartup:
+.global _mainCRTStartup	// For Mingw32 builds where the linker looks for this symbol
+_mainCRTStartup:
 .global start
 start:
-    jmp RealEntryPoint
-//        .byte	0xe9
-//		.byte	0xfd
-//		.byte	0x01
+        .byte	0xe9
+		.byte	0xfd
+		.byte	0x01
 
 // Now starts the extra boot code that we will store
 // in the first 512 bytes of freeldr.sys. This code
@@ -67,7 +71,7 @@ FatHelperEntryPoint:
 
 		push ax							// First save AX - the start cluster of freeldr.sys
 
-#if 0
+
 		// Display "Loading FreeLoader..." message
         mov  esi, offset msgLoading			// Loading message
         call [bp-PutCharsOffset]		// Display it
@@ -117,18 +121,16 @@ LoadFile5:
 		pop  es
 
         jmp  LoadFile						// Load the next cluster (if any)
-#endif
+
 LoadFile_Done:
-        mov  dl, [bp+BootDrive]	// Load the boot drive into DL
-		mov  dh, BootPartition				// Load the boot partition into DH
+        mov  dl,BYTE PTR [bp+BootDrive]		// Load the boot drive into DL
+		mov  dh,[BootPartition]				// Load the boot partition into DH
 
 		push 0						// push segment (0x0000)
 		mov bx, [0x8000 + 0xA8]		// load the RVA of the EntryPoint into eax
 		add bx, 0x8000				// RVA -> VA and skip 3 bytes (jump to fathelper code)
 		push bx						// push offset
-//      retf						// Transfer control to FreeLoader
-		.byte 0xcb // == retf
-
+		retf						// Transfer control to FreeLoader
 
 // Reads the entire FAT into memory at 7000:0000
 ReadFatIntoMemory:
@@ -226,17 +228,8 @@ IsFat12_Done:
 		ret
 
 
-.text
-.code64
-msgLoading:
-		.ascii "Loading FreeLoader..."
-		.byte 0x0d,0x0a,0
 
-//			times 510-($-$$) db 0	// Pad to 510 bytes
-.org 0x1fe
-			.word 0x0aa55				// BootSector signature
+msgLoading:	.asciz "Loading FreeLoader...\r\n"
 
-
-// pseudo adresses
-//.org 0x7dfd
-BootPartition:
+            .org 0x1fe				// Pad to 510 bytes
+			.word 0x0aa55			// BootSector signature

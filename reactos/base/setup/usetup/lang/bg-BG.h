@@ -995,18 +995,24 @@ static MUI_ENTRY bgBGBootLoaderEntries[] =
     {
         8,
         12,
-        "Слагане на зареждач на твърдия диск (в MBR).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Слагане на зареждач на дискета.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Слагане на зареждач на дискета.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Да не се слага зареждач.",
         TEXT_STYLE_NORMAL
     },

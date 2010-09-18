@@ -16,6 +16,7 @@
 #define TAG_FCB  'BCFV'
 #define TAG_IRP  'PRIV'
 #define TAG_VFAT 'TAFV'
+#define TAG_FSD_CLOSE_CONTEXT 'CLCV'
 
 
 /* Global resource acquire/release */
@@ -35,6 +36,34 @@
 { \
     ExReleaseResourceLite(&(FatGlobalData.Resource)); \
 }
+
+#define FatIsFastIoPossible(FCB) ((BOOLEAN)                                                \
+    (((FCB)->Condition != FcbGood || !FsRtlOplockIsFastIoPossible(&(FCB)->Fcb.Oplock)) ?   \
+        FastIoIsNotPossible                                                                \
+    :                                                                                      \
+        (!FsRtlAreThereCurrentFileLocks(&(FCB)->Fcb.Lock) &&                               \
+         ((FCB)->OutstandingAsyncWrites == 0) &&                                           \
+         !FlagOn((FCB)->Vcb->State, VCB_STATE_FLAG_WRITE_PROTECTED) ?                      \
+            FastIoIsPossible                                                               \
+        :                                                                                  \
+            FastIoIsQuestionable                                                           \
+        )                                                                                  \
+    )                                                                                      \
+)
+
+#define IsFileObjectReadOnly(FO) (!((FO)->WriteAccess | (FO)->DeleteAccess))
+#define IsFileDeleted(FCB) (FlagOn((FCB)->State, FCB_STATE_DELETE_ON_CLOSE) && ((FCB)->UncleanCount == 0))
+
+BOOLEAN
+FORCEINLINE
+FatIsIoRangeValid(IN LARGE_INTEGER Start, IN ULONG Length)
+{
+    /* Check if it's more than 32bits, or if the length causes 32bit overflow.
+       FAT-specific! */
+
+    return !(Start.HighPart || Start.LowPart + Length < Start.LowPart);
+}
+
 
 NTSYSAPI
 NTSTATUS
@@ -66,6 +95,12 @@ FatReadStreamFile(PVCB Vcb,
                   ULONG ByteSize,
                   PBCB *Bcb,
                   PVOID *Buffer);
+
+BOOLEAN
+NTAPI
+FatCheckForDismount(IN PFAT_IRP_CONTEXT IrpContext,
+                    PVCB Vcb,
+                    IN BOOLEAN Force);
 
 /*  -----------------------------------------------------------  dir.c  */
 
@@ -149,6 +184,8 @@ FatNoopRelease(IN PVOID Context);
 
 /* ---------------------------------------------------------  fastfat.c */
 
+extern FAST_MUTEX FatCloseQueueMutex;
+
 PFAT_IRP_CONTEXT NTAPI
 FatBuildIrpContext(PIRP Irp, BOOLEAN CanWait);
 
@@ -204,6 +241,16 @@ FatSetFileObject(PFILE_OBJECT FileObject,
 
 PVOID FASTCALL
 FatMapUserBuffer(PIRP Irp);
+
+BOOLEAN NTAPI
+FatIsTopLevelIrp(IN PIRP Irp);
+
+VOID NTAPI
+FatNotifyReportChange(IN PFAT_IRP_CONTEXT IrpContext,
+                      IN PVCB Vcb,
+                      IN PFCB Fcb,
+                      IN ULONG Filter,
+                      IN ULONG Action);
 
 /* --------------------------------------------------------- fullfat.c */
 
@@ -284,6 +331,10 @@ FatCreateFcb(
     IN PFCB ParentDcb,
     IN FF_FILE *FileHandle);
 
+VOID NTAPI
+FatDeleteFcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PFCB Fcb);
+
 IO_STATUS_BLOCK NTAPI
 FatiOpenExistingFcb(IN PFAT_IRP_CONTEXT IrpContext,
                     IN PFILE_OBJECT FileObject,
@@ -318,6 +369,10 @@ FatRemoveNames(IN PFAT_IRP_CONTEXT IrpContext,
 
 PCCB NTAPI
 FatCreateCcb();
+
+VOID NTAPI
+FatDeleteCcb(IN PFAT_IRP_CONTEXT IrpContext,
+             IN PCCB Ccb);
 
 VOID NTAPI
 FatSetFullNameInFcb(PFCB Fcb,

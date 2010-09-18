@@ -102,8 +102,7 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
         "SYSTEM\\CurrentControlSet\\Control\\Class\\"
         "{4D36E972-E325-11CE-BFC1-08002BE10318}";
     PCHAR TargetKeyNameStart =
-        "SYSTEM\\CurrentControlSet\\Services\\";
-    PCHAR TargetKeyNameEnd = "\\Parameters\\Tcpip";
+        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     PCHAR TargetKeyName = NULL;
     PCHAR *EnumKeysLinkage = GetSubkeyNames( EnumKeyName, "\\Linkage" );
     PCHAR *EnumKeysTop     = GetSubkeyNames( EnumKeyName, "" );
@@ -125,10 +124,10 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             !strcmp( RootDevice, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
                 (CHAR*) malloc( strlen( TargetKeyNameStart ) +
-                        strlen( RootDevice ) + strlen( TargetKeyNameEnd ) + 1);
+                        strlen( RootDevice ) + 1);
             if( !TargetKeyName ) goto cleanup;
-            sprintf( TargetKeyName, "%s%s%s",
-                     TargetKeyNameStart, RootDevice, TargetKeyNameEnd );
+            sprintf( TargetKeyName, "%s%s",
+                     TargetKeyNameStart, RootDevice );
             Error = RegCreateKeyExA( HKEY_LOCAL_MACHINE, TargetKeyName, 0, NULL, 0, KEY_READ, NULL, &OutKey, NULL );
             break;
         } else {
@@ -210,7 +209,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PDHCP_ADAPTER Adapter = NULL;
     HANDLE AdapterStateChangedEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
-    int i, AdapterCount = 0;
+    int i, AdapterCount = 0, Broadcast;
 
     /* FIXME: Kill this thread when the service is stopped */
 
@@ -286,6 +285,15 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                         socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
 
                     if (DhcpSocket != INVALID_SOCKET) {
+						
+						/* Allow broadcast on this socket */
+						Broadcast = 1;
+						setsockopt(DhcpSocket,
+								   SOL_SOCKET,
+								   SO_BROADCAST,
+								   (const char *)&Broadcast,
+								   sizeof(Broadcast));
+						
                         Adapter->ListenAddr.sin_family = AF_INET;
                         Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
                         Adapter->BindStatus =

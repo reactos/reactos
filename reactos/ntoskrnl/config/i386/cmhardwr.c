@@ -232,7 +232,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 {
     UNICODE_STRING KeyName, ValueName, Data, SectionName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG HavePae, CacheSize, Length, TotalLength = 0, i, Disposition;
+    ULONG HavePae, Length, TotalLength = 0, i, Disposition;
     SIZE_T ViewSize;
     NTSTATUS Status;
     HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle, SectionHandle;
@@ -450,9 +450,6 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                         CpuString[47] = ANSI_NULL;
                     }
                 }
-
-                /* Get the cache size while we're still localized */
-                CacheSize = ((PKIPCR)KeGetPcr())->SecondLevelCacheSize;
 
                 /* Go back to user affinity */
                 KeRevertToUserAffinityThread();

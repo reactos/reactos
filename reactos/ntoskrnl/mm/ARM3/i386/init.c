@@ -150,6 +150,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
+    KIRQL OldIrql;
 
     /* Check for global bit */
 #if 0

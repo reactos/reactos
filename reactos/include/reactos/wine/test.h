@@ -237,8 +237,7 @@ static tls_data* get_tls_data(void)
     data=TlsGetValue(tls_index);
     if (!data)
     {
-        data=HeapAlloc(GetProcessHeap(), 0, sizeof(tls_data));
-        data->todo_level = 0;
+        data=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(tls_data));
         data->str_pos = data->strings;
         TlsSetValue(tls_index,data);
     }
@@ -592,6 +591,8 @@ int main( int argc, char **argv )
     if (GetEnvironmentVariableA( "WINETEST_DEBUG", p, sizeof(p) )) winetest_debug = atoi(p);
     if (GetEnvironmentVariableA( "WINETEST_INTERACTIVE", p, sizeof(p) )) winetest_interactive = atoi(p);
     if (GetEnvironmentVariableA( "WINETEST_REPORT_SUCCESS", p, sizeof(p) )) report_success = atoi(p);
+
+    if (!winetest_interactive) SetErrorMode( SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX );
 
     if (!argv[1])
     {

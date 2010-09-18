@@ -89,23 +89,6 @@ NtGdiEscape(HDC  hDC,
 
 INT
 APIENTRY
-IntEngExtEscape(
-   SURFOBJ *Surface,
-   INT      Escape,
-   INT      InSize,
-   LPVOID   InData,
-   INT      OutSize,
-   LPVOID   OutData)
-{
-   if (Escape == QUERYESCSUPPORT)
-      return FALSE;
-
-   DPRINT1("IntEngExtEscape is unimplemented. - Keep going and have a nice day\n");
-   return -1;
-}
-
-INT
-APIENTRY
 IntGdiExtEscape(
    PDC    dc,
    INT    Escape,
@@ -117,22 +100,14 @@ IntGdiExtEscape(
    SURFACE *psurf = dc->dclevel.pSurface;
    INT Result;
 
-   /* FIXME - Handle psurf == NULL !!!!!! */
-
-   if ( NULL == dc->ppdev->DriverFunctions.Escape )
+   if (!dc->ppdev->DriverFunctions.Escape)
    {
-      Result = IntEngExtEscape(
-         &psurf->SurfObj,
-         Escape,
-         InSize,
-         (PVOID)((ULONG_PTR)InData),
-         OutSize,
-         (PVOID)OutData);
+      Result = 0;
    }
    else
    {
       Result = dc->ppdev->DriverFunctions.Escape(
-         &psurf->SurfObj,
+         psurf ? &psurf->SurfObj : NULL,
          Escape,
          InSize,
          (PVOID)InData,

@@ -10,9 +10,8 @@
  */
 
 #include <k32.h>
-#include <wine/debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
+#define NDEBUG
+#include <debug.h>
 
 /*
  * @implemented

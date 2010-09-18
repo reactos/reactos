@@ -6,15 +6,6 @@
 extern "C" {
 #endif
 
-/* Helper macro to enable gcc's extension. */
-#ifndef __GNU_EXTENSION
-#ifdef __GNUC__
-#define __GNU_EXTENSION __extension__
-#else
-#define __GNU_EXTENSION
-#endif
-#endif
-
 #define STDMETHODCALLTYPE __stdcall
 
 #ifndef _WDMDDK_

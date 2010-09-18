@@ -817,6 +817,51 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+             IN ULONG PagesToDestroy,
+             IN TYPE_OF_MEMORY MemoryType)
+{
+    PLIST_ENTRY ListEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MemDescriptor;
+
+    DPRINT1("Burn RAM amount: %d pages\n", PagesToDestroy);
+
+    /* Loop the memory descriptors, beginning at the end */
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Blink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Blink)
+    {
+        /* Get the memory descriptor structure */
+        MemDescriptor = CONTAINING_RECORD(ListEntry,
+                                          MEMORY_ALLOCATION_DESCRIPTOR,
+                                          ListEntry);
+
+        /* Is memory free there or is it temporary? */
+        if (MemDescriptor->MemoryType == LoaderFree ||
+            MemDescriptor->MemoryType == LoaderFirmwareTemporary)
+        {
+            /* Check if the descriptor has more pages than we want */
+            if (MemDescriptor->PageCount > PagesToDestroy)
+            {
+                /* Change block's page count, ntoskrnl doesn't care much */
+                MemDescriptor->PageCount -= PagesToDestroy;
+                break;
+            }
+            else
+            {
+                /* Change block type */
+                MemDescriptor->MemoryType = MemoryType;
+                PagesToDestroy -= MemDescriptor->PageCount;
+
+                /* Check if we are done */
+                if (PagesToDestroy == 0) break;
+            }
+        }
+    }
+}
+
+VOID
+NTAPI
 ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -919,12 +964,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
             {
                 /* Read the number of pages we'll use */
                 PerfMemUsed = atol(PerfMem + 1) * (1024 * 1024 / PAGE_SIZE);
-                if (PerfMem)
-                {
-                    /* FIXME: TODO */
-                    DPRINT1("Burnable memory support not yet present."
-                            "/BURNMEM option ignored.\n");
-                }
+                if (PerfMemUsed) ExBurnMemory(LoaderBlock, PerfMemUsed, LoaderBad);
             }
         }
     }
@@ -1851,6 +1891,9 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Update progress bar */
     InbvUpdateProgressBar(90);
 
+    /* Enough fun for now */
+    AllowPagedPool = FALSE;
+
     /* Launch initial process */
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
@@ -1860,9 +1903,6 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
-
-    /* Enough fun for now */
-    AllowPagedPool = FALSE;
 
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);

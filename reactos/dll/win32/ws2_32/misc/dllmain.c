@@ -459,7 +459,7 @@ select(IN      INT nfds,
 
         DereferenceProviderByPointer(Provider);
 
-        if (Errno != NO_ERROR)
+        if (Count == SOCKET_ERROR)
         {
             WSASetLastError(Errno);
             return SOCKET_ERROR;
@@ -586,13 +586,15 @@ ioctlsocket(IN     SOCKET s,
             IN     LONG cmd,
             IN OUT ULONG FAR* argp)
 {
+	ULONG tmp;
+	
     return WSAIoctl(s,
                     cmd,
                     argp,
                     sizeof(ULONG),
                     argp,
                     sizeof(ULONG),
-                    argp,
+                    &tmp,
                     0,
                     0);
 }
@@ -642,7 +644,7 @@ WSAAccept(IN     SOCKET s,
     if (Socket == INVALID_SOCKET)
         WSASetLastError(Errno);
 
-    if ( addr )
+    if ( addr && addrlen )
     {
 #if DBG
         LPSOCKADDR_IN sa = (LPSOCKADDR_IN)addr;

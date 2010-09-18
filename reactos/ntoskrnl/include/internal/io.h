@@ -996,8 +996,7 @@ NTAPI
 IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
                 IN PDRIVER_INITIALIZE InitializationFunction,
                 IN PUNICODE_STRING RegistryPath,
-                IN PVOID DllBase,
-                IN ULONG SizeOfImage,
+                PLDR_DATA_TABLE_ENTRY ModuleObject,
                 OUT PDRIVER_OBJECT *pDriverObject);
 
 VOID
@@ -1073,7 +1072,7 @@ IopParseDevice(
     IN ULONG Attributes,
     IN OUT PUNICODE_STRING CompleteName,
     IN OUT PUNICODE_STRING RemainingName,
-    IN OUT PVOID Context OPTIONAL,
+    IN OUT PVOID Context,
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
     OUT PVOID *Object
 );

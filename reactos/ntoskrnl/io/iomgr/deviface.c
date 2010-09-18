@@ -731,11 +731,6 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
             }
             KeyName.Length = KeyName.MaximumLength = (USHORT)bip->DataLength - 4 * sizeof(WCHAR);
             KeyName.Buffer = &((PWSTR)bip->Data)[4];
-            if (KeyName.Length && KeyName.Buffer[KeyName.Length / sizeof(WCHAR)] == UNICODE_NULL)
-            {
-                /* Remove trailing NULL */
-                KeyName.Length -= sizeof(WCHAR);
-            }
 
             /* Add new symbolic link to symbolic link list */
             if (ReturnBuffer.Length + KeyName.Length + sizeof(WCHAR) > ReturnBuffer.MaximumLength)
@@ -1232,6 +1227,7 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG LinkedValue;
+    GUID DeviceGuid;
 
     if (SymbolicLinkName == NULL)
         return STATUS_INVALID_PARAMETER_1;
@@ -1309,13 +1305,20 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
         DPRINT1("IoGetDeviceObjectPointer() failed with status 0x%08lx\n", Status);
         return Status;
     }
+    
+    Status = RtlGUIDFromString(&GuidString, &DeviceGuid);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlGUIDFromString() failed with status 0x%08lx\n", Status);
+        return Status;
+    }
 
     EventGuid = Enable ? &GUID_DEVICE_INTERFACE_ARRIVAL : &GUID_DEVICE_INTERFACE_REMOVAL;
     IopNotifyPlugPlayNotification(
         PhysicalDeviceObject,
         EventCategoryDeviceInterfaceChange,
         EventGuid,
-        &GuidString,
+        &DeviceGuid,
         (PVOID)SymbolicLinkName);
 
     ObDereferenceObject(FileObject);

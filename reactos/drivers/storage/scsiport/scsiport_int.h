@@ -36,7 +36,7 @@
 #define SCSI_PORT_DISABLE_INT_REQUESET 0x2000
 #define SCSI_PORT_DISABLE_INTERRUPTS  0x4000
 #define SCSI_PORT_ENABLE_INT_REQUEST  0x8000
-#define SCIS_PORT_TIMER_NEEDED        0x10000
+#define SCSI_PORT_TIMER_NEEDED        0x10000
 
 /* LUN Extension flags*/
 #define LUNEX_FROZEN_QUEUE        0x0001
@@ -182,6 +182,8 @@ typedef struct _SCSI_PORT_INTERRUPT_DATA
     PSCSI_REQUEST_BLOCK_INFO CompletedRequests; /* Linked list of Srb info data */
     PSCSI_PORT_LUN_EXTENSION CompletedAbort;
     PSCSI_PORT_LUN_EXTENSION ReadyLun;
+    PHW_TIMER HwScsiTimer;
+    ULONG MiniportTimerValue;
 } SCSI_PORT_INTERRUPT_DATA, *PSCSI_PORT_INTERRUPT_DATA;
 
 
@@ -257,6 +259,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   PHW_INTERRUPT HwInterrupt;
   PHW_RESET_BUS HwResetBus;
   PHW_DMA_STARTED HwDmaStarted;
+  PHW_TIMER HwScsiTimer;
 
   PSCSI_REQUEST_BLOCK OriginalSrb;
   SCSI_REQUEST_BLOCK InternalSrb;

@@ -80,6 +80,42 @@ ScmCreateStartEvent(PHANDLE StartEvent)
 }
 
 
+static VOID
+ScmWaitForLsass(VOID)
+{
+    HANDLE hEvent;
+    DWORD dwError;
+
+    hEvent = CreateEventW(NULL,
+                          TRUE,
+                          FALSE,
+                          L"LSA_RPC_SERVER_ACTIVE");
+    if (hEvent == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT("Failed to create the notication event (Error %lu)\n", dwError);
+
+        if (dwError == ERROR_ALREADY_EXISTS)
+        {
+            hEvent = OpenEventW(SYNCHRONIZE,
+                                FALSE,
+                                L"LSA_RPC_SERVER_ACTIVE");
+            if (hEvent == NULL)
+            {
+               DPRINT1("Could not open the notification event (Error %lu)\n", GetLastError());
+               return;
+            }
+        }
+    }
+
+    DPRINT("Wait for the LSA server!\n");
+    WaitForSingleObject(hEvent, INFINITE);
+    DPRINT("LSA server running!\n");
+
+    CloseHandle(hEvent);
+}
+
+
 BOOL
 ScmNamedPipeHandleRequest(PVOID Request,
                           DWORD RequestSize,
@@ -304,9 +340,6 @@ wWinMain(HINSTANCE hInstance,
 
     DPRINT("SERVICES: Service Control Manager\n");
 
-    /* Acquire privileges to load drivers */
-    AcquireLoadDriverPrivilege();
-
     /* Create start event */
     if (!ScmCreateStartEvent(&hScmStartEvent))
     {
@@ -345,6 +378,12 @@ wWinMain(HINSTANCE hInstance,
 
     /* Register event handler (used for system shutdown) */
     SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
+
+    /* Wait for the LSA server */
+    ScmWaitForLsass();
+
+    /* Acquire privileges to load drivers */
+    AcquireLoadDriverPrivilege();
 
     /* Start auto-start services */
     ScmAutoStartServices();

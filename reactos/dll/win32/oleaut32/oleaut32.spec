@@ -410,6 +410,8 @@
 439 stdcall VarUI8FromUI2(long ptr)
 440 stdcall VarUI8FromUI4(long ptr)
 441 stdcall VarUI8FromDec(long ptr)
+442 stdcall RegisterTypeLibForUser(ptr wstr wstr)
+443 stdcall UnRegisterTypeLibForUser(ptr long long long long)
 
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)

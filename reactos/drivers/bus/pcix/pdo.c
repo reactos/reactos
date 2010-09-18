@@ -112,9 +112,95 @@ PciPdoIrpStartDevice(IN PIRP Irp,
                      IN PIO_STACK_LOCATION IoStackLocation,
                      IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    BOOLEAN Changed, DoReset;
+    POWER_STATE PowerState;
+    PAGED_CODE();
+
+    DoReset = FALSE;
+
+    /* Begin entering the start phase */
+    Status = PciBeginStateTransition((PVOID)DeviceExtension, PciStarted);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check if this is a VGA device */
+    if (((DeviceExtension->BaseClass == PCI_CLASS_PRE_20) &&
+         (DeviceExtension->SubClass == PCI_SUBCLASS_PRE_20_VGA)) ||
+        ((DeviceExtension->BaseClass == PCI_CLASS_DISPLAY_CTLR) &&
+         (DeviceExtension->SubClass == PCI_SUBCLASS_VID_VGA_CTLR)))
+    {
+        /* Always force it on */
+        DeviceExtension->CommandEnables |= (PCI_ENABLE_IO_SPACE |
+                                            PCI_ENABLE_MEMORY_SPACE);
+    }
+
+    /* Check if native IDE is enabled and it owns the I/O ports */
+    if (DeviceExtension->IoSpaceUnderNativeIdeControl)
+    {
+        /* Then don't allow I/O access */
+        DeviceExtension->CommandEnables &= ~PCI_ENABLE_IO_SPACE;
+    }
+
+    /* Always enable bus mastering */
+    DeviceExtension->CommandEnables |= PCI_ENABLE_BUS_MASTER;
+
+    /* Check if the OS assigned resources differ from the PCI configuration */
+    Changed = PciComputeNewCurrentSettings(DeviceExtension,
+                                           IoStackLocation->Parameters.
+                                           StartDevice.AllocatedResources);
+    if (Changed)
+    {
+        /* Remember this for later */
+        DeviceExtension->MovedDevice = TRUE;
+    }
+    else
+    {
+        /* All good */
+        DPRINT1("PCI - START not changing resource settings.\n");
+    }
+
+    /* Check if the device was sleeping */
+    if (DeviceExtension->PowerState.CurrentDeviceState != PowerDeviceD0)
+    {
+        /* Power it up */
+        Status = PciSetPowerManagedDevicePowerState(DeviceExtension,
+                                                    PowerDeviceD0,
+                                                    FALSE);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Powerup fail, fail the request */
+            PciCancelStateTransition((PVOID)DeviceExtension, PciStarted);
+            return STATUS_DEVICE_POWER_FAILURE;
+        }
+
+        /* Tell the power manager that the device is powered up */
+        PowerState.DeviceState = PowerDeviceD0;
+        PoSetPowerState(DeviceExtension->PhysicalDeviceObject,
+                        DevicePowerState,
+                        PowerState);
+
+        /* Update internal state */
+        DeviceExtension->PowerState.CurrentDeviceState = PowerDeviceD0;
+
+        /* This device's resources and decodes will need to be reset */
+        DoReset = TRUE;
+    }
+
+    /* Update resource information now that the device is powered up and active */
+    Status = PciSetResources(DeviceExtension, DoReset, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+        /* That failed, so cancel the transition */
+        PciCancelStateTransition((PVOID)DeviceExtension, PciStarted);
+    }
+    else
+    {
+        /* Fully commit, as the device is now started up and ready to go */
+        PciCommitStateTransition((PVOID)DeviceExtension, PciStarted);
+    }
+
+    /* Return the result of the start request */
+    return Status;
 }
 
 NTSTATUS
@@ -200,9 +286,32 @@ PciPdoIrpQueryDeviceRelations(IN PIRP Irp,
                               IN PIO_STACK_LOCATION IoStackLocation,
                               IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Are ejection relations being queried? */
+    if (IoStackLocation->Parameters.QueryDeviceRelations.Type == EjectionRelations)
+    {
+        /* Call the worker function */
+        Status = PciQueryEjectionRelations(DeviceExtension,
+                                           (PDEVICE_RELATIONS*)&Irp->
+                                           IoStatus.Information);
+    }
+    else if (IoStackLocation->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
+    {
+        /* The only other relation supported is the target device relation */
+        Status = PciQueryTargetDeviceRelations(DeviceExtension,
+                                               (PDEVICE_RELATIONS*)&Irp->
+                                               IoStatus.Information);
+    }
+    else
+    {
+        /* All other relations are unsupported */
+        Status = STATUS_NOT_SUPPORTED;
+    }
+
+    /* Return either the result of the worker function, or unsupported status */
+    return Status;
 }
 
 NTSTATUS
@@ -211,9 +320,12 @@ PciPdoIrpQueryCapabilities(IN PIRP Irp,
                            IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryCapabilities(DeviceExtension,
+                                IoStackLocation->
+                                Parameters.DeviceCapabilities.Capabilities);
 }
 
 NTSTATUS
@@ -222,9 +334,11 @@ PciPdoIrpQueryResources(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryResources(DeviceExtension,
+                            (PCM_RESOURCE_LIST*)&Irp->IoStatus.Information);
 }
 
 NTSTATUS
@@ -233,9 +347,12 @@ PciPdoIrpQueryResourceRequirements(IN PIRP Irp,
                                    IN PIO_STACK_LOCATION IoStackLocation,
                                    IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryRequirements(DeviceExtension,
+                                (PIO_RESOURCE_REQUIREMENTS_LIST*)&Irp->
+                                IoStatus.Information);
 }
 
 NTSTATUS
@@ -244,9 +361,15 @@ PciPdoIrpQueryDeviceText(IN PIRP Irp,
                          IN PIO_STACK_LOCATION IoStackLocation,
                          IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryDeviceText(DeviceExtension,
+                              IoStackLocation->
+                              Parameters.QueryDeviceText.DeviceTextType,
+                              IoStackLocation->
+                              Parameters.QueryDeviceText.LocaleId,
+                              (PWCHAR*)&Irp->IoStatus.Information);
 }
 
 NTSTATUS
@@ -255,9 +378,12 @@ PciPdoIrpQueryId(IN PIRP Irp,
                  IN PIO_STACK_LOCATION IoStackLocation,
                  IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryId(DeviceExtension,
+                      IoStackLocation->Parameters.QueryId.IdType,
+                      (PWCHAR*)&Irp->IoStatus.Information);
 }
 
 NTSTATUS
@@ -266,9 +392,12 @@ PciPdoIrpQueryBusInformation(IN PIRP Irp,
                              IN PIO_STACK_LOCATION IoStackLocation,
                              IN PPCI_PDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    PAGED_CODE();
+
+    /* Call the worker function */
+    return PciQueryBusInformation(DeviceExtension,
+                                  (PPNP_BUS_INFORMATION*)&Irp->
+                                  IoStatus.Information);
 }
 
 NTSTATUS

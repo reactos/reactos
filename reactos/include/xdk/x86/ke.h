@@ -151,9 +151,15 @@ _KeQueryTickCount(
   OUT PLARGE_INTEGER CurrentCount)
 {
   for (;;) {
+#ifdef NONAMELESSUNION
+    CurrentCount->s.HighPart = KeTickCount.High1Time;
+    CurrentCount->s.LowPart = KeTickCount.LowPart;
+    if (CurrentCount->s.HighPart == KeTickCount.High2Time) break;
+#else
     CurrentCount->HighPart = KeTickCount.High1Time;
     CurrentCount->LowPart = KeTickCount.LowPart;
     if (CurrentCount->HighPart == KeTickCount.High2Time) break;
+#endif
     YieldProcessor();
   }
 }

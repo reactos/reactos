@@ -127,6 +127,8 @@ VfatDispatchRequest (IN PVFAT_IRP_CONTEXT IrpContext)
          return VfatCleanup(IrpContext);
       case IRP_MJ_FLUSH_BUFFERS:
          return VfatFlush(IrpContext);
+      case IRP_MJ_PNP:
+         return VfatPnp(IrpContext);
       default:
          DPRINT1 ("Unexpected major function %x\n", IrpContext->MajorFunction);
          IrpContext->Irp->IoStatus.Status = STATUS_DRIVER_INTERNAL_ERROR;

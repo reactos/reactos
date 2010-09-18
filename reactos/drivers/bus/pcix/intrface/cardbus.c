@@ -73,7 +73,8 @@ Cardbus_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
 
 VOID
 NTAPI
-Cardbus_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
+Cardbus_ResetDevice(IN PPCI_PDO_EXTENSION PdoExtension,
+                    IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
     while (TRUE);
@@ -81,7 +82,8 @@ Cardbus_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
 
 VOID
 NTAPI
-Cardbus_ChangeResourceSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+Cardbus_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
+                               IN PPCI_COMMON_HEADER PciData)
 {
     UNIMPLEMENTED;
     while (TRUE);

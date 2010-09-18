@@ -701,6 +701,7 @@ AddDiskToList (HANDLE FileHandle,
   ULONG i;
   PLIST_ENTRY ListEntry;
   PBIOSDISKENTRY BiosDiskEntry;
+  ULONG LayoutBufferSize;
 
   Status = NtDeviceIoControlFile (FileHandle,
                                   NULL,
@@ -870,9 +871,15 @@ AddDiskToList (HANDLE FileHandle,
 
   InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, BiosDiskNumber);
 
+  /*
+   * Allocate a buffer for 26 logical drives (2 entries each == 52) 
+   * plus the main partiton table (4 entries). Total 56 entries.
+   */
+  LayoutBufferSize = sizeof(DRIVE_LAYOUT_INFORMATION) +
+                     ((56 - ANYSIZE_ARRAY) * sizeof(PARTITION_INFORMATION));
   LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap (ProcessHeap,
                   0,
-                  8192);
+                  LayoutBufferSize);
   if (LayoutBuffer == NULL)
   {
     return;
@@ -887,7 +894,7 @@ AddDiskToList (HANDLE FileHandle,
                                   NULL,
                                   0,
                                   LayoutBuffer,
-                                  8192);
+                                  LayoutBufferSize);
   if (NT_SUCCESS (Status))
   {
     if (LayoutBuffer->PartitionCount == 0)
@@ -1956,6 +1963,8 @@ CreateNewPartition (PPARTLIST List,
     PartEntry->FormatState = Unformatted;
     PartEntry->PartInfo[0].StartingOffset.QuadPart =
       PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
+    PartEntry->PartInfo[0].HiddenSectors = 
+      PartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
     PartEntry->PartInfo[0].PartitionLength.QuadPart =
       PartEntry->UnpartitionedLength - DiskEntry->TrackSize;
     PartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
@@ -1985,6 +1994,8 @@ CreateNewPartition (PPARTLIST List,
 
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+      PrevPartEntry->PartInfo[1].HiddenSectors = 
+        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2011,6 +2022,8 @@ CreateNewPartition (PPARTLIST List,
 
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         PartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+      PrevPartEntry->PartInfo[1].HiddenSectors = 
+        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2066,6 +2079,8 @@ CreateNewPartition (PPARTLIST List,
     NewPartEntry->FormatState = Unformatted;
     NewPartEntry->PartInfo[0].StartingOffset.QuadPart =
       PartEntry->UnpartitionedOffset + DiskEntry->TrackSize;
+    NewPartEntry->PartInfo[0].HiddenSectors = 
+      NewPartEntry->PartInfo[0].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
     NewPartEntry->PartInfo[0].PartitionLength.QuadPart =
       PartitionSize - DiskEntry->TrackSize;
     NewPartEntry->PartInfo[0].PartitionType = PARTITION_ENTRY_UNUSED;
@@ -2095,6 +2110,8 @@ CreateNewPartition (PPARTLIST List,
 
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+      PrevPartEntry->PartInfo[1].HiddenSectors = 
+        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {
@@ -2121,6 +2138,8 @@ CreateNewPartition (PPARTLIST List,
 
       PrevPartEntry->PartInfo[1].StartingOffset.QuadPart =
         NewPartEntry->PartInfo[0].StartingOffset.QuadPart - DiskEntry->TrackSize;
+      PrevPartEntry->PartInfo[1].HiddenSectors = 
+        PrevPartEntry->PartInfo[1].StartingOffset.QuadPart / DiskEntry->BytesPerSector;
 
       if (DiskEntry->PartListHead.Flink == &PrevPartEntry->ListEntry)
       {

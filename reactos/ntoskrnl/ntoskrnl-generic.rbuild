@@ -31,6 +31,7 @@
 	<library>bootvid</library>
 	<library>wdmguid</library>
 	<library>ioevent</library>
+	<library>cportlib</library>
 	<dependency>bugcodes</dependency>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
@@ -263,6 +264,7 @@
 	</directory>
 	<directory name="inbv">
 		<file>inbv.c</file>
+		<file>inbvport.c</file>
 	</directory>
 	<directory name="io">
 		<directory name="iomgr">

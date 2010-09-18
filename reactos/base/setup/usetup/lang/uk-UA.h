@@ -991,18 +991,24 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
     {
         8,
         12,
-        "Встановити bootloader на жорсткий диск (bootsector).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Встановити bootloader на дискету.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Встановити bootloader на дискету.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Не встановлювати bootloader.",
         TEXT_STYLE_NORMAL
     },

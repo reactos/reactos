@@ -775,5 +775,8 @@ NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb);
 
+/*  --------------------------------------------------------------- pnp.c  */
+
+NTSTATUS VfatPnp(PVFAT_IRP_CONTEXT IrpContext);
 
 /* EOF */

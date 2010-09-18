@@ -218,7 +218,7 @@ gdi32 -
 kernel32 -
   reactos/dll/win32/kernel32/misc/errormsg.c    # Out of sync
   reactos/dll/win32/kernel32/misc/profile.c     # Out of sync
-  reactos/dll/win32/kernel32/misc/lcformat.c    # Out of sync
+  reactos/dll/win32/kernel32/misc/lcformat.c    # Synced to Wine-1_3
   reactos/dll/win32/kernel32/misc/lzexpand.c    # Synced to Wine-1_1_23
 
 msvcrt -

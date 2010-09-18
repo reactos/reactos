@@ -469,14 +469,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (Parent != PsInitialSystemProcess)
         {
             /* It's not, so acquire the process rundown */
-            if (ExAcquireRundownProtection(&Process->RundownProtect))
+            if (ExAcquireRundownProtection(&Parent->RundownProtect))
             {
                 /* If the parent has a section, use it */
                 SectionObject = Parent->SectionObject;
                 if (SectionObject) ObReferenceObject(SectionObject);
 
                 /* Release process rundown */
-                ExReleaseRundownProtection(&Process->RundownProtect);
+                ExReleaseRundownProtection(&Parent->RundownProtect);
             }
 
             /* If we don't have a section object */

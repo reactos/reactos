@@ -59,7 +59,7 @@ extern "C" {
 #define TDI_REQ_ABORTED                   STATUS_REQUEST_ABORTED
 #define TDI_BUFFER_TOO_SMALL              STATUS_BUFFER_TOO_SMALL
 #define TDI_CANCELLED                     STATUS_CANCELLED
-#define	TDI_BUFFER_TOO_BIG		            STATUS_INVALID_BUFFER_SIZE
+#define TDI_BUFFER_TOO_BIG                STATUS_INVALID_BUFFER_SIZE
 #define TDI_INVALID_REQUEST               STATUS_INVALID_DEVICE_REQUEST
 #define TDI_PENDING                       STATUS_PENDING
 #define TDI_ITEM_NOT_FOUND                STATUS_OBJECT_NAME_NOT_FOUND
@@ -67,10 +67,10 @@ extern "C" {
 #define TDI_STATUS_BAD_VERSION            0xC0010004L
 #define TDI_STATUS_BAD_CHARACTERISTICS    0xC0010005L
 
-#define	TDI_OPTION_EOL                    0
+#define TDI_OPTION_EOL                    0
 
-#define	TDI_ADDRESS_OPTION_REUSE          1
-#define	TDI_ADDRESS_OPTION_DHCP           2
+#define TDI_ADDRESS_OPTION_REUSE          1
+#define TDI_ADDRESS_OPTION_DHCP           2
 
 #ifdef __cplusplus
 }

@@ -39,9 +39,7 @@
 #include <windowsx.h>	// for SelectBrush(), ListBox_SetSel(), SubclassWindow(), ...
 #include <commctrl.h>
 
-#ifndef _MSC_VER
 #include <objbase.h>
-#endif
 #include <oleauto.h>	// for VARIANT
 
 #include <malloc.h>		// for alloca()

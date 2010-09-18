@@ -739,6 +739,7 @@ KiTrap07Handler(IN PKTRAP_FRAME TrapFrame)
                 NpxSaveArea = KiGetThreadNpxArea(NpxThread);
                 
                 /* Save FPU state */
+                DPRINT("FIXME: Save FPU state: %p\n", NpxSaveArea);
                 //Ke386SaveFpuState(NpxSaveArea);
 
                 /* Update NPX state */

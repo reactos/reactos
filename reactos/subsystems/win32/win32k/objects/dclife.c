@@ -134,6 +134,18 @@ DC_AllocDC(PUNICODE_STRING Driver)
     hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
     NewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
 
+    /* Allocate a Vis region */
+    NewDC->prgnVis = IntSysCreateRectpRgn(0, 0, 1, 1);
+    if (!NewDC->prgnVis)
+    {
+        DPRINT1("IntSysCreateRectpRgn failed\n");
+        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
+        {
+            ASSERT(FALSE);
+        }
+        return NULL;
+    }
+
     return NewDC;
 }
 
@@ -153,8 +165,10 @@ DC_Cleanup(PVOID ObjectBody)
     DC_vSelectPalette(pDC, NULL);
 
     /* Dereference default brushes */
-    BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
-    BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
+    if (pDC->eboText.pbrush)
+        BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
+    if (pDC->eboBackground.pbrush)
+        BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
 
     /* Cleanup the dc brushes */
     EBRUSHOBJ_vCleanup(&pDC->eboFill);
@@ -193,12 +207,12 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         }
         if (pDC->prgnVis)
         {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
+            Index = GDI_HANDLE_GET_INDEX(pDC->prgnVis->BaseObject.hHmgr);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
             //
-            if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) return FALSE;
+            if (!GDIOBJ_SetOwnership(pDC->prgnVis->BaseObject.hHmgr, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
         {   // FIXME! HAX!!!
@@ -661,7 +675,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
     PDC pdcNew, pdcOld;
     PDC_ATTR pdcattrNew, pdcattrOld;
     HDC hdcNew, DisplayDC = NULL;
-    HRGN hVisRgn;
     UNICODE_STRING DriverName;
     DWORD Layout = 0;
     HSURF hsurf;
@@ -742,12 +755,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
         NtGdiDeleteObjectApp(DisplayDC);
     }
 
-    hVisRgn = IntSysCreateRectRgn(0, 0, 1, 1);
-    if (hVisRgn)
-    {
-        GdiSelectVisRgn(hdcNew, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
-    }
     if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
 
     DC_InitDC(hdcNew);
@@ -768,7 +775,7 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
 
   if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
 
-  ObjType = GDI_HANDLE_GET_TYPE(DCHandle) >> GDI_ENTRY_UPPER_SHIFT;
+  ObjType = GDI_OBJECT_GET_TYPE_INDEX((ULONG_PTR)DCHandle);
 
   if (GreGetObjectOwner( DCHandle, ObjType))
   {

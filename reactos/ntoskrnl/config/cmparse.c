@@ -999,13 +999,8 @@ CmpBuildHashStackAndLookupCache(IN PCM_KEY_BODY ParseObject,
                                 OUT PULONG OuterStackArray,
                                 OUT PULONG *LockedKcbs)
 {
-    ULONG HashKeyCopy;
-    
     /* We don't lock anything for now */
     *LockedKcbs = NULL;
-
-    /* Make a copy of the hash key */
-    HashKeyCopy = (*Kcb)->ConvKey;
 
     /* Calculate hash values */
     *TotalRemainingSubkeys = 0xBAADF00D;

@@ -132,12 +132,25 @@ PpSetCustomTargetEvent(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(NotificationStructure != NULL);
     ASSERT(DeviceObject != NULL);
 
+    if (SyncEvent)
+    {
+        ASSERT(SyncStatus);
+        *SyncStatus = STATUS_PENDING;
+    }
+
     /* That call is totally wrong but notifications handler must be fixed first */
     IopNotifyPlugPlayNotification(DeviceObject,
                                   EventCategoryTargetDeviceChange,
                                   &GUID_PNP_CUSTOM_NOTIFICATION,
                                   NotificationStructure,
                                   NULL);
+
+    if (SyncEvent)
+    {
+        KeSetEvent(SyncEvent, IO_NO_INCREMENT, FALSE);
+        *SyncStatus = STATUS_SUCCESS;
+    }
+
     return STATUS_SUCCESS;
 }
 

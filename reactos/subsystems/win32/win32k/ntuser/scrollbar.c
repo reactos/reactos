@@ -470,7 +470,6 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 {
    PSCROLLBARINFO psbi;
    LPSCROLLINFO psi;
-   LRESULT Result;
    ULONG Size, s;
    INT i;
 
@@ -492,9 +491,9 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 
    RtlZeroMemory(Window->pSBInfo, Size);
 
-   Result = co_WinPosGetNonClientSize(Window,
-                                      &Window->Wnd->rcWindow,
-                                      &Window->Wnd->rcClient);
+   co_WinPosGetNonClientSize(Window,
+                             &Window->Wnd->rcWindow,
+                             &Window->Wnd->rcClient);
 
    for(s = SB_HORZ; s <= SB_VERT; s++)
    {

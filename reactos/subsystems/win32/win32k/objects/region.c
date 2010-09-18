@@ -2451,7 +2451,7 @@ IntGdiPaintRgn(
     REGION_FreeRgnByHandle(tmpVisRgn);
 
     // Fill the region
-    return TRUE;
+    return bRet;
 }
 
 BOOL

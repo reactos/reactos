@@ -21,6 +21,8 @@
 #ifndef __WINE_D3D9TYPES_H
 #define __WINE_D3D9TYPES_H
 
+#if(DIRECT3D_VERSION >= 0x0900)
+
 #pragma pack(push, 4)
 
 /*****************************************************************************
@@ -1585,5 +1587,7 @@ typedef enum _D3DCOMPOSERECTSOP{
 #endif /* D3D_DISABLE_9EX */
 
 #pragma pack(pop)
+
+#endif /* DIRECT3D_VERSION >= 0x0900 */
 
 #endif /* __WINE_D3D9TYPES_H */

@@ -17,9 +17,12 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
-#include <wine/debug.h>
+#define NDEBUG
+#include <debug.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
+#if DBG
+static ULONG gDebugChannel = kernel32file;
+#endif
 
 /* GLOBAL VARIABLES **********************************************************/
 

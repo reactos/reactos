@@ -578,7 +578,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
     ULONG LockPages, TotalPages;
     NTSTATUS Status = STATUS_SUCCESS;
     PEPROCESS CurrentProcess;
-    PETHREAD Thread;
     PMMSUPPORT AddressSpace;
     NTSTATUS ProbeStatus;
     PMMPTE PointerPte, LastPte;
@@ -615,9 +614,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
     ASSERT(LockPages != 0);
     
     //
-    // Get the thread and process
+    // Get theprocess
     //
-    Thread = PsGetCurrentThread();
     if (Address <= MM_HIGHEST_USER_ADDRESS)
     {
         //
@@ -961,9 +959,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
         PageFrameIndex = PFN_FROM_PTE(PointerPte);
         if (PageFrameIndex <= MmHighestPhysicalPage)
         {
-            //
-            // Get the PFN entry
-            //
             ASSERT((CurrentProcess == NULL) || (UsePfnLock == FALSE));
             
             //

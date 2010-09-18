@@ -474,7 +474,7 @@ vfatMakeFCBFromDirEntry(
 	if (vfatFCBIsDirectory(rcFCB))
 	{
 		ULONG FirstCluster, CurrentCluster;
-		NTSTATUS Status;
+		NTSTATUS Status = STATUS_SUCCESS;
 		Size = 0;
 		FirstCluster = vfatDirEntryGetFirstCluster (vcb, &rcFCB->entry);
 		if (FirstCluster == 1)
@@ -484,7 +484,7 @@ vfatMakeFCBFromDirEntry(
 		else if (FirstCluster != 0)
 		{
 			CurrentCluster = FirstCluster;
-			while (CurrentCluster != 0xffffffff)
+			while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
 			{
 				Size += vcb->FatInfo.BytesPerCluster;
 				Status = NextCluster (vcb, FirstCluster, &CurrentCluster, FALSE);

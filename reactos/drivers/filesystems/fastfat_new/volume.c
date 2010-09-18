@@ -8,7 +8,7 @@
 
 /* INCLUDES *****************************************************************/
 
-//#define NDEBUG
+#define NDEBUG
 #include "fastfat.h"
 
 /* FUNCTIONS ****************************************************************/
@@ -77,10 +77,29 @@ FatiQueryFsSizeInfo(PVCB Vcb,
     Buffer->SectorsPerAllocationUnit = Vcb->Bpb.SectorsPerCluster;
     Buffer->BytesPerSector = Vcb->Bpb.BytesPerSector;
 
-    DPRINT1("Total %d, free %d, SPC %d, BPS %d\n", Partition->FreeClusterCount,
-        Partition->NumClusters, Vcb->Bpb.SectorsPerCluster, Vcb->Bpb.BytesPerSector);
+    DPRINT1("Total %d, free %d, SPC %d, BPS %d\n", Partition->NumClusters,
+        Partition->FreeClusterCount, Vcb->Bpb.SectorsPerCluster, Vcb->Bpb.BytesPerSector);
 
     return Status;
+}
+
+NTSTATUS
+NTAPI
+FatiQueryFsDeviceInfo(PVCB Vcb,
+                      PFILE_FS_DEVICE_INFORMATION Buffer,
+                      PLONG Length)
+{
+    /* Deduct the minimum written length */
+    *Length -= sizeof(FILE_FS_DEVICE_INFORMATION);
+
+    /* Zero it */
+    RtlZeroMemory(Buffer, sizeof(FILE_FS_DEVICE_INFORMATION));
+
+    /* Set values */
+    Buffer->DeviceType = FILE_DEVICE_DISK;
+    Buffer->Characteristics = Vcb->TargetDeviceObject->Characteristics;
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -135,13 +154,28 @@ FatiQueryVolumeInfo(PFAT_IRP_CONTEXT IrpContext, PIRP Irp)
         /* Call FsVolumeInfo handler */
         Status = FatiQueryFsVolumeInfo(Vcb, Buffer, &Length);
         break;
+
     case FileFsSizeInformation:
         /* Call FsVolumeInfo handler */
         Status = FatiQueryFsSizeInfo(Vcb, Buffer, &Length);
         break;
-    default:
-        DPRINT1("Volume information class %d is not supported!\n", InfoClass);
+
+    case FileFsDeviceInformation:
+        Status = FatiQueryFsDeviceInfo(Vcb, Buffer, &Length);
+        break;
+
+    case FileFsAttributeInformation:
         UNIMPLEMENTED;
+        //Status = FatiQueryFsAttributeInfo(IrpContext, Vcb, Buffer, &Length);
+        break;
+
+    case FileFsFullSizeInformation:
+        UNIMPLEMENTED;
+        //Status = FatiQueryFsFullSizeInfo(IrpContext, Vcb, Buffer, &Length);
+        break;
+
+    default:
+        Status = STATUS_INVALID_PARAMETER;
     }
 
     /* Set IoStatus.Information to amount of filled bytes */
@@ -175,11 +209,7 @@ FatQueryVolumeInfo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     FsRtlEnterFileSystem();
 
     /* Set Top Level IRP if not set */
-    if (IoGetTopLevelIrp() == NULL)
-    {
-        IoSetTopLevelIrp(Irp);
-        TopLevel = TRUE;
-    }
+    TopLevel = FatIsTopLevelIrp(Irp);
 
     /* Build an irp context */
     IrpContext = FatBuildIrpContext(Irp, CanWait);
@@ -226,6 +256,16 @@ FatReadStreamFile(PVCB Vcb,
     {
         ASSERT(FALSE);
     }
+}
+
+BOOLEAN
+NTAPI
+FatCheckForDismount(IN PFAT_IRP_CONTEXT IrpContext,
+                    PVCB Vcb,
+                    IN BOOLEAN Force)
+{
+    /* We never allow deletion of a volume for now */
+    return FALSE;
 }
 
 /* EOF */

@@ -3,7 +3,6 @@
 #ifndef __ASM__
 
 #include "intrin_i.h"
-#include "v86m.h"
 
 //
 // Thread Dispatcher Header DebugActive Mask

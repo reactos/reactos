@@ -379,9 +379,15 @@ NTSTATUS FileCloseAddress(
   LockObject(AddrFile, &OldIrql);
   /* We have to close this connection because we started it */
   if( AddrFile->Listener )
+  {
+      AddrFile->Listener->AddressFile = NULL;
       TCPClose( AddrFile->Listener );
+  }
   if( AddrFile->Connection )
+  {
+      AddrFile->Connection->AddressFile = NULL;
       DereferenceObject( AddrFile->Connection );
+  }
   UnlockObject(AddrFile, OldIrql);
 
   DereferenceObject(AddrFile);

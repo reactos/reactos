@@ -628,7 +628,7 @@ typedef struct _STORAGE_MEDIA_SERIAL_NUMBER_DATA {
 typedef struct _PERSISTENT_RESERVE_COMMAND {
   ULONG Version;
   ULONG Size;
-  _ANONYMOUS_UNION union {
+  __MINGW_EXTENSION union {
     struct {
       UCHAR ServiceAction:5;
       UCHAR Reserved1:3;

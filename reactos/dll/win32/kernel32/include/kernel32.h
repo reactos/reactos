@@ -1,5 +1,25 @@
 #pragma once
 
+//
+// Kernel32 Filter IDs
+//
+#define kernel32file            200
+#define kernel32ver             201
+#define actctx                  202
+#define resource                203
+#define kernel32session         204
+
+#define TRACE(fmt, ...)         TRACE__(gDebugChannel, fmt, ##__VA_ARGS__)
+#define WARN(fmt, ...)          WARN__(gDebugChannel, fmt, ##__VA_ARGS__)
+#define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
+#define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
+
+#define debugstr_a  
+#define debugstr_w
+#define wine_dbgstr_w  
+#define debugstr_guid
+
+#include "wine/unicode.h"
 #include "baseheap.h"
 
 #define BINARY_UNKNOWN	(0)
@@ -40,8 +60,9 @@
 /* Undocumented CreateProcess flag */
 #define STARTF_SHELLPRIVATE         0x400
   
-#define SetLastErrorByStatus(__S__) \
- ((void)SetLastError(RtlNtStatusToDosError(__S__)))
+#define SetLastErrorByStatus(x) RtlSetLastWin32ErrorAndNtStatusFromNtStatus((x))
+#define GetLastError()          NtCurrentTeb()->LastErrorValue
+#define SetLastError(x)         NtCurrentTeb()->LastErrorValue = (x)
 
 typedef struct _CODEPAGE_ENTRY
 {
@@ -100,6 +121,7 @@ DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 #define HeapAlloc RtlAllocateHeap
 #define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
+#define _lread  (_readfun)_hread
 
 POBJECT_ATTRIBUTES
 WINAPI

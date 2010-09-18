@@ -28,9 +28,9 @@ extern "C" {
 #endif
 
 #if !defined(SMBCLASS)
-  #define SMBCLASSAPI DECLSPEC_IMPORT
+#define SMBCLASSAPI DECLSPEC_IMPORT
 #else
-  #define SMBCLASSAPI
+#define SMBCLASSAPI
 #endif
 
 #define SMB_BUS_REQUEST \
@@ -74,25 +74,25 @@ struct _SMB_CLASS;
 #define SMB_MAXIMUM_PROTOCOL              0x0A
 
 typedef struct _SMB_REQUEST {
-  UCHAR  Status;
-  UCHAR  Protocol;
-  UCHAR  Address;
-  UCHAR  Command;
-  UCHAR  BlockLength;
-  UCHAR  Data[SMB_MAX_DATA_SIZE];
+  UCHAR Status;
+  UCHAR Protocol;
+  UCHAR Address;
+  UCHAR Command;
+  UCHAR BlockLength;
+  UCHAR Data[SMB_MAX_DATA_SIZE];
 } SMB_REQUEST, *PSMB_REQUEST;
 
 typedef VOID
 (NTAPI *SMB_ALARM_NOTIFY)(
-  PVOID  Context,
-  UCHAR  Address,
-  USHORT  Data);
+  PVOID Context,
+  UCHAR Address,
+  USHORT Data);
 
 typedef struct _SMB_REGISTER_ALARM {
-  UCHAR  MinAddress;
-  UCHAR  MaxAddress;
-  SMB_ALARM_NOTIFY  NotifyFunction;
-  PVOID  NotifyContext;
+  UCHAR MinAddress;
+  UCHAR MaxAddress;
+  SMB_ALARM_NOTIFY NotifyFunction;
+  PVOID NotifyContext;
 } SMB_REGISTER_ALARM, *PSMB_REGISTER_ALARM;
 
 /* SMB_CLASS.XxxVersion constants */
@@ -101,83 +101,83 @@ typedef struct _SMB_REGISTER_ALARM {
 
 typedef NTSTATUS
 (NTAPI *SMB_RESET_DEVICE)(
-  IN struct _SMB_CLASS  *SmbClass,
-  IN PVOID  SmbMiniport);
+  IN struct _SMB_CLASS *SmbClass,
+  IN PVOID SmbMiniport);
 
 typedef VOID
 (NTAPI *SMB_START_IO)(
-  IN struct _SMB_CLASS  *SmbClass,
-  IN PVOID  SmbMiniport);
+  IN struct _SMB_CLASS *SmbClass,
+  IN PVOID SmbMiniport);
 
 typedef NTSTATUS
 (NTAPI *SMB_STOP_DEVICE)(
-  IN struct _SMB_CLASS  *SmbClass,
-  IN PVOID  SmbMiniport);
+  IN struct _SMB_CLASS *SmbClass,
+  IN PVOID SmbMiniport);
 
 typedef struct _SMB_CLASS {
-  USHORT  MajorVersion;
-  USHORT  MinorVersion;
-  PVOID  Miniport;
-  PDEVICE_OBJECT  DeviceObject;
-  PDEVICE_OBJECT  PDO;
-  PDEVICE_OBJECT  LowerDeviceObject;
-  PIRP  CurrentIrp;
-  PSMB_REQUEST  CurrentSmb;
-  SMB_RESET_DEVICE  ResetDevice;
-  SMB_START_IO  StartIo;
-  SMB_STOP_DEVICE  StopDevice;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+  PVOID Miniport;
+  PDEVICE_OBJECT DeviceObject;
+  PDEVICE_OBJECT PDO;
+  PDEVICE_OBJECT LowerDeviceObject;
+  PIRP CurrentIrp;
+  PSMB_REQUEST CurrentSmb;
+  SMB_RESET_DEVICE ResetDevice;
+  SMB_START_IO StartIo;
+  SMB_STOP_DEVICE StopDevice;
 } SMB_CLASS, *PSMB_CLASS;
 
 SMBCLASSAPI
 VOID
 NTAPI
 SmbClassAlarm(
-  IN PSMB_CLASS  SmbClass,
-  IN UCHAR  Address,
-  IN USHORT  Data);
+  IN PSMB_CLASS SmbClass,
+  IN UCHAR Address,
+  IN USHORT Data);
 
 SMBCLASSAPI
 VOID
 NTAPI
 SmbClassCompleteRequest(
-  IN PSMB_CLASS  SmbClass);
+  IN PSMB_CLASS SmbClass);
 
 typedef NTSTATUS
 (NTAPI *PSMB_INITIALIZE_MINIPORT)(
-  IN PSMB_CLASS  SmbClass,
-  IN PVOID  MiniportExtension,
-  IN PVOID  MiniportContext);
+  IN PSMB_CLASS SmbClass,
+  IN PVOID MiniportExtension,
+  IN PVOID MiniportContext);
 
 SMBCLASSAPI
 NTSTATUS
 NTAPI
 SmbClassCreateFdo(
-  IN PDRIVER_OBJECT  DriverObject,
-  IN PDEVICE_OBJECT  PDO,
-  IN ULONG  MiniportExtensionSize,
-  IN PSMB_INITIALIZE_MINIPORT  MiniportInitialize,
-  IN PVOID  MiniportContext,
-  OUT PDEVICE_OBJECT  *FDO);
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT PDO,
+  IN ULONG MiniportExtensionSize,
+  IN PSMB_INITIALIZE_MINIPORT MiniportInitialize,
+  IN PVOID MiniportContext,
+  OUT PDEVICE_OBJECT *FDO);
 
 SMBCLASSAPI
 NTSTATUS
 NTAPI
 SmbClassInitializeDevice(
-  IN ULONG  MajorVersion,
-  IN ULONG  MinorVersion,
-  IN PDRIVER_OBJECT  DriverObject);
+  IN ULONG MajorVersion,
+  IN ULONG MinorVersion,
+  IN PDRIVER_OBJECT DriverObject);
 
 SMBCLASSAPI
 VOID
 NTAPI
 SmbClassLockDevice(
-  IN PSMB_CLASS  SmbClass);
+  IN PSMB_CLASS SmbClass);
 
 SMBCLASSAPI
 VOID
 NTAPI
 SmbClassUnlockDevice(
-  IN PSMB_CLASS  SmbClass);
+  IN PSMB_CLASS SmbClass);
 
 #ifdef __cplusplus
 }

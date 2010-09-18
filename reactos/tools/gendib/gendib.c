@@ -836,9 +836,8 @@ CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
         }
       if (ROPCODE_GENERIC == RopInfo->RopCode)
         {
-          Output(Out, "BOOLEAN UsesDest, UsesSource, UsesPattern;\n");
+          Output(Out, "BOOLEAN UsesSource, UsesPattern;\n");
           Output(Out, "\n");
-          Output(Out, "UsesDest = ROP4_USES_DEST(BltInfo->Rop4);\n");
           Output(Out, "UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);\n");
           Output(Out, "UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);\n");
         }

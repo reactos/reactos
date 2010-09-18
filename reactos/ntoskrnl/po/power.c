@@ -52,7 +52,7 @@ PopRequestPowerIrpCompletion(IN PDEVICE_OBJECT DeviceObject,
 
     IoFreeIrp(Irp);
 
-    return STATUS_SUCCESS;
+    return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
 VOID
@@ -136,10 +136,20 @@ PoInitSystem(IN ULONG BootPhase)
     /* Check if this is phase 1 init */
     if (BootPhase == 1)
     {
-        /* Registry power button notification */
+        /* Register power button notification */
         IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
                                        PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
                                        (PVOID)&GUID_DEVICE_SYS_BUTTON,
+                                       IopRootDeviceNode->
+                                       PhysicalDeviceObject->DriverObject,
+                                       PopAddRemoveSysCapsCallback,
+                                       NULL,
+                                       &NotificationEntry);
+        
+        /* Register lid notification */
+        IoRegisterPlugPlayNotification(EventCategoryDeviceInterfaceChange,
+                                       PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES,
+                                       (PVOID)&GUID_DEVICE_LID,
                                        IopRootDeviceNode->
                                        PhysicalDeviceObject->DriverObject,
                                        PopAddRemoveSysCapsCallback,
@@ -360,7 +370,6 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION Stack;
     PIRP Irp;
     PREQUEST_POWER_ITEM RequestPowerItem;
-    NTSTATUS Status;
   
     if (MinorFunction != IRP_MN_QUERY_POWER
         && MinorFunction != IRP_MN_SET_POWER
@@ -409,7 +418,7 @@ PoRequestPowerIrp(IN PDEVICE_OBJECT DeviceObject,
         *pIrp = Irp;
   
     IoSetCompletionRoutine(Irp, PopRequestPowerIrpCompletion, RequestPowerItem, TRUE, TRUE, TRUE);
-    Status = IoCallDriver(TopDeviceObject, Irp);
+    IoCallDriver(TopDeviceObject, Irp);
   
     /* Always return STATUS_PENDING. The completion routine
      * will call CompletionFunction and complete the Irp.

@@ -745,7 +745,12 @@ typedef enum {
 #define SE_SYSTEM_ENVIRONMENT_NAME	TEXT("SeSystemEnvironmentPrivilege")
 #define SE_CHANGE_NOTIFY_NAME	TEXT("SeChangeNotifyPrivilege")
 #define SE_REMOTE_SHUTDOWN_NAME	TEXT("SeRemoteShutdownPrivilege")
-#define SE_CREATE_GLOBAL_NAME TEXT("SeCreateGlobalPrivilege")
+#define SE_UNDOCK_NAME	TEXT("SeUndockPrivilege")
+#define SE_SYNC_AGENT_NAME	TEXT("SeSyncAgentPrivilege")
+#define SE_ENABLE_DELEGATION_NAME	TEXT("SeEnableDelegationPrivilege")
+#define SE_MANAGE_VOLUME_NAME	TEXT("SeManageVolumePrivilege")
+#define SE_IMPERSONATE_NAME	TEXT("SeImpersonatePrivilege")
+#define SE_CREATE_GLOBAL_NAME	TEXT("SeCreateGlobalPrivilege")
 #define SE_GROUP_MANDATORY 1
 #define SE_GROUP_ENABLED_BY_DEFAULT 2
 #define SE_GROUP_ENABLED 4
@@ -4185,16 +4190,16 @@ typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
     _ANONYMOUS_STRUCT struct {
       DWORD NameOffset:31;
       DWORD NameIsString:1;
-    } DUMMYSTRUCTNAME;
+    } DUMMYSTRUCTNAME1;
     DWORD Name;
     WORD Id;
-  } DUMMYUNIONNAME;
+  } DUMMYUNIONNAME1;
   _ANONYMOUS_UNION union {
     DWORD OffsetToData;
     _ANONYMOUS_STRUCT struct {
       DWORD OffsetToDirectory:31;
       DWORD DataIsDirectory:1;
-    } DUMMYSTRUCTNAME;
+    } DUMMYSTRUCTNAME3;
   } DUMMYUNIONNAME2;
 } IMAGE_RESOURCE_DIRECTORY_ENTRY, *PIMAGE_RESOURCE_DIRECTORY_ENTRY;
 

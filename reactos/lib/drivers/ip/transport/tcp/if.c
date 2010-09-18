@@ -35,19 +35,16 @@ POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
     POSK_IFADDR ifaddr = IF->TCPContext;
     struct sockaddr_in *addr_in;
     struct sockaddr_in *dstaddr_in;
+    struct sockaddr_in *netmask_in;
     ASSERT(ifaddr);
 
-    RtlZeroMemory(ifaddr, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ));
+    RtlZeroMemory(ifaddr, sizeof(OSK_IFADDR) + 3 * sizeof( struct sockaddr_in ));
 
     addr_in = (struct sockaddr_in *)&ifaddr[1];
     dstaddr_in = (struct sockaddr_in *)&addr_in[1];
+    netmask_in = (struct sockaddr_in *)&dstaddr_in[1];
 
     TI_DbgPrint(DEBUG_TCPIF,("Called\n"));
-
-    ifaddr->ifa_dstaddr = (struct sockaddr *)dstaddr_in;
-
-    /* XXX - Point-to-point interfaces not supported yet */
-    memset( &ifaddr->ifa_dstaddr, 0, sizeof( struct sockaddr ) );
 
     ifaddr->ifa_addr = (struct sockaddr *)addr_in;
     Status = GetInterfaceIPv4Address( IF,
@@ -56,10 +53,24 @@ POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
 
     ASSERT(NT_SUCCESS(Status));
 
+    ifaddr->ifa_dstaddr = (struct sockaddr *)dstaddr_in;
+    Status = GetInterfaceIPv4Address(IF,
+                                     ADE_POINTOPOINT,
+                                     (PULONG)&dstaddr_in->sin_addr.s_addr );
+
+    ASSERT(NT_SUCCESS(Status));
+    
+    ifaddr->ifa_netmask = (struct sockaddr *)netmask_in;
+    Status = GetInterfaceIPv4Address(IF,
+                                     ADE_ADDRMASK,
+                                     (PULONG)&netmask_in->sin_addr.s_addr );
+    
+    ASSERT(NT_SUCCESS(Status));
+
     TI_DbgPrint(DEBUG_TCPIF,("interface %x : addr %x\n",
                IF, addr_in->sin_addr.s_addr));
 
-    ifaddr->ifa_flags = 0; /* XXX what goes here? */
+    ifaddr->ifa_flags = 0;
     ifaddr->ifa_refcnt = 0; /* Anachronistic */
     ifaddr->ifa_metric = 1; /* We can get it like in ninfo.c, if we want */
     ifaddr->ifa_mtu = IF->MTU;

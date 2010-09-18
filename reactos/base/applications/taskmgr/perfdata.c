@@ -1,7 +1,7 @@
 /*
  *  ReactOS Task Manager
  *
- *  perfdata.cpp
+ *  perfdata.c
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *

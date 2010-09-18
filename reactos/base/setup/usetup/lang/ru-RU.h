@@ -986,18 +986,24 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     {
         8,
         12,
-        "Установка на жесткий диск (загрузочный сектор).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Установка на гибкий диск.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Установка на гибкий диск.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Не устанавливать загрузчик.",
         TEXT_STYLE_NORMAL
     },

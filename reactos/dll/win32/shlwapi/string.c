@@ -91,7 +91,7 @@ static void FillNumberFmt(NUMBERFMTW *fmt, LPWSTR decimal_buffer, int decimal_bu
  * Format an integer according to the current locale
  *
  * RETURNS
- *  The number of bytes written on success or 0 on failure
+ *  The number of characters written on success or 0 on failure
  */
 static int FormatInt(LONGLONG qdwValue, LPWSTR pszBuf, int cchBuf)
 {
@@ -124,7 +124,7 @@ static int FormatInt(LONGLONG qdwValue, LPWSTR pszBuf, int cchBuf)
  * after the decimal point
  *
  * RETURNS
- *  The number of bytes written on success or 0 on failure
+ *  The number of characters written on success or 0 on failure
  */
 static int FormatDouble(double value, int decimals, LPWSTR pszBuf, int cchBuf)
 {

@@ -40,7 +40,10 @@ HWND hProcessPageShowAllProcessesButton;/* Process Show All Processes checkbox *
 
 static int  nProcessPageWidth;
 static int  nProcessPageHeight;
-static HANDLE  hProcessPageEvent = NULL;    /* When this event becomes signaled then we refresh the process list */
+#ifdef RUN_PROC_PAGE
+static HANDLE   hProcessThread = NULL;
+static DWORD    dwProcessThread;
+#endif
 
 int CALLBACK    ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 void AddProcess(ULONG Index);
@@ -104,7 +107,6 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     int     nXDifference;
     int     nYDifference;
     int     cx, cy;
-    HANDLE  hRefreshThread = NULL;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -139,19 +141,19 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
          */
         OldProcessListWndProc = (WNDPROC)(LONG_PTR) SetWindowLongPtrW(hProcessPageListCtrl, GWL_WNDPROC, (LONG_PTR)ProcessListWndProc);
 
+#ifdef RUN_PROC_PAGE
         /* Start our refresh thread */
-        hRefreshThread = CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, NULL);
-
+        hProcessThread = CreateThread(NULL, 0, ProcessPageRefreshThread, NULL, 0, &dwProcessThread);
+#endif
         return TRUE;
 
     case WM_DESTROY:
         /* Close the event handle, this will make the */
         /* refresh thread exit when the wait fails */
-        CloseHandle(hProcessPageEvent);
-        CloseHandle(hRefreshThread);
-
+#ifdef RUN_PROC_PAGE
+        EndLocalThread(&hProcessThread, dwProcessThread);
+#endif
         SaveColumnSettings();
-
         break;
 
     case WM_COMMAND:
@@ -194,11 +196,9 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         cy = rc.top + nYDifference;
         SetWindowPos(hProcessPageShowAllProcessesButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
         InvalidateRect(hProcessPageShowAllProcessesButton, NULL, TRUE);
-
         break;
 
     case WM_NOTIFY:
-
         ProcessPageOnNotify(wParam, lParam);
         break;
     }
@@ -372,9 +372,11 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
 
 void RefreshProcessPage(void)
 {
+#ifdef RUN_PROC_PAGE
     /* Signal the event so that our refresh thread */
     /* will wake up and refresh the process page */
-    SetEvent(hProcessPageEvent);
+    PostThreadMessage(dwProcessThread, WM_TIMER, 0, 0);
+#endif
 }
 
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
@@ -382,33 +384,18 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
     ULONG    OldProcessorUsage = 0;
     ULONG    OldProcessCount = 0;
     WCHAR    szCpuUsage[256], szProcesses[256];
-
-    /* Create the event */
-    hProcessPageEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
-
-    /* If we couldn't create the event then exit the thread */
-    if (!hProcessPageEvent)
-        return 0;
+    MSG      msg;
 
     LoadStringW(hInst, IDS_STATUS_CPUUSAGE, szCpuUsage, 256);
     LoadStringW(hInst, IDS_STATUS_PROCESSES, szProcesses, 256);
 
     while (1) {
-        DWORD    dwWaitVal;
-
-        /* Wait on the event */
-        dwWaitVal = WaitForSingleObject(hProcessPageEvent, INFINITE);
-
-        /* If the wait failed then the event object must have been */
-        /* closed and the task manager is exiting so exit this thread */
-        if (dwWaitVal == WAIT_FAILED)
+        /*  Wait for an the event or application close */
+        if (GetMessage(&msg, NULL, 0, 0) <= 0)
             return 0;
 
-        if (dwWaitVal == WAIT_OBJECT_0) {
+        if (msg.message == WM_TIMER) {
             WCHAR    text[260];
-
-            /* Reset our event */
-            ResetEvent(hProcessPageEvent);
 
             UpdateProcesses();
 

@@ -311,9 +311,6 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
     current_entry = CacheSegmentLRUListHead.Flink;
     while (current_entry != &CacheSegmentLRUListHead && Target > 0)
     {
-        NTSTATUS Status;
-        
-        Status = STATUS_SUCCESS;
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     CacheSegmentLRUListEntry);
         current_entry = current_entry->Flink;
@@ -332,7 +329,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
             {
                 PFN_NUMBER Page;
                 Page = (PFN_NUMBER)(MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT);
-                Status = MmPageOutPhysicalAddress(Page);
+                MmPageOutPhysicalAddress(Page);
             }
             KeAcquireGuardedMutex(&ViewLock);
             KeAcquireSpinLock(&current->Bcb->BcbLock, &oldIrql);
@@ -1022,7 +1019,6 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 {
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
-   NTSTATUS Status;
    LIST_ENTRY FreeList;
    KIRQL oldIrql;
 
@@ -1077,7 +1073,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
       {
          current_entry = RemoveTailList(&FreeList);
          current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
-         Status = CcRosInternalFreeCacheSegment(current);
+         CcRosInternalFreeCacheSegment(current);
       }
       ExFreeToNPagedLookasideList(&BcbLookasideList, Bcb);
       KeAcquireGuardedMutex(&ViewLock);

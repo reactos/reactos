@@ -229,7 +229,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
 
   /* Search existing volume entry on disk */
   FileOffset.QuadPart = 0;
-  if (CcPinRead(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
+  if (CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
   {
     while (TRUE)
     {
@@ -250,13 +250,13 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
       Entry = (PDIR_ENTRY)((ULONG_PTR)Entry + SizeDirEntry);
       if ((DirIndex % EntriesPerPage) == 0)
       {
-	     CcUnpinData(Context);
-	     FileOffset.u.LowPart += PAGE_SIZE;
-	     if (!CcPinRead(pRootFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
-	     {
-	       Context = NULL;
-	       break;
-	     }
+        CcUnpinData(Context);
+        FileOffset.u.LowPart += PAGE_SIZE;
+        if (!CcPinRead(pRootFcb->FileObject, &FileOffset, SizeDirEntry, TRUE, &Context, (PVOID*)&Entry))
+        {
+          Context = NULL;
+          break;
+        }
       }
     }
     if (Context)

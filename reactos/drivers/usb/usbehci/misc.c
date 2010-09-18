@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/misc.c
  * PURPOSE:     Misceallenous operations.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #include "usbehci.h"

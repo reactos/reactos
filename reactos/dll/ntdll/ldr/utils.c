@@ -1389,7 +1389,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
   SIZE_T ProtectSize;
   PVOID Page, ProtectPage, ProtectPage2;
   PUSHORT TypeOffset;
-  ULONG_PTR Delta;
+  LONG_PTR Delta;
   NTSTATUS Status;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
@@ -3465,60 +3465,15 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
 }
 
 
-PIMAGE_BASE_RELOCATION NTAPI
-LdrProcessRelocationBlock(IN ULONG_PTR Address,
+PIMAGE_BASE_RELOCATION
+NTAPI
+LdrProcessRelocationBlock(
+    IN ULONG_PTR Address,
 			  IN ULONG Count,
 			  IN PUSHORT TypeOffset,
 			  IN LONG_PTR Delta)
 {
-  SHORT Offset;
-  USHORT Type;
-  USHORT i;
-  PUSHORT ShortPtr;
-  PULONG LongPtr;
-
-  for (i = 0; i < Count; i++)
-    {
-      Offset = *TypeOffset & 0xFFF;
-      Type = *TypeOffset >> 12;
-
-      switch (Type)
-        {
-          case IMAGE_REL_BASED_ABSOLUTE:
-            break;
-
-          case IMAGE_REL_BASED_HIGH:
-            ShortPtr = (PUSHORT)((ULONG_PTR)Address + Offset);
-            *ShortPtr += HIWORD(Delta);
-            break;
-
-          case IMAGE_REL_BASED_LOW:
-            ShortPtr = (PUSHORT)((ULONG_PTR)Address + Offset);
-            *ShortPtr += LOWORD(Delta);
-            break;
-
-          case IMAGE_REL_BASED_HIGHLOW:
-            LongPtr = (PULONG)((ULONG_PTR)Address + Offset);
-            *LongPtr += Delta;
-            break;
-#ifdef _WIN64
-          case IMAGE_REL_BASED_DIR64:
-            LongPtr = (PULONG)((ULONG_PTR)Address + Offset);
-            *LongPtr += Delta;
-            break;
-#endif
-
-          case IMAGE_REL_BASED_HIGHADJ:
-          case IMAGE_REL_BASED_MIPS_JMPADDR:
-          default:
-            DPRINT1("Unknown/unsupported fixup type %hu.\n", Type);
-            return NULL;
-        }
-
-      TypeOffset++;
-    }
-
-  return (PIMAGE_BASE_RELOCATION)TypeOffset;
+    return LdrProcessRelocationBlockLongLong(Address, Count, TypeOffset, Delta);
 }
 
 NTSTATUS

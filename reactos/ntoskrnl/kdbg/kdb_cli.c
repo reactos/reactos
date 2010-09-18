@@ -825,7 +825,6 @@ KdbpCmdBackTrace(
     ULONG Argc,
     PCHAR Argv[])
 {
-    ULONG Count;
     ULONG ul;
     ULONGLONG Result = 0;
 #ifdef _M_IX86
@@ -845,7 +844,6 @@ KdbpCmdBackTrace(
             ul = strtoul(Argv[Argc-1], NULL, 0);
             if (ul > 0)
             {
-                Count = ul;
                 Argc -= 2;
             }
         }
@@ -854,7 +852,6 @@ KdbpCmdBackTrace(
             ul = strtoul(Argv[Argc-1] + 1, NULL, 0);
             if (ul > 0)
             {
-                Count = ul;
                 Argc--;
             }
         }

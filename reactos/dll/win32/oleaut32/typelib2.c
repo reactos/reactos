@@ -317,7 +317,7 @@ static int ctl2_find_guid(
     while (offset != -1) {
 	guidentry = (MSFT_GuidEntry *)&This->typelib_segment_data[MSFT_SEG_GUID][offset];
 
-	if (!memcmp(guidentry, guid, sizeof(GUID))) return offset;
+        if (IsEqualGUID(guidentry, guid)) return offset;
 
 	offset = guidentry->next_hash;
     }
@@ -1695,7 +1695,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddRefTypeInfo(
         impinfo.oGuid = guid_offset;
         *phRefType = ctl2_alloc_importinfo(This->typelib, &impinfo)+1;
 
-        if(!memcmp(&guid.guid, &IID_IDispatch, sizeof(GUID)))
+        if(IsEqualGUID(&guid.guid, &IID_IDispatch))
             This->typelib->typelib_header.dispatchpos = *phRefType;
     }
 
@@ -2469,7 +2469,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnLayOut(
                 return hres;
             }
 
-            if(!memcmp(&typeattr->guid, &IID_IDispatch, sizeof(IDispatch)))
+            if(IsEqualGUID(&typeattr->guid, &IID_IDispatch))
                 This->typeinfo->flags |= TYPEFLAG_FDISPATCHABLE;
 
             This->typeinfo->datatype2 += (typeattr->cFuncs<<16) + 1;

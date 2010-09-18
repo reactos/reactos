@@ -173,7 +173,7 @@ GetTextExtentPointW(
 	LPSIZE		lpSize
 	)
 {
-  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 1);
+  return NtGdiGetTextExtent(hdc, (LPWSTR)lpString, cchString, lpSize, 0);
 }
 
 
@@ -192,6 +192,13 @@ GetTextExtentExPointW(
 	LPSIZE  lpSize
 	)
 {
+
+  if(nMaxExtent < -1)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
   return NtGdiGetTextExtentExW (
     hdc, (LPWSTR)lpszStr, cchString, nMaxExtent, (PULONG)lpnFit, (PULONG)alpDx, lpSize, 0 );
 }
@@ -215,6 +222,12 @@ GetTextExtentExPointA(
   NTSTATUS Status;
   LPWSTR lpszStrW;
   BOOL rc = 0;
+
+  if(nMaxExtent < -1)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
 
   Status = HEAP_strdupA2W ( &lpszStrW, lpszStr );
   if (!NT_SUCCESS (Status))
@@ -286,7 +299,7 @@ GetTextExtentExPointI(HDC hdc,
                       LPINT alpDx,
                       LPSIZE lpSize)
 {
-    return NtGdiGetTextExtentExW(hdc,pgiIn,cgi,nMaxExtent,(ULONG *)lpnFit, (PULONG) alpDx,lpSize,1);
+    return NtGdiGetTextExtentExW(hdc,pgiIn,cgi,nMaxExtent,(ULONG *)lpnFit, (PULONG) alpDx,lpSize,GTEF_INDICES);
 }
 
 /*
@@ -299,7 +312,7 @@ GetTextExtentPointI(HDC hdc,
                     int cgi,
                     LPSIZE lpSize)
 {
-    return NtGdiGetTextExtent(hdc,pgiIn,cgi,lpSize,2);
+    return NtGdiGetTextExtent(hdc,pgiIn,cgi,lpSize,GTEF_INDICES);
 }
 
 /*

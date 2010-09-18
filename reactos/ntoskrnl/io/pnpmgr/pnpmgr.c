@@ -64,6 +64,13 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 {
    PDEVICE_OBJECT Fdo;
    NTSTATUS Status;
+    
+   if (!DriverObject)
+   {
+      /* Special case for bus driven devices */
+      DeviceNode->Flags |= DNF_ADDED;
+      return STATUS_SUCCESS;
+   }
 
    if (!DriverObject->DriverExtension->AddDevice)
    {
@@ -1897,11 +1904,15 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
    {
       /* We don't need to worry about loading the driver because we're
        * being driven in raw mode so our parent must be loaded to get here */
-      Status = IopStartDevice(DeviceNode);
-      if (!NT_SUCCESS(Status))
+      Status = IopInitializeDevice(DeviceNode, NULL);
+      if (NT_SUCCESS(Status))
       {
-          DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
-                  &DeviceNode->InstancePath, Status);
+          Status = IopStartDevice(DeviceNode);
+          if (!NT_SUCCESS(Status))
+          {
+              DPRINT1("IopStartDevice(%wZ) failed with status 0x%08x\n",
+                      &DeviceNode->InstancePath, Status);
+          }
       }
    }
    else
@@ -2610,6 +2621,7 @@ IopUpdateRootKey(VOID)
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE hEnum, hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
    NTSTATUS Status;
+   ULONG Disposition;
 
    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
    Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
@@ -2636,13 +2648,16 @@ IopUpdateRootKey(VOID)
       if (!NT_SUCCESS(Status))
          return Status;
       InitializeObjectAttributes(&ObjectAttributes, &HalAcpiId, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiDevice, NULL);
-      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+      Status = ZwCreateKey(&hHalAcpiId, KEY_CREATE_SUB_KEY | KEY_SET_VALUE, &ObjectAttributes, 0, NULL, 0, &Disposition);
       ZwClose(hHalAcpiDevice);
       if (!NT_SUCCESS(Status))
-         return Status;
-      Status = ZwSetValueKey(hHalAcpiId, &DeviceDescU, 0, REG_SZ, HalAcpiDeviceDesc.Buffer, HalAcpiDeviceDesc.MaximumLength);
-      if (NT_SUCCESS(Status))
-         Status = ZwSetValueKey(hHalAcpiId, &HardwareIDU, 0, REG_MULTI_SZ, HalAcpiHardwareID.Buffer, HalAcpiHardwareID.MaximumLength);
+          return Status;
+      if (Disposition == REG_CREATED_NEW_KEY)
+      {
+          Status = ZwSetValueKey(hHalAcpiId, &DeviceDescU, 0, REG_SZ, HalAcpiDeviceDesc.Buffer, HalAcpiDeviceDesc.MaximumLength);
+          if (NT_SUCCESS(Status))
+              Status = ZwSetValueKey(hHalAcpiId, &HardwareIDU, 0, REG_MULTI_SZ, HalAcpiHardwareID.Buffer, HalAcpiHardwareID.MaximumLength);
+      }
       if (NT_SUCCESS(Status))
       {
           InitializeObjectAttributes(&ObjectAttributes, &LogConfU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hHalAcpiId, NULL);
@@ -3310,8 +3325,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             ASSERT(EnumeratorNameEnd);
             
             /* This is the format of the returned data */
-            PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * 2,
-                            &DeviceNode->ChildBusNumber);
+            PIP_RETURN_DATA((EnumeratorNameEnd - DeviceInstanceName) * sizeof(WCHAR),
+                            DeviceInstanceName);
             
         case DevicePropertyAddress:
 
@@ -3640,7 +3655,7 @@ IoInvalidateDeviceRelations(
     PIO_WORKITEM WorkItem;
     PINVALIDATE_DEVICE_RELATION_DATA Data;
 
-    Data = ExAllocatePool(PagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
+    Data = ExAllocatePool(NonPagedPool, sizeof(INVALIDATE_DEVICE_RELATION_DATA));
     if (!Data)
         return;
     WorkItem = IoAllocateWorkItem(DeviceObject);

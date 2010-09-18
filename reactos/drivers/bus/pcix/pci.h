@@ -80,6 +80,11 @@
 #define PCI_VERIFIER_CODES                  0x04
 
 //
+// PCI ID Buffer ANSI Strings
+//
+#define MAX_ANSI_STRINGS                    0x08
+
+//
 // Device Extension, Interface, Translator and Arbiter Signatures
 //
 typedef enum _PCI_SIGNATURE
@@ -101,6 +106,18 @@ typedef enum _PCI_SIGNATURE
     PciInterface_AgpTarget = 'icP>',
     PciInterface_Location  = 'icP?'
 } PCI_SIGNATURE, *PPCI_SIGNATURE;
+
+//
+// Driver-handled PCI Device Types
+//
+typedef enum _PCI_DEVICE_TYPES
+{
+    PciTypeInvalid,
+    PciTypeHostBridge,
+    PciTypePciBridge,
+    PciTypeCardbusBridge,
+    PciTypeDevice
+} PCI_DEVICE_TYPES;
 
 //
 // Device Extension Logic States
@@ -281,10 +298,11 @@ typedef struct _PCI_PDO_EXTENSION
     BOOLEAN MovedDevice;
     BOOLEAN DisablePowerDown;
     BOOLEAN NeedsHotPlugConfiguration;
-    BOOLEAN SwitchedIDEToNativeMode;
+    BOOLEAN IDEInNativeMode;
     BOOLEAN BIOSAllowsIDESwitchToNativeMode;
     BOOLEAN IoSpaceUnderNativeIdeControl;
     BOOLEAN OnDebugPath;
+    BOOLEAN IoSpaceNotRequired;
     PCI_POWER_STATE PowerState;
     PCI_HEADER_TYPE_DEPENDENT Dependent;
     ULONGLONG HackFlags;
@@ -399,6 +417,19 @@ typedef struct _PCI_VERIFIER_DATA
 } PCI_VERIFIER_DATA, *PPCI_VERIFIER_DATA;
 
 //
+// PCI ID Buffer Descriptor
+//
+typedef struct _PCI_ID_BUFFER
+{
+    ULONG Count;
+    ANSI_STRING Strings[MAX_ANSI_STRINGS];
+    ULONG StringSize[MAX_ANSI_STRINGS];
+    ULONG TotalLength;
+    PCHAR CharBuffer;
+    CHAR BufferData[256];
+} PCI_ID_BUFFER, *PPCI_ID_BUFFER;
+
+//
 // PCI Configuration Callbacks
 //
 struct _PCI_CONFIGURATOR_CONTEXT;
@@ -420,7 +451,8 @@ typedef VOID (NTAPI *PCI_CONFIGURATOR_SAVE_CURRENT_SETTINGS)(
 );
 
 typedef VOID (NTAPI *PCI_CONFIGURATOR_CHANGE_RESOURCE_SETTINGS)(
-    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 typedef VOID (NTAPI *PCI_CONFIGURATOR_GET_ADDITIONAL_RESOURCE_DESCRIPTORS)(
@@ -430,7 +462,8 @@ typedef VOID (NTAPI *PCI_CONFIGURATOR_GET_ADDITIONAL_RESOURCE_DESCRIPTORS)(
 );
 
 typedef VOID (NTAPI *PCI_CONFIGURATOR_RESET_DEVICE)(
-    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 //
@@ -466,7 +499,7 @@ typedef struct _PCI_CONFIGURATOR_CONTEXT
 //
 typedef VOID (NTAPI *PCI_IPI_FUNCTION)(
     IN PVOID Reserved,
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PVOID Context
 );
 
 //
@@ -476,7 +509,7 @@ typedef struct _PCI_IPI_CONTEXT
 {
     LONG RunCount;
     ULONG Barrier;
-    PPCI_PDO_EXTENSION PdoExtension;
+    PVOID DeviceExtension;
     PCI_IPI_FUNCTION Function;
     PVOID Context;
 } PCI_IPI_CONTEXT, *PPCI_IPI_CONTEXT;
@@ -1064,6 +1097,12 @@ PciCanDisableDecodes(
     IN BOOLEAN ForPowerDown
 );
 
+PCI_DEVICE_TYPES
+NTAPI
+PciClassifyDeviceType(
+    IN PPCI_PDO_EXTENSION PdoExtension
+);
+
 ULONG_PTR
 NTAPI
 PciExecuteCriticalSystemRoutine(
@@ -1091,6 +1130,26 @@ PciDecodeEnable(
     IN PPCI_PDO_EXTENSION PdoExtension,
     IN BOOLEAN Enable,
     OUT PUSHORT Command
+);
+
+NTSTATUS
+NTAPI
+PciQueryBusInformation(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPNP_BUS_INFORMATION* Buffer
+);
+
+NTSTATUS
+NTAPI
+PciQueryCapabilities(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PDEVICE_CAPABILITIES DeviceCapability
+);
+
+PCM_PARTIAL_RESOURCE_DESCRIPTOR
+NTAPI
+PciNextPartialDescriptor(
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDescriptor
 );
 
 //
@@ -1197,6 +1256,30 @@ VOID
 NTAPI
 PciDebugDumpCommonConfig(
     IN PPCI_COMMON_HEADER PciData
+);
+
+VOID
+NTAPI
+PciDebugDumpQueryCapabilities(
+    IN PDEVICE_CAPABILITIES DeviceCaps
+);
+
+VOID
+NTAPI
+PciDebugPrintIoResReqList(
+    IN PIO_RESOURCE_REQUIREMENTS_LIST Requirements
+);
+
+VOID
+NTAPI
+PciDebugPrintCmResList(
+    IN PCM_RESOURCE_LIST ResourceList
+);
+
+VOID
+NTAPI
+PciDebugPrintPartialResource(
+    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialResource
 );
 
 //
@@ -1434,6 +1517,49 @@ PciQueryDeviceRelations(
     IN OUT PDEVICE_RELATIONS *pDeviceRelations
 );
 
+NTSTATUS
+NTAPI
+PciQueryResources(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    OUT PCM_RESOURCE_LIST *Buffer
+);
+
+NTSTATUS
+NTAPI
+PciQueryTargetDeviceRelations(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PDEVICE_RELATIONS *pDeviceRelations
+);
+
+NTSTATUS
+NTAPI
+PciQueryEjectionRelations(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PDEVICE_RELATIONS *pDeviceRelations
+);
+
+NTSTATUS
+NTAPI
+PciQueryRequirements(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *RequirementsList
+);
+
+BOOLEAN
+NTAPI
+PciComputeNewCurrentSettings(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PCM_RESOURCE_LIST ResourceList
+);
+
+NTSTATUS
+NTAPI
+PciSetResources(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN BOOLEAN DoReset,
+    IN BOOLEAN SomethingSomethingDarkSide
+);
+
 //
 // Identification Functions
 //
@@ -1442,6 +1568,23 @@ NTAPI
 PciGetDeviceDescriptionMessage(
     IN UCHAR BaseClass,
     IN UCHAR SubClass
+);
+
+NTSTATUS
+NTAPI
+PciQueryDeviceText(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN DEVICE_TEXT_TYPE QueryType,
+    IN ULONG Locale,
+    OUT PWCHAR *Buffer
+);
+
+NTSTATUS
+NTAPI
+PciQueryId(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN BUS_QUERY_ID_TYPE QueryType,
+    OUT PWCHAR *Buffer
 );
 
 //
@@ -1482,13 +1625,15 @@ Cardbus_GetAdditionalResourceDescriptors(
 VOID
 NTAPI
 Cardbus_ResetDevice(
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 VOID
 NTAPI
 Cardbus_ChangeResourceSettings(
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 //
@@ -1529,13 +1674,15 @@ Device_GetAdditionalResourceDescriptors(
 VOID
 NTAPI
 Device_ResetDevice(
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 VOID
 NTAPI
 Device_ChangeResourceSettings(
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 //
@@ -1576,13 +1723,15 @@ PPBridge_GetAdditionalResourceDescriptors(
 VOID
 NTAPI
 PPBridge_ResetDevice(
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 VOID
 NTAPI
 PPBridge_ChangeResourceSettings(
-    IN PPCI_CONFIGURATOR_CONTEXT Context
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN PPCI_COMMON_HEADER PciData
 );
 
 //
@@ -1607,7 +1756,10 @@ extern PCI_INTERFACE TranslatorInterfaceInterrupt;
 extern PDRIVER_OBJECT PciDriverObject;
 extern PWATCHDOG_TABLE WdTable;
 extern PPCI_HACK_ENTRY PciHackTable;
+extern BOOLEAN PciAssignBusNumbers;
 extern BOOLEAN PciEnableNativeModeATA;
+extern PPCI_IRQ_ROUTING_TABLE PciIrqRoutingTable;
+extern BOOLEAN PciRunningDatacenter;
 
 /* Exported by NTOS, should this go in the NDK? */
 extern NTSYSAPI BOOLEAN InitSafeBootMode;

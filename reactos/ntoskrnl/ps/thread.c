@@ -91,7 +91,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     }
 
     /* Do we have a cookie set yet? */
-    if (!SharedUserData->Cookie)
+    while (!SharedUserData->Cookie)
     {
         LARGE_INTEGER SystemTime;
         ULONG NewCookie;

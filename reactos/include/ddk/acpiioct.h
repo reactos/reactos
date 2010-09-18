@@ -35,7 +35,7 @@ extern "C" {
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER {
   ULONG Signature;
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR MethodName[4];
     ULONG MethodNameAsUlong;
   } DUMMYUNIONNAME;
@@ -43,7 +43,7 @@ typedef struct _ACPI_EVAL_INPUT_BUFFER {
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER {
   ULONG Signature;
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR MethodName[4];
     ULONG MethodNameAsUlong;
   } DUMMYUNIONNAME;
@@ -52,7 +52,7 @@ typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_INTEGER {
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING {
   ULONG Signature;
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR MethodName[4];
     ULONG MethodNameAsUlong;
   } DUMMYUNIONNAME;
@@ -63,7 +63,7 @@ typedef struct _ACPI_EVAL_INPUT_BUFFER_SIMPLE_STRING {
 typedef struct _ACPI_METHOD_ARGUMENT {
   USHORT Type;
   USHORT DataLength;
-  union {
+  _ANONYMOUS_UNION union {
     ULONG Argument;
     UCHAR Data[ANYSIZE_ARRAY];
   } DUMMYUNIONNAME;
@@ -72,7 +72,7 @@ typedef ACPI_METHOD_ARGUMENT UNALIGNED *PACPI_METHOD_ARGUMENT;
 
 typedef struct _ACPI_EVAL_INPUT_BUFFER_COMPLEX {
   ULONG Signature;
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR MethodName[4];
     ULONG MethodNameAsUlong;
   } DUMMYUNIONNAME;
@@ -142,47 +142,47 @@ typedef struct _ACPI_ENUM_CHILDREN_OUTPUT_BUFFER {
 typedef ACPI_ENUM_CHILDREN_OUTPUT_BUFFER UNALIGNED *PACPI_ENUM_CHILDREN_OUTPUT_BUFFER;
 
 #define ACPI_METHOD_ARGUMENT_LENGTH( DataLength )                           \
-    (FIELD_OFFSET(ACPI_METHOD_ARGUMENT, Data) + max(sizeof(ULONG), DataLength))
+  (FIELD_OFFSET(ACPI_METHOD_ARGUMENT, Data) + max(sizeof(ULONG), DataLength))
 
 #define ACPI_METHOD_ARGUMENT_LENGTH_FROM_ARGUMENT( Argument )               \
-    (ACPI_METHOD_ARGUMENT_LENGTH(((PACPI_METHOD_ARGUMENT)Argument)->DataLength))
+  (ACPI_METHOD_ARGUMENT_LENGTH(((PACPI_METHOD_ARGUMENT)Argument)->DataLength))
 
 #define ACPI_METHOD_NEXT_ARGUMENT( Argument )                               \
-    (PACPI_METHOD_ARGUMENT) ( (PUCHAR) Argument +                           \
-    ACPI_METHOD_ARGUMENT_LENGTH_FROM_ARGUMENT( Argument ) )
+  (PACPI_METHOD_ARGUMENT) ( (PUCHAR) Argument +                             \
+  ACPI_METHOD_ARGUMENT_LENGTH_FROM_ARGUMENT( Argument ) )
 
 
 #define ACPI_METHOD_SET_ARGUMENT_INTEGER( MethodArgument, IntData )         \
-    { MethodArgument->Type = ACPI_METHOD_ARGUMENT_INTEGER;                  \
-      MethodArgument->DataLength = sizeof(ULONG);                           \
-      MethodArgument->Argument = IntData; }
+  { MethodArgument->Type = ACPI_METHOD_ARGUMENT_INTEGER;                    \
+    MethodArgument->DataLength = sizeof(ULONG);                             \
+    MethodArgument->Argument = IntData; }
 
 #define ACPI_METHOD_SET_ARGUMENT_STRING( Argument, StrData )                \
-    { Argument->Type = ACPI_METHOD_ARGUMENT_STRING;                         \
-      Argument->DataLength = strlen((PCHAR)StrData) + sizeof(UCHAR);       \
-      RtlCopyMemory(&Argument->Data[0],(PUCHAR)StrData,Argument->DataLength); }
+  { Argument->Type = ACPI_METHOD_ARGUMENT_STRING;                           \
+    Argument->DataLength = strlen((PCHAR)StrData) + sizeof(UCHAR);          \
+    RtlCopyMemory(&Argument->Data[0],(PUCHAR)StrData,Argument->DataLength); }
 
 #define ACPI_METHOD_SET_ARGUMENT_BUFFER( Argument, BuffData, BuffLength )   \
-    { Argument->Type = ACPI_METHOD_ARGUMENT_BUFFER;                         \
-      Argument->DataLength = BuffLength;                                    \
-      RtlCopyMemory(&Argument->Data[0],(PUCHAR)BuffData,Argument->DataLength); }
+  { Argument->Type = ACPI_METHOD_ARGUMENT_BUFFER;                           \
+    Argument->DataLength = BuffLength;                                      \
+    RtlCopyMemory(&Argument->Data[0],(PUCHAR)BuffData,Argument->DataLength); }
 
-#define ACPI_ENUM_CHILD_LENGTH_FROM_CHILD( Child )              \
-    ( (2* sizeof (ULONG)) + Child->NameLength )
+#define ACPI_ENUM_CHILD_LENGTH_FROM_CHILD( Child ) \
+  ( (2* sizeof (ULONG)) + Child->NameLength )
 
-#define ACPI_ENUM_CHILD_NEXT( Child )                           \
-    (PACPI_ENUM_CHILD) ( (PUCHAR) Child +                       \
-    ACPI_ENUM_CHILD_LENGTH_FROM_CHILD( Child ) )
+#define ACPI_ENUM_CHILD_NEXT( Child )           \
+  (PACPI_ENUM_CHILD) ( (PUCHAR) Child +         \
+  ACPI_ENUM_CHILD_LENGTH_FROM_CHILD( Child ) )
 
-#define IOCTL_ACPI_ASYNC_EVAL_METHOD             CTL_CODE(FILE_DEVICE_ACPI, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_ACPI_EVAL_METHOD                   CTL_CODE(FILE_DEVICE_ACPI, 1, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_ACPI_ACQUIRE_GLOBAL_LOCK           CTL_CODE(FILE_DEVICE_ACPI, 4, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_ACPI_RELEASE_GLOBAL_LOCK           CTL_CODE(FILE_DEVICE_ACPI, 5, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_ASYNC_EVAL_METHOD    CTL_CODE(FILE_DEVICE_ACPI, 0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_EVAL_METHOD          CTL_CODE(FILE_DEVICE_ACPI, 1, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_ACQUIRE_GLOBAL_LOCK  CTL_CODE(FILE_DEVICE_ACPI, 4, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_RELEASE_GLOBAL_LOCK  CTL_CODE(FILE_DEVICE_ACPI, 5, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-#define IOCTL_ACPI_EVAL_METHOD_EX                CTL_CODE(FILE_DEVICE_ACPI, 6, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_ACPI_ASYNC_EVAL_METHOD_EX          CTL_CODE(FILE_DEVICE_ACPI, 7, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
-#define IOCTL_ACPI_ENUM_CHILDREN                 CTL_CODE(FILE_DEVICE_ACPI, 8, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_EVAL_METHOD_EX       CTL_CODE(FILE_DEVICE_ACPI, 6, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_ASYNC_EVAL_METHOD_EX CTL_CODE(FILE_DEVICE_ACPI, 7, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
+#define IOCTL_ACPI_ENUM_CHILDREN        CTL_CODE(FILE_DEVICE_ACPI, 8, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)
 #endif
 
 #ifdef __cplusplus

@@ -995,18 +995,24 @@ static MUI_ENTRY ltLTBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on a floppy disk.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Install bootloader on a floppy disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Skip install bootloader.",
         TEXT_STYLE_NORMAL
     },

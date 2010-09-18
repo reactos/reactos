@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/usbehci.c
  * PURPOSE:     USB EHCI device driver.
  * PROGRAMMERS:
- *              Michael Martin (mjmartin@reactos.com)
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 /* DEFINES *******************************************************************/

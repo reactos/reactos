@@ -153,10 +153,10 @@
 @ cdecl __isascii(long) __isascii
 @ cdecl __iscsym(long) __iscsym
 @ cdecl __iscsymf(long) __iscsymf
-@ extern __lc_codepage __lc_codepage
+@ extern __lc_codepage MSVCRT___lc_codepage
 @ stub __lc_collate
-@ extern __lc_collate_cp __lc_collate_cp
-@ extern __lc_handle __lc_handle
+@ extern __lc_collate_cp MSVCRT___lc_collate_cp
+@ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
 # stub __libm_sse2_acos
 # stub __libm_sse2_acosf
