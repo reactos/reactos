@@ -5,6 +5,7 @@
  * PURPOSE:     Helper Library for USB
  * PROGRAMMERS:
  *              Filip Navara <xnavara@volny.cz>
+ *              Michael Martin <michael.martin@reactos.org>
  *
  */
 
@@ -33,6 +34,7 @@
 
 #include <ntddk.h>
 #include <usbdi.h>
+#include <debug.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2
 #endif
@@ -71,7 +73,7 @@ DllUnload(VOID)
  */
 PVOID NTAPI
 USBD_Debug_GetHeap(ULONG Unknown1, POOL_TYPE PoolType, ULONG NumberOfBytes,
-	ULONG Tag)
+                   ULONG Tag)
 {
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
@@ -305,43 +307,56 @@ USBD_RegisterHcDeviceCapabilities(ULONG Unknown1, ULONG Unknown2,
 
 /*
  * @implemented
- * FIXME: Test
  */
-PURB
-NTAPI
+PURB NTAPI
 USBD_CreateConfigurationRequestEx(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
     PUSBD_INTERFACE_LIST_ENTRY InterfaceList
     )
 {
     PURB Urb;
-    ULONG UrbSize;
+    ULONG UrbSize = 0;
     ULONG InterfaceCount;
+    ULONG InterfaceNumber, EndPointNumber;
+    PUSBD_INTERFACE_INFORMATION InterfaceInfo;
 
     for (InterfaceCount = 0;
          InterfaceList[InterfaceCount].InterfaceDescriptor != NULL;
-         ++InterfaceCount)
-       ;
-    /* Include the NULL entry */
-    ++InterfaceCount;
+         InterfaceCount++)
+    {
+        UrbSize += sizeof(USBD_INTERFACE_INFORMATION);
+        UrbSize += (InterfaceList[InterfaceCount].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION);
+    }
 
-    UrbSize = sizeof(Urb->UrbSelectConfiguration) +
-       (InterfaceCount * sizeof(PUSBD_INTERFACE_LIST_ENTRY));
+    UrbSize += sizeof(URB) + sizeof(USBD_INTERFACE_INFORMATION);
+
     Urb = ExAllocatePool(NonPagedPool, UrbSize);
-    Urb->UrbSelectConfiguration.Hdr.Function =
-        URB_FUNCTION_SELECT_CONFIGURATION;
-    Urb->UrbSelectConfiguration.Hdr.Length =
-        sizeof(Urb->UrbSelectConfiguration);
-    Urb->UrbSelectConfiguration.ConfigurationDescriptor =
-       ConfigurationDescriptor;
-    memcpy((PVOID)&Urb->UrbSelectConfiguration.Interface, (PVOID)InterfaceList,
-       InterfaceCount * sizeof(PUSBD_INTERFACE_LIST_ENTRY));
+    RtlZeroMemory(Urb, UrbSize);
+    Urb->UrbSelectConfiguration.Hdr.Function =  URB_FUNCTION_SELECT_CONFIGURATION;
+    Urb->UrbSelectConfiguration.Hdr.Length = sizeof(Urb->UrbSelectConfiguration);
+    Urb->UrbSelectConfiguration.ConfigurationDescriptor = ConfigurationDescriptor;
+
+    InterfaceInfo = &Urb->UrbSelectConfiguration.Interface;
+    for (InterfaceNumber = 0; InterfaceNumber < InterfaceCount; InterfaceNumber++)
+    {
+        InterfaceList[InterfaceNumber].Interface = InterfaceInfo;
+        InterfaceInfo->Length = sizeof(USBD_INTERFACE_INFORMATION) +
+                                ((InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints - 1) * sizeof(USBD_PIPE_INFORMATION));
+        InterfaceInfo->InterfaceNumber = InterfaceList[InterfaceNumber].InterfaceDescriptor->bInterfaceNumber;
+        InterfaceInfo->AlternateSetting = InterfaceList[InterfaceNumber].InterfaceDescriptor->bAlternateSetting;
+        InterfaceInfo->NumberOfPipes = InterfaceList[InterfaceNumber].InterfaceDescriptor->bNumEndpoints;
+        for (EndPointNumber = 0; EndPointNumber < InterfaceInfo->NumberOfPipes; EndPointNumber++)
+        {
+            InterfaceInfo->Pipes[EndPointNumber].MaximumTransferSize = PAGE_SIZE;
+        }
+        InterfaceInfo = (PUSBD_INTERFACE_INFORMATION) ((ULONG_PTR)InterfaceInfo + InterfaceInfo->Length);
+    }
 
     return Urb;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PURB NTAPI
 USBD_CreateConfigurationRequest(
@@ -349,11 +364,12 @@ USBD_CreateConfigurationRequest(
     PUSHORT Size
     )
 {
+    /* WindowsXP returns NULL */
     return NULL;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG NTAPI
 USBD_GetInterfaceLength(
@@ -363,18 +379,23 @@ USBD_GetInterfaceLength(
 {
     ULONG_PTR Current;
     PUSB_INTERFACE_DESCRIPTOR CurrentDescriptor = InterfaceDescriptor;
-    ULONG Length = CurrentDescriptor->bLength;
+    ULONG Length = 0;
+    BOOLEAN InterfaceFound = FALSE;
 
-    // USB_ENDPOINT_DESCRIPTOR_TYPE
-    if (CurrentDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
+    for (Current = (ULONG_PTR)CurrentDescriptor;
+         Current < (ULONG_PTR)BufferEnd;
+         Current += CurrentDescriptor->bLength)
     {
-        for (Current = (ULONG_PTR)CurrentDescriptor;
-             Current < (ULONG_PTR)BufferEnd;
-             Current += CurrentDescriptor->bLength)
-            CurrentDescriptor = (PUSB_INTERFACE_DESCRIPTOR)Current;
-            Length += CurrentDescriptor->bLength;
+        CurrentDescriptor = (PUSB_INTERFACE_DESCRIPTOR)Current;
 
+        if ((CurrentDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE) && (InterfaceFound))
+            break;
+        else if (CurrentDescriptor->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE)
+            InterfaceFound = TRUE;
+
+        Length += CurrentDescriptor->bLength;
     }
+
     return Length;
 }
 
@@ -397,7 +418,7 @@ USBD_ParseDescriptors(
                             ((PLONG)DescriptorBuffer + TotalLength) ) break;
        if (PComDes->bDescriptorType == DescriptorType) return PComDes;
        if (PComDes->bLength == 0) break;
-       PComDes = PComDes + PComDes->bLength;
+       PComDes = (PUSB_COMMON_DESCRIPTOR)((ULONG_PTR)PComDes + PComDes->bLength);
     }
     return NULL;
 }
