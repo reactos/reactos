@@ -85,6 +85,13 @@ typedef struct _DISPLAY_DEVICE_ENTRY
 	SETTINGS_ENTRY InitialSettings;
 } DISPLAY_DEVICE_ENTRY, *PDISPLAY_DEVICE_ENTRY;
 
+typedef struct _GLOBAL_DATA
+{
+	COLORREF desktop_color;
+} GLOBAL_DATA, *PGLOBAL_DATA;
+
+extern GLOBAL_DATA g_GlobalData;
+
 BOOL
 DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice);
 
