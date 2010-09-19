@@ -1,7 +1,11 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/mingw-w64)
 
-add_definitions(-D_CRTBLD -Wno-main)
+add_definitions(-D_CRTBLD)
+
+if(NOT MSVC)
+add_definitions(-Wno-main)
+endif(NOT MSVC)
 
 set(MINGW_COMMON_SOURCE
   _newmode.c
@@ -31,11 +35,14 @@ set(MINGW_COMMON_SOURCE
   xthdloc.c
   xtxtmode.c
   ofmt_stub.c
-  cxa_pure_virtual.c
-)
+  cxa_pure_virtual.c)
 
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
+
+if(NOT MSVC)
 target_link_libraries(mingw_common oldnames -lkernel32 -lntdll)
+endif(NOT MSVC)
+
 set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 add_dependencies(mingw_common psdk)
 
@@ -53,8 +60,7 @@ add_dependencies(mingw_dllmain psdk)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
   COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
-  COMMAND ${MINGW_PREFIX}ar -rc ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
-)
+  COMMAND ${MINGW_PREFIX}ar -rc ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
 
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a PROPERTIES GENERATED TRUE)
 
