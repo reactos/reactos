@@ -10,6 +10,10 @@ set(CMAKE_SYSTEM_PROCESSOR i686)
 # which compilers to use for C and C++
 set(CMAKE_C_COMPILER cl)
 set(CMAKE_CXX_COMPILER cl)
+SET(CMAKE_RC_COMPILER rc)
+SET(CMAKE_ASM_COMPILER ml)
+
+SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <DEFINES> /I${REACTOS_SOURCE_DIR}/include/psdk /I${REACTOS_BINARY_DIR}/include/psdk /I${REACTOS_SOURCE_DIR}/include/ /I${REACTOS_SOURCE_DIR}/include/reactos /I${REACTOS_BINARY_DIR}/include/reactos /I${REACTOS_SOURCE_DIR}/include/reactos/wine /I${REACTOS_SOURCE_DIR}/include/crt /I${REACTOS_SOURCE_DIR}/include/crt/mingw32 /fo <OBJECT> <SOURCE>")
 
 set(CMAKE_C_FLAGS_INIT "/DWIN32 /D_WINDOWS /W1 /Zm1000")
 
