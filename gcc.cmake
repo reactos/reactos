@@ -44,7 +44,7 @@ macro(add_importlibs MODULE)
 endmacro()
 
 macro(set_module_type MODULE TYPE)
-  target_link_libraries(calc mingw_wmain mingw_common)
+  target_link_libraries(${MODULE} mingw_wmain mingw_common)
   if(${TYPE} MATCHES win32gui)
     set_entrypoint(${MODULE} wWinMainCRTStartup)
   endif()
