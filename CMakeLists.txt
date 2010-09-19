@@ -1,6 +1,17 @@
 cmake_minimum_required(VERSION 2.8)
 project(REACTOS)
 
+# Compile options
+include(config.cmake)
+
+# Compiler specific definitions and macros
+if(MSVC)
+include(msc.cmake)
+else()
+include(gcc.cmake)
+endif(MSVC)
+
+# Generic macros
 include(CMakeMacros.cmake)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -15,7 +26,6 @@ add_definitions(-D__REACTOS__)
 if(NOT CMAKE_CROSSCOMPILING)
 
 add_definitions(-DTARGET_i386)
-add_definitions(-fshort-wchar)
 
 include_directories(${REACTOS_SOURCE_DIR}/tools/unicode)
 include_directories(include)
@@ -27,15 +37,13 @@ include_directories(${REACTOS_BINARY_DIR}/include)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
+if(NOT MSVC)
 export(TARGETS widl winebuild nci buildno gendib cdmake FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+else()
+export(TARGETS winebuild nci buildno gendib cdmake FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+endif()
 
 else()
-
-if(MSVC)
-include(msc.cmake)
-else()
-include(gcc.cmake)
-endif(MSVC)
 
 # Activate support for assembly source files
 enable_language(ASM)
@@ -45,11 +53,6 @@ enable_language(RC)
 
 set(IMPORT_EXECUTABLES "${REACTOS_SOURCE_DIR}/build/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
 include(${IMPORT_EXECUTABLES})
-
-# Debug Options
-set(_WINKD_ 0)
-set(KDBG 1)
-set(DBG 1)
 
 add_definitions(-DDBG=${DBG} -DKDBG=${KDBG})
 
@@ -161,3 +164,4 @@ add_custom_command(
 add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
 
 endif()
+

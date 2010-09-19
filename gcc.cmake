@@ -1,4 +1,12 @@
 
+
+if(NOT CMAKE_CROSSCOMPILING)
+
+add_definitions(-fshort-wchar)
+
+
+else()
+
 # Linking
 link_directories("${REACTOS_SOURCE_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
 set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
@@ -23,3 +31,24 @@ add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpr
 
 # C++ Flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
+
+# Macros
+macro(set_entrypoint MODULE ENTRYPOINT)
+  set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,-entry,_${ENTRYPOINT}")
+endmacro()
+
+macro(add_importlibs MODULE)
+  FOREACH(LIB ${ARGN})
+    target_link_libraries(${MODULE} ${LIB}.a)
+  ENDFOREACH()
+endmacro()
+
+macro(set_module_type MODULE TYPE)
+  target_link_libraries(calc mingw_wmain mingw_common)
+  if(${TYPE} MATCHES win32gui)
+    set_entrypoint(${MODULE} wWinMainCRTStartup)
+  endif()
+endmacro()
+
+endif()
+
