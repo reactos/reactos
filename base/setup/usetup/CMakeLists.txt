@@ -35,8 +35,7 @@ target_link_libraries(usetup
     newinflib
     ext2lib
     vfatlib
-    mingw_common
-    -lmsvcrt)
+    mingw_common)
 
 set_target_properties(usetup PROPERTIES LINK_FLAGS "-Wl,-entry,_NtProcessStartup@4")
 

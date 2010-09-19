@@ -31,8 +31,11 @@ SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS
 
 # Use stdcall fixups, and don't link with anything by default unless we say so
 set(CMAKE_C_STANDARD_LIBRARIES -lgcc CACHE STRING "libgcc") # We should add the environment libgcc here
-#-Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
+if(ARCH MATCHES i386)
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds")
+elseif(ARCH MATCHES amd64)
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at")
+endif(ARCH MATCHES i386)
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 
