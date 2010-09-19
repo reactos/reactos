@@ -21,16 +21,10 @@ void _ReadBarrier(void);
 void _WriteBarrier(void);
 #pragma intrinsic(_WriteBarrier)
 
-char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand);
-#pragma intrinsic(_InterlockedCompareExchange8)
-short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand);
-#pragma intrinsic(_InterlockedCompareExchange16)
 long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 #pragma intrinsic(_InterlockedCompareExchange)
 long _InterlockedExchange(volatile long * const Target, const long Value);
 #pragma intrinsic(_InterlockedExchange)
-short _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
-#pragma intrinsic(_InterlockedExchangeAdd16)
 long _InterlockedExchangeAdd(volatile long * const Addend, const long Value);
 #pragma intrinsic(_InterlockedExchangeAdd)
 char _InterlockedAnd8(volatile char * const value, const char mask);
