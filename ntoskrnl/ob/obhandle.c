@@ -462,6 +462,7 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
 
         /* Charge the quota */
         ObjectHeader->QuotaBlockCharged = (PVOID)1;
+        DPRINT("FIXME: Should charge: %lx %lx\n", PagedPoolCharge, NonPagedPoolCharge);
 #if 0
             PsChargeSharedPoolQuota(PsGetCurrentProcess(),
                                     PagedPoolCharge,
@@ -898,7 +899,7 @@ ObpIncrementHandleCount(IN PVOID Object,
         if (!ObCheckObjectAccess(Object,
                                  AccessState,
                                  TRUE,
-                                 AccessMode,
+                                 ProbeMode,
                                  &Status))
         {
             /* Access was denied, so fail */

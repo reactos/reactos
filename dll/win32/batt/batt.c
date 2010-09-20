@@ -38,7 +38,8 @@ DWORD
 WINAPI
 BatteryClassCoInstaller(IN DI_FUNCTION InstallFunction,
                         IN HDEVINFO DeviceInfoSet,
-                        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+                        IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+                        IN OUT PCOINSTALLER_CONTEXT_DATA Context)
 {
     switch (InstallFunction)
     {

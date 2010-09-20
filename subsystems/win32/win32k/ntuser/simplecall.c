@@ -698,7 +698,6 @@ NtUserCallHwndParamLock(
 {
    DWORD Ret = 0;
    PWINDOW_OBJECT Window;
-   PWND Wnd;
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(DWORD);
 
@@ -710,8 +709,6 @@ NtUserCallHwndParamLock(
       RETURN( FALSE);
    }
    UserRefObjectCo(Window, &Ref);
-
-   Wnd = Window->Wnd;
 
    switch (Routine)
    {

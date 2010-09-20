@@ -301,13 +301,14 @@ HalHandleNMI(IN PVOID NmiInfo)
     // Halt the system
     //
     InbvDisplayString("\n*** The system has halted ***\n");
-#endif
+
 
     //
     // Enter the debugger if possible
     //
+    KiBugCheckData[0] = (ULONG_PTR)KeServiceDescriptorTable; /* NMI Corruption? */
     //if (!(KdDebuggerNotPresent) && (KdDebuggerEnabled)) KeEnterKernelDebugger();
-
+#endif
     //
     // Freeze the system
     //

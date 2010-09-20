@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "../ARM3/miarm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
@@ -57,6 +58,56 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
     return dummy;
 }
 #endif
+
+const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
 
 /* FUNCTIONS ***************************************************************/
 
@@ -602,8 +653,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG oldPdeOffset, PdeOffset;
     PULONG Pt = NULL;
     ULONG Pte;
-    BOOLEAN NoExecute = FALSE;
-    
     DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
     
@@ -638,10 +687,6 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     }
     
     Attributes = ProtectToPTE(flProtect);
-    if (Attributes & 0x80000000)
-    {
-        NoExecute = TRUE;
-    }
     Attributes &= 0xfff;
     if (Address >= MmSystemRangeStart)
     {
@@ -775,7 +820,6 @@ NTAPI
 MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
     ULONG Attributes = 0;
-    BOOLEAN NoExecute = FALSE;
     PULONG Pt;
     
     DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
@@ -783,10 +827,6 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     
     Attributes = ProtectToPTE(flProtect);
 
-    if (Attributes & 0x80000000)
-    {
-        NoExecute = TRUE;
-    }
     Attributes &= 0xfff;
     if (Address >= MmSystemRangeStart)
     {

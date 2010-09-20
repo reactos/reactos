@@ -50,6 +50,7 @@
 /* Internal Headers */
 #include "interface/consup.h"
 #include "partlist.h"
+#include "infros.h"
 #include "inffile.h"
 #include "inicache.h"
 #include "progress.h"
@@ -107,7 +108,8 @@ typedef enum _PAGE_NUMBER
   REGISTRY_PAGE,
   BOOT_LOADER_PAGE,
   BOOT_LOADER_FLOPPY_PAGE,
-  BOOT_LOADER_HARDDISK_PAGE,
+  BOOT_LOADER_HARDDISK_MBR_PAGE,
+  BOOT_LOADER_HARDDISK_VBR_PAGE,
 
   REPAIR_INTRO_PAGE,
 

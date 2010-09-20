@@ -406,12 +406,44 @@ ME_StreamOutRTFTableProps(ME_TextEditor *editor, ME_OutStream *pStream,
 
 static BOOL
 ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_OutStream *pStream,
-                         const ME_DisplayItem *para)
+                         ME_DisplayItem *para)
 {
   PARAFORMAT2 *fmt = para->member.para.pFmt;
   char props[STREAMOUT_BUFFER_SIZE] = "";
   int i;
-  
+
+  if (!editor->bEmulateVersion10) { /* v4.1 */
+    if (para->member.para.nFlags & MEPF_ROWSTART) {
+      pStream->nNestingLevel++;
+      if (pStream->nNestingLevel == 1) {
+        if (!ME_StreamOutRTFTableProps(editor, pStream, para))
+          return FALSE;
+      }
+      return TRUE;
+    } else if (para->member.para.nFlags & MEPF_ROWEND) {
+      pStream->nNestingLevel--;
+      if (pStream->nNestingLevel >= 1) {
+        if (!ME_StreamOutPrint(pStream, "{\\*\\nesttableprops"))
+          return FALSE;
+        if (!ME_StreamOutRTFTableProps(editor, pStream, para))
+          return FALSE;
+        if (!ME_StreamOutPrint(pStream, "\\nestrow}{\\nonesttables\\par}\r\n"))
+          return FALSE;
+      } else {
+        if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
+          return FALSE;
+      }
+      return TRUE;
+    }
+  } else { /* v1.0 - 3.0 */
+    if (para->member.para.pFmt->dwMask & PFM_TABLE &&
+        para->member.para.pFmt->wEffects & PFE_TABLE)
+    {
+      if (!ME_StreamOutRTFTableProps(editor, pStream, para))
+        return FALSE;
+    }
+  }
+
   /* TODO: Don't emit anything if the last PARAFORMAT2 is inherited */
   if (!ME_StreamOutPrint(pStream, "\\pard"))
     return FALSE;
@@ -798,39 +830,8 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
     if (cursor.pPara != prev_para)
     {
       prev_para = cursor.pPara;
-      if (!editor->bEmulateVersion10) { /* v4.1 */
-        if (cursor.pPara->member.para.nFlags & MEPF_ROWSTART) {
-          pStream->nNestingLevel++;
-          if (pStream->nNestingLevel == 1) {
-            if (!ME_StreamOutRTFTableProps(editor, pStream, cursor.pPara))
-              return FALSE;
-          }
-        } else if (cursor.pPara->member.para.nFlags & MEPF_ROWEND) {
-          pStream->nNestingLevel--;
-          if (pStream->nNestingLevel >= 1) {
-            if (!ME_StreamOutPrint(pStream, "{\\*\\nesttableprops"))
-              return FALSE;
-            if (!ME_StreamOutRTFTableProps(editor, pStream, cursor.pPara))
-              return FALSE;
-            if (!ME_StreamOutPrint(pStream, "\\nestrow}{\\nonesttables\\par}\r\n"))
-              return FALSE;
-          } else {
-            if (!ME_StreamOutPrint(pStream, "\\row \r\n"))
-              return FALSE;
-          }
-        } else if (!ME_StreamOutRTFParaProps(editor, pStream, cursor.pPara)) {
-          return FALSE;
-        }
-      } else { /* v1.0 - 3.0 */
-        if (cursor.pPara->member.para.pFmt->dwMask & PFM_TABLE &&
-            cursor.pPara->member.para.pFmt->wEffects & PFE_TABLE)
-        {
-          if (!ME_StreamOutRTFTableProps(editor, pStream, cursor.pPara))
-            return FALSE;
-        }
-        if (!ME_StreamOutRTFParaProps(editor, pStream, cursor.pPara))
-          return FALSE;
-      }
+      if (!ME_StreamOutRTFParaProps(editor, pStream, cursor.pPara))
+        return FALSE;
     }
 
     if (cursor.pRun == endCur.pRun && !endCur.nOffset)
@@ -838,7 +839,7 @@ static BOOL ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream,
     TRACE("flags %xh\n", cursor.pRun->member.run.nFlags);
     /* TODO: emit embedded objects */
     if (cursor.pPara->member.para.nFlags & (MEPF_ROWSTART|MEPF_ROWEND))
-      break;
+      continue;
     if (cursor.pRun->member.run.nFlags & MERF_GRAPHICS) {
       FIXME("embedded objects are not handled\n");
     } else if (cursor.pRun->member.run.nFlags & MERF_TAB) {

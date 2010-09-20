@@ -2435,7 +2435,11 @@ IoSkipCurrentIrpStackLocation(
 {
   ASSERT(Irp->CurrentLocation <= Irp->StackCount);
   Irp->CurrentLocation++;
+#ifdef NONAMELESSUNION
+  Irp->Tail.Overlay.s.u.CurrentStackLocation++;
+#else
   Irp->Tail.Overlay.CurrentStackLocation++;
+#endif
 }
 
 FORCEINLINE
@@ -2445,7 +2449,11 @@ IoSetNextIrpStackLocation(
 {
   ASSERT(Irp->CurrentLocation > 0);
   Irp->CurrentLocation--;
+#ifdef NONAMELESSUNION
+  Irp->Tail.Overlay.s.u.CurrentStackLocation--;
+#else
   Irp->Tail.Overlay.CurrentStackLocation--;
+#endif
 }
 
 FORCEINLINE
@@ -2454,7 +2462,11 @@ IoGetNextIrpStackLocation(
   IN PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation > 0);
+#ifdef NONAMELESSUNION
+  return ((Irp)->Tail.Overlay.s.u.CurrentStackLocation - 1 );
+#else
   return ((Irp)->Tail.Overlay.CurrentStackLocation - 1 );
+#endif
 }
 
 FORCEINLINE
@@ -2545,7 +2557,11 @@ IoGetCurrentIrpStackLocation(
   IN PIRP Irp)
 {
   ASSERT(Irp->CurrentLocation <= Irp->StackCount + 1);
+#ifdef NONAMELESSUNION
+  return Irp->Tail.Overlay.s.u.CurrentStackLocation;
+#else
   return Irp->Tail.Overlay.CurrentStackLocation;
+#endif
 }
 
 FORCEINLINE

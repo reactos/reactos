@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_AUTHORITY_KEY_ID "Identifiant de l'autorité de la clé"
     IDS_KEY_ATTRIBUTES "Attributs de la clé"
@@ -170,7 +170,7 @@ STRINGTABLE DISCARDABLE
     IDS_ANY_CERT_POLICY "Toutes les politiques d'émission"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALIZEDNAME_ROOT "Autorités de certification de confiance"
     IDS_LOCALIZEDNAME_MY "Personnel"
@@ -180,7 +180,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_DISALLOWED "Certificats non autorisés"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_KEY_ID "ID de clé ="
     IDS_CERT_ISSUER "Émetteur du certificat"

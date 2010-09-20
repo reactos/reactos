@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_CERT_POLICY "Politica certificatului"
     IDS_POLICY_ID "Identificatorul politicii: "

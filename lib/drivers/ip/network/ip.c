@@ -163,7 +163,7 @@ PIP_INTERFACE IPCreateInterface(
     TcpipInitializeSpinLock(&IF->Lock);
 
     IF->TCPContext = ExAllocatePoolWithTag
-	( NonPagedPool, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ),
+	( NonPagedPool, sizeof(OSK_IFADDR) + 3 * sizeof( struct sockaddr_in ),
           OSKITTCP_CONTEXT_TAG );
     if (!IF->TCPContext) {
         ExFreePoolWithTag(IF, IP_INTERFACE_TAG);

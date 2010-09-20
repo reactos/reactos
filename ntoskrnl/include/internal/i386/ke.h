@@ -3,7 +3,6 @@
 #ifndef __ASM__
 
 #include "intrin_i.h"
-#include "v86m.h"
 
 //
 // Thread Dispatcher Header DebugActive Mask
@@ -455,7 +454,7 @@ extern ULONG Ke386CacheAlignment;
 extern ULONG KiFastSystemCallDisable;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
-extern VOID __cdecl KiTrap02(VOID);
+extern DECLSPEC_NORETURN VOID __cdecl KiTrap02(VOID);
 extern VOID __cdecl KiTrap08(VOID);
 extern VOID __cdecl KiTrap13(VOID);
 extern VOID __cdecl KiFastCallEntry(VOID);

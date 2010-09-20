@@ -132,6 +132,8 @@ DisplayApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(uMsg);
     UNREFERENCED_PARAMETER(hwnd);
 
+    g_GlobalData.desktop_color = GetSysColor(COLOR_DESKTOP);
+
     LoadString(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
     ZeroMemory(&psh, sizeof(PROPSHEETHEADER));

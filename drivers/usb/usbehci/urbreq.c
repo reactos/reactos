@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/urbreq.c
  * PURPOSE:     URB Related Functions.
  * PROGRAMMERS:
- *              Michael Martin (mjmartin@reactos.org)
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #include "usbehci.h"
@@ -125,6 +125,8 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
 
     DPRINT1("ExecuteControlRequest: Buffer %x, Length %x\n", Buffer, BufferLength);
 
+    ExAcquireFastMutex(&DeviceExtension->AsyncListMutex);
+
     Base = (ULONG) DeviceExtension->ResourceMemory;
 
     /* Set up the QUEUE HEAD in memory */
@@ -198,7 +200,7 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
     UsbCmd->Run = FALSE;
     WRITE_REGISTER_ULONG((PULONG)(Base + EHCI_USBCMD), tmp);
 
-    if (CtrlSetup->bmRequestType._BM.Dir == BMREQUEST_DEVICE_TO_HOST)
+    if (SetupPacket->bmRequestType._BM.Dir == BMREQUEST_DEVICE_TO_HOST)
     {
         if ((Buffer) && (BufferLength))
         {
@@ -207,6 +209,8 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
         else
             DPRINT1("Unable to copy data to buffer\n");
     }
+
+    ExReleaseFastMutex(&DeviceExtension->AsyncListMutex);
 
     return TRUE;
 }

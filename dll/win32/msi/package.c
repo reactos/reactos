@@ -324,57 +324,85 @@ static UINT create_temp_property_table(MSIPACKAGE *package)
 
 UINT msi_clone_properties(MSIPACKAGE *package)
 {
-    MSIQUERY *view = NULL;
+    MSIQUERY *view_select = NULL;
     UINT rc;
 
-    static const WCHAR Query[] = {
+    static const WCHAR query_select[] = {
        'S','E','L','E','C','T',' ','*',' ',
        'F','R','O','M',' ','`','P','r','o','p','e','r','t','y','`',0};
-    static const WCHAR Insert[] = {
+    static const WCHAR query_insert[] = {
        'I','N','S','E','R','T',' ','i','n','t','o',' ',
        '`','_','P','r','o','p','e','r','t','y','`',' ',
        '(','`','_','P','r','o','p','e','r','t','y','`',',',
        '`','V','a','l','u','e','`',')',' ',
        'V','A','L','U','E','S',' ','(','?',',','?',')',0};
+    static const WCHAR query_update[] = {
+        'U','P','D','A','T','E',' ','`','_','P','r','o','p','e','r','t','y','`',' ',
+        'S','E','T',' ','`','V','a','l','u','e','`',' ','=',' ','?',' ',
+        'W','H','E','R','E',' ','`','_','P','r','o','p','e','r','t','y','`',' ','=',' ','?',0};
 
-    /* clone the existing properties */
-    rc = MSI_DatabaseOpenViewW(package->db, Query, &view);
+    rc = MSI_DatabaseOpenViewW( package->db, query_select, &view_select );
     if (rc != ERROR_SUCCESS)
         return rc;
 
-    rc = MSI_ViewExecute(view, 0);
+    rc = MSI_ViewExecute( view_select, 0 );
     if (rc != ERROR_SUCCESS)
     {
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
+        MSI_ViewClose( view_select );
+        msiobj_release( &view_select->hdr );
         return rc;
     }
 
     while (1)
     {
-        MSIRECORD *row;
-        MSIQUERY *view2;
+        MSIQUERY *view_insert, *view_update;
+        MSIRECORD *rec_select;
 
-        rc = MSI_ViewFetch(view, &row);
+        rc = MSI_ViewFetch( view_select, &rec_select );
         if (rc != ERROR_SUCCESS)
             break;
 
-        rc = MSI_DatabaseOpenViewW(package->db, Insert, &view2);
+        rc = MSI_DatabaseOpenViewW( package->db, query_insert, &view_insert );
         if (rc != ERROR_SUCCESS)
         {
-            msiobj_release(&row->hdr);
+            msiobj_release( &rec_select->hdr );
             continue;
         }
 
-        MSI_ViewExecute(view2, row);
-        MSI_ViewClose(view2);
-        msiobj_release(&view2->hdr);
-        msiobj_release(&row->hdr);
+        rc = MSI_ViewExecute( view_insert, rec_select );
+        MSI_ViewClose( view_insert );
+        msiobj_release( &view_insert->hdr );
+        if (rc != ERROR_SUCCESS)
+        {
+            MSIRECORD *rec_update;
+
+            TRACE("insert failed, trying update\n");
+
+            rc = MSI_DatabaseOpenViewW( package->db, query_update, &view_update );
+            if (rc != ERROR_SUCCESS)
+            {
+                WARN("open view failed %u\n", rc);
+                msiobj_release( &rec_select->hdr );
+                continue;
+            }
+
+            rec_update = MSI_CreateRecord( 2 );
+            MSI_RecordCopyField( rec_select, 1, rec_update, 2 );
+            MSI_RecordCopyField( rec_select, 2, rec_update, 1 );
+            rc = MSI_ViewExecute( view_update, rec_update );
+            if (rc != ERROR_SUCCESS)
+                WARN("update failed %u\n", rc);
+
+            MSI_ViewClose( view_update );
+            msiobj_release( &view_update->hdr );
+            msiobj_release( &rec_update->hdr );
+        }
+
+        msiobj_release( &rec_select->hdr );
     }
 
-    MSI_ViewClose(view);
-    msiobj_release(&view->hdr);
-
+    MSI_ViewClose( view_select );
+    msiobj_release( &view_select->hdr );
     return rc;
 }
 
@@ -1014,7 +1042,7 @@ static UINT msi_load_admin_properties(MSIPACKAGE *package)
     return r;
 }
 
-static void adjust_allusers_property( MSIPACKAGE *package )
+void msi_adjust_allusers_property( MSIPACKAGE *package )
 {
     /* FIXME: this should depend on the user's privileges */
     if (msi_get_property_int( package->db, szAllUsers, 0 ) == 2)
@@ -1046,6 +1074,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 
         create_temp_property_table( package );
         msi_clone_properties( package );
+        msi_adjust_allusers_property( package );
 
         package->ProductCode = msi_dup_property( package->db, szProductCode );
         package->script = msi_alloc_zero( sizeof(MSISCRIPT) );
@@ -1065,8 +1094,6 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPCWSTR base_url )
 
         if (package->WordCount & msidbSumInfoSourceTypeAdminImage)
             msi_load_admin_properties( package );
-
-        adjust_allusers_property( package );
     }
 
     return package;
@@ -1208,6 +1235,13 @@ static UINT apply_registered_patch( MSIPACKAGE *package, LPCWSTR patch_code )
         ERR("failed to parse patch summary %u\n", r);
         msiobj_release( &patch_db->hdr );
         return r;
+    }
+
+    patch_info->localfile = strdupW( patch_file );
+    if (!patch_info->localfile)
+    {
+        msiobj_release( &patch_db->hdr );
+        return ERROR_OUTOFMEMORY;
     }
 
     r = msi_apply_patch_db( package, patch_db, patch_info );
@@ -1369,6 +1403,12 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
         }
 
         index++;
+    }
+
+    if (index)
+    {
+        msi_clone_properties( package );
+        msi_adjust_allusers_property( package );
     }
 
     *pPackage = package;

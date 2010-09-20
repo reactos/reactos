@@ -727,6 +727,7 @@ Bus_PDO_QueryResources(
 			case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
 			case ACPI_RESOURCE_TYPE_MEMORY24:
 			case ACPI_RESOURCE_TYPE_MEMORY32:
+            case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
 			case ACPI_RESOURCE_TYPE_IO:
 			{
 				NumberOfResources++;
@@ -1047,6 +1048,22 @@ Bus_PDO_QueryResources(
 				ResourceDescriptor++;
 				break;
 			}
+            case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+            {
+                ACPI_RESOURCE_FIXED_MEMORY32 *memfixed32_data = (ACPI_RESOURCE_FIXED_MEMORY32*) &resource->Data;
+				ResourceDescriptor->Type = CmResourceTypeMemory;
+				ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+				ResourceDescriptor->Flags = 0;
+				if (memfixed32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+				else
+					ResourceDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+				ResourceDescriptor->u.Memory.Start.QuadPart = memfixed32_data->Address;
+				ResourceDescriptor->u.Memory.Length = memfixed32_data->AddressLength;
+                
+				ResourceDescriptor++;
+				break;
+			}
 			default:
 			{
 				break;
@@ -1142,6 +1159,7 @@ Bus_PDO_QueryResourceRequirements(
 			case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
 			case ACPI_RESOURCE_TYPE_MEMORY24:
 			case ACPI_RESOURCE_TYPE_MEMORY32:
+            case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
 			case ACPI_RESOURCE_TYPE_IO:
 			{
 				NumberOfResources++;
@@ -1479,6 +1497,24 @@ Bus_PDO_QueryResourceRequirements(
 				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = mem32_data->Maximum;
 				RequirementDescriptor->u.Memory.Length = mem32_data->AddressLength;
 
+				RequirementDescriptor++;
+				break;
+			}
+            case ACPI_RESOURCE_TYPE_FIXED_MEMORY32:
+			{
+				ACPI_RESOURCE_FIXED_MEMORY32 *fixedmem32_data = (ACPI_RESOURCE_FIXED_MEMORY32*) &resource->Data;
+				RequirementDescriptor->Option = CurrentRes ? 0 : IO_RESOURCE_PREFERRED;
+				RequirementDescriptor->Type = CmResourceTypeMemory;
+				RequirementDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+				RequirementDescriptor->Flags = 0;
+				if (fixedmem32_data->WriteProtect == ACPI_READ_ONLY_MEMORY)
+					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_ONLY;
+				else
+					RequirementDescriptor->Flags |= CM_RESOURCE_MEMORY_READ_WRITE;
+				RequirementDescriptor->u.Memory.MinimumAddress.QuadPart = fixedmem32_data->Address;
+				RequirementDescriptor->u.Memory.MaximumAddress.QuadPart = fixedmem32_data->Address;
+				RequirementDescriptor->u.Memory.Length = fixedmem32_data->AddressLength;
+                
 				RequirementDescriptor++;
 				break;
 			}

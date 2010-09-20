@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Ошибка конвертирования объекта в примитивный тип"
     IDS_INVALID_CALL_ARG    "Неверный вызов процедуры или аргумент"

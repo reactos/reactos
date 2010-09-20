@@ -233,7 +233,6 @@ CdfsFCBInitializeCache(PVCB Vcb,
                        PFCB Fcb)
 {
     PFILE_OBJECT FileObject;
-    NTSTATUS Status;
     PCCB  newCCB;
 
     FileObject = IoCreateStreamFileObject(NULL, Vcb->StorageDevice);
@@ -241,7 +240,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
     newCCB = ExAllocatePoolWithTag(NonPagedPool, sizeof(CCB), TAG_CCB);
     if (newCCB == NULL)
     {
-        return(STATUS_INSUFFICIENT_RESOURCES);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
     RtlZeroMemory(newCCB,
         sizeof(CCB));
@@ -256,7 +255,6 @@ CdfsFCBInitializeCache(PVCB Vcb,
     Fcb->FileObject = FileObject;
     Fcb->DevExt = Vcb;
 
-    Status = STATUS_SUCCESS;
     CcInitializeCacheMap(FileObject,
         (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
         FALSE,
@@ -266,7 +264,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
     ObDereferenceObject(FileObject);
     Fcb->Flags |= FCB_CACHE_INITIALIZED;
 
-    return(Status);
+    return STATUS_SUCCESS;
 }
 
 
@@ -434,6 +432,9 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
     }
     memset(newCCB, 0, sizeof(CCB));
 
+    FileObject->ReadAccess = TRUE;
+    FileObject->WriteAccess = FALSE;
+    FileObject->DeleteAccess = FALSE;
     FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
     FileObject->FsContext = Fcb;
     FileObject->FsContext2 = newCCB;

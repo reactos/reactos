@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Det angivna installationspaketet kunde inte öppnas.  Kontrollera filsökvägen och försök igen."
 	5 "sökvägen %s hittades inte"

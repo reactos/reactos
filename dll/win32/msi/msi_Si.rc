@@ -24,7 +24,7 @@
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Navedenega namestitvenega paketa ni mogoče odpreti. Preverite ime datoteke in poskusite znova."
 	5 "pot %s ne obstaja"

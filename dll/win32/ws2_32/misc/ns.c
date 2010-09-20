@@ -1172,11 +1172,11 @@ getservbyname(IN  CONST CHAR FAR* name,
     PCHAR SystemDirectory = ServiceDBData; /* Reuse this stack space */
     PCHAR ServicesFileLocation = "\\drivers\\etc\\services";
     PCHAR ThisLine = 0, NextLine = 0, ServiceName = 0, PortNumberStr = 0,
-    ProtocolStr = 0, Comment = 0;
+    ProtocolStr = 0, Comment = 0, EndValid;
     PCHAR Aliases[WS2_INTERNAL_MAX_ALIAS] = { 0 };
     UINT i,SizeNeeded = 0,
     SystemDirSize = sizeof(ServiceDBData) - 1;
-    DWORD ReadSize = 0, ValidData = 0;
+    DWORD ReadSize = 0;
     PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
 
     if( !p )
@@ -1215,43 +1215,56 @@ getservbyname(IN  CONST CHAR FAR* name,
         WSASetLastError( WSANO_RECOVERY );
         return NULL;
     }
-
+    
     /* Scan the services file ...
-     *
-     * We will read up to BUFSIZ bytes per pass, until the buffer does not
-     * contain a full line, then we will try to read more.
-     *
-     * We fall from the loop if the buffer does not have a line terminator.
-     */
-
+    *
+    * We will be share the buffer on the lines. If the line does not fit in
+    * the buffer, then moving it to the beginning of the buffer and read
+    * the remnants of line from file.
+    */
+    
     /* Initial Read */
-    while(!Found &&
-          ReadFile(ServicesFile,
-                   ServiceDBData + ValidData,
-                   sizeof( ServiceDBData ) - ValidData,
-                   &ReadSize,
-                   NULL))
+    ReadFile(ServicesFile,
+                   ServiceDBData,
+                   sizeof( ServiceDBData ) - 1,
+                   &ReadSize, NULL );
+    ThisLine = NextLine = ServiceDBData;
+    EndValid = ServiceDBData + ReadSize;
+    ServiceDBData[sizeof(ServiceDBData) - 1] = '\0';
+    
+    while(ReadSize)
     {
-        ValidData += ReadSize;
-        ReadSize = 0;
-        NextLine = ThisLine = ServiceDBData;
-
-        /* Find the beginning of the next line */
-        while(NextLine < ServiceDBData + ValidData &&
-              *NextLine != '\r' && *NextLine != '\n' )
+        for(; *NextLine != '\r' && *NextLine != '\n'; NextLine++)
         {
-            NextLine++;
+            if(NextLine == EndValid)
+            {
+                int LineLen = NextLine - ThisLine;
+                
+                if(ThisLine == ServiceDBData)
+                {
+                    WS_DbgPrint(MIN_TRACE,("Line too long"));
+                    WSASetLastError( WSANO_RECOVERY );
+                    return NULL;
+                }
+
+                memmove(ServiceDBData, ThisLine, LineLen);
+           
+                ReadFile(ServicesFile, ServiceDBData + LineLen,
+                         sizeof( ServiceDBData )-1 - LineLen,
+                         &ReadSize, NULL );
+                               
+                EndValid = ServiceDBData + LineLen + ReadSize;
+                NextLine = ServiceDBData + LineLen;
+                ThisLine = ServiceDBData;
+                
+                if(!ReadSize) break;
+            }
         }
-
-        /* Zero and skip, so we can treat what we have as a string */
-        if( NextLine > ServiceDBData + ValidData )
-            break;
-
-        *NextLine = 0; NextLine++;
-
+        
+        *NextLine = '\0';
         Comment = strchr( ThisLine, '#' );
-        if( Comment ) *Comment = 0; /* Terminate at comment start */
-
+        if( Comment ) *Comment = '\0'; /* Terminate at comment start */
+        
         if(DecodeServEntFromString(ThisLine,
                                    &ServiceName,
                                    &PortNumberStr,
@@ -1268,22 +1281,8 @@ getservbyname(IN  CONST CHAR FAR* name,
                 (NextLine - ThisLine);
             break;
         }
-
-        /* Get rid of everything we read so far */
-        while( NextLine <= ServiceDBData + ValidData &&
-               isspace( *NextLine ) )
-        {
-            NextLine++;
-        }
-
-        WS_DbgPrint(MAX_TRACE,("About to move %d chars\n",
-                    ServiceDBData + ValidData - NextLine));
-
-        memmove(ServiceDBData,
-                NextLine,
-                ServiceDBData + ValidData - NextLine );
-        ValidData -= NextLine - ServiceDBData;
-        WS_DbgPrint(MAX_TRACE,("Valid bytes: %d\n", ValidData));
+        NextLine++;
+        ThisLine = NextLine;
     }
 
     /* This we'll do no matter what */

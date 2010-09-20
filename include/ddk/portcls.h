@@ -126,12 +126,11 @@
 #define PORTCLS_H
 
 #ifdef __cplusplus
-extern "C"
-{
-    #include <wdm.h>
+extern "C" {
+#include <wdm.h>
 }
 #else
-    #include <wdm.h>
+#include <wdm.h>
 #endif
 
 #include <windef.h>
@@ -146,12 +145,11 @@ extern "C"
 #include <drmk.h>
 
 #ifdef __cplusplus
-extern "C"
-{
-    #include <wdm.h>
+extern "C" {
+#include <wdm.h>
 }
 #else
-    #include <wdm.h>
+#include <wdm.h>
 #endif
 
 #ifndef PC_NO_IMPORTS
@@ -213,24 +211,22 @@ DEFINE_GUID(CLSID_MiniportDriverFmSynthWithVol, 0xe5a3c139L, 0xf0f2, 0x11d1, 0x8
     IoIsWdmVersionAvailable may also be used by older drivers.
 */
 
-enum
-{
-    kVersionInvalid = -1,
-
-    kVersionWin98,
-    kVersionWin98SE,
-    kVersionWin2K,
-    kVersionWin98SE_QFE2,
-    kVersionWin2K_SP2,
-    kVersionWinME,
-    kVersionWin98SE_QFE3,
-    kVersionWinME_QFE1,
-    kVersionWinXP,
-    kVersionWinXPSP1,
-    kVersionWinServer2003,
-    kVersionWin2K_UAAQFE,           /* These support IUnregister* interface */
-    kVersionWinXP_UAAQFE,
-    kVersionWinServer2003_UAAQFE
+enum {
+  kVersionInvalid = -1,
+  kVersionWin98,
+  kVersionWin98SE,
+  kVersionWin2K,
+  kVersionWin98SE_QFE2,
+  kVersionWin2K_SP2,
+  kVersionWinME,
+  kVersionWin98SE_QFE3,
+  kVersionWinME_QFE1,
+  kVersionWinXP,
+  kVersionWinXPSP1,
+  kVersionWinServer2003,
+  kVersionWin2K_UAAQFE,           /* These support IUnregister* interface */
+  kVersionWinXP_UAAQFE,
+  kVersionWinServer2003_UAAQFE
 };
 
 /* ===============================================================
@@ -241,164 +237,151 @@ struct _PCPROPERTY_REQUEST;
 
 typedef struct _PCPROPERTY_REQUEST PCPROPERTY_REQUEST, *PPCPROPERTY_REQUEST;
 
-typedef NTSTATUS (NTAPI *PCPFNPROPERTY_HANDLER)(
-    IN  PPCPROPERTY_REQUEST PropertyRequest);
+typedef NTSTATUS
+(NTAPI *PCPFNPROPERTY_HANDLER)(
+  IN  PPCPROPERTY_REQUEST PropertyRequest);
 
-typedef struct
-{
-    const GUID *            Set;
-    ULONG                   Id;
-    ULONG                   Flags;
+typedef struct {
+  const GUID *Set;
+  ULONG Id;
+  ULONG Flags;
 #define PCPROPERTY_ITEM_FLAG_GET            KSPROPERTY_TYPE_GET
 #define PCPROPERTY_ITEM_FLAG_SET            KSPROPERTY_TYPE_SET
 #define PCPROPERTY_ITEM_FLAG_BASICSUPPORT   KSPROPERTY_TYPE_BASICSUPPORT
-//not supported #define PCPROPERTY_ITEM_FLAG_RELATIONS      KSPROPERTY_TYPE_RELATIONS
+  //not supported #define PCPROPERTY_ITEM_FLAG_RELATIONS      KSPROPERTY_TYPE_RELATIONS
 #define PCPROPERTY_ITEM_FLAG_SERIALIZERAW   KSPROPERTY_TYPE_SERIALIZERAW
 #define PCPROPERTY_ITEM_FLAG_UNSERIALIZERAW KSPROPERTY_TYPE_UNSERIALIZERAW
 #define PCPROPERTY_ITEM_FLAG_SERIALIZESIZE  KSPROPERTY_TYPE_SERIALIZESIZE
 #define PCPROPERTY_ITEM_FLAG_SERIALIZE\
-        (PCPROPERTY_ITEM_FLAG_SERIALIZERAW\
-        |PCPROPERTY_ITEM_FLAG_UNSERIALIZERAW\
-        |PCPROPERTY_ITEM_FLAG_SERIALIZESIZE\
-        )
+  (PCPROPERTY_ITEM_FLAG_SERIALIZERAW\
+  |PCPROPERTY_ITEM_FLAG_UNSERIALIZERAW\
+  |PCPROPERTY_ITEM_FLAG_SERIALIZESIZE\
+  )
 #define PCPROPERTY_ITEM_FLAG_DEFAULTVALUES  KSPROPERTY_TYPE_DEFAULTVALUES
-    PCPFNPROPERTY_HANDLER   Handler;
+  PCPFNPROPERTY_HANDLER Handler;
 }
 PCPROPERTY_ITEM, *PPCPROPERTY_ITEM;
 
-
-struct _PCPROPERTY_REQUEST
-{
-    PUNKNOWN                MajorTarget;
-    PUNKNOWN                MinorTarget;
-    ULONG                   Node;
-    const PCPROPERTY_ITEM * PropertyItem;
-    ULONG                   Verb;
-    ULONG                   InstanceSize;
-    PVOID                   Instance;
-    ULONG                   ValueSize;
-    PVOID                   Value;
-    PIRP                    Irp;
+struct _PCPROPERTY_REQUEST {
+  PUNKNOWN MajorTarget;
+  PUNKNOWN MinorTarget;
+  ULONG Node;
+  const PCPROPERTY_ITEM *PropertyItem;
+  ULONG Verb;
+  ULONG InstanceSize;
+  PVOID Instance;
+  ULONG ValueSize;
+  PVOID Value;
+  PIRP Irp;
 };
 
 struct _PCEVENT_REQUEST;
 
-typedef NTSTATUS (NTAPI *PCPFNEVENT_HANDLER)(
-    IN  struct _PCEVENT_REQUEST* EventRequest);
+typedef NTSTATUS
+(NTAPI *PCPFNEVENT_HANDLER)(
+  IN struct _PCEVENT_REQUEST* EventRequest);
 
-typedef struct _PCEVENT_ITEM
-{
-    const GUID* Set;
-    ULONG Id;
-    ULONG Flags;
-    PCPFNEVENT_HANDLER Handler;
+typedef struct _PCEVENT_ITEM {
+  const GUID* Set;
+  ULONG Id;
+  ULONG Flags;
+  PCPFNEVENT_HANDLER Handler;
 } PCEVENT_ITEM, *PPCEVENT_ITEM;
 
-typedef struct _PCEVENT_REQUEST
-{
-    PUNKNOWN MajorTarget;
-    PUNKNOWN MinorTarget;
-    ULONG Node;
-    const PCEVENT_ITEM* EventItem;
-    PKSEVENT_ENTRY EventEntry;
-    ULONG Verb;
-    PIRP Irp;
+typedef struct _PCEVENT_REQUEST {
+  PUNKNOWN MajorTarget;
+  PUNKNOWN MinorTarget;
+  ULONG Node;
+  const PCEVENT_ITEM* EventItem;
+  PKSEVENT_ENTRY EventEntry;
+  ULONG Verb;
+  PIRP Irp;
 } PCEVENT_REQUEST, *PPCEVENT_REQUEST;
-
-
 
 struct _PCMETHOD_REQUEST;
 
-typedef NTSTATUS (NTAPI *PCPFNMETHOD_HANDLER)(
-    IN  struct _PCMETHOD_REQUEST* MethodRequest);
+typedef NTSTATUS
+(NTAPI *PCPFNMETHOD_HANDLER)(
+  IN struct _PCMETHOD_REQUEST* MethodRequest);
 
-typedef struct _PCMETHOD_ITEM
-{
-    const GUID* Set;
-    ULONG Id;
-    ULONG Flags;
-    PCPFNMETHOD_HANDLER Handler;
+typedef struct _PCMETHOD_ITEM {
+  const GUID* Set;
+  ULONG Id;
+  ULONG Flags;
+  PCPFNMETHOD_HANDLER Handler;
 } PCMETHOD_ITEM, *PPCMETHOD_ITEM;
 
-typedef struct _PCMETHOD_REQUEST
-{
-    PUNKNOWN MajorTarget;
-    PUNKNOWN MinorTarget;
-    ULONG Node;
-    const PCMETHOD_ITEM* MethodItem;
-    ULONG Verb;
+typedef struct _PCMETHOD_REQUEST {
+  PUNKNOWN MajorTarget;
+  PUNKNOWN MinorTarget;
+  ULONG Node;
+  const PCMETHOD_ITEM* MethodItem;
+  ULONG Verb;
 } PCMETHOD_REQUEST, *PPCMETHOD_REQUEST;
-
 
 /* ===============================================================
     Structures (unsorted)
 */
 
-typedef struct
-{
-    ULONG PropertyItemSize;
-    ULONG PropertyCount;
-    const PCPROPERTY_ITEM* Properties;
-    ULONG MethodItemSize;
-    ULONG MethodCount;
-    const PCMETHOD_ITEM* Methods;
-    ULONG EventItemSize;
-    ULONG EventCount;
-    const PCEVENT_ITEM* Events;
-    ULONG Reserved;
+typedef struct {
+  ULONG PropertyItemSize;
+  ULONG PropertyCount;
+  const PCPROPERTY_ITEM* Properties;
+  ULONG MethodItemSize;
+  ULONG MethodCount;
+  const PCMETHOD_ITEM* Methods;
+  ULONG EventItemSize;
+  ULONG EventCount;
+  const PCEVENT_ITEM* Events;
+  ULONG Reserved;
 } PCAUTOMATION_TABLE, *PPCAUTOMATION_TABLE;
 
-typedef struct
-{
-    ULONG FromNode;
-    ULONG FromNodePin;
-    ULONG ToNode;
-    ULONG ToNodePin;
+typedef struct {
+  ULONG FromNode;
+  ULONG FromNodePin;
+  ULONG ToNode;
+  ULONG ToNodePin;
 } PCCONNECTION_DESCRIPTOR, *PPCCONNECTIONDESCRIPTOR;
 
-typedef struct
-{
-    ULONG MaxGlobalInstanceCount;
-    ULONG MaxFilterInstanceCount;
-    ULONG MinFilterInstanceCount;
-    const PCAUTOMATION_TABLE* AutomationTable;
-    KSPIN_DESCRIPTOR KsPinDescriptor;
+typedef struct {
+  ULONG MaxGlobalInstanceCount;
+  ULONG MaxFilterInstanceCount;
+  ULONG MinFilterInstanceCount;
+  const PCAUTOMATION_TABLE* AutomationTable;
+  KSPIN_DESCRIPTOR KsPinDescriptor;
 } PCPIN_DESCRIPTOR, *PPCPIN_DESCRIPTOR;
 
-typedef struct
-{
-    ULONG Flags;
-    const PCAUTOMATION_TABLE* AutomationTable;
-    const GUID* Type;
-    const GUID* Name;
+typedef struct {
+  ULONG Flags;
+  const PCAUTOMATION_TABLE* AutomationTable;
+  const GUID* Type;
+  const GUID* Name;
 } PCNODE_DESCRIPTOR, *PPCNODE_DESCRIPTOR;
 
-typedef struct
-{
-    ULONG Version;
-    const PCAUTOMATION_TABLE* AutomationTable;
-    ULONG PinSize;
-    ULONG PinCount;
-    const PCPIN_DESCRIPTOR* Pins;
-    ULONG NodeSize;
-    ULONG NodeCount;
-    const PCNODE_DESCRIPTOR* Nodes;
-    ULONG ConnectionCount;
-    const PCCONNECTION_DESCRIPTOR* Connections;
-    ULONG CategoryCount;
-    const GUID* Categories;
+typedef struct {
+  ULONG Version;
+  const PCAUTOMATION_TABLE* AutomationTable;
+  ULONG PinSize;
+  ULONG PinCount;
+  const PCPIN_DESCRIPTOR* Pins;
+  ULONG NodeSize;
+  ULONG NodeCount;
+  const PCNODE_DESCRIPTOR* Nodes;
+  ULONG ConnectionCount;
+  const PCCONNECTION_DESCRIPTOR* Connections;
+  ULONG CategoryCount;
+  const GUID* Categories;
 } PCFILTER_DESCRIPTOR, *PPCFILTER_DESCRIPTOR;
 
-#define DEFINE_PCAUTOMATION_TABLE_PROP(AutomationTable,PropertyTable)\
-const PCAUTOMATION_TABLE AutomationTable =\
-{\
-    sizeof(PropertyTable[0]),\
-    SIZEOF_ARRAY(PropertyTable),\
-    (const PCPROPERTY_ITEM *) PropertyTable,\
-    0,0,NULL,\
-    0,0,NULL,\
-    0\
-}
+#define DEFINE_PCAUTOMATION_TABLE_PROP(AutomationTable,PropertyTable) \
+  const PCAUTOMATION_TABLE AutomationTable = {                        \
+    sizeof(PropertyTable[0]),                                         \
+    SIZEOF_ARRAY(PropertyTable),                                      \
+    (const PCPROPERTY_ITEM *) PropertyTable,                          \
+    0,0,NULL,                                                         \
+    0,0,NULL,                                                         \
+    0                                                                 \
+  }
 
 /* ===============================================================
     IResourceList Interface
@@ -409,34 +392,33 @@ const PCAUTOMATION_TABLE AutomationTable =\
 
 DEFINE_GUID(IID_IResourceList, 0x22C6AC60L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 
-DECLARE_INTERFACE_(IResourceList, IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
+DECLARE_INTERFACE_(IResourceList, IUnknown) {
+  DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(ULONG, NumberOfEntries)( THIS ) PURE;
+  STDMETHOD_(ULONG, NumberOfEntries)( THIS ) PURE;
 
-    STDMETHOD_(ULONG, NumberOfEntriesOfType)( THIS_
-        IN  CM_RESOURCE_TYPE Type) PURE;
+  STDMETHOD_(ULONG, NumberOfEntriesOfType)( THIS_
+    IN CM_RESOURCE_TYPE Type) PURE;
 
-    STDMETHOD_(PCM_PARTIAL_RESOURCE_DESCRIPTOR, FindTranslatedEntry)( THIS_
-        IN  CM_RESOURCE_TYPE Type,
-        IN  ULONG Index) PURE;
+  STDMETHOD_(PCM_PARTIAL_RESOURCE_DESCRIPTOR, FindTranslatedEntry)( THIS_
+    IN CM_RESOURCE_TYPE Type,
+    IN ULONG Index) PURE;
 
-    STDMETHOD_(PCM_PARTIAL_RESOURCE_DESCRIPTOR, FindUntranslatedEntry)( THIS_
-        IN  CM_RESOURCE_TYPE Type,
-        IN  ULONG Index) PURE;
+  STDMETHOD_(PCM_PARTIAL_RESOURCE_DESCRIPTOR, FindUntranslatedEntry)( THIS_
+    IN CM_RESOURCE_TYPE Type,
+    IN ULONG Index) PURE;
 
-    STDMETHOD_(NTSTATUS, AddEntry)( THIS_
-        IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated,
-        IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Untranslated) PURE;
+  STDMETHOD_(NTSTATUS, AddEntry)( THIS_
+    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated,
+    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Untranslated) PURE;
 
-    STDMETHOD_(NTSTATUS, AddEntryFromParent)( THIS_
-        IN  IResourceList* Parent,
-        IN  CM_RESOURCE_TYPE Type,
-        IN  ULONG Index) PURE;
+  STDMETHOD_(NTSTATUS, AddEntryFromParent)( THIS_
+    IN IResourceList* Parent,
+    IN CM_RESOURCE_TYPE Type,
+    IN ULONG Index) PURE;
 
-    STDMETHOD_(PCM_RESOURCE_LIST, TranslatedList)( THIS ) PURE;
-    STDMETHOD_(PCM_RESOURCE_LIST, UntranslatedList)( THIS ) PURE;
+  STDMETHOD_(PCM_RESOURCE_LIST, TranslatedList)( THIS ) PURE;
+  STDMETHOD_(PCM_RESOURCE_LIST, UntranslatedList)( THIS ) PURE;
 };
 
 #define IMP_IResourceList \
@@ -468,115 +450,114 @@ DECLARE_INTERFACE_(IResourceList, IUnknown)
 typedef IResourceList *PRESOURCELIST;
 
 #define NumberOfPorts() \
-    NumberOfEntriesOfType(CmResourceTypePort)
+  NumberOfEntriesOfType(CmResourceTypePort)
 
 #define FindTranslatedPort(n) \
-    FindTranslatedEntry(CmResourceTypePort, (n))
+  FindTranslatedEntry(CmResourceTypePort, (n))
 
 #define FindUntranslatedPort(n) \
-    FindUntranslatedEntry(CmResourceTypePort, (n))
+  FindUntranslatedEntry(CmResourceTypePort, (n))
 
 #define AddPortFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypePort, (n))
+  AddEntryFromParent((p), CmResourceTypePort, (n))
 
 #define NumberOfInterrupts() \
-    NumberOfEntriesOfType(CmResourceTypeInterrupt)
+  NumberOfEntriesOfType(CmResourceTypeInterrupt)
 
 #define FindTranslatedInterrupt(n) \
-    FindTranslatedEntry(CmResourceTypeInterrupt, (n))
+  FindTranslatedEntry(CmResourceTypeInterrupt, (n))
 
 #define FindUntranslatedInterrupt(n) \
-    FindUntranslatedEntry(CmResourceTypeInterrupt, (n))
+  FindUntranslatedEntry(CmResourceTypeInterrupt, (n))
 
 #define AddInterruptFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeInterrupt, (n))
+  AddEntryFromParent((p), CmResourceTypeInterrupt, (n))
 
 #define NumberOfMemories() \
-    NumberOfEntriesOfType(CmResourceTypeMemory)
+  NumberOfEntriesOfType(CmResourceTypeMemory)
 
 #define FindTranslatedMemory(n) \
-    FindTranslatedEntry(CmResourceTypeMemory, (n))
+  FindTranslatedEntry(CmResourceTypeMemory, (n))
 
 #define FindUntranslatedMemory(n) \
-    FindUntranslatedEntry(CmResourceTypeMemory, (n))
+  FindUntranslatedEntry(CmResourceTypeMemory, (n))
 
 #define AddMemoryFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeMemory, (n))
+  AddEntryFromParent((p), CmResourceTypeMemory, (n))
 
 #define NumberOfDmas() \
-    NumberOfEntriesOfType(CmResourceTypeDma)
+  NumberOfEntriesOfType(CmResourceTypeDma)
 
 #define FindTranslatedDma(n) \
-    FindTranslatedEntry(CmResourceTypeDma, (n))
+  FindTranslatedEntry(CmResourceTypeDma, (n))
 
 #define FindUntranslatedDma(n) \
-    FindUntranslatedEntry(CmResourceTypeDma, (n))
+  FindUntranslatedEntry(CmResourceTypeDma, (n))
 
 #define AddDmaFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeInterrupt, (n))
+  AddEntryFromParent((p), CmResourceTypeInterrupt, (n))
 
 #define NumberOfDeviceSpecifics() \
-    NumberOfEntriesOfType(CmResourceTypeDeviceSpecific)
+  NumberOfEntriesOfType(CmResourceTypeDeviceSpecific)
 
 #define FindTranslatedDeviceSpecific(n) \
-    FindTranslatedEntry(CmResourceTypeDeviceSpecific, (n))
+  FindTranslatedEntry(CmResourceTypeDeviceSpecific, (n))
 
 #define FindUntranslatedDeviceSpecific(n) \
-    FindUntranslatedEntry(CmResourceTypeDeviceSpecific, (n))
+  FindUntranslatedEntry(CmResourceTypeDeviceSpecific, (n))
 
 #define AddDeviceSpecificFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeDeviceSpecific, (n))
+  AddEntryFromParent((p), CmResourceTypeDeviceSpecific, (n))
 
 #define NumberOfBusNumbers() \
-    NumberOfEntriesOfType(CmResourceTypeBusNumber)
+  NumberOfEntriesOfType(CmResourceTypeBusNumber)
 
 #define FindTranslatedBusNumber(n) \
-    FindTranslatedEntry(CmResourceTypeBusNumber, (n))
+  FindTranslatedEntry(CmResourceTypeBusNumber, (n))
 
 #define FindUntranslatedBusNumber(n) \
-    FindUntranslatedEntry(CmResourceTypeBusNumber, (n))
+  FindUntranslatedEntry(CmResourceTypeBusNumber, (n))
 
 #define AddBusNumberFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeBusNumber, (n))
+  AddEntryFromParent((p), CmResourceTypeBusNumber, (n))
 
 #define NumberOfDevicePrivates() \
-    NumberOfEntriesOfType(CmResourceTypeDevicePrivate)
+  NumberOfEntriesOfType(CmResourceTypeDevicePrivate)
 
 #define FindTranslatedDevicePrivate(n) \
-    FindTranslatedEntry(CmResourceTypeDevicePrivate, (n))
+  FindTranslatedEntry(CmResourceTypeDevicePrivate, (n))
 
 #define FindUntranslatedDevicePrivate(n) \
-    FindUntranslatedEntry(CmResourceTypeDevicePrivate, (n))
+  FindUntranslatedEntry(CmResourceTypeDevicePrivate, (n))
 
 #define AddDevicePrivateFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeDevicePrivate, (n))
+  AddEntryFromParent((p), CmResourceTypeDevicePrivate, (n))
 
 #define NumberOfAssignedResources() \
-    NumberOfEntriesOfType(CmResourceTypeAssignedResource)
+  NumberOfEntriesOfType(CmResourceTypeAssignedResource)
 
 #define FindTranslatedAssignedResource(n) \
-    FindTranslatedEntry(CmResourceTypeAssignedResource, (n))
+  FindTranslatedEntry(CmResourceTypeAssignedResource, (n))
 
 #define FindUntranslatedAssignedResource(n) \
-    FindUntranslatedEntry(CmResourceTypeAssignedResource, (n))
+  FindUntranslatedEntry(CmResourceTypeAssignedResource, (n))
 
 #define AddAssignedResourceFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeAssignedResource, (n))
+  AddEntryFromParent((p), CmResourceTypeAssignedResource, (n))
 
 #define NumberOfSubAllocateFroms() \
-    NumberOfEntriesOfType(CmResourceTypeSubAllocateFrom)
+  NumberOfEntriesOfType(CmResourceTypeSubAllocateFrom)
 
 #define FindTranslatedSubAllocateFrom(n) \
-    FindTranslatedEntry(CmResourceTypeSubAllocateFrom, (n))
+  FindTranslatedEntry(CmResourceTypeSubAllocateFrom, (n))
 
 #define FindUntranslatedSubAllocateFrom(n) \
-    FindUntranslatedEntry(CmResourceTypeSubAllocateFrom, (n))
+  FindUntranslatedEntry(CmResourceTypeSubAllocateFrom, (n))
 
 #define AddSubAllocateFromFromParent(p, n) \
-    AddEntryFromParent((p), CmResourceTypeSubAllocateFrom, (n))
+  AddEntryFromParent((p), CmResourceTypeSubAllocateFrom, (n))
 
 #undef INTERFACE
-
 
 /* ===============================================================
     IServiceSink Interface
@@ -585,17 +566,15 @@ typedef IResourceList *PRESOURCELIST;
 
 DEFINE_GUID(IID_IServiceSink, 0x22C6AC64L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 
-DECLARE_INTERFACE_(IServiceSink, IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
-    STDMETHOD_(void, RequestService)( THIS ) PURE;
+DECLARE_INTERFACE_(IServiceSink, IUnknown) {
+  DEFINE_ABSTRACT_UNKNOWN()
+  STDMETHOD_(void, RequestService)( THIS ) PURE;
 };
 
 #define IMP_IServiceSink \
-    STDMETHODIMP_(void) RequestService(void);
+  STDMETHODIMP_(void) RequestService(void);
 
 typedef IServiceSink *PSERVICESINK;
-
 
 /* ===============================================================
     IServiceGroup Interface
@@ -605,24 +584,23 @@ typedef IServiceSink *PSERVICESINK;
 
 DEFINE_GUID(IID_IServiceGroup, 0x22C6AC65L, 0x851B, 0x11D0, 0x9A, 0x7F, 0x00, 0xAA, 0x00, 0x38, 0xAC, 0xFE);
 
-DECLARE_INTERFACE_(IServiceGroup, IServiceSink)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
+DECLARE_INTERFACE_(IServiceGroup, IServiceSink) {
+  DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(void, RequestService)( THIS ) PURE;  /* IServiceSink */
+  STDMETHOD_(void, RequestService)( THIS ) PURE;  /* IServiceSink */
 
-    STDMETHOD_(NTSTATUS, AddMember)( THIS_
-        IN  PSERVICESINK pServiceSink) PURE;
+  STDMETHOD_(NTSTATUS, AddMember)( THIS_
+    IN PSERVICESINK pServiceSink) PURE;
 
-    STDMETHOD_(void, RemoveMember)( THIS_
-        IN  PSERVICESINK pServiceSink) PURE;
+  STDMETHOD_(void, RemoveMember)( THIS_
+    IN PSERVICESINK pServiceSink) PURE;
 
-    STDMETHOD_(void, SupportDelayedService)( THIS ) PURE;
+  STDMETHOD_(void, SupportDelayedService)( THIS ) PURE;
 
-    STDMETHOD_(void, RequestDelayedService)( THIS_
-        IN  ULONGLONG ullDelay) PURE;
+  STDMETHOD_(void, RequestDelayedService)( THIS_
+    IN ULONGLONG ullDelay) PURE;
 
-    STDMETHOD_(void, CancelDelayedService)( THIS ) PURE;
+  STDMETHOD_(void, CancelDelayedService)( THIS ) PURE;
 };
 
 #define IMP_IServiceGroup \
@@ -654,21 +632,20 @@ DEFINE_GUID(IID_IUnregisterSubdevice, 0x16738177L, 0xe199, 0x41f9, 0x9a, 0x87, 0
 #undef INTERFACE
 #define INTERFACE IUnregisterSubdevice
 
-DECLARE_INTERFACE_(IUnregisterSubdevice,IUnknown)
-{
-    DEFINE_ABSTRACT_UNKNOWN()
+DECLARE_INTERFACE_(IUnregisterSubdevice,IUnknown) {
+  DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(NTSTATUS,UnregisterSubdevice)(THIS_
-        IN  PDEVICE_OBJECT  DeviceObject,
-        IN  PUNKNOWN        Unknown)PURE;
+  STDMETHOD_(NTSTATUS,UnregisterSubdevice)(THIS_
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PUNKNOWN Unknown) PURE;
 };
 
 typedef IUnregisterSubdevice *PUNREGISTERSUBDEVICE;
 
-#define IMP_IUnregisterSubdevice                        \
-    STDMETHODIMP_(NTSTATUS) UnregisterSubdevice(THIS_   \
-        IN  PDEVICE_OBJECT  DeviceObject,               \
-        IN  PUNKNOWN        Unknown)
+#define IMP_IUnregisterSubdevice                      \
+  STDMETHODIMP_(NTSTATUS) UnregisterSubdevice(THIS_   \
+    IN PDEVICE_OBJECT DeviceObject,                   \
+    IN PUNKNOWN Unknown)
 
 /* ===============================================================
     IUnregisterPhysicalConnection Interface
@@ -2189,16 +2166,15 @@ typedef IPortClsVersion *PPORTCLSVERSION;
     IPreFetchOffset Interface
 */
 
-
-
 /* ===============================================================
     PortCls API Functions
 */
 
-typedef NTSTATUS (NTAPI *PCPFNSTARTDEVICE)(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp,
-    IN  PRESOURCELIST ResourceList);
+typedef NTSTATUS
+(NTAPI *PCPFNSTARTDEVICE)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  IN PRESOURCELIST ResourceList);
 
 /* This is in NTDDK.H */
 /*
@@ -2209,18 +2185,17 @@ typedef NTSTATUS (*PDRIVER_ADD_DEVICE)(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcAddAdapterDevice(
-    IN  PDRIVER_OBJECT DriverObject,
-    IN  PDEVICE_OBJECT PhysicalDeviceObject,
-    IN  PCPFNSTARTDEVICE StartDevice,
-    IN  ULONG MaxObjects,
-    IN  ULONG DeviceExtensionSize);
+  IN PDRIVER_OBJECT DriverObject,
+  IN PDEVICE_OBJECT PhysicalDeviceObject,
+  IN PCPFNSTARTDEVICE StartDevice,
+  IN ULONG MaxObjects,
+  IN ULONG DeviceExtensionSize);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcInitializeAdapterDriver(
-    IN  PDRIVER_OBJECT DriverObject,
-    IN  PUNICODE_STRING RegistryPathName,
-    IN  PDRIVER_ADD_DEVICE AddDevice);
-
+  IN PDRIVER_OBJECT DriverObject,
+  IN PUNICODE_STRING RegistryPathName,
+  IN PDRIVER_ADD_DEVICE AddDevice);
 
 /* ===============================================================
     Factories (TODO: Move elsewhere)
@@ -2228,62 +2203,62 @@ PcInitializeAdapterDriver(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewDmaChannel(
-    OUT PDMACHANNEL* OutDmaChannel,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  POOL_TYPE PoolType,
-    IN  PDEVICE_DESCRIPTION DeviceDescription,
-    IN  PDEVICE_OBJECT DeviceObject);
+  OUT PDMACHANNEL* OutDmaChannel,
+  IN PUNKNOWN OuterUnknown OPTIONAL,
+  IN POOL_TYPE PoolType,
+  IN PDEVICE_DESCRIPTION DeviceDescription,
+  IN PDEVICE_OBJECT DeviceObject);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewInterruptSync(
-    OUT PINTERRUPTSYNC* OUtInterruptSync,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  PRESOURCELIST ResourceList,
-    IN  ULONG ResourceIndex,
-    IN  INTERRUPTSYNCMODE Mode);
+  OUT PINTERRUPTSYNC* OUtInterruptSync,
+  IN PUNKNOWN OuterUnknown OPTIONAL,
+  IN PRESOURCELIST ResourceList,
+  IN ULONG ResourceIndex,
+  IN INTERRUPTSYNCMODE Mode);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewMiniport(
-    OUT PMINIPORT* OutMiniport,
-    IN  REFCLSID ClassId);
+  OUT PMINIPORT* OutMiniport,
+  IN REFCLSID ClassId);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewPort(
-    OUT PPORT* OutPort,
-    IN  REFCLSID ClassId);
+  OUT PPORT* OutPort,
+  IN REFCLSID ClassId);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewRegistryKey(
-    OUT PREGISTRYKEY* OutRegistryKey,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  ULONG RegistryKeyType,
-    IN  ACCESS_MASK DesiredAccess,
-    IN  PVOID DeviceObject OPTIONAL,
-    IN  PVOID SubDevice OPTIONAL,
-    IN  POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-    IN  ULONG CreateOptions OPTIONAL,
-    OUT PULONG Disposition OPTIONAL);
+  OUT PREGISTRYKEY* OutRegistryKey,
+  IN PUNKNOWN OuterUnknown OPTIONAL,
+  IN ULONG RegistryKeyType,
+  IN ACCESS_MASK DesiredAccess,
+  IN PVOID DeviceObject OPTIONAL,
+  IN PVOID SubDevice OPTIONAL,
+  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+  IN ULONG CreateOptions OPTIONAL,
+  OUT PULONG Disposition OPTIONAL);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewResourceList(
-    OUT PRESOURCELIST* OutResourceList,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  POOL_TYPE PoolType,
-    IN  PCM_RESOURCE_LIST TranslatedResources,
-    IN  PCM_RESOURCE_LIST UntranslatedResources);
+  OUT PRESOURCELIST* OutResourceList,
+  IN PUNKNOWN OuterUnknown OPTIONAL,
+  IN POOL_TYPE PoolType,
+  IN PCM_RESOURCE_LIST TranslatedResources,
+  IN PCM_RESOURCE_LIST UntranslatedResources);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewResourceSublist(
-    OUT PRESOURCELIST* OutResourceList,
-    IN  PUNKNOWN OuterUnknown OPTIONAL,
-    IN  POOL_TYPE PoolType,
-    IN  PRESOURCELIST ParentList,
-    IN  ULONG MaximumEntries);
+  OUT PRESOURCELIST* OutResourceList,
+  IN PUNKNOWN OuterUnknown OPTIONAL,
+  IN POOL_TYPE PoolType,
+  IN PRESOURCELIST ParentList,
+  IN ULONG MaximumEntries);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcNewServiceGroup(
-    OUT PSERVICEGROUP* OutServiceGroup,
-    IN  PUNKNOWN OuterUnknown OPTIONAL);
+  OUT PSERVICEGROUP* OutServiceGroup,
+  IN PUNKNOWN OuterUnknown OPTIONAL);
 
 
 /* ===============================================================
@@ -2292,20 +2267,19 @@ PcNewServiceGroup(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcDispatchIrp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp);
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcCompleteIrp(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp,
-    IN  NTSTATUS Status);
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  IN NTSTATUS Status);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcForwardIrpSynchronous(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp);
-
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp);
 
 /* ===============================================================
     Power Management
@@ -2313,14 +2287,13 @@ PcForwardIrpSynchronous(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterAdapterPowerManagement(
-    IN  PUNKNOWN pUnknown,
-    IN  PVOID pvContext1);
+  IN PUNKNOWN pUnknown,
+  IN PVOID pvContext1);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRequestNewPowerState(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  DEVICE_POWER_STATE RequestedNewState);
-
+  IN PDEVICE_OBJECT pDeviceObject,
+  IN DEVICE_POWER_STATE RequestedNewState);
 
 /* ===============================================================
     Properties
@@ -2328,17 +2301,16 @@ PcRequestNewPowerState(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcGetDeviceProperty(
-    IN  PVOID DeviceObject,
-    IN  DEVICE_REGISTRY_PROPERTY DeviceProperty,
-    IN  ULONG BufferLength,
-    OUT PVOID PropertyBuffer,
-    OUT PULONG ResultLength);
+  IN PVOID DeviceObject,
+  IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
+  IN ULONG BufferLength,
+  OUT PVOID PropertyBuffer,
+  OUT PULONG ResultLength);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcCompletePendingPropertyRequest(
-    IN  PPCPROPERTY_REQUEST PropertyRequest,
-    IN  NTSTATUS NtStatus);
-
+  IN PPCPROPERTY_REQUEST PropertyRequest,
+  IN NTSTATUS NtStatus);
 
 /* ===============================================================
     I/O Timeouts
@@ -2346,16 +2318,15 @@ PcCompletePendingPropertyRequest(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterIoTimeout(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  PIO_TIMER_ROUTINE pTimerRoutine,
-    IN  PVOID pContext);
+  IN PDEVICE_OBJECT pDeviceObject,
+  IN PIO_TIMER_ROUTINE pTimerRoutine,
+  IN PVOID pContext);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcUnregisterIoTimeout(
-    IN  PDEVICE_OBJECT pDeviceObject,
-    IN  PIO_TIMER_ROUTINE pTimerRoutine,
-    IN  PVOID pContext);
-
+  IN PDEVICE_OBJECT pDeviceObject,
+  IN PIO_TIMER_ROUTINE pTimerRoutine,
+  IN PVOID pContext);
 
 /* ===============================================================
     Physical Connections
@@ -2363,28 +2334,27 @@ PcUnregisterIoTimeout(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterPhysicalConnection(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PUNKNOWN FromUnknown,
-    IN  ULONG FromPin,
-    IN  PUNKNOWN ToUnknown,
-    IN  ULONG ToPin);
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PUNKNOWN FromUnknown,
+  IN ULONG FromPin,
+  IN PUNKNOWN ToUnknown,
+  IN ULONG ToPin);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterPhysicalConnectionFromExternal(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PUNICODE_STRING FromString,
-    IN  ULONG FromPin,
-    IN  PUNKNOWN ToUnknown,
-    IN  ULONG ToPin);
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PUNICODE_STRING FromString,
+  IN ULONG FromPin,
+  IN PUNKNOWN ToUnknown,
+  IN ULONG ToPin);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterPhysicalConnectionToExternal(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PUNKNOWN FromUnknown,
-    IN  ULONG FromPin,
-    IN  PUNICODE_STRING ToString,
-    IN  ULONG ToPin);
-
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PUNKNOWN FromUnknown,
+  IN ULONG FromPin,
+  IN PUNICODE_STRING ToString,
+  IN ULONG ToPin);
 
 /* ===============================================================
     Misc
@@ -2392,14 +2362,13 @@ PcRegisterPhysicalConnectionToExternal(
 
 PORTCLASSAPI ULONGLONG NTAPI
 PcGetTimeInterval(
-    IN  ULONGLONG Since);
+  IN ULONGLONG Since);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterSubdevice(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PWCHAR Name,
-    IN  PUNKNOWN Unknown);
-
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PWCHAR Name,
+  IN PUNKNOWN Unknown);
 
 /* ===============================================================
     Digital Rights Management Functions
@@ -2408,41 +2377,40 @@ PcRegisterSubdevice(
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcAddContentHandlers(
-    IN  ULONG ContentId,
-    IN  PVOID *paHandlers,
-    IN  ULONG NumHandlers);
+  IN ULONG ContentId,
+  IN PVOID *paHandlers,
+  IN ULONG NumHandlers);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcCreateContentMixed(
-    IN  PULONG paContentId,
-    IN  ULONG cContentId,
-    OUT PULONG pMixedContentId);
+  IN PULONG paContentId,
+  IN ULONG cContentId,
+  OUT PULONG pMixedContentId);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcDestroyContent(
-    IN  ULONG ContentId);
+  IN ULONG ContentId);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcForwardContentToDeviceObject(
-    IN  ULONG ContentId,
-    IN  PVOID Reserved,
-    IN  PCDRMFORWARD DrmForward);
+  IN ULONG ContentId,
+  IN PVOID Reserved,
+  IN PCDRMFORWARD DrmForward);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcForwardContentToFileObject(
-    IN  ULONG ContentId,
-    IN  PFILE_OBJECT FileObject);
+  IN ULONG ContentId,
+  IN PFILE_OBJECT FileObject);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcForwardContentToInterface(
-    IN  ULONG ContentId,
-    IN  PUNKNOWN pUnknown,
-    IN  ULONG NumMethods);
+  IN ULONG ContentId,
+  IN PUNKNOWN pUnknown,
+  IN ULONG NumMethods);
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcGetContentRights(
-    IN  ULONG ContentId,
-    OUT PDRMRIGHTS DrmRights);
+  IN ULONG ContentId,
+  OUT PDRMRIGHTS DrmRights);
 
-
-#endif
+#endif /* PORTCLS_H */

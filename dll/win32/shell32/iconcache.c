@@ -171,26 +171,20 @@ static HICON SIC_OverlayShortcutImage(HICON SourceIcon, BOOL large)
 	  goto fail;
 	}
 
-	/* Copy the source xor bitmap to the target and clear out part of it by using
-	   the shortcut mask */
+	/* Copy the source color bitmap to the target */
 	if (! BitBlt(TargetDC, 0, 0, SourceBitmapInfo.bmWidth, SourceBitmapInfo.bmHeight,
-	             SourceDC, 0, 0, SRCCOPY) ||
-	    ! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-	             ShortcutDC, 0, 0, SRCAND))
-	{
-	  goto fail;
-	}
+	             SourceDC, 0, 0, SRCCOPY)) goto fail;
 
-	if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
-
-	/* Now put in the shortcut xor mask */
-	if (! BitBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
-	             ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
-	             ShortcutDC, 0, 0, SRCINVERT))
-	{
-	  goto fail;
-	}
+    /* Copy the source xor bitmap to the target and clear out part of it by using
+       the shortcut mask */
+    if (NULL == SelectObject(ShortcutDC, ShortcutIconInfo.hbmColor)) goto fail;
+    if (!MaskBlt(TargetDC, 0, SourceBitmapInfo.bmHeight - ShortcutBitmapInfo.bmHeight,
+                 ShortcutBitmapInfo.bmWidth, ShortcutBitmapInfo.bmHeight,
+                 ShortcutDC, 0, 0, ShortcutIconInfo.hbmMask, 0, 0, 
+                 MAKEROP4(SRCCOPY, 0xAA0000)))
+    {
+        goto fail;
+    }
 
 	/* Clean up, we're not goto'ing to 'fail' after this so we can be lazy and not set
 	   handles to NULL */
@@ -387,14 +381,14 @@ BOOL SIC_Initialize(void)
     if (sic_hdpa)
     {
         TRACE("Icon cache already initialized\n");
-        return TRUE;
+	  return TRUE;
     }
 
-    sic_hdpa = DPA_Create(16);
-    if (!sic_hdpa)
-    {
+	sic_hdpa = DPA_Create(16);
+	if (!sic_hdpa)
+	{
         return FALSE;
-    }
+	}
 
     hDC = CreateICW(L"DISPLAY", NULL, NULL, NULL);
     if (!hDC)
@@ -439,7 +433,7 @@ BOOL SIC_Initialize(void)
                                         100);
     if (ShellSmallIconList)
     {
-         /* Load the document icon, which is used as the default if an icon isn't found. */
+        /* Load the document icon, which is used as the default if an icon isn't found. */
         hSm = (HICON)LoadImageW(shell32_hInstance,
                                 MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
                                 IMAGE_ICON,
@@ -459,7 +453,7 @@ BOOL SIC_Initialize(void)
     }
 
     if (ShellBigIconList)
-    {
+        {
         hLg = (HICON)LoadImageW(shell32_hInstance,
                                 MAKEINTRESOURCEW(IDI_SHELL_DOCUMENT),
                                 IMAGE_ICON,
@@ -470,7 +464,7 @@ BOOL SIC_Initialize(void)
         {
             ERR("Failed to load IDI_SHELL_DOCUMENT icon2!\n");
             DestroyIcon(hSm);
-            return FALSE;
+          return FALSE;
         }
     }
     else
@@ -482,9 +476,9 @@ BOOL SIC_Initialize(void)
     SIC_IconAppend(swShell32Name, IDI_SHELL_DOCUMENT-1, hSm, hLg, 0);
     SIC_IconAppend(swShell32Name, -IDI_SHELL_DOCUMENT, hSm, hLg, 0);
 
-    TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
+	TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);
 
-    return TRUE;
+	return TRUE;
 }
 /*************************************************************************
  * SIC_Destroy
@@ -550,7 +544,7 @@ static int SIC_LoadOverlayIcon(int icon_idx)
 		LPWSTR p = wcschr(buffer, ',');
 
 		if (p)
-		    *p++ = 0;
+		*p++ = 0;
 
 		iconPath = buffer;
 		iconIdx = _wtoi(p);

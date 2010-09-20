@@ -172,6 +172,25 @@ unsigned pe_get_map_size(const struct image_section_map* ism)
 }
 
 /******************************************************************
+ *		pe_is_valid_pointer_table
+ *
+ * Checks whether the PointerToSymbolTable and NumberOfSymbols in file_header contain
+ * valid information.
+ */
+static BOOL pe_is_valid_pointer_table(const IMAGE_NT_HEADERS* nthdr, const void* mapping, DWORD64 sz)
+{
+    DWORD64     offset;
+
+    /* is the iSym table inside file size ? (including first DWORD of string table, which is its size) */
+    offset = (DWORD64)nthdr->FileHeader.PointerToSymbolTable;
+    offset += (DWORD64)nthdr->FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
+    if (offset + sizeof(DWORD) > sz) return FALSE;
+    /* is string table (following iSym table) inside file size ? */
+    offset += *(DWORD*)((const char*)mapping + offset);
+    return offset <= sz;
+}
+
+/******************************************************************
  *		pe_map_file
  *
  * Maps an PE file into memory (and checks it's a real PE file)
@@ -209,16 +228,29 @@ static BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_ty
             }
             if (nthdr->FileHeader.PointerToSymbolTable && nthdr->FileHeader.NumberOfSymbols)
             {
-                /* FIXME ugly: should rather map the relevant content instead of copying it */
-                const char* src = (const char*)mapping +
-                    nthdr->FileHeader.PointerToSymbolTable +
-                    nthdr->FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
-                char* dst;
-                DWORD sz = *(DWORD*)src;
+                LARGE_INTEGER li;
 
-                if ((dst = HeapAlloc(GetProcessHeap(), 0, sz)))
-                    memcpy(dst, src, sz);
-                fmap->u.pe.strtable = dst;
+                if (GetFileSizeEx(file, &li) && pe_is_valid_pointer_table(nthdr, mapping, li.QuadPart))
+                {
+                    /* FIXME ugly: should rather map the relevant content instead of copying it */
+                    const char* src = (const char*)mapping +
+                        nthdr->FileHeader.PointerToSymbolTable +
+                        nthdr->FileHeader.NumberOfSymbols * sizeof(IMAGE_SYMBOL);
+                    char* dst;
+                    DWORD sz = *(DWORD*)src;
+
+                    if ((dst = HeapAlloc(GetProcessHeap(), 0, sz)))
+                        memcpy(dst, src, sz);
+                    fmap->u.pe.strtable = dst;
+                }
+                else
+                {
+                    WARN("Bad coff table... wipping out\n");
+                    /* we have bad information here, wipe it out */
+                    fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable = 0;
+                    fmap->u.pe.ntheader.FileHeader.NumberOfSymbols = 0;
+                    fmap->u.pe.strtable = NULL;
+                }
             }
             else fmap->u.pe.strtable = NULL;
         }
@@ -255,6 +287,35 @@ static void pe_unmap_file(struct image_file_map* fmap)
         CloseHandle(fmap->u.pe.hMap);
         fmap->u.pe.hMap = NULL;
     }
+}
+
+/******************************************************************
+ *		pe_map_directory
+ *
+ * Maps a directory content out of a PE file
+ */
+const char* pe_map_directory(struct module* module, int dirno, DWORD* size)
+{
+    IMAGE_NT_HEADERS*   nth;
+    void*               mapping;
+
+    if (module->type != DMT_PE || !module->format_info[DFI_PE]) return NULL;
+    if (dirno >= IMAGE_NUMBEROF_DIRECTORY_ENTRIES ||
+        !(mapping = pe_map_full(&module->format_info[DFI_PE]->u.pe_info->fmap, &nth)))
+        return NULL;
+    if (size) *size = nth->OptionalHeader.DataDirectory[dirno].Size;
+    return RtlImageRvaToVa(nth, mapping,
+                           nth->OptionalHeader.DataDirectory[dirno].VirtualAddress, NULL);
+}
+
+/******************************************************************
+ *		pe_unmap_directory
+ *
+ * Unmaps a directory content
+ */
+void pe_unmap_directory(struct image_file_map* fmap, int dirno)
+{
+    pe_unmap_full(fmap);
 }
 
 static void pe_module_remove(struct process* pcs, struct module_format* modfmt)
@@ -348,10 +409,10 @@ static BOOL pe_load_coff_symbol_table(struct module* module)
     if (!fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable || !numsym)
         return TRUE;
     if (!(mapping = pe_map_full(fmap, NULL))) return FALSE;
-    isym = (const IMAGE_SYMBOL*)((char*)mapping + fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable);
+    isym = (const IMAGE_SYMBOL*)((const char*)mapping + fmap->u.pe.ntheader.FileHeader.PointerToSymbolTable);
     /* FIXME: no way to get strtable size */
     strtable = (const char*)&isym[numsym];
-    sect = IMAGE_FIRST_SECTION(&fmap->u.pe.ntheader);
+    sect = IMAGE_FIRST_SECTION(RtlImageNtHeader((HMODULE)mapping));
 
     for (i = 0; i < numsym; i+= naux, isym += naux)
     {

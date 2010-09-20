@@ -638,7 +638,7 @@ FATDelEntry(
                 CcUnpinData(Context);
             }
             Offset.u.LowPart = (i * sizeof(FAT_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
-            CcPinRead(pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
+            CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FAT_DIR_ENTRY), TRUE,
                       &Context, (PVOID*)&pDirEntry);
         }
         pDirEntry[i % (PAGE_SIZE / sizeof(FAT_DIR_ENTRY))].Filename[0] = 0xe5;
@@ -689,7 +689,7 @@ FATXDelEntry(
     DPRINT("delete entry: %d\n", StartIndex);
     Offset.u.HighPart = 0;
     Offset.u.LowPart = (StartIndex * sizeof(FATX_DIR_ENTRY) / PAGE_SIZE) * PAGE_SIZE;
-    if (!CcPinRead(pFcb->parentFcb->FileObject, &Offset, PAGE_SIZE, TRUE,
+    if (!CcPinRead(pFcb->parentFcb->FileObject, &Offset, sizeof(FATX_DIR_ENTRY), TRUE,
                    &Context, (PVOID*)&pDirEntry))
     {
         DPRINT1("CcPinRead(Offset %x:%x, Length %d) failed\n", Offset.u.HighPart, Offset.u.LowPart, PAGE_SIZE);

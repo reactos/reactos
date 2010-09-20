@@ -114,6 +114,12 @@ void OskitDumpBuffer( OSK_PCHAR Data, OSK_UINT Len )
 		DbgPrint ( line );
 }
 
+void InitializeSocketFlags(struct socket *so)
+{
+    so->so_state |= SS_NBIO;
+    so->so_options |= SO_DONTROUTE;
+}
+
 /* From uipc_syscalls.c */
 
 int OskitTCPSocket( void *context,
@@ -128,7 +134,7 @@ int OskitTCPSocket( void *context,
     int error = socreate(domain, &so, type, proto);
     if( !error ) {
 	so->so_connection = context;
-	so->so_state |= SS_NBIO;
+    InitializeSocketFlags(so);
 	*aso = so;
     }
     OSKUnlock();
@@ -145,6 +151,9 @@ int OskitTCPRecv( void *connection,
     struct iovec iov = { 0 };
     int error = 0;
     int tcp_flags = 0;
+    
+    if (!connection)
+        return OSK_ESHUTDOWN;
 
     OS_DbgPrint(OSK_MID_TRACE,
                 ("so->so_state %x\n", ((struct socket *)connection)->so_state));
@@ -170,7 +179,7 @@ int OskitTCPRecv( void *connection,
 		       &tcp_flags );
     OSKUnlock();
 
-    *OutLen = Len - uio.uio_resid;
+    if (error == 0) *OutLen = Len - uio.uio_resid;
 
     return error;
 }
@@ -212,14 +221,12 @@ int OskitTCPConnect( void *socket, void *nam, OSK_UINT namelen ) {
     struct sockaddr addr;
 
     OS_DbgPrint(OSK_MID_TRACE,("Called, socket = %08x\n", socket));
-
-    OSKLock();
-    if ((so->so_state & SS_NBIO) && (so->so_state & SS_ISCONNECTING)) {
-	error = EALREADY;
-	goto done;
-    }
+    
+    if (!socket)
+        return OSK_ESHUTDOWN;
 
     OS_DbgPrint(OSK_MIN_TRACE,("Nam: %x\n", nam));
+
     if( nam )
 	addr = *((struct sockaddr *)nam);
 
@@ -230,26 +237,12 @@ int OskitTCPConnect( void *socket, void *nam, OSK_UINT namelen ) {
     addr.sa_family = addr.sa_len;
     addr.sa_len = sizeof(struct sockaddr);
 
+    OSKLock();
     error = soconnect(so, &sabuf);
-
-    if (error == EINPROGRESS)
-        goto done;
-    else if (error)
-	goto bad;
-
-    if ((so->so_state & SS_NBIO) && (so->so_state & SS_ISCONNECTING)) {
-	error = EINPROGRESS;
-	goto done;
-    }
-
-bad:
-    so->so_state &= ~SS_ISCONNECTING;
-
-    if (error == ERESTART)
-	error = EINTR;
-
-done:
     OSKUnlock();
+
+    if (error == 0) error = OSK_EINPROGRESS;
+
     OS_DbgPrint(OSK_MID_TRACE,("Ending: %08x\n", error));
     return (error);
 }
@@ -317,7 +310,7 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     error = sosend( socket, NULL, &uio, NULL, NULL, 0 );
     OSKUnlock();
 
-    *OutLen = Len - uio.uio_resid;
+    if (error == 0) *OutLen = Len - uio.uio_resid;
 
     return error;
 }
@@ -341,13 +334,11 @@ int OskitTCPAccept( void *socket,
     if (!socket)
         return OSK_ESHUTDOWN;
 
-    if (!new_socket || !AddrOut)
+    if (!new_socket)
         return OSK_EINVAL;
 
     OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: Doing accept (Finish %d)\n",
 			       FinishAccepting));
-
-    *OutAddrLen = AddrLen;
 
     if (name)
 	/* that's a copyin actually */
@@ -357,19 +348,17 @@ int OskitTCPAccept( void *socket,
 
     s = splnet();
 
-#if 0
     if ((head->so_options & SO_ACCEPTCONN) == 0) {
 	OS_DbgPrint(OSK_MID_TRACE,("OSKITTCP: head->so_options = %x, wanted bit %x\n",
 				   head->so_options, SO_ACCEPTCONN));
 	error = EINVAL;
 	goto out;
     }
-#endif
 
     OS_DbgPrint(OSK_MID_TRACE,("head->so_q = %x, head->so_state = %x\n",
 			       head->so_q, head->so_state));
 
-    if ((head->so_state & SS_NBIO) && head->so_q == NULL) {
+    if (head->so_q == NULL) {
 	error = EWOULDBLOCK;
 	goto out;
     }
@@ -389,8 +378,6 @@ int OskitTCPAccept( void *socket,
 
     OS_DbgPrint(OSK_MID_TRACE,("error = %d\n", error));
     if( FinishAccepting && so ) {
-	head->so_q = so->so_q;
-	head->so_qlen--;
 
 	mnam.m_data = (char *)&sa;
 	mnam.m_len = sizeof(sa);
@@ -399,11 +386,9 @@ int OskitTCPAccept( void *socket,
         if (error)
             goto out;
 
-	so->so_state |= SS_NBIO | SS_ISCONNECTED;
-        so->so_q = so->so_q0 = NULL;
-        so->so_qlen = so->so_q0len = 0;
-        so->so_head = 0;
+        soqremque(so, 1);
         so->so_connection = context;
+        soisconnected(so);
 
 	*newso = so;
 

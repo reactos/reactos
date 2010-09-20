@@ -1044,8 +1044,10 @@ INT WINAPI GetNumberFormatW(LCID lcid, DWORD dwFlags,
   TRACE("(0x%04x,0x%08x,%s,%p,%p,%d)\n", lcid, dwFlags, debugstr_w(lpszValue),
         lpFormat, lpNumberStr, cchOut);
 
+  lcid = ConvertDefaultLocale(lcid);
+
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpNumberStr) ||
-      !IsValidLocale(lcid, 0) ||
+      !IsValidLocale(lcid, LCID_INSTALLED) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep)))
   {
     goto error;
@@ -1415,8 +1417,10 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
   TRACE("(0x%04x,0x%08x,%s,%p,%p,%d)\n", lcid, dwFlags, debugstr_w(lpszValue),
         lpFormat, lpCurrencyStr, cchOut);
 
+  lcid = ConvertDefaultLocale(lcid);
+
   if (!lpszValue || cchOut < 0 || (cchOut > 0 && !lpCurrencyStr) ||
-      !IsValidLocale(lcid, 0) ||
+      !IsValidLocale(lcid, LCID_INSTALLED) ||
       (lpFormat && (dwFlags || !lpFormat->lpDecimalSep || !lpFormat->lpThousandSep ||
       !lpFormat->lpCurrencySymbol || lpFormat->NegativeOrder > 15 ||
       lpFormat->PositiveOrder > 3)))

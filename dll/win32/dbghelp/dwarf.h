@@ -379,6 +379,9 @@ typedef enum dwarf_operation_e
   DW_OP_form_tls_address                = 0x9b,
   DW_OP_call_frame_cfa                  = 0x9c,
   DW_OP_bit_piece                       = 0x9d,
+  /** Dwarf4 new values */
+  DW_OP_implicit_value                  = 0x9e,
+  DW_OP_stack_value                     = 0x9f,
 
   /* Implementation defined extensions */
   DW_OP_lo_user                         = 0xe0,
@@ -418,3 +421,57 @@ enum dwarf_calling_convention
 #define DW_LNE_end_sequence             0x01
 #define DW_LNE_set_address              0x02
 #define DW_LNE_define_file              0x03
+/* Dwarf4 new values */
+#define DW_LNE_set_discriminator        0x04
+
+#define DW_CIE_ID                       ~(0x0)
+
+enum dwarf_call_frame_info
+{
+    DW_CFA_advance_loc = 0x40,
+    DW_CFA_offset = 0x80,
+    DW_CFA_restore = 0xc0,
+    DW_CFA_nop = 0x00,
+    DW_CFA_set_loc = 0x01,
+    DW_CFA_advance_loc1 = 0x02,
+    DW_CFA_advance_loc2 = 0x03,
+    DW_CFA_advance_loc4 = 0x04,
+    DW_CFA_offset_extended = 0x05,
+    DW_CFA_restore_extended = 0x06,
+    DW_CFA_undefined = 0x07,
+    DW_CFA_same_value = 0x08,
+    DW_CFA_register = 0x09,
+    DW_CFA_remember_state = 0x0a,
+    DW_CFA_restore_state = 0x0b,
+    DW_CFA_def_cfa = 0x0c,
+    DW_CFA_def_cfa_register = 0x0d,
+    DW_CFA_def_cfa_offset = 0x0e,
+    DW_CFA_def_cfa_expression = 0x0f,
+    DW_CFA_expression = 0x10,
+    DW_CFA_offset_extended_sf = 0x11,
+    DW_CFA_def_cfa_sf = 0x12,
+    DW_CFA_def_cfa_offset_sf = 0x13,
+    DW_CFA_val_offset = 0x14,
+    DW_CFA_val_offset_sf = 0x15,
+    DW_CFA_val_expression = 0x16,
+    /* GNU extensions */
+    DW_CFA_GNU_window_save = 0x2d,
+    DW_CFA_GNU_args_size = 0x2e,
+    DW_CFA_GNU_negative_offset_extended = 0x2f,
+
+};
+
+#define DW_EH_PE_native   0x00
+#define DW_EH_PE_leb128   0x01
+#define DW_EH_PE_data2    0x02
+#define DW_EH_PE_data4    0x03
+#define DW_EH_PE_data8    0x04
+#define DW_EH_PE_signed   0x08
+#define DW_EH_PE_abs      0x00
+#define DW_EH_PE_pcrel    0x10
+#define DW_EH_PE_textrel  0x20
+#define DW_EH_PE_datarel  0x30
+#define DW_EH_PE_funcrel  0x40
+#define DW_EH_PE_aligned  0x50
+#define DW_EH_PE_indirect 0x80
+#define DW_EH_PE_omit     0xff

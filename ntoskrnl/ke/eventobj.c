@@ -161,7 +161,6 @@ KeSetEvent(IN PKEVENT Event,
 {
     KIRQL OldIrql;
     LONG PreviousState;
-    PKWAIT_BLOCK WaitBlock;
     PKTHREAD Thread;
     ASSERT_EVENT(Event);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
@@ -170,7 +169,7 @@ KeSetEvent(IN PKEVENT Event,
      * Check if this is an signaled notification event without an upcoming wait.
      * In this case, we can immediately return TRUE, without locking.
      */
-    if ((Event->Header.Type == NotificationEvent) &&
+    if ((Event->Header.Type == EventNotificationObject) &&
         (Event->Header.SignalState == 1) &&
         !(Wait))
     {
@@ -190,13 +189,8 @@ KeSetEvent(IN PKEVENT Event,
     /* Check if the event just became signaled now, and it has waiters */
     if (!(PreviousState) && !(IsListEmpty(&Event->Header.WaitListHead)))
     {
-        /* Get the Wait Block */
-        WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink,
-                                      KWAIT_BLOCK,
-                                      WaitListEntry);
-
         /* Check the type of event */
-        if (Event->Header.Type == NotificationEvent)
+        if (Event->Header.Type == EventNotificationObject)
         {
             /* Unwait the thread */
             KxUnwaitThread(&Event->Header, Increment);
@@ -237,7 +231,7 @@ KeSetEventBoostPriority(IN PKEVENT Event,
     KIRQL OldIrql;
     PKWAIT_BLOCK WaitBlock;
     PKTHREAD Thread = KeGetCurrentThread(), WaitThread;
-    ASSERT(Event->Header.Type == SynchronizationEvent);
+    ASSERT(Event->Header.Type == EventSynchronizationObject);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
 
     /* Acquire Dispatcher Database Lock */

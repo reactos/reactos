@@ -100,6 +100,7 @@ list(APPEND SOURCE
     fstub/fstubex.c
     fstub/halstub.c
     inbv/inbv.c
+    inbv/inbvport.c
     io/iomgr/adapter.c
     io/iomgr/arcname.c
     io/iomgr/bootlog.c
@@ -407,6 +408,7 @@ set_target_properties(ntoskrnl PROPERTIES LINK_FLAGS "-Wl,-entry,_KiSystemStartu
 
 target_link_libraries(ntoskrnl
     ${CMAKE_CURRENT_SOURCE_DIR}/ntoskrnl_i386.def
+    cportlib
     csq
     -lhal
     pseh

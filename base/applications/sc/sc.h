@@ -7,7 +7,7 @@
 
 /* control functions */
 BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount);
-BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs);
+BOOL Create(LPCTSTR *ServiceArgs, INT ArgCount);
 BOOL Delete(LPCTSTR ServiceName);
 BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args, INT ArgCount);
 BOOL Query(LPCTSTR *ServiceArgs, DWORD ArgCount, BOOL bExtended);
@@ -29,3 +29,4 @@ VOID ConfigUsage(VOID);
 VOID DescriptionUsage(VOID);
 VOID DeleteUsage(VOID);
 VOID CreateUsage(VOID);
+VOID ControlUsage(VOID);

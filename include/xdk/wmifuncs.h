@@ -16,7 +16,7 @@ WmiTraceMessage(
 #endif
 #endif /* RUN_WPP */
 
- #if (NTDDI_VERSION >= NTDDI_WINXP)
+#if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
 NTSTATUS
@@ -32,7 +32,7 @@ WmiQueryTraceInformation(
 /* FIXME: Get va_list from where? */
 NTKERNELAPI
 NTSTATUS
-__cdecl
+NTAPI
 WmiTraceMessageVa(
   IN TRACEHANDLE LoggerHandle,
   IN ULONG MessageFlags,

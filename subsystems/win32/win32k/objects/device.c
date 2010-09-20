@@ -1256,10 +1256,8 @@ IntChangeDisplaySettings(
     IN DWORD dwflags,
     IN PVOID lParam  OPTIONAL)
 {
-    BOOLEAN Global = FALSE;
     BOOLEAN NoReset = FALSE;
     BOOLEAN Reset = FALSE;
-    BOOLEAN SetPrimary = FALSE;
     LONG Ret = DISP_CHANGE_SUCCESSFUL;
     NTSTATUS Status ;
 
@@ -1269,7 +1267,7 @@ IntChangeDisplaySettings(
     {
         /* Check global, reset and noreset flags */
         if ((dwflags & CDS_GLOBAL) == CDS_GLOBAL)
-            Global = TRUE;
+            DPRINT1("CDS_GLOBAL unhandled");
         if ((dwflags & CDS_NORESET) == CDS_NORESET)
             NoReset = TRUE;
         dwflags &= ~(CDS_GLOBAL | CDS_NORESET);
@@ -1277,7 +1275,7 @@ IntChangeDisplaySettings(
     if ((dwflags & CDS_RESET) == CDS_RESET)
         Reset = TRUE;
     if ((dwflags & CDS_SET_PRIMARY) == CDS_SET_PRIMARY)
-        SetPrimary = TRUE;
+        DPRINT1("CDS_SET_PRIMARY unhandled");
     dwflags &= ~(CDS_RESET | CDS_SET_PRIMARY);
 
     if (Reset && NoReset)

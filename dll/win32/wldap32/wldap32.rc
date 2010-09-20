@@ -39,5 +39,6 @@
 #include "wldap32_It.rc"
 #include "wldap32_Lt.rc"
 #include "wldap32_Pt.rc"
+#include "wldap32_Ro.rc"
 #include "wldap32_Ru.rc"
 #include "wldap32_Uk.rc"

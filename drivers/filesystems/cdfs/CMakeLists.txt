@@ -9,6 +9,7 @@ list(APPEND SOURCE
     close.c
     common.c
     create.c
+    devctrl.c
     dirctl.c
     fcb.c
     finfo.c

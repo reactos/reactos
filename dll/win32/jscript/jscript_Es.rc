@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Error al convertir objeto a tipo primitivo"
     IDS_INVALID_CALL_ARG    "Llamada a procedimiento no válido o argumento"

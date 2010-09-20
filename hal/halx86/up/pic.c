@@ -813,7 +813,7 @@ _HalpDismissIrqGeneric(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrqGeneric(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -823,7 +823,7 @@ HalpDismissIrqGeneric(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq15(IN KIRQL Irql,
                  IN ULONG Irq,
                  OUT PKIRQL OldIrql)
@@ -859,7 +859,7 @@ HalpDismissIrq15(IN KIRQL Irql,
 
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq13(IN KIRQL Irql,
                  IN ULONG Irq,
                  OUT PKIRQL OldIrql)
@@ -872,7 +872,7 @@ HalpDismissIrq13(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq07(IN KIRQL Irql,
                  IN ULONG Irq,
                  OUT PKIRQL OldIrql)
@@ -956,7 +956,7 @@ _HalpDismissIrqLevel(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrqLevel(IN KIRQL Irql,
                     IN ULONG Irq,
                     OUT PKIRQL OldIrql)
@@ -966,7 +966,7 @@ HalpDismissIrqLevel(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq15Level(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -1001,7 +1001,7 @@ HalpDismissIrq15Level(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq13Level(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -1014,7 +1014,7 @@ HalpDismissIrq13Level(IN KIRQL Irql,
 }
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq07Level(IN KIRQL Irql,
                       IN ULONG Irq,
                       OUT PKIRQL OldIrql)
@@ -1252,8 +1252,8 @@ _HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 {
     /* Do the work */
@@ -1261,8 +1261,8 @@ HalpApcInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 HalpApcInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Set up a fake INT Stack */
@@ -1301,8 +1301,8 @@ _HalpDispatchInterruptHandler(VOID)
 }
 
 VOID
-FASTCALL
 DECLSPEC_NORETURN
+FASTCALL
 HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME TrapFrame)
 {
     KIRQL CurrentIrql;

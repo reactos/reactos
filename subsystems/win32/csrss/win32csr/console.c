@@ -780,7 +780,7 @@ CSR_API(CsrGetProcessList)
         current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
         if (++nItems <= Request->Data.GetProcessListRequest.nMaxIds)
         {
-            *Buffer++ = (DWORD)current->ProcessId;
+            *Buffer++ = HandleToUlong(current->ProcessId);
         }
     }
 

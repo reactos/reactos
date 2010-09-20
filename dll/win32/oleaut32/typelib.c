@@ -903,6 +903,49 @@ end:
     return result;
 }
 
+/******************************************************************************
+ *		RegisterTypeLibForUser	[OLEAUT32.442]
+ * Adds information about a type library to the user registry
+ * NOTES
+ *    Docs: ITypeLib FAR * ptlib
+ *    Docs: OLECHAR FAR* szFullPath
+ *    Docs: OLECHAR FAR* szHelpDir
+ *
+ * RETURNS
+ *    Success: S_OK
+ *    Failure: Status
+ */
+HRESULT WINAPI RegisterTypeLibForUser(
+     ITypeLib * ptlib,     /* [in] Pointer to the library*/
+     OLECHAR * szFullPath, /* [in] full Path of the library*/
+     OLECHAR * szHelpDir)  /* [in] dir to the helpfile for the library,
+							 may be NULL*/
+{
+    FIXME("(%p, %s, %s) registering the typelib system-wide\n", ptlib,
+          debugstr_w(szFullPath), debugstr_w(szHelpDir));
+    return RegisterTypeLib(ptlib, szFullPath, szHelpDir);
+}
+
+/******************************************************************************
+ *	UnRegisterTypeLibForUser	[OLEAUT32.443]
+ * Removes information about a type library from the user registry
+ *
+ * RETURNS
+ *    Success: S_OK
+ *    Failure: Status
+ */
+HRESULT WINAPI UnRegisterTypeLibForUser(
+    REFGUID libid,	/* [in] GUID of the library */
+    WORD wVerMajor,	/* [in] major version */
+    WORD wVerMinor,	/* [in] minor version */
+    LCID lcid,	/* [in] locale id */
+    SYSKIND syskind)
+{
+    FIXME("(%s, %u, %u, %u, %u) unregistering the typelib system-wide\n",
+          debugstr_guid(libid), wVerMajor, wVerMinor, lcid, syskind);
+    return UnRegisterTypeLib(libid, wVerMajor, wVerMinor, lcid, syskind);
+}
+
 /*======================= ITypeLib implementation =======================*/
 
 typedef struct tagTLBCustData
@@ -6023,6 +6066,9 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
       This,pIUnk,memid,wFlags,pDispParams,pVarResult,pExcepInfo,pArgErr
     );
 
+    if( This->TypeAttr.wTypeFlags & TYPEFLAG_FRESTRICTED )
+        return DISP_E_MEMBERNOTFOUND;
+
     if (!pDispParams)
     {
         ERR("NULL pDispParams not allowed\n");
@@ -6042,7 +6088,8 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
      * FUNCDESC for dispinterfaces and we want the real function description */
     for (pFuncInfo = This->funclist; pFuncInfo; pFuncInfo=pFuncInfo->next)
         if ((memid == pFuncInfo->funcdesc.memid) &&
-            (wFlags & pFuncInfo->funcdesc.invkind))
+            (wFlags & pFuncInfo->funcdesc.invkind) &&
+            (pFuncInfo->funcdesc.wFuncFlags & FUNCFLAG_FRESTRICTED) == 0)
             break;
 
     if (pFuncInfo) {
@@ -6491,7 +6538,7 @@ func_fail:
             WARN("Could not search inherited interface!\n");
         }
     }
-    ERR("did not find member id %d, flags 0x%x!\n", memid, wFlags);
+    WARN("did not find member id %d, flags 0x%x!\n", memid, wFlags);
     return DISP_E_MEMBERNOTFOUND;
 }
 
@@ -7654,9 +7701,9 @@ static HRESULT WINAPI ITypeComp_fnBind(
     ITypeInfoImpl *This = info_impl_from_ITypeComp(iface);
     const TLBFuncDesc *pFDesc;
     const TLBVarDesc *pVDesc;
-    HRESULT hr = DISP_E_MEMBERNOTFOUND;
+    HRESULT hr = S_OK;
 
-    TRACE("(%s, %x, 0x%x, %p, %p, %p)\n", debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
+    TRACE("(%p)->(%s, %x, 0x%x, %p, %p, %p)\n", This, debugstr_w(szName), lHash, wFlags, ppTInfo, pDescKind, pBindPtr);
 
     *pDescKind = DESCKIND_NONE;
     pBindPtr->lpfuncdesc = NULL;
@@ -7716,7 +7763,7 @@ static HRESULT WINAPI ITypeComp_fnBind(
         }
         WARN("Could not search inherited interface!\n");
     }
-    WARN("did not find member with name %s, flags 0x%x!\n", debugstr_w(szName), wFlags);
+    TRACE("did not find member with name %s, flags 0x%x\n", debugstr_w(szName), wFlags);
     return hr;
 }
 

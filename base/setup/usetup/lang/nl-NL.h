@@ -1012,18 +1012,24 @@ static MUI_ENTRY nlNLBootLoaderEntries[] =
     {
         8,
         12,
-        "Installeer de bootloader op de harde schijf (bootsector).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Installeer de bootloader op een floppy disk.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Installeer de bootloader op een floppy disk.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Installeren bootloader overslaan.",
         TEXT_STYLE_NORMAL
     },

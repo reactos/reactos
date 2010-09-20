@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Erro ao converter objeto em tipo primitivo"
     IDS_INVALID_CALL_ARG    "Argumento ou chamada de procedimento inválida"
@@ -51,7 +51,7 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Erro ao converter objecto em tipo primitivo"
     IDS_INVALID_CALL_ARG    "Argumento ou chamada de procedimento inválida"

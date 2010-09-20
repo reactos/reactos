@@ -23,7 +23,7 @@
 @ stub DwmAttachMilContent
 @ stub DwmDefWindowProc
 @ stub DwmDetachMilContent
-@ stub DwmEnableBlurBehindWindow
+@ stdcall DwmEnableBlurBehindWindow(ptr ptr)
 @ stdcall DwmEnableMMCSS(long)
 @ stdcall DwmExtendFrameIntoClientArea(long ptr)
 @ stdcall DwmFlush()

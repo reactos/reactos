@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "unknown object" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "pasek tytu³u"

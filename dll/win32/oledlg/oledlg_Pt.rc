@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+UIINSERTOBJECT DIALOG  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Inserir objeto"
 FONT 8, "MS Shell Dlg"
@@ -54,7 +54,7 @@ END
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+UIINSERTOBJECT DIALOG  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Inserir objecto"
 FONT 8, "MS Shell Dlg"
@@ -84,7 +84,7 @@ END
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Inserir um novo objeto %s no documento"
   IDS_RESULTFILEOBJDESC	"Inserir o conteúdo do arquivo como um objeto no documento de modo que possa ativá-lo usando o programa que o criou."
@@ -95,7 +95,7 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Inserir novo objecto %s no documento"
   IDS_RESULTFILEOBJDESC	"Inserir conteúdo do ficheiro como um objecto no documento de modo que opossa activar usando o programa que o criou."
@@ -107,7 +107,7 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+IDD_PASTESPECIAL4 DIALOG 3, 15, 293, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Colar Especial"
 FONT 8, "MS Shell Dlg"
@@ -135,7 +135,7 @@ END
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+IDD_PASTESPECIAL4 DIALOG 3, 15, 293, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Colar Especial"
 FONT 8, "MS Shell Dlg"
@@ -164,7 +164,7 @@ END
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "Insere o conteúdo da área de transferência no seu documento como %s."
     IDS_PS_PASTE_OBJECT                   "Insere o conteúdo da área de transferência no seu documento para que seja possível ativá-lo usando %s."
@@ -180,7 +180,7 @@ STRINGTABLE DISCARDABLE
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "Insere o conteúdo da área de transferência no seu documento como %s."
     IDS_PS_PASTE_OBJECT                   "Insere o conteúdo da área de transferência no seu documento para que o possa activar usando %s."

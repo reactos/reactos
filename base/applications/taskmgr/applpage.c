@@ -38,7 +38,6 @@ HWND            hApplicationPageSwitchToButton; /* Application Switch To button 
 HWND            hApplicationPageNewTaskButton;  /* Application New Task button */
 static int      nApplicationPageWidth;
 static int      nApplicationPageHeight;
-static HANDLE   hApplicationPageEvent = NULL;   /* When this event becomes signaled then we refresh the app list */
 static BOOL     bSortAscending = TRUE;
 DWORD WINAPI    ApplicationPageRefreshThread(void *lpParameter);
 BOOL            noApps;
@@ -50,6 +49,11 @@ void            ApplicationPageShowContextMenu1(void);
 void            ApplicationPageShowContextMenu2(void);
 int CALLBACK    ApplicationPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int             ProcGetIndexByProcessId(DWORD dwProcessId);
+
+#ifdef RUN_APPS_PAGE
+static HANDLE   hApplicationThread = NULL;
+static DWORD    dwApplicationThread;
+#endif
 
 #if 0
 void SwitchToThisWindow (
@@ -92,7 +96,6 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     LV_COLUMN  column;
     WCHAR      szTemp[256];
     int        cx, cy;
-    HANDLE     hRefreshThread = NULL;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -132,15 +135,16 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         UpdateApplicationListControlViewSetting();
 
         /* Start our refresh thread */
-        hRefreshThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, NULL);
-
+#ifdef RUN_APPS_PAGE
+        hApplicationThread = CreateThread(NULL, 0, ApplicationPageRefreshThread, NULL, 0, &dwApplicationThread);
+#endif
         return TRUE;
 
     case WM_DESTROY:
-        /* Close the event handle, this will make the */
-        /* refresh thread exit when the wait fails */
-        CloseHandle(hApplicationPageEvent);
-        CloseHandle(hRefreshThread);
+        /* Close refresh thread */
+#ifdef RUN_APPS_PAGE
+        EndLocalThread(&hApplicationThread, dwApplicationThread);
+#endif
         break;
 
     case WM_COMMAND:
@@ -213,9 +217,11 @@ ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
 void RefreshApplicationPage(void)
 {
+#ifdef RUN_APPS_PAGE
     /* Signal the event so that our refresh thread */
     /* will wake up and refresh the application page */
-    SetEvent(hApplicationPageEvent);
+    PostThreadMessage(dwApplicationThread, WM_TIMER, 0, 0);
+#endif
 }
 
 void UpdateApplicationListControlViewSetting(void)
@@ -236,6 +242,7 @@ void UpdateApplicationListControlViewSetting(void)
 
 DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
 {
+    MSG msg;
     INT i;
     BOOL                            bItemRemoved = FALSE;
     LV_ITEM                         item;
@@ -243,30 +250,15 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
     HIMAGELIST                      hImageListLarge;
     HIMAGELIST                      hImageListSmall;
 
-    /* Create the event */
-    hApplicationPageEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
-
     /* If we couldn't create the event then exit the thread */
-    if (!hApplicationPageEvent)
-        return 0;
-
     while (1)
     {
-        DWORD   dwWaitVal;
-
-        /* Wait on the event */
-        dwWaitVal = WaitForSingleObject(hApplicationPageEvent, INFINITE);
-
-        /* If the wait failed then the event object must have been */
-        /* closed and the task manager is exiting so exit this thread */
-        if (dwWaitVal == WAIT_FAILED)
+        /*  Wait for an the event or application close */
+        if (GetMessage(&msg, NULL, 0, 0) <= 0)
             return 0;
 
-        if (dwWaitVal == WAIT_OBJECT_0)
+        if (msg.message == WM_TIMER)
         {
-            /* Reset our event */
-            ResetEvent(hApplicationPageEvent);
-
             /*
              * FIXME:
              *

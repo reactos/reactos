@@ -3,7 +3,7 @@
 #if defined(_X86_) || defined(_IA64_) || defined(_AMD64_)
 
 typedef union _MCI_ADDR {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG Address;
     ULONG Reserved;
   } DUMMYSTRUCTNAME;
@@ -157,7 +157,7 @@ typedef enum _ERROR_SEVERITY_VALUE {
 
 typedef union _ERROR_REVISION {
   USHORT Revision;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     UCHAR Minor;
     UCHAR Major;
   } DUMMYSTRUCTNAME;
@@ -174,7 +174,7 @@ typedef union _ERROR_REVISION {
 
 typedef union _ERROR_TIMESTAMP {
   ULONGLONG TimeStamp;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     UCHAR Seconds;
     UCHAR Minutes;
     UCHAR Hours;
@@ -201,7 +201,7 @@ typedef _ERROR_PLATFORM_GUID  ERROR_PLATFORM_GUID, *PERROR_PLATFORM_GUID;
 
 typedef union _ERROR_RECORD_VALID {
   UCHAR Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     UCHAR OemPlatformID:1;
     UCHAR Reserved:7;
   } DUMMYSTRUCTNAME;
@@ -219,7 +219,7 @@ typedef struct _ERROR_RECORD_HEADER {
 
 typedef union _ERROR_RECOVERY_INFO {
   UCHAR RecoveryInfo;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     UCHAR Corrected:1;
     UCHAR NotContained:1;
     UCHAR Reset:1;
@@ -236,7 +236,7 @@ typedef struct _ERROR_SECTION_HEADER {
   ULONG Length;
 } ERROR_SECTION_HEADER, *PERROR_SECTION_HEADER;
 
-#if !defined(__midl) && defined(_MSC_EXTENSIONS)
+#if !defined(__midl)
 __inline
 USHORT
 NTAPI
@@ -245,16 +245,20 @@ GetFwMceLogProcessorNumber(
 {
   PERROR_SECTION_HEADER section = (PERROR_SECTION_HEADER)((ULONG64)Log + sizeof(*Log));
   USHORT lid = (USHORT)((UCHAR)(section->Reserved));
+#ifdef NONAMELESSUNION
+  lid |= (USHORT)((UCHAR)(Log->TimeStamp.s.Reserved) << 8);
+#else
   lid |= (USHORT)((UCHAR)(Log->TimeStamp.Reserved) << 8);
+#endif
   return( lid );
 }
-#endif
+#endif /* !__midl */
 
 #define ERROR_PROCESSOR_GUID {0xe429faf1, 0x3cb7, 0x11d4, {0xbc, 0xa7, 0x0, 0x80, 0xc7, 0x3c, 0x88, 0x81}}
 
 typedef union _ERROR_MODINFO_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG CheckInfo:1;
     ULONGLONG RequestorIdentifier:1;
     ULONGLONG ResponderIdentifier:1;
@@ -291,7 +295,7 @@ typedef enum _ERROR_CACHE_CHECK_MESI {
 
 typedef union _ERROR_CACHE_CHECK {
   ULONGLONG CacheCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Operation:4;
     ULONGLONG Level:2;
     ULONGLONG Reserved1:2;
@@ -324,7 +328,7 @@ typedef union _ERROR_CACHE_CHECK {
 
 typedef union _ERROR_CACHE_CHECK {
   ULONGLONG CacheCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Operation:4;
     ULONGLONG Level:2;
     ULONGLONG Reserved1:2;
@@ -367,7 +371,7 @@ typedef enum _ERROR_TLB_CHECK_OPERATION {
 
 typedef union _ERROR_TLB_CHECK {
   ULONGLONG TlbCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG TRSlot:8;
     ULONGLONG TRSlotValid:1;
     ULONGLONG Reserved1:1;
@@ -407,7 +411,7 @@ typedef enum _ERROR_BUS_CHECK_OPERATION {
 
 typedef union _ERROR_BUS_CHECK {
   ULONGLONG BusCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Size:5;
     ULONGLONG Internal:1;
     ULONGLONG External:1;
@@ -434,7 +438,7 @@ typedef union _ERROR_BUS_CHECK {
 
 typedef union _ERROR_BUS_CHECK {
   ULONGLONG BusCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Size:5;
     ULONGLONG Internal:1;
     ULONGLONG External:1;
@@ -484,7 +488,7 @@ typedef enum _ERROR_REGFILE_CHECK_OPERATION {
 
 typedef union _ERROR_REGFILE_CHECK {
   ULONGLONG RegFileCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Identifier:4;
     ULONGLONG Operation:4;
     ULONGLONG RegisterNumber:7;
@@ -518,7 +522,7 @@ typedef enum _ERROR_MS_CHECK_OPERATION {
 
 typedef union _ERROR_MS_CHECK {
   ULONGLONG MsCheck;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG StructureIdentifier:5;
     ULONGLONG Level:3;
     ULONGLONG ArrayId:4;
@@ -561,7 +565,7 @@ typedef struct _ERROR_MODINFO {
 
 typedef union _ERROR_PROCESSOR_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorMap:1;
     ULONGLONG StateParameter:1;
     ULONGLONG CRLid:1;
@@ -578,7 +582,7 @@ typedef union _ERROR_PROCESSOR_VALID {
 
 typedef union _ERROR_PROCESSOR_ERROR_MAP {
   ULONGLONG ErrorMap;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG   Cid:4;
     ULONGLONG   Tid:4;
     ULONGLONG   Eic:4;
@@ -597,7 +601,7 @@ typedef _ERROR_PROCESSOR_LEVEL_INDEX ERROR_PROCESSOR_LEVEL_INDEX, *PERROR_PROCES
 
 typedef union _ERROR_PROCESSOR_STATE_PARAMETER {
   ULONGLONG   StateParameter;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG reserved0:2;
     ULONGLONG rz:1;
     ULONGLONG ra:1;
@@ -641,7 +645,7 @@ typedef union _ERROR_PROCESSOR_STATE_PARAMETER {
 
 typedef union _PROCESSOR_LOCAL_ID {
   ULONGLONG LocalId;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG reserved:16;
     ULONGLONG eid:8;
     ULONGLONG id:8;
@@ -664,7 +668,7 @@ typedef struct _ERROR_PROCESSOR_CPUID_INFO {
 
 typedef union _ERROR_PROCESSOR_STATIC_INFO_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG MinState:1;
     ULONGLONG BR:1;
     ULONGLONG CR:1;
@@ -730,7 +734,7 @@ typedef enum _ERR_TYPES {
 
 typedef union _ERROR_STATUS {
   ULONGLONG Status;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Reserved0:8;
     ULONGLONG Type:8;
     ULONGLONG Address:1;
@@ -750,7 +754,7 @@ typedef struct _ERROR_OEM_DATA {
 
 typedef union _ERROR_BUS_SPECIFIC_DATA {
   ULONGLONG BusSpecificData;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG LockAsserted:1;
     ULONGLONG DeferLogged:1;
     ULONGLONG IOQEmpty:1;
@@ -777,7 +781,7 @@ typedef union _ERROR_BUS_SPECIFIC_DATA {
 
 typedef union _ERROR_MEMORY_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorStatus:1;
     ULONGLONG PhysicalAddress:1;
     ULONGLONG AddressMask:1;
@@ -825,7 +829,7 @@ typedef struct _ERROR_MEMORY {
 
 typedef union _ERROR_PCI_BUS_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorStatus:1;
     ULONGLONG ErrorType:1;
     ULONGLONG Id:1;
@@ -881,7 +885,7 @@ typedef struct _ERROR_PCI_BUS {
 
 typedef union _ERROR_PCI_COMPONENT_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorStatus:1;
     ULONGLONG Info:1;
     ULONGLONG MemoryMappedRegistersPairs:1;
@@ -919,7 +923,7 @@ typedef struct _ERROR_PCI_COMPONENT {
 
 typedef union _ERROR_SYSTEM_EVENT_LOG_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG RecordId:1;
     ULONGLONG RecordType:1;
     ULONGLONG GeneratorId:1;
@@ -954,7 +958,7 @@ typedef struct _ERROR_SYSTEM_EVENT_LOG {
 
 typedef union _ERROR_SMBIOS_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG EventType:1;
     ULONGLONG Length:1;
     ULONGLONG TimeStamp:1;
@@ -978,7 +982,7 @@ typedef struct _ERROR_SMBIOS {
 
 typedef union _ERROR_PLATFORM_SPECIFIC_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorStatus:1;
     ULONGLONG RequestorId:1;
     ULONGLONG ResponderId:1;
@@ -1007,7 +1011,7 @@ typedef struct _ERROR_PLATFORM_SPECIFIC {
 
 typedef union _ERROR_PLATFORM_BUS_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorStatus:1;
     ULONGLONG RequestorId:1;
     ULONGLONG ResponderId:1;
@@ -1036,7 +1040,7 @@ typedef struct _ERROR_PLATFORM_BUS {
 
 typedef union _ERROR_PLATFORM_HOST_CONTROLLER_VALID {
   ULONGLONG Valid;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG ErrorStatus:1;
     ULONGLONG RequestorId:1;
     ULONGLONG ResponderId:1;

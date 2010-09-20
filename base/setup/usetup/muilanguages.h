@@ -232,7 +232,7 @@ const MUI_LANGUAGE LanguageList[] =
   {L"00000814", L"1252", L"850", L"10000", L"Norwegian (Nynorsk)",          L"47",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    nnNOLayouts },
   {L"00000415", L"1250", L"852", L"10029", L"Polish",                       L"48",  plPLPages, plPLErrorEntries, plPLStrings, LatinFonts,    plPLLayouts },
   {L"00000816", L"1252", L"850", L"10000", L"Portuguese (Portugal)",        L"351", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    ptPTLayouts },
-  {L"00000416", L"1252", L"850", L"10000", L"Portuguese (Brazil)",          L"55",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    ptBRLayouts },
+  {L"00000416", L"1252", L"850", L"10000", L"Portuguese (Brazil)",          L"55",  ptBRPages, ptBRErrorEntries, ptBRStrings, LatinFonts,    ptBRLayouts },
   {L"00000446", L"0",    L"1",   L"2",     L"Punjabi (India)",              L"91",  enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  paINLayouts },
   {L"00000418", L"1250", L"852", L"10029", L"Romanian",                     L"40",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    roROLayouts },
   {L"00000417", L"1252", L"850", L"10000", L"Romansh",                      L"41",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    rmCHLayouts },

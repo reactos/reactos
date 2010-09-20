@@ -1236,7 +1236,6 @@ BOOL FASTCALL
 IntKeyboardInput(KEYBDINPUT *ki)
 {
    PUSER_MESSAGE_QUEUE FocusMessageQueue;
-   PTHREADINFO pti;
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
@@ -1339,7 +1338,6 @@ IntKeyboardInput(KEYBDINPUT *ki)
       Msg.time = ki->time;
 
    /* All messages have to contain the cursor point. */
-   pti = PsGetCurrentThreadWin32Thread();
    Msg.pt = gpsi->ptCursor;
    
    KbdHookData.vkCode = vk_hook;

@@ -107,11 +107,7 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   dc->fs &= ~DC_FLAG_DIRTY_RAO;
 
-  if (dc->prgnVis == NULL)
-  {
-    dc->prgnVis = IntSysCreateRectpRgn(0, 0, 0, 0);
-    GDIOBJ_CopyOwnership(hdc, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr);
-  }
+  ASSERT (dc->prgnVis != NULL);
 
   retval = NtGdiCombineRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )

@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Fehler beim umwandeln des Objektes in einen Grundtyp"
     IDS_INVALID_CALL_ARG    "Ungültiger Funktionsaufruf oder Argument"

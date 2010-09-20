@@ -993,18 +993,24 @@ static MUI_ENTRY csCZBootLoaderEntries[] =
     {
         8,
         12,
-        "Nainstalovat zavad؟ na disk (MBR).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Nainstalovat zavad؟ na disketu.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Nainstalovat zavad؟ na disketu.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "P�esko�it instalaci zavad؟e.",
         TEXT_STYLE_NORMAL
     },

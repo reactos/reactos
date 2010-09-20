@@ -1002,6 +1002,7 @@ TraceMessage(
 
 EXTERN_C
 ULONG
+WMIAPI
 TraceMessageVa(
   IN TRACEHANDLE LoggerHandle,
   IN ULONG MessageFlags,

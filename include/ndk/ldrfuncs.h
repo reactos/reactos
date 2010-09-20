@@ -109,4 +109,13 @@ LdrVerifyMappedImageMatchesChecksum(
     IN ULONG FileLength
 );
 
+PIMAGE_BASE_RELOCATION
+NTAPI
+LdrProcessRelocationBlockLongLong(
+    IN ULONG_PTR Address,
+    IN ULONG Count,
+    IN PUSHORT TypeOffset,
+    IN LONGLONG Delta
+);
+
 #endif

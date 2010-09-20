@@ -3028,7 +3028,7 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
     if (!(infoPtr->dwStyle & CCS_NORESIZE))
     {
         RECT window_rect;
-        UINT uPosFlags = SWP_NOZORDER;
+        UINT uPosFlags = SWP_NOZORDER | SWP_NOACTIVATE;
 
         if ((infoPtr->dwStyle & CCS_BOTTOM) == CCS_NOMOVEY)
         {
@@ -3050,9 +3050,8 @@ TOOLBAR_AutoSize (TOOLBAR_INFO *infoPtr)
 
         if (infoPtr->dwStyle & WS_BORDER)
         {
-            x = y = 1; /* FIXME: this looks wrong */
-            cy += GetSystemMetrics(SM_CYEDGE);
-            cx += GetSystemMetrics(SM_CXEDGE);
+            cy += 2 * GetSystemMetrics(SM_CXBORDER);
+            cx += 2 * GetSystemMetrics(SM_CYBORDER);
         }
 
         SetWindowPos(infoPtr->hwndSelf, NULL, x, y, cx, cy, uPosFlags);
@@ -4842,7 +4841,7 @@ TOOLBAR_SetRows (TOOLBAR_INFO *infoPtr, WPARAM wParam, LPRECT lprc)
             SetWindowPos(infoPtr->hwndSelf, NULL, 0, 0,
                          infoPtr->rcBound.right - infoPtr->rcBound.left,
                          infoPtr->rcBound.bottom - infoPtr->rcBound.top,
-                         SWP_NOMOVE);
+                         SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
         }
 
         /* repaint toolbar */
@@ -6007,7 +6006,7 @@ TOOLBAR_NCPaint (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	GetWindowRect (hwnd, &rcWindow);
 	OffsetRect (&rcWindow, -rcWindow.left, -rcWindow.top);
 	if( dwStyle & WS_BORDER )
-	    OffsetRect (&rcWindow, 1, 1);
+	    InflateRect (&rcWindow, -1, -1);
 	DrawEdge (hdc, &rcWindow, EDGE_ETCHED, BF_TOP);
     }
 

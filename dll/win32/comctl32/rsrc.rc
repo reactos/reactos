@@ -37,49 +37,49 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "wine/wine_common_ver.rc"
 
 /* @makedep: idt_check.bmp */
-IDT_CHECK BITMAP LOADONCALL DISCARDABLE idt_check.bmp
+IDT_CHECK BITMAP idt_check.bmp
 
 /* @makedep: idb_std_small.bmp */
-IDB_STD_SMALL BITMAP LOADONCALL DISCARDABLE idb_std_small.bmp
+IDB_STD_SMALL BITMAP idb_std_small.bmp
 
 /* @makedep: idb_std_large.bmp */
-IDB_STD_LARGE BITMAP LOADONCALL DISCARDABLE idb_std_large.bmp
+IDB_STD_LARGE BITMAP idb_std_large.bmp
 
 /* @makedep: idb_view_small.bmp */
-IDB_VIEW_SMALL BITMAP LOADONCALL DISCARDABLE idb_view_small.bmp
+IDB_VIEW_SMALL BITMAP idb_view_small.bmp
 
 /* @makedep: idb_view_large.bmp */
-IDB_VIEW_LARGE BITMAP LOADONCALL MOVEABLE DISCARDABLE idb_view_large.bmp
+IDB_VIEW_LARGE BITMAP idb_view_large.bmp
 
 /* @makedep: idb_hist_small.bmp */
-IDB_HIST_SMALL BITMAP LOADONCALL DISCARDABLE idb_hist_small.bmp
+IDB_HIST_SMALL BITMAP idb_hist_small.bmp
 
 /* @makedep: idb_hist_large.bmp */
-IDB_HIST_LARGE BITMAP LOADONCALL DISCARDABLE idb_hist_large.bmp
+IDB_HIST_LARGE BITMAP idb_hist_large.bmp
 
 /* @makedep: idc_copy.cur */
-IDC_COPY CURSOR LOADONCALL DISCARDABLE idc_copy.cur
+IDC_COPY CURSOR idc_copy.cur
 
 /* @makedep: idc_divider.cur */
-IDC_DIVIDER CURSOR LOADONCALL DISCARDABLE idc_divider.cur
+IDC_DIVIDER CURSOR idc_divider.cur
 
 /* @makedep: idc_divideropen.cur */
-IDC_DIVIDEROPEN CURSOR LOADONCALL DISCARDABLE idc_divideropen.cur
+IDC_DIVIDEROPEN CURSOR idc_divideropen.cur
 
 /* @makedep: idc_movebutton.cur */
-IDC_MOVEBUTTON CURSOR LOADONCALL DISCARDABLE idc_movebutton.cur
+IDC_MOVEBUTTON CURSOR idc_movebutton.cur
 
 /* @makedep: idi_dragarrow.ico */
-IDI_DRAGARROW ICON LOADONCALL DISCARDABLE idi_dragarrow.ico
+IDI_DRAGARROW ICON idi_dragarrow.ico
 
 /* @makedep: idi_tt_info_sm.ico */
-IDI_TT_INFO_SM ICON LOADONCALL DISCARDABLE idi_tt_info_sm.ico
+IDI_TT_INFO_SM ICON idi_tt_info_sm.ico
 
 /* @makedep: idi_tt_warn_sm.ico */
-IDI_TT_WARN_SM ICON LOADONCALL DISCARDABLE idi_tt_warn_sm.ico
+IDI_TT_WARN_SM ICON idi_tt_warn_sm.ico
 
 /* @makedep: idi_tt_error_sm.ico */
-IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
+IDI_TT_ERROR_SM ICON idi_tt_error_sm.ico
 
 
 /*
@@ -117,4 +117,5 @@ IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
 #include "comctl_Ro.rc"
 #include "comctl_Ru.rc"
 #include "comctl_Si.rc"
+#include "comctl_Sr.rc"
 #include "comctl_Zh.rc"

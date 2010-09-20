@@ -212,7 +212,6 @@ static
 VOID
 CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
   dc->dcattr.mxWorldToDevice = dc->dclevel.mxWorldToDevice;
   dc->dcattr.mxDeviceToWorld = dc->dclevel.mxDeviceToWorld;
   dc->dcattr.mxWorldToPage = dc->dclevel.mxWorldToPage;
@@ -228,7 +227,6 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {
-     Status = _SEH2_GetExceptionCode();
      ASSERT(FALSE);
   }
   _SEH2_END;

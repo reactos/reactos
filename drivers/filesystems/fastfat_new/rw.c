@@ -91,11 +91,7 @@ FatRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     if (DeviceObject != FatGlobalData.DiskDeviceObject)
     {
         /* Set Top Level IRP if not set */
-        if (IoGetTopLevelIrp() == NULL)
-        {
-            IoSetTopLevelIrp(Irp);
-            TopLevel = TRUE;
-        }
+        TopLevel = FatIsTopLevelIrp(Irp);
 
         /* Build an irp context */
         IrpContext = FatBuildIrpContext(Irp, CanWait);

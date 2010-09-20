@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "onbekend object" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "titelbalk"

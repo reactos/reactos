@@ -44,7 +44,7 @@
 #endif
 
 #if defined (_MSC_VER)
-#define __MINGW_MSC_PREREQ(major, minor) ((major * 100 + minor * 10) >= _MSC_VER)
+#define __MINGW_MSC_PREREQ(major, minor) (_MSC_VER >= (major * 100 + minor * 10))
 #else
 #define __MINGW_MSC_PREREQ(major, minor) 0
 #endif
@@ -203,6 +203,12 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 
 #ifndef _CRT_UNUSED
 #define _CRT_UNUSED(x) (void)x
+#endif
+
+#ifdef _MSC_VER
+#define ATTRIB_NORETURN
+#else
+#define ATTRIB_NORETURN DECLSPEC_NORETURN
 #endif
 
 #include "_mingw_mac.h"

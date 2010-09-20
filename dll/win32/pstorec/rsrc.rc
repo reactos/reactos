@@ -26,4 +26,4 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: pstorec_tlb.tlb */
-1 TYPELIB LOADONCALL DISCARDABLE pstorec_tlb.tlb
+1 TYPELIB pstorec_tlb.tlb

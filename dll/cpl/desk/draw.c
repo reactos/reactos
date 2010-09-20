@@ -541,11 +541,11 @@ MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, THEME *
 	{
 		GetMenuStringW(Menu, i, Text, 128, MF_BYPOSITION);
 
-		rect.left = x;
+		rect.left = rect.right = x;
 		rect.top = Rect->top;
+		rect.bottom = Rect->bottom;
 		DrawTextW(DC, Text, -1, &rect, DT_SINGLELINE | DT_CALCRECT);
-
-	    rect.bottom = Rect->bottom;
+		rect.bottom = Rect->bottom;
 		rect.right += MENU_BAR_ITEMS_SPACE;
 		x += rect.right - rect.left;
 

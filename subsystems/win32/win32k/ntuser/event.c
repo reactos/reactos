@@ -181,7 +181,6 @@ IntNotifyWinEvent(
 {
    PEVENTHOOK pEH;
    PLIST_ENTRY pLE;
-   LRESULT Result;
 
    DPRINT("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
 
@@ -204,11 +203,11 @@ IntNotifyWinEvent(
            if (!(pEH->idProcess) || !(pEH->idThread) || 
                (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess))
            {
-              Result = IntCallLowLevelEvent( pEH,
-                                             Event,
-                                             UserHMGetHandle(pWnd),
-                                             idObject,
-                                             idChild);
+              IntCallLowLevelEvent( pEH,
+                                    Event,
+                                    UserHMGetHandle(pWnd),
+                                    idObject,
+                                    idChild);
            }
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
@@ -217,7 +216,8 @@ IntNotifyWinEvent(
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
-           Result = co_IntCallEventProc( UserHMGetHandle(pEH),
+            // What in the deuce is this right-aligned formatting?
+           co_IntCallEventProc(          UserHMGetHandle(pEH),
                                                         Event,
                                         UserHMGetHandle(pWnd),
                                                      idObject,

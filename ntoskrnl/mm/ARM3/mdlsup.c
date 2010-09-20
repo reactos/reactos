@@ -578,13 +578,11 @@ MmProbeAndLockPages(IN PMDL Mdl,
     ULONG LockPages, TotalPages;
     NTSTATUS Status = STATUS_SUCCESS;
     PEPROCESS CurrentProcess;
-    PETHREAD Thread;
     PMMSUPPORT AddressSpace;
     NTSTATUS ProbeStatus;
     PMMPTE PointerPte, LastPte;
     PMMPDE PointerPde;
     PFN_NUMBER PageFrameIndex;
-    PMMPFN Pfn1;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
     DPRINT("Probing MDL: %p\n", Mdl);
@@ -616,9 +614,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
     ASSERT(LockPages != 0);
     
     //
-    // Get the thread and process
+    // Get theprocess
     //
-    Thread = PsGetCurrentThread();
     if (Address <= MM_HIGHEST_USER_ADDRESS)
     {
         //
@@ -813,6 +810,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Assume failure and check for non-mapped pages
         //
         *MdlPages = -1;
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Should be checking the PPE and PXE */
+        ASSERT(FALSE);
+#endif
         while ((PointerPde->u.Hard.Valid == 0) ||
                (PointerPte->u.Hard.Valid == 0))
         {
@@ -958,10 +959,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
         PageFrameIndex = PFN_FROM_PTE(PointerPte);
         if (PageFrameIndex <= MmHighestPhysicalPage)
         {
-            //
-            // Get the PFN entry
-            //
-            Pfn1 = MiGetPfnEntry(PageFrameIndex);
             ASSERT((CurrentProcess == NULL) || (UsePfnLock == FALSE));
             
             //

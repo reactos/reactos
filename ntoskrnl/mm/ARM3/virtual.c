@@ -81,6 +81,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 MiDecrementShareCount(Pfn1, PageFrameIndex);
                 
                 /* Decrement the page table too */
+                DPRINT("FIXME: ARM3 should decrement the PT refcount for: %p\n", Pfn2);
                 #if 0 // ARM3: Dont't trust this yet
                 MiDecrementShareCount(Pfn2, PageTableIndex);
                 #endif

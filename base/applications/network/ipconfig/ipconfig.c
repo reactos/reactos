@@ -359,6 +359,7 @@ CLEANUP:
 
 VOID ShowInfo(BOOL bAll)
 {
+    MIB_IFROW mibEntry;
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
     PIP_ADAPTER_INFO pAdapter = NULL;
     ULONG adaptOutBufLen = 0;
@@ -441,6 +442,9 @@ VOID ShowInfo(BOOL bAll)
     {
         LPTSTR IntType, myConType;
 
+        mibEntry.dwIndex = pAdapter->Index;
+        GetIfEntry(&mibEntry);
+
         IntType = GetInterfaceTypeName(pAdapter->Type);
         myConType = GetConnectionType(pAdapter->AdapterName);
 
@@ -449,7 +453,7 @@ VOID ShowInfo(BOOL bAll)
         if (myConType != NULL) HeapFree(ProcessHeap, 0, myConType);
 
         /* check if the adapter is connected to the media */
-        if (_tcscmp(pAdapter->IpAddressList.IpAddress.String, "0.0.0.0") == 0)
+        if (mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_CONNECTED && mibEntry.dwOperStatus != MIB_IF_OPER_STATUS_OPERATIONAL)
         {
             _tprintf(_T("\tMedia State . . . . . . . . . . . : Media disconnected\n"));
             pAdapter = pAdapter->Next;

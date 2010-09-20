@@ -77,7 +77,7 @@ FileMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void** ppvObject)
     TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
     /* Perform a sanity check on the parameters.*/
-    if ( (This==0) || (ppvObject==0) )
+    if ( ppvObject==0 )
 	return E_INVALIDARG;
 
     /* Initialize the return parameter */
@@ -421,10 +421,7 @@ FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
     }
 
     if (!bWriteWide)
-    {
-        res=IStream_Write(pStm,&ZERO,sizeof(DWORD),NULL);
-        return res;
-    }
+        return IStream_Write(pStm,&ZERO,sizeof(DWORD),NULL);
 
     /* write bytes needed for the filepathW (without 0) + 6 */
     bytesW = len*sizeof(WCHAR) + 6;
@@ -441,9 +438,7 @@ FileMonikerImpl_Save(IMoniker* iface, IStream* pStm, BOOL fClearDirty)
     if (FAILED(res)) return res;
 
     /* write W string (no 0) */
-    res=IStream_Write(pStm,filePathW,bytesW,NULL);
-
-    return res;
+    return IStream_Write(pStm,filePathW,bytesW,NULL);
 }
 
 /******************************************************************************
@@ -1455,7 +1450,7 @@ HRESULT WINAPI CreateFileMoniker(LPCOLESTR lpszPathName, LPMONIKER * ppmk)
     hr = FileMonikerImpl_Construct(newFileMoniker,lpszPathName);
 
     if (SUCCEEDED(hr))
-	hr = FileMonikerImpl_QueryInterface((IMoniker*)newFileMoniker,&IID_IMoniker,(void**)ppmk);
+	hr = IMoniker_QueryInterface((IMoniker*)newFileMoniker,&IID_IMoniker,(void**)ppmk);
     else
         HeapFree(GetProcessHeap(),0,newFileMoniker);
 
@@ -1605,7 +1600,7 @@ static HRESULT WINAPI FileMonikerCF_CreateInstance(LPCLASSFACTORY iface,
     hr = FileMonikerImpl_Construct(newFileMoniker, wszEmpty);
 
     if (SUCCEEDED(hr))
-	hr = FileMonikerImpl_QueryInterface((IMoniker*)newFileMoniker, riid, ppv);
+	hr = IMoniker_QueryInterface((IMoniker*)newFileMoniker, riid, ppv);
     if (FAILED(hr))
         HeapFree(GetProcessHeap(),0,newFileMoniker);
 

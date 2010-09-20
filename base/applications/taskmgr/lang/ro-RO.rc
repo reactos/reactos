@@ -160,6 +160,7 @@ END
 //
 // Dialog
 //
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -520,8 +521,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Gestionar de activități"
-    IDC_TASKMGR             "Gestoinar de activități"
+    IDS_APP_TITLE           "Gestionarul de activități"
+    IDC_TASKMGR             "Gestionarul de activități"
     IDS_IDLE_PROCESS        "Proces sistem inactiv"
 END
 

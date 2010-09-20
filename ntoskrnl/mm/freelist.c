@@ -180,6 +180,9 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     if (BYTE_OFFSET(SkipBytes.LowPart)) return NULL;
     SkipPages = (PFN_NUMBER)(SkipBytes.QuadPart >> PAGE_SHIFT);
     
+    /* This isn't supported at all */
+    if (SkipPages) DPRINT1("WARNING: Caller requesting SkipBytes, MDL might be mismatched\n");
+
     //
     // Now compute the number of pages the MDL will cover
     //

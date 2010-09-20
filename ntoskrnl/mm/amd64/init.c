@@ -373,19 +373,20 @@ MiInitializeSessionSpace(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 VOID
 MiInitializePageTable()
 {
-    ULONG64 PageFrameOffset;
+    ULONG64 PxePhysicalAddress;
     MMPTE TmplPte, *Pte;
+    PFN_NUMBER PxePfn;
 
     /* HACK: don't use freeldr debug print anymore */
     //FrLdrDbgPrint = NoDbgPrint;
 
     /* Get current directory base */
-    MmSystemPageDirectory[0] = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
-    PageFrameOffset = MmSystemPageDirectory[0] << PAGE_SHIFT;
-    ASSERT(PageFrameOffset == __readcr3());
+    PxePfn = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
+    PxePhysicalAddress = PxePfn << PAGE_SHIFT;
+    ASSERT(PxePhysicalAddress == __readcr3());
 
     /* Set directory base for the system process */
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameOffset;
+    PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PxePhysicalAddress;
 
     /* Enable global pages */
     __writecr4(__readcr4() | CR4_PGE);

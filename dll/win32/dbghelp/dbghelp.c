@@ -151,14 +151,16 @@ const char* wine_dbgstr_addr(const ADDRESS64* addr)
     }
 }
 
-extern struct cpu       cpu_i386, cpu_x86_64;
+extern struct cpu       cpu_i386, cpu_x86_64, cpu_ppc;
 
-static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, NULL};
+static struct cpu*      dbghelp_cpus[] = {&cpu_i386, &cpu_x86_64, &cpu_ppc, NULL};
 struct cpu*             dbghelp_current_cpu =
 #if defined(__i386__)
     &cpu_i386
 #elif defined(__x86_64__)
     &cpu_x86_64
+#elif defined(__powerpc__)
+    &cpu_ppc
 #else
 #error define support for your CPU
 #endif

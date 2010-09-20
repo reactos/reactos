@@ -615,8 +615,8 @@ static HRESULT WINAPI DataAdviseHolder_QueryInterface(
   /*
    * Compare the riid with the interface IDs implemented by this object.
    */
-  if ( (memcmp(&IID_IUnknown, riid, sizeof(IID_IUnknown)) == 0) ||
-       (memcmp(&IID_IDataAdviseHolder, riid, sizeof(IID_IDataAdviseHolder)) == 0)  )
+  if ( IsEqualIID(&IID_IUnknown, riid) ||
+       IsEqualIID(&IID_IDataAdviseHolder, riid)  )
   {
     *ppvObject = iface;
   }

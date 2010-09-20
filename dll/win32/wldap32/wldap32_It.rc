@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "Successo"
     1 "Errore nelle operazioni"

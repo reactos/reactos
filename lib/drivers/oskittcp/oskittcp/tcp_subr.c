@@ -560,6 +560,7 @@ struct rtentry *
 tcp_rtlookup(inp)
 	struct inpcb *inp;
 {
+#ifndef __REACTOS__
 	struct route *ro;
 	struct rtentry *rt;
 
@@ -576,7 +577,10 @@ tcp_rtlookup(inp)
 			rt = ro->ro_rt;
 		}
 	}
-	return rt;
+    return rt;
+#else
+    return NULL;
+#endif
 }
 
 /*

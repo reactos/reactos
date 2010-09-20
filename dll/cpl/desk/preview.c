@@ -63,6 +63,7 @@ typedef struct _PREVIEW_DATA
     HFONT hCaptionFont;
     HFONT hMenuFont;
     HFONT hMessageFont;
+    HFONT hClientFont;
 
     HMENU hMenu;
 
@@ -76,6 +77,7 @@ static VOID UpdatePreviewTheme(HWND hwnd, PPREVIEW_DATA pPreviewData, THEME *the
     pPreviewData->hbrScrollbar = CreateSolidBrush(theme->crColor[COLOR_SCROLLBAR]);
     if (pPreviewData->hbrDesktop != NULL)
         DeleteObject(pPreviewData->hbrDesktop);
+
     pPreviewData->hbrDesktop = CreateSolidBrush(theme->crColor[COLOR_DESKTOP]);
     if (pPreviewData->hbrWindow != NULL)
         DeleteObject(pPreviewData->hbrWindow);
@@ -111,6 +113,8 @@ static VOID
 OnCreate(HWND hwnd, PPREVIEW_DATA pPreviewData)
 {
     THEME *theme;
+
+    pPreviewData->hClientFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 
     /* Load and modify the menu */
     pPreviewData->hMenu = LoadMenu(hApplet, MAKEINTRESOURCE(IDR_PREVIEW_MENU));
@@ -289,7 +293,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     rc.left += 4;
     rc.top += 2;
     SetTextColor(hdc, theme->crColor[COLOR_WINDOWTEXT]);
-    hOldFont = SelectObject(hdc, pPreviewData->hCaptionFont);   /* FIXME: client text is not caption text */
+    hOldFont = SelectObject(hdc, pPreviewData->hClientFont);
     DrawText(hdc, pPreviewData->lpWinTxt, -1, &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
 

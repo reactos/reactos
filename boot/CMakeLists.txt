@@ -81,6 +81,7 @@ list(APPEND FREELDR_BASE_SOURCE
     freeldr/freeldr/video/palette.c
     freeldr/freeldr/video/video.c
     freeldr/freeldr/windows/conversion.c
+    freeldr/freeldr/windows/headless.c
     freeldr/freeldr/windows/peloader.c
     freeldr/freeldr/windows/winldr.c
     freeldr/freeldr/windows/wlmemory.c
@@ -176,6 +177,7 @@ target_link_libraries(freeldr mini_hal)
 endif(ARCH MATCHES i386)
 
 target_link_libraries(freeldr
+    cportlib
     rossym
     cmlib
     rtl
@@ -198,6 +200,7 @@ target_link_libraries(setupldr mini_hal)
 endif(ARCH MATCHES i386)
 
 target_link_libraries(setupldr
+    cportlib
     rossym
     cmlib
     rtl

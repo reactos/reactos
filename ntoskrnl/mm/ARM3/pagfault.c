@@ -42,9 +42,14 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         return MmSharedUserDataPte;
     }
     
-    /* Find the VAD, it must exist, since we only handle PEB/TEB */
+    /* Find the VAD, it might not exist if the address is bogus */
     Vad = MiLocateAddress(VirtualAddress);
-    ASSERT(Vad);
+    if (!Vad)
+    {
+        /* Bogus virtual address */
+        *ProtectCode = MM_NOACCESS;
+        return NULL;
+    }
     
     /* This must be a TEB/PEB VAD */
     ASSERT(Vad->u.VadFlags.PrivateMemory == TRUE);
@@ -99,10 +104,11 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     if (PointerPde->u.Hard.Valid == 0)
     {
-#ifndef _M_AMD64
+#ifdef _M_AMD64
+        ASSERT(FALSE);
+#else
         /* This seems to be making the assumption that one PDE is one page long */
         C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
-#endif
         
         //
         // Copy it from our double-mapped system page directory
@@ -111,6 +117,7 @@ MiCheckPdeForPagedPool(IN PVOID Address)
                                MmSystemPagePtes[((ULONG_PTR)PointerPde &
                                                  (PAGE_SIZE - 1)) /
                                                 sizeof(MMPTE)].u.Long);
+#endif
     }
     
     //
@@ -463,7 +470,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     //
     PointerPte = MiAddressToPte(Address);
     PointerPde = MiAddressToPde(Address);
-    
+#if (_MI_PAGING_LEVELS >= 3)
+    /* We need the PPE and PXE addresses */
+    ASSERT(FALSE);
+#endif
+
     //
     // Check for dispatch-level snafu
     //
@@ -488,6 +499,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
         
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Need to check PXE and PDE validity */
+        ASSERT(FALSE);
+#endif
+
         //
         // Is the PDE valid?
         //
@@ -497,12 +513,12 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             // Debug spew (eww!)
             //
             DPRINT("Invalid PDE\n");
-            
+#if (_MI_PAGING_LEVELS == 2) 
             //
             // Handle mapping in "Special" PDE directoreis
             //
             MiCheckPdeForPagedPool(Address);
-            
+#endif
             //
             // Now we SHOULD be good
             //
@@ -556,7 +572,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             // This might happen...not sure yet
             //
             DPRINT1("FAULT ON PAGE TABLES: %p %lx %lx!\n", Address, *PointerPte, *PointerPde);
-            
+#if (_MI_PAGING_LEVELS == 2) 
             //
             // Map in the page table
             //
@@ -565,7 +581,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 DPRINT1("PAGE TABLES FAULTED IN!\n");
                 return STATUS_SUCCESS;
             }
-            
+#endif
             //
             // Otherwise the page table doesn't actually exist
             //
@@ -609,10 +625,28 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             return STATUS_SUCCESS;
         }
         
-        //
-        // We don't implement prototype PTEs
-        //
-        ASSERT(TempPte.u.Soft.Prototype == 0);
+        /* Check one kind of prototype PTE */
+        if (TempPte.u.Soft.Prototype)
+        {
+            /* The one used for protected pool... */
+            ASSERT(MmProtectFreedNonPagedPool == TRUE);
+            
+            /* Make sure protected pool is on, and that this is a pool address */
+            if ((MmProtectFreedNonPagedPool) &&
+                (((Address >= MmNonPagedPoolStart) &&
+                  (Address < (PVOID)((ULONG_PTR)MmNonPagedPoolStart +
+                                     MmSizeOfNonPagedPoolInBytes))) ||
+                 ((Address >= MmNonPagedPoolExpansionStart) &&
+                  (Address < MmNonPagedPoolEnd))))
+            {
+                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                KeBugCheckEx(DRIVER_CAUGHT_MODIFYING_FREED_POOL,
+                             (ULONG_PTR)Address,
+                             StoreInstruction,
+                             Mode,
+                             4);
+            }
+        }
         
         //
         // We don't implement transition PTEs
@@ -650,6 +684,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
     
+#if (_MI_PAGING_LEVELS >= 3)
+    /* Need to check/handle PPE and PXE validity too */
+    ASSERT(FALSE);
+#endif
+
     /* First things first, is the PDE valid? */
     ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
     ASSERT(PointerPde->u.Hard.LargePage == 0);
@@ -679,6 +718,10 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Need to check/handle PPE and PXE validity too */
+        ASSERT(FALSE);
+#endif
         ASSERT(PointerPde->u.Hard.Valid == 1);
     }
 
@@ -688,8 +731,23 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
     /* Check if this address range belongs to a valid allocation (VAD) */
     ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
-    ASSERT(ProtectionCode != MM_NOACCESS);
-
+    if (ProtectionCode == MM_NOACCESS)
+    {
+        /* This is a bogus VA */
+        Status = STATUS_ACCESS_VIOLATION;
+        
+        /* Could be a not-yet-mapped paged pool page table */
+#if (_MI_PAGING_LEVELS == 2) 
+        MiCheckPdeForPagedPool(Address);
+#endif
+        /* See if that fixed it */
+        if (PointerPte->u.Hard.Valid == 1) Status = STATUS_SUCCESS;
+        
+        /* Return the status */
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return Status;
+    }
+    
     /* Did we get a prototype PTE back? */
     if (!ProtoPte)
     {

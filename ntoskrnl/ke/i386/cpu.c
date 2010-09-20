@@ -105,6 +105,17 @@ RDMSR(IN ULONG Register)
     return __readmsr(Register);
 }
 
+/* NSC/Cyrix CPU configuration register index */
+#define CX86_CCR1 0xc1
+
+/* NSC/Cyrix CPU indexed register access macros */
+#define getCx86(reg) ({ WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); READ_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23); })
+
+#define setCx86(reg, data) do { \
+   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x22,(reg)); \
+   WRITE_PORT_UCHAR((PUCHAR)(ULONG_PTR)0x23,(data)); \
+} while (0)
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -241,7 +252,7 @@ KiGetFeatureBits(VOID)
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULONG Vendor;
     ULONG FeatureBits = KF_WORKING_PTE;
-    ULONG Reg[4], Dummy;
+    ULONG Reg[4], Dummy, Ccr1;
     BOOLEAN ExtendedCPUID = TRUE;
     ULONG CpuFeatures = 0;
 
@@ -352,7 +363,22 @@ KiGetFeatureBits(VOID)
         /* Cyrix CPUs */
         case CPU_CYRIX:
 
-            /* FIXME: CMPXCGH8B */
+            /* Workaround the "COMA" bug on 6x family of Cyrix CPUs */
+            if (Prcb->CpuType == 6 &&
+                Prcb->CpuStep <= 1)
+            {
+                /* Get CCR1 value */
+                Ccr1 = getCx86(CX86_CCR1);
+
+                /* Enable the NO_LOCK bit */
+                Ccr1 |= 0x10;
+
+                /* Set the new CCR1 value */
+                setCx86(CX86_CCR1, Ccr1);
+            }
+
+            /* Set the current features */
+            CpuFeatures = Reg[3];
 
             break;
 
@@ -1173,7 +1199,12 @@ KiIsNpxPresent(VOID)
     Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
     
     /* Store on FPU stack */
+#ifdef _MSC_VER
+    __asm fninit;
+    __asm fnstsw Magic;
+#else
     asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
+#endif
     
     /* Magic should now be cleared */
     if (Magic & 0xFF)
@@ -1210,7 +1241,7 @@ KiIsNpxErrataPresent(VOID)
     __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
     
     /* Initialize FPU state */
-    asm volatile ("fninit");
+    Ke386FnInit();
     
     /* Multiply the magic values and divide, we should get the result back */
     Value1 = 4195835.0;
@@ -1227,8 +1258,8 @@ KiIsNpxErrataPresent(VOID)
     return ErrataPresent;
 }
 
-NTAPI
 VOID
+NTAPI
 KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
 {
     ULONG EFlags, Cr0;

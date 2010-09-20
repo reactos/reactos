@@ -182,7 +182,7 @@ DWORD WINAPI VerFindFileA(
         }
     }
 
-    /* Check to see if the file exists and is inuse by another application */
+    /* Check to see if the file exists and is in use by another application */
     if (lpszFilename && testFileExistenceA(curDir, lpszFilename, FALSE)) {
         if (lpszFilename && !testFileExistenceA(curDir, lpszFilename, TRUE))
            retval |= VFF_FILEINUSE;

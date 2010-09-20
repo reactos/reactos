@@ -120,6 +120,7 @@ typedef enum {
     IHTMLInputElement_tid,
     IHTMLLocation_tid,
     IHTMLOptionElement_tid,
+    IHTMLRect_tid,
     IHTMLScreen_tid,
     IHTMLScriptElement_tid,
     IHTMLSelectElement_tid,

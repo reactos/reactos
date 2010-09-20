@@ -18,6 +18,7 @@ list(APPEND SOURCE
     fsctl.c
     iface.c
     misc.c
+    pnp.c
     rw.c
     shutdown.c
     string.c

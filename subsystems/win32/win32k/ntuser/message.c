@@ -579,14 +579,20 @@ co_IntTranslateMouseMessage(
       return TRUE;
    }
 
+   *HitTest = HTCLIENT;
+
    UserRefObjectCo(Window, &Ref);
 
    if ( ThreadQueue == Window->pti->MessageQueue &&
         ThreadQueue->CaptureWindow != Window->hSelf)
    {
       /* only send WM_NCHITTEST messages if we're not capturing the window! */
-      *HitTest = co_IntSendMessage(Window->hSelf, WM_NCHITTEST, 0,
-                                   MAKELONG(Msg->pt.x, Msg->pt.y));
+      if (Remove ) 
+      {
+         *HitTest = co_IntSendMessage(Window->hSelf, WM_NCHITTEST, 0,
+                                      MAKELONG(Msg->pt.x, Msg->pt.y));
+      } 
+      /* else we are going to see this message again, but then with Remove == TRUE */
 
       if (*HitTest == (USHORT)HTTRANSPARENT)
       {
@@ -625,10 +631,6 @@ co_IntTranslateMouseMessage(
             UserDerefObjectCo(DesktopWindow);
          }
       }
-   }
-   else
-   {
-      *HitTest = HTCLIENT;
    }
 
    if ( gspv.bMouseClickLock && 
@@ -800,6 +802,8 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
     * WM_TIMER messages
  */
 CheckMessages:
+
+   HitTest = HTNOWHERE;
 
    Present = FALSE;
 
@@ -1864,7 +1868,6 @@ UserSendNotifyMessage( HWND hWnd,
      ULONG_PTR PResult;
      PTHREADINFO pti;
      PWINDOW_OBJECT Window;
-     MSG Message;
 
       if ( !(Window = UserGetWindowObject(hWnd)) ) return FALSE;
 
@@ -1876,11 +1879,6 @@ UserSendNotifyMessage( HWND hWnd,
       }
       else
       { // Handle message and callback.
-         Message.hwnd = hWnd;
-         Message.message = Msg;
-         Message.wParam = wParam;
-         Message.lParam = lParam;
-
          Result = co_IntSendMessageTimeoutSingle( hWnd,
                                                   Msg,
                                                   wParam,

@@ -31,9 +31,9 @@
 #define USB_SPEC                            0x0200
 #define HID_SPEC                            0x0101
 
-#define USB_20_SPEC                        0x0200
-#define USB_11_SPEC                        0x0110
-#define USB_10_SPEC                        0x0100
+#define USB_20_SPEC                         0x0200
+#define USB_11_SPEC                         0x0110
+#define USB_10_SPEC                         0x0100
 
 #define HID_MAX_PACKET_SIZE0                0x08
 #define MICROSOFT_VENDOR_ID                 0x045E
@@ -81,7 +81,9 @@
 #define RCPT_RPIPE                          5
 
 #if !defined(MIDL_PASS)
-#define USB_MAKE_REQUEST_TYPE(direction, type, recipient) (BYTE)( ((BYTE)direction << 7) | ((BYTE)type << 5) | ((BYTE)recipient & 0x07) )
+#define USB_MAKE_REQUEST_TYPE(direction, type, recipient) \
+  (BYTE)( ((BYTE)direction << 7) |                        \
+  ((BYTE)type << 5) | ((BYTE)recipient & 0x07) )
 #endif
 
 #define GET_STATUS                          0
@@ -207,7 +209,8 @@
 #define EP_OUT                              0
 #define EP_IN                               1
 
-#define MAKE_ENDPOINT_ADDRESS(num, dir)     ( ((BYTE)(dir) << 7) | ((BYTE)(num) & 0x0F) )
+#define MAKE_ENDPOINT_ADDRESS(num, dir)       \
+  ( ((BYTE)(dir) << 7) | ((BYTE)(num) & 0x0F) )
 
 #define ENDPOINT_TYPE                       0x03
 #define CONTROL_ENDPOINT                    0
@@ -501,7 +504,8 @@ typedef struct _USBHUBPORTDATA {
   USBHUBPORTSTATUSCHANGE PortStatusChange;
 } USBHUBPORTDATA;
 
-#define USB_MAKE_LANGID(lang, sublang) ((((USHORT)(sublang)) << 10) | (USHORT)(lang))
+#define USB_MAKE_LANGID(lang, sublang)         \
+  ((((USHORT)(sublang)) << 10) | (USHORT)(lang))
 
 #define USB_LANG_RESERVED                                   0x00 
 #define USB_LANG_ARABIC                                     0x01
@@ -672,6 +676,6 @@ typedef struct _USBHUBPORTDATA {
 #define USB_SUBLANG_HID_VENDOR_DEFINED_3                    0x3e
 #define USB_SUBLANG_HID_VENDOR_DEFINED_4                    0x3f
 
-#endif // !defined(MIDL_PASS)
+#endif /* !defined(MIDL_PASS) */
 
 #include <poppack.h>

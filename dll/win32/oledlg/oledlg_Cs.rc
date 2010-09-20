@@ -25,7 +25,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 /* Czech strings in CP1250 */
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+UIINSERTOBJECT DIALOG  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Vložit objekt"
 FONT 8, "MS Shell Dlg"
@@ -52,7 +52,7 @@ BEGIN
     EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Vložen nový %s objekt do Vašeho dokumentu"
   IDS_RESULTFILEOBJDESC	"Vložen obsah souboru jako objekt do Vašeho dokumentu, takže ho mùžete upravit programem, kterým byl vytvoøen."

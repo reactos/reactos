@@ -118,7 +118,7 @@ VOID InterrogateUsage(VOID)
 VOID StopUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sends an STOP control request to a service.\n")
+                _T("        Sends a STOP control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> stop [service name]\n"));
 }
@@ -126,7 +126,7 @@ VOID StopUsage(VOID)
 VOID ContinueUsage(VOID)
 {
     _tprintf(_T("DESCRIPTION:\n")
-                _T("        Sends an CONTINUE control request to a service.\n")
+                _T("        Sends a CONTINUE control request to a service.\n")
                 _T("USAGE:\n")
                 _T("        sc <server> continue [service name]\n"));
 }
@@ -178,4 +178,12 @@ VOID CreateUsage(VOID)
                 _T("       (default = LocalSystem)\n")
                 _T(" DisplayName= <display name>\n")
                 _T(" password= <password>\n"));
+}
+
+VOID ControlUsage(VOID)
+{
+    _tprintf(_T("DESCRIPTION:\n")
+                _T("        Sends a CONTROL control request to a service.\n")
+                _T("USAGE:\n")
+                _T("        sc <server> control [service name] <value>\n"));
 }

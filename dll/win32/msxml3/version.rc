@@ -15,7 +15,7 @@
  */
 
 /* @makedep: msxml3_v1.tlb */
-1 TYPELIB LOADONCALL DISCARDABLE msxml3_v1.tlb
+1 TYPELIB msxml3_v1.tlb
 
 #define WINE_OLESELFREGISTER
 #define WINE_FILEDESCRIPTION_STR "Wine MSXML 3.0"

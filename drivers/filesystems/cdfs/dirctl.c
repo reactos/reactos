@@ -376,13 +376,15 @@ CdfsGetNameInformation(PFCB Fcb,
     DPRINT("CdfsGetNameInformation() called\n");
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-    if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
+    if ((sizeof(FILE_NAMES_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
     Info->FileNameLength = Length;
     Info->NextEntryOffset =
-        ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
-    memcpy(Info->FileName, Fcb->ObjectName, Length);
+        ROUND_UP(sizeof(FILE_NAMES_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, Fcb->ObjectName, Length);
+
+    //  Info->FileIndex=;
 
     return(STATUS_SUCCESS);
 }
@@ -399,31 +401,27 @@ CdfsGetDirectoryInformation(PFCB Fcb,
     DPRINT("CdfsGetDirectoryInformation() called\n");
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-    if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
+    if ((sizeof (FILE_DIRECTORY_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
     Info->FileNameLength = Length;
     Info->NextEntryOffset =
-        ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
-    memcpy(Info->FileName, Fcb->ObjectName, Length);
+        ROUND_UP(sizeof(FILE_DIRECTORY_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, Fcb->ObjectName, Length);
 
     /* Convert file times */
     CdfsDateTimeToSystemTime(Fcb,
         &Info->CreationTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->LastAccessTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->LastWriteTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->ChangeTime);
+    Info->LastWriteTime = Info->CreationTime;
+    Info->ChangeTime = Info->CreationTime;
 
     /* Convert file flags */
     CdfsFileFlagsToAttributes(Fcb,
         &Info->FileAttributes);
     if (CdfsFCBIsDirectory(Fcb))
     {
-        Info->EndOfFile.QuadPart = 0LL;
-        Info->AllocationSize.QuadPart = 0LL;
+        Info->EndOfFile.QuadPart = 0;
+        Info->AllocationSize.QuadPart = 0;
     }
     else
     {
@@ -450,23 +448,19 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
     DPRINT("CdfsGetFullDirectoryInformation() called\n");
 
     Length = wcslen(Fcb->ObjectName) * sizeof(WCHAR);
-    if ((sizeof (FILE_BOTH_DIR_INFORMATION) + Length) > BufferLength)
+    if ((sizeof (FILE_FULL_DIR_INFORMATION) + Length) > BufferLength)
         return(STATUS_BUFFER_OVERFLOW);
 
     Info->FileNameLength = Length;
     Info->NextEntryOffset =
-        ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
-    memcpy(Info->FileName, Fcb->ObjectName, Length);
+        ROUND_UP(sizeof(FILE_FULL_DIR_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, Fcb->ObjectName, Length);
 
     /* Convert file times */
     CdfsDateTimeToSystemTime(Fcb,
         &Info->CreationTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->LastAccessTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->LastWriteTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->ChangeTime);
+    Info->LastWriteTime = Info->CreationTime;
+    Info->ChangeTime = Info->CreationTime;
 
     /* Convert file flags */
     CdfsFileFlagsToAttributes(Fcb,
@@ -474,8 +468,8 @@ CdfsGetFullDirectoryInformation(PFCB Fcb,
 
     if (CdfsFCBIsDirectory(Fcb))
     {
-        Info->EndOfFile.QuadPart = 0LL;
-        Info->AllocationSize.QuadPart = 0LL;
+        Info->EndOfFile.QuadPart = 0;
+        Info->AllocationSize.QuadPart = 0;
     }
     else
     {
@@ -508,18 +502,14 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
 
     Info->FileNameLength = Length;
     Info->NextEntryOffset =
-        ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, 4);
-    memcpy(Info->FileName, Fcb->ObjectName, Length);
+        ROUND_UP(sizeof(FILE_BOTH_DIR_INFORMATION) + Length, sizeof(ULONG));
+    RtlCopyMemory(Info->FileName, Fcb->ObjectName, Length);
 
     /* Convert file times */
     CdfsDateTimeToSystemTime(Fcb,
         &Info->CreationTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->LastAccessTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->LastWriteTime);
-    CdfsDateTimeToSystemTime(Fcb,
-        &Info->ChangeTime);
+    Info->LastWriteTime = Info->CreationTime;
+    Info->ChangeTime = Info->CreationTime;
 
     /* Convert file flags */
     CdfsFileFlagsToAttributes(Fcb,
@@ -527,8 +517,8 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
 
     if (CdfsFCBIsDirectory(Fcb))
     {
-        Info->EndOfFile.QuadPart = 0LL;
-        Info->AllocationSize.QuadPart = 0LL;
+        Info->EndOfFile.QuadPart = 0;
+        Info->AllocationSize.QuadPart = 0;
     }
     else
     {
@@ -542,8 +532,9 @@ CdfsGetBothDirectoryInformation(PFCB Fcb,
     Info->EaSize = 0;
 
     /* Copy short name */
+    ASSERT(Fcb->ShortNameU.Length / sizeof(WCHAR) <= 12);
     Info->ShortNameLength = Fcb->ShortNameU.Length;
-    memcpy(Info->ShortName, Fcb->ShortNameU.Buffer, Fcb->ShortNameU.Length);
+    RtlCopyMemory(Info->ShortName, Fcb->ShortNameU.Buffer, Fcb->ShortNameU.Length);
 
     return(STATUS_SUCCESS);
 }
@@ -584,6 +575,15 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
         Stack->Parameters.QueryDirectory.FileInformationClass;
     FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
 
+    /* Determine Buffer for result */
+    if (Irp->MdlAddress)
+    {
+        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
+    }
+    else
+    {
+        Buffer = Irp->UserBuffer;
+    }
 
     if (SearchPattern != NULL)
     {
@@ -596,13 +596,8 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
-
-            Ccb->DirectorySearchPattern.Length = SearchPattern->Length;
             Ccb->DirectorySearchPattern.MaximumLength = SearchPattern->Length + sizeof(WCHAR);
-
-            memcpy(Ccb->DirectorySearchPattern.Buffer,
-                SearchPattern->Buffer,
-                SearchPattern->Length);
+            RtlCopyUnicodeString(&Ccb->DirectorySearchPattern, SearchPattern);
             Ccb->DirectorySearchPattern.Buffer[SearchPattern->Length / sizeof(WCHAR)] = 0;
         }
     }
@@ -625,23 +620,13 @@ CdfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     /* Determine directory index */
     if (Stack->Flags & SL_INDEX_SPECIFIED)
     {
-        Ccb->Entry = Ccb->CurrentByteOffset.u.LowPart;
-        Ccb->Offset = 0;
+        Ccb->Entry = Stack->Parameters.QueryDirectory.FileIndex;
+        Ccb->Offset = Ccb->CurrentByteOffset.u.LowPart;
     }
     else if (First || (Stack->Flags & SL_RESTART_SCAN))
     {
         Ccb->Entry = 0;
         Ccb->Offset = 0;
-    }
-
-    /* Determine Buffer for result */
-    if (Irp->MdlAddress)
-    {
-        Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-    }
-    else
-    {
-        Buffer = Irp->UserBuffer;
     }
     DPRINT("Buffer = %p  tofind = %wZ\n", Buffer, &Ccb->DirectorySearchPattern);
 

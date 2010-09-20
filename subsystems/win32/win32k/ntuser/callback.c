@@ -267,7 +267,16 @@ co_IntLoadSysMenuTemplate()
    if (NT_SUCCESS(Status))
    {
       /* Simulate old behaviour: copy into our local buffer */
-      Result = *(LRESULT*)ResultPointer;
+      _SEH2_TRY
+      {
+        ProbeForRead(ResultPointer, sizeof(LRESULT), 1);
+        Result = *(LRESULT*)ResultPointer;
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+        Result = 0;
+      }
+      _SEH2_END
    }
 
    UserEnterCo();

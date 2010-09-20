@@ -118,8 +118,10 @@ soisconnected(so)
 		wakeup(so, (caddr_t)&head->so_timeo);
 	} else {
 		wakeup(so, (caddr_t)&so->so_timeo);
+#ifndef __REACTOS__
 		sorwakeup(so);
 		sowwakeup(so);
+#endif
 	}
 }
 
@@ -131,8 +133,10 @@ soisdisconnecting(so)
     so->so_state &= ~SS_ISCONNECTING;
     so->so_state |= (SS_ISDISCONNECTING|SS_CANTRCVMORE|SS_CANTSENDMORE);
     wakeup(so, (caddr_t)&so->so_timeo);
+#ifndef __REACTOS__
     sowwakeup(so);
     sorwakeup(so);
+#endif
 }
 
 void
@@ -144,8 +148,10 @@ soisdisconnected(so)
     so->so_state &= ~(SS_ISCONNECTING|SS_ISCONNECTED|SS_ISDISCONNECTING);
     so->so_state |= (SS_CANTRCVMORE|SS_CANTSENDMORE);
     wakeup(so, (caddr_t)&so->so_timeo);
+#ifndef __REACTOS__
     sowwakeup(so);
     sorwakeup(so);
+#endif
 }
 
 /*
@@ -192,7 +198,9 @@ sonewconn1(head, connstatus)
 		return ((struct socket *)0);
 	}
 	if (connstatus) {
+#ifndef __REACTOS__
 		sorwakeup(head);
+#endif
 		wakeup(head, (caddr_t)&head->so_timeo);
 		so->so_state |= connstatus;
 	}

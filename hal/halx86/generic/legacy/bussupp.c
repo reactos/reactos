@@ -678,10 +678,10 @@ ShowSize(ULONG x)
 
 VOID
 NTAPI
-HalpDebugPciBus(IN ULONG i,
-                IN ULONG j,
-                IN ULONG k,
-                IN PPCI_COMMON_CONFIG PciData)
+HalpDebugPciDumpBus(IN ULONG i,
+                    IN ULONG j,
+                    IN ULONG k,
+                    IN PPCI_COMMON_CONFIG PciData)
 {   
     extern CHAR ClassTable[3922];
     extern CHAR VendorTable[642355];
@@ -933,7 +933,7 @@ HalpInitializePciBus(VOID)
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
                 
                 /* Print out the entry */
-                HalpDebugPciBus(i, j, k, PciData);
+                HalpDebugPciDumpBus(i, j, k, PciData);
                 
                 /* Check if this is a Cardbus bridge */
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)

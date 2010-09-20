@@ -64,22 +64,26 @@ BOOLEAN
 NTAPI
 MmIsAddressValid(IN PVOID VirtualAddress)
 {
-    //
-    // Just check the Valid bit in the Address' PDE and PTE
-    //
-    if ((MiAddressToPde(VirtualAddress)->u.Hard.Valid == 0) ||
-        (MiAddressToPte(VirtualAddress)->u.Hard.Valid == 0))
-    {
-        //
-        // Attempting to access this page is guranteed to result in a page fault
-        //
-        return FALSE;
-    }
+#if _MI_PAGING_LEVELS >= 4
+    /* Check if the PXE is valid */
+    if (MiAddressToPxe(VirtualAddress)->u.Hard.Valid == 0) return FALSE;
+#endif
 
-    //
-    // This address is valid now, but it will only stay so if the caller holds
-    // the PFN lock
-    //
+#if _MI_PAGING_LEVELS >= 3
+    /* Check if the PPE is valid */
+    if (MiAddressToPpe(VirtualAddress)->u.Hard.Valid == 0) return FALSE;
+#endif
+
+#if _MI_PAGING_LEVELS >= 2
+    /* Check if the PDE is valid */
+    if (MiAddressToPde(VirtualAddress)->u.Hard.Valid == 0) return FALSE;
+#endif
+
+    /* Check if the PTE is valid */
+    if (MiAddressToPte(VirtualAddress)->u.Hard.Valid == 0) return FALSE;
+
+    /* This address is valid now, but it will only stay so if the caller holds
+     * the PFN lock */
     return TRUE;
 }
 

@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/pdo.c
  * PURPOSE:     USB EHCI device driver.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (michael.martin@reactos.org)
  */
 
 #define INITGUID
@@ -125,16 +125,56 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     {
         case IOCTL_INTERNAL_USB_SUBMIT_URB:
         {
+            PUSB_DEVICE UsbDevice = NULL;
             URB *Urb;
+            ULONG i;
 
             Urb = (PURB) Stack->Parameters.Others.Argument1;
-            DPRINT("Header Length %d\n", Urb->UrbHeader.Length);
-            DPRINT("Header Function %d\n", Urb->UrbHeader.Function);
-            /* Queue all request for now, kernel thread will complete them */
-            QueueURBRequest(PdoDeviceExtension, Irp);
-            Information = 0;
-            IoMarkIrpPending(Irp);
-            Status = STATUS_PENDING;
+
+            UsbDevice = Urb->UrbHeader.UsbdDeviceHandle;
+
+            if (UsbDevice == NULL)
+                UsbDevice = PdoDeviceExtension->UsbDevices[0];
+
+            if ((Urb->UrbHeader.Function == URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER) &&
+                (UsbDevice == PdoDeviceExtension->UsbDevices[0]))
+            {
+                if (Urb->UrbBulkOrInterruptTransfer.PipeHandle == &UsbDevice->ActiveInterface->EndPoints[0]->EndPointDescriptor)
+                {
+                    DPRINT1("PipeHandle doesnt match SCE PipeHandle\n");
+                }
+
+                /* Queue the Irp first */
+                QueueURBRequest(PdoDeviceExtension, Irp);
+
+                /* Check if there is any connected devices */
+                for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
+                {
+                    if (PdoDeviceExtension->Ports[i].PortChange == 0x01)
+                    {
+                        DPRINT1("Inform hub driver that port %d has changed\n", i+1);
+                        ((PUCHAR)Urb->UrbBulkOrInterruptTransfer.TransferBuffer)[0] = 1 << ((i + 1) & 7);
+                        Information = 0;
+                        Status = STATUS_SUCCESS;
+                        /* Assume URB success */
+                        Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+                        /* Set the DeviceHandle to the Internal Device */
+                        Urb->UrbHeader.UsbdDeviceHandle = UsbDevice;
+
+                        /* Request handled, Remove it from the queue */
+                        RemoveUrbRequest(PdoDeviceExtension, Irp);
+                        break;
+                    }
+                }
+                if (Status == STATUS_SUCCESS) break;
+                DPRINT1("Queueing IRP\n");
+                IoMarkIrpPending(Irp);
+                Status = STATUS_PENDING;
+                break;
+            }
+
+            Status = HandleUrbRequest(PdoDeviceExtension, Irp);
+
             break;
         }
         case IOCTL_INTERNAL_USB_CYCLE_PORT:
@@ -166,11 +206,11 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %x\n", IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE);
+            DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_DEVICE_HANDLE %x\n", Stack->Parameters.Others.Argument2);
             if (Stack->Parameters.Others.Argument1)
             {
                 /* Return the root hubs devicehandle */
-                DPRINT1("Returning RootHub Handle %x\n", PdoDeviceExtension->UsbDevices[0]);
+                DPRINT("Returning RootHub Handle %x\n", PdoDeviceExtension->UsbDevices[0]);
                 *(PVOID *)Stack->Parameters.Others.Argument1 = (PVOID)PdoDeviceExtension->UsbDevices[0];
                 Status = STATUS_SUCCESS;
             }
@@ -182,13 +222,13 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_HUB_COUNT:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
+            DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_HUB_COUNT %x\n", IOCTL_INTERNAL_USB_GET_HUB_COUNT);
             ASSERT(Stack->Parameters.Others.Argument1 != NULL);
             if (Stack->Parameters.Others.Argument1)
             {
                 /* FIXME: Determine the number of hubs between the usb device and root hub */
                 DPRINT1("RootHubCount %x\n", *(PULONG)Stack->Parameters.Others.Argument1);
-                *(PULONG)Stack->Parameters.Others.Argument1 = 0;
+                *(PULONG)Stack->Parameters.Others.Argument1 = 1;
             }
             Status = STATUS_SUCCESS;
             break;
@@ -215,12 +255,14 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO:
         {
-            DPRINT1("IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO\n");
-
+            DPRINT("Ehci: IOCTL_INTERNAL_USB_GET_ROOTHUB_PDO Arg1 %x, Arg2 %x\n", Stack->Parameters.Others.Argument1, Stack->Parameters.Others.Argument2);
             if (Stack->Parameters.Others.Argument1)
                 *(PVOID *)Stack->Parameters.Others.Argument1 = FdoDeviceExtension->Pdo;
+
+            /* Windows usbehci driver gives the Pdo in both Arguments. */
             if (Stack->Parameters.Others.Argument2)
-                *(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
+                //*(PVOID *)Stack->Parameters.Others.Argument2 = IoGetAttachedDeviceReference(FdoDeviceExtension->DeviceObject);
+                *(PVOID *)Stack->Parameters.Others.Argument2 = FdoDeviceExtension->Pdo;
 
             Information = 0;
             Status = STATUS_SUCCESS;
@@ -229,7 +271,7 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION:
         {
             PUSB_IDLE_CALLBACK_INFO CallBackInfo;
-            DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION\n");
+            DPRINT1("Ehci: IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION\n");
             /* FIXME: Set Callback for safe power down */
             CallBackInfo = Stack->Parameters.DeviceIoControl.Type3InputBuffer;
             DPRINT1("IdleCallback %x\n", CallBackInfo->IdleCallback);
@@ -368,16 +410,20 @@ PdoDispatchPnp(
             UNICODE_STRING InterfaceSymLinkName;
             LONG i;
 
+            DPRINT1("Ehci: PDO StartDevice\n");
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
             /* Create the root hub */
             RootHubDevice = InternalCreateUsbDevice(1, 0, NULL, TRUE);
 
-            for (i = 0; i < 8; i++)
+            for (i = 0; i < PdoDeviceExtension->NumberOfPorts; i++)
             {
-                PdoDeviceExtension->Ports[i].PortStatus = USB_PORT_STATUS_ENABLE;
+                PdoDeviceExtension->Ports[i].PortStatus = USB_PORT_STATUS_HIGH_SPEED | 0x8000;
                 PdoDeviceExtension->Ports[i].PortChange = 0;
+
+                if (!FdoDeviceExtension->ECHICaps.HCSParams.PortPowerControl)
+                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_POWER;
             }
 
             RtlCopyMemory(&RootHubDevice->DeviceDescriptor,
@@ -425,7 +471,7 @@ PdoDispatchPnp(
             PdoDeviceExtension->UsbDevices[0] = RootHubDevice;
 
             /* Create a thread to handle the URB's */
-
+/*
             Status = PsCreateSystemThread(&PdoDeviceExtension->ThreadHandle,
                                           THREAD_ALL_ACCESS,
                                           NULL,
@@ -436,18 +482,18 @@ PdoDispatchPnp(
 
             if (!NT_SUCCESS(Status))
                 DPRINT1("Failed Thread Creation with Status: %x\n", Status);
-
+*/
             Status = IoRegisterDeviceInterface(DeviceObject, &GUID_DEVINTERFACE_USB_HUB, NULL, &InterfaceSymLinkName);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Failed to register interface\n");
-                ASSERT(FALSE);
+                return Status;
             }
             else
             {
                 Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
                 if (!NT_SUCCESS(Status)) 
-                    ASSERT(FALSE);
+                    return Status;
             }
 
             Status = STATUS_SUCCESS;
@@ -455,6 +501,7 @@ PdoDispatchPnp(
         }
         case IRP_MN_QUERY_DEVICE_RELATIONS:
         {
+            DPRINT1("Ehci: PDO QueryDeviceRelations\n");
             switch (Stack->Parameters.QueryDeviceRelations.Type)
             {
                 case TargetDeviceRelation:
@@ -499,6 +546,7 @@ PdoDispatchPnp(
         }
         case IRP_MN_QUERY_CAPABILITIES:
         {
+            DPRINT("Ehci: PDO Query Capabilities\n");
             PDEVICE_CAPABILITIES DeviceCapabilities;
             ULONG i;
 
@@ -538,6 +586,7 @@ PdoDispatchPnp(
 
         case IRP_MN_QUERY_ID:
         {
+            DPRINT("Ehci: PDO Query ID\n");
             Status = PdoQueryId(DeviceObject, Irp, &Information);
             break;
         }
@@ -549,6 +598,8 @@ PdoDispatchPnp(
             PPDO_DEVICE_EXTENSION PdoDeviceExtension;
             PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 
+            DPRINT("Ehci: PDO Query Interface\n");
+
             PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
             FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
 
@@ -557,10 +608,6 @@ PdoDispatchPnp(
             {
                 DPRINT1("Failed to create string from GUID!\n");
             }
-
-            DPRINT("Interface GUID requested %wZ\n", &GuidString);
-            DPRINT("QueryInterface.Size %x\n", Stack->Parameters.QueryInterface.Size);
-            DPRINT("QueryInterface.Version %x\n", Stack->Parameters.QueryInterface.Version);
 
             /* Assume success */
             Status = STATUS_SUCCESS;

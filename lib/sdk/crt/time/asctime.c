@@ -73,7 +73,7 @@ IntToChar2(int x)
     return u.char2;
 }
 
-FORCEINLINE
+static __inline
 void
 FillBuf(timebuf_t *buf, const struct tm *ptm)
 {

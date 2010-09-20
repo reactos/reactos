@@ -70,23 +70,23 @@ KiVdmOpcodePUSHF(IN PKTRAP_FRAME TrapFrame,
     
     /* Build flat ESP */
     Esp = (TrapFrame->HardwareSegSs << 4) + (USHORT)TrapFrame->HardwareEsp;
-    Esp -= 2;
     
     /* Check for OPER32 */
     if (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32)
     {
         /* Save EFlags */
-        Esp -= 2;
-        *(PULONG)(Esp - 2) = V86EFlags;
+        Esp -= 4;
+        *(PULONG)Esp = V86EFlags;
     }
     else
     {
         /* Save EFLags */
+        Esp -= 2;
         *(PUSHORT)Esp = (USHORT)V86EFlags;
     }
     
     /* Set new ESP and EIP */
-    TrapFrame->HardwareEsp = (USHORT)Esp;
+    TrapFrame->HardwareEsp = Esp - (TrapFrame->HardwareSegSs << 4);
     TrapFrame->Eip += KiVdmGetInstructionSize(Flags);
     
     /* We're done */
@@ -103,20 +103,22 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     /* Build flat ESP */
     Esp = (TrapFrame->HardwareSegSs << 4) + (USHORT)TrapFrame->HardwareEsp;
     
-    /* Read EFlags */
-    EFlags = *(PULONG)Esp;
-    Esp += 4;
-    
     /* Check for OPER32 */
-    if (!(KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32))
+    if (KiVdmGetPrefixFlags(Flags) & PFX_FLAG_OPER32)
     {
-        /* Read correct flags and use correct stack address */
-        Esp -= 2;
-        EFlags &= 0xFFFF;
+        /* Read EFlags */
+        EFlags = *(PULONG)Esp;
+        Esp += 4;
+    }
+    else
+    {
+        /* Read EFlags */
+        EFlags = *(PUSHORT)Esp;
+        Esp += 2;
     }
     
     /* Set new ESP */
-    TrapFrame->HardwareEsp = Esp;
+    TrapFrame->HardwareEsp = Esp - (TrapFrame->HardwareSegSs << 4);
     
     /* Mask out IOPL from the flags */
     EFlags &= ~EFLAGS_IOPL;
@@ -137,7 +139,7 @@ KiVdmOpcodePOPF(IN PKTRAP_FRAME TrapFrame,
     V86EFlags |= EFLAGS_V86_MASK | EFLAGS_INTERRUPT_MASK;
 
     /* Update EFlags in trap frame */
-    TrapFrame->EFlags |= V86EFlags;
+    TrapFrame->EFlags = V86EFlags;
 
     /* Check if ESP0 needs to be fixed up */
     if (TrapEFlags & EFLAGS_V86_MASK) Ki386AdjustEsp0(TrapFrame);
@@ -311,6 +313,7 @@ KiVdmOpcodeIRET(IN PKTRAP_FRAME TrapFrame,
     else
     {
         /* FIXME: Check for VDM interrupts */
+       DPRINT("FIXME: Check for VDM interrupts\n");
     }
     
     /* We're done */

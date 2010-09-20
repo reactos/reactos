@@ -992,18 +992,24 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         8,
         12,
-        "Instalar cargador de arranque en el disco duro (sector de boot).",
+        "Install bootloader on the harddisk (MBR and VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Instalar cargador de inicio en un disquete.",
+        "Install bootloader on the harddisk (VBR only).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         14,
+        "Instalar cargador de inicio en un disquete.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        15,
         "Omitir la instalaci¢n del cargador de arranque.",
         TEXT_STYLE_NORMAL
     },

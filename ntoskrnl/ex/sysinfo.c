@@ -494,7 +494,6 @@ QSI_DEF(SystemProcessorInformation)
 {
     PSYSTEM_PROCESSOR_INFORMATION Spi
         = (PSYSTEM_PROCESSOR_INFORMATION) Buffer;
-    PKPRCB Prcb;
 
     *ReqSize = sizeof(SYSTEM_PROCESSOR_INFORMATION);
 
@@ -503,7 +502,6 @@ QSI_DEF(SystemProcessorInformation)
     {
         return STATUS_INFO_LENGTH_MISMATCH;
     }
-    Prcb = KeGetCurrentPrcb();
     Spi->ProcessorArchitecture = KeProcessorArchitecture;
     Spi->ProcessorLevel = KeProcessorLevel;
     Spi->ProcessorRevision = KeProcessorRevision;
@@ -931,7 +929,6 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 
     LONG i;
     ULONG TotalTime;
-    LARGE_INTEGER CurrentTime;
     PKPRCB Prcb;
 
     *ReqSize = KeNumberProcessors * sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION);
@@ -942,7 +939,6 @@ QSI_DEF(SystemProcessorPerformanceInformation)
         return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-    CurrentTime.QuadPart = KeQueryInterruptTime();
     for (i = 0; i < KeNumberProcessors; i++)
     {
         /* Get the PRCB on this processor */

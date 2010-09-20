@@ -24,7 +24,7 @@
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "nepoznan objekt" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "naslovna vrstica"

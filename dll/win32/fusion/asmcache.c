@@ -91,15 +91,32 @@ static BOOL create_full_path(LPCWSTR path)
     return ret;
 }
 
-static BOOL get_assembly_directory(LPWSTR dir, DWORD size)
+static BOOL get_assembly_directory(LPWSTR dir, DWORD size, BYTE architecture)
 {
-    static const WCHAR gac[] =
-        {'\\','a','s','s','e','m','b','l','y','\\','G','A','C','_','M','S','I','L',0};
+    static const WCHAR gac[] = {'\\','a','s','s','e','m','b','l','y','\\','G','A','C',0};
 
-    FIXME("Ignoring assembly architecture\n");
+    static const WCHAR msil[] = {'_','M','S','I','L',0};
+    static const WCHAR x86[] = {'_','3','2',0};
+    static const WCHAR amd64[] = {'_','6','4',0};
 
     GetWindowsDirectoryW(dir, size);
     strcatW(dir, gac);
+
+    switch (architecture)
+    {
+        case peMSIL:
+            strcatW(dir, msil);
+            break;
+
+        case peI386:
+            strcatW(dir, x86);
+            break;
+
+        case peAMD64:
+            strcatW(dir, amd64);
+            break;
+    }
+
     return TRUE;
 }
 
@@ -291,7 +308,7 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     if (FAILED(hr))
         goto done;
 
-    get_assembly_directory(asmdir, MAX_PATH);
+    get_assembly_directory(asmdir, MAX_PATH, assembly_get_architecture(assembly));
 
     sprintfW(path, format, asmdir, name, version, token);
 

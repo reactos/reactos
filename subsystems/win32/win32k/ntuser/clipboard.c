@@ -949,7 +949,6 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     // because pallette information may change
 
                     HDC hdc;
-                    INT ret;
                     BITMAP bm;
                     BITMAPINFO bi;
                     SURFACE *psurf;
@@ -975,14 +974,14 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
                     bi.bmiHeader.biYPelsPerMeter = 0;
                     bi.bmiHeader.biClrUsed = 0;
 
-                    ret = NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight,  NULL, &bi, DIB_RGB_COLORS, 0, 0);
+                    NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight,  NULL, &bi, DIB_RGB_COLORS, 0, 0);
 
                     size = bi.bmiHeader.biSizeImage + sizeof(BITMAPINFOHEADER);
 
                     hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
                     memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER));
 
-                    ret = NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
+                    NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
 
                     UserReleaseDC(NULL, hdc, FALSE);
 

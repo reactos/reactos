@@ -66,7 +66,7 @@ TabbedTextOutA(
   LPCSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions,
+  CONST INT *lpnTabStopPositions,
   int nTabOrigin)
 {
   LONG ret;
@@ -196,7 +196,7 @@ TabbedTextOutW(
   LPCWSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions,
+  CONST INT *lpnTabStopPositions,
   int nTabOrigin)
 {
   return TEXT_TabbedTextOut(hDC, X, Y, lpString, nCount, nTabPositions, lpnTabStopPositions, nTabOrigin, TRUE);
@@ -213,7 +213,7 @@ GetTabbedTextExtentA(
   LPCSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions)
+  CONST INT *lpnTabStopPositions)
 {
     LONG ret;
     DWORD len = MultiByteToWideChar(CP_ACP, 0, lpString, nCount, NULL, 0);
@@ -241,7 +241,7 @@ GetTabbedTextExtentW(
   LPCWSTR lpString,
   int nCount,
   int nTabPositions,
-  CONST LPINT lpnTabStopPositions)
+  CONST INT *lpnTabStopPositions)
 {
    return TEXT_TabbedTextOut(hDC, 0, 0, lpString, nCount, nTabPositions, lpnTabStopPositions, 0, FALSE);
 }

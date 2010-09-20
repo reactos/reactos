@@ -463,8 +463,19 @@ acpi_bus_generate_event_dpc(PKDPC Dpc,
                             PVOID SystemArgument1,
                             PVOID SystemArgument2)
 {
-	struct acpi_bus_event *event = SystemArgument1;
+	struct acpi_bus_event *event;
+    struct acpi_device *device = SystemArgument1;
+    ULONG_PTR TypeData = (ULONG_PTR)SystemArgument2;
 	KIRQL OldIrql;
+    
+    event = ExAllocatePool(NonPagedPool,sizeof(struct acpi_bus_event));
+	if (!event)
+		return;
+    
+	sprintf(event->device_class, "%s", device->pnp.device_class);
+	sprintf(event->bus_id, "%s", device->pnp.bus_id);
+	event->type = (TypeData & 0xFF000000) >> 24;
+	event->data = (TypeData & 0x00FFFFFF);
 
 	KeAcquireSpinLock(&acpi_bus_event_lock, &OldIrql);
 	list_add_tail(&event->node, &acpi_bus_event_list);
@@ -479,7 +490,7 @@ acpi_bus_generate_event (
 	UINT8			type,
 	int			data)
 {
-	struct acpi_bus_event	*event = NULL;
+    ULONG_PTR TypeData = 0;
 
 	DPRINT("acpi_bus_generate_event");
 
@@ -489,18 +500,14 @@ acpi_bus_generate_event (
 	/* drop event on the floor if no one's listening */
 	if (!event_is_open)
 		return_VALUE(0);
+    
+    /* Data shouldn't even get near 24 bits */
+    ASSERT(!(data & 0xFF000000));
+    
+    TypeData = data;
+    TypeData |= type << 24;
 
-	event = ExAllocatePool(NonPagedPool,sizeof(struct acpi_bus_event));
-	if (!event)
-		return_VALUE(-4);
-
-	sprintf(event->device_class, "%s", device->pnp.device_class);
-	sprintf(event->bus_id, "%s", device->pnp.bus_id);
-	event->type = type;
-	event->data = data;
-
-	if (!KeInsertQueueDpc(&event_dpc, event, NULL))
-	    ExFreePool(event);
+	KeInsertQueueDpc(&event_dpc, device, (PVOID)TypeData);
 
 	return_VALUE(0);
 }

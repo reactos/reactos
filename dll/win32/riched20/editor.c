@@ -4406,10 +4406,9 @@ static LRESULT RichEditWndProc_common(HWND hWnd, UINT msg, WPARAM wParam,
       texthost = ME_CreateTextHost(hWnd, pcs, FALSE);
       return texthost != NULL;
     }
-    else if (msg != WM_NCDESTROY)
+    else
     {
-      ERR("called with invalid hWnd %p - application bug?\n", hWnd);
-      return 0;
+      return DefWindowProcW(hWnd, msg, wParam, lParam);
     }
   }
 

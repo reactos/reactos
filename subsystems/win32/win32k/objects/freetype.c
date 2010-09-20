@@ -302,7 +302,9 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     PSECTION_OBJECT SectionObject;
     ULONG ViewSize = 0;
     LARGE_INTEGER SectionSize;
+#if 0 // Wine code
     FT_Fixed XScale, YScale;
+#endif
     UNICODE_STRING FontRegPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
     /* Open the font file */
@@ -395,9 +397,9 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
     FontGDI->face = Face;
 
     /* FIXME: Complete text metrics */
+#if 0 /* This (Wine) code doesn't seem to work correctly for us */
     XScale = Face->size->metrics.x_scale;
     YScale = Face->size->metrics.y_scale;
-#if 0 /* This (Wine) code doesn't seem to work correctly for us */
     FontGDI->TextMetric.tmAscent =  (FT_MulFix(Face->ascender, YScale) + 32) >> 6;
     FontGDI->TextMetric.tmDescent = (FT_MulFix(Face->descender, YScale) + 32) >> 6;
     FontGDI->TextMetric.tmHeight =  (FT_MulFix(Face->ascender, YScale) -
@@ -2119,11 +2121,12 @@ FASTCALL
 TextIntGetTextExtentPoint(PDC dc,
                           PTEXTOBJ TextObj,
                           LPCWSTR String,
-                          int Count,
-                          int MaxExtent,
+                          INT Count,
+                          ULONG MaxExtent,
                           LPINT Fit,
                           LPINT Dx,
-                          LPSIZE Size)
+                          LPSIZE Size,
+                          FLONG fl)
 {
     PFONTGDI FontGDI;
     FT_Face face;
@@ -2195,7 +2198,11 @@ TextIntGetTextExtentPoint(PDC dc,
 
     for (i = 0; i < Count; i++)
     {
-        glyph_index = FT_Get_Char_Index(face, *String);
+        if (fl & GTEF_INDICES)
+            glyph_index = *String;
+        else
+            glyph_index = FT_Get_Char_Index(face, *String);
+
         if (!(realglyph = ftGdiGlyphCacheGet(face, glyph_index,
                                              TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight)))
         {
@@ -4238,16 +4245,17 @@ NtGdiGetGlyphIndicesW(
     IntLockFreeType;
     face = FontGDI->face;
 
+    if (DefChar == 0xffff && FT_IS_SFNT(face))
+    {
+        TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
+        DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
+    }
+
     for (i = 0; i < cwc; i++)
     {
-        Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
+        Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]); // FIXME: unsafe!
         if (Buffer[i] == 0)
         {
-            if (DefChar == 0xffff && FT_IS_SFNT(face))
-            {
-                TT_OS2 *pOS2 = FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-                DefChar = (pOS2->usDefaultChar ? FT_Get_Char_Index(face, pOS2->usDefaultChar) : 0);
-            }
             Buffer[i] = DefChar;
         }
     }

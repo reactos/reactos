@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_AUTHORITY_KEY_ID "Identificatorul cheii autorității"
     IDS_KEY_ATTRIBUTES "Atributele cheii"
@@ -170,7 +170,7 @@ STRINGTABLE DISCARDABLE
     IDS_ANY_CERT_POLICY "Toate politicile de emitere"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALIZEDNAME_ROOT "Autorități de încredere de bază de certificare"
     IDS_LOCALIZEDNAME_MY "Personale"
@@ -180,7 +180,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_DISALLOWED "Lipsite de încredere"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_KEY_ID "KeyID="
     IDS_CERT_ISSUER "Emitentul certificatului"

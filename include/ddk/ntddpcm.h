@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef __NTDDPCM_H
-#define __NTDDPCM_H
+#ifndef _NTDDPCMH_
+#define _NTDDPCMH_
 
 #ifdef __cplusplus
 extern "C" {
@@ -156,4 +156,4 @@ typedef struct _PCMCIA_INTERFACE_STANDARD {
 }
 #endif
 
-#endif /* __NTDDPCM_H */
+#endif /* _NTDDPCMH_ */

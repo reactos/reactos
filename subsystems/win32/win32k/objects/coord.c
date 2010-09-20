@@ -886,6 +886,46 @@ IntMirrorWindowOrg(PDC dc)
     return;
 }
 
+VOID
+NTAPI
+DC_vSetLayout(
+    IN PDC pdc,
+    IN LONG wox,
+    IN DWORD dwLayout)
+{
+    PDC_ATTR pdcattr = pdc->pdcattr;
+
+    pdcattr->dwLayout = dwLayout;
+
+    if (!(dwLayout & LAYOUT_ORIENTATIONMASK)) return;
+
+    if (dwLayout & LAYOUT_RTL)
+    {
+        pdcattr->iMapMode = MM_ANISOTROPIC;
+    }
+
+    pdcattr->szlWindowExt.cy = -pdcattr->szlWindowExt.cy;
+    pdcattr->ptlWindowOrg.x  = -pdcattr->ptlWindowOrg.x;
+
+    if (wox == -1)
+        IntMirrorWindowOrg(pdc);
+    else
+        pdcattr->ptlWindowOrg.x = wox - pdcattr->ptlWindowOrg.x;
+
+    if (!(pdcattr->flTextAlign & TA_CENTER)) pdcattr->flTextAlign |= TA_RIGHT;
+
+    if (pdc->dclevel.flPath & DCPATH_CLOCKWISE)
+        pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
+    else
+        pdc->dclevel.flPath |= DCPATH_CLOCKWISE;
+
+    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
+                         INVALIDATE_ATTRIBUTES |
+                         DEVICE_TO_WORLD_INVALID);
+
+//  DC_UpdateXforms(pdc);
+}
+
 // NtGdiSetLayout
 //
 // The default is left to right. This function changes it to right to left, which
@@ -901,53 +941,22 @@ NtGdiSetLayout(
     IN LONG wox,
     IN DWORD dwLayout)
 {
-    PDC dc;
+    PDC pdc;
     PDC_ATTR pdcattr;
     DWORD oLayout;
 
-    dc = DC_LockDc(hdc);
-    if (!dc)
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return GDI_ERROR;
     }
-    pdcattr = dc->pdcattr;
+    pdcattr = pdc->pdcattr;
 
-    pdcattr->dwLayout = dwLayout;
     oLayout = pdcattr->dwLayout;
+    DC_vSetLayout(pdc, wox, dwLayout);
 
-    if (!(dwLayout & LAYOUT_ORIENTATIONMASK))
-    {
-        DC_UnlockDc(dc);
-        return oLayout;
-    }
-
-    if (dwLayout & LAYOUT_RTL)
-    {
-        pdcattr->iMapMode = MM_ANISOTROPIC;
-    }
-
-    pdcattr->szlWindowExt.cy = -pdcattr->szlWindowExt.cy;
-    pdcattr->ptlWindowOrg.x  = -pdcattr->ptlWindowOrg.x;
-
-    if (wox == -1)
-        IntMirrorWindowOrg(dc);
-    else
-        pdcattr->ptlWindowOrg.x = wox - pdcattr->ptlWindowOrg.x;
-
-    if (!(pdcattr->flTextAlign & TA_CENTER)) pdcattr->flTextAlign |= TA_RIGHT;
-
-    if (dc->dclevel.flPath & DCPATH_CLOCKWISE)
-        dc->dclevel.flPath &= ~DCPATH_CLOCKWISE;
-    else
-        dc->dclevel.flPath |= DCPATH_CLOCKWISE;
-
-    pdcattr->flXform |= (PAGE_EXTENTS_CHANGED |
-                         INVALIDATE_ATTRIBUTES |
-                         DEVICE_TO_WORLD_INVALID);
-
-//  DC_UpdateXforms(dc);
-    DC_UnlockDc(dc);
+    DC_UnlockDc(pdc);
     return oLayout;
 }
 

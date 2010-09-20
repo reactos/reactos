@@ -25,6 +25,8 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
    DPRINT("MmDeleteProcessAddressSpace(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
+   RemoveEntryList(&Process->MmProcessLinks);
+
    MmLockAddressSpace(&Process->Vm);
 
    while ((MemoryArea = (PMEMORY_AREA)Process->Vm.WorkingSetExpansionLinks.Flink) != NULL)

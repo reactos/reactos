@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Klarte ikke åpne den oppgitte installasjonspakken. Kontroller filbanen og prøv igjen."
 	5 "Fant ikke stien '%s'."

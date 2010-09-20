@@ -35,20 +35,20 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                Connection, Connection->SocketContext));
 
         /* Things that can happen when we try the initial connection */
-        if( Connection->SignalState & SEL_CONNECT ) {
+        if( Connection->SignalState & (SEL_CONNECT | SEL_FIN) ) {
             while (!IsListEmpty(&Connection->ConnectRequest)) {
                Entry = RemoveHeadList( &Connection->ConnectRequest );
 
                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
 
-               Bucket->Status = STATUS_SUCCESS;
+               Bucket->Status = (Connection->SignalState & SEL_CONNECT) ? STATUS_SUCCESS : STATUS_CANCELLED;
                Bucket->Information = 0;
 
                InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
            }
        }
 
-       if( Connection->SignalState & SEL_ACCEPT ) {
+       if( Connection->SignalState & (SEL_ACCEPT | SEL_FIN) ) {
            /* Handle readable on a listening socket --
             * TODO: Implement filtering
             */
@@ -90,7 +90,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
       }
 
       /* Things that happen after we're connected */
-      if( Connection->SignalState & SEL_READ ) {
+      if( Connection->SignalState & (SEL_READ | SEL_FIN) ) {
           TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
                                  IsListEmpty(&Connection->ReceiveRequest) ?
                                  "empty" : "nonempty"));
@@ -145,7 +145,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                }
            }
        }
-       if( Connection->SignalState & SEL_WRITE ) {
+       if( Connection->SignalState & (SEL_WRITE | SEL_FIN) ) {
            TI_DbgPrint(DEBUG_TCP,("Writeable: irp list %s\n",
                                   IsListEmpty(&Connection->SendRequest) ?
                                   "empty" : "nonempty"));
@@ -234,7 +234,10 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
        /* If the socket is dead, remove the reference we added for oskit */
        if (Connection->SignalState & SEL_FIN)
+       {
+           Connection->SocketContext = NULL;
            DereferenceObject(Connection);
+       }
 }
 
 VOID ConnectionFree(PVOID Object) {
@@ -663,17 +666,15 @@ NTSTATUS TCPClose
     KIRQL OldIrql;
     NTSTATUS Status;
     PVOID Socket;
+    PADDRESS_FILE AddressFile = NULL;
+    PCONNECTION_ENDPOINT AddressConnection = NULL;
 
-    /* We don't rely on SocketContext == NULL for socket
-     * closure anymore but we still need it to determine
-     * if we caused the closure
-     */
     LockObject(Connection, &OldIrql);
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
 
     /* Don't try to close again if the other side closed us already */
-    if (!(Connection->SignalState & SEL_FIN))
+    if (Socket)
     {
        /* We need to close here otherwise oskit will never indicate
         * SEL_FIN and we will never fully close the connection */
@@ -693,11 +694,26 @@ NTSTATUS TCPClose
     }
 
     if (Connection->AddressFile)
-        DereferenceObject(Connection->AddressFile);
+    {
+        LockObjectAtDpcLevel(Connection->AddressFile);
+        if (Connection->AddressFile->Connection == Connection)
+        {
+            AddressConnection = Connection->AddressFile->Connection;
+            Connection->AddressFile->Connection = NULL;
+        }
+        UnlockObjectFromDpcLevel(Connection->AddressFile);
+
+        AddressFile = Connection->AddressFile;
+        Connection->AddressFile = NULL;
+    }
 
     UnlockObject(Connection, OldIrql);
 
     DereferenceObject(Connection);
+    if (AddressConnection)
+        DereferenceObject(AddressConnection);
+    if (AddressFile)
+        DereferenceObject(AddressFile);
 
     return Status;
 }

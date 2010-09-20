@@ -398,7 +398,7 @@ SwapMouseButton(
 int WINAPI
 ToAscii(UINT uVirtKey,
 	UINT uScanCode,
-	CONST PBYTE lpKeyState,
+	CONST BYTE *lpKeyState,
 	LPWORD lpChar,
 	UINT uFlags)
 {
@@ -412,7 +412,7 @@ ToAscii(UINT uVirtKey,
 int WINAPI
 ToAsciiEx(UINT uVirtKey,
 	  UINT uScanCode,
-	  CONST PBYTE lpKeyState,
+	  CONST BYTE *lpKeyState,
 	  LPWORD lpChar,
 	  UINT uFlags,
 	  HKL dwhkl)
@@ -434,7 +434,7 @@ ToAsciiEx(UINT uVirtKey,
 int WINAPI
 ToUnicode(UINT wVirtKey,
 	  UINT wScanCode,
-	  CONST PBYTE lpKeyState,
+	  CONST BYTE *lpKeyState,
 	  LPWSTR pwszBuff,
 	  int cchBuff,
 	  UINT wFlags)
@@ -450,13 +450,13 @@ ToUnicode(UINT wVirtKey,
 int WINAPI
 ToUnicodeEx(UINT wVirtKey,
 	    UINT wScanCode,
-	    CONST PBYTE lpKeyState,
+	    CONST BYTE *lpKeyState,
 	    LPWSTR pwszBuff,
 	    int cchBuff,
 	    UINT wFlags,
 	    HKL dwhkl)
 {
-  return NtUserToUnicodeEx( wVirtKey, wScanCode, lpKeyState, pwszBuff, cchBuff,
+  return NtUserToUnicodeEx( wVirtKey, wScanCode, (PBYTE)lpKeyState, pwszBuff, cchBuff,
 			    wFlags, dwhkl );
 }
 

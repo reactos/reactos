@@ -142,7 +142,7 @@ typedef struct _CDINFO
   ULONG JolietLevel;
   ULONG RootStart;
   ULONG RootSize;
-  WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH];
+  WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];
   ULONG VolumeLabelLength;
   ULONG SerialNumber;
 } CDINFO, *PCDINFO;
@@ -277,13 +277,17 @@ CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
 		     IN OUT PULONG pOutputBufferSize,
 		     IN BOOLEAN Override);
 
-
 /* create.c */
 
 NTSTATUS NTAPI
 CdfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp);
 
+/* devctrl.c */
+
+NTSTATUS NTAPI
+CdfsDeviceControl(PDEVICE_OBJECT DeviceObject,
+                  PIRP Irp);
 
 /* dirctl.c */
 
