@@ -37,6 +37,6 @@ target_link_libraries(usetup
     vfatlib
     mingw_common)
 
-set_target_properties(usetup PROPERTIES LINK_FLAGS "-Wl,-entry,_NtProcessStartup@4")
+set_module_type(usetup nativecui)
 
 add_dependencies(usetup psdk buildno_header)
