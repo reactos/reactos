@@ -328,50 +328,50 @@ list(APPEND SOURCE
     mm/powerpc/page.c)
 endif(ARCH MATCHES i386)
 
-if(_WINKD_ MATCHES 0)
+if(NOT _WINKD_)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
     kd/i386/kdmemsup.c
     kd/wrappers/gdbstub.c)
 
-if(KDBG MATCHES 1)
+if(KDBG)
 list(APPEND SOURCE
     kdbg/i386/i386-dis.c
     kdbg/i386/kdb_help.S
     kdbg/i386/longjmp.S
     kdbg/i386/setjmp.S)
-endif(KDBG MATCHES 1)
+endif(KDBG)
 
 elseif(ARCH MATCHES amd64)
 list(APPEND SOURCE
     kd/amd64/kd.c
     kd/amd64/kdmemsup.c)
 
-if(KDBG MATCHES 1)
+if(KDBG)
 list(APPEND SOURCE
     kdbg/amd64/i386-dis.c
     kdbg/amd64/kdb_help.S
     kdbg/amd64/kdb.c)
-endif(KDBG MATCHES 1)
+endif(KDBG)
 
 elseif(ARCH MATCHES powerpc)
 list(APPEND SOURCE kd/wrappers/gdbstub_powerpc.c)
 
 endif(ARCH MATCHES i386)
 
-if(KDBG MATCHES 1)
+if(KDBG)
 list(APPEND SOURCE
     kdbg/kdb.c
     kdbg/kdb_cli.c
     kdbg/kdb_expr.c
     kdbg/kdb_keyboard.c
     kdbg/kdb_serial.c)
-endif(KDBG MATCHES 1)
+endif(KDBG)
 
-if(DBG_OR_KDBG MATCHES true)
+if(DBG OR KDBG)
 list(APPEND SOURCE kdbg/kdb_symbols.c)
-endif(DBG_OR_KDBG MATCHES true)
+endif(DBG OR KDBG)
 
 list(APPEND SOURCE
     kd/wrappers/bochs.c
@@ -380,7 +380,7 @@ list(APPEND SOURCE
     kd/kdio.c
     kd/kdmain.c)
 
-else() # _WINKD_ MATCHES 1
+else() # _WINKD_
 
 list(APPEND SOURCE
     kd64/kdapi.c
@@ -399,7 +399,7 @@ elseif(ARCH MATCHES arm)
 list(APPEND SOURCE kd64/arm/kdarm.c)
 endif(ARCH MATCHES i386)
 
-endif(_WINKD_ MATCHES 0)
+endif(NOT _WINKD_)
 
 add_executable(ntoskrnl ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch)
 
