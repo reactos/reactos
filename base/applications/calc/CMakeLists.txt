@@ -2,7 +2,7 @@
 add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
 
-add_executable(calc WIN32 
+add_executable(calc 
     about.c
     convert.c
     function.c
@@ -11,12 +11,8 @@ add_executable(calc WIN32
     winmain.c
     resource.rc)
 
-target_link_libraries(calc mingw_wmain mingw_common
-                      -ladvapi32
-                      -luser32
-                      -lgdi32
-                      -lmsvcrt)
+set_module_type(calc win32gui)
 
-set_target_properties(calc PROPERTIES LINK_FLAGS "-Wl,-entry,_WinMainCRTStartup")
+add_importlibs(calc advapi32 user32 gdi32 msvcrt)
 
 add_dependencies(calc psdk)
