@@ -58,11 +58,13 @@ sys_arch_decl_protect(sys_prot_t *lev)
 sys_sem_t
 sys_sem_new(u8_t count)
 {
-    sys_sem_t sem = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-    if (!sem)
-        return SYS_SEM_NULL;
+    sys_sem_t sem;
     
     ASSERT(count == 0 || count == 1);
+    
+    sem = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+    if (!sem)
+        return SYS_SEM_NULL;
     
     /* It seems lwIP uses the semaphore implementation as either a completion event or a lock
      * so I optimize for this case by using a synchronization event and setting its initial state
@@ -155,19 +157,17 @@ void
 sys_mbox_post(sys_mbox_t mbox, void *msg)
 {
     PLWIP_MESSAGE_CONTAINER Container;
-    KIRQL OldIrql;
     
     Container = ExAllocatePool(NonPagedPool, sizeof(*Container));
     ASSERT(Container);
     
     Container->Message = msg;
     
-    KeAcquireSpinLock(&mbox->Lock, &OldIrql);
-    InsertTailList(&mbox->ListHead,
-                   &Container->ListEntry);
+    ExInterlockedInsertTailList(&mbox->ListHead,
+                                &Container->ListEntry,
+                                &mbox->Lock);
     
     KeSetEvent(&mbox->Event, IO_NO_INCREMENT, FALSE);
-    KeReleaseSpinLock(&mbox->Lock, OldIrql);
 }
 
 u32_t
@@ -201,13 +201,13 @@ sys_arch_mbox_fetch(sys_mbox_t mbox, void **msg, u32_t timeout)
         ASSERT(Entry);
         if (IsListEmpty(&mbox->ListHead))
             KeClearEvent(&mbox->Event);
-        Container = CONTAINING_RECORD(Entry, LWIP_MESSAGE_CONTAINER, ListEntry);
         KeReleaseSpinLock(&mbox->Lock, OldIrql);
 
         KeQuerySystemTime(&PostWaitTime);
         TimeDiff = PostWaitTime.QuadPart - PreWaitTime.QuadPart;
         TimeDiff /= 10000;
         
+        Container = CONTAINING_RECORD(Entry, LWIP_MESSAGE_CONTAINER, ListEntry);
         Message = Container->Message;
         ExFreePool(Container);
         
@@ -374,7 +374,5 @@ sys_shutdown(void)
             
             ZwClose(Container->Handle);
         }
-        
-        CurrentEntry = CurrentEntry->Flink;
     }
 }
