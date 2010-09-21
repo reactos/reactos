@@ -1430,13 +1430,18 @@ KeBugCheckEx(IN ULONG BugCheckCode,
              IN ULONG_PTR BugCheckParameter3,
              IN ULONG_PTR BugCheckParameter4)
 {
-    /* Call the internal API */
-    KeBugCheckWithTf(BugCheckCode,
-                     BugCheckParameter1,
-                     BugCheckParameter2,
-                     BugCheckParameter3,
-                     BugCheckParameter4,
-                     NULL);
+    /* Workaround for Windows Server 2003 Checked PCI Driver issue */
+    if (!(BugCheckCode == PCI_BUS_DRIVER_INTERNAL) &&
+         (BugCheckParameter1 == 0xDEAD0010))
+    {
+        /* Call the internal API */
+        KeBugCheckWithTf(BugCheckCode,
+                         BugCheckParameter1,
+                         BugCheckParameter2,
+                         BugCheckParameter3,
+                         BugCheckParameter4,
+                         NULL);
+    }
 }
 
 /*

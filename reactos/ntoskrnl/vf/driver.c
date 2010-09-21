@@ -43,4 +43,20 @@ VfFailDeviceNode(IN PDEVICE_OBJECT PhysicalDeviceObject,
     UNIMPLEMENTED;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+VfFailSystemBIOS(IN ULONG BugCheckMajorCode,
+                 IN ULONG BugCheckMinorCode,
+                 IN VF_FAILURE_CLASS FailureClass,
+                 IN OUT PULONG AssertionControl,
+                 IN PSTR DebuggerMessageText,
+                 IN PSTR ParameterFormatString,
+                 ...)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */

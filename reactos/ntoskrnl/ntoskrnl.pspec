@@ -1399,7 +1399,7 @@
 @ stdcall VerSetConditionMask(long long long long)
 @ cdecl VfFailDeviceNode(ptr long long long ptr ptr ptr)
 ;VfFailDriver
-;VfFailSystemBIOS
+@ cdecl VfFailSystemBIOS(long long long ptr ptr ptr)
 @ stdcall VfIsVerificationEnabled(long ptr)
 #ifndef __x86_64__
 @ stdcall WRITE_REGISTER_BUFFER_UCHAR(ptr ptr long)
