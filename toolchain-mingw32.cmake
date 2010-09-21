@@ -26,7 +26,9 @@ SET(CMAKE_CXX_COMPILER ${MINGW_PREFIX}g++)
 SET(CMAKE_RC_COMPILER ${MINGW_PREFIX}windres)
 SET(CMAKE_ASM_COMPILER ${MINGW_PREFIX}gcc)
 SET(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -x assembler-with-cpp -o <OBJECT> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
+SET(CMAKE_IDL_COMPILER native-widl)
 
+SET(CMAKE_IDL_COMPILE_OBJECT "<CMAKE_IDL_COMPILER> <FLAGS> <DEFINES> -m32 --win32 -h -H <OBJECT> <SOURCE>")
 SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT> ")
 
 # Use stdcall fixups, and don't link with anything by default unless we say so

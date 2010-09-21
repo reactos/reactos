@@ -1,56 +1,113 @@
 
-MACRO (MACRO_ADD_PSDK_INTERFACES)
+LIST(APPEND SOURCE
+#   access.idl
+    activaut.idl
+#   asynot.idl
+#   asysta.idl
+    bdaiface.idl
+#   binres.idl
+    bits.idl
+    bits1_5.idl
+#   cmdbas.idl
+#   cmdtxt.idl
+    comcat.idl
+    commoncontrols.idl
+    control.idl
+#   crtrow.idl
+    ctxtcall.idl
+#   dbccmd.idl
+#   dbcses.idl
+#   dbdsad.idl
+#   dbinit.idl
+#   dbprop.idl
+#   dbs.idl
+    devenum.idl
+    dimm.idl
+    dispex.idl
+    docobj.idl
+    downloadmgr.idl
+#   dyngraph.idl
+    exdisp.idl
+    fusion.idl
+    hlink.idl
+    htiframe.idl
+    iads.idl
+    icftypes.idl
+    imnact.idl
+    imnxport.idl
+    indexsrv.idl
+    mimeinfo.idl
+    mimeole.idl
+    mscoree.idl
+    msdadc.idl
+    mshtmhst.idl
+    msinkaut.idl
+    mstask.idl
+    msxml.idl
+    msxml2.idl
+    netcon.idl
+    netfw.idl
+    oaidl.idl
+    objidl.idl
+    objsafe.idl
+    ocidl.idl
+    ocmm.idl
+    oleacc.idl
+    oledb.idl
+    oleidl.idl
+#   opnrst.idl
+    optary.idl
+    perhist.idl
+    propidl.idl
+    propsys.idl
+    pstore.idl
+    richole.idl
+#   row.idl
+#   rowchg.idl
+#   rstbas.idl
+#   rstinf.idl
+#   rstloc.idl
+    sensevts.idl
+    servprov.idl
+#   sesprp.idl
+    shdeprecated.idl
+    shldisp.idl
+    shtypes.idl
+#   stdole2.idl
+    strmif.idl
+    structuredquerycondition.idl
+    textstor.idl
+    tom.idl
+    tuner.idl
+    unknwn.idl
+    urlhist.idl
+    urlmon.idl
+    vmr9.idl
+#   vmrender.idl
+    wbemcli.idl
+    wia_lh.idl
+    wia_xp.idl
+    wtypes.idl
+    xmldom.idl
+    xmldso.idl
+    xmllite.idl)
 
- FOREACH(_in_FILE ${ARGN})
+if(NOT MSVC)
+  LIST(APPEND SOURCE
+    activscp.idl
+    activdbg.idl
+    asptlb.idl
+    ctfutb.idl
+    mlang.idl
+    msctf.idl
+    mshtml.idl
+    shobjidl.idl
+    wincodec.idl
+    wuapi.idl
+)
+endif()
 
-   GET_FILENAME_COMPONENT(FILE ${_in_FILE} NAME_WE)
-
-   ADD_CUSTOM_COMMAND(
-     OUTPUT ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h
-     COMMAND native-widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -h -H ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.idl
-     DEPENDS native-widl
-   )
-
-   SET_SOURCE_FILES_PROPERTIES(
-     ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h
-     PROPERTIES
-     GENERATED TRUE
-   )
-
-    LIST(APPEND PSDK_HEADERS ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h)  
-
- ENDFOREACH(_in_FILE ${ARGN})
-
-ENDMACRO (MACRO_ADD_PSDK_INTERFACES)
-
-file(GLOB_RECURSE SOURCE "*.idl")
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/access.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/asynot.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/asysta.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/binres.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/cmdbas.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/cmdtxt.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/crtrow.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dbccmd.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dbcses.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dbdsad.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dbinit.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/vmrender.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/sesprp.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/stdole2.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/rstloc.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/rstbas.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/rstinf.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/rowchg.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/row.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/opnrst.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dyngraph.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dbs.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/psdk/dbprop.idl)
-
-MACRO_ADD_PSDK_INTERFACES(${SOURCE})
-
-ADD_CUSTOM_TARGET(psdk ALL DEPENDS ${PSDK_HEADERS})
+ADD_INTERFACE_DEFINITIONS(psdk ${SOURCE})
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${REACTOS_BINARY_DIR}/include/psdk/stdole2.tlb
