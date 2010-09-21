@@ -15,7 +15,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-static ULONG gDebugChannel = actctx;
+DEBUG_CHANNEL(actctx);
 
 #define ACTCTX_FAKE_HANDLE ((HANDLE) 0xf00baa)
 

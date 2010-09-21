@@ -21,7 +21,7 @@
 #include <debug.h>
 
 #if DBG
-static ULONG gDebugChannel = kernel32file;
+DEBUG_CHANNEL(kernel32file);
 #endif
 
 /* GLOBAL VARIABLES **********************************************************/
