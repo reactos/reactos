@@ -29,7 +29,6 @@
 #include <fileobjs.h>
 #include <lock.h>
 #include <wait.h>
-#include <oskittcp.h>
 #include <interface.h>
 #include <ports.h>
 #include <ipifcons.h>

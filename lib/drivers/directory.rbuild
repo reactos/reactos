@@ -10,6 +10,9 @@
 	<directory name="oskittcp">
 		<xi:include href="oskittcp/oskittcp.rbuild" />
 	</directory>
+	<directory name="lwip">
+		<xi:include href="lwip/lwip.rbuild" />
+	</directory>
 	<directory name="chew">
 		<xi:include href="chew/chew.rbuild" />
 	</directory>
