@@ -3,13 +3,13 @@ Files synched with Wine can be found in /media/doc/README.WINE
 Other Things synched with other projects:
 
 Title: RedHat Liberation Fonts
-Version: 1.04
-Actual Version: 1.04
+Version: 1.05.2
+Actual Version: 1.06
 Website: https://www.redhat.com/promo/fonts/
 
 Title: DejaVu Fonts
-Version: 2.30
-Actual Version: 2.30
+Version: 2.31
+Actual Version: 2.32
 Website: http://dejavu.sourceforge.net
 
 Title: DXTN OpenGL Compression Libs
@@ -19,12 +19,12 @@ Website: http://www.geocities.com/dborca/opengl/tc.html
 
 Title: FreeType
 Version: 2.3.5
-Actual Version: 2.3.11
+Actual Version: 2.4.2
 Website: http://www.freetype.org
 
 Title: Mesa3D
 Version: 7.4
-Actual Version: 7.6
+Actual Version: 7.8.2
 Website: http://www.mesa3d.org
 
 Title: GNU adns
@@ -44,10 +44,10 @@ Website: http://expat.sourceforge.net
 
 Title: LibXML
 Version: 2.7.6
-Actual Version: 2.7.6
+Actual Version: 2.7.7
 Website: http://xmlsoft.org
 
 Title: ZLib
 Version: 1.2.3
-Actual Version: 1.2.3
+Actual Version: 1.2.5
 Website: http://www.zlib.net
