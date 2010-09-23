@@ -40,7 +40,7 @@ list(APPEND SOURCE
 
 add_library(pcix SHARED ${CMAKE_CURRENT_BINARY_DIR}/pcix_pci.h.gch ${SOURCE})
 
-set_target_properties(pcix PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
+set_target_properties(pcix PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native -Wl,--exclude-all-symbols" SUFFIX ".sys")
 
 target_link_libraries(pcix
     -lntoskrnl
