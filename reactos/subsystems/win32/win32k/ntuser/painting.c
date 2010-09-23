@@ -750,6 +750,64 @@ co_IntFixCaret(PWINDOW_OBJECT Window, RECTL *lprc, UINT flags)
    return 0;
 }
 
+BOOL
+FASTCALL
+IntPrintWindow(
+    PWINDOW_OBJECT Window,
+    HDC hdcBlt,
+    UINT nFlags)
+{
+    PWND pwnd;
+    HDC hdcSrc;
+    INT cx, cy, xSrc, ySrc;
+
+    pwnd = Window->Wnd;
+
+    if (!pwnd)
+       return FALSE;
+
+    if ( nFlags & PW_CLIENTONLY)
+    {
+       cx = pwnd->rcClient.right - pwnd->rcClient.left;
+       cy = pwnd->rcClient.bottom - pwnd->rcClient.top;
+       xSrc = pwnd->rcClient.left - pwnd->rcWindow.left;
+       ySrc = pwnd->rcClient.top - pwnd->rcWindow.top;
+    }
+    else
+    {
+       cx = pwnd->rcWindow.right - pwnd->rcWindow.left;
+       cy = pwnd->rcWindow.bottom - pwnd->rcWindow.top;
+       xSrc = 0;
+       ySrc = 0;
+    }
+    
+    // TODO: Setup Redirection for Print.
+    return FALSE;
+
+    /* Update the window just incase. */
+    co_IntPaintWindows( Window, RDW_ERASENOW|RDW_UPDATENOW, FALSE);
+
+    hdcSrc = UserGetDCEx( Window, NULL, DCX_CACHE|DCX_WINDOW);
+    /* Print window to printer context. */
+    NtGdiBitBlt( hdcBlt,
+                 0,
+                 0,
+                 cx,
+                 cy,
+                 hdcSrc,
+                 xSrc,
+                 ySrc,
+                 SRCCOPY,
+                 0,
+                 0);
+
+    UserReleaseDC( Window, hdcSrc, FALSE);
+
+    // TODO: Release Redirection from Print.
+
+    return TRUE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -2026,6 +2084,36 @@ NtUserInvalidateRgn(
     BOOL bErase)
 {
     return NtUserRedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | (bErase? RDW_ERASE : 0));
+}
+
+BOOL
+APIENTRY
+NtUserPrintWindow(
+    HWND hwnd,
+    HDC  hdcBlt,
+    UINT nFlags)
+{
+    PWINDOW_OBJECT Window;   
+    BOOL Ret = FALSE;
+
+    UserEnterExclusive();
+
+    if (hwnd)
+    {
+       Window = UserGetWindowObject(hwnd);
+       // TODO: Add Desktop and MessageBox check via FNID's.
+       if ( Window )
+       { 
+          /* Validate flags and check it as a mask for 0 or 1. */
+          if ( (nFlags & PW_CLIENTONLY) == nFlags)
+             Ret = IntPrintWindow( Window, hdcBlt, nFlags);
+          else
+             SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       }
+    }
+
+    UserLeave();
+    return Ret;
 }
 
 /* ValidateRect gets redirected to NtUserValidateRect:

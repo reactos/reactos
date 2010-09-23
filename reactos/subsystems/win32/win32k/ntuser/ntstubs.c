@@ -866,17 +866,6 @@ NtUserNotifyProcessCreate(
     return 0;
 }
 
-BOOL
-APIENTRY
-NtUserPrintWindow(
-    HWND hwnd,
-    HDC  hdcBlt,
-    UINT nFlags)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 NTSTATUS
 APIENTRY
 NtUserProcessConnect(
