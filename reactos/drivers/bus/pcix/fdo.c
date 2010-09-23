@@ -89,7 +89,6 @@ PciFdoIrpStartDevice(IN PIRP Irp,
 
     /* Check for any boot-provided resources */
     Resources = IoStackLocation->Parameters.StartDevice.AllocatedResources;
-    DPRINT1("Resources: %p\n", Resources);
     if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
     {
         /* These resources would only be for non-root FDOs, unhandled for now */
@@ -227,7 +226,7 @@ PciFdoIrpQueryInterface(IN PIRP Irp,
     /* Deleted extensions don't respond to IRPs */
     if (DeviceExtension->DeviceState == PciDeleted)
     {
-        /* Hand it bacO try to deal with it */
+        /* Hand it back to try to deal with it */
         return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
     }
 
@@ -436,6 +435,7 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
     PDEVICE_OBJECT AttachedTo;
     PPCI_FDO_EXTENSION FdoExtension;
     PPCI_FDO_EXTENSION ParentExtension;
+    PPCI_PDO_EXTENSION PdoExtension;
     PDEVICE_OBJECT DeviceObject;
     UCHAR Buffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG)];
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)Buffer;
@@ -449,6 +449,8 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
 
     /* Zero out variables so failure path knows what to do */
     AttachedTo = NULL;
+    FdoExtension = NULL;
+    PdoExtension = NULL;
     do
     {
         /* Check if there's already a device extension for this bus */
@@ -456,9 +458,44 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                                                        &PciGlobalLock);
         if (ParentExtension)
         {
-            /* More than one PCI bus, this is not expected yet */
-            UNIMPLEMENTED;
-            while (TRUE);
+            /* Make sure we find a real PDO */
+            PdoExtension = PhysicalDeviceObject->DeviceExtension;
+            ASSERT_PDO(PdoExtension);
+
+            /* Make sure it's a PCI-to-PCI bridge */
+            if ((PdoExtension->BaseClass != PCI_CLASS_BRIDGE_DEV) ||
+                (PdoExtension->SubClass != PCI_SUBCLASS_BR_PCI_TO_PCI))
+            {
+                /* This should never happen */
+                DPRINT1("PCI - PciAddDevice for Non-Root/Non-PCI-PCI bridge,\n"
+                        "      Class %02x, SubClass %02x, will not add.\n",
+                        PdoExtension->BaseClass,
+                        PdoExtension->SubClass);
+                ASSERT((PdoExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+                       (PdoExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI));
+
+                /* Enter the failure path */
+                Status = STATUS_INVALID_DEVICE_REQUEST;
+                break;
+            }
+
+            /* Subordinate bus on the bridge */
+            DPRINT1("PCI - AddDevice (new bus is child of bus 0x%x).\n",
+                    ParentExtension->BaseBus);
+
+            /* Make sure PCI bus numbers are configured */
+            if (!PciAreBusNumbersConfigured(PdoExtension))
+            {
+                /* This is a critical failure */
+                DPRINT1("PCI - Bus numbers not configured for bridge (0x%x.0x%x.0x%x)\n",
+                        ParentExtension->BaseBus,
+                        PdoExtension->Slot.u.bits.DeviceNumber,
+                        PdoExtension->Slot.u.bits.FunctionNumber);
+
+                /* Enter the failure path */
+                Status = STATUS_INVALID_DEVICE_REQUEST;
+                break;
+            }
         }
 
         /* Create the FDO for the bus */
@@ -484,11 +521,15 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
         ASSERT(AttachedTo != NULL);
         if (!AttachedTo) break;
         FdoExtension->AttachedDeviceObject = AttachedTo;
+
+        /* Check if this is a child bus, or the root */
         if (ParentExtension)
         {
-            /* More than one PCI bus, this is not expected yet */
-            UNIMPLEMENTED;
-            while (TRUE);
+            /* The child inherits root data */
+            FdoExtension->BaseBus = PdoExtension->Dependent.type1.SecondaryBus;
+            FdoExtension->BusRootFdoExtension = ParentExtension->BusRootFdoExtension;
+            PdoExtension->BridgeFdoExtension = FdoExtension;
+            FdoExtension->ParentFdoExtension = ParentExtension;
         }
         else
         {
@@ -505,7 +546,9 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
             {
                 /* Root PDO in ReactOS does not assign boot resources */
                 UNIMPLEMENTED;
-                while (TRUE);
+//                while (TRUE);
+                DPRINT1("Encountered during setup\n");
+                Descriptor = NULL;
             }
 
             if (Descriptor)
@@ -520,15 +563,11 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 if (PciBreakOnDefault)
                 {
                     /* If a second bus is found and there's still no data, crash */
-                    #if 0 // ros bug?
                     KeBugCheckEx(PCI_BUS_DRIVER_INTERNAL,
                                  0xDEAD0010u,
                                  (ULONG_PTR)DeviceObject,
                                  0,
                                  0);
-                    #else
-                    DPRINT1("Windows would crash!\n");
-                    #endif
                 }
 
                 /* Warn that a default configuration will be used, and set bus 0 */
@@ -586,12 +625,16 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
 
         /* The Bus FDO is now initialized */
         DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-        DPRINT1("PCI Root FDO Added: %p %p\n", DeviceObject, FdoExtension);
         return STATUS_SUCCESS;
     } while (FALSE);
 
     /* This is the failure path */
     ASSERT(!NT_SUCCESS(Status));
+
+    /* Check if the FDO extension exists */
+    if (FdoExtension) DPRINT1("Should destroy secondaries\n");
+
+    /* Delete device objects */
     if (AttachedTo) IoDetachDevice(AttachedTo);
     if (DeviceObject) IoDeleteDevice(DeviceObject);
     return Status;

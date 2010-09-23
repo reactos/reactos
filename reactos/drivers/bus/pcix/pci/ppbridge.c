@@ -680,8 +680,89 @@ NTAPI
 PPBridge_ChangeResourceSettings(IN PPCI_PDO_EXTENSION PdoExtension,
                                 IN PPCI_COMMON_HEADER PciData)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    BOOLEAN IoActive;
+    PPCI_FDO_EXTENSION FdoExtension;
+    PPCI_FUNCTION_RESOURCES PciResources;
+    ULONG i;
+
+    /* Check if I/O Decodes are enabled */
+    IoActive = (PciData->u.type1.IOBase & 0xF) == 1;
+
+    /*
+     * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
+     * i820, i840, i845 Chipsets) that don't have subtractive decode broken.
+     * If they do have broken subtractive support, or if they are not ICH bridges,
+     * then check if the bridge supports substractive decode at all.
+     */
+    if ((((PdoExtension->VendorId == 0x8086) &&
+         ((PdoExtension->DeviceId == 0x2418) ||
+          (PdoExtension->DeviceId == 0x2428) ||
+          (PdoExtension->DeviceId == 0x244E) ||
+          (PdoExtension->DeviceId == 0x2448))) &&
+         (!(PdoExtension->HackFlags & PCI_HACK_BROKEN_SUBTRACTIVE_DECODE) ||
+         (PdoExtension->Dependent.type1.SubtractiveDecode == FALSE))) ||
+        (PdoExtension->Dependent.type1.SubtractiveDecode == FALSE))
+    {
+        /* No resources are needed on a subtractive decode bridge */
+        PciData->u.type1.MemoryBase = 0xFFFF;
+        PciData->u.type1.PrefetchBase = 0xFFFF;
+        PciData->u.type1.IOBase = 0xFF;
+        PciData->u.type1.IOLimit = 0;
+        PciData->u.type1.MemoryLimit = 0;
+        PciData->u.type1.PrefetchLimit = 0;
+        PciData->u.type1.PrefetchBaseUpper32 = 0;
+        PciData->u.type1.PrefetchLimitUpper32 = 0;
+        PciData->u.type1.IOBaseUpper16 = 0;
+        PciData->u.type1.IOLimitUpper16 = 0;
+    }
+    else
+    {
+        /*
+         * Otherwise, get the FDO to read the old PCI configuration header that
+         * had been saved by the hack in PPBridge_SaveCurrentSettings.
+         */
+        FdoExtension = PdoExtension->ParentFdoExtension;
+        ASSERT(PdoExtension->Resources == NULL);
+
+        /* Read the PCI header data and use that here */
+        PciData->u.type1.IOBase = FdoExtension->PreservedConfig->u.type1.IOBase;
+        PciData->u.type1.IOLimit = FdoExtension->PreservedConfig->u.type1.IOLimit;
+        PciData->u.type1.MemoryBase = FdoExtension->PreservedConfig->u.type1.MemoryBase;
+        PciData->u.type1.MemoryLimit = FdoExtension->PreservedConfig->u.type1.MemoryLimit;
+        PciData->u.type1.PrefetchBase = FdoExtension->PreservedConfig->u.type1.PrefetchBase;
+        PciData->u.type1.PrefetchLimit = FdoExtension->PreservedConfig->u.type1.PrefetchLimit;
+        PciData->u.type1.PrefetchBaseUpper32 = FdoExtension->PreservedConfig->u.type1.PrefetchBaseUpper32;
+        PciData->u.type1.PrefetchLimitUpper32 = FdoExtension->PreservedConfig->u.type1.PrefetchLimitUpper32;
+        PciData->u.type1.IOBaseUpper16 = FdoExtension->PreservedConfig->u.type1.IOBaseUpper16;
+        PciData->u.type1.IOLimitUpper16 = FdoExtension->PreservedConfig->u.type1.IOLimitUpper16;
+    }
+
+    /* Loop bus resources */
+    PciResources = PdoExtension->Resources;
+    if (PciResources)
+    {
+        /* Loop each resource type (the BARs, ROM BAR and Prefetch) */
+        for (i = 0; i < 6; i++)
+        {
+            UNIMPLEMENTED;
+        }
+    }
+
+    /* Copy the bus number data */
+    PciData->u.type1.PrimaryBus = PdoExtension->Dependent.type1.PrimaryBus;
+    PciData->u.type1.SecondaryBus = PdoExtension->Dependent.type1.SecondaryBus;
+    PciData->u.type1.SubordinateBus = PdoExtension->Dependent.type1.SubordinateBus;
+
+    /* Copy the decode flags */
+    if (PdoExtension->Dependent.type1.IsaBitSet)
+    {
+        PciData->u.type1.BridgeControl |= PCI_ENABLE_BRIDGE_ISA;
+    }
+
+    if (PdoExtension->Dependent.type1.VgaBitSet)
+    {
+        PciData->u.type1.BridgeControl |= PCI_ENABLE_BRIDGE_VGA;
+    }
 }
 
 /* EOF */
