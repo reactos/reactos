@@ -280,6 +280,8 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     {
         /* We couldn't create the CID, dereference the thread and fail */
         ObDereferenceObject(Thread);
+        ObDereferenceObject(Process);
+        ASSERT(FALSE);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -301,6 +303,8 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     {
         /* Fail */
         ObDereferenceObject(Thread);
+        ObDereferenceObject(Process);
+        ASSERT(FALSE);
         return STATUS_PROCESS_IS_TERMINATING;
     }
 
@@ -314,6 +318,8 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
             /* Failed to create the TEB. Release rundown and dereference */
             ExReleaseRundownProtection(&Process->RundownProtect);
             ObDereferenceObject(Thread);
+            ObDereferenceObject(Process);
+            ASSERT(FALSE);
             return Status;
         }
 
@@ -357,6 +363,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
         /* Release rundown and dereference */
         ExReleaseRundownProtection(&Process->RundownProtect);
         ObDereferenceObject(Thread);
+        ObDereferenceObject(Process);
+        ASSERT(FALSE);
+
         return Status;
     }
 
@@ -431,6 +440,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
         /* Dereference completely to kill it */
         ObDereferenceObjectEx(Thread, 2);
+        ObDereferenceObject(Process);
+        ASSERT(FALSE);
+
         return Status;
     }
 
@@ -513,6 +525,9 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
             /* Close its handle, killing it */
             ObCloseHandle(ThreadHandle, PreviousMode);
+            ObDereferenceObject(Process);
+            ASSERT(FALSE);
+
             return Status;
         }
 
