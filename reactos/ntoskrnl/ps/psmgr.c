@@ -15,6 +15,10 @@
 extern ULONG ExpInitializationPhase;
 extern BOOLEAN SysThreadCreated;
 
+PVOID KeUserPopEntrySListEnd;
+PVOID KeUserPopEntrySListFault;
+PVOID KeUserPopEntrySListResume;
+
 GENERIC_MAPPING PspProcessMapping =
 {
     STANDARD_RIGHTS_READ    | PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -187,10 +191,24 @@ PspLookupKernelUserEntryPoints(VOID)
                                           &KeRaiseUserExceptionDispatcher);
     if (!NT_SUCCESS(Status)) return Status;
 
+    /* Get user-mode SLIST exception functions for page fault rollback race hack */
+    Status = PspLookupSystemDllEntryPoint("ExpInterlockedPopEntrySListEnd",
+                                          &KeUserPopEntrySListEnd);
+    if (!NT_SUCCESS(Status)) { DPRINT1("this not found\n"); return Status; }
+    Status = PspLookupSystemDllEntryPoint("ExpInterlockedPopEntrySListFault",
+                                          &KeUserPopEntrySListFault);
+    if (!NT_SUCCESS(Status)) { DPRINT1("this not found\n"); return Status; }
+    Status = PspLookupSystemDllEntryPoint("ExpInterlockedPopEntrySListResume",
+                                          &KeUserPopEntrySListResume);
+    if (!NT_SUCCESS(Status)) { DPRINT1("this not found\n"); return Status; }
+
+    /* On x86, there are multiple ways to do a system call, find the right stubs */
+#if defined(_X86_)
     /* Check if this is a machine that supports SYSENTER */
     if (KeFeatureBits & KF_FAST_SYSCALL)
     {
         /* Get user-mode sysenter stub */
+        SharedUserdata->SystemCall = (PsNtosImageBase >> (PAGE_SHIFT + 1));
         Status = PspLookupSystemDllEntryPoint("KiFastSystemCall",
                                               (PVOID)&SharedUserData->
                                               SystemCall);
@@ -213,6 +231,7 @@ PspLookupKernelUserEntryPoints(VOID)
 
     /* Set the test instruction */
     SharedUserData->TestRetInstruction = 0xC3;
+#endif
 
     /* Return the status */
     return Status;
