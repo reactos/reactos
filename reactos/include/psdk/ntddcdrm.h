@@ -165,6 +165,13 @@ typedef struct _CDROM_TOC {
 
 #define CDROM_TOC_SIZE sizeof(CDROM_TOC)
 
+typedef struct _CDROM_TOC_SESSION_DATA {
+  UCHAR Length[2];
+  UCHAR FirstCompleteSession;
+  UCHAR LastCompleteSession;
+  TRACK_DATA TrackData[1];
+} CDROM_TOC_SESSION_DATA, *PCDROM_TOC_SESSION_DATA;
+
 typedef struct _CDROM_TOC_ATIP_DATA_BLOCK {
   UCHAR  CdrwReferenceSpeed : 3;
   UCHAR  Reserved3 : 1;
