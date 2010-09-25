@@ -3318,7 +3318,7 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlComputeCrc32(
-    IN USHORT PartialCrc,
+    IN ULONG InitialCrc,
     IN PUCHAR Buffer,
     IN ULONG Length
 );
