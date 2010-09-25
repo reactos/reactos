@@ -18,6 +18,12 @@
 #define SRB_CLASS_FLAGS_PAGING            0x40000000
 #define SRB_CLASS_FLAGS_FREE_MDL          0x80000000
 
+#define ASSERT_FDO(x) \
+    ASSERT(((PCOMMON_DEVICE_EXTENSION) (x)->DeviceExtension)->IsFdo)
+
+#define ASSERT_PDO(x) \
+    ASSERT(!(((PCOMMON_DEVICE_EXTENSION) (x)->DeviceExtension)->IsFdo))
+
 #define IS_CLEANUP_REQUEST(majorFunction)   \
   ((majorFunction == IRP_MJ_CLOSE) ||       \
    (majorFunction == IRP_MJ_CLEANUP) ||     \
@@ -177,6 +183,17 @@
 #define GUID_CLASSPNP_WORKING_SET     {0x105701b0, 0x9e9b, 0x47cb, {0x97, 0x80, 0x81, 0x19, 0x8a, 0xf7, 0xb5, 0x24}}
 
 #define DEFAULT_FAILURE_PREDICTION_PERIOD 60 * 60 * 1
+
+static inline ULONG CountOfSetBitsUChar(UCHAR _X)
+{ ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
+static inline ULONG CountOfSetBitsULong(ULONG _X)
+{ ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
+static inline ULONG CountOfSetBitsULong32(ULONG32 _X)
+{ ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
+static inline ULONG CountOfSetBitsULong64(ULONG64 _X)
+{ ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
+static inline ULONG CountOfSetBitsUlongPtr(ULONG_PTR _X)
+{ ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
 
 typedef enum _MEDIA_CHANGE_DETECTION_STATE {
   MediaUnknown,
@@ -772,6 +789,14 @@ ClassIoComplete(
   PVOID Context);
 
 SCSIPORTAPI
+NTSTATUS
+NTAPI
+ClassIoCompleteAssociated(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context);
+
+SCSIPORTAPI
 BOOLEAN
 NTAPI
 ClassInterpretSenseInfo(
@@ -860,6 +885,13 @@ NTAPI
 ClassClaimDevice(
   PDEVICE_OBJECT LowerDeviceObject,
   BOOLEAN Release);
+  
+SCSIPORTAPI
+NTSTATUS
+NTAPI
+ClassInternalIoControl (
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp);
 
 SCSIPORTAPI
 VOID
