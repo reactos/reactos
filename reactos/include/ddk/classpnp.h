@@ -41,6 +41,42 @@
 
 #define IS_SCSIOP_READWRITE(opCode) (IS_SCSIOP_READ(opCode) || IS_SCSIOP_WRITE(opCode))
 
+#define ADJUST_FUA_FLAG(fdoExt) {                                                       \
+    if (TEST_FLAG(fdoExt->DeviceFlags, DEV_WRITE_CACHE) &&                              \
+        !TEST_FLAG(fdoExt->DeviceFlags, DEV_POWER_PROTECTED) &&                         \
+        !TEST_FLAG(fdoExt->ScanForSpecialFlags, CLASS_SPECIAL_FUA_NOT_SUPPORTED) ) {    \
+        fdoExt->CdbForceUnitAccess = TRUE;                                              \
+    } else {                                                                            \
+        fdoExt->CdbForceUnitAccess = FALSE;                                             \
+    }                                                                                   \
+}
+
+#define FREE_POOL(_PoolPtr)     \
+    if (_PoolPtr != NULL) {     \
+        ExFreePool(_PoolPtr);   \
+        _PoolPtr = NULL;        \
+    }
+
+#ifdef POOL_TAGGING
+#undef ExAllocatePool
+#undef ExAllocatePoolWithQuota
+#define ExAllocatePool(a,b) ExAllocatePoolWithTag(a,b,'nUcS')
+//#define ExAllocatePool(a,b) #assert(0)
+#define ExAllocatePoolWithQuota(a,b) ExAllocatePoolWithQuotaTag(a,b,'nUcS')
+#endif
+
+#define CLASS_TAG_AUTORUN_DISABLE           'ALcS'
+#define CLASS_TAG_FILE_OBJECT_EXTENSION     'FLcS'
+#define CLASS_TAG_MEDIA_CHANGE_DETECTION    'MLcS'
+#define CLASS_TAG_MOUNT                     'mLcS'
+#define CLASS_TAG_RELEASE_QUEUE             'qLcS'
+#define CLASS_TAG_POWER                     'WLcS'
+#define CLASS_TAG_WMI                       'wLcS'
+#define CLASS_TAG_FAILURE_PREDICT           'fLcS'
+#define CLASS_TAG_DEVICE_CONTROL            'OIcS'
+#define CLASS_TAG_MODE_DATA                 'oLcS'
+#define CLASS_TAG_MULTIPATH                 'mPcS'
+
 #define MAXIMUM_RETRIES 4
 
 #define CLASS_DRIVER_EXTENSION_KEY ((PVOID) ClassInitialize)
@@ -217,12 +253,9 @@ typedef struct _CLASS_PRIVATE_COMMON_DATA CLASS_PRIVATE_COMMON_DATA, *PCLASS_PRI
 struct _MEDIA_CHANGE_DETECTION_INFO;
 typedef struct _MEDIA_CHANGE_DETECTION_INFO MEDIA_CHANGE_DETECTION_INFO, *PMEDIA_CHANGE_DETECTION_INFO;
 
-struct _DICTIONARY_HEADER;
-typedef struct _DICTIONARY_HEADER DICTIONARY_HEADER, *PDICTIONARY_HEADER;
-
 typedef struct _DICTIONARY {
   ULONGLONG Signature;
-  PDICTIONARY_HEADER List;
+  struct _DICTIONARY_HEADER* List;
   KSPIN_LOCK SpinLock;
 } DICTIONARY, *PDICTIONARY;
 
@@ -558,9 +591,6 @@ typedef struct _PHYSICAL_DEVICE_EXTENSION {
   ULONG_PTR Reserved4;
 } PHYSICAL_DEVICE_EXTENSION, *PPHYSICAL_DEVICE_EXTENSION;
 
-struct _FAILURE_PREDICTION_INFO;
-typedef struct _FAILURE_PREDICTION_INFO *PFAILURE_PREDICTION_INFO;
-
 typedef struct _CLASS_POWER_OPTIONS {
   ULONG PowerDown:1;
   ULONG LockQueue:1;
@@ -652,7 +682,7 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
   BOOLEAN ReleaseQueueIrpFromPool;
   BOOLEAN FailurePredicted;
   ULONG FailureReason;
-  PFAILURE_PREDICTION_INFO FailurePredictionInfo;
+  struct _FAILURE_PREDICTION_INFO* FailurePredictionInfo;
   BOOLEAN PowerDownInProgress;
   ULONG EnumerationInterlock;
   KEVENT ChildLock;
@@ -732,6 +762,14 @@ NTAPI
 ClassDeviceControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp);
+
+SCSIPORTAPI
+NTSTATUS
+NTAPI
+ClassIoComplete(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context);
 
 SCSIPORTAPI
 BOOLEAN
@@ -848,7 +886,7 @@ NTAPI
 ClassGetDescriptor(
   PDEVICE_OBJECT DeviceObject,
   PSTORAGE_PROPERTY_ID PropertyId,
-  PVOID *Descriptor);
+  PSTORAGE_DESCRIPTOR_HEADER *Descriptor);
 
 SCSIPORTAPI
 VOID
@@ -1007,6 +1045,13 @@ NTAPI
 ClassReleaseChildLock(
   PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
+NTSTATUS
+NTAPI
+ClassSignalCompletion(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PKEVENT Event);
+
 VOID
 NTAPI
 ClassSendStartUnit(
@@ -1020,10 +1065,26 @@ ClassRemoveDevice(
   UCHAR RemoveType);
 
 SCSIPORTAPI
+NTSTATUS
+NTAPI
+ClassAsynchronousCompletion(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Event);
+
+SCSIPORTAPI
 VOID
 NTAPI
 ClassCheckMediaState(
   PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
+
+SCSIPORTAPI
+NTSTATUS
+NTAPI
+ClassCheckVerifyComplete(
+  PDEVICE_OBJECT DeviceObject,
+  PIRP Irp,
+  PVOID Context);
 
 SCSIPORTAPI
 VOID
