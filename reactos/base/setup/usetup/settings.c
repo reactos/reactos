@@ -989,7 +989,7 @@ SetGeoID(PWCHAR Id)
                                    0,
                                    REG_SZ,
                                    (PVOID)Id,
-                                   (wcslen(Id) * sizeof(WCHAR)));
+                                   (wcslen(Id) + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
          DPRINT1("NtSetValueKey() failed (Status = %lx)\n", Status);
