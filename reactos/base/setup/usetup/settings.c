@@ -997,6 +997,7 @@ SetGeoID(PWCHAR Id)
          return FALSE;
     }
 
+    NtClose(KeyHandle);
     return TRUE;
 }
 
