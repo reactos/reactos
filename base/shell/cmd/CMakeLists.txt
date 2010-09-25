@@ -1,0 +1,77 @@
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
+add_definitions(-DANONYMOUSUNIONS)
+add_definitions(-D_DEBUG_MEM)
+
+list(APPEND SOURCE
+    cmd.rc
+    main.c)
+
+add_pch(cmd ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h SOURCE)
+
+list(APPEND SOURCE
+    alias.c
+    assoc.c
+    attrib.c
+    batch.c
+    beep.c
+    call.c
+    chcp.c
+    choice.c
+    cls.c
+    cmd.c
+    cmddbg.c
+    cmdinput.c
+    cmdtable.c
+    color.c
+    console.c
+    copy.c
+    date.c
+    del.c
+    delay.c
+    dir.c
+    dirstack.c
+    echo.c
+    error.c
+    filecomp.c
+    for.c
+    free.c
+    goto.c
+    history.c
+    if.c
+    internal.c
+    label.c
+    locale.c
+    memory.c
+    misc.c
+    mklink.c
+    move.c
+    msgbox.c
+    parser.c
+    path.c
+    pause.c
+    prompt.c
+    redir.c
+    ren.c
+    replace.c
+    screen.c
+    set.c
+    setlocal.c
+    shift.c
+    start.c
+    strtoclr.c
+    time.c
+    timer.c
+    title.c
+    type.c
+    ver.c
+    verify.c
+    vol.c
+    where.c
+    window.c)
+
+add_executable(cmd ${CMAKE_CURRENT_BINARY_DIR}/cmd_precomp.h.gch ${SOURCE})
+set_module_type(cmd win32cui)
+set_unicode(cmd yes)
+target_link_libraries(cmd oldnames wine)
+add_importlibs(cmd advapi32 user32 msvcrt)
