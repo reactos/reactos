@@ -291,9 +291,9 @@ NtGdiBitBlt(
                           &DCDest->dclevel.pbrFill->ptOrigin,
                           ROP3_TO_ROP4(ROP));
 
-cleanup:
-    if (UsesSource)
+	if (UsesSource)
         EXLATEOBJ_vCleanup(&exlo);
+cleanup:
     if (UsesSource && hDCSrc != hDCDest)
     {
         DC_UnlockDc(DCSrc);
