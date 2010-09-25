@@ -56,6 +56,7 @@ if (NOT MSVC)
 MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
 
     get_filename_component(OBJECT_PATH ${_object_file} PATH)
+    get_filename_component(OBJECT_NAME ${_object_file} NAME)
     file(MAKE_DIRECTORY ${OBJECT_PATH})
     get_directory_property(defines COMPILE_DEFINITIONS)
     get_directory_property(includes INCLUDE_DIRECTORIES)
@@ -114,3 +115,27 @@ MACRO(ADD_INTERFACE_DEFINITIONS TARGET)
   ENDFOREACH()
   ADD_CUSTOM_TARGET(${TARGET} ALL DEPENDS ${OBJECTS})
 ENDMACRO()
+
+MACRO(add_minicd_target _targetname _dir _nameoncd)
+    get_target_property(FILENAME ${_targetname} LOCATION)
+
+    add_custom_command(
+        OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd/${_dir}/${_nameoncd}        
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd})
+        
+    add_custom_target(${_targetname}_minicd DEPENDS ${BOOTCD_DIR}/${_dir}/${_nameoncd})
+
+    add_dependencies(${_targetname}_minicd ${_targetname})
+    add_dependencies(minicd ${_targetname}_minicd)
+ENDMACRO(add_minicd_target _targetname _dir _nameoncd)
+
+MACRO(add_minicd FILENAME _dir _nameoncd)
+    add_custom_command(
+        OUTPUT ${BOOTCD_DIR}/${_dir}/${_nameoncd}
+        DEPENDS ${FILENAME}
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd})
+        
+    add_custom_target(${_nameoncd}_minicd DEPENDS ${BOOTCD_DIR}/${_dir}/${_nameoncd})
+    
+    add_dependencies(minicd ${_nameoncd}_minicd)
+ENDMACRO(add_minicd)
