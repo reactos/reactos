@@ -83,6 +83,10 @@
 
 #endif /* ALLOCATE_SRB_FROM_POOL */
 
+#define SET_FLAG(Flags, Bit)    ((Flags) |= (Bit))
+#define CLEAR_FLAG(Flags, Bit)  ((Flags) &= ~(Bit))
+#define TEST_FLAG(Flags, Bit)   (((Flags) & (Bit)) != 0)
+
 #define CLASS_WORKING_SET_MAXIMUM                         2048
 
 #define CLASS_INTERPRET_SENSE_INFO2_MAXIMUM_HISTORY_COUNT 30000
@@ -576,6 +580,87 @@ typedef struct _CLASS_QUERY_WMI_REGINFO_EX_LIST {
   PCLASS_QUERY_WMI_REGINFO_EX ClassFdoQueryWmiRegInfoEx;
   PCLASS_QUERY_WMI_REGINFO_EX ClassPdoQueryWmiRegInfoEx;
 } CLASS_QUERY_WMI_REGINFO_EX_LIST, *PCLASS_QUERY_WMI_REGINFO_EX_LIST;
+
+typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
+      ULONG Version;
+      PDEVICE_OBJECT DeviceObject;
+    } DUMMYSTRUCTNAME;
+    COMMON_DEVICE_EXTENSION CommonExtension;
+  } DUMMYUNIONNAME;
+  PDEVICE_OBJECT LowerPdo;
+  PSTORAGE_DEVICE_DESCRIPTOR DeviceDescriptor;
+  PSTORAGE_ADAPTER_DESCRIPTOR AdapterDescriptor;
+  DEVICE_POWER_STATE DevicePowerState;
+  ULONG DMByteSkew;
+  ULONG DMSkew;
+  BOOLEAN DMActive;
+  DISK_GEOMETRY DiskGeometry;
+  PSENSE_DATA SenseData;
+  ULONG TimeOutValue;
+  ULONG DeviceNumber;
+  ULONG SrbFlags;
+  ULONG ErrorCount;
+  LONG LockCount;
+  LONG ProtectedLockCount;
+  LONG InternalLockCount;
+  KEVENT EjectSynchronizationEvent;
+  USHORT  DeviceFlags;
+  UCHAR SectorShift;
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+  UCHAR CdbForceUnitAccess;
+#else
+  UCHAR ReservedByte;
+#endif
+  PMEDIA_CHANGE_DETECTION_INFO MediaChangeDetectionInfo;
+  PKEVENT Unused1;
+  HANDLE  Unused2;
+  FILE_OBJECT_EXTENSION KernelModeMcnContext;
+  ULONG MediaChangeCount;
+  HANDLE DeviceDirectory;
+  KSPIN_LOCK ReleaseQueueSpinLock;
+  PIRP ReleaseQueueIrp;
+  SCSI_REQUEST_BLOCK ReleaseQueueSrb;
+  BOOLEAN ReleaseQueueNeeded;
+  BOOLEAN ReleaseQueueInProgress;
+  BOOLEAN ReleaseQueueIrpFromPool;
+  BOOLEAN FailurePredicted;
+  ULONG FailureReason;
+  PFAILURE_PREDICTION_INFO FailurePredictionInfo;
+  BOOLEAN PowerDownInProgress;
+  ULONG EnumerationInterlock;
+  KEVENT ChildLock;
+  PKTHREAD ChildLockOwner;
+  ULONG ChildLockAcquisitionCount;
+  ULONG ScanForSpecialFlags;
+  KDPC PowerRetryDpc;
+  KTIMER PowerRetryTimer;
+  CLASS_POWER_CONTEXT PowerContext;
+
+#if (NTDDI_VERSION <= NTDDI_WIN2K)
+
+#if (SPVER(NTDDI_VERSION) < 2))
+  ULONG_PTR Reserved1;
+  ULONG_PTR Reserved2;
+  ULONG_PTR Reserved3;
+  ULONG_PTR Reserved4;
+#else
+  ULONG CompletionSuccessCount;
+  ULONG SavedSrbFlags;
+  ULONG SavedErrorCount;
+  ULONG_PTR Reserved1;
+#endif
+
+#else /* (NTDDI_VERSION <= NTDDI_WIN2K) */
+
+  PCLASS_PRIVATE_FDO_DATA PrivateFdoData;
+  ULONG_PTR Reserved2;
+  ULONG_PTR Reserved3;
+  ULONG_PTR Reserved4;
+#endif /* (NTDDI_VERSION <= NTDDI_WIN2K) */
+
+} FUNCTIONAL_DEVICE_EXTENSION, *PFUNCTIONAL_DEVICE_EXTENSION;
 
 SCSIPORTAPI
 ULONG
