@@ -1,5 +1,5 @@
 
-#add_subdirectory(cacls)
+add_subdirectory(cacls)
 add_subdirectory(calc)
 #add_subdirectory(charmap)
 #add_subdirectory(cmdutils)
