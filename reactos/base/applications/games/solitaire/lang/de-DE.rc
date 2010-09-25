@@ -5,8 +5,6 @@
  * PURPOSE:     German Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  */
-#include "resource.h"
-
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 

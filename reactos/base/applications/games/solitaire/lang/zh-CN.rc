@@ -6,8 +6,6 @@
  * TRANSLATOR:  zhangbing <e_zb@21cn.com, ezb@mail.gywb.cn>
  */
 
-#include "resource.h"
-
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 

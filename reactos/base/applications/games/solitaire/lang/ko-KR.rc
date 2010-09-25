@@ -1,8 +1,6 @@
 /*
  *Korean translation of solitaire by Seungju Kim(manatails007) (www.seungjukim.com)
  */
-#include "resource.h"
-
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 
 

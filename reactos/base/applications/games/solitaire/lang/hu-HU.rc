@@ -6,8 +6,6 @@
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  * TRANSLATOR:  Xxxx00
  */
-#include "resource.h"
-
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 
