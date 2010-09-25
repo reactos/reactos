@@ -19,8 +19,8 @@ UCHAR HalpCmosCenturyOffset;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-FORCEINLINE
 UCHAR
+NTAPI
 HalpReadCmos(IN UCHAR Reg)
 {
     /* Select the register */
@@ -30,8 +30,8 @@ HalpReadCmos(IN UCHAR Reg)
     return READ_PORT_UCHAR(CMOS_DATA_PORT);
 }
 
-FORCEINLINE
 VOID
+NTAPI
 HalpWriteCmos(IN UCHAR Reg,
               IN UCHAR Value)
 {
