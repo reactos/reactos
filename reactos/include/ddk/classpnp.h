@@ -19,10 +19,10 @@
 #define SRB_CLASS_FLAGS_FREE_MDL          0x80000000
 
 #define ASSERT_FDO(x) \
-    ASSERT(((PCOMMON_DEVICE_EXTENSION) (x)->DeviceExtension)->IsFdo)
+  ASSERT(((PCOMMON_DEVICE_EXTENSION) (x)->DeviceExtension)->IsFdo)
 
 #define ASSERT_PDO(x) \
-    ASSERT(!(((PCOMMON_DEVICE_EXTENSION) (x)->DeviceExtension)->IsFdo))
+  ASSERT(!(((PCOMMON_DEVICE_EXTENSION) (x)->DeviceExtension)->IsFdo))
 
 #define IS_CLEANUP_REQUEST(majorFunction)   \
   ((majorFunction == IRP_MJ_CLOSE) ||       \
@@ -119,18 +119,18 @@
 #define DebugPrint(x)
 #endif
 
-#define DEBUG_BUFFER_LENGTH               256
+#define DEBUG_BUFFER_LENGTH                        256
 
-#define START_UNIT_TIMEOUT                  (60 * 4)
+#define START_UNIT_TIMEOUT                         (60 * 4)
 
-#define MEDIA_CHANGE_DEFAULT_TIME          1
-#define MEDIA_CHANGE_TIMEOUT_TIME          300
+#define MEDIA_CHANGE_DEFAULT_TIME                  1
+#define MEDIA_CHANGE_TIMEOUT_TIME                  300
 
 #define MAXIMUM_RETRY_FOR_SINGLE_IO_IN_100NS_UNITS 0x3b9aca00
 
 #ifdef ALLOCATE_SRB_FROM_POOL
 
-#define ClasspAllocateSrb(ext)
+#define ClasspAllocateSrb(ext)                      \
   ExAllocatePoolWithTag(NonPagedPool,               \
                         sizeof(SCSI_REQUEST_BLOCK), \
                         'sBRS')
