@@ -38,7 +38,7 @@ macro(set_entrypoint MODULE ENTRYPOINT)
 endmacro()
 
 macro(set_subsystem MODULE SUBSYSTEM)
-  set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--subsystem:${SUBSYSTEM}")
+  set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--subsystem,${SUBSYSTEM}")
 endmacro()
 
 macro(add_importlibs MODULE)
