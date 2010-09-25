@@ -8,8 +8,8 @@
    This file is part of bzip2/libbzip2, a program and library for
    lossless, block-sorting data compression.
 
-   bzip2/libbzip2 version 1.0.5 of 10 December 2007
-   Copyright (C) 1996-2007 Julian Seward <jseward@bzip.org>
+   bzip2/libbzip2 version 1.0.6 of 6 September 2010
+   Copyright (C) 1996-2010 Julian Seward <jseward@bzip.org>
 
    Please read the WARNING, DISCLAIMER and PATENTS sections in the 
    README file.
@@ -36,7 +36,7 @@
 
 /*-- General stuff. --*/
 
-#define BZ_VERSION  "1.0.5, 10-Dec-2007"
+#define BZ_VERSION  "1.0.6, 6-Sept-2010"
 
 typedef char            Char;
 typedef unsigned char   Bool;
