@@ -1,6 +1,4 @@
 
-
-
 include_directories(include)
 include_directories(acpica/include)
 
@@ -143,8 +141,7 @@ set_target_properties(acpi PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,
 
 target_link_libraries(acpi
     wdmguid
-    acpica
-    -lntoskrnl
-    -lhal)
+    acpica)
 
+add_importlibs(acpi ntoskrnl hal)
 add_dependencies(acpi psdk bugcodes)

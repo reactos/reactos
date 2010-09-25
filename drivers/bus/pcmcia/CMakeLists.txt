@@ -1,6 +1,4 @@
 
-
-
 add_library(pcmcia SHARED
     fdo.c
     pcmcia.c
@@ -9,8 +7,5 @@ add_library(pcmcia SHARED
 
 set_target_properties(pcmcia PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native -Wl,--exclude-all-symbols" SUFFIX ".sys")
 
-target_link_libraries(pcmcia
-    -lntoskrnl
-    -lhal)
-
+add_importlibs(pcmcia ntoskrnl hal)
 add_dependencies(pcmcia psdk bugcodes buildno_header)

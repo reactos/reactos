@@ -1,6 +1,4 @@
 
-
-
 add_library(pci SHARED
     fdo.c
     pci.c
@@ -9,8 +7,5 @@ add_library(pci SHARED
 
 set_target_properties(pci PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native -Wl,--exclude-all-symbols" SUFFIX ".sys")
 
-target_link_libraries(pci
-    -lntoskrnl
-    -lhal)
-
+add_importlibs(pci ntoskrnl hal)
 add_dependencies(pci psdk bugcodes buildno_header)
