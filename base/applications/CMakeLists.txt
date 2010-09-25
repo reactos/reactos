@@ -1,8 +1,8 @@
 
 add_subdirectory(cacls)
 add_subdirectory(calc)
-#add_subdirectory(charmap)
-#add_subdirectory(cmdutils)
+add_subdirectory(charmap)
+add_subdirectory(cmdutils)
 #add_subdirectory(control)
 #add_subdirectory(dxdiag)
 #add_subdirectory(extrac32)
