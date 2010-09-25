@@ -13,8 +13,6 @@
 
 #include <scsi.h>
 
-#define DEBUG_BUFFER_LENGTH               256
-
 #define SRB_CLASS_FLAGS_LOW_PRIORITY      0x10000000
 #define SRB_CLASS_FLAGS_PERSISTANT        0x20000000
 #define SRB_CLASS_FLAGS_PAGING            0x40000000
@@ -53,6 +51,33 @@
 
 #define ClassAcquireRemoveLock(devobj, tag) \
   ClassAcquireRemoveLockEx(devobj, tag, __FILE__, __LINE__)
+
+#ifdef TRY
+#undef TRY
+#endif
+#ifdef LEAVE
+#undef LEAVE
+#endif
+
+#ifdef FINALLY
+#undef FINALLY
+#endif
+
+#define TRY
+#define LEAVE             goto __tryLabel;
+#define FINALLY           __tryLabel:
+
+#if defined DebugPrint
+#undef DebugPrint
+#endif
+
+#if DBG
+#define DebugPrint(x) ClassDebugPrint x
+#else
+#define DebugPrint(x)
+#endif
+
+#define DEBUG_BUFFER_LENGTH               256
 
 #define START_UNIT_TIMEOUT                  (60 * 4)
 
@@ -606,7 +631,7 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
   LONG ProtectedLockCount;
   LONG InternalLockCount;
   KEVENT EjectSynchronizationEvent;
-  USHORT  DeviceFlags;
+  USHORT DeviceFlags;
   UCHAR SectorShift;
 #if (NTDDI_VERSION >= NTDDI_VISTA)
   UCHAR CdbForceUnitAccess;
@@ -615,7 +640,7 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
 #endif
   PMEDIA_CHANGE_DETECTION_INFO MediaChangeDetectionInfo;
   PKEVENT Unused1;
-  HANDLE  Unused2;
+  HANDLE Unused2;
   FILE_OBJECT_EXTENSION KernelModeMcnContext;
   ULONG MediaChangeCount;
   HANDLE DeviceDirectory;
@@ -658,6 +683,7 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
   ULONG_PTR Reserved2;
   ULONG_PTR Reserved3;
   ULONG_PTR Reserved4;
+
 #endif /* (NTDDI_VERSION <= NTDDI_WIN2K) */
 
 } FUNCTIONAL_DEVICE_EXTENSION, *PFUNCTIONAL_DEVICE_EXTENSION;
