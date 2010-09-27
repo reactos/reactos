@@ -99,6 +99,12 @@ MmInitializeMemoryConsumer(ULONG Consumer,
    MiMemoryConsumers[Consumer].Trim = Trim;
 }
 
+VOID
+NTAPI
+MiZeroPhysicalPage(
+    IN PFN_NUMBER PageFrameIndex
+);
+
 NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
@@ -131,7 +137,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
          Request = CONTAINING_RECORD(Entry, MM_ALLOCATION_REQUEST, ListEntry);
          KeReleaseSpinLock(&AllocationListLock, OldIrql);
          if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
-         MiZeroPage(Page);
+         MiZeroPhysicalPage(Page);
          Request->Page = Page;
          KeSetEvent(&Request->Event, IO_NO_INCREMENT, FALSE);
       }

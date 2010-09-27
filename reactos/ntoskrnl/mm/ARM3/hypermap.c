@@ -112,18 +112,17 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
+MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
                              IN PFN_NUMBER NumberOfPages)
 {
     MMPTE TempPte;
     PMMPTE PointerPte;
     PFN_NUMBER Offset, PageFrameIndex;
-    PMMPFN Page;
 
     //
     // Sanity checks
     //
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(NumberOfPages != 0);
     ASSERT(NumberOfPages <= (MI_ZERO_PTES - 1));
     
@@ -151,19 +150,17 @@ MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
     //
     PointerPte->u.Hard.PageFrameNumber = Offset - NumberOfPages;
    
-    //
-    // Write the current PTE
-    //
+    /* Choose the correct PTE to use, and which template */
     PointerPte += (Offset + 1);
     TempPte = ValidKernelPte;
     MI_MAKE_LOCAL_PAGE(&TempPte); // Hyperspace is local!
-    do
+    
+    /* Make sure the list isn't empty and loop it */
+    ASSERT(Pfn1 != (PVOID)LIST_HEAD);
+    while (Pfn1 != (PVOID)LIST_HEAD)
     {
-        //
-        // Get the first page entry and its PFN
-        //
-        Page = *Pages++;
-        PageFrameIndex = MiGetPfnEntryIndex(Page);
+        /* Get the page index for this PFN */
+        PageFrameIndex = MiGetPfnEntryIndex(Pfn1);
         
         //
         // Write the PFN
@@ -175,7 +172,10 @@ MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
         //
         PointerPte--;
         MI_WRITE_VALID_PTE(PointerPte, TempPte);
-    } while (--NumberOfPages);
+        
+        /* Move to the next PFN */
+        Pfn1 = (PMMPFN)Pfn1->u1.Flink;
+    }
     
     //
     // Return the address
@@ -193,7 +193,7 @@ MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
     //
     // Sanity checks
     //
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT (NumberOfPages != 0);
     ASSERT (NumberOfPages <= (MI_ZERO_PTES - 1));
     

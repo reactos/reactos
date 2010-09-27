@@ -66,6 +66,7 @@ MiZeroPhysicalPage(IN PFN_NUMBER PageFrameIndex)
 
     /* Map in hyperspace, then wipe it using XMMI or MEMSET */
     VirtualAddress = MiMapPageInHyperSpace(Process, PageFrameIndex, &OldIrql);
+    ASSERT(VirtualAddress);
     KeZeroPages(VirtualAddress, PAGE_SIZE);
     MiUnmapPageInHyperSpace(Process, VirtualAddress, OldIrql);
 }

@@ -360,7 +360,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         Pfn1 = MiGetPfnEntry(Page);
         ASSERT(Pfn1);
-        if (Pfn1->u3.e1.PageLocation != ZeroedPageList) MiZeroPage(Page);
+        if (Pfn1->u3.e1.PageLocation != ZeroedPageList) MiZeroPhysicalPage(Page);
         Pfn1->u3.e1.PageLocation = ActiveAndValid;
     }
     
@@ -627,25 +627,6 @@ MmAllocPage(ULONG Type)
 
 NTSTATUS
 NTAPI
-MiZeroPage(PFN_NUMBER Page)
-{
-    KIRQL Irql;
-    PVOID TempAddress;
-    
-    Irql = KeRaiseIrqlToDpcLevel();
-    TempAddress = MiMapPageToZeroInHyperSpace(Page);
-    if (TempAddress == NULL)
-    {
-        return(STATUS_NO_MEMORY);
-    }
-    memset(TempAddress, 0, PAGE_SIZE);
-    MiUnmapPagesInZeroSpace(TempAddress, 1);
-    KeLowerIrql(Irql);
-    return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
 MmZeroPageThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
@@ -653,6 +634,7 @@ MmZeroPageThreadMain(PVOID Ignored)
    PPHYSICAL_PAGE PageDescriptor;
    PFN_NUMBER Pfn;
    ULONG Count;
+   PVOID ZeroAddress;
 
    /* Free initial kernel memory */
    //MiFreeInitMemory();
@@ -679,22 +661,19 @@ MmZeroPageThreadMain(PVOID Ignored)
       while (MmFreePageListHead.Total)
       {
          PageDescriptor = MiRemoveHeadList(&MmFreePageListHead);
-         /* We set the page to used, because MmCreateVirtualMapping failed with unused pages */
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
          Pfn = MiGetPfnEntryIndex(PageDescriptor);
-         Status = MiZeroPage(Pfn);
+         KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+         
+         PageDescriptor->u1.Flink = LIST_HEAD;
+         ZeroAddress = MiMapPagesToZeroInHyperSpace(PageDescriptor, 1);
+         ASSERT(ZeroAddress);
+         RtlZeroMemory(ZeroAddress, PAGE_SIZE);
+         MiUnmapPagesInZeroSpace(ZeroAddress, 1);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         if (NT_SUCCESS(Status))
-         {
-            MiInsertZeroListAtBack(Pfn);
-            Count++;
-         }
-         else
-         {
-            MiInsertInListTail(&MmFreePageListHead, PageDescriptor);
-            PageDescriptor->u3.e1.PageLocation = FreePageList;
-         }
+        
+         MiInsertZeroListAtBack(Pfn);
+         Count++;
 
       }
       DPRINT("Zeroed %d pages.\n", Count);

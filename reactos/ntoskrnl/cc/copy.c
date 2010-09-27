@@ -31,6 +31,12 @@ ULONG CcFastReadResourceMiss;
 
 VOID
 NTAPI
+MiZeroPhysicalPage(
+    IN PFN_NUMBER PageFrameIndex
+);
+
+VOID
+NTAPI
 CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;
@@ -41,12 +47,7 @@ CcInitCacheZeroPage(VOID)
        DbgPrint("Can't allocate CcZeroPage.\n");
        KeBugCheck(CACHE_MANAGER);
    }
-   Status = MiZeroPage(CcZeroPage);
-   if (!NT_SUCCESS(Status))
-   {
-       DbgPrint("Can't zero out CcZeroPage.\n");
-       KeBugCheck(CACHE_MANAGER);
-   }
+   MiZeroPhysicalPage(CcZeroPage);
 }
 
 NTSTATUS
