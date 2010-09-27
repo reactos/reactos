@@ -229,31 +229,17 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         //
         while (PagesFound < PageCount)
         {
-            //
-            // Do we have zeroed pages?
-            //
-            if (MmZeroedPageListHead.Total)
+            /* Grab a page */
+            Page = MiRemoveAnyPage(0);
+            if (Page == 0)
             {
-                //
-                // Grab a zero page
-                //
-                Pfn1 = MiRemoveHeadList(&MmZeroedPageListHead);
-            }
-            else if (MmFreePageListHead.Total)
-            {
-                //
-                // Nope, grab an unzeroed page
-                //
-                Pfn1 = MiRemoveHeadList(&MmFreePageListHead);
-            }
-            else
-            {
-                //
-                // This is not good... hopefully we have at least SOME pages
-                //
+                /* This is not good... hopefully we have at least SOME pages */
                 ASSERT(PagesFound);
                 break;
             }
+            
+            /* Grab the page entry for it */
+            Pfn1 = MiGetPfnEntry(Page);
             
             //
             // Make sure it's really free
@@ -266,11 +252,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
             Pfn1->u3.e2.ReferenceCount = 1;
-            
-            //
-            // Decrease available pages
-            //
-            MmAvailablePages--;
             
             //
             // Save it into the MDL
@@ -303,6 +284,9 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 if (MiIsPfnInUse(Pfn1)) continue;
                 if ((Pfn1->u3.e1.PageLocation == ZeroedPageList) != LookForZeroedPages) continue;
                 
+                /* Remove the page from the free or zero list */
+                MiUnlinkFreeOrZeroedPage(Pfn1);
+                
                 //
                 // Sanity checks
                 //
@@ -314,11 +298,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.StartOfAllocation = 1;
                 Pfn1->u3.e1.EndOfAllocation = 1;
-                                
-                //
-                // Decrease available pages
-                //
-                MmAvailablePages--;
                 
                 //
                 // Save this page into the MDL
