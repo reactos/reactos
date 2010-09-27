@@ -432,25 +432,68 @@ VOID
 NTAPI
 MmSetRmapListHeadPage(PFN_NUMBER Pfn, struct _MM_RMAP_ENTRY* ListHead)
 {
-   KIRQL oldIrql;
+    KIRQL oldIrql;
+    PMMPFN Pfn1;
     
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->RmapListHead = (LONG)ListHead;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    Pfn1 = MiGetPfnEntry(Pfn);
+    if (ListHead)
+    {
+        /* Should not be trying to insert an RMAP for a non-active page */
+        ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
+        
+        /* Set the list head address */
+        Pfn1->RmapListHead = (LONG)ListHead;
+        
+        /* Mark that the page has an actual RMAP, not a residual color link */
+        Pfn1->u3.e1.ParityError = TRUE;
+    }
+    else
+    {
+        /* ReactOS semantics dictate the page is STILL active right now */
+        ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
+        
+        /* In this case, the RMAP is actually being removed, so clear field */
+        Pfn1->RmapListHead = 0;
+        
+        /* Mark that the page has no RMAP, not a residual color link */
+        Pfn1->u3.e1.ParityError = FALSE;
+        
+        /* ReactOS semantics will now release the page, which will make it free and enter a colored list */
+    }
+    
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
 struct _MM_RMAP_ENTRY*
 NTAPI
 MmGetRmapListHeadPage(PFN_NUMBER Pfn)
 {
-   KIRQL oldIrql;
-   struct _MM_RMAP_ENTRY* ListHead;
-    
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   ListHead = (struct _MM_RMAP_ENTRY*)MiGetPfnEntry(Pfn)->RmapListHead;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-    
-   return(ListHead);
+    KIRQL oldIrql;
+    struct _MM_RMAP_ENTRY* ListHead;
+    PMMPFN Pfn1;
+
+    /* Lock PFN database */
+    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Get the entry */
+    Pfn1 = MiGetPfnEntry(Pfn);
+  
+    /* Check if the page doesn't really have an RMAP */
+    if (Pfn1->u3.e1.ParityError == FALSE)
+    {
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+        return NULL;
+    }
+  
+    ListHead = (struct _MM_RMAP_ENTRY*)Pfn1->RmapListHead;
+  
+    /* Should not have an RMAP for a non-active page */
+    ASSERT(MiIsPfnInUse(Pfn1) == TRUE);
+   
+    /* Release PFN database and return rmap list head */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+    return ListHead;
 }
 
 VOID
