@@ -317,6 +317,41 @@ NtUserCallOneParam(
           _SEH2_END;
           RETURN(Ret);
       }
+      case ONEPARAM_ROUTINE_SETPROCDEFLAYOUT:
+      {
+          PPROCESSINFO ppi;
+          if (Param & LAYOUT_ORIENTATIONMASK)
+          {
+             ppi = PsGetCurrentProcessWin32Process();
+             ppi->dwLayout = Param;
+             RETURN(TRUE);
+          }
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          RETURN(FALSE);
+      }
+      case ONEPARAM_ROUTINE_GETPROCDEFLAYOUT:
+      {
+          BOOL Ret = TRUE;
+          PPROCESSINFO ppi;
+          PDWORD pdwLayout;
+          if ( PsGetCurrentProcess() == CsrProcess)
+          {
+             SetLastWin32Error(ERROR_INVALID_ACCESS);
+             RETURN(FALSE);
+          }
+          ppi = PsGetCurrentProcessWin32Process();
+          _SEH2_TRY
+          {
+             pdwLayout = (PDWORD)Param;
+             *pdwLayout = ppi->dwLayout;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+             Ret = FALSE;
+          }
+          _SEH2_END;
+          RETURN(Ret);
+      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
