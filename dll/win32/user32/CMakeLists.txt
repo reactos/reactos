@@ -8,20 +8,61 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 include_directories(include)
 
-get_directory_property(defines COMPILE_DEFINITIONS)
-get_directory_property(includes INCLUDE_DIRECTORIES)
+set_rc_compiler()
 
-foreach(arg ${defines})
-  set(result_defs "${result_defs} -D${arg}")
-endforeach(arg ${defines})
-
-foreach(arg ${includes})
-  set(result_incs "-I${arg} ${result_incs}")
-endforeach(arg ${includes})
-
-SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${result_defs} ${result_incs} -i <SOURCE> -O coff -o <OBJECT>")
-
-file(GLOB_RECURSE SOURCE *.c)
+list(APPEND SOURCE
+    user32_stubs.c
+    controls/button.c
+    controls/combo.c
+    controls/edit.c
+    controls/icontitle.c
+    controls/listbox.c
+    controls/regcontrol.c
+    controls/scrollbar.c
+    controls/static.c
+    misc/dde.c
+    misc/ddeclient.c
+    misc/ddeserver.c
+    misc/desktop.c
+    misc/display.c
+    misc/dllmain.c
+    misc/exit.c
+    misc/exticon.c
+    misc/imm.c
+    misc/misc.c
+    misc/object.c
+    misc/resources.c
+    misc/rtlstr.c
+    misc/stubs.c
+    misc/timer.c
+    misc/usrapihk.c
+    misc/winhelp.c
+    misc/winsta.c
+    misc/wsprintf.c
+    windows/accel.c
+    windows/caret.c
+    windows/class.c
+    windows/clipboard.c
+    windows/cursoricon.c
+    windows/dc.c
+    windows/defwnd.c
+    windows/dialog.c
+    windows/draw.c
+    windows/font.c
+    windows/hook.c
+    windows/input.c
+    windows/mdi.c
+    windows/menu.c
+    windows/messagebox.c
+    windows/message.c
+    windows/nonclient.c
+    windows/paint.c
+    windows/prop.c
+    windows/rect.c
+    windows/spy.c
+    windows/text.c
+    windows/window.c
+    windows/winpos.c)
 
 add_library(user32 SHARED
     ${SOURCE}

@@ -62,3 +62,6 @@ endif()
 set(CMAKE_C_FLAGS_DEBUG_INIT "/D_DEBUG /MDd /Zi  /Ob0 /Od")
 SET(CMAKE_CXX_FLAGS_DEBUG_INIT "/D_DEBUG /MDd /Zi /Ob0 /Od")
 
+macro(set_rc_compiler)
+# dummy, this workaround is only needed in mingw due to lack of RC support in cmake
+endmacro()

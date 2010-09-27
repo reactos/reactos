@@ -93,4 +93,18 @@ macro(set_unicode MODULE STATE)
   target_link_libraries(${MODULE} mingw_common)
 endmacro()
 
-  
+# Workaround lack of mingw RC support in cmake
+macro(set_rc_compiler)
+    get_directory_property(defines COMPILE_DEFINITIONS)
+    get_directory_property(includes INCLUDE_DIRECTORIES)
+
+    foreach(arg ${defines})
+        set(result_defs "${result_defs} -D${arg}")
+    endforeach(arg ${defines})
+
+    foreach(arg ${includes})
+        set(result_incs "-I${arg} ${result_incs}")
+    endforeach(arg ${includes})
+
+    SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${result_defs} ${result_incs} -i <SOURCE> -O coff -o <OBJECT>")
+endmacro()
