@@ -36,17 +36,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /* FUNCTIONS *****************************************************************/
 
 /*
- * Private calls for CSRSS
- */
-VOID
-WINAPI
-PrivateCsrssManualGuiCheck(LONG Check)
-{
-  NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
-}
-
-
-/*
  * @implemented
  */
 BOOL
