@@ -567,13 +567,11 @@ MmDereferencePage(PFN_NUMBER Pfn)
    Page->u3.e2.ReferenceCount--;
    if (Page->u3.e2.ReferenceCount == 0)
    {
-      MmAvailablePages++;
-      Page->u3.e1.PageLocation = FreePageList;
-      MiInsertInListTail(&MmFreePageListHead, Page);
-      if (MmFreePageListHead.Total > 8 && 0 == KeReadStateEvent(&ZeroPageThreadEvent))
-      {
-         KeSetEvent(&ZeroPageThreadEvent, IO_NO_INCREMENT, FALSE);
-      }
+        /* Mark the page temporarily as valid, we're going to make it free soon */
+        Page->u3.e1.PageLocation = ActiveAndValid;
+
+        /* Bring it back into the free list */
+        MiInsertPageInFreeList(Pfn);
    }
 }
 
@@ -582,44 +580,26 @@ NTAPI
 MmAllocPage(ULONG Type)
 {
    PFN_NUMBER PfnOffset;
-   PPHYSICAL_PAGE PageDescriptor;
-   BOOLEAN NeedClear = FALSE;
-
-   DPRINT("MmAllocPage()\n");
-
-   if (MmZeroedPageListHead.Total == 0)
+   PMMPFN Pfn1;
+   
+   if (Type != MC_SYSTEM)
    {
-       if (MmFreePageListHead.Total == 0)
-       {
-         /* Check if this allocation is for the PFN DB itself */
-         if (MmNumberOfPhysicalPages == 0) 
-         {
-             ASSERT(FALSE);
-         }
-
-         DPRINT1("MmAllocPage(): Out of memory\n");
-         return 0;
-      }
-      PageDescriptor = MiRemoveHeadList(&MmFreePageListHead);
-
-      NeedClear = TRUE;
+       PfnOffset = MiRemoveZeroPage(0);
    }
    else
    {
-      PageDescriptor = MiRemoveHeadList(&MmZeroedPageListHead);
+       PfnOffset = MiRemoveAnyPage(0);
    }
 
-   PageDescriptor->u3.e2.ReferenceCount = 1;
-
-   MmAvailablePages--;
-
-   PfnOffset = MiGetPfnEntryIndex(PageDescriptor);
-   if ((NeedClear) && (Type != MC_SYSTEM))
+   if (!PfnOffset)
    {
-      MiZeroPage(PfnOffset);
+       DPRINT1("MmAllocPage(): Out of memory\n");
+       return 0;
    }
-     
-   PageDescriptor->u3.e1.PageLocation = ActiveAndValid;
+
+   Pfn1 = MiGetPfnEntry(PfnOffset);
+   Pfn1->u3.e2.ReferenceCount = 1;
+   Pfn1->u3.e1.PageLocation = ActiveAndValid;
    return PfnOffset;
 }
 
