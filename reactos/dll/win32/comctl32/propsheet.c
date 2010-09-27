@@ -2421,6 +2421,27 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
   return FALSE;
 }
 
+#ifndef DISABLE_USER32_HACKS
+BOOL CALLBACK
+EnumChildProc(HWND hwnd, LPARAM lParam)
+{
+    WCHAR szType[20];
+
+    RealGetWindowClassW(hwnd, szType, 20);
+
+    if (strcmpW(szType, WC_EDITW) == 0)
+    {
+        if (IsWindowEnabled(hwnd) && IsWindowVisible(hwnd))
+        {
+            *(PLONG)lParam = TRUE;
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+#endif
+
 /******************************************************************************
  *            PROPSHEET_SetWizButtons
  *
@@ -2436,12 +2457,17 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   HWND hwndNext   = GetDlgItem(hwndDlg, IDC_NEXT_BUTTON);
   HWND hwndFinish = GetDlgItem(hwndDlg, IDC_FINISH_BUTTON);
 
+#ifndef DISABLE_USER32_HACKS
+  LONG Found = FALSE;
+#endif
+
   TRACE("%d\n", dwFlags);
 
   EnableWindow(hwndBack, FALSE);
   EnableWindow(hwndNext, FALSE);
   EnableWindow(hwndFinish, FALSE);
 
+#ifdef DISABLE_USER32_HACKS
   /* set the default pushbutton to an enabled button */
   if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
     SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
@@ -2451,6 +2477,7 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
     SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
   else
     SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
+#endif
 
 
   if (dwFlags & PSWIZB_BACK)
@@ -2482,6 +2509,39 @@ static void PROPSHEET_SetWizButtons(HWND hwndDlg, DWORD dwFlags)
   }
   else if (!(dwFlags & PSWIZB_DISABLEDFINISH))
     EnableWindow(hwndFinish, TRUE);
+
+#ifndef DISABLE_USER32_HACKS
+
+  /* try to find an edit control that deserves focus */
+   EnumChildWindows(PropSheet_GetCurrentPageHwnd(hwndDlg), EnumChildProc, (LPARAM)&Found);
+
+  /* set the default pushbutton to an enabled button and give it focus if we didn't find any edit control*/
+  if (((dwFlags & PSWIZB_FINISH) || psInfo->hasFinish) && !(dwFlags & PSWIZB_DISABLEDFINISH))
+  {
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_FINISH_BUTTON, 0);
+    if(!Found)
+        SetFocus(hwndFinish);
+  }
+  else if (dwFlags & PSWIZB_NEXT)
+  {
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_NEXT_BUTTON, 0);
+    if(!Found)
+        SetFocus(hwndNext);
+  }
+  else if (dwFlags & PSWIZB_BACK)
+  {
+    SendMessageW(hwndDlg, DM_SETDEFID, IDC_BACK_BUTTON, 0);
+    if(!Found)
+        SetFocus(hwndBack);
+  }
+  else
+  {
+    SendMessageW(hwndDlg, DM_SETDEFID, IDCANCEL, 0);
+    if(!Found)
+        SetFocus(GetDlgItem(hwndDlg, IDCANCEL));
+  }
+
+#endif
 }
 
 /******************************************************************************

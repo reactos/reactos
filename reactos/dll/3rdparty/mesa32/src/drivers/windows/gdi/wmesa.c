@@ -119,6 +119,7 @@ static void wmSetPixelFormat(WMesaFramebuffer pwfb, HDC hDC)
 
     /* Only 16 and 32 bit targets are supported now */
     assert(pwfb->cColorBits == 0 ||
+       pwfb->cColorBits == 8 ||
 	   pwfb->cColorBits == 16 || 
 	   pwfb->cColorBits == 24 || 
 	   pwfb->cColorBits == 32);

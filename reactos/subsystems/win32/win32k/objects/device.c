@@ -486,6 +486,12 @@ IntPrepareDriver(VOID)
             RtlZeroMemory( PrimarySurface.pEDDgpl ,sizeof(EDD_DIRECTDRAW_GLOBAL));
             ret = TRUE;
         }
+
+        gpsi->aiSysMet[SM_CXSCREEN] = PrimarySurface.gdiinfo.ulHorzRes;
+        gpsi->aiSysMet[SM_CYSCREEN] = PrimarySurface.gdiinfo.ulVertRes;
+        gpsi->aiSysMet[SM_CXVIRTUALSCREEN] = PrimarySurface.gdiinfo.ulHorzRes;
+        gpsi->aiSysMet[SM_CYVIRTUALSCREEN] = PrimarySurface.gdiinfo.ulVertRes;
+
         goto cleanup;
     }
 

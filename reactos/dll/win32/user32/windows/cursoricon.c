@@ -485,8 +485,8 @@ static BOOL create_icon_bitmaps( const BITMAPINFO *bmi, int width, int height,
     else
     {
         if (!(*mask = CreateBitmap( width, height, 1, 1, NULL ))) goto done;
-        if (!(*color = CreateBitmap( width, height, bmi->bmiHeader.biPlanes,
-                                     bmi->bmiHeader.biBitCount, NULL )))
+        if (!(*color = CreateBitmap( width, height, GetDeviceCaps( screen_dc, PLANES ),
+                                     GetDeviceCaps( screen_dc, BITSPIXEL ), NULL )))
         {
             DeleteObject( *mask );
             goto done;

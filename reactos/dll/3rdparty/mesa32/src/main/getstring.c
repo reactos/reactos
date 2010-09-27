@@ -126,7 +126,7 @@ const GLubyte * GLAPIENTRY
 _mesa_GetString( GLenum name )
 {
    GET_CURRENT_CONTEXT(ctx);
-   static const char *vendor = "Brian Paul";
+   static const char *vendor = "Mesa";
    static const char *renderer = "Mesa";
 
    if (!ctx)
