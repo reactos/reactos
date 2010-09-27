@@ -208,6 +208,13 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       return(STATUS_UNSUCCESSFUL);
    }
    Process = entry->Process;
+
+   if (!ExAcquireRundownProtection(&Process->RundownProtect))
+   {
+      ExReleaseFastMutex(&RmapListLock);
+      return STATUS_PROCESS_IS_TERMINATING;
+   }
+
    Address = entry->Address;
    if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
@@ -220,6 +227,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       ExReleaseFastMutex(&RmapListLock);
       if (!NT_SUCCESS(Status))
       {
+         ExReleaseRundownProtection(&Process->RundownProtect);
          return Status;
       }
       AddressSpace = &Process->Vm;
@@ -235,6 +243,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
+      ExReleaseRundownProtection(&Process->RundownProtect);
       if (Address < MmSystemRangeStart)
       {
          ObDereferenceObject(Process);
@@ -256,6 +265,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
+         ExReleaseRundownProtection(&Process->RundownProtect);
          if (Address < MmSystemRangeStart)
          {
             ObDereferenceObject(Process);
@@ -281,6 +291,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
+         ExReleaseRundownProtection(&Process->RundownProtect);
          if (Address < MmSystemRangeStart)
          {
             ObDereferenceObject(Process);
@@ -303,6 +314,9 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    {
       KeBugCheck(MEMORY_MANAGEMENT);
    }
+
+   ExReleaseRundownProtection(&Process->RundownProtect);
+
    if (Address < MmSystemRangeStart)
    {
       ObDereferenceObject(Process);
@@ -499,6 +513,7 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
    ExAcquireFastMutex(&RmapListLock);
    previous_entry = NULL;
    current_entry = MmGetRmapListHeadPage(Page);
+
    while (current_entry != NULL)
    {
       if (current_entry->Process == (PEPROCESS)Process &&
@@ -514,14 +529,14 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
          }
          ExReleaseFastMutex(&RmapListLock);
          ExFreeToNPagedLookasideList(&RmapLookasideList, current_entry);
-	 if (Process == NULL)
-	 {
-	    Process = PsInitialSystemProcess;
-	 }
-	 if (Process)
-	 {
+         if (Process == NULL)
+         {
+            Process = PsInitialSystemProcess;
+         }
+         if (Process)
+         {
             (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
-	 }
+         }
          return;
       }
       previous_entry = current_entry;
