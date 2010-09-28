@@ -17,17 +17,13 @@
  */
 
 #include <k32.h>
+#include <winnls.h>
 
 #define NDEBUG
 #include <debug.h>
 
 #include "lcformat_private.h"
 
-/* FIXME:  these are included in winnls.h, however including this file causes alot of
-           conflicting type errors. */
-
-#define LOCALE_RETURN_NUMBER 0x20000000
-#define LOCALE_USE_CP_ACP 0x40000000
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|\
                                     LOCALE_RETURN_NUMBER|LOCALE_RETURN_GENITIVE_NAMES)
 #define CALINFO_MAX_YEAR 2029
