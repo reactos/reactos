@@ -1761,7 +1761,7 @@ GetLocaleInfoW (
     }
     else
     {
-        memcpy( lpLCData, ch + 1, *ch * sizeof(WCHAR) );
+        memcpy( lpLCData, ch + 1, nRet * sizeof(WCHAR) );
         if (LCType != LOCALE_FONTSIGNATURE) lpLCData[nRet-1] = 0;
     }
     return nRet;
