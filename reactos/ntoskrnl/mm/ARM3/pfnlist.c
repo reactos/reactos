@@ -156,8 +156,8 @@ MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
     /* Update the page location */
     Pfn1->u3.e1.PageLocation = ZeroedPageList;
 
-    /* FIXME: NOT YET Due to caller semantics: Update the available page count */
-    //MmAvailablePages++;
+    /* Update the available page count */
+    MmAvailablePages++;
 
     /* Check if we've reached the configured low memory threshold */
     if (MmAvailablePages == MmLowMemoryThreshold)

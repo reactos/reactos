@@ -631,8 +631,8 @@ MmZeroPageThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
    KIRQL oldIrql;
-   PPHYSICAL_PAGE PageDescriptor;
-   PFN_NUMBER Pfn;
+   PMMPFN Pfn1;
+   PFN_NUMBER PageIndex, FreePage;
    ULONG Count;
    PVOID ZeroAddress;
 
@@ -660,21 +660,30 @@ MmZeroPageThreadMain(PVOID Ignored)
       oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       while (MmFreePageListHead.Total)
       {
-         PageDescriptor = MiRemoveHeadList(&MmFreePageListHead);
-         Pfn = MiGetPfnEntryIndex(PageDescriptor);
-         KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-         
-         PageDescriptor->u1.Flink = LIST_HEAD;
-         ZeroAddress = MiMapPagesToZeroInHyperSpace(PageDescriptor, 1);
-         ASSERT(ZeroAddress);
-         RtlZeroMemory(ZeroAddress, PAGE_SIZE);
-         MiUnmapPagesInZeroSpace(ZeroAddress, 1);
-
-         oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+          PageIndex = MmFreePageListHead.Flink;
+          Pfn1 = MiGetPfnEntry(PageIndex);
+          FreePage = MiRemoveAnyPage(0); // FIXME: Use real color
+          if (FreePage != PageIndex)
+          {
+              KeBugCheckEx(PFN_LIST_CORRUPT,
+                           0x8F,
+                           FreePage,
+                           PageIndex,
+                           0);
+          }
+          
+          Pfn1->u1.Flink = LIST_HEAD;
+          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
+  
+          ZeroAddress = MiMapPagesToZeroInHyperSpace(Pfn1, 1);
+          ASSERT(ZeroAddress);
+          RtlZeroMemory(ZeroAddress, PAGE_SIZE);
+          MiUnmapPagesInZeroSpace(ZeroAddress, 1);
+                   
+          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         
-         MiInsertZeroListAtBack(Pfn);
-         Count++;
-
+          MiInsertZeroListAtBack(PageIndex);
+          Count++;
       }
       DPRINT("Zeroed %d pages.\n", Count);
       KeResetEvent(&ZeroPageThreadEvent);
