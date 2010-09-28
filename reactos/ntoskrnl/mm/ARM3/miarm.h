@@ -933,12 +933,6 @@ MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
 );
 
-PMMPFN
-NTAPI
-MiRemoveHeadList(
-    IN PMMPFNLIST ListHead
-);
-
 PFN_NUMBER
 NTAPI
 MiAllocatePfn(

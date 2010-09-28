@@ -306,30 +306,30 @@ typedef struct _MMPFNENTRY
     USHORT Modified:1;
     USHORT ReadInProgress:1;                 // StartOfAllocation
     USHORT WriteInProgress:1;                // EndOfAllocation
-    USHORT PrototypePte:1;                   // Zero
-    USHORT PageColor:4;                      // LockCount
-    USHORT PageLocation:3;                   // Consumer
+    USHORT PrototypePte:1;
+    USHORT PageColor:4;
+    USHORT PageLocation:3;
     USHORT RemovalRequested:1;
-    USHORT CacheAttribute:2;                 // Type
+    USHORT CacheAttribute:2;
     USHORT Rom:1;
-    USHORT ParityError:1;
+    USHORT ParityError:1;                    // HasRmap
 } MMPFNENTRY;
 
 typedef struct _MMPFN
 {
     union
     {
-        PFN_NUMBER Flink;                    // ListEntry.Flink
-        ULONG WsIndex;
+        PFN_NUMBER Flink;
+        ULONG WsIndex;                       // SavedSwapEntry
         PKEVENT Event;
         NTSTATUS ReadStatus;
         SINGLE_LIST_ENTRY NextStackPfn;
     } u1;
-    PMMPTE PteAddress;                       // ListEntry.Blink
+    PMMPTE PteAddress;
     union
     {
         PFN_NUMBER Blink;
-        ULONG_PTR ShareCount;                // MapCount
+        ULONG_PTR ShareCount;
     } u2;
     union
     {
@@ -351,7 +351,7 @@ typedef struct _MMPFN
     };
     union
     {
-        ULONG_PTR EntireFrame;               // SavedSwapEntry
+        ULONG_PTR EntireFrame;
         struct
         {
             ULONG_PTR PteFrame:25;
