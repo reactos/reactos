@@ -75,12 +75,6 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    }
    Process = entry->Process;
 
-   if (!ExAcquireRundownProtection(&Process->RundownProtect))
-   {
-      ExReleaseFastMutex(&RmapListLock);
-      return STATUS_PROCESS_IS_TERMINATING;
-   }
-
    Address = entry->Address;
    if ((((ULONG_PTR)Address) & 0xFFF) != 0)
    {
@@ -89,6 +83,12 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
 
    if (Address < MmSystemRangeStart)
    {
+       if (!ExAcquireRundownProtection(&Process->RundownProtect))
+       {
+          ExReleaseFastMutex(&RmapListLock);
+          return STATUS_PROCESS_IS_TERMINATING;
+       }
+
       Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
       ExReleaseFastMutex(&RmapListLock);
       if (!NT_SUCCESS(Status))
@@ -109,9 +109,9 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
-      ExReleaseRundownProtection(&Process->RundownProtect);
       if (Address < MmSystemRangeStart)
       {
+         ExReleaseRundownProtection(&Process->RundownProtect);
          ObDereferenceObject(Process);
       }
       return(STATUS_UNSUCCESSFUL);
@@ -131,9 +131,9 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
-         ExReleaseRundownProtection(&Process->RundownProtect);
          if (Address < MmSystemRangeStart)
          {
+            ExReleaseRundownProtection(&Process->RundownProtect);
             ObDereferenceObject(Process);
          }
          return(STATUS_UNSUCCESSFUL);
@@ -157,9 +157,9 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       if (PageOp == NULL)
       {
          MmUnlockAddressSpace(AddressSpace);
-         ExReleaseRundownProtection(&Process->RundownProtect);
          if (Address < MmSystemRangeStart)
          {
+            ExReleaseRundownProtection(&Process->RundownProtect);
             ObDereferenceObject(Process);
          }
          return(STATUS_UNSUCCESSFUL);
@@ -181,10 +181,9 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
-   ExReleaseRundownProtection(&Process->RundownProtect);
-
    if (Address < MmSystemRangeStart)
    {
+      ExReleaseRundownProtection(&Process->RundownProtect);
       ObDereferenceObject(Process);
    }
    return(Status);
