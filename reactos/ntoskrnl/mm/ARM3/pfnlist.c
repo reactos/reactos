@@ -73,137 +73,6 @@ MiZeroPhysicalPage(IN PFN_NUMBER PageFrameIndex)
 
 VOID
 NTAPI
-MiInsertInListTail(IN PMMPFNLIST ListHead,
-                   IN PMMPFN Entry)
-{
-    PFN_NUMBER OldBlink, EntryIndex = MiGetPfnEntryIndex(Entry);
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    ASSERT_LIST_INVARIANT(ListHead);
-
-    /* Get the back link */
-    OldBlink = ListHead->Blink;
-    if (OldBlink != LIST_HEAD)
-    {
-        /* Set the back pointer to point to us now */
-        MiGetPfnEntry(OldBlink)->u1.Flink = EntryIndex;
-    }
-    else
-    {
-        /* Set the list to point to us */
-        ListHead->Flink = EntryIndex;
-    }
-    
-    /* Set the entry to point to the list head forwards, and the old page backwards */
-    Entry->u1.Flink = LIST_HEAD;
-    Entry->u2.Blink = OldBlink;
-    
-    /* And now the head points back to us, since we are last */
-    ListHead->Blink = EntryIndex;
-    ListHead->Total++;
-	ASSERT_LIST_INVARIANT(ListHead);
-}
-
-VOID
-NTAPI
-MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
-{
-    PFN_NUMBER OldBlink;
-    PMMPFNLIST ListHead;
-    PMMPFN Pfn1;
-#if 0
-    PMMPFN Blink;
-    ULONG Color;
-    PMMCOLOR_TABLES ColorHead;
-#endif
-
-    /* Make sure the PFN lock is held */
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    
-    /* Get the descriptor */
-    Pfn1 = MiGetPfnEntry(EntryIndex);
-    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-    ASSERT(Pfn1->u4.MustBeCached == 0);
-    ASSERT(Pfn1->u3.e1.Rom == 0);
-    ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
-    ASSERT(Pfn1->u4.InPageError == 0);
-    
-    /* Use the zero list */
-    ListHead = &MmZeroedPageListHead;
-    ASSERT_LIST_INVARIANT(ListHead);
-    ListHead->Total++;
-
-    /* Get the back link */
-    OldBlink = ListHead->Blink;
-    if (OldBlink != LIST_HEAD)
-    {
-        /* Set the back pointer to point to us now */
-        MiGetPfnEntry(OldBlink)->u1.Flink = EntryIndex;
-    }
-    else
-    {
-        /* Set the list to point to us */
-        ListHead->Flink = EntryIndex;
-    }
-    
-    /* Set the entry to point to the list head forwards, and the old page backwards */
-    Pfn1->u1.Flink = LIST_HEAD;
-    Pfn1->u2.Blink = OldBlink;
-    
-    /* And now the head points back to us, since we are last */
-    ListHead->Blink = EntryIndex;
-	ASSERT_LIST_INVARIANT(ListHead);
-    
-    /* Update the page location */
-    Pfn1->u3.e1.PageLocation = ZeroedPageList;
-
-    /* Update the available page count */
-    MmAvailablePages++;
-
-    /* Check if we've reached the configured low memory threshold */
-    if (MmAvailablePages == MmLowMemoryThreshold)
-    {
-        /* Clear the event, because now we're ABOVE the threshold */
-        KeClearEvent(MiLowMemoryEvent);
-    }
-    else if (MmAvailablePages == MmHighMemoryThreshold)
-    {
-        /* Otherwise check if we reached the high threshold and signal the event */
-        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
-    }
-
-#if 0
-    /* Get the page color */
-    Color = EntryIndex & MmSecondaryColorMask;
-
-    /* Get the first page on the color list */
-    ColorHead = &MmFreePagesByColor[ZeroedPageList][Color];
-    if (ColorHead->Flink == LIST_HEAD)
-    {
-        /* The list is empty, so we are the first page */
-        Pfn1->u4.PteFrame = -1;
-        ColorHead->Flink = EntryIndex;
-    }
-    else
-    {
-        /* Get the previous page */
-        Blink = (PMMPFN)ColorHead->Blink;
-        
-        /* Make it link to us */
-        Pfn1->u4.PteFrame = MiGetPfnEntryIndex(Blink);
-        Blink->OriginalPte.u.Long = EntryIndex;
-    }
-    
-    /* Now initialize our own list pointers */
-    ColorHead->Blink = Pfn1;
-    Pfn1->OriginalPte.u.Long = LIST_HEAD;
-    
-    /* And increase the count in the colored list */
-    ColorHead->Count++;
-#endif
-}
-
-VOID
-NTAPI
 MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 {
     PFN_NUMBER OldFlink, OldBlink;
@@ -527,45 +396,6 @@ MiRemoveZeroPage(IN ULONG Color)
     /* Return the page */
     return PageIndex;
 }
-
-
-PMMPFN
-NTAPI
-MiRemoveHeadList(IN PMMPFNLIST ListHead)
-{
-    PFN_NUMBER Entry, Flink;
-    PMMPFN Pfn1;
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    ASSERT_LIST_INVARIANT(ListHead);
-
-    /* Get the entry that's currently first on the list */
-    Entry = ListHead->Flink;
-    Pfn1 = MiGetPfnEntry(Entry);
-    
-    /* Make the list point to the entry following the first one */
-    Flink = Pfn1->u1.Flink;
-    ListHead->Flink = Flink;
-
-    /* Check if the next entry is actually the list head */
-    if (ListHead->Flink != LIST_HEAD)
-    {
-        /* It isn't, so therefore whoever is coming next points back to the head */
-        MiGetPfnEntry(Flink)->u2.Blink = LIST_HEAD;
-    }
-    else
-    {
-        /* Then the list is empty, so the backlink should point back to us */
-        ListHead->Blink = LIST_HEAD;
-    }
-  
-    /* We are not on a list anymore */
-    Pfn1->u1.Flink = Pfn1->u2.Blink = 0;
-    ListHead->Total--;
-	ASSERT_LIST_INVARIANT(ListHead);
-
-    /* Return the head element */
-    return Pfn1;
-}
 
 extern KEVENT ZeroPageThreadEvent;
 
@@ -682,6 +512,82 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         /* This is ReactOS-specific */
         KeSetEvent(&ZeroPageThreadEvent, IO_NO_INCREMENT, FALSE);
     }
+}
+
+/* Note: This function is hardcoded only for the zeroed page list, for now */
+VOID
+NTAPI
+MiInsertPageInList(IN PMMPFNLIST ListHead,
+                   IN PFN_NUMBER PageFrameIndex)
+{
+    PFN_NUMBER Flink;
+    PMMPFN Pfn1, Pfn2;
+    MMLISTS ListName;
+
+    /* For free pages, use MiInsertPageInFreeList */
+    ASSERT(ListHead != &MmFreePageListHead);
+
+    /* Make sure the lock is held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    
+    /* Make sure the PFN is valid */
+    ASSERT((PageFrameIndex) &&
+           (PageFrameIndex <= MmHighestPhysicalPage) &&
+           (PageFrameIndex >= MmLowestPhysicalPage));
+ 
+    /* Page should be unused */
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    ASSERT(Pfn1->u3.e1.Rom != 1);
+
+    /* Only used for zero pages in ReactOS */
+    ListName = ListHead->ListName;
+    ASSERT(ListName == ZeroedPageList);
+    ListHead->Total++;
+
+    /* Don't handle bad pages yet yet */
+    ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
+
+    /* Make the head of the list point to this page now */
+    Flink = ListHead->Flink;
+    ListHead->Flink = PageFrameIndex;
+
+    /* Make the page point to the previous head, and back to the list */
+    Pfn1->u1.Flink = Flink;
+    Pfn1->u2.Blink = LIST_HEAD;
+
+    /* Was the list empty? */
+    if (Flink != LIST_HEAD)
+    {
+        /* It wasn't, so update the backlink of the previous head page */
+        Pfn2 = MiGetPfnEntry(Flink);
+        Pfn2->u2.Blink = PageFrameIndex;
+    }
+    else
+    {
+        /* It was empty, so have it loop back around to this new page */
+        ListHead->Blink = PageFrameIndex;
+    }
+
+    /* Move the page onto its new location */
+    Pfn1->u3.e1.PageLocation = ListName;
+
+    /* One more page on the system */
+    MmAvailablePages++;
+ 
+    /* Check if we've reached the configured low memory threshold */
+    if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Clear the event, because now we're ABOVE the threshold */
+        KeClearEvent(MiLowMemoryEvent);
+    }
+    else if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Otherwise check if we reached the high threshold and signal the event */
+        KeSetEvent(MiHighMemoryEvent, 0, FALSE);
+    }
+    
+    /* FIXME: Color code handling */
 }
 
 VOID

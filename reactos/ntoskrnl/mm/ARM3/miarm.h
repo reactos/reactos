@@ -920,15 +920,9 @@ MiUnmapLockedPagesInUserSpace(
 
 VOID
 NTAPI
-MiInsertInListTail(
+MiInsertPageInList(
     IN PMMPFNLIST ListHead,
-    IN PMMPFN Entry
-);
-
-VOID
-NTAPI
-MiInsertZeroListAtBack(
-    IN PFN_NUMBER PageIndex
+    IN PFN_NUMBER PageFrameIndex
 );
 
 VOID

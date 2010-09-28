@@ -682,7 +682,7 @@ MmZeroPageThreadMain(PVOID Ignored)
                    
           oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         
-          MiInsertZeroListAtBack(PageIndex);
+          MiInsertPageInList(&MmZeroedPageListHead, PageIndex);
           Count++;
       }
       DPRINT("Zeroed %d pages.\n", Count);
