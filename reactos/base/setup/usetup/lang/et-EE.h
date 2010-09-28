@@ -985,13 +985,13 @@ static MUI_ENTRY etEEBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Paigalda alglaadur kävakettale (MBR ja VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Paigalda alglaadur kävakettale (ainult VBR).",
         TEXT_STYLE_NORMAL
     },
     {
