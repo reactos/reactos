@@ -108,3 +108,18 @@ macro(set_rc_compiler)
 
     SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${result_defs} ${result_incs} -i <SOURCE> -O coff -o <OBJECT>")
 endmacro()
+
+#typelib support
+macro(ADD_TYPELIB TARGET)
+  FOREACH(SOURCE ${ARGN})
+    GET_FILENAME_COMPONENT(FILE ${SOURCE} NAME_WE)
+    SET(OBJECT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}.tlb)
+    ADD_CUSTOM_COMMAND(
+      OUTPUT ${OBJECT}
+      COMMAND native-widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -t -T ${OBJECT} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
+      DEPENDS native-widl
+    )
+    LIST(APPEND OBJECTS ${OBJECT})
+  ENDFOREACH()
+  ADD_CUSTOM_TARGET(${TARGET} ALL DEPENDS ${OBJECTS})
+ENDMACRO()

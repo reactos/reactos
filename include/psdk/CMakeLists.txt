@@ -109,12 +109,4 @@ endif()
 
 ADD_INTERFACE_DEFINITIONS(psdk ${SOURCE})
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${REACTOS_BINARY_DIR}/include/psdk/stdole2.tlb
-  COMMAND native-widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -t -T ${REACTOS_BINARY_DIR}/include/psdk/stdole2.tlb ${REACTOS_SOURCE_DIR}/include/psdk/stdole2.idl
-  DEPENDS native-widl
-)
-
-SET_SOURCE_FILES_PROPERTIES(${REACTOS_BINARY_DIR}/include/psdk/stdole2.tlb PROPERTIES GENERATED TRUE)
-
-ADD_CUSTOM_TARGET(stdole2 ALL DEPENDS ${REACTOS_BINARY_DIR}/include/psdk/stdole2.tlb)
+ADD_TYPELIB(stdole2 stdole2.idl)
