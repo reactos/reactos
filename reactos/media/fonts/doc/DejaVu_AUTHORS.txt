@@ -1,3 +1,4 @@
+abysta at yandex.ru
 Adrian Schroeter
 Andrey Valentinovich Panov
 Ben Laenen
@@ -20,21 +21,27 @@ John Karp
 Keenan Pepper
 Lars Naesbye Christensen
 Mashrab Kuvatov
+Max Berger
 Mederic Boquien
 Michael Everson
+MihailJP
 Misu Moldovan
 Nguyen Thai Ngoc Duy
+Nicolas Mailhot
 Ognyan Kulev
 Ondrej Koala Vacha
 Peter Cernak
 Remy Oudompheng
 Roozbeh Pournader
+Sahak Petrosyan
 Sander Vesik
 Stepan Roh
+Stephen Hartke
+Steve Tinney
 Tavmjong Bah
 Tim May
 Valentin Stoykov
 Vasek Stodulka
 Wesley Transue
 
-$Id: AUTHORS 1910 2007-06-25 19:10:14Z ben_laenen $
+$Id: AUTHORS 2379 2010-05-27 08:14:08Z ben_laenen $
