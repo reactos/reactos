@@ -145,8 +145,6 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
     }
 }
 
-extern KEVENT ZeroPageThreadEvent;
-
 NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -496,10 +494,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Initialize the color tables */
     MiInitializeColorTables();
-    
-    /* ReactOS Stuff */
-    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
-    
+       
     /* Build the PFN Database */
     MiInitializePfnDatabase(LoaderBlock);
     MmInitializeBalancer(MmAvailablePages, 0);

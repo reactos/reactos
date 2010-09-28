@@ -439,6 +439,8 @@ extern PMMPDE MiHighestUserPde;
 extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
+extern BOOLEAN MmZeroingPageThreadActive;
+extern KEVENT MmZeroingPageEvent;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])

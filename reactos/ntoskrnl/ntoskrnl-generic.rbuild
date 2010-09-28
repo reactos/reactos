@@ -463,6 +463,7 @@
 			<file>syspte.c</file>
 			<file>vadnode.c</file>
 			<file>virtual.c</file>
+			<file>zeropage.c</file>
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>

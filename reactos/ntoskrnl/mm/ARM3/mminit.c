@@ -1811,7 +1811,11 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);        
-                                    
+
+        /* Set the zero page event */
+        KeInitializeEvent(&MmZeroingPageEvent, SynchronizationEvent, FALSE);
+        MmZeroingPageThreadActive = FALSE;
+                                            
         //
         // Count physical pages on the system
         //

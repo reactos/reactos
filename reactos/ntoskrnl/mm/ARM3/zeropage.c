@@ -1,0 +1,98 @@
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            ntoskrnl/mm/ARM3/zeropage.c
+ * PURPOSE:         ARM Memory Manager Zero Page Thread Support
+ * PROGRAMMERS:     ReactOS Portable Systems Group
+ */
+
+/* INCLUDES *******************************************************************/
+
+#include <ntoskrnl.h>
+#define NDEBUG
+#include <debug.h>
+
+#line 15 "ARM³::ZEROPAGE"
+#define MODULE_INVOLVED_IN_ARM3
+#include "../ARM3/miarm.h"
+
+/* GLOBALS ********************************************************************/
+
+BOOLEAN MmZeroingPageThreadActive;
+KEVENT MmZeroingPageEvent;
+
+/* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+MmZeroPageThread(VOID)
+{
+    PKTHREAD Thread = KeGetCurrentThread();
+    //PVOID StartAddress, EndAddress;
+    PVOID WaitObjects[2];
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    PVOID ZeroAddress;
+    PFN_NUMBER PageIndex, FreePage;
+    PMMPFN Pfn1;
+    
+    /* FIXME: Get the discardable sections to free them */
+//    MiFindInitializationCode(&StartAddress, &EndAddress);
+//    if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
+
+    /* Set our priority to 0 */
+    Thread->BasePriority = 0;
+    KeSetPriorityThread(Thread, 0);
+    
+    /* Setup the wait objects */
+    WaitObjects[0] = &MmZeroingPageEvent;
+//    WaitObjects[1] = &PoSystemIdleTimer; FIXME: Implement idle timer
+
+    while (TRUE)
+    {
+        Status = KeWaitForMultipleObjects(1, // 2
+                                          WaitObjects,
+                                          WaitAny,
+                                          WrFreePage,
+                                          KernelMode,
+                                          FALSE,
+                                          NULL,
+                                          NULL);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        while (TRUE)
+        {
+            if (!MmFreePageListHead.Total)
+            {
+                MmZeroingPageThreadActive = FALSE;
+                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                break;
+            }
+
+            PageIndex = MmFreePageListHead.Flink;
+            Pfn1 = MiGetPfnEntry(PageIndex);
+            FreePage = MiRemoveAnyPage(0); // FIXME: Use real color
+            if (FreePage != PageIndex)
+            {
+                KeBugCheckEx(PFN_LIST_CORRUPT,
+                             0x8F,
+                             FreePage,
+                             PageIndex,
+                             0);
+            }
+            
+            Pfn1->u1.Flink = LIST_HEAD;
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            
+            ZeroAddress = MiMapPagesToZeroInHyperSpace(Pfn1, 1);
+            ASSERT(ZeroAddress);
+            RtlZeroMemory(ZeroAddress, PAGE_SIZE);
+            MiUnmapPagesInZeroSpace(ZeroAddress, 1);
+            
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+            MiInsertPageInList(&MmZeroedPageListHead, PageIndex);
+        }
+    }
+}
+
+/* EOF */

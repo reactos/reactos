@@ -48,8 +48,6 @@ SIZE_T MmPagedPoolCommit;
 SIZE_T MmPeakCommitment; 
 SIZE_T MmtotalCommitLimitMaximum;
 
-KEVENT ZeroPageThreadEvent;
-static BOOLEAN ZeroPageThreadShouldTerminate = FALSE;
 static RTL_BITMAP MiUserPfnBitMap;
 
 /* FUNCTIONS *************************************************************/
@@ -623,74 +621,6 @@ MmAllocPage(ULONG Type)
    Pfn1->u3.e2.ReferenceCount = 1;
    Pfn1->u3.e1.PageLocation = ActiveAndValid;
    return PfnOffset;
-}
-
-NTSTATUS
-NTAPI
-MmZeroPageThreadMain(PVOID Ignored)
-{
-   NTSTATUS Status;
-   KIRQL oldIrql;
-   PMMPFN Pfn1;
-   PFN_NUMBER PageIndex, FreePage;
-   ULONG Count;
-   PVOID ZeroAddress;
-
-   /* Free initial kernel memory */
-   //MiFreeInitMemory();
-
-   /* Set our priority to 0 */
-   KeGetCurrentThread()->BasePriority = 0;
-   KeSetPriorityThread(KeGetCurrentThread(), 0);
-
-   while(1)
-   {
-      Status = KeWaitForSingleObject(&ZeroPageThreadEvent,
-                                     0,
-                                     KernelMode,
-                                     FALSE,
-                                     NULL);
-
-      if (ZeroPageThreadShouldTerminate)
-      {
-         DPRINT1("ZeroPageThread: Terminating\n");
-         return STATUS_SUCCESS;
-      }
-      Count = 0;
-      oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      while (MmFreePageListHead.Total)
-      {
-          PageIndex = MmFreePageListHead.Flink;
-          Pfn1 = MiGetPfnEntry(PageIndex);
-          FreePage = MiRemoveAnyPage(0); // FIXME: Use real color
-          if (FreePage != PageIndex)
-          {
-              KeBugCheckEx(PFN_LIST_CORRUPT,
-                           0x8F,
-                           FreePage,
-                           PageIndex,
-                           0);
-          }
-          
-          Pfn1->u1.Flink = LIST_HEAD;
-          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-  
-          ZeroAddress = MiMapPagesToZeroInHyperSpace(Pfn1, 1);
-          ASSERT(ZeroAddress);
-          RtlZeroMemory(ZeroAddress, PAGE_SIZE);
-          MiUnmapPagesInZeroSpace(ZeroAddress, 1);
-                   
-          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-        
-          MiInsertPageInList(&MmZeroedPageListHead, PageIndex);
-          Count++;
-      }
-      DPRINT("Zeroed %d pages.\n", Count);
-      KeResetEvent(&ZeroPageThreadEvent);
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   }
-
-   return STATUS_SUCCESS;
 }
 
 /* EOF */

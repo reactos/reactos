@@ -1951,5 +1951,5 @@ Phase1Initialization(IN PVOID Context)
     Phase1InitializationDiscard(Context);
 
     /* Jump into zero page thread */
-    MmZeroPageThreadMain(NULL);
+    MmZeroPageThread();
 }

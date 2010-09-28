@@ -1164,10 +1164,10 @@ MmGetContinuousPages(
     BOOLEAN ZeroPages
 );
 
-NTSTATUS
+VOID
 NTAPI
-MmZeroPageThreadMain(
-    PVOID Context
+MmZeroPageThread(
+    VOID
 );
 
 /* hypermap.c *****************************************************************/

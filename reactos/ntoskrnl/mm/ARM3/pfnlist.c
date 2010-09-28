@@ -397,8 +397,6 @@ MiRemoveZeroPage(IN ULONG Color)
     return PageIndex;
 }
 
-extern KEVENT ZeroPageThreadEvent;
-
 VOID
 NTAPI
 MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
@@ -507,10 +505,11 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 #endif
     
     /* Notify zero page thread if enough pages are on the free list now */
-    if ((MmFreePageListHead.Total > 8) && !(KeReadStateEvent(&ZeroPageThreadEvent)))
+    if ((ListHead->Total >= 8) && !(MmZeroingPageThreadActive))
     {
-        /* This is ReactOS-specific */
-        KeSetEvent(&ZeroPageThreadEvent, IO_NO_INCREMENT, FALSE);
+        /* Set the event */
+        MmZeroingPageThreadActive = TRUE;
+        KeSetEvent(&MmZeroingPageEvent, IO_NO_INCREMENT, FALSE);
     }
 }
 
