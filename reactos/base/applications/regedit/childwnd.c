@@ -227,8 +227,8 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 			bFound = FALSE;
 
 			/* Check default key */
-			if (RegQueryStringValue(hRootKey, pszKeyPath, NULL,
-				szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
+			if (QueryStringValue(hRootKey, pszKeyPath, NULL,
+				szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
 			{
 				/* Sanity check this key; it cannot be empty, nor can it be a
 				 * loop back */
@@ -259,8 +259,8 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 		/* Check CLSID key */
 		if (RegOpenKey(hRootKey, pszKeyPath, &hSubKey) == ERROR_SUCCESS)
 		{
-			if (RegQueryStringValue(hSubKey, TEXT("CLSID"), NULL,
-				szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
+			if (QueryStringValue(hSubKey, TEXT("CLSID"), NULL, szBuffer, 
+			                     COUNT_OF(szBuffer)) == ERROR_SUCCESS)
 			{
 				lstrcpyn(pszSuggestions, TEXT("HKCR\\CLSID\\"), (int) iSuggestionsLength);
 				i = _tcslen(pszSuggestions);
@@ -535,8 +535,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     }
                     else
                     {
-                      if (RegRenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
-						  lResult = FALSE;
+                      if (RenameKey(hRootKey, keyPath, ptvdi->item.pszText) != ERROR_SUCCESS)
+                        lResult = FALSE;
                     }
                     return lResult;
                   }

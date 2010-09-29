@@ -19,6 +19,12 @@
 
 #include <regedit.h>
 
+#define RSF_WHOLESTRING    0x00000001
+#define RSF_LOOKATKEYS	   0x00000002
+#define RSF_LOOKATVALUES   0x00000004
+#define RSF_LOOKATDATA     0x00000008
+#define RSF_MATCHCASE      0x00010000
+
 static TCHAR s_szFindWhat[256];
 static const TCHAR s_szFindFlags[] = _T("FindFlags");
 static const TCHAR s_szFindFlagsR[] = _T("FindFlagsReactOS");
@@ -677,7 +683,7 @@ BOOL FindNext(HWND hWnd)
 
     if (fSuccess)
     {
-        RegKeyGetName(szFullKey, COUNT_OF(szFullKey), hKeyRoot, pszFoundSubKey);
+        GetKeyName(szFullKey, COUNT_OF(szFullKey), hKeyRoot, pszFoundSubKey);
         SelectNode(g_pChildWnd->hTreeWnd, szFullKey);
         SetValueName(g_pChildWnd->hListWnd, pszFoundValueName);
         free(pszFoundSubKey);

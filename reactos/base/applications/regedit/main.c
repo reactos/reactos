@@ -20,7 +20,7 @@
 
 #include <regedit.h>
 
-BOOL ProcessCmdLine(LPSTR lpCmdLine);
+BOOL ProcessCmdLine(LPWSTR lpCmdLine);
 
 
 /*******************************************************************************
@@ -143,9 +143,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     }
 
     /* Restore position */
-    if (RegQueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey,
-        _T("LastKey"),
-        szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
+    if (QueryStringValue(HKEY_CURRENT_USER, g_szGeneralRegKey, _T("LastKey"),
+        szBuffer, COUNT_OF(szBuffer)) == ERROR_SUCCESS)
     {
         SelectNode(g_pChildWnd->hTreeWnd, szBuffer);
     }
@@ -183,30 +182,15 @@ BOOL TranslateChildTabMessage(MSG *msg)
   return TRUE;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance,
+                      HINSTANCE hPrevInstance,
+                      LPWSTR    lpCmdLine,
+                      int       nCmdShow)
 {
     MSG msg;
     HACCEL hAccel;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
-
-    /*
-        int hCrt;
-        FILE *hf;
-        AllocConsole();
-        hCrt = _open_osfhandle((long)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-        hf = _fdopen(hCrt, "w");
-        *stdout = *hf;
-        setvbuf(stdout, NULL, _IONBF, 0);
-
-    	wprintf(L"command line exit, hInstance = %d\n", hInstance);
-    	getch();
-    	FreeConsole();
-        return 0;
-     */
 
     if (ProcessCmdLine(lpCmdLine)) {
         return 0;

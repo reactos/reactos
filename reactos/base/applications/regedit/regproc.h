@@ -17,81 +17,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/******************************************************************************
- * Defines and consts
- */
 #define KEY_MAX_LEN             1024
 
-/* Return values */
-#define SUCCESS               0
-#define KEY_VALUE_ALREADY_SET 2
+#define REG_FORMAT_5 1
+#define REG_FORMAT_4 2
 
-extern HINSTANCE hInst;
-
-typedef void (*CommandAPI)(LPSTR lpsLine);
-
-void doSetValue(LPSTR lpsLine);
-void doDeleteValue(LPSTR lpsLine);
-void doCreateKey(LPSTR lpsLine);
-void doDeleteKey(LPSTR lpsLine);
-void doRegisterDLL(LPSTR lpsLine);
-void doUnregisterDLL(LPSTR lpsLine);
-
-BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name);
-BOOL import_registry_file(LPTSTR filename);
-void delete_registry_key(CHAR *reg_key_name);
-
-void setAppName(const CHAR *name);
 const CHAR *getAppName(void);
 
-void processRegLines(FILE *in, CommandAPI command);
-
-/*
- * Generic prototypes
- */
-char*   getToken(char** str, const char* delims);
-void    get_file_name(CHAR **command_line, CHAR *filename);
-LPSTR   convertHexToHexCSV( BYTE *buf, ULONG len);
-LPSTR   convertHexToDWORDStr( BYTE *buf, ULONG len);
-LPSTR   getRegKeyName(LPSTR lpLine);
-BOOL    getRegClass(LPSTR lpLine, HKEY* hkey);
-DWORD   getDataType(LPSTR *lpValue, DWORD* parse_type);
-LPSTR   getArg(LPSTR arg);
-HRESULT openKey(LPSTR stdInput);
-void    closeKey(void);
-
-/*
- * api setValue prototypes
- */
-void    processSetValue(LPSTR cmdline);
-HRESULT setValue(LPSTR val_name, LPSTR val_data);
-
-/*
- * Permission prototypes
- */
-
-BOOL InitializeAclUiDll(VOID);
-VOID UnloadAclUiDll(VOID);
-BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);
-
-/*
- * Processing
- */
-LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
-LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
-LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName);
-LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue);
-LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen);
-
-/*
- * Miscellaneous
- */
-#define RSF_WHOLESTRING    0x00000001
-#define RSF_LOOKATKEYS	   0x00000002
-#define RSF_LOOKATVALUES   0x00000004
-#define RSF_LOOKATDATA     0x00000008
-#define RSF_MATCHCASE      0x00010000
-
-BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);
-
-/* EOF */
+BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format);
+BOOL import_registry_file(FILE* reg_file);
+void delete_registry_key(LPTSTR reg_key_name);
+WCHAR* GetWideString(const char* strA);
+CHAR* GetMultiByteString(const WCHAR* strW);
