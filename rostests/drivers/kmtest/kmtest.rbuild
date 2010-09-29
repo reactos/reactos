@@ -14,5 +14,6 @@
 	<file>ntos_ke.c</file>
 	<file>ntos_ob.c</file>
 	<file>ntos_pools.c</file>
+	<file>ntos_fsrtl.c</file>
 	<file>kmtest.rc</file>
 </module>

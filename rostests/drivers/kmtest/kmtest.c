@@ -174,6 +174,7 @@ BOOLEAN ZwUnloadTest(PDRIVER_OBJECT, PUNICODE_STRING, PWCHAR);
 BOOLEAN DetachDeviceTest(PDEVICE_OBJECT);
 BOOLEAN AttachDeviceTest(PDEVICE_OBJECT,  PWCHAR);
 VOID LowerDeviceKernelAPITest(PDEVICE_OBJECT, BOOLEAN);
+VOID NtoskrnlFsRtlTest(HANDLE KeyHandle);
 
 typedef enum {
     TestStageExTimer = 0,
@@ -185,6 +186,7 @@ typedef enum {
     TestStageOb,
     TestStageKeStall,
     TestStageDrv,
+    TestStageFsRtl,
     TestStageMax
 } TEST_STAGE;
 
@@ -397,6 +399,10 @@ RunKernelModeTest(PDRIVER_OBJECT DriverObject,
          }
 
          FinishTest(KeyHandle, L"DriverTest");
+         break;
+
+       case TestStageFsRtl:
+         NtoskrnlFsRtlTest(KeyHandle);
          break;
 
        default:
