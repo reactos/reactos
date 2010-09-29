@@ -4225,7 +4225,7 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
 
    if((pRgn = RGNOBJAPI_Lock(hRgn, NULL)))
    {
-      Ret = pRgn->rdh.iType;
+      Ret = REGION_Complexity(pRgn);
       RGNOBJAPI_Unlock(pRgn);
    }
    else
@@ -4264,7 +4264,7 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
 
    if((pRgn = RGNOBJAPI_Lock(VisRgn, NULL)))
    {
-      Ret = pRgn->rdh.iType;
+      Ret = REGION_Complexity(pRgn);
       *Rect = pRgn->rdh.rcBound;
       RGNOBJAPI_Unlock(pRgn);
    }
