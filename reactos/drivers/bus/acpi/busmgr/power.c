@@ -61,7 +61,7 @@ int acpi_power_nocheck;
 
 static int acpi_power_add (struct acpi_device *device);
 static int acpi_power_remove (struct acpi_device *device, int type);
-static int acpi_power_resume(struct acpi_device *device);
+static int acpi_power_resume(struct acpi_device *device, int state);
 
 static struct acpi_driver acpi_power_driver = {
 	.name =		ACPI_POWER_DRIVER_NAME,
@@ -128,7 +128,7 @@ acpi_power_get_state (
 	int *state)
 {
 	ACPI_STATUS		status = AE_OK;
-	unsigned long		sta = 0;
+	unsigned long long	sta = 0;
 	char node_name[5];
 	ACPI_BUFFER buffer = { sizeof(node_name), node_name };
 
@@ -632,9 +632,9 @@ acpi_power_remove (
 	return_VALUE(0);
 }
 
-static int acpi_power_resume(struct acpi_device *device)
+static int acpi_power_resume(struct acpi_device *device, int state)
 {
-	int result = 0, state;
+	int result = 0;
 	struct acpi_power_resource *resource = NULL;
 	struct acpi_power_reference *ref;
 

@@ -1298,7 +1298,7 @@ acpi_bus_add (
 	 * ----
 	 * Fix for the system root bus device -- the only root-level device.
 	 */
-	if ((parent == ACPI_ROOT_OBJECT) && (type == ACPI_BUS_TYPE_DEVICE)) {
+	if (((ACPI_HANDLE)parent == ACPI_ROOT_OBJECT) && (type == ACPI_BUS_TYPE_DEVICE)) {
 		hid = ACPI_BUS_HID;
 		sprintf(device->pnp.device_name, "%s", ACPI_BUS_DEVICE_NAME);
 		sprintf(device->pnp.device_class, "%s", ACPI_BUS_CLASS);
