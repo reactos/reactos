@@ -347,6 +347,7 @@ NtUserCallOneParam(
           }
           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
           {
+             SetLastNtError(_SEH2_GetExceptionCode());
              Ret = FALSE;
           }
           _SEH2_END;
