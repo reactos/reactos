@@ -219,6 +219,13 @@ extern const ULONG MmProtectToPteMask[32];
 #define MM_NOIRQL (KIRQL)0xFFFFFFFF
 
 //
+// Returns the color of a page
+//
+#define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
+#define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
+
+//
 // FIXFIX: These should go in ex.h after the pool merge
 //
 #ifdef _M_AMD64
@@ -455,9 +462,8 @@ extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
 extern BOOLEAN MmZeroingPageThreadActive;
 extern KEVENT MmZeroingPageEvent;
-
-#define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
-#define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
+extern ULONG MmSystemPageColor;
+extern ULONG MmProcessColorSeed;
 
 //
 // Figures out the hardware bits for a PTE
@@ -1092,5 +1098,20 @@ NTAPI
 MiGetNextNode(
     IN PMMADDRESS_NODE Node
 );
+
+//
+// MiRemoveZeroPage will use inline code to zero out the page manually if only
+// free pages are available. In some scenarios, we don't/can't run that piece of
+// code and would rather only have a real zero page. If we can't have a zero page,
+// then we'd like to have our own code to grab a free page and zero it out, by
+// using MiRemoveAnyPage. This macro implements this.
+//
+PFN_NUMBER
+FORCEINLINE
+MiRemoveZeroPageSafe(IN ULONG Color)
+{
+    if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
+    return 0;
+}
 
 /* EOF */

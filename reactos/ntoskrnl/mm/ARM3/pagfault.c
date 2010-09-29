@@ -179,9 +179,10 @@ MiResolveDemandZeroFault(IN PVOID Address,
                          IN PEPROCESS Process,
                          IN KIRQL OldIrql)
 {
-    PFN_NUMBER PageFrameNumber;
+    PFN_NUMBER PageFrameNumber = 0;
     MMPTE TempPte;
     BOOLEAN NeedZero = FALSE;
+    ULONG Color;
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
@@ -196,8 +197,16 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* No forking yet */
         ASSERT(Process->ForkInProgress == NULL);
         
+        /* Get process color */
+        Color = MI_GET_NEXT_PROCESS_COLOR(Process);
+        
         /* We'll need a zero page */
         NeedZero = TRUE;
+    }
+    else
+    {
+        /* Get the next system page color */
+        Color = MI_GET_NEXT_COLOR();
     }
         
     //
@@ -206,9 +215,21 @@ MiResolveDemandZeroFault(IN PVOID Address,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     ASSERT(PointerPte->u.Hard.Valid == 0);
     
-    /* Get a page */
-    PageFrameNumber = MiRemoveAnyPage(0);
-    DPRINT("New pool page: %lx\n", PageFrameNumber);
+    /* Do we need a zero page? */
+    if (NeedZero)
+    {
+        /* Try to get one, if we couldn't grab a free page and zero it */
+        PageFrameNumber = MiRemoveZeroPageSafe(Color);
+        if (PageFrameNumber) NeedZero = FALSE;
+    }
+    
+    /* Did we get a page? */
+    if (!PageFrameNumber)
+    {
+        /* We either failed to find a zero page, or this is a system request */
+        PageFrameNumber = MiRemoveAnyPage(Color);
+        DPRINT("New pool page: %lx\n", PageFrameNumber);
+    }
     
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
@@ -463,6 +484,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     ULONG ProtectionCode;
     PMMVAD Vad;
     PFN_NUMBER PageFrameIndex;
+    ULONG Color;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
     
     //
@@ -756,19 +778,25 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
         /* Lock the PFN database since we're going to grab a page */
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        
+        /* Try to get a zero page */
+        Color = MI_GET_NEXT_PROCESS_COLOR(CurrentProcess);
+        PageFrameIndex = MiRemoveZeroPageSafe(Color);
+        if (!PageFrameIndex)
+        {
+            /* Grab a page out of there. Later we should grab a colored zero page */
+            PageFrameIndex = MiRemoveAnyPage(Color);
+            ASSERT(PageFrameIndex);
 
-        /* Grab a page out of there. Later we should grab a colored zero page */
-        PageFrameIndex = MiRemoveAnyPage(0);
-        ASSERT(PageFrameIndex);
+            /* Release the lock since we need to do some zeroing */
+            KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 
-        /* Release the lock since we need to do some zeroing */
-        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+            /* Zero out the page, since it's for user-mode */
+            MiZeroPfn(PageFrameIndex);
 
-        /* Zero out the page, since it's for user-mode */
-        MiZeroPfn(PageFrameIndex);
-
-        /* Grab the lock again so we can initialize the PFN entry */
-        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            /* Grab the lock again so we can initialize the PFN entry */
+            OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        }
 
         /* Initialize the PFN entry now */
         MiInitializePfn(PageFrameIndex, PointerPte, 1);

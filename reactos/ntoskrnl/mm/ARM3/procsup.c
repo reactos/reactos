@@ -16,7 +16,9 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
-extern MM_SYSTEMSIZE MmSystemSize;
+/* GLOBALS ********************************************************************/
+
+ULONG MmProcessColorSeed = 0x12345678;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -357,7 +359,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         PointerPte++;
         
         /* Get a page and write the current invalid PTE */
-        PageFrameIndex = MiRemoveAnyPage(0);
+        PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         MI_WRITE_INVALID_PTE(PointerPte, InvalidPte);
 
         /* Initialize the PFN entry for this page */
@@ -444,7 +446,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     while (LimitPte >= NewLimitPte)
     {
         /* Get a page and write the current invalid PTE */
-        PageFrameIndex = MiRemoveAnyPage(0);
+        PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         MI_WRITE_INVALID_PTE(LimitPte, InvalidPte);
 
         /* Initialize the PFN entry for this page */
@@ -1058,9 +1060,10 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     MMPTE TempPte, PdePte;
     ULONG PdeOffset;
     PMMPTE SystemTable;
+    ULONG Color;
 
-    /* No page colors yet */
-    Process->NextPageColor = 0;
+    /* Choose a process color */
+    Process->NextPageColor = RtlRandom(&MmProcessColorSeed);
     
     /* Setup the hyperspace lock */
     KeInitializeSpinLock(&Process->HyperSpaceLock);
@@ -1068,16 +1071,37 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Lock PFN database */
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     
-    /* Get a page for the PDE */
-    PdeIndex = MiRemoveAnyPage(0);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    MiZeroPhysicalPage(PdeIndex);
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-    /* Get a page for hyperspace */
-    HyperIndex = MiRemoveAnyPage(0);
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    MiZeroPhysicalPage(HyperIndex);
+    /* Get a zero page for the PDE, if possible */
+    Color = MI_GET_NEXT_PROCESS_COLOR(Process);
+    PdeIndex = MiRemoveZeroPageSafe(Color);
+    if (!PdeIndex)
+    {
+        /* No zero pages, grab a free one */
+        PdeIndex = MiRemoveAnyPage(Color);
+        
+        /* Zero it outside the PFN lock */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiZeroPhysicalPage(PdeIndex);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    }
+    
+    /* Get a zero page for hyperspace, if possible */
+    Color = MI_GET_NEXT_PROCESS_COLOR(Process);
+    HyperIndex = MiRemoveZeroPageSafe(Color);
+    if (!HyperIndex)
+    {
+        /* No zero pages, grab a free one */
+        HyperIndex = MiRemoveAnyPage(Color);
+        
+        /* Zero it outside the PFN lock */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiZeroPhysicalPage(HyperIndex);
+    }
+    else
+    {
+        /* Release the PFN lock */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    }
 
     /* Switch to phase 1 initialization */
     ASSERT(Process->AddressSpaceInitialized == 0);
@@ -1112,7 +1136,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 
     /* Copy all the kernel mappings */
     PdeOffset = MiGetPdeOffset(MmSystemRangeStart);
-
     RtlCopyMemory(&SystemTable[PdeOffset],
                   MiAddressToPde(MmSystemRangeStart),
                   PAGE_SIZE - PdeOffset * sizeof(MMPTE));

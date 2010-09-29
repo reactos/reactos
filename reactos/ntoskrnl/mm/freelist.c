@@ -604,11 +604,11 @@ MmAllocPage(ULONG Type)
    
    if (Type != MC_SYSTEM)
    {
-       PfnOffset = MiRemoveZeroPage(0);
+       PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
    }
    else
    {
-       PfnOffset = MiRemoveAnyPage(0);
+       PfnOffset = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
    }
 
    if (!PfnOffset)

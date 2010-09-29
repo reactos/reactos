@@ -473,7 +473,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 ASSERT(PointerPte->u.Hard.Valid == 0);
                 
                 /* Request a page */
-                PageFrameNumber = MiRemoveAnyPage(0);
+                PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
                 TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
 
 #if (_MI_PAGING_LEVELS >= 3)
@@ -768,7 +768,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     do
     {
         /* Allocate a page */
-        PageFrameNumber = MiRemoveAnyPage(0);
+        PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         
         /* Get the PFN entry for it and fill it out */
         Pfn1 = MiGetPfnEntry(PageFrameNumber);

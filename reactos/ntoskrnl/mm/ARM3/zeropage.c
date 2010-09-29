@@ -69,8 +69,11 @@ MmZeroPageThread(VOID)
             }
 
             PageIndex = MmFreePageListHead.Flink;
+            ASSERT(PageIndex != LIST_HEAD);
             Pfn1 = MiGetPfnEntry(PageIndex);
-            FreePage = MiRemoveAnyPage(0); // FIXME: Use real color
+            FreePage = MiRemoveAnyPage(MI_GET_PAGE_COLOR(PageIndex));
+            
+            /* The first global free page should also be the first on its own list */
             if (FreePage != PageIndex)
             {
                 KeBugCheckEx(PFN_LIST_CORRUPT,

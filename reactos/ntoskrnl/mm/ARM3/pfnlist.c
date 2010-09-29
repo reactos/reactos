@@ -30,12 +30,11 @@ do { \
 #define ASSERT_LIST_INVARIANT(x)
 #endif
 
-#define ARM3_COLORS 1
-
 /* GLOBALS ********************************************************************/
 
 BOOLEAN MmDynamicPfn;
 BOOLEAN MmMirroring;
+ULONG MmSystemPageColor;
 
 MMPFNLIST MmZeroedPageListHead = {0, ZeroedPageList, LIST_HEAD, LIST_HEAD};
 MMPFNLIST MmFreePageListHead = {0, FreePageList, LIST_HEAD, LIST_HEAD};
@@ -80,11 +79,9 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     PFN_NUMBER OldFlink, OldBlink;
     PMMPFNLIST ListHead;
     MMLISTS ListName;
-#ifdef ARM3_COLORS    
     ULONG Color;
     PMMCOLOR_TABLES ColorTable;
     PMMPFN Pfn1;
-#endif
     
     /* Make sure the PFN lock is held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -131,7 +128,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
         /* Set the list head's backlink instead */
         ListHead->Flink = OldFlink;
     }
-#ifdef ARM3_COLORS    
+
     /* Get the page color */
     OldBlink = MiGetPfnEntryIndex(Entry);
     Color = OldBlink & MmSecondaryColorMask;
@@ -185,7 +182,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     
     /* ReactOS Hack */
     Entry->OriginalPte.u.Long = 0;
-#endif    
+
     /* We are not on a list anymore */
     Entry->u1.Flink = Entry->u2.Blink = 0;
     ASSERT_LIST_INVARIANT(ListHead);
@@ -219,9 +216,8 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     MMLISTS ListName;
     PFN_NUMBER OldFlink, OldBlink;
     ULONG OldColor, OldCache;
-#ifdef ARM3_COLORS    
     PMMCOLOR_TABLES ColorTable;
-#endif
+
     /* Make sure PFN lock is held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT(Color < MmSecondaryColors);
@@ -280,7 +276,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     Pfn1->u3.e2.ShortFlags = 0;
     Pfn1->u3.e1.PageColor = OldColor;
     Pfn1->u3.e1.CacheAttribute = OldCache;
-#ifdef ARM3_COLORS    
+
     /* Get the first page on the color list */
     ASSERT(Color < MmSecondaryColors);
     ColorTable = &MmFreePagesByColor[ListName][Color];
@@ -306,7 +302,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     
     /* ReactOS Hack */
     Pfn1->OriginalPte.u.Long = 0;
-#endif
+
     /* See if we hit any thresholds */
     if (MmAvailablePages == MmHighMemoryThreshold)
     {
@@ -340,9 +336,8 @@ MiRemoveAnyPage(IN ULONG Color)
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
-    
+#if 0
     /* Check the colored free list */
-#if 0 // Enable when using ARM3 database */
     PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
     if (PageIndex == LIST_HEAD)
     {
@@ -368,11 +363,10 @@ MiRemoveAnyPage(IN ULONG Color)
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
             }
-#if 0 // Enable when using ARM3 database */
+#if 0
         }
     }
 #endif
-
     /* Remove the page from its list */
     PageIndex = MiRemovePageByColor(PageIndex, Color);
 
@@ -403,7 +397,7 @@ MiRemoveZeroPage(IN ULONG Color)
     ASSERT(Color < MmSecondaryColors);
 
     /* Check the colored zero list */
-#if 0 // Enable when using ARM3 database */
+#if 0
     PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
     if (PageIndex == LIST_HEAD)
     {
@@ -414,9 +408,10 @@ MiRemoveZeroPage(IN ULONG Color)
         Color = PageIndex & MmSecondaryColorMask;
         if (PageIndex == LIST_HEAD)
         {
+            /* This means there's no zero pages, we have to look for free ones */
             ASSERT(MmZeroedPageListHead.Total == 0);
             Zero = TRUE;
-#if 0 // Enable when using ARM3 database */
+#if 0
             /* Check the colored free list */
             PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
             if (PageIndex == LIST_HEAD)
@@ -432,13 +427,14 @@ MiRemoveZeroPage(IN ULONG Color)
                     /* FIXME: Should check the standby list */
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
-#if 0 // Enable when using ARM3 database */
+#if 0
             }
 #endif
         }
-#if 0 // Enable when using ARM3 database */
+#if 0
     }
 #endif
+
     /* Sanity checks */
     Pfn1 = MiGetPfnEntry(PageIndex);
     ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
@@ -468,11 +464,10 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     PMMPFNLIST ListHead;
     PFN_NUMBER LastPage;
     PMMPFN Pfn1;
-#ifdef ARM3_COLORS    
     ULONG Color;
     PMMPFN Blink;
     PMMCOLOR_TABLES ColorTable;
-#endif
+
     /* Make sure the page index is valid */
     ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
     ASSERT((PageFrameIndex != 0) &&
@@ -537,7 +532,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         /* Otherwise check if we reached the high threshold and signal the event */
         KeSetEvent(MiHighMemoryEvent, 0, FALSE);
     }
-#ifdef ARM3_COLORS    
+
     /* Get the page color */
     Color = PageFrameIndex & MmSecondaryColorMask;
 
@@ -571,7 +566,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     
     /* And increase the count in the colored list */
     ColorTable->Count++;
-#endif
+
     /* Notify zero page thread if enough pages are on the free list now */
     if ((ListHead->Total >= 8) && !(MmZeroingPageThreadActive))
     {
@@ -590,10 +585,9 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     PFN_NUMBER Flink;
     PMMPFN Pfn1, Pfn2;
     MMLISTS ListName;
-#ifdef ARM3_COLORS
     PMMCOLOR_TABLES ColorHead;
     ULONG Color;
-#endif
+
     /* For free pages, use MiInsertPageInFreeList */
     ASSERT(ListHead != &MmFreePageListHead);
 
@@ -657,7 +651,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
         KeSetEvent(MiHighMemoryEvent, 0, FALSE);
     }
 
-#ifdef ARM3_COLORS
+    /* Sanity checks */
     ASSERT(ListName == ZeroedPageList);
     ASSERT(Pfn1->u4.InPageError == 0);
 
@@ -695,7 +689,6 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
 
     /* One more paged on the colored list */
     ColorHead->Count++;
-#endif
 }
 
 VOID
@@ -783,7 +776,7 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     /* Grab a page */
     ASSERT_LIST_INVARIANT(&MmFreePageListHead);
     ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
-    PageFrameIndex = MiRemoveAnyPage(0);
+    PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
 
     /* Write the software PTE */
     MI_WRITE_INVALID_PTE(PointerPte, TempPte);
