@@ -30,6 +30,8 @@ do { \
 #define ASSERT_LIST_INVARIANT(x)
 #endif
 
+#define ARM3_COLORS 1
+
 /* GLOBALS ********************************************************************/
 
 BOOLEAN MmDynamicPfn;
@@ -133,11 +135,9 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     /* Get the page color */
     OldBlink = MiGetPfnEntryIndex(Entry);
     Color = OldBlink & MmSecondaryColorMask;
-    DPRINT1("Color: %lx\n", Color);
 
     /* Get the first page on the color list */
     ColorTable = &MmFreePagesByColor[ListName][Color];
-    DPRINT1("Color table: %p %lx\n", ColorTable, ColorTable->Flink);
 
     /* Check if this was was actually the head */
     OldFlink = ColorTable->Flink;
@@ -148,7 +148,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
         if (ColorTable->Flink != LIST_HEAD)
         {
             /* And make the previous link point to the head now */
-            MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = -1;
+            MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = COLORED_LIST_HEAD;
         }
         else
         {
@@ -159,7 +159,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     else
     {
         /* This page shouldn't be pointing back to the head */
-        ASSERT(Entry->u4.PteFrame != -1);
+        ASSERT(Entry->u4.PteFrame != COLORED_LIST_HEAD);
 
         /* Make the back link point to whoever the next page is */
         Pfn1 = MiGetPfnEntry(Entry->u4.PteFrame);
@@ -170,7 +170,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
         {
             /* Make the back link point to the head */
             Pfn1 = MiGetPfnEntry(Entry->OriginalPte.u.Long);
-            Pfn1->u4.PteFrame = -1;
+            Pfn1->u4.PteFrame = Entry->u4.PteFrame;
         }
         else
         {
@@ -182,6 +182,9 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     /* One less colored page */
     ASSERT(ColorTable->Count >= 1);
     ColorTable->Count--;
+    
+    /* ReactOS Hack */
+    Entry->OriginalPte.u.Long = 0;
 #endif    
     /* We are not on a list anymore */
     Entry->u1.Flink = Entry->u2.Blink = 0;
@@ -284,8 +287,6 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     ASSERT(ColorTable->Count >= 1);
     
     /* Set the forward link to whoever we were pointing to */
-    DPRINT1("Has RMAP: %lx (link: %lx)\n", Pfn1->u3.e1.ParityError, Pfn1->OriginalPte.u.Long);
-    DPRINT1("Color table: %p %lx\n", ColorTable, ColorTable->Flink);
     ColorTable->Flink = Pfn1->OriginalPte.u.Long;
     
     /* Get the first page on the color list */
@@ -297,11 +298,14 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     else
     {
         /* The list is empty, so we are the first page */
-        MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = -1;
+        MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = COLORED_LIST_HEAD;
     }
     
     /* One less page */
     ColorTable->Count--;
+    
+    /* ReactOS Hack */
+    Pfn1->OriginalPte.u.Long = 0;
 #endif
     /* See if we hit any thresholds */
     if (MmAvailablePages == MmHighMemoryThreshold)
@@ -536,16 +540,13 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 #ifdef ARM3_COLORS    
     /* Get the page color */
     Color = PageFrameIndex & MmSecondaryColorMask;
-    DPRINT1("Color: %lx\n", Color);
 
     /* Get the first page on the color list */
     ColorTable = &MmFreePagesByColor[FreePageList][Color];
-    DPRINT1("Color table: %p %lx\n", ColorTable, ColorTable->Flink);
-    DPRINT1("Has RMAP: %lx (link: %lx)\n", Pfn1->u3.e1.ParityError, Pfn1->OriginalPte.u.Long);
     if (ColorTable->Flink == LIST_HEAD)
     {
         /* The list is empty, so we are the first page */
-        Pfn1->u4.PteFrame = -1;
+        Pfn1->u4.PteFrame = COLORED_LIST_HEAD;
         ColorTable->Flink = PageFrameIndex;
     }
     else
@@ -557,7 +558,6 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         Pfn1->u4.PteFrame = MiGetPfnEntryIndex(Blink);
          
         /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-        DPRINT1("Has RMAP: %lx (link: %lx)\n", Blink->u3.e1.ParityError, Blink->OriginalPte.u.Long);
         ASSERT(Blink->u3.e1.ParityError == FALSE);
         Blink->OriginalPte.u.Long = PageFrameIndex;
     }
@@ -663,7 +663,6 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
 
     /* Get the page color */
     Color = PageFrameIndex & MmSecondaryColorMask;
-    DPRINT1("Color: %lx\n", Color);
 
     /* Get the list for this color */
     ColorHead = &MmFreePagesByColor[ZeroedPageList][Color];
@@ -676,7 +675,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     
     /* Make this page point back to the list, and point forwards to the old head */
     Pfn1->OriginalPte.u.Long = Flink;
-    Pfn1->u4.PteFrame = -1;
+    Pfn1->u4.PteFrame = COLORED_LIST_HEAD;
 
     /* Set the new head */
     ColorHead->Flink = PageFrameIndex;
@@ -849,7 +848,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
              * ways we shouldn't be seeing RMAP entries at this point
              */
             ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
-            ASSERT(Pfn1->OriginalPte.u.Long == 0);
+            ASSERT(Pfn1->u3.e1.ParityError == FALSE);
 
             /* Mark the page temporarily as valid, we're going to make it free soon */
             Pfn1->u3.e1.PageLocation = ActiveAndValid;

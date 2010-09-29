@@ -194,10 +194,24 @@ extern const ULONG MmProtectToPteMask[32];
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
+#if defined(_M_IX86) || defined(_M_ARM)
 //
 // PFN List Sentinel
 //
 #define LIST_HEAD 0xFFFFFFFF
+
+//
+// Because GCC cannot automatically downcast 0xFFFFFFFF to lesser-width bits,
+// we need a manual definition suited to the number of bits in the PteFrame.
+// This is used as a LIST_HEAD for the colored list
+//
+#define COLORED_LIST_HEAD ((1 << 25) - 1) // 0x1FFFFFF
+#elif defined(_M_AMD64)
+#define LIST_HEAD 0xFFFFFFFFFFFFFFFFLL
+#define COLORED_LIST_HEAD ((1 << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
+#else
+#error Define these please!
+#endif
 
 //
 // Special IRQL value (found in assertions)
