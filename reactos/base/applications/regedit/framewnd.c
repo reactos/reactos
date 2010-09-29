@@ -95,7 +95,7 @@ static void OnInitMenu(HWND hWnd)
     dwIndex = 0;
     do
     {
-        cbValueName = sizeof(szValueName) / sizeof(szValueName[0]);
+        cbValueName = COUNT_OF(szValueName);
         cbValueData = sizeof(abValueData);
         lResult = RegEnumValue(hKey, dwIndex, szValueName, &cbValueName, NULL, &dwType, abValueData, &cbValueData);
         if ((lResult == ERROR_SUCCESS) && (dwType == REG_SZ))
@@ -521,7 +521,7 @@ BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName)
     if (!GetKeyName(szBuffer, COUNT_OF(szBuffer), hRootKey, keyName))
         goto done;
 
-    hGlobal = GlobalAlloc(GMEM_MOVEABLE, (_tcslen(szBuffer) + 1) * sizeof(TCHAR));
+    hGlobal = GlobalAlloc(GMEM_MOVEABLE, (lstrlen(szBuffer) + 1) * sizeof(TCHAR));
     if (!hGlobal)
         goto done;
 
@@ -553,21 +553,18 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
     HKEY hKey;
     LVFINDINFO lvfi;
 
-    if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyEx(hRootKey, pszKeyPath, 0, KEY_QUERY_VALUE | KEY_SET_VALUE,
+                     &hKey) != ERROR_SUCCESS)
         return FALSE;
 
-    LoadString(hInst, IDS_NEW_VALUE, szNewValueFormat, sizeof(szNewValueFormat)
-        / sizeof(szNewValueFormat[0]));
+    LoadString(hInst, IDS_NEW_VALUE, szNewValueFormat, COUNT_OF(szNewValueFormat));
 
     do
     {
-        _sntprintf(szNewValue, sizeof(szNewValue) / sizeof(szNewValue[0]),
-            szNewValueFormat, iIndex++);
-
+        wsprintf(szNewValue, szNewValueFormat, iIndex++);
         cbData = sizeof(data);
         lResult = RegQueryValueEx(hKey, szNewValue, NULL, &dwExistingType, data, &cbData);
-    }
-    while(lResult == ERROR_SUCCESS);
+    } while(lResult == ERROR_SUCCESS);
 
     switch(dwType) {
     case REG_DWORD:
@@ -589,8 +586,11 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
     }
     memset(data, 0, cbData);
     lResult = RegSetValueEx(hKey, szNewValue, 0, dwType, data, cbData);
+    RegCloseKey(hKey);
     if (lResult != ERROR_SUCCESS)
+    {
         return FALSE;
+    }
 
     RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
 
@@ -862,7 +862,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
             }
         }
-        if (GetFocus() == g_pChildWnd->hTreeWnd)
+        else if (GetFocus() == g_pChildWnd->hTreeWnd)
         {
             /* Get focused entry of treeview (if any) */
             HTREEITEM hItem = TreeView_GetSelection(g_pChildWnd->hTreeWnd);
@@ -905,8 +905,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
               }
             }
           }
-        } else
-        if (GetFocus() == g_pChildWnd->hTreeWnd)
+        }
+        else if (GetFocus() == g_pChildWnd->hTreeWnd)
         {
           if (keyPath == 0 || *keyPath == 0)
           {
@@ -918,7 +918,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RefreshTreeView(g_pChildWnd->hTreeWnd);
           }
         }
-	break;
+        break;
+    }
     case ID_EDIT_NEW_STRINGVALUE:
         CreateNewValue(hKeyRoot, keyPath, REG_SZ);
         break;
@@ -928,14 +929,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_EDIT_NEW_DWORDVALUE:
         CreateNewValue(hKeyRoot, keyPath, REG_DWORD);
         break;
-	case ID_EDIT_NEW_MULTISTRINGVALUE:
+    case ID_EDIT_NEW_MULTISTRINGVALUE:
         CreateNewValue(hKeyRoot, keyPath, REG_MULTI_SZ);
         break;
-	case ID_EDIT_NEW_EXPANDABLESTRINGVALUE:
+    case ID_EDIT_NEW_EXPANDABLESTRINGVALUE:
         CreateNewValue(hKeyRoot, keyPath, REG_EXPAND_SZ);
         break;
-
-    }
     case ID_EDIT_FIND:
         FindDialog(hWnd);
         break;
