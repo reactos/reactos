@@ -339,10 +339,12 @@ MiRemoveAnyPage(IN ULONG Color)
 #if 0
     /* Check the colored free list */
     PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
+    DPRINT1("Found free page: %lx\n", PageIndex);
     if (PageIndex == LIST_HEAD)
     {
         /* Check the colored zero list */
         PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
+        DPRINT1("Found zero page: %lx\n", PageIndex);
         if (PageIndex == LIST_HEAD)
         {
 #endif
@@ -413,7 +415,7 @@ MiRemoveZeroPage(IN ULONG Color)
             Zero = TRUE;
 #if 0
             /* Check the colored free list */
-            PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
+            PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
             if (PageIndex == LIST_HEAD)
             {
 #endif
