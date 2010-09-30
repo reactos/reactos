@@ -1,11 +1,23 @@
 #include <windows.h>
 #include <stdio.h>
-#include <tchar.h>
+#include <wchar.h>
+#include <assert.h>
 #include "doskey.h"
 
 #define MAX_STRING 2000
-TCHAR szStringBuf[MAX_STRING];
-LPTSTR pszExeName = _T("cmd.exe");
+WCHAR szStringBuf[MAX_STRING];
+LPWSTR pszExeName = L"cmd.exe";
+
+/* Function pointers */
+typedef DWORD (WINAPI *GetConsoleCommandHistoryW_t) (LPWSTR sCommands, DWORD nBufferLength, LPWSTR sExeName); 
+typedef DWORD (WINAPI *GetConsoleCommandHistoryLengthW_t) (LPWSTR sExeName);
+typedef BOOL (WINAPI *SetConsoleNumberOfCommandsW_t)(DWORD nNumber, LPWSTR sExeName);
+typedef VOID (WINAPI *ExpungeConsoleCommandHistoryW_t)(LPWSTR sExeName);
+
+GetConsoleCommandHistoryW_t pGetConsoleCommandHistoryW;
+GetConsoleCommandHistoryLengthW_t pGetConsoleCommandHistoryLengthW;
+SetConsoleNumberOfCommandsW_t pSetConsoleNumberOfCommandsW;
+ExpungeConsoleCommandHistoryW_t pExpungeConsoleCommandHistoryW;
 
 static VOID SetInsert(DWORD dwFlag)
 {
@@ -18,79 +30,74 @@ static VOID SetInsert(DWORD dwFlag)
 
 static VOID PrintHistory(VOID)
 {
-    DWORD Length = GetConsoleCommandHistoryLength(pszExeName);
-    DWORD BufferLength;
+    DWORD Length = pGetConsoleCommandHistoryLengthW(pszExeName);
     PBYTE HistBuf;
-    TCHAR *Hist;
-    TCHAR *HistEnd;
-
-    /* On Windows, the ANSI version of GetConsoleCommandHistory requires
-     * a buffer twice as large as the actual history length. */
-    BufferLength = Length * (sizeof(WCHAR) / sizeof(TCHAR)) * sizeof(BYTE);
+    WCHAR *Hist;
+    WCHAR *HistEnd;
 
     HistBuf = HeapAlloc(GetProcessHeap(),
                         HEAP_ZERO_MEMORY,
-                        BufferLength);
+                        Length);
     if (!HistBuf) return;
-    Hist = (TCHAR *)HistBuf;
-    HistEnd = (TCHAR *)&HistBuf[Length];
+    Hist = (WCHAR *)HistBuf;
+    HistEnd = (WCHAR *)&HistBuf[Length];
 
-    if (GetConsoleCommandHistory(Hist, BufferLength, pszExeName))
-        for (; Hist < HistEnd; Hist += _tcslen(Hist) + 1)
-            _tprintf(_T("%s\n"), Hist);
+    if (pGetConsoleCommandHistoryW(Hist, Length, pszExeName))
+        for (; Hist < HistEnd; Hist += wcslen(Hist) + 1)
+            wprintf(L"%s\n", Hist);
 
     HeapFree(GetProcessHeap(), 0, HistBuf);
 }
 
-static INT SetMacro(LPTSTR definition)
+static INT SetMacro(LPWSTR definition)
 {
-    TCHAR *name, *nameend, *text, temp;
+    WCHAR *name, *nameend, *text, temp;
 
     name = definition;
-    while (*name == _T(' '))
+    while (*name == L' ')
         name++;
 
     /* error if no '=' found */
-    if ((nameend = _tcschr(name, _T('='))) != NULL)
+    if ((nameend = wcschr(name, L'=')) != NULL)
     {
         text = nameend + 1;
-        while (*text == _T(' '))
+        while (*text == L' ')
             text++;
 
-        while (nameend > name && nameend[-1] == _T(' '))
+        while (nameend > name && nameend[-1] == L' ')
             nameend--;
 
         /* Split rest into name and substitute */
         temp = *nameend;
-        *nameend = _T('\0');
+        *nameend = L'\0';
         /* Don't allow spaces in the name, since such a macro would be unusable */
-        if (!_tcschr(name, _T(' ')) && AddConsoleAlias(name, text, pszExeName))
+        if (!wcschr(name, L' ') && AddConsoleAlias(name, text, pszExeName))
             return 0;
         *nameend = temp;
     }
 
     LoadString(GetModuleHandle(NULL), IDS_INVALID_MACRO_DEF, szStringBuf, MAX_STRING);
-    _tprintf(szStringBuf, definition);
+    wprintf(szStringBuf, definition);
     return 1;
 }
 
-static VOID PrintMacros(LPTSTR pszExeName, LPTSTR Indent)
+static VOID PrintMacros(LPWSTR pszExeName, LPWSTR Indent)
 {
     DWORD Length = GetConsoleAliasesLength(pszExeName);
     PBYTE AliasBuf;
-    TCHAR *Alias;
-    TCHAR *AliasEnd;
+    WCHAR *Alias;
+    WCHAR *AliasEnd;
 
     AliasBuf = HeapAlloc(GetProcessHeap(),
                          HEAP_ZERO_MEMORY,
                          Length * sizeof(BYTE));
     if (!AliasBuf) return;
-    Alias = (TCHAR *)AliasBuf;
-    AliasEnd = (TCHAR *)&AliasBuf[Length];
+    Alias = (WCHAR *)AliasBuf;
+    AliasEnd = (WCHAR *)&AliasBuf[Length];
 
     if (GetConsoleAliases(Alias, Length * sizeof(BYTE), pszExeName))
-        for (; Alias < AliasEnd; Alias += _tcslen(Alias) + 1)
-            _tprintf(_T("%s%s\n"), Indent, Alias);
+        for (; Alias < AliasEnd; Alias += wcslen(Alias) + 1)
+            wprintf(L"%s%s\n", Indent, Alias);
 
     HeapFree(GetProcessHeap(), 0, AliasBuf);
 }
@@ -99,51 +106,47 @@ static VOID PrintAllMacros(VOID)
 {
     DWORD Length = GetConsoleAliasExesLength();
     PBYTE ExeNameBuf;
-    TCHAR *ExeName;
-    TCHAR *ExeNameEnd;
+    WCHAR *ExeName;
+    WCHAR *ExeNameEnd;
 
     ExeNameBuf = HeapAlloc(GetProcessHeap(),
                            HEAP_ZERO_MEMORY,
                            Length * sizeof(BYTE));
     if (!ExeNameBuf) return;
-    ExeName = (TCHAR *)ExeNameBuf;
-    ExeNameEnd = (TCHAR *)&ExeNameBuf[Length];
+    ExeName = (WCHAR *)ExeNameBuf;
+    ExeNameEnd = (WCHAR *)&ExeNameBuf[Length];
 
     if (GetConsoleAliasExes(ExeName, Length * sizeof(BYTE)))
     {
-        for (; ExeName < ExeNameEnd; ExeName += _tcslen(ExeName) + 1)
+        for (; ExeName < ExeNameEnd; ExeName += wcslen(ExeName) + 1)
         {
-            _tprintf(_T("[%s]\n"), ExeName);
-            PrintMacros(ExeName, _T("    "));
-            _tprintf(_T("\n"));
+            wprintf(L"[%s]\n", ExeName);
+            PrintMacros(ExeName, L"    ");
+            wprintf(L"\n");
         }
     }
 
     HeapFree(GetProcessHeap(), 0, ExeNameBuf);
 }
 
-static VOID ReadFromFile(LPTSTR param)
+static VOID ReadFromFile(LPWSTR param)
 {
     FILE* fp;
-    TCHAR line[MAX_PATH];
+    WCHAR line[MAX_PATH];
 
-    fp = _tfopen(param, _T("r"));
+    fp = _wfopen(param, L"r");
     if (!fp)
     {
-#ifdef UNICODE
         _wperror(param);
-#else
-        perror(param);
-#endif
         return;
     }
 
-    while ( _fgetts(line, MAX_PATH, fp) != NULL) 
+    while ( fgetws(line, MAX_PATH, fp) != NULL) 
     {
         /* Remove newline character */
-        TCHAR *end = &line[_tcslen(line) - 1];
-        if (*end == _T('\n'))
-            *end = _T('\0');
+        WCHAR *end = &line[wcslen(line) - 1];
+        if (*end == L'\n')
+            *end = L'\0';
 
         if (*line)
             SetMacro(line);
@@ -154,43 +157,53 @@ static VOID ReadFromFile(LPTSTR param)
 }
 
 /* Get the start and end of the next command-line argument. */
-static BOOL GetArg(TCHAR **pStart, TCHAR **pEnd)
+static BOOL GetArg(WCHAR **pStart, WCHAR **pEnd)
 {
     BOOL bInQuotes = FALSE;
-    TCHAR *p = *pEnd;
-    p += _tcsspn(p, _T(" \t"));
+    WCHAR *p = *pEnd;
+    p += wcsspn(p, L" \t");
     if (!*p)
         return FALSE;
     *pStart = p;
     do
     {
-        if (!bInQuotes && (*p == _T(' ') || *p == _T('\t')))
+        if (!bInQuotes && (*p == L' ' || *p == L'\t'))
             break;
-        bInQuotes ^= (*p++ == _T('"'));
+        bInQuotes ^= (*p++ == L'"');
     } while (*p);
     *pEnd = p;
     return TRUE;
 }
 
 /* Remove starting and ending quotes from a string, if present */
-static LPTSTR RemoveQuotes(LPTSTR str)
+static LPWSTR RemoveQuotes(LPWSTR str)
 {
-    TCHAR *end;
-    if (*str == _T('"') && *(end = str + _tcslen(str) - 1) == _T('"'))
+    WCHAR *end;
+    if (*str == L'"' && *(end = str + wcslen(str) - 1) == L'"')
     {
         str++;
-        *end = _T('\0');
+        *end = L'\0';
     }
     return str;
 }
 
 int
-_tmain(VOID)
+wmain(VOID)
 {
     /* Get the full command line using GetCommandLine(). We can't just use argv,
      * because then a parameter like "gotoroot=cd \" wouldn't be passed completely. */
-    TCHAR *pArgStart;
-    TCHAR *pArgEnd = GetCommandLine();
+    WCHAR *pArgStart;
+    WCHAR *pArgEnd = GetCommandLine();
+	HMODULE hKernel32 = LoadLibraryW(L"kernel32.dll");
+
+	/* Get function pointers */
+	pGetConsoleCommandHistoryW = (GetConsoleCommandHistoryW_t)GetProcAddress( hKernel32,  "GetConsoleCommandHistoryW");
+	pGetConsoleCommandHistoryLengthW = (GetConsoleCommandHistoryLengthW_t)GetProcAddress( hKernel32,  "GetConsoleCommandHistoryLengthW");
+	pSetConsoleNumberOfCommandsW = (SetConsoleNumberOfCommandsW_t)GetProcAddress( hKernel32,  "SetConsoleNumberOfCommandsW");
+	pExpungeConsoleCommandHistoryW = (ExpungeConsoleCommandHistoryW_t)GetProcAddress( hKernel32,  "ExpungeConsoleCommandHistoryW");
+
+	assert(pGetConsoleCommandHistoryW && pGetConsoleCommandHistoryLengthW &&
+		pSetConsoleNumberOfCommandsW && pSetConsoleNumberOfCommandsW);
 
     /* Skip the application name */
     GetArg(&pArgStart, &pArgEnd);
@@ -198,55 +211,55 @@ _tmain(VOID)
     while (GetArg(&pArgStart, &pArgEnd))
     {
         /* NUL-terminate this argument to make processing easier */
-        TCHAR tmp = *pArgEnd;
-        *pArgEnd = _T('\0');
+        WCHAR tmp = *pArgEnd;
+        *pArgEnd = L'\0';
 
-        if (!_tcscmp(pArgStart, _T("/?")))
+        if (!wcscmp(pArgStart, L"/?"))
         {
             LoadString(GetModuleHandle(NULL), IDS_HELP, szStringBuf, MAX_STRING);
-            _tprintf(szStringBuf);
+            wprintf(szStringBuf);
             break;
         }
-        else if (!_tcsnicmp(pArgStart, _T("/EXENAME="), 9))
+        else if (!_wcsnicmp(pArgStart, L"/EXENAME=", 9))
         {
             pszExeName = RemoveQuotes(pArgStart + 9);
         }
-        else if (!_tcsicmp(pArgStart, _T("/H")) ||
-                 !_tcsicmp(pArgStart, _T("/HISTORY")))
+        else if (!wcsicmp(pArgStart, L"/H") ||
+                 !wcsicmp(pArgStart, L"/HISTORY"))
         {
             PrintHistory();
         }
-        else if (!_tcsnicmp(pArgStart, _T("/LISTSIZE="), 10))
+        else if (!_wcsnicmp(pArgStart, L"/LISTSIZE=", 10))
         {
-            SetConsoleNumberOfCommands(_ttoi(pArgStart + 10), pszExeName);
+            pSetConsoleNumberOfCommandsW(_wtoi(pArgStart + 10), pszExeName);
         }
-        else if (!_tcsicmp(pArgStart, _T("/REINSTALL")))
+        else if (!wcsicmp(pArgStart, L"/REINSTALL"))
         {
-            ExpungeConsoleCommandHistory(pszExeName);
+            pExpungeConsoleCommandHistoryW(pszExeName);
         }
-        else if (!_tcsicmp(pArgStart, _T("/INSERT")))
+        else if (!wcsicmp(pArgStart, L"/INSERT"))
         {
             SetInsert(ENABLE_INSERT_MODE);
         }
-        else if (!_tcsicmp(pArgStart, _T("/OVERSTRIKE")))
+        else if (!wcsicmp(pArgStart, L"/OVERSTRIKE"))
         {
             SetInsert(0);
         }
-        else if (!_tcsicmp(pArgStart, _T("/M")) ||
-                 !_tcsicmp(pArgStart, _T("/MACROS")))
+        else if (!wcsicmp(pArgStart, L"/M") ||
+                 !wcsicmp(pArgStart, L"/MACROS"))
         {
-            PrintMacros(pszExeName, _T(""));
+            PrintMacros(pszExeName, L"");
         }
-        else if (!_tcsnicmp(pArgStart, _T("/M:"),      3) ||
-                 !_tcsnicmp(pArgStart, _T("/MACROS:"), 8))
+        else if (!_wcsnicmp(pArgStart, L"/M:",      3) ||
+                 !_wcsnicmp(pArgStart, L"/MACROS:", 8))
         {
-            LPTSTR exe = RemoveQuotes(_tcschr(pArgStart, _T(':')) + 1);
-            if (!_tcsicmp(exe, _T("ALL")))
+            LPWSTR exe = RemoveQuotes(wcschr(pArgStart, L':') + 1);
+            if (!wcsicmp(exe, L"ALL"))
                 PrintAllMacros();
             else
-                PrintMacros(exe, _T(""));
+                PrintMacros(exe, L"");
         }
-        else if (!_tcsnicmp(pArgStart, _T("/MACROFILE="), 11))
+        else if (!_wcsnicmp(pArgStart, L"/MACROFILE=", 11))
         {
             ReadFromFile(RemoveQuotes(pArgStart + 11));
         }
