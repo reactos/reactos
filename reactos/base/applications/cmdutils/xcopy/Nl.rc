@@ -32,9 +32,9 @@ STRINGTABLE
     STRING_PAUSE,    "Druk op <enter> om te beginnen met kopiëren\n"
     STRING_SIMCOPY,  "%d bestand(en) zouden worden gekopieerd\n"
     STRING_COPY,     "%d bestand(en) gekopieerd\n"
-    STRING_QISDIR,   "Is '%s' een bestand of een map\n" \
-                     "op de bestemming?\n" \
-                     "(B - Bestand, D - Directory)\n"
+    STRING_QISDIR,   "Is '%s' een bestand of een map\n\
+                     op de bestemming?\n\
+                     (B - Bestand, D - Directory)\n"
     STRING_SRCPROMPT,"%s? (Ja|Nee)\n"
     STRING_OVERWRITE,"Overschrijven %s? (Ja|Nee|Alles)\n"
     STRING_COPYFAIL, "Kopiëren van '%s' naar '%s' mislukt met r/c %d\n"

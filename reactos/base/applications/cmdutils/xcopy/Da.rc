@@ -30,9 +30,9 @@ STRINGTABLE
     STRING_PAUSE,    "Tryk Enter for at begynde at kopiere\n"
     STRING_SIMCOPY,  "%d fil(er) vil blive kopieret\n"
     STRING_COPY,     "%d fil(er) kopieret\n"
-    STRING_QISDIR,   "Er «%s» et filnavn eller katalog\n" \
-                     "på destinationen?\n" \
-                     "(F - Fil, K - Katalog)\n"
+    STRING_QISDIR,   "Er «%s» et filnavn eller katalog\n \
+                     på destinationen?\n \
+                     (F - Fil, K - Katalog)\n"
     STRING_SRCPROMPT,"%s? (Ja|Nei)\n"
     STRING_OVERWRITE,"Overskrive «%s»? (Ja|Nei|Alle)\n"
     STRING_COPYFAIL, "Kunne ikke kopiere «%s» til «%s»; fejlet med r/c %d\n"

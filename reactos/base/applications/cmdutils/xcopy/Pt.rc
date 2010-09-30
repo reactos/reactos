@@ -33,9 +33,9 @@ STRINGTABLE
     STRING_PAUSE,    "Pressione <Enter> para iniciar a cópia\n"
     STRING_SIMCOPY,  "%d arquivo(s) seriam copiado(s)\n"
     STRING_COPY,     "%d arquivo(s) copiado(s)\n"
-    STRING_QISDIR,   "'%s' é um arquivo ou diretório\n" \
-                     "no alvo?\n" \
-                     "(A - Arquivo, D - Directório)\n"
+    STRING_QISDIR,   "'%s' é um arquivo ou diretório\n\
+                     no alvo?\n\
+                     (A - Arquivo, D - Directório)\n"
     STRING_SRCPROMPT,"%s? (Sim|Não)\n"
     STRING_OVERWRITE,"Reescrever %s? (Sim|Não|Tudo)\n"
     STRING_COPYFAIL, "Falha ao copiar '%s' para '%s' com r/c %d\n"
@@ -91,9 +91,9 @@ STRINGTABLE
     STRING_PAUSE,    "Carregue <Enter> para iniciar cópia\n"
     STRING_SIMCOPY,  "%d ficheiro(s) seriam copiado(s)\n"
     STRING_COPY,     "%d ficheiro(s) copiado(s)\n"
-    STRING_QISDIR,   "'%s' é um ficheiro ou directório\n" \
-                     "no alvo?\n" \
-                     "(F - Ficheiro, D - Directório)\n"
+    STRING_QISDIR,   "'%s' é um ficheiro ou directório\n\
+                     no alvo?\n\
+                     (F - Ficheiro, D - Directório)\n"
     STRING_SRCPROMPT,"%s? (Yes|No)\n"
     STRING_OVERWRITE,"Reescrever %s? (Yes|No|All)\n"
     STRING_COPYFAIL, "Cópia de '%s' para '%s' falhou com r/c %d\n"

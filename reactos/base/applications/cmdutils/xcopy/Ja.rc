@@ -33,9 +33,9 @@ STRINGTABLE
     STRING_PAUSE,    "コピーを開始するには <enter> を押してください\n"
     STRING_SIMCOPY,  "%d ファイルがコピーされる見込みです。\n"
     STRING_COPY,     "%d ファイルをコピーしました\n"
-    STRING_QISDIR,   "送り先の '%s' はファイル名ですか、\n" \
-                     "ディレクトリですか?\n" \
-                     "(F - ファイル、D - ディレクトリ)\n"
+    STRING_QISDIR,   "送り先の '%s' はファイル名ですか、\n \
+                     ディレクトリですか?\n \
+                     (F - ファイル、D - ディレクトリ)\n"
     STRING_SRCPROMPT,"%s? (Yes|No)\n"
     STRING_OVERWRITE,"%s を上書きしますか? (Yes|No|All)\n"
     STRING_COPYFAIL, "'%s' から '%s' へのコピーは失敗しました。戻り値 %d\n"
