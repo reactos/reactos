@@ -567,14 +567,6 @@ MmIsPageInUse(PFN_NUMBER Pfn)
 
 VOID
 NTAPI
-MiSetConsumer(IN PFN_NUMBER Pfn,
-              IN ULONG Type)
-{
-    MiGetPfnEntry(Pfn)->u3.e1.PageLocation = ActiveAndValid;
-}
-
-VOID
-NTAPI
 MmDereferencePage(PFN_NUMBER Pfn)
 {
    PPHYSICAL_PAGE Page;
@@ -591,6 +583,7 @@ MmDereferencePage(PFN_NUMBER Pfn)
         Page->u3.e1.PageLocation = ActiveAndValid;
 
         /* Bring it back into the free list */
+        DPRINT("Legacy free: %lx\n", Pfn);
         MiInsertPageInFreeList(Pfn);
    }
 }
@@ -617,6 +610,7 @@ MmAllocPage(ULONG Type)
        return 0;
    }
 
+   DPRINT("Legacy allocate: %lx\n", PfnOffset);
    Pfn1 = MiGetPfnEntry(PfnOffset);
    Pfn1->u3.e2.ReferenceCount = 1;
    Pfn1->u3.e1.PageLocation = ActiveAndValid;

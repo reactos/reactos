@@ -234,8 +234,6 @@ MiIsBalancerThread(VOID)
           PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
 }
 
-VOID NTAPI MiSetConsumer(IN PFN_NUMBER Pfn, IN ULONG Consumer);
-
 NTSTATUS
 NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
@@ -321,7 +319,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
       /* Update the Consumer and make the page active */
-      MiSetConsumer(Page, Consumer);
       if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);
