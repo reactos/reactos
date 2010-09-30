@@ -377,7 +377,10 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     KIRQL OldIrql;
     PLIST_ENTRY NextEntry, NextHead, LastHead;
     PMMPTE PointerPte, StartPte;
+    PMMPDE PointerPde;
+    ULONG EndAllocation;
     MMPTE TempPte;
+    MMPDE TempPde;
     PMMPFN Pfn1;
     PVOID BaseVa, BaseVaStart;
     PMMFREE_POOL_ENTRY FreeEntry;
@@ -409,7 +412,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Get the page bit count
             //
-            i = ((SizeInPages - 1) / 1024) + 1;
+            i = ((SizeInPages - 1) / PTE_COUNT) + 1;
             DPRINT1("Paged pool expansion: %d %x\n", i, SizeInPages);
             
             //
@@ -450,15 +453,15 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             }
             
             //
-            // Get the template PTE we'll use to expand
+            // Get the template PDE we'll use to expand
             //
-            TempPte = ValidKernelPte;
+            TempPde = ValidKernelPde;
             
             //
             // Get the first PTE in expansion space
             //
-            PointerPte = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
-            BaseVa = MiPteToAddress(PointerPte);
+            PointerPde = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
+            BaseVa = MiPteToAddress(PointerPde);
             BaseVaStart = BaseVa;
             
             //
@@ -470,11 +473,13 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // It should not already be valid
                 //
-                ASSERT(PointerPte->u.Hard.Valid == 0);
+                ASSERT(PointerPde->u.Hard.Valid == 0);
                 
                 /* Request a page */
+                DPRINT1("Requesting %d PDEs\n", i);
                 PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
-                TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+                TempPde.u.Hard.PageFrameNumber = PageFrameNumber;
+                DPRINT1("We have a PDE: %lx\n", PageFrameNumber);
 
 #if (_MI_PAGING_LEVELS >= 3)
                 /* On PAE/x64 systems, there's no double-buffering */
@@ -483,38 +488,38 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Save it into our double-buffered system page directory
                 //
-                /* This seems to be making the assumption that one PDE is one page long */
-                C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
-                MmSystemPagePtes[(ULONG_PTR)PointerPte & (PAGE_SIZE - 1) /
-                                 sizeof(MMPTE)] = TempPte;
-                            
+                MmSystemPagePtes[(ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)] = TempPde;
+                                            
                 /* Initialize the PFN */
                 MiInitializePfnForOtherProcess(PageFrameNumber,
-                                               PointerPte,
-                                               MmSystemPageDirectory[(PointerPte - (PMMPTE)PDE_BASE) / PDE_COUNT]);
+                                               PointerPde,
+                                               MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
                              
-                /* Write the actual PTE now */
-                MI_WRITE_VALID_PTE(PointerPte++, TempPte);
+                /* Write the actual PDE now */
+                MI_WRITE_VALID_PTE(PointerPde, TempPde);
 #endif                
                 //
                 // Move on to the next expansion address
                 //
+                PointerPde++;
                 BaseVa = (PVOID)((ULONG_PTR)BaseVa + PAGE_SIZE);
-            } while (--i > 0);
+                i--;
+            } while (i > 0);
             
             //
             // Release the PFN database lock
             //            
             KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-            
+                        
             //
             // These pages are now available, clear their availablity bits
             //
+            EndAllocation = (MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
+                             MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
+                             PTE_COUNT;
             RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap,
-                         (MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
-                          MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
-                         1024,
-                         SizeInPages * 1024);
+                         EndAllocation,
+                         SizeInPages * PTE_COUNT);
                         
             //
             // Update the next expansion location
@@ -553,7 +558,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         // Update the end bitmap so we know the bounds of this allocation when
         // the time comes to free it
         //
-        RtlSetBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, i + SizeInPages - 1);
+        EndAllocation = i + SizeInPages - 1;
+        RtlSetBit(MmPagedPoolInfo.EndOfPagedPoolBitmap, EndAllocation);
         
         //
         // Now we can release the lock (it mainly protects the bitmap)
@@ -583,9 +589,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Write the demand zero PTE and keep going
             //
-            ASSERT(PointerPte->u.Hard.Valid == 0);
-            *PointerPte++ = TempPte;
-        } while (PointerPte < StartPte);
+            MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+        } while (++PointerPte < StartPte);
         
         //
         // Return the allocation address to the caller

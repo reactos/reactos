@@ -107,16 +107,11 @@ MiCheckPdeForPagedPool(IN PVOID Address)
 #ifdef _M_AMD64
         ASSERT(FALSE);
 #else
-        /* This seems to be making the assumption that one PDE is one page long */
-        C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
-        
         //
         // Copy it from our double-mapped system page directory
         //
         InterlockedExchangePte(PointerPde,
-                               MmSystemPagePtes[((ULONG_PTR)PointerPde &
-                                                 (PAGE_SIZE - 1)) /
-                                                sizeof(MMPTE)].u.Long);
+                               MmSystemPagePtes[(ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)].u.Long);
 #endif
     }
     
