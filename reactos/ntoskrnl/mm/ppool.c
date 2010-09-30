@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitializePagedPool)
-#endif
-
 #undef ASSERT
 #define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
 
@@ -965,26 +961,6 @@ RPoolFree ( PR_POOL pool, void* Addr )
 	R_ACQUIRE_MUTEX(pool);
 	RPoolReclaim ( pool, FreeBlock );
 	R_RELEASE_MUTEX(pool);
-}
-
-VOID
-INIT_FUNCTION
-NTAPI
-MmInitializePagedPool(VOID)
-{   
-	/*
-	 * We are still at a high IRQL level at this point so explicitly commit
-	 * the first page of the paged pool before writing the first block header.
-	 */
-	MmCommitPagedPoolAddress ( (PVOID)MmPagedPoolBase, FALSE );
-
-	MmPagedPool = RPoolInit ( MmPagedPoolBase,
-		MmPagedPoolSize,
-		MM_POOL_ALIGNMENT,
-		MM_CACHE_LINE_SIZE,
-		PAGE_SIZE );
-
-	ExInitializeFastMutex(&MmPagedPool->Mutex);
 }
 
 PVOID NTAPI

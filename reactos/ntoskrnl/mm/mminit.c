@@ -199,21 +199,6 @@ MiInitSystemMemoryAreas()
     ASSERT(Status == STATUS_SUCCESS);
     
     //
-    // And now, ReactOS paged pool
-    //
-    BaseAddress = MmPagedPoolBase;
-    Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_PAGED_POOL | MEMORY_AREA_STATIC,
-                                &BaseAddress,
-                                MmPagedPoolSize,
-                                PAGE_READWRITE,
-                                &MArea,
-                                TRUE,
-                                0,
-                                BoundaryAddressMultiple);
-    ASSERT(Status == STATUS_SUCCESS);
-    
-    //
     // Next, the KPCR
     //
     BaseAddress = (PVOID)PCR;
@@ -287,10 +272,6 @@ MiDbgDumpAddressSpace(VOID)
             MmSystemRangeStart,
             (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
             "Boot Loaded Image");
-    DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmPagedPoolBase,
-            (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
-            "Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPfnDatabase,
             (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
@@ -373,12 +354,7 @@ MmInitSystem(IN ULONG Phase,
         
         /* Initialize ARM³ in phase 0 */
         MmArmInitSystem(0, KeLoaderBlock);    
-        
-        /* Put the paged pool after the loaded modules */
-        MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
-                                               MmBootImageSize);
-        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-        
+
         /* Intialize system memory areas */
         MiInitSystemMemoryAreas();
 
@@ -387,7 +363,6 @@ MmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 1)
     {
-        MmInitializePagedPool();
         MiInitializeUserPfnBitmap();
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
         MmInitializeRmapList();
