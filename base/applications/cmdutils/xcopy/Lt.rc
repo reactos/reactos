@@ -33,9 +33,9 @@ STRINGTABLE
     STRING_PAUSE,    "Spauskite <enter> kopijavimui pradėti\n"
     STRING_SIMCOPY,  "bus nukopijuota failų: %d\n"
     STRING_COPY,     "nukopijuota failų: %d\n"
-    STRING_QISDIR,   "Ar „%s“ yra failas, ar katalogas,\n" \
-                     "ar paskirtis?\n" \
-                     "(F - failas, K - katalogas)\n"
+    STRING_QISDIR,   "Ar „%s“ yra failas, ar katalogas,\n\
+                     ar paskirtis?\n\
+                     (F - failas, K - katalogas)\n"
     STRING_SRCPROMPT,"%s? (Taip|Ne)\n"
     STRING_OVERWRITE,"Perrašyti %s? (Taip|Ne|Visus)\n"
     STRING_COPYFAIL, "„%s“ kopijavimas į „%s“ nepavyko su r/c %d\n"
