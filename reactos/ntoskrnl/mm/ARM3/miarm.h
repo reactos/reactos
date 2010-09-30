@@ -62,11 +62,18 @@
 /* Size of a page table */
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
 
+/* Size of a page directory */
+#define PD_SIZE  (PDE_COUNT * sizeof(MMPDE))
+
+/* Size of all page directories for a process */
+#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+
 /* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
 #ifdef _M_IX86
 #define PD_COUNT  1
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
+C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #elif _M_ARM
 #define PD_COUNT  1
 #define PDE_COUNT 4096
