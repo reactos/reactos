@@ -994,7 +994,7 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\374","Nam
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\380","CountryCode",0x00010001,0x0000017c
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\380","Name",0x00000000,"Ukraine"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\381","CountryCode",0x00010001,0x0000017d
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\381","Name",0x00000000,"Yugoslavia"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\381","Name",0x00000000,"Serbia"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\385","CountryCode",0x00010001,0x00000181
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\385","Name",0x00000000,"Croatia"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Telephony\Country List\386","CountryCode",0x00010001,0x00000182
