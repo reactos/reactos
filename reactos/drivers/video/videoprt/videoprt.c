@@ -304,6 +304,8 @@ IntVideoPortCreateAdapterDeviceObject(
    }
 
    InitializeListHead(&DeviceExtension->AddressMappingListHead);
+   InitializeListHead(&DeviceExtension->DmaAdapterList);
+
    KeInitializeDpc(
       &DeviceExtension->DpcObject,
       IntVideoPortDeferredRoutine,
