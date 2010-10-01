@@ -1,4 +1,6 @@
 
+add_definitions(-DUNICODE -D_UNICODE)
+
 add_library(wsock32 SHARED stubs.c wsock32.rc)
 
 set_module_type(wsock32 win32dll)

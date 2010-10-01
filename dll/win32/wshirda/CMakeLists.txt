@@ -1,4 +1,6 @@
 
+add_definitions(-DUNICODE -D_UNICODE)
+
 spec2def(wshirda ${CMAKE_CURRENT_SOURCE_DIR}/wshirda.spec ${CMAKE_CURRENT_BINARY_DIR}/wshirda.def)
 
 add_library(wshirda SHARED wshirda.c wshirda.rc)
