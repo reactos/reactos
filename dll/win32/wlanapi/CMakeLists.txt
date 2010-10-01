@@ -1,0 +1,17 @@
+
+include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
+
+spec2def(wlanapi ${CMAKE_CURRENT_SOURCE_DIR}/wlanapi.spec ${CMAKE_CURRENT_BINARY_DIR}/wlanapi.def)
+
+add_library(wlanapi SHARED main.c)
+
+set_target_properties(wlanapi PROPERTIES LINK_FLAGS "-Wl,-entry,0")
+
+target_link_libraries(wlanapi
+    ${CMAKE_CURRENT_BINARY_DIR}/wlanapi.def
+    wlansvc_client
+    wine
+    pseh)
+
+add_importlibs(wlanapi kernel32 rpcrt4 ntdll)
+add_dependencies(wlanapi wlanapi_def psdk)
