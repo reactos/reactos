@@ -1,22 +1,15 @@
 
-
-
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
 
 spec2def(avicap32 ${CMAKE_CURRENT_SOURCE_DIR}/avicap32.spec ${CMAKE_CURRENT_BINARY_DIR}/avicap32.def)
 
-add_library(avicap32 SHARED
-    ${CMAKE_CURRENT_SOURCE_DIR}/avicap32.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/avicap32.rc)
+add_library(avicap32 SHARED avicap32.c avicap32.rc)
 
-set_target_properties(avicap32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(avicap32 win32dll)
 
 target_link_libraries(avicap32
     ${CMAKE_CURRENT_BINARY_DIR}/avicap32.def
-    -ladvapi32
-    -luser32
-    wine
-    mingw_common
-    -lversion)
+    wine)
 
-add_dependencies(avicap32 avicap32_def psdk)
+add_importlibs(avicap32 advapi32 user32 version kernel32 ntdll)
+add_dependencies(avicap32 avicap32_def)

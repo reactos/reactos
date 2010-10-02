@@ -35,7 +35,11 @@ add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpr
 
 # Macros
 macro(set_entrypoint MODULE ENTRYPOINT)
+    if(${ENTRYPOINT} STREQUAL "0")
+    set(NEW_LINKER_FLAGS "-Wl,-entry,0")
+    else()
     set(NEW_LINKER_FLAGS "-Wl,-entry,_${ENTRYPOINT}")
+    endif()
     get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
     if(LINKER_FLAGS)
         set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
