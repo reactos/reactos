@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -9,11 +7,11 @@ spec2def(clusapi ${CMAKE_CURRENT_SOURCE_DIR}/clusapi.spec ${CMAKE_CURRENT_BINARY
 
 add_library(clusapi SHARED clusapi.c)
 
-set_target_properties(clusapi PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(clusapi win32dll)
 
 target_link_libraries(clusapi
     ${CMAKE_CURRENT_BINARY_DIR}/clusapi.def
-    wine
-    mingw_common)
+    wine)
 
-add_dependencies(clusapi clusapi_def psdk)
+add_importlibs(clusapi kernel32 ntdll)
+add_dependencies(clusapi clusapi_def)

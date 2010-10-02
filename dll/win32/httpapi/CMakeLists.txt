@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -9,11 +7,11 @@ spec2def(httpapi ${CMAKE_CURRENT_SOURCE_DIR}/httpapi.spec ${CMAKE_CURRENT_BINARY
 
 add_library(httpapi SHARED httpapi_main.c)
 
-set_target_properties(httpapi PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(httpapi win32dll)
 
 target_link_libraries(httpapi
     ${CMAKE_CURRENT_BINARY_DIR}/httpapi.def
-    wine
-    mingw_common)
+    wine)
 
-add_dependencies(httpapi httpapi_def psdk)
+add_importlibs(httpapi kernel32 ntdll)
+add_dependencies(httpapi httpapi_def)

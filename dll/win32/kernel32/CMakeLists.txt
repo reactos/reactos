@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D_KERNEL32_)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -94,20 +92,28 @@ list(APPEND SOURCE
     thread/fls.c
     thread/thread.c
     thread/tls.c
-    thread/${ARCH}/fiber.S
-    thread/${ARCH}/thread.S
     kernel32.rc
     kernel32_stubs.c)
 
-add_library(kernel32 SHARED
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_k32.h.gch)
+if(ARCH MATCHES i386)
+list(APPEND SOURCE
+    thread/i386/fiber.S
+    thread/i386/thread.S)
+elseif(ARCH MATCHES amd64)
+list(APPEND SOURCE
+    thread/amd64/fiber.S
+    thread/amd64/thread.S)
+endif(ARCH MATCHES i386)
 
-set_target_properties(kernel32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+add_library(kernel32 SHARED
+    ${CMAKE_CURRENT_BINARY_DIR}/kernel32_k32.h.gch
+    ${SOURCE})
+
+set_module_type(kernel32 win32dll)
 
 target_link_libraries(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/kernel32.def
-    pseh
-    -lntdll)
+    pseh)
 
+add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
-add_dependencies(kernel32 errcodes version)
+add_dependencies(kernel32 errcodes)

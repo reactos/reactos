@@ -1,12 +1,11 @@
 
-
-
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-D_WINE)
-
-add_definitions(-DHAVE_REGEX_H)
-add_definitions(-D_IMAGEHLP_SOURCE_)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL
+    -D__USE_CRTIMP
+    -D_WINE
+    -DHAVE_REGEX_H
+    -D_IMAGEHLP_SOURCE_)
 
 if(ARCH MATCHES amd64)
 add_definitions(-DUNW_FLAG_NHANDLER=0 -DUNW_FLAG_EHANDLER=1 -DUNW_FLAG_UHANDLER=2 -DUNW_FLAG_CHAININFO=3)
@@ -42,15 +41,13 @@ add_library(dbghelp SHARED
     type.c
     version.rc)
 
-set_target_properties(dbghelp PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(dbghelp win32dll)
 
 target_link_libraries(dbghelp
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def
     wine
     mingw_common
-    -lpsapi
-    -lversion
-    pseh
-    -lmsvcrt)
+    pseh)
 
-add_dependencies(dbghelp dbghelp_def psdk)
+add_importlibs(dbghelp psapi version msvcrt)
+add_dependencies(dbghelp dbghelp_def)

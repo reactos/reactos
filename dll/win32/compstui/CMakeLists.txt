@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -9,11 +7,11 @@ spec2def(compstui ${CMAKE_CURRENT_SOURCE_DIR}/compstui.spec ${CMAKE_CURRENT_BINA
 
 add_library(compstui SHARED compstui_main.c)
 
-set_target_properties(compstui PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(compstui win32dll)
 
 target_link_libraries(compstui
     ${CMAKE_CURRENT_BINARY_DIR}/compstui.def
-    wine
-    mingw_common)
+    wine)
 
-add_dependencies(compstui compstui_def psdk)
+add_importlibs(compstui kernel32 ntdll)
+add_dependencies(compstui compstui_def)

@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -12,13 +10,11 @@ spec2def(imm32 ${CMAKE_CURRENT_SOURCE_DIR}/imm32.spec ${CMAKE_CURRENT_BINARY_DIR
 
 add_library(imm32 SHARED imm.c version.rc)
 
-set_target_properties(imm32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(imm32 win32dll)
 
 target_link_libraries(imm32
     ${CMAKE_CURRENT_BINARY_DIR}/imm32.def
-    wine
-    -ladvapi32
-    -luser32
-    mingw_common)
+    wine)
 
-add_dependencies(imm32 imm32_def psdk)
+add_importlibs(imm32 advapi32 user32 kernel32 ntdll)
+add_dependencies(imm32 imm32_def)

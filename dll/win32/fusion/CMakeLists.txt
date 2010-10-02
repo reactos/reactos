@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -15,15 +13,11 @@ add_library(fusion SHARED
     fusion.c
     fusion_main.c)
 
-set_target_properties(fusion PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(fusion win32dll)
 
 target_link_libraries(fusion
     ${CMAKE_CURRENT_BINARY_DIR}/fusion.def
-    wine
-    mingw_common
-    -lshlwapi
-    -ladvapi32
-    -ldbghelp
-    -luser32)
+    wine)
 
-add_dependencies(fusion fusion_def psdk)
+add_importlibs(fusion shlwapi advapi32 dbghelp user32 kernel32 ntdll)
+add_dependencies(fusion fusion_def)

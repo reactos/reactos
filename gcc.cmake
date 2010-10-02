@@ -18,6 +18,8 @@ add_definitions(-pipe -fms-extensions)
 
 set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
+set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
 # Debugging (Note: DWARF-4 on 4.5.1 when we ship)
 add_definitions(-gdwarf-2 -g2 -femit-struct-debug-detailed=none -feliminate-unused-debug-types)
 
@@ -30,15 +32,12 @@ add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-e
 # Optimizations
 add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
 
-# C++ Flags
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti")
-
 # Macros
 macro(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-    set(NEW_LINKER_FLAGS "-Wl,-entry,0")
+        set(NEW_LINKER_FLAGS "-Wl,-entry,0")
     else()
-    set(NEW_LINKER_FLAGS "-Wl,-entry,_${ENTRYPOINT}")
+        set(NEW_LINKER_FLAGS "-Wl,-entry,_${ENTRYPOINT}")
     endif()
     get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
     if(LINKER_FLAGS)

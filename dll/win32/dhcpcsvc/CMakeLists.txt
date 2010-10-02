@@ -1,5 +1,5 @@
 
-
+add_definitions(-Dtzset=_tzset)
 
 include_directories(include)
 
@@ -25,17 +25,10 @@ add_library(dhcpcsvc SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_rosdhcp.h.gch
     ${SOURCE})
 
-set_target_properties(dhcpcsvc PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(dhcpcsvc win32dll)
 
-target_link_libraries(dhcpcsvc
-    ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def
-    -lmsvcrt
-    -lws2_32
-    -liphlpapi
-    -ladvapi32
-    oldnames
-    -lkernel32
-    -lntdll)
+target_link_libraries(dhcpcsvc ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
 
+add_importlibs(dhcpcsvc ws2_32 iphlpapi advapi32 msvcrt kernel32 ntdll)
 add_pch(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/include/rosdhcp.h ${SOURCE})
-add_dependencies(dhcpcsvc dhcpcsvc_def psdk)
+add_dependencies(dhcpcsvc dhcpcsvc_def)

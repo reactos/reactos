@@ -1,13 +1,12 @@
 
-
-
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-D_WINE)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL
+    -D__USE_CRTIMP
+    -D_WINE)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -41,15 +40,13 @@ add_library(crypt32 SHARED
     crypt32.rc
     version.rc)
 
-set_target_properties(crypt32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(crypt32 win32dll)
 
 target_link_libraries(crypt32
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def
     wine
     pseh
-    mingw_common
-    -luser32
-    -ladvapi32
-    -lmsvcrt)
+    mingw_common)
 
-add_dependencies(crypt32 crypt32_def psdk)
+add_importlibs(crypt32 user32 advapi32 msvcrt)
+add_dependencies(crypt32 crypt32_def)
