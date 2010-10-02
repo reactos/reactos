@@ -12,6 +12,6 @@ target_link_libraries(xmllite
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def
     wine)
 
-add_importlibs(xmllite msvcrt kernel32 ntdll)
+add_importlibs(xmllite kernel32 ntdll)
 
 add_dependencies(xmllite xmllite_def psdk buildno_header)
