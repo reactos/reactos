@@ -110,6 +110,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define MM_NOCACHE             8 
 #define MM_DECOMMIT            0x10 
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+#define MM_INVALID_PROTECTION  0xFFFFFFFF
 
 //
 // Specific PTE Definitions that map to the Memory Manager's Protection Mask Bits

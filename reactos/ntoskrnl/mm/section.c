@@ -3307,14 +3307,6 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    ULONG FileAccess = 0;
 
    /*
-    * Specifying a maximum size is meaningless for an image section
-    */
-   if (UMaximumSize != NULL)
-   {
-      return(STATUS_INVALID_PARAMETER_4);
-   }
-
-   /*
     * Check file access required
     */
    if (SectionPageProtection & PAGE_READWRITE ||
@@ -3470,132 +3462,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    return(Status);
 }
 
-/*
- * @implemented
- */
-NTSTATUS NTAPI
-NtCreateSection (OUT PHANDLE SectionHandle,
-                 IN ACCESS_MASK DesiredAccess,
-                 IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-                 IN PLARGE_INTEGER MaximumSize OPTIONAL,
-                 IN ULONG SectionPageProtection OPTIONAL,
-                 IN ULONG AllocationAttributes,
-                 IN HANDLE FileHandle OPTIONAL)
-{
-   LARGE_INTEGER SafeMaximumSize;
-   PVOID SectionObject;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status;
 
-   PreviousMode = ExGetPreviousMode();
-
-   if(PreviousMode != KernelMode)
-   {
-     _SEH2_TRY
-     {
-       if (MaximumSize != NULL)
-       {
-          /* make a copy on the stack */
-          SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
-          MaximumSize = &SafeMaximumSize;
-       }
-       ProbeForWriteHandle(SectionHandle);
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-         /* Return the exception code */
-         _SEH2_YIELD(return _SEH2_GetExceptionCode());
-     }
-     _SEH2_END;
-   }
-
-   Status = MmCreateSection(&SectionObject,
-                            DesiredAccess,
-                            ObjectAttributes,
-                            MaximumSize,
-                            SectionPageProtection,
-                            AllocationAttributes,
-                            FileHandle,
-                            NULL);
-   if (NT_SUCCESS(Status))
-   {
-      Status = ObInsertObject ((PVOID)SectionObject,
-                               NULL,
-                               DesiredAccess,
-                               0,
-                               NULL,
-                               SectionHandle);
-   }
-
-   return Status;
-}
-
-
-/**********************************************************************
- * NAME
- *  NtOpenSection
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *  SectionHandle
- *
- *  DesiredAccess
- *
- *  ObjectAttributes
- *
- * RETURN VALUE
- *
- * REVISIONS
- */
-NTSTATUS NTAPI
-NtOpenSection(PHANDLE   SectionHandle,
-              ACCESS_MASK  DesiredAccess,
-              POBJECT_ATTRIBUTES ObjectAttributes)
-{
-   HANDLE hSection;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status;
-
-   PreviousMode = ExGetPreviousMode();
-
-   if(PreviousMode != KernelMode)
-   {
-     _SEH2_TRY
-     {
-       ProbeForWriteHandle(SectionHandle);
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-        /* Return the exception code */
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-     }
-     _SEH2_END;
-   }
-
-   Status = ObOpenObjectByName(ObjectAttributes,
-                               MmSectionObjectType,
-                               PreviousMode,
-                               NULL,
-                               DesiredAccess,
-                               NULL,
-                               &hSection);
-
-   if(NT_SUCCESS(Status))
-   {
-     _SEH2_TRY
-     {
-       *SectionHandle = hSection;
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-       Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END;
-   }
-
-   return(Status);
-}
 
 static NTSTATUS
 MmMapViewOfSegment(PMMSUPPORT AddressSpace,
@@ -3642,233 +3509,6 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
 }
 
 
-/**********************************************************************
- * NAME       EXPORTED
- * NtMapViewOfSection
- *
- * DESCRIPTION
- * Maps a view of a section into the virtual address space of a
- * process.
- *
- * ARGUMENTS
- * SectionHandle
- *  Handle of the section.
- *
- * ProcessHandle
- *  Handle of the process.
- *
- * BaseAddress
- *  Desired base address (or NULL) on entry;
- *  Actual base address of the view on exit.
- *
- * ZeroBits
- *  Number of high order address bits that must be zero.
- *
- * CommitSize
- *  Size in bytes of the initially committed section of
- *  the view.
- *
- * SectionOffset
- *  Offset in bytes from the beginning of the section
- *  to the beginning of the view.
- *
- * ViewSize
- *  Desired length of map (or zero to map all) on entry
- *  Actual length mapped on exit.
- *
- * InheritDisposition
- *  Specified how the view is to be shared with
- *  child processes.
- *
- * AllocateType
- *  Type of allocation for the pages.
- *
- * Protect
- *  Protection for the committed region of the view.
- *
- * RETURN VALUE
- *  Status.
- *
- * @implemented
- */
-NTSTATUS NTAPI
-NtMapViewOfSection(IN HANDLE SectionHandle,
-                   IN HANDLE ProcessHandle,
-                   IN OUT PVOID* BaseAddress  OPTIONAL,
-                   IN ULONG_PTR ZeroBits  OPTIONAL,
-                   IN SIZE_T CommitSize,
-                   IN OUT PLARGE_INTEGER SectionOffset  OPTIONAL,
-                   IN OUT PSIZE_T ViewSize,
-                   IN SECTION_INHERIT InheritDisposition,
-                   IN ULONG AllocationType  OPTIONAL,
-                   IN ULONG Protect)
-{
-   PVOID SafeBaseAddress;
-   LARGE_INTEGER SafeSectionOffset;
-   SIZE_T SafeViewSize;
-   PROS_SECTION_OBJECT Section;
-   PEPROCESS Process;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status;
-   ULONG tmpProtect;
-   ACCESS_MASK DesiredAccess;
-
-   /*
-    * Check the protection
-    */
-   if (Protect & ~PAGE_FLAGS_VALID_FROM_USER_MODE)
-   {
-     return STATUS_INVALID_PARAMETER_10;
-   }
-
-   tmpProtect = Protect & ~(PAGE_GUARD|PAGE_NOCACHE);
-   if (tmpProtect != PAGE_NOACCESS &&
-       tmpProtect != PAGE_READONLY &&
-       tmpProtect != PAGE_READWRITE &&
-       tmpProtect != PAGE_WRITECOPY &&
-       tmpProtect != PAGE_EXECUTE &&
-       tmpProtect != PAGE_EXECUTE_READ &&
-       tmpProtect != PAGE_EXECUTE_READWRITE &&
-       tmpProtect != PAGE_EXECUTE_WRITECOPY)
-   {
-     return STATUS_INVALID_PAGE_PROTECTION;
-   }
-
-   PreviousMode = ExGetPreviousMode();
-
-   if(PreviousMode != KernelMode)
-   {
-     SafeBaseAddress = NULL;
-     SafeSectionOffset.QuadPart = 0;
-     SafeViewSize = 0;
-
-     _SEH2_TRY
-     {
-       if(BaseAddress != NULL)
-       {
-         ProbeForWritePointer(BaseAddress);
-         SafeBaseAddress = *BaseAddress;
-       }
-       if(SectionOffset != NULL)
-       {
-         ProbeForWriteLargeInteger(SectionOffset);
-         SafeSectionOffset = *SectionOffset;
-       }
-       ProbeForWriteSize_t(ViewSize);
-       SafeViewSize = *ViewSize;
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-         /* Return the exception code */
-         _SEH2_YIELD(return _SEH2_GetExceptionCode());
-     }
-     _SEH2_END;
-   }
-   else
-   {
-     SafeBaseAddress = (BaseAddress != NULL ? *BaseAddress : NULL);
-     SafeSectionOffset.QuadPart = (SectionOffset != NULL ? SectionOffset->QuadPart : 0);
-     SafeViewSize = (ViewSize != NULL ? *ViewSize : 0);
-   }
-
-   SafeSectionOffset.LowPart = PAGE_ROUND_DOWN(SafeSectionOffset.LowPart);
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_OPERATION,
-                                      PsProcessType,
-                                      PreviousMode,
-                                      (PVOID*)(PVOID)&Process,
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
-
-   /* Convert NT Protection Attr to Access Mask */
-   if (Protect == PAGE_READONLY)
-   {
-      DesiredAccess = SECTION_MAP_READ;
-   }
-   else if (Protect == PAGE_READWRITE)
-   {
-      DesiredAccess = SECTION_MAP_WRITE;
-   }
-   else if (Protect == PAGE_WRITECOPY)
-   {
-      DesiredAccess = SECTION_QUERY;
-   }
-   /* FIXME: Handle other Protection Attributes. For now keep previous behavior */
-   else
-   {
-      DesiredAccess = SECTION_MAP_READ;
-   }
-
-   Status = ObReferenceObjectByHandle(SectionHandle,
-                                      DesiredAccess,
-                                      MmSectionObjectType,
-                                      PreviousMode,
-                                      (PVOID*)(PVOID)&Section,
-                                      NULL);
-   if (!(NT_SUCCESS(Status)))
-   {
-      DPRINT("ObReference failed rc=%x\n",Status);
-      ObDereferenceObject(Process);
-      return(Status);
-   }
-
-   Status = MmMapViewOfSection(Section,
-                               (PEPROCESS)Process,
-                               (BaseAddress != NULL ? &SafeBaseAddress : NULL),
-                               ZeroBits,
-                               CommitSize,
-                               (SectionOffset != NULL ? &SafeSectionOffset : NULL),
-                               (ViewSize != NULL ? &SafeViewSize : NULL),
-                               InheritDisposition,
-                               AllocationType,
-                               Protect);
-
-   /* Check if this is an image for the current process */
-   if ((Section->AllocationAttributes & SEC_IMAGE) &&
-       (Process == PsGetCurrentProcess()) &&
-       (Status != STATUS_IMAGE_NOT_AT_BASE))
-   {
-        /* Notify the debugger */
-       DbgkMapViewOfSection(Section,
-                            SafeBaseAddress,
-                            SafeSectionOffset.LowPart,
-                            SafeViewSize);
-   }
-
-   ObDereferenceObject(Section);
-   ObDereferenceObject(Process);
-
-   if(NT_SUCCESS(Status))
-   {
-     /* copy parameters back to the caller */
-     _SEH2_TRY
-     {
-       if(BaseAddress != NULL)
-       {
-         *BaseAddress = SafeBaseAddress;
-       }
-       if(SectionOffset != NULL)
-       {
-         *SectionOffset = SafeSectionOffset;
-       }
-       if(ViewSize != NULL)
-       {
-         *ViewSize = SafeViewSize;
-       }
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-       Status = _SEH2_GetExceptionCode();
-     }
-     _SEH2_END;
-   }
-
-   return(Status);
-}
 
 static VOID
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
@@ -4156,54 +3796,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
    return(STATUS_SUCCESS);
 }
 
-/**********************************************************************
- * NAME       EXPORTED
- * NtUnmapViewOfSection
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- * ProcessHandle
- *
- * BaseAddress
- *
- * RETURN VALUE
- * Status.
- *
- * REVISIONS
- */
-NTSTATUS NTAPI
-NtUnmapViewOfSection (HANDLE ProcessHandle,
-                      PVOID BaseAddress)
-{
-   PEPROCESS Process;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status;
 
-   DPRINT("NtUnmapViewOfSection(ProcessHandle %x, BaseAddress %x)\n",
-          ProcessHandle, BaseAddress);
-
-   PreviousMode = ExGetPreviousMode();
-
-   DPRINT("Referencing process\n");
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_OPERATION,
-                                      PsProcessType,
-                                      PreviousMode,
-                                      (PVOID*)(PVOID)&Process,
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("ObReferenceObjectByHandle failed (Status %x)\n", Status);
-      return(Status);
-   }
-
-   Status = MmUnmapViewOfSection(Process, BaseAddress);
-
-   ObDereferenceObject(Process);
-
-   return Status;
-}
 
 
 /**
@@ -4346,76 +3939,7 @@ NtQuerySection(IN HANDLE SectionHandle,
 }
 
 
-/**
- * Extends size of file backed section.
- *
- * @param SectionHandle
- *        Handle to the section object. It must be opened with
- *        SECTION_EXTEND_SIZE access.
- * @param NewMaximumSize
- *        New maximum size of the section in bytes.
- *
- * @return Status.
- *
- * @todo Move the actual code to internal function MmExtendSection.
- * @unimplemented
- */
-NTSTATUS NTAPI
-NtExtendSection(IN HANDLE SectionHandle,
-                IN PLARGE_INTEGER NewMaximumSize)
-{
-   LARGE_INTEGER SafeNewMaximumSize;
-   PROS_SECTION_OBJECT Section;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status;
 
-   PreviousMode = ExGetPreviousMode();
-
-   if(PreviousMode != KernelMode)
-   {
-     _SEH2_TRY
-     {
-       /* make a copy on the stack */
-       SafeNewMaximumSize = ProbeForReadLargeInteger(NewMaximumSize);
-       NewMaximumSize = &SafeNewMaximumSize;
-     }
-     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-     {
-        /* Return the exception code */
-        _SEH2_YIELD(return _SEH2_GetExceptionCode());
-     }
-     _SEH2_END;
-   }
-
-   Status = ObReferenceObjectByHandle(SectionHandle,
-                                      SECTION_EXTEND_SIZE,
-                                      MmSectionObjectType,
-                                      PreviousMode,
-                                      (PVOID*)&Section,
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return Status;
-   }
-
-   if (!(Section->AllocationAttributes & SEC_FILE))
-   {
-      ObDereferenceObject(Section);
-      return STATUS_INVALID_PARAMETER;
-   }
-
-   /*
-    * - Acquire file extneding resource.
-    * - Check if we're not resizing the section below it's actual size!
-    * - Extend segments if needed.
-    * - Set file information (FileAllocationInformation) to the new size.
-    * - Release file extending resource.
-    */
-
-   ObDereferenceObject(Section);
-
-   return STATUS_NOT_IMPLEMENTED;
-}
 
 /**********************************************************************
  * NAME       EXPORTED
@@ -4704,15 +4228,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
 }
 
 
-/*
- * @unimplemented
- */
-BOOLEAN NTAPI
-MmDisableModifiedWriteOfSection (ULONG Unknown0)
-{
-   UNIMPLEMENTED;
-   return (FALSE);
-}
+
 
 /*
  * @implemented
@@ -4736,19 +4252,6 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
    }
    return FALSE;
 }
-
-/*
- * @unimplemented
- */
-BOOLEAN NTAPI
-MmForceSectionClosed (
-    IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-    IN BOOLEAN                  DelayClose)
-{
-   UNIMPLEMENTED;
-   return (FALSE);
-}
-
 
 /*
  * @implemented
@@ -4798,22 +4301,6 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 }
 
 /*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-MmMapViewInSessionSpace (
-    IN PVOID Section,
-    OUT PVOID *MappedBase,
-    IN OUT PSIZE_T ViewSize
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-
-/*
  * @implemented
  */
 NTSTATUS NTAPI
@@ -4831,18 +4318,6 @@ MmUnmapViewInSystemSpace (IN PVOID MappedBase)
    return Status;
 }
 
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-MmUnmapViewInSessionSpace (
-    IN PVOID MappedBase
-    )
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
 
 /**********************************************************************
  * NAME       EXPORTED
@@ -4957,14 +4432,6 @@ MmCreateSection (OUT PVOID  * Section,
                                   AllocationAttributes));
 }
 
-NTSTATUS
-NTAPI
-NtAreMappedFilesTheSame(IN PVOID File1MappedAsAnImage,
-                        IN PVOID File2MappedAsFile)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
 
 
 /* EOF */

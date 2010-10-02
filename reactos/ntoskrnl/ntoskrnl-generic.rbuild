@@ -459,6 +459,7 @@
 			<file>pfnlist.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
+			<file>section.c</file>
 			<file>sysldr.c</file>
 			<file>syspte.c</file>
 			<file>vadnode.c</file>
