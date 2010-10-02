@@ -22,4 +22,4 @@ target_link_libraries(advpack
     -lversion
     -ladvapi32)
 
-add_dependencies(advpack advpack_def psdk)
+add_dependencies(advpack advpack_def psdk buildno_header)

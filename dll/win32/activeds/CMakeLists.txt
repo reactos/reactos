@@ -16,4 +16,4 @@ target_link_libraries(activeds
      wine
      mingw_common)
 
-add_dependencies(activeds activeds_def psdk)
+add_dependencies(activeds activeds_def psdk buildno_header)

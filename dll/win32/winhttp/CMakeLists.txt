@@ -20,5 +20,5 @@ target_link_libraries(winhttp
     ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def
     wine)
 
-add_importlibs(winhttp msvcrt shlwapi wininet ws2_32 ntdll)
+add_importlibs(winhttp shlwapi wininet ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(winhttp winhttp_def psdk)

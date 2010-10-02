@@ -33,5 +33,5 @@ target_link_libraries(wldap32
      ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def
      wine)
 
-add_importlibs(wldap32 ntdll user32)
+add_importlibs(wldap32 user32 kernel32 ntdll)
 add_dependencies(wldap32 wldap32_def psdk)

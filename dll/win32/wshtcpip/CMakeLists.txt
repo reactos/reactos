@@ -1,5 +1,6 @@
 
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
+
 include_directories(${REACTOS_SOURCE_DIR}/lib/tdilib)
 
 spec2def(wshtcpip ${CMAKE_CURRENT_SOURCE_DIR}/wshtcpip.spec ${CMAKE_CURRENT_BINARY_DIR}/wshtcpip.def)
@@ -12,5 +13,5 @@ target_link_libraries(wshtcpip
     ${CMAKE_CURRENT_BINARY_DIR}/wshtcpip.def
     tdilib)
 
-add_importlibs(wshtcpip kernel32 ntdll ws2_32)
+add_importlibs(wshtcpip kernel32 ws2_32 kernel32 ntdll)
 add_dependencies(wshtcpip wshtcpip_def psdk)

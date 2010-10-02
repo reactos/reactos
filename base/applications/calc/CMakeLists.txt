@@ -1,5 +1,6 @@
 
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
+
 add_definitions(-DDISABLE_HTMLHELP_SUPPORT=1)
 
 add_executable(calc 
@@ -12,7 +13,4 @@ add_executable(calc
     resource.rc)
 
 set_module_type(calc win32gui)
-set_unicode(calc yes)
 add_importlibs(calc advapi32 user32 gdi32 msvcrt)
-
-add_dependencies(calc psdk)

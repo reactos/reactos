@@ -25,7 +25,7 @@ target_link_libraries(winmm
     wine
     pseh)
 
-add_importlibs(winmm msvcrt ntdll advapi32 user32)
+add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 add_dependencies(winmm winmm_def psdk)
 
 add_subdirectory(midimap)

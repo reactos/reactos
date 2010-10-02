@@ -16,5 +16,5 @@ target_link_libraries(winspool
     ${CMAKE_CURRENT_BINARY_DIR}/winspool.def
     wine)
 
-add_importlibs(winspool ntdll advapi32 shlwapi)
+add_importlibs(winspool advapi32 shlwapi kernel32 ntdll)
 add_dependencies(winspool winspool_def psdk)

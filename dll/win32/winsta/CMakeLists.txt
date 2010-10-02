@@ -21,6 +21,6 @@ target_link_libraries(winsta
     ${CMAKE_CURRENT_BINARY_DIR}/winsta.def
     wine)
 
-add_importlibs(winsta ntdll)
+add_importlibs(winsta kernel32 ntdll)
 add_pch(winsta ${CMAKE_CURRENT_SOURCE_DIR}/winsta.h ${SOURCE})
 add_dependencies(winsta winsta_def psdk)

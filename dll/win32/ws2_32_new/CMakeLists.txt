@@ -51,5 +51,5 @@ target_link_libraries(ws2_32_new
      ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_new.def
      wine)
 
-add_importlibs(ws2_32_new ntdll user32 advapi32 dnsapi ws2help)
+add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help kernel32 ntdll)
 add_dependencies(ws2_32_new ws2_32_new_def psdk)

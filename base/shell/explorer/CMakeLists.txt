@@ -1,6 +1,8 @@
+
 add_subdirectory(notifyhook)
 
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
+
 add_definitions(-DWIN32)
 add_definitions(-D__WINDRES__)
 
@@ -46,16 +48,12 @@ list(APPEND SOURCE
 
 add_executable(explorer ${SOURCE}) #${CMAKE_CURRENT_BINARY_DIR}/explorer_precomp.h.gch ${SOURCE})
 
-set_module_type(explorer win32gui)
-
 target_link_libraries(explorer
-    mingw_wmain
-    mingw_common
-    coldname
-    oldnames
     wine
     uuid)
-    
+
+set_module_type(explorer win32gui)
+
 add_importlibs(explorer 
     advapi32
     gdi32

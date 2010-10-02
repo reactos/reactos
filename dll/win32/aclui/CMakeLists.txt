@@ -1,7 +1,6 @@
 
+set_unicode()
 
-
-add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-DSUPPORT_UXTHEME)
 
 file(GLOB_RECURSE SOURCE *.c)
@@ -28,4 +27,4 @@ target_link_libraries(aclui
     -lntdll)
 
 add_pch(aclui ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(aclui aclui_def psdk)
+add_dependencies(aclui aclui_def psdk buildno_header)

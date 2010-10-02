@@ -13,5 +13,5 @@ target_link_libraries(wlanapi
     wine
     pseh)
 
-add_importlibs(wlanapi kernel32 rpcrt4 ntdll)
+add_importlibs(wlanapi rpcrt4 kernel32 ntdll)
 add_dependencies(wlanapi wlanapi_def psdk)

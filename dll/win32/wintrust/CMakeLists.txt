@@ -19,5 +19,5 @@ target_link_libraries(wintrust
     wine
     pseh)
 
-add_importlibs(wintrust msvcrt crypt32 cryptui user32 advapi32 imagehlp ntdll)
-add_dependencies(wintrust wintrust_def psdk)
+add_importlibs(wintrust crypt32 cryptui user32 advapi32 imagehlp msvcrt kernel32 ntdll)
+add_dependencies(wintrust wintrust_def psdk buildno_header)

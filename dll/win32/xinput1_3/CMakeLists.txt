@@ -12,4 +12,6 @@ target_link_libraries(xinput1_3
     ${CMAKE_CURRENT_BINARY_DIR}/xinput1_3.def
     wine)
 
-add_dependencies(xinput1_3 xinput1_3_def psdk)
+add_importlibs(xinput1_3 msvcrt kernel32 ntdll)
+
+add_dependencies(xinput1_3 xinput1_3_def psdk buildno_header)

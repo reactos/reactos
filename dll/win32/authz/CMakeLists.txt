@@ -21,4 +21,4 @@ target_link_libraries(authz
     -lntdll)
 
 add_pch(authz ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(authz authz_def psdk)
+add_dependencies(authz authz_def psdk buildno_header)

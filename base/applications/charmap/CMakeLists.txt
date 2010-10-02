@@ -1,4 +1,6 @@
 
+set_unicode()
+
 list(APPEND SOURCE
     about.c
     charmap.c
@@ -12,8 +14,5 @@ add_executable(charmap
 
 add_pch(charmap ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-set_unicode(charmap yes)
-
 set_module_type(charmap win32gui)
-
 add_importlibs(charmap user32 gdi32 comctl32 msvcrt)

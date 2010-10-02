@@ -1,7 +1,7 @@
 
-list(APPEND SOURCE
-    cacls.c
-    cacls.rc)
+set_unicode()
+
+list(APPEND SOURCE cacls.c cacls.rc)
 
 add_executable(cacls
     ${CMAKE_CURRENT_BINARY_DIR}/cacls_precomp.h.gch
@@ -9,8 +9,5 @@ add_executable(cacls
 
 add_pch(cacls ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
-set_unicode(cacls yes)
-
 set_module_type(cacls win32cui)
-
-add_importlibs(cacls advapi32 ntdll user32 shell32 msvcrt)
+add_importlibs(cacls advapi32 user32 shell32 msvcrt)
