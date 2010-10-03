@@ -167,11 +167,10 @@ FindSystemTimer(PMSG pMsg)
 BOOL
 FASTCALL
 ValidateTimerCallback(PTHREADINFO pti,
-                      PWINDOW_OBJECT Window,
-                      WPARAM wParam,
                       LPARAM lParam)
 {
   PLIST_ENTRY pLE;
+  BOOL Ret = FALSE;
   PTIMER pTmr = FirstpTmr;
 
   if (!pTmr) return FALSE;
@@ -180,18 +179,18 @@ ValidateTimerCallback(PTHREADINFO pti,
   do
   {
     if ( (lParam == (LPARAM)pTmr->pfn) &&
-         (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
+        !(pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) &&
          (pTmr->pti->ppi == pti->ppi) )
+    {
+       Ret = TRUE;
        break;
-
+    }
     pLE = pTmr->ptmrList.Flink;
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
   TimerLeave();
 
-  if (!pTmr) return FALSE;
-
-  return TRUE;
+  return Ret;
 }
 
 UINT_PTR FASTCALL
@@ -616,8 +615,7 @@ NtUserSetSystemTimer(
 
    DPRINT("Enter NtUserSetSystemTimer\n");
 
-   // This is wrong, lpTimerFunc is NULL!
-   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM));
+   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, NULL, TMRF_SYSTEM));
 
 CLEANUP:
    DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);

@@ -394,7 +394,7 @@ IntDispatchMessage(PMSG pMsg)
   {
      if (pMsg->message == WM_TIMER)
      {
-        if (ValidateTimerCallback(PsGetCurrentThreadWin32Thread(),Window,pMsg->wParam,pMsg->lParam))
+        if (ValidateTimerCallback(PsGetCurrentThreadWin32Thread(),pMsg->lParam))
         {
            KeQueryTickCount(&TickCount);
            Time = MsqCalculateMessageTime(&TickCount);
@@ -963,13 +963,15 @@ MessageFound:
       }
 
 MsgExit:
+      pti->rpdesk->htEx = HitTest; /* Now set the capture hit. */
+
       if ( ISITHOOKED(WH_MOUSE) && IS_MOUSE_MESSAGE(Msg->Msg.message))
       {
-          if(!ProcessMouseMessage(&Msg->Msg, HitTest, RemoveMsg))
-		  {
-			  return FALSE;
-		  }
-	  }
+          if (!ProcessMouseMessage(&Msg->Msg, HitTest, RemoveMsg))
+          {
+             return FALSE;
+          }
+      }
 
       if ( ISITHOOKED(WH_KEYBOARD) && IS_KBD_MESSAGE(Msg->Msg.message))
       {

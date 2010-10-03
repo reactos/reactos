@@ -1125,20 +1125,11 @@ NtUserValidateTimerCallback(
     LPARAM lParam)
 {
   BOOL Ret = FALSE;
-  PWINDOW_OBJECT Window = NULL;
 
   UserEnterShared();
 
-  if (hWnd)
-  {
-     Window = UserGetWindowObject(hWnd);
-     if (!Window || !Window->Wnd)
-        goto Exit;
-  }
+  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), lParam);
 
-  Ret = ValidateTimerCallback(PsGetCurrentThreadWin32Thread(), Window, wParam, lParam);
-
-Exit:
   UserLeave();
   return Ret;
 }
