@@ -1,9 +1,10 @@
 
-include_directories(BEFORE .)
-include_directories(${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
-include_directories(${REACTOS_SOURCE_DIR}/dll/cpl/console)
+include_directories(
+    BEFORE .
+    ${REACTOS_SOURCE_DIR}/subsystems/win32/csrss/include
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers
+    ${REACTOS_SOURCE_DIR}/dll/cpl/console)
 
 spec2def(win32csr ${CMAKE_CURRENT_SOURCE_DIR}/win32csr.spec ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
 
@@ -34,8 +35,8 @@ target_link_libraries(win32csr
 
 set_module_type(win32csr win32dll)
 
-add_importlibs(win32csr ntdll user32 gdi32 advapi32 psapi)
+add_importlibs(win32csr user32 gdi32 advapi32 psapi kernel32 ntdll)
 
 add_pch(win32csr ${CMAKE_CURRENT_SOURCE_DIR}/w32csr.h ${SOURCE})
 
-add_dependencies(win32csr win32csr_def psdk bugcodes)
+add_dependencies(win32csr win32csr_def bugcodes)
