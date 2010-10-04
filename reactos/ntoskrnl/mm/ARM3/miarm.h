@@ -234,6 +234,18 @@ extern const ULONG MmProtectToPteMask[32];
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
 //
+// Decodes a Prototype PTE into the underlying PTE
+//
+#define MiProtoPteToPte(x)                  \
+    (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
+             ((x)->u.Proto.ProtoAddressHigh | (x)->u.Proto.ProtoAddressLow))
+
+//
+// Prototype PTEs that don't yet have a pagefile association
+//
+#define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+
+//
 // FIXFIX: These should go in ex.h after the pool merge
 //
 #ifdef _M_AMD64
@@ -358,6 +370,25 @@ typedef struct _MI_LARGE_PAGE_RANGES
     PFN_NUMBER StartFrame;
     PFN_NUMBER LastFrame;
 } MI_LARGE_PAGE_RANGES, *PMI_LARGE_PAGE_RANGES;
+
+typedef struct _MMVIEW
+{
+    ULONG_PTR Entry;
+    PCONTROL_AREA ControlArea;
+} MMVIEW, *PMMVIEW;
+
+typedef struct _MMSESSION
+{
+    KGUARDED_MUTEX SystemSpaceViewLock;
+    PKGUARDED_MUTEX SystemSpaceViewLockPointer;
+    PCHAR SystemSpaceViewStart;
+    PMMVIEW SystemSpaceViewTable;
+    ULONG SystemSpaceHashSize;
+    ULONG SystemSpaceHashEntries;
+    ULONG SystemSpaceHashKey;
+    ULONG BitmapFailures;
+    PRTL_BITMAP SystemSpaceBitMap;
+} MMSESSION, *PMMSESSION;
 
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
@@ -562,6 +593,31 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+}
+
+//
+// Builds a Prototype PTE for the address of the PTE
+//
+FORCEINLINE
+VOID
+MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
+                      IN PMMPTE PointerPte)
+{
+    ULONG_PTR Offset;
+
+    /* Mark this as a prototype */
+    NewPte->u.Long = 0;
+    NewPte->u.Proto.Prototype = 1;
+    
+    /*
+     * Prototype PTEs are only valid in paged pool by design, this little trick
+     * lets us only use 28 bits for the adress of the PTE
+     */
+    Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
+    
+    /* 7 bits go in the "low", and the other 21 bits go in the "high" */
+    NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
+    NewPte->u.Proto.ProtoAddressHigh = Offset & 0xFFFFF80;
 }
 
 //
@@ -1105,6 +1161,12 @@ PMMADDRESS_NODE
 NTAPI
 MiGetNextNode(
     IN PMMADDRESS_NODE Node
+);
+
+BOOLEAN
+NTAPI
+MiInitializeSystemSpaceMap(
+    IN PVOID InputSession OPTIONAL
 );
 
 //
