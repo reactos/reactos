@@ -70,6 +70,8 @@ CHAR MmUserProtectionToMask2[16] =
     (CHAR)MM_INVALID_PROTECTION
 };
 
+MMSESSION MmSession;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 ULONG
@@ -153,6 +155,58 @@ MiMakeProtectionMask(IN ULONG Protect)
     /* Return the final MM PTE protection mask */
     return ProtectMask;
 }
+
+BOOLEAN
+NTAPI
+MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
+{
+    SIZE_T AllocSize, BitmapSize;
+    PMMSESSION Session;
+
+    /* For now, always use the global session */
+    ASSERT(InputSession == NULL);
+    Session = &MmSession;
+
+    /* Initialize the system space lock */
+    Session->SystemSpaceViewLockPointer = &Session->SystemSpaceViewLock;
+    KeInitializeGuardedMutex(Session->SystemSpaceViewLockPointer);
+    
+    /* Set the start address */
+    Session->SystemSpaceViewStart = MiSystemViewStart;
+
+    /* Create a bitmap to describe system space */
+    BitmapSize = sizeof(RTL_BITMAP) + ((((MmSystemViewSize / 65536) + 31) / 32) * sizeof(ULONG));
+    Session->SystemSpaceBitMap = ExAllocatePoolWithTag(NonPagedPool,
+                                                       BitmapSize,
+                                                       '  mM');
+    ASSERT(Session->SystemSpaceBitMap);
+    RtlInitializeBitMap(Session->SystemSpaceBitMap,
+                        (PULONG)(Session->SystemSpaceBitMap + 1),
+                        MmSystemViewSize / 65536);
+
+    /* Set system space fully empty to begin with */
+    RtlClearAllBits(Session->SystemSpaceBitMap);
+
+    /* Set default hash flags */
+    Session->SystemSpaceHashSize = 31;
+    Session->SystemSpaceHashKey = Session->SystemSpaceHashSize - 1;
+    Session->SystemSpaceHashEntries = 0;
+
+    /* Calculate how much space for the hash views we'll need */
+    AllocSize = sizeof(MMVIEW) * Session->SystemSpaceHashSize;
+    ASSERT(AllocSize < PAGE_SIZE);
+
+    /* Allocate and zero the view table */
+    Session->SystemSpaceViewTable = ExAllocatePoolWithTag(NonPagedPool,
+                                                          AllocSize,
+                                                          '  mM');
+    ASSERT(Session->SystemSpaceViewTable != NULL);
+    RtlZeroMemory(Session->SystemSpaceViewTable, AllocSize);
+    
+    /* Success */
+    return TRUE;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS

@@ -1674,6 +1674,9 @@ MiBuildPagedPool(VOID)
     MiHighPagedPoolThreshold = (60 * _1MB) >> PAGE_SHIFT;
     MiHighPagedPoolThreshold = min(MiHighPagedPoolThreshold, (Size * 2) / 5);
     ASSERT(MiLowPagedPoolThreshold < MiHighPagedPoolThreshold);
+    
+    /* Setup the global session space */
+    MiInitializeSystemSpaceMap(NULL);
 }
 
 NTSTATUS
