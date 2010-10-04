@@ -1082,79 +1082,8 @@ co_WinPosSetWindowPos(
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
    if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != UserGetShellWindow())
    {
-      PWINDOW_OBJECT ParentWindow;
-      PWINDOW_OBJECT Sibling;
-      PWINDOW_OBJECT InsertAfterWindow;
-
-      if ((ParentWindow = Window->spwndParent))
-      {
-         if (HWND_TOPMOST == WinPos.hwndInsertAfter)
-         {
-            InsertAfterWindow = NULL;
-         }
-         else if (HWND_TOP == WinPos.hwndInsertAfter
-                  || HWND_NOTOPMOST == WinPos.hwndInsertAfter)
-         {
-            InsertAfterWindow = NULL;
-            Sibling = ParentWindow->spwndChild;
-            while ( NULL != Sibling && 
-                    0 != (Sibling->Wnd->ExStyle & WS_EX_TOPMOST) )
-            {
-               InsertAfterWindow = Sibling;
-               Sibling = Sibling->spwndNext;
-            }
-            if (NULL != InsertAfterWindow)
-            {
-               UserReferenceObject(InsertAfterWindow);
-            }
-         }
-         else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
-         {
-            if(ParentWindow->spwndChild)
-            {
-               InsertAfterWindow = ParentWindow->spwndChild;
-
-               if(InsertAfterWindow)
-               {
-                  while (InsertAfterWindow->spwndNext)
-                     InsertAfterWindow = InsertAfterWindow->spwndNext;
-               }
-
-               UserReferenceObject(InsertAfterWindow);
-            }
-            else
-               InsertAfterWindow = NULL;
-         }
-         else
-            InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
-         /* Do nothing if hwndInsertAfter is HWND_BOTTOM and Window is already
-            the last window */
-         if (InsertAfterWindow != Window)
-         {
-            IntUnlinkWindow(Window);
-            IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
-         }
-         if (InsertAfterWindow != NULL)
-            UserDereferenceObject(InsertAfterWindow);
-
-         if ( (HWND_TOPMOST == WinPos.hwndInsertAfter) || 
-              (0 != (Window->Wnd->ExStyle & WS_EX_TOPMOST) &&
-              NULL != Window->spwndPrev &&
-              0 != (Window->spwndPrev->Wnd->ExStyle & WS_EX_TOPMOST)) ||
-              (NULL != Window->spwndNext &&
-               0 != (Window->spwndNext->Wnd->ExStyle & WS_EX_TOPMOST)) )
-         {
-            Window->Wnd->ExStyle |= WS_EX_TOPMOST;
-         }
-         else
-         {
-            Window->Wnd->ExStyle &= ~ WS_EX_TOPMOST;
-         }
-
-      }
+      IntLinkHwnd(Window, WndInsertAfter);
    }
-
-   if (!Window->Wnd) return FALSE;
 
    OldWindowRect = Window->Wnd->rcWindow;
    OldClientRect = Window->Wnd->rcClient;
