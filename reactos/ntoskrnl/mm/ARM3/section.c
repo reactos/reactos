@@ -207,6 +207,210 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     return TRUE;
 }
 
+NTSTATUS
+NTAPI
+MiCreatePagingFileMap(OUT PSEGMENT *Segment,
+                      IN PSIZE_T MaximumSize,
+                      IN ULONG ProtectionMask,
+                      IN ULONG AllocationAttributes)
+{
+    SIZE_T SizeLimit;
+    PFN_NUMBER PteCount;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+    PCONTROL_AREA ControlArea;
+    PSEGMENT NewSegment;
+    PSUBSECTION Subsection;
+    PAGED_CODE();
+
+    /* No large pages in ARM3 yet */
+    ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
+    
+    /* Pagefile-backed sections need a known size */
+    if (!(*MaximumSize)) return STATUS_INVALID_PARAMETER_4;
+
+    /* Calculate the maximum size possible, given the Prototype PTEs we'll need */
+    SizeLimit = MAXULONG_PTR - sizeof(SEGMENT);
+    SizeLimit /= sizeof(MMPTE);
+    SizeLimit <<= PAGE_SHIFT;
+
+    /* Fail if this size is too big */
+    if (*MaximumSize > SizeLimit) return STATUS_SECTION_TOO_BIG;
+
+    /* Calculate how many Prototype PTEs will be needed */
+    PteCount = (*MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT;
+
+    /* For commited memory, we must have a valid protection mask */
+    if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
+
+    /* The segment contains all the Prototype PTEs, allocate it in paged pool */
+    NewSegment = ExAllocatePoolWithTag(PagedPool,
+                                       sizeof(SEGMENT) +
+                                       sizeof(MMPTE) * (PteCount - 1),
+                                       'tSmM');
+    ASSERT(NewSegment);
+    *Segment = NewSegment;
+    
+    /* Now allocate the control area, which has the subsection structure */
+    ControlArea = ExAllocatePoolWithTag(NonPagedPool,
+                                        sizeof(CONTROL_AREA) + sizeof(SUBSECTION),
+                                        'tCmM');
+    ASSERT(ControlArea);
+
+    /* And zero it out, filling the basic segmnet pointer and reference fields */
+    RtlZeroMemory(ControlArea, sizeof(CONTROL_AREA) + sizeof(SUBSECTION));
+    ControlArea->Segment = NewSegment;
+    ControlArea->NumberOfSectionReferences = 1;
+    ControlArea->NumberOfUserReferences = 1;
+
+    /* Convert allocation attributes to control area flags */
+    if (AllocationAttributes & SEC_BASED) ControlArea->u.Flags.Based = 1;
+    if (AllocationAttributes & SEC_RESERVE) ControlArea->u.Flags.Reserve = 1;
+    if (AllocationAttributes & SEC_COMMIT) ControlArea->u.Flags.Commit = 1;
+
+    /* The subsection follows, write the mask, PTE count and point back to the CA */
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+    Subsection->ControlArea = ControlArea;
+    Subsection->PtesInSubsection = PteCount;
+    Subsection->u.SubsectionFlags.Protection = ProtectionMask;
+
+    /* Zero out the segment's prototype PTEs, and link it with the control area */
+    PointerPte = &NewSegment->ThePtes[0];
+    RtlZeroMemory(NewSegment, sizeof(SEGMENT));
+    NewSegment->PrototypePte = PointerPte;
+    NewSegment->ControlArea = ControlArea;
+
+    /* Save some extra accounting data for the segment as well */
+    NewSegment->u1.CreatingProcess = PsGetCurrentProcess();
+    NewSegment->SizeOfSegment = PteCount * PAGE_SIZE;
+    NewSegment->TotalNumberOfPtes = PteCount;
+    NewSegment->NonExtendedPtes = PteCount;
+
+    /* The subsection's base address is the first Prototype PTE in the segment */
+    Subsection->SubsectionBase = PointerPte;
+    
+    /* Start with an empty PTE, unless this is a commit operation */
+    TempPte.u.Long = 0;
+    if (AllocationAttributes & SEC_COMMIT)
+    {
+        /* In which case, write down the protection mask in the Prototype PTEs */
+        TempPte.u.Soft.Protection = ProtectionMask;
+        
+        /* For accounting, also mark these pages as being committed */
+        NewSegment->NumberOfCommittedPages = PteCount;
+    }
+
+    /* The template PTE itself for the segment should also have the mask set */
+    NewSegment->SegmentPteTemplate.u.Soft.Protection = ProtectionMask;
+
+    /* Write out the prototype PTEs, for now they're simply demand zero */
+    RtlFillMemoryUlong(PointerPte, PteCount * sizeof(MMPTE), TempPte.u.Long);
+    return STATUS_SUCCESS;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+MmCreateArm3Section(OUT PVOID *SectionObject,
+                    IN ACCESS_MASK DesiredAccess,
+                    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+                    IN PLARGE_INTEGER InputMaximumSize,
+                    IN ULONG SectionPageProtection,
+                    IN ULONG AllocationAttributes,
+                    IN HANDLE FileHandle OPTIONAL,
+                    IN PFILE_OBJECT FileObject OPTIONAL)
+{
+    SECTION Section;
+    PSECTION NewSection;
+    PSUBSECTION Subsection;
+    PSEGMENT NewSegment;
+    NTSTATUS Status;
+    PCONTROL_AREA ControlArea;
+    ULONG ProtectionMask;
+
+    /* ARM3 does not yet support this */
+    ASSERT(FileHandle == NULL);
+    ASSERT(FileObject == NULL);
+    ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
+
+    /* Make the same sanity checks that the Nt interface should've validated */
+    ASSERT((AllocationAttributes & ~(SEC_COMMIT | SEC_RESERVE | SEC_BASED |
+                                     SEC_LARGE_PAGES | SEC_IMAGE | SEC_NOCACHE |
+                                     SEC_NO_CHANGE)) == 0);
+    ASSERT((AllocationAttributes & (SEC_COMMIT | SEC_RESERVE | SEC_IMAGE)) != 0);
+    ASSERT(!((AllocationAttributes & SEC_IMAGE) &&
+             (AllocationAttributes & (SEC_COMMIT | SEC_RESERVE |
+                                      SEC_NOCACHE | SEC_NO_CHANGE))));
+    ASSERT(!((AllocationAttributes & SEC_COMMIT) && (AllocationAttributes & SEC_RESERVE)));
+    ASSERT(!((SectionPageProtection & PAGE_NOCACHE) ||
+             (SectionPageProtection & PAGE_WRITECOMBINE) ||
+             (SectionPageProtection & PAGE_GUARD) ||
+             (SectionPageProtection & PAGE_NOACCESS)));
+
+    /* Convert section flag to page flag */
+    if (AllocationAttributes & SEC_NOCACHE) SectionPageProtection |= PAGE_NOCACHE;
+
+    /* Check to make sure the protection is correct. Nt* does this already */
+    ProtectionMask = MiMakeProtectionMask(SectionPageProtection);
+    if (ProtectionMask == MM_INVALID_PROTECTION) return STATUS_INVALID_PAGE_PROTECTION;
+
+    /* A handle must be supplied with SEC_IMAGE, and this is the no-handle path */
+    if (AllocationAttributes & SEC_IMAGE) return STATUS_INVALID_FILE_FOR_SECTION;
+
+    /* So this must be a pagefile-backed section, create the mappings needed */
+    Status = MiCreatePagingFileMap(&NewSegment,
+                                   (PSIZE_T)InputMaximumSize,
+                                   ProtectionMask,
+                                   AllocationAttributes);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Set the initial section object data */
+    Section.InitialPageProtection = SectionPageProtection;
+    Section.Segment = NULL;
+    Section.SizeOfSection.QuadPart = NewSegment->SizeOfSegment;
+    Section.Segment = NewSegment;
+
+    /* THe mapping created a control area and segment, save the flags */
+    ControlArea = NewSegment->ControlArea;
+    Section.u.LongFlags = ControlArea->u.LongFlags;
+
+    /* ARM3 cannot support these right now, make sure they're not being set */
+    ASSERT(ControlArea->u.Flags.Image == 0);
+    ASSERT(ControlArea->FilePointer == NULL);
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+    ASSERT(ControlArea->u.Flags.WasPurged == 0);
+    
+    /* A pagefile-backed mapping only has one subsection, and this is all ARM3 supports */
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+    ASSERT(Subsection->NextSubsection == NULL);
+
+    /* Create the actual section object, with enough space for the prototype PTEs */
+    Status = ObCreateObject(ExGetPreviousMode(),
+                            MmSectionObjectType,
+                            ObjectAttributes,
+                            ExGetPreviousMode(),
+                            NULL,
+                            sizeof(SECTION),
+                            sizeof(SECTION) +
+                            NewSegment->TotalNumberOfPtes * sizeof(MMPTE),
+                            sizeof(CONTROL_AREA) + sizeof(SUBSECTION),
+                            (PVOID*)&NewSection);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Now copy the local section object from the stack into this new object */
+    RtlCopyMemory(NewSection, &Section, sizeof(SECTION));
+    NewSection->Address.StartingVpn = 0;
+
+    /* Return the object and the creation status */
+    *SectionObject = (PVOID)NewSection;
+    return Status;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS
