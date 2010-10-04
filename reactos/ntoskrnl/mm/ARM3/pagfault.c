@@ -176,15 +176,14 @@ MiResolveDemandZeroFault(IN PVOID Address,
 {
     PFN_NUMBER PageFrameNumber = 0;
     MMPTE TempPte;
-    BOOLEAN NeedZero = FALSE;
+    BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
     
     /* Must currently only be called by paging path */
-    ASSERT(OldIrql == MM_NOIRQL);
-    if (Process)
+    if ((Process) && (OldIrql == MM_NOIRQL))
     {
         /* Sanity check */
         ASSERT(MI_IS_PAGE_TABLE_ADDRESS(PointerPte));
@@ -194,45 +193,64 @@ MiResolveDemandZeroFault(IN PVOID Address,
         
         /* Get process color */
         Color = MI_GET_NEXT_PROCESS_COLOR(Process);
+        ASSERT(Color != 0xFFFFFFFF);
         
         /* We'll need a zero page */
         NeedZero = TRUE;
     }
     else
     {
+        /* Check if we need a zero page */
+        NeedZero = (OldIrql != MM_NOIRQL);
+        
         /* Get the next system page color */
         Color = MI_GET_NEXT_COLOR();
     }
-        
-    //
-    // Lock the PFN database
-    //
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    ASSERT(PointerPte->u.Hard.Valid == 0);
+
+    /* Check if the PFN database should be acquired */
+    if (OldIrql == MM_NOIRQL)
+    {
+        /* Acquire it and remember we should release it after */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        HaveLock = TRUE;
+    }
+    
+    /* We either manually locked the PFN DB, or already came with it locked */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     
     /* Do we need a zero page? */
-    if (NeedZero)
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+    if ((NeedZero) && (Process))
     {
         /* Try to get one, if we couldn't grab a free page and zero it */
         PageFrameNumber = MiRemoveZeroPageSafe(Color);
-        if (PageFrameNumber) NeedZero = FALSE;
+        if (PageFrameNumber)
+        {
+            /* We got a genuine zero page, stop worrying about it */
+            NeedZero = FALSE;
+        }
+        else
+        {
+            /* We'll need a free page and zero it manually */
+            PageFrameNumber = MiRemoveAnyPage(Color);
+        }
     }
-    
-    /* Did we get a page? */
-    if (!PageFrameNumber)
+    else if (!NeedZero)
     {
-        /* We either failed to find a zero page, or this is a system request */
+        /* Process or system doesn't want a zero page, grab anything */
         PageFrameNumber = MiRemoveAnyPage(Color);
-        DPRINT("New pool page: %lx\n", PageFrameNumber);
+    }
+    else
+    {
+        /* System wants a zero page, obtain one */
+        PageFrameNumber = MiRemoveZeroPage(Color);
     }
     
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
     
-    //
-    // Release PFN lock
-    //
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    /* Release PFN lock if needed */
+    if (HaveLock) KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     
     //
     // Increment demand zero faults
@@ -283,24 +301,53 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
                         IN PMMPFN Pfn1)
 {
     MMPTE TempPte;
+    PMMPTE OriginalPte;
+    ULONG Protection;
     PFN_NUMBER PageFrameIndex;
     
     /* Must be called with an valid prototype PTE, with the PFN lock held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT(PointerProtoPte->u.Hard.Valid == 1);
     
-    /* Quick-n-dirty */
-    ASSERT(PointerPte->u.Soft.PageFileHigh == 0xFFFFF);
-    
     /* Get the page */
     PageFrameIndex = PFN_FROM_PTE(PointerProtoPte);
+    
+    /* Get the PFN entry and set it as a prototype PTE */
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1->u3.e1.PrototypePte = 1;
+    
+    /* FIXME: Increment the share count for the page table */
+    
+    /* Check where we should be getting the protection information from */
+    if (PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED)
+    {
+        /* Get the protection from the PTE, there's no real Proto PTE data */
+        Protection = PointerPte->u.Soft.Protection;
+    }
+    else
+    {
+        /* Get the protection from the original PTE link */
+        OriginalPte = &Pfn1->OriginalPte;
+        Protection = OriginalPte->u.Soft.Protection;
+    }
 
     /* Release the PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     
-    /* Build the user PTE */
-    ASSERT(Address < MmSystemRangeStart);
-    MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, MM_READONLY, PageFrameIndex);
+    /* Remove caching bits */
+    Protection &= ~(MM_NOCACHE | MM_NOACCESS);
+    
+    /* Check if this is a kernel or user address */
+    if (Address < MmSystemRangeStart)
+    {
+        /* Build the user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte, PointerPte, Protection, PageFrameIndex);
+    }
+    else
+    {
+        /* Build the kernel PTE */
+        MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, Protection, PageFrameIndex);
+    }
     
     /* Write the PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -325,25 +372,56 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     MMPTE TempPte;
     PMMPFN Pfn1;
     PFN_NUMBER PageFrameIndex;
+    NTSTATUS Status;
     
     /* Must be called with an invalid, prototype PTE, with the PFN lock held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(PointerPte->u.Soft.Prototype == 1);
 
-    /* Read the prototype PTE -- it must be valid since we only handle shared data */
+    /* Read the prototype PTE and check if it's valid */
     TempPte = *PointerProtoPte;
-    ASSERT(TempPte.u.Hard.Valid == 1);
+    if (TempPte.u.Hard.Valid == 1)
+    {
+        /* One more user of this mapped page */
+        PageFrameIndex = PFN_FROM_PTE(&TempPte);
+        Pfn1 = MiGetPfnEntry(PageFrameIndex);
+        Pfn1->u2.ShareCount++;
     
-    /* One more user of this mapped page */
-    PageFrameIndex = PFN_FROM_PTE(&TempPte);
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
-    Pfn1->u2.ShareCount++;
+        /* Call it a transition */
+        InterlockedIncrement(&KeGetCurrentPrcb()->MmTransitionCount);
     
-    /* Call it a transition */
-    InterlockedIncrement(&KeGetCurrentPrcb()->MmTransitionCount);
+        /* Complete the prototype PTE fault -- this will release the PFN lock */
+        return MiCompleteProtoPteFault(StoreInstruction,
+                                       Address,
+                                       PointerPte,
+                                       PointerProtoPte,
+                                       OldIrql,
+                                       NULL);
+    }
+    
+    /* Make sure there's some protection mask */
+    if (TempPte.u.Long == 0)
+    {
+        /* Release the lock */
+        DPRINT1("Access on reserved section?\n");
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        return STATUS_ACCESS_VIOLATION;
+    }
+    
+    /* This is the only thing we support right now */
+    ASSERT(TempPte.u.Soft.PageFileHigh == 0);
+    ASSERT(TempPte.u.Proto.ReadOnly == 0);
+    ASSERT(PointerPte > MiHighestUserPte);
+    ASSERT(TempPte.u.Soft.Prototype == 0);
+    ASSERT(TempPte.u.Soft.Transition == 0);
+
+    /* Resolve the demand zero fault */
+    Status = MiResolveDemandZeroFault(Address, PointerProtoPte, Process, OldIrql);
+    ASSERT(NT_SUCCESS(Status));
     
     /* Complete the prototype PTE fault -- this will release the PFN lock */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
     return MiCompleteProtoPteFault(StoreInstruction,
                                    Address,
                                    PointerPte,
@@ -388,39 +466,76 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     {
         /* This should never happen */
         ASSERT(!MI_IS_PHYSICAL_ADDRESS(PointerProtoPte));
-            
-        /* We currently only handle the shared user data PTE path */
-        ASSERT(Address < MmSystemRangeStart);
-        ASSERT(PointerPte->u.Soft.Prototype == 1);
-        ASSERT(PointerPte->u.Soft.PageFileHigh == 0xFFFFF);
-        ASSERT(Vad == NULL);
         
-        /* Lock the PFN database */
-        LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-        
-        /* For the shared data page, this should be true */
+        /* Check if this is a kernel-mode address */
         SuperProtoPte = MiAddressToPte(PointerProtoPte);
-        ASSERT(SuperProtoPte->u.Hard.Valid == 1);
-        ASSERT(TempPte.u.Hard.Valid == 0);
+        if (Address >= MmSystemRangeStart)
+        {
+            /* Lock the PFN database */
+            LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+            
+            /* Has the PTE been made valid yet? */
+            if (!SuperProtoPte->u.Hard.Valid)
+            {
+                UNIMPLEMENTED;
+                while (TRUE);
+            }
+            else
+            {
+                ASSERT(PointerPte->u.Hard.Valid == 0);
+                /* Resolve the fault -- this will release the PFN lock */
+                Status = MiResolveProtoPteFault(StoreInstruction,
+                                                Address,
+                                                PointerPte,
+                                                PointerProtoPte,
+                                                NULL,
+                                                NULL,
+                                                NULL,
+                                                Process,
+                                                LockIrql,
+                                                TrapInformation);
+                ASSERT(Status == STATUS_SUCCESS);
 
-        /* Resolve the fault -- this will release the PFN lock */
-        Status = MiResolveProtoPteFault(StoreInstruction,
-                                        Address,
-                                        PointerPte,
-                                        PointerProtoPte,
-                                        NULL,
-                                        NULL,
-                                        NULL,
-                                        Process,
-                                        LockIrql,
-                                        TrapInformation);
-        ASSERT(Status == STATUS_SUCCESS);
+                /* Complete this as a transition fault */
+                ASSERT(OldIrql == KeGetCurrentIrql());
+                ASSERT(OldIrql <= APC_LEVEL);
+                ASSERT(KeAreAllApcsDisabled() == TRUE);
+                return Status;
+            }
+        }
+        else
+        {
+            /* We currently only handle the shared user data PTE path */
+            ASSERT(PointerPte->u.Soft.Prototype == 1);
+            ASSERT(PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED);
+            ASSERT(Vad == NULL);
+        
+            /* Lock the PFN database */
+            LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        
+            /* For the shared data page, this should be true */
+            ASSERT(SuperProtoPte->u.Hard.Valid == 1);
+            ASSERT(TempPte.u.Hard.Valid == 0);
 
-        /* Complete this as a transition fault */
-        ASSERT(OldIrql == KeGetCurrentIrql());
-        ASSERT(OldIrql <= APC_LEVEL);
-        ASSERT(KeAreAllApcsDisabled() == TRUE);
-        return STATUS_PAGE_FAULT_TRANSITION;
+            /* Resolve the fault -- this will release the PFN lock */
+            Status = MiResolveProtoPteFault(StoreInstruction,
+                                            Address,
+                                            PointerPte,
+                                            PointerProtoPte,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            Process,
+                                            LockIrql,
+                                            TrapInformation);
+            ASSERT(Status == STATUS_SUCCESS);
+
+            /* Complete this as a transition fault */
+            ASSERT(OldIrql == KeGetCurrentIrql());
+            ASSERT(OldIrql <= APC_LEVEL);
+            ASSERT(KeAreAllApcsDisabled() == TRUE);
+            return STATUS_PAGE_FAULT_TRANSITION;
+        }
     }
     
     //
@@ -469,7 +584,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                  IN PVOID TrapInformation)
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
-    PMMPTE PointerPte, ProtoPte;
+    PMMPTE PointerPte, ProtoPte = NULL;
     PMMPDE PointerPde;
     MMPTE TempPte;
     PETHREAD CurrentThread;
@@ -645,9 +760,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         /* Check one kind of prototype PTE */
         if (TempPte.u.Soft.Prototype)
         {
-            /* The one used for protected pool... */
-            ASSERT(MmProtectFreedNonPagedPool == TRUE);
-            
             /* Make sure protected pool is on, and that this is a pool address */
             if ((MmProtectFreedNonPagedPool) &&
                 (((Address >= MmNonPagedPoolStart) &&
@@ -663,6 +775,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                              Mode,
                              4);
             }
+            
+            /* Get the prototype PTE! */
+            ProtoPte = MiProtoPteToPte(&TempPte);
         }
         
         //
@@ -670,13 +785,39 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         ASSERT(TempPte.u.Soft.Transition == 0);
         
+        /* Check for no-access PTE */
+        if (TempPte.u.Soft.Protection == MM_NOACCESS)
+        {
+            /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                         (ULONG_PTR)Address,
+                         StoreInstruction,
+                         (ULONG_PTR)TrapInformation,
+                         1);
+        }
+        
+        /* Check for demand page */
+        if ((StoreInstruction) && !(ProtoPte) && !(TempPte.u.Hard.Valid))
+        {
+            /* Get the protection code */
+            if (!(TempPte.u.Soft.Protection & MM_READWRITE))
+            {
+                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                KeBugCheckEx(ATTEMPTED_WRITE_TO_READONLY_MEMORY,
+                             (ULONG_PTR)Address,
+                             TempPte.u.Long,
+                             (ULONG_PTR)TrapInformation,
+                             14);
+            }
+        }
+        
         //
         // Now do the real fault handling
         //
         Status = MiDispatchFault(StoreInstruction,
                                  Address,
                                  PointerPte,
-                                 NULL,
+                                 ProtoPte,
                                  FALSE,
                                  NULL,
                                  TrapInformation,
