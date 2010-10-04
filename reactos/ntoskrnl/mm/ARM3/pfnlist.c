@@ -713,6 +713,16 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     {
         /* Only valid from MmCreateProcessAddressSpace path */
         ASSERT(PsGetCurrentProcess()->Vm.WorkingSetSize == 0);
+        
+        /* Make this a demand zero PTE */
+        MI_MAKE_SOFTWARE_PTE(&Pfn1->OriginalPte, MM_READWRITE);
+    }
+    else
+    {
+        /* Copy the PTE data */
+        Pfn1->OriginalPte = *PointerPte;
+        ASSERT(!((Pfn1->OriginalPte.u.Soft.Prototype == 0) &&
+                 (Pfn1->OriginalPte.u.Soft.Transition == 1)));
     }
 
     /* Otherwise this is a fresh page -- set it up */
@@ -870,11 +880,9 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
     /* Setup the PTE */
     Pfn1 = MiGetPfnEntry(PageFrameIndex);
     Pfn1->PteAddress = PointerPte;
-    
-#if 0 // When using ARM3 PFN
+
     /* Make this a software PTE */
     MI_MAKE_SOFTWARE_PTE(&Pfn1->OriginalPte, MM_READWRITE);
-#endif
     
     /* Setup the page */
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
