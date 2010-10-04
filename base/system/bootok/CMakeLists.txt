@@ -1,0 +1,8 @@
+
+set_unicode()
+
+add_executable(bootok bootok.c bootok.rc)
+
+set_module_type(bootok win32cui)
+
+add_importlibs(bootok advapi32 msvcrt)
