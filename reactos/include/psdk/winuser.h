@@ -2341,6 +2341,15 @@ extern "C" {
 #define TPM_VERPOSANIMATION 0x1000
 #define TPM_VERNEGANIMATION 0x2000
 #endif
+#if(_WIN32_WINNT >= 0x0500)
+#define TPM_NOANIMATION 16384
+#endif
+#if (_WIN32_WINNT >= 0x0501)
+#define TPM_LAYOUTRTL 32768
+#endif
+#if (_WIN32_WINNT >= 0x0601)
+#define TPM_WORKAREA 65536
+#endif
 #define HELP_COMMAND 0x102
 #define HELP_CONTENTS 3
 #define HELP_CONTEXT 1
