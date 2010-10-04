@@ -175,14 +175,14 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     Session->SystemSpaceViewStart = MiSystemViewStart;
 
     /* Create a bitmap to describe system space */
-    BitmapSize = sizeof(RTL_BITMAP) + ((((MmSystemViewSize / 65536) + 31) / 32) * sizeof(ULONG));
+    BitmapSize = sizeof(RTL_BITMAP) + ((((MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE) + 31) / 32) * sizeof(ULONG));
     Session->SystemSpaceBitMap = ExAllocatePoolWithTag(NonPagedPool,
                                                        BitmapSize,
                                                        '  mM');
     ASSERT(Session->SystemSpaceBitMap);
     RtlInitializeBitMap(Session->SystemSpaceBitMap,
                         (PULONG)(Session->SystemSpaceBitMap + 1),
-                        MmSystemViewSize / 65536);
+                        MmSystemViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE);
 
     /* Set system space fully empty to begin with */
     RtlClearAllBits(Session->SystemSpaceBitMap);
@@ -205,6 +205,262 @@ MiInitializeSystemSpaceMap(IN PVOID InputSession OPTIONAL)
     
     /* Success */
     return TRUE;
+}
+
+PVOID
+NTAPI
+MiInsertInSystemSpace(IN PMMSESSION Session,
+                      IN ULONG Buckets,
+                      IN PCONTROL_AREA ControlArea)
+{
+    PVOID Base;
+    ULONG Entry, Hash, i;
+    PAGED_CODE();
+
+    /* Only global mappings supported for now */
+    ASSERT(Session == &MmSession);
+
+    /* Stay within 4GB and don't go past the number of hash entries available */
+    ASSERT(Buckets < MI_SYSTEM_VIEW_BUCKET_SIZE);
+    ASSERT(Session->SystemSpaceHashEntries < Session->SystemSpaceHashSize);
+
+    /* Find space where to map this view */
+    i = RtlFindClearBitsAndSet(Session->SystemSpaceBitMap, Buckets, 0);
+    ASSERT(i != 0xFFFFFFFF);
+    Base = (PVOID)((ULONG_PTR)Session->SystemSpaceViewStart + (i * MI_SYSTEM_VIEW_BUCKET_SIZE));
+
+    /* Get the hash entry for this allocation */
+    Entry = ((ULONG_PTR)Base & ~(MI_SYSTEM_VIEW_BUCKET_SIZE - 1)) + Buckets;
+    Hash = (Entry >> 16) % Session->SystemSpaceHashKey;
+
+    /* Loop hash entries until a free one is found */
+    while (Session->SystemSpaceViewTable[Hash].Entry)
+    {
+        /* Unless we overflow, in which case loop back at hash o */
+        if (++Hash >= Session->SystemSpaceHashSize) Hash = 0;
+    }
+
+    /* Add this entry into the hash table */
+    Session->SystemSpaceViewTable[Hash].Entry = Entry;
+    Session->SystemSpaceViewTable[Hash].ControlArea = ControlArea;
+
+    /* Hash entry found, increment total and return the base address */
+    Session->SystemSpaceHashEntries++;
+    return Base;
+}
+
+NTSTATUS
+NTAPI
+MiAddMappedPtes(IN PMMPTE FirstPte,
+                IN PFN_NUMBER PteCount,
+                IN PCONTROL_AREA ControlArea)
+{
+    MMPTE TempPte;
+    PMMPTE PointerPte, ProtoPte, LastProtoPte, LastPte;
+    PSUBSECTION Subsection;
+
+    /* ARM3 doesn't support this yet */
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+    ASSERT(ControlArea->FilePointer == NULL);
+    
+    /* Sanity checks */
+    ASSERT(PteCount != 0);
+    ASSERT(ControlArea->NumberOfMappedViews >= 1);
+    ASSERT(ControlArea->NumberOfUserReferences >= 1);
+    ASSERT(ControlArea->NumberOfSectionReferences != 0);
+    ASSERT(ControlArea->u.Flags.BeingCreated == 0);
+    ASSERT(ControlArea->u.Flags.BeingDeleted == 0);
+    ASSERT(ControlArea->u.Flags.BeingPurged == 0);
+
+    /* Get the PTEs for the actual mapping */
+    PointerPte = FirstPte;
+    LastPte = FirstPte + PteCount;
+
+    /* Get the prototype PTEs that desribe the section mapping in the subsection */
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+    ProtoPte = Subsection->SubsectionBase;
+    LastProtoPte = &Subsection->SubsectionBase[Subsection->PtesInSubsection];
+
+    /* Loop the PTEs for the mapping */
+    while (PointerPte < LastPte)
+    {
+        /* We may have run out of prototype PTEs in this subsection */
+        if (ProtoPte >= LastProtoPte)
+        {
+            /* But we don't handle this yet */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+        
+        /* The PTE should be completely clear */
+        ASSERT(PointerPte->u.Long == 0);
+        
+        /* Build the prototype PTE and write it */
+        MI_MAKE_PROTOTYPE_PTE(&TempPte, ProtoPte);
+        MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+
+        /* Keep going */
+        PointerPte++;
+        ProtoPte++;
+    }
+
+    /* No failure path */
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiFillSystemPageDirectory(IN PVOID Base,
+                          IN SIZE_T NumberOfBytes)
+{
+    PMMPDE PointerPde, LastPde, SystemMapPde;
+    MMPDE TempPde;
+    PFN_NUMBER PageFrameIndex;
+    KIRQL OldIrql;
+    PAGED_CODE();
+
+    /* Find the PDEs needed for this mapping */
+    PointerPde = MiAddressToPde(Base);
+    LastPde = MiAddressToPde((PVOID)((ULONG_PTR)Base + NumberOfBytes - 1));
+
+    /* Find the system double-mapped PDE that describes this mapping */
+    SystemMapPde = &MmSystemPagePtes[((ULONG_PTR)PointerPde & (SYSTEM_PD_SIZE - 1)) / sizeof(MMPTE)];
+    
+    /* Use the PDE template and loop the PDEs */
+    TempPde = ValidKernelPde;
+    while (PointerPde <= LastPde)
+    {
+        /* Lock the PFN database */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+        /* Check if we don't already have this PDE mapped */
+        if (SystemMapPde->u.Hard.Valid == 0)
+        {
+            /* Grab a page for it */
+            PageFrameIndex = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
+            ASSERT(PageFrameIndex);
+            TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
+
+            /* Initialize its PFN entry, with the parent system page directory page table */
+            MiInitializePfnForOtherProcess(PageFrameIndex,
+                                           PointerPde,
+                                           MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
+
+            /* Make the system PDE entry valid */
+            MI_WRITE_VALID_PTE(SystemMapPde, TempPde);
+            
+            /* The system PDE entry might be the PDE itself, so check for this */
+            if (PointerPde->u.Hard.Valid == 0)
+            {
+                /* It's different, so make the real PDE valid too */
+                MI_WRITE_VALID_PTE(PointerPde, TempPde);
+            }
+        }
+
+        /* Release the lock and keep going with the next PDE */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        SystemMapPde++;
+        PointerPde++;
+    }
+}
+
+NTSTATUS
+NTAPI
+MiCheckPurgeAndUpMapCount(IN PCONTROL_AREA ControlArea,
+                          IN BOOLEAN FailIfSystemViews)
+{
+    KIRQL OldIrql;
+    
+    /* Flag not yet supported */
+    ASSERT(FailIfSystemViews == FALSE);
+    
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* State not yet supported */
+    ASSERT(ControlArea->u.Flags.BeingPurged == 0);
+
+    /* Increase the reference counts */
+    ControlArea->NumberOfMappedViews++;
+    ControlArea->NumberOfUserReferences++;
+    ASSERT(ControlArea->NumberOfSectionReferences != 0);
+
+    /* Release the PFN lock and return success */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MiMapViewInSystemSpace(IN PVOID Section,
+                       IN PMMSESSION Session,
+                       OUT PVOID *MappedBase,
+                       IN OUT PSIZE_T ViewSize)
+{
+    PVOID Base;
+    PCONTROL_AREA ControlArea;
+    ULONG Buckets, SectionSize;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Only global mappings for now */
+    ASSERT(Session == &MmSession);
+
+    /* Get the control area, check for any flags ARM3 doesn't yet support */
+    ControlArea = ((PSECTION)Section)->Segment->ControlArea;
+    ASSERT(ControlArea->u.Flags.Image == 0);
+    ASSERT(ControlArea->FilePointer == NULL);
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+    ASSERT(ControlArea->u.Flags.WasPurged == 0);
+    
+    /* Increase the reference and map count on the control area, no purges yet */
+    Status = MiCheckPurgeAndUpMapCount(ControlArea, FALSE);
+    ASSERT(NT_SUCCESS(Status));
+    
+    /* Get the section size at creation time */
+    SectionSize = ((PSECTION)Section)->SizeOfSection.LowPart;
+
+    /* If the caller didn't specify a view size, assume the whole section */
+    if (!(*ViewSize)) *ViewSize = SectionSize;
+    
+    /* Check if the caller wanted a larger section than the view */
+    if (*ViewSize > SectionSize)
+    {
+        /* We should probably fail. FIXME TODO */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Get the number of 64K buckets required for this mapping */
+    Buckets = *ViewSize / MI_SYSTEM_VIEW_BUCKET_SIZE;
+    if (*ViewSize & (MI_SYSTEM_VIEW_BUCKET_SIZE - 1)) Buckets++;
+    
+    /* Check if the view is more than 4GB large */
+    if (Buckets >= MI_SYSTEM_VIEW_BUCKET_SIZE)
+    {
+        /* We should probably fail */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Insert this view into system space and get a base address for it */
+    Base = MiInsertInSystemSpace(Session, Buckets, ControlArea);
+    ASSERT(Base);
+
+    /* Create the PDEs needed for this mapping, and double-map them if needed */
+    MiFillSystemPageDirectory(Base, Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE);
+
+    /* Create the actual prototype PTEs for this mapping */
+    Status = MiAddMappedPtes(MiAddressToPte(Base),
+                             BYTES_TO_PAGES(*ViewSize),
+                             ControlArea);
+    ASSERT(NT_SUCCESS(Status));
+    
+    /* Return the base adress of the mapping and success */
+    *MappedBase = Base;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

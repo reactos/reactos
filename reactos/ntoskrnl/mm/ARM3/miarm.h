@@ -246,6 +246,11 @@ extern const ULONG MmProtectToPteMask[32];
 #define MI_PTE_LOOKUP_NEEDED 0xFFFFF
 
 //
+// System views are binned into 64K chunks
+//
+#define MI_SYSTEM_VIEW_BUCKET_SIZE  65536
+
+//
 // FIXFIX: These should go in ex.h after the pool merge
 //
 #ifdef _M_AMD64

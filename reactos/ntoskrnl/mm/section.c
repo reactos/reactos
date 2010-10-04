@@ -54,6 +54,23 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
+NTSTATUS
+NTAPI
+MiMapViewInSystemSpace(IN PVOID Section,
+IN PVOID Session,
+OUT PVOID *MappedBase,
+IN OUT PSIZE_T ViewSize);
+
+NTSTATUS
+NTAPI
+MmCreateArm3Section(OUT PVOID *SectionObject,
+IN ACCESS_MASK DesiredAccess,
+IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+IN PLARGE_INTEGER InputMaximumSize,
+IN ULONG SectionPageProtection,
+IN ULONG AllocationAttributes,
+IN HANDLE FileHandle OPTIONAL,
+IN PFILE_OBJECT FileObject OPTIONAL);
 
 /* TYPES *********************************************************************/
 
@@ -4265,6 +4282,16 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    PMMSUPPORT AddressSpace;
    NTSTATUS Status;
 
+    if ((ULONG_PTR)SectionObject & 1)
+    {
+        PAGED_CODE();
+        extern PVOID MmSession;
+        return MiMapViewInSystemSpace((PVOID)((ULONG_PTR)SectionObject & ~1),
+                                      &MmSession,
+                                      MappedBase,
+                                      ViewSize);
+    }
+
    DPRINT("MmMapViewInSystemSpace() called\n");
 
    Section = (PROS_SECTION_OBJECT)SectionObject;
@@ -4386,6 +4413,20 @@ MmCreateSection (OUT PVOID  * Section,
 {
    ULONG Protection;
    PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
+   
+    /* Check if an ARM3 section is being created instead */
+    if (AllocationAttributes & 0xC0000000)
+    {
+        DPRINT1("arm 3 path\n");
+        return MmCreateArm3Section(Section,
+                                   DesiredAccess,
+                                   ObjectAttributes,
+                                   MaximumSize,
+                                   SectionPageProtection,
+                                   AllocationAttributes &~ 0xC0000000,
+                                   FileHandle,
+                                   File);
+    }
 
    /*
     * Check the protection
