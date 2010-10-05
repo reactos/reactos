@@ -1040,6 +1040,21 @@ typedef struct _RTL_CRITICAL_SECTION
 #endif
 
 //
+// RTL Private Heap Structures
+//
+typedef struct _HEAP_LOCK
+{
+    union
+    {
+        RTL_CRITICAL_SECTION CriticalSection;
+#ifndef NTOS_MODE_USER
+        ERESOURCE Resource;
+#endif
+        UCHAR Padding[0x68]; /* Max ERESOURCE size for x64 build. Needed because RTL is built only once */
+    };
+} HEAP_LOCK, *PHEAP_LOCK;
+
+//
 // RTL Range List Structures
 //
 typedef struct _RTL_RANGE_LIST
