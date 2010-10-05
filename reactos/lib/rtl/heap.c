@@ -150,7 +150,7 @@ typedef struct tagHEAP
 {
     SUBHEAP          subheap;       /* First sub-heap */
     struct list      entry;         /* Entry in process heap list */
-    RTL_CRITICAL_SECTION critSection; /* Critical section for serialization */
+    HEAP_LOCK        lock;          /* Critical section for serialization */
     DECLSPEC_ALIGN(8) FREE_LIST_ENTRY  freeList[HEAP_NB_FREE_LISTS];  /* Free lists */
     DWORD            flags;         /* Heap flags */
     DWORD            magic;         /* Magic number */
@@ -717,15 +717,15 @@ static BOOL HEAP_InitSubHeap( HEAP *heap, LPVOID address, DWORD flags,
           {
             if (!processHeap)  /* do it by hand to avoid memory allocations */
             {
-                heap->critSection.DebugInfo      = &process_heap_critsect_debug;
-                heap->critSection.LockCount      = -1;
-                heap->critSection.RecursionCount = 0;
-                heap->critSection.OwningThread   = 0;
-                heap->critSection.LockSemaphore  = 0;
-                heap->critSection.SpinCount      = 0;
-                process_heap_critsect_debug.CriticalSection = &heap->critSection;
+                heap->lock.CriticalSection.DebugInfo      = &process_heap_critsect_debug;
+                heap->lock.CriticalSection.LockCount      = -1;
+                heap->lock.CriticalSection.RecursionCount = 0;
+                heap->lock.CriticalSection.OwningThread   = 0;
+                heap->lock.CriticalSection.LockSemaphore  = 0;
+                heap->lock.CriticalSection.SpinCount      = 0;
+                process_heap_critsect_debug.CriticalSection = &heap->lock.CriticalSection;
             }
-            else RtlInitializeHeapLock( &heap->critSection );
+            else RtlInitializeHeapLock( &heap->lock );
           }
     }
 
@@ -1094,7 +1094,7 @@ static BOOL HEAP_IsRealArena( HEAP *heapPtr,   /* [in] ptr to the heap */
     flags |= heapPtr->flags;
     /* calling HeapLock may result in infinite recursion, so do the critsect directly */
     if (!(flags & HEAP_NO_SERIALIZE))
-        RtlEnterHeapLock( &heapPtr->critSection );
+        RtlEnterHeapLock( &heapPtr->lock );
 
     if (block)
     {
@@ -1113,7 +1113,7 @@ static BOOL HEAP_IsRealArena( HEAP *heapPtr,   /* [in] ptr to the heap */
             ret = HEAP_ValidateInUseArena( subheap, (const ARENA_INUSE *)block - 1, quiet );
 
         if (!(flags & HEAP_NO_SERIALIZE))
-            RtlLeaveHeapLock( &heapPtr->critSection );
+            RtlLeaveHeapLock( &heapPtr->lock );
         return ret;
     }
 
@@ -1143,7 +1143,7 @@ static BOOL HEAP_IsRealArena( HEAP *heapPtr,   /* [in] ptr to the heap */
         subheap = subheap->next;
     }
 
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
     return ret;
 }
 
@@ -1181,9 +1181,9 @@ RtlCreateHeap(ULONG flags,
         if (processHeap)
         {
             HEAP *heapPtr = subheap->heap;
-            RtlEnterHeapLock( &processHeap->critSection );
+            RtlEnterHeapLock( &processHeap->lock );
             list_add_head( &processHeap->entry, &heapPtr->entry );
-            RtlLeaveHeapLock( &processHeap->critSection );
+            RtlLeaveHeapLock( &processHeap->lock );
         }
         else
         {
@@ -1224,12 +1224,12 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
          return heap; /* cannot delete the main process heap */
 
       /* remove it from the per-process list */
-      RtlEnterHeapLock( &processHeap->critSection );
+      RtlEnterHeapLock( &processHeap->lock );
       list_remove( &heapPtr->entry );
-      RtlLeaveHeapLock( &processHeap->critSection );
+      RtlLeaveHeapLock( &processHeap->lock );
    }
 
-    RtlDeleteHeapLock( &heapPtr->critSection );
+    RtlDeleteHeapLock( &heapPtr->lock );
     subheap = &heapPtr->subheap;
     while (subheap)
     {
@@ -1281,13 +1281,13 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
 
     if (rounded_size < HEAP_MIN_DATA_SIZE) rounded_size = HEAP_MIN_DATA_SIZE;
 
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->lock );
     /* Locate a suitable free block */
     if (!(pArena = HEAP_FindFreeBlock( heapPtr, rounded_size, &subheap )))
     {
         TRACE("(%p,%08lx,%08lx): returning NULL\n",
                   heap, flags, size  );
-        if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+        if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
         if (flags & HEAP_GENERATE_EXCEPTIONS) RtlRaiseStatus( STATUS_NO_MEMORY );
         return NULL;
     }
@@ -1319,7 +1319,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
     else
         mark_block_uninitialized( pInUse + 1, pInUse->size & ARENA_SIZE_MASK );
 
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
 
     TRACE("(%p,%08lx,%08lx): returning %p\n", heap, flags, size, pInUse + 1 );
     return (LPVOID)(pInUse + 1);
@@ -1357,10 +1357,10 @@ BOOLEAN NTAPI RtlFreeHeap(
 
     flags &= HEAP_NO_SERIALIZE;
     flags |= heapPtr->flags;
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->lock );
     if (!HEAP_IsRealArena( heapPtr, HEAP_NO_SERIALIZE, ptr, QUIET ))
     {
-        if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+        if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
         RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_PARAMETER );
         TRACE("(%p,%08lx,%p): returning FALSE\n", heap, flags, ptr );
         return FALSE;
@@ -1376,13 +1376,13 @@ BOOLEAN NTAPI RtlFreeHeap(
 
     HEAP_MakeInUseBlockFree( subheap, pInUse );
 
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
 
     TRACE("(%p,%08lx,%p): returning TRUE\n", heap, flags, ptr );
     return TRUE;
 
 error:
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
     RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_PARAMETER );
     TRACE("(%p,%08x,%p): returning FALSE\n", heap, flags, ptr );
     return FALSE;
@@ -1427,7 +1427,7 @@ PVOID NTAPI RtlReAllocateHeap(
    //Flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY |
    //         HEAP_REALLOC_IN_PLACE_ONLY;
     flags |= heapPtr->flags;
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->lock );
 
     rounded_size = ROUND_SIZE(size);
     if (rounded_size < size) goto oom;  /* overflow */
@@ -1510,19 +1510,19 @@ PVOID NTAPI RtlReAllocateHeap(
 
     /* Return the new arena */
 done:
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
     TRACE("(%p,%08lx,%p,%08lx): returning %p\n", heap, flags, ptr, size, pArena + 1 );
     return (LPVOID)(pArena + 1);
 
 oom:
-     if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+     if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
      if (flags & HEAP_GENERATE_EXCEPTIONS) RtlRaiseStatus( STATUS_NO_MEMORY );
      RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_NO_MEMORY );
      TRACE("(%p,%08x,%p,%08lx): returning oom\n", heap, flags, ptr, size );
      return NULL;
 
 error:
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
     RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_PARAMETER );
     TRACE("(%p,%08x,%p,%08lx): returning error\n", heap, flags, ptr, size );
     return NULL;
@@ -1562,7 +1562,7 @@ RtlLockHeap(IN HANDLE Heap)
    HEAP *heapPtr = HEAP_GetPtr( Heap );
    if (!heapPtr)
       return FALSE;
-   RtlEnterHeapLock( &heapPtr->critSection );
+   RtlEnterHeapLock( &heapPtr->lock );
    return TRUE;
 }
 
@@ -1586,7 +1586,7 @@ RtlUnlockHeap(HANDLE Heap)
    HEAP *heapPtr = HEAP_GetPtr( Heap );
    if (!heapPtr)
       return FALSE;
-   RtlLeaveHeapLock( &heapPtr->critSection );
+   RtlLeaveHeapLock( &heapPtr->lock );
    return TRUE;
 }
 
@@ -1621,7 +1621,7 @@ RtlSizeHeap(
     }
     flags &= HEAP_NO_SERIALIZE;
     flags |= heapPtr->flags;
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlEnterHeapLock( &heapPtr->lock );
     if (!HEAP_IsRealArena( heapPtr, HEAP_NO_SERIALIZE, ptr, QUIET ))
     {
         RtlSetLastWin32ErrorAndNtStatusFromNtStatus( STATUS_INVALID_PARAMETER );
@@ -1632,7 +1632,7 @@ RtlSizeHeap(
         const ARENA_INUSE *pArena = (const ARENA_INUSE *)ptr - 1;
         ret = (pArena->size & ARENA_SIZE_MASK) - pArena->unused_bytes;
     }
-    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->critSection );
+    if (!(flags & HEAP_NO_SERIALIZE)) RtlLeaveHeapLock( &heapPtr->lock );
 
     TRACE("(%p,%08lx,%p): returning %08lx\n", heap, flags, ptr, ret );
     return ret;
@@ -1694,7 +1694,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
     NTSTATUS Status = STATUS_SUCCESS;
 
     struct list *ptr=NULL;
-    RtlEnterHeapLock(&processHeap->critSection);
+    RtlEnterHeapLock(&processHeap->lock);
     Status=HeapEnumerationRoutine(processHeap,lParam);
 
     LIST_FOR_EACH( ptr, &processHeap->entry )
@@ -1703,7 +1703,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
         Status = HeapEnumerationRoutine(ptr,lParam);
     }
 
-    RtlLeaveHeapLock(&processHeap->critSection);
+    RtlLeaveHeapLock(&processHeap->lock);
 
     return Status;
 }
@@ -1719,7 +1719,7 @@ RtlGetProcessHeaps(ULONG count,
     ULONG total = 1;  /* main heap */
     struct list *ptr;
     ULONG i=0;
-    RtlEnterHeapLock( &processHeap->critSection );
+    RtlEnterHeapLock( &processHeap->lock );
     LIST_FOR_EACH( ptr, &processHeap->entry ) total++;
     //if (total <= count)
     {
@@ -1732,7 +1732,7 @@ RtlGetProcessHeaps(ULONG count,
             *(heaps++) = LIST_ENTRY( ptr, HEAP, entry );
         }
     }
-    RtlLeaveHeapLock( &processHeap->critSection );
+    RtlLeaveHeapLock( &processHeap->lock );
     return i;
 }
 
@@ -1746,7 +1746,7 @@ RtlValidateProcessHeaps(VOID)
    BOOLEAN Result = TRUE;
    HEAP ** pptr;
 
-   RtlEnterHeapLock( &processHeap->critSection );
+   RtlEnterHeapLock( &processHeap->lock );
 
    for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr++)
    {
@@ -1757,7 +1757,7 @@ RtlValidateProcessHeaps(VOID)
       }
    }
 
-   RtlLeaveHeapLock( &processHeap->critSection );
+   RtlLeaveHeapLock( &processHeap->lock );
    return Result;
 }
 
