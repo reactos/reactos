@@ -1600,10 +1600,11 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWINDOW_OBJECT ParentWindow, DWORD* d
    /* default positioning for overlapped windows */
     if(!(Cs->style & (WS_POPUP | WS_CHILD)))
    {
-      RECTL WorkArea;
+      PMONITOR pMonitor;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
 
-      UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
+      pMonitor = IntGetPrimaryMonitor();
+      ASSERT(pMonitor);
 
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
 
@@ -1618,8 +1619,17 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWINDOW_OBJECT ParentWindow, DWORD* d
           }
           else
           {
-              Cs->x = WorkArea.left;
-              Cs->y = WorkArea.top;
+               Cs->x = pMonitor->cWndStack * (UserGetSystemMetrics(SM_CXSIZE) + UserGetSystemMetrics(SM_CXFRAME));
+               Cs->y = pMonitor->cWndStack * (UserGetSystemMetrics(SM_CYSIZE) + UserGetSystemMetrics(SM_CYFRAME));
+               if (Cs->x > ((pMonitor->rcWork.right - pMonitor->rcWork.left) / 4) ||
+                   Cs->y > ((pMonitor->rcWork.bottom - pMonitor->rcWork.top) / 4))
+               {
+                  /* reset counter and position */
+                  Cs->x = 0;
+                  Cs->y = 0;
+                  pMonitor->cWndStack = 0;
+               }
+               pMonitor->cWndStack++;
           }
       }
 
@@ -1632,8 +1642,8 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWINDOW_OBJECT ParentWindow, DWORD* d
           }
           else
           {
-              Cs->cx = (WorkArea.right - WorkArea.left) * 3 / 4 - Cs->x;
-              Cs->cy = (WorkArea.bottom - WorkArea.top) * 3 / 4 - Cs->y;
+              Cs->cx = (pMonitor->rcWork.right - pMonitor->rcWork.left) * 3 / 4;
+              Cs->cy = (pMonitor->rcWork.bottom - pMonitor->rcWork.top) * 3 / 4;
           }
       }
       /* neither x nor cx are default. Check the y values .
@@ -1643,7 +1653,7 @@ IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWINDOW_OBJECT ParentWindow, DWORD* d
       else if (IS_DEFAULT(Cs->cy))
       {
           DPRINT("Strange use of CW_USEDEFAULT in nHeight\n");
-          Cs->cy = (WorkArea.bottom - WorkArea.top) * 3 / 4 - Cs->y;
+          Cs->cy = (pMonitor->rcWork.bottom - pMonitor->rcWork.top) * 3 / 4;
       }
    }
    else
