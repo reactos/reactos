@@ -870,7 +870,7 @@ MiInitPageDirectoryMap(VOID)
     BoundaryAddressMultiple.QuadPart = 0;
     BaseAddress = (PVOID)PTE_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_OWNED_BY_ARM3,
                                 &BaseAddress,
                                 0x1000000,
                                 PAGE_READWRITE,
@@ -885,7 +885,7 @@ MiInitPageDirectoryMap(VOID)
     //
     BaseAddress = (PVOID)PDE_BASE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_OWNED_BY_ARM3,
                                 &BaseAddress,
                                 0x100000,
                                 PAGE_READWRITE,
@@ -900,7 +900,7 @@ MiInitPageDirectoryMap(VOID)
     //
     BaseAddress = (PVOID)HYPER_SPACE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_OWNED_BY_ARM3,
                                 &BaseAddress,
                                 PAGE_SIZE,
                                 PAGE_READWRITE,
