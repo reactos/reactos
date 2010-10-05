@@ -189,6 +189,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
     
     (*Count) = 0;
     
+    KeEnterCriticalRegion();
     KeAcquireGuardedMutex(&ViewLock);
     
     WriteCount[0] = WriteCount[1];
@@ -278,6 +279,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
     }
     
     KeReleaseGuardedMutex(&ViewLock);
+    KeLeaveCriticalRegion();
     
     DPRINT("CcRosFlushDirtyPages() finished\n");
     return(STATUS_SUCCESS);
