@@ -43,6 +43,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define MODULE_INVOLVED_IN_ARM3
+#include "ARM3/miarm.h"
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -663,31 +666,14 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 /*
  * @implemented
  */
-NTSTATUS NTAPI
-NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
+NTSTATUS
+NTAPI
+NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
                         IN OUT PVOID* UBaseAddress,
-                        IN     ULONG_PTR  ZeroBits,
+                        IN ULONG_PTR ZeroBits,
                         IN OUT PSIZE_T URegionSize,
-                        IN     ULONG  AllocationType,
-                        IN     ULONG  Protect)
-/*
- * FUNCTION: Allocates a block of virtual memory in the process address space
- * ARGUMENTS:
- *      ProcessHandle = The handle of the process which owns the virtual memory
- *      BaseAddress   = A pointer to the virtual memory allocated. If you
- *                      supply a non zero value the system will try to
- *                      allocate the memory at the address supplied. It round
- *                      it down to a multiple  of the page size.
- *      ZeroBits  = (OPTIONAL) You can specify the number of high order bits
- *                      that must be zero, ensuring that the memory will be
- *                      allocated at a address below a certain value.
- *      RegionSize = The number of bytes to allocate
- *      AllocationType = Indicates the type of virtual memory you like to
- *                       allocated, can be a combination of MEM_COMMIT,
- *                       MEM_RESERVE, MEM_RESET, MEM_TOP_DOWN.
- *      Protect = Indicates the protection type of the pages allocated.
- * RETURNS: Status
- */
+                        IN ULONG AllocationType,
+                        IN ULONG Protect)
 {
    PEPROCESS Process;
    MEMORY_AREA* MemoryArea;
@@ -699,132 +685,188 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    ULONG RegionSize;
    PVOID PBaseAddress;
    ULONG PRegionSize;
-   ULONG MemProtection;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-   KPROCESSOR_MODE PreviousMode;
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    KAPC_STATE ApcState;
+    ULONG ProtectionMask;
+    BOOLEAN Attached = FALSE;
+    BoundaryAddressMultiple.QuadPart = 0;
+    PAGED_CODE();
 
-   PAGED_CODE();
+    /* Check for valid Zero bits */
+    if (ZeroBits > 21)
+    {
+        DPRINT1("Too many zero bits\n");
+        return STATUS_INVALID_PARAMETER_3;
+    }
 
-   DPRINT("NtAllocateVirtualMemory(*UBaseAddress %x, "
-          "ZeroBits %d, *URegionSize %x, AllocationType %x, Protect %x)\n",
-          *UBaseAddress,ZeroBits,*URegionSize,AllocationType,
-          Protect);
+    /* Check for valid Allocation Types */
+    if ((AllocationType & ~(MEM_COMMIT | MEM_RESERVE | MEM_RESET | MEM_PHYSICAL |
+                            MEM_TOP_DOWN | MEM_WRITE_WATCH)))
+    {
+        DPRINT1("Invalid Allocation Type\n");
+        return STATUS_INVALID_PARAMETER_5;
+    }
 
-   /* Check for valid protection flags */
-   MemProtection = Protect & ~(PAGE_GUARD|PAGE_NOCACHE);
-   if (MemProtection != PAGE_NOACCESS &&
-       MemProtection != PAGE_READONLY &&
-       MemProtection != PAGE_READWRITE &&
-       MemProtection != PAGE_WRITECOPY &&
-       MemProtection != PAGE_EXECUTE &&
-       MemProtection != PAGE_EXECUTE_READ &&
-       MemProtection != PAGE_EXECUTE_READWRITE &&
-       MemProtection != PAGE_EXECUTE_WRITECOPY)
-   {
-      DPRINT1("Invalid page protection\n");
-      return STATUS_INVALID_PAGE_PROTECTION;
-   }
+    /* Check for at least one of these Allocation Types to be set */
+    if (!(AllocationType & (MEM_COMMIT | MEM_RESERVE | MEM_RESET)))
+    {
+        DPRINT1("No memory allocation base type\n");
+        return STATUS_INVALID_PARAMETER_5;
+    }
 
-   /* Check for valid Zero bits */
-   if (ZeroBits > 21)
-   {
-      DPRINT1("Too many zero bits\n");
-      return STATUS_INVALID_PARAMETER_3;
-   }
+    /* MEM_RESET is an exclusive flag, make sure that is valid too */
+    if ((AllocationType & MEM_RESET) && (AllocationType != MEM_RESET))
+    {
+        DPRINT1("Invalid use of MEM_RESET\n");
+        return STATUS_INVALID_PARAMETER_5;
+    }
 
-   /* Check for valid Allocation Types */
-   if ((AllocationType & ~(MEM_COMMIT | MEM_RESERVE | MEM_RESET | MEM_PHYSICAL |
-                           MEM_TOP_DOWN | MEM_WRITE_WATCH)))
-   {
-      DPRINT1("Invalid Allocation Type\n");
-      return STATUS_INVALID_PARAMETER_5;
-   }
+    /* Check if large pages are being used */
+    if (AllocationType & MEM_LARGE_PAGES)
+    {
+        /* Large page allocations MUST be committed */
+        if (!(AllocationType & MEM_COMMIT))
+        {
+            DPRINT1("Must supply MEM_COMMIT with MEM_LARGE_PAGES\n");
+            return STATUS_INVALID_PARAMETER_5;
+        }
+        
+        /* These flags are not allowed with large page allocations */
+        if (AllocationType & (MEM_PHYSICAL | MEM_RESET | MEM_WRITE_WATCH))
+        {
+            DPRINT1("Using illegal flags with MEM_LARGE_PAGES\n");
+            return STATUS_INVALID_PARAMETER_5;
+        }
+    }
 
-   /* Check for at least one of these Allocation Types to be set */
-   if (!(AllocationType & (MEM_COMMIT | MEM_RESERVE | MEM_RESET)))
-   {
-      DPRINT1("No memory allocation base type\n");
-      return STATUS_INVALID_PARAMETER_5;
-   }
+    /* MEM_WRITE_WATCH can only be used if MEM_RESERVE is also used */
+    if ((AllocationType & MEM_WRITE_WATCH) && !(AllocationType & MEM_RESERVE))
+    {
+        DPRINT1("MEM_WRITE_WATCH used without MEM_RESERVE\n");
+        return STATUS_INVALID_PARAMETER_5;
+    }
 
-   /* MEM_RESET is an exclusive flag, make sure that is valid too */
-   if ((AllocationType & MEM_RESET) && (AllocationType != MEM_RESET))
-   {
-      DPRINT1("Invalid use of MEM_RESET\n");
-      return STATUS_INVALID_PARAMETER_5;
-   }
+    /* MEM_PHYSICAL can only be used if MEM_RESERVE is also used */
+    if ((AllocationType & MEM_PHYSICAL) && !(AllocationType & MEM_RESERVE))
+    {
+        DPRINT1("MEM_WRITE_WATCH used without MEM_RESERVE\n");
+        return STATUS_INVALID_PARAMETER_5;
+    }
 
-   /* MEM_WRITE_WATCH can only be used if MEM_RESERVE is also used */
-   if ((AllocationType & MEM_WRITE_WATCH) && !(AllocationType & MEM_RESERVE))
-   {
-      DPRINT1("MEM_WRITE_WATCH used without MEM_RESERVE\n");
-      return STATUS_INVALID_PARAMETER_5;
-   }
+    /* Check for valid MEM_PHYSICAL usage */
+    if (AllocationType & MEM_PHYSICAL)
+    {
+        /* Only these flags are allowed with MEM_PHYSIAL */
+        if (AllocationType & ~(MEM_RESERVE | MEM_TOP_DOWN | MEM_PHYSICAL))
+        {
+            DPRINT1("Using illegal flags with MEM_PHYSICAL\n");
+            return STATUS_INVALID_PARAMETER_5;
+        }
 
-   /* MEM_PHYSICAL can only be used with MEM_RESERVE, and can only be R/W */
-   if (AllocationType & MEM_PHYSICAL)
-   {
-      /* First check for MEM_RESERVE exclusivity */
-      if (AllocationType != (MEM_RESERVE | MEM_PHYSICAL))
-      {
-         DPRINT1("MEM_PHYSICAL used with other flags then MEM_RESERVE or"
-                 "MEM_RESERVE was not present at all\n");
-         return STATUS_INVALID_PARAMETER_5;
-      }
+        /* Then make sure PAGE_READWRITE is used */
+        if (Protect != PAGE_READWRITE)
+        {
+            DPRINT1("MEM_PHYSICAL used without PAGE_READWRITE\n");
+            return STATUS_INVALID_PARAMETER_6;
+        }
+    }
 
-      /* Then make sure PAGE_READWRITE is used */
-      if (Protect != PAGE_READWRITE)
-      {
-         DPRINT1("MEM_PHYSICAL used without PAGE_READWRITE\n");
-         return STATUS_INVALID_PAGE_PROTECTION;
-      }
-   }
+    /* Calculate the protection mask and make sure it's valid */
+    ProtectionMask = MiMakeProtectionMask(Protect);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("Invalid protection mask\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
 
-   PreviousMode = KeGetPreviousMode();
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Check for user-mode parameters */
+        if (PreviousMode != KernelMode)
+        {
+            /* Make sure they are writable */
+            ProbeForWritePointer(UBaseAddress);
+            ProbeForWriteUlong(URegionSize);
+        }
+        
+        /* Capture their values */
+        PBaseAddress = *UBaseAddress;
+        PRegionSize = *URegionSize;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+    
+    /* Make sure the allocation isn't past the VAD area */
+    if (PBaseAddress >= MM_HIGHEST_VAD_ADDRESS)
+    {
+        DPRINT1("Virtual allocation base above User Space\n");
+        return STATUS_INVALID_PARAMETER_2;
+    }
+    
+    /* Make sure the allocation wouldn't overflow past the VAD area */
+    if ((((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) - (ULONG_PTR)PBaseAddress) < PRegionSize)
+    {
+        DPRINT1("Region size would overflow into kernel-memory\n");
+        return STATUS_INVALID_PARAMETER_4;
+    }
+    
+    /* Make sure there's a size specified */
+    if (!PRegionSize)
+    {
+        DPRINT1("Region size is invalid (zero)\n");
+        return STATUS_INVALID_PARAMETER_4;
+    }
 
-   _SEH2_TRY
-   {
-      if (PreviousMode != KernelMode)
-      {
-         ProbeForWritePointer(UBaseAddress);
-         ProbeForWriteUlong(URegionSize);
-      }
-      PBaseAddress = *UBaseAddress;
-      PRegionSize  = *URegionSize;
-   }
-   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-   {
-      /* Return the exception code */
-      _SEH2_YIELD(return _SEH2_GetExceptionCode());
-   }
-   _SEH2_END;
-
-   BoundaryAddressMultiple.QuadPart = 0;
+    /* Check if this is for the current process */
+    if (ProcessHandle == NtCurrentProcess())
+    {
+        /* We already have the current process, no need to go through Ob */
+        Process = CurrentProcess;
+    }
+    else
+    {
+        /* Reference the handle for correct permissions */
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_VM_OPERATION,
+                                           PsProcessType,
+                                           PreviousMode,
+                                           (PVOID*)&Process,
+                                           NULL);
+        if (!NT_SUCCESS(Status)) return Status;
+        
+        /* Check if not running in the current process */
+        if (CurrentProcess != Process)
+        {
+            /* Attach to it */
+            KeStackAttachProcess(&Process->Pcb, &ApcState);
+            Attached = TRUE;
+        }
+    }
+    
+    /* Check for large page allocations */
+    if (AllocationType & MEM_LARGE_PAGES)
+    {
+        /* The lock memory privilege is required */
+        if (!SeSinglePrivilegeCheck(SeLockMemoryPrivilege, PreviousMode))
+        {
+            /* Fail without it */
+            DPRINT1("Privilege not held for MEM_LARGE_PAGES\n");
+            if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
+            return STATUS_PRIVILEGE_NOT_HELD;
+        }
+    }
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
    RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
                 PAGE_ROUND_DOWN(PBaseAddress);
 
-   /*
-    * We've captured and calculated the data, now do more checks
-    * Yes, MmCreateMemoryArea does similar checks, but they don't return
-    * the right status codes that a caller of this routine would expect.
-    */
-   if ((ULONG_PTR)BaseAddress >= USER_SHARED_DATA)
-   {
-      DPRINT1("Virtual allocation base above User Space\n");
-      return STATUS_INVALID_PARAMETER_2;
-   }
-   if (!RegionSize)
-   {
-      DPRINT1("Region size is invalid (zero)\n");
-      return STATUS_INVALID_PARAMETER_4;
-   }
-   if ((USER_SHARED_DATA - (ULONG_PTR)BaseAddress) < RegionSize)
-   {
-      DPRINT1("Region size would overflow into kernel-memory\n");
-      return STATUS_INVALID_PARAMETER_4;
-   }
 
    /*
     * Copy on Write is reserved for system use. This case is a certain failure
@@ -835,19 +877,6 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    {
       DPRINT1("Copy on write is not supported by VirtualAlloc\n");
       return STATUS_INVALID_PAGE_PROTECTION;
-   }
-
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_OPERATION,
-                                      PsProcessType,
-                                      PreviousMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
-      return(Status);
    }
 
    Type = (AllocationType & MEM_COMMIT) ? MEM_COMMIT : MEM_RESERVE;
@@ -871,8 +900,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
                   (ULONG_PTR)BaseAddress + RegionSize, MemoryArea->EndingAddress);
 
             MmUnlockAddressSpace(AddressSpace);
-            ObDereferenceObject(Process);
-
+            if (Attached) KeUnstackDetachProcess(&ApcState);
+            if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
             return STATUS_MEMORY_NOT_ALLOCATED;
          }
 
@@ -888,7 +917,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
             }
 
             MmUnlockAddressSpace(AddressSpace);
-            ObDereferenceObject(Process);
+            if (Attached) KeUnstackDetachProcess(&ApcState);
+            if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
             /* MEM_RESET does not modify any attributes of region */
             return STATUS_SUCCESS;
@@ -904,7 +934,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
                              BaseAddress, RegionSize,
                              Type, Protect, MmModifyAttributes);
             MmUnlockAddressSpace(AddressSpace);
-            ObDereferenceObject(Process);
+            if (Attached) KeUnstackDetachProcess(&ApcState);
+            if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
             DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 
             /* Give the caller rounded BaseAddress and area length */
@@ -935,7 +966,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
             }
 
             MmUnlockAddressSpace(AddressSpace);
-            ObDereferenceObject(Process);
+            if (Attached) KeUnstackDetachProcess(&ApcState);
+            if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
             DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
 
             /* Give the caller rounded BaseAddress and area length */
@@ -951,7 +983,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
          else
          {
             MmUnlockAddressSpace(AddressSpace);
-            ObDereferenceObject(Process);
+            if (Attached) KeUnstackDetachProcess(&ApcState);
+            if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
             return(STATUS_UNSUCCESSFUL);
          }
       }
@@ -969,7 +1002,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    if (!NT_SUCCESS(Status))
    {
       MmUnlockAddressSpace(AddressSpace);
-      ObDereferenceObject(Process);
+      if (Attached) KeUnstackDetachProcess(&ApcState);
+      if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
       DPRINT("NtAllocateVirtualMemory() = %x\n",Status);
       return(Status);
    }
@@ -987,12 +1021,14 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       MmReserveSwapPages(nPages);
    }
 
+   MmUnlockAddressSpace(AddressSpace);
+   if (Attached) KeUnstackDetachProcess(&ApcState);
+   if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
+
    *UBaseAddress = BaseAddress;
    *URegionSize = MemoryAreaLength;
    DPRINT("*UBaseAddress %x  *URegionSize %x\n", BaseAddress, RegionSize);
 
-   MmUnlockAddressSpace(AddressSpace);
-   ObDereferenceObject(Process);
    return(STATUS_SUCCESS);
 }
 
@@ -1261,8 +1297,8 @@ MmFreeVirtualMemory(PEPROCESS Process,
  */
 NTSTATUS NTAPI
 NtFreeVirtualMemory(IN HANDLE ProcessHandle,
-                    IN PVOID*  PBaseAddress,
-                    IN PSIZE_T PRegionSize,
+                    IN PVOID*  UBaseAddress,
+                    IN PSIZE_T URegionSize,
                     IN ULONG FreeType)
 /*
  * FUNCTION: Frees a range of virtual memory
@@ -1281,51 +1317,94 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    NTSTATUS Status;
    PEPROCESS Process;
    PMMSUPPORT AddressSpace;
-   PVOID BaseAddress;
-   ULONG RegionSize;
+   PVOID BaseAddress, PBaseAddress;
+   ULONG RegionSize, PRegionSize;
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    KAPC_STATE ApcState;
+    BOOLEAN Attached = FALSE;
+    PAGED_CODE();
 
-   PAGED_CODE();
-
-   DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *PBaseAddress %x, "
-          "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
-          *PRegionSize,FreeType);
-
+    /* Only two flags are supported */
     if (!(FreeType & (MEM_RELEASE | MEM_DECOMMIT)))
     {
         DPRINT1("Invalid FreeType\n");
         return STATUS_INVALID_PARAMETER_4;
     }
-
-    if (ExGetPreviousMode() != KernelMode)
+   
+    /* Check if no flag was used, or if both flags were used */
+    if (!((FreeType & (MEM_DECOMMIT | MEM_RELEASE))) ||
+         ((FreeType & (MEM_DECOMMIT | MEM_RELEASE)) == (MEM_DECOMMIT | MEM_RELEASE)))
     {
-        _SEH2_TRY
-        {
-            /* Probe user pointers */
-            ProbeForWriteSize_t(PRegionSize);
-            ProbeForWritePointer(PBaseAddress);
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            /* Return the exception code */
-            _SEH2_YIELD(return _SEH2_GetExceptionCode());
-        }
-        _SEH2_END;
+        DPRINT1("Invalid FreeType combination\n");
+        return STATUS_INVALID_PARAMETER_4;
     }
-
-   BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
-   RegionSize = PAGE_ROUND_UP((ULONG_PTR)(*PBaseAddress) + (*PRegionSize)) -
-                PAGE_ROUND_DOWN((*PBaseAddress));
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_OPERATION,
-                                      PsProcessType,
-                                      UserMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
+   
+    /* Enter SEH */
+    _SEH2_TRY
+    {
+        /* Check for user-mode parameters */
+        if (PreviousMode != KernelMode)
+        {
+            /* Make sure they are writable */
+            ProbeForWritePointer(UBaseAddress);
+            ProbeForWriteUlong(URegionSize);
+        }
+       
+        /* Capture their values */
+        PBaseAddress = *UBaseAddress;
+        PRegionSize = *URegionSize;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+   
+    /* Make sure the allocation isn't past the user area */
+    if (PBaseAddress >= MM_HIGHEST_USER_ADDRESS)
+    {
+        DPRINT1("Virtual free base above User Space\n");
+        return STATUS_INVALID_PARAMETER_2;
+    }
+   
+   /* Make sure the allocation wouldn't overflow past the user area */
+   if (((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (ULONG_PTR)PBaseAddress) < PRegionSize)
    {
-      return(Status);
+       DPRINT1("Region size would overflow into kernel-memory\n");
+       return STATUS_INVALID_PARAMETER_3;
    }
+
+   /* Check if this is for the current process */
+   if (ProcessHandle == NtCurrentProcess())
+   {
+       /* We already have the current process, no need to go through Ob */
+       Process = CurrentProcess;
+   }
+   else
+   {
+       /* Reference the handle for correct permissions */
+       Status = ObReferenceObjectByHandle(ProcessHandle,
+                                          PROCESS_VM_OPERATION,
+                                          PsProcessType,
+                                          PreviousMode,
+                                          (PVOID*)&Process,
+                                          NULL);
+       if (!NT_SUCCESS(Status)) return Status;
+       
+       /* Check if not running in the current process */
+       if (CurrentProcess != Process)
+       {
+           /* Attach to it */
+           KeStackAttachProcess(&Process->Pcb, &ApcState);
+           Attached = TRUE;
+       }
+   }
+
+   BaseAddress = (PVOID)PAGE_ROUND_DOWN((PBaseAddress));
+   RegionSize = PAGE_ROUND_UP((ULONG_PTR)(PBaseAddress) + (PRegionSize)) -
+                PAGE_ROUND_DOWN((PBaseAddress));
 
    AddressSpace = &Process->Vm;
 
@@ -1372,7 +1451,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 unlock_deref_and_return:
 
    MmUnlockAddressSpace(AddressSpace);
-   ObDereferenceObject(Process);
+   if (Attached) KeUnstackDetachProcess(&ApcState);
+   if (ProcessHandle != NtCurrentProcess()) ObDereferenceObject(Process);
 
    return(Status);
 }
