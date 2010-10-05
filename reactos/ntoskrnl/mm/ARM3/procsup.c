@@ -125,7 +125,7 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     
     /* Build the rest of the VAD now */
     Vad->StartingVpn = (*Base) >> PAGE_SHIFT;
-    Vad->EndingVpn =  ((*Base) + Size - 1) >> PAGE_SHIFT;
+    Vad->EndingVpn = ((*Base) + Size - 1) >> PAGE_SHIFT;
     Vad->u3.Secured.StartVpn = *Base;
     Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
     Vad->u1.Parent = NULL;
@@ -1194,6 +1194,14 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         
         /* Release the working set */
         MiUnlockProcessWorkingSet(Process, Thread);
+        
+        /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
+        if (Vad->u.VadFlags.Spare == 1)
+        {
+            /* Set a flag so MmDeleteMemoryArea knows to free, but not to remove */
+            Vad->u.VadFlags.Spare = 2;
+            continue;
+        }
         
         /* Free the VAD memory */
         ExFreePool(Vad);
