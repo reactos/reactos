@@ -1503,7 +1503,7 @@ MmFindRegion(
 PFILE_OBJECT
 NTAPI
 MmGetFileObjectForSection(
-    IN PROS_SECTION_OBJECT Section
+    IN PVOID Section
 );
 NTSTATUS
 NTAPI
@@ -1515,7 +1515,7 @@ MmGetFileNameForAddress(
 NTSTATUS
 NTAPI
 MmGetFileNameForSection(
-    IN PROS_SECTION_OBJECT Section,
+    IN PVOID Section,
     OUT POBJECT_NAME_INFORMATION *ModuleName
 );
 

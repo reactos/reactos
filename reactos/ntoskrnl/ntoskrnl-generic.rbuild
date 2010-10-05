@@ -472,20 +472,11 @@
 		<file>marea.c</file>
 		<file>mmfault.c</file>
 		<file>mminit.c</file>
-		<file>mpw.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
-		<file>pe.c</file>
-		<file>ppool.c</file>
-		<file>procsup.c</file>
 		<file>region.c</file>
 		<file>rmap.c</file>
 		<file>section.c</file>
-		<file>virtual.c</file>
-		<if property="_ELF_" value="1">
-			<file>elf32.c</file>
-			<file>elf64.c</file>
-		</if>
 	</directory>
 	<directory name="ob">
 		<file>obdir.c</file>

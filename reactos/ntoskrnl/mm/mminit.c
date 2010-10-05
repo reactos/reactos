@@ -17,6 +17,8 @@
 
 /* GLOBALS *******************************************************************/
 
+VOID NTAPI MiInitializeUserPfnBitmap(VOID);
+
 PCHAR
 MemType[] =
 {
@@ -47,6 +49,9 @@ MemType[] =
     "LoaderReserve     ",
     "LoaderXIPRom      "
 };
+
+HANDLE MpwThreadHandle;
+KEVENT MpwThreadEvent;
 
 BOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
@@ -330,7 +335,88 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
-VOID NTAPI MiInitializeUserPfnBitmap(VOID);
+NTSTATUS NTAPI
+MmMpwThreadMain(PVOID Ignored)
+{
+   NTSTATUS Status;
+   ULONG PagesWritten;
+   LARGE_INTEGER Timeout;
+
+   Timeout.QuadPart = -50000000;
+
+   for(;;)
+   {
+      Status = KeWaitForSingleObject(&MpwThreadEvent,
+                                     0,
+                                     KernelMode,
+                                     FALSE,
+                                     &Timeout);
+      if (!NT_SUCCESS(Status))
+      {
+         DbgPrint("MpwThread: Wait failed\n");
+         KeBugCheck(MEMORY_MANAGEMENT);
+         return(STATUS_UNSUCCESSFUL);
+      }
+
+      PagesWritten = 0;
+
+      CcRosFlushDirtyPages(128, &PagesWritten);
+   }
+}
+
+NTSTATUS
+NTAPI
+MmInitMpwThread(VOID)
+{
+   KPRIORITY Priority;
+   NTSTATUS Status;
+   CLIENT_ID MpwThreadId;
+   
+   KeInitializeEvent(&MpwThreadEvent, SynchronizationEvent, FALSE);
+
+   Status = PsCreateSystemThread(&MpwThreadHandle,
+                                 THREAD_ALL_ACCESS,
+                                 NULL,
+                                 NULL,
+                                 &MpwThreadId,
+                                 (PKSTART_ROUTINE) MmMpwThreadMain,
+                                 NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      return(Status);
+   }
+
+   Priority = 27;
+   NtSetInformationThread(MpwThreadHandle,
+                          ThreadPriority,
+                          &Priority,
+                          sizeof(Priority));
+
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+NTAPI
+MmInitBsmThread(VOID)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE ThreadHandle;
+
+    /* Create the thread */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    Status = PsCreateSystemThread(&ThreadHandle,
+                                  THREAD_ALL_ACCESS,
+                                  &ObjectAttributes,
+                                  NULL,
+                                  NULL,
+                                  KeBalanceSetManager,
+                                  NULL);
+
+    /* Close the handle and return status */
+    ZwClose(ThreadHandle);
+    return Status;
+}
 
 BOOLEAN
 NTAPI

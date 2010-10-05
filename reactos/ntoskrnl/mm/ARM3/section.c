@@ -717,6 +717,184 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     return STATUS_SUCCESS;
 }
 
+PFILE_OBJECT
+NTAPI
+MmGetFileObjectForSection(IN PVOID SectionObject)
+{
+    PSECTION_OBJECT Section;
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    ASSERT(SectionObject != NULL);
+    
+    /* Check if it's an ARM3, or ReactOS section */
+    if ((ULONG_PTR)SectionObject & 1)
+    {
+        /* Return the file pointer stored in the control area */
+        Section = (PVOID)((ULONG_PTR)SectionObject & ~1);
+        return Section->Segment->ControlArea->FilePointer;
+    }
+
+    /* Return the file object */
+    return ((PROS_SECTION_OBJECT)SectionObject)->FileObject;
+}
+
+NTSTATUS
+NTAPI
+MmGetFileNameForFileObject(IN PFILE_OBJECT FileObject,
+                           OUT POBJECT_NAME_INFORMATION *ModuleName)
+{
+    POBJECT_NAME_INFORMATION ObjectNameInfo;
+    NTSTATUS Status;
+    ULONG ReturnLength;
+    
+    /* Allocate memory for our structure */
+    ObjectNameInfo = ExAllocatePoolWithTag(PagedPool, 1024, '  mM');
+    if (!ObjectNameInfo) return STATUS_NO_MEMORY;
+
+    /* Query the name */
+    Status = ObQueryNameString(FileObject,
+                               ObjectNameInfo,
+                               1024,
+                               &ReturnLength);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Failed, free memory */
+        DPRINT1("Name query failed\n");
+        ExFreePoolWithTag(ObjectNameInfo, '  mM');
+        *ModuleName = NULL;
+        return Status;
+    }
+
+    /* Success */
+    *ModuleName = ObjectNameInfo;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmGetFileNameForSection(IN PVOID Section,
+                        OUT POBJECT_NAME_INFORMATION *ModuleName)
+{
+    PFILE_OBJECT FileObject;
+
+    /* Make sure it's an image section */
+    if ((ULONG_PTR)Section & 1)
+    {
+        /* Check ARM3 Section flag */
+        if (((PSECTION)((ULONG_PTR)Section & ~1))->u.Flags.Image == 0)
+        {
+            /* It's not, fail */
+            DPRINT1("Not an image section\n");
+            return STATUS_SECTION_NOT_IMAGE;
+        }
+    }
+    else if (!(((PROS_SECTION_OBJECT)Section)->AllocationAttributes & SEC_IMAGE))
+    {
+        /* It's not, fail */
+        DPRINT1("Not an image section\n");
+        return STATUS_SECTION_NOT_IMAGE;
+    }
+
+    /* Get the file object */
+    FileObject = MmGetFileObjectForSection(Section);
+    return MmGetFileNameForFileObject(FileObject, ModuleName);
+}
+
+NTSTATUS
+NTAPI
+MmGetFileNameForAddress(IN PVOID Address,
+                        OUT PUNICODE_STRING ModuleName)
+{
+   PVOID Section;
+   PMEMORY_AREA MemoryArea;
+   POBJECT_NAME_INFORMATION ModuleNameInformation;
+   PVOID AddressSpace;
+   NTSTATUS Status;
+   PFILE_OBJECT FileObject = NULL;
+   PMMVAD Vad;
+   PCONTROL_AREA ControlArea;
+
+   /* Lock address space */
+   AddressSpace = MmGetCurrentAddressSpace();
+   MmLockAddressSpace(AddressSpace);
+
+   /* Locate the memory area for the process by address */
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+   if (!MemoryArea)
+   {
+       /* Fail, the address does not exist */
+InvalidAddress:
+       DPRINT1("Invalid address\n");
+       MmUnlockAddressSpace(AddressSpace);
+       return STATUS_INVALID_ADDRESS;
+   }
+
+   /* Check if it's a section view (RosMm section) or ARM3 section */
+   if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+   {
+      /* Get the section pointer to the SECTION_OBJECT */
+      Section = MemoryArea->Data.SectionData.Section;
+
+      /* Unlock address space */
+      MmUnlockAddressSpace(AddressSpace);
+      
+      /* Get the filename of the section */
+      Status = MmGetFileNameForSection(Section, &ModuleNameInformation);
+   }
+   else if (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)
+   {
+       /* Get the VAD */
+       Vad = MiLocateAddress(Address);
+       if (!Vad) goto InvalidAddress;
+       
+       /* Make sure it's not a VM VAD */
+       if (Vad->u.VadFlags.PrivateMemory == 1)
+       {
+NotSection:
+           DPRINT1("Address is not a section\n");
+           MmUnlockAddressSpace(AddressSpace);
+           return STATUS_SECTION_NOT_IMAGE;
+       }
+       
+       /* Get the control area */
+       ControlArea = Vad->ControlArea;
+       if (!(ControlArea) || !(ControlArea->u.Flags.Image)) goto NotSection;
+       
+       /* Get the file object */
+       FileObject = ControlArea->FilePointer;
+       ASSERT(FileObject != NULL);
+       ObReferenceObject(FileObject);
+       
+       /* Unlock address space */
+       MmUnlockAddressSpace(AddressSpace);
+       
+       /* Get the filename of the file object */
+       Status = MmGetFileNameForFileObject(FileObject, &ModuleNameInformation);
+       
+       /* Dereference it */
+       ObDereferenceObject(FileObject);
+   }
+   else
+   {
+       /* Trying to access virtual memory or something */
+       goto InvalidAddress;
+   }
+
+   /* Check if we were able to get the file object name */
+   if (NT_SUCCESS(Status))
+   {
+        /* Init modulename */
+       RtlCreateUnicodeString(ModuleName,
+                              ModuleNameInformation->Name.Buffer);
+
+       /* Free temp taged buffer from MmGetFileNameForFileObject() */
+       ExFreePoolWithTag(ModuleNameInformation, '  mM');
+       DPRINT("Found ModuleName %S by address %p\n", ModuleName->Buffer, Address);
+   }
+   
+   /* Return status */
+   return Status;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
