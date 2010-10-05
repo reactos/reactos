@@ -2034,20 +2034,40 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 UINT APIENTRY
 NtUserGetMenuIndex(
    HMENU hMenu,
-   UINT wID)
+   HMENU hSubMenu)
 {
-   UNIMPLEMENTED
+   PMENU_OBJECT Menu, SubMenu;
+   PMENU_ITEM MenuItem;
+   DECLARE_RETURN(UINT);
 
-   return 0;
+   DPRINT("Enter NtUserGetMenuIndex\n");
+   UserEnterShared();
+
+   if ( !(Menu = UserGetMenuObject(hMenu)) ||
+        !(SubMenu = UserGetMenuObject(hSubMenu)) )
+      RETURN(0xFFFFFFFF);
+
+   MenuItem = Menu->MenuItemList;
+   while(MenuItem)
+   {
+      if (MenuItem->hSubMenu == hSubMenu)
+         RETURN(MenuItem->wID);
+      MenuItem = MenuItem->Next;
+   }
+
+   RETURN(0xFFFFFFFF);
+
+CLEANUP:
+   DPRINT("Leave NtUserGetMenuIndex, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
-
 
 /*
  * @implemented
@@ -2217,10 +2237,6 @@ UserMenuInfo(
 
    return( Res);
 }
-
-
-
-
 
 /*
  * @implemented
