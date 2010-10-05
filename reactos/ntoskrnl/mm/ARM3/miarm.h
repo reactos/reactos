@@ -56,6 +56,9 @@
 #define _1MB (1024 * _1KB)
 #define _1GB (1024 * _1MB)
 
+/* Everyone loves 64K */
+#define _64K (64 * _1KB)
+
 /* Area mapped by a PDE */
 #define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
 
@@ -248,7 +251,7 @@ extern const ULONG MmProtectToPteMask[32];
 //
 // System views are binned into 64K chunks
 //
-#define MI_SYSTEM_VIEW_BUCKET_SIZE  65536
+#define MI_SYSTEM_VIEW_BUCKET_SIZE  _64K
 
 //
 // FIXFIX: These should go in ex.h after the pool merge
@@ -1138,6 +1141,23 @@ MiFindEmptyAddressRangeDownTree(
     IN PMM_AVL_TABLE Table,
     OUT PULONG_PTR Base,
     OUT PMMADDRESS_NODE *Parent
+);
+
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeInTree(
+    IN SIZE_T Length,
+    IN ULONG_PTR Alignment,
+    IN PMM_AVL_TABLE Table,
+    OUT PMMADDRESS_NODE *PreviousVad,
+    OUT PULONG_PTR Base
+);
+
+VOID
+NTAPI
+MiInsertVad(
+    IN PMMVAD Vad,
+    IN PEPROCESS Process
 );
 
 VOID
