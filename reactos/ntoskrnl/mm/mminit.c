@@ -250,7 +250,7 @@ MiInitSystemMemoryAreas()
 
 #if defined(_X86_)
     //
-    // Finally, reserve the 2  pages we currently make use of for HAL mappings
+    // Finally, reserve the 2 pages we currently make use of for HAL mappings
     //
     BaseAddress = (PVOID)0xFFC00000;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
