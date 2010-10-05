@@ -839,7 +839,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    /*
     * Check if this page needs to be mapped COW
     */
-   if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+   if ((Segment->WriteCopy) &&
        (Region->Protect == PAGE_READWRITE ||
        Region->Protect == PAGE_EXECUTE_READWRITE))
    {
@@ -1331,7 +1331,7 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    /*
     * Check if we are doing COW
     */
-   if (!((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+   if (!((Segment->WriteCopy) &&
          (Region->Protect == PAGE_READWRITE ||
           Region->Protect == PAGE_EXECUTE_READWRITE)))
    {
@@ -2015,7 +2015,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    Segment = MemoryArea->Data.SectionData.Segment;
 
-   if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
+   if ((Segment->WriteCopy) &&
          (NewProtect == PAGE_READWRITE || NewProtect == PAGE_EXECUTE_READWRITE))
    {
       DoCOW = TRUE;
@@ -3518,7 +3518,6 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
    MArea->Data.SectionData.Segment = Segment;
    MArea->Data.SectionData.Section = Section;
    MArea->Data.SectionData.ViewOffset = ViewOffset;
-   MArea->Data.SectionData.WriteCopyView = FALSE;
    MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
                       ViewSize, 0, Protect);
 
