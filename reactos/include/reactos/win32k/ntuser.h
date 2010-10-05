@@ -943,7 +943,7 @@ UINT
 NTAPI
 NtUserGetMenuIndex(
   HMENU hMenu,
-  UINT wID);
+  HMENU hSubMenu);
 
 BOOL
 NTAPI
