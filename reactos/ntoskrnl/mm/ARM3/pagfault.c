@@ -27,6 +27,7 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
                       OUT PMMVAD *ProtoVad)
 {
     PMMVAD Vad;
+    PMMPTE PointerPte;
     
     /* No prototype/section support for now */
     *ProtoVad = NULL;
@@ -50,15 +51,33 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
         *ProtectCode = MM_NOACCESS;
         return NULL;
     }
-    
-    /* This must be a TEB/PEB VAD */
-    ASSERT(Vad->u.VadFlags.PrivateMemory == TRUE);
-    ASSERT(Vad->u.VadFlags.MemCommit == TRUE);
+
+    /* This must be a VM VAD */
     ASSERT(Vad->u.VadFlags.VadType == VadNone);
     
-    /* Return the protection on it */
-    *ProtectCode = Vad->u.VadFlags.Protection;
-    return NULL;
+    /* Check if it's a section, or just an allocation */
+    if (Vad->u.VadFlags.PrivateMemory == TRUE)
+    {
+        /* This must be a TEB/PEB VAD */
+        ASSERT(Vad->u.VadFlags.MemCommit == TRUE);
+        *ProtectCode = Vad->u.VadFlags.Protection;
+        return NULL;
+    }
+    else
+    {
+        /* Return the proto VAD */
+        ASSERT(Vad->u2.VadFlags2.ExtendableFile == 0);
+        *ProtoVad = Vad;
+        
+        /* Get the prototype PTE for this page */
+        PointerPte = (((ULONG_PTR)VirtualAddress >> PAGE_SHIFT) - Vad->StartingVpn) + Vad->FirstPrototypePte;
+        ASSERT(PointerPte <= Vad->LastContiguousPte);
+        ASSERT(PointerPte != NULL);
+        
+        /* Return the Prototype PTE and the protection for the page mapping */
+        *ProtectCode = Vad->u.VadFlags.Protection;
+        return PointerPte;
+    }
 }
  
 NTSTATUS
@@ -482,8 +501,8 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
             }
             else
             {
-                ASSERT(PointerPte->u.Hard.Valid == 0);
                 /* Resolve the fault -- this will release the PFN lock */
+                ASSERT(PointerPte->u.Hard.Valid == 0);
                 Status = MiResolveProtoPteFault(StoreInstruction,
                                                 Address,
                                                 PointerPte,
@@ -505,15 +524,14 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
         }
         else
         {
-            /* We currently only handle the shared user data PTE path */
+            /* We currently only handle very limited paths */
             ASSERT(PointerPte->u.Soft.Prototype == 1);
             ASSERT(PointerPte->u.Soft.PageFileHigh == MI_PTE_LOOKUP_NEEDED);
-            ASSERT(Vad == NULL);
         
             /* Lock the PFN database */
             LockIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         
-            /* For the shared data page, this should be true */
+            /* For our current usage, this should be true */
             ASSERT(SuperProtoPte->u.Hard.Valid == 1);
             ASSERT(TempPte.u.Hard.Valid == 0);
 
@@ -972,8 +990,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     }
     else
     {
-        /* The only "prototype PTE" we support is the shared user data path */
-        ASSERT(ProtectionCode == MM_READONLY);
+        /* No guard page support yet */
+        ASSERT((ProtectionCode & MM_DECOMMIT) == 0);
+        ASSERT(ProtectionCode != 0x100);
         
         /* Write the prototype PTE */
         TempPte = PrototypePte;
@@ -991,7 +1010,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                                  Vad);
         ASSERT(Status == STATUS_PAGE_FAULT_TRANSITION);
         ASSERT(PointerPte->u.Hard.Valid == 1);
-        ASSERT(PointerPte->u.Hard.PageFrameNumber == MmSharedUserDataPte->u.Hard.PageFrameNumber);
+        ASSERT(PointerPte->u.Hard.PageFrameNumber != 0);
     }
     
     /* Release the working set */
