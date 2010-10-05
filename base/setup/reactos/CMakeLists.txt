@@ -1,0 +1,16 @@
+
+set_unicode()
+
+add_executable(reactos
+    reactos.c
+    reactos.rc)
+
+target_link_libraries(reactos uuid)
+
+set_module_type(reactos win32gui)
+add_importlibs(reactos
+    gdi32
+    user32
+    comctl32
+    setupapi
+    msvcrt)

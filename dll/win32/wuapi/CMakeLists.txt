@@ -24,4 +24,4 @@ target_link_libraries(wuapi
     wine)
 
 add_importlibs(wuapi uuid ole32 advapi32 kernel32 ntdll)
-add_dependencies(wuapi wuapi_def psdk buildno_header)
+add_dependencies(wuapi wuapi_def)
