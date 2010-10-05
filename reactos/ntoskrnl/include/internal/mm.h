@@ -76,20 +76,8 @@ typedef ULONG SWAPENTRY;
 #define MI_STATIC_MEMORY_AREAS              (13)
 #endif
 
-#define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
-#define MEMORY_AREA_CONTINUOUS_MEMORY       (2)
-#define MEMORY_AREA_NO_CACHE                (3)
-#define MEMORY_AREA_IO_MAPPING              (4)
-#define MEMORY_AREA_SYSTEM                  (5)
-#define MEMORY_AREA_MDL_MAPPING             (7)
 #define MEMORY_AREA_VIRTUAL_MEMORY          (8)
-#define MEMORY_AREA_CACHE_SEGMENT           (9)
-#define MEMORY_AREA_SHARED_DATA             (10)
-#define MEMORY_AREA_KERNEL_STACK            (11)
-#define MEMORY_AREA_PAGED_POOL              (12)
-#define MEMORY_AREA_NO_ACCESS               (13)
-#define MEMORY_AREA_PEB_OR_TEB              (14)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
@@ -278,6 +266,7 @@ typedef struct _MEMORY_AREA
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG PageOpCount;
+    PVOID Vad;
     union
     {
         struct
@@ -285,7 +274,6 @@ typedef struct _MEMORY_AREA
             ROS_SECTION_OBJECT* Section;
             ULONG ViewOffset;
             PMM_SECTION_SEGMENT Segment;
-            BOOLEAN WriteCopyView;
             LIST_ENTRY RegionListHead;
         } SectionData;
         struct

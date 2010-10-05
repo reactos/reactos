@@ -93,14 +93,34 @@ MiCheckForConflictingNode(IN ULONG_PTR StartVpn,
 
 VOID
 NTAPI
-MiInsertNode(
-    IN PMM_AVL_TABLE Table,
-    IN PMMADDRESS_NODE NewNode,
-    PMMADDRESS_NODE Parent,
-    TABLE_SEARCH_RESULT Result)
+MiInsertNode(IN PMM_AVL_TABLE Table,
+             IN PMMADDRESS_NODE NewNode,
+             IN PMMADDRESS_NODE Parent,
+             IN TABLE_SEARCH_RESULT Result)
 {
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
+}
+
+VOID
+NTAPI
+MiInsertVad(IN PMMVAD Vad,
+            IN PEPROCESS Process)
+{
+    TABLE_SEARCH_RESULT Result;
+    PMMADDRESS_NODE Parent = NULL;
+    
+    /* Validate the VAD and set it as the current hint */
+    ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
+    Process->VadRoot.NodeHint = Vad;
+    
+    /* Find the parent VAD and where this child should be inserted */
+    Result = RtlpFindAvlTableNodeOrParent(&Process->VadRoot, (PVOID)Vad->StartingVpn, &Parent);
+    ASSERT(Result != TableFoundNode);
+    ASSERT((Parent != NULL) || (Result == TableEmptyTree));
+    
+    /* Do the actual insert operation */
+    MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 }
 
 VOID
@@ -163,13 +183,12 @@ MiGetPreviousNode(IN PMMADDRESS_NODE Node)
 
 TABLE_SEARCH_RESULT
 NTAPI
-MiFindEmptyAddressRangeDownTree(
-    IN SIZE_T Length,
-    IN ULONG_PTR BoundaryAddress,
-    IN ULONG_PTR Alignment,
-    IN PMM_AVL_TABLE Table,
-    OUT PULONG_PTR Base,
-    OUT PMMADDRESS_NODE *Parent)
+MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
+                                IN ULONG_PTR BoundaryAddress,
+                                IN ULONG_PTR Alignment,
+                                IN PMM_AVL_TABLE Table,
+                                OUT PULONG_PTR Base,
+                                OUT PMMADDRESS_NODE *Parent)
 {
     PMMADDRESS_NODE Node, LowestNode, Child;
     ULONG LowVpn, HighVpn;
@@ -180,7 +199,7 @@ MiFindEmptyAddressRangeDownTree(
     ASSERT(BoundaryAddress <= ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
     
     /* Compute page length, make sure the boundary address is valid */
-    Length = PAGE_ROUND_UP(Length);
+    Length = ROUND_TO_PAGES(Length);
     PageCount = Length >> PAGE_SHIFT;
     if ((BoundaryAddress + 1) < Length) return STATUS_NO_MEMORY;
 

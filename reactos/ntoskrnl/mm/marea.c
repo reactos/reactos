@@ -407,6 +407,11 @@ MmRebalanceTree(
    }
 }
 
+VOID
+NTAPI
+MiInsertVad(IN PMMVAD Vad,
+IN PEPROCESS Process);
+
 static VOID
 MmInsertMemoryArea(
    PMMSUPPORT AddressSpace,
@@ -417,6 +422,26 @@ MmInsertMemoryArea(
    ULONG Depth = 0;
 
    MmVerifyMemoryAreas(AddressSpace);
+   
+   /* Build a lame VAD if this is a user-space allocation */
+   if ((marea->EndingAddress < MmSystemRangeStart) && (marea->Type != MEMORY_AREA_OWNED_BY_ARM3))
+   {
+       ASSERT(marea->Type == MEMORY_AREA_VIRTUAL_MEMORY || marea->Type == MEMORY_AREA_SECTION_VIEW);
+       PMMVAD Vad;
+       Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'Fake');
+       ASSERT(Vad);
+       RtlZeroMemory(Vad, sizeof(MMVAD));
+       Vad->StartingVpn = PAGE_ROUND_DOWN(marea->StartingAddress) >> PAGE_SHIFT;
+       Vad->EndingVpn = PAGE_ROUND_DOWN((ULONG_PTR)marea->EndingAddress - 1) >> PAGE_SHIFT;
+       Vad->u.VadFlags.Spare = 1;
+       Vad->u.VadFlags.PrivateMemory = 1;
+       MiInsertVad(Vad, MmGetAddressSpaceOwner(AddressSpace));
+       marea->Vad = Vad;
+   }
+   else
+   {
+       marea->Vad = NULL;
+   }
 
    if (AddressSpace->WorkingSetExpansionLinks.Flink == NULL)
    {
@@ -702,6 +727,10 @@ MmFindGapAtAddress(
    }
 }
 
+VOID
+NTAPI
+MiRemoveNode(IN PMMADDRESS_NODE Node,
+IN PMM_AVL_TABLE Table);
 
 /**
  * @name MmFreeMemoryArea
@@ -749,12 +778,6 @@ MmFreeMemoryArea(
             Address < (ULONG_PTR)EndAddress;
             Address += PAGE_SIZE)
        {
-          if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
-          {
-             MmRawDeleteVirtualMapping((PVOID)Address);
-          }
-          else
-          {
              BOOLEAN Dirty = FALSE;
              SWAPENTRY SwapEntry = 0;
              PFN_NUMBER Page = 0;
@@ -772,13 +795,28 @@ MmFreeMemoryArea(
                 FreePage(FreePageContext, MemoryArea, (PVOID)Address,
                          Page, SwapEntry, (BOOLEAN)Dirty);
              }
-          }
        }
 
        if (Process != NULL &&
            Process != CurrentProcess)
        {
           KeDetachProcess();
+       }
+
+       if (MemoryArea->Vad)
+       {
+           ASSERT(MemoryArea->EndingAddress < MmSystemRangeStart);
+           ASSERT(MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY || MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+           
+           /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
+           ASSERT(((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare != 0);
+           if (((PMMVAD)MemoryArea->Vad)->u.VadFlags.Spare == 1)
+           {
+               MiRemoveNode(MemoryArea->Vad, &Process->VadRoot);
+           }
+           
+           ExFreePool(MemoryArea->Vad);
+           MemoryArea->Vad = NULL;
        }
     }
 
