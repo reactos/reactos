@@ -3956,7 +3956,19 @@ NtQuerySection(IN HANDLE SectionHandle,
 
 
 
-
+NTSTATUS
+NTAPI
+MmMapViewOfArm3Section(IN PVOID SectionObject,
+                       IN PEPROCESS Process,
+                       IN OUT PVOID *BaseAddress,
+                       IN ULONG_PTR ZeroBits,
+                       IN SIZE_T CommitSize,
+                       IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+                       IN OUT PSIZE_T ViewSize,
+                       IN SECTION_INHERIT InheritDisposition,
+                       IN ULONG AllocationType,
+                       IN ULONG Protect);
+                       
 /**********************************************************************
  * NAME       EXPORTED
  * MmMapViewOfSection
@@ -4023,6 +4035,20 @@ MmMapViewOfSection(IN PVOID SectionObject,
    ULONG ViewOffset;
    NTSTATUS Status = STATUS_SUCCESS;
 
+   if ((ULONG_PTR)SectionObject & 1)
+   {
+       return MmMapViewOfArm3Section((PVOID)((ULONG_PTR)SectionObject & ~1),
+                                     Process,
+                                     BaseAddress,
+                                     ZeroBits,
+                                     CommitSize,
+                                     SectionOffset,
+                                     ViewSize,
+                                     InheritDisposition,
+                                     AllocationType,
+                                     Protect);
+   }
+   
    ASSERT(Process);
 
    if (!Protect || Protect & ~PAGE_FLAGS_VALID_FOR_SECTION)
@@ -4280,10 +4306,10 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
    PROS_SECTION_OBJECT Section;
    PMMSUPPORT AddressSpace;
    NTSTATUS Status;
-
+   PAGED_CODE();
+        
     if ((ULONG_PTR)SectionObject & 1)
     {
-        PAGED_CODE();
         extern PVOID MmSession;
         return MiMapViewInSystemSpace((PVOID)((ULONG_PTR)SectionObject & ~1),
                                       &MmSession,

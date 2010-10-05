@@ -121,6 +121,28 @@ MiInsertVad(IN PMMVAD Vad,
     
     /* Do the actual insert operation */
     MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
+    
+    /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
+    if (Vad->u.VadFlags.Spare == 0)
+    {
+        NTSTATUS Status;
+        PMEMORY_AREA MemoryArea;
+        PHYSICAL_ADDRESS BoundaryAddressMultiple;
+        SIZE_T Size;
+        PVOID AllocatedBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
+        BoundaryAddressMultiple.QuadPart = 0;
+        Size = ((Vad->EndingVpn + 1) - Vad->StartingVpn) << PAGE_SHIFT;
+        Status = MmCreateMemoryArea(&Process->Vm,
+                                    MEMORY_AREA_OWNED_BY_ARM3,
+                                    &AllocatedBase,
+                                    Size,
+                                    PAGE_READWRITE,
+                                    &MemoryArea,
+                                    TRUE,
+                                    0,
+                                    BoundaryAddressMultiple);
+        ASSERT(NT_SUCCESS(Status));
+    }
 }
 
 VOID
@@ -179,6 +201,112 @@ MiGetPreviousNode(IN PMMADDRESS_NODE Node)
     
     /* Nothing found */
     return NULL;
+}
+
+PMMADDRESS_NODE
+NTAPI
+MiGetNextNode(IN PMMADDRESS_NODE Node)
+{
+    PMMADDRESS_NODE Parent;
+
+    /* Get the right child */
+    if (RtlRightChildAvl(Node))
+    {
+        /* Get left-most child */
+        Node = RtlRightChildAvl(Node);
+        while (RtlLeftChildAvl(Node)) Node = RtlLeftChildAvl(Node);
+        return Node;
+    }
+
+    Parent = RtlParentAvl(Node);
+    ASSERT(Parent != NULL);
+    while (Parent != Node)
+    {
+        /* The parent should be a left child, return the real predecessor */
+        if (RtlIsLeftChildAvl(Node))
+        {
+            /* Return it */
+            return Parent;
+        }
+        
+        /* Keep lopping until we find our parent */
+        Node = Parent;
+        Parent = RtlParentAvl(Node);
+    }
+    
+    /* Nothing found */
+    return NULL;
+}
+
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
+                              IN ULONG_PTR Alignment,
+                              IN PMM_AVL_TABLE Table,
+                              OUT PMMADDRESS_NODE *PreviousVad,
+                              OUT PULONG_PTR Base)
+{
+    PMMADDRESS_NODE Node;
+    PMMADDRESS_NODE NextNode;
+    ULONG_PTR StartingVpn, HighestVpn, AlignmentVpn, LengthVpn, LowVpn;
+    ASSERT(Length != 0);
+
+    /* Precompute page numbers for the length, alignment, and starting address */
+    LengthVpn = (Length + (PAGE_SIZE - 1)) >> PAGE_SHIFT;
+    AlignmentVpn = Alignment >> PAGE_SHIFT;
+    StartingVpn = ROUND_DOWN((ULONG_PTR)MM_LOWEST_USER_ADDRESS >> PAGE_SHIFT,
+                             AlignmentVpn);
+
+    /* Check if the table is free, so the lowest possible address is available */
+    if (!Table->NumberGenericTableElements) goto FoundAtBottom;
+
+    /* Otherwise, follow the leftmost child of the right root node's child */
+    Node = RtlRightChildAvl(&Table->BalancedRoot);
+    while (RtlLeftChildAvl(Node)) Node = RtlLeftChildAvl(Node);
+
+    /* This is the node for the remaining gap at the bottom, can it be used? */
+    if ((Node->StartingVpn > StartingVpn) &&
+        (LengthVpn < Node->StartingVpn - StartingVpn))
+    {
+FoundAtBottom:
+        /* Use this VAD to store the allocation */
+        *PreviousVad = NULL;
+        *Base = StartingVpn << PAGE_SHIFT;
+        return STATUS_SUCCESS;
+    }
+
+    /* Otherwise, we start a search to find a gap */
+    while (TRUE)
+    {
+        /* The last aligned page number in this entry */
+        LowVpn = ROUND_DOWN(Node->EndingVpn + 1, AlignmentVpn);
+        
+        /* Keep going as long as there's still a next node */
+        NextNode = MiGetNextNode(Node);
+        if (!NextNode) break;
+
+        /* Can this allocation fit in this node? */
+        if ((LengthVpn <= (NextNode->StartingVpn - LowVpn)) &&
+            (NextNode->StartingVpn > LowVpn))
+        {
+Found:
+            /* Yes! Use this VAD to store the allocation */
+            *PreviousVad = Node;
+            *Base = ROUND_DOWN((Node->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1), 
+                               Alignment);
+            return STATUS_SUCCESS;
+        }
+
+        /* Try the next node */
+        Node = NextNode;
+    }
+
+    /* We're down to the last (top) VAD, will this allocation fit inside it? */
+    HighestVpn = ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1) >> PAGE_SHIFT;
+    if ((HighestVpn > LowVpn) && (LengthVpn <= HighestVpn - LowVpn)) goto Found;
+    
+    /* Nyet, there's no free address space for this allocation, so we'll fail */
+    return STATUS_NO_MEMORY;
 }
 
 TABLE_SEARCH_RESULT

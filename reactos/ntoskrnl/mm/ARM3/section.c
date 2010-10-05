@@ -465,6 +465,159 @@ MiMapViewInSystemSpace(IN PVOID Section,
 
 NTSTATUS
 NTAPI
+MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
+                       IN PEPROCESS Process,
+                       IN PVOID *BaseAddress,
+                       IN PLARGE_INTEGER SectionOffset,
+                       IN PSIZE_T ViewSize,
+                       IN PSECTION Section,
+                       IN SECTION_INHERIT InheritDisposition,
+                       IN ULONG ProtectionMask,
+                       IN ULONG CommitSize,
+                       IN ULONG_PTR ZeroBits,
+                       IN ULONG AllocationType)
+{
+    PMMVAD Vad;
+    PETHREAD Thread = PsGetCurrentThread();
+    ULONG_PTR StartAddress, EndingAddress;
+    PSUBSECTION Subsection;
+    PSEGMENT Segment;
+    PFN_NUMBER PteOffset;
+    NTSTATUS Status;
+
+    /* Get the segment and subection for this section */
+    Segment = ControlArea->Segment;
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+
+    /* Non-pagefile-backed sections not supported */
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+    ASSERT(ControlArea->FilePointer == NULL);
+    ASSERT(Segment->SegmentFlags.TotalNumberOfPtes4132 == 0);
+    
+    /* Based sections not supported */
+    ASSERT(Section->Address.StartingVpn == 0);
+    
+    /* These flags/parameters are not supported */
+    ASSERT((AllocationType & MEM_DOS_LIM) == 0);
+    ASSERT((AllocationType & MEM_RESERVE) == 0);
+    ASSERT((AllocationType & MEM_TOP_DOWN) == 0);
+    ASSERT(Process->VmTopDown == 0);
+    ASSERT(Section->u.Flags.CopyOnWrite == FALSE);
+    ASSERT(ZeroBits == 0);
+
+    /* First, increase the map count. No purging is supported yet */
+    Status = MiCheckPurgeAndUpMapCount(ControlArea, FALSE);
+    ASSERT(NT_SUCCESS(Status));
+
+    /* Check if the caller specified the view size */
+    if (!(*ViewSize))
+    {
+        /* The caller did not, so pick a 64K aligned view size based on the offset */
+        SectionOffset->LowPart &= ~(_64K - 1);
+        *ViewSize = Section->SizeOfSection.QuadPart - SectionOffset->QuadPart;
+    }
+    else
+    {
+        /* A size was specified, align it to a 64K boundary */
+        *ViewSize += SectionOffset->LowPart & (_64K - 1);
+        
+        /* Align the offset as well to make this an aligned map */
+        SectionOffset->LowPart &= ~((ULONG)_64K - 1);
+    }
+
+    /* We must be dealing with a 64KB aligned offset */
+    ASSERT((SectionOffset->LowPart & ((ULONG)_64K - 1)) == 0);
+
+    /* It's illegal to try to map more than 2GB */
+    if (*ViewSize >= 0x80000000) return STATUS_INVALID_VIEW_SIZE;
+
+    /* Within this section, figure out which PTEs will describe the view */
+    PteOffset = SectionOffset->QuadPart >> PAGE_SHIFT;
+
+    /* The offset must be in this segment's PTE chunk and it must be valid */
+    ASSERT(PteOffset < Segment->TotalNumberOfPtes);
+    ASSERT(((SectionOffset->QuadPart + *ViewSize + PAGE_SIZE - 1) >> PAGE_SHIFT) >= PteOffset);
+    
+    /* In ARM3, only one subsection is used for now. It must contain these PTEs */
+    ASSERT(PteOffset < Subsection->PtesInSubsection);
+    ASSERT(Subsection->SubsectionBase != NULL);
+    
+    /* In ARM3, only MEM_COMMIT is supported for now. The PTEs must've been committed */
+    ASSERT(Segment->NumberOfCommittedPages >= Segment->TotalNumberOfPtes);
+
+    /* Did the caller specify an address? */
+    if (!(*BaseAddress))
+    {
+        /* No, find an address bottom-up */
+        Status = MiFindEmptyAddressRangeInTree(*ViewSize,
+                                               _64K,
+                                               &Process->VadRoot,
+                                               (PMMADDRESS_NODE*)&Process->VadFreeHint,
+                                               &StartAddress);
+        ASSERT(NT_SUCCESS(Status));
+    }
+    else
+    {
+        /* This (rather easy) code path is not yet implemented */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Get the ending address, which is the last piece we need for the VAD */
+    EndingAddress = (StartAddress + *ViewSize - 1) | (PAGE_SIZE - 1);
+    
+    /* A VAD can now be allocated. Do so and zero it out */
+    Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'ldaV');
+    ASSERT(Vad);
+    RtlZeroMemory(Vad, sizeof(MMVAD));
+
+    /* Write all the data required in the VAD for handling a fault */
+    Vad->StartingVpn = StartAddress >> PAGE_SHIFT;
+    Vad->EndingVpn = EndingAddress >> PAGE_SHIFT;
+    Vad->ControlArea = ControlArea;
+    Vad->u.VadFlags.Protection = ProtectionMask;
+    Vad->u2.VadFlags2.FileOffset = SectionOffset->QuadPart >> 16;
+    Vad->u2.VadFlags2.Inherit = (InheritDisposition == ViewShare);
+    if ((AllocationType & SEC_NO_CHANGE) || (Section->u.Flags.NoChange))
+    {
+        /* This isn't really implemented yet, but handle setting the flag */
+        Vad->u.VadFlags.NoChange = 1;
+        Vad->u2.VadFlags2.SecNoChange = 1;
+    }
+
+    /* Finally, write down the first and last prototype PTE */
+    Vad->FirstPrototypePte = &Subsection->SubsectionBase[PteOffset];
+    PteOffset += (Vad->EndingVpn - Vad->StartingVpn);
+    Vad->LastContiguousPte = &Subsection->SubsectionBase[PteOffset];
+
+    /* Make sure the last PTE is valid and still within the subsection */
+    ASSERT(PteOffset < Subsection->PtesInSubsection);
+    ASSERT(Vad->FirstPrototypePte <= Vad->LastContiguousPte);
+    
+    /* FIXME: Should setup VAD bitmap */
+    Status = STATUS_SUCCESS;
+
+    /* Pretend as if we own the working set */
+    MiLockProcessWorkingSet(Process, Thread);
+    
+    /* Insert the VAD */
+    MiInsertVad(Vad, Process);
+
+    /* Release the working set */
+    MiUnlockProcessWorkingSet(Process, Thread);
+
+    /* Windows stores this for accounting purposes, do so as well */
+    if (!Segment->u2.FirstMappedVa) Segment->u2.FirstMappedVa = (PVOID)StartAddress;
+
+    /* Finally, let the caller know where, and for what size, the view was mapped */
+    *ViewSize = (ULONG_PTR)EndingAddress - (ULONG_PTR)StartAddress + 1;
+    *BaseAddress = (PVOID)StartAddress;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                       IN PSIZE_T MaximumSize,
                       IN ULONG ProtectionMask,
@@ -665,6 +818,146 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
     /* Return the object and the creation status */
     *SectionObject = (PVOID)NewSection;
+    return Status;
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+MmMapViewOfArm3Section(IN PVOID SectionObject,
+                       IN PEPROCESS Process,
+                       IN OUT PVOID *BaseAddress,
+                       IN ULONG_PTR ZeroBits,
+                       IN SIZE_T CommitSize,
+                       IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+                       IN OUT PSIZE_T ViewSize,
+                       IN SECTION_INHERIT InheritDisposition,
+                       IN ULONG AllocationType,
+                       IN ULONG Protect)
+{
+    KAPC_STATE ApcState;
+    BOOLEAN Attached = FALSE;
+    PSECTION Section;
+    PCONTROL_AREA ControlArea;
+    ULONG ProtectionMask;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Get the segment and control area */
+    Section = (PSECTION)SectionObject;
+    ControlArea = Section->Segment->ControlArea;
+    
+    /* These flags/states are not yet supported by ARM3 */
+    ASSERT(Section->u.Flags.Image == 0);
+    ASSERT(Section->u.Flags.NoCache == 0);
+    ASSERT(Section->u.Flags.WriteCombined == 0);
+    ASSERT((AllocationType & MEM_RESERVE) == 0);
+    ASSERT(ControlArea->u.Flags.PhysicalMemory == 0);
+    
+    
+#if 0
+    /* FIXME: Check if the mapping protection is compatible with the create */
+    if (!MiIsProtectionCompatible(Section->InitialPageProtection, Protect))
+    {
+        DPRINT1("Mapping protection is incompatible\n");
+        return STATUS_SECTION_PROTECTION;
+    }
+#endif
+
+    /* Check if the offset and size would cause an overflow */
+    if ((SectionOffset->QuadPart + *ViewSize) < SectionOffset->QuadPart)
+    {
+        DPRINT1("Section offset overflows\n");
+        return STATUS_INVALID_VIEW_SIZE;
+    }
+
+    /* Check if the offset and size are bigger than the section itself */
+    if ((SectionOffset->QuadPart + *ViewSize) > Section->SizeOfSection.QuadPart)
+    {
+        DPRINT1("Section offset is larger than section\n");
+        return STATUS_INVALID_VIEW_SIZE;
+    }
+
+    /* Check if the caller did not specify a view size */
+    if (!(*ViewSize))
+    {
+        /* Compute it for the caller */
+        *ViewSize = Section->SizeOfSection.QuadPart - SectionOffset->QuadPart;
+
+        /* Check if it's larger than 4GB or overflows into kernel-mode */
+        if ((*ViewSize > 0xFFFFFFFF) ||
+            (((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - (ULONG_PTR)*BaseAddress) < *ViewSize))
+        {
+            DPRINT1("Section view won't fit\n");
+            return STATUS_INVALID_VIEW_SIZE;
+        }
+    }
+
+    /* Check if the commit size is larger than the view size */
+    if (CommitSize > *ViewSize)
+    {
+        DPRINT1("Attempting to commit more than the view itself\n");
+        return STATUS_INVALID_PARAMETER_5;
+    }
+
+    /* Check if the view size is larger than the section */
+    if (*ViewSize > Section->SizeOfSection.QuadPart)
+    {
+        DPRINT1("The view is larger than the section\n");
+        return STATUS_INVALID_VIEW_SIZE;
+    }
+
+    /* Compute and validate the protection mask */
+    ProtectionMask = MiMakeProtectionMask(Protect);
+    if (ProtectionMask == MM_INVALID_PROTECTION)
+    {
+        DPRINT1("The protection is invalid\n");
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
+    
+    /* We only handle pagefile-backed sections, which cannot be writecombined */
+    if (Protect & PAGE_WRITECOMBINE)
+    {
+        DPRINT1("Cannot write combine a pagefile-backed section\n");
+        return STATUS_INVALID_PARAMETER_10;
+    }
+
+    /* Start by attaching to the current process if needed */
+    if (PsGetCurrentProcess() != Process)
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+        Attached = TRUE;
+    }
+    
+    /* Lock the address space and make sure the process is alive */
+    MmLockAddressSpace(&Process->Vm);
+    if (!Process->VmDeleted)
+    {
+        /* Do the actual mapping */
+        Status = MiMapViewOfDataSection(ControlArea,
+                                        Process,
+                                        BaseAddress,
+                                        SectionOffset,
+                                        ViewSize,
+                                        Section,
+                                        InheritDisposition,
+                                        ProtectionMask,
+                                        CommitSize,
+                                        ZeroBits,
+                                        AllocationType);
+    }
+    else
+    {
+        /* The process is being terminated, fail */
+        DPRINT1("The process is dying\n");
+        Status = STATUS_PROCESS_IS_TERMINATING;
+    }
+    
+    /* Unlock the address space and detatch if needed, then return status */
+    MmUnlockAddressSpace(&Process->Vm);
+    if (Attached) KeUnstackDetachProcess(&ApcState);
     return Status;
 }
 
