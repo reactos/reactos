@@ -592,6 +592,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
     ASSERT(FileHandle == NULL);
     ASSERT(FileObject == NULL);
     ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
+    ASSERT((AllocationAttributes & SEC_BASED) == 0);
 
     /* Make the same sanity checks that the Nt interface should've validated */
     ASSERT((AllocationAttributes & ~(SEC_COMMIT | SEC_RESERVE | SEC_BASED |
