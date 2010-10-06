@@ -1,3 +1,3 @@
 
-file(GLOB_RECURSE SOURCE "*.c")
-add_library(nt ${SOURCE})
+add_library(nt entry_point.c)
+add_dependencies(nt psdk)
