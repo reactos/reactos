@@ -1194,6 +1194,12 @@ MiInitializeSystemSpaceMap(
     IN PVOID InputSession OPTIONAL
 );
 
+ULONG
+NTAPI
+MiMakeProtectionMask(
+    IN ULONG Protect
+);
+
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of
