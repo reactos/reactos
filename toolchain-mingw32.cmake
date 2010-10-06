@@ -38,7 +38,8 @@ MARK_AS_ADVANCED(CLEAR CMAKE_CXX_STANDARD_LIBRARIES)
 set(CMAKE_CXX_STANDARD_LIBRARIES "")
 
 if(ARCH MATCHES i386)
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds")
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at")
+#-Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
 elseif(ARCH MATCHES amd64)
 set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at")
 endif(ARCH MATCHES i386)
