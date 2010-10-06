@@ -687,53 +687,177 @@ VOID DIALOG_EditTimeDate(VOID)
     SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM)szDate);
 }
 
-VOID DIALOG_EditWrap(VOID)
+VOID DoCreateStatusBar(VOID)
 {
-    static const TCHAR edit[] = _T("edit");
-    DWORD dwStyle;
-    RECT rc, rcstatus;
-    DWORD size;
+    RECT rc;
+    RECT rcstatus;
+    BOOL bStatusBarVisible;
+
+    // Check if status bar object already exists.
+    if (Globals.hStatusBar == NULL)
+    {
+        // Try to create the status bar
+        Globals.hStatusBar = CreateStatusWindow(
+                                WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE,
+                                NULL,
+                                Globals.hMainWnd,
+                                CMD_STATUSBAR_WND_ID);
+
+        if (Globals.hStatusBar == NULL)
+        {
+            ShowLastError();
+            return;
+        }
+
+        // Load the string for formatting column/row text output
+        LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH-1);
+
+        // Set the status bar for single-text output
+        SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
+    }
+
+    // Set status bar visible or not accordind the the settings.
+    if (Globals.bWrapLongLines == TRUE ||
+        Globals.bShowStatusBar == FALSE)
+    {
+        bStatusBarVisible = FALSE;
+        ShowWindow(Globals.hStatusBar, SW_HIDE);
+    }
+    else
+    {
+        bStatusBarVisible = TRUE;
+        ShowWindow(Globals.hStatusBar, SW_SHOW);
+        SendMessage(Globals.hStatusBar, WM_SIZE, 0, 0);
+    }
+
+    // Set check state in show status bar item.
+    if (Globals.bShowStatusBar == TRUE)
+    {
+        CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_CHECKED);
+    }
+    else
+    {
+        CheckMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_UNCHECKED);
+    }
+
+    // Update menu mar with the previous changes
+    DrawMenuBar(Globals.hMainWnd);
+
+    // Sefety test is edit control exists
+    if (Globals.hEdit != NULL)
+    {
+        // Retrieve the sizes of the controls
+        GetClientRect(Globals.hMainWnd, &rc);
+        GetClientRect(Globals.hStatusBar, &rcstatus);
+
+        // If status bar is currently visible, update dimensions of edir control
+        if (bStatusBarVisible)
+            rc.bottom -= (rcstatus.bottom - rcstatus.top);
+
+        // Resize edit control to right size.
+        MoveWindow(Globals.hEdit, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
+    }
+
+    // Update content with current row/column text
+    DIALOG_StatusBarUpdateCaretPos();
+}
+
+VOID DoCreateEditWindow(VOID)
+{
+    DWORD  dwStyle;
+    int    iSize;
     LPTSTR pTemp;
-    TCHAR buff[MAX_PATH];
 
-    Globals.bWrapLongLines = !Globals.bWrapLongLines;
+    iSize = 0;
 
-    size = GetWindowTextLength(Globals.hEdit) + 1;
-    pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
-    if (!pTemp)
+    // If the edit control already exists, try to save its content
+    if (Globals.hEdit != NULL)
+    {
+        // number of chars currently written into the editor.
+        iSize = GetWindowTextLength(Globals.hEdit);
+
+        if (iSize)
+        {
+            // Allocates temporary buffer.
+            pTemp = HeapAlloc(GetProcessHeap(), 0, (iSize + 1) * sizeof(TCHAR));
+
+            if (!pTemp)
+            {
+                ShowLastError();
+                return;
+            }
+
+            // Recover the text into the control.
+            GetWindowText(Globals.hEdit, pTemp, iSize + 1);
+        }
+
+        // Restore original window procedure
+        SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)Globals.EditProc);
+
+        // Destroy the edit control
+        DestroyWindow(Globals.hEdit);
+    }
+
+    // Update wrap status into the main menu and recover style flags
+    if (Globals.bWrapLongLines)
+    {
+        dwStyle = EDIT_STYLE_WRAP;
+        EnableMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    } else {
+        dwStyle = EDIT_STYLE;
+        EnableMenuItem(Globals.hMenu, CMD_STATUSBAR, MF_BYCOMMAND | MF_ENABLED);
+    }
+
+    // Update previous changes
+    DrawMenuBar(Globals.hMainWnd);
+
+    // Create the new edit control
+    Globals.hEdit = CreateWindowEx(
+                        WS_EX_CLIENTEDGE,
+                        EDIT_CLASS,
+                        NULL,
+                        dwStyle,
+                        CW_USEDEFAULT,
+                        CW_USEDEFAULT,
+                        CW_USEDEFAULT,
+                        CW_USEDEFAULT,
+                        Globals.hMainWnd,
+                        NULL,
+                        Globals.hInstance,
+                        NULL);
+
+    if (Globals.hEdit == NULL)
     {
         ShowLastError();
         return;
     }
-    GetWindowText(Globals.hEdit, pTemp, size);
-    DestroyWindow(Globals.hEdit);
-    GetClientRect(Globals.hMainWnd, &rc);
-    dwStyle = Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE;
-    EnableMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
-        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
-    if ( Globals.hStatusBar )
-    {
-       if ( Globals.bWrapLongLines )
-          ShowWindow(Globals.hStatusBar, SW_HIDE);
-       else if ( Globals.bShowStatusBar )
-       {
-          GetClientRect(Globals.hStatusBar, &rcstatus);
-          rc.bottom -= (rcstatus.bottom - rcstatus.top);
-          ShowWindow(Globals.hStatusBar, SW_SHOW);
-       }
-    }
-    Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, edit, NULL, dwStyle,
-                         0, 0, rc.right, rc.bottom, Globals.hMainWnd,
-                         NULL, Globals.hInstance, NULL);
+
     SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
     SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
-    SetWindowText(Globals.hEdit, pTemp);
-    SetFocus(Globals.hEdit);
+
+    // If some text was previously saved, restore it.
+    if (iSize != 0)
+    {
+        SetWindowText(Globals.hEdit, pTemp);
+        HeapFree(GetProcessHeap(), 0, pTemp);
+    }
+
+    // Sub-class a new window callback for row/column detection.
     Globals.EditProc = (WNDPROC) SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)EDIT_WndProc);
-    _stprintf(buff, Globals.szStatusBarLineCol, 1, 1);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
-    HeapFree(GetProcessHeap(), 0, pTemp);
-    DrawMenuBar(Globals.hMainWnd);
+
+    // Create/update status bar
+    DoCreateStatusBar();
+
+    // Finally shows new edit control and set focus into it.
+    ShowWindow(Globals.hEdit, SW_SHOW);
+    SetFocus(Globals.hEdit);
+}
+
+VOID DIALOG_EditWrap(VOID)
+{
+    Globals.bWrapLongLines = !Globals.bWrapLongLines;
+
+    DoCreateEditWindow();
 }
 
 VOID DIALOG_SelectFont(VOID)
@@ -887,27 +1011,9 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
 
 VOID DIALOG_ViewStatusBar(VOID)
 {
-   RECT rc;
-   RECT rcstatus;
+    Globals.bShowStatusBar = !Globals.bShowStatusBar;
 
-   Globals.bShowStatusBar = !Globals.bShowStatusBar;
-   if ( !Globals.hStatusBar )
-   {
-       Globals.hStatusBar = CreateStatusWindow(WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE, TEXT("test"), Globals.hMainWnd, CMD_STATUSBAR_WND_ID );
-       LoadString(Globals.hInstance, STRING_LINE_COLUMN, Globals.szStatusBarLineCol, MAX_PATH-1);
-       SendMessage(Globals.hStatusBar, SB_SIMPLE, (WPARAM)TRUE, (LPARAM)0);
-   }
-    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_STATUSBAR,
-        MF_BYCOMMAND | (Globals.bShowStatusBar ? MF_CHECKED : MF_UNCHECKED));
-    DrawMenuBar(Globals.hMainWnd);
-    GetClientRect(Globals.hMainWnd, &rc);
-    GetClientRect(Globals.hStatusBar, &rcstatus);
-    if ( Globals.bShowStatusBar )
-        rc.bottom -= (rcstatus.bottom - rcstatus.top);
-
-    MoveWindow(Globals.hEdit, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, TRUE);
-    ShowWindow(Globals.hStatusBar, Globals.bShowStatusBar);
-    DIALOG_StatusBarUpdateCaretPos();
+    DoCreateStatusBar();
 }
 
 VOID DIALOG_HelpContents(VOID)
