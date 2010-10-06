@@ -74,6 +74,10 @@ LoadImageFileExecutionOptions(PPEB Peb)
     UNICODE_STRING ImageName;
     UNICODE_STRING ImagePathName;
     ULONG ValueSize;
+    extern ULONG RtlpPageHeapGlobalFlags, RtlpPageHeapSizeRangeStart, RtlpPageHeapSizeRangeEnd;
+    extern ULONG RtlpPageHeapDllRangeStart, RtlpPageHeapDllRangeEnd;
+    extern WCHAR RtlpPageHeapTargetDlls[512];
+    extern BOOLEAN RtlpPageHeapEnabled;
 
     if (Peb->ProcessParameters &&
         Peb->ProcessParameters->ImagePathName.Length > 0)
@@ -113,10 +117,75 @@ LoadImageFileExecutionOptions(PPEB Peb)
             Peb->NtGlobalFlag = Value;
             DPRINT("GlobalFlag: Value=0x%lx\n", Value);
         }
-        /*
-         *  FIXME:
-         *   read more options
-         */
+        else
+        {
+            /* Add debugging flags if there is no GlobalFlags override */
+            if (Peb->BeingDebugged)
+            {
+                Peb->NtGlobalFlag |= FLG_HEAP_VALIDATE_PARAMETERS |
+                                     FLG_HEAP_ENABLE_FREE_CHECK |
+                                     FLG_HEAP_ENABLE_TAIL_CHECK;
+            }
+        }
+
+        /* Handle the case when page heap is enabled */
+        if (Peb->NtGlobalFlag & FLG_HEAP_PAGE_ALLOCS)
+        {
+            /* Disable all heap debugging flags so that no heap call goes via page heap branch */
+            Peb->NtGlobalFlag &= ~(FLG_HEAP_VALIDATE_PARAMETERS |
+                                   FLG_HEAP_VALIDATE_ALL |
+                                   FLG_HEAP_ENABLE_FREE_CHECK |
+                                   FLG_HEAP_ENABLE_TAIL_CHECK |
+                                   FLG_USER_STACK_TRACE_DB |
+                                   FLG_HEAP_ENABLE_TAGGING |
+                                   FLG_HEAP_ENABLE_TAG_BY_DLL);
+        }
+
+        /* Get page heap flags without checking return value */
+        LdrQueryImageFileExecutionOptions(&ImageName,
+                                          L"PageHeapFlags",
+                                          REG_DWORD,
+                                          (PVOID)&RtlpPageHeapGlobalFlags,
+                                          sizeof(RtlpPageHeapGlobalFlags),
+                                          &ValueSize);
+
+        LdrQueryImageFileExecutionOptions(&ImageName,
+                                          L"PageHeapSizeRangeStart",
+                                          REG_DWORD,
+                                          (PVOID)&RtlpPageHeapSizeRangeStart,
+                                          sizeof(RtlpPageHeapSizeRangeStart),
+                                          &ValueSize);
+
+        LdrQueryImageFileExecutionOptions(&ImageName,
+                                          L"PageHeapSizeRangeEnd",
+                                          REG_DWORD,
+                                          (PVOID)&RtlpPageHeapSizeRangeEnd,
+                                          sizeof(RtlpPageHeapSizeRangeEnd),
+                                          &ValueSize);
+
+        LdrQueryImageFileExecutionOptions(&ImageName,
+                                          L"PageHeapDllRangeStart",
+                                          REG_DWORD,
+                                          (PVOID)&RtlpPageHeapDllRangeStart,
+                                          sizeof(RtlpPageHeapDllRangeStart),
+                                          &ValueSize);
+
+        LdrQueryImageFileExecutionOptions(&ImageName,
+                                          L"PageHeapDllRangeEnd",
+                                          REG_DWORD,
+                                          (PVOID)&RtlpPageHeapDllRangeEnd,
+                                          sizeof(RtlpPageHeapDllRangeEnd),
+                                          &ValueSize);
+
+        LdrQueryImageFileExecutionOptions(&ImageName,
+                                          L"PageHeapTargetDlls",
+                                          REG_SZ,
+                                          (PVOID)RtlpPageHeapTargetDlls,
+                                          sizeof(RtlpPageHeapTargetDlls),
+                                          &ValueSize);
+
+        /* Now when all parameters are read, enable page heap */
+        RtlpPageHeapEnabled = TRUE;
     }
 }
 

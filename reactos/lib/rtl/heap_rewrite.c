@@ -269,7 +269,6 @@ RtlpSpecialHeapCreate(ULONG Flags,
                       PVOID Lock,
                       PRTL_HEAP_PARAMETERS Parameters) { return NULL; };
 
-BOOLEAN RtlpSpecialHeapEnabled = FALSE;
 HEAP_LOCK RtlpProcessHeapsListLock;
 PHEAP RtlpProcessHeaps[HEAP_MAX_PROCESS_HEAPS]; /* Usermode only */
 
@@ -1542,7 +1541,7 @@ RtlCreateHeap(ULONG Flags,
     BOOLEAN AllocateLock = FALSE;
 
     /* Check for a special heap */
-    if (RtlpSpecialHeapEnabled && !Addr && !Lock)
+    if (RtlpPageHeapEnabled && !Addr && !Lock)
     {
         Heap = RtlpSpecialHeapCreate(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
         if (Heap) return Heap;

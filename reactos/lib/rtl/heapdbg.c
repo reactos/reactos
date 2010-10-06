@@ -8,6 +8,17 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <rtl.h>
+
+#define NDEBUG
+#include <debug.h>
+
+BOOLEAN RtlpPageHeapEnabled = FALSE;
+ULONG RtlpPageHeapGlobalFlags;
+ULONG RtlpPageHeapSizeRangeStart, RtlpPageHeapSizeRangeEnd;
+ULONG RtlpPageHeapDllRangeStart, RtlpPageHeapDllRangeEnd;
+WCHAR RtlpPageHeapTargetDlls[512];
+
 /* FUNCTIONS ******************************************************************/
 
 /* EOF */
