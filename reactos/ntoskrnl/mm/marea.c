@@ -375,6 +375,10 @@ MmInsertMemoryArea(
        RtlZeroMemory(Vad, sizeof(MMVAD));
        Vad->StartingVpn = PAGE_ROUND_DOWN(marea->StartingAddress) >> PAGE_SHIFT;
        Vad->EndingVpn = PAGE_ROUND_DOWN((ULONG_PTR)marea->EndingAddress - 1) >> PAGE_SHIFT;
+       if (Vad->EndingVpn < Vad->StartingVpn)
+       {
+           DPRINT1("Building a broken VAD. Data: %p %p %lx %lx\n", marea->StartingAddress, marea->EndingAddress, Vad->StartingVpn, Vad->EndingVpn);
+       }
        Vad->u.VadFlags.Spare = 1;
        Vad->u.VadFlags.PrivateMemory = 1;
        MiInsertVad(Vad, MmGetAddressSpaceOwner(AddressSpace));
