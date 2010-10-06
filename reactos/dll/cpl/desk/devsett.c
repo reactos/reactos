@@ -86,7 +86,7 @@ pCDevSettings_AllocAndCopyString(const TCHAR *pszSrc)
         wcscpy(str,
                pszSrc);
 #else
-        MultiByteToWideChar(CP_APC,
+        MultiByteToWideChar(CP_ACP,
                             0,
                             pszSrc,
                             -1,

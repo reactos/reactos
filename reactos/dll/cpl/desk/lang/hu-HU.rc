@@ -7,7 +7,7 @@ CAPTION "Háttér"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
-                    70, 10, 105, 70, WS_EX_STATICEDGE
+                    70, 10, 105, 80, 0
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 7, 99, 173, 71
@@ -17,7 +17,7 @@ BEGIN
     PUSHBUTTON      "&Színek...", IDC_COLOR_BUTTON, 187, 155, 50, 14
     LTEXT           "Elrendezés:", IDC_STATIC, 187, 98, 36, 8
     COMBOBOX        IDC_PLACEMENT_COMBO, 187, 148, 50, 90,
-                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
