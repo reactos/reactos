@@ -707,7 +707,7 @@ RtlGetSetBootStatusData(
 NTSTATUS
 NTAPI
 RtlLockBootStatusData(
-	HANDLE Filehandle
+	OUT PHANDLE Filehandle
 	)
 {
 	UNIMPLEMENTED;
@@ -720,7 +720,7 @@ RtlLockBootStatusData(
 NTSTATUS
 NTAPI
 RtlUnlockBootStatusData(
-	HANDLE Filehandle
+	IN HANDLE Filehandle
 	)
 {
 	UNIMPLEMENTED;

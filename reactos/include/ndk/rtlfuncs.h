@@ -3496,14 +3496,14 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlLockBootStatusData(
-    HANDLE FileHandle
+    OUT PHANDLE FileHandle
 );
 
 NTSYSAPI
 NTSTATUS
 NTAPI
 RtlUnlockBootStatusData(
-    HANDLE FileHandle
+    IN HANDLE FileHandle
 );
 #endif
 
