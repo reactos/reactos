@@ -567,6 +567,16 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
     
+    /* Check for Pentium LOCK errata */
+    if (KiI386PentiumLockErrataPresent)
+    {
+        /* Mark the 1st IDT page as Write-Through to prevent a lockup
+           on a FOOF instruction. 
+           See http://www.rcollins.org/Errata/Dec97/F00FBug.html */
+        PointerPte = MiAddressToPte(KeGetPcr()->IDT);
+        PointerPte->u.Hard.WriteThrough = 1;
+    }
+
     return STATUS_SUCCESS;
 }
 
