@@ -150,8 +150,6 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
-    DPRINT("Removing address node: %lx %lx\n", Node->StartingVpn, Node->EndingVpn);
-
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
     
@@ -254,8 +252,8 @@ MiFindEmptyAddressRangeInTree(IN SIZE_T Length,
     /* Precompute page numbers for the length, alignment, and starting address */
     LengthVpn = (Length + (PAGE_SIZE - 1)) >> PAGE_SHIFT;
     AlignmentVpn = Alignment >> PAGE_SHIFT;
-    StartingVpn = ROUND_DOWN((ULONG_PTR)MM_LOWEST_USER_ADDRESS >> PAGE_SHIFT,
-                             AlignmentVpn);
+    StartingVpn = ROUND_UP((ULONG_PTR)MM_LOWEST_USER_ADDRESS >> PAGE_SHIFT,
+                           AlignmentVpn);
 
     /* Check if the table is free, so the lowest possible address is available */
     if (!Table->NumberGenericTableElements) goto FoundAtBottom;
@@ -279,7 +277,7 @@ FoundAtBottom:
     while (TRUE)
     {
         /* The last aligned page number in this entry */
-        LowVpn = ROUND_DOWN(Node->EndingVpn + 1, AlignmentVpn);
+        LowVpn = ROUND_UP(Node->EndingVpn + 1, AlignmentVpn);
         
         /* Keep going as long as there's still a next node */
         NextNode = MiGetNextNode(Node);
@@ -292,8 +290,8 @@ FoundAtBottom:
 Found:
             /* Yes! Use this VAD to store the allocation */
             *PreviousVad = Node;
-            *Base = ROUND_DOWN((Node->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1), 
-                               Alignment);
+            *Base = ROUND_UP((Node->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1), 
+                             Alignment);
             return STATUS_SUCCESS;
         }
 
@@ -335,7 +333,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
     if (Table->NumberGenericTableElements == 0)
     {
         /* Tree is empty, the candidate address is already the best one */
-        *Base = ROUND_DOWN(BoundaryAddress + 1 - Length, Alignment);
+        *Base = ROUND_UP(BoundaryAddress + 1 - Length, Alignment);
         return TableEmptyTree;
     }
 
