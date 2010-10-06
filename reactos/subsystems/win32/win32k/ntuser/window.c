@@ -1592,6 +1592,21 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
    return Ret;
 }
 
+ static void IntSendParentNotify( PWINDOW_OBJECT pWindow, UINT msg )
+ {
+     if ( (pWindow->Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD &&
+         !(pWindow->Wnd->style & WS_EX_NOPARENTNOTIFY))
+     {
+         if (pWindow->spwndParent && pWindow->spwndParent != UserGetDesktopWindow())
+         {
+             co_IntSendMessage( pWindow->spwndParent->hSelf, 
+                                WM_PARENTNOTIFY,
+                                MAKEWPARAM( msg, pWindow->Wnd->IDMenu), 
+                                (LPARAM)pWindow->hSelf );
+         }
+     }
+ }
+
 void FASTCALL
 IntFixWindowCoordinates(CREATESTRUCTW* Cs, PWINDOW_OBJECT ParentWindow, DWORD* dwShowMode)
 {
@@ -2151,14 +2166,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Send the WM_PARENTNOTIFY message */
-   if ((Wnd->style & WS_CHILD) &&
-       (!(Wnd->ExStyle & WS_EX_NOPARENTNOTIFY)) && ParentWindow)
-   {
-      co_IntSendMessage(ParentWindow->hSelf,
-                        WM_PARENTNOTIFY,
-                        MAKEWPARAM(WM_CREATE, Wnd->IDMenu),
-                        (LPARAM)Window->hSelf);
-   }
+   IntSendParentNotify(Window, WM_CREATE);
 
    /* Notify the shell that a new window was created */
    if ((!hWndParent) && (!hWndOwner))
@@ -2408,7 +2416,6 @@ NtUserDeferWindowPos(HDWP WinPosInfo,
 
 BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 {
-   BOOLEAN isChild;
    PWND Wnd;
    HWND hWnd;
    PTHREADINFO ti;
@@ -2474,23 +2481,11 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    IntDereferenceMessageQueue(Window->pti->MessageQueue);
 
    IntEngWindowChanged(Window, WOC_DELETE);
-   isChild = (0 != (Wnd->style & WS_CHILD));
 
-#if 0 /* FIXME */
-
-   if (isChild)
+   if (Wnd->style & WS_CHILD)
    {
-      if (! USER_IsExitingThread(GetCurrentThreadId()))
-      {
-         send_parent_notify(hwnd, WM_DESTROY);
-      }
+      IntSendParentNotify(Window, WM_DESTROY);
    }
-   else if (NULL != GetWindow(Wnd, GW_OWNER))
-   {
-      co_HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWDESTROYED, (WPARAM)hwnd, 0L, TRUE );
-      /* FIXME: clean up palette - see "Internals" p.352 */
-   }
-#endif
 
    if (!IntIsWindow(Window->hSelf))
    {
@@ -2498,7 +2493,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    }
 
    /* Recursively destroy owned windows */
-   if (! isChild)
+   if (! (Wnd->style & WS_CHILD))
    {
       for (;;)
       {
