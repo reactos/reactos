@@ -2404,7 +2404,9 @@ BOOLEAN NTAPI RtlFreeHeap(
     PHEAP_ENTRY HeapEntry;
     USHORT TagIndex = 0;
     SIZE_T BlockSize;
+    PHEAP_VIRTUAL_ALLOC_ENTRY VirtualEntry;
     BOOLEAN Locked = FALSE;
+    NTSTATUS Status;
 
     /* Freeing NULL pointer is a legal operation */
     if (!Ptr) return TRUE;
@@ -2440,7 +2442,24 @@ BOOLEAN NTAPI RtlFreeHeap(
     if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
     {
         /* Big allocation */
-        ASSERT(FALSE);
+        VirtualEntry = CONTAINING_RECORD(HeapEntry, HEAP_VIRTUAL_ALLOC_ENTRY, BusyBlock);
+
+        /* Remove it from the list */
+        RemoveEntryList(&VirtualEntry->Entry);
+
+        // TODO: Tagging
+
+        BlockSize = 0;
+        Status = ZwFreeVirtualMemory(NtCurrentProcess(),
+                                     (PVOID *)&VirtualEntry,
+                                     &BlockSize,
+                                     MEM_RELEASE);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed releasing memory with Status 0x%08X\n", Status);
+            // TODO: Set this status in user mode
+        }
     }
     else
     {
@@ -2514,6 +2533,26 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
 {
     /* We always fail growing in place now */
     return FALSE;
+}
+
+PHEAP_ENTRY_EXTRA NTAPI
+RtlpGetExtraStuffPointer(PHEAP_ENTRY HeapEntry)
+{
+    PHEAP_VIRTUAL_ALLOC_ENTRY VirtualEntry;
+
+    /* Check if it's a big block */
+    if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
+    {
+        VirtualEntry = CONTAINING_RECORD(HeapEntry, HEAP_VIRTUAL_ALLOC_ENTRY, BusyBlock);
+
+        /* Return a pointer to the extra stuff*/
+        return &VirtualEntry->ExtraStuff;
+    }
+    else
+    {
+        /* This is a usual entry, which means extra stuff follows this block */
+        return (PHEAP_ENTRY_EXTRA)(HeapEntry + HeapEntry->Size - 1);
+    }
 }
 
 
@@ -2870,12 +2909,11 @@ RtlReAllocateHeap(HANDLE HeapPtr,
                     /* Process extra stuff if it exists */
                     if (NewInUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
                     {
-                        UNIMPLEMENTED;
-                        NewExtra = NULL;//RtlpGetExtraStuffPointer(NewInUseEntry);
+                        NewExtra = RtlpGetExtraStuffPointer(NewInUseEntry);
 
                         if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
                         {
-                            OldExtra = NULL;//RtlpGetExtraStuffPointer(InUseEntry);
+                            OldExtra = RtlpGetExtraStuffPointer(InUseEntry);
                             NewExtra->Settable = OldExtra->Settable;
                         }
                         else
@@ -3031,6 +3069,13 @@ RtlSizeHeap(
     PHEAP_ENTRY HeapEntry;
     SIZE_T EntrySize;
 
+    // FIXME This is a hack around missing SEH support!
+    if (!Heap)
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_HANDLE);
+        return (SIZE_T)-1;
+    }
+
     /* Force flags */
     Flags |= Heap->Flags;
 
@@ -3049,10 +3094,7 @@ RtlSizeHeap(
     /* Get size of this block depending if it's a usual or a big one */
     if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
     {
-        // FIXME implement
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-        EntrySize = 0;
+        EntrySize = RtlpGetSizeOfBigBlock(HeapEntry);
     }
     else
     {
