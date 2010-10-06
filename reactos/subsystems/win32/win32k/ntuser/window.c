@@ -2445,6 +2445,12 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
    }
 
+   /* Inform the parent */
+   if (Wnd->style & WS_CHILD)
+   {
+      IntSendParentNotify(Window, WM_DESTROY);
+   }
+
    /* Look whether the focus is within the tree of windows we will
     * be destroying.
     */
@@ -2481,12 +2487,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    IntDereferenceMessageQueue(Window->pti->MessageQueue);
 
    IntEngWindowChanged(Window, WOC_DELETE);
-
-   if (Wnd->style & WS_CHILD)
-   {
-      IntSendParentNotify(Window, WM_DESTROY);
-   }
-
+   
    if (!IntIsWindow(Window->hSelf))
    {
       return TRUE;
