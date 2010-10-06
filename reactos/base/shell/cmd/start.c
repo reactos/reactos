@@ -246,14 +246,14 @@ INT cmd_start (LPTSTR Rest)
 		else
 		{
 			TRACE ("[EXEC: %s %s]\n", debugstr_aw(szFullName), debugstr_aw(Rest));
-			_tcscpy(szFullCmdLine, Rest);
+			_tcscpy(szFullCmdLine, szFullName);
 		}
 
 		/* build command line for CreateProcess() */
 		if (param != NULL)
 		{
-			_tcscat(szFullCmdLine, _T(" "));
-			_tcscat(szFullCmdLine, param);
+			_tcsncat(szFullCmdLine, _T(" "), CMDLINE_LENGTH - _tcslen(szFullCmdLine));
+			_tcsncat(szFullCmdLine, param, CMDLINE_LENGTH - _tcslen(szFullCmdLine));
 		}
 
 		/* fill startup info */
