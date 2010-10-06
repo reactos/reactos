@@ -236,12 +236,14 @@ extern const ULONG MmProtectToPteMask[32];
 #define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
+#ifdef _M_IX86
 //
 // Decodes a Prototype PTE into the underlying PTE
 //
 #define MiProtoPteToPte(x)                  \
     (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
              ((x)->u.Proto.ProtoAddressHigh | (x)->u.Proto.ProtoAddressLow))
+#endif
 
 //
 // Prototype PTEs that don't yet have a pagefile association
@@ -603,6 +605,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
 
+#ifdef _M_IX86
 //
 // Builds a Prototype PTE for the address of the PTE
 //
@@ -627,6 +630,7 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
     NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
     NewPte->u.Proto.ProtoAddressHigh = Offset & 0xFFFFF80;
 }
+#endif
 
 //
 // Returns if the page is physically resident (ie: a large page)

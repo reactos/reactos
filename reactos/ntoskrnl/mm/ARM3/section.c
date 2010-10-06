@@ -309,6 +309,7 @@ MiAddMappedPtes(IN PMMPTE FirstPte,
     return STATUS_SUCCESS;
 }
 
+#if (_MI_PAGING_LEVELS == 2)
 VOID
 NTAPI
 MiFillSystemPageDirectory(IN PVOID Base,
@@ -364,6 +365,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
         PointerPde++;
     }
 }
+#endif
 
 NTSTATUS
 NTAPI
@@ -449,8 +451,10 @@ MiMapViewInSystemSpace(IN PVOID Section,
     Base = MiInsertInSystemSpace(Session, Buckets, ControlArea);
     ASSERT(Base);
 
+#if (_MI_PAGING_LEVELS == 2)
     /* Create the PDEs needed for this mapping, and double-map them if needed */
     MiFillSystemPageDirectory(Base, Buckets * MI_SYSTEM_VIEW_BUCKET_SIZE);
+#endif
 
     /* Create the actual prototype PTEs for this mapping */
     Status = MiAddMappedPtes(MiAddressToPte(Base),

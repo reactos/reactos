@@ -857,9 +857,9 @@ MmArmInitSystem_x(IN ULONG Phase,
         //MiBuildPagedPool();
 
         // This is the old stuff:
-        MmPagedPoolBase = (PVOID)((PCHAR)MmPagedPoolEnd + 1);
-        MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-        ASSERT((PCHAR)MmPagedPoolBase + MmPagedPoolSize < (PCHAR)MmNonPagedSystemStart);
+        //MmPagedPoolBase = (PVOID)((PCHAR)MmPagedPoolEnd + 1);
+        //MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+        //ASSERT((PCHAR)MmPagedPoolBase + MmPagedPoolSize < (PCHAR)MmNonPagedSystemStart);
 
         
         HalInitializeBios(0, LoaderBlock);
