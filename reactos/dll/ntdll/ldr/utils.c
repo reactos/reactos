@@ -3337,6 +3337,7 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
                                    OUT PULONG ReturnedLength OPTIONAL)
 {
   PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+  CHAR KeyInfoBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 32];
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING ValueNameString;
   UNICODE_STRING KeyName;
@@ -3377,15 +3378,8 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
       return Status;
     }
 
-  KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 32;
-  KeyInfo = RtlAllocateHeap (RtlGetProcessHeap(),
-                             HEAP_ZERO_MEMORY,
-                             KeyInfoSize);
-  if (KeyInfo == NULL)
-    {
-      NtClose (KeyHandle);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  KeyInfoSize = sizeof(KeyInfoBuffer);
+  KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION)KeyInfoBuffer;
 
   RtlInitUnicodeString (&ValueNameString,
                         (PWSTR)ValueName);
@@ -3397,10 +3391,13 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
                             &ResultSize);
   if (Status == STATUS_BUFFER_OVERFLOW)
     {
+        /* We can allocate only if there is a process heap already */
+        if (!RtlGetProcessHeap())
+          {
+              NtClose (KeyHandle);
+              return STATUS_NO_MEMORY;
+          }
       KeyInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + KeyInfo->DataLength;
-      RtlFreeHeap (RtlGetProcessHeap(),
-                   0,
-                   KeyInfo);
       KeyInfo = RtlAllocateHeap (RtlGetProcessHeap(),
                                  HEAP_ZERO_MEMORY,
                                  KeyInfoSize);
@@ -3421,7 +3418,7 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
 
   if (!NT_SUCCESS(Status))
     {
-      if (KeyInfo != NULL)
+      if ((PCHAR)KeyInfo != KeyInfoBuffer)
         {
           RtlFreeHeap (RtlGetProcessHeap(),
                        0,
@@ -3432,9 +3429,12 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
 
   if (KeyInfo->Type != Type)
     {
-      RtlFreeHeap (RtlGetProcessHeap(),
-                   0,
-                   KeyInfo);
+      if ((PCHAR)KeyInfo != KeyInfoBuffer)
+        {
+          RtlFreeHeap (RtlGetProcessHeap(),
+                       0,
+                       KeyInfo);
+        }
       return STATUS_OBJECT_TYPE_MISMATCH;
     }
 
@@ -3451,9 +3451,12 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
                  &KeyInfo->Data,
                  ResultSize);
 
-  RtlFreeHeap (RtlGetProcessHeap(),
-               0,
-               KeyInfo);
+  if ((PCHAR)KeyInfo != KeyInfoBuffer)
+   {
+     RtlFreeHeap (RtlGetProcessHeap(),
+                  0,
+                  KeyInfo);
+  }
 
   if (ReturnedLength != NULL)
     {

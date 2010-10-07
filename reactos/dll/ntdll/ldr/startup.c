@@ -383,6 +383,9 @@ LdrpInit2(PCONTEXT Context,
     /* Initialize Critical Section Data */
     RtlpInitDeferedCriticalSection();
 
+    /* Load execution options */
+    LoadImageFileExecutionOptions(Peb);
+
     /* create process heap */
     RtlInitializeHeapManager();
     Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
@@ -446,9 +449,6 @@ LdrpInit2(PCONTEXT Context,
 
     /* Load compatibility settings */
     LoadCompatibilitySettings(Peb);
-
-    /* Load execution options */
-    LoadImageFileExecutionOptions(Peb);
 
     /* build full ntdll path */
     wcscpy(FullNtDllPath, SharedUserData->NtSystemRoot);
