@@ -373,12 +373,23 @@ MmInsertMemoryArea(
        Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'Fake');
        ASSERT(Vad);
        RtlZeroMemory(Vad, sizeof(MMVAD));
+       EndingAddress = (((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1));
+         StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
+         
        Vad->StartingVpn = PAGE_ROUND_DOWN(marea->StartingAddress) >> PAGE_SHIFT;
-       Vad->EndingVpn = PAGE_ROUND_DOWN((ULONG_PTR)marea->EndingAddress - 1) >> PAGE_SHIFT;
-       if (Vad->EndingVpn < Vad->StartingVpn)
-       {
-           DPRINT1("Building a broken VAD. Data: %p %p %lx %lx\n", marea->StartingAddress, marea->EndingAddress, Vad->StartingVpn, Vad->EndingVpn);
-       }
+       /*
+        * For some strange reason, it is perfectly valid to create a MAREA from 0x1000 to... 0x1000.
+        * In a normal OS/Memory Manager, this would be retarded, but ReactOS allows this (how it works
+        * I don't even want to know).
+        */
+        if (marea->EndingAddress != marea->StartingAddress)
+        {
+            Vad->EndingVpn = PAGE_ROUND_DOWN((ULONG_PTR)marea->EndingAddress - 1) >> PAGE_SHIFT;
+        }
+        else
+        {
+            Vad->EndingVpn = Vad->StartingVpn;
+        }
        Vad->u.VadFlags.Spare = 1;
        Vad->u.VadFlags.PrivateMemory = 1;
        MiInsertVad(Vad, MmGetAddressSpaceOwner(AddressSpace));
