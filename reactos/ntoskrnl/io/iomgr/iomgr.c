@@ -507,7 +507,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Create ARC names for boot devices */
-    IopCreateArcNames(LoaderBlock);
+    if (!NT_SUCCESS(IopCreateArcNames(LoaderBlock))) return FALSE;
 
     /* Mark the system boot partition */
     if (!IopMarkBootPartition(LoaderBlock)) return FALSE;
