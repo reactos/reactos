@@ -373,9 +373,6 @@ MmInsertMemoryArea(
        Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD), 'Fake');
        ASSERT(Vad);
        RtlZeroMemory(Vad, sizeof(MMVAD));
-       EndingAddress = (((ULONG_PTR)PBaseAddress + PRegionSize - 1) | (PAGE_SIZE - 1));
-         StartingAddress = (ULONG_PTR)PAGE_ALIGN(PBaseAddress);
-         
        Vad->StartingVpn = PAGE_ROUND_DOWN(marea->StartingAddress) >> PAGE_SHIFT;
        /*
         * For some strange reason, it is perfectly valid to create a MAREA from 0x1000 to... 0x1000.
