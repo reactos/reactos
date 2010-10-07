@@ -368,7 +368,7 @@ IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                                          ARC_DISK_SIGNATURE,
                                          ListEntry);
         /* And check if checksums and arc names match */
-        if (CheckSum == ArcDiskEntry->CheckSum &&
+        if (CheckSum + ArcDiskEntry->CheckSum == 0 &&
             strcmp(KeLoaderBlock->ArcBootDeviceName, ArcDiskEntry->ArcName) == 0)
         {
             IsBootCdRom = TRUE;
