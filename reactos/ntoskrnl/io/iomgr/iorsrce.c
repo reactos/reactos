@@ -1,11 +1,12 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/resource.c
+ * FILE:            ntoskrnl/io/iorsrce.c
  * PURPOSE:         Hardware resource managment
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Alex Ionescu (alex@relsoft.net)
+ *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -648,6 +649,143 @@ IopQueryBusDescription(
       ExFreePoolWithTag(BasicInformation, TAG_IO_RESOURCE);
 
    return Status;
+}
+
+VOID
+NTAPI
+IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
+                                   IN PUNICODE_STRING OsLoaderPathName)
+{
+    NTSTATUS Status;
+    UNICODE_STRING LinkTarget, KeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE LinkHandle, RegistryHandle, KeyHandle;
+    WCHAR LinkTargetBuffer[256], KeyNameBuffer[sizeof("SystemPartition")];
+    UNICODE_STRING CmRegistryMachineSystemName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM");
+
+    ASSERT(NtSystemPartitionDeviceName->MaximumLength >= NtSystemPartitionDeviceName->Length + sizeof(WCHAR));
+    ASSERT(NtSystemPartitionDeviceName->Buffer[NtSystemPartitionDeviceName->Length / sizeof(WCHAR)] == UNICODE_NULL);
+    ASSERT(OsLoaderPathName->MaximumLength >= OsLoaderPathName->Length + sizeof(WCHAR));
+    ASSERT(OsLoaderPathName->Buffer[OsLoaderPathName->Length / sizeof(WCHAR)] == UNICODE_NULL);
+
+    /* First define needed stuff to open NtSystemPartitionDeviceName symbolic link */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NtSystemPartitionDeviceName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
+
+    /* Open NtSystemPartitionDeviceName symbolic link */
+    Status = ZwOpenSymbolicLinkObject(&LinkHandle,
+                                      SYMBOLIC_LINK_QUERY,
+                                      &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed opening given symbolic link!\n");
+        return;
+    }
+
+    /* Prepare the string that will receive where symbolic link points to */
+    LinkTarget.Length = 0;
+    /* We will zero the end of the string after having received it */
+    LinkTarget.MaximumLength = sizeof(LinkTargetBuffer) - sizeof(UNICODE_NULL);
+    LinkTarget.Buffer = LinkTargetBuffer;
+
+    /* Query target */
+    Status = ZwQuerySymbolicLinkObject(LinkHandle,
+                                       &LinkTarget,
+                                       NULL);
+
+    /* We are done with symbolic link */
+    ObCloseHandle(LinkHandle, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed querying given symbolic link!\n");
+        return;
+    }
+
+    /* As promised, we zero the end */
+    LinkTarget.Buffer[LinkTarget.Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+    /* Open registry to save data (HKLM\SYSTEM) */
+    Status = IopOpenRegistryKeyEx(&RegistryHandle,
+                                  NULL,
+                                  &CmRegistryMachineSystemName,
+                                  KEY_ALL_ACCESS);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed opening registry!\n");
+        return;
+    }
+
+    /* We'll store in Setup subkey, and as we love fun, we use only one buffer for three writings... */
+    wcscpy(KeyNameBuffer, L"Setup");
+    KeyName.Length = sizeof(L"Setup") - sizeof(UNICODE_NULL);
+    KeyName.MaximumLength = sizeof(L"Setup");
+    KeyName.Buffer = KeyNameBuffer;
+
+    /* So, open or create the subkey */
+    Status = IopCreateRegistryKeyEx(&KeyHandle,
+                                    RegistryHandle,
+                                    &KeyName,
+                                    KEY_ALL_ACCESS,
+                                    REG_OPTION_NON_VOLATILE,
+                                    NULL);
+
+    /* We're done with HKLM\SYSTEM */
+    ObCloseHandle(RegistryHandle, KernelMode);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed opening/creating Setup key!\n");
+        return;
+    }
+
+    /* Prepare first data writing... */
+    wcscpy(KeyNameBuffer, L"SystemPartition");
+    KeyName.Length = sizeof(L"SystemPartition") - sizeof(UNICODE_NULL);
+    KeyName.MaximumLength = sizeof(L"SystemPartition");
+
+    /* Write SystemPartition value which is the target of the symbolic link */
+    Status = ZwSetValueKey(KeyHandle,
+                           &KeyName,
+                           0,
+                           REG_SZ,
+                           LinkTarget.Buffer,
+                           LinkTarget.Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed writing SystemPartition value!\n");
+    }
+
+    /* Prepare for second data writing... */ 
+    wcscpy(KeyName.Buffer, L"OsLoaderPath");
+    KeyName.Length = sizeof(L"OsLoaderPath") - sizeof(UNICODE_NULL);
+    KeyName.MaximumLength = sizeof(L"OsLoaderPath");
+
+    /* Remove trailing slash if any (one slash only excepted) */
+    if (OsLoaderPathName->Length > sizeof(WCHAR) &&
+        OsLoaderPathName->Buffer[(OsLoaderPathName->Length / sizeof(WCHAR)) - 1] == OBJ_NAME_PATH_SEPARATOR)
+    {
+        OsLoaderPathName->Length -= sizeof(WCHAR);
+        OsLoaderPathName->Buffer[OsLoaderPathName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    }
+
+    /* Then, write down data */
+    Status = ZwSetValueKey(KeyHandle,
+                           &KeyName,
+                           0,
+                           REG_SZ,
+                           OsLoaderPathName->Buffer,
+                           OsLoaderPathName->Length + sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed writing OsLoaderPath value!\n");
+    }
+
+    /* We're finally done! */
+    ObCloseHandle(KeyHandle, KernelMode);
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

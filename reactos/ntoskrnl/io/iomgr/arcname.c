@@ -578,7 +578,8 @@ IopCreateArcNames(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                                               TRUE);
                         if (NT_SUCCESS(Status))
                         {
-                            /* FIXME: Save in registry */
+                            /* Save in registry */
+                            IopStoreSystemPartitionInformation(&DeviceName, &BootPath);
 
                             /* Free the string now */
                             RtlFreeUnicodeString(&BootPath);

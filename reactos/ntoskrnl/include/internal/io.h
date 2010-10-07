@@ -1165,6 +1165,14 @@ IopStartRamdisk(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+// Configuration Routines
+//
+VOID
+NTAPI
+IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
+                                   IN PUNICODE_STRING OsLoaderPathName
+);
+
 //
 // Global I/O Data
 //
