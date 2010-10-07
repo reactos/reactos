@@ -30,8 +30,8 @@
 #define HEAP_ENTRY_SHIFT 3
 #define HEAP_MAX_BLOCK_SIZE ((0x80000 - PAGE_SIZE) >> HEAP_ENTRY_SHIFT)
 
-#define ARENA_INUSE_FILLER     0x55555555
-#define ARENA_FREE_FILLER      0xaaaaaaaa
+#define ARENA_INUSE_FILLER     0xBAADF00D
+#define ARENA_FREE_FILLER      0xFEEEFEEE
 #define HEAP_TAIL_FILL         0xab
 
 // from ntifs.h, should go to another header!
@@ -261,6 +261,7 @@ typedef struct _HEAP_VIRTUAL_ALLOC_ENTRY
     HEAP_ENTRY BusyBlock;
 } HEAP_VIRTUAL_ALLOC_ENTRY, *PHEAP_VIRTUAL_ALLOC_ENTRY;
 
+extern BOOLEAN RtlpPageHeapEnabled;
 HANDLE NTAPI
 RtlpSpecialHeapCreate(ULONG Flags,
                       PVOID Addr,
@@ -340,6 +341,9 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
                         PHEAP_FREE_ENTRY FreeEntry,
                         PSIZE_T FreeSize,
                         BOOLEAN Remove);
+
+PHEAP_ENTRY_EXTRA NTAPI
+RtlpGetExtraStuffPointer(PHEAP_ENTRY HeapEntry);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1546,7 +1550,8 @@ RtlCreateHeap(ULONG Flags,
         Heap = RtlpSpecialHeapCreate(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
         if (Heap) return Heap;
 
-        ASSERT(FALSE);
+        //ASSERT(FALSE);
+        DPRINT1("Enabling page heap failed\n");
     }
 
     /* Check validation flags */
@@ -1560,11 +1565,17 @@ RtlCreateHeap(ULONG Flags,
     if (!Parameters) Parameters = &SafeParams;
 
     /* Check global flags */
+    if (NtGlobalFlags & FLG_HEAP_DISABLE_COALESCING)
+        Flags |= HEAP_DISABLE_COALESCE_ON_FREE;
+
     if (NtGlobalFlags & FLG_HEAP_ENABLE_FREE_CHECK)
         Flags |= HEAP_FREE_CHECKING_ENABLED;
 
     if (NtGlobalFlags & FLG_HEAP_ENABLE_TAIL_CHECK)
         Flags |= HEAP_TAIL_CHECKING_ENABLED;
+
+    if (Flags & HEAP_TAIL_CHECKING_ENABLED)
+        DPRINT1("TailChecking!\n");
 
     if (RtlpGetMode() == UserMode)
     {
@@ -2014,7 +2025,7 @@ RtlpSplitEntry(PHEAP Heap,
             if (FreeFlags & HEAP_ENTRY_LAST_ENTRY)
             {
                 /* Insert it to the free list if it's the last entry */
-                RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, TRUE);
+                RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
                 Heap->TotalFreeSize += FreeSize;
             }
             else
@@ -2025,7 +2036,7 @@ RtlpSplitEntry(PHEAP Heap,
                 if (SplitBlock2->Flags & HEAP_ENTRY_BUSY)
                 {
                     SplitBlock2->PreviousSize = (USHORT)FreeSize;
-                    RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, TRUE);
+                    RtlpInsertFreeBlockHelper(Heap, SplitBlock, FreeSize, FALSE);
                     Heap->TotalFreeSize += FreeSize;
                 }
                 else
@@ -2034,7 +2045,7 @@ RtlpSplitEntry(PHEAP Heap,
                     SplitBlock->Flags = SplitBlock2->Flags;
 
                     /* Remove that next entry */
-                    RtlpRemoveFreeBlock(Heap, SplitBlock2, FALSE, TRUE);
+                    RtlpRemoveFreeBlock(Heap, SplitBlock2, FALSE, FALSE);
 
                     /* Update sizes */
                     FreeSize += SplitBlock2->Size;
@@ -2052,7 +2063,7 @@ RtlpSplitEntry(PHEAP Heap,
                         }
 
                         /* Actually insert it */
-                        RtlpInsertFreeBlockHelper( Heap, SplitBlock, (USHORT)FreeSize, TRUE );
+                        RtlpInsertFreeBlockHelper(Heap, SplitBlock, (USHORT)FreeSize, FALSE);
 
                         /* Update total size */
                         Heap->TotalFreeSize += FreeSize;
@@ -2094,6 +2105,7 @@ RtlpAllocateNonDedicated(PHEAP Heap,
     PLIST_ENTRY FreeListHead, Next;
     PHEAP_FREE_ENTRY FreeBlock;
     PHEAP_ENTRY InUseEntry;
+    PHEAP_ENTRY_EXTRA Extra;
     EXCEPTION_RECORD ExceptionRecord;
 
     /* Go through the zero list to find a place where to insert the new entry */
@@ -2130,6 +2142,27 @@ RtlpAllocateNonDedicated(PHEAP Heap,
                     /* Zero memory if that was requested */
                     if (Flags & HEAP_ZERO_MEMORY)
                         RtlZeroMemory(InUseEntry + 1, Size);
+                    else if (Heap->Flags & HEAP_FREE_CHECKING_ENABLED)
+                    {
+                        /* Fill this block with a special pattern */
+                        RtlFillMemoryUlong(InUseEntry + 1, Size & ~0x3, ARENA_INUSE_FILLER);
+                    }
+
+                    /* Fill tail of the block with a special pattern too if requested */
+                    if (Heap->Flags & HEAP_TAIL_CHECKING_ENABLED)
+                    {
+                        RtlFillMemory((PCHAR)(InUseEntry + 1) + Size, sizeof(HEAP_ENTRY), HEAP_TAIL_FILL);
+                        InUseEntry->Flags |= HEAP_ENTRY_FILL_PATTERN;
+                    }
+
+                    /* Prepare extra if it's present */
+                    if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
+                    {
+                        Extra = RtlpGetExtraStuffPointer(InUseEntry);
+                        RtlZeroMemory(Extra, sizeof(HEAP_ENTRY_EXTRA));
+
+                        // TODO: Tagging
+                    }
 
                     /* Return pointer to the */
                     return InUseEntry + 1;
@@ -2158,13 +2191,34 @@ RtlpAllocateNonDedicated(PHEAP Heap,
         /* Zero memory if that was requested */
         if (Flags & HEAP_ZERO_MEMORY)
             RtlZeroMemory(InUseEntry + 1, Size);
+        else if (Heap->Flags & HEAP_FREE_CHECKING_ENABLED)
+        {
+            /* Fill this block with a special pattern */
+            RtlFillMemoryUlong(InUseEntry + 1, Size & ~0x3, ARENA_INUSE_FILLER);
+        }
+
+        /* Fill tail of the block with a special pattern too if requested */
+        if (Heap->Flags & HEAP_TAIL_CHECKING_ENABLED)
+        {
+            RtlFillMemory((PCHAR)(InUseEntry + 1) + Size, sizeof(HEAP_ENTRY), HEAP_TAIL_FILL);
+            InUseEntry->Flags |= HEAP_ENTRY_FILL_PATTERN;
+        }
+
+        /* Prepare extra if it's present */
+        if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
+        {
+            Extra = RtlpGetExtraStuffPointer(InUseEntry);
+            RtlZeroMemory(Extra, sizeof(HEAP_ENTRY_EXTRA));
+
+            // TODO: Tagging
+        }
 
         /* Return pointer to the */
         return InUseEntry + 1;
     }
 
     /* Really unfortunate, out of memory condition */
-    //STATUS_NO_MEMORY;
+    RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
 
     /* Generate an exception */
     if (Flags & HEAP_GENERATE_EXCEPTIONS)
@@ -2209,6 +2263,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     EXCEPTION_RECORD ExceptionRecord;
     BOOLEAN HeapLocked = FALSE;
     PHEAP_VIRTUAL_ALLOC_ENTRY VirtualBlock = NULL;
+    PHEAP_ENTRY_EXTRA Extra;
     NTSTATUS Status;
 
     /* Force flags */
@@ -2217,7 +2272,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     /* Check for the maximum size */
     if (Size >= 0x80000000)
     {
-        // STATUS_NO_MEMORY
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
         return FALSE;
     }
 
@@ -2225,24 +2280,27 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         HEAP_VALIDATE_ALL_ENABLED |
         HEAP_VALIDATE_PARAMETERS_ENABLED |
         HEAP_FLAG_PAGE_ALLOCS |
-        HEAP_EXTRA_FLAGS_MASK |
         HEAP_CREATE_ENABLE_TRACING |
-        HEAP_FREE_CHECKING_ENABLED |
-        HEAP_TAIL_CHECKING_ENABLED |
         HEAP_CREATE_ALIGN_16))
     {
         DPRINT1("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
     }
 
+    if (Flags & HEAP_TAIL_CHECKING_ENABLED)
+        DPRINT1("TailChecking, Heap %p\n!", Heap);
+
     /* Calculate allocation size and index */
-    if (!Size) Size = 1;
-    AllocationSize = (Size + Heap->AlignRound) & Heap->AlignMask;
+    if (Size)
+        AllocationSize = Size;
+    else
+        AllocationSize = 1;
+    AllocationSize = (AllocationSize + Heap->AlignRound) & Heap->AlignMask;
     Index = AllocationSize >>  HEAP_ENTRY_SHIFT;
 
     /* Acquire the lock if necessary */
     if (!(Flags & HEAP_NO_SERIALIZE))
     {
-        RtlEnterHeapLock( Heap->LockVariable );
+        RtlEnterHeapLock(Heap->LockVariable);
         HeapLocked = TRUE;
     }
 
@@ -2261,7 +2319,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
 
             /* Save flags and remove the free entry */
             FreeFlags = FreeBlock->Flags;
-            RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, TRUE);
+            RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, FALSE);
 
             /* Update the total free size of the heap */
             Heap->TotalFreeSize -= Index;
@@ -2308,7 +2366,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
             FreeBlock = CONTAINING_RECORD(FreeListHead->Blink,
                                           HEAP_FREE_ENTRY,
                                           FreeList);
-            RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, TRUE);
+            RtlpRemoveFreeBlock(Heap, FreeBlock, TRUE, FALSE);
 
             /* Split it */
             InUseEntry = RtlpSplitEntry(Heap, FreeBlock, AllocationSize, Index, Size);
@@ -2320,6 +2378,27 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         /* Zero memory if that was requested */
         if (Flags & HEAP_ZERO_MEMORY)
             RtlZeroMemory(InUseEntry + 1, Size);
+        else if (Heap->Flags & HEAP_FREE_CHECKING_ENABLED)
+        {
+            /* Fill this block with a special pattern */
+            RtlFillMemoryUlong(InUseEntry + 1, Size & ~0x3, ARENA_INUSE_FILLER);
+        }
+
+        /* Fill tail of the block with a special pattern too if requested */
+        if (Heap->Flags & HEAP_TAIL_CHECKING_ENABLED)
+        {
+            RtlFillMemory((PCHAR)(InUseEntry + 1) + Size, sizeof(HEAP_ENTRY), HEAP_TAIL_FILL);
+            InUseEntry->Flags |= HEAP_ENTRY_FILL_PATTERN;
+        }
+
+        /* Prepare extra if it's present */
+        if (InUseEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
+        {
+            Extra = RtlpGetExtraStuffPointer(InUseEntry);
+            RtlZeroMemory(Extra, sizeof(HEAP_ENTRY_EXTRA));
+
+            // TODO: Tagging
+        }
 
         /* User data starts right after the entry's header */
         return InUseEntry + 1;
@@ -2377,7 +2456,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         RtlRaiseException(&ExceptionRecord);
     }
 
-    //STATUS_BUFFER_TOO_SMALL;
+    RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_BUFFER_TOO_SMALL);
 
     /* Release the lock */
     if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
@@ -2431,7 +2510,7 @@ BOOLEAN NTAPI RtlFreeHeap(
     {
         /* This is an invalid block */
         DPRINT1("HEAP: Trying to free an invalid address %p!\n", Ptr);
-        // FIXME: Set STATUS_INVALID_PARAMETER
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
 
         /* Release the heap lock */
         if (Locked) RtlLeaveHeapLock(Heap->LockVariable);
@@ -2457,7 +2536,7 @@ BOOLEAN NTAPI RtlFreeHeap(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed releasing memory with Status 0x%08X\n", Status);
-            // TODO: Set this status in user mode
+            RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status);
         }
     }
     else
@@ -2593,7 +2672,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     /* Return success in case of a null pointer */
     if (!Ptr)
     {
-        // STATUS_SUCCESS
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_SUCCESS);
         return NULL;
     }
 
@@ -2605,7 +2684,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     /* Make sure size is valid */
     if (Size >= 0x80000000)
     {
-        // STATUS_NO_MEMORY
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
         return NULL;
     }
 
@@ -2635,7 +2714,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     /* If that entry is not really in-use, we have a problem */
     if (!(InUseEntry->Flags & HEAP_ENTRY_BUSY))
     {
-        // STATUS_INVALID_PARAMETER
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
 
         /* Release the lock and return */
         if (HeapLocked)
@@ -3086,7 +3165,7 @@ RtlSizeHeap(
     /* Return -1 if that entry is free */
     if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY))
     {
-        // STATUS_INVALID_PARAMETER
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
         return (SIZE_T)-1;
     }
 
@@ -3131,7 +3210,9 @@ BOOLEAN NTAPI RtlValidateHeap(
 )
 {
     UNIMPLEMENTED;
-    return FALSE;
+
+    /* Imitate success */
+    return TRUE;
 }
 
 VOID
