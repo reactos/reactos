@@ -10,6 +10,8 @@ add_executable(sndrec32
     sndrec32.cpp
     rsrc.rc)
 
+target_link_libraries(sndrec32 stlport)
+
 set_module_type(sndrec32 win32gui)
 
 add_importlibs(sndrec32 winmm user32 msacm32 comctl32 comdlg32 gdi32 msvcrt)

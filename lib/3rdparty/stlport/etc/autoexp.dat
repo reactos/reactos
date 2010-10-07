@@ -1,0 +1,835 @@
+;------------------------------------------------------------------------------
+; This is the description of STLport data structures in Visual Studio debugger
+; language. Those descriptions has been tested with Visual C++ 2005 Express
+; Edition, you are welcome to report successful usage with any other Visual
+; Studio version.
+; Those descriptions has been tested with STLport 5.2.0.
+; How to use: Copy/Paste this file content in the autoexp.dat file you will find
+; in your Visual Studio install, for instance
+; C:\Program Files\Microsoft Visual Studio 8\Common7\Packages\Debugger, in the
+; [Visualizer] section.
+; TODO: Enhance debug iterator visualization to report end iterators.
+; TODO: Add visualization for rope.
+; TODO: Fix bitset visualization.
+;------------------------------------------------------------------------------
+;------------------------------------------------------------------------------
+; stlport::basic_string
+;------------------------------------------------------------------------------
+stlp_std::basic_string<char,*>|stlpx_std::basic_string<char,*>|stlpmtx_std::basic_string<char,*>|stlpxmtx_std::basic_string<char,*>|stlpd_std::priv::_NonDbg_str<char,*>|stlpdx_std::priv::_NonDbg_str<char,*>|stlpdmtx_std::priv::_NonDbg_str<char,*>|stlpdxmtx_std::priv::_NonDbg_str<char,*>{
+    preview
+    (
+        [$c._M_start_of_storage._M_data, s]
+    )
+
+    stringview
+    (
+        [$c._M_start_of_storage._M_data, s]
+    )
+
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            buffer: [(unsigned int)$c._M_start_of_storage._M_data, x],
+            length: $c._M_finish - $c._M_start_of_storage._M_data,
+            capacity: #if($c._M_start_of_storage._M_data == $c._M_buffers._M_static_buf)
+                    (
+                        $c._DEFAULT_SIZE
+                    )
+                    #else
+                    (
+                        $c._M_buffers._M_end_of_storage - $c._M_start_of_storage._M_data
+                    ),
+            #array
+            (
+				expr: $c._M_start_of_storage._M_data[$i],
+				size: $c._M_finish - $c._M_start_of_storage._M_data
+			)
+        )
+    )
+}
+
+stlp_std::basic_string<unsigned short,*>|stlp_std::basic_string<wchar_t,*>|stlpx_std::basic_string<unsigned short,*>|stlpx_std::basic_string<wchar_t,*>|stlpmtx_std::basic_string<unsigned short,*>|stlpmtx_std::basic_string<wchar_t,*>|stlpxmtx_std::basic_string<unsigned short,*>|stlpxmtx_std::basic_string<wchar_t,*>|stlpd_std::priv::_NonDbg_str<unsigned short,*>|stlpd_std::priv::_NonDbg_str<wchar_t,*>|stlpdx_std::priv::_NonDbg_str<unsigned short,*>|stlpdx_std::priv::_NonDbg_str<wchar_t,*>|stlpdmtx_std::priv::_NonDbg_str<unsigned short,*>|stlpdmtx_std::priv::_NonDbg_str<wchar_t,*>|stlpdxmtx_std::priv::_NonDbg_str<unsigned short,*>|stlpdxmtx_std::priv::_NonDbg_str<wchar_t,*>{
+    preview
+    (
+        [$c._M_start_of_storage._M_data, su]
+    )
+
+    stringview
+    (
+        [$c._M_start_of_storage._M_data, su]
+    )
+
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            buffer: [(unsigned int)$c._M_start_of_storage._M_data, x],
+            length: $c._M_finish - $c._M_start_of_storage._M_data,
+            capacity: #if($c._M_start_of_storage._M_data == $c._M_buffers._M_static_buf)
+                    (
+                        $c._DEFAULT_SIZE
+                    )
+                    #else
+                    (
+                        $c._M_buffers._M_end_of_storage - $c._M_start_of_storage._M_data
+                    ),
+            #array
+            (
+				expr: $c._M_start_of_storage._M_data[$i],
+				size: $c._M_finish - $c._M_start_of_storage._M_data
+			)
+        )
+    )
+}
+
+stlpd_std::basic_string<*>|stlpdx_std::basic_string<*>|stlpdmtx_std::basic_string<*>|stlpdxmtx_std::basic_string<*>{
+    preview
+    (
+		$c._M_non_dbg_impl
+	)
+
+    stringview
+    (
+		$c._M_non_dbg_impl
+    )
+
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            string: $c._M_non_dbg_impl
+         )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::vector
+;------------------------------------------------------------------------------
+stlp_std::vector<bool,*>|stlpx_std::vector<bool,*>|stlpmtx_std::vector<bool,*>|stlpxmtx_std::vector<bool,*>|stlpd_std::priv::_NonDbg_vector<bool,*>|stlpdx_std::priv::_NonDbg_vector<bool,*>|stlpdmtx_std::priv::_NonDbg_vector<bool,*>|stlpdxmtx_std::priv::_NonDbg_vector<bool,*>{
+    preview
+    (
+        #(
+			"[",
+			($c._M_finish._M_p - $c._M_start._M_p) * sizeof(unsigned int) * 8 + $c._M_finish._M_offset,
+			"](",
+			#array
+			(
+				expr : ($c._M_start._M_p[$i / (sizeof(unsigned int) * 8)] >> ($i % (sizeof(unsigned int) * 8))),
+				size : (($c._M_finish._M_p - $c._M_start._M_p) * sizeof(unsigned int) * 8 + $c._M_finish._M_offset)
+			)  : (bool)($e & 1),
+			")"
+		)
+	)
+	children
+	(
+		#(
+			[raw view]: [$c,!],
+			buffer : [(unsigned int)$c._M_start._M_p, x],
+			size : (($c._M_finish._M_p - $c._M_start._M_p) * sizeof(unsigned int) * 8 + $c._M_finish._M_offset),
+			#array
+			(
+				expr : ($c._M_start._M_p[$i / (sizeof(unsigned int) * 8)] >> ($i % (sizeof(unsigned int) * 8))),
+				size : (($c._M_finish._M_p - $c._M_start._M_p) * sizeof(unsigned int) * 8 + $c._M_finish._M_offset)
+			)  : (bool)($e & 1)
+		)
+	)
+}
+
+stlp_std::priv::_Bit_iter<*>|stlpx_std::priv::_Bit_iter<*>|stlpmtx_std::priv::_Bit_iter<*>|stlpxmtx_std::priv::_Bit_iter<*>|stlpd_std::priv::_Bit_iter<*>|stlpdx_std::priv::_Bit_iter<*>|stlpdmtx_std::priv::::_Bit_iter<*>|stlpdxmtx_std::priv::_Bit_iter<*>{
+	preview
+	(
+		#(
+			(bool) (((*$c._M_p) >> $c._M_offset) & 1)
+		)
+	)
+	children
+	(
+		#(
+			[raw view]: [$c,!],
+			value : (bool) (((*$c._M_p) >> $c._M_offset) & 1)
+		)
+	)
+}
+
+stlp_std::vector<*>|stlpx_std::vector<*>|stlpmtx_std::vector<*>|stlpxmtx_std::vector<*>|stlpd_std::priv::_NonDbg_vector<*>|stlpdx_std::priv::_NonDbg_vector<*>|stlpdmtx_std::priv::_NonDbg_vector<*>|stlpdxmtx_std::priv::_NonDbg_vector<*>{
+    preview
+    (
+        #(
+            "[",
+            $c._M_finish - $c._M_start,
+            "/",
+            $c._M_end_of_storage._M_data - $c._M_start,
+            "](",
+            #array
+            (
+                expr :  ($c._M_start)[$i],
+                size :  $c._M_finish - $c._M_start
+            ),
+            ")"
+        )
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            size : $c._M_finish - $c._M_start,
+            capacity : $c._M_end_of_storage._M_data - $c._M_start,
+            #array
+            (
+                expr :  ($c._M_start)[$i],
+                size :  $c._M_finish - $c._M_start
+            )
+        )
+    )
+}
+
+stlpd_std::vector<*>|stlpdx_std::vector<*>|stlpdmtx_std::vector<*>|stlpdxmtx_std::vector<*>{
+    preview
+    (
+		$c._M_non_dbg_impl
+    )
+    children
+    (
+        #(
+            [raw view] : [$c,!],
+            vector : $c._M_non_dbg_impl
+         )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::deque
+;------------------------------------------------------------------------------
+stlp_std::deque<*,*>|stlpx_std::deque<*,*>|stlpmtx_std::deque<*,*>|stlpxmtx_std::deque<*,*>|stlpd_std::priv::_NonDbg_deque<*,*>|stlpdx_std::priv::_NonDbg_deque<*,*>|stlpdmtx_std::priv::_NonDbg_deque<*,*>|stlpdxmtx_std::priv::_NonDbg_deque<*,*>{
+    preview
+    (
+		#if (((unsigned int)($c._M_start._M_cur + 1) - ((unsigned int)$c._M_start._M_cur)) < _MAX_BYTES)
+		(
+			#(
+				"[",
+				(($c._M_finish._M_node - $c._M_start._M_node + 1) * (_MAX_BYTES / sizeof($T1))) - ($c._M_start._M_cur - $c._M_start._M_first) - ($c._M_finish._M_last - $c._M_finish._M_cur),
+				"/",
+				($c._M_finish._M_node - $c._M_start._M_node + 1) * (_MAX_BYTES / sizeof($T1)) - 1,
+				"](",
+				#array
+				(
+					expr : *(*($c._M_start._M_node + (($i + ($c._M_start._M_cur - $c._M_start._M_first)) / (_MAX_BYTES / sizeof($T1)))) + (($i + ($c._M_start._M_cur - $c._M_start._M_first)) % (_MAX_BYTES / sizeof($T1)))),
+					size : (($c._M_finish._M_node - $c._M_start._M_node + 1) * (_MAX_BYTES / sizeof($T1))) - ($c._M_start._M_cur - $c._M_start._M_first) - ($c._M_finish._M_last - $c._M_finish._M_cur)
+				),
+				")"
+			)
+		)
+		#else
+		(
+			#(
+				"[",
+				$c._M_finish._M_node - $c._M_start._M_node,
+				"/",
+				$c._M_finish._M_node - $c._M_start._M_node,
+				"](",
+				#array
+				(
+					expr : **($c._M_start._M_node + $i),
+					size : $c._M_finish._M_node - $c._M_start._M_node
+				),
+				")"
+			)
+		)
+    )
+    children
+    (
+		#if (((unsigned int)($c._M_start._M_cur + 1) - ((unsigned int)$c._M_start._M_cur)) < _MAX_BYTES)
+		(
+			#(
+				[raw view]: [$c,!],
+				size : (($c._M_finish._M_node - $c._M_start._M_node + 1) * (_MAX_BYTES / sizeof($T1))) - ($c._M_start._M_cur - $c._M_start._M_first) - ($c._M_finish._M_last - $c._M_finish._M_cur),
+				capacity : ($c._M_finish._M_node - $c._M_start._M_node + 1) * (_MAX_BYTES / sizeof($T1)) - 1,
+				front free space : $c._M_start._M_cur - $c._M_start._M_first,
+				back free space : $c._M_finish._M_last - $c._M_finish._M_cur - 1,
+				#array
+				(
+					expr : *(*($c._M_start._M_node + (($i + ($c._M_start._M_cur - $c._M_start._M_first)) / (_MAX_BYTES / sizeof($T1)))) + (($i + ($c._M_start._M_cur - $c._M_start._M_first)) % (_MAX_BYTES / sizeof($T1)))),
+					size : (($c._M_finish._M_node - $c._M_start._M_node + 1) * (_MAX_BYTES / sizeof($T1))) - ($c._M_start._M_cur - $c._M_start._M_first) - ($c._M_finish._M_last - $c._M_finish._M_cur)
+				)
+			)
+		)
+		#else
+		(
+			#(
+				[raw view] : [$c,!],
+				size : $c._M_finish._M_node - $c._M_start._M_node,
+				capacity : $c._M_finish._M_node - $c._M_start._M_node,
+				front free space : $c._M_start._M_cur - $c._M_start._M_first,
+				back free space : $c._M_finish._M_last - $c._M_finish._M_cur - 1,
+				#array
+				(
+					expr : **($c._M_start._M_node + $i),
+					size : $c._M_finish._M_node - $c._M_start._M_node
+				)
+			)
+		)
+    )
+}
+
+stlp_std::priv::_Deque_iterator<*>|stlpx_std::priv::_Deque_iterator<*>|stlpmtx_std::priv::_Deque_iterator<*>|stlpxmtx_std::priv::_Deque_iterator<*>|stlpd_std::priv::_Deque_iterator<*>|stlpdx_std::priv::_Deque_iterator<*>|stlpdmtx_std::priv::_Deque_iterator<*>|stlpdxmtx_std::priv::_Deque_iterator<*>{
+	preview
+	(
+		*($c._M_cur)
+	)
+    children
+    (
+        #(
+            [raw view] : [$c, !],
+            ptr : [(unsigned int)($c._M_cur), x],
+            value : *($c._M_cur)
+        )
+    )
+}
+
+stlpd_std::deque<*>|stlpdx_std::deque<*>|stlpdmtx_std::deque<*>|stlpdxmtx_std::deque<*>{
+    preview
+    (
+		$c._M_non_dbg_impl
+	)
+    children
+    (
+        #(
+            [raw view] : [$c,!],
+            deque : $c._M_non_dbg_impl
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::list
+;------------------------------------------------------------------------------
+stlp_std::list<*,*>|stlpx_std::list<*,*>|stlpmtx_std::list<*,*>|stlpxmtx_std::list<*,*>|stlpd_std::priv::_NonDbg_list<*,*>|stlpdx_std::priv::_NonDbg_list<*,*>|stlpdmtx_std::priv::_NonDbg_list<*,*>|stlpdxmtx_std::priv::_NonDbg_list<*,*>{
+    preview
+    (
+		#(
+			"(",
+			#list
+			(
+				head : $c._M_node._M_data._M_next,
+				skip : &($c._M_node._M_data),
+				next : _M_next,
+			): #( *($T1*)(&($e) + 1)),
+			")"
+		)
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            #list
+            (
+                head : $c._M_node._M_data._M_next,
+				skip : &($c._M_node._M_data),
+                next : _M_next,
+            ): #( *($T1*)(&($e) + 1))
+        )
+    )
+}
+
+stlp_std::priv::_List_iterator<*,*>|stlpx_std::priv::_List_iterator<*,*>|stlpmtx_std::priv::_List_iterator<*,*>|stlpxmtx_std::priv::_List_iterator<*,*>|stlpd_std::priv::_List_iterator<*,*>|stlpdx_std::priv::_List_iterator<*,*>|stlpdmtx_std::priv::_List_iterator<*,*>|stlpdxmtx_std::priv::_List_iterator<*,*>{
+    preview
+    (
+        #(*($T1 *)($c._M_node + 1))
+    )
+    children
+    (
+        #(
+            [raw view] : [$c, !],
+            ptr : [(unsigned int)($c._M_node + 1), x],
+            value : *($T1 *)($c._M_node + 1)
+        )
+    )
+}
+
+stlpd_std::list<*,*>|stlpdx_std::list<*,*>|stlpdmtx_std::list<*,*>|stlpdxmtx_std::list<*,*>{
+    preview
+    (
+		$c._M_non_dbg_impl
+    )
+    children
+    (
+        #(
+            [raw view] : [$c,!],
+            list : $c._M_non_dbg_impl
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::slist
+;------------------------------------------------------------------------------
+stlp_std::slist<*,*>|stlpx_std::slist<*,*>|stlpmtx_std::slist<*,*>|stlpxmtx_std::slist<*,*>|stlpd_std::priv::_NonDbg_slist<*,*>|stlpdx_std::priv::_NonDbg_slist<*,*>|stlpdmtx_std::priv::_NonDbg_slist<*,*>|stlpdxmtx_std::priv::_NonDbg_slist<*,*>{
+    preview
+    (
+		#(
+			"(",
+			#list
+			(
+				head : $c._M_head._M_data._M_next,
+				skip : &($c._M_head._M_data),
+				next : _M_next,
+			): #( *($T1*)(&($e) + 1)),
+			")"
+		)
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            #list
+            (
+                head : $c._M_head._M_data._M_next,
+				skip : &($c._M_head._M_data),
+                next : _M_next,
+            ): #( *($T1*)(&($e) + 1))
+        )
+    )
+}
+
+stlp_std::priv::_Slist_iterator<*,*>|stlpx_std::priv::_Slist_iterator<*,*>|stlpmtx_std::priv::_Slist_iterator<*,*>|stlpxmtx_std::priv::_Slist_iterator<*,*>|stlpd_std::priv::_Slist_iterator<*,*>|stlpdx_std::priv::_Slist_iterator<*,*>|stlpdmtx_std::priv::_Slist_iterator<*,*>|stlpdxmtx_std::priv::_Slist_iterator<*,*>{
+    preview
+    (
+        #(*($T1 *)($c._M_node + 1))
+    )
+    children
+    (
+        #(
+            [raw view] : [$c,!],
+            ptr : [(unsigned int)($c._M_node + 1), x],
+            value : *($T1 *)($c._M_node + 1)
+        )
+    )
+}
+
+stlpd_std::slist<*,*>|stlpdx_std::slist<*,*>|stlpdmtx_std::slist<*,*>|stlpdxmtx_std::slist<*,*>{
+    preview
+    (
+		$c._M_non_dbg_impl
+    )
+    children
+    (
+        #(
+            [raw view] : [$c,!],
+            [slist] : $c._M_non_dbg_impl
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::pair
+;------------------------------------------------------------------------------
+stlp_std::pair<*,*>|stlpx_std::pair<*,*>|stlpmtx_std::pair<*,*>|stlpxmtx_std::pair<*,*>|stlpd_std::pair<*,*>|stlpdx_std::pair<*,*>|stlpdmtx_std::pair<*,*>|stlpdxmtx_std::pair<*,*>{
+    preview
+    (
+        #(
+            "(",
+            $c.first,
+            ", ",
+            $c.second,
+            ")"
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::map, stlport::multimap, stlport::set, stlport::multiset
+;------------------------------------------------------------------------------
+stlp_std::map<*>|stlpx_std::map<*>|stlpmtx_std::map<*>|stlpxmtx_std::map<*>|stlp_std::multimap<*>|stlpx_std::multimap<*>|stlpmtx_std::multimap<*>|stlpxmtx_std::multimap<*>|stlp_std::set<*>|stlpx_std::set<*>|stlpmtx_std::set<*>|stlpxmtx_std::set<*>|stlp_std::multiset<*>|stlpx_std::multiset<*>|stlpmtx_std::multiset<*>|stlpxmtx_std::multiset<*>{
+    preview
+    (
+		#(
+			"[",
+			$c._M_t._M_node_count,
+			"](",
+			$c._M_t,
+			")"
+		)
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            size: [$c._M_t._M_node_count],
+            tree: $c._M_t
+        )
+    )
+}
+
+stlpd_std::map<*>|stlpdx_std::map<*>|stlpdmtx_std::map<*>|stlpdxmtx_std::map<*>|stlpd_std::multimap<*>|stlpdx_std::multimap<*>|stlpdmtx_std::multimap<*>|stlpdxmtx_std::multimap<*>|stlpd_std::set<*>|stlpdx_std::set<*>|stlpdmtx_std::set<*>|stlpdxmtx_std::set<*>|stlpd_std::multiset<*>|stlpdx_std::multiset<*>|stlpdmtx_std::multiset<*>|stlpdxmtx_std::multiset<*>{
+    preview
+    (
+		#(
+			"[",
+			$c._M_t._M_non_dbg_impl._M_node_count,
+			"](",
+			$c._M_t._M_non_dbg_impl,
+			")"
+		)
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            size: $c._M_t._M_non_dbg_impl._M_node_count,
+            tree: $c._M_t._M_non_dbg_impl
+        )
+    )
+}
+
+stlp_std::priv::_Rb_tree<*,*,*,*,*>|stlpx_std::priv::_Rb_tree<*,*,*,*,*>|stlpmtx_std::priv::_Rb_tree<*,*,*,*,*>|stlpxmtx_std::priv::_Rb_tree<*,*,*,*,*>|stlpd_std::priv::_NonDbg_Rb_tree<*,*,*,*,*>|stlpdx_std::priv::_NonDbg_Rb_tree<*,*,*,*,*>|stlpdmtx_std::priv::_NonDbg_Rb_tree<*,*,*,*,*>|stlpdxmtx_std::priv::_NonDbg_Rb_tree<*,*,*,*,*>{
+    preview
+    (
+		#tree
+		(
+			head : $c._M_header._M_data._M_parent,
+			skip : &($c._M_header._M_data),
+			size : $c._M_node_count,
+			left : _M_left,
+			right : _M_right
+		): #(*($T3 *)(&($e) + 1))
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            #tree
+            (
+                head : $c._M_header._M_data._M_parent,
+				skip : &($c._M_header._M_data),
+				size : $c._M_node_count,
+                left : _M_left,
+                right : _M_right
+            ) : #(*($T3 *)(&($e) + 1))
+        )
+    )
+}
+
+stlp_std::priv::_Rb_tree_iterator<*,*>|stlpx_std::priv::_Rb_tree_iterator<*,*>|stlpmtx_std::priv::_Rb_tree_iterator<*,*>|stlpxmtx_std::priv::_Rb_tree_iterator<*,*>|stlpd_std::priv::_Rb_tree_iterator<*,*>|stlpdx_std::priv::_Rb_tree_iterator<*,*>|stlpdmtx_std::priv::_Rb_tree_iterator<*,*>|stlpdxmtx_std::priv::_Rb_tree_iterator<*,*>{
+    preview
+    (
+        [*($T1*)($c._M_node + 1)]
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            value: [*($T1*)($c._M_node + 1)],
+            ptr: [(unsigned int)($c._M_node + 1), x]
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::hash_map, stlport::hash_multimap, stlport::hash_set, stlport::hash_multiset
+; stlport::unordered_map, stlport::unordered_multimap, stlport::unordered_set, stlport::unordered_multiset
+;------------------------------------------------------------------------------
+stlp_std::hash_map<*>|stlpx_std::hash_map<*>|stlpmtx_std::hash_map<*>|stlpxmtx_std::hash_map<*>|stlp_std::hash_multimap<*>|stlpx_std::hash_multimap<*>|stlpmtx_std::hash_multimap<*>|stlpxmtx_std::hash_multimap<*>|stlp_std::hash_set<*>|stlpx_std::hash_set<*>|stlpmtx_std::hash_set<*>|stlpxmtx_std::hash_set<*>|stlp_std::hash_multiset<*>|stlpx_std::hash_multiset<*>|stlpmtx_std::hash_multiset<*>|stlpxmtx_std::hash_multiset<*>|stlp_std::tr1::unordered_map<*>|stlpx_std::tr1::unordered_map<*>|stlpmtx_std::tr1::unordered_map<*>|stlpxmtx_std::tr1::unordered_map<*>|stlp_std::tr1::unordered_multimap<*>|stlpx_std::tr1::unordered_multimap<*>|stlpmtx_std::tr1::unordered_multimap<*>|stlpxmtx_std::tr1::unordered_multimap<*>|stlp_std::tr1::unordered_set<*>|stlpx_std::tr1::unordered_set<*>|stlpmtx_std::tr1::unordered_set<*>|stlpxmtx_std::tr1::unordered_set<*>|stlp_std::tr1::unordered_multiset<*>|stlpx_std::tr1::unordered_multiset<*>|stlpmtx_std::tr1::unordered_multiset<*>|stlpxmtx_std::tr1::unordered_multiset<*>{
+    preview
+    (
+		#(
+			"[",
+			$c._M_ht._M_num_elements,
+			"]",
+			$c._M_ht
+		)
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            hashtable: $c._M_ht
+        )
+    )
+}
+
+stlpd_std::hash_map<*>|stlpdx_std::hash_map<*>|stlpdmtx_std::hash_map<*>|stlpdxmtx_std::hash_map<*>|stlpd_std::hash_multimap<*>|stlpdx_std::hash_multimap<*>|stlpdmtx_std::hash_multimap<*>|stlpdxmtx_std::hash_multimap<*>|stlpd_std::hash_set<*>|stlpdx_std::hash_set<*>|stlpdmtx_std::hash_set<*>|stlpdxmtx_std::hash_set<*>|stlpd_std::hash_multiset<*>|stlpdx_std::hash_multiset<*>|stlpdmtx_std::hash_multiset<*>|stlpdxmtx_std::hash_multiset<*>|stlpd_std::tr1::unordered_map<*>|stlpdx_std::tr1::unordered_map<*>|stlpdmtx_std::tr1::unordered_map<*>|stlpdxmtx_std::tr1::unordered_map<*>|stlpd_std::tr1::unordered_multimap<*>|stlpdx_std::tr1::unordered_multimap<*>|stlpdmtx_std::tr1::unordered_multimap<*>|stlpdxmtx_std::tr1::unordered_multimap<*>|stlpd_std::tr1::unordered_set<*>|stlpdx_std::tr1::unordered_set<*>|stlpdmtx_std::tr1::unordered_set<*>|stlpdxmtx_std::tr1::unordered_set<*>|stlpd_std::tr1::unordered_multiset<*>|stlpdx_std::tr1::unordered_multiset<*>|stlpdmtx_std::tr1::unordered_multiset<*>|stlpdxmtx_std::tr1::unordered_multiset<*>{
+    preview
+    (
+		#(
+			"[",
+			$c._M_ht._M_non_dbg_impl._M_num_elements,
+			"]",
+			$c._M_ht._M_non_dbg_impl
+		)
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            hashtable: $c._M_ht._M_non_dbg_impl
+        )
+    )
+}
+
+stlp_std::hashtable<*,*>|stlpx_std::hashtable<*,*>|stlpmtx_std::hashtable<*,*>|stlpxmtx_std::hashtable<*,*>|stlpd_std::priv::_NonDbg_hashtable<*,*>|stlpdx_std::priv::_NonDbg_hashtable<*,*>|stlpdmtx_std::priv::_NonDbg_hashtable<*,*>|stlpdxmtx_std::priv::_NonDbg_hashtable<*,*>{
+    preview
+    (
+		$c._M_elems
+    )
+    children
+    (
+        #(
+            [raw view]: [$c,!],
+            size : $c._M_num_elements,
+            load factor : (float)$c._M_num_elements / ($c._M_buckets._M_finish - $c._M_buckets._M_start),
+            max load factor: $c._M_max_load_factor,
+            buckets : $c._M_buckets,
+            elements : $c._M_elems
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::queue, stlport::priority_queue, stlport::stack
+;------------------------------------------------------------------------------
+stlp_std::queue<*>|stlpx_std::queue<*>|stlpmtx_std::queue<*>|stlpxmtx_std::queue<*>|stlpd_std::queue<*>|stlpdx_std::queue<*>|stlpdmtx_std::queue<*>|stlpdxmtx_std::queue<*>|stlp_std::priority_queue<*>|stlpx_std::priority_queue<*>|stlpmtx_std::priority_queue<*>|stlpxmtx_std::priority_queue<*>|stlpd_std::priority_queue<*>|stlpdx_std::priority_queue<*>|stlpdmtx_std::priority_queue<*>|stlpdxmtx_std::priority_queue<*>|stlp_std::stack<*>|stlpx_std::stack<*>|stlpmtx_std::stack<*>|stlpxmtx_std::stack<*>|stlpd_std::stack<*>|stlpdx_std::stack<*>|stlpdmtx_std::stack<*>|stlpdxmtx_std::stack<*>{
+	preview
+	(
+		$c.c
+	)
+	children
+	(
+		#(
+			[raw view] : [$c,!],
+			container : $c.c
+		)
+	)
+}
+
+;------------------------------------------------------------------------------
+; stlport debug iterator
+;------------------------------------------------------------------------------
+stlp_std::priv::_DBG_iter<*>|stlpx_std::priv::_DBG_iter<*>|stlpmtx_std::priv::_DBG_iter<*>|stlpxmtx_std::priv::_DBG_iter<*>|stlpd_std::priv::_DBG_iter<*>|stlpdx_std::priv::_DBG_iter<*>|stlpdmtx_std::priv::_DBG_iter<*>|stlpdxmtx_std::priv::_DBG_iter<*>{
+	preview
+	(
+		#if($c._M_owner != 0)
+		(
+			$c._M_iterator
+		)
+		#else
+		(
+			"undefined"
+		)
+	)
+	children
+	(
+		#(
+			#if($c._M_owner != 0)
+			(
+				#(
+					[raw view] : [$c,!],
+					[iterator] : $c._M_iterator,
+					[valid] : [true]
+				)
+			)
+			#else
+			(
+				#(
+					[raw view] : [$c,!],
+					[valid] : [false]
+				)
+			)
+		)
+	)
+}
+
+;------------------------------------------------------------------------------
+; stlport::bitset
+; TODO: Fix it, it doesn't work as expected even when adding an enum to the bitset
+; class to get access to the bitset static size rather than using $T1.
+;------------------------------------------------------------------------------
+stdp_std::bitset<*,*>|stdpx_std::bitset<*,*>|stdpmtx_std::bitset<*,*>|stdpxmtx_std::bitset<*,*>|stdpd_std::bitset<*>|stdpdx_std::bitset<*>|stdpdmtx_std::bitset<*>|stdpdxmtx_std::bitset<*>{
+	preview
+	(
+		#(
+		"[",
+			$T1,
+		"](",
+		#array
+		(
+			expr : ($c._M_w[$i / (sizeof(unsigned long) * 8)] >> ($i % (sizeof(unsigned long) * 8))),
+			size : $T1
+		) : [($e & 1),d],
+		")"
+		)
+	)
+	children
+	(
+		#array
+		(
+			expr : 	($c._M_w[$i / (sizeof(unsigned long) * 8)] >> ($i % (sizeof(unsigned long) * 8))),
+			size : 	$T1
+		) : (bool)($e & 1)
+	)
+}
+
+stdp_std::bitset<*>::reference|stdpx_std::bitset<*>::reference|stdpmtx_std::bitset<*>::reference|stdpxmtx_std::bitset<*>::reference|stdpd_std::bitset<*>::reference|stdpdx_std::bitset<*>::reference|stdpdmtx_std::bitset<*>::reference|stdpdxmtx_std::bitset<*>{
+    preview
+    (
+		#(
+			"bitset[", $c._M_bpos, "] = ",
+			(bool)(*($c._M_wp) >> $c._M_bpos) & 1)
+		)
+    )
+}
+
+;------------------------------------------------------------------------------
+; stlport::auto_ptr
+;------------------------------------------------------------------------------
+stlp_std::auto_ptr<*>|stlpx_std::auto_ptr<*>|stlpmtx_std::auto_ptr<*>|stlpxmtx_std::auto_ptr<*>|stlpd_std::auto_ptr<*>|stlpdx_std::auto_ptr<*>|stlpdmtx_std::auto_ptr<*>|stlpdxmtx_std::auto_ptr<*>{
+    preview
+    (
+        #if(($c._M_p) != 0)
+        (
+            [*($T1 *)$c._M_p]
+        )
+        #else
+        (
+            "null"
+        )
+    )
+    children
+    (
+        #if(($c._M_p) != 0)
+        (
+            #(
+                [raw view]: [$c,!],
+                ptr: [(unsigned int)$c._M_p, x],
+                value: [*($T1 *)$c._M_p]
+            )
+        )
+        #else
+        (
+            #(
+                [raw view]: [$c,!]
+            )
+        )
+    )
+}
+
+;------------------------------------------------------------------------------
+;  stlport::complex
+;------------------------------------------------------------------------------
+stlp_std::complex<*>|stlpx_std::complex<*>|stlpmtx_std::complex<*>|stlpxmtx_std::complex<*>|stlpd_std::complex<*>|stlpdx_std::complex<*>|stlpdmtx_std::complex<*>|stlpdxmtx_std::complex<*>{
+	children
+	(
+		#(
+			real: $e._M_re,
+			imaginary: $e._M_im
+		)
+	)
+	preview
+	(
+		#if($e._M_im != 0)
+		(
+			#if ($e._M_re != 0)
+			(									; Real and Imaginary components
+				#if ($e._M_im >= 0)
+				(
+					#($e._M_re,"+i*", $e._M_im)
+				)
+				#else
+				(
+					#($e._M_re,"-i*", -$e._M_im)
+				)
+			)
+			#else
+			(									; Purely imaginary
+				#if ($e._M_im >= 0.0)
+				(
+					#("i*", $e._M_im)
+				)
+				#else
+				(
+					#("-i*", -$e._M_im)
+				)
+			)
+		)
+		#else
+		(										; Purely real
+			$e._M_re
+		)
+	)
+}
+
+;------------------------------------------------------------------------------
+;  stlport::valarray
+;------------------------------------------------------------------------------
+
+stlp_std::valarray<*>|stlpx_std::valarray<*>|stlpmtx_std::valarray<*>|stlpxmtx_std::valarray<*>|stlpd_std::valarray<*>|stlpdx_std::valarray<*>|stlpdmtx_std::valarray<*>|stlpdxmtx_std::valarray<*>{
+    preview
+    (
+		#(
+			"[",
+            $c._M_size ,
+            "](",
+            #array
+            (
+				expr : 	($c._M_first)[$i],
+				size : 	$c._M_size
+			),
+			")"
+		)
+	)
+
+	children
+	(
+		#array
+		(
+			expr :	($c._M_first)[$i],
+			size :	$c._M_size
+		)
+	)
+}
+
+stlp_std::slice|stlpx_std::slice|stlpmtx_std::slice|stlpxmtx_std::slice|stlpd_std::slice|stlpdx_std::slice|stlpdmtx_std::slice|stlpdxmtx_std::slice{
+	preview
+	(
+		#(
+			"start = ",
+			$c._M_start,
+			", size = ",
+			$c._M_length,
+			", stride = ",
+			$c._M_stride
+		)
+	)
+	children
+	(
+		#(
+			[raw view] : [$c,!],
+			start : $c._M_start,
+			size : $c._M_length,
+			stride : $c._M_stride
+		)
+	)
+}
+
+stlp_std::gslice|stlpx_std::gslice|stlpmtx_std::gslice|stlpxmtx_std::gslice|stlpd_std::gslice|stlpdx_std::gslice|stlpdmtx_std::gslice|stlpdxmtx_std::gslice{
+	preview
+	(
+		#(
+			"start = ",
+			$c._M_start,
+			", sizes = ",
+			$c._M_lengths,
+			", strides = ",
+			$c._M_strides
+		)
+	)
+	children
+	(
+		#(
+			[raw view] : [$c,!],
+			start : $c._M_start,
+			sizes : $c._M_lengths,
+			strides : $c._M_strides
+		)
+	)
+}

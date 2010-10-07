@@ -41,8 +41,9 @@ list(APPEND MINGW_COMMON_SOURCE
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
 
 if(NOT MSVC)
-  target_link_libraries(mingw_common oldnames)
-  add_importlibs(mingw_common kernel32 ntdll)
+  target_link_libraries(mingw_common)
+  add_importlibs(mingw_common kernel32 ntdll oldnames)
+  add_dependencies(mingw_common oldnames)
 endif(NOT MSVC)
 
 set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
@@ -55,6 +56,10 @@ add_dependencies(mingw_main psdk)
 add_library(mingw_wmain crt0_w.c crtexe.c dllargv.c)
 set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
 add_dependencies(mingw_wmain psdk)
+
+#hack : this way, every executable will be linked to libgcc
+target_link_libraries(mingw_main gcc)
+target_link_libraries(mingw_wmain gcc)
 
 add_library(mingw_dllmain crtdll.c dllargv.c)
 add_dependencies(mingw_dllmain psdk)

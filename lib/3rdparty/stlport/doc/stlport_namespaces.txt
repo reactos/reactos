@@ -1,0 +1,133 @@
+This document present the STLport namespace schema and give additionnal
+information about how STLport replace the native C++ Standard library
+coming with your compiler.
+
+1. What is the STLport namespace ?
+
+  As STLport is a C++ Standard library implementation the STLport namespace
+is 'std'. In normal use this is all you need to know and you can stop reading
+here.
+
+2. How does STLport replace native C++ Standard library ?
+
+  STLport defines a macro 'std' that replaces all references of std in the
+user code by a different name. This technique has has some drawback but also
+advantages. The drawback is that you cannot declared Standard component like
+that:
+
+
+//foo.h
+namespace std
+{
+  template <class _Tp>
+  class allocator;
+}
+
+void f1(const std::allocator<int>&);
+
+
+//foo.cpp
+#include "foo.h"
+#include <memory>
+
+void f1(const std::allocator<int>& alloc)
+{
+  //implementation
+}
+
+//bar.cpp
+#include "foo.h"
+#include <memory>
+
+int main(int, char**)
+{
+  std::allocator<int> alloc;
+  f1(alloc);
+}
+
+  If you build this code you will surely have a compilation error as f1 is declared
+as taking a std::allocator parameter but you are calling it using an STLport allocator
+instance that is not in the std namespace. The good news is that this drawback is easy
+to detect as it will generate compilation error or at least link time error. The only
+workaround is to include an arbitrary Standard header before the allocator declaration.
+Good candidates for that are <utility> or <cerrno> as they are small headers. Including
+those headers will replace std with the STLport namespace.
+
+  The advantage of this macro replacement is that we can customize the STLport namespace
+depending on the compilation options. For instance the STLport safe mode you can use by
+defining _STLP_DEBUG is not binary compatible with a normal debug build. To ensure that
+no one will ever build code without _STLP_DEBUG and link with STLport library built with
+this option the namespace is different so that it will generate link time error rather
+than random crashes during application execution.
+
+3. Why not having use namespace injection ?
+
+  An other way to replace native Standard C++ library implementation would have been to
+use namespace injection:
+
+namespace std
+{
+  using namespace stlport;
+}
+
+  This solution has a first major drawback which is that STLport would be much more sensible
+to native headers. If you include a C++ native headers that indirectly define for instance
+the vector class it is going to conflict with the STLport vector definition.
+
+  Moreover this solution just does not work for a very simple reason. The C++ Standard 
+allows users to specialized some of the Standard algorithms. This specialization has to 
+be done in the same namespace as the main template declaration:
+
+//In an STLport header:
+namespace stlport
+{
+  template <class _Tp>
+  struct less
+  {
+    bool operator () (const _Tp& x, const _Tp& y) const;
+  };
+}
+
+//User code:
+
+struct MyStruct;
+
+namespace std
+{
+  template <>
+  struct less<MyStruct>
+  {
+  };
+}
+
+As you can see the specialization is not in the STLport less namespace and it
+won't be used in associative containers for instance.
+
+4. What is the STLport specific namespace ?
+
+  The official STLport namespace is: stlport. Once again this is not the real namespace
+where all the Standard stuff are. As the real STLport namespace change depending on compilation
+options you cannot use it directly. So stlport is an alias of the real STLport namespace.
+
+5. What are the other STLport namespaces ?
+
+  Those names are given for information purpose and should never be used in any user code. The
+default STLport namespace is: stlp_std. Here is the list of the customized namespaces:
+
+  - stlpd_std : when _STLP_DEBUG is defined
+  - stlpx_std : when you use STLport as a shared library linked to the static version of the native
+    runtime or when you build the static STLport library linked with the dynamic version. This option
+    is only supported by a limited number of compilers.
+  - stlpmtx_std : when building STLport as not thread safe.
+
+  You can also have combination of those extension like stlpdxmtx_std or stlpdmtx_std...
+
+  There is also an other STLport namespace for STLport internal functions or struct/class: priv.
+
+namespace stlport
+{
+  namespace priv
+  {
+  }
+}
+ 

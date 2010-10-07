@@ -1,0 +1,130 @@
+/*
+ * Copyright (c) 1997-1999
+ * Silicon Graphics Computer Systems, Inc.
+ *
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+
+#ifndef _STLP_MEMORY
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x46
+#  include <stl/_prolog.h>
+#  define _STLP_MEMORY
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x46)
+#  ifndef _STLP_INTERNAL_ALLOC_H
+#    include <stl/_alloc.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_TEMPBUF_H
+#    include <stl/_tempbuf.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_RAW_STORAGE_ITER_H
+#    include <stl/_raw_storage_iter.h>
+#  endif
+
+#  include <stl/_auto_ptr.h>
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID != 0x46) || defined (_STLP_IMPORT_VENDOR_STD)
+#  if defined (__MSL__)
+#    include _STLP_NATIVE_HEADER(limits)
+#  endif
+
+#  if !defined(_STLP_NO_EXTENSIONS) && defined(_STLP_USE_BOOST_SUPPORT)
+#    define BOOST_TR1_MEMORY_INCLUDED
+#    define BOOST_TR1_FULL_MEMORY_INCLUDED
+#  endif
+
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <memory>
+#  else
+#    include _STLP_NATIVE_HEADER(memory)
+#  endif
+
+#  if defined (__MSL__) && (__MSL__ >= 0x2405   && __MSL__ < 0x5201) 
+/*  980401 vss  MSL 2.4  Pro 3 Release  */  
+#    include <new_mem.h>
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x46)
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#if !defined(_STLP_NO_EXTENSIONS) && defined(_STLP_USE_BOOST_SUPPORT)
+
+namespace boost {
+
+class bad_weak_ptr;
+template<class T> class shared_ptr;
+template<class T> class weak_ptr;
+template<class T> class enable_shared_from_this;
+template<class D, class T> D * get_deleter(shared_ptr<T> const & p);
+template<class T, class U> shared_ptr<T> static_pointer_cast(shared_ptr<U> const & r);
+template<class T, class U> shared_ptr<T> const_pointer_cast(shared_ptr<U> const & r);
+template<class T, class U> shared_ptr<T> dynamic_pointer_cast(shared_ptr<U> const & r);
+template<class T> void swap(weak_ptr<T> & a, weak_ptr<T> & b);
+template<class T> void swap(shared_ptr<T> & a, shared_ptr<T> & b);
+
+namespace detail{
+class shared_count;
+class weak_count;
+}
+
+} // namespace boost
+
+#  ifndef BOOST_SHARED_PTR_HPP_INCLUDED
+#    include <boost/shared_ptr.hpp>
+#  endif
+#  ifndef BOOST_WEAK_PTR_HPP_INCLUDED
+#    include <boost/weak_ptr.hpp>
+#  endif
+#  ifndef BOOST_ENABLE_SHARED_FROM_THIS_HPP_INCLUDED
+#    include <boost/enable_shared_from_this.hpp>
+#  endif
+
+_STLP_BEGIN_NAMESPACE
+
+namespace tr1 {
+
+using ::boost::bad_weak_ptr;
+using ::boost::shared_ptr;
+using ::boost::swap;
+using ::boost::static_pointer_cast;
+using ::boost::dynamic_pointer_cast;
+using ::boost::const_pointer_cast;
+using ::boost::get_deleter;
+using ::boost::weak_ptr;
+using ::boost::enable_shared_from_this;
+
+// shared_ptr IO
+// weak_ptr IO
+
+} // namespace tr1
+
+_STLP_END_NAMESPACE
+
+#endif /* !_STLP_NO_EXTENSIONS && _STLP_USE_BOOST_SUPPORT */
+
+#endif /* _STLP_MEMORY */
+
+// Local Variables:
+// mode:C++
+// End:
+

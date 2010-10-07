@@ -1,0 +1,104 @@
+/*
+ * Copyright (c) 1999
+ * Silicon Graphics Computer Systems, Inc.
+ *
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+
+#ifndef _STLP_IOSTREAM
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x1037
+#  include <stl/_prolog.h>
+#  define _STLP_IOSTREAM
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x1037) && \
+   !(defined (_STLP_NO_IOSTREAMS) && defined (_STLP_IMPORT_VENDOR_STD))
+#  include <stl/_ioserr.h>
+
+#  ifdef _STLP_REDIRECT_STDSTREAMS
+// for ofstream redirection
+#    ifndef _STLP_INTERNAL_FSTREAM_H
+#      include <stl/_fstream.h>
+#    endif
+#  endif
+
+#  ifndef _STLP_INTERNAL_IOSFWD
+#    include <stl/_iosfwd.h>
+#  endif
+
+#  ifndef _STLP_INTERNAL_ISTREAM
+#    include <stl/_istream.h>
+#  endif
+
+_STLP_BEGIN_NAMESPACE
+
+#  ifndef _STLP_USE_NAMESPACES
+// in case of SGI iostreams, we have to rename our streams not to clash with those
+// provided in native lib
+#    define cin _STLP_cin
+#    define cout _STLP_cout
+#    define cerr _STLP_cerr
+#    define clog _STLP_clog
+#  endif
+
+// Note: cin and wcin are both associated with stdio.  The C standard
+// (Amendment 1, section 4.6.2.1) says that it is an error to mix
+// wide- and narrow-oriented I/O on the same stream.  This implies
+// that it is an error to use both cin and wcin in the same C++
+// program; the same applies to cout and wcout, and cerr/clog and
+// wcerr/wclog.
+
+extern _STLP_DECLSPEC istream cin;
+
+#  ifdef _STLP_REDIRECT_STDSTREAMS
+extern _STLP_DECLSPEC ofstream cout;
+extern _STLP_DECLSPEC ofstream cerr;
+extern _STLP_DECLSPEC ofstream clog;
+#  else
+extern _STLP_DECLSPEC ostream cout;
+extern _STLP_DECLSPEC ostream cerr;
+extern _STLP_DECLSPEC ostream clog;
+#  endif
+
+#  ifndef _STLP_NO_WCHAR_T
+extern _STLP_DECLSPEC wistream wcin;
+extern _STLP_DECLSPEC wostream wcout;
+extern _STLP_DECLSPEC wostream wcerr;
+extern _STLP_DECLSPEC wostream wclog;
+#  endif
+
+_STLP_END_NAMESPACE
+
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID != 0x1037) || defined (_STLP_IMPORT_VENDOR_STD)
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <iostream>
+#  else
+#    include _STLP_NATIVE_HEADER(iostream)
+#  endif
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x1037)
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#endif /* _STLP_IOSTREAM */
+
+// Local Variables:
+// mode:C++
+// End:

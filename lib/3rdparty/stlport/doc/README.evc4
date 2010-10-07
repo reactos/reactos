@@ -1,0 +1,126 @@
+
+========================================
+STLport README for eMbedded Visual C++ 4
+========================================
+
+by: Zdenek Nemec, zero@mapfactor.com, last edited 2005-10-17
+
+============
+Introduction
+============
+This document should provide step-by-step guidance for installing, testing and using the STLport library under Windows CE .NET 4.x
+(aka Windows Mobile 2003 aka Pocket PC 2003).
+For any further comments or questions visit the STLport mailing lists
+http://stlport.sourceforge.net/Maillists.shtml or forums
+https://sourceforge.net/forum/?group_id=146814
+
+=============
+Prerequisites
+=============
+To build and use the STLport you will need following tools and libraries:
+ - eMbedded Visual C++ 4.0 SP4
+ - an SDK for your target platform with RTTI support
+
+================
+Building STLport
+================
+First, make sure that RTTI is available. Not all SDKs that come with eVC4 also include
+the necessary libs, but there is a patch for the PPC2003 SDK, available at
+http://support.microsoft.com/default.aspx?scid=kb;[LN];830482. 
+
+Second, open command line and set proper system variables.
+This can be done by using batch files under your 'eMbedded Visual C++' directory(use either WCEemulator.BAT if you want to build STLport for the emulator or WCEARMV4.BAT if you intend to aim an ARM device).
+NOTE: If you are using Microsoft's batch files to set system variables check if both WCEROOT and SDKROOT vars are set to correct locations. example:
+WCEROOT=C:\Program Files\Microsoft eMbedded C++ 4.0
+SDKROOT=C:\Program Files\Windows CE Tools
+
+Third, when you are 100percent sure you've set correctly systems variables go to the STLport/build/lib dir and run the configure.bat with
+proper -c option (ie. "-c evc4"),
+then invoke following command: 'nmake /fmsvc.mak install' to build the library.
+
+If anything goes wrong check if you met all prerequisities and if you set system vars accordingly to the makfile you are using.
+At the end of build process you should have some libs installed in STLport/lib/evc4-arm or STLport/lib/evc4-x86 and dynamic libs in STLport/bin directory.
+
+You might want to repeat all those steps if you would like to have 
+e.g. both ARM and x86 emulator binaries, just don't forget to do 
+'nmake /fmsvc.mak clobber' before new build.
+
+Note: MIPS platform is also available for build, but it may not compile or work properly. Use with caution!
+
+===============
+Testing STLport
+===============
+When you successfuly build STLport libs, you should go to STLport/test/unit directory build and run the STLP test suite.
+Use 'nmake /fmsvc.mak' and keep in mind that you still have to have proper system variables set!
+Once test build has finished upload and run stlp_unit_test.exe to your emulator or device.
+Wait for a while (aprox. 2mins) until all tests are done.
+You should see two files next to your binary now.
+Check stlp_test.txt for any errors. If all tests passed you are ready to deploy STLport.
+If some test fails don't worry and check the STLport forum if it's already reported bug or you have found a new one.
+
+=============
+Using STLport
+=============
+Setting up the IDE:
+Before you start using STLport you have to set proper include and libraries search paths.
+Go to 'Tools'>'Options' menu in your eVC 4.0 and then to 'Directories' tab.
+For every platform you want to use STLport add STLport/stlport directory to the FIRST place in 'Include Files'
+and STLport/lib directory in 'Library files' section.
+
+Setting up projects:
+When using STLport together with MFC, you have to define _STLP_USE_MFC to properly include and use STLport.
+
+By default, exception support is not activated. You can detect this via _CPPUNWIND and activate this via /GX.
+Without exception support, e.g. std::bad_alloc is not available, causing compile errors for some code.
+
+Also, there is only one runtime available but the IDE doesn't add the corresponding switch to the command line.
+The right switch (selecting a dynamically linked runtime) is IMHO /MD or /MDd. This then also switches STLport to dynamic linking.
+Alternatively, you can #define _DLL for your project, which achieves the same but, again IMHO, is a less clean solution.
+
+============
+Known issues
+============
+- The compilers that come with eVC4 are almost bug-to-bug compatible with 
+the one from VC6, so most workarounds for that compiler apply here, too.
+
+- There is a bug in the MIPS compiler that comes with eVC4 which only surfaces
+under certain conditions:
+ * in release mode with global optimizations on (#pragma optimize("g", on))
+ * a baseclass has (at least) two pointer members
+ * a derived class adds no data members 
+ * the derived class' cctor defers to the basclass' compiler-generated cctor
+ * it is passed as template parameter to a function
+The smallest testcase I could come up with is this:
+	struct base {
+		void* ptr1;
+		void* ptr2;
+	};
+	struct derived: public base {
+		derived() {}
+		derived(const derived& __x): base(__x) {}
+	};
+
+	template<typename SomeType> void function( SomeType st1, SomeType st2) {}
+
+	struct test {
+		derived tmp;
+		~test() { function(tmp, tmp); }
+	};
+	test test;
+..which causes an internal compiler error. Removing the base::ptr1, adding data 
+to derived, making function() a normal function, or turning off optimization 
+(#pragma optimize("g", off)) all causes the code to compile. This bug affects
+iterators of deque and vector<bool>.
+
+- Because of interdependancy between STLport and native Standard library headers
+STLport headers should always be included first in your translation unit (.cpp
+file). That is to say that:
+
+//Wrong headers order:
+#include <windows.h>
+#include <cstdlib>
+
+// Correct headers order
+#include <cstdlib>
+#include <windows.h>
+

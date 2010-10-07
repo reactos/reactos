@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 1999
+ * Boris Fomitchev
+ *
+ * This material is provided "as is", with absolutely no warranty expressed
+ * or implied. Any use is at your own risk.
+ *
+ * Permission to use or copy this software for any purpose is hereby granted
+ * without fee, provided the above notices are retained on all copies.
+ * Permission to modify the code and to distribute modified code is granted,
+ * provided the above notices are retained, and a notice that the code was
+ * modified is included with the above copyright notice.
+ *
+ */
+
+#ifndef _STLP_CFLOAT
+#define _STLP_CFLOAT
+
+#ifndef _STLP_OUTERMOST_HEADER_ID
+#  define _STLP_OUTERMOST_HEADER_ID 0x106
+#  include <stl/_prolog.h>
+#endif
+
+// Borland defines some implementation constants in std:: namespace,
+// we do not want to import them.
+#if defined  (_STLP_USE_NEW_C_HEADERS) && !defined (__BORLANDC__)
+#  if defined (_STLP_HAS_INCLUDE_NEXT)
+#    include_next <cfloat>
+#  else
+#    include _STLP_NATIVE_CPP_C_HEADER(cfloat)
+#  endif
+#else
+#  include <float.h>
+#endif
+
+#if (_STLP_OUTERMOST_HEADER_ID == 0x106 )
+#  include <stl/_epilog.h>
+#  undef _STLP_OUTERMOST_HEADER_ID
+#endif
+
+#endif /* _STLP_CFLOAT */
+
+// Local Variables:
+// mode:C++
+// End:

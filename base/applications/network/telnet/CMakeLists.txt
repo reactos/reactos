@@ -22,6 +22,8 @@ add_executable(telnet
     src/ttelhndl.cpp
     telnet.rc)
 
+target_link_libraries(telnet stlport)
+
 set_module_type(telnet win32cui)
 
 add_importlibs(telnet ws2_32 user32 msvcrt)

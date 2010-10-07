@@ -10,12 +10,15 @@ else()
 # Linking
 link_directories("${REACTOS_SOURCE_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
 set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> -lstdc++ -lsupc++ -lgcc -lmingwex -lmingw32 <LINK_LIBRARIES>")
+set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--kill-at")
 # -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
 
 # Compiler Core
 add_definitions(-pipe -fms-extensions)
+
+# stlport special
+add_definitions(-D_STLP_GCC_USES_GNU_LD)
 
 set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
@@ -58,7 +61,7 @@ endmacro()
 
 macro(add_importlibs MODULE)
   foreach(LIB ${ARGN})
-    target_link_libraries(${MODULE} ${LIB}.a)
+    target_link_libraries(${MODULE} ${LIB}.dll.a)
   endforeach()
 endmacro()
 
@@ -134,3 +137,14 @@ macro(ADD_TYPELIB TARGET)
   endforeach()
   add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
 endmacro()
+
+#linkage hell...
+add_library(msvcrt_imp SHARED IMPORTED)
+set_target_properties(msvcrt_imp PROPERTIES IMPORTED_IMPLIB ${REACTOS_SOURCE_DIR}/importlibs/libmsvcrt.a)
+add_library(gcc STATIC IMPORTED)
+set_target_properties(gcc PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libgcc.a
+    IMPORTED_LINK_INTERFACE_LIBRARIES "mingw_common -lkernel32")
+add_library(supc++ STATIC IMPORTED)
+set_target_properties(supc++ PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libsupc++.a
+    IMPORTED_LINK_INTERFACE_LIBRARIES "gcc -lmsvcrt")
+
