@@ -32,8 +32,25 @@ MiCheckVirtualAddress(IN PVOID VirtualAddress,
     /* No prototype/section support for now */
     *ProtoVad = NULL;
     
-    /* Only valid for user VADs for now */
-    ASSERT(VirtualAddress <= MM_HIGHEST_USER_ADDRESS);
+    /* Check if this is a page table address */
+    if (MI_IS_PAGE_TABLE_ADDRESS(VirtualAddress))
+    {
+        /* This should never happen, as these addresses are handled by the double-maping */
+        if (((PMMPTE)VirtualAddress >= MiAddressToPte(MmPagedPoolStart)) &&
+            ((PMMPTE)VirtualAddress <= MmPagedPoolInfo.LastPteForPagedPool))
+        {
+            /* Fail such access */
+            *ProtectCode = MM_NOACCESS;
+            return NULL;
+        }
+        
+        /* Return full access rights */
+        *ProtectCode = MM_READWRITE;
+        return NULL;
+    }
+    
+    /* Should not be a session address */
+    ASSERT(MI_IS_SESSION_ADDRESS(VirtualAddress) == FALSE);
     
     /* Special case for shared data */
     if (PAGE_ALIGN(VirtualAddress) == (PVOID)USER_SHARED_DATA)
@@ -642,7 +659,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     //
     // Check for kernel fault
     //
-    if (Address >= MmSystemRangeStart)
+    while (Address >= MmSystemRangeStart)
     {
         //
         // What are you even DOING here?
@@ -718,25 +735,16 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
         {
-            //
-            // This might happen...not sure yet
-            //
-            DPRINT1("FAULT ON PAGE TABLES: %p %lx %lx!\n", Address, *PointerPte, *PointerPde);
 #if (_MI_PAGING_LEVELS == 2) 
-            //
-            // Map in the page table
-            //
+            /* Could be paged pool access from a new process -- synchronize the page directories */
             if (MiCheckPdeForPagedPool(Address) == STATUS_WAIT_1)
             {
                 DPRINT1("PAGE TABLES FAULTED IN!\n");
                 return STATUS_SUCCESS;
             }
 #endif
-            //
-            // Otherwise the page table doesn't actually exist
-            //
-            DPRINT1("FAILING\n");
-            return STATUS_ACCESS_VIOLATION;
+            /* Otherwise this could be a commit of a virtual address */
+            break;
         }
         
         /* In this path, we are using the system working set */
@@ -866,7 +874,8 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
 
     /* First things first, is the PDE valid? */
-    ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
+//    DPRINT1("The PDE we faulted on: %lx %lx\n", PointerPde, MiAddressToPde(PTE_BASE));
+    //ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
     ASSERT(PointerPde->u.Hard.LargePage == 0);
     if (PointerPde->u.Hard.Valid == 0)
     {
@@ -901,8 +910,27 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         ASSERT(PointerPde->u.Hard.Valid == 1);
     }
 
-    /* Now capture the PTE. We only handle cases where it's totally empty */
+    /* Now capture the PTE. Ignore virtual faults for now */
     TempPte = *PointerPte;
+    ASSERT(TempPte.u.Hard.Valid == 0);
+    
+    /* Quick check for demand-zero */
+    if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
+    {
+        /* Resolve the fault */
+        //DPRINT1("VAD demand-zero fault: %p\n", Address);
+        MiResolveDemandZeroFault(Address,
+                                 PointerPte,
+                                 CurrentProcess,
+                                 MM_NOIRQL);
+
+        /* Return the status */
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return STATUS_PAGE_FAULT_DEMAND_ZERO;
+    }
+    
+    /* Don't handle prototype PTEs yet -- only kernel demand zero PTEs */
+    ASSERT(TempPte.u.Soft.Prototype == 0);
     ASSERT(TempPte.u.Long == 0);
 
     /* Check if this address range belongs to a valid allocation (VAD) */
