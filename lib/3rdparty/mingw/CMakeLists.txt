@@ -7,7 +7,7 @@ if(NOT MSVC)
 add_definitions(-Wno-main)
 endif(NOT MSVC)
 
-set(MINGW_COMMON_SOURCE
+list(APPEND MINGW_COMMON_SOURCE
   _newmode.c
   atonexit.c
   binmode.c
@@ -27,6 +27,7 @@ set(MINGW_COMMON_SOURCE
   pseudo-reloc.c
   pseudo-reloc-list.c
   tlsmcrt.c
+  tlsmthread.c
   tlssup.c
   tlsthrd.c
   txtmode.c
@@ -40,7 +41,8 @@ set(MINGW_COMMON_SOURCE
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
 
 if(NOT MSVC)
-target_link_libraries(mingw_common oldnames -lkernel32 -lntdll)
+  target_link_libraries(mingw_common oldnames)
+  add_importlibs(mingw_common kernel32 ntdll)
 endif(NOT MSVC)
 
 set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
