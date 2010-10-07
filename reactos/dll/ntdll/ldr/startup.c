@@ -139,53 +139,53 @@ LoadImageFileExecutionOptions(PPEB Peb)
                                    FLG_USER_STACK_TRACE_DB |
                                    FLG_HEAP_ENABLE_TAGGING |
                                    FLG_HEAP_ENABLE_TAG_BY_DLL);
+
+            /* Get page heap flags without checking return value */
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapFlags",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapGlobalFlags,
+                                              sizeof(RtlpPageHeapGlobalFlags),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapSizeRangeStart",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapSizeRangeStart,
+                                              sizeof(RtlpPageHeapSizeRangeStart),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapSizeRangeEnd",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapSizeRangeEnd,
+                                              sizeof(RtlpPageHeapSizeRangeEnd),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapDllRangeStart",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapDllRangeStart,
+                                              sizeof(RtlpPageHeapDllRangeStart),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapDllRangeEnd",
+                                              REG_DWORD,
+                                              (PVOID)&RtlpPageHeapDllRangeEnd,
+                                              sizeof(RtlpPageHeapDllRangeEnd),
+                                              &ValueSize);
+
+            LdrQueryImageFileExecutionOptions(&ImageName,
+                                              L"PageHeapTargetDlls",
+                                              REG_SZ,
+                                              (PVOID)RtlpPageHeapTargetDlls,
+                                              sizeof(RtlpPageHeapTargetDlls),
+                                              &ValueSize);
+
+            /* Now when all parameters are read, enable page heap */
+            RtlpPageHeapEnabled = TRUE;
         }
-
-        /* Get page heap flags without checking return value */
-        LdrQueryImageFileExecutionOptions(&ImageName,
-                                          L"PageHeapFlags",
-                                          REG_DWORD,
-                                          (PVOID)&RtlpPageHeapGlobalFlags,
-                                          sizeof(RtlpPageHeapGlobalFlags),
-                                          &ValueSize);
-
-        LdrQueryImageFileExecutionOptions(&ImageName,
-                                          L"PageHeapSizeRangeStart",
-                                          REG_DWORD,
-                                          (PVOID)&RtlpPageHeapSizeRangeStart,
-                                          sizeof(RtlpPageHeapSizeRangeStart),
-                                          &ValueSize);
-
-        LdrQueryImageFileExecutionOptions(&ImageName,
-                                          L"PageHeapSizeRangeEnd",
-                                          REG_DWORD,
-                                          (PVOID)&RtlpPageHeapSizeRangeEnd,
-                                          sizeof(RtlpPageHeapSizeRangeEnd),
-                                          &ValueSize);
-
-        LdrQueryImageFileExecutionOptions(&ImageName,
-                                          L"PageHeapDllRangeStart",
-                                          REG_DWORD,
-                                          (PVOID)&RtlpPageHeapDllRangeStart,
-                                          sizeof(RtlpPageHeapDllRangeStart),
-                                          &ValueSize);
-
-        LdrQueryImageFileExecutionOptions(&ImageName,
-                                          L"PageHeapDllRangeEnd",
-                                          REG_DWORD,
-                                          (PVOID)&RtlpPageHeapDllRangeEnd,
-                                          sizeof(RtlpPageHeapDllRangeEnd),
-                                          &ValueSize);
-
-        LdrQueryImageFileExecutionOptions(&ImageName,
-                                          L"PageHeapTargetDlls",
-                                          REG_SZ,
-                                          (PVOID)RtlpPageHeapTargetDlls,
-                                          sizeof(RtlpPageHeapTargetDlls),
-                                          &ValueSize);
-
-        /* Now when all parameters are read, enable page heap */
-        RtlpPageHeapEnabled = TRUE;
     }
 }
 
