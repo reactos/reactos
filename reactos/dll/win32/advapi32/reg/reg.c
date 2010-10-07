@@ -2928,12 +2928,12 @@ RegEnumValueW(HKEY hKey,
 
     status = NtEnumerateValueKey( KeyHandle, index, KeyValueFullInformation,
                                   buffer, total_size, &total_size );
-    if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
+    if (status && (status != STATUS_BUFFER_OVERFLOW) && (status != STATUS_BUFFER_TOO_SMALL)) goto done;
 
     if (value || data)
     {
         /* retry with a dynamically allocated buffer */
-        while (status == STATUS_BUFFER_OVERFLOW)
+        while ((status == STATUS_BUFFER_OVERFLOW) || (status == STATUS_BUFFER_TOO_SMALL))
         {
             if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
             if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
