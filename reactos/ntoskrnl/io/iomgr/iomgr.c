@@ -82,6 +82,8 @@ GENERAL_LOOKASIDE IoSmallIrpLookaside;
 GENERAL_LOOKASIDE IopMdlLookasideList;
 extern GENERAL_LOOKASIDE IoCompletionPacketLookaside;
 
+PLOADER_PARAMETER_BLOCK IopLoaderBlock;
+
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitSystem)
 #endif
@@ -493,6 +495,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();
 
+    /* Make loader block available for the whole kernel */
+    IopLoaderBlock = LoaderBlock;
+
     /* Load boot start drivers */
     IopInitializeBootDrivers();
 
@@ -505,6 +510,9 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Initialize the ramdisk driver */
         IopStartRamdisk(LoaderBlock);
     }
+
+    /* No one should need loader block any longer */
+    IopLoaderBlock = NULL;
 
     /* Create ARC names for boot devices */
     if (!NT_SUCCESS(IopCreateArcNames(LoaderBlock))) return FALSE;
