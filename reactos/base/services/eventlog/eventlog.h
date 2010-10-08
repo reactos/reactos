@@ -93,6 +93,7 @@ typedef struct _LOGFILE
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
+#if 0
 typedef struct _EVENTSOURCE
 {
     LIST_ENTRY EventSourceListEntry;
@@ -100,6 +101,15 @@ typedef struct _EVENTSOURCE
     ULONG CurrentRecord;
     WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
+#endif
+
+typedef struct _LOGHANDLE
+{
+    LIST_ENTRY LogHandleListEntry;
+    PLOGFILE LogFile;
+    ULONG CurrentRecord;
+    WCHAR szName[1];
+} LOGHANDLE, *PLOGHANDLE;
 
 /* file.c */
 VOID LogfListInitialize(VOID);
