@@ -92,8 +92,6 @@ include_directories(include/ndk)
 include_directories(include/reactos)
 include_directories(include/reactos/libs)
 
-include_directories(BEFORE lib/3rdparty/stlport/stlport)
-
 add_subdirectory(include/psdk)
 add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/idl)
