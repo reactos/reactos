@@ -24,7 +24,6 @@
 // Various defines, to be moved to a separate header file
 #define HEAP_FREELISTS 128
 #define HEAP_SEGMENTS 64
-#define HEAP_MAX_PROCESS_HEAPS 16
 
 #define HEAP_ENTRY_SIZE ((ULONG)sizeof(HEAP_ENTRY))
 #define HEAP_ENTRY_SHIFT 3
@@ -271,7 +270,6 @@ RtlpSpecialHeapCreate(ULONG Flags,
                       PRTL_HEAP_PARAMETERS Parameters) { return NULL; };
 
 HEAP_LOCK RtlpProcessHeapsListLock;
-PHEAP RtlpProcessHeaps[HEAP_MAX_PROCESS_HEAPS]; /* Usermode only */
 
 /* Heap entry flags */
 #define HEAP_ENTRY_BUSY           0x01
@@ -1574,9 +1572,6 @@ RtlCreateHeap(ULONG Flags,
     if (NtGlobalFlags & FLG_HEAP_ENABLE_TAIL_CHECK)
         Flags |= HEAP_TAIL_CHECKING_ENABLED;
 
-    if (Flags & HEAP_TAIL_CHECKING_ENABLED)
-        DPRINT1("TailChecking!\n");
-
     if (RtlpGetMode() == UserMode)
     {
         /* Also check these flags if in usermode */
@@ -1704,6 +1699,7 @@ RtlCreateHeap(ULONG Flags,
             /* Zero the initial page ourselves */
             RtlZeroMemory(CommittedAddress, PAGE_SIZE);
         }
+        else
         {
             /* Commit routine is absent, so query how much memory caller reserved */
             Status = ZwQueryVirtualMemory(NtCurrentProcess(),
@@ -1872,6 +1868,7 @@ RtlCreateHeap(ULONG Flags,
         // FIXME: What about lookasides?
     }
 
+    DPRINT("Heap %p, flags 0x%08x\n", Heap, Heap->Flags);
     return Heap;
 }
 
@@ -2286,8 +2283,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         DPRINT1("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
     }
 
-    if (Flags & HEAP_TAIL_CHECKING_ENABLED)
-        DPRINT1("TailChecking, Heap %p\n!", Heap);
+    //DPRINT("RtlAllocateHeap(%p %x %x)\n", Heap, Flags, Size);
 
     /* Calculate allocation size and index */
     if (Size)
@@ -2689,8 +2685,11 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     }
 
     /* Calculate allocation size and index */
-    if (!Size) Size = 1;
-    AllocationSize = (Size + Heap->AlignRound) & Heap->AlignMask;
+    if (Size)
+        AllocationSize = Size;
+    else
+        AllocationSize = 1;
+    AllocationSize = (AllocationSize + Heap->AlignRound) & Heap->AlignMask;
 
     /* Add up extra stuff, if it is present anywhere */
     if (((((PHEAP_ENTRY)Ptr)-1)->Flags & HEAP_ENTRY_EXTRA_PRESENT) ||
@@ -3225,8 +3224,6 @@ RtlInitializeHeapManager(VOID)
 
     /* Initialize heap-related fields of PEB */
     Peb->NumberOfHeaps = 0;
-    Peb->MaximumNumberOfHeaps = HEAP_MAX_PROCESS_HEAPS;
-    Peb->ProcessHeaps = (PVOID)RtlpProcessHeaps;
 
     /* Initialize the process heaps list protecting lock */
     RtlInitializeHeapLock(&RtlpProcessHeapsListLock);
