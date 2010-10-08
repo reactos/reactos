@@ -34,4 +34,4 @@ target_link_libraries(wldap32
      wine)
 
 add_importlibs(wldap32 user32 kernel32 ntdll)
-add_dependencies(wldap32 wldap32_def psdk)
+add_dependencies(wldap32 wldap32_def)

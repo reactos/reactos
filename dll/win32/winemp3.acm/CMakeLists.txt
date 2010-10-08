@@ -14,7 +14,8 @@ add_custom_target(winemp3.acm_def ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/winemp
 
 add_library(winemp3.acm SHARED mpegl3.c)
 
-set_target_properties(winemp3.acm PROPERTIES LINK_FLAGS "-Wl,-entry,0" SUFFIX "")
+set_entrypoint(winemp3.acm 0)
+set_target_properties(winemp3.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(winemp3.acm
     ${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def

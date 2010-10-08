@@ -14,4 +14,4 @@ target_link_libraries(xmllite
 
 add_importlibs(xmllite kernel32 ntdll)
 
-add_dependencies(xmllite xmllite_def psdk buildno_header)
+add_dependencies(xmllite xmllite_def)

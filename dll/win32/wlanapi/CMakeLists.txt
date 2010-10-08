@@ -5,7 +5,7 @@ spec2def(wlanapi ${CMAKE_CURRENT_SOURCE_DIR}/wlanapi.spec ${CMAKE_CURRENT_BINARY
 
 add_library(wlanapi SHARED main.c)
 
-set_target_properties(wlanapi PROPERTIES LINK_FLAGS "-Wl,-entry,0")
+set_entrypoint(wlanapi 0)
 
 target_link_libraries(wlanapi
     ${CMAKE_CURRENT_BINARY_DIR}/wlanapi.def
@@ -14,4 +14,4 @@ target_link_libraries(wlanapi
     pseh)
 
 add_importlibs(wlanapi rpcrt4 kernel32 ntdll)
-add_dependencies(wlanapi wlanapi_def psdk)
+add_dependencies(wlanapi wlanapi_def psdk buildno_header)

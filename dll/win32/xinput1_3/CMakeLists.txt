@@ -14,4 +14,4 @@ target_link_libraries(xinput1_3
 
 add_importlibs(xinput1_3 msvcrt kernel32 ntdll)
 
-add_dependencies(xinput1_3 xinput1_3_def psdk buildno_header)
+add_dependencies(xinput1_3 xinput1_3_def)

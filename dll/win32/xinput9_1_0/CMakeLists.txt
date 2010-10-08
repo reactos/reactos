@@ -10,4 +10,4 @@ add_importlibs(xinput9_1_0 kernel32)
 
 set_module_type(xinput9_1_0 win32dll)
 target_link_libraries(xinput9_1_0 ${CMAKE_CURRENT_BINARY_DIR}/xinput9_1_0.def)
-add_dependencies(xinput9_1_0 xinput9_1_0_def psdk buildno_header)
+add_dependencies(xinput9_1_0 xinput9_1_0_def)

@@ -13,4 +13,4 @@ target_link_libraries(wtsapi32
     wine)
 
 add_importlibs(wtsapi32 advapi32 kernel32 ntdll)
-add_dependencies(wtsapi32 wtsapi32_def psdk)
+add_dependencies(wtsapi32 wtsapi32_def)

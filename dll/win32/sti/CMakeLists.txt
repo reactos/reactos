@@ -1,10 +1,12 @@
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D__WINESRC__)
-add_definitions(-DENTRY_PREFIX=STI_)
-add_definitions(-DPROXY_DELEGATION)
-add_definitions(-DREGISTER_PROXY_DLL)
+
+add_definitions(
+    -D__WINESRC__
+    -DENTRY_PREFIX=STI_
+    -DPROXY_DELEGATION
+    -DREGISTER_PROXY_DLL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -13,8 +15,7 @@ spec2def(sti ${CMAKE_CURRENT_SOURCE_DIR}/sti.spec ${CMAKE_CURRENT_BINARY_DIR}/st
 add_library(sti SHARED
     regsvr.c
     sti.c
-    sti_main.c
-    sti_wia.idl)# not sure
+    sti_main.c)
 
 set_entrypoint(sti 0)
 

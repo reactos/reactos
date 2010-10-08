@@ -1,5 +1,6 @@
 
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
+
 add_definitions(-DLE)
 add_definitions(-DWINSOCK_API_LINKAGE=DECLSPEC_EXPORT)
 
@@ -9,7 +10,6 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(ws2_32 ${CMAKE_CURRENT_SOURCE_DIR}/ws2_32.spec ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
 list(APPEND SOURCE
-    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_ws2_32.h.gch
     misc/bsd.c
     misc/catalog.c
     misc/dllmain.c
@@ -32,4 +32,4 @@ target_link_libraries(ws2_32
 
 add_importlibs(ws2_32 user32 advapi32 dnsapi ws2help kernel32 ntdll)
 add_pch(ws2_32 ${CMAKE_CURRENT_SOURCE_DIR}/include/ws2_32.h ${SOURCE})
-add_dependencies(ws2_32 ws2_32_def psdk)
+add_dependencies(ws2_32 ws2_32_def)

@@ -20,4 +20,4 @@ target_link_libraries(wintrust
     pseh)
 
 add_importlibs(wintrust crypt32 cryptui user32 advapi32 imagehlp msvcrt kernel32 ntdll)
-add_dependencies(wintrust wintrust_def psdk buildno_header)
+add_dependencies(wintrust wintrust_def)

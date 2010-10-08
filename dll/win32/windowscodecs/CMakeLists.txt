@@ -41,4 +41,4 @@ target_link_libraries(windowscodecs
     wine)
 
 add_importlibs(windowscodecs uuid ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
-add_dependencies(windowscodecs windowscodecs_def psdk)
+add_dependencies(windowscodecs windowscodecs_def)

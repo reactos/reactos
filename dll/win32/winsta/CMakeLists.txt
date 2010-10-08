@@ -23,4 +23,4 @@ target_link_libraries(winsta
 
 add_importlibs(winsta kernel32 ntdll)
 add_pch(winsta ${CMAKE_CURRENT_SOURCE_DIR}/winsta.h ${SOURCE})
-add_dependencies(winsta winsta_def psdk)
+add_dependencies(winsta winsta_def)

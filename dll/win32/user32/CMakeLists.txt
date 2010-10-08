@@ -1,17 +1,16 @@
 
+set_unicode()
 
-
-add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
-include_directories(include)
+include_directories(
+    BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    include)
 
 set_rc_compiler()
 
 list(APPEND SOURCE
-    user32_stubs.c
     controls/button.c
     controls/combo.c
     controls/edit.c
@@ -62,25 +61,21 @@ list(APPEND SOURCE
     windows/spy.c
     windows/text.c
     windows/window.c
-    windows/winpos.c)
+    windows/winpos.c
+    user32_stubs.c
+    user32.rc)
 
 add_library(user32 SHARED
-    ${SOURCE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/user32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/user32_user32.h.gch)
+    ${CMAKE_CURRENT_BINARY_DIR}/user32_user32.h.gch
+    ${SOURCE})
 
-set_target_properties(user32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(user32 win32dll)
 
 target_link_libraries(user32
     ${CMAKE_CURRENT_SOURCE_DIR}/user32.def
     wine
-    -lgdi32
-    -ladvapi32
-    -limm32
     win32ksys
-    pseh
-    -lkernel32
-    -lntdll)
+    pseh)
                       
 add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
-add_dependencies(user32 psdk)
+add_importlibs(user32 gdi32 advapi32 imm32 kernel32 ntdll)

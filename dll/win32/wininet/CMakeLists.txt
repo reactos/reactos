@@ -33,4 +33,4 @@ target_link_libraries(wininet
     pseh)
 
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 secur32 crypt32 ws2_32 msvcrt kernel32 ntdll)
-add_dependencies(wininet wininet_def psdk buildno_header)
+add_dependencies(wininet wininet_def)

@@ -1,8 +1,5 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_definitions(-D__WINESRC__)
 
 spec2def(uxtheme ${CMAKE_CURRENT_SOURCE_DIR}/uxtheme.spec ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)
@@ -19,15 +16,11 @@ add_library(uxtheme SHARED
     uxini.c
     version.rc)
 
-set_target_properties(uxtheme PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(uxtheme win32dll)
 
 target_link_libraries(uxtheme
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def
-    wine
-    -luser32
-    -ladvapi32
-    -lgdi32
-    -lmsimg32
-    mingw_common)
+    wine)
 
-add_dependencies(uxtheme uxtheme_def psdk)
+add_importlibs(uxtheme user32 advapi32 gdi32 msimg32 kernel32 ntdll)
+add_dependencies(uxtheme uxtheme_def)

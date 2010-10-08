@@ -9,4 +9,4 @@ set_module_type(wshirda win32dll)
 
 target_link_libraries(wshirda ${CMAKE_CURRENT_BINARY_DIR}/wshirda.def)
 add_importlibs(wshirda ws2_32 kernel32 ntdll)
-add_dependencies(wshirda wshirda_def psdk)
+add_dependencies(wshirda wshirda_def)
