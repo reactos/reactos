@@ -1928,6 +1928,7 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
     {
         VirtualEntry = CONTAINING_RECORD(Current, HEAP_VIRTUAL_ALLOC_ENTRY, Entry);
         BaseAddress = (PVOID)VirtualEntry;
+        Current = Current->Flink;
         Size = 0;
         ZwFreeVirtualMemory(NtCurrentProcess(),
                             &BaseAddress,
