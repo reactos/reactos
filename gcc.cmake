@@ -17,9 +17,6 @@ set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-bas
 # Compiler Core
 add_definitions(-pipe -fms-extensions)
 
-# stlport special
-add_definitions(-D_STLP_GCC_USES_GNU_LD)
-
 set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
@@ -35,6 +32,14 @@ add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-e
 
 # Optimizations
 add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
+
+#linkage hell...
+add_library(gcc STATIC IMPORTED)
+set_target_properties(gcc PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libgcc.a
+    IMPORTED_LINK_INTERFACE_LIBRARIES "mingw_common -lkernel32")
+add_library(supc++ STATIC IMPORTED)
+set_target_properties(supc++ PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libsupc++.a
+    IMPORTED_LINK_INTERFACE_LIBRARIES "gcc -lmsvcrt")
 
 # Macros
 macro(set_entrypoint MODULE ENTRYPOINT)
@@ -81,7 +86,7 @@ macro(set_module_type MODULE TYPE)
         else()
             target_link_libraries(${MODULE} mingw_wmain)
         endif(NOT IS_UNICODE)
-        target_link_libraries(${MODULE} mingw_common)
+        target_link_libraries(${MODULE} mingw_common gcc)
     endif()
     if(${TYPE} MATCHES win32cui)
         set_subsystem(${MODULE} console)
@@ -91,7 +96,7 @@ macro(set_module_type MODULE TYPE)
         else()
             target_link_libraries(${MODULE} mingw_wmain)
         endif(NOT IS_UNICODE)
-        target_link_libraries(${MODULE} mingw_common)
+        target_link_libraries(${MODULE} mingw_common gcc)
     endif()
     if(${TYPE} MATCHES win32dll)
         set_entrypoint(${MODULE} DllMain@12)
@@ -137,14 +142,3 @@ macro(ADD_TYPELIB TARGET)
   endforeach()
   add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
 endmacro()
-
-#linkage hell...
-add_library(msvcrt_imp SHARED IMPORTED)
-set_target_properties(msvcrt_imp PROPERTIES IMPORTED_IMPLIB ${REACTOS_SOURCE_DIR}/importlibs/libmsvcrt.a)
-add_library(gcc STATIC IMPORTED)
-set_target_properties(gcc PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libgcc.a
-    IMPORTED_LINK_INTERFACE_LIBRARIES "mingw_common -lkernel32")
-add_library(supc++ STATIC IMPORTED)
-set_target_properties(supc++ PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libsupc++.a
-    IMPORTED_LINK_INTERFACE_LIBRARIES "gcc -lmsvcrt")
-

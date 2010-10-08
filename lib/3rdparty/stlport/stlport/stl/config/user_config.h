@@ -157,9 +157,9 @@
  *  It is being put in this file as there is no way to check if we are using GNU ld automatically,
  *  so it becomes user's responsibility.
  */
-/*
-#define _STLP_GCC_USES_GNU_LD
-*/
+#ifdef __MINGW32__
+#  define _STLP_GCC_USES_GNU_LD
+#endif
 
 /*==========================================================
  * Compatibility section

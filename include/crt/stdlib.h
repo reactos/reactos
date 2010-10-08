@@ -134,13 +134,7 @@ extern "C" {
   _invalid_parameter_handler __cdecl _set_invalid_parameter_handler(_invalid_parameter_handler _Handler);
   _invalid_parameter_handler __cdecl _get_invalid_parameter_handler(void);
 
-#ifndef _CRT_ERRNO_DEFINED
-#define _CRT_ERRNO_DEFINED
-  _CRTIMP extern int *__cdecl _errno(void);
-#define errno (*_errno())
-  errno_t __cdecl _set_errno(int _Value);
-  errno_t __cdecl _get_errno(int *_Value);
-#endif
+#include <errno.h>
   _CRTIMP unsigned long *__cdecl __doserrno(void);
 #define _doserrno (*__doserrno())
   errno_t __cdecl _set_doserrno(unsigned long _Value);
