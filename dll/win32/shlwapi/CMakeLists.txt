@@ -1,8 +1,5 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -27,25 +24,25 @@ add_library(shlwapi SHARED
     wsprintf.c
     shlwapi.rc)
 
-set_target_properties(shlwapi PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(shlwapi win32dll)
 
 target_link_libraries(shlwapi
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def
     wine
-    uuid
-    -luser32
-    -lgdi32
-    -ladvapi32
-    -loleaut32
-    -lole32
-    -lcomctl32
-    -lcomdlg32
-    -lmpr
-    -lmlang
-    -lurlmon
-    -lshell32
-    -lwinmm
-    -lversion
-    mingw_common)
+    uuid)
 
-add_dependencies(shlwapi shlwapi_def psdk)
+add_importlibs(shlwapi
+    user32
+    gdi32
+    advapi32
+    oleaut32
+    ole32
+    comctl32
+    comdlg32
+    mpr
+    mlang
+    urlmon
+    winmm
+    version)
+
+add_dependencies(shlwapi shlwapi_def)

@@ -1,6 +1,5 @@
 
 add_definitions(-D__SECUR32__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 spec2def(secur32 ${CMAKE_CURRENT_SOURCE_DIR}/secur32.spec ${CMAKE_CURRENT_BINARY_DIR}/secur32.def)

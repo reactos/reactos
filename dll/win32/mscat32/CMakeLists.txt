@@ -13,9 +13,5 @@ target_link_libraries(mscat32
     ${CMAKE_CURRENT_BINARY_DIR}/mscat32.def
     wine)
 
-add_importlibs(mscat32
-    wintrust
-    kernel32
-    ntdll)
-
+add_importlibs(mscat32 wintrust kernel32 ntdll)
 add_dependencies(mscat32 mscat32_def)

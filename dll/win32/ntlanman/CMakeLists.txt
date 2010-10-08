@@ -1,18 +1,15 @@
 
-
-
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
 
 spec2def(ntlanman ${CMAKE_CURRENT_SOURCE_DIR}/ntlanman.spec ${CMAKE_CURRENT_BINARY_DIR}/ntlanman.def)
 
 add_library(ntlanman SHARED ntlanman.c ntlanman.rc)
 
-set_target_properties(ntlanman PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(ntlanman win32dll)
 
 target_link_libraries(ntlanman
     ${CMAKE_CURRENT_BINARY_DIR}/ntlanman.def
-    wine
-    mingw_common
-    -lnetapi32)
+    wine)
 
-add_dependencies(ntlanman ntlanman_def psdk)
+add_importlibs(ntlanman netapi32 kernel32 ntdll)
+add_dependencies(ntlanman ntlanman_def)

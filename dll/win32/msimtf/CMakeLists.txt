@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(msimtf ${CMAKE_CURRENT_SOURCE_DIR}/msimtf.spec ${CMAKE_CURRENT_BINARY_DIR}/msimtf.def)
@@ -17,10 +16,5 @@ target_link_libraries(msimtf
     uuid
     wine)
 
-add_importlibs(msimtf
-    msvcrt
-    imm32
-    kernel32
-    ntdll)
-
+add_importlibs(msimtf msvcrt imm32 kernel32 ntdll)
 add_dependencies(msimtf msimtf_def)

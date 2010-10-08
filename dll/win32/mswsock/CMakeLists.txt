@@ -1,10 +1,8 @@
 
+set_unicode()
 
-
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-DLE)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(mswsock ${CMAKE_CURRENT_SOURCE_DIR}/mswsock.spec ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)
 
@@ -13,11 +11,9 @@ add_library(mswsock SHARED
     stubs.c
     mswsock.rc)
 
-set_target_properties(mswsock PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(mswsock win32dll)
 
-target_link_libraries(mswsock
-    ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def
-    -lws2_32
-    -lkernel32)
+target_link_libraries(mswsock ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)
 
-add_dependencies(mswsock mswsock_def psdk)
+add_importlibs(mswsock ws2_32 kernel32)
+add_dependencies(mswsock mswsock_def)

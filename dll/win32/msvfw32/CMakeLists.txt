@@ -1,6 +1,4 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_definitions(-D__WINESRC__)
@@ -14,17 +12,11 @@ add_library(msvfw32 SHARED
     drawdib.c
     rsrc.rc)
 
-set_target_properties(msvfw32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(msvfw32 win32dll)
 
 target_link_libraries(msvfw32
     ${CMAKE_CURRENT_BINARY_DIR}/msvfw32.def
-    wine
-    -lwinmm
-    -lversion
-    -lcomctl32
-    -luser32
-    -lgdi32
-    -ladvapi32
-    mingw_common)
+    wine)
 
-add_dependencies(msvfw32 msvfw32_def psdk)
+add_importlibs(msvfw32 winmm version comctl32 user32 gdi32 advapi32 kernel32 ntdll)
+add_dependencies(msvfw32 msvfw32_def)

@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(rsabase ${CMAKE_CURRENT_SOURCE_DIR}/rsabase.spec ${CMAKE_CURRENT_BINARY_DIR}/rsabase.def)

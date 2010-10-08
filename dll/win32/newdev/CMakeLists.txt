@@ -1,7 +1,5 @@
 
-
-
-add_definitions(-DUNICODE -D_UNICODE)
+set_unicode()
 
 spec2def(newdev ${CMAKE_CURRENT_SOURCE_DIR}/newdev.spec ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
 
@@ -11,17 +9,11 @@ add_library(newdev SHARED
     wizard.c
     newdev.rc)
 
-set_target_properties(newdev PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(newdev win32dll)
 
 target_link_libraries(newdev
     ${CMAKE_CURRENT_BINARY_DIR}/newdev.def
-    wine
-    mingw_common
-    -lgdi32
-    -lcomctl32
-    -lsetupapi
-    -ladvapi32
-    -luser32
-    -lshell32)
+    wine)
 
-add_dependencies(newdev newdev_def psdk)
+add_importlibs(newdev gdi32 comctl32 setupapi advapi32 user32 shell32 kernel32 ntdll)
+add_dependencies(newdev newdev_def)

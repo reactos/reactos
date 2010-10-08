@@ -1,8 +1,5 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_definitions(-D__WINESRC__)
 
 spec2def(schannel ${CMAKE_CURRENT_SOURCE_DIR}/schannel.spec ${CMAKE_CURRENT_BINARY_DIR}/schannel.def)
@@ -13,12 +10,11 @@ add_library(schannel SHARED
     usermode.c
     version.rc)
 
-set_target_properties(schannel PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(schannel win32dll)
 
 target_link_libraries(schannel
     ${CMAKE_CURRENT_BINARY_DIR}/schannel.def
-    wine
-    -lsecur32
-    mingw_common)
+    wine)
 
-add_dependencies(schannel schannel_def psdk)
+add_importlibs(schannel secur32 kernel32 ntdll)
+add_dependencies(schannel schannel_def)

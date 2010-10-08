@@ -14,11 +14,5 @@ target_link_libraries(msrle32
     ${CMAKE_CURRENT_BINARY_DIR}/msrle32.def
     wine)
 
-add_importlibs(msrle32
-    msvcrt
-    winmm
-    user32
-    kernel32
-    ntdll)
-
+add_importlibs(msrle32 msvcrt winmm user32 kernel32 ntdll)
 add_dependencies(msrle32 msrle32_def)

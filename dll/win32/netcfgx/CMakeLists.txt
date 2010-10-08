@@ -19,16 +19,5 @@ target_link_libraries(netcfgx
     uuid
     wine)
 
-add_importlibs(netcfgx
-    rpcrt4
-    setupapi
-    advapi32
-    iphlpapi
-    ole32
-    user32
-    comctl32
-    ws2_32
-    kernel32
-    ntdll)
-
+add_importlibs(netcfgx rpcrt4 setupapi advapi32 iphlpapi ole32 user32 comctl32 ws2_32 kernel32 ntdll)
 add_dependencies(netcfgx netcfgx_def)

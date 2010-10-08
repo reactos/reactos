@@ -1,8 +1,5 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
 add_definitions(-D__WINESRC__)
 
 spec2def(netapi32 ${CMAKE_CURRENT_SOURCE_DIR}/netapi32.spec ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)
@@ -21,14 +18,11 @@ add_library(netapi32 SHARED
     share.c
     wksta.c)
 
-set_target_properties(netapi32 PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(netapi32 win32dll)
 
 target_link_libraries(netapi32
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def
-    wine
-    -liphlpapi
-    -lws2_32
-    -ladvapi32
-    mingw_common)
+    wine)
 
-add_dependencies(netapi32 netapi32_def psdk)
+add_importlibs(netapi32 iphlpapi ws2_32 advapi32 kernel32 ntdll)
+add_dependencies(netapi32 netapi32_def)

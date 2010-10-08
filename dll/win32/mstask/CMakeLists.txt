@@ -1,7 +1,9 @@
 
 add_definitions(-D__WINESRC__)
+
 remove_definitions(-DWINVER=0x502)
 add_definitions(-DWINVER=0x600)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D__WINESRC__)
 
@@ -25,8 +27,5 @@ target_link_libraries(mstask
     uuid
     wine)
 
-add_importlibs(mstask
-    ole32
-    ntdll)
-
+add_importlibs(mstask ole32 ntdll)
 add_dependencies(mstask mstask_def)

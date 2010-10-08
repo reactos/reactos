@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(riched32 ${CMAKE_CURRENT_SOURCE_DIR}/riched32.spec ${CMAKE_CURRENT_BINARY_DIR}/riched32.def)

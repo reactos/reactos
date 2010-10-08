@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(olepro32 ${CMAKE_CURRENT_SOURCE_DIR}/olepro32.spec ${CMAKE_CURRENT_BINARY_DIR}/olepro32.def)
