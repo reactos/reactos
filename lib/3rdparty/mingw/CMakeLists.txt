@@ -41,9 +41,7 @@ list(APPEND MINGW_COMMON_SOURCE
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
 
 if(NOT MSVC)
-  target_link_libraries(mingw_common)
-#  add_importlibs(mingw_common kernel32 ntdll oldnames)
-#  add_dependencies(mingw_common oldnames)
+  add_dependencies(mingw_common oldnames)
 endif(NOT MSVC)
 
 set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)

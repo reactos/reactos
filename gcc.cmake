@@ -37,12 +37,12 @@ add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-e
 add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
 
 #linkage hell...
-add_library(gcc STATIC IMPORTED)
-set_target_properties(gcc PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libgcc.a
-    IMPORTED_LINK_INTERFACE_LIBRARIES "mingw_common -lkernel32")
-add_library(supc++ STATIC IMPORTED)
-set_target_properties(supc++ PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libsupc++.a
-    IMPORTED_LINK_INTERFACE_LIBRARIES "gcc -lmsvcrt")
+#add_library(gcc STATIC IMPORTED)
+#set_target_properties(gcc PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libgcc.a
+#    IMPORTED_LINK_INTERFACE_LIBRARIES "mingw_common -lkernel32")
+#add_library(supc++ STATIC IMPORTED)
+#set_target_properties(supc++ PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libsupc++.a
+#    IMPORTED_LINK_INTERFACE_LIBRARIES "gcc -lmsvcrt")
 
 # Macros
 macro(set_entrypoint MODULE ENTRYPOINT)
@@ -89,7 +89,7 @@ macro(set_module_type MODULE TYPE)
         else()
             target_link_libraries(${MODULE} mingw_wmain)
         endif(NOT IS_UNICODE)
-        target_link_libraries(${MODULE} mingw_common gcc)
+		target_link_libraries(${MODULE} -lgcc mingw_common)
     endif()
     if(${TYPE} MATCHES win32cui)
         set_subsystem(${MODULE} console)
@@ -99,7 +99,7 @@ macro(set_module_type MODULE TYPE)
         else()
             target_link_libraries(${MODULE} mingw_wmain)
         endif(NOT IS_UNICODE)
-        target_link_libraries(${MODULE} mingw_common gcc)
+		target_link_libraries(${MODULE} -lgcc mingw_common)
     endif()
     if(${TYPE} MATCHES win32dll)
         set_entrypoint(${MODULE} DllMain@12)
