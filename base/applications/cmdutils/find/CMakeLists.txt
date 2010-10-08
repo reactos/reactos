@@ -2,4 +2,4 @@
 add_executable(find find.c find.rc)
 
 set_module_type(find win32cui)
-add_importlibs(find user32 msvcrt)
+add_importlibs(find user32 msvcrt kernel32)

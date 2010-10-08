@@ -5,4 +5,4 @@ add_executable(eventvwr eventvwr.c eventvwr.rc)
 
 set_module_type(eventvwr win32gui)
 
-add_importlibs(eventvwr user32 comctl32 advapi32 msvcrt)
+add_importlibs(eventvwr user32 comctl32 advapi32 msvcrt kernel32)

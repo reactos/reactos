@@ -4,4 +4,4 @@ add_executable(tracert tracert.c tracert.rc)
 
 set_module_type(tracert win32cui)
 
-add_importlibs(tracert ws2_32 msvcrt)
+add_importlibs(tracert ws2_32 msvcrt kernel32)

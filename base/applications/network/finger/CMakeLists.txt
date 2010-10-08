@@ -9,4 +9,4 @@ add_executable(finger
 
 set_module_type(finger win32cui)
 
-add_importlibs(finger ws2_32 msvcrt)
+add_importlibs(finger ws2_32 msvcrt kernel32)

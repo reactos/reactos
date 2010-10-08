@@ -17,4 +17,4 @@ add_pch(msconfig ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 set_module_type(msconfig win32gui)
 
-add_importlibs(msconfig user32 advapi32 version comctl32 shell32 shlwapi msvcrt)
+add_importlibs(msconfig user32 advapi32 version comctl32 shell32 shlwapi msvcrt kernel32)

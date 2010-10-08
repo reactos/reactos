@@ -12,5 +12,5 @@ target_link_libraries(olecli32
     ${CMAKE_CURRENT_BINARY_DIR}/olecli32.def
     wine)
 
-add_importlibs(oleacc ole32 gdi32 kernel32 ntdll)
+add_importlibs(olecli32 ole32 gdi32 kernel32 ntdll)
 add_dependencies(olecli32 olecli32_def psdk buildno_header)

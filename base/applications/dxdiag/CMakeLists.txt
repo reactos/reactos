@@ -27,4 +27,4 @@ set_module_type(dxdiag win32gui)
 
 target_link_libraries(dxdiag dxguid)
 
-add_importlibs(dxdiag user32 advapi32 comctl32 dinput8 setupapi dsound ddraw version gdi32 winmm d3d9 msvcrt)
+add_importlibs(dxdiag user32 advapi32 comctl32 dinput8 setupapi dsound ddraw version gdi32 winmm d3d9 msvcrt kernel32)

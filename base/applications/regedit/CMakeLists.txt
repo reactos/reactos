@@ -26,6 +26,6 @@ set_module_type(regedit win32gui)
 
 target_link_libraries(regedit uuid)
 
-add_importlibs(regedit user32 gdi32 advapi32 ole32 shell32 comctl32 comdlg32 shlwapi msvcrt)
+add_importlibs(regedit user32 gdi32 advapi32 ole32 shell32 comctl32 comdlg32 shlwapi msvcrt kernel32)
 
 #add_subdirectory(clb)

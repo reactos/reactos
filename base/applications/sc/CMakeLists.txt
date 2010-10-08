@@ -19,4 +19,4 @@ add_pch(sc ${CMAKE_CURRENT_SOURCE_DIR}/sc.h ${SOURCE})
 
 set_module_type(sc win32cui)
 
-add_importlibs(sc advapi32 msvcrt)
+add_importlibs(sc advapi32 msvcrt kernel32)

@@ -11,4 +11,4 @@ add_executable(winemine
     rsrc.rc)
 
 set_module_type(winemine win32gui)
-add_importlibs(winemine user32 gdi32 advapi32 shell32 msvcrt)
+add_importlibs(winemine user32 gdi32 advapi32 shell32 msvcrt kernel32)

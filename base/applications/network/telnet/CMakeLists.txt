@@ -26,4 +26,4 @@ target_link_libraries(telnet stlport)
 
 set_module_type(telnet win32cui)
 
-add_importlibs(telnet ws2_32 user32 msvcrt)
+add_importlibs(telnet ws2_32 user32 msvcrt kernel32)

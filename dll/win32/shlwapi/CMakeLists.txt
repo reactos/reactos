@@ -43,6 +43,9 @@ add_importlibs(shlwapi
     mlang
     urlmon
     winmm
-    version)
+    version
+    shell32
+    kernel32
+    ntdll)
 
 add_dependencies(shlwapi shlwapi_def)

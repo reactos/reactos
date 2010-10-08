@@ -10,4 +10,4 @@ add_executable(ftp
 
 set_module_type(ftp win32cui)
 
-add_importlibs(ftp ws2_32 iphlpapi msvcrt)
+add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
