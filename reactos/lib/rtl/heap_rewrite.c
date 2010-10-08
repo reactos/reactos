@@ -1656,6 +1656,24 @@ RtlCreateHeap(ULONG Flags,
             TotalSize = ROUND_UP(CommitSize, 16 * PAGE_SIZE);
     }
 
+    if (RtlpGetMode() == UserMode)
+    {
+        /* TODO: Here should be a call to special "Debug" heap, which does parameters validation,
+        however we're just going to simulate setting correct flags here */
+        if (Flags & (HEAP_VALIDATE_ALL_ENABLED |
+                     HEAP_VALIDATE_PARAMETERS_ENABLED |
+                     HEAP_CAPTURE_STACK_BACKTRACES |
+                     HEAP_FLAG_PAGE_ALLOCS |
+                     HEAP_CREATE_ENABLE_TRACING) &&
+                     !(Flags & HEAP_SKIP_VALIDATION_CHECKS))
+        {
+            // RtlDebugCreateHeap(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
+            Flags |= HEAP_SKIP_VALIDATION_CHECKS |
+                     HEAP_TAIL_CHECKING_ENABLED |
+                     HEAP_FREE_CHECKING_ENABLED;
+        }
+    }
+
     /* Calculate header size */
     HeaderSize = sizeof(HEAP);
     if (!(Flags & HEAP_NO_SERIALIZE))
