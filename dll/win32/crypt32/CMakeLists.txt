@@ -46,7 +46,7 @@ target_link_libraries(crypt32
     ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def
     wine
     pseh
-    mingw_common)
+    oldnames)
 
-add_importlibs(crypt32 user32 advapi32 msvcrt)
+add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(crypt32 crypt32_def)

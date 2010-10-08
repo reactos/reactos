@@ -1,6 +1,4 @@
 
-
-
 include_directories(include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -13,15 +11,11 @@ add_library(msgina SHARED
     tui.c
     msgina.rc)
 
-set_target_properties(msgina PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(msgina win32dll)
 
 target_link_libraries(msgina
     ${CMAKE_CURRENT_BINARY_DIR}/msgina.def
-    wine
-    mingw_common
-    -ladvapi32
-    -luser32
-    -lgdi32
-    -luserenv)
+    wine)
 
-add_dependencies(msgina msgina_def psdk)
+add_importlibs(msgina advapi32 user32 gdi32 userenv kernel32 ntdll)
+add_dependencies(msgina msgina_def)

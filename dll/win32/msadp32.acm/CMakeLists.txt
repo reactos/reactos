@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D_DLL -D__USE_CRTIMP)
 add_definitions(-D__WINESRC__)
 
@@ -15,14 +13,12 @@ add_custom_target(msadp32.acm_def ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msadp3
 
 add_library(msadp32.acm SHARED msadp32.c)
 
-set_target_properties(msadp32.acm PROPERTIES LINK_FLAGS "-Wl,-entry,0" SUFFIX "")
+set_entrypoint(msadp32.acm 0)
+set_target_properties(msadp32.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(msadp32.acm
     ${CMAKE_CURRENT_BINARY_DIR}/msadp32.acm.def
-    wine
-    -lwinmm
-    -luser32
-    mingw_common
-    -lmsvcrt)
+    wine)
 
-add_dependencies(msadp32.acm msadp32.acm_def psdk)
+add_importlibs(msadp32.acm winmm user32 msvcrt kernel32 ntdll)
+add_dependencies(msadp32.acm msadp32.acm_def psdk buildno_header)

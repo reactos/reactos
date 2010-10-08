@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D_DLL -D__USE_CRTIMP)
 add_definitions(-D__WINESRC__)
 
@@ -15,14 +13,12 @@ add_custom_target(msg711.acm_def ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/msg711.
 
 add_library(msg711.acm SHARED msg711.c)
 
-set_target_properties(msg711.acm PROPERTIES LINK_FLAGS "-Wl,-entry,0" SUFFIX "")
+set_entrypoint(msg711.acm 0)
+set_target_properties(msg711.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(msg711.acm
     ${CMAKE_CURRENT_BINARY_DIR}/msg711.acm.def
-    wine
-    -lwinmm
-    -luser32
-    mingw_common
-    -lmsvcrt)
+    wine)
 
-add_dependencies(msg711.acm msg711.acm_def psdk)
+add_importlibs(msg711.acm winmm user32 msvcrt kernel32 ntdll)
+add_dependencies(msg711.acm msg711.acm_def psdk buildno_header)

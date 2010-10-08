@@ -46,8 +46,8 @@ set_module_type(dbghelp win32dll)
 target_link_libraries(dbghelp
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def
     wine
-    mingw_common
-    pseh)
+    pseh
+    oldnames)
 
-add_importlibs(dbghelp psapi version msvcrt)
+add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)
 add_dependencies(dbghelp dbghelp_def)

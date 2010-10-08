@@ -1,6 +1,4 @@
 
-
-
 add_definitions(-D__WINESRC__)
 add_definitions(-D_WINE)
 
@@ -17,13 +15,11 @@ add_library(mpr SHARED
     wnet.c
     mpr.rc)
 
-set_target_properties(mpr PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(mpr win32dll)
 
 target_link_libraries(mpr
     ${CMAKE_CURRENT_BINARY_DIR}/mpr.def
-    wine
-    mingw_common
-    -ladvapi32
-    -luser32)
+    wine)
 
-add_dependencies(mpr mpr_def psdk)
+add_importlibs(mpr advapi32 user32 kernel32 ntdll)
+add_dependencies(mpr mpr_def)

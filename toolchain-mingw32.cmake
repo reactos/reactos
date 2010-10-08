@@ -32,7 +32,7 @@ SET(CMAKE_IDL_COMPILE_OBJECT "<CMAKE_IDL_COMPILER> <FLAGS> <DEFINES> -m32 --win3
 SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -O coff -o <OBJECT> ")
 
 # Use stdcall fixups, and don't link with anything by default unless we say so
-set(CMAKE_C_STANDARD_LIBRARIES "" CACHE STRING "Standard C Libraries")
+set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 
 #MARK_AS_ADVANCED(CLEAR CMAKE_CXX_STANDARD_LIBRARIES)
 set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "Standard C++ Libraries")

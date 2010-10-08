@@ -75,4 +75,4 @@ target_link_libraries(cmd wine)
 
 add_pch(cmd ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h SOURCE)
 set_module_type(cmd win32cui)
-add_importlibs(cmd advapi32 user32 msvcrt)
+add_importlibs(cmd advapi32 user32 msvcrt kernel32 ntdll)

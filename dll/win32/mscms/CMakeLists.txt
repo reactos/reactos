@@ -1,8 +1,5 @@
 
-
-
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(mscms ${CMAKE_CURRENT_SOURCE_DIR}/mscms.spec ${CMAKE_CURRENT_BINARY_DIR}/mscms.def)
@@ -16,11 +13,11 @@ add_library(mscms SHARED
     transform.c
     version.rc)
 
-set_target_properties(mscms PROPERTIES LINK_FLAGS "-Wl,-entry,_DllMain@12")
+set_module_type(mscms win32dll)
 
 target_link_libraries(mscms
     ${CMAKE_CURRENT_BINARY_DIR}/mscms.def
-    wine
-    mingw_common)
+    wine)
 
-add_dependencies(mscms mscms_def psdk)
+add_importlibs(mscms kernel32 ntdll)
+add_dependencies(mscms mscms_def)
