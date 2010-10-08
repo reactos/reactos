@@ -11,4 +11,6 @@ add_importlibs(wlansvc
     advapi32
     rpcrt4
     iphlpapi
-    msvcrt)
+    msvcrt
+    kernel32
+    ntdll)

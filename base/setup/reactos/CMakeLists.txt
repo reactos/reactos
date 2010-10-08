@@ -1,9 +1,7 @@
 
 set_unicode()
 
-add_executable(reactos
-    reactos.c
-    reactos.rc)
+add_executable(reactos reactos.c reactos.rc)
 
 target_link_libraries(reactos uuid)
 
@@ -13,4 +11,6 @@ add_importlibs(reactos
     user32
     comctl32
     setupapi
-    msvcrt)
+    msvcrt
+    kernel32
+    ntdll)

@@ -18,4 +18,4 @@ add_pch(eventlog ${CMAKE_CURRENT_SOURCE_DIR}/eventlog.h ${SOURCE})
 
 set_module_type(eventlog win32cui)
 
-add_importlibs(eventlog advapi32 rpcrt4 msvcrt)
+add_importlibs(eventlog advapi32 rpcrt4 msvcrt kernel32 ntdll)

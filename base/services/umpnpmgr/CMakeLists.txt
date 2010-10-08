@@ -13,4 +13,6 @@ add_importlibs(umpnpmgr
     advapi32
     rpcrt4
     userenv
-    msvcrt)
+    msvcrt
+    kernel32
+    ntdll)

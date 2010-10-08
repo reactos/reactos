@@ -9,5 +9,7 @@ add_executable(msiexec
 
 set_module_type(msiexec win32gui)
 
-add_importlibs(msiexec user32 advapi32 ole32 msi msvcrt)
 target_link_libraries(msiexec uuid wine)
+
+add_importlibs(msiexec user32 advapi32 ole32 msi msvcrt kernel32 ntdll)
+

@@ -3,7 +3,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/newinflib)
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
-add_executable(usetup WIN32
+add_executable(usetup
     interface/usetup.c
     interface/devinst.c
     interface/consup.c
@@ -38,5 +38,4 @@ target_link_libraries(usetup
     mingw_common)
 
 set_module_type(usetup nativecui)
-
-add_dependencies(usetup psdk buildno_header)
+add_importlibs(usetup kernel32 ntdll)

@@ -11,5 +11,5 @@ add_executable(audiosrv
     audiosrv.rc)
 
 set_module_type(audiosrv win32cui)
-add_importlibs(audiosrv advapi32 user32 setupapi msvcrt)
+add_importlibs(audiosrv advapi32 user32 setupapi msvcrt kernel32)
 

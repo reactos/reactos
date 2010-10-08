@@ -7,5 +7,5 @@ add_executable(telnetd
 target_link_libraries(telnetd wine)
 
 set_module_type(telnetd win32cui)
-add_importlibs(telnetd advapi32 ws2_32 msvcrt)
+add_importlibs(telnetd advapi32 ws2_32 msvcrt kernel32 ntdll)
 

@@ -20,9 +20,9 @@ add_executable(explorer_new ${CMAKE_CURRENT_BINARY_DIR}/explorer_new_precomp.h.g
 
 target_link_libraries(explorer_new uuid)
 
-add_pch(explorer_new ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h SOURCE)
+add_pch(explorer_new ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 set_module_type(explorer_new win32gui)
-add_importlibs(explorer_new 
+add_importlibs(explorer_new
     advapi32
     gdi32
     user32
@@ -31,4 +31,6 @@ add_importlibs(explorer_new
     oleaut32
     shell32
     shlwapi
-    msvcrt)
+    msvcrt
+    kernel32
+    ntdll)

@@ -16,4 +16,4 @@ add_pch(rpcss ${CMAKE_CURRENT_SOURCE_DIR}/rpcss.h ${SOURCE})
 
 set_module_type(rpcss win32cui)
 
-add_importlibs(rpcss advapi32 rpcrt4 msvcrt)
+add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)

@@ -5,4 +5,4 @@ add_executable(expand expand.c expand.rc)
 
 set_module_type(expand win32cui)
 
-add_importlibs(expand lz32 setupapi user32 msvcrt)
+add_importlibs(expand lz32 setupapi user32 msvcrt kernel32 ntdll)

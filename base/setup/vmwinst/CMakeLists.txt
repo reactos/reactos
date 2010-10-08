@@ -1,9 +1,7 @@
 
 set_unicode()
 
-add_executable(vmwinst
-    vmwinst.c
-    vmwinst.rc)
+add_executable(vmwinst vmwinst.c vmwinst.rc)
 
 target_link_libraries(vmwinst pseh)
 
@@ -16,4 +14,6 @@ add_importlibs(vmwinst
     user32
     setupapi
     shell32
-    msvcrt)
+    msvcrt
+    kernel32
+    ntdll)

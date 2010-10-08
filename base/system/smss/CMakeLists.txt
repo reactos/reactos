@@ -24,8 +24,9 @@ list(APPEND SOURCE
 
 add_executable(smss WIN32 ${CMAKE_CURRENT_BINARY_DIR}/smss_smss.h.gch ${SOURCE})
 
+target_link_libraries(smss mingw_common nt smlib)
+
 add_pch(smss ${CMAKE_CURRENT_SOURCE_DIR}/smss.h ${SOURCE})
 
 set_module_type(smss nativecui)
 add_importlibs(smss ntdll)
-target_link_libraries(smss mingw_common nt smlib)
