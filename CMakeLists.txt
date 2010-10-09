@@ -58,13 +58,13 @@ include(${IMPORT_EXECUTABLES})
 
 add_definitions(-DDBG=${DBG} -DKDBG=${KDBG})
 
-if(DBG MATCHES 1)
+if(DBG)
 add_definitions(-D_SEH_ENABLE_TRACE)
-endif(DBG MATCHES 1)
+endif(DBG)
 
-if((DBG MATCHES 1) OR (KDBG MATCHES 1))
+if(DBG OR KDBG)
 set(DBG_OR_KDBG true)
-endif((DBG MATCHES 1) OR (KDBG MATCHES 1))
+endif(DBG OR KDBG)
 
 # Version Options
 add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_WINDOWS=0x502 -D_SETUPAPI_VER=0x502)
