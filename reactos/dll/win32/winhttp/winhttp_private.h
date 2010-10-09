@@ -27,6 +27,9 @@
 #include "wine/unicode.h"
 
 #include <sys/types.h>
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
 #ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
 #endif
@@ -93,6 +96,10 @@ typedef struct
     object_header_t hdr;
     LPWSTR agent;
     DWORD access;
+    int resolve_timeout;
+    int connect_timeout;
+    int send_timeout;
+    int recv_timeout;
     LPWSTR proxy_server;
     LPWSTR proxy_bypass;
     LPWSTR proxy_username;
@@ -110,7 +117,7 @@ typedef struct
     LPWSTR password;
     INTERNET_PORT hostport;
     INTERNET_PORT serverport;
-    struct sockaddr_in sockaddr;
+    struct sockaddr_storage sockaddr;
 } connect_t;
 
 typedef struct
@@ -121,6 +128,7 @@ typedef struct
     char *peek_msg;
     char *peek_msg_mem;
     size_t peek_len;
+    DWORD security_flags;
 } netconn_t;
 
 typedef struct
@@ -139,6 +147,10 @@ typedef struct
     LPWSTR version;
     LPWSTR raw_headers;
     netconn_t netconn;
+    int resolve_timeout;
+    int connect_timeout;
+    int send_timeout;
+    int recv_timeout;
     LPWSTR status_text;
     DWORD content_length; /* total number of bytes to be read (per chunk) */
     DWORD content_read;   /* bytes read so far */
@@ -204,22 +216,26 @@ void send_callback( object_header_t *, DWORD, LPVOID, DWORD );
 void close_connection( request_t * );
 
 BOOL netconn_close( netconn_t * );
-BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int );
+BOOL netconn_connect( netconn_t *, const struct sockaddr *, unsigned int, int );
 BOOL netconn_connected( netconn_t * );
 BOOL netconn_create( netconn_t *, int, int, int );
 BOOL netconn_get_next_line( netconn_t *, char *, DWORD * );
 BOOL netconn_init( netconn_t *, BOOL );
+void netconn_unload( void );
 BOOL netconn_query_data_available( netconn_t *, DWORD * );
 BOOL netconn_recv( netconn_t *, void *, size_t, int, int * );
-BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr_in * );
-BOOL netconn_secure_connect( netconn_t * );
+BOOL netconn_resolve( WCHAR *, INTERNET_PORT, struct sockaddr *, socklen_t *, int );
+BOOL netconn_secure_connect( netconn_t *, WCHAR * );
 BOOL netconn_send( netconn_t *, const void *, size_t, int, int * );
+DWORD netconn_set_timeout( netconn_t *, BOOL, int );
 const void *netconn_get_certificate( netconn_t * );
+int netconn_get_cipher_strength( netconn_t * );
 
 BOOL set_cookies( request_t *, const WCHAR * );
 BOOL add_cookie_headers( request_t * );
 BOOL add_request_headers( request_t *, LPCWSTR, DWORD, DWORD );
 void delete_domain( domain_t * );
+BOOL set_server_for_hostname( connect_t *connect, LPCWSTR server, INTERNET_PORT port );
 
 static inline void *heap_alloc( SIZE_T size )
 {

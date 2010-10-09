@@ -15,6 +15,8 @@
 	<file>session.c</file>
 	<file>url.c</file>
 	<library>wine</library>
+	<library>advapi32</library>
+	<library>crypt32</library>
 	<library>shlwapi</library>
 	<library>wininet</library>
 	<library>ws2_32</library>

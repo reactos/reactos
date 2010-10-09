@@ -119,22 +119,22 @@ static HRESULT WINAPI DownloadBSC_OnLowResource(IBindStatusCallback *iface, DWOR
     return E_NOTIMPL;
 }
 
-static void on_progress(DownloadBSC *This, ULONG progress, ULONG progress_max, ULONG status_code, LPCWSTR status_text)
+static HRESULT on_progress(DownloadBSC *This, ULONG progress, ULONG progress_max, ULONG status_code, LPCWSTR status_text)
 {
     HRESULT hres;
 
     if(!This->callback)
-        return;
+        return S_OK;
 
     hres = IBindStatusCallback_OnProgress(This->callback, progress, progress_max, status_code, status_text);
-    if(FAILED(hres))
-        FIXME("OnProgress failed: %08x\n", hres);
+    return hres;
 }
 
 static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG ulProgress,
         ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
 {
     DownloadBSC *This = STATUSCLB_THIS(iface);
+    HRESULT hres = S_OK;
 
     TRACE("%p)->(%u %u %u %s)\n", This, ulProgress, ulProgressMax, ulStatusCode,
             debugstr_w(szStatusText));
@@ -146,11 +146,11 @@ static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG u
     case BINDSTATUS_ENDDOWNLOADDATA:
     case BINDSTATUS_SENDINGREQUEST:
     case BINDSTATUS_MIMETYPEAVAILABLE:
-        on_progress(This, ulProgress, ulProgressMax, ulStatusCode, szStatusText);
+        hres = on_progress(This, ulProgress, ulProgressMax, ulStatusCode, szStatusText);
         break;
 
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
-        on_progress(This, ulProgress, ulProgressMax, ulStatusCode, szStatusText);
+        hres = on_progress(This, ulProgress, ulProgressMax, ulStatusCode, szStatusText);
         This->cache_file = heap_strdupW(szStatusText);
         break;
 
@@ -161,7 +161,7 @@ static HRESULT WINAPI DownloadBSC_OnProgress(IBindStatusCallback *iface, ULONG u
         FIXME("Unsupported status %u\n", ulStatusCode);
     }
 
-    return S_OK;
+    return hres;
 }
 
 static HRESULT WINAPI DownloadBSC_OnStopBinding(IBindStatusCallback *iface,
