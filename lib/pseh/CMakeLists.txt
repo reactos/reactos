@@ -1,4 +1,6 @@
 
+if(NOT MSVC)
+
 list(APPEND SOURCE framebased.c)
 
 if(ARCH MATCHES i386)
@@ -15,3 +17,4 @@ endif(ARCH MATCHES i386)
 add_library(pseh ${SOURCE})
 add_dependencies(pseh psdk)
 
+endif()
