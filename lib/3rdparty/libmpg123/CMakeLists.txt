@@ -1,13 +1,14 @@
-add_definitions(-DOPT_I386)
-add_definitions(-DREAL_IS_FLOAT)
-add_definitions(-DNOXFERMEM)
-add_definitions(-DHAVE_CONFIG_H)
-add_definitions(-DEOVERFLOW=75)
-add_definitions(-Dlseek=_lseek)
-add_definitions(-Dread=_read)
-add_definitions(-Dstrdup=_strdup)
+add_definitions(
+    -DOPT_I386
+    -DREAL_IS_FLOAT
+    -DNOXFERMEM
+    -DHAVE_CONFIG_H
+    -DEOVERFLOW=75
+    -Dlseek=_lseek
+    -Dread=_read
+    -Dstrdup=_strdup)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
 
 add_library(libmpg123
     compat.c
@@ -35,3 +36,5 @@ add_library(libmpg123
     synth_real.c
     synth_s32.c
     tabinit.c)
+
+add_dependencies(libmpg123 psdk)
