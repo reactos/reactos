@@ -66,6 +66,7 @@
 #define YYERROR_VERBOSE
 
 static unsigned char pointer_default = RPC_FC_UP;
+static int is_object_interface = FALSE;
 
 typedef struct list typelist_t;
 struct typenode {
@@ -805,6 +806,7 @@ dispinterface: tDISPINTERFACE aIDENTIFIER	{ $$ = get_type(TYPE_INTERFACE, $2, 0)
 	;
 
 dispinterfacehdr: attributes dispinterface	{ attr_t *attrs;
+						  is_object_interface = TRUE;
 						  $$ = $2;
 						  check_def($$);
 						  attrs = make_attr(ATTR_DISPINTERFACE);
@@ -834,7 +836,7 @@ dispinterfacedef: dispinterfacehdr '{'
 	;
 
 inherit:					{ $$ = NULL; }
-	| ':' aKNOWNTYPE			{ $$ = find_type_or_error2($2, 0); }
+	| ':' aKNOWNTYPE			{ $$ = find_type_or_error2($2, 0); is_object_interface = 1; }
 	;
 
 interface: tINTERFACE aIDENTIFIER		{ $$ = get_type(TYPE_INTERFACE, $2, 0); }
@@ -847,6 +849,7 @@ interfacehdr: attributes interface		{ $$.interface = $2;
 						    pointer_default = get_attrv($1, ATTR_POINTERDEFAULT);
 						  check_def($2);
 						  $2->attrs = check_iface_attrs($2->name, $1);
+						  is_object_interface = is_object($2);
 						  $2->defined = TRUE;
 						}
 	;
@@ -923,8 +926,7 @@ decl_spec_no_type:
 declarator:
 	  '*' m_type_qual_list declarator %prec PPTR
 						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
-	| callconv declarator			{ $$ = $2; if ($$->func_type) $$->func_type->attrs = append_attr($$->func_type->attrs, make_attrp(ATTR_CALLCONV, $1));
-						           else if ($$->type) $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	| callconv declarator			{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
 	| direct_declarator
 	;
 
@@ -942,8 +944,7 @@ direct_declarator:
 abstract_declarator:
 	  '*' m_type_qual_list m_abstract_declarator %prec PPTR
 						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
-	| callconv m_abstract_declarator	{ $$ = $2; if ($$->func_type) $$->func_type->attrs = append_attr($$->func_type->attrs, make_attrp(ATTR_CALLCONV, $1));
-						           else if ($$->type) $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	| callconv m_abstract_declarator	{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
 	| abstract_direct_declarator
 	;
 
@@ -951,8 +952,7 @@ abstract_declarator:
 abstract_declarator_no_direct:
 	  '*' m_type_qual_list m_any_declarator %prec PPTR
 						{ $$ = $3; $$->type = append_ptrchain_type($$->type, type_new_pointer(pointer_default, NULL, $2)); }
-	| callconv m_any_declarator		{ $$ = $2; if ($$->func_type) $$->func_type->attrs = append_attr($$->func_type->attrs, make_attrp(ATTR_CALLCONV, $1));
-						           else if ($$->type) $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
+	| callconv m_any_declarator		{ $$ = $2; $$->type->attrs = append_attr($$->type->attrs, make_attrp(ATTR_CALLCONV, $1)); }
 	;
 
 /* abstract declarator or empty */
@@ -1572,6 +1572,12 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
      * function node */
     for (t = v->type; is_ptr(t); t = type_pointer_get_ref(t))
       ft->attrs = move_attr(ft->attrs, t->attrs, ATTR_CALLCONV);
+    if (is_object_interface && !is_attr(ft->attrs, ATTR_CALLCONV))
+    {
+      static char *stdmethodcalltype;
+      if (!stdmethodcalltype) stdmethodcalltype = strdup("STDMETHODCALLTYPE");
+      ft->attrs = append_attr(NULL, make_attrp(ATTR_CALLCONV, stdmethodcalltype));
+    }
   }
   else
   {
@@ -1815,12 +1821,6 @@ static type_t *reg_typedefs(decl_spec_t *decl_spec, declarator_list_t *decls, at
   }
   else if (is_attr(attrs, ATTR_UUID) && !is_attr(attrs, ATTR_PUBLIC))
     attrs = append_attr( attrs, make_attr(ATTR_PUBLIC) );
-
-  /* Append the SWITCHTYPE attribute to a union if it does not already have one.  */
-  if (type_get_type_detect_alias(type) == TYPE_UNION &&
-      is_attr(attrs, ATTR_SWITCHTYPE) &&
-      !is_attr(type->attrs, ATTR_SWITCHTYPE))
-    type->attrs = append_attr(type->attrs, make_attrp(ATTR_SWITCHTYPE, get_attrp(attrs, ATTR_SWITCHTYPE)));
 
   LIST_FOR_EACH_ENTRY( decl, decls, const declarator_t, entry )
   {
