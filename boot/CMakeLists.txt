@@ -170,7 +170,7 @@ add_library(freeldr SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/freeldr_freeldr.h.gch
     ${FREELDR_SOURCE})
 
-set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000" SUFFIX ".sys")
+set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys")
 
 if(ARCH MATCHES i386)
 target_link_libraries(freeldr mini_hal)
