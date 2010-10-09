@@ -2,7 +2,7 @@
 
 [Section]
 Name = SciTE
-Version = 2.20
+Version = 2.21
 Licence = Freeware
 Description = SciTE is a SCIntilla based Text Editor. Originally built to demonstrate Scintilla, it has grown to be a generally useful editor with facilities for building and running programs.
 Size = 0.6M
