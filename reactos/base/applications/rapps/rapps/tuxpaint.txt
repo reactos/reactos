@@ -8,7 +8,7 @@ Description = An Open Source bitmap graphics editor geared towards young childre
 Size = 10MB
 Category = 3
 URLSite = http://tuxpaint.org/
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.21-win32-installer.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/tuxpaint/tuxpaint/0.9.21/tuxpaint-0.9.21-win32-installer.exe
 CDPath = none
 
 [Section.0407]

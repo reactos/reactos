@@ -32,11 +32,11 @@ URLSite = Nieznana
 [Section.0419]
 Name = Драйвер AC97 для VirtualBox
 Licence = Не указано
-Description = Разархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
+Description = Pазархивируйте содержимое в папку "ReactOS", затем дважды перезагрузите систему.
 URLSite = Не указано
 
 [Section.0422]
 Name = Драйвер AC97 для VirtualBox
 Licence = Невідома
-Description = Розархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
+Description = Pозархівуйте вміст в теку "ReactOS" після чого двічі перезавантажте систему.
 URLSite = Не вказано
