@@ -513,6 +513,7 @@ BOOL NETCON_connected(WININET_NETCONNECTION *connection)
         return TRUE;
 }
 
+#if 0
 /* translate a unix error code into a winsock one */
 int sock_get_error( int err )
 {
@@ -579,6 +580,7 @@ int sock_get_error( int err )
 #endif
     return err;
 }
+#endif
 
 /******************************************************************************
  * NETCON_create

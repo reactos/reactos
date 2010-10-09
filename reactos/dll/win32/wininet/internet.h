@@ -47,10 +47,6 @@
 #define ioctlsocket ioctl
 #endif /* __MINGW32__ */
 
-/* ReactOS-specific definitions */
-#undef CP_UNIXCP
-#define CP_UNIXCP   CP_THREAD_ACP
-
 /* used for netconnection.c stuff */
 typedef struct
 {
@@ -441,7 +437,7 @@ DWORD NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int 
 BOOL NETCON_query_data_available(WININET_NETCONNECTION *connection, DWORD *available);
 LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection);
 DWORD NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value);
-int sock_get_error(int);
+#define sock_get_error(x) WSAGetLastError()
 
 extern void URLCacheContainers_CreateDefaults(void);
 extern void URLCacheContainers_DeleteAll(void);
