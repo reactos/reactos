@@ -45,24 +45,33 @@ list(APPEND SOURCE
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
-
 add_executable(explorer ${SOURCE}) #${CMAKE_CURRENT_BINARY_DIR}/explorer_precomp.h.gch ${SOURCE})
 
+set_subsystem(explorer windows)
+set_entrypoint(explorer WinMainCRTStartup)
+
 target_link_libraries(explorer
+    -lsupc++
+    -lstdc++
+    -lgcc
+    -lmingw32
+    -lmingwex
     wine
-    uuid)
+    mingw_wmain
+    mingw_common
+    uuid
+    -ladvapi32
+    -lgdi32
+    -luser32
+    -lws2_32
+    -lmsimg32
+    -lcomctl32
+    -lole32
+    -loleaut32
+    -lshell32
+    -lnotifyhook
+    -lmsvcrt
+    -lkernel32
+    -lntdll)
 
-set_module_type(explorer win32gui)
-
-add_importlibs(explorer 
-    advapi32
-    gdi32
-    user32
-    ws2_32
-    msimg32
-    comctl32
-    ole32
-    oleaut32
-    shell32
-    notifyhook
-    msvcrt)
+add_dependencies(explorer psdk buildno_header)
