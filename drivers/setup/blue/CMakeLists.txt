@@ -12,3 +12,4 @@ target_link_libraries(blue
     -lhal)
 
 add_dependencies(blue psdk bugcodes)
+add_minicd_target(blue reactos blue.sys)

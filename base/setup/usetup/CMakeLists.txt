@@ -39,3 +39,4 @@ target_link_libraries(usetup
 
 set_module_type(usetup nativecui)
 add_importlibs(usetup kernel32 ntdll)
+add_minicd_target(usetup reactos/system32 smss.exe)

@@ -44,3 +44,5 @@ target_link_libraries(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.def
                       
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
 add_dependencies(ntdll ntstatus version)
+
+add_minicd_target(ntdll reactos/system32 ntdll.dll)

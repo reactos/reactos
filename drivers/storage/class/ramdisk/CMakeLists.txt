@@ -12,3 +12,4 @@ target_link_libraries(ramdisk
     -lhal)
 
 add_dependencies(ramdisk psdk bugcodes)
+add_minicd_target(ramdisk reactos ramdisk.sys)

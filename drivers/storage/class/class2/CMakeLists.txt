@@ -16,3 +16,4 @@ target_link_libraries(class2
     -lhal)
 
 add_dependencies(class2 class2_def psdk bugcodes)
+add_minicd_target(class2 reactos class2.sys)

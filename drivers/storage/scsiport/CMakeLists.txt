@@ -11,3 +11,4 @@ target_link_libraries(scsiport
     -lhal)
 
 add_dependencies(scsiport psdk bugcodes)
+add_minicd_target(scsiport reactos scsiport.sys)

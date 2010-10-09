@@ -10,3 +10,4 @@ target_link_libraries(buslogic
     libcntpr)
 
 add_dependencies(buslogic psdk bugcodes)
+add_minicd_target(buslogic reactos buslogic.sys)

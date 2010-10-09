@@ -23,3 +23,4 @@ target_link_libraries(uniata
     -lgcc)
 
 add_dependencies(uniata psdk bugcodes buildno_header)
+add_minicd_target(uniata reactos uniata.sys)

@@ -10,3 +10,4 @@ target_link_libraries(atapi
     libcntpr)
 
 add_dependencies(atapi psdk bugcodes)
+add_minicd_target(atapi reactos atapi.sys)

@@ -29,3 +29,4 @@ target_link_libraries(cdfs
 
 add_pch(cdfs ${CMAKE_CURRENT_SOURCE_DIR}/cdfs.h ${SOURCE})
 add_dependencies(cdfs psdk bugcodes)
+add_minicd_target(cdfs reactos cdfs.sys)

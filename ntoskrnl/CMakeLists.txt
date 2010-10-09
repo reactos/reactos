@@ -424,3 +424,5 @@ target_link_libraries(ntoskrnl
 add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
 set_source_files_properties(${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S PROPERTIES GENERATED TRUE)
 add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi)
+
+add_minicd_target(ntoskrnl reactos ntoskrnl.exe)

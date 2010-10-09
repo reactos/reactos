@@ -14,3 +14,4 @@ target_link_libraries(cdrom
     -lhal)
 
 add_dependencies(cdrom psdk bugcodes)
+add_minicd_target(cdrom reactos cdrom.sys)

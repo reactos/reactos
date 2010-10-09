@@ -27,3 +27,4 @@ target_link_libraries(bootvid
 
 add_pch(bootvid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(bootvid bootvid_def psdk buildno_header bugcodes)
+add_minicd_target(bootvid reactos bootvid.dll)

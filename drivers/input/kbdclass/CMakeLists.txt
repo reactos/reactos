@@ -15,3 +15,4 @@ target_link_libraries(kbdclass
     -lhal)
 
 add_dependencies(kbdclass psdk bugcodes)
+add_minicd_target(kbdclass reactos kbdclass.sys)

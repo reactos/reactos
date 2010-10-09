@@ -99,12 +99,28 @@ add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/idl)
 add_subdirectory(include/reactos/mc)
 
+#minicd target
+set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
+
+file(MAKE_DIRECTORY "${BOOTCD_DIR}")
+file(MAKE_DIRECTORY "${BOOTCD_DIR}/loader")
+file(MAKE_DIRECTORY "${BOOTCD_DIR}/reactos")
+file(MAKE_DIRECTORY "${BOOTCD_DIR}/reactos/system32")
+
+add_custom_command(
+    OUTPUT ${REACTOS_BINARY_DIR}/minicd.iso
+    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${BOOTCD_DIR} REACTOS ${REACTOS_BINARY_DIR}/minicd.iso
+    DEPENDS native-cdmake)
+add_custom_target(minicd DEPENDS ${REACTOS_BINARY_DIR}/minicd.iso)
+add_minicd(${REACTOS_SOURCE_DIR}/boot/bootdata/bootcd.ini "" freeldr.ini)
+
 add_subdirectory(base)
 add_subdirectory(boot)
 add_subdirectory(dll)
 add_subdirectory(drivers)
 add_subdirectory(hal)
 add_subdirectory(lib)
+add_subdirectory(media)
 add_subdirectory(ntoskrnl)
 add_subdirectory(subsystems)
 

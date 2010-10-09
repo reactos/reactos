@@ -30,3 +30,4 @@ target_link_libraries(ext2fs
     -lhal)
 
 add_dependencies(ext2fs psdk bugcodes)
+add_minicd_target(ext2fs reactos ext2.sys)

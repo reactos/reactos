@@ -75,7 +75,7 @@ MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
         DEPENDS native-winebuild)
     set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
     add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
-
+    add_minicd(${_object_file} loader ${OBJECT_NAME})
 ENDMACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
 else()
 MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)

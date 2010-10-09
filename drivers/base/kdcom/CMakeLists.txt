@@ -21,3 +21,4 @@ target_link_libraries(kdcom
     -lhal)
 
 add_dependencies(kdcom kdcom_def psdk buildno_header bugcodes)
+add_minicd_target(kdcom reactos kdcom.dll)

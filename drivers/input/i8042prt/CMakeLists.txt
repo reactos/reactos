@@ -21,3 +21,4 @@ target_link_libraries(i8042prt
     -lhal)
 
 add_dependencies(i8042prt psdk bugcodes)
+add_minicd_target(i8042prt reactos i8042prt.sys)

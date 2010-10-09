@@ -193,7 +193,7 @@ list(APPEND SETUPLDR_SOURCE
 
 add_library(setupldr SHARED ${SETUPLDR_SOURCE})
 
-set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 
 if(ARCH MATCHES i386)
 target_link_libraries(setupldr mini_hal)
@@ -205,3 +205,7 @@ target_link_libraries(setupldr
     cmlib
     rtl
     libcntpr)
+
+add_minicd_target(setupldr loader setupldr.sys)
+add_minicd_target(freeldr loader freeldr.sys)
+add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/txtsetup.sif reactos txtsetup.sif)
