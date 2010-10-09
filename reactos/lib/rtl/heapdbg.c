@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <rtl.h>
+#include <heap.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -20,5 +21,16 @@ ULONG RtlpPageHeapDllRangeStart, RtlpPageHeapDllRangeEnd;
 WCHAR RtlpPageHeapTargetDlls[512];
 
 /* FUNCTIONS ******************************************************************/
+
+HANDLE NTAPI
+RtlpPageHeapCreate(ULONG Flags,
+                   PVOID Addr,
+                   SIZE_T TotalSize,
+                   SIZE_T CommitSize,
+                   PVOID Lock,
+                   PRTL_HEAP_PARAMETERS Parameters)
+{
+    return NULL;
+}
 
 /* EOF */
