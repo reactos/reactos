@@ -3569,8 +3569,8 @@ LPSTR INTERNET_GetResponseBuffer(void)
 
 LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
 {
-    struct timeval tv;
     fd_set infd;
+    struct timeval tv;
     BOOL bSuccess = FALSE;
     INT nRecv = 0;
     LPSTR lpszBuffer = INTERNET_GetResponseBuffer();
@@ -3578,13 +3578,13 @@ LPSTR INTERNET_GetNextLine(INT nSocket, LPDWORD dwLen)
     TRACE("\n");
 
     FD_ZERO(&infd);
-    FD_SET(nSocket, &infd);
-    tv.tv_sec=RESPONSE_TIMEOUT;
-    tv.tv_usec=0;
+    FD_SET(nSocket,&infd);
+    tv.tv_sec = RESPONSE_TIMEOUT;
+    tv.tv_usec = 0;
 
     while (nRecv < MAX_REPLY_LEN)
     {
-        if (select(nSocket+1,&infd,NULL,NULL,&tv) > 0)
+        if (select(0, &infd, NULL, NULL, &tv) > 0)
         {
             if (recv(nSocket, &lpszBuffer[nRecv], 1, 0) <= 0)
             {
