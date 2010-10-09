@@ -122,7 +122,7 @@ MACRO(add_minicd_target _targetname _dir _nameoncd)
     add_custom_command(
         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd/${_dir}/${_nameoncd}        
         COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd})
-        
+
     add_custom_target(${_targetname}_minicd DEPENDS ${BOOTCD_DIR}/${_dir}/${_nameoncd})
 
     add_dependencies(${_targetname}_minicd ${_targetname})

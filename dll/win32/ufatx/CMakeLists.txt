@@ -10,4 +10,4 @@ target_link_libraries(ufatx
     vfatxlib)
 
 add_importlibs(ufatx gcc kernel32 ntdll)
-add_dependencies(ufatx ufatx_def)
+add_dependencies(ufatx ufatx_def psdk buildno_header)
