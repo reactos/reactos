@@ -302,7 +302,7 @@ typedef struct {
  *
  */
 
-#include <host/pshpack1.h>
+#include "pshpack1.h"
 
 typedef struct {
 /*00*/	DWORD SLTG_magic;	/* 0x47544c53  == "SLTG" */
@@ -599,7 +599,7 @@ WORD offset from start of block to SAFEARRAY
 WORD typeofarray
 */
 
-#include <host/poppack.h>
+#include "poppack.h"
 
 /*---------------------------END--------------------------------------------*/
 #endif

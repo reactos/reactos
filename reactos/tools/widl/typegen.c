@@ -873,7 +873,7 @@ static unsigned int write_procformatstring_type(FILE *file, int indent,
             print_file(file, indent, "0x4d,    /* FC_IN_PARAM */\n");
 
         print_file(file, indent, "0x01,\n");
-        print_file(file, indent, "NdrFcShort(0x%hx),\n", type->typestring_offset);
+        print_file(file, indent, "NdrFcShort(0x%hx),\n", (unsigned short)type->typestring_offset);
         size = 4; /* includes param type prefix */
     }
     return size;
@@ -1137,7 +1137,7 @@ static unsigned int write_conf_or_var_desc(FILE *file, const type_t *structure,
         print_file(file, 2, "0x%x, /* %s */\n", operator_type,
                    operator_type ? string_of_type(operator_type) : "no operators");
         print_file(file, 2, "NdrFcShort(0x%hx),\t/* offset = %d */\n",
-                   offset, offset);
+                   (unsigned short)offset, offset);
     }
     else
     {
@@ -1172,7 +1172,7 @@ static unsigned int write_conf_or_var_desc(FILE *file, const type_t *structure,
 
         print_file(file, 2, "0x%x, /* Corr desc: %s */\n", conftype, conftype_string);
         print_file(file, 2, "0x%x, /* %s */\n", RPC_FC_CALLBACK, "FC_CALLBACK");
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", callback_offset, callback_offset);
+        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)callback_offset, callback_offset);
     }
     return 4;
 }
@@ -1654,8 +1654,8 @@ static void write_user_tfs(FILE *file, type_t *type, unsigned int *tfsoff)
     print_file(file, 2, "0x%x,\t/* Alignment= %d, Flags= %02x */\n",
                flags | (ualign - 1), ualign - 1, flags);
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* Function offset= %hu */\n", funoff, funoff);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", size, size);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", usize, usize);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)size, size);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)usize, usize);
     *tfsoff += 8;
     reloff = absoff - *tfsoff;
     print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset= %hd (%u) */\n", reloff, reloff, absoff);
@@ -1786,8 +1786,8 @@ static int write_pointer_description_offsets(
              * note that MSDN states that for pointer layouts in structures,
              * this is a negative offset from the end of the structure, but
              * this statement is incorrect. all offsets are positive */
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Memory offset = %d */\n", *offset_in_memory, *offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Buffer offset = %d */\n", *offset_in_buffer, *offset_in_buffer);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Memory offset = %d */\n", (unsigned short)*offset_in_memory, *offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Buffer offset = %d */\n", (unsigned short)*offset_in_buffer, *offset_in_buffer);
 
             memsize = type_memsize(type);
             *offset_in_memory += memsize;
@@ -1940,10 +1940,10 @@ static int write_fixed_array_pointer_descriptions(
 
             print_file(file, 2, "0x%02x, /* FC_FIXED_REPEAT */\n", RPC_FC_FIXED_REPEAT);
             print_file(file, 2, "0x%02x, /* FC_PAD */\n", RPC_FC_PAD);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Iterations = %d */\n", type_array_get_dim(type), type_array_get_dim(type));
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", increment_size, increment_size);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", *offset_in_memory, *offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", pointer_count, pointer_count);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Iterations = %d */\n", (unsigned short)type_array_get_dim(type), type_array_get_dim(type));
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", (unsigned short)increment_size, increment_size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", (unsigned short)*offset_in_memory, *offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", (unsigned short)pointer_count, pointer_count);
             *typestring_offset += 10;
 
             pointer_count = write_pointer_description_offsets(
@@ -2014,9 +2014,9 @@ static int write_conformant_array_pointer_descriptions(
 
             print_file(file, 2, "0x%02x, /* FC_VARIABLE_REPEAT */\n", RPC_FC_VARIABLE_REPEAT);
             print_file(file, 2, "0x%02x, /* FC_FIXED_OFFSET */\n", RPC_FC_FIXED_OFFSET);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", increment_size, increment_size);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", offset_in_memory, offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", pointer_count, pointer_count);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", (unsigned short)increment_size, increment_size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", (unsigned short)offset_in_memory, offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", (unsigned short)pointer_count, pointer_count);
             *typestring_offset += 8;
 
             pointer_count = write_pointer_description_offsets(
@@ -2056,9 +2056,9 @@ static int write_varying_array_pointer_descriptions(
 
             print_file(file, 2, "0x%02x, /* FC_VARIABLE_REPEAT */\n", RPC_FC_VARIABLE_REPEAT);
             print_file(file, 2, "0x%02x, /* FC_VARIABLE_OFFSET */\n", RPC_FC_VARIABLE_OFFSET);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", increment_size, increment_size);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", *offset_in_memory, *offset_in_memory);
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", pointer_count, pointer_count);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Increment = %d */\n", (unsigned short)increment_size, increment_size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset to array = %d */\n", (unsigned short)*offset_in_memory, *offset_in_memory);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* Number of pointers = %d */\n", (unsigned short)pointer_count, pointer_count);
             *typestring_offset += 8;
 
             pointer_count = write_pointer_description_offsets(
@@ -2221,7 +2221,7 @@ static unsigned int write_string_tfs(FILE *file, const attr_list_t *attrs,
         print_file(file, 2, "0x%x, /* FC_PAD */\n", RPC_FC_PAD);
         *typestring_offset += 2;
 
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", dim, dim);
+        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)dim, dim);
         *typestring_offset += 2;
 
         return start_offset;
@@ -2298,7 +2298,7 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
         }
         else
         {
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", size, size);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)size, size);
             *typestring_offset += 2;
         }
 
@@ -2319,11 +2319,11 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
             }
             else
             {
-                print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", dim, dim);
+                print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)dim, dim);
                 *typestring_offset += 2;
             }
 
-            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", elsize, elsize);
+            print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)elsize, elsize);
             *typestring_offset += 2;
         }
 
@@ -2349,7 +2349,7 @@ static unsigned int write_array_tfs(FILE *file, const attr_list_t *attrs, type_t
     else
     {
         unsigned int dim = size_is ? 0 : type_array_get_dim(type);
-        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", dim, dim);
+        print_file(file, 2, "NdrFcShort(0x%hx),\t/* %u */\n", (unsigned short)dim, dim);
         *typestring_offset += 2;
         *typestring_offset
             += write_conf_or_var_desc(file, current_structure, baseoff,
@@ -2487,7 +2487,7 @@ static unsigned int write_struct_tfs(FILE *file, type_t *type,
     print_start_tfs_comment(file, type, start_offset);
     print_file(file, 2, "0x%x,\t/* %s */\n", fc, string_of_type(fc));
     print_file(file, 2, "0x%x,\t/* %d */\n", align - 1, align - 1);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", total_size, total_size);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)total_size, total_size);
     *tfsoff += 4;
 
     if (array)
@@ -2513,7 +2513,7 @@ static unsigned int write_struct_tfs(FILE *file, type_t *type,
         int reloff = absoff - *tfsoff;
         assert( reloff >= 0 );
         print_file(file, 2, "NdrFcShort(0x%hx),\t/* Offset= %d (%u) */\n",
-                   reloff, reloff, absoff);
+                   (unsigned short)reloff, reloff, absoff);
         *tfsoff += 2;
     }
     else if ((fc == RPC_FC_PSTRUCT) ||
@@ -2713,8 +2713,8 @@ static unsigned int write_union_tfs(FILE *file, type_t *type, unsigned int *tfso
         print_file(file, 0, "/* %u */\n", *tfsoff);
     }
 
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", size, size);
-    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", nbranch, nbranch);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)size, size);
+    print_file(file, 2, "NdrFcShort(0x%hx),\t/* %d */\n", (unsigned short)nbranch, nbranch);
     *tfsoff += 4;
 
     if (fields) LIST_FOR_EACH_ENTRY(f, fields, var_t, entry)

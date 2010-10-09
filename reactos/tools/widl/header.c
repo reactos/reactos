@@ -39,9 +39,12 @@
 typedef struct _user_type_t generic_handle_t;
 
 static int indentation = 0;
+static int is_object_interface = 0;
 user_type_list_t user_type_list = LIST_INIT(user_type_list);
 static context_handle_list_t context_handle_list = LIST_INIT(context_handle_list);
 static struct list generic_handle_list = LIST_INIT(generic_handle_list);
+
+static void write_type_def_or_decl(FILE *f, type_t *t, int field, const char *name);
 
 static void indent(FILE *h, int delta)
 {
@@ -366,12 +369,12 @@ static void write_type_v(FILE *h, type_t *t, int is_field, int declonly, const c
     if (type_get_type_detect_alias(pt) == TYPE_FUNCTION) {
       int i;
       const char *callconv = get_attrp(pt->attrs, ATTR_CALLCONV);
-      if (!callconv) callconv = "";
+      if (!callconv && is_object_interface) callconv = "STDMETHODCALLTYPE";
       if (is_attr(pt->attrs, ATTR_INLINE)) fprintf(h, "inline ");
       write_type_left(h, type_function_get_rettype(pt), declonly);
       fputc(' ', h);
       if (ptr_level) fputc('(', h);
-      fprintf(h, "%s ", callconv);
+      if (callconv) fprintf(h, "%s ", callconv);
       for (i = 0; i < ptr_level; i++)
         fputc('*', h);
     } else
@@ -396,7 +399,7 @@ static void write_type_v(FILE *h, type_t *t, int is_field, int declonly, const c
   }
 }
 
-void write_type_def_or_decl(FILE *f, type_t *t, int field, const char *name)
+static void write_type_def_or_decl(FILE *f, type_t *t, int field, const char *name)
 {
   write_type_v(f, t, field, FALSE, name);
 }
@@ -785,7 +788,7 @@ static void write_cpp_method_def(FILE *header, const type_t *iface)
     const var_t *func = stmt->u.var;
     if (!is_callas(func->attrs)) {
       const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
-      if (!callconv) callconv = "";
+      if (!callconv) callconv = "STDMETHODCALLTYPE";
       indent(header, 0);
       fprintf(header, "virtual ");
       write_type_decl_left(header, type_function_get_rettype(func->type));
@@ -815,7 +818,7 @@ static void do_write_c_method_def(FILE *header, const type_t *iface, const char 
     }
     if (!is_callas(func->attrs)) {
       const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
-      if (!callconv) callconv = "";
+      if (!callconv) callconv = "STDMETHODCALLTYPE";
       indent(header, 0);
       write_type_decl_left(header, type_function_get_rettype(func->type));
       fprintf(header, " (%s *%s)(\n", callconv, get_name(func));
@@ -846,7 +849,7 @@ static void write_method_proto(FILE *header, const type_t *iface)
 
     if (!is_local(func->attrs)) {
       const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
-      if (!callconv) callconv = "";
+      if (!callconv) callconv = "STDMETHODCALLTYPE";
       /* proxy prototype */
       write_type_decl_left(header, type_function_get_rettype(func->type));
       fprintf(header, " %s %s_%s_Proxy(\n", callconv, iface->name, get_name(func));
@@ -1217,6 +1220,7 @@ static void write_header_stmts(FILE *header, const statement_list_t *stmts, cons
         if (type_get_type(stmt->u.type) == TYPE_INTERFACE)
         {
           type_t *iface = stmt->u.type;
+          if (is_object(iface)) is_object_interface++;
           if (is_attr(stmt->u.type->attrs, ATTR_DISPINTERFACE) || is_object(stmt->u.type))
           {
             write_com_interface_start(header, iface);
@@ -1229,6 +1233,7 @@ static void write_header_stmts(FILE *header, const statement_list_t *stmts, cons
             write_header_stmts(header, type_iface_get_stmts(iface), iface, FALSE);
             write_rpc_interface_end(header, iface);
           }
+          if (is_object(iface)) is_object_interface++;
         }
         else if (type_get_type(stmt->u.type) == TYPE_COCLASS)
           write_coclass(header, stmt->u.type);
@@ -1304,16 +1309,14 @@ void write_header(const statement_list_t *stmts)
 
   fprintf(header, "#ifndef __WIDL_%s\n", header_token);
   fprintf(header, "#define __WIDL_%s\n\n", header_token);
-  start_cplusplus_guard(header);
+
+  fprintf(header, "/* Forward declarations */\n\n");
+  write_forward_decls(header, stmts);
 
   fprintf(header, "/* Headers for imported files */\n\n");
   write_imports(header, stmts);
   fprintf(header, "\n");
-
-  /* FIXME: should be before imported file includes */
-  fprintf(header, "/* Forward declarations */\n\n");
-  write_forward_decls(header, stmts);
-  fprintf(header, "\n");
+  start_cplusplus_guard(header);
 
   write_header_stmts(header, stmts, NULL, FALSE);
 

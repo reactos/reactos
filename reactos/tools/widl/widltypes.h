@@ -21,9 +21,9 @@
 #ifndef __WIDL_WIDLTYPES_H
 #define __WIDL_WIDLTYPES_H
 
-#define S_OK           0 	 
-#define S_FALSE        1 	 
-#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL) 	 
+#define S_OK           0
+#define S_FALSE        1
+#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
 #define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
 
 #define max(a, b) ((a) > (b) ? a : b)
@@ -39,7 +39,9 @@
 typedef GUID UUID;
 #endif
 
+#ifndef TRUE
 #define TRUE 1
+#endif
 #define FALSE 0
 
 typedef struct _loc_info_t loc_info_t;
