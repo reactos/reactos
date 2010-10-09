@@ -766,7 +766,8 @@ RtlSetUserFlagsHeap(
     IN PVOID HeapHandle,
     IN ULONG Flags,
     IN PVOID BaseAddress,
-    IN ULONG UserFlags
+    IN ULONG UserFlagsReset,
+    IN ULONG UserFlagsSet
 );
 
 NTSYSAPI

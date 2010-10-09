@@ -1812,7 +1812,8 @@ NTAPI
 RtlSetUserFlagsHeap(IN PVOID HeapHandle,
                     IN ULONG Flags,
                     IN PVOID BaseAddress,
-                    IN ULONG UserFlags)
+                    IN ULONG UserFlagsReset,
+                    IN ULONG UserFlagsSet)
 {
     HEAP *heapPtr;
     PHEAP_USER_DATA udata;
@@ -1829,7 +1830,7 @@ RtlSetUserFlagsHeap(IN PVOID HeapHandle,
         udata = HEAP_AllocUserData(heapPtr, BaseAddress);
         if (!udata) return FALSE;
     }
-    udata->UserFlags = UserFlags & HEAP_SETTABLE_USER_FLAGS;
+    udata->UserFlags = UserFlagsSet & HEAP_SETTABLE_USER_FLAGS;
     return TRUE;
 }
 
