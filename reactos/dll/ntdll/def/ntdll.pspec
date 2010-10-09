@@ -897,7 +897,7 @@
 //@ stdcall RtlSetTimer
 @ stdcall RtlSetUnhandledExceptionFilter(ptr)
 //@ stdcall RtlSetUnicodeCallouts
-@ stdcall RtlSetUserFlagsHeap(ptr long ptr long)
+@ stdcall RtlSetUserFlagsHeap(ptr long ptr long long)
 @ stdcall RtlSetUserValueHeap(ptr long ptr ptr)
 @ stdcall RtlSizeHeap(long long ptr)
 @ stdcall RtlSleepConditionVariableCS(ptr ptr ptr)
