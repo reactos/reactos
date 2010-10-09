@@ -12,6 +12,7 @@
    http://binglongx.spaces.live.com/blog/cns!142CBF6D49079DE8!596.entry
    http://www.phreedom.org/research/exploits/asn1-bitstring/
    http://illmatics.com/Understanding_the_LFH.pdf
+   http://www.alex-ionescu.com/?p=18
 */
 
 /* INCLUDES *****************************************************************/
@@ -243,7 +244,7 @@ typedef struct _HEAP_ENTRY_EXTRA
           {
                USHORT AllocatorBackTraceIndex;
                USHORT TagIndex;
-               ULONG Settable;
+               ULONG_PTR Settable;
           };
           UINT64 ZeroInit;
      };
@@ -1153,7 +1154,7 @@ RtlpDestroyHeapSegment(PHEAP_SEGMENT Segment)
     if (Segment->SegmentFlags & HEAP_USER_ALLOCATED) return;
 
     BaseAddress = Segment->BaseAddress;
-    DPRINT1("Destroying segment %p, BA %p\n", Segment, BaseAddress);
+    DPRINT("Destroying segment %p, BA %p\n", Segment, BaseAddress);
 
     /* Release virtual memory */
     Status = ZwFreeVirtualMemory(NtCurrentProcess(),
@@ -2983,7 +2984,15 @@ RtlReAllocateHeap(HANDLE HeapPtr,
 
                     Flags |= HEAP_SETTABLE_USER_VALUE | ((InUseEntry->Flags & HEAP_ENTRY_SETTABLE_FLAGS) << 4);
 
-                    UNIMPLEMENTED;
+                    /* Get pointer to the old extra data */
+                    OldExtra = RtlpGetExtraStuffPointer(InUseEntry);
+
+                    /* Save tag index if it was set */
+                    if (OldExtra->TagIndex &&
+                        !(OldExtra->TagIndex & HEAP_PSEUDO_TAG_FLAG))
+                    {
+                        Flags |= OldExtra->TagIndex << HEAP_TAG_SHIFT;
+                    }
                 }
                 else if (InUseEntry->SmallTagIndex)
                 {
@@ -3131,7 +3140,7 @@ RtlUnlockHeap(HANDLE HeapPtr)
     /* Check if it's really a heap */
     if (Heap->Signature != HEAP_SIGNATURE) return FALSE;
 
-    /* Lock if it's lockable */
+    /* Unlock if it's lockable */
     if (!(Heap->Flags & HEAP_NO_SERIALIZE))
     {
         RtlLeaveHeapLock(Heap->LockVariable);
@@ -3307,8 +3316,49 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
                     IN PVOID BaseAddress,
                     IN PVOID UserValue)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PHEAP Heap = (PHEAP)HeapHandle;
+    PHEAP_ENTRY HeapEntry;
+    PHEAP_ENTRY_EXTRA Extra;
+    BOOLEAN HeapLocked = FALSE;
+
+    /* Force flags */
+    Flags |= Heap->Flags;
+
+    /* Lock if it's lockable */
+    if (!(Heap->Flags & HEAP_NO_SERIALIZE))
+    {
+        RtlEnterHeapLock(Heap->LockVariable);
+        HeapLocked = TRUE;
+    }
+
+    /* Get a pointer to the entry */
+    HeapEntry = (PHEAP_ENTRY)BaseAddress - 1;
+
+    /* If it's a free entry - return error */
+    if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY))
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+
+        /* Release the heap lock if it was acquired */
+        if (HeapLocked)
+            RtlLeaveHeapLock(Heap->LockVariable);
+
+        return FALSE;
+    }
+
+    /* Check if this entry has an extra stuff associated with it */
+    if (HeapEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
+    {
+        /* Use extra to store the value */
+        Extra = RtlpGetExtraStuffPointer(HeapEntry);
+        Extra->Settable = (ULONG_PTR)UserValue;
+    }
+
+    /* Release the heap lock if it was acquired */
+    if (HeapLocked)
+        RtlLeaveHeapLock(Heap->LockVariable);
+
+    return TRUE;
 }
 
 /*
@@ -3319,9 +3369,47 @@ NTAPI
 RtlSetUserFlagsHeap(IN PVOID HeapHandle,
                     IN ULONG Flags,
                     IN PVOID BaseAddress,
-                    IN ULONG UserFlags)
+                    IN ULONG UserFlagsReset,
+                    IN ULONG UserFlagsSet)
 {
-    return FALSE;
+    PHEAP Heap = (PHEAP)HeapHandle;
+    PHEAP_ENTRY HeapEntry;
+    BOOLEAN HeapLocked = FALSE;
+
+    /* Force flags */
+    Flags |= Heap->Flags;
+
+    /* Lock if it's lockable */
+    if (!(Heap->Flags & HEAP_NO_SERIALIZE))
+    {
+        RtlEnterHeapLock(Heap->LockVariable);
+        HeapLocked = TRUE;
+    }
+
+    /* Get a pointer to the entry */
+    HeapEntry = (PHEAP_ENTRY)BaseAddress - 1;
+
+    /* If it's a free entry - return error */
+    if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY))
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+
+        /* Release the heap lock if it was acquired */
+        if (HeapLocked)
+            RtlLeaveHeapLock(Heap->LockVariable);
+
+        return FALSE;
+    }
+
+    /* Set / reset flags */
+    HeapEntry->Flags &= ~(UserFlagsReset >> 4);
+    HeapEntry->Flags |= (UserFlagsSet >> 4);
+
+    /* Release the heap lock if it was acquired */
+    if (HeapLocked)
+        RtlLeaveHeapLock(Heap->LockVariable);
+
+    return TRUE;
 }
 
 /*
@@ -3335,8 +3423,56 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
                    OUT PVOID *UserValue,
                    OUT PULONG UserFlags)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PHEAP Heap = (PHEAP)HeapHandle;
+    PHEAP_ENTRY HeapEntry;
+    PHEAP_ENTRY_EXTRA Extra;
+    BOOLEAN HeapLocked = FALSE;
+
+    /* Force flags */
+    Flags |= Heap->Flags;
+
+    /* Lock if it's lockable */
+    if (!(Heap->Flags & HEAP_NO_SERIALIZE))
+    {
+        RtlEnterHeapLock(Heap->LockVariable);
+        HeapLocked = TRUE;
+    }
+
+    /* Get a pointer to the entry */
+    HeapEntry = (PHEAP_ENTRY)BaseAddress - 1;
+
+    /* If it's a free entry - return error */
+    if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY))
+    {
+        RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_INVALID_PARAMETER);
+
+        /* Release the heap lock if it was acquired */
+        if (HeapLocked)
+            RtlLeaveHeapLock(Heap->LockVariable);
+
+        return FALSE;
+    }
+
+    /* Check if this entry has an extra stuff associated with it */
+    if (HeapEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT)
+    {
+        /* Get pointer to extra data */
+        Extra = RtlpGetExtraStuffPointer(HeapEntry);
+
+        /* Pass user value */
+        if (UserValue)
+            *UserValue = (PVOID)Extra->Settable;
+
+        /* Decode and return user flags */
+        if (UserFlags)
+            *UserFlags = (HeapEntry->Flags & HEAP_ENTRY_SETTABLE_FLAGS) << 4;
+    }
+
+    /* Release the heap lock if it was acquired */
+    if (HeapLocked)
+        RtlLeaveHeapLock(Heap->LockVariable);
+
+    return TRUE;
 }
 
 /*
