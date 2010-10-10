@@ -151,6 +151,11 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)            /* handle the messages */
     {
+        case WM_CREATE:
+            ptStack = NULL;
+            ptSP = 0;
+            break;
+
         case WM_DESTROY:
             PostQuitMessage(0); /* send a WM_QUIT to the message queue */
             break;
@@ -446,9 +451,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 HDC hdc;
                 GetClientRect(hwndMiniature, (LPRECT) &mclient);
                 hdc = GetDC(hwndMiniature);
-                BitBlt(hdc, -min(imgXRes * GetScrollPos(hScrollbox, SB_HORZ) / 10000, imgXRes - mclient[2]),
-                       -min(imgYRes * GetScrollPos(hScrollbox, SB_VERT) / 10000, imgYRes - mclient[3]),
-                       imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
+                BitBlt(hdc, 0, 0, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
                 ReleaseDC(hwndMiniature, hdc);
             }
             break;
@@ -565,6 +568,24 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
 
+        case WM_KEYDOWN:
+            if (wParam == VK_ESCAPE)
+            {
+                if (!drawing)
+                {
+                    /* Deselect */
+                    if ((activeTool == TOOL_RECTSEL) || (activeTool == TOOL_FREESEL))
+                    {
+                        startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                        whilePaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                        endPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                        ShowWindow(hSelection, SW_HIDE);
+                    }
+                }
+                /* FIXME: also cancel current drawing underway */
+            }
+            break;
+
         case WM_MOUSEMOVE:
             if (hwnd == hImageArea)
             {
@@ -640,6 +661,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if ((activeTool >= TOOL_TEXT) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_FREESEL))
                         {
                             TCHAR sizeStr[100];
+                            if ((activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
+                                yRel = xRel;
                             _stprintf(sizeStr, _T("%d x %d"), xRel, yRel);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
                         }
@@ -651,6 +674,8 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         if (activeTool >= TOOL_TEXT)
                         {
                             TCHAR sizeStr[100];
+                            if ((activeTool >= TOOL_LINE) && (GetAsyncKeyState(VK_SHIFT) < 0))
+                                yRel = xRel;
                             _stprintf(sizeStr, _T("%d x %d"), xRel, yRel);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
                         }
@@ -783,7 +808,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDM_EDITDELETESELECTION:
                 {
                     /* remove selection window and already painted content using undo(),
-                    paint Rect for rectangular selections and nothing for freeform selections */
+                    paint Rect for rectangular selections and Poly for freeform selections */
                     undo();
                     if (activeTool == TOOL_RECTSEL)
                     {
@@ -791,16 +816,23 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         Rect(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2] + rectSel_dest[0],
                              rectSel_dest[3] + rectSel_dest[1], bgColor, bgColor, 0, TRUE);
                     }
+                    if (activeTool == TOOL_FREESEL)
+                    {
+                        newReversible();
+                        Poly(hDrawingDC, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE);
+                    }
                     break;
                 }
                 case IDM_EDITSELECTALL:
-                    if (activeTool == TOOL_RECTSEL)
-                    {
-                        startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
-                        whilePaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
-                        endPaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
-                    }
+                {
+                    HWND hToolbar = FindWindowEx(hToolBoxContainer, NULL, TOOLBARCLASSNAME, NULL);
+                    SendMessage(hToolbar, TB_CHECKBUTTON, ID_RECTSEL, MAKELONG(TRUE, 0));
+                    SendMessage(hwnd, WM_COMMAND, ID_RECTSEL, 0);
+                    startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                    whilePaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
+                    endPaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
                     break;
+                }
                 case IDM_EDITCOPYTO:
                     if (GetSaveFileName(&ofn) != 0)
                         SaveDIBToFile(hSelBm, ofn.lpstrFile, hDrawingDC, NULL, NULL, fileHPPM, fileVPPM);
@@ -829,23 +861,73 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 case IDM_IMAGEROTATEMIRROR:
                     switch (mirrorRotateDlg())
                     {
-                        case 1:
-                            newReversible();
-                            StretchBlt(hDrawingDC, imgXRes - 1, 0, -imgXRes, imgYRes, hDrawingDC, 0, 0,
-                                       imgXRes, imgYRes, SRCCOPY);
-                            SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        case 1: /* flip horizontally */
+                            if (IsWindowVisible(hSelection))
+                            {
+                                SelectObject(hSelDC, hSelMask);
+                                StretchBlt(hSelDC, rectSel_dest[2] - 1, 0, -rectSel_dest[2], rectSel_dest[3], hSelDC,
+                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                SelectObject(hSelDC, hSelBm);
+                                StretchBlt(hSelDC, rectSel_dest[2] - 1, 0, -rectSel_dest[2], rectSel_dest[3], hSelDC,
+                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                /* force refresh of selection contents, used also in case 2 and case 4 */
+                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
+                                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
+                                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                            }
+                            else
+                            {
+                                newReversible();
+                                StretchBlt(hDrawingDC, imgXRes - 1, 0, -imgXRes, imgYRes, hDrawingDC, 0, 0,
+                                           imgXRes, imgYRes, SRCCOPY);
+                                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                            }
                             break;
-                        case 2:
-                            newReversible();
-                            StretchBlt(hDrawingDC, 0, imgYRes - 1, imgXRes, -imgYRes, hDrawingDC, 0, 0,
-                                       imgXRes, imgYRes, SRCCOPY);
-                            SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        case 2: /* flip vertically */
+                            if (IsWindowVisible(hSelection))
+                            {
+                                SelectObject(hSelDC, hSelMask);
+                                StretchBlt(hSelDC, 0, rectSel_dest[3] - 1, rectSel_dest[2], -rectSel_dest[3], hSelDC,
+                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                SelectObject(hSelDC, hSelBm);
+                                StretchBlt(hSelDC, 0, rectSel_dest[3] - 1, rectSel_dest[2], -rectSel_dest[3], hSelDC,
+                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
+                                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
+                                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                            }
+                            else
+                            {
+                                newReversible();
+                                StretchBlt(hDrawingDC, 0, imgYRes - 1, imgXRes, -imgYRes, hDrawingDC, 0, 0,
+                                           imgXRes, imgYRes, SRCCOPY);
+                                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                            }
                             break;
-                        case 4:
-                            newReversible();
-                            StretchBlt(hDrawingDC, imgXRes - 1, imgYRes - 1, -imgXRes, -imgYRes, hDrawingDC,
-                                       0, 0, imgXRes, imgYRes, SRCCOPY);
-                            SendMessage(hImageArea, WM_PAINT, 0, 0);
+                        case 3: /* rotate 90 degrees */
+                            break;
+                        case 4: /* rotate 180 degrees */
+                            if (IsWindowVisible(hSelection))
+                            {
+                                SelectObject(hSelDC, hSelMask);
+                                StretchBlt(hSelDC, rectSel_dest[2] - 1, rectSel_dest[3] - 1, -rectSel_dest[2], -rectSel_dest[3], hSelDC,
+                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                SelectObject(hSelDC, hSelBm);
+                                StretchBlt(hSelDC, rectSel_dest[2] - 1, rectSel_dest[3] - 1, -rectSel_dest[2], -rectSel_dest[3], hSelDC,
+                                           0, 0, rectSel_dest[2], rectSel_dest[3], SRCCOPY);
+                                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
+                                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
+                                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
+                            }
+                            else
+                            {
+                                newReversible();
+                                StretchBlt(hDrawingDC, imgXRes - 1, imgYRes - 1, -imgXRes, -imgYRes, hDrawingDC,
+                                           0, 0, imgXRes, imgYRes, SRCCOPY);
+                                SendMessage(hImageArea, WM_PAINT, 0, 0);
+                            }
+                            break;
+                        case 5: /* rotate 270 degrees */
                             break;
                     }
                     break;
@@ -895,6 +977,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 case IDM_VIEWSHOWGRID:
                     showGrid = !showGrid;
+                    SendMessage(hImageArea, WM_PAINT, 0, 0);
                     break;
                 case IDM_VIEWSHOWMINIATURE:
                     showMiniature = !showMiniature;

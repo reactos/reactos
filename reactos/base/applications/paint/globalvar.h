@@ -101,3 +101,5 @@ extern HWND hSizeboxRightBottom;
 
 extern POINT pointStack[256];
 extern short pointSP;
+extern POINT *ptStack;
+extern int ptSP;
