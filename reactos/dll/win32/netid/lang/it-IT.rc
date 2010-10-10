@@ -71,7 +71,7 @@ BEGIN
     25 "Potete modificare il nome e il dominio di questo computer. Le modifiche potrebbero influenzare l'accesso alle risorse di rete."
     1021 "Nota: Solo gli Amministratori possono cambiare l'identificazione di questo computer."
     1022 "Nota: L'identificazione di questo computer non può essere cambiata perchè:"
-    1030 "Il nuovo nome del computer ""%s"" contiene dei caratteri non permessi. I caratteri vietati sono `? ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / "
+    1030 "Il nuovo nome del computer ""%s"" contiene dei caratteri non permessi. I caratteri vietati sono `? ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / "
     3210 "&Dettagli >>"
     3220 "<< &Dettagli"
     4000 "Informazioni"
