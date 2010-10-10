@@ -14,6 +14,9 @@ else()
 add_definitions(/GS- /Zl /Zi)
 add_definitions(-Dinline=__inline -D__STDC__=1)
 
+set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+
+
 macro(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
         set(NEW_LINKER_FLAGS "/ENTRY:0")
