@@ -331,15 +331,36 @@ SeCreateClientSecurityFromSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectCon
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 SeImpersonateClientEx(IN PSECURITY_CLIENT_CONTEXT ClientContext,
                       IN PETHREAD ServerThread OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    BOOLEAN EffectiveOnly;
+
+    PAGED_CODE();
+
+    if (ClientContext->DirectlyAccessClientToken == FALSE)
+    {
+        EffectiveOnly = ClientContext->SecurityQos.EffectiveOnly;
+    }
+    else
+    {
+        EffectiveOnly = ClientContext->DirectAccessEffectiveOnly;
+    }
+
+    if (ServerThread == NULL)
+    {
+        ServerThread = PsGetCurrentThread();
+    }
+
+    return PsImpersonateClient(ServerThread,
+                               ClientContext->ClientToken,
+                               TRUE,
+                               EffectiveOnly,
+                               ClientContext->SecurityQos.ImpersonationLevel);
 }
 
 /*
@@ -350,29 +371,10 @@ NTAPI
 SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
                     IN PETHREAD ServerThread OPTIONAL)
 {
-    UCHAR b;
-
     PAGED_CODE();
 
-    if (ClientContext->DirectlyAccessClientToken == FALSE)
-    {
-        b = ClientContext->SecurityQos.EffectiveOnly;
-    }
-    else
-    {
-        b = ClientContext->DirectAccessEffectiveOnly;
-    }
-
-    if (ServerThread == NULL)
-    {
-        ServerThread = PsGetCurrentThread();
-    }
-
-    PsImpersonateClient(ServerThread,
-                        ClientContext->ClientToken,
-                        1,
-                        b,
-                        ClientContext->SecurityQos.ImpersonationLevel);
+    SeImpersonateClientEx(ClientContext,
+                          ServerThread);
 }
 
 /* EOF */
