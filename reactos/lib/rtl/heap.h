@@ -16,7 +16,11 @@
 #define HEAP_SEGMENTS 64
 
 #define HEAP_ENTRY_SIZE ((ULONG)sizeof(HEAP_ENTRY))
+#ifdef _WIN64
+#define HEAP_ENTRY_SHIFT 4
+#else
 #define HEAP_ENTRY_SHIFT 3
+#endif
 #define HEAP_MAX_BLOCK_SIZE ((0x80000 - PAGE_SIZE) >> HEAP_ENTRY_SHIFT)
 
 #define ARENA_INUSE_FILLER     0xBAADF00D
@@ -106,7 +110,11 @@ typedef struct _HEAP_ENTRY
     struct _HEAP_COMMON_ENTRY;
 }  HEAP_ENTRY, *PHEAP_ENTRY;
 
+#ifdef _WIN64
+C_ASSERT(sizeof(HEAP_ENTRY) == 16);
+#else
 C_ASSERT(sizeof(HEAP_ENTRY) == 8);
+#endif
 C_ASSERT((1 << HEAP_ENTRY_SHIFT) == sizeof(HEAP_ENTRY));
 
 typedef struct _HEAP_TAG_ENTRY
