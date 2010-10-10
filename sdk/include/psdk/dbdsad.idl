@@ -1,0 +1,75 @@
+/*
+ * Copyright (C) 2009 Huw Davies
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+[
+    object,
+    uuid(0c733a7a-2a1c-11ce-ade5-00aa0044773d),
+    pointer_default(unique)
+]
+interface IDBDataSourceAdmin : IUnknown
+{
+    [local]
+    HRESULT CreateDataSource([in] ULONG cPropertySets,
+                             [in, out, size_is(cPropertySets)] DBPROPSET rgPropertySets[],
+                             [in] IUnknown *pUnkOuter,
+                             [in] REFIID riid,
+                             [out, iid_is(riid)] IUnknown **ppDBSession);
+
+    [call_as(CreateDataSource)]
+    HRESULT RemoteCreateDataSource([in] ULONG cPropertySets,
+                                   [in, unique, size_is(cPropertySets)] DBPROPSET *rgPropertySets,
+                                   [in] IUnknown *pUnkOuter,
+                                   [in] REFIID riid,
+                                   [in, out, unique, iid_is(riid)] IUnknown **ppDBSession,
+                                   [in] ULONG cTotalProps,
+                                   [out, size_is(cTotalProps)] DBPROPSTATUS *rgPropStatus,
+                                   [out] IErrorInfo **ppErrorInfoRem);
+
+    [local]
+    HRESULT DestroyDataSource();
+
+    [call_as(DestroyDataSource)]
+    HRESULT RemoteDestroyDataSource([out] IErrorInfo **ppErrorInfoRem);
+
+    [local]
+    HRESULT GetCreationProperties([in] ULONG cPropertyIDSets,
+                                  [in, size_is(cPropertyIDSets)] const DBPROPIDSET rgPropertyIDSets[],
+                                  [in, out] ULONG *pcPropertyInfoSets,
+                                  [out, size_is(,*pcPropertyInfoSets)] DBPROPINFOSET **prgPropertyInfoSets,
+                                  [out, annotation("__deref_out_z_opt")] OLECHAR **ppDescBuffer);
+
+    [call_as(GetCreationProperties)]
+    HRESULT RemoteGetCreationProperties([in] ULONG cPropertyIDSets,
+                                        [in, unique, size_is(cPropertyIDSets)] const DBPROPIDSET *rgPropertyIDSets,
+                                        [in, out] ULONG *pcPropertyInfoSets,
+                                        [out, size_is(,*pcPropertyInfoSets)] DBPROPINFOSET **prgPropertyInfoSets,
+                                        [in, out] DBCOUNTITEM *pcOffsets,
+                                        [out, size_is(,(ULONG)*pcOffsets)] DBBYTEOFFSET **prgDescOffsets,
+                                        [in, out] ULONG *pcbDescBuffer,
+                                        [in, out, unique, size_is(,*pcbDescBuffer)] OLECHAR **ppDescBuffer,
+                                        [out] IErrorInfo **ppErrorInfoRem);
+
+    [local]
+    HRESULT ModifyDataSource([in] ULONG cPropertySets,
+                             [in, size_is(cPropertySets)] DBPROPSET rgPropertySets[]);
+
+    [call_as(ModifyDataSource)]
+    HRESULT RemoteModifyDataSource([in] ULONG cPropertySets,
+                                   [in, size_is(cPropertySets)] DBPROPSET *rgPropertySets,
+                                   [out] IErrorInfo **ppErrorInfoRem);
+}

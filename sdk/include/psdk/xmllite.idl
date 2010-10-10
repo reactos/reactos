@@ -1,0 +1,111 @@
+/*
+ * Copyright (C) 2010 Nikolay Sivov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "unknwn.idl";
+import "objidl.idl";
+import "oaidl.idl";
+
+typedef enum XmlNodeType {
+    XmlNodeType_None                  = 0,
+    XmlNodeType_Element               = 1,
+    XmlNodeType_Attribute             = 2,
+    XmlNodeType_Text                  = 3,
+    XmlNodeType_CDATA                 = 4,
+    XmlNodeType_ProcessingInstruction = 7,
+    XmlNodeType_Comment               = 8,
+    XmlNodeType_DocumentType          = 10,
+    XmlNodeType_Whitespace            = 13,
+    XmlNodeType_EndElement            = 15,
+    XmlNodeType_XmlDeclaration        = 17,
+    _XmlNodeType_Last                 = 17
+} XmlNodeType;
+
+/* IXmlReader */
+[
+  local,
+  object,
+  uuid(7279fc81-709d-4095-b63d-69fe4b0d9030),
+  pointer_default(unique)
+]
+interface IXmlReader : IUnknown
+{
+    HRESULT SetInput( [in] IUnknown *input);
+    HRESULT GetProperty( [in] UINT property, [out] LONG_PTR *value);
+    HRESULT SetProperty( [in] UINT property, [in] LONG_PTR value);
+    HRESULT Read( [out] XmlNodeType *node_type);
+    HRESULT GetNodeType( [out] XmlNodeType *node_type);
+    HRESULT MoveToFirstAttribute(void);
+    HRESULT MoveToNextAttribute(void);
+    HRESULT MoveToAttributeByName( [in] LPCWSTR local_name,
+                                   [in] LPCWSTR namespaceUri);
+    HRESULT MoveToElement(void);
+    HRESULT GetQualifiedName( [out] LPCWSTR *qualifiedName,
+                              [out] UINT *qualifiedName_length);
+    HRESULT GetNamespaceUri( [out] LPCWSTR *namespaceUri,
+                             [out] UINT *nnamespaceUri_length);
+    HRESULT GetLocalName( [out] LPCWSTR *local_name,
+                          [out] UINT *locale_name_length);
+    HRESULT GetPrefix( [out] LPCWSTR *prefix,
+                       [out] UINT *prefix_length);
+    HRESULT GetValue( [out] LPCWSTR *value,
+                      [out] UINT *value_length);
+    HRESULT ReadValueChunk( [out] WCHAR *buffer,
+                            [in]  UINT chunk_size,
+                            [in,out] UINT *read);
+    HRESULT GetBaseUri( [out] LPCWSTR *baseUri,
+                        [out] UINT *baseUri_length);
+    BOOL IsDefault(void);
+    BOOL IsEmptyElement(void);
+    HRESULT GetLineNumber( [out] UINT *lineNumber);
+    HRESULT GetLinePosition( [out] UINT *linePosition);
+    HRESULT GetAttributeCount( [out] UINT *attributeCount);
+    HRESULT GetDepth( [out] UINT *depth);
+    BOOL IsEOF(void);
+}
+
+/* IXmlReader state */
+cpp_quote("typedef enum XmlReadState")
+cpp_quote("{")
+cpp_quote("    XmlReadState_Initial     = 0,")
+cpp_quote("    XmlReadState_Interactive = 1,")
+cpp_quote("    XmlReadState_Error       = 2,")
+cpp_quote("    XmlReadState_EndOfFile   = 3,")
+cpp_quote("    XmlReadState_Closed      = 4")
+cpp_quote("} XmlReadState;")
+
+/* IXmlReader properties */
+cpp_quote("typedef enum XmlReaderProperty")
+cpp_quote("{")
+cpp_quote("    XmlReaderProperty_MultiLanguage      = 0,")
+cpp_quote("    XmlReaderProperty_ConformanceLevel   = XmlReaderProperty_MultiLanguage + 1,")
+cpp_quote("    XmlReaderProperty_RandomAccess       = XmlReaderProperty_ConformanceLevel + 1,")
+cpp_quote("    XmlReaderProperty_XmlResolver        = XmlReaderProperty_RandomAccess + 1,")
+cpp_quote("    XmlReaderProperty_DtdProcessing      = XmlReaderProperty_XmlResolver + 1,")
+cpp_quote("    XmlReaderProperty_ReadState          = XmlReaderProperty_DtdProcessing + 1,")
+cpp_quote("    XmlReaderProperty_MaxElementDepth    = XmlReaderProperty_ReadState + 1,")
+cpp_quote("    XmlReaderProperty_MaxEntityExpansion = XmlReaderProperty_MaxElementDepth + 1,")
+cpp_quote("    _XmlReaderProperty_Last              = XmlReaderProperty_MaxEntityExpansion")
+cpp_quote("} XmlReaderProperty;")
+
+/* IXmlReader construction */
+cpp_quote("STDAPI CreateXmlReader(REFIID riid, void **ppvObject, IMalloc *pMalloc);")
+
+cpp_quote("typedef IUnknown IXmlReaderInput;")
+cpp_quote("STDAPI CreateXmlReaderInputWithEncodingName(IUnknown *stream, IMalloc *pMalloc,")
+cpp_quote("                                            LPCWSTR encoding, BOOL hint,")
+cpp_quote("                                            LPCWSTR base_uri, IXmlReaderInput **ppInput);")

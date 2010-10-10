@@ -1,0 +1,1809 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<book>
+  <title>ReactOS Build System Documentation</title>
+
+  <bookinfo>
+    <releaseinfo>$Id$</releaseinfo>
+
+    <author>
+      <firstname>Casper</firstname>
+
+      <surname>Hornstrup</surname>
+    </author>
+
+    <othercredit>
+      <firstname>Emanuele</firstname>
+
+      <surname>Aliberti</surname>
+    </othercredit>
+
+    <copyright>
+      <year>2005</year>
+    </copyright>
+  </bookinfo>
+
+  <chapter>
+    <title>Building ReactOS</title>
+
+    <section>
+      <title>Building ReactOS</title>
+
+      <para>To generate GNU make makefiles and building ReactOS, do the
+      following:<orderedlist>
+          <listitem>
+            <para>Go to the top-level <filename>reactos</filename>
+            directory;</para>
+          </listitem>
+
+          <listitem>
+            <para>Run the command:<screen>mingw32-make</screen></para>
+
+            <para>This will start building ReactOS.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <para>To build a bootable CD, run the following command:<screen>mingw32-make bootcd</screen>This
+      will create <filename>ReactOS.iso</filename> in the top-level
+      <filename>reactos</filename> directory.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>How build directions are stored</title>
+
+    <para>XML files are used throughout the ReactOS source tree to drive the
+    build system.</para>
+
+    <section>
+      <title>Top-level XML Build File</title>
+
+      <para>The top-level XML build file (<filename>ReactOS.rbuild</filename>) is
+      processed by <command>rbuild</command>. The following is an example of
+      how it could look like:<programlisting>&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE project SYSTEM "tools/rbuild/project.dtd"&gt;
+&lt;project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude"&gt;
+  &lt;xi:include href="config.rbuild"&gt;
+    &lt;xi:fallback&gt;
+      &lt;xi:include href="config.template.rbuild" /&gt;
+    &lt;/xi:fallback&gt;
+  &lt;/xi:include&gt;
+
+  &lt;define name="_M_IX86" /&gt;
+  &lt;if property="DBG" value="1"&gt;
+    &lt;define name="DBG" value="1" /&gt;
+    &lt;property name="DBG_OR_KDBG" value="true" /&gt;
+  &lt;/if&gt;
+
+  &lt;include base="ReactOS"&gt;include&lt;/include&gt;
+
+  &lt;directory name="boot"&gt;
+    &lt;xi:include href="boot/boot.rbuild" /&gt;
+  &lt;/directory&gt;
+
+  &lt;module name="bootcd" type="iso"&gt;
+  &lt;/module&gt;
+&lt;/project&gt;</programlisting></para>
+    </section>
+
+    <section>
+      <title>XInclude</title>
+
+      <para>XML files used by <command>rbuild</command> are modular and use
+      XInclude to include other chunks of XML in the top-level
+      <filename>ReactOS.rbuild</filename> file. The namespace used by XInclude is
+      <literal>xi</literal>.</para>
+
+      <section id="element.xi.include">
+        <title>xi:include</title>
+
+        <para>It is possible to split an XML build file over several files.
+        The include element in the <literal>xi</literal> namespace is used to
+        accomplish this.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <programlisting>&lt;xi:include href="<replaceable>config.rbuild</replaceable>"&gt;
+  &lt;xi:fallback&gt;
+    &lt;xi:include href="<replaceable>config.template.rbuild</replaceable>" /&gt;
+  &lt;/xi:fallback&gt;
+&lt;/xi:include&gt;</programlisting>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>href</term>
+
+                <listitem>
+                  <para>Name of XML build file to include. The filename is
+                  relative to the location of the current XML build
+                  file.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.xi.fallback">xi:fallback</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.xi.fallback">
+        <title>xi:fallback</title>
+
+        <para>This element is used to provide the name of an alternate file
+        that is to be included if the first include file did not
+        exists.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <programlisting>&lt;xi:fallback&gt;
+  &lt;xi:include href="<replaceable>config.template.rbuild</replaceable>" /&gt;
+&lt;/xi:fallback&gt;</programlisting>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.xi.include">xi:include</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.xi.include">xi:include</link>.</para>
+        </section>
+      </section>
+    </section>
+
+    <section>
+      <title>Element reference</title>
+
+      <section id="element.bootstrap">
+        <title>Bootstrap element</title>
+
+        <para>A bootstrap element specifies that the generated file should be
+        put on the bootable CD as a bootstrap file.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;bootstrap base="reactos" nameoncd="halmp.dll" /&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>base</term>
+
+                <listitem>
+                  <para>Put file in this directory on the bootable CD. This
+                  attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>nameoncd</term>
+
+                <listitem>
+                  <para>Name of file on the bootable CD. This attribute is
+                  optional.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.cdfile">
+        <title>CDFile element</title>
+
+        <para>A cdfile element specifies the name of a file that is to be put
+        on the bootable CD.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;cdfile base="reactos" nameoncd="ReadMe.txt"&gt;ReadMe.txt&lt;/cdfile&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>base</term>
+
+                <listitem>
+                  <para>Put file in this directory on the bootable CD. This
+                  attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>nameoncd</term>
+
+                <listitem>
+                  <para>Name of file on the bootable CD. This attribute is
+                  optional.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of file.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.compilerflag">
+        <title>Compilerflag element</title>
+
+        <para>A compilerflag element specifies additional flags to be bassed
+        to the compiler.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;compilerflags&gt;<replaceable>-Wpointer-arith</replaceable>&lt;/compilerflag&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes.</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>The compiler flags.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.if">if</link>, <link
+          linkend="element.project">project</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.component">
+        <title>Component element</title>
+
+        <para>A component element specifies that imports from a library are to
+        be stubbed so tests can be run without actually calling the functions
+        in the library. This element can only be used for modules of type
+        test.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;component name="ntdll.dll"&gt;
+  ...
+&lt;/component&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>name</term>
+
+                <listitem>
+                  <para>Name of library.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.symbol">symbol</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.define">
+        <title>Define element</title>
+
+        <para>A define element specifies the name and (optionally) value of a
+        define for the C/C++ compiler and resource compiler.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;define name="<replaceable>WINVER</replaceable>"&gt;<replaceable>0x501</replaceable>&lt;/define&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>name</term>
+
+                <listitem>
+                  <para>Name of define.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Value of define. The value is optional.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.dependency">
+        <title>Dependency element</title>
+
+        <para>A dependency element specifies the name of a module (usually of
+        type buildtool) that is to be processed before the current
+        module.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;dependency&gt;<replaceable>OtherModule</replaceable>&lt;/dependency&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of module.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.directory">
+        <title>Directory element</title>
+
+        <para>A directory element specifies the name of a subdirectory.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;directory name="<replaceable>MyDirectory</replaceable>"&gt;
+  ...
+&lt;/directory&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>name</term>
+
+                <listitem>
+                  <para>Name of directory.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.directory">directory</link>, <link
+          linkend="element.directory">if</link>, <link
+          linkend="element.project">project</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.cdfile">cdfile</link>, <link
+          linkend="element.directory">directory</link>, <link
+          linkend="element.file">file</link>, <link
+          linkend="element.if">if</link>, <link
+          linkend="element.pch">pch</link>, <link
+          linkend="element.property">property</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.file">
+        <title>File element</title>
+
+        <para>A file element specifies the name of a file that is to be
+        processed.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;file&gt;<replaceable>MyFile.c</replaceable>&lt;/file&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of file.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.directory">directory</link>, <link
+          linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.group">
+        <title>Group element</title>
+
+        <para>A group element's purpose is grouping subelements.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;group&gt;
+  &lt;file&gt;<replaceable>i386-dis.c</replaceable>&lt;/file&gt;
+  &lt;file&gt;<replaceable>kdb_help.S</replaceable>&lt;/file&gt;
+  &lt;file&gt;<replaceable>longjmp.S</replaceable>&lt;/file&gt;
+  &lt;file&gt;<replaceable>setjmp.S</replaceable>&lt;/file&gt;
+&lt;/group&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.if">if</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.file">file</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.if">
+        <title>If element</title>
+
+        <para>An if element allows for conditional processing of other
+        elements.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;if property="<replaceable>DBG</replaceable>" value="<replaceable>1</replaceable>"&gt;
+  ...
+&lt;/if&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>property</term>
+
+                <listitem>
+                  <para>Name of the property that is to be evaluated.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>value</term>
+
+                <listitem>
+                  <para>Value to compare to the value of the property. If the
+                  property has the specified value, then the subelements are
+                  processed.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.directory">directory</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.compilerflag">compilerflag</link>,
+          <link linkend="element.define">define</link>, <link
+          linkend="element.directory">directory</link>, <link
+          linkend="element.file">file</link>, <link
+          linkend="element.if">if</link>, <link
+          linkend="element.include">include</link>, <link
+          linkend="element.property">property</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.importlibrary">
+        <title>Importlibrary element</title>
+
+        <para>An importlibrary element specifies that an import library should
+        be generated which other modules can use to link with the current
+        module.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;importlibrary definition="<replaceable>MyModule.def</replaceable>" /&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>definition</term>
+
+                <listitem>
+                  <para>Filename of definition file
+                  (<filename>.def</filename>) used to generate the import
+                  library. The filename is relative to the current
+                  module.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.include">
+        <title>Include element</title>
+
+        <para>An include element specifies an include directory for the C/C++
+        compiler and resource compiler.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;include base="<replaceable>MyLibraryModule</replaceable>"&gt;<replaceable>include</replaceable>&lt;/include&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>base</term>
+
+                <listitem>
+                  <para>Module or project which the value of this element is
+                  relative to. This attribute is optional. If left out, the
+                  include directory is relative to the position of the
+                  top-level XML build file.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Relative include directory.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.input">
+        <title>Input element</title>
+
+        <para>An input element specifies a group of filenames that is to be
+        passed as parameters to a build tool. Input filename parameters are
+        located after output filename parameters on the command line.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;input&gt;
+  ...
+&lt;/input&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.invoke">invoke</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.inputfile">inputfile</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.inputfile">
+        <title>Inputfile element</title>
+
+        <para>An inputfile element specifies a filename that is to be passed
+        as a parameter to a build tool.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;inputfile&gt;<replaceable>ntoskrnl.mc</replaceable>&lt;/inputfile&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>switches</term>
+
+                <listitem>
+                  <para>Switches that is passed as parameters just before the
+                  filename. This attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of file that is to be passed as a parameter to the build
+          tool.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.input">input</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.installfile">
+        <title>Installfile element</title>
+
+        <para>An installfile element specifies the name of a file that is to
+        be installed when using '<command>make install</command>'.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;installfile base="<replaceable>reactos</replaceable>" newname="<replaceable>ReadMe.txt</replaceable>"&gt;<replaceable>ReadMe.txt</replaceable>&lt;/installfile&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>base</term>
+
+                <listitem>
+                  <para>Put file in this directory within the install
+                  directory. This attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>newname</term>
+
+                <listitem>
+                  <para>Name of file within the install directory. This
+                  attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of file.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.invoke">
+        <title>Invoke element</title>
+
+        <para>An invoke element specifies the name of a module which is to be
+        executed before the current module is processed.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;invoke module="<replaceable>wmc</replaceable>"&gt;
+  &lt;input&gt;
+    &lt;inputfile&gt;<replaceable>ntoskrnl.mc</replaceable>&lt;/inputfile&gt;
+  &lt;/input&gt;
+  &lt;output&gt;
+    &lt;outputfile switches="<replaceable>-H</replaceable>"&gt;<replaceable>../include/reactos/bugcodes.h</replaceable>&lt;/outputfile&gt;
+    &lt;outputfile switches="<replaceable>-o</replaceable>"&gt;<replaceable>bugcodes.rc</replaceable>&lt;/outputfile&gt;
+  &lt;/output&gt;
+&lt;/invoke&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>module</term>
+
+                <listitem>
+                  <para>Name of the module to execute.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.input">input</link>, <link
+          linkend="element.output">output</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.library">
+        <title>Library element</title>
+
+        <para>A library element specifies the name of another module which is
+        to be linked with the current module.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;library&gt;<replaceable>MyLibraryModule</replaceable>&lt;/library&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.section</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.linkerflag">
+        <title>Linkerflag element</title>
+
+        <para>A likerflag element specifies flags to be passed to the linker
+        tool.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;linkerflag&gt;<replaceable>-lgcc</replaceable>&lt;/linkerflag&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>The switches to pass to the linker.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.module">module</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.module">
+        <title>Module element</title>
+
+        <para>There can be zero or more <sgmltag
+        class="element">module</sgmltag>s per XML build file.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;module if="${MP}" ifnot="${MP}" name="msvcrt" type="win32dll" extension=".dll" entrypoint="_DllMain@12" baseaddress="0x70000000" mangledsymbols="true" installbase="system32" installname="msvcrt.dll" usewrc="false" allowwarnings="true" aliasof="module1"&gt;
+  ...
+&lt;/module&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>if</term>
+
+                <listitem>
+                  <para>If the value is 1, then the module is enabled,
+                  otherwise it is disabled. A disabled module is not
+                  processed.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>ifnot</term>
+
+                <listitem>
+                  <para>If the value is 1, then the module is disabled,
+                  otherwise it is enabled. A disabled module is not
+                  processed.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>name</term>
+
+                <listitem>
+                  <para>Name of the module. Also the base name of the
+                  generated file if such file is generated for the particular
+                  module type.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>type</term>
+
+                <listitem>
+                  <para>Type of module. See below for an explanation of module
+                  types. <emphasis><emphasis>The module type determines the
+                  actions that is to be carried out to process the module. The
+                  defined module types are seen
+                  below:</emphasis></emphasis></para>
+
+                  <table>
+                    <title>Module Types</title>
+
+                    <tgroup cols="6">
+                      <thead>
+                        <row>
+                          <entry>Value</entry>
+
+                          <entry>Output name suffix</entry>
+
+                          <entry>Entrypoint</entry>
+
+                          <entry>Baseaddress</entry>
+
+                          <entry>Mangledsymbols</entry>
+
+                          <entry>Description</entry>
+                        </row>
+                      </thead>
+
+                      <tbody>
+                        <row>
+                          <entry>buildtool</entry>
+
+                          <entrytbl cols="2">
+                            <tbody>
+                              <row>
+                                <entry><filename>.exe</filename> (Windows)</entry>
+
+                                <entry>none (Linux)</entry>
+                              </row>
+                            </tbody>
+                          </entrytbl>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a tool that can be run (invoked) when
+                          building ReactOS.</entry>
+                        </row>
+
+                        <row>
+                          <entry>staticlibrary</entry>
+
+                          <entry><filename>.a</filename></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a static library containing object
+                          files that can be linked together with other
+                          modules.</entry>
+                        </row>
+
+                        <row>
+                          <entry>objectlibrary</entry>
+
+                          <entry><filename>.o</filename></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds object files that can be linked
+                          together with other modules.</entry>
+                        </row>
+
+                        <row>
+                          <entry>kernel</entry>
+
+                          <entry><filename>.exe</filename></entry>
+
+                          <entry><function>_NtProcessStartup</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds
+                          <filename>ntoskrnl.exe</filename>.</entry>
+                        </row>
+
+                        <row>
+                          <entry>kernelmodedll</entry>
+
+                          <entry><filename>.dll</filename></entry>
+
+                          <entry><function>_DriverEntry@8</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a kernel-mode DLL.</entry>
+                        </row>
+
+                        <row>
+                          <entry>kernelmodedriver</entry>
+
+                          <entry><filename>.sys</filename></entry>
+
+                          <entry><function>_DriverEntry@8</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a kernel-mode driver.</entry>
+                        </row>
+
+                        <row>
+                          <entry>nativecui</entry>
+
+                          <entry>.exe</entry>
+
+                          <entry><function>_NtProcessStartup</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Build a native NT/ROS program (no enviroment
+                          subsystem required to run).</entry>
+                        </row>
+
+                        <row>
+                          <entry>nativedll</entry>
+
+                          <entry><filename>.dll</filename></entry>
+
+                          <entry><function>_DllMainCRTStartup@12</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a native DLL.</entry>
+                        </row>
+
+                        <row>
+                          <entry>win32dll</entry>
+
+                          <entry><filename>.dll</filename></entry>
+
+                          <entry><function>_DllMain@12</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a Win32 DLL.</entry>
+                        </row>
+
+                        <row>
+                          <entry>win32cui</entry>
+
+                          <entry><filename>.exe</filename></entry>
+
+                          <entry><function>_mainCRTStartup</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a Win32 console executable.</entry>
+                        </row>
+
+                        <row>
+                          <entry>win32gui</entry>
+
+                          <entry><filename>.exe</filename></entry>
+
+                          <entry><function>_WinMainCRTStartup</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a Win32 GUI executable.</entry>
+                        </row>
+
+                        <row>
+                          <entry>bootloader</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a bootloader.</entry>
+                        </row>
+
+                        <row>
+                          <entry>bootsector</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds one or more bootsector
+                          binaries.</entry>
+                        </row>
+
+                        <row>
+                          <entry>iso</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-.</entry>
+
+                          <entry>Builds a bootable CD.</entry>
+                        </row>
+
+                        <row>
+                          <entry>test</entry>
+
+                          <entry>.exe</entry>
+
+                          <entry><function>_mainCRTStartup</function></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Builds a testsuite.</entry>
+                        </row>
+
+                        <row>
+                          <entry>rpcserver</entry>
+
+                          <entry><filename>.o</filename></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Generates and builds server code for an RPC
+                          interface.</entry>
+                        </row>
+
+                        <row>
+                          <entry>rpcclient</entry>
+
+                          <entry><filename>.o</filename></entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Generates and builds client code for an RPC
+                          interface.</entry>
+                        </row>
+
+                        <row>
+                          <entry>alias</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>-</entry>
+
+                          <entry>Module is an alias for another module. This
+                          module type is the only module type for which the
+                          aliasof attribute is applicable. Only the module
+                          install functionality is aliased.</entry>
+                        </row>
+                      </tbody>
+                    </tgroup>
+                  </table>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>extension</term>
+
+                <listitem>
+                  <para>Extension of the generated file if such file is
+                  generated for the particular module type.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>entrypoint</term>
+
+                <listitem>
+                  <para>Entrypoint symbol of the generated file if such file
+                  is generated for the particular module type.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>baseaddress</term>
+
+                <listitem>
+                  <para>Base address of the generated file if such file is
+                  generated for the particular module type.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>mangledsymbols</term>
+
+                <listitem>
+                  <para>Controls wether or not to pass --kill-at to dlltool.
+                  If this attribute has the value false then --kill-at is
+                  passed to dlltool. If the value is true, then --kill-at is
+                  not passed to dlltool. If the generated file exports C++
+                  classes then this need to be true.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>installbase</term>
+
+                <listitem>
+                  <para>Base directory of the generated file in the
+                  installation directory. This attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>installname</term>
+
+                <listitem>
+                  <para>Name of generated file in the installation directory.
+                  This attribute is optional, but if not specified, the
+                  generated file is not copied to the installation
+                  directory.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>usewrc</term>
+
+                <listitem>
+                  <para>Use WRC to compile resources if true. If false,
+                  windres is used. This attribute is optional. If not
+                  specified, WRC will be used.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>allowwarnings</term>
+
+                <listitem>
+                  <para>Error out if false and at least one warning is emitted
+                  during building of this module. This attribute is optional.
+                  If not specified, it is assumed to be false.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>aliasof</term>
+
+                <listitem>
+                  <para>Name of module that is aliased.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.project">project</link>, <link
+          linkend="element.directory">directory</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.bootstrap">bootstrap</link>, <link
+          linkend="element.component">component</link>, <link
+          linkend="element.define">define</link>, <link
+          linkend="element.dependency">dependency</link>, <link
+          linkend="element.directory">directory</link>, <link
+          linkend="element.file">file</link>, <link
+          linkend="element.if">if</link>, <link
+          linkend="element.importlibrary">importlibrary</link>, <link
+          linkend="element.include">include</link>, <link
+          linkend="element.invoke">invoke</link>, <link
+          linkend="element.library">library</link>, <link
+          linkend="element.linkerflag">linkerflag</link>, <link
+          linkend="element.property">property</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.output">
+        <title>Output element</title>
+
+        <para>An output element specifies a group of filenames that is to be
+        passed as parameters to a build tool. Output filename parameters are
+        located before input filename parameters on the command line.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;output&gt;
+  ...
+&lt;/output&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.invoke">invoke</link></para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.outputfile">outputfile</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.outputfile">
+        <title>Outputfile element</title>
+
+        <para>An outputfile element specifies a filename that is to be passed
+        as a parameter to a build tool.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;outputfile switches="<replaceable>-H</replaceable>"&gt;<replaceable>../include/reactos/bugcodes.h</replaceable>&lt;/outputfile&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>switches</term>
+
+                <listitem>
+                  <para>Switches that are passed as parameters just before the
+                  filename. This attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of file that is to be passed as a parameter to the build
+          tool.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.output">output</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.pch">
+        <title>Pch element</title>
+
+        <para>A pch element specifies a GCC precompiled header file.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;pch&gt;<replaceable>ntdll.h</replaceable>&lt;/pch&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of the include file to be precompiled.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para><link linkend="element.directory">directory</link>.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.project">
+        <title>Project element</title>
+
+        <para>There can be one <sgmltag class="element">project</sgmltag> per
+        top-level XML build file. A project can only be defined in a top-level
+        XML build file.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;project name="ReactOS" makefile="Makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude"&gt;
+  ...
+&lt;/project&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>name</term>
+
+                <listitem>
+                  <para>Name of the project.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>makefile</term>
+
+                <listitem>
+                  <para>Filename of the GNU makefile that is to be
+                  created.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para>None. This is the top-level (root) element of
+          <filename>ReactOS.rbuild</filename> file.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para><link linkend="element.define">define</link>, <link
+          linkend="element.directory">directory</link>, <link
+          linkend="element.if">if</link>, <link
+          linkend="element.include">include</link>, <link
+          linkend="element.module">module</link>, <link
+          linkend="element.property">property</link>.</para>
+        </section>
+      </section>
+
+      <section id="element.property">
+        <title>Property element</title>
+
+        <para>A property element specifies the name and value of a property
+        that can be used for conditional processing of the XML build
+        file.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;property name="<replaceable>mypropertyname</replaceable>" value="<replaceable>mypropertyvalue</replaceable>" /&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>name</term>
+
+                <listitem>
+                  <para>Name of property.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term>value</term>
+
+                <listitem>
+                  <para>Value of property.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>None.</para>
+        </section>
+
+        <section>
+          <title>Parents</title>
+
+          <para></para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+
+      <section id="element.symbol">
+        <title>Symbol element</title>
+
+        <para>A symbol element specifies an imported function from a library
+        that is to be stubbed so tests can be run without actually calling the
+        function in the library.</para>
+
+        <section>
+          <title>Syntax</title>
+
+          <para><programlisting>&lt;symbol newname="<replaceable>RtlAllocateHeap</replaceable>"&gt;<replaceable>HeapAlloc@12</replaceable>&lt;/symbol&gt;</programlisting></para>
+        </section>
+
+        <section>
+          <title>Attributes</title>
+
+          <para><variablelist>
+              <varlistentry>
+                <term>newname</term>
+
+                <listitem>
+                  <para>New name of symbol. This attribute is optional.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </section>
+
+        <section>
+          <title>Content</title>
+
+          <para>Name of symbol.</para>
+        </section>
+
+        <section>
+          <title>Children</title>
+
+          <para>None.</para>
+        </section>
+      </section>
+    </section>
+  </chapter>
+
+  <bibliography>
+    <title>Bibliography</title>
+
+    <bibliomixed><title><ulink
+    url="http://www.w3.org/TR/2004/REC-xml-20040204/">Extensible Markup
+    Language (XML) 1.0 (Third Edition)</ulink></title><releaseinfo>W3C
+    Recommendation</releaseinfo><author>
+        <firstname>Fran&ccedil;ois</firstname>
+
+        <surname>Yergeau</surname>
+      </author><author>
+        <firstname>Tim</firstname>
+
+        <surname>Bray</surname>
+      </author><author>
+        <firstname>Jean</firstname>
+
+        <surname>Paoli</surname>
+      </author><author>
+        <firstname>C. M.</firstname>
+
+        <surname>Sperberg-McQueen</surname>
+      </author><author>
+        <firstname>Eve</firstname>
+
+        <surname>Maler</surname>
+      </author><date>4th February 2004</date></bibliomixed>
+
+    <bibliomixed><title><ulink
+    url="http://www.w3.org/TR/2004/REC-xinclude-20041220/">XML Inclusions
+    (XInclude) Version 1.0 </ulink></title><releaseinfo>W3C
+    Recommendation</releaseinfo><editor>
+        <firstname>Jonathan</firstname>
+
+        <surname>Marsh</surname>
+
+        <affiliation>
+          <orgname>Microsoft</orgname>
+        </affiliation>
+
+        <email>jmarsh@microsoft.com</email>
+      </editor><editor>
+        <firstname>David</firstname>
+
+        <surname>Orchard</surname>
+
+        <affiliation>
+          <orgname>BEA Systems</orgname>
+        </affiliation>
+
+        <email>dorchard@bea.com</email>
+      </editor>20 December 2004</bibliomixed>
+  </bibliography>
+</book>

@@ -1,0 +1,299 @@
+/*
+ * Copyright 2006 Robert Shearman for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "objidl.idl";
+
+interface IImnAccount;
+
+cpp_quote("#ifndef HR_E")
+cpp_quote("#define HR_E(n) MAKE_SCODE(SEVERITY_ERROR, FACILITY_INTERNET, n)")
+cpp_quote("#endif")
+cpp_quote("#ifndef HR_S")
+cpp_quote("#define HR_S(n) MAKE_SCODE(SEVERITY_SUCCESS, FACILITY_INTERNET, n)")
+cpp_quote("#endif")
+
+typedef enum tagSMTPAUTHTYPE
+{
+    SMTP_AUTH_NONE,
+    SMTP_AUTH_SICILY,
+    SMTP_AUTH_USE_POP3ORIMAP_SETTINGS,
+    SMTP_AUTH_USE_SMTP_SETTINGS,
+} SMTPAUTHTYPE;
+
+const SHORT CCHMAX_ORG_NAME = 256;
+const SHORT CCHMAX_DISPLAY_NAME = 256;
+const SHORT CCHMAX_ACCOUNT_NAME = 256;
+const SHORT CCHMAX_SERVER_NAME = 256;
+const SHORT CCHMAX_PASSWORD = 256;
+const SHORT CCHMAX_USERNAME = 256;
+const SHORT CCHMAX_EMAIL_ADDRESS = 256;
+const SHORT CCHMAX_CONNECTOID = 256;
+const SHORT CCHMAX_SEARCH_BASE = 256;
+const SHORT CCHMAX_ROOT_FOLDER = 256;
+const SHORT CCHMAX_SIGNATURE = 16;
+const SHORT CCHMAX_SERVICE = 256;
+
+[
+    object,
+    uuid(0A06BD31-166F-11D0-81B9-00C04FD85AB4),
+    pointer_default(unique)
+]
+interface IImnAdviseAccount : IUnknown
+{
+    typedef enum
+    {
+        ACCT_NEWS,
+        ACCT_MAIL,
+        ACCT_DIR_SERV,
+        ACCT_LAST
+    } ACCTTYPE;
+
+    typedef struct tagAccountContext
+    {
+        ACCTTYPE AcctType;
+        LPSTR pszAccountID;
+        LPSTR pszOldName;
+        DWORD dwServerType;
+    } ACTX;
+
+    HRESULT AdviseAccount(
+        [in]    DWORD dwAdviseType,
+        [in]    ACTX *pAcctCtx);
+}
+
+[
+    object,
+    uuid(8D0AED11-1638-11D0-81B9-00C04FD85AB4),
+    pointer_default(unique)
+]
+interface IImnAdviseMigrateServer : IUnknown
+{
+    HRESULT MigrateServer(
+        [in]    DWORD dwSrvType,
+        [in]    IImnAccount *pAccount);
+}
+
+[
+    object,
+    uuid(FD465483-1384-11D0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IImnEnumAccounts : IUnknown
+{
+    HRESULT GetCount(
+        [out]   ULONG *pcItems);
+
+    HRESULT SortByAccountName();
+
+    HRESULT GetNext(
+        [out]   IImnAccount **ppAccount);
+
+    HRESULT Reset();
+}
+
+[
+    object,
+    uuid(FD465481-1384-11D0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IImnAccountManager : IUnknown
+{
+    typedef struct tagACCTLISTINFO
+    {
+        DWORD cbSize;
+        ACCTTYPE AcctTypeInit;
+        DWORD dwAcctFlags;
+        DWORD dwFlags;
+    } ACCTLISTINFO;
+
+    HRESULT Init(
+        [in]    IImnAdviseMigrateServer *pAdviseMigrateServer);
+
+    HRESULT CreateAccountObject(
+        [in]    ACCTTYPE AcctType,
+        [out]   IImnAccount **ppAccount);
+
+    HRESULT Enumerate(
+        [in]    DWORD dwSrvTypes,
+        [out]   IImnEnumAccounts **ppEnumAccounts);
+
+    HRESULT GetAccountCount(
+        [in]    ACCTTYPE AcctType,
+        [out]   ULONG *pcServers);
+
+    HRESULT FindAccount(
+        [in]    DWORD dwPropTag,
+        [in]    LPCSTR pszSearchData,
+        [out]   IImnAccount **ppAccount);
+
+    HRESULT GetDefaultAccountName(
+        [in]    ACCTTYPE AcctType,
+        [in,ref] LPSTR pszAccount,
+        [in]    ULONG cchMax);
+
+    HRESULT ProcessNotification(
+        [in]    UINT uMsg,
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam);
+
+    HRESULT ValidateDefaultSendAccount();
+
+    HRESULT AccountListDialog(
+        [in]    HWND hwnd,
+        [in]    ACCTLISTINFO *pinfo);
+
+    HRESULT Advise(
+        [in]    IImnAdviseAccount *pAdviseAccount,
+        [out]   DWORD *pdwConnection);
+
+    HRESULT Unadvise(
+        [in]    DWORD dwConnection);
+
+    HRESULT GetUniqueAccountName(
+        [in]    LPSTR szName,
+        [in]    UINT cch);
+
+    HRESULT InitEx(
+        [in]    IImnAdviseMigrateServer *pAdviseMigrateServer,
+        [in]    DWORD dwFlags);
+}
+
+[
+    object,
+    uuid(C43DFC6F-62BB-11D2-A727-00C04F79E7C8),
+    pointer_default(unique)
+]
+interface IImnAccountManager2 : IImnAccountManager
+{
+    HRESULT InitUser(
+        [in]    IImnAdviseMigrateServer *pAdviseMigrateServer,
+        [in]    REFGUID rguidID,
+        [in]    DWORD dwFlags);
+
+    HRESULT GetIncompleteAccount(
+        [in]    ACCTTYPE AcctType,
+        [in,ref] LPSTR pszAccountId,
+        [in]    ULONG cchMax);
+
+    HRESULT SetIncompleteAccount(
+        [in]    ACCTTYPE AcctType,
+        [in]    LPCSTR pszAccountId);
+}
+
+[
+    object,
+    uuid(FD465484-1384-11D0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IPropertyContainer : IUnknown
+{
+    typedef enum
+    {
+        TYPE_ERROR = 1000,
+        TYPE_DWORD,
+        TYPE_LONG,
+        TYPE_WORD,
+        TYPE_SHORT,
+        TYPE_BYTE,
+        TYPE_CHAR,
+        TYPE_FILETIME,
+        TYPE_STRING,
+        TYPE_BINARY,
+        TYPE_FLAGS,
+        TYPE_STREAM,
+        TYPE_WSTRING,
+        TYPE_BOOL,
+        TYPE_PASS,
+        TYPE_LAST
+    } PROPTYPE;
+
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetProp")
+cpp_quote("#undef SetProp")
+cpp_quote("#endif")
+
+    HRESULT GetProp(
+        [in]    DWORD dwPropTag,
+        [in,size_is(*pcb),ref] BYTE *pb,
+        [in]    ULONG *pcb);
+
+    HRESULT GetPropDw(
+        [in]    DWORD dwPropTag,
+        [out]   DWORD *pdw);
+
+    HRESULT GetPropSz(
+        [in]    DWORD dwPropTag,
+        [in,ref] LPSTR psz,
+        [in]    ULONG cchMax);
+
+    HRESULT SetProp(
+        [in]    DWORD dwPropTag,
+        [in,size_is(cb)] BYTE *pb,
+        [in]    ULONG cb);
+
+    HRESULT SetPropDw(
+        [in]    DWORD dwPropTag,
+        [in]    DWORD dw);
+
+    HRESULT SetPropSz(
+        [in]    DWORD dwPropTag,
+        [in]    LPSTR psz);
+}
+
+[
+    object,
+    uuid(FD465482-1384-11D0-ABBD-0020AFDFD10A),
+    pointer_default(unique)
+]
+interface IImnAccount : IPropertyContainer
+{
+    HRESULT Exist();
+
+    HRESULT SetAsDefault();
+
+    HRESULT Delete();
+
+    HRESULT SaveChanges();
+
+    HRESULT GetAccountType(
+        [out]   ACCTTYPE *pAcctType);
+
+    HRESULT GetServerTypes(
+        [out]   DWORD *pdwSrvTypes);
+
+    HRESULT ShowProperties(
+        [in]    HWND hwnd,
+        [in]    DWORD dwFlags);
+
+    HRESULT ValidateProperty(
+        [in]    DWORD dwPropTag,
+        [in,size_is(cb)] BYTE *pb,
+        [in]    ULONG cb);
+
+    HRESULT DoWizard(
+        [in]    HWND hwnd,
+        [in]    DWORD dwFlags);
+
+    HRESULT DoImportWizard(
+        [in]    HWND hwnd,
+        [in]    CLSID clsid,
+        [in]    DWORD dwFlags);
+}
+
+cpp_quote("HRESULT WINAPI HrCreateAccountManager(IImnAccountManager **ppAccountManager);")
+cpp_quote("HRESULT WINAPI ValidEmailAddress(LPSTR lpAddress);")

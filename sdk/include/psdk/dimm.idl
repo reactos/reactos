@@ -1,0 +1,590 @@
+/*
+ * Copyright 2007 Jacek Caban for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "unknwn.idl";
+#endif
+
+cpp_quote("#include <imm.h>")
+
+cpp_quote("#if 0")
+
+typedef struct {
+    LPSTR lpReading;
+    LPSTR lpWord;
+} REGISTERWORDA;
+
+typedef struct {
+    LPWSTR lpReading;
+    LPWSTR lpWord;
+} REGISTERWORDW;
+
+#define LF_FACESIZE         32
+
+typedef struct {
+    LONG lfHeight;
+    LONG lfWidth;
+    LONG lfEscapement;
+    LONG lfOrientation;
+    LONG lfWeight;
+    BYTE lfItalic;
+    BYTE lfUnderline;
+    BYTE lfStrikeOut;
+    BYTE lfCharSet;
+    BYTE lfOutPrecision;
+    BYTE lfClipPrecision;
+    BYTE lfQuality;
+    BYTE lfPitchAndFamily;
+    CHAR lfFaceName[LF_FACESIZE];
+} LOGFONTA;
+
+typedef struct {
+    LONG  lfHeight;
+    LONG  lfWidth;
+    LONG  lfEscapement;
+    LONG  lfOrientation;
+    LONG  lfWeight;
+    BYTE  lfItalic;
+    BYTE  lfUnderline;
+    BYTE  lfStrikeOut;
+    BYTE  lfCharSet;
+    BYTE  lfOutPrecision;
+    BYTE  lfClipPrecision;
+    BYTE  lfQuality;
+    BYTE  lfPitchAndFamily;
+    WCHAR lfFaceName[LF_FACESIZE];
+} LOGFONTW;
+
+typedef DWORD HIMC;
+typedef DWORD HIMCC;
+
+typedef struct {
+    DWORD dwIndex;
+    DWORD dwStyle;
+    POINT ptCurrentPos;
+    RECT  rcArea;
+} CANDIDATEFORM;
+
+typedef struct {
+    DWORD dwStyle;
+    POINT ptCurrentPos;
+    RECT  rcArea;
+} COMPOSITIONFORM;
+
+typedef struct {
+    DWORD dwSize;
+    DWORD dwStyle;
+    DWORD dwCount;
+    DWORD dwSelection;
+    DWORD dwPageStart;
+    DWORD dwPageSize;
+    DWORD dwOffset[1];
+} CANDIDATELIST;
+
+#define STYLE_DESCRIPTION_SIZE  32
+
+typedef struct {
+    DWORD dwStyle;
+    CHAR  szDescription[STYLE_DESCRIPTION_SIZE];
+} STYLEBUFA;
+
+typedef struct {
+    DWORD dwStyle;
+    WCHAR szDescription[STYLE_DESCRIPTION_SIZE];
+} STYLEBUFW;
+
+typedef WORD ATOM;
+
+#define IMEMENUITEM_STRING_SIZE 80
+
+typedef struct {
+    UINT    cbSize;
+    UINT    fType;
+    UINT    fState;
+    UINT    wID;
+    HBITMAP hbmpChecked;
+    HBITMAP hbmpUnchecked;
+    DWORD   dwItemData;
+    CHAR    szString[IMEMENUITEM_STRING_SIZE];
+    HBITMAP hbmpItem;
+} IMEMENUITEMINFOA;
+
+typedef struct {
+    UINT    cbSize;
+    UINT    fType;
+    UINT    fState;
+    UINT    wID;
+    HBITMAP hbmpChecked;
+    HBITMAP hbmpUnchecked;
+    DWORD   dwItemData;
+    WCHAR   szString[IMEMENUITEM_STRING_SIZE];
+    HBITMAP hbmpItem;
+} IMEMENUITEMINFOW;
+
+cpp_quote("#endif")
+
+[
+    object,
+    uuid(08c03412-f96b-11d0-a475-00aa006bcc59),
+    pointer_default(unique)
+]
+interface IEnumRegisterWordA : IUnknown
+{
+    HRESULT Clone(
+            [out] IEnumRegisterWordA **ppEnum);
+
+    HRESULT Next(
+            [in]  ULONG ulCount,
+            [out] REGISTERWORDA *rgRegisterword,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+            [in]  ULONG ulCount);
+}
+
+[
+    object,
+    uuid(4955dd31-b159-11d0-8fcf-00aa006bcc59),
+    pointer_default(unique)
+]
+interface IEnumRegisterWordW : IUnknown
+{
+    HRESULT Clone(
+            [out] IEnumRegisterWordW **ppEnum);
+
+    HRESULT Next(
+            [in]  ULONG ulCount,
+            [out] REGISTERWORDW *rgRegisterword,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+            [in]  ULONG ulCount);
+}
+
+[
+    object,
+    uuid(09b5eab0-f997-11d1-93d4-0060b067b86e),
+    pointer_default(unique),
+    local
+]
+interface IEnumInputContext : IUnknown
+{
+    HRESULT Clone(
+            [out] IEnumInputContext **ppEnum);
+
+    HRESULT Next(
+            [in]  ULONG ulCount,
+            [out] HIMC *rgInputContext,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+            [in]  ULONG ulCount);
+}
+
+[
+    object,
+    uuid(08c0e040-62d1-11d1-9326-0060b067b86e),
+    pointer_default(unique),
+    local
+]
+interface IActiveIMMApp : IUnknown
+{
+    HRESULT AssociateContext(
+            [in]  HWND hWnd,
+            [in]  HIMC hIME,
+            [out] HIMC *phPrev);
+
+    HRESULT ConfigureIMEA(
+            [in]  HKL hKL,
+            [in]  HWND hwnd,
+            [in]  DWORD dwMode,
+            [in]  REGISTERWORDA *pData);
+
+    HRESULT ConfigureIMEW(
+            [in]  HKL hKL,
+            [in]  HWND hWnd,
+            [in]  DWORD dwMode,
+            [in]  REGISTERWORDW *pData);
+
+    HRESULT CreateContext(
+            [out] HIMC *phIMC);
+
+    HRESULT DestroyContext(
+            [in]  HIMC hIME);
+
+    HRESULT EnumRegisterWordA(
+            [in]  HKL hKL,
+            [in]  LPSTR szReading,
+            [in]  DWORD dwStyle,
+            [in]  LPSTR szRegister,
+            [in]  LPVOID pData,
+            [out] IEnumRegisterWordA **pEnum);
+
+    HRESULT EnumRegisterWordW(
+            [in]  HKL hKL,
+            [in]  LPWSTR szReading,
+            [in]  DWORD dwStyle,
+            [in]  LPWSTR szRegister,
+            [in]  LPVOID pData,
+            [out] IEnumRegisterWordW **pEnum);
+
+    HRESULT EscapeA(
+            [in]  HKL hKL,
+            [in]  HIMC hIMC,
+            [in]  UINT uEscape,
+            [in, out] LPVOID pData,
+            [out] LRESULT *plResult);
+
+    HRESULT EscapeW(
+            [in]  HKL hKL,
+            [in]  HIMC hIMC,
+            [in]  UINT uEscape,
+            [in, out] LPVOID pData,
+            [out] LRESULT *plResult);
+
+    HRESULT GetCandidateListA(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  UINT uBufLen,
+            [out] CANDIDATELIST *pCandList,
+            [out] UINT *puCopied);
+
+    HRESULT GetCandidateListW(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  UINT uBufLen,
+            [out] CANDIDATELIST *pCandList,
+            [out] UINT *puCopied);
+
+    HRESULT GetCandidateListCountA(
+            [in]  HIMC hIMC,
+            [out] DWORD *pdwListSize,
+            [out] DWORD *pdwBufLen);
+
+    HRESULT GetCandidateListCountW(
+            [in]  HIMC hIMC,
+            [out] DWORD *pdwListSize,
+            [out] DWORD *pdwBufLen);
+
+    HRESULT GetCandidateWindow(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [out] CANDIDATEFORM *pCandidate);
+
+    HRESULT GetCompositionFontA(
+            [in]  HIMC hIMC,
+            [out] LOGFONTA *plf);
+
+    HRESULT GetCompositionFontW(
+            [in]  HIMC hIMC,
+            [out] LOGFONTW *plf);
+
+    HRESULT GetCompositionStringA(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  DWORD dwBufLen,
+            [out] LONG *plCopied,
+            [out] LPVOID pBuf);
+
+    HRESULT GetCompositionStringW(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  DWORD dwBufLen,
+            [out] LONG *plCopied,
+            [out] LPVOID pBuf);
+
+    HRESULT GetCompositionWindow(
+            [in]  HIMC hIMC,
+            [out] COMPOSITIONFORM *pCompForm);
+
+    HRESULT GetContext(
+            [in]  HWND hwnd,
+            [out] HIMC *phIMC);
+
+    HRESULT GetConversionListA(
+            [in]  HKL hKL,
+            [in]  HIMC hIMC,
+            [in]  LPSTR pSrc,
+            [in]  UINT uBufLen,
+            [in]  UINT uFlag,
+            [out] CANDIDATELIST *pDst,
+            [out] UINT *puCopied);
+
+    HRESULT GetConversionListW(
+            [in]  HKL hKL,
+            [in]  HIMC hIMC,
+            [in]  LPWSTR pSrc,
+            [in]  UINT uBufLen,
+            [in]  UINT uFlag,
+            [out] CANDIDATELIST *pDst,
+            [out] UINT *puCopied);
+
+    HRESULT GetConversionStatus(
+            [in] HIMC hIMC,
+            [out] DWORD *pfdwConversion,
+            [out] DWORD *pfdwSentence);
+
+    HRESULT GetDefaultIMEWnd(
+            [in] HWND hWnd,
+            [out] HWND *phDefWnd);
+
+    HRESULT GetDescriptionA(
+            [in]  HKL hKL,
+            [in]  UINT uBufLen,
+            [out] LPSTR szDescription,
+            [out] UINT *puCopied);
+
+    HRESULT GetDescriptionW(
+            [in]  HKL hKL,
+            [in]  UINT uBufLen,
+            [out] LPWSTR szDescription,
+            [out] UINT *puCopied);
+
+    HRESULT GetGuideLineA(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  DWORD dwBufLen,
+            [out] LPSTR pBuf,
+            [out] DWORD *pdwResult);
+
+    HRESULT GetGuideLineW(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  DWORD dwBufLen,
+            [out] LPWSTR pBuf,
+            [out] DWORD *pdwResult);
+
+    HRESULT GetIMEFileNameA(
+            [in]  HKL hKL,
+            [in]  UINT uBufLen,
+            [out] LPSTR szFileName,
+            [out] UINT *puCopied);
+
+    HRESULT GetIMEFileNameW(
+            [in]  HKL hKL,
+            [in]  UINT uBufLen,
+            [out] LPWSTR szFileName,
+            [out] UINT *puCopied);
+
+    HRESULT GetOpenStatus(
+            [in]  HIMC hIMC);
+
+    HRESULT GetProperty(
+            [in]  HKL hKL,
+            [in]  DWORD fdwIndex,
+            [out] DWORD *pdwProperty);
+
+    HRESULT GetRegisterWordStyleA(
+            [in]  HKL hKL,
+            [in]  UINT nItem,
+            [out] STYLEBUFA *pStyleBuf,
+            [out] UINT *puCopied);
+
+    HRESULT GetRegisterWordStyleW(
+            [in]  HKL hKL,
+            [in]  UINT nItem,
+            [out] STYLEBUFW *pStyleBuf,
+            [out] UINT *puCopied);
+
+    HRESULT GetStatusWindowPos(
+            [in]  HIMC hIMC,
+            [out] POINT *pptPos);
+
+    HRESULT GetVirtualKey(
+            [in]  HWND hWnd,
+            [out] UINT *puVirtualKey);
+
+    HRESULT InstallIMEA(
+            [in]  LPSTR szIMEFileName,
+            [in]  LPSTR szLayoutText,
+            [out] HKL *phKL);
+
+    HRESULT InstallIMEW(
+            [in]  LPWSTR szIMEFileName,
+            [in]  LPWSTR szLayoutText,
+            [out] HKL *phKL);
+
+    HRESULT IsIME(
+            [in]  HKL hKL);
+
+    HRESULT IsUIMessageA(
+            [in]  HWND hWndIME,
+            [in]  UINT msg,
+            [in]  WPARAM wParam,
+            [in]  LPARAM lParam);
+
+    HRESULT IsUIMessageW(
+            [in]  HWND hWndIME,
+            [in]  UINT msg,
+            [in]  WPARAM wParam,
+            [in]  LPARAM lParam);
+
+    HRESULT NotifyIME(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwAction,
+            [in]  DWORD dwIndex,
+            [in]  DWORD dwValue);
+
+    HRESULT RegisterWordA(
+            [in]  HKL hKL,
+            [in]  LPSTR szReading,
+            [in]  DWORD dwStyle,
+            [in]  LPSTR szRegister);
+
+    HRESULT RegisterWordW(
+            [in]  HKL hKL,
+            [in]  LPWSTR szReading,
+            [in]  DWORD dwStyle,
+            [in]  LPWSTR szRegister);
+
+    HRESULT ReleaseContext(
+            [in]  HWND hWnd,
+            [in]  HIMC hIMC);
+
+    HRESULT SetCandidateWindow(
+            [in]  HIMC hIMC,
+            [in]  CANDIDATEFORM *pCandidate);
+
+    HRESULT SetCompositionFontA(
+            [in]  HIMC hIMC,
+            [in]  LOGFONTA *plf);
+
+    HRESULT SetCompositionFontW(
+            [in]  HIMC hIMC,
+            [in]  LOGFONTW *plf);
+
+    HRESULT SetCompositionStringA(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  LPVOID pComp,
+            [in]  DWORD dwCompLen,
+            [in]  LPVOID pRead,
+            [in]  DWORD dwReadLen);
+
+    HRESULT SetCompositionStringW(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwIndex,
+            [in]  LPVOID pComp,
+            [in]  DWORD dwCompLen,
+            [in]  LPVOID pRead,
+            [in]  DWORD dwReadLen);
+
+    HRESULT SetCompositionWindow(
+            [in]  HIMC hIMC,
+            [in]  COMPOSITIONFORM *pCompForm);
+
+    HRESULT SetConversionStatus(
+            [in]  HIMC hIMC,
+            [in]  DWORD fdwConversion,
+            [in]  DWORD fdwSentence);
+
+    HRESULT SetOpenStatus(
+            [in]  HIMC hIMC,
+            [in]  BOOL fOpen);
+
+    HRESULT SetStatusWindowPos(
+            [in]  HIMC hIMC,
+            [in]  POINT *pptPos);
+
+    HRESULT SimulateHotKey(
+            [in]  HWND hwnd,
+            [in]  DWORD dwHotKeyID);
+
+    HRESULT UnregisterWordA(
+            [in]  HKL hKL,
+            [in]  LPSTR szReading,
+            [in]  DWORD dwStyle,
+            [in]  LPSTR szUnregister);
+
+    HRESULT UnregisterWordW(
+            [in]  HKL hKL,
+            [in]  LPWSTR szReading,
+            [in]  DWORD dwStyle,
+            [in]  LPWSTR szUnregister);
+
+    HRESULT Activate(
+            [in]  BOOL fRestoreLayout);
+
+    HRESULT Deactivate();
+
+    HRESULT OnDefWindowProc(
+            [in]  HWND hWnd,
+            [in]  UINT Msg,
+            [in]  WPARAM wParam,
+            [in]  LPARAM lParam,
+            [out] LRESULT *plResult);
+
+    HRESULT FilterClientWindows(
+            [in]  ATOM *aaClassList,
+            [in]  UINT uSize);
+
+    HRESULT GetCodePageA(
+            [in]  HKL hKL,
+            [out] UINT *uCodePage);
+
+    HRESULT GetLangId(
+            [in]  HKL hKL,
+            [out] LANGID *plid);
+
+    HRESULT AssociateContextEx(
+            [in]  HWND hWnd,
+            [in]  HIMC hIMC,
+            [in]  DWORD dwFlags);
+
+    HRESULT DisableIME(
+            [in]  DWORD idThread);
+
+    HRESULT GetImeMenuItemsA(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwFlags,
+            [in]  DWORD dwType,
+            [in]  IMEMENUITEMINFOA *pImeParentMenu,
+            [out] IMEMENUITEMINFOA *pImeMenu,
+            [in]  DWORD dwSize,
+            [out] DWORD *pdwResult);
+
+    HRESULT GetImeMenuItemsW(
+            [in]  HIMC hIMC,
+            [in]  DWORD dwFlags,
+            [in]  DWORD dwType,
+            [in]  IMEMENUITEMINFOW *pImeParentMenu,
+            [out] IMEMENUITEMINFOW *pImeMenu,
+            [in]  DWORD dwSize,
+            [out] DWORD *pdwResult);
+
+    HRESULT EnumInputContext(
+            [in]  DWORD idThread,
+            [out] IEnumInputContext **ppEnum);
+}
+
+[
+    uuid(4955dd33-b159-11d0-8fcf-00aa006bcc59)
+]
+coclass CActiveIMM
+{
+    [default] interface IActiveIMMApp;
+    /* interface IActiveIMMIME; */
+    /* interface IActiveIMMRegistrar; */
+    /* interface IActiveIMMMessagePumpOwner; */
+}

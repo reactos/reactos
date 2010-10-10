@@ -1,0 +1,75 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriStateTreeViewDemo", "TriStateTreeViewDemo\TriStateTreeViewDemo.csproj", "{6E9E72B6-B523-424F-B409-BA5357BB7B50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TriStateTreeView", "TriStateTreeView.csproj", "{99CEE41D-B76D-4102-B0AD-C81069509D17}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RosBuilder", "..\RosBuilder\RosBuilder.csproj", "{78A0F196-A5BD-469A-B901-B269671AFB0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RosFramework", "..\RosFramework\RosFramework.csproj", "{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NAnt.Core", "..\NAnt.Core\NAnt.Core.csproj", "{8F5F8375-4097-4952-B860-784EB9961ABE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NAnt.Console", "..\NAnt.Console\NAnt.Console.csproj", "{859696F8-F405-4018-A155-D34561498A3E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug Main NAnt BuildFile|Any CPU = Debug Main NAnt BuildFile|Any CPU
+		Debug NAnt Tests|Any CPU = Debug NAnt Tests|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E9E72B6-B523-424F-B409-BA5357BB7B50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99CEE41D-B76D-4102-B0AD-C81069509D17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78A0F196-A5BD-469A-B901-B269671AFB0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug NAnt Tests|Any CPU.Build.0 = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug NAnt Tests|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Release|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{8F5F8375-4097-4952-B860-784EB9961ABE}.Release|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Debug Main NAnt BuildFile|Any CPU.ActiveCfg = Debug Main NAnt BuildFile|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Debug Main NAnt BuildFile|Any CPU.Build.0 = Debug Main NAnt BuildFile|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Debug NAnt Tests|Any CPU.ActiveCfg = Debug NAnt Tests|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Debug NAnt Tests|Any CPU.Build.0 = Debug NAnt Tests|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Release|Any CPU.ActiveCfg = Debug NAnt Tests|Any CPU
+		{859696F8-F405-4018-A155-D34561498A3E}.Release|Any CPU.Build.0 = Debug NAnt Tests|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
