@@ -15,7 +15,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Video meghajtó telepítése"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "A ReactOS telepítõ nem rendelkezik a VMware(r) SVGA meghajtóval.\n\A VMware(r) VM menüjében válaszd ki a  'Install VMware tools...' menüpontot\n\n\nKattints a  'Tovább' gombra a folytatáshoz, vagy a 'Mégse' gombra, hogy kilépj az SVGA meghajtó telepítésébõl.",-1,25,25,225,85
+  LTEXT "A ReactOS telepítõ nem rendelkezik a VMware(r) SVGA meghajtóval.\n\
+A VMware(r) VM menüjében válaszd ki a  'Install VMware tools...' menüpontot\n\n\nKattints a  'Tovább' gombra a folytatáshoz, vagy a 'Mégse' gombra, hogy kilépj az SVGA meghajtó telepítésébõl.",-1,25,25,225,85
 END
 
 IDD_INSTALLING_VMWARE_TOOLS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
