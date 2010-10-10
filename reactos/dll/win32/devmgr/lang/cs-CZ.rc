@@ -75,7 +75,7 @@ BEGIN
     IDS_DEV_FAILED_ADD "Toto zaøízení nepracuje správnì, protoe $1 nepracuje správnì."
     IDS_DEV_DISABLED_SERVICE "ReactOS nemùe nainstalovat ovladaèe tohoto zaøízení, protoe nemá pøístup na disk nebo síové umístìní, na kterém se nacházejí instalaèní soubory."
     IDS_DEV_TRANSLATION_FAILED "Toto zaøízení neodpovídá svému ovladaèi."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáe urèit nastavení tohoto zaøízení. Konzultujte manuál, kterı byl pøibalen k zaøízení a pouijte záloku \"Zdroje\" k vybrání nastavení."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS nedokáe urèit nastavení tohoto zaøízení. Konzultujte manuál, kterı byl pøibalen k zaøízení a pouijte záloku ""Zdroje"" k vybrání nastavení."
     IDS_DEV_BIOS_TABLE "Firmware tohoto poèítaèe nezahrnuje dost informací nutnıch pro správné nastavení a pouití tohoto zaøízení.\nAby bylo moné pouít toto zaøízení, kontaktujte vırobce poèítaèe k získání novìjší verze firmwaru nebo BIOSu."
     IDS_DEV_IRQ_TRANSLATION_FAILED "Toto zaøízení poaduje PCI pøerušení, ale je konfigurováno pro ISA pøerušení (èi naopak).\nProsím, nastavte správnì pøerušení pro toto zaøízení."
     IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS nemùe incializovat ovladaè zaøízení pro toto zaøízení."
