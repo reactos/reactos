@@ -1,0 +1,43 @@
+
+spec2def(ksproxy ${CMAKE_CURRENT_SOURCE_DIR}/ksproxy.spec ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
+
+add_library(ksproxy SHARED
+    allocator.cpp
+    basicaudio.cpp
+    classfactory.cpp
+    clockforward.cpp
+    cvpconfig.cpp
+    cvpvbiconfig.cpp
+    datatype.cpp
+    enum_mediatypes.cpp
+    enumpins.cpp
+    input_pin.cpp
+    interface.cpp
+    ksproxy.cpp
+    ksproxy.rc
+    mediasample.cpp
+    node.cpp
+    output_pin.cpp
+    proxy.cpp
+    qualityforward.cpp)
+
+set_entrypoint(ksproxy 0)
+set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
+if(MSVC)
+    set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "/GR-")
+else()
+    set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
+endif(MSVC)
+
+
+target_link_libraries(ksproxy ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def strmiids)
+
+add_importlibs(ksproxy
+    advapi32
+    ole32
+    setupapi
+    msvcrt
+    ksuser
+    ntdll)
+
+add_dependencies(ksproxy ksproxy_def psdk buildno_header)
