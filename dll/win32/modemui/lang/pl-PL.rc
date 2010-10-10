@@ -338,7 +338,7 @@ BEGIN
 	558 "Belgijski Krajowy"
 	559 "Australijski Krajowy"
 	560 "Nieznany switch"
-	570 "Konfiguracja ISDN dla tego Modemu\NIS nie zosta³a ukoñczona.\n\nProszê wype³niæ wszystkie pola w\nzak³adce ISDN przed prób¹ u¿ycia modemu."
+	570 "Konfiguracja ISDN dla tego Modemu\\NIS nie zosta³a ukoñczona.\n\nProszê wype³niæ wszystkie pola w\nzak³adce ISDN przed prób¹ u¿ycia modemu."
 	600 "PPP   (56K,GSM)"
 	601 "PPP   (64K,GSM)"
 	602 "V.120 (64K,GSM)"
