@@ -169,11 +169,7 @@ else
 endif
 
 ifeq ($(ROS_AUTOMAKE),)
-  ifeq ($(ARCH),i386)
-    ROS_AUTOMAKE=makefile.auto
-  else
     ROS_AUTOMAKE=makefile-$(ARCH).auto
-  endif
 endif
 
 all: $(ROS_AUTOMAKE)
@@ -423,7 +419,7 @@ $(TEMPORARY):
 endif
 endif
 
-BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
+BUILDNO_H = $(INTERMEDIATE_)sdk$(SEP)include$(SEP)reactos$(SEP)buildno.h
 
 include sdk/libs/lib.mak
 include sdk/tools/tools.mak
@@ -432,9 +428,9 @@ include sdk/tools/tools.mak
 PREAUTO := \
 	$(BIN2C_TARGET) \
 	$(BIN2RES_TARGET) \
-#	$(BUILDNO_H) \
-	$(GENDIB_DIB_FILES) \
-	$(NCI_SERVICE_FILES)
+	$(BUILDNO_H) \
+	$(NCI_SERVICE_FILES) \
+	$(GENDIB_DIB_FILES) 
 
 ifeq ($(ARCH),powerpc)
 PREAUTO += $(OFW_INTERFACE_SERVICE_FILES) $(PPCMMU_TARGETS)
@@ -444,8 +440,7 @@ ifeq ($(ROS_BUILDENGINE),)
 ROS_BUILDENGINE=$(RBUILD_TARGET)
 endif
 
-$(ROS_AUTOMAKE): $(ROS_BUILDENGINE) $(XMLBUILDFILES) | $(PREAUTO)
-	${mkdir} $(OUTPUT_)media$(SEP)inf 2>$(NUL)
+$(ROS_AUTOMAKE): $(ROS_BUILDENGINE) $(XMLBUILDFILES) | $(BUILDNO_H)
 	$(ECHO_RBUILD)
 	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) mingw
 

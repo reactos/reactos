@@ -1,0 +1,359 @@
+/*
+ * Copyright 2008 Hans Leidekker for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+cpp_quote("DEFINE_GUID(CLSID_AutomaticUpdates, 0xbfe18e9c,0x6d87,0x4450,0xb3,0x7c,0xe0,0x2f,0x0b,0x37,0x38,0x03);")
+cpp_quote("DEFINE_GUID(CLSID_UpdateSession, 0x4cb43d7f,0x7eee,0x4906,0x86,0x98,0x60,0xda,0x1c,0x38,0xf2,0xfe);")
+
+import "oaidl.idl";
+
+interface IAutomaticUpdates;
+interface IAutomaticUpdatesSettings;
+interface IDownloadJob;
+interface IDownloadResult;
+interface IInstallationJob;
+interface IInstallationResult;
+interface ISearchJob;
+interface ISearchResult;
+interface IUpdateCollection;
+interface IUpdateDownloader;
+interface IUpdateHistoryEntryCollection;
+interface IUpdateInstaller;
+interface IUpdateSearcher;
+interface IUpdateSession;
+interface IWebProxy;
+
+typedef [public] enum tagDownloadPriority
+{
+    dpLow    = 1,
+    dpNormal = 2,
+    dpHigh   = 3,
+} DownloadPriority;
+
+typedef [public] enum tagServerSelection
+{
+    ssDefault       = 0,
+    ssManagedServer = 1,
+    ssWindowsUpdate = 2,
+    ssOthers        = 3,
+} ServerSelection;
+
+[
+    object,
+    uuid(673425bf-c082-4c7c-bdfd-569464b8e0ce),
+    oleautomation,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+    hidden
+]
+interface IAutomaticUpdates : IDispatch
+{
+    HRESULT DetectNow();
+    HRESULT Pause();
+    HRESULT Resume();
+    HRESULT ShowSettingsDialog();
+
+    [propget]
+    HRESULT Settings(
+        [out, retval] IAutomaticUpdatesSettings **retval);
+
+    [propget]
+    HRESULT ServiceEnabled(
+        [out, retval] VARIANT_BOOL *retval);
+
+    HRESULT EnableService();
+}
+
+[
+    object,
+    uuid(816858a4-260d-4260-933a-2585f1abc76b),
+    oleautomation,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+]
+interface IUpdateSession : IDispatch
+{
+    [propget]
+    HRESULT ClientApplicationID(
+        [out, retval] BSTR *retval);
+
+    [propput]
+    HRESULT ClientApplicationID(
+        [in] BSTR value);
+
+    [propget]
+    HRESULT ReadOnly(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propget]
+    HRESULT WebProxy(
+        [out, retval] IWebProxy **retval);
+
+    [propput]
+    HRESULT WebProxy(
+        [in, unique] IWebProxy *value);
+
+    HRESULT CreateUpdateSearcher(
+        [out, retval] IUpdateSearcher **retval);
+
+    HRESULT CreateUpdateDownloader(
+        [out, retval] IUpdateDownloader **retval);
+
+    HRESULT CreateUpdateInstaller(
+        [out, retval] IUpdateInstaller **retval);
+}
+
+[
+    object,
+    uuid(8f45abf1-f9ae-4b95-a933-f0f66e5056ea),
+    oleautomation,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+]
+interface IUpdateSearcher : IDispatch
+{
+    [propget]
+    HRESULT CanAutomaticallyUpgradeService(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propput]
+    HRESULT CanAutomaticallyUpgradeService(
+        [in] VARIANT_BOOL value);
+
+    [propget]
+    HRESULT ClientApplicationID(
+        [out, retval] BSTR *retval);
+
+    [propput]
+    HRESULT ClientApplicationID(
+        [in] BSTR value);
+
+    [propget]
+    HRESULT IncludePotentiallySupersededUpdates(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propput]
+    HRESULT IncludePotentiallySupersededUpdates(
+        [in] VARIANT_BOOL value);
+
+    [propget]
+    HRESULT ServerSelection(
+        [out, retval] ServerSelection *retval);
+
+    [propput]
+    HRESULT ServerSelection(
+        [in] ServerSelection value);
+
+    HRESULT BeginSearch(
+        [in] BSTR criteria,
+        [in] IUnknown *onCompleted,
+        [in] VARIANT state,
+        [out, retval] ISearchJob **retval);
+
+    HRESULT EndSearch(
+        [in] ISearchJob *searchJob,
+        [out, retval] ISearchResult **retval);
+
+    HRESULT EscapeString(
+        [in] BSTR unescaped,
+        [out, retval] BSTR *retval);
+
+    HRESULT QueryHistory(
+        [in] LONG startIndex,
+        [in] LONG count,
+        [out, retval] IUpdateHistoryEntryCollection **retval);
+
+    HRESULT Search(
+        [in] BSTR criteria,
+        [out, retval] ISearchResult **retval);
+
+    [propget]
+    HRESULT Online(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propput]
+    HRESULT Online(
+        [in] VARIANT_BOOL value);
+
+    HRESULT GetTotalHistoryCount(
+        [out, retval] LONG *retval);
+
+    [propget]
+    HRESULT ServiceID(
+        [out, retval] BSTR *retval);
+
+    [propput]
+    HRESULT ServiceID(
+        [in] BSTR value);
+}
+
+[
+    object,
+    uuid(68f1c6f9-7ecc-4666-a464-247fe12496c3),
+    oleautomation,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+    hidden
+]
+interface IUpdateDownloader : IDispatch
+{
+    [propget]
+    HRESULT ClientApplicationID(
+        [out, retval] BSTR *retval);
+
+    [propput]
+    HRESULT ClientApplicationID(
+        [in] BSTR value);
+
+    [propget]
+    HRESULT IsForced(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propput]
+    HRESULT IsForced(
+        [in] VARIANT_BOOL value);
+
+    [propget]
+    HRESULT Priority(
+        [out, retval] DownloadPriority *retval);
+
+    [propput]
+    HRESULT Priority(
+        [in] DownloadPriority value);
+
+    [propget]
+    HRESULT Updates(
+        [out, retval] IUpdateCollection **retval);
+
+    [propput]
+    HRESULT Updates(
+        [in] IUpdateCollection *value);
+
+    HRESULT BeginDownload(
+        [in] IUnknown *onProgressChanged,
+        [in] IUnknown *onCompleted,
+        [in] VARIANT state,
+        [out, retval] IDownloadJob **retval);
+
+    HRESULT Download(
+        [out, retval] IDownloadResult **retval);
+
+    HRESULT EndDownload(
+        [in] IDownloadJob *value,
+        [out, retval] IDownloadResult **retval);
+}
+
+[
+    object,
+    uuid(7b929c68-ccdc-4226-96b1-8724600b54c2),
+    oleautomation,
+    dual,
+    nonextensible,
+    pointer_default(unique),
+]
+interface IUpdateInstaller : IDispatch
+{
+    [propget]
+    HRESULT ClientApplicationID(
+        [out, retval] BSTR *retval);
+
+    [propput]
+    HRESULT ClientApplicationID(
+        [in] BSTR value);
+
+    [propget]
+    HRESULT IsForced(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propput]
+    HRESULT IsForced(
+        [in] VARIANT_BOOL value);
+
+    [propget, restricted]
+    HRESULT ParentHwnd(
+        [out, retval] HWND *retval);
+
+    [propput, restricted]
+    HRESULT ParentHwnd(
+        [in, unique] HWND value);
+
+    [propput]
+    HRESULT ParentWindow(
+        [in, unique] IUnknown *value);
+
+    [propget]
+    HRESULT ParentWindow(
+        [out, retval] IUnknown **retval);
+
+    [propget]
+    HRESULT Updates(
+        [out, retval] IUpdateCollection **retval);
+
+    [propput]
+    HRESULT Updates(
+        [in] IUpdateCollection *value);
+
+    HRESULT BeginInstall(
+        [in] IUnknown *onProgressChanged,
+        [in] IUnknown *onCompleted,
+        [in] VARIANT state,
+        [out, retval] IInstallationJob **retval);
+
+    HRESULT BeginUninstall(
+        [in] IUnknown *onProgressChanged,
+        [in] IUnknown *onCompleted,
+        [in] VARIANT state,
+        [out, retval] IInstallationJob **retval);
+
+    HRESULT EndInstall(
+        [in] IInstallationJob *value,
+        [out, retval] IInstallationResult **retval);
+
+    HRESULT EndUninstall(
+        [in] IInstallationJob *value,
+        [out, retval] IInstallationResult **retval);
+
+    HRESULT Install(
+        [out, retval] IInstallationResult **retval);
+
+    HRESULT RunWizard(
+        [in, defaultvalue("")] BSTR dialogTitle,
+        [out, retval] IInstallationResult **retval);
+
+    [propget]
+    HRESULT IsBusy(
+        [out, retval] VARIANT_BOOL *retval);
+
+    HRESULT Uninstall(
+        [out, retval] IInstallationResult **retval);
+
+    [propget]
+    HRESULT AllowSourcePrompts(
+        [out, retval] VARIANT_BOOL *retval);
+
+    [propput]
+    HRESULT AllowSourcePrompts(
+        [in] VARIANT_BOOL value);
+
+    [propget]
+    HRESULT RebootRequiredBeforeInstallation(
+        [out, retval] VARIANT_BOOL *retval);
+}

@@ -1,0 +1,46 @@
+# $Id$
+PATH_TO_TOP = ../..
+
+TARGET = zlib.host.a
+
+CFLAGS = \
+ -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
+ -Wstrict-prototypes -Wmissing-prototypes
+
+OBJECTS = \
+  adler32.o \
+  compress.o \
+  crc32.o \
+  gzio.o \
+  uncompr.o \
+  deflate.o \
+  trees.o \
+  zutil.o \
+  inflate.o \
+  infblock.o \
+  inftrees.o \
+  infcodes.o \
+  infutil.o \
+  inffast.o
+
+OBJECTS := $(OBJECTS:%=hostobjs/%)
+
+all: hostobjs $(TARGET)
+
+hostobjs:
+	- $(RMKDIR) hostobjs
+
+hostobjs/%.o: %.c
+	$(HOST_CC) $(CFLAGS) -c $< -o $@
+
+$(TARGET): $(OBJECTS)
+	$(HOST_AR) -r $(TARGET) $^
+
+clean:
+	- $(RM) hostobjs/*
+	- $(RM) $(TARGET)
+	- $(RMDIR) hostobjs
+
+.phony: clean
+
+include $(PATH_TO_TOP)/rules.mak

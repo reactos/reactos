@@ -1,0 +1,356 @@
+/*
+ * WLAN Service interface definition
+ */
+
+#include <ms-dtyp.idl>
+#include <wlanapi.h>
+
+typedef [context_handle] PVOID WLANSVC_RPC_HANDLE;
+typedef WLANSVC_RPC_HANDLE* LPWLANSVC_RPC_HANDLE;
+typedef [handle] LPWSTR WLANSVC_HANDLE;
+
+/* FIXME */
+typedef struct struct_C {
+    ULONGLONG elem_1;
+    ULONGLONG elem_2;
+    GUID elem_3;
+    GUID elem_4;
+    DWORD elem_5;
+    GUID elem_6;
+    DWORD elem_7;
+    DWORD elem_8;
+    ULONGLONG elem_9;
+    [size_is(elem_7)] BYTE elem_10[];
+} struct_C ;
+
+typedef struct struct_D {
+    GUID elem_1;
+    GUID elem_2;
+    DWORD elem_3;
+    ULONGLONG elem_4;
+    [size_is(elem_3)] BYTE elem_5[];
+} struct_D ;
+
+typedef struct struct_E {
+    /* enum16 */ short elem_1;
+    DWORD elem_2;
+    WCHAR elem_3[256];
+    WCHAR elem_4[1024];
+} struct_E ;
+
+[
+   uuid(266f33b4-c7c1-4bd1-8f52-ddb8f2214ea9),
+   version(1.0)
+]
+ 
+interface wlansvc_interface
+{
+    /* Function: 0x00 */
+    DWORD _RpcOpenHandle(
+        [in] WLANSVC_HANDLE szMachineName,
+        [in] DWORD dwClientVersion,
+        [in, out] DWORD* pdwNegotiatedVersion,
+        [in, out] LPWLANSVC_RPC_HANDLE phClientHandle);
+
+    /* Function: 0x01 */
+    DWORD _RpcCloseHandle(
+        [in, out] LPWLANSVC_RPC_HANDLE phClientHandle);
+
+    /* Function: 0x02 */
+    DWORD _RpcEnumInterfaces(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [out, ref] PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
+
+    /* Function: 0x03 */ 
+    DWORD _RpcSetAutoConfigParameter(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] /* enum32 */ long OpCode,
+        [in] DWORD dwDataSize,
+        [in][size_is(dwDataSize)] LPBYTE pData);
+
+    /* Function: 0x04 */
+    DWORD _RpcQueryAutoConfigParameter(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] /* enum32 */ DWORD OpCode,
+        [out] LPDWORD pdwDataSize,
+        [out][ref][size_is(*pdwDataSize)] char ** ppData,
+        [out] /* enum32 */ DWORD * pWlanOpcodeValueType);
+
+    /* Function: 0x05 */
+    DWORD _RpcGetInterfaceCapability(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [out, ref] PWLAN_INTERFACE_CAPABILITY *ppCapability);
+
+    /* Function: 0x06 */
+     DWORD _RpcSetInterface(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] /* enum32 */ DWORD OpCode,
+        [in] DWORD dwDataSize,
+        [in, size_is(dwDataSize)] LPBYTE pData);
+
+     /* Function: 0x07 */
+     DWORD _RpcQueryInterface(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] /* enum32 */ long OpCode,
+        [out] LPDWORD pdwDataSize,
+        [out][ref][size_is(*pdwDataSize)] LPBYTE* ppData,
+        [out] /* enum32 */ LPDWORD pWlanOpcodeValueType);
+
+    /* Function: 0x08 */
+    DWORD _RpcIhvControl(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] /* enum32 */ DWORD Type,
+        [in] DWORD dwInBufferSize,
+        [in][size_is(dwInBufferSize)] LPBYTE pInBuffer,
+        [in] DWORD dwOutBufferSize,
+        [out][size_is(dwOutBufferSize), length_is(*pdwBytesReturned)] LPBYTE pOutBuffer,
+        [out] LPDWORD pdwBytesReturned);
+
+    /* Function: 0x09 */
+    DWORD _RpcScan(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][unique] PDOT11_SSID pDot11Ssid,
+        [in][unique] PWLAN_RAW_DATA pIeData);
+
+    /* Function: 0x0A */
+    DWORD _RpcGetAvailableNetworkList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] DWORD dwFlags,
+        [out][ref] WLAN_AVAILABLE_NETWORK_LIST **ppAvailableNetworkList);
+
+    /* Function: 0x0B */
+    DWORD _RpcGetNetworkBssList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][unique] PDOT11_SSID pDot11Ssid,
+        [in] /* enum16 */ short dot11BssType,
+        [in] DWORD bSecurityEnabled,
+        [out] LPDWORD dwBssListSize,
+        [out][ref][size_is(*dwBssListSize)] LPBYTE *ppWlanBssList);
+
+    /* Function: 0x0C */
+    DWORD _RpcConnect(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] PWLAN_CONNECTION_PARAMETERS* pConnectionParameters);
+
+    /* Function: 0x0D */
+    DWORD _RpcDisconnect(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGUID);
+
+    /* Function: 0x0E */
+    DWORD _RpcRegisterNotification(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] DWORD arg_2,
+        [out] LPDWORD pdwPrevNotifSource);
+
+    /* Function: 0x0F */
+    DWORD _RpcAsyncGetNotification(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [out][ref] PWLAN_NOTIFICATION_DATA *NotificationData);
+
+    /* Function: 0x10 */
+    DWORD _RpcSetProfileEapUserData(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName,
+        [in] EAP_METHOD_TYPE MethodType,
+        [in] DWORD dwFlags,
+        [in] DWORD dwEapUserDataSize,
+        [in][size_is(dwEapUserDataSize)] LPBYTE pbEapUserData);
+
+    /* Function: 0x11 */
+    DWORD _RpcSetProfile(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] DWORD dwFlags,
+        [in][string] wchar_t * strProfileXml,
+        [in][unique][string] wchar_t * strAllUserProfileSecurity,
+        [in] BOOL bOverwrite,
+        [out] LPDWORD pdwReasonCode);
+
+    /* Function: 0x12 */
+    DWORD _RpcGetProfile(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName,
+        [out][ref][string] wchar_t ** pstrProfileXml,
+        [out] LPDWORD pdwFlags,
+        [in, out][unique] LPDWORD pdwGrantedAccess);
+
+    /* Function: 0x13 */
+    DWORD _RpcDeleteProfile(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName);
+
+    /* Function: 0x14 */
+    DWORD _RpcRenameProfile(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strOldProfileName,
+        [in][string] wchar_t * strNewProfileName);
+
+    /* Function: 0x15 */
+    DWORD _RpcSetProfileList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in] DWORD dwItems,
+        [in] /* [string] */ [size_is(dwItems)] /* wchar_t */ BYTE ** strProfileNames); /* FIXME */
+
+    /* Function: 0x16 */
+    DWORD _RpcGetProfileList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [out][ref] PWLAN_PROFILE_INFO_LIST *ppProfileList);
+
+    /* Function: 0x17 */
+    DWORD _RpcSetProfilePosition(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName,
+        [in] DWORD dwPosition);
+
+    /* Function: 0x18 */
+    DWORD _RpcSetProfileCustomUserData(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName,
+        [in] DWORD dwDataSize,
+        [in][unique][size_is(dwDataSize)] LPBYTE pData);
+
+    /* Function: 0x19 */
+    DWORD _RpcGetProfileCustomUserData(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName,
+        [out] LPDWORD dwDataSize,
+        [out][ref][size_is(*dwDataSize)] LPBYTE *pData);
+
+    /* Function: 0x1A */
+    DWORD _RpcSetFilterList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] /* enum16 */ short wlanFilterListType,
+        [in][unique] PDOT11_NETWORK_LIST pNetworkList);
+
+    /* Function: 0x1B */
+    DWORD _RpcGetFilterList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] /* enum16 */ short wlanFilterListType,
+        [out][ref] PDOT11_NETWORK_LIST *pNetworkList);
+
+    /* Function: 0x1C */
+    DWORD _RpcSetPsdIEDataList(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in][unique][string] wchar_t * strFormat,
+        [in] DWORD dwDataListSize,
+        [in][unique][size_is(dwDataListSize)] LPBYTE pPsdIEDataList);
+
+    /* Function: 0x1D */
+    DWORD _RpcSaveTemporaryProfile(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * strProfileName,
+        [in][unique][string] wchar_t * strAllUserProfileSecurity,
+        [in] DWORD dwFlags,
+        [in] BOOL bOverWrite);
+
+    /* Function: 0x1E, address: 0x2C992E36 */
+    DWORD _RpcIsUIRequestPending(
+        [in] wchar_t * arg_1,
+        [in] GUID* pInterfaceGuid,
+        [in] struct_C * arg_3,
+        [out] LPDWORD arg_4);
+
+    /* Function: 0x1F, address: 0x2C992EB3 */
+    DWORD _RpcSetUIForwardingNetworkList(
+        [in] wchar_t * arg_1,
+        [in][size_is(dwSize)] GUID* arg_2,
+        [in] DWORD dwSize,
+        [out] GUID* arg_4);
+
+    /* Function: 0x20 */
+    DWORD _RpcIsNetworkSuppressed(
+        [in] wchar_t * arg_1,
+        [in] DWORD arg_2,
+        [in] GUID* pInterfaceGuid,
+        [out] LPDWORD arg_4);
+
+    /* Function: 0x21 */
+    DWORD _RpcRemoveUIForwardingNetworkList(
+        [in] wchar_t * arg_1,
+        [in] GUID* pInterfaceGuid);
+
+    /* Function: 0x22 */
+    DWORD _RpcQueryExtUIRequest(
+        [in] wchar_t * arg_1,
+        [in] GUID* arg_2,
+        [in] GUID* arg_3,
+        [in] /* enum16 */ short arg_4,
+        [out] GUID* pInterfaceGuid,
+        [out][ref] struct_C ** arg_6);
+
+    /* Function: 0x23 */
+    DWORD _RpcUIResponse(
+        [in] wchar_t * arg_1,
+        [in] struct_C * arg_2,
+        [in] struct_D * arg_3);
+
+    /* Function: 0x24 */
+    DWORD _RpcGetProfileKeyInfo(
+        [in] wchar_t * arg_1,
+        [in] DWORD arg_2,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * arg_4,
+        [in] DWORD arg_5,
+        [out] LPDWORD arg_6,
+        [in, out][unique][size_is(arg_5)] char * arg_7,
+        [out] LPDWORD arg_8);
+
+    /* Function: 0x25 */
+    DWORD _RpcAsyncDoPlap(
+        [in] wchar_t * arg_1,
+        [in] GUID* pInterfaceGuid,
+        [in][string] wchar_t * arg_3,
+        [in] DWORD dwSize,
+        [in][size_is(dwSize)] struct_E arg_5[]);
+
+    /* Function: 0x26 */
+    DWORD _RpcQueryPlapCredentials(
+        [in] wchar_t * arg_1,
+        [out] LPDWORD dwSize,
+        [out][ref][size_is(*dwSize)] struct_E ** arg_3,
+        [out][ref][string] wchar_t ** arg_4,
+        [out] GUID* pInterfaceGuid,
+        [out] LPDWORD arg_6,
+        [out] LPDWORD arg_7,
+        [out] LPDWORD arg_8,
+        [out] LPDWORD arg_9);
+
+    /* Function: 0x27 */
+    DWORD _RpcCancelPlap(
+        [in] wchar_t * arg_1,
+        [in] GUID* pInterfaceGuid);
+
+    /* Function: 0x28 */
+    DWORD _RpcSetSecuritySettings(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] WLAN_SECURABLE_OBJECT SecurableObject,
+        [in][string] wchar_t * strModifiedSDDL);
+
+    /* Function: 0x29 */
+    DWORD _RpcGetSecuritySettings(
+        [in] WLANSVC_RPC_HANDLE hClientHandle,
+        [in] WLAN_SECURABLE_OBJECT SecurableObject,
+        [out] WLAN_OPCODE_VALUE_TYPE *pValueType,
+        [out][ref][string] wchar_t ** pstrCurrentSDDL,
+        [out] LPDWORD pdwGrantedAccess);
+
+}

@@ -1,0 +1,381 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <ProjectType>Local</ProjectType>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8F5F8375-4097-4952-B860-784EB9961ABE}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <AssemblyKeyContainerName>
+    </AssemblyKeyContainerName>
+    <AssemblyName>SysGen.Framework</AssemblyName>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+    <DefaultClientScript>JScript</DefaultClientScript>
+    <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
+    <DefaultTargetSchema>IE50</DefaultTargetSchema>
+    <DelaySign>false</DelaySign>
+    <OutputType>Library</OutputType>
+    <RootNamespace>SysGen.Framework</RootNamespace>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>
+    </DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>1</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug Main NAnt BuildFile|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <BaseAddress>285212672</BaseAddress>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <ConfigurationOverrideFile>
+    </ConfigurationOverrideFile>
+    <DefineConstants>
+    </DefineConstants>
+    <DocumentationFile>
+    </DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
+    <FileAlignment>4096</FileAlignment>
+    <Optimize>false</Optimize>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>1</WarningLevel>
+    <DebugType>full</DebugType>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Attributes\FunctionAttribute.cs" />
+    <Compile Include="Attributes\FunctionSetAttribute.cs" />
+    <Compile Include="Backends\APIDocumentation\APIDocumentation.cs" />
+    <Compile Include="Backends\Base\HtmlDocumenterBaseBacked.cs" />
+    <Compile Include="Backends\BaseAddress\BaseAddressReportBackend.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwPackageModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwMessageHeaderModuleHandler.cs" />
+    <Compile Include="Backends\RGenStats\RGenStatBackend.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwCabinetModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwBuildToolModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwHostStaticLibraryModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwRpcProxyModuleHandler.cs" />
+    <Compile Include="Backends\MSVisualStudio\MSVisualStudio.cs" />
+    <Compile Include="Backends\RBuildDB\RBuildDBBackend.cs" />
+    <Compile Include="Backends\WarningReport\WarningReport.cs" />
+    <Compile Include="Collections\BackendCollection.cs" />
+    <Compile Include="Collections\FileHandlerCollection.cs" />
+    <Compile Include="FileWriters\SysSetupComponentSetupFileWriter.cs" />
+    <Compile Include="FileWriters\TxtSetupHiveFileWriter.cs" />
+    <Compile Include="SysGenDependencyTracker.cs" />
+    <Compile Include="Elements\Base\Element.cs" />
+    <Compile Include="FileWriters\Base\AutoGeneratedFileWriter.cs" />
+    <Compile Include="FileWriters\Base\AutoGeneratedInfFileWriter.cs" />
+    <Compile Include="FileWriters\Base\AutoGeneratedCFileWriter.cs" />
+    <Compile Include="FileWriters\CompilationUnitFileWriter.cs" />
+    <Compile Include="FileWriters\HeaderRosCfgFileWriter.cs" />
+    <Compile Include="FileWriters\HeaderCreditsFileWriter.cs" />
+    <Compile Include="FileWriters\DefinitionFileWriter.cs" />
+    <Compile Include="FileWriters\UnAttendSetupFileWriter.cs" />
+    <Compile Include="FileWriters\TxtCreditsFileWriter.cs" />
+    <Compile Include="FileWriters\TxtSetupFileWriter.cs" />
+    <Compile Include="FileWriters\SysSetupFileWriter.cs" />
+    <Compile Include="FileWriters\DffFileWriter.cs" />
+    <Compile Include="Handlers\SysSetupFileHandler.cs" />
+    <Compile Include="Interfaces\IBuildStatusMailReporter.cs" />
+    <Compile Include="Interfaces\IRBuildInstallable.cs" />
+    <Compile Include="Log\Loggers\ConsoleLogger.cs" />
+    <Compile Include="Log\Loggers\StringLogger.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\TaskValueAttribute.cs" />
+    <Compile Include="Attributes\Validators\BooleanValidatorAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\TaskPropertyAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\BuildElementArrayAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\BuildElementAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\ElementNameAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\Validators\UriValidatorAttribute.cs" />
+    <Compile Include="Attributes\Validators\StringValidatorAttribute.cs" />
+    <Compile Include="Attributes\Validators\Int32ValidatorAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\TaskAttributeAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\TaskFileSetAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\TaskNameAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\TaskOptionSetAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Attributes\Validators\Base\ValidatorAttribute.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Backends\Base\Backend.cs" />
+    <Compile Include="Backends\Base\CompilerBaseBacked.cs" />
+    <Compile Include="Backends\Catalog\CatalogBackend.cs" />
+    <Compile Include="Backends\BuildLogReport\BuildLogReport.cs" />
+    <Compile Include="Backends\ProjectTreeReport\ProjectTreeReport.cs" />
+    <Compile Include="Backends\Html\HtmlBackend.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\Base\MingwRBuildModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwNativeDLLModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwRpcClientHeaderModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwRpcServerHeaderModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwIdlHeaderModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwBootLoaderModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwWin32OCXModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwBootSectorModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwWin32CUIModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwWin32GUIModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwWin32DLLModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwKernelModeDLLModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwKernelModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwEmbeddedTypeLibModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwKernelModeDriverModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwStaticLibraryModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwObjectLibraryModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwNativeCUIModuleHandler.cs" />
+    <Compile Include="Backends\Mingw\Misc\MakefileWriter.cs" />
+    <Compile Include="Backends\Mingw\MingwBackend.cs" />
+    <Compile Include="Backends\Mingw\CompilableFile.cs" />
+    <Compile Include="Backends\Mingw\MingwRBuildElementHandler.cs" />
+    <Compile Include="Backends\Mingw\TargetsHandlers\Base\MingwRBuildTargetHandler.cs" />
+    <Compile Include="Collections\LogListenerCollection.cs" />
+    <Compile Include="Collections\DefineCollection.cs" />
+    <Compile Include="Exceptions\BuildException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Interfaces\IElement.cs" />
+    <Compile Include="Interfaces\IFileHandler.cs" />
+    <Compile Include="Interfaces\IDirectory.cs" />
+    <Compile Include="Interfaces\ISysGenObject.cs" />
+    <Compile Include="Interfaces\ITaskContainer.cs" />
+    <Compile Include="Interfaces\ITask.cs" />
+    <Compile Include="Location.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="LocationMap.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Log\Log.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Backends\Mingw\ModuleHandlers\MingwRBuildProjectHandler.cs" />
+    <Compile Include="SysGenEngine.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SysGenConversion.cs" />
+    <Compile Include="Plugins\TaskBuilder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\TaskBuilderCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Collections\TaskCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Plugins\TaskFactory.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SysGenPathResolver.cs" />
+    <Compile Include="Tasks\Base\Task.cs" />
+    <Compile Include="Tasks\Base\TaskContainer.cs" />
+    <Compile Include="Tasks\BuiltIn\Build\XIFallbackTask.cs" />
+    <Compile Include="Tasks\BuiltIn\Build\XIIncludeTask.cs" />
+    <Compile Include="Tasks\BuiltIn\Logic\IfNotTask.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tasks\BuiltIn\Logic\IfTask.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tasks\RBuild\Base\AuthorBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\AutoFilesTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\CDFileBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\FolderBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\PlatformFileBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\FileSystemInfoBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\PropertyBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\RbuildElementBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\ValueBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\CompilerFlagTask.cs" />
+    <Compile Include="Tasks\RBuild\CDFileTask.cs" />
+    <Compile Include="Tasks\RBuild\BootstrapTask.cs" />
+    <Compile Include="Tasks\RBuild\CompilationUnitTask.cs" />
+    <Compile Include="Tasks\RBuild\AutoRegisterTask.cs" />
+    <Compile Include="Tasks\RBuild\AutoInstallFilesTask.cs" />
+    <Compile Include="Tasks\RBuild\Base\FileBaseTask.cs" />
+    <Compile Include="Tasks\RBuild\AutoManifest.cs" />
+    <Compile Include="Tasks\RBuild\AutoResource.cs" />
+    <Compile Include="Tasks\RBuild\BootstrapFileTask.cs" />
+    <Compile Include="Tasks\RBuild\BaseAdressTask.cs" />
+    <Compile Include="Tasks\RBuild\BuildFamilyTask.cs" />
+    <Compile Include="Tasks\RBuild\ComponentTask.cs" />
+    <Compile Include="Tasks\RBuild\BootSector.cs" />
+    <Compile Include="Tasks\RBuild\AutoFilesTask.cs" />
+    <Compile Include="Tasks\RBuild\InstallComponent.cs" />
+    <Compile Include="Tasks\RBuild\ReDefineTask.cs" />
+    <Compile Include="Tasks\RBuild\DebugChannelTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformAutorunTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformDescriptionTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformNameTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformWallpaperTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformDebugChannelTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformScreenSaverTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformShellTask.cs" />
+    <Compile Include="Tasks\RBuild\RequiresTask.cs" />
+    <Compile Include="Tasks\RBuild\WallPaperTask.cs" />
+    <Compile Include="Tasks\RBuild\SetupTask.cs" />
+    <Compile Include="Tasks\RBuild\Modules\BuildTool.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Cabinet.cs" />
+    <Compile Include="Tasks\RBuild\Modules\StaticLibrary.cs" />
+    <Compile Include="Tasks\RBuild\Modules\ObjectLibrary.cs" />
+    <Compile Include="Tasks\RBuild\Modules\KernelModeDLL.cs" />
+    <Compile Include="Tasks\RBuild\Modules\KernelModeDriver.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Kernel.cs" />
+    <Compile Include="Tasks\RBuild\Modules\NativeCUI.cs" />
+    <Compile Include="Tasks\RBuild\Modules\NativeDLL.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Package.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Win32SCR.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Win32OCX.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Win32CUI.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Win32GUI.cs" />
+    <Compile Include="Tasks\RBuild\Modules\Win32DLL.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformModuleTask.cs" />
+    <Compile Include="Tasks\RBuild\Platform\PlatformLanguageTask.cs" />
+    <Compile Include="Tasks\RBuild\OverrideModuleTask.cs" />
+    <Compile Include="Tasks\RBuild\FamilyTask.cs" />
+    <Compile Include="Tasks\RBuild\InstalFolder.cs" />
+    <Compile Include="Tasks\RBuild\DeveloperTask.cs" />
+    <Compile Include="Tasks\RBuild\ContributorTask.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Tasks\RBuild\MantainterTask.cs" />
+    <Compile Include="Tasks\RBuild\LanguageTask.cs" />
+    <Compile Include="Tasks\RBuild\LocalizationTask.cs" />
+    <Compile Include="Tasks\RBuild\LinkerScriptTask.cs" />
+    <Compile Include="Tasks\RBuild\ModuleStateTask.cs" />
+    <Compile Include="Tasks\RBuild\DependencyTask.cs" />
+    <Compile Include="Tasks\RBuild\RbuildTask.cs" />
+    <Compile Include="Tasks\RBuild\ProjectTask.cs" />
+    <Compile Include="Tasks\RBuild\MetadataTask.cs" />
+    <Compile Include="Tasks\RBuild\LibraryTask.cs" />
+    <Compile Include="Tasks\RBuild\PCHTask.cs" />
+    <Compile Include="Tasks\RBuild\ImportLibraryTask.cs" />
+    <Compile Include="Tasks\RBuild\InstallFileTask.cs" />
+    <Compile Include="Tasks\RBuild\FileTask.cs" />
+    <Compile Include="Tasks\RBuild\ModuleTask.cs" />
+    <Compile Include="Tasks\RBuild\DirectoryTask.cs" />
+    <Compile Include="Tasks\RBuild\IncludeTask.cs" />
+    <Compile Include="Tasks\RBuild\GroupTask.cs" />
+    <Compile Include="Tasks\RBuild\LinkerFlagTask.cs" />
+    <Compile Include="Tasks\RBuild\DefineTask.cs" />
+    <Compile Include="Tasks\RBuild\PropertyTask.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Exceptions\ValidationException.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Log\Loggers\XmlLogger.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Backends\MSVisualStudio\VisualStudio\Solution.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RosFramework\SysGen.RBuild.Framework.csproj">
+      <Project>{88D9BED7-30C5-4683-A6C6-6F2EB55B8F26}</Project>
+      <Name>SysGen.RBuild.Framework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+</Project>

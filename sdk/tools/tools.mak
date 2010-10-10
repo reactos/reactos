@@ -43,7 +43,7 @@ $(TOOLS_INT_)xml.o: $(TOOLS_BASE_)xml.cpp $(XML_SSPRINTF_HEADERS) | $(TOOLS_INT)
 include sdk/tools/bin2c.mak
 include sdk/tools/buildno/buildno.mak
 include sdk/tools/gendib/gendib.mak
-include sdk/tools/rsym/log2lines.mak
+include sdk/tools/log2lines/log2lines.mak
 include sdk/tools/nci/nci.mak
 ifeq ($(ARCH),powerpc)
 include sdk/tools/ofw_interface/ofw_interface.mak

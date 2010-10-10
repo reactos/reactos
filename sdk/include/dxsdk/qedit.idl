@@ -1,0 +1,168 @@
+/*
+ * Copyright (C) 2008 Google (Lei Zhang)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "ocidl.idl";
+/* import "dxtrans.idl"; */
+import "amstream.idl";
+import "msxml.idl";
+
+[
+    object,
+    uuid(0579154A-2B53-4994-B0D0-E773148EFF85),
+    local,
+    pointer_default(unique)
+]
+interface ISampleGrabberCB : IUnknown
+{
+    HRESULT SampleCB(
+        double SampleTime,
+        IMediaSample * pSample
+    );
+    HRESULT BufferCB(
+        double SampleTime,
+        BYTE * pBuffer,
+        LONG BufferLen
+    );
+}
+
+[
+    object,
+    uuid(6B652FFF-11FE-4fce-92AD-0266B5D7C78F),
+    local,
+    pointer_default(unique)
+]
+interface ISampleGrabber: IUnknown
+{
+    HRESULT SetOneShot(
+        BOOL OneShot
+    );
+
+    HRESULT SetMediaType(
+        const AM_MEDIA_TYPE * pType
+    );
+
+    HRESULT GetConnectedMediaType(
+        AM_MEDIA_TYPE * pType
+    );
+
+    HRESULT SetBufferSamples(
+        BOOL BufferThem
+    );
+
+    HRESULT GetCurrentBuffer(
+        [in,out] LONG * pBufferSize,
+        [out] LONG * pBuffer
+    );
+
+    HRESULT GetCurrentSample(
+        [out] IMediaSample ** ppSample
+    );
+
+    HRESULT SetCallback(
+        ISampleGrabberCB * pCallback,
+        LONG WhichMethodToCallback
+    );
+};
+
+[
+    object,
+    uuid(65bd0710-24d2-4FF7-9324-ed2e5d3abafa),
+    pointer_default(unique)
+]
+interface IMediaDet : IUnknown
+{
+    HRESULT get_Filter(
+        [out] IUnknown* *pVal
+    );
+
+    HRESULT put_Filter(
+        IUnknown* newVal
+    );
+
+    HRESULT get_OutputStreams(
+        [out] LONG *pVal
+    );
+
+    HRESULT get_CurrentStream(
+        [out] LONG *pVal
+    );
+
+    HRESULT put_CurrentStream(
+        LONG newVal
+    );
+
+    HRESULT get_StreamType(
+        [out] GUID *pVal
+    );
+
+    HRESULT get_StreamTypeB(
+        [out] BSTR *pVal
+    );
+
+    HRESULT get_StreamLength(
+        [out] double *pVal
+    );
+
+    HRESULT get_Filename(
+        [out] BSTR *pVal
+    );
+
+    HRESULT put_Filename(
+        BSTR newVal
+    );
+
+    HRESULT GetBitmapBits(
+        double StreamTime,
+        LONG * pBufferSize,
+        char * pBuffer,
+        LONG Width,
+        LONG Height
+    );
+
+    HRESULT WriteBitmapBits(
+        double StreamTime,
+        LONG Width,
+        LONG Height,
+        BSTR Filename
+    );
+
+    HRESULT get_StreamMediaType(
+        [out] AM_MEDIA_TYPE * pVal
+    );
+
+    HRESULT GetSampleGrabber(
+        [out] ISampleGrabber ** ppVal
+    );
+
+    HRESULT get_FrameRate(
+        [out] double *pVal
+    );
+
+    HRESULT EnterBitmapGrabMode(
+        double SeekTime
+    );
+};
+
+[
+    uuid(65BD0711-24D2-4ff7-9324-ED2E5D3ABAFA),
+]
+coclass MediaDet
+{
+    [default] interface IMediaDet;
+};

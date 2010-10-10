@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile-amd64.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile-amd64.auto" xmlns:xi="http://www.w3.org/2001/XInclude" allowwarnings="true">
 	<xi:include href="config-amd64.rbuild">
 		<xi:fallback>
 			<xi:include href="config-amd64.template.rbuild" />
@@ -18,6 +18,7 @@
 	<define name="TARGET_amd64" host="true" />
 
 	<define name="USE_COMPILER_EXCEPTIONS" />
+	<define name ="NO_UNDERSCORE_PREFIX" />
 
 	<property name="PLATFORM" value="PC"/>
 	<property name="usewrc" value="false"/>
@@ -28,11 +29,13 @@
 			<compilerflag>-ftracer</compilerflag>
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
+		<compilerflag>-fms-extensions</compilerflag>
 		<compilerflag>-mpreferred-stack-boundary=4</compilerflag>
 		<compilerflag compiler="midl">-m64 --win64</compilerflag>
 		<!-- compilerflag compiler="cc,cxx">-gstabs+</compilerflag -->
 		<!-- compilerflag compiler="as">-gstabs+</compilerflag -->
 		<compilerflag>-U_X86_</compilerflag>
+		<compilerflag>-UWIN32</compilerflag>
 		<compilerflag>-Wno-format</compilerflag>
 	</group>
 
@@ -42,11 +45,31 @@
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 		<linkerflag>--unique=.eh_frame</linkerflag>
 		<linkerflag>-static</linkerflag>
+		<linkerflag>--exclude-all-symbols</linkerflag>
 	</group>
 
 	<if property="USERMODE" value="1">
 		<directory name="base">
-			<xi:include href="base/base.rbuild" />
+			<directory name="applications">
+				<xi:include href="base/applications/applications.rbuild" />
+			</directory>
+			<directory name="services">
+				<xi:include href="base/services/services.rbuild" />
+			</directory>
+			<directory name="setup">
+				<xi:include href="base/setup/setup.rbuild" />
+			</directory>
+			<directory name="shell">
+				<directory name="cmd">
+					<xi:include href="base/shell/cmd/cmd.rbuild" />
+				</directory>
+				<directory name="explorer-new">
+					<xi:include href="base/shell/explorer-new/explorer.rbuild" />
+				</directory>
+			</directory>
+			<directory name="system">
+				<xi:include href="base/system/system.rbuild" />
+			</directory>
 		</directory>
 		<directory name="dll">
 			<xi:include href="dll/dll.rbuild" />

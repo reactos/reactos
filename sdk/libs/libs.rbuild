@@ -7,14 +7,14 @@
 	<directory name="cmlib">
 		<xi:include href="cmlib/cmlib.rbuild" />
 	</directory>
+	<directory name="crt">
+		<xi:include href="crt/crt.rbuild" />
+	</directory>
 	<directory name="debugsup">
 		<xi:include href="debugsup/debugsup.rbuild" />
 	</directory>
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
-	</directory>
-	<directory name="mingw">
-		<xi:include href="mingw/mingw.rbuild" />
 	</directory>
 	<directory name="pseh">
 		<xi:include href="pseh/pseh.rbuild" />

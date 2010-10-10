@@ -63,31 +63,31 @@
 		<define name="_SETUPAPI_VER">0x600</define>
 	</if>
 
-	<include>.</include>
-	<include>include</include>
-	<include root="intermediate">include</include>
-	<include>include/psdk</include>
-	<include root="intermediate">include/psdk</include>
-	<include>include/dxsdk</include>
-	<include root="intermediate">include/dxsdk</include>
-	<include>include/crt</include>
-	<include compilerset="gcc">include/crt/mingw32</include>
-	<include compilerset="msc">include/crt/msc</include>
-	<include>include/ddk</include>
-	<include>include/GL</include>
-	<include>include/ndk</include>
-	<include>include/reactos</include>
-	<include root="intermediate">include/reactos</include>
-	<include root="intermediate">include/reactos/mc</include>
-	<include>include/reactos/libs</include>
+	<include>sdk/include</include>
+	<include root="intermediate">sdk/include</include>
+	<include>sdk/include/psdk</include>
+	<include root="intermediate">sdk/include/psdk</include>
+	<include>sdk/include/dxsdk</include>
+	<include root="intermediate">sdk/include/dxsdk</include>
+	<include>sdk/include/crt</include>
+	<include compilerset="gcc">sdk/include/crt/mingw32</include>
+	<include compilerset="msc">sdk/include/crt/msc</include>
+	<include>sdk/include/ddk</include>
+	<include>sdk/include/GL</include>
+	<include>sdk/include/ndk</include>
+	<include>sdk/include/reactos</include>
+	<include root="intermediate">sdk/include/reactos</include>
+	<include root="intermediate">sdk/include/reactos/mc</include>
+	<include>sdk/include/reactos/libs</include>
 
-	<include host="true">include</include>
-	<include host="true" root="intermediate">include</include>
-	<include host="true">include/reactos</include>
-	<include host="true">include/reactos/wine</include>
+	<include host="true">sdk/include</include>
+	<include host="true" root="intermediate">sdk/include</include>
+	<include host="true">sdk/include/reactos</include>
+	<include host="true">sdk/include/reactos/wine</include>
 
 	<group compilerset="gcc">
 		<compilerflag>-Wall</compilerflag>
+		<compilerflag>-Wno-char-subscripts</compilerflag>
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
 	</group>
 
@@ -117,14 +117,9 @@
 		</if>
 
 		<compilerflag>-fno-strict-aliasing</compilerflag>
-		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-Wpointer-arith</compilerflag>
 		<compilerflag>-Wno-multichar</compilerflag>
-		<!--
 		<compilerflag>-Wno-error=uninitialized</compilerflag>
-		<compilerflag>-Wno-error=unused-function</compilerflag>
-		<compilerflag>-Wno-error=write-strings</compilerflag>
-		-->
 		<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	</group>
 

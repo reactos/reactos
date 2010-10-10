@@ -7,18 +7,18 @@
 		</xi:fallback>
 	</xi:include>
 
-    <xi:include href="ReactOS-generic.rbuild" />
+	<xi:include href="ReactOS-generic.rbuild" />
 
-    <!-- <define name="_M_ARM" /> Already defined by toolchain -->
+	<!-- <define name="_M_ARM" /> Already defined by toolchain -->
 	<define name="_ARM_" />
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
 
-    <define name="USE_COMPILER_EXCEPTIONS" />
+	<define name="USE_COMPILER_EXCEPTIONS" />
 
-    <property name="WINEBUILD_FLAGS" value="--kill-at"/>
+	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
 
-    <include>include/reactos/arm</include>
+	<include>include/reactos/arm</include>
 
 	<if property="SARCH" value="versatile">
 		<define name="BOARD_CONFIG_VERSATILE"/>
@@ -28,17 +28,18 @@
 		<if property="OPTIMIZE" value="1">
 			<compilerflag>-ftracer</compilerflag>
 		</if>
-        <compilerflag>-Wno-attributes</compilerflag>
-        <compilerflag>-U_UNICODE</compilerflag>
-        <compilerflag>-UUNICODE</compilerflag>
+		<compilerflag>-fms-extensions</compilerflag>
+		<compilerflag>-Wno-attributes</compilerflag>
+		<compilerflag>-U_UNICODE</compilerflag>
+		<compilerflag>-UUNICODE</compilerflag>
 	</group>
 
 
 	<define name="__MSVCRT__"/> <!-- DUBIOUS -->
 
 	<group linkerset="ld">
-        <linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
-        <linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
+		<linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
 		<linkerflag>-file-alignment=0x1000</linkerflag>
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 	</group>
@@ -52,7 +53,10 @@
 		<directory name="drivers">
 			<directory name="csq">
 				<xi:include href="lib/drivers/csq/csq.rbuild" />
-            </directory>
+			</directory>
+		</directory>
+		<directory name="cportlib">
+			<xi:include href="lib/cportlib/cportlib.rbuild" />
 		</directory>
 		<directory name="debugsup">
 			<xi:include href="lib/debugsup/debugsup.rbuild" />
@@ -73,6 +77,9 @@
 		<directory name="inflib">
 			<xi:include href="lib/inflib/inflib.rbuild" />
 		</directory>
+		<directory name="newinflib">
+			<xi:include href="lib/newinflib/inflib.rbuild" />
+		</directory>
 		<directory name="cmlib">
 			<xi:include href="lib/cmlib/cmlib.rbuild" />
 		</directory>
@@ -86,6 +93,9 @@
 			<directory name="crt">
 				<xi:include href="lib/sdk/crt/crt.rbuild" />
 				<xi:include href="lib/sdk/crt/libcntpr.rbuild" />
+			</directory>
+			<directory name="ioevent">
+				<xi:include href="lib/sdk/ioevent/ioevent.rbuild" />
 			</directory>
 			<directory name="nt">
 				<xi:include href="lib/sdk/nt/nt.rbuild" />
@@ -111,17 +121,7 @@
 		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
 	</directory>
 	<directory name="hal">
-		<directory name="halarm">
-			<directory name="generic">
-				<xi:include href="hal/halarm/generic/generic.rbuild" />
-			</directory>
-			<directory name="up">
-				<xi:include href="hal/halarm/up/halup.rbuild" />
-			</directory>
-		</directory>
-		<directory name="hal">
-			<xi:include href="hal/hal/hal.rbuild" />
-		</directory>
+		<xi:include href="hal/hal.rbuild" />
 	</directory>
 	<directory name="boot">
 		<xi:include href="boot/boot.rbuild" />
@@ -155,9 +155,9 @@
 	</directory>
 	<directory name="base">
 		<directory name="system">
-            <directory name="smss">
-                <xi:include href="base/system/smss/smss.rbuild" />
-            </directory>
+			<directory name="smss">
+				<xi:include href="base/system/smss/smss.rbuild" />
+			</directory>
 		</directory>
 	</directory>
 </project>

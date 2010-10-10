@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile-i386.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="config.rbuild">
 		<xi:fallback>
 			<xi:include href="config.template.rbuild" />
@@ -24,9 +24,12 @@
 			<compilerflag>-ftracer</compilerflag>
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
+		<compilerflag>-fms-extensions</compilerflag>
 		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
 		<compilerflag compiler="midl">-m32 --win32</compilerflag>
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
+		<compilerflag compiler="cc,cxx">-fno-set-stack-executable</compilerflag>
+		<compilerflag compiler="cc,cxx">-fno-optimize-sibling-calls</compilerflag>
 		<compilerflag compiler="as">-gstabs+</compilerflag>
 	</group>
 

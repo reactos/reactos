@@ -15,8 +15,8 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-#ifndef XML_H
-#define XML_H
+
+#pragma once
 
 #include <string>
 #include <vector>
@@ -240,5 +240,3 @@ std::vector<char> vectorize(const std::string &str);
 void vectappend(std::vector<char> &strvec, char ch);
 void vectappend(std::vector<char> &strvec, const char *charstr);
 void vectappend(std::vector<char> &strvec, const std::string &str);
-
-#endif // XML_H
