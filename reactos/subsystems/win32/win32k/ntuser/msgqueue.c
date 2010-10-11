@@ -591,7 +591,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
 
    if (DesktopWindow)
    {
-       UserRefObjectCo(DesktopWindow, &Ref);//can DesktopWindow be NULL?
+       UserRefObjectCo(DesktopWindow, &Ref);
        Desk = DesktopWindow->head.pti->pDeskInfo;
    }
 
@@ -628,6 +628,18 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
          }
 
       }
+      else
+      {
+         if (Remove)
+         {
+            RemoveEntryList(&Current->ListEntry);
+         }
+         IntUnLockHardwareMessageQueue(MessageQueue);
+         IntUnLockSystemHardwareMessageQueueLock(FALSE);
+         *Message = Current;
+
+         RETURN(TRUE);
+      }
    }
    IntUnLockHardwareMessageQueue(MessageQueue);
 
@@ -650,7 +662,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
       UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
       /* What to do if out of memory? For now we just panic a bit in debug */
       ASSERT(UserMsg);
-      UserMsg->FreeLParam = FALSE;
       UserMsg->Msg = Msg;
       InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
 
@@ -808,7 +819,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          Msg.pt = gpsi->ptCursor;
-         MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
+         MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
    }
    else
    {
@@ -866,7 +877,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 PUSER_MESSAGE FASTCALL
-MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam)
+MsqCreateMessage(LPMSG Msg)
 {
    PUSER_MESSAGE Message;
 
@@ -876,7 +887,6 @@ MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam)
       return NULL;
    }
 
-   Message->FreeLParam = FreeLParam;
    RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 
    return Message;
@@ -1302,17 +1312,26 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 VOID FASTCALL
-MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam,
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessage,
                DWORD MessageBits)
 {
    PUSER_MESSAGE Message;
 
-   if(!(Message = MsqCreateMessage(Msg, FreeLParam)))
+   if(!(Message = MsqCreateMessage(Msg)))
    {
       return;
    }
-   InsertTailList(&MessageQueue->PostedMessagesListHead,
-                  &Message->ListEntry);
+
+   if(!HardwareMessage)
+   {
+       InsertTailList(&MessageQueue->PostedMessagesListHead,
+                      &Message->ListEntry);
+   }
+   else
+   {
+       InsertTailList(&MessageQueue->HardwareMessagesListHead,
+                      &Message->ListEntry);
+   }
    MessageQueue->QueueBits |= MessageBits;
    MessageQueue->ChangedBits |= MessageBits;
    if (MessageQueue->WakeMask & MessageBits)

@@ -11,7 +11,6 @@
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
-  BOOLEAN FreeLParam;
   MSG Msg;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
@@ -116,12 +115,12 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                UINT uTimeout, BOOL Block, INT HookMessage,
                ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL
-MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);
+MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message);
 VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       MSG* Msg, BOOLEAN FreeLParam, DWORD MessageBits);
+	       MSG* Msg, BOOLEAN HardwareMessage, DWORD MessageBits);
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY

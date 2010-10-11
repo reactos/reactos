@@ -810,7 +810,6 @@ CheckMessages:
       Msg->Msg.message = WM_QUIT;
       Msg->Msg.wParam = ThreadQueue->QuitExitCode;
       Msg->Msg.lParam = 0;
-      Msg->FreeLParam = FALSE;
       if (RemoveMessages)
       {
          ThreadQueue->QuitPosted = FALSE;
@@ -866,7 +865,6 @@ CheckMessages:
                             &Msg->Msg,
                             RemoveMessages))
    {
-      Msg->FreeLParam = FALSE;
       goto MsgExit;
    }
 
@@ -2144,10 +2142,6 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
             }
             Info.Msg.lParam = (LPARAM) UserMem;
          }
-         if (Msg.FreeLParam && 0 != Msg.Msg.lParam)
-         {
-            ExFreePool((void *) Msg.Msg.lParam);
-         }
          Status = MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
          if (! NT_SUCCESS(Status))
          {
@@ -2299,10 +2293,6 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
             RETURN( (BOOL) -1);
          }
          Info.Msg.lParam = (LPARAM) UserMem;
-      }
-      if (RemoveMsg && Msg.FreeLParam && 0 != Msg.Msg.lParam)
-      {
-         ExFreePool((void *) Msg.Msg.lParam);
       }
       Status = MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
       if (! NT_SUCCESS(Status))
