@@ -292,22 +292,27 @@ static HRESULT WINAPI IDirect3DCubeTexture9Impl_GetLevelDesc(LPDIRECT3DCUBETEXTU
     return hr;
 }
 
-static HRESULT WINAPI IDirect3DCubeTexture9Impl_GetCubeMapSurface(LPDIRECT3DCUBETEXTURE9 iface, D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9** ppCubeMapSurface) {
+static HRESULT WINAPI IDirect3DCubeTexture9Impl_GetCubeMapSurface(IDirect3DCubeTexture9 *iface,
+        D3DCUBEMAP_FACES FaceType, UINT Level, IDirect3DSurface9 **ppCubeMapSurface)
+{
     IDirect3DCubeTexture9Impl *This = (IDirect3DCubeTexture9Impl *)iface;
-    HRESULT hrc = D3D_OK;
     IWineD3DSurface *mySurface = NULL;
+    HRESULT hr;
 
     TRACE("iface %p, face %#x, level %u, surface %p.\n", iface, FaceType, Level, ppCubeMapSurface);
 
     wined3d_mutex_lock();
-    hrc = IWineD3DCubeTexture_GetCubeMapSurface(This->wineD3DCubeTexture, (WINED3DCUBEMAP_FACES) FaceType, Level, &mySurface);
-    if (hrc == D3D_OK && NULL != ppCubeMapSurface) {
-       IWineD3DCubeTexture_GetParent(mySurface, (IUnknown **)ppCubeMapSurface);
-       IWineD3DCubeTexture_Release(mySurface);
+    hr = IWineD3DCubeTexture_GetCubeMapSurface(This->wineD3DCubeTexture,
+            (WINED3DCUBEMAP_FACES)FaceType, Level, &mySurface);
+    if (SUCCEEDED(hr) && ppCubeMapSurface)
+    {
+        *ppCubeMapSurface = IWineD3DCubeTexture_GetParent(mySurface);
+        IDirect3DSurface9_AddRef(*ppCubeMapSurface);
+        IWineD3DCubeTexture_Release(mySurface);
     }
     wined3d_mutex_unlock();
 
-    return hrc;
+    return hr;
 }
 
 static HRESULT WINAPI IDirect3DCubeTexture9Impl_LockRect(LPDIRECT3DCUBETEXTURE9 iface, D3DCUBEMAP_FACES FaceType, UINT Level, D3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) {
@@ -399,9 +404,9 @@ HRESULT cubetexture_init(IDirect3DCubeTexture9Impl *texture, IDirect3DDevice9Imp
     texture->ref = 1;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateCubeTexture(device->WineD3DDevice, edge_length, levels, usage,
-            wined3dformat_from_d3dformat(format), pool, &texture->wineD3DCubeTexture,
-            (IUnknown *)texture, &d3d9_cubetexture_wined3d_parent_ops);
+    hr = IWineD3DDevice_CreateCubeTexture(device->WineD3DDevice, edge_length,
+            levels, usage, wined3dformat_from_d3dformat(format), pool, texture,
+            &d3d9_cubetexture_wined3d_parent_ops, &texture->wineD3DCubeTexture);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {

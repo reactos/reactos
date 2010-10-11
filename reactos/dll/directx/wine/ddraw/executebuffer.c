@@ -23,27 +23,9 @@
 #include "config.h"
 #include "wine/port.h"
 
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-
-#define COBJMACROS
-#define NONAMELESSUNION
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "wine/exception.h"
-
-#include "ddraw.h"
-#include "d3d.h"
-
 #include "ddraw_private.h"
-#include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(d3d7);
+WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
 /*****************************************************************************
  * _dump_executedata
@@ -103,10 +85,10 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
     /* Activate the viewport */
     lpViewport->active_device = lpDevice;
-    lpViewport->activate(lpViewport, FALSE);
+    viewport_activate(lpViewport, FALSE);
 
     TRACE("ExecuteData :\n");
-    if (TRACE_ON(d3d7))
+    if (TRACE_ON(ddraw))
       _dump_executedata(&(This->data));
 
     while (1) {
@@ -142,27 +124,28 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 			
 		for (i = 0; i < count; i++) {
                     LPD3DTRIANGLE ci = (LPD3DTRIANGLE) instr;
-		    TRACE_(d3d7)("  v1: %d  v2: %d  v3: %d\n",ci->u1.v1, ci->u2.v2, ci->u3.v3);
-		    TRACE_(d3d7)("  Flags : ");
-		    if (TRACE_ON(d3d7)) {
-			/* Wireframe */
-			if (ci->wFlags & D3DTRIFLAG_EDGEENABLE1)
-	        	    TRACE_(d3d7)("EDGEENABLE1 ");
-	    		if (ci->wFlags & D3DTRIFLAG_EDGEENABLE2)
-	        	    TRACE_(d3d7)("EDGEENABLE2 ");
-	    		if (ci->wFlags & D3DTRIFLAG_EDGEENABLE1)
-	        	    TRACE_(d3d7)("EDGEENABLE3 ");
-	    		/* Strips / Fans */
-	    		if (ci->wFlags == D3DTRIFLAG_EVEN)
-	        	    TRACE_(d3d7)("EVEN ");
-	    		if (ci->wFlags == D3DTRIFLAG_ODD)
-	        	    TRACE_(d3d7)("ODD ");
-	    		if (ci->wFlags == D3DTRIFLAG_START)
-	        	    TRACE_(d3d7)("START ");
-	    		if ((ci->wFlags > 0) && (ci->wFlags < 30))
-	       		    TRACE_(d3d7)("STARTFLAT(%d) ", ci->wFlags);
-	    		TRACE_(d3d7)("\n");
-        	    }
+		    TRACE("  v1: %d  v2: %d  v3: %d\n",ci->u1.v1, ci->u2.v2, ci->u3.v3);
+		    TRACE("  Flags : ");
+                    if (TRACE_ON(ddraw))
+                    {
+                        /* Wireframe */
+                        if (ci->wFlags & D3DTRIFLAG_EDGEENABLE1)
+                            TRACE("EDGEENABLE1 ");
+                        if (ci->wFlags & D3DTRIFLAG_EDGEENABLE2)
+                            TRACE("EDGEENABLE2 ");
+                        if (ci->wFlags & D3DTRIFLAG_EDGEENABLE1)
+                            TRACE("EDGEENABLE3 ");
+                        /* Strips / Fans */
+                        if (ci->wFlags == D3DTRIFLAG_EVEN)
+                            TRACE("EVEN ");
+                        if (ci->wFlags == D3DTRIFLAG_ODD)
+                            TRACE("ODD ");
+                        if (ci->wFlags == D3DTRIFLAG_START)
+                            TRACE("START ");
+                        if ((ci->wFlags > 0) && (ci->wFlags < 30))
+                            TRACE("STARTFLAT(%u) ", ci->wFlags);
+                        TRACE("\n");
+                    }
 		    This->indices[(i * 3)    ] = ci->u1.v1;
 		    This->indices[(i * 3) + 1] = ci->u2.v2;
 		    This->indices[(i * 3) + 2] = ci->u3.v3;
@@ -188,25 +171,24 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 	        int i;
 		TRACE("MATRIXMULTIPLY   (%d)\n", count);
 		
-		for (i = 0; i < count; i++) {
-		    LPD3DMATRIXMULTIPLY ci = (LPD3DMATRIXMULTIPLY) instr;
-                    LPD3DMATRIX a, b, c;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DMATRIXMULTIPLY *ci = (D3DMATRIXMULTIPLY *)instr;
+                    D3DMATRIX *a, *b, *c;
 
-                    if(!ci->hDestMatrix || ci->hDestMatrix > lpDevice->numHandles ||
-                       !ci->hSrcMatrix1 || ci->hSrcMatrix1 > lpDevice->numHandles ||
-                       !ci->hSrcMatrix2 || ci->hSrcMatrix2 > lpDevice->numHandles) {
-                        ERR("Handles out of bounds\n");
-                    } else if (lpDevice->Handles[ci->hDestMatrix - 1].type != DDrawHandle_Matrix ||
-                               lpDevice->Handles[ci->hSrcMatrix1 - 1].type != DDrawHandle_Matrix ||
-                               lpDevice->Handles[ci->hSrcMatrix2 - 1].type != DDrawHandle_Matrix) {
-                        ERR("Handle types invalid\n");
-                    } else {
-                        a = (LPD3DMATRIX) lpDevice->Handles[ci->hDestMatrix - 1].ptr;
-                        b = (LPD3DMATRIX) lpDevice->Handles[ci->hSrcMatrix1 - 1].ptr;
-                        c = (LPD3DMATRIX) lpDevice->Handles[ci->hSrcMatrix2 - 1].ptr;
-                        TRACE("  Dest : %p  Src1 : %p  Src2 : %p\n",
-                            a, b, c);
-                        multiply_matrix(a,c,b);
+                    a = ddraw_get_object(&lpDevice->handle_table, ci->hDestMatrix - 1, DDRAW_HANDLE_MATRIX);
+                    b = ddraw_get_object(&lpDevice->handle_table, ci->hSrcMatrix1 - 1, DDRAW_HANDLE_MATRIX);
+                    c = ddraw_get_object(&lpDevice->handle_table, ci->hSrcMatrix2 - 1, DDRAW_HANDLE_MATRIX);
+
+                    if (!a || !b || !c)
+                    {
+                        ERR("Invalid matrix handle (a %#x -> %p, b %#x -> %p, c %#x -> %p).\n",
+                                ci->hDestMatrix, a, ci->hSrcMatrix1, b, ci->hSrcMatrix2, c);
+                    }
+                    else
+                    {
+                        TRACE("dst %p, src1 %p, src2 %p.\n", a, b, c);
+                        multiply_matrix(a, c, b);
                     }
 
                     instr += size;
@@ -217,27 +199,30 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 	        int i;
 		TRACE("STATETRANSFORM   (%d)\n", count);
 		
-		for (i = 0; i < count; i++) {
-		    LPD3DSTATE ci = (LPD3DSTATE) instr;
+                for (i = 0; i < count; ++i)
+                {
+                    D3DSTATE *ci = (D3DSTATE *)instr;
+                    D3DMATRIX *m;
 
-                    if(!ci->u2.dwArg[0]) {
-                        ERR("Setting a NULL matrix handle, what should I do?\n");
-                    } else if(ci->u2.dwArg[0] > lpDevice->numHandles) {
-                        ERR("Handle %d is out of bounds\n", ci->u2.dwArg[0]);
-                    } else if(lpDevice->Handles[ci->u2.dwArg[0] - 1].type != DDrawHandle_Matrix) {
-                        ERR("Handle %d is not a matrix handle\n", ci->u2.dwArg[0]);
-                    } else {
-                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_WORLD)
+                    m = ddraw_get_object(&lpDevice->handle_table, ci->u2.dwArg[0] - 1, DDRAW_HANDLE_MATRIX);
+                    if (!m)
+                    {
+                        ERR("Invalid matrix handle %#x.\n", ci->u2.dwArg[0]);
+                    }
+                    else
+                    {
+                        if (ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_WORLD)
                             lpDevice->world = ci->u2.dwArg[0];
-                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_VIEW)
+                        if (ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_VIEW)
                             lpDevice->view = ci->u2.dwArg[0];
-                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_PROJECTION)
+                        if (ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_PROJECTION)
                             lpDevice->proj = ci->u2.dwArg[0];
                         IDirect3DDevice7_SetTransform((IDirect3DDevice7 *)lpDevice,
-                                ci->u1.dtstTransformStateType, (LPD3DMATRIX)lpDevice->Handles[ci->u2.dwArg[0] - 1].ptr);
+                                ci->u1.dtstTransformStateType, m);
                     }
-		    instr += size;
-		}
+
+                    instr += size;
+                }
 	    } break;
 
 	    case D3DOP_STATELIGHT: {
@@ -251,22 +236,18 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
 		    if (!ci->u1.dlstLightStateType || (ci->u1.dlstLightStateType > D3DLIGHTSTATE_COLORVERTEX))
 			ERR("Unexpected Light State Type %d\n", ci->u1.dlstLightStateType);
-		    else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_MATERIAL /* 1 */) {
-			DWORD matHandle = ci->u2.dwArg[0];
+                    else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_MATERIAL /* 1 */)
+                    {
+                        IDirect3DMaterialImpl *m;
 
-			if (!matHandle) {
-			    FIXME(" D3DLIGHTSTATE_MATERIAL called with NULL material !!!\n");
-			} else if (matHandle >= lpDevice->numHandles) {
-			    WARN("Material handle %d is invalid\n", matHandle);
-			} else if (lpDevice->Handles[matHandle - 1].type != DDrawHandle_Material) {
-			    WARN("Handle %d is not a material handle\n", matHandle);
-			} else {
-			    IDirect3DMaterialImpl *mat =
-                                lpDevice->Handles[matHandle - 1].ptr;
-
-			    mat->activate(mat);
-			}
-		    } else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_COLORMODEL /* 3 */) {
+                        m = ddraw_get_object(&lpDevice->handle_table, ci->u2.dwArg[0] - 1, DDRAW_HANDLE_MATERIAL);
+                        if (!m)
+                            ERR("Invalid material handle %#x.\n", ci->u2.dwArg[0]);
+                        else
+                            material_activate(m);
+                    }
+                    else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_COLORMODEL /* 3 */)
+                    {
 			switch (ci->u2.dwArg[0]) {
 			    case D3DCOLOR_MONO:
 				ERR("DDCOLOR_MONO should not happen!\n");
@@ -354,7 +335,8 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
                     TRACE("  Start : %d Dest : %d Count : %d\n",
 			  ci->wStart, ci->wDest, ci->dwCount);
 		    TRACE("  Flags : ");
-		    if (TRACE_ON(d3d7)) {
+                    if (TRACE_ON(ddraw))
+                    {
 		        if (ci->dwFlags & D3DPROCESSVERTICES_COPY)
 			    TRACE("COPY ");
 			if (ci->dwFlags & D3DPROCESSVERTICES_NOCOLOR)
@@ -404,7 +386,8 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 			D3DMATRIX mat;
 			D3DVIEWPORT* Viewport = &lpViewport->viewports.vp1;
 			
-			if (TRACE_ON(d3d7)) {
+                        if (TRACE_ON(ddraw))
+                        {
 			    TRACE("  Projection Matrix : (%p)\n", &proj_mat);
 			    dump_D3DMATRIX(&proj_mat);
 			    TRACE("  View       Matrix : (%p)\n", &view_mat);
@@ -448,7 +431,8 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 			D3DMATRIX mat;
 			D3DVIEWPORT* Viewport = &lpViewport->viewports.vp1;
 			
-			if (TRACE_ON(d3d7)) {
+                        if (TRACE_ON(ddraw))
+                        {
 			    TRACE("  Projection Matrix : (%p)\n", &proj_mat);
 			    dump_D3DMATRIX(&proj_mat);
 			    TRACE("  View       Matrix : (%p)\n",&view_mat);
@@ -591,7 +575,7 @@ IDirect3DExecuteBufferImpl_QueryInterface(IDirect3DExecuteBuffer *iface,
                                           REFIID riid,
                                           void **obj)
 {
-    TRACE("(%p)->(%s,%p)\n", iface, debugstr_guid(riid), obj);
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obj);
 
     *obj = NULL;
 
@@ -627,7 +611,7 @@ IDirect3DExecuteBufferImpl_AddRef(IDirect3DExecuteBuffer *iface)
     IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    FIXME("(%p)->()incrementing from %u.\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u.\n", This, ref);
 
     return ref;
 }
@@ -647,7 +631,7 @@ IDirect3DExecuteBufferImpl_Release(IDirect3DExecuteBuffer *iface)
     IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->()decrementing from %u.\n", This, ref + 1);
+    TRACE("%p decreasing refcount to %u.\n", This, ref);
 
     if (!ref) {
         if (This->need_free)
@@ -671,13 +655,11 @@ IDirect3DExecuteBufferImpl_Release(IDirect3DExecuteBuffer *iface)
  *  D3D_OK
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DExecuteBufferImpl_Initialize(IDirect3DExecuteBuffer *iface,
-                                        IDirect3DDevice *lpDirect3DDevice,
-                                        D3DEXECUTEBUFFERDESC *lpDesc)
+static HRESULT WINAPI IDirect3DExecuteBufferImpl_Initialize(IDirect3DExecuteBuffer *iface,
+        IDirect3DDevice *device, D3DEXECUTEBUFFERDESC *desc)
 {
-    IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
-    TRACE("(%p)->(%p,%p) no-op....\n", This, lpDirect3DDevice, lpDesc);
+    TRACE("iface %p, device %p, desc %p.\n", iface, device, desc);
+
     return D3D_OK;
 }
 
@@ -700,12 +682,14 @@ IDirect3DExecuteBufferImpl_Lock(IDirect3DExecuteBuffer *iface,
 {
     IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
     DWORD dwSize;
-    TRACE("(%p)->(%p)\n", This, lpDesc);
+
+    TRACE("iface %p, desc %p.\n", iface, lpDesc);
 
     dwSize = lpDesc->dwSize;
     memcpy(lpDesc, &This->desc, dwSize);
 
-    if (TRACE_ON(d3d7)) {
+    if (TRACE_ON(ddraw))
+    {
         TRACE("  Returning description :\n");
 	_dump_D3DEXECUTEBUFFERDESC(lpDesc);
     }
@@ -721,11 +705,10 @@ IDirect3DExecuteBufferImpl_Lock(IDirect3DExecuteBuffer *iface,
  *  This implementation always returns D3D_OK
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DExecuteBufferImpl_Unlock(IDirect3DExecuteBuffer *iface)
+static HRESULT WINAPI IDirect3DExecuteBufferImpl_Unlock(IDirect3DExecuteBuffer *iface)
 {
-    IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
-    TRACE("(%p)->() no-op...\n", This);
+    TRACE("iface %p.\n", iface);
+
     return D3D_OK;
 }
 
@@ -749,7 +732,8 @@ IDirect3DExecuteBufferImpl_SetExecuteData(IDirect3DExecuteBuffer *iface,
 {
     IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
     DWORD nbvert;
-    TRACE("(%p)->(%p)\n", This, lpData);
+
+    TRACE("iface %p, data %p.\n", iface, lpData);
 
     memcpy(&This->data, lpData, lpData->dwSize);
 
@@ -760,9 +744,8 @@ IDirect3DExecuteBufferImpl_SetExecuteData(IDirect3DExecuteBuffer *iface,
     HeapFree(GetProcessHeap(), 0, This->vertex_data);
     This->vertex_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbvert * sizeof(D3DTLVERTEX));
 
-    if (TRACE_ON(d3d7)) {
+    if (TRACE_ON(ddraw))
         _dump_executedata(lpData);
-    }
 
     return D3D_OK;
 }
@@ -785,12 +768,14 @@ IDirect3DExecuteBufferImpl_GetExecuteData(IDirect3DExecuteBuffer *iface,
 {
     IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
     DWORD dwSize;
-    TRACE("(%p)->(%p): stub!\n", This, lpData);
+
+    TRACE("iface %p, data %p.\n", iface, lpData);
 
     dwSize = lpData->dwSize;
     memcpy(lpData, &This->data, dwSize);
 
-    if (TRACE_ON(d3d7)) {
+    if (TRACE_ON(ddraw))
+    {
         TRACE("Returning data :\n");
 	_dump_executedata(lpData);
     }
@@ -811,15 +796,14 @@ IDirect3DExecuteBufferImpl_GetExecuteData(IDirect3DExecuteBuffer *iface,
  *  DDERR_UNSUPPORTED, because it's not implemented in Windows.
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DExecuteBufferImpl_Validate(IDirect3DExecuteBuffer *iface,
-                                    DWORD *Offset,
-                                    LPD3DVALIDATECALLBACK Func,
-                                    void *UserArg,
-                                    DWORD Reserved)
+static HRESULT WINAPI IDirect3DExecuteBufferImpl_Validate(IDirect3DExecuteBuffer *iface,
+        DWORD *offset, LPD3DVALIDATECALLBACK callback, void *context, DWORD reserved)
 {
-    IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
-    TRACE("(%p)->(%p,%p,%p,%08x): Unimplemented!\n", This, Offset, Func, UserArg, Reserved);
+    TRACE("iface %p, offset %p, callback %p, context %p, reserved %#x.\n",
+            iface, offset, callback, context, reserved);
+
+    WARN("Not implemented.\n");
+
     return DDERR_UNSUPPORTED; /* Unchecked */
 }
 
@@ -836,16 +820,16 @@ IDirect3DExecuteBufferImpl_Validate(IDirect3DExecuteBuffer *iface,
  *  DDERR_UNSUPPORTED, because it's not implemented in Windows.
  *
  *****************************************************************************/
-static HRESULT WINAPI
-IDirect3DExecuteBufferImpl_Optimize(IDirect3DExecuteBuffer *iface,
-                                    DWORD Dummy)
+static HRESULT WINAPI IDirect3DExecuteBufferImpl_Optimize(IDirect3DExecuteBuffer *iface, DWORD reserved)
 {
-    IDirect3DExecuteBufferImpl *This = (IDirect3DExecuteBufferImpl *)iface;
-    TRACE("(%p)->(%08x): Unimplemented\n", This, Dummy);
+    TRACE("iface %p, reserved %#x.\n", iface, reserved);
+
+    WARN("Not implemented.\n");
+
     return DDERR_UNSUPPORTED; /* Unchecked */
 }
 
-const IDirect3DExecuteBufferVtbl IDirect3DExecuteBuffer_Vtbl =
+static const struct IDirect3DExecuteBufferVtbl d3d_execute_buffer_vtbl =
 {
     IDirect3DExecuteBufferImpl_QueryInterface,
     IDirect3DExecuteBufferImpl_AddRef,
@@ -858,3 +842,38 @@ const IDirect3DExecuteBufferVtbl IDirect3DExecuteBuffer_Vtbl =
     IDirect3DExecuteBufferImpl_Validate,
     IDirect3DExecuteBufferImpl_Optimize,
 };
+
+HRESULT d3d_execute_buffer_init(IDirect3DExecuteBufferImpl *execute_buffer,
+        IDirect3DDeviceImpl *device, D3DEXECUTEBUFFERDESC *desc)
+{
+    execute_buffer->lpVtbl = &d3d_execute_buffer_vtbl;
+    execute_buffer->ref = 1;
+    execute_buffer->d3ddev = device;
+
+    /* Initializes memory */
+    memcpy(&execute_buffer->desc, desc, desc->dwSize);
+
+    /* No buffer given */
+    if (!(execute_buffer->desc.dwFlags & D3DDEB_LPDATA))
+        execute_buffer->desc.lpData = NULL;
+
+    /* No buffer size given */
+    if (!(execute_buffer->desc.dwFlags & D3DDEB_BUFSIZE))
+        execute_buffer->desc.dwBufferSize = 0;
+
+    /* Create buffer if asked */
+    if (!execute_buffer->desc.lpData && execute_buffer->desc.dwBufferSize)
+    {
+        execute_buffer->need_free = TRUE;
+        execute_buffer->desc.lpData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, execute_buffer->desc.dwBufferSize);
+        if (!execute_buffer->desc.lpData)
+        {
+            ERR("Failed to allocate execute buffer data.\n");
+            return DDERR_OUTOFMEMORY;
+        }
+    }
+
+    execute_buffer->desc.dwFlags |= D3DDEB_LPDATA;
+
+    return D3D_OK;
+}

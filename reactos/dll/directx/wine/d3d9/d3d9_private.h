@@ -42,8 +42,8 @@
    Internal use
    =========================================================================== */
 extern HRESULT vdecl_convert_fvf(DWORD FVF, D3DVERTEXELEMENT9 **ppVertexElements) DECLSPEC_HIDDEN;
-D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format) DECLSPEC_HIDDEN;
-WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_HIDDEN;
+D3DFORMAT d3dformat_from_wined3dformat(enum wined3d_format_id format) DECLSPEC_HIDDEN;
+enum wined3d_format_id wined3dformat_from_d3dformat(D3DFORMAT format) DECLSPEC_HIDDEN;
 
 /* ===========================================================================
     Macros
@@ -183,51 +183,6 @@ typedef struct IDirect3DDevice9Impl
 HRESULT device_init(IDirect3DDevice9Impl *device, IWineD3D *wined3d, UINT adapter, D3DDEVTYPE device_type,
         HWND focus_window, DWORD flags, D3DPRESENT_PARAMETERS *parameters) DECLSPEC_HIDDEN;
 
-/* IDirect3DDevice9: */
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetSwapChain(IDirect3DDevice9Ex *iface,
-        UINT iSwapChain, IDirect3DSwapChain9 **pSwapChain) DECLSPEC_HIDDEN;
-extern UINT WINAPI IDirect3DDevice9Impl_GetNumberOfSwapChains(IDirect3DDevice9Ex *iface) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetVertexDeclaration(IDirect3DDevice9Ex *iface,
-        IDirect3DVertexDeclaration9 *pDecl) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetVertexDeclaration(IDirect3DDevice9Ex *iface,
-        IDirect3DVertexDeclaration9 **ppDecl) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShader(IDirect3DDevice9Ex *iface,
-        IDirect3DVertexShader9 *pShader) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShader(IDirect3DDevice9Ex *iface,
-        IDirect3DVertexShader9 **ppShader) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShaderConstantF(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, const float *pConstantData, UINT Vector4fCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShaderConstantF(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, float *pConstantData, UINT Vector4fCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShaderConstantI(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, const int *pConstantData, UINT Vector4iCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShaderConstantI(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, int *pConstantData, UINT Vector4iCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShaderConstantB(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, const BOOL *pConstantData, UINT BoolCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShaderConstantB(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, BOOL *pConstantData, UINT BoolCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetPixelShader(IDirect3DDevice9Ex *iface,
-        IDirect3DPixelShader9 *pShader) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetPixelShader(IDirect3DDevice9Ex *iface,
-        IDirect3DPixelShader9  **ppShader) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetPixelShaderConstantF(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, const float *pConstantData, UINT Vector4fCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetPixelShaderConstantF(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, float *pConstantData, UINT Vector4fCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetPixelShaderConstantI(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, const int *pConstantData, UINT Vector4iCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetPixelShaderConstantI(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, int *pConstantData, UINT Vector4iCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_SetPixelShaderConstantB(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, const BOOL *pConstantData, UINT BoolCount) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI IDirect3DDevice9Impl_GetPixelShaderConstantB(IDirect3DDevice9Ex *iface,
-        UINT StartRegister, BOOL *pConstantData, UINT BoolCount) DECLSPEC_HIDDEN;
-
-/* ---------------- */
-/* IDirect3DVolume9 */
-/* ---------------- */
-
 /*****************************************************************************
  * IDirect3DVolume9 implementation structure
  */
@@ -248,7 +203,7 @@ typedef struct IDirect3DVolume9Impl
 } IDirect3DVolume9Impl;
 
 HRESULT volume_init(IDirect3DVolume9Impl *volume, IDirect3DDevice9Impl *device, UINT width, UINT height,
-        UINT depth, DWORD usage, WINED3DFORMAT format, WINED3DPOOL pool) DECLSPEC_HIDDEN;
+        UINT depth, DWORD usage, enum wined3d_format_id format, WINED3DPOOL pool) DECLSPEC_HIDDEN;
 
 /* ------------------- */
 /* IDirect3DSwapChain9 */
@@ -351,7 +306,7 @@ typedef struct IDirect3DIndexBuffer9Impl
 
     /* Parent reference */
     LPDIRECT3DDEVICE9EX       parentDevice;
-    WINED3DFORMAT             format;
+    enum wined3d_format_id format;
 } IDirect3DIndexBuffer9Impl;
 
 HRESULT indexbuffer_init(IDirect3DIndexBuffer9Impl *buffer, IDirect3DDevice9Impl *device,

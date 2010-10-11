@@ -14,20 +14,18 @@
 	<library>advapi32</library>
 	<library>wined3d</library>
 
+	<file>buffer.c</file>
 	<file>cubetexture.c</file>
 	<file>d3d9_main.c</file>
 	<file>device.c</file>
 	<file>directx.c</file>
-	<file>indexbuffer.c</file>
-	<file>pixelshader.c</file>
 	<file>query.c</file>
+	<file>shader.c</file>
 	<file>stateblock.c</file>
 	<file>surface.c</file>
 	<file>swapchain.c</file>
 	<file>texture.c</file>
-	<file>vertexbuffer.c</file>
 	<file>vertexdeclaration.c</file>
-	<file>vertexshader.c</file>
 	<file>volume.c</file>
 	<file>volumetexture.c</file>
 	<file>version.rc</file>

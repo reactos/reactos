@@ -20,22 +20,9 @@
  */
 
 #include "config.h"
-
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "ddraw.h"
-#include "winerror.h"
+#include "wine/port.h"
 
 #include "ddraw_private.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
@@ -62,17 +49,18 @@ WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 static HRESULT WINAPI IDirectDrawClipperImpl_QueryInterface(
     LPDIRECTDRAWCLIPPER iface, REFIID riid, LPVOID* ppvObj
 ) {
-    if (IsEqualGUID(&IID_IUnknown, riid)
-	|| IsEqualGUID(&IID_IDirectDrawClipper, riid))
+
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), ppvObj);
+
+    if (IsEqualGUID(&IID_IDirectDrawClipper, riid)
+            || IsEqualGUID(&IID_IUnknown, riid))
     {
         IUnknown_AddRef(iface);
         *ppvObj = iface;
         return S_OK;
     }
-    else
-    {
-	return E_NOINTERFACE;
-    }
+
+    return E_NOINTERFACE;
 }
 
 /*****************************************************************************
@@ -86,7 +74,7 @@ static ULONG WINAPI IDirectDrawClipperImpl_AddRef( LPDIRECTDRAWCLIPPER iface )
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->() incrementing from %u.\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u.\n", This, ref);
 
     return ref;
 }
@@ -102,7 +90,7 @@ static ULONG WINAPI IDirectDrawClipperImpl_Release(IDirectDrawClipper *iface) {
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->() decrementing from %u.\n", This, ref + 1);
+    TRACE("%p decreasing refcount to %u.\n", This, ref);
 
     if (ref == 0)
     {
@@ -135,7 +123,8 @@ static HRESULT WINAPI IDirectDrawClipperImpl_SetHwnd(
 ) {
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
     HRESULT hr;
-    TRACE("(%p)->(%08x,%p)\n", This, dwFlags, hWnd);
+
+    TRACE("iface %p, flags %#x, window %p.\n", iface, dwFlags, hWnd);
 
     EnterCriticalSection(&ddraw_cs);
     hr = IWineD3DClipper_SetHWnd(This->wineD3DClipper,
@@ -173,7 +162,9 @@ static HRESULT WINAPI IDirectDrawClipperImpl_GetClipList(
 {
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
     HRESULT hr;
-    TRACE("(%p,%p,%p,%p)\n", This, lpRect, lpClipList, lpdwSize);
+
+    TRACE("iface %p, rect %s, clip_list %p, clip_list_size %p.\n",
+            iface, wine_dbgstr_rect(lpRect), lpClipList, lpdwSize);
 
     EnterCriticalSection(&ddraw_cs);
     hr = IWineD3DClipper_GetClipList(This->wineD3DClipper,
@@ -204,6 +195,8 @@ static HRESULT WINAPI IDirectDrawClipperImpl_SetClipList(
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
     HRESULT hr;
 
+    TRACE("iface %p, clip_list %p, flags %#x.\n", iface, lprgn, dwFlag);
+
     EnterCriticalSection(&ddraw_cs);
     hr = IWineD3DClipper_SetClipList(This->wineD3DClipper,
                                      lprgn,
@@ -228,7 +221,8 @@ static HRESULT WINAPI IDirectDrawClipperImpl_GetHWnd(
 ) {
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
     HRESULT hr;
-    TRACE("(%p)->(%p)\n", This, hWndPtr);
+
+    TRACE("iface %p, window %p.\n", iface, hWndPtr);
 
     EnterCriticalSection(&ddraw_cs);
     hr =  IWineD3DClipper_GetHWnd(This->wineD3DClipper,
@@ -254,19 +248,18 @@ static HRESULT WINAPI IDirectDrawClipperImpl_GetHWnd(
 static HRESULT WINAPI IDirectDrawClipperImpl_Initialize(
      LPDIRECTDRAWCLIPPER iface, LPDIRECTDRAW lpDD, DWORD dwFlags
 ) {
-    IDirectDrawImpl* pOwner;
     IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
-    TRACE("(%p)->(%p,0x%08x)\n", This, lpDD, dwFlags);
+
+    TRACE("iface %p, ddraw %p, flags %#x.\n", iface, lpDD, dwFlags);
 
     EnterCriticalSection(&ddraw_cs);
-    if (This->ddraw_owner != NULL)
+    if (This->initialized)
     {
         LeaveCriticalSection(&ddraw_cs);
         return DDERR_ALREADYINITIALIZED;
     }
 
-    pOwner = lpDD ? ddraw_from_ddraw1(lpDD) : NULL;
-    This->ddraw_owner = pOwner;
+    This->initialized = TRUE;
 
     LeaveCriticalSection(&ddraw_cs);
     return DD_OK;
@@ -286,8 +279,7 @@ static HRESULT WINAPI IDirectDrawClipperImpl_Initialize(
 static HRESULT WINAPI IDirectDrawClipperImpl_IsClipListChanged(
     LPDIRECTDRAWCLIPPER iface, BOOL* lpbChanged
 ) {
-    IDirectDrawClipperImpl *This = (IDirectDrawClipperImpl *)iface;
-    FIXME("(%p)->(%p),stub!\n",This,lpbChanged);
+    FIXME("iface %p, changed %p stub!\n", iface, lpbChanged);
 
     /* XXX What is safest? */
     *lpbChanged = FALSE;
@@ -298,7 +290,7 @@ static HRESULT WINAPI IDirectDrawClipperImpl_IsClipListChanged(
 /*****************************************************************************
  * The VTable
  *****************************************************************************/
-const IDirectDrawClipperVtbl IDirectDrawClipper_Vtbl =
+static const struct IDirectDrawClipperVtbl ddraw_clipper_vtbl =
 {
     IDirectDrawClipperImpl_QueryInterface,
     IDirectDrawClipperImpl_AddRef,
@@ -310,3 +302,17 @@ const IDirectDrawClipperVtbl IDirectDrawClipper_Vtbl =
     IDirectDrawClipperImpl_SetClipList,
     IDirectDrawClipperImpl_SetHwnd
 };
+
+HRESULT ddraw_clipper_init(IDirectDrawClipperImpl *clipper)
+{
+    clipper->lpVtbl = &ddraw_clipper_vtbl;
+    clipper->ref = 1;
+    clipper->wineD3DClipper = pWineDirect3DCreateClipper();
+    if (!clipper->wineD3DClipper)
+    {
+        WARN("Failed to create wined3d clipper.\n");
+        return E_OUTOFMEMORY;
+    }
+
+    return DD_OK;
+}

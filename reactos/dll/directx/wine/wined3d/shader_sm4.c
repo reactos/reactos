@@ -49,6 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 enum wined3d_sm4_opcode
 {
     WINED3D_SM4_OP_ADD      = 0x00,
+    WINED3D_SM4_OP_AND      = 0x01,
     WINED3D_SM4_OP_BREAK    = 0x02,
     WINED3D_SM4_OP_BREAKC   = 0x03,
     WINED3D_SM4_OP_CUT      = 0x09,
@@ -58,14 +59,19 @@ enum wined3d_sm4_opcode
     WINED3D_SM4_OP_ENDIF    = 0x15,
     WINED3D_SM4_OP_ENDLOOP  = 0x16,
     WINED3D_SM4_OP_EXP      = 0x19,
+    WINED3D_SM4_OP_FRC      = 0x1a,
     WINED3D_SM4_OP_IADD     = 0x1e,
     WINED3D_SM4_OP_IF       = 0x1f,
     WINED3D_SM4_OP_IGE      = 0x21,
+    WINED3D_SM4_OP_IMUL     = 0x26,
     WINED3D_SM4_OP_LOG      = 0x2f,
+    WINED3D_SM4_OP_LOOP     = 0x30,
     WINED3D_SM4_OP_LT       = 0x31,
+    WINED3D_SM4_OP_MAD      = 0x32,
     WINED3D_SM4_OP_MIN      = 0x33,
     WINED3D_SM4_OP_MAX      = 0x34,
     WINED3D_SM4_OP_MOV      = 0x36,
+    WINED3D_SM4_OP_MOVC     = 0x37,
     WINED3D_SM4_OP_MUL      = 0x38,
     WINED3D_SM4_OP_RET      = 0x3e,
     WINED3D_SM4_OP_RSQ      = 0x44,
@@ -79,12 +85,13 @@ enum wined3d_sm4_register_type
     WINED3D_SM4_RT_OUTPUT       = 0x2,
     WINED3D_SM4_RT_IMMCONST     = 0x4,
     WINED3D_SM4_RT_CONSTBUFFER  = 0x8,
+    WINED3D_SM4_RT_NULL         = 0xd,
 };
 
 enum wined3d_sm4_immconst_type
 {
-    WINED3D_SM4_IMMCONST_FLOAT  = 0x1,
-    WINED3D_SM4_IMMCONST_FLOAT4 = 0x2,
+    WINED3D_SM4_IMMCONST_SCALAR = 0x1,
+    WINED3D_SM4_IMMCONST_VEC4   = 0x2,
 };
 
 struct wined3d_sm4_data
@@ -112,6 +119,7 @@ struct sysval_map
 static const struct wined3d_sm4_opcode_info opcode_table[] =
 {
     {WINED3D_SM4_OP_ADD,    WINED3DSIH_ADD,         1,  2},
+    {WINED3D_SM4_OP_AND,    WINED3DSIH_AND,         1,  2},
     {WINED3D_SM4_OP_BREAK,  WINED3DSIH_BREAK,       0,  0},
     {WINED3D_SM4_OP_BREAKC, WINED3DSIH_BREAKP,      0,  1},
     {WINED3D_SM4_OP_CUT,    WINED3DSIH_CUT,         0,  0},
@@ -121,18 +129,23 @@ static const struct wined3d_sm4_opcode_info opcode_table[] =
     {WINED3D_SM4_OP_ENDIF,  WINED3DSIH_ENDIF,       0,  0},
     {WINED3D_SM4_OP_ENDLOOP,WINED3DSIH_ENDLOOP,     0,  0},
     {WINED3D_SM4_OP_EXP,    WINED3DSIH_EXP,         1,  1},
+    {WINED3D_SM4_OP_FRC,    WINED3DSIH_FRC,         1,  1},
     {WINED3D_SM4_OP_IADD,   WINED3DSIH_IADD,        1,  2},
     {WINED3D_SM4_OP_IF,     WINED3DSIH_IF,          0,  1},
     {WINED3D_SM4_OP_IGE,    WINED3DSIH_IGE,         1,  2},
+    {WINED3D_SM4_OP_IMUL,   WINED3DSIH_IMUL,        2,  2},
     {WINED3D_SM4_OP_LOG,    WINED3DSIH_LOG,         1,  1},
+    {WINED3D_SM4_OP_LOOP,   WINED3DSIH_LOOP,        0,  0},
     {WINED3D_SM4_OP_LT,     WINED3DSIH_LT,          1,  2},
+    {WINED3D_SM4_OP_MAD,    WINED3DSIH_MAD,         1,  3},
     {WINED3D_SM4_OP_MIN,    WINED3DSIH_MIN,         1,  2},
     {WINED3D_SM4_OP_MAX,    WINED3DSIH_MAX,         1,  2},
     {WINED3D_SM4_OP_MOV,    WINED3DSIH_MOV,         1,  1},
+    {WINED3D_SM4_OP_MOVC,   WINED3DSIH_MOVC,        1,  3},
     {WINED3D_SM4_OP_MUL,    WINED3DSIH_MUL,         1,  2},
     {WINED3D_SM4_OP_RET,    WINED3DSIH_RET,         0,  0},
     {WINED3D_SM4_OP_RSQ,    WINED3DSIH_RSQ,         1,  1},
-    {WINED3D_SM4_OP_SINCOS, WINED3DSIH_SINCOS,      1,  2},
+    {WINED3D_SM4_OP_SINCOS, WINED3DSIH_SINCOS,      2,  1},
 };
 
 static const WINED3DSHADER_PARAM_REGISTER_TYPE register_type_table[] =
@@ -146,6 +159,11 @@ static const WINED3DSHADER_PARAM_REGISTER_TYPE register_type_table[] =
     /* UNKNOWN */                       0,
     /* UNKNOWN */                       0,
     /* WINED3D_SM4_RT_CONSTBUFFER */    WINED3DSPR_CONSTBUFFER,
+    /* UNKNOWN */                       0,
+    /* UNKNOWN */                       0,
+    /* UNKNOWN */                       0,
+    /* UNKNOWN */                       0,
+    /* WINED3D_SM4_RT_NULL */           WINED3DSPR_NULL,
 };
 
 static const struct sysval_map sysval_map[] =
@@ -336,14 +354,14 @@ static void shader_sm4_read_src_param(void *data, const DWORD **ptr, struct wine
 
         switch(immconst_type)
         {
-            case WINED3D_SM4_IMMCONST_FLOAT:
-                src_param->reg.immconst_type = WINED3D_IMMCONST_FLOAT;
+            case WINED3D_SM4_IMMCONST_SCALAR:
+                src_param->reg.immconst_type = WINED3D_IMMCONST_SCALAR;
                 memcpy(src_param->reg.immconst_data, *ptr, 1 * sizeof(DWORD));
                 *ptr += 1;
                 break;
 
-            case WINED3D_SM4_IMMCONST_FLOAT4:
-                src_param->reg.immconst_type = WINED3D_IMMCONST_FLOAT4;
+            case WINED3D_SM4_IMMCONST_VEC4:
+                src_param->reg.immconst_type = WINED3D_IMMCONST_VEC4;
                 memcpy(src_param->reg.immconst_data, *ptr, 4 * sizeof(DWORD));
                 *ptr += 4;
                 break;

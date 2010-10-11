@@ -39,7 +39,7 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface)
     /* release the ref to the front and back buffer parents */
     if (This->front_buffer)
     {
-        IWineD3DSurface_SetContainer((IWineD3DSurface *)This->front_buffer, NULL);
+        surface_set_container(This->front_buffer, WINED3D_CONTAINER_NONE, NULL);
         if (IWineD3DSurface_Release((IWineD3DSurface *)This->front_buffer) > 0)
         {
             WARN("(%p) Something's still holding the front buffer\n",This);
@@ -51,7 +51,7 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface)
         UINT i;
         for (i = 0; i < This->presentParms.BackBufferCount; ++i)
         {
-            IWineD3DSurface_SetContainer((IWineD3DSurface *)This->back_buffers[i], NULL);
+            surface_set_container(This->back_buffers[i], WINED3D_CONTAINER_NONE, NULL);
             if (IWineD3DSurface_Release((IWineD3DSurface *)This->back_buffers[i]))
             {
                 WARN("(%p) Something's still holding the back buffer\n",This);
@@ -65,7 +65,8 @@ static void WINAPI IWineGDISwapChainImpl_Destroy(IWineD3DSwapChain *iface)
      * this will be the original desktop resolution. In case of d3d7 this will be a NOP because ddraw sets the resolution
      * before starting up Direct3D, thus orig_width and orig_height will be equal to the modes in the presentation params
      */
-    if(This->presentParms.Windowed == FALSE && This->presentParms.AutoRestoreDisplayMode) {
+    if (!This->presentParms.Windowed && This->presentParms.AutoRestoreDisplayMode)
+    {
         mode.Width = This->orig_width;
         mode.Height = This->orig_height;
         mode.RefreshRate = 0;

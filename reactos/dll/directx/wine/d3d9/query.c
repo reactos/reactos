@@ -158,7 +158,7 @@ HRESULT query_init(IDirect3DQuery9Impl *query, IDirect3DDevice9Impl *device, D3D
     query->ref = 1;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateQuery(device->WineD3DDevice, type, &query->wineD3DQuery, (IUnknown *)query);
+    hr = IWineD3DDevice_CreateQuery(device->WineD3DDevice, type, &query->wineD3DQuery);
     wined3d_mutex_unlock();
     if (FAILED(hr))
     {
