@@ -134,7 +134,6 @@ MAKE_FUNCPTR(SSL_shutdown);
 MAKE_FUNCPTR(SSL_write);
 MAKE_FUNCPTR(SSL_read);
 MAKE_FUNCPTR(SSL_pending);
-MAKE_FUNCPTR(SSL_get_error);
 MAKE_FUNCPTR(SSL_get_ex_new_index);
 MAKE_FUNCPTR(SSL_get_ex_data);
 MAKE_FUNCPTR(SSL_set_ex_data);

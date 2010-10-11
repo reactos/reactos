@@ -160,7 +160,6 @@ struct _object_header_t
     DWORD  dwFlags;
     DWORD_PTR dwContext;
     DWORD  dwError;
-    ULONG  ErrorMask;
     DWORD  dwInternalFlags;
     LONG   refs;
     INTERNET_STATUS_CALLBACK lpfnStatusCB;

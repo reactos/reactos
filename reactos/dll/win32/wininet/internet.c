@@ -812,7 +812,7 @@ static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffe
         }
     }
 
-    return INET_QueryOption(hdr, option, buffer, size, unicode);
+    return INET_QueryOption(option, buffer, size, unicode);
 }
 
 static const object_vtbl_t APPINFOVtbl = {

@@ -1176,7 +1176,7 @@ static DWORD FTPFILE_QueryOption(object_header_t *hdr, DWORD option, void *buffe
         }
     }
     }
-    return INET_QueryOption(hdr, option, buffer, size, unicode);
+    return INET_QueryOption(option, buffer, size, unicode);
 }
 
 static DWORD FTPFILE_ReadFile(object_header_t *hdr, void *buffer, DWORD size, DWORD *read)

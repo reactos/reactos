@@ -2435,6 +2435,7 @@ static BOOL CommitUrlCacheEntryInternal(
     DWORD dwFileSizeLow = 0;
     DWORD dwFileSizeHigh = 0;
     BYTE cDirectory = 0;
+    int len;
     char achFile[MAX_PATH];
     LPSTR lpszUrlNameA = NULL;
     LPSTR lpszFileExtensionA = NULL;
