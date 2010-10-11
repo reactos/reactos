@@ -1982,9 +1982,9 @@ RtlQueryHeapInformation(HANDLE HeapHandle,
 NTSTATUS
 NTAPI
 RtlMultipleAllocateHeap(IN PVOID HeapHandle,
-                        IN DWORD Flags,
+                        IN ULONG Flags,
                         IN SIZE_T Size,
-                        IN DWORD Count,
+                        IN ULONG Count,
                         OUT PVOID *Array)
 {
     UNIMPLEMENTED;
@@ -1994,8 +1994,8 @@ RtlMultipleAllocateHeap(IN PVOID HeapHandle,
 NTSTATUS
 NTAPI
 RtlMultipleFreeHeap(IN PVOID HeapHandle,
-                    IN DWORD Flags,
-                    IN DWORD Count,
+                    IN ULONG Flags,
+                    IN ULONG Count,
                     OUT PVOID *Array)
 {
     UNIMPLEMENTED;
