@@ -369,6 +369,15 @@ typedef enum _RTL_PATH_TYPE
 #ifndef NTOS_MODE_USER
 
 //
+// Heap Information Class
+//
+typedef enum _HEAP_INFORMATION_CLASS
+{
+    HeapCompatibilityInformation,
+    HeapEnableTerminationOnCorruption
+} HEAP_INFORMATION_CLASS;
+
+//
 // Callback function for RTL Timers or Registered Waits
 //
 typedef VOID
