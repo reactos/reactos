@@ -760,12 +760,7 @@ static INT_PTR CALLBACK focusDlgWinProc (HWND hDlg, UINT uiMsg, WPARAM wParam,
        return TRUE;
 
     case WM_COMMAND:
-       if (LOWORD(wParam) == IDCANCEL)
-       {
-           EndDialog(hDlg, LOWORD(wParam));
-           return TRUE;
-       }
-       else if (LOWORD(wParam) == 200)
+       if (LOWORD(wParam) == 200)
        {
            if (HIWORD(wParam) == EN_SETFOCUS)
                g_hwndInitialFocusT1 = (HWND)lParam;
@@ -1005,6 +1000,28 @@ static INT_PTR CALLBACK TestDefButtonDlgProc (HWND hDlg, UINT uiMsg,
     return FALSE;
 }
 
+static INT_PTR CALLBACK TestReturnKeyDlgProc (HWND hDlg, UINT uiMsg,
+        WPARAM wParam, LPARAM lParam)
+{
+    static int received_idok = 0;
+    switch (uiMsg)
+    {
+    case WM_INITDIALOG:
+        {
+            MSG msg = {hDlg, WM_KEYDOWN, VK_RETURN, 0x011c0001};
+            IsDialogMessage(hDlg, &msg);
+        }
+        ok(received_idok, "WM_COMMAND not received\n");
+        EndDialog(hDlg, 0);
+        return TRUE;
+    case WM_COMMAND:
+        ok(wParam==IDOK, "Expected IDOK\n");
+        received_idok = 1;
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static void test_DialogBoxParamA(void)
 {
     INT_PTR ret;
@@ -1049,6 +1066,8 @@ static void test_DialogBoxParamA(void)
 
     ret = DialogBoxParamA(GetModuleHandle(NULL), "TEST_EMPTY_DIALOG", 0, TestDefButtonDlgProc, 0);
     ok(ret == IDOK, "Expected IDOK\n");
+
+    DialogBoxParamA(GetModuleHandle(NULL), "TEST_EMPTY_DIALOG", 0, TestReturnKeyDlgProc, 0);
 }
 
 static void test_DisabledDialogTest(void)
