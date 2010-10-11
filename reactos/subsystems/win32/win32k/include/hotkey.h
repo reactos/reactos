@@ -27,7 +27,7 @@ GetHotKey (UINT fsModifiers,
 	   int *id);
 
 VOID FASTCALL
-UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
+UnregisterWindowHotKeys(PWND Window);
 
 VOID FASTCALL
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);

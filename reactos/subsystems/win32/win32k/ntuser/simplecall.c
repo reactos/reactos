@@ -230,7 +230,7 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
          {
-            PWINDOW_OBJECT Window;
+            PWND Window;
             DWORD_PTR Result;
 
             if(!(Window = UserGetWindowObject((HWND)Param)))
@@ -377,7 +377,7 @@ NtUserCallTwoParam(
    DWORD Routine)
 {
    NTSTATUS Status;
-   PWINDOW_OBJECT Window;
+   PWND Window;
    DECLARE_RETURN(DWORD_PTR);
 
    DPRINT("Enter NtUserCallTwoParam\n");
@@ -456,7 +456,7 @@ NtUserCallTwoParam(
           wParam = MAKEWPARAM((Param2 >> 3) & 0x3,
                               Param2 & (UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE));
 
-          RETURN( UserUpdateUiState(Window->Wnd, wParam) );
+          RETURN( UserUpdateUiState(Window, wParam) );
       }
 
       case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
@@ -496,21 +496,18 @@ NtUserCallHwndLock(
    DWORD Routine)
 {
    BOOL Ret = 0;
-   PWINDOW_OBJECT Window;
-   PWND Wnd;
+   PWND Window;
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(BOOLEAN);
 
    DPRINT("Enter NtUserCallHwndLock\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN( FALSE);
    }
    UserRefObjectCo(Window, &Ref);
-
-   Wnd = Window->Wnd;
 
    /* FIXME: Routine can be 0x53 - 0x5E */
    switch (Routine)
@@ -523,7 +520,7 @@ NtUserCallHwndLock(
          {
             DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
             Ret = TRUE;
-            if ((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
+            if ((Window->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
                co_WinPosSetWindowPos( Window,
                                       HWND_DESKTOP,
                                       0,0,0,0,
@@ -615,13 +612,13 @@ NtUserCallHwnd(
    {
       case HWND_ROUTINE_GETWNDCONTEXTHLPID:
       {
-         PWINDOW_OBJECT Window;
+         PWND Window;
          PPROPERTY HelpId;
          USER_REFERENCE_ENTRY Ref;
 
          UserEnterExclusive();
 
-         if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+         if (!(Window = UserGetWindowObject(hWnd)))
          {
             UserLeave();
             return 0;
@@ -664,7 +661,7 @@ NtUserCallHwndParam(
 
       case HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID:
       {
-         PWINDOW_OBJECT Window;
+         PWND Window;
 
          UserEnterExclusive();
          if(!(Window = UserGetWindowObject(hWnd)))
@@ -684,20 +681,18 @@ NtUserCallHwndParam(
 
       case HWNDPARAM_ROUTINE_SETDIALOGPOINTER:
       {
-         PWINDOW_OBJECT Window;
          PWND pWnd;
          USER_REFERENCE_ENTRY Ref;
 
          UserEnterExclusive();
 
-         if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+         if (!(pWnd = UserGetWindowObject(hWnd)))
          {
             UserLeave();
             return 0;
          }
-         UserRefObjectCo(Window, &Ref);
+         UserRefObjectCo(pWnd, &Ref);
 
-         pWnd = Window->Wnd;
          if (pWnd->head.pti->ppi == PsGetCurrentProcessWin32Process() &&
              pWnd->cbwndExtra == DLGWINDOWEXTRA && 
              !(pWnd->state & WNDS_SERVERSIDEWINDOWPROC))
@@ -714,7 +709,7 @@ NtUserCallHwndParam(
             }
          }
          
-         UserDerefObjectCo(Window);
+         UserDerefObjectCo(pWnd);
          UserLeave();
          return 0;
       }
@@ -733,14 +728,14 @@ NtUserCallHwndParamLock(
    DWORD Routine)
 {
    DWORD Ret = 0;
-   PWINDOW_OBJECT Window;
+   PWND Window;
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(DWORD);
 
    DPRINT1("Enter NtUserCallHwndParamLock\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN( FALSE);
    }

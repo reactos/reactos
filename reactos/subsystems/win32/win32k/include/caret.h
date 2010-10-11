@@ -17,8 +17,8 @@ co_IntSetCaretPos(int X, int Y);
 BOOL FASTCALL
 IntSwitchCaretShowing(PVOID Info);
 
-BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT WindowObject);
+BOOL FASTCALL co_UserShowCaret(PWND WindowObject);
 
-BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject);
+BOOL FASTCALL co_UserHideCaret(PWND WindowObject);
 
 /* EOF */

@@ -93,26 +93,26 @@ IntCleanupThreadCallbacks(PTHREADINFO W32Thread)
 // This will help user space programs speed up read access with the window object.
 //
 static VOID
-IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
+IntSetTebWndCallback (HWND * hWnd, PWND * pWnd)
 {
   HWND hWndS = *hWnd;
-  PWINDOW_OBJECT Window = UserGetWindowObject(*hWnd);
+  PWND Window = UserGetWindowObject(*hWnd);
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   *hWnd = ClientInfo->CallbackWnd.hWnd;
-  *pWnd = ClientInfo->CallbackWnd.pvWnd;
+  *pWnd = ClientInfo->CallbackWnd.pWnd;
 
   ClientInfo->CallbackWnd.hWnd  = hWndS;
-  ClientInfo->CallbackWnd.pvWnd = DesktopHeapAddressToUser(Window->Wnd);
+  ClientInfo->CallbackWnd.pWnd = DesktopHeapAddressToUser(Window);
 }
 
 static VOID
-IntRestoreTebWndCallback (HWND hWnd, PVOID pWnd)
+IntRestoreTebWndCallback (HWND hWnd, PWND pWnd)
 {
   PCLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ClientInfo->CallbackWnd.hWnd = hWnd;
-  ClientInfo->CallbackWnd.pvWnd = pWnd;
+  ClientInfo->CallbackWnd.pWnd = pWnd;
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -125,7 +125,8 @@ co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                               LRESULT Result)
 {
    SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
-   PVOID ResultPointer, pWnd;
+   PVOID ResultPointer;
+   PWND pWnd;
    ULONG ResultLength;
    NTSTATUS Status;
 
@@ -168,7 +169,8 @@ co_IntCallWindowProc(WNDPROC Proc,
    WINDOWPROC_CALLBACK_ARGUMENTS StackArguments;
    PWINDOWPROC_CALLBACK_ARGUMENTS Arguments;
    NTSTATUS Status;
-   PVOID ResultPointer, pWnd;
+   PVOID ResultPointer;
+   PWND pWnd;
    ULONG ResultLength;
    ULONG ArgumentLength;
    LRESULT Result;

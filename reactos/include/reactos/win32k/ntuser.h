@@ -173,7 +173,7 @@ typedef struct tagHOOK
 typedef struct _CALLBACKWND
 {
      HWND hWnd;
-     PVOID pvWnd;
+     struct _WND *pWnd;
 } CALLBACKWND, *PCALLBACKWND;
 
 #define CI_TRANSACTION       0x00000001
@@ -384,6 +384,12 @@ typedef struct _CLS
 } CLS, *PCLS;
 
 
+typedef struct _SBINFOEX
+{
+  SCROLLBARINFO ScrollBarInfo;
+  SCROLLINFO ScrollInfo;
+} SBINFOEX, *PSBINFOEX;
+
 // State Flags !Not Implemented!
 #define WNDS_HASMENU                 0X00000001
 #define WNDS_HASVERTICALSCROOLLBAR   0X00000002
@@ -526,6 +532,7 @@ typedef struct _WND
     struct _WND *spwndClipboardListener;
     DWORD ExStyle2;
 
+    /* ReactOS */
     struct
     {
         RECT NormalRect;
@@ -538,6 +545,11 @@ typedef struct _WND
     UINT InternalPosInitialized : 1;
     UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
     UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
+
+  /* Scrollbar info */
+  PSBINFOEX pSBInfoex; // convert to PSBINFO
+  /* Entry in the list of thread windows. */
+  LIST_ENTRY ThreadListEntry;
 } WND, *PWND;
 
 typedef struct _PFNCLIENT
@@ -1013,13 +1025,13 @@ NtUserSetSystemMenu(
   HWND hWnd,
   HMENU hMenu);
 
-DWORD
+BOOL
 NTAPI
 NtUserThunkedMenuInfo(
   HMENU hMenu,
   LPCMENUINFO lpcmi);
 
-DWORD
+BOOL
 NTAPI
 NtUserThunkedMenuItemInfo(
   HMENU hMenu,
@@ -3230,8 +3242,6 @@ NtUserMenuInfo(
  PROSMENUINFO lpmi,
  BOOL fsog
 );
-
-
 
 typedef struct tagROSMENUITEMINFO
 {

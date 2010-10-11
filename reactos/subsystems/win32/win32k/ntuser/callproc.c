@@ -193,16 +193,14 @@ NtUserGetCPD(
    GETCPD Flags,
    ULONG_PTR ProcIn)
 {
-   PWINDOW_OBJECT Window;
    PWND Wnd;
    ULONG_PTR Result = 0;
 
    UserEnterExclusive();
-   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+   if (!(Wnd = UserGetWindowObject(hWnd)))
    {   
       goto Cleanup;
    }
-   Wnd = Window->Wnd;
 
    // Processing Window only from User space.
    if ((Flags & ~(UserGetCPDU2A|UserGetCPDA2U)) != UserGetCPDClass)        

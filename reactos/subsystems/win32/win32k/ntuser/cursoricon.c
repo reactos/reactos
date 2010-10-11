@@ -176,7 +176,7 @@ UserSetCursor(
 
 BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
 {
-    PWINDOW_OBJECT DesktopWindow;
+    PWND DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
     HDC hDC;
     MSG Msg;
@@ -197,7 +197,7 @@ BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
 
     /* Clip cursor position */
     if (!CurInfo->bClipped)
-        rcClip = DesktopWindow->Wnd->rcClient;
+        rcClip = DesktopWindow->rcClient;
     else
         rcClip = CurInfo->rcClip;
 
@@ -704,7 +704,7 @@ NtUserClipCursor(
     /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
     RECTL Rect;
-    PWINDOW_OBJECT DesktopWindow = NULL;
+    PWND DesktopWindow = NULL;
     DECLARE_RETURN(BOOL);
 
     DPRINT("Enter NtUserClipCursor\n");
@@ -725,7 +725,7 @@ NtUserClipCursor(
     {
 
         CurInfo->bClipped = TRUE;
-        RECTL_bIntersectRect(&CurInfo->rcClip, &Rect, &DesktopWindow->Wnd->rcWindow);
+        RECTL_bIntersectRect(&CurInfo->rcClip, &Rect, &DesktopWindow->rcWindow);
         UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
 
         RETURN(TRUE);

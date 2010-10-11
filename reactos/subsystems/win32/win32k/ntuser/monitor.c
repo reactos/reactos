@@ -885,7 +885,7 @@ NtUserMonitorFromWindow(
    IN HWND hWnd,
    IN DWORD dwFlags)
 {
-   PWINDOW_OBJECT Window;
+   PWND Window;
    HMONITOR hMonitor = NULL;
    RECTL Rect;
    DECLARE_RETURN(HMONITOR);
@@ -903,11 +903,8 @@ NtUserMonitorFromWindow(
       RETURN(hMonitor);
    }
 
-   if (!Window->Wnd)
-      RETURN(hMonitor);
-
-   Rect.left = Rect.right = Window->Wnd->rcWindow.left;
-   Rect.top = Rect.bottom = Window->Wnd->rcWindow.bottom;
+   Rect.left = Rect.right = Window->rcWindow.left;
+   Rect.top = Rect.bottom = Window->rcWindow.bottom;
 
    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
 

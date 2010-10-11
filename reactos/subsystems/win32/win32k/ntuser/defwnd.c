@@ -27,7 +27,7 @@
 static
 LRESULT FASTCALL
 IntClientShutdown(
-   PWINDOW_OBJECT pWindow,
+   PWND pWindow,
    WPARAM wParam,
    LPARAM lParam
 )
@@ -49,14 +49,14 @@ IntClientShutdown(
    {
       for (i = 0; List[i]; i++)
       {
-          PWINDOW_OBJECT WndChild;
+          PWND WndChild;
 
-          if (!(WndChild = UserGetWindowObject(List[i])) || !WndChild->Wnd)
+          if (!(WndChild = UserGetWindowObject(List[i])))
              continue;
 
           if (wParam & MCS_QUERYENDSESSION)
           {
-             if (!co_IntSendMessage(WndChild->hSelf, WM_QUERYENDSESSION, 0, lParams))
+             if (!co_IntSendMessage(WndChild->head.h, WM_QUERYENDSESSION, 0, lParams))
              {
                 lResult = MCSR_DONOTSHUTDOWN;
                 break;
@@ -64,10 +64,10 @@ IntClientShutdown(
           }
           else          
           {
-             co_IntSendMessage(WndChild->hSelf, WM_ENDSESSION, KillTimers, lParams);
+             co_IntSendMessage(WndChild->head.h, WM_ENDSESSION, KillTimers, lParams);
              if (KillTimers)
              {
-                DestroyTimersForWindow(WndChild->pti, WndChild);
+                DestroyTimersForWindow(WndChild->head.pti, WndChild);
              }
              lResult = MCSR_SHUTDOWNFINISHED;
           }
@@ -80,17 +80,17 @@ IntClientShutdown(
  */
    if (wParam & MCS_QUERYENDSESSION)
    {
-      if (!co_IntSendMessage(pWindow->hSelf, WM_QUERYENDSESSION, 0, lParams))
+      if (!co_IntSendMessage(pWindow->head.h, WM_QUERYENDSESSION, 0, lParams))
       {
          lResult = MCSR_DONOTSHUTDOWN;
       }
    }
    else          
    {
-      co_IntSendMessage(pWindow->hSelf, WM_ENDSESSION, KillTimers, lParams);
+      co_IntSendMessage(pWindow->head.h, WM_ENDSESSION, KillTimers, lParams);
       if (KillTimers)
       {
-         DestroyTimersForWindow(pWindow->pti, pWindow);
+         DestroyTimersForWindow(pWindow->head.pti, pWindow);
       }
       lResult = MCSR_SHUTDOWNFINISHED;
    }
@@ -102,25 +102,21 @@ IntClientShutdown(
  */
 LRESULT FASTCALL
 IntDefWindowProc(
-   PWINDOW_OBJECT Window,
+   PWND Wnd,
    UINT Msg,
    WPARAM wParam,
    LPARAM lParam,
    BOOL Ansi)
 {
-   PWND Wnd;
    LRESULT lResult = 0;
 
    if (Msg > WM_USER) return 0;
-
-   Wnd = Window->Wnd;
-   if (!Wnd) return 0;
 
    switch (Msg)
    {
       case WM_SYSCOMMAND:
       {
-         DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Window->hSelf, wParam, lParam );
+         DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
          if (!ISITHOOKED(WH_CBT)) break;
          lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
          break;
@@ -129,7 +125,7 @@ IntDefWindowProc(
       {
          if ((Wnd->style & WS_VISIBLE) && wParam) break;
          if (!(Wnd->style & WS_VISIBLE) && !wParam) break;
-         if (!Window->spwndOwner) break;
+         if (!Wnd->spwndOwner) break;
          if (LOWORD(lParam))
          {
             if (wParam)
@@ -140,12 +136,12 @@ IntDefWindowProc(
             else
                 Wnd->state |= WNDS_HIDDENPOPUP;
 
-            co_WinPosShowWindow(Window, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
+            co_WinPosShowWindow(Wnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
          }
       }
       break;
       case WM_CLIENTSHUTDOWN:
-         return IntClientShutdown(Window, wParam, lParam);
+         return IntClientShutdown(Wnd, wParam, lParam);
 
       case WM_CBT:
       {
@@ -176,8 +172,8 @@ IntDefWindowProc(
                   _SEH2_END;
                }
                if (!lResult)
-                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam ? (LPARAM)&rt : 0);
-            }
+                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)Wnd->head.h, lParam ? (LPARAM)&rt : 0);
+           }
             break;
          }
          break;
