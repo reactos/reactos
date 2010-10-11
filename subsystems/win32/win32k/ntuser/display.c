@@ -499,7 +499,7 @@ UserEnumDisplaySettings(
     {
         /* No device found */
         DPRINT1("No device found!\n");
-        return FALSE;
+        return STATUS_UNSUCCESSFUL;
     }
 
     if (iModeNum == 0)
