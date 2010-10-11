@@ -330,9 +330,7 @@ static int netconn_secure_verify(int preverify_ok, X509_STORE_CTX *ctx)
             CertFreeCertificateContext(endCert);
             CertCloseStore(store, 0);
         }
-    } else
-        pSSL_set_ex_data(ssl, error_idx, (void *)ERROR_INTERNET_SEC_CERT_ERRORS);
-
+    }
     return ret;
 }
 
@@ -394,7 +392,6 @@ DWORD NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
 	DYNSSL(SSL_write);
 	DYNSSL(SSL_read);
 	DYNSSL(SSL_pending);
-        DYNSSL(SSL_get_error);
 	DYNSSL(SSL_get_ex_new_index);
 	DYNSSL(SSL_get_ex_data);
 	DYNSSL(SSL_set_ex_data);
@@ -775,12 +772,6 @@ DWORD NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int 
     {
 #ifdef SONAME_LIBSSL
 	*recvd = pSSL_read(connection->ssl_s, buf, len);
-
-        /* Check if EOF was received */
-        if(!*recvd && (pSSL_get_error(connection->ssl_s, *recvd)==SSL_ERROR_ZERO_RETURN
-                    || pSSL_get_error(connection->ssl_s, *recvd)==SSL_ERROR_SYSCALL))
-            return ERROR_SUCCESS;
-
         return *recvd > 0 ? ERROR_SUCCESS : ERROR_INTERNET_CONNECTION_ABORTED;
 #else
 	return ERROR_NOT_SUPPORTED;

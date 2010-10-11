@@ -1447,7 +1447,7 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
     lpUrlComponents->nScheme = UCW.nScheme;
     lpUrlComponents->nPort = UCW.nPort;
 
-    TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", debugstr_a(lpszUrl),
+    TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", lpszUrl,
           debugstr_an(lpUrlComponents->lpszScheme, lpUrlComponents->dwSchemeLength),
           debugstr_an(lpUrlComponents->lpszHostName, lpUrlComponents->dwHostNameLength),
           debugstr_an(lpUrlComponents->lpszUrlPath, lpUrlComponents->dwUrlPathLength),
@@ -1860,7 +1860,7 @@ BOOL WINAPI InternetCanonicalizeUrlA(LPCSTR lpszUrl, LPSTR lpszBuffer,
     DWORD dwURLFlags = URL_WININET_COMPATIBILITY | URL_ESCAPE_UNSAFE;
 
     TRACE("(%s, %p, %p, 0x%08x) bufferlength: %d\n", debugstr_a(lpszUrl), lpszBuffer,
-        lpdwBufferLength, dwFlags, lpdwBufferLength ? *lpdwBufferLength : -1);
+        lpdwBufferLength, lpdwBufferLength ? *lpdwBufferLength : -1, dwFlags);
 
     if(dwFlags & ICU_DECODE)
     {
@@ -2194,7 +2194,7 @@ BOOL WINAPI InternetReadFileExW(HINTERNET hFile, LPINTERNET_BUFFERSW lpBuffer,
     return res == ERROR_SUCCESS;
 }
 
-DWORD INET_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
+DWORD INET_QueryOption(DWORD option, void *buffer, DWORD *size, BOOL unicode)
 {
     static BOOL warn = TRUE;
 
@@ -2357,25 +2357,6 @@ DWORD INET_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *
         return ERROR_INTERNET_INCORRECT_HANDLE_TYPE;
     case INTERNET_OPTION_POLICY:
         return ERROR_INVALID_PARAMETER;
-    case INTERNET_OPTION_CONTEXT_VALUE:
-    {
-        if (!hdr)
-            return ERROR_INTERNET_INCORRECT_HANDLE_TYPE;
-        if (!size)
-            return ERROR_INVALID_PARAMETER;
-
-        if (*size < sizeof(DWORD_PTR))
-        {
-            *size = sizeof(DWORD_PTR);
-            return ERROR_INSUFFICIENT_BUFFER;
-        }
-        if (!buffer)
-            return ERROR_INVALID_PARAMETER;
-
-        *(DWORD_PTR *)buffer = hdr->dwContext;
-        *size = sizeof(DWORD_PTR);
-        return ERROR_SUCCESS;
-    }
     }
 
     FIXME("Stub for %d\n", option);
@@ -2407,7 +2388,7 @@ BOOL WINAPI InternetQueryOptionW(HINTERNET hInternet, DWORD dwOption,
             WININET_Release(hdr);
         }
     }else {
-        res = INET_QueryOption(NULL, dwOption, lpBuffer, lpdwBufferLength, TRUE);
+        res = INET_QueryOption(dwOption, lpBuffer, lpdwBufferLength, TRUE);
     }
 
     if(res != ERROR_SUCCESS)
@@ -2440,7 +2421,7 @@ BOOL WINAPI InternetQueryOptionA(HINTERNET hInternet, DWORD dwOption,
             WININET_Release(hdr);
         }
     }else {
-        res = INET_QueryOption(NULL, dwOption, lpBuffer, lpdwBufferLength, FALSE);
+        res = INET_QueryOption(dwOption, lpBuffer, lpdwBufferLength, FALSE);
     }
 
     if(res != ERROR_SUCCESS)
@@ -2503,19 +2484,8 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
       break;
     case INTERNET_OPTION_ERROR_MASK:
       {
-        if(!lpwhh) {
-            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
-            return FALSE;
-        } else if(*(ULONG*)lpBuffer & (~(INTERNET_ERROR_MASK_INSERT_CDROM|
-                        INTERNET_ERROR_MASK_COMBINED_SEC_CERT|
-                        INTERNET_ERROR_MASK_LOGIN_FAILURE_DISPLAY_ENTITY_BODY))) {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-        } else if(dwBufferLength != sizeof(ULONG)) {
-            SetLastError(ERROR_INTERNET_BAD_OPTION_LENGTH);
-            ret = FALSE;
-        } else
-            lpwhh->ErrorMask = *(ULONG*)lpBuffer;
+        ULONG flags = *(ULONG *)lpBuffer;
+        FIXME("Option INTERNET_OPTION_ERROR_MASK(%d): STUB\n", flags);
       }
       break;
     case INTERNET_OPTION_CODEPAGE:
@@ -2580,21 +2550,8 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         break;
     }
     case INTERNET_OPTION_CONTEXT_VALUE:
-    {
-        if (!lpwhh)
-        {
-            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
-            return FALSE;
-        }
-        if (!lpBuffer || dwBufferLength != sizeof(DWORD_PTR))
-        {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            ret = FALSE;
-        }
-        else
-            lpwhh->dwContext = *(DWORD_PTR *)lpBuffer;
-        break;
-    }
+	 FIXME("Option INTERNET_OPTION_CONTEXT_VALUE; STUB\n");
+	 break;
     case INTERNET_OPTION_SECURITY_FLAGS:
 	 FIXME("Option INTERNET_OPTION_SECURITY_FLAGS; STUB\n");
 	 break;

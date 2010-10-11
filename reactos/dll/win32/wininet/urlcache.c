@@ -2556,6 +2556,7 @@ static BOOL CommitUrlCacheEntryInternal(
     dwBytesNeeded = DWORD_ALIGN(dwBytesNeeded + strlen(lpszUrlNameA) + 1);
     if (lpszLocalFileName)
     {
+        len = WideCharToMultiByte(CP_ACP, 0, lpszUrlName, -1, NULL, 0, NULL, NULL);
         dwOffsetLocalFileName = dwBytesNeeded;
         dwBytesNeeded = DWORD_ALIGN(dwBytesNeeded + strlen(pchLocalFileName) + 1);
     }
