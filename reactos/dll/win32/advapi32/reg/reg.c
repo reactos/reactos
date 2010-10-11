@@ -2793,14 +2793,14 @@ RegEnumValueA(HKEY hKey,
 
     status = NtEnumerateValueKey( KeyHandle, index, KeyValueFullInformation,
                                   buffer, total_size, &total_size );
-    if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
+    if (status && (status != STATUS_BUFFER_OVERFLOW) && (status != STATUS_BUFFER_TOO_SMALL)) goto done;
 
     /* we need to fetch the contents for a string type even if not requested,
      * because we need to compute the length of the ASCII string. */
     if (value || data || is_string(info->Type))
     {
         /* retry with a dynamically allocated buffer */
-        while (status == STATUS_BUFFER_OVERFLOW)
+        while ((status == STATUS_BUFFER_OVERFLOW) || (status == STATUS_BUFFER_TOO_SMALL))
         {
             if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
             if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
@@ -2819,14 +2819,14 @@ RegEnumValueA(HKEY hKey,
         {
             ULONG len;
             RtlUnicodeToMultiByteSize( &len, (WCHAR *)(buf_ptr + info->DataOffset),
-                                       total_size - info->DataOffset );
+                                       info->DataLength );
             if (data && len)
             {
                 if (len > *count) status = STATUS_BUFFER_OVERFLOW;
                 else
                 {
                     RtlUnicodeToMultiByteN( (PCHAR)data, len, NULL, (WCHAR *)(buf_ptr + info->DataOffset),
-                                            total_size - info->DataOffset );
+                                            info->DataLength );
                     /* if the type is REG_SZ and data is not 0-terminated
                      * and there is enough space in the buffer NT appends a \0 */
                     if (len < *count && data[len-1]) data[len] = 0;
@@ -2836,8 +2836,8 @@ RegEnumValueA(HKEY hKey,
         }
         else if (data)
         {
-            if (total_size - info->DataOffset > *count) status = STATUS_BUFFER_OVERFLOW;
-            else memcpy( data, buf_ptr + info->DataOffset, total_size - info->DataOffset );
+            if (info->DataLength > *count) status = STATUS_BUFFER_OVERFLOW;
+            else memcpy( data, buf_ptr + info->DataOffset, info->DataLength );
         }
 
         if (value && !status)
@@ -2962,17 +2962,17 @@ RegEnumValueW(HKEY hKey,
 
         if (data)
         {
-            if (total_size - info->DataOffset > *count)
+            if (info->DataLength > *count)
             {
                 status = STATUS_BUFFER_OVERFLOW;
                 goto overflow;
             }
-            memcpy( data, buf_ptr + info->DataOffset, total_size - info->DataOffset );
-            if (total_size - info->DataOffset <= *count-sizeof(WCHAR) && is_string(info->Type))
+            memcpy( data, buf_ptr + info->DataOffset, info->DataLength );
+            if (is_string(info->Type) && info->DataLength <= *count - sizeof(WCHAR))
             {
                 /* if the type is REG_SZ and data is not 0-terminated
                  * and there is enough space in the buffer NT appends a \0 */
-                WCHAR *ptr = (WCHAR *)(data + total_size - info->DataOffset);
+                WCHAR *ptr = (WCHAR *)(data + info->DataLength);
                 if (ptr > (WCHAR *)data && ptr[-1]) *ptr = 0;
             }
         }
