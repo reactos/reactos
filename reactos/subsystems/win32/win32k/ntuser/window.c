@@ -1966,14 +1966,13 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Cs->style = Window->style; /* HCBT_CREATEWND needs the real window style */
    CbtCreate.lpcs = Cs;
    CbtCreate.hwndInsertAfter = HWND_TOP;
-   if (ISITHOOKED(WH_CBT))
+
+   if (co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) &CbtCreate))
    {
-      if (co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) &CbtCreate))
-      {
-         DPRINT1("HCBT_CREATEWND hook failed!\n");
-         RETURN( (PWND) NULL);
-      }
+      DPRINT1("HCBT_CREATEWND hook failed!\n");
+      RETURN( (PWND) NULL);
    }
+
    Cs->style = dwStyle; /* NCCREATE and WM_NCCALCSIZE need the original values*/
 
    /* Send the WM_GETMINMAXINFO message*/
@@ -2342,7 +2341,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    }
 
    /* If window was created successfully and it is hooked */
-   if ((Window->state2 & WNDS2_WMCREATEMSGPROCESSED) && (ISITHOOKED(WH_CBT)))
+   if ((Window->state2 & WNDS2_WMCREATEMSGPROCESSED))
    {
       if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
    }

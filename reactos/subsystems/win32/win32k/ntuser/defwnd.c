@@ -117,7 +117,6 @@ IntDefWindowProc(
       case WM_SYSCOMMAND:
       {
          DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Wnd->head.h, wParam, lParam );
-         if (!ISITHOOKED(WH_CBT)) break;
          lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
          break;
       }
@@ -145,8 +144,6 @@ IntDefWindowProc(
 
       case WM_CBT:
       {
-         if (!ISITHOOKED(WH_CBT)) break;
-
          switch (wParam)
          {
             case HCBT_MOVESIZE:

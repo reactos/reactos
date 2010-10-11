@@ -330,20 +330,16 @@ IntCallWndProc
 ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
    BOOL SameThread = FALSE;
+   CWPSTRUCT CWP;
 
    if (Window->head.pti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread()))
       SameThread = TRUE;
 
-   if ((!SameThread && (Window->head.pti->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROC))) ||
-        (SameThread && ISITHOOKED(WH_CALLWNDPROC)) )
-   {
-      CWPSTRUCT CWP;
-      CWP.hwnd    = hWnd;
-      CWP.message = Msg;
-      CWP.wParam  = wParam;
-      CWP.lParam  = lParam;
-      co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
-   }
+   CWP.hwnd    = hWnd;
+   CWP.message = Msg;
+   CWP.wParam  = wParam;
+   CWP.lParam  = lParam;
+   co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
 }
 
 static
@@ -353,21 +349,17 @@ IntCallWndProcRet
 ( PWND Window, HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *uResult)
 {
    BOOL SameThread = FALSE;
+   CWPRETSTRUCT CWPR;
 
    if (Window->head.pti == ((PTHREADINFO)PsGetCurrentThreadWin32Thread()))
       SameThread = TRUE;
 
-   if ((!SameThread && (Window->head.pti->fsHooks & HOOKID_TO_FLAG(WH_CALLWNDPROCRET))) ||
-        (SameThread && ISITHOOKED(WH_CALLWNDPROCRET)) )
-   {
-      CWPRETSTRUCT CWPR;
-      CWPR.hwnd    = hWnd;
-      CWPR.message = Msg;
-      CWPR.wParam  = wParam;
-      CWPR.lParam  = lParam;
-      CWPR.lResult = *uResult;
-      co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
-   }
+   CWPR.hwnd    = hWnd;
+   CWPR.message = Msg;
+   CWPR.wParam  = wParam;
+   CWPR.lParam  = lParam;
+   CWPR.lResult = *uResult;
+   co_HOOK_CallHooks( WH_CALLWNDPROCRET, HC_ACTION, SameThread, (LPARAM)&CWPR );
 }
 
 LRESULT
@@ -709,17 +701,14 @@ BOOL ProcessMouseMessage(MSG* Msg, USHORT HitTest, UINT RemoveMsg)
                            Msg->message,
                            (LPARAM)&MHook ))
     {
-        if (ISITHOOKED(WH_CBT))
-        {
-            MHook.pt           = Msg->pt;
-            MHook.hwnd         = Msg->hwnd;
-            MHook.wHitTestCode = HitTest;
-            MHook.dwExtraInfo  = 0;
-            co_HOOK_CallHooks( WH_CBT,
-                               HCBT_CLICKSKIPPED,
-                               Msg->message,
-                               (LPARAM)&MHook);
-        }
+        MHook.pt           = Msg->pt;
+        MHook.hwnd         = Msg->hwnd;
+        MHook.wHitTestCode = HitTest;
+        MHook.dwExtraInfo  = 0;
+        co_HOOK_CallHooks( WH_CBT,
+                           HCBT_CLICKSKIPPED,
+                           Msg->message,
+                           (LPARAM)&MHook);
         return FALSE;
     }
 
@@ -743,14 +732,11 @@ BOOL ProcessKeyboardMessage(MSG* Msg, UINT RemoveMsg)
                            LOWORD(Msg->wParam),
                            Msg->lParam))
     {
-        if (ISITHOOKED(WH_CBT))
-        {
-            /* skip this message */
-            co_HOOK_CallHooks( WH_CBT,
-                               HCBT_KEYSKIPPED,
-                               LOWORD(Msg->wParam),
-                               Msg->lParam );
-        }
+        /* skip this message */
+        co_HOOK_CallHooks( WH_CBT,
+                           HCBT_KEYSKIPPED,
+                           LOWORD(Msg->wParam),
+                           Msg->lParam );
         return FALSE;
     }
 	return TRUE;
@@ -965,7 +951,7 @@ MessageFound:
 MsgExit:
       pti->rpdesk->htEx = HitTest; /* Now set the capture hit. */
 
-      if ( ISITHOOKED(WH_MOUSE) && IS_MOUSE_MESSAGE(Msg->Msg.message))
+      if ( IS_MOUSE_MESSAGE(Msg->Msg.message))
       {
           if (!ProcessMouseMessage(&Msg->Msg, HitTest, RemoveMsg))
           {
@@ -973,7 +959,7 @@ MsgExit:
           }
       }
 
-      if ( ISITHOOKED(WH_KEYBOARD) && IS_KBD_MESSAGE(Msg->Msg.message))
+      if ( IS_KBD_MESSAGE(Msg->Msg.message))
       {
           if(!ProcessKeyboardMessage(&Msg->Msg, RemoveMsg))
           {
@@ -982,11 +968,8 @@ MsgExit:
       }
       // The WH_GETMESSAGE hook enables an application to monitor messages about to
       // be returned by the GetMessage or PeekMessage function.
-      if (ISITHOOKED(WH_GETMESSAGE))
-      {
-         //DPRINT1("Peek WH_GETMESSAGE -> %x\n",&Msg);
-         co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
-      }
+
+      co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
       return TRUE;
    }
 
@@ -2419,17 +2402,13 @@ NtUserCallMsgFilter(
 
    if (BadChk) RETURN( FALSE);
 
-   if ( ISITHOOKED(WH_SYSMSGFILTER) &&
-        co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)&Msg))
+   if ( co_HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)&Msg))
    {
       Ret = TRUE;
    }
    else
    {
-      if ( ISITHOOKED(WH_MSGFILTER) )
-      {
-         Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
-      }
+      Ret = co_HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)&Msg);
    }
 
    _SEH2_TRY
@@ -2620,12 +2599,13 @@ NtUserMessageCall(
       case FNID_SENDMESSAGECALLBACK:
       {
          PCALL_BACK_INFO CallBackInfo = (PCALL_BACK_INFO)ResultInfo;
+         ULONG_PTR uResult;
 
          if (!CallBackInfo)
             break;
 
          if (!co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
-             CallBackInfo->CallBack, CallBackInfo->Context, NULL))
+             CallBackInfo->CallBack, CallBackInfo->Context, &uResult))
          {
             DPRINT1("Callback failure!\n");
          }
