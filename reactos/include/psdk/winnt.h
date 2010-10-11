@@ -4958,50 +4958,6 @@ typedef enum _HEAP_INFORMATION_CLASS {
   HeapEnableTerminationOnCorruption
 } HEAP_INFORMATION_CLASS;
 
-NTSYSAPI
-DWORD
-NTAPI
-RtlSetHeapInformation (
-    IN PVOID HeapHandle,
-    IN HEAP_INFORMATION_CLASS HeapInformationClass,
-    IN PVOID HeapInformation OPTIONAL,
-    IN SIZE_T HeapInformationLength OPTIONAL
-    );
-
-NTSYSAPI
-DWORD
-NTAPI
-RtlQueryHeapInformation (
-    IN PVOID HeapHandle,
-    IN HEAP_INFORMATION_CLASS HeapInformationClass,
-    OUT PVOID HeapInformation OPTIONAL,
-    IN SIZE_T HeapInformationLength OPTIONAL,
-    OUT PSIZE_T ReturnLength OPTIONAL
-    );
-
-//
-//  Multiple alloc-free APIS
-//
-
-DWORD
-NTAPI
-RtlMultipleAllocateHeap (
-    IN PVOID HeapHandle,
-    IN DWORD Flags,
-    IN SIZE_T Size,
-    IN DWORD Count,
-    OUT PVOID * Array
-    );
-
-DWORD
-NTAPI
-RtlMultipleFreeHeap (
-    IN PVOID HeapHandle,
-    IN DWORD Flags,
-    IN DWORD Count,
-    OUT PVOID * Array
-    );
-
 typedef enum _PROCESSOR_CACHE_TYPE {
   CacheUnified,
   CacheInstruction,

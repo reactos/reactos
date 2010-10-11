@@ -955,32 +955,32 @@ RtlpRemoveHeapFromProcessList(PHEAP Heap)
        Use classic, lernt from university times algorithm for removing an entry
        from a static array */
 
-     Current = (PHEAP *)&Peb->ProcessHeaps[Heap->ProcessHeapsListIndex - 1];
-     Next = Current + 1;
+    Current = (PHEAP *)&Peb->ProcessHeaps[Heap->ProcessHeapsListIndex - 1];
+    Next = Current + 1;
 
-     /* How many items we need to shift to the left */
-     Count = Peb->NumberOfHeaps - (Heap->ProcessHeapsListIndex - 1);
+    /* How many items we need to shift to the left */
+    Count = Peb->NumberOfHeaps - (Heap->ProcessHeapsListIndex - 1);
 
-     /* Move them all in a loop */
-     while (--Count)
-     {
-         /* Copy it and advance next pointer */
-         *Current = *Next;
+    /* Move them all in a loop */
+    while (--Count)
+    {
+        /* Copy it and advance next pointer */
+        *Current = *Next;
 
-         /* Update its index */
-         (*Current)->ProcessHeapsListIndex -= 1;
+        /* Update its index */
+        (*Current)->ProcessHeapsListIndex -= 1;
 
-         /* Advance pointers */
-         Current++;
-         Next++;
-     }
+        /* Advance pointers */
+        Current++;
+        Next++;
+    }
 
-     /* Decrease total number of heaps */
-     Peb->NumberOfHeaps--;
+    /* Decrease total number of heaps */
+    Peb->NumberOfHeaps--;
 
-     /* Zero last unused item */
-     Peb->ProcessHeaps[Peb->NumberOfHeaps] = NULL;
-     Heap->ProcessHeapsListIndex = 0;
+    /* Zero last unused item */
+    Peb->ProcessHeaps[Peb->NumberOfHeaps] = NULL;
+    Heap->ProcessHeapsListIndex = 0;
 
     /* Release the lock */
     RtlLeaveHeapLock(&RtlpProcessHeapsListLock);
@@ -1977,6 +1977,8 @@ RtlpAllocateNonDedicated(PHEAP Heap,
 
     /* Release the lock */
     if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
+    DPRINT1("HEAP: Allocation failed!\n");
+    DPRINT1("Flags %x\n", Heap->Flags);
     return NULL;
 }
 
@@ -2016,7 +2018,8 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     if (Size >= 0x80000000)
     {
         RtlSetLastWin32ErrorAndNtStatusFromNtStatus(STATUS_NO_MEMORY);
-        return FALSE;
+        DPRINT1("HEAP: Allocation failed!\n");
+        return NULL;
     }
 
     if (Flags & (
@@ -2167,6 +2170,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
             // Set STATUS!
             /* Release the lock */
             if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
+            DPRINT1("HEAP: Allocation failed!\n");
             return NULL;
         }
 
@@ -2202,6 +2206,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
 
     /* Release the lock */
     if (HeapLocked) RtlLeaveHeapLock(Heap->LockVariable);
+    DPRINT1("HEAP: Allocation failed!\n");
     return NULL;
 }
 
@@ -2277,7 +2282,8 @@ BOOLEAN NTAPI RtlFreeHeap(
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Failed releasing memory with Status 0x%08X\n", Status);
+            DPRINT1("HEAP: Failed releasing memory with Status 0x%08X. Heap %p, ptr %p, base address %p\n",
+                Status, Heap, Ptr, VirtualEntry);
             RtlSetLastWin32ErrorAndNtStatusFromNtStatus(Status);
         }
     }
@@ -2351,8 +2357,225 @@ RtlpGrowBlockInPlace (IN PHEAP Heap,
                       IN SIZE_T Size,
                       IN SIZE_T Index)
 {
-    /* We always fail growing in place now */
-    return FALSE;
+    UCHAR EntryFlags, RememberFlags;
+    PHEAP_FREE_ENTRY FreeEntry, UnusedEntry, FollowingEntry;
+    SIZE_T FreeSize, PrevSize, TailPart, AddedSize = 0;
+    PHEAP_ENTRY_EXTRA OldExtra, NewExtra;
+
+    /* We can't grow beyond specified threshold */
+    if (Index > Heap->VirtualMemoryThreshold)
+        return FALSE;
+
+    /* Get entry flags */
+    EntryFlags = InUseEntry->Flags;
+
+    /* Get the next free entry */
+    FreeEntry = (PHEAP_FREE_ENTRY)(InUseEntry + InUseEntry->Size);
+
+    if (EntryFlags & HEAP_ENTRY_LAST_ENTRY)
+    {
+        /* There is no next block, just uncommitted space. Calculate how much is needed */
+        FreeSize = (Index - InUseEntry->Size) << HEAP_ENTRY_SHIFT;
+        FreeSize = ROUND_UP(FreeSize, PAGE_SIZE);
+
+        /* Find and commit those pages */
+        FreeEntry = RtlpFindAndCommitPages(Heap,
+                                           Heap->Segments[InUseEntry->SegmentOffset],
+                                           &FreeSize,
+                                           FreeEntry);
+
+        /* Fail if it failed... */
+        if (!FreeEntry) return FALSE;
+
+        /* It was successful, perform coalescing */
+        FreeSize = FreeSize >> HEAP_ENTRY_SHIFT;
+        FreeEntry = RtlpCoalesceFreeBlocks(Heap, FreeEntry, &FreeSize, FALSE);
+
+        /* Check if it's enough */
+        if (FreeSize + InUseEntry->Size < Index)
+        {
+            /* Still not enough */
+            RtlpInsertFreeBlock(Heap, FreeEntry, FreeSize);
+            Heap->TotalFreeSize += FreeSize;
+            return FALSE;
+        }
+
+        /* Remember flags of this free entry */
+        RememberFlags = FreeEntry->Flags;
+
+        /* Sum up sizes */
+        FreeSize += InUseEntry->Size;
+    }
+    else
+    {
+        /* The next block indeed exists. Check if it's free or in use */
+        if (FreeEntry->Flags & HEAP_ENTRY_BUSY) return FALSE;
+
+        /* Next entry is free, check if it can fit the block we need */
+        FreeSize = InUseEntry->Size + FreeEntry->Size;
+        if (FreeSize < Index) return FALSE;
+
+        /* Remember flags of this free entry */
+        RememberFlags = FreeEntry->Flags;
+
+        /* Remove this block from the free list */
+        RtlpRemoveFreeBlock(Heap, FreeEntry, FALSE, FALSE);
+        Heap->TotalFreeSize -= FreeEntry->Size;
+    }
+
+    PrevSize = (InUseEntry->Size << HEAP_ENTRY_SHIFT) - InUseEntry->UnusedBytes;
+    FreeSize -= Index;
+
+    /* Don't produce too small blocks */
+    if (FreeSize <= 2)
+    {
+        Index += FreeSize;
+        FreeSize = 0;
+    }
+
+    /* Process extra stuff */
+    if (RememberFlags & HEAP_ENTRY_EXTRA_PRESENT)
+    {
+        /* Calculate pointers */
+        OldExtra = (PHEAP_ENTRY_EXTRA)(InUseEntry + InUseEntry->Size - 1);
+        NewExtra = (PHEAP_ENTRY_EXTRA)(InUseEntry + Index - 1);
+
+        /* Copy contents */
+        *NewExtra = *OldExtra;
+
+        // FIXME Tagging
+    }
+
+    /* Update sizes */
+    InUseEntry->Size = Index;
+    InUseEntry->UnusedBytes = ((Index << HEAP_ENTRY_SHIFT) - Size);
+
+    /* Check if there is a free space remaining after merging those blocks */
+    if (!FreeSize)
+    {
+        /* Update flags and sizes */
+        InUseEntry->Flags |= RememberFlags & HEAP_ENTRY_LAST_ENTRY;
+
+        /* Either update previous size of the next entry or mark it as a last
+           entry in the segment*/
+        if (RememberFlags & HEAP_ENTRY_LAST_ENTRY)
+            Heap->Segments[InUseEntry->SegmentOffset]->LastEntryInSegment = InUseEntry;
+        else
+            (InUseEntry + InUseEntry->Size)->PreviousSize = InUseEntry->Size;
+    }
+    else
+    {
+        /* Complex case, we need to split the block to give unused free space
+           back to the heap */
+        UnusedEntry = (PHEAP_FREE_ENTRY)(InUseEntry + Index);
+        UnusedEntry->PreviousSize = Index;
+        UnusedEntry->SegmentOffset = InUseEntry->SegmentOffset;
+
+        /* Update the following block or set the last entry in the segment */
+        if (RememberFlags & HEAP_ENTRY_LAST_ENTRY)
+        {
+            /* Set last entry and set flags and size */
+            Heap->Segments[InUseEntry->SegmentOffset]->LastEntryInSegment = InUseEntry;
+            UnusedEntry->Flags = RememberFlags;
+            UnusedEntry->Size = FreeSize;
+
+            /* Insert it to the heap and update total size  */
+            RtlpInsertFreeBlockHelper(Heap, UnusedEntry, FreeSize, FALSE);
+            Heap->TotalFreeSize += FreeSize;
+        }
+        else
+        {
+            /* There is a block after this one  */
+            FollowingEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)UnusedEntry + FreeSize);
+
+            if (FollowingEntry->Flags & HEAP_ENTRY_BUSY)
+            {
+                /* Update flags and set size of the unused space entry */
+                UnusedEntry->Flags = RememberFlags & (~HEAP_ENTRY_LAST_ENTRY);
+                UnusedEntry->Size = FreeSize;
+
+                /* Update previous size of the following entry */
+                FollowingEntry->PreviousSize = FreeSize;
+
+                /* Insert it to the heap and update total free size */
+                RtlpInsertFreeBlockHelper(Heap, UnusedEntry, FreeSize, FALSE);
+                Heap->TotalFreeSize += FreeSize;
+            }
+            else
+            {
+                /* That following entry is also free, what a fortune! */
+                RememberFlags = FollowingEntry->Flags;
+
+                /* Remove it */
+                RtlpRemoveFreeBlock(Heap, FollowingEntry, FALSE, FALSE);
+                Heap->TotalFreeSize -= FollowingEntry->Size;
+
+                /* And make up a new combined block */
+                FreeSize += FollowingEntry->Size;
+                UnusedEntry->Flags = RememberFlags;
+
+                /* Check where to put it */
+                if (FreeSize <= HEAP_MAX_BLOCK_SIZE)
+                {
+                    /* Fine for a dedicated list */
+                    UnusedEntry->Size = FreeSize;
+
+                    if (RememberFlags & HEAP_ENTRY_LAST_ENTRY)
+                        Heap->Segments[UnusedEntry->SegmentOffset]->LastEntryInSegment = (PHEAP_ENTRY)UnusedEntry;
+                    else
+                        ((PHEAP_ENTRY)UnusedEntry + FreeSize)->PreviousSize = FreeSize;
+
+                    /* Insert it back and update total size */
+                    RtlpInsertFreeBlockHelper(Heap, UnusedEntry, FreeSize, FALSE);
+                    Heap->TotalFreeSize += FreeSize;
+                }
+                else
+                {
+                    /* The block is very large, leave all the hassle to the insertion routine */
+                    RtlpInsertFreeBlock(Heap, UnusedEntry, FreeSize);
+                }
+            }
+        }
+    }
+
+    /* Copy user settable flags */
+    InUseEntry->Flags &= ~HEAP_ENTRY_SETTABLE_FLAGS;
+    InUseEntry->Flags |= ((Flags & HEAP_SETTABLE_USER_FLAGS) >> 4);
+
+    /* Properly "zero out" (and fill!) the space */
+    if (Flags & HEAP_ZERO_MEMORY)
+    {
+        RtlZeroMemory((PCHAR)(InUseEntry + 1) + PrevSize, Size - PrevSize);
+    }
+    else if (Heap->Flags & HEAP_FREE_CHECKING_ENABLED)
+    {
+        /* Calculate tail part which we need to fill */
+        TailPart = PrevSize & (sizeof(ULONG) - 1);
+
+        /* "Invert" it as usual */
+        if (TailPart) TailPart = 4 - TailPart;
+
+        if (Size > (PrevSize + TailPart))
+            AddedSize = (Size - (PrevSize + TailPart)) & ~(sizeof(ULONG) - 1);
+
+        if (AddedSize)
+        {
+            RtlFillMemoryUlong((PCHAR)(InUseEntry + 1) + PrevSize + TailPart,
+                               AddedSize,
+                               ARENA_INUSE_FILLER);
+        }
+    }
+
+    /* Fill the new tail */
+    if (Heap->Flags & HEAP_TAIL_CHECKING_ENABLED)
+    {
+        RtlFillMemory((PCHAR)(InUseEntry + 1) + Size,
+                      HEAP_ENTRY_SIZE,
+                      HEAP_TAIL_FILL);
+    }
+
+    /* Return success */
+    return TRUE;
 }
 
 PHEAP_ENTRY_EXTRA NTAPI
@@ -3270,18 +3493,34 @@ RtlProtectHeap(IN PVOID HeapHandle,
     return NULL;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlSetHeapInformation(IN HANDLE HeapHandle OPTIONAL,
                       IN HEAP_INFORMATION_CLASS HeapInformationClass,
                       IN PVOID HeapInformation,
                       IN SIZE_T HeapInformationLength)
 {
-    UNIMPLEMENTED;
-    return 0;
+    /* Setting heap information is not really supported except for enabling LFH */
+    if (HeapInformationClass == 0) return STATUS_SUCCESS;
+
+    /* Check buffer length */
+    if (HeapInformationLength < sizeof(ULONG))
+    {
+        /* The provided buffer is too small */
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* Check for a special magic value for enabling LFH */
+    if (*(PULONG)HeapInformation == 2)
+    {
+        DPRINT1("RtlSetHeapInformation() needs to enable LFH\n");
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_UNSUCCESSFUL;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlQueryHeapInformation(HANDLE HeapHandle,
                         HEAP_INFORMATION_CLASS HeapInformationClass,
@@ -3289,11 +3528,29 @@ RtlQueryHeapInformation(HANDLE HeapHandle,
                         SIZE_T HeapInformationLength OPTIONAL,
                         PSIZE_T ReturnLength OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return 0;
+    PHEAP Heap = (PHEAP)HeapHandle;
+
+    /* Only HeapCompatibilityInformation is supported */
+    if (HeapInformationClass != HeapCompatibilityInformation)
+        return STATUS_UNSUCCESSFUL;
+
+    /* Set result length */
+    if (ReturnLength) *ReturnLength = sizeof(ULONG);
+
+    /* Check buffer length */
+    if (HeapInformationLength < sizeof(ULONG))
+    {
+        /* It's too small, return needed length */
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* Return front end heap type */
+    *(PULONG)HeapInformation = Heap->FrontEndHeapType;
+
+    return STATUS_SUCCESS;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlMultipleAllocateHeap(IN PVOID HeapHandle,
                         IN DWORD Flags,
@@ -3305,7 +3562,7 @@ RtlMultipleAllocateHeap(IN PVOID HeapHandle,
     return 0;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlMultipleFreeHeap(IN PVOID HeapHandle,
                     IN DWORD Flags,

@@ -708,6 +708,17 @@ RtlProtectHeap(
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlQueryHeapInformation (
+    IN PVOID HeapHandle,
+    IN HEAP_INFORMATION_CLASS HeapInformationClass,
+    OUT PVOID HeapInformation OPTIONAL,
+    IN SIZE_T HeapInformationLength OPTIONAL,
+    OUT PSIZE_T ReturnLength OPTIONAL
+    );
+
+NTSYSAPI
 PWSTR
 NTAPI
 RtlQueryTagHeap(
@@ -729,11 +740,42 @@ RtlReAllocateHeap(
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlSetHeapInformation (
+    IN PVOID HeapHandle,
+    IN HEAP_INFORMATION_CLASS HeapInformationClass,
+    IN PVOID HeapInformation OPTIONAL,
+    IN SIZE_T HeapInformationLength OPTIONAL
+    );
+
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlLockHeap(
     IN HANDLE Heap
 );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMultipleAllocateHeap (
+    IN PVOID HeapHandle,
+    IN DWORD Flags,
+    IN SIZE_T Size,
+    IN DWORD Count,
+    OUT PVOID * Array
+    );
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMultipleFreeHeap (
+    IN PVOID HeapHandle,
+    IN DWORD Flags,
+    IN DWORD Count,
+    OUT PVOID * Array
+    );
 
 NTSYSAPI
 NTSTATUS

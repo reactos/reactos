@@ -1934,7 +1934,7 @@ RtlProtectHeap(IN PVOID HeapHandle,
     return NULL;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlSetHeapInformation(IN HANDLE HeapHandle OPTIONAL,
                       IN HEAP_INFORMATION_CLASS HeapInformationClass,
@@ -1945,7 +1945,7 @@ RtlSetHeapInformation(IN HANDLE HeapHandle OPTIONAL,
     return 0;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlQueryHeapInformation(HANDLE HeapHandle,
                         HEAP_INFORMATION_CLASS HeapInformationClass,
@@ -1979,7 +1979,7 @@ RtlQueryHeapInformation(HANDLE HeapHandle,
     }
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlMultipleAllocateHeap(IN PVOID HeapHandle,
                         IN DWORD Flags,
@@ -1991,7 +1991,7 @@ RtlMultipleAllocateHeap(IN PVOID HeapHandle,
     return 0;
 }
 
-DWORD
+NTSTATUS
 NTAPI
 RtlMultipleFreeHeap(IN PVOID HeapHandle,
                     IN DWORD Flags,
