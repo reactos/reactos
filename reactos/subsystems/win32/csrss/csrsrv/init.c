@@ -38,7 +38,20 @@ InitializeVideoAddressSpace(VOID)
     LARGE_INTEGER Offset;
     SIZE_T ViewSize;
     CHAR IVTAndBda[1024+256];
-
+    
+    /* Free the 1MB pre-reserved region. In reality, ReactOS should simply support us mapping the view into the reserved area, but it doesn't. */
+    BaseAddress = 0;
+    ViewSize = 1024 * 1024;
+    Status = ZwFreeVirtualMemory(NtCurrentProcess(), 
+                                 &BaseAddress,
+                                 &ViewSize,
+                                 MEM_RELEASE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't unmap reserved memory (%x)\n", Status);
+        return 0;
+    }
+    
     /* Open the physical memory section */
     InitializeObjectAttributes(&ObjectAttributes,
                                &PhysMemName,
