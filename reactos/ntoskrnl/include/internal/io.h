@@ -741,6 +741,14 @@ IoInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+BOOLEAN
+NTAPI
+IopVerifyDiskSignature(
+    IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout,
+    IN PARC_DISK_SIGNATURE ArcDiskSignature,
+    OUT PULONG Signature
+);
+
 //
 // Device/Volume Routines
 //
@@ -1165,8 +1173,17 @@ IopStartRamdisk(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+//
 // Configuration Routines
 //
+NTSTATUS
+NTAPI
+IopFetchConfigurationInformation(OUT PWSTR * SymbolicLinkList,
+                                 IN GUID Guid,
+                                 IN ULONG ExpectedInterfaces,
+                                 IN PULONG Interfaces
+);
+
 VOID
 NTAPI
 IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,

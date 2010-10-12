@@ -651,6 +651,47 @@ IopQueryBusDescription(
    return Status;
 }
 
+NTSTATUS
+NTAPI
+IopFetchConfigurationInformation(OUT PWSTR * SymbolicLinkList,
+                                 IN GUID Guid,
+                                 IN ULONG ExpectedInterfaces,
+                                 IN PULONG Interfaces)
+{
+    NTSTATUS Status;
+    ULONG IntInterfaces = 0;
+    PWSTR IntSymbolicLinkList;
+
+    /* Get the associated enabled interfaces with the given GUID */
+    Status = IoGetDeviceInterfaces(&Guid, NULL, 0, SymbolicLinkList);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Zero output and leave */
+        if (SymbolicLinkList != 0)
+        {
+            *SymbolicLinkList = 0;
+        }
+
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    IntSymbolicLinkList = *SymbolicLinkList;
+
+    /* Count the number of enabled interfaces by counting the number of symbolic links */
+    while (*IntSymbolicLinkList != UNICODE_NULL)
+    {
+        IntInterfaces++;
+        IntSymbolicLinkList += wcslen(IntSymbolicLinkList) + (sizeof(UNICODE_NULL) / sizeof(WCHAR));
+    }
+
+    /* Matching result will define the result */
+    Status = (IntInterfaces >= ExpectedInterfaces) ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+    /* Finally, give back to the caller the number of found interfaces */
+    *Interfaces = IntInterfaces;
+
+    return Status;
+}
+
 VOID
 NTAPI
 IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceName,
