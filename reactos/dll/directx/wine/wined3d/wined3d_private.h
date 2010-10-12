@@ -2631,7 +2631,7 @@ const char *debug_d3dusagequery(DWORD usagequery) DECLSPEC_HIDDEN;
 const char *debug_d3ddeclmethod(WINED3DDECLMETHOD method) DECLSPEC_HIDDEN;
 const char *debug_d3ddeclusage(BYTE usage) DECLSPEC_HIDDEN;
 const char *debug_d3dprimitivetype(WINED3DPRIMITIVETYPE PrimitiveType) DECLSPEC_HIDDEN;
-const char *debug_d3drenderstate(DWORD state) DECLSPEC_HIDDEN;
+const char *debug_d3drenderstate(WINED3DRENDERSTATETYPE state) DECLSPEC_HIDDEN;
 const char *debug_d3dsamplerstate(DWORD state) DECLSPEC_HIDDEN;
 const char *debug_d3dstate(DWORD state) DECLSPEC_HIDDEN;
 const char *debug_d3dtexturefiltertype(WINED3DTEXTUREFILTERTYPE filter_type) DECLSPEC_HIDDEN;
