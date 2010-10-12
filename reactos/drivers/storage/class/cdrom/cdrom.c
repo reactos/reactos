@@ -955,7 +955,7 @@ Return Value:
     //
 
     deviceExtension->DiskGeometry =
-        ExAllocatePool(NonPagedPool, sizeof(DISK_GEOMETRY));
+        ExAllocatePool(NonPagedPool, sizeof(DISK_GEOMETRY_EX));
 
     if (deviceExtension->DiskGeometry == NULL) {
 
@@ -1006,7 +1006,7 @@ Return Value:
     //
 
     status = ScsiClassReadDriveCapacity(deviceObject);
-    bps = deviceExtension->DiskGeometry->BytesPerSector;
+    bps = deviceExtension->DiskGeometry->Geometry.BytesPerSector;
 
     if (!NT_SUCCESS(status) || !bps) {
 
@@ -1037,7 +1037,7 @@ Return Value:
 
         bps = 1 << lastBit;
     }
-    deviceExtension->DiskGeometry->BytesPerSector = bps;
+    deviceExtension->DiskGeometry->Geometry.BytesPerSector = bps;
     DebugPrint((2, "CreateCdRomDeviceObject: Calc'd bps = %x\n", bps));
 
     //
@@ -2828,12 +2828,12 @@ Return Value:
     startingOffset.QuadPart = currentIrpStack->Parameters.Read.ByteOffset.QuadPart +
                               transferByteCount;
 
-    if (!deviceExtension->DiskGeometry->BytesPerSector) {
-        deviceExtension->DiskGeometry->BytesPerSector = 2048;
+    if (!deviceExtension->DiskGeometry->Geometry.BytesPerSector) {
+        deviceExtension->DiskGeometry->Geometry.BytesPerSector = 2048;
     }
 
     if ((startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) ||
-        (transferByteCount & (deviceExtension->DiskGeometry->BytesPerSector - 1))) {
+        (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1))) {
 
         DebugPrint((1,"ScsiCdRomRead: Invalid I/O parameters\n"));
         DebugPrint((1, "\toffset %x:%x, Length %x:%x\n",
@@ -2841,7 +2841,7 @@ Return Value:
                     startingOffset.u.LowPart,
                     deviceExtension->PartitionLength.u.HighPart,
                     deviceExtension->PartitionLength.u.LowPart));
-        DebugPrint((1, "\tbps %x\n", deviceExtension->DiskGeometry->BytesPerSector));
+        DebugPrint((1, "\tbps %x\n", deviceExtension->DiskGeometry->Geometry.BytesPerSector));
 
         //
         // Fail request with status of invalid parameters.
@@ -3059,11 +3059,11 @@ CdRomDeviceControlCompletion(
 
                 bps = 1 << lastBit;
             }
-            deviceExtension->DiskGeometry->BytesPerSector = bps;
+            deviceExtension->DiskGeometry->Geometry.BytesPerSector = bps;
 
             DebugPrint((2,
                         "CdRomDeviceControlCompletion: Calculated bps %#x\n",
-                        deviceExtension->DiskGeometry->BytesPerSector));
+                        deviceExtension->DiskGeometry->Geometry.BytesPerSector));
 
             //
             // Copy last sector in reverse byte order.
@@ -3082,7 +3082,7 @@ CdRomDeviceControlCompletion(
             WHICH_BIT(bps, deviceExtension->SectorShift);
 
             DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Sector size is %d\n",
-                deviceExtension->DiskGeometry->BytesPerSector));
+                deviceExtension->DiskGeometry->Geometry.BytesPerSector));
 
             DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Number of Sectors is %d\n",
                 lastSector + 1));
@@ -3097,7 +3097,7 @@ CdRomDeviceControlCompletion(
             // Calculate number of cylinders.
             //
 
-            deviceExtension->DiskGeometry->Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
+            deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
 
             deviceExtension->PartitionLength.QuadPart =
                 (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
@@ -3108,7 +3108,7 @@ CdRomDeviceControlCompletion(
                 // This device supports removable media.
                 //
 
-                deviceExtension->DiskGeometry->MediaType = RemovableMedia;
+                deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
 
             } else {
 
@@ -3116,20 +3116,20 @@ CdRomDeviceControlCompletion(
                 // Assume media type is fixed disk.
                 //
 
-                deviceExtension->DiskGeometry->MediaType = FixedMedia;
+                deviceExtension->DiskGeometry->Geometry.MediaType = FixedMedia;
             }
 
             //
             // Assume sectors per track are 32;
             //
 
-            deviceExtension->DiskGeometry->SectorsPerTrack = 32;
+            deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = 32;
 
             //
             // Assume tracks per cylinder (number of heads) is 64.
             //
 
-            deviceExtension->DiskGeometry->TracksPerCylinder = 64;
+            deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = 64;
 
             //
             // Copy the device extension's geometry info into the user buffer.
@@ -6530,7 +6530,7 @@ Return Value:
         //
 
         from = (PFOUR_BYTE) &readCapacityBuffer->BytesPerBlock;
-        to = (PFOUR_BYTE) &deviceExtension->DiskGeometry->BytesPerSector;
+        to = (PFOUR_BYTE) &deviceExtension->DiskGeometry->Geometry.BytesPerSector;
         to->Byte0 = from->Byte3;
         to->Byte1 = from->Byte2;
         to->Byte2 = from->Byte1;
@@ -6540,7 +6540,7 @@ Return Value:
         // Using the new BytesPerBlock, calculate and store the SectorShift.
         //
 
-        WHICH_BIT(deviceExtension->DiskGeometry->BytesPerSector, deviceExtension->SectorShift);
+        WHICH_BIT(deviceExtension->DiskGeometry->Geometry.BytesPerSector, deviceExtension->SectorShift);
 
         //
         // Copy last sector in reverse byte order.
@@ -6558,22 +6558,22 @@ Return Value:
         // Calculate number of cylinders.
         //
 
-        deviceExtension->DiskGeometry->Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
+        deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
         deviceExtension->PartitionLength.QuadPart =
             (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
-        deviceExtension->DiskGeometry->MediaType = RemovableMedia;
+        deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
 
         //
         // Assume sectors per track are 32;
         //
 
-        deviceExtension->DiskGeometry->SectorsPerTrack = 32;
+        deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = 32;
 
         //
         // Assume tracks per cylinder (number of heads) is 64.
         //
 
-        deviceExtension->DiskGeometry->TracksPerCylinder = 64;
+        deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = 64;
 
     } else {
 
@@ -6660,11 +6660,11 @@ Return Value:
                 //
 
                 originalIrp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-                RtlZeroMemory(deviceExtension->DiskGeometry, sizeof(DISK_GEOMETRY));
-                deviceExtension->DiskGeometry->BytesPerSector = 2048;
+                RtlZeroMemory(deviceExtension->DiskGeometry, sizeof(DISK_GEOMETRY_EX));
+                deviceExtension->DiskGeometry->Geometry.BytesPerSector = 2048;
                 deviceExtension->SectorShift = 11;
                 deviceExtension->PartitionLength.QuadPart = (LONGLONG)(0x7fffffff);
-                deviceExtension->DiskGeometry->MediaType = RemovableMedia;
+                deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
             }
         } else {
 
@@ -6672,11 +6672,11 @@ Return Value:
             // Set up reasonable defaults
             //
 
-            RtlZeroMemory(deviceExtension->DiskGeometry, sizeof(DISK_GEOMETRY));
-            deviceExtension->DiskGeometry->BytesPerSector = 2048;
+            RtlZeroMemory(deviceExtension->DiskGeometry, sizeof(DISK_GEOMETRY_EX));
+            deviceExtension->DiskGeometry->Geometry.BytesPerSector = 2048;
             deviceExtension->SectorShift = 11;
             deviceExtension->PartitionLength.QuadPart = (LONGLONG)(0x7fffffff);
-            deviceExtension->DiskGeometry->MediaType = RemovableMedia;
+            deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
         }
     }
 
