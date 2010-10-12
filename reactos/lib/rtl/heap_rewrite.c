@@ -67,6 +67,20 @@ RtlpFindLeastSetBit(ULONG Bits)
     }
 }
 
+/* Maximum size of a tail-filling pattern used for compare operation */
+UCHAR FillPattern[HEAP_ENTRY_SIZE] =
+{
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL,
+    HEAP_TAIL_FILL
+};
+
+
 ULONG NTAPI
 RtlCompareMemoryUlong(PVOID Source, ULONG Length, ULONG Value);
 
@@ -3160,6 +3174,437 @@ RtlSizeHeap(
     return EntrySize;
 }
 
+BOOLEAN NTAPI
+RtlpCheckInUsePattern(PHEAP_ENTRY HeapEntry)
+{
+    SIZE_T Size, Result;
+    PCHAR TailPart;
+
+    /* Calculate size */
+    if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC)
+        Size = RtlpGetSizeOfBigBlock(HeapEntry);
+    else
+        Size = (HeapEntry->Size << HEAP_ENTRY_SHIFT) - HeapEntry->UnusedBytes;
+
+    /* Calculate pointer to the tail part of the block */
+    TailPart = (PCHAR)(HeapEntry + 1) + Size;
+
+    /* Compare tail pattern */
+    Result = RtlCompareMemory(TailPart,
+                              FillPattern,
+                              HEAP_ENTRY_SIZE);
+
+    if (Result != HEAP_ENTRY_SIZE)
+    {
+        DPRINT1("HEAP: Heap entry (size %x) %p tail is modified at %p\n", Size, HeapEntry, TailPart + Result);
+        return FALSE;
+    }
+
+    /* All is fine */
+    return TRUE;
+}
+
+BOOLEAN NTAPI
+RtlpValidateHeapHeaders(
+    PHEAP Heap,
+    BOOLEAN Recalculate)
+{
+    // We skip header validation for now
+    return TRUE;
+}
+
+BOOLEAN NTAPI
+RtlpValidateHeapEntry(
+    PHEAP Heap,
+    PHEAP_ENTRY HeapEntry)
+{
+    BOOLEAN BigAllocation, EntryFound = FALSE;
+    PHEAP_SEGMENT Segment;
+    ULONG SegmentOffset;
+
+    /* Perform various consistency checks of this entry */
+    if (!HeapEntry) goto invalid_entry;
+    if ((ULONG_PTR)HeapEntry & (HEAP_ENTRY_SIZE - 1)) goto invalid_entry;
+    if (!(HeapEntry->Flags & HEAP_ENTRY_BUSY)) goto invalid_entry;
+
+    BigAllocation = HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC;
+    Segment = Heap->Segments[HeapEntry->SegmentOffset];
+
+    if (BigAllocation &&
+        (((ULONG_PTR)HeapEntry & (PAGE_SIZE - 1)) != FIELD_OFFSET(HEAP_VIRTUAL_ALLOC_ENTRY, BusyBlock)))
+         goto invalid_entry;
+
+    if (!BigAllocation && (HeapEntry->SegmentOffset >= HEAP_SEGMENTS ||
+        !Segment ||
+        HeapEntry < Segment->FirstEntry ||
+        HeapEntry >= Segment->LastValidEntry))
+        goto invalid_entry;
+
+    if ((HeapEntry->Flags & HEAP_ENTRY_FILL_PATTERN) && 
+        !RtlpCheckInUsePattern(HeapEntry))
+        goto invalid_entry;
+
+    /* Checks are done, if this is a virtual entry, that's all */
+    if (HeapEntry->Flags & HEAP_ENTRY_VIRTUAL_ALLOC) return TRUE;
+
+    /* Go through segments and check if this entry fits into any of them */
+    for (SegmentOffset = 0; SegmentOffset < HEAP_SEGMENTS; SegmentOffset++)
+    {
+        Segment = Heap->Segments[SegmentOffset];
+        if (!Segment) continue;
+
+        if ((HeapEntry >= Segment->FirstEntry) &&
+            (HeapEntry < Segment->LastValidEntry))
+        {
+            /* Got it */
+            EntryFound = TRUE;
+            break;
+        }
+    }
+
+    /* Return our result of finding entry in the segments */
+    return EntryFound;
+
+invalid_entry:
+    DPRINT1("HEAP: Invalid heap entry %p in heap %p\n", HeapEntry, Heap);
+    return FALSE;
+}
+
+BOOLEAN NTAPI
+RtlpValidateHeapSegment(
+    PHEAP Heap,
+    PHEAP_SEGMENT Segment,
+    UCHAR SegmentOffset,
+    PULONG FreeEntriesCount,
+    PSIZE_T TotalFreeSize,
+    PSIZE_T TagEntries,
+    PSIZE_T PseudoTagEntries)
+{
+    PHEAP_UCR_DESCRIPTOR UcrDescriptor;
+    PLIST_ENTRY UcrEntry;
+    SIZE_T ByteSize, Size, Result;
+    PHEAP_ENTRY CurrentEntry;
+    ULONG UnCommittedPages;
+    ULONG UnCommittedRanges;
+    ULONG PreviousSize;
+
+    UnCommittedPages = 0;
+    UnCommittedRanges = 0;
+
+    if (IsListEmpty(&Segment->UCRSegmentList))
+    {
+        UcrEntry = NULL;
+        UcrDescriptor = NULL;
+    }
+    else
+    {
+        UcrEntry = Segment->UCRSegmentList.Flink;
+        UcrDescriptor = CONTAINING_RECORD(UcrEntry, HEAP_UCR_DESCRIPTOR, SegmentEntry);
+    }
+
+    if (Segment->BaseAddress == Heap)
+        CurrentEntry = &Heap->Entry;
+    else
+        CurrentEntry = &Segment->Entry;
+
+    while (CurrentEntry < Segment->LastValidEntry)
+    {
+        if (UcrDescriptor &&
+            ((PVOID)CurrentEntry >= UcrDescriptor->Address))
+        {
+            DPRINT1("HEAP: Entry %p is not inside uncommited range [%p .. %p)\n",
+                    CurrentEntry, UcrDescriptor->Address,
+                    (PCHAR)UcrDescriptor->Address + UcrDescriptor->Size);
+
+            return FALSE;
+        }
+
+        PreviousSize = 0;
+
+        while (CurrentEntry < Segment->LastValidEntry)
+        {
+            if (PreviousSize != CurrentEntry->PreviousSize)
+            {
+                DPRINT1("HEAP: Entry %p has incorrect PreviousSize %x instead of %x\n",
+                    CurrentEntry, CurrentEntry->PreviousSize, PreviousSize);
+
+                return FALSE;
+            }
+
+            PreviousSize = CurrentEntry->Size;
+            Size = CurrentEntry->Size << HEAP_ENTRY_SHIFT;
+
+            if (CurrentEntry->Flags & HEAP_ENTRY_BUSY)
+            {
+                if (TagEntries)
+                {
+                    UNIMPLEMENTED;
+                }
+
+                /* Check fill pattern */
+                if (CurrentEntry->Flags & HEAP_ENTRY_FILL_PATTERN)
+                {
+                    if (!RtlpCheckInUsePattern(CurrentEntry))
+                        return FALSE;
+                }
+            }
+            else
+            {
+                /* The entry is free, increase free entries count and total free size */
+                *FreeEntriesCount = *FreeEntriesCount + 1;
+                *TotalFreeSize += CurrentEntry->Size;
+
+                if ((Heap->Flags & HEAP_FREE_CHECKING_ENABLED) &&
+                    (CurrentEntry->Flags & HEAP_ENTRY_FILL_PATTERN))
+                {
+                    ByteSize = Size - sizeof(HEAP_FREE_ENTRY);
+
+                    if ((CurrentEntry->Flags & HEAP_ENTRY_EXTRA_PRESENT) &&
+                        (ByteSize > sizeof(HEAP_FREE_ENTRY_EXTRA)))
+                    {
+                        ByteSize -= sizeof(HEAP_FREE_ENTRY_EXTRA);
+                    }
+
+                    Result = RtlCompareMemoryUlong((PCHAR)((PHEAP_FREE_ENTRY)CurrentEntry + 1),
+                                                    ByteSize,
+                                                    ARENA_FREE_FILLER);
+
+                    if (Result != ByteSize)
+                    {
+                        DPRINT1("HEAP: Free heap block %p modified at %p after it was freed\n",
+                            CurrentEntry,
+                            (PCHAR)(CurrentEntry + 1) + Result);
+
+                        return FALSE;
+                    }
+                }
+            }
+
+            if (CurrentEntry->SegmentOffset != SegmentOffset)
+            {
+                DPRINT1("HEAP: Heap entry %p SegmentOffset is incorrect %x (should be %x)\n", CurrentEntry, SegmentOffset, CurrentEntry->SegmentOffset);
+                return FALSE;
+            }
+
+            /* Check if it's the last entry */
+            if (CurrentEntry->Flags & HEAP_ENTRY_LAST_ENTRY)
+            {
+                CurrentEntry = (PHEAP_ENTRY)((PCHAR)CurrentEntry + Size);
+
+                if (!UcrDescriptor)
+                {
+                    /* Check if it's not really the last one */
+                    if (CurrentEntry != Segment->LastValidEntry)
+                    {
+                        DPRINT1("HEAP: Heap entry %p is not last block in segment (%x)\n", CurrentEntry, Segment->LastValidEntry);
+                        return FALSE;
+                    }
+                }
+                else if (CurrentEntry != UcrDescriptor->Address)
+                {
+                    DPRINT1("HEAP: Heap entry %p does not match next uncommitted address (%p)\n",
+                        CurrentEntry, UcrDescriptor->Address);
+
+                    return FALSE;
+                }
+                else
+                {
+                    UnCommittedPages += (UcrDescriptor->Size / PAGE_SIZE);
+                    UnCommittedRanges++;
+
+                    CurrentEntry = (PHEAP_ENTRY)((PCHAR)UcrDescriptor->Address + UcrDescriptor->Size);
+
+                    /* Go to the next UCR descriptor */
+                    UcrEntry = UcrEntry->Flink;
+                    if (UcrEntry == &Segment->UCRSegmentList)
+                    {
+                        UcrEntry = NULL;
+                        UcrDescriptor = NULL;
+                    }
+                    else
+                    {
+                        UcrDescriptor = CONTAINING_RECORD(UcrEntry, HEAP_UCR_DESCRIPTOR, SegmentEntry);
+                    }
+                }
+
+                break;
+            }
+
+            /* Advance to the next entry */
+            CurrentEntry = (PHEAP_ENTRY)((PCHAR)CurrentEntry + Size);
+        }
+    }
+
+    /* Check total numbers of UCP and UCR */
+    if (Segment->NumberOfUnCommittedPages != UnCommittedPages)
+    {
+        DPRINT1("HEAP: Segment %p NumberOfUnCommittedPages is invalid (%x != %x)\n",
+            Segment, Segment->NumberOfUnCommittedPages, UnCommittedPages);
+
+        return FALSE;
+    }
+
+    if (Segment->NumberOfUnCommittedRanges != UnCommittedRanges)
+    {
+        DPRINT1("HEAP: Segment %p NumberOfUnCommittedRanges is invalid (%x != %x)\n",
+            Segment, Segment->NumberOfUnCommittedRanges, UnCommittedRanges);
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+BOOLEAN NTAPI
+RtlpValidateHeap(PHEAP Heap,
+                 BOOLEAN ForceValidation)
+{
+    PHEAP_SEGMENT Segment;
+    BOOLEAN EmptyList;
+    UCHAR SegmentOffset;
+    SIZE_T Size, TotalFreeSize;
+    ULONG PreviousSize;
+    PHEAP_VIRTUAL_ALLOC_ENTRY VirtualAllocBlock;
+    PLIST_ENTRY ListHead, NextEntry;
+    PHEAP_FREE_ENTRY FreeEntry;
+    ULONG FreeBlocksCount, FreeListEntriesCount;
+
+    /* Check headers */
+    if (!RtlpValidateHeapHeaders(Heap, FALSE))
+        return FALSE;
+
+    /* Skip validation if it's not needed */
+    if (!ForceValidation && !(Heap->Flags & HEAP_VALIDATE_ALL_ENABLED))
+        return TRUE;
+
+    /* Check free lists bitmaps */
+    FreeListEntriesCount = 0;
+    ListHead = &Heap->FreeLists[0];
+
+    for (Size = 0; Size < HEAP_FREELISTS; Size++)
+    {
+        if (Size)
+        {
+            /* This is a dedicated list. Check if it's empty */
+            EmptyList = IsListEmpty(ListHead);
+
+            if (Heap->u.FreeListsInUseBytes[Size >> 3] & (1 << (Size & 7)))
+            {
+                if (EmptyList)
+                {
+                    DPRINT1("HEAP: Empty %x-free list marked as non-empty\n", Size);
+                    return FALSE;
+                }
+            }
+            else
+            {
+                if (!EmptyList)
+                {
+                    DPRINT1("HEAP: Non-empty %x-free list marked as empty\n", Size);
+                    return FALSE;
+                }
+            }
+        }
+
+        /* Now check this list entries */
+        NextEntry = ListHead->Flink;
+        PreviousSize = 0;
+
+        while (ListHead != NextEntry)
+        {
+            FreeEntry = CONTAINING_RECORD(NextEntry, HEAP_FREE_ENTRY, FreeList);
+            NextEntry = NextEntry->Flink;
+
+            /* If there is an in-use entry in a free list - that's quite a big problem */
+            if (FreeEntry->Flags & HEAP_ENTRY_BUSY)
+            {
+                DPRINT1("HEAP: %x-dedicated list free element %x is marked in-use\n", Size, FreeEntry);
+                return FALSE;
+            }
+
+            /* Check sizes according to that specific list's size */
+            if ((Size == 0) && (FreeEntry->Size < HEAP_FREELISTS))
+            {
+                DPRINT1("HEAP: Non dedicated list free element %x has size %x which would fit a dedicated list\n", FreeEntry, FreeEntry->Size);
+                return FALSE;
+            }
+            else if (Size && (FreeEntry->Size != Size))
+            {
+                DPRINT1("HEAP: %x-dedicated list free element %x has incorrect size %x\n", Size, FreeEntry, FreeEntry->Size);
+                return FALSE;
+            }
+            else if ((Size == 0) && (FreeEntry->Size < PreviousSize))
+            {
+                DPRINT1("HEAP: Non dedicated list free element %x is not put in order\n", FreeEntry);
+                return FALSE;
+            }
+
+            /* Remember previous size*/
+            PreviousSize = FreeEntry->Size;
+
+            /* Add up to the total amount of free entries */
+            FreeListEntriesCount++;
+        }
+
+        /* Go to the head of the next free list */
+        ListHead++;
+    }
+
+    /* Check big allocations */
+    ListHead = &Heap->VirtualAllocdBlocks;
+    NextEntry = ListHead->Flink;
+
+    while (ListHead != NextEntry)
+    {
+        VirtualAllocBlock = CONTAINING_RECORD(NextEntry, HEAP_VIRTUAL_ALLOC_ENTRY, Entry);
+
+        /* We can only check the fill pattern */
+        if (VirtualAllocBlock->BusyBlock.Flags & HEAP_ENTRY_FILL_PATTERN)
+        {
+            if (!RtlpCheckInUsePattern(&VirtualAllocBlock->BusyBlock))
+                return FALSE;
+        }
+
+        NextEntry = NextEntry->Flink;
+    }
+
+    /* Check all segments */
+    FreeBlocksCount = 0;
+    TotalFreeSize = 0;
+
+    for (SegmentOffset = 0; SegmentOffset < HEAP_SEGMENTS; SegmentOffset++)
+    {
+        Segment = Heap->Segments[SegmentOffset];
+
+        /* Go to the next one if there is no segment */
+        if (!Segment) continue;
+
+        if (!RtlpValidateHeapSegment(Heap,
+                                     Segment,
+                                     SegmentOffset,
+                                     &FreeBlocksCount,
+                                     &TotalFreeSize,
+                                     NULL,
+                                     NULL))
+        {
+            return FALSE;
+        }
+    }
+
+    if (FreeListEntriesCount != FreeBlocksCount)
+    {
+        DPRINT1("HEAP: Free blocks count in arena (%d) does not match free blocks number in the free lists (%d)\n", FreeBlocksCount, FreeListEntriesCount);
+        return FALSE;
+    }
+
+    if (Heap->TotalFreeSize != TotalFreeSize)
+    {
+        DPRINT1("HEAP: Total size of free blocks in arena (%d) does not equal to the one in heap header (%d)\n", TotalFreeSize, Heap->TotalFreeSize);
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /***********************************************************************
  *           RtlValidateHeap
@@ -3180,15 +3625,47 @@ RtlSizeHeap(
  * @implemented
  */
 BOOLEAN NTAPI RtlValidateHeap(
-   HANDLE Heap,
+   HANDLE HeapPtr,
    ULONG Flags,
    PVOID Block
 )
 {
-    UNIMPLEMENTED;
+    PHEAP Heap = (PHEAP)HeapPtr;
+    BOOLEAN HeapLocked = FALSE;
+    BOOLEAN HeapValid;
 
-    /* Imitate success */
-    return TRUE;
+    // FIXME Check for special heap
+
+    /* Check signature */
+    if (Heap->Signature != HEAP_SIGNATURE)
+    {
+        DPRINT1("HEAP: Signature %x is invalid for heap %p\n", Heap->Signature, Heap);
+        return FALSE;
+    }
+
+    /* Force flags */
+    Flags = Heap->ForceFlags;
+
+    /* Acquire the lock if necessary */
+    if (!(Flags & HEAP_NO_SERIALIZE))
+    {
+        RtlEnterHeapLock(Heap->LockVariable);
+        HeapLocked = TRUE;
+    }
+
+    /* Either validate whole heap or just one entry */
+    if (!Block)
+        HeapValid = RtlpValidateHeap(Heap, TRUE);
+    else
+        HeapValid = RtlpValidateHeapEntry(Heap, (PHEAP_ENTRY)Block - 1);
+
+    /* Unlock if it's lockable */
+    if (HeapLocked)
+    {
+        RtlLeaveHeapLock(Heap->LockVariable);
+    }
+
+    return HeapValid;
 }
 
 VOID
