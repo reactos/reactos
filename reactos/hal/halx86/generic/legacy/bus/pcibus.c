@@ -753,7 +753,9 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
     }
 
     /* Interrupt resource */
-    if (0 != PciConfig.u.type0.InterruptLine)
+    if (0 != PciConfig.u.type0.InterruptPin &&
+        0 != PciConfig.u.type0.InterruptLine &&
+        0xFF != PciConfig.u.type0.InterruptLine)
         ResourceCount++;
 
     /* Allocate output buffer and initialize */
@@ -806,7 +808,9 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         }
     }
 
-    if (0 != PciConfig.u.type0.InterruptLine)
+    if (0 != PciConfig.u.type0.InterruptPin &&
+        0 != PciConfig.u.type0.InterruptLine &&
+        0xFF != PciConfig.u.type0.InterruptLine)
     {
         Descriptor->Type = CmResourceTypeInterrupt;
         Descriptor->ShareDisposition = CmResourceShareShared;          /* FIXME Just a guess */
