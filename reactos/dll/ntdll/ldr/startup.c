@@ -489,7 +489,7 @@ LdrpInit2(PCONTEXT Context,
     /* add entry for executable (becomes first list entry) */
     ExeModule = (PLDR_DATA_TABLE_ENTRY)
                  RtlAllocateHeap(Peb->ProcessHeap,
-                                 0,
+                                 HEAP_ZERO_MEMORY,
                                  sizeof(LDR_DATA_TABLE_ENTRY));
     if (ExeModule == NULL)
     {
