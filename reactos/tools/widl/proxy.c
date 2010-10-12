@@ -280,7 +280,7 @@ static void gen_proxy(type_t *iface, const var_t *func, int idx,
   int has_ret = !is_void(type_function_get_rettype(func->type));
   int has_full_pointer = is_full_pointer_function(func);
   const char *callconv = get_attrp(func->type->attrs, ATTR_CALLCONV);
-  if (!callconv) callconv = "";
+  if (!callconv) callconv = "STDMETHODCALLTYPE";
 
   indent = 0;
   print_proxy( "static void __finally_%s_%s_Proxy( struct __proxy_frame *__frame )\n",

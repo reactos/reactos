@@ -34,7 +34,6 @@ extern int is_declptr(const type_t *t);
 extern const char* get_name(const var_t *v);
 extern void write_type_left(FILE *h, type_t *t, int declonly);
 extern void write_type_right(FILE *h, type_t *t, int is_field);
-extern void write_type_def_or_decl(FILE *h, type_t *t, int is_field, const char *name);
 extern void write_type_decl(FILE *f, type_t *t, const char *name);
 extern void write_type_decl_left(FILE *f, type_t *t);
 extern int needs_space_after(type_t *t);

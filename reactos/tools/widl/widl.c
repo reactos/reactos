@@ -694,6 +694,7 @@ int main(int argc,char *argv[])
   if (do_server) server_token = dup_basename_token(server_name,"_s.c");
 
   add_widl_version_define();
+  wpp_add_define("_WIN32", NULL);
 
   atexit(rm_tempfile);
   if (!no_preprocess)

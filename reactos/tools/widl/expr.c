@@ -513,27 +513,22 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
     case EXPR_HEXNUM:
     case EXPR_NUM:
     case EXPR_TRUEFALSE:
-        result.is_variable = FALSE;
         result.is_temporary = FALSE;
         result.type = type_new_int(TYPE_BASIC_INT, 0);
         break;
     case EXPR_STRLIT:
-        result.is_variable = FALSE;
         result.is_temporary = TRUE;
         result.type = type_new_pointer(RPC_FC_UP, type_new_int(TYPE_BASIC_CHAR, 0), NULL);
         break;
     case EXPR_WSTRLIT:
-        result.is_variable = FALSE;
         result.is_temporary = TRUE;
         result.type = type_new_pointer(RPC_FC_UP, type_new_int(TYPE_BASIC_WCHAR, 0), NULL);
         break;
     case EXPR_CHARCONST:
-        result.is_variable = FALSE;
         result.is_temporary = TRUE;
         result.type = type_new_int(TYPE_BASIC_CHAR, 0);
         break;
     case EXPR_DOUBLE:
-        result.is_variable = FALSE;
         result.is_temporary = TRUE;
         result.type = type_new_basic(TYPE_BASIC_DOUBLE);
         break;
@@ -596,7 +591,6 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         result.type = e->u.tref;
         break;
     case EXPR_SIZEOF:
-        result.is_variable = FALSE;
         result.is_temporary = FALSE;
         result.type = type_new_int(TYPE_BASIC_INT, 0);
         break;
@@ -634,7 +628,6 @@ static struct expression_type resolve_expression(const struct expr_loc *expr_loc
         result_right = resolve_expression(expr_loc, cont_type, e->u.ext);
         check_scalar_type(expr_loc, cont_type, result_left.type);
         check_scalar_type(expr_loc, cont_type, result_right.type);
-        result.is_variable = FALSE;
         result.is_temporary = FALSE;
         result.type = type_new_int(TYPE_BASIC_INT, 0);
         break;
