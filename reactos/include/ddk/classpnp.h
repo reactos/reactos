@@ -944,7 +944,6 @@ ClassMarkChildMissing(
 
 SCSIPORTAPI
 VOID
-NTAPI
 ClassDebugPrint(
   CLASS_DEBUG_LEVEL DebugPrintLevel,
   PCCHAR DebugMessage,
