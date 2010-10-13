@@ -142,6 +142,6 @@ BEGIN
 	IDS_CPLNAME "控制台"
 	IDS_CPLDESCRIPTION "配置控制台属性。"
 	IDS_APPLY_SHORTCUT_ALL "修改启动此窗口的快捷方式(&S)"
-	IDS_SCREEN_TEXT "C:\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
+	IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
 	IDS_RASTERFONTS "Raster 字体"
 END
