@@ -145,6 +145,6 @@ BEGIN
   IDS_CPLNAME "Konsol"
   IDS_CPLDESCRIPTION "Konfigurasi properti konsol."
   IDS_APPLY_SHORTCUT_ALL "Modifikasi &jalan pintas yang memulai jendela ini"
-  IDS_SCREEN_TEXT "C:\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
+  IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
   IDS_RASTERFONTS "Font Raster"
 END

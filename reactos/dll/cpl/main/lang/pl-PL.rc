@@ -168,7 +168,7 @@ BEGIN
   IDS_HAND "Wybór ³¹cza"
   IDS_NONE "(brak)"
   IDS_SYSTEM_SCHEME "(schemat systemu)"
-  IDS_BROWSE_FILTER "Kursory (*.ani, *.cur)\0*.ani;*.cur\Animowane kusory (*.ani)\0*.ani\0Kursory statyczne (*.cur)\0*.cur\0Wszystkie pliki\0*.*\0\0"
+  IDS_BROWSE_FILTER "Kursory (*.ani, *.cur)\0*.ani;*.cur\0Animowane kusory (*.ani)\0*.ani\0Kursory statyczne (*.cur)\0*.cur\0Wszystkie pliki\0*.*\0\0"
   IDS_BROWSE_TITLE "Przegl¹daj"
   IDS_REMOVE_TITLE "PotwierdŸ usuniêcie schematu"
   IDS_REMOVE_TEXT "Czy na pewno chcesz usun¹æ schemat kursorów '%s'?"

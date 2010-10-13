@@ -138,6 +138,6 @@ BEGIN
 	IDS_CPLNAME "Командная строка"
 	IDS_CPLDESCRIPTION "Настройка командной строки."
 	IDS_APPLY_SHORTCUT_ALL "&Изменить ярлык, которым было запущено это окно"
-	IDS_SCREEN_TEXT "C:\ReactOS> dir\nSYSTEM          <DIR>     10-01-07     5:00\nSYSTEM32      <DIR>     10-01-07     5:00"
+	IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-07     5:00\nSYSTEM32      <DIR>     10-01-07     5:00"
 	IDS_RASTERFONTS "Растровые шрифты"
 END
