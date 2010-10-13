@@ -222,7 +222,7 @@ AuthzInitializeContextFromToken(IN DWORD Flags,
 
 AUTHZAPI
 BOOL
-WINAPI
+WINAPIV
 AuthzInitializeObjectAccessAuditEvent(IN DWORD Flags,
                                       IN AUTHZ_AUDIT_EVENT_TYPE_HANDLE hAuditEventType,
                                       IN PWSTR szOperationType,
@@ -234,7 +234,7 @@ AuthzInitializeObjectAccessAuditEvent(IN DWORD Flags,
 
 AUTHZAPI
 BOOL
-WINAPI
+WINAPIV
 AuthzInitializeObjectAccessAuditEvent2(IN DWORD Flags,
                                        IN AUTHZ_AUDIT_EVENT_TYPE_HANDLE hAuditEventType,
                                        IN PWSTR szOperationType,
@@ -282,7 +282,7 @@ AuthzRegisterSecurityEventSource(IN DWORD dwFlags,
 
 AUTHZAPI
 BOOL
-WINAPI
+WINAPIV
 AuthzReportSecurityEvent(IN DWORD dwFlags,
                          IN AUTHZ_SECURITY_EVENT_PROVIDER_HANDLE hEventProvider,
                          IN DWORD dwAuditId,
