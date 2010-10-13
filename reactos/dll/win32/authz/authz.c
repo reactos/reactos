@@ -178,7 +178,8 @@ AuthzInitializeObjectAccessAuditEvent(IN DWORD Flags,
                                       IN PWSTR szObjectName,
                                       IN PWSTR szAdditionalInfo,
                                       OUT PAUTHZ_AUDIT_EVENT_HANDLE phAuditEvent,
-                                      IN DWORD dwAdditionalParamCount)
+                                      IN DWORD dwAdditionalParamCount,
+                                      ...)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -199,7 +200,8 @@ AuthzInitializeObjectAccessAuditEvent2(IN DWORD Flags,
                                        IN PWSTR szAdditionalInfo,
                                        IN PWSTR szAdditionalInfo2,
                                        OUT PAUTHZ_AUDIT_EVENT_HANDLE phAuditEvent,
-                                       IN DWORD dwAdditionalParameterCount)
+                                       IN DWORD dwAdditionalParameterCount,
+                                       ...)
 {
     UNIMPLEMENTED;
     return FALSE;
