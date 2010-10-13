@@ -29,4 +29,4 @@ add_importlibs(amstream
     kernel32
     ntdll)
 
-add_dependencies(amstream amstream_def)
+add_dependencies(amstream amstream_def dxsdk)

@@ -25,4 +25,4 @@ add_importlibs(msdmo
     kernel32
     ntdll)
 
-add_dependencies(msdmo msdmo_def psdk buildno_header)
+add_dependencies(msdmo msdmo_def dxdsk psdk buildno_header)
