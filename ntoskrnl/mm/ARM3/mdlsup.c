@@ -444,10 +444,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
         return Base;
     }
     
-    //
-    // In user-mode, let ReactOS do it
-    //
-    return MiMapLockedPagesInUserSpace(Mdl, Base, CacheType, BaseAddress);
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /*
@@ -557,10 +555,7 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
     }
     else
     {
-        //
-        // Let ReactOS handle it
-        //
-        MiUnmapLockedPagesInUserSpace(BaseAddress, Mdl);
+        UNIMPLEMENTED;
     }
 }
 

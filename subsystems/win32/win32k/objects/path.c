@@ -1062,14 +1062,17 @@ PATH_PathToRegion ( PPATH pPath, INT nPolyFillMode, HRGN *pHrgn )
 
   PATH_FlattenPath ( pPath );
 
-  /* FIXME: What happens when number of points is zero? */
-
   /* First pass: Find out how many strokes there are in the path */
   /* FIXME: We could eliminate this with some bookkeeping in GdiPath */
   numStrokes=0;
   for(i=0; i<pPath->numEntriesUsed; i++)
     if((pPath->pFlags[i] & ~PT_CLOSEFIGURE) == PT_MOVETO)
       numStrokes++;
+
+  if(numStrokes == 0)
+  {
+      return FALSE;
+  }
 
   /* Allocate memory for number-of-points-in-stroke array */
   pNumPointsInStroke = ExAllocatePoolWithTag(PagedPool, sizeof(ULONG) * numStrokes, TAG_PATH);

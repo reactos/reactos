@@ -43,21 +43,21 @@ typedef struct tagSBTRACK
     PSBCALC  pSBCalc;
 } SBTRACK, *PSBTRACK;
 
-
+/*
 typedef struct _SBINFOEX
 {
   SCROLLBARINFO ScrollBarInfo;
   SCROLLINFO ScrollInfo;
 } SBINFOEX, *PSBINFOEX;
-
+*/
 #define IntGetScrollbarInfoFromWindow(Window, i) \
-  ((PSCROLLBARINFO)(&((Window)->pSBInfo + i)->ScrollBarInfo))
+  ((PSCROLLBARINFO)(&((Window)->pSBInfoex + i)->ScrollBarInfo))
 
 #define IntGetScrollInfoFromWindow(Window, i) \
-  ((LPSCROLLINFO)(&((Window)->pSBInfo + i)->ScrollInfo))
+  ((LPSCROLLINFO)(&((Window)->pSBInfoex + i)->ScrollInfo))
 
 #define SBOBJ_TO_SBID(Obj)	((Obj) - OBJID_HSCROLL)
 #define SBID_IS_VALID(id)	(id == SB_HORZ || id == SB_VERT || id == SB_CTL)
 
-BOOL FASTCALL co_IntCreateScrollBars(PWINDOW_OBJECT Window);
-BOOL FASTCALL IntDestroyScrollBars(PWINDOW_OBJECT Window);
+BOOL FASTCALL co_IntCreateScrollBars(PWND Window);
+BOOL FASTCALL IntDestroyScrollBars(PWND Window);

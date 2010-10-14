@@ -8,8 +8,8 @@
    This file is part of bzip2/libbzip2, a program and library for
    lossless, block-sorting data compression.
 
-   bzip2/libbzip2 version 1.0.5 of 10 December 2007
-   Copyright (C) 1996-2007 Julian Seward <jseward@bzip.org>
+   bzip2/libbzip2 version 1.0.6 of 6 September 2010
+   Copyright (C) 1996-2010 Julian Seward <jseward@bzip.org>
 
    Please read the WARNING, DISCLAIMER and PATENTS sections in the 
    README file.
@@ -381,6 +381,13 @@ Int32 BZ2_decompress ( DState* s )
             es = -1;
             N = 1;
             do {
+               /* Check that N doesn't get too big, so that es doesn't
+                  go negative.  The maximum value that can be
+                  RUNA/RUNB encoded is equal to the block size (post
+                  the initial RLE), viz, 900k, so bounding N at 2
+                  million should guard against overflow without
+                  rejecting any legitimate inputs. */
+               if (N >= 2*1024*1024) RETURN(BZ_DATA_ERROR);
                if (nextSym == BZ_RUNA) es = es + (0+1) * N; else
                if (nextSym == BZ_RUNB) es = es + (1+1) * N;
                N = N * 2;
@@ -485,12 +492,25 @@ Int32 BZ2_decompress ( DState* s )
          RETURN(BZ_DATA_ERROR);
 
       /*-- Set up cftab to facilitate generation of T^(-1) --*/
+      /* Check: unzftab entries in range. */
+      for (i = 0; i <= 255; i++) {
+         if (s->unzftab[i] < 0 || s->unzftab[i] > nblock)
+            RETURN(BZ_DATA_ERROR);
+      }
+      /* Actually generate cftab. */
       s->cftab[0] = 0;
       for (i = 1; i <= 256; i++) s->cftab[i] = s->unzftab[i-1];
       for (i = 1; i <= 256; i++) s->cftab[i] += s->cftab[i-1];
+      /* Check: cftab entries in range. */
       for (i = 0; i <= 256; i++) {
          if (s->cftab[i] < 0 || s->cftab[i] > nblock) {
             /* s->cftab[i] can legitimately be == nblock */
+            RETURN(BZ_DATA_ERROR);
+         }
+      }
+      /* Check: cftab entries non-descending. */
+      for (i = 1; i <= 256; i++) {
+         if (s->cftab[i-1] > s->cftab[i]) {
             RETURN(BZ_DATA_ERROR);
          }
       }

@@ -3,6 +3,7 @@
 <module name="usbhub" type="kernelmodedriver" installbase="system32/drivers" installname="usbhub.sys">
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<library>usbd</library>
 	<file>createclose.c</file>
 	<file>fdo.c</file>
 	<file>misc.c</file>

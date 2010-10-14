@@ -8,7 +8,7 @@ Description = Panzer General Clone using SDL libs.
 Size = 2.0MB
 Category = 4
 URLSite = http://lgames.sourceforge.net/index.php?project=LGeneral
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lgeneral-1.1-win32.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/lgames/binaries/lgeneral-1.1-win32.exe
 CDPath = none
 
 [Section.0407]

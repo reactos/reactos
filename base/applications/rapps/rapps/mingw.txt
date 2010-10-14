@@ -2,13 +2,13 @@
 
 [Section]
 Name = MinGW
-Version = 5.1.6
+Version = 20100909
 Licence = Public domain/GPL
 Description = A Port of the GNU toolchain with GCC, GDB, GNU make, etc.
-Size = 155kb
+Size = 568kb
 Category = 7
 URLSite = http://mingw.org/
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.6.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/mingw/Automated%20MinGW%20Installer/mingw-get-inst/mingw-get-inst-20100909/mingw-get-inst-20100909.exe
 CDPath = none
 
 [Section.0407]

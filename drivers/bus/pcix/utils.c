@@ -369,15 +369,15 @@ PciFindParentPciFdoExtension(IN PDEVICE_OBJECT DeviceObject,
 
         /* Scan all children PDO, stop when no more PDOs, or found it */
         for (FoundExtension = DeviceExtension->ChildPdoList;
-             FoundExtension && (FoundExtension != SearchExtension);
+             ((FoundExtension) && (FoundExtension != SearchExtension));
              FoundExtension = FoundExtension->Next);
-
-        /* If we found it, break out */
-        if (FoundExtension) break;
 
         /* Release this device's lock */
         KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
         KeLeaveCriticalRegion();
+
+        /* If we found it, break out */
+        if (FoundExtension) break;
 
         /* Move to the next device */
         DeviceExtension = (PPCI_FDO_EXTENSION)DeviceExtension->List.Next;
@@ -611,6 +611,9 @@ PciGetHackFlags(IN USHORT VendorId,
     ULONGLONG HackFlags;
     ULONG LastWeight, MatchWeight;
     ULONG EntryFlags;
+    
+    /* ReactOS SetupLDR Hack */
+    if (!PciHackTable) return 0;
 
     /* Initialize the variables before looping */
     LastWeight = 0;

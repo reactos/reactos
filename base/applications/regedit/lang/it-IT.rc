@@ -167,12 +167,12 @@ BEGIN
   END
   POPUP ""
   BEGIN
-        MENUITEM "C&ut", ID_HEXEDIT_CUT
-        MENUITEM "&Copy", ID_HEXEDIT_COPY
-        MENUITEM "&Paste", ID_HEXEDIT_PASTE
-        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM "&Copia", ID_HEXEDIT_COPY
+        MENUITEM "&Incolla", ID_HEXEDIT_PASTE
+        MENUITEM "&Taglia", ID_HEXEDIT_CUT
+        MENUITEM "&Cancella", ID_HEXEDIT_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+        MENUITEM "&Seleziona tutto", ID_HEXEDIT_SELECT_ALL
   END
 END
 

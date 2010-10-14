@@ -26,7 +26,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d9);
 
 typedef struct _D3DDECLTYPE_INFO {
     D3DDECLTYPE d3dType;
-    WINED3DFORMAT format;
+    enum wined3d_format_id format;
     int         size;
     int         typesize;
 } D3DDECLTYPE_INFO;
@@ -395,9 +395,8 @@ HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration9Impl *declaration,
     declaration->element_count = element_count;
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, &declaration->wineD3DVertexDeclaration,
-            (IUnknown *)declaration, &d3d9_vertexdeclaration_wined3d_parent_ops,
-            wined3d_elements, wined3d_element_count);
+    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, wined3d_elements, wined3d_element_count,
+            declaration, &d3d9_vertexdeclaration_wined3d_parent_ops, &declaration->wineD3DVertexDeclaration);
     wined3d_mutex_unlock();
     HeapFree(GetProcessHeap(), 0, wined3d_elements);
     if (FAILED(hr))
@@ -411,45 +410,4 @@ HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration9Impl *declaration,
     IDirect3DDevice9Ex_AddRef(declaration->parentDevice);
 
     return D3D_OK;
-}
-
-HRESULT  WINAPI  IDirect3DDevice9Impl_SetVertexDeclaration(LPDIRECT3DDEVICE9EX iface, IDirect3DVertexDeclaration9* pDecl) {
-    IDirect3DDevice9Impl *This = (IDirect3DDevice9Impl *)iface;
-    IDirect3DVertexDeclaration9Impl *pDeclImpl = (IDirect3DVertexDeclaration9Impl *)pDecl;
-    HRESULT hr = D3D_OK;
-
-    TRACE("iface %p, vertex declaration %p.\n", iface, pDecl);
-
-    wined3d_mutex_lock();
-    hr = IWineD3DDevice_SetVertexDeclaration(This->WineD3DDevice, pDeclImpl == NULL ? NULL : pDeclImpl->wineD3DVertexDeclaration);
-    wined3d_mutex_unlock();
-
-    return hr;
-}
-
-HRESULT  WINAPI  IDirect3DDevice9Impl_GetVertexDeclaration(LPDIRECT3DDEVICE9EX iface, IDirect3DVertexDeclaration9** ppDecl) {
-    IDirect3DDevice9Impl* This = (IDirect3DDevice9Impl*) iface;
-    IWineD3DVertexDeclaration* pTest = NULL;
-    HRESULT hr = D3D_OK;
-
-    TRACE("iface %p, declaration %p.\n", iface, ppDecl);
-
-    if (NULL == ppDecl) {
-      return D3DERR_INVALIDCALL;
-    }
-
-    *ppDecl = NULL;
-
-    wined3d_mutex_lock();
-    hr = IWineD3DDevice_GetVertexDeclaration(This->WineD3DDevice, &pTest);
-    if (hr == D3D_OK && NULL != pTest) {
-        IWineD3DVertexDeclaration_GetParent(pTest, (IUnknown **)ppDecl);
-        IWineD3DVertexDeclaration_Release(pTest);
-    } else {
-        *ppDecl = NULL;
-    }
-    wined3d_mutex_unlock();
-
-    TRACE("(%p) : returning %p\n", This, *ppDecl);
-    return hr;
 }

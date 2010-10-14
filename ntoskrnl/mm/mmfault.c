@@ -105,10 +105,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 
       switch (MemoryArea->Type)
       {
-         case MEMORY_AREA_PAGED_POOL:
-            Status = STATUS_SUCCESS;
-            break;
-
          case MEMORY_AREA_SECTION_VIEW:
             Status = MmAccessFaultSectionView(AddressSpace,
                                               MemoryArea,
@@ -196,12 +192,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
 
       switch (MemoryArea->Type)
       {
-         case MEMORY_AREA_PAGED_POOL:
-            {
-               Status = MmCommitPagedPoolAddress((PVOID)Address, Locked);
-               break;
-            }
-
          case MEMORY_AREA_SECTION_VIEW:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
@@ -293,25 +283,3 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
     }
 }
 
-NTSTATUS
-NTAPI
-MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
-{
-   NTSTATUS Status;
-   PFN_NUMBER AllocatedPage;
-
-   Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
-   if (!NT_SUCCESS(Status))
-   {
-      MmUnlockAddressSpace(MmGetKernelAddressSpace());
-      Status = MmRequestPageMemoryConsumer(MC_PPOOL, TRUE, &AllocatedPage);
-      MmLockAddressSpace(MmGetKernelAddressSpace());
-   }
-   Status =
-      MmCreateVirtualMapping(NULL,
-                             (PVOID)PAGE_ROUND_DOWN(Address),
-                             PAGE_READWRITE,
-                             &AllocatedPage,
-                             1);
-   return(Status);
-}

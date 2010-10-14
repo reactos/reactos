@@ -146,6 +146,6 @@ BEGIN
   IDS_CPLNAME "Konsole"
   IDS_CPLDESCRIPTION "Konfiguriert die Konsoleneigenschaften."
   IDS_APPLY_SHORTCUT_ALL "Modifiziere die &Verknüpfung, die das Fenster startete"
-  IDS_SCREEN_TEXT "C:\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
+  IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
   IDS_RASTERFONTS "Rasterschriften"
 END

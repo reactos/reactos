@@ -22,15 +22,6 @@ typedef struct _CURICON_OBJECT
   ICONINFO IconInfo;
 } CURICON_OBJECT, *PCURICON_OBJECT;
 
-typedef struct _CURSORCLIP_INFO
-{
-  BOOL IsClipped;
-  UINT Left;
-  UINT Top;
-  UINT Right;
-  UINT Bottom;
-} CURSORCLIP_INFO, *PCURSORCLIP_INFO;
-
 typedef struct _CURSORACCELERATION_INFO
 {
     UINT FirstThreshold;
@@ -45,7 +36,8 @@ typedef struct _SYSTEM_CURSORINFO
   DWORD ClickLockTime;
 //  BOOL SwapButtons;
   UINT ButtonsDown;
-  CURSORCLIP_INFO CursorClipInfo;
+  RECTL rcClip;
+  BOOL bClipped;
   PCURICON_OBJECT CurrentCursorObject;
   INT ShowingCursor;
 /*

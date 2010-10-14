@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* TYPES *********************************************************************/
+
+extern SYSTEM_BASIC_INFORMATION BaseCachedSysInfo;
+
 /* FUNCTIONS ***************************************************************/
 
 /*
@@ -30,6 +34,17 @@ HeapCreate(DWORD flOptions,
     /* Remove non-Win32 flags and tag this allocation */
     Flags = (flOptions & (HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE)) |
             HEAP_CLASS_1;
+
+    /* Check if heap is growable and ensure max size is correct */
+    if (dwMaximumSize == 0)
+        Flags |= HEAP_GROWABLE;
+    else if (dwMaximumSize < BaseCachedSysInfo.PageSize &&
+            dwInitialSize > dwMaximumSize)
+    {
+        /* Max size is non-zero but less than page size which can't be correct.
+           Fix it up by bumping it to the initial size whatever it is. */
+        dwMaximumSize = dwInitialSize;
+    }
 
     /* Call RTL Heap */
     hRet = RtlCreateHeap(Flags,

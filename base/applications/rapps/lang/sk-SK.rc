@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  29-08-2009
- * LAST CHANGE:  05-10-2009
+ * LAST CHANGE:  26-07-2010
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -143,7 +143,7 @@ BEGIN
 	IDS_INFO_INSTALLSRC "\nInstall Source: "
 	IDS_INFO_UNINSTALLSTR "\nUninstall String: "
 	IDS_INFO_MODIFYPATH "\nModify Path: "
-	IDS_INFO_INSTALLDATE "\nInstall Date: "
+	IDS_INFO_INSTALLDATE "\nD·tum inötal·cie: "
 END
 
 STRINGTABLE DISCARDABLE
@@ -193,6 +193,6 @@ BEGIN
 	IDS_CHOOSE_FOLDER_ERROR "Zvolili ste si neexistuj˙ci prieËinok!"
 	IDS_USER_NOT_ADMIN "Mali by ste byù administr·tor pre spustenie ""ManaûÈra aplik·ciÌ systÈmu ReactOS""!"
 	IDS_APP_REG_REMOVE "Naozaj chcete vymazaù ˙daje o nainötalovanom programe z registrov?"
-	IDS_INFORMATION "Information"
-	IDS_UNABLE_TO_REMOVE "Unable to remove data on the program from the registry!"
+	IDS_INFORMATION "Inform·cie"
+	IDS_UNABLE_TO_REMOVE "Nie je moûnÈ odstr·niù z registrov ˙daje o programe!"
 END

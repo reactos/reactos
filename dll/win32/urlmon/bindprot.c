@@ -382,7 +382,7 @@ static ULONG WINAPI BindProtocol_Release(IInternetProtocol *iface)
         if(This->filter_proxy)
             IInternetProtocol_Release(PROTOCOL(This->filter_proxy));
 
-        set_binding_sink(PROTOCOL(This), NULL);
+        set_binding_sink(PROTOCOL(This), NULL, NULL);
 
         if(This->notif_hwnd)
             release_notif_hwnd(This->notif_hwnd);
@@ -488,7 +488,7 @@ static HRESULT WINAPI BindProtocol_UnlockRequest(IInternetProtocol *iface)
     return IInternetProtocol_UnlockRequest(This->protocol_handler);
 }
 
-void set_binding_sink(IInternetProtocol *bind_protocol, IInternetProtocolSink *sink)
+void set_binding_sink(IInternetProtocol *bind_protocol, IInternetProtocolSink *sink, IInternetBindInfo *bind_info)
 {
     BindProtocol *This = PROTOCOL_THIS(bind_protocol);
     IInternetProtocolSink *prev_sink;
@@ -505,6 +505,12 @@ void set_binding_sink(IInternetProtocol *bind_protocol, IInternetProtocolSink *s
     service_provider = InterlockedExchangePointer((void**)&This->service_provider, service_provider);
     if(service_provider)
         IServiceProvider_Release(service_provider);
+
+    if(bind_info)
+        IInternetBindInfo_AddRef(bind_info);
+    bind_info = InterlockedExchangePointer((void**)&This->bind_info, bind_info);
+    if(bind_info)
+        IInternetBindInfo_Release(bind_info);
 }
 
 IWinInetInfo *get_wininet_info(IInternetProtocol *bind_protocol)
@@ -619,10 +625,7 @@ static HRESULT WINAPI ProtocolHandler_Start(IInternetProtocol *iface, LPCWSTR sz
     if(urlmon_protocol)
         IInternetProtocol_QueryInterface(protocol, &IID_IWinInetInfo, (void**)&This->wininet_info);
 
-    IInternetBindInfo_AddRef(pOIBindInfo);
-    This->bind_info = pOIBindInfo;
-
-    set_binding_sink(PROTOCOL(This), pOIProtSink);
+    set_binding_sink(PROTOCOL(This), pOIProtSink, pOIBindInfo);
 
     hres = IInternetProtocol_QueryInterface(protocol, &IID_IInternetPriority, (void**)&priority);
     if(SUCCEEDED(hres)) {
@@ -670,7 +673,7 @@ static HRESULT WINAPI ProtocolHandler_Terminate(IInternetProtocol *iface, DWORD 
         This->filter_proxy = NULL;
     }
 
-    set_binding_sink(PROTOCOL(This), NULL);
+    set_binding_sink(PROTOCOL(This), NULL, NULL);
 
     if(This->bind_info) {
         IInternetBindInfo_Release(This->bind_info);

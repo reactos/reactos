@@ -1674,6 +1674,9 @@ MiBuildPagedPool(VOID)
     MiHighPagedPoolThreshold = (60 * _1MB) >> PAGE_SHIFT;
     MiHighPagedPoolThreshold = min(MiHighPagedPoolThreshold, (Size * 2) / 5);
     ASSERT(MiLowPagedPoolThreshold < MiHighPagedPoolThreshold);
+    
+    /* Setup the global session space */
+    MiInitializeSystemSpaceMap(NULL);
 }
 
 NTSTATUS
@@ -1811,7 +1814,11 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);        
-                                    
+
+        /* Set the zero page event */
+        KeInitializeEvent(&MmZeroingPageEvent, SynchronizationEvent, FALSE);
+        MmZeroingPageThreadActive = FALSE;
+                                            
         //
         // Count physical pages on the system
         //

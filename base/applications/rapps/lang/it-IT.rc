@@ -159,7 +159,7 @@ BEGIN
 	IDS_CAT_ENGINEER "Scienze"
 	IDS_CAT_FINANCE "Finanza"
 	IDS_CAT_GAMES "Giochi e divertimento"
-	IDS_CAT_GRAPHICS "Graphica"
+	IDS_CAT_GRAPHICS "Grafica"
 	IDS_CAT_INTERNET "Internet & rete"
 	IDS_CAT_LIBS "Librerie"
 	IDS_CAT_OFFICE "Ufficio"
@@ -171,7 +171,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_APPTITLE "ReactOS Applications Manager"
+	IDS_APPTITLE "ReactOS Gestione applicazioni"
 	IDS_SEARCH_TEXT "Cerca..."
 	IDS_INSTALL "Installa"
 	IDS_UNINSTALL "Disinstalla"

@@ -241,7 +241,7 @@ NtUserNotifyWinEvent(
    LONG  idObject,
    LONG  idChild)
 {
-   PWINDOW_OBJECT Window = NULL;
+   PWND Window = NULL;
    USER_REFERENCE_ENTRY Ref;
    UserEnterExclusive();
 
@@ -255,7 +255,7 @@ NtUserNotifyWinEvent(
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
       UserRefObjectCo(Window, &Ref);
-      IntNotifyWinEvent( Event, Window->Wnd, idObject, idChild);
+      IntNotifyWinEvent( Event, Window, idObject, idChild);
       UserDerefObjectCo(Window);
    }
    UserLeave();

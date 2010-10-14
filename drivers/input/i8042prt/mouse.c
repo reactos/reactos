@@ -492,7 +492,7 @@ cleanup:
 		{
 			PINTERNAL_I8042_HOOK_MOUSE MouseHook;
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_I8042_HOOK_MOUSE\n");
-			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(CONNECT_DATA))
+			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(INTERNAL_I8042_HOOK_MOUSE))
 			{
 				Status = STATUS_INVALID_PARAMETER;
 				break;

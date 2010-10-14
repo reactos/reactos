@@ -186,3 +186,9 @@ KspValidateConnectRequest(
     IN PVOID Descriptors,
     IN ULONG DescriptorSize,
     OUT PKSPIN_CONNECT* Connect);
+
+NTSTATUS
+KspReadMediaCategory(
+    IN LPGUID Category,
+    PKEY_VALUE_PARTIAL_INFORMATION *OutInformation);
+

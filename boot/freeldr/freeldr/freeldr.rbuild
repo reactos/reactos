@@ -33,5 +33,9 @@
 		<library>rtl</library>
 		<library>libcntpr</library>
 		<library>cportlib</library>
+		<group linkerset="ld">
+			<linkerflag>-static</linkerflag>
+			<linkerflag>-lgcc</linkerflag>
+		</group>
 	</module>
 </ifnot>

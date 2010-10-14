@@ -83,7 +83,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Installazione Video Driver"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Il setup di ReactOS sta per disinstallare il driver SVGA di VMware(r)!!!\n\n\Cliccate 'Fine' per disinstallare il driver o 'Annulla' per lasciarlo come è.",-1,25,25,225,85
+  LTEXT "Il setup di ReactOS sta per disinstallare il driver SVGA di VMware(r)!!!\n\n\
+Cliccate 'Fine' per disinstallare il driver o 'Annulla' per lasciarlo come è.",-1,25,25,225,85
 END
 
 STRINGTABLE

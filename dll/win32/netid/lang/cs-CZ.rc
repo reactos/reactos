@@ -75,7 +75,7 @@ BEGIN
     25 "Lze zmìnit název a èlenství tohoto poèítaèe. Zmìny mohou mít vliv na pøístup k síovım prostøedkùm."
     1021 "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi."
     1022 "Poznámka: Identifikace poèítaèe nemùe bıt zmìnìna z následujících dùvodù:"
-    1030 "Novı název poèítaèe ""%s"" obsahuje nepovolené znaky. Mezi nepovolené znaky patøí ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / ?"
+    1030 "Novı název poèítaèe ""%s"" obsahuje nepovolené znaky. Mezi nepovolené znaky patøí ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / ?"
     3210 "&Detaily >>"
     3220 "<< &Detaily"
     4000 "Informace"

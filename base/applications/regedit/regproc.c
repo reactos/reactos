@@ -4,6 +4,7 @@
  *
  * Copyright 1999 Sylvain St-Germain
  * Copyright 2002 Andriy Palamarchuk
+ * Copyright 2008 Alexander N. S?rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,24 +18,17 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <regedit.h>
+#include "regedit.h"
 
 #define REG_VAL_BUF_SIZE        4096
 
 /* maximal number of characters in hexadecimal data line,
-   not including '\' character */
-#define REG_FILE_HEX_LINE_LEN   76
-
-/* Globals used by the api setValue */
-static LPSTR currentKeyName   = NULL;
-static HKEY  currentKeyClass  = 0;
-static HKEY  currentKeyHandle = 0;
-static BOOL  bTheKeyIsOpen    = FALSE;
-
-static const CHAR *app_name = "UNKNOWN";
+ * including the indentation, but not including the '\' character
+ */
+#define REG_FILE_HEX_LINE_LEN   (2 + 25 * 3)
 
 static const CHAR *reg_class_names[] = {
                                      "HKEY_LOCAL_MACHINE", "HKEY_USERS", "HKEY_CLASSES_ROOT",
@@ -42,6 +36,11 @@ static const CHAR *reg_class_names[] = {
                                  };
 
 #define REG_CLASS_NUMBER (sizeof(reg_class_names) / sizeof(reg_class_names[0]))
+
+const WCHAR* reg_class_namesW[REG_CLASS_NUMBER] = {
+    L"HKEY_LOCAL_MACHINE", L"HKEY_USERS", L"HKEY_CLASSES_ROOT",
+    L"HKEY_CURRENT_CONFIG", L"HKEY_CURRENT_USER", L"HKEY_DYN_DATA"
+};
 
 static HKEY reg_class_keys[REG_CLASS_NUMBER] = {
             HKEY_LOCAL_MACHINE, HKEY_USERS, HKEY_CLASSES_ROOT,
@@ -64,100 +63,93 @@ if (!(p)) \
 }
 
 /******************************************************************************
- * This is a replacement for strsep which is not portable (missing on Solaris).
+ * Allocates memory and converts input from multibyte to wide chars
+ * Returned string must be freed by the caller
  */
-#if 0
-/* DISABLED */
-char* getToken(char** str, const char* delims)
+WCHAR* GetWideString(const char* strA)
 {
-    char* token;
+    if(strA)
+    {
+        WCHAR* strW;
+        int len = MultiByteToWideChar(CP_ACP, 0, strA, -1, NULL, 0);
 
-    if (*str==NULL) {
-        /* No more tokens */
-        return NULL;
+        strW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        CHECK_ENOUGH_MEMORY(strW);
+        MultiByteToWideChar(CP_ACP, 0, strA, -1, strW, len);
+        return strW;
     }
-
-    token=*str;
-    while (**str!='\0') {
-        if (strchr(delims,**str)!=NULL) {
-            **str='\0';
-            (*str)++;
-            return token;
-        }
-        (*str)++;
-    }
-    /* There is no other token */
-    *str=NULL;
-    return token;
+    return NULL;
 }
-#endif
 
 /******************************************************************************
- * Copies file name from command line string to the buffer.
- * Rewinds the command line string pointer to the next non-space character
- * after the file name.
- * Buffer contains an empty string if no filename was found;
- *
- * params:
- * command_line - command line current position pointer
- *      where *s[0] is the first symbol of the file name.
- * file_name - buffer to write the file name to.
+ * Allocates memory and converts input from multibyte to wide chars
+ * Returned string must be freed by the caller
  */
-void get_file_name(CHAR **command_line, CHAR *file_name)
+static WCHAR* GetWideStringN(const char* strA, int chars, DWORD *len)
 {
-    CHAR *s = *command_line;
-    int pos = 0;                /* position of pointer "s" in *command_line */
-    file_name[0] = 0;
+    if(strA)
+    {
+        WCHAR* strW;
+        *len = MultiByteToWideChar(CP_ACP, 0, strA, chars, NULL, 0);
 
-    if (!s[0]) {
-        return;
+        strW = HeapAlloc(GetProcessHeap(), 0, *len * sizeof(WCHAR));
+        CHECK_ENOUGH_MEMORY(strW);
+        MultiByteToWideChar(CP_ACP, 0, strA, chars, strW, *len);
+        return strW;
     }
-
-    if (s[0] == '"') {
-        s++;
-        (*command_line)++;
-        while(s[0] != '"') {
-            if (!s[0]) {
-                fprintf(stderr,"%s: Unexpected end of file name!\n",
-                        getAppName());
-                exit(1);
-            }
-            s++;
-            pos++;
-        }
-    } else {
-        while(s[0] && !isspace(s[0])) {
-            s++;
-            pos++;
-        }
-    }
-    memcpy(file_name, *command_line, pos * sizeof((*command_line)[0]));
-    /* remove the last backslash */
-    if (file_name[pos - 1] == '\\') {
-        file_name[pos - 1] = '\0';
-    } else {
-        file_name[pos] = '\0';
-    }
-
-    if (s[0]) {
-        s++;
-        pos++;
-    }
-    while(s[0] && isspace(s[0])) {
-        s++;
-        pos++;
-    }
-    (*command_line) += pos;
+    *len = 0;
+    return NULL;
 }
 
+/******************************************************************************
+ * Allocates memory and converts input from wide chars to multibyte
+ * Returned string must be freed by the caller
+ */
+char* GetMultiByteString(const WCHAR* strW)
+{
+    if(strW)
+    {
+        char* strA;
+        int len = WideCharToMultiByte(CP_ACP, 0, strW, -1, NULL, 0, NULL, NULL);
+
+        strA = HeapAlloc(GetProcessHeap(), 0, len);
+        CHECK_ENOUGH_MEMORY(strA);
+        WideCharToMultiByte(CP_ACP, 0, strW, -1, strA, len, NULL, NULL);
+        return strA;
+    }
+    return NULL;
+}
+
+/******************************************************************************
+ * Allocates memory and converts input from wide chars to multibyte
+ * Returned string must be freed by the caller
+ */
+static char* GetMultiByteStringN(const WCHAR* strW, int chars, DWORD* len)
+{
+    if(strW)
+    {
+        char* strA;
+        *len = WideCharToMultiByte(CP_ACP, 0, strW, chars, NULL, 0, NULL, NULL);
+
+        strA = HeapAlloc(GetProcessHeap(), 0, *len);
+        CHECK_ENOUGH_MEMORY(strA);
+        WideCharToMultiByte(CP_ACP, 0, strW, chars, strA, *len, NULL, NULL);
+        return strA;
+    }
+    *len = 0;
+    return NULL;
+}
 
 /******************************************************************************
  * Converts a hex representation of a DWORD into a DWORD.
  */
-static BOOL convertHexToDWord(char* str, DWORD *dw)
+static BOOL convertHexToDWord(WCHAR* str, DWORD *dw)
 {
+    char buf[9];
     char dummy;
-    if (strlen(str) > 8 || sscanf(str, "%lx%c", dw, &dummy) != 1) {
+
+    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, 9, NULL, NULL);
+    if (lstrlenW(str) > 8 || sscanf(buf, "%lx%c", dw, &dummy) != 1) {
         fprintf(stderr,"%s: ERROR, invalid hex value\n", getAppName());
         return FALSE;
     }
@@ -165,15 +157,15 @@ static BOOL convertHexToDWord(char* str, DWORD *dw)
 }
 
 /******************************************************************************
-* Converts a hex comma separated values list into a binary string.
-  */
-static BYTE* convertHexCSVToHex(char *str, DWORD *size)
+ * Converts a hex comma separated values list into a binary string.
+ */
+static BYTE* convertHexCSVToHex(WCHAR *str, DWORD *size)
 {
-    char *s;
+    WCHAR *s;
     BYTE *d, *data;
 
     /* The worst case is 1 digit + 1 comma per byte */
-    *size=(strlen(str)+1)/2;
+    *size=(lstrlenW(str)+1)/2;
     data=HeapAlloc(GetProcessHeap(), 0, *size);
     CHECK_ENOUGH_MEMORY(data);
 
@@ -182,25 +174,21 @@ static BYTE* convertHexCSVToHex(char *str, DWORD *size)
     *size=0;
     while (*s != '\0') {
         UINT wc;
-        char dummy;
+        WCHAR *end;
 
-        if (s[1] != ',' && s[1] != '\0' && s[2] != ',' && s[2] != '\0') {
-            fprintf(stderr,"%s: ERROR converting CSV hex stream. Invalid sequence at '%s'\n",
-                    getAppName(), s);
-            HeapFree(GetProcessHeap(), 0, data);
-            return NULL;
-        }
-        if (sscanf(s, "%x%c", &wc, &dummy) < 1 || dummy != ',') {
+        wc = wcstoul(s,&end, 16);
+        if (end == s || wc > 0xff || (*end && *end != L',')) {
+            char* strA = GetMultiByteString(s);
             fprintf(stderr,"%s: ERROR converting CSV hex stream. Invalid value at '%s'\n",
-                    getAppName(), s);
+                    getAppName(), strA);
             HeapFree(GetProcessHeap(), 0, data);
+            HeapFree(GetProcessHeap(), 0, strA);
             return NULL;
         }
         *d++ =(BYTE)wc;
         (*size)++;
-        /* Skip one or two digits and any comma */
-        while (*s && *s!=',') s++;
-        if (*s) s++;
+        if (*end) end++;
+        s = end;
     }
 
     return data;
@@ -213,17 +201,24 @@ static BYTE* convertHexCSVToHex(char *str, DWORD *size)
  *
  * Note: Updated based on the algorithm used in 'server/registry.c'
  */
-DWORD getDataType(LPSTR *lpValue, DWORD* parse_type)
+static DWORD getDataType(LPWSTR *lpValue, DWORD* parse_type)
 {
-    struct data_type { const char *tag; int len; int type; int parse_type; };
+    struct data_type { const WCHAR *tag; int len; int type; int parse_type; };
+
+    static const WCHAR quote[] = {'"'};
+    static const WCHAR str[] = {'s','t','r',':','"'};
+    static const WCHAR str2[] = {'s','t','r','(','2',')',':','"'};
+    static const WCHAR hex[] = {'h','e','x',':'};
+    static const WCHAR dword[] = {'d','w','o','r','d',':'};
+    static const WCHAR hexp[] = {'h','e','x','('};
 
     static const struct data_type data_types[] = {                   /* actual type */  /* type to assume for parsing */
-                { "\"",        1,   REG_SZ,              REG_SZ },
-                { "str:\"",    5,   REG_SZ,              REG_SZ },
-                { "str(2):\"", 8,   REG_EXPAND_SZ,       REG_SZ },
-                { "hex:",      4,   REG_BINARY,          REG_BINARY },
-                { "dword:",    6,   REG_DWORD,           REG_DWORD },
-                { "hex(",      4,   -1,                  REG_BINARY },
+                { quote,       1,   REG_SZ,              REG_SZ },
+                { str,         5,   REG_SZ,              REG_SZ },
+                { str2,        8,   REG_EXPAND_SZ,       REG_SZ },
+                { hex,         4,   REG_BINARY,          REG_BINARY },
+                { dword,       6,   REG_DWORD,           REG_DWORD },
+                { hexp,        4,   -1,                  REG_BINARY },
                 { NULL,        0,    0,                  0 }
             };
 
@@ -231,7 +226,7 @@ DWORD getDataType(LPSTR *lpValue, DWORD* parse_type)
     int type;
 
     for (ptr = data_types; ptr->tag; ptr++) {
-        if (memcmp( ptr->tag, *lpValue, ptr->len ))
+        if (wcsncmp(ptr->tag, *lpValue, ptr->len))
             continue;
 
         /* Found! */
@@ -239,13 +234,14 @@ DWORD getDataType(LPSTR *lpValue, DWORD* parse_type)
         type=ptr->type;
         *lpValue+=ptr->len;
         if (type == -1) {
-            char* end;
+            WCHAR* end;
+
             /* "hex(xx):" is special */
-            type = (int)strtoul( *lpValue , &end, 16 );
+            type = (int)wcstoul( *lpValue , &end, 16 );
             if (**lpValue=='\0' || *end!=')' || *(end+1)!=':') {
                 type=REG_NONE;
             } else {
-                *lpValue=end+2;
+                *lpValue = end + 2;
             }
         }
         return type;
@@ -255,40 +251,13 @@ DWORD getDataType(LPSTR *lpValue, DWORD* parse_type)
 }
 
 /******************************************************************************
- * Returns an allocated buffer with a cleaned copy (removed the surrounding
- * dbl quotes) of the passed value.
- */
-LPSTR getArg( LPSTR arg)
-{
-    LPSTR tmp = NULL;
-    size_t len;
-
-    if (arg == NULL)
-        return NULL;
-
-    /*
-     * Get rid of surrounding quotes
-     */
-    len = strlen(arg);
-
-    if( arg[len-1] == '\"' ) arg[len-1] = '\0';
-    if( arg[0]     == '\"' ) arg++;
-
-    tmp = HeapAlloc(GetProcessHeap(), 0, strlen(arg)+1);
-    CHECK_ENOUGH_MEMORY(tmp);
-    strcpy(tmp, arg);
-
-    return tmp;
-}
-
-/******************************************************************************
  * Replaces escape sequences with the characters.
  */
-static void REGPROC_unescape_string(LPSTR str)
+static void REGPROC_unescape_string(WCHAR* str)
 {
-    size_t str_idx = 0;            /* current character under analysis */
-    size_t val_idx = 0;            /* the last character of the unescaped string */
-    size_t len = strlen(str);
+    int str_idx = 0;            /* current character under analysis */
+    int val_idx = 0;            /* the last character of the unescaped string */
+    int len = lstrlenW(str);
     for (str_idx = 0; str_idx < len; str_idx++, val_idx++) {
         if (str[str_idx] == '\\') {
             str_idx++;
@@ -313,6 +282,55 @@ static void REGPROC_unescape_string(LPSTR str)
     str[val_idx] = '\0';
 }
 
+static BOOL parseKeyName(LPWSTR lpKeyName, HKEY *hKey, LPWSTR *lpKeyPath)
+{
+    WCHAR* lpSlash = NULL;
+    unsigned int i, len;
+
+    if (lpKeyName == NULL)
+        return FALSE;
+
+    for(i = 0; *(lpKeyName + i) != 0; i++)
+    {
+        if(*(lpKeyName+i) == '\\')
+        {
+            lpSlash = lpKeyName + i;
+            break;
+        }
+    }
+
+    if (lpSlash)
+    {
+        len = lpSlash-lpKeyName;
+    }
+    else
+    {
+        len = lstrlenW(lpKeyName);
+        lpSlash = lpKeyName+len;
+    }
+    *hKey = NULL;
+
+    for (i = 0; i < REG_CLASS_NUMBER; i++) {
+        if (CompareStringW(LOCALE_USER_DEFAULT, 0, lpKeyName, len, reg_class_namesW[i], len) == CSTR_EQUAL &&
+            len == lstrlenW(reg_class_namesW[i])) {
+            *hKey = reg_class_keys[i];
+            break;
+        }
+    }
+
+    if (*hKey == NULL)
+        return FALSE;
+
+    if (*lpSlash != '\0')
+        lpSlash++;
+    *lpKeyPath = lpSlash;
+    return TRUE;
+}
+
+/* Globals used by the setValue() & co */
+static LPSTR currentKeyName;
+static HKEY  currentKeyHandle = NULL;
+
 /******************************************************************************
  * Sets the value with name val_name to the data in val_data for the currently
  * opened key.
@@ -321,49 +339,63 @@ static void REGPROC_unescape_string(LPSTR str)
  * val_name - name of the registry value
  * val_data - registry value data
  */
-LONG setValue(LPSTR val_name, LPSTR val_data)
+static LONG setValue(WCHAR* val_name, WCHAR* val_data, BOOL is_unicode)
 {
     LONG res;
     DWORD  dwDataType, dwParseType;
     LPBYTE lpbData;
     DWORD  dwData, dwLen;
+    WCHAR del[] = {'-',0};
 
     if ( (val_name == NULL) || (val_data == NULL) )
         return ERROR_INVALID_PARAMETER;
 
-    if (strcmp(val_data, "-") == 0)
+    if (lstrcmpW(val_data, del) == 0)
     {
-        res=RegDeleteValueA(currentKeyHandle,val_name);
+        res=RegDeleteValueW(currentKeyHandle,val_name);
         return (res == ERROR_FILE_NOT_FOUND ? ERROR_SUCCESS : res);
     }
 
     /* Get the data type stored into the value field */
     dwDataType = getDataType(&val_data, &dwParseType);
 
-    if (dwParseType == REG_SZ)        /* no conversion for string */
+    if (dwParseType == REG_SZ)          /* no conversion for string */
     {
-        dwLen = (DWORD) strlen(val_data);
+        REGPROC_unescape_string(val_data);
+        /* Compute dwLen after REGPROC_unescape_string because it may
+         * have changed the string length and we don't want to store
+         * the extra garbage in the registry.
+         */
+        dwLen = lstrlenW(val_data);
         if (dwLen>0 && val_data[dwLen-1]=='"')
         {
             dwLen--;
             val_data[dwLen]='\0';
         }
-        dwLen++;
-        REGPROC_unescape_string(val_data);
-        lpbData = (LPBYTE)val_data;
+        lpbData = (BYTE*) val_data;
+        dwLen++;  /* include terminating null */
+        dwLen = dwLen * sizeof(WCHAR); /* size is in bytes */
     }
     else if (dwParseType == REG_DWORD)  /* Convert the dword types */
     {
         if (!convertHexToDWord(val_data, &dwData))
             return ERROR_INVALID_DATA;
         lpbData = (BYTE*)&dwData;
-        dwLen = sizeof(dwData);    
+        dwLen = sizeof(dwData);
     }
     else if (dwParseType == REG_BINARY) /* Convert the binary data */
     {
         lpbData = convertHexCSVToHex(val_data, &dwLen);
         if (!lpbData)
-            return ERROR_INVALID_DATA;    
+            return ERROR_INVALID_DATA;
+
+        if((dwDataType == REG_MULTI_SZ || dwDataType == REG_EXPAND_SZ) && !is_unicode)
+        {
+            LPBYTE tmp = lpbData;
+            lpbData = (LPBYTE)GetWideStringN((char*)lpbData, dwLen, &dwLen);
+            dwLen *= sizeof(WCHAR);
+            HeapFree(GetProcessHeap(), 0, tmp);
+        }
     }
     else                                /* unknown format */
     {
@@ -371,25 +403,26 @@ LONG setValue(LPSTR val_name, LPSTR val_data)
         return ERROR_INVALID_DATA;
     }
 
-    res = RegSetValueExA(
+    res = RegSetValueExW(
                currentKeyHandle,
                val_name,
                0,                  /* Reserved */
                dwDataType,
                lpbData,
                dwLen);
-
     if (dwParseType == REG_BINARY)
         HeapFree(GetProcessHeap(), 0, lpbData);
     return res;
 }
 
-
 /******************************************************************************
- * Open the key
+ * A helper function for processRegEntry() that opens the current key.
+ * That key must be closed by calling closeKey().
  */
-LONG openKey( LPSTR stdInput)
+static LONG openKeyW(WCHAR* stdInput)
 {
+    HKEY keyClass;
+    WCHAR* keyPath;
     DWORD dwDisp;
     LONG res;
 
@@ -398,17 +431,12 @@ LONG openKey( LPSTR stdInput)
         return ERROR_INVALID_PARAMETER;
 
     /* Get the registry class */
-    if (!getRegClass(stdInput, &currentKeyClass)) /* Sets global variable */
+    if (!parseKeyName(stdInput, &keyClass, &keyPath))
         return ERROR_INVALID_PARAMETER;
 
-    /* Get the key name */
-    currentKeyName = getRegKeyName(stdInput); /* Sets global variable */
-    if (currentKeyName == NULL)
-        return ERROR_INVALID_PARAMETER;
-
-    res = RegCreateKeyExA(
-               currentKeyClass,          /* Class     */
-               currentKeyName,           /* Sub Key   */
+    res = RegCreateKeyExW(
+               keyClass,                 /* Class     */
+               keyPath,                  /* Sub Key   */
                0,                        /* MUST BE 0 */
                NULL,                     /* object type */
                REG_OPTION_NON_VOLATILE,  /* option, REG_OPTION_NON_VOLATILE ... */
@@ -419,205 +447,44 @@ LONG openKey( LPSTR stdInput)
                                                         REG_OPENED_EXISTING_KEY */
 
     if (res == ERROR_SUCCESS)
-        bTheKeyIsOpen = TRUE;
+        currentKeyName = GetMultiByteString(stdInput);
+    else
+        currentKeyHandle = NULL;
 
     return res;
 
 }
 
 /******************************************************************************
- * Extracts from [HKEY\some\key\path] or HKEY\some\key\path types of line
- * the key name (what starts after the first '\')
- */
-LPSTR getRegKeyName(LPSTR lpLine)
-{
-    LPSTR keyNameBeg;
-    char  lpLineCopy[KEY_MAX_LEN];
-
-    if (lpLine == NULL)
-        return NULL;
-
-    strcpy(lpLineCopy, lpLine);
-
-    keyNameBeg = strchr(lpLineCopy, '\\');    /* The key name start by '\' */
-    if (keyNameBeg) {
-        keyNameBeg++;
-        if (lpLine[0] == '[') /* need to find matching ']' */
-        {
-            LPSTR keyNameEnd;
-
-            keyNameEnd = strrchr(lpLineCopy, ']');
-            if (keyNameEnd) {
-                *keyNameEnd = '\0';               /* remove ']' from the key name */
-            }
-        }
-    } else {
-        keyNameBeg = lpLineCopy + strlen(lpLineCopy); /* branch - empty string */
-    }
-    currentKeyName = HeapAlloc(GetProcessHeap(), 0, strlen(keyNameBeg) + 1);
-    CHECK_ENOUGH_MEMORY(currentKeyName);
-    strcpy(currentKeyName, keyNameBeg);
-    return currentKeyName;
-}
-
-/******************************************************************************
- * Extracts from [HKEY\some\key\path] or HKEY\some\key\path types of line
- * the key class (what ends before the first '\')
- */
-BOOL getRegClass(LPSTR lpClass, HKEY* hkey)
-{
-    LPSTR classNameEnd;
-    LPSTR classNameBeg;
-    unsigned int i;
-
-    char  lpClassCopy[KEY_MAX_LEN];
-
-    if (lpClass == NULL)
-        return FALSE;
-
-    lstrcpynA(lpClassCopy, lpClass, KEY_MAX_LEN);
-
-    classNameEnd  = strchr(lpClassCopy, '\\');    /* The class name ends by '\' */
-    if (!classNameEnd)                            /* or the whole string */
-    {
-        classNameEnd = lpClassCopy + strlen(lpClassCopy);
-        if (classNameEnd[-1] == ']')
-        {
-            classNameEnd--;
-        }
-    }
-    *classNameEnd = '\0';                       /* Isolate the class name */
-    if (lpClassCopy[0] == '[') {
-        classNameBeg = lpClassCopy + 1;
-    } else {
-        classNameBeg = lpClassCopy;
-    }
-
-    for (i = 0; i < REG_CLASS_NUMBER; i++) {
-        if (!strcmp(classNameBeg, reg_class_names[i])) {
-            *hkey = reg_class_keys[i];
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-/******************************************************************************
  * Close the currently opened key.
  */
-void closeKey(void)
+static void closeKey(void)
 {
-    RegCloseKey(currentKeyHandle);
-
-    HeapFree(GetProcessHeap(), 0, currentKeyName); /* Allocated by getKeyName */
-
-    bTheKeyIsOpen    = FALSE;
-
-    currentKeyName   = NULL;
-    currentKeyClass  = 0;
-    currentKeyHandle = 0;
-}
-
-/******************************************************************************
- * This function is the main entry point to the setValue type of action.  It
- * receives the currently read line and dispatch the work depending on the
- * context.
- */
-void doSetValue(LPSTR stdInput)
-{
-    /*
-     * We encountered the end of the file, make sure we
-     * close the opened key and exit
-     */
-    if (stdInput == NULL) {
-        if (bTheKeyIsOpen != FALSE)
-            closeKey();
-
-        return;
-    }
-
-    if      ( stdInput[0] == '[')      /* We are reading a new key */
+    if (currentKeyHandle)
     {
-        if ( bTheKeyIsOpen != FALSE )
-            closeKey();                    /* Close the previous key before */
-
-        /* delete the key if we encounter '-' at the start of reg key */
-        if ( stdInput[1] == '-')
-        {
-            int last_chr = strlen(stdInput) - 1;
-
-            /* skip leading "[-" and get rid of trailing "]" */
-            if (stdInput[last_chr] == ']')
-                stdInput[last_chr] = '\0';
-            delete_registry_key(stdInput+2);
-            return;
-        }
-
-        if ( openKey(stdInput) != ERROR_SUCCESS )
-            fprintf(stderr,"%s: setValue failed to open key %s\n",
-                    getAppName(), stdInput);
-    } else if( ( bTheKeyIsOpen ) &&
-               (( stdInput[0] == '@') || /* reading a default @=data pair */
-                ( stdInput[0] == '\"'))) /* reading a new value=data pair */
-    {
-        processSetValue(stdInput);
-    } else                               /* since we are assuming that the */
-    {                                  /* file format is valid we must   */
-        if ( bTheKeyIsOpen )             /* be reading a blank line which  */
-            closeKey();                    /* indicate end of this key processing */
+        HeapFree(GetProcessHeap(), 0, currentKeyName);
+        RegCloseKey(currentKeyHandle);
+        currentKeyHandle = NULL;
     }
-}
-
-/******************************************************************************
- * This function is the main entry point to the deleteValue type of action.  It
- * receives the currently read line and dispatch the work depending on the
- * context.
- */
-void doDeleteValue(LPSTR line)
-{
-    UNREFERENCED_PARAMETER(line);
-    fprintf(stderr,"%s: deleteValue not yet implemented\n", getAppName());
-}
-
-/******************************************************************************
- * This function is the main entry point to the deleteKey type of action.  It
- * receives the currently read line and dispatch the work depending on the
- * context.
- */
-void doDeleteKey(LPSTR line)
-{
-    UNREFERENCED_PARAMETER(line);
-    fprintf(stderr,"%s: deleteKey not yet implemented\n", getAppName());
-}
-
-/******************************************************************************
- * This function is the main entry point to the createKey type of action.  It
- * receives the currently read line and dispatch the work depending on the
- * context.
- */
-void doCreateKey(LPSTR line)
-{
-    UNREFERENCED_PARAMETER(line);
-    fprintf(stderr,"%s: createKey not yet implemented\n", getAppName());
 }
 
 /******************************************************************************
  * This function is a wrapper for the setValue function.  It prepares the
- * land and clean the area once completed.
+ * land and cleans the area once completed.
  * Note: this function modifies the line parameter.
  *
  * line - registry file unwrapped line. Should have the registry value name and
  *      complete registry value data.
  */
-void processSetValue(LPSTR line)
+static void processSetValue(WCHAR* line, BOOL is_unicode)
 {
-    LPSTR val_name;                   /* registry value name   */
-    LPSTR val_data;                   /* registry value data   */
-
+    WCHAR* val_name;                   /* registry value name   */
+    WCHAR* val_data;                   /* registry value data   */
     int line_idx = 0;                 /* current character under analysis */
     LONG res;
 
     /* get value name */
+    while ( iswspace(line[line_idx]) ) line_idx++;
     if (line[line_idx] == '@' && line[line_idx + 1] == '=') {
         line[line_idx] = '\0';
         val_name = line;
@@ -626,11 +493,6 @@ void processSetValue(LPSTR line)
         line_idx++;
         val_name = line + line_idx;
         while (TRUE) {
-            /* check if the line is unterminated (otherwise it may loop forever!) */
-            if (line[line_idx] == '\0') {
-                fprintf(stderr,"Warning! unrecognized line:\n%s\n", line);
-                return;
-            } else
             if (line[line_idx] == '\\')   /* skip escaped character */
             {
                 line_idx += 2;
@@ -644,48 +506,120 @@ void processSetValue(LPSTR line)
                 }
             }
         }
+        while ( iswspace(line[line_idx]) ) line_idx++;
         if (line[line_idx] != '=') {
+            char* lineA;
             line[line_idx] = '\"';
-            fprintf(stderr,"Warning! unrecognized line:\n%s\n", line);
+            lineA = GetMultiByteString(line);
+            fprintf(stderr,"Warning! unrecognized line:\n%s\n", lineA);
+            HeapFree(GetProcessHeap(), 0, lineA);
             return;
         }
 
     } else {
-        fprintf(stderr,"Warning! unrecognized line:\n%s\n", line);
+        char* lineA = GetMultiByteString(line);
+        fprintf(stderr,"Warning! unrecognized line:\n%s\n", lineA);
+        HeapFree(GetProcessHeap(), 0, lineA);
         return;
     }
     line_idx++;                   /* skip the '=' character */
+
+    while ( iswspace(line[line_idx]) ) line_idx++;
     val_data = line + line_idx;
+    /* trim trailing blanks */
+    line_idx = lstrlenW(val_data);
+    while (line_idx > 0 && iswspace(val_data[line_idx-1])) line_idx--;
+    val_data[line_idx] = '\0';
 
     REGPROC_unescape_string(val_name);
-    res = setValue(val_name, val_data);
+    res = setValue(val_name, val_data, is_unicode);
     if ( res != ERROR_SUCCESS )
+    {
+        char* val_nameA = GetMultiByteString(val_name);
+        char* val_dataA = GetMultiByteString(val_data);
         fprintf(stderr,"%s: ERROR Key %s not created. Value: %s, Data: %s\n",
                 getAppName(),
                 currentKeyName,
-                val_name,
-                val_data);
+                val_nameA,
+                val_dataA);
+        HeapFree(GetProcessHeap(), 0, val_nameA);
+        HeapFree(GetProcessHeap(), 0, val_dataA);
+    }
 }
 
 /******************************************************************************
- * Calls command for each line of a registry file.
+ * This function receives the currently read entry and performs the
+ * corresponding action.
+ * isUnicode affects parsing of REG_MULTI_SZ values
+ */
+static void processRegEntry(WCHAR* stdInput, BOOL isUnicode)
+{
+    /*
+     * We encountered the end of the file, make sure we
+     * close the opened key and exit
+     */
+    if (stdInput == NULL) {
+        closeKey();
+        return;
+    }
+
+    if ( stdInput[0] == L'[')           /* We are reading a new key */
+    {
+        WCHAR* keyEnd;
+        closeKey();                     /* Close the previous key */
+
+        /* Get rid of the square brackets */
+        stdInput++;
+        keyEnd = wcsrchr(stdInput, L']');
+        if (keyEnd)
+            *keyEnd='\0';
+
+        /* delete the key if we encounter '-' at the start of reg key */
+        if ( stdInput[0] == '-')
+        {
+            delete_registry_key(stdInput + 1);
+        } else if ( openKeyW(stdInput) != ERROR_SUCCESS )
+        {
+            char* stdInputA = GetMultiByteString(stdInput);
+            fprintf(stderr,"%s: setValue failed to open key %s\n",
+                    getAppName(), stdInputA);
+            HeapFree(GetProcessHeap(), 0, stdInputA);
+        }
+    } else if( currentKeyHandle &&
+               (( stdInput[0] == '@') || /* reading a default @=data pair */
+                ( stdInput[0] == '\"'))) /* reading a new value=data pair */
+    {
+        processSetValue(stdInput, isUnicode);
+    } else
+    {
+        /* Since we are assuming that the file format is valid we must be
+         * reading a blank line which indicates the end of this key processing
+         */
+        closeKey();
+    }
+}
+
+/******************************************************************************
+ * Processes a registry file.
  * Correctly processes comments (in # form), line continuation.
  *
  * Parameters:
  *   in - input stream to read from
- *   command - command to be called for each line
  */
-void processRegLines(FILE *in, CommandAPI command)
+static void processRegLinesA(FILE *in)
 {
     LPSTR line           = NULL;  /* line read from input stream */
-    size_t lineSize       = REG_VAL_BUF_SIZE;
+    ULONG lineSize       = REG_VAL_BUF_SIZE;
 
     line = HeapAlloc(GetProcessHeap(), 0, lineSize);
     CHECK_ENOUGH_MEMORY(line);
 
     while (!feof(in)) {
         LPSTR s; /* The pointer into line for where the current fgets should read */
+        LPSTR check;
+        WCHAR* lineW;
         s = line;
+
         for (;;) {
             size_t size_remaining;
             int size_to_get;
@@ -712,8 +646,11 @@ void processRegLines(FILE *in, CommandAPI command)
             /* Get as much as possible into the buffer, terminated either by
              * eof, error, eol or getting the maximum amount.  Abort on error.
              */
-            size_to_get = (int) (size_remaining > INT_MAX ? INT_MAX : size_remaining);
-            if (NULL == fgets (s, size_to_get, in)) {
+            size_to_get = (size_remaining > INT_MAX ? INT_MAX : size_remaining);
+
+            check = fgets (s, size_to_get, in);
+
+            if (check == NULL) {
                 if (ferror(in)) {
                     perror ("While reading input");
                     exit (IO_ERROR);
@@ -753,90 +690,159 @@ void processRegLines(FILE *in, CommandAPI command)
             if (s_eol > line && *(s_eol-1) == '\\') {
                 int c;
                 s = s_eol-1;
-                /* The following error protection could be made more self-
-                 * correcting but I thought it not worth trying.
-                 */
-                if ((c = fgetc (in)) == EOF || c != ' ' ||
-                        (c = fgetc (in)) == EOF || c != ' ')
+
+                do
+                {
+                    c = fgetc(in);
+                } while(c == ' ' || c == '\t');
+
+                if(c == EOF)
+                {
                     fprintf(stderr,"%s: ERROR - invalid continuation.\n",
                             getAppName());
+                }
+                else
+                {
+                    *s = c;
+                    s++;
+                }
                 continue;
             }
+
+            lineW = GetWideString(line);
 
             break; /* That is the full virtual line */
         }
 
-        command(line);
+        processRegEntry(lineW, FALSE);
+        HeapFree(GetProcessHeap(), 0, lineW);
     }
-    command(NULL);
+    processRegEntry(NULL, FALSE);
 
     HeapFree(GetProcessHeap(), 0, line);
 }
 
-/******************************************************************************
- * This function is the main entry point to the registerDLL action.  It
- * receives the currently read line, then loads and registers the requested DLLs
- */
-void doRegisterDLL(LPSTR stdInput)
+static void processRegLinesW(FILE *in)
 {
-    HMODULE theLib = 0;
-    UINT retVal = 0;
+    WCHAR* buf           = NULL;  /* line read from input stream */
+    ULONG lineSize       = REG_VAL_BUF_SIZE;
+    size_t CharsInBuf = -1;
 
-    /* Check for valid input */
-    if (stdInput == NULL)
-        return;
+    WCHAR* s; /* The pointer into buf for where the current fgets should read */
+    WCHAR* line; /* The start of the current line */
 
-    /* Load and register the library, then free it */
-    theLib = LoadLibraryA(stdInput);
-    if (theLib) {
-        FARPROC lpfnDLLRegProc = GetProcAddress(theLib, "DllRegisterServer");
-        if (lpfnDLLRegProc)
-            retVal = (*lpfnDLLRegProc)();
-        else
-            fprintf(stderr,"%s: Couldn't find DllRegisterServer proc in '%s'.\n",
-                    getAppName(), stdInput);
+    buf = HeapAlloc(GetProcessHeap(), 0, lineSize * sizeof(WCHAR));
+    CHECK_ENOUGH_MEMORY(buf);
 
-        if (retVal != S_OK)
-            fprintf(stderr,"%s: DLLRegisterServer error 0x%x in '%s'.\n",
-                    getAppName(), retVal, stdInput);
+    s = buf;
+    line = buf;
 
-        FreeLibrary(theLib);
-    } else {
-        fprintf(stderr,"%s: Could not load DLL '%s'.\n", getAppName(), stdInput);
+    while(!feof(in)) {
+        size_t size_remaining;
+        int size_to_get;
+        WCHAR *s_eol = NULL; /* various local uses */
+
+        /* Do we need to expand the buffer ? */
+        assert (s >= buf && s <= buf + lineSize);
+        size_remaining = lineSize - (s-buf);
+        if (size_remaining < 2) /* room for 1 character and the \0 */
+        {
+            WCHAR *new_buffer;
+            size_t new_size = lineSize + (REG_VAL_BUF_SIZE / sizeof(WCHAR));
+            if (new_size > lineSize) /* no arithmetic overflow */
+                new_buffer = HeapReAlloc (GetProcessHeap(), 0, buf, new_size * sizeof(WCHAR));
+            else
+                new_buffer = NULL;
+            CHECK_ENOUGH_MEMORY(new_buffer);
+            buf = new_buffer;
+            line = buf;
+            s = buf + lineSize - size_remaining;
+            lineSize = new_size;
+            size_remaining = lineSize - (s-buf);
+        }
+
+        /* Get as much as possible into the buffer, terminated either by
+        * eof, error or getting the maximum amount.  Abort on error.
+        */
+        size_to_get = (size_remaining > INT_MAX ? INT_MAX : size_remaining);
+
+        CharsInBuf = fread(s, sizeof(WCHAR), size_to_get - 1, in);
+        s[CharsInBuf] = 0;
+
+        if (CharsInBuf == 0) {
+            if (ferror(in)) {
+                perror ("While reading input");
+                exit (IO_ERROR);
+            } else {
+                assert (feof(in));
+                *s = '\0';
+                /* It is not clear to me from the definition that the
+                * contents of the buffer are well defined on detecting
+                * an eof without managing to read anything.
+                */
+            }
+        }
+
+        /* If we didn't read the eol nor the eof go around for the rest */
+        while(1)
+        {
+            s_eol = wcschr(line, '\n');
+
+            if(!s_eol) {
+                /* Move the stub of the line to the start of the buffer so
+                 * we get the maximum space to read into, and so we don't
+                 * have to recalculate 'line' if the buffer expands */
+                MoveMemory(buf, line, (lstrlenW(line) + 1) * sizeof(WCHAR));
+                line = buf;
+                s = wcschr(line, '\0');
+                break;
+            }
+
+            /* If it is a comment line then discard it and go around again */
+            if (*line == '#') {
+                line = s_eol + 1;
+                continue;
+            }
+
+            /* If there is a concatenating \\ then go around again */
+            if ((*(s_eol-1) == '\\') ||
+                (*(s_eol-1) == '\r' && *(s_eol-2) == '\\')) {
+                WCHAR* NextLine = s_eol;
+
+                while(*(NextLine+1) == ' ' || *(NextLine+1) == '\t')
+                    NextLine++;
+
+                NextLine++;
+
+                if(*(s_eol-1) == '\r')
+                    s_eol--;
+
+                MoveMemory(s_eol - 1, NextLine, (CharsInBuf - (NextLine - s) + 1)*sizeof(WCHAR));
+                CharsInBuf -= NextLine - s_eol + 1;
+                s_eol = 0;
+                continue;
+            }
+
+            /* Remove any line feed.  Leave s_eol on the \0 */
+            if (s_eol) {
+                *s_eol = '\0';
+                if (s_eol > buf && *(s_eol-1) == '\r')
+                    *(s_eol-1) = '\0';
+            }
+
+            if(!s_eol)
+                break;
+
+            processRegEntry(line, TRUE);
+            line = s_eol + 1;
+            s_eol = 0;
+            continue; /* That is the full virtual line */
+        }
     }
-}
 
-/******************************************************************************
- * This function is the main entry point to the unregisterDLL action.  It
- * receives the currently read line, then loads and unregisters the requested DLLs
- */
-void doUnregisterDLL(LPSTR stdInput)
-{
-    HMODULE theLib = 0;
-    UINT retVal = 0;
+    processRegEntry(NULL, TRUE);
 
-    /* Check for valid input */
-    if (stdInput == NULL)
-        return;
-
-    /* Load and unregister the library, then free it */
-    theLib = LoadLibraryA(stdInput);
-    if (theLib) {
-        FARPROC lpfnDLLRegProc = GetProcAddress(theLib, "DllUnregisterServer");
-        if (lpfnDLLRegProc)
-            retVal = (*lpfnDLLRegProc)();
-        else
-            fprintf(stderr,"%s: Couldn't find DllUnregisterServer proc in '%s'.\n",
-                    getAppName(), stdInput);
-
-        if (retVal != S_OK)
-            fprintf(stderr,"%s: DLLUnregisterServer error 0x%x in '%s'.\n",
-                    getAppName(), retVal, stdInput);
-
-        FreeLibrary(theLib);
-    } else {
-        fprintf(stderr,"%s: Could not load DLL '%s'.\n", getAppName(), stdInput);
-    }
+    HeapFree(GetProcessHeap(), 0, buf);
 }
 
 /****************************************************************************
@@ -860,7 +866,7 @@ static void REGPROC_print_error(void)
         exit(1);
     }
     puts(lpMsgBuf);
-    LocalFree((HLOCAL)lpMsgBuf);
+    LocalFree(lpMsgBuf);
     exit(1);
 }
 
@@ -874,7 +880,7 @@ static void REGPROC_print_error(void)
  * required_len - length of the string to place to the buffer in characters.
  *   The length does not include the terminating null character.
  */
-static void REGPROC_resize_char_buffer(CHAR **buffer, DWORD *len, DWORD required_len)
+static void REGPROC_resize_char_buffer(WCHAR **buffer, DWORD *len, DWORD required_len)
 {
     required_len++;
     if (required_len > *len) {
@@ -888,30 +894,154 @@ static void REGPROC_resize_char_buffer(CHAR **buffer, DWORD *len, DWORD required
 }
 
 /******************************************************************************
+ * Same as REGPROC_resize_char_buffer() but on a regular buffer.
+ *
+ * Parameters:
+ * buffer - pointer to a buffer
+ * len - current size of the buffer in bytes
+ * required_size - size of the data to place in the buffer in bytes
+ */
+static void REGPROC_resize_binary_buffer(BYTE **buffer, DWORD *size, DWORD required_size)
+{
+    if (required_size > *size) {
+        *size = required_size;
+        if (!*buffer)
+            *buffer = HeapAlloc(GetProcessHeap(), 0, *size);
+        else
+            *buffer = HeapReAlloc(GetProcessHeap(), 0, *buffer, *size);
+        CHECK_ENOUGH_MEMORY(*buffer);
+    }
+}
+
+/******************************************************************************
  * Prints string str to file
  */
-static void REGPROC_export_string(FILE *file, CHAR *str)
+static void REGPROC_export_string(WCHAR **line_buf, DWORD *line_buf_size, DWORD *line_len, WCHAR *str, DWORD str_len)
 {
-    size_t len = strlen(str);
-    size_t i;
+    DWORD i, pos;
+    DWORD extra = 0;
+
+    REGPROC_resize_char_buffer(line_buf, line_buf_size, *line_len + str_len + 10);
 
     /* escaping characters */
-    for (i = 0; i < len; i++) {
-        CHAR c = str[i];
+    pos = *line_len;
+    for (i = 0; i < str_len; i++) {
+        WCHAR c = str[i];
         switch (c) {
-        case '\\':
-            fputs("\\\\", file);
-            break;
-        case '\"':
-            fputs("\\\"", file);
-            break;
         case '\n':
-            fputs("\\\n", file);
+            extra++;
+            REGPROC_resize_char_buffer(line_buf, line_buf_size, *line_len + str_len + extra);
+            (*line_buf)[pos++] = '\\';
+            (*line_buf)[pos++] = 'n';
             break;
+
+        case '\\':
+        case '"':
+            extra++;
+            REGPROC_resize_char_buffer(line_buf, line_buf_size, *line_len + str_len + extra);
+            (*line_buf)[pos++] = '\\';
+            /* Fall through */
+
         default:
-            fputc(c, file);
+            (*line_buf)[pos++] = c;
             break;
         }
+    }
+    (*line_buf)[pos] = '\0';
+    *line_len = pos;
+}
+
+static void REGPROC_export_binary(WCHAR **line_buf, DWORD *line_buf_size, DWORD *line_len, DWORD type, BYTE *value, DWORD value_size, BOOL unicode)
+{
+    DWORD hex_pos, data_pos;
+    const WCHAR *hex_prefix;
+    const WCHAR hex[] = {'h','e','x',':',0};
+    WCHAR hex_buf[17];
+    const WCHAR concat[] = {'\\','\n',' ',' ',0};
+    DWORD concat_prefix, concat_len;
+    const WCHAR newline[] = {'\n',0};
+    CHAR* value_multibyte = NULL;
+
+    if (type == REG_BINARY) {
+        hex_prefix = hex;
+    } else {
+        const WCHAR hex_format[] = {'h','e','x','(','%','u',')',':',0};
+        hex_prefix = hex_buf;
+        wsprintfW(hex_buf, hex_format, type);
+        if ((type == REG_SZ || type == REG_EXPAND_SZ || type == REG_MULTI_SZ) && !unicode)
+        {
+            value_multibyte = GetMultiByteStringN((WCHAR*)value, value_size / sizeof(WCHAR), &value_size);
+            value = (BYTE*)value_multibyte;
+        }
+    }
+
+    concat_len = lstrlenW(concat);
+    concat_prefix = 2;
+
+    hex_pos = *line_len;
+    *line_len += lstrlenW(hex_prefix);
+    data_pos = *line_len;
+    *line_len += value_size * 3;
+    /* - The 2 spaces that concat places at the start of the
+     *   line effectively reduce the space available for data.
+     * - If the value name and hex prefix are very long
+     *   ( > REG_FILE_HEX_LINE_LEN) then we may overestimate
+     *   the needed number of lines by one. But that's ok.
+     * - The trailing linefeed takes the place of a comma so
+     *   it's accounted for already.
+     */
+    *line_len += *line_len / (REG_FILE_HEX_LINE_LEN - concat_prefix) * concat_len;
+    REGPROC_resize_char_buffer(line_buf, line_buf_size, *line_len);
+    lstrcpyW(*line_buf + hex_pos, hex_prefix);
+    if (value_size)
+    {
+        const WCHAR format[] = {'%','0','2','x',0};
+        DWORD i, column;
+
+        column = data_pos; /* no line wrap yet */
+        i = 0;
+        while (1)
+        {
+            wsprintfW(*line_buf + data_pos, format, (unsigned int)value[i]);
+            data_pos += 2;
+            if (++i == value_size)
+                break;
+
+            (*line_buf)[data_pos++] = ',';
+            column += 3;
+
+            /* wrap the line */
+            if (column >= REG_FILE_HEX_LINE_LEN) {
+                lstrcpyW(*line_buf + data_pos, concat);
+                data_pos += concat_len;
+                column = concat_prefix;
+            }
+        }
+    }
+    lstrcpyW(*line_buf + data_pos, newline);
+    HeapFree(GetProcessHeap(), 0, value_multibyte);
+}
+
+/******************************************************************************
+ * Writes the given line to a file, in multi-byte or wide characters
+ */
+static void REGPROC_write_line(FILE *file, const WCHAR* str, BOOL unicode)
+{
+    int i;
+    if (unicode)
+    {
+        for(i = 0; str[i]; i++)
+        {
+            if (str[i] == L'\n')
+                fputwc(L'\r', file);
+            fputwc(str[i], file);
+        }
+    }
+    else
+    {
+        char* strA = GetMultiByteString(str);
+        fputs(strA, file);
+        HeapFree(GetProcessHeap(), 0, strA);
     }
 }
 
@@ -923,18 +1053,20 @@ static void REGPROC_export_string(FILE *file, CHAR *str)
  * key - registry branch to export.
  * reg_key_name_buf - name of the key with registry class.
  *      Is resized if necessary.
- * reg_key_name_len - length of the buffer for the registry class in characters.
+ * reg_key_name_size - length of the buffer for the registry class in characters.
  * val_name_buf - buffer for storing value name.
  *      Is resized if necessary.
- * val_name_len - length of the buffer for storing value names in characters.
+ * val_name_size - length of the buffer for storing value names in characters.
  * val_buf - buffer for storing values while extracting.
  *      Is resized if necessary.
  * val_size - size of the buffer for storing values in bytes.
  */
 static void export_hkey(FILE *file, HKEY key,
-                 CHAR **reg_key_name_buf, DWORD *reg_key_name_len,
-                 CHAR **val_name_buf, DWORD *val_name_len,
-                 BYTE **val_buf, DWORD *val_size)
+                 WCHAR **reg_key_name_buf, DWORD *reg_key_name_size,
+                 WCHAR **val_name_buf, DWORD *val_name_size,
+                 BYTE **val_buf, DWORD *val_size,
+                 WCHAR **line_buf, DWORD *line_buf_size,
+                 BOOL unicode)
 {
     DWORD max_sub_key_len;
     DWORD max_val_name_len;
@@ -943,112 +1075,124 @@ static void export_hkey(FILE *file, HKEY key,
     DWORD i;
     BOOL more_data;
     LONG ret;
+    WCHAR key_format[] = {'\n','[','%','s',']','\n',0};
 
     /* get size information and resize the buffers if necessary */
-    if (RegQueryInfoKey(key, NULL, NULL, NULL, NULL,
+    if (RegQueryInfoKeyW(key, NULL, NULL, NULL, NULL,
                         &max_sub_key_len, NULL,
                         NULL, &max_val_name_len, &max_val_size, NULL, NULL
                        ) != ERROR_SUCCESS) {
         REGPROC_print_error();
     }
-    curr_len = (DWORD) strlen(*reg_key_name_buf);
-    REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_len,
+    curr_len = lstrlenW(*reg_key_name_buf);
+    REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_size,
                                max_sub_key_len + curr_len + 1);
-    REGPROC_resize_char_buffer(val_name_buf, val_name_len,
+    REGPROC_resize_char_buffer(val_name_buf, val_name_size,
                                max_val_name_len);
-    if (max_val_size > *val_size) {
-        *val_size = max_val_size;
-        if (!*val_buf) *val_buf = HeapAlloc(GetProcessHeap(), 0, *val_size);
-        else *val_buf = HeapReAlloc(GetProcessHeap(), 0, *val_buf, *val_size);
-        CHECK_ENOUGH_MEMORY(val_buf);
-    }
-
+    REGPROC_resize_binary_buffer(val_buf, val_size, max_val_size);
+    REGPROC_resize_char_buffer(line_buf, line_buf_size, lstrlenW(*reg_key_name_buf) + 4);
     /* output data for the current key */
-    fputs("\n[", file);
-    fputs(*reg_key_name_buf, file);
-    fputs("]\n", file);
+    wsprintfW(*line_buf, key_format, *reg_key_name_buf);
+    REGPROC_write_line(file, *line_buf, unicode);
+
     /* print all the values */
     i = 0;
     more_data = TRUE;
     while(more_data) {
         DWORD value_type;
-        DWORD val_name_len1 = *val_name_len;
+        DWORD val_name_size1 = *val_name_size;
         DWORD val_size1 = *val_size;
-        ret = RegEnumValueA(key, i, *val_name_buf, &val_name_len1, NULL,
-                            &value_type, *val_buf, &val_size1);
-        if (ret != ERROR_SUCCESS) {
+        ret = RegEnumValueW(key, i, *val_name_buf, &val_name_size1, NULL,
+                           &value_type, *val_buf, &val_size1);
+        if (ret == ERROR_MORE_DATA) {
+            /* Increase the size of the buffers and retry */
+            REGPROC_resize_char_buffer(val_name_buf, val_name_size, val_name_size1);
+            REGPROC_resize_binary_buffer(val_buf, val_size, val_size1);
+        } else if (ret != ERROR_SUCCESS) {
             more_data = FALSE;
             if (ret != ERROR_NO_MORE_ITEMS) {
                 REGPROC_print_error();
             }
         } else {
+            DWORD line_len;
             i++;
 
             if ((*val_name_buf)[0]) {
-                fputs("\"", file);
-                REGPROC_export_string(file, *val_name_buf);
-                fputs("\"=", file);
+                const WCHAR val_start[] = {'"','%','s','"','=',0};
+
+                line_len = 0;
+                REGPROC_export_string(line_buf, line_buf_size, &line_len, *val_name_buf, lstrlenW(*val_name_buf));
+                REGPROC_resize_char_buffer(val_name_buf, val_name_size, lstrlenW(*line_buf) + 1);
+                lstrcpyW(*val_name_buf, *line_buf);
+
+                line_len = 3 + lstrlenW(*val_name_buf);
+                REGPROC_resize_char_buffer(line_buf, line_buf_size, line_len);
+                wsprintfW(*line_buf, val_start, *val_name_buf);
             } else {
-                fputs("@=", file);
+                const WCHAR std_val[] = {'@','=',0};
+                line_len = 2;
+                REGPROC_resize_char_buffer(line_buf, line_buf_size, line_len);
+                lstrcpyW(*line_buf, std_val);
             }
 
             switch (value_type) {
             case REG_SZ:
-            case REG_EXPAND_SZ:
-                fputs("\"", file);
-                REGPROC_export_string(file, (char*) *val_buf);
-                fputs("\"\n", file);
+            {
+                WCHAR* wstr = (WCHAR*)*val_buf;
+
+                if (val_size1 < sizeof(WCHAR) || val_size1 % sizeof(WCHAR) ||
+                    wstr[val_size1 / sizeof(WCHAR) - 1]) {
+                    REGPROC_export_binary(line_buf, line_buf_size, &line_len, value_type, *val_buf, val_size1, unicode);
+                } else {
+                    const WCHAR start[] = {'"',0};
+                    const WCHAR end[] = {'"','\n',0};
+                    DWORD len;
+
+                    len = lstrlenW(start);
+                    REGPROC_resize_char_buffer(line_buf, line_buf_size, line_len + len);
+                    lstrcpyW(*line_buf + line_len, start);
+                    line_len += len;
+
+                    /* At this point we know wstr is '\0'-terminated
+                     * so we can substract 1 from the size
+                     */
+                    REGPROC_export_string(line_buf, line_buf_size, &line_len, wstr, val_size1 / sizeof(WCHAR) - 1);
+
+                    REGPROC_resize_char_buffer(line_buf, line_buf_size, line_len + lstrlenW(end));
+                    lstrcpyW(*line_buf + line_len, end);
+                }
                 break;
+            }
 
             case REG_DWORD:
-                fprintf(file, "dword:%08lx\n", *((DWORD *)*val_buf));
+            {
+                WCHAR format[] = {'d','w','o','r','d',':','%','0','8','x','\n',0};
+
+                REGPROC_resize_char_buffer(line_buf, line_buf_size, line_len + 15);
+                wsprintfW(*line_buf + line_len, format, *((DWORD *)*val_buf));
                 break;
+            }
 
             default:
+            {
+                char* key_nameA = GetMultiByteString(*reg_key_name_buf);
+                char* value_nameA = GetMultiByteString(*val_name_buf);
                 fprintf(stderr,"%s: warning - unsupported registry format '%ld', "
                         "treat as binary\n",
                         getAppName(), value_type);
-                fprintf(stderr,"key name: \"%s\"\n", *reg_key_name_buf);
-                fprintf(stderr,"value name:\"%s\"\n\n", *val_name_buf);
+                fprintf(stderr,"key name: \"%s\"\n", key_nameA);
+                fprintf(stderr,"value name:\"%s\"\n\n", value_nameA);
+                HeapFree(GetProcessHeap(), 0, key_nameA);
+                HeapFree(GetProcessHeap(), 0, value_nameA);
+            }
                 /* falls through */
+            case REG_EXPAND_SZ:
             case REG_MULTI_SZ:
                 /* falls through */
-            case REG_BINARY: {
-                    DWORD i1;
-                    const CHAR *hex_prefix;
-                    CHAR buf[20];
-                    int cur_pos;
-
-                    if (value_type == REG_BINARY) {
-                        hex_prefix = "hex:";
-                    } else {
-                        hex_prefix = buf;
-                        sprintf(buf, "hex(%ld):", value_type);
-                    }
-
-                    /* position of where the next character will be printed */
-                    /* NOTE: yes, strlen("hex:") is used even for hex(x): */
-                    cur_pos = (int) (strlen("\"\"=") + strlen("hex:") +
-                              strlen(*val_name_buf));
-
-                    fputs(hex_prefix, file);
-                    for (i1 = 0; i1 < val_size1; i1++) {
-                        fprintf(file, "%02x", (unsigned int)(*val_buf)[i1]);
-                        if (i1 + 1 < val_size1) {
-                            fputs(",", file);
-                        }
-                        cur_pos += 3;
-
-                        /* wrap the line */
-                        if (cur_pos > REG_FILE_HEX_LINE_LEN) {
-                            fputs("\\\n  ", file);
-                            cur_pos = 2;
-                        }
-                    }
-                    fputs("\n", file);
-                    break;
-                }
+            case REG_BINARY:
+                REGPROC_export_binary(line_buf, line_buf_size, &line_len, value_type, *val_buf, val_size1, unicode);
             }
+            REGPROC_write_line(file, *line_buf, unicode);
         }
     }
 
@@ -1056,11 +1200,14 @@ static void export_hkey(FILE *file, HKEY key,
     more_data = TRUE;
     (*reg_key_name_buf)[curr_len] = '\\';
     while(more_data) {
-        DWORD buf_len = *reg_key_name_len - curr_len;
+        DWORD buf_size = *reg_key_name_size - curr_len - 1;
 
-        ret = RegEnumKeyExA(key, i, *reg_key_name_buf + curr_len + 1, &buf_len,
-                            NULL, NULL, NULL, NULL);
-        if (ret != ERROR_SUCCESS && ret != ERROR_MORE_DATA) {
+        ret = RegEnumKeyExW(key, i, *reg_key_name_buf + curr_len + 1, &buf_size,
+                           NULL, NULL, NULL, NULL);
+        if (ret == ERROR_MORE_DATA) {
+            /* Increase the size of the buffer and retry */
+            REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_size, curr_len + 1 + buf_size);
+        } else if (ret != ERROR_SUCCESS) {
             more_data = FALSE;
             if (ret != ERROR_NO_MORE_ITEMS) {
                 REGPROC_print_error();
@@ -1069,10 +1216,11 @@ static void export_hkey(FILE *file, HKEY key,
             HKEY subkey;
 
             i++;
-            if (RegOpenKeyA(key, *reg_key_name_buf + curr_len + 1,
-                            &subkey) == ERROR_SUCCESS) {
-                export_hkey(file, subkey, reg_key_name_buf, reg_key_name_len,
-                            val_name_buf, val_name_len, val_buf, val_size);
+            if (RegOpenKeyW(key, *reg_key_name_buf + curr_len + 1,
+                           &subkey) == ERROR_SUCCESS) {
+                export_hkey(file, subkey, reg_key_name_buf, reg_key_name_size,
+                            val_name_buf, val_name_size, val_buf, val_size,
+                            line_buf, line_buf_size, unicode);
                 RegCloseKey(subkey);
             } else {
                 REGPROC_print_error();
@@ -1085,15 +1233,39 @@ static void export_hkey(FILE *file, HKEY key,
 /******************************************************************************
  * Open file for export.
  */
-static FILE *REGPROC_open_export_file(const TCHAR *file_name)
+static FILE *REGPROC_open_export_file(WCHAR *file_name, BOOL unicode)
 {
-    FILE *file = _tfopen(file_name, _T("w"));
-    if (!file) {
-        perror("");
-/*      fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), file_name);*/
-        exit(1);
+    FILE *file;
+    WCHAR dash = '-';
+
+    if (wcsncmp(file_name, &dash, 1) == 0)
+        file = stdout;
+    else
+    {
+        if (unicode)
+            file = _wfopen(file_name, L"wb");
+        else
+            file = _wfopen(file_name, L"w");
+        if (!file) {
+            CHAR* file_nameA = GetMultiByteString(file_name);
+            perror("");
+            fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), file_nameA);
+            HeapFree(GetProcessHeap(), 0, file_nameA);
+            exit(1);
+        }
     }
-    fputs("REGEDIT4\n", file);
+    if (unicode)
+    {
+        const BYTE unicode_seq[] = {0xff,0xfe};
+        const WCHAR header[] = L"Windows Registry Editor Version 5.00\r\n";
+        fwrite(unicode_seq, sizeof(BYTE), COUNT_OF(unicode_seq), file);
+        fwrite(header, sizeof(WCHAR), lstrlenW(header), file);
+    }
+    else
+    {
+        fputs("REGEDIT4\n", file);
+    }
+
     return file;
 }
 
@@ -1105,77 +1277,84 @@ static FILE *REGPROC_open_export_file(const TCHAR *file_name)
  * reg_key_name - registry branch to export. The whole registry is exported if
  *      reg_key_name is NULL or contains an empty string.
  */
-BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name)
+BOOL export_registry_key(WCHAR *file_name, WCHAR *reg_key_name, DWORD format)
 {
-    HKEY reg_key_class;
-
-    CHAR *reg_key_name_buf;
-    CHAR *val_name_buf;
+    WCHAR *reg_key_name_buf;
+    WCHAR *val_name_buf;
     BYTE *val_buf;
-    DWORD reg_key_name_len = KEY_MAX_LEN;
-    DWORD val_name_len = KEY_MAX_LEN;
+    WCHAR *line_buf;
+    DWORD reg_key_name_size = KEY_MAX_LEN;
+    DWORD val_name_size = KEY_MAX_LEN;
     DWORD val_size = REG_VAL_BUF_SIZE;
+    DWORD line_buf_size = KEY_MAX_LEN + REG_VAL_BUF_SIZE;
     FILE *file = NULL;
+    BOOL unicode = (format == REG_FORMAT_5);
 
     reg_key_name_buf = HeapAlloc(GetProcessHeap(), 0,
-                                 reg_key_name_len  * sizeof(*reg_key_name_buf));
+                                 reg_key_name_size  * sizeof(*reg_key_name_buf));
     val_name_buf = HeapAlloc(GetProcessHeap(), 0,
-                             val_name_len * sizeof(*val_name_buf));
+                             val_name_size * sizeof(*val_name_buf));
     val_buf = HeapAlloc(GetProcessHeap(), 0, val_size);
-    CHECK_ENOUGH_MEMORY(reg_key_name_buf && val_name_buf && val_buf);
+    line_buf = HeapAlloc(GetProcessHeap(), 0, line_buf_size * sizeof(*line_buf));
+    CHECK_ENOUGH_MEMORY(reg_key_name_buf && val_name_buf && val_buf && line_buf);
 
     if (reg_key_name && reg_key_name[0]) {
-        CHAR *branch_name;
+        HKEY reg_key_class;
+        WCHAR *branch_name = NULL;
         HKEY key;
 
-        REGPROC_resize_char_buffer(&reg_key_name_buf, &reg_key_name_len,
-                                   (DWORD) strlen(reg_key_name));
-        strcpy(reg_key_name_buf, reg_key_name);
+        REGPROC_resize_char_buffer(&reg_key_name_buf, &reg_key_name_size,
+                                   lstrlenW(reg_key_name));
+        lstrcpyW(reg_key_name_buf, reg_key_name);
 
         /* open the specified key */
-        if (!getRegClass(reg_key_name, &reg_key_class)) {
+        if (!parseKeyName(reg_key_name, &reg_key_class, &branch_name)) {
+            CHAR* key_nameA = GetMultiByteString(reg_key_name);
             fprintf(stderr,"%s: Incorrect registry class specification in '%s'\n",
-                    getAppName(), reg_key_name);
+                    getAppName(), key_nameA);
+            HeapFree(GetProcessHeap(), 0, key_nameA);
             exit(1);
         }
-        branch_name = getRegKeyName(reg_key_name);
-        CHECK_ENOUGH_MEMORY(branch_name);
         if (!branch_name[0]) {
             /* no branch - registry class is specified */
-            file = REGPROC_open_export_file(file_name);
+            file = REGPROC_open_export_file(file_name, unicode);
             export_hkey(file, reg_key_class,
-                        &reg_key_name_buf, &reg_key_name_len,
-                        &val_name_buf, &val_name_len,
-                        &val_buf, &val_size);
-        } else if (RegOpenKeyA(reg_key_class, branch_name, &key) == ERROR_SUCCESS) {
-            file = REGPROC_open_export_file(file_name);
+                        &reg_key_name_buf, &reg_key_name_size,
+                        &val_name_buf, &val_name_size,
+                        &val_buf, &val_size, &line_buf,
+                        &line_buf_size, unicode);
+        } else if (RegOpenKeyW(reg_key_class, branch_name, &key) == ERROR_SUCCESS) {
+            file = REGPROC_open_export_file(file_name, unicode);
             export_hkey(file, key,
-                        &reg_key_name_buf, &reg_key_name_len,
-                        &val_name_buf, &val_name_len,
-                        &val_buf, &val_size);
+                        &reg_key_name_buf, &reg_key_name_size,
+                        &val_name_buf, &val_name_size,
+                        &val_buf, &val_size, &line_buf,
+                        &line_buf_size, unicode);
             RegCloseKey(key);
         } else {
+            CHAR* key_nameA = GetMultiByteString(reg_key_name);
             fprintf(stderr,"%s: Can't export. Registry key '%s' does not exist!\n",
-                    getAppName(), reg_key_name);
+                    getAppName(), key_nameA);
+            HeapFree(GetProcessHeap(), 0, key_nameA);
             REGPROC_print_error();
         }
-        HeapFree(GetProcessHeap(), 0, branch_name);
     } else {
         unsigned int i;
 
         /* export all registry classes */
-        file = REGPROC_open_export_file(file_name);
+        file = REGPROC_open_export_file(file_name, unicode);
         for (i = 0; i < REG_CLASS_NUMBER; i++) {
             /* do not export HKEY_CLASSES_ROOT */
             if (reg_class_keys[i] != HKEY_CLASSES_ROOT &&
                     reg_class_keys[i] != HKEY_CURRENT_USER &&
                     reg_class_keys[i] != HKEY_CURRENT_CONFIG &&
                     reg_class_keys[i] != HKEY_DYN_DATA) {
-                strcpy(reg_key_name_buf, reg_class_names[i]);
+                lstrcpyW(reg_key_name_buf, reg_class_namesW[i]);
                 export_hkey(file, reg_class_keys[i],
-                            &reg_key_name_buf, &reg_key_name_len,
-                            &val_name_buf, &val_name_len,
-                            &val_buf, &val_size);
+                            &reg_key_name_buf, &reg_key_name_size,
+                            &val_name_buf, &val_name_size,
+                            &val_buf, &val_size, &line_buf,
+                            &line_buf_size, unicode);
             }
         }
     }
@@ -1183,81 +1362,35 @@ BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name)
     if (file) {
         fclose(file);
     }
+    HeapFree(GetProcessHeap(), 0, reg_key_name);
+    HeapFree(GetProcessHeap(), 0, val_name_buf);
     HeapFree(GetProcessHeap(), 0, val_buf);
+    HeapFree(GetProcessHeap(), 0, line_buf);
     return TRUE;
 }
 
 /******************************************************************************
  * Reads contents of the specified file into the registry.
  */
-BOOL import_registry_file(LPTSTR filename)
+BOOL import_registry_file(FILE* reg_file)
 {
-    FILE* reg_file = _tfopen(filename, _T("r"));
-
-    if (reg_file) {
-        unsigned char ch1 = fgetc(reg_file);
-        unsigned char ch2 = fgetc(reg_file);
-
-        /* detect UTF-16.LE or UTF-16.BE format */
-        if ((ch1 == 0xff && ch2 == 0xfe) ||
-            (ch1 == 0xfe && ch2 == 0xff)) {
-            /* TODO: implement support for UNICODE files! */
-        } else {
-            /* restore read point to the first line */
-            fseek(reg_file, 0L, SEEK_SET);
-            processRegLines(reg_file, doSetValue);
+    if (reg_file)
+    {
+        BYTE s[2];
+        if (fread( s, 2, 1, reg_file) == 1)
+        {
+            if (s[0] == 0xff && s[1] == 0xfe)
+            {
+                processRegLinesW(reg_file);
+            } else
+            {
+                fseek(reg_file, 0, SEEK_SET);
+                processRegLinesA(reg_file);
+            }
         }
-        fclose(reg_file);
         return TRUE;
     }
     return FALSE;
-}
-
-/******************************************************************************
- * Recursive function which removes the registry key with all subkeys.
- */
-static void delete_branch(HKEY key,
-                   CHAR **reg_key_name_buf, DWORD *reg_key_name_len)
-{
-    HKEY branch_key;
-    DWORD max_sub_key_len;
-    DWORD subkeys;
-    DWORD curr_len;
-    LONG ret;
-    long int i;
-
-    if (RegOpenKeyA(key, *reg_key_name_buf, &branch_key) != ERROR_SUCCESS) {
-        REGPROC_print_error();
-    }
-
-    /* get size information and resize the buffers if necessary */
-    if (RegQueryInfoKey(branch_key, NULL, NULL, NULL,
-                        &subkeys, &max_sub_key_len,
-                        NULL, NULL, NULL, NULL, NULL, NULL
-                       ) != ERROR_SUCCESS) {
-        REGPROC_print_error();
-    }
-    curr_len = (DWORD) strlen(*reg_key_name_buf);
-    REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_len,
-                               max_sub_key_len + curr_len + 1);
-
-    (*reg_key_name_buf)[curr_len] = '\\';
-    for (i = subkeys - 1; i >= 0; i--) {
-        DWORD buf_len = *reg_key_name_len - curr_len;
-
-        ret = RegEnumKeyExA(branch_key, i, *reg_key_name_buf + curr_len + 1,
-                            &buf_len, NULL, NULL, NULL, NULL);
-        if (ret != ERROR_SUCCESS &&
-                ret != ERROR_MORE_DATA &&
-                ret != ERROR_NO_MORE_ITEMS) {
-            REGPROC_print_error();
-        } else {
-            delete_branch(key, reg_key_name_buf, reg_key_name_len);
-        }
-    }
-    (*reg_key_name_buf)[curr_len] = '\0';
-    RegCloseKey(branch_key);
-    RegDeleteKeyA(key, *reg_key_name_buf);
 }
 
 /******************************************************************************
@@ -1267,265 +1400,28 @@ static void delete_branch(HKEY key,
  * reg_key_name - full name of registry branch to delete. Ignored if is NULL,
  *      empty, points to register key class, does not exist.
  */
-void delete_registry_key(CHAR *reg_key_name)
+void delete_registry_key(WCHAR *reg_key_name)
 {
-    CHAR *branch_name;
-    DWORD branch_name_len;
-    HKEY reg_key_class;
-    HKEY branch_key;
+    WCHAR *key_name = NULL;
+    HKEY key_class;
 
     if (!reg_key_name || !reg_key_name[0])
         return;
-    /* open the specified key */
-    if (!getRegClass(reg_key_name, &reg_key_class)) {
+
+    if (!parseKeyName(reg_key_name, &key_class, &key_name)) {
+        char* reg_key_nameA = GetMultiByteString(reg_key_name);
         fprintf(stderr,"%s: Incorrect registry class specification in '%s'\n",
-                getAppName(), reg_key_name);
+                getAppName(), reg_key_nameA);
+        HeapFree(GetProcessHeap(), 0, reg_key_nameA);
         exit(1);
     }
-    branch_name = getRegKeyName(reg_key_name);
-    CHECK_ENOUGH_MEMORY(branch_name);
-    branch_name_len = (DWORD) strlen(branch_name);
-    if (!branch_name[0]) {
+    if (!*key_name) {
+        char* reg_key_nameA = GetMultiByteString(reg_key_name);
         fprintf(stderr,"%s: Can't delete registry class '%s'\n",
-                getAppName(), reg_key_name);
+                getAppName(), reg_key_nameA);
+        HeapFree(GetProcessHeap(), 0, reg_key_nameA);
         exit(1);
     }
-    if (RegOpenKeyA(reg_key_class, branch_name, &branch_key) == ERROR_SUCCESS) {
-        /* check whether the key exists */
-        RegCloseKey(branch_key);
-        delete_branch(reg_key_class, &branch_name, &branch_name_len);
-    }
-    HeapFree(GetProcessHeap(), 0, branch_name);
+
+    SHDeleteKey(key_class, key_name);
 }
-
-/******************************************************************************
- * Sets the application name. Then application name is used in the error
- * reporting.
- */
-void setAppName(const CHAR *name)
-{
-    app_name = name;
-}
-
-const CHAR *getAppName(void)
-{
-    return app_name;
-}
-
-LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
-{
-    LONG lResult;
-    DWORD dwDisposition;
-    HKEY hDestSubKey = NULL;
-    HKEY hSrcSubKey = NULL;
-    DWORD dwIndex, dwType, cbName, cbData;
-    TCHAR szSubKey[256];
-    TCHAR szValueName[256];
-    BYTE szValueData[512];
-
-    FILETIME ft;
-
-    /* open the source subkey, if specified */
-    if (lpSrcSubKey)
-    {
-        lResult = RegOpenKeyEx(hSrcKey, lpSrcSubKey, 0, KEY_ALL_ACCESS, &hSrcSubKey);
-        if (lResult)
-            goto done;
-        hSrcKey = hSrcSubKey;
-    }
-
-    /* create the destination subkey */
-    lResult = RegCreateKeyEx(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
-        &hDestSubKey, &dwDisposition);
-    if (lResult)
-        goto done;
-
-    /* copy all subkeys */
-    dwIndex = 0;
-    do
-    {
-        cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
-        lResult = RegEnumKeyEx(hSrcKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
-        if (lResult == ERROR_SUCCESS)
-        {
-            lResult = RegCopyKey(hDestSubKey, szSubKey, hSrcKey, szSubKey);
-            if (lResult)
-                goto done;
-        }
-    }
-    while(lResult == ERROR_SUCCESS);
-
-    /* copy all subvalues */
-    dwIndex = 0;
-    do
-    {
-        cbName = sizeof(szValueName) / sizeof(szValueName[0]);
-        cbData = sizeof(szValueData) / sizeof(szValueData[0]);
-        lResult = RegEnumValue(hSrcKey, dwIndex++, szValueName, &cbName, NULL, &dwType, szValueData, &cbData);
-        if (lResult == ERROR_SUCCESS)
-        {
-            lResult = RegSetValueEx(hDestSubKey, szValueName, 0, dwType, szValueData, cbData);
-            if (lResult)
-                goto done;
-        }
-    }
-    while(lResult == ERROR_SUCCESS);
-
-    lResult = ERROR_SUCCESS;
-
-done:
-    if (hSrcSubKey)
-        RegCloseKey(hSrcSubKey);
-    if (hDestSubKey)
-        RegCloseKey(hDestSubKey);
-    if (lResult != ERROR_SUCCESS)
-        SHDeleteKey(hDestKey, lpDestSubKey);
-    return lResult;
-
-}
-
-LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
-{
-    LONG lResult;
-
-    if (!lpSrcSubKey)
-        return ERROR_INVALID_FUNCTION;
-
-    lResult = RegCopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
-    if (lResult == ERROR_SUCCESS)
-        SHDeleteKey(hSrcKey, lpSrcSubKey);
-
-    return lResult;
-}
-
-LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
-{
-    LPCTSTR s;
-    LPTSTR lpNewSubKey = NULL;
-    LONG Ret = 0;
-
-	if (!lpSubKey)
-		return Ret;
-
-    s = _tcsrchr(lpSubKey, _T('\\'));
-    if (s)
-    {
-        s++;
-        lpNewSubKey = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (s - lpSubKey + _tcslen(lpNewName) + 1) * sizeof(TCHAR));
-        if (lpNewSubKey != NULL)
-        {
-            memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(TCHAR));
-            _tcscpy(lpNewSubKey + (s - lpSubKey), lpNewName);
-            lpNewName = lpNewSubKey;
-        }
-        else
-            return ERROR_NOT_ENOUGH_MEMORY;
-    }
-
-    Ret = RegMoveKey(hKey, lpNewName, hKey, lpSubKey);
-
-    if (lpNewSubKey)
-    {
-        HeapFree(GetProcessHeap(), 0, lpNewSubKey);
-    }
-    return Ret;
-}
-
-LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue)
-{
-    LONG lResult;
-    HKEY hSubKey = NULL;
-    DWORD dwType, cbData;
-    BYTE data[512];
-
-    if (lpSubKey)
-    {
-        lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
-        if (lResult != ERROR_SUCCESS)
-            goto done;
-        hKey = hSubKey;
-    }
-
-    cbData = sizeof(data);
-    lResult = RegQueryValueEx(hKey, lpSrcValue, NULL, &dwType, data, &cbData);
-    if (lResult != ERROR_SUCCESS)
-        goto done;
-
-    lResult = RegSetValueEx(hKey, lpDestValue, 0, dwType, data, cbData);
-    if (lResult != ERROR_SUCCESS)
-        goto done;
-
-    RegDeleteValue(hKey, lpSrcValue);
-
-done:
-    if (hSubKey)
-        RegCloseKey(hSubKey);
-    return lResult;
-}
-
-LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen)
-{
-    LONG lResult;
-    HKEY hSubKey = NULL;
-    DWORD cbData, dwType;
-
-    if (lpSubKey)
-    {
-        lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
-        if (lResult != ERROR_SUCCESS)
-            goto done;
-        hKey = hSubKey;
-    }
-
-    cbData = (dwBufferLen - 1) * sizeof(*pszBuffer);
-    lResult = RegQueryValueEx(hKey, lpValueName, NULL, &dwType, (LPBYTE) pszBuffer, &cbData);
-    if (lResult != ERROR_SUCCESS)
-        goto done;
-    if (dwType != REG_SZ)
-    {
-        lResult = -1;
-        goto done;
-    }
-
-    pszBuffer[cbData / sizeof(*pszBuffer)] = '\0';
-
-done:
-    if (lResult != ERROR_SUCCESS)
-        pszBuffer[0] = '\0';
-    if (hSubKey)
-        RegCloseKey(hSubKey);
-    return lResult;
-}
-
-/******************************************************************************
- * Key naming and parsing
- */
-
-BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey)
-{
-    LPCTSTR pszRootKey;
-
-    if (hRootKey == HKEY_CLASSES_ROOT)
-        pszRootKey = TEXT("HKEY_CLASSES_ROOT");
-    else if (hRootKey == HKEY_CURRENT_USER)
-        pszRootKey = TEXT("HKEY_CURRENT_USER");
-    else if (hRootKey == HKEY_LOCAL_MACHINE)
-        pszRootKey = TEXT("HKEY_LOCAL_MACHINE");
-    else if (hRootKey == HKEY_USERS)
-        pszRootKey = TEXT("HKEY_USERS");
-    else if (hRootKey == HKEY_CURRENT_CONFIG)
-        pszRootKey = TEXT("HKEY_CURRENT_CONFIG");
-    else if (hRootKey == HKEY_DYN_DATA)
-        pszRootKey = TEXT("HKEY_DYN_DATA");
-    else
-        return FALSE;
-
-    if (lpSubKey[0])
-        _sntprintf(pszDest, iDestLength, TEXT("%s\\%s"), pszRootKey, lpSubKey);
-    else
-        _sntprintf(pszDest, iDestLength, TEXT("%s"), pszRootKey);
-    return TRUE;
-}
-
-
-

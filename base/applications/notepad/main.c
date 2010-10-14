@@ -29,9 +29,9 @@ static ATOM aFINDMSGSTRING;
 
 VOID NOTEPAD_EnableSearchMenu()
 {
-    EnableMenuItem(GetMenu(Globals.hMainWnd), CMD_SEARCH,
+    EnableMenuItem(Globals.hMenu, CMD_SEARCH,
                    MF_BYCOMMAND | ((GetWindowTextLength(Globals.hEdit) == 0) ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
-    EnableMenuItem(GetMenu(Globals.hMainWnd), CMD_SEARCH_NEXT,
+    EnableMenuItem(Globals.hMenu, CMD_SEARCH_NEXT,
                    MF_BYCOMMAND | ((GetWindowTextLength(Globals.hEdit) == 0) ? MF_DISABLED | MF_GRAYED : MF_ENABLED));
 }
 
@@ -334,23 +334,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
     switch (msg) {
 
     case WM_CREATE:
-    {
-        static const TCHAR edit[] = _T("edit");
-        RECT rc;
-        GetClientRect(hWnd, &rc);
-        Globals.hEdit = CreateWindowEx(EDIT_EXSTYLE, edit, NULL, Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE,
-                             0, 0, rc.right, rc.bottom, hWnd,
-                             NULL, Globals.hInstance, NULL);
-        if (!Globals.hEdit)
-            return -1;
-        SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
-        if (Globals.hFont)
-            SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)TRUE);
-
-        Globals.EditProc = (WNDPROC) SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)EDIT_WndProc);
-
+        Globals.hMenu = GetMenu(hWnd);
         break;
-    }
 
     case WM_COMMAND:
         if (HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == EN_HSCROLL || HIWORD(wParam) == EN_VSCROLL)
@@ -386,7 +371,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     case WM_SIZE:
     {
-        if (Globals.bShowStatusBar)
+        if (Globals.bShowStatusBar == TRUE &&
+            Globals.bWrapLongLines == FALSE)
         {
             RECT rcStatusBar;
             HDWP hdwp;
@@ -412,6 +398,12 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
         break;
     }
+
+    // The entire client area is covered by edit control and by
+    // the status bar. So there is no need to erase main background.
+    // This resolves the horrible fliker effect during windows resizes.
+    case WM_ERASEBKGND:
+        return 1;
 
     case WM_SETFOCUS:
         SetFocus(Globals.hEdit);
@@ -612,6 +604,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prev, LPTSTR cmdline, int sh
         ShowLastError();
         ExitProcess(1);
     }
+
+    DoCreateEditWindow();
 
     NOTEPAD_InitData();
     DIALOG_FileNew();

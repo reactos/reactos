@@ -32,7 +32,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-static ULONG gDebugChannel = resource;
+DEBUG_CHANNEL(resource);
 
 #define DATE_DATEVARSONLY 0x0100  /* only date stuff: yMdg */
 #define TIME_TIMEVARSONLY 0x0200  /* only time stuff: hHmst */

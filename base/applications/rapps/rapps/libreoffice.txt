@@ -1,0 +1,24 @@
+﻿; UTF-8
+
+[Section]
+Name = LibreOffice
+Version = 3.3.0 Beta 1
+Licence = LGPL
+Description = Former called OpenOffice. Open Source Office Suite.
+Size = 138.0MB
+Category = 6
+URLSite = http://www.documentfoundation.org/
+URLDownload = http://download.documentfoundation.org/libreoffice/testing/LO_3.3.0-beta1_Win_x86_install_en-US.exe
+CDPath = none
+
+[Section.0407]
+Description = Vorher bekannt als OpenOffice. Open Source Office Suite.
+
+[Section.040a]
+Description = La suite de ofimática de código abierto.
+
+[Section.0415]
+Description = Otwarty pakiet biurowy.
+
+[Section.0422]
+Description = Відкритий офісний пакет.

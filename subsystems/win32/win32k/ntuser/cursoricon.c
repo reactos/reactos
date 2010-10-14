@@ -60,7 +60,7 @@ InitCursorImpl()
 
      gSysCursorInfo.Enabled = FALSE;
      gSysCursorInfo.ButtonsDown = 0;
-     gSysCursorInfo.CursorClipInfo.IsClipped = FALSE;
+     gSysCursorInfo.bClipped = FALSE;
      gSysCursorInfo.LastBtnDown = 0;
      gSysCursorInfo.CurrentCursorObject = NULL;
      gSysCursorInfo.ShowingCursor = 0;
@@ -176,62 +176,55 @@ UserSetCursor(
 
 BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
 {
-    PWINDOW_OBJECT DesktopWindow;
+    PWND DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
     HDC hDC;
     MSG Msg;
+    RECTL rcClip;
+    POINT pt;
 
     if(!(hDC = IntGetScreenDC()))
     {
         return FALSE;
     }
 
+    if(!(DesktopWindow = UserGetDesktopWindow()))
+    {
+        return FALSE;
+    }
+
     CurInfo = IntGetSysCursorInfo();
 
-    DesktopWindow = UserGetDesktopWindow();
+    /* Clip cursor position */
+    if (!CurInfo->bClipped)
+        rcClip = DesktopWindow->rcClient;
+    else
+        rcClip = CurInfo->rcClip;
 
-    if (DesktopWindow)
+    if(x >= rcClip.right)  x = rcClip.right - 1;
+    if(x < rcClip.left)    x = rcClip.left;
+    if(y >= rcClip.bottom) y = rcClip.bottom - 1;
+    if(y < rcClip.top)     y = rcClip.top;
+
+    pt.x = x;
+    pt.y = y;
+
+
+    if (SendMouseMoveMsg)
     {
-        if(x >= DesktopWindow->Wnd->rcClient.right)
-            x = DesktopWindow->Wnd->rcClient.right - 1;
-        if(y >= DesktopWindow->Wnd->rcClient.bottom)
-            y = DesktopWindow->Wnd->rcClient.bottom - 1;
+        /* Generate a mouse move message */
+        Msg.message = WM_MOUSEMOVE;
+        Msg.wParam = CurInfo->ButtonsDown;
+        Msg.lParam = MAKELPARAM(x, y);
+        Msg.pt = pt;
+        MsqInsertSystemMessage(&Msg);
     }
 
-    if(x < 0)
-        x = 0;
-    if(y < 0)
-        y = 0;
+    /* Store the new cursor position */
+    gpsi->ptCursor = pt;
 
-    //Clip cursor position
-    if(CurInfo->CursorClipInfo.IsClipped)
-    {
-       if(x >= (LONG)CurInfo->CursorClipInfo.Right)
-           x = (LONG)CurInfo->CursorClipInfo.Right - 1;
-       if(x < (LONG)CurInfo->CursorClipInfo.Left)
-           x = (LONG)CurInfo->CursorClipInfo.Left;
-       if(y >= (LONG)CurInfo->CursorClipInfo.Bottom)
-           y = (LONG)CurInfo->CursorClipInfo.Bottom - 1;
-       if(y < (LONG)CurInfo->CursorClipInfo.Top)
-           y = (LONG)CurInfo->CursorClipInfo.Top;
-    }
-
-    //Store the new cursor position
-    gpsi->ptCursor.x = x;
-    gpsi->ptCursor.y = y;
-
-    //Move the mouse pointer
+    /* Move the mouse pointer */
     GreMovePointer(hDC, x, y);
-
-    if (!SendMouseMoveMsg)
-       return TRUE;
-
-    //Generate a mouse move message
-    Msg.message = WM_MOUSEMOVE;
-    Msg.wParam = CurInfo->ButtonsDown;
-    Msg.lParam = MAKELPARAM(x, y);
-    Msg.pt = gpsi->ptCursor;
-    MsqInsertSystemMessage(&Msg);
 
     return TRUE;
 }
@@ -707,7 +700,7 @@ UserClipCursor(
 {
     /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
     PSYSTEM_CURSORINFO CurInfo;
-    PWINDOW_OBJECT DesktopWindow = NULL;
+    PWND DesktopWindow = NULL;
 
     CurInfo = IntGetSysCursorInfo();
 
@@ -718,17 +711,13 @@ UserClipCursor(
        (prcl->bottom > prcl->top) &&
         DesktopWindow != NULL)
     {
-        CurInfo->CursorClipInfo.IsClipped = TRUE;
-        CurInfo->CursorClipInfo.Left = max(prcl->left, DesktopWindow->Wnd->rcWindow.left);
-        CurInfo->CursorClipInfo.Top = max(prcl->top, DesktopWindow->Wnd->rcWindow.top);
-        CurInfo->CursorClipInfo.Right = min(prcl->right, DesktopWindow->Wnd->rcWindow.right);
-        CurInfo->CursorClipInfo.Bottom = min(prcl->bottom, DesktopWindow->Wnd->rcWindow.bottom);
-
+        CurInfo->bClipped = TRUE;
+        RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
         UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
     }
     else
     {
-        CurInfo->CursorClipInfo.IsClipped = FALSE;
+        CurInfo->bClipped = FALSE;
     }
 
     return TRUE;
@@ -742,7 +731,6 @@ APIENTRY
 NtUserClipCursor(
     RECTL *prcl)
 {
-    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
     RECTL rclLocal;
     BOOL bResult;
 
@@ -763,8 +751,8 @@ NtUserClipCursor(
 
         prcl = &rclLocal;
     }
-
-    UserEnterExclusive();
+	
+	UserEnterExclusive();
 
     /* Call the internal function */
     bResult = UserClipCursor(prcl);
@@ -866,12 +854,9 @@ NtUserGetClipCursor(
         RETURN(FALSE);
 
     CurInfo = IntGetSysCursorInfo();
-    if (CurInfo->CursorClipInfo.IsClipped)
+    if (CurInfo->bClipped)
     {
-        Rect.left = CurInfo->CursorClipInfo.Left;
-        Rect.top = CurInfo->CursorClipInfo.Top;
-        Rect.right = CurInfo->CursorClipInfo.Right;
-        Rect.bottom = CurInfo->CursorClipInfo.Bottom;
+        Rect = CurInfo->rcClip;
     }
     else
     {

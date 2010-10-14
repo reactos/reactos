@@ -144,6 +144,6 @@ BEGIN
 	IDS_CPLNAME "Konsoll"
 	IDS_CPLDESCRIPTION "Konfigurere Konsoll innstillinger."
 	IDS_APPLY_SHORTCUT_ALL "Modify &shortcut that started this window"
-	IDS_SCREEN_TEXT "C:\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
+	IDS_SCREEN_TEXT "C:\\ReactOS> dir\nSYSTEM          <DIR>     10-01-99     5:00\nSYSTEM32      <DIR>     10-01-99     5:00"
 	IDS_RASTERFONTS "Raster Fonts"
 END

@@ -14,11 +14,11 @@
 /* FUNCTIONS ********************************************************/
 
 void
-SetWallpaper(TCHAR * FileName, DWORD dwStyle, DWORD dwTile)     //FIXME: The pattern (tiled/stretched) is not set
+SetWallpaper(TCHAR * FileName, DWORD dwStyle, DWORD dwTile) //FIXME: Has to be called 2x to apply the pattern (tiled/stretched) too
 {
     SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) FileName, SPIF_UPDATEINIFILE);
 
-    /*HKEY hDesktop;
+    HKEY hDesktop;
     TCHAR szStyle[3], szTile[3];
 
     if ((dwStyle > 2) || (dwTile > 2))
@@ -39,5 +39,5 @@ SetWallpaper(TCHAR * FileName, DWORD dwStyle, DWORD dwTile)     //FIXME: The pat
                       _tcslen(szTile) * sizeof(TCHAR));
 
         RegCloseKey(hDesktop);
-    }*/
+    }
 }

@@ -13,6 +13,9 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>uuid</library>
+	<if property="ARCH" value="amd64">
+		<library>crt</library>
+	</if>
 
 	<file>ati_fragment_shader.c</file>
 	<file>arb_program_shader.c</file>

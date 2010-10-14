@@ -33,9 +33,9 @@ STRINGTABLE
     STRING_PAUSE,    "Premi Invio per iniziare a copiare\n"
     STRING_SIMCOPY,  "%d file sarebbero copiati\n"
     STRING_COPY,     "%d file copiato/i\n"
-    STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n" \
-                     "nell'obiettivo?\n" \
-                     "(F - File, C - Cartella)\n"
+    STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n \
+                     nell'obiettivo?\n \
+                     (F - File, C - Cartella)\n"
     STRING_SRCPROMPT,"%s? (Sì|No)\n"
     STRING_OVERWRITE,"Sovrascrivere %s? (Sì|No|Tutti)\n"
     STRING_COPYFAIL, "La copia di '%s' in '%s' è fallita con r/c %d\n"

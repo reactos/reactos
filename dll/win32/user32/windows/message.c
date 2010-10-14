@@ -2624,7 +2624,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
 
   if (pci->CallbackWnd.hWnd == UMMsg.hwnd)
-     pWnd  = pci->CallbackWnd.pvWnd;
+     pWnd  = pci->CallbackWnd.pWnd;
     
   CallbackArgs->Result = IntCallWindowProcW( CallbackArgs->IsAnsiProc,
                                              CallbackArgs->Proc,

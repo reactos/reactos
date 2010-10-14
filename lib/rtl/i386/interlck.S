@@ -16,6 +16,9 @@
  * RtlInterlockedPopEntrySList(
  *     IN PSLIST_HEADER ListHead);
  */
+.global _ExpInterlockedPopEntrySListResume@0
+.global _ExpInterlockedPopEntrySListEnd@0
+.global _ExpInterlockedPopEntrySListFault@0
 .global _RtlInterlockedPopEntrySList@4
 _RtlInterlockedPopEntrySList@4:
 
@@ -25,7 +28,7 @@ _RtlInterlockedPopEntrySList@4:
 
     /* Load ListHead into ebp */
     mov ebp, [esp + 12]
-
+_ExpInterlockedPopEntrySListResume@0:
     /* Load ListHead->Next into eax */
     mov eax, [ebp]
 
@@ -40,14 +43,15 @@ _RtlInterlockedPopEntrySList@4:
     /* Copy Depth and Sequence number and adjust Depth */
     lea ecx, [edx - 1]
 
+_ExpInterlockedPopEntrySListFault@0:
     /* Get next pointer */
     mov ebx, [eax]
-
+_ExpInterlockedPopEntrySListEnd@0:
     /* If [ebp] equals edx:eax, exchange it with ecx:ebx */
-    lock cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
 
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
-    jnz 1b
+    jnz _ExpInterlockedPopEntrySListResume@0
 
     /* Restore registers and return */
 2:
@@ -89,7 +93,7 @@ _RtlInterlockedPushEntrySList@8:
     lea ecx, [edx + 0x10001]
 
     /* If [ebp] equals edx:eax, exchange it with ecx:ebx */
-    lock cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
  
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
     jnz 1b
@@ -136,7 +140,7 @@ _RtlInterlockedFlushSList@4:
     xor cx, cx
 
     /* If [ebp] equals edx:eax, exchange it with ecx:ebx */
-    lock cmpxchg8b [ebp]
+    LOCK cmpxchg8b qword ptr [ebp]
  
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
     jnz 1b

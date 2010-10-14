@@ -124,3 +124,10 @@ extern void DestroyMainMenu( void );
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
 extern BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath);
+extern LONG RenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName);
+extern LONG RenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue);
+extern LONG QueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen);
+extern BOOL GetKeyName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);
+
+/* security.c */
+extern BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);

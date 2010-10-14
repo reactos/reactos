@@ -50,7 +50,7 @@ STRING_LABEL_NAME_EDIT  "Podaj aktualn¹ etykietê woluminu dla dysku %C: "
 
 STRING_ERROR_LABEL     "Nieprawid³owa etykieta woluminu zosta³a wpisana dla tego dysku.\n"
 
-STRING_YN_FORMAT       "\OSTRZE¯ENIE: WSZYSTKIE DANE NA NIEWYJMOWALNYM DYSKU\n\
+STRING_YN_FORMAT       "\\OSTRZE¯ENIE: WSZYSTKIE DANE NA NIEWYJMOWALNYM DYSKU\n\
 W STACJI %C: ZOSTAN¥ UTRACONE!\nCzy kontynuowaæ formatowanie (T/N)? "
 
 STRING_YES_NO_FAQ      "TN"

@@ -67,11 +67,11 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("start")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        if (ServiceName)
+        if (ArgCount > 0)
         {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
             Start(ServiceName,
                   ServiceArgs,
                   ArgCount);
@@ -81,11 +81,11 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("pause")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        if (ServiceName)
+        if (ArgCount > 0)
         {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
             Control(SERVICE_CONTROL_PAUSE,
                     ServiceName,
                     ServiceArgs,
@@ -96,11 +96,11 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("interrogate")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        if (ServiceName)
+        if (ArgCount > 0)
         {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
             Control(SERVICE_CONTROL_INTERROGATE,
                     ServiceName,
                     ServiceArgs,
@@ -111,11 +111,11 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("stop")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        if (ServiceName)
+        if (ArgCount > 0)
         {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
             Control(SERVICE_CONTROL_STOP,
                     ServiceName,
                     ServiceArgs,
@@ -126,11 +126,11 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("continue")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        if (ServiceName)
+        if (ArgCount > 0)
         {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
             Control(SERVICE_CONTROL_CONTINUE,
                     ServiceName,
                     ServiceArgs,
@@ -141,51 +141,49 @@ ScControl(LPCTSTR Server,       // remote machine name
     }
     else if (!lstrcmpi(Command, _T("delete")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
+        if (ArgCount > 0)
+        {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
 
-        if (ServiceName)
             Delete(ServiceName);
+        }
         else
             DeleteUsage();
     }
     else if (!lstrcmpi(Command, _T("create")))
     {
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        if (*ServiceArgs)
-            Create(ServiceName,
-                   ServiceArgs);
-        else
-            CreateUsage();
+        Create(ServiceArgs, ArgCount);
     }
     else if (!lstrcmpi(Command, _T("control")))
     {
         INT CtlValue;
 
-        ServiceName = *ServiceArgs++;
-        ArgCount--;
-
-        CtlValue = _ttoi(ServiceArgs[0]);
-        ServiceArgs++;
-        ArgCount--;
-
-        if (ServiceName)
+        if (ArgCount > 1)
         {
-            if ((CtlValue >=128) && CtlValue <= 255)
-            {
+            ServiceName = *ServiceArgs++;
+            ArgCount--;
+
+            CtlValue = _ttoi(ServiceArgs[0]);
+            ServiceArgs++;
+            ArgCount--;
+
+            if ((CtlValue >= 128) && (CtlValue <= 255))
                 Control(CtlValue,
                         ServiceName,
                         ServiceArgs,
                         ArgCount);
-
-                return 0;
-            }
+            else
+                ControlUsage();
         }
-
-        ContinueUsage();
+        else
+            ControlUsage();
     }
+    else
+    {
+        MainUsage();
+    }
+
     return 0;
 }
 

@@ -21,11 +21,8 @@
 
 	<file>clipper.c</file>
 	<file>ddraw.c</file>
-	<file>ddraw_thunks.c</file>
 	<file>device.c</file>
-	<file>direct3d.c</file>
 	<file>executebuffer.c</file>
-	<file>gamma.c</file>
 	<file>light.c</file>
 	<file>main.c</file>
 	<file>material.c</file>
@@ -34,8 +31,6 @@
 	<file>regsvr.c</file>
 	<file>stubs.c</file>
 	<file>surface.c</file>
-	<file>surface_thunks.c</file>
-	<file>texture.c</file>
 	<file>utils.c</file>
 	<file>version.rc</file>
 	<file>vertexbuffer.c</file>

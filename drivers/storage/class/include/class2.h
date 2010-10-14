@@ -112,7 +112,7 @@ typedef struct _DEVICE_EXTENSION
   PCLASS_CREATE_CLOSE ClassCreateClose;
   PDRIVER_STARTIO ClassStartIo;
   PIO_SCSI_CAPABILITIES PortCapabilities;
-  PDISK_GEOMETRY DiskGeometry;
+  PDISK_GEOMETRY_EX DiskGeometry;
   PDEVICE_OBJECT PhysicalDevice;
   PSENSE_DATA SenseData;
   ULONG TimeOutValue;

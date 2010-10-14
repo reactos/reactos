@@ -152,6 +152,27 @@ MiIsPdeForAddressValid(PVOID Address)
 #define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)
 #define VAtoPTI(va) ((((ULONG64)va) >> PTI_SHIFT) & 0x1FF)
 
+FORCEINLINE
+VOID
+MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
+                      IN PMMPTE PointerPte)
+{
+    ULONG_PTR Offset;
+
+    /* Store the Address */
+    NewPte->u.Long = (ULONG64)PointerPte;
+
+    /* Mark this as a prototype PTE */
+    NewPte->u.Proto.Prototype = 1;
+    NewPte->u.Proto.Valid  = 1;
+    NewPte->u.Proto.ReadOnly = 0;
+    NewPte->u.Proto.Protection = 0;
+}
+
+/* Sign extend 48 bits */
+#define MiProtoPteToPte(x)                  \
+    (PMMPTE)((LONG64)(x)->u.Proto.ProtoAddress)
+
 /* We don't use these hacks */
 VOID
 FORCEINLINE

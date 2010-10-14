@@ -453,7 +453,7 @@ IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
 static VOID APIENTRY
 IntKeyboardSendWinKeyMsg()
 {
-   PWINDOW_OBJECT Window;
+   PWND Window;
    MSG Mesg;
 
    if (!(Window = UserGetWindowObject(InputWindowStation->ShellWindow)))
@@ -468,7 +468,7 @@ IntKeyboardSendWinKeyMsg()
    Mesg.lParam = 0;
 
    /* The QS_HOTKEY is just a guess */
-   MsqPostMessage(Window->pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
+   MsqPostMessage(Window->head.pti->MessageQueue, &Mesg, FALSE, QS_HOTKEY);
 }
 
 static VOID APIENTRY

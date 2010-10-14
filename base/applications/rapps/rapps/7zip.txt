@@ -8,7 +8,7 @@ Description = Utility to create and open 7zip, zip, tar, rar and other archive f
 Size = 0.9M
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z465.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/sevenzip/7-Zip/4.65/7z465.exe
 CDPath = none
 
 [Section.0407]

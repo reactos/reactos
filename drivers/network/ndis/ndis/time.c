@@ -145,7 +145,7 @@ NdisMCancelTimer(
  *     - call at IRQL <= DISPATCH_LEVEL
  */
 {
-  KIRQL OldIrql;
+  //KIRQL OldIrql;
 
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(TimerCancelled);
@@ -153,6 +153,7 @@ NdisMCancelTimer(
 
   *TimerCancelled = KeCancelTimer (&Timer->Timer);
 
+#if 0
   if (*TimerCancelled)
   {
       KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
@@ -160,6 +161,7 @@ NdisMCancelTimer(
       if (!DequeueMiniportTimer(Timer)) ASSERT(FALSE);
       KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
   }
+#endif
 }
 
 VOID NTAPI
@@ -170,6 +172,7 @@ MiniTimerDpcFunction(PKDPC Dpc,
 {
   PNDIS_MINIPORT_TIMER Timer = DeferredContext;
 
+#if 0
   /* Only dequeue if the timer has a period of 0 */
   if (!Timer->Timer.Period)
   {
@@ -178,6 +181,7 @@ MiniTimerDpcFunction(PKDPC Dpc,
       if (!DequeueMiniportTimer(Timer)) ASSERT(FALSE);
       KeReleaseSpinLockFromDpcLevel(&Timer->Miniport->Lock);
   }
+#endif
 
   Timer->MiniportTimerFunction(Dpc,
                                Timer->MiniportTimerContext,
@@ -240,14 +244,15 @@ NdisMSetPeriodicTimer(
  */
 {
   LARGE_INTEGER Timeout;
-  KIRQL OldIrql;
+  //KIRQL OldIrql;
 
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsPeriod, -10000);
-    
+
+#if 0
   /* Lock the miniport block */
   KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
 
@@ -260,6 +265,7 @@ NdisMSetPeriodicTimer(
 
   /* Unlock the miniport block */
   KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
+#endif
 
   KeSetTimerEx(&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
 }
@@ -285,7 +291,7 @@ NdisMSetTimer(
  */
 {
   LARGE_INTEGER Timeout;
-  KIRQL OldIrql;
+  //KIRQL OldIrql;
 
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
@@ -293,6 +299,7 @@ NdisMSetTimer(
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
 
+#if 0
   /* Lock the miniport block */
   KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
 
@@ -305,6 +312,7 @@ NdisMSetTimer(
 
   /* Unlock the miniport block */
   KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
+#endif
 
   KeSetTimer(&Timer->Timer, Timeout, &Timer->Dpc);
 }

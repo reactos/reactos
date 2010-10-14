@@ -63,3 +63,5 @@ BOOL FileExists(LPCTSTR szFilename);
 BOOL HasFileExtension(LPCTSTR szFilename);
 BOOL DoCloseFile(void);
 void DoOpenFile(LPCTSTR szFileName);
+VOID DoCreateStatusBar(VOID);
+VOID DoCreateEditWindow(VOID);

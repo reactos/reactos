@@ -428,6 +428,7 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
         /* Full key information */
         case KeyValueFullInformation:
+        case KeyValueFullInformationAlign64:
 
             /* Check if this is a small key and compute key size */
             IsSmall = CmpIsKeyValueSmall(&KeySize,
@@ -447,9 +448,20 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 /* Calculate the data offset */
                 DataOffset = Size - KeySize;
 
-                /* Align the offset to 4 bytes */
-                AlignedData = ALIGN_UP(DataOffset, ULONG);
-
+#ifdef _WIN64
+                /* On 64-bit, always align to 8 bytes */
+                AlignedData = ALIGN_UP(DataOffset, ULONGLONG);
+#else
+                /* On 32-bit, align the offset to 4 or 8 bytes */
+                if (KeyValueInformationClass == KeyValueFullInformationAlign64)
+                {
+                    AlignedData = ALIGN_UP(DataOffset, ULONGLONG);
+                }
+                else
+                {
+                    AlignedData = ALIGN_UP(DataOffset, ULONG);
+                }
+#endif
                 /* If alignment was required, we'll need more space */
                 if (AlignedData > DataOffset) Size += (AlignedData-DataOffset);
             }
@@ -656,6 +668,7 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
         default:
 
             /* We got some class that we don't support */
+            DPRINT1("Caller requested unknown class: %lx\n", KeyValueInformationClass);
             *Status = STATUS_INVALID_PARAMETER;
             break;
     }

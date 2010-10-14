@@ -19,8 +19,6 @@
 #undef ExAllocatePoolWithQuota
 #undef ExAllocatePoolWithQuotaTag
 
-BOOLEAN AllowPagedPool = TRUE;
- 
 /* GLOBALS ********************************************************************/
 
 ULONG ExpNumberOfPagedPools;
@@ -454,11 +452,6 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     PPOOL_HEADER Entry, NextEntry, FragmentEntry;
     KIRQL OldIrql;
     ULONG BlockSize, i;
-    
-    //
-    // Check for paged pool
-    //
-    if (!(AllowPagedPool) && (PoolType == PagedPool)) return ExAllocatePagedPoolWithTag(PagedPool, NumberOfBytes, Tag);
 
     //
     // Some sanity checks
@@ -760,19 +753,6 @@ ExFreePoolWithTag(IN PVOID P,
     PPOOL_DESCRIPTOR PoolDesc;
     BOOLEAN Combined = FALSE;
 
-    //
-    // Check for paged pool
-    //
-    if ((P >= MmPagedPoolBase) &&
-        (P <= (PVOID)((ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize)))
-    {
-        //
-        // Use old allocator
-        //
-        ExFreePagedPool(P);
-        return;
-    }
-   
     //
     // Quickly deal with big page allocations
     //

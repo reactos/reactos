@@ -785,7 +785,9 @@ HalpDebugPciDumpBus(IN ULONG i,
     if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x200) DbgPrint(" medium devsel,");
     if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x400) DbgPrint(" fast devsel,");
     DbgPrint(" latency %d", PciData->LatencyTimer);
-    if (PciData->u.type0.InterruptLine) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
+    if (PciData->u.type0.InterruptPin != 0 &&
+        PciData->u.type0.InterruptLine != 0 &&
+        PciData->u.type0.InterruptLine != 0xFF) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
     DbgPrint("\n");
     
     /* Scan addresses */

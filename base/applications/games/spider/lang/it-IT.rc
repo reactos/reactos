@@ -52,10 +52,10 @@ END
 STRINGTABLE
 BEGIN
     IDS_SPI_NAME    "Spider"
-    IDS_SPI_ABOUT   "Soltiario Spider di Gregor Schneider\n\nCardLib version 1.0"
+    IDS_SPI_ABOUT   "Solitario Spider di Gregor Schneider\n\nCardLib version 1.0"
     IDS_SPI_QUIT    "Chiudere la partita?"
     IDS_SPI_WIN     "Complimenti, hai vinto!"
-    IDS_SPI_DEAL    "Deal again?"
+    IDS_SPI_DEAL    "Nuova partita?"
 END
 
 

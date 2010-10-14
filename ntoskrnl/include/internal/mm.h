@@ -8,7 +8,6 @@ struct _EPROCESS;
 
 extern PFN_NUMBER MiFreeSwapPages;
 extern PFN_NUMBER MiUsedSwapPages;
-extern SIZE_T MmPagedPoolSize;
 extern SIZE_T MmTotalPagedPoolQuota;
 extern SIZE_T MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
@@ -18,9 +17,6 @@ extern PFN_NUMBER MmLowestPhysicalPage;
 extern PFN_NUMBER MmHighestPhysicalPage;
 extern PFN_NUMBER MmAvailablePages;
 extern PFN_NUMBER MmResidentAvailablePages;
-
-extern PVOID MmPagedPoolBase;
-extern SIZE_T MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
@@ -76,20 +72,8 @@ typedef ULONG SWAPENTRY;
 #define MI_STATIC_MEMORY_AREAS              (13)
 #endif
 
-#define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
-#define MEMORY_AREA_CONTINUOUS_MEMORY       (2)
-#define MEMORY_AREA_NO_CACHE                (3)
-#define MEMORY_AREA_IO_MAPPING              (4)
-#define MEMORY_AREA_SYSTEM                  (5)
-#define MEMORY_AREA_MDL_MAPPING             (7)
 #define MEMORY_AREA_VIRTUAL_MEMORY          (8)
-#define MEMORY_AREA_CACHE_SEGMENT           (9)
-#define MEMORY_AREA_SHARED_DATA             (10)
-#define MEMORY_AREA_KERNEL_STACK            (11)
-#define MEMORY_AREA_PAGED_POOL              (12)
-#define MEMORY_AREA_NO_ACCESS               (13)
-#define MEMORY_AREA_PEB_OR_TEB              (14)
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
@@ -278,6 +262,7 @@ typedef struct _MEMORY_AREA
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG PageOpCount;
+    PVOID Vad;
     union
     {
         struct
@@ -285,7 +270,6 @@ typedef struct _MEMORY_AREA
             ROS_SECTION_OBJECT* Section;
             ULONG ViewOffset;
             PMM_SECTION_SEGMENT Segment;
-            BOOLEAN WriteCopyView;
             LIST_ENTRY RegionListHead;
         } SectionData;
         struct
@@ -306,30 +290,30 @@ typedef struct _MMPFNENTRY
     USHORT Modified:1;
     USHORT ReadInProgress:1;                 // StartOfAllocation
     USHORT WriteInProgress:1;                // EndOfAllocation
-    USHORT PrototypePte:1;                   // Zero
-    USHORT PageColor:4;                      // LockCount
-    USHORT PageLocation:3;                   // Consumer
+    USHORT PrototypePte:1;
+    USHORT PageColor:4;
+    USHORT PageLocation:3;
     USHORT RemovalRequested:1;
-    USHORT CacheAttribute:2;                 // Type
+    USHORT CacheAttribute:2;
     USHORT Rom:1;
-    USHORT ParityError:1;
+    USHORT ParityError:1;                    // HasRmap
 } MMPFNENTRY;
 
 typedef struct _MMPFN
 {
     union
     {
-        PFN_NUMBER Flink;                    // ListEntry.Flink
-        ULONG WsIndex;
+        PFN_NUMBER Flink;
+        ULONG WsIndex;                       // SavedSwapEntry
         PKEVENT Event;
         NTSTATUS ReadStatus;
         SINGLE_LIST_ENTRY NextStackPfn;
     } u1;
-    PMMPTE PteAddress;                       // ListEntry.Blink
+    PMMPTE PteAddress;
     union
     {
         PFN_NUMBER Blink;
-        ULONG_PTR ShareCount;                // MapCount
+        ULONG_PTR ShareCount;
     } u2;
     union
     {
@@ -351,7 +335,7 @@ typedef struct _MMPFN
     };
     union
     {
-        ULONG_PTR EntireFrame;               // SavedSwapEntry
+        ULONG_PTR EntireFrame;
         struct
         {
             ULONG_PTR PteFrame:25;
@@ -1164,10 +1148,10 @@ MmGetContinuousPages(
     BOOLEAN ZeroPages
 );
 
-NTSTATUS
+VOID
 NTAPI
-MmZeroPageThreadMain(
-    PVOID Context
+MmZeroPageThread(
+    VOID
 );
 
 /* hypermap.c *****************************************************************/
@@ -1189,7 +1173,7 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
+MiMapPagesToZeroInHyperSpace(IN PMMPFN Pfn1,
                              IN PFN_NUMBER NumberOfPages);
 
 VOID
@@ -1206,14 +1190,6 @@ MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
 {
     HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
     return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
-}
-
-FORCEINLINE
-PVOID
-MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
-{
-    PMMPFN Pfn1 = MiGetPfnEntry(Page);
-    return MiMapPagesToZeroInHyperSpace(&Pfn1, 1);
 }
 
 #define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);
@@ -1523,7 +1499,7 @@ MmFindRegion(
 PFILE_OBJECT
 NTAPI
 MmGetFileObjectForSection(
-    IN PROS_SECTION_OBJECT Section
+    IN PVOID Section
 );
 NTSTATUS
 NTAPI
@@ -1535,7 +1511,7 @@ MmGetFileNameForAddress(
 NTSTATUS
 NTAPI
 MmGetFileNameForSection(
-    IN PROS_SECTION_OBJECT Section,
+    IN PVOID Section,
     OUT POBJECT_NAME_INFORMATION *ModuleName
 );
 

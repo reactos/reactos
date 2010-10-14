@@ -5,9 +5,6 @@
  * PURPOSE:     Italian Language File for Solitaire (gabriel ilardi)
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
  */
-
-#include "resource.h"
-
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 

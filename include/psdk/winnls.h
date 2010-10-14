@@ -573,6 +573,21 @@ typedef enum _NORM_FORM {
 	NormalizationKD = 0x6
 } NORM_FORM;
 #endif /* (WINVER >= 0x0600) */
+typedef struct _FILEMUIINFO {
+    DWORD dwSize;
+    DWORD dwVersion;
+    DWORD dwFileType;
+    BYTE pChecksum[16];
+    BYTE pServiceChecksum[16];
+    DWORD dwLanguageNameOffset;
+    DWORD dwTypeIDMainSize;
+    DWORD dwTypeIDMainOffset;
+    DWORD dwTypeNameMainOffset;
+    DWORD dwTypeIDMUISize;
+    DWORD dwTypeIDMUIOffset;
+    DWORD dwTypeNameMUIOffset;
+    BYTE abBuffer[8];
+} FILEMUIINFO, *PFILEMUIINFO;
 
 int WINAPI CompareStringA(LCID,DWORD,LPCSTR,int,LPCSTR,int);
 int WINAPI CompareStringW(LCID,DWORD,LPCWSTR,int,LPCWSTR,int);
@@ -634,6 +649,7 @@ int WINAPI SetCalendarInfoW(LCID,CALID,CALTYPE,LPCWSTR);
 BOOL WINAPI SetLocaleInfoA(LCID,LCTYPE,LPCSTR);
 BOOL WINAPI SetLocaleInfoW(LCID,LCTYPE,LPCWSTR);
 BOOL WINAPI SetThreadLocale(LCID);
+LANGID WINAPI SetThreadUILanguage(LANGID);
 BOOL WINAPI SetUserDefaultLCID(LCID);
 BOOL WINAPI SetUserDefaultUILanguage(LANGID);
 BOOL WINAPI SetUserGeoID(GEOID);
@@ -654,14 +670,24 @@ LANGID WINAPI GetUserDefaultUILanguage(void);
 BOOL WINAPI IsValidLanguageGroup(LGRPID,DWORD);
 #endif /* (WINVER >= 0x0500) */
 #if (WINVER >= 0x0600)
+BOOL WINAPI GetFileMUIInfo(DWORD,PCWSTR,PFILEMUIINFO,DWORD*);
+BOOL WINAPI GetFileMUIPath(DWORD,PCWSTR,PWSTR,PULONG,PWSTR,PULONG,PULONGLONG);
 WINBASEAPI
 int WINAPI GetLocaleInfoEx(LPCWSTR,LCTYPE,LPWSTR,int);
+BOOL WINAPI GetProcessPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
+BOOL WINAPI GetSystemPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
+BOOL WINAPI GetThreadPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
+LANGID WINAPI GetThreadUILanguage(void);
+BOOL WINAPI GetUILanguageInfo(DWORD,PCZZWSTR,PZZWSTR,PDWORD,PDWORD);
+BOOL WINAPI GetUserPreferredUILanguages(DWORD,PULONG,PZZWSTR,PULONG);
 int WINAPI IdnToAscii(DWORD,LPCWSTR,int,LPWSTR,int);
 int WINAPI IdnToNameprepUnicode(DWORD,LPCWSTR,int,LPWSTR,int);
 int WINAPI IdnToUnicode(DWORD,LPCWSTR,int,LPWSTR,int);
 BOOL WINAPI IsNormalizedString(NORM_FORM,LPCWSTR,int);
 int WINAPI NormalizeString(NORM_FORM,LPCWSTR,int,LPWSTR,int);
 int WINAPI GetStringScripts(DWORD,LPCWSTR,int,LPWSTR,int);
+BOOL WINAPI SetProcessPreferredUILanguages(DWORD,PCZZWSTR,PULONG);
+BOOL WINAPI SetThreadPreferredUILanguages(DWORD,PCZZWSTR,PULONG);
 BOOL WINAPI VerifyScripts(DWORD,LPCWSTR,int,LPCWSTR,int);
 #endif /* (WINVER >= 0x0600) */
 

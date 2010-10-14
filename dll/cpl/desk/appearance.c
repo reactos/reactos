@@ -5,7 +5,7 @@
  * PURPOSE:         Appearance property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
- *                  Timo Kreuzer (timo[dot]kreuzer[at]web[dot]de
+ *                  Timo Kreuzer (timo[dot]kreuzer[at]web[dot]de)
  */
 
 #include "desk.h"
@@ -115,6 +115,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					{
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 						g->Theme = g->ThemeAdv;
+					    g_GlobalData.desktop_color = g->Theme.crColor[COLOR_DESKTOP];
 						g->bHasChanged = TRUE;
 						g->ThemeId = -1;	/* Customized */
 						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_SETCURSEL, (WPARAM)-1, 0);
@@ -160,6 +161,14 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case PSN_KILLACTIVE:
 					SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, (LONG_PTR)FALSE);
 					return TRUE;
+
+				case PSN_SETACTIVE:
+					if (g->Theme.crColor[COLOR_DESKTOP] != g_GlobalData.desktop_color)
+					{
+						g->Theme.crColor[COLOR_DESKTOP] = g_GlobalData.desktop_color;
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
+					}
+					break;
 			}
 			break;
 	}

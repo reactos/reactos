@@ -282,7 +282,7 @@ IntGetCodePageEntry(UINT CodePage)
                                      &ObjectAttributes,
                                      NULL,
                                      PAGE_READONLY,
-                                     SEC_FILE,
+                                     SEC_COMMIT,
                                      FileHandle);
 
             /* HACK: Check if another process was faster

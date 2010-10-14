@@ -26,6 +26,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
 
+/* Do not call while under the GL lock. */
 static void volumetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3DSRGB srgb)
 {
     /* Override the IWineD3DResource Preload method. */
@@ -42,7 +43,7 @@ static void volumetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINE
     if (!device->isInDraw) context = context_acquire(device, NULL);
     else if (gl_info->supported[EXT_TEXTURE_SRGB] && This->baseTexture.bindCount > 0)
     {
-        srgb_mode = device->stateBlock->samplerState[This->baseTexture.sampler][WINED3DSAMP_SRGBTEXTURE];
+        srgb_mode = device->stateBlock->state.sampler_states[This->baseTexture.sampler][WINED3DSAMP_SRGBTEXTURE];
         srgb_was_toggled = This->baseTexture.is_srgb != srgb_mode;
         This->baseTexture.is_srgb = srgb_mode;
     }
@@ -85,13 +86,13 @@ static void volumetexture_cleanup(IWineD3DVolumeTextureImpl *This)
 
     for (i = 0; i < This->baseTexture.level_count; ++i)
     {
-        IWineD3DVolume *volume = (IWineD3DVolume *)This->baseTexture.sub_resources[i];
+        IWineD3DVolumeImpl *volume = (IWineD3DVolumeImpl *)This->baseTexture.sub_resources[i];
 
         if (volume)
         {
             /* Cleanup the container. */
-            IWineD3DVolume_SetContainer(volume, NULL);
-            IWineD3DVolume_Release(volume);
+            volume_set_container(volume, NULL);
+            IWineD3DVolume_Release((IWineD3DVolume *)volume);
         }
     }
     basetexture_cleanup((IWineD3DBaseTexture *)This);
@@ -124,6 +125,7 @@ static ULONG WINAPI IWineD3DVolumeTextureImpl_AddRef(IWineD3DVolumeTexture *ifac
     return InterlockedIncrement(&This->resource.ref);
 }
 
+/* Do not call while under the GL lock. */
 static ULONG WINAPI IWineD3DVolumeTextureImpl_Release(IWineD3DVolumeTexture *iface) {
     IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
     ULONG ref;
@@ -165,6 +167,7 @@ static void WINAPI IWineD3DVolumeTextureImpl_PreLoad(IWineD3DVolumeTexture *ifac
     volumetexture_internal_preload((IWineD3DBaseTexture *) iface, SRGB_ANY);
 }
 
+/* Do not call while under the GL lock. */
 static void WINAPI IWineD3DVolumeTextureImpl_UnLoad(IWineD3DVolumeTexture *iface) {
     unsigned int i;
     IWineD3DVolumeTextureImpl *This = (IWineD3DVolumeTextureImpl *)iface;
@@ -186,8 +189,11 @@ static WINED3DRESOURCETYPE WINAPI IWineD3DVolumeTextureImpl_GetType(IWineD3DVolu
     return resource_get_type((IWineD3DResource *)iface);
 }
 
-static HRESULT WINAPI IWineD3DVolumeTextureImpl_GetParent(IWineD3DVolumeTexture *iface, IUnknown **pParent) {
-    return resource_get_parent((IWineD3DResource *)iface, pParent);
+static void * WINAPI IWineD3DVolumeTextureImpl_GetParent(IWineD3DVolumeTexture *iface)
+{
+    TRACE("iface %p\n", iface);
+
+    return ((IWineD3DVolumeTextureImpl *)iface)->resource.parent;
 }
 
 /* ******************************************************
@@ -236,13 +242,6 @@ static HRESULT WINAPI IWineD3DVolumeTextureImpl_BindTexture(IWineD3DVolumeTextur
     return basetexture_bind((IWineD3DBaseTexture *)iface, srgb, &dummy);
 }
 
-static UINT WINAPI IWineD3DVolumeTextureImpl_GetTextureDimensions(IWineD3DVolumeTexture *iface)
-{
-    TRACE("iface %p.\n", iface);
-
-    return GL_TEXTURE_3D;
-}
-
 static BOOL WINAPI IWineD3DVolumeTextureImpl_IsCondNP2(IWineD3DVolumeTexture *iface)
 {
     TRACE("iface %p.\n", iface);
@@ -267,7 +266,9 @@ static HRESULT WINAPI IWineD3DVolumeTextureImpl_GetLevelDesc(IWineD3DVolumeTextu
         return WINED3DERR_INVALIDCALL;
     }
 
-    return IWineD3DVolume_GetDesc(volume, desc);
+    IWineD3DVolume_GetDesc(volume, desc);
+
+    return WINED3D_OK;
 }
 
 static HRESULT WINAPI IWineD3DVolumeTextureImpl_GetVolumeLevel(IWineD3DVolumeTexture *iface,
@@ -373,7 +374,6 @@ static const IWineD3DVolumeTextureVtbl IWineD3DVolumeTexture_Vtbl =
     IWineD3DVolumeTextureImpl_GetDirty,
     /* not in d3d */
     IWineD3DVolumeTextureImpl_BindTexture,
-    IWineD3DVolumeTextureImpl_GetTextureDimensions,
     IWineD3DVolumeTextureImpl_IsCondNP2,
     /* volume texture */
     IWineD3DVolumeTextureImpl_GetLevelDesc,
@@ -384,18 +384,18 @@ static const IWineD3DVolumeTextureVtbl IWineD3DVolumeTexture_Vtbl =
 };
 
 HRESULT volumetexture_init(IWineD3DVolumeTextureImpl *texture, UINT width, UINT height,
-        UINT depth, UINT levels, IWineD3DDeviceImpl *device, DWORD usage, WINED3DFORMAT format,
-        WINED3DPOOL pool, IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+        UINT depth, UINT levels, IWineD3DDeviceImpl *device, DWORD usage, enum wined3d_format_id format_id,
+        WINED3DPOOL pool, void *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    const struct wined3d_format_desc *format_desc = getFormatDescEntry(format, gl_info);
+    const struct wined3d_format *format = wined3d_get_format(gl_info, format_id);
     UINT tmp_w, tmp_h, tmp_d;
     unsigned int i;
     HRESULT hr;
 
     /* TODO: It should only be possible to create textures for formats
      * that are reported as supported. */
-    if (WINED3DFMT_UNKNOWN >= format)
+    if (WINED3DFMT_UNKNOWN >= format_id)
     {
         WARN("(%p) : Texture cannot be created with a format of WINED3DFMT_UNKNOWN.\n", texture);
         return WINED3DERR_INVALIDCALL;
@@ -433,7 +433,7 @@ HRESULT volumetexture_init(IWineD3DVolumeTextureImpl *texture, UINT width, UINT 
     texture->lpVtbl = &IWineD3DVolumeTexture_Vtbl;
 
     hr = basetexture_init((IWineD3DBaseTextureImpl *)texture, 1, levels,
-            WINED3DRTYPE_VOLUMETEXTURE, device, 0, usage, format_desc, pool, parent, parent_ops);
+            WINED3DRTYPE_VOLUMETEXTURE, device, 0, usage, format, pool, parent, parent_ops);
     if (FAILED(hr))
     {
         WARN("Failed to initialize basetexture, returning %#x.\n", hr);
@@ -445,6 +445,7 @@ HRESULT volumetexture_init(IWineD3DVolumeTextureImpl *texture, UINT width, UINT 
     texture->baseTexture.pow2Matrix[5] = 1.0f;
     texture->baseTexture.pow2Matrix[10] = 1.0f;
     texture->baseTexture.pow2Matrix[15] = 1.0f;
+    texture->baseTexture.target = GL_TEXTURE_3D;
 
     /* Generate all the surfaces. */
     tmp_w = width;
@@ -457,7 +458,7 @@ HRESULT volumetexture_init(IWineD3DVolumeTextureImpl *texture, UINT width, UINT 
 
         /* Create the volume. */
         hr = IWineD3DDeviceParent_CreateVolume(device->device_parent, parent,
-                tmp_w, tmp_h, tmp_d, format, pool, usage, &volume);
+                tmp_w, tmp_h, tmp_d, format_id, pool, usage, &volume);
         if (FAILED(hr))
         {
             ERR("Creating a volume for the volume texture failed, hr %#x.\n", hr);
@@ -466,7 +467,7 @@ HRESULT volumetexture_init(IWineD3DVolumeTextureImpl *texture, UINT width, UINT 
         }
 
         /* Set its container to this texture. */
-        IWineD3DVolume_SetContainer(volume, (IWineD3DBase *)texture);
+        volume_set_container((IWineD3DVolumeImpl *)volume, texture);
         texture->baseTexture.sub_resources[i] = (IWineD3DResourceImpl *)volume;
 
         /* Calculate the next mipmap level. */

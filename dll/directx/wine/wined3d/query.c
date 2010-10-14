@@ -46,7 +46,7 @@ enum wined3d_event_query_result wined3d_event_query_test(struct wined3d_event_qu
 
     TRACE("(%p) : device %p\n", query, device);
 
-    if (query->context == NULL)
+    if (!query->context)
     {
         TRACE("Query not started\n");
         return WINED3D_EVENT_QUERY_NOT_STARTED;
@@ -230,27 +230,21 @@ void wined3d_event_query_issue(struct wined3d_event_query *query, IWineD3DDevice
     context_release(context);
 }
 
-/*
- * Occlusion Queries:
- * http://www.gris.uni-tuebingen.de/~bartz/Publications/paper/hww98.pdf
- * http://oss.sgi.com/projects/ogl-sample/registry/ARB/occlusion_query.txt
- */
-
-/* *******************************************
-   IWineD3DQuery IUnknown parts follow
-   ******************************************* */
-static HRESULT  WINAPI IWineD3DQueryImpl_QueryInterface(IWineD3DQuery *iface, REFIID riid, LPVOID *ppobj)
+static HRESULT  WINAPI IWineD3DQueryImpl_QueryInterface(IWineD3DQuery *iface, REFIID riid, void **object)
 {
-    IWineD3DQueryImpl *This = (IWineD3DQueryImpl *)iface;
-    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IWineD3DBase)
-        || IsEqualGUID(riid, &IID_IWineD3DQuery)) {
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
+
+    if (IsEqualGUID(riid, &IID_IWineD3DQuery)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
         IUnknown_AddRef(iface);
-        *ppobj = This;
+        *object = iface;
         return S_OK;
     }
-    *ppobj = NULL;
+
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
+
+    *object = NULL;
     return E_NOINTERFACE;
 }
 
@@ -265,7 +259,9 @@ static ULONG  WINAPI IWineD3DQueryImpl_Release(IWineD3DQuery *iface) {
     ULONG ref;
     TRACE("(%p) : Releasing from %d\n", This, This->ref);
     ref = InterlockedDecrement(&This->ref);
-    if (ref == 0) {
+
+    if (!ref)
+    {
         /* Queries are specific to the GL context that created them. Not
          * deleting the query will obviously leak it, but that's still better
          * than potentially deleting a different query with the same id in this
@@ -286,21 +282,6 @@ static ULONG  WINAPI IWineD3DQueryImpl_Release(IWineD3DQuery *iface) {
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
-}
-
-/* *******************************************
-   IWineD3DQuery IWineD3DQuery parts follow
-   ******************************************* */
-static HRESULT WINAPI IWineD3DQueryImpl_GetParent(IWineD3DQuery *iface, IUnknown **parent)
-{
-    TRACE("iface %p, parent %p.\n", iface, parent);
-
-    *parent = (IUnknown *)parent;
-    IUnknown_AddRef(*parent);
-
-    TRACE("Returning %p.\n", *parent);
-
-    return WINED3D_OK;
 }
 
 static HRESULT  WINAPI IWineD3DOcclusionQueryImpl_GetData(IWineD3DQuery* iface, void* pData, DWORD dwSize, DWORD dwGetDataFlags) {
@@ -554,7 +535,6 @@ static const IWineD3DQueryVtbl IWineD3DEventQuery_Vtbl =
     IWineD3DQueryImpl_AddRef,
     IWineD3DQueryImpl_Release,
     /*** IWineD3Dquery methods ***/
-    IWineD3DQueryImpl_GetParent,
     IWineD3DEventQueryImpl_GetData,
     IWineD3DEventQueryImpl_GetDataSize,
     IWineD3DQueryImpl_GetType,
@@ -568,15 +548,13 @@ static const IWineD3DQueryVtbl IWineD3DOcclusionQuery_Vtbl =
     IWineD3DQueryImpl_AddRef,
     IWineD3DQueryImpl_Release,
     /*** IWineD3Dquery methods ***/
-    IWineD3DQueryImpl_GetParent,
     IWineD3DOcclusionQueryImpl_GetData,
     IWineD3DOcclusionQueryImpl_GetDataSize,
     IWineD3DQueryImpl_GetType,
     IWineD3DOcclusionQueryImpl_Issue
 };
 
-HRESULT query_init(IWineD3DQueryImpl *query, IWineD3DDeviceImpl *device,
-        WINED3DQUERYTYPE type, IUnknown *parent)
+HRESULT query_init(IWineD3DQueryImpl *query, IWineD3DDeviceImpl *device, WINED3DQUERYTYPE type)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
 
@@ -638,7 +616,6 @@ HRESULT query_init(IWineD3DQueryImpl *query, IWineD3DDeviceImpl *device,
     query->type = type;
     query->state = QUERY_CREATED;
     query->device = device;
-    query->parent = parent;
     query->ref = 1;
 
     return WINED3D_OK;

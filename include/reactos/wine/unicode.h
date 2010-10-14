@@ -34,6 +34,7 @@
 #define isdigitW(n) iswdigit((n))
 #define isxdigitW(n) iswxdigit((n))
 #define isspaceW(n) iswspace((n))
+#define iscntrlW(n) iswcntrl((n))
 #define atoiW(s) _wtoi((const wchar_t *)(s))
 #define atolW(s) _wtol((const wchar_t *)(s))
 #define strlwrW(s) _wcslwr((wchar_t *)(s))

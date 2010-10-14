@@ -986,13 +986,13 @@ static MUI_ENTRY itITBootLoaderEntries[] =
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR and VBR).",
+        "Installazione del bootloader sul disco fisso (MBR e VBR).",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on the harddisk (VBR only).",
+        "Installazione del bootloader sul disco fisso (solo VBR).",
         TEXT_STYLE_NORMAL
     },
     {

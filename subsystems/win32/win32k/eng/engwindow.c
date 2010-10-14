@@ -71,13 +71,13 @@ IntEngWndCallChangeProc(
 }
 
 /*
- * Fills the CLIPOBJ and client rect of the WNDOBJ with the data from the given WINDOW_OBJECT
+ * Fills the CLIPOBJ and client rect of the WNDOBJ with the data from the given WND
  */
 BOOLEAN
 FASTCALL
 IntEngWndUpdateClipObj(
   WNDGDI *WndObjInt,
-  PWINDOW_OBJECT Window)
+  PWND Window)
 {
   HRGN hVisRgn;
   PROSRGNDATA visRgn;
@@ -89,7 +89,7 @@ IntEngWndUpdateClipObj(
   hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
   if (hVisRgn != NULL)
   {
-    NtGdiOffsetRgn(hVisRgn, Window->Wnd->rcClient.left, Window->Wnd->rcClient.top);
+    NtGdiOffsetRgn(hVisRgn, Window->rcClient.left, Window->rcClient.top);
     visRgn = RGNOBJAPI_Lock(hVisRgn, NULL);
     if (visRgn != NULL)
     {
@@ -127,8 +127,8 @@ IntEngWndUpdateClipObj(
   if (ClipObj == NULL)
   {
     /* Fall back to client rect */
-    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->rcClient,
-                                     &Window->Wnd->rcClient);
+    ClipObj = IntEngCreateClipRegion(1, &Window->rcClient,
+                                     &Window->rcClient);
   }
 
   if (ClipObj == NULL)
@@ -138,7 +138,7 @@ IntEngWndUpdateClipObj(
   }
 
   RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
-  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->rcClient, sizeof (RECT));
+  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->rcClient, sizeof (RECT));
   OldClipObj = InterlockedExchangePointer((PVOID*)&WndObjInt->ClientClipObj, ClipObj);
   if (OldClipObj != NULL)
     IntEngDeleteClipRegion(OldClipObj);
@@ -147,12 +147,12 @@ IntEngWndUpdateClipObj(
 }
 
 /*
- * Updates all WNDOBJs of the given WINDOW_OBJECT and calls the change-procs.
+ * Updates all WNDOBJs of the given WND and calls the change-procs.
  */
 VOID
 FASTCALL
 IntEngWindowChanged(
-  PWINDOW_OBJECT  Window,
+  PWND  Window,
   FLONG           flChanged)
 {
   WNDGDI *Current;
@@ -160,7 +160,7 @@ IntEngWindowChanged(
 
   ASSERT_IRQL_LESS_OR_EQUAL(PASSIVE_LEVEL);
 
-  hWnd = Window->hSelf; // pWnd->head.h;
+  hWnd = Window->head.h;
   Current = (WNDGDI *)IntGetProp(Window, AtomWndObj);
 
   if ( gcountPWO &&
@@ -206,7 +206,7 @@ EngCreateWnd(
 {
   WNDGDI *WndObjInt = NULL;
   WNDOBJ *WndObjUser = NULL;
-  PWINDOW_OBJECT Window;
+  PWND Window;
   BOOL calledFromUser;
   DECLARE_RETURN(WNDOBJ*);
 
@@ -279,7 +279,7 @@ EngDeleteWnd(
   IN WNDOBJ *pwo)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-  PWINDOW_OBJECT Window;
+  PWND Window;
   BOOL calledFromUser;
 
   DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);

@@ -17,4 +17,8 @@
 	<library>cportlib</library>
 	<library>rtl</library>
 	<library>libcntpr</library>
+	<group linkerset="ld">
+		<linkerflag>-static</linkerflag>
+		<linkerflag>-lgcc</linkerflag>
+	</group>
 </module>

@@ -17,9 +17,9 @@
 
 PTHREADINFO      ClipboardThread;
 PTHREADINFO      ClipboardOwnerThread;
-PWINDOW_OBJECT  ClipboardWindow;
-PWINDOW_OBJECT  ClipboardViewerWindow;
-PWINDOW_OBJECT  ClipboardOwnerWindow;
+PWND  ClipboardWindow;
+PWND  ClipboardViewerWindow;
+PWND  ClipboardOwnerWindow;
 BOOL            sendDrawClipboardMsg;
 BOOL            recentlySetClipboard;
 BOOL            delayedRender;
@@ -38,7 +38,7 @@ DWORD synthesizedDataSize;
 /* return the pointer to the prev window of the finded window,
    if NULL does not exists in the chain */
 PCLIPBOARDCHAINELEMENT FASTCALL
-IntIsWindowInChain(PWINDOW_OBJECT window)
+IntIsWindowInChain(PWND window)
 {
     PCLIPBOARDCHAINELEMENT wce = WindowsChain;
 
@@ -60,14 +60,14 @@ VOID FASTCALL printChain(VOID)
     PCLIPBOARDCHAINELEMENT wce2 = WindowsChain;
     while (wce2)
     {
-        DPRINT1("chain: %p\n", wce2->window->hSelf);
+        DPRINT1("chain: %p\n", wce2->window->head.h);
         wce2 = wce2->next;
     }
 }
 
 /* the new window always have to be the first in the chain */
 PCLIPBOARDCHAINELEMENT FASTCALL
-IntAddWindowToChain(PWINDOW_OBJECT window)
+IntAddWindowToChain(PWND window)
 {
     PCLIPBOARDCHAINELEMENT wce = NULL;
 
@@ -96,7 +96,7 @@ exit_addChain:
 }
 
 PCLIPBOARDCHAINELEMENT FASTCALL
-IntRemoveWindowFromChain(PWINDOW_OBJECT window)
+IntRemoveWindowFromChain(PWND window)
 {
     PCLIPBOARDCHAINELEMENT wce = WindowsChain;
 	PCLIPBOARDCHAINELEMENT *link = &WindowsChain;
@@ -373,7 +373,7 @@ intIsClipboardOpenByMe(VOID)
 
 /* IntClipboardFreeWindow it's called when a window was destroyed */
 VOID FASTCALL
-IntClipboardFreeWindow(PWINDOW_OBJECT window)
+IntClipboardFreeWindow(PWND window)
 {
     /* called from co_UserFreeWindow in window.c */
     /* check if clipboard is not locked by this window, if yes, unlock it */
@@ -405,7 +405,7 @@ BOOL APIENTRY
 NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
 {
 
-    PWINDOW_OBJECT Window;
+    PWND Window;
     BOOL ret = FALSE;
 
     UserEnterExclusive();
@@ -420,7 +420,7 @@ NtUserOpenClipboard(HWND hWnd, DWORD Unknown1)
         {
             if  (ClipboardOwnerWindow)
             {
-                if (ClipboardOwnerWindow->hSelf == hWnd)
+                if (ClipboardOwnerWindow->head.h == hWnd)
                 {
                     ret = TRUE;
                 }
@@ -513,7 +513,7 @@ NtUserGetOpenClipboardWindow(VOID)
 
     if (ClipboardWindow)
     {
-        ret = ClipboardWindow->hSelf;
+        ret = ClipboardWindow->head.h;
     }
 
     UserLeave();
@@ -526,7 +526,7 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
 {
     BOOL ret = FALSE;
     PCLIPBOARDCHAINELEMENT w = NULL;
-    PWINDOW_OBJECT removeWindow;
+    PWND removeWindow;
     UserEnterExclusive();
 
     removeWindow = UserGetWindowObject(hWndRemove);
@@ -549,9 +549,9 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
         // then they do the chain
 
         /* WindowsChain->window may be NULL */
-        LPARAM lparam = WindowsChain->window == NULL ? 0 : (LPARAM)WindowsChain->window->hSelf;
-        DPRINT1("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->hSelf);
-        co_IntSendMessage(WindowsChain->window->hSelf, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, lparam);
+        LPARAM lparam = WindowsChain->window == NULL ? 0 : (LPARAM)WindowsChain->window->head.h;
+        DPRINT1("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->head.h);
+        co_IntSendMessage(WindowsChain->window->head.h, WM_CHANGECBCHAIN, (WPARAM)hWndRemove, lparam);
     }
 
     UserLeave();
@@ -600,8 +600,8 @@ NtUserEmptyClipboard(VOID)
 
     if (ret && ClipboardOwnerWindow)
     {
-        DPRINT("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->hSelf);
-        co_IntSendMessage( ClipboardOwnerWindow->hSelf, WM_DESTROYCLIPBOARD, 0, 0);
+        DPRINT("Clipboard: WM_DESTROYCLIPBOARD to %p", ClipboardOwnerWindow->head.h);
+        co_IntSendMessage( ClipboardOwnerWindow->head.h, WM_DESTROYCLIPBOARD, 0, 0);
     }
 
     UserLeave();
@@ -631,8 +631,8 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
                     /* tell owner what data needs to be rendered */
                     if (ClipboardOwnerWindow)
                     {
-                        ASSERT(ClipboardOwnerWindow->hSelf);
-                        co_IntSendMessage(ClipboardOwnerWindow->hSelf, WM_RENDERFORMAT, (WPARAM)uFormat, 0);
+                        ASSERT(ClipboardOwnerWindow->head.h);
+                        co_IntSendMessage(ClipboardOwnerWindow->head.h, WM_RENDERFORMAT, (WPARAM)uFormat, 0);
                         data = intIsFormatAvailable(uFormat);
                         ASSERT(data->size);
                         ret = (HANDLE)(ULONG_PTR)data->size;
@@ -782,7 +782,7 @@ NtUserGetClipboardOwner(VOID)
 
     if (ClipboardOwnerWindow)
     {
-        ret = ClipboardOwnerWindow->hSelf;
+        ret = ClipboardOwnerWindow->head.h;
     }
 
     UserLeave();
@@ -799,7 +799,7 @@ NtUserGetClipboardViewer(VOID)
 
     if (WindowsChain)
     {
-        ret = WindowsChain->window->hSelf;
+        ret = WindowsChain->window->head.h;
     }
 
     UserLeave();
@@ -1065,7 +1065,7 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
 {
     HWND ret = NULL;
     PCLIPBOARDCHAINELEMENT newWC = NULL;
-    PWINDOW_OBJECT window;
+    PWND window;
 
     UserEnterExclusive();
 
@@ -1081,7 +1081,7 @@ NtUserSetClipboardViewer(HWND hWndNewViewer)
                 if (newWC->next)
                 {
                     // return the next HWND available window in the chain
-                    ret = newWC->next->window->hSelf;
+                    ret = newWC->next->window->head.h;
                 }
             }
         }

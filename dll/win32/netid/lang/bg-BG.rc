@@ -70,7 +70,7 @@ BEGIN
 	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Забележка: Само управниците могат да променят опознавателите на компютъра."
     1022 "Забележка: Опознавателят на компютъра не може да бъде сменен, защото:"
-	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
+	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' "" , . < > / and ?"
     3210 "&По&дробности >>"
     3220 "<< &По&дробности"
 	4000 "Information"

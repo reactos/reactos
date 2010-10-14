@@ -15,6 +15,8 @@
 		<define name="UNW_FLAG_UHANDLER">2</define>
 		<define name="UNW_FLAG_CHAININFO">3</define>
 	</if>
+	<define name="lseek">_lseek</define>
+    <define name="read">_read</define>
 	<file>coff.c</file>
 	<file>cpu_i386.c</file>
 	<file>cpu_ppc.c</file>

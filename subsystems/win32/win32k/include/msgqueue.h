@@ -11,7 +11,6 @@
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
-  BOOLEAN FreeLParam;
   MSG Msg;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
@@ -116,19 +115,19 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                UINT uTimeout, BOOL Block, INT HookMessage,
                ULONG_PTR *uResult);
 PUSER_MESSAGE FASTCALL
-MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);
+MsqCreateMessage(LPMSG Msg);
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message);
 VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-	       MSG* Msg, BOOLEAN FreeLParam, DWORD MessageBits);
+	       MSG* Msg, BOOLEAN HardwareMessage, DWORD MessageBits);
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY
 co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
-	       IN PWINDOW_OBJECT Window,
+	       IN PWND Window,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message);
@@ -147,7 +146,7 @@ MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
 VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,

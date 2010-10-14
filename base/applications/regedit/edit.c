@@ -702,6 +702,91 @@ done:
     return result;
 }
 
+static LONG CopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
+{
+    LONG lResult;
+    DWORD dwDisposition;
+    HKEY hDestSubKey = NULL;
+    HKEY hSrcSubKey = NULL;
+    DWORD dwIndex, dwType, cbName, cbData;
+    TCHAR szSubKey[256];
+    TCHAR szValueName[256];
+    BYTE szValueData[512];
+
+    FILETIME ft;
+
+    /* open the source subkey, if specified */
+    if (lpSrcSubKey)
+    {
+        lResult = RegOpenKeyEx(hSrcKey, lpSrcSubKey, 0, KEY_ALL_ACCESS, &hSrcSubKey);
+        if (lResult)
+            goto done;
+        hSrcKey = hSrcSubKey;
+    }
+
+    /* create the destination subkey */
+    lResult = RegCreateKeyEx(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
+        &hDestSubKey, &dwDisposition);
+    if (lResult)
+        goto done;
+
+    /* copy all subkeys */
+    dwIndex = 0;
+    do
+    {
+        cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
+        lResult = RegEnumKeyEx(hSrcKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
+        if (lResult == ERROR_SUCCESS)
+        {
+            lResult = CopyKey(hDestSubKey, szSubKey, hSrcKey, szSubKey);
+            if (lResult)
+                goto done;
+        }
+    }
+    while(lResult == ERROR_SUCCESS);
+
+    /* copy all subvalues */
+    dwIndex = 0;
+    do
+    {
+        cbName = sizeof(szValueName) / sizeof(szValueName[0]);
+        cbData = sizeof(szValueData) / sizeof(szValueData[0]);
+        lResult = RegEnumValue(hSrcKey, dwIndex++, szValueName, &cbName, NULL, &dwType, szValueData, &cbData);
+        if (lResult == ERROR_SUCCESS)
+        {
+            lResult = RegSetValueEx(hDestSubKey, szValueName, 0, dwType, szValueData, cbData);
+            if (lResult)
+                goto done;
+        }
+    }
+    while(lResult == ERROR_SUCCESS);
+
+    lResult = ERROR_SUCCESS;
+
+done:
+    if (hSrcSubKey)
+        RegCloseKey(hSrcSubKey);
+    if (hDestSubKey)
+        RegCloseKey(hDestSubKey);
+    if (lResult != ERROR_SUCCESS)
+        SHDeleteKey(hDestKey, lpDestSubKey);
+    return lResult;
+}
+
+static LONG MoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
+{
+    LONG lResult;
+
+    if (!lpSrcSubKey)
+        return ERROR_INVALID_FUNCTION;
+
+    lResult = CopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
+    if (lResult == ERROR_SUCCESS)
+        SHDeleteKey(hSrcKey, lpSrcSubKey);
+
+    return lResult;
+}
+
 BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
 {
     TCHAR msg[128], caption[128];
@@ -731,4 +816,129 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
 done:
     RegCloseKey(hKey);
     return result;
+}
+
+LONG RenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
+{
+    LPCTSTR s;
+    LPTSTR lpNewSubKey = NULL;
+    LONG Ret = 0;
+
+    if (!lpSubKey)
+        return Ret;
+
+    s = _tcsrchr(lpSubKey, _T('\\'));
+    if (s)
+    {
+        s++;
+        lpNewSubKey = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (s - lpSubKey + _tcslen(lpNewName) + 1) * sizeof(TCHAR));
+        if (lpNewSubKey != NULL)
+        {
+            memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(TCHAR));
+            lstrcpy(lpNewSubKey + (s - lpSubKey), lpNewName);
+            lpNewName = lpNewSubKey;
+        }
+        else
+            return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    Ret = MoveKey(hKey, lpNewName, hKey, lpSubKey);
+
+    if (lpNewSubKey)
+    {
+        HeapFree(GetProcessHeap(), 0, lpNewSubKey);
+    }
+    return Ret;
+}
+
+LONG RenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue)
+{
+    LONG lResult;
+    HKEY hSubKey = NULL;
+    DWORD dwType, cbData;
+    BYTE data[512];
+
+    if (lpSubKey)
+    {
+        lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
+        if (lResult != ERROR_SUCCESS)
+            goto done;
+        hKey = hSubKey;
+    }
+
+    cbData = sizeof(data);
+    lResult = RegQueryValueEx(hKey, lpSrcValue, NULL, &dwType, data, &cbData);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+
+    lResult = RegSetValueEx(hKey, lpDestValue, 0, dwType, data, cbData);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+
+    RegDeleteValue(hKey, lpSrcValue);
+
+done:
+    if (hSubKey)
+        RegCloseKey(hSubKey);
+    return lResult;
+}
+
+LONG QueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen)
+{
+    LONG lResult;
+    HKEY hSubKey = NULL;
+    DWORD cbData, dwType;
+
+    if (lpSubKey)
+    {
+        lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
+        if (lResult != ERROR_SUCCESS)
+            goto done;
+        hKey = hSubKey;
+    }
+
+    cbData = (dwBufferLen - 1) * sizeof(*pszBuffer);
+    lResult = RegQueryValueEx(hKey, lpValueName, NULL, &dwType, (LPBYTE) pszBuffer, &cbData);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+    if (dwType != REG_SZ)
+    {
+        lResult = -1;
+        goto done;
+    }
+
+    pszBuffer[cbData / sizeof(*pszBuffer)] = _T('\0');
+
+done:
+    if (lResult != ERROR_SUCCESS)
+        pszBuffer[0] = _T('\0');
+    if (hSubKey)
+        RegCloseKey(hSubKey);
+    return lResult;
+}
+
+BOOL GetKeyName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey)
+{
+    LPCTSTR pszRootKey;
+
+    if (hRootKey == HKEY_CLASSES_ROOT)
+        pszRootKey = TEXT("HKEY_CLASSES_ROOT");
+    else if (hRootKey == HKEY_CURRENT_USER)
+        pszRootKey = TEXT("HKEY_CURRENT_USER");
+    else if (hRootKey == HKEY_LOCAL_MACHINE)
+        pszRootKey = TEXT("HKEY_LOCAL_MACHINE");
+    else if (hRootKey == HKEY_USERS)
+        pszRootKey = TEXT("HKEY_USERS");
+    else if (hRootKey == HKEY_CURRENT_CONFIG)
+        pszRootKey = TEXT("HKEY_CURRENT_CONFIG");
+    else if (hRootKey == HKEY_DYN_DATA)
+        pszRootKey = TEXT("HKEY_DYN_DATA");
+    else
+        return FALSE;
+
+    if (lpSubKey[0])
+        _sntprintf(pszDest, iDestLength, TEXT("%s\\%s"), pszRootKey, lpSubKey);
+    else
+        _sntprintf(pszDest, iDestLength, TEXT("%s"), pszRootKey);
+    return TRUE;
 }

@@ -9,7 +9,8 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-IDS_UsageMessage, "%s\n\Sposób u¿ycia: regsvr32 [/u] [/s] [/c] [/n] [/i[:wiersz_polecenia]] nazwa_pliku_dll\n\
+IDS_UsageMessage, "%s\n\
+Sposób u¿ycia: regsvr32 [/u] [/s] [/c] [/n] [/i[:wiersz_polecenia]] nazwa_pliku_dll\n\
 /u -	Wyrejestruj serwer\n\
 /s -	Tryb cichy; nie wyœwietlaj okien komunikatów\n\
 /c -	Wyjœcie w konsoli\n\

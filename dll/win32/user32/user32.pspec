@@ -748,9 +748,6 @@
 @ stdcall wvsprintfA(ptr str ptr)
 @ stdcall wvsprintfW(ptr wstr ptr)
 
-; ROS specific exports
-@ stdcall PrivateCsrssManualGuiCheck(long)
-
 ; Functions exported by Win Vista
 @ stdcall SetProcessDPIAware()
 

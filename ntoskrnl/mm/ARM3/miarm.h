@@ -56,17 +56,27 @@
 #define _1MB (1024 * _1KB)
 #define _1GB (1024 * _1MB)
 
+/* Everyone loves 64K */
+#define _64K (64 * _1KB)
+
 /* Area mapped by a PDE */
 #define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
 
 /* Size of a page table */
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
 
+/* Size of a page directory */
+#define PD_SIZE  (PDE_COUNT * sizeof(MMPDE))
+
+/* Size of all page directories for a process */
+#define SYSTEM_PD_SIZE (PD_COUNT * PD_SIZE)
+
 /* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
 #ifdef _M_IX86
 #define PD_COUNT  1
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
+C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #elif _M_ARM
 #define PD_COUNT  1
 #define PDE_COUNT 4096
@@ -103,6 +113,7 @@
 #define MM_NOCACHE             8 
 #define MM_DECOMMIT            0x10 
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+#define MM_INVALID_PROTECTION  0xFFFFFFFF
 
 //
 // Specific PTE Definitions that map to the Memory Manager's Protection Mask Bits
@@ -194,15 +205,55 @@ extern const ULONG MmProtectToPteMask[32];
 #define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
 #define MM_SYSLDR_SINGLE_ENTRY 0x1
 
+#if defined(_M_IX86) || defined(_M_ARM)
 //
 // PFN List Sentinel
 //
 #define LIST_HEAD 0xFFFFFFFF
 
 //
+// Because GCC cannot automatically downcast 0xFFFFFFFF to lesser-width bits,
+// we need a manual definition suited to the number of bits in the PteFrame.
+// This is used as a LIST_HEAD for the colored list
+//
+#define COLORED_LIST_HEAD ((1 << 25) - 1) // 0x1FFFFFF
+#elif defined(_M_AMD64)
+#define LIST_HEAD 0xFFFFFFFFFFFFFFFFLL
+#define COLORED_LIST_HEAD ((1 << 57) - 1) // 0x1FFFFFFFFFFFFFFLL
+#else
+#error Define these please!
+#endif
+
+//
 // Special IRQL value (found in assertions)
 //
 #define MM_NOIRQL (KIRQL)0xFFFFFFFF
+
+//
+// Returns the color of a page
+//
+#define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
+#define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
+
+#ifdef _M_IX86
+//
+// Decodes a Prototype PTE into the underlying PTE
+//
+#define MiProtoPteToPte(x)                  \
+    (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
+             ((x)->u.Proto.ProtoAddressHigh | (x)->u.Proto.ProtoAddressLow))
+#endif
+
+//
+// Prototype PTEs that don't yet have a pagefile association
+//
+#define MI_PTE_LOOKUP_NEEDED 0xFFFFF
+
+//
+// System views are binned into 64K chunks
+//
+#define MI_SYSTEM_VIEW_BUCKET_SIZE  _64K
 
 //
 // FIXFIX: These should go in ex.h after the pool merge
@@ -330,6 +381,25 @@ typedef struct _MI_LARGE_PAGE_RANGES
     PFN_NUMBER LastFrame;
 } MI_LARGE_PAGE_RANGES, *PMI_LARGE_PAGE_RANGES;
 
+typedef struct _MMVIEW
+{
+    ULONG_PTR Entry;
+    PCONTROL_AREA ControlArea;
+} MMVIEW, *PMMVIEW;
+
+typedef struct _MMSESSION
+{
+    KGUARDED_MUTEX SystemSpaceViewLock;
+    PKGUARDED_MUTEX SystemSpaceViewLockPointer;
+    PCHAR SystemSpaceViewStart;
+    PMMVIEW SystemSpaceViewTable;
+    ULONG SystemSpaceHashSize;
+    ULONG SystemSpaceHashEntries;
+    ULONG SystemSpaceHashKey;
+    ULONG BitmapFailures;
+    PRTL_BITMAP SystemSpaceBitMap;
+} MMSESSION, *PMMSESSION;
+
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
@@ -439,9 +509,10 @@ extern PMMPDE MiHighestUserPde;
 extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
-
-#define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
-#define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
+extern BOOLEAN MmZeroingPageThreadActive;
+extern KEVENT MmZeroingPageEvent;
+extern ULONG MmSystemPageColor;
+extern ULONG MmProcessColorSeed;
 
 //
 // Figures out the hardware bits for a PTE
@@ -533,6 +604,33 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
+
+#ifdef _M_IX86
+//
+// Builds a Prototype PTE for the address of the PTE
+//
+FORCEINLINE
+VOID
+MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
+                      IN PMMPTE PointerPte)
+{
+    ULONG_PTR Offset;
+
+    /* Mark this as a prototype */
+    NewPte->u.Long = 0;
+    NewPte->u.Proto.Prototype = 1;
+    
+    /*
+     * Prototype PTEs are only valid in paged pool by design, this little trick
+     * lets us only use 28 bits for the adress of the PTE
+     */
+    Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
+    
+    /* 7 bits go in the "low", and the other 21 bits go in the "high" */
+    NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
+    NewPte->u.Proto.ProtoAddressHigh = Offset & 0xFFFFF80;
+}
+#endif
 
 //
 // Returns if the page is physically resident (ie: a large page)
@@ -920,27 +1018,15 @@ MiUnmapLockedPagesInUserSpace(
 
 VOID
 NTAPI
-MiInsertInListTail(
+MiInsertPageInList(
     IN PMMPFNLIST ListHead,
-    IN PMMPFN Entry
-);
-
-VOID
-NTAPI
-MiInsertZeroListAtBack(
-    IN PFN_NUMBER PageIndex
+    IN PFN_NUMBER PageFrameIndex
 );
 
 VOID
 NTAPI
 MiUnlinkFreeOrZeroedPage(
     IN PMMPFN Entry
-);
-
-PMMPFN
-NTAPI
-MiRemoveHeadList(
-    IN PMMPFNLIST ListHead
 );
 
 PFN_NUMBER
@@ -1061,6 +1147,23 @@ MiFindEmptyAddressRangeDownTree(
     OUT PMMADDRESS_NODE *Parent
 );
 
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeInTree(
+    IN SIZE_T Length,
+    IN ULONG_PTR Alignment,
+    IN PMM_AVL_TABLE Table,
+    OUT PMMADDRESS_NODE *PreviousVad,
+    OUT PULONG_PTR Base
+);
+
+VOID
+NTAPI
+MiInsertVad(
+    IN PMMVAD Vad,
+    IN PEPROCESS Process
+);
+
 VOID
 NTAPI
 MiInsertNode(
@@ -1088,5 +1191,32 @@ NTAPI
 MiGetNextNode(
     IN PMMADDRESS_NODE Node
 );
+
+BOOLEAN
+NTAPI
+MiInitializeSystemSpaceMap(
+    IN PVOID InputSession OPTIONAL
+);
+
+ULONG
+NTAPI
+MiMakeProtectionMask(
+    IN ULONG Protect
+);
+
+//
+// MiRemoveZeroPage will use inline code to zero out the page manually if only
+// free pages are available. In some scenarios, we don't/can't run that piece of
+// code and would rather only have a real zero page. If we can't have a zero page,
+// then we'd like to have our own code to grab a free page and zero it out, by
+// using MiRemoveAnyPage. This macro implements this.
+//
+PFN_NUMBER
+FORCEINLINE
+MiRemoveZeroPageSafe(IN ULONG Color)
+{
+    if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
+    return 0;
+}
 
 /* EOF */

@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/config/cmapi.c
  * PURPOSE:         Configuration Manager - Internal Registry APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -1015,8 +1016,91 @@ NTAPI
 NtQueryOpenSubKeys(IN POBJECT_ATTRIBUTES TargetKey,
                    OUT PULONG HandleCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KPROCESSOR_MODE PreviousMode;
+    PCM_KEY_BODY KeyBody = NULL;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    DPRINT("NtQueryOpenSubKeys()\n");
+
+    PAGED_CODE();
+
+    /* Get the processor mode */
+    PreviousMode = KeGetPreviousMode();
+
+    if (PreviousMode != KernelMode)
+    {
+        /* Prepare to probe parameters */
+        _SEH2_TRY
+        {
+            /* Probe target key */
+            ProbeForRead(TargetKey,
+                         sizeof(OBJECT_ATTRIBUTES),
+                         sizeof(ULONG));
+
+            /* Probe handle count */
+            ProbeForWriteUlong(HandleCount);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* Open a handle to the key */
+    Status = ObOpenObjectByName(TargetKey,
+                                CmpKeyObjectType,
+                                PreviousMode,
+                                NULL,
+                                KEY_READ,
+                                NULL,
+                                &KeyHandle);
+    if (NT_SUCCESS(Status))
+    {
+        /* Reference the key object */
+        Status = ObReferenceObjectByHandle(KeyHandle,
+                                           KEY_READ,
+                                           CmpKeyObjectType,
+                                           PreviousMode,
+                                           (PVOID *)&KeyBody,
+                                           NULL);
+
+        /* Close the handle */
+        NtClose(KeyHandle);
+    }
+
+    /* Fail, if the key object could not be referenced */
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* Lock the registry exclusively */
+    CmpLockRegistryExclusive();
+
+    /* Fail, if we did not open a hive root key */
+    if (KeyBody->KeyControlBlock->KeyCell !=
+        KeyBody->KeyControlBlock->KeyHive->BaseBlock->RootCell)
+    {
+        DPRINT("Error: Key is not a hive root key!\n");
+        CmpUnlockRegistry();
+        ObDereferenceObject(KeyBody);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Call the internal API */
+    *HandleCount = CmCountOpenSubKeys(KeyBody->KeyControlBlock,
+                                      FALSE);
+
+    /* Unlock the registry */
+    CmpUnlockRegistry();
+
+    /* Dereference the key object */
+    ObDereferenceObject(KeyBody);
+
+    DPRINT("Done.\n");
+
+    return Status;
 }
 
 NTSTATUS
