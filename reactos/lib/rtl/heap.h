@@ -54,6 +54,26 @@
 /* Segment flags */
 #define HEAP_USER_ALLOCATED    0x1
 
+/* A handy inline to distinguis normal heap, special "debug heap" and special "page heap" */
+FORCEINLINE BOOLEAN
+RtlpHeapIsSpecial(ULONG Flags)
+{
+    if (Flags & HEAP_SKIP_VALIDATION_CHECKS) return FALSE;
+
+    if (Flags & (HEAP_FLAG_PAGE_ALLOCS |
+                 HEAP_VALIDATE_ALL_ENABLED |
+                 HEAP_VALIDATE_PARAMETERS_ENABLED |
+                 HEAP_CAPTURE_STACK_BACKTRACES |
+                 HEAP_CREATE_ENABLE_TRACING))
+    {
+        /* This is a special heap */
+        return TRUE;
+    }
+
+    /* No need for a special treatment */
+    return FALSE;
+}
+
 /* Heap structures */
 struct _HEAP_COMMON_ENTRY
 {
@@ -303,6 +323,59 @@ PHEAP_ENTRY_EXTRA NTAPI
 RtlpGetExtraStuffPointer(PHEAP_ENTRY HeapEntry);
 
 /* heapdbg.c */
+HANDLE NTAPI
+RtlDebugCreateHeap(ULONG Flags,
+                   PVOID Addr,
+                   SIZE_T TotalSize,
+                   SIZE_T CommitSize,
+                   PVOID Lock,
+                   PRTL_HEAP_PARAMETERS Parameters);
+
+HANDLE NTAPI
+RtlDebugDestroyHeap(HANDLE HeapPtr);
+
+PVOID NTAPI
+RtlDebugAllocateHeap(PVOID HeapPtr,
+                     ULONG Flags,
+                     SIZE_T Size);
+
+PVOID NTAPI
+RtlDebugReAllocateHeap(HANDLE HeapPtr,
+                       ULONG Flags,
+                       PVOID Ptr,
+                       SIZE_T Size);
+
+BOOLEAN NTAPI
+RtlDebugFreeHeap(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr);
+
+BOOLEAN NTAPI
+RtlDebugGetUserInfoHeap(PVOID HeapHandle,
+                        ULONG Flags,
+                        PVOID BaseAddress,
+                        PVOID *UserValue,
+                        PULONG UserFlags);
+
+BOOLEAN NTAPI
+RtlDebugSetUserValueHeap(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         PVOID UserValue);
+
+BOOLEAN
+NTAPI
+RtlDebugSetUserFlagsHeap(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         ULONG UserFlagsReset,
+                         ULONG UserFlagsSet);
+
+SIZE_T NTAPI
+RtlDebugSizeHeap(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr);
+
 HANDLE NTAPI
 RtlpPageHeapCreate(ULONG Flags,
                    PVOID Addr,
