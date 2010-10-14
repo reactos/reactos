@@ -104,7 +104,7 @@ RtlpInitializeHeap(PHEAP Heap,
 
     /* Prepare a list of UCRs */
     InitializeListHead(&Heap->UCRList);
-    InitializeListHead(&Heap->UCRSegmentList);
+    InitializeListHead(&Heap->UCRSegments);
     UcrDescriptor = NextHeapBase;
 
     for (i=0; i<NumUCRs; i++, UcrDescriptor++)
@@ -408,14 +408,86 @@ RtlpCreateUnCommittedRange(PHEAP_SEGMENT Segment)
 {
     PLIST_ENTRY Entry;
     PHEAP_UCR_DESCRIPTOR UcrDescriptor;
+    PHEAP_UCR_SEGMENT UcrSegment;
     PHEAP Heap = Segment->Heap;
+    SIZE_T ReserveSize = 16 * PAGE_SIZE;
+    SIZE_T CommitSize = 1 * PAGE_SIZE;
+    NTSTATUS Status;
 
     DPRINT("RtlpCreateUnCommittedRange(%p)\n", Segment);
 
     /* Check if we have unused UCRs */
     if (IsListEmpty(&Heap->UCRList))
     {
-        ASSERT(FALSE);
+        /* Get a pointer to the first UCR segment */
+        UcrSegment = CONTAINING_RECORD(&Heap->UCRSegments.Flink, HEAP_UCR_SEGMENT, ListEntry);
+
+        /* Check the list of UCR segments */
+        if (IsListEmpty(&Heap->UCRSegments) ||
+            UcrSegment->ReservedSize == UcrSegment->CommittedSize)
+        {
+            /* We need to create a new one. Reserve 16 pages for it */
+            UcrSegment = NULL;
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                             (PVOID *)&UcrSegment,
+                                             0,
+                                             &ReserveSize,
+                                             MEM_RESERVE,
+                                             PAGE_READWRITE);
+
+            if (!NT_SUCCESS(Status)) return NULL;
+
+            /* Commit one page */
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                             (PVOID *)&UcrSegment,
+                                             0,
+                                             &CommitSize,
+                                             MEM_COMMIT,
+                                             PAGE_READWRITE);
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* Release reserved memory */
+                ZwFreeVirtualMemory(NtCurrentProcess(),
+                                    (PVOID *)&UcrDescriptor,
+                                    &ReserveSize,
+                                    MEM_RELEASE);
+                return NULL;
+            }
+
+            /* Set it's data */
+            UcrSegment->ReservedSize = ReserveSize;
+            UcrSegment->CommittedSize = CommitSize;
+
+            /* Add it to the head of the list */
+            InsertHeadList(&Heap->UCRSegments, &UcrSegment->ListEntry);
+
+            /* Get a pointer to the first available UCR descriptor */
+            UcrDescriptor = (PHEAP_UCR_DESCRIPTOR)(UcrSegment + 1);
+        }
+        else
+        {
+            /* It's possible to use existing UCR segment. Commit one more page */
+            UcrDescriptor = (PHEAP_UCR_DESCRIPTOR)((PCHAR)UcrSegment + UcrSegment->CommittedSize);
+            Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                             (PVOID *)&UcrDescriptor,
+                                             0,
+                                             &CommitSize,
+                                             MEM_COMMIT,
+                                             PAGE_READWRITE);
+
+            if (!NT_SUCCESS(Status)) return NULL;
+
+            /* Update sizes */
+            UcrSegment->CommittedSize += CommitSize;
+        }
+
+        /* There is a whole bunch of new UCR descriptors. Put them into the unused list */
+        while ((PCHAR)UcrDescriptor < ((PCHAR)UcrSegment + UcrSegment->CommittedSize))
+        {
+            InsertTailList(&Heap->UCRList, &UcrDescriptor->ListEntry);
+            UcrDescriptor++;
+        }
     }
 
     /* There are unused UCRs, just get the first one */
@@ -506,9 +578,10 @@ PHEAP_FREE_ENTRY NTAPI
 RtlpFindAndCommitPages(PHEAP Heap,
                        PHEAP_SEGMENT Segment,
                        PSIZE_T Size,
-                       PVOID Address)
+                       PVOID AddressRequested)
 {
     PLIST_ENTRY Current;
+    ULONG_PTR Address = 0;
     PHEAP_UCR_DESCRIPTOR UcrDescriptor, PreviousUcr = NULL;
     PHEAP_ENTRY FirstEntry, LastEntry, PreviousLastEntry;
     NTSTATUS Status;
@@ -523,20 +596,20 @@ RtlpFindAndCommitPages(PHEAP Heap,
 
         /* Check if we can use that one right away */
         if (UcrDescriptor->Size >= *Size &&
-            (UcrDescriptor->Address == Address || !Address))
+            (UcrDescriptor->Address == AddressRequested || !AddressRequested))
         {
             /* Get the address */
-            Address = UcrDescriptor->Address;
+            Address = (ULONG_PTR)UcrDescriptor->Address;
 
             /* Commit it */
             if (Heap->CommitRoutine)
             {
-                Status = Heap->CommitRoutine(Heap, &Address, Size);
+                Status = Heap->CommitRoutine(Heap, (PVOID *)&Address, Size);
             }
             else
             {
                 Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
-                                                 &Address,
+                                                 (PVOID *)&Address,
                                                  0,
                                                  Size,
                                                  MEM_COMMIT,
@@ -597,7 +670,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
             LastEntry->Flags &= ~HEAP_ENTRY_LAST_ENTRY;
 
             /* Update UCR descriptor */
-            UcrDescriptor->Address = (PUCHAR)UcrDescriptor->Address + *Size;
+            UcrDescriptor->Address = (PVOID)((ULONG_PTR)UcrDescriptor->Address + *Size);
             UcrDescriptor->Size -= *Size;
 
             DPRINT("Updating UcrDescriptor %p, new Address %p, size %d\n",
@@ -644,6 +717,7 @@ RtlpFindAndCommitPages(PHEAP Heap,
         }
 
         /* Advance to the next descriptor */
+        PreviousUcr = UcrDescriptor;
         Current = Current->Flink;
     }
 
@@ -655,14 +729,15 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
                       PHEAP_FREE_ENTRY FreeEntry,
                       SIZE_T Size)
 {
-#if 0
     PHEAP_SEGMENT Segment;
     PHEAP_ENTRY PrecedingInUseEntry = NULL, NextInUseEntry = NULL;
     PHEAP_FREE_ENTRY NextFreeEntry;
     PHEAP_UCR_DESCRIPTOR UcrDescriptor;
     ULONG PrecedingSize, NextSize, DecommitSize;
-    ULONG DecommitBase;
+    ULONG_PTR DecommitBase;
     NTSTATUS Status;
+
+    DPRINT("Decommitting %p %p %x\n", Heap, FreeEntry, Size);
 
     /* We can't decommit if there is a commit routine! */
     if (Heap->CommitRoutine)
@@ -692,7 +767,7 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
     }
 
     /* Get the next entry */
-    NextFreeEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry + (Size >> HEAP_ENTRY_SHIFT));
+    NextFreeEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)FreeEntry + Size);
     DecommitSize = ROUND_DOWN(NextFreeEntry, PAGE_SIZE);
     NextSize = (PHEAP_ENTRY)NextFreeEntry - (PHEAP_ENTRY)DecommitSize;
 
@@ -708,14 +783,17 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
         NextInUseEntry = (PHEAP_ENTRY)NextFreeEntry;
     }
 
-    NextFreeEntry  = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)NextFreeEntry - NextSize);
+    NextFreeEntry = (PHEAP_FREE_ENTRY)((PHEAP_ENTRY)NextFreeEntry - NextSize);
 
+    /* Calculate real decommit size */
     if (DecommitSize > DecommitBase)
+    {
         DecommitSize -= DecommitBase;
+    }
     else
     {
         /* Nothing to decommit */
-        RtlpInsertFreeBlock(Heap, FreeEntry, PrecedingSize);
+        RtlpInsertFreeBlock(Heap, FreeEntry, Size);
         return;
     }
 
@@ -739,7 +817,7 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
 
     if (!NT_SUCCESS(Status))
     {
-        RtlpInsertFreeBlock(Heap, FreeEntry, PrecedingSize);
+        RtlpInsertFreeBlock(Heap, FreeEntry, Size);
         return;
     }
 
@@ -753,18 +831,22 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
         FreeEntry->Flags = HEAP_ENTRY_LAST_ENTRY;
         FreeEntry->Size = PrecedingSize;
         Heap->TotalFreeSize += PrecedingSize;
+
+        /* Set last entry in the segment to this entry */
         Segment->LastEntryInSegment = (PHEAP_ENTRY)FreeEntry;
-        RtlpInsertFreeBlockHelper(Heap, FreeEntry, PrecedingSize);
+
+        /* Insert it into the free list */
+        RtlpInsertFreeBlockHelper(Heap, FreeEntry, PrecedingSize, FALSE);
     }
-    else if (NextInUseEntry)
+    else if (PrecedingInUseEntry)
     {
         /* Adjust preceding in use entry */
         PrecedingInUseEntry->Flags |= HEAP_ENTRY_LAST_ENTRY;
         Segment->LastEntryInSegment = PrecedingInUseEntry;
-    }
-    else if ((Segment->LastEntryInSegment >= (PHEAP_ENTRY)DecommitBase))
+    } else if ((ULONG_PTR)Segment->LastEntryInSegment >= DecommitBase &&
+               ((PCHAR)Segment->LastEntryInSegment < ((PCHAR)DecommitBase + DecommitSize)))
     {
-        /* Adjust last entry in the segment */
+        /* Update this segment's last entry */
         Segment->LastEntryInSegment = Segment->FirstEntry;
     }
 
@@ -779,16 +861,13 @@ RtlpDeCommitFreeBlock(PHEAP Heap,
 
         ((PHEAP_FREE_ENTRY)((PHEAP_ENTRY)NextFreeEntry + NextSize))->PreviousSize = NextSize;
 
-        Heap->TotalFreeSize += PrecedingSize;
-        RtlpInsertFreeBlockHelper(Heap, NextFreeEntry, NextSize);
+        Heap->TotalFreeSize += NextSize;
+        RtlpInsertFreeBlockHelper(Heap, NextFreeEntry, NextSize, FALSE);
     }
     else if (NextInUseEntry)
     {
         NextInUseEntry->PreviousSize = 0;
     }
-#else
-    RtlpInsertFreeBlock(Heap, FreeEntry, Size);
-#endif
 }
 
 BOOLEAN NTAPI
@@ -1047,7 +1126,7 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
 
         /* Advance FreeEntry and update sizes */
         FreeEntry = CurrentEntry;
-        *FreeSize += CurrentEntry->Size;
+        *FreeSize = *FreeSize + CurrentEntry->Size;
         Heap->TotalFreeSize -= CurrentEntry->Size;
         FreeEntry->Size = *FreeSize;
 
@@ -1086,7 +1165,7 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
             RtlpRemoveFreeBlock(Heap, NextEntry, FALSE, FALSE);
 
             /* Update sizes */
-            *FreeSize += NextEntry->Size;
+            *FreeSize = *FreeSize + NextEntry->Size;
             Heap->TotalFreeSize -= NextEntry->Size;
             FreeEntry->Size = *FreeSize;
 
@@ -1648,7 +1727,7 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
 {
     PHEAP Heap = (PHEAP)HeapPtr;
     PLIST_ENTRY Current;
-    PHEAP_UCR_DESCRIPTOR UcrDescriptor;
+    PHEAP_UCR_SEGMENT UcrSegment;
     PHEAP_VIRTUAL_ALLOC_ENTRY VirtualEntry;
     PVOID BaseAddress;
     SIZE_T Size;
@@ -1695,27 +1774,23 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
         Heap->LockVariable = NULL;
     }
 
-    /* Go through heap's global uncommitted ranges list and free them */
-    DPRINT1("HEAP: Freeing segment's UCRs is not yet implemented!\n");
-    Current = Heap->UCRSegmentList.Flink;
-    while(Current != &Heap->UCRSegmentList)
+    /* Free UCR segments if any were created */
+    Current = Heap->UCRSegments.Flink;
+    while(Current != &Heap->UCRSegments)
     {
-        UcrDescriptor = CONTAINING_RECORD(Current, HEAP_UCR_DESCRIPTOR, ListEntry);
-
-        if (UcrDescriptor)
-        {
-            BaseAddress = UcrDescriptor->Address;
-            Size = 0;
-
-            /* Release that memory */
-            ZwFreeVirtualMemory(NtCurrentProcess(),
-                                &BaseAddress,
-                                &Size,
-                                MEM_RELEASE);
-        }
+        UcrSegment = CONTAINING_RECORD(Current, HEAP_UCR_SEGMENT, ListEntry);
 
         /* Advance to the next descriptor */
         Current = Current->Flink;
+
+        BaseAddress = (PVOID)UcrSegment;
+        Size = 0;
+
+        /* Release that memory */
+        ZwFreeVirtualMemory(NtCurrentProcess(),
+                            &BaseAddress,
+                            &Size,
+                            MEM_RELEASE);
     }
 
     /* Go through segments and destroy them */
@@ -2043,7 +2118,7 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         HEAP_CREATE_ENABLE_TRACING |
         HEAP_CREATE_ALIGN_16))
     {
-        DPRINT1("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
+        DPRINT("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
     }
 
     //DPRINT("RtlAllocateHeap(%p %x %x)\n", Heap, Flags, Size);
@@ -3000,7 +3075,7 @@ RtlReAllocateHeap(HANDLE HeapPtr,
                     if (Size > OldSize &&
                         (Flags & HEAP_ZERO_MEMORY))
                     {
-                        RtlZeroMemory((PCHAR)NewBaseAddress + OldSize, Size - OldSize );
+                        RtlZeroMemory((PCHAR)NewBaseAddress + OldSize, Size - OldSize);
                     }
 
                     /* Free the old block */
@@ -3701,7 +3776,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
  */
 ULONG NTAPI
 RtlGetProcessHeaps(ULONG count,
-                   HANDLE *heaps )
+                   HANDLE *heaps)
 {
     UNIMPLEMENTED;
     return 0;

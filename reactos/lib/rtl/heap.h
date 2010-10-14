@@ -178,6 +178,7 @@ typedef struct _HEAP
     USHORT SegmentAllocatorBackTraceIndex;
     USHORT Reserved;
     LIST_ENTRY UCRSegmentList;
+
     ULONG Flags;
     ULONG ForceFlags;
     ULONG CompatibilityFlags;
@@ -200,6 +201,7 @@ typedef struct _HEAP
     USHORT MaximumTagIndex;
     PHEAP_TAG_ENTRY TagEntries;
     LIST_ENTRY UCRList;
+    LIST_ENTRY UCRSegments; // FIXME: non-Vista
     ULONG AlignRound;
     ULONG AlignMask;
     LIST_ENTRY VirtualAllocdBlocks;
@@ -251,6 +253,13 @@ typedef struct _HEAP_UCR_DESCRIPTOR
     PVOID Address;
     ULONG Size;
 } HEAP_UCR_DESCRIPTOR, *PHEAP_UCR_DESCRIPTOR;
+
+typedef struct _HEAP_UCR_SEGMENT
+{
+    LIST_ENTRY ListEntry;
+    SIZE_T ReservedSize;
+    SIZE_T CommittedSize;
+} HEAP_UCR_SEGMENT, *PHEAP_UCR_SEGMENT;
 
 typedef struct _HEAP_ENTRY_EXTRA
 {
