@@ -1,5 +1,7 @@
 add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
 
+set_cpp()
+
 add_executable(telnet
     src/ansiprsr.cpp
     src/keytrans.cpp
@@ -22,8 +24,6 @@ add_executable(telnet
     src/ttelhndl.cpp
     telnet.rc)
 
-target_link_libraries(telnet stlport)
-
 set_module_type(telnet win32cui)
 
-add_importlibs(telnet ws2_32 user32 msvcrt kernel32)
+add_importlibs(telnet ws2_32 user32 kernel32 msvcrt)

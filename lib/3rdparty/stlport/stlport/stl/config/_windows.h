@@ -44,7 +44,7 @@
 #  endif
 #endif /* _STLP_BIG_ENDIAN */
 
-#if !defined (_STLP_WINDOWS_H_INCLUDED)
+#if !defined (_STLP_WINDOWS_H_INCLUDED) && !defined(_WDMDDK_) //let's hope it will work long enough...
 #  define _STLP_WINDOWS_H_INCLUDED
 #  if defined (__BUILDING_STLPORT)
 #    include <stl/config/_native_headers.h>

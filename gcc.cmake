@@ -18,7 +18,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-bas
 add_definitions(-pipe -fms-extensions)
 
 # stlport includes
-set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> -I${REACTOS_SOURCE_DIR}/lib/3rdparty/stlport/stlport <FLAGS> -o <OBJECT> -c <SOURCE>")
 
 set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
@@ -35,14 +35,6 @@ add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-e
 
 # Optimizations
 add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
-
-#linkage hell...
-#add_library(gcc STATIC IMPORTED)
-#set_target_properties(gcc PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libgcc.a
-#    IMPORTED_LINK_INTERFACE_LIBRARIES "mingw_common -lkernel32")
-#add_library(supc++ STATIC IMPORTED)
-#set_target_properties(supc++ PROPERTIES IMPORTED_LOCATION ${REACTOS_SOURCE_DIR}/importlibs/libsupc++.a
-#    IMPORTED_LINK_INTERFACE_LIBRARIES "gcc -lmsvcrt")
 
 # Macros
 macro(set_entrypoint MODULE ENTRYPOINT)
@@ -76,7 +68,11 @@ endmacro()
 macro(set_module_type MODULE TYPE)
 
     add_dependencies(${MODULE} psdk buildno_header)
-  
+	
+    if(${IS_CPP})
+	  target_link_libraries(${MODULE} stlport -lsupc++ -lgcc)
+	endif()
+	
     if(${TYPE} MATCHES nativecui)
         set_subsystem(${MODULE} native)
         set_entrypoint(${MODULE} NtProcessStartup@4)
@@ -112,6 +108,12 @@ macro(set_module_type MODULE TYPE)
         set_entrypoint(${MODULE} DllMain@12)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     endif()
+	if(${TYPE} MATCHES kernelmodedriver)
+	    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols" SUFFIX ".sys")
+	    set_entrypoint(${MODULE} DriverEntry@8)
+		set_subsystem(${MODULE} native)
+		add_dependencies(${MODULE} bugcodes)
+	endif()
 endmacro()
 
 endif()
@@ -120,6 +122,10 @@ macro(set_unicode)
    add_definitions(-DUNICODE -D_UNICODE)
    set(IS_UNICODE 1)
 endmacro()
+
+macro(set_cpp)
+  set(IS_CPP 1)
+ endmacro()
 
 # Workaround lack of mingw RC support in cmake
 macro(set_rc_compiler)

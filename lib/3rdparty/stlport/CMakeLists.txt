@@ -41,9 +41,3 @@ list(APPEND SOURCE
   src/cxa.c)
 
 add_library(stlport ${SOURCE})
-
-if(NOT MSVC)
-  #those are mandatory to get correctly ordered linked libraries.
-  #target_link_libraries(stlport supc++ msvcrt.dll.a)
-  #add_importlibs(stlport msvcrt)
-endif()

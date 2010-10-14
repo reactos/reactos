@@ -1,7 +1,7 @@
 
-set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
-
 include_directories(inc)
+
+set_cpp()
 
 add_library(uniata SHARED
     id_ata.cpp
@@ -14,13 +14,8 @@ add_library(uniata SHARED
     idedma.rc
     ros_glue/ros_glue.cpp)
 
-set_target_properties(uniata PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(uniata kernelmodedriver)
 
-target_link_libraries(uniata
-    -lscsiport
-    -lntoskrnl
-    -lhal
-    -lgcc)
+add_importlibs(uniata scsiport ntoskrnl hal)
 
-add_dependencies(uniata psdk bugcodes buildno_header)
 add_minicd_target(uniata reactos uniata.sys)

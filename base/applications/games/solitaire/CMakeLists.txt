@@ -1,5 +1,6 @@
 
 set_unicode()
+set_cpp()
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/cardlib)
 
@@ -9,8 +10,8 @@ add_executable(sol
     solitaire.cpp
     rsrc.rc)
 
-target_link_libraries(sol stlport cardlib)
+target_link_libraries(sol cardlib)
 
 set_module_type(sol win32gui)
 
-add_importlibs(sol advapi32 comctl32 user32 gdi32 msvcrt)
+add_importlibs(sol advapi32 comctl32 user32 gdi32 kernel32 msvcrt)

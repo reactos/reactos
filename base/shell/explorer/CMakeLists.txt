@@ -3,6 +3,10 @@ add_subdirectory(notifyhook)
 
 set_unicode()
 
+#NOTE : explorer doesn't follow standard c++, and so doesn't compile with stlport headers
+#I'm not willing to do it if explorer_new is hanging around
+set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+
 add_definitions(-DWIN32)
 add_definitions(-D__WINDRES__)
 
