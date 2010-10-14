@@ -4,7 +4,7 @@
 
 add_definitions(-D_STLP_USE_EXCEPTIONS)
 
-include_directories(BEFORE stlport)
+set_cpp()
 
 list(APPEND SOURCE
   src/allocators.cpp

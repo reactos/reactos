@@ -139,3 +139,8 @@ MACRO(add_minicd FILENAME _dir _nameoncd)
     
     add_dependencies(minicd ${_nameoncd}_minicd)
 ENDMACRO(add_minicd)
+
+macro(set_cpp)
+  include_directories(BEFORE ${REACTOS_SOURCE_DIR}/lib/3rdparty/stlport/stlport)
+  set(IS_CPP 1)
+endmacro()

@@ -17,9 +17,6 @@ set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-bas
 # Compiler Core
 add_definitions(-pipe -fms-extensions)
 
-# stlport includes
-set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> -I${REACTOS_SOURCE_DIR}/lib/3rdparty/stlport/stlport <FLAGS> -o <OBJECT> -c <SOURCE>")
-
 set(CMAKE_C_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
@@ -122,10 +119,6 @@ macro(set_unicode)
    add_definitions(-DUNICODE -D_UNICODE)
    set(IS_UNICODE 1)
 endmacro()
-
-macro(set_cpp)
-  set(IS_CPP 1)
- endmacro()
 
 # Workaround lack of mingw RC support in cmake
 macro(set_rc_compiler)
