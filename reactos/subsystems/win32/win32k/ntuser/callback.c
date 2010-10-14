@@ -339,6 +339,8 @@ co_IntCallHookProc(INT HookId,
    PANSI_STRING asClassName;
    PTHREADINFO pti;
 
+   ASSERT(Proc);
+
    pti = PsGetCurrentThreadWin32Thread();
    if (pti->TIF_flags & TIF_INCLEANUP)
    {
