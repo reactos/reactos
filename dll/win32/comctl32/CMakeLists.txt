@@ -6,8 +6,7 @@ add_definitions(-D_WINE)
 add_definitions(-D_COMCTL32_)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(comctl32 ${CMAKE_CURRENT_SOURCE_DIR}/comctl32.spec ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
@@ -63,6 +62,8 @@ add_importlibs(comctl32
     advapi32
     winmm
     uxtheme
+    msvcrt
+    kernel32
     ntdll)
 
 add_dependencies(comctl32 comctl32_def)

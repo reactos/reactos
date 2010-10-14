@@ -18,7 +18,7 @@ add_subdirectory(cards)
 add_subdirectory(cfgmgr32)
 add_subdirectory(clusapi)
 add_subdirectory(comcat)
-#add_subdirectory(comctl32)#FIXME: comctl32\dpa.c:531: error: conflicting types for 'DPA_GetPtr'
+add_subdirectory(comctl32)
 #add_subdirectory(comdlg32)#FIXME: comdlg32\\/cdlg_Es.rc:396: unrecognized escape sequence
 add_subdirectory(compstui)
 #add_subdirectory(credui)#FIXME: \\cryptui\\/cryptui_Fr.rc:432: syntax error
@@ -147,7 +147,7 @@ add_subdirectory(rasman)
 add_subdirectory(resutils)
 add_subdirectory(riched20)
 add_subdirectory(riched32)
-#add_subdirectory(rpcrt4)
+add_subdirectory(rpcrt4)
 add_subdirectory(rsabase)
 add_subdirectory(rsaenh)
 add_subdirectory(samlib)
