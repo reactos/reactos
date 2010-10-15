@@ -2216,7 +2216,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
     /* If we use interrupt(s), copy them */
-    if (Interrupt)
+    while (Interrupt)
     {
         ResourceDescriptor->Type = CmResourceTypeInterrupt;
 
@@ -2232,37 +2232,12 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
             ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
         }
 
-        ResourceDescriptor->u.Interrupt.Level = PortConfig->BusInterruptLevel;
-        ResourceDescriptor->u.Interrupt.Vector = PortConfig->BusInterruptVector;
+        ResourceDescriptor->u.Interrupt.Level = (Interrupt == 2) ? PortConfig->BusInterruptLevel2 : PortConfig->BusInterruptLevel;
+        ResourceDescriptor->u.Interrupt.Vector = (Interrupt == 2) ? PortConfig->BusInterruptVector2 : PortConfig->BusInterruptVector;
         ResourceDescriptor->u.Interrupt.Affinity = 0;
 
         ResourceDescriptor++;
         Interrupt--;
-    }
-
-    /* Copy 2nd interrupt
-       FIXME: Stupid code duplication, remove */
-    if (Interrupt)
-    {
-        ResourceDescriptor->Type = CmResourceTypeInterrupt;
-
-        if (PortConfig->AdapterInterfaceType == MicroChannel ||
-            PortConfig->InterruptMode == LevelSensitive)
-        {
-            ResourceDescriptor->ShareDisposition = CmResourceShareShared;
-            ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
-        }
-        else
-        {
-            ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-            ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
-        }
-
-        ResourceDescriptor->u.Interrupt.Level = PortConfig->BusInterruptLevel;
-        ResourceDescriptor->u.Interrupt.Vector = PortConfig->BusInterruptVector;
-        ResourceDescriptor->u.Interrupt.Affinity = 0;
-
-        ResourceDescriptor++;
     }
 
     /* Copy DMA data */
