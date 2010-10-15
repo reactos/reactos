@@ -8,4 +8,5 @@
 	<file>mixer.c</file>
 	<file>sup.c</file>
 	<file>wave.c</file>
+	<file>topology.c</file>
 </module>
