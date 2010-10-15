@@ -3216,7 +3216,7 @@ RtlSizeHeap(
     }
 
     /* Force flags */
-    Flags |= Heap->Flags;
+    Flags |= Heap->ForceFlags;
 
     /* Call special heap */
     if (RtlpHeapIsSpecial(Flags))
