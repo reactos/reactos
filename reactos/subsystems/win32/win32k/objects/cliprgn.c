@@ -109,10 +109,10 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   ASSERT (dc->prgnVis != NULL);
 
-  retval = NtGdiCombineRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
+  retval = NtGdiCombineRgn(dc->prgnVis->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
   {
-    NtGdiOffsetRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    NtGdiOffsetRgn(dc->prgnVis->BaseObject.hHmgr, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
     CLIPPING_UpdateGCRegion(dc);
   }
 
@@ -310,7 +310,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       if (!dc->rosdc.hClipRgn)
       {
          dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(dc->rosdc.hClipRgn, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, NewRgn, RGN_DIFF);
+         NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->prgnVis->BaseObject.hHmgr, NewRgn, RGN_DIFF);
          Result = SIMPLEREGION;
       }
       else
@@ -551,7 +551,7 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
   CLIPOBJ * co;
 
   /* Must have VisRgn set to a valid state! */
-  if (!pDC->prgnVis) return ERROR;
+  ASSERT (pDC->prgnVis);
 
   if (pDC->prgnAPI)
   {
