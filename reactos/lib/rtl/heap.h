@@ -322,6 +322,15 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
 PHEAP_ENTRY_EXTRA NTAPI
 RtlpGetExtraStuffPointer(PHEAP_ENTRY HeapEntry);
 
+BOOLEAN NTAPI
+RtlpValidateHeap(PHEAP Heap, BOOLEAN ForceValidation);
+
+BOOLEAN NTAPI
+RtlpValidateHeapEntry(PHEAP Heap, PHEAP_ENTRY HeapEntry);
+
+BOOLEAN NTAPI
+RtlpValidateHeapHeaders(PHEAP Heap, BOOLEAN Recalculate);
+
 /* heapdbg.c */
 HANDLE NTAPI
 RtlDebugCreateHeap(ULONG Flags,
@@ -331,7 +340,7 @@ RtlDebugCreateHeap(ULONG Flags,
                    PVOID Lock,
                    PRTL_HEAP_PARAMETERS Parameters);
 
-HANDLE NTAPI
+BOOLEAN NTAPI
 RtlDebugDestroyHeap(HANDLE HeapPtr);
 
 PVOID NTAPI

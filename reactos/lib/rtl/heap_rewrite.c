@@ -1476,23 +1476,9 @@ RtlCreateHeap(ULONG Flags,
             TotalSize = ROUND_UP(CommitSize, 16 * PAGE_SIZE);
     }
 
-    if (RtlpGetMode() == UserMode)
-    {
-        /* TODO: Here should be a call to special "Debug" heap, which does parameters validation,
-        however we're just going to simulate setting correct flags here */
-        if (Flags & (HEAP_VALIDATE_ALL_ENABLED |
-                     HEAP_VALIDATE_PARAMETERS_ENABLED |
-                     HEAP_CAPTURE_STACK_BACKTRACES |
-                     HEAP_FLAG_PAGE_ALLOCS |
-                     HEAP_CREATE_ENABLE_TRACING) &&
-                     !(Flags & HEAP_SKIP_VALIDATION_CHECKS))
-        {
-            // RtlDebugCreateHeap(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
-            Flags |= HEAP_SKIP_VALIDATION_CHECKS |
-                     HEAP_TAIL_CHECKING_ENABLED |
-                     HEAP_FREE_CHECKING_ENABLED;
-        }
-    }
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugCreateHeap(Flags, Addr, TotalSize, CommitSize, Lock, Parameters);
 
     /* Calculate header size */
     HeaderSize = sizeof(HEAP);
@@ -1736,7 +1722,11 @@ RtlDestroyHeap(HANDLE HeapPtr) /* [in] Handle of heap */
 
     if (!HeapPtr) return NULL;
 
-    // TODO: Check for special heap
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Heap->Flags))
+    {
+        if (!RtlDebugDestroyHeap(Heap)) return HeapPtr;
+    }
 
     /* Check for a process heap */
     if (RtlpGetMode() == UserMode &&
@@ -2103,6 +2093,10 @@ RtlAllocateHeap(IN PVOID HeapPtr,
     /* Force flags */
     Flags |= Heap->ForceFlags;
 
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugAllocateHeap(Heap, Flags, Size);
+
     /* Check for the maximum size */
     if (Size >= 0x80000000)
     {
@@ -2111,14 +2105,10 @@ RtlAllocateHeap(IN PVOID HeapPtr,
         return NULL;
     }
 
-    if (Flags & (
-        HEAP_VALIDATE_ALL_ENABLED |
-        HEAP_VALIDATE_PARAMETERS_ENABLED |
-        HEAP_FLAG_PAGE_ALLOCS |
-        HEAP_CREATE_ENABLE_TRACING |
-        HEAP_CREATE_ALIGN_16))
+    if (Flags & (HEAP_CREATE_ENABLE_TRACING |
+                 HEAP_CREATE_ALIGN_16))
     {
-        DPRINT("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
+        DPRINT1("HEAP: RtlAllocateHeap is called with unsupported flags %x, ignoring\n", Flags);
     }
 
     //DPRINT("RtlAllocateHeap(%p %x %x)\n", Heap, Flags, Size);
@@ -2328,6 +2318,10 @@ BOOLEAN NTAPI RtlFreeHeap(
     /* Get pointer to the heap and force flags */
     Heap = (PHEAP)HeapPtr;
     Flags |= Heap->ForceFlags;
+
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugFreeHeap(Heap, Flags, Ptr);
 
     /* Lock if necessary */
     if (!(Flags & HEAP_NO_SERIALIZE))
@@ -2733,7 +2727,9 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     /* Force heap flags */
     Flags |= Heap->ForceFlags;
 
-    // Check for special heap
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugReAllocateHeap(Heap, Flags, Ptr, Size);
 
     /* Make sure size is valid */
     if (Size >= 0x80000000)
@@ -3222,7 +3218,9 @@ RtlSizeHeap(
     /* Force flags */
     Flags |= Heap->Flags;
 
-    // FIXME Special heap
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugSizeHeap(Heap, Flags, Ptr);
 
     /* Get the heap entry pointer */
     HeapEntry = (PHEAP_ENTRY)Ptr - 1;
@@ -3825,6 +3823,10 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
     /* Force flags */
     Flags |= Heap->Flags;
 
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugSetUserValueHeap(Heap, Flags, BaseAddress, UserValue);
+
     /* Lock if it's lockable */
     if (!(Heap->Flags & HEAP_NO_SERIALIZE))
     {
@@ -3880,6 +3882,10 @@ RtlSetUserFlagsHeap(IN PVOID HeapHandle,
     /* Force flags */
     Flags |= Heap->Flags;
 
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugSetUserFlagsHeap(Heap, Flags, BaseAddress, UserFlagsReset, UserFlagsSet);
+
     /* Lock if it's lockable */
     if (!(Heap->Flags & HEAP_NO_SERIALIZE))
     {
@@ -3931,6 +3937,10 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
 
     /* Force flags */
     Flags |= Heap->Flags;
+
+    /* Call special heap */
+    if (RtlpHeapIsSpecial(Flags))
+        return RtlDebugGetUserInfoHeap(Heap, Flags, BaseAddress, UserValue, UserFlags);
 
     /* Lock if it's lockable */
     if (!(Heap->Flags & HEAP_NO_SERIALIZE))
