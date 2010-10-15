@@ -856,5 +856,10 @@ modules\rostests\winetests\wldap32\wldap32_winetest.exe                    7   o
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 modules\rostests\winetests\xmllite\xmllite_winetest.exe                    7   optional
 
+modules\rostests\apitests\dciman32\dciman32_apitest.exe                    7   optional
+modules\rostests\apitests\gdi32\gdi32_apitest.exe                          7   optional
+modules\rostests\apitests\ntdll\ntdll_apitest.exe                          7   optional
+modules\rostests\apitests\user32\user32_apitest.exe                        7   optional
+modules\rostests\apitests\ws2_32\ws2_32_apitest.exe                        7   optional
 
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
