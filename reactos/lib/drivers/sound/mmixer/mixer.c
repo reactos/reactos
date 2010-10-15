@@ -76,7 +76,7 @@ MIXER_STATUS
 MMixerOpen(
     IN PMIXER_CONTEXT MixerContext,
     IN ULONG MixerId,
-    IN PVOID MixerEvent,
+    IN PVOID MixerEventContext,
     IN PMIXER_EVENT MixerEventRoutine,
     OUT PHANDLE MixerHandle)
 {
@@ -92,6 +92,7 @@ MMixerOpen(
         return Status;
     }
 
+    /* get mixer info */
     MixerInfo = (LPMIXER_INFO)MMixerGetMixerInfoByIndex(MixerContext, MixerId);
     if (!MixerInfo)
     {
@@ -99,11 +100,8 @@ MMixerOpen(
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    /* FIXME
-     * handle event notification
-     */
-
-    Status = MMixerAddEvents(MixerContext, MixerInfo);
+    /* add the event */
+    Status = MMixerAddEvent(MixerContext, MixerInfo, MixerEventContext, MixerEventRoutine);
 
 
     /* store result */
@@ -396,10 +394,10 @@ MMixerGetControlDetails(
     switch(MixerControl->dwControlType)
     {
         case MIXERCONTROL_CONTROLTYPE_MUTE:
-            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo->hMixer, NodeId, MixerLine->Line.dwLineID, MixerControlDetails, FALSE);
+            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo, NodeId, MixerLine->Line.dwLineID, MixerControlDetails, FALSE);
             break;
         case MIXERCONTROL_CONTROLTYPE_VOLUME:
-            Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo->hMixer, NodeId, FALSE, MixerControl, MixerControlDetails, MixerLine);
+            Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo, NodeId, FALSE, MixerControl, MixerControlDetails, MixerLine);
             break;
         default:
             Status = MM_STATUS_NOT_IMPLEMENTED;

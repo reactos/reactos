@@ -62,13 +62,6 @@ typedef struct
 
 }TOPOLOGY, *PTOPOLOGY;
 
-
-typedef struct
-{
-    KSEVENTDATA EventData;
-    LIST_ENTRY Entry;
-}EVENT_ITEM, *LPEVENT_ITEM;
-
 typedef struct
 {
     LIST_ENTRY    Entry;
@@ -140,6 +133,14 @@ typedef struct
     ULONG WaveOutListCount;
     LIST_ENTRY WaveOutList;
 }MIXER_LIST, *PMIXER_LIST;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    PVOID MixerEventContext;
+    PMIXER_EVENT MixerEventRoutine;
+
+}EVENT_NOTIFICATION_ENTRY, *PEVENT_NOTIFICATION_ENTRY;
 
 #define DESTINATION_LINE 0xFFFF0000
 
@@ -262,7 +263,7 @@ MMixerGetMixerControlById(
 MIXER_STATUS
 MMixerSetGetMuteControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG dwLineID,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
@@ -271,7 +272,7 @@ MMixerSetGetMuteControlDetails(
 MIXER_STATUS
 MMixerSetGetVolumeControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG bSet,
     LPMIXERCONTROLW MixerControl,
@@ -324,9 +325,11 @@ MMixerInitializeWaveInfo(
     IN PULONG Pins);
 
 MIXER_STATUS
-MMixerAddEvents(
+MMixerAddEvent(
     IN PMIXER_CONTEXT MixerContext,
-    IN OUT LPMIXER_INFO MixerInfo);
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN PVOID MixerEvent,
+    IN PMIXER_EVENT MixerEventRoutine);
 
 /* topology.c */
 

@@ -1086,20 +1086,22 @@ MIXER_STATUS
 MMixerAddEvent(
     IN PMIXER_CONTEXT MixerContext,
     IN OUT LPMIXER_INFO MixerInfo,
-    IN ULONG NodeId)
+    IN PVOID MixerEventContext,
+    IN PMIXER_EVENT MixerEventRoutine)
 {
-    KSE_NODE Property;
-    LPEVENT_ITEM EventData;
-    ULONG BytesReturned;
-    MIXER_STATUS Status;
+    //KSE_NODE Property;
+    PEVENT_NOTIFICATION_ENTRY EventData;
+    //ULONG BytesReturned;
+    //MIXER_STATUS Status;
 
-    EventData = (LPEVENT_ITEM)MixerContext->AllocEventData(sizeof(LIST_ENTRY));
+    EventData = (PEVENT_NOTIFICATION_ENTRY)MixerContext->AllocEventData(sizeof(EVENT_NOTIFICATION_ENTRY));
     if (!EventData)
     {
         /* not enough memory */
         return MM_STATUS_NO_MEMORY;
     }
 
+#if 0
     /* setup request */
     Property.Event.Set = KSEVENTSETID_AudioControlChange;
     Property.Event.Flags = KSEVENT_TYPE_TOPOLOGY|KSEVENT_TYPE_ENABLE;
@@ -1115,45 +1117,14 @@ MMixerAddEvent(
         MixerContext->FreeEventData(EventData);
         return Status;
     }
+#endif
+
+    /* initialize notification entry */
+    EventData->MixerEventContext = MixerEventContext;
+    EventData->MixerEventRoutine;
 
     /* store event */
     InsertTailList(&MixerInfo->EventList, &EventData->Entry);
-    return Status;
-}
-
-MIXER_STATUS
-MMixerAddEvents(
-    IN PMIXER_CONTEXT MixerContext,
-    IN OUT LPMIXER_INFO MixerInfo)
-{
-    PKSMULTIPLE_ITEM NodeTypes;
-    ULONG Index;
-    MIXER_STATUS Status;
-    LPGUID Guid;
-
-    /* get filter node types */
-    Status = MMixerGetFilterTopologyProperty(MixerContext, MixerInfo->hMixer, KSPROPERTY_TOPOLOGY_NODES, &NodeTypes);
-
-    if (Status != MM_STATUS_SUCCESS)
-    {
-        /* failed */
-        return Status;
-    }
-
-    for(Index = 0; Index < NodeTypes->Count; Index++)
-    {
-        Guid = MMixerGetNodeType(NodeTypes, Index);
-        if (IsEqualGUID(&KSNODETYPE_VOLUME, Guid) || IsEqualGUID(&KSNODETYPE_MUTE, Guid))
-        {
-            /* add an event for volume / mute controls
-             * TODO: support extra control types
-             */
-            MMixerAddEvent(MixerContext, MixerInfo, Index);
-        }
-    }
-
-    /* free node types */
-    MixerContext->Free(NodeTypes);
-
     return MM_STATUS_SUCCESS;
 }
+

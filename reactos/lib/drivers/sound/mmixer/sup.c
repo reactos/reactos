@@ -233,10 +233,38 @@ MMixerGetVolumeControlIndex(
     return VolumeData->InputSteppingDelta * (VolumeData->ValuesCount-1);
 }
 
+VOID
+MMixerNotifyControlChange(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NotificationType,
+    IN ULONG Value)
+{
+    PLIST_ENTRY Entry;
+    PEVENT_NOTIFICATION_ENTRY NotificationEntry;
+
+    /* enumerate list and add a notification entry */
+    Entry = MixerInfo->LineList.Flink;
+    while(Entry != &MixerInfo->EventList)
+    {
+        /* get notification entry offset */
+        NotificationEntry = (PEVENT_NOTIFICATION_ENTRY)CONTAINING_RECORD(Entry, EVENT_NOTIFICATION_ENTRY, Entry);
+
+        if (NotificationEntry->MixerEventRoutine)
+        {
+            /* now perform the callback */
+            NotificationEntry->MixerEventRoutine(NotificationEntry->MixerEventContext, (HANDLE)MixerInfo, NotificationType, Value);
+        }
+
+        /* move to next notification entry */
+        Entry = Entry->Flink;
+    }
+}
+
 MIXER_STATUS
 MMixerSetGetMuteControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG dwLineID,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
@@ -257,7 +285,7 @@ MMixerSetGetMuteControlDetails(
         Value = Input->fValue;
 
     /* set control details */
-    Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
+    Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_MUTE, 0, &Value);
 
     if (Status != MM_STATUS_SUCCESS)
         return Status;
@@ -270,7 +298,8 @@ MMixerSetGetMuteControlDetails(
     }
     else
     {
-        /* FIXME notify wdmaud clients MM_MIXM_LINE_CHANGE dwLineID */
+        /* notify wdmaud clients MM_MIXM_LINE_CHANGE dwLineID */
+        MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_LINE_CHANGE, dwLineID);
     }
 
     return Status;
@@ -279,7 +308,7 @@ MMixerSetGetMuteControlDetails(
 MIXER_STATUS
 MMixerSetGetVolumeControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG bSet,
     LPMIXERCONTROLW MixerControl,
@@ -322,12 +351,12 @@ MMixerSetGetVolumeControlDetails(
     if (bSet)
     {
         /* TODO */
-        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
-        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 0, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, 1, &Value);
     }
     else
     {
-        Status = MMixerSetGetControlDetails(MixerContext, hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
+        Status = MMixerSetGetControlDetails(MixerContext, MixerInfo->hMixer, NodeId, bSet, KSPROPERTY_AUDIO_VOLUMELEVEL, Channel, &Value);
     }
 
     if (!bSet)
@@ -339,6 +368,7 @@ MMixerSetGetVolumeControlDetails(
     else
     {
         /* notify clients of a line change  MM_MIXM_CONTROL_CHANGE with MixerControl->dwControlID */
+        MMixerNotifyControlChange(MixerContext, MixerInfo, MM_MIXM_CONTROL_CHANGE, MixerControl->dwControlID);
     }
     return Status;
 }
@@ -406,8 +436,6 @@ MMixerCreateMixerData(
     MixerData->hDevice = hDevice;
     MixerData->hDeviceInterfaceKey = hKey;
     MixerData->Topology = NULL;
-
-
 
     InsertTailList(&MixerList->MixerData, &MixerData->Entry);
     MixerList->MixerDataCount++;

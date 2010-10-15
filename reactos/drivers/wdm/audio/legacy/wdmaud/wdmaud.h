@@ -38,6 +38,14 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
+    ULONG NotificationType;
+    ULONG Value;
+    HANDLE hMixer;
+}EVENT_ENTRY, *PEVENT_ENTRY;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
 }SYSAUDIO_ENTRY, *PSYSAUDIO_ENTRY;
 

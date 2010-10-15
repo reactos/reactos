@@ -48,7 +48,10 @@ typedef MIXER_STATUS(*PMIXER_CLOSEKEY)(
     IN HANDLE hKey);
 
 typedef VOID (*PMIXER_EVENT)(
-    IN PVOID MixerEvent);
+    IN PVOID MixerEventContext,
+    IN HANDLE hMixer,
+    IN ULONG NotificationType,
+    IN ULONG Value);
 
 typedef VOID (*PMIXER_COPY)(
     IN PVOID Dst,
@@ -130,7 +133,7 @@ MIXER_STATUS
 MMixerOpen(
     IN PMIXER_CONTEXT MixerContext,
     IN ULONG MixerId,
-    IN PVOID MixerEvent,
+    IN PVOID MixerEventContext,
     IN PMIXER_EVENT MixerEventRoutine,
     OUT PHANDLE MixerHandle);
 
