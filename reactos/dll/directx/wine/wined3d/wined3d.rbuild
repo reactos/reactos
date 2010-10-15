@@ -13,9 +13,6 @@
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>uuid</library>
-	<if property="ARCH" value="amd64">
-		<library>crt</library>
-	</if>
 
 	<file>ati_fragment_shader.c</file>
 	<file>arb_program_shader.c</file>
@@ -52,6 +49,10 @@
 	<file>volumetexture.c</file>
 	<file>wined3d_main.c</file>
 	<file>version.rc</file>
+	<if property="ARCH" value="amd64">
+		<file>powf.c</file>
+		<file>sqrtf.c</file>
+	</if>
 
 	<dependency>wineheaders</dependency>
 </module>
