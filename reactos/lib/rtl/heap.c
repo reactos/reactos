@@ -1638,6 +1638,23 @@ RtlSizeHeap(
     return ret;
 }
 
+BOOLEAN NTAPI
+RtlpValidateHeap(HEAP * Heap, BOOLEAN ForceValidation)
+{
+  return HEAP_IsRealArena(Heap, Heap->flags, NULL, TRUE);
+}
+
+BOOLEAN NTAPI
+RtlpValidateHeapHeaders(HEAP * Heap, BOOLEAN Recalculate)
+{
+    return TRUE;
+}
+
+BOOLEAN NTAPI
+RtlpValidateHeapEntry(HEAP * Heap, PVOID HeapEntry)
+{
+    return TRUE;
+}
 
 /***********************************************************************
  *           RtlValidateHeap
