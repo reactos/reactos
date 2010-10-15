@@ -1041,10 +1041,8 @@ ScsiPortInitialize(IN PVOID Argument1,
     WCHAR DosNameBuffer[80];
     UNICODE_STRING DosDeviceName;
     PIO_SCSI_CAPABILITIES PortCapabilities;
-    ULONG MappedIrq;
-    KIRQL Dirql;
-    KAFFINITY Affinity;
 
+    KIRQL OldIrql;
     PCM_RESOURCE_LIST ResourceList;
     BOOLEAN Conflict;
 
@@ -1137,6 +1135,7 @@ ScsiPortInitialize(IN PVOID Argument1,
 
         /* Fill Device Extension */
         DeviceExtension = PortDeviceObject->DeviceExtension;
+        RtlZeroMemory(DeviceExtension, DeviceExtensionSize);
         DeviceExtension->Length = DeviceExtensionSize;
         DeviceExtension->DeviceObject = PortDeviceObject;
         DeviceExtension->PortNumber = SystemConfig->ScsiPortCount;
@@ -1509,45 +1508,55 @@ CreatePortConfig:
           (PortConfig->BusInterruptLevel == 0 && PortConfig->BusInterruptVector == 0))
       {
           /* No interrupts */
-          KeInitializeSpinLock(&DeviceExtension->IrqLock);
+          DeviceExtension->InterruptCount = 0;
 
-          /* FIXME: Use synchronization routine */
-          ASSERT("No interrupts branch requires changes in synchronization\n");
+          DPRINT1("Interrupt Count: 0\n");
 
-          DeviceExtension->Interrupt = (PVOID)DeviceExtension;
-          DPRINT("No interrupts\n");
+          UNIMPLEMENTED;
 
+          /* This code path will ALWAYS crash so stop it now */
+          while(TRUE);
       }
       else
       {
-          /* Are 2 interrupts needed? */
-          if (DeviceExtension->HwInterrupt != NULL &&
-              (PortConfig->BusInterruptLevel != 0 || PortConfig->BusInterruptVector != 0) &&
-              (PortConfig->BusInterruptLevel2 != 0 || PortConfig->BusInterruptVector2 != 0))
+          BOOLEAN InterruptShareable;
+          KINTERRUPT_MODE InterruptMode[2];
+          ULONG InterruptVector[2], i, MappedIrq[2];
+          KIRQL Dirql[2], MaxDirql;
+          KAFFINITY Affinity[2];
+
+          DeviceExtension->InterruptLevel[0] = PortConfig->BusInterruptLevel;
+          DeviceExtension->InterruptLevel[1] = PortConfig->BusInterruptLevel2;
+
+          InterruptVector[0] = PortConfig->BusInterruptVector;
+          InterruptVector[1] = PortConfig->BusInterruptVector2;
+
+          InterruptMode[0] = PortConfig->InterruptMode;
+          InterruptMode[1] = PortConfig->InterruptMode2;
+
+          DeviceExtension->InterruptCount = (PortConfig->BusInterruptLevel2 != 0 || PortConfig->BusInterruptVector2 != 0) ? 2 : 1;
+
+          for (i = 0; i < DeviceExtension->InterruptCount; i++)
           {
-              DPRINT1("2 interrupts requested! Not yet supported\n");
-              ASSERT(FALSE);
-          }
-          else
-          {
-              BOOLEAN InterruptShareable;
-
-              /* No, only 1 interrupt */
-              DPRINT("1 interrupt, IRQ is %d\n", PortConfig->BusInterruptLevel);
-
-              DeviceExtension->InterruptLevel = PortConfig->BusInterruptLevel;
-
               /* Register an interrupt handler for this device */
-              MappedIrq = HalGetInterruptVector(PortConfig->AdapterInterfaceType,
-                                                PortConfig->SystemIoBusNumber,
-                                                PortConfig->BusInterruptLevel,
-                                                PortConfig->BusInterruptVector,
-                                                &Dirql,
-                                                &Affinity);
-
+              MappedIrq[i] = HalGetInterruptVector(PortConfig->AdapterInterfaceType,
+                                                   PortConfig->SystemIoBusNumber,
+                                                   DeviceExtension->InterruptLevel[i],
+                                                   InterruptVector[i],
+                                                   &Dirql[i],
+                                                   &Affinity[i]);
+          }
+          
+          if (DeviceExtension->InterruptCount == 1 || Dirql[0] > Dirql[1])
+              MaxDirql = Dirql[0];
+          else
+              MaxDirql = Dirql[1];
+          
+          for (i = 0; i < DeviceExtension->InterruptCount; i++)
+          {
               /* Determing IRQ sharability as usual */
               if (PortConfig->AdapterInterfaceType == MicroChannel ||
-                  PortConfig->InterruptMode == LevelSensitive)
+                  InterruptMode[i] == LevelSensitive)
               {
                   InterruptShareable = TRUE;
               }
@@ -1556,27 +1565,29 @@ CreatePortConfig:
                   InterruptShareable = FALSE;
               }
 
-              Status = IoConnectInterrupt(&DeviceExtension->Interrupt,
+              Status = IoConnectInterrupt(&DeviceExtension->Interrupt[i],
                                           (PKSERVICE_ROUTINE)ScsiPortIsr,
                                           DeviceExtension,
-                                          NULL,
-                                          MappedIrq,
-                                          Dirql,
-                                          Dirql,
-                                          PortConfig->InterruptMode,
+                                          &DeviceExtension->IrqLock,
+                                          MappedIrq[i],
+                                          Dirql[i],
+                                          MaxDirql,
+                                          InterruptMode[i],
                                           InterruptShareable,
-                                          Affinity,
+                                          Affinity[i],
                                           FALSE);
 
               if (!(NT_SUCCESS(Status)))
               {
                   DPRINT1("Could not connect interrupt %d\n",
-                      PortConfig->BusInterruptVector);
-                  DeviceExtension->Interrupt = NULL;
+                          InterruptVector[i]);
+                  DeviceExtension->Interrupt[i] = NULL;
                   break;
               }
-
           }
+          
+          if (!NT_SUCCESS(Status))
+              break;
       }
 
       /* Save IoAddress (from access ranges) */
@@ -1607,14 +1618,14 @@ CreatePortConfig:
       }
 
       /* Call HwInitialize at DISPATCH_LEVEL */
-      KeRaiseIrql(DISPATCH_LEVEL, &Dirql);
+      KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
-      if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+      if (!KeSynchronizeExecution(DeviceExtension->Interrupt[0],
                                   DeviceExtension->HwInitialize,
                                   DeviceExtension->MiniPortDeviceExtension))
       {
           DPRINT1("HwInitialize() failed!\n");
-          KeLowerIrql(Dirql);
+          KeLowerIrql(OldIrql);
           Status = STATUS_ADAPTER_HARDWARE_ERROR;
           break;
       }
@@ -1630,7 +1641,7 @@ CreatePortConfig:
       }
 
       /* Lower irql back to what it was */
-      KeLowerIrql(Dirql);
+      KeLowerIrql(OldIrql);
 
       /* Start our timer */
       IoStartTimer(PortDeviceObject);
@@ -1720,11 +1731,14 @@ SpiCleanupAfterInit(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
     if (DeviceExtension == NULL)
         return;
 
-    /* Stop the timer and disconnect the interrupt */
-    if (DeviceExtension->Interrupt)
+    /* Stop the timer */
+    IoStopTimer(DeviceExtension->DeviceObject);
+
+    /* Disconnect the interrupts */
+    while (DeviceExtension->InterruptCount)
     {
-        IoStopTimer(DeviceExtension->DeviceObject);
-        IoDisconnectInterrupt(DeviceExtension->Interrupt);
+        if (DeviceExtension->Interrupt[--DeviceExtension->InterruptCount])
+            IoDisconnectInterrupt(DeviceExtension->Interrupt[DeviceExtension->InterruptCount]);
     }
 
     /* Delete ConfigInfo */
@@ -2042,6 +2056,8 @@ SpiResourceToConfig(IN PHW_INITIALIZATION_DATA HwInitializationData,
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialData;
     ULONG RangeNumber;
     ULONG Index;
+    ULONG Interrupt = 0;
+    ULONG Dma = 0;
 
     RangeNumber = 0;
 
@@ -2081,24 +2097,71 @@ SpiResourceToConfig(IN PHW_INITIALIZATION_DATA HwInitializationData,
             break;
 
         case CmResourceTypeInterrupt:
-            /* Copy interrupt data */
-            PortConfig->BusInterruptLevel = PartialData->u.Interrupt.Level;
-            PortConfig->BusInterruptVector = PartialData->u.Interrupt.Vector;
 
-            /* Set interrupt mode accordingly to the resource */
-            if (PartialData->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
+            if (Interrupt == 0)
             {
-                PortConfig->InterruptMode = Latched;
+                /* Copy interrupt data */
+                PortConfig->BusInterruptLevel = PartialData->u.Interrupt.Level;
+                PortConfig->BusInterruptVector = PartialData->u.Interrupt.Vector;
+
+                /* Set interrupt mode accordingly to the resource */
+                if (PartialData->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
+                {
+                    PortConfig->InterruptMode = Latched;
+                }
+                else if (PartialData->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
+                {
+                    PortConfig->InterruptMode = LevelSensitive;
+                }
             }
-            else if (PartialData->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
+            else if (Interrupt == 1)
             {
-                PortConfig->InterruptMode = LevelSensitive;
+                /* Copy interrupt data */
+                PortConfig->BusInterruptLevel2 = PartialData->u.Interrupt.Level;
+                PortConfig->BusInterruptVector2 = PartialData->u.Interrupt.Vector;
+
+                /* Set interrupt mode accordingly to the resource */
+                if (PartialData->Flags == CM_RESOURCE_INTERRUPT_LATCHED)
+                {
+                    PortConfig->InterruptMode2 = Latched;
+                }
+                else if (PartialData->Flags == CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE)
+                {
+                    PortConfig->InterruptMode2 = LevelSensitive;
+                }
             }
+
+            Interrupt++;
             break;
 
         case CmResourceTypeDma:
-            PortConfig->DmaChannel = PartialData->u.Dma.Channel;
-            PortConfig->DmaPort = PartialData->u.Dma.Port;
+
+            if (Dma == 0)
+            {
+                PortConfig->DmaChannel = PartialData->u.Dma.Channel;
+                PortConfig->DmaPort = PartialData->u.Dma.Port;
+
+                if (PartialData->Flags & CM_RESOURCE_DMA_8)
+                    PortConfig->DmaWidth = Width8Bits;
+                else if ((PartialData->Flags & CM_RESOURCE_DMA_16) ||
+                         (PartialData->Flags & CM_RESOURCE_DMA_8_AND_16)) //???
+                    PortConfig->DmaWidth = Width16Bits;
+                else if (PartialData->Flags & CM_RESOURCE_DMA_32)
+                    PortConfig->DmaWidth = Width32Bits;
+            }
+            else if (Dma == 1)
+            {
+                PortConfig->DmaChannel = PartialData->u.Dma.Channel;
+                PortConfig->DmaPort = PartialData->u.Dma.Port;
+
+                if (PartialData->Flags & CM_RESOURCE_DMA_8)
+                    PortConfig->DmaWidth2 = Width8Bits;
+                else if ((PartialData->Flags & CM_RESOURCE_DMA_16) ||
+                         (PartialData->Flags & CM_RESOURCE_DMA_8_AND_16)) //???
+                    PortConfig->DmaWidth2 = Width16Bits;
+                else if (PartialData->Flags & CM_RESOURCE_DMA_32)
+                    PortConfig->DmaWidth2 = Width32Bits;
+            }
             break;
         }
     }
@@ -2112,9 +2175,8 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     PCM_RESOURCE_LIST ResourceList;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR ResourceDescriptor;
     PACCESS_RANGE AccessRange;
-    BOOLEAN Dma;
     ULONG ListLength = 0, i, FullSize;
-    ULONG Interrupt;
+    ULONG Interrupt, Dma;
 
     /* Get current Atdisk usage from the system */
     ConfigInfo = IoGetConfigurationInformation();
@@ -2129,34 +2191,21 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     if (PortConfig->DmaChannel != SP_UNINITIALIZED_VALUE ||
         PortConfig->DmaPort != SP_UNINITIALIZED_VALUE)
     {
-        Dma = TRUE;
-        ListLength++;
+        Dma = 1;
+        
+        if (PortConfig->DmaChannel != SP_UNINITIALIZED_VALUE ||
+            PortConfig->DmaPort != SP_UNINITIALIZED_VALUE)
+            Dma++;
     }
     else
     {
-        Dma = FALSE;
+        Dma = 0;
     }
+    ListLength += Dma;
 
     /* How many interrupts to we have? */
-    if (DeviceExtension->HwInterrupt == NULL ||
-        (PortConfig->BusInterruptLevel == 0 &&
-        PortConfig->BusInterruptVector == 0))
-    {
-        Interrupt = 0;
-    }
-    else
-    {
-        Interrupt = 1;
-        ListLength++;
-    }
-
-    if (DeviceExtension->HwInterrupt != NULL &&
-        (PortConfig->BusInterruptLevel2 != 0 ||
-        PortConfig->BusInterruptVector2 != 0))
-    {
-        Interrupt++;
-        ListLength++;
-    }
+    Interrupt = DeviceExtension->InterruptCount;
+    ListLength += Interrupt;
 
     /* How many access ranges do we use? */
     AccessRange = &((*(PortConfig->AccessRanges))[0]);
@@ -2221,7 +2270,7 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         ResourceDescriptor->Type = CmResourceTypeInterrupt;
 
         if (PortConfig->AdapterInterfaceType == MicroChannel ||
-            PortConfig->InterruptMode == LevelSensitive)
+            ((Interrupt == 2) ? PortConfig->InterruptMode2 : PortConfig->InterruptMode) == LevelSensitive)
         {
             ResourceDescriptor->ShareDisposition = CmResourceShareShared;
             ResourceDescriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
@@ -2241,19 +2290,29 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
     /* Copy DMA data */
-    if (Dma)
+    while (Dma)
     {
         ResourceDescriptor->Type = CmResourceTypeDma;
         ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
-        ResourceDescriptor->u.Dma.Channel = PortConfig->DmaChannel;
-        ResourceDescriptor->u.Dma.Port = PortConfig->DmaPort;
+        ResourceDescriptor->u.Dma.Channel = (Dma == 2) ? PortConfig->DmaChannel2 : PortConfig->DmaChannel;
+        ResourceDescriptor->u.Dma.Port = (Dma == 2) ? PortConfig->DmaPort2 : PortConfig->DmaPort;
         ResourceDescriptor->Flags = 0;
+        
+        if (((Dma == 2) ? PortConfig->DmaWidth2 : PortConfig->DmaWidth) == Width8Bits)
+            ResourceDescriptor->Flags |= CM_RESOURCE_DMA_8;
+        else if (((Dma == 2) ? PortConfig->DmaWidth2 : PortConfig->DmaWidth) == Width16Bits)
+            ResourceDescriptor->Flags |= CM_RESOURCE_DMA_16;
+        else
+            ResourceDescriptor->Flags |= CM_RESOURCE_DMA_32;
 
-        if (PortConfig->DmaChannel == SP_UNINITIALIZED_VALUE)
+        if (((Dma == 2) ? PortConfig->DmaChannel2 : PortConfig->DmaChannel) == SP_UNINITIALIZED_VALUE)
             ResourceDescriptor->u.Dma.Channel = 0;
 
-        if (PortConfig->DmaPort == SP_UNINITIALIZED_VALUE)
+        if (((Dma == 2) ? PortConfig->DmaPort2 : PortConfig->DmaPort) == SP_UNINITIALIZED_VALUE)
             ResourceDescriptor->u.Dma.Port = 0;
+        
+        ResourceDescriptor++;
+        Dma--;
     }
 
     return ResourceList;
@@ -2981,7 +3040,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 
     KeAcquireSpinLockAtDpcLevel(&DeviceExtension->SpinLock);
 
-    if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+    if (!KeSynchronizeExecution(DeviceExtension->Interrupt[0],
                                 ScsiPortStartPacket,
                                 DeviceObject))
     {
@@ -3234,7 +3293,7 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
     /* Schedule an active request */
     InterlockedIncrement(&DeviceExtension->ActiveRequestCounter );
     KeAcquireSpinLock(&DeviceExtension->SpinLock, &CurrentIrql);
-    KeSynchronizeExecution(DeviceExtension->Interrupt,
+    KeSynchronizeExecution(DeviceExtension->Interrupt[0],
                            ScsiPortStartPacket,
                            DeviceObject);
     KeReleaseSpinLock(&DeviceExtension->SpinLock, CurrentIrql);
@@ -4796,7 +4855,7 @@ TryAgain:
     Context.InterruptData = &InterruptData;
     Context.DeviceExtension = DeviceExtension;
 
-    if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+    if (!KeSynchronizeExecution(DeviceExtension->Interrupt[0],
                                 SpiSaveInterruptData,
                                 &Context))
     {
@@ -5089,7 +5148,7 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
         if (DeviceExtension->TimerCount == 0)
         {
             /* Timeout, process it */
-            if (KeSynchronizeExecution(DeviceExtension->Interrupt,
+            if (KeSynchronizeExecution(DeviceExtension->Interrupt[0],
                                        SpiProcessTimeout,
                                        DeviceExtension->DeviceObject))
             {
@@ -5143,7 +5202,7 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
                 ResetParams.PathId = LunExtension->PathId;
                 ResetParams.DeviceExtension = DeviceExtension;
 
-                if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+                if (!KeSynchronizeExecution(DeviceExtension->Interrupt[0],
                                             SpiResetBus,
                                             &ResetParams))
                 {
@@ -5654,6 +5713,8 @@ SpiCreatePortConfig(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
         ConfigInfo->InterruptMode = Latched;
         ConfigInfo->DmaChannel = SP_UNINITIALIZED_VALUE;
         ConfigInfo->DmaPort = SP_UNINITIALIZED_VALUE;
+        ConfigInfo->DmaChannel2 = SP_UNINITIALIZED_VALUE;
+        ConfigInfo->DmaPort2 = SP_UNINITIALIZED_VALUE;
         ConfigInfo->MaximumTransferLength = SP_UNINITIALIZED_VALUE;
         ConfigInfo->NumberOfAccessRanges = HwInitData->NumberOfAccessRanges;
         ConfigInfo->MaximumNumberOfTargets = 8;
@@ -5876,11 +5937,12 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     PCM_FULL_RESOURCE_DESCRIPTOR FullResource;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
     PCM_SCSI_DEVICE_DATA ScsiDeviceData;
-    ULONG Length, Count;
+    ULONG Length, Count, Dma = 0, Interrupt = 0;
     ULONG Index = 0, RangeCount = 0;
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
     NTSTATUS Status = STATUS_SUCCESS;
+    
 
     KeyValueInformation = (PKEY_VALUE_FULL_INFORMATION) Buffer;
 
@@ -6169,16 +6231,61 @@ SpiParseDeviceInfo(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
                     break;
 
                 case CmResourceTypeInterrupt:
-                    ConfigInfo->BusInterruptLevel =
+  
+                    if (Interrupt == 0)
+                    {
+                        ConfigInfo->BusInterruptLevel =
+                            PartialDescriptor->u.Interrupt.Level;
+
+                        ConfigInfo->BusInterruptVector =
+                            PartialDescriptor->u.Interrupt.Vector;
+
+                        ConfigInfo->InterruptMode = (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
+                    }
+                    else if (Interrupt == 1)
+                    {
+                        ConfigInfo->BusInterruptLevel2 =
                         PartialDescriptor->u.Interrupt.Level;
 
-                    ConfigInfo->BusInterruptVector =
+                        ConfigInfo->BusInterruptVector2 =
                         PartialDescriptor->u.Interrupt.Vector;
+
+                        ConfigInfo->InterruptMode2 = (PartialDescriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED) ? Latched : LevelSensitive;
+                    }
+                        
+                    Interrupt++;
                     break;
 
                 case CmResourceTypeDma:
-                    ConfigInfo->DmaChannel = PartialDescriptor->u.Dma.Channel;
-                    ConfigInfo->DmaPort = PartialDescriptor->u.Dma.Port;
+
+                    if (Dma == 0)
+                    {
+                        ConfigInfo->DmaChannel = PartialDescriptor->u.Dma.Channel;
+                        ConfigInfo->DmaPort = PartialDescriptor->u.Dma.Port;
+                        
+                        if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
+                            ConfigInfo->DmaWidth = Width8Bits;
+                        else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
+                                 (PartialDescriptor->Flags & CM_RESOURCE_DMA_8_AND_16)) //???
+                            ConfigInfo->DmaWidth = Width16Bits;
+                        else if (PartialDescriptor->Flags & CM_RESOURCE_DMA_32)
+                            ConfigInfo->DmaWidth = Width32Bits;
+                    }
+                    else if (Dma == 1)
+                    {
+                        ConfigInfo->DmaChannel2 = PartialDescriptor->u.Dma.Channel;
+                        ConfigInfo->DmaPort2 = PartialDescriptor->u.Dma.Port;
+                        
+                        if (PartialDescriptor->Flags & CM_RESOURCE_DMA_8)
+                            ConfigInfo->DmaWidth2 = Width8Bits;
+                        else if ((PartialDescriptor->Flags & CM_RESOURCE_DMA_16) ||
+                                 (PartialDescriptor->Flags & CM_RESOURCE_DMA_8_AND_16)) //???
+                            ConfigInfo->DmaWidth2 = Width16Bits;
+                        else if (PartialDescriptor->Flags & CM_RESOURCE_DMA_32)
+                            ConfigInfo->DmaWidth2 = Width32Bits;
+                    }
+ 
+                    Dma++;
                     break;
 
                 case CmResourceTypeDeviceSpecific:
@@ -6240,7 +6347,7 @@ ScsiPortAllocateAdapterChannel(IN PDEVICE_OBJECT DeviceObject,
     DeviceExtension->MapRegisterBase = MapRegisterBase;
 
     /* Start pending request */
-    KeSynchronizeExecution(DeviceExtension->Interrupt,
+    KeSynchronizeExecution(DeviceExtension->Interrupt[0],
         ScsiPortStartPacket, DeviceObject);
 
     /* Release spinlock we took */
