@@ -16,59 +16,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
-/* imported from wine 1.1.14 */
-static void* ADVAPI_GetDomainName(unsigned sz, unsigned ofs)
-{
-    HKEY key;
-    LONG ret;
-    BYTE* ptr = NULL;
-    UNICODE_STRING* ustr;
-
-    static const WCHAR wVNETSUP[] = {
-        'S','y','s','t','e','m','\\',
-        'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
-        'S','e','r','v','i','c','e','s','\\',
-        'V','x','D','\\','V','N','E','T','S','U','P','\0'};
-
-    ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, wVNETSUP, 0, KEY_READ, &key);
-    if (ret == ERROR_SUCCESS)
-    {
-        DWORD size = 0;
-        static const WCHAR wg[] = { 'W','o','r','k','g','r','o','u','p',0 };
-
-        ret = RegQueryValueExW(key, wg, NULL, NULL, NULL, &size);
-        if (ret == ERROR_MORE_DATA || ret == ERROR_SUCCESS)
-        {
-            ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz + size);
-            if (!ptr) return NULL;
-            ustr = (UNICODE_STRING*)(ptr + ofs);
-            ustr->MaximumLength = size;
-            ustr->Buffer = (WCHAR*)(ptr + sz);
-            ret = RegQueryValueExW(key, wg, NULL, NULL, (LPBYTE)ustr->Buffer, &size);
-            if (ret != ERROR_SUCCESS)
-            {
-                HeapFree(GetProcessHeap(), 0, ptr);
-                ptr = NULL;
-            }   
-            else ustr->Length = size - sizeof(WCHAR);
-        }
-        RegCloseKey(key);
-    }
-    if (!ptr)
-    {
-        static const WCHAR wDomain[] = {'D','O','M','A','I','N','\0'};
-        ptr = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                        sz + sizeof(wDomain));
-        if (!ptr) return NULL;
-        ustr = (UNICODE_STRING*)(ptr + ofs);
-        ustr->MaximumLength = sizeof(wDomain);
-        ustr->Buffer = (WCHAR*)(ptr + sz);
-        ustr->Length = sizeof(wDomain) - sizeof(WCHAR);
-        memcpy(ustr->Buffer, wDomain, sizeof(wDomain));
-    }
-    return ptr;
-}
-
 
 static BOOL LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
 {
@@ -647,103 +594,37 @@ LsaQueryForestTrustInformation(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS WINAPI
 LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
               POLICY_INFORMATION_CLASS InformationClass,
               PVOID *Buffer)
 {
+    PLSAPR_POLICY_INFORMATION PolicyInformation = NULL;
+    NTSTATUS Status;
+
     TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
 
-    if(!Buffer) return STATUS_INVALID_PARAMETER;
-    switch (InformationClass)
+    RpcTryExcept
     {
-        case PolicyAuditEventsInformation: /* 2 */
-        {
-            PPOLICY_AUDIT_EVENTS_INFO p = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
-                                                    sizeof(POLICY_AUDIT_EVENTS_INFO));
-            p->AuditingMode = FALSE; /* no auditing */
-            *Buffer = p;
-        }
-        break;
-        case PolicyPrimaryDomainInformation: /* 3 */
-        {
-            /* Only the domain name is valid for the local computer.
-             * All other fields are zero.
-             */
-            PPOLICY_PRIMARY_DOMAIN_INFO pinfo;
-
-            pinfo = ADVAPI_GetDomainName(sizeof(*pinfo), offsetof(POLICY_PRIMARY_DOMAIN_INFO, Name));
-
-            TRACE("setting domain to %s\n", debugstr_w(pinfo->Name.Buffer));
-
-            *Buffer = pinfo;
-        }
-        case PolicyAccountDomainInformation: /* 5 */
-        {
-            struct di
-            {
-                POLICY_ACCOUNT_DOMAIN_INFO info;
-                SID sid;
-                DWORD padding[3];
-                WCHAR domain[MAX_COMPUTERNAME_LENGTH + 1];
-            };
-
-            DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-            struct di * xdi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
-
-            xdi->info.DomainName.MaximumLength = dwSize * sizeof(WCHAR);
-            xdi->info.DomainName.Buffer = xdi->domain;
-            if (GetComputerNameW(xdi->info.DomainName.Buffer, &dwSize))
-                xdi->info.DomainName.Length = dwSize * sizeof(WCHAR);
-
-            TRACE("setting name to %s\n", debugstr_w(xdi->info.DomainName.Buffer));
-
-            xdi->info.DomainSid = &xdi->sid;
-
-            /* read the computer SID from the registry */
-            if (!ADVAPI_GetComputerSid(&xdi->sid))
-            {
-                HeapFree(GetProcessHeap(), 0, xdi);
-
-                WARN("Computer SID not found\n");
-
-                return STATUS_UNSUCCESSFUL;
-            }
-
-            *Buffer = xdi;
-        }
-        break;
-        case  PolicyDnsDomainInformation:	/* 12 (0xc) */
-        {
-            /* Only the domain name is valid for the local computer.
-             * All other fields are zero.
-             */
-            PPOLICY_DNS_DOMAIN_INFO pinfo;
-
-            pinfo = ADVAPI_GetDomainName(sizeof(*pinfo), offsetof(POLICY_DNS_DOMAIN_INFO, Name));
-
-            TRACE("setting domain to %s\n", debugstr_w(pinfo->Name.Buffer));
-
-            *Buffer = pinfo;
-        }
-        break;
-        case PolicyAuditLogInformation:
-        case PolicyPdAccountInformation:
-        case PolicyLsaServerRoleInformation:
-        case PolicyReplicaSourceInformation:
-        case PolicyDefaultQuotaInformation:
-        case PolicyModificationInformation:
-        case PolicyAuditFullSetInformation:
-        case PolicyAuditFullQueryInformation:
-        case PolicyEfsInformation:
-        {
-            FIXME("category not implemented\n");
-            return STATUS_UNSUCCESSFUL;
-        }
+        Status = LsarQueryInformationPolicy((LSAPR_HANDLE)PolicyHandle,
+                                            InformationClass,
+                                            &PolicyInformation);
+        *Buffer = PolicyInformation;
     }
-    return STATUS_SUCCESS;
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (PolicyInformation != NULL)
+            MIDL_user_free(PolicyInformation);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    TRACE("Done (Status: 0x%08x)\n", Status);
+
+    return Status;
 }
 
 /*

@@ -60,9 +60,10 @@ LsapCreateDbHandle(LSA_DB_HANDLE_TYPE HandleType,
 }
 
 
-static BOOL
+static NTSTATUS
 LsapValidateDbHandle(LSAPR_HANDLE Handle,
-                     LSA_DB_HANDLE_TYPE HandleType)
+                     LSA_DB_HANDLE_TYPE HandleType,
+                     ACCESS_MASK GrantedAccess)
 {
     PLSA_DB_HANDLE DbHandle = (PLSA_DB_HANDLE)Handle;
     BOOL bValid = FALSE;
@@ -83,8 +84,15 @@ LsapValidateDbHandle(LSAPR_HANDLE Handle,
     }
     _SEH2_END;
 
+    if (bValid == FALSE)
+        return STATUS_INVALID_HANDLE;
 
-    return bValid;
+    if (GrantedAccess != 0)
+    {
+        /* FIXME: Check for granted access rights */
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -145,13 +153,15 @@ NTSTATUS LsarClose(
 
 //    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    if (LsapValidateDbHandle(*ObjectHandle, LsaDbIgnoreHandle))
+    Status = LsapValidateDbHandle(*ObjectHandle,
+                                  LsaDbIgnoreHandle,
+                                  0);
+
+    if (Status == STATUS_SUCCESS)
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, *ObjectHandle);
         *ObjectHandle = NULL;
     }
-    else
-        Status = STATUS_INVALID_HANDLE;
 
 //    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
@@ -248,8 +258,148 @@ NTSTATUS LsarQueryInformationPolicy(
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarQueryInformationPolicy(%p,0x%08x,%p)\n",
+          PolicyHandle, InformationClass, PolicyInformation);
+
+    if (PolicyInformation)
+    {
+        TRACE("*PolicyInformation %p\n", *PolicyInformation);
+    }
+
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (InformationClass)
+    {
+        case PolicyAuditEventsInformation: /* 2 */
+        {
+            PLSAPR_POLICY_AUDIT_EVENTS_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_AUDIT_EVENTS_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->AuditingMode = FALSE; /* no auditing */
+            p->EventAuditingOptions = NULL;
+            p->MaximumAuditEventCount = 0;
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case PolicyPrimaryDomainInformation: /* 3 */
+        {
+            PLSAPR_POLICY_PRIMARY_DOM_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_PRIMARY_DOM_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->Name.Length = 0;
+            p->Name.MaximumLength = 0;
+            p->Name.Buffer = NULL;
+#if 0
+            p->Name.Length = wcslen(L"COMPUTERNAME");
+            p->Name.MaximumLength = p->Name.Length + sizeof(WCHAR);
+            p->Name.Buffer = MIDL_user_allocate(p->Name.MaximumLength);
+            if (p->Name.Buffer == NULL)
+            {
+                MIDL_user_free(p);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(p->Name.Buffer, L"COMPUTERNAME");
+#endif
+
+            p->Sid = NULL; /* no domain, no workgroup */
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case PolicyAccountDomainInformation: /* 5 */
+        {
+            PLSAPR_POLICY_ACCOUNT_DOM_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_ACCOUNT_DOM_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->DomainName.Length = 0;
+            p->DomainName.MaximumLength = 0;
+            p->DomainName.Buffer = NULL;
+#if 0
+            p->DomainName.Length = wcslen(L"COMPUTERNAME");
+            p->DomainName.MaximumLength = p->DomainName.Length + sizeof(WCHAR);
+            p->DomainName.Buffer = MIDL_user_allocate(p->DomainName.MaximumLength);
+            if (p->DomainName.Buffer == NULL)
+            {
+                MIDL_user_free(p);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(p->DomainName.Buffer, L"COMPUTERNAME");
+#endif
+
+            p->Sid = NULL; /* no domain, no workgroup */
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case  PolicyDnsDomainInformation:	/* 12 (0xc) */
+        {
+            PLSAPR_POLICY_DNS_DOMAIN_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_DNS_DOMAIN_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->Name.Length = 0;
+            p->Name.MaximumLength = 0;
+            p->Name.Buffer = NULL;
+#if 0
+            p->Name.Length = wcslen(L"COMPUTERNAME");
+            p->Name.MaximumLength = p->Name.Length + sizeof(WCHAR);
+            p->Name.Buffer = MIDL_user_allocate(p->Name.MaximumLength);
+            if (p->Name.Buffer == NULL)
+            {
+                MIDL_user_free(p);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(p->Name.Buffer, L"COMPUTERNAME");
+#endif
+
+            p->DnsDomainName.Length = 0;
+            p->DnsDomainName.MaximumLength = 0;
+            p->DnsDomainName.Buffer = NULL;
+
+            p->DnsForestName.Length = 0;
+            p->DnsForestName.MaximumLength = 0;
+            p->DnsForestName.Buffer = 0;
+
+            memset(&p->DomainGuid, 0, sizeof(GUID));
+
+            p->Sid = NULL; /* no domain, no workgroup */
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case PolicyAuditLogInformation:
+        case PolicyPdAccountInformation:
+        case PolicyLsaServerRoleInformation:
+        case PolicyReplicaSourceInformation:
+        case PolicyDefaultQuotaInformation:
+        case PolicyModificationInformation:
+        case PolicyAuditFullSetInformation:
+        case PolicyAuditFullQueryInformation:
+        case PolicyEfsInformation:
+        {
+            FIXME("category not implemented\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -688,10 +838,13 @@ NTSTATUS LsarLookupPrivilegeValue(
     TRACE("LsarLookupPrivilegeValue(%p, %wZ, %p)\n",
           PolicyHandle, Name, Value);
 
-    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Invalid handle\n");
-        return STATUS_INVALID_HANDLE;
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
     }
 
     TRACE("Privilege: %wZ\n", Name);
@@ -714,10 +867,13 @@ NTSTATUS LsarLookupPrivilegeName(
     TRACE("LsarLookupPrivilegeName(%p, %p, %p)\n",
           PolicyHandle, Value, Name);
 
-    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
     {
         ERR("Invalid handle\n");
-        return STATUS_INVALID_HANDLE;
+        return Status;
     }
 
     Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
@@ -766,10 +922,15 @@ NTSTATUS LsarEnmuerateAccountRights(
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
+    NTSTATUS Status;
+
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
 
-    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
-        return STATUS_INVALID_HANDLE;
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     UserRights->Entries = 0;
     UserRights->UserRights = NULL;
