@@ -30,36 +30,36 @@
  @ stub LsaISetupWasRun
  @ stub LsapAuOpenSam
  @ stdcall LsapInitLsa()
- @ stub LsarAddPrivilegesToAccount
- @ stub LsarClose
- @ stub LsarCreateAccount
- @ stub LsarCreateSecret
- @ stub LsarCreateTrustedDomain
- @ stub LsarDelete
- @ stub LsarEnumerateAccounts
- @ stub LsarEnumeratePrivileges
- @ stub LsarEnumeratePrivilegesAccount
- @ stub LsarEnumerateTrustedDomains
- @ stub LsarGetQuotasForAccount
- @ stub LsarGetSystemAccessAccount
- @ stub LsarLookupNames
- @ stub LsarLookupPrivilegeDisplayName
- @ stub LsarLookupPrivilegeName
- @ stub LsarLookupPrivilegeValue
- @ stub LsarLookupSids
- @ stub LsarOpenAccount
- @ stub LsarOpenPolicy
- @ stub LsarOpenSecret
- @ stub LsarOpenTrustedDomain
- @ stub LsarQueryInfoTrustedDomain
- @ stub LsarQueryInformationPolicy
- @ stub LsarQuerySecret
- @ stub LsarQuerySecurityObject
- @ stub LsarRemovePrivilegesFromAccount
- @ stub LsarSetInformationPolicy
- @ stub LsarSetInformationTrustedDomain
- @ stub LsarSetQuotasForAccount
- @ stub LsarSetSecret
- @ stub LsarSetSecurityObject
- @ stub LsarSetSystemAccessAccount
+ @ stdcall LsarAddPrivilegesToAccount(ptr ptr)
+ @ stdcall LsarClose(ptr)
+ @ stdcall LsarCreateAccount(ptr ptr long ptr)
+ @ stdcall LsarCreateSecret(ptr ptr long ptr)
+ @ stdcall LsarCreateTrustedDomain(ptr ptr long ptr)
+ @ stdcall LsarDelete(ptr)
+ @ stdcall LsarEnumerateAccounts(ptr ptr ptr long)
+ @ stdcall LsarEnumeratePrivileges(ptr ptr ptr long)
+ @ stdcall LsarEnumeratePrivilegesAccount(ptr ptr)
+ @ stdcall LsarEnumerateTrustedDomains(ptr ptr ptr long)
+ @ stdcall LsarGetQuotasForAccount(ptr ptr)
+ @ stdcall LsarGetSystemAccessAccount(ptr ptr)
+ @ stdcall LsarLookupNames(ptr long ptr ptr ptr long ptr)
+ @ stdcall LsarLookupPrivilegeDisplayName(ptr ptr long long ptr ptr)
+ @ stdcall LsarLookupPrivilegeName(ptr ptr ptr)
+ @ stdcall LsarLookupPrivilegeValue(ptr ptr ptr)
+ @ stdcall LsarLookupSids(ptr ptr ptr ptr long ptr)
+ @ stdcall LsarOpenAccount(ptr ptr long ptr)
+ @ stdcall LsarOpenPolicy(ptr ptr long ptr)
+ @ stdcall LsarOpenSecret(ptr ptr long ptr)
+ @ stdcall LsarOpenTrustedDomain(ptr ptr long ptr)
+ @ stdcall LsarQueryInfoTrustedDomain(ptr long ptr)
+ @ stdcall LsarQueryInformationPolicy(ptr long ptr)
+ @ stdcall LsarQuerySecret(ptr ptr ptr ptr ptr)
+ @ stdcall LsarQuerySecurityObject(ptr long ptr)
+ @ stdcall LsarRemovePrivilegesFromAccount(ptr long ptr)
+ @ stdcall LsarSetInformationPolicy(ptr long ptr)
+ @ stdcall LsarSetInformationTrustedDomain(ptr long ptr)
+ @ stdcall LsarSetQuotasForAccount(ptr ptr)
+ @ stdcall LsarSetSecret(ptr ptr ptr)
+ @ stdcall LsarSetSecurityObject(ptr long ptr)
+ @ stdcall LsarSetSystemAccessAccount(ptr long)
  @ stdcall ServiceInit()
