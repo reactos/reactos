@@ -62,4 +62,4 @@
  @ stub LsarSetSecret
  @ stub LsarSetSecurityObject
  @ stub LsarSetSystemAccessAccount
- @ stub ServiceInit
+ @ stdcall ServiceInit()

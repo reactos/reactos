@@ -55,6 +55,14 @@ wWinMain(IN HINSTANCE hInstance,
         goto ByeBye;
     }
 
+    /* Start the Netlogon service. */
+    Status = ServiceInit();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ServiceInit() failed (Status 0x%08lX)\n", Status);
+        goto ByeBye;
+    }
+
 #if 0
     /* Initialize the SAM server DLL. */
     Status = SamIInitialize();
