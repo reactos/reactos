@@ -48,6 +48,12 @@ typedef struct
     ULONG NodesConnectedFromCount;
     PTOPOLOGY_NODE * NodesConnectedFrom;
 
+    ULONG PinConnectedFromCount;
+    PULONG PinConnectedFrom;
+
+    ULONG PinConnectedToCount;
+    PULONG PinConnectedTo;
+
     ULONG Visited;
 }PIN, *PPIN;
 

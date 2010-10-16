@@ -644,6 +644,7 @@ MMixerAddMixerSourceLines(
     MMixerGetAllUpOrDownstreamNodesFromNodeIndex(MixerContext, Topology, LineTerminator, TRUE, &AllNodesCount, AllNodes);
 
     /* get all pins which indirectly / directly connect to this node */
+    AllPinsCount = 0;
     MMixerGetAllUpOrDownstreamPinsFromNodeIndex(MixerContext, Topology, LineTerminator, TRUE, &AllPinsCount, AllPins);
 
     DPRINT("LineTerminator %lu\n", LineTerminator);
@@ -818,6 +819,7 @@ MMixerHandlePhysicalConnection(
         /* the mixer is an output mixer
          * find end pin of the node path
          */
+        PinsCount = 0;
         Status = MMixerGetAllUpOrDownstreamPinsFromPinIndex(MixerContext, Topology, OutConnection->Pin, FALSE, &PinsCount, Pins);
 
         /* check for success */
@@ -925,6 +927,7 @@ MMixerInitializeFilter(
      * For source pins (wave in) search down stream
      * The search direction is always the opposite of the current mixer type
      */
+    PinsFound = 0;
     MMixerGetAllUpOrDownstreamPinsFromNodeIndex(MixerContext, Topology, NodeIndex, !bInputMixer, &PinsFound, Pins);
 
     /* if there is now pin found, we have a broken topology */
@@ -961,6 +964,7 @@ MMixerInitializeFilter(
     Status = MMixerAllocateTopologyPinArray(MixerContext, Topology, &Pins);
     ASSERT(Status == MM_STATUS_SUCCESS);
 
+    PinsFound = 0;
     MMixerGetAllUpOrDownstreamPinsFromNodeIndex(MixerContext, Topology, NodeIndex, bInputMixer, &PinsFound, Pins);
 
     /* if there is no pin found, we have a broken topology */

@@ -70,16 +70,19 @@ MMixerAllocateTopology(
     }
 
     /* allocate topology nodes */
-    Topology->TopologyNodes = (PTOPOLOGY_NODE) MixerContext->Alloc(sizeof(TOPOLOGY_NODE) * NodesCount);
-
-    if (!Topology->TopologyNodes)
+    if (NodesCount)
     {
-        /* release memory */
-        MixerContext->Free(Topology->TopologyPins);
-        MixerContext->Free(Topology);
+        Topology->TopologyNodes = (PTOPOLOGY_NODE) MixerContext->Alloc(sizeof(TOPOLOGY_NODE) * NodesCount);
 
-        /* out of memory */
-        return MM_STATUS_NO_MEMORY;
+        if (!Topology->TopologyNodes)
+        {
+            /* release memory */
+            MixerContext->Free(Topology->TopologyPins);
+            MixerContext->Free(Topology);
+
+            /* out of memory */
+            return MM_STATUS_NO_MEMORY;
+        }
     }
 
     /* initialize topology */
@@ -336,6 +339,79 @@ MMixerHandleNodeToNodeConnection(
 }
 
 MIXER_STATUS
+MMixerAddPinToPinConnection(
+    IN PMIXER_CONTEXT MixerContext,
+    IN OUT PPIN InPin,
+    IN OUT PPIN OutPin)
+{
+    ULONG Count;
+    PULONG NewPinsIndex;
+
+    /* now enlarge PinConnectedTo */
+    Count = InPin->PinConnectedToCount;
+
+    /* allocate pin connection index */
+    NewPinsIndex = MixerContext->Alloc(sizeof(ULONG) * (Count + 1));
+
+    if (!NewPinsIndex)
+    {
+        /* out of memory */
+        return MM_STATUS_NO_MEMORY;
+    }
+
+    if (Count)
+    {
+        /* copy existing nodes */
+        MixerContext->Copy(NewPinsIndex, InPin->PinConnectedTo, sizeof(ULONG) * Count);
+
+        /* release old nodes array */
+        MixerContext->Free(InPin->PinConnectedTo);
+    }
+
+    /* add new topology node */
+    NewPinsIndex[Count] = OutPin->PinId;
+
+    /* replace old nodes array */
+    InPin->PinConnectedTo = NewPinsIndex;
+
+    /* increment pin count */
+    InPin->PinConnectedToCount++;
+
+    /* now enlarge PinConnectedFrom */
+    Count = OutPin->PinConnectedFromCount;
+
+    /* allocate pin connection index */
+    NewPinsIndex = MixerContext->Alloc(sizeof(ULONG) * (Count + 1));
+
+    if (!NewPinsIndex)
+    {
+        /* out of memory */
+        return MM_STATUS_NO_MEMORY;
+    }
+
+    if (Count)
+    {
+        /* copy existing nodes */
+        MixerContext->Copy(NewPinsIndex, OutPin->PinConnectedFrom, sizeof(ULONG) * Count);
+
+        /* release old nodes array */
+        MixerContext->Free(OutPin->PinConnectedFrom);
+    }
+
+    /* add new topology node */
+    NewPinsIndex[Count] = InPin->PinId;
+
+    /* replace old nodes array */
+    OutPin->PinConnectedFrom = NewPinsIndex;
+
+    /* increment pin count */
+    OutPin->PinConnectedFromCount++;
+
+    /* done */
+    return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
 MMixerHandleNodePinConnection(
     IN PMIXER_CONTEXT MixerContext,
     IN PKSTOPOLOGY_CONNECTION Connection,
@@ -345,7 +421,22 @@ MMixerHandleNodePinConnection(
     PTOPOLOGY_NODE Node;
 
     /* check type */
-    if (Connection->FromNode == KSFILTER_NODE)
+    if (Connection->FromNode == KSFILTER_NODE &&
+        Connection->ToNode == KSFILTER_NODE)
+    {
+        /* Pin -> Pin direction */
+
+        /* sanity checks */
+        ASSERT(Topology->TopologyPinsCount > Connection->FromNodePin);
+        ASSERT(Topology->TopologyPinsCount > Connection->ToNodePin);
+
+        /* add connection */
+        return MMixerAddPinToPinConnection(MixerContext,
+                                           &Topology->TopologyPins[Connection->FromNodePin],
+                                           &Topology->TopologyPins[Connection->ToNodePin]);
+
+    }
+    else if (Connection->FromNode == KSFILTER_NODE)
     {
         /* Pin -> Node direction */
 
@@ -543,6 +634,18 @@ MMixerGetUpOrDownStreamPins(
         ASSERT(Pin->Visited == FALSE);
         ASSERT(Pins[Index] == Pin->PinId);
 
+        /* FIXME support Pin -> Pin connections in iteration */
+        if (bUpStream)
+        {
+            /* indicates a very broken topology Pin -> Pin -> Node <-... */
+            ASSERT(Pin->PinConnectedFromCount == 0);
+        }
+        else
+        {
+            /* indicates a very broken topology -> Node -> Pin -> Pin */
+            ASSERT(Pin->PinConnectedToCount == 0);
+        }
+
         /* add them to pin array */
         MMixerAddPinIndexToArray(MixerContext, Pin->PinId, Topology->TopologyPinsCount, OutPinCount, OutPins);
 
@@ -591,9 +694,6 @@ MMixerGetAllUpOrDownstreamPinsFromNodeIndex(
     OUT PULONG OutPins)
 {
     PTOPOLOGY_NODE TopologyNode;
-
-    /* mark them as empty */
-    *OutPinsCount = 0;
 
     /* reset visited status */
     MMixerResetTopologyVisitStatus(Topology);
@@ -694,27 +794,34 @@ MMixerGetAllUpOrDownstreamPinsFromPinIndex(
     OUT PULONG OutPinsCount,
     OUT PULONG OutPins)
 {
-    ULONG Index, TopologyNodesCount;
+    ULONG Index, TopologyNodesCount, TopologyPinsCount;
     PPIN Pin;
     PTOPOLOGY_NODE *TopologyNodes;
-
-    /* mark them as empty */
-    *OutPinsCount = 0;
+    PULONG TopologyPins;
 
     /* get pin */
     Pin = &Topology->TopologyPins[PinIndex];
 
     if (bUpStream)
     {
-        /* use nodes to which a pin is attached to */
+        /* use nodes to which this pin is attached to */
         TopologyNodes = Pin->NodesConnectedFrom;
         TopologyNodesCount = Pin->NodesConnectedFromCount;
+
+        /* use pins to which this pin is attached to */
+        TopologyPins = Pin->PinConnectedFrom;
+        TopologyPinsCount = Pin->PinConnectedFromCount;
+
     }
     else
     {
-        /* use nodes which are attached to a node */
+        /* use nodes which are attached to a pin */
         TopologyNodes = Pin->NodesConnectedTo;
         TopologyNodesCount = Pin->NodesConnectedToCount;
+
+        /* use pins which are attached to this pin */
+        TopologyPins = Pin->PinConnectedTo;
+        TopologyPinsCount = Pin->PinConnectedToCount;
     }
 
 
@@ -723,6 +830,13 @@ MMixerGetAllUpOrDownstreamPinsFromPinIndex(
 
     /* sanity check */
     ASSERT(Topology->TopologyPinsCount > PinIndex);
+
+    /* add pins which are directly connected to this pin */
+    for(Index = 0; Index < TopologyPinsCount; Index++)
+    {
+        /* add them to pin array */
+        MMixerAddPinIndexToArray(MixerContext, TopologyPins[Index], Topology->TopologyPinsCount, OutPinsCount, OutPins);
+    }
 
     /* now visit all up / down stream pins & nodes */
     for(Index = 0; Index < TopologyNodesCount; Index++)
@@ -991,6 +1105,7 @@ MMixerIsNodeConnectedToPin(
     }
 
     /* now get connected pins */
+    PinsCount = 0;
     MMixerGetAllUpOrDownstreamPinsFromNodeIndex(MixerContext, Topology, NodeIndex, bUpStream, &PinsCount, Pins);
 
     /* set to false */
@@ -1082,7 +1197,7 @@ MMixerCreateTopology(
         return Status;
     }
 
-    //MMixerPrintTopology(Topology);
+    MMixerPrintTopology(Topology);
 
     /* store result */
     *OutTopology = Topology;
