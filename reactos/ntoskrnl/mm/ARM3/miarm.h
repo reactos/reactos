@@ -152,6 +152,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 extern const ULONG MmProtectToPteMask[32];
+extern const ULONG MmProtectToValue[32];
 
 //
 // Assertions for session images, addresses, and PTEs
