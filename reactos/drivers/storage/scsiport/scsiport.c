@@ -2151,8 +2151,8 @@ SpiResourceToConfig(IN PHW_INITIALIZATION_DATA HwInitializationData,
             }
             else if (Dma == 1)
             {
-                PortConfig->DmaChannel = PartialData->u.Dma.Channel;
-                PortConfig->DmaPort = PartialData->u.Dma.Port;
+                PortConfig->DmaChannel2 = PartialData->u.Dma.Channel;
+                PortConfig->DmaPort2 = PartialData->u.Dma.Port;
 
                 if (PartialData->Flags & CM_RESOURCE_DMA_8)
                     PortConfig->DmaWidth2 = Width8Bits;
@@ -2193,8 +2193,8 @@ SpiConfigToResource(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     {
         Dma = 1;
         
-        if (PortConfig->DmaChannel != SP_UNINITIALIZED_VALUE ||
-            PortConfig->DmaPort != SP_UNINITIALIZED_VALUE)
+        if (PortConfig->DmaChannel2 != SP_UNINITIALIZED_VALUE ||
+            PortConfig->DmaPort2 != SP_UNINITIALIZED_VALUE)
             Dma++;
     }
     else
