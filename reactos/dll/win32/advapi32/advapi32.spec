@@ -348,7 +348,7 @@
 @ stub LsaAddPrivilegesToAccount
 @ stub LsaClearAuditLog
 @ stdcall LsaClose(ptr)
-@ stub LsaCreateAccount
+@ stdcall LsaCreateAccount(ptr ptr long ptr)
 @ stub LsaCreateSecret
 @ stub LsaCreateTrustedDomain
 @ stdcall LsaCreateTrustedDomainEx(ptr ptr ptr long ptr)
@@ -377,8 +377,8 @@
 @ stdcall LsaLookupPrivilegeValue(ptr ptr ptr)
 @ stdcall LsaLookupSids(ptr long ptr ptr ptr)
 @ stdcall LsaNtStatusToWinError(long)
-@ stub LsaOpenAccount
-@ stdcall LsaOpenPolicy(long long long long)
+@ stdcall LsaOpenAccount(ptr ptr long ptr)
+@ stdcall LsaOpenPolicy(ptr ptr long ptr)
 @ stub LsaOpenPolicySce
 @ stub LsaOpenSecret
 @ stub LsaOpenTrustedDomain

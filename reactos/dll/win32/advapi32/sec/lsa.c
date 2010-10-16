@@ -155,6 +155,38 @@ LsaAddAccountRights(
     return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaCreateAccount(IN LSA_HANDLE PolicyHandle,
+                 IN PSID AccountSid,
+                 IN ULONG Flags,
+                 IN OUT PLSA_HANDLE AccountHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarCreateAccount((LSAPR_HANDLE)PolicyHandle,
+                                   AccountSid,
+                                   Flags,
+                                   AccountHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
 /*
  * @unimplemented
  */
@@ -500,6 +532,38 @@ LsaNtStatusToWinError(NTSTATUS Status)
     return RtlNtStatusToDosError(Status);
 }
 
+
+/*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaOpenAccount(IN LSA_HANDLE PolicyHandle,
+               IN PSID AccountSid,
+               IN ULONG Flags,
+               IN OUT PLSA_HANDLE AccountHandle)
+{
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,0x%08x,%p)\n", PolicyHandle, AccountSid, Flags, AccountHandle);
+
+    RpcTryExcept
+    {
+        Status = LsarOpenAccount((LSAPR_HANDLE)PolicyHandle,
+                                 AccountSid,
+                                 Flags,
+                                 AccountHandle);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+
 /******************************************************************************
  * LsaOpenPolicy
  *
@@ -701,19 +765,35 @@ LsaSetDomainInformationPolicy(
     return STATUS_UNSUCCESSFUL;
 }
 
+
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
-LsaSetInformationPolicy(
-    LSA_HANDLE PolicyHandle,
-    POLICY_INFORMATION_CLASS InformationClass,
-    PVOID Buffer)
+LsaSetInformationPolicy(IN LSA_HANDLE PolicyHandle,
+                        IN POLICY_INFORMATION_CLASS InformationClass,
+                        IN PVOID Buffer)
 {
-    FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+
+    TRACE("(%p,0x%08x,%p)\n", PolicyHandle, InformationClass, Buffer);
+
+    RpcTryExcept
+    {
+        Status = LsarSetInformationPolicy((LSAPR_HANDLE)PolicyHandle,
+                                          InformationClass,
+                                          (PLSAPR_POLICY_INFORMATION)Buffer);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
+
 
 /*
  * @unimplemented
