@@ -3060,6 +3060,32 @@ typedef struct _ICONINFO {
 	HBITMAP hbmColor;
 } ICONINFO,*PICONINFO;
 
+typedef struct _ICONINFOEXA
+{
+	DWORD     cbSize;
+	BOOL      fIcon;
+	DWORD     xHotspot;
+	DWORD     yHotspot;
+	HBITMAP   hbmMask;
+	HBITMAP   hbmColor;
+	WORD      wResID;
+	CHAR      szModName[MAX_PATH];
+	CHAR      szResName[MAX_PATH];
+} ICONINFOEXA, *PICONINFOEXA;
+
+typedef struct _ICONINFOEXW
+{
+	DWORD     cbSize;
+	BOOL      fIcon;
+	DWORD     xHotspot;
+	DWORD     yHotspot;
+	HBITMAP   hbmMask;
+	HBITMAP   hbmColor;
+	WORD      wResID;
+	WCHAR     szModName[MAX_PATH];
+	WCHAR     szResName[MAX_PATH];
+} ICONINFOEXW, *PICONINFOEXW;
+
 typedef struct tagNMHDR {
 	HWND hwndFrom;
 	UINT_PTR idFrom;
@@ -4112,6 +4138,8 @@ HWND WINAPI GetForegroundWindow(void);
 DWORD WINAPI GetGuiResources(HANDLE,DWORD);
 #endif
 BOOL WINAPI GetIconInfo(HICON,PICONINFO);
+BOOL WINAPI GetIconInfoExA(HICON,ICONINFOEXA*);
+BOOL WINAPI GetIconInfoExW(HICON,ICONINFOEXW*);
 BOOL WINAPI GetInputState(void);
 UINT WINAPI GetKBCodePage(void);
 HKL WINAPI GetKeyboardLayout(DWORD);
