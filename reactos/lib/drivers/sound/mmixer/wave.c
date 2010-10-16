@@ -357,8 +357,12 @@ MMixerInitializeWaveInfo(
     if (!WaveInfo)
         return MM_STATUS_NO_MEMORY;
 
-    /* FIXME support multiple pins for wave device */
-    ASSERT(PinCount == 1);
+    if (PinCount > 1)
+    {
+        /* FIXME support multiple pins for wave device */
+        DPRINT1("Implement support for multiple pins\n");
+        //ASSERT(PinCount == 1);
+    }
 
     /* initialize wave info */
     WaveInfo->DeviceId = MixerData->DeviceId;
