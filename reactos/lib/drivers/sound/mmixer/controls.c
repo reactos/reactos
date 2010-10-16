@@ -835,7 +835,7 @@ MMixerHandlePhysicalConnection(
 
         /* sanity checks */
         ASSERT(PinsCount != 0);
-        ASSERT(PinsCount == 1);
+        //ASSERT(PinsCount == 1);
 
         /* create destination line */
         Status = MMixerBuildMixerDestinationLine(MixerContext, MixerInfo, Pins[0], bInput);
