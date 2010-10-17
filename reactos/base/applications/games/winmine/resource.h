@@ -1,7 +1,7 @@
 /*
  * WineMine (resource.h)
  *
- * Copyright 2000 Joshua Thielen <jt85296@ltu.edu>
+ * Copyright 2000 Joshua Thielen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -15,14 +15,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <windef.h>
+#include <winuser.h>
 
-#define IDNONE          -1
+#define ID_TIMER        1000
 
 /* menu defines */
-#define IDM_WINEMINE   1000
 #define IDM_NEW        1001
 #define IDM_EXIT       1002
 #define IDM_TIMES      1003
@@ -46,19 +47,8 @@
 #define IDC_EDITROWS   1032
 #define IDC_EDITMINES  1033
 
-#define IDS_SECONDS    1101
+#define IDS_APPNAME    1101
 #define IDS_NOBODY     1102
 #define IDS_ABOUT      1103
 
-#define IDI_WINEMINE   1201
-#define IDA_WINEMINE   1202
-
-#define IDB_FACES      1301
-#define IDB_LEDS       1302
-#define IDB_MINES      1303
-
-#define IDRESET        1401
-
-#define IDD_CONGRATS   1501
-#define IDD_TIMES      1502
-#define IDD_CUSTOM     1503
+#define IDA_WINEMINE   1201

@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="winemine" type="win32gui" installbase="system32" installname="winemine.exe" unicode="yes">
-	<include base="winemine">.</include>
+<module name="winmine" type="win32gui" installbase="system32" installname="winmine.exe" unicode="no">
+	<include base="winmine">.</include>
+	<library>wine</library>
 	<library>gdi32</library>
 	<library>user32</library>
 	<library>advapi32</library>

@@ -188,7 +188,7 @@ reactos/dll/win32/xmllite         # Autosync
 ReactOS shares the following programs with Winehq.
 
 reactos/base/applications/cmdutils/xcopy  # Autosync
-reactos/base/applications/games/winemine  # Out of sync
+reactos/base/applications/games/winmine   # Forked at Wine-1_3_5
 reactos/base/applications/extrac32        # Autosync
 reactos/base/applications/iexplore        # Autosync
 reactos/base/applications/notepad         # Forked at Wine-20041201
