@@ -1368,7 +1368,6 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 	case MNID_HELP_HELPON:	MACRO_HelpOn();         break;
 	case MNID_HELP_HELPTOP: MACRO_HelpOnTop();      break;
 	case MNID_HELP_ABOUT:	MACRO_About();          break;
-	case MNID_HELP_WINE:    ShellAbout(hWnd, "WINE", "Help", 0); break;
 
             /* Context help */
         case MNID_CTXT_ANNOTATE:MACRO_Annotate();       break;

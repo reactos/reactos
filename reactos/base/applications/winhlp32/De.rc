@@ -66,9 +66,6 @@ MAIN_MENU MENU
    MENUITEM "Immer im &Vordergrund", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Über WINE", MNID_HELP_WINE
-#endif
  }
 }
 
@@ -92,7 +89,7 @@ CAPTION "Suche"
 
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE Hilfe"
+STID_WINE_HELP, 	"Wine Hilfe"
 STID_WHERROR, 		"FEHLER"
 STID_WARNING,  		"ACHTUNG"
 STID_INFO,  		"Information"

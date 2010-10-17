@@ -33,8 +33,8 @@ STRINGTABLE
     STRING_PAUSE,    "Appuyez sur ENTRÉE pour démarrer la copie\n"
     STRING_SIMCOPY,  "%d fichier(s) seront copiés\n"
     STRING_COPY,     "%d fichier(s) copiés\n"
-    STRING_QISDIR,   "« %s » est-il un fichier ou un répertoire\n \
-                     dans la destination ?\n \
+    STRING_QISDIR,   "« %s » est-il un fichier ou un répertoire\n\
+                     dans la destination ?\n\
                      (F - Fichier, R - Répertoire)\n"
     STRING_SRCPROMPT,"%s ? (Oui|Non)\n"
     STRING_OVERWRITE,"Écraser  %s ? (Oui|Non|Tous)\n"

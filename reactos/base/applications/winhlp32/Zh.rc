@@ -68,16 +68,13 @@ MAIN_MENU MENU
    MENUITEM "总是在最前面(&T)", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "资料信息(&I)...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "关于 WINE(&A)", MNID_HELP_WINE
-#endif
  }
 }
 
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE 帮助"
+STID_WINE_HELP, 	"Wine 帮助"
 STID_WHERROR, 		"错误"
 STID_WARNING,  		"警告"
 STID_INFO,  		"信息"
@@ -136,16 +133,13 @@ MAIN_MENU MENU
    MENUITEM "總是在最上面(&T)", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "資訊(&I)...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "關於 WINE(&A)", MNID_HELP_WINE
-#endif
  }
 }
 
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE 幫助"
+STID_WINE_HELP, 	"Wine 幫助"
 STID_WHERROR, 		"錯誤"
 STID_WARNING,  		"警告"
 STID_INFO,  		"資訊"
