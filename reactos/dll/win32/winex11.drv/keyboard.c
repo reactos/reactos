@@ -1159,6 +1159,8 @@ void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD event_flags, DWORD 
     WORD flags, wVkStripped, wVkL, wVkR, vk_hook = wVk;
     LPARAM lParam = 0;
 
+    if (!time) time = GetTickCount();
+
     wVk = LOBYTE(wVk);
     flags = LOBYTE(wScan);
 

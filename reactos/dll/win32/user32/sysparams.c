@@ -92,39 +92,43 @@ enum spi_index
     SPI_INDEX_COUNT
 };
 
-static const char * const DefSysColors[] =
+static const struct
 {
-    "Scrollbar", "212 208 200",              /* COLOR_SCROLLBAR */
-    "Background", "58 110 165",              /* COLOR_BACKGROUND */
-    "ActiveTitle", "10 36 106",              /* COLOR_ACTIVECAPTION */
-    "InactiveTitle", "128 128 128",          /* COLOR_INACTIVECAPTION */
-    "Menu", "212 208 200",                   /* COLOR_MENU */
-    "Window", "255 255 255",                 /* COLOR_WINDOW */
-    "WindowFrame", "0 0 0",                  /* COLOR_WINDOWFRAME */
-    "MenuText", "0 0 0",                     /* COLOR_MENUTEXT */
-    "WindowText", "0 0 0",                   /* COLOR_WINDOWTEXT */
-    "TitleText", "255 255 255",              /* COLOR_CAPTIONTEXT */
-    "ActiveBorder", "212 208 200",           /* COLOR_ACTIVEBORDER */
-    "InactiveBorder", "212 208 200",         /* COLOR_INACTIVEBORDER */
-    "AppWorkSpace", "128 128 128",           /* COLOR_APPWORKSPACE */
-    "Hilight", "10 36 106",                  /* COLOR_HIGHLIGHT */
-    "HilightText", "255 255 255",            /* COLOR_HIGHLIGHTTEXT */
-    "ButtonFace", "212 208 200",             /* COLOR_BTNFACE */
-    "ButtonShadow", "128 128 128",           /* COLOR_BTNSHADOW */
-    "GrayText", "128 128 128",               /* COLOR_GRAYTEXT */
-    "ButtonText", "0 0 0",                   /* COLOR_BTNTEXT */
-    "InactiveTitleText", "212 208 200",      /* COLOR_INACTIVECAPTIONTEXT */
-    "ButtonHilight", "255 255 255",          /* COLOR_BTNHIGHLIGHT */
-    "ButtonDkShadow", "64 64 64",            /* COLOR_3DDKSHADOW */
-    "ButtonLight", "212 208 200",            /* COLOR_3DLIGHT */
-    "InfoText", "0 0 0",                     /* COLOR_INFOTEXT */
-    "InfoWindow", "255 255 225",             /* COLOR_INFOBK */
-    "ButtonAlternateFace", "181 181 181",    /* COLOR_ALTERNATEBTNFACE */
-    "HotTrackingColor", "0 0 128",           /* COLOR_HOTLIGHT */
-    "GradientActiveTitle", "166 202 240",    /* COLOR_GRADIENTACTIVECAPTION */
-    "GradientInactiveTitle", "192 192 192",  /* COLOR_GRADIENTINACTIVECAPTION */
-    "MenuHilight", "10 36 106",              /* COLOR_MENUHILIGHT */
-    "MenuBar", "212 208 200"                 /* COLOR_MENUBAR */
+    const char *name;
+    COLORREF    rgb;
+} DefSysColors[] =
+{
+    {"Scrollbar", RGB(212, 208, 200)},              /* COLOR_SCROLLBAR */
+    {"Background", RGB(58, 110, 165)},              /* COLOR_BACKGROUND */
+    {"ActiveTitle", RGB(10, 36, 106)},              /* COLOR_ACTIVECAPTION */
+    {"InactiveTitle", RGB(128, 128, 128)},          /* COLOR_INACTIVECAPTION */
+    {"Menu", RGB(212, 208, 200)},                   /* COLOR_MENU */
+    {"Window", RGB(255, 255, 255)},                 /* COLOR_WINDOW */
+    {"WindowFrame", RGB(0, 0, 0)},                  /* COLOR_WINDOWFRAME */
+    {"MenuText", RGB(0, 0, 0)},                     /* COLOR_MENUTEXT */
+    {"WindowText", RGB(0, 0, 0)},                   /* COLOR_WINDOWTEXT */
+    {"TitleText", RGB(255, 255, 255)},              /* COLOR_CAPTIONTEXT */
+    {"ActiveBorder", RGB(212, 208, 200)},           /* COLOR_ACTIVEBORDER */
+    {"InactiveBorder", RGB(212, 208, 200)},         /* COLOR_INACTIVEBORDER */
+    {"AppWorkSpace", RGB(128, 128, 128)},           /* COLOR_APPWORKSPACE */
+    {"Hilight", RGB(10, 36, 106)},                  /* COLOR_HIGHLIGHT */
+    {"HilightText", RGB(255, 255, 255)},            /* COLOR_HIGHLIGHTTEXT */
+    {"ButtonFace", RGB(212, 208, 200)},             /* COLOR_BTNFACE */
+    {"ButtonShadow", RGB(128, 128, 128)},           /* COLOR_BTNSHADOW */
+    {"GrayText", RGB(128, 128, 128)},               /* COLOR_GRAYTEXT */
+    {"ButtonText", RGB(0, 0, 0)},                   /* COLOR_BTNTEXT */
+    {"InactiveTitleText", RGB(212, 208, 200)},      /* COLOR_INACTIVECAPTIONTEXT */
+    {"ButtonHilight", RGB(255, 255, 255)},          /* COLOR_BTNHIGHLIGHT */
+    {"ButtonDkShadow", RGB(64, 64, 64)},            /* COLOR_3DDKSHADOW */
+    {"ButtonLight", RGB(212, 208, 200)},            /* COLOR_3DLIGHT */
+    {"InfoText", RGB(0, 0, 0)},                     /* COLOR_INFOTEXT */
+    {"InfoWindow", RGB(255, 255, 225)},             /* COLOR_INFOBK */
+    {"ButtonAlternateFace", RGB(181, 181, 181)},    /* COLOR_ALTERNATEBTNFACE */
+    {"HotTrackingColor", RGB(0, 0, 128)},           /* COLOR_HOTLIGHT */
+    {"GradientActiveTitle", RGB(166, 202, 240)},    /* COLOR_GRADIENTACTIVECAPTION */
+    {"GradientInactiveTitle", RGB(192, 192, 192)},  /* COLOR_GRADIENTINACTIVECAPTION */
+    {"MenuHilight", RGB(10, 36, 106)},              /* COLOR_MENUHILIGHT */
+    {"MenuBar", RGB(212, 208, 200)}                 /* COLOR_MENUBAR */
 };
 
 /**
@@ -931,21 +935,22 @@ void SYSPARAMS_Init(void)
         if (hkey)
         {
             DWORD dwDataSize = sizeof(buffer);
-            if (!(RegQueryValueExA(hkey,DefSysColors[i*2], 0, 0, (LPBYTE) buffer, &dwDataSize)))
+            if (!(RegQueryValueExA(hkey,DefSysColors[i].name, 0, 0, (LPBYTE) buffer, &dwDataSize)))
                 if (sscanf( buffer, "%d %d %d", &r, &g, &b ) == 3) bOk = TRUE;
         }
 
         /* second try, win.ini */
         if (!bOk)
         {
-            GetProfileStringA( "colors", DefSysColors[i*2], DefSysColors[i*2+1], buffer, 100 );
+            GetProfileStringA( "colors", DefSysColors[i].name, NULL, buffer, 100 );
             if (sscanf( buffer, " %d %d %d", &r, &g, &b ) == 3) bOk = TRUE;
         }
 
-        /* last chance, take the default */
-        if (!bOk) sscanf( DefSysColors[i*2+1], " %d %d %d", &r, &g, &b );
-
-        SYSPARAMS_SetSysColor( i, RGB(r,g,b) );
+        /* else, take the default */
+        if (!bOk)
+            SYSPARAMS_SetSysColor( i, DefSysColors[i].rgb );
+        else
+            SYSPARAMS_SetSysColor( i, RGB(r,g,b) );
     }
     if (hkey) RegCloseKey( hkey );
 

@@ -167,7 +167,7 @@ void WINAPI keybd_event( BYTE bVk, BYTE bScan,
     input.u.ki.wVk = bVk;
     input.u.ki.wScan = bScan;
     input.u.ki.dwFlags = dwFlags;
-    input.u.ki.time = GetTickCount();
+    input.u.ki.time = 0;
     input.u.ki.dwExtraInfo = dwExtraInfo;
     SendInput( 1, &input, sizeof(input) );
 }
@@ -186,7 +186,7 @@ void WINAPI mouse_event( DWORD dwFlags, DWORD dx, DWORD dy,
     input.u.mi.dy = dy;
     input.u.mi.mouseData = dwData;
     input.u.mi.dwFlags = dwFlags;
-    input.u.mi.time = GetCurrentTime();
+    input.u.mi.time = 0;
     input.u.mi.dwExtraInfo = dwExtraInfo;
     SendInput( 1, &input, sizeof(input) );
 }

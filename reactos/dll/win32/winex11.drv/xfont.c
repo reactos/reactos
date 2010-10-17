@@ -1834,21 +1834,20 @@ static void XFONT_LoadIgnores( HKEY hkey )
  * Returns expanded name for the cachedmetrics file.
  * Now it also appends the current value of the $DISPLAY variable.
  */
-static char* XFONT_UserMetricsCache( char* buffer, int* buf_size )
+static char* XFONT_UserMetricsCache(void)
 {
     const char *confdir = "";//wine_get_config_dir();
     const char *display_name = XDisplayName(NULL);
     int len = strlen(confdir) + strlen(INIFontMetrics) + strlen(display_name) + 8;
+    char *buffer;
     unsigned int display = 0;
     unsigned int screen = 0;
     char *p, *ext;
 
-
-    if ((len > *buf_size) &&
-        !(buffer = HeapReAlloc( GetProcessHeap(), 0, buffer, *buf_size = len )))
+    if (!(buffer = HeapAlloc(GetProcessHeap(), 0, len)))
     {
         ERR("out of memory\n");
-        ExitProcess(1);
+        return NULL;
     }
     sprintf( buffer, "%s/%s", confdir, INIFontMetrics );
 
@@ -2900,10 +2899,11 @@ static void X11DRV_FONT_InitX11Metrics( void )
 {
   char**    x_pattern;
   unsigned  x_checksum;
-  int       i, x_count, buf_size;
-  char      *buffer;
-  HKEY hkey;
-
+  int       i, x_count;
+  char      *buffer = NULL;
+  HKEY hkey = NULL;
+  XFontStruct*  x_fs;
+  char fontcheck_name[] = "-*-*-*-*-normal-*-[12 0 0 12]-*-72-*-*-*-iso8859-1";
 
   wine_tsx11_lock();
   x_pattern = XListFonts(gdi_display, "*", MAX_FONTS, &x_count );
@@ -2916,48 +2916,48 @@ static void X11DRV_FONT_InitX11Metrics( void )
   for( i = x_checksum = 0; i < x_count; i++ )
   {
      int j;
-#if 0
-     printf("%i\t: %s\n", i, x_pattern[i] );
-#endif
 
      j = strlen( x_pattern[i] );
      if( j ) x_checksum ^= __genericCheckSum( x_pattern[i], j );
   }
   x_checksum |= X_PFONT_MAGIC;
-  buf_size = PATH_MAX;
-  buffer = HeapAlloc( GetProcessHeap(), 0, buf_size );
 
   /* deal with systemwide font metrics cache */
 
-  buffer[0] = 0;
   /* @@ Wine registry key: HKCU\Software\Wine\X11 Driver\Fonts */
-  if (RegOpenKeyA(HKEY_CURRENT_USER, INIFontSection, &hkey)) hkey = 0;
-  if (hkey)
+  if (RegOpenKeyA(HKEY_CURRENT_USER, INIFontSection, &hkey) == ERROR_SUCCESS)
   {
-	DWORD type, count = buf_size;
-	RegQueryValueExA(hkey, INIGlobalMetrics, 0, &type, (LPBYTE)buffer, &count);
+    DWORD type, count = 0;
+    if (RegQueryValueExA(hkey, INIGlobalMetrics, NULL, &type, NULL, &count) == ERROR_SUCCESS &&
+        type == REG_SZ)
+    {
+      buffer = HeapAlloc(GetProcessHeap(), 0, count + 1);
+      if (RegQueryValueExA(hkey, INIGlobalMetrics, NULL, NULL, (LPBYTE)buffer, &count) == ERROR_SUCCESS)
+      {
+        buffer[count] = '\0';
+        TRACE("system fontcache is '%s'\n", buffer);
+        XFONT_ReadCachedMetrics(buffer, DefResolution, x_checksum, x_count);
+      }
+      HeapFree(GetProcessHeap(), 0, buffer);
+      buffer = NULL;
+    }
   }
 
-  if( buffer[0] )
-  {
-      TRACE("system fontcache is '%s'\n", buffer);
-      XFONT_ReadCachedMetrics(buffer, DefResolution, x_checksum, x_count);
-  }
   if (fontList == NULL)
   {
-      /* try per-user */
-      buffer = XFONT_UserMetricsCache( buffer, &buf_size );
-      if( buffer[0] )
-      {
-          TRACE("user fontcache is '%s'\n", buffer);
-	  XFONT_ReadCachedMetrics(buffer, DefResolution, x_checksum, x_count);
-      }
+    /* try per-user */
+    buffer = XFONT_UserMetricsCache();
+    if (buffer)
+    {
+      TRACE("user fontcache is '%s'\n", buffer);
+      XFONT_ReadCachedMetrics(buffer, DefResolution, x_checksum, x_count);
+    }
   }
 
-  if( fontList == NULL )	/* build metrics from scratch */
+  if (fontList == NULL) /* build metrics from scratch */
   {
       int n_ff = XFONT_BuildMetrics(x_pattern, DefResolution, x_checksum, x_count);
-      if( buffer[0] )	 /* update cached metrics */
+      if( buffer )	 /* update cached metrics */
       {
 	  int fd = open( buffer, O_CREAT | O_TRUNC | O_RDWR, 0666 );
 	  if ( fd < 0 )
@@ -2972,22 +2972,19 @@ static void X11DRV_FONT_InitX11Metrics( void )
       }
   }
 
+  HeapFree(GetProcessHeap(), 0, buffer);
+
   wine_tsx11_lock();
   XFreeFontNames(x_pattern);
 
   /* check if we're dealing with X11 R6 server */
+  if( (x_fs = safe_XLoadQueryFont(gdi_display, fontcheck_name)) )
   {
-      XFontStruct*  x_fs;
-      strcpy(buffer, "-*-*-*-*-normal-*-[12 0 0 12]-*-72-*-*-*-iso8859-1");
-      if( (x_fs = safe_XLoadQueryFont(gdi_display, buffer)) )
-      {
-	  text_caps |= TC_SF_X_YINDEP;
-	  XFreeFont(gdi_display, x_fs);
-      }
+    text_caps |= TC_SF_X_YINDEP;
+    XFreeFont(gdi_display, x_fs);
   }
-  wine_tsx11_unlock();
 
-  HeapFree(GetProcessHeap(), 0, buffer);
+  wine_tsx11_unlock();
 
   XFONT_WindowsNames();
   XFONT_LoadAliases( hkey );

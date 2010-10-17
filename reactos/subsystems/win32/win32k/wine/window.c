@@ -1531,6 +1531,21 @@ static void set_window_pos( struct window *win, struct window *previous,
     if (swp_flags & SWP_SHOWWINDOW) win->style |= WS_VISIBLE;
     else if (swp_flags & SWP_HIDEWINDOW) win->style &= ~WS_VISIBLE;
 
+    /* keep children at the same position relative to top right corner when the parent is mirrored */
+    if (win->ex_style & WS_EX_LAYOUTRTL)
+    {
+        struct window *child;
+        int old_size = old_client_rect.right - old_client_rect.left;
+        int new_size = win->client_rect.right - win->client_rect.left;
+
+        if (old_size != new_size) LIST_FOR_EACH_ENTRY( child, &win->children, struct window, entry )
+        {
+            offset_rect( &child->window_rect, new_size - old_size, 0 );
+            offset_rect( &child->visible_rect, new_size - old_size, 0 );
+            offset_rect( &child->client_rect, new_size - old_size, 0 );
+        }
+    }
+
     /* if the window is not visible, everything is easy */
     if (!visible) return;
 
@@ -2059,7 +2074,7 @@ DECL_HANDLER(get_window_tree)
 /* set the position and Z order of a window */
 DECL_HANDLER(set_window_pos)
 {
-    const rectangle_t *visible_rect = NULL, *valid_rects = NULL;
+    rectangle_t window_rect, client_rect, visible_rect;
     struct window *previous = NULL;
     struct window *win = get_window( req->handle );
     unsigned int flags = req->flags;
@@ -2103,11 +2118,30 @@ DECL_HANDLER(set_window_pos)
         return;
     }
 
-    if (get_req_data_size((void*)req) >= sizeof(rectangle_t)) visible_rect = get_req_data();
-    if (get_req_data_size((void*)req) >= 3 * sizeof(rectangle_t)) valid_rects = visible_rect + 1;
+    window_rect = visible_rect = req->window;
+    client_rect = req->client;
+    if (get_req_data_size((void*)req) >= sizeof(rectangle_t))
+        memcpy( &visible_rect, get_req_data(), sizeof(rectangle_t) );
+    if (win->parent && win->parent->ex_style & WS_EX_LAYOUTRTL)
+    {
+        mirror_rect( &win->parent->client_rect, &window_rect );
+        mirror_rect( &win->parent->client_rect, &visible_rect );
+        mirror_rect( &win->parent->client_rect, &client_rect );
+    }
 
-    if (!visible_rect) visible_rect = &req->window;
-    set_window_pos( win, previous, flags, &req->window, &req->client, visible_rect, valid_rects );
+    if (get_req_data_size((void*)req) >= 3 * sizeof(rectangle_t))
+    {
+        rectangle_t valid_rects[2];
+        memcpy( valid_rects, (const rectangle_t *)get_req_data() + 1, 2 * sizeof(rectangle_t) );
+        if (win->parent && win->parent->ex_style & WS_EX_LAYOUTRTL)
+        {
+            mirror_rect( &win->parent->client_rect, &valid_rects[0] );
+            mirror_rect( &win->parent->client_rect, &valid_rects[1] );
+        }
+        set_window_pos( win, previous, flags, &window_rect, &client_rect, &visible_rect, valid_rects );
+    }
+    else set_window_pos( win, previous, flags, &window_rect, &client_rect, &visible_rect, NULL );
+
     reply->new_style = win->style;
     reply->new_ex_style = win->ex_style;
 }
@@ -2118,11 +2152,50 @@ DECL_HANDLER(get_window_rectangles)
 {
     struct window *win = get_window( req->handle );
 
-    if (win)
+    if (!win) return;
+
+    reply->window  = win->window_rect;
+    reply->visible = win->visible_rect;
+    reply->client  = win->client_rect;
+
+    switch (req->relative)
     {
-        reply->window  = win->window_rect;
-        reply->visible = win->visible_rect;
-        reply->client  = win->client_rect;
+    case COORDS_CLIENT:
+        offset_rect( &reply->window, -win->client_rect.left, -win->client_rect.top );
+        offset_rect( &reply->visible, -win->client_rect.left, -win->client_rect.top );
+        offset_rect( &reply->client, -win->client_rect.left, -win->client_rect.top );
+        if (win->ex_style & WS_EX_LAYOUTRTL)
+        {
+            mirror_rect( &win->client_rect, &reply->window );
+            mirror_rect( &win->client_rect, &reply->visible );
+        }
+        break;
+    case COORDS_WINDOW:
+        offset_rect( &reply->window, -win->window_rect.left, -win->window_rect.top );
+        offset_rect( &reply->visible, -win->window_rect.left, -win->window_rect.top );
+        offset_rect( &reply->client, -win->window_rect.left, -win->window_rect.top );
+        if (win->ex_style & WS_EX_LAYOUTRTL)
+        {
+            mirror_rect( &win->window_rect, &reply->visible );
+            mirror_rect( &win->window_rect, &reply->client );
+        }
+        break;
+    case COORDS_PARENT:
+        if (win->parent && win->parent->ex_style & WS_EX_LAYOUTRTL)
+        {
+            mirror_rect( &win->parent->client_rect, &reply->window );
+            mirror_rect( &win->parent->client_rect, &reply->visible );
+            mirror_rect( &win->parent->client_rect, &reply->client );
+        }
+        break;
+    case COORDS_SCREEN:
+        client_to_screen_rect( win->parent, &reply->window );
+        client_to_screen_rect( win->parent, &reply->visible );
+        client_to_screen_rect( win->parent, &reply->client );
+        break;
+    default:
+        set_error( STATUS_INVALID_PARAMETER );
+        break;
     }
 }
 
@@ -2166,11 +2239,17 @@ DECL_HANDLER(set_window_text)
 DECL_HANDLER(get_windows_offset)
 {
     struct window *win;
+    int mirror_from = 0, mirror_to = 0;
 
     reply->x = reply->y = 0;
     if (req->from)
     {
         if (!(win = get_window( req->from ))) return;
+        if (win->ex_style & WS_EX_LAYOUTRTL)
+        {
+            mirror_from = 1;
+            reply->x += win->client_rect.right - win->client_rect.left;
+        }
         while (win && !is_desktop_window(win))
         {
             reply->x += win->client_rect.left;
@@ -2181,6 +2260,11 @@ DECL_HANDLER(get_windows_offset)
     if (req->to)
     {
         if (!(win = get_window( req->to ))) return;
+        if (win->ex_style & WS_EX_LAYOUTRTL)
+        {
+            mirror_to = 1;
+            reply->x -= win->client_rect.right - win->client_rect.left;
+        }
         while (win && !is_desktop_window(win))
         {
             reply->x -= win->client_rect.left;
@@ -2188,6 +2272,8 @@ DECL_HANDLER(get_windows_offset)
             win = win->parent;
         }
     }
+    if (mirror_from) reply->x = -reply->x;
+    reply->mirror = mirror_from ^ mirror_to;
 }
 
 
@@ -2229,15 +2315,28 @@ DECL_HANDLER(get_visible_region)
 /* get the window region */
 DECL_HANDLER(get_window_region)
 {
+    rectangle_t *data;
     struct window *win = get_window( req->window );
 
     if (!win) return;
+    if (!win->win_region) return;
 
-    if (win->win_region)
+    if (win->ex_style & WS_EX_LAYOUTRTL)
     {
-        rectangle_t *data = get_region_data( win->win_region, get_reply_max_size((void*)req), &reply->total_size );
-        if (data) set_reply_data_ptr( (void*)req, data, reply->total_size );
+        struct region *region = create_empty_region();
+
+        if (!region) return;
+        if (!copy_region( region, win->win_region ))
+        {
+            free_region( region );
+            return;
+        }
+        mirror_region( &win->window_rect, region );
+        data = get_region_data_and_free( region, get_reply_max_size((void*)req), &reply->total_size );
     }
+    else data = get_region_data( win->win_region, get_reply_max_size((void*)req), &reply->total_size );
+
+    if (data) set_reply_data_ptr( (void*)req, data, reply->total_size );
 }
 
 
@@ -2253,6 +2352,7 @@ DECL_HANDLER(set_window_region)
     {
         if (!(region = create_region_from_req_data( get_req_data(), get_req_data_size((void*)req) )))
             return;
+        if (win->ex_style & WS_EX_LAYOUTRTL) mirror_region( &win->window_rect, region );
     }
     set_window_region( win, region, req->redraw );
 }
@@ -2334,18 +2434,20 @@ DECL_HANDLER(get_update_region)
 /* update the z order of a window so that a given rectangle is fully visible */
 DECL_HANDLER(update_window_zorder)
 {
-    rectangle_t tmp;
+    rectangle_t tmp, rect = req->rect;
     struct window *ptr, *win = get_window( req->window );
 
     if (!win || !win->parent || !is_visible( win )) return;  /* nothing to do */
+    if (win->ex_style & WS_EX_LAYOUTRTL) mirror_rect( &win->client_rect, &rect );
+    offset_rect( &rect, win->client_rect.left, win->client_rect.top );
 
     LIST_FOR_EACH_ENTRY( ptr, &win->parent->children, struct window, entry )
     {
         if (ptr == win) break;
         if (!(ptr->style & WS_VISIBLE)) continue;
         if (ptr->ex_style & WS_EX_TRANSPARENT) continue;
-        if (!intersect_rect( &tmp, &ptr->visible_rect, &req->rect )) continue;
-        if (ptr->win_region && !rect_in_region( ptr->win_region, &req->rect )) continue;
+        if (!intersect_rect( &tmp, &ptr->visible_rect, &rect )) continue;
+        if (ptr->win_region && !rect_in_region( ptr->win_region, &rect )) continue;
         /* found a window obscuring the rectangle, now move win above this one */
         /* making sure to not violate the topmost rule */
         if (!(ptr->ex_style & WS_EX_TOPMOST) || (win->ex_style & WS_EX_TOPMOST))
@@ -2373,6 +2475,7 @@ DECL_HANDLER(redraw_window)
         {
             if (!(region = create_region_from_req_data( get_req_data(), get_req_data_size((void*)req) )))
                 return;
+            if (win->ex_style & WS_EX_LAYOUTRTL) mirror_region( &win->client_rect, region );
         }
     }
 

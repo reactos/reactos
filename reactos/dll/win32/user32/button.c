@@ -213,15 +213,6 @@ static inline WCHAR *get_button_text( HWND hwnd )
     return buffer;
 }
 
-static void setup_clipping( HWND hwnd, HDC hdc )
-{
-    RECT rc;
-
-    GetClientRect( hwnd, &rc );
-    DPtoLP( hdc, (POINT *)&rc, 2 );
-    IntersectClipRect( hdc, rc.left, rc.top, rc.right, rc.bottom );
-}
-
 /***********************************************************************
  *           ButtonWndProc_common
  */
@@ -773,6 +764,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     LONG style = GetWindowLongW( hwnd, GWL_STYLE );
     BOOL pushedState = (state & BUTTON_HIGHLIGHTED);
     HWND parent;
+    HRGN hrgn;
 
     GetClientRect( hwnd, &rc );
 
@@ -782,7 +774,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (!parent) parent = hwnd;
     SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
 
-    setup_clipping( hwnd, hDC );
+    hrgn = set_control_clipping( hDC, &rc );
 
     hOldPen = SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
     hOldBrush = SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
@@ -842,6 +834,8 @@ draw_focus:
     SelectObject( hDC, hOldPen );
     SelectObject( hDC, hOldBrush );
     SetBkMode(hDC, oldBkMode);
+    SelectClipRgn( hDC, hrgn );
+    if (hrgn) DeleteObject( hrgn );
 }
 
 /**********************************************************************
@@ -858,6 +852,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     LONG state = get_button_state( hwnd );
     LONG style = GetWindowLongW( hwnd, GWL_STYLE );
     HWND parent;
+    HRGN hrgn;
 
     if (style & BS_PUSHLIKE)
     {
@@ -877,7 +872,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (!hBrush) /* did the app forget to call defwindowproc ? */
         hBrush = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
 					(WPARAM)hDC, (LPARAM)hwnd );
-    setup_clipping( hwnd, hDC );
+    hrgn = set_control_clipping( hDC, &client );
 
     if (style & BS_LEFTTEXT)
     {
@@ -968,6 +963,8 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 	IntersectRect(&rtext, &rtext, &client);
 	DrawFocusRect( hDC, &rtext );
     }
+    SelectClipRgn( hDC, hrgn );
+    if (hrgn) DeleteObject( hrgn );
 }
 
 
@@ -1007,6 +1004,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     TEXTMETRICW tm;
     LONG style = GetWindowLongW( hwnd, GWL_STYLE );
     HWND parent;
+    HRGN hrgn;
 
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     /* GroupBox acts like static control, so it sends CTLCOLORSTATIC */
@@ -1016,10 +1014,9 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (!hbr) /* did the app forget to call defwindowproc ? */
         hbr = (HBRUSH)DefWindowProcW(parent, WM_CTLCOLORSTATIC,
 				     (WPARAM)hDC, (LPARAM)hwnd);
-    setup_clipping( hwnd, hDC );
-
     GetClientRect( hwnd, &rc);
     rcFrame = rc;
+    hrgn = set_control_clipping( hDC, &rc );
 
     GetTextMetricsW (hDC, &tm);
     rcFrame.top += (tm.tmHeight / 2) - 1;
@@ -1028,20 +1025,22 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
     InflateRect(&rc, -7, 1);
     dtFlags = BUTTON_CalcLabelRect(hwnd, hDC, &rc);
 
-    if (dtFlags == (UINT)-1L)
-       return;
+    if (dtFlags != (UINT)-1)
+    {
+        /* Because buttons have CS_PARENTDC class style, there is a chance
+         * that label will be drawn out of client rect.
+         * But Windows doesn't clip label's rect, so do I.
+         */
 
-    /* Because buttons have CS_PARENTDC class style, there is a chance
-     * that label will be drawn out of client rect.
-     * But Windows doesn't clip label's rect, so do I.
-     */
+        /* There is 1-pixel margin at the left, right, and bottom */
+        rc.left--; rc.right++; rc.bottom++;
+        FillRect(hDC, &rc, hbr);
+        rc.left++; rc.right--; rc.bottom--;
 
-    /* There is 1-pixel margin at the left, right, and bottom */
-    rc.left--; rc.right++; rc.bottom++;
-    FillRect(hDC, &rc, hbr);
-    rc.left++; rc.right--; rc.bottom--;
-
-    BUTTON_DrawLabel(hwnd, hDC, dtFlags, &rc);
+        BUTTON_DrawLabel(hwnd, hDC, dtFlags, &rc);
+    }
+    SelectClipRgn( hDC, hrgn );
+    if (hrgn) DeleteObject( hrgn );
 }
 
 
@@ -1100,6 +1099,7 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     LONG_PTR id = GetWindowLongPtrW( hwnd, GWLP_ID );
     HWND parent;
     HFONT hFont, hPrevFont = 0;
+    HRGN hrgn;
 
     dis.CtlType    = ODT_BUTTON;
     dis.CtlID      = id;
@@ -1118,8 +1118,10 @@ static void OB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (!parent) parent = hwnd;
     SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
 
-    setup_clipping( hwnd, hDC );
+    hrgn = set_control_clipping( hDC, &dis.rcItem );
 
     SendMessageW( GetParent(hwnd), WM_DRAWITEM, id, (LPARAM)&dis );
     if (hPrevFont) SelectObject(hDC, hPrevFont);
+    SelectClipRgn( hDC, hrgn );
+    if (hrgn) DeleteObject( hrgn );
 }

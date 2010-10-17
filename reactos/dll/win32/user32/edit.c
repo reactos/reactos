@@ -3107,8 +3107,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
         {
             RECT rc;
             /* Windows places the menu at the edit's center in this case */
-            GetClientRect(es->hwndSelf, &rc);
-            MapWindowPoints(es->hwndSelf, 0, (POINT *)&rc, 2);
+            WIN_GetRectangles( es->hwndSelf, COORDS_SCREEN, NULL, &rc );
             x = rc.left + (rc.right - rc.left) / 2;
             y = rc.top + (rc.bottom - rc.top) / 2;
         }

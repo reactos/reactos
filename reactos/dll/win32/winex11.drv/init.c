@@ -388,18 +388,20 @@ INT CDECL X11DRV_ExtEscape( X11DRV_PDEVICE *physDev, INT escape, INT in_count, L
                             if (event.type == NoExpose) break;
                             if (event.type == GraphicsExpose)
                             {
-                                int x = event.xgraphicsexpose.x - physDev->dc_rect.left;
-                                int y = event.xgraphicsexpose.y - physDev->dc_rect.top;
+                                RECT rect;
 
-                                TRACE( "got %d,%d %dx%d count %d\n", x, y,
-                                       event.xgraphicsexpose.width,
-                                       event.xgraphicsexpose.height,
+                                rect.left   = event.xgraphicsexpose.x - physDev->dc_rect.left;
+                                rect.top    = event.xgraphicsexpose.y - physDev->dc_rect.top;
+                                rect.right  = rect.left + event.xgraphicsexpose.width;
+                                rect.bottom = rect.top + event.xgraphicsexpose.height;
+                                if (GetLayout( physDev->hdc ) & LAYOUT_RTL)
+                                    mirror_rect( &physDev->dc_rect, &rect );
+
+                                TRACE( "got %s count %d\n", wine_dbgstr_rect(&rect),
                                        event.xgraphicsexpose.count );
 
-                                if (!tmp) tmp = CreateRectRgn( 0, 0, 0, 0 );
-                                SetRectRgn( tmp, x, y,
-                                            x + event.xgraphicsexpose.width,
-                                            y + event.xgraphicsexpose.height );
+                                if (!tmp) tmp = CreateRectRgnIndirect( &rect );
+                                else SetRectRgn( tmp, rect.left, rect.top, rect.right, rect.bottom );
                                 if (hrgn) CombineRgn( hrgn, hrgn, tmp, RGN_OR );
                                 else
                                 {

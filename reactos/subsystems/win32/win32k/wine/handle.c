@@ -162,6 +162,15 @@ static void handle_table_destroy( struct object *obj )
     ExFreePool( table->entries );
 }
 
+/* close all the process handles and free the handle table */
+void close_process_handles( PPROCESSINFO process )
+{
+    struct handle_table *table = process->handles;
+
+    process->handles = NULL;
+    if (table) release_object( table );
+}
+
 /* allocate a new handle table */
 struct handle_table *alloc_handle_table( PPROCESSINFO process, int count )
 {

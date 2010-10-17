@@ -199,54 +199,6 @@ VOID WINAPI SetDebugErrorLevel( DWORD dwLevel )
 }
 
 
-/******************************************************************************
- *                    GetProcessDefaultLayout [USER32.@]
- *
- * Gets the default layout for parentless windows.
- * Right now, just returns 0 (left-to-right).
- *
- * RETURNS
- *    Success: Nonzero
- *    Failure: Zero
- *
- * BUGS
- *    No RTL
- */
-BOOL WINAPI GetProcessDefaultLayout( DWORD *pdwDefaultLayout )
-{
-    if ( !pdwDefaultLayout ) {
-        SetLastError( ERROR_INVALID_PARAMETER );
-        return FALSE;
-     }
-    FIXME( "( %p ): No BiDi\n", pdwDefaultLayout );
-    *pdwDefaultLayout = 0;
-    return TRUE;
-}
-
-
-/******************************************************************************
- *                    SetProcessDefaultLayout [USER32.@]
- *
- * Sets the default layout for parentless windows.
- * Right now, only accepts 0 (left-to-right).
- *
- * RETURNS
- *    Success: Nonzero
- *    Failure: Zero
- *
- * BUGS
- *    No RTL
- */
-BOOL WINAPI SetProcessDefaultLayout( DWORD dwDefaultLayout )
-{
-    if ( dwDefaultLayout == 0 )
-        return TRUE;
-    FIXME( "( %08x ): No BiDi\n", dwDefaultLayout );
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
-}
-
-
 /***********************************************************************
  *		SetWindowStationUser (USER32.@)
  */

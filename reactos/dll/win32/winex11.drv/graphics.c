@@ -82,13 +82,14 @@ static RECT get_device_rect( HDC hdc, int left, int top, int right, int bottom )
     rect.top    = top;
     rect.right  = right;
     rect.bottom = bottom;
-    LPtoDP( hdc, (POINT *)&rect, 2 );
     if (GetLayout( hdc ) & LAYOUT_RTL)
     {
-        int tmp = rect.left;
-        rect.left = rect.right + 1;
-        rect.right = tmp + 1;
+        /* shift the rectangle so that the right border is included after mirroring */
+        /* it would be more correct to do this after LPtoDP but that's not what Windows does */
+        rect.left--;
+        rect.right--;
     }
+    LPtoDP( hdc, (POINT *)&rect, 2 );
     if (rect.left > rect.right)
     {
         int tmp = rect.left;

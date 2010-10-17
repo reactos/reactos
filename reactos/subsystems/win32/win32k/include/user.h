@@ -123,6 +123,7 @@ extern rectangle_t *get_region_data_and_free( struct region *region, data_size_t
 extern int is_region_empty( const struct region *region );
 extern void get_region_extents( const struct region *region, rectangle_t *rect );
 extern void offset_region( struct region *region, int x, int y );
+extern void mirror_region( const rectangle_t *client_rect, struct region *region );
 extern struct region *copy_region( struct region *dst, const struct region *src );
 extern struct region *intersect_region( struct region *dst, const struct region *src1,
                                         const struct region *src2 );
@@ -172,5 +173,14 @@ extern void set_process_default_desktop( PPROCESSINFO process, struct desktop *d
                                          obj_handle_t handle );
 extern void close_process_desktop( PPROCESSINFO process );
 extern void close_thread_desktop( PTHREADINFO thread );
+
+/* mirror a rectangle respective to the window client area */
+static inline void mirror_rect( const rectangle_t *client_rect, rectangle_t *rect )
+{
+    int width = client_rect->right - client_rect->left;
+    int tmp = rect->left;
+    rect->left = width - rect->right;
+    rect->right = width - tmp;
+}
 
 #endif  /* __WINE_SERVER_USER_H */

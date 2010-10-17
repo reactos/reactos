@@ -174,6 +174,7 @@ struct bitblt_coords
     int  width;
     int  height;
     RECT visrect;   /* rectangle clipped to the visible part */
+    DWORD layout;   /* DC layout */
 };
 
 
@@ -775,6 +776,14 @@ extern void wait_for_withdrawn_state( Display *display, struct x11drv_win_data *
 extern void update_user_time( Time time );
 extern void update_net_wm_states( Display *display, struct x11drv_win_data *data );
 extern void make_window_embedded( Display *display, struct x11drv_win_data *data );
+
+static inline void mirror_rect( const RECT *window_rect, RECT *rect )
+{
+    int width = window_rect->right - window_rect->left;
+    int tmp = rect->left;
+    rect->left = width - rect->right;
+    rect->right = width - tmp;
+}
 
 /* X context to associate a hwnd to an X window */
 extern XContext winContext;

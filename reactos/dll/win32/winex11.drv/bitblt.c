@@ -1187,8 +1187,14 @@ static BOOL BITBLT_GetVisRectangles( X11DRV_PDEVICE *physDevDst, X11DRV_PDEVICE 
     dst->y      = rect.top;
     dst->width  = rect.right - rect.left;
     dst->height = rect.bottom - rect.top;
-    if (dst->width < 0) SWAP_INT32( &rect.left, &rect.right );
-    if (dst->height < 0) SWAP_INT32( &rect.top, &rect.bottom );
+    if (dst->layout & LAYOUT_RTL && dst->layout & LAYOUT_BITMAPORIENTATIONPRESERVED)
+    {
+        SWAP_INT32( &rect.left, &rect.right );
+        dst->x = rect.left;
+        dst->width = rect.right - rect.left;
+    }
+    if (rect.left > rect.right) { SWAP_INT32( &rect.left, &rect.right ); rect.left++; rect.right++; }
+    if (rect.top > rect.bottom) { SWAP_INT32( &rect.top, &rect.bottom ); rect.top++; rect.bottom++; }
 
     GetRgnBox( physDevDst->region, &clipRect );
     if (!IntersectRect( &dst->visrect, &rect, &clipRect )) return FALSE;
@@ -1206,8 +1212,14 @@ static BOOL BITBLT_GetVisRectangles( X11DRV_PDEVICE *physDevDst, X11DRV_PDEVICE 
     src->y      = rect.top;
     src->width  = rect.right - rect.left;
     src->height = rect.bottom - rect.top;
-    if (src->width < 0) SWAP_INT32( &rect.left, &rect.right );
-    if (src->height < 0) SWAP_INT32( &rect.top, &rect.bottom );
+    if (src->layout & LAYOUT_RTL && src->layout & LAYOUT_BITMAPORIENTATIONPRESERVED)
+    {
+        SWAP_INT32( &rect.left, &rect.right );
+        src->x = rect.left;
+        src->width = rect.right - rect.left;
+    }
+    if (rect.left > rect.right) { SWAP_INT32( &rect.left, &rect.right ); rect.left++; rect.right++; }
+    if (rect.top > rect.bottom) { SWAP_INT32( &rect.top, &rect.bottom ); rect.top++; rect.bottom++; }
 
     /* Apparently the clipping and visible regions are only for output,
        so just check against dc extent here to avoid BadMatch errors */
@@ -1407,16 +1419,6 @@ BOOL CDECL X11DRV_StretchBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst, IN
     Pixmap pixmaps[3] = { 0, 0, 0 };  /* pixmaps for DST, SRC, TMP */
     GC tmpGC = 0;
 
-    /* compensate for off-by-one shifting for negative widths and heights */
-    if (widthDst < 0)
-        ++xDst;
-    if (heightDst < 0)
-        ++yDst;
-    if (widthSrc < 0)
-        ++xSrc;
-    if (heightSrc < 0)
-        ++ySrc;
-
     usePat = (((rop >> 4) & 0x0f0000) != (rop & 0x0f0000));
     useSrc = (((rop >> 2) & 0x330000) != (rop & 0x330000));
     useDst = (((rop >> 1) & 0x550000) != (rop & 0x550000));
@@ -1426,10 +1428,19 @@ BOOL CDECL X11DRV_StretchBlt( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst, IN
     src.y      = ySrc;
     src.width  = widthSrc;
     src.height = heightSrc;
+    src.layout = physDevSrc ? GetLayout( physDevSrc->hdc ) : 0;
     dst.x      = xDst;
     dst.y      = yDst;
     dst.width  = widthDst;
     dst.height = heightDst;
+    dst.layout = GetLayout( physDevDst->hdc );
+
+    if (rop & NOMIRRORBITMAP)
+    {
+        src.layout |= LAYOUT_BITMAPORIENTATIONPRESERVED;
+        dst.layout |= LAYOUT_BITMAPORIENTATIONPRESERVED;
+        rop &= ~NOMIRRORBITMAP;
+    }
 
     if (useSrc)
     {
@@ -1684,10 +1695,12 @@ BOOL CDECL X11DRV_AlphaBlend( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst, IN
     src.y      = ySrc;
     src.width  = widthSrc;
     src.height = heightSrc;
+    src.layout = GetLayout( physDevSrc->hdc );
     dst.x      = xDst;
     dst.y      = yDst;
     dst.width  = widthDst;
     dst.height = heightDst;
+    dst.layout = GetLayout( physDevDst->hdc );
 
     if (!BITBLT_GetVisRectangles( physDevDst, physDevSrc, &dst, &src )) return TRUE;
 

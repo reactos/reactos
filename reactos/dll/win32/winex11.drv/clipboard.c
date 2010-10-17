@@ -3228,11 +3228,20 @@ static void X11DRV_HandleSelectionRequest( HWND hWnd, XSelectionRequestEvent *ev
 
                 if (hClipData && (lpClipData = GlobalLock(hClipData)))
                 {
+                    int mode = PropModeReplace;
+
                     TRACE("\tUpdating property %s, %d bytes\n", debugstr_w(lpFormat->Name), cBytes);
 
                     wine_tsx11_lock();
-                    XChangeProperty(display, request, rprop, event->target,
-                                    8, PropModeReplace, lpClipData, cBytes);
+                    do
+                    {
+                        int nelements = min(cBytes, 65536);
+                        XChangeProperty(display, request, rprop, event->target,
+                                        8, mode, lpClipData, nelements);
+                        mode = PropModeAppend;
+                        cBytes -= nelements;
+                        lpClipData += nelements;
+                    } while (cBytes > 0);
                     wine_tsx11_unlock();
 
                     GlobalUnlock(hClipData);

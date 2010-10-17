@@ -489,7 +489,7 @@
 @ stub LoadImageColorMatcherA
 @ stub LoadImageColorMatcherW
 @ stdcall MaskBlt(long long long long long long long long long long long long)
-@ stub MirrorRgn
+@ stdcall MirrorRgn(long long)
 @ stdcall ModifyWorldTransform(long ptr long)
 @ stdcall MoveToEx(long long long ptr)
 @ stdcall NamedEscape(long wstr long long ptr long ptr)

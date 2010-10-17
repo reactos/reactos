@@ -739,6 +739,29 @@ void offset_region( struct region *region, int x, int y )
     region->extents.bottom += y;
 }
 
+/* mirror a region relative to a window client rect */
+void mirror_region( const rectangle_t *client_rect, struct region *region )
+{
+    int start, end, i, j;
+
+    for (start = 0; start < region->num_rects; start = end + 1)
+    {
+        for (end = start; end < region->num_rects - 1; end++)
+            if (region->rects[end + 1].top != region->rects[end].top) break;
+        for (i = start, j = end; i < j; i++, j--)
+        {
+            rectangle_t rect = region->rects[j];
+            region->rects[i] = region->rects[j];
+            region->rects[j] = rect;
+            mirror_rect( client_rect, &region->rects[j] );
+            mirror_rect( client_rect, &region->rects[i] );
+        }
+        if (i == j) mirror_rect( client_rect, &region->rects[i] );
+    }
+    mirror_rect( client_rect, &region->extents );
+}
+
+
 /* make a copy of a region; returns dst or NULL on error */
 struct region *copy_region( struct region *dst, const struct region *src )
 {

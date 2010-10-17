@@ -396,6 +396,8 @@ void CDECL RosDrv_SetCursor( HCURSOR handle )
     if(handle == NULL)
     {
         RosUserSetCursor(NULL);
+
+        // FIXME: Delete previously created (by GetIconInfo) bitmaps!
     }
     else
     {

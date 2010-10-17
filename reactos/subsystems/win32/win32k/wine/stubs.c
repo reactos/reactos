@@ -228,6 +228,11 @@ DECL_HANDLER(accept_socket)
     UNIMPLEMENTED;
 }
 
+DECL_HANDLER(accept_into_socket)
+{
+    UNIMPLEMENTED;
+}
+
 DECL_HANDLER(set_socket_event)
 {
     UNIMPLEMENTED;

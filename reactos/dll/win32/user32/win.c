@@ -27,6 +27,7 @@
 #include <string.h>
 #include "windef.h"
 #include "winbase.h"
+#include "winver.h"
 #include "winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
@@ -40,6 +41,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(win);
 
 #define NB_USER_HANDLES  ((LAST_USER_HANDLE - FIRST_USER_HANDLE + 1) >> 1)
 #define USER_HANDLE_TO_INDEX(hwnd) ((LOWORD(hwnd) - FIRST_USER_HANDLE) >> 1)
+
+static DWORD process_layout = ~0u;
 
 /**********************************************************************/
 
@@ -651,7 +654,7 @@ ULONG WIN_SetStyle( HWND hwnd, ULONG set_bits, ULONG clear_bits )
  *
  * Get the window and client rectangles.
  */
-BOOL WIN_GetRectangles( HWND hwnd, RECT *rectWindow, RECT *rectClient )
+BOOL WIN_GetRectangles( HWND hwnd, enum coords_relative relative, RECT *rectWindow, RECT *rectClient )
 {
     WND *win = WIN_GetPtr( hwnd );
     BOOL ret = TRUE;
@@ -677,38 +680,102 @@ BOOL WIN_GetRectangles( HWND hwnd, RECT *rectWindow, RECT *rectClient )
         }
         if (rectWindow) *rectWindow = rect;
         if (rectClient) *rectClient = rect;
+        return TRUE;
     }
-    else if (win == WND_OTHER_PROCESS)
+    if (win != WND_OTHER_PROCESS)
     {
-        SERVER_START_REQ( get_window_rectangles )
+        RECT window_rect = win->rectWindow, client_rect = win->rectClient;
+
+        switch (relative)
         {
-            req->handle = wine_server_user_handle( hwnd );
-            if ((ret = !wine_server_call_err( req )))
+        case COORDS_CLIENT:
+            OffsetRect( &window_rect, -win->rectClient.left, -win->rectClient.top );
+            OffsetRect( &client_rect, -win->rectClient.left, -win->rectClient.top );
+            if (win->dwExStyle & WS_EX_LAYOUTRTL)
+                mirror_rect( &win->rectClient, &window_rect );
+            break;
+        case COORDS_WINDOW:
+            OffsetRect( &window_rect, -win->rectWindow.left, -win->rectWindow.top );
+            OffsetRect( &client_rect, -win->rectWindow.left, -win->rectWindow.top );
+            if (win->dwExStyle & WS_EX_LAYOUTRTL)
+                mirror_rect( &win->rectWindow, &client_rect );
+            break;
+        case COORDS_PARENT:
+            if (win->parent)
             {
-                if (rectWindow)
+                WND *parent = WIN_GetPtr( win->parent );
+                if (parent == WND_DESKTOP) break;
+                if (!parent || parent == WND_OTHER_PROCESS)
                 {
-                    rectWindow->left   = reply->window.left;
-                    rectWindow->top    = reply->window.top;
-                    rectWindow->right  = reply->window.right;
-                    rectWindow->bottom = reply->window.bottom;
+                    WIN_ReleasePtr( win );
+                    goto other_process;
                 }
-                if (rectClient)
+                if (parent->flags & WIN_CHILDREN_MOVED)
                 {
-                    rectClient->left   = reply->client.left;
-                    rectClient->top    = reply->client.top;
-                    rectClient->right  = reply->client.right;
-                    rectClient->bottom = reply->client.bottom;
+                    WIN_ReleasePtr( parent );
+                    WIN_ReleasePtr( win );
+                    goto other_process;
                 }
+                if (parent->dwExStyle & WS_EX_LAYOUTRTL)
+                {
+                    mirror_rect( &parent->rectClient, &window_rect );
+                    mirror_rect( &parent->rectClient, &client_rect );
+                }
+                WIN_ReleasePtr( parent );
+            }
+            break;
+        case COORDS_SCREEN:
+            while (win->parent)
+            {
+                WND *parent = WIN_GetPtr( win->parent );
+                if (parent == WND_DESKTOP) break;
+                if (!parent || parent == WND_OTHER_PROCESS)
+                {
+                    WIN_ReleasePtr( win );
+                    goto other_process;
+                }
+                WIN_ReleasePtr( win );
+                if (parent->flags & WIN_CHILDREN_MOVED)
+                {
+                    WIN_ReleasePtr( parent );
+                    goto other_process;
+                }
+                win = parent;
+                OffsetRect( &window_rect, win->rectClient.left, win->rectClient.top );
+                OffsetRect( &client_rect, win->rectClient.left, win->rectClient.top );
+            }
+            break;
+        }
+        if (rectWindow) *rectWindow = window_rect;
+        if (rectClient) *rectClient = client_rect;
+        WIN_ReleasePtr( win );
+        return TRUE;
+    }
+
+other_process:
+    SERVER_START_REQ( get_window_rectangles )
+    {
+        req->handle = wine_server_user_handle( hwnd );
+        req->relative = relative;
+        if ((ret = !wine_server_call_err( req )))
+        {
+            if (rectWindow)
+            {
+                rectWindow->left   = reply->window.left;
+                rectWindow->top    = reply->window.top;
+                rectWindow->right  = reply->window.right;
+                rectWindow->bottom = reply->window.bottom;
+            }
+            if (rectClient)
+            {
+                rectClient->left   = reply->client.left;
+                rectClient->top    = reply->client.top;
+                rectClient->right  = reply->client.right;
+                rectClient->bottom = reply->client.bottom;
             }
         }
-        SERVER_END_REQ;
     }
-    else
-    {
-        if (rectWindow) *rectWindow = win->rectWindow;
-        if (rectClient) *rectClient = win->rectClient;
-        WIN_ReleasePtr( win );
-    }
+    SERVER_END_REQ;
     return ret;
 }
 
@@ -1179,6 +1246,12 @@ HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module,
             parent = GetDesktopWindow();
             owner = cs->hwndParent;
         }
+        else
+        {
+            DWORD parent_style = GetWindowLongW( parent, GWL_EXSTYLE );
+            if ((parent_style & WS_EX_LAYOUTRTL) && !(parent_style & WS_EX_NOINHERITLAYOUT))
+                cs->dwExStyle |= WS_EX_LAYOUTRTL;
+        }
     }
     else
     {
@@ -1193,7 +1266,12 @@ HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module,
         /* are we creating the desktop or HWND_MESSAGE parent itself? */
         if (className != (LPCWSTR)DESKTOP_CLASS_ATOM &&
             (IS_INTRESOURCE(className) || strcmpiW( className, messageW )))
+        {
+            DWORD layout;
+            GetProcessDefaultLayout( &layout );
+            if (layout & LAYOUT_RTL) cs->dwExStyle |= WS_EX_LAYOUTRTL;
             parent = GetDesktopWindow();
+        }
     }
 
     WIN_FixCoordinates(cs, &sw); /* fix default coordinates */
@@ -1346,22 +1424,17 @@ HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module,
 
     /* send WM_NCCALCSIZE */
 
-    if ((wndPtr = WIN_GetPtr(hwnd)))
+    if (WIN_GetRectangles( hwnd, COORDS_PARENT, &rect, NULL ))
     {
         /* yes, even if the CBT hook was called with HWND_TOP */
-        POINT pt;
-        HWND insert_after = (wndPtr->dwStyle & WS_CHILD) ? HWND_BOTTOM : HWND_TOP;
-        RECT window_rect = wndPtr->rectWindow;
-        RECT client_rect = window_rect;
-        WIN_ReleasePtr( wndPtr );
+        HWND insert_after = (GetWindowLongW( hwnd, GWL_STYLE ) & WS_CHILD) ? HWND_BOTTOM : HWND_TOP;
+        RECT client_rect = rect;
 
         /* the rectangle is in screen coords for WM_NCCALCSIZE when wparam is FALSE */
-        pt.x = pt.y = 0;
-        MapWindowPoints( parent, 0, &pt, 1 );
-        OffsetRect( &client_rect, pt.x, pt.y );
+        MapWindowPoints( parent, 0, (POINT *)&client_rect, 2 );
         SendMessageW( hwnd, WM_NCCALCSIZE, FALSE, (LPARAM)&client_rect );
-        OffsetRect( &client_rect, -pt.x, -pt.y );
-        set_window_pos( hwnd, insert_after, SWP_NOACTIVATE, &window_rect, &client_rect, NULL );
+        MapWindowPoints( 0, parent, (POINT *)&client_rect, 2 );
+        set_window_pos( hwnd, insert_after, SWP_NOACTIVATE, &rect, &client_rect, NULL );
     }
     else return 0;
 
@@ -1385,8 +1458,8 @@ HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module,
           wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP) return 0;
     if (!(wndPtr->flags & WIN_NEED_SIZE))
     {
-        rect = wndPtr->rectClient;
         WIN_ReleasePtr( wndPtr );
+        WIN_GetRectangles( hwnd, COORDS_PARENT, NULL, &rect );
         SendMessageW( hwnd, WM_SIZE, SIZE_RESTORED,
                       MAKELONG(rect.right-rect.left, rect.bottom-rect.top));
         SendMessageW( hwnd, WM_MOVE, 0, MAKELONG( rect.left, rect.top ) );
@@ -2085,14 +2158,28 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
     switch( offset )
     {
     case GWL_STYLE:
-    case GWL_EXSTYLE:
-        style.styleOld =
-            offset == GWL_STYLE ? wndPtr->dwStyle : wndPtr->dwExStyle;
+        style.styleOld = wndPtr->dwStyle;
         style.styleNew = newval;
         WIN_ReleasePtr( wndPtr );
-        SendMessageW( hwnd, WM_STYLECHANGING, offset, (LPARAM)&style );
+        SendMessageW( hwnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM)&style );
         if (!(wndPtr = WIN_GetPtr( hwnd )) || wndPtr == WND_OTHER_PROCESS) return 0;
         newval = style.styleNew;
+        /* WS_CLIPSIBLINGS can't be reset on top-level windows */
+        if (wndPtr->parent == GetDesktopWindow()) newval |= WS_CLIPSIBLINGS;
+        break;
+    case GWL_EXSTYLE:
+        style.styleOld = wndPtr->dwExStyle;
+        style.styleNew = newval;
+        WIN_ReleasePtr( wndPtr );
+        SendMessageW( hwnd, WM_STYLECHANGING, GWL_EXSTYLE, (LPARAM)&style );
+        if (!(wndPtr = WIN_GetPtr( hwnd )) || wndPtr == WND_OTHER_PROCESS) return 0;
+        /* WS_EX_TOPMOST can only be changed through SetWindowPos */
+        newval = (style.styleNew & ~WS_EX_TOPMOST) | (wndPtr->dwExStyle & WS_EX_TOPMOST);
+        /* WS_EX_WINDOWEDGE depends on some other styles */
+        if ((newval & WS_EX_DLGMODALFRAME) || (wndPtr->dwStyle & WS_THICKFRAME))
+            newval |= WS_EX_WINDOWEDGE;
+        else if (wndPtr->dwStyle & (WS_CHILD|WS_POPUP))
+            newval &= ~WS_EX_WINDOWEDGE;
         break;
     case GWLP_HWNDPARENT:
         if (wndPtr->parent == GetDesktopWindow())
@@ -2166,8 +2253,6 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
             break;
         case GWL_EXSTYLE:
             req->flags = SET_WIN_EXSTYLE;
-            /* WS_EX_TOPMOST can only be changed through SetWindowPos */
-            newval = (newval & ~WS_EX_TOPMOST) | (wndPtr->dwExStyle & WS_EX_TOPMOST);
             req->ex_style = newval;
             break;
         case GWLP_ID:
@@ -2232,6 +2317,8 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
 
     if (offset == GWL_STYLE || offset == GWL_EXSTYLE)
     {
+        style.styleOld = retval;
+        style.styleNew = newval;
         USER_Driver->pSetWindowStyle( hwnd, offset, &style );
         SendMessageW( hwnd, WM_STYLECHANGED, offset, (LPARAM)&style );
     }
@@ -3301,12 +3388,7 @@ UINT WINAPI GetWindowModuleFileNameW( HWND hwnd, LPWSTR module, UINT size )
 BOOL WINAPI GetWindowInfo( HWND hwnd, PWINDOWINFO pwi)
 {
     if (!pwi) return FALSE;
-    if (!IsWindow(hwnd)) return FALSE;
-
-    GetWindowRect(hwnd, &pwi->rcWindow);
-    GetClientRect(hwnd, &pwi->rcClient);
-    /* translate to screen coordinates */
-    MapWindowPoints(hwnd, 0, (LPPOINT)&pwi->rcClient, 2);
+    if (!WIN_GetRectangles( hwnd, COORDS_SCREEN, &pwi->rcWindow, &pwi->rcClient )) return FALSE;
 
     pwi->dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     pwi->dwExStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
@@ -3387,6 +3469,13 @@ BOOL WINAPI UpdateLayeredWindowIndirect( HWND hwnd, const UPDATELAYEREDWINDOWINF
 {
     BYTE alpha = 0xff;
 
+    if (!(GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_LAYERED) ||
+        GetLayeredWindowAttributes( hwnd, NULL, NULL, NULL ))
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+
     if (!(info->dwFlags & ULW_EX_NORESIZE) && (info->pptDst || info->psize))
     {
         int x = 0, y = 0, cx = 0, cy = 0;
@@ -3464,6 +3553,71 @@ BOOL WINAPI UpdateLayeredWindow( HWND hwnd, HDC hdcDst, POINT *pptDst, SIZE *psi
     info.prcDirty = NULL;
     return UpdateLayeredWindowIndirect( hwnd, &info );
 }
+
+
+/******************************************************************************
+ *                    GetProcessDefaultLayout [USER32.@]
+ *
+ * Gets the default layout for parentless windows.
+ */
+BOOL WINAPI GetProcessDefaultLayout( DWORD *layout )
+{
+    if (!layout)
+    {
+        SetLastError( ERROR_NOACCESS );
+        return FALSE;
+    }
+    if (process_layout == ~0u)
+    {
+        static const WCHAR translationW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
+                                              '\\','T','r','a','n','s','l','a','t','i','o','n', 0 };
+        static const WCHAR filedescW[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
+                                           '\\','%','0','4','x','%','0','4','x',
+                                           '\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
+        WCHAR *str, buffer[MAX_PATH];
+        DWORD i, len, version_layout = 0;
+        DWORD user_lang = GetUserDefaultLangID();
+        DWORD *languages;
+        void *data = NULL;
+
+        GetModuleFileNameW( 0, buffer, MAX_PATH );
+        if (!(len = GetFileVersionInfoSizeW( buffer, NULL ))) goto done;
+        if (!(data = HeapAlloc( GetProcessHeap(), 0, len ))) goto done;
+        if (!GetFileVersionInfoW( buffer, 0, len, data )) goto done;
+        if (!VerQueryValueW( data, translationW, (void **)&languages, &len ) || !len) goto done;
+
+        len /= sizeof(DWORD);
+        for (i = 0; i < len; i++) if (LOWORD(languages[i]) == user_lang) break;
+        if (i == len)  /* try neutral language */
+            for (i = 0; i < len; i++)
+                if (LOWORD(languages[i]) == MAKELANGID( PRIMARYLANGID(user_lang), SUBLANG_NEUTRAL )) break;
+        if (i == len) i = 0;  /* default to the first one */
+
+        sprintfW( buffer, filedescW, LOWORD(languages[i]), HIWORD(languages[i]) );
+        if (!VerQueryValueW( data, buffer, (void **)&str, &len )) goto done;
+        TRACE( "found description %s\n", debugstr_w( str ));
+        if (str[0] == 0x200e && str[1] == 0x200e) version_layout = LAYOUT_RTL;
+
+    done:
+        HeapFree( GetProcessHeap(), 0, data );
+        process_layout = version_layout;
+    }
+    *layout = process_layout;
+    return TRUE;
+}
+
+
+/******************************************************************************
+ *                    SetProcessDefaultLayout [USER32.@]
+ *
+ * Sets the default layout for parentless windows.
+ */
+BOOL WINAPI SetProcessDefaultLayout( DWORD layout )
+{
+    process_layout = layout;
+    return TRUE;
+}
+
 
 /* 64bit versions */
 

@@ -728,7 +728,8 @@ static MENUITEM *MENU_FindItemByCoords( const POPUPMENU *menu,
     RECT rect;
 
     if (!GetWindowRect(menu->hWnd, &rect)) return NULL;
-    pt.x -= rect.left;
+    if (GetWindowLongW( menu->hWnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) pt.x = rect.right - 1 - pt.x;
+    else pt.x -= rect.left;
     pt.y -= rect.top;
     item = menu->items;
     for (i = 0; i < menu->nItems; i++, item++)
@@ -1835,6 +1836,7 @@ static BOOL MENU_ShowPopup( HWND hwndOwner, HMENU hmenu, UINT id, UINT flags,
     POINT pt;
     HMONITOR monitor;
     MONITORINFO info;
+    DWORD ex_style = 0;
 
     TRACE("owner=%p hmenu=%p id=0x%04x x=0x%04x y=0x%04x xa=0x%04x ya=0x%04x\n",
           hwndOwner, hmenu, id, x, y, xanchor, yanchor);
@@ -1864,6 +1866,12 @@ static BOOL MENU_ShowPopup( HWND hwndOwner, HMENU hmenu, UINT id, UINT flags,
     info.cbSize = sizeof(info);
     GetMonitorInfoW( monitor, &info );
 
+    if (flags & TPM_LAYOUTRTL)
+    {
+        ex_style = WS_EX_LAYOUTRTL;
+        flags ^= TPM_RIGHTALIGN;
+    }
+
     if( flags & TPM_RIGHTALIGN ) x -= width;
     if( flags & TPM_CENTERALIGN ) x -= width / 2;
 
@@ -1891,7 +1899,7 @@ static BOOL MENU_ShowPopup( HWND hwndOwner, HMENU hmenu, UINT id, UINT flags,
     if( y < info.rcWork.top ) y = info.rcWork.top;
 
     /* NOTE: In Windows, top menu popup is not owned. */
-    menu->hWnd = CreateWindowExW( 0, (LPCWSTR)POPUPMENU_CLASS_ATOM, NULL,
+    menu->hWnd = CreateWindowExW( ex_style, (LPCWSTR)POPUPMENU_CLASS_ATOM, NULL,
                                 WS_POPUP, x, y, width, height,
                                 hwndOwner, 0, (HINSTANCE)GetWindowLongPtrW(hwndOwner, GWLP_HINSTANCE),
                                 (LPVOID)hmenu );
@@ -2340,6 +2348,7 @@ static HMENU MENU_ShowSubPopup( HWND hwndOwner, HMENU hmenu,
                               GetClassLongW( menu->hWnd, GCL_STYLE));
 
 	NC_GetSysPopupPos( menu->hWnd, &rect );
+	if (wFlags & TPM_LAYOUTRTL) rect.left = rect.right;
 	rect.top = rect.bottom;
 	rect.right = GetSystemMetrics(SM_CXSIZE);
         rect.bottom = GetSystemMetrics(SM_CYSIZE);
@@ -2355,7 +2364,10 @@ static HMENU MENU_ShowSubPopup( HWND hwndOwner, HMENU hmenu,
 
 	    /* The first item in the popup menu has to be at the
 	       same y position as the focused menu item */
-	    rect.left += rc.right - GetSystemMetrics(SM_CXBORDER);
+            if (wFlags & TPM_LAYOUTRTL)
+                rect.left += GetSystemMetrics(SM_CXBORDER);
+	    else
+                rect.left += rc.right - GetSystemMetrics(SM_CXBORDER);
 	    rect.top += rc.top - MENU_TOP_MARGIN;
 	    rect.right = rc.left - rc.right + GetSystemMetrics(SM_CXBORDER);
 	    rect.bottom = rc.top - rc.bottom - MENU_TOP_MARGIN
@@ -2363,14 +2375,17 @@ static HMENU MENU_ShowSubPopup( HWND hwndOwner, HMENU hmenu,
 	}
 	else
 	{
-	    rect.left += item->rect.left;
+            if (wFlags & TPM_LAYOUTRTL)
+                rect.left = rect.right - item->rect.left;
+	    else
+                rect.left += item->rect.left;
 	    rect.top += item->rect.bottom;
 	    rect.right = item->rect.right - item->rect.left;
 	    rect.bottom = item->rect.bottom - item->rect.top;
 	}
     }
 
-    MENU_ShowPopup( hwndOwner, item->hSubMenu, menu->FocusedItem, 0,
+    MENU_ShowPopup( hwndOwner, item->hSubMenu, menu->FocusedItem, wFlags,
 		    rect.left, rect.top, rect.right, rect.bottom );
     if (selectFirst)
         MENU_MoveSelection( hwndOwner, item->hSubMenu, ITEM_NEXT );
@@ -3320,6 +3335,7 @@ void MENU_TrackMouseMenuBar( HWND hWnd, INT ht, POINT pt )
 
     TRACE("wnd=%p ht=0x%04x %s\n", hWnd, ht, wine_dbgstr_point( &pt));
 
+    if (GetWindowLongW( hWnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) wFlags |= TPM_LAYOUTRTL;
     if (IsMenu(hMenu))
     {
 	MENU_InitTracking( hWnd, hMenu, FALSE, wFlags );
@@ -3357,6 +3373,7 @@ void MENU_TrackKbdMenuBar( HWND hwnd, UINT wParam, WCHAR wChar)
         uItem = 0;
         wParam |= HTSYSMENU; /* prevent item lookup */
     }
+    if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) wFlags |= TPM_LAYOUTRTL;
 
     if (!IsMenu( hTrackMenu )) return;
 
@@ -3633,8 +3650,7 @@ BOOL WINAPI EnableMenuItem( HMENU hMenu, UINT wItemID, UINT wFlags )
 		return (UINT)-1;
 
             /* Refresh the frame to reflect the change */
-            GetWindowRect(parentMenu->hWnd, &rc);
-            MapWindowPoints(0, parentMenu->hWnd, (POINT *)&rc, 2);
+            WIN_GetRectangles( parentMenu->hWnd, COORDS_CLIENT, &rc, NULL );
             rc.bottom = 0;
             RedrawWindow(parentMenu->hWnd, &rc, 0, RDW_FRAME | RDW_INVALIDATE | RDW_NOCHILDREN);
 	}

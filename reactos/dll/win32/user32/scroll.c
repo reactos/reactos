@@ -223,23 +223,26 @@ static BOOL SCROLL_GetScrollBarRect( HWND hwnd, INT nBar, RECT *lprect,
     switch(nBar)
     {
       case SB_HORZ:
-        lprect->left   = wndPtr->rectClient.left - wndPtr->rectWindow.left;
-        lprect->top    = wndPtr->rectClient.bottom - wndPtr->rectWindow.top;
-        lprect->right  = wndPtr->rectClient.right - wndPtr->rectWindow.left;
-        lprect->bottom = lprect->top + GetSystemMetrics(SM_CYHSCROLL);
+        WIN_GetRectangles( hwnd, COORDS_WINDOW, NULL, lprect );
+        lprect->top = lprect->bottom;
+        lprect->bottom += GetSystemMetrics(SM_CYHSCROLL);
 	if(wndPtr->dwStyle & WS_VSCROLL)
 	  lprect->right++;
         vertical = FALSE;
 	break;
 
       case SB_VERT:
+        WIN_GetRectangles( hwnd, COORDS_WINDOW, NULL, lprect );
         if((wndPtr->dwExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            lprect->left   = wndPtr->rectClient.left - wndPtr->rectWindow.left - GetSystemMetrics(SM_CXVSCROLL);
+        {
+            lprect->right = lprect->left;
+            lprect->left -= GetSystemMetrics(SM_CXVSCROLL);
+        }
         else
-            lprect->left   = wndPtr->rectClient.right - wndPtr->rectWindow.left;
-        lprect->top    = wndPtr->rectClient.top - wndPtr->rectWindow.top;
-        lprect->right  = lprect->left + GetSystemMetrics(SM_CXVSCROLL);
-        lprect->bottom = wndPtr->rectClient.bottom - wndPtr->rectWindow.top;
+        {
+            lprect->left = lprect->right;
+            lprect->right += GetSystemMetrics(SM_CXVSCROLL);
+        }
 	if(wndPtr->dwStyle & WS_HSCROLL)
 	  lprect->bottom++;
         vertical = TRUE;
@@ -1095,14 +1098,11 @@ void SCROLL_TrackScrollBar( HWND hwnd, INT scrollbar, POINT pt )
 
     if (scrollbar != SB_CTL)
     {
-        WND *wndPtr = WIN_GetPtr( hwnd );
-        if (!wndPtr || wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP) return;
-        xoffset = wndPtr->rectClient.left - wndPtr->rectWindow.left;
-        yoffset = wndPtr->rectClient.top - wndPtr->rectWindow.top;
-        WIN_ReleasePtr( wndPtr );
+        RECT rect;
+        WIN_GetRectangles( hwnd, COORDS_CLIENT, &rect, NULL );
         ScreenToClient( hwnd, &pt );
-        pt.x += xoffset;
-        pt.y += yoffset;
+        pt.x -= rect.left;
+        pt.y -= rect.top;
     }
 
     SCROLL_HandleScrollEvent( hwnd, scrollbar, WM_LBUTTONDOWN, pt );
@@ -1426,6 +1426,13 @@ LRESULT ScrollBarWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
     case WM_LBUTTONDBLCLK:
     case WM_LBUTTONDOWN:
+        if (GetWindowLongW( hwnd, GWL_STYLE ) & SBS_SIZEGRIP)
+        {
+            SendMessageW( GetParent(hwnd), WM_SYSCOMMAND,
+                          SC_SIZE + ((GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) ?
+                                     WMSZ_BOTTOMLEFT : WMSZ_BOTTOMRIGHT), lParam );
+        }
+        else
         {
 	    POINT pt;
 	    pt.x = (short)LOWORD(lParam);
@@ -1518,6 +1525,14 @@ LRESULT ScrollBarWndProc_common( HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             if (!wParam) EndPaint(hwnd, &ps);
         }
         break;
+
+    case WM_SETCURSOR:
+        if (GetWindowLongW( hwnd, GWL_STYLE ) & SBS_SIZEGRIP)
+        {
+            ULONG_PTR cursor = (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) ? IDC_SIZENESW : IDC_SIZENWSE;
+            return (LRESULT)SetCursor( LoadCursorA( 0, (LPSTR)cursor ));
+        }
+        return DefWindowProcW( hwnd, message, wParam, lParam );
 
     case SBM_SETPOS:
         return SetScrollPos( hwnd, SB_CTL, wParam, (BOOL)lParam );

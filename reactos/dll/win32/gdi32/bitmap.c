@@ -510,17 +510,41 @@ LONG WINAPI SetBitmapBits(
  */
 HBITMAP BITMAP_CopyBitmap(HBITMAP hbitmap)
 {
-    HBITMAP res = 0;
-    BITMAP bm;
+    HBITMAP res;
+    DIBSECTION dib;
+    DWORD size;
 
-    if (!GetObjectW( hbitmap, sizeof(bm), &bm )) return 0;
-    res = CreateBitmapIndirect(&bm);
+    if (!(size = GetObjectW( hbitmap, sizeof(dib), &dib ))) return 0;
 
+    if (size == sizeof(DIBSECTION))
+    {
+        void *bits;
+        BITMAPINFO *bi;
+        HDC dc = CreateCompatibleDC( NULL );
+
+        if (!dc) return 0;
+        if (!(bi = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] ))))
+        {
+            DeleteDC( dc );
+            return 0;
+        }
+        bi->bmiHeader = dib.dsBmih;
+
+        /* Get the color table or the color masks */
+        GetDIBits( dc, hbitmap, 0, 0, NULL, bi, DIB_RGB_COLORS );
+
+        res = CreateDIBSection( dc, bi, DIB_RGB_COLORS, &bits, NULL, 0 );
+        if (res) SetDIBits( dc, res, 0, dib.dsBm.bmHeight, dib.dsBm.bmBits, bi, DIB_RGB_COLORS );
+        HeapFree( GetProcessHeap(), 0, bi );
+        DeleteDC( dc );
+        return res;
+    }
+
+    res = CreateBitmapIndirect( &dib.dsBm );
     if(res) {
-        char *buf = HeapAlloc( GetProcessHeap(), 0, bm.bmWidthBytes *
-			       bm.bmHeight );
-        GetBitmapBits (hbitmap, bm.bmWidthBytes * bm.bmHeight, buf);
-	SetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
+        char *buf = HeapAlloc( GetProcessHeap(), 0, dib.dsBm.bmWidthBytes * dib.dsBm.bmHeight );
+        GetBitmapBits (hbitmap, dib.dsBm.bmWidthBytes * dib.dsBm.bmHeight, buf);
+        SetBitmapBits (res, dib.dsBm.bmWidthBytes * dib.dsBm.bmHeight, buf);
 	HeapFree( GetProcessHeap(), 0, buf );
     }
     return res;

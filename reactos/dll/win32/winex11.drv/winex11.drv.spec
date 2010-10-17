@@ -145,7 +145,7 @@
 @ cdecl wglUseFontBitmapsW(ptr long long long) X11DRV_wglUseFontBitmapsW
 
 #IME Interface
-@ stdcall ImeInquire(ptr wstr wstr)
+@ stdcall ImeInquire(ptr ptr wstr)
 @ stdcall ImeConfigure(long long long ptr)
 @ stdcall ImeDestroy(long)
 @ stdcall ImeEscape(long long ptr)

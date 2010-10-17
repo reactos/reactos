@@ -60,7 +60,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(nonclient);
      ((exStyle) & WS_EX_DLGMODALFRAME) || \
      !((style) & (WS_CHILD | WS_POPUP)))
 
-#define HAS_MENU(w)  ((((w)->dwStyle & (WS_CHILD | WS_POPUP)) != WS_CHILD) && ((w)->wIDmenu != 0))
+#define HAS_MENU(hwnd,style)  ((((style) & (WS_CHILD | WS_POPUP)) != WS_CHILD) && GetMenu(hwnd))
 
 
 /******************************************************************************
@@ -86,7 +86,6 @@ static void
 NC_AdjustRectOuter (LPRECT rect, DWORD style, BOOL menu, DWORD exStyle)
 {
     int adjust;
-    if(style & WS_ICONIC) return;
 
     if ((exStyle & (WS_EX_STATICEDGE|WS_EX_DLGMODALFRAME)) ==
         WS_EX_STATICEDGE)
@@ -99,7 +98,7 @@ NC_AdjustRectOuter (LPRECT rect, DWORD style, BOOL menu, DWORD exStyle)
         if ((exStyle & WS_EX_DLGMODALFRAME) ||
             (style & (WS_THICKFRAME|WS_DLGFRAME))) adjust = 2; /* outer */
     }
-    if (style & WS_THICKFRAME)
+    if ((style & WS_THICKFRAME) && !(exStyle & WS_EX_DLGMODALFRAME))
         adjust +=  ( GetSystemMetrics (SM_CXFRAME)
                    - GetSystemMetrics (SM_CXDLGFRAME)); /* The resize border */
     if ((style & (WS_BORDER|WS_DLGFRAME)) ||
@@ -140,8 +139,6 @@ NC_AdjustRectOuter (LPRECT rect, DWORD style, BOOL menu, DWORD exStyle)
 static void
 NC_AdjustRectInner (LPRECT rect, DWORD style, DWORD exStyle)
 {
-    if(style & WS_ICONIC) return;
-
     if (exStyle & WS_EX_CLIENTEDGE)
         InflateRect(rect, GetSystemMetrics(SM_CXEDGE), GetSystemMetrics(SM_CYEDGE));
 
@@ -390,11 +387,8 @@ BOOL WINAPI AdjustWindowRect( LPRECT rect, DWORD style, BOOL menu )
  */
 BOOL WINAPI AdjustWindowRectEx( LPRECT rect, DWORD style, BOOL menu, DWORD exStyle )
 {
-    /* Correct the window style */
-    style &= (WS_DLGFRAME | WS_BORDER | WS_THICKFRAME | WS_CHILD);
-    exStyle &= (WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE |
-                WS_EX_STATICEDGE | WS_EX_TOOLWINDOW);
-    if (exStyle & WS_EX_DLGMODALFRAME) style &= ~WS_THICKFRAME;
+    if (style & WS_ICONIC) return TRUE;
+    style &= ~(WS_HSCROLL | WS_VSCROLL);
 
     TRACE("(%s) %08x %d %08x\n", wine_dbgstr_rect(rect), style, menu, exStyle );
 
@@ -410,7 +404,7 @@ BOOL WINAPI AdjustWindowRectEx( LPRECT rect, DWORD style, BOOL menu, DWORD exSty
  *
  * Handle a WM_NCCALCSIZE message. Called from DefWindowProc().
  */
-LRESULT NC_HandleNCCalcSize( HWND hwnd, RECT *winRect )
+LRESULT NC_HandleNCCalcSize( HWND hwnd, WPARAM wparam, RECT *winRect )
 {
     RECT tmpRect = { 0, 0, 0, 0 };
     LRESULT result = 0;
@@ -424,7 +418,7 @@ LRESULT NC_HandleNCCalcSize( HWND hwnd, RECT *winRect )
     if (cls_style & CS_VREDRAW) result |= WVR_VREDRAW;
     if (cls_style & CS_HREDRAW) result |= WVR_HREDRAW;
 
-    if (!IsIconic(hwnd))
+    if (!(style & WS_ICONIC))
     {
         NC_AdjustRectOuter( &tmpRect, style, FALSE, exStyle );
 
@@ -451,7 +445,11 @@ LRESULT NC_HandleNCCalcSize( HWND hwnd, RECT *winRect )
                         - GetSystemMetrics(SM_CYEDGE));
 
         if (style & WS_VSCROLL)
-            if( winRect->right - winRect->left >= GetSystemMetrics(SM_CXVSCROLL)){
+            if (winRect->right - winRect->left >= GetSystemMetrics(SM_CXVSCROLL))
+            {
+                /* rectangle is in screen coords when wparam is false */
+                if (!wparam && (exStyle & WS_EX_LAYOUTRTL)) exStyle ^= WS_EX_LEFTSCROLLBAR;
+
                 if((exStyle & WS_EX_LEFTSCROLLBAR) != 0)
                     winRect->left  += GetSystemMetrics(SM_CXVSCROLL);
                 else
@@ -477,78 +475,63 @@ LRESULT NC_HandleNCCalcSize( HWND hwnd, RECT *winRect )
  *
  * Get the 'inside' rectangle of a window, i.e. the whole window rectangle
  * but without the borders (if any).
- * The rectangle is in window coordinates (for drawing with GetWindowDC()).
  */
-static void NC_GetInsideRect( HWND hwnd, RECT *rect )
+static void NC_GetInsideRect( HWND hwnd, enum coords_relative relative, RECT *rect,
+                              DWORD style, DWORD ex_style )
 {
-    WND *wndPtr = WIN_GetPtr( hwnd );
+    WIN_GetRectangles( hwnd, relative, rect, NULL );
 
-    if (!wndPtr || wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP) return;
-
-    rect->top    = rect->left = 0;
-    rect->right  = wndPtr->rectWindow.right - wndPtr->rectWindow.left;
-    rect->bottom = wndPtr->rectWindow.bottom - wndPtr->rectWindow.top;
-
-    if (wndPtr->dwStyle & WS_ICONIC) goto END;
+    if (style & WS_ICONIC) return;
 
     /* Remove frame from rectangle */
-    if (HAS_THICKFRAME( wndPtr->dwStyle, wndPtr->dwExStyle ))
+    if (HAS_THICKFRAME( style, ex_style ))
     {
         InflateRect( rect, -GetSystemMetrics(SM_CXFRAME), -GetSystemMetrics(SM_CYFRAME) );
     }
-    else if (HAS_DLGFRAME( wndPtr->dwStyle, wndPtr->dwExStyle ))
+    else if (HAS_DLGFRAME( style, ex_style ))
     {
         InflateRect( rect, -GetSystemMetrics(SM_CXDLGFRAME), -GetSystemMetrics(SM_CYDLGFRAME));
     }
-    else if (HAS_THINFRAME( wndPtr->dwStyle ))
+    else if (HAS_THINFRAME( style ))
     {
         InflateRect( rect, -GetSystemMetrics(SM_CXBORDER), -GetSystemMetrics(SM_CYBORDER) );
     }
 
     /* We have additional border information if the window
      * is a child (but not an MDI child) */
-    if ( (wndPtr->dwStyle & WS_CHILD)  &&
-         ( (wndPtr->dwExStyle & WS_EX_MDICHILD) == 0 ) )
+    if ((style & WS_CHILD) && !(ex_style & WS_EX_MDICHILD))
     {
-        if (wndPtr->dwExStyle & WS_EX_CLIENTEDGE)
+        if (ex_style & WS_EX_CLIENTEDGE)
             InflateRect (rect, -GetSystemMetrics(SM_CXEDGE), -GetSystemMetrics(SM_CYEDGE));
-        if (wndPtr->dwExStyle & WS_EX_STATICEDGE)
+        if (ex_style & WS_EX_STATICEDGE)
             InflateRect (rect, -GetSystemMetrics(SM_CXBORDER), -GetSystemMetrics(SM_CYBORDER));
     }
-
-END:
-    WIN_ReleasePtr( wndPtr );
 }
 
 
 /***********************************************************************
- * NC_DoNCHitTest
+ * NC_HandleNCHitTest
  *
- * Handle a WM_NCHITTEST message. Called from NC_HandleNCHitTest().
- *
- * FIXME:  Just a modified copy of the Win 3.1 version.
+ * Handle a WM_NCHITTEST message. Called from DefWindowProc().
  */
-
-static LRESULT NC_DoNCHitTest (WND *wndPtr, POINT pt )
+LRESULT NC_HandleNCHitTest( HWND hwnd, POINT pt )
 {
     RECT rect, rcClient;
-    POINT ptClient;
+    DWORD style, ex_style;
 
-    TRACE("hwnd=%p pt=%d,%d\n", wndPtr->obj.handle, pt.x, pt.y );
+    TRACE("hwnd=%p pt=%d,%d\n", hwnd, pt.x, pt.y );
 
-    GetWindowRect(wndPtr->obj.handle, &rect );
+    WIN_GetRectangles( hwnd, COORDS_SCREEN, &rect, &rcClient );
     if (!PtInRect( &rect, pt )) return HTNOWHERE;
 
-    if (wndPtr->dwStyle & WS_MINIMIZE) return HTCAPTION;
+    style = GetWindowLongW( hwnd, GWL_STYLE );
+    ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
+    if (style & WS_MINIMIZE) return HTCAPTION;
 
-    /* Check client area */
-    ptClient = pt;
-    ScreenToClient( wndPtr->obj.handle, &ptClient );
-    GetClientRect( wndPtr->obj.handle, &rcClient );
-    if (PtInRect( &rcClient, ptClient )) return HTCLIENT;
+    if (PtInRect( &rcClient, pt )) return HTCLIENT;
 
     /* Check borders */
-    if (HAS_THICKFRAME( wndPtr->dwStyle, wndPtr->dwExStyle ))
+    if (HAS_THICKFRAME( style, ex_style ))
     {
         InflateRect( &rect, -GetSystemMetrics(SM_CXFRAME), -GetSystemMetrics(SM_CYFRAME) );
         if (!PtInRect( &rect, pt ))
@@ -585,110 +568,128 @@ static LRESULT NC_DoNCHitTest (WND *wndPtr, POINT pt )
     }
     else  /* No thick frame */
     {
-        if (HAS_DLGFRAME( wndPtr->dwStyle, wndPtr->dwExStyle ))
+        if (HAS_DLGFRAME( style, ex_style ))
             InflateRect(&rect, -GetSystemMetrics(SM_CXDLGFRAME), -GetSystemMetrics(SM_CYDLGFRAME));
-        else if (HAS_THINFRAME( wndPtr->dwStyle ))
+        else if (HAS_THINFRAME( style ))
             InflateRect(&rect, -GetSystemMetrics(SM_CXBORDER), -GetSystemMetrics(SM_CYBORDER));
         if (!PtInRect( &rect, pt )) return HTBORDER;
     }
 
     /* Check caption */
 
-    if ((wndPtr->dwStyle & WS_CAPTION) == WS_CAPTION)
+    if ((style & WS_CAPTION) == WS_CAPTION)
     {
-        if (wndPtr->dwExStyle & WS_EX_TOOLWINDOW)
+        if (ex_style & WS_EX_TOOLWINDOW)
             rect.top += GetSystemMetrics(SM_CYSMCAPTION) - 1;
         else
             rect.top += GetSystemMetrics(SM_CYCAPTION) - 1;
         if (!PtInRect( &rect, pt ))
         {
-            BOOL min_or_max_box = (wndPtr->dwStyle & WS_MAXIMIZEBOX) ||
-                                  (wndPtr->dwStyle & WS_MINIMIZEBOX);
-            /* Check system menu */
-            if ((wndPtr->dwStyle & WS_SYSMENU) && !(wndPtr->dwExStyle & WS_EX_TOOLWINDOW))
+            BOOL min_or_max_box = (style & WS_MAXIMIZEBOX) ||
+                                  (style & WS_MINIMIZEBOX);
+            if (ex_style & WS_EX_LAYOUTRTL)
             {
-                if (NC_IconForWindow(wndPtr->obj.handle))
-                    rect.left += GetSystemMetrics(SM_CYCAPTION) - 1;
+                /* Check system menu */
+                if ((style & WS_SYSMENU) && !(ex_style & WS_EX_TOOLWINDOW) && NC_IconForWindow(hwnd))
+                {
+                    rect.right -= GetSystemMetrics(SM_CYCAPTION) - 1;
+                    if (pt.x > rect.right) return HTSYSMENU;
+                }
+
+                /* Check close button */
+                if (style & WS_SYSMENU)
+                {
+                    rect.left += GetSystemMetrics(SM_CYCAPTION);
+                    if (pt.x < rect.left) return HTCLOSE;
+                }
+
+                /* Check maximize box */
+                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                if (min_or_max_box && !(ex_style & WS_EX_TOOLWINDOW))
+                {
+                    rect.left += GetSystemMetrics(SM_CXSIZE);
+                    if (pt.x < rect.left) return HTMAXBUTTON;
+                }
+
+                /* Check minimize box */
+                if (min_or_max_box && !(ex_style & WS_EX_TOOLWINDOW))
+                {
+                    rect.left += GetSystemMetrics(SM_CXSIZE);
+                    if (pt.x < rect.left) return HTMINBUTTON;
+                }
             }
-            if (pt.x < rect.left) return HTSYSMENU;
+            else
+            {
+                /* Check system menu */
+                if ((style & WS_SYSMENU) && !(ex_style & WS_EX_TOOLWINDOW) && NC_IconForWindow(hwnd))
+                {
+                    rect.left += GetSystemMetrics(SM_CYCAPTION) - 1;
+                    if (pt.x < rect.left) return HTSYSMENU;
+                }
 
-            /* Check close button */
-            if (wndPtr->dwStyle & WS_SYSMENU)
-                rect.right -= GetSystemMetrics(SM_CYCAPTION);
-            if (pt.x > rect.right) return HTCLOSE;
+                /* Check close button */
+                if (style & WS_SYSMENU)
+                {
+                    rect.right -= GetSystemMetrics(SM_CYCAPTION);
+                    if (pt.x > rect.right) return HTCLOSE;
+                }
 
-            /* Check maximize box */
-            /* In win95 there is automatically a Maximize button when there is a minimize one*/
-            if (min_or_max_box && !(wndPtr->dwExStyle & WS_EX_TOOLWINDOW))
-                rect.right -= GetSystemMetrics(SM_CXSIZE);
-            if (pt.x > rect.right) return HTMAXBUTTON;
+                /* Check maximize box */
+                /* In win95 there is automatically a Maximize button when there is a minimize one*/
+                if (min_or_max_box && !(ex_style & WS_EX_TOOLWINDOW))
+                {
+                    rect.right -= GetSystemMetrics(SM_CXSIZE);
+                    if (pt.x > rect.right) return HTMAXBUTTON;
+                }
 
-            /* Check minimize box */
-            /* In win95 there is automatically a Maximize button when there is a Maximize one*/
-            if (min_or_max_box && !(wndPtr->dwExStyle & WS_EX_TOOLWINDOW))
-                rect.right -= GetSystemMetrics(SM_CXSIZE);
-
-            if (pt.x > rect.right) return HTMINBUTTON;
+                /* Check minimize box */
+                if (min_or_max_box && !(ex_style & WS_EX_TOOLWINDOW))
+                {
+                    rect.right -= GetSystemMetrics(SM_CXSIZE);
+                    if (pt.x > rect.right) return HTMINBUTTON;
+                }
+            }
             return HTCAPTION;
-        }
-    }
-
-      /* Check vertical scroll bar */
-
-    if (wndPtr->dwStyle & WS_VSCROLL)
-    {
-        if((wndPtr->dwExStyle & WS_EX_LEFTSCROLLBAR) != 0)
-            rcClient.left -= GetSystemMetrics(SM_CXVSCROLL);
-        else
-            rcClient.right += GetSystemMetrics(SM_CXVSCROLL);
-        if (PtInRect( &rcClient, ptClient )) return HTVSCROLL;
-    }
-
-      /* Check horizontal scroll bar */
-
-    if (wndPtr->dwStyle & WS_HSCROLL)
-    {
-        rcClient.bottom += GetSystemMetrics(SM_CYHSCROLL);
-        if (PtInRect( &rcClient, ptClient ))
-        {
-            /* Check size box */
-            if ((wndPtr->dwStyle & WS_VSCROLL) &&
-                ((((wndPtr->dwExStyle & WS_EX_LEFTSCROLLBAR) != 0) && (ptClient.x <= rcClient.left + GetSystemMetrics(SM_CXVSCROLL))) ||
-                (((wndPtr->dwExStyle & WS_EX_LEFTSCROLLBAR) == 0) && (ptClient.x >= rcClient.right - GetSystemMetrics(SM_CXVSCROLL)))))
-                return HTSIZE;
-            return HTHSCROLL;
         }
     }
 
       /* Check menu bar */
 
-    if (HAS_MENU(wndPtr))
+    if (HAS_MENU( hwnd, style ) && (pt.y < rcClient.top) &&
+        (pt.x >= rcClient.left) && (pt.x < rcClient.right))
+        return HTMENU;
+
+      /* Check vertical scroll bar */
+
+    if (ex_style & WS_EX_LAYOUTRTL) ex_style ^= WS_EX_LEFTSCROLLBAR;
+    if (style & WS_VSCROLL)
     {
-        if ((ptClient.y < 0) && (ptClient.x >= 0) && (ptClient.x < rcClient.right))
-            return HTMENU;
+        if((ex_style & WS_EX_LEFTSCROLLBAR) != 0)
+            rcClient.left -= GetSystemMetrics(SM_CXVSCROLL);
+        else
+            rcClient.right += GetSystemMetrics(SM_CXVSCROLL);
+        if (PtInRect( &rcClient, pt )) return HTVSCROLL;
+    }
+
+      /* Check horizontal scroll bar */
+
+    if (style & WS_HSCROLL)
+    {
+        rcClient.bottom += GetSystemMetrics(SM_CYHSCROLL);
+        if (PtInRect( &rcClient, pt ))
+        {
+            /* Check size box */
+            if ((style & WS_VSCROLL) &&
+                ((((ex_style & WS_EX_LEFTSCROLLBAR) != 0) && (pt.x <= rcClient.left + GetSystemMetrics(SM_CXVSCROLL))) ||
+                (((ex_style & WS_EX_LEFTSCROLLBAR) == 0) && (pt.x >= rcClient.right - GetSystemMetrics(SM_CXVSCROLL)))))
+                return HTSIZE;
+            return HTHSCROLL;
+        }
     }
 
     /* Has to return HTNOWHERE if nothing was found
        Could happen when a window has a customized non client area */
     return HTNOWHERE;
-}
-
-
-/***********************************************************************
- * NC_HandleNCHitTest
- *
- * Handle a WM_NCHITTEST message. Called from DefWindowProc().
- */
-LRESULT NC_HandleNCHitTest (HWND hwnd , POINT pt)
-{
-    LRESULT retvalue;
-    WND *wndPtr = WIN_GetPtr( hwnd );
-
-    if (!wndPtr || wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP) return HTERROR;
-
-    retvalue = NC_DoNCHitTest (wndPtr, pt);
-    WIN_ReleasePtr( wndPtr );
-    return retvalue;
 }
 
 
@@ -706,7 +707,10 @@ BOOL NC_DrawSysButton (HWND hwnd, HDC hdc, BOOL down)
     if (hIcon)
     {
         RECT rect;
-        NC_GetInsideRect( hwnd, &rect );
+        DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+        DWORD ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
+
+        NC_GetInsideRect( hwnd, COORDS_WINDOW, &rect, style, ex_style );
         DrawIconEx (hdc, rect.left + 2, rect.top + 1, hIcon,
                     GetSystemMetrics(SM_CXSMICON),
                     GetSystemMetrics(SM_CYSMICON), 0, 0, DI_NORMAL);
@@ -728,11 +732,13 @@ BOOL NC_DrawSysButton (HWND hwnd, HDC hdc, BOOL down)
 static void NC_DrawCloseButton (HWND hwnd, HDC hdc, BOOL down, BOOL bGrayed)
 {
     RECT rect;
+    DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+    DWORD ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
 
-    NC_GetInsideRect( hwnd, &rect );
+    NC_GetInsideRect( hwnd, COORDS_WINDOW, &rect, style, ex_style );
 
     /* A tool window has a smaller Close button */
-    if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW)
+    if (ex_style & WS_EX_TOOLWINDOW)
     {
         INT iBmpHeight = 11; /* Windows does not use SM_CXSMSIZE and SM_CYSMSIZE   */
         INT iBmpWidth = 11;  /* it uses 11x11 for  the close button in tool window */
@@ -766,15 +772,16 @@ static void NC_DrawMaxButton(HWND hwnd,HDC hdc,BOOL down, BOOL bGrayed)
 {
     RECT rect;
     UINT flags;
+    DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+    DWORD ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
 
     /* never draw maximize box when window has WS_EX_TOOLWINDOW style */
-    if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW)
-        return;
+    if (ex_style & WS_EX_TOOLWINDOW) return;
 
-    flags = IsZoomed(hwnd) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX;
+    flags = (style & WS_MAXIMIZE) ? DFCS_CAPTIONRESTORE : DFCS_CAPTIONMAX;
 
-    NC_GetInsideRect( hwnd, &rect );
-    if (GetWindowLongW( hwnd, GWL_STYLE) & WS_SYSMENU)
+    NC_GetInsideRect( hwnd, COORDS_WINDOW, &rect, style, ex_style );
+    if (style & WS_SYSMENU)
         rect.right -= GetSystemMetrics(SM_CXSIZE);
     rect.left = rect.right - GetSystemMetrics(SM_CXSIZE);
     rect.bottom = rect.top + GetSystemMetrics(SM_CYSIZE) - 2;
@@ -796,12 +803,12 @@ static void  NC_DrawMinButton(HWND hwnd,HDC hdc,BOOL down, BOOL bGrayed)
     RECT rect;
     UINT flags = DFCS_CAPTIONMIN;
     DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+    DWORD ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
 
     /* never draw minimize box when window has WS_EX_TOOLWINDOW style */
-    if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_TOOLWINDOW)
-        return;
+    if (ex_style & WS_EX_TOOLWINDOW) return;
 
-    NC_GetInsideRect( hwnd, &rect );
+    NC_GetInsideRect( hwnd, COORDS_WINDOW, &rect, style, ex_style );
     if (style & WS_SYSMENU)
         rect.right -= GetSystemMetrics(SM_CXSIZE);
     if (style & (WS_MAXIMIZEBOX|WS_MINIMIZEBOX))
@@ -989,15 +996,12 @@ static void  NC_DoNCPaint( HWND  hwnd, HRGN  clip, BOOL  suppress_menupaint )
     DWORD dwStyle, dwExStyle;
     WORD flags;
     HRGN hrgn;
-    RECT rectClient, rectWindow;
-    int has_menu;
+    RECT rectClient;
 
     if (!(wndPtr = WIN_GetPtr( hwnd )) || wndPtr == WND_OTHER_PROCESS) return;
-    has_menu = HAS_MENU(wndPtr);
     dwStyle = wndPtr->dwStyle;
     dwExStyle = wndPtr->dwExStyle;
     flags = wndPtr->flags;
-    rectWindow = wndPtr->rectWindow;
     WIN_ReleasePtr( wndPtr );
 
     if ( dwStyle & WS_MINIMIZE ||
@@ -1014,8 +1018,7 @@ static void  NC_DoNCPaint( HWND  hwnd, HRGN  clip, BOOL  suppress_menupaint )
        Now, how is the "system" supposed to tell what happened?
      */
 
-    GetClientRect( hwnd, &rectClient );
-    MapWindowPoints( hwnd, 0, (POINT *)&rectClient, 2 );
+    WIN_GetRectangles( hwnd, COORDS_SCREEN, NULL, &rectClient );
     hrgn = CreateRectRgnIndirect( &rectClient );
 
     if (clip > (HRGN)1)
@@ -1030,9 +1033,7 @@ static void  NC_DoNCPaint( HWND  hwnd, HRGN  clip, BOOL  suppress_menupaint )
 
     if (!hdc) return;
 
-    rect.top = rect.left = 0;
-    rect.right  = rectWindow.right - rectWindow.left;
-    rect.bottom = rectWindow.bottom - rectWindow.top;
+    WIN_GetRectangles( hwnd, COORDS_WINDOW, &rect, NULL );
     GetClipBox( hdc, &rectClip );
 
     SelectObject( hdc, SYSCOLOR_GetPen(COLOR_WINDOWFRAME) );
@@ -1061,7 +1062,7 @@ static void  NC_DoNCPaint( HWND  hwnd, HRGN  clip, BOOL  suppress_menupaint )
             NC_DrawCaption(hdc, &r, hwnd, dwStyle, dwExStyle, active);
     }
 
-    if (has_menu)
+    if (HAS_MENU( hwnd, dwStyle ))
     {
 	RECT r = rect;
 	r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
@@ -1215,16 +1216,13 @@ void NC_GetSysPopupPos( HWND hwnd, RECT* rect )
     if (IsIconic(hwnd)) GetWindowRect( hwnd, rect );
     else
     {
-        WND *wndPtr = WIN_GetPtr( hwnd );
-        if (!wndPtr || wndPtr == WND_OTHER_PROCESS || wndPtr == WND_DESKTOP) return;
+        DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+        DWORD ex_style = GetWindowLongW( hwnd, GWL_EXSTYLE );
 
-        NC_GetInsideRect( hwnd, rect );
-        OffsetRect( rect, wndPtr->rectWindow.left, wndPtr->rectWindow.top);
-        if (wndPtr->dwStyle & WS_CHILD)
-            ClientToScreen( GetParent(hwnd), (POINT *)rect );
+        NC_GetInsideRect( hwnd, COORDS_CLIENT, rect, style, ex_style );
         rect->right = rect->left + GetSystemMetrics(SM_CYCAPTION) - 1;
         rect->bottom = rect->top + GetSystemMetrics(SM_CYCAPTION) - 1;
-        WIN_ReleasePtr( wndPtr );
+        MapWindowPoints( hwnd, 0, (POINT *)rect, 2 );
     }
 }
 
@@ -1627,7 +1625,6 @@ LRESULT NC_HandleSysCommand( HWND hwnd, WPARAM wParam, LPARAM lParam )
 BOOL WINAPI GetTitleBarInfo(HWND hwnd, PTITLEBARINFO tbi) {
     DWORD dwStyle;
     DWORD dwExStyle;
-    RECT wndRect;
 
     TRACE("(%p %p)\n", hwnd, tbi);
 
@@ -1643,13 +1640,7 @@ BOOL WINAPI GetTitleBarInfo(HWND hwnd, PTITLEBARINFO tbi) {
     }
     dwStyle = GetWindowLongW(hwnd, GWL_STYLE);
     dwExStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
-    NC_GetInsideRect(hwnd, &tbi->rcTitleBar);
-
-    GetWindowRect(hwnd, &wndRect);
-
-    tbi->rcTitleBar.top += wndRect.top;
-    tbi->rcTitleBar.left += wndRect.left;
-    tbi->rcTitleBar.right += wndRect.left;
+    NC_GetInsideRect(hwnd, COORDS_SCREEN, &tbi->rcTitleBar, dwStyle, dwExStyle);
 
     tbi->rcTitleBar.bottom = tbi->rcTitleBar.top;
     if(dwExStyle & WS_EX_TOOLWINDOW)

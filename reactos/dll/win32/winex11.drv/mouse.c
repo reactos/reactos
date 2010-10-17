@@ -32,6 +32,9 @@ static void *xcursor_handle;
 MAKE_FUNCPTR(XcursorImageCreate);
 MAKE_FUNCPTR(XcursorImageDestroy);
 MAKE_FUNCPTR(XcursorImageLoadCursor);
+MAKE_FUNCPTR(XcursorImagesCreate);
+MAKE_FUNCPTR(XcursorImagesDestroy);
+MAKE_FUNCPTR(XcursorImagesLoadCursor);
 # undef MAKE_FUNCPTR
 #endif /* SONAME_LIBXCURSOR */
 
@@ -115,33 +118,13 @@ void X11DRV_Xcursor_Init(void)
     LOAD_FUNCPTR(XcursorImageCreate);
     LOAD_FUNCPTR(XcursorImageDestroy);
     LOAD_FUNCPTR(XcursorImageLoadCursor);
+    LOAD_FUNCPTR(XcursorImagesCreate);
+    LOAD_FUNCPTR(XcursorImagesDestroy);
+    LOAD_FUNCPTR(XcursorImagesLoadCursor);
 #undef LOAD_FUNCPTR
 #endif /* SONAME_LIBXCURSOR */
 }
 
-
-/***********************************************************************
- *		get_coords
- *
- * get the coordinates of a mouse event
- */
-static inline void get_coords( HWND hwnd, Window window, int x, int y, POINT *pt )
-{
-    struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
-
-    if (!data) return;
-
-    if (window == data->client_window)
-    {
-        pt->x = x + data->client_rect.left;
-        pt->y = y + data->client_rect.top;
-    }
-    else
-    {
-        pt->x = x + data->whole_rect.left;
-        pt->y = y + data->whole_rect.top;
-    }
-}
 
 /***********************************************************************
  *		clip_point_to_rect
@@ -242,25 +225,38 @@ void set_window_cursor( HWND hwnd, HCURSOR handle )
  */
 static void update_mouse_state( HWND hwnd, Window window, int x, int y, unsigned int state, POINT *pt )
 {
-    struct x11drv_thread_data *data = x11drv_thread_data();
+    struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
 
-    get_coords( hwnd, window, x, y, pt );
+    if (!data) return;
+
+    if (window == data->whole_window)
+    {
+        x += data->whole_rect.left - data->client_rect.left;
+        y += data->whole_rect.top - data->client_rect.top;
+    }
+    pt->x = x + data->client_rect.left;
+    pt->y = y + data->client_rect.top;
 
     cursor_window = hwnd;
 
     /* update the wine server Z-order */
 
-    if (window != data->grab_window &&
+    if (window != x11drv_thread_data()->grab_window &&
         /* ignore event if a button is pressed, since the mouse is then grabbed too */
         !(state & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask|Button6Mask|Button7Mask)))
     {
+        RECT rect;
+        SetRect( &rect, x, y, x + 1, y + 1 );
+        if (GetWindowLongW( data->hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL)
+            mirror_rect( &data->client_rect, &rect );
+
         SERVER_START_REQ( update_window_zorder )
         {
             req->window      = wine_server_user_handle( hwnd );
-            req->rect.left   = pt->x;
-            req->rect.top    = pt->y;
-            req->rect.right  = pt->x + 1;
-            req->rect.bottom = pt->y + 1;
+            req->rect.left   = rect.left;
+            req->rect.top    = rect.top;
+            req->rect.right  = rect.right;
+            req->rect.bottom = rect.bottom;
             wine_server_call( req );
         }
         SERVER_END_REQ;
@@ -345,6 +341,8 @@ void X11DRV_send_mouse_input( HWND hwnd, DWORD flags, DWORD x, DWORD y,
                               DWORD data, DWORD time, DWORD extra_info, UINT injected_flags )
 {
     POINT pt;
+
+    if (!time) time = GetTickCount();
 
     if (flags & MOUSEEVENTF_MOVE && flags & MOUSEEVENTF_ABSOLUTE)
     {
@@ -469,73 +467,159 @@ void X11DRV_send_mouse_input( HWND hwnd, DWORD flags, DWORD x, DWORD y,
 #ifdef SONAME_LIBXCURSOR
 
 /***********************************************************************
- *              create_xcursor_cursor
+ *              create_xcursor_frame
  *
- * Use Xcursor to create an X cursor from a Windows one.
+ * Use Xcursor to create a frame of an X cursor from a Windows one.
  */
-static Cursor create_xcursor_cursor( HDC hdc, ICONINFO *icon, int width, int height )
+static XcursorImage *create_xcursor_frame( HDC hdc, ICONINFO *iinfo, HANDLE icon,
+                                           HBITMAP hbmColor, unsigned char *color_bits, int color_size,
+                                           HBITMAP hbmMask, unsigned char *mask_bits, int mask_size,
+                                           int width, int height, int istep )
 {
+    XcursorImage *image, *ret = NULL;
     int x, y, i, has_alpha;
-    BITMAPINFO *info;
-    Cursor cursor;
-    XcursorImage *image;
     XcursorPixel *ptr;
-
-    if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) return 0;
 
     wine_tsx11_lock();
     image = pXcursorImageCreate( width, height );
     wine_tsx11_unlock();
     if (!image)
     {
-        HeapFree( GetProcessHeap(), 0, info );
-        return 0;
+        ERR("X11 failed to produce a cursor frame!\n");
+        goto cleanup;
     }
 
-    image->xhot = icon->xHotspot;
-    image->yhot = icon->yHotspot;
-    image->delay = 0;
+    image->xhot = iinfo->xHotspot;
+    image->yhot = iinfo->yHotspot;
+    image->delay = 100; /* TODO: find a way to get the proper delay */
 
+    /* draw the cursor frame to a temporary buffer then copy it into the XcursorImage */
+    memset( color_bits, 0x00, color_size );
+    SelectObject( hdc, hbmColor );
+    if (!DrawIconEx( hdc, 0, 0, icon, width, height, istep, NULL, DI_NORMAL ))
+    {
+        TRACE("Could not draw frame %d (walk past end of frames).\n", istep);
+        goto cleanup;
+    }
+    memcpy( image->pixels, color_bits, color_size );
+
+    /* check if the cursor frame was drawn with an alpha channel */
+    for (i = 0, ptr = image->pixels; i < width * height; i++, ptr++)
+        if ((has_alpha = (*ptr & 0xff000000) != 0)) break;
+
+    /* if no alpha channel was drawn then generate it from the mask */
+    if (!has_alpha)
+    {
+        unsigned int width_bytes = (width + 31) / 32 * 4;
+
+        /* draw the cursor mask to a temporary buffer */
+        memset( mask_bits, 0xFF, mask_size );
+        SelectObject( hdc, hbmMask );
+        if (!DrawIconEx( hdc, 0, 0, icon, width, height, istep, NULL, DI_MASK ))
+        {
+            ERR("Failed to draw frame mask %d.\n", istep);
+            goto cleanup;
+        }
+        /* use the buffer to directly modify the XcursorImage alpha channel */
+        for (y = 0, ptr = image->pixels; y < height; y++)
+            for (x = 0; x < width; x++, ptr++)
+                if (!((mask_bits[y * width_bytes + x / 8] << (x % 8)) & 0x80))
+                    *ptr |= 0xff000000;
+    }
+    ret = image;
+
+cleanup:
+    if (ret == NULL) pXcursorImageDestroy( image );
+    return ret;
+}
+
+/***********************************************************************
+ *              create_xcursor_cursor
+ *
+ * Use Xcursor to create an X cursor from a Windows one.
+ */
+static Cursor create_xcursor_cursor( HDC hdc, ICONINFO *iinfo, HANDLE icon, int width, int height )
+{
+    unsigned char *color_bits, *mask_bits;
+    HBITMAP hbmColor = 0, hbmMask = 0;
+    XcursorImage **imgs, *image;
+    int color_size, mask_size;
+    BITMAPINFO *info = NULL;
+    XcursorImages *images;
+    Cursor cursor = 0;
+    int nFrames = 0;
+
+    if (!(imgs = HeapAlloc( GetProcessHeap(), 0, sizeof(XcursorImage*) ))) return 0;
+
+    /* Allocate all of the resources necessary to obtain a cursor frame */
+    if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) goto cleanup;
     info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     info->bmiHeader.biWidth = width;
     info->bmiHeader.biHeight = -height;
     info->bmiHeader.biPlanes = 1;
-    info->bmiHeader.biBitCount = 32;
     info->bmiHeader.biCompression = BI_RGB;
-    info->bmiHeader.biSizeImage = width * height * 4;
     info->bmiHeader.biXPelsPerMeter = 0;
     info->bmiHeader.biYPelsPerMeter = 0;
     info->bmiHeader.biClrUsed = 0;
     info->bmiHeader.biClrImportant = 0;
-    GetDIBits( hdc, icon->hbmColor, 0, height, image->pixels, info, DIB_RGB_COLORS );
-
-    for (i = 0, ptr = image->pixels; i < width * height; i++, ptr++)
-        if ((has_alpha = (*ptr & 0xff000000) != 0)) break;
-
-    if (!has_alpha)
+    info->bmiHeader.biBitCount = 32;
+    color_size = width * height * 4;
+    info->bmiHeader.biSizeImage = color_size;
+    hbmColor = CreateDIBSection( hdc, info, DIB_RGB_COLORS, (VOID **) &color_bits, NULL, 0);
+    if (!hbmColor)
     {
-        unsigned char *mask_bits;
-        unsigned int width_bytes = (width + 31) / 32 * 4;
-
-        /* generate alpha channel from the mask */
-        info->bmiHeader.biBitCount = 1;
-        info->bmiHeader.biSizeImage = width_bytes * height;
-        if ((mask_bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage )))
-        {
-            GetDIBits( hdc, icon->hbmMask, 0, height, mask_bits, info, DIB_RGB_COLORS );
-            for (y = 0, ptr = image->pixels; y < height; y++)
-                for (x = 0; x < width; x++, ptr++)
-                    if (!((mask_bits[y * width_bytes + x / 8] << (x % 8)) & 0x80))
-                        *ptr |= 0xff000000;
-            HeapFree( GetProcessHeap(), 0, mask_bits );
-        }
+        ERR("Failed to create DIB section for cursor color data!\n");
+        goto cleanup;
     }
-    HeapFree( GetProcessHeap(), 0, info );
+    info->bmiHeader.biBitCount = 1;
+    mask_size = ((width + 31) / 32 * 4) * height; /* width_bytes * height */
+    info->bmiHeader.biSizeImage = mask_size;
+    hbmMask = CreateDIBSection( hdc, info, DIB_RGB_COLORS, (VOID **) &mask_bits, NULL, 0);
+    if (!hbmMask)
+    {
+        ERR("Failed to create DIB section for cursor mask data!\n");
+        goto cleanup;
+    }
 
+    /* Create an XcursorImage for each frame of the cursor */
+    while (1)
+    {
+        XcursorImage **imgstmp;
+
+        image = create_xcursor_frame( hdc, iinfo, icon,
+                                      hbmColor, color_bits, color_size,
+                                      hbmMask, mask_bits, mask_size,
+                                      width, height, nFrames );
+        if (!image) break; /* no more drawable frames */
+
+        imgs[nFrames++] = image;
+        if (!(imgstmp = HeapReAlloc( GetProcessHeap(), 0, imgs, (nFrames+1)*sizeof(XcursorImage*) ))) goto cleanup;
+        imgs = imgstmp;
+    }
+
+    /* Build an X cursor out of all of the frames */
+    if (!(images = pXcursorImagesCreate( nFrames ))) goto cleanup;
+    for (images->nimage = 0; images->nimage < nFrames; images->nimage++)
+        images->images[images->nimage] = imgs[images->nimage];
     wine_tsx11_lock();
-    cursor = pXcursorImageLoadCursor( gdi_display, image );
-    pXcursorImageDestroy( image );
+    cursor = pXcursorImagesLoadCursor( gdi_display, images );
     wine_tsx11_unlock();
+    pXcursorImagesDestroy( images ); /* Note: this frees each individual frame (calls XcursorImageDestroy) */
+    HeapFree( GetProcessHeap(), 0, imgs );
+    imgs = NULL;
+
+cleanup:
+    if (imgs)
+    {
+        /* Failed to produce a cursor, free previously allocated frames */
+        for (nFrames--; nFrames >= 0; nFrames--)
+            pXcursorImageDestroy( imgs[nFrames] );
+        HeapFree( GetProcessHeap(), 0, imgs );
+    }
+    /* Cleanup all of the resources used to obtain the frame data */
+    if (hbmColor) DeleteObject( hbmColor );
+    if (hbmMask) DeleteObject( hbmMask );
+    HeapFree( GetProcessHeap(), 0, info );
     return cursor;
 }
 
@@ -773,7 +857,7 @@ static Cursor create_cursor( HANDLE handle )
     if (info.hbmColor)
     {
 #ifdef SONAME_LIBXCURSOR
-        if (pXcursorImageLoadCursor) cursor = create_xcursor_cursor( hdc, &info, bm.bmWidth, bm.bmHeight );
+        if (pXcursorImagesLoadCursor) cursor = create_xcursor_cursor( hdc, &info, handle, bm.bmWidth, bm.bmHeight );
 #endif
         if (!cursor) cursor = create_xlib_cursor( hdc, &info, bm.bmWidth, bm.bmHeight );
         DeleteObject( info.hbmColor );

@@ -207,9 +207,9 @@ static int resolveParagraphs(WORD *types, int cch)
 
     Breaks a paragraph into lines
 
-    Input:  Character count
+    Input:  Array of line break flags
+            Character count
     In/Out: Array of characters
-            Array of line break flags
 
     Returns the count of characters on the first line
 
@@ -218,7 +218,7 @@ static int resolveParagraphs(WORD *types, int cch)
     occurs after the character in pszInput[n]. Breaks before the first
     character are not allowed.
 ------------------------------------------------------------------------*/
-static int resolveLines(LPCWSTR pszInput, BOOL * pbrk, int cch)
+static int resolveLines(LPCWSTR pszInput, const BOOL * pbrk, int cch)
 {
     /* skip characters not of type LS */
     int ich = 0;
@@ -298,14 +298,14 @@ static void resolveWhitespace(int baselevel, const WORD *pcls, BYTE *plevel, int
     Implements the Line-by-Line phases of the Unicode Bidi Algorithm
 
       Input:     Count of characters
+                 Array of character directions
 
     Inp/Out: Input text
-             Array of character directions
              Array of levels
 
 ------------------------------------------------------------------------*/
-static void BidiLines(int baselevel, LPWSTR pszOutLine, LPCWSTR pszLine, WORD * pclsLine,
-                      BYTE * plevelLine, int cchPara, BOOL * pbrk)
+static void BidiLines(int baselevel, LPWSTR pszOutLine, LPCWSTR pszLine, const WORD * pclsLine,
+                      BYTE * plevelLine, int cchPara, const BOOL * pbrk)
 {
     int cchLine = 0;
     int done = 0;
@@ -330,7 +330,7 @@ static void BidiLines(int baselevel, LPWSTR pszOutLine, LPCWSTR pszLine, WORD * 
         {
             int i;
             /* reorder each line in place */
-            ScriptLayout(cchLine, plevelLine, run, NULL);
+            ScriptLayout(cchLine, plevelLine, NULL, run);
             for (i = 0; i < cchLine; i++)
                 pszOutLine[done+run[i]] = pszLine[i];
         }
@@ -599,7 +599,7 @@ BOOL BIDI_Reorder(
             for (j = 0; j < nItems; j++)
                 runOrder[j] = pItems[j].a.s.uBidiLevel;
 
-            ScriptLayout(nItems, runOrder, NULL, visOrder);
+            ScriptLayout(nItems, runOrder, visOrder, NULL);
 
             for (j = 0; j < nItems; j++)
             {
@@ -631,7 +631,10 @@ BOOL BIDI_Reorder(
                 }
                 if (res)
                 {
-                    FIXME("Unable to shape string (%x)\n",res);
+                    if (res == USP_E_SCRIPT_NOT_IN_FONT)
+                        TRACE("Unable to shape with currently selected font\n");
+                    else
+                        FIXME("Unable to shape string (%x)\n",res);
                     j = nItems;
                     doGlyphs = FALSE;
                     HeapFree(GetProcessHeap(), 0, *lpGlyphs);

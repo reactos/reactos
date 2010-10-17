@@ -126,7 +126,7 @@ typedef union
 
 enum cpu_type
 {
-    CPU_x86, CPU_x86_64, CPU_ALPHA, CPU_POWERPC, CPU_SPARC
+    CPU_x86, CPU_x86_64, CPU_ALPHA, CPU_POWERPC, CPU_ARM, CPU_SPARC
 };
 typedef int cpu_type_t;
 
@@ -143,6 +143,7 @@ typedef struct
         struct { unsigned __int64 fir;
                  unsigned int psr, __pad; } alpha_regs;
         struct { unsigned int iar, msr, ctr, lr, dar, dsisr, trap, __pad; } powerpc_regs;
+        struct { unsigned int sp, lr, pc, cpsr; } arm_regs;
         struct { unsigned int psr, pc, npc, y, wim, tbr; } sparc_regs;
     } ctl;
     union
@@ -153,6 +154,7 @@ typedef struct
         struct { unsigned __int64 v0, t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12,
                                   s0, s1, s2, s3, s4, s5, s6, a0, a1, a2, a3, a4, a5, at; } alpha_regs;
         struct { unsigned int gpr[32], cr, xer; } powerpc_regs;
+        struct { unsigned int r[13]; } arm_regs;
         struct { unsigned int g[8], o[8], l[8], i[8]; } sparc_regs;
     } integer;
     union
@@ -1239,7 +1241,7 @@ struct get_handle_fd_reply
 {
     struct reply_header __header;
     int          type;
-    int          removable;
+    int          cacheable;
     unsigned int access;
     unsigned int options;
 };
@@ -1341,6 +1343,20 @@ struct accept_socket_reply
 
 
 
+struct accept_into_socket_request
+{
+    struct request_header __header;
+    obj_handle_t lhandle;
+    obj_handle_t ahandle;
+    char __pad_20[4];
+};
+struct accept_into_socket_reply
+{
+    struct reply_header __header;
+};
+
+
+
 struct set_socket_event_request
 {
     struct request_header __header;
@@ -1409,6 +1425,8 @@ struct alloc_console_request
     unsigned int access;
     unsigned int attributes;
     process_id_t pid;
+    int          input_fd;
+    char __pad_28[4];
 };
 struct alloc_console_reply
 {
@@ -1529,7 +1547,7 @@ struct get_console_mode_reply
 {
     struct reply_header __header;
     int          mode;
-    char __pad_12[4];
+    int          is_bare;
 };
 
 
@@ -1635,7 +1653,7 @@ struct create_console_output_request
     unsigned int access;
     unsigned int attributes;
     unsigned int share;
-    char __pad_28[4];
+    int          fd;
 };
 struct create_console_output_reply
 {
@@ -3249,6 +3267,8 @@ struct get_window_rectangles_request
 {
     struct request_header __header;
     user_handle_t  handle;
+    int            relative;
+    char __pad_20[4];
 };
 struct get_window_rectangles_reply
 {
@@ -3256,6 +3276,13 @@ struct get_window_rectangles_reply
     rectangle_t    window;
     rectangle_t    visible;
     rectangle_t    client;
+};
+enum coords_relative
+{
+    COORDS_CLIENT,
+    COORDS_WINDOW,
+    COORDS_PARENT,
+    COORDS_SCREEN
 };
 
 
@@ -3298,6 +3325,8 @@ struct get_windows_offset_reply
     struct reply_header __header;
     int            x;
     int            y;
+    int            mirror;
+    char __pad_20[4];
 };
 
 
@@ -4396,7 +4425,9 @@ struct query_symlink_request
 struct query_symlink_reply
 {
     struct reply_header __header;
+    data_size_t    total;
     /* VARARG(target_name,unicode_str); */
+    char __pad_12[4];
 };
 
 
@@ -4790,6 +4821,7 @@ enum request
     REQ_unlock_file,
     REQ_create_socket,
     REQ_accept_socket,
+    REQ_accept_into_socket,
     REQ_set_socket_event,
     REQ_get_socket_event,
     REQ_enable_socket_event,
@@ -5039,6 +5071,7 @@ union generic_request
     struct unlock_file_request unlock_file_request;
     struct create_socket_request create_socket_request;
     struct accept_socket_request accept_socket_request;
+    struct accept_into_socket_request accept_into_socket_request;
     struct set_socket_event_request set_socket_event_request;
     struct get_socket_event_request get_socket_event_request;
     struct enable_socket_event_request enable_socket_event_request;
@@ -5286,6 +5319,7 @@ union generic_reply
     struct unlock_file_reply unlock_file_reply;
     struct create_socket_reply create_socket_reply;
     struct accept_socket_reply accept_socket_reply;
+    struct accept_into_socket_reply accept_into_socket_reply;
     struct set_socket_event_reply set_socket_event_reply;
     struct get_socket_event_reply get_socket_event_reply;
     struct enable_socket_event_reply enable_socket_event_reply;
@@ -5486,6 +5520,6 @@ union generic_reply
     struct set_cursor_reply set_cursor_reply;
 };
 
-#define SERVER_PROTOCOL_VERSION 401
+#define SERVER_PROTOCOL_VERSION 410
 
 #endif /* __WINE_WINE_SERVER_PROTOCOL_H */

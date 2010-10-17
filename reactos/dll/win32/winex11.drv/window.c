@@ -431,6 +431,10 @@ static void sync_window_cursor( struct x11drv_win_data *data )
     SERVER_END_REQ;
 
     set_window_cursor( data->hwnd, cursor );
+
+    /* setting the cursor can fail if the window isn't created yet */
+    /* so make sure that we try again once we receive a mouse event */
+    data->cursor = (HANDLE)~0u;
 }
 
 
@@ -475,8 +479,10 @@ static void sync_window_region( Display *display, struct x11drv_win_data *data, 
     }
     else
     {
-        RGNDATA *pRegionData = X11DRV_GetRegionData( hrgn, 0 );
-        if (pRegionData)
+        RGNDATA *pRegionData;
+
+        if (GetWindowLongW( data->hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL) MirrorRgn( data->hwnd, hrgn );
+        if ((pRegionData = X11DRV_GetRegionData( hrgn, 0 )))
         {
             wine_tsx11_lock();
             XShapeCombineRectangles( display, data->whole_window, ShapeBounding,
@@ -1616,6 +1622,8 @@ static void move_window_bits( struct x11drv_win_data *data, const RECT *old_rect
         hdc_src = hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE );
     }
 
+    ExcludeUpdateRgn( hdc_dst, data->hwnd );
+
     code = X11DRV_START_EXPOSURES;
     ExtEscape( hdc_dst, X11DRV_ESCAPE, sizeof(code), (LPSTR)&code, 0, NULL );
 
@@ -1931,9 +1939,10 @@ BOOL CDECL X11DRV_CreateDesktopWindow( HWND hwnd )
     SERVER_START_REQ( get_window_rectangles )
     {
         req->handle = wine_server_user_handle( hwnd );
+        req->relative = COORDS_CLIENT;
         wine_server_call( req );
-        width  = reply->window.right - reply->window.left;
-        height = reply->window.bottom - reply->window.top;
+        width  = reply->window.right;
+        height = reply->window.bottom;
     }
     SERVER_END_REQ;
 
@@ -2339,7 +2348,7 @@ void CDECL X11DRV_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             !memcmp( &valid_rects[0], &data->client_rect, sizeof(RECT) ))
         {
             /* if we have an X window the bits will be moved by the X server */
-            if (!data->whole_window)
+            if (!data->whole_window && (x_offset != 0 || y_offset != 0))
                 move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
         }
         else

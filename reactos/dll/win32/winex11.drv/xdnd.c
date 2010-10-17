@@ -29,6 +29,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#define NONAMELESSUNION
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -282,6 +284,8 @@ void X11DRV_XDND_PositionEvent( HWND hWnd, XClientMessageEvent *event )
 
     XDNDxy.x = event->data.l[2] >> 16;
     XDNDxy.y = event->data.l[2] & 0xFFFF;
+    XDNDxy.x += virtual_screen_rect.left;
+    XDNDxy.y += virtual_screen_rect.top;
     targetWindow = WindowFromPoint(XDNDxy);
 
     pointl.x = XDNDxy.x;
@@ -996,10 +1000,10 @@ static HRESULT WINAPI XDNDDATAOBJECT_GetData(IDataObject *dataObject,
             if (current->cf_win == formatEtc->cfFormat)
             {
                 pMedium->tymed = TYMED_HGLOBAL;
-                pMedium->hGlobal = HeapAlloc(GetProcessHeap(), 0, current->size);
-                if (pMedium->hGlobal == NULL)
+                pMedium->u.hGlobal = HeapAlloc(GetProcessHeap(), 0, current->size);
+                if (pMedium->u.hGlobal == NULL)
                     return E_OUTOFMEMORY;
-                memcpy(pMedium->hGlobal, current->data, current->size);
+                memcpy(pMedium->u.hGlobal, current->data, current->size);
                 pMedium->pUnkForRelease = 0;
                 return S_OK;
             }

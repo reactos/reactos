@@ -637,6 +637,7 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
 #define MAX_LARGE_HANDLES ((GDI_HEAP_SIZE >> 2) - FIRST_LARGE_HANDLE)
 static GDIOBJHDR *large_handles[MAX_LARGE_HANDLES];
 static int next_large_handle;
+static LONG debug_count;
 
 static const char *gdi_obj_type( unsigned type )
 {
@@ -714,6 +715,9 @@ HGDIOBJ alloc_gdi_handle( GDIOBJHDR *obj, WORD type, const struct gdi_obj_funcs 
     large_handles[i] = obj;
     next_large_handle = i;
     LeaveCriticalSection( &gdi_section );
+    TRACE( "allocated %s %p %u/%u\n",
+           gdi_obj_type(type), (HGDIOBJ)(ULONG_PTR)((i + FIRST_LARGE_HANDLE) << 2),
+           InterlockedIncrement( &debug_count ), MAX_LARGE_HANDLES );
     return (HGDIOBJ)(ULONG_PTR)((i + FIRST_LARGE_HANDLE) << 2);
 }
 
@@ -738,6 +742,8 @@ void *free_gdi_handle( HGDIOBJ handle )
     }
     if (object)
     {
+        TRACE( "freed %s %p %u/%u\n", gdi_obj_type( object->type ), handle,
+               InterlockedDecrement( &debug_count ) + 1, MAX_LARGE_HANDLES );
         object->type  = 0;  /* mark it as invalid */
         object->funcs = NULL;
     }
@@ -771,7 +777,6 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
         LeaveCriticalSection( &gdi_section );
         WARN( "Invalid handle %p\n", handle );
     }
-    else TRACE("(%p): enter %d\n", handle, gdi_section.RecursionCount);
 
     return ptr;
 }
@@ -783,7 +788,6 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
  */
 void GDI_ReleaseObj( HGDIOBJ handle )
 {
-    TRACE("(%p): leave %d\n", handle, gdi_section.RecursionCount);
     LeaveCriticalSection( &gdi_section );
 }
 

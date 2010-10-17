@@ -38,7 +38,6 @@ Win32kProcessCallout(PEPROCESS Process,
 {
     PPROCESSINFO Win32Process;
     NTSTATUS Status;
-    struct handle_table *handles;
 
     DPRINT("Enter Win32kProcessCallback\n");
 
@@ -86,9 +85,7 @@ Win32kProcessCallout(PEPROCESS Process,
         UserEnterExclusive();
 
         /* Delete its handles table */
-        handles = Win32Process->handles;
-        Win32Process->handles = NULL;
-        if (handles) release_object(handles);
+        close_process_handles(Win32Process);
 
         /* Destroy its classes */
         destroy_process_classes(Win32Process);

@@ -4029,4 +4029,4 @@ XVisualInfo *visual_from_fbconfig_id( XID fbconfig_id )
     return NULL;
 }
 
-#endif /* defined(HAVE_OPENGL) */
+#endif /* defined(SONAME_LIBGL) */

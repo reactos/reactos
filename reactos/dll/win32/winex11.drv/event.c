@@ -732,22 +732,22 @@ static void X11DRV_Expose( HWND hwnd, XEvent *xev )
 
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
 
+    rect.left   = event->x;
+    rect.top    = event->y;
+    rect.right  = event->x + event->width;
+    rect.bottom = event->y + event->height;
     if (event->window == data->whole_window)
     {
-        rect.left = data->whole_rect.left + event->x;
-        rect.top  = data->whole_rect.top + event->y;
+        OffsetRect( &rect, data->whole_rect.left - data->client_rect.left,
+                    data->whole_rect.top - data->client_rect.top );
         flags |= RDW_FRAME;
     }
-    else
-    {
-        rect.left = data->client_rect.left + event->x;
-        rect.top  = data->client_rect.top + event->y;
-    }
-    rect.right  = rect.left + event->width;
-    rect.bottom = rect.top + event->height;
 
     if (event->window != root_window)
     {
+        if (GetWindowLongW( data->hwnd, GWL_EXSTYLE ) & WS_EX_LAYOUTRTL)
+            mirror_rect( &data->client_rect, &rect );
+
         SERVER_START_REQ( update_window_zorder )
         {
             req->window      = wine_server_user_handle( hwnd );
@@ -759,8 +759,6 @@ static void X11DRV_Expose( HWND hwnd, XEvent *xev )
         }
         SERVER_END_REQ;
 
-        /* make position relative to client area instead of parent */
-        OffsetRect( &rect, -data->client_rect.left, -data->client_rect.top );
         flags |= RDW_ALLCHILDREN;
     }
 

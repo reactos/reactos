@@ -318,7 +318,7 @@ HFONT WINAPI CreateFontIndirectExA( const ENUMLOGFONTEXDVA *penumexA )
 }
 
 /***********************************************************************
- *           CreateFontIndirectExA   (GDI32.@)
+ *           CreateFontIndirectExW   (GDI32.@)
  */
 HFONT WINAPI CreateFontIndirectExW( const ENUMLOGFONTEXDVW *penumex )
 {

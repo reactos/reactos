@@ -753,19 +753,6 @@ static void CBPaintText(
 	    !(lphc->wState & CBF_DROPPED) )
 	   itemState |= ODS_SELECTED | ODS_FOCUS;
 
-       /*
-	* Save the current clip region.
-	* To retrieve the clip region, we need to create one "dummy"
-	* clip region.
-	*/
-       clipRegion = CreateRectRgnIndirect(&rectEdit);
-
-       if (GetClipRgn(hdc, clipRegion)!=1)
-       {
-	 DeleteObject(clipRegion);
-	 clipRegion=NULL;
-       }
-
        if (!IsWindowEnabled(lphc->self)) itemState |= ODS_DISABLED;
 
        dis.CtlType	= ODT_COMBOBOX;
@@ -781,16 +768,12 @@ static void CBPaintText(
        /*
 	* Clip the DC and have the parent draw the item.
 	*/
-       IntersectClipRect(hdc,
-			 rectEdit.left,  rectEdit.top,
-			 rectEdit.right, rectEdit.bottom);
+       clipRegion = set_control_clipping( hdc, &rectEdit );
 
        SendMessageW(lphc->owner, WM_DRAWITEM, ctlid, (LPARAM)&dis );
 
-       /*
-	* Reset the clipping region.
-	*/
-       SelectClipRgn(hdc, clipRegion);
+       SelectClipRgn( hdc, clipRegion );
+       if (clipRegion) DeleteObject( clipRegion );
      }
      else
      {

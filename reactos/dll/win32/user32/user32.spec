@@ -290,6 +290,8 @@
 @ stdcall GetGUIThreadInfo(long ptr)
 @ stdcall GetGuiResources(long long)
 @ stdcall GetIconInfo(long ptr)
+@ stdcall GetIconInfoExA(long ptr)
+@ stdcall GetIconInfoExW(long ptr)
 @ stub GetInputDesktop
 @ stdcall GetInputState()
 @ stdcall GetInternalWindowPos(long ptr ptr)

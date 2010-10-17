@@ -26,6 +26,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "user_private.h"
+#include "controls.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -111,6 +112,32 @@ static const signed char LTRBInnerFlat[] = {
 /* last COLOR id */
 #define COLOR_MAX   COLOR_MENUBAR
 
+
+/***********************************************************************
+ *           set_control_clipping
+ *
+ * Set clipping for a builtin control that uses CS_PARENTDC.
+ * Return the previous clip region if any.
+ */
+HRGN set_control_clipping( HDC hdc, const RECT *rect )
+{
+    RECT rc = *rect;
+    HRGN hrgn = CreateRectRgn( 0, 0, 0, 0 );
+
+    if (GetClipRgn( hdc, hrgn ) != 1)
+    {
+        DeleteObject( hrgn );
+        hrgn = 0;
+    }
+    DPtoLP( hdc, (POINT *)&rc, 2 );
+    if (GetLayout( hdc ) & LAYOUT_RTL)  /* compensate for the shifting done by IntersectClipRect */
+    {
+        rc.left++;
+        rc.right++;
+    }
+    IntersectClipRect( hdc, rc.left, rc.top, rc.right, rc.bottom );
+    return hrgn;
+}
 
 /***********************************************************************
  *           UITOOLS_DrawDiagEdge
@@ -912,7 +939,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 
     UITOOLS95_DFC_ButtonPush(dc, r, uFlags & 0xff00);
 
-    switch(uFlags & 0xff)
+    switch(uFlags & 0xf)
     {
     case DFCS_CAPTIONCLOSE:     str[0] = 0x72; break;
     case DFCS_CAPTIONHELP:      str[0] = 0x73; break;
@@ -1210,10 +1237,6 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 BOOL WINAPI DrawFrameControl( HDC hdc, LPRECT rc, UINT uType,
                                   UINT uState )
 {
-    /* Win95 doesn't support drawing in other mapping modes */
-    if(GetMapMode(hdc) != MM_TEXT)
-        return FALSE;
-
     switch(uType)
     {
     case DFC_BUTTON:
