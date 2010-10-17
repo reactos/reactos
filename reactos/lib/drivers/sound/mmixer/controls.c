@@ -772,6 +772,47 @@ MMixerAddMixerControlsToDestinationLine(
     return Status;
 }
 
+VOID
+MMixerApplyOutputFilterHack(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_DATA MixerData,
+    IN OUT PULONG PinsCount,
+    IN OUT PULONG Pins)
+{
+    ULONG Count = 0, Index;
+    MIXER_STATUS Status;
+    PKSPIN_PHYSICALCONNECTION Connection;
+
+    for(Index = 0; Index < *PinsCount; Index++)
+    {
+        /* check if it has a physical connection */
+        Status = MMixerGetPhysicalConnection(MixerContext, MixerData->hDevice, Pins[Index], &Connection);
+
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* remove pin */
+            MixerContext->Copy(&Pins[Index], &Pins[Index + 1], (*PinsCount - (Index + 1)) * sizeof(ULONG));
+
+            /* free physical connection */
+            MixerContext->Free(Connection);
+
+            /* decrement index */
+            Index--;
+
+            /* decrement pin count */
+            (*PinsCount)--;
+        }
+        else
+        {
+            /* simple pin */
+            Count++;
+        }
+    }
+
+    /* store result */
+    *PinsCount = Count;
+}
+
 MIXER_STATUS
 MMixerHandlePhysicalConnection(
     IN PMIXER_CONTEXT MixerContext,
@@ -797,7 +838,7 @@ MMixerHandlePhysicalConnection(
          return MM_STATUS_UNSUCCESSFUL;
      }
 
-     DPRINT("Name %S, Pin %lu bInput %lu\n", OutConnection->SymbolicLinkName, OutConnection->Pin, bInput);
+    DPRINT("Name %S, Pin %lu bInput %lu\n", OutConnection->SymbolicLinkName, OutConnection->Pin, bInput);
 
     /* store connected mixer handle */
     MixerInfo->hMixer = MixerData->hDevice;
@@ -832,10 +873,16 @@ MMixerHandlePhysicalConnection(
             /* return error code */
             return Status;
         }
+        /* HACK:
+         * some topologies do not have strict boundaries
+         * WorkArround: remove all pin ids which have a physical connection
+         * because bridge pins may belong to different render paths
+         */
+        MMixerApplyOutputFilterHack(MixerContext, MixerData, &PinsCount, Pins);
 
         /* sanity checks */
         ASSERT(PinsCount != 0);
-        //ASSERT(PinsCount == 1);
+        ASSERT(PinsCount == 1);
 
         /* create destination line */
         Status = MMixerBuildMixerDestinationLine(MixerContext, MixerInfo, Pins[0], bInput);
