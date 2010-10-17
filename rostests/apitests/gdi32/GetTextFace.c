@@ -9,8 +9,8 @@
 #include <wine/test.h>
 #include <windows.h>
 
-#define TEST(x) ok(x, #x)
-#define RTEST(x) ok(x, #x)
+#define TEST(x) ok(x, #x"\n")
+#define RTEST(x) ok(x, #x"\n")
 
 void Test_GetTextFace()
 {

@@ -9,8 +9,8 @@
 #include <wine/test.h>
 #include <windows.h>
 
-#define TEST(x) ok(x, #x)
-#define RTEST(x) ok(x, #x)
+#define TEST(x) ok(x, #x"\n")
+#define RTEST(x) ok(x, #x"\n")
 
 void Test_SetWindowExtEx()
 {
@@ -101,7 +101,7 @@ void Test_SetWindowExtEx()
     //TEST(WindowExt.cy == 2700);
 
     /* Values should be changed */
-    ret = SetWindowExtEx(hDC, 
+    ret = SetWindowExtEx(hDC,
                          4 * GetDeviceCaps(GetDC(0), HORZRES),
                          -4 * GetDeviceCaps(GetDC(0), VERTRES),
                          &WindowExt);
