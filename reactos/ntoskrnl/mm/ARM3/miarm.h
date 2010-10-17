@@ -1205,6 +1205,21 @@ MiMakeProtectionMask(
     IN ULONG Protect
 );
 
+VOID
+NTAPI
+MiDeleteVirtualAddresses(
+    IN ULONG_PTR Va,
+    IN ULONG_PTR EndingAddress,
+    IN PMMVAD Vad
+);
+
+ULONG
+NTAPI
+MiMakeSystemAddressValid(
+    IN PVOID PageTableVirtualAddress,
+    IN PEPROCESS CurrentProcess
+);
+                         
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of

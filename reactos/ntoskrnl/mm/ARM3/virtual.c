@@ -29,6 +29,45 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+ULONG
+NTAPI
+MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
+                         IN PEPROCESS CurrentProcess)
+{
+    NTSTATUS Status;
+    BOOLEAN LockChange = FALSE;
+
+    /* Must be a non-pool page table, since those are double-mapped already */
+    ASSERT(PageTableVirtualAddress > MM_HIGHEST_USER_ADDRESS);
+    ASSERT((PageTableVirtualAddress < MmPagedPoolStart) ||
+           (PageTableVirtualAddress > MmPagedPoolEnd));
+    
+    /* Working set lock or PFN lock should be held */
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+
+    /* Check if the page table is valid */
+    while (!MmIsAddressValid(PageTableVirtualAddress))
+    {
+        /* Fault it in */
+        Status = MmAccessFault(FALSE, PageTableVirtualAddress, KernelMode, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* This should not fail */
+            KeBugCheckEx(KERNEL_DATA_INPAGE_ERROR,
+                         1,
+                         Status,
+                         (ULONG_PTR)CurrentProcess,
+                         (ULONG_PTR)PageTableVirtualAddress);
+        }
+
+        /* This flag will be useful later when we do better locking */
+        LockChange = TRUE;
+    }
+
+    /* Let caller know what the lock state is */
+    return LockChange;
+}
+
 PFN_NUMBER
 NTAPI
 MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
@@ -124,6 +163,167 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
     
     /* Done */
     return ActualPages;
+}
+
+VOID
+NTAPI
+MiDeletePte(IN PMMPTE PointerPte,
+            IN PVOID VirtualAddress,
+            IN PEPROCESS CurrentProcess)
+{
+    PMMPFN Pfn1;
+    MMPTE PteContents;
+    PFN_NUMBER PageFrameIndex;
+
+    /* PFN lock must be held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* Capture the PTE */
+    PteContents = *PointerPte;
+
+    /* We only support valid PTEs for now */
+    ASSERT(PteContents.u.Hard.Valid == 1);
+    ASSERT(PteContents.u.Soft.Prototype == 0);
+    ASSERT(PteContents.u.Soft.Transition == 0);
+
+    /* Get the PFN entry */
+    PageFrameIndex = PFN_FROM_PTE(&PteContents);
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+
+    /* We don't support deleting prototype PTEs for now */
+    ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+
+    /* Make sure the saved PTE address is valid */
+    if ((PMMPTE)((ULONG_PTR)Pfn1->PteAddress & ~0x1) != PointerPte)
+    {
+        /* The PFN entry is illegal, or invalid */
+        KeBugCheckEx(MEMORY_MANAGEMENT,
+                     0x401, 
+                     (ULONG_PTR)PointerPte,
+                     PointerPte->u.Long,
+                     (ULONG_PTR)Pfn1->PteAddress);
+    }
+
+    /* There should only be 1 shared reference count */
+    ASSERT(Pfn1->u2.ShareCount == 1);
+    
+    /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
+    //MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+
+    /* Mark the PFN for deletion and dereference what should be the last ref */
+    MI_SET_PFN_DELETED(Pfn1);
+    MiDecrementShareCount(Pfn1, PageFrameIndex);
+    
+    /* We should eventually do this */
+    //CurrentProcess->NumberOfPrivatePages--;
+
+    /* Destroy the PTE and flush the TLB */
+    PointerPte->u.Long = 0;
+    KeFlushCurrentTb();
+}
+
+VOID
+NTAPI
+MiDeleteVirtualAddresses(IN ULONG_PTR Va,
+                         IN ULONG_PTR EndingAddress,
+                         IN PMMVAD Vad)
+{
+    PMMPTE PointerPte, PointerPde;
+    MMPTE TempPte;
+    PEPROCESS CurrentProcess;
+    KIRQL OldIrql;
+
+    /* Grab the process and PTE/PDE for the address being deleted */
+    CurrentProcess = PsGetCurrentProcess();
+    PointerPde = MiAddressToPde(Va);
+    PointerPte = MiAddressToPte(Va);
+
+    /* We usually only get a VAD when it's not a VM address */
+    if (Vad)
+    {
+        /* At process deletion, we may get a VAD, but it should be a VM VAD */
+        ASSERT(Vad->u.VadFlags.PrivateMemory);
+        ASSERT(Vad->FirstPrototypePte == NULL);
+        
+        /* Get out if this is a fake VAD, RosMm will free the marea pages */
+        if (Vad->u.VadFlags.Spare == 1) return;
+    }
+    
+    /* In all cases, we don't support fork() yet */
+    ASSERT(CurrentProcess->CloneRoot == NULL);
+
+    /* Loop the PTE for each VA */
+    while (TRUE)
+    {
+        /* First keep going until we find a valid PDE */
+        while (PointerPde->u.Long == 0)
+        {
+            /* Still no valid PDE, try the next 4MB (or whatever) */
+            PointerPde++;
+            
+            /* Update the PTE on this new boundary */
+            PointerPte = MiPteToAddress(PointerPde);
+            
+            /* Check if all the PDEs are invalid, so there's nothing to free */
+            Va = (ULONG_PTR)MiPteToAddress(PointerPte);
+            if (Va > EndingAddress) return;
+        }
+        
+        /* Now check if the PDE is mapped in */
+        if (PointerPde->u.Hard.Valid == 0)
+        {
+            /* It isn't, so map it in */
+            PointerPte = MiPteToAddress(PointerPde);
+            MiMakeSystemAddressValid(PointerPte, CurrentProcess);
+        }
+    
+        /* Now we should have a valid PDE, mapped in, and still have some VA */
+        ASSERT(PointerPde->u.Hard.Valid == 1);
+        ASSERT(Va <= EndingAddress);
+        
+        /* Lock the PFN Database while we delete the PTEs */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        do
+        {
+            /* Capture the PDE and make sure it exists */
+            TempPte = *PointerPte;
+            if (TempPte.u.Long)
+            {
+                /* Check if the PTE is actually mapped in */
+                if (TempPte.u.Long & 0xFFFFFC01)
+                {
+                    /* It is, we don't support prototype PTEs for now though */
+                    ASSERT(TempPte.u.Soft.Prototype == 0);
+                    
+                    /* Delete the PTE proper */
+                    MiDeletePte(PointerPte, (PVOID)Va, CurrentProcess);
+                }
+                else
+                {
+                    /* The PTE was never mapped, just nuke it here */
+                    PointerPte->u.Long = 0;
+                }
+            }
+
+            /* Update the address and PTE for it */
+            Va += PAGE_SIZE;
+            PointerPte++;
+            
+            /* Making sure the PDE is still valid */
+            ASSERT(PointerPde->u.Hard.Valid == 1);    
+        }
+        while ((Va & (PDE_MAPPED_VA - 1)) && (Va <= EndingAddress));
+
+        /* The PDE should still be valid at this point */
+        ASSERT(PointerPde->u.Hard.Valid == 1);
+        
+        /* Release the lock and get out if we're done */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        if (Va > EndingAddress) return;
+
+        /* Otherwise, we exited because we hit a new PDE boundary, so start over */
+        PointerPde = MiAddressToPde(Va);
+    } while (TRUE);
 }
 
 LONG

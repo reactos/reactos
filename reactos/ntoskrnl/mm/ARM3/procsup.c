@@ -139,6 +139,8 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     /* Insert the VAD */
     ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
     Process->VadRoot.NodeHint = Vad;
+    Vad->ControlArea = NULL; // For Memory-Area hack
+    Vad->FirstPrototypePte = NULL;
     MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 
     /* Release the working set */
@@ -258,7 +260,7 @@ MmDeleteKernelStack(IN PVOID StackBase,
             MiDecrementShareCount(Pfn2, PageTableFrameNumber);
 #endif
             /* Set the special pending delete marker */
-            Pfn1->PteAddress = (PMMPTE)((ULONG_PTR)Pfn1->PteAddress | 1);
+            MI_SET_PFN_DELETED(Pfn1);
             
             /* And now delete the actual stack page */
             MiDecrementShareCount(Pfn1, PageFrameNumber);
@@ -1174,7 +1176,6 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
     
     /* Enumerate the VADs */
     VadTree = &Process->VadRoot;
-    DPRINT("Cleaning up VADs: %d\n", VadTree->NumberGenericTableElements);
     while (VadTree->NumberGenericTableElements)
     {
         /* Grab the current VAD */
@@ -1186,11 +1187,15 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         /* Remove this VAD from the tree */
         ASSERT(VadTree->NumberGenericTableElements >= 1);
         MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
-        DPRINT("Moving on: %d\n", VadTree->NumberGenericTableElements);
 
         /* Only PEB/TEB VADs supported for now */
         ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
         ASSERT(Vad->u.VadFlags.VadType == VadNone);
+        
+        /* Delete the addresses */
+        MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
+                                 (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
+                                 Vad);
         
         /* Release the working set */
         MiUnlockProcessWorkingSet(Process, Thread);
