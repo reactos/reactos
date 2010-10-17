@@ -119,7 +119,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    Length += ALIGN(RuntimeData->MaximumLength, sizeof(ULONG));
 
    /* Calculate the required block size */
-   Param = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length);
+   Param = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, Length);
    if (!Param)
      {
 	RtlReleasePebLock();
