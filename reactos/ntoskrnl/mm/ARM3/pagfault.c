@@ -929,11 +929,37 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return STATUS_PAGE_FAULT_DEMAND_ZERO;
     }
     
-    /* Don't handle prototype PTEs yet -- only kernel demand zero PTEs */
+    /* Get protection and check if it's a prototype PTE */
+    ProtectionCode = TempPte.u.Soft.Protection;
     ASSERT(TempPte.u.Soft.Prototype == 0);
-    ASSERT(TempPte.u.Long == 0);
+    
+    /* Check for non-demand zero PTE */
+    if (TempPte.u.Long != 0)
+    {
+        /* This is a page fault, check for valid protection */
+        ASSERT(ProtectionCode != 0x100);
+        
+        /* FIXME: Run MiAccessCheck */
+        
+        /* Dispatch the fault */
+        Status = MiDispatchFault(StoreInstruction,
+                                 Address,
+                                 PointerPte,
+                                 NULL,
+                                 FALSE,
+                                 PsGetCurrentProcess(),
+                                 TrapInformation,
+                                 NULL);
+                                 
+        /* Return the status */
+        ASSERT(NT_SUCCESS(Status));
+        ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+        MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
+        return Status;
+    }
 
     /* Check if this address range belongs to a valid allocation (VAD) */
+    ASSERT(TempPte.u.Long == 0);
     ProtoPte = MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
     if (ProtectionCode == MM_NOACCESS)
     {
