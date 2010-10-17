@@ -282,6 +282,25 @@ WdmAudCloseSoundDeviceByLegacy(
          /* First stop the stream */
          if (DeviceType != MIXER_DEVICE_TYPE)
          {
+             DeviceInfo.u.State = KSSTATE_PAUSE;
+             SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_SETDEVICE_STATE,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                            sizeof(WDMAUD_DEVICE_INFO),
+                                            NULL);
+
+             DeviceInfo.u.State = KSSTATE_ACQUIRE;
+             SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_SETDEVICE_STATE,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                            sizeof(WDMAUD_DEVICE_INFO),
+                                            NULL);
+
+
              DeviceInfo.u.State = KSSTATE_STOP;
              SyncOverlappedDeviceIoControl(KernelHandle,
                                            IOCTL_SETDEVICE_STATE,
