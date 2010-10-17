@@ -323,7 +323,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 
         /* Otherwise, we exited because we hit a new PDE boundary, so start over */
         PointerPde = MiAddressToPde(Va);
-    } while (TRUE);
+    }
 }
 
 LONG
