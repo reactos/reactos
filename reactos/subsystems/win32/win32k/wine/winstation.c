@@ -376,7 +376,7 @@ void connect_process_winstation( PPROCESSINFO process )
     struct desktop *desktop = NULL;
     obj_handle_t handle;
     PPROCESSINFO parent = NULL;
-    PEPROCESS eparent;
+    PEPROCESS eparent = NULL;
     HANDLE parent_handle;
     NTSTATUS status;
 
