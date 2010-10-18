@@ -832,7 +832,7 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     KeLeaveGuardedRegion();
 }
 
-NTSTATUS
+BOOLEAN
 NTAPI
 MmArmInitSystem(
     IN ULONG Phase,

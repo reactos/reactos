@@ -199,7 +199,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
 {
-    PMEMORY_AREA MemoryArea;
+    PMEMORY_AREA MemoryArea = NULL;
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
@@ -214,27 +214,24 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
     }
     
-    /* 
-     * Check if this is an ARM3 memory area or if there's no memory area at all.
-     * The latter can happen early in the boot cycle when ARM3 paged pool is in
-     * use before having defined the memory areas proper.
-     * A proper fix would be to define memory areas in the ARM3 code, but we want
-     * to avoid adding this ReactOS-specific construct to ARM3 code.
-     * Either way, in the future, as ReactOS-paged pool is eliminated, this hack
-     * can go away.
-     */
-    MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
-    if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
+    /* Is there a ReactOS address space yet? */
+    if (MmGetKernelAddressSpace())
     {
-        /* Could this be a VAD fault from user-mode? */
-        MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
+        /* Check if this is an ARM3 memory area */
+        MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+        if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
+        {
+            /* Could this be a VAD fault from user-mode? */
+            MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
+        }
     }
-    if ((!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
-        ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)))
+    
+    /* Is this an ARM3 memory area, or is there no address space yet? */
+    if (((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)) ||
+        (!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
+        (!MmGetKernelAddressSpace()))
     {
-        //
-        // Hand it off to more competent hands...
-        //
+        /* This is an ARM3 fault */
         DPRINT("ARM3 fault %p\n", MemoryArea);
         return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
     }
