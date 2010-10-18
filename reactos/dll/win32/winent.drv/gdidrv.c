@@ -28,6 +28,8 @@ HANDLE hStockBitmap;
 
 /* FUNCTIONS **************************************************************/
 
+BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, INT height, DWORD rop );
+
 BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
                              NTDRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
                              BLENDFUNCTION blendfn)
@@ -95,7 +97,15 @@ BOOL CDECL RosDrv_BitBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
                     INT width, INT height, NTDRV_PDEVICE *physDevSrc,
                     INT xSrc, INT ySrc, DWORD rop )
 {
+    BOOL useSrc;
     POINT pts[2], ptBrush;
+
+    useSrc = (((rop >> 2) & 0x330000) != (rop & 0x330000));
+    if (!physDevSrc && useSrc) return FALSE;
+
+    /* Forward to PatBlt if src dev is missing */
+    if (!physDevSrc)
+        return RosDrv_PatBlt(physDevDst, xDst, yDst, width, height, rop);
 
     /* map source coordinates */
     if (physDevSrc)
@@ -897,7 +907,11 @@ BOOL CDECL RosDrv_StretchBlt( NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst,
                               NTDRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc,
                               INT widthSrc, INT heightSrc, DWORD rop )
 {
+    BOOL useSrc;
     POINT pts[2], ptBrush;
+
+    useSrc = (((rop >> 2) & 0x330000) != (rop & 0x330000));
+    if (!physDevSrc && useSrc) return FALSE;
 
     /* map source coordinates */
     if (physDevSrc)
