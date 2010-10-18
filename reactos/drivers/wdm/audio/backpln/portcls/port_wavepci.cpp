@@ -324,6 +324,9 @@ CPortWavePci::Init(
         m_ServiceGroup->AddRef();
     }
 
+    // store for node property requests
+    m_SubDeviceDescriptor->UnknownMiniport = UnknownMiniport;
+
     // check if it supports IPinCount interface
     Status = UnknownMiniport->QueryInterface(IID_IPinCount, (PVOID*)&PinCount);
     if (NT_SUCCESS(Status))
