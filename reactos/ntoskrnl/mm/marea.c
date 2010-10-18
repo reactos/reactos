@@ -356,6 +356,12 @@ NTAPI
 MiInsertVad(IN PMMVAD Vad,
 IN PEPROCESS Process);
 
+ULONG
+NTAPI
+MiMakeProtectionMask(
+    IN ULONG Protect
+);
+
 static VOID
 MmInsertMemoryArea(
    PMMSUPPORT AddressSpace,
@@ -389,6 +395,7 @@ MmInsertMemoryArea(
         }
        Vad->u.VadFlags.Spare = 1;
        Vad->u.VadFlags.PrivateMemory = 1;
+       Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
        MiInsertVad(Vad, MmGetAddressSpaceOwner(AddressSpace));
        marea->Vad = Vad;
    }

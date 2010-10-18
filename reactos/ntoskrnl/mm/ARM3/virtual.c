@@ -172,22 +172,22 @@ MiDeletePte(IN PMMPTE PointerPte,
             IN PEPROCESS CurrentProcess)
 {
     PMMPFN Pfn1;
-    MMPTE PteContents;
+    MMPTE TempPte;
     PFN_NUMBER PageFrameIndex;
 
     /* PFN lock must be held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Capture the PTE */
-    PteContents = *PointerPte;
+    TempPte = *PointerPte;
 
     /* We only support valid PTEs for now */
-    ASSERT(PteContents.u.Hard.Valid == 1);
-    ASSERT(PteContents.u.Soft.Prototype == 0);
-    ASSERT(PteContents.u.Soft.Transition == 0);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    ASSERT(TempPte.u.Soft.Prototype == 0);
+    ASSERT(TempPte.u.Soft.Transition == 0);
 
     /* Get the PFN entry */
-    PageFrameIndex = PFN_FROM_PTE(&PteContents);
+    PageFrameIndex = PFN_FROM_PTE(&TempPte);
     Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
     /* We don't support deleting prototype PTEs for now */
@@ -907,6 +907,109 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
     // Fake success
     //
     return STATUS_SUCCESS;
+}
+
+ULONG
+NTAPI
+MiQueryAddressState(IN PVOID Va,
+                    IN PMMVAD Vad,
+                    IN PEPROCESS TargetProcess,
+                    OUT PULONG ReturnedProtect,
+                    OUT PVOID *NextVa)
+{
+
+    PMMPTE PointerPte, PointerPde;
+    MMPTE TempPte;
+    BOOLEAN DemandZeroPte = TRUE, ValidPte = FALSE;
+    ULONG State = MEM_RESERVE, Protect = 0, LockChange;
+    ASSERT((Vad->StartingVpn <= ((ULONG_PTR)Va >> PAGE_SHIFT)) &&
+           (Vad->EndingVpn >= ((ULONG_PTR)Va >> PAGE_SHIFT)));
+
+    /* Only normal VADs supported */
+    ASSERT(Vad->u.VadFlags.VadType == VadNone);
+        
+    /* Get the PDE and PTE for the address */
+    PointerPde = MiAddressToPde(Va);
+    PointerPte = MiAddressToPte(Va);
+
+    /* Return the next range */
+    *NextVa = (PVOID)((ULONG_PTR)Va + PAGE_SIZE);
+
+    /* Loop to make sure the PDE is valid */
+    do
+    {
+        /* Try again */
+        LockChange = 0;
+
+        /* Is the PDE empty? */
+        if (!PointerPde->u.Long)
+        {
+            /* No address in this range used yet, move to the next PDE range */
+            *NextVa = MiPteToAddress(MiPteToAddress(PointerPde + 1));
+            break;
+        }
+
+        /* The PDE is empty, but is it faulted in? */
+        if (!PointerPde->u.Hard.Valid)
+        {
+            /* It isn't, go ahead and do the fault */
+            LockChange = MiMakeSystemAddressValid(MiPteToAddress(PointerPde),
+                                                  TargetProcess);
+        }
+
+        /* Check if the PDE was faulted in, making the PTE readable */
+        if (!LockChange) ValidPte = TRUE;
+    } while (LockChange);
+
+    /* Is it safe to try reading the PTE? */
+    if (ValidPte)
+    {
+        /* FIXME: watch out for large pages */
+        
+        /* Capture the PTE */
+        TempPte = *PointerPte;
+        if (TempPte.u.Long)
+        {
+            /* The PTE is valid, so it's not zeroed out */
+            DemandZeroPte = FALSE;
+
+            /* Check if it's valid or has a valid protection mask */
+            ASSERT(TempPte.u.Soft.Prototype == 0);
+            if ((TempPte.u.Soft.Protection != MM_DECOMMIT) ||
+                (TempPte.u.Hard.Valid == 1))
+            {
+                /* This means it's committed */
+                State = MEM_COMMIT;
+                
+                /* For now, we lie about the protection */
+                Protect = PAGE_EXECUTE_READWRITE;
+            }
+            else
+            {
+                /* Otherwise our defaults should hold */
+                ASSERT(Protect == 0);
+                ASSERT(State == MEM_RESERVE);
+            }
+        }
+    }
+
+    /* Check if this was a demand-zero PTE, since we need to find the state */
+    if (DemandZeroPte)
+    {
+        /* Check if the VAD is for committed memory */
+        if (Vad->u.VadFlags.MemCommit)
+        {
+            /* This is committed memory */
+            State = MEM_COMMIT;
+            
+            /* Convert the protection */
+            Protect = MmProtectToValue[Vad->u.VadFlags.Protection];
+        }
+    }
+
+    /* Return the protection code */
+    *ReturnedProtect = Protect;
+    return State;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -2048,6 +2151,157 @@ NtResetWriteWatch(IN HANDLE ProcessHandle,
     //
     // Return success
     //
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+NtQueryVirtualMemory(IN HANDLE ProcessHandle,
+                     IN PVOID BaseAddress,
+                     IN MEMORY_INFORMATION_CLASS MemoryInformationClass,
+                     OUT PVOID MemoryInformation,
+                     IN SIZE_T MemoryInformationLength,
+                     OUT PSIZE_T ReturnLength)
+{
+    PEPROCESS TargetProcess;
+    NTSTATUS Status;
+    PMMVAD Vad = NULL;
+    PVOID Address, NextAddress;
+    BOOLEAN Found;
+    ULONG NewProtect, NewState, BaseVpn;
+    MEMORY_BASIC_INFORMATION MemoryInfo;
+    KAPC_STATE ApcState;
+    DPRINT("Querying class %d about address: %p\n", MemoryInformationClass, BaseAddress);
+
+    /* Only this class is supported for now */
+    ASSERT(MemoryInformationClass == MemoryBasicInformation);
+    
+    /* Validate the size information of the class */
+    if (MemoryInformationLength < sizeof(MEMORY_BASIC_INFORMATION))
+    {
+        /* The size is invalid */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+    /* Bail out if the address is invalid */
+    if (BaseAddress > MM_HIGHEST_USER_ADDRESS) return STATUS_INVALID_PARAMETER;
+
+    /* Check for illegal addresses in user-space, or the shared memory area */
+    if ((BaseAddress > MM_HIGHEST_VAD_ADDRESS) ||
+        (PAGE_ALIGN(BaseAddress) == (PVOID)USER_SHARED_DATA))
+    {
+        /* FIXME: We should return some bogus info structure */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Check if this is for a local or remote process */
+    if (ProcessHandle == NtCurrentProcess())
+    {
+        TargetProcess = PsGetCurrentProcess();
+    }
+    else
+    {
+        /* Reference the target process */
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_QUERY_INFORMATION,
+                                           PsProcessType,
+                                           ExGetPreviousMode(),
+                                           (PVOID*)&TargetProcess,
+                                           NULL);
+        if (!NT_SUCCESS(Status)) return Status;
+        
+        /* Attach to it now */
+        KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
+    }
+
+    /* Loop the VADs */
+    ASSERT(TargetProcess->VadRoot.NumberGenericTableElements);
+    if (TargetProcess->VadRoot.NumberGenericTableElements)
+    {
+        /* Scan on the right */
+        Vad = (PMMVAD)TargetProcess->VadRoot.BalancedRoot.RightChild;
+        BaseVpn = (ULONG_PTR)BaseAddress >> PAGE_SHIFT;
+        while (Vad)
+        {
+            /* Check if this VAD covers the allocation range */
+            if ((BaseVpn >= Vad->StartingVpn) &&
+                (BaseVpn <= Vad->EndingVpn))
+            {
+                /* We're done */
+                Found = TRUE;
+                break;
+            }
+
+            /* Check if this VAD is too high */
+            if (BaseVpn < Vad->StartingVpn)
+            {
+                /* Search on the left next */
+                Vad = Vad->LeftChild;
+            }
+            else
+            {
+                /* Then this VAD is too low, keep searching on the right */
+                ASSERT(BaseVpn > Vad->EndingVpn);
+                Vad = Vad->RightChild;
+            }
+        }
+    }
+
+    /* Was a VAD found? */
+    if (!Found)
+    {
+        /* We don't handle this yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+   
+    /* This must be a VM VAD */
+    ASSERT(Vad->u.VadFlags.PrivateMemory);
+   
+    /* Build the initial information block */
+    Address = PAGE_ALIGN(BaseAddress);
+    MemoryInfo.BaseAddress = Address;
+    MemoryInfo.AllocationBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
+    MemoryInfo.AllocationProtect = MmProtectToValue[Vad->u.VadFlags.Protection];
+    MemoryInfo.Type = MEM_PRIVATE;
+    
+    /* Find the largest chunk of memory which has the same state and protection mask */
+    MemoryInfo.State = MiQueryAddressState(Address,
+                                           Vad,
+                                           TargetProcess,
+                                           &MemoryInfo.Protect,
+                                           &NextAddress);
+    Address = NextAddress;
+    while (((ULONG_PTR)Address >> PAGE_SHIFT) <= Vad->EndingVpn)
+    {
+        /* Keep going unless the state or protection mask changed */
+        NewState = MiQueryAddressState(Address, Vad, TargetProcess, &NewProtect, &NextAddress);
+        if ((NewState != MemoryInfo.State) || (NewProtect != MemoryInfo.Protect)) break;
+        Address = NextAddress;
+    }
+
+    /* Now that we know the last VA address, calculate hte region size */
+    MemoryInfo.RegionSize = ((ULONG_PTR)Address - (ULONG_PTR)MemoryInfo.BaseAddress);
+
+    /* Check if we were attached */
+    if (ProcessHandle != NtCurrentProcess())
+    {
+        /* Detach and derefernece the process */
+        KeUnstackDetachProcess(&ApcState);
+        ObDereferenceObject(TargetProcess);
+    }
+
+    /* Return the data (FIXME: Use SEH) */
+    *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+    if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+    
+    /* All went well */
+    DPRINT("Base: %p AllocBase: %p Protect: %lx AllocProtect: %lx "
+            "State: %lx Type: %lx Size: %lx\n",
+            MemoryInfo.BaseAddress, MemoryInfo.AllocationBase,
+            MemoryInfo.AllocationProtect, MemoryInfo.Protect,
+            MemoryInfo.State, MemoryInfo.Type, MemoryInfo.RegionSize);
     return STATUS_SUCCESS;
 }
 
