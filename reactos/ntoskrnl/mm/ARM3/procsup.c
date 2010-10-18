@@ -29,14 +29,14 @@ MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    PVOID AllocatedBase = (PVOID)MI_LOWEST_VAD_ADDRESS;
+    PVOID AllocatedBase = (PVOID)USER_SHARED_DATA;
     BoundaryAddressMultiple.QuadPart = 0;
 
     Status = MmCreateMemoryArea(&Process->Vm,
                                 MEMORY_AREA_OWNED_BY_ARM3,
                                 &AllocatedBase,
                                 ((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - 1) -
-                                (ULONG_PTR)MI_LOWEST_VAD_ADDRESS,
+                                (ULONG_PTR)USER_SHARED_DATA,
                                 PAGE_READWRITE,
                                 &MemoryArea,
                                 TRUE,
@@ -141,6 +141,8 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     Process->VadRoot.NodeHint = Vad;
     Vad->ControlArea = NULL; // For Memory-Area hack
     Vad->FirstPrototypePte = NULL;
+    DPRINT("VAD: %p\n", Vad);
+    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *Base, Process->ImageFileName);
     MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
 
     /* Release the working set */
@@ -150,7 +152,6 @@ MiCreatePebOrTeb(IN PEPROCESS Process,
     KeReleaseGuardedMutex(&Process->AddressCreationLock);
 
     /* Return the status */
-    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *Base, Process->ImageFileName);
     return Status;
 }
 

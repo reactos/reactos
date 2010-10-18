@@ -241,12 +241,12 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     /* We usually only get a VAD when it's not a VM address */
     if (Vad)
     {
-        /* At process deletion, we may get a VAD, but it should be a VM VAD */
-        ASSERT(Vad->u.VadFlags.PrivateMemory);
-        ASSERT(Vad->FirstPrototypePte == NULL);
-        
         /* Get out if this is a fake VAD, RosMm will free the marea pages */
         if (Vad->u.VadFlags.Spare == 1) return;
+
+        /* At process deletion, we may get a VAD, but it should be a VM VAD */
+        ASSERT(Vad->u.VadFlags.PrivateMemory);
+        //ASSERT(Vad->FirstPrototypePte == NULL); memory_area fuckers
     }
     
     /* In all cases, we don't support fork() yet */

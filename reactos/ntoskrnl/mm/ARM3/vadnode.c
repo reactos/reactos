@@ -100,6 +100,43 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
 {
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
+
+    /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
+    PMMVAD Vad = (PMMVAD)NewNode;
+    if (Vad->u.VadFlags.Spare == 0)
+    {
+        NTSTATUS Status;
+        PMEMORY_AREA MemoryArea;
+        PHYSICAL_ADDRESS BoundaryAddressMultiple;
+        SIZE_T Size;
+        PEPROCESS Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
+        PVOID AllocatedBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
+        BoundaryAddressMultiple.QuadPart = 0;
+        Size = ((Vad->EndingVpn + 1) - Vad->StartingVpn) << PAGE_SHIFT;
+        Status = MmCreateMemoryArea(&Process->Vm,
+                                    MEMORY_AREA_OWNED_BY_ARM3,
+                                    &AllocatedBase,
+                                    Size,
+                                    PAGE_READWRITE,
+                                    &MemoryArea,
+                                    TRUE,
+                                    0,
+                                    BoundaryAddressMultiple);
+        ASSERT(NT_SUCCESS(Status));
+
+        /* Check if this is VM VAD */
+        if (Vad->ControlArea == NULL)
+        {
+            /* We store the reactos MEMORY_AREA here */
+            DPRINT("Storing %p in %p\n", MemoryArea, Vad);
+            Vad->FirstPrototypePte = (PMMPTE)MemoryArea;
+        }
+        else
+        {
+            /* This is a section VAD, this code doesn't happen yet */
+            ASSERT(FALSE);
+        }
+    }
 }
 
 VOID
@@ -121,28 +158,6 @@ MiInsertVad(IN PMMVAD Vad,
     
     /* Do the actual insert operation */
     MiInsertNode(&Process->VadRoot, (PVOID)Vad, Parent, Result);
-    
-    /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
-    if (Vad->u.VadFlags.Spare == 0)
-    {
-        NTSTATUS Status;
-        PMEMORY_AREA MemoryArea;
-        PHYSICAL_ADDRESS BoundaryAddressMultiple;
-        SIZE_T Size;
-        PVOID AllocatedBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
-        BoundaryAddressMultiple.QuadPart = 0;
-        Size = ((Vad->EndingVpn + 1) - Vad->StartingVpn) << PAGE_SHIFT;
-        Status = MmCreateMemoryArea(&Process->Vm,
-                                    MEMORY_AREA_OWNED_BY_ARM3,
-                                    &AllocatedBase,
-                                    Size,
-                                    PAGE_READWRITE,
-                                    &MemoryArea,
-                                    TRUE,
-                                    0,
-                                    BoundaryAddressMultiple);
-        ASSERT(NT_SUCCESS(Status));
-    }
 }
 
 VOID
@@ -162,6 +177,38 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
         /* Get a new hint, unless we're empty now, in which case nothing */
         if (!Table->NumberGenericTableElements) Table->NodeHint = NULL;
         else Table->NodeHint = Table->BalancedRoot.RightChild;
+    }
+
+    /* Free the node from ReactOS view as well */
+    PMMVAD Vad = (PMMVAD)Node;
+    if (Vad->u.VadFlags.Spare == 0)
+    {
+        PMEMORY_AREA MemoryArea;
+        PEPROCESS Process;
+            
+        /* Check if this is VM VAD */
+        if (Vad->ControlArea == NULL)
+        {
+            /* We store the ReactOS MEMORY_AREA here */
+            MemoryArea = (PMEMORY_AREA)Vad->FirstPrototypePte;
+            if (MemoryArea)
+            {
+                /* Get the process */
+                Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
+                
+                /* We only create fake memory-areas for ARM3 VADs */
+                ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
+                ASSERT(MemoryArea->Vad == NULL);
+            
+                /* Free it */
+                MmFreeMemoryArea(&Process->Vm, MemoryArea, NULL, NULL);
+            }
+        }
+        else
+        {
+            /* This is a section VAD, this code doesn't happen yet */
+            ASSERT(FALSE);
+        }
     }
 }
 

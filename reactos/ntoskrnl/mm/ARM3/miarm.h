@@ -45,9 +45,7 @@
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
-
-/* The range 0x10000->0x7FEFFFFF is reserved for the ROSMM MAREA Allocator */
-#define MI_LOWEST_VAD_ADDRESS                   (PVOID)0x7FF00000
+#define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 #endif /* !_M_AMD64 */
 
