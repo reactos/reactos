@@ -355,31 +355,6 @@ SIZE_T MmTotalCommitLimitMaximum;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#ifndef _M_AMD64
-//
-// In Bavaria, this is probably a hate crime
-//
-VOID
-FASTCALL
-MiSyncARM3WithROS(IN PVOID AddressStart,
-                  IN PVOID AddressEnd)
-{
-    //
-    // Puerile piece of junk-grade carbonized horseshit puss sold to the lowest bidder
-    //
-    ULONG Pde = ADDR_TO_PDE_OFFSET(AddressStart);
-    while (Pde <= ADDR_TO_PDE_OFFSET(AddressEnd))
-    {
-        //
-        // This both odious and heinous
-        //
-        extern ULONG MmGlobalKernelPageDirectory[1024];
-        MmGlobalKernelPageDirectory[Pde] = ((PULONG)PDE_BASE)[Pde];
-        Pde++;
-    }
-}
-#endif
-
 PFN_NUMBER
 NTAPI
 MxGetNextPage(IN PFN_NUMBER PageCount)
@@ -1892,14 +1867,7 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the platform-specific parts */       
         MiInitMachineDependent(LoaderBlock);
-        
-        //
-        // Sync us up with ReactOS Mm
-        //
-        MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
-        MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
-        MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
-      
+
         //
         // Build the physical memory block
         //
