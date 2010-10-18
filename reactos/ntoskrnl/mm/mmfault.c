@@ -17,37 +17,6 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
-FASTCALL
-MiSyncForProcessAttach(IN PKTHREAD Thread,
-                       IN PEPROCESS Process)
-{
-    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
-
-    /* Hack Sync because Mm is broken */
-    MmUpdatePageDir(Process, Ethread, sizeof(ETHREAD));
-    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
-    MmUpdatePageDir(Process,
-                    (PVOID)Thread->StackLimit,
-                    Thread->LargeStack ?
-                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
-}
-
-VOID
-FASTCALL
-MiSyncForContextSwitch(IN PKTHREAD Thread)
-{
-    PVOID Process = PsGetCurrentProcess();
-    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
-
-    /* Hack Sync because Mm is broken */
-    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
-    MmUpdatePageDir(Process,
-                    (PVOID)Thread->StackLimit,
-                    Thread->LargeStack ?
-                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
-}
-
 NTSTATUS
 NTAPI
 MmpAccessFault(KPROCESSOR_MODE Mode,
