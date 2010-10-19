@@ -832,6 +832,22 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     KeLeaveGuardedRegion();
 }
 
+//
+// Returns the ProtoPTE inside a VAD for the given VPN
+//
+FORCEINLINE
+PMMPTE
+MI_GET_PROTOTYPE_PTE_FOR_VPN(IN PMMVAD Vad,
+                             IN ULONG_PTR Vpn)
+{
+    PMMPTE ProtoPte;
+
+    /* Find the offset within the VAD's prototype PTEs */
+    ProtoPte = Vad->FirstPrototypePte + ((Vpn - Vad->StartingVpn) * sizeof(MMPTE));
+    ASSERT(ProtoPte <= Vad->LastContiguousPte);
+    return ProtoPte;
+}
+
 BOOLEAN
 NTAPI
 MmArmInitSystem(
@@ -1223,6 +1239,27 @@ NTAPI
 MiMakeSystemAddressValid(
     IN PVOID PageTableVirtualAddress,
     IN PEPROCESS CurrentProcess
+);
+
+ULONG
+NTAPI
+MiMakeSystemAddressValidPfn(
+    IN PVOID VirtualAddress,
+    IN KIRQL OldIrql
+);
+
+VOID
+NTAPI
+MiRemoveMappedView(
+    IN PEPROCESS CurrentProcess,
+    IN PMMVAD Vad
+);
+
+PSUBSECTION
+NTAPI
+MiLocateSubsection(
+    IN PMMVAD Vad,
+    IN ULONG_PTR Vpn
 );
                          
 //

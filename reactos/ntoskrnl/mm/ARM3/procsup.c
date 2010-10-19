@@ -581,7 +581,7 @@ MmCreatePeb(IN PEPROCESS Process,
     //
     // Map NLS Tables
     //
-    Status = MmMapViewOfSection(ExpNlsSectionPointer,
+    Status = MmMapViewOfSection((PVOID)((ULONG_PTR)ExpNlsSectionPointer | 0x1),
                                 (PEPROCESS)Process,
                                 &TableBase,
                                 0,
@@ -1186,17 +1186,25 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
         ASSERT(VadTree->NumberGenericTableElements >= 1);
         MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
 
-        /* Only PEB/TEB VADs supported for now */
-        ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
+        /* Only regular VADs supported for now */
         ASSERT(Vad->u.VadFlags.VadType == VadNone);
         
-        /* Delete the addresses */
-        MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
-                                 (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
-                                 Vad);
+        /* Check if this is a section VAD */
+        if (!(Vad->u.VadFlags.PrivateMemory) && (Vad->ControlArea))
+        {
+            /* Remove the view */
+            MiRemoveMappedView(Process, Vad);
+        }
+        else
+        {
+            /* Delete the addresses */
+            MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
+                                     (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
+                                     Vad);
         
-        /* Release the working set */
-        MiUnlockProcessWorkingSet(Process, Thread);
+            /* Release the working set */
+            MiUnlockProcessWorkingSet(Process, Thread);
+        }
         
         /* Skip ARM3 fake VADs, they'll be freed by MmDeleteProcessAddresSpace */
         if (Vad->u.VadFlags.Spare == 1)

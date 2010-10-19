@@ -393,6 +393,188 @@ MiCheckPurgeAndUpMapCount(IN PCONTROL_AREA ControlArea,
     return STATUS_SUCCESS;
 }
 
+PSUBSECTION
+NTAPI
+MiLocateSubsection(IN PMMVAD Vad,
+                   IN ULONG_PTR Vpn)
+{
+    PSUBSECTION Subsection;
+    PCONTROL_AREA ControlArea;
+    ULONG PteOffset;
+
+    /* Get the control area */
+    ControlArea = Vad->ControlArea;
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+    ASSERT(ControlArea->u.Flags.Image == 0);
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+
+    /* Get the subsection */
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+    
+    /* We only support single-subsection segments */
+    ASSERT(Subsection->SubsectionBase != NULL);
+    ASSERT(Vad->FirstPrototypePte >= Subsection->SubsectionBase);
+    ASSERT(Vad->FirstPrototypePte < &Subsection->SubsectionBase[Subsection->PtesInSubsection]);
+    
+    /* Compute the PTE offset */
+    PteOffset = (ULONG_PTR)Vpn - Vad->StartingVpn;
+    PteOffset += Vad->FirstPrototypePte - Subsection->SubsectionBase;
+
+    /* Again, we only support single-subsection segments */
+    ASSERT(PteOffset < 0xF0000000);
+    ASSERT(PteOffset < Subsection->PtesInSubsection);
+    
+    /* Return the subsection */
+    return Subsection;
+}
+
+VOID
+NTAPI
+MiSegmentDelete(IN PSEGMENT Segment)
+{
+    PCONTROL_AREA ControlArea;
+    SEGMENT_FLAGS SegmentFlags;
+    PSUBSECTION Subsection;
+    PMMPTE PointerPte, LastPte, PteForProto;
+    MMPTE TempPte;
+    KIRQL OldIrql;
+
+    /* Capture data */
+    SegmentFlags = Segment->SegmentFlags;
+    ControlArea = Segment->ControlArea;
+
+    /* Make sure control area is on the right delete path */
+    ASSERT(ControlArea->u.Flags.BeingDeleted == 1);
+    ASSERT(ControlArea->WritableUserReferences == 0);
+    
+    /* These things are not supported yet */
+    ASSERT(ControlArea->DereferenceList.Flink == NULL);
+    ASSERT(!(ControlArea->u.Flags.Image) & !(ControlArea->u.Flags.File));
+    ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
+    ASSERT(ControlArea->u.Flags.Rom == 0);
+
+    /* Get the subsection and PTEs for this segment */
+    Subsection = (PSUBSECTION)(ControlArea + 1);
+    PointerPte = Subsection->SubsectionBase;
+    LastPte = PointerPte + Segment->NonExtendedPtes;
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    /* Check if the master PTE is invalid */
+    PteForProto = MiAddressToPte(PointerPte);
+    if (!PteForProto->u.Hard.Valid)
+    {
+        /* Fault it in */
+        MiMakeSystemAddressValidPfn(PointerPte, OldIrql);
+    }
+
+    /* Loop all the segment PTEs */
+    while (PointerPte < LastPte)
+    {
+        /* Check if it's time to switch master PTEs if we passed a PDE boundary */
+        if (!((ULONG_PTR)PointerPte & (PD_SIZE - 1)) &&
+            (PointerPte != Subsection->SubsectionBase))
+        {
+            /* Check if the master PTE is invalid */
+            PteForProto = MiAddressToPte(PointerPte);
+            if (!PteForProto->u.Hard.Valid)
+            {
+                /* Fault it in */
+                MiMakeSystemAddressValidPfn(PointerPte, OldIrql);
+            }
+        }
+
+        /* This should be a prototype PTE */
+        TempPte = *PointerPte;
+        ASSERT(SegmentFlags.LargePages == 0);
+        ASSERT(TempPte.u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Soft.Prototype == 1);
+
+        /* Zero the PTE and keep going */
+        PointerPte->u.Long = 0;
+        PointerPte++;
+    }
+    
+    /* Release the PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* Free the structures */
+    ExFreePool(ControlArea);
+    ExFreePool(Segment);
+}
+
+VOID
+NTAPI
+MiCheckControlArea(IN PCONTROL_AREA ControlArea,
+                   IN KIRQL OldIrql)
+{
+    BOOLEAN DeleteSegment = FALSE;
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    
+    /* Check if this is the last reference or view */
+    if (!(ControlArea->NumberOfMappedViews) &&
+        !(ControlArea->NumberOfSectionReferences))
+    {
+        /* There should be no more user references either */
+        ASSERT(ControlArea->NumberOfUserReferences == 0);
+
+        /* Not yet supported */
+        ASSERT(ControlArea->FilePointer == NULL);
+
+        /* The control area is being destroyed */
+        ControlArea->u.Flags.BeingDeleted = TRUE;
+        DeleteSegment = TRUE;
+    }
+
+    /* Release the PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    
+    /* Delete the segment if needed */
+    if (DeleteSegment)
+    {
+        /* No more user write references at all */
+        ASSERT(ControlArea->WritableUserReferences == 0);
+        MiSegmentDelete(ControlArea->Segment);
+    }
+}
+
+VOID
+NTAPI
+MiRemoveMappedView(IN PEPROCESS CurrentProcess,
+                   IN PMMVAD Vad)
+{
+    KIRQL OldIrql;
+    PCONTROL_AREA ControlArea;
+
+    /* Get the control area */
+    ControlArea = Vad->ControlArea;
+
+    /* We only support non-extendable, non-image, pagefile-backed regular sections */
+    ASSERT(Vad->u.VadFlags.VadType == VadNone);
+    ASSERT(Vad->u2.VadFlags2.ExtendableFile == FALSE);
+    ASSERT(ControlArea);
+    ASSERT(ControlArea->FilePointer == NULL);
+    
+    /* Delete the actual virtual memory pages */
+    MiDeleteVirtualAddresses(Vad->StartingVpn << PAGE_SHIFT,
+                             (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1),
+                             Vad);
+
+    /* Release the working set */
+    MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Remove references */
+    ControlArea->NumberOfMappedViews--;
+    ControlArea->NumberOfUserReferences--;
+
+    /* Check if it should be destroyed */
+    MiCheckControlArea(ControlArea, OldIrql);
+}
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -505,7 +687,6 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* These flags/parameters are not supported */
     ASSERT((AllocationType & MEM_DOS_LIM) == 0);
     ASSERT((AllocationType & MEM_RESERVE) == 0);
-    ASSERT((AllocationType & MEM_TOP_DOWN) == 0);
     ASSERT(Process->VmTopDown == 0);
     ASSERT(Section->u.Flags.CopyOnWrite == FALSE);
     ASSERT(ZeroBits == 0);
@@ -553,13 +734,28 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* Did the caller specify an address? */
     if (!(*BaseAddress))
     {
-        /* No, find an address bottom-up */
-        Status = MiFindEmptyAddressRangeInTree(*ViewSize,
-                                               _64K,
-                                               &Process->VadRoot,
-                                               (PMMADDRESS_NODE*)&Process->VadFreeHint,
-                                               &StartAddress);
-        ASSERT(NT_SUCCESS(Status));
+        /* Which way should we search? */
+        if (AllocationType & MEM_TOP_DOWN)
+        {
+            /* No, find an address top-down */
+            Status = MiFindEmptyAddressRangeDownTree(*ViewSize,
+                                                     (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
+                                                     _64K,
+                                                     &Process->VadRoot,
+                                                     &StartAddress,
+                                                     (PMMADDRESS_NODE*)&Process->VadFreeHint);
+            ASSERT(NT_SUCCESS(Status));
+        }
+        else
+        {
+            /* No, find an address bottom-up */
+            Status = MiFindEmptyAddressRangeInTree(*ViewSize,
+                                                   _64K,
+                                                   &Process->VadRoot,
+                                                   (PMMADDRESS_NODE*)&Process->VadFreeHint,
+                                                   &StartAddress);
+            ASSERT(NT_SUCCESS(Status));
+        }
     }
     else
     {
@@ -1179,8 +1375,11 @@ NtCreateSection(OUT PHANDLE SectionHandle,
                                   SEC_LARGE_PAGES | SEC_IMAGE | SEC_NOCACHE |
                                   SEC_NO_CHANGE)))
     {
-        DPRINT1("Bogus allocation attribute: %lx\n", AllocationAttributes);
-        return STATUS_INVALID_PARAMETER_6;
+        if (!(AllocationAttributes & 1))
+        {
+            DPRINT1("Bogus allocation attribute: %lx\n", AllocationAttributes);
+            return STATUS_INVALID_PARAMETER_6;
+        }
     }
 
     /* Check for no allocation type */
