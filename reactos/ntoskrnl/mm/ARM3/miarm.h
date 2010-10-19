@@ -1058,6 +1058,13 @@ MiDecrementShareCount(
     IN PFN_NUMBER PageFrameIndex
 );
 
+VOID
+NTAPI
+MiDecrementReferenceCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
+);
+
 PFN_NUMBER
 NTAPI
 MiRemoveAnyPage(
@@ -1232,5 +1239,19 @@ MiRemoveZeroPageSafe(IN ULONG Color)
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
     return 0;
 }
+
+//
+// New ARM3<->RosMM PAGE Architecture
+//
+#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
+#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
+typedef struct _MMROSPFN
+{
+    PMM_RMAP_ENTRY RmapListHead;
+    SWAPENTRY SwapEntry;
+} MMROSPFN, *PMMROSPFN;
+
+#define RosMmData            AweReferenceCount
 
 /* EOF */

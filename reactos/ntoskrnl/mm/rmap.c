@@ -19,17 +19,6 @@
 
 /* TYPES ********************************************************************/
 
-typedef struct _MM_RMAP_ENTRY
-{
-   struct _MM_RMAP_ENTRY* Next;
-   PEPROCESS Process;
-   PVOID Address;
-#if DBG
-   PVOID Caller;
-#endif
-}
-MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
-
 /* GLOBALS ******************************************************************/
 
 static FAST_MUTEX RmapListLock;

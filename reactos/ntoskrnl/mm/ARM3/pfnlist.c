@@ -555,7 +555,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         Pfn1->u4.PteFrame = MiGetPfnEntryIndex(Blink);
          
         /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-        ASSERT(Blink->u3.e1.ParityError == FALSE);
+        ASSERT(Blink->u4.AweAllocation == FALSE);
         Blink->OriginalPte.u.Long = PageFrameIndex;
     }
     
@@ -563,7 +563,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ColorTable->Blink = Pfn1;
 
     /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-    ASSERT(Pfn1->u3.e1.ParityError == FALSE);
+    ASSERT(Pfn1->u4.AweAllocation == FALSE);
     Pfn1->OriginalPte.u.Long = LIST_HEAD;
     
     /* And increase the count in the colored list */
@@ -667,7 +667,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     Flink = ColorHead->Flink;
 
     /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-    ASSERT(Pfn1->u3.e1.ParityError == FALSE);
+    ASSERT(Pfn1->u4.AweAllocation == FALSE);
     
     /* Make this page point back to the list, and point forwards to the old head */
     Pfn1->OriginalPte.u.Long = Flink;
@@ -853,7 +853,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
              * ways we shouldn't be seeing RMAP entries at this point
              */
             ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
-            ASSERT(Pfn1->u3.e1.ParityError == FALSE);
+            ASSERT(Pfn1->u4.AweAllocation == FALSE);
 
             /* Mark the page temporarily as valid, we're going to make it free soon */
             Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -867,6 +867,49 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
             InterlockedDecrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
         }
     }
+}
+
+VOID
+NTAPI
+MiDecrementReferenceCount(IN PMMPFN Pfn1,
+                          IN PFN_NUMBER PageFrameIndex)
+{
+    /* PFN lock must be held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* Sanity checks on the page */
+    ASSERT(PageFrameIndex < MmHighestPhysicalPage);
+    ASSERT(Pfn1 == MiGetPfnEntry(PageFrameIndex));
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+
+    /* Dereference the page, bail out if it's still alive */
+    InterlockedDecrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+    if (Pfn1->u3.e2.ReferenceCount) return;
+
+    /* Nobody should still have reference to this page */
+    if (Pfn1->u2.ShareCount != 0)
+    {
+        /* Otherwise something's really wrong */
+        KeBugCheckEx(PFN_LIST_CORRUPT, 7, PageFrameIndex, Pfn1->u2.ShareCount, 0);
+    }
+
+    /* And it should be lying on some page list */
+    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+    /* Did someone set the delete flag? */
+    if (MI_IS_PFN_DELETED(Pfn1))
+    {
+        /* Insert it into the free list, there's nothing left to do */
+        MiInsertPageInFreeList(PageFrameIndex);
+        return;
+    }
+
+    /* We don't have a modified list yet */
+    ASSERT(Pfn1->u3.e1.Modified == 0);
+    ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
+
+    /* FIXME: Normally it would go on the standby list, but we're pushing it on the free list */
+    MiInsertPageInFreeList(PageFrameIndex);
 }
 
 VOID

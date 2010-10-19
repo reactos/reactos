@@ -279,6 +279,17 @@ typedef struct _MEMORY_AREA
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
+typedef struct _MM_RMAP_ENTRY
+{
+   struct _MM_RMAP_ENTRY* Next;
+   PEPROCESS Process;
+   PVOID Address;
+#if DBG
+   PVOID Caller;
+#endif
+}
+MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
+
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
 //
