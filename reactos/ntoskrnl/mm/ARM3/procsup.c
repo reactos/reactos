@@ -581,7 +581,7 @@ MmCreatePeb(IN PEPROCESS Process,
     //
     // Map NLS Tables
     //
-    Status = MmMapViewOfSection((PVOID)((ULONG_PTR)ExpNlsSectionPointer | 0x1),
+    Status = MmMapViewOfSection(ExpNlsSectionPointer,
                                 (PEPROCESS)Process,
                                 &TableBase,
                                 0,

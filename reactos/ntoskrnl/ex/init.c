@@ -296,7 +296,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                              NULL,
                              &SectionSize,
                              PAGE_READWRITE,
-                             SEC_COMMIT | 0x1,
+                             SEC_COMMIT,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -319,7 +319,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Map the NLS Section in system space */
-    Status = MmMapViewInSystemSpace((PVOID)((ULONG_PTR)ExpNlsSectionPointer | 0x1),
+    Status = MmMapViewInSystemSpace(ExpNlsSectionPointer,
                                     &SectionBase,
                                     &ExpNlsTableSize);
     if (!NT_SUCCESS(Status))
@@ -349,7 +349,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     SectionBase = NULL;
 
     /* Map the section in the system process */
-    Status = MmMapViewOfSection((PVOID)((ULONG_PTR)ExpNlsSectionPointer | 0x1),
+    Status = MmMapViewOfSection(ExpNlsSectionPointer,
                                 PsGetCurrentProcess(),
                                 &SectionBase,
                                 0L,
