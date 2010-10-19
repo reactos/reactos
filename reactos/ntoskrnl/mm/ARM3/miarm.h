@@ -241,7 +241,7 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MiProtoPteToPte(x)                  \
     (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             ((x)->u.Proto.ProtoAddressHigh | (x)->u.Proto.ProtoAddressLow))
+             (((x)->u.Proto.ProtoAddressHigh << 7) | (x)->u.Proto.ProtoAddressLow))
 #endif
 
 //
@@ -624,10 +624,11 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
      * lets us only use 28 bits for the adress of the PTE
      */
     Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
-    
+
     /* 7 bits go in the "low", and the other 21 bits go in the "high" */
     NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
-    NewPte->u.Proto.ProtoAddressHigh = Offset & 0xFFFFF80;
+    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0xFFFFFF80) >> 7;
+    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
 }
 #endif
 

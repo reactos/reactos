@@ -805,21 +805,23 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             /* Get the prototype PTE! */
             ProtoPte = MiProtoPteToPte(&TempPte);
         }
+        else
+        {        
+            //
+            // We don't implement transition PTEs
+            //
+            ASSERT(TempPte.u.Soft.Transition == 0);
         
-        //
-        // We don't implement transition PTEs
-        //
-        ASSERT(TempPte.u.Soft.Transition == 0);
-        
-        /* Check for no-access PTE */
-        if (TempPte.u.Soft.Protection == MM_NOACCESS)
-        {
-            /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
-            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
-                         (ULONG_PTR)Address,
-                         StoreInstruction,
-                         (ULONG_PTR)TrapInformation,
-                         1);
+            /* Check for no-access PTE */
+            if (TempPte.u.Soft.Protection == MM_NOACCESS)
+            {
+                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                             (ULONG_PTR)Address,
+                             StoreInstruction,
+                             (ULONG_PTR)TrapInformation,
+                             1);
+            }
         }
         
         /* Check for demand page */
@@ -874,8 +876,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
 
     /* First things first, is the PDE valid? */
-//    DPRINT1("The PDE we faulted on: %lx %lx\n", PointerPde, MiAddressToPde(PTE_BASE));
-    //ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
     ASSERT(PointerPde->u.Hard.LargePage == 0);
     if (PointerPde->u.Hard.Valid == 0)
     {
@@ -918,7 +918,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
     {
         /* Resolve the fault */
-        //DPRINT1("VAD demand-zero fault: %p\n", Address);
         MiResolveDemandZeroFault(Address,
                                  PointerPte,
                                  CurrentProcess,
