@@ -17,6 +17,7 @@
 #include <winddi.h>
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
+#include "wine/list.h"
 #include "winent.h"
 #include <pseh/pseh2.h>
 #include "wine/debug.h"

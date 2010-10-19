@@ -22,6 +22,7 @@
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "wine/rosuser.h"
+#include "wine/list.h"
 #include "winent.h"
 #include "wine/server.h"
 #include "wine/debug.h"

@@ -30,6 +30,7 @@ struct ntdrv_escape_set_drawable
 /* ntdrv private window data */
 struct ntdrv_win_data
 {
+    struct list entry;          /* entry in the linked list of win data */
     HWND        hwnd;           /* hwnd that this private data belongs to */
     PVOID       whole_window;   /* SWM window for the complete window */
     RECT        window_rect;    /* USER window rectangle relative to parent */

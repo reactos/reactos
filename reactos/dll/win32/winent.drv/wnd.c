@@ -21,13 +21,22 @@
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
 #include "wine/rosuser.h"
+#include "wine/list.h"
 #include "winent.h"
 #include "wine/server.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosuserdrv);
 
-static const char window_data_prop[] = "__ros_nt_window_data";
+static struct list wnd_data_list = LIST_INIT( wnd_data_list );
+static CRITICAL_SECTION wnd_data_cs;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &wnd_data_cs,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": wnd_data_cs") }
+};
+static CRITICAL_SECTION wnd_data_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 /* FUNCTIONS **************************************************************/
 
@@ -48,6 +57,53 @@ VOID CDECL RosDrv_UpdateZOrder(HWND hwnd, RECT *rect)
         SERVER_END_REQ;
 }
 
+struct ntdrv_win_data *associate_create( HWND hwnd )
+{
+    struct ntdrv_win_data *data;
+
+    /* Insert our mapping */
+    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ntdrv_win_data));
+    if(!data) return NULL;
+
+    data->hwnd = hwnd;
+
+    EnterCriticalSection(&wnd_data_cs);
+    list_add_tail(&wnd_data_list, &data->entry);
+    LeaveCriticalSection(&wnd_data_cs);
+
+    return data;
+}
+
+VOID associate_destroy( struct ntdrv_win_data *data )
+{
+    EnterCriticalSection(&wnd_data_cs);
+    list_remove( &data->entry );
+    LeaveCriticalSection(&wnd_data_cs);
+
+    HeapFree( GetProcessHeap(), 0, data);
+}
+
+struct ntdrv_win_data *associate_find( HWND hwnd )
+{
+    struct ntdrv_win_data *item;
+    BOOL found = FALSE;
+
+    EnterCriticalSection(&wnd_data_cs);
+
+    LIST_FOR_EACH_ENTRY( item, &wnd_data_list, struct ntdrv_win_data, entry )
+        if (item->hwnd == hwnd)
+        {
+            found = TRUE;
+            break;
+        }
+
+    LeaveCriticalSection(&wnd_data_cs);
+
+    if (!found) item = NULL;
+
+    return item;
+}
+
 /***********************************************************************
  *		NTDRV_get_win_data
  *
@@ -59,7 +115,7 @@ struct ntdrv_win_data *NTDRV_get_win_data( HWND hwnd )
 
     if (!hwnd) return NULL;
 
-    data = (struct ntdrv_win_data *)GetPropA( hwnd, window_data_prop );
+    data = associate_find( hwnd );
 
     return data;
 }
@@ -81,12 +137,8 @@ struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd )
     /* don't create win data for HWND_MESSAGE windows */
     if (parent != GetDesktopWindow() && !GetAncestor( parent, GA_PARENT )) return NULL;
 
-    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ntdrv_win_data));
+    data = associate_create(hwnd);
     if (!data) return NULL;
-    data->hwnd = hwnd;
-
-    /* Add it as a property to the window */
-    SetPropA( hwnd, window_data_prop, (HANDLE)data );
 
     GetWindowRect( hwnd, &data->window_rect );
     MapWindowPoints( 0, parent, (POINT *)&data->window_rect, 2 );
@@ -116,12 +168,8 @@ struct ntdrv_win_data *NTDRV_create_desktop_win_data( HWND hwnd )
 {
     struct ntdrv_win_data *data;
 
-    data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ntdrv_win_data));
+    data = associate_create(hwnd);
     if (!data) return NULL;
-    data->hwnd = hwnd;
-
-    /* Add it as a property to the window */
-    SetPropA( hwnd, window_data_prop, (HANDLE)data );
 
     /* Mark it as being a whole window */
     data->whole_window = (PVOID)1;
@@ -139,14 +187,11 @@ void NTDRV_destroy_win_data( HWND hwnd )
     struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
     if (!data) return;
 
-    /* Remove property */
-    RemovePropA( hwnd, window_data_prop );
+    /* Remove property and free its data */
+    associate_destroy( data );
 
     /* Inform window manager */
     SwmRemoveWindow( hwnd );
-
-    /* Free window data */
-    HeapFree( GetProcessHeap(), 0, data );
 }
 
 
