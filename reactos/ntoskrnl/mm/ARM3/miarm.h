@@ -843,7 +843,7 @@ MI_GET_PROTOTYPE_PTE_FOR_VPN(IN PMMVAD Vad,
     PMMPTE ProtoPte;
 
     /* Find the offset within the VAD's prototype PTEs */
-    ProtoPte = Vad->FirstPrototypePte + ((Vpn - Vad->StartingVpn) * sizeof(MMPTE));
+    ProtoPte = Vad->FirstPrototypePte + (Vpn - Vad->StartingVpn);
     ASSERT(ProtoPte <= Vad->LastContiguousPte);
     return ProtoPte;
 }
