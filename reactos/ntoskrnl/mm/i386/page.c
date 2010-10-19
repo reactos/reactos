@@ -223,7 +223,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 MmDeleteHyperspaceMapping(PageDir);
                 return NULL;
             }
-            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+            Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
             if (!NT_SUCCESS(Status) || Pfn == 0)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -231,7 +231,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             Entry = InterlockedCompareExchangePte(&PageDir[PdeOffset], PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
                 Pfn = PTE_TO_PFN(Entry);
             }
         }
@@ -280,7 +280,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 return NULL;
             }
-            Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+            Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
             if (!NT_SUCCESS(Status) || Pfn == 0)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -288,7 +288,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             Entry = InterlockedCompareExchangePte(PageDir, PFN_TO_PTE(Pfn) | PA_PRESENT | PA_READWRITE | PA_USER, 0);
             if (Entry != 0)
             {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
             }
         }
     }
@@ -449,7 +449,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     
     if (FreePage && WasValid)
     {
-        MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+        MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
     }
     
     /*

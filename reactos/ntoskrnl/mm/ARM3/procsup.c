@@ -373,9 +373,6 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         MI_WRITE_VALID_PTE(PointerPte, TempPte);
     }
 
-    // Bug #4835
-    (VOID)InterlockedExchangeAddUL(&MiMemoryConsumers[MC_NPPOOL].PagesUsed, StackPages);
-
     //
     // Release the PFN lock
     //

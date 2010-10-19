@@ -556,14 +556,7 @@ MmAllocPage(ULONG Type)
    PFN_NUMBER PfnOffset;
    PMMPFN Pfn1;
    
-   if (Type != MC_SYSTEM)
-   {
-       PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
-   }
-   else
-   {
-       PfnOffset = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
-   }
+   PfnOffset = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
 
    if (!PfnOffset)
    {
