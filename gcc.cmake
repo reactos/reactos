@@ -96,6 +96,8 @@ macro(set_module_type MODULE TYPE)
     endif()
     if(${TYPE} MATCHES win32dll)
         set_entrypoint(${MODULE} DllMain@12)
+        # temporary, will have to be done in each dll cmake file instead
+        add_livecd_target(${MODULE} reactos/system32)
     endif()
     if(${TYPE} MATCHES win32ocx)
         set_entrypoint(${MODULE} DllMain@12)
