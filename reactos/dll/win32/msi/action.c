@@ -1985,7 +1985,7 @@ static UINT ITERATE_CostFinalizeConditions(MSIRECORD *row, LPVOID param)
 VS_FIXEDFILEINFO *msi_get_disk_file_version( LPCWSTR filename )
 {
     static const WCHAR name[] = {'\\',0};
-    VS_FIXEDFILEINFO *ret;
+    VS_FIXEDFILEINFO *ptr, *ret;
     LPVOID version;
     DWORD versize, handle;
     UINT sz;
@@ -2002,11 +2002,14 @@ VS_FIXEDFILEINFO *msi_get_disk_file_version( LPCWSTR filename )
 
     GetFileVersionInfoW( filename, 0, versize, version );
 
-    if (!VerQueryValueW( version, name, (LPVOID *)&ret, &sz ))
+    if (!VerQueryValueW( version, name, (LPVOID *)&ptr, &sz ))
     {
         msi_free( version );
         return NULL;
     }
+
+    ret = msi_alloc( sz );
+    memcpy( ret, ptr, sz );
 
     msi_free( version );
     return ret;
