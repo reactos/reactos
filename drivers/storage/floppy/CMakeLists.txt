@@ -18,3 +18,4 @@ target_link_libraries(floppy
 
 add_dependencies(floppy psdk bugcodes buildno_header)
 add_minicd_target(floppy reactos floppy.sys)
+add_livecd_target(floppy reactos/system32/drivers)

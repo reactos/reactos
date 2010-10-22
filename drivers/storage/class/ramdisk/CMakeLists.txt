@@ -13,3 +13,4 @@ target_link_libraries(ramdisk
 
 add_dependencies(ramdisk psdk bugcodes)
 add_minicd_target(ramdisk reactos ramdisk.sys)
+add_livecd_target(ramdisk reactos/system32/drivers)

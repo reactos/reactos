@@ -11,3 +11,4 @@ target_link_libraries(buslogic
 
 add_dependencies(buslogic psdk bugcodes)
 add_minicd_target(buslogic reactos buslogic.sys)
+add_livecd_target(buslogic reactos/system32/drivers)

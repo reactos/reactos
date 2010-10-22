@@ -8,3 +8,4 @@ set_target_properties(vbemp PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl
 
 add_importlibs(vbemp videoprt)
 add_dependencies(vbemp psdk bugcodes)
+add_livecd_target(vbemp reactos/system32/drivers)

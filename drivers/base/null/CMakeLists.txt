@@ -11,3 +11,4 @@ target_link_libraries(null
     -lhal)
 
 add_dependencies(null psdk bugcodes)
+add_livecd_target(null reactos/system32/drivers)

@@ -15,3 +15,4 @@ target_link_libraries(cdrom
 
 add_dependencies(cdrom psdk bugcodes)
 add_minicd_target(cdrom reactos cdrom.sys)
+add_livecd_target(cdrom reactos/system32/drivers)

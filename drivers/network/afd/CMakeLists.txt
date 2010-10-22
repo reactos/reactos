@@ -28,3 +28,4 @@ target_link_libraries(afd
 
 add_pch(afd ${CMAKE_CURRENT_SOURCE_DIR}/include/afd.h ${SOURCE})
 add_dependencies(afd psdk bugcodes buildno_header)
+add_livecd_target(afd reactos/system32/drivers)

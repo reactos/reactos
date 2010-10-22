@@ -147,6 +147,7 @@ add_importlibs(acpi ntoskrnl hal)
 add_dependencies(acpi psdk bugcodes)
 
 add_minicd_target(acpi reactos acpi.sys)
+add_livecd_target(acpi reactos/system32/drivers)
 
 add_subdirectory(cmbatt)
 add_subdirectory(compbatt)

@@ -11,3 +11,4 @@ target_link_libraries(atapi
 
 add_dependencies(atapi psdk bugcodes)
 add_minicd_target(atapi reactos atapi.sys)
+add_livecd_target(atapi reactos/system32/drivers)

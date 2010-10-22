@@ -22,3 +22,4 @@ target_link_libraries(kdcom
 
 add_dependencies(kdcom kdcom_def psdk buildno_header bugcodes)
 add_minicd_target(kdcom reactos kdcom.dll)
+add_livecd_target(kdcom reactos/system32)

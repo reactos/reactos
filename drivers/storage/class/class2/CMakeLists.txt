@@ -17,3 +17,4 @@ target_link_libraries(class2
 
 add_dependencies(class2 class2_def psdk bugcodes)
 add_minicd_target(class2 reactos class2.sys)
+add_livecd_target(class2 reactos/system32/drivers)

@@ -14,3 +14,4 @@ target_link_libraries(mouclass
     -lhal)
 
 add_dependencies(mouclass psdk bugcodes)
+add_livecd_target(mouclass reactos/system32/drivers)

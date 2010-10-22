@@ -10,3 +10,4 @@ set_target_properties(pcmcia PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 add_importlibs(pcmcia ntoskrnl hal)
 add_dependencies(pcmcia psdk bugcodes buildno_header)
 add_minicd_target(pcmcia reactos pcmcia.sys)
+add_livecd_target(pcmcia reactos/system32/drivers)

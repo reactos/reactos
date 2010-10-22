@@ -44,3 +44,4 @@ target_link_libraries(ndis
 
 add_pch(ndis ${CMAKE_CURRENT_SOURCE_DIR}/include/ndissys.h ${SOURCE})
 add_dependencies(ndis ndis_def psdk bugcodes buildno_header)
+add_livecd_target(ndis reactos/system32/drivers)

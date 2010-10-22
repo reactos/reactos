@@ -36,3 +36,4 @@ target_link_libraries(fastfat
 add_pch(fastfat ${CMAKE_CURRENT_SOURCE_DIR}/vfat.h ${SOURCE})
 add_dependencies(fastfat psdk bugcodes)
 add_minicd_target(fastfat reactos fastfat.sys)
+add_livecd_target(fastfat reactos/system32/drivers)

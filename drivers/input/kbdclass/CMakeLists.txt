@@ -16,3 +16,4 @@ target_link_libraries(kbdclass
 
 add_dependencies(kbdclass psdk bugcodes)
 add_minicd_target(kbdclass reactos kbdclass.sys)
+add_livecd_target(kbdclass reactos/system32/drivers)

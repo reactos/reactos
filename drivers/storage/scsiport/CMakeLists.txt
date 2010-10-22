@@ -12,3 +12,4 @@ target_link_libraries(scsiport
 
 add_dependencies(scsiport psdk bugcodes)
 add_minicd_target(scsiport reactos scsiport.sys)
+add_livecd_target(scsiport reactos/system32/drivers)

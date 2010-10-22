@@ -15,3 +15,4 @@ target_link_libraries(disk
 
 add_dependencies(disk psdk bugcodes)
 add_minicd_target(disk reactos disk.sys)
+add_livecd_target(disk reactos/system32/drivers)

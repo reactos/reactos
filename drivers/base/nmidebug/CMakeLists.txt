@@ -10,3 +10,4 @@ target_link_libraries(nmidebug
     -lhal)
 
 add_dependencies(nmidebug psdk bugcodes)
+add_livecd_target(nmidebug reactos/system32/drivers)
