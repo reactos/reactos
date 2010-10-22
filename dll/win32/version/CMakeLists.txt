@@ -18,3 +18,4 @@ target_link_libraries(version
 
 add_importlibs(version lz32 kernel32 ntdll)
 add_dependencies(version version_def psdk buildno_header)
+add_livecd_target(version reactos/system32)

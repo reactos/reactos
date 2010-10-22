@@ -11,3 +11,4 @@ target_link_libraries(beepmidi ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def)
 
 add_importlibs(beepmidi winmm kernel32 ntdll)
 add_dependencies(beepmidi beepmidi_def psdk)
+add_livecd_target(beepmidi reactos/system32)

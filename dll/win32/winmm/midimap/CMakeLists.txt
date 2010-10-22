@@ -13,3 +13,4 @@ target_link_libraries(midimap
 
 add_importlibs(midimap kernel32 uuid ntdll advapi32 user32 winmm)
 add_dependencies(midimap midimap_def psdk)
+add_livecd_target(midimap reactos/system32)
