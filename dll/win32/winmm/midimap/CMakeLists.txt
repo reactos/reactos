@@ -5,7 +5,7 @@ spec2def(midimap ${CMAKE_CURRENT_SOURCE_DIR}/midimap.spec ${CMAKE_CURRENT_BINARY
 
 add_library(midimap SHARED midimap.c midimap.rc)
 
-set_target_properties(midimap PROPERTIES LINK_FLAGS "-Wl,-entry,0")
+set_entrypoint(midimap 0)
 
 target_link_libraries(midimap
     ${CMAKE_CURRENT_BINARY_DIR}/midimap.def
