@@ -1,7 +1,7 @@
 
 set_unicode()
 
-add_executable(rpcss
+list(APPEND SOURCE
     epmp.c
     irotp.c
     rpcss_main.c
@@ -10,10 +10,13 @@ add_executable(rpcss
     irot.idl
     rpcss.rc)
 
-target_link_libraries(rpcss rpcss_epm_server rpcss_irot_server pseh)
+include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)
 
-add_pch(rpcss ${CMAKE_CURRENT_SOURCE_DIR}/rpcss.h ${SOURCE})
+add_executable(rpcss ${SOURCE})
+
+target_link_libraries(rpcss epm_server irot_server pseh wine)
 
 set_module_type(rpcss win32cui)
 
 add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)
+add_livecd_target(rpcss reactos/system32)
