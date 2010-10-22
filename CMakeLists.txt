@@ -40,9 +40,9 @@ add_subdirectory(tools)
 add_subdirectory(lib)
 
 if(NOT MSVC)
-export(TARGETS widl winebuild nci buildno gendib cdmake FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci buildno gendib cdmake mkhive FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 else()
-export(TARGETS winebuild nci buildno gendib cdmake FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS winebuild nci buildno gendib cdmake mkhive FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 endif()
 
 else()
@@ -97,6 +97,7 @@ include_directories(include/reactos/libs)
 add_subdirectory(include/psdk)
 add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/idl)
+add_subdirectory(include/reactos/wine)
 add_subdirectory(include/reactos/mc)
 
 #minicd target
@@ -113,6 +114,25 @@ add_custom_command(
     DEPENDS native-cdmake)
 add_custom_target(minicd DEPENDS ${REACTOS_BINARY_DIR}/minicd.iso)
 add_minicd(${REACTOS_SOURCE_DIR}/boot/bootdata/bootcd.ini "" freeldr.ini)
+
+#livecd target
+set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
+
+file(MAKE_DIRECTORY "${LIVECD_DIR}")
+file(MAKE_DIRECTORY "${LIVECD_DIR}/loader")
+file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos")
+file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/fonts")
+file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32")
+file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32/config")
+
+
+
+add_custom_command(
+    OUTPUT ${REACTOS_BINARY_DIR}/livecd.iso
+    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${LIVECD_DIR} REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
+    DEPENDS native-cdmake)
+add_custom_target(livecd DEPENDS ${REACTOS_BINARY_DIR}/livecd.iso)
+add_livecd(${REACTOS_SOURCE_DIR}/boot/bootdata/livecd.ini "" freeldr.ini)
 
 add_subdirectory(base)
 add_subdirectory(boot)

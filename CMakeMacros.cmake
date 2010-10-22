@@ -116,11 +116,17 @@ MACRO(ADD_INTERFACE_DEFINITIONS TARGET)
   ADD_CUSTOM_TARGET(${TARGET} ALL DEPENDS ${OBJECTS})
 ENDMACRO()
 
-MACRO(add_minicd_target _targetname _dir _nameoncd)
+MACRO(add_minicd_target _targetname _dir) # optional parameter: _nameoncd
     get_target_property(FILENAME ${_targetname} LOCATION)
 
+    if("${ARGN}" STREQUAL "")
+    	get_filename_component(_nameoncd ${FILENAME} NAME)
+    else()
+    	set(_nameoncd ${ARGN})
+    endif()
+
     add_custom_command(
-        OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd/${_dir}/${_nameoncd}        
+        OUTPUT ${BOOTCD_DIR}/${_dir}/${_nameoncd}        
         COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd})
 
     add_custom_target(${_targetname}_minicd DEPENDS ${BOOTCD_DIR}/${_dir}/${_nameoncd})
@@ -144,3 +150,109 @@ macro(set_cpp)
   include_directories(BEFORE ${REACTOS_SOURCE_DIR}/lib/3rdparty/stlport/stlport)
   set(IS_CPP 1)
 endmacro()
+
+MACRO(add_livecd_target _targetname _dir )# optional parameter : _nameoncd
+    
+    get_target_property(FILENAME ${_targetname} LOCATION)
+
+    if("${ARGN}" STREQUAL "")
+    	get_filename_component(_nameoncd ${FILENAME} NAME)
+    else()
+    	set(_nameoncd ${ARGN})
+    endif()
+
+    add_custom_command(
+        OUTPUT ${LIVECD_DIR}/${_dir}/${_nameoncd}        
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd})
+        
+    add_custom_target(${_targetname}_livecd DEPENDS ${LIVECD_DIR}/${_dir}/${_nameoncd})
+
+    add_dependencies(${_targetname}_livecd ${_targetname})
+    add_dependencies(livecd ${_targetname}_livecd)
+ENDMACRO(add_livecd_target _targetname _dir _nameoncd)
+
+MACRO(add_livecd FILENAME _dir _nameoncd)
+    add_custom_command(
+        OUTPUT ${LIVECD_DIR}/${_dir}/${_nameoncd}
+        DEPENDS ${FILENAME}
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd})
+        
+    add_custom_target(${_nameoncd}_livecd DEPENDS ${LIVECD_DIR}/${_dir}/${_nameoncd})
+    
+    add_dependencies(livecd ${_nameoncd}_livecd)
+ENDMACRO(add_livecd)
+
+macro(custom_incdefs)
+    if(NOT DEFINED result_incs) #rpc_defines
+        get_directory_property(rpc_defines COMPILE_DEFINITIONS)
+        get_directory_property(rpc_includes INCLUDE_DIRECTORIES)
+
+        foreach(arg ${rpc_defines})
+            set(result_defs ${result_defs} -D${arg})
+        endforeach(arg ${defines})
+
+        foreach(arg ${rpc_includes})
+            set(result_incs -I${arg} ${result_incs})
+        endforeach(arg ${includes})
+    endif()
+endmacro(custom_incdefs)
+
+macro(rpcproxy TARGET)
+    custom_incdefs()
+        list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c)
+
+    foreach(_in_FILE ${ARGN})
+        get_filename_component(FILE ${_in_FILE} NAME_WE)
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c
+            COMMAND native-widl ${result_incs} ${result_defs} -m32 --win32 -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.h -p -P ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            DEPENDS native-widl)
+        set_source_files_properties(
+            ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c
+            PROPERTIES GENERATED TRUE)
+        list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
+        list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl)
+        list(APPEND PROXY_DEPENDS ${TARGET}_${FILE}_p)
+        add_custom_target(${TARGET}_${FILE}_p 
+            DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
+        #add_dependencies(${TARGET}_proxy ${TARGET}_${FILE}_p)
+    endforeach(_in_FILE ${ARGN})
+    
+    	add_custom_command(
+    	    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
+    	    COMMAND native-widl ${result_incs} ${result_defs}  -m32 --win32 --dlldata-only --dlldata=${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${IDLS}
+    	    DEPENDS native-widl)
+    	set_source_files_properties(
+    	    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
+    	    PROPERTIES GENERATED TRUE)
+        
+        add_library(${TARGET}_proxy ${SOURCE})
+        add_dependencies(${TARGET}_proxy psdk ${PROXY_DEPENDS})
+endmacro(rpcproxy)
+
+macro (MACRO_IDL_FILES)
+    custom_incdefs()
+    foreach(_in_FILE ${ARGN})
+        get_filename_component(FILE ${_in_FILE} NAME_WE)
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c
+            COMMAND native-widl ${result_incs} ${result_defs} -m32 --win32 -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h -s -S ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            DEPENDS native-widl)
+        set_source_files_properties(
+            ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c
+            PROPERTIES GENERATED TRUE)
+        add_library(${FILE}_server ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c)
+        add_dependencies(${FILE}_server psdk)
+    
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
+            COMMAND native-widl ${result_incs} ${result_defs} -m32 --win32 -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h -c -C ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            DEPENDS native-widl)
+        set_source_files_properties(
+            ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
+            PROPERTIES GENERATED TRUE)
+        add_library(${FILE}_client ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c)
+        add_dependencies(${FILE}_client psdk)
+    endforeach(_in_FILE ${ARGN})
+
+endmacro (MACRO_IDL_FILES)

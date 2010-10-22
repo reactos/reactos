@@ -206,6 +206,23 @@ target_link_libraries(setupldr
     rtl
     libcntpr)
 
+list(APPEND LIVECD_HIVES
+    ${CMAKE_CURRENT_SOURCE_DIR}/bootdata/livecd.inf
+    ${CMAKE_CURRENT_SOURCE_DIR}/bootdata/hiveinst_i386.inf)
+
+add_custom_command(
+    OUTPUT ${LIVECD_DIR}/reactos/system32/config/sam
+
+    COMMAND native-mkhive ${CMAKE_CURRENT_SOURCE_DIR}/bootdata ${LIVECD_DIR}/reactos/system32/config/ ${ARCH} ${LIVECD_HIVES}
+    DEPENDS native-mkhive)
+
+add_custom_target(livecd_hives DEPENDS ${LIVECD_DIR}/reactos/system32/config/sam)
+
+# Bootcd files
 add_minicd_target(setupldr loader setupldr.sys)
 add_minicd_target(freeldr loader freeldr.sys)
 add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/txtsetup.sif reactos txtsetup.sif)
+
+# Livecd files
+add_livecd_target(setupldr loader)
+add_dependencies(livecd livecd_hives isoboot)
