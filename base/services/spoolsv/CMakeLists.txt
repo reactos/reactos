@@ -7,3 +7,4 @@ target_link_libraries(spoolsv wine)
 
 set_module_type(spoolsv win32cui)
 add_importlibs(spoolsv advapi32 msvcrt kernel32 ntdll)
+add_livecd_target(spoolsv reactos/system32)
