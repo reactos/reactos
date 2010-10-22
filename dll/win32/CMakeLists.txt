@@ -19,7 +19,7 @@ add_subdirectory(cfgmgr32)
 add_subdirectory(clusapi)
 add_subdirectory(comcat)
 add_subdirectory(comctl32)
-#add_subdirectory(comdlg32)#FIXME: comdlg32\\/cdlg_Es.rc:396: unrecognized escape sequence
+add_subdirectory(comdlg32)
 add_subdirectory(compstui)
 #add_subdirectory(credui)#FIXME: \\cryptui\\/cryptui_Fr.rc:432: syntax error
 add_subdirectory(crtdll)

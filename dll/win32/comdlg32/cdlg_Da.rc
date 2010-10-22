@@ -258,7 +258,7 @@ FONT 8, "MS Shell Dlg"
     EDITTEXT                          edt3, 237,106,  35,12, WS_GROUP | ES_NUMBER
 
     GROUPBOX        "Udskriv område", grp1,   8,92,  144,64, WS_GROUP
-    CONTROL         "&Alle"           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "&Alle",          rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
     CONTROL         "Si&der",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
     CONTROL         "&Markeret",      rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
     EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
