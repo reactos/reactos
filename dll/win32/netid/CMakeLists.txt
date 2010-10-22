@@ -10,3 +10,4 @@ target_link_libraries(netid
 
 add_importlibs(netid user32 gdi32 comctl32 advapi32 netapi32 kernel32 ntdll)
 add_dependencies(netid netid_def)
+add_livecd_target(netid reactos/system32)

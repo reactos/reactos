@@ -24,3 +24,4 @@ add_importlibs(deskmon
 
 add_pch(deskmon ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(deskmon deskmon_def)
+add_livecd_target(deskmon reactos/system32)

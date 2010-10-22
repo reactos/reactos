@@ -17,3 +17,4 @@ add_importlibs(devcpux
     ntdll)
 
 add_dependencies(devcpux devcpux_def)
+add_livecd_target(devcpux reactos/system32)

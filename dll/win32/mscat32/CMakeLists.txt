@@ -15,3 +15,4 @@ target_link_libraries(mscat32
 
 add_importlibs(mscat32 wintrust kernel32 ntdll)
 add_dependencies(mscat32 mscat32_def)
+add_livecd_target(mscat32 reactos/system32)

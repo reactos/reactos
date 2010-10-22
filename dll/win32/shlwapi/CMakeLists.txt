@@ -49,3 +49,4 @@ add_importlibs(shlwapi
     ntdll)
 
 add_dependencies(shlwapi shlwapi_def)
+add_livecd_target(shlwapi reactos/system32)

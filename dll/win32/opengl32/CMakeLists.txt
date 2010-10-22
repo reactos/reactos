@@ -31,3 +31,4 @@ add_importlibs(opengl32
 
 add_pch(opengl32 ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.h ${SOURCE})
 add_dependencies(opengl32 opengl32_def)
+add_livecd_target(opengl32 reactos/system32)

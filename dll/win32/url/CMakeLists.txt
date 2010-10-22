@@ -14,3 +14,4 @@ target_link_libraries(url
 
 add_importlibs(url shell32 shlwapi kernel32 ntdll)
 add_dependencies(url url_def)
+add_livecd_target(url reactos/system32)

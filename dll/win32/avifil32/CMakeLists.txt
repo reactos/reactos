@@ -40,3 +40,4 @@ add_importlibs(avifil32
     ntdll)
 
 add_dependencies(avifil32 avifil32_def)
+add_livecd_target(avifil32 reactos/system32)

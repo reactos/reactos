@@ -117,3 +117,4 @@ target_link_libraries(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/kernel32.def
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
 add_dependencies(kernel32 errcodes)
+add_livecd_target(kernel32 reactos/system32)

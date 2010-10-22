@@ -25,3 +25,4 @@ add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
 add_dependencies(msacm32 msacm32_def)
 
 add_subdirectory(msacm32.drv)
+add_livecd_target(msacm32 reactos/system32)

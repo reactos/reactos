@@ -18,3 +18,4 @@ target_link_libraries(imm32
 
 add_importlibs(imm32 advapi32 user32 kernel32 ntdll)
 add_dependencies(imm32 imm32_def)
+add_livecd_target(imm32 reactos/system32)

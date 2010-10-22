@@ -24,3 +24,4 @@ target_link_libraries(uxtheme
 
 add_importlibs(uxtheme user32 advapi32 gdi32 msimg32 kernel32 ntdll)
 add_dependencies(uxtheme uxtheme_def)
+add_livecd_target(uxtheme reactos/system32)

@@ -24,3 +24,4 @@ add_importlibs(aclui user32 gdi32 comctl32 ole32 oleaut32 advapi32 uxtheme kerne
 
 add_pch(aclui ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(aclui aclui_def)
+add_livecd_target(aclui reactos/system32)

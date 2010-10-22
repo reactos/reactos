@@ -24,3 +24,4 @@ add_importlibs(fontext
     ntdll)
 
 add_dependencies(fontext fontext_def)
+add_livecd_target(fontext reactos/system32)

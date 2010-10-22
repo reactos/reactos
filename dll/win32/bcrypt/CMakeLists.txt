@@ -17,3 +17,4 @@ target_link_libraries(bcrypt
 add_importlibs(bcrypt kernel32 ntdll)
 
 add_dependencies(bcrypt bcrypt_def)
+add_livecd_target(bcrypt reactos/system32)

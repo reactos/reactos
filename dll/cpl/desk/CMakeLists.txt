@@ -45,3 +45,4 @@ add_importlibs(desk
     ntdll)
 
 add_dependencies(desk desk_def)
+add_livecd_target(desk reactos/system32)

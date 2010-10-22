@@ -16,3 +16,4 @@ target_link_libraries(msrle32
 
 add_importlibs(msrle32 msvcrt winmm user32 kernel32 ntdll)
 add_dependencies(msrle32 msrle32_def)
+add_livecd_target(msrle32 reactos/system32)

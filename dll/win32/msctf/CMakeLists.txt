@@ -30,3 +30,4 @@ target_link_libraries(msctf
 
 add_importlibs(msctf ole32 oleaut32 user32 advapi32 kernel32 ntdll)
 add_dependencies(msctf msctf_def)
+add_livecd_target(msctf reactos/system32)

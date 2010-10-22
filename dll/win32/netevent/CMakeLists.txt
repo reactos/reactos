@@ -15,3 +15,4 @@ target_link_libraries(netevent
 add_importlibs(netevent kernel32)
 
 add_dependencies(netevent netevent_def neteventmsg)
+add_livecd_target(netevent reactos/system32)

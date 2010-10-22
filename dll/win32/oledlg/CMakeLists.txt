@@ -18,3 +18,4 @@ target_link_libraries(oledlg
 
 add_importlibs(oledlg ole32 comdlg32 user32 advapi32 kernel32 ntdll)
 add_dependencies(oledlg oledlg_def)
+add_livecd_target(oledlg reactos/system32)

@@ -23,7 +23,10 @@ list(APPEND SOURCE
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-D__WINESRC__)
+#FIXME: this should be quotes enclosed
 add_definitions(-DPROXY_CLSID_IS={0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}})
+#add_definitions(-DPROXY_CLSID_IS="{0xb196b286,0xbab4,0x101a,{0xb6,0x9c,0x00,0xaa,0x00,0x34,0x1d,0x07}}")
+
 add_definitions(-DCOM_NO_WINDOWS_H)
 add_definitions(-D_OLEAUT32_)
 add_definitions(-DPROXY_DELEGATION)
@@ -57,3 +60,4 @@ add_dependencies(oleaut32 oleaut32_def)
 
 rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
+add_livecd_target(oleaut32 reactos/system32)

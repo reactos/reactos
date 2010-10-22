@@ -14,3 +14,4 @@ target_link_libraries(sccbase
 
 add_importlibs(sccbase kernel32 ntdll)
 add_dependencies(sccbase sccbase_def)
+add_livecd_target(sccbase reactos/system32)

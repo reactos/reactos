@@ -17,3 +17,4 @@ target_link_libraries(newdev
 
 add_importlibs(newdev gdi32 comctl32 setupapi advapi32 user32 shell32 kernel32 ntdll)
 add_dependencies(newdev newdev_def)
+add_livecd_target(newdev reactos/system32)

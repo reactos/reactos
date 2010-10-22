@@ -11,3 +11,4 @@ target_link_libraries(ufat
 
 add_importlibs(ufat kernel32 ntdll)
 add_dependencies(ufat ufat_def)
+add_livecd_target(ufat reactos/system32)

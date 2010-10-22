@@ -67,3 +67,4 @@ add_importlibs(comctl32
     ntdll)
 
 add_dependencies(comctl32 comctl32_def)
+add_livecd_target(comctl32 reactos/system32)

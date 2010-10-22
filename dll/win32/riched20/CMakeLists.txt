@@ -50,3 +50,4 @@ add_importlibs(riched20
     ntdll)
 
 add_dependencies(riched20 riched20_def)
+add_livecd_target(riched20 reactos/system32)

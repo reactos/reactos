@@ -24,3 +24,4 @@ add_importlibs(input
     kernel32)
 
 add_dependencies(input input_def)
+add_livecd_target(input reactos/system32)

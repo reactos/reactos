@@ -15,3 +15,4 @@ target_link_libraries(query
 
 add_importlibs(query kernel32 ntdll)
 add_dependencies(query query_def)
+add_livecd_target(query reactos/system32)

@@ -13,3 +13,4 @@ target_link_libraries(icmp
 
 add_importlibs(icmp ws2_32 kernel32 ntdll)
 add_dependencies(icmp icmp_def psdk)
+add_livecd_target(icmp reactos/system32)

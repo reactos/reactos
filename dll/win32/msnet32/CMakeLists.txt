@@ -14,3 +14,4 @@ target_link_libraries(msnet32
 
 add_importlibs(msnet32 kernel32 ntdll)
 add_dependencies(msnet32 msnet32_def)
+add_livecd_target(msnet32 reactos/system32)

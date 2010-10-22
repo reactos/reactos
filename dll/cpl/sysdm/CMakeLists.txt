@@ -38,3 +38,4 @@ add_importlibs(sysdm
 
 add_pch(sysdm ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(sysdm sysdm_def)
+add_livecd_target(sysdm reactos/system32)

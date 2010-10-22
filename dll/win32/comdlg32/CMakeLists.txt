@@ -38,3 +38,4 @@ add_importlibs(comdlg32
     ntdll)
 
 add_dependencies(comdlg32 comdlg32_def)
+add_livecd_target(comdlg32 reactos/system32)

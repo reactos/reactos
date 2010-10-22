@@ -13,3 +13,4 @@ target_link_libraries(powrprof
 
 add_importlibs(powrprof advapi32 user32 comctl32 kernel32 ntdll)
 add_dependencies(powrprof powrprof_def)
+add_livecd_target(powrprof reactos/system32)

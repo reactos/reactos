@@ -21,3 +21,4 @@ target_link_libraries(mapi32
 
 add_importlibs(mapi32 shlwapi shell32 user32 advapi32 kernel32 ntdll)
 add_dependencies(mapi32 mapi32_def)
+add_livecd_target(mapi32 reactos/system32)

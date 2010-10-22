@@ -15,3 +15,4 @@ target_link_libraries(dciman32
 
 add_importlibs(dciman32 kernel32 ntdll)
 add_dependencies(dciman32 dciman32_def)
+add_livecd_target(dciman32 reactos/system32)

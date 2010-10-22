@@ -44,3 +44,4 @@ target_link_libraries(rpcrt4
 
 add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 ntdll)
 add_dependencies(rpcrt4 rpcrt4_def winesdk)
+add_livecd_target(rpcrt4 reactos/system32)

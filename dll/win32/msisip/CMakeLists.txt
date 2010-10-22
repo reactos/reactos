@@ -14,3 +14,4 @@ target_link_libraries(msisip
 
 add_importlibs(msisip crypt32 ole32 kernel32 ntdll)
 add_dependencies(msisip msisip_def)
+add_livecd_target(msisip reactos/system32)

@@ -22,3 +22,4 @@ add_importlibs(hdwwiz
     ntdll)
 
 add_dependencies(hdwwiz hdwwiz_def)
+add_livecd_target(hdwwiz reactos/system32)

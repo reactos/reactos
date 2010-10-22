@@ -55,3 +55,4 @@ add_importlibs(setupapi
     ntdll)
 
 add_dependencies(setupapi setupapi_def)
+add_livecd_target(setupapi reactos/system32)

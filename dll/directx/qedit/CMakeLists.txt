@@ -32,3 +32,4 @@ add_importlibs(qedit
     ntdll)
 
 add_dependencies(qedit qedit_def)
+add_livecd_target(qedit reactos/system32)

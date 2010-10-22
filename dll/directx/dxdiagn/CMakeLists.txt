@@ -27,3 +27,4 @@ add_importlibs(dxdiagn
     ntdll)
 
 add_dependencies(dxdiagn dxdiagn_def)
+add_livecd_target(dxdiagn reactos/system32)

@@ -14,3 +14,4 @@ target_link_libraries(cards ${CMAKE_CURRENT_BINARY_DIR}/cards.def)
 
 add_importlibs(cards user32 gdi32)
 add_dependencies(cards cards_def)
+add_livecd_target(cards reactos/system32)

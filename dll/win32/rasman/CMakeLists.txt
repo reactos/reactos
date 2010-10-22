@@ -12,3 +12,4 @@ target_link_libraries(rasman
 
 add_importlibs(rasman kernel32 ntdll)
 add_dependencies(rasman rasman_def)
+add_livecd_target(rasman reactos/system32)

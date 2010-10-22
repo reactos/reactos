@@ -26,3 +26,4 @@ target_link_libraries(netapi32
 
 add_importlibs(netapi32 iphlpapi ws2_32 advapi32 kernel32 ntdll)
 add_dependencies(netapi32 netapi32_def)
+add_livecd_target(netapi32 reactos/system32)

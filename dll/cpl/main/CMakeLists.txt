@@ -27,3 +27,4 @@ add_importlibs(main
     kernel32)
 
 add_dependencies(main main_def)
+add_livecd_target(main reactos/system32)

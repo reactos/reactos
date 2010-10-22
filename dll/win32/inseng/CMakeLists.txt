@@ -22,3 +22,4 @@ add_importlibs(inseng
     ntdll)
 
 add_dependencies(inseng inseng_def)
+add_livecd_target(inseng reactos/system32)

@@ -14,3 +14,4 @@ target_link_libraries(traffic
 
 add_importlibs(traffic kernel32 ntdll)
 add_dependencies(traffic traffic_def psdk buildno_header)
+add_livecd_target(traffic reactos/system32)

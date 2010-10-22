@@ -14,3 +14,4 @@ target_link_libraries(initpki
 
 add_importlibs(initpki kernel32 ntdll)
 add_dependencies(initpki initpki_def)
+add_livecd_target(initpki reactos/system32)

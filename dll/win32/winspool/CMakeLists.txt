@@ -20,3 +20,4 @@ target_link_libraries(winspool
 add_importlibs(winspool advapi32 shlwapi kernel32 ntdll)
 add_dependencies(winspool winspool_def)
 #add_livecd_target(winspool reactos/system32 winspool.drv)
+add_livecd_target(winspool reactos/system32)

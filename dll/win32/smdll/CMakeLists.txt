@@ -14,3 +14,4 @@ target_link_libraries(smdll
 
 add_importlibs(smdll ntdll)
 add_dependencies(smdll smdll_def psdk buildno_header)
+add_livecd_target(smdll reactos/system32)

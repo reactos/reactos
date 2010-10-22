@@ -16,3 +16,4 @@ target_link_libraries(activeds
 add_importlibs(activeds kernel32 ntdll)
 
 add_dependencies(activeds activeds_def)
+add_livecd_target(activeds reactos/system32)

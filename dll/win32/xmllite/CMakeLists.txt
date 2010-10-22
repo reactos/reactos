@@ -15,3 +15,4 @@ target_link_libraries(xmllite
 add_importlibs(xmllite kernel32 ntdll)
 
 add_dependencies(xmllite xmllite_def)
+add_livecd_target(xmllite reactos/system32)

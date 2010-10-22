@@ -21,3 +21,4 @@ target_link_libraries(winhttp
 
 add_importlibs(winhttp shlwapi wininet ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(winhttp winhttp_def)
+add_livecd_target(winhttp reactos/system32)

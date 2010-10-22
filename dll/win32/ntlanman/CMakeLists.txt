@@ -13,3 +13,4 @@ target_link_libraries(ntlanman
 
 add_importlibs(ntlanman netapi32 kernel32 ntdll)
 add_dependencies(ntlanman ntlanman_def)
+add_livecd_target(ntlanman reactos/system32)

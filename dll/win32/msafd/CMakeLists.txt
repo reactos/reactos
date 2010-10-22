@@ -26,3 +26,4 @@ add_pch(msafd ${CMAKE_CURRENT_SOURCE_DIR}/msafd.h ${SOURCE})
 
 add_importlibs(msafd advapi32 kernel32 ntdll)
 add_dependencies(msafd msafd_def)
+add_livecd_target(msafd reactos/system32)

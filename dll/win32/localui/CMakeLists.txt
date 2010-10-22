@@ -15,3 +15,4 @@ target_link_libraries(localui
 
 add_importlibs(localui winspool user32 kernel32 ntdll)
 add_dependencies(localui localui_def)
+add_livecd_target(localui reactos/system32)

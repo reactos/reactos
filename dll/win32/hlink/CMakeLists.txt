@@ -26,3 +26,4 @@ add_importlibs(hlink
     ntdll)
 
 add_dependencies(hlink hlink_def)
+add_livecd_target(hlink reactos/system32)

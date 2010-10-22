@@ -15,3 +15,4 @@ target_link_libraries(mciqtz32
 
 add_importlibs(mciqtz32 winmm oleaut32 ole32 user32 gdi32 kernel32 ntdll)
 add_dependencies(mciqtz32 mciqtz32_def)
+add_livecd_target(mciqtz32 reactos/system32)

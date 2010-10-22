@@ -14,3 +14,4 @@ target_link_libraries(itircl
 
 add_importlibs(itircl kernel32 ntdll)
 add_dependencies(itircl itircl_def psdk)
+add_livecd_target(itircl reactos/system32)

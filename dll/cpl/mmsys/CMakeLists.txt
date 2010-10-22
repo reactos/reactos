@@ -32,3 +32,4 @@ add_importlibs(mmsys
     kernel32)
 
 add_dependencies(mmsys mmsys_def)
+add_livecd_target(mmsys reactos/system32)

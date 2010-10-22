@@ -14,3 +14,4 @@ target_link_libraries(loadperf
 
 add_importlibs(loadperf kernel32 ntdll)
 add_dependencies(loadperf loadperf_def)
+add_livecd_target(loadperf reactos/system32)

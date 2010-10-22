@@ -19,3 +19,4 @@ target_link_libraries(usp10
 
 add_importlibs(usp10 gdi32 kernel32 ntdll)
 add_dependencies(usp10 usp10_def)
+add_livecd_target(usp10 reactos/system32)

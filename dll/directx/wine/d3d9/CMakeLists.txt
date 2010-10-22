@@ -40,3 +40,4 @@ add_importlibs(d3d9
     wined3d)
 
 add_dependencies(d3d9 d3d9_def wineheaders)
+add_livecd_target(d3d9 reactos/system32)

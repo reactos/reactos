@@ -23,3 +23,4 @@ target_link_libraries(secur32
 add_importlibs(secur32 advapi32 kernel32 ntdll)
 add_pch(secur32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(secur32 secur32_def)
+add_livecd_target(secur32 reactos/system32)

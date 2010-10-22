@@ -52,3 +52,4 @@ target_link_libraries(gdi32
 
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
+add_livecd_target(gdi32 reactos/system32)

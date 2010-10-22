@@ -14,3 +14,4 @@ target_link_libraries(mssign32
 
 add_importlibs(mssign32 kernel32 ntdll)
 add_dependencies(mssign32 mssign32_def)
+add_livecd_target(mssign32 reactos/system32)

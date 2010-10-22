@@ -25,3 +25,4 @@ add_importlibs(access
     kernel32)
 
 add_dependencies(access access_def)
+add_livecd_target(access reactos/system32)

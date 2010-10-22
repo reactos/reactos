@@ -21,3 +21,4 @@ target_link_libraries(mscms
 
 add_importlibs(mscms kernel32 ntdll)
 add_dependencies(mscms mscms_def)
+add_livecd_target(mscms reactos/system32)

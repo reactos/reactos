@@ -15,3 +15,4 @@ target_link_libraries(clusapi
 
 add_importlibs(clusapi kernel32 ntdll)
 add_dependencies(clusapi clusapi_def)
+add_livecd_target(clusapi reactos/system32)

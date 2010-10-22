@@ -28,3 +28,4 @@ target_link_libraries(msvcrt
 
 add_pch(msvcrt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_importlibs(msvcrt kernel32 ntdll)
+add_livecd_target(msvcrt reactos/system32)

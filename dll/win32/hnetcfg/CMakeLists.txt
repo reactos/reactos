@@ -29,3 +29,4 @@ add_importlibs(hnetcfg
     ntdll)
 
 add_dependencies(hnetcfg hnetcfg_def)
+add_livecd_target(hnetcfg reactos/system32)

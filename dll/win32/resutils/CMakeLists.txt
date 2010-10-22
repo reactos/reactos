@@ -14,3 +14,4 @@ target_link_libraries(resutils
 
 add_importlibs(resutils kernel32 ntdll)
 add_dependencies(resutils resutils_def)
+add_livecd_target(resutils reactos/system32)

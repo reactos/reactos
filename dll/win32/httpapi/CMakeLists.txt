@@ -15,3 +15,4 @@ target_link_libraries(httpapi
 
 add_importlibs(httpapi kernel32 ntdll)
 add_dependencies(httpapi httpapi_def)
+add_livecd_target(httpapi reactos/system32)

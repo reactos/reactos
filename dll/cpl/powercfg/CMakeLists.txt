@@ -26,3 +26,4 @@ add_importlibs(powercfg
     kernel32)
 
 add_dependencies(powercfg powercfg_def)
+add_livecd_target(powercfg reactos/system32)

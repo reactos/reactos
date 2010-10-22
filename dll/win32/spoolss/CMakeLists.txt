@@ -14,3 +14,4 @@ target_link_libraries(spoolss
 
 add_importlibs(spoolss winspool kernel32 ntdll)
 add_dependencies(spoolss spoolss_def)
+add_livecd_target(spoolss reactos/system32)

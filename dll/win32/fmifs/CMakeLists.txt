@@ -12,12 +12,13 @@ list(APPEND SOURCE
     query.c
     fmifs.rc)
 
-add_library(fmifs SHARED ${SOURCE})
+add_pch(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+add_library(fmifs SHARED ${CMAKE_CURRENT_BINARY_DIR}/fmifs_precomp.h.gch ${SOURCE})
 
 set_entrypoint(fmifs InitializeFmIfs@12)
 
 target_link_libraries(fmifs ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
 add_importlibs(fmifs kernel32 ntdll)
-add_pch(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(fmifs fmifs_def psdk buildno_header)
+add_livecd_target(fmifs reactos/system32)

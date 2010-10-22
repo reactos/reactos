@@ -13,3 +13,4 @@ target_link_libraries(avicap32
 
 add_importlibs(avicap32 advapi32 user32 version kernel32 ntdll)
 add_dependencies(avicap32 avicap32_def)
+add_livecd_target(avicap32 reactos/system32)

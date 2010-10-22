@@ -15,3 +15,4 @@ add_importlibs(ncpa
     shell32)
 
 add_dependencies(ncpa ncpa_def)
+add_livecd_target(ncpa reactos/system32)

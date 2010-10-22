@@ -42,3 +42,4 @@ add_importlibs(netshell
 
 add_pch(netshell ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(netshell netshell_def)
+add_livecd_target(netshell reactos/system32)

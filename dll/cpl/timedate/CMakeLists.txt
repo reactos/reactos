@@ -26,3 +26,4 @@ add_importlibs(timedate
     iphlpapi)
 
 add_dependencies(timedate timedate_def)
+add_livecd_target(timedate reactos/system32)

@@ -16,3 +16,4 @@ target_link_libraries(msvidc32
 
 add_importlibs(msvidc32 user32 kernel32 ntdll)
 add_dependencies(msvidc32 msvidc32_def)
+add_livecd_target(msvidc32 reactos/system32)

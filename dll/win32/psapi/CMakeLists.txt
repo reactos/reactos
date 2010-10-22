@@ -20,3 +20,4 @@ target_link_libraries(psapi
 add_importlibs(psapi kernel32 ntdll)
 add_pch(psapi ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(psapi psapi_def)
+add_livecd_target(psapi reactos/system32)

@@ -52,3 +52,4 @@ add_importlibs(browseui
     ntdll)
 
 add_dependencies(browseui browseui_def)
+add_livecd_target(browseui reactos/system32)

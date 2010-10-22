@@ -19,3 +19,4 @@ target_link_libraries(msgina
 
 add_importlibs(msgina advapi32 user32 gdi32 userenv kernel32 ntdll)
 add_dependencies(msgina msgina_def)
+add_livecd_target(msgina reactos/system32)

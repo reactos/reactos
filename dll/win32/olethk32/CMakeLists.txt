@@ -14,3 +14,4 @@ target_link_libraries(olethk32
 
 add_importlibs(olethk32 kernel32 ntdll)
 add_dependencies(olethk32 olethk32_def psdk)
+add_livecd_target(olethk32 reactos/system32)

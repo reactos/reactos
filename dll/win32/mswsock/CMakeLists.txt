@@ -17,3 +17,4 @@ target_link_libraries(mswsock ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)
 
 add_importlibs(mswsock ws2_32 kernel32)
 add_dependencies(mswsock mswsock_def)
+add_livecd_target(mswsock reactos/system32)

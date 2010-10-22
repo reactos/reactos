@@ -37,3 +37,4 @@ add_importlibs(dsound
     ntdll)
 
 add_dependencies(dsound dsound_def)
+add_livecd_target(dsound reactos/system32)

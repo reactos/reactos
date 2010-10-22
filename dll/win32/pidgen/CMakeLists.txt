@@ -14,3 +14,4 @@ target_link_libraries(pidgen
 
 add_importlibs(pidgen kernel32 ntdll)
 add_dependencies(pidgen pidgen_def)
+add_livecd_target(pidgen reactos/system32)

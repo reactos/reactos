@@ -11,3 +11,4 @@ target_link_libraries(serialui ${CMAKE_CURRENT_BINARY_DIR}/serialui.def)
 
 add_importlibs(serialui user32 shlwapi kernel32)
 add_dependencies(serialui serialui_def)
+add_livecd_target(serialui reactos/system32)

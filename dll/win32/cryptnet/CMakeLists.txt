@@ -19,3 +19,4 @@ add_importlibs(cryptnet
     ntdll)
 
 add_dependencies(cryptnet cryptnet_def)
+add_livecd_target(cryptnet reactos/system32)

@@ -16,3 +16,4 @@ target_link_libraries(acledit ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
 add_importlibs(acledit ntdll)
 
 add_dependencies(acledit acledit_def)
+add_livecd_target(acledit reactos/system32)

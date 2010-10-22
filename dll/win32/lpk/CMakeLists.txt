@@ -14,3 +14,4 @@ target_link_libraries(lpk ${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
 
 add_importlibs(lpk user32 usp10 kernel32 ntdll)
 add_dependencies(lpk lpk_def)
+add_livecd_target(lpk reactos/system32)

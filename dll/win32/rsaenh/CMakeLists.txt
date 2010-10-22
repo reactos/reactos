@@ -29,3 +29,4 @@ target_link_libraries(rsaenh
 add_importlibs(rsaenh msvcrt crypt32 advapi32 kernel32 ntdll)
 
 add_dependencies(rsaenh rsaenh_def)
+add_livecd_target(rsaenh reactos/system32)

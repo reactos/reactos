@@ -14,3 +14,4 @@ target_link_libraries(mssip32
 
 add_importlibs(mssip32 kernel32 ntdll)
 add_dependencies(mssip32 mssip32_def)
+add_livecd_target(mssip32 reactos/system32)
