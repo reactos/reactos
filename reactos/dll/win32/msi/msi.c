@@ -3779,3 +3779,44 @@ UINT WINAPI MsiInstallMissingComponentW(LPCWSTR szProduct, LPCWSTR szComponent, 
     FIXME("(%s %s %d\n", debugstr_w(szProduct), debugstr_w(szComponent), eInstallState);
     return ERROR_SUCCESS;
 }
+
+/***********************************************************************
+ * MsiBeginTransactionA     [MSI.@]
+ */
+UINT WINAPI MsiBeginTransactionA( LPCSTR name, DWORD attrs, MSIHANDLE *id, HANDLE *event )
+{
+    WCHAR *nameW;
+    UINT r;
+
+    FIXME("%s %u %p %p\n", debugstr_a(name), attrs, id, event);
+
+    nameW = strdupAtoW( name );
+    if (name && !nameW)
+        return ERROR_OUTOFMEMORY;
+
+    r = MsiBeginTransactionW( nameW, attrs, id, event );
+    msi_free( nameW );
+    return r;
+}
+
+/***********************************************************************
+ * MsiBeginTransactionW     [MSI.@]
+ */
+UINT WINAPI MsiBeginTransactionW( LPCWSTR name, DWORD attrs, MSIHANDLE *id, HANDLE *event )
+{
+    FIXME("%s %u %p %p\n", debugstr_w(name), attrs, id, event);
+
+    *id = (MSIHANDLE)0xdeadbeef;
+    *event = (HANDLE)0xdeadbeef;
+
+    return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ * MsiEndTransaction     [MSI.@]
+ */
+UINT WINAPI MsiEndTransaction( DWORD state )
+{
+    FIXME("%u\n", state);
+    return ERROR_SUCCESS;
+}

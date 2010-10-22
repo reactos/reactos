@@ -1785,7 +1785,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
             BOOL feature_state = ((feature->Level > 0) &&
                                   (feature->Level <= level));
 
-            if ((feature_state) && (feature->Action == INSTALLSTATE_UNKNOWN))
+            if (feature_state && feature->ActionRequest == INSTALLSTATE_UNKNOWN)
             {
                 if (feature->Attributes & msidbFeatureAttributesFavorSource)
                     msi_feature_set_state(package, feature, INSTALLSTATE_SOURCE);
@@ -1814,7 +1814,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         {
             BOOL selected = feature->Level > 0 && feature->Level <= level;
 
-            if (selected && feature->Action == INSTALLSTATE_UNKNOWN)
+            if (selected && feature->ActionRequest == INSTALLSTATE_UNKNOWN)
             {
                  msi_feature_set_state(package, feature, feature->Installed);
             }
@@ -1839,7 +1839,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
         {
             if (cl->component->ForceLocalState &&
-                feature->Action == INSTALLSTATE_SOURCE)
+                feature->ActionRequest == INSTALLSTATE_SOURCE)
             {
                 msi_feature_set_state(package, feature, INSTALLSTATE_LOCAL);
                 break;
@@ -1850,7 +1850,7 @@ UINT MSI_SetFeatureStates(MSIPACKAGE *package)
         {
             component = cl->component;
 
-            switch (feature->Action)
+            switch (feature->ActionRequest)
             {
             case INSTALLSTATE_ABSENT:
                 component->anyAbsent = 1;
@@ -2371,17 +2371,43 @@ static const WCHAR *get_root_key( MSIPACKAGE *package, INT root, HKEY *root_key 
     return ret;
 }
 
+static WCHAR *get_keypath( MSIPACKAGE *package, HKEY root, const WCHAR *path )
+{
+    static const WCHAR prefixW[] = {'S','O','F','T','W','A','R','E','\\'};
+    static const UINT len = sizeof(prefixW) / sizeof(prefixW[0]);
+
+    if (is_64bit && package->platform == PLATFORM_INTEL &&
+        root == HKEY_LOCAL_MACHINE && !strncmpiW( path, prefixW, len ))
+    {
+        UINT size;
+        WCHAR *path_32node;
+
+        size = (strlenW( path ) + strlenW( szWow6432Node ) + 1) * sizeof(WCHAR);
+        path_32node = msi_alloc( size );
+        if (!path_32node)
+            return NULL;
+
+        memcpy( path_32node, path, len * sizeof(WCHAR) );
+        path_32node[len] = 0;
+        strcatW( path_32node, szWow6432Node );
+        strcatW( path_32node, szBackSlash );
+        strcatW( path_32node, path + len );
+        return path_32node;
+    }
+
+    return strdupW( path );
+}
+
 static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = param;
     LPSTR value_data = NULL;
     HKEY  root_key, hkey;
     DWORD type,size;
-    LPWSTR  deformated;
+    LPWSTR deformated, uikey, keypath;
     LPCWSTR szRoot, component, name, key, value;
     MSICOMPONENT *comp;
     MSIRECORD * uirow;
-    LPWSTR uikey;
     INT   root;
     BOOL check_first = FALSE;
     UINT rc;
@@ -2432,14 +2458,14 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
     strcpyW(uikey,szRoot);
     strcatW(uikey,deformated);
 
-    if (RegCreateKeyW( root_key, deformated, &hkey))
+    keypath = get_keypath( package, root_key, deformated );
+    msi_free( deformated );
+    if (RegCreateKeyW( root_key, keypath, &hkey ))
     {
-        ERR("Could not create key %s\n",debugstr_w(deformated));
-        msi_free(deformated);
+        ERR("Could not create key %s\n", debugstr_w(keypath));
         msi_free(uikey);
         return ERROR_SUCCESS;
     }
-    msi_free(deformated);
 
     value = MSI_RecordGetString(row,5);
     if (value)
@@ -2554,7 +2580,7 @@ static UINT ITERATE_RemoveRegistryValuesOnUninstall( MSIRECORD *row, LPVOID para
 {
     MSIPACKAGE *package = param;
     LPCWSTR component, name, key_str, root_key_str;
-    LPWSTR deformated_key, deformated_name, ui_key_str;
+    LPWSTR deformated_key, deformated_name, ui_key_str, keypath;
     MSICOMPONENT *comp;
     MSIRECORD *uirow;
     BOOL delete_key = FALSE;
@@ -2610,8 +2636,10 @@ static UINT ITERATE_RemoveRegistryValuesOnUninstall( MSIRECORD *row, LPVOID para
 
     deformat_string( package, name, &deformated_name );
 
-    delete_reg_key_or_value( hkey_root, deformated_key, deformated_name, delete_key );
+    keypath = get_keypath( package, hkey_root, deformated_key );
     msi_free( deformated_key );
+    delete_reg_key_or_value( hkey_root, keypath, deformated_name, delete_key );
+    msi_free( keypath );
 
     uirow = MSI_CreateRecord( 2 );
     MSI_RecordSetStringW( uirow, 1, ui_key_str );
@@ -2629,7 +2657,7 @@ static UINT ITERATE_RemoveRegistryValuesOnInstall( MSIRECORD *row, LPVOID param 
 {
     MSIPACKAGE *package = param;
     LPCWSTR component, name, key_str, root_key_str;
-    LPWSTR deformated_key, deformated_name, ui_key_str;
+    LPWSTR deformated_key, deformated_name, ui_key_str, keypath;
     MSICOMPONENT *comp;
     MSIRECORD *uirow;
     BOOL delete_key = FALSE;
@@ -2682,8 +2710,10 @@ static UINT ITERATE_RemoveRegistryValuesOnInstall( MSIRECORD *row, LPVOID param 
 
     deformat_string( package, name, &deformated_name );
 
-    delete_reg_key_or_value( hkey_root, deformated_key, deformated_name, delete_key );
+    keypath = get_keypath( package, hkey_root, deformated_key );
     msi_free( deformated_key );
+    delete_reg_key_or_value( hkey_root, keypath, deformated_name, delete_key );
+    msi_free( keypath );
 
     uirow = MSI_CreateRecord( 2 );
     MSI_RecordSetStringW( uirow, 1, ui_key_str );
@@ -3891,7 +3921,7 @@ static UINT msi_publish_patches( MSIPACKAGE *package )
     WCHAR *p, *all_patches = NULL;
     DWORD len = 0;
 
-    r = MSIREG_OpenProductKey( package->ProductCode, NULL, package->Context, &product_key, FALSE );
+    r = MSIREG_OpenProductKey( package->ProductCode, NULL, package->Context, &product_key, TRUE );
     if (r != ERROR_SUCCESS)
         return ERROR_FUNCTION_FAILED;
 
@@ -4759,7 +4789,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     if (!msi_check_publish(package))
         return ERROR_SUCCESS;
 
-    rc = MSIREG_OpenUninstallKey(package->ProductCode, &hkey, TRUE);
+    rc = MSIREG_OpenUninstallKey(package, &hkey, TRUE);
     if (rc != ERROR_SUCCESS)
         return rc;
 
@@ -4839,7 +4869,7 @@ static UINT msi_unpublish_product(MSIPACKAGE *package, WCHAR *remove)
 
     MSIREG_DeleteProductKey(package->ProductCode);
     MSIREG_DeleteUserDataProductKey(package->ProductCode);
-    MSIREG_DeleteUninstallKey(package->ProductCode);
+    MSIREG_DeleteUninstallKey(package);
 
     if (package->Context == MSIINSTALLCONTEXT_MACHINE)
     {
@@ -7498,7 +7528,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     msi_clone_properties( package );
 
     msi_parse_command_line( package, szCommandLine, FALSE );
-    msi_adjust_allusers_property( package );
+    msi_adjust_privilege_properties( package );
     msi_set_context( package );
 
     if (needs_ui_sequence( package))
