@@ -426,3 +426,4 @@ set_source_files_properties(${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S PROPERTIES GE
 add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi)
 
 add_minicd_target(ntoskrnl reactos ntoskrnl.exe)
+add_livecd_target(ntoskrnl reactos/system32)

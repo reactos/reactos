@@ -188,3 +188,4 @@ target_link_libraries(win32k
 
 add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
 add_dependencies(win32k psdk gendib_generated bugcodes subsystem_napi buildno_header)
+add_livecd_target(win32k reactos/system32)
