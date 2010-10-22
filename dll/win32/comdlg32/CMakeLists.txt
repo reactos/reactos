@@ -33,6 +33,8 @@ add_importlibs(comdlg32
     gdi32
     advapi32
     ole32
+    msvcrt
+    kernel32
     ntdll)
 
 add_dependencies(comdlg32 comdlg32_def)

@@ -55,3 +55,13 @@ add_importlibs(urlmon
     ntdll)
 
 add_dependencies(urlmon urlmon_def)
+add_definitions(-DENTRY_PREFIX=URLMON_)
+add_definitions(-DPROXY_DELEGATION)
+add_definitions(-DREGISTER_PROXY_DLL)
+add_definitions(-D_URLMON_)
+
+# FIXME : this should be quotes enclosed 
+add_definitions(-DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}})
+#add_definitions(-DPROXY_CLSID_IS="{0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,0x00,0x4B,0xA9,0x0B}}")
+
+rpcproxy(urlmon urlmon_urlmon.idl)
