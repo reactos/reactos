@@ -686,6 +686,7 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
     ULONG BufferLength;
     ULONG BytesToCopy;
     ULONG BufferSize;
+    ULONG Gap;
     PUCHAR Buffer;
     NTSTATUS Status;
 
@@ -696,7 +697,18 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
     {
         Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
         if (!NT_SUCCESS(Status))
-            return;
+        {
+            Gap = Position - m_CommonBufferOffset;
+            if (Gap > m_FrameSize)
+            {
+                // insert silence samples
+                DPRINT1("Inserting Silence Buffer Offset %lu GapLength %lu\n", m_CommonBufferOffset, BufferLength);
+                m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
+
+                m_CommonBufferOffset += BufferLength;
+                break;
+            }
+        }
 
         BytesToCopy = min(BufferLength, BufferSize);
 
@@ -712,7 +724,7 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
         m_IrpQueue->UpdateMapping(BytesToCopy);
         m_CommonBufferOffset += BytesToCopy;
 
-        BufferLength = Position - m_CommonBufferOffset;
+        BufferLength -= BytesToCopy;
         m_Position.PlayOffset += BytesToCopy;
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
@@ -744,7 +756,18 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
     {
         Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
         if (!NT_SUCCESS(Status))
-            return;
+        {
+            Gap = m_CommonBufferSize - m_CommonBufferOffset + Position;
+            if (Gap > m_FrameSize)
+            {
+                // insert silence samples
+                DPRINT1("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
+                m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
+
+                m_CommonBufferOffset += BufferLength;
+            }
+            break;
+        }
 
         BytesToCopy = min(BufferLength, BufferSize);
 
@@ -765,7 +788,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
         m_CommonBufferOffset += BytesToCopy;
         m_Position.PlayOffset += BytesToCopy;
 
-        BufferLength = m_CommonBufferSize - m_CommonBufferOffset;
+        BufferLength -=BytesToCopy;
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
@@ -1192,7 +1215,6 @@ CPortPinWaveCyclic::Init(
 #endif
 
     DPRINT1("CPortPinWaveCyclic::Init Status %x PinId %u Capture %u\n", Status, ConnectDetails->PinId, Capture);
-    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize);
 
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1268,6 +1290,7 @@ CPortPinWaveCyclic::Init(
     PC_ASSERT(NT_SUCCESS(Status));
     PC_ASSERT(m_FrameSize);
 
+    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u CommonBufferSize %lu\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize, m_CommonBufferSize);
 
 
     /* set up allocator framing */
