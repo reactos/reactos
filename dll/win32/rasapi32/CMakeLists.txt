@@ -14,3 +14,4 @@ target_link_libraries(rasapi32
 
 add_importlibs(rasapi32 kernel32 ntdll)
 add_dependencies(rasapi32 rasapi32_def psdk buildno_header)
+add_livecd_target(rasapi32 reactos/system32)

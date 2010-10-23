@@ -22,3 +22,4 @@ add_importlibs(odbccp32
     ntdll)
 
 add_dependencies(odbccp32 odbccp32_def)
+add_livecd_target(odbccp32 reactos/system32)

@@ -17,3 +17,4 @@ target_link_libraries(mciwave
 
 add_importlibs(mciwave winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(mciwave mciwave_def psdk buildno_header)
+add_livecd_target(mciwave reactos/system32)

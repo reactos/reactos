@@ -14,3 +14,4 @@ target_link_libraries(mcicda
 
 add_importlibs(mcicda winmm user32 kernel32 ntdll)
 add_dependencies(mcicda mcicda_def psdk buildno_header)
+add_livecd_target(mcicda reactos/system32)

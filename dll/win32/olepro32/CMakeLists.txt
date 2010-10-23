@@ -18,3 +18,4 @@ add_importlibs(olepro32
     ntdll)
 
 add_dependencies(olepro32 olepro32_def)
+add_livecd_target(olepro32 reactos/system32)

@@ -117,3 +117,4 @@ add_importlibs(glu32
     ntdll)
 
 add_dependencies(glu32 glu32_def psdk buildno_header)
+add_livecd_target(glu32 reactos/system32)

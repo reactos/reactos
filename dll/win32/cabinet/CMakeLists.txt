@@ -21,3 +21,4 @@ target_link_libraries(cabinet
 
 add_importlibs(cabinet kernel32 ntdll)
 add_dependencies(cabinet cabinet_def psdk buildno_header)
+add_livecd_target(cabinet reactos/system32)

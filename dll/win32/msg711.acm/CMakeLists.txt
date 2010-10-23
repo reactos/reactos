@@ -22,3 +22,4 @@ target_link_libraries(msg711.acm
 
 add_importlibs(msg711.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(msg711.acm msg711.acm_def psdk buildno_header)
+add_livecd_target(msg711.acm reactos/system32)

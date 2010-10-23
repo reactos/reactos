@@ -22,3 +22,4 @@ target_link_libraries(msgsm32.acm
 
 add_importlibs(msgsm32.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(msgsm32.acm msgsm32.acm_def psdk buildno_header)
+add_livecd_target(msgsm32.acm reactos/system32)

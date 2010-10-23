@@ -14,3 +14,4 @@ target_link_libraries(printui
 
 add_importlibs(printui shell32 kernel32 ntdll)
 add_dependencies(printui printui_def psdk buildno_header)
+add_livecd_target(printui reactos/system32)

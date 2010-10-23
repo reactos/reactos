@@ -22,3 +22,4 @@ add_importlibs(comcat
     ntdll)
 
 add_dependencies(comcat comcat_def psdk buildno_header)
+add_livecd_target(comcat reactos/system32)

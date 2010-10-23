@@ -18,3 +18,4 @@ target_link_libraries(pdh
 
 add_importlibs(pdh kernel32 ntdll)
 add_dependencies(pdh pdh_def)
+add_livecd_target(pdh reactos/system32)

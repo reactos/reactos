@@ -14,3 +14,4 @@ target_link_libraries(rsabase
 
 add_importlibs(rsabase rsaenh ntdll)
 add_dependencies(rsabase rsabase_def)
+add_livecd_target(rsabase reactos/system32)

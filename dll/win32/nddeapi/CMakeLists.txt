@@ -14,3 +14,4 @@ target_link_libraries(nddeapi
 
 add_importlibs(nddeapi kernel32 ntdll)
 add_dependencies(nddeapi nddeapi_def psdk buildno_header)
+add_livecd_target(nddeapi reactos/system32)

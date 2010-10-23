@@ -19,3 +19,4 @@ add_importlibs(oleacc
     ntdll)
 
 add_dependencies(oleacc oleacc_def)
+add_livecd_target(oleacc reactos/system32)
