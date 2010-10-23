@@ -919,7 +919,7 @@ CPortPinWavePci::Init(
     }
 
     // initialize irp queue
-    Status = m_IrpQueue->Init(ConnectDetails, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment, NULL);
+    Status = m_IrpQueue->Init(ConnectDetails, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment);
     if (!NT_SUCCESS(Status))
     {
         // this should never happen

@@ -321,8 +321,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN KSPIN_CONNECT *ConnectDetails,
         IN ULONG FrameSize,
-        IN ULONG Alignment,
-        IN PVOID SilenceBuffer) PURE;
+        IN ULONG Alignment) PURE;
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PIRP Irp,
@@ -363,8 +362,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     STDMETHODIMP_(NTSTATUS) Init(THIS_                 \
         IN KSPIN_CONNECT *ConnectDetails,              \
         IN ULONG FrameSize,                            \
-        IN ULONG Alignment,                            \
-        IN PVOID SilenceBuffer);                       \
+        IN ULONG Alignment);                           \
                                                        \
     STDMETHODIMP_(NTSTATUS) AddMapping(THIS_           \
         IN PIRP Irp,                                   \
