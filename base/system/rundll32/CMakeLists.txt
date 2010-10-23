@@ -8,3 +8,4 @@ add_executable(rundll32 rundll32.c rundll32.rc)
 set_module_type(rundll32 win32gui)
 
 add_importlibs(rundll32 user32 msvcrt kernel32 ntdll)
+add_livecd_target(rundll32 reactos/system32)
