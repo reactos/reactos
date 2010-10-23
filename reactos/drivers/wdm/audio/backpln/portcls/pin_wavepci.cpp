@@ -62,8 +62,6 @@ protected:
     KSAUDIO_POSITION m_Position;
     ULONG m_StopCount;
 
-    ULONG m_Delay;
-
     BOOL m_bUsePrefetch;
     ULONG m_PrefetchOffset;
     SUBDEVICE_DESCRIPTOR m_Descriptor;
@@ -637,41 +635,85 @@ CPortPinWavePci::Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    ISubdevice *SubDevice;
     NTSTATUS Status;
-    PSUBDEVICE_DESCRIPTOR Descriptor;
+
+    if (m_Format)
+    {
+        // free format
+        FreeItem(m_Format, TAG_PORTCLASS);
+
+        // format is freed
+        m_Format = NULL;
+    }
+
+    if (m_IrpQueue)
+    {
+        // cancel remaining irps
+        m_IrpQueue->CancelBuffers();
+
+        // release irp queue
+        m_IrpQueue->Release();
+
+        // queue is freed
+        m_IrpQueue = NULL;
+    }
+
 
     if (m_ServiceGroup)
     {
+        // remove member from service group
         m_ServiceGroup->RemoveMember(PSERVICESINK(this));
+
+        // do not release service group, it is released by the miniport object
+        m_ServiceGroup = NULL;
     }
 
     if (m_Stream)
     {
         if (m_State != KSSTATE_STOP)
         {
-            m_Stream->SetState(KSSTATE_STOP);
+            // stop stream
+            Status = m_Stream->SetState(KSSTATE_STOP);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT("Warning: failed to stop stream with %x\n", Status);
+                PC_ASSERT(0);
+            }
         }
+        // set state to stop
+        m_State = KSSTATE_STOP;
+
+        DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
+
+        // release stream
         m_Stream->Release();
+
+        // stream is now freed
+        m_Stream = NULL;
     }
 
-    Status = m_Port->QueryInterface(IID_ISubdevice, (PVOID*)&SubDevice);
-    if (NT_SUCCESS(Status))
+    if (m_Filter)
     {
-        Status = SubDevice->GetDescriptor(&Descriptor);
-        if (NT_SUCCESS(Status))
-        {
-            Descriptor->Factory.Instances[m_ConnectDetails->PinId].CurrentPinInstanceCount--;
-        }
-        SubDevice->Release();
+        // disconnect pin from filter
+        m_Filter->FreePin((PPORTPINWAVEPCI)this);
+
+        // release filter reference
+        m_Filter->Release();
+
+        // pin is done with filter
+        m_Filter = NULL;
     }
 
-    if (m_Format)
+    if (m_Port)
     {
-        FreeItem(m_Format, TAG_PORTCLASS);
-        m_Format = NULL;
+        // release reference to port driver
+        m_Port->Release();
+
+        // work is done for port
+        m_Port = NULL;
     }
 
+    // successfully complete irp
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -756,33 +798,18 @@ CPortPinWavePci::Init(
     NTSTATUS Status;
     PKSDATAFORMAT DataFormat;
     BOOLEAN Capture;
+    ISubdevice * Subdevice = NULL;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
 
-    Port->AddRef();
-    Filter->AddRef();
-
-    m_Port = Port;
-    m_Filter = Filter;
-    m_KsPinDescriptor = KsPinDescriptor;
-    m_ConnectDetails = ConnectDetails;
-    m_Miniport = GetWavePciMiniport(Port);
-    m_DeviceObject = DeviceObject;
-
-    DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
-
-    DPRINT("IPortPinWavePci_fnInit entered\n");
-
-    m_Format = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
-    if (!m_Format)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
-
+    // check if it is a source / sink pin
     if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
+        // sink pin
         Capture = FALSE;
     }
     else if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_OUT)
     {
+        // source pin
         Capture = TRUE;
     }
     else
@@ -792,6 +819,45 @@ CPortPinWavePci::Init(
         while(TRUE);
     }
 
+    // add port / filter reference
+    Port->AddRef();
+    Filter->AddRef();
+
+    // initialize pin
+    m_Port = Port;
+    m_Filter = Filter;
+    m_KsPinDescriptor = KsPinDescriptor;
+    m_ConnectDetails = ConnectDetails;
+    m_Miniport = GetWavePciMiniport(Port);
+    m_DeviceObject = DeviceObject;
+    m_State = KSSTATE_STOP;
+    m_Capture = Capture;
+
+    DPRINT("IPortPinWavePci_fnInit entered\n");
+
+    // get dataformat
+    DataFormat = (PKSDATAFORMAT)(ConnectDetails + 1);
+
+    // allocate data format
+    m_Format = (PKSDATAFORMAT)AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
+    if (!m_Format)
+    {
+        // release references
+        m_Port->Release();
+        m_Filter->Release();
+
+        // no dangling pointers
+        Port = NULL;
+        Filter = NULL;
+
+        // failed to allocate data format
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // copy data format
+    RtlMoveMemory(m_Format, DataFormat, DataFormat->FormatSize);
+
+    // allocate new stream
     Status = m_Miniport->NewStream(&m_Stream,
                                    NULL,
                                    NonPagedPool,
@@ -805,46 +871,80 @@ CPortPinWavePci::Init(
     DPRINT("IPortPinWavePci_fnInit Status %x\n", Status);
 
     if (!NT_SUCCESS(Status))
-        return Status;
-
-    if (m_ServiceGroup)
     {
-        Status = m_ServiceGroup->AddMember(PSERVICESINK(this));
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("Failed to add pin to service group\n");
-            return Status;
-        }
+        // free references
+        Port->Release();
+        Filter->Release();
+
+        // free data format
+        FreeItem(m_Format, TAG_PORTCLASS);
+
+        // no dangling pointers
+        m_Port = NULL;
+        m_Filter = NULL;
+        m_Format = NULL;
+
+        // failed to allocate stream
+        return Status;
     }
 
-    // delay of 10 milisec
-    m_Delay = Int32x32To64(10, -10000);
-
+    // get allocator requirements for pin
     Status = m_Stream->GetAllocatorFraming(&m_AllocatorFraming);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT("OptionFlags %x RequirementsFlag %x PoolType %x Frames %lu FrameSize %lu FileAlignment %lu\n",
+               m_AllocatorFraming.OptionsFlags, m_AllocatorFraming.RequirementsFlags, m_AllocatorFraming.PoolType, m_AllocatorFraming.Frames, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment);
+    }
+
+    // allocate new irp queue
+    Status = NewIrpQueue(&m_IrpQueue);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("GetAllocatorFraming failed with %x\n", Status);
+        // free references
+        Port->Release();
+        Filter->Release();
+        m_Stream->Release();
+
+        // free data format
+        FreeItem(m_Format, TAG_PORTCLASS);
+
+        // no dangling pointers
+        m_Port = NULL;
+        m_Filter = NULL;
+        m_Format = NULL;
+        m_Stream = NULL;
+
+        // failed to allocate irp queue
+        return Status;
     }
 
-    DPRINT("OptionFlags %x RequirementsFlag %x PoolType %x Frames %lu FrameSize %lu FileAlignment %lu\n",
-           m_AllocatorFraming.OptionsFlags, m_AllocatorFraming.RequirementsFlags, m_AllocatorFraming.PoolType, m_AllocatorFraming.Frames, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment);
+    // initialize irp queue
+    Status = m_IrpQueue->Init(ConnectDetails, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        // this should never happen
+        ASSERT(0);
+    }
 
-    ISubdevice * Subdevice = NULL;
     // get subdevice interface
     Status = Port->QueryInterface(IID_ISubdevice, (PVOID*)&Subdevice);
 
     if (!NT_SUCCESS(Status))
-        return Status;
+    {
+        // this function should never fail
+        ASSERT(0);
+    }
 
-    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
-
+    // get subdevice descriptor
     Status = Subdevice->GetDescriptor(&SubDeviceDescriptor);
     if (!NT_SUCCESS(Status))
     {
-        // failed to get descriptor
-        Subdevice->Release();
-        return Status;
+        // this function should never fail
+        ASSERT(0);
     }
+
+    // release subdevice
+    Subdevice->Release();
 
     /* set up subdevice descriptor */
     RtlZeroMemory(&m_Descriptor, sizeof(SUBDEVICE_DESCRIPTOR));
@@ -855,21 +955,30 @@ CPortPinWavePci::Init(
     m_Descriptor.UnknownMiniport = SubDeviceDescriptor->UnknownMiniport;
     m_Descriptor.PortPin = (PVOID)this;
 
-
-
-    Status = NewIrpQueue(&m_IrpQueue);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = m_IrpQueue->Init(ConnectDetails, m_AllocatorFraming.FrameSize, m_AllocatorFraming.FileAlignment, NULL);
-    if (!NT_SUCCESS(Status))
+    if (m_ServiceGroup)
     {
-        DPRINT("IrpQueue_Init failed with %x\n", Status);
-        return Status;
+        Status = m_ServiceGroup->AddMember(PSERVICESINK(this));
+        if (!NT_SUCCESS(Status))
+        {
+            // free references
+            m_Stream->Release();
+            Port->Release();
+            Filter->Release();
+
+            // free data format
+            FreeItem(m_Format, TAG_PORTCLASS);
+
+            // no dangling pointers
+            m_Stream = NULL;
+            m_Port = NULL;
+            m_Filter = NULL;
+            m_Format = NULL;
+
+            // failed to add to service group
+            return Status;
+        }
     }
 
-    m_State = KSSTATE_STOP;
-    m_Capture = Capture;
 
     return STATUS_SUCCESS;
 }
