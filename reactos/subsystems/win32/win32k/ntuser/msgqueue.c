@@ -1003,9 +1003,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
-   /* Call the callback if the message wa
-   
-   s sent with SendMessageCallback */
+   /* Call the callback if the message was sent with SendMessageCallback */
    if (Message->CompletionCallback != NULL)
    {
       co_IntCallSentMessageCallback(Message->CompletionCallback,
