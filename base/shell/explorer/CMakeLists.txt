@@ -37,6 +37,7 @@ list(APPEND SOURCE
     taskbar/startmenu.cpp
     taskbar/traynotify.cpp
     precomp.cpp
+    explorer.rc
     services/startup.c
     services/shellservices.cpp
     desktop/desktop.cpp
