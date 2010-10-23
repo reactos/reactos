@@ -138,6 +138,7 @@ EnableWindow(HWND hWnd,
     
     if (Update)
     {
+        IntNotifyWinEvent(EVENT_OBJECT_STATECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
         SendMessageW(hWnd, WM_ENABLE, (LPARAM)bEnable, 0);
     }
     // Return nonzero if it was disabled, or zero if it wasn't:

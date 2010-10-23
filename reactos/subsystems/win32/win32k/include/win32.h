@@ -96,6 +96,7 @@ typedef struct _THREADINFO
     LIST_ENTRY          PtiLink;
     POINT               ptLast;
 
+    LIST_ENTRY          aphkStart[NB_HOOKS];
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
   /* ReactOS */
   LIST_ENTRY WindowListHead;
@@ -150,6 +151,8 @@ typedef struct _W32PROCESS
   LIST_ENTRY    GDIBrushAttrFreeList;
 } W32PROCESS, *PW32PROCESS;
 
+#define CLIBS 32
+
 typedef struct _PROCESSINFO
 {
   W32PROCESS;
@@ -158,11 +161,15 @@ typedef struct _PROCESSINFO
   struct _DESKTOP* rpdeskStartup;
   PCLS pclsPrivateList;
   PCLS pclsPublicList;
-
+  DWORD dwhmodLibLoadedMask;
+  HANDLE ahmodLibLoaded[CLIBS];
+  struct _WINSTATION_OBJECT *prpwinsta;
+  HWINSTA hwinsta;
+  ACCESS_MASK amwinsta;
+  DWORD dwHotkey;
   HMONITOR hMonitor;
-
+  LUID luidSession;
   USERSTARTUPINFO usi;
-  ULONG Flags;
   DWORD dwLayout;
   DWORD dwRegisteredClasses;
   /* ReactOS */

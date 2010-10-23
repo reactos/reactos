@@ -2060,7 +2060,11 @@ AnyPopup(VOID)
 BOOL WINAPI
 IsWindowInDestroy(HWND hWnd)
 {
-    return NtUserIsWindowInDestroy(hWnd);
+    PWND pwnd;
+    pwnd = ValidateHwnd(hWnd);
+    if (!pwnd)
+       return FALSE;
+    return ((pwnd->state2 & WNDS2_INDESTROY) == WNDS2_INDESTROY);
 }
 
 /*

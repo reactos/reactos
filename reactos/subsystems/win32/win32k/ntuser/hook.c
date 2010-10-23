@@ -2,8 +2,10 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window hooks
- * FILE:             subsystem/win32/win32k/ntuser/hook.c
+ * FILE:             subsystems/win32/win32k/ntuser/hook.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   James Tabor (james.tabor@rectos.org)
+ *
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  * NOTE:             Most of this code was adapted from Wine,
@@ -15,474 +17,117 @@
 #define NDEBUG
 #include <debug.h>
 
-static PHOOKTABLE GlobalHooks;
-
+typedef struct _HOOKPACK
+{
+  PHOOK pHk; 
+  LPARAM lParam;
+} HOOKPACK, *PHOOKPACK;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-
-/* create a new hook table */
-static
-PHOOKTABLE
-IntAllocHookTable(void)
-{
-    PHOOKTABLE Table;
-    UINT i;
-
-    Table = ExAllocatePoolWithTag(PagedPool, sizeof(HOOKTABLE), TAG_HOOK);
-    if (NULL != Table)
-    {
-        for (i = 0; i < NB_HOOKS; i++)
-        {
-            InitializeListHead(&Table->Hooks[i]);
-            Table->Counts[i] = 0;
-        }
-    }
-
-    return Table;
-}
-
-
-PHOOK
-FASTCALL
-IntGetHookObject(HHOOK hHook)
-{
-    PHOOK Hook;
-
-    if (!hHook)
-    {
-        SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
-        return NULL;
-    }
-
-    Hook = (PHOOK)UserGetObject(gHandleTable, hHook, otHook);
-    if (!Hook)
-    {
-        SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
-        return NULL;
-    }
-
-    ASSERT(Hook->head.cLockObj >= 0);
-
-    Hook->head.cLockObj++;
-
-    return Hook;
-}
-
-
-
-/* create a new hook and add it to the specified table */
-static
-PHOOK
-IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
-{
-    PTHREADINFO W32Thread;
-    PHOOK Hook;
-    PHOOKTABLE Table = Global ? GlobalHooks : MsqGetHooks(((PTHREADINFO)Thread->Tcb.Win32Thread)->MessageQueue);
-    HANDLE Handle;
-
-    if (NULL == Table)
-    {
-        Table = IntAllocHookTable();
-        if (NULL == Table)
-        {
-            return NULL;
-        }
-        if (Global)
-        {
-            GlobalHooks = Table;
-        }
-        else
-        {
-            MsqSetHooks(((PTHREADINFO)Thread->Tcb.Win32Thread)->MessageQueue, Table);
-        }
-    }
-
-    Hook = UserCreateObject(gHandleTable, NULL, &Handle, otHook, sizeof(HOOK));
-    if (NULL == Hook)
-    {
-        return NULL;
-    }
-
-    Hook->Thread = Thread;
-    Hook->HookId = HookId;
-
-    if (Thread)
-    {
-        W32Thread = ((PTHREADINFO)Thread->Tcb.Win32Thread);
-        ASSERT(W32Thread != NULL);
-        W32Thread->fsHooks |= HOOKID_TO_FLAG(HookId);
-
-        if (W32Thread->pClientInfo)
-           W32Thread->pClientInfo->fsHooks = W32Thread->fsHooks;
-
-        if (W32Thread->pDeskInfo) // Do this for now.
-           W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
-
-        Hook->head.pti = W32Thread;
-        Hook->head.rpdesk = W32Thread->rpdesk;
-    }
-
-    RtlInitUnicodeString(&Hook->ModuleName, NULL);
-
-    InsertHeadList(&Table->Hooks[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
-
-    return Hook;
-}
-
-/* get the hook table that a given hook belongs to */
-static
-PHOOKTABLE
-FASTCALL
-IntGetTable(PHOOK Hook)
-{
-    if (NULL == Hook->Thread || WH_KEYBOARD_LL == Hook->HookId ||
-        WH_MOUSE_LL == Hook->HookId)
-    {
-        return GlobalHooks;
-    }
-
-    return MsqGetHooks(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue);
-}
-
-/* get the first hook in the chain */
-static
-PHOOK
-FASTCALL
-IntGetFirstHook(PHOOKTABLE Table, int HookId)
-{
-    PLIST_ENTRY Elem = Table->Hooks[HOOKID_TO_INDEX(HookId)].Flink;
-
-    return Elem == &Table->Hooks[HOOKID_TO_INDEX(HookId)]
-           ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain);
-}
-
-/* find the first non-deleted hook in the chain */
-static
-PHOOK
-FASTCALL
-IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
-{
-    PHOOK Hook;
-    PLIST_ENTRY Elem;
-
-    Hook = IntGetFirstHook(Table, HookId);
-
-    while (NULL != Hook && NULL == Hook->Proc)
-    {
-        Elem = Hook->Chain.Flink;
-        Hook = (Elem == &Table->Hooks[HOOKID_TO_INDEX(HookId)]
-                ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain));
-    }
-
-    return Hook;
-}
-
-/* find the next hook in the chain, skipping the deleted ones */
-PHOOK
-FASTCALL
-IntGetNextHook(PHOOK Hook)
-{
-    PHOOKTABLE Table = IntGetTable(Hook);
-    int HookId = Hook->HookId;
-    PLIST_ENTRY Elem;
-
-    Elem = Hook->Chain.Flink;
-    while (Elem != &Table->Hooks[HOOKID_TO_INDEX(HookId)])
-    {
-        Hook = CONTAINING_RECORD(Elem, HOOK, Chain);
-        if (NULL != Hook->Proc)
-        {
-            return Hook;
-        }
-    }
-
-    if (NULL != GlobalHooks && Table != GlobalHooks)  /* now search through the global table */
-    {
-        return IntGetFirstValidHook(GlobalHooks, HookId);
-    }
-
-    return NULL;
-}
-
-/* free a hook, removing it from its chain */
-static
-VOID
-FASTCALL
-IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
-{
-    RemoveEntryList(&Hook->Chain);
-    RtlFreeUnicodeString(&Hook->ModuleName);
-
-    /* Dereference thread if required */
-    if (Hook->Flags & HOOK_THREAD_REFERENCED)
-    {
-        ObDereferenceObject(Hook->Thread);
-    }
-
-    /* Close handle */
-    UserDeleteObject(UserHMGetHandle(Hook), otHook);
-}
-
-/* remove a hook, freeing it if the chain is not in use */
-static
-VOID
-IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
-{
-    PTHREADINFO W32Thread;
-    PHOOKTABLE Table = IntGetTable(Hook);
-
-    ASSERT(NULL != Table); // At this point this should not be null!
-
-    W32Thread = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
-    ASSERT(W32Thread != NULL);
-    W32Thread->fsHooks &= ~HOOKID_TO_FLAG(Hook->HookId);
-
-    GetWin32ClientInfo()->fsHooks = W32Thread->fsHooks;
-
-    if (W32Thread->pDeskInfo) // Do this for now.
-       W32Thread->pDeskInfo->fsHooks= W32Thread->fsHooks;
-
-    if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
-    {
-        Hook->Proc = NULL; /* chain is in use, just mark it and return */
-    }
-    else
-    {
-        IntFreeHook(Table, Hook, WinStaObj);
-    }
-}
-
-/* release a hook chain, removing deleted hooks if the use count drops to 0 */
-static
-VOID
-FASTCALL
-IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
-{
-    PLIST_ENTRY Elem;
-    PHOOK HookObj;
-
-    if (NULL == Table)
-    {
-        return;
-    }
-
-    /* use count shouldn't already be 0 */
-    ASSERT(0 != Table->Counts[HOOKID_TO_INDEX(HookId)]);
-
-    if (0 == Table->Counts[HOOKID_TO_INDEX(HookId)])
-    {
-        return;
-    }
-
-    if (0 == --Table->Counts[HOOKID_TO_INDEX(HookId)])
-    {
-        Elem = Table->Hooks[HOOKID_TO_INDEX(HookId)].Flink;
-
-        while (Elem != &Table->Hooks[HOOKID_TO_INDEX(HookId)])
-        {
-            HookObj = CONTAINING_RECORD(Elem, HOOK, Chain);
-            Elem = Elem->Flink;
-
-            if (NULL == HookObj->Proc)
-            {
-                IntFreeHook(Table, HookObj, WinStaObj);
-            }
-        }
-    }
-}
-
 static
 LRESULT
 FASTCALL
-IntCallLowLevelHook(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
+IntCallLowLevelHook( PHOOK Hook,
+                     INT Code,
+                     WPARAM wParam,
+                     LPARAM lParam)
 {
     NTSTATUS Status;
-    ULONG_PTR uResult;
+    PTHREADINFO pti;
+    PHOOKPACK pHP;
+    ULONG_PTR uResult = 0;
+
+    if (Hook->Thread)
+       pti = Hook->Thread->Tcb.Win32Thread;
+    else
+       pti = Hook->head.pti;
+
+    pHP = ExAllocatePoolWithTag(NonPagedPool, sizeof(HOOKPACK), TAG_HOOK);
+    if (!pHP) return 0;
+
+    pHP->pHk = Hook;
+    pHP->lParam = lParam;
 
     /* FIXME should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-    Status = co_MsqSendMessage(((PTHREADINFO)Hook->Thread->Tcb.Win32Thread)->MessageQueue,
-                                IntToPtr(Code),
-                                Hook->HookId,
+    Status = co_MsqSendMessage( pti->MessageQueue,
+                                IntToPtr(Code), // hWnd
+                                Hook->HookId,   // Msg
                                 wParam,
-                                lParam,
+                                (LPARAM)pHP,
                                 5000,
                                 TRUE,
                                 MSQ_ISHOOK,
-                                &uResult);
-
-    return NT_SUCCESS(Status) ? uResult : 0;
-}
-
-/*
-  Called from inside kernel space.
- */
-LRESULT
-FASTCALL
-co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
-{
-    PHOOK Hook, SaveHook;
-    PTHREADINFO pti;
-    PCLIENTINFO ClientInfo;
-    PHOOKTABLE Table;
-    LRESULT Result;
-    PWINSTATION_OBJECT WinStaObj;
-    NTSTATUS Status;
-
-    ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
-
-#if 0
-    /* FIXME! Check pDeskInfo->fsHooks for global hooks! */
-    if (!ISITHOOKED(HookId))
-    {
-        return 0;
-    }
-#endif
-
-    pti = PsGetCurrentThreadWin32Thread();
-    if (!pti)
-    {
-        Table = NULL;
-    }
-    else
-    {
-        Table = MsqGetHooks(pti->MessageQueue);
-    }
-
-    if (NULL == Table || ! (Hook = IntGetFirstValidHook(Table, HookId)))
-    {
-        /* try global table */
-        Table = GlobalHooks;
-        if (NULL == Table || ! (Hook = IntGetFirstValidHook(Table, HookId)))
-        {
-            return 0;  /* no hook set */
-        }
-    }
-
-    if ((Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL))
-    {
-        DPRINT1("\nHook found by Id and posted to Thread! %d\n",HookId );
-        /* Post it in message queue. */
-        return IntCallLowLevelHook(Hook, Code, wParam, lParam);
-    }
-
-    Table->Counts[HOOKID_TO_INDEX(HookId)]++;
-    if (Table != GlobalHooks && GlobalHooks != NULL)
-    {
-        GlobalHooks->Counts[HOOKID_TO_INDEX(HookId)]++;
-    }
-
-    ClientInfo = GetWin32ClientInfo();
-    SaveHook = ClientInfo->phkCurrent;
-    ClientInfo->phkCurrent = Hook;     /* Load the call. */
-
-    Result = co_IntCallHookProc(HookId,
-                                Code,
-                                wParam,
-                                lParam,
-                                Hook->Proc,
-                                Hook->Ansi,
-                                &Hook->ModuleName);
-
-    ClientInfo->phkCurrent = SaveHook;
-
-    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                            KernelMode,
-                                            0,
-                                            &WinStaObj);
-
+                               &uResult);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Invalid window station????\n");
+       DPRINT1("Error Hook Call SendMsg. %d Status: 0x%x\n", Hook->HookId, Status);
+       ExFreePoolWithTag(pHP, TAG_HOOK);
     }
-    else
-    {
-        IntReleaseHookChain(MsqGetHooks(pti->MessageQueue), HookId, WinStaObj);
-        IntReleaseHookChain(GlobalHooks, HookId, WinStaObj);
-        ObDereferenceObject(WinStaObj);
-    }
-
-    return Result;
-}
-
-VOID
-FASTCALL
-HOOK_DestroyThreadHooks(PETHREAD Thread)
-{
-    int HookId;
-    PLIST_ENTRY Elem;
-    PHOOK HookObj;
-    PWINSTATION_OBJECT WinStaObj;
-    NTSTATUS Status;
-
-    if (NULL != GlobalHooks)
-    {
-        Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                                KernelMode,
-                                                0,
-                                                &WinStaObj);
-
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Invalid window station????\n");
-            return;
-        }
-
-        for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
-        {
-            /* only low-level keyboard/mouse global hooks can be owned by a thread */
-            switch(HookId)
-            {
-                case WH_KEYBOARD_LL:
-                case WH_MOUSE_LL:
-                    Elem = GlobalHooks->Hooks[HOOKID_TO_INDEX(HookId)].Flink;
-
-                    while (Elem != &GlobalHooks->Hooks[HOOKID_TO_INDEX(HookId)])
-                    {
-                        HookObj = CONTAINING_RECORD(Elem, HOOK, Chain);
-                        Elem = Elem->Flink;
-
-                        if (HookObj->Thread == Thread)
-                        {
-                            IntRemoveHook(HookObj, WinStaObj, TRUE);
-                        }
-                    }
-                    break;
-            }
-        }
-    }
+    return NT_SUCCESS(Status) ? uResult : 0;
 }
 
 static
 LRESULT
 FASTCALL
-co_HOOK_CallHookNext(PHOOK Hook, INT Code, WPARAM wParam, LPARAM lParam)
+co_HOOK_CallHookNext( PHOOK Hook,
+                      INT Code,
+                      WPARAM wParam,
+                      LPARAM lParam)
 {
-    if ((Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL))
+    if ( (Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL) )
     {
-        DPRINT1("CALLING HOOK from another Thread. %d\n", Hook->HookId);
+        DPRINT1("Calling Next HOOK from another Thread. %d\n", Hook->HookId);
         return IntCallLowLevelHook(Hook, Code, wParam, lParam);
     }
 
-    DPRINT("CALLING HOOK %d\n", Hook->HookId);
+    DPRINT("Calling Next HOOK %d\n", Hook->HookId);
 
-    return co_IntCallHookProc(Hook->HookId,
-                              Code,
-                              wParam,
-                              lParam,
-                              Hook->Proc,
-                              Hook->Ansi,
+    return co_IntCallHookProc( Hook->HookId,
+                               Code,
+                               wParam,
+                               lParam,
+                               Hook->Proc,
+                               Hook->Ansi,
                               &Hook->ModuleName);
 }
 
+//
+// Dispatch MsgQueue Hook Call processor!
+//
+LRESULT
+FASTCALL
+co_CallHook( INT HookId,
+             INT Code,
+             WPARAM wParam,
+             LPARAM lParam)
+{
+    LRESULT Result;
+    PHOOK phk;
+    PHOOKPACK pHP = (PHOOKPACK)lParam;
+
+    phk = pHP->pHk;
+    /* The odds are high for this to be a Global call. */
+    Result = co_IntCallHookProc( HookId,
+                                 Code,
+                                 wParam,
+                                 pHP->lParam,
+                                 phk->Proc,
+                                 phk->Ansi,
+                                &phk->ModuleName);
+
+    ExFreePoolWithTag(pHP, TAG_HOOK);
+    return Result;
+}
 
 LRESULT
 FASTCALL
-IntCallDebugHook(PHOOK Hook,
-                 int Code,
-                 WPARAM wParam,
-                 LPARAM lParam)
+IntCallDebugHook( PHOOK Hook,
+                  int Code,
+                  WPARAM wParam,
+                  LPARAM lParam,
+                  BOOL Ansi)
 {
     LRESULT lResult = 0;
     ULONG Size;
@@ -608,16 +253,13 @@ IntCallDebugHook(PHOOK Hook,
     return lResult;
 }
 
-/*
-   Called from user space via CallNextHook.
- */
 LRESULT
 FASTCALL
-UserCallNextHookEx(PHOOK Hook,
-                   int Code,
-                   WPARAM wParam,
-                   LPARAM lParam,
-                   BOOL Ansi)
+UserCallNextHookEx( PHOOK Hook,
+                    int Code,
+                    WPARAM wParam,
+                    LPARAM lParam,
+                    BOOL Ansi)
 {
     LRESULT lResult = 0;
     BOOL BadChk = FALSE;
@@ -1002,7 +644,7 @@ UserCallNextHookEx(PHOOK Hook,
         }
 
         case WH_DEBUG:
-            lResult = IntCallDebugHook(Hook, Code, wParam, lParam);
+            lResult = IntCallDebugHook(Hook, Code, wParam, lParam, Ansi);
             break;
 
         /*
@@ -1018,70 +660,454 @@ UserCallNextHookEx(PHOOK Hook,
             DPRINT1("Unsupported HOOK Id -> %d\n",Hook->HookId);
             break;
     }
-
+    if (Hook->HookId == WH_JOURNALPLAYBACK && lResult == 0)
+       lResult = -1;
     return lResult; 
 }
 
+PHOOK
+FASTCALL
+IntGetHookObject(HHOOK hHook)
+{
+    PHOOK Hook;
+    
+    if (!hHook)
+    {
+       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
+       return NULL;
+    }
+
+    Hook = (PHOOK)UserGetObject(gHandleTable, hHook, otHook);
+    if (!Hook)
+    {
+       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
+       return NULL;
+    }
+
+    UserReferenceObject(Hook);
+
+    return Hook;
+}
+
+/* get the first hook in the chain */
+static
+PHOOK
+FASTCALL
+IntGetFirstHook(PLIST_ENTRY Table)
+{
+    PLIST_ENTRY Elem = Table->Flink;
+
+    if (IsListEmpty(Table)) return NULL;
+
+    return Elem == Table ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain);
+}
+
+/* find the next hook in the chain  */
+PHOOK
+FASTCALL
+IntGetNextHook(PHOOK Hook)
+{
+    int HookId = Hook->HookId;
+    PLIST_ENTRY Elem;
+    PTHREADINFO pti;
+
+    if (Hook->Thread)
+    {
+       pti = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
+
+       Elem = Hook->Chain.Flink;
+       if (Elem != &pti->aphkStart[HOOKID_TO_INDEX(HookId)])
+          return CONTAINING_RECORD(Elem, HOOK, Chain);
+    }
+    else
+    {
+       pti = PsGetCurrentThreadWin32Thread();
+
+       Elem = Hook->Chain.Flink;
+       if (Elem != &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)])
+          return CONTAINING_RECORD(Elem, HOOK, Chain);
+    }
+    return NULL;
+}
+
+/* free a hook, removing it from its chain */
+static
+VOID
+FASTCALL
+IntFreeHook(PHOOK Hook)
+{
+    RemoveEntryList(&Hook->Chain);
+    if (Hook->ModuleName.Buffer)
+    {
+       ExFreePoolWithTag(Hook->ModuleName.Buffer, TAG_HOOK);
+       Hook->ModuleName.Buffer = NULL;
+    }
+    /* Close handle */
+    UserDeleteObject(UserHMGetHandle(Hook), otHook);
+}
+
+/* remove a hook, freeing it from the chain */
+static
+BOOL
+FASTCALL
+IntRemoveHook(PHOOK Hook)
+{
+    INT HookId;
+    PTHREADINFO pti;
+
+    HookId = Hook->HookId;
+
+    if (Hook->Thread) // Local
+    {
+       pti = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
+
+       IntFreeHook( Hook);
+
+       if ( IsListEmpty(&pti->aphkStart[HOOKID_TO_INDEX(HookId)]) )
+       {
+          pti->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+          _SEH2_TRY
+          {
+             GetWin32ClientInfo()->fsHooks = pti->fsHooks;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+          }
+          _SEH2_END;
+          return TRUE;
+       }
+    }
+    else // Global
+    {
+       IntFreeHook( Hook);
+
+       pti = PsGetCurrentThreadWin32Thread();
+
+       if ( pti->pDeskInfo &&
+            IsListEmpty(&pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
+       {
+          pti->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+          return TRUE;
+       }
+    }
+    return FALSE;
+}
+
+VOID
+FASTCALL
+HOOK_DestroyThreadHooks(PETHREAD Thread)
+{
+   PTHREADINFO pti;
+   int HookId;
+   PHOOK HookObj;
+   PLIST_ENTRY pElem;
+
+   pti = Thread->Tcb.Win32Thread;
+   if (!pti || !pti->pDeskInfo) return;
+
+// Local Thread cleanup.
+   if (pti->fsHooks)
+   {
+      for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
+      {
+         PLIST_ENTRY pLLE = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
+
+         if (IsListEmpty(pLLE)) continue;
+
+         pElem = pLLE->Flink;
+         HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
+         do
+         {
+            if (!HookObj) break;
+            if (IntRemoveHook(HookObj)) break;
+            pElem = HookObj->Chain.Flink;
+            HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
+         }
+         while (pElem != pLLE);
+      }
+      pti->fsHooks = 0;
+   }
+// Global search based on Thread and cleanup.
+   if (pti->pDeskInfo->fsHooks)
+   {
+      for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
+      {
+         PLIST_ENTRY pGLE = &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
+
+         if (IsListEmpty(pGLE)) continue;
+
+         pElem = pGLE->Flink;
+         HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
+         do
+         {
+            if (!HookObj) break;
+            if (HookObj->head.pti == pti)
+            {
+               if (IntRemoveHook(HookObj)) break;
+            }
+            pElem = HookObj->Chain.Flink;
+            HookObj = CONTAINING_RECORD(pElem, HOOK, Chain);
+         }
+         while (pElem != pGLE);
+      }
+   }
+   return;
+}
+
+/*
+  Win32k Kernel Space Hook Caller.
+ */
+LRESULT
+FASTCALL
+co_HOOK_CallHooks( INT HookId,
+                   INT Code,
+                   WPARAM wParam,
+                   LPARAM lParam)
+{
+    PHOOK Hook, SaveHook;
+    PTHREADINFO pti;
+    PCLIENTINFO ClientInfo;
+    PLIST_ENTRY pLLE, pGLE;
+    BOOL Local = FALSE, Global = FALSE;
+    LRESULT Result = 0;
+
+    ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
+
+    pti = GetW32ThreadInfo(); // Need to call this!
+
+    if (!pti || !pti->pDeskInfo)
+       goto Exit; // Must have a desktop running for hooks.
+
+    if ( pti->TIF_flags & TIF_INCLEANUP)
+       goto Exit;
+
+    if ( ISITHOOKED(HookId) )
+    {
+       DPRINT("Local Hooker %d\n", HookId);
+       Local = TRUE;
+    }
+
+    if ( pti->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
+    {
+       DPRINT("Global Hooker %d\n", HookId);
+       Global = TRUE;
+    }
+
+    if ( !Local && !Global ) goto Exit; // No work!
+
+    pLLE = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
+    pGLE = &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
+    Hook = NULL;
+
+    /* SetWindowHookEx sorts out the Thread issue by placing the Hook to
+       the correct Thread if not NULL.
+     */
+    if ( Local )
+    {
+       Hook = IntGetFirstHook(pLLE);
+       if (!Hook)
+       {
+          DPRINT1("No Local Hook Found!\n");
+          goto Exit;
+       }
+       ObReferenceObject(Hook->Thread);
+
+       ClientInfo = pti->pClientInfo;
+       SaveHook = pti->sphkCurrent;
+
+       /* Load it for the next call. */
+       pti->sphkCurrent = Hook;
+       Hook->phkNext = IntGetNextHook(Hook);
+       if (ClientInfo)
+       {
+          _SEH2_TRY
+          {
+             ClientInfo->phkCurrent = Hook;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+             ClientInfo = NULL; // Don't bother next run.
+          }
+          _SEH2_END;
+       }
+       Result = co_IntCallHookProc( HookId,
+                                    Code,
+                                    wParam,
+                                    lParam,
+                                    Hook->Proc,
+                                    Hook->Ansi,
+                                   &Hook->ModuleName);
+       if (ClientInfo)
+       {
+          _SEH2_TRY
+          {
+             ClientInfo->phkCurrent = SaveHook;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+          }
+          _SEH2_END;
+       }
+       pti->sphkCurrent = SaveHook;
+       Hook->phkNext = NULL;
+       ObDereferenceObject(Hook->Thread);
+    }
+
+    if ( Global )
+    {
+       PTHREADINFO ptiHook;
+
+       Hook = IntGetFirstHook(pGLE);
+       if (!Hook)
+       {
+          DPRINT1("No Global Hook Found!\n");
+          goto Exit;
+       }
+      /* Performance goes down the drain. If more hooks are associated to this
+       * hook ID, this will have to post to each of the thread message queues
+       * or make a direct call.
+       */
+       do
+       {
+         /* Hook->Thread is null, we hax around this with Hook->head.pti. */
+          ptiHook = Hook->head.pti;
+
+         /* "Global hook monitors messages for all threads in the same desktop
+          *  as the calling thread."
+          */
+          if ( ptiHook->TIF_flags & TIF_INCLEANUP ||
+               ptiHook->rpdesk != pti->rpdesk)
+          {
+             Hook = IntGetNextHook(Hook);
+             if (!Hook) break;
+             continue;
+          }
+          // Lockup the thread while this links through user world.
+          ObReferenceObject(ptiHook->pEThread);
+          if (ptiHook != pti )
+          {
+             DPRINT("\nGlobal Hook posting to another Thread! %d\n",HookId );
+             Result = IntCallLowLevelHook(Hook, Code, wParam, lParam);
+          }
+          else
+          { /* Make the direct call. */
+             Result = co_IntCallHookProc( HookId,
+                                          Code,
+                                          wParam,
+                                          lParam,
+                                          Hook->Proc,
+                                          Hook->Ansi,
+                                         &Hook->ModuleName);
+          }
+          ObDereferenceObject(ptiHook->pEThread);
+          Hook = IntGetNextHook(Hook);
+       }
+       while ( Hook );
+       DPRINT("Ret: Global HookId %d Result 0x%x\n", HookId,Result);
+    }
+Exit:
+    if (HookId == WH_JOURNALPLAYBACK && Result == 0)
+       Result = -1;
+    return Result;
+}
+
+BOOL
+FASTCALL
+IntUnhookWindowsHook(int HookId, HOOKPROC pfnFilterProc)
+{
+    PHOOK Hook;
+    PLIST_ENTRY pLLE, pLE;
+    PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+
+    if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
+    {
+       SetLastWin32Error(ERROR_INVALID_HOOK_FILTER);
+       return FALSE;
+    }
+
+    if (pti->fsHooks)
+    {
+       pLLE = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
+
+       if (IsListEmpty(pLLE)) return FALSE;
+
+       pLE = pLLE->Flink;
+       Hook = CONTAINING_RECORD(pLE, HOOK, Chain);
+       do
+       {
+          if (!Hook) break;
+          if (Hook->Proc == pfnFilterProc)
+          {
+             if (Hook->head.pti == pti)
+             {
+                IntRemoveHook(Hook);
+                UserDereferenceObject(Hook);
+                return TRUE;
+             }
+             else
+             {
+                SetLastWin32Error(ERROR_ACCESS_DENIED);
+                return FALSE;
+             }
+          }
+          pLE = Hook->Chain.Flink;
+          Hook = CONTAINING_RECORD(pLE, HOOK, Chain);
+       }
+       while (pLE != pLLE);
+    }
+    return FALSE;
+}
+
+/*
+ *  Support for compatibility only? Global hooks are processed in kernel space.
+ *  This is very thread specific! Never seeing applications with more than one
+ *  hook per thread installed. Most of the applications are Global hookers and
+ *  associated with just one hook Id. Maybe it's for diagnostic testing or a
+ *  throw back to 3.11?
+ */
 LRESULT
 APIENTRY
-NtUserCallNextHookEx(int Code,
-                     WPARAM wParam,
-                     LPARAM lParam,
-                     BOOL Ansi)
+NtUserCallNextHookEx( int Code,
+                      WPARAM wParam,
+                      LPARAM lParam,
+                      BOOL Ansi)
 {
+    PTHREADINFO pti;
     PHOOK HookObj, NextObj;
     PCLIENTINFO ClientInfo;
-    PWINSTATION_OBJECT WinStaObj;
-    NTSTATUS Status;
+    LRESULT lResult = 0;
     DECLARE_RETURN(LRESULT);
 
     DPRINT("Enter NtUserCallNextHookEx\n");
     UserEnterExclusive();
 
-    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                            KernelMode,
-                                            0,
-                                            &WinStaObj);
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        RETURN( 0);
-    }
+    pti = GetW32ThreadInfo();
 
-    ObDereferenceObject(WinStaObj);
-
-    ClientInfo = GetWin32ClientInfo();
-
-    if (!ClientInfo) RETURN( 0);
-
-    HookObj = ClientInfo->phkCurrent;
+    HookObj = pti->sphkCurrent;
 
     if (!HookObj) RETURN( 0);
 
-    /* Check that the first hook in the chain is not this hook */
-    NextObj = IntGetFirstHook(IntGetTable(HookObj), HookObj->HookId);
+    NextObj = HookObj->phkNext;
 
-    /* Its the same so it has already been called */
-    if (HookObj == NextObj) RETURN(0);
-
-    UserReferenceObject(HookObj);
-
-    Ansi = HookObj->Ansi;
-
-    if (NULL != HookObj->Thread && (HookObj->Thread != PsGetCurrentThread()))
+    pti->sphkCurrent = NextObj;
+    ClientInfo = pti->pClientInfo;
+    _SEH2_TRY
     {
-        DPRINT1("Thread mismatch\n");
-        UserDereferenceObject(HookObj);
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        RETURN( 0);
+       ClientInfo->phkCurrent = NextObj;
     }
-   
-    NextObj = IntGetNextHook(HookObj);
-    ClientInfo->phkCurrent = NextObj; /* Preset next hook from list. */
-    UserCallNextHookEx( HookObj, Code, wParam, lParam, Ansi);
-    UserDereferenceObject(HookObj);
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+       ClientInfo = NULL;
+    }
+    _SEH2_END;
 
-    RETURN( (LRESULT)NextObj);
+    /* Now in List run down. */
+    if (ClientInfo && NextObj)
+    {
+       NextObj->phkNext = IntGetNextHook(NextObj);
+       lResult = UserCallNextHookEx( NextObj, Code, wParam, lParam, NextObj->Ansi);
+    }
+    RETURN( lResult);
 
 CLEANUP:
     DPRINT("Leave NtUserCallNextHookEx, ret=%i\n",_ret_);
@@ -1091,43 +1117,51 @@ CLEANUP:
 
 HHOOK
 APIENTRY
-NtUserSetWindowsHookAW(int idHook, 
-                       HOOKPROC lpfn,
-                       BOOL Ansi)
+NtUserSetWindowsHookAW( int idHook, 
+                        HOOKPROC lpfn,
+                        BOOL Ansi)
 {
+    DWORD ThreadId;
     UNICODE_STRING USModuleName;
 
     RtlInitUnicodeString(&USModuleName, NULL);
+    ThreadId = PtrToUint(NtCurrentTeb()->ClientId.UniqueThread);
 
-    return NtUserSetWindowsHookEx(NULL, &USModuleName, 0, idHook, lpfn, Ansi);
+    return NtUserSetWindowsHookEx( NULL,
+                                  &USModuleName,
+                                   ThreadId,
+                                   idHook,
+                                   lpfn,
+                                   Ansi);
 }
 
 HHOOK
 APIENTRY
-NtUserSetWindowsHookEx(HINSTANCE Mod,
-                       PUNICODE_STRING UnsafeModuleName,
-                       DWORD ThreadId,
-                       int HookId,
-                       HOOKPROC HookProc,
-                       BOOL Ansi)
+NtUserSetWindowsHookEx( HINSTANCE Mod,
+                        PUNICODE_STRING UnsafeModuleName,
+                        DWORD ThreadId,
+                        int HookId,
+                        HOOKPROC HookProc,
+                        BOOL Ansi)
 {
     PWINSTATION_OBJECT WinStaObj;
-    PCLIENTINFO ClientInfo;
-    BOOLEAN Global;
-    PETHREAD Thread;
     PHOOK Hook;
     UNICODE_STRING ModuleName;
     NTSTATUS Status;
     HHOOK Handle;
-    BOOLEAN ThreadReferenced = FALSE;
+    PETHREAD Thread = NULL;
+    PTHREADINFO ptiCurrent, pti = NULL;
+    BOOL Hit = FALSE;
     DECLARE_RETURN(HHOOK);
 
     DPRINT("Enter NtUserSetWindowsHookEx\n");
     UserEnterExclusive();
 
+    ptiCurrent = GetW32ThreadInfo();
+
     if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        SetLastWin32Error(ERROR_INVALID_HOOK_FILTER);
         RETURN( NULL);
     }
 
@@ -1137,173 +1171,211 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         RETURN( NULL);
     }
 
-    ClientInfo = GetWin32ClientInfo();
-
     if (ThreadId)  /* thread-local hook */
     {
-        if (HookId == WH_JOURNALRECORD ||
+       if ( HookId == WH_JOURNALRECORD ||
             HookId == WH_JOURNALPLAYBACK ||
             HookId == WH_KEYBOARD_LL ||
             HookId == WH_MOUSE_LL ||
             HookId == WH_SYSMSGFILTER)
-        {
-            /* these can only be global */
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            RETURN( NULL);
-        }
+       {
+           /* these can only be global */
+           SetLastWin32Error(ERROR_GLOBAL_ONLY_HOOK);
+           RETURN( NULL);
+       }
 
-        Mod = NULL;
-        Global = FALSE;
+       if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
+       {
+          DPRINT1("Invalid thread id 0x%x\n", ThreadId);
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          RETURN( NULL);
+       }
 
-        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
-        {
-            DPRINT1("Invalid thread id 0x%x\n", ThreadId);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            RETURN( NULL);
-        }
+       pti = Thread->Tcb.Win32Thread;
 
-        /* Thread was referenced */
-        ThreadReferenced = TRUE;
-        if (Thread->ThreadsProcess != PsGetCurrentProcess())
-        {
-            ObDereferenceObject(Thread);
-            DPRINT1("Can't specify thread belonging to another process\n");
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            RETURN( NULL);
-        }
+       ObDereferenceObject(Thread);
+
+       if ( pti->rpdesk != ptiCurrent->rpdesk) // gptiCurrent->rpdesk)
+       {
+          SetLastWin32Error(ERROR_ACCESS_DENIED);
+          RETURN( NULL);
+       }
+
+       if (Thread->ThreadsProcess != PsGetCurrentProcess())
+       {
+          if ( !Mod &&
+              (HookId == WH_GETMESSAGE ||
+               HookId == WH_CALLWNDPROC ||
+               HookId == WH_CBT ||
+               HookId == WH_HARDWARE ||
+               HookId == WH_DEBUG ||
+               HookId == WH_SHELL ||
+               HookId == WH_FOREGROUNDIDLE ||
+               HookId == WH_CALLWNDPROCRET) )
+          {
+             SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
+             RETURN( NULL);
+          }
+
+          if ( (pti->TIF_flags & (TIF_CSRSSTHREAD|TIF_SYSTEMTHREAD)) && 
+               (HookId == WH_GETMESSAGE ||
+                HookId == WH_CALLWNDPROC ||
+                HookId == WH_CBT ||
+                HookId == WH_HARDWARE ||
+                HookId == WH_DEBUG ||
+                HookId == WH_SHELL ||
+                HookId == WH_FOREGROUNDIDLE ||
+                HookId == WH_CALLWNDPROCRET) )
+          {
+             SetLastWin32Error(ERROR_HOOK_TYPE_NOT_ALLOWED);
+             RETURN( NULL);
+          }
+       }
     }
     else  /* system-global hook */
     {
-        if (HookId == WH_KEYBOARD_LL || HookId == WH_MOUSE_LL)
-        {
-            Mod = NULL;
-            Thread = PsGetCurrentThread();
-
-            Status = ObReferenceObjectByPointer(Thread,
-                                                THREAD_ALL_ACCESS,
-                                                PsThreadType,
-                                                KernelMode);
-
-            if (!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                RETURN( (HANDLE) NULL);
-            }
-
-            /* Thread was referenced */
-            ThreadReferenced = TRUE;
-        }
-        else if (NULL ==  Mod)
-        {
-            SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
-            RETURN( NULL);
-        }
-        else
-        {
-            Thread = NULL;
-        }
-        Global = TRUE;
+       pti = ptiCurrent; // gptiCurrent;
+       if ( !Mod &&
+            (HookId == WH_GETMESSAGE ||
+             HookId == WH_CALLWNDPROC ||
+             HookId == WH_CBT ||
+             HookId == WH_SYSMSGFILTER ||
+             HookId == WH_HARDWARE ||
+             HookId == WH_DEBUG ||
+             HookId == WH_SHELL ||
+             HookId == WH_FOREGROUNDIDLE ||
+             HookId == WH_CALLWNDPROCRET) )
+       {
+          SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
+          RETURN( NULL);
+       }
     }
 
-    if ((Global && (HookId != WH_KEYBOARD_LL && HookId != WH_MOUSE_LL)) ||
-        WH_DEBUG == HookId ||
-        WH_JOURNALPLAYBACK == HookId ||
-        WH_JOURNALRECORD == HookId)
-    {
-#if 0 /* Removed to get winEmbed working again */
-        UNIMPLEMENTED
-#else
-        DPRINT1("Not implemented: HookId %d Global %s\n", HookId, Global ? "TRUE" : "FALSE");
-#endif
-
-        /* Dereference thread if needed */
-        if (ThreadReferenced) ObDereferenceObject(Thread);
-        SetLastWin32Error(ERROR_NOT_SUPPORTED);
-        RETURN( NULL);
-    }
-
-    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                            KernelMode,
-                                            0,
+    Status = IntValidateWindowStationHandle( PsGetCurrentProcess()->Win32WindowStation,
+                                             KernelMode,
+                                             0,
                                             &WinStaObj);
 
     if (!NT_SUCCESS(Status))
     {
-        /* Dereference thread if needed */
-        if (ThreadReferenced) ObDereferenceObject(Thread);
-        SetLastNtError(Status);
-        RETURN( (HANDLE) NULL);
+       SetLastNtError(Status);
+       RETURN( NULL);
+    }
+    ObDereferenceObject(WinStaObj);
+
+    Hook = UserCreateObject(gHandleTable, NULL, &Handle, otHook, sizeof(HOOK));
+
+    if (!Hook)
+    {
+       RETURN( NULL);
     }
 
-    Hook = IntAddHook(Thread, HookId, Global, WinStaObj);
-    if (NULL == Hook)
+    Hook->ihmod   = (INT)Mod; // Module Index from atom table, Do this for now.
+    Hook->Thread  = Thread; /* Set Thread, Null is Global. */
+    Hook->HookId  = HookId;
+    Hook->rpdesk  = pti->rpdesk;
+    Hook->phkNext = NULL; /* Dont use as a chain! Use link lists for chaining. */
+    Hook->Proc    = HookProc;
+    Hook->Ansi    = Ansi;
+
+    if (ThreadId)  /* thread-local hook */
     {
-        /* Dereference thread if needed */
-        if (ThreadReferenced) ObDereferenceObject(Thread);
-        ObDereferenceObject(WinStaObj);
-        RETURN( NULL);
-    }
+       InsertHeadList(&pti->aphkStart[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
+       pti->sphkCurrent = NULL;
+       Hook->ptiHooked = pti;
+       pti->fsHooks |= HOOKID_TO_FLAG(HookId);
 
-    /* Let IntFreeHook now that this thread needs a dereference */
-    if (ThreadReferenced)
-    {
-        Hook->Flags |= HOOK_THREAD_REFERENCED;
-    }
-
-    if (NULL != Mod)
-    {
-        Status = MmCopyFromCaller(&ModuleName, UnsafeModuleName, sizeof(UNICODE_STRING));
-        if (!NT_SUCCESS(Status))
-        {
-            UserDereferenceObject(Hook);
-            IntRemoveHook(Hook, WinStaObj, FALSE);
-            ObDereferenceObject(WinStaObj);
-            SetLastNtError(Status);
-            RETURN( NULL);
-        }
-
-        Hook->ModuleName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                        ModuleName.MaximumLength,
-                                                        TAG_HOOK);
-        if (NULL == Hook->ModuleName.Buffer)
-        {
-            UserDereferenceObject(Hook);
-            IntRemoveHook(Hook, WinStaObj, FALSE);
-            ObDereferenceObject(WinStaObj);
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-            RETURN( NULL);
-        }
-
-        Hook->ModuleName.MaximumLength = ModuleName.MaximumLength;
-        Status = MmCopyFromCaller(Hook->ModuleName.Buffer,
-                                  ModuleName.Buffer,
-                                  ModuleName.MaximumLength);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(Hook->ModuleName.Buffer, TAG_HOOK);
-            UserDereferenceObject(Hook);
-            IntRemoveHook(Hook, WinStaObj, FALSE);
-            ObDereferenceObject(WinStaObj);
-            SetLastNtError(Status);
-            RETURN( NULL);
-        }
-
-        Hook->ModuleName.Length = ModuleName.Length;
-        /* make proc relative to the module base */
-        Hook->Proc = (void *)((char *)HookProc - (char *)Mod);
+       if (pti->pClientInfo)
+       {
+          if ( pti->ppi == ptiCurrent->ppi) /* gptiCurrent->ppi) */
+          {
+             _SEH2_TRY
+             {
+                pti->pClientInfo->fsHooks = pti->fsHooks;
+                pti->pClientInfo->phkCurrent = 0;
+             }
+             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+             {
+                Hit = TRUE;
+             }
+             _SEH2_END;
+             if (Hit)
+             {
+                DPRINT1("Problem writing to Local ClientInfo!\n");
+             }
+          }
+          else
+          {
+             KeAttachProcess(&pti->ppi->peProcess->Pcb);
+             _SEH2_TRY
+             {
+                pti->pClientInfo->fsHooks = pti->fsHooks;
+                pti->pClientInfo->phkCurrent = 0;
+             }
+             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+             {
+                Hit = TRUE;
+             }
+             _SEH2_END;
+             KeDetachProcess();
+             if (Hit)
+             {
+                DPRINT1("Problem writing to Remote ClientInfo!\n");
+             }
+          }
+       }
     }
     else
-        Hook->Proc = HookProc;
+    {
+       InsertHeadList(&pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
+       Hook->ptiHooked = NULL;
+       //gptiCurrent->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
+       pti->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
+    }
 
-    Hook->Ansi = Ansi;
-    Handle = UserHMGetHandle(Hook);
+    RtlInitUnicodeString(&Hook->ModuleName, NULL);
 
-    /* Clear the client threads next hook. */
-    ClientInfo->phkCurrent = 0;
+    if (Mod)
+    {
+       Status = MmCopyFromCaller(&ModuleName,
+                                  UnsafeModuleName,
+                                  sizeof(UNICODE_STRING));
+       if (!NT_SUCCESS(Status))
+       {
+          IntRemoveHook(Hook);
+          SetLastNtError(Status);
+          RETURN( NULL);
+       }
 
-    UserDereferenceObject(Hook);
+       Hook->ModuleName.Buffer = ExAllocatePoolWithTag( PagedPool,
+                                                        ModuleName.MaximumLength,
+                                                        TAG_HOOK);
+       if (NULL == Hook->ModuleName.Buffer)
+       {
+          IntRemoveHook(Hook);
+          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+          RETURN( NULL);
+       }
 
-    ObDereferenceObject(WinStaObj);
+       Hook->ModuleName.MaximumLength = ModuleName.MaximumLength;
+       Status = MmCopyFromCaller( Hook->ModuleName.Buffer,
+                                  ModuleName.Buffer,
+                                  ModuleName.MaximumLength);
+       if (!NT_SUCCESS(Status))
+       {
+          ExFreePoolWithTag(Hook->ModuleName.Buffer, TAG_HOOK);
+          Hook->ModuleName.Buffer = NULL;
+          IntRemoveHook(Hook);
+          SetLastNtError(Status);
+          RETURN( NULL);
+       }
+
+       Hook->ModuleName.Length = ModuleName.Length;
+       /* make proc relative to the module base */
+       Hook->offPfn = (ULONG_PTR)((char *)HookProc - (char *)Mod);
+    }
+    else
+       Hook->offPfn = 0;
 
     RETURN( Handle);
 
@@ -1313,46 +1385,28 @@ CLEANUP:
     END_CLEANUP;
 }
 
-
 BOOL
 APIENTRY
 NtUserUnhookWindowsHookEx(HHOOK Hook)
 {
-    PWINSTATION_OBJECT WinStaObj;
     PHOOK HookObj;
-    NTSTATUS Status;
     DECLARE_RETURN(BOOL);
 
     DPRINT("Enter NtUserUnhookWindowsHookEx\n");
     UserEnterExclusive();
 
-    Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                            KernelMode,
-                                            0,
-                                            &WinStaObj);
-
-    if (!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        RETURN( FALSE);
-    }
-
-    /*  Status = UserReferenceObjectByHandle(gHandleTable, Hook,
-                                             otHookProc, (PVOID *) &HookObj); */
     if (!(HookObj = IntGetHookObject(Hook)))
     {
         DPRINT1("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
-        ObDereferenceObject(WinStaObj);
         /* SetLastNtError(Status); */
         RETURN( FALSE);
     }
 
     ASSERT(Hook == UserHMGetHandle(HookObj));
 
-    IntRemoveHook(HookObj, WinStaObj, FALSE);
+    IntRemoveHook(HookObj);
 
     UserDereferenceObject(HookObj);
-    ObDereferenceObject(WinStaObj);
 
     RETURN( TRUE);
 

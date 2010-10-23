@@ -368,9 +368,10 @@ IntDispatchMessage(PMSG pMsg)
 {
   LARGE_INTEGER TickCount;
   LONG Time;
-  LRESULT retval;
+  LRESULT retval = 0;
   PMSGMEMORY MsgMemoryEntry;
   INT lParamBufferSize;
+  PTHREADINFO pti;
   LPARAM lParamPacked;
   PWND Window = NULL;
 
@@ -380,25 +381,29 @@ IntDispatchMessage(PMSG pMsg)
      if (!Window) return 0;
   }
 
+  pti = PsGetCurrentThreadWin32Thread();
+
   if (((pMsg->message == WM_SYSTIMER) ||
        (pMsg->message == WM_TIMER)) &&
       (pMsg->lParam) )
   {
      if (pMsg->message == WM_TIMER)
      {
-        if (ValidateTimerCallback(PsGetCurrentThreadWin32Thread(),pMsg->lParam))
+        ObReferenceObject(pti->pEThread);
+        if (ValidateTimerCallback(pti,pMsg->lParam))
         {
            KeQueryTickCount(&TickCount);
            Time = MsqCalculateMessageTime(&TickCount);
-           return co_IntCallWindowProc((WNDPROC)pMsg->lParam,
-                                        TRUE,
-                                        pMsg->hwnd,
-                                        WM_TIMER,
-                                        pMsg->wParam,
-                                        (LPARAM)Time,
-                                        sizeof(LPARAM));
+           retval = co_IntCallWindowProc((WNDPROC)pMsg->lParam,
+                                          TRUE,
+                                          pMsg->hwnd,
+                                          WM_TIMER,
+                                          pMsg->wParam,
+                                         (LPARAM)Time,
+                                          sizeof(LPARAM));
         }
-        return 0;        
+        ObDereferenceObject(pti->pEThread);
+        return retval;        
      }
      else
      {
@@ -431,7 +436,7 @@ IntDispatchMessage(PMSG pMsg)
      DPRINT1("Failed to pack message parameters\n");
      return 0;
   }
-
+  ObReferenceObject(pti->pEThread);
   retval = co_IntCallWindowProc( Window->lpfnWndProc,
                                 !Window->Unicode,
                                  pMsg->hwnd,
@@ -452,6 +457,7 @@ IntDispatchMessage(PMSG pMsg)
      co_UserGetUpdateRgn( Window, hrgn, TRUE );
      REGION_FreeRgnByHandle( hrgn );
   }
+  ObDereferenceObject(pti->pEThread);
   return retval;
 }
 
@@ -784,6 +790,7 @@ BOOL ProcessMouseMessage(MSG* Msg, BOOLEAN RemoveMessages)
                            HCBT_CLICKSKIPPED,
                            Msg->message,
                            (LPARAM)&MHook);
+        DPRINT1("MouseMessage WH_CBT Call Hook return!\n");
         return FALSE;
     }
 
@@ -812,6 +819,7 @@ BOOL ProcessKeyboardMessage(MSG* Msg, BOOLEAN RemoveMessages)
                            HCBT_KEYSKIPPED,
                            LOWORD(Msg->wParam),
                            Msg->lParam );
+        DPRINT1("KeyboardMessage WH_CBT Call Hook return!\n");
         return FALSE;
     }
 	return TRUE;
@@ -1322,13 +1330,13 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
                                 UINT uTimeout,
                                 ULONG_PTR *uResult )
 {
-   ULONG_PTR Result;
    NTSTATUS Status;
    PWND Window = NULL;
    PMSGMEMORY MsgMemoryEntry;
    INT lParamBufferSize;
    LPARAM lParamPacked;
    PTHREADINFO Win32Thread;
+   ULONG_PTR Result = 0;
    DECLARE_RETURN(LRESULT);
    USER_REFERENCE_ENTRY Ref;
 
@@ -1369,6 +1377,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
           RETURN( FALSE);
       }
 
+      ObReferenceObject(Win32Thread->pEThread);
       Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                !Window->Unicode,
                                                 hWnd,
@@ -1380,6 +1389,8 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
       {
          *uResult = Result;
       }
+
+      ObDereferenceObject(Win32Thread->pEThread);
 
       IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
@@ -1408,14 +1419,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
    do
    {
       Status = co_MsqSendMessage( Window->head.pti->MessageQueue,
-                                                       hWnd,
-                                                        Msg,
-                                                     wParam,
-                                                     lParam,
-                                                   uTimeout,
-                                      (uFlags & SMTO_BLOCK),
-                                                 MSQ_NORMAL,
-                                                    uResult );
+                                  hWnd,
+                                  Msg,
+                                  wParam,
+                                  lParam,
+                                  uTimeout,
+                                 (uFlags & SMTO_BLOCK),
+                                  MSQ_NORMAL,
+                                  uResult );
    }
    while ((STATUS_TIMEOUT == Status) &&
           (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
@@ -1575,7 +1586,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
    /* If this is not a callback and it can be sent now, then send it. */
    if ((Window->head.pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
    {
-
+      ObReferenceObject(Win32Thread->pEThread);
       Result = (ULONG_PTR)co_IntCallWindowProc( Window->lpfnWndProc,
                                                !Window->Unicode,
                                                 hWnd,
@@ -1587,6 +1598,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
       {
          *uResult = Result;
       }
+      ObDereferenceObject(Win32Thread->pEThread);
    }
 
    IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
@@ -2553,12 +2565,13 @@ NtUserMessageCall(
                                             2000,
                                             &RetVal);
                }
+               Ret = RetVal;
             }
             else if (parm.flags & BSF_POSTMESSAGE)
             {
                Ret = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
             }
-            else if ( parm.flags & BSF_SENDNOTIFYMESSAGE)
+            else //Everything else,,,, if ( parm.flags & BSF_SENDNOTIFYMESSAGE)
             {
                Ret = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
             }
@@ -2584,21 +2597,31 @@ NtUserMessageCall(
       case FNID_CALLWNDPROC:
       case FNID_CALLWNDPROCRET:
       {
-         PCLIENTINFO ClientInfo = GetWin32ClientInfo();
-         PHOOK NextObj, Hook = ClientInfo->phkCurrent;
+         PTHREADINFO pti;
+         PCLIENTINFO ClientInfo;
+         PHOOK NextObj, Hook;
 
-         if (!ClientInfo || !Hook) break;
+         pti = GetW32ThreadInfo();
 
-         UserReferenceObject(Hook);
+         Hook = pti->sphkCurrent;
 
-         if (Hook->Thread && (Hook->Thread != PsGetCurrentThread()))
+         if (!Hook) break;
+
+         NextObj = Hook->phkNext;
+         ClientInfo = pti->pClientInfo;
+         _SEH2_TRY
          {
-            UserDereferenceObject(Hook);
-            break;
+            ClientInfo->phkCurrent = NextObj;
          }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+            ClientInfo = NULL;
+         }
+         _SEH2_END;
 
-         NextObj = IntGetNextHook(Hook);
-         ClientInfo->phkCurrent = NextObj;
+         if (!ClientInfo || !NextObj) break;
+
+         NextObj->phkNext = IntGetNextHook(NextObj);
 
          if ( Hook->HookId == WH_CALLWNDPROC)
          {
@@ -2634,8 +2657,6 @@ NtUserMessageCall(
                                           Hook->Ansi,
                                           &Hook->ModuleName);
          }
-         UserDereferenceObject(Hook);
-         lResult = (LRESULT) NextObj;
       }
       break;
    }

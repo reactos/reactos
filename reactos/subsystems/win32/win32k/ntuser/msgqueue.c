@@ -948,26 +948,25 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                   &Message->ListEntry);
 
    if (Message->HookMessage == MSQ_ISHOOK)
-   {
-      Result = co_HOOK_CallHooks(Message->Msg.message,
-                                 (INT)(INT_PTR)Message->Msg.hwnd,
-                                 Message->Msg.wParam,
-                                 Message->Msg.lParam);
+   {  // Direct Hook Call processor
+      Result = co_CallHook( Message->Msg.message,     // HookId
+                           (INT)(INT_PTR)Message->Msg.hwnd, // Code
+                            Message->Msg.wParam,
+                            Message->Msg.lParam);
    }
    else if (Message->HookMessage == MSQ_ISEVENT)
-   {
+   {  // Direct Event Call processor
       Result = co_EVENT_CallEvents( Message->Msg.message,
                                     Message->Msg.hwnd,
                                     Message->Msg.wParam,
                                     Message->Msg.lParam);
    }
    else
-   {
-      /* Call the window procedure. */
-      Result = co_IntSendMessage(Message->Msg.hwnd,
-                                 Message->Msg.message,
-                                 Message->Msg.wParam,
-                                 Message->Msg.lParam);
+   {  /* Call the window procedure. */
+      Result = co_IntSendMessage( Message->Msg.hwnd,
+                                  Message->Msg.message,
+                                  Message->Msg.wParam,
+                                  Message->Msg.lParam);
    }
 
    /* remove the message from the local dispatching list, because it doesn't need
@@ -1004,7 +1003,9 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
-   /* Call the callback if the message was sent with SendMessageCallback */
+   /* Call the callback if the message wa
+   
+   s sent with SendMessageCallback */
    if (Message->CompletionCallback != NULL)
    {
       co_IntCallSentMessageCallback(Message->CompletionCallback,
@@ -1133,10 +1134,10 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    PUSER_SENT_MESSAGE Message;
    KEVENT CompletionEvent;
    NTSTATUS WaitStatus;
-   LRESULT Result;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    LARGE_INTEGER Timeout;
    PLIST_ENTRY Entry;
+   LRESULT Result = 0;   //// Result could be trashed. ////
 
    if(!(Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
    {
@@ -1154,7 +1155,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    /* FIXME - increase reference counter of sender's message queue here */
 
-   Result = 0;
    Message->Msg.hwnd = Wnd;
    Message->Msg.message = Msg;
    Message->Msg.wParam = wParam;
@@ -1164,6 +1164,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Message->SenderQueue = ThreadQueue;
    IntReferenceMessageQueue(ThreadQueue);
    Message->CompletionCallback = NULL;
+   Message->CompletionCallbackContext = 0;
    Message->HookMessage = HookMessage;
    Message->HasPackedLParam = FALSE;
 
@@ -1630,18 +1631,6 @@ MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
    /* decrease the reference counter, if it hits zero, the queue will be freed */
    IntDereferenceMessageQueue(MessageQueue);
-}
-
-PHOOKTABLE FASTCALL
-MsqGetHooks(PUSER_MESSAGE_QUEUE Queue)
-{
-   return Queue->Hooks;
-}
-
-VOID FASTCALL
-MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks)
-{
-   Queue->Hooks = Hooks;
 }
 
 LPARAM FASTCALL

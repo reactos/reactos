@@ -304,13 +304,13 @@ GetUser32Handle(HANDLE handle)
 static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_EVENT + 1] =
 {
     FALSE, /* VALIDATE_TYPE_FREE (not used) */
-    FALSE, /* VALIDATE_TYPE_WIN  FALSE */
+    FALSE, /* VALIDATE_TYPE_WIN */
     TRUE, /* VALIDATE_TYPE_MENU  FALSE */
     TRUE, /* VALIDATE_TYPE_CURSOR */
     TRUE, /* VALIDATE_TYPE_MWPOS */
-    TRUE, /* VALIDATE_TYPE_HOOK  FALSE */
+    FALSE, /* VALIDATE_TYPE_HOOK */
     FALSE, /* (not used) */
-    TRUE, /* VALIDATE_TYPE_CALLPROC  FALSE */
+    FALSE, /* VALIDATE_TYPE_CALLPROC */
     TRUE, /* VALIDATE_TYPE_ACCEL */
     FALSE, /* (not used) */
     FALSE, /* (not used) */

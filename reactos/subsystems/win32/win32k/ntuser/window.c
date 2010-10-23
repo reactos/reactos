@@ -163,7 +163,6 @@ IntIsWindow(HWND hWnd)
 }
 
 
-
 PWND FASTCALL
 IntGetParent(PWND Wnd)
 {
@@ -178,7 +177,6 @@ IntGetParent(PWND Wnd)
 
    return NULL;
 }
-
 
 /*
  * IntWinListChildren
@@ -348,7 +346,7 @@ static LRESULT co_UserFreeWindow(PWND Window,
    Window->state2 |= WNDS2_INDESTROY;
    Window->style &= ~WS_VISIBLE;
 
-   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window, OBJID_WINDOW, 0);
+   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window, OBJID_WINDOW, CHILDID_SELF, 0);
 
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
@@ -399,7 +397,9 @@ static LRESULT co_UserFreeWindow(PWND Window,
       if(BelongsToThreadData)
          co_IntSendMessage(Window->head.h, WM_NCDESTROY, 0, 0);
    }
+
    DestroyTimersForWindow(ThreadData, Window);
+
    HOOK_DestroyThreadHooks(ThreadData->pEThread); // This is needed here too!
 
    /* flush the message queue */
@@ -1168,6 +1168,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
 
    }
 
+   IntNotifyWinEvent(EVENT_OBJECT_PARENTCHANGE, Wnd ,OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
    /*
     * SetParent additionally needs to make hwnd the top window
     * in the z-order and send the expected WM_WINDOWPOSCHANGING and
@@ -1226,13 +1227,6 @@ IntUnlinkWindow(PWND Wnd)
  
    Wnd->spwndPrev = Wnd->spwndNext = NULL;
 }
-
-BOOL FASTCALL
-IntIsWindowInDestroy(PWND Window)
-{
-   return ((Window->state2 & WNDS2_INDESTROY) == WNDS2_INDESTROY);
-}
-
 
 BOOL
 FASTCALL
@@ -1635,6 +1629,33 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
    pti = PsGetCurrentThreadWin32Thread();
 
+   if (!(Cs->dwExStyle & WS_EX_LAYOUTRTL))
+   {
+      if (ParentWindow)
+      {
+         if ( (Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD &&
+              ParentWindow->ExStyle & WS_EX_LAYOUTRTL &&
+             !(ParentWindow->ExStyle & WS_EX_NOINHERITLAYOUT) )
+            Cs->dwExStyle |= WS_EX_LAYOUTRTL;
+      }
+      else
+      {/* 
+        Note from MSDN http://msdn.microsoft.com/en-us/library/aa913269.aspx :
+
+        Dialog boxes and message boxes do not inherit layout, so you must
+        set the layout explicitly.
+       */
+         if ( Class && Class->fnid != FNID_DIALOG)
+         {
+            PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+            if (ppi->dwLayout & LAYOUT_RTL)
+            {
+               Cs->dwExStyle |= WS_EX_LAYOUTRTL;
+            }
+         }
+      }      
+   }
+
    /* Automatically add WS_EX_WINDOWEDGE */
    if ((Cs->dwExStyle & WS_EX_DLGMODALFRAME) ||
          ((!(Cs->dwExStyle & WS_EX_STATICEDGE)) &&
@@ -1877,17 +1898,19 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
                      PLARGE_STRING WindowName)
 {
    PWND Window = NULL, ParentWindow = NULL, OwnerWindow;
-   HWND hWnd, hWndParent, hWndOwner;
+   HWND hWnd, hWndParent, hWndOwner, hwndInsertAfter;
    DWORD dwStyle;
    PWINSTATION_OBJECT WinSta;
    PCLS Class = NULL;
    SIZE Size;
    POINT MaxPos;
-   CBT_CREATEWNDW CbtCreate;
+   CBT_CREATEWNDW * pCbtCreate;
    LRESULT Result;
    USER_REFERENCE_ENTRY ParentRef, Ref;
    PTHREADINFO pti;
+   ANSI_STRING asClassName;
    DWORD dwShowMode = SW_SHOW;
+   CREATESTRUCTW *pCsw;
    DECLARE_RETURN(PWND);
 
    /* Get the current window station and reference it */
@@ -1899,6 +1922,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
    WinSta = pti->rpdesk->rpwinstaParent;
    ObReferenceObjectByPointer(WinSta, KernelMode, ExWindowStationObjectType, 0);
+
+   pCsw = NULL;
+   pCbtCreate = NULL;
+   RtlInitAnsiString(&asClassName, NULL);
 
    /* Get the class and reference it*/
    Class = IntGetAndReferenceClass(ClassName, Cs->hInstance);
@@ -1956,22 +1983,57 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
        RETURN(0);
    }
 
-   hWnd = Window->head.h;
+   hWnd = UserHMGetHandle(Window);
 
    UserRefObjectCo(Window, &Ref);
    ObDereferenceObject(WinSta);
 
-   /* Call the WH_CBT hook */
-   dwStyle = Cs->style;
-   Cs->style = Window->style; /* HCBT_CREATEWND needs the real window style */
-   CbtCreate.lpcs = Cs;
-   CbtCreate.hwndInsertAfter = HWND_TOP;
+   //// Call the WH_CBT hook ////
 
-   if (co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) &CbtCreate))
+   // Allocate the calling structures Justin Case this goes Global.
+   pCsw = ExAllocatePoolWithTag(NonPagedPool, sizeof(CREATESTRUCTW), TAG_HOOK);
+   pCbtCreate = ExAllocatePoolWithTag(NonPagedPool, sizeof(CBT_CREATEWNDW), TAG_HOOK);
+
+   /* Fill the new CREATESTRUCTW */
+   pCsw->lpCreateParams = Cs->lpCreateParams;
+   pCsw->hInstance = Cs->hInstance;
+   pCsw->hMenu = Cs->hMenu;
+   pCsw->hwndParent = Cs->hwndParent;
+   pCsw->cx = Cs->cx;
+   pCsw->cy = Cs->cy;
+   pCsw->x = Cs->x;
+   pCsw->y = Cs->y;
+   pCsw->dwExStyle = Cs->dwExStyle;
+   dwStyle = Cs->style;       // Save it anyway.
+   pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
+
+   pCsw->lpszName  = (LPCWSTR) WindowName->Buffer;
+   pCsw->lpszClass = (LPCWSTR) ClassName->Buffer;
+
+   if (Window->state & WNDS_ANSICREATOR)
    {
-      DPRINT1("HCBT_CREATEWND hook failed!\n");
+      if (!IS_ATOM(ClassName->Buffer))
+      {
+         RtlUnicodeStringToAnsiString(&asClassName, ClassName, TRUE);
+         pCsw->lpszClass = (LPCWSTR) asClassName.Buffer;
+      }
+   }
+
+   pCbtCreate->lpcs = pCsw;
+   pCbtCreate->hwndInsertAfter = HWND_TOP;
+
+   Result = co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) pCbtCreate);
+   if (Result != 0)
+   {
+      DPRINT1("WH_CBT HCBT_CREATEWND hook failed! 0x%x\n", Result);
       RETURN( (PWND) NULL);
    }
+   // Write back changes.
+   Cs->cx = pCsw->cx;
+   Cs->cy = pCsw->cy;
+   Cs->x = pCsw->x;
+   Cs->y = pCsw->y;
+   hwndInsertAfter = pCbtCreate->hwndInsertAfter;
 
    Cs->style = dwStyle; /* NCCREATE and WM_NCCALCSIZE need the original values*/
 
@@ -2014,7 +2076,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
    
    /* Send the NCCREATE message */
-   Result = co_IntSendMessage(Window->head.h, WM_NCCREATE, 0, (LPARAM) Cs);
+   Result = co_IntSendMessage(UserHMGetHandle(Window), WM_NCCREATE, 0, (LPARAM) Cs);
    if (!Result)
    {
       DPRINT1("co_UserCreateWindowEx(): NCCREATE message failed\n");
@@ -2032,7 +2094,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
 
    /* Send the WM_CREATE message. */
-   Result = co_IntSendMessage(Window->head.h, WM_CREATE, 0, (LPARAM) Cs);
+   Result = co_IntSendMessage(UserHMGetHandle(Window), WM_CREATE, 0, (LPARAM) Cs);
    if (Result == (LRESULT)-1)
    {
       DPRINT1("co_UserCreateWindowEx(): WM_CREATE message failed\n");
@@ -2040,7 +2102,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    /* Send the EVENT_OBJECT_CREATE event*/
-   IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_WINDOW, 0);
+   IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_WINDOW, CHILDID_SELF, 0);
 
    /* By setting the flag below it can be examined to determine if the window
       was created successfully and a valid pwnd was passed back to caller since
@@ -2102,7 +2164,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
       if (Window->ExStyle & WS_EX_MDICHILD)
       {
-        co_IntSendMessage(ParentWindow->head.h, WM_MDIREFRESHMENU, 0, 0);
+        co_IntSendMessage(UserHMGetHandle(ParentWindow), WM_MDIREFRESHMENU, 0, 0);
         /* ShowWindow won't activate child windows */
         co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
       }
@@ -2120,6 +2182,10 @@ CLEANUP:
        else if (Class)
            IntDereferenceClass(Class, pti->pDeskInfo, pti->ppi);
    }
+
+   if (pCsw) ExFreePoolWithTag(pCsw, TAG_HOOK);
+   if (pCbtCreate) ExFreePoolWithTag(pCbtCreate, TAG_HOOK);
+   RtlFreeAnsiString(&asClassName);
 
    if (Window)
    {
@@ -2280,7 +2346,7 @@ NtUserCreateWindowEx(
     /* Call the internal function */
     pwnd = co_UserCreateWindowEx(&Cs, &ustrClassName, plstrWindowName);
 
-	if(!pwnd)
+    if(!pwnd)
     {
         DPRINT1("co_UserCreateWindowEx failed!\n");
     }
@@ -2343,7 +2409,11 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    /* If window was created successfully and it is hooked */
    if ((Window->state2 & WNDS2_WMCREATEMSGPROCESSED))
    {
-      if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
+      if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0))
+      {
+         DPRINT1("Destroy Window WH_CBT Call Hook return!\n");
+         return FALSE;
+      }
    }
 
    /* Inform the parent */

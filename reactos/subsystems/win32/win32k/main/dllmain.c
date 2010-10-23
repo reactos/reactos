@@ -175,6 +175,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 {
     struct _EPROCESS *Process;
     PTHREADINFO Win32Thread;
+    int i;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kThreadCallback\n");
@@ -214,6 +215,10 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       InitializeListHead(&Win32Thread->WindowListHead);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
       InitializeListHead(&Win32Thread->PtiLink);
+      for (i = 0; i < NB_HOOKS; i++)
+      {
+         InitializeListHead(&Win32Thread->aphkStart[i]);
+      }
 
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
@@ -290,6 +295,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->TIF_flags |= TIF_INCLEANUP;
       DceFreeThreadDCE(Win32Thread);
       HOOK_DestroyThreadHooks(Thread);
+      EVENT_DestroyThreadEvents(Thread);
       /* Cleanup timers */
       DestroyTimersForThread(Win32Thread);
       KeSetEvent(Win32Thread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
