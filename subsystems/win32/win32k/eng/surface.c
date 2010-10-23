@@ -173,7 +173,7 @@ SURFACE_AllocSurface(
         pso->iType = iType;
         pso->iUniq = InterlockedIncrement((PLONG)&giUniqueSurface);
 
-        /* Assign a default palette amd increment its reference count */
+        /* Assign a default palette and increment its reference count */
         psurf->ppal = appalSurfaceDefault[iFormat];
         GDIOBJ_IncrementShareCount(&psurf->ppal->BaseObject);
     }

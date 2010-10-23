@@ -185,8 +185,9 @@ LDEVOBJ_bLoadImage(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to load a GDI driver: '%S'\n", pstrPathName->Buffer);
-        ASSERT(FALSE);
+        DPRINT1("Failed to load a GDI driver: '%S', Status = 0x%lx\n", 
+                pstrPathName->Buffer, Status);
+
         /* Free the allocated memory */
         ExFreePoolWithTag(pDriverInfo, TAG_LDEV);
         return FALSE;
@@ -322,13 +323,47 @@ EngLoadImageEx(
     LPWSTR pwszDriverName,
     ULONG ldevtype)
 {
+    WCHAR acwBuffer[MAX_PATH];
     PLDEVOBJ pldev;
     UNICODE_STRING strDriverName;
+    ULONG cwcLength;
+    LPWSTR pwsz;
 
     DPRINT("EngLoadImageEx(%ls, %ld)\n", pwszDriverName, ldevtype);
+    ASSERT(pwszDriverName);
 
-    /* Initialize the driver name */
-    RtlInitUnicodeString(&strDriverName, pwszDriverName);
+    /* Initialize buffer for the the driver name */
+    RtlInitEmptyUnicodeString(&strDriverName, acwBuffer, sizeof(acwBuffer));
+
+    /* Start path with systemroot */
+    RtlAppendUnicodeToString(&strDriverName, L"\\SystemRoot\\System32\\");
+
+    /* Get Length of given string */
+    cwcLength = wcslen(pwszDriverName);
+
+    /* Check if we have a system32 path given */
+    pwsz = pwszDriverName + cwcLength;
+    while (pwsz > pwszDriverName)
+    {
+        if (_wcsnicmp(pwsz, L"\\system32\\", 10) == 0)
+        {
+            /* Driver name starts after system32 */
+            pwsz += 10;
+            break;
+        }
+        pwsz--;
+    }
+
+    /* Append the driver name */
+    RtlAppendUnicodeToString(&strDriverName, pwsz);
+
+    /* MSDN says "The driver must include this suffix in the pwszDriver string."
+       But in fact it's optional. */
+    if (_wcsnicmp(pwszDriverName + cwcLength - 4, L".dll", 4) != 0)
+    {
+        /* Append the .dll suffix */
+        RtlAppendUnicodeToString(&strDriverName, L".dll");
+    }
 
     /* Lock loader */
     EngAcquireSemaphore(ghsemLDEVList);
@@ -339,7 +374,7 @@ EngLoadImageEx(
         /* Check if the ldev is associated with a file */
         if (pldev->pGdiDriverInfo)
         {
-            /* Check for match */
+            /* Check for match (case insensative) */
             if (RtlEqualUnicodeString(&pldev->pGdiDriverInfo->DriverName, &strDriverName, 1))
             {
                 /* Image found in LDEV list */
@@ -399,25 +434,6 @@ leave:
     return pldev;
 }
 
-PLDEVOBJ
-APIENTRY
-EngLoadDriver(
-    LPWSTR pwszDriverName,
-    ULONG ldevtype)
-{
-    WCHAR acwBuffer[MAX_PATH];
-    PLDEVOBJ pldev;
-
-    ASSERT(pwszDriverName);
-    DPRINT("EngLoadDriver(%ls, %ld)\n", pwszDriverName, ldevtype);
-
-    /* Create a full file name */ // FIXME: do better than that
-    swprintf(acwBuffer, L"\\SystemRoot\\System32\\%ls.dll", pwszDriverName);
-
-    pldev = EngLoadImageEx(acwBuffer, ldevtype);
-
-    return pldev;
-}
 
 /** Exported functions ********************************************************/
 

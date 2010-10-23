@@ -261,7 +261,7 @@ EngpCreatePDEV(
     }
 
     /* Try to get a diplay driver */
-    ppdev->pldev = EngLoadDriver(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
+    ppdev->pldev = EngLoadImageEx(pdm->dmDeviceName, LDEV_DEVICE_DISPLAY);
     if (!ppdev->pldev)
     {
         DPRINT1("Could not load display driver '%ls'\n",

@@ -69,7 +69,7 @@ InitLDEVImpl();
 
 PLDEVOBJ
 APIENTRY
-EngLoadDriver(
+EngLoadImageEx(
     LPWSTR pwszDriverName,
     ULONG ldevtype);
 

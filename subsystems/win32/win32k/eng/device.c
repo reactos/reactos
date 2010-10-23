@@ -122,7 +122,7 @@ EngpRegisterGraphicsDevice(
     {
         DPRINT1("trying driver: %ls\n", pwsz);
         /* Try to load the display driver */
-        pldev = EngLoadDriver(pwsz, LDEV_DEVICE_DISPLAY);
+        pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
         if (!pldev)
         {
             DPRINT1("Could not load driver: '%ls'\n", pwsz);
