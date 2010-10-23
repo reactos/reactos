@@ -80,3 +80,4 @@ target_link_libraries(explorer
     -lntdll)
 
 add_dependencies(explorer psdk buildno_header)
+add_livecd_target(explorer reactos)
