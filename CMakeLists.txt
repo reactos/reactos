@@ -127,11 +127,10 @@ file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/Default User")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/Default User/Desktop")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/Default User/My Documents")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos")
+file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/inf")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/fonts")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32/config")
-
-
 
 add_custom_command(
     OUTPUT ${REACTOS_BINARY_DIR}/livecd.iso
