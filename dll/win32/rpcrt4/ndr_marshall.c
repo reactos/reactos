@@ -6032,6 +6032,7 @@ static LONG unmarshall_discriminant(PMIDL_STUB_MESSAGE pStubMsg,
     case RPC_FC_WCHAR:
     case RPC_FC_SHORT:
     case RPC_FC_USHORT:
+    case RPC_FC_ENUM16:
     {
         USHORT d;
         ALIGN_POINTER(pStubMsg->Buffer, sizeof(USHORT));

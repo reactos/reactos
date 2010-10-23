@@ -1399,6 +1399,8 @@ BOOL WINAPI DebugSetProcessKillOnExit(BOOL);
 #endif
 PVOID WINAPI DecodePointer(PVOID);
 PVOID WINAPI DecodeSystemPointer(PVOID);
+BOOL WINAPI DecryptFileA(LPCSTR,DWORD);
+BOOL WINAPI DecryptFileW(LPCWSTR,DWORD);
 BOOL WINAPI DefineDosDeviceA(DWORD,LPCSTR,LPCSTR);
 BOOL WINAPI DefineDosDeviceW(DWORD,LPCWSTR,LPCWSTR);
 #define DefineHandleTable(w) ((w),TRUE)
@@ -2374,6 +2376,7 @@ typedef PCACTCTXW PCACTCTX;
 #define CreateProcessAsUser CreateProcessAsUserW
 #define CreateSemaphore CreateSemaphoreW
 #define CreateWaitableTimer CreateWaitableTimerW
+#define DecryptFile DecryptFileW
 #define DefineDosDevice DefineDosDeviceW
 #define DeleteFile DeleteFileW
 #if (_WIN32_WINNT >= 0x0500)
@@ -2577,6 +2580,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define CreateProcessAsUser CreateProcessAsUserA
 #define CreateSemaphore CreateSemaphoreA
 #define CreateWaitableTimer CreateWaitableTimerA
+#define DecryptFile DecryptFileA
 #define DefineDosDevice DefineDosDeviceA
 #define DeleteFile DeleteFileA
 #if (_WIN32_WINNT >= 0x0500)

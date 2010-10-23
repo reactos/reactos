@@ -147,17 +147,11 @@ KsTopologyPropertyHandler(
     IN  OUT PVOID Data,
     IN  const KSTOPOLOGY* Topology)
 {
-    UNICODE_STRING LocalMachine = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\MediaCategories\\");
-    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"Name");
-    UNICODE_STRING GuidString;
-    UNICODE_STRING KeyName;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     KSP_NODE * Node;
     PIO_STACK_LOCATION IoStack;
-    ULONG Size;
     NTSTATUS Status;
-    HANDLE hKey;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    LPGUID Guid;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -184,90 +178,60 @@ KsTopologyPropertyHandler(
         case KSPROPERTY_TOPOLOGY_NAME:
             Node = (KSP_NODE*)Property;
 
+            /* check for invalid node id */
             if (Node->NodeId >= Topology->TopologyNodesCount)
             {
+                /* invalid node id */
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_INVALID_PARAMETER;
                 break;
             }
 
-            Status = RtlStringFromGUID(&Topology->TopologyNodesNames[Node->NodeId], &GuidString);
+            /* check if there is a name supplied */
+            if (!IsEqualGUIDAligned(&Topology->TopologyNodesNames[Node->NodeId], &GUID_NULL))
+            {
+                /* node name has been supplied */
+                Guid = (LPGUID)&Topology->TopologyNodesNames[Node->NodeId];
+            }
+            else
+            {
+                /* fallback to topology node type */
+                Guid = (LPGUID)&Topology->TopologyNodes[Node->NodeId];
+            }
+
+            /* read topology node name */
+            Status = KspReadMediaCategory(Guid, &KeyInfo);
             if (!NT_SUCCESS(Status))
             {
                 Irp->IoStatus.Information = 0;
                 break;
             }
 
-            KeyName.Length = 0;
-            KeyName.MaximumLength = LocalMachine.Length + GuidString.Length + sizeof(WCHAR);
-            KeyName.Buffer = AllocateItem(PagedPool, KeyName.MaximumLength);
-            if (!KeyName.Buffer)
-            {
-                Irp->IoStatus.Information = 0;
-                Status = STATUS_INSUFFICIENT_RESOURCES;
-                RtlFreeUnicodeString(&GuidString);
-                break;
-            }
+            /* store result size */
+            Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
 
-            RtlAppendUnicodeStringToString(&KeyName, &LocalMachine);
-            RtlAppendUnicodeStringToString(&KeyName, &GuidString);
-
-            RtlFreeUnicodeString(&GuidString);
-
-            InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
-            Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
-
-            FreeItem(KeyName.Buffer);
-
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
-                Irp->IoStatus.Information = 0;
-                break;
-            }
-
-            Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, NULL, 0, &Size);
-            if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
-            {
-                ZwClose(hKey);
-                Irp->IoStatus.Information = 0;
-                break;
-            }
-
-            ASSERT(Size);
-            KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) AllocateItem(NonPagedPool, Size);
-            if (!KeyInfo)
-            {
-                Status = STATUS_NO_MEMORY;
-                break;
-            }
-
-            Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, (PVOID)KeyInfo, Size, &Size);
-            if (!NT_SUCCESS(Status))
-            {
-                FreeItem(KeyInfo);
-                ZwClose(hKey);
-                Irp->IoStatus.Information = 0;
-                break;
-            }
-
-            ZwClose(hKey);
+            /* check for buffer overflow */
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
-                Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
-                Status = STATUS_MORE_ENTRIES;
+                /* buffer too small */
+                Status = STATUS_BUFFER_OVERFLOW;
                 FreeItem(KeyInfo);
                 break;
             }
 
+            /* copy result buffer */
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
+
+            /* zero terminate it */
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
-             Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
+
+            /* free key info */
             FreeItem(KeyInfo);
+
             break;
         default:
              Irp->IoStatus.Information = 0;
-           Status = STATUS_NOT_IMPLEMENTED;
+           Status = STATUS_NOT_FOUND;
     }
 
 

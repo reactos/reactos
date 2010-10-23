@@ -78,7 +78,7 @@ HRESULT bind_to_storage(LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv);
 HRESULT bind_to_object(IMoniker *mon, LPCWSTR url, IBindCtx *pbc, REFIID riid, void **ppv);
 
 HRESULT create_binding_protocol(LPCWSTR url, BOOL from_urlmon, IInternetProtocol **protocol);
-void set_binding_sink(IInternetProtocol *bind_protocol, IInternetProtocolSink *sink);
+void set_binding_sink(IInternetProtocol *bind_protocol, IInternetProtocolSink *sink, IInternetBindInfo *bind_info);
 IWinInetInfo *get_wininet_info(IInternetProtocol*);
 
 typedef struct ProtocolVtbl ProtocolVtbl;
@@ -105,12 +105,12 @@ typedef struct {
 } Protocol;
 
 struct ProtocolVtbl {
-    HRESULT (*open_request)(Protocol*,LPCWSTR,DWORD,HINTERNET,IInternetBindInfo*);
+    HRESULT (*open_request)(Protocol*,IUri*,DWORD,HINTERNET,IInternetBindInfo*);
     HRESULT (*start_downloading)(Protocol*);
     void (*close_connection)(Protocol*);
 };
 
-HRESULT protocol_start(Protocol*,IInternetProtocol*,LPCWSTR,IInternetProtocolSink*,IInternetBindInfo*);
+HRESULT protocol_start(Protocol*,IInternetProtocol*,IUri*,IInternetProtocolSink*,IInternetBindInfo*);
 HRESULT protocol_continue(Protocol*,PROTOCOLDATA*);
 HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*);
 HRESULT protocol_lock_request(Protocol*);

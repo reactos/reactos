@@ -184,26 +184,23 @@ list(APPEND SOURCE
     mm/ARM3/pfnlist.c
     mm/ARM3/pool.c
     mm/ARM3/procsup.c
+    mm/ARM3/section.c
     mm/ARM3/sysldr.c
     mm/ARM3/syspte.c
     mm/ARM3/vadnode.c
     mm/ARM3/virtual.c
+    mm/ARM3/zeropage.c
     mm/anonmem.c
     mm/balance.c
     mm/freelist.c
     mm/marea.c
     mm/mmfault.c
     mm/mminit.c
-    mm/mpw.c
     mm/pagefile.c
     mm/pageop.c
-    mm/pe.c
-    mm/ppool.c
-    mm/procsup.c
     mm/region.c
     mm/rmap.c
     mm/section.c
-    mm/virtual.c
     ob/obdir.c
     ob/obhandle.c
     ob/obinit.c

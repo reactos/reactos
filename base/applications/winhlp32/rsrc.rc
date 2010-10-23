@@ -22,7 +22,7 @@
 #include "winhelp_res.h"
 
 /* @makedep: winhelp.ico */
-IDI_WINHELP ICON DISCARDABLE winhelp.ico
+IDI_WINHELP ICON winhelp.ico
 
 #include "Bg.rc"
 #include "Cs.rc"
@@ -41,6 +41,7 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 #include "Da.rc"
 #include "De.rc"
 #include "Fr.rc"
+#include "He.rc"
 #include "It.rc"
 #include "Ja.rc"
 #include "Lt.rc"
@@ -50,5 +51,6 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 #include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
+#include "Sr.rc"
 #include "Uk.rc"
 #include "Zh.rc"

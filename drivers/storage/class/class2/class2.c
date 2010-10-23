@@ -748,16 +748,16 @@ Retry:
         // in reverse byte order.
         //
 
-        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->BytesPerSector)->Byte0 =
+        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->Geometry.BytesPerSector)->Byte0 =
             ((PFOUR_BYTE)&readCapacityBuffer->BytesPerBlock)->Byte3;
 
-        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->BytesPerSector)->Byte1 =
+        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->Geometry.BytesPerSector)->Byte1 =
             ((PFOUR_BYTE)&readCapacityBuffer->BytesPerBlock)->Byte2;
 
-        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->BytesPerSector)->Byte2 =
+        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->Geometry.BytesPerSector)->Byte2 =
             ((PFOUR_BYTE)&readCapacityBuffer->BytesPerBlock)->Byte1;
 
-        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->BytesPerSector)->Byte3 =
+        ((PFOUR_BYTE)&deviceExtension->DiskGeometry->Geometry.BytesPerSector)->Byte3 =
             ((PFOUR_BYTE)&readCapacityBuffer->BytesPerBlock)->Byte0;
 
         //
@@ -780,10 +780,10 @@ Retry:
         // Calculate sector to byte shift.
         //
 
-        WHICH_BIT(deviceExtension->DiskGeometry->BytesPerSector, deviceExtension->SectorShift);
+        WHICH_BIT(deviceExtension->DiskGeometry->Geometry.BytesPerSector, deviceExtension->SectorShift);
 
         DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Sector size is %d\n",
-            deviceExtension->DiskGeometry->BytesPerSector));
+            deviceExtension->DiskGeometry->Geometry.BytesPerSector));
 
         DebugPrint((2,"SCSI ScsiClassReadDriveCapacity: Number of Sectors is %d\n",
             lastSector + 1));
@@ -798,7 +798,7 @@ Retry:
         // Calculate number of cylinders.
         //
 
-        deviceExtension->DiskGeometry->Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
+        deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(32 * 64));
 
         deviceExtension->PartitionLength.QuadPart =
             (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
@@ -809,7 +809,7 @@ Retry:
             // This device supports removable media.
             //
 
-            deviceExtension->DiskGeometry->MediaType = RemovableMedia;
+            deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
 
         } else {
 
@@ -817,20 +817,20 @@ Retry:
             // Assume media type is fixed disk.
             //
 
-            deviceExtension->DiskGeometry->MediaType = FixedMedia;
+            deviceExtension->DiskGeometry->Geometry.MediaType = FixedMedia;
         }
 
         //
         // Assume sectors per track are 32;
         //
 
-        deviceExtension->DiskGeometry->SectorsPerTrack = 32;
+        deviceExtension->DiskGeometry->Geometry.SectorsPerTrack = 32;
 
         //
         // Assume tracks per cylinder (number of heads) is 64.
         //
 
-        deviceExtension->DiskGeometry->TracksPerCylinder = 64;
+        deviceExtension->DiskGeometry->Geometry.TracksPerCylinder = 64;
     }
 
     if (status == STATUS_VERIFY_REQUIRED) {
@@ -860,8 +860,8 @@ Retry:
         // except for the bytes per sector and sector shift.
         //
 
-        RtlZeroMemory(deviceExtension->DiskGeometry, sizeof(DISK_GEOMETRY));
-        deviceExtension->DiskGeometry->BytesPerSector = 512;
+        RtlZeroMemory(deviceExtension->DiskGeometry, sizeof(DISK_GEOMETRY_EX));
+        deviceExtension->DiskGeometry->Geometry.BytesPerSector = 512;
         deviceExtension->SectorShift = 9;
         deviceExtension->PartitionLength.QuadPart = (LONGLONG) 0;
 
@@ -871,7 +871,7 @@ Retry:
             // This device supports removable media.
             //
 
-            deviceExtension->DiskGeometry->MediaType = RemovableMedia;
+            deviceExtension->DiskGeometry->Geometry.MediaType = RemovableMedia;
 
         } else {
 
@@ -879,7 +879,7 @@ Retry:
             // Assume media type is fixed disk.
             //
 
-            deviceExtension->DiskGeometry->MediaType = FixedMedia;
+            deviceExtension->DiskGeometry->Geometry.MediaType = FixedMedia;
         }
     }
 
@@ -2752,7 +2752,7 @@ Return Value:
             errorLogEntry->DeviceOffset.QuadPart = (LONGLONG) badSector;
             errorLogEntry->DeviceOffset = RtlExtendedIntegerMultiply(
                                errorLogEntry->DeviceOffset,
-                               deviceExtension->DiskGeometry->BytesPerSector);
+                               deviceExtension->DiskGeometry->Geometry.BytesPerSector);
         }
 
         errorLogEntry->ErrorCode = logStatus;

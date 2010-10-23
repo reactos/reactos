@@ -17,6 +17,18 @@
 #define PLACEMENT_STRETCH   1
 #define PLACEMENT_TILE      2
 
+/* The values in these macros are dependant on the
+ * layout of the monitor image and they must be adjusted
+ * if that image will be changed.
+ */
+#define MONITOR_LEFT        18
+#define MONITOR_TOP         18
+#define MONITOR_RIGHT       168
+#define MONITOR_BOTTOM      128
+
+#define MONITOR_WIDTH       (MONITOR_RIGHT-MONITOR_LEFT)
+#define MONITOR_HEIGHT      (MONITOR_BOTTOM-MONITOR_TOP)
+
 typedef struct
 {
     BOOL bWallpaper; /* Is this background a wallpaper */
@@ -303,7 +315,7 @@ InitBackgroundDialog(HWND hwndDlg, PDATA pData)
 
     RegCloseKey(regKey);
 
-    pData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_LOADTRANSPARENT);
+    pData->hBitmap = (HBITMAP) LoadImage(hApplet, MAKEINTRESOURCE(IDC_MONITOR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
     if (pData->hBitmap != NULL)
     {
         GetObject(pData->hBitmap, sizeof(BITMAP), &bitmap);
@@ -515,93 +527,139 @@ DrawBackgroundPreview(LPDRAWITEMSTRUCT draw, PDATA pData)
     float scaleY;
     int scaledWidth;
     int scaledHeight;
-    int posX;
-    int posY;
+    int posX, desX;
+    int posY, desY;
     HBRUSH hBrush;
     int x;
     int y;
+    HDC hDC;
+    HGDIOBJ hOldObj;
+    RECT rcItem = {
+        MONITOR_LEFT,
+        MONITOR_TOP,
+        MONITOR_RIGHT,
+        MONITOR_BOTTOM
+    };
+
+    hDC = CreateCompatibleDC(draw->hDC);
+    hOldObj = SelectObject(hDC, pData->hBitmap);
 
     if (pData->backgroundItems[pData->backgroundSelection].bWallpaper == FALSE)
     {
         /* update desktop background color image */
         hBrush = CreateSolidBrush(g_GlobalData.desktop_color);
-        FillRect(draw->hDC, &draw->rcItem, hBrush);
+        FillRect(hDC, &rcItem, hBrush);
         DeleteObject(hBrush);
-        return;
     }
-
-    if (pData->pWallpaperBitmap == NULL)
-        return;
-
-    scaleX = ((float)GetSystemMetrics(SM_CXSCREEN) - 1) / (float)draw->rcItem.right;
-    scaleY = ((float)GetSystemMetrics(SM_CYSCREEN) - 1) / (float)draw->rcItem.bottom;
-
-    scaledWidth = pData->pWallpaperBitmap->width / scaleX;
-    scaledHeight = pData->pWallpaperBitmap->height / scaleY;
-
-    posX = (draw->rcItem.right / 2) - (scaledWidth / 2);
-    posY = (draw->rcItem.bottom / 2) - (scaledHeight / 2);
-
-    FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
-
-    SetStretchBltMode(draw->hDC, COLORONCOLOR);
-
-    switch (pData->placementSelection)
+    else
+    if (pData->pWallpaperBitmap != NULL)
     {
-        case PLACEMENT_CENTER:
-            StretchDIBits(draw->hDC,
-                          posX,
-                          posY,
-                          scaledWidth,
-                          scaledHeight,
-                          0,
-                          0,
-                          pData->pWallpaperBitmap->width,
-                          pData->pWallpaperBitmap->height,
-                          pData->pWallpaperBitmap->bits,
-                          pData->pWallpaperBitmap->info,
-                          DIB_RGB_COLORS,
-                          SRCCOPY);
-            break;
+        scaleX = ((float)GetSystemMetrics(SM_CXSCREEN) - 1) / (float)MONITOR_WIDTH;
+        scaleY = ((float)GetSystemMetrics(SM_CYSCREEN) - 1) / (float)MONITOR_HEIGHT;
 
-        case PLACEMENT_STRETCH:
-            StretchDIBits(draw->hDC,
-                          0,
-                          0,
-                          draw->rcItem.right,
-                          draw->rcItem.bottom,
-                          0,
-                          0,
-                          pData->pWallpaperBitmap->width,
-                          pData->pWallpaperBitmap->height,
-                          pData->pWallpaperBitmap->bits,
-                          pData->pWallpaperBitmap->info,
-                          DIB_RGB_COLORS,
-                          SRCCOPY);
-            break;
+        scaledWidth = (int)(pData->pWallpaperBitmap->width / scaleX);
+        scaledHeight = (int)(pData->pWallpaperBitmap->height / scaleY);
 
-        case PLACEMENT_TILE:
-            for (y = 0; y < draw->rcItem.bottom; y += scaledHeight)
-            {
-                for (x = 0; x < draw->rcItem.right; x += scaledWidth)
+        FillRect(hDC, &rcItem, GetSysColorBrush(COLOR_BACKGROUND));
+
+        SetStretchBltMode(hDC, COLORONCOLOR);
+
+        switch (pData->placementSelection)
+        {
+            case PLACEMENT_CENTER:
+                posX = (MONITOR_WIDTH - scaledWidth + 1) / 2;
+                posY = (MONITOR_HEIGHT - scaledHeight + 1) / 2;
+                desX = 0;
+                desY = 0;
+
+                if (posX < 0) { desX = -posX / 2; posX = 0; }
+                if (posY < 0) { desY = -posY / 2; posY = 0; }
+
+                if (scaledWidth > MONITOR_WIDTH)
+                    scaledWidth = MONITOR_WIDTH;
+
+                if (scaledHeight > MONITOR_HEIGHT)
+                    scaledHeight = MONITOR_HEIGHT;
+
+                StretchDIBits(hDC,
+                              MONITOR_LEFT+posX,
+                              MONITOR_TOP+posY,
+                              scaledWidth,
+                              scaledHeight,
+                              desX,
+                              desY,
+                              pData->pWallpaperBitmap->width - (int)(desX * scaleX),
+                              pData->pWallpaperBitmap->height - (int)(desY * scaleY),
+                              pData->pWallpaperBitmap->bits,
+                              pData->pWallpaperBitmap->info,
+                              DIB_RGB_COLORS,
+                              SRCCOPY);
+                break;
+
+            case PLACEMENT_STRETCH:
+                StretchDIBits(hDC,
+                              MONITOR_LEFT,
+                              MONITOR_TOP,
+                              MONITOR_WIDTH,
+                              MONITOR_HEIGHT,
+                              0,
+                              0,
+                              pData->pWallpaperBitmap->width,
+                              pData->pWallpaperBitmap->height,
+                              pData->pWallpaperBitmap->bits,
+                              pData->pWallpaperBitmap->info,
+                              DIB_RGB_COLORS,
+                              SRCCOPY);
+                break;
+
+            case PLACEMENT_TILE:
+                for (y = 0; y < MONITOR_HEIGHT; y += scaledHeight)
                 {
-                    StretchDIBits(draw->hDC,
-                                  x,
-                                  y,
-                                  scaledWidth,
-                                  scaledHeight,
-                                  0,
-                                  0,
-                                  pData->pWallpaperBitmap->width,
-                                  pData->pWallpaperBitmap->height,
-                                  pData->pWallpaperBitmap->bits,
-                                  pData->pWallpaperBitmap->info,
-                                  DIB_RGB_COLORS,
-                                  SRCCOPY);
+                    for (x = 0; x < MONITOR_WIDTH; x += scaledWidth)
+                    {
+                        if ((MONITOR_WIDTH-x) >= scaledWidth)
+                            posX = scaledWidth;
+                        else
+                            posX = MONITOR_WIDTH-x;
+
+
+                        if ((MONITOR_HEIGHT-y) >= scaledHeight)
+                            posY = scaledHeight;
+                        else
+                            posY = MONITOR_HEIGHT-y;
+
+                        StretchDIBits(hDC,
+                                      MONITOR_LEFT + x,
+                                      MONITOR_TOP + y,
+                                      posX,
+                                      posY,
+                                      0,
+                                      0,
+                                      pData->pWallpaperBitmap->width * posX / scaledWidth,
+                                      pData->pWallpaperBitmap->height * posY / scaledHeight,
+                                      pData->pWallpaperBitmap->bits,
+                                      pData->pWallpaperBitmap->info,
+                                      DIB_RGB_COLORS,
+                                      SRCCOPY);
+                    }
+
                 }
-            }
-            break;
+
+                break;
+        }
     }
+
+    TransparentBlt(draw->hDC,
+                   draw->rcItem.left, draw->rcItem.top,
+                   draw->rcItem.right-draw->rcItem.left+1,
+                   draw->rcItem.bottom-draw->rcItem.top+1,
+                   hDC,
+                   0, 0,
+                   pData->cxSource, pData->cySource,
+                   0xFF00FF);
+
+    SelectObject(hDC, hOldObj);
+    DeleteDC(hDC);
 }
 
 
@@ -723,25 +781,6 @@ BackgroundPageProc(HWND hwndDlg,
                         break;
                 }
             } break;
-
-        case WM_PAINT:
-            {
-                PAINTSTRUCT ps;
-                HDC hdc, hdcMem;
-
-                hdc = BeginPaint(hwndDlg, &ps);
-
-                hdcMem = CreateCompatibleDC(hdc);
-                SelectObject(hdcMem, pData->hBitmap);
-/*
-                TransparentBlt(hdc, 98, 0,
-                               pData->cxSource, pData->cySource, hdcMem, 0, 0,
-                               pData->cxSource, pData->cySource, 0xFF80FF);
-*/
-                DeleteDC(hdcMem);
-                EndPaint(hwndDlg, &ps);
-            }
-            break;
 
         case WM_DRAWITEM:
             {

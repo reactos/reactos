@@ -284,6 +284,10 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
+                /* force refresh of selection contents */
+                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
+                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
+                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
             }
             HeapFree(GetProcessHeap(), 0, ptStack);
             ptStack = NULL;
@@ -310,6 +314,10 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
+                /* force refresh of selection contents */
+                SendMessage(hSelection, WM_LBUTTONDOWN, 0, 0);
+                SendMessage(hSelection, WM_MOUSEMOVE, 0, 0);
+                SendMessage(hSelection, WM_LBUTTONUP, 0, 0);
             }
             break;
         case TOOL_RUBBER:

@@ -56,12 +56,12 @@ BEGIN
         MENUITEM "找下一个(&N)\tF3", ID_FIND_NEXT
         MENUITEM "替换(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "只读(&0))", ID_EDIT_READONLY
-        MENUITEM "已改动(M)", ID_EDIT_MODIFIED
+        MENUITEM "只读(&O)", ID_EDIT_READONLY
+        MENUITEM "已改动(&M)", ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "其他(&X)"
         BEGIN
-            MENUITEM "选择信息(&I)", ID_EDIT_SELECTIONINFO
+            MENUITEM "选中信息(&I)", ID_EDIT_SELECTIONINFO
             MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
             MENUITEM "默认格式(&D)", ID_EDIT_DEFCHARFORMAT
             MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT
@@ -116,22 +116,22 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "黑",      ID_COLOR_BLACK
-        MENUITEM "Maroon",     ID_COLOR_MAROON
-        MENUITEM "绿",      ID_COLOR_GREEN
-        MENUITEM "Olive"       ID_COLOR_OLIVE
-        MENUITEM "Navy"        ID_COLOR_NAVY
-        MENUITEM "紫"      ID_COLOR_PURPLE
-        MENUITEM "Teal"        ID_COLOR_TEAL
-        MENUITEM "灰"        ID_COLOR_GRAY
-        MENUITEM "Silver"      ID_COLOR_SILVER
-        MENUITEM "红"         ID_COLOR_RED
-        MENUITEM "Lime"        ID_COLOR_LIME
-        MENUITEM "黄"      ID_COLOR_YELLOW
-        MENUITEM "蓝"        ID_COLOR_BLUE
-        MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
-        MENUITEM "Aqua"        ID_COLOR_AQUA
-        MENUITEM "白"       ID_COLOR_WHITE
+        MENUITEM "黑色",      ID_COLOR_BLACK /* 未找到“标准译名表” */
+        MENUITEM "栗色",     ID_COLOR_MAROON
+        MENUITEM "调和绿",      ID_COLOR_GREEN
+        MENUITEM "橄榄色"       ID_COLOR_OLIVE
+        MENUITEM "藏青"        ID_COLOR_NAVY
+        MENUITEM "紫色"      ID_COLOR_PURPLE
+        MENUITEM "鸭翅绿"        ID_COLOR_TEAL
+        MENUITEM "灰色"        ID_COLOR_GRAY
+        MENUITEM "银色"      ID_COLOR_SILVER
+        MENUITEM "红色"         ID_COLOR_RED
+        MENUITEM "绿色"        ID_COLOR_LIME
+        MENUITEM "黄色"      ID_COLOR_YELLOW
+        MENUITEM "蓝色"        ID_COLOR_BLUE
+        MENUITEM "洋红"     ID_COLOR_FUCHSIA /* =magenta? */
+        MENUITEM "水绿"        ID_COLOR_AQUA
+        MENUITEM "白色"       ID_COLOR_WHITE
         MENUITEM "自动"   ID_COLOR_AUTOMATIC
     END
 END
@@ -262,20 +262,18 @@ END
 STRINGTABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "文档"
-    STRING_PROMPT_SAVE_CHANGES,  "要保存 '%s' 吗?"
-    STRING_SEARCH_FINISHED,      "文件查找结束."
-    STRING_LOAD_RICHED_FAILED,   "RichEdit 装载失败."
-    STRING_SAVE_LOSEFORMATTING,  "你已经选择保存为文本文件, " \
-                                 "这可能导致格式丢失. " \
-                                 "你确定要这么做吗?"
+    STRING_PROMPT_SAVE_CHANGES,  "要保存“%s”吗？"
+    STRING_SEARCH_FINISHED,      "文件查找结束。"
+    STRING_LOAD_RICHED_FAILED,   "RichEdit 装载失败。"
+    STRING_SAVE_LOSEFORMATTING,  "你已经选择保存为文本文件，而这可能导致格式丢失。你确定要这么做吗？"
     STRING_INVALID_NUMBER,       "数字格式无效"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "不支持 OLE 储存文件"
-    STRING_WRITE_FAILED,              "不能保存文件."
-    STRING_WRITE_ACCESS_DENIED,       "你没有保存文件的权限."
-    STRING_OPEN_FAILED,               "不能打开文件."
-    STRING_OPEN_ACCESS_DENIED,        "你没有打开文件的权限."
+    STRING_WRITE_FAILED,              "不能保存文件。"
+    STRING_WRITE_ACCESS_DENIED,       "你没有保存文件的权限。"
+    STRING_OPEN_FAILED,               "不能打开文件。"
+    STRING_OPEN_ACCESS_DENIED,        "你没有打开文件的权限。"
     STRING_PRINTING_NOT_IMPLEMENTED,  "打印功能尚未实现"
-    STRING_MAX_TAB_STOPS,             "最多只能添加 32 个制表位宽度."
+    STRING_MAX_TAB_STOPS,             "最多只能添加 32 个制表位宽度。"
 END
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL

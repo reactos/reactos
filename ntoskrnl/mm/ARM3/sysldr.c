@@ -746,7 +746,11 @@ MiSnapThunk(IN PVOID DllBase,
             }
 
             /* Check if we couldn't find it */
-            if (High < Low) return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
+            if (High < Low)
+            {
+                DPRINT1("Warning: Driver failed to load, %s not found\n", NameImport->Name);
+                return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
+            }
 
             /* Otherwise, this is the ordinal */
             Ordinal = OrdinalTable[Mid];
@@ -1237,6 +1241,7 @@ CheckDllState:
             /* Cleanup and return */
             MiDereferenceImports(LoadedImports);
             if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
+            DPRINT1("Warning: Driver failed to load, %S not found\n", *MissingDriver);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
 

@@ -9,6 +9,8 @@
 /* INCLUDES *********************************************************/
 
 #include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
 #include "globalvar.h"
 #include "drawing.h"
 #include "history.h"
@@ -87,6 +89,7 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             if (moving)
             {
+                TCHAR sizeStr[100];
                 int xDelta;
                 int yDelta;
                 resetToU1();
@@ -147,6 +150,9 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
                 }
 
+                _stprintf(sizeStr, _T("%d x %d"), rectSel_dest[2], rectSel_dest[3]);
+                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
+
                 if (action != 0)
                     StretchBlt(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2], rectSel_dest[3], hSelDC, 0, 0, GetDIBWidth(hSelBm), GetDIBHeight(hSelBm), SRCCOPY);
                 else
@@ -182,6 +188,7 @@ SelectionWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int h = rectSel_dest[3] * zoom / 1000 + 6;
                 xPos = LOWORD(lParam);
                 yPos = HIWORD(lParam);
+                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) NULL);
                 action = identifyCorner(xPos, yPos, w, h);
                 if (action != 0)
                     SetCursor(LoadCursor(NULL, cursors[action]));

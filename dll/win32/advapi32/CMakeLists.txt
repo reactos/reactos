@@ -17,6 +17,7 @@ list(APPEND SOURCE
     crypt/crypt_md5.c
     crypt/crypt_sha.c
     misc/dllmain.c
+    misc/efs.c
     misc/hwprofiles.c
     misc/logon.c
     misc/msi.c

@@ -234,7 +234,7 @@ HINTERNET get_internet_session(IInternetBindInfo *bind_info)
     return internet_session;
 }
 
-HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, LPCWSTR url,
+HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, IUri *uri,
         IInternetProtocolSink *protocol_sink, IInternetBindInfo *bind_info)
 {
     DWORD request_flags;
@@ -265,7 +265,7 @@ HRESULT protocol_start(Protocol *protocol, IInternetProtocol *prot, LPCWSTR url,
     if(protocol->bindf & BINDF_NEEDFILE)
         request_flags |= INTERNET_FLAG_NEED_FILE;
 
-    hres = protocol->vtbl->open_request(protocol, url, request_flags, internet_session, bind_info);
+    hres = protocol->vtbl->open_request(protocol, uri, request_flags, internet_session, bind_info);
     if(FAILED(hres)) {
         protocol_close_connection(protocol);
         return report_result(protocol, hres);

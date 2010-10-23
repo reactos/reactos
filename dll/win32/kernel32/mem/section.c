@@ -87,7 +87,7 @@ CreateFileMappingW(HANDLE hFile,
     DesiredAccess = STANDARD_RIGHTS_REQUIRED | SECTION_QUERY | SECTION_MAP_READ;
 
     /* Get the attributes for the actual allocation and cleanup flProtect */
-    Attributes = flProtect & (SEC_FILE | SEC_IMAGE | SEC_RESERVE | SEC_NOCACHE | SEC_COMMIT);
+    Attributes = flProtect & (SEC_FILE | SEC_IMAGE | SEC_RESERVE | SEC_NOCACHE | SEC_COMMIT | SEC_LARGE_PAGES);
     flProtect ^= Attributes;
 
     /* If the caller didn't say anything, assume SEC_COMMIT */

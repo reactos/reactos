@@ -343,8 +343,8 @@ IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Copy\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Copy\tCtrl+C",                IDM_EDIT_COPY
+        MENUITEM "Paste\tCtrl+V",               IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN
@@ -375,8 +375,8 @@ IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Copy\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Copy\tCtrl+C",                IDM_EDIT_COPY
+        MENUITEM "Paste\tCtrl+V",               IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN
@@ -408,8 +408,8 @@ IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
     POPUP "Edit"
     BEGIN
-        MENUITEM "Copy\tCTRL-C",                IDM_EDIT_COPY
-        MENUITEM "Paste\tCTRL-V",               IDM_EDIT_PASTE
+        MENUITEM "Copy\tCtrl+C",                IDM_EDIT_COPY
+        MENUITEM "Paste\tCtrl+V",               IDM_EDIT_PASTE
     END
     POPUP "View"
     BEGIN

@@ -1353,6 +1353,7 @@ void (WINE_GLAPI *glVertex4sv)(const GLshort *v) DECLSPEC_HIDDEN;
 void (WINE_GLAPI *glVertexPointer)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer) DECLSPEC_HIDDEN;
 void (WINE_GLAPI *glViewport)(GLint x, GLint y, GLsizei width, GLsizei height) DECLSPEC_HIDDEN;
 void (WINE_GLAPI *glPointParameterfv)(GLenum pname, const GLfloat *params) DECLSPEC_HIDDEN;
+void (WINE_GLAPI *glPointParameteri)(GLenum name, GLint value) DECLSPEC_HIDDEN;
 
 /* glFinish and glFlush are always loaded from opengl32.dll, thus they always have
  * __stdcall calling convention.
@@ -1708,6 +1709,7 @@ BOOL (WINAPI *pwglShareLists)(HGLRC, HGLRC) DECLSPEC_HIDDEN;
     USE_GL_FUNC(glVertexPointer) \
     USE_GL_FUNC(glViewport) \
     USE_GL_FUNC(glPointParameterfv) \
+    USE_GL_FUNC(glPointParameteri) \
 
 #define WGL_FUNCS_GEN \
     USE_WGL_FUNC(wglCreateContext) \
@@ -1758,6 +1760,7 @@ typedef enum wined3d_gl_extension
     ARB_SYNC,
     ARB_TEXTURE_BORDER_CLAMP,
     ARB_TEXTURE_COMPRESSION,
+    ARB_TEXTURE_COMPRESSION_RGTC,
     ARB_TEXTURE_CUBE_MAP,
     ARB_TEXTURE_ENV_ADD,
     ARB_TEXTURE_ENV_COMBINE,
@@ -1784,6 +1787,7 @@ typedef enum wined3d_gl_extension
     EXT_BLEND_FUNC_SEPARATE,
     EXT_BLEND_MINMAX,
     EXT_DRAW_BUFFERS2,
+    EXT_DEPTH_BOUNDS_TEST,
     EXT_FOG_COORD,
     EXT_FRAMEBUFFER_BLIT,
     EXT_FRAMEBUFFER_MULTISAMPLE,
@@ -1816,6 +1820,7 @@ typedef enum wined3d_gl_extension
     NV_FRAGMENT_PROGRAM_OPTION,
     NV_HALF_FLOAT,
     NV_LIGHT_MAX_EXPONENT,
+    NV_POINT_SPRITE,
     NV_REGISTER_COMBINERS,
     NV_REGISTER_COMBINERS2,
     NV_TEXGEN_REFLECTION,
@@ -1834,7 +1839,8 @@ typedef enum wined3d_gl_extension
     WGL_ARB_PIXEL_FORMAT,
     WGL_WINE_PIXEL_FORMAT_PASSTHROUGH,
     /* Internally used */
-    WINE_NORMALIZED_TEXRECT,
+    WINED3D_GL_NORMALIZED_TEXRECT,
+    WINED3D_GL_VERSION_2_0,
 
     WINED3D_GL_EXT_COUNT,
 } GL_SupportedExt;
@@ -2447,6 +2453,15 @@ typedef GLvoid (WINE_GLAPI *PGLFNGETSYNCIVPROC)(GLsync sync, GLenum pname, GLsiz
 #define GL_CLAMP_TO_BORDER_ARB                              0x812d
 #endif
 
+/* GL_ARB_texture_compression_rgtc */
+#ifndef GL_ARB_texture_compression_rgtc
+#define GL_ARB_texture_compression_rgtc 1
+#define GL_COMPRESSED_RED_RGTC1                             0x8dbb
+#define GL_COMPRESSED_SIGNED_RED_RGTC1                      0x8dbc
+#define GL_COMPRESSED_RED_GREEN_RGTC2                       0x8dbd
+#define GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2                0x8dbe
+#endif
+
 /* GL_ARB_texture_cube_map */
 #ifndef GL_ARB_texture_cube_map
 #define GL_ARB_texture_cube_map 1
@@ -2968,6 +2983,14 @@ typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEEXTPROC)(GLenum modeRGB, GLe
 typedef void (WINE_GLAPI *PGLFNBLENDFUNCSEPARATEEXTPROC)(GLenum sfactorRGB, GLenum dfactorRGB,
         GLenum sfactorAlpha, GLenum dfactorAlpha);
 
+/* GL_EXT_depth_bounds_test */
+#ifndef GL_EXT_depth_bounds_test
+#define GL_EXT_depth_bounds_test 1
+#define GL_DEPTH_BOUNDS_TEST_EXT                            0x8890
+#define GL_DEPTH_BOUNDS_EXT                                 0x8891
+#endif
+typedef void (WINE_GLAPI *PGLFNDEPTHBOUNDSEXTPROC)(GLclampd zmin, GLclampd zmax);
+
 /* GL_EXT_draw_buffers2 */
 typedef GLvoid (WINE_GLAPI *PGLFNCOLORMASKINDEXEDEXTPROC)(GLuint buffer_idx, GLboolean r, GLboolean g,
         GLboolean b, GLboolean a);
@@ -3478,6 +3501,16 @@ typedef void (WINE_GLAPI *PGLFNVERTEXATTRIBS4HVNVPROC)(GLuint index, GLsizei n, 
 #define GL_MAX_SHININESS_NV                                 0x8504
 #define GL_MAX_SPOT_EXPONENT_NV                             0x8505
 #endif
+
+/* GL_NV_point_sprite */
+#ifndef GL_NV_point_sprite
+#define GL_NV_point_sprite 1
+#define GL_NV_POINT_SPRITE_NV                               0x8861
+#define GL_NV_COORD_REPLACE_NV                              0x8862
+#define GL_NV_POINT_SPRITE_R_MODE_NV                        0x8863
+#endif
+typedef void (WINE_GLAPI *PGLFNPOINTPARAMETERIVNVPROC)(GLenum pname, const GLint *params);
+typedef void (WINE_GLAPI *PGLFNPOINTPARAMETERINVPROC)(GLenum pname, GLint param);
 
 /* GL_NV_register_combiners */
 #ifndef GL_NV_register_combiners
@@ -4197,6 +4230,9 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
     /* GL_EXT_blend_func_separate */ \
     USE_GL_FUNC(PGLFNBLENDEQUATIONSEPARATEEXTPROC, \
             glBlendEquationSeparateEXT,                 EXT_BLEND_EQUATION_SEPARATE,    NULL) \
+    /* GL_EXT_depth_bounds_test */ \
+    USE_GL_FUNC(PGLFNDEPTHBOUNDSEXTPROC, \
+            glDepthBoundsEXT,                           EXT_DEPTH_BOUNDS_TEST,          NULL) \
     /* GL_EXT_draw_buffers2 */ \
     USE_GL_FUNC(PGLFNCOLORMASKINDEXEDEXTPROC, \
             glColorMaskIndexedEXT,                      EXT_DRAW_BUFFERS2,              NULL) \
@@ -4474,6 +4510,11 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
             glVertexAttribs3hvNV,                       NV_HALF_FLOAT,                  NULL) \
     USE_GL_FUNC(PGLFNVERTEXATTRIBS4HVNVPROC, \
             glVertexAttribs4hvNV,                       NV_HALF_FLOAT,                  NULL) \
+    /* GL_NV_point_sprite */ \
+    USE_GL_FUNC(PGLFNPOINTPARAMETERIVNVPROC, \
+            glPointParameterivNV,                       NV_POINT_SPRITE,                NULL) \
+    USE_GL_FUNC(PGLFNPOINTPARAMETERINVPROC, \
+            glPointParameteriNV,                        NV_POINT_SPRITE,                NULL) \
     /* GL_NV_register_combiners */ \
     USE_GL_FUNC(PGLFNCOMBINERINPUTNVPROC, \
             glCombinerInputNV,                          NV_REGISTER_COMBINERS,          NULL) \

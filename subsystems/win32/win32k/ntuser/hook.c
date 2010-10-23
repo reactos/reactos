@@ -332,6 +332,14 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 
     ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
+#if 0
+    /* FIXME! Check pDeskInfo->fsHooks for global hooks! */
+    if (!ISITHOOKED(HookId))
+    {
+        return 0;
+    }
+#endif
+
     pti = PsGetCurrentThreadWin32Thread();
     if (!pti)
     {

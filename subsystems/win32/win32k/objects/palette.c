@@ -752,7 +752,7 @@ IntAnimatePalette(HPALETTE hPal,
         UINT pal_entries;
         HDC hDC;
         PDC dc;
-        PWINDOW_OBJECT Wnd;
+        PWND Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
 
         palPtr = (PPALETTE)PALETTE_LockPalette(hPal);
@@ -1071,7 +1071,7 @@ BOOL
 APIENTRY
 NtGdiUpdateColors(HDC hDC)
 {
-   PWINDOW_OBJECT Wnd;
+   PWND Wnd;
    BOOL calledFromUser, ret;
    USER_REFERENCE_ENTRY Ref;
 

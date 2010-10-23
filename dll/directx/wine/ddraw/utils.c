@@ -22,11 +22,9 @@
  */
 
 #include "config.h"
-
-#define NONAMELESSUNION
+#include "wine/port.h"
 
 #include "ddraw_private.h"
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ddraw);
 
@@ -35,19 +33,17 @@ static void DDRAW_dump_pixelformat(const DDPIXELFORMAT *pf);
 /*****************************************************************************
  * PixelFormat_WineD3DtoDD
  *
- * Converts an WINED3DFORMAT value into a DDPIXELFORMAT structure
+ * Converts an wined3d format ID into a DDPIXELFORMAT structure
  *
  * Params:
  *  DDPixelFormat: Address of the structure to write the pixel format to
  *  WineD3DFormat: Source format
  *
  *****************************************************************************/
-void
-PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
-                        WINED3DFORMAT WineD3DFormat)
+void PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat, enum wined3d_format_id WineD3DFormat)
 {
     DWORD Size = DDPixelFormat->dwSize;
-    TRACE("Converting WINED3DFORMAT %d to DDRAW\n", WineD3DFormat);
+    TRACE("Converting wined3d format %#x to DDRAW.\n", WineD3DFormat);
 
     if(Size==0) return;
 
@@ -315,6 +311,16 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
             break;
 
+        case WINED3DFMT_R16G16_SNORM:
+            DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
+            DDPixelFormat->dwFourCC = 0;
+            DDPixelFormat->u1.dwBumpBitCount = 32;
+            DDPixelFormat->u2.dwBumpDuBitMask =         0x0000ffff;
+            DDPixelFormat->u3.dwBumpDvBitMask =         0xffff0000;
+            DDPixelFormat->u4.dwBumpLuminanceBitMask =  0x00000000;
+            DDPixelFormat->u5.dwLuminanceAlphaBitMask = 0x00000000;
+            break;
+
         case WINED3DFMT_R5G5_SNORM_L6_UNORM:
             DDPixelFormat->dwFlags = DDPF_BUMPDUDV;
             DDPixelFormat->dwFourCC = 0;
@@ -347,17 +353,17 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
 /*****************************************************************************
  * PixelFormat_DD2WineD3D
  *
- * Reads a DDPIXELFORMAT structure and returns the equal WINED3DFORMAT
+ * Reads a DDPIXELFORMAT structure and returns the equivalent wined3d
+ * format ID.
  *
  * Params:
  *  DDPixelFormat: The source format
  *
  * Returns:
- *  The WINED3DFORMAT equal to the DDraw format
+ *  The wined3d format ID equivalent to the DDraw format
  *  WINED3DFMT_UNKNOWN if a matching format wasn't found
  *****************************************************************************/
-WINED3DFORMAT
-PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
+enum wined3d_format_id PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
 {
     TRACE("Convert a DirectDraw Pixelformat to a WineD3D Pixelformat\n");
     if(TRACE_ON(ddraw))
@@ -572,47 +578,7 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
     }
     else if(DDPixelFormat->dwFlags & DDPF_FOURCC)
     {
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('U', 'Y', 'V', 'Y'))
-        {
-            return WINED3DFMT_UYVY;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('Y', 'U', 'Y', '2'))
-        {
-            return WINED3DFMT_YUY2;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('Y', 'V', '1', '2'))
-        {
-            return WINED3DFMT_YV12;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('D', 'X', 'T', '1'))
-        {
-            return WINED3DFMT_DXT1;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('D', 'X', 'T', '2'))
-        {
-            return WINED3DFMT_DXT2;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('D', 'X', 'T', '3'))
-        {
-           return WINED3DFMT_DXT3;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('D', 'X', 'T', '4'))
-        {
-            return WINED3DFMT_DXT4;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('D', 'X', 'T', '5'))
-        {
-	    return WINED3DFMT_DXT5;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('G', 'R', 'G', 'B'))
-        {
-            return WINED3DFMT_G8R8_G8B8;
-        }
-        if(DDPixelFormat->dwFourCC == MAKEFOURCC('R', 'G', 'B', 'G'))
-        {
-            return WINED3DFMT_R8G8_B8G8;
-        }
-        return WINED3DFMT_UNKNOWN;  /* Abuse this as an error value */
+        return DDPixelFormat->dwFourCC;
     }
     else if(DDPixelFormat->dwFlags & DDPF_BUMPDUDV)
     {
@@ -622,6 +588,13 @@ PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
             (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x00000000) )
         {
             return WINED3DFMT_R8G8_SNORM;
+        }
+        else if ( (DDPixelFormat->u1.dwBumpBitCount         == 32        ) &&
+                  (DDPixelFormat->u2.dwBumpDuBitMask        == 0x0000ffff) &&
+                  (DDPixelFormat->u3.dwBumpDvBitMask        == 0xffff0000) &&
+                  (DDPixelFormat->u4.dwBumpLuminanceBitMask == 0x00000000) )
+        {
+            return WINED3DFMT_R16G16_SNORM;
         }
         else if ( (DDPixelFormat->u1.dwBumpBitCount         == 16        ) &&
                   (DDPixelFormat->u2.dwBumpDuBitMask        == 0x0000001f) &&
@@ -668,7 +641,7 @@ DDRAW_dump_DDCOLORKEY(const DDCOLORKEY *ddck)
 static void DDRAW_dump_flags_nolf(DWORD flags, const flag_info* names,
                                   size_t num_names)
 {
-    unsigned int	i;
+    unsigned int i;
 
     for (i=0; i < num_names; i++)
         if ((flags & names[i].val) ||      /* standard flag value */

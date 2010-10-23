@@ -39,7 +39,7 @@ static domain_t *add_domain( session_t *session, WCHAR *name )
     list_init( &domain->entry );
     list_init( &domain->cookies );
 
-    domain->name = name;
+    domain->name = strdupW( name );
     list_add_tail( &session->cookie_cache, &domain->entry );
 
     TRACE("%s\n", debugstr_w(domain->name));
@@ -120,7 +120,7 @@ static BOOL add_cookie( session_t *session, cookie_t *cookie, WCHAR *domain_name
     }
     else if ((old_cookie = find_cookie( domain, path, cookie->name ))) delete_cookie( old_cookie );
 
-    cookie->path = path;
+    cookie->path = strdupW( path );
     list_add_tail( &domain->cookies, &cookie->entry );
 
     TRACE("domain %s path %s <- %s=%s\n", debugstr_w(domain_name), debugstr_w(cookie->path),
@@ -230,12 +230,9 @@ BOOL set_cookies( request_t *request, const WCHAR *cookies )
     ret = add_cookie( session, cookie, cookie_domain, cookie_path );
 
 end:
-    if (!ret)
-    {
-        free_cookie( cookie );
-        heap_free( cookie_domain );
-        heap_free( cookie_path );
-    }
+    if (!ret) free_cookie( cookie );
+    heap_free( cookie_domain );
+    heap_free( cookie_path );
     heap_free( buffer );
     return ret;
 }

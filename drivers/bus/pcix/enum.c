@@ -1575,15 +1575,31 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     PWCHAR DescriptionText;
     USHORT SubVendorId, SubSystemId;
     PCI_CAPABILITIES_HEADER CapHeader, PcixCapHeader;
+    UCHAR SecondaryBus;
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%x, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
     /* Is this the root FDO? */
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
-        /* Other FDOs are not currently supported */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Get the PDO for the child bus */
+        PdoExtension = DeviceExtension->PhysicalDeviceObject->DeviceExtension;
+        ASSERT_PDO(PdoExtension);
+
+        /* Check for hack which only allows bus to have one child device */
+        if (PdoExtension->HackFlags & PCI_HACK_ONE_CHILD) MaxDevice = 1;
+      
+        /* Check if the secondary bus number has changed */
+        PciReadDeviceConfig(PdoExtension,
+                            &SecondaryBus,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, u.type1.SecondaryBus),
+                            sizeof(UCHAR));
+        if (SecondaryBus != PdoExtension->Dependent.type1.SecondaryBus)
+        {
+            DPRINT1("PCI: Bus numbers have been changed!  Restoring originals.\n");
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
     }
 
     /* Loop every device on the bus */

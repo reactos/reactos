@@ -85,15 +85,14 @@ static const ULONG CrcTable[256] =
  * @implemented
  */
 ULONG NTAPI
-RtlComputeCrc32 (IN USHORT Initial,
-		 IN PUCHAR Data,
-		 IN ULONG Length)
+RtlComputeCrc32(IN ULONG Initial,
+                IN PUCHAR Data,
+                IN ULONG Length)
 {
-  ULONG CrcValue;
+  ULONG CrcValue = ~Initial;
 
-  DPRINT("(%lu,%p,%lu)\n", Initial, Data, Length);
+  DPRINT("(%d,%p,%d)\n", Initial, Data, Length);
 
-  CrcValue = ~Initial;
   while (Length > 0)
   {
     CrcValue = CrcTable[(CrcValue ^ *Data) & 0xff] ^ (CrcValue >> 8);

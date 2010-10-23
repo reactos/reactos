@@ -353,32 +353,15 @@ SIZE_T MmAllocationFragment;
 SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommitLimitMaximum;
 
-/* PRIVATE FUNCTIONS **********************************************************/
-
-#ifndef _M_AMD64
-//
-// In Bavaria, this is probably a hate crime
-//
-VOID
-FASTCALL
-MiSyncARM3WithROS(IN PVOID AddressStart,
-                  IN PVOID AddressEnd)
-{
-    //
-    // Puerile piece of junk-grade carbonized horseshit puss sold to the lowest bidder
-    //
-    ULONG Pde = ADDR_TO_PDE_OFFSET(AddressStart);
-    while (Pde <= ADDR_TO_PDE_OFFSET(AddressEnd))
-    {
-        //
-        // This both odious and heinous
-        //
-        extern ULONG MmGlobalKernelPageDirectory[1024];
-        MmGlobalKernelPageDirectory[Pde] = ((PULONG)PDE_BASE)[Pde];
-        Pde++;
-    }
-}
+/* Internal setting used for debugging memory descriptors */
+BOOLEAN MiDbgEnableMdDump =
+#ifdef _ARM_
+TRUE;
+#else
+FALSE;
 #endif
+
+/* PRIVATE FUNCTIONS **********************************************************/
 
 PFN_NUMBER
 NTAPI
@@ -1674,9 +1657,63 @@ MiBuildPagedPool(VOID)
     MiHighPagedPoolThreshold = (60 * _1MB) >> PAGE_SHIFT;
     MiHighPagedPoolThreshold = min(MiHighPagedPoolThreshold, (Size * 2) / 5);
     ASSERT(MiLowPagedPoolThreshold < MiHighPagedPoolThreshold);
+    
+    /* Setup the global session space */
+    MiInitializeSystemSpaceMap(NULL);
 }
 
-NTSTATUS
+VOID
+NTAPI
+MiDbgDumpMemoryDescriptors(VOID)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR Md;
+    ULONG TotalPages = 0;
+    PCHAR
+    MemType[] =
+    {
+        "ExceptionBlock    ",
+        "SystemBlock       ",
+        "Free              ",
+        "Bad               ",
+        "LoadedProgram     ",
+        "FirmwareTemporary ",
+        "FirmwarePermanent ",
+        "OsloaderHeap      ",
+        "OsloaderStack     ",
+        "SystemCode        ",
+        "HalCode           ",
+        "BootDriver        ",
+        "ConsoleInDriver   ",
+        "ConsoleOutDriver  ",
+        "StartupDpcStack   ",
+        "StartupKernelStack",
+        "StartupPanicStack ",
+        "StartupPcrPage    ",
+        "StartupPdrPage    ",
+        "RegistryData      ",
+        "MemoryData        ",
+        "NlsData           ",
+        "SpecialMemory     ",
+        "BBTMemory         ",
+        "LoaderReserve     ",
+        "LoaderXIPRom      "
+    };
+    
+    DPRINT1("Base\t\tLength\t\tType\n");
+    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+        DPRINT1("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
+        TotalPages += Md->PageCount;
+    }
+
+    DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+}
+
+BOOLEAN
 NTAPI
 MmArmInitSystem(IN ULONG Phase,
                 IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -1687,6 +1724,9 @@ MmArmInitSystem(IN ULONG Phase,
     PPHYSICAL_MEMORY_RUN Run;
     PFN_NUMBER PageCount;
     
+    /* Dump memory descriptors */
+    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
+        
     //
     // Instantiate memory that we don't consider RAM/usable
     // We use the same exclusions that Windows does, in order to try to be
@@ -1811,7 +1851,11 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);        
-                                    
+
+        /* Set the zero page event */
+        KeInitializeEvent(&MmZeroingPageEvent, SynchronizationEvent, FALSE);
+        MmZeroingPageThreadActive = FALSE;
+                                            
         //
         // Count physical pages on the system
         //
@@ -1885,14 +1929,7 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the platform-specific parts */       
         MiInitMachineDependent(LoaderBlock);
-        
-        //
-        // Sync us up with ReactOS Mm
-        //
-        MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
-        MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
-        MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
-      
+
         //
         // Build the physical memory block
         //
@@ -2090,7 +2127,7 @@ MmArmInitSystem(IN ULONG Phase,
     //
     // Always return success for now
     //
-    return STATUS_SUCCESS;
+    return TRUE;
 }
 
 /* EOF */

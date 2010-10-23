@@ -19,15 +19,15 @@ MMixerGetFilterPinCount(
     MIXER_STATUS Status;
     ULONG NumPins, BytesReturned;
 
-    // setup property request
+    /* setup property request */
     Pin.Flags = KSPROPERTY_TYPE_GET;
     Pin.Set = KSPROPSETID_Pin;
     Pin.Id = KSPROPERTY_PIN_CTYPES;
 
-    // query pin count
+    /* query pin count */
     Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&NumPins, sizeof(ULONG), (PULONG)&BytesReturned);
 
-    // check for success
+    /* check for success */
     if (Status != MM_STATUS_SUCCESS)
         return 0;
 
@@ -46,43 +46,43 @@ MMixerGetFilterTopologyProperty(
     MIXER_STATUS Status;
     ULONG BytesReturned;
 
-    // setup property request
+    /* setup property request */
     Property.Id = PropertyId;
     Property.Flags = KSPROPERTY_TYPE_GET;
     Property.Set = KSPROPSETID_Topology;
 
-    // query for the size
+    /* query for the size */
     Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), NULL, 0, &BytesReturned);
 
     if (Status != MM_STATUS_MORE_ENTRIES)
         return Status;
 
-    //sanity check
+    /* sanity check */
     ASSERT(BytesReturned);
 
-    // allocate an result buffer
+    /* allocate an result buffer */
     MultipleItem = (PKSMULTIPLE_ITEM)MixerContext->Alloc(BytesReturned);
 
     if (!MultipleItem)
     {
-        // not enough memory
+        /* not enough memory */
         return MM_STATUS_NO_MEMORY;
     }
 
-    // query again with allocated buffer
+    /* query again with allocated buffer */
     Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)MultipleItem, BytesReturned, &BytesReturned);
 
     if (Status != MM_STATUS_SUCCESS)
     {
-        // failed
+        /* failed */
         MixerContext->Free((PVOID)MultipleItem);
         return Status;
     }
 
-    // store result
+    /* store result */
     *OutMultipleItem = MultipleItem;
 
-    // done
+    /* done */
     return Status;
 }
 
@@ -109,24 +109,23 @@ MMixerGetPhysicalConnection(
 
     if (Status == MM_STATUS_UNSUCCESSFUL)
     {
-        // pin does not have a physical connection
+        /* pin does not have a physical connection */
         return Status;
     }
     DPRINT("Status %u BytesReturned %lu\n", Status, BytesReturned);
     Connection = (PKSPIN_PHYSICALCONNECTION)MixerContext->Alloc(BytesReturned);
     if (!Connection)
     {
-        // not enough memory
+        /* not enough memory */
         return MM_STATUS_NO_MEMORY;
     }
 
-    // query the pin for the physical connection
+    /* query the pin for the physical connection */
     Status = MixerContext->Control(hMixer, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Connection, BytesReturned, &BytesReturned);
     if (Status != MM_STATUS_SUCCESS)
     {
-        // failed to query the physical connection
+        /* failed to query the physical connection */
         MixerContext->Free(Connection);
-        DPRINT("Status %u\n", Status);
         return Status;
     }
 
@@ -141,73 +140,76 @@ MMixerGetControlTypeFromTopologyNode(
 {
     if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_AGC))
     {
-        // automatic gain control
+        /* automatic gain control */
         return MIXERCONTROL_CONTROLTYPE_ONOFF;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_LOUDNESS))
     {
-        // loudness control
+        /* loudness control */
         return MIXERCONTROL_CONTROLTYPE_LOUDNESS;
     }
-    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUTE ))
+    else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUTE))
     {
-        // mute control
+        /* mute control */
         return MIXERCONTROL_CONTROLTYPE_MUTE;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_TONE))
     {
-        // tpne control
-        //FIXME
-        // MIXERCONTROL_CONTROLTYPE_ONOFF if KSPROPERTY_AUDIO_BASS_BOOST is supported
-        // MIXERCONTROL_CONTROLTYPE_BASS if KSPROPERTY_AUDIO_BASS is supported
-        // MIXERCONTROL_CONTROLTYPE_TREBLE if KSPROPERTY_AUDIO_TREBLE is supported
+        /* tone control
+         * FIXME
+         * MIXERCONTROL_CONTROLTYPE_ONOFF if KSPROPERTY_AUDIO_BASS_BOOST is supported
+         * MIXERCONTROL_CONTROLTYPE_BASS if KSPROPERTY_AUDIO_BASS is supported
+         * MIXERCONTROL_CONTROLTYPE_TREBLE if KSPROPERTY_AUDIO_TREBLE is supported
+         */
         UNIMPLEMENTED;
         return MIXERCONTROL_CONTROLTYPE_ONOFF;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_VOLUME))
     {
-        // volume control
+        /* volume control */
         return MIXERCONTROL_CONTROLTYPE_VOLUME;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_PEAKMETER))
     {
-        // peakmeter control
+        /* peakmeter control */
         return MIXERCONTROL_CONTROLTYPE_PEAKMETER;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUX))
     {
-        // mux control
+        /* mux control */
         return MIXERCONTROL_CONTROLTYPE_MUX;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_MUX))
     {
-        // mux control
+        /* mux control */
         return MIXERCONTROL_CONTROLTYPE_MUX;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_STEREO_WIDE))
     {
-        // stero wide control
+        /* stero wide control */
         return MIXERCONTROL_CONTROLTYPE_FADER;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_CHORUS))
     {
-        // chorus control
+        /* chorus control */
         return MIXERCONTROL_CONTROLTYPE_FADER;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_REVERB))
     {
-        // reverb control
+        /* reverb control */
         return MIXERCONTROL_CONTROLTYPE_FADER;
     }
     else if (IsEqualGUIDAligned(NodeType, (LPGUID)&KSNODETYPE_SUPERMIX))
     {
-        // supermix control
-        // MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported 
+        /* supermix control
+         * MIXERCONTROL_CONTROLTYPE_MUTE if KSPROPERTY_AUDIO_MUTE is supported 
+         */
         UNIMPLEMENTED;
         return MIXERCONTROL_CONTROLTYPE_VOLUME;
     }
-    //TODO
-    //check for other supported node types
+    /* TODO
+     * check for other supported node types
+     */
     //UNIMPLEMENTED
     return 0;
 }
@@ -279,4 +281,3 @@ MMixerGetPinInstanceCount(
     ASSERT(Status == MM_STATUS_SUCCESS);
     return PinInstances.CurrentCount;
 }
-

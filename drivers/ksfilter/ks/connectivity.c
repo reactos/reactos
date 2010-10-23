@@ -330,6 +330,7 @@ KspPinPropertyHandler(
     NTSTATUS Status = STATUS_NOT_SUPPORTED;
     ULONG Count;
     const PKSDATARANGE* DataRanges;
+    LPGUID Guid;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Buffer = Irp->UserBuffer;
@@ -509,48 +510,77 @@ KspPinPropertyHandler(
 
         case KSPROPERTY_PIN_CATEGORY:
 
+            if (!Descriptor->Category)
+            {
+                /* no pin category */
+                return STATUS_NOT_FOUND;
+            }
+
+            /* check size */
             Size = sizeof(GUID);
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
+                /* buffer too small */
                 Irp->IoStatus.Information = Size;
                 Status = STATUS_BUFFER_TOO_SMALL;
                 break;
             }
-            if (Descriptor->Category)
-            {
-                RtlMoveMemory(Buffer, Descriptor->Category, sizeof(GUID));
-            }
 
+            /* copy category guid */
+            RtlMoveMemory(Buffer, Descriptor->Category, sizeof(GUID));
+
+            /* save result */
             Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;
 
         case KSPROPERTY_PIN_NAME:
-            if (!Descriptor->Name)
+
+            if (Descriptor->Name)
             {
-                Irp->IoStatus.Information = 0;
-                Status = STATUS_SUCCESS;
-                break;
+                /* use pin name */
+                Guid = (LPGUID)Descriptor->Name;
+            }
+            else
+            {
+                /* use pin category as fallback */
+                Guid = (LPGUID)Descriptor->Category;
             }
 
-            Status = KspReadMediaCategory((LPGUID)Descriptor->Name, &KeyInfo);
+            if (!Guid)
+            {
+                /* no friendly name available */
+                return STATUS_NOT_FOUND;
+            }
+
+            /* read friendly name category name */
+            Status = KspReadMediaCategory(Guid, &KeyInfo);
             if (!NT_SUCCESS(Status))
             {
+                /* failed to read category */
                 Irp->IoStatus.Information = 0;
                 break;
             }
 
+            /* store required length */
             Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
 
+            /* check if buffer is too small */
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
+                /* buffer too small */
                 Status = STATUS_BUFFER_OVERFLOW;
                 FreeItem(KeyInfo);
                 break;
             }
 
+            /* copy result */
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
+
+            /* null terminate name */
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
+
+            /* free key info */
             FreeItem(KeyInfo);
             break;
         case KSPROPERTY_PIN_PROPOSEDATAFORMAT:

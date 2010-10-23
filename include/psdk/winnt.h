@@ -148,8 +148,8 @@ typedef void* __ptr64 PVOID64;
 #endif
 
 typedef wchar_t WCHAR;
-typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR;
-typedef CONST WCHAR *LPCWCH,*PCWCH,*LPCWSTR,*PCWSTR;
+typedef WCHAR *PWCHAR,*LPWCH,*PWCH,*NWPSTR,*LPWSTR,*PWSTR,*PZZWSTR;
+typedef CONST WCHAR *LPCWCH,*PCWCH,*LPCWSTR,*PCWSTR,*PCZZWSTR;
 typedef CHAR *PCHAR,*LPCH,*PCH,*NPSTR,*LPSTR,*PSTR;
 typedef CONST CHAR *LPCCH,*PCCH,*PCSTR,*LPCSTR;
 typedef PWSTR *PZPWSTR;
@@ -160,6 +160,7 @@ typedef CONST WCHAR UNALIGNED *LPCUWSTR,*PCUWSTR;
 typedef PSTR *PZPSTR;
 typedef CONST PSTR *PCZPSTR;
 typedef PCSTR *PZPCSTR;
+
 
 #ifdef UNICODE
 #ifndef _TCHAR_DEFINED
@@ -1304,6 +1305,8 @@ typedef enum {
 #define SEC_RESERVE	0x04000000
 #define SEC_COMMIT	0x08000000
 #define SEC_NOCACHE	0x10000000
+#define SEC_WRITECOMBINE 0x40000000     
+#define SEC_LARGE_PAGES  0x80000000
 #define SECTION_EXTEND_SIZE 16
 #define SECTION_MAP_READ 4
 #define SECTION_MAP_WRITE 2
@@ -4954,50 +4957,6 @@ typedef enum _HEAP_INFORMATION_CLASS {
   HeapCompatibilityInformation,
   HeapEnableTerminationOnCorruption
 } HEAP_INFORMATION_CLASS;
-
-NTSYSAPI
-DWORD
-NTAPI
-RtlSetHeapInformation (
-    IN PVOID HeapHandle,
-    IN HEAP_INFORMATION_CLASS HeapInformationClass,
-    IN PVOID HeapInformation OPTIONAL,
-    IN SIZE_T HeapInformationLength OPTIONAL
-    );
-
-NTSYSAPI
-DWORD
-NTAPI
-RtlQueryHeapInformation (
-    IN PVOID HeapHandle,
-    IN HEAP_INFORMATION_CLASS HeapInformationClass,
-    OUT PVOID HeapInformation OPTIONAL,
-    IN SIZE_T HeapInformationLength OPTIONAL,
-    OUT PSIZE_T ReturnLength OPTIONAL
-    );
-
-//
-//  Multiple alloc-free APIS
-//
-
-DWORD
-NTAPI
-RtlMultipleAllocateHeap (
-    IN PVOID HeapHandle,
-    IN DWORD Flags,
-    IN SIZE_T Size,
-    IN DWORD Count,
-    OUT PVOID * Array
-    );
-
-DWORD
-NTAPI
-RtlMultipleFreeHeap (
-    IN PVOID HeapHandle,
-    IN DWORD Flags,
-    IN DWORD Count,
-    OUT PVOID * Array
-    );
 
 typedef enum _PROCESSOR_CACHE_TYPE {
   CacheUnified,

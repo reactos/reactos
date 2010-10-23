@@ -27,6 +27,7 @@ list(APPEND SOURCE
     generictable.c
     handle.c
     heap.c
+    heapdbg.c
     image.c
     interlck.c
     message.c

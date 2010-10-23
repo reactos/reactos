@@ -182,29 +182,25 @@ static HRESULT WINAPI IDirect3DVolume9Impl_GetContainer(LPDIRECT3DVOLUME9 iface,
 
 static HRESULT WINAPI IDirect3DVolume9Impl_GetDesc(LPDIRECT3DVOLUME9 iface, D3DVOLUME_DESC* pDesc) {
     IDirect3DVolume9Impl *This = (IDirect3DVolume9Impl *)iface;
-    WINED3DVOLUME_DESC     wined3ddesc;
-    HRESULT hr;
+    WINED3DVOLUME_DESC wined3ddesc;
 
     TRACE("iface %p, desc %p.\n", iface, pDesc);
 
     wined3d_mutex_lock();
 
-    hr = IWineD3DVolume_GetDesc(This->wineD3DVolume, &wined3ddesc);
+    IWineD3DVolume_GetDesc(This->wineD3DVolume, &wined3ddesc);
 
     wined3d_mutex_unlock();
 
-    if (SUCCEEDED(hr))
-    {
-        pDesc->Format = d3dformat_from_wined3dformat(wined3ddesc.Format);
-        pDesc->Type = wined3ddesc.Type;
-        pDesc->Usage = wined3ddesc.Usage;
-        pDesc->Pool = wined3ddesc.Pool;
-        pDesc->Width = wined3ddesc.Width;
-        pDesc->Height = wined3ddesc.Height;
-        pDesc->Depth = wined3ddesc.Depth;
-    }
+    pDesc->Format = d3dformat_from_wined3dformat(wined3ddesc.Format);
+    pDesc->Type = wined3ddesc.Type;
+    pDesc->Usage = wined3ddesc.Usage;
+    pDesc->Pool = wined3ddesc.Pool;
+    pDesc->Width = wined3ddesc.Width;
+    pDesc->Height = wined3ddesc.Height;
+    pDesc->Depth = wined3ddesc.Depth;
 
-    return hr;
+    return D3D_OK;
 }
 
 static HRESULT WINAPI IDirect3DVolume9Impl_LockBox(LPDIRECT3DVOLUME9 iface, D3DLOCKED_BOX* pLockedVolume, CONST D3DBOX* pBox, DWORD Flags) {
@@ -267,7 +263,7 @@ static const struct wined3d_parent_ops d3d9_volume_wined3d_parent_ops =
 };
 
 HRESULT volume_init(IDirect3DVolume9Impl *volume, IDirect3DDevice9Impl *device, UINT width, UINT height,
-        UINT depth, DWORD usage, WINED3DFORMAT format, WINED3DPOOL pool)
+        UINT depth, DWORD usage, enum wined3d_format_id format, WINED3DPOOL pool)
 {
     HRESULT hr;
 
@@ -275,7 +271,7 @@ HRESULT volume_init(IDirect3DVolume9Impl *volume, IDirect3DDevice9Impl *device, 
     volume->ref = 1;
 
     hr = IWineD3DDevice_CreateVolume(device->WineD3DDevice, width, height, depth, usage & WINED3DUSAGE_MASK,
-            format, pool, &volume->wineD3DVolume, (IUnknown *)volume, &d3d9_volume_wined3d_parent_ops);
+            format, pool, volume, &d3d9_volume_wined3d_parent_ops, &volume->wineD3DVolume);
     if (FAILED(hr))
     {
         WARN("Failed to create wined3d volume, hr %#x.\n", hr);

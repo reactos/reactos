@@ -328,7 +328,7 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
 
    switch (type)
    {
-//      case otWindow:
+      case otWindow:
 //      case otMenu:
 //      case otHook:
 //      case otCallProc:
@@ -418,7 +418,7 @@ UserDereferenceObject(PVOID object)
 
      switch (type)
      {
-//        case otWindow:
+        case otWindow:
 //        case otMenu:
 //        case otHook:
 //        case otCallProc:

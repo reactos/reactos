@@ -318,6 +318,53 @@ FreeEventData(IN PVOID EventData)
     FreeItem(Data);
 }
 
+VOID
+EventCallback(
+    IN PVOID MixerEventContext,
+    IN HANDLE hMixer,
+    IN ULONG NotificationType,
+    IN ULONG Value)
+{
+    PWDMAUD_CLIENT ClientInfo;
+    PEVENT_ENTRY Entry;
+    ULONG Index;
+
+    /* get client context */
+    ClientInfo = (PWDMAUD_CLIENT)MixerEventContext;
+
+    /* now search for the mixer which originated the request */
+    for(Index = 0; Index < ClientInfo->NumPins; Index++)
+    {
+        if (ClientInfo->hPins[Index].Handle == hMixer && ClientInfo->hPins[Index].Type == MIXER_DEVICE_TYPE)
+        {
+            if (ClientInfo->hPins[Index].NotifyEvent)
+            {
+                /* allocate event entry */
+                Entry = AllocateItem(NonPagedPool, sizeof(EVENT_ENTRY));
+                if (!Entry)
+                {
+                    /* no memory */
+                    break;
+                }
+
+                /* setup event entry */
+                Entry->NotificationType = NotificationType;
+                Entry->Value = Value;
+                Entry->hMixer = hMixer;
+
+                /* insert entry */
+                InsertTailList(&ClientInfo->MixerEventList, &Entry->Entry);
+
+                /* now notify the client */
+                KeSetEvent(ClientInfo->hPins[Index].NotifyEvent, 0, FALSE);
+            }
+            /* done */
+            break;
+        }
+    }
+}
+
+
 NTSTATUS
 WdmAudMixerInitialize(
     IN PDEVICE_OBJECT DeviceObject)
@@ -378,7 +425,7 @@ WdmAudControlOpenMixer(
         }
     }
 
-    if (MMixerOpen(&MixerContext, DeviceInfo->DeviceIndex, EventObject, NULL /* FIXME */, &hMixer) != MM_STATUS_SUCCESS)
+    if (MMixerOpen(&MixerContext, DeviceInfo->DeviceIndex, ClientInfo, EventCallback, &hMixer) != MM_STATUS_SUCCESS)
     {
         ObDereferenceObject(EventObject);
         DPRINT1("Failed to open mixer\n");
@@ -511,7 +558,39 @@ WdmAudGetMixerEvent(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    UNIMPLEMENTED
+    PLIST_ENTRY Entry;
+    PEVENT_ENTRY EventEntry;
+
+    /* enumerate event list and check if there is a new event */
+    Entry = ClientInfo->MixerEventList.Flink;
+
+    while(Entry != &ClientInfo->MixerEventList)
+    {
+        /* grab event entry */
+        EventEntry = (PEVENT_ENTRY)CONTAINING_RECORD(Entry, EVENT_ENTRY, Entry);
+
+        if (EventEntry->hMixer == DeviceInfo->hDevice)
+        {
+            /* found an entry */
+            DeviceInfo->u.MixerEvent.hMixer = EventEntry->hMixer;
+            DeviceInfo->u.MixerEvent.NotificationType = EventEntry->NotificationType;
+            DeviceInfo->u.MixerEvent.Value = EventEntry->Value;
+
+            /* remove entry from list */
+            RemoveEntryList(&EventEntry->Entry);
+
+            /* free event entry */
+            FreeItem(EventEntry);
+
+            /* done */
+            return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+        }
+
+        /* move to next */
+        Entry = Entry->Flink;
+    }
+
+    /* no event entry available */
     return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(WDMAUD_DEVICE_INFO));
 }
 

@@ -23,23 +23,6 @@
 
 #include "config.h"
 #include "wine/port.h"
-#include "wine/debug.h"
-
-#include <assert.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
-
-#define COBJMACROS
-
-#include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wingdi.h"
-#include "wine/exception.h"
-
-#include "ddraw.h"
-#include "d3d.h"
 
 #include "ddraw_private.h"
 
@@ -68,7 +51,7 @@ IParentImpl_QueryInterface(IParent *iface,
                            REFIID riid,
                            void **obj)
 {
-    TRACE("(%p)->(%s,%p)\n", iface, debugstr_guid(riid), obj);
+    TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), obj);
 
     *obj = NULL;
     if ( IsEqualGUID( &IID_IUnknown, riid ) ||
@@ -98,7 +81,7 @@ IParentImpl_AddRef(IParent *iface)
     IParentImpl *This = (IParentImpl *)iface;
     ULONG ref = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p) : AddRef from %d\n", This, ref - 1);
+    TRACE("%p increasing refcount to %u.\n", This, ref);
 
     return ref;
 }
@@ -122,7 +105,7 @@ static ULONG WINAPI IParentImpl_Release(IParent *iface)
     IParentImpl *This = (IParentImpl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p) : ReleaseRef to %d\n", This, ref);
+    TRACE("%p decreasing refcount to %u.\n", This, ref);
 
     if (ref == 0)
     {
@@ -138,9 +121,15 @@ static ULONG WINAPI IParentImpl_Release(IParent *iface)
 /*****************************************************************************
  * The VTable
  *****************************************************************************/
-const IParentVtbl IParent_Vtbl =
+static const struct IParentVtbl ddraw_parent_vtbl =
 {
      IParentImpl_QueryInterface,
      IParentImpl_AddRef,
      IParentImpl_Release,
 };
+
+void ddraw_parent_init(IParentImpl *parent)
+{
+    parent->lpVtbl = &ddraw_parent_vtbl;
+    parent->ref = 1;
+}

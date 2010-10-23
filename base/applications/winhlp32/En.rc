@@ -63,10 +63,7 @@ MAIN_MENU MENU
    MENUITEM "Help &on help", MNID_HELP_HELPON
    MENUITEM "Always on &top", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Info...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&About Wine", MNID_HELP_WINE
-#endif
+   MENUITEM "&About Wine Help", MNID_HELP_ABOUT
  }
 }
 
@@ -110,10 +107,7 @@ MAIN_MENU MENU
    MENUITEM "Help &on help", MNID_HELP_HELPON
    MENUITEM "Always on &top", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Info...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&About Wine", MNID_HELP_WINE
-#endif
+   MENUITEM "&About Wine Help", MNID_HELP_ABOUT
  }
 }
 

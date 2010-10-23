@@ -254,7 +254,7 @@ static const size_t wined3d_type_sizes[] =
     /*WINED3DDECLTYPE_FLOAT16_4*/ 4 * sizeof(short int)
 };
 
-static const WINED3DFORMAT wined3d_format_lookup[] =
+static const enum wined3d_format_id wined3d_format_lookup[] =
 {
     /*WINED3DDECLTYPE_FLOAT1*/    WINED3DFMT_R32_FLOAT,
     /*WINED3DDECLTYPE_FLOAT2*/    WINED3DFMT_R32G32_FLOAT,
@@ -399,9 +399,8 @@ HRESULT vertexdeclaration_init(IDirect3DVertexDeclaration8Impl *declaration,
     memcpy(declaration->elements, elements, declaration->elements_size);
 
     wined3d_mutex_lock();
-    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, &declaration->wined3d_vertex_declaration,
-            (IUnknown *)declaration, &d3d8_vertexdeclaration_wined3d_parent_ops,
-            wined3d_elements, wined3d_element_count);
+    hr = IWineD3DDevice_CreateVertexDeclaration(device->WineD3DDevice, wined3d_elements, wined3d_element_count,
+            declaration, &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     wined3d_mutex_unlock();
     HeapFree(GetProcessHeap(), 0, wined3d_elements);
     if (FAILED(hr))
@@ -425,9 +424,8 @@ HRESULT vertexdeclaration_init_fvf(IDirect3DVertexDeclaration8Impl *declaration,
     declaration->elements_size = 0;
     declaration->shader_handle = fvf;
 
-    hr = IWineD3DDevice_CreateVertexDeclarationFromFVF(device->WineD3DDevice,
-            &declaration->wined3d_vertex_declaration, (IUnknown *)declaration,
-            &d3d8_vertexdeclaration_wined3d_parent_ops, fvf);
+    hr = IWineD3DDevice_CreateVertexDeclarationFromFVF(device->WineD3DDevice, fvf, declaration,
+            &d3d8_vertexdeclaration_wined3d_parent_ops, &declaration->wined3d_vertex_declaration);
     if (FAILED(hr))
     {
         WARN("Failed to create wined3d vertex declaration, hr %#x.\n", hr);

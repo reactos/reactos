@@ -63,16 +63,13 @@ MAIN_MENU MENU
    MENUITEM "Винаги от&горе", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Информация...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Относно WINE", MNID_HELP_WINE
-#endif
  }
 }
 
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE Помощ"
+STID_WINE_HELP, 	"Wine Помощ"
 STID_WHERROR, 		"ГРЕШКА"
 STID_WARNING,  		"ПРЕДУПРЕЖДЕНИЕ"
 STID_INFO,  		"Информация"

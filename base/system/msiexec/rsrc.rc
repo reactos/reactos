@@ -32,4 +32,4 @@
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: msiexec.ico */
-1 ICON DISCARDABLE msiexec.ico
+1 ICON msiexec.ico

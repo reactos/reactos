@@ -13,7 +13,7 @@ CAPTION "±³¾°"
 FONT 9, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
-                    70, 10, 105, 70,WS_EX_STATICEDGE
+                    70, 10, 105, 80, 0
     CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
@@ -23,7 +23,7 @@ BEGIN
     PUSHBUTTON      "ÑÕÉ«(&C)...", IDC_COLOR_BUTTON, 188, 177, 50, 15
     LTEXT           "Î»ÖÃ:", IDC_STATIC, 188, 138, 36, 9
     COMBOBOX        IDC_PLACEMENT_COMBO, 188, 149, 50, 54,
-                    CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 

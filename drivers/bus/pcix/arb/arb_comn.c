@@ -138,20 +138,23 @@ PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
         DPRINT1("PCI Warning hot start FDOx %08x, resource ranges not checked.\n", DeviceExtension);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
-    
+
     /* Check for non-root FDO */
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
         /* Grab the PDO */
         PdoExtension = (PPCI_PDO_EXTENSION)DeviceExtension->PhysicalDeviceObject->DeviceExtension;
-        ASSERT(PdoExtension->ExtensionType == PciPdoExtensionType);
+        ASSERT_PDO(PdoExtension);
 
-        /* Multiple FDOs are not yet supported */
-        UNIMPLEMENTED;
-        while (TRUE);
-        return STATUS_SUCCESS;
+        /* Check if this is a subtractive bus */
+        if (PdoExtension->Dependent.type1.SubtractiveDecode)
+        {
+            /* There is nothing to do regarding arbitration of resources */
+            DPRINT1("PCI Skipping arbiter initialization for subtractive bridge FDOX %p\n", DeviceExtension);
+            return STATUS_SUCCESS;
+        }
     }
-    
+
     /* Loop all arbiters */
     for (ArbiterType = PciArb_Io; ArbiterType <= PciArb_Memory; ArbiterType++)
     {
@@ -171,7 +174,7 @@ PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
             /* Ignore anything else */
             continue;
         }
- 
+
         /* Find an arbiter of this type */
         Instance = PciFindNextSecondaryExtension(&DeviceExtension->SecondaryExtension,
                                                  ArbiterType);

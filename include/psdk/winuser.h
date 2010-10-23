@@ -2341,6 +2341,15 @@ extern "C" {
 #define TPM_VERPOSANIMATION 0x1000
 #define TPM_VERNEGANIMATION 0x2000
 #endif
+#if(_WIN32_WINNT >= 0x0500)
+#define TPM_NOANIMATION 16384
+#endif
+#if (_WIN32_WINNT >= 0x0501)
+#define TPM_LAYOUTRTL 32768
+#endif
+#if (_WIN32_WINNT >= 0x0601)
+#define TPM_WORKAREA 65536
+#endif
 #define HELP_COMMAND 0x102
 #define HELP_CONTENTS 3
 #define HELP_CONTEXT 1
@@ -3050,6 +3059,32 @@ typedef struct _ICONINFO {
 	HBITMAP hbmMask;
 	HBITMAP hbmColor;
 } ICONINFO,*PICONINFO;
+
+typedef struct _ICONINFOEXA
+{
+	DWORD     cbSize;
+	BOOL      fIcon;
+	DWORD     xHotspot;
+	DWORD     yHotspot;
+	HBITMAP   hbmMask;
+	HBITMAP   hbmColor;
+	WORD      wResID;
+	CHAR      szModName[MAX_PATH];
+	CHAR      szResName[MAX_PATH];
+} ICONINFOEXA, *PICONINFOEXA;
+
+typedef struct _ICONINFOEXW
+{
+	DWORD     cbSize;
+	BOOL      fIcon;
+	DWORD     xHotspot;
+	DWORD     yHotspot;
+	HBITMAP   hbmMask;
+	HBITMAP   hbmColor;
+	WORD      wResID;
+	WCHAR     szModName[MAX_PATH];
+	WCHAR     szResName[MAX_PATH];
+} ICONINFOEXW, *PICONINFOEXW;
 
 typedef struct tagNMHDR {
 	HWND hwndFrom;
@@ -4103,6 +4138,8 @@ HWND WINAPI GetForegroundWindow(void);
 DWORD WINAPI GetGuiResources(HANDLE,DWORD);
 #endif
 BOOL WINAPI GetIconInfo(HICON,PICONINFO);
+BOOL WINAPI GetIconInfoExA(HICON,ICONINFOEXA*);
+BOOL WINAPI GetIconInfoExW(HICON,ICONINFOEXW*);
 BOOL WINAPI GetInputState(void);
 UINT WINAPI GetKBCodePage(void);
 HKL WINAPI GetKeyboardLayout(DWORD);

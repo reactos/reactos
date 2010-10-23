@@ -804,12 +804,19 @@ static UINT register_appid(const MSIAPPID *appid, LPCWSTR app )
 UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 {
     static const WCHAR szFileType_fmt[] = {'F','i','l','e','T','y','p','e','\\','%','s','\\','%','i',0};
+    const WCHAR *keypath;
     MSIRECORD *uirow;
     HKEY hkey,hkey2,hkey3;
     MSICLASS *cls;
 
     load_classes_and_such(package);
-    if (RegCreateKeyW(HKEY_CLASSES_ROOT, szCLSID, &hkey) != ERROR_SUCCESS)
+
+    if (is_64bit && package->platform == PLATFORM_INTEL)
+        keypath = szWow6432NodeCLSID;
+    else
+        keypath = szCLSID;
+
+    if (RegCreateKeyW(HKEY_CLASSES_ROOT, keypath, &hkey) != ERROR_SUCCESS)
         return ERROR_FUNCTION_FAILED;
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
@@ -963,12 +970,19 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
 {
     static const WCHAR szFileType[] = {'F','i','l','e','T','y','p','e','\\',0};
+    const WCHAR *keypath;
     MSIRECORD *uirow;
     MSICLASS *cls;
     HKEY hkey, hkey2;
 
     load_classes_and_such( package );
-    if (RegOpenKeyW( HKEY_CLASSES_ROOT, szCLSID, &hkey ) != ERROR_SUCCESS)
+
+    if (is_64bit && package->platform == PLATFORM_INTEL)
+        keypath = szWow6432NodeCLSID;
+    else
+        keypath = szCLSID;
+
+    if (RegOpenKeyW( HKEY_CLASSES_ROOT, keypath, &hkey ) != ERROR_SUCCESS)
         return ERROR_SUCCESS;
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
@@ -1072,7 +1086,7 @@ static UINT register_progid( const MSIPROGID* progid )
         if (clsid)
             msi_reg_set_subkey_val( hkey, szCLSID, NULL, clsid );
         else
-            ERR("%s has no class\n", debugstr_w( progid->ProgID ) );
+            TRACE("%s has no class\n", debugstr_w( progid->ProgID ) );
 
         if (progid->Description)
             msi_reg_set_val_str( hkey, NULL, progid->Description );

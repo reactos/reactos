@@ -455,7 +455,7 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                         LONG lResult;
 
                         keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
-                        lResult = RegRenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
+                        lResult = RenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
                         lineinfo->name = realloc(lineinfo->name, (_tcslen(Info->item.pszText)+1)*sizeof(TCHAR));
                         if (lineinfo->name != NULL)
                             _tcscpy(lineinfo->name, Info->item.pszText);

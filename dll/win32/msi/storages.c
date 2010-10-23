@@ -334,10 +334,12 @@ static UINT STORAGES_get_column_info(struct tagMSIVIEW *view, UINT n,
 static UINT storages_find_row(MSISTORAGESVIEW *sv, MSIRECORD *rec, UINT *row)
 {
     LPCWSTR str;
-    UINT i, id, data;
+    UINT r, i, id, data;
 
     str = MSI_RecordGetString(rec, 1);
-    msi_string2idW(sv->db->strings, str, &id);
+    r = msi_string2idW(sv->db->strings, str, &id);
+    if (r != ERROR_SUCCESS)
+        return r;
 
     for (i = 0; i < sv->num_rows; i++)
     {

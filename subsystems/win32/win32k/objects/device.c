@@ -1357,7 +1357,7 @@ IntChangeDisplaySettings(
         {
             WCHAR szBuffer[MAX_DRIVER_NAME];
             PDC DC;
-            PWINDOW_OBJECT Wnd=NULL;
+            PWND Wnd=NULL;
             HWND hWnd;
             HDC hDC;
 
@@ -1478,7 +1478,7 @@ GetDisplayNumberFromDeviceName(
 
     if (pDeviceName == NULL || pDeviceName->Length == 0)
     {
-        PWINDOW_OBJECT DesktopObject;
+        PWND DesktopObject;
         HDC DesktopHDC;
         PDC pDC;
 

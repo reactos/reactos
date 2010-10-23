@@ -25,6 +25,7 @@
 #define W32PF_SCREENSAVER             0x00200000
 #define W32PF_IDLESCREENSAVER         0x00400000
 #define W32PF_ICONTITLEREGISTERED     0x10000000
+#define W32PF_DPIAWARE                0x20000000
 // ReactOS
 #define W32PF_NOWINDOWGHOSTING       (0x01000000)
 #define W32PF_MANUALGUICHECK         (0x02000000)
@@ -93,6 +94,7 @@ typedef struct _THREADINFO
     HANDLE              hEventQueueClient;
     PKEVENT             pEventQueueServer;
     LIST_ENTRY          PtiLink;
+    POINT               ptLast;
 
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
   /* ReactOS */

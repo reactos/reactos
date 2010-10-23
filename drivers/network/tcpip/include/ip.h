@@ -205,7 +205,6 @@ extern LIST_ENTRY InterfaceListHead;
 extern KSPIN_LOCK InterfaceListLock;
 extern LIST_ENTRY NetTableListHead;
 extern KSPIN_LOCK NetTableListLock;
-extern BOOLEAN IpWorkItemQueued;
 
 PIP_PACKET IPCreatePacket(
   ULONG Type);
@@ -232,7 +231,10 @@ BOOLEAN IPRegisterInterface(
 VOID IPUnregisterInterface(
     PIP_INTERFACE IF);
 
-VOID NTAPI IPTimeout( PVOID Context );
+VOID NTAPI IPTimeoutDpcFn(PKDPC Dpc,
+                          PVOID DeferredContext,
+                          PVOID SystemArgument1,
+                          PVOID SystemArgument2);
 
 VOID IPDispatchProtocol(
     PIP_INTERFACE Interface,

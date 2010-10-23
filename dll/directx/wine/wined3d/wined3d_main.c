@@ -46,8 +46,8 @@ struct wined3d_wndproc_table
 static struct wined3d_wndproc_table wndproc_table;
 
 int num_lock = 0;
-void (*CDECL wine_tsx11_lock_ptr)(void) = NULL;
-void (*CDECL wine_tsx11_unlock_ptr)(void) = NULL;
+void (CDECL *wine_tsx11_lock_ptr)(void) = NULL;
+void (CDECL *wine_tsx11_unlock_ptr)(void) = NULL;
 
 static CRITICAL_SECTION wined3d_cs;
 static CRITICAL_SECTION_DEBUG wined3d_cs_debug =
@@ -70,13 +70,14 @@ wined3d_settings_t wined3d_settings =
     RTL_READTEX,    /* Default render target locking method */
     PCI_VENDOR_NONE,/* PCI Vendor ID */
     PCI_DEVICE_NONE,/* PCI Device ID */
-    0,              /* The default of memory is set in FillGLCaps */
+    0,              /* The default of memory is set in init_driver_info */
     NULL,           /* No wine logo by default */
     FALSE,          /* Disable multisampling for now due to Nvidia driver bugs which happens for some users */
     FALSE,          /* No strict draw ordering. */
 };
 
-IWineD3D * WINAPI WineDirect3DCreate(UINT version, IUnknown *parent)
+/* Do not call while under the GL lock. */
+IWineD3D * WINAPI WineDirect3DCreate(UINT version, void *parent)
 {
     IWineD3DImpl *object;
     HRESULT hr;
@@ -101,19 +102,19 @@ IWineD3D * WINAPI WineDirect3DCreate(UINT version, IUnknown *parent)
     return (IWineD3D *)object;
 }
 
-static inline DWORD get_config_key(HKEY defkey, HKEY appkey, const char* name, char* buffer, DWORD size)
+static DWORD get_config_key(HKEY defkey, HKEY appkey, const char *name, char *buffer, DWORD size)
 {
-    if (0 != appkey && !RegQueryValueExA( appkey, name, 0, NULL, (LPBYTE) buffer, &size )) return 0;
-    if (0 != defkey && !RegQueryValueExA( defkey, name, 0, NULL, (LPBYTE) buffer, &size )) return 0;
+    if (appkey && !RegQueryValueExA(appkey, name, 0, NULL, (BYTE *)buffer, &size)) return 0;
+    if (defkey && !RegQueryValueExA(defkey, name, 0, NULL, (BYTE *)buffer, &size)) return 0;
     return ERROR_FILE_NOT_FOUND;
 }
 
-static inline DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char* name, DWORD *data)
+static DWORD get_config_key_dword(HKEY defkey, HKEY appkey, const char *name, DWORD *data)
 {
     DWORD type;
     DWORD size = sizeof(DWORD);
-    if (0 != appkey && !RegQueryValueExA( appkey, name, 0, &type, (LPBYTE) data, &size ) && (type == REG_DWORD)) return 0;
-    if (0 != defkey && !RegQueryValueExA( defkey, name, 0, &type, (LPBYTE) data, &size ) && (type == REG_DWORD)) return 0;
+    if (appkey && !RegQueryValueExA(appkey, name, 0, &type, (BYTE *)data, &size) && (type == REG_DWORD)) return 0;
+    if (defkey && !RegQueryValueExA(defkey, name, 0, &type, (BYTE *)data, &size) && (type == REG_DWORD)) return 0;
     return ERROR_FILE_NOT_FOUND;
 }
 
@@ -199,7 +200,7 @@ static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
         }
     }
 
-    if ( 0 != hkey || 0 != appkey )
+    if (hkey || appkey)
     {
         if ( !get_config_key( hkey, appkey, "VertexShaderMode", buffer, size) )
         {

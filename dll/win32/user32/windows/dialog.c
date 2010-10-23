@@ -270,7 +270,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     else
     {
         info->className = (LPCWSTR)p;
-        p += wcslen( info->className ) + 1;
+        p += strlenW( info->className ) + 1;
     }
 
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
@@ -292,7 +292,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
     {
         info->windowName = (LPCWSTR)p;
         info->windowNameFree = FALSE;
-        p += wcslen( info->windowName ) + 1;
+        p += strlenW( info->windowName ) + 1;
     }
 
     if (GET_WORD(p))
@@ -431,7 +431,8 @@ static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
         if (!IsWindow(hParent)) break;
 
         pWnd = ValidateHwnd(hParent);
-        if (!pWnd) break;
+        // FIXME: Use pWnd->fnid == FNID_DESKTOP
+        if (!pWnd || hParent == GetDesktopWindow()) break;
 
         if (!(pWnd->state & WNDS_DIALOGWINDOW))
         {
@@ -473,8 +474,7 @@ static BOOL DIALOG_IsAccelerator( HWND hwnd, HWND hwndDlg, WPARAM wParam )
                 while (p != NULL && p[1] == '&');
 
                 /* and check if it's the one we're looking for */
-				/* FIXME: usage of towupper correct? */
-                if (p != NULL && towupper( p[1] ) == towupper( wParam ) )
+                if (p != NULL && toupperW( p[1] ) == toupperW( wParam ) )
                 {
                     if ((dlgCode & DLGC_STATIC) || (style & 0x0f) == BS_GROUPBOX )
                     {
@@ -623,7 +623,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             break;
         default:
             result->menuName = (LPCWSTR)p;
-            p += wcslen( result->menuName ) + 1;
+            p += strlenW( result->menuName ) + 1;
             break;
     }
 
@@ -641,14 +641,14 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             break;
         default:
             result->className = (LPCWSTR)p;
-            p += wcslen( result->className ) + 1;
+            p += strlenW( result->className ) + 1;
             break;
     }
 
     /* Get the window caption */
 
     result->caption = (LPCWSTR)p;
-    p += wcslen( result->caption ) + 1;
+    p += strlenW( result->caption ) + 1;
 
     /* Get the font name */
 
@@ -682,7 +682,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
                 result->italic = LOBYTE(GET_WORD(p)); p++;
             }
             result->faceName = (LPCWSTR)p;
-            p += wcslen( result->faceName ) + 1;
+            p += strlenW( result->faceName ) + 1;
         }
     }
 
@@ -956,7 +956,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     dlgInfo->yBaseUnit   = yBaseUnit;
     dlgInfo->idResult    = IDOK;
     dlgInfo->flags       = flags;
-    /* dlgInfo->hDialogHeap = 0; */
 
     if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
 
@@ -1134,12 +1133,6 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
 //// ReactOS
             if ((dlgInfo = (DIALOGINFO *)SetWindowLongPtrW( hwnd, DWLP_ROS_DIALOGINFO, 0 )))
             {
-                /* Free dialog heap (if created) */
-                /*if (dlgInfo->hDialogHeap)
-                {
-                    GlobalUnlock16(dlgInfo->hDialogHeap);
-                    GlobalFree16(dlgInfo->hDialogHeap);
-                }*/
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
@@ -2327,14 +2320,12 @@ IsDialogMessageW(
   HWND hDlg,
   LPMSG lpMsg)
 {
-     INT dlgCode = 0;
+    INT dlgCode = 0;
 
-     // FIXME: hooks
-     if (CallMsgFilterW( lpMsg, MSGF_DIALOGBOX )) return TRUE;
-
-     if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
+    if (CallMsgFilterW( lpMsg, MSGF_DIALOGBOX )) return TRUE;
 
     if (hDlg == GetDesktopWindow()) return FALSE;
+    if ((hDlg != lpMsg->hwnd) && !IsChild( hDlg, lpMsg->hwnd )) return FALSE;
 
      hDlg = DIALOG_FindMsgDestination(hDlg);
 
@@ -2380,7 +2371,7 @@ IsDialogMessageW(
                             {
                                 INT length;
                                 SendMessageW (hwndNext, WM_GETTEXT, maxlen, (LPARAM) buffer);
-                                length = wcslen (buffer);
+                                length = strlenW (buffer);
                                 HeapFree (GetProcessHeap(), 0, buffer);
                                 SendMessageW (hwndNext, EM_SETSEL, 0, length);
                             }
@@ -2425,11 +2416,8 @@ IsDialogMessageW(
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
                     HWND hwndDef = GetDlgItem(hDlg, LOWORD(dw));
-                    if (!hwndDef || !IsWindowEnabled(hwndDef))
-                        return TRUE;
-
-                     SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
-                                     (LPARAM)GetDlgItem(hDlg, LOWORD(dw)));
+                    if (hwndDef ? IsWindowEnabled(hwndDef) : LOWORD(dw)==IDOK)
+                        SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ), (LPARAM)hwndDef);
                  }
                  else
                  {
@@ -2442,6 +2430,9 @@ IsDialogMessageW(
          break;
 
      case WM_CHAR:
+         /* FIXME Under what circumstances does WM_GETDLGCODE get sent?
+          * It does NOT get sent in the test program I have
+          */
          dlgCode = SendMessageW( lpMsg->hwnd, WM_GETDLGCODE, lpMsg->wParam, (LPARAM)lpMsg );
          if (dlgCode & (DLGC_WANTCHARS|DLGC_WANTMESSAGE)) break;
          if (lpMsg->wParam == '\t' && (dlgCode & DLGC_WANTTAB)) break;
@@ -2454,7 +2445,7 @@ IsDialogMessageW(
              return TRUE;
          }
          break;
-
+//// ReactOS
      case WM_SYSKEYDOWN:
          /* If the ALT key is being pressed display the keyboard cues */
          if (lpMsg->lParam & (1 << 29))

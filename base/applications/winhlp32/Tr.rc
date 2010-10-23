@@ -63,16 +63,13 @@ MAIN_MENU MENU
    MENUITEM "&Her Zaman Üstte", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Bilgi...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "WINE &Hakkýnda", MNID_HELP_WINE
-#endif
  }
 }
 
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE Yardým"
+STID_WINE_HELP, 	"Wine Yardým"
 STID_WHERROR, 		"HATA"
 STID_WARNING,  		"UYARI"
 STID_INFO,  		"Bilgi"

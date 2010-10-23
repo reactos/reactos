@@ -221,7 +221,6 @@ RtlStringCchCopyA(IN LPSTR Destination,
 
 static __inline
 NTSTATUS
-NTAPI
 RtlStringCbPrintfA(OUT LPSTR Destination,
                    IN SIZE_T Length,
                    IN LPCSTR Format,
@@ -251,7 +250,6 @@ RtlStringCbPrintfA(OUT LPSTR Destination,
 
 static __inline
 NTSTATUS
-NTAPI
 RtlStringCbPrintfExA(OUT LPSTR Destination,
                      IN SIZE_T Length,
                      OUT LPSTR *DestinationEnd OPTIONAL,
@@ -409,7 +407,6 @@ RtlStringCbCopyExA(OUT LPSTR Destination,
 
 static __inline
 NTSTATUS
-NTAPI
 RtlStringCbPrintfW(
     LPWSTR pszDest,
     IN size_t cbDest,

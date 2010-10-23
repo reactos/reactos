@@ -741,6 +741,27 @@ typedef struct _MMVAD_LONG
 } MMVAD_LONG, *PMMVAD_LONG;
 
 //
+// Short VAD used in virtual memory allocations
+//
+typedef struct _MMVAD_SHORT
+{
+    union
+    {
+        LONG_PTR Balance:2;
+        PMMVAD Parent;
+    } u1;
+    PMMVAD LeftChild;
+    PMMVAD RightChild;
+    ULONG StartingVpn;
+    ULONG EndingVpn;
+    union
+    {
+        ULONG LongFlags;
+        MMVAD_FLAGS VadFlags;
+    } u;
+} MMVAD_SHORT, *PMMVAD_SHORT;
+
+//
 // Actual Section Object
 //
 typedef struct _SECTION

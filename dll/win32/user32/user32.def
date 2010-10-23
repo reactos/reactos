@@ -731,5 +731,4 @@ EXPORTS
   wsprintfW
   wvsprintfA
   wvsprintfW
-  PrivateCsrssManualGuiCheck
   SetProcessDPIAware

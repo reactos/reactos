@@ -24,8 +24,6 @@ UDP_STATISTICS UDPStats;
 /* Network timers */
 KTIMER IPTimer;
 KDPC IPTimeoutDpc;
-KSPIN_LOCK IpWorkLock;
-WORK_QUEUE_ITEM IpWorkItem;
 
 VOID TiWriteErrorLog(
     PDRIVER_OBJECT DriverContext,
@@ -578,28 +576,6 @@ VOID NTAPI TiUnload(
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-VOID NTAPI IPTimeoutDpcFn(
-    PKDPC Dpc,
-    PVOID DeferredContext,
-    PVOID SystemArgument1,
-    PVOID SystemArgument2)
-/*
- * FUNCTION: Timeout DPC
- * ARGUMENTS:
- *     Dpc             = Pointer to our DPC object
- *     DeferredContext = Pointer to context information (unused)
- *     SystemArgument1 = Unused
- *     SystemArgument2 = Unused
- * NOTES:
- *     This routine is dispatched once in a while to do maintainance jobs
- */
-{
-    if( !IpWorkItemQueued ) {
-	ExQueueWorkItem( &IpWorkItem, DelayedWorkQueue );
-	IpWorkItemQueued = TRUE;
-    }
-}
-
 NTSTATUS NTAPI
 DriverEntry(
   PDRIVER_OBJECT DriverObject,
@@ -630,7 +606,6 @@ DriverEntry(
 
   /* Initialize our periodic timer and its associated DPC object. When the
      timer expires, the IPTimeout deferred procedure call (DPC) is queued */
-  ExInitializeWorkItem( &IpWorkItem, IPTimeout, NULL );
   KeInitializeDpc(&IPTimeoutDpc, IPTimeoutDpcFn, NULL);
   KeInitializeTimer(&IPTimer);
 

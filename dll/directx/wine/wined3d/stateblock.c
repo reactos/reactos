@@ -196,17 +196,17 @@ static HRESULT stateblock_allocate_shader_constants(IWineD3DStateBlockImpl *obje
     IWineD3DDeviceImpl *device = object->device;
 
     /* Allocate space for floating point constants */
-    object->pixelShaderConstantF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+    object->state.ps_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             sizeof(float) * device->d3d_pshader_constantF * 4);
-    if (!object->pixelShaderConstantF) goto fail;
+    if (!object->state.ps_consts_f) goto fail;
 
     object->changed.pixelShaderConstantsF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             sizeof(BOOL) * device->d3d_pshader_constantF);
     if (!object->changed.pixelShaderConstantsF) goto fail;
 
-    object->vertexShaderConstantF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+    object->state.vs_consts_f = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             sizeof(float) * device->d3d_vshader_constantF * 4);
-    if (!object->vertexShaderConstantF) goto fail;
+    if (!object->state.vs_consts_f) goto fail;
 
     object->changed.vertexShaderConstantsF = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
             sizeof(BOOL) * device->d3d_vshader_constantF);
@@ -224,9 +224,9 @@ static HRESULT stateblock_allocate_shader_constants(IWineD3DStateBlockImpl *obje
 
 fail:
     ERR("Failed to allocate memory\n");
-    HeapFree(GetProcessHeap(), 0, object->pixelShaderConstantF);
+    HeapFree(GetProcessHeap(), 0, object->state.ps_consts_f);
     HeapFree(GetProcessHeap(), 0, object->changed.pixelShaderConstantsF);
-    HeapFree(GetProcessHeap(), 0, object->vertexShaderConstantF);
+    HeapFree(GetProcessHeap(), 0, object->state.vs_consts_f);
     HeapFree(GetProcessHeap(), 0, object->changed.vertexShaderConstantsF);
     HeapFree(GetProcessHeap(), 0, object->contained_vs_consts_f);
     HeapFree(GetProcessHeap(), 0, object->contained_ps_consts_f);
@@ -262,7 +262,7 @@ static void stateblock_savedstates_set_all(SAVEDSTATES *states, DWORD vs_consts,
     stateblock_set_bits(states->transform, HIGHEST_TRANSFORMSTATE + 1);
     stateblock_set_bits(states->renderState, WINEHIGHEST_RENDER_STATE + 1);
     for (i = 0; i < MAX_TEXTURES; ++i) states->textureState[i] = 0x3ffff;
-    for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = 0x3fff;
+    for (i = 0; i < MAX_COMBINED_SAMPLERS; ++i) states->samplerState[i] = 0x3ffe;
     states->clipplane = 0xffffffff;
     states->pixelShaderConstantsB = 0xffff;
     states->pixelShaderConstantsI = 0xffff;
@@ -452,7 +452,7 @@ static void stateblock_init_lights(IWineD3DStateBlockImpl *stateblock, struct li
             struct wined3d_light_info *dst_light = HeapAlloc(GetProcessHeap(), 0, sizeof(*dst_light));
 
             *dst_light = *src_light;
-            list_add_tail(&stateblock->lightMap[i], &dst_light->entry);
+            list_add_tail(&stateblock->state.light_map[i], &dst_light->entry);
         }
     }
 }
@@ -492,28 +492,33 @@ static ULONG  WINAPI IWineD3DStateBlockImpl_Release(IWineD3DStateBlock *iface) {
     if (!refCount) {
         int counter;
 
-        if (This->vertexDecl) IWineD3DVertexDeclaration_Release(This->vertexDecl);
+        if (This->state.vertex_declaration)
+            IWineD3DVertexDeclaration_Release((IWineD3DVertexDeclaration *)This->state.vertex_declaration);
 
         for (counter = 0; counter < MAX_COMBINED_SAMPLERS; counter++)
         {
-            if (This->textures[counter]) IWineD3DBaseTexture_Release(This->textures[counter]);
+            if (This->state.textures[counter])
+                IWineD3DBaseTexture_Release((IWineD3DBaseTexture *)This->state.textures[counter]);
         }
 
-        for (counter = 0; counter < MAX_STREAMS; counter++) {
-            if(This->streamSource[counter]) {
-                if (IWineD3DBuffer_Release(This->streamSource[counter]))
+        for (counter = 0; counter < MAX_STREAMS; ++counter)
+        {
+            struct wined3d_buffer *buffer = This->state.streams[counter].buffer;
+            if (buffer)
+            {
+                if (IWineD3DBuffer_Release((IWineD3DBuffer *)buffer))
                 {
-                    TRACE("Vertex buffer still referenced by stateblock, applications has leaked Stream %u, buffer %p\n", counter, This->streamSource[counter]);
+                    WARN("Buffer %p still referenced by stateblock, stream %u.\n", buffer, counter);
                 }
             }
         }
-        if(This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
-        if(This->vertexShader) IWineD3DVertexShader_Release(This->vertexShader);
-        if(This->pixelShader) IWineD3DPixelShader_Release(This->pixelShader);
+        if (This->state.index_buffer) IWineD3DBuffer_Release((IWineD3DBuffer *)This->state.index_buffer);
+        if (This->state.vertex_shader) IWineD3DVertexShader_Release((IWineD3DVertexShader *)This->state.vertex_shader);
+        if (This->state.pixel_shader) IWineD3DPixelShader_Release((IWineD3DPixelShader *)This->state.pixel_shader);
 
         for(counter = 0; counter < LIGHTMAP_SIZE; counter++) {
             struct list *e1, *e2;
-            LIST_FOR_EACH_SAFE(e1, e2, &This->lightMap[counter])
+            LIST_FOR_EACH_SAFE(e1, e2, &This->state.light_map[counter])
             {
                 struct wined3d_light_info *light = LIST_ENTRY(e1, struct wined3d_light_info, entry);
                 list_remove(&light->entry);
@@ -521,9 +526,9 @@ static ULONG  WINAPI IWineD3DStateBlockImpl_Release(IWineD3DStateBlock *iface) {
             }
         }
 
-        HeapFree(GetProcessHeap(), 0, This->vertexShaderConstantF);
+        HeapFree(GetProcessHeap(), 0, This->state.vs_consts_f);
         HeapFree(GetProcessHeap(), 0, This->changed.vertexShaderConstantsF);
-        HeapFree(GetProcessHeap(), 0, This->pixelShaderConstantF);
+        HeapFree(GetProcessHeap(), 0, This->state.ps_consts_f);
         HeapFree(GetProcessHeap(), 0, This->changed.pixelShaderConstantsF);
         HeapFree(GetProcessHeap(), 0, This->contained_vs_consts_f);
         HeapFree(GetProcessHeap(), 0, This->contained_ps_consts_f);
@@ -532,24 +537,24 @@ static ULONG  WINAPI IWineD3DStateBlockImpl_Release(IWineD3DStateBlock *iface) {
     return refCount;
 }
 
-/**********************************************************
- * IWineD3DStateBlockImpl parts follows
- **********************************************************/
-static void record_lights(IWineD3DStateBlockImpl *This, const IWineD3DStateBlockImpl *targetStateBlock)
+static void wined3d_state_record_lights(struct wined3d_state *dst_state, const struct wined3d_state *src_state)
 {
     UINT i;
 
-    /* Lights... For a recorded state block, we just had a chain of actions to perform,
-     * so we need to walk that chain and update any actions which differ
-     */
-    for(i = 0; i < LIGHTMAP_SIZE; i++) {
+    /* Lights... For a recorded state block, we just had a chain of actions
+     * to perform, so we need to walk that chain and update any actions which
+     * differ. */
+    for (i = 0; i < LIGHTMAP_SIZE; ++i)
+    {
         struct list *e, *f;
-        LIST_FOR_EACH(e, &This->lightMap[i]) {
+        LIST_FOR_EACH(e, &dst_state->light_map[i])
+        {
             BOOL updated = FALSE;
             struct wined3d_light_info *src = LIST_ENTRY(e, struct wined3d_light_info, entry), *realLight;
 
             /* Look up the light in the destination */
-            LIST_FOR_EACH(f, &targetStateBlock->lightMap[i]) {
+            LIST_FOR_EACH(f, &src_state->light_map[i])
+            {
                 realLight = LIST_ENTRY(f, struct wined3d_light_info, entry);
                 if (realLight->OriginalIndex == src->OriginalIndex)
                 {
@@ -558,12 +563,12 @@ static void record_lights(IWineD3DStateBlockImpl *This, const IWineD3DStateBlock
                     if (realLight->glIndex == -1 && src->glIndex != -1)
                     {
                         /* Light disabled */
-                        This->activeLights[src->glIndex] = NULL;
+                        dst_state->lights[src->glIndex] = NULL;
                     }
                     else if (realLight->glIndex != -1 && src->glIndex == -1)
                     {
                         /* Light enabled */
-                        This->activeLights[realLight->glIndex] = src;
+                        dst_state->lights[realLight->glIndex] = src;
                     }
                     src->glIndex = realLight->glIndex;
                     updated = TRUE;
@@ -575,13 +580,13 @@ static void record_lights(IWineD3DStateBlockImpl *This, const IWineD3DStateBlock
             {
                 /* This can happen if the light was originally created as a
                  * default light for SetLightEnable() while recording. */
-                WARN("Light %u in stateblock %p does not exist in device stateblock %p.\n",
-                        src->OriginalIndex, This, targetStateBlock);
+                WARN("Light %u in dst_state %p does not exist in src_state %p.\n",
+                        src->OriginalIndex, dst_state, src_state);
 
                 src->OriginalParms = WINED3D_default_light;
                 if (src->glIndex != -1)
                 {
-                    This->activeLights[src->glIndex] = NULL;
+                    dst_state->lights[src->glIndex] = NULL;
                     src->glIndex = -1;
                 }
             }
@@ -592,19 +597,24 @@ static void record_lights(IWineD3DStateBlockImpl *This, const IWineD3DStateBlock
 static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
 {
     IWineD3DStateBlockImpl *This = (IWineD3DStateBlockImpl *)iface;
-    IWineD3DStateBlockImpl *targetStateBlock = This->device->stateBlock;
+    const struct wined3d_state *src_state = &This->device->stateBlock->state;
     unsigned int i;
     DWORD map;
 
-    TRACE("(%p) : Updating state block %p ------------------v\n", targetStateBlock, This);
+    TRACE("iface %p.\n", iface);
 
-    if (This->changed.vertexShader && This->vertexShader != targetStateBlock->vertexShader)
+    TRACE("Capturing state %p.\n", src_state);
+
+    if (This->changed.vertexShader && This->state.vertex_shader != src_state->vertex_shader)
     {
-        TRACE("Updating vertex shader from %p to %p\n", This->vertexShader, targetStateBlock->vertexShader);
+        TRACE("Updating vertex shader from %p to %p\n",
+                This->state.vertex_shader, src_state->vertex_shader);
 
-        if (targetStateBlock->vertexShader) IWineD3DVertexShader_AddRef(targetStateBlock->vertexShader);
-        if (This->vertexShader) IWineD3DVertexShader_Release(This->vertexShader);
-        This->vertexShader = targetStateBlock->vertexShader;
+        if (src_state->vertex_shader)
+            IWineD3DVertexShader_AddRef((IWineD3DVertexShader *)src_state->vertex_shader);
+        if (This->state.vertex_shader)
+            IWineD3DVertexShader_Release((IWineD3DVertexShader *)This->state.vertex_shader);
+        This->state.vertex_shader = src_state->vertex_shader;
     }
 
     /* Vertex Shader Float Constants */
@@ -612,17 +622,16 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         unsigned int idx = This->contained_vs_consts_f[i];
 
-        TRACE("Setting %p from %p %u to {%.8e, %.8e, %.8e, %.8e}.\n",
-                This, targetStateBlock, idx,
-                targetStateBlock->vertexShaderConstantF[idx * 4 + 0],
-                targetStateBlock->vertexShaderConstantF[idx * 4 + 1],
-                targetStateBlock->vertexShaderConstantF[idx * 4 + 2],
-                targetStateBlock->vertexShaderConstantF[idx * 4 + 3]);
+        TRACE("Setting vs_consts_f[%u] to {%.8e, %.8e, %.8e, %.8e}.\n", idx,
+                src_state->vs_consts_f[idx * 4 + 0],
+                src_state->vs_consts_f[idx * 4 + 1],
+                src_state->vs_consts_f[idx * 4 + 2],
+                src_state->vs_consts_f[idx * 4 + 3]);
 
-        This->vertexShaderConstantF[idx * 4 + 0] = targetStateBlock->vertexShaderConstantF[idx * 4 + 0];
-        This->vertexShaderConstantF[idx * 4 + 1] = targetStateBlock->vertexShaderConstantF[idx * 4 + 1];
-        This->vertexShaderConstantF[idx * 4 + 2] = targetStateBlock->vertexShaderConstantF[idx * 4 + 2];
-        This->vertexShaderConstantF[idx * 4 + 3] = targetStateBlock->vertexShaderConstantF[idx * 4 + 3];
+        This->state.vs_consts_f[idx * 4 + 0] = src_state->vs_consts_f[idx * 4 + 0];
+        This->state.vs_consts_f[idx * 4 + 1] = src_state->vs_consts_f[idx * 4 + 1];
+        This->state.vs_consts_f[idx * 4 + 2] = src_state->vs_consts_f[idx * 4 + 2];
+        This->state.vs_consts_f[idx * 4 + 3] = src_state->vs_consts_f[idx * 4 + 3];
     }
 
     /* Vertex Shader Integer Constants */
@@ -630,17 +639,16 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         unsigned int idx = This->contained_vs_consts_i[i];
 
-        TRACE("Setting %p from %p %u to {%d, %d, %d, %d}.\n",
-                This, targetStateBlock, idx,
-                targetStateBlock->vertexShaderConstantI[idx * 4 + 0],
-                targetStateBlock->vertexShaderConstantI[idx * 4 + 1],
-                targetStateBlock->vertexShaderConstantI[idx * 4 + 2],
-                targetStateBlock->vertexShaderConstantI[idx * 4 + 3]);
+        TRACE("Setting vs_consts[%u] to {%d, %d, %d, %d}.\n", idx,
+                src_state->vs_consts_i[idx * 4 + 0],
+                src_state->vs_consts_i[idx * 4 + 1],
+                src_state->vs_consts_i[idx * 4 + 2],
+                src_state->vs_consts_i[idx * 4 + 3]);
 
-        This->vertexShaderConstantI[idx * 4 + 0] = targetStateBlock->vertexShaderConstantI[idx * 4 + 0];
-        This->vertexShaderConstantI[idx * 4 + 1] = targetStateBlock->vertexShaderConstantI[idx * 4 + 1];
-        This->vertexShaderConstantI[idx * 4 + 2] = targetStateBlock->vertexShaderConstantI[idx * 4 + 2];
-        This->vertexShaderConstantI[idx * 4 + 3] = targetStateBlock->vertexShaderConstantI[idx * 4 + 3];
+        This->state.vs_consts_i[idx * 4 + 0] = src_state->vs_consts_i[idx * 4 + 0];
+        This->state.vs_consts_i[idx * 4 + 1] = src_state->vs_consts_i[idx * 4 + 1];
+        This->state.vs_consts_i[idx * 4 + 2] = src_state->vs_consts_i[idx * 4 + 2];
+        This->state.vs_consts_i[idx * 4 + 3] = src_state->vs_consts_i[idx * 4 + 3];
     }
 
     /* Vertex Shader Boolean Constants */
@@ -648,11 +656,10 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         unsigned int idx = This->contained_vs_consts_b[i];
 
-        TRACE("Setting %p from %p %u to %s.\n",
-                This, targetStateBlock, idx,
-                targetStateBlock->vertexShaderConstantB[idx] ? "TRUE" : "FALSE");
+        TRACE("Setting vs_consts_b[%u] to %s.\n",
+                idx, src_state->vs_consts_b[idx] ? "TRUE" : "FALSE");
 
-        This->vertexShaderConstantB[idx] = targetStateBlock->vertexShaderConstantB[idx];
+        This->state.vs_consts_b[idx] = src_state->vs_consts_b[idx];
     }
 
     /* Pixel Shader Float Constants */
@@ -660,44 +667,42 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         unsigned int idx = This->contained_ps_consts_f[i];
 
-        TRACE("Setting %p from %p %u to {%.8e, %.8e, %.8e, %.8e}.\n",
-                This, targetStateBlock, idx,
-                targetStateBlock->pixelShaderConstantF[idx * 4 + 0],
-                targetStateBlock->pixelShaderConstantF[idx * 4 + 1],
-                targetStateBlock->pixelShaderConstantF[idx * 4 + 2],
-                targetStateBlock->pixelShaderConstantF[idx * 4 + 3]);
+        TRACE("Setting ps_consts_f[%u] to {%.8e, %.8e, %.8e, %.8e}.\n", idx,
+                src_state->ps_consts_f[idx * 4 + 0],
+                src_state->ps_consts_f[idx * 4 + 1],
+                src_state->ps_consts_f[idx * 4 + 2],
+                src_state->ps_consts_f[idx * 4 + 3]);
 
-        This->pixelShaderConstantF[idx * 4 + 0] = targetStateBlock->pixelShaderConstantF[idx * 4 + 0];
-        This->pixelShaderConstantF[idx * 4 + 1] = targetStateBlock->pixelShaderConstantF[idx * 4 + 1];
-        This->pixelShaderConstantF[idx * 4 + 2] = targetStateBlock->pixelShaderConstantF[idx * 4 + 2];
-        This->pixelShaderConstantF[idx * 4 + 3] = targetStateBlock->pixelShaderConstantF[idx * 4 + 3];
+        This->state.ps_consts_f[idx * 4 + 0] = src_state->ps_consts_f[idx * 4 + 0];
+        This->state.ps_consts_f[idx * 4 + 1] = src_state->ps_consts_f[idx * 4 + 1];
+        This->state.ps_consts_f[idx * 4 + 2] = src_state->ps_consts_f[idx * 4 + 2];
+        This->state.ps_consts_f[idx * 4 + 3] = src_state->ps_consts_f[idx * 4 + 3];
     }
 
     /* Pixel Shader Integer Constants */
     for (i = 0; i < This->num_contained_ps_consts_i; ++i)
     {
         unsigned int idx = This->contained_ps_consts_i[i];
-        TRACE("Setting %p from %p %u to {%d, %d, %d, %d}.\n",
-                This, targetStateBlock, idx,
-                targetStateBlock->pixelShaderConstantI[idx * 4 + 0],
-                targetStateBlock->pixelShaderConstantI[idx * 4 + 1],
-                targetStateBlock->pixelShaderConstantI[idx * 4 + 2],
-                targetStateBlock->pixelShaderConstantI[idx * 4 + 3]);
+        TRACE("Setting ps_consts_i[%u] to {%d, %d, %d, %d}.\n", idx,
+                src_state->ps_consts_i[idx * 4 + 0],
+                src_state->ps_consts_i[idx * 4 + 1],
+                src_state->ps_consts_i[idx * 4 + 2],
+                src_state->ps_consts_i[idx * 4 + 3]);
 
-        This->pixelShaderConstantI[idx * 4 + 0] = targetStateBlock->pixelShaderConstantI[idx * 4 + 0];
-        This->pixelShaderConstantI[idx * 4 + 1] = targetStateBlock->pixelShaderConstantI[idx * 4 + 1];
-        This->pixelShaderConstantI[idx * 4 + 2] = targetStateBlock->pixelShaderConstantI[idx * 4 + 2];
-        This->pixelShaderConstantI[idx * 4 + 3] = targetStateBlock->pixelShaderConstantI[idx * 4 + 3];
+        This->state.ps_consts_i[idx * 4 + 0] = src_state->ps_consts_i[idx * 4 + 0];
+        This->state.ps_consts_i[idx * 4 + 1] = src_state->ps_consts_i[idx * 4 + 1];
+        This->state.ps_consts_i[idx * 4 + 2] = src_state->ps_consts_i[idx * 4 + 2];
+        This->state.ps_consts_i[idx * 4 + 3] = src_state->ps_consts_i[idx * 4 + 3];
     }
 
     /* Pixel Shader Boolean Constants */
     for (i = 0; i < This->num_contained_ps_consts_b; ++i)
     {
         unsigned int idx = This->contained_ps_consts_b[i];
-        TRACE("Setting %p from %p %u to %s.\n", This, targetStateBlock, idx,
-                targetStateBlock->pixelShaderConstantB[idx] ? "TRUE" : "FALSE");
+        TRACE("Setting ps_consts_b[%u] to %s.\n",
+                idx, src_state->ps_consts_b[idx] ? "TRUE" : "FALSE");
 
-        This->pixelShaderConstantB[idx] = targetStateBlock->pixelShaderConstantB[idx];
+        This->state.ps_consts_b[idx] = src_state->ps_consts_b[idx];
     }
 
     /* Others + Render & Texture */
@@ -707,57 +712,61 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
 
         TRACE("Updating transform %#x.\n", transform);
 
-        This->transforms[transform] = targetStateBlock->transforms[transform];
+        This->state.transforms[transform] = src_state->transforms[transform];
     }
 
-    if (This->changed.primitive_type) This->gl_primitive_type = targetStateBlock->gl_primitive_type;
+    if (This->changed.primitive_type)
+        This->state.gl_primitive_type = src_state->gl_primitive_type;
 
     if (This->changed.indices
-            && ((This->pIndexData != targetStateBlock->pIndexData)
-                || (This->baseVertexIndex != targetStateBlock->baseVertexIndex)
-                || (This->IndexFmt != targetStateBlock->IndexFmt)))
+            && ((This->state.index_buffer != src_state->index_buffer)
+                || (This->state.base_vertex_index != src_state->base_vertex_index)
+                || (This->state.index_format != src_state->index_format)))
     {
-        TRACE("Updating pIndexData to %p, baseVertexIndex to %d.\n",
-                targetStateBlock->pIndexData, targetStateBlock->baseVertexIndex);
+        TRACE("Updating index buffer to %p, base vertex index to %d.\n",
+                src_state->index_buffer, src_state->base_vertex_index);
 
-        if (targetStateBlock->pIndexData) IWineD3DBuffer_AddRef(targetStateBlock->pIndexData);
-        if (This->pIndexData) IWineD3DBuffer_Release(This->pIndexData);
-        This->pIndexData = targetStateBlock->pIndexData;
-        This->baseVertexIndex = targetStateBlock->baseVertexIndex;
-        This->IndexFmt = targetStateBlock->IndexFmt;
+        if (src_state->index_buffer)
+            IWineD3DBuffer_AddRef((IWineD3DBuffer *)src_state->index_buffer);
+        if (This->state.index_buffer)
+            IWineD3DBuffer_Release((IWineD3DBuffer *)This->state.index_buffer);
+        This->state.index_buffer = src_state->index_buffer;
+        This->state.base_vertex_index = src_state->base_vertex_index;
+        This->state.index_format = src_state->index_format;
     }
 
-    if (This->changed.vertexDecl && This->vertexDecl != targetStateBlock->vertexDecl)
+    if (This->changed.vertexDecl && This->state.vertex_declaration != src_state->vertex_declaration)
     {
-        TRACE("Updating vertex declaration from %p to %p.\n", This->vertexDecl, targetStateBlock->vertexDecl);
+        TRACE("Updating vertex declaration from %p to %p.\n",
+                This->state.vertex_declaration, src_state->vertex_declaration);
 
-        if (targetStateBlock->vertexDecl) IWineD3DVertexDeclaration_AddRef(targetStateBlock->vertexDecl);
-        if (This->vertexDecl) IWineD3DVertexDeclaration_Release(This->vertexDecl);
-        This->vertexDecl = targetStateBlock->vertexDecl;
+        if (src_state->vertex_declaration)
+                IWineD3DVertexDeclaration_AddRef((IWineD3DVertexDeclaration *)src_state->vertex_declaration);
+        if (This->state.vertex_declaration)
+                IWineD3DVertexDeclaration_Release((IWineD3DVertexDeclaration *)This->state.vertex_declaration);
+        This->state.vertex_declaration = src_state->vertex_declaration;
     }
 
-    if (This->changed.material
-            && memcmp(&targetStateBlock->material, &This->material, sizeof(This->material)))
+    if (This->changed.material && memcmp(&src_state->material, &This->state.material, sizeof(This->state.material)))
     {
         TRACE("Updating material.\n");
 
-        This->material = targetStateBlock->material;
+        This->state.material = src_state->material;
     }
 
-    if (This->changed.viewport
-            && memcmp(&targetStateBlock->viewport, &This->viewport, sizeof(This->viewport)))
+    if (This->changed.viewport && memcmp(&src_state->viewport, &This->state.viewport, sizeof(This->state.viewport)))
     {
         TRACE("Updating viewport.\n");
 
-        This->viewport = targetStateBlock->viewport;
+        This->state.viewport = src_state->viewport;
     }
 
-    if(This->changed.scissorRect
-            && memcmp(&targetStateBlock->scissorRect, &This->scissorRect, sizeof(This->scissorRect)))
+    if (This->changed.scissorRect && memcmp(&src_state->scissor_rect,
+            &This->state.scissor_rect, sizeof(This->state.scissor_rect)))
     {
         TRACE("Updating scissor rect.\n");
 
-        This->scissorRect = targetStateBlock->scissorRect;
+        This->state.scissor_rect = src_state->scissor_rect;
     }
 
     map = This->changed.streamSource;
@@ -765,16 +774,19 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         if (!(map & 1)) continue;
 
-        if (This->streamStride[i] != targetStateBlock->streamStride[i]
-                || This->streamSource[i] != targetStateBlock->streamSource[i])
+        if (This->state.streams[i].stride != src_state->streams[i].stride
+                || This->state.streams[i].buffer != src_state->streams[i].buffer)
         {
             TRACE("Updating stream source %u to %p, stride to %u.\n",
-                    i, targetStateBlock->streamSource[i], targetStateBlock->streamStride[i]);
+                    i, src_state->streams[i].buffer,
+                    src_state->streams[i].stride);
 
-            This->streamStride[i] = targetStateBlock->streamStride[i];
-            if (targetStateBlock->streamSource[i]) IWineD3DBuffer_AddRef(targetStateBlock->streamSource[i]);
-            if (This->streamSource[i]) IWineD3DBuffer_Release(This->streamSource[i]);
-            This->streamSource[i] = targetStateBlock->streamSource[i];
+            This->state.streams[i].stride = src_state->streams[i].stride;
+            if (src_state->streams[i].buffer)
+                    IWineD3DBuffer_AddRef((IWineD3DBuffer *)src_state->streams[i].buffer);
+            if (This->state.streams[i].buffer)
+                    IWineD3DBuffer_Release((IWineD3DBuffer *)This->state.streams[i].buffer);
+            This->state.streams[i].buffer = src_state->streams[i].buffer;
         }
     }
 
@@ -783,14 +795,14 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         if (!(map & 1)) continue;
 
-        if (This->streamFreq[i] != targetStateBlock->streamFreq[i]
-                || This->streamFlags[i] != targetStateBlock->streamFlags[i])
+        if (This->state.streams[i].frequency != src_state->streams[i].frequency
+                || This->state.streams[i].flags != src_state->streams[i].flags)
         {
             TRACE("Updating stream frequency %u to %u flags to %#x.\n",
-                    i, targetStateBlock->streamFreq[i], targetStateBlock->streamFlags[i]);
+                    i, src_state->streams[i].frequency, src_state->streams[i].flags);
 
-            This->streamFreq[i] = targetStateBlock->streamFreq[i];
-            This->streamFlags[i] = targetStateBlock->streamFlags[i];
+            This->state.streams[i].frequency = src_state->streams[i].frequency;
+            This->state.streams[i].flags = src_state->streams[i].flags;
         }
     }
 
@@ -799,10 +811,10 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         if (!(map & 1)) continue;
 
-        if (memcmp(targetStateBlock->clipplane[i], This->clipplane[i], sizeof(*This->clipplane)))
+        if (memcmp(src_state->clip_planes[i], This->state.clip_planes[i], sizeof(*This->state.clip_planes)))
         {
             TRACE("Updating clipplane %u.\n", i);
-            memcpy(This->clipplane[i], targetStateBlock->clipplane[i], sizeof(*This->clipplane));
+            memcpy(This->state.clip_planes[i], src_state->clip_planes[i], sizeof(*This->state.clip_planes));
         }
     }
 
@@ -811,9 +823,9 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         WINED3DRENDERSTATETYPE rs = This->contained_render_states[i];
 
-        TRACE("Updating renderState %#x to %u.\n", rs, targetStateBlock->renderState[rs]);
+        TRACE("Updating render state %#x to %u.\n", rs, src_state->render_states[rs]);
 
-        This->renderState[rs] = targetStateBlock->renderState[rs];
+        This->state.render_states[rs] = src_state->render_states[rs];
     }
 
     /* Texture states */
@@ -822,10 +834,10 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         DWORD stage = This->contained_tss_states[i].stage;
         DWORD state = This->contained_tss_states[i].state;
 
-        TRACE("Updating texturestage state %u, %u to %u (was %u).\n", stage, state,
-                targetStateBlock->textureState[stage][state], This->textureState[stage][state]);
+        TRACE("Updating texturestage state %u, %u to %#x (was %#x).\n", stage, state,
+                src_state->texture_states[stage][state], This->state.texture_states[stage][state]);
 
-        This->textureState[stage][state] = targetStateBlock->textureState[stage][state];
+        This->state.texture_states[stage][state] = src_state->texture_states[stage][state];
     }
 
     /* Samplers */
@@ -834,11 +846,14 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
     {
         if (!(map & 1)) continue;
 
-        TRACE("Updating texture %u to %p (was %p).\n", i, targetStateBlock->textures[i], This->textures[i]);
+        TRACE("Updating texture %u to %p (was %p).\n",
+                i, src_state->textures[i], This->state.textures[i]);
 
-        if (targetStateBlock->textures[i]) IWineD3DBaseTexture_AddRef(targetStateBlock->textures[i]);
-        if (This->textures[i]) IWineD3DBaseTexture_Release(This->textures[i]);
-        This->textures[i] = targetStateBlock->textures[i];
+        if (src_state->textures[i])
+            IWineD3DBaseTexture_AddRef((IWineD3DBaseTexture *)src_state->textures[i]);
+        if (This->state.textures[i])
+            IWineD3DBaseTexture_Release((IWineD3DBaseTexture *)This->state.textures[i]);
+        This->state.textures[i] = src_state->textures[i];
     }
 
     for (i = 0; i < This->num_contained_sampler_states; ++i)
@@ -846,33 +861,37 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Capture(IWineD3DStateBlock *iface)
         DWORD stage = This->contained_sampler_states[i].stage;
         DWORD state = This->contained_sampler_states[i].state;
 
-        TRACE("Updating sampler state %u, %u to %u (was %u).\n", stage, state,
-                targetStateBlock->samplerState[stage][state], This->samplerState[stage][state]);
+        TRACE("Updating sampler state %u, %u to %#x (was %#x).\n", stage, state,
+                src_state->sampler_states[stage][state], This->state.sampler_states[stage][state]);
 
-        This->samplerState[stage][state] = targetStateBlock->samplerState[stage][state];
+        This->state.sampler_states[stage][state] = src_state->sampler_states[stage][state];
     }
 
-    if (This->changed.pixelShader && This->pixelShader != targetStateBlock->pixelShader)
+    if (This->changed.pixelShader && This->state.pixel_shader != src_state->pixel_shader)
     {
-        if (targetStateBlock->pixelShader) IWineD3DPixelShader_AddRef(targetStateBlock->pixelShader);
-        if (This->pixelShader) IWineD3DPixelShader_Release(This->pixelShader);
-        This->pixelShader = targetStateBlock->pixelShader;
+        if (src_state->pixel_shader)
+            IWineD3DPixelShader_AddRef((IWineD3DPixelShader *)src_state->pixel_shader);
+        if (This->state.pixel_shader)
+            IWineD3DPixelShader_Release((IWineD3DPixelShader *)This->state.pixel_shader);
+        This->state.pixel_shader = src_state->pixel_shader;
     }
 
-    record_lights(This, targetStateBlock);
+    wined3d_state_record_lights(&This->state, src_state);
 
-    TRACE("(%p) : Updated state block %p ------------------^\n", targetStateBlock, This);
+    TRACE("Captue done.\n");
 
     return WINED3D_OK;
 }
 
-static void apply_lights(IWineD3DDevice *device, const IWineD3DStateBlockImpl *This)
+static void apply_lights(IWineD3DDevice *device, const struct wined3d_state *state)
 {
     UINT i;
-    for(i = 0; i < LIGHTMAP_SIZE; i++) {
+
+    for (i = 0; i < LIGHTMAP_SIZE; ++i)
+    {
         struct list *e;
 
-        LIST_FOR_EACH(e, &This->lightMap[i])
+        LIST_FOR_EACH(e, &state->light_map[i])
         {
             const struct wined3d_light_info *light = LIST_ENTRY(e, struct wined3d_light_info, entry);
 
@@ -893,51 +912,53 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
 
     TRACE("Blocktype: %d\n", This->blockType);
 
-    if (This->changed.vertexShader) IWineD3DDevice_SetVertexShader(device, This->vertexShader);
+    if (This->changed.vertexShader)
+        IWineD3DDevice_SetVertexShader(device, (IWineD3DVertexShader *)This->state.vertex_shader);
 
     /* Vertex Shader Constants */
     for (i = 0; i < This->num_contained_vs_consts_f; ++i)
     {
         IWineD3DDevice_SetVertexShaderConstantF(device, This->contained_vs_consts_f[i],
-                This->vertexShaderConstantF + This->contained_vs_consts_f[i] * 4, 1);
+                This->state.vs_consts_f + This->contained_vs_consts_f[i] * 4, 1);
     }
     for (i = 0; i < This->num_contained_vs_consts_i; ++i)
     {
         IWineD3DDevice_SetVertexShaderConstantI(device, This->contained_vs_consts_i[i],
-                This->vertexShaderConstantI + This->contained_vs_consts_i[i] * 4, 1);
+                This->state.vs_consts_i + This->contained_vs_consts_i[i] * 4, 1);
     }
     for (i = 0; i < This->num_contained_vs_consts_b; ++i)
     {
         IWineD3DDevice_SetVertexShaderConstantB(device, This->contained_vs_consts_b[i],
-                This->vertexShaderConstantB + This->contained_vs_consts_b[i], 1);
+                This->state.vs_consts_b + This->contained_vs_consts_b[i], 1);
     }
 
-    apply_lights(device, This);
+    apply_lights(device, &This->state);
 
-    if (This->changed.pixelShader) IWineD3DDevice_SetPixelShader(device, This->pixelShader);
+    if (This->changed.pixelShader)
+        IWineD3DDevice_SetPixelShader(device, (IWineD3DPixelShader *)This->state.pixel_shader);
 
     /* Pixel Shader Constants */
     for (i = 0; i < This->num_contained_ps_consts_f; ++i)
     {
         IWineD3DDevice_SetPixelShaderConstantF(device, This->contained_ps_consts_f[i],
-                This->pixelShaderConstantF + This->contained_ps_consts_f[i] * 4, 1);
+                This->state.ps_consts_f + This->contained_ps_consts_f[i] * 4, 1);
     }
     for (i = 0; i < This->num_contained_ps_consts_i; ++i)
     {
         IWineD3DDevice_SetPixelShaderConstantI(device, This->contained_ps_consts_i[i],
-                This->pixelShaderConstantI + This->contained_ps_consts_i[i] * 4, 1);
+                This->state.ps_consts_i + This->contained_ps_consts_i[i] * 4, 1);
     }
     for (i = 0; i < This->num_contained_ps_consts_b; ++i)
     {
         IWineD3DDevice_SetPixelShaderConstantB(device, This->contained_ps_consts_b[i],
-                This->pixelShaderConstantB + This->contained_ps_consts_b[i], 1);
+                This->state.ps_consts_b + This->contained_ps_consts_b[i], 1);
     }
 
     /* Render */
     for (i = 0; i < This->num_contained_render_states; ++i)
     {
         IWineD3DDevice_SetRenderState(device, This->contained_render_states[i],
-                This->renderState[This->contained_render_states[i]]);
+                This->state.render_states[This->contained_render_states[i]]);
     }
 
     /* Texture states */
@@ -946,7 +967,7 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
         DWORD stage = This->contained_tss_states[i].stage;
         DWORD state = This->contained_tss_states[i].state;
 
-        IWineD3DDevice_SetTextureStageState(device, stage, state, This->textureState[stage][state]);
+        IWineD3DDevice_SetTextureStageState(device, stage, state, This->state.texture_states[stage][state]);
     }
 
     /* Sampler states */
@@ -954,7 +975,7 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
     {
         DWORD stage = This->contained_sampler_states[i].stage;
         DWORD state = This->contained_sampler_states[i].state;
-        DWORD value = This->samplerState[stage][state];
+        DWORD value = This->state.sampler_states[stage][state];
 
         if (stage >= MAX_FRAGMENT_SAMPLERS) stage += WINED3DVERTEXTEXTURESAMPLER0 - MAX_FRAGMENT_SAMPLERS;
         IWineD3DDevice_SetSamplerState(device, stage, state, value);
@@ -963,51 +984,56 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
     for (i = 0; i < This->num_contained_transform_states; ++i)
     {
         IWineD3DDevice_SetTransform(device, This->contained_transform_states[i],
-                &This->transforms[This->contained_transform_states[i]]);
+                &This->state.transforms[This->contained_transform_states[i]]);
     }
 
     if (This->changed.primitive_type)
     {
         This->device->updateStateBlock->changed.primitive_type = TRUE;
-        This->device->updateStateBlock->gl_primitive_type = This->gl_primitive_type;
+        This->device->updateStateBlock->state.gl_primitive_type = This->state.gl_primitive_type;
     }
 
     if (This->changed.indices)
     {
-        IWineD3DDevice_SetIndexBuffer(device, This->pIndexData, This->IndexFmt);
-        IWineD3DDevice_SetBaseVertexIndex(device, This->baseVertexIndex);
+        IWineD3DDevice_SetIndexBuffer(device, (IWineD3DBuffer *)This->state.index_buffer, This->state.index_format);
+        IWineD3DDevice_SetBaseVertexIndex(device, This->state.base_vertex_index);
     }
 
-    if (This->changed.vertexDecl && This->vertexDecl)
+    if (This->changed.vertexDecl && This->state.vertex_declaration)
     {
-        IWineD3DDevice_SetVertexDeclaration(device, This->vertexDecl);
+        IWineD3DDevice_SetVertexDeclaration(device, (IWineD3DVertexDeclaration *)This->state.vertex_declaration);
     }
 
     if (This->changed.material)
     {
-        IWineD3DDevice_SetMaterial(device, &This->material);
+        IWineD3DDevice_SetMaterial(device, &This->state.material);
     }
 
     if (This->changed.viewport)
     {
-        IWineD3DDevice_SetViewport(device, &This->viewport);
+        IWineD3DDevice_SetViewport(device, &This->state.viewport);
     }
 
     if (This->changed.scissorRect)
     {
-        IWineD3DDevice_SetScissorRect(device, &This->scissorRect);
+        IWineD3DDevice_SetScissorRect(device, &This->state.scissor_rect);
     }
 
     map = This->changed.streamSource;
     for (i = 0; map; map >>= 1, ++i)
     {
-        if (map & 1) IWineD3DDevice_SetStreamSource(device, i, This->streamSource[i], 0, This->streamStride[i]);
+        if (map & 1)
+            IWineD3DDevice_SetStreamSource(device, i,
+                    (IWineD3DBuffer *)This->state.streams[i].buffer,
+                    0, This->state.streams[i].stride);
     }
 
     map = This->changed.streamFreq;
     for (i = 0; map; map >>= 1, ++i)
     {
-        if (map & 1) IWineD3DDevice_SetStreamSourceFreq(device, i, This->streamFreq[i] | This->streamFlags[i]);
+        if (map & 1)
+            IWineD3DDevice_SetStreamSourceFreq(device, i,
+                    This->state.streams[i].frequency | This->state.streams[i].flags);
     }
 
     map = This->changed.textures;
@@ -1018,7 +1044,7 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
         if (!(map & 1)) continue;
 
         stage = i < MAX_FRAGMENT_SAMPLERS ? i : WINED3DVERTEXTEXTURESAMPLER0 + i - MAX_FRAGMENT_SAMPLERS;
-        IWineD3DDevice_SetTexture(device, stage, This->textures[i]);
+        IWineD3DDevice_SetTexture(device, stage, (IWineD3DBaseTexture *)This->state.textures[i]);
     }
 
     map = This->changed.clipplane;
@@ -1028,19 +1054,19 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
 
         if (!(map & 1)) continue;
 
-        clip[0] = This->clipplane[i][0];
-        clip[1] = This->clipplane[i][1];
-        clip[2] = This->clipplane[i][2];
-        clip[3] = This->clipplane[i][3];
+        clip[0] = This->state.clip_planes[i][0];
+        clip[1] = This->state.clip_planes[i][1];
+        clip[2] = This->state.clip_planes[i][2];
+        clip[3] = This->state.clip_planes[i][3];
         IWineD3DDevice_SetClipPlane(device, i, clip);
     }
 
-    This->device->stateBlock->lowest_disabled_stage = MAX_TEXTURES - 1;
+    This->device->stateBlock->state.lowest_disabled_stage = MAX_TEXTURES - 1;
     for (i = 0; i < MAX_TEXTURES - 1; ++i)
     {
-        if (This->device->stateBlock->textureState[i][WINED3DTSS_COLOROP] == WINED3DTOP_DISABLE)
+        if (This->device->stateBlock->state.texture_states[i][WINED3DTSS_COLOROP] == WINED3DTOP_DISABLE)
         {
-            This->device->stateBlock->lowest_disabled_stage = i;
+            This->device->stateBlock->state.lowest_disabled_stage = i;
             break;
         }
     }
@@ -1049,11 +1075,11 @@ static HRESULT WINAPI IWineD3DStateBlockImpl_Apply(IWineD3DStateBlock *iface)
     return WINED3D_OK;
 }
 
-static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStateBlock* iface) {
-    IWineD3DStateBlockImpl *This = (IWineD3DStateBlockImpl *)iface;
-    IWineD3DDevice *device = (IWineD3DDevice *)This->device;
-    IWineD3DDeviceImpl *device_impl = (IWineD3DDeviceImpl *)device;
-    const struct wined3d_gl_info *gl_info = &device_impl->adapter->gl_info;
+void stateblock_init_default_state(IWineD3DStateBlockImpl *stateblock)
+{
+    IWineD3DDeviceImpl *device = stateblock->device;
+    const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
+    struct wined3d_state *state = &stateblock->state;
     union {
         WINED3DLINEPATTERN lp;
         DWORD d;
@@ -1067,243 +1093,237 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
     IWineD3DSurface *backbuffer;
     HRESULT hr;
 
-    /* Note this may have a large overhead but it should only be executed
-       once, in order to initialize the complete state of the device and
-       all opengl equivalents                                            */
-    TRACE("(%p) -----------------------> Setting up device defaults... %p\n", This, device);
-    /* TODO: make a special stateblock type for the primary stateblock (it never gets applied so it doesn't need a real type) */
-    This->blockType = WINED3DSBT_INIT;
+    TRACE("stateblock %p.\n", stateblock);
+
+    stateblock->blockType = WINED3DSBT_INIT;
 
     /* Set some of the defaults for lights, transforms etc */
-    memcpy(&This->transforms[WINED3DTS_PROJECTION], identity, sizeof(identity));
-    memcpy(&This->transforms[WINED3DTS_VIEW], identity, sizeof(identity));
-    for (i = 0; i < 256; ++i) {
-      memcpy(&This->transforms[WINED3DTS_WORLDMATRIX(i)], identity, sizeof(identity));
+    memcpy(&state->transforms[WINED3DTS_PROJECTION], identity, sizeof(identity));
+    memcpy(&state->transforms[WINED3DTS_VIEW], identity, sizeof(identity));
+    for (i = 0; i < 256; ++i)
+    {
+        memcpy(&state->transforms[WINED3DTS_WORLDMATRIX(i)], identity, sizeof(identity));
     }
 
     TRACE("Render states\n");
     /* Render states: */
-    if (device_impl->auto_depth_stencil)
-       IWineD3DDevice_SetRenderState(device, WINED3DRS_ZENABLE,       WINED3DZB_TRUE);
+    if (device->auto_depth_stencil)
+       state->render_states[WINED3DRS_ZENABLE] = WINED3DZB_TRUE;
     else
-       IWineD3DDevice_SetRenderState(device, WINED3DRS_ZENABLE,       WINED3DZB_FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FILLMODE,         WINED3DFILL_SOLID);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SHADEMODE,        WINED3DSHADE_GOURAUD);
+       state->render_states[WINED3DRS_ZENABLE] = WINED3DZB_FALSE;
+    state->render_states[WINED3DRS_FILLMODE] = WINED3DFILL_SOLID;
+    state->render_states[WINED3DRS_SHADEMODE] = WINED3DSHADE_GOURAUD;
     lp.lp.wRepeatFactor = 0;
-    lp.lp.wLinePattern  = 0;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_LINEPATTERN,      lp.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ZWRITEENABLE,     TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ALPHATESTENABLE,  FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_LASTPIXEL,        TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SRCBLEND,         WINED3DBLEND_ONE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_DESTBLEND,        WINED3DBLEND_ZERO);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CULLMODE,         WINED3DCULL_CCW);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ZFUNC,            WINED3DCMP_LESSEQUAL);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ALPHAFUNC,        WINED3DCMP_ALWAYS);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ALPHAREF,         0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_DITHERENABLE,     FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ALPHABLENDENABLE, FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGENABLE,        FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SPECULARENABLE,   FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ZVISIBLE,         0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGCOLOR,         0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGTABLEMODE,     WINED3DFOG_NONE);
+    lp.lp.wLinePattern = 0;
+    state->render_states[WINED3DRS_LINEPATTERN] = lp.d;
+    state->render_states[WINED3DRS_ZWRITEENABLE] = TRUE;
+    state->render_states[WINED3DRS_ALPHATESTENABLE] = FALSE;
+    state->render_states[WINED3DRS_LASTPIXEL] = TRUE;
+    state->render_states[WINED3DRS_SRCBLEND] = WINED3DBLEND_ONE;
+    state->render_states[WINED3DRS_DESTBLEND] = WINED3DBLEND_ZERO;
+    state->render_states[WINED3DRS_CULLMODE] = WINED3DCULL_CCW;
+    state->render_states[WINED3DRS_ZFUNC] = WINED3DCMP_LESSEQUAL;
+    state->render_states[WINED3DRS_ALPHAFUNC] = WINED3DCMP_ALWAYS;
+    state->render_states[WINED3DRS_ALPHAREF] = 0;
+    state->render_states[WINED3DRS_DITHERENABLE] = FALSE;
+    state->render_states[WINED3DRS_ALPHABLENDENABLE] = FALSE;
+    state->render_states[WINED3DRS_FOGENABLE] = FALSE;
+    state->render_states[WINED3DRS_SPECULARENABLE] = FALSE;
+    state->render_states[WINED3DRS_ZVISIBLE] = 0;
+    state->render_states[WINED3DRS_FOGCOLOR] = 0;
+    state->render_states[WINED3DRS_FOGTABLEMODE] = WINED3DFOG_NONE;
     tmpfloat.f = 0.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGSTART,         tmpfloat.d);
+    state->render_states[WINED3DRS_FOGSTART] = tmpfloat.d;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGEND,           tmpfloat.d);
+    state->render_states[WINED3DRS_FOGEND] = tmpfloat.d;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGDENSITY,       tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_EDGEANTIALIAS,    FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ZBIAS,            0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_RANGEFOGENABLE,   FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILENABLE,    FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILFAIL,      WINED3DSTENCILOP_KEEP);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILZFAIL,     WINED3DSTENCILOP_KEEP);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILPASS,      WINED3DSTENCILOP_KEEP);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILREF,       0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILMASK,      0xFFFFFFFF);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILFUNC,      WINED3DCMP_ALWAYS);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_TEXTUREFACTOR,    0xFFFFFFFF);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP0, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP1, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP2, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP3, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP4, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP5, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP6, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP7, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CLIPPING,                 TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_LIGHTING,                 TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_AMBIENT,                  0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_FOGVERTEXMODE,            WINED3DFOG_NONE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_COLORVERTEX,              TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_LOCALVIEWER,              TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_NORMALIZENORMALS,         FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_DIFFUSEMATERIALSOURCE,    WINED3DMCS_COLOR1);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SPECULARMATERIALSOURCE,   WINED3DMCS_COLOR2);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_AMBIENTMATERIALSOURCE,    WINED3DMCS_MATERIAL);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_EMISSIVEMATERIALSOURCE,   WINED3DMCS_MATERIAL);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_VERTEXBLEND,              WINED3DVBF_DISABLE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CLIPPLANEENABLE,          0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SOFTWAREVERTEXPROCESSING, FALSE);
+    state->render_states[WINED3DRS_FOGDENSITY] = tmpfloat.d;
+    state->render_states[WINED3DRS_EDGEANTIALIAS] = FALSE;
+    state->render_states[WINED3DRS_ZBIAS] = 0;
+    state->render_states[WINED3DRS_RANGEFOGENABLE] = FALSE;
+    state->render_states[WINED3DRS_STENCILENABLE] = FALSE;
+    state->render_states[WINED3DRS_STENCILFAIL] = WINED3DSTENCILOP_KEEP;
+    state->render_states[WINED3DRS_STENCILZFAIL] = WINED3DSTENCILOP_KEEP;
+    state->render_states[WINED3DRS_STENCILPASS] = WINED3DSTENCILOP_KEEP;
+    state->render_states[WINED3DRS_STENCILREF] = 0;
+    state->render_states[WINED3DRS_STENCILMASK] = 0xffffffff;
+    state->render_states[WINED3DRS_STENCILFUNC] = WINED3DCMP_ALWAYS;
+    state->render_states[WINED3DRS_STENCILWRITEMASK] = 0xffffffff;
+    state->render_states[WINED3DRS_TEXTUREFACTOR] = 0xffffffff;
+    state->render_states[WINED3DRS_WRAP0] = 0;
+    state->render_states[WINED3DRS_WRAP1] = 0;
+    state->render_states[WINED3DRS_WRAP2] = 0;
+    state->render_states[WINED3DRS_WRAP3] = 0;
+    state->render_states[WINED3DRS_WRAP4] = 0;
+    state->render_states[WINED3DRS_WRAP5] = 0;
+    state->render_states[WINED3DRS_WRAP6] = 0;
+    state->render_states[WINED3DRS_WRAP7] = 0;
+    state->render_states[WINED3DRS_CLIPPING] = TRUE;
+    state->render_states[WINED3DRS_LIGHTING] = TRUE;
+    state->render_states[WINED3DRS_AMBIENT] = 0;
+    state->render_states[WINED3DRS_FOGVERTEXMODE] = WINED3DFOG_NONE;
+    state->render_states[WINED3DRS_COLORVERTEX] = TRUE;
+    state->render_states[WINED3DRS_LOCALVIEWER] = TRUE;
+    state->render_states[WINED3DRS_NORMALIZENORMALS] = FALSE;
+    state->render_states[WINED3DRS_DIFFUSEMATERIALSOURCE] = WINED3DMCS_COLOR1;
+    state->render_states[WINED3DRS_SPECULARMATERIALSOURCE] = WINED3DMCS_COLOR2;
+    state->render_states[WINED3DRS_AMBIENTMATERIALSOURCE] = WINED3DMCS_MATERIAL;
+    state->render_states[WINED3DRS_EMISSIVEMATERIALSOURCE] = WINED3DMCS_MATERIAL;
+    state->render_states[WINED3DRS_VERTEXBLEND] = WINED3DVBF_DISABLE;
+    state->render_states[WINED3DRS_CLIPPLANEENABLE] = 0;
+    state->render_states[WINED3DRS_SOFTWAREVERTEXPROCESSING] = FALSE;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSIZE,                tmpfloat.d);
+    state->render_states[WINED3DRS_POINTSIZE] = tmpfloat.d;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSIZE_MIN,            tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSPRITEENABLE,        FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSCALEENABLE,         FALSE);
+    state->render_states[WINED3DRS_POINTSIZE_MIN] = tmpfloat.d;
+    state->render_states[WINED3DRS_POINTSPRITEENABLE] = FALSE;
+    state->render_states[WINED3DRS_POINTSCALEENABLE] = FALSE;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSCALE_A,             tmpfloat.d);
+    state->render_states[WINED3DRS_POINTSCALE_A] = tmpfloat.d;
     tmpfloat.f = 0.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSCALE_B,             tmpfloat.d);
+    state->render_states[WINED3DRS_POINTSCALE_B] = tmpfloat.d;
     tmpfloat.f = 0.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSCALE_C,             tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_MULTISAMPLEANTIALIAS,     TRUE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_MULTISAMPLEMASK,          0xFFFFFFFF);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_PATCHEDGESTYLE,           WINED3DPATCHEDGE_DISCRETE);
+    state->render_states[WINED3DRS_POINTSCALE_C] = tmpfloat.d;
+    state->render_states[WINED3DRS_MULTISAMPLEANTIALIAS] = TRUE;
+    state->render_states[WINED3DRS_MULTISAMPLEMASK] = 0xffffffff;
+    state->render_states[WINED3DRS_PATCHEDGESTYLE] = WINED3DPATCHEDGE_DISCRETE;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_PATCHSEGMENTS,            tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_DEBUGMONITORTOKEN,        0xbaadcafe);
+    state->render_states[WINED3DRS_PATCHSEGMENTS] = tmpfloat.d;
+    state->render_states[WINED3DRS_DEBUGMONITORTOKEN] = 0xbaadcafe;
     tmpfloat.f = gl_info->limits.pointsize_max;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POINTSIZE_MAX,            tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_INDEXEDVERTEXBLENDENABLE, FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_COLORWRITEENABLE,         0x0000000F);
+    state->render_states[WINED3DRS_POINTSIZE_MAX] = tmpfloat.d;
+    state->render_states[WINED3DRS_INDEXEDVERTEXBLENDENABLE] = FALSE;
+    state->render_states[WINED3DRS_COLORWRITEENABLE] = 0x0000000f;
     tmpfloat.f = 0.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_TWEENFACTOR,              tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_BLENDOP,                  WINED3DBLENDOP_ADD);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_POSITIONDEGREE,           WINED3DDEGREE_CUBIC);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_NORMALDEGREE,             WINED3DDEGREE_LINEAR);
+    state->render_states[WINED3DRS_TWEENFACTOR] = tmpfloat.d;
+    state->render_states[WINED3DRS_BLENDOP] = WINED3DBLENDOP_ADD;
+    state->render_states[WINED3DRS_POSITIONDEGREE] = WINED3DDEGREE_CUBIC;
+    state->render_states[WINED3DRS_NORMALDEGREE] = WINED3DDEGREE_LINEAR;
     /* states new in d3d9 */
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SCISSORTESTENABLE,        FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SLOPESCALEDEPTHBIAS,      0);
+    state->render_states[WINED3DRS_SCISSORTESTENABLE] = FALSE;
+    state->render_states[WINED3DRS_SLOPESCALEDEPTHBIAS] = 0;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_MINTESSELLATIONLEVEL,     tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_MAXTESSELLATIONLEVEL,     tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ANTIALIASEDLINEENABLE,    FALSE);
+    state->render_states[WINED3DRS_MINTESSELLATIONLEVEL] = tmpfloat.d;
+    state->render_states[WINED3DRS_MAXTESSELLATIONLEVEL] = tmpfloat.d;
+    state->render_states[WINED3DRS_ANTIALIASEDLINEENABLE] = FALSE;
     tmpfloat.f = 0.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ADAPTIVETESS_X,           tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ADAPTIVETESS_Y,           tmpfloat.d);
+    state->render_states[WINED3DRS_ADAPTIVETESS_X] = tmpfloat.d;
+    state->render_states[WINED3DRS_ADAPTIVETESS_Y] = tmpfloat.d;
     tmpfloat.f = 1.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ADAPTIVETESS_Z,           tmpfloat.d);
+    state->render_states[WINED3DRS_ADAPTIVETESS_Z] = tmpfloat.d;
     tmpfloat.f = 0.0f;
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ADAPTIVETESS_W,           tmpfloat.d);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_ENABLEADAPTIVETESSELLATION, FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_TWOSIDEDSTENCILMODE,      FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CCW_STENCILFAIL,          WINED3DSTENCILOP_KEEP);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CCW_STENCILZFAIL,         WINED3DSTENCILOP_KEEP);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CCW_STENCILPASS,          WINED3DSTENCILOP_KEEP);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_CCW_STENCILFUNC,          WINED3DCMP_ALWAYS);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_COLORWRITEENABLE1,        0x0000000F);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_COLORWRITEENABLE2,        0x0000000F);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_COLORWRITEENABLE3,        0x0000000F);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_BLENDFACTOR,              0xFFFFFFFF);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SRGBWRITEENABLE,          0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_DEPTHBIAS,                0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP8,  0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP9,  0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP10, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP11, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP12, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP13, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP14, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_WRAP15, 0);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SEPARATEALPHABLENDENABLE, FALSE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_SRCBLENDALPHA,            WINED3DBLEND_ONE);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_DESTBLENDALPHA,           WINED3DBLEND_ZERO);
-    IWineD3DDevice_SetRenderState(device, WINED3DRS_BLENDOPALPHA,             WINED3DBLENDOP_ADD);
+    state->render_states[WINED3DRS_ADAPTIVETESS_W] = tmpfloat.d;
+    state->render_states[WINED3DRS_ENABLEADAPTIVETESSELLATION] = FALSE;
+    state->render_states[WINED3DRS_TWOSIDEDSTENCILMODE] = FALSE;
+    state->render_states[WINED3DRS_CCW_STENCILFAIL] = WINED3DSTENCILOP_KEEP;
+    state->render_states[WINED3DRS_CCW_STENCILZFAIL] = WINED3DSTENCILOP_KEEP;
+    state->render_states[WINED3DRS_CCW_STENCILPASS] = WINED3DSTENCILOP_KEEP;
+    state->render_states[WINED3DRS_CCW_STENCILFUNC] = WINED3DCMP_ALWAYS;
+    state->render_states[WINED3DRS_COLORWRITEENABLE1] = 0x0000000f;
+    state->render_states[WINED3DRS_COLORWRITEENABLE2] = 0x0000000f;
+    state->render_states[WINED3DRS_COLORWRITEENABLE3] = 0x0000000f;
+    state->render_states[WINED3DRS_BLENDFACTOR] = 0xFFFFFFFF;
+    state->render_states[WINED3DRS_SRGBWRITEENABLE] = 0;
+    state->render_states[WINED3DRS_DEPTHBIAS] = 0;
+    state->render_states[WINED3DRS_WRAP8] = 0;
+    state->render_states[WINED3DRS_WRAP9] = 0;
+    state->render_states[WINED3DRS_WRAP10] = 0;
+    state->render_states[WINED3DRS_WRAP11] = 0;
+    state->render_states[WINED3DRS_WRAP12] = 0;
+    state->render_states[WINED3DRS_WRAP13] = 0;
+    state->render_states[WINED3DRS_WRAP14] = 0;
+    state->render_states[WINED3DRS_WRAP15] = 0;
+    state->render_states[WINED3DRS_SEPARATEALPHABLENDENABLE] = FALSE;
+    state->render_states[WINED3DRS_SRCBLENDALPHA] = WINED3DBLEND_ONE;
+    state->render_states[WINED3DRS_DESTBLENDALPHA] = WINED3DBLEND_ZERO;
+    state->render_states[WINED3DRS_BLENDOPALPHA] = WINED3DBLENDOP_ADD;
 
     /* clipping status */
-    This->clip_status.ClipUnion = 0;
-    This->clip_status.ClipIntersection = 0xFFFFFFFF;
+    state->clip_status.ClipUnion = 0;
+    state->clip_status.ClipIntersection = 0xFFFFFFFF;
 
     /* Texture Stage States - Put directly into state block, we will call function below */
-    for (i = 0; i < MAX_TEXTURES; i++) {
-        TRACE("Setting up default texture states for texture Stage %d\n", i);
-        memcpy(&This->transforms[WINED3DTS_TEXTURE0 + i], identity, sizeof(identity));
-        This->textureState[i][WINED3DTSS_COLOROP               ] = (i==0)? WINED3DTOP_MODULATE :  WINED3DTOP_DISABLE;
-        This->textureState[i][WINED3DTSS_COLORARG1             ] = WINED3DTA_TEXTURE;
-        This->textureState[i][WINED3DTSS_COLORARG2             ] = WINED3DTA_CURRENT;
-        This->textureState[i][WINED3DTSS_ALPHAOP               ] = (i==0)? WINED3DTOP_SELECTARG1 :  WINED3DTOP_DISABLE;
-        This->textureState[i][WINED3DTSS_ALPHAARG1             ] = WINED3DTA_TEXTURE;
-        This->textureState[i][WINED3DTSS_ALPHAARG2             ] = WINED3DTA_CURRENT;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT00          ] = 0;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT01          ] = 0;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT10          ] = 0;
-        This->textureState[i][WINED3DTSS_BUMPENVMAT11          ] = 0;
-        This->textureState[i][WINED3DTSS_TEXCOORDINDEX         ] = i;
-        This->textureState[i][WINED3DTSS_BUMPENVLSCALE         ] = 0;
-        This->textureState[i][WINED3DTSS_BUMPENVLOFFSET        ] = 0;
-        This->textureState[i][WINED3DTSS_TEXTURETRANSFORMFLAGS ] = WINED3DTTFF_DISABLE;
-        This->textureState[i][WINED3DTSS_COLORARG0             ] = WINED3DTA_CURRENT;
-        This->textureState[i][WINED3DTSS_ALPHAARG0             ] = WINED3DTA_CURRENT;
-        This->textureState[i][WINED3DTSS_RESULTARG             ] = WINED3DTA_CURRENT;
+    for (i = 0; i < MAX_TEXTURES; ++i)
+    {
+        TRACE("Setting up default texture states for texture Stage %u.\n", i);
+        memcpy(&state->transforms[WINED3DTS_TEXTURE0 + i], identity, sizeof(identity));
+        state->texture_states[i][WINED3DTSS_COLOROP] = i ? WINED3DTOP_DISABLE : WINED3DTOP_MODULATE;
+        state->texture_states[i][WINED3DTSS_COLORARG1] = WINED3DTA_TEXTURE;
+        state->texture_states[i][WINED3DTSS_COLORARG2] = WINED3DTA_CURRENT;
+        state->texture_states[i][WINED3DTSS_ALPHAOP] = i ? WINED3DTOP_DISABLE : WINED3DTOP_SELECTARG1;
+        state->texture_states[i][WINED3DTSS_ALPHAARG1] = WINED3DTA_TEXTURE;
+        state->texture_states[i][WINED3DTSS_ALPHAARG2] = WINED3DTA_CURRENT;
+        state->texture_states[i][WINED3DTSS_BUMPENVMAT00] = 0;
+        state->texture_states[i][WINED3DTSS_BUMPENVMAT01] = 0;
+        state->texture_states[i][WINED3DTSS_BUMPENVMAT10] = 0;
+        state->texture_states[i][WINED3DTSS_BUMPENVMAT11] = 0;
+        state->texture_states[i][WINED3DTSS_TEXCOORDINDEX] = i;
+        state->texture_states[i][WINED3DTSS_BUMPENVLSCALE] = 0;
+        state->texture_states[i][WINED3DTSS_BUMPENVLOFFSET] = 0;
+        state->texture_states[i][WINED3DTSS_TEXTURETRANSFORMFLAGS] = WINED3DTTFF_DISABLE;
+        state->texture_states[i][WINED3DTSS_COLORARG0] = WINED3DTA_CURRENT;
+        state->texture_states[i][WINED3DTSS_ALPHAARG0] = WINED3DTA_CURRENT;
+        state->texture_states[i][WINED3DTSS_RESULTARG] = WINED3DTA_CURRENT;
     }
-    This->lowest_disabled_stage = 1;
+    state->lowest_disabled_stage = 1;
 
         /* Sampler states*/
-    for (i = 0 ; i <  MAX_COMBINED_SAMPLERS; i++) {
-        TRACE("Setting up default samplers states for sampler %d\n", i);
-        This->samplerState[i][WINED3DSAMP_ADDRESSU         ] = WINED3DTADDRESS_WRAP;
-        This->samplerState[i][WINED3DSAMP_ADDRESSV         ] = WINED3DTADDRESS_WRAP;
-        This->samplerState[i][WINED3DSAMP_ADDRESSW         ] = WINED3DTADDRESS_WRAP;
-        This->samplerState[i][WINED3DSAMP_BORDERCOLOR      ] = 0x00;
-        This->samplerState[i][WINED3DSAMP_MAGFILTER        ] = WINED3DTEXF_POINT;
-        This->samplerState[i][WINED3DSAMP_MINFILTER        ] = WINED3DTEXF_POINT;
-        This->samplerState[i][WINED3DSAMP_MIPFILTER        ] = WINED3DTEXF_NONE;
-        This->samplerState[i][WINED3DSAMP_MIPMAPLODBIAS    ] = 0;
-        This->samplerState[i][WINED3DSAMP_MAXMIPLEVEL      ] = 0;
-        This->samplerState[i][WINED3DSAMP_MAXANISOTROPY    ] = 1;
-        This->samplerState[i][WINED3DSAMP_SRGBTEXTURE      ] = 0;
-        This->samplerState[i][WINED3DSAMP_ELEMENTINDEX     ] = 0; /* TODO: Indicates which element of a  multielement texture to use */
-        This->samplerState[i][WINED3DSAMP_DMAPOFFSET       ] = 0; /* TODO: Vertex offset in the presampled displacement map */
+    for (i = 0 ; i <  MAX_COMBINED_SAMPLERS; ++i)
+    {
+        TRACE("Setting up default samplers states for sampler %u.\n", i);
+        state->sampler_states[i][WINED3DSAMP_ADDRESSU] = WINED3DTADDRESS_WRAP;
+        state->sampler_states[i][WINED3DSAMP_ADDRESSV] = WINED3DTADDRESS_WRAP;
+        state->sampler_states[i][WINED3DSAMP_ADDRESSW] = WINED3DTADDRESS_WRAP;
+        state->sampler_states[i][WINED3DSAMP_BORDERCOLOR] = 0;
+        state->sampler_states[i][WINED3DSAMP_MAGFILTER] = WINED3DTEXF_POINT;
+        state->sampler_states[i][WINED3DSAMP_MINFILTER] = WINED3DTEXF_POINT;
+        state->sampler_states[i][WINED3DSAMP_MIPFILTER] = WINED3DTEXF_NONE;
+        state->sampler_states[i][WINED3DSAMP_MIPMAPLODBIAS] = 0;
+        state->sampler_states[i][WINED3DSAMP_MAXMIPLEVEL] = 0;
+        state->sampler_states[i][WINED3DSAMP_MAXANISOTROPY] = 1;
+        state->sampler_states[i][WINED3DSAMP_SRGBTEXTURE] = 0;
+        /* TODO: Indicates which element of a multielement texture to use. */
+        state->sampler_states[i][WINED3DSAMP_ELEMENTINDEX] = 0;
+        /* TODO: Vertex offset in the presampled displacement map. */
+        state->sampler_states[i][WINED3DSAMP_DMAPOFFSET] = 0;
     }
 
     for (i = 0; i < gl_info->limits.textures; ++i)
     {
-        /* Note: This avoids calling SetTexture, so pretend it has been called */
-        This->changed.textures |= 1 << i;
-        This->textures[i]         = NULL;
+        state->textures[i] = NULL;
     }
 
     /* check the return values, because the GetBackBuffer call isn't valid for ddraw */
-    hr = IWineD3DDevice_GetSwapChain(device, 0, &swapchain);
-    if( hr == WINED3D_OK && swapchain != NULL) {
-        WINED3DVIEWPORT vp;
-
+    hr = IWineD3DDevice_GetSwapChain((IWineD3DDevice *)device, 0, &swapchain);
+    if (SUCCEEDED(hr) && swapchain)
+    {
         hr = IWineD3DSwapChain_GetBackBuffer(swapchain, 0, WINED3DBACKBUFFER_TYPE_MONO, &backbuffer);
         if (SUCCEEDED(hr) && backbuffer)
         {
             WINED3DSURFACE_DESC desc;
-            RECT scissorrect;
 
             IWineD3DSurface_GetDesc(backbuffer, &desc);
             IWineD3DSurface_Release(backbuffer);
 
             /* Set the default scissor rect values */
-            scissorrect.left = 0;
-            scissorrect.right = desc.width;
-            scissorrect.top = 0;
-            scissorrect.bottom = desc.height;
-            hr = IWineD3DDevice_SetScissorRect(device, &scissorrect);
-            if (FAILED(hr)) ERR("This should never happen, expect rendering issues!\n");
+            state->scissor_rect.left = 0;
+            state->scissor_rect.right = desc.width;
+            state->scissor_rect.top = 0;
+            state->scissor_rect.bottom = desc.height;
         }
 
         /* Set the default viewport */
-        vp.X      = 0;
-        vp.Y      = 0;
-        vp.Width  = ((IWineD3DSwapChainImpl *)swapchain)->presentParms.BackBufferWidth;
-        vp.Height = ((IWineD3DSwapChainImpl *)swapchain)->presentParms.BackBufferHeight;
-        vp.MinZ   = 0.0f;
-        vp.MaxZ   = 1.0f;
-        IWineD3DDevice_SetViewport(device, &vp);
+        state->viewport.X = 0;
+        state->viewport.Y = 0;
+        state->viewport.Width = ((IWineD3DSwapChainImpl *)swapchain)->presentParms.BackBufferWidth;
+        state->viewport.Height = ((IWineD3DSwapChainImpl *)swapchain)->presentParms.BackBufferHeight;
+        state->viewport.MinZ = 0.0f;
+        state->viewport.MaxZ = 1.0f;
 
         IWineD3DSwapChain_Release(swapchain);
     }
 
-    TRACE("-----------------------> Device defaults now set up...\n");
-    return WINED3D_OK;
+    TRACE("Done.\n");
 }
 
 /**********************************************************
@@ -1319,7 +1339,6 @@ static const IWineD3DStateBlockVtbl IWineD3DStateBlock_Vtbl =
     /* IWineD3DStateBlock */
     IWineD3DStateBlockImpl_Capture,
     IWineD3DStateBlockImpl_Apply,
-    IWineD3DStateBlockImpl_InitStartupStateBlock
 };
 
 HRESULT stateblock_init(IWineD3DStateBlockImpl *stateblock, IWineD3DDeviceImpl *device, WINED3DSTATEBLOCKTYPE type)
@@ -1334,7 +1353,7 @@ HRESULT stateblock_init(IWineD3DStateBlockImpl *stateblock, IWineD3DDeviceImpl *
 
     for (i = 0; i < LIGHTMAP_SIZE; i++)
     {
-        list_init(&stateblock->lightMap[i]);
+        list_init(&stateblock->state.light_map[i]);
     }
 
     hr = stateblock_allocate_shader_constants(stateblock);
@@ -1350,7 +1369,7 @@ HRESULT stateblock_init(IWineD3DStateBlockImpl *stateblock, IWineD3DDeviceImpl *
     switch (type)
     {
         case WINED3DSBT_ALL:
-            stateblock_init_lights(stateblock, device->stateBlock->lightMap);
+            stateblock_init_lights(stateblock, device->stateBlock->state.light_map);
             stateblock_savedstates_set_all(&stateblock->changed, device->d3d_vshader_constantF,
                                            device->d3d_pshader_constantF);
             break;
@@ -1360,7 +1379,7 @@ HRESULT stateblock_init(IWineD3DStateBlockImpl *stateblock, IWineD3DDeviceImpl *
             break;
 
         case WINED3DSBT_VERTEXSTATE:
-            stateblock_init_lights(stateblock, device->stateBlock->lightMap);
+            stateblock_init_lights(stateblock, device->stateBlock->state.light_map);
             stateblock_savedstates_set_vertex(&stateblock->changed, device->d3d_vshader_constantF);
             break;
 

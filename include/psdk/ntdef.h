@@ -617,6 +617,12 @@ typedef struct _GROUP_AFFINITY {
 
 #define RTL_FIELD_SIZE(type, field) (sizeof(((type *)0)->field))
 
+#define RTL_SIZEOF_THROUGH_FIELD(type, field) \
+    (FIELD_OFFSET(type, field) + RTL_FIELD_SIZE(type, field))
+
+#define RTL_CONTAINS_FIELD(Struct, Size, Field) \
+    ( (((PCHAR)(&(Struct)->Field)) + sizeof((Struct)->Field)) <= (((PCHAR)(Struct))+(Size)) )
+
 #define RTL_NUMBER_OF_V1(A) (sizeof(A)/sizeof((A)[0]))
 #define RTL_NUMBER_OF_V2(A) RTL_NUMBER_OF_V1(A)
 #ifdef ENABLE_RTL_NUMBER_OF_V2

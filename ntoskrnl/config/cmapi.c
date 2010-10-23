@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/config/cmapi.c
  * PURPOSE:         Configuration Manager - Internal Registry APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -1813,4 +1814,87 @@ CmUnloadKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+ULONG
+NTAPI
+CmCountOpenSubKeys(IN PCM_KEY_CONTROL_BLOCK RootKcb,
+                   IN BOOLEAN RemoveEmptyCacheEntries)
+{
+    PCM_KEY_HASH Entry;
+    PCM_KEY_CONTROL_BLOCK CachedKcb;
+    PCM_KEY_CONTROL_BLOCK ParentKcb;
+    USHORT ParentKeyCount;
+    USHORT j;
+    ULONG i;
+    ULONG SubKeys = 0;
+
+    DPRINT("CmCountOpenSubKeys() called\n");
+
+    /* The root key is the only referenced key. There are no refereced sub keys. */
+    if (RootKcb->RefCount == 1)
+    {
+        DPRINT("open sub keys: 0\n");
+        return 0;
+    }
+
+    /* Enumerate all hash lists */
+    for (i = 0; i < CmpHashTableSize; i++)
+    {
+        /* Get the first cache entry */
+        Entry = CmpCacheTable[i].Entry;
+
+        /* Enumerate all cache entries */
+        while (Entry)
+        {
+            /* Get the KCB of the current cache entry */
+            CachedKcb = CONTAINING_RECORD(Entry, CM_KEY_CONTROL_BLOCK, KeyHash);
+
+            /* Check keys only that are subkeys to our root key */
+            if (CachedKcb->TotalLevels > RootKcb->TotalLevels)
+            {
+                /* Calculate the number of parent keys to the root key */
+                ParentKeyCount = CachedKcb->TotalLevels - RootKcb->TotalLevels;
+
+                /* Find a parent key that could be the root key */
+                ParentKcb = CachedKcb;
+                for (j = 0; j < ParentKeyCount; j++)
+                {
+                    ParentKcb = ParentKcb->ParentKcb;
+                }
+
+                /* Check whether the parent is the root key */
+                if (ParentKcb == RootKcb)
+                {
+                    DPRINT("Found a sub key \n");
+                    DPRINT("RefCount = %u\n", CachedKcb->RefCount);
+
+                    if (CachedKcb->RefCount > 0)
+                    {
+                        /* Count the current hash entry if it is in use */
+                        SubKeys++;
+                    }
+                    else if ((CachedKcb->RefCount == 0) && (RemoveEmptyCacheEntries == TRUE))
+                    {
+                        /* Remove the current key from the delayed close list */
+                        CmpRemoveFromDelayedClose(CachedKcb);
+
+                        /* Remove the current cache entry */
+                        CmpCleanUpKcbCacheWithLock(CachedKcb, TRUE);
+
+                        /* Restart, because the hash list has changed */
+                        Entry = CmpCacheTable[i].Entry;
+                        continue;
+                    }
+                }
+            }
+
+            /* Get the next cache entry */
+            Entry = Entry->NextHash;
+        }
+    }
+
+    DPRINT("open sub keys: %u\n", SubKeys);
+
+    return SubKeys;
 }

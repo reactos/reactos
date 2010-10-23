@@ -15,6 +15,18 @@ Index: epm_towers.h
  #define EPM_PROTOCOL_OSI_TP4  		0x05
  #define EPM_PROTOCOL_OSI_CLNS 		0x06
  #define EPM_PROTOCOL_TCP     		0x07
+Index: ndr_marshall.c
+===================================================================
+--- ndr_marshall.c	(working copy)
++++ ndr_marshall.c	(working copy)
+@@ -6032,6 +6032,7 @@
+     case RPC_FC_WCHAR:
+     case RPC_FC_SHORT:
+     case RPC_FC_USHORT:
++    case RPC_FC_ENUM16:
+     {
+         USHORT d;
+         ALIGN_POINTER(pStubMsg->Buffer, sizeof(USHORT));
 Index: rpc_epmap.c
 ===================================================================
 --- rpc_epmap.c	(working copy)

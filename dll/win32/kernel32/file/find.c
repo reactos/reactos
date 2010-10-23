@@ -14,7 +14,7 @@
 #include <k32.h>
 #define NDEBUG
 #include <debug.h>
-static ULONG gDebugChannel = kernel32file;
+DEBUG_CHANNEL(kernel32file);
 
 /* TYPES ********************************************************************/
 

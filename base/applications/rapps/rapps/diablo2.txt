@@ -8,7 +8,7 @@ Description = Diablo 2 Shareware. zeckensack's glide wrapper is required to run 
 Size = 132MB
 Category = 4
 URLSite = http://www.blizzard.com/diablo2/
-URLDownload = http://ftp.freenet.de/pub/filepilot/windows/spiele/diabloiidemo.exe
+URLDownload = http://pub.zoneofgames.ru/demos/diabloiidemo.exe
 CDPath = none
 
 [Section.0407]

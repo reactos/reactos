@@ -652,7 +652,7 @@ Return Value:
     NTSTATUS       status;
     PDEVICE_OBJECT deviceObject = NULL;
     PDEVICE_OBJECT physicalDevice;
-    PDISK_GEOMETRY diskGeometry = NULL;
+    PDISK_GEOMETRY_EX diskGeometry = NULL;
     PDEVICE_EXTENSION deviceExtension = NULL;
     PDEVICE_EXTENSION physicalDeviceExtension;
     UCHAR          pathId = LunInfo->PathId;
@@ -880,7 +880,7 @@ Return Value:
     // Allocate buffer for drive geometry.
     //
 
-    diskGeometry = ExAllocatePool(NonPagedPool, sizeof(DISK_GEOMETRY));
+    diskGeometry = ExAllocatePool(NonPagedPool, sizeof(DISK_GEOMETRY_EX));
 
     if (diskGeometry == NULL) {
 
@@ -1065,7 +1065,7 @@ CreatePartitionDeviceObjects(
     ULONG          partitionNumber = 0;
     NTSTATUS       status;
     PDEVICE_OBJECT deviceObject = NULL;
-    PDISK_GEOMETRY diskGeometry = NULL;
+    PDISK_GEOMETRY_EX diskGeometry = NULL;
     PDRIVE_LAYOUT_INFORMATION partitionList = NULL;
     PDEVICE_EXTENSION deviceExtension;
     PDEVICE_EXTENSION physicalDeviceExtension;
@@ -1087,7 +1087,7 @@ CreatePartitionDeviceObjects(
 
     physicalDeviceExtension = PhysicalDeviceObject->DeviceExtension;
     diskGeometry = physicalDeviceExtension->DiskGeometry;
-    bytesPerSector = diskGeometry->BytesPerSector;
+    bytesPerSector = diskGeometry->Geometry.BytesPerSector;
 
     //
     // Make sure sector size is not zero.
@@ -1099,7 +1099,7 @@ CreatePartitionDeviceObjects(
         // Default sector size for disk is 512.
         //
 
-        bytesPerSector = diskGeometry->BytesPerSector = 512;
+        bytesPerSector = diskGeometry->Geometry.BytesPerSector = 512;
     }
 
     sectorShift = physicalDeviceExtension->SectorShift;
@@ -1118,7 +1118,7 @@ CreatePartitionDeviceObjects(
     //
 
     HalExamineMBR(PhysicalDeviceObject,
-                  physicalDeviceExtension->DiskGeometry->BytesPerSector,
+                  physicalDeviceExtension->DiskGeometry->Geometry.BytesPerSector,
                   (ULONG)0x54,
                   (PVOID)&dmSkew);
 
@@ -1149,7 +1149,7 @@ CreatePartitionDeviceObjects(
     //
 
     status = IoReadPartitionTable(PhysicalDeviceObject,
-                                  physicalDeviceExtension->DiskGeometry->BytesPerSector,
+                                  physicalDeviceExtension->DiskGeometry->Geometry.BytesPerSector,
                                   TRUE,
                                   (PVOID)&partitionList);
 
@@ -1432,7 +1432,7 @@ CreatePartitionDeviceObjects(
             //
 
             deviceExtension->TimeOutValue = physicalDeviceExtension->TimeOutValue;
-            deviceExtension->DiskGeometry->BytesPerSector = bytesPerSector;
+            deviceExtension->DiskGeometry->Geometry.BytesPerSector = bytesPerSector;
             deviceExtension->SectorShift  = sectorShift;
             deviceExtension->DeviceObject = deviceObject;
             deviceExtension->DeviceFlags |= physicalDeviceExtension->DeviceFlags;
@@ -1512,7 +1512,7 @@ Return Value:
                                transferByteCount);
 
     if ((startingOffset.QuadPart > deviceExtension->PartitionLength.QuadPart) ||
-        (transferByteCount & (deviceExtension->DiskGeometry->BytesPerSector - 1))) {
+        (transferByteCount & (deviceExtension->DiskGeometry->Geometry.BytesPerSector - 1))) {
 
         //
         // This error maybe caused by the fact that the drive is not ready.
@@ -2014,6 +2014,7 @@ Return Value:
     }
 
     case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+    case IOCTL_DISK_GET_DRIVE_GEOMETRY_EX:
         {
 
         PDEVICE_EXTENSION physicalDeviceExtension;
@@ -2021,8 +2022,12 @@ Return Value:
         BOOLEAN           removable = FALSE;
         BOOLEAN           listInitialized = FALSE;
 
-        if ( irpStack->Parameters.DeviceIoControl.OutputBufferLength <
-            sizeof( DISK_GEOMETRY ) ) {
+        if ((irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY &&
+             irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof(DISK_GEOMETRY)) ||
+             (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY_EX &&
+             irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof(DISK_GEOMETRY_EX))) {
 
             status = STATUS_INFO_LENGTH_MISMATCH;
             break;
@@ -2083,10 +2088,15 @@ Return Value:
 
             RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
                           deviceExtension->DiskGeometry,
-                          sizeof(DISK_GEOMETRY));
+                          (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) ?
+                          sizeof(DISK_GEOMETRY) : 
+                          sizeof(DISK_GEOMETRY_EX));
 
             status = STATUS_SUCCESS;
-            Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+            Irp->IoStatus.Information =
+               (irpStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_DISK_GET_DRIVE_GEOMETRY) ?
+               sizeof(DISK_GEOMETRY) : 
+               sizeof(DISK_GEOMETRY_EX);
         }
 
         break;
@@ -2252,6 +2262,88 @@ Return Value:
 
         break;
 
+    case IOCTL_DISK_GET_PARTITION_INFO_EX:
+
+        //
+        // Return the information about the partition specified by the device
+        // object.  Note that no information is ever returned about the size
+        // or partition type of the physical disk, as this doesn't make any
+        // sense.
+        //
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof(PARTITION_INFORMATION_EX)) {
+
+            status = STATUS_INFO_LENGTH_MISMATCH;
+
+        }
+        else if (diskData->PartitionNumber == 0) {
+
+            //
+            // Paritition zero is not a partition so this is not a
+            // reasonable request.
+            //
+
+            status = STATUS_INVALID_DEVICE_REQUEST;
+
+        }
+        else {
+
+            PPARTITION_INFORMATION_EX outputBuffer;
+
+            //
+            // Update the geometry in case it has changed.
+            //
+
+            status = UpdateRemovableGeometry (DeviceObject, Irp);
+
+            if (!NT_SUCCESS(status)) {
+
+                //
+                // Note the drive is not ready.
+                //
+
+                diskData->DriveNotReady = TRUE;
+                break;
+            }
+
+            //
+            // Note the drive is now ready.
+            //
+
+            diskData->DriveNotReady = FALSE;
+
+            if (diskData->PartitionType == 0 && (diskData->PartitionNumber > 0)) {
+
+                status = STATUS_INVALID_DEVICE_REQUEST;
+                break;
+            }
+
+            outputBuffer =
+                    (PPARTITION_INFORMATION_EX)Irp->AssociatedIrp.SystemBuffer;
+
+            //
+            // FIXME: hack of the year, assume that partition is MBR
+            // Thing that can obviously be wrong...
+            //
+
+            outputBuffer->PartitionStyle = PARTITION_STYLE_MBR;
+            outputBuffer->Mbr.PartitionType = diskData->PartitionType;
+            outputBuffer->StartingOffset = deviceExtension->StartingOffset;
+            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
+            outputBuffer->Mbr.HiddenSectors = diskData->HiddenSectors;
+            outputBuffer->PartitionNumber = diskData->PartitionNumber;
+            outputBuffer->Mbr.BootIndicator = diskData->BootIndicator;
+            outputBuffer->RewritePartition = FALSE;
+            outputBuffer->Mbr.RecognizedPartition =
+                IsRecognizedPartition(diskData->PartitionType);
+
+            status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION_EX);
+        }
+
+        break;
+
     case IOCTL_DISK_SET_PARTITION_INFO:
 
         if (diskData->PartitionNumber == 0) {
@@ -2285,7 +2377,7 @@ Return Value:
 
             status = IoSetPartitionInformation(
                           deviceExtension->PhysicalDevice,
-                          deviceExtension->DiskGeometry->BytesPerSector,
+                          deviceExtension->DiskGeometry->Geometry.BytesPerSector,
                           diskData->PartitionOrdinal,
                           inputBuffer->PartitionType);
 
@@ -2323,7 +2415,7 @@ Return Value:
             //
 
             status = IoReadPartitionTable(deviceExtension->PhysicalDevice,
-                              deviceExtension->DiskGeometry->BytesPerSector,
+                              deviceExtension->DiskGeometry->Geometry.BytesPerSector,
                               FALSE,
                               &partitionList);
 
@@ -2504,9 +2596,9 @@ Return Value:
 
         status = IoWritePartitionTable(
                            deviceExtension->DeviceObject,
-                           deviceExtension->DiskGeometry->BytesPerSector,
-                           deviceExtension->DiskGeometry->SectorsPerTrack,
-                           deviceExtension->DiskGeometry->TracksPerCylinder,
+                           deviceExtension->DiskGeometry->Geometry.BytesPerSector,
+                           deviceExtension->DiskGeometry->Geometry.SectorsPerTrack,
+                           deviceExtension->DiskGeometry->Geometry.TracksPerCylinder,
                            partitionList);
         }
 
@@ -3455,7 +3547,7 @@ Return Value:
     // Get sector size.
     //
 
-    sectorSize = DeviceExtension->DiskGeometry->BytesPerSector;
+    sectorSize = DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
 
     //
     // Make sure sector size is at least 512 bytes.
@@ -4102,9 +4194,11 @@ diskMatched:
     // Update the actual geometry information.
     //
 
-    DeviceExtension->DiskGeometry->SectorsPerTrack = sectorsPerTrack;
-    DeviceExtension->DiskGeometry->TracksPerCylinder = tracksPerCylinder;
-    DeviceExtension->DiskGeometry->Cylinders.QuadPart = (LONGLONG)cylinders;
+    DeviceExtension->DiskGeometry->Geometry.SectorsPerTrack = sectorsPerTrack;
+    DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder = tracksPerCylinder;
+    DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)cylinders;
+    DeviceExtension->DiskGeometry->DiskSize.QuadPart = cylinders * tracksPerCylinder * sectorsPerTrack *
+                                                       DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
 
     DebugPrint((3,
                "SCSIDISK: UpdateGeometry: BIOS spt %x, #heads %x, #cylinders %x\n",
@@ -4119,7 +4213,7 @@ diskMatched:
     if (!DeviceExtension->DMActive) {
 
         HalExamineMBR(DeviceExtension->DeviceObject,
-                      DeviceExtension->DiskGeometry->BytesPerSector,
+                      DeviceExtension->DiskGeometry->Geometry.BytesPerSector,
                       (ULONG)0x55,
                       &tmpPtr
                       );
@@ -4155,18 +4249,19 @@ diskMatched:
 
         cylinders -= 1;
 
-        DeviceExtension->DiskGeometry->Cylinders.QuadPart = cylinders + 1;
-        DeviceExtension->DiskGeometry->TracksPerCylinder = tracksPerCylinder + 1;
+        DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = cylinders + 1;
+        DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder = tracksPerCylinder + 1;
 
         DeviceExtension->PartitionLength.QuadPart =
-            DeviceExtension->DiskGeometry->Cylinders.QuadPart *
-                DeviceExtension->DiskGeometry->SectorsPerTrack *
-                DeviceExtension->DiskGeometry->BytesPerSector *
-                DeviceExtension->DiskGeometry->TracksPerCylinder;
+        DeviceExtension->DiskGeometry->DiskSize.QuadPart =
+            DeviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart *
+                DeviceExtension->DiskGeometry->Geometry.SectorsPerTrack *
+                DeviceExtension->DiskGeometry->Geometry.BytesPerSector *
+                DeviceExtension->DiskGeometry->Geometry.TracksPerCylinder;
 
         if (DeviceExtension->DMActive) {
 
-            DeviceExtension->DMByteSkew = DeviceExtension->DMSkew * DeviceExtension->DiskGeometry->BytesPerSector;
+            DeviceExtension->DMByteSkew = DeviceExtension->DMSkew * DeviceExtension->DiskGeometry->Geometry.BytesPerSector;
 
         }
 
@@ -4250,7 +4345,7 @@ Return Value:
     //
 
     status = IoReadPartitionTable(deviceExtension->PhysicalDevice,
-                      deviceExtension->DiskGeometry->BytesPerSector,
+                      deviceExtension->DiskGeometry->Geometry.BytesPerSector,
                       TRUE,
                       &partitionList);
 

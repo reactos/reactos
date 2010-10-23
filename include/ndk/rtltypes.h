@@ -369,6 +369,15 @@ typedef enum _RTL_PATH_TYPE
 #ifndef NTOS_MODE_USER
 
 //
+// Heap Information Class
+//
+typedef enum _HEAP_INFORMATION_CLASS
+{
+    HeapCompatibilityInformation,
+    HeapEnableTerminationOnCorruption
+} HEAP_INFORMATION_CLASS;
+
+//
 // Callback function for RTL Timers or Registered Waits
 //
 typedef VOID
@@ -1038,6 +1047,21 @@ typedef struct _RTL_CRITICAL_SECTION
 } RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
 
 #endif
+
+//
+// RTL Private Heap Structures
+//
+typedef struct _HEAP_LOCK
+{
+    union
+    {
+        RTL_CRITICAL_SECTION CriticalSection;
+#ifndef NTOS_MODE_USER
+        ERESOURCE Resource;
+#endif
+        UCHAR Padding[0x68]; /* Max ERESOURCE size for x64 build. Needed because RTL is built only once */
+    };
+} HEAP_LOCK, *PHEAP_LOCK;
 
 //
 // RTL Range List Structures
