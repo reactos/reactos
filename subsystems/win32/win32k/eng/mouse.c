@@ -77,9 +77,9 @@ MouseSafetyOnDrawStart(
     }
 
     if (pgp->Exclude.right >= HazardX1
-            && pgp->Exclude.left <= HazardX2
-            && pgp->Exclude.bottom >= HazardY1
-            && pgp->Exclude.top <= HazardY2)
+        && pgp->Exclude.left <= HazardX2
+        && pgp->Exclude.bottom >= HazardY1
+        && pgp->Exclude.top <= HazardY2)
     {
         ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
         ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, -1, -1, NULL);
@@ -112,7 +112,10 @@ MouseSafetyOnDrawEnd(
         return FALSE;
     }
 
-    ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
+    ppdev->pfnMovePointer(&ppdev->pSurface->SurfObj,
+                          gpsi->ptCursor.x,
+                          gpsi->ptCursor.y,
+                          &pgp->Exclude);
 
     ppdev->SafetyRemoveLevel = 0;
 
@@ -163,16 +166,16 @@ IntHideMousePointer(
     ptlSave.y = rclDest.top - pt.y;
 
     IntEngBitBlt(psoDest,
-                   &pgp->psurfSave->SurfObj,
-                   NULL,
-                   NULL,
-                   NULL,
-                   &rclDest,
-                   &ptlSave,
-                   &ptlSave,
-                   NULL,
-                   NULL,
-                   ROP3_TO_ROP4(SRCCOPY));
+                 &pgp->psurfSave->SurfObj,
+                 NULL,
+                 NULL,
+                 NULL,
+                 &rclDest,
+                 &ptlSave,
+                 &ptlSave,
+                 NULL,
+                 NULL,
+                 ROP3_TO_ROP4(SRCCOPY));
 }
 
 VOID
@@ -216,71 +219,71 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 
     /* Copy the pixels under the cursor to temporary surface. */
     IntEngBitBlt(&pgp->psurfSave->SurfObj,
-                   psoDest,
-                   NULL,
-                   NULL,
-                   NULL,
-                   &rclPointer,
-                   (POINTL*)&rclSurf,
-                   NULL,
-                   NULL,
-                   NULL,
-                   ROP3_TO_ROP4(SRCCOPY));
+                 psoDest,
+                 NULL,
+                 NULL,
+                 NULL,
+                 &rclPointer,
+                 (POINTL*)&rclSurf,
+                 NULL,
+                 NULL,
+                 NULL,
+                 ROP3_TO_ROP4(SRCCOPY));
 
     /* Blt the pointer on the screen. */
     if (pgp->psurfColor)
     {
         IntEngBitBlt(psoDest,
-                       &pgp->psurfMask->SurfObj,
-                       NULL,
-                       NULL,
-                       NULL,
-                       &rclSurf,
-                       (POINTL*)&rclPointer,
-                       NULL,
-                       NULL,
-                       NULL,
-                       ROP3_TO_ROP4(SRCAND));
+                     &pgp->psurfMask->SurfObj,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &rclSurf,
+                     (POINTL*)&rclPointer,
+                     NULL,
+                     NULL,
+                     NULL,
+                     ROP3_TO_ROP4(SRCAND));
 
         IntEngBitBlt(psoDest,
-                       &pgp->psurfColor->SurfObj,
-                       NULL,
-                       NULL,
-                       NULL,
-                       &rclSurf,
-                       (POINTL*)&rclPointer,
-                       NULL,
-                       NULL,
-                       NULL,
-                       ROP3_TO_ROP4(SRCINVERT));
+                     &pgp->psurfColor->SurfObj,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &rclSurf,
+                     (POINTL*)&rclPointer,
+                     NULL,
+                     NULL,
+                     NULL,
+                     ROP3_TO_ROP4(SRCINVERT));
     }
     else
     {
         IntEngBitBlt(psoDest,
-                       &pgp->psurfMask->SurfObj,
-                       NULL,
-                       NULL,
-                       NULL,
-                       &rclSurf,
-                       (POINTL*)&rclPointer,
-                       NULL,
-                       NULL,
-                       NULL,
-                       ROP3_TO_ROP4(SRCAND));
+                     &pgp->psurfMask->SurfObj,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &rclSurf,
+                     (POINTL*)&rclPointer,
+                     NULL,
+                     NULL,
+                     NULL,
+                     ROP3_TO_ROP4(SRCAND));
 
         rclPointer.top += pgp->Size.cy;
 
         IntEngBitBlt(psoDest,
-                       &pgp->psurfMask->SurfObj,
-                       NULL,
-                       NULL,
-                       NULL,
-                       &rclSurf,
-                       (POINTL*)&rclPointer,
-                       NULL,
-                       NULL,
-                       NULL,
-                       ROP3_TO_ROP4(SRCINVERT));
+                     &pgp->psurfMask->SurfObj,
+                     NULL,
+                     NULL,
+                     NULL,
+                     &rclSurf,
+                     (POINTL*)&rclPointer,
+                     NULL,
+                     NULL,
+                     NULL,
+                     ROP3_TO_ROP4(SRCINVERT));
     }
 }
 
@@ -317,16 +320,16 @@ EngSetPointerShape(
     if (psoColor || psoMask)
     {
         /* Get the size of the new pointer */
-    if (psoColor)
-    {
+        if (psoColor)
+        {
             sizel.cx = psoColor->sizlBitmap.cx;
             sizel.cy = psoColor->sizlBitmap.cy;
-            }
+        }
         else// if (psoMask)
-    {
+        {
             sizel.cx = psoMask->sizlBitmap.cx;
             sizel.cy = psoMask->sizlBitmap.cy / 2;
-    }
+        }
 
         rectl.left = 0;
         rectl.top = 0;
@@ -379,35 +382,35 @@ EngSetPointerShape(
 
         /* Create a bitmap for the mask */
         hbmMask = EngCreateBitmap(psoMask->sizlBitmap,
-                               lDelta,
-                               pso->iBitmapFormat,
-                               BMF_TOPDOWN | BMF_NOZEROINIT,
-                               NULL);
+                                  lDelta,
+                                  pso->iBitmapFormat,
+                                  BMF_TOPDOWN | BMF_NOZEROINIT,
+                                  NULL);
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
         if (!psurfMask) goto failure;
 
         /* Initialize an EXLATEOBJ */
-            ppal = PALETTE_LockPalette(ppdev->devinfo.hpalDefault);
-            EXLATEOBJ_vInitialize(&exlo,
-                                  &gpalMono,
-                                  ppal,
-                                  0,
-                                  RGB(0xff,0xff,0xff),
-                                  RGB(0,0,0));
+        ppal = PALETTE_LockPalette(ppdev->devinfo.hpalDefault);
+        EXLATEOBJ_vInitialize(&exlo,
+                              &gpalMono,
+                              ppal,
+                              0,
+                              RGB(0xff,0xff,0xff),
+                              RGB(0,0,0));
 
         /* Copy the mask bitmap */
         rectl.bottom = psoMask->sizlBitmap.cy;
         IntEngCopyBits(&psurfMask->SurfObj,
-                           psoMask,
-                           NULL,
-                           &exlo.xlo,
+                       psoMask,
+                       NULL,
+                       &exlo.xlo,
                        &rectl,
                        (POINTL*)&rectl);
 
         /* Cleanup */
-            EXLATEOBJ_vCleanup(&exlo);
+        EXLATEOBJ_vCleanup(&exlo);
         if (ppal) PALETTE_UnlockPalette(ppal);
-        }
+    }
 
     /* Hide mouse pointer */
     IntHideMousePointer(ppdev, pso);
@@ -434,7 +437,7 @@ EngSetPointerShape(
         EngDeleteSurface(pgp->psurfSave->BaseObject.hHmgr);
         SURFACE_ShareUnlockSurface(pgp->psurfSave);
         pgp->psurfSave = NULL;
-        }
+    }
 
     /* See if we are being asked to hide the pointer. */
     if (psoMask == NULL && psoColor == NULL)
