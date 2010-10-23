@@ -8,22 +8,6 @@
 
 #include "private.hpp"
 
-
-KSPIN_INTERFACE PinInterfaces[] = 
-{
-    {
-        {STATIC_KSINTERFACESETID_Standard},
-        KSINTERFACE_STANDARD_STREAMING,
-        0
-    },
-    {
-        {STATIC_KSINTERFACESETID_Standard},
-        KSINTERFACE_STANDARD_LOOPED_STREAMING,
-        0
-    }
-};
-
-
 NTSTATUS
 NTAPI
 KsoDispatchCreateWithGenericFactory(
@@ -87,274 +71,6 @@ PcHandleDisableEventWithTable(
 }
 
 NTSTATUS
-PcHandleGuidNullRequest(
-    IN OUT PIRP Irp,
-    IN PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor)
-{
-    PPCNODE_DESCRIPTOR Node;
-    PPCPROPERTY_ITEM PropertyItem;
-    PIO_STACK_LOCATION IoStack;
-    PKSP_NODE Property;
-    LPGUID Buffer;
-    ULONG Count = 0, SubIndex, Index;
-
-    // get current irp stack location
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-
-    // access property
-    Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-    if (Property->NodeId >= SubDeviceDescriptor->DeviceDescriptor->NodeCount)
-    {
-        // request is out of bounds
-        Irp->IoStatus.Information = 0;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
-
-    if (!Node->AutomationTable)
-    {
-        // request is out of bounds
-        Irp->IoStatus.Information = 0;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    PC_ASSERT(Node->AutomationTable);
-    PC_ASSERT(Node->AutomationTable->PropertyCount);
-    PC_ASSERT(Node->AutomationTable->PropertyItemSize);
-
-    Buffer = (LPGUID)AllocateItem(NonPagedPool,  sizeof (GUID) * Node->AutomationTable->PropertyCount, TAG_PORTCLASS);
-    if  (!Buffer)
-        return  STATUS_INSUFFICIENT_RESOURCES;
-
-     PropertyItem = (PCPROPERTY_ITEM*)Node->AutomationTable->Properties;
-     for (Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
-     {
-         BOOL Found = FALSE;
-         for (SubIndex = 0; SubIndex < Count; SubIndex++)
-         {
-             if  (IsEqualGUIDAligned(Buffer[SubIndex], *PropertyItem->Set))
-             {
-                 Found = TRUE;
-                 break;
-             }
-         }
-         if (!Found)
-         {
-             RtlMoveMemory(&Buffer[Count], PropertyItem->Set, sizeof (GUID));
-             Count++;
-         }
-         PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + Node->AutomationTable->PropertyItemSize);
-     }
-
-     // store result length
-     Irp->IoStatus.Information =  sizeof (GUID) * Count;
-     if  (IoStack->Parameters.DeviceIoControl.OutputBufferLength <  sizeof (GUID) * Count)
-     {
-         // buffer too small
-         FreeItem(Buffer, TAG_PORTCLASS);
-         return  STATUS_MORE_ENTRIES;
-     }
-
-     RtlMoveMemory(Irp->UserBuffer, Buffer,  sizeof (GUID) * Count);
-     FreeItem(Buffer, TAG_PORTCLASS);
-     return STATUS_SUCCESS;
-}
-
-NTSTATUS
-PcFindNodePropertyHandler(
-    PIRP Irp,
-    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor,
-    OUT PPCPROPERTY_ITEM * OutPropertyItem)
-{
-    PPCNODE_DESCRIPTOR Node;
-    PPCPROPERTY_ITEM PropertyItem;
-    PIO_STACK_LOCATION IoStack;
-    PKSP_NODE Property;
-    ULONG Index;
-
-    // get current irp stack location
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    // access property
-    Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-    if (Property->NodeId >= SubDeviceDescriptor->DeviceDescriptor->NodeCount)
-    {
-        // request is out of bounds
-        DPRINT("InvalidIndex %u %u\n", Property->NodeId, SubDeviceDescriptor->DeviceDescriptor->NodeCount);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    Node = (PPCNODE_DESCRIPTOR)((ULONG_PTR)SubDeviceDescriptor->DeviceDescriptor->Nodes + (Property->NodeId * SubDeviceDescriptor->DeviceDescriptor->NodeSize));
-
-    if (!Node->AutomationTable)
-    {
-        // request is out of bounds
-        Irp->IoStatus.Information = 0;
-        return STATUS_NOT_FOUND;
-    }
-
-    // sanity checks
-    PC_ASSERT(Node->AutomationTable);
-    PC_ASSERT(Node->AutomationTable->PropertyCount);
-    PC_ASSERT(Node->AutomationTable->PropertyItemSize);
-
-    PropertyItem = (PCPROPERTY_ITEM*)Node->AutomationTable->Properties;
-
-    DPRINT("NodeId %u PropertyCount %u\n", Property->NodeId, Node->AutomationTable->PropertyCount);
-    for(Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
-    {
-        if (IsEqualGUIDAligned(*PropertyItem->Set, Property->Property.Set) && PropertyItem->Id == Property->Property.Id)
-        {
-            //found property handler
-            *OutPropertyItem = PropertyItem;
-            return STATUS_SUCCESS;
-        }
-        PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + Node->AutomationTable->PropertyItemSize);
-    }
-
-    // no handler yet found
-    DPRINT("NotFound\n");
-    return STATUS_NOT_FOUND;
-}
-
-NTSTATUS
-PcNodeBasicSupportHandler(
-    PIRP Irp,
-    PPCPROPERTY_ITEM PropertyItem)
-{
-    PULONG Flags;
-    PIO_STACK_LOCATION IoStack;
-    PKSPROPERTY_DESCRIPTION Description;
-    PKSP_NODE Property;
-
-    // get current irp stack location
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    // access property
-    Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-    PC_ASSERT(IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(ULONG));
-    Flags= (PULONG)Irp->UserBuffer;
-
-    // reset flags
-    *Flags = 0;
-
-    if (PropertyItem->Flags & KSPROPERTY_TYPE_SET)
-        *Flags |= KSPROPERTY_TYPE_SET;
-
-    if (PropertyItem->Flags & KSPROPERTY_TYPE_GET)
-        *Flags |= KSPROPERTY_TYPE_GET;
-
-    // store result length
-    Irp->IoStatus.Information = sizeof(ULONG);
-
-    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(KSPROPERTY_DESCRIPTION))
-    {
-        // get output buffer
-        Description = (PKSPROPERTY_DESCRIPTION)Irp->UserBuffer;
-
-        // store result
-        Description->DescriptionSize = sizeof(KSPROPERTY_DESCRIPTION);
-        Description->PropTypeSet.Set = KSPROPTYPESETID_General;
-        Description->PropTypeSet.Id = 0;
-        Description->PropTypeSet.Flags = 0;
-        Description->MembersListCount = 0;
-        Description->Reserved = 0;
-
-        Irp->IoStatus.Information = sizeof(KSPROPERTY_DESCRIPTION);
-    }
-    return STATUS_SUCCESS;
-}
-
-
-NTSTATUS
-PcHandleNodePropertyRequest(
-    PIRP Irp,
-    IN PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor)
-{
-    PIO_STACK_LOCATION IoStack;
-    PPCPROPERTY_ITEM  PropertyItem;
-    PPCPROPERTY_REQUEST PropertyRequest;
-    PKSP_NODE Property;
-    NTSTATUS Status;
-
-    // get current irp stack location
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_NODE))
-    {
-        // certainly not a node property request
-        return STATUS_NOT_FOUND;
-    }
-
-    // access property
-    Property = (PKSP_NODE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-    if (IsEqualGUIDAligned(Property->Property.Set, GUID_NULL) && Property->Property.Id == 0 && Property->Property.Flags == (KSPROPERTY_TYPE_SETSUPPORT | KSPROPERTY_TYPE_TOPOLOGY))
-    {
-        return PcHandleGuidNullRequest(Irp, SubDeviceDescriptor);
-    }
-
-    // find property handler
-    Status = PcFindNodePropertyHandler(Irp, SubDeviceDescriptor, &PropertyItem);
-
-    // check for success
-    if (!NT_SUCCESS(Status))
-    {
-        // might not be a node property request
-        DPRINT("NotFound\n");
-        return STATUS_NOT_FOUND;
-    }
-
-    if (Property->Property.Flags & KSPROPERTY_TYPE_BASICSUPPORT)
-    {
-        // caller issued a basic property request
-        if (!(PropertyItem->Flags & KSPROPERTY_TYPE_BASICSUPPORT))
-        {
-            // driver does not have a basic support handler
-            return PcNodeBasicSupportHandler(Irp, PropertyItem);
-        }
-    }
-
-    // sanity check
-    PC_ASSERT(SubDeviceDescriptor->UnknownMiniport);
-
-    // allocate a property request
-    PropertyRequest = (PPCPROPERTY_REQUEST)AllocateItem(NonPagedPool, sizeof(PCPROPERTY_REQUEST), TAG_PORTCLASS);
-    if (!PropertyRequest)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-     // initialize property request
-     PropertyRequest->MajorTarget = SubDeviceDescriptor->UnknownMiniport;
-     PropertyRequest->MinorTarget = SubDeviceDescriptor->UnknownStream;
-     PropertyRequest->Irp = Irp;
-     PropertyRequest->Node = Property->NodeId;
-     PropertyRequest->PropertyItem = PropertyItem;
-     PropertyRequest->Verb = Property->Property.Flags;
-     PropertyRequest->InstanceSize = IoStack->Parameters.DeviceIoControl.InputBufferLength - sizeof(KSNODEPROPERTY);
-     PropertyRequest->Instance = (PVOID)((ULONG_PTR)IoStack->Parameters.DeviceIoControl.Type3InputBuffer + sizeof(KSNODEPROPERTY));
-     PropertyRequest->ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
-     PropertyRequest->Value = Irp->UserBuffer;
-
-     Status = PropertyItem->Handler(PropertyRequest);
-
-     if (Status != STATUS_PENDING)
-     {
-         //request completed
-         Irp->IoStatus.Information = PropertyRequest->ValueSize;
-         FreeItem(PropertyRequest, TAG_PORTCLASS);
-     }
-
-     // done
-     DPRINT("Status %x\n", Status);
-     return Status;
-}
-
-NTSTATUS
 NTAPI
 PcHandlePropertyWithTable(
     IN PIRP Irp,
@@ -362,21 +78,22 @@ PcHandlePropertyWithTable(
     IN PKSPROPERTY_SET PropertySet,
     IN PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor)
 {
-    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStack;
 
-    // try handle it as node property request
-    Status = PcHandleNodePropertyRequest(Irp, SubDeviceDescriptor);
+    // get current irp stack location
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    if (Status == STATUS_NOT_FOUND)
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
     {
-        // store device descriptor
-        KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
-
-        /* then try KsPropertyHandler */
-        Status = KsPropertyHandler(Irp, PropertySetCount, PropertySet);
+        // certainly an invalid request
+        return STATUS_INVALID_PARAMETER;
     }
 
-    return Status;
+    // store device descriptor
+    KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
+
+    // then try KsPropertyHandler 
+    return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 }
 
 VOID
@@ -406,15 +123,377 @@ PcAddToEventTable(
 }
 
 NTSTATUS
-PcAddToPropertyTable(
-    PVOID Ptr,
-    LONG Unknown,
-    LONG Unknown2,
-    LONG Unknown3,
-    CHAR Unknown4)
+NTAPI
+PropertyItemDispatch(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PPCPROPERTY_REQUEST PropertyRequest;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+    PKSPROPERTY Property;
+    PPCNODE_DESCRIPTOR NodeDescriptor;
+    PKSNODEPROPERTY NodeProperty;
+    PKSPROPERTY_SET PropertySet;
+    PPCPROPERTY_ITEM PropertyItem;
+    PPCAUTOMATION_TABLE NodeAutomation;
+    PIO_STACK_LOCATION IoStack;
+    ULONG InstanceSize, ValueSize, Index;
+    PVOID Instance;
+    NTSTATUS Status;
+
+    // allocate a property request
+    PropertyRequest = (PPCPROPERTY_REQUEST)AllocateItem(NonPagedPool, sizeof(PCPROPERTY_REQUEST), TAG_PORTCLASS);
+    if (!PropertyRequest)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    // grab device descriptor
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    // get current irp stack
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    // get input property request
+    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    // get property set
+    PropertySet = (PKSPROPERTY_SET)KSPROPERTY_SET_IRP_STORAGE(Irp);
+
+    // sanity check
+    PC_ASSERT(Descriptor);
+    PC_ASSERT(Descriptor->UnknownMiniport);
+
+    // get instance / value size
+    InstanceSize = IoStack->Parameters.DeviceIoControl.InputBufferLength;
+    Instance = Data;
+    ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+     // initialize property request
+     PropertyRequest->MajorTarget = Descriptor->UnknownMiniport;
+     PropertyRequest->MinorTarget = Descriptor->UnknownStream;
+     PropertyRequest->Irp = Irp;
+     PropertyRequest->Verb = Property->Flags;
+
+
+    // check if this is filter / pin property request
+    if (!(Property->Flags & KSPROPERTY_TYPE_TOPOLOGY))
+    {
+        // adjust input buffer size
+        InstanceSize -= sizeof(KSPROPERTY);
+        Instance = (PVOID)((ULONG_PTR)Instance + sizeof(KSPROPERTY));
+
+        // filter / pin property request dont use node field
+        PropertyRequest->Node = MAXULONG;
+    }
+    else if (InstanceSize >= sizeof(KSNODEPROPERTY))
+    {
+        // request is for a node
+        InstanceSize -= sizeof(KSNODEPROPERTY);
+        Instance = (PVOID)((ULONG_PTR)Instance + sizeof(KSNODEPROPERTY));
+
+        // cast node property request
+        NodeProperty = (PKSNODEPROPERTY)Request;
+
+        // store node id
+        PropertyRequest->Node = NodeProperty->NodeId;
+    }
+    else
+    {
+        // invalid buffer size
+        return STATUS_INVALID_BUFFER_SIZE;
+    }
+
+    // store instance size
+    PropertyRequest->InstanceSize = InstanceSize;
+    PropertyRequest->Instance = (InstanceSize != 0 ? Instance : NULL);
+
+    // store value size
+    PropertyRequest->ValueSize = ValueSize;
+    PropertyRequest->Value = (ValueSize != 0 ? Irp->UserBuffer : NULL);
+
+    // now scan the property set for the attached property set item stored in Relations member
+    if (PropertySet)
+    {
+        // sanity check
+        PC_ASSERT(IsEqualGUIDAligned(Property->Set, *PropertySet->Set));
+
+        for(Index = 0; Index < PropertySet->PropertiesCount; Index++)
+        {
+            // check if they got the same property id
+            if (PropertySet->PropertyItem[Index].PropertyId == Property->Id)
+            {
+                // found item
+                PropertyRequest->PropertyItem = (const PCPROPERTY_ITEM*)PropertySet->PropertyItem[Index].Relations;
+
+                // done
+                break;
+            }
+        }
+    }
+
+    // check if there has been a property set item attached
+    if (!PropertyRequest->PropertyItem)
+    {
+        // is topology node id valid
+        if (PropertyRequest->Node < Descriptor->DeviceDescriptor->NodeCount)
+        {
+            // get node descriptor
+            NodeDescriptor = (PPCNODE_DESCRIPTOR) ((ULONG_PTR)Descriptor->DeviceDescriptor->Nodes + PropertyRequest->Node * Descriptor->DeviceDescriptor->NodeSize);
+
+            // get node automation table
+            NodeAutomation = (PPCAUTOMATION_TABLE)NodeDescriptor->AutomationTable;
+
+            // has it got a automation table
+            if (NodeAutomation)
+            {
+                // now scan the properties and check if it supports this request
+                PropertyItem = (PPCPROPERTY_ITEM)NodeAutomation->Properties;
+                for(Index = 0; Index < NodeAutomation->PropertyCount; Index++)
+                {
+                    // are they same property
+                    if (IsEqualGUIDAligned(*PropertyItem->Set, Property->Set))
+                    {
+                        if (PropertyItem->Id == Property->Id)
+                        {
+                            // found match
+                            PropertyRequest->PropertyItem = PropertyItem;
+
+                            // done
+                            break;
+                        }
+                    }
+
+                    // move to next property item
+                    PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + NodeAutomation->PropertyItemSize);
+                }
+            }
+        }
+    }
+
+    if (PropertyRequest->PropertyItem && PropertyRequest->PropertyItem->Handler)
+    {
+        // now call the handler
+        UNICODE_STRING GuidBuffer;
+        RtlStringFromGUID(Property->Set, &GuidBuffer);
+        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p\n",
+                PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
+                PropertyRequest->PropertyItem->Handler, PropertyRequest);
+        Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
+
+         Irp->IoStatus.Information = PropertyRequest->ValueSize;
+
+        if (Status != STATUS_PENDING)
+        {
+            // free property request
+            FreeItem(PropertyRequest, TAG_PORTCLASS);
+        }
+    }
+    else
+    {
+        FreeItem(PropertyRequest, TAG_PORTCLASS);
+        Status = STATUS_NOT_FOUND;
+    }
+
+    /* done */
+    return Status;
+}
+
+NTSTATUS
+PcAddToPropertyTable(
+    IN PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor,
+    IN PPCPROPERTY_ITEM PropertyItem,
+    IN ULONG bNode)
+{
+    ULONG bFound = FALSE;
+    ULONG Index, PropertySetIndex, PropertySetItemIndex;
+    PKSPROPERTY_SET NewPropertySet;
+    PKSPROPERTY_ITEM FilterPropertyItem, NewFilterPropertyItem;
+    LPGUID Guid;
+    //UNICODE_STRING GuidBuffer;
+
+ASSERT(PropertyItem->Set);
+	//	RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
+   // DPRINT1("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
+
+
+
+    //DPRINT1("FilterPropertySetCount %lu\n", SubDeviceDescriptor->FilterPropertySetCount);
+    // first step check if the property set is present already
+    for(Index = 0; Index < SubDeviceDescriptor->FilterPropertySetCount; Index++)
+    {
+
+		//RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
+        //DPRINT1("FilterProperty Set %S PropertyCount %lu\n", GuidBuffer.Buffer, SubDeviceDescriptor->FilterPropertySet[Index].PropertiesCount);
+        if (IsEqualGUIDAligned(*SubDeviceDescriptor->FilterPropertySet[Index].Set, *PropertyItem->Set))
+        {
+            // property set is already present
+            bFound = TRUE;
+            PropertySetIndex = Index;
+
+            // break out
+            break;
+        }
+    }
+
+    // is the property set present
+    if (!bFound)
+    {
+        // need to allocate a property set
+        NewPropertySet = (PKSPROPERTY_SET)AllocateItem(NonPagedPool, (SubDeviceDescriptor->FilterPropertySetCount + 1) * sizeof(KSPROPERTY_SET), TAG_PORTCLASS);
+        if (!NewPropertySet)
+        {
+            // out of memory
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        // need to allocate property set guid
+        Guid = (LPGUID)AllocateItem(NonPagedPool, sizeof(GUID), TAG_PORTCLASS);
+        if (!Guid)
+        {
+            // out of memory
+            FreeItem(NewPropertySet, TAG_PORTCLASS);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        // are any existing property sets
+        if (SubDeviceDescriptor->FilterPropertySetCount)
+        {
+            // copy property sets
+            RtlMoveMemory(NewPropertySet, SubDeviceDescriptor->FilterPropertySet, SubDeviceDescriptor->FilterPropertySetCount * sizeof(KSPROPERTY_SET));
+
+            // release memory
+            FreeItem(SubDeviceDescriptor->FilterPropertySet, TAG_PORTCLASS);
+        }
+
+        // store new property set descriptors
+        SubDeviceDescriptor->FilterPropertySet = NewPropertySet;
+
+        // store index 
+        PropertySetIndex = SubDeviceDescriptor->FilterPropertySetCount;
+
+        // increment property set count
+        SubDeviceDescriptor->FilterPropertySetCount++;
+
+        // copy property guid
+        RtlMoveMemory(Guid, PropertyItem->Set, sizeof(GUID));
+
+        // initialize property set 
+        SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].Set = Guid;
+        SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount = 0;
+    }
+
+    // as the property set has been indentified, now search for duplicate property set item entries
+    FilterPropertyItem = (PKSPROPERTY_ITEM)SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem;
+    bFound = FALSE;
+
+    for(Index = 0; Index < SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount; Index++)
+    {
+        // now search for an equal property set item
+        if (FilterPropertyItem->PropertyId == PropertyItem->Id)
+        {
+            // found existing property set item
+            bFound = TRUE;
+            PropertySetItemIndex = Index;
+            break;
+        }
+
+        // move to next entry
+        FilterPropertyItem++;
+    }
+
+    if (!bFound)
+    {
+        // need to allocate memory for new property set item
+        NewFilterPropertyItem = (PKSPROPERTY_ITEM)AllocateItem(NonPagedPool, (SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount + 1) * sizeof(KSPROPERTY_ITEM), TAG_PORTCLASS);
+        if (!NewFilterPropertyItem)
+        {
+            // out of memory
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        // are any existing property set items
+        if (SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount)
+        {
+            // copy property item sets
+            RtlMoveMemory(NewFilterPropertyItem,
+                          (PVOID)SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem,
+                          SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount * sizeof(KSPROPERTY_ITEM));
+
+            // release old descriptors
+            FreeItem((PVOID)SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem, TAG_PORTCLASS);
+        }
+
+        // store new descriptor
+        SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem = NewFilterPropertyItem;
+
+        // store index
+        PropertySetItemIndex = SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount;
+
+        // increment property item set count
+        SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount++;
+
+        // now initialize property item
+        FilterPropertyItem = (PKSPROPERTY_ITEM)&SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex];
+        FilterPropertyItem->PropertyId = PropertyItem->Id;
+        FilterPropertyItem->MinProperty = sizeof(KSPROPERTY);
+        FilterPropertyItem->MinData = 0;
+
+        // are any set operations supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_SET)
+        {
+            // setup handler 
+            FilterPropertyItem->SetPropertyHandler = PropertyItemDispatch;
+        }
+
+        // are set operation supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
+        {
+            // setup handler
+            FilterPropertyItem->GetPropertyHandler = PropertyItemDispatch;
+        }
+
+        // are get operations supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_GET)
+        {
+            // setup handler 
+            FilterPropertyItem->GetPropertyHandler = PropertyItemDispatch;
+        }
+
+        // are basic support operations supported
+        if (PropertyItem->Flags & PCPROPERTY_ITEM_FLAG_BASICSUPPORT)
+        {
+            // setup handler 
+            FilterPropertyItem->SupportHandler = PropertyItemDispatch;
+        }
+
+        if (!bNode)
+        {
+            // store property item in relations
+            // only store property item of filter properties / pin properties
+            // because filter & pin properties do not require a specific context
+            // on the other hand node properties are specifically bound to a node
+             
+            FilterPropertyItem->Relations = (const KSPROPERTY*)PropertyItem;
+        }
+    }
+    else
+    {
+        // property set item handler already present
+
+        if (bNode)
+        {
+            // filter & pin properties should not be exposed on a node
+            ASSERT(SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex].Relations == NULL);
+        }
+        else
+        {
+            // node properties should not be exposed on a filter & pin
+            ASSERT(SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem[PropertySetItemIndex].Relations != NULL);
+        }
+    }
+
+    // done
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -491,6 +570,15 @@ DumpFilterDescriptor(
                     EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + NodeDescriptor->AutomationTable->EventItemSize);
                 }
 
+                DPRINT1(" Index %u PropertyCount %u\n", Index, NodeDescriptor->AutomationTable->PropertyCount);
+                PropertyItem = (PPCPROPERTY_ITEM)NodeDescriptor->AutomationTable->Properties;
+                for(SubIndex = 0; SubIndex < NodeDescriptor->AutomationTable->PropertyCount; SubIndex++)
+                {
+                    RtlStringFromGUID(*PropertyItem->Set, &GuidString);
+                    DPRINT1("  PropertyIndex %u GUID %S Id %u Flags %x\n", SubIndex, GuidString.Buffer, PropertyItem->Id, PropertyItem->Flags);
+
+                    PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + NodeDescriptor->AutomationTable->PropertyItemSize);
+                }
             }
 
 
@@ -539,10 +627,13 @@ PcCreateSubdeviceDescriptor(
     IN PPCFILTER_DESCRIPTOR FilterDescription)
 {
     SUBDEVICE_DESCRIPTOR * Descriptor;
-    ULONG Index;
+    ULONG Index, SubIndex;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
     PPCPIN_DESCRIPTOR SrcDescriptor;
+    PPCNODE_DESCRIPTOR NodeDescriptor;
+    PPCPROPERTY_ITEM PropertyItem;
 
+    // allocate subdevice descriptor
     Descriptor = (PSUBDEVICE_DESCRIPTOR)AllocateItem(NonPagedPool, sizeof(SUBDEVICE_DESCRIPTOR), TAG_PORTCLASS);
     if (!Descriptor)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -551,6 +642,7 @@ PcCreateSubdeviceDescriptor(
     InitializeListHead(&Descriptor->SymbolicLinkList);
     InitializeListHead(&Descriptor->PhysicalConnectionList);
 
+    //FIXME add driver category guids
     Descriptor->Interfaces = (GUID*)AllocateItem(NonPagedPool, sizeof(GUID) * InterfaceCount, TAG_PORTCLASS);
     if (!Descriptor->Interfaces)
         goto cleanup;
@@ -559,98 +651,215 @@ PcCreateSubdeviceDescriptor(
     RtlCopyMemory(Descriptor->Interfaces, InterfaceGuids, sizeof(GUID) * InterfaceCount);
     Descriptor->InterfaceCount = InterfaceCount;
 
+    //DumpFilterDescriptor(FilterDescription);
+
+    // are any property sets supported by the portcls
     if (FilterPropertiesCount)
     {
-       /// FIXME
-       /// handle driver properties
-
-       DumpFilterDescriptor(FilterDescription);
-
+       // first allocate filter properties set
        Descriptor->FilterPropertySet = (PKSPROPERTY_SET)AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * FilterPropertiesCount, TAG_PORTCLASS);
        if (! Descriptor->FilterPropertySet)
            goto cleanup;
 
+       // now copy all filter property sets
        Descriptor->FilterPropertySetCount = FilterPropertiesCount;
        for(Index = 0; Index < FilterPropertiesCount; Index++)
        {
+           // copy property set
            RtlMoveMemory(&Descriptor->FilterPropertySet[Index], &FilterProperties[Index], sizeof(KSPROPERTY_SET));
+
+           if (Descriptor->FilterPropertySet[Index].PropertiesCount)
+           {
+               // copy property items to make sure they are dynamically allocated
+               Descriptor->FilterPropertySet[Index].PropertyItem = (PKSPROPERTY_ITEM)AllocateItem(NonPagedPool, FilterProperties[Index].PropertiesCount * sizeof(KSPROPERTY_ITEM), TAG_PORTCLASS);
+               if (!Descriptor->FilterPropertySet[Index].PropertyItem)
+               {
+                   // no memory
+                   goto cleanup;
+               }
+
+               // copy filter property items
+               RtlMoveMemory((PVOID)Descriptor->FilterPropertySet[Index].PropertyItem, FilterProperties[Index].PropertyItem, FilterProperties[Index].PropertiesCount * sizeof(KSPROPERTY_ITEM));
+           }
        }
     }
 
-    Descriptor->Topology = (PKSTOPOLOGY)AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY), TAG_PORTCLASS);
-    if (!Descriptor->Topology)
-        goto cleanup;
-
-    if (FilterDescription->ConnectionCount)
+    // now check if the filter descriptor supports filter properties
+    if (FilterDescription->AutomationTable)
     {
-        Descriptor->Topology->TopologyConnections = (PKSTOPOLOGY_CONNECTION)AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescription->ConnectionCount, TAG_PORTCLASS);
-        if (!Descriptor->Topology->TopologyConnections)
-            goto cleanup;
+        // get first entry
+        PropertyItem = (PPCPROPERTY_ITEM)FilterDescription->AutomationTable->Properties;
 
-        RtlMoveMemory((PVOID)Descriptor->Topology->TopologyConnections, FilterDescription->Connections, FilterDescription->ConnectionCount * sizeof(PCCONNECTION_DESCRIPTOR));
-        Descriptor->Topology->TopologyConnectionsCount = FilterDescription->ConnectionCount;
-    }
-
-    if (FilterDescription->NodeCount)
-    {
-        Descriptor->Topology->TopologyNodes = (const GUID *)AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescription->NodeCount, TAG_PORTCLASS);
-        if (!Descriptor->Topology->TopologyNodes)
-            goto cleanup;
-
-        Descriptor->Topology->TopologyNodesNames = (const GUID *)AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescription->NodeCount, TAG_PORTCLASS);
-        if (!Descriptor->Topology->TopologyNodesNames)
-            goto cleanup;
-
-        for(Index = 0; Index < FilterDescription->NodeCount; Index++)
+        // copy driver filter property sets
+        for(Index = 0; Index < FilterDescription->AutomationTable->PropertyCount; Index++)
         {
-            if (FilterDescription->Nodes[Index].Type)
+            // add the property item
+            Status = PcAddToPropertyTable(Descriptor, PropertyItem, FALSE);
+
+            // check for success
+            if (Status != STATUS_SUCCESS)
             {
-                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodes[Index], FilterDescription->Nodes[Index].Type, sizeof(GUID));
+                // goto cleanup
+                goto cleanup;
             }
-            if (FilterDescription->Nodes[Index].Name)
-            {
-                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodesNames[Index], FilterDescription->Nodes[Index].Name, sizeof(GUID));
-            }
+
+            // move to next entry
+            PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + FilterDescription->AutomationTable->PropertyItemSize);
         }
-        Descriptor->Topology->TopologyNodesCount = FilterDescription->NodeCount;
     }
 
+    // check if the filter has pins
     if (FilterDescription->PinCount)
     {
+        // allocate pin factory descriptors
         Descriptor->Factory.KsPinDescriptor = (PKSPIN_DESCRIPTOR)AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * FilterDescription->PinCount, TAG_PORTCLASS);
         if (!Descriptor->Factory.KsPinDescriptor)
             goto cleanup;
 
+        // allocate pin instance info
         Descriptor->Factory.Instances = (PPIN_INSTANCE_INFO)AllocateItem(NonPagedPool, FilterDescription->PinCount * sizeof(PIN_INSTANCE_INFO), TAG_PORTCLASS);
         if (!Descriptor->Factory.Instances)
             goto cleanup;
 
+        // initialize pin factory descriptor
         Descriptor->Factory.PinDescriptorCount = FilterDescription->PinCount;
         Descriptor->Factory.PinDescriptorSize = sizeof(KSPIN_DESCRIPTOR);
 
+        // grab first entry
         SrcDescriptor = (PPCPIN_DESCRIPTOR)FilterDescription->Pins;
-        DPRINT("Size %u Expected %u\n", FilterDescription->PinSize, sizeof(PCPIN_DESCRIPTOR));
 
         // copy pin factories
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
         {
+            // copy pin descriptor
             RtlMoveMemory(&Descriptor->Factory.KsPinDescriptor[Index], &SrcDescriptor->KsPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
 
-            Descriptor->Factory.KsPinDescriptor[Index].Interfaces = PinInterfaces;
-            Descriptor->Factory.KsPinDescriptor[Index].InterfacesCount = sizeof(PinInterfaces) / sizeof(KSPIN_INTERFACE);
-
-            DPRINT("Index %u DataRangeCount %u\n", Index, SrcDescriptor->KsPinDescriptor.DataRangesCount);
-
+            // initialize pin factory instance data
             Descriptor->Factory.Instances[Index].CurrentPinInstanceCount = 0;
             Descriptor->Factory.Instances[Index].MaxFilterInstanceCount = SrcDescriptor->MaxFilterInstanceCount;
             Descriptor->Factory.Instances[Index].MaxGlobalInstanceCount = SrcDescriptor->MaxGlobalInstanceCount;
             Descriptor->Factory.Instances[Index].MinFilterInstanceCount = SrcDescriptor->MinFilterInstanceCount;
+
+            // check if the descriptor has an automation table
+            if (SrcDescriptor->AutomationTable)
+            {
+                // it has, grab first entry
+                PropertyItem = (PPCPROPERTY_ITEM)SrcDescriptor->AutomationTable->Properties;
+
+                // now add all supported property items
+                for(SubIndex = 0; SubIndex < SrcDescriptor->AutomationTable->PropertyCount; SubIndex++)
+                {
+                    // add the property item to the table
+                    Status = PcAddToPropertyTable(Descriptor, PropertyItem, FALSE);
+
+                    // check for success
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        // goto cleanup
+                        goto cleanup;
+                    }
+
+                    // move to next entry
+                    PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + SrcDescriptor->AutomationTable->PropertyItemSize);
+                }
+            }
+
+            // move to next entry
             SrcDescriptor = (PPCPIN_DESCRIPTOR)((ULONG_PTR)SrcDescriptor + FilterDescription->PinSize);
         }
     }
 
+    // allocate topology descriptor
+    Descriptor->Topology = (PKSTOPOLOGY)AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY), TAG_PORTCLASS);
+    if (!Descriptor->Topology)
+        goto cleanup;
+
+    // are there any connections
+    if (FilterDescription->ConnectionCount)
+    {
+        // allocate connection descriptor
+        Descriptor->Topology->TopologyConnections = (PKSTOPOLOGY_CONNECTION)AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescription->ConnectionCount, TAG_PORTCLASS);
+        if (!Descriptor->Topology->TopologyConnections)
+            goto cleanup;
+
+        // copy connection descriptor
+        RtlMoveMemory((PVOID)Descriptor->Topology->TopologyConnections, FilterDescription->Connections, FilterDescription->ConnectionCount * sizeof(PCCONNECTION_DESCRIPTOR));
+
+        // store connection count
+        Descriptor->Topology->TopologyConnectionsCount = FilterDescription->ConnectionCount;
+    }
+
+    // does the filter have nodes
+    if (FilterDescription->NodeCount)
+    {
+        // allocate topology node types array
+        Descriptor->Topology->TopologyNodes = (const GUID *)AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescription->NodeCount, TAG_PORTCLASS);
+        if (!Descriptor->Topology->TopologyNodes)
+            goto cleanup;
+
+        // allocate topology node names array
+        Descriptor->Topology->TopologyNodesNames = (const GUID *)AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescription->NodeCount, TAG_PORTCLASS);
+        if (!Descriptor->Topology->TopologyNodesNames)
+            goto cleanup;
+
+        // grab first entry
+       NodeDescriptor = (PPCNODE_DESCRIPTOR)FilterDescription->Nodes;
+
+       // iterate all nodes and copy node types / names and node properties
+        for(Index = 0; Index < FilterDescription->NodeCount; Index++)
+        {
+            // does it have a type
+            if (NodeDescriptor->Type)
+            {
+                // copy node type
+                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodes[Index], NodeDescriptor->Type, sizeof(GUID));
+            }
+
+            // does it have a node name
+            if (NodeDescriptor->Name)
+            {
+                // copy node name
+                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodesNames[Index], NodeDescriptor->Name, sizeof(GUID));
+            }
+
+            // check if has an automation table
+            if (NodeDescriptor->AutomationTable)
+            {
+                // grab first entry
+                PropertyItem = (PPCPROPERTY_ITEM)NodeDescriptor->AutomationTable->Properties;
+
+                // copy all node properties into the global property set
+                for(SubIndex = 0; SubIndex < NodeDescriptor->AutomationTable->PropertyCount; SubIndex++)
+                {
+                    // add to property set
+                    Status = PcAddToPropertyTable(Descriptor, PropertyItem, TRUE);
+
+                    // check for success
+                    if (Status != STATUS_SUCCESS)
+                    {
+                        // failed
+                        goto cleanup;
+                    }
+
+                    // move to next property item
+                    PropertyItem = (PPCPROPERTY_ITEM)((ULONG_PTR)PropertyItem + NodeDescriptor->AutomationTable->PropertyItemSize);
+                }
+            }
+
+            // move to next descriptor
+            NodeDescriptor = (PPCNODE_DESCRIPTOR)((ULONG_PTR)NodeDescriptor + FilterDescription->NodeSize);
+        }
+
+        // now store the topology node count
+        Descriptor->Topology->TopologyNodesCount = FilterDescription->NodeCount;
+    }
+
+    // store descriptor
     Descriptor->DeviceDescriptor = FilterDescription;
+
+    // store result
     *OutSubdeviceDescriptor = Descriptor;
+    // done
     return STATUS_SUCCESS;
 
 cleanup:
