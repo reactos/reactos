@@ -67,9 +67,6 @@ MAIN_MENU MENU
    MENUITEM "În&totdeauna deasupra",         MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Informații...",                MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Despre Wine",                  MNID_HELP_WINE
-#endif
  }
 }
 

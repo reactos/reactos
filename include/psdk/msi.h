@@ -19,12 +19,12 @@
 #ifndef __WINE_MSI_H
 #define __WINE_MSI_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef _MSI_NO_CRYPTO
 #include <wincrypt.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 typedef ULONG MSIHANDLE;
@@ -662,6 +662,12 @@ UINT WINAPI MsiDetermineApplicablePatchesW(LPCWSTR, DWORD, PMSIPATCHSEQUENCEINFO
 UINT WINAPI MsiApplyMultiplePatchesA(LPCSTR, LPCSTR, LPCSTR);
 UINT WINAPI MsiApplyMultiplePatchesW(LPCWSTR, LPCWSTR, LPCWSTR);
 #define     MsiApplyMultiplePatches WINELIB_NAME_AW(MsiApplyMultiplePatches)
+
+UINT WINAPI MsiBeginTransactionA(LPCSTR, DWORD, MSIHANDLE *, HANDLE *);
+UINT WINAPI MsiBeginTransactionW(LPCWSTR, DWORD, MSIHANDLE *, HANDLE *);
+#define     MsiBeginTransaction WINELIB_NAME_AW(MsiBeginTransaction)
+
+UINT WINAPI MsiEndTransaction(DWORD);
 
 /* Non Unicode */
 UINT WINAPI MsiCloseHandle(MSIHANDLE);

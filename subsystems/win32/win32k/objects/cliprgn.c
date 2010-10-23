@@ -541,7 +541,7 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
   CLIPOBJ * co;
 
   /* Must have VisRgn set to a valid state! */
-  if (!pDC->prgnVis) return ERROR;
+  ASSERT (pDC->prgnVis);
 
   if (pDC->prgnAPI)
   {

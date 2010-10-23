@@ -469,7 +469,7 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
     if( !pHandle )
         return ERROR_INVALID_PARAMETER;
 
-    if( szDatabase )
+    if( szDatabase && szDatabase[0] )
     {
         LPCWSTR persist = uiUpdateCount ? MSIDBOPEN_TRANSACT : MSIDBOPEN_READONLY;
 
@@ -642,6 +642,18 @@ LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty )
     if( prop->vt != VT_LPSTR )
         return NULL;
     return strdupAtoW( prop->u.pszVal );
+}
+
+INT msi_suminfo_get_int32( MSISUMMARYINFO *si, UINT uiProperty )
+{
+    PROPVARIANT *prop;
+
+    if ( uiProperty >= MSI_MAX_PROPS )
+        return -1;
+    prop = &si->property[uiProperty];
+    if( prop->vt != VT_I4 )
+        return -1;
+    return prop->u.lVal;
 }
 
 LPWSTR msi_get_suminfo_product( IStorage *stg )

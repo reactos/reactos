@@ -151,6 +151,7 @@ KsTopologyPropertyHandler(
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
+    LPGUID Guid;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -177,37 +178,60 @@ KsTopologyPropertyHandler(
         case KSPROPERTY_TOPOLOGY_NAME:
             Node = (KSP_NODE*)Property;
 
+            /* check for invalid node id */
             if (Node->NodeId >= Topology->TopologyNodesCount)
             {
+                /* invalid node id */
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_INVALID_PARAMETER;
                 break;
             }
 
-            Status = KspReadMediaCategory((LPGUID)&Topology->TopologyNodesNames[Node->NodeId], &KeyInfo);
+            /* check if there is a name supplied */
+            if (!IsEqualGUIDAligned(&Topology->TopologyNodesNames[Node->NodeId], &GUID_NULL))
+            {
+                /* node name has been supplied */
+                Guid = (LPGUID)&Topology->TopologyNodesNames[Node->NodeId];
+            }
+            else
+            {
+                /* fallback to topology node type */
+                Guid = (LPGUID)&Topology->TopologyNodes[Node->NodeId];
+            }
+
+            /* read topology node name */
+            Status = KspReadMediaCategory(Guid, &KeyInfo);
             if (!NT_SUCCESS(Status))
             {
                 Irp->IoStatus.Information = 0;
                 break;
             }
 
+            /* store result size */
             Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
 
+            /* check for buffer overflow */
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
+                /* buffer too small */
                 Status = STATUS_BUFFER_OVERFLOW;
                 FreeItem(KeyInfo);
                 break;
             }
 
+            /* copy result buffer */
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
+
+            /* zero terminate it */
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
+
+            /* free key info */
             FreeItem(KeyInfo);
 
             break;
         default:
              Irp->IoStatus.Information = 0;
-           Status = STATUS_NOT_IMPLEMENTED;
+           Status = STATUS_NOT_FOUND;
     }
 
 

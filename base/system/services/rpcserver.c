@@ -24,7 +24,6 @@
 typedef struct _SCMGR_HANDLE
 {
     DWORD Tag;
-    DWORD RefCount;
     DWORD DesiredAccess;
 } SCMGR_HANDLE;
 
@@ -43,7 +42,6 @@ typedef struct _SERVICE_HANDLE
 {
     SCMGR_HANDLE Handle;
 
-    DWORD DesiredAccess;
     PSERVICE ServiceEntry;
 
     /* FIXME: Insert more data here */
@@ -169,7 +167,6 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     Ptr->Handle.Tag = MANAGER_TAG;
-    Ptr->Handle.RefCount = 1;
 
     /* FIXME: initialize more data here */
 
@@ -194,7 +191,6 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     Ptr->Handle.Tag = SERVICE_TAG;
-    Ptr->Handle.RefCount = 1;
 
     /* FIXME: initialize more data here */
     Ptr->ServiceEntry = lpServiceEntry;
@@ -202,6 +198,46 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
     *Handle = (SC_HANDLE)Ptr;
 
     return ERROR_SUCCESS;
+}
+
+
+static PMANAGER_HANDLE
+ScmGetServiceManagerFromHandle(SC_RPC_HANDLE Handle)
+{
+    PMANAGER_HANDLE pManager = NULL;
+
+    _SEH2_TRY
+    {
+        if (((PMANAGER_HANDLE)Handle)->Handle.Tag == MANAGER_TAG)
+            pManager = (PMANAGER_HANDLE)Handle;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception: Invalid Service Manager handle!\n");
+    }
+    _SEH2_END;
+
+    return pManager;
+}
+
+
+static PSERVICE_HANDLE
+ScmGetServiceFromHandle(SC_RPC_HANDLE Handle)
+{
+    PSERVICE_HANDLE pService = NULL;
+
+    _SEH2_TRY
+    {
+        if (((PSERVICE_HANDLE)Handle)->Handle.Tag == SERVICE_TAG)
+            pService = (PSERVICE_HANDLE)Handle;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Exception: Invalid Service handle!\n");
+    }
+    _SEH2_END;
+
+    return pService;
 }
 
 
@@ -423,14 +459,10 @@ DWORD RCloseServiceHandle(
     {
         DPRINT("Found manager handle\n");
 
-        hManager->Handle.RefCount--;
-        if (hManager->Handle.RefCount == 0)
-        {
-            /* FIXME: add handle cleanup code */
+        /* FIXME: add handle cleanup code */
 
-            HeapFree(GetProcessHeap(), 0, hManager);
-            hManager = NULL;
-        }
+        HeapFree(GetProcessHeap(), 0, hManager);
+        hManager = NULL;
 
         DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
@@ -442,17 +474,11 @@ DWORD RCloseServiceHandle(
         /* Get the pointer to the service record */
         lpService = hService->ServiceEntry;
 
-        ASSERT(hService->Handle.RefCount > 0);
+        /* FIXME: add handle cleanup code */
 
-        hService->Handle.RefCount--;
-        if (hService->Handle.RefCount == 0)
-        {
-            /* FIXME: add handle cleanup code */
-
-            /* Free the handle */
-            HeapFree(GetProcessHeap(), 0, hService);
-            hService = NULL;
-        }
+        /* Free the handle */
+        HeapFree(GetProcessHeap(), 0, hService);
+        hService = NULL;
 
         ASSERT(lpService->dwRefCount > 0);
 
@@ -543,18 +569,19 @@ DWORD RControlService(
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
     /* Check the service handle */
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
+
 
     /* Check the service entry point */
     lpService = hSvc->ServiceEntry;
     if (lpService == NULL)
     {
-        DPRINT("lpService == NULL!\n"); 
+        DPRINT1("lpService == NULL!\n"); 
         return ERROR_INVALID_HANDLE;
     }
 
@@ -674,9 +701,12 @@ DWORD RDeleteService(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
+    {
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
+    }
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
                                   DELETE))
@@ -721,9 +751,12 @@ DWORD RLockServiceDatabase(
 
     *lpLock = 0;
 
-    hMgr = (PMANAGER_HANDLE)hSCManager;
-    if (!hMgr || hMgr->Handle.Tag != MANAGER_TAG)
+    hMgr = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hMgr == NULL)
+    {
+        DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
+    }
 
     if (!RtlAreAllAccessesGranted(hMgr->Handle.DesiredAccess,
                                   SC_MANAGER_LOCK))
@@ -758,10 +791,10 @@ DWORD RQueryServiceObjectSecurity(
 
     DPRINT("RQueryServiceObjectSecurity() called\n");
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -840,10 +873,10 @@ DWORD RSetServiceObjectSecurity(
 
     DPRINT("RSetServiceObjectSecurity() called\n");
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -957,10 +990,10 @@ DWORD RQueryServiceStatus(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1143,10 +1176,10 @@ DWORD RChangeServiceConfigW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -1763,10 +1796,10 @@ DWORD RCreateServiceW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hManager = (PMANAGER_HANDLE)hSCManager;
-    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
     {
-        DPRINT("Invalid manager handle!\n");
+        DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2073,7 +2106,6 @@ DWORD REnumDependentServicesW(
     DWORD dwServicesReturned = 0;
     DWORD dwServiceCount;
     HKEY hServicesKey = NULL;
-    LPSC_RPC_HANDLE hSCObject;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     PSERVICE *lpServicesArray = NULL;
@@ -2085,8 +2117,13 @@ DWORD REnumDependentServicesW(
 
     DPRINT("REnumDependentServicesW() called\n");
 
-    hSCObject = &hService;
-    hSvc = (PSERVICE_HANDLE) *hSCObject;
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
+    {
+        DPRINT1("Invalid service handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
     lpService = hSvc->ServiceEntry;
 
     /* Check access rights */
@@ -2218,12 +2255,13 @@ DWORD REnumServicesStatusW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hManager = (PMANAGER_HANDLE)hSCManager;
-    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
     {
-        DPRINT("Invalid manager handle!\n");
+        DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
+
 
     *pcbBytesNeeded = 0;
     *lpServicesReturned = 0;
@@ -2469,10 +2507,10 @@ DWORD ROpenServiceW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hManager = (PMANAGER_HANDLE)hSCManager;
-    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
     {
-        DPRINT("Invalid manager handle!\n");
+        DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2549,10 +2587,10 @@ DWORD RQueryServiceConfigW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2757,10 +2795,10 @@ DWORD RStartServiceW(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -2983,10 +3021,10 @@ DWORD RChangeServiceConfigA(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3401,7 +3439,6 @@ DWORD REnumDependentServicesA(
     DWORD dwServicesReturned = 0;
     DWORD dwServiceCount;
     HKEY hServicesKey = NULL;
-    LPSC_RPC_HANDLE hSCObject;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
     PSERVICE *lpServicesArray = NULL;
@@ -3413,8 +3450,13 @@ DWORD REnumDependentServicesA(
 
     DPRINT("REnumDependentServicesA() called\n");
 
-    hSCObject = &hService;
-    hSvc = (PSERVICE_HANDLE) *hSCObject;
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
+    {
+        DPRINT1("Invalid service handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
     lpService = hSvc->ServiceEntry;
 
     /* Check access rights */
@@ -3723,10 +3765,10 @@ DWORD RQueryServiceConfigA(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -3964,10 +4006,10 @@ DWORD RStartServiceA(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4345,10 +4387,10 @@ DWORD RChangeServiceConfig2W(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4446,10 +4488,10 @@ DWORD RQueryServiceConfig2A(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4566,10 +4608,10 @@ DWORD RQueryServiceConfig2W(
     if (ScmShutdown)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4719,10 +4761,10 @@ DWORD RQueryServiceStatusEx(
     if (cbBufSize < sizeof(SERVICE_STATUS_PROCESS))
         return ERROR_INSUFFICIENT_BUFFER;
 
-    hSvc = (PSERVICE_HANDLE)hService;
-    if (!hSvc || hSvc->Handle.Tag != SERVICE_TAG)
+    hSvc = ScmGetServiceFromHandle(hService);
+    if (hSvc == NULL)
     {
-        DPRINT("Invalid handle tag!\n");
+        DPRINT1("Invalid service handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 
@@ -4912,10 +4954,10 @@ DWORD REnumServicesStatusExW(
     if (InfoLevel != SC_ENUM_PROCESS_INFO)
         return ERROR_INVALID_LEVEL;
 
-    hManager = (PMANAGER_HANDLE)hSCManager;
-    if (!hManager || hManager->Handle.Tag != MANAGER_TAG)
+    hManager = ScmGetServiceManagerFromHandle(hSCManager);
+    if (hManager == NULL)
     {
-        DPRINT("Invalid manager handle!\n");
+        DPRINT1("Invalid service manager handle!\n");
         return ERROR_INVALID_HANDLE;
     }
 

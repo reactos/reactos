@@ -960,27 +960,29 @@ CPortPinWaveCyclic::Close(
     {
         // free format
         FreeItem(m_Format, TAG_PORTCLASS);
+
+        // format is freed
         m_Format = NULL;
     }
 
     if (m_IrpQueue)
     {
-        // fixme cancel irps
+        // cancel remaining irps
+        m_IrpQueue->CancelBuffers();
+
+        // release irp queue
         m_IrpQueue->Release();
-    }
 
-
-    if (m_Port)
-    {
-        // release reference to port driver
-        m_Port->Release();
-        m_Port = NULL;
+        // queue is freed
+        m_IrpQueue = NULL;
     }
 
     if (m_ServiceGroup)
     {
         // remove member from service group
         m_ServiceGroup->RemoveMember(PSERVICESINK(this));
+
+        // do not release service group, it is released by the miniport object
         m_ServiceGroup = NULL;
     }
 
@@ -999,20 +1001,35 @@ CPortPinWaveCyclic::Close(
         // set state to stop
         m_State = KSSTATE_STOP;
 
-
         DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
+
         // release stream
         m_Stream->Release();
 
+        // stream is now freed
+        m_Stream = NULL;
     }
 
 
     if (m_Filter)
     {
-        // release reference to filter instance
+        // disconnect pin from filter
         m_Filter->FreePin((PPORTPINWAVECYCLIC)this);
+
+        // release filter reference
         m_Filter->Release();
+
+        // pin is done with filter
         m_Filter = NULL;
+    }
+
+    if (m_Port)
+    {
+        // release reference to port driver
+        m_Port->Release();
+
+        // work is done for port
+        m_Port = NULL;
     }
 
     Irp->IoStatus.Information = 0;

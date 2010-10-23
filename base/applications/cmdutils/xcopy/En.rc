@@ -30,8 +30,8 @@ STRINGTABLE
     STRING_PAUSE,    "Press <enter> to begin copying\n"
     STRING_SIMCOPY,  "%d file(s) would be copied\n"
     STRING_COPY,     "%d file(s) copied\n"
-    STRING_QISDIR,   "Is '%s' a filename or directory\n \
-                     on the target?\n \
+    STRING_QISDIR,   "Is '%s' a filename or directory\n\
+                     on the target?\n\
                      (F - File, D - Directory)\n"
     STRING_SRCPROMPT,"%s? (Yes|No)\n"
     STRING_OVERWRITE,"Overwrite %s? (Yes|No|All)\n"

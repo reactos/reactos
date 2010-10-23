@@ -63,9 +63,6 @@ MAIN_MENU MENU
    MENUITEM "All&tid øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Informasjon...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Om Wine", MNID_HELP_WINE
-#endif
  }
 }
 

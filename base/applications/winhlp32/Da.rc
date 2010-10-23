@@ -68,9 +68,6 @@ MAIN_MENU MENU
    MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Information...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "Om &Wine", MNID_HELP_WINE
-#endif
  }
 }
 

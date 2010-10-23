@@ -31,10 +31,10 @@ STRINGTABLE
     STRING_INVPARMS, "Numero non valido di parametri - Digita xcopy /? per l'aiuto\n"
     STRING_INVPARM,  "Parametro '%s' non valido -  Digita xcopy /? per l'aiuto\n"
     STRING_PAUSE,    "Premi Invio per iniziare a copiare\n"
-    STRING_SIMCOPY,  "%d file sarebbero copiati\n"
+    STRING_SIMCOPY,  "%d file saranno copiati\n"
     STRING_COPY,     "%d file copiato/i\n"
-    STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n \
-                     nell'obiettivo?\n \
+    STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n\
+                     nell'obiettivo?\n\
                      (F - File, C - Cartella)\n"
     STRING_SRCPROMPT,"%s? (Sì|No)\n"
     STRING_OVERWRITE,"Sovrascrivere %s? (Sì|No|Tutti)\n"
@@ -48,7 +48,7 @@ STRINGTABLE
     STRING_DIR_CHAR, "C"
 
     STRING_HELP,
-"XCOPY - Copia file(s) e alberi di cartelle sorgenti in una destinazione\n\
+"XCOPY - Copia file e alberi di cartelle sorgenti in una destinazione\n\
 \n\
 Sintassi:\n\
 XCOPY sorgente [destinazione] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
@@ -59,18 +59,18 @@ Dove:\n\
 [/I]  Assume una cartella se la destinazione non esiste e sono copiati 2 o\n\
 \tpiù file\n\
 [/S]  Copia le cartelle e le sottocartelle\n\
-[/E]  Copia le cartelle e le sottocartelle, includendo quelle vuote\n\
+[/E]  Copia le cartelle e le sottocartelle, incluse quelle vuote\n\
 [/Q]  Non mostra i nomi durante la copia, modalità silenziosa.\n\
 [/F]  Mostra i nomi completi della sorgente e della destinazione durante la copia\n\
-[/L]  Simula l'operazione, mostrando i nome che sarebbero copiati\n\
+[/L]  Simula l'operazione, mostrando i nomi che sarebbero copiati\n\
 [/W]  Richiede prima di iniziare l'operazione di copia\n\
-[/T]  Crea la struttura di cartelle vuote ma non copia i files\n\
-[/Y]  Disabilita le conferme quando sono sovrascritti files\n\
-[/-Y] Abilita le conferme quando sono sovrascritti files\n\
+[/T]  Crea la struttura di cartelle vuote ma non copia i file\n\
+[/Y]  Disabilita le conferme quando sono sovrascritti dei file\n\
+[/-Y] Abilita le conferme quando sono sovrascritti dei file\n\
 [/P]  Chiede conferma per ogni file sorgente prima di copiare\n\
 [/N]  Copia usando i nomi abbreviati\n\
 [/U]  Copia solo files che sono già presenti nella destinazione\n\
-[/R]  Sovrascrive ogni file che abbia l'attributo Sola Lettura\n\
+[/R]  Sovrascrive ogni file che abbia l'attributo Sola lettura\n\
 [/H]  Include i file nascosti e di sistema nella copia\n\
 [/C]  Continua anche se accade un errore durante la copia\n\
 [/A]  Copia solo i file che abbiano l'attributo Archivio\n\

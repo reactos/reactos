@@ -2,7 +2,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Window event handlers
- * FILE:              subsystem/win32/win32k/ntuser/event.c
+ * FILE:              subsystems/win32/win32k/ntuser/event.c
  * PROGRAMER:         James Tabor (james.tabor@rectos.org)
  */
 
@@ -103,12 +103,15 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
                         LONG idChild)
 {
    NTSTATUS Status;
-   ULONG_PTR uResult;
-   EVENTPACK EP;
+   PEVENTPACK pEP;
+   ULONG_PTR uResult = 0;
 
-   EP.pEH = pEH;
-   EP.idObject = idObject;
-   EP.idChild = idChild;
+   pEP = ExAllocatePoolWithTag(NonPagedPool, sizeof(EVENTPACK), TAG_HOOK);
+   if (!pEP) return 0;
+
+   pEP->pEH = pEH;
+   pEP->idObject = idObject;
+   pEP->idChild = idChild;
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
@@ -116,15 +119,17 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
                                hwnd,
                                event,
                                0,
-                              (LPARAM)&EP,
+                              (LPARAM)pEP,
                                5000,
                                TRUE,
                                MSQ_ISEVENT,
                               &uResult);
-
+   if (!NT_SUCCESS(Status))
+   { 
+      ExFreePoolWithTag(pEP, TAG_HOOK);
+   }
    return NT_SUCCESS(Status) ? uResult : 0;
 }
-
 
 static
 BOOL
@@ -145,14 +150,49 @@ IntRemoveEvent(PEVENTHOOK pEH)
    return FALSE;
 }
 
+VOID
+FASTCALL
+EVENT_DestroyThreadEvents(PETHREAD Thread)
+{
+   PTHREADINFO pti;
+   PEVENTHOOK pEH;
+   PLIST_ENTRY pLE;
+
+   pti = Thread->Tcb.Win32Thread;
+   if (!pti) return;
+
+   if (!GlobalEvents || !GlobalEvents->Counts) return;
+
+   pLE = GlobalEvents->Events.Flink;
+   if (IsListEmpty(pLE)) return;
+
+   pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
+   do
+   {
+      if (IsListEmpty(pLE)) break;
+      if (!pEH) break;
+      pLE = pEH->Chain.Flink;
+      if (pEH->head.pti == pti)
+      {
+         IntRemoveEvent(pEH);
+      }
+      pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
+   } while (pLE != &GlobalEvents->Events);
+
+   return;
+}
+
 /* FUNCTIONS *****************************************************************/
 
+//
+// Dispatch MsgQueue Event Call processor!
+//
 LRESULT
 FASTCALL
 co_EVENT_CallEvents( DWORD event,
-                       HWND hwnd, 
-                    UINT_PTR idObject,
-                    LONG_PTR idChild)
+                     HWND hwnd, 
+                     UINT_PTR idObject,
+                     LONG_PTR idChild)
 {
    PEVENTHOOK pEH;
    LRESULT Result;
@@ -165,9 +205,11 @@ co_EVENT_CallEvents( DWORD event,
                                  hwnd,
                                  pEP->idObject,
                                  pEP->idChild,
-                                (DWORD_PTR)(NtCurrentTeb()->ClientId).UniqueThread,
+                                 PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
                                 (DWORD)EngGetTickCount(),
                                  pEH->Proc);
+
+   ExFreePoolWithTag(pEP, TAG_HOOK);
    return Result;
 }
 
@@ -177,55 +219,66 @@ IntNotifyWinEvent(
    DWORD Event,
    PWND  pWnd,
    LONG  idObject,
-   LONG  idChild)
+   LONG  idChild,
+   DWORD flags)
 {
    PEVENTHOOK pEH;
    PLIST_ENTRY pLE;
+   PTHREADINFO pti, ptiCurrent;
 
    DPRINT("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
 
-   if (!pWnd) return;
+   if (!GlobalEvents || !GlobalEvents->Counts) return;
 
    if (pWnd && pWnd->state & WNDS_DESTROYED) return;
 
-   if (!GlobalEvents || !GlobalEvents->Counts) return;
+   ptiCurrent = PsGetCurrentThreadWin32Thread();
+
+   if (pWnd && flags & WEF_SETBYWNDPTI)
+      pti = pWnd->head.pti;
+   else
+      pti = ptiCurrent;
 
    pLE = GlobalEvents->Events.Flink;
    pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
    do
-   { 
+   {
+     if (!pEH) break;
      UserReferenceObject(pEH);
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
      {
-        if (pEH->head.pti->pEThread != PsGetCurrentThread())
-        { // if all process || all thread || other thread same process
-           if (!(pEH->idProcess) || !(pEH->idThread) || 
-               (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess))
+// if all process || all thread || other thread same process
+// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
+        if ( (!pEH->idProcess || pEH->idProcess == PtrToUint(pti->pEThread->Cid.UniqueProcess)) &&
+             (!(pEH->Flags & WINEVENT_SKIPOWNPROCESS) || pEH->head.pti->ppi != pti->ppi) &&
+             (!pEH->idThread  || pEH->idThread == PtrToUint(pti->pEThread->Cid.UniqueThread)) &&
+             (!(pEH->Flags & WINEVENT_SKIPOWNTHREAD)  || pEH->head.pti != pti) &&
+               pEH->head.pti->rpdesk == ptiCurrent->rpdesk ) // Same as hooks.
+        {
+           // Send message to the thread if pEH is not current.
+           if (pEH->head.pti != ptiCurrent)
            {
+              DPRINT1("Global Event 0x%x, idObject %d\n", Event, idObject);
               IntCallLowLevelEvent( pEH,
                                     Event,
                                     UserHMGetHandle(pWnd),
                                     idObject,
                                     idChild);
            }
-        }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
-        else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
-                   ( ((pEH->idProcess &&
-                     NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)(DWORD_PTR)pEH->idProcess) &&
-                     !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
-                     !pEH->idProcess ) )
-        {
-            // What in the deuce is this right-aligned formatting?
-           co_IntCallEventProc(          UserHMGetHandle(pEH),
-                                                        Event,
-                                        UserHMGetHandle(pWnd),
-                                                     idObject,
-                                                      idChild,
-             PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
-                                     (DWORD)EngGetTickCount(),
-                                                    pEH->Proc);
-        }
+           else
+           {
+              DPRINT1("Local Event 0x%x, idObject %d\n", Event, idObject);
+              co_IntCallEventProc( UserHMGetHandle(pEH),
+                                   Event,
+                                   UserHMGetHandle(pWnd),
+                                   idObject,
+                                   idChild,
+                                   PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
+                                  (DWORD)EngGetTickCount(),
+                                   pEH->Proc);
+           }
+        }        
      }
      UserDereferenceObject(pEH);
      pLE = pEH->Chain.Flink;
@@ -255,7 +308,7 @@ NtUserNotifyWinEvent(
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
       UserRefObjectCo(Window, &Ref);
-      IntNotifyWinEvent( Event, Window, idObject, idChild);
+      IntNotifyWinEvent( Event, Window, idObject, idChild, WEF_SETBYWNDPTI);
       UserDerefObjectCo(Window);
    }
    UserLeave();
@@ -322,7 +375,7 @@ NtUserSetWinEventHook(
          goto SetEventExit;
       }
    }
-
+   // Creator, pti is set here.
    pEH = UserCreateObject(gHandleTable, NULL, &Handle, otEvent, sizeof(EVENTHOOK));
    if (pEH)
    {
@@ -330,16 +383,18 @@ NtUserSetWinEventHook(
       GlobalEvents->Counts++;
 
       UserHMGetHandle(pEH) = Handle;
-      if (Thread)
-         pEH->head.pti = Thread->Tcb.Win32Thread;
-      else
-         pEH->head.pti = GetW32ThreadInfo();
       pEH->eventMin  = eventMin;
       pEH->eventMax  = eventMax;
-      pEH->idProcess = idProcess;
-      pEH->idThread  = idThread;
+      pEH->idProcess = idProcess; // These are cmp'ed
+      pEH->idThread  = idThread;  //  "
       pEH->Flags     = dwflags;
-
+    /*
+       If WINEVENT_INCONTEXT, set offset from hmod and proc. Save ihmod from
+       the atom index table where the hmod data is saved to be recalled later
+       if fSync set by WINEVENT_INCONTEXT.
+       If WINEVENT_OUTOFCONTEXT just use proc..
+       Do this instead....
+     */
       if (NULL != hmodWinEventProc)
       {
          pEH->offPfn = (ULONG_PTR)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);

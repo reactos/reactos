@@ -67,9 +67,6 @@ MAIN_MENU MENU
    MENUITEM "常に手前に表示(&T)", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "情報(&I)...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "WINE について(&A)", MNID_HELP_WINE
-#endif
  }
 }
 
@@ -92,7 +89,7 @@ CAPTION "検索"
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE ヘルプ"
+STID_WINE_HELP, 	"Wine ヘルプ"
 STID_WHERROR, 		"エラー"
 STID_WARNING,  		"警告"
 STID_INFO,  		"情報"

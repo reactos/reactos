@@ -45,9 +45,7 @@
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
-
-/* The range 0x10000->0x7FEFFFFF is reserved for the ROSMM MAREA Allocator */
-#define MI_LOWEST_VAD_ADDRESS                   (PVOID)0x7FF00000
+#define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 #endif /* !_M_AMD64 */
 
@@ -152,6 +150,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #endif
 
 extern const ULONG MmProtectToPteMask[32];
+extern const ULONG MmProtectToValue[32];
 
 //
 // Assertions for session images, addresses, and PTEs
@@ -242,7 +241,7 @@ extern const ULONG MmProtectToPteMask[32];
 //
 #define MiProtoPteToPte(x)                  \
     (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             ((x)->u.Proto.ProtoAddressHigh | (x)->u.Proto.ProtoAddressLow))
+             (((x)->u.Proto.ProtoAddressHigh << 7) | (x)->u.Proto.ProtoAddressLow))
 #endif
 
 //
@@ -625,10 +624,11 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
      * lets us only use 28 bits for the adress of the PTE
      */
     Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
-    
+
     /* 7 bits go in the "low", and the other 21 bits go in the "high" */
     NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
-    NewPte->u.Proto.ProtoAddressHigh = Offset & 0xFFFFF80;
+    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0xFFFFFF80) >> 7;
+    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
 }
 #endif
 
@@ -833,7 +833,23 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     KeLeaveGuardedRegion();
 }
 
-NTSTATUS
+//
+// Returns the ProtoPTE inside a VAD for the given VPN
+//
+FORCEINLINE
+PMMPTE
+MI_GET_PROTOTYPE_PTE_FOR_VPN(IN PMMVAD Vad,
+                             IN ULONG_PTR Vpn)
+{
+    PMMPTE ProtoPte;
+
+    /* Find the offset within the VAD's prototype PTEs */
+    ProtoPte = Vad->FirstPrototypePte + (Vpn - Vad->StartingVpn);
+    ASSERT(ProtoPte <= Vad->LastContiguousPte);
+    return ProtoPte;
+}
+
+BOOLEAN
 NTAPI
 MmArmInitSystem(
     IN ULONG Phase,
@@ -1059,6 +1075,13 @@ MiDecrementShareCount(
     IN PFN_NUMBER PageFrameIndex
 );
 
+VOID
+NTAPI
+MiDecrementReferenceCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
+);
+
 PFN_NUMBER
 NTAPI
 MiRemoveAnyPage(
@@ -1204,6 +1227,42 @@ MiMakeProtectionMask(
     IN ULONG Protect
 );
 
+VOID
+NTAPI
+MiDeleteVirtualAddresses(
+    IN ULONG_PTR Va,
+    IN ULONG_PTR EndingAddress,
+    IN PMMVAD Vad
+);
+
+ULONG
+NTAPI
+MiMakeSystemAddressValid(
+    IN PVOID PageTableVirtualAddress,
+    IN PEPROCESS CurrentProcess
+);
+
+ULONG
+NTAPI
+MiMakeSystemAddressValidPfn(
+    IN PVOID VirtualAddress,
+    IN KIRQL OldIrql
+);
+
+VOID
+NTAPI
+MiRemoveMappedView(
+    IN PEPROCESS CurrentProcess,
+    IN PMMVAD Vad
+);
+
+PSUBSECTION
+NTAPI
+MiLocateSubsection(
+    IN PMMVAD Vad,
+    IN ULONG_PTR Vpn
+);
+                         
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of
@@ -1218,5 +1277,19 @@ MiRemoveZeroPageSafe(IN ULONG Color)
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
     return 0;
 }
+
+//
+// New ARM3<->RosMM PAGE Architecture
+//
+#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
+#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
+#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
+typedef struct _MMROSPFN
+{
+    PMM_RMAP_ENTRY RmapListHead;
+    SWAPENTRY SwapEntry;
+} MMROSPFN, *PMMROSPFN;
+
+#define RosMmData            AweReferenceCount
 
 /* EOF */

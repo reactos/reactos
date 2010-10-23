@@ -35,6 +35,6 @@ STRINGTABLE
     STRING_SUCCESS, "Operazione completata con successo\n"
     STRING_INVALID_KEY, "Errore: nome della chiave non valido\n"
     STRING_INVALID_CMDLINE, "Errore: parametri della linea di comando non validi\n"
-    STRING_NO_REMOTE, "Errore: Impossibile aggiungere chiavi alla macchina remota\n"
-    STRING_CANNOT_FIND, "Errore: Il sistema non è riuscito a trovare la chiave di registro o il valore specificati\n"
+    STRING_NO_REMOTE, "Errore: impossibile aggiungere chiavi alla macchina remota\n"
+    STRING_CANNOT_FIND, "Errore: il sistema non è riuscito a trovare la chiave di registro o il valore specificati\n"
 }

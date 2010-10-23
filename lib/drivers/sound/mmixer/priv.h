@@ -17,11 +17,56 @@
 #define YDEBUG
 #include <debug.h>
 
+typedef struct __TOPOLOGY_NODE__
+{
+    GUID NodeType;
+    ULONG NodeIndex;
+
+    ULONG NodeConnectedToCount;
+    struct __TOPOLOGY_NODE__ ** NodeConnectedTo;
+
+    ULONG NodeConnectedFromCount;
+    struct __TOPOLOGY_NODE__ ** NodeConnectedFrom;
+
+    ULONG PinConnectedFromCount;
+    PULONG PinConnectedFrom;
+
+    ULONG PinConnectedToCount;
+    PULONG PinConnectedTo;
+
+    ULONG Visited;
+    ULONG Reserved;
+}TOPOLOGY_NODE, *PTOPOLOGY_NODE;
+
 typedef struct
 {
-    KSEVENTDATA EventData;
-    LIST_ENTRY Entry;
-}EVENT_ITEM, *LPEVENT_ITEM;
+    ULONG PinId;
+
+    ULONG NodesConnectedToCount;
+    PTOPOLOGY_NODE * NodesConnectedTo;
+
+    ULONG NodesConnectedFromCount;
+    PTOPOLOGY_NODE * NodesConnectedFrom;
+
+    ULONG PinConnectedFromCount;
+    PULONG PinConnectedFrom;
+
+    ULONG PinConnectedToCount;
+    PULONG PinConnectedTo;
+
+    ULONG Visited;
+}PIN, *PPIN;
+
+
+typedef struct
+{
+    ULONG TopologyPinsCount;
+    PPIN TopologyPins;
+
+    ULONG TopologyNodesCount;
+    PTOPOLOGY_NODE TopologyNodes;
+
+}TOPOLOGY, *PTOPOLOGY;
 
 typedef struct
 {
@@ -68,6 +113,7 @@ typedef struct
     HANDLE hDevice;
     HANDLE hDeviceInterfaceKey;
     LPWSTR DeviceName;
+    PTOPOLOGY Topology;
 }MIXER_DATA, *LPMIXER_DATA;
 
 typedef struct
@@ -93,6 +139,14 @@ typedef struct
     ULONG WaveOutListCount;
     LIST_ENTRY WaveOutList;
 }MIXER_LIST, *PMIXER_LIST;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    PVOID MixerEventContext;
+    PMIXER_EVENT MixerEventRoutine;
+
+}EVENT_NOTIFICATION_ENTRY, *PEVENT_NOTIFICATION_ENTRY;
 
 #define DESTINATION_LINE 0xFFFF0000
 
@@ -215,7 +269,7 @@ MMixerGetMixerControlById(
 MIXER_STATUS
 MMixerSetGetMuteControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG dwLineID,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
@@ -224,7 +278,7 @@ MMixerSetGetMuteControlDetails(
 MIXER_STATUS
 MMixerSetGetVolumeControlDetails(
     IN PMIXER_CONTEXT MixerContext,
-    IN HANDLE hMixer,
+    IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG bSet,
     LPMIXERCONTROLW MixerControl,
@@ -273,9 +327,124 @@ MMixerInitializeWaveInfo(
     IN LPMIXER_DATA MixerData,
     IN LPWSTR DeviceName,
     IN ULONG bWaveIn,
-    IN ULONG PinId);
+    IN ULONG PinCount,
+    IN PULONG Pins);
 
 MIXER_STATUS
-MMixerAddEvents(
+MMixerAddEvent(
     IN PMIXER_CONTEXT MixerContext,
-    IN OUT LPMIXER_INFO MixerInfo);
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN PVOID MixerEvent,
+    IN PMIXER_EVENT MixerEventRoutine);
+
+/* topology.c */
+
+MIXER_STATUS
+MMixerCreateTopology(
+    IN PMIXER_CONTEXT MixerContext,
+    IN ULONG PinCount,
+    IN PKSMULTIPLE_ITEM NodeConnections,
+    IN PKSMULTIPLE_ITEM NodeTypes,
+    OUT PTOPOLOGY *OutTopology);
+
+VOID
+MMixerGetAllUpOrDownstreamPinsFromNodeIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    IN ULONG bUpStream,
+    OUT PULONG OutPinsCount,
+    OUT PULONG OutPins);
+
+MIXER_STATUS
+MMixerGetAllUpOrDownstreamPinsFromPinIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG PinIndex,
+    IN ULONG bUpStream,
+    OUT PULONG OutPinsCount,
+    OUT PULONG OutPins);
+
+VOID
+MMixerGetNextNodesFromPinIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG PinIndex,
+    IN ULONG bUpStream,
+    OUT PULONG OutNodesCount,
+    OUT PULONG OutNodes);
+
+MIXER_STATUS
+MMixerAllocateTopologyPinArray(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    OUT PULONG * OutPins);
+
+MIXER_STATUS
+MMixerAllocateTopologyNodeArray(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    OUT PULONG * OutPins);
+
+VOID
+MMixerGetAllUpOrDownstreamNodesFromPinIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG PinIndex,
+    IN ULONG bUpStream,
+    OUT PULONG OutNodesCount,
+    OUT PULONG OutNodes);
+
+VOID
+MMixerIsNodeTerminator(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    OUT ULONG * bTerminator);
+
+VOID
+MMixerGetNextNodesFromNodeIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    IN ULONG bUpStream,
+    OUT PULONG OutNodesCount,
+    OUT PULONG OutNodes);
+
+LPGUID
+MMixerGetNodeTypeFromTopology(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex);
+
+MIXER_STATUS
+MMixerGetAllUpOrDownstreamNodesFromNodeIndex(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    IN ULONG bUpStream,
+    OUT PULONG OutNodesCount,
+    OUT PULONG OutNodes);
+
+MIXER_STATUS
+MMixerIsNodeConnectedToPin(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    IN ULONG PinId,
+    IN ULONG bUpStream,
+    OUT PULONG bConnected);
+
+ULONG
+MMixerGetNodeIndexFromGuid(
+    IN PTOPOLOGY Topology,
+    IN const GUID *NodeType);
+
+VOID
+MMixerSetTopologyNodeReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex);
+
+VOID
+MMixerIsTopologyNodeReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    OUT PULONG bReserved);

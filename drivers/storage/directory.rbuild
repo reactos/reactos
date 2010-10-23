@@ -16,4 +16,7 @@
 <directory name="scsiport">
 	<xi:include href="scsiport/scsiport.rbuild" />
 </directory>
+<directory name="classpnp">
+	<xi:include href="classpnp/classpnp.rbuild" />
+</directory>
 </group>

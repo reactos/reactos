@@ -60,9 +60,10 @@ LsapCreateDbHandle(LSA_DB_HANDLE_TYPE HandleType,
 }
 
 
-static BOOL
+static NTSTATUS
 LsapValidateDbHandle(LSAPR_HANDLE Handle,
-                     LSA_DB_HANDLE_TYPE HandleType)
+                     LSA_DB_HANDLE_TYPE HandleType,
+                     ACCESS_MASK GrantedAccess)
 {
     PLSA_DB_HANDLE DbHandle = (PLSA_DB_HANDLE)Handle;
     BOOL bValid = FALSE;
@@ -83,8 +84,15 @@ LsapValidateDbHandle(LSAPR_HANDLE Handle,
     }
     _SEH2_END;
 
+    if (bValid == FALSE)
+        return STATUS_INVALID_HANDLE;
 
-    return bValid;
+    if (GrantedAccess != 0)
+    {
+        /* FIXME: Check for granted access rights */
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -136,7 +144,7 @@ void __RPC_USER LSAPR_HANDLE_rundown(LSAPR_HANDLE hHandle)
 
 
 /* Function 0 */
-NTSTATUS LsarClose(
+NTSTATUS WINAPI LsarClose(
     LSAPR_HANDLE *ObjectHandle)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -145,13 +153,15 @@ NTSTATUS LsarClose(
 
 //    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    if (LsapValidateDbHandle(*ObjectHandle, LsaDbIgnoreHandle))
+    Status = LsapValidateDbHandle(*ObjectHandle,
+                                  LsaDbIgnoreHandle,
+                                  0);
+
+    if (Status == STATUS_SUCCESS)
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, *ObjectHandle);
         *ObjectHandle = NULL;
     }
-    else
-        Status = STATUS_INVALID_HANDLE;
 
 //    RtlLeaveCriticalSection(&PolicyHandleTableLock);
 
@@ -160,7 +170,7 @@ NTSTATUS LsarClose(
 
 
 /* Function 1 */
-NTSTATUS LsarDelete(
+NTSTATUS WINAPI LsarDelete(
     LSAPR_HANDLE ObjectHandle)
 {
     /* Deprecated */
@@ -169,7 +179,7 @@ NTSTATUS LsarDelete(
 
 
 /* Function 2 */
-NTSTATUS LsarEnumeratePrivileges(
+NTSTATUS WINAPI LsarEnumeratePrivileges(
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_PRIVILEGE_ENUM_BUFFER EnumerationBuffer,
@@ -181,7 +191,7 @@ NTSTATUS LsarEnumeratePrivileges(
 
 
 /* Function 3 */
-NTSTATUS LsarQuerySecurityObject(
+NTSTATUS WINAPI LsarQuerySecurityObject(
     LSAPR_HANDLE ObjectHandle,
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR *SecurityDescriptor)
@@ -192,7 +202,7 @@ NTSTATUS LsarQuerySecurityObject(
 
 
 /* Function 4 */
-NTSTATUS LsarSetSecurityObject(
+NTSTATUS WINAPI LsarSetSecurityObject(
     LSAPR_HANDLE ObjectHandle,
     SECURITY_INFORMATION SecurityInformation,
     PLSAPR_SR_SECURITY_DESCRIPTOR SecurityDescriptor)
@@ -203,7 +213,7 @@ NTSTATUS LsarSetSecurityObject(
 
 
 /* Function 5 */
-NTSTATUS LsarChangePassword(
+NTSTATUS WINAPI LsarChangePassword(
     handle_t IDL_handle,
     PRPC_UNICODE_STRING String1,
     PRPC_UNICODE_STRING String2,
@@ -217,7 +227,7 @@ NTSTATUS LsarChangePassword(
 
 
 /* Function 6 */
-NTSTATUS LsarOpenPolicy(
+NTSTATUS WINAPI LsarOpenPolicy(
     LPWSTR SystemName,
     PLSAPR_OBJECT_ATTRIBUTES ObjectAttributes,
     ACCESS_MASK DesiredAccess,
@@ -243,18 +253,158 @@ NTSTATUS LsarOpenPolicy(
 
 
 /* Function 7 */
-NTSTATUS LsarQueryInformationPolicy(
+NTSTATUS WINAPI LsarQueryInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION *PolicyInformation)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarQueryInformationPolicy(%p,0x%08x,%p)\n",
+          PolicyHandle, InformationClass, PolicyInformation);
+
+    if (PolicyInformation)
+    {
+        TRACE("*PolicyInformation %p\n", *PolicyInformation);
+    }
+
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    switch (InformationClass)
+    {
+        case PolicyAuditEventsInformation: /* 2 */
+        {
+            PLSAPR_POLICY_AUDIT_EVENTS_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_AUDIT_EVENTS_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->AuditingMode = FALSE; /* no auditing */
+            p->EventAuditingOptions = NULL;
+            p->MaximumAuditEventCount = 0;
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case PolicyPrimaryDomainInformation: /* 3 */
+        {
+            PLSAPR_POLICY_PRIMARY_DOM_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_PRIMARY_DOM_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->Name.Length = 0;
+            p->Name.MaximumLength = 0;
+            p->Name.Buffer = NULL;
+#if 0
+            p->Name.Length = wcslen(L"COMPUTERNAME");
+            p->Name.MaximumLength = p->Name.Length + sizeof(WCHAR);
+            p->Name.Buffer = MIDL_user_allocate(p->Name.MaximumLength);
+            if (p->Name.Buffer == NULL)
+            {
+                MIDL_user_free(p);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(p->Name.Buffer, L"COMPUTERNAME");
+#endif
+
+            p->Sid = NULL; /* no domain, no workgroup */
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case PolicyAccountDomainInformation: /* 5 */
+        {
+            PLSAPR_POLICY_ACCOUNT_DOM_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_ACCOUNT_DOM_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->DomainName.Length = 0;
+            p->DomainName.MaximumLength = 0;
+            p->DomainName.Buffer = NULL;
+#if 0
+            p->DomainName.Length = wcslen(L"COMPUTERNAME");
+            p->DomainName.MaximumLength = p->DomainName.Length + sizeof(WCHAR);
+            p->DomainName.Buffer = MIDL_user_allocate(p->DomainName.MaximumLength);
+            if (p->DomainName.Buffer == NULL)
+            {
+                MIDL_user_free(p);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(p->DomainName.Buffer, L"COMPUTERNAME");
+#endif
+
+            p->Sid = NULL; /* no domain, no workgroup */
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case  PolicyDnsDomainInformation:	/* 12 (0xc) */
+        {
+            PLSAPR_POLICY_DNS_DOMAIN_INFO p = MIDL_user_allocate(sizeof(LSAPR_POLICY_DNS_DOMAIN_INFO));
+            if (p == NULL)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            p->Name.Length = 0;
+            p->Name.MaximumLength = 0;
+            p->Name.Buffer = NULL;
+#if 0
+            p->Name.Length = wcslen(L"COMPUTERNAME");
+            p->Name.MaximumLength = p->Name.Length + sizeof(WCHAR);
+            p->Name.Buffer = MIDL_user_allocate(p->Name.MaximumLength);
+            if (p->Name.Buffer == NULL)
+            {
+                MIDL_user_free(p);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            wcscpy(p->Name.Buffer, L"COMPUTERNAME");
+#endif
+
+            p->DnsDomainName.Length = 0;
+            p->DnsDomainName.MaximumLength = 0;
+            p->DnsDomainName.Buffer = NULL;
+
+            p->DnsForestName.Length = 0;
+            p->DnsForestName.MaximumLength = 0;
+            p->DnsForestName.Buffer = 0;
+
+            memset(&p->DomainGuid, 0, sizeof(GUID));
+
+            p->Sid = NULL; /* no domain, no workgroup */
+
+            *PolicyInformation = (PLSAPR_POLICY_INFORMATION)p;
+        }
+        break;
+
+        case PolicyAuditLogInformation:
+        case PolicyPdAccountInformation:
+        case PolicyLsaServerRoleInformation:
+        case PolicyReplicaSourceInformation:
+        case PolicyDefaultQuotaInformation:
+        case PolicyModificationInformation:
+        case PolicyAuditFullSetInformation:
+        case PolicyAuditFullQueryInformation:
+        case PolicyEfsInformation:
+        {
+            FIXME("category not implemented\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
 /* Function 8 */
-NTSTATUS LsarSetInformationPolicy(
+NTSTATUS WINAPI LsarSetInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     PLSAPR_POLICY_INFORMATION PolicyInformation)
@@ -265,7 +415,7 @@ NTSTATUS LsarSetInformationPolicy(
 
 
 /* Function 9 */
-NTSTATUS LsarClearAuditLog(
+NTSTATUS WINAPI LsarClearAuditLog(
     LSAPR_HANDLE ObjectHandle)
 {
     /* Deprecated */
@@ -274,7 +424,7 @@ NTSTATUS LsarClearAuditLog(
 
 
 /* Function 10 */
-NTSTATUS LsarCreateAccount(
+NTSTATUS WINAPI LsarCreateAccount(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     ACCESS_MASK DesiredAccess,
@@ -286,7 +436,7 @@ NTSTATUS LsarCreateAccount(
 
 
 /* Function 11 */
-NTSTATUS LsarEnumerateAccounts(
+NTSTATUS WINAPI LsarEnumerateAccounts(
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer,
@@ -298,7 +448,7 @@ NTSTATUS LsarEnumerateAccounts(
 
 
 /* Function 12 */
-NTSTATUS LsarCreateTrustedDomain(
+NTSTATUS WINAPI LsarCreateTrustedDomain(
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_TRUST_INFORMATION TrustedDomainInformation,
     ACCESS_MASK DesiredAccess,
@@ -310,7 +460,7 @@ NTSTATUS LsarCreateTrustedDomain(
 
 
 /* Function 13 */
-NTSTATUS LsarEnumerateTrustedDomains(
+NTSTATUS WINAPI LsarEnumerateTrustedDomains(
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_TRUSTED_ENUM_BUFFER EnumerationBuffer,
@@ -322,7 +472,7 @@ NTSTATUS LsarEnumerateTrustedDomains(
 
 
 /* Function 14 */
-NTSTATUS LsarLookupNames(
+NTSTATUS WINAPI LsarLookupNames(
     LSAPR_HANDLE PolicyHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -420,7 +570,7 @@ NTSTATUS LsarLookupNames(
 
 
 /* Function 15 */
-NTSTATUS LsarLookupSids(
+NTSTATUS WINAPI LsarLookupSids(
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -513,7 +663,7 @@ NTSTATUS LsarLookupSids(
 
 
 /* Function 16 */
-NTSTATUS LsarCreateSecret(
+NTSTATUS WINAPI LsarCreateSecret(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING SecretName,
     ACCESS_MASK DesiredAccess,
@@ -525,7 +675,7 @@ NTSTATUS LsarCreateSecret(
 
 
 /* Function 17 */
-NTSTATUS LsarOpenAccount(
+NTSTATUS WINAPI LsarOpenAccount(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     ACCESS_MASK DesiredAccess,
@@ -537,7 +687,7 @@ NTSTATUS LsarOpenAccount(
 
 
 /* Function 18 */
-NTSTATUS LsarEnumeratePrivilegesAccount(
+NTSTATUS WINAPI LsarEnumeratePrivilegesAccount(
     LSAPR_HANDLE AccountHandle,
     PLSAPR_PRIVILEGE_SET *Privileges)
 {
@@ -547,7 +697,7 @@ NTSTATUS LsarEnumeratePrivilegesAccount(
 
 
 /* Function 19 */
-NTSTATUS LsarAddPrivilegesToAccount(
+NTSTATUS WINAPI LsarAddPrivilegesToAccount(
     LSAPR_HANDLE AccountHandle,
     PLSAPR_PRIVILEGE_SET Privileges)
 {
@@ -557,7 +707,7 @@ NTSTATUS LsarAddPrivilegesToAccount(
 
 
 /* Function 20 */
-NTSTATUS LsarRemovePrivilegesFromAccount(
+NTSTATUS WINAPI LsarRemovePrivilegesFromAccount(
     LSAPR_HANDLE AccountHandle,
     BOOL AllPrivileges,
     PLSAPR_PRIVILEGE_SET Privileges)
@@ -568,7 +718,7 @@ NTSTATUS LsarRemovePrivilegesFromAccount(
 
 
 /* Function 21 */
-NTSTATUS LsarGetQuotasForAccount(
+NTSTATUS WINAPI LsarGetQuotasForAccount(
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
@@ -578,7 +728,7 @@ NTSTATUS LsarGetQuotasForAccount(
 
 
 /* Function 22 */
-NTSTATUS LsarSetQuotasForAccount(
+NTSTATUS WINAPI LsarSetQuotasForAccount(
     LSAPR_HANDLE AccountHandle,
     PQUOTA_LIMITS QuotaLimits)
 {
@@ -588,7 +738,7 @@ NTSTATUS LsarSetQuotasForAccount(
 
 
 /* Function 23 */
-NTSTATUS LsarGetSystemAccessAccount(
+NTSTATUS WINAPI LsarGetSystemAccessAccount(
     LSAPR_HANDLE AccountHandle,
     ACCESS_MASK *SystemAccess)
 {
@@ -598,7 +748,7 @@ NTSTATUS LsarGetSystemAccessAccount(
 
 
 /* Function 24 */
-NTSTATUS LsarSetSystemAccessAccount(
+NTSTATUS WINAPI LsarSetSystemAccessAccount(
     LSAPR_HANDLE AccountHandle,
     ACCESS_MASK SystemAccess)
 {
@@ -608,7 +758,7 @@ NTSTATUS LsarSetSystemAccessAccount(
 
 
 /* Function 25 */
-NTSTATUS LsarOpenTrustedDomain(
+NTSTATUS WINAPI LsarOpenTrustedDomain(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid,
     ACCESS_MASK DesiredAccess,
@@ -620,7 +770,7 @@ NTSTATUS LsarOpenTrustedDomain(
 
 
 /* Function 26 */
-NTSTATUS LsarQueryInfoTrustedDomain(
+NTSTATUS WINAPI LsarQueryInfoTrustedDomain(
     LSAPR_HANDLE TrustedDomainHandle,
     TRUSTED_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO *TrustedDomainInformation)
@@ -631,7 +781,7 @@ NTSTATUS LsarQueryInfoTrustedDomain(
 
 
 /* Function 27 */
-NTSTATUS LsarSetInformationTrustedDomain(
+NTSTATUS WINAPI LsarSetInformationTrustedDomain(
     LSAPR_HANDLE TrustedDomainHandle,
     TRUSTED_INFORMATION_CLASS InformationClass,
     PLSAPR_TRUSTED_DOMAIN_INFO TrustedDomainInformation)
@@ -642,7 +792,7 @@ NTSTATUS LsarSetInformationTrustedDomain(
 
 
 /* Function 28 */
-NTSTATUS LsarOpenSecret(
+NTSTATUS WINAPI LsarOpenSecret(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING SecretName,
     ACCESS_MASK DesiredAccess,
@@ -654,7 +804,7 @@ NTSTATUS LsarOpenSecret(
 
 
 /* Function 29 */
-NTSTATUS LsarSetSecret(
+NTSTATUS WINAPI LsarSetSecret(
     LSAPR_HANDLE *SecretHandle,
     PLSAPR_CR_CIPHER_VALUE EncryptedCurrentValue,
     PLSAPR_CR_CIPHER_VALUE EncryptedOldValue)
@@ -665,7 +815,7 @@ NTSTATUS LsarSetSecret(
 
 
 /* Function 30 */
-NTSTATUS LsarQuerySecret(
+NTSTATUS WINAPI LsarQuerySecret(
     LSAPR_HANDLE SecretHandle,
     PLSAPR_CR_CIPHER_VALUE *EncryptedCurrentValue,
     PLARGE_INTEGER CurrentValueSetTime,
@@ -678,7 +828,7 @@ NTSTATUS LsarQuerySecret(
 
 
 /* Function 31 */
-NTSTATUS LsarLookupPrivilegeValue(
+NTSTATUS WINAPI LsarLookupPrivilegeValue(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING Name,
     PLUID Value)
@@ -688,10 +838,13 @@ NTSTATUS LsarLookupPrivilegeValue(
     TRACE("LsarLookupPrivilegeValue(%p, %wZ, %p)\n",
           PolicyHandle, Name, Value);
 
-    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
     {
-        ERR("Invalid handle\n");
-        return STATUS_INVALID_HANDLE;
+        ERR("Invalid handle (Status %lx)\n", Status);
+        return Status;
     }
 
     TRACE("Privilege: %wZ\n", Name);
@@ -704,7 +857,7 @@ NTSTATUS LsarLookupPrivilegeValue(
 
 
 /* Function 32 */
-NTSTATUS LsarLookupPrivilegeName(
+NTSTATUS WINAPI LsarLookupPrivilegeName(
     LSAPR_HANDLE PolicyHandle,
     PLUID Value,
     PRPC_UNICODE_STRING *Name)
@@ -714,10 +867,13 @@ NTSTATUS LsarLookupPrivilegeName(
     TRACE("LsarLookupPrivilegeName(%p, %p, %p)\n",
           PolicyHandle, Value, Name);
 
-    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
     {
         ERR("Invalid handle\n");
-        return STATUS_INVALID_HANDLE;
+        return Status;
     }
 
     Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
@@ -727,7 +883,7 @@ NTSTATUS LsarLookupPrivilegeName(
 
 
 /* Function 33 */
-NTSTATUS LsarLookupPrivilegeDisplayName(
+NTSTATUS WINAPI LsarLookupPrivilegeDisplayName(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING Name,
     USHORT ClientLanguage,
@@ -741,7 +897,7 @@ NTSTATUS LsarLookupPrivilegeDisplayName(
 
 
 /* Function 34 */
-NTSTATUS LsarDeleteObject(
+NTSTATUS WINAPI LsarDeleteObject(
     LSAPR_HANDLE *ObjectHandle)
 {
     UNIMPLEMENTED;
@@ -750,7 +906,7 @@ NTSTATUS LsarDeleteObject(
 
 
 /* Function 35 */
-NTSTATUS LsarEnumerateAccountsWithUserRight(
+NTSTATUS WINAPI LsarEnumerateAccountsWithUserRight(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING UserRight,
     PLSAPR_ACCOUNT_ENUM_BUFFER EnumerationBuffer)
@@ -761,15 +917,20 @@ NTSTATUS LsarEnumerateAccountsWithUserRight(
 
 
 /* Function 36 */
-NTSTATUS LsarEnmuerateAccountRights(
+NTSTATUS WINAPI LsarEnmuerateAccountRights(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
 {
+    NTSTATUS Status;
+
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
 
-    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
-        return STATUS_INVALID_HANDLE;
+    Status = LsapValidateDbHandle(PolicyHandle,
+                                  LsaDbPolicyHandle,
+                                  0); /* FIXME */
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     UserRights->Entries = 0;
     UserRights->UserRights = NULL;
@@ -778,7 +939,7 @@ NTSTATUS LsarEnmuerateAccountRights(
 
 
 /* Function 37 */
-NTSTATUS LsarAddAccountRights(
+NTSTATUS WINAPI LsarAddAccountRights(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     PLSAPR_USER_RIGHT_SET UserRights)
@@ -789,7 +950,7 @@ NTSTATUS LsarAddAccountRights(
 
 
 /* Function 38 */
-NTSTATUS LsarRemoveAccountRights(
+NTSTATUS WINAPI LsarRemoveAccountRights(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID AccountSid,
     BOOL AllRights,
@@ -801,7 +962,7 @@ NTSTATUS LsarRemoveAccountRights(
 
 
 /* Function 39 */
-NTSTATUS LsarQueryTrustedDomainInfo(
+NTSTATUS WINAPI LsarQueryTrustedDomainInfo(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid,
     TRUSTED_INFORMATION_CLASS InformationClass,
@@ -813,7 +974,7 @@ NTSTATUS LsarQueryTrustedDomainInfo(
 
 
 /* Function 40 */
-NTSTATUS LsarSetTrustedDomainInfo(
+NTSTATUS WINAPI LsarSetTrustedDomainInfo(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid,
     TRUSTED_INFORMATION_CLASS InformationClass,
@@ -825,7 +986,7 @@ NTSTATUS LsarSetTrustedDomainInfo(
 
 
 /* Function 41 */
-NTSTATUS LsarDeleteTrustedDomain(
+NTSTATUS WINAPI LsarDeleteTrustedDomain(
     LSAPR_HANDLE PolicyHandle,
     PRPC_SID TrustedDomainSid)
 {
@@ -835,7 +996,7 @@ NTSTATUS LsarDeleteTrustedDomain(
 
 
 /* Function 42 */
-NTSTATUS LsarStorePrivateData(
+NTSTATUS WINAPI LsarStorePrivateData(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE EncryptedData)
@@ -846,7 +1007,7 @@ NTSTATUS LsarStorePrivateData(
 
 
 /* Function 43 */
-NTSTATUS LsarRetrievePrivateData(
+NTSTATUS WINAPI LsarRetrievePrivateData(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING KeyName,
     PLSAPR_CR_CIPHER_VALUE *EncryptedData)
@@ -857,7 +1018,7 @@ NTSTATUS LsarRetrievePrivateData(
 
 
 /* Function 44 */
-NTSTATUS LsarOpenPolicy2(
+NTSTATUS WINAPI LsarOpenPolicy2(
     LPWSTR SystemName,
     PLSAPR_OBJECT_ATTRIBUTES ObjectAttributes,
     ACCESS_MASK DesiredAccess,
@@ -869,7 +1030,7 @@ NTSTATUS LsarOpenPolicy2(
 
 
 /* Function 45 */
-NTSTATUS LsarGetUserName(
+NTSTATUS WINAPI LsarGetUserName(
     LPWSTR SystemName,
     PRPC_UNICODE_STRING *UserName,
     PRPC_UNICODE_STRING *DomainName)
@@ -880,7 +1041,7 @@ NTSTATUS LsarGetUserName(
 
 
 /* Function 46 */
-NTSTATUS LsarQueryInformationPolicy2(
+NTSTATUS WINAPI LsarQueryInformationPolicy2(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long *PolicyInformation)
@@ -891,7 +1052,7 @@ NTSTATUS LsarQueryInformationPolicy2(
 
 
 /* Function 47 */
-NTSTATUS LsarSetInformationPolicy2(
+NTSTATUS WINAPI LsarSetInformationPolicy2(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long PolicyInformation)
@@ -902,7 +1063,7 @@ NTSTATUS LsarSetInformationPolicy2(
 
 
 /* Function 48 */
-NTSTATUS LsarQueryTrustedDomainInfoByName(
+NTSTATUS WINAPI LsarQueryTrustedDomainInfoByName(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     POLICY_INFORMATION_CLASS InformationClass,
@@ -914,7 +1075,7 @@ NTSTATUS LsarQueryTrustedDomainInfoByName(
 
 
 /* Function 49 */
-NTSTATUS LsarSetTrustedDomainInfoByName(
+NTSTATUS WINAPI LsarSetTrustedDomainInfoByName(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     POLICY_INFORMATION_CLASS InformationClass,
@@ -926,7 +1087,7 @@ NTSTATUS LsarSetTrustedDomainInfoByName(
 
 
 /* Function 50 */
-NTSTATUS LsarEnumerateTrustedDomainsEx(
+NTSTATUS WINAPI LsarEnumerateTrustedDomainsEx(
     LSAPR_HANDLE PolicyHandle,
     DWORD *EnumerationContext,
     PLSAPR_TRUSTED_ENUM_BUFFER_EX EnumerationBuffer,
@@ -938,7 +1099,7 @@ NTSTATUS LsarEnumerateTrustedDomainsEx(
 
 
 /* Function 51 */
-NTSTATUS LsarCreateTrustedDomainEx(
+NTSTATUS WINAPI LsarCreateTrustedDomainEx(
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_TRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
     PLSAPR_TRUSTED_DOMAIN_AUTH_INFORMATION AuthentificationInformation,
@@ -951,7 +1112,7 @@ NTSTATUS LsarCreateTrustedDomainEx(
 
 
 /* Function 52 */
-NTSTATUS LsarSetPolicyReplicationHandle(
+NTSTATUS WINAPI LsarSetPolicyReplicationHandle(
     PLSAPR_HANDLE PolicyHandle)
 {
     /* Deprecated */
@@ -960,7 +1121,7 @@ NTSTATUS LsarSetPolicyReplicationHandle(
 
 
 /* Function 53 */
-NTSTATUS LsarQueryDomainInformationPolicy(
+NTSTATUS WINAPI LsarQueryDomainInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long *PolicyInformation)
@@ -971,7 +1132,7 @@ NTSTATUS LsarQueryDomainInformationPolicy(
 
 
 /* Function 54 */
-NTSTATUS LsarSetDomainInformationPolicy(
+NTSTATUS WINAPI LsarSetDomainInformationPolicy(
     LSAPR_HANDLE PolicyHandle,
     POLICY_INFORMATION_CLASS InformationClass,
     unsigned long PolicyInformation)
@@ -982,7 +1143,7 @@ NTSTATUS LsarSetDomainInformationPolicy(
 
 
 /* Function 55 */
-NTSTATUS LsarOpenTrustedDomainByName(
+NTSTATUS WINAPI LsarOpenTrustedDomainByName(
     LSAPR_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING TrustedDomainName,
     ACCESS_MASK DesiredAccess,
@@ -994,7 +1155,7 @@ NTSTATUS LsarOpenTrustedDomainByName(
 
 
 /* Function 56 */
-NTSTATUS LsarTestCall(
+NTSTATUS WINAPI LsarTestCall(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1003,7 +1164,7 @@ NTSTATUS LsarTestCall(
 
 
 /* Function 57 */
-NTSTATUS LsarLookupSids2(
+NTSTATUS WINAPI LsarLookupSids2(
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -1019,7 +1180,7 @@ NTSTATUS LsarLookupSids2(
 
 
 /* Function 58 */
-NTSTATUS LsarLookupNames2(
+NTSTATUS WINAPI LsarLookupNames2(
     LSAPR_HANDLE PolicyHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -1036,7 +1197,7 @@ NTSTATUS LsarLookupNames2(
 
 
 /* Function 59 */
-NTSTATUS LsarCreateTrustedDomainEx2(
+NTSTATUS WINAPI LsarCreateTrustedDomainEx2(
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_TRUSTED_DOMAIN_INFORMATION_EX TrustedDomainInformation,
     PLSAPR_TRUSTED_DOMAIN_AUTH_INFORMATION_INTERNAL AuthentificationInformation,
@@ -1049,7 +1210,7 @@ NTSTATUS LsarCreateTrustedDomainEx2(
 
 
 /* Function 60 */
-NTSTATUS CredrWrite(
+NTSTATUS WINAPI CredrWrite(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1058,7 +1219,7 @@ NTSTATUS CredrWrite(
 
 
 /* Function 61 */
-NTSTATUS CredrRead(
+NTSTATUS WINAPI CredrRead(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1067,7 +1228,7 @@ NTSTATUS CredrRead(
 
 
 /* Function 62 */
-NTSTATUS CredrEnumerate(
+NTSTATUS WINAPI CredrEnumerate(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1076,7 +1237,7 @@ NTSTATUS CredrEnumerate(
 
 
 /* Function 63 */
-NTSTATUS CredrWriteDomainCredentials(
+NTSTATUS WINAPI CredrWriteDomainCredentials(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1085,7 +1246,7 @@ NTSTATUS CredrWriteDomainCredentials(
 
 
 /* Function 64 */
-NTSTATUS CredrReadDomainCredentials(
+NTSTATUS WINAPI CredrReadDomainCredentials(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1094,7 +1255,7 @@ NTSTATUS CredrReadDomainCredentials(
 
 
 /* Function 65 */
-NTSTATUS CredrDelete(
+NTSTATUS WINAPI CredrDelete(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1103,7 +1264,7 @@ NTSTATUS CredrDelete(
 
 
 /* Function 66 */
-NTSTATUS CredrGetTargetInfo(
+NTSTATUS WINAPI CredrGetTargetInfo(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1112,7 +1273,7 @@ NTSTATUS CredrGetTargetInfo(
 
 
 /* Function 67 */
-NTSTATUS CredrProfileLoaded(
+NTSTATUS WINAPI CredrProfileLoaded(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1121,7 +1282,7 @@ NTSTATUS CredrProfileLoaded(
 
 
 /* Function 68 */
-NTSTATUS LsarLookupNames3(
+NTSTATUS WINAPI LsarLookupNames3(
     LSAPR_HANDLE PolicyHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -1138,7 +1299,7 @@ NTSTATUS LsarLookupNames3(
 
 
 /* Function 69 */
-NTSTATUS CredrGetSessionTypes(
+NTSTATUS WINAPI CredrGetSessionTypes(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1147,7 +1308,7 @@ NTSTATUS CredrGetSessionTypes(
 
 
 /* Function 70 */
-NTSTATUS LsarRegisterAuditEvent(
+NTSTATUS WINAPI LsarRegisterAuditEvent(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1156,7 +1317,7 @@ NTSTATUS LsarRegisterAuditEvent(
 
 
 /* Function 71 */
-NTSTATUS LsarGenAuditEvent(
+NTSTATUS WINAPI LsarGenAuditEvent(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1165,7 +1326,7 @@ NTSTATUS LsarGenAuditEvent(
 
 
 /* Function 72 */
-NTSTATUS LsarUnregisterAuditEvent(
+NTSTATUS WINAPI LsarUnregisterAuditEvent(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1174,7 +1335,7 @@ NTSTATUS LsarUnregisterAuditEvent(
 
 
 /* Function 73 */
-NTSTATUS LsarQueryForestTrustInformation(
+NTSTATUS WINAPI LsarQueryForestTrustInformation(
     LSAPR_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
     LSA_FOREST_TRUST_RECORD_TYPE HighestRecordType,
@@ -1186,7 +1347,7 @@ NTSTATUS LsarQueryForestTrustInformation(
 
 
 /* Function 74 */
-NTSTATUS LsarSetForestTrustInformation(
+NTSTATUS WINAPI LsarSetForestTrustInformation(
     LSAPR_HANDLE PolicyHandle,
     PLSA_UNICODE_STRING TrustedDomainName,
     LSA_FOREST_TRUST_RECORD_TYPE HighestRecordType,
@@ -1200,7 +1361,7 @@ NTSTATUS LsarSetForestTrustInformation(
 
 
 /* Function 75 */
-NTSTATUS CredrRename(
+NTSTATUS WINAPI CredrRename(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1209,7 +1370,7 @@ NTSTATUS CredrRename(
 
 
 /* Function 76 */
-NTSTATUS LsarLookupSids3(
+NTSTATUS WINAPI LsarLookupSids3(
     LSAPR_HANDLE PolicyHandle,
     PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
     PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
@@ -1225,7 +1386,7 @@ NTSTATUS LsarLookupSids3(
 
 
 /* Function 77 */
-NTSTATUS LsarLookupNames4(
+NTSTATUS WINAPI LsarLookupNames4(
     handle_t RpcHandle,
     DWORD Count,
     PRPC_UNICODE_STRING Names,
@@ -1242,7 +1403,7 @@ NTSTATUS LsarLookupNames4(
 
 
 /* Function 78 */
-NTSTATUS LsarOpenPolicySce(
+NTSTATUS WINAPI LsarOpenPolicySce(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1251,7 +1412,7 @@ NTSTATUS LsarOpenPolicySce(
 
 
 /* Function 79 */
-NTSTATUS LsarAdtRegisterSecurityEventSource(
+NTSTATUS WINAPI LsarAdtRegisterSecurityEventSource(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1260,7 +1421,7 @@ NTSTATUS LsarAdtRegisterSecurityEventSource(
 
 
 /* Function 80 */
-NTSTATUS LsarAdtUnregisterSecurityEventSource(
+NTSTATUS WINAPI LsarAdtUnregisterSecurityEventSource(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1269,7 +1430,7 @@ NTSTATUS LsarAdtUnregisterSecurityEventSource(
 
 
 /* Function 81 */
-NTSTATUS LsarAdtReportSecurityEvent(
+NTSTATUS WINAPI LsarAdtReportSecurityEvent(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1278,7 +1439,7 @@ NTSTATUS LsarAdtReportSecurityEvent(
 
 
 /* Function 82 */
-NTSTATUS CredrFindBestCredential(
+NTSTATUS WINAPI CredrFindBestCredential(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1287,7 +1448,7 @@ NTSTATUS CredrFindBestCredential(
 
 
 /* Function 83 */
-NTSTATUS LsarSetAuditPolicy(
+NTSTATUS WINAPI LsarSetAuditPolicy(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1296,7 +1457,7 @@ NTSTATUS LsarSetAuditPolicy(
 
 
 /* Function 84 */
-NTSTATUS LsarQueryAuditPolicy(
+NTSTATUS WINAPI LsarQueryAuditPolicy(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1305,7 +1466,7 @@ NTSTATUS LsarQueryAuditPolicy(
 
 
 /* Function 85 */
-NTSTATUS LsarEnumerateAuditPolicy(
+NTSTATUS WINAPI LsarEnumerateAuditPolicy(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1314,7 +1475,7 @@ NTSTATUS LsarEnumerateAuditPolicy(
 
 
 /* Function 86 */
-NTSTATUS LsarEnumerateAuditCategories(
+NTSTATUS WINAPI LsarEnumerateAuditCategories(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1323,7 +1484,7 @@ NTSTATUS LsarEnumerateAuditCategories(
 
 
 /* Function 87 */
-NTSTATUS LsarEnumerateAuditSubCategories(
+NTSTATUS WINAPI LsarEnumerateAuditSubCategories(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1332,7 +1493,7 @@ NTSTATUS LsarEnumerateAuditSubCategories(
 
 
 /* Function 88 */
-NTSTATUS LsarLookupAuditCategoryName(
+NTSTATUS WINAPI LsarLookupAuditCategoryName(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1341,7 +1502,7 @@ NTSTATUS LsarLookupAuditCategoryName(
 
 
 /* Function 89 */
-NTSTATUS LsarLookupAuditSubCategoryName(
+NTSTATUS WINAPI LsarLookupAuditSubCategoryName(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1350,7 +1511,7 @@ NTSTATUS LsarLookupAuditSubCategoryName(
 
 
 /* Function 90 */
-NTSTATUS LsarSetAuditSecurity(
+NTSTATUS WINAPI LsarSetAuditSecurity(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1359,7 +1520,7 @@ NTSTATUS LsarSetAuditSecurity(
 
 
 /* Function 91 */
-NTSTATUS LsarQueryAuditSecurity(
+NTSTATUS WINAPI LsarQueryAuditSecurity(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1368,7 +1529,7 @@ NTSTATUS LsarQueryAuditSecurity(
 
 
 /* Function 92 */
-NTSTATUS CredReadByTokenHandle(
+NTSTATUS WINAPI CredReadByTokenHandle(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1377,7 +1538,7 @@ NTSTATUS CredReadByTokenHandle(
 
 
 /* Function 93 */
-NTSTATUS CredrRestoreCredentials(
+NTSTATUS WINAPI CredrRestoreCredentials(
     handle_t hBinding)
 {
     UNIMPLEMENTED;
@@ -1386,7 +1547,7 @@ NTSTATUS CredrRestoreCredentials(
 
 
 /* Function 94 */
-NTSTATUS CredrBackupCredentials(
+NTSTATUS WINAPI CredrBackupCredentials(
     handle_t hBinding)
 {
     UNIMPLEMENTED;

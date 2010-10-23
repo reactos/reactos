@@ -107,7 +107,7 @@ InitializeVideoAddressSpace(VOID)
                                      &BaseAddress,
                                      0,
                                      &ViewSize,
-                                     MEM_COMMIT,
+                                     MEM_RESERVE | MEM_COMMIT,
                                      PAGE_EXECUTE_READWRITE);
     if (!NT_SUCCESS(Status))
     {

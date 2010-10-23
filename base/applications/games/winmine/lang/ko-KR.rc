@@ -1,0 +1,95 @@
+/*
+ * WineMine
+ * Korean Language Support
+ *
+ * Copyright 2000 Joshua Thielen
+ * Copyright 2003 Marcelo Duarte
+ * Copyright 2005,2007 YunSong Hwang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE BEGIN
+     IDS_APPNAME, "Wine지뢰찾기"
+     IDS_NOBODY,  "아무개"
+     IDS_ABOUT,   "Copyright 2000 Joshua Thielen"
+END
+
+MENU_WINEMINE MENU
+BEGIN
+    POPUP "옵션(&O)" BEGIN
+        MENUITEM "새 게임(&N)\tF2",       IDM_NEW
+        MENUITEM SEPARATOR
+        MENUITEM "물음표 표시(&M)", IDM_MARKQ
+        MENUITEM SEPARATOR
+        MENUITEM "초보자(&B)",      IDM_BEGINNER
+        MENUITEM "중급자(&A)",      IDM_ADVANCED
+        MENUITEM "상급자(&E)",        IDM_EXPERT
+        MENUITEM "사용자 정의(&C)",        IDM_CUSTOM
+        MENUITEM SEPARATOR
+        MENUITEM "나가기(&X)\tAlt+X",   IDM_EXIT
+    END
+    POPUP "도움말(&I)" BEGIN
+        MENUITEM "가장 빠른 시간(&F)",    IDM_TIMES
+        MENUITEM "정보(&A)",         IDM_ABOUT
+    END
+END
+
+DLG_TIMES DIALOGEX 0, 0, 160, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "가장 빠른 시간"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "최단 시간", -1,  10,  10, 140,  45
+    LTEXT           "초보자",      -1,  20,  20,  40,   8
+    LTEXT           "중급자",      -1,  20,  30,  40,   8
+    LTEXT           "전문가",        -1,  20,  40,  40,   8
+    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
+    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
+    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
+    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
+    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
+    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
+    DEFPUSHBUTTON   "확인",                IDOK,  55,  60,  50,  15
+END
+
+DLG_CONGRATS DIALOGEX  0, 0, 160, 60
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "축하합니다!"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "당신의 이름을 적어주세요", -1,  10,  10, 150,  10
+    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "확인",                         IDOK,  60,  40,  40,  15
+END
+
+DLG_CUSTOM DIALOGEX  0, 0, 100, 100
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+CAPTION "게임 사용자 정의 "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "가로줄",   -1,   5,   5,  30,  10
+    LTEXT           "새로줄",   -1,   5,  35,  30,  10
+    LTEXT           "지뢰",  -1,   5,  65,  30,  10
+    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
+    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
+    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    DEFPUSHBUTTON   "확인",     IDOK,      40,  30,  50,  15
+    PUSHBUTTON      "취소", IDCANCEL,  40,  50,  50,  15
+END

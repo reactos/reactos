@@ -211,9 +211,6 @@ static INT_PTR CDECL cabinet_open_stream( char *pszFile, int oflag, int pmode )
     UINT r;
     IStream *stm;
 
-    if (oflag)
-        WARN("ignoring open flags 0x%08x\n", oflag);
-
     r = db_get_raw_stream( cab_stream.db, cab_stream.name, &stm );
     if (r != ERROR_SUCCESS)
     {
@@ -358,6 +355,40 @@ done:
     return res;
 }
 
+static INT_PTR cabinet_next_cabinet_stream( FDINOTIFICATIONTYPE fdint,
+                                            PFDINOTIFICATION pfdin )
+{
+    MSICABDATA *data = pfdin->pv;
+    MSIMEDIAINFO *mi = data->mi;
+    UINT rc;
+
+    msi_free( mi->disk_prompt );
+    msi_free( mi->cabinet );
+    msi_free( mi->volume_label );
+    mi->disk_prompt = NULL;
+    mi->cabinet = NULL;
+    mi->volume_label = NULL;
+
+    mi->disk_id++;
+    mi->is_continuous = TRUE;
+
+    rc = msi_media_get_disk_info( data->package, mi );
+    if (rc != ERROR_SUCCESS)
+    {
+        ERR("Failed to get next cabinet information: %u\n", rc);
+        return -1;
+    }
+
+    msi_free( cab_stream.name );
+    cab_stream.name = encode_streamname( FALSE, mi->cabinet + 1 );
+    if (!cab_stream.name)
+        return -1;
+
+    TRACE("next cabinet is %s\n", debugstr_w(mi->cabinet));
+
+    return 0;
+}
+
 static INT_PTR cabinet_copy_file(FDINOTIFICATIONTYPE fdint,
                                  PFDINOTIFICATION pfdin)
 {
@@ -494,6 +525,12 @@ static INT_PTR CDECL cabinet_notify_stream( FDINOTIFICATIONTYPE fdint, PFDINOTIF
 {
     switch (fdint)
     {
+    case fdintPARTIAL_FILE:
+        return cabinet_partial_file( fdint, pfdin );
+
+    case fdintNEXT_CABINET:
+        return cabinet_next_cabinet_stream( fdint, pfdin );
+
     case fdintCOPY_FILE:
         return cabinet_copy_file( fdint, pfdin );
 

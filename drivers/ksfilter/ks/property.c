@@ -47,6 +47,25 @@ FindPropertyHandler(
                         IoStatus->Information = PropertySet[Index].PropertyItem[ItemIndex].MinData;
                         return STATUS_MORE_ENTRIES;
                     }
+
+                    /* store property set */
+                    *Set = (PKSPROPERTY_SET)&PropertySet[Index];
+
+                    if (Property->Flags & KSPROPERTY_TYPE_SET)
+                    {
+                        /* store property handler */
+                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
+                        return STATUS_SUCCESS;
+                    }
+
+                    if (Property->Flags & KSPROPERTY_TYPE_GET)
+                    {
+                        /* store property handler */
+                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
+                        return STATUS_SUCCESS;
+                    }
+
+
                     if (Property->Flags & KSPROPERTY_TYPE_BASICSUPPORT)
                     {
                         PULONG Flags;
@@ -64,13 +83,20 @@ FindPropertyHandler(
                         /* clear flags */
                         *Flags = 0;
 
+                        IoStatus->Information = sizeof(ULONG);
+
+                        if (PropertySet[Index].PropertyItem[ItemIndex].SupportHandler)
+                        {
+                            /* use support handler from driver */
+                            *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SupportHandler;
+                            return STATUS_SUCCESS;
+                        }
+
                         if (PropertySet[Index].PropertyItem[ItemIndex].GetSupported)
                             *Flags |= KSPROPERTY_TYPE_GET;
 
                         if (PropertySet[Index].PropertyItem[ItemIndex].SetSupported)
                             *Flags |= KSPROPERTY_TYPE_SET;
-
-                        IoStatus->Information = sizeof(ULONG);
 
                         if (OutputBufferLength >= sizeof(KSPROPERTY_DESCRIPTION))
                         {
@@ -89,14 +115,6 @@ FindPropertyHandler(
                         }
                         return STATUS_SUCCESS;
                     }
-                    if (Property->Flags & KSPROPERTY_TYPE_SET)
-                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
-
-                    if (Property->Flags & KSPROPERTY_TYPE_GET)
-                        *PropertyHandler = PropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
-
-                    *Set = (PKSPROPERTY_SET)&PropertySet[Index];
-                    return STATUS_SUCCESS;
                 }
             }
         }
@@ -171,7 +189,7 @@ KspPropertyHandler(
             }
         }
     }
-    else if (IsEqualGUIDAligned(&Property->Set, &GUID_NULL) && Property->Id == 0 && Property->Flags == KSPROPERTY_TYPE_SETSUPPORT)
+    else if (IsEqualGUIDAligned(&Property->Set, &GUID_NULL) && Property->Id == 0 && (Property->Flags & KSPROPERTY_TYPE_SETSUPPORT) == KSPROPERTY_TYPE_SETSUPPORT)
     {
         // store output size
         Irp->IoStatus.Information = sizeof(GUID) * PropertySetsCount;
@@ -189,7 +207,7 @@ KspPropertyHandler(
        {
            RtlMoveMemory(&Guid[Index], PropertySet[Index].Set, sizeof(GUID));
        }
-       return STATUS_SUCCESS;
+       Status = STATUS_SUCCESS;
     }
 
     /* done */

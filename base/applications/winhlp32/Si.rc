@@ -65,9 +65,6 @@ MAIN_MENU MENU
    MENUITEM "Vedno na &vrhu", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Informacije ...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&O WINE", MNID_HELP_WINE
-#endif
  }
 }
 
@@ -90,7 +87,7 @@ CAPTION "Iskanje"
 /* Strings */
 STRINGTABLE
 {
-STID_WINE_HELP, 	"WINE Pomoč"
+STID_WINE_HELP, 	"Wine Pomoč"
 STID_WHERROR, 		"NAPAKA"
 STID_WARNING,  		"OPOZORILO"
 STID_INFO,  		"Informacija"

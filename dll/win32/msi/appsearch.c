@@ -89,7 +89,7 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
         'S','i','g','n','a','t','u','r','e',' ',
         'w','h','e','r','e',' ','S','i','g','n','a','t','u','r','e',' ','=',' ',
         '\'','%','s','\'',0};
-    LPWSTR minVersion, maxVersion;
+    LPWSTR minVersion, maxVersion, p;
     MSIRECORD *row;
     DWORD time;
 
@@ -106,6 +106,12 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
 
     /* get properties */
     sig->File = msi_dup_record_field(row,2);
+    if ((p = strchrW(sig->File, '|')))
+    {
+        p++;
+        memmove(sig->File, p, (strlenW(p) + 1) * sizeof(WCHAR));
+    }
+
     minVersion = msi_dup_record_field(row,3);
     if (minVersion)
     {

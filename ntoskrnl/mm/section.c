@@ -4902,7 +4902,7 @@ MmCreateSection (OUT PVOID  * Section,
    PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
    
     /* Check if an ARM3 section is being created instead */
-    if (AllocationAttributes & 0xC0000000)
+    if (AllocationAttributes & 1)
     {
         DPRINT1("arm 3 path\n");
         return MmCreateArm3Section(Section,
@@ -4910,7 +4910,7 @@ MmCreateSection (OUT PVOID  * Section,
                                    ObjectAttributes,
                                    MaximumSize,
                                    SectionPageProtection,
-                                   AllocationAttributes &~ 0xC0000000,
+                                   AllocationAttributes &~ 1,
                                    FileHandle,
                                    File);
     }

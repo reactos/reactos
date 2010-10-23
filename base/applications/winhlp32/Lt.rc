@@ -66,9 +66,6 @@ MAIN_MENU MENU
    MENUITEM "&Visada viršuje",            MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Informacija...",            MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Apie Wine",                 MNID_HELP_WINE
-#endif
  }
 }
 

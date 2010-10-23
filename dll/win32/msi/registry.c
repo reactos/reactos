@@ -40,7 +40,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-
 /* 
  * This module will be all the helper functions for registry access by the
  * installer bits. 
@@ -97,6 +96,15 @@ static const WCHAR szUserDataComp_fmt[] = {
 
 static const WCHAR szUninstall_fmt[] = {
 'S','o','f','t','w','a','r','e','\\',
+'M','i','c','r','o','s','o','f','t','\\',
+'W','i','n','d','o','w','s','\\',
+'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+'U','n','i','n','s','t','a','l','l','\\',
+'%','s',0 };
+
+static const WCHAR szUninstall_32node_fmt[] = {
+'S','o','f','t','w','a','r','e','\\',
+'W','o','w','6','4','3','2','N','o','d','e','\\',
 'M','i','c','r','o','s','o','f','t','\\',
 'W','i','n','d','o','w','s','\\',
 'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
@@ -509,28 +517,36 @@ static UINT get_user_sid(LPWSTR *usersid)
     return ERROR_SUCCESS;
 }
 
-UINT MSIREG_OpenUninstallKey(LPCWSTR szProduct, HKEY* key, BOOL create)
+UINT MSIREG_OpenUninstallKey(MSIPACKAGE *package, HKEY *key, BOOL create)
 {
     UINT rc;
     WCHAR keypath[0x200];
-    TRACE("%s\n",debugstr_w(szProduct));
 
-    sprintfW(keypath,szUninstall_fmt,szProduct);
+    TRACE("%s\n", debugstr_w(package->ProductCode));
+
+    if (is_64bit && package->platform == PLATFORM_INTEL)
+        sprintfW(keypath, szUninstall_32node_fmt, package->ProductCode);
+    else
+        sprintfW(keypath, szUninstall_fmt, package->ProductCode);
 
     if (create)
-        rc = RegCreateKeyW(HKEY_LOCAL_MACHINE, keypath, key);
+        rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, NULL, 0, KEY_ALL_ACCESS, NULL, key, NULL);
     else
-        rc = RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
+        rc = RegOpenKeyExW(HKEY_LOCAL_MACHINE, keypath, 0, KEY_ALL_ACCESS, key);
 
     return rc;
 }
 
-UINT MSIREG_DeleteUninstallKey(LPCWSTR szProduct)
+UINT MSIREG_DeleteUninstallKey(MSIPACKAGE *package)
 {
     WCHAR keypath[0x200];
-    TRACE("%s\n",debugstr_w(szProduct));
 
-    sprintfW(keypath,szUninstall_fmt,szProduct);
+    TRACE("%s\n", debugstr_w(package->ProductCode));
+
+    if (is_64bit && package->platform == PLATFORM_INTEL)
+        sprintfW(keypath, szUninstall_32node_fmt, package->ProductCode);
+    else
+        sprintfW(keypath, szUninstall_fmt, package->ProductCode);
 
     return RegDeleteTreeW(HKEY_LOCAL_MACHINE, keypath);
 }

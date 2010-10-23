@@ -1636,6 +1636,8 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
         top_popup_hmenu = hmenu;
     }
 
+    IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPSTART, MenuInfo.Wnd, OBJID_CLIENT, CHILDID_SELF, 0);
+
     /* Display the window */
 
     SetWindowPos( MenuInfo.Wnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -3445,6 +3447,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 
                 if (MenuInfo.Flags & MF_POPUP)
                 {
+                    IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, MenuInfo.Wnd, OBJID_CLIENT, CHILDID_SELF, 0);
                     DestroyWindow(MenuInfo.Wnd);
                     MenuInfo.Wnd = NULL;
 
@@ -3518,7 +3521,11 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
         MenuInfo.Wnd = hWnd;
         MenuSetRosMenuInfo(&MenuInfo);
     }
- 
+
+    IntNotifyWinEvent( EVENT_SYSTEM_MENUSTART,
+                       hWnd,
+                       MenuInfo.Flags & MF_SYSMENU ? OBJID_SYSMENU : OBJID_MENU,
+                       CHILDID_SELF, 0);
     return TRUE;
 }
 /***********************************************************************
@@ -3528,6 +3535,7 @@ static BOOL FASTCALL MenuExitTracking(HWND hWnd, BOOL bPopup)
 {
     TRACE("hwnd=%p\n", hWnd);
 
+    IntNotifyWinEvent( EVENT_SYSTEM_MENUEND, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
     SendMessageW( hWnd, WM_EXITMENULOOP, bPopup, 0 );
     ShowCaret(0);
     top_popup = 0;
@@ -3645,7 +3653,7 @@ BOOL WINAPI TrackPopupMenuEx( HMENU Menu, UINT Flags, int x, int y,
 {
     BOOL ret = FALSE;
 
-    if (!IsMenu(Menu))
+    if (!IsMenu(Menu))    
     {
       SetLastError( ERROR_INVALID_MENU_HANDLE );
       return FALSE;

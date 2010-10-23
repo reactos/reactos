@@ -71,9 +71,6 @@ MAIN_MENU MENU
    MENUITEM "Завжди &зверху", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Інформація...", MNID_HELP_ABOUT
-#ifdef WINELIB
-   MENUITEM "&Про Wine", MNID_HELP_WINE
-#endif
  }
 }
 

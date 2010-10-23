@@ -2262,6 +2262,88 @@ Return Value:
 
         break;
 
+    case IOCTL_DISK_GET_PARTITION_INFO_EX:
+
+        //
+        // Return the information about the partition specified by the device
+        // object.  Note that no information is ever returned about the size
+        // or partition type of the physical disk, as this doesn't make any
+        // sense.
+        //
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof(PARTITION_INFORMATION_EX)) {
+
+            status = STATUS_INFO_LENGTH_MISMATCH;
+
+        }
+        else if (diskData->PartitionNumber == 0) {
+
+            //
+            // Paritition zero is not a partition so this is not a
+            // reasonable request.
+            //
+
+            status = STATUS_INVALID_DEVICE_REQUEST;
+
+        }
+        else {
+
+            PPARTITION_INFORMATION_EX outputBuffer;
+
+            //
+            // Update the geometry in case it has changed.
+            //
+
+            status = UpdateRemovableGeometry (DeviceObject, Irp);
+
+            if (!NT_SUCCESS(status)) {
+
+                //
+                // Note the drive is not ready.
+                //
+
+                diskData->DriveNotReady = TRUE;
+                break;
+            }
+
+            //
+            // Note the drive is now ready.
+            //
+
+            diskData->DriveNotReady = FALSE;
+
+            if (diskData->PartitionType == 0 && (diskData->PartitionNumber > 0)) {
+
+                status = STATUS_INVALID_DEVICE_REQUEST;
+                break;
+            }
+
+            outputBuffer =
+                    (PPARTITION_INFORMATION_EX)Irp->AssociatedIrp.SystemBuffer;
+
+            //
+            // FIXME: hack of the year, assume that partition is MBR
+            // Thing that can obviously be wrong...
+            //
+
+            outputBuffer->PartitionStyle = PARTITION_STYLE_MBR;
+            outputBuffer->Mbr.PartitionType = diskData->PartitionType;
+            outputBuffer->StartingOffset = deviceExtension->StartingOffset;
+            outputBuffer->PartitionLength.QuadPart = deviceExtension->PartitionLength.QuadPart;
+            outputBuffer->Mbr.HiddenSectors = diskData->HiddenSectors;
+            outputBuffer->PartitionNumber = diskData->PartitionNumber;
+            outputBuffer->Mbr.BootIndicator = diskData->BootIndicator;
+            outputBuffer->RewritePartition = FALSE;
+            outputBuffer->Mbr.RecognizedPartition =
+                IsRecognizedPartition(diskData->PartitionType);
+
+            status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION_EX);
+        }
+
+        break;
+
     case IOCTL_DISK_SET_PARTITION_INFO:
 
         if (diskData->PartitionNumber == 0) {

@@ -228,21 +228,6 @@ NtUserCallOneParam(
             RETURN (ret);
          }
 
-      case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
-         {
-            PWND Window;
-            DWORD_PTR Result;
-
-            if(!(Window = UserGetWindowObject((HWND)Param)))
-            {
-               RETURN( FALSE);
-            }
-
-            Result = (DWORD_PTR)IntIsWindowInDestroy(Window);
-
-            RETURN( Result);
-         }
-
       case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
          {
             BOOL Enable;
@@ -473,6 +458,8 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_SETCURSORPOS:
          RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, FALSE));
 
+      case TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK:
+         RETURN( IntUnhookWindowsHook((int)Param1, (HOOKPROC)Param2));
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
@@ -710,6 +697,21 @@ NtUserCallHwndParam(
          }
          
          UserDerefObjectCo(pWnd);
+         UserLeave();
+         return 0;
+      }
+
+      case HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT:
+      {
+         PWND pWnd;
+         PNOTIFYEVENT pne;
+         UserEnterExclusive();
+         pne = (PNOTIFYEVENT)Param;
+         if (hWnd)
+            pWnd = UserGetWindowObject(hWnd);
+         else
+            pWnd = NULL;
+         IntNotifyWinEvent(pne->event, pWnd, pne->idObject, pne->idChild, pne->flags);
          UserLeave();
          return 0;
       }

@@ -54,6 +54,26 @@
 /* Segment flags */
 #define HEAP_USER_ALLOCATED    0x1
 
+/* A handy inline to distinguis normal heap, special "debug heap" and special "page heap" */
+FORCEINLINE BOOLEAN
+RtlpHeapIsSpecial(ULONG Flags)
+{
+    if (Flags & HEAP_SKIP_VALIDATION_CHECKS) return FALSE;
+
+    if (Flags & (HEAP_FLAG_PAGE_ALLOCS |
+                 HEAP_VALIDATE_ALL_ENABLED |
+                 HEAP_VALIDATE_PARAMETERS_ENABLED |
+                 HEAP_CAPTURE_STACK_BACKTRACES |
+                 HEAP_CREATE_ENABLE_TRACING))
+    {
+        /* This is a special heap */
+        return TRUE;
+    }
+
+    /* No need for a special treatment */
+    return FALSE;
+}
+
 /* Heap structures */
 struct _HEAP_COMMON_ENTRY
 {
@@ -178,6 +198,7 @@ typedef struct _HEAP
     USHORT SegmentAllocatorBackTraceIndex;
     USHORT Reserved;
     LIST_ENTRY UCRSegmentList;
+
     ULONG Flags;
     ULONG ForceFlags;
     ULONG CompatibilityFlags;
@@ -200,6 +221,7 @@ typedef struct _HEAP
     USHORT MaximumTagIndex;
     PHEAP_TAG_ENTRY TagEntries;
     LIST_ENTRY UCRList;
+    LIST_ENTRY UCRSegments; // FIXME: non-Vista
     ULONG AlignRound;
     ULONG AlignMask;
     LIST_ENTRY VirtualAllocdBlocks;
@@ -252,6 +274,13 @@ typedef struct _HEAP_UCR_DESCRIPTOR
     ULONG Size;
 } HEAP_UCR_DESCRIPTOR, *PHEAP_UCR_DESCRIPTOR;
 
+typedef struct _HEAP_UCR_SEGMENT
+{
+    LIST_ENTRY ListEntry;
+    SIZE_T ReservedSize;
+    SIZE_T CommittedSize;
+} HEAP_UCR_SEGMENT, *PHEAP_UCR_SEGMENT;
+
 typedef struct _HEAP_ENTRY_EXTRA
 {
      union
@@ -293,7 +322,69 @@ RtlpCoalesceFreeBlocks (PHEAP Heap,
 PHEAP_ENTRY_EXTRA NTAPI
 RtlpGetExtraStuffPointer(PHEAP_ENTRY HeapEntry);
 
+BOOLEAN NTAPI
+RtlpValidateHeap(PHEAP Heap, BOOLEAN ForceValidation);
+
+BOOLEAN NTAPI
+RtlpValidateHeapEntry(PHEAP Heap, PHEAP_ENTRY HeapEntry);
+
+BOOLEAN NTAPI
+RtlpValidateHeapHeaders(PHEAP Heap, BOOLEAN Recalculate);
+
 /* heapdbg.c */
+HANDLE NTAPI
+RtlDebugCreateHeap(ULONG Flags,
+                   PVOID Addr,
+                   SIZE_T TotalSize,
+                   SIZE_T CommitSize,
+                   PVOID Lock,
+                   PRTL_HEAP_PARAMETERS Parameters);
+
+BOOLEAN NTAPI
+RtlDebugDestroyHeap(HANDLE HeapPtr);
+
+PVOID NTAPI
+RtlDebugAllocateHeap(PVOID HeapPtr,
+                     ULONG Flags,
+                     SIZE_T Size);
+
+PVOID NTAPI
+RtlDebugReAllocateHeap(HANDLE HeapPtr,
+                       ULONG Flags,
+                       PVOID Ptr,
+                       SIZE_T Size);
+
+BOOLEAN NTAPI
+RtlDebugFreeHeap(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr);
+
+BOOLEAN NTAPI
+RtlDebugGetUserInfoHeap(PVOID HeapHandle,
+                        ULONG Flags,
+                        PVOID BaseAddress,
+                        PVOID *UserValue,
+                        PULONG UserFlags);
+
+BOOLEAN NTAPI
+RtlDebugSetUserValueHeap(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         PVOID UserValue);
+
+BOOLEAN
+NTAPI
+RtlDebugSetUserFlagsHeap(PVOID HeapHandle,
+                         ULONG Flags,
+                         PVOID BaseAddress,
+                         ULONG UserFlagsReset,
+                         ULONG UserFlagsSet);
+
+SIZE_T NTAPI
+RtlDebugSizeHeap(HANDLE HeapPtr,
+                 ULONG Flags,
+                 PVOID Ptr);
+
 HANDLE NTAPI
 RtlpPageHeapCreate(ULONG Flags,
                    PVOID Addr,

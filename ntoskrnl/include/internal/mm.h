@@ -114,10 +114,8 @@ typedef ULONG SWAPENTRY;
 
 #define MC_CACHE                            (0)
 #define MC_USER                             (1)
-#define MC_PPOOL                            (2)
-#define MC_NPPOOL                           (3)
-#define MC_SYSTEM                           (4)
-#define MC_MAXIMUM                          (5)
+#define MC_SYSTEM                           (2)
+#define MC_MAXIMUM                          (3)
 
 #define PAGED_POOL_MASK                     1
 #define MUST_SUCCEED_POOL_MASK              2
@@ -278,6 +276,17 @@ typedef struct _MEMORY_AREA
         } VirtualMemoryData;
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
+
+typedef struct _MM_RMAP_ENTRY
+{
+   struct _MM_RMAP_ENTRY* Next;
+   PEPROCESS Process;
+   PVOID Address;
+#if DBG
+   PVOID Caller;
+#endif
+}
+MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
@@ -1668,20 +1677,6 @@ NTAPI
 MmCallDllInitialize(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     IN PLIST_ENTRY ListHead
-);
-
-/* ReactOS Mm Hacks */
-VOID
-FASTCALL
-MiSyncForProcessAttach(
-    IN PKTHREAD NextThread,
-    IN PEPROCESS Process
-);
-
-VOID
-FASTCALL
-MiSyncForContextSwitch(
-    IN PKTHREAD Thread
 );
 
 extern PMMSUPPORT MmKernelAddressSpace;
