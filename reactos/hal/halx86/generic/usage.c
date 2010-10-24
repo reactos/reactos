@@ -235,8 +235,9 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
         if (!HalpGetInfoFromACPI)
         {
             /* No, so use our local table */
-            Port = HalpComPortIrqMapping[0][0];
-            for (i = 0; Port; i++)
+            for (i = 0, Port = HalpComPortIrqMapping[i][0];
+                 Port;
+                 i++, Port = HalpComPortIrqMapping[i][0])
             {
                 /* Is this the port we want? */
                 if (Port == (ULONG_PTR)KdComPortInUse)
@@ -248,9 +249,6 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
                                        PRIMARY_VECTOR_BASE,
                                        HIGH_LEVEL);
                 }
-                
-                /* Next port */
-                Port = HalpComPortIrqMapping[i][0];
             }
         }
     }
