@@ -330,9 +330,6 @@ IopCheckResourceDescriptor(
    ULONG i, ii;
    BOOLEAN Result = FALSE;
 
-   if (ResDesc->ShareDisposition == CmResourceShareShared)
-       return FALSE;
-
    for (i = 0; i < ResourceList->Count; i++)
    {
       PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList->List[i].PartialResourceList;
