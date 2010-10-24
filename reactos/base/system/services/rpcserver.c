@@ -31,9 +31,6 @@ typedef struct _SCMGR_HANDLE
 typedef struct _MANAGER_HANDLE
 {
     SCMGR_HANDLE Handle;
-
-    /* FIXME: Insert more data here */
-
     WCHAR DatabaseName[1];
 } MANAGER_HANDLE, *PMANAGER_HANDLE;
 
@@ -41,11 +38,7 @@ typedef struct _MANAGER_HANDLE
 typedef struct _SERVICE_HANDLE
 {
     SCMGR_HANDLE Handle;
-
     PSERVICE ServiceEntry;
-
-    /* FIXME: Insert more data here */
-
 } SERVICE_HANDLE, *PSERVICE_HANDLE;
 
 
@@ -149,7 +142,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
     if (lpDatabaseName == NULL)
         lpDatabaseName = SERVICES_ACTIVE_DATABASEW;
 
-    if (_wcsicmp(lpDatabaseName,SERVICES_FAILED_DATABASEW)==0)
+    if (_wcsicmp(lpDatabaseName, SERVICES_FAILED_DATABASEW) == 0)
     {
         DPRINT("Database %S, does not exist\n",lpDatabaseName);
         return ERROR_DATABASE_DOES_NOT_EXIST;
@@ -167,8 +160,6 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
         return ERROR_NOT_ENOUGH_MEMORY;
 
     Ptr->Handle.Tag = MANAGER_TAG;
-
-    /* FIXME: initialize more data here */
 
     wcscpy(Ptr->DatabaseName, lpDatabaseName);
 
@@ -192,7 +183,6 @@ ScmCreateServiceHandle(PSERVICE lpServiceEntry,
 
     Ptr->Handle.Tag = SERVICE_TAG;
 
-    /* FIXME: initialize more data here */
     Ptr->ServiceEntry = lpServiceEntry;
 
     *Handle = (SC_HANDLE)Ptr;
@@ -453,9 +443,10 @@ DWORD RCloseServiceHandle(
     if (*hSCObject == 0)
         return ERROR_INVALID_HANDLE;
 
-    hManager = (PMANAGER_HANDLE)*hSCObject;
-    hService = (PSERVICE_HANDLE)*hSCObject;
-    if (hManager->Handle.Tag == MANAGER_TAG)
+    hManager = ScmGetServiceManagerFromHandle(*hSCObject);
+    hService = ScmGetServiceFromHandle(*hSCObject);
+
+    if (hManager != NULL)
     {
         DPRINT("Found manager handle\n");
 
@@ -467,7 +458,7 @@ DWORD RCloseServiceHandle(
         DPRINT("RCloseServiceHandle() done\n");
         return ERROR_SUCCESS;
     }
-    else if (hService->Handle.Tag == SERVICE_TAG)
+    else if (hService != NULL)
     {
         DPRINT("Found service handle\n");
 
@@ -561,6 +552,7 @@ DWORD RControlService(
     DWORD dwError = ERROR_SUCCESS;
     DWORD pcbBytesNeeded = 0;
     DWORD dwServicesReturned = 0;
+    DWORD dwControlsAccepted;
     HKEY hServicesKey = NULL;
 
     DPRINT("RControlService() called\n");
@@ -662,6 +654,23 @@ DWORD RControlService(
     }
     else
     {
+        dwControlsAccepted = lpService->Status.dwControlsAccepted;
+
+        /* Check if the control code is acceptable */
+        switch (dwControl)
+        {
+            case SERVICE_CONTROL_STOP:
+                if ((dwControlsAccepted & SERVICE_ACCEPT_STOP) == 0)
+                    return ERROR_INVALID_SERVICE_CONTROL;
+                break;
+
+            case SERVICE_CONTROL_PAUSE:
+            case SERVICE_CONTROL_CONTINUE:
+                if ((dwControlsAccepted & SERVICE_ACCEPT_PAUSE_CONTINUE) == 0)
+                    return ERROR_INVALID_SERVICE_CONTROL;
+                break;
+        }
+
         /* Send control code to the service */
         dwError = ScmControlService(lpService,
                                     dwControl);
