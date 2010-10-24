@@ -1264,7 +1264,7 @@ NtGdiCreateDIBitmapInternal(
                                            hcmXform);
 
 cleanup:
-	ExFreePoolWithTag(safeBits, TAG_DIB);
+	if (safeBits) ExFreePoolWithTag(safeBits, TAG_DIB);
 	return hbmResult;
 }
 
