@@ -7,3 +7,5 @@ add_executable(nslookup
 set_module_type(nslookup win32cui)
 
 add_importlibs(nslookup user32 ws2_32 snmpapi iphlpapi msvcrt kernel32)
+
+add_livecd_target(nslookup reactos/system32)

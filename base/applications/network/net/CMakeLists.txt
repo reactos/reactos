@@ -13,3 +13,5 @@ add_executable(net ${SOURCE})
 set_module_type(net win32cui)
 
 add_importlibs(net ws2_32 msvcrt kernel32)
+
+add_livecd_target(net reactos/system32)
