@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
+PGRAPHICS_DEVICE gpVgaGraphicsDevice;
+
 static PGRAPHICS_DEVICE gpGraphicsDeviceFirst = NULL;
 static PGRAPHICS_DEVICE gpGraphicsDeviceLast = NULL;
 static HSEMAPHORE ghsemGraphicsDeviceList;

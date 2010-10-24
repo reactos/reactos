@@ -29,6 +29,33 @@ VOID FASTCALL IntUserManualGuiCheck(LONG Check);
 PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
 VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);
 
+NTSTATUS
+NTAPI
+RegOpenKey(
+    LPCWSTR pwszKeyName,
+    PHKEY phkey);
+
+NTSTATUS
+NTAPI
+RegQueryValue(
+    IN HKEY hkey,
+    IN PCWSTR pwszValueName,
+    IN ULONG ulType,
+    OUT PVOID pvData,
+    IN OUT PULONG pcbValue);
+
+VOID
+NTAPI
+RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData);
+
+VOID
+NTAPI
+RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData);
+
+BOOL
+NTAPI
+RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData);
+
 BOOL
 NTAPI
 RegReadUserSetting(

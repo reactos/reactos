@@ -54,7 +54,8 @@ InitLDEVImpl()
     gpldevWin32k->cRefs = 1;
     gpldevWin32k->ulDriverVersion = GDI_ENGINE_VERSION;
     gpldevWin32k->pGdiDriverInfo = (PVOID)(gpldevWin32k + 1);
-    gpldevWin32k->pGdiDriverInfo->DriverName.Buffer = NULL; // FIXME
+    RtlInitUnicodeString(&gpldevWin32k->pGdiDriverInfo->DriverName,
+                         L"\\SystemRoot\\System32\\win32k.sys");
     gpldevWin32k->pGdiDriverInfo->ImageAddress = &__ImageBase;
     gpldevWin32k->pGdiDriverInfo->SectionPointer = NULL;
     gpldevWin32k->pGdiDriverInfo->EntryPoint = (PVOID)DriverEntry;
@@ -107,7 +108,7 @@ LDEVOBJ_pdmiGetModes(
     ULONG cbSize, cbFull;
     PDEVMODEINFO pdminfo;
 
-    DPRINT1("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
+    DPRINT("LDEVOBJ_pdmiGetModes(%p, %p)\n", pldev, hDriver);
 
     /* Call the driver to get the required size */
     cbSize = pldev->pfn.GetModes(hDriver, 0, NULL);
@@ -167,16 +168,11 @@ LDEVOBJ_bLoadImage(
         return FALSE;
     }
 
-    /* Initialize the UNICODE_STRING */
-    pDriverInfo->DriverName.Buffer = (PWSTR)(pDriverInfo + 1);
-    pDriverInfo->DriverName.Length = pstrPathName->Length;
-    pDriverInfo->DriverName.MaximumLength = pstrPathName->Length;
-
-    /* Copy the driver name */
-//    RtlCopyUnicodeString(pDriverInfo->DriverName, pstrPathName);
-    RtlCopyMemory(pDriverInfo->DriverName.Buffer,
-                  pstrPathName->Buffer,
-                  pstrPathName->Length);
+    /* Initialize the UNICODE_STRING and copy the driver name */
+    RtlInitEmptyUnicodeString(&pDriverInfo->DriverName,
+                              (PWSTR)(pDriverInfo + 1),
+                              pstrPathName->Length);
+    RtlCopyUnicodeString(&pDriverInfo->DriverName, pstrPathName);
 
     /* Try to load the driver */
     Status = ZwSetSystemInformation(SystemLoadGdiDriverInformation,

@@ -13,8 +13,9 @@
 #define NDEBUG
 #include <debug.h>
 
-static PPDEVOBJ gppdevList = NULL;
 PPDEVOBJ gppdevPrimary = NULL;
+
+static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
 
 BOOL
@@ -225,7 +226,6 @@ PDEVOBJ_pdmMatchDevMode(
     return NULL;
 }
 
-
 static
 PPDEVOBJ
 EngpCreatePDEV(
@@ -236,12 +236,19 @@ EngpCreatePDEV(
     PPDEVOBJ ppdev;
 
     /* Try to find the GRAPHICS_DEVICE */
-    pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0, 0);
-    if (!pGraphicsDevice)
+    if (pustrDeviceName)
     {
-        DPRINT1("No GRAPHICS_DEVICE found for %ls!\n",
-                pustrDeviceName ? pustrDeviceName->Buffer : 0);
-        return NULL;
+        pGraphicsDevice = EngpFindGraphicsDevice(pustrDeviceName, 0, 0);
+        if (!pGraphicsDevice)
+        {
+            DPRINT1("No GRAPHICS_DEVICE found for %ls!\n",
+                    pustrDeviceName ? pustrDeviceName->Buffer : 0);
+            return NULL;
+        }
+    }
+    else
+    {
+        pGraphicsDevice = gpPrimaryGraphicsDevice;
     }
 
     /* Allocate a new PDEVOBJ */

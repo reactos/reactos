@@ -55,7 +55,7 @@ RegQueryValue(
     UNICODE_STRING ustrValueName;
     BYTE ajBuffer[100];
     PKEY_VALUE_PARTIAL_INFORMATION pInfo;
-    ULONG cbInfoSize;
+    ULONG cbInfoSize, cbDataSize;
 
     /* Check if the local buffer is sufficient */
     cbInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + *pcbValue;
@@ -81,20 +81,23 @@ RegQueryValue(
                              (PVOID)pInfo,
                              cbInfoSize,
                              &cbInfoSize);
+
+    cbDataSize = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+
     if (NT_SUCCESS(Status))
     {
         /* Did we get the right type */
         if (pInfo->Type == ulType)
         {
             /* Copy the contents to the caller */
-            RtlCopyMemory(pvData, pInfo->Data, *pcbValue);
+            RtlCopyMemory(pvData, pInfo->Data, min(*pcbValue, cbDataSize));
         }
         else
             Status = STATUS_OBJECT_TYPE_MISMATCH;
     }
 
     /* Return the data size to the caller */
-    *pcbValue = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+    *pcbValue = cbDataSize;
 
     /* Cleanup */
     if (pInfo != (PVOID)ajBuffer)
@@ -104,6 +107,37 @@ RegQueryValue(
 
 }
 
+VOID
+NTAPI
+RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData)
+{
+    UNICODE_STRING ustrValue;
+    UNICODE_STRING ustrData;
+
+    RtlInitUnicodeString(&ustrValue, pwszValue);
+    RtlInitUnicodeString(&ustrData, pwszData);
+    ZwSetValueKey(hkey, &ustrValue, 0, REG_SZ, &ustrData, ustrData.Length + sizeof(WCHAR));
+}
+
+VOID
+NTAPI
+RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData)
+{
+    UNICODE_STRING ustrValue;
+
+    RtlInitUnicodeString(&ustrValue, pwszValue);
+    ZwSetValueKey(hkey, &ustrValue, 0, REG_DWORD, &dwData, sizeof(DWORD));
+}
+
+BOOL
+NTAPI
+RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
+{
+    NTSTATUS Status;
+    ULONG cbSize = sizeof(DWORD);
+    Status = RegQueryValue(hkey, pwszValue, REG_DWORD, pdwData, &cbSize);
+    return NT_SUCCESS(Status);
+}
 
 BOOL
 NTAPI

@@ -13,48 +13,12 @@
 #define NDEBUG
 #include <debug.h>
 
-PDEVOBJ *gpdevPrimary;
+BOOL InitSysParams();
 
-const PWCHAR KEY_ROOT = L"";
-const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
+BOOL gbBaseVideo = 0;
 
-NTSTATUS
-NTAPI
-UserEnumDisplayDevices(
-    PUNICODE_STRING pustrDevice,
-    DWORD iDevNum,
-    PDISPLAY_DEVICEW pdispdev,
-    DWORD dwFlags);
-
-VOID
-RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData)
-{
-    UNICODE_STRING ustrValue;
-    UNICODE_STRING ustrData;
-
-    RtlInitUnicodeString(&ustrValue, pwszValue);
-    RtlInitUnicodeString(&ustrData, pwszData);
-    ZwSetValueKey(hkey, &ustrValue, 0, REG_SZ, &ustrData, ustrData.Length + sizeof(WCHAR));
-}
-
-VOID
-RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData)
-{
-    UNICODE_STRING ustrValue;
-
-    RtlInitUnicodeString(&ustrValue, pwszValue);
-    ZwSetValueKey(hkey, &ustrValue, 0, REG_DWORD, &dwData, sizeof(DWORD));
-}
-
-
-BOOL
-RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
-{
-    NTSTATUS Status;
-    ULONG cbSize = sizeof(DWORD);
-    Status = RegQueryValue(hkey, pwszValue, REG_DWORD, pdwData, &cbSize);
-    return NT_SUCCESS(Status);
-}
+static const PWCHAR KEY_ROOT = L"";
+static const PWCHAR KEY_VIDEO = L"\\Registry\\Machine\\HARDWARE\\DEVICEMAP\\VIDEO";
 
 VOID
 RegWriteDisplaySettings(HKEY hkey, PDEVMODEW pdm)
@@ -103,96 +67,12 @@ RegReadDisplaySettings(HKEY hkey, PDEVMODEW pdm)
     READ(dmPosition.y, "Attach.RelativeY", DM_POSITION);
 }
 
-
-enum
-{
-    VF_USEVGA = 0x1,
-};
-
-BOOL
-InitDisplayDriver(
-    PUNICODE_STRING pustrRegPath,
-    FLONG flags)
-{
-//    PWSTR pwszDriverName;
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-    NTSTATUS Status;
-
-    /* Setup QueryTable for direct registry query */
-    RtlZeroMemory(QueryTable, sizeof(QueryTable));
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED|RTL_QUERY_REGISTRY_DIRECT;
-
-
-    /* Check if vga mode is requested */
-    if (flags & VF_USEVGA)
-    {
-        DWORD dwVgaCompatible;
-
-        /*  */
-        QueryTable[0].Name = L"VgaCompatible";
-        QueryTable[0].EntryContext = &dwVgaCompatible;
-
-        /* Check if the driver is vga */
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-                                        pustrRegPath->Buffer,
-                                        QueryTable,
-                                        NULL,
-                                        NULL);
-
-        if (!dwVgaCompatible)
-        {
-            /* This driver is not a vga driver */
-            return FALSE;
-        }
-    }
-
-#if 0
-
-    /* Query the adapter's registry path */
-    swprintf(awcBuffer, L"\\Device\\Video%lu", iDevNum);
-    QueryTable[0].Name = pGraphicsDevice->szNtDeviceName;
-
-    /* Set string for the registry key */
-    ustrRegistryPath.Buffer = pdispdev->DeviceKey;
-    ustrRegistryPath.Length = 128;
-    ustrRegistryPath.MaximumLength = 128;
-    QueryTable[0].EntryContext = &ustrRegistryPath;
-
-    /* Query the registry */
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
-                                    L"VIDEO",
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-
-    RegQueryValue(KEY_VIDEO, awcBuffer, REG_SZ, pdispdev->DeviceKey, 256);
-
-    {
-        HANDLE hmod;
-
-        hmod = EngLoadImage(pwszDriverName);
-
-        /* Jump to next name */
-        pwszDriverName += wcslen(pwszDriverName) + 1;
-    }
-    while (pwszDriverName < 0);
-#endif
-
-    return 0;
-}
-
-
-NTSTATUS
+PGRAPHICS_DEVICE
 NTAPI
-DisplayDriverQueryRoutine(
-    IN PWSTR ValueName,
-    IN ULONG ValueType,
-    IN PVOID ValueData,
-    IN ULONG ValueLength,
-    IN PVOID Context,
-    IN PVOID EntryContext)
+InitDisplayDriver(
+    IN PWSTR pwszDeviceName,
+    IN PWSTR pwszRegKey)
 {
-    PWSTR pwszRegKey = ValueData;
     PGRAPHICS_DEVICE pGraphicsDevice;
     UNICODE_STRING ustrDeviceName, ustrDisplayDrivers, ustrDescription;
     NTSTATUS Status;
@@ -201,31 +81,16 @@ DisplayDriverQueryRoutine(
     HKEY hkey;
     DEVMODEW dmDefault;
 
-    UNREFERENCED_PARAMETER(ValueLength);
-    UNREFERENCED_PARAMETER(Context);
-    UNREFERENCED_PARAMETER(EntryContext);
-
-    DPRINT1("DisplayDriverQueryRoutine(%S, %S);\n",
-            ValueName, pwszRegKey);
-
-    /* Check if we have a correct entry */
-    if (ValueType != REG_SZ || ValueName[0] != '\\')
-    {
-        /* Something else, just skip it */
-        return STATUS_SUCCESS;
-    }
+    DPRINT1("InitDisplayDriver(%S, %S);\n",
+            pwszDeviceName, pwszRegKey);
 
     /* Open the driver's registry key */
     Status = RegOpenKey(pwszRegKey, &hkey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to open registry key\n");
-        return STATUS_SUCCESS;
+        DPRINT1("Failed to open registry key: %ls\n", pwszRegKey);
+        return NULL;
     }
-
-// HACK: only use 1st adapter
-//if (ValueName[13] != '0')
-//    return STATUS_SUCCESS;
 
     /* Query the diplay drivers */
     cbSize = sizeof(awcBuffer) - 10;
@@ -238,7 +103,7 @@ DisplayDriverQueryRoutine(
     {
         DPRINT1("Didn't find 'InstalledDisplayDrivers', status = 0x%lx\n", Status);
         ZwClose(hkey);
-        return STATUS_SUCCESS;
+        return NULL;
     }
 
     /* Initialize the UNICODE_STRING */
@@ -273,43 +138,118 @@ DisplayDriverQueryRoutine(
     ZwClose(hkey);
 
     /* Register the device with GDI */
-    RtlInitUnicodeString(&ustrDeviceName, ValueName);
+    RtlInitUnicodeString(&ustrDeviceName, pwszDeviceName);
     pGraphicsDevice = EngpRegisterGraphicsDevice(&ustrDeviceName,
                                                  &ustrDisplayDrivers,
                                                  &ustrDescription,
                                                  &dmDefault);
 
-    // FIXME: what to do with pGraphicsDevice?
-
-    return STATUS_SUCCESS;
+    return pGraphicsDevice;
 }
 
-BOOL InitSysParams();
-
 BOOL
-InitVideo(FLONG flags)
+InitVideo(
+    PUNICODE_STRING pustrRegPath,
+    FLONG flags)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
+    WCHAR awcDeviceName[20];
+    WCHAR awcBuffer[256];
     NTSTATUS Status;
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG cbValue;
+    HKEY hkey;
 
     DPRINT1("----------------------------- InitVideo() -------------------------------\n");
 
-    /* Setup QueryTable for registry query */
-    RtlZeroMemory(QueryTable, sizeof(QueryTable));
-    QueryTable[0].QueryRoutine = DisplayDriverQueryRoutine;
+    Status = RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control", &hkey);
+    if (NT_SUCCESS(Status))
+    {
+        cbValue = 256;
+        Status = RegQueryValue(hkey, L"SystemStartOptions", REG_SZ, awcBuffer, &cbValue);
+        if (NT_SUCCESS(Status))
+        {
+            /* Check if VGA mode is requested. */
+            if (wcsstr(awcBuffer, L"/BASEVIDEO") != 0)
+            {
+                DPRINT1("VGA mode requested.\n");
+                gbBaseVideo = TRUE;
+            }
+        }
 
-    /* Query the registry */
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
-                                    L"VIDEO",
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
+        ZwClose(hkey);
+    }
+
+    /* Open the key for the adapters */
+    Status = RegOpenKey(KEY_VIDEO, &hkey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not open device registry key!\n");
+        ASSERT(FALSE);
+    }
+
+    /* Read the name of the VGA adapter */
+    cbValue = 20;
+    Status = RegQueryValue(hkey, L"VgaCompatible", REG_SZ, awcDeviceName, &cbValue);
+    if (NT_SUCCESS(Status))
+    {
+        iVGACompatible = _wtoi(&awcDeviceName[13]);
+        DPRINT1("VGA adapter = %ld\n", iVGACompatible);
+    }
+
+    /* Get the maximum mumber of adapters */
+    if (!RegReadDWORD(hkey, L"MaxObjectNumber", &ulMaxObjectNumber))
+    {
+        DPRINT1("Could not read MaxObjectNumber, defaulting to 0.\n");
+    }
+
+    DPRINT("Found %ld devices\n", ulMaxObjectNumber);
+
+    /* Loop through all adapters */
+    cbValue = 256;
+    for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
+    {
+        /* Create the adapter's key name */
+        swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
+
+        /* Read the reg key name */
+        Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
+
+        pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
+
+        /* Check if this is the VGA adapter */
+        if (iDevNum == iVGACompatible)
+        {
+            /* Set the VGA device as primary */
+            gpVgaGraphicsDevice = pGraphicsDevice;
+            DPRINT1("gpVgaGraphicsDevice = %p\n", gpVgaGraphicsDevice);
+        }
+
+        /* Set the first one as primary device */
+        if (!gpPrimaryGraphicsDevice)
+            gpPrimaryGraphicsDevice = pGraphicsDevice;
+    }
+
+    ZwClose(hkey);
+
+    if (gbBaseVideo)
+    {
+        if (gpVgaGraphicsDevice)
+        {
+            /* Set the VgaAdapter as primary */
+            gpPrimaryGraphicsDevice = gpVgaGraphicsDevice;
+            // FIXME: DEVMODE
+        }
+        else
+        {
+            DPRINT1("Could not find VGA compatible driver. Trying normal.\n");
+        }
+    }
 
     InitSysParams();
 
-    return 0;
+    return 1;
 }
-
 
 NTSTATUS
 NTAPI

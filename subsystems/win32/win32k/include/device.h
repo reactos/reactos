@@ -41,22 +41,6 @@ DC_AllocDcAttr(PDC pdc);
 //#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl(TAG('R', 'o', 's', 'D'), (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
 
-
-NTSTATUS
-NTAPI
-RegOpenKey(
-    LPCWSTR pwszKeyName,
-    PHKEY phkey);
-
-NTSTATUS
-NTAPI
-RegQueryValue(
-    IN HKEY hkey,
-    IN PCWSTR pwszValueName,
-    IN ULONG ulType,
-    OUT PVOID pvData,
-    IN OUT PULONG pcbValue);
-
 BOOL
 NTAPI
 PDEVOBJ_bSwitchMode(
@@ -68,3 +52,6 @@ NTAPI
 PDEVOBJ_pdmMatchDevMode(
     PPDEVOBJ ppdev,
     PDEVMODEW pdm);
+
+extern PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
+extern PGRAPHICS_DEVICE gpVgaGraphicsDevice;
