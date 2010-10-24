@@ -1,0 +1,197 @@
+; File generated automatically from dll\win32\winspool\winspool.spec; do not edit!
+
+LIBRARY winspool.drv
+
+EXPORTS
+  EnumPrinterPropertySheets=__wine_stub_winspool_drv_100 @100 NONAME
+  ClusterSplOpen=__wine_stub_winspool_drv_101 @101 NONAME
+  ClusterSplClose=__wine_stub_winspool_drv_102 @102 NONAME
+  ClusterSplIsAlive=__wine_stub_winspool_drv_103 @103 NONAME
+  PerfClose=__wine_stub_winspool_drv_104 @104
+  PerfCollect=__wine_stub_winspool_drv_105 @105
+  PerfOpen=__wine_stub_winspool_drv_106 @106
+  GetDefaultPrinterA@8 @201
+  SetDefaultPrinterA@4 @202
+  GetDefaultPrinterW@8 @203
+  SetDefaultPrinterW@4 @204
+  SplReadPrinter=__wine_stub_winspool_drv_205 @205 NONAME
+  AddPerMachineConnectionA=__wine_stub_winspool_drv_206 @206 NONAME
+  AddPerMachineConnectionW=__wine_stub_winspool_drv_207 @207 NONAME
+  DeletePerMachineConnectionA=__wine_stub_winspool_drv_208 @208 NONAME
+  DeletePerMachineConnectionW=__wine_stub_winspool_drv_209 @209 NONAME
+  EnumPerMachineConnectionsA=__wine_stub_winspool_drv_210 @210 NONAME
+  EnumPerMachineConnectionsW=__wine_stub_winspool_drv_211 @211 NONAME
+  LoadPrinterDriver=__wine_stub_winspool_drv_212 @212 NONAME
+  RefCntLoadDriver=__wine_stub_winspool_drv_213 @213 NONAME
+  RefCntUnloadDriver=__wine_stub_winspool_drv_214 @214 NONAME
+  ForceUnloadDriver=__wine_stub_winspool_drv_215 @215 NONAME
+  PublishPrinterA=__wine_stub_winspool_drv_216 @216 NONAME
+  PublishPrinterW=__wine_stub_winspool_drv_217 @217 NONAME
+  CallCommonPropertySheetUI=__wine_stub_winspool_drv_218 @218 NONAME
+  PrintUIQueueCreate=__wine_stub_winspool_drv_219 @219 NONAME
+  PrintUIPrinterPropPages=__wine_stub_winspool_drv_220 @220 NONAME
+  PrintUIDocumentDefaults=__wine_stub_winspool_drv_221 @221 NONAME
+  SendRecvBidiData=__wine_stub_winspool_drv_222 @222 NONAME
+  RouterFreeBidiResponseContainer=__wine_stub_winspool_drv_223 @223 NONAME
+  ExternalConnectToLd64In32Server=__wine_stub_winspool_drv_224 @224 NONAME
+  PrintUIWebPnpEntry=__wine_stub_winspool_drv_226 @226 NONAME
+  PrintUIWebPnpPostEntry=__wine_stub_winspool_drv_227 @227 NONAME
+  PrintUICreateInstance=__wine_stub_winspool_drv_228 @228 NONAME
+  PrintUIDocumentPropertiesWrap=__wine_stub_winspool_drv_229 @229 NONAME
+  PrintUIPrinterSetup=__wine_stub_winspool_drv_230 @230 NONAME
+  PrintUIServerPropPages=__wine_stub_winspool_drv_231 @231 NONAME
+  AddDriverCatalog=__wine_stub_winspool_drv_232 @232 NONAME
+  ADVANCEDSETUPDIALOG=__wine_stub_winspool_drv_107 @107
+  AbortPrinter@4 @108
+  AddFormA@12 @109
+  AddFormW@12 @110
+  AddJobA@20 @111
+  AddJobW@20 @112
+  AddMonitorA@12 @113
+  AddMonitorW@12 @114
+  AddPortA@12 @115
+  AddPortExA@16 @116
+  AddPortExW@16 @117
+  AddPortW@12 @118
+  AddPrinterA@12 @119
+  AddPrinterConnectionA@4 @120
+  AddPrinterConnectionW@4 @121
+  AddPrinterDriverA@12 @122
+  AddPrinterDriverExA@16 @123
+  AddPrinterDriverExW@16 @124
+  AddPrinterDriverW@12 @125
+  AddPrinterW@12 @126
+  AddPrintProcessorA@16 @127
+  AddPrintProcessorW@16 @128
+  AddPrintProvidorA@12 @129
+  AddPrintProvidorW@12 @130
+  AdvancedDocumentPropertiesA@20 @131
+  AdvancedDocumentPropertiesW@20 @132
+  AdvancedSetupDialog=__wine_stub_winspool_drv_133 @133
+  ClosePrinter@4 @134
+  CloseSpoolFileHandle=__wine_stub_winspool_drv_135 @135
+  ConfigurePortA@12 @136
+  ConfigurePortW@12 @137
+  ConnectToPrinterDlg@8 @138
+  ConvertAnsiDevModeToUnicodeDevMode=__wine_stub_winspool_drv_139 @139
+  ConvertUnicodeDevModeToAnsiDevMode=__wine_stub_winspool_drv_140 @140
+  CommitSpoolData=__wine_stub_winspool_drv_141 @141
+  CreatePrinterIC=__wine_stub_winspool_drv_142 @142
+  DEVICECAPABILITIES=__wine_stub_winspool_drv_143 @143
+  DEVICEMODE=__wine_stub_winspool_drv_144 @144
+  DeleteFormA@8 @145
+  DeleteFormW@8 @146
+  DeleteMonitorA@12 @147
+  DeleteMonitorW@12 @148
+  DeletePortA@12 @149
+  DeletePortW@12 @150
+  DeletePrinter@4 @151
+  DeletePrinterConnectionA@4 @152
+  DeletePrinterConnectionW@4 @153
+  DeletePrinterDataExA@12 @154
+  DeletePrinterDataExW@12 @155
+  DeletePrinterDataA@8 @156
+  DeletePrinterDataW@8 @157
+  DeletePrinterDriverA@12 @158
+  DeletePrinterDriverExA@20 @159
+  DeletePrinterDriverExW@20 @160
+  DeletePrinterDriverW@12 @161
+  DeletePrinterIC=__wine_stub_winspool_drv_162 @162
+  DevQueryPrint=__wine_stub_winspool_drv_163 @163
+  DeletePrintProcessorA@12 @164
+  DeletePrintProcessorW@12 @165
+  DeletePrintProvidorA@12 @166
+  DeletePrintProvidorW@12 @167
+  DeviceCapabilitiesA@20 @168
+  DeviceCapabilitiesW@20 @169
+  DeviceMode=__wine_stub_winspool_drv_170 @170
+  DocumentEvent=__wine_stub_winspool_drv_171 @171
+  DllMain@12 @172
+  DocumentPropertiesA@24 @173
+  DocumentPropertiesW@24 @174
+  EXTDEVICEMODE=__wine_stub_winspool_drv_175 @175
+  EndDocPrinter@4 @176
+  EndPagePrinter@4 @177
+  EnumFormsA@24 @178
+  EnumFormsW@24 @179
+  EnumJobsA@32 @180
+  EnumJobsW@32 @181
+  EnumMonitorsA@24 @182
+  EnumMonitorsW@24 @183
+  EnumPortsA@24 @184
+  EnumPortsW@24 @185
+  EnumPrinterDataA@36 @186
+  EnumPrinterDataExA@24 @187
+  EnumPrinterDataExW@24 @188
+  EnumPrinterDataW@36 @189
+  EnumPrinterDriversA@28 @190
+  EnumPrinterDriversW@28 @191
+  EnumPrintersA@28 @192
+  EnumPrintersW@28 @193
+  EnumPrinterKeyA@20 @194
+  EnumPrinterKeyW@20 @195
+  ExtDeviceMode@32 @196
+  EnumPrintProcessorDatatypesA@28 @197
+  EnumPrintProcessorDatatypesW@28 @198
+  EnumPrintProcessorsA@28 @199
+  EnumPrintProcessorsW@28 @200
+  FindClosePrinterChangeNotification@4 @225
+  FindFirstPrinterChangeNotification@16 @233
+  FindNextPrinterChangeNotification@16 @234
+  FreePrinterNotifyInfo@4 @235
+  GetFormA@24 @236
+  GetFormW@24 @237
+  GetJobA@24 @238
+  GetJobW@24 @239
+  GetPrinterA@20 @240
+  GetPrinterDataA@24 @241
+  GetPrinterDataExA@28 @242
+  GetPrinterDataExW@28 @243
+  GetPrinterDataW@24 @244
+  GetPrinterDriverA@24 @245
+  GetPrinterDriverDirectoryA@24 @246
+  GetPrinterDriverDirectoryW@24 @247
+  GetPrinterDriverW@24 @248
+  GetPrinterW@20 @249
+  GetPrintProcessorDirectoryA@24 @250
+  GetPrintProcessorDirectoryW@24 @251
+  GetSpoolFileHandle=__wine_stub_winspool_drv_252 @252
+  IsValidDevmodeA=__wine_stub_winspool_drv_253 @253
+  IsValidDevmodeW=__wine_stub_winspool_drv_254 @254
+  OpenPrinterA@12 @255
+  OpenPrinterW@12 @256
+  PlayGdiScriptOnPrinterIC=__wine_stub_winspool_drv_257 @257
+  PrinterMessageBoxA@24 @258
+  PrinterMessageBoxW@24 @259
+  PrinterProperties@8 @260
+  QueryColorProfile=__wine_stub_winspool_drv_261 @261
+  QuerySpoolMode=__wine_stub_winspool_drv_262 @262
+  QueryRemoteFonts=__wine_stub_winspool_drv_263 @263
+  ReadPrinter@16 @264
+  ResetPrinterA@8 @265
+  ResetPrinterW@8 @266
+  ScheduleJob@8 @267
+  SeekPrinter=__wine_stub_winspool_drv_268 @268
+  SetAllocFailCount=__wine_stub_winspool_drv_269 @269
+  SetFormA@16 @270
+  SetFormW@16 @271
+  SetJobA@20 @272
+  SetJobW@20 @273
+  SetPrinterA@16 @274
+  SetPrinterDataA@20 @275
+  SetPrinterDataExA@24 @276
+  SetPrinterDataExW@24 @277
+  SetPrinterDataW@20 @278
+  SetPrinterW@16 @279
+  SplDriverUnloadComplete=__wine_stub_winspool_drv_280 @280
+  SpoolerDevQueryPrintW=__wine_stub_winspool_drv_281 @281
+  SpoolerInit@0 @282
+  SpoolerPrinterEvent=__wine_stub_winspool_drv_283 @283
+  StartDocDlgA=__wine_stub_winspool_drv_284 @284
+  StartDocDlgW=__wine_stub_winspool_drv_285 @285
+  StartDocPrinterA@12 @286
+  StartDocPrinterW@12 @287
+  StartPagePrinter@4 @288
+  WaitForPrinterChange@8 @289
+  WritePrinter@16 @290
+  XcvDataW@32 @291
