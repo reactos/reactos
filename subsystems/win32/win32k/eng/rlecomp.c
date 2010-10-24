@@ -18,108 +18,59 @@ enum Rle_EscapeCodes
     RLE_DELTA = 2  /* Delta */
 };
 
-VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
+VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format)
 {
-    int x = 0;
-    int y = Size.cy - 1;
-    int c;
-    int length;
-    int width = ((Size.cx+1)/2);
-    int height = Size.cy - 1;
+    INT x = 0;
+    INT y = Size.cy - 1;
+    INT c;
+    INT length;
+    INT width;
+    INT height = Size.cy - 1;
     BYTE *begin = CompressedBits;
     BYTE *bits = CompressedBits;
     BYTE *temp;
-    while (y >= 0)
-    {
-        length = *bits++ / 2;
-        if (length)
-        {
-            c = *bits++;
-            while (length--)
-            {
-                if (x >= width) break;
-                temp = UncompressedBits + (((height - y) * Delta) + x);
-                x++;
-                *temp = c;
-            }
-        }
-        else
-        {
-            length = *bits++;
-            switch (length)
-            {
-                case RLE_EOL:
-                    x = 0;
-                    y--;
-                    break;
-                case RLE_END:
-                    return;
-                case RLE_DELTA:
-                    x += (*bits++)/2;
-                    y -= (*bits++)/2;
-                    break;
-                default:
-                    length /= 2;
-                    while (length--)
-                    {
-                        c = *bits++;
-                        if (x < width)
-                        {
-                            temp = UncompressedBits + (((height - y) * Delta) + x);
-                            x++;
-                            *temp = c;
-                        }
-                    }
-                    if ((bits - begin) & 1)
-                    {
-                        bits++;
-                    }
-            }
-        }
-    }
-}
+    INT shift = 0;
 
-VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
-{
-    int x = 0;
-    int y = Size.cy - 1;
-    int c;
-    int length;
-    int width = Size.cx;
-    int height = Size.cy - 1;
-    BYTE *begin = CompressedBits;
-    BYTE *bits = CompressedBits;
-    BYTE *temp;
-    while (y >= 0)
+    if (Format == BMF_4RLE)
+        shift = 1;
+    else if(Format != BMF_8RLE)
+        return;
+
+    width = ((Size.cx + shift) >> shift);
+
+    _SEH2_TRY
     {
-        length = *bits++;
-        if (length)
+        while (y >= 0)
         {
-            c = *bits++;
-            while (length--)
+            length = (*bits++) >> shift;
+            if (length)
             {
-                if (x >= width) break;
-                temp = UncompressedBits + (((height - y) * Delta) + x);
-                x++;
-                *temp = c;
+                c = *bits++;
+                while (length--)
+                {
+                    if (x >= width) break;
+                    temp = UncompressedBits + (((height - y) * Delta) + x);
+                    x++;
+                    *temp = c;
+                }
             }
-        }
-        else
-        {
-            length = *bits++;
-            switch (length)
+            else
             {
+                length = *bits++;
+                switch (length)
+                {
                 case RLE_EOL:
                     x = 0;
                     y--;
                     break;
                 case RLE_END:
-                    return;
+                    _SEH2_YIELD(return);
                 case RLE_DELTA:
-                    x += *bits++;
-                    y -= *bits++;
+                    x += (*bits++) >> shift;
+                    y -= (*bits++) >> shift;
                     break;
                 default:
+                    length = length >> shift;
                     while (length--)
                     {
                         c = *bits++;
@@ -134,7 +85,15 @@ VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LO
                     {
                         bits++;
                     }
+                }
             }
         }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Decoding error\n");
+    }
+    _SEH2_END;
+
+    return;
 }

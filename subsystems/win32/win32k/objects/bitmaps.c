@@ -101,20 +101,13 @@ GreCreateBitmapEx(
     pso = &psurf->SurfObj;
 
     /* The infamous RLE hack */
-    if (iFormat == BMF_4RLE)
+    if (iFormat == BMF_4RLE || iFormat == BMF_8RLE)
     {
-        sizl.cx = nWidth; sizl.cy = nHeight;
+        sizl.cx = nWidth;
+        sizl.cy = nHeight;
         pvCompressedBits = pvBits;
         pvBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
-        Decompress4bpp(sizl, pvCompressedBits, pvBits, pso->lDelta);
-        fjBitmap |= BMF_RLE_HACK;
-    }
-    else if (iFormat == BMF_8RLE)
-    {
-        sizl.cx = nWidth; sizl.cy = nHeight;
-        pvCompressedBits = pvBits;
-        pvBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
-        Decompress8bpp(sizl, pvCompressedBits, pvBits, pso->lDelta);
+        DecompressBitmap(sizl, pvCompressedBits, pvBits, pso->lDelta, iFormat);
         fjBitmap |= BMF_RLE_HACK;
     }
 
@@ -239,10 +232,7 @@ IntCreateCompatibleBitmap(
         if (Dc->dctype != DC_TYPE_MEMORY)
         {
             PSURFACE psurf;
-            SIZEL size;
 
-            size.cx = abs(Width);
-            size.cy = abs(Height);
             Bmp = GreCreateBitmap(abs(Width),
                                   abs(Height),
                                   1,
@@ -268,11 +258,9 @@ IntCreateCompatibleBitmap(
             {
                 if (Count == sizeof(BITMAP))
                 {
-                    SIZEL size;
                     PSURFACE psurfBmp;
-                    size.cx = abs(Width);
-                    size.cy = abs(Height);
-					Bmp = GreCreateBitmap(abs(Width),
+
+                    Bmp = GreCreateBitmap(abs(Width),
                                   abs(Height),
                                   1,
                                   dibs.dsBm.bmBitsPixel,

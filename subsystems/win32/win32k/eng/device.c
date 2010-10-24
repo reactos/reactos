@@ -243,9 +243,9 @@ EngpFindGraphicsDevice(
     if (pustrDevice)
     {
         /* Loop through the list of devices */
-        for (pGraphicsDevice = gpGraphicsDeviceFirst, i = 0;
+        for (pGraphicsDevice = gpGraphicsDeviceFirst;
              pGraphicsDevice;
-             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice, i++)
+             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
         {
             /* Compare the device name */
             RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);

@@ -430,11 +430,12 @@ UserEnumDisplaySettings(
     PDEVMODEENTRY pdmentry;
     ULONG i, iFoundMode;
 
-    DPRINT1("Enter UserEnumDisplaySettings('%ls', %ld)\n",
+    DPRINT("Enter UserEnumDisplaySettings('%ls', %ld)\n",
             pustrDevice ? pustrDevice->Buffer : NULL, iModeNum);
 
     /* Ask gdi for the GRAPHICS_DEVICE */
     pGraphicsDevice = EngpFindGraphicsDevice(pustrDevice, 0, 0);
+
     if (!pGraphicsDevice)
     {
         /* No device found */
@@ -442,19 +443,19 @@ UserEnumDisplaySettings(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (iModeNum == 0)
-    {
-        DPRINT1("Should initialize modes somehow\n");
-        // Update DISPLAY_DEVICEs?
-    }
+    if (iModeNum >= pGraphicsDevice->cDevModes)
+        return STATUS_NO_MORE_ENTRIES;
 
     iFoundMode = 0;
     for (i = 0; i < pGraphicsDevice->cDevModes; i++)
     {
         pdmentry = &pGraphicsDevice->pDevModeList[i];
 
-//        if ((!(dwFlags & EDS_RAWMODE) && (pdmentry->dwFlags & 1)) || // FIXME!
-//            (dwFlags & EDS_RAWMODE))
+        /* FIXME: consider EDS_RAWMODE */
+#if 0
+        if ((!(dwFlags & EDS_RAWMODE) && (pdmentry->dwFlags & 1)) ||!
+            (dwFlags & EDS_RAWMODE))
+#endif
         {
             /* Is this the one we want? */
             if (iFoundMode == iModeNum)
@@ -536,7 +537,7 @@ NtUserEnumDisplaySettings(
     DEVMODEW dmReg, *pdm;
 
     DPRINT1("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
-            pustrDevice ? pustrDevice->Buffer:0, iModeNum);
+            pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
 
     if (pustrDevice)
     {
@@ -668,8 +669,12 @@ UserChangeDisplaySettings(
     }
 
     /* Fixup values */
-    if((dm.dmFields & DM_BITSPERPEL) && (dm.dmBitsPerPel == 0))
+    if(dm.dmBitsPerPel == 0 || !(dm.dmFields & DM_BITSPERPEL))
+    {
         dm.dmBitsPerPel = ppdev->pdmwDev->dmBitsPerPel;
+        dm.dmFields |= DM_BITSPERPEL;
+    }
+
     if((dm.dmFields & DM_DISPLAYFREQUENCY) && (dm.dmDisplayFrequency == 0))
         dm.dmDisplayFrequency = ppdev->pdmwDev->dmDisplayFrequency;
 
