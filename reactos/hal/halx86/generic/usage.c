@@ -509,6 +509,9 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN PVOID Handler,
                            IN KINTERRUPT_MODE Mode)
 {
+    /* Set the IDT_LATCHED flag for latched interrupts */
+    if (Mode == Latched) Flags |= IDT_LATCHED;
+    
     /* Register the vector */
     HalpRegisterVector(Flags, BusVector, SystemVector, Irql);
 
