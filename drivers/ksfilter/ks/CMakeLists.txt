@@ -26,9 +26,10 @@ add_library(ks SHARED
     kcom.c
     ks.rc)
 
-set_target_properties(ks PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
-
-set_module_type(ks kernelmodedriver)
+set_target_properties(ks PROPERTIES SUFFIX ".sys")
+set_entrypoint(ks 0)
+set_subsystem(ks native)
+set_image_base(ks 0x00010000)
 
 target_link_libraries(ks
     ${CMAKE_CURRENT_SOURCE_DIR}/ks.def
