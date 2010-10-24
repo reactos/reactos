@@ -151,9 +151,6 @@ static const ULONG ExpandDest[16] =
       0xF0F0F0F0 /* 1111 */,
     };
 
-  /* Ignore alpha channel in Pattern */
-  Pattern &= 0x00ffffff ;
-
   /* Optimized code for the various named rop codes. */
   switch (Rop)
     {
