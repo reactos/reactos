@@ -873,8 +873,7 @@ co_HOOK_CallHooks( INT HookId,
 
     ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
-    pti = GetW32ThreadInfo(); // Need to call this!
-
+    pti = PsGetCurrentThreadWin32Thread();
     if (!pti || !pti->pDeskInfo)
        goto Exit; // Must have a desktop running for hooks.
 
