@@ -11,7 +11,7 @@ list(APPEND SOURCE
 
 add_library(pcnet SHARED ${SOURCE})
 
-set_target_properties(pcnet PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(pcnet kernelmodedriver)
 
 target_link_libraries(pcnet
     -lndis
@@ -19,3 +19,5 @@ target_link_libraries(pcnet
     -lhal)
 
 add_dependencies(pcnet psdk bugcodes buildno_header)
+
+add_livecd_target(pcnet reactos/system32/drivers)

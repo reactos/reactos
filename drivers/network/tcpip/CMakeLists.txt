@@ -25,7 +25,7 @@ list(APPEND SOURCE
 
 add_library(tcpip SHARED ${CMAKE_CURRENT_BINARY_DIR}/tcpip_precomp.h.gch ${SOURCE})
 
-set_target_properties(tcpip PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(tcpip kernelmodedriver)
 
 target_link_libraries(tcpip
     ${CMAKE_CURRENT_BINARY_DIR}/tcpip.def
@@ -39,3 +39,5 @@ target_link_libraries(tcpip
 
 add_pch(tcpip ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
 add_dependencies(tcpip tcpip_def psdk bugcodes buildno_header)
+
+add_livecd_target(tcpip reactos/system32/drivers)

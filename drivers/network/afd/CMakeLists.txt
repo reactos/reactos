@@ -19,7 +19,7 @@ list(APPEND SOURCE
 
 add_library(afd SHARED ${CMAKE_CURRENT_BINARY_DIR}/afd_afd.h.gch ${SOURCE})
 
-set_target_properties(afd PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(afd kernelmodedriver)
 
 target_link_libraries(afd
     pseh
@@ -28,4 +28,5 @@ target_link_libraries(afd
 
 add_pch(afd ${CMAKE_CURRENT_SOURCE_DIR}/include/afd.h ${SOURCE})
 add_dependencies(afd psdk bugcodes buildno_header)
+
 add_livecd_target(afd reactos/system32/drivers)

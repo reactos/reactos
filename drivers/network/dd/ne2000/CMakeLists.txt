@@ -8,7 +8,7 @@ list(APPEND SOURCE
 
 add_library(ne2000 SHARED ${SOURCE})
 
-set_target_properties(ne2000 PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(ne2000 kernelmodedriver)
 
 target_link_libraries(ne2000
     -lndis
@@ -16,3 +16,5 @@ target_link_libraries(ne2000
     -lhal)
 
 add_dependencies(ne2000 psdk bugcodes buildno_header)
+
+add_livecd_target(ne2000 reactos/system32/drivers)

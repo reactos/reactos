@@ -19,7 +19,7 @@ list(APPEND SOURCE
 
 add_library(tdi SHARED ${SOURCE})
 
-set_target_properties(tdi PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(tdi kernelmodedriver)
 
 target_link_libraries(tdi
     ${CMAKE_CURRENT_BINARY_DIR}/tdi.def
@@ -27,3 +27,5 @@ target_link_libraries(tdi
     -lhal)
 
 add_dependencies(tdi tdi_def psdk bugcodes buildno_header)
+
+add_livecd_target(tdi reactos/system32/drivers)
