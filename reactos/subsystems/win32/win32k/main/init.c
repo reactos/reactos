@@ -90,6 +90,10 @@ Win32kProcessCallout(PEPROCESS Process,
         /* Destroy its classes */
         destroy_process_classes(Win32Process);
 
+        /* Free allocated user handles */
+        free_process_user_handles(Win32Process);
+
+        /* Destroy idle event if it exists */
         if (Win32Process->idle_event)
         {
             ObDereferenceObject(Win32Process->idle_event);
@@ -157,7 +161,7 @@ Win32kThreadCallout(PETHREAD Thread,
         UserEnterExclusive();
             cleanup_clipboard_thread(Win32Thread);
             destroy_thread_windows(Win32Thread);
-            //free_msg_queue(Win32Thread); // FIXME!
+            free_msg_queue(Win32Thread);
             close_thread_desktop(Win32Thread);
         UserLeave();
 
