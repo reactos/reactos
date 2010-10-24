@@ -733,7 +733,7 @@ IopTranslateDeviceResources(
    DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool, ListSize);
    if (!DeviceNode->ResourceListTranslated)
    {
-      Status =STATUS_NO_MEMORY;
+      Status = STATUS_NO_MEMORY;
       goto cleanup;
    }
    RtlCopyMemory(DeviceNode->ResourceListTranslated, DeviceNode->ResourceList, ListSize);
@@ -758,6 +758,7 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Port.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
+                  DPRINT1("Failed to translate port resource (Start: 0xI64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
                }
                break;
@@ -771,6 +772,14 @@ IopTranslateDeviceResources(
                   DescriptorRaw->u.Interrupt.Vector,
                   (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
                   &DescriptorTranslated->u.Interrupt.Affinity);
+                
+               if (!DescriptorTranslated->u.Interrupt.Vector)
+               {
+                   Status = STATUS_UNSUCCESSFUL;
+                   DPRINT1("Failed to translate interrupt resource (Vector: 0x%x | Level: 0x%x)\n", DescriptorRaw->u.Interrupt.Vector,
+                                                                                                   DescriptorRaw->u.Interrupt.Level);
+                   goto cleanup;
+               }
                break;
             }
             case CmResourceTypeMemory:
@@ -784,6 +793,7 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Memory.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
+                  DPRINT1("Failed to translate memory resource (Start: 0xI64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
                   goto cleanup;
                }
             }
@@ -879,16 +889,21 @@ IopAssignDeviceResources(
    Status = IopCreateResourceListFromRequirements(DeviceNode->ResourceRequirements,
                                                   &DeviceNode->ResourceList);
    if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("Failed to create a resource list from supplied resources for %wZ\n", &DeviceNode->InstancePath);
        goto ByeBye;
+   }
 
-   Status = IopDetectResourceConflict(DeviceNode->ResourceList, FALSE, NULL);
-   if (!NT_SUCCESS(Status))
-       goto ByeBye;
+   /* IopCreateResourceListFromRequirements should NEVER succeed with a conflicting list */
+   ASSERT(IopDetectResourceConflict(DeviceNode->ResourceList, FALSE, NULL) != STATUS_CONFLICTING_ADDRESSES);
 
 Finish:
    Status = IopTranslateDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("Failed to translate resources for %wZ\n", &DeviceNode->InstancePath);
        goto ByeBye;
+   }
 
    Status = IopUpdateResourceMapForPnPDevice(DeviceNode);
    if (!NT_SUCCESS(Status))
