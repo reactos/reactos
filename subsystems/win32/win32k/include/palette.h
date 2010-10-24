@@ -40,7 +40,7 @@ typedef struct _PALETTE
   PALOBJ PalObj;
   XLATEOBJ *logicalToSystem;
   HPALETTE Self;
-  ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
+  FLONG flFlags; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
   ULONG NumColors;
   PALETTEENTRY *IndexedColors;
   ULONG RedMask;

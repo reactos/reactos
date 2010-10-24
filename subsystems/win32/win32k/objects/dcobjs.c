@@ -166,7 +166,7 @@ GdiSelectPalette(
 
     /* Is this a valid palette for this depth? */
 	if ((BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
-					&& ppal->Mode == PAL_INDEXED) ||
+					&& (ppal->flFlags & PAL_INDEXED)) ||
 			(BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
     {
         /* Get old palette, set new one */

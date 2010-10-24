@@ -85,28 +85,28 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
 
     /*  palette_size = visual->map_entries; */
 
-    gpalRGB.Mode = PAL_RGB;
+    gpalRGB.flFlags = PAL_RGB;
     gpalRGB.RedMask = RGB(0xFF, 0x00, 0x00);
     gpalRGB.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalRGB.BlueMask = RGB(0x00, 0x00, 0xFF);
     gpalRGB.BaseObject.ulShareCount = 0;
     gpalRGB.BaseObject.BaseFlags = 0 ;
 
-    gpalBGR.Mode = PAL_BGR;
+    gpalBGR.flFlags = PAL_BGR;
     gpalBGR.RedMask = RGB(0x00, 0x00, 0xFF);
     gpalBGR.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalBGR.BlueMask = RGB(0xFF, 0x00, 0x00);
     gpalBGR.BaseObject.ulShareCount = 0;
     gpalBGR.BaseObject.BaseFlags = 0 ;
 
-    gpalRGB555.Mode = PAL_RGB16_555 | PAL_BITFIELDS;
+    gpalRGB555.flFlags = PAL_RGB16_555 | PAL_BITFIELDS;
     gpalRGB555.RedMask = 0x7C00;
     gpalRGB555.GreenMask = 0x3E0;
     gpalRGB555.BlueMask = 0x1F;
     gpalRGB555.BaseObject.ulShareCount = 0;
     gpalRGB555.BaseObject.BaseFlags = 0 ;
 
-    gpalRGB565.Mode = PAL_RGB16_565 | PAL_BITFIELDS;
+    gpalRGB565.flFlags = PAL_RGB16_565 | PAL_BITFIELDS;
     gpalRGB565.RedMask = 0xF800;
     gpalRGB565.GreenMask = 0x7E0;
     gpalRGB565.BlueMask = 0x1F;
@@ -114,7 +114,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     gpalRGB565.BaseObject.BaseFlags = 0 ;
 
     memset(&gpalMono, 0, sizeof(PALETTE));
-    gpalMono.Mode = PAL_MONOCHROME;
+    gpalMono.flFlags = PAL_MONOCHROME;
     gpalMono.BaseObject.ulShareCount = 0;
     gpalMono.BaseObject.BaseFlags = 0 ;
 
@@ -162,7 +162,7 @@ PALETTE_AllocPalette(ULONG Mode,
     NewPalette = PalGDI->BaseObject.hHmgr;
 
     PalGDI->Self = NewPalette;
-    PalGDI->Mode = Mode;
+    PalGDI->flFlags = Mode;
 
     if (NULL != Colors)
     {
@@ -178,20 +178,22 @@ PALETTE_AllocPalette(ULONG Mode,
         RtlCopyMemory(PalGDI->IndexedColors, Colors, sizeof(PALETTEENTRY) * NumColors);
     }
 
-    if (PAL_INDEXED == Mode)
+    if (Mode & PAL_INDEXED)
     {
         PalGDI->NumColors = NumColors;
     }
-    else if (PAL_BITFIELDS == Mode)
+    else if (Mode & PAL_BITFIELDS)
     {
         PalGDI->RedMask = Red;
         PalGDI->GreenMask = Green;
         PalGDI->BlueMask = Blue;
 
         if (Red == 0x7c00 && Green == 0x3E0 && Blue == 0x1F)
-            PalGDI->Mode |= PAL_RGB16_555;
+            PalGDI->flFlags |= PAL_RGB16_555;
         else if (Red == 0xF800 && Green == 0x7E0 && Blue == 0x1F)
-            PalGDI->Mode |= PAL_RGB16_565;
+            PalGDI->flFlags |= PAL_RGB16_565;
+        else if (Red == 0xFF0000 && Green == 0xFF00 && Blue == 0xFF)
+            PalGDI->flFlags |= PAL_BGR;
     }
 
     PALETTE_UnlockPalette(PalGDI);
@@ -217,7 +219,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     NewPalette = PalGDI->BaseObject.hHmgr;
 
     PalGDI->Self = NewPalette;
-    PalGDI->Mode = PAL_INDEXED;
+    PalGDI->flFlags = PAL_INDEXED;
 
     PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool,
                                                   sizeof(PALETTEENTRY) * NumColors,
@@ -321,7 +323,7 @@ ULONG
 NTAPI
 PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG ulColor)
 {
-    if (ppal->Mode & PAL_INDEXED) // use fl & PALINDEXED
+    if (ppal->flFlags & PAL_INDEXED) // use fl & PALINDEXED
         return PALETTE_ulGetNearestPaletteIndex(ppal, ulColor);
     else
         return PALETTE_ulGetNearestBitFieldsIndex(ppal, ulColor);
@@ -333,19 +335,19 @@ PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors)
 {
     ASSERT(pulColors);
 
-    if (ppal->Mode & PAL_INDEXED || ppal->Mode & PAL_RGB)
+    if (ppal->flFlags & PAL_INDEXED || ppal->flFlags & PAL_RGB)
     {
         pulColors[0] = RGB(0xFF, 0x00, 0x00);
         pulColors[1] = RGB(0x00, 0xFF, 0x00);
         pulColors[2] = RGB(0x00, 0x00, 0xFF);
     }
-    else if (ppal->Mode & PAL_BGR)
+    else if (ppal->flFlags & PAL_BGR)
     {
         pulColors[0] = RGB(0x00, 0x00, 0xFF);
         pulColors[1] = RGB(0x00, 0xFF, 0x00);
         pulColors[2] = RGB(0xFF, 0x00, 0x00);
     }
-    else if (ppal->Mode & PAL_BITFIELDS)
+    else if (ppal->flFlags & PAL_BITFIELDS)
     {
         pulColors[0] = ppal->RedMask;
         pulColors[1] = ppal->GreenMask;
@@ -433,7 +435,7 @@ PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors, ULONG *PaletteEntry
     /* NOTE: PaletteEntry ULONGs are in the same order as PALETTEENTRY. */
     RtlCopyMemory(PaletteEntry, PalGDI->IndexedColors + Start, sizeof(ULONG) * Colors);
 
-    if (PalGDI->Mode & PAL_GAMMACORRECTION)
+    if (PalGDI->flFlags & PAL_GAMMACORRECTION)
         ColorCorrection(PalGDI, (PPALETTEENTRY)PaletteEntry, Colors);
 
     return Colors;
@@ -664,17 +666,17 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
          return nearest;
       }
 
-      if (palGDI->Mode & PAL_INDEXED)
+      if (palGDI->flFlags & PAL_INDEXED)
       {
          ULONG index;
          index = PALETTE_ulGetNearestPaletteIndex(palGDI, Color);
          nearest = PALETTE_ulGetRGBColorFromIndex(palGDI, index);
       }
-      else if (palGDI->Mode & PAL_RGB || palGDI->Mode & PAL_BGR)
+      else if (palGDI->flFlags & PAL_RGB || palGDI->flFlags & PAL_BGR)
       {
          nearest = Color;
       }
-      else if (palGDI->Mode & PAL_BITFIELDS)
+      else if (palGDI->flFlags & PAL_BITFIELDS)
       {
          RBits = 8 - GetNumberOfBits(palGDI->RedMask);
          GBits = 8 - GetNumberOfBits(palGDI->GreenMask);
@@ -702,7 +704,7 @@ NtGdiGetNearestPaletteIndex(
 
     if (ppal)
     {
-        if (ppal->Mode & PAL_INDEXED)
+        if (ppal->flFlags & PAL_INDEXED)
         {
             /* Return closest match for the given RGB color */
             index = PALETTE_ulGetNearestPaletteIndex(ppal, crColor);

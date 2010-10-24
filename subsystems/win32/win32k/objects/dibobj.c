@@ -1690,7 +1690,7 @@ DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi)
     USHORT *lpIndex;
 	HPALETTE hpal;
 
-    if (ppal->Mode != PAL_INDEXED)
+    if (!(ppal->flFlags & PAL_INDEXED))
     {
         return NULL;
     }
@@ -1764,17 +1764,33 @@ BuildDIBPalette(CONST BITMAPINFO *bmi)
         GreenMask = pdwColors[1];
         BlueMask = pdwColors[2];
     }
-    else if (bits == 15)
-    {
-        paletteType = PAL_RGB16_555;
-    }
-    else if (bits == 16)
-    {
-        paletteType = PAL_RGB16_565;
-    }
     else
     {
-		paletteType = PAL_BGR;
+        paletteType = PAL_BITFIELDS;
+        switch (bits)
+        {
+            case 15:
+                paletteType |= PAL_RGB16_555;
+                RedMask = 0x7C00;
+                GreenMask = 0x03E0;
+                BlueMask = 0x001F;
+                break;
+
+            case 16:
+                paletteType |= PAL_RGB16_565;
+                RedMask = 0xF800;
+                GreenMask = 0x07E0;
+                BlueMask = 0x001F;
+                break;
+
+            case 24:
+            case 32:
+                paletteType |= PAL_BGR;
+                RedMask = 0xFF0000;
+                GreenMask = 0x00FF00;
+                BlueMask = 0x0000FF;
+                break;
+        }
     }
 
     if (bmi->bmiHeader.biClrUsed == 0)

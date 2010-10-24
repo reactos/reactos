@@ -949,7 +949,7 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
             pds->dsBmih.biHeight = pds->dsBm.bmHeight;
             pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
             pds->dsBmih.biBitCount = pds->dsBm.bmBitsPixel;
-			if(psurf->ppal->Mode & PAL_BITFIELDS)
+			if(psurf->ppal->flFlags & PAL_BITFIELDS)
 			{
 				pds->dsBmih.biCompression = BI_BITFIELDS;
 			}
