@@ -553,6 +553,7 @@ DWORD RControlService(
     DWORD pcbBytesNeeded = 0;
     DWORD dwServicesReturned = 0;
     DWORD dwControlsAccepted;
+    DWORD dwCurrentState;
     HKEY hServicesKey = NULL;
 
     DPRINT("RControlService() called\n");
@@ -655,8 +656,34 @@ DWORD RControlService(
     else
     {
         dwControlsAccepted = lpService->Status.dwControlsAccepted;
+        dwCurrentState = lpService->Status.dwCurrentState;
 
-        /* Check if the control code is acceptable */
+        /* Check the current state before sending a control request */
+        switch (dwCurrentState)
+        {
+            case SERVICE_STOP_PENDING:
+            case SERVICE_STOPPED:
+                return ERROR_SERVICE_CANNOT_ACCEPT_CTRL;
+
+            case SERVICE_START_PENDING:
+                switch (dwControl)
+                {
+                    case SERVICE_CONTROL_STOP:
+                        break;
+
+                    case SERVICE_CONTROL_INTERROGATE:
+                        RtlCopyMemory(lpServiceStatus,
+                                      &lpService->Status,
+                                      sizeof(SERVICE_STATUS));
+                        return ERROR_SUCCESS;
+
+                    default:
+                        return ERROR_SERVICE_CANNOT_ACCEPT_CTRL;
+                }
+                break;
+        }
+
+        /* Check if the control code is acceptable to the service */
         switch (dwControl)
         {
             case SERVICE_CONTROL_STOP:
