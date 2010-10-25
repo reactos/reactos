@@ -169,7 +169,7 @@ SharedPtrToKernel(PVOID Ptr)
 static __inline BOOL
 IsThreadHooked(PCLIENTINFO pci)
 {
-    return pci->fsHooks != 0;
+    return (pci->fsHooks|pci->pDeskInfo->fsHooks) != 0;
 }
 
 static __inline PDESKTOPINFO
