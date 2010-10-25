@@ -2329,9 +2329,34 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     if ((BaseAddress > MM_HIGHEST_VAD_ADDRESS) ||
         (PAGE_ALIGN(BaseAddress) == (PVOID)USER_SHARED_DATA))
     {
-        /* FIXME: We should return some bogus info structure */
-        UNIMPLEMENTED;
-        while (TRUE);
+        Address = PAGE_ALIGN(BaseAddress);
+
+        /* Make up an info structure describing this range */
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationProtect = PAGE_READONLY;
+        MemoryInfo.Type = MEM_PRIVATE;
+
+        /* Special case for shared data */
+        if (Address == (PVOID)USER_SHARED_DATA)
+        {
+            MemoryInfo.AllocationBase = (PVOID)USER_SHARED_DATA;
+            MemoryInfo.State = MEM_COMMIT;
+            MemoryInfo.Protect = PAGE_READONLY;
+            MemoryInfo.RegionSize = PAGE_SIZE;
+        }
+        else
+        {
+            MemoryInfo.AllocationBase = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1;
+            MemoryInfo.State = MEM_RESERVE;
+            MemoryInfo.Protect = PAGE_NOACCESS;
+            MemoryInfo.RegionSize = (ULONG_PTR)MemoryInfo.AllocationBase - (ULONG_PTR)Address;
+        }
+
+        /* Return the data (FIXME: Use SEH) */
+        *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+        if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+
+        return STATUS_SUCCESS;
     }
 
     /* Check if this is for a local or remote process */
@@ -2395,9 +2420,26 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
         /* Calculate region size */
         if (Vad)
         {
-            /* We don't handle this yet */
-            UNIMPLEMENTED;
-            while (TRUE);
+            if (Vad->StartingVpn >= BaseVpn)
+            {
+                /* Region size is the free space till the start of that VAD */
+                MemoryInfo.RegionSize = (ULONG_PTR)(Vad->StartingVpn << PAGE_SHIFT) - (ULONG_PTR)Address;
+            }
+            else
+            {
+                /* Get the next VAD */
+                Vad = (PMMVAD)MiGetNextNode((PMMADDRESS_NODE)Vad);
+                if (Vad)
+                {
+                    /* Region size is the free space till the start of that VAD */
+                    MemoryInfo.RegionSize = (ULONG_PTR)(Vad->StartingVpn << PAGE_SHIFT) - (ULONG_PTR)Address;
+                }
+                else
+                {
+                    /* Maximum possible region size with that base address */
+                    MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
+                }
+            }
         }
         else
         {
