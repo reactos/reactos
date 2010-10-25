@@ -317,8 +317,8 @@ NtUserEnumDisplayDevices(
     DISPLAY_DEVICEW dispdev;
     NTSTATUS Status;
 
-    DPRINT1("Enter NtUserEnumDisplayDevices(%p, %ls, %ld)\n",
-            pustrDevice, pustrDevice ? pustrDevice->Buffer : 0, iDevNum);
+    DPRINT("Enter NtUserEnumDisplayDevices(%wZ, %ld)\n",
+           pustrDevice, iDevNum);
 
     // FIXME: HACK, desk.cpl passes broken crap
     if (pustrDevice && iDevNum != 0)
