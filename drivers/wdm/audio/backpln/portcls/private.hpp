@@ -356,6 +356,22 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM_AUDIO_POSITION(PropPositionHandler, PropPositionHandler)\
 }
 
+
+#define DEFINE_KSPROPERTY_ITEM_DRMAUDIOSTREAM_CONTENTID(SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_DRMAUDIOSTREAM_CONTENTID,\
+        NULL,\
+        sizeof(KSPROPERTY),\
+        sizeof(ULONG),\
+        (SetHandler),\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_DRMSET(PinSet,\
+    PropPositionHandler)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+    DEFINE_KSPROPERTY_ITEM_DRMAUDIOSTREAM_CONTENTID(PropPositionHandler)\
+}
+
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\

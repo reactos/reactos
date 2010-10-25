@@ -587,7 +587,7 @@ CPortPinWaveRT::Init(
         goto cleanup;
     }
 
-    Status = m_IrpQueue->Init(ConnectDetails, 0, 0, NULL);
+    Status = m_IrpQueue->Init(ConnectDetails, 0, 0);
     if (!NT_SUCCESS(Status))
     {
         goto cleanup;

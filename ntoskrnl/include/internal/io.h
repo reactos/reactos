@@ -514,6 +514,21 @@ IopAssignDeviceResources(
     IN PDEVICE_NODE DeviceNode
 );
 
+NTSTATUS
+NTAPI
+IopCreateResourceListFromRequirements(
+    IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
+    OUT PCM_RESOURCE_LIST *ResourceList
+);
+
+NTSTATUS
+NTAPI
+IopDetectResourceConflict(
+     IN PCM_RESOURCE_LIST ResourceList,
+     IN BOOLEAN Silent,
+     OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor
+);
+
 //
 // PNP Routines
 //

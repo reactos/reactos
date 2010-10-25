@@ -503,7 +503,7 @@ co_IntCallHookProc(INT HookId,
                RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
                Extra = (PCHAR) (CbtCreatewndExtra + 1);
-               CbtCreatewndExtra->Cs.lpszClass = ClassName.Buffer; // if Atom
+               CbtCreatewndExtra->Cs.lpszClass = CbtCreateWnd->lpcs->lpszClass; // if Atom
 
                if (Ansi)
                {
@@ -517,7 +517,7 @@ co_IntCallHookProc(INT HookId,
                }
                else
                {
-                 if (asWindowName.Buffer)
+                 if (WindowName.Buffer)
                     RtlCopyMemory(Extra, WindowName.Buffer, WindowName.Length);
                  CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
                  Extra += WindowName.Length;
@@ -526,7 +526,7 @@ co_IntCallHookProc(INT HookId,
                  Extra += sizeof(WCHAR);
                }
 
-               if (!IS_ATOM(ClassName.Buffer))
+               if (!IS_ATOM(CbtCreateWnd->lpcs->lpszClass))
                {
                   if (Ansi)
                   {

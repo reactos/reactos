@@ -43,7 +43,6 @@ protected:
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
     PIRP m_Irp;
-    PVOID m_SilenceBuffer;
 
     ULONG m_OutOfMapping;
     ULONG m_MaxFrameSize;
@@ -84,12 +83,10 @@ NTAPI
 CIrpQueue::Init(
     IN KSPIN_CONNECT *ConnectDetails,
     IN ULONG FrameSize,
-    IN ULONG Alignment,
-    IN PVOID SilenceBuffer)
+    IN ULONG Alignment)
 {
     m_ConnectDetails = ConnectDetails;
     m_MaxFrameSize = FrameSize;
-    m_SilenceBuffer = SilenceBuffer;
     m_Alignment = Alignment;
 
     InitializeListHead(&m_IrpList);
@@ -259,21 +256,12 @@ CIrpQueue::GetMapping(
         m_CurrentOffset = Offset = 0;
     }
 
-    if (!Irp && m_SilenceBuffer && m_MaxFrameSize)
-    {
-        DPRINT("NoIrp\n");
-        // no irp available, use silence buffer
-        *Buffer = (PUCHAR)m_SilenceBuffer;
-        *BufferSize = m_MaxFrameSize;
-        return STATUS_SUCCESS;
-    }
-
     if (!Irp)
     {
         // no irp buffer available
+        DPRINT("NoIrp\n");
         return STATUS_UNSUCCESSFUL;
     }
-
 
     // get stream header
     StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];

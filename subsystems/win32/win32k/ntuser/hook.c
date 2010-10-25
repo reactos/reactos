@@ -582,7 +582,11 @@ UserCallNextHookEx( PHOOK Hook,
                     break;
             }
             break;
-
+/*
+ Note WH_JOURNALPLAYBACK,
+    "To have the system wait before processing the message, the return value
+     must be the amount of time, in clock ticks, that the system should wait."
+ */
         case WH_JOURNALPLAYBACK:
         case WH_JOURNALRECORD:
         {
@@ -660,8 +664,6 @@ UserCallNextHookEx( PHOOK Hook,
             DPRINT1("Unsupported HOOK Id -> %d\n",Hook->HookId);
             break;
     }
-    if (Hook->HookId == WH_JOURNALPLAYBACK && lResult == 0)
-       lResult = -1;
     return lResult; 
 }
 
@@ -873,8 +875,7 @@ co_HOOK_CallHooks( INT HookId,
 
     ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
-    pti = GetW32ThreadInfo(); // Need to call this!
-
+    pti = PsGetCurrentThreadWin32Thread();
     if (!pti || !pti->pDeskInfo)
        goto Exit; // Must have a desktop running for hooks.
 
@@ -1006,8 +1007,6 @@ co_HOOK_CallHooks( INT HookId,
        DPRINT("Ret: Global HookId %d Result 0x%x\n", HookId,Result);
     }
 Exit:
-    if (HookId == WH_JOURNALPLAYBACK && Result == 0)
-       Result = -1;
     return Result;
 }
 
@@ -1179,6 +1178,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
             HookId == WH_MOUSE_LL ||
             HookId == WH_SYSMSGFILTER)
        {
+           DPRINT1("Local hook installing Global HookId: %d\n",HookId);
            /* these can only be global */
            SetLastWin32Error(ERROR_GLOBAL_ONLY_HOOK);
            RETURN( NULL);
@@ -1197,6 +1197,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
        if ( pti->rpdesk != ptiCurrent->rpdesk) // gptiCurrent->rpdesk)
        {
+          DPRINT1("Local hook wrong desktop HookId: %d\n",HookId);
           SetLastWin32Error(ERROR_ACCESS_DENIED);
           RETURN( NULL);
        }
@@ -1213,6 +1214,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                HookId == WH_FOREGROUNDIDLE ||
                HookId == WH_CALLWNDPROCRET) )
           {
+             DPRINT1("Local hook needs hMod HookId: %d\n",HookId);
              SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
              RETURN( NULL);
           }
@@ -1246,6 +1248,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              HookId == WH_FOREGROUNDIDLE ||
              HookId == WH_CALLWNDPROCRET) )
        {
+          DPRINT1("Global hook needs hMod HookId: %d\n",HookId);
           SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
           RETURN( NULL);
        }
@@ -1377,6 +1380,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     else
        Hook->offPfn = 0;
 
+    DPRINT1("Installing: HookId %d Global %s\n", HookId, !ThreadId ? "TRUE" : "FALSE");
     RETURN( Handle);
 
 CLEANUP:

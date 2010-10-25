@@ -2306,7 +2306,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     PMMVAD Vad = NULL;
     PVOID Address, NextAddress;
-    BOOLEAN Found;
+    BOOLEAN Found = FALSE;
     ULONG NewProtect, NewState, BaseVpn;
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
@@ -2390,11 +2390,44 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     /* Was a VAD found? */
     if (!Found)
     {
-        /* We don't handle this yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        Address = PAGE_ALIGN(BaseAddress);
+
+        /* Calculate region size */
+        if (Vad)
+        {
+            /* We don't handle this yet */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+        else
+        {
+            /* Maximum possible region size with that base address */
+            MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
+        }
+
+        /* Check if we were attached */
+        if (ProcessHandle != NtCurrentProcess())
+        {
+            /* Detach and derefernece the process */
+            KeUnstackDetachProcess(&ApcState);
+            ObDereferenceObject(TargetProcess);
+        }
+
+        /* Build the rest of the initial information block */
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationBase = NULL;
+        MemoryInfo.AllocationProtect = 0;
+        MemoryInfo.State = MEM_FREE;
+        MemoryInfo.Protect = PAGE_NOACCESS;
+        MemoryInfo.Type = 0;
+
+        /* Return the data (FIXME: Use SEH) */
+        *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+        if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+
+        return STATUS_SUCCESS;
     }
-   
+
     /* This must be a VM VAD */
     ASSERT(Vad->u.VadFlags.PrivateMemory);
    
