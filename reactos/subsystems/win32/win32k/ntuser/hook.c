@@ -582,7 +582,11 @@ UserCallNextHookEx( PHOOK Hook,
                     break;
             }
             break;
-
+/*
+ Note WH_JOURNALPLAYBACK,
+    "To have the system wait before processing the message, the return value
+     must be the amount of time, in clock ticks, that the system should wait."
+ */
         case WH_JOURNALPLAYBACK:
         case WH_JOURNALRECORD:
         {
@@ -660,8 +664,6 @@ UserCallNextHookEx( PHOOK Hook,
             DPRINT1("Unsupported HOOK Id -> %d\n",Hook->HookId);
             break;
     }
-    if (Hook->HookId == WH_JOURNALPLAYBACK && lResult == 0)
-       lResult = -1;
     return lResult; 
 }
 
@@ -1005,8 +1007,6 @@ co_HOOK_CallHooks( INT HookId,
        DPRINT("Ret: Global HookId %d Result 0x%x\n", HookId,Result);
     }
 Exit:
-    if (HookId == WH_JOURNALPLAYBACK && Result == 0)
-       Result = -1;
     return Result;
 }
 
