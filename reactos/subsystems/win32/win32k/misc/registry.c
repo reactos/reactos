@@ -11,6 +11,134 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+NTAPI
+RegOpenKey(
+    LPCWSTR pwszKeyName,
+    PHKEY phkey)
+{
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ustrKeyName;
+    HKEY hkey;
+
+    /* Initialize the key name */
+    RtlInitUnicodeString(&ustrKeyName, pwszKeyName);
+
+    /* Initialize object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &ustrKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Open the key */
+    Status = ZwOpenKey(&hkey, KEY_READ, &ObjectAttributes);
+    if (NT_SUCCESS(Status))
+    {
+        *phkey = hkey;
+    }
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+RegQueryValue(
+    IN HKEY hkey,
+    IN PCWSTR pwszValueName,
+    IN ULONG ulType,
+    OUT PVOID pvData,
+    IN OUT PULONG pcbValue)
+{
+    NTSTATUS Status;
+    UNICODE_STRING ustrValueName;
+    BYTE ajBuffer[100];
+    PKEY_VALUE_PARTIAL_INFORMATION pInfo;
+    ULONG cbInfoSize, cbDataSize;
+
+    /* Check if the local buffer is sufficient */
+    cbInfoSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + *pcbValue;
+    if (cbInfoSize <= sizeof(ajBuffer))
+    {
+        pInfo = (PVOID)ajBuffer;
+    }
+    else
+    {
+        /* It's not, allocate a sufficient buffer */
+        pInfo = ExAllocatePoolWithTag(PagedPool, cbInfoSize, TAG_TEMP);
+        if (!pInfo)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+
+    /* Query the value */
+    RtlInitUnicodeString(&ustrValueName, pwszValueName);
+    Status = ZwQueryValueKey(hkey,
+                             &ustrValueName,
+                             KeyValuePartialInformation,
+                             (PVOID)pInfo,
+                             cbInfoSize,
+                             &cbInfoSize);
+
+    cbDataSize = cbInfoSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* Did we get the right type */
+        if (pInfo->Type == ulType)
+        {
+            /* Copy the contents to the caller */
+            RtlCopyMemory(pvData, pInfo->Data, min(*pcbValue, cbDataSize));
+        }
+        else
+            Status = STATUS_OBJECT_TYPE_MISMATCH;
+    }
+
+    /* Return the data size to the caller */
+    *pcbValue = cbDataSize;
+
+    /* Cleanup */
+    if (pInfo != (PVOID)ajBuffer)
+        ExFreePoolWithTag(pInfo, TAG_TEMP);
+
+    return Status;
+
+}
+
+VOID
+NTAPI
+RegWriteSZ(HKEY hkey, PWSTR pwszValue, PWSTR pwszData)
+{
+    UNICODE_STRING ustrValue;
+    UNICODE_STRING ustrData;
+
+    RtlInitUnicodeString(&ustrValue, pwszValue);
+    RtlInitUnicodeString(&ustrData, pwszData);
+    ZwSetValueKey(hkey, &ustrValue, 0, REG_SZ, &ustrData, ustrData.Length + sizeof(WCHAR));
+}
+
+VOID
+NTAPI
+RegWriteDWORD(HKEY hkey, PWSTR pwszValue, DWORD dwData)
+{
+    UNICODE_STRING ustrValue;
+
+    RtlInitUnicodeString(&ustrValue, pwszValue);
+    ZwSetValueKey(hkey, &ustrValue, 0, REG_DWORD, &dwData, sizeof(DWORD));
+}
+
+BOOL
+NTAPI
+RegReadDWORD(HKEY hkey, PWSTR pwszValue, PDWORD pdwData)
+{
+    NTSTATUS Status;
+    ULONG cbSize = sizeof(DWORD);
+    Status = RegQueryValue(hkey, pwszValue, REG_DWORD, pdwData, &cbSize);
+    return NT_SUCCESS(Status);
+}
+
 BOOL
 NTAPI
 RegReadUserSetting(
@@ -163,7 +291,8 @@ RegWriteUserSetting(
     Status = RtlAppendUnicodeToString(&usKeyName, pwszKeyName);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("RtlAppendUnicodeToString failed with Status=%lx, buf:%d,%d\n", Status, usKeyName.Length, usKeyName.MaximumLength);
+        DPRINT1("RtlAppendUnicodeToString failed with Status=%lx, buf:%d,%d\n", 
+                Status, usKeyName.Length, usKeyName.MaximumLength);
         return FALSE;
     }
 

@@ -14,7 +14,7 @@ typedef struct _ROSRGNDATA
 
   RGNDATAHEADER rdh;
   RECTL        *Buffer;
-} ROSRGNDATA, *PROSRGNDATA, *LPROSRGNDATA;
+} ROSRGNDATA, *PROSRGNDATA, *LPROSRGNDATA, REGION, *PREGION;
 
 
 /* Functions ******************************************************************/

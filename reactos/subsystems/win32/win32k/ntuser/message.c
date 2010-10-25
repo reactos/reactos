@@ -395,12 +395,12 @@ IntDispatchMessage(PMSG pMsg)
            KeQueryTickCount(&TickCount);
            Time = MsqCalculateMessageTime(&TickCount);
            retval = co_IntCallWindowProc((WNDPROC)pMsg->lParam,
-                                          TRUE,
-                                          pMsg->hwnd,
-                                          WM_TIMER,
-                                          pMsg->wParam,
-                                         (LPARAM)Time,
-                                          sizeof(LPARAM));
+                                        TRUE,
+                                        pMsg->hwnd,
+                                        WM_TIMER,
+                                        pMsg->wParam,
+                                        (LPARAM)Time,
+                                        sizeof(LPARAM));
         }
         ObDereferenceObject(pti->pEThread);
         return retval;        
@@ -631,7 +631,7 @@ co_IntTranslateMouseMessage(
       }
    }
 
-   if ( gspv.bMouseClickLock && 
+   if ( gspv.bMouseClickLock &&
         ( (Msg->message == WM_LBUTTONUP) ||
           (Msg->message == WM_LBUTTONDOWN) ) )
    {
@@ -867,98 +867,98 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
 
    do
    {
-       KeQueryTickCount(&LargeTickCount);
-       ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
+   KeQueryTickCount(&LargeTickCount);
+   ThreadQueue->LastMsgRead = LargeTickCount.u.LowPart;
 
-       /* Dispatch sent messages here. */
-       while (co_MsqDispatchOneSentMessage(ThreadQueue))
-          ;
+   /* Dispatch sent messages here. */
+   while (co_MsqDispatchOneSentMessage(ThreadQueue))
+      ;
 
-       /* Now look for a quit message. */
+   /* Now look for a quit message. */
 
-       if (ThreadQueue->QuitPosted)
-       {
-          /* According to the PSDK, WM_QUIT messages are always returned, regardless
-             of the filter specified */
-          Msg->Msg.hwnd = NULL;
-          Msg->Msg.message = WM_QUIT;
-          Msg->Msg.wParam = ThreadQueue->QuitExitCode;
-          Msg->Msg.lParam = 0;
-          if (RemoveMessages)
-          {
-             ThreadQueue->QuitPosted = FALSE;
-          }
+   if (ThreadQueue->QuitPosted)
+   {
+      /* According to the PSDK, WM_QUIT messages are always returned, regardless
+         of the filter specified */
+      Msg->Msg.hwnd = NULL;
+      Msg->Msg.message = WM_QUIT;
+      Msg->Msg.wParam = ThreadQueue->QuitExitCode;
+      Msg->Msg.lParam = 0;
+      if (RemoveMessages)
+      {
+         ThreadQueue->QuitPosted = FALSE;
+      }
 
           return TRUE;
-       }
+   }
 
-       /* Now check for normal messages. */
+   /* Now check for normal messages. */
        if (co_MsqFindMessage( ThreadQueue,
-                              FALSE,
-                              RemoveMessages,
-                              Window,
-                              MsgFilterMin,
-                              MsgFilterMax,
+                                FALSE,
+                                RemoveMessages,
+                                Window,
+                                MsgFilterMin,
+                                MsgFilterMax,
                               &Message ))
-       {
-          RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
-          if (RemoveMessages)
-          {
-             MsqDestroyMessage(Message);
-          }
+   {
+      RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
+      if (RemoveMessages)
+      {
+         MsqDestroyMessage(Message);
+      }
           break;
-       }
+   }
 
-       /* Check for hardware events. */
+   /* Check for hardware events. */
        if(co_MsqFindMessage( ThreadQueue,
-                             TRUE,
-                             RemoveMessages,
-                             Window,
-                             MsgFilterMin,
-                             MsgFilterMax,
+                                TRUE,
+                                RemoveMessages,
+                                Window,
+                                MsgFilterMin,
+                                MsgFilterMax,
                              &Message ))
-       {
-          RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
-          if (RemoveMessages)
-          {
-             MsqDestroyMessage(Message);
-          }
+   {
+      RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
+      if (RemoveMessages)
+      {
+         MsqDestroyMessage(Message);
+      }
 
           if(!ProcessHardwareMessage(&Msg->Msg, RemoveMessages))
               continue;
 
           break;
-       }
-
-       /* Check for sent messages again. */
-       while (co_MsqDispatchOneSentMessage(ThreadQueue))
-          ;
-
-       /* Check for paint messages. */
-       if( IntGetPaintMessage( Window,
-                               MsgFilterMin,
-                               MsgFilterMax,
-                               pti,
-                               &Msg->Msg,
-                               RemoveMessages))
-       {
-          break;
-       }
-
-       if (PostTimerMessages(Window))
-       {
-          continue;
-       }
-
-       return FALSE;
    }
+
+   /* Check for sent messages again. */
+   while (co_MsqDispatchOneSentMessage(ThreadQueue))
+      ;
+
+   /* Check for paint messages. */
+       if( IntGetPaintMessage( Window,
+                            MsgFilterMin,
+                            MsgFilterMax,
+                            pti,
+                            &Msg->Msg,
+                            RemoveMessages))
+   {
+          break;
+   }
+
+   if (PostTimerMessages(Window))
+   {
+          continue;
+            }
+
+             return FALSE;
+          }
    while (TRUE);
 
-   // The WH_GETMESSAGE hook enables an application to monitor messages about to
-   // be returned by the GetMessage or PeekMessage function.
+      // The WH_GETMESSAGE hook enables an application to monitor messages about to
+      // be returned by the GetMessage or PeekMessage function.
 
-   co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
-   return TRUE;
+      co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
+      return TRUE;
 }
 
 static NTSTATUS FASTCALL
@@ -1240,7 +1240,7 @@ UserPostMessage( HWND Wnd,
       return FALSE;
    }
 
-   if (!Wnd) 
+   if (!Wnd)
       return UserPostThreadMessage( PtrToInt(PsGetCurrentThreadId()),
                                     Msg,
                                     wParam,
@@ -1257,6 +1257,7 @@ UserPostMessage( HWND Wnd,
 
       if (List != NULL)
       {
+         UserPostMessage(DesktopWindow->head.h, Msg, wParam, lParam);
          for (i = 0; List[i]; i++)
             UserPostMessage(List[i], Msg, wParam, lParam);
          ExFreePool(List);
@@ -1419,14 +1420,14 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
    do
    {
       Status = co_MsqSendMessage( Window->head.pti->MessageQueue,
-                                  hWnd,
-                                  Msg,
-                                  wParam,
-                                  lParam,
-                                  uTimeout,
-                                 (uFlags & SMTO_BLOCK),
-                                  MSQ_NORMAL,
-                                  uResult );
+                                                       hWnd,
+                                                        Msg,
+                                                     wParam,
+                                                     lParam,
+                                                   uTimeout,
+                                      (uFlags & SMTO_BLOCK),
+                                                 MSQ_NORMAL,
+                                                    uResult );
    }
    while ((STATUS_TIMEOUT == Status) &&
           (uFlags & SMTO_NOTIMEOUTIFNOTHUNG) &&
@@ -1484,6 +1485,9 @@ co_IntSendMessageTimeout( HWND hWnd,
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return 0;
    }
+
+   /* Send message to the desktop window too! */
+   co_IntSendMessageTimeoutSingle(DesktopWindow->head.h, Msg, wParam, lParam, uFlags, uTimeout, uResult);
 
    Children = IntWinListChildren(DesktopWindow);
    if (NULL == Children)
@@ -1830,6 +1834,7 @@ UserSendNotifyMessage( HWND hWnd,
 
       if (List != NULL)
       {
+         UserSendNotifyMessage(DesktopWindow->head.h, Msg, wParam, lParam);
          for (i = 0; List[i]; i++)
          {
             UserSendNotifyMessage(List[i], Msg, wParam, lParam);
@@ -2422,7 +2427,7 @@ NtUserDispatchMessage(PMSG UnsafeMsgInfo)
   BOOL Hit = FALSE;
   MSG SafeMsg;
 
-  UserEnterExclusive();  
+  UserEnterExclusive();
   _SEH2_TRY
   {
     ProbeForRead(UnsafeMsgInfo, sizeof(MSG), 1);
@@ -2434,7 +2439,7 @@ NtUserDispatchMessage(PMSG UnsafeMsgInfo)
     Hit = TRUE;
   }
   _SEH2_END;
-  
+
   if (!Hit) Res = IntDispatchMessage(&SafeMsg);
 
   UserLeave();
@@ -2677,11 +2682,11 @@ NtUserMessageCall(
             {
                 BadChk = TRUE;
             }
-            _SEH2_END;      
+            _SEH2_END;
          }
          break;
       default:
-         break;   
+         break;
    }
 
    UserLeave();

@@ -34,8 +34,6 @@ BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
 
-LIST_ENTRY GlobalDriverListHead;
-
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
 
@@ -368,6 +366,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
   return(STATUS_SUCCESS);
 }
 
+C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
 
 /*
  * This definition doesn't work
@@ -423,8 +422,19 @@ DriverEntry (
         return STATUS_UNSUCCESSFUL;
     }
 
-  /* Initialize a list of loaded drivers in Win32 subsystem */
-  InitializeListHead(&GlobalDriverListHead);
+   if (!gpsi)
+   {
+      gpsi = UserHeapAlloc(sizeof(SERVERINFO));
+      if (gpsi)
+      {
+         RtlZeroMemory(gpsi, sizeof(SERVERINFO));
+         DPRINT("Global Server Data -> %x\n", gpsi);
+      }
+      else
+      {
+          ASSERT(FALSE);
+      }
+   }
 
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore();
 
@@ -433,6 +443,26 @@ DriverEntry (
   {
       DPRINT1("Failed to initialize the GDI handle table.\n");
       return STATUS_UNSUCCESSFUL;
+  }
+
+  /* Initialize default palettes */
+  PALETTE_Init();
+
+  /* Create stock objects, ie. precreated objects commonly
+     used by win32 applications */
+  CreateStockObjects();
+  CreateSysColorObjects();
+
+  InitXlateImpl();
+  InitPDEVImpl();
+  InitLDEVImpl();
+  InitDeviceImpl();
+
+  Status = InitDcImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to initialize Device context implementation!\n");
+    return STATUS_UNSUCCESSFUL;
   }
 
   Status = InitUserImpl();
@@ -526,26 +556,12 @@ DriverEntry (
       return(Status);
     }
 
-  Status = InitDcImpl();
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to initialize Device context implementation!\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
   /* Initialize FreeType library */
   if (! InitFontSupport())
     {
       DPRINT1("Unable to initialize font support\n");
       return STATUS_UNSUCCESSFUL;
     }
-
-  InitXlateImpl();
-
-  /* Create stock objects, ie. precreated objects commonly
-     used by win32 applications */
-  CreateStockObjects();
-  CreateSysColorObjects();
 
   gusLanguageID = IntGdiGetLanguageID();
 

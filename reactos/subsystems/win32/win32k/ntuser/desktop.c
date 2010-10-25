@@ -616,8 +616,6 @@ UserRedrawDesktop()
 {
     PWND Window = NULL;
 
-    UserEnterExclusive();
-
     Window = UserGetDesktopWindow();
 
     IntInvalidateWindows( Window,
@@ -626,7 +624,6 @@ UserRedrawDesktop()
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
-    UserLeave();
 }
 
 

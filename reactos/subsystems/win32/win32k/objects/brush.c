@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS win32 subsystem
  * PURPOSE:           Functions for brushes
  * FILE:              subsystem/win32/win32k/objects/brush.c
- * PROGRAMER:         
+ * PROGRAMER:
  */
 
 #include <win32k.h>
@@ -19,13 +19,13 @@ typedef struct _GDI_OBJ_ATTR_FREELIST
   DWORD nEntries;
   PVOID AttrList[GDIOBJATTRFREE];
 } GDI_OBJ_ATTR_FREELIST, *PGDI_OBJ_ATTR_FREELIST;
-      
+
 typedef struct _GDI_OBJ_ATTR_ENTRY
 {
   RGN_ATTR Attr[GDIOBJATTRFREE];
 } GDI_OBJ_ATTR_ENTRY, *PGDI_OBJ_ATTR_ENTRY;
 
-static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
+static const ULONG HatchBrushes[NB_HATCH_STYLES][8] =
 {
     {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF}, /* HS_HORIZONTAL */
     {0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7}, /* HS_VERTICAL   */
@@ -46,7 +46,7 @@ AllocateObjectAttr(VOID)
   PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
   PGDI_OBJ_ATTR_ENTRY pGdiObjAttrEntry;
   int i;
-  
+
   pti = PsGetCurrentThreadWin32Thread();
   if (pti->pgdiBrushAttr)
   {
@@ -127,9 +127,9 @@ FreeObjectAttr(PVOID pAttr)
   PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
 
   pti = PsGetCurrentThreadWin32Thread();
-  
+
   if (!pti) return;
-  
+
   if (!pti->pgdiBrushAttr)
   {  // If it is null, just cache it for the next time.
      pti->pgdiBrushAttr = pAttr;
@@ -244,129 +244,6 @@ BRUSH_GetObject(PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
     return sizeof(LOGBRUSH);
 }
 
-/**
- * @name CalculateColorTableSize
- *
- * Internal routine to calculate the number of color table entries.
- *
- * @param BitmapInfoHeader
- *        Input bitmap information header, can be any version of
- *        BITMAPINFOHEADER or BITMAPCOREHEADER.
- *
- * @param ColorSpec
- *        Pointer to variable which specifiing the color mode (DIB_RGB_COLORS
- *        or DIB_RGB_COLORS). On successful return this value is normalized
- *        according to the bitmap info.
- *
- * @param ColorTableSize
- *        On successful return this variable is filled with number of
- *        entries in color table for the image with specified parameters.
- *
- * @return
- *    TRUE if the input values together form a valid image, FALSE otherwise.
- */
-BOOL
-APIENTRY
-CalculateColorTableSize(
-    CONST BITMAPINFOHEADER *BitmapInfoHeader,
-    UINT *ColorSpec,
-    UINT *ColorTableSize)
-{
-    WORD BitCount;
-    DWORD ClrUsed;
-    DWORD Compression;
-
-    /*
-     * At first get some basic parameters from the passed BitmapInfoHeader
-     * structure. It can have one of the following formats:
-     * - BITMAPCOREHEADER (the oldest one with totally different layout
-     *                     from the others)
-     * - BITMAPINFOHEADER (the standard and most common header)
-     * - BITMAPV4HEADER (extension of BITMAPINFOHEADER)
-     * - BITMAPV5HEADER (extension of BITMAPV4HEADER)
-     */
-    if (BitmapInfoHeader->biSize == sizeof(BITMAPCOREHEADER))
-    {
-        BitCount = ((LPBITMAPCOREHEADER)BitmapInfoHeader)->bcBitCount;
-        ClrUsed = 0;
-        Compression = BI_RGB;
-    }
-    else
-    {
-        BitCount = BitmapInfoHeader->biBitCount;
-        ClrUsed = BitmapInfoHeader->biClrUsed;
-        Compression = BitmapInfoHeader->biCompression;
-    }
-
-    switch (Compression)
-    {
-        case BI_BITFIELDS:
-            if (*ColorSpec == DIB_PAL_COLORS)
-                *ColorSpec = DIB_RGB_COLORS;
-
-            if (BitCount != 16 && BitCount != 32)
-                return FALSE;
-
-            /* For BITMAPV4HEADER/BITMAPV5HEADER the masks are included in
-             * the structure itself (bV4RedMask, bV4GreenMask, and bV4BlueMask).
-             * For BITMAPINFOHEADER the color masks are stored in the palette. */
-            if (BitmapInfoHeader->biSize > sizeof(BITMAPINFOHEADER))
-                *ColorTableSize = 0;
-            else
-                *ColorTableSize = 3;
-
-            return TRUE;
-
-        case BI_RGB:
-            switch (BitCount)
-            {
-                case 1:
-                    *ColorTableSize = ClrUsed ? min(ClrUsed, 2) : 2;
-                    return TRUE;
-
-                case 4:
-                    *ColorTableSize = ClrUsed ? min(ClrUsed, 16) : 16;
-                    return TRUE;
-
-                case 8:
-                    *ColorTableSize = ClrUsed ? min(ClrUsed, 256) : 256;
-                    return TRUE;
-
-                default:
-                    if (*ColorSpec == DIB_PAL_COLORS)
-                        *ColorSpec = DIB_RGB_COLORS;
-                    if (BitCount != 16 && BitCount != 24 && BitCount != 32)
-                        return FALSE;
-                    *ColorTableSize = ClrUsed;
-                    return TRUE;
-            }
-
-        case BI_RLE4:
-            if (BitCount == 4)
-            {
-                *ColorTableSize = ClrUsed ? min(ClrUsed, 16) : 16;
-                return TRUE;
-            }
-            return FALSE;
-
-        case BI_RLE8:
-            if (BitCount == 8)
-            {
-                *ColorTableSize = ClrUsed ? min(ClrUsed, 256) : 256;
-                return TRUE;
-            }
-            return FALSE;
-
-        case BI_JPEG:
-        case BI_PNG:
-            *ColorTableSize = ClrUsed;
-            return TRUE;
-
-        default:
-            return FALSE;
-    }
-}
-
 HBRUSH
 APIENTRY
 IntGdiCreateDIBBrush(
@@ -379,9 +256,7 @@ IntGdiCreateDIBBrush(
     PBRUSH pbrush;
     HBITMAP hPattern;
     ULONG_PTR DataPtr;
-    UINT PaletteEntryCount;
-    PSURFACE psurfPattern;
-    INT PaletteType;
+    PVOID pvDIBits;
 
     if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
     {
@@ -389,36 +264,19 @@ IntGdiCreateDIBBrush(
         return NULL;
     }
 
-    if (!CalculateColorTableSize(&BitmapInfo->bmiHeader,
-                                 &ColorSpec,
-                                 &PaletteEntryCount))
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
+    DataPtr = (ULONG_PTR)BitmapInfo + DIB_BitmapInfoSize(BitmapInfo, ColorSpec);
 
-    // FIXME: What about BI_BITFIELDS
-    DataPtr = (ULONG_PTR)BitmapInfo + BitmapInfo->bmiHeader.biSize;
-    if (ColorSpec == DIB_RGB_COLORS)
-        DataPtr += PaletteEntryCount * sizeof(RGBQUAD);
-    else
-        DataPtr += PaletteEntryCount * sizeof(USHORT);
-
-    hPattern = IntGdiCreateBitmap(BitmapInfo->bmiHeader.biWidth,
-                                  BitmapInfo->bmiHeader.biHeight,
-                                  BitmapInfo->bmiHeader.biPlanes,
-                                  BitmapInfo->bmiHeader.biBitCount,
-                                  (PVOID)DataPtr);
+    hPattern = DIB_CreateDIBSection(NULL, BitmapInfo, ColorSpec, &pvDIBits, NULL, 0, 0);
     if (hPattern == NULL)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
-
-    psurfPattern = SURFACE_LockSurface(hPattern);
-    ASSERT(psurfPattern != NULL);
-    psurfPattern->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
-    SURFACE_UnlockSurface(psurfPattern);
+	RtlCopyMemory(pvDIBits,
+		          (PVOID)DataPtr,
+				  DIB_GetDIBImageBytes(BitmapInfo->bmiHeader.biWidth,
+                                       BitmapInfo->bmiHeader.biHeight,
+                                       BitmapInfo->bmiHeader.biBitCount * BitmapInfo->bmiHeader.biPlanes));
 
     pbrush = BRUSH_AllocBrushWithHandle();
     if (pbrush == NULL)
@@ -455,7 +313,7 @@ IntGdiCreateHatchBrush(
         return 0;
     }
 
-    hPattern = IntGdiCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
+    hPattern = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
     if (hPattern == NULL)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

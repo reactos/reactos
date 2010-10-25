@@ -68,6 +68,10 @@ DtbgWindowProc(HWND Wnd,
     case WM_CLOSE:
         return 0;
 
+    case WM_DISPLAYCHANGE:
+        MoveWindow(Wnd, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
+        break;
+
     case WM_NOTIFY:
     {
         PPRIVATE_NOTIFY_DESKTOP nmh = (PPRIVATE_NOTIFY_DESKTOP)lParam;

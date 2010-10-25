@@ -12,169 +12,361 @@
 #define NDEBUG
 #include <debug.h>
 
+//FIXME: windows uses 0x0012009f
+#define DIRTY_DEFAULT DIRTY_CHARSET|DIRTY_BACKGROUND|DIRTY_TEXT|DIRTY_LINE|DIRTY_FILL
+
+PSURFACE psurfDefaultBitmap = NULL;
+PBRUSH pbrDefaultBrush = NULL;
+
+// FIXME: these should go to floatobj.h or something
+#define FLOATOBJ_0 {0x00000000, 0x00000000}
+#define FLOATOBJ_1 {0x40000000, 0x00000002}
+#define FLOATOBJ_16 {0x40000000, 0x00000006}
+#define FLOATOBJ_1_16 {0x40000000, 0xfffffffe}
+
+static const FLOATOBJ gef0 = FLOATOBJ_0;
+static const FLOATOBJ gef1 = FLOATOBJ_1;
+static const FLOATOBJ gef16 = FLOATOBJ_16;
+
+static const MATRIX	gmxWorldToDeviceDefault =
+{
+    FLOATOBJ_16, FLOATOBJ_0,
+    FLOATOBJ_0, FLOATOBJ_16,
+    FLOATOBJ_0, FLOATOBJ_0,
+    0, 0, 0x4b
+};
+
+static const MATRIX	gmxDeviceToWorldDefault =
+{
+    FLOATOBJ_1_16, FLOATOBJ_0,
+    FLOATOBJ_0, FLOATOBJ_1_16,
+    FLOATOBJ_0, FLOATOBJ_0,
+    0, 0, 0x53
+};
+
+static const MATRIX	gmxWorldToPageDefault =
+{
+    FLOATOBJ_1, FLOATOBJ_0,
+    FLOATOBJ_0, FLOATOBJ_1,
+    FLOATOBJ_0, FLOATOBJ_0,
+    0, 0, 0x63
+};
+
+// HACK!! Fix XFORMOBJ then use 1:16 / 16:1
+#define gmxWorldToDeviceDefault gmxWorldToPageDefault
+#define gmxDeviceToWorldDefault gmxWorldToPageDefault
+
 /** Internal functions ********************************************************/
 
-HDC FASTCALL
-DC_AllocDC(PUNICODE_STRING Driver)
+NTSTATUS
+InitDcImpl()
 {
-    PDC  NewDC;
-    PDC_ATTR pdcattr;
-    HDC  hDC;
-    PWSTR Buf = NULL;
-    XFORM xformTemplate;
-    PBRUSH pbrush;
-    HSURF hsurf;
+    psurfDefaultBitmap = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
+    if (!psurfDefaultBitmap)
+        return STATUS_UNSUCCESSFUL;
 
-    if (Driver != NULL)
-    {
-        Buf = ExAllocatePoolWithTag(PagedPool, Driver->MaximumLength, TAG_DC);
-        if (!Buf)
-        {
-            DPRINT1("ExAllocatePoolWithTag failed\n");
-            return NULL;
-        }
-        RtlCopyMemory(Buf, Driver->Buffer, Driver->MaximumLength);
-    }
+    pbrDefaultBrush = BRUSH_ShareLockBrush(StockObjects[BLACK_BRUSH]);
+    if (!pbrDefaultBrush)
+        return STATUS_UNSUCCESSFUL;
 
-    NewDC = (PDC)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DC);
-    if (!NewDC)
-    {
-        if (Buf)
-        {
-            ExFreePoolWithTag(Buf, TAG_DC);
-        }
-        DPRINT1("GDIOBJ_AllocObjWithHandle failed\n");
-        return NULL;
-    }
-
-    hDC = NewDC->BaseObject.hHmgr;
-
-    NewDC->pdcattr = &NewDC->dcattr;
-    DC_AllocateDcAttr(hDC);
-
-    if (Driver != NULL)
-    {
-        RtlCopyMemory(&NewDC->rosdc.DriverName, Driver, sizeof(UNICODE_STRING));
-        NewDC->rosdc.DriverName.Buffer = Buf;
-    }
-    pdcattr = NewDC->pdcattr;
-
-    // FIXME: no floating point in the kernel!
-    xformTemplate.eM11 = 1.0f;
-    xformTemplate.eM12 = 0.0f;
-    xformTemplate.eM21 = 0.0f;
-    xformTemplate.eM22 = 1.0f;
-    xformTemplate.eDx = 0.0f;
-    xformTemplate.eDy = 0.0f;
-    XForm2MatrixS(&NewDC->dclevel.mxWorldToDevice, &xformTemplate);
-    XForm2MatrixS(&NewDC->dclevel.mxDeviceToWorld, &xformTemplate);
-    XForm2MatrixS(&NewDC->dclevel.mxWorldToPage, &xformTemplate);
-
-    // Setup syncing bits for the dcattr data packets.
-    pdcattr->flXform = DEVICE_TO_PAGE_INVALID;
-
-    pdcattr->ulDirty_ = 0;  // Server side
-
-    pdcattr->iMapMode = MM_TEXT;
-    pdcattr->iGraphicsMode = GM_COMPATIBLE;
-    pdcattr->jFillMode = ALTERNATE;
-
-    pdcattr->szlWindowExt.cx = 1; // Float to Int,,, WRONG!
-    pdcattr->szlWindowExt.cy = 1;
-    pdcattr->szlViewportExt.cx = 1;
-    pdcattr->szlViewportExt.cy = 1;
-
-    pdcattr->crForegroundClr = 0;
-    pdcattr->ulForegroundClr = 0;
-
-    pdcattr->ulBackgroundClr = 0xffffff;
-    pdcattr->crBackgroundClr = 0xffffff;
-
-    pdcattr->ulPenClr = RGB(0, 0, 0);
-    pdcattr->crPenClr = RGB(0, 0, 0);
-
-    pdcattr->ulBrushClr = RGB(255, 255, 255);   // Do this way too.
-    pdcattr->crBrushClr = RGB(255, 255, 255);
-
-//// This fixes the default brush and pen settings. See DC_InitDC.
-
-    /* Create the default fill brush */
-    pdcattr->hbrush = NtGdiGetStockObject(WHITE_BRUSH);
-    NewDC->dclevel.pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
-    EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NewDC);
-
-    /* Create the default pen / line brush */
-    pdcattr->hpen = NtGdiGetStockObject(BLACK_PEN);
-    NewDC->dclevel.pbrLine = PEN_ShareLockPen(pdcattr->hpen);
-    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrLine, NewDC);
-
-    /* Create the default text brush */
-    pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(BLACK_BRUSH));
-    EBRUSHOBJ_vInit(&NewDC->eboText, pbrush, NewDC);
-    pdcattr->ulDirty_ |= DIRTY_TEXT;
-
-    /* Create the default background brush */
-    pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(WHITE_BRUSH));
-    EBRUSHOBJ_vInit(&NewDC->eboBackground, pbrush, NewDC);
-
-    pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
-    TextIntRealizeFont(pdcattr->hlfntNew,NULL);
-    NewDC->hlfntCur = pdcattr->hlfntNew;
-    NewDC->dclevel.plfnt = GDIOBJ_GetKernelObj(pdcattr->hlfntNew);
-
-    NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
-    NewDC->dclevel.ppal = PALETTE_ShareLockPalette(NewDC->dclevel.hpal);
-    /* This should never fail */
-    ASSERT(NewDC->dclevel.ppal);
-
-    NewDC->dclevel.laPath.eMiterLimit = 10.0; // FIXME: use FLOATL or FLOATOBJ!
-
-    NewDC->dclevel.lSaveDepth = 1;
-
-    hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
-    NewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
-
-    /* Allocate a Vis region */
-    NewDC->prgnVis = IntSysCreateRectpRgn(0, 0, 1, 1);
-    if (!NewDC->prgnVis)
-    {
-        DPRINT1("IntSysCreateRectpRgn failed\n");
-        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
-        {
-            ASSERT(FALSE);
-        }
-        return NULL;
-    }
-
-    return NewDC;
+    return STATUS_SUCCESS;
 }
 
-BOOL INTERNAL_CALL
+
+PDC
+NTAPI
+DC_AllocDcWithHandle()
+{
+    PDC pdc;
+    pdc = (PDC)GDIOBJ_AllocObjWithHandle(GDILoObjType_LO_DC_TYPE);
+
+    pdc->pdcattr = &pdc->dcattr;
+
+    return pdc;
+}
+
+
+void
+DC_InitHack(PDC pdc)
+{
+    TextIntRealizeFont(pdc->pdcattr->hlfntNew,NULL);
+    pdc->pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
+
+    /* This should never fail */
+    ASSERT(pdc->dclevel.ppal);
+
+    /* Select regions */
+    pdc->rosdc.hClipRgn = NULL;
+    pdc->rosdc.hGCClipRgn = NULL;
+}
+
+VOID
+NTAPI
+DC_vInitDc(
+    PDC pdc,
+    DCTYPE dctype,
+    PPDEVOBJ ppdev)
+{
+    /* Setup some basic fields */
+    pdc->dctype = dctype;
+    pdc->ppdev = ppdev;
+    pdc->dhpdev = ppdev->dhpdev;
+    pdc->hsem = ppdev->hsemDevLock;
+    pdc->flGraphicsCaps = ppdev->devinfo.flGraphicsCaps;
+    pdc->flGraphicsCaps2 = ppdev->devinfo.flGraphicsCaps2;
+    pdc->fs = DC_DIRTY_RAO;
+
+    /* Setup dc attribute */
+    pdc->pdcattr = &pdc->dcattr;
+    pdc->dcattr.pvLDC = NULL;
+    pdc->dcattr.ulDirty_ = DIRTY_DEFAULT;
+    if (ppdev == gppdevPrimary)
+        pdc->dcattr.ulDirty_ |= DC_PRIMARY_DISPLAY;
+
+    /* Setup the DC size */
+    if (dctype == DCTYPE_MEMORY)
+    {
+        /* Memory DCs have a 1 x 1 bitmap by default */
+        pdc->dclevel.sizl.cx = 1;
+        pdc->dclevel.sizl.cy = 1;
+    }
+    else
+    {
+        /* Other DC's are as big as the related PDEV */
+	    pdc->dclevel.sizl.cx = ppdev->gdiinfo.ulHorzRes;
+	    pdc->dclevel.sizl.cy = ppdev->gdiinfo.ulVertRes;
+    }
+
+    /* Setup Window rect based on DC size */
+    pdc->erclWindow.left = 0;
+    pdc->erclWindow.top = 0;
+    pdc->erclWindow.right = pdc->dclevel.sizl.cx;
+    pdc->erclWindow.bottom = pdc->dclevel.sizl.cy;
+
+    if (dctype == DCTYPE_DIRECT)
+    {
+        /* Direct DCs get the surface from the PDEV */
+        pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
+
+        pdc->erclBounds.left = 0x7fffffff;
+        pdc->erclBounds.top = 0x7fffffff;
+        pdc->erclBounds.right = 0x80000000;
+        pdc->erclBounds.bottom = 0x80000000;
+        pdc->erclBoundsApp.left = 0xffffffff;
+        pdc->erclBoundsApp.top = 0xfffffffc;
+        pdc->erclBoundsApp.right = 0x00007ffc; // FIXME
+        pdc->erclBoundsApp.bottom = 0x00000333; // FIXME
+        pdc->erclClip = pdc->erclBounds;
+//        pdc->co
+
+        pdc->fs |= DC_SYNCHRONIZEACCESS | DC_ACCUM_APP | DC_PERMANANT | DC_DISPLAY;
+    }
+    else
+    {
+        /* Non-direct DCs don't have a surface by default */
+        pdc->dclevel.pSurface = NULL;
+
+        // FIXME: HACK, because our code expects a surface
+        pdc->dclevel.pSurface = SURFACE_ShareLockSurface(StockObjects[DEFAULT_BITMAP]);
+
+        pdc->erclBounds.left = 0;
+        pdc->erclBounds.top = 0;
+        pdc->erclBounds.right = 0;
+        pdc->erclBounds.bottom = 0;
+        pdc->erclBoundsApp = pdc->erclBounds;
+        pdc->erclClip = pdc->erclWindow;
+//        pdc->co = NULL
+    }
+
+//        pdc->dcattr.VisRectRegion:
+
+    /* Setup coordinate transformation data */
+	pdc->dclevel.mxWorldToDevice = gmxWorldToDeviceDefault;
+	pdc->dclevel.mxDeviceToWorld = gmxDeviceToWorldDefault;
+	pdc->dclevel.mxWorldToPage = gmxWorldToPageDefault;
+	pdc->dclevel.efM11PtoD = gef16;
+	pdc->dclevel.efM22PtoD = gef16;
+	pdc->dclevel.efDxPtoD = gef0;
+	pdc->dclevel.efDyPtoD = gef0;
+	pdc->dclevel.efM11_TWIPS = gef0;
+	pdc->dclevel.efM22_TWIPS = gef0;
+	pdc->dclevel.efPr11 = gef0;
+	pdc->dclevel.efPr22 = gef0;
+	pdc->dcattr.mxWorldToDevice = pdc->dclevel.mxWorldToDevice;
+	pdc->dcattr.mxDeviceToWorld = pdc->dclevel.mxDeviceToWorld;
+	pdc->dcattr.mxWorldToPage = pdc->dclevel.mxWorldToPage;
+	pdc->dcattr.efM11PtoD = pdc->dclevel.efM11PtoD;
+	pdc->dcattr.efM22PtoD = pdc->dclevel.efM22PtoD;
+	pdc->dcattr.efDxPtoD = pdc->dclevel.efDxPtoD;
+	pdc->dcattr.efDyPtoD = pdc->dclevel.efDyPtoD;
+	pdc->dcattr.iMapMode = MM_TEXT;
+	pdc->dcattr.dwLayout = 0;
+	pdc->dcattr.flXform = PAGE_TO_DEVICE_SCALE_IDENTITY |
+	                      PAGE_TO_DEVICE_IDENTITY |
+	                      WORLD_TO_PAGE_IDENTITY;
+
+    /* Setup more coordinates */
+    pdc->ptlDCOrig.x = 0;
+    pdc->ptlDCOrig.y = 0;
+	pdc->dcattr.lWindowOrgx = 0;
+	pdc->dcattr.ptlWindowOrg.x = 0;
+	pdc->dcattr.ptlWindowOrg.y = 0;
+	pdc->dcattr.szlWindowExt.cx = 1;
+	pdc->dcattr.szlWindowExt.cy = 1;
+	pdc->dcattr.ptlViewportOrg.x = 0;
+	pdc->dcattr.ptlViewportOrg.y = 0;
+	pdc->dcattr.szlViewportExt.cx = 1;
+	pdc->dcattr.szlViewportExt.cy = 1;
+    pdc->dcattr.szlVirtualDevicePixel.cx = ppdev->gdiinfo.ulHorzRes;
+    pdc->dcattr.szlVirtualDevicePixel.cy = ppdev->gdiinfo.ulVertRes;
+    pdc->dcattr.szlVirtualDeviceMm.cx = ppdev->gdiinfo.ulHorzSize;
+    pdc->dcattr.szlVirtualDeviceMm.cy = ppdev->gdiinfo.ulVertSize;
+    pdc->dcattr.szlVirtualDeviceSize.cx = 0;
+    pdc->dcattr.szlVirtualDeviceSize.cy = 0;
+
+    /* Setup regions */
+    pdc->prgnAPI = NULL;
+	pdc->prgnRao = NULL;
+    /* Allocate a Vis region */
+    pdc->prgnVis = IntSysCreateRectpRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
+	ASSERT(pdc->prgnVis);
+	GDIOBJ_CopyOwnership(pdc->BaseObject.hHmgr, pdc->prgnVis->BaseObject.hHmgr);
+
+    /* Setup palette */
+    pdc->dclevel.hpal = StockObjects[DEFAULT_PALETTE];
+    pdc->dclevel.ppal = PALETTE_ShareLockPalette(pdc->dclevel.hpal);
+
+    /* Setup path */
+	pdc->dclevel.hPath = NULL;
+    pdc->dclevel.flPath = 0;
+//	pdc->dclevel.lapath:
+
+    /* Setup colors */
+	pdc->dcattr.crBackgroundClr = RGB(0xff, 0xff, 0xff);
+	pdc->dcattr.ulBackgroundClr = RGB(0xff, 0xff, 0xff);
+	pdc->dcattr.crForegroundClr = RGB(0, 0, 0);
+	pdc->dcattr.ulForegroundClr = RGB(0, 0, 0);
+	pdc->dcattr.crBrushClr = RGB(0xff, 0xff, 0xff);
+	pdc->dcattr.ulBrushClr = RGB(0xff, 0xff, 0xff);
+	pdc->dcattr.crPenClr = RGB(0, 0, 0);
+	pdc->dcattr.ulPenClr = RGB(0, 0, 0);
+
+    /* Select the default fill and line brush */
+	pdc->dcattr.hbrush = StockObjects[WHITE_BRUSH];
+	pdc->dcattr.hpen = StockObjects[BLACK_PEN];
+    pdc->dclevel.pbrFill = BRUSH_ShareLockBrush(pdc->pdcattr->hbrush);
+    pdc->dclevel.pbrLine = PEN_ShareLockPen(pdc->pdcattr->hpen);
+	pdc->dclevel.ptlBrushOrigin.x = 0;
+	pdc->dclevel.ptlBrushOrigin.y = 0;
+	pdc->dcattr.ptlBrushOrigin = pdc->dclevel.ptlBrushOrigin;
+
+    /* Initialize EBRUSHOBJs */
+    EBRUSHOBJ_vInit(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
+    EBRUSHOBJ_vInit(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+    EBRUSHOBJ_vInit(&pdc->eboText, pbrDefaultBrush, pdc);
+    EBRUSHOBJ_vInit(&pdc->eboBackground, pbrDefaultBrush, pdc);
+
+    /* Setup fill data */
+	pdc->dcattr.jROP2 = R2_COPYPEN;
+	pdc->dcattr.jBkMode = 2;
+	pdc->dcattr.lBkMode = 2;
+	pdc->dcattr.jFillMode = ALTERNATE;
+	pdc->dcattr.lFillMode = 1;
+	pdc->dcattr.jStretchBltMode = 1;
+	pdc->dcattr.lStretchBltMode = 1;
+    pdc->ptlFillOrigin.x = 0;
+    pdc->ptlFillOrigin.y = 0;
+
+    /* Setup drawing position */
+	pdc->dcattr.ptlCurrent.x = 0;
+	pdc->dcattr.ptlCurrent.y = 0;
+	pdc->dcattr.ptfxCurrent.x = 0;
+	pdc->dcattr.ptfxCurrent.y = 0;
+
+	/* Setup ICM data */
+	pdc->dclevel.lIcmMode = 0;
+	pdc->dcattr.lIcmMode = 0;
+	pdc->dcattr.hcmXform = NULL;
+	pdc->dcattr.flIcmFlags = 0;
+	pdc->dcattr.IcmBrushColor = CLR_INVALID;
+	pdc->dcattr.IcmPenColor = CLR_INVALID;
+	pdc->dcattr.pvLIcm = NULL;
+    pdc->dcattr.hColorSpace = NULL; // FIXME: 0189001f
+	pdc->dclevel.pColorSpace = NULL; // FIXME
+    pdc->pClrxFormLnk = NULL;
+//	pdc->dclevel.ca =
+
+	/* Setup font data */
+    pdc->hlfntCur = NULL; // FIXME: 2f0a0cf8
+    pdc->pPFFList = NULL;
+    pdc->flSimulationFlags = 0;
+    pdc->lEscapement = 0;
+    pdc->prfnt = NULL;
+	pdc->dcattr.flFontMapper = 0;
+	pdc->dcattr.flTextAlign = 0;
+	pdc->dcattr.lTextAlign = 0;
+	pdc->dcattr.lTextExtra = 0;
+	pdc->dcattr.lRelAbs = 1;
+	pdc->dcattr.lBreakExtra = 0;
+	pdc->dcattr.cBreak = 0;
+    pdc->dcattr.hlfntNew = StockObjects[SYSTEM_FONT];
+//	pdc->dclevel.pFont = LFONT_ShareLockFont(pdc->dcattr.hlfntNew);
+
+    /* Other stuff */
+    pdc->hdcNext = NULL;
+    pdc->hdcPrev = NULL;
+    pdc->ipfdDevMax = 0x0000ffff;
+    pdc->ulCopyCount = -1;
+    pdc->ptlDoBanding.x = 0;
+    pdc->ptlDoBanding.y = 0;
+	pdc->dclevel.lSaveDepth = 1;
+	pdc->dclevel.hdcSave = NULL;
+	pdc->dcattr.iGraphicsMode = GM_COMPATIBLE;
+	pdc->dcattr.iCS_CP = 0;
+    pdc->pSurfInfo = NULL;
+
+}
+
+BOOL
+INTERNAL_CALL
 DC_Cleanup(PVOID ObjectBody)
 {
-    PDC pDC = (PDC)ObjectBody;
+    PDC pdc = (PDC)ObjectBody;
 
-    /* Free driver name (HACK) */
-    if (pDC->rosdc.DriverName.Buffer)
-        ExFreePoolWithTag(pDC->rosdc.DriverName.Buffer, TAG_DC);
+    /* Free DC_ATTR */
+    DC_vFreeDcAttr(pdc);
+
+    /* Delete saved DCs */
+    DC_vRestoreDC(pdc, 1);
 
     /* Deselect dc objects */
-    DC_vSelectSurface(pDC, NULL);
-    DC_vSelectFillBrush(pDC, NULL);
-    DC_vSelectLineBrush(pDC, NULL);
-    DC_vSelectPalette(pDC, NULL);
-
-    /* Dereference default brushes */
-    if (pDC->eboText.pbrush)
-        BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
-    if (pDC->eboBackground.pbrush)
-        BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
+    DC_vSelectSurface(pdc, NULL);
+    DC_vSelectFillBrush(pdc, NULL);
+    DC_vSelectLineBrush(pdc, NULL);
+    DC_vSelectPalette(pdc, NULL);
 
     /* Cleanup the dc brushes */
-    EBRUSHOBJ_vCleanup(&pDC->eboFill);
-    EBRUSHOBJ_vCleanup(&pDC->eboLine);
-    EBRUSHOBJ_vCleanup(&pDC->eboText);
-    EBRUSHOBJ_vCleanup(&pDC->eboBackground);
+    EBRUSHOBJ_vCleanup(&pdc->eboFill);
+    EBRUSHOBJ_vCleanup(&pdc->eboLine);
+    EBRUSHOBJ_vCleanup(&pdc->eboText);
+    EBRUSHOBJ_vCleanup(&pdc->eboBackground);
+
+    /*  Free regions */
+    if (pdc->rosdc.hClipRgn)
+        GreDeleteObject(pdc->rosdc.hClipRgn);
+    if (pdc->prgnVis)
+        REGION_FreeRgnByHandle(pdc->prgnVis->BaseObject.hHmgr);
+    if (pdc->rosdc.hGCClipRgn)
+        GreDeleteObject(pdc->rosdc.hGCClipRgn);
+    if (NULL != pdc->rosdc.CombinedClip)
+        IntEngDeleteClipRegion(pdc->rosdc.CombinedClip);
+
+    PATH_Delete(pdc->dclevel.hPath);
+
+    if(pdc->dclevel.pSurface)
+        SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+
+    PDEVOBJ_vRelease(pdc->ppdev) ;
 
     return TRUE;
 }
@@ -186,205 +378,187 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     INT Index;
     PGDI_TABLE_ENTRY Entry;
     PDC pDC;
+    BOOL ret = FALSE;
 
-    if (!GDIOBJ_SetOwnership(hDC, Owner)) return FALSE;
-    pDC = DC_LockDc(hDC);
-    if (pDC)
+    if (!GDIOBJ_SetOwnership(hDC, Owner))
     {
+        DPRINT1("GDIOBJ_SetOwnership failed\n");
+        return FALSE;
+    }
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        DPRINT1("Could not lock DC\n");
+        return FALSE;
+    }
+
     /*
        System Regions:
           These regions do not use attribute sections and when allocated, use
           gdiobj level functions.
     */
-        if (pDC->rosdc.hClipRgn)
-        {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
-            Entry = &GdiHandleTable->Entries[Index];
-            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-            Entry->UserData = NULL;
-            //
-            if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
-        }
-        if (pDC->prgnVis)
-        {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->prgnVis->BaseObject.hHmgr);
-            Entry = &GdiHandleTable->Entries[Index];
-            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-            Entry->UserData = NULL;
-            //
-            if (!GDIOBJ_SetOwnership(pDC->prgnVis->BaseObject.hHmgr, Owner)) return FALSE;
-        }
-        if (pDC->rosdc.hGCClipRgn)
-        {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
-            Entry = &GdiHandleTable->Entries[Index];
-            if (Entry->UserData) FreeObjectAttr(Entry->UserData);
-            Entry->UserData = NULL;
-            //
-            if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) return FALSE;
-        }
-        if (pDC->dclevel.hPath)
-        {
-            if (!GDIOBJ_SetOwnership(pDC->dclevel.hPath, Owner)) return FALSE;
-        }
-        DC_UnlockDc(pDC);
+    if (pDC->rosdc.hClipRgn)
+    {   // FIXME! HAX!!!
+        Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hClipRgn);
+        Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+        Entry->UserData = NULL;
+        //
+        if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) goto leave;
     }
+    if (pDC->prgnVis)
+    {   // FIXME! HAX!!!
+        Index = GDI_HANDLE_GET_INDEX(pDC->prgnVis->BaseObject.hHmgr);
+        Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+        Entry->UserData = NULL;
+        //
+        if (!GDIOBJ_SetOwnership(pDC->prgnVis->BaseObject.hHmgr, Owner)) goto leave;
+    }
+    if (pDC->rosdc.hGCClipRgn)
+    {   // FIXME! HAX!!!
+        Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hGCClipRgn);
+        Entry = &GdiHandleTable->Entries[Index];
+        if (Entry->UserData) FreeObjectAttr(Entry->UserData);
+        Entry->UserData = NULL;
+        //
+        if (!GDIOBJ_SetOwnership(pDC->rosdc.hGCClipRgn, Owner)) goto leave;
+    }
+    if (pDC->dclevel.hPath)
+    {
+        if (!GDIOBJ_SetOwnership(pDC->dclevel.hPath, Owner)) goto leave;
+    }
+    ret = TRUE;
 
-    return TRUE;
+leave:
+    DC_UnlockDc(pDC);
+
+    return ret;
 }
 
 
-HDC FASTCALL
-IntGdiCreateDC(
-    PUNICODE_STRING Driver,
-    PUNICODE_STRING Device,
-    PVOID pUMdhpdev,
-    CONST PDEVMODEW InitData,
-    BOOL CreateAsIC)
+int FASTCALL
+CLIPPING_UpdateGCRegion(DC* Dc);
+
+static
+void
+DC_vUpdateDC(PDC pdc)
 {
-    HDC      hdc;
-    PDC      pdc;
-    PDC_ATTR pdcattr;
-    HRGN     hVisRgn;
-    UNICODE_STRING StdDriver;
-    BOOL calledFromUser;
+    HRGN hVisRgn ;
+    PPDEVOBJ ppdev = pdc->ppdev ;
 
-    RtlInitUnicodeString(&StdDriver, L"DISPLAY");
+    pdc->dhpdev = ppdev->dhpdev;
 
-    DPRINT("DriverName: %wZ, DeviceName: %wZ\n", Driver, Device);
+    SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
+    pdc->dclevel.pSurface = PDEVOBJ_pSurface(ppdev);
 
-    if (NULL == Driver || 0 == RtlCompareUnicodeString(Driver, &StdDriver, TRUE))
+    PDEVOBJ_sizl(pdc->ppdev, &pdc->dclevel.sizl);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->dclevel.sizl.cx, pdc->dclevel.sizl.cy);
+    ASSERT(hVisRgn);
+    GdiSelectVisRgn(pdc->BaseObject.hHmgr, hVisRgn);
+    GreDeleteObject(hVisRgn);
+
+    pdc->flGraphicsCaps = ppdev->devinfo.flGraphicsCaps;
+    pdc->flGraphicsCaps2 = ppdev->devinfo.flGraphicsCaps2;
+
+    /* Mark EBRUSHOBJs as dirty */
+    pdc->pdcattr->ulDirty_ |= DIRTY_DEFAULT ;
+}
+
+/* Prepare a blit for up to 2 DCs */
+/* rc1 and rc2 are the rectangles where we want to draw or
+ * from where we take pixels. */
+VOID
+FASTCALL
+DC_vPrepareDCsForBlit(PDC pdc1,
+                      RECT rc1,
+                      PDC pdc2,
+                      RECT rc2)
+{
+    PDC pdcFirst, pdcSecond;
+    PRECT prcFirst, prcSecond;
+    /* Lock them in good order */
+    if(pdc2)
     {
-        if (CreateAsIC)
+        if((ULONG_PTR)pdc1->ppdev->hsemDevLock >= (ULONG_PTR)pdc2->ppdev->hsemDevLock)
         {
-            if (! IntPrepareDriverIfNeeded())
-            {
-                /* Here, we have two possibilities:
-                 * a) return NULL, and hope that the caller
-                 *    won't call us in a loop
-                 * b) bugcheck, but caller is unable to
-                 *    react on the problem
-                 */
-                /*DPRINT1("Unable to prepare graphics driver, returning NULL ic\n");
-                return NULL;*/
-                KeBugCheck(VIDEO_DRIVER_INIT_FAILURE);
-            }
+            pdcFirst = pdc1;
+            prcFirst = &rc1;
+            pdcSecond = pdc2;
+            prcSecond = &rc2;
         }
         else
         {
-            calledFromUser = UserIsEntered();
-            if (!calledFromUser)
-            {
-                UserEnterExclusive();
-            }
-
-            if (! co_IntGraphicsCheck(TRUE))
-            {
-                if (!calledFromUser)
-                {
-                    UserLeave();
-                }
-                DPRINT1("Unable to initialize graphics, returning NULL dc\n");
-                return NULL;
-            }
-
-            if (!calledFromUser)
-            {
-                UserLeave();
-            }
-
+            pdcFirst = pdc2;
+            prcFirst = &rc2;
+            pdcSecond = pdc1;
+            prcSecond = &rc1;
         }
-    }
-
-    /*  Check for existing DC object  */
-    if ((hdc = DC_FindOpenDC(Driver)) != NULL)
-    {
-        hdc = NtGdiCreateCompatibleDC(hdc);
-        if (!hdc)
-            DPRINT1("NtGdiCreateCompatibleDC() failed\n");
-        return hdc;
-    }
-
-    /*  Allocate a DC object  */
-    pdc = DC_AllocDC(Driver);
-    if (pdc == NULL)
-    {
-        DPRINT1("DC_AllocDC() failed\n");
-        return NULL;
-    }
-    hdc = pdc->BaseObject.hHmgr;
-    pdcattr = pdc->pdcattr;
-
-    pdc->dctype = DC_TYPE_DIRECT;
-
-    pdc->dhpdev = PrimarySurface.dhpdev;
-    if (pUMdhpdev) pUMdhpdev = pdc->dhpdev; // set DHPDEV for device.
-    pdc->ppdev = (PVOID)&PrimarySurface;
-
-    // ATM we only have one display.
-    pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
-
-    pdc->flGraphicsCaps  = PrimarySurface.devinfo.flGraphicsCaps;
-    pdc->flGraphicsCaps2 = PrimarySurface.devinfo.flGraphicsCaps2;
-
-    pdc->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
-
-    pdcattr->jROP2 = R2_COPYPEN;
-
-    pdc->erclWindow.top = pdc->erclWindow.left = 0;
-    pdc->erclWindow.right  = pdc->ppdev->gdiinfo.ulHorzRes;
-    pdc->erclWindow.bottom = pdc->ppdev->gdiinfo.ulVertRes;
-    pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
-
-    pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
-
-    hVisRgn = IntSysCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
-                                 pdc->ppdev->gdiinfo.ulVertRes);
-
-    if (!CreateAsIC)
-    {
-        pdc->pSurfInfo = NULL;
-//    pdc->dclevel.pSurface =
-        DC_UnlockDc(pdc);
-
-        /*  Initialize the DC state  */
-        IntGdiSetTextColor(hdc, RGB(0, 0, 0));
-        IntGdiSetBkColor(hdc, RGB(255, 255, 255));
     }
     else
     {
-        /* From MSDN2:
-           The CreateIC function creates an information context for the specified device.
-           The information context provides a fast way to get information about the
-           device without creating a device context (DC). However, GDI drawing functions
-           cannot accept a handle to an information context.
-         */
-        pdc->dctype = DC_TYPE_INFO;
-//    pdc->pSurfInfo =
-//        DC_vSelectSurface(pdc, NULL);
-        pdcattr->crBackgroundClr = pdcattr->ulBackgroundClr = RGB(255, 255, 255);
-        pdcattr->crForegroundClr = RGB(0, 0, 0);
-        DC_UnlockDc(pdc);
+        pdcFirst = pdc1 ;
+        prcFirst = &rc1;
+        pdcSecond = NULL ;
     }
-    DC_InitDC(hdc);
 
-    if (hVisRgn)
+    if(pdcFirst && pdcFirst->dctype == DCTYPE_DIRECT)
     {
-        GdiSelectVisRgn(hdc, hVisRgn);
-        REGION_FreeRgnByHandle(hVisRgn);
+        EngAcquireSemaphore(pdcFirst->ppdev->hsemDevLock);
+        MouseSafetyOnDrawStart(pdcFirst->ppdev,
+                                    prcFirst->left,
+                                    prcFirst->top,
+                                    prcFirst->right,
+                                    prcFirst->bottom) ;
+        /* Update surface if needed */
+        if(pdcFirst->ppdev->pSurface != pdcFirst->dclevel.pSurface)
+        {
+            DC_vUpdateDC(pdcFirst);
+        }
     }
-
-    IntGdiSetTextAlign(hdc, TA_TOP);
-    IntGdiSetBkMode(hdc, OPAQUE);
-
-    return hdc;
+    if(pdcSecond && pdcSecond->dctype == DCTYPE_DIRECT)
+    {
+        EngAcquireSemaphore(pdcSecond->ppdev->hsemDevLock);
+        MouseSafetyOnDrawStart(pdcSecond->ppdev,
+                                    prcSecond->left,
+                                    prcSecond->top,
+                                    prcSecond->right,
+                                    prcSecond->bottom) ;
+        /* Update surface if needed */
+        if(pdcSecond->ppdev->pSurface != pdcSecond->dclevel.pSurface)
+        {
+            DC_vUpdateDC(pdcSecond);
+        }
+    }
 }
 
+/* Finishes a blit for one or two DCs */
+VOID
+FASTCALL
+DC_vFinishBlit(PDC pdc1, PDC pdc2)
+{
+    if(pdc1->dctype == DCTYPE_DIRECT)
+    {
+        MouseSafetyOnDrawEnd(pdc1->ppdev);
+        EngReleaseSemaphore(pdc1->ppdev->hsemDevLock);
+    }
 
-HDC APIENTRY
-NtGdiOpenDCW(
-    PUNICODE_STRING Device,
-    DEVMODEW *InitData,
+    if(pdc2)
+    {
+        if(pdc2->dctype == DCTYPE_DIRECT)
+        {
+            MouseSafetyOnDrawEnd(pdc2->ppdev);
+            EngReleaseSemaphore(pdc2->ppdev->hsemDevLock);
+        }
+    }
+}
+
+HDC
+NTAPI
+GreOpenDCW(
+    PUNICODE_STRING pustrDevice,
+    DEVMODEW *pdmInit,
     PUNICODE_STRING pustrLogAddr,
     ULONG iType,
     BOOL bDisplay,
@@ -392,98 +566,210 @@ NtGdiOpenDCW(
     VOID *pDriverInfo2,
     VOID *pUMdhpdev)
 {
-    UNICODE_STRING SafeDevice;
-    DEVMODEW SafeInitData;
-    PVOID Dhpdev;
-    HDC Ret;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PPDEVOBJ ppdev;
+    PDC pdc;
+    HDC hdc;
 
-    if (!Device) return UserGetDesktopDC(iType,FALSE,TRUE);
+    DPRINT("GreOpenDCW(%S, iType=%ld)\n",
+           pustrDevice ? pustrDevice->Buffer : NULL, iType);
 
-    if (InitData)
+    /* Get a PDEVOBJ for the device */
+    ppdev = EngpGetPDEV(pustrDevice);
+    if (!ppdev)
     {
+        DPRINT1("Didn't find a suitable PDEV\n");
+        return NULL;
+    }
+
+    DPRINT("GreOpenDCW - ppdev = %p\n", ppdev);
+
+    pdc = DC_AllocDcWithHandle();
+    if (!pdc)
+    {
+        DPRINT1("Could not Allocate a DC\n");
+        PDEVOBJ_vRelease(ppdev);
+        return NULL;
+    }
+    hdc = pdc->BaseObject.hHmgr;
+
+    /* Lock ppdev and initialize the new DC */
+    DC_vInitDc(pdc, iType, ppdev);
+    /* FIXME: HACK! */
+    DC_InitHack(pdc);
+
+    DC_AllocDcAttr(pdc);
+
+    DC_UnlockDc(pdc);
+
+    DPRINT("returning hdc = %p\n", hdc);
+
+    return hdc;
+}
+
+HDC
+APIENTRY
+NtGdiOpenDCW(
+    PUNICODE_STRING pustrDevice,
+    DEVMODEW *pdmInit,
+    PUNICODE_STRING pustrLogAddr,
+    ULONG iType,
+    BOOL bDisplay,
+    HANDLE hspool,
+    VOID *pDriverInfo2,
+    VOID *pUMdhpdev)
+{
+    UNICODE_STRING ustrDevice;
+    WCHAR awcDevice[CCHDEVICENAME];
+    DEVMODEW dmInit;
+    PVOID dhpdev;
+    HDC hdc;
+
+    /* Only if a devicename is given, we need any data */
+    if (pustrDevice)
+    {
+        /* Initialize destination string */
+        RtlInitEmptyUnicodeString(&ustrDevice, awcDevice, sizeof(awcDevice));
+
         _SEH2_TRY
         {
+            /* Probe the UNICODE_STRING and the buffer */
+            ProbeForRead(pustrDevice, sizeof(UNICODE_STRING), 1);
+            ProbeForRead(pustrDevice->Buffer, pustrDevice->Length, 1);
+
+            /* Copy the string */
+            RtlCopyUnicodeString(&ustrDevice, pustrDevice);
+
+            if (pdmInit)
+            {
+                /* FIXME: could be larger */
+                ProbeForRead(pdmInit, sizeof(DEVMODEW), 1);
+                RtlCopyMemory(&dmInit, pdmInit, sizeof(DEVMODEW));
+            }
+
             if (pUMdhpdev)
             {
-                ProbeForWrite(pUMdhpdev, sizeof(PVOID), 1);
+                ProbeForWrite(pUMdhpdev, sizeof(HANDLE), 1);
             }
-            ProbeForRead(InitData, sizeof(DEVMODEW), 1);
-            RtlCopyMemory(&SafeInitData, InitData, sizeof(DEVMODEW));
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            SetLastNtError(_SEH2_GetExceptionCode());
+            _SEH2_YIELD(return NULL);
         }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            return NULL;
-        }
-        /* FIXME - InitData can have some more bytes! */
+        _SEH2_END
     }
-
-    if (Device)
+    else
     {
-        Status = IntSafeCopyUnicodeString(&SafeDevice, Device);
-        if (!NT_SUCCESS(Status))
+        pdmInit = NULL;
+        pUMdhpdev = NULL;
+    }
+
+    /* FIXME: HACK! */
+    if (pustrDevice)
+    {
+        UNICODE_STRING ustrDISPLAY = RTL_CONSTANT_STRING(L"DISPLAY");
+        if (RtlEqualUnicodeString(&ustrDevice, &ustrDISPLAY, TRUE))
         {
-            SetLastNtError(Status);
-            return NULL;
+            pustrDevice = NULL;
         }
     }
 
-    Ret = IntGdiCreateDC(Device ? &SafeDevice : NULL,
-                         NULL,
-                         pUMdhpdev ? &Dhpdev : NULL,
-                         InitData ? &SafeInitData : NULL,
-                         (BOOL) iType); // FALSE 0 DCW, TRUE 1 ICW
+    /* Call the internal function */
+    hdc = GreOpenDCW(pustrDevice ? &ustrDevice : NULL,
+                     pdmInit ? &dmInit : NULL,
+                     NULL, // fixme pwszLogAddress
+                     iType,
+                     bDisplay,
+                     hspool,
+                     NULL, //FIXME: pDriverInfo2
+                     pUMdhpdev ? &dhpdev : NULL);
 
-    // FIXME!!!!
-    if (pUMdhpdev) pUMdhpdev = Dhpdev;
+    /* If we got a HDC and a UM dhpdev is requested,... */
+    if (hdc && pUMdhpdev)
+    {
+        /* Copy dhpdev to caller (FIXME: use dhpdev?? */
+        _SEH2_TRY
+        {
+            /* Pointer was already probed */
+            *(HANDLE*)pUMdhpdev = dhpdev;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Ignore error */
+        }
+        _SEH2_END
+    }
 
-    return Ret;
+    return hdc;
 }
 
-HDC FASTCALL
-IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
+
+HDC
+APIENTRY
+NtGdiCreateCompatibleDC(HDC hdc)
 {
-    HDC hDC;
-    UNICODE_STRING DriverName;
-    RtlInitUnicodeString(&DriverName, L"DISPLAY");
+    HDC hdcNew;
+    PPDEVOBJ ppdev;
+    PDC pdc, pdcNew;
 
-    if (DcType != DC_TYPE_MEMORY)
-        hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, (DcType == DC_TYPE_INFO));
-    else
-        hDC = NtGdiCreateCompatibleDC(NULL); // OH~ Yuck! I think I taste vomit in my mouth!
-//
-// There is room to grow here~
-//
+    DPRINT("NtGdiCreateCompatibleDC(0x%p)\n", hdc);
 
-//
-// If NULL, first time through! Build the default (was window) dc!
-// Setup clean DC state for the system.
-//
-    if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
-    { // This is a cheesy way to do this.
-        PDC dc = DC_LockDc(hDC);
-        HSURF hsurf;
-        defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
-        if (!defaultDCstate)
+    /* Did the caller provide a DC? */
+    if (hdc)
+    {
+        /* Yes, try to lock it */
+        pdc = DC_LockDc(hdc);
+        if (!pdc)
         {
-            DC_UnlockDc(dc);
+            DPRINT1("Could not lock source DC %p\n", hdc);
             return NULL;
         }
-        RtlZeroMemory(defaultDCstate, sizeof(DC));
-        defaultDCstate->pdcattr = &defaultDCstate->dcattr;
-        hsurf = (HSURF)PrimarySurface.pSurface; // HAX²
-        defaultDCstate->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
-        DC_vCopyState(dc, defaultDCstate, TRUE);
-        DC_UnlockDc(dc);
+
+        /* Get the pdev from the DC */
+        ppdev = pdc->ppdev;
+        InterlockedIncrement(&ppdev->cPdevRefs);
+
+        /* Unlock the source DC */
+        DC_UnlockDc(pdc);
     }
-    return hDC;
+    else
+    {
+        /* No DC given, get default device */
+        ppdev = EngpGetPDEV(NULL);
+    }
+
+    if (!ppdev)
+    {
+        DPRINT1("Didn't find a suitable PDEV\n");
+        return NULL;
+    }
+
+    /* Allocate a new DC */
+    pdcNew = DC_AllocDcWithHandle();
+    if (!pdcNew)
+    {
+        DPRINT1("Could not allocate a new DC\n");
+        PDEVOBJ_vRelease(ppdev);
+        return NULL;
+    }
+    hdcNew = pdcNew->BaseObject.hHmgr;
+
+    /* Lock ppdev and initialize the new DC */
+    DC_vInitDc(pdcNew, DCTYPE_MEMORY, ppdev);
+    /* FIXME: HACK! */
+    DC_InitHack(pdcNew);
+
+    /* Allocate a dc attribute */
+    DC_AllocDcAttr(pdcNew);
+
+    // HACK!
+    DC_vSelectSurface(pdcNew, psurfDefaultBitmap);
+
+    DC_UnlockDc(pdcNew);
+
+    DPRINT("Leave NtGdiCreateCompatibleDC hdcNew = %p\n", hdcNew);
+
+    return hdcNew;
 }
 
 BOOL
@@ -500,102 +786,69 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
     if (!Force)
     {
+        /* Windows permits NtGdiDeleteObjectApp to delete a permanent DC
+         * For some reason, it's still a valid handle, pointing to some kernel data.
+         * Not sure if this is a bug, a feature, some cache stuff... Who knows?
+         * See NtGdiDeleteObjectApp test for details */
         if (DCToDelete->fs & DC_FLAG_PERMANENT)
         {
-            DPRINT1("No! You Naughty Application!\n");
             DC_UnlockDc(DCToDelete);
-            return UserReleaseDC(NULL, hDC, FALSE);
+            if(UserReleaseDC(NULL, hDC, FALSE))
+            {
+                /* ReactOs feature : call UserReleaseDC
+                 * I don't think windows does it.
+                 * Still, complain, no one should ever call DeleteDC
+                 * on a window DC */
+                 DPRINT1("No, you naughty application!\n");
+                 return TRUE;
+            }
+            else
+            {
+                /* This is not a window owned DC.
+                 * Force its deletion */
+                return IntGdiDeleteDC(hDC, TRUE);
+            }
         }
     }
-
-    /*  First delete all saved DCs  */
-    while (DCToDelete->dclevel.lSaveDepth > 1)
-    {
-        PDC  savedDC;
-        HDC  savedHDC;
-
-        savedHDC = DCToDelete->hdcNext;
-        savedDC = DC_LockDc(savedHDC);
-        if (savedDC == NULL)
-        {
-            break;
-        }
-        DCToDelete->hdcNext = savedDC->hdcNext;
-        DCToDelete->dclevel.lSaveDepth--;
-        DC_UnlockDc(savedDC);
-        IntGdiDeleteDC(savedHDC, Force);
-    }
-
-    /*  Free GDI resources allocated to this DC  */
-    if (!(DCToDelete->dclevel.flPath & DCPATH_SAVESTATE))
-    {
-        /*
-        NtGdiSelectPen (DCHandle, STOCK_BLACK_PEN);
-        NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
-        NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
-        DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
-    }
-    if (DCToDelete->rosdc.hClipRgn)
-    {
-        GreDeleteObject(DCToDelete->rosdc.hClipRgn);
-    }
-    if (DCToDelete->prgnVis)
-    {
-        GreDeleteObject(DCToDelete->prgnVis->BaseObject.hHmgr);
-    }
-    if (NULL != DCToDelete->rosdc.CombinedClip)
-    {
-        IntEngDeleteClipRegion(DCToDelete->rosdc.CombinedClip);
-    }
-    if (DCToDelete->rosdc.hGCClipRgn)
-    {
-        GreDeleteObject(DCToDelete->rosdc.hGCClipRgn);
-    }
-    if (DCToDelete->dclevel.prgnMeta)
-    {
-       GreDeleteObject(((PROSRGNDATA)DCToDelete->dclevel.prgnMeta)->BaseObject.hHmgr);
-    }
-    if (DCToDelete->prgnAPI)
-    {
-       GreDeleteObject(((PROSRGNDATA)DCToDelete->prgnAPI)->BaseObject.hHmgr);
-    }
-    PATH_Delete(DCToDelete->dclevel.hPath);
 
     DC_UnlockDc(DCToDelete);
-    GreDeleteObject(hDC);
+
+    if (!IsObjectDead(hDC))
+    {
+        if (!GDIOBJ_FreeObjByHandle(hDC, GDI_OBJECT_TYPE_DC))
+        {
+            DPRINT1("DC_FreeDC failed\n");
+        }
+    }
+    else
+    {
+        DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n", hDC);
+    }
+    
     return TRUE;
 }
 
-HDC FASTCALL
-DC_FindOpenDC(PUNICODE_STRING  Driver)
+BOOL
+APIENTRY
+NtGdiDeleteObjectApp(HANDLE DCHandle)
 {
-    return NULL;
-}
+    /* Complete all pending operations */
+    NtGdiFlushUserBatch();
 
-/*!
- * Initialize some common fields in the Device Context structure.
-*/
-VOID FASTCALL
-DC_InitDC(HDC  DCHandle)
-{
-//  NtGdiRealizeDefaultPalette(DCHandle);
+    if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
 
-////  Removed for now.. See above brush and pen.
-//  NtGdiSelectBrush(DCHandle, NtGdiGetStockObject( WHITE_BRUSH ));
-//  NtGdiSelectPen(DCHandle, NtGdiGetStockObject( BLACK_PEN ));
-////
-    //NtGdiSelectFont(DCHandle, hFont);
+    if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
+        return GreDeleteObject((HGDIOBJ) DCHandle);
 
-    /*
-      {
-        int res;
-        res = CLIPPING_UpdateGCRegion(DCToInit);
-        ASSERT ( res != ERROR );
-      }
-    */
+    if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
 
-    /* Set virtual resolution */
-    NtGdiSetVirtualResolution(DCHandle, 0, 0, 0, 0);
+    if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    return IntGdiDeleteDC(DCHandle, FALSE);
 }
 
 BOOL
@@ -618,7 +871,7 @@ MakeInfoDC(PDC pdc, BOOL bSet)
         pdc->dctype = DC_TYPE_INFO;
         pdc->dclevel.pSurface = NULL;
 
-        PDEV_sizl(pdc->ppdev, &sizl);
+        PDEVOBJ_sizl(pdc->ppdev, &sizl);
 
         if ( sizl.cx == pdc->dclevel.sizl.cx &&
              sizl.cy == pdc->dclevel.sizl.cy )
@@ -669,132 +922,42 @@ NtGdiMakeInfoDC(
     return FALSE;
 }
 
-HDC APIENTRY
-NtGdiCreateCompatibleDC(HDC hDC)
+
+HDC FASTCALL
+IntGdiCreateDC(
+    PUNICODE_STRING Driver,
+    PUNICODE_STRING pustrDevice,
+    PVOID pUMdhpdev,
+    CONST PDEVMODEW pdmInit,
+    BOOL CreateAsIC)
 {
-    PDC pdcNew, pdcOld;
-    PDC_ATTR pdcattrNew, pdcattrOld;
-    HDC hdcNew, DisplayDC = NULL;
-    UNICODE_STRING DriverName;
-    DWORD Layout = 0;
-    HSURF hsurf;
+    HDC hdc;
 
-    if (hDC == NULL)
-    {
-        RtlInitUnicodeString(&DriverName, L"DISPLAY");
-        DisplayDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, TRUE);
-        if (NULL == DisplayDC)
-        {
-            DPRINT1("Failed to create DisplayDC\n");
-            return NULL;
-        }
-        hDC = DisplayDC;
-    }
+    hdc = GreOpenDCW(pustrDevice,
+                     pdmInit,
+                     NULL,
+                     CreateAsIC ? DCTYPE_INFO :
+                          (Driver ? DC_TYPE_DIRECT : DC_TYPE_DIRECT),
+                     TRUE,
+                     NULL,
+                     NULL,
+                     pUMdhpdev);
 
-    /*  Allocate a new DC based on the original DC's device  */
-    pdcOld = DC_LockDc(hDC);
-    if (NULL == pdcOld)
-    {
-        if (NULL != DisplayDC)
-        {
-            NtGdiDeleteObjectApp(DisplayDC);
-        }
-        DPRINT1("Failed to lock hDC\n");
-        return NULL;
-    }
-    pdcNew = DC_AllocDC(&pdcOld->rosdc.DriverName);
-    if (!pdcNew)
-    {
-        DPRINT1("Failed to create pdcNew\n");
-        DC_UnlockDc(pdcOld);
-        if (DisplayDC)
-        {
-            NtGdiDeleteObjectApp(DisplayDC);
-        }
-        return  NULL;
-    }
-    hdcNew = pdcNew->BaseObject.hHmgr;
-
-    pdcattrOld = pdcOld->pdcattr;
-    pdcattrNew = pdcNew->pdcattr;
-
-    /* Copy information from original DC to new DC  */
-    pdcNew->dclevel.hdcSave = hdcNew;
-
-    pdcNew->dhpdev = pdcOld->dhpdev;
-
-    /* DriverName is copied in the AllocDC routine  */
-    pdcattrNew->ptlWindowOrg   = pdcattrOld->ptlWindowOrg;
-    pdcattrNew->szlWindowExt   = pdcattrOld->szlWindowExt;
-    pdcattrNew->ptlViewportOrg = pdcattrOld->ptlViewportOrg;
-    pdcattrNew->szlViewportExt = pdcattrOld->szlViewportExt;
-
-    pdcNew->dctype        = DC_TYPE_MEMORY; // Always!
-    hsurf      = NtGdiGetStockObject(DEFAULT_BITMAP);
-    pdcNew->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
-    pdcNew->ppdev          = pdcOld->ppdev;
-    pdcNew->dclevel.hpal    = pdcOld->dclevel.hpal;
-
-    pdcattrNew->lTextAlign      = pdcattrOld->lTextAlign;
-    pdcattrNew->lBkMode         = pdcattrOld->lBkMode;
-    pdcattrNew->jBkMode         = pdcattrOld->jBkMode;
-    pdcattrNew->jROP2           = pdcattrOld->jROP2;
-    pdcattrNew->dwLayout        = pdcattrOld->dwLayout;
-    if (pdcattrOld->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = pdcattrOld->dwLayout;
-    pdcNew->dclevel.flPath     = pdcOld->dclevel.flPath;
-    pdcattrNew->ulDirty_        = pdcattrOld->ulDirty_;
-    pdcattrNew->iCS_CP          = pdcattrOld->iCS_CP;
-
-    pdcNew->erclWindow.left = pdcNew->erclWindow.top = 0;
-    pdcNew->erclWindow.right = pdcNew->erclWindow.bottom = 1;
-
-    DC_UnlockDc(pdcNew);
-    DC_UnlockDc(pdcOld);
-    if (NULL != DisplayDC)
-    {
-        NtGdiDeleteObjectApp(DisplayDC);
-    }
-
-    if (Layout) NtGdiSetLayout(hdcNew, -1, Layout);
-
-    DC_InitDC(hdcNew);
-    return hdcNew;
+    return hdc;
 }
 
-
-BOOL
-APIENTRY
-NtGdiDeleteObjectApp(HANDLE DCHandle)
+HDC FASTCALL
+IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
 {
-  GDIOBJTYPE ObjType;
+    HDC hDC;
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
 
-  /* Complete all pending operations */
-  NtGdiFlushUserBatch();
+    if (DcType == DC_TYPE_MEMORY)
+        hDC = NtGdiCreateCompatibleDC(NULL); // OH~ Yuck! I think I taste vomit in my mouth!
+    else
+        hDC = IntGdiCreateDC(NULL, NULL, NULL, NULL, (DcType == DC_TYPE_INFO));
 
-  if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
-
-  if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
-
-  ObjType = GDI_OBJECT_GET_TYPE_INDEX((ULONG_PTR)DCHandle);
-
-  if (GreGetObjectOwner( DCHandle, ObjType))
-  {
-     switch(ObjType)
-     {
-        case GDIObjType_DC_TYPE:
-          return IntGdiDeleteDC(DCHandle, FALSE);
-
-        case GDIObjType_RGN_TYPE:
-        case GDIObjType_SURF_TYPE:
-        case GDIObjType_PAL_TYPE:
-        case GDIObjType_LFONT_TYPE:
-        case GDIObjType_BRUSH_TYPE:
-          return GreDeleteObject((HGDIOBJ) DCHandle);
-
-        default:
-          return FALSE;
-     }
-  }
-  return (DCHandle != NULL);
+    return hDC;
 }
 

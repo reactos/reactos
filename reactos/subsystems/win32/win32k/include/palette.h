@@ -40,7 +40,7 @@ typedef struct _PALETTE
   PALOBJ PalObj;
   XLATEOBJ *logicalToSystem;
   HPALETTE Self;
-  ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
+  FLONG flFlags; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
   ULONG NumColors;
   PALETTEENTRY *IndexedColors;
   ULONG RedMask;
@@ -52,8 +52,8 @@ typedef struct _PALETTE
   HDEV  hPDev;
 } PALETTE, *PPALETTE;
 
-extern PALETTE gpalRGB, gpalBGR, gpalMono;
-
+extern PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565, *gppalDefault;
+extern PPALETTE appalSurfaceDefault[];
 
 HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
                                        ULONG NumColors,

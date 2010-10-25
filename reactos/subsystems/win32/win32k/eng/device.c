@@ -12,6 +12,264 @@
 #define NDEBUG
 #include <debug.h>
 
+PGRAPHICS_DEVICE gpPrimaryGraphicsDevice;
+PGRAPHICS_DEVICE gpVgaGraphicsDevice;
+
+static PGRAPHICS_DEVICE gpGraphicsDeviceFirst = NULL;
+static PGRAPHICS_DEVICE gpGraphicsDeviceLast = NULL;
+static HSEMAPHORE ghsemGraphicsDeviceList;
+static ULONG giDevNum = 1;
+
+BOOL
+NTAPI
+InitDeviceImpl()
+{
+    ghsemGraphicsDeviceList = EngCreateSemaphore();
+    if (!ghsemGraphicsDeviceList)
+        return FALSE;
+
+    return TRUE;
+}
+
+
+PGRAPHICS_DEVICE
+NTAPI
+EngpRegisterGraphicsDevice(
+    PUNICODE_STRING pustrDeviceName,
+    PUNICODE_STRING pustrDiplayDrivers,
+    PUNICODE_STRING pustrDescription,
+    PDEVMODEW pdmDefault)
+{
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    PDEVICE_OBJECT pDeviceObject;
+    PFILE_OBJECT pFileObject;
+    NTSTATUS Status;
+    PWSTR pwsz;
+    ULONG i, cj, cModes = 0;
+    BOOL bEnable = TRUE;
+    PDEVMODEINFO pdminfo;
+    PDEVMODEW pdm, pdmEnd;
+    PLDEVOBJ pldev;
+
+    DPRINT1("EngpRegisterGraphicsDevice(%S)\n", pustrDeviceName->Buffer);
+
+    /* Allocate a GRAPHICS_DEVICE structure */
+    pGraphicsDevice = ExAllocatePoolWithTag(PagedPool,
+                                            sizeof(GRAPHICS_DEVICE),
+                                            GDITAG_GDEVICE);
+    if (!pGraphicsDevice)
+    {
+        DPRINT1("ExAllocatePoolWithTag failed\n");
+        return NULL;
+    }
+
+    /* Try to open the driver */
+    Status = IoGetDeviceObjectPointer(pustrDeviceName,
+                                      FILE_READ_DATA | FILE_WRITE_DATA,
+                                      &pFileObject,
+                                      &pDeviceObject);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not open driver, 0x%lx\n", Status);
+        ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
+        return NULL;
+    }
+
+    /* Enable the device */
+    EngFileWrite(pFileObject, &bEnable, sizeof(BOOL), &cj);
+
+    /* Copy the device and file object pointers */
+    pGraphicsDevice->DeviceObject = pDeviceObject;
+    pGraphicsDevice->FileObject = pFileObject;
+
+    /* Copy device name */
+    wcsncpy(pGraphicsDevice->szNtDeviceName,
+            pustrDeviceName->Buffer,
+            sizeof(pGraphicsDevice->szNtDeviceName) / sizeof(WCHAR));
+
+    /* Create a win device name (FIXME: virtual devices!) */
+    swprintf(pGraphicsDevice->szWinDeviceName, L"\\\\.\\VIDEO%d", (CHAR)giDevNum);
+
+    /* Allocate a buffer for the strings */
+    cj = pustrDiplayDrivers->Length + pustrDescription->Length + sizeof(WCHAR);
+    pwsz = ExAllocatePoolWithTag(PagedPool, cj, GDITAG_DRVSUP);
+    if (!pwsz)
+    {
+        DPRINT1("Could not allocate string buffer\n");
+        ASSERT(FALSE); // FIXME
+    }
+
+    /* Copy display driver names */
+    pGraphicsDevice->pDiplayDrivers = pwsz;
+    RtlCopyMemory(pGraphicsDevice->pDiplayDrivers,
+                  pustrDiplayDrivers->Buffer,
+                  pustrDiplayDrivers->Length);
+
+    /* Copy description */
+    pGraphicsDevice->pwszDescription = pwsz + pustrDiplayDrivers->Length / sizeof(WCHAR);
+    RtlCopyMemory(pGraphicsDevice->pwszDescription,
+                  pustrDescription->Buffer,
+                  pustrDescription->Length + sizeof(WCHAR));
+
+    /* Initialize the pdevmodeInfo list and default index  */
+    pGraphicsDevice->pdevmodeInfo = NULL;
+    pGraphicsDevice->iDefaultMode = 0;
+    pGraphicsDevice->iCurrentMode = 0;
+
+    // FIXME: initialize state flags
+    pGraphicsDevice->StateFlags = 0;
+
+    /* Loop through the driver names
+     * This is a REG_MULTI_SZ string */
+    for (; *pwsz; pwsz += wcslen(pwsz) + 1)
+    {
+        DPRINT1("trying driver: %ls\n", pwsz);
+        /* Try to load the display driver */
+        pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
+        if (!pldev)
+        {
+            DPRINT1("Could not load driver: '%ls'\n", pwsz);
+            continue;
+        }
+
+        /* Get the mode list from the driver */
+        pdminfo = LDEVOBJ_pdmiGetModes(pldev, pDeviceObject);
+        if (!pdminfo)
+        {
+            DPRINT1("Could not get mode list for '%ls'\n", pwsz);
+            continue;
+        }
+
+        /* Attach the mode info to the device */
+        pdminfo->pdmiNext = pGraphicsDevice->pdevmodeInfo;
+        pGraphicsDevice->pdevmodeInfo = pdminfo;
+
+        /* Count DEVMODEs */
+        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
+        for (pdm = pdminfo->adevmode;
+             pdm + 1 <= pdmEnd;
+             pdm = (DEVMODEW*)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        {
+            cModes++;
+        }
+
+        // FIXME: release the driver again until it's used?
+    }
+
+    if (!pGraphicsDevice->pdevmodeInfo || cModes == 0)
+    {
+        DPRINT1("No devmodes\n");
+        ExFreePool(pGraphicsDevice);
+        return NULL;
+    }
+
+    /* Allocate an index buffer */
+    pGraphicsDevice->cDevModes = cModes;
+    pGraphicsDevice->pDevModeList = ExAllocatePoolWithTag(PagedPool,
+                                                          cModes * sizeof(DEVMODEENTRY),
+                                                          GDITAG_GDEVICE);
+    if (!pGraphicsDevice->pDevModeList)
+    {
+        DPRINT1("No devmode list\n");
+        ExFreePool(pGraphicsDevice);
+        return NULL;
+    }
+
+    /* Loop through all DEVMODEINFOs */
+    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
+         pdminfo;
+         pdminfo = pdminfo->pdmiNext)
+    {
+        /* Calculate End of the DEVMODEs */
+        pdmEnd = (DEVMODEW*)((PCHAR)pdminfo->adevmode + pdminfo->cbdevmode);
+
+        /* Loop through the DEVMODEs */
+        for (pdm = pdminfo->adevmode;
+             pdm + 1 <= pdmEnd;
+             pdm = (PDEVMODEW)((PCHAR)pdm + pdm->dmSize + pdm->dmDriverExtra))
+        {
+            /* Compare with the default entry */
+            if (pdm->dmBitsPerPel == pdmDefault->dmBitsPerPel &&
+                pdm->dmPelsWidth == pdmDefault->dmPelsWidth &&
+                pdm->dmPelsHeight == pdmDefault->dmPelsHeight &&
+                pdm->dmDisplayFrequency == pdmDefault->dmDisplayFrequency)
+            {
+                pGraphicsDevice->iDefaultMode = i;
+                pGraphicsDevice->iCurrentMode = i;
+                DPRINT1("Found default entry: %ld '%ls'\n", i, pdm->dmDeviceName);
+            }
+
+            /* Initialize the entry */
+            pGraphicsDevice->pDevModeList[i].dwFlags = 0;
+            pGraphicsDevice->pDevModeList[i].pdm = pdm;
+            i++;
+        }
+     }
+
+    /* Lock loader */
+    EngAcquireSemaphore(ghsemGraphicsDeviceList);
+
+    /* Insert the device into the global list */
+    pGraphicsDevice->pNextGraphicsDevice = gpGraphicsDeviceLast;
+    gpGraphicsDeviceLast = pGraphicsDevice;
+    if (!gpGraphicsDeviceFirst)
+        gpGraphicsDeviceFirst = pGraphicsDevice;
+
+    /* Increment device number */
+    giDevNum++;
+
+    /* Unlock loader */
+    EngReleaseSemaphore(ghsemGraphicsDeviceList);
+    DPRINT1("Prepared %ld modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
+
+    return pGraphicsDevice;
+}
+
+
+PGRAPHICS_DEVICE
+NTAPI
+EngpFindGraphicsDevice(
+    PUNICODE_STRING pustrDevice,
+    ULONG iDevNum,
+    DWORD dwFlags)
+{
+    UNICODE_STRING ustrCurrent;
+    PGRAPHICS_DEVICE pGraphicsDevice;
+    ULONG i;
+
+    /* Lock list */
+    EngAcquireSemaphore(ghsemGraphicsDeviceList);
+
+    if (pustrDevice)
+    {
+        /* Loop through the list of devices */
+        for (pGraphicsDevice = gpGraphicsDeviceFirst;
+             pGraphicsDevice;
+             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice)
+        {
+            /* Compare the device name */
+            RtlInitUnicodeString(&ustrCurrent, pGraphicsDevice->szWinDeviceName);
+            if (RtlEqualUnicodeString(&ustrCurrent, pustrDevice, FALSE))
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        /* Loop through the list of devices */
+        for (pGraphicsDevice = gpGraphicsDeviceFirst, i = 0;
+             pGraphicsDevice && i < iDevNum;
+             pGraphicsDevice = pGraphicsDevice->pNextGraphicsDevice, i++);
+    }
+
+    /* Unlock list */
+    EngReleaseSemaphore(ghsemGraphicsDeviceList);
+
+    return pGraphicsDevice;
+}
+
+
 static
 NTSTATUS
 EngpFileIoRequest(
@@ -39,7 +297,7 @@ EngpFileIoRequest(
     /* Initialize an event */
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
-    /* Build IPR */
+    /* Build IRP */
     liStartOffset.QuadPart = ullStartOffset;
     pIrp = IoBuildSynchronousFsdRequest(ulMajorFunction,
                                         pDeviceObject,
@@ -113,7 +371,7 @@ EngFileIoControl(
     /* Initialize an event */
     KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
-    /* Build IO control IPR */
+    /* Build IO control IRP */
     pIrp = IoBuildDeviceIoControlRequest(dwIoControlCode,
                                          pDeviceObject,
                                          lpInBuffer,

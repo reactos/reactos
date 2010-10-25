@@ -3687,7 +3687,7 @@ NtGdiGetRandomRgn(
         else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case SYSRGN:
-        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
+        if (pDC->prgnVis) hSrc = pDC->prgnVis->BaseObject.hHmgr;
         break;
     default:
         hSrc = 0;

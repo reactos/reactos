@@ -38,6 +38,7 @@
 		<file>dib.c</file>
 		<file>floodfill.c</file>
 		<file>stretchblt.c</file>
+		<file>alphablend.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -69,13 +70,16 @@
 			</directory>
 		</if>
 		<file>gradient.c</file>
+		<file>ldevobj.c</file>
 		<file>lineto.c</file>
 		<file>mapping.c</file>
 		<file>mem.c</file>
 		<file>engmisc.c</file>
 		<file>mouse.c</file>
 		<file>paint.c</file>
+		<file>pdevobj.c</file>
 		<file>perfcnt.c</file>
+		<file>rlecomp.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
 		<file>string.c</file>
@@ -84,9 +88,6 @@
 		<file>transblt.c</file>
 		<file>engwindow.c</file>
 		<file>xlate.c</file>
-	</directory>
-	<directory name="ldr">
-		<file>loader.c</file>
 	</directory>
 	<directory name="main">
 		<file>dllmain.c</file>

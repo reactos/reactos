@@ -41,6 +41,9 @@ DceCreateDisplayDC(VOID)
   UNICODE_STRING DriverName;
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
   hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
+
+  co_IntGraphicsCheck(TRUE);
+
 //
 // If NULL, first time through! Build the default window dc!
 //

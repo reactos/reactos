@@ -64,7 +64,7 @@ EXLATEOBJ_iXlateRGBtoBGR(PEXLATEOBJ pxlo, ULONG iColor)
 {
     ULONG iNewColor;
 
-    /* Copy green and alpha */
+    /* Copy green */
     iNewColor = iColor & 0xff00ff00;
 
     /* Mask red and blue */
@@ -362,19 +362,19 @@ EXLATEOBJ_vInitialize(
     EXLATEOBJ_vInitTrivial(pexlo);
 
     if (ppalDst == ppalSrc || !ppalSrc || !ppalDst ||
-        ((ppalDst->Mode == PAL_RGB || ppalDst->Mode == PAL_BGR) &&
-         ppalDst->Mode == ppalSrc->Mode))
+        ((ppalDst->flFlags == PAL_RGB || ppalDst->flFlags == PAL_BGR) &&
+         ppalDst->flFlags == ppalSrc->flFlags))
     {
         return;
     }
 
     pexlo->ppalSrc = ppalSrc;
     pexlo->ppalDst = ppalDst;
-    pexlo->xlo.iSrcType = ppalSrc->Mode;
-    pexlo->xlo.iDstType = ppalDst->Mode;
+    pexlo->xlo.iSrcType = ppalSrc->flFlags;
+    pexlo->xlo.iDstType = ppalDst->flFlags;
 
     /* Chack if both of the pallettes are indexed */
-    if (!(ppalSrc->Mode & PAL_INDEXED) || !(ppalDst->Mode & PAL_INDEXED))
+    if (!(ppalSrc->flFlags & PAL_INDEXED) || !(ppalDst->flFlags & PAL_INDEXED))
     {
         /* At least one palette is not indexed, calculate shifts/masks */
         ULONG aulMasksSrc[3], aulMasksDst[3];
@@ -391,10 +391,10 @@ EXLATEOBJ_vInitialize(
         pexlo->ulBlueShift = CalculateShift(aulMasksSrc[2], aulMasksDst[2]);
     }
 
-    if (ppalSrc->Mode & PAL_MONOCHROME)
+    if (ppalSrc->flFlags & PAL_MONOCHROME)
     {
         /* This is a monochrome palette */
-        if (!(ppalDst->Mode & PAL_MONOCHROME))
+        if (!(ppalDst->flFlags & PAL_MONOCHROME))
         {
             /* Mono to color, use the dest DC's fore and back color */
             pexlo->pfnXlate = EXLATEOBJ_iXlateTable;
@@ -406,28 +406,28 @@ EXLATEOBJ_vInitialize(
                 PALETTE_ulGetNearestIndex(ppalDst, crDstBackColor);
         }
     }
-    else if (ppalDst->Mode & PAL_MONOCHROME)
+    else if (ppalDst->flFlags & PAL_MONOCHROME)
     {
         pexlo->pfnXlate = EXLATEOBJ_iXlateToMono;
         pexlo->xlo.flXlate |= XO_TO_MONO;
         pexlo->xlo.cEntries = 1;
 
-        if (ppalSrc->Mode & PAL_INDEXED)
+        if (ppalSrc->flFlags & PAL_INDEXED)
         {
             pexlo->aulXlate[0] =
                 PALETTE_ulGetNearestPaletteIndex(ppalSrc, crSrcBackColor);
         }
-        else if (ppalSrc->Mode & PAL_BGR)
+        else if (ppalSrc->flFlags & PAL_BGR)
         {
             pexlo->aulXlate[0] = crSrcBackColor;
         }
-        else if (ppalSrc->Mode & PAL_RGB)
+        else if (ppalSrc->flFlags & PAL_RGB)
         {
             pexlo->aulXlate[0] = RGB(GetBValue(crSrcBackColor),
                                      GetGValue(crSrcBackColor),
                                      GetRValue(crSrcBackColor));
         }
-        else if (ppalSrc->Mode & PAL_BITFIELDS)
+        else if (ppalSrc->flFlags & PAL_BITFIELDS)
         {
             PALETTE_vGetBitMasks(ppalSrc, &pexlo->ulRedMask);
             pexlo->ulRedShift = CalculateShift(0xFF, pexlo->ulRedMask);
@@ -437,7 +437,7 @@ EXLATEOBJ_vInitialize(
             pexlo->aulXlate[0] = EXLATEOBJ_iXlateShiftAndMask(pexlo, crSrcBackColor);
         }
     }
-    else if (ppalSrc->Mode & PAL_INDEXED)
+    else if (ppalSrc->flFlags & PAL_INDEXED)
     {
         cEntries = ppalSrc->NumColors;
 
@@ -458,7 +458,7 @@ EXLATEOBJ_vInitialize(
         pexlo->xlo.cEntries = cEntries;
 
         pexlo->pfnXlate = EXLATEOBJ_iXlateTable;
-        if (ppalDst->Mode & PAL_INDEXED)
+        if (ppalDst->flFlags & PAL_INDEXED)
         {
             pexlo->xlo.flXlate |= XO_TABLE;
 
@@ -504,78 +504,78 @@ EXLATEOBJ_vInitialize(
             }
         }
     }
-    else if (ppalSrc->Mode & PAL_RGB)
+    else if (ppalSrc->flFlags & PAL_RGB)
     {
-        if (ppalDst->Mode & PAL_INDEXED)
+        if (ppalDst->flFlags & PAL_INDEXED)
             pexlo->pfnXlate = EXLATEOBJ_iXlateRGBtoPal;
 
-        else if (ppalDst->Mode & PAL_BGR)
+        else if (ppalDst->flFlags & PAL_BGR)
             pexlo->pfnXlate = EXLATEOBJ_iXlateRGBtoBGR;
 
-        else if (ppalDst->Mode & PAL_RGB16_555)
+        else if (ppalDst->flFlags & PAL_RGB16_555)
             pexlo->pfnXlate = EXLATEOBJ_iXlateRGBto555;
 
-        else if (ppalDst->Mode & PAL_RGB16_565)
+        else if (ppalDst->flFlags & PAL_RGB16_565)
             pexlo->pfnXlate = EXLATEOBJ_iXlateRGBto565;
 
-        else if (ppalDst->Mode & PAL_BITFIELDS)
+        else if (ppalDst->flFlags & PAL_BITFIELDS)
             pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
     }
-    else if (ppalSrc->Mode & PAL_BGR)
+    else if (ppalSrc->flFlags & PAL_BGR)
     {
-        if (ppalDst->Mode & PAL_INDEXED)
+        if (ppalDst->flFlags & PAL_INDEXED)
             pexlo->pfnXlate = EXLATEOBJ_iXlateBitfieldsToPal;
 
-        else if (ppalDst->Mode & PAL_RGB)
+        else if (ppalDst->flFlags & PAL_RGB)
             /* The inverse function works the same */
             pexlo->pfnXlate = EXLATEOBJ_iXlateRGBtoBGR;
 
-        else if (ppalDst->Mode & PAL_RGB16_555)
+        else if (ppalDst->flFlags & PAL_RGB16_555)
             pexlo->pfnXlate = EXLATEOBJ_iXlateBGRto555;
 
-        else if (ppalDst->Mode & PAL_RGB16_565)
+        else if (ppalDst->flFlags & PAL_RGB16_565)
             pexlo->pfnXlate = EXLATEOBJ_iXlateBGRto565;
 
-        else if (ppalDst->Mode & PAL_BITFIELDS)
+        else if (ppalDst->flFlags & PAL_BITFIELDS)
             pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
     }
-    else if (ppalSrc->Mode & PAL_RGB16_555)
+    else if (ppalSrc->flFlags & PAL_RGB16_555)
     {
-        if (ppalDst->Mode & PAL_INDEXED)
+        if (ppalDst->flFlags & PAL_INDEXED)
             pexlo->pfnXlate = EXLATEOBJ_iXlate555toPal;
 
-        else if (ppalDst->Mode & PAL_RGB)
+        else if (ppalDst->flFlags & PAL_RGB)
             pexlo->pfnXlate = EXLATEOBJ_iXlate555toRGB;
 
-        else if (ppalDst->Mode & PAL_BGR)
+        else if (ppalDst->flFlags & PAL_BGR)
             pexlo->pfnXlate = EXLATEOBJ_iXlate555toBGR;
 
-        else if (ppalDst->Mode & PAL_RGB16_565)
+        else if (ppalDst->flFlags & PAL_RGB16_565)
             pexlo->pfnXlate = EXLATEOBJ_iXlate555to565;
 
-        else if (ppalDst->Mode & PAL_BITFIELDS)
+        else if (ppalDst->flFlags & PAL_BITFIELDS)
             pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
     }
-    else if (ppalSrc->Mode & PAL_RGB16_565)
+    else if (ppalSrc->flFlags & PAL_RGB16_565)
     {
-        if (ppalDst->Mode & PAL_INDEXED)
+        if (ppalDst->flFlags & PAL_INDEXED)
             pexlo->pfnXlate = EXLATEOBJ_iXlate565toPal;
 
-        else if (ppalDst->Mode & PAL_RGB)
+        else if (ppalDst->flFlags & PAL_RGB)
             pexlo->pfnXlate = EXLATEOBJ_iXlate565toRGB;
 
-        else if (ppalDst->Mode & PAL_BGR)
+        else if (ppalDst->flFlags & PAL_BGR)
             pexlo->pfnXlate = EXLATEOBJ_iXlate565toBGR;
 
-        else if (ppalDst->Mode & PAL_RGB16_555)
+        else if (ppalDst->flFlags & PAL_RGB16_555)
             pexlo->pfnXlate = EXLATEOBJ_iXlate565to555;
 
-        else if (ppalDst->Mode & PAL_BITFIELDS)
+        else if (ppalDst->flFlags & PAL_BITFIELDS)
             pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
     }
-    else if (ppalSrc->Mode & PAL_BITFIELDS)
+    else if (ppalSrc->flFlags & PAL_BITFIELDS)
     {
-        if (ppalDst->Mode & PAL_INDEXED)
+        if (ppalDst->flFlags & PAL_INDEXED)
             pexlo->pfnXlate = EXLATEOBJ_iXlateBitfieldsToPal;
         else
             pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
@@ -603,157 +603,24 @@ EXLATEOBJ_vInitXlateFromDCs(
     PDC pdcDst)
 {
     PSURFACE psurfDst, psurfSrc;
-    HPALETTE hpalSrc, hpalDst;
-    PPALETTE ppalSrc, ppalDst, ppalDstDc;
-
-    DPRINT("Enter EXLATEOBJ_vInitXlateFromDCs\n");
-
-    /* Do basic init */
-    EXLATEOBJ_vInitTrivial(pexlo);
 
     psurfDst = pdcDst->dclevel.pSurface;
     psurfSrc = pdcSrc->dclevel.pSurface;
 
+    /* Check for trivial color translation */
     if (psurfDst == psurfSrc)
     {
+        EXLATEOBJ_vInitTrivial(pexlo);
         return;
     }
 
-    hpalSrc = psurfSrc->hDIBPalette;
-    if (!hpalSrc) 
-        hpalSrc = pPrimarySurface->devinfo.hpalDefault;
-
-    ppalSrc = PALETTE_ShareLockPalette(hpalSrc);
-    if (!ppalSrc)
-        return;
-
-    hpalDst = psurfDst->hDIBPalette;
-    if (!hpalDst) hpalDst = pPrimarySurface->devinfo.hpalDefault;
-
-    ppalDst = PALETTE_ShareLockPalette(hpalDst);
-    if (!ppalDst)
-    {
-        PALETTE_ShareUnlockPalette(ppalSrc);
-        return;
-    }
-
-    ppalDstDc = pdcDst->dclevel.ppal;
-    ASSERT(ppalDstDc);
-
-    /* KB41464 details how to convert between mono and color */
-    if (psurfDst->SurfObj.iBitmapFormat == BMF_1BPP)
-    {
-        if (psurfSrc->SurfObj.iBitmapFormat != BMF_1BPP)
-        {
-            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-            EXLATEOBJ_vInitialize(pexlo,
-                                  ppalSrc,
-                                  &gpalMono,
-                                  pdcSrc->pdcattr->crBackgroundClr,
-                                  pdcDst->pdcattr->crBackgroundClr,
-                                  pdcDst->pdcattr->crForegroundClr);
-        }
-    }
-    else if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP && !psurfSrc->hSecure)
-    {
-        // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-        EXLATEOBJ_vInitialize(pexlo,
-                              &gpalMono,
-                              ppalDst,
-                              0,
-                              pdcDst->pdcattr->crBackgroundClr,
-                              pdcDst->pdcattr->crForegroundClr);
-    }
-    else
-    {
-        EXLATEOBJ_vInitialize(pexlo, ppalSrc, ppalDst, 0, 0, 0);
-    }
-
-    PALETTE_ShareUnlockPalette(ppalDst);
-    PALETTE_ShareUnlockPalette(ppalSrc);
-}
-
-
-VOID
-NTAPI
-EXLATEOBJ_vInitBrushXlate(
-    PEXLATEOBJ pexlo,
-    BRUSH *pbrush,
-    SURFACE *psurfDst,
-    COLORREF crForegroundClr,
-    COLORREF crBackgroundClr)
-{
-    HPALETTE hpalDst = NULL;
-    PPALETTE ppalDst, ppalPattern;
-    SURFACE *psurfPattern;
-
-    ASSERT(pexlo);
-    ASSERT(pbrush);
-    ASSERT(psurfDst);
-    ASSERT(!(pbrush->flAttrs & (GDIBRUSH_IS_SOLID | GDIBRUSH_IS_NULL)));
-
-    EXLATEOBJ_vInitTrivial(pexlo);
-
-    hpalDst = psurfDst->hDIBPalette;
-    if (!hpalDst) hpalDst = pPrimarySurface->devinfo.hpalDefault;
-    ppalDst = PALETTE_ShareLockPalette(hpalDst);
-    if (!ppalDst)
-    {
-        DPRINT1("No ppalDst!\n");
-        return;
-    }
-
-    psurfPattern = SURFACE_ShareLockSurface(pbrush->hbmPattern);
-    if (!psurfPattern)
-    {
-        PALETTE_ShareUnlockPalette(ppalDst);
-        return;
-    }
-
-#if 0
-    if (psurfDst->SurfObj.iBitmapFormat == BMF_1BPP)
-    {
-        if (psurfSrc->SurfObj.iBitmapFormat != BMF_1BPP)
-        {
-            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-            EXLATEOBJ_vInitialize(pexlo,
-                                  ppalSrc,
-                                  &gpalMono,
-                                  0,
-                                  crBackgroundClr,
-                                  crForegroundClr);
-        }
-    }
-    else
-#endif
-    if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP &&
-        !(pbrush->flAttrs & GDIBRUSH_IS_DIB))
-    {
-        /* Special case: 1 bpp pattern, not a DIB brush. */
-        if (psurfDst->SurfObj.iBitmapFormat != BMF_1BPP)
-        {
-            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-            EXLATEOBJ_vInitialize(pexlo,
-                                  &gpalMono,
-                                  ppalDst,
-                                  0,
-                                  crBackgroundClr,
-                                  crForegroundClr);
-        }
-    }
-    else
-    {
-        /* Default: use the patterns' palette */
-        ppalPattern = PALETTE_LockPalette(psurfPattern->hDIBPalette);
-        if (ppalPattern)
-        {
-            EXLATEOBJ_vInitialize(pexlo, &gpalRGB, ppalDst, 0, 0, 0);
-            PALETTE_UnlockPalette(ppalPattern);
-        }
-    }
-
-    PALETTE_ShareUnlockPalette(ppalDst);
-    SURFACE_ShareUnlockSurface(psurfPattern);
+    /* Normal initialisation. No surface means DEFAULT_BITMAP */
+    EXLATEOBJ_vInitialize(pexlo,
+                          psurfSrc ? psurfSrc->ppal : &gpalMono,
+                          psurfDst ? psurfDst->ppal : &gpalMono,
+                          pdcSrc->pdcattr->crBackgroundClr,
+                          pdcDst->pdcattr->crBackgroundClr,
+                          pdcDst->pdcattr->crForegroundClr);
 }
 
 VOID
@@ -827,9 +694,9 @@ XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
     /* Verify palette type match */
     if (!ppal ||
         ((iPal == XO_SRCPALETTE || iPal == XO_DESTPALETTE)
-            && !(ppal->Mode & PAL_INDEXED)) ||
+            && !(ppal->flFlags & PAL_INDEXED)) ||
         ((iPal == XO_SRCBITFIELDS || iPal == XO_DESTBITFIELDS)
-            && !(ppal->Mode & PAL_BITFIELDS)))
+            && !(ppal->flFlags & PAL_BITFIELDS)))
     {
         return 0;
     }
@@ -840,7 +707,7 @@ XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
     }
 
     /* Copy the values into the buffer */
-    if (ppal->Mode & PAL_INDEXED)
+    if (ppal->flFlags & PAL_INDEXED)
     {
         cPal = min(cPal, ppal->NumColors);
         for (i = 0; i < cPal; i++)

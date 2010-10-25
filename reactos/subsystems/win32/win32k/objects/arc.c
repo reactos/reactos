@@ -31,7 +31,7 @@ BOOL FASTCALL IntDrawArc( PDC dc, INT XLeft, INT YLeft, INT Width, INT Height, d
 static
 BOOL
 FASTCALL
-IntArc( DC *dc, 
+IntArc( DC *dc,
         int  Left,
         int  Top,
         int  Right,
@@ -91,7 +91,7 @@ IntArc( DC *dc,
     }
 
     if (!PenWidth) PenWidth = 1;
-    pbrushPen->ptPenWidth.x = PenWidth;  
+    pbrushPen->ptPenWidth.x = PenWidth;
 
     RectBounds.left   = Left;
     RectBounds.right  = Right;
@@ -105,7 +105,7 @@ IntArc( DC *dc,
 
     IntLPtoDP(dc, (LPPOINT)&RectBounds, 2);
     IntLPtoDP(dc, (LPPOINT)&RectSEpts, 2);
-    
+
     RectBounds.left   += dc->ptlDCOrig.x;
     RectBounds.right  += dc->ptlDCOrig.x;
     RectBounds.top    += dc->ptlDCOrig.y;
@@ -172,7 +172,7 @@ IntArc( DC *dc,
     }
     if (arctype == GdiTypeChord)
         PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
-           
+
     pbrushPen->ptPenWidth.x = PenOrigWidth;
     PEN_UnlockPen(pbrushPen);
     DPRINT("IntArc Exit.\n");
@@ -218,12 +218,6 @@ IntGdiArcInternal(
   }
 
   pdcattr = dc->pdcattr;
-
-  if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-    DC_vUpdateFillBrush(dc);
-
-  if (pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-    DC_vUpdateLineBrush(dc);
 
   if (arctype == GdiTypeArcTo)
   {
@@ -329,7 +323,14 @@ NtGdiAngleArc(
   }
   worker.l  = dwStartAngle;
   worker1.l = dwSweepAngle;
+  DC_vPrepareDCsForBlit(pDC, pDC->rosdc.CombinedClip->rclBounds,
+                           NULL, pDC->rosdc.CombinedClip->rclBounds);
+  if (pDC->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(pDC);
+  if (pDC->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(pDC);
   Ret = IntGdiAngleArc( pDC, x, y, dwRadius, worker.f, worker1.f);
+  DC_vFinishBlit(pDC, NULL);
   DC_UnlockDc( pDC );
   return Ret;
 }
@@ -364,6 +365,15 @@ NtGdiArcInternal(
     return TRUE;
   }
 
+  DC_vPrepareDCsForBlit(dc, dc->rosdc.CombinedClip->rclBounds,
+                            NULL, dc->rosdc.CombinedClip->rclBounds);
+
+  if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
+    DC_vUpdateFillBrush(dc);
+
+  if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
+    DC_vUpdateLineBrush(dc);
+
   Ret = IntGdiArcInternal(
                   arctype,
                   dc,
@@ -376,6 +386,7 @@ NtGdiArcInternal(
                   XEndArc,
                   YEndArc);
 
+  DC_vFinishBlit(dc, NULL);
   DC_UnlockDc( dc );
   return Ret;
 }
