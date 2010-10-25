@@ -1178,6 +1178,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
             HookId == WH_MOUSE_LL ||
             HookId == WH_SYSMSGFILTER)
        {
+           DPRINT1("Local hook installing Global HookId: %d\n",HookId);
            /* these can only be global */
            SetLastWin32Error(ERROR_GLOBAL_ONLY_HOOK);
            RETURN( NULL);
@@ -1196,6 +1197,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
        if ( pti->rpdesk != ptiCurrent->rpdesk) // gptiCurrent->rpdesk)
        {
+          DPRINT1("Local hook wrong desktop HookId: %d\n",HookId);
           SetLastWin32Error(ERROR_ACCESS_DENIED);
           RETURN( NULL);
        }
@@ -1212,6 +1214,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                HookId == WH_FOREGROUNDIDLE ||
                HookId == WH_CALLWNDPROCRET) )
           {
+             DPRINT1("Local hook needs hMod HookId: %d\n",HookId);
              SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
              RETURN( NULL);
           }
@@ -1245,6 +1248,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              HookId == WH_FOREGROUNDIDLE ||
              HookId == WH_CALLWNDPROCRET) )
        {
+          DPRINT1("Global hook needs hMod HookId: %d\n",HookId);
           SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
           RETURN( NULL);
        }
@@ -1376,6 +1380,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     else
        Hook->offPfn = 0;
 
+    DPRINT1("Installing: HookId %d Global %s\n", HookId, !ThreadId ? "TRUE" : "FALSE");
     RETURN( Handle);
 
 CLEANUP:
