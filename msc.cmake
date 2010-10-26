@@ -72,8 +72,6 @@ macro(set_unicode)
     add_definitions(-DUNICODE -D_UNICODE)
 endmacro()
 
-endif()
-
 set(CMAKE_C_FLAGS_DEBUG_INIT "/D_DEBUG /MDd /Zi  /Ob0 /Od")
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "/D_DEBUG /MDd /Zi /Ob0 /Od")
 
@@ -81,14 +79,12 @@ macro(set_rc_compiler)
 # dummy, this workaround is only needed in mingw due to lack of RC support in cmake
 endmacro()
 
-#typelib support
-macro(ADD_TYPELIB TARGET)
-    foreach(SOURCE ${ARGN})
-        get_filename_component(FILE ${SOURCE} NAME_WE)
-        set(OBJECT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}.tlb)
-        add_custom_command(OUTPUT ${OBJECT}
-                           COMMAND midl /I ${REACTOS_SOURCE_DIR}/include/dxsdk /I . /I ${REACTOS_SOURCE_DIR}/include /I ${REACTOS_SOURCE_DIR}/include/psdk /win32 /tlb ${OBJECT} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE})
-        list(APPEND OBJECTS ${OBJECT})
-    endforeach()
-    add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
-endmacro()
+#idl files support
+set(IDL_COMPILER midl)
+set(IDL_FLAGS /win32)
+set(IDL_HEADER_ARG /h) #.h
+set(IDL_TYPELIB_ARG /tlb) #.tlb
+set(IDL_SERVER_ARG /sstub) #.c for stub server library
+set(IDL_CLIENT_ARG /cstub) #.c for stub client library
+
+endif()

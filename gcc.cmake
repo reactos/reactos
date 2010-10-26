@@ -123,8 +123,6 @@ macro(set_module_type MODULE TYPE)
 	endif()
 endmacro()
 
-endif()
-
 macro(set_unicode)
    add_definitions(-DUNICODE -D_UNICODE)
    set(IS_UNICODE 1)
@@ -146,15 +144,14 @@ macro(set_rc_compiler)
     set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${result_defs} ${result_incs} -i <SOURCE> -O coff -o <OBJECT>")
 endmacro()
 
-#typelib support
-macro(ADD_TYPELIB TARGET)
-  foreach(SOURCE ${ARGN})
-    get_filename_component(FILE ${SOURCE} NAME_WE)
-    set(OBJECT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}.tlb)
-    add_custom_command(OUTPUT ${OBJECT}
-                       COMMAND native-widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -t -T ${OBJECT} ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
-                       DEPENDS native-widl)
-    list(APPEND OBJECTS ${OBJECT})
-  endforeach()
-  add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
+#idl files support
+set(IDL_COMPILER native-widl)
+set(IDL_FLAGS -m32 --win32)
+set(IDL_HEADER_ARG -h -H) #.h
+set(IDL_TYPELIB_ARG -t -T) #.tlb
+set(IDL_SERVER_ARG -s -S) #.c for server library
+set(IDL_CLIENT_ARG -c -C) #.c for stub client library
+
 endmacro()
+
+endif()

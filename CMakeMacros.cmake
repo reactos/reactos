@@ -236,8 +236,8 @@ macro (MACRO_IDL_FILES)
         get_filename_component(FILE ${_in_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c
-            COMMAND native-widl ${result_incs} ${result_defs} -m32 --win32 -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h -s -S ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
-            DEPENDS native-widl)
+            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${IDL_SERVER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            DEPENDS ${_in_file})
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_s.c
             PROPERTIES GENERATED TRUE)
@@ -246,8 +246,8 @@ macro (MACRO_IDL_FILES)
     
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
-            COMMAND native-widl ${result_incs} ${result_defs} -m32 --win32 -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h -c -C ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
-            DEPENDS native-widl)
+            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${IDL_CLIENT_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            DEPENDS ${_in_file})
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.c
             PROPERTIES GENERATED TRUE)
@@ -256,3 +256,16 @@ macro (MACRO_IDL_FILES)
     endforeach(_in_FILE ${ARGN})
 
 endmacro (MACRO_IDL_FILES)
+
+macro(ADD_TYPELIB TARGET)
+  custom_incdefs()
+  foreach(SOURCE ${ARGN})
+    get_filename_component(FILE ${SOURCE} NAME_WE)
+    set(OBJECT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}.tlb)
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}.tlb
+                       COMMAND ${IDL_COMPILER} ${result_incs} ${IDL_FLAGS} ${IDL_TYPELIB_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}.tlb ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
+                       DEPENDS ${SOURCE})
+    list(APPEND OBJECTS ${OBJECT})
+  endforeach()
+  add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
+endmacro()
