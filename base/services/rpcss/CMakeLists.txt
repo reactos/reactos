@@ -20,3 +20,4 @@ set_module_type(rpcss win32cui)
 
 add_importlibs(rpcss advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_livecd_target(rpcss reactos/system32)
+add_dependencies(rpcss winesdk)
