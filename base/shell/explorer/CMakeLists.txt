@@ -60,7 +60,6 @@ target_link_libraries(explorer
     -lsupc++
     -lstdc++
     -lgcc
-    -lmingw32
     -lmingwex
     wine
     mingw_wmain
@@ -79,6 +78,8 @@ target_link_libraries(explorer
     -lmsvcrt
     -lkernel32
     -lntdll)
+	
+set_image_base(explorer 0x00400000)
 
 add_dependencies(explorer psdk buildno_header)
 add_livecd_target(explorer reactos)
