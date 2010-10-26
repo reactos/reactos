@@ -987,11 +987,14 @@ co_HOOK_CallHooks( INT HookId,
           ObReferenceObject(ptiHook->pEThread);
           if (ptiHook != pti )
           {
-             DPRINT("\nGlobal Hook posting to another Thread! %d\n",HookId );
+             if (HookId == WH_KEYBOARD_LL){
+             DPRINT1("\nGlobal Hook posting to another Thread! %d\n",HookId );}
              Result = IntCallLowLevelHook(Hook, Code, wParam, lParam);
           }
           else
           { /* Make the direct call. */
+             if (HookId == WH_KEYBOARD_LL){
+             DPRINT1("\nLocal Hook calling to Thread! %d\n",HookId );}
              Result = co_IntCallHookProc( HookId,
                                           Code,
                                           wParam,

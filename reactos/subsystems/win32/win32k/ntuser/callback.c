@@ -333,8 +333,6 @@ co_IntCallHookProc(INT HookId,
    CBT_CREATEWNDW *CbtCreateWnd = NULL;
    PCHAR Extra;
    PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
-   UNICODE_STRING WindowName, ClassName;
-   ANSI_STRING asWindowName, asClassName;
    PTHREADINFO pti;
    PWND pWnd;
    BOOL Hit = FALSE;
@@ -362,64 +360,11 @@ co_IntCallHookProc(INT HookId,
                   DPRINT1("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
                   goto Fault_Exit;
                }
-
+              // Due to KsStudio.exe, just pass the callers original pointers
+              // except class which point to kernel space if not an atom.
+              // Found by, Olaf Siejka
                CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
                ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS);
-
-               if (Ansi)
-               {
-                  RtlInitAnsiString(&asWindowName, NULL);
-                  _SEH2_TRY
-                  {
-                     ProbeForRead(CbtCreateWnd->lpcs->lpszName, sizeof(CHAR), 1);
-                  }
-                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                  {
-                     Hit = TRUE;
-                  }
-                  _SEH2_END;
-                  if (Hit) // Client is at deaths door.
-                     goto Fault_Exit;
-                  if (CbtCreateWnd->lpcs->lpszName)
-                     RtlInitAnsiString(&asWindowName, (PCSZ)CbtCreateWnd->lpcs->lpszName);
-                  ArgumentLength += asWindowName.Length + sizeof(CHAR);
-               }
-               else
-               {
-                  RtlInitUnicodeString(&WindowName, NULL);
-                  _SEH2_TRY
-                  {
-                     ProbeForRead(CbtCreateWnd->lpcs->lpszName, sizeof(WCHAR), 1);
-                  }
-                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                  {
-                     Hit = TRUE;
-                  }
-                  _SEH2_END;
-                  if (Hit)
-                     goto Fault_Exit;
-                  if (CbtCreateWnd->lpcs->lpszName)
-                     RtlInitUnicodeString(&WindowName, CbtCreateWnd->lpcs->lpszName);
-                  ArgumentLength += WindowName.Length + sizeof(WCHAR);
-               }
-
-               if (!IS_ATOM(CbtCreateWnd->lpcs->lpszClass))
-               {
-                  if (Ansi)
-                  {
-                     RtlInitAnsiString(&asClassName, NULL);
-                     if (CbtCreateWnd->lpcs->lpszClass)
-                        RtlInitAnsiString(&asClassName, (PCSZ)CbtCreateWnd->lpcs->lpszClass);
-                     ArgumentLength += asClassName.Length + sizeof(CHAR);
-                  }
-                  else
-                  {
-                     RtlInitUnicodeString(&ClassName, NULL);
-                     if (CbtCreateWnd->lpcs->lpszClass)
-                        RtlInitUnicodeString(&ClassName, CbtCreateWnd->lpcs->lpszClass);
-                     ArgumentLength += ClassName.Length + sizeof(WCHAR);
-                  }
-               }
                break;
 
             case HCBT_MOVESIZE:
@@ -502,55 +447,9 @@ co_IntCallHookProc(INT HookId,
                CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
                RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
-               Extra = (PCHAR) (CbtCreatewndExtra + 1);
                CbtCreatewndExtra->Cs.lpszClass = CbtCreateWnd->lpcs->lpszClass; // if Atom
-
-               if (Ansi)
-               {
-                 if (asWindowName.Buffer)
-                    RtlCopyMemory(Extra, asWindowName.Buffer, asWindowName.Length);
-                 CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-                 Extra += asWindowName.Length;
-
-                 *((CHAR *) Extra) = '\0';
-                 Extra += sizeof(CHAR);
-               }
-               else
-               {
-                 if (WindowName.Buffer)
-                    RtlCopyMemory(Extra, WindowName.Buffer, WindowName.Length);
-                 CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-                 Extra += WindowName.Length;
-
-                 *((WCHAR *) Extra) = L'\0';
-                 Extra += sizeof(WCHAR);
-               }
-
-               if (!IS_ATOM(CbtCreateWnd->lpcs->lpszClass))
-               {
-                  if (Ansi)
-                  {
-                     if (asClassName.Buffer)
-                        RtlCopyMemory(Extra, asClassName.Buffer, asClassName.Length);
-                     CbtCreatewndExtra->Cs.lpszClass =
-                        (LPCWSTR)(ULONG_PTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
-                     Extra += asClassName.Length;
-
-                     *((CHAR *) Extra) = '\0';
-                     Extra += sizeof(CHAR);
-                  }
-                  else
-                  {
-                     if (ClassName.Buffer)
-                        RtlCopyMemory(Extra, ClassName.Buffer, ClassName.Length);
-                     CbtCreatewndExtra->Cs.lpszClass =
-                        (LPCWSTR)(ULONG_PTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
-                     Extra += ClassName.Length;
-
-                     *((WCHAR *) Extra) = L'\0';
-                     Extra += sizeof(WCHAR);
-                  }
-               }
+               CbtCreatewndExtra->Cs.lpszName = CbtCreateWnd->lpcs->lpszName;
+               Extra = (PCHAR) (CbtCreatewndExtra + 1);
                break;
             case HCBT_CLICKSKIPPED:
                RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));

@@ -452,8 +452,6 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   LRESULT Result;
   CREATESTRUCTW Csw;
   CBT_CREATEWNDW CbtCreatewndw;
-  CREATESTRUCTA Csa;
-  CBT_CREATEWNDA CbtCreatewnda;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
   WPARAM wParam = 0;
   LPARAM lParam = 0;
@@ -479,30 +477,12 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
           Csw = CbtCreatewndExtra->Cs;
-          if (NULL != CbtCreatewndExtra->Cs.lpszName)
-          {
-              Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
-                                       + (ULONG_PTR) CbtCreatewndExtra->Cs.lpszName);
-          }
-          if (0 != HIWORD(CbtCreatewndExtra->Cs.lpszClass))
-          {
-              Csw.lpszClass = (LPCWSTR)((PCHAR) CbtCreatewndExtra
-                                         + LOWORD((ULONG_PTR) CbtCreatewndExtra->Cs.lpszClass));
-          }
+          Csw.lpszName = CbtCreatewndExtra->Cs.lpszName;
+          Csw.lpszClass = CbtCreatewndExtra->Cs.lpszClass;
           wParam = Common->wParam;
-          if (Common->Ansi)
-          {
-              memcpy(&Csa, &Csw, sizeof(CREATESTRUCTW));
-              CbtCreatewnda.lpcs = &Csa;
-              CbtCreatewnda.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
-              lParam = (LPARAM) &CbtCreatewnda;
-          }
-          else
-          {
-              CbtCreatewndw.lpcs = &Csw;
-              CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
-              lParam = (LPARAM) &CbtCreatewndw;
-          }
+          CbtCreatewndw.lpcs = &Csw;
+          CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+          lParam = (LPARAM) &CbtCreatewndw;
           break;
         case HCBT_CLICKSKIPPED:
             pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
@@ -555,6 +535,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       break;
     }
     case WH_KEYBOARD_LL:
+      ERR("WH_KEYBOARD_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pKeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pKeyboardLlData);
       break;
