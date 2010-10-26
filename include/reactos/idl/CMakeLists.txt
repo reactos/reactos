@@ -10,4 +10,6 @@ list(APPEND SOURCE
 MACRO_IDL_FILES(${SOURCE})
 remove_definitions(-DWINNT=0x502)
 add_definitions(-DWINNT=0x600)
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
 MACRO_IDL_FILES(pnp.idl)
