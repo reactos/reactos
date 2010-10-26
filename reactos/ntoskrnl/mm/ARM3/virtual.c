@@ -1050,6 +1050,48 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
 
 ULONG
 NTAPI
+MiGetPageProtection(IN PMMPTE PointerPte)
+{
+    MMPTE TempPte;
+    PMMPFN Pfn;
+    PAGED_CODE();
+
+    /* Copy this PTE's contents */
+    TempPte = *PointerPte;
+
+    /* Assure it's not totally zero */
+    ASSERT(TempPte.u.Long);
+
+    /* Check for a special prototype format */
+    if (TempPte.u.Soft.Valid == 0 &&
+        TempPte.u.Soft.Prototype == 1)
+    {
+        /* Unsupported now */
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* In the easy case of transition or demand zero PTE just return its protection */
+    if (!TempPte.u.Hard.Valid) return MmProtectToValue[TempPte.u.Soft.Protection];
+
+    /* If we get here, the PTE is valid, so look up the page in PFN database */
+    Pfn = &MmPfnDatabase[TempPte.u.Hard.PageFrameNumber];
+
+    if (!Pfn->u3.e1.PrototypePte)
+    {
+        /* Return protection of the original pte */
+        return MmProtectToValue[Pfn->OriginalPte.u.Soft.Protection];
+    }
+
+    /* This is hardware PTE */
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+
+    return PAGE_NOACCESS;
+}
+
+ULONG
+NTAPI
 MiQueryAddressState(IN PVOID Va,
                     IN PMMVAD Vad,
                     IN PEPROCESS TargetProcess,
@@ -1119,9 +1161,9 @@ MiQueryAddressState(IN PVOID Va,
             {
                 /* This means it's committed */
                 State = MEM_COMMIT;
-                
-                /* For now, we lie about the protection */
-                Protect = PAGE_EXECUTE_READWRITE;
+
+                /* Get protection state of this page */
+                Protect = MiGetPageProtection(PointerPte);
             }
             else
             {
