@@ -343,7 +343,7 @@ typedef struct _COMM_FAULT_OFFSETS
 typedef struct _MIDL_STUB_DESC
 {
   void *RpcInterfaceInformation;
-  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
   void (__RPC_API *pfnFree)(void *);
   union {
     handle_t *pAutoHandle;
