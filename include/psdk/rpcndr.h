@@ -118,6 +118,9 @@ typedef unsigned char boolean;
 #define midl_user_free MIDL_user_free
 #define midl_user_allocate MIDL_user_allocate
 
+void  * __RPC_USER MIDL_user_allocate(size_t size);
+void             __RPC_USER MIDL_user_free( void  * );
+
 #define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)(s >> 8)
 #define NdrFcLong(s)  (unsigned char)(s & 0xff), (unsigned char)((s & 0x0000ff00) >> 8), \
   (unsigned char)((s & 0x00ff0000) >> 16), (unsigned char)(s >> 24)
@@ -649,6 +652,7 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI unsigned char* RPC_ENTRY
   NdrUserMarshalSimpleTypeConvert( ULONG *pFlags, unsigned char *pBuffer, unsigned char FormatChar );
 
+#ifdef __GCC__
 /* Note: this should return a CLIENT_CALL_RETURN, but calling convention for
  * returning structures/unions is different between Windows and gcc on i386. */
 LONG_PTR RPC_VAR_ENTRY
@@ -659,6 +663,13 @@ LONG_PTR RPC_VAR_ENTRY
   NdrAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
 LONG_PTR RPC_VAR_ENTRY
   NdrDcomAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
+#else
+CLIENT_CALL_RETURN RPC_VAR_ENTRY NdrClientCall2(
+  PMIDL_STUB_DESC pStubDescriptor,
+  PFORMAT_STRING pFormat,
+  ...
+);
+#endif
 
 RPCRTAPI void RPC_ENTRY
   NdrServerCall2( PRPC_MESSAGE pRpcMsg );
