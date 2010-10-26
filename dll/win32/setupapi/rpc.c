@@ -111,7 +111,7 @@ PnpUnbindLocalBindingHandle(VOID)
 
 
 void __RPC_FAR * __RPC_USER
-midl_user_allocate(SIZE_T len)
+midl_user_allocate(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
