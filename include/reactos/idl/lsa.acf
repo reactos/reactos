@@ -1,6 +1,6 @@
 [
    explicit_handle
 ]
-interface svcctl
+interface lsarpc
 {
 }
