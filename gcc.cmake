@@ -152,6 +152,4 @@ set(IDL_TYPELIB_ARG -t -T) #.tlb
 set(IDL_SERVER_ARG -s -S) #.c for server library
 set(IDL_CLIENT_ARG -c -C) #.c for stub client library
 
-endmacro()
-
 endif()
