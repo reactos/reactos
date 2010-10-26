@@ -204,7 +204,7 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG_PTR MaxCount;
   ULONG Offset;
   ULONG ActualCount;
-  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
   void (__RPC_API *pfnFree)(void *);
   unsigned char *StackTop;
   unsigned char *pPresentedType;
@@ -486,7 +486,7 @@ typedef struct _NDR_USER_MARSHAL_INFO_LEVEL1
 {
     void *Buffer;
     ULONG BufferSize;
-    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(SIZE_T);
+    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
     void (__RPC_API *pfnFree)(void *);
     struct IRpcChannelBuffer *pRpcChannelBuffer;
     ULONG_PTR Reserved[5];
@@ -652,24 +652,14 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI unsigned char* RPC_ENTRY
   NdrUserMarshalSimpleTypeConvert( ULONG *pFlags, unsigned char *pBuffer, unsigned char FormatChar );
 
-#ifdef __GCC__
-/* Note: this should return a CLIENT_CALL_RETURN, but calling convention for
- * returning structures/unions is different between Windows and gcc on i386. */
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrClientCall2( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-LONG_PTR RPC_VAR_ENTRY
+CLIENT_CALL_RETURN RPC_VAR_ENTRY
   NdrDcomAsyncClientCall( PMIDL_STUB_DESC pStubDescriptor, PFORMAT_STRING pFormat, ... );
-#else
-CLIENT_CALL_RETURN RPC_VAR_ENTRY NdrClientCall2(
-  PMIDL_STUB_DESC pStubDescriptor,
-  PFORMAT_STRING pFormat,
-  ...
-);
-#endif
 
 RPCRTAPI void RPC_ENTRY
   NdrServerCall2( PRPC_MESSAGE pRpcMsg );
