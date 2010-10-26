@@ -96,7 +96,7 @@ HRESULT WINAPI ObjectStubless(DWORD *args)
     args[0] = *(const WORD*)(fs + 8);
     TRACE("(%p)->(%d)([%d bytes]) ret=%08x\n", iface, index, args[0], args[1]);
 
-    return NdrClientCall2(stubless->pStubDesc, fs, args + 2);
+    return NdrClientCall2(stubless->pStubDesc, fs, args + 2).Simple;
 }
 
 #define BLOCK_SIZE 1024
