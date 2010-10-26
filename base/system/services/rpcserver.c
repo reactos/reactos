@@ -2564,11 +2564,10 @@ DWORD ROpenServiceW(
 /* Function 17 */
 DWORD RQueryServiceConfigW(
     SC_RPC_HANDLE hService,
-    LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGW lpServiceConfig,
+    LPQUERY_SERVICE_CONFIGW lpServiceConfig,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_8K pcbBytesNeeded)
 {
-    LPQUERY_SERVICE_CONFIGW lpServiceConfig = (LPQUERY_SERVICE_CONFIGW)lpBuf;
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
@@ -3742,11 +3741,10 @@ DWORD ROpenServiceA(
 /* Function 29 */
 DWORD RQueryServiceConfigA(
     SC_RPC_HANDLE hService,
-    LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGA lpServiceConfig,
+    LPQUERY_SERVICE_CONFIGA lpServiceConfig,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_8K pcbBytesNeeded)
 {
-    LPQUERY_SERVICE_CONFIGA lpServiceConfig = (LPQUERY_SERVICE_CONFIGA)lpBuf;
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
@@ -5355,7 +5353,7 @@ DWORD RFunction55(
 }
 
 
-void __RPC_FAR * __RPC_USER midl_user_allocate(SIZE_T len)
+void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
