@@ -452,12 +452,12 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   CREATESTRUCTW Csw;
   CBT_CREATEWNDW CbtCreatewndw;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
-  PKBDLLHOOKSTRUCT pKeyboardLlData;
-  PMSLLHOOKSTRUCT pMouseLlData;
-  PMSG pMsg;
+  KBDLLHOOKSTRUCT KeyboardLlData, *pKeyboardLlData;
+  MSLLHOOKSTRUCT MouseLlData, *pMouseLlData;
+  MSG Msg, *pMsg;
   PMOUSEHOOKSTRUCT pMHook;
-  PCWPSTRUCT pCWP;
-  PCWPRETSTRUCT pCWPR;
+  CWPSTRUCT CWP, *pCWP;
+  CWPRETSTRUCT CWPR, *pCWPR;
   PRECTL prl;  
   LPCBTACTIVATESTRUCT pcbtas;
   WPARAM wParam = 0;
@@ -541,11 +541,13 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     case WH_KEYBOARD_LL:
       ERR("WH_KEYBOARD_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pKeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
-      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pKeyboardLlData);
+      RtlCopyMemory(&KeyboardLlData, pKeyboardLlData, sizeof(KBDLLHOOKSTRUCT));
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &KeyboardLlData);
       break;
     case WH_MOUSE_LL:
       pMouseLlData = (PMSLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
-      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pMouseLlData);
+      RtlCopyMemory(&MouseLlData, pMouseLlData, sizeof(MSLLHOOKSTRUCT));
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &MouseLlData);
       break;
     case WH_MOUSE: /* SEH support */
       pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
@@ -560,26 +562,33 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       _SEH2_END;
       break;
     case WH_CALLWNDPROC:
+      ERR("WH_CALLWNDPROC: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pCWP = (PCWPSTRUCT)((PCHAR) Common + Common->lParam);
-      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pCWP);
+      RtlCopyMemory(&CWP, pCWP, sizeof(CWPSTRUCT));
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &CWP);
       break;
     case WH_CALLWNDPROCRET:
       pCWPR = (PCWPRETSTRUCT)((PCHAR) Common + Common->lParam);
-      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pCWPR);
+      RtlCopyMemory(&CWPR, pCWPR, sizeof(CWPRETSTRUCT));
+      Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &CWPR);
       break;
     case WH_MSGFILTER: /* All SEH support */
+      ERR("WH_MSGFILTER: Code %d, wParam %d\n",Common->Code,Common->wParam);
     case WH_SYSMSGFILTER:
     case WH_GETMESSAGE:
       pMsg = (PMSG)((PCHAR) Common + Common->lParam);
+      RtlCopyMemory(&Msg, pMsg, sizeof(MSG));
       _SEH2_TRY
       {
-         Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pMsg);
+         Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &Msg);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
          Hit = TRUE;
       }
       _SEH2_END;
+      if (!Hit && Common->HookId == WH_GETMESSAGE)
+         RtlCopyMemory(pMsg, &Msg, sizeof(MSG));
       break;
     case WH_FOREGROUNDIDLE: /* <-- SEH support */
     case WH_KEYBOARD:

@@ -726,7 +726,7 @@ IntGetNextHook(PHOOK Hook)
        pti = PsGetCurrentThreadWin32Thread();
 
        Elem = Hook->Chain.Flink;
-       if (Elem != &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)])
+       if (Elem != &pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)])
           return CONTAINING_RECORD(Elem, HOOK, Chain);
     }
     return NULL;
@@ -785,10 +785,11 @@ IntRemoveHook(PHOOK Hook)
 
        pti = PsGetCurrentThreadWin32Thread();
 
-       if ( pti->pDeskInfo &&
-            IsListEmpty(&pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
+       if ( pti->rpdesk &&
+            pti->rpdesk->pDeskInfo &&
+            IsListEmpty(&pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
        {
-          pti->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+          pti->rpdesk->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
           return TRUE;
        }
     }
@@ -830,7 +831,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
       pti->fsHooks = 0;
    }
 // Global search based on Thread and cleanup.
-   if (pti->pDeskInfo->fsHooks)
+   if (pti->rpdesk->pDeskInfo->fsHooks)
    {
       for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
       {
@@ -876,7 +877,7 @@ co_HOOK_CallHooks( INT HookId,
     ASSERT(WH_MINHOOK <= HookId && HookId <= WH_MAXHOOK);
 
     pti = PsGetCurrentThreadWin32Thread();
-    if (!pti || !pti->pDeskInfo)
+    if (!pti || !pti->rpdesk || !pti->rpdesk->pDeskInfo)
        goto Exit; // Must have a desktop running for hooks.
 
     if ( pti->TIF_flags & TIF_INCLEANUP)
@@ -888,7 +889,7 @@ co_HOOK_CallHooks( INT HookId,
        Local = TRUE;
     }
 
-    if ( pti->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
+    if ( pti->rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
     {
        DPRINT("Global Hooker %d\n", HookId);
        Global = TRUE;
@@ -897,7 +898,7 @@ co_HOOK_CallHooks( INT HookId,
     if ( !Local && !Global ) goto Exit; // No work!
 
     pLLE = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
-    pGLE = &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
+    pGLE = &pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
     Hook = NULL;
 
     /* SetWindowHookEx sorts out the Thread issue by placing the Hook to
@@ -987,14 +988,12 @@ co_HOOK_CallHooks( INT HookId,
           ObReferenceObject(ptiHook->pEThread);
           if (ptiHook != pti )
           {
-             if (HookId == WH_KEYBOARD_LL){
-             DPRINT1("\nGlobal Hook posting to another Thread! %d\n",HookId );}
+             DPRINT("\nGlobal Hook posting to another Thread! %d\n",HookId );
              Result = IntCallLowLevelHook(Hook, Code, wParam, lParam);
           }
           else
           { /* Make the direct call. */
-             if (HookId == WH_KEYBOARD_LL){
-             DPRINT1("\nLocal Hook calling to Thread! %d\n",HookId );}
+             DPRINT("\nLocal Hook calling to Thread! %d\n",HookId );
              Result = co_IntCallHookProc( HookId,
                                           Code,
                                           wParam,
