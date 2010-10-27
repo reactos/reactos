@@ -1075,7 +1075,7 @@ MiGetPageProtection(IN PMMPTE PointerPte)
     if (!TempPte.u.Hard.Valid) return MmProtectToValue[TempPte.u.Soft.Protection];
 
     /* If we get here, the PTE is valid, so look up the page in PFN database */
-    Pfn = &MmPfnDatabase[TempPte.u.Hard.PageFrameNumber];
+    Pfn = MiGetPfnEntry(TempPte.u.Hard.PageFrameNumber);
 
     if (!Pfn->u3.e1.PrototypePte)
     {
