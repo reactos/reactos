@@ -14,23 +14,23 @@ MMixerPrintTopology(
 {
     ULONG Index, SubIndex;
 
-    DPRINT1("Num Pins %lu NumNodes %lu\n", Topology->TopologyPinsCount, Topology->TopologyNodesCount);
+    DPRINT("Num Pins %lu NumNodes %lu\n", Topology->TopologyPinsCount, Topology->TopologyNodesCount);
 
     for(Index = 0; Index < Topology->TopologyPinsCount; Index++)
     {
-        DPRINT1("PinId %lu NodesConnectedFromCount %lu NodesConnectedToCount %lu Visited %lu\n", Topology->TopologyPins[Index].PinId,
+        DPRINT("PinId %lu NodesConnectedFromCount %lu NodesConnectedToCount %lu Visited %lu\n", Topology->TopologyPins[Index].PinId,
             Topology->TopologyPins[Index].NodesConnectedFromCount, Topology->TopologyPins[Index].NodesConnectedToCount, Topology->TopologyPins[Index].Visited);
 
         for(SubIndex = 0; SubIndex < Topology->TopologyPins[Index].NodesConnectedFromCount; SubIndex++)
-            DPRINT1("NodesConnectedFrom Index %lu NodeId %lu\n", SubIndex, Topology->TopologyPins[Index].NodesConnectedFrom[SubIndex]->NodeIndex);
+            DPRINT("NodesConnectedFrom Index %lu NodeId %lu\n", SubIndex, Topology->TopologyPins[Index].NodesConnectedFrom[SubIndex]->NodeIndex);
 
         for(SubIndex = 0; SubIndex < Topology->TopologyPins[Index].NodesConnectedToCount; SubIndex++)
-            DPRINT1("NodesConnectedTo Index %lu NodeId %lu\n", SubIndex, Topology->TopologyPins[Index].NodesConnectedTo[SubIndex]->NodeIndex);
+            DPRINT("NodesConnectedTo Index %lu NodeId %lu\n", SubIndex, Topology->TopologyPins[Index].NodesConnectedTo[SubIndex]->NodeIndex);
     }
 
     for(Index = 0; Index < Topology->TopologyNodesCount; Index++)
     {
-        DPRINT1("NodeId %lu NodesConnectedFromCount %lu NodesConnectedToCount %lu Visited %lu PinConnectedFromCount %lu PinConnectedToCount %lu\n", Topology->TopologyNodes[Index].NodeIndex,
+        DPRINT("NodeId %lu NodesConnectedFromCount %lu NodesConnectedToCount %lu Visited %lu PinConnectedFromCount %lu PinConnectedToCount %lu\n", Topology->TopologyNodes[Index].NodeIndex,
             Topology->TopologyNodes[Index].NodeConnectedFromCount, Topology->TopologyNodes[Index].NodeConnectedToCount, Topology->TopologyNodes[Index].Visited,
             Topology->TopologyNodes[Index].PinConnectedFromCount, Topology->TopologyNodes[Index].PinConnectedToCount);
     }

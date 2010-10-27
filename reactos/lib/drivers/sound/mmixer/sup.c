@@ -340,7 +340,6 @@ MMixerSetGetVolumeControlDetails(
         if (Index >= VolumeData->ValuesCount)
         {
             DPRINT1("Index %u out of bounds %u \n", Index, VolumeData->ValuesCount);
-            DbgBreakPoint();
             return MM_STATUS_INVALID_PARAMETER;
         }
 
