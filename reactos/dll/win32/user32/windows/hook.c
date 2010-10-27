@@ -449,12 +449,9 @@ NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PHOOKPROC_CALLBACK_ARGUMENTS Common;
-  LRESULT Result;
   CREATESTRUCTW Csw;
   CBT_CREATEWNDW CbtCreatewndw;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
-  WPARAM wParam = 0;
-  LPARAM lParam = 0;
   PKBDLLHOOKSTRUCT pKeyboardLlData;
   PMSLLHOOKSTRUCT pMouseLlData;
   PMSG pMsg;
@@ -463,6 +460,9 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PCWPRETSTRUCT pCWPR;
   PRECTL prl;  
   LPCBTACTIVATESTRUCT pcbtas;
+  WPARAM wParam = 0;
+  LPARAM lParam = 0;
+  LRESULT Result = 0;
   BOOL Hit = FALSE;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
@@ -530,6 +530,10 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       {
         case HCBT_CREATEWND:
           CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter; 
+          CbtCreatewndExtra->Cs.x = CbtCreatewndw.lpcs->x;
+          CbtCreatewndExtra->Cs.y = CbtCreatewndw.lpcs->y;
+          CbtCreatewndExtra->Cs.cx = CbtCreatewndw.lpcs->cx;
+          CbtCreatewndExtra->Cs.cy = CbtCreatewndw.lpcs->cy;
           break;
       }
       break;
