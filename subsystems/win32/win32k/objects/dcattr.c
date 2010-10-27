@@ -152,35 +152,49 @@ FreeDcAttr(PDC_ATTR pDc_Attr)
   return;
 }
 
+BOOL
+FASTCALL
+DC_AllocDcAttr(PDC pdc)
+{
+    DC_AllocateDcAttr(pdc->BaseObject.hHmgr);
+    *pdc->pdcattr = pdc->dcattr;
+    return TRUE;
+}
+
+// CHECK against current head
 VOID
 FASTCALL
 DC_AllocateDcAttr(HDC hDC)
 {
   PVOID NewMem = NULL;
   PDC pDC;
+  HANDLE Pid = NtCurrentProcess();
+  ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
 
+  NTSTATUS Status = ZwAllocateVirtualMemory(Pid,
+                                        &NewMem,
+                                              0,
+                                       &MemSize,
+                         MEM_COMMIT|MEM_RESERVE,
+                                 PAGE_READWRITE);
   {
     INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)hDC);
     PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-
-    NewMem = AllocateDcAttr();
-
     // FIXME: dc could have been deleted!!! use GDIOBJ_InsertUserData
-
-    if (NewMem)
+    if (NT_SUCCESS(Status))
     {
-       RtlZeroMemory(NewMem, sizeof(DC_ATTR));
-       Entry->UserData = NewMem;
-       DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
+      RtlZeroMemory(NewMem, MemSize);
+      Entry->UserData  = NewMem;
+      DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
     }
     else
     {
-       DPRINT1("DC_ATTR not allocated!\n");
+       DPRINT("DC_ATTR not allocated!\n");
     }
   }
   pDC = DC_LockDc(hDC);
   ASSERT(pDC->pdcattr == &pDC->dcattr);
-  if (NewMem)
+  if(NewMem)
   {
      pDC->pdcattr = NewMem; // Store pointer
   }
@@ -188,23 +202,37 @@ DC_AllocateDcAttr(HDC hDC)
 }
 
 VOID
-FASTCALL
-DC_FreeDcAttr(HDC  DCToFree )
+NTAPI
+DC_vFreeDcAttr(PDC pdc)
 {
-  PDC pDC = DC_LockDc(DCToFree);
-  if (pDC->pdcattr == &pDC->dcattr) return; // Internal DC object!
-  pDC->pdcattr = &pDC->dcattr;
-  DC_UnlockDc(pDC);
+    HANDLE Pid = NtCurrentProcess();
+    INT Index;
+    PGDI_TABLE_ENTRY pent;
 
-  {
-    INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)DCToFree);
-    PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-    if (Entry->UserData)
+    if (pdc->pdcattr == &pdc->dcattr)
     {
-       FreeDcAttr(Entry->UserData);
-       Entry->UserData = NULL;
+        // Internal DC object!
+        return;
     }
-  }
+
+    pdc->pdcattr = &pdc->dcattr;
+
+    Index = GDI_HANDLE_GET_INDEX(pdc->BaseObject.hHmgr);
+    pent = &GdiHandleTable->Entries[Index];
+    if(pent->UserData)
+    {
+        ULONG MemSize = sizeof(DC_ATTR);
+        NTSTATUS Status = ZwFreeVirtualMemory(Pid,
+                                              &pent->UserData,
+                                              &MemSize,
+                                              MEM_RELEASE);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("DC_FreeDC failed to free DC_ATTR 0x%p\n", pent->UserData);
+            ASSERT(FALSE);
+        }
+        pent->UserData = NULL;
+    }
 }
 
 
@@ -218,12 +246,8 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR pdcattr)
 
   _SEH2_TRY
   {
-      ProbeForWrite( pdcattr,
-             sizeof(DC_ATTR),
-                           1);
-      RtlCopyMemory( pdcattr,
-                &dc->dcattr,
-             sizeof(DC_ATTR));
+      ProbeForWrite(pdcattr, sizeof(DC_ATTR), 1);
+      RtlCopyMemory(pdcattr, &dc->dcattr, sizeof(DC_ATTR));
   }
   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
   {

@@ -256,9 +256,9 @@ UpdateDeviceGammaRamp( HDEV hPDev )
      palPtr = (PALOBJ*) palGDI;
 
      if (pGDev->flFlags & PDEV_GAMMARAMP_TABLE)
-        palGDI->Mode |= PAL_GAMMACORRECTION;
+        palGDI->flFlags |= PAL_GAMMACORRECTION;
      else
-        palGDI->Mode &= ~PAL_GAMMACORRECTION;
+        palGDI->flFlags &= ~PAL_GAMMACORRECTION;
 
      if (!(pGDev->flFlags & PDEV_DRIVER_PUNTED_CALL)) // No punting, we hook
      {

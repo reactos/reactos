@@ -616,8 +616,6 @@ UserRedrawDesktop()
 {
     PWND Window = NULL;
 
-    UserEnterExclusive();
-
     Window = UserGetDesktopWindow();
 
     IntInvalidateWindows( Window,
@@ -626,7 +624,6 @@ UserRedrawDesktop()
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
-    UserLeave();
 }
 
 
@@ -884,6 +881,7 @@ NtUserCreateDesktop(
    LARGE_STRING WindowName;
    PWND pWnd = NULL;
    CREATESTRUCTW Cs;
+   INT i;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
@@ -1026,6 +1024,11 @@ NtUserCreateDesktop(
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);
    DesktopObject->ActiveMessageQueue = NULL;
+   /* Setup Global Hooks. */
+   for (i = 0; i < NB_HOOKS; i++)
+   {
+      InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
+   }
    ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
    if (! NT_SUCCESS(Status))

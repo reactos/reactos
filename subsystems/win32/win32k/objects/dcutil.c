@@ -145,7 +145,7 @@ IntSetDefaultRegion(PDC pdc)
     if (pdc->ppdev->flFlags & PDEV_META_DEVICE)
     {
         pSurface = pdc->dclevel.pSurface;
-        if (pSurface && pSurface->flFlags & PDEV_SURFACE)
+        if (pSurface && pSurface->flags & PDEV_SURFACE)
         {
             rclClip.left   += pdc->ppdev->ptlOrigion.x;
             rclClip.top    += pdc->ppdev->ptlOrigion.y;

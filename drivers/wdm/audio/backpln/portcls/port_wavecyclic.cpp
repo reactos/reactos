@@ -275,12 +275,12 @@ CPortWaveCyclic::Init(
     }
 
     // create the subdevice descriptor
-    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor, 
+    Status = PcCreateSubdeviceDescriptor(&m_SubDeviceDescriptor,
                                          4,
                                          InterfaceGuids,
-                                         0, 
+                                         0,
                                          NULL,
-                                         2, 
+                                         2,
                                          WaveCyclicPropertySet,
                                          0,
                                          0,

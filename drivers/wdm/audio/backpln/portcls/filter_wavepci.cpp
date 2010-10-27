@@ -96,12 +96,13 @@ CPortFilterWavePci::NewIrpTarget(
         return STATUS_UNSUCCESSFUL;
     }
 
-    if (m_Pins[ConnectDetails->PinId] && m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount)
+    if (m_Pins[ConnectDetails->PinId] && 
+        (m_Descriptor->Factory.Instances[ConnectDetails->PinId].CurrentPinInstanceCount == m_Descriptor->Factory.Instances[ConnectDetails->PinId].MaxFilterInstanceCount))
     {
-        // release existing instance
-        PC_ASSERT(0);
-        m_Pins[ConnectDetails->PinId]->Close(DeviceObject, NULL);
+        // no available instance
+        return STATUS_UNSUCCESSFUL;
     }
+
 
     // now create the pin
     Status = NewPortPinWavePci(&Pin);
@@ -304,6 +305,26 @@ CPortFilterWavePci::Init(
 
     return STATUS_SUCCESS;
 }
+
+NTSTATUS
+NTAPI
+CPortFilterWavePci::FreePin(
+    IN struct IPortPinWavePci* Pin)
+{
+    ULONG Index;
+
+    for(Index = 0; Index < m_Descriptor->Factory.PinDescriptorCount; Index++)
+    {
+        if (m_Pins[Index] == Pin)
+        {
+            m_Descriptor->Factory.Instances[Index].CurrentPinInstanceCount--;
+            m_Pins[Index] = NULL;
+            return STATUS_SUCCESS;
+        }
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
 
 NTSTATUS 
 NewPortFilterWavePci(

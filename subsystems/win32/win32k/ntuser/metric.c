@@ -24,9 +24,19 @@ FASTCALL
 InitMetrics(VOID)
 {
     INT *piSysMet;
+    ULONG Width, Height;
 
-    ULONG Width = pPrimarySurface->gdiinfo.ulHorzRes;
-    ULONG Height = pPrimarySurface->gdiinfo.ulVertRes;
+    /* FIXME: HACK, due to missing PDEV on first init */
+    if (!pPrimarySurface)
+    {
+        Width = 640;
+        Height = 480;
+    }
+    else
+    {
+        Width = pPrimarySurface->gdiinfo.ulHorzRes;
+        Height = pPrimarySurface->gdiinfo.ulVertRes;
+    }
 
     piSysMet = gpsi->aiSysMet;
 

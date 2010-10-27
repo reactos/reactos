@@ -51,13 +51,15 @@ VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
 VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
 BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
 
+#define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
+
 typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
     PVOID pvDesktopLimit;
     struct _WND *spwnd;
     DWORD fsHooks;
-    struct tagHOOK * aphkStart[16];
+    LIST_ENTRY aphkStart[NB_HOOKS];
 
     HWND hTaskManWindow;
     HWND hProgmanWindow;
@@ -127,15 +129,23 @@ typedef struct _PROCMARKHEAD
 /* Window Client Information structure */
 struct  _ETHREAD;
 
+#define WEF_SETBYWNDPTI      0x0001
+
 typedef struct tagHOOK
 {
   THRDESKHEAD    head;
+  struct tagHOOK *phkNext;   /* This is for user space. */
+  int            HookId;     /* Hook table index */
+  ULONG_PTR      offPfn;
+  ULONG          flags;      /* Some internal flags */
+  INT            ihmod;
+  PTHREADINFO    ptiHooked;
+  struct _DESKTOP *rpdesk;
+  /* ReactOS */
   LIST_ENTRY     Chain;      /* Hook chain entry */
   struct _ETHREAD* Thread;   /* Thread owning the hook */
-  int            HookId;     /* Hook table index */
   HOOKPROC       Proc;       /* Hook function */
   BOOLEAN        Ansi;       /* Is it an Ansi hook? */
-  ULONG          Flags;      /* Some internal flags */
   UNICODE_STRING ModuleName; /* Module name for global hooks */
 } HOOK, *PHOOK;
 
@@ -3149,7 +3159,6 @@ typedef struct tagKMDDELPARAM
 #define NOPARAM_ROUTINE_ANYPOPUP              0xffff0006
 #define ONEPARAM_ROUTINE_CSRSS_GUICHECK       0xffff0008
 #define ONEPARAM_ROUTINE_SWITCHCARETSHOWING   0xfffe0008
-#define ONEPARAM_ROUTINE_ISWINDOWINDESTROY    0xfffe000c
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0xfffe000d
 #define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0xfffe000e
 #define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0xfffe0027
@@ -3167,6 +3176,7 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
+#define HWNDPARAM_ROUTINE_ROS_NOTIFYWINEVENT 0x1005
 
 DWORD
 NTAPI

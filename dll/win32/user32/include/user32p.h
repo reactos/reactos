@@ -83,9 +83,6 @@
 #define NtUserGetCursorPos(lpPoint) \
   (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION)
 
-#define NtUserIsWindowInDestroy(hWnd) \
-  (BOOL)NtUserCallOneParam((DWORD_PTR)hWnd, ONEPARAM_ROUTINE_ISWINDOWINDESTROY)
-
 #define NtUserEnableProcessWindowGhosting(bEnable) \
   NtUserCallOneParam((DWORD_PTR)bEnable, ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING)
 

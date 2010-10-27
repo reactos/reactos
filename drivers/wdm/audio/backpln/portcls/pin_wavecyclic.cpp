@@ -73,7 +73,7 @@ protected:
     ULONG m_StopCount;
     KSAUDIO_POSITION m_Position;
     KSALLOCATOR_FRAMING m_AllocatorFraming;
-    SUBDEVICE_DESCRIPTOR m_Descriptor;
+    PSUBDEVICE_DESCRIPTOR m_Descriptor;
 
     KSPIN_LOCK m_EventListLock;
     LIST_ENTRY m_EventList;
@@ -105,10 +105,12 @@ NTSTATUS NTAPI PinWaveCyclicAudioPosition(IN PIRP Irp, IN PKSIDENTIFIER Request,
 NTSTATUS NTAPI PinWaveCyclicAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 NTSTATUS NTAPI PinWaveCyclicAddEndOfStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY  EventEntry);
 NTSTATUS NTAPI PinWaveCyclicAddLoopedStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY EventEntry);
+NTSTATUS NTAPI PinWaveCyclicDRMHandler(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
 
 
 DEFINE_KSPROPERTY_CONNECTIONSET(PinWaveCyclicConnectionSet, PinWaveCyclicState, PinWaveCyclicDataFormat, PinWaveCyclicAllocatorFraming);
 DEFINE_KSPROPERTY_AUDIOSET(PinWaveCyclicAudioSet, PinWaveCyclicAudioPosition);
+DEFINE_KSPROPERTY_DRMSET(PinWaveCyclicDRMSet, PinWaveCyclicDRMHandler);
 
 KSEVENT_ITEM PinWaveCyclicConnectionEventSet =
 {
@@ -144,6 +146,13 @@ KSPROPERTY_SET PinWaveCyclicPropertySet[] =
         &KSPROPSETID_Audio,
         sizeof(PinWaveCyclicAudioSet) / sizeof(KSPROPERTY_ITEM),
         (const KSPROPERTY_ITEM*)&PinWaveCyclicAudioSet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_DrmAudioStream,
+        sizeof(PinWaveCyclicDRMSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PinWaveCyclicDRMSet,
         0,
         NULL
     }
@@ -191,6 +200,19 @@ CPortPinWaveCyclic::QueryInterface(
 
     return STATUS_UNSUCCESSFUL;
 }
+
+NTSTATUS
+NTAPI
+PinWaveCyclicDRMHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER Request,
+    IN OUT PVOID Data)
+{
+    DPRINT1("PinWaveCyclicDRMHandler\n");
+    ASSERT(0);
+    return STATUS_INVALID_PARAMETER;
+}
+
 
 NTSTATUS
 NTAPI
@@ -448,12 +470,14 @@ PinWaveCyclicState(
             {
                 // FIXME
                 // complete with successful state
+                Pin->m_Stream->Silence(Pin->m_CommonBuffer, Pin->m_CommonBufferSize);
                 Pin->m_IrpQueue->CancelBuffers();
                 Pin->m_Position.PlayOffset = 0;
                 Pin->m_Position.WriteOffset = 0;
             }
             else if (Pin->m_State == KSSTATE_STOP)
             {
+                Pin->m_Stream->Silence(Pin->m_CommonBuffer, Pin->m_CommonBufferSize);
                 Pin->m_IrpQueue->CancelBuffers();
                 Pin->m_Position.PlayOffset = 0;
                 Pin->m_Position.WriteOffset = 0;
@@ -662,6 +686,7 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
     ULONG BufferLength;
     ULONG BytesToCopy;
     ULONG BufferSize;
+    ULONG Gap;
     PUCHAR Buffer;
     NTSTATUS Status;
 
@@ -672,7 +697,18 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
     {
         Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
         if (!NT_SUCCESS(Status))
-            return;
+        {
+            Gap = Position - m_CommonBufferOffset;
+            if (Gap > m_FrameSize)
+            {
+                // insert silence samples
+                DPRINT1("Inserting Silence Buffer Offset %lu GapLength %lu\n", m_CommonBufferOffset, BufferLength);
+                m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
+
+                m_CommonBufferOffset += BufferLength;
+                break;
+            }
+        }
 
         BytesToCopy = min(BufferLength, BufferSize);
 
@@ -688,7 +724,7 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
         m_IrpQueue->UpdateMapping(BytesToCopy);
         m_CommonBufferOffset += BytesToCopy;
 
-        BufferLength = Position - m_CommonBufferOffset;
+        BufferLength -= BytesToCopy;
         m_Position.PlayOffset += BytesToCopy;
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
@@ -720,7 +756,18 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
     {
         Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
         if (!NT_SUCCESS(Status))
-            return;
+        {
+            Gap = m_CommonBufferSize - m_CommonBufferOffset + Position;
+            if (Gap > m_FrameSize)
+            {
+                // insert silence samples
+                DPRINT1("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
+                m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
+
+                m_CommonBufferOffset += BufferLength;
+            }
+            break;
+        }
 
         BytesToCopy = min(BufferLength, BufferSize);
 
@@ -741,7 +788,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
         m_CommonBufferOffset += BytesToCopy;
         m_Position.PlayOffset += BytesToCopy;
 
-        BufferLength = m_CommonBufferSize - m_CommonBufferOffset;
+        BufferLength -=BytesToCopy;
 
         if (m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
@@ -751,7 +798,6 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
                 m_Position.PlayOffset = m_Position.PlayOffset % m_Position.WriteOffset;
             }
         }
-
     }
 
     if (Gap == Length)
@@ -773,22 +819,13 @@ CPortPinWaveCyclic::RequestService()
 {
     ULONG Position;
     NTSTATUS Status;
-    PUCHAR Buffer;
-    ULONG BufferSize;
     ULONGLONG OldOffset, NewOffset;
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
     if (m_State == KSSTATE_RUN)
     {
-        Status = m_IrpQueue->GetMapping(&Buffer, &BufferSize);
-        if (!NT_SUCCESS(Status))
-        {
-            return;
-        }
-
         Status = m_Stream->GetPosition(&Position);
-        DPRINT("Position %u Buffer %p BufferSize %u ActiveIrpOffset %u Capture %u\n", Position, Buffer, m_CommonBufferSize, BufferSize, m_Capture);
 
         OldOffset = m_Position.PlayOffset;
 
@@ -841,7 +878,7 @@ CPortPinWaveCyclic::DeviceIoControl(
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
         /* handle property with subdevice descriptor */
-        Status = PcHandlePropertyWithTable(Irp,  m_Descriptor.FilterPropertySetCount, m_Descriptor.FilterPropertySet, &m_Descriptor);
+        Status = PcHandlePropertyWithTable(Irp,  m_Descriptor->FilterPropertySetCount, m_Descriptor->FilterPropertySet, m_Descriptor);
 
         if (Status == STATUS_NOT_FOUND)
         {
@@ -854,11 +891,11 @@ CPortPinWaveCyclic::DeviceIoControl(
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_ENABLE_EVENT)
     {
-        Status = PcHandleEnableEventWithTable(Irp, &m_Descriptor);
+        Status = PcHandleEnableEventWithTable(Irp, m_Descriptor);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_DISABLE_EVENT)
     {
-        Status = PcHandleDisableEventWithTable(Irp, &m_Descriptor);
+        Status = PcHandleDisableEventWithTable(Irp, m_Descriptor);
     }
     else if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_RESET_STATE)
     {
@@ -960,27 +997,29 @@ CPortPinWaveCyclic::Close(
     {
         // free format
         FreeItem(m_Format, TAG_PORTCLASS);
+
+        // format is freed
         m_Format = NULL;
     }
 
     if (m_IrpQueue)
     {
-        // fixme cancel irps
+        // cancel remaining irps
+        m_IrpQueue->CancelBuffers();
+
+        // release irp queue
         m_IrpQueue->Release();
-    }
 
-
-    if (m_Port)
-    {
-        // release reference to port driver
-        m_Port->Release();
-        m_Port = NULL;
+        // queue is freed
+        m_IrpQueue = NULL;
     }
 
     if (m_ServiceGroup)
     {
         // remove member from service group
         m_ServiceGroup->RemoveMember(PSERVICESINK(this));
+
+        // do not release service group, it is released by the miniport object
         m_ServiceGroup = NULL;
     }
 
@@ -999,20 +1038,35 @@ CPortPinWaveCyclic::Close(
         // set state to stop
         m_State = KSSTATE_STOP;
 
-
         DPRINT("Closing stream at Irql %u\n", KeGetCurrentIrql());
+
         // release stream
         m_Stream->Release();
 
+        // stream is now freed
+        m_Stream = NULL;
     }
 
 
     if (m_Filter)
     {
-        // release reference to filter instance
+        // disconnect pin from filter
         m_Filter->FreePin((PPORTPINWAVECYCLIC)this);
+
+        // release filter reference
         m_Filter->Release();
+
+        // pin is done with filter
         m_Filter = NULL;
+    }
+
+    if (m_Port)
+    {
+        // release reference to port driver
+        m_Port->Release();
+
+        // work is done for port
+        m_Port = NULL;
     }
 
     Irp->IoStatus.Information = 0;
@@ -1103,7 +1157,6 @@ CPortPinWaveCyclic::Init(
     PKSDATAFORMAT DataFormat;
     PDEVICE_OBJECT DeviceObject;
     BOOLEAN Capture;
-    PVOID SilenceBuffer;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor = NULL;
     //IDrmAudioStream * DrmAudio = NULL;
 
@@ -1162,7 +1215,6 @@ CPortPinWaveCyclic::Init(
 #endif
 
     DPRINT1("CPortPinWaveCyclic::Init Status %x PinId %u Capture %u\n", Status, ConnectDetails->PinId, Capture);
-    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize);
 
     if (!NT_SUCCESS(Status))
         return Status;
@@ -1186,18 +1238,26 @@ CPortPinWaveCyclic::Init(
     InitializeListHead(&m_EventList);
     KeInitializeSpinLock(&m_EventListLock);
 
-    /* set up subdevice descriptor */
-    RtlZeroMemory(&m_Descriptor, sizeof(SUBDEVICE_DESCRIPTOR));
-    m_Descriptor.FilterPropertySet = PinWaveCyclicPropertySet;
-    m_Descriptor.FilterPropertySetCount = sizeof(PinWaveCyclicPropertySet) / sizeof(KSPROPERTY_SET);
-    m_Descriptor.UnknownStream = (PUNKNOWN)m_Stream;
-    m_Descriptor.DeviceDescriptor = SubDeviceDescriptor->DeviceDescriptor;
-    m_Descriptor.UnknownMiniport = SubDeviceDescriptor->UnknownMiniport;
-    m_Descriptor.PortPin = (PVOID)this;
-    m_Descriptor.EventSetCount = sizeof(PinWaveCyclicEventSet) / sizeof(KSEVENT_SET);
-    m_Descriptor.EventSet = PinWaveCyclicEventSet;
-    m_Descriptor.EventList = &m_EventList;
-    m_Descriptor.EventListLock = &m_EventListLock;
+    Status = PcCreateSubdeviceDescriptor(&m_Descriptor,
+                                         SubDeviceDescriptor->InterfaceCount,
+                                         SubDeviceDescriptor->Interfaces,
+                                         0, /* FIXME KSINTERFACE_STANDARD with KSINTERFACE_STANDARD_STREAMING / KSINTERFACE_STANDARD_LOOPED_STREAMING */
+                                         NULL,
+                                         sizeof(PinWaveCyclicPropertySet) / sizeof(KSPROPERTY_SET),
+                                         PinWaveCyclicPropertySet,
+                                         0,
+                                         0,
+                                         0,
+                                         NULL,
+                                         sizeof(PinWaveCyclicEventSet) / sizeof(KSEVENT_SET),
+                                         PinWaveCyclicEventSet,
+                                         SubDeviceDescriptor->DeviceDescriptor);
+
+    m_Descriptor->UnknownStream = (PUNKNOWN)m_Stream;
+    m_Descriptor->UnknownMiniport = SubDeviceDescriptor->UnknownMiniport;
+    m_Descriptor->PortPin = (PVOID)this;
+    m_Descriptor->EventList = &m_EventList;
+    m_Descriptor->EventListLock = &m_EventListLock;
 
     // initialize reset state
     m_ResetState = KSRESET_END;
@@ -1230,9 +1290,7 @@ CPortPinWaveCyclic::Init(
     PC_ASSERT(NT_SUCCESS(Status));
     PC_ASSERT(m_FrameSize);
 
-    SilenceBuffer = AllocateItem(NonPagedPool, m_FrameSize, TAG_PORTCLASS);
-    if (!SilenceBuffer)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u CommonBufferSize %lu\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize, m_CommonBufferSize);
 
 
     /* set up allocator framing */
@@ -1243,10 +1301,9 @@ CPortPinWaveCyclic::Init(
     m_AllocatorFraming.Reserved = 0;
     m_AllocatorFraming.FrameSize = m_FrameSize;
 
-    m_Stream->Silence(SilenceBuffer, m_FrameSize);
     m_Stream->Silence(m_CommonBuffer, m_CommonBufferSize);
 
-    Status = m_IrpQueue->Init(ConnectDetails, m_FrameSize, 0, SilenceBuffer);
+    Status = m_IrpQueue->Init(ConnectDetails, m_FrameSize, 0);
     if (!NT_SUCCESS(Status))
     {
        m_IrpQueue->Release();
@@ -1264,9 +1321,6 @@ CPortPinWaveCyclic::Init(
 
     m_Port = Port;
     m_Filter = Filter;
-
-    //DPRINT("Setting state to acquire %x\n", m_Stream->SetState(KSSTATE_ACQUIRE));
-    //DPRINT("Setting state to pause %x\n", m_Stream->SetState(KSSTATE_PAUSE));
 
     return STATUS_SUCCESS;
 }

@@ -34,8 +34,6 @@ BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
 
-LIST_ENTRY GlobalDriverListHead;
-
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
 
@@ -175,6 +173,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 {
     struct _EPROCESS *Process;
     PTHREADINFO Win32Thread;
+    int i;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kThreadCallback\n");
@@ -214,6 +213,10 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       InitializeListHead(&Win32Thread->WindowListHead);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
       InitializeListHead(&Win32Thread->PtiLink);
+      for (i = 0; i < NB_HOOKS; i++)
+      {
+         InitializeListHead(&Win32Thread->aphkStart[i]);
+      }
 
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
@@ -290,6 +293,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->TIF_flags |= TIF_INCLEANUP;
       DceFreeThreadDCE(Win32Thread);
       HOOK_DestroyThreadHooks(Thread);
+      EVENT_DestroyThreadEvents(Thread);
       /* Cleanup timers */
       DestroyTimersForThread(Win32Thread);
       KeSetEvent(Win32Thread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
@@ -362,6 +366,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
   return(STATUS_SUCCESS);
 }
 
+C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
 
 /*
  * This definition doesn't work
@@ -417,8 +422,19 @@ DriverEntry (
         return STATUS_UNSUCCESSFUL;
     }
 
-  /* Initialize a list of loaded drivers in Win32 subsystem */
-  InitializeListHead(&GlobalDriverListHead);
+   if (!gpsi)
+   {
+      gpsi = UserHeapAlloc(sizeof(SERVERINFO));
+      if (gpsi)
+      {
+         RtlZeroMemory(gpsi, sizeof(SERVERINFO));
+         DPRINT("Global Server Data -> %x\n", gpsi);
+      }
+      else
+      {
+          ASSERT(FALSE);
+      }
+   }
 
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore();
 
@@ -427,6 +443,26 @@ DriverEntry (
   {
       DPRINT1("Failed to initialize the GDI handle table.\n");
       return STATUS_UNSUCCESSFUL;
+  }
+
+  /* Initialize default palettes */
+  PALETTE_Init();
+
+  /* Create stock objects, ie. precreated objects commonly
+     used by win32 applications */
+  CreateStockObjects();
+  CreateSysColorObjects();
+
+  InitXlateImpl();
+  InitPDEVImpl();
+  InitLDEVImpl();
+  InitDeviceImpl();
+
+  Status = InitDcImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to initialize Device context implementation!\n");
+    return STATUS_UNSUCCESSFUL;
   }
 
   Status = InitUserImpl();
@@ -520,26 +556,12 @@ DriverEntry (
       return(Status);
     }
 
-  Status = InitDcImpl();
-  if (!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to initialize Device context implementation!\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
   /* Initialize FreeType library */
   if (! InitFontSupport())
     {
       DPRINT1("Unable to initialize font support\n");
       return STATUS_UNSUCCESSFUL;
     }
-
-  InitXlateImpl();
-
-  /* Create stock objects, ie. precreated objects commonly
-     used by win32 applications */
-  CreateStockObjects();
-  CreateSysColorObjects();
 
   gusLanguageID = IntGdiGetLanguageID();
 

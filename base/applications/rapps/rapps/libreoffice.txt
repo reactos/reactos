@@ -2,13 +2,13 @@
 
 [Section]
 Name = LibreOffice
-Version = 3.3.0 Beta 1
+Version = 3.3.0 Beta 2
 Licence = LGPL
 Description = Former called OpenOffice. Open Source Office Suite.
-Size = 138.0MB
+Size = 318.0MB
 Category = 6
 URLSite = http://www.documentfoundation.org/
-URLDownload = http://download.documentfoundation.org/libreoffice/testing/LO_3.3.0-beta1_Win_x86_install_en-US.exe
+URLDownload = http://download.documentfoundation.org/libreoffice/testing/3.3.0-beta2/win/x86/LibO_3.3.0_beta2_Win_x86_install_multi.exe
 CDPath = none
 
 [Section.0407]

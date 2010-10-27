@@ -87,9 +87,6 @@ typedef struct _USER_MESSAGE_QUEUE
   /* Caret information for this queue */
   PTHRDCARETINFO CaretInfo;
 
-  /* Window hooks */
-  PHOOKTABLE Hooks;
-
   /* queue state tracking */
   WORD WakeMask;
   WORD QueueBits;
@@ -211,9 +208,6 @@ __inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 BOOL APIENTRY IntInitMessagePumpHook();
 BOOL APIENTRY IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
-
-PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
-VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);

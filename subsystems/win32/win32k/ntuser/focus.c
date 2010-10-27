@@ -165,6 +165,7 @@ co_IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
+      IntNotifyWinEvent(EVENT_OBJECT_FOCUS, NULL, OBJID_CLIENT, CHILDID_SELF, 0);
       co_IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
@@ -174,6 +175,8 @@ co_IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWnd)
    {
+      PWND pWnd = UserGetWindowObject(hWnd);
+      IntNotifyWinEvent(EVENT_OBJECT_FOCUS, pWnd, OBJID_CLIENT, CHILDID_SELF, 0);
       co_IntPostOrSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
@@ -356,8 +359,10 @@ co_IntSetActiveWindow(PWND Wnd OPTIONAL)
    cbt.fMouse     = FALSE;
    cbt.hWndActive = hWndPrev;
    if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
+   {
+      DPRINT1("SetActiveWindow WH_CBT Call Hook return!\n");
       return 0;
-
+   }
    ThreadQueue->ActiveWindow = hWnd;
 
    co_IntSendDeactivateMessages(hWndPrev, hWnd);
@@ -392,9 +397,11 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
          return hWndPrev;
       }
 
-     if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->head.h, (LPARAM)hWndPrev))
-        return 0;
-
+      if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->head.h, (LPARAM)hWndPrev))
+      {
+         DPRINT1("SetFocusWindow 1 WH_CBT Call Hook return!\n");
+         return 0;
+      }
       ThreadQueue->FocusWindow = Window->head.h;
 
       co_IntSendKillFocusMessages(hWndPrev, Window->head.h);
@@ -403,9 +410,11 @@ co_IntSetFocusWindow(PWND Window OPTIONAL)
    else
    {
       ThreadQueue->FocusWindow = 0;
-
-     if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
-        return 0;
+      if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
+      {
+         DPRINT1("SetFocusWindow 2 WH_CBT Call Hook return!\n");
+         return 0;
+      }
 
       co_IntSendKillFocusMessages(hWndPrev, 0);
    }
@@ -533,7 +542,7 @@ NtUserSetCapture(HWND hWnd)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
-   PWND Window;
+   PWND Window, pWnd;
    HWND hWndPrev;
    DECLARE_RETURN(HWND);
 
@@ -553,12 +562,22 @@ NtUserSetCapture(HWND hWnd)
 
    hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
 
+   if (hWndPrev)
+   {
+      pWnd = UserGetWindowObject(hWndPrev);
+      if (pWnd)
+         IntNotifyWinEvent(EVENT_SYSTEM_CAPTUREEND, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
+   }
+
    /* also remove other windows if not capturing anymore */
-   if(hWnd == NULL)
+   if (hWnd == NULL)
    {
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MENUOWNER, NULL);
       MsqSetStateWindow(ThreadQueue, MSQ_STATE_MOVESIZE, NULL);
    }
+
+   if (Window)
+      IntNotifyWinEvent(EVENT_SYSTEM_CAPTURESTART, Window, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
 
    co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    ThreadQueue->CaptureWindow = hWnd;

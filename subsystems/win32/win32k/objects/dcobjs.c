@@ -110,8 +110,10 @@ DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
 
+    /* Timo : The text brush should never be changed.
+     * Jérôme : Yeah, but its palette must be updated anyway! */
     if(pdcattr->ulDirty_ & DIRTY_TEXT)
-        EBRUSHOBJ_vUpdate(&pdc->eboText, pdc->eboText.pbrush, pdc);
+        EBRUSHOBJ_vUpdate(&pdc->eboText, pbrDefaultBrush, pdc);
 
     /* Update the eboText's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
@@ -127,7 +129,7 @@ DC_vUpdateBackgroundBrush(PDC pdc)
     PDC_ATTR pdcattr = pdc->pdcattr;
 
     if(pdcattr->ulDirty_ & DIRTY_BACKGROUND)
-        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pdc->eboBackground.pbrush, pdc);
+        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pbrDefaultBrush, pdc);
 
     /* Update the eboBackground's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
@@ -164,7 +166,7 @@ GdiSelectPalette(
 
     /* Is this a valid palette for this depth? */
 	if ((BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
-					&& ppal->Mode == PAL_INDEXED) ||
+					&& (ppal->flFlags & PAL_INDEXED)) ||
 			(BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
     {
         /* Get old palette, set new one */
@@ -282,14 +284,24 @@ NtGdiSelectBitmap(
     }
 
     /* Get the handle for the old bitmap */
-    psurfOld = pDC->dclevel.pSurface;
-    hOrgBmp = psurfOld ? psurfOld->BaseObject.hHmgr : NULL;
+    ASSERT(pDC->dclevel.pSurface);
+    hOrgBmp = pDC->dclevel.pSurface->BaseObject.hHmgr;
+
+	/* Lock it, to be sure while we mess with it*/
+	psurfOld = SURFACE_LockSurface(hOrgBmp);
+
+	/* Reset hdc, this surface isn't selected anymore */
+	psurfOld->hdc = NULL;
 
     /* Release the old bitmap, reference the new */
     DC_vSelectSurface(pDC, psurfBmp);
 
+	/* And unlock it, now we're done */
+	SURFACE_UnlockSurface(psurfOld);
+
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    psurfBmp->hDC = hDC;
+    psurfBmp->hdc = hDC;
+
 
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
@@ -356,6 +368,7 @@ NtGdiSelectClipPath(
     if (pPath->state != PATH_Closed)
     {
         SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
+        DC_UnlockDc(pdc);
         return FALSE;
     }
 

@@ -1050,6 +1050,48 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
 
 ULONG
 NTAPI
+MiGetPageProtection(IN PMMPTE PointerPte)
+{
+    MMPTE TempPte;
+    PMMPFN Pfn;
+    PAGED_CODE();
+
+    /* Copy this PTE's contents */
+    TempPte = *PointerPte;
+
+    /* Assure it's not totally zero */
+    ASSERT(TempPte.u.Long);
+
+    /* Check for a special prototype format */
+    if (TempPte.u.Soft.Valid == 0 &&
+        TempPte.u.Soft.Prototype == 1)
+    {
+        /* Unsupported now */
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* In the easy case of transition or demand zero PTE just return its protection */
+    if (!TempPte.u.Hard.Valid) return MmProtectToValue[TempPte.u.Soft.Protection];
+
+    /* If we get here, the PTE is valid, so look up the page in PFN database */
+    Pfn = MiGetPfnEntry(TempPte.u.Hard.PageFrameNumber);
+
+    if (!Pfn->u3.e1.PrototypePte)
+    {
+        /* Return protection of the original pte */
+        return MmProtectToValue[Pfn->OriginalPte.u.Soft.Protection];
+    }
+
+    /* This is hardware PTE */
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+
+    return PAGE_NOACCESS;
+}
+
+ULONG
+NTAPI
 MiQueryAddressState(IN PVOID Va,
                     IN PMMVAD Vad,
                     IN PEPROCESS TargetProcess,
@@ -1119,9 +1161,9 @@ MiQueryAddressState(IN PVOID Va,
             {
                 /* This means it's committed */
                 State = MEM_COMMIT;
-                
-                /* For now, we lie about the protection */
-                Protect = PAGE_EXECUTE_READWRITE;
+
+                /* Get protection state of this page */
+                Protect = MiGetPageProtection(PointerPte);
             }
             else
             {
@@ -2306,7 +2348,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     PMMVAD Vad = NULL;
     PVOID Address, NextAddress;
-    BOOLEAN Found;
+    BOOLEAN Found = FALSE;
     ULONG NewProtect, NewState, BaseVpn;
     MEMORY_BASIC_INFORMATION MemoryInfo;
     KAPC_STATE ApcState;
@@ -2329,9 +2371,34 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     if ((BaseAddress > MM_HIGHEST_VAD_ADDRESS) ||
         (PAGE_ALIGN(BaseAddress) == (PVOID)USER_SHARED_DATA))
     {
-        /* FIXME: We should return some bogus info structure */
-        UNIMPLEMENTED;
-        while (TRUE);
+        Address = PAGE_ALIGN(BaseAddress);
+
+        /* Make up an info structure describing this range */
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationProtect = PAGE_READONLY;
+        MemoryInfo.Type = MEM_PRIVATE;
+
+        /* Special case for shared data */
+        if (Address == (PVOID)USER_SHARED_DATA)
+        {
+            MemoryInfo.AllocationBase = (PVOID)USER_SHARED_DATA;
+            MemoryInfo.State = MEM_COMMIT;
+            MemoryInfo.Protect = PAGE_READONLY;
+            MemoryInfo.RegionSize = PAGE_SIZE;
+        }
+        else
+        {
+            MemoryInfo.AllocationBase = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1;
+            MemoryInfo.State = MEM_RESERVE;
+            MemoryInfo.Protect = PAGE_NOACCESS;
+            MemoryInfo.RegionSize = (ULONG_PTR)MemoryInfo.AllocationBase - (ULONG_PTR)Address;
+        }
+
+        /* Return the data (FIXME: Use SEH) */
+        *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+        if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+
+        return STATUS_SUCCESS;
     }
 
     /* Check if this is for a local or remote process */
@@ -2390,11 +2457,61 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     /* Was a VAD found? */
     if (!Found)
     {
-        /* We don't handle this yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        Address = PAGE_ALIGN(BaseAddress);
+
+        /* Calculate region size */
+        if (Vad)
+        {
+            if (Vad->StartingVpn >= BaseVpn)
+            {
+                /* Region size is the free space till the start of that VAD */
+                MemoryInfo.RegionSize = (ULONG_PTR)(Vad->StartingVpn << PAGE_SHIFT) - (ULONG_PTR)Address;
+            }
+            else
+            {
+                /* Get the next VAD */
+                Vad = (PMMVAD)MiGetNextNode((PMMADDRESS_NODE)Vad);
+                if (Vad)
+                {
+                    /* Region size is the free space till the start of that VAD */
+                    MemoryInfo.RegionSize = (ULONG_PTR)(Vad->StartingVpn << PAGE_SHIFT) - (ULONG_PTR)Address;
+                }
+                else
+                {
+                    /* Maximum possible region size with that base address */
+                    MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
+                }
+            }
+        }
+        else
+        {
+            /* Maximum possible region size with that base address */
+            MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
+        }
+
+        /* Check if we were attached */
+        if (ProcessHandle != NtCurrentProcess())
+        {
+            /* Detach and derefernece the process */
+            KeUnstackDetachProcess(&ApcState);
+            ObDereferenceObject(TargetProcess);
+        }
+
+        /* Build the rest of the initial information block */
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationBase = NULL;
+        MemoryInfo.AllocationProtect = 0;
+        MemoryInfo.State = MEM_FREE;
+        MemoryInfo.Protect = PAGE_NOACCESS;
+        MemoryInfo.Type = 0;
+
+        /* Return the data (FIXME: Use SEH) */
+        *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+        if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+
+        return STATUS_SUCCESS;
     }
-   
+
     /* This must be a VM VAD */
     ASSERT(Vad->u.VadFlags.PrivateMemory);
    

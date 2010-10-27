@@ -37,7 +37,7 @@ DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   LONG lDelta = SurfObj->lDelta;
 
   c &= 0xFFFFFF;
-  while(y1++ < y2) 
+  while(y1++ < y2)
   {
     *(PUSHORT)(addr) = c & 0xFFFF;
     *(addr + 2) = c >> 16;
@@ -466,7 +466,6 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
 {
    INT Rows, Cols, SrcX, SrcY;
    register PUCHAR Dst;
-   ULONG DstDelta;
    BLENDFUNCTION BlendFunc;
    register NICEPIXEL32 DstPixel, SrcPixel;
    UCHAR Alpha, SrcBpp;
@@ -474,9 +473,6 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
    DPRINT("DIB_24BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
           SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
           DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
-
-   ASSERT(DestRect->bottom - DestRect->top == SourceRect->bottom - SourceRect->top &&
-          DestRect->right - DestRect->left == SourceRect->right - SourceRect->left);
 
    BlendFunc = BlendObj->BlendFunction;
    if (BlendFunc.BlendOp != AC_SRC_OVER)
@@ -503,39 +499,41 @@ DIB_24BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
 
    Dst = (PUCHAR)((ULONG_PTR)Dest->pvScan0 + (DestRect->top * Dest->lDelta) +
                              (DestRect->left * 3));
-   DstDelta = Dest->lDelta - ((DestRect->right - DestRect->left) * 3);
    SrcBpp = BitsPerFormat(Source->iBitmapFormat);
 
-   Rows = DestRect->bottom - DestRect->top;
+   Rows = 0;
    SrcY = SourceRect->top;
-   while (--Rows >= 0)
-   {
-      Cols = DestRect->right - DestRect->left;
-      SrcX = SourceRect->left;
-      while (--Cols >= 0)
+   while (++Rows <= DestRect->bottom - DestRect->top)
+  {
+    Cols = 0;
+    SrcX = SourceRect->left;
+    while (++Cols <= DestRect->right - DestRect->left)
+    {
+      SrcPixel.ul = DIB_GetSource(Source, SrcX, SrcY, ColorTranslation);
+      SrcPixel.col.red = (SrcPixel.col.red * BlendFunc.SourceConstantAlpha) / 255;
+      SrcPixel.col.green = (SrcPixel.col.green * BlendFunc.SourceConstantAlpha) / 255;
+      SrcPixel.col.blue = (SrcPixel.col.blue * BlendFunc.SourceConstantAlpha) / 255;
+      if (!(BlendFunc.AlphaFormat & AC_SRC_ALPHA))
       {
-         SrcPixel.ul = DIB_GetSource(Source, SrcX++, SrcY, ColorTranslation);
-         SrcPixel.col.red = SrcPixel.col.red * BlendFunc.SourceConstantAlpha / 255;
-         SrcPixel.col.green = SrcPixel.col.green * BlendFunc.SourceConstantAlpha / 255;
-         SrcPixel.col.blue = SrcPixel.col.blue * BlendFunc.SourceConstantAlpha / 255;
-         SrcPixel.col.alpha = (SrcBpp == 32) ? (SrcPixel.col.alpha * BlendFunc.SourceConstantAlpha / 255) : BlendFunc.SourceConstantAlpha;
-
-         Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
-                 SrcPixel.col.alpha : BlendFunc.SourceConstantAlpha;
-
-         /* copy only 24bits of dst */
-         DstPixel.ul = *(PUSHORT)(Dst) + (*(Dst+2) << 16);
-         DstPixel.col.red = Clamp8(DstPixel.col.red * (255 - Alpha) / 255 + SrcPixel.col.red);
-         DstPixel.col.green = Clamp8(DstPixel.col.green * (255 - Alpha) / 255 + SrcPixel.col.green);
-         DstPixel.col.blue = Clamp8(DstPixel.col.blue * (255 - Alpha) / 255 + SrcPixel.col.blue);
-         /* copy back 24bits of result */
-         *(PUSHORT)(Dst) = (USHORT)(DstPixel.ul & 0xFFFF);
-         *(Dst + 2) = (UCHAR)((DstPixel.ul >> 16) & 0xFF);
-         Dst = (PUCHAR)((ULONG_PTR)Dst + 3);
+          Alpha = BlendFunc.SourceConstantAlpha ;
       }
-      Dst = (PUCHAR)((ULONG_PTR)Dst + DstDelta);
-      SrcY++;
-   }
+      else
+      {
+        Alpha = (SrcPixel.col.alpha * BlendFunc.SourceConstantAlpha) / 255;
+      }
+
+      DstPixel.col.red = Clamp8((*Dst * (255 - Alpha)) / 255 + SrcPixel.col.red) ;
+      DstPixel.col.green = Clamp8((*(Dst+1) * (255 - Alpha) / 255 + SrcPixel.col.green)) ;
+      DstPixel.col.blue = Clamp8((*(Dst+2) * (255 - Alpha)) / 255 + SrcPixel.col.blue) ;
+      *Dst++ = DstPixel.col.red;
+      *Dst++ = DstPixel.col.green;
+      *Dst++ = DstPixel.col.blue;
+      SrcX = SourceRect->left + (Cols*(SourceRect->right - SourceRect->left))/(DestRect->right - DestRect->left);
+    }
+    Dst = (PUCHAR)((ULONG_PTR)Dest->pvScan0 + ((DestRect->top + Rows) * Dest->lDelta) +
+                (DestRect->left*3));
+    SrcY = SourceRect->top + (Rows*(SourceRect->bottom - SourceRect->top))/(DestRect->bottom - DestRect->top);
+  }
 
    return TRUE;
 }

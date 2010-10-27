@@ -33,7 +33,7 @@ DIB_1BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 VOID
 DIB_1BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  while(x1 < x2) 
+  while(x1 < x2)
   {
     DIB_1BPP_PutPixel(SurfObj, x1, y, c);
     x1++;
@@ -43,7 +43,7 @@ DIB_1BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 VOID
 DIB_1BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
-  while(y1 < y2) 
+  while(y1 < y2)
   {
     DIB_1BPP_PutPixel(SurfObj, x, y1, c);
     y1++;
@@ -471,15 +471,6 @@ DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                         RECTL*  DestRect,  RECTL *SourceRect,
                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
 {
-  return FALSE;
-}
-
-BOOLEAN
-DIB_1BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
-                    RECTL* SourceRect, CLIPOBJ* ClipRegion,
-                    XLATEOBJ* ColorTranslation, BLENDOBJ* BlendObj)
-{
-  UNIMPLEMENTED;
   return FALSE;
 }
 

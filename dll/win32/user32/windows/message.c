@@ -2064,13 +2064,18 @@ SendMessageW(HWND Wnd,
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
-      if (Window != NULL && Window->head.pti == ti && !IsThreadHooked(GetWin32ClientInfo()))
+      if ( Window != NULL &&
+           Window->head.pti == ti &&
+          !IsThreadHooked(GetWin32ClientInfo()) &&
+          !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
 
                    * Window belongs to calling thread
                    * The calling thread is not being hooked
+                   * Not calling a server side proc:
+                     Desktop, Switch, ScrollBar, Menu, IconTitle, or hWndMessage
            */
 
           return IntCallMessageProc(Window, Wnd, Msg, wParam, lParam, FALSE);
@@ -2130,13 +2135,18 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
-      if (Window != NULL && Window->head.pti == ti && !IsThreadHooked(GetWin32ClientInfo()))
+      if ( Window != NULL &&
+           Window->head.pti == ti &&
+          !IsThreadHooked(GetWin32ClientInfo()) &&
+          !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
 
                    * Window belongs to calling thread
                    * The calling thread is not being hooked
+                   * Not calling a server side proc: 
+                     Desktop, Switch, ScrollBar, Menu, IconTitle, or hWndMessage
            */
 
           return IntCallMessageProc(Window, Wnd, Msg, wParam, lParam, TRUE);
