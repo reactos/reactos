@@ -941,6 +941,12 @@ W32kKeyProcessMessage(LPMSG Msg,
          VscVkTable = KeyboardLayout->pVSCtoVK_E1;
       }
 
+      if (!VscVkTable)
+      {
+          DPRINT1("somethings wrong, Prefix=0x%x", Prefix);
+          return;
+      }
+
       RawVk = 0xff;
       while (VscVkTable->Vsc)
       {
