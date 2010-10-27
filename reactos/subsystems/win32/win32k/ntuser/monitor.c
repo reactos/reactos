@@ -1,21 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          Monitor support
@@ -48,18 +31,18 @@ static PMONITOR gMonitorList = NULL;
 NTSTATUS
 InitMonitorImpl()
 {
-   DPRINT("Initializing monitor implementation...\n");
+    DPRINT("Initializing monitor implementation...\n");
 
-   return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 CleanupMonitorImpl()
 {
-   DPRINT("Cleaning up monitor implementation...\n");
-   /* FIXME: Destroy monitor objects? */
+    DPRINT("Cleaning up monitor implementation...\n");
+    /* FIXME: Destroy monitor objects? */
 
-   return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -86,18 +69,18 @@ static
 PMONITOR
 IntCreateMonitorObject()
 {
-   HANDLE Handle;
-   PMONITOR Monitor;
+    HANDLE Handle;
+    PMONITOR Monitor;
 
-   Monitor = UserCreateObject(gHandleTable, NULL, &Handle, otMonitor, sizeof (MONITOR));
-   if (Monitor == NULL)
-   {
-      return NULL;
-   }
+    Monitor = UserCreateObject(gHandleTable, NULL, &Handle, otMonitor, sizeof (MONITOR));
+    if (Monitor == NULL)
+    {
+        return NULL;
+    }
 
-   ExInitializeFastMutex(&Monitor->Lock);
+    ExInitializeFastMutex(&Monitor->Lock);
 
-   return Monitor;
+    return Monitor;
 }
 
 /* IntDestroyMonitorObject
@@ -114,33 +97,32 @@ static
 void
 IntDestroyMonitorObject(IN PMONITOR pMonitor)
 {
-   RtlFreeUnicodeString(&pMonitor->DeviceName);
-   UserDereferenceObject(pMonitor);
+    RtlFreeUnicodeString(&pMonitor->DeviceName);
+    UserDereferenceObject(pMonitor);
 }
 
 
 PMONITOR FASTCALL
 UserGetMonitorObject(IN HMONITOR hMonitor)
 {
-   PMONITOR Monitor;
+    PMONITOR Monitor;
 
-   if (!hMonitor)
-   {
-      SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
-      return NULL;
-   }
+    if (!hMonitor)
+    {
+        SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+        return NULL;
+    }
 
+    Monitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, otMonitor);
+    if (!Monitor)
+    {
+        SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+        return NULL;
+    }
 
-   Monitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, otMonitor);
-   if (!Monitor)
-   {
-      SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
-      return NULL;
-   }
+    ASSERT(Monitor->head.cLockObj >= 0);
 
-   ASSERT(Monitor->head.cLockObj >= 0);
-
-   return Monitor;
+    return Monitor;
 }
 
 
@@ -160,58 +142,58 @@ NTSTATUS
 IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
                  IN ULONG DisplayNumber)
 {
-   PMONITOR Monitor;
-   WCHAR Buffer[CCHDEVICENAME];
+    PMONITOR Monitor;
+    WCHAR Buffer[CCHDEVICENAME];
 
-   DPRINT("Attaching monitor...\n");
+    DPRINT("Attaching monitor...\n");
 
-   /* create new monitor object */
-   Monitor = IntCreateMonitorObject();
-   if (Monitor == NULL)
-   {
-      DPRINT("Couldnt create monitor object\n");
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
+    /* create new monitor object */
+    Monitor = IntCreateMonitorObject();
+    if (Monitor == NULL)
+    {
+        DPRINT("Couldnt create monitor object\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-   _snwprintf(Buffer, CCHDEVICENAME, L"\\\\.\\DISPLAY%d", DisplayNumber + 1);
-   if (!RtlCreateUnicodeString(&Monitor->DeviceName, Buffer))
-   {
-      DPRINT("Couldn't duplicate monitor name!\n");
-      UserDereferenceObject(Monitor);
-      UserDeleteObject(UserHMGetHandle(Monitor), otMonitor);
-      return STATUS_INSUFFICIENT_RESOURCES;
-   }
+    _snwprintf(Buffer, CCHDEVICENAME, L"\\\\.\\DISPLAY%d", DisplayNumber + 1);
+    if (!RtlCreateUnicodeString(&Monitor->DeviceName, Buffer))
+    {
+        DPRINT("Couldn't duplicate monitor name!\n");
+        UserDereferenceObject(Monitor);
+        UserDeleteObject(UserHMGetHandle(Monitor), otMonitor);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-   Monitor->GdiDevice = pGdiDevice;
-   Monitor->rcMonitor.left  = 0;
-   Monitor->rcMonitor.top   = 0;
-   Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
-   Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
-   Monitor->rcWork = Monitor->rcMonitor;
-   Monitor->cWndStack = 0;
+    Monitor->GdiDevice = pGdiDevice;
+    Monitor->rcMonitor.left  = 0;
+    Monitor->rcMonitor.top   = 0;
+    Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
+    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
+    Monitor->rcWork = Monitor->rcMonitor;
+    Monitor->cWndStack = 0;
 
-   Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
+    Monitor->hrgnMonitor = IntSysCreateRectRgnIndirect( &Monitor->rcMonitor );
 
-   IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
+    IntGdiSetRegionOwner(Monitor->hrgnMonitor, GDI_OBJ_HMGR_PUBLIC);
 
-   if (gMonitorList == NULL)
-   {
-      DPRINT("Primary monitor is beeing attached\n");
-      Monitor->IsPrimary = TRUE;
-      gMonitorList = Monitor;
-   }
-   else
-   {
-      PMONITOR p;
-      DPRINT("Additional monitor is beeing attached\n");
-      for (p = gMonitorList; p->Next != NULL; p = p->Next)
-      {
-         p->Next = Monitor;
-      }
-      Monitor->Prev = p;
-   }
+    if (gMonitorList == NULL)
+    {
+        DPRINT("Primary monitor is beeing attached\n");
+        Monitor->IsPrimary = TRUE;
+        gMonitorList = Monitor;
+    }
+    else
+    {
+        PMONITOR p;
+        DPRINT("Additional monitor is beeing attached\n");
+        for (p = gMonitorList; p->Next != NULL; p = p->Next)
+        {
+            p->Next = Monitor;
+        }
+        Monitor->Prev = p;
+    }
 
-   return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /* IntDetachMonitor
@@ -228,48 +210,48 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
 NTSTATUS
 IntDetachMonitor(IN PDEVOBJ *pGdiDevice)
 {
-   PMONITOR Monitor;
+    PMONITOR Monitor;
 
-   for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
-   {
-      if (Monitor->GdiDevice == pGdiDevice)
-         break;
-   }
+    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
+    {
+        if (Monitor->GdiDevice == pGdiDevice)
+            break;
+    }
 
-   if (Monitor == NULL)
-   {
-      /* no monitor for given device found */
-      return STATUS_INVALID_PARAMETER;
-   }
+    if (Monitor == NULL)
+    {
+        /* no monitor for given device found */
+        return STATUS_INVALID_PARAMETER;
+    }
 
-   if (Monitor->IsPrimary && (Monitor->Next != NULL || Monitor->Prev != NULL))
-   {
-      PMONITOR NewPrimaryMonitor = (Monitor->Prev != NULL) ? (Monitor->Prev) : (Monitor->Next);
+    if (Monitor->IsPrimary && (Monitor->Next != NULL || Monitor->Prev != NULL))
+    {
+        PMONITOR NewPrimaryMonitor = (Monitor->Prev != NULL) ? (Monitor->Prev) : (Monitor->Next);
 
-      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&NewPrimaryMonitor->Lock);
-      NewPrimaryMonitor->IsPrimary = TRUE;
-      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&NewPrimaryMonitor->Lock);
-   }
+        ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&NewPrimaryMonitor->Lock);
+        NewPrimaryMonitor->IsPrimary = TRUE;
+        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&NewPrimaryMonitor->Lock);
+    }
 
-   if (gMonitorList == Monitor)
-   {
-      gMonitorList = Monitor->Next;
-      if (Monitor->Next != NULL)
-         Monitor->Next->Prev = NULL;
-   }
-   else
-   {
-      Monitor->Prev->Next = Monitor->Next;
-      if (Monitor->Next != NULL)
-         Monitor->Next->Prev = Monitor->Prev;
-   }
+    if (gMonitorList == Monitor)
+    {
+        gMonitorList = Monitor->Next;
+        if (Monitor->Next != NULL)
+            Monitor->Next->Prev = NULL;
+    }
+    else
+    {
+        Monitor->Prev->Next = Monitor->Next;
+        if (Monitor->Next != NULL)
+            Monitor->Next->Prev = Monitor->Prev;
+    }
 
-   if (Monitor->hrgnMonitor)
-      REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
+    if (Monitor->hrgnMonitor)
+        REGION_FreeRgnByHandle(Monitor->hrgnMonitor);
 
-   IntDestroyMonitorObject(Monitor);
+    IntDestroyMonitorObject(Monitor);
 
-   return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /* IntGetPrimaryMonitor
@@ -283,16 +265,16 @@ PMONITOR
 FASTCALL
 IntGetPrimaryMonitor()
 {
-   PMONITOR Monitor;
+    PMONITOR Monitor;
 
-   for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
-   {
-      /* FIXME: I guess locking the monitor is not neccessary to read 1 int */
-      if (Monitor->IsPrimary)
-         break;
-   }
+    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
+    {
+        /* FIXME: I guess locking the monitor is not neccessary to read 1 int */
+        if (Monitor->IsPrimary)
+            break;
+    }
 
-   return Monitor;
+    return Monitor;
 }
 
 /* IntGetMonitorsFromRect
@@ -334,99 +316,99 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
                        OPTIONAL IN DWORD listSize,
                        OPTIONAL IN DWORD flags)
 {
-   PMONITOR Monitor, NearestMonitor = NULL, PrimaryMonitor = NULL;
-   UINT iCount = 0;
-   LONG iNearestDistanceX = 0x7fffffff, iNearestDistanceY = 0x7fffffff;
+    PMONITOR Monitor, NearestMonitor = NULL, PrimaryMonitor = NULL;
+    UINT iCount = 0;
+    LONG iNearestDistanceX = 0x7fffffff, iNearestDistanceY = 0x7fffffff;
 
-   /* find monitors which intersect the rectangle */
-   for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
-   {
-      RECTL MonitorRect, IntersectionRect;
+    /* find monitors which intersect the rectangle */
+    for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
+    {
+        RECTL MonitorRect, IntersectionRect;
 
-      ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Monitor->Lock);
-      MonitorRect = Monitor->rcMonitor;
-      ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
+        ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Monitor->Lock);
+        MonitorRect = Monitor->rcMonitor;
+        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
 
-      DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
-             MonitorRect.left, MonitorRect.top, MonitorRect.right, MonitorRect.bottom);
+        DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
+               MonitorRect.left, MonitorRect.top, MonitorRect.right, MonitorRect.bottom);
 
-      if (flags == MONITOR_DEFAULTTOPRIMARY && Monitor->IsPrimary)
-      {
-         PrimaryMonitor = Monitor;
-      }
+        if (flags == MONITOR_DEFAULTTOPRIMARY && Monitor->IsPrimary)
+        {
+            PrimaryMonitor = Monitor;
+        }
 
-      if (pRect != NULL)
-      {
-         BOOL intersects = TRUE;
+        if (pRect != NULL)
+        {
+            BOOL intersects = TRUE;
 
-         /* check if the rect intersects the monitor */
-         if ((pRect->right < MonitorRect.left) || (pRect->left > MonitorRect.right) ||
-               (pRect->bottom < MonitorRect.top) || (pRect->top > MonitorRect.bottom))
-         {
-            intersects = FALSE;
-         }
-
-         if (flags == MONITOR_DEFAULTTONEAREST && !intersects)
-         {
-            INT distanceX, distanceY;
-
-            distanceX = MIN(ABS(MonitorRect.left - pRect->right),
-                            ABS(pRect->left - MonitorRect.right));
-            distanceY = MIN(ABS(MonitorRect.top - pRect->bottom),
-                            ABS(pRect->top - MonitorRect.bottom));
-
-            if (((distanceX <  iNearestDistanceX) && (distanceY <= iNearestDistanceY)) ||
-                  ((distanceX <= iNearestDistanceX) && (distanceY <  iNearestDistanceY)))
+            /* check if the rect intersects the monitor */
+            if ((pRect->right < MonitorRect.left) || (pRect->left > MonitorRect.right) ||
+                    (pRect->bottom < MonitorRect.top) || (pRect->top > MonitorRect.bottom))
             {
-               iNearestDistanceX = distanceX;
-               iNearestDistanceY = distanceY;
-               NearestMonitor = Monitor;
+                intersects = FALSE;
             }
-         }
 
-         if (!intersects)
-            continue;
+            if (flags == MONITOR_DEFAULTTONEAREST && !intersects)
+            {
+                INT distanceX, distanceY;
 
-         /* calculate intersection */
-         IntersectionRect.left   = MAX(MonitorRect.left,   pRect->left);
-         IntersectionRect.top    = MAX(MonitorRect.top,    pRect->top);
-         IntersectionRect.right  = MIN(MonitorRect.right,  pRect->right);
-         IntersectionRect.bottom = MIN(MonitorRect.bottom, pRect->bottom);
-      }
-      else
-      {
-         IntersectionRect = MonitorRect;
-      }
+                distanceX = MIN(ABS(MonitorRect.left - pRect->right),
+                                ABS(pRect->left - MonitorRect.right));
+                distanceY = MIN(ABS(MonitorRect.top - pRect->bottom),
+                                ABS(pRect->top - MonitorRect.bottom));
 
-      if (iCount < listSize)
-      {
-         if (hMonitorList != NULL)
-            hMonitorList[iCount] = UserHMGetHandle(Monitor);
-         if (monitorRectList != NULL)
-            monitorRectList[iCount] = IntersectionRect;
-      }
-      iCount++;
-   }
+                if (((distanceX <  iNearestDistanceX) && (distanceY <= iNearestDistanceY)) ||
+                        ((distanceX <= iNearestDistanceX) && (distanceY <  iNearestDistanceY)))
+                {
+                    iNearestDistanceX = distanceX;
+                    iNearestDistanceY = distanceY;
+                    NearestMonitor = Monitor;
+                }
+            }
 
-   if (iCount == 0 && flags == MONITOR_DEFAULTTONEAREST)
-   {
-      if (iCount < listSize)
-      {
-         if (hMonitorList != NULL)
-            hMonitorList[iCount] = UserHMGetHandle(NearestMonitor);
-      }
-      iCount++;
-   }
-   else if (iCount == 0 && flags == MONITOR_DEFAULTTOPRIMARY)
-   {
-      if (iCount < listSize)
-      {
-         if (hMonitorList != NULL)
-            hMonitorList[iCount] = UserHMGetHandle(PrimaryMonitor);
-      }
-      iCount++;
-   }
-   return iCount;
+            if (!intersects)
+                continue;
+
+            /* calculate intersection */
+            IntersectionRect.left   = MAX(MonitorRect.left,   pRect->left);
+            IntersectionRect.top    = MAX(MonitorRect.top,    pRect->top);
+            IntersectionRect.right  = MIN(MonitorRect.right,  pRect->right);
+            IntersectionRect.bottom = MIN(MonitorRect.bottom, pRect->bottom);
+        }
+        else
+        {
+            IntersectionRect = MonitorRect;
+        }
+
+        if (iCount < listSize)
+        {
+            if (hMonitorList != NULL)
+                hMonitorList[iCount] = UserHMGetHandle(Monitor);
+            if (monitorRectList != NULL)
+                monitorRectList[iCount] = IntersectionRect;
+        }
+        iCount++;
+    }
+
+    if (iCount == 0 && flags == MONITOR_DEFAULTTONEAREST)
+    {
+        if (iCount < listSize)
+        {
+            if (hMonitorList != NULL)
+                hMonitorList[iCount] = UserHMGetHandle(NearestMonitor);
+        }
+        iCount++;
+    }
+    else if (iCount == 0 && flags == MONITOR_DEFAULTTOPRIMARY)
+    {
+        if (iCount < listSize)
+        {
+            if (hMonitorList != NULL)
+                hMonitorList[iCount] = UserHMGetHandle(PrimaryMonitor);
+        }
+        iCount++;
+    }
+    return iCount;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -464,146 +446,147 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
 INT
 APIENTRY
 NtUserEnumDisplayMonitors(
-   OPTIONAL IN HDC hDC,
-   OPTIONAL IN LPCRECTL pRect,
-   OPTIONAL OUT HMONITOR *hMonitorList,
-   OPTIONAL OUT PRECTL monitorRectList,
-   OPTIONAL IN DWORD listSize)
+    OPTIONAL IN HDC hDC,
+    OPTIONAL IN LPCRECTL pRect,
+    OPTIONAL OUT HMONITOR *hMonitorList,
+    OPTIONAL OUT PRECTL monitorRectList,
+    OPTIONAL IN DWORD listSize)
 {
-   INT numMonitors, i;
-   HMONITOR *safeHMonitorList = NULL;
-   PRECTL safeRectList = NULL;
-   RECTL rect, *myRect;
-   RECTL dcRect;
-   NTSTATUS status;
+    INT numMonitors, i;
+    HMONITOR *safeHMonitorList = NULL;
+    PRECTL safeRectList = NULL;
+    RECTL rect, *myRect;
+    RECTL dcRect;
+    NTSTATUS status;
 
-   /* get rect */
-   if (pRect != NULL)
-   {
-      status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
-      if (!NT_SUCCESS(status))
-      {
-         DPRINT("MmCopyFromCaller() failed!\n");
-         SetLastNtError(status);
-         return -1;
-      }
-   }
+    /* get rect */
+    if (pRect != NULL)
+    {
+        status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
+        if (!NT_SUCCESS(status))
+        {
+            DPRINT("MmCopyFromCaller() failed!\n");
+            SetLastNtError(status);
+            return -1;
+        }
+    }
 
-   if (hDC != NULL)
-   {
-      PDC dc;
-      INT regionType;
+    if (hDC != NULL)
+    {
+        PDC dc;
+        INT regionType;
 
-      /* get visible region bounding rect */
-      dc = DC_LockDc(hDC);
-      if (dc == NULL)
-      {
-         DPRINT("DC_LockDc() failed!\n");
-         /* FIXME: setlasterror? */
-         return -1;
-      }
-      regionType = REGION_GetRgnBox(dc->prgnVis, &dcRect);
-      DC_UnlockDc(dc);
+        /* get visible region bounding rect */
+        dc = DC_LockDc(hDC);
+        if (dc == NULL)
+        {
+            DPRINT("DC_LockDc() failed!\n");
+            /* FIXME: setlasterror? */
+            return -1;
+        }
+        regionType = REGION_GetRgnBox(dc->prgnVis, &dcRect);
+        DC_UnlockDc(dc);
 
-      if (regionType == 0)
-      {
-         DPRINT("NtGdiGetRgnBox() failed!\n");
-         return -1;
-      }
-      if (regionType == NULLREGION)
-         return 0;
-      if (regionType == COMPLEXREGION)
-      { /* TODO: warning */
-      }
+        if (regionType == 0)
+        {
+            DPRINT("NtGdiGetRgnBox() failed!\n");
+            return -1;
+        }
+        if (regionType == NULLREGION)
+            return 0;
+        if (regionType == COMPLEXREGION)
+        {
+            /* TODO: warning */
+        }
 
-      /* if hDC and pRect are given the area of interest is pRect with
-         coordinate origin at the DC position */
-      if (pRect != NULL)
-      {
-         rect.left += dcRect.left;
-         rect.right += dcRect.left;
-         rect.top += dcRect.top;
-         rect.bottom += dcRect.top;
-      }
-      /* if hDC is given and pRect is not the area of interest is the
-         bounding rect of hDC */
-      else
-      {
-         rect = dcRect;
-      }
-   }
+        /* if hDC and pRect are given the area of interest is pRect with
+           coordinate origin at the DC position */
+        if (pRect != NULL)
+        {
+            rect.left += dcRect.left;
+            rect.right += dcRect.left;
+            rect.top += dcRect.top;
+            rect.bottom += dcRect.top;
+        }
+        /* if hDC is given and pRect is not the area of interest is the
+           bounding rect of hDC */
+        else
+        {
+            rect = dcRect;
+        }
+    }
 
-   if (hDC == NULL && pRect == NULL)
-      myRect = NULL;
-   else
-      myRect = &rect;
+    if (hDC == NULL && pRect == NULL)
+        myRect = NULL;
+    else
+        myRect = &rect;
 
-   /* find intersecting monitors */
-   numMonitors = IntGetMonitorsFromRect(myRect, NULL, NULL, 0, 0);
-   if (numMonitors == 0 || listSize == 0 ||
-         (hMonitorList == NULL && monitorRectList == NULL))
-   {
-      DPRINT("numMonitors = %d\n", numMonitors);
-      return numMonitors;
-   }
+    /* find intersecting monitors */
+    numMonitors = IntGetMonitorsFromRect(myRect, NULL, NULL, 0, 0);
+    if (numMonitors == 0 || listSize == 0 ||
+            (hMonitorList == NULL && monitorRectList == NULL))
+    {
+        DPRINT("numMonitors = %d\n", numMonitors);
+        return numMonitors;
+    }
 
-   if (hMonitorList != NULL && listSize != 0)
-   {
-      safeHMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * listSize, USERTAG_MONITORRECTS);
-      if (safeHMonitorList == NULL)
-      {
-         /* FIXME: SetLastWin32Error? */
-         return -1;
-      }
-   }
-   if (monitorRectList != NULL && listSize != 0)
-   {
-      safeRectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * listSize, USERTAG_MONITORRECTS);
-      if (safeRectList == NULL)
-      {
-         ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
-         /* FIXME: SetLastWin32Error? */
-         return -1;
-      }
-   }
+    if (hMonitorList != NULL && listSize != 0)
+    {
+        safeHMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * listSize, USERTAG_MONITORRECTS);
+        if (safeHMonitorList == NULL)
+        {
+            /* FIXME: SetLastWin32Error? */
+            return -1;
+        }
+    }
+    if (monitorRectList != NULL && listSize != 0)
+    {
+        safeRectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * listSize, USERTAG_MONITORRECTS);
+        if (safeRectList == NULL)
+        {
+            ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
+            /* FIXME: SetLastWin32Error? */
+            return -1;
+        }
+    }
 
-   /* get intersecting monitors */
-   numMonitors = IntGetMonitorsFromRect(myRect, safeHMonitorList, safeRectList,
-                                        listSize, 0 );
+    /* get intersecting monitors */
+    numMonitors = IntGetMonitorsFromRect(myRect, safeHMonitorList, safeRectList,
+                                         listSize, 0 );
 
-   if (hDC != NULL && pRect != NULL && safeRectList != NULL)
-      for (i = 0; i < numMonitors; i++)
-      {
-         safeRectList[i].left -= dcRect.left;
-         safeRectList[i].right -= dcRect.left;
-         safeRectList[i].top -= dcRect.top;
-         safeRectList[i].bottom -= dcRect.top;
-      }
+    if (hDC != NULL && pRect != NULL && safeRectList != NULL)
+        for (i = 0; i < numMonitors; i++)
+        {
+            safeRectList[i].left -= dcRect.left;
+            safeRectList[i].right -= dcRect.left;
+            safeRectList[i].top -= dcRect.top;
+            safeRectList[i].bottom -= dcRect.top;
+        }
 
-   /* output result */
-   if (hMonitorList != NULL && listSize != 0)
-   {
-      status = MmCopyToCaller(hMonitorList, safeHMonitorList, sizeof (HMONITOR) * listSize);
-      ExFreePool(safeHMonitorList);
-      if (!NT_SUCCESS(status))
-      {
-         ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
-         SetLastNtError(status);
-         return -1;
-      }
-   }
-   if (monitorRectList != NULL && listSize != 0)
-   {
-      status = MmCopyToCaller(monitorRectList, safeRectList, sizeof (RECT) * listSize);
-      ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
-      if (!NT_SUCCESS(status))
-      {
-         SetLastNtError(status);
-         return -1;
-      }
-   }
+    /* output result */
+    if (hMonitorList != NULL && listSize != 0)
+    {
+        status = MmCopyToCaller(hMonitorList, safeHMonitorList, sizeof (HMONITOR) * listSize);
+        ExFreePool(safeHMonitorList);
+        if (!NT_SUCCESS(status))
+        {
+            ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
+            SetLastNtError(status);
+            return -1;
+        }
+    }
+    if (monitorRectList != NULL && listSize != 0)
+    {
+        status = MmCopyToCaller(monitorRectList, safeRectList, sizeof (RECT) * listSize);
+        ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
+        if (!NT_SUCCESS(status))
+        {
+            SetLastNtError(status);
+            return -1;
+        }
+    }
 
-   return numMonitors;
+    return numMonitors;
 }
 
 /* NtUserGetMonitorInfo
@@ -633,81 +616,81 @@ NtUserEnumDisplayMonitors(
 BOOL
 APIENTRY
 NtUserGetMonitorInfo(
-   IN HMONITOR hMonitor,
-   OUT LPMONITORINFO pMonitorInfo)
+    IN HMONITOR hMonitor,
+    OUT LPMONITORINFO pMonitorInfo)
 {
-   PMONITOR Monitor;
-   MONITORINFOEXW MonitorInfo;
-   NTSTATUS Status;
-   DECLARE_RETURN(BOOL);
+    PMONITOR Monitor;
+    MONITORINFOEXW MonitorInfo;
+    NTSTATUS Status;
+    DECLARE_RETURN(BOOL);
 
-   DPRINT("Enter NtUserGetMonitorInfo\n");
-   UserEnterShared();
+    DPRINT("Enter NtUserGetMonitorInfo\n");
+    UserEnterShared();
 
-   /* get monitor object */
-   if (!(Monitor = UserGetMonitorObject(hMonitor)))
-   {
-      DPRINT("Couldnt find monitor 0x%lx\n", hMonitor);
-      RETURN(FALSE);
-   }
+    /* get monitor object */
+    if (!(Monitor = UserGetMonitorObject(hMonitor)))
+    {
+        DPRINT("Couldnt find monitor 0x%lx\n", hMonitor);
+        RETURN(FALSE);
+    }
 
-   if(pMonitorInfo == NULL)
-   {
-      SetLastNtError(STATUS_INVALID_PARAMETER);
-      RETURN(FALSE);
-   }
+    if(pMonitorInfo == NULL)
+    {
+        SetLastNtError(STATUS_INVALID_PARAMETER);
+        RETURN(FALSE);
+    }
 
-   /* get size of pMonitorInfo */
-   Status = MmCopyFromCaller(&MonitorInfo.cbSize, &pMonitorInfo->cbSize, sizeof (MonitorInfo.cbSize));
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN(FALSE);
-   }
-   if ((MonitorInfo.cbSize != sizeof (MONITORINFO)) &&
-         (MonitorInfo.cbSize != sizeof (MONITORINFOEXW)))
-   {
-      SetLastNtError(STATUS_INVALID_PARAMETER);
-      RETURN(FALSE);
-   }
+    /* get size of pMonitorInfo */
+    Status = MmCopyFromCaller(&MonitorInfo.cbSize, &pMonitorInfo->cbSize, sizeof (MonitorInfo.cbSize));
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        RETURN(FALSE);
+    }
+    if ((MonitorInfo.cbSize != sizeof (MONITORINFO)) &&
+            (MonitorInfo.cbSize != sizeof (MONITORINFOEXW)))
+    {
+        SetLastNtError(STATUS_INVALID_PARAMETER);
+        RETURN(FALSE);
+    }
 
-   /* fill monitor info */
-   MonitorInfo.rcMonitor = Monitor->rcMonitor;
-   MonitorInfo.rcWork = Monitor->rcWork;
-   MonitorInfo.dwFlags = 0;
+    /* fill monitor info */
+    MonitorInfo.rcMonitor = Monitor->rcMonitor;
+    MonitorInfo.rcWork = Monitor->rcWork;
+    MonitorInfo.dwFlags = 0;
 
-   if (Monitor->IsPrimary)
-      MonitorInfo.dwFlags |= MONITORINFOF_PRIMARY;
+    if (Monitor->IsPrimary)
+        MonitorInfo.dwFlags |= MONITORINFOF_PRIMARY;
 
-   /* fill device name */
-   if (MonitorInfo.cbSize == sizeof (MONITORINFOEXW))
-   {
-      WCHAR nul = L'\0';
-      INT len = Monitor->DeviceName.Length;
-      if (len >= CCHDEVICENAME * sizeof (WCHAR))
-         len = (CCHDEVICENAME - 1) * sizeof (WCHAR);
+    /* fill device name */
+    if (MonitorInfo.cbSize == sizeof (MONITORINFOEXW))
+    {
+        WCHAR nul = L'\0';
+        INT len = Monitor->DeviceName.Length;
+        if (len >= CCHDEVICENAME * sizeof (WCHAR))
+            len = (CCHDEVICENAME - 1) * sizeof (WCHAR);
 
-      memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
-      memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
-   }
+        memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
+        memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
+    }
 
-   /* output data */
-   Status = MmCopyToCaller(pMonitorInfo, &MonitorInfo, MonitorInfo.cbSize);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("GetMonitorInfo: MmCopyToCaller failed\n");
-      SetLastNtError(Status);
-      RETURN(FALSE);
-   }
+    /* output data */
+    Status = MmCopyToCaller(pMonitorInfo, &MonitorInfo, MonitorInfo.cbSize);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("GetMonitorInfo: MmCopyToCaller failed\n");
+        SetLastNtError(Status);
+        RETURN(FALSE);
+    }
 
-   DPRINT("GetMonitorInfo: success\n");
+    DPRINT("GetMonitorInfo: success\n");
 
-   RETURN(TRUE);
+    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT("Leave NtUserGetMonitorInfo, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+    DPRINT("Leave NtUserGetMonitorInfo, ret=%i\n",_ret_);
+    UserLeave();
+    END_CLEANUP;
 }
 
 /* NtUserMonitorFromPoint
@@ -729,42 +712,42 @@ CLEANUP:
 HMONITOR
 APIENTRY
 NtUserMonitorFromPoint(
-   IN POINT point,
-   IN DWORD dwFlags)
+    IN POINT point,
+    IN DWORD dwFlags)
 {
-   INT NumMonitors;
-   RECTL InRect;
-   HMONITOR hMonitor = NULL;
+    INT NumMonitors;
+    RECTL InRect;
+    HMONITOR hMonitor = NULL;
 
-   /* fill inRect */
-   InRect.left = InRect.right = point.x;
-   InRect.top = InRect.bottom = point.y;
+    /* fill inRect */
+    InRect.left = InRect.right = point.x;
+    InRect.top = InRect.bottom = point.y;
 
-   /* find intersecting monitor */
-   NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL, 1, 0);
-   if (NumMonitors < 0)
-   {
-      return (HMONITOR)NULL;
-   }
+    /* find intersecting monitor */
+    NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL, 1, 0);
+    if (NumMonitors < 0)
+    {
+        return (HMONITOR)NULL;
+    }
 
-   if (hMonitor == NULL)
-   {
-      if (dwFlags == MONITOR_DEFAULTTOPRIMARY)
-      {
-         PMONITOR MonitorObj = IntGetPrimaryMonitor();
-         if (MonitorObj)
-            hMonitor = UserHMGetHandle(MonitorObj);
-      }
-      else if (dwFlags == MONITOR_DEFAULTTONEAREST)
-      {
-         NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL,
-                                              1, MONITOR_DEFAULTTONEAREST);
-         /*ASSERT( (numMonitors > 0) && (hMonitor != NULL) );*/
-      }
-      /* else flag is DEFAULTTONULL */
-   }
+    if (hMonitor == NULL)
+    {
+        if (dwFlags == MONITOR_DEFAULTTOPRIMARY)
+        {
+            PMONITOR MonitorObj = IntGetPrimaryMonitor();
+            if (MonitorObj)
+                hMonitor = UserHMGetHandle(MonitorObj);
+        }
+        else if (dwFlags == MONITOR_DEFAULTTONEAREST)
+        {
+            NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL,
+                                                 1, MONITOR_DEFAULTTONEAREST);
+            /*ASSERT( (numMonitors > 0) && (hMonitor != NULL) );*/
+        }
+        /* else flag is DEFAULTTONULL */
+    }
 
-   return hMonitor;
+    return hMonitor;
 }
 
 /* NtUserMonitorFromRect
@@ -787,131 +770,131 @@ NtUserMonitorFromPoint(
 HMONITOR
 APIENTRY
 NtUserMonitorFromRect(
-   IN LPCRECTL pRect,
-   IN DWORD dwFlags)
+    IN LPCRECTL pRect,
+    IN DWORD dwFlags)
 {
-   INT numMonitors, iLargestArea = -1, i;
-   PRECTL rectList;
-   HMONITOR *hMonitorList;
-   HMONITOR hMonitor = NULL;
-   RECTL rect;
-   NTSTATUS status;
+    INT numMonitors, iLargestArea = -1, i;
+    PRECTL rectList;
+    HMONITOR *hMonitorList;
+    HMONITOR hMonitor = NULL;
+    RECTL rect;
+    NTSTATUS status;
 
-   /* get rect */
-   status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
-   if (!NT_SUCCESS(status))
-   {
-      SetLastNtError(status);
-      return (HMONITOR)NULL;
-   }
+    /* get rect */
+    status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
+    if (!NT_SUCCESS(status))
+    {
+        SetLastNtError(status);
+        return (HMONITOR)NULL;
+    }
 
-   /* find intersecting monitors */
-   numMonitors = IntGetMonitorsFromRect(&rect, NULL, NULL, 0, 0);
-   if (numMonitors < 0)
-   {
-      return (HMONITOR)NULL;
-   }
+    /* find intersecting monitors */
+    numMonitors = IntGetMonitorsFromRect(&rect, NULL, NULL, 0, 0);
+    if (numMonitors < 0)
+    {
+        return (HMONITOR)NULL;
+    }
 
-   if (numMonitors == 0)
-   {
-      if (dwFlags == MONITOR_DEFAULTTOPRIMARY)
-      {
-         PMONITOR monitorObj = IntGetPrimaryMonitor();
-         if (monitorObj)
-            return UserHMGetHandle(monitorObj);
-      }
-      else if (dwFlags == MONITOR_DEFAULTTONEAREST)
-      {
-         numMonitors = IntGetMonitorsFromRect(&rect, &hMonitor, NULL,
-                                              1, MONITOR_DEFAULTTONEAREST);
-         if (numMonitors <= 0)
-         {
-            /* error? */
-            return (HMONITOR)NULL;
-         }
+    if (numMonitors == 0)
+    {
+        if (dwFlags == MONITOR_DEFAULTTOPRIMARY)
+        {
+            PMONITOR monitorObj = IntGetPrimaryMonitor();
+            if (monitorObj)
+                return UserHMGetHandle(monitorObj);
+        }
+        else if (dwFlags == MONITOR_DEFAULTTONEAREST)
+        {
+            numMonitors = IntGetMonitorsFromRect(&rect, &hMonitor, NULL,
+                                                 1, MONITOR_DEFAULTTONEAREST);
+            if (numMonitors <= 0)
+            {
+                /* error? */
+                return (HMONITOR)NULL;
+            }
 
-         if (numMonitors > 0)
-            return hMonitor;
-      }
-      /* else flag is DEFAULTTONULL */
-      return (HMONITOR)NULL;
-   }
+            if (numMonitors > 0)
+                return hMonitor;
+        }
+        /* else flag is DEFAULTTONULL */
+        return (HMONITOR)NULL;
+    }
 
-   hMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * numMonitors, USERTAG_MONITORRECTS);
-   if (hMonitorList == NULL)
-   {
-      /* FIXME: SetLastWin32Error? */
-      return (HMONITOR)NULL;
-   }
-   rectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * numMonitors, USERTAG_MONITORRECTS);
-   if (rectList == NULL)
-   {
-      ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-      /* FIXME: SetLastWin32Error? */
-      return (HMONITOR)NULL;
-   }
+    hMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * numMonitors, USERTAG_MONITORRECTS);
+    if (hMonitorList == NULL)
+    {
+        /* FIXME: SetLastWin32Error? */
+        return (HMONITOR)NULL;
+    }
+    rectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * numMonitors, USERTAG_MONITORRECTS);
+    if (rectList == NULL)
+    {
+        ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
+        /* FIXME: SetLastWin32Error? */
+        return (HMONITOR)NULL;
+    }
 
-   /* get intersecting monitors */
-   numMonitors = IntGetMonitorsFromRect(&rect, hMonitorList, rectList,
-                                        numMonitors, 0);
-   if (numMonitors <= 0)
-   {
-      ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-      ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
-      return (HMONITOR)NULL;
-   }
+    /* get intersecting monitors */
+    numMonitors = IntGetMonitorsFromRect(&rect, hMonitorList, rectList,
+                                         numMonitors, 0);
+    if (numMonitors <= 0)
+    {
+        ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
+        ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
+        return (HMONITOR)NULL;
+    }
 
-   /* find largest intersection */
-   for (i = 0; i < numMonitors; i++)
-   {
-      INT area = (rectList[i].right - rectList[i].left) *
-                 (rectList[i].bottom - rectList[i].top);
-      if (area > iLargestArea)
-      {
-         hMonitor = hMonitorList[i];
-      }
-   }
+    /* find largest intersection */
+    for (i = 0; i < numMonitors; i++)
+    {
+        INT area = (rectList[i].right - rectList[i].left) *
+                   (rectList[i].bottom - rectList[i].top);
+        if (area > iLargestArea)
+        {
+            hMonitor = hMonitorList[i];
+        }
+    }
 
-   ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-   ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
+    ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
+    ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
 
-   return hMonitor;
+    return hMonitor;
 }
 
 
 HMONITOR
 APIENTRY
 NtUserMonitorFromWindow(
-   IN HWND hWnd,
-   IN DWORD dwFlags)
+    IN HWND hWnd,
+    IN DWORD dwFlags)
 {
-   PWND Window;
-   HMONITOR hMonitor = NULL;
-   RECTL Rect;
-   DECLARE_RETURN(HMONITOR);
+    PWND Window;
+    HMONITOR hMonitor = NULL;
+    RECTL Rect;
+    DECLARE_RETURN(HMONITOR);
 
-   DPRINT("Enter NtUserMonitorFromWindow\n");
-   UserEnterShared();
+    DPRINT("Enter NtUserMonitorFromWindow\n");
+    UserEnterShared();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
-   {
-      if (dwFlags == MONITOR_DEFAULTTONULL)
-      {
-         RETURN(hMonitor);
-      }
-      IntGetMonitorsFromRect(NULL, &hMonitor, NULL, 1, dwFlags);
-      RETURN(hMonitor);
-   }
+    if (!(Window = UserGetWindowObject(hWnd)))
+    {
+        if (dwFlags == MONITOR_DEFAULTTONULL)
+        {
+            RETURN(hMonitor);
+        }
+        IntGetMonitorsFromRect(NULL, &hMonitor, NULL, 1, dwFlags);
+        RETURN(hMonitor);
+    }
 
-   Rect.left = Rect.right = Window->rcWindow.left;
-   Rect.top = Rect.bottom = Window->rcWindow.bottom;
+    Rect.left = Rect.right = Window->rcWindow.left;
+    Rect.top = Rect.bottom = Window->rcWindow.bottom;
 
-   IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
+    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
 
-   RETURN(hMonitor);
+    RETURN(hMonitor);
 
 CLEANUP:
-   DPRINT("Leave NtUserMonitorFromWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
+    DPRINT("Leave NtUserMonitorFromWindow, ret=%i\n",_ret_);
+    UserLeave();
+    END_CLEANUP;
 }
