@@ -47,16 +47,6 @@ CleanupMonitorImpl()
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-#ifndef MIN
-# define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
-#ifndef MAX
-# define MAX(a, b) ((a) > (b) ? (a) : (b))
-#endif
-#ifndef ABS
-# define ABS(a) ((a) < (0) ? (-(a)) : (a))
-#endif
-
 /* IntCreateMonitorObject
  *
  * Creates a MONITOR
@@ -318,9 +308,9 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
 {
     PMONITOR Monitor, NearestMonitor = NULL, PrimaryMonitor = NULL;
     UINT iCount = 0;
-    LONG iNearestDistanceX = 0x7fffffff, iNearestDistanceY = 0x7fffffff;
+    ULONG iNearestDistance = 0xffffffff;
 
-    /* find monitors which intersect the rectangle */
+    /* Find monitors which intersect the rectangle */
     for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
     {
         RECTL MonitorRect, IntersectionRect;
@@ -337,49 +327,42 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
             PrimaryMonitor = Monitor;
         }
 
-        if (pRect != NULL)
+        /* Check if a rect is given */
+        if (pRect == NULL)
         {
-            BOOL intersects = TRUE;
+            /* No rect given, so use the full monitor rect */
+            IntersectionRect = MonitorRect;
+        }
 
-            /* check if the rect intersects the monitor */
-            if ((pRect->right < MonitorRect.left) || (pRect->left > MonitorRect.right) ||
-                    (pRect->bottom < MonitorRect.top) || (pRect->top > MonitorRect.bottom))
+        /* We have a rect, calculate intersection */
+        else if (!RECTL_bIntersectRect(&IntersectionRect, &MonitorRect, pRect))
+        {
+            /* Rects did not intersect */
+            if (flags == MONITOR_DEFAULTTONEAREST)
             {
-                intersects = FALSE;
-            }
+                ULONG cx, cy, iDistance;
 
-            if (flags == MONITOR_DEFAULTTONEAREST && !intersects)
-            {
-                INT distanceX, distanceY;
+                /* Get x and y distance */
+                cx = min(abs(MonitorRect.left - pRect->right),
+                         abs(pRect->left - MonitorRect.right));
+                cy = min(abs(MonitorRect.top - pRect->bottom),
+                         abs(pRect->top - MonitorRect.bottom));
 
-                distanceX = MIN(ABS(MonitorRect.left - pRect->right),
-                                ABS(pRect->left - MonitorRect.right));
-                distanceY = MIN(ABS(MonitorRect.top - pRect->bottom),
-                                ABS(pRect->top - MonitorRect.bottom));
+                /* Calculate distance square */
+                iDistance = cx * cx + cy * cy;
 
-                if (((distanceX <  iNearestDistanceX) && (distanceY <= iNearestDistanceY)) ||
-                        ((distanceX <= iNearestDistanceX) && (distanceY <  iNearestDistanceY)))
+                /* Check if this is the new nearest monitor */
+                if (iDistance < iNearestDistance)
                 {
-                    iNearestDistanceX = distanceX;
-                    iNearestDistanceY = distanceY;
+                    iNearestDistance = iDistance;
                     NearestMonitor = Monitor;
                 }
             }
 
-            if (!intersects)
-                continue;
-
-            /* calculate intersection */
-            IntersectionRect.left   = MAX(MonitorRect.left,   pRect->left);
-            IntersectionRect.top    = MAX(MonitorRect.top,    pRect->top);
-            IntersectionRect.right  = MIN(MonitorRect.right,  pRect->right);
-            IntersectionRect.bottom = MIN(MonitorRect.bottom, pRect->bottom);
-        }
-        else
-        {
-            IntersectionRect = MonitorRect;
+            continue;
         }
 
+        /* Check if there's space in the buffer */
         if (iCount < listSize)
         {
             if (hMonitorList != NULL)
@@ -387,27 +370,30 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
             if (monitorRectList != NULL)
                 monitorRectList[iCount] = IntersectionRect;
         }
+        
+        /* Increase count of found monitors */
         iCount++;
     }
 
-    if (iCount == 0 && flags == MONITOR_DEFAULTTONEAREST)
+    /* Found nothing intersecting? */
+    if (iCount == 0)
     {
-        if (iCount < listSize)
+        /* Check if we shall default to the nearest monitor */
+        if (flags == MONITOR_DEFAULTTONEAREST && NearestMonitor)
         {
-            if (hMonitorList != NULL)
+            if (hMonitorList && listSize > 0)
                 hMonitorList[iCount] = UserHMGetHandle(NearestMonitor);
+            iCount++;
         }
-        iCount++;
-    }
-    else if (iCount == 0 && flags == MONITOR_DEFAULTTOPRIMARY)
-    {
-        if (iCount < listSize)
+        /* Check if we shall default to the primary monitor */
+        else if (flags == MONITOR_DEFAULTTOPRIMARY && PrimaryMonitor)
         {
-            if (hMonitorList != NULL)
+            if (hMonitorList != NULL && listSize > 0)
                 hMonitorList[iCount] = UserHMGetHandle(PrimaryMonitor);
+            iCount++;
         }
-        iCount++;
     }
+
     return iCount;
 }
 
@@ -719,32 +705,17 @@ NtUserMonitorFromPoint(
     RECTL InRect;
     HMONITOR hMonitor = NULL;
 
-    /* fill inRect */
-    InRect.left = InRect.right = point.x;
-    InRect.top = InRect.bottom = point.y;
+    /* fill inRect (bottom-right exclusive) */
+    InRect.left = point.x;
+    InRect.right = point.x + 1;
+    InRect.top = point.y;
+    InRect.bottom = point.y + 1;
 
     /* find intersecting monitor */
-    NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL, 1, 0);
+    NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL, 1, dwFlags);
     if (NumMonitors < 0)
     {
         return (HMONITOR)NULL;
-    }
-
-    if (hMonitor == NULL)
-    {
-        if (dwFlags == MONITOR_DEFAULTTOPRIMARY)
-        {
-            PMONITOR MonitorObj = IntGetPrimaryMonitor();
-            if (MonitorObj)
-                hMonitor = UserHMGetHandle(MonitorObj);
-        }
-        else if (dwFlags == MONITOR_DEFAULTTONEAREST)
-        {
-            NumMonitors = IntGetMonitorsFromRect(&InRect, &hMonitor, NULL,
-                                                 1, MONITOR_DEFAULTTONEAREST);
-            /*ASSERT( (numMonitors > 0) && (hMonitor != NULL) );*/
-        }
-        /* else flag is DEFAULTTONULL */
     }
 
     return hMonitor;
@@ -773,7 +744,7 @@ NtUserMonitorFromRect(
     IN LPCRECTL pRect,
     IN DWORD dwFlags)
 {
-    INT numMonitors, iLargestArea = -1, i;
+    ULONG numMonitors, iLargestArea = 0, i;
     PRECTL rectList;
     HMONITOR *hMonitorList;
     HMONITOR hMonitor = NULL;
@@ -789,44 +760,24 @@ NtUserMonitorFromRect(
     }
 
     /* find intersecting monitors */
-    numMonitors = IntGetMonitorsFromRect(&rect, NULL, NULL, 0, 0);
-    if (numMonitors < 0)
+    numMonitors = IntGetMonitorsFromRect(&rect, &hMonitor, NULL, 1, dwFlags);
+    if (numMonitors <= 1)
     {
-        return (HMONITOR)NULL;
+        return hMonitor;
     }
 
-    if (numMonitors == 0)
-    {
-        if (dwFlags == MONITOR_DEFAULTTOPRIMARY)
-        {
-            PMONITOR monitorObj = IntGetPrimaryMonitor();
-            if (monitorObj)
-                return UserHMGetHandle(monitorObj);
-        }
-        else if (dwFlags == MONITOR_DEFAULTTONEAREST)
-        {
-            numMonitors = IntGetMonitorsFromRect(&rect, &hMonitor, NULL,
-                                                 1, MONITOR_DEFAULTTONEAREST);
-            if (numMonitors <= 0)
-            {
-                /* error? */
-                return (HMONITOR)NULL;
-            }
-
-            if (numMonitors > 0)
-                return hMonitor;
-        }
-        /* else flag is DEFAULTTONULL */
-        return (HMONITOR)NULL;
-    }
-
-    hMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * numMonitors, USERTAG_MONITORRECTS);
+    hMonitorList = ExAllocatePoolWithTag(PagedPool, 
+                                         sizeof(HMONITOR) * numMonitors,
+                                         USERTAG_MONITORRECTS);
     if (hMonitorList == NULL)
     {
         /* FIXME: SetLastWin32Error? */
         return (HMONITOR)NULL;
     }
-    rectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * numMonitors, USERTAG_MONITORRECTS);
+
+    rectList = ExAllocatePoolWithTag(PagedPool,
+                                     sizeof(RECT) * numMonitors,
+                                     USERTAG_MONITORRECTS);
     if (rectList == NULL)
     {
         ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
@@ -837,7 +788,7 @@ NtUserMonitorFromRect(
     /* get intersecting monitors */
     numMonitors = IntGetMonitorsFromRect(&rect, hMonitorList, rectList,
                                          numMonitors, 0);
-    if (numMonitors <= 0)
+    if (numMonitors == 0)
     {
         ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
         ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
@@ -847,9 +798,9 @@ NtUserMonitorFromRect(
     /* find largest intersection */
     for (i = 0; i < numMonitors; i++)
     {
-        INT area = (rectList[i].right - rectList[i].left) *
-                   (rectList[i].bottom - rectList[i].top);
-        if (area > iLargestArea)
+        ULONG area = (rectList[i].right - rectList[i].left) *
+                     (rectList[i].bottom - rectList[i].top);
+        if (area >= iLargestArea)
         {
             hMonitor = hMonitorList[i];
         }
