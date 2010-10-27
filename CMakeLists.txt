@@ -139,6 +139,8 @@ add_custom_command(
 add_custom_target(livecd DEPENDS ${REACTOS_BINARY_DIR}/livecd.iso)
 add_livecd(${REACTOS_SOURCE_DIR}/boot/bootdata/livecd.ini "" freeldr.ini)
 
+include(baseaddress.cmake)
+
 add_subdirectory(base)
 add_subdirectory(boot)
 add_subdirectory(dll)
