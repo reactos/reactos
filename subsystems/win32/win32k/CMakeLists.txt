@@ -1,12 +1,11 @@
 
-
-
-include_directories(.)
-include_directories(include)
-include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
-include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+include_directories(
+    .
+    include
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/include
+    ${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
 add_definitions(-DLANGPACK)
 add_definitions(-D_WIN32K_)
@@ -178,17 +177,15 @@ add_library(win32k SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/win32k_pch.h.gch
     ${SOURCE})
 
-set_target_properties(win32k PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(win32k kernelmodedriver)
 
 target_link_libraries(win32k
     ${CMAKE_CURRENT_SOURCE_DIR}/win32k_i386.def
     pseh
-    -lntoskrnl
-    -lhal
-    -lftfd
     dxguid
     libcntpr)
 
+add_importlibs(win32k ntoskrnl hal ftfd)
 add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
-add_dependencies(win32k psdk gendib_generated bugcodes subsystem_napi buildno_header)
+add_dependencies(win32k gendib_generated subsystem_napi)
 add_livecd_target(win32k reactos/system32)
