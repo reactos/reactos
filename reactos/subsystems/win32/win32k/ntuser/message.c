@@ -2492,18 +2492,23 @@ NtUserMessageCall(
    UserEnterExclusive();
 
    /* Validate input */
-   if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
+   if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
    {
-      UserLeave();
-      return FALSE;
+      Window = UserGetWindowObject(hWnd);
+      if (!Window)
+      {
+        UserLeave();
+        return FALSE;
+      }
    }
+
    switch(dwType)
    {
       case FNID_DEFWINDOWPROC:
-         UserRefObjectCo(Window, &Ref);
+         if (Window) UserRefObjectCo(Window, &Ref);
          lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
          Ret = TRUE;
-         UserDerefObjectCo(Window);
+         if (Window) UserDerefObjectCo(Window);
       break;
       case FNID_SENDNOTIFYMESSAGE:
          Ret = UserSendNotifyMessage(hWnd, Msg, wParam, lParam);
