@@ -9,7 +9,7 @@
  @ stdcall ClassDeviceControl(ptr ptr)
  @ stdcall ClassIoComplete(ptr ptr ptr)
  @ stdcall ClassIoCompleteAssociated(ptr ptr ptr)
- @ stdcall ClassInterpretSenseInfo(ptr ptr long long long ptr)
+ @ stdcall ClassInterpretSenseInfo(ptr ptr long long long ptr ptr)
  @ stdcall ClassSendDeviceIoControlSynchronous(long ptr ptr long long long ptr)
  @ stdcall ClassSendIrpSynchronous(ptr ptr)
  @ stdcall ClassForwardIrpSynchronous(ptr ptr)
