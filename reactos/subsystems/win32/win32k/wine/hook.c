@@ -28,6 +28,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef NB_HOOKS
+
 struct hook_table;
 
 struct hook

@@ -50,7 +50,7 @@ DECL_HANDLER(get_process_idle_event)
     {
         Process = PsGetProcessWin32Process(ProcessObject);
 
-        if (Process->idle_event && ProcessObject != PsGetCurrentProcess())
+        if (Process && Process->idle_event && ProcessObject != PsGetCurrentProcess())
         {
             /* Get a handle to the idle event (in another process) */
             Status = ObOpenObjectByPointer(Process->idle_event,
