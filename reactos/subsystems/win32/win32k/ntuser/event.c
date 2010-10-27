@@ -299,17 +299,21 @@ NtUserNotifyWinEvent(
    UserEnterExclusive();
 
    /* Validate input */
-   if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
+   if (hWnd && (hWnd != INVALID_HANDLE_VALUE))
    {
-      UserLeave();
-      return;
+     Window = UserGetWindowObject(hWnd);
+     if (!Window)
+     {
+       UserLeave();
+       return;
+     }
    }
 
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
-      UserRefObjectCo(Window, &Ref);
+      if (Window) UserRefObjectCo(Window, &Ref);
       IntNotifyWinEvent( Event, Window, idObject, idChild, WEF_SETBYWNDPTI);
-      UserDerefObjectCo(Window);
+      if (Window) UserDerefObjectCo(Window);
    }
    UserLeave();
 }
