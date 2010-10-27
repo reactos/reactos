@@ -108,12 +108,12 @@ file(MAKE_DIRECTORY "${BOOTCD_DIR}/loader")
 file(MAKE_DIRECTORY "${BOOTCD_DIR}/reactos")
 file(MAKE_DIRECTORY "${BOOTCD_DIR}/reactos/system32")
 
-add_custom_command(
-    OUTPUT ${REACTOS_BINARY_DIR}/minicd.iso
+add_custom_target(minicd 
     COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${BOOTCD_DIR} REACTOS ${REACTOS_BINARY_DIR}/minicd.iso
     DEPENDS native-cdmake)
-add_custom_target(minicd DEPENDS ${REACTOS_BINARY_DIR}/minicd.iso)
+
 add_minicd(${REACTOS_SOURCE_DIR}/boot/bootdata/bootcd.ini "" freeldr.ini)
+set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/minicd.iso)
 
 #livecd target
 set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
@@ -132,12 +132,11 @@ file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/fonts")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32")
 file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32/config")
 
-add_custom_command(
-    OUTPUT ${REACTOS_BINARY_DIR}/livecd.iso
+add_custom_target(livecd
     COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${LIVECD_DIR} REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
     DEPENDS native-cdmake)
-add_custom_target(livecd DEPENDS ${REACTOS_BINARY_DIR}/livecd.iso)
 add_livecd(${REACTOS_SOURCE_DIR}/boot/bootdata/livecd.ini "" freeldr.ini)
+set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/livecd.iso)
 
 include(baseaddress.cmake)
 

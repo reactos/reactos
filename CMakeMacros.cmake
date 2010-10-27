@@ -125,23 +125,19 @@ MACRO(add_minicd_target _targetname _dir) # optional parameter: _nameoncd
     	set(_nameoncd ${ARGN})
     endif()
 
-    add_custom_command(
-        OUTPUT ${BOOTCD_DIR}/${_dir}/${_nameoncd}        
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd})
+    add_custom_target(${_targetname}_minicd 
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd}
+        DEPENDS ${_targetname})
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${BOOTCD_DIR}/${_dir}/${_nameoncd})
 
-    add_custom_target(${_targetname}_minicd DEPENDS ${BOOTCD_DIR}/${_dir}/${_nameoncd})
-
-    add_dependencies(${_targetname}_minicd ${_targetname})
     add_dependencies(minicd ${_targetname}_minicd)
-ENDMACRO(add_minicd_target _targetname _dir _nameoncd)
+ENDMACRO(add_minicd_target)
 
 MACRO(add_minicd FILENAME _dir _nameoncd)
-    add_custom_command(
-        OUTPUT ${BOOTCD_DIR}/${_dir}/${_nameoncd}
-        DEPENDS ${FILENAME}
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd})
-        
-    add_custom_target(${_nameoncd}_minicd DEPENDS ${BOOTCD_DIR}/${_dir}/${_nameoncd})
+    add_custom_target(${_nameoncd}_minicd
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd}
+        DEPENDS ${FILENAME})
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${BOOTCD_DIR}/${_dir}/${_nameoncd})
     
     add_dependencies(minicd ${_nameoncd}_minicd)
 ENDMACRO(add_minicd)
@@ -161,24 +157,20 @@ MACRO(add_livecd_target _targetname _dir )# optional parameter : _nameoncd
     	set(_nameoncd ${ARGN})
     endif()
 
-    add_custom_command(
-        OUTPUT ${LIVECD_DIR}/${_dir}/${_nameoncd}        
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd})
-        
-    add_custom_target(${_targetname}_livecd DEPENDS ${LIVECD_DIR}/${_dir}/${_nameoncd})
+    add_custom_target(${_targetname}_livecd 
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd}
+        DEPENDS ${_targetname})
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${LIVECD_DIR}/${_dir}/${_nameoncd})
 
-    add_dependencies(${_targetname}_livecd ${_targetname})
     add_dependencies(livecd ${_targetname}_livecd)
-ENDMACRO(add_livecd_target _targetname _dir _nameoncd)
+ENDMACRO(add_livecd_target)
 
 MACRO(add_livecd FILENAME _dir _nameoncd)
-    add_custom_command(
-        OUTPUT ${LIVECD_DIR}/${_dir}/${_nameoncd}
-        DEPENDS ${FILENAME}
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd})
-        
-    add_custom_target(${_nameoncd}_livecd DEPENDS ${LIVECD_DIR}/${_dir}/${_nameoncd})
-    
+    add_custom_target(${_nameoncd}_livecd
+        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd}
+        DEPENDS ${FILENAME})
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${LIVECD_DIR}/${_dir}/${_nameoncd})
+
     add_dependencies(livecd ${_nameoncd}_livecd)
 ENDMACRO(add_livecd)
 
