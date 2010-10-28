@@ -1,26 +1,80 @@
 
+ADD_TYPELIB(msxml3_v1 msxml3_v1.idl)
+add_dependencies(msxml3_v1 stdole2)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
+add_definitions(-D_WIN32_WINNT=0x601)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_WINE
+    -DLIBXML_STATIC
+    -D_DLL
+    -D__USE_CRTIMP)
 
-spec2def(netcfgx ${CMAKE_CURRENT_SOURCE_DIR}/netcfgx.spec ${CMAKE_CURRENT_BINARY_DIR}/netcfgx.def)
+if(MSVC)
+add_definitions(/FIwine/typeof.h)
+endif(MSVC)
 
-add_library(netcfgx SHARED
-    netcfgx.c
-    classfactory.c
-    netcfg_iface.c
-    inetcfgcomp_iface.c
-    tcpipconf_notify.c
-    netcfgx.rc)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-set_module_type(netcfgx win32dll)
+spec2def(msxml3 ${CMAKE_CURRENT_SOURCE_DIR}/msxml3.spec ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
 
-target_link_libraries(netcfgx
-    ${CMAKE_CURRENT_BINARY_DIR}/netcfgx.def
+add_library(msxml3 SHARED
+    attribute.c
+    comment.c
+    domdoc.c
+    element.c
+    factory.c
+    main.c
+    httprequest.c
+    node.c
+    nodelist.c
+    nodemap.c
+    parseerror.c
+    pi.c
+    queryresult.c
+    regsvr.c
+    schema.c
+    text.c
+    uuid.c
+    xmldoc.c
+    xmlelem.c
+    saxreader.c
+    bsc.c
+    cdata.c
+    dispex.c
+    docfrag.c
+    domimpl.c
+    entityref.c
+    version.rc)
+
+set_module_type(msxml3 win32dll)
+
+target_link_libraries(msxml3
+    ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def
+    libxml2
     uuid
-    wine)
+    wine
+    wineldr)
 
-add_importlibs(netcfgx rpcrt4 setupapi advapi32 iphlpapi ole32 user32 comctl32 ws2_32 ntdll)
-add_dependencies(netcfgx netcfgx_def)
+add_importlibs(msxml3
+    msvcrt
+    urlmon
+    wininet
+    ws2_32
+    comctl32
+    shell32
+    shlwapi
+    cabinet
+    oleaut32
+    ole32
+    version
+    user32
+    gdi32
+    advapi32
+    kernel32
+    ntdll)
+
+add_dependencies(msxml3 msxml3_v1 msxml3_def)
 add_livecd_target(msxml3 reactos/system32)

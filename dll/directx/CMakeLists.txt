@@ -20,5 +20,5 @@ add_subdirectory(msdmo)
 #add_subdirectory(msdvbnp)
 #add_subdirectory(msvidctl)
 add_subdirectory(qedit)
-#add_subdirectory(quartz) #idl
+add_subdirectory(quartz)
 #add_subdirectory(wine)

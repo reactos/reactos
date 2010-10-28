@@ -12,7 +12,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libutil)
 
 spec2def(glu32 ${CMAKE_CURRENT_SOURCE_DIR}/glu32.spec ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
-list(APPEND SOURCE
+add_library(glu32 SHARED
     libnurbs/interface/bezierEval.cc
     libnurbs/interface/bezierPatch.cc
     libnurbs/interface/bezierPatchMesh.cc
@@ -103,12 +103,11 @@ list(APPEND SOURCE
     libutil/quad.c
     libutil/registry.c)
 
-add_library(glu32 SHARED ${SOURCE})
-
 set_entrypoint(glu32 0)
 
 target_link_libraries(glu32 ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
-add_importlibs(glu32
+add_importlibs(
+    glu32
     gcc
     msvcrt
     opengl32
@@ -116,5 +115,5 @@ add_importlibs(glu32
     kernel32
     ntdll)
 
-add_dependencies(glu32 glu32_def psdk buildno_header)
+add_dependencies(glu32 glu32_def)
 add_livecd_target(glu32 reactos/system32)

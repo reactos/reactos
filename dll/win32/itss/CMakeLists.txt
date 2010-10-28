@@ -1,6 +1,5 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(-D__WINESRC__ -D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(itss ${CMAKE_CURRENT_SOURCE_DIR}/itss.spec ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
@@ -25,6 +24,7 @@ add_importlibs(itss
     urlmon
     shlwapi
     ole32
+    kernel32
     ntdll)
 
 add_dependencies(itss itss_def wineheaders)

@@ -21,7 +21,13 @@ target_link_libraries(winemp3.acm
     ${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def
     mingw_common
     wine
-    mpg123)
+    libmpg123)
 
-add_importlibs(winemp3.acm msvcrt winmm user32)
+add_importlibs(winemp3.acm
+    msvcrt
+    winmm
+    user32
+    kernel32
+    ntdll)
+
 add_dependencies(winemp3.acm winemp3.acm_def psdk)

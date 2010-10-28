@@ -15,7 +15,8 @@ spec2def(sti ${CMAKE_CURRENT_SOURCE_DIR}/sti.spec ${CMAKE_CURRENT_BINARY_DIR}/st
 add_library(sti SHARED
     regsvr.c
     sti.c
-    sti_main.c)
+    sti_main.c
+    sti_wia.idl)
 
 set_entrypoint(sti 0)
 
@@ -35,3 +36,6 @@ add_importlibs(sti
     ntdll)
 
 add_dependencies(sti sti_def)
+
+rpcproxy(sti sti_wia.idl)
+add_livecd_target(sti reactos/system32)

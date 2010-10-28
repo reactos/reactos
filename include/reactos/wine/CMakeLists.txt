@@ -1,3 +1,6 @@
+
+ADD_INTERFACE_DEFINITIONS(wineheaders itss.idl wined3d.idl)
+
 list(APPEND SOURCE
     epm.idl
     irot.idl)
