@@ -25,4 +25,3 @@ Language=English
 Removal of the program "%1" is called.
 .
 
-; EOF
