@@ -74,6 +74,7 @@
 #include "winerror.h"
 #include "win.h"
 #include "user_private.h"
+#include "wine/rosuser.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
@@ -411,6 +412,21 @@ LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL uni
     DWORD_PTR ret = 0;
 
     USER_CheckNotLock();
+
+    if (id == WH_SHELL)
+    {
+        HWND *hook_windows = RosUserBuildShellHookHwndList();
+        if (hook_windows)
+        {
+            INT wm_shellhook = RegisterWindowMessageW(L"SHELLHOOK");
+            HWND* cursor = hook_windows;
+
+            for (; *cursor; cursor++)
+                PostMessage(*cursor, wm_shellhook, code, wparam);
+
+            HeapFree(GetProcessHeap(), 0, hook_windows);
+        }
+    }
 
     if (!HOOK_IsHooked( id ))
     {
@@ -896,4 +912,21 @@ BOOL WINAPI IsWinEventHookInstalled(DWORD dwEvent)
     /* FIXME: Needed by Office 2007 installer */
     WARN("(%d)-stub!\n", dwEvent);
     return TRUE;
+}
+
+/***********************************************************************
+ *           RegisterShellHookWindow			[USER32.@]
+ */
+BOOL WINAPI RegisterShellHookWindow ( HWND hWnd )
+{
+    return RosUserRegisterShellHookWindow( hWnd );
+}
+
+
+/***********************************************************************
+ *           DeregisterShellHookWindow			[USER32.@]
+ */
+HRESULT WINAPI DeregisterShellHookWindow ( HWND hWnd )
+{
+    return RosUserDeRegisterShellHookWindow( hWnd );
 }

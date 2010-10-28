@@ -437,26 +437,6 @@ void WINAPI RegisterSystemThread(DWORD flags, DWORD reserved)
     FIXME("(%08x, %08x)\n", flags, reserved);
 }
 
-/***********************************************************************
- *           RegisterShellHookWindow			[USER32.@]
- */
-BOOL WINAPI RegisterShellHookWindow ( HWND hWnd )
-{
-    FIXME("(%p): stub\n", hWnd);
-    return 0;
-}
-
-
-/***********************************************************************
- *           DeregisterShellHookWindow			[USER32.@]
- */
-HRESULT WINAPI DeregisterShellHookWindow ( HWND u )
-{
-    FIXME("0x%08x stub\n",u);
-    return 0;
-
-}
-
 
 /***********************************************************************
  *           RegisterTasklist   			[USER32.@]

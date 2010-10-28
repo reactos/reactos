@@ -153,6 +153,9 @@ static BOOL set_active_window( HWND hwnd, HWND *prev, BOOL mouse, BOOL focus )
         SendMessageW( hwnd, WM_ACTIVATE,
                       MAKEWPARAM( mouse ? WA_CLICKACTIVE : WA_ACTIVE, IsIconic(hwnd) ),
                       (LPARAM)previous );
+
+        /* Call WH_SHELL hook */
+        HOOK_CallHooks( WH_SHELL, HSHELL_WINDOWACTIVATED, (WPARAM)hwnd, 0, TRUE );
     }
 
     /* now change focus if necessary */
