@@ -82,6 +82,9 @@ RosUserGetKeyNameText              3
 RosUserToUnicodeEx                 7
 RosUserMapVirtualKeyEx             4
 RosUserGetAsyncKeyState            1
+RosUserRegisterShellHookWindow     1
+RosUserDeRegisterShellHookWindow   1
+RosUserBuildShellHookHwndList      0
 SwmAddWindow                       4
 SwmAddDesktopWindow                3
 SwmRemoveWindow                    1

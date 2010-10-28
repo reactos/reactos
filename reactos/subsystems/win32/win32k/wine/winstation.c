@@ -222,6 +222,7 @@ static struct desktop *create_desktop( const struct unicode_str *name, unsigned 
             desktop->close_timeout = NULL;
             desktop->users = 0;
             list_add_tail( &winstation->desktops, &desktop->entry );
+            list_init( &desktop->shell_hooks );
         }
     }
     ExFreePool( full_name );

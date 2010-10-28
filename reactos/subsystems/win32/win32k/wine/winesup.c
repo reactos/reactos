@@ -11,6 +11,7 @@
 #include <win32k.h>
 
 #include "object.h"
+#include "user.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -19,6 +20,16 @@ timeout_t current_time = 0ULL;
 int debug_level = 0;
 
 unsigned int global_error;
+
+typedef struct _SHELL_HOOK_WINDOW
+{
+  struct list ListEntry;
+  HWND hWnd;
+} SHELL_HOOK_WINDOW, *PSHELL_HOOK_WINDOW;
+
+static struct list global_shell_hooks = LIST_INIT(global_shell_hooks);
+
+struct desktop *get_desktop_obj( PPROCESSINFO process, obj_handle_t handle, unsigned int access );
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -176,6 +187,143 @@ SystemTimeToUnixTime(const PLARGE_INTEGER SystemTime)
     ULargeInt.QuadPart -= DIFFTIME;
 
     return ULargeInt.QuadPart / 10000000;
+}
+
+BOOL NTAPI
+RosUserRegisterShellHookWindow(HWND hWnd)
+{
+    //PPROCESSINFO process = PsGetCurrentProcessWin32Process();
+    //struct desktop *desktop;
+    struct list *entry, *shell_hooks;
+    PSHELL_HOOK_WINDOW hook_entry;
+
+    DPRINT("UserRegisterShellHookWindow\n");
+
+    UserEnterExclusive();
+
+    //if (process->desktop && (desktop = get_desktop_obj( process, process->desktop, 0 )))
+    {
+        shell_hooks = &global_shell_hooks;
+
+        /* First deregister the window, so we can be sure it's never twice in the
+        * list.
+        */
+        LIST_FOR_EACH(entry, shell_hooks)
+        {
+            hook_entry = LIST_ENTRY( entry, SHELL_HOOK_WINDOW, ListEntry );
+
+            if (hook_entry->hWnd == hWnd)
+            {
+                list_remove(&hook_entry->ListEntry);
+                ExFreePool(hook_entry);
+                //release_object( desktop );
+                break;
+            }
+        }
+
+        hook_entry = ExAllocatePool(PagedPool, sizeof(SHELL_HOOK_WINDOW));
+
+        if (!hook_entry)
+        {
+            //release_object( desktop );
+            UserLeave();
+            return FALSE;
+        }
+
+        hook_entry->hWnd = hWnd;
+        list_add_tail(shell_hooks, &hook_entry->ListEntry);
+
+        //release_object( desktop );
+    }
+
+    UserLeave();
+
+    return TRUE;
+}
+
+BOOL NTAPI
+RosUserDeRegisterShellHookWindow(HWND hWnd)
+{
+    //PPROCESSINFO process = PsGetCurrentProcessWin32Process();
+    //struct desktop *desktop;
+    struct list *entry, *shell_hooks;
+    PSHELL_HOOK_WINDOW hook_entry;
+
+    UserEnterExclusive();
+
+    //if (process->desktop && (desktop = get_desktop_obj( process, process->desktop, 0 )))
+    {
+        shell_hooks = &global_shell_hooks;
+
+        LIST_FOR_EACH(entry, shell_hooks)
+        {
+            hook_entry = LIST_ENTRY( entry, SHELL_HOOK_WINDOW, ListEntry );
+
+            if (hook_entry->hWnd == hWnd)
+            {
+                list_remove(&hook_entry->ListEntry);
+                ExFreePool(hook_entry);
+                //release_object( desktop );
+                UserLeave();
+                return TRUE;
+            }
+        }
+
+        //release_object( desktop );
+    }
+
+    UserLeave();
+    return FALSE;
+}
+
+HWND * NTAPI
+RosUserBuildShellHookHwndList()
+{
+    //PPROCESSINFO process = PsGetCurrentProcessWin32Process();
+    //struct desktop *desktop;
+    struct list *entry, *shell_hooks;
+    PSHELL_HOOK_WINDOW hook_entry;
+    ULONG entries=0;
+    HWND* list = NULL;
+
+    UserEnterExclusive();
+
+    //if (process->desktop && (desktop = get_desktop_obj( process, process->desktop, 0 )))
+    {
+        shell_hooks = &global_shell_hooks;
+
+        /* fixme: if we save nb elements in desktop, we dont have to loop to find nb entries */
+        LIST_FOR_EACH(entry, shell_hooks)
+            entries++;
+
+        if (!entries)
+        {
+            //release_object( desktop );
+            UserLeave();
+            return NULL;
+        }
+
+        list = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(HWND) * (entries + 1)); /* alloc one extra for nullterm */
+        if (list)
+        {
+            HWND* cursor = list;
+
+            LIST_FOR_EACH(entry, shell_hooks)
+            {
+                hook_entry = LIST_ENTRY( entry, SHELL_HOOK_WINDOW, ListEntry );
+
+                *cursor++ = hook_entry->hWnd;
+            }
+
+            *cursor = NULL; /* nullterm list */
+        }
+
+        //release_object( desktop );
+    }
+
+    UserLeave();
+
+    return list;
 }
 
 /* EOF */

@@ -62,6 +62,7 @@ struct desktop
     struct hook_table   *global_hooks;   /* table of global hooks on this desktop */
     struct timeout_user *close_timeout;  /* timeout before closing the desktop */
     unsigned int         users;          /* processes and threads using this desktop */
+    struct list          shell_hooks;    /* list of registered shell hooks */
 };
 
 struct region
