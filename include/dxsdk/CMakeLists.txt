@@ -1,37 +1,27 @@
 
-MACRO (MACRO_ADD_DXSDK_INTERFACES)
-
- FOREACH(_in_FILE ${ARGN})
-
-   GET_FILENAME_COMPONENT(FILE ${_in_FILE} NAME_WE)
-
-   ADD_CUSTOM_COMMAND(
-     OUTPUT ${REACTOS_BINARY_DIR}/include/dxsdk/${FILE}.h
-     COMMAND native-widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -h -H ${REACTOS_BINARY_DIR}/include/dxsdk/${FILE}.h ${REACTOS_SOURCE_DIR}/include/dxsdk/${FILE}.idl
-     DEPENDS native-widl
-   )
-
-   SET_SOURCE_FILES_PROPERTIES(
-     ${REACTOS_BINARY_DIR}/include/dxsdk/${FILE}.h
-     PROPERTIES
-     GENERATED TRUE
-   )
-
-    LIST(APPEND DXSDK_HEADERS ${REACTOS_BINARY_DIR}/include/dxsdk/${FILE}.h)  
-
- ENDFOREACH(_in_FILE ${ARGN})
-
-ENDMACRO (MACRO_ADD_DXSDK_INTERFACES)
-
-file(GLOB_RECURSE SOURCE "*.idl")
-
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/dxsdk/axcore.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/dxsdk/axextend.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/dxsdk/devenum.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/dxsdk/dshowasf.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/dxsdk/dyngraph.idl)
-LIST(REMOVE_ITEM SOURCE ${REACTOS_SOURCE_DIR}/include/dxsdk/vmrender.idl)
-
-MACRO_ADD_DXSDK_INTERFACES(${SOURCE})
-
-ADD_CUSTOM_TARGET(dxsdk ALL DEPENDS ${DXSDK_HEADERS})
+LIST(APPEND SOURCE
+    amstream.idl
+    amvideo.idl
+    austream.idl
+    #axcore.idl
+    #axextend.idl
+    bdatif.idl
+    ddstream.idl
+    devenum.idl
+    dmodshow.idl
+    #dshowasf.idl
+    #dyngraph.idl
+    mediaobj.idl
+    medparam.idl
+    mixerocx.idl
+    mmstream.idl
+    qedit.idl
+    regbag.idl
+    strmif.idl
+    tvratings.idl
+    vidcap.idl
+    videoacc.idl
+    #vmrender.idl
+)
+    
+ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
