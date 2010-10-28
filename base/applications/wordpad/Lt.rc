@@ -81,9 +81,9 @@ BEGIN
     POPUP "F&ormatas"
     BEGIN
         MENUITEM "&Šriftas...",                     ID_FONTSETTINGS
-        MENUITEM "&Ženkleliai"                      ID_BULLET
-        MENUITEM "&Pastraipa..."                    ID_PARAFORMAT
-        MENUITEM "&Tabuliavimo žymės..."            ID_TABSTOPS
+        MENUITEM "&Ženkleliai",                     ID_BULLET
+        MENUITEM "&Pastraipa...",                   ID_PARAFORMAT
+        MENUITEM "&Tabuliavimo žymės...",           ID_TABSTOPS
         POPUP "&Fonas"
         BEGIN
             MENUITEM "&Sistemos\tCtrl+1",           ID_BACK_1
@@ -92,7 +92,7 @@ BEGIN
     END
     POPUP "&Žinynas"
     BEGIN
-        MENUITEM "&Apie Wine Wordpad"               ID_ABOUT
+        MENUITEM "&Apie Wine Wordpad",              ID_ABOUT
     END
 END
 
@@ -104,8 +104,8 @@ BEGIN
         MENUITEM "&Kopijuoti",   ID_EDIT_COPY
         MENUITEM "Į&dėti",       ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Ženkleliai"   ID_BULLET
-        MENUITEM "&Pastraipa..." ID_PARAFORMAT
+        MENUITEM "&Ženkleliai",  ID_BULLET
+        MENUITEM "&Pastraipa...",ID_PARAFORMAT
     END
 END
 
@@ -113,23 +113,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Juoda"          ID_COLOR_BLACK
-        MENUITEM "Kaštoninė"      ID_COLOR_MAROON
-        MENUITEM "Žalia"          ID_COLOR_GREEN
-        MENUITEM "Alyvinė"        ID_COLOR_OLIVE
-        MENUITEM "Ultramarinas"   ID_COLOR_NAVY
-        MENUITEM "Purpurinė"      ID_COLOR_PURPLE
-        MENUITEM "Neutrali ciano" ID_COLOR_TEAL
-        MENUITEM "Pilka"          ID_COLOR_GRAY
-        MENUITEM "Sidabrinė"      ID_COLOR_SILVER
-        MENUITEM "Raudona"        ID_COLOR_RED
-        MENUITEM "Gelsvai žalsva" ID_COLOR_LIME
-        MENUITEM "Geltona"        ID_COLOR_YELLOW
-        MENUITEM "Mėlyna"         ID_COLOR_BLUE
-        MENUITEM "Fuksija"        ID_COLOR_FUCHSIA
-        MENUITEM "Žydra"          ID_COLOR_AQUA
-        MENUITEM "Balta"          ID_COLOR_WHITE
-        MENUITEM "Automatic"      ID_COLOR_AUTOMATIC
+        MENUITEM "Juoda",         ID_COLOR_BLACK
+        MENUITEM "Kaštoninė",     ID_COLOR_MAROON
+        MENUITEM "Žalia",         ID_COLOR_GREEN
+        MENUITEM "Alyvinė",       ID_COLOR_OLIVE
+        MENUITEM "Ultramarinas",  ID_COLOR_NAVY
+        MENUITEM "Purpurinė",     ID_COLOR_PURPLE
+        MENUITEM "Neutrali ciano",ID_COLOR_TEAL
+        MENUITEM "Pilka",         ID_COLOR_GRAY
+        MENUITEM "Sidabrinė",     ID_COLOR_SILVER
+        MENUITEM "Raudona",       ID_COLOR_RED
+        MENUITEM "Gelsvai žalsva",ID_COLOR_LIME
+        MENUITEM "Geltona",       ID_COLOR_YELLOW
+        MENUITEM "Mėlyna",        ID_COLOR_BLUE
+        MENUITEM "Fuksija",       ID_COLOR_FUCHSIA
+        MENUITEM "Žydra",         ID_COLOR_AQUA
+        MENUITEM "Balta",         ID_COLOR_WHITE
+        MENUITEM "Automatic",     ID_COLOR_AUTOMATIC
     END
 END
 
@@ -157,7 +157,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Pastraipos formatas"
+CAPTION "Pastraipos formatas"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Įtrauka", -1, 10, 10, 120, 68
@@ -175,7 +175,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Tabuliavimo žymės"
+CAPTION "Tabuliavimo žymės"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tabuliavimo pozicija", -1, 10, 10, 120, 90
@@ -189,7 +189,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Eilutės skaidymas", -1, 10, 10, 130, 85

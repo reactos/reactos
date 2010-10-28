@@ -27,7 +27,7 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "&Bestand"
     BEGIN
-        MENUITEM "&Nieuw...\tCtrl+N"      ID_FILE_NEW
+        MENUITEM "&Nieuw...\tCtrl+N",     ID_FILE_NEW
         MENUITEM "&Openen...\tCtrl+O",    ID_FILE_OPEN
         MENUITEM "Op&slaan\tCtrl+S",      ID_FILE_SAVE
         MENUITEM "Ops&laan als...",       ID_FILE_SAVEAS
@@ -81,9 +81,9 @@ BEGIN
     POPUP "&Opmaak"
     BEGIN
         MENUITEM "&Lettertype...",               ID_FONTSETTINGS
-        MENUITEM "&Bullet points"                ID_BULLET
-        MENUITEM "&Paragraaf..."                 ID_PARAFORMAT
-        MENUITEM "&Tabs..."                      ID_TABSTOPS
+        MENUITEM "&Bullet points",               ID_BULLET
+        MENUITEM "&Paragraaf...",                ID_PARAFORMAT
+        MENUITEM "&Tabs...",                     ID_TABSTOPS
         POPUP "&Achtergrond"
         BEGIN
             MENUITEM "&Systeem\tCtrl+1",   ID_BACK_1
@@ -92,7 +92,7 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&Over Wine Wordpad"       ID_ABOUT
+        MENUITEM "&Over Wine Wordpad",      ID_ABOUT
     END
 END
 
@@ -104,7 +104,7 @@ BEGIN
         MENUITEM "&Kopiëren",            ID_EDIT_COPY
         MENUITEM "&Plakken",            ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bullet points"        ID_BULLET
+        MENUITEM "&Bullet points",        ID_BULLET
         MENUITEM "&Paragraaf...",        ID_PARAFORMAT
     END
 END
@@ -113,23 +113,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Zwart"         ID_COLOR_BLACK
-        MENUITEM "Kastanjebruin" ID_COLOR_MAROON
-        MENUITEM "Groen"         ID_COLOR_GREEN
-        MENUITEM "Olijfgroen"    ID_COLOR_OLIVE
-        MENUITEM "Marineblauw"   ID_COLOR_NAVY
-        MENUITEM "Paars"         ID_COLOR_PURPLE
-        MENUITEM "Groenblauw"    ID_COLOR_TEAL
-        MENUITEM "Grijs"         ID_COLOR_GRAY
-        MENUITEM "Zilver"        ID_COLOR_SILVER
-        MENUITEM "Rood"          ID_COLOR_RED
-        MENUITEM "Lichtgroen"    ID_COLOR_LIME
-        MENUITEM "Geel"          ID_COLOR_YELLOW
-        MENUITEM "Blauw"         ID_COLOR_BLUE
-        MENUITEM "Fuchsiapaars"  ID_COLOR_FUCHSIA
-        MENUITEM "Zeeblauw"      ID_COLOR_AQUA
-        MENUITEM "Wit"           ID_COLOR_WHITE
-        MENUITEM "Automatisch"     ID_COLOR_AUTOMATIC
+        MENUITEM "Zwart",        ID_COLOR_BLACK
+        MENUITEM "Kastanjebruin",ID_COLOR_MAROON
+        MENUITEM "Groen",        ID_COLOR_GREEN
+        MENUITEM "Olijfgroen",   ID_COLOR_OLIVE
+        MENUITEM "Marineblauw",  ID_COLOR_NAVY
+        MENUITEM "Paars",        ID_COLOR_PURPLE
+        MENUITEM "Groenblauw",   ID_COLOR_TEAL
+        MENUITEM "Grijs",        ID_COLOR_GRAY
+        MENUITEM "Zilver",       ID_COLOR_SILVER
+        MENUITEM "Rood",         ID_COLOR_RED
+        MENUITEM "Lichtgroen",   ID_COLOR_LIME
+        MENUITEM "Geel",         ID_COLOR_YELLOW
+        MENUITEM "Blauw",        ID_COLOR_BLUE
+        MENUITEM "Fuchsiapaars", ID_COLOR_FUCHSIA
+        MENUITEM "Zeeblauw",     ID_COLOR_AQUA
+        MENUITEM "Wit",          ID_COLOR_WHITE
+        MENUITEM "Automatisch",  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -157,7 +157,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Paragraaf formaat"
+CAPTION "Paragraaf formaat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Inspringing", -1, 10, 10, 120, 68
@@ -175,7 +175,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Tabs"
+CAPTION "Tabs"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tab-einden", -1, 10, 10, 120, 90
@@ -189,7 +189,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Regel afbreken", -1, 10, 10, 130, 85

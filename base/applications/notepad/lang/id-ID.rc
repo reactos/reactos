@@ -88,7 +88,7 @@ BEGIN
         MENUITEM "&Cari...",              CMD_HELP_SEARCH
         MENUITEM "&Bantuan pada bantuan", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Tentang"               CMD_ABOUT
+        MENUITEM "&Tentang",              CMD_ABOUT
         MENUITEM "Inf&o",                 CMD_ABOUT_WINE
     END
 END

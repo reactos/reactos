@@ -86,7 +86,7 @@ BEGIN
         MENUITEM "&Etsi...",           CMD_HELP_SEARCH
         MENUITEM "Apua &Opastuksesta", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&About"              CMD_ABOUT
+        MENUITEM "&About",             CMD_ABOUT
         MENUITEM "Inf&o...",           CMD_ABOUT_WINE
     END
 END

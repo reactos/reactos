@@ -71,7 +71,7 @@ BEGIN
         MENUITEM "&Փնտրել...",                  CMD_HELP_SEARCH
         MENUITEM "&Օգնությոն օգտագործում",      CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Ծրագրի մասին"                CMD_ABOUT
+        MENUITEM "&Ծրագրի մասին",               CMD_ABOUT
         MENUITEM "&Տեղեկություն...",            CMD_ABOUT_WINE
     END
 END

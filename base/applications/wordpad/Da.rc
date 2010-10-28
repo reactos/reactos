@@ -81,9 +81,9 @@ BEGIN
     POPUP "F&ormat"
     BEGIN
         MENUITEM "&Skrifttype...",            ID_FONTSETTINGS
-        MENUITEM "&Bullets"                   ID_BULLET
-        MENUITEM "&Afsnit..."                 ID_PARAFORMAT
-        MENUITEM "&Tabulatorer..."            ID_TABSTOPS
+        MENUITEM "&Bullets",                  ID_BULLET
+        MENUITEM "&Afsnit...",                ID_PARAFORMAT
+        MENUITEM "&Tabulatorer...",           ID_TABSTOPS
         POPUP "&Baggrund"
         BEGIN
             MENUITEM "&System\tCtrl+1",       ID_BACK_1
@@ -92,7 +92,7 @@ BEGIN
     END
     POPUP "&Hjælp"
     BEGIN
-        MENUITEM "&Om Wine Wordpad"           ID_ABOUT
+        MENUITEM "&Om Wine Wordpad",          ID_ABOUT
     END
 END
 
@@ -100,12 +100,12 @@ IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Klip"                ID_EDIT_CUT
-        MENUITEM "K&opier"              ID_EDIT_COPY
-        MENUITEM "&Indsæt"              ID_EDIT_PASTE
+        MENUITEM "&Klip",               ID_EDIT_CUT
+        MENUITEM "K&opier",             ID_EDIT_COPY
+        MENUITEM "&Indsæt",             ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Bullets"             ID_BULLET
-        MENUITEM "&Afsnit..."           ID_PARAFORMAT
+        MENUITEM "&Bullets",            ID_BULLET
+        MENUITEM "&Afsnit...",          ID_PARAFORMAT
     END
 END
 
@@ -116,20 +116,20 @@ BEGIN
         MENUITEM "Sort",      ID_COLOR_BLACK
         MENUITEM "Mørkerød",  ID_COLOR_MAROON
         MENUITEM "Grøn",      ID_COLOR_GREEN
-        MENUITEM "Oliven"     ID_COLOR_OLIVE
-        MENUITEM "Navy"       ID_COLOR_NAVY
-        MENUITEM "Lilla"      ID_COLOR_PURPLE
-        MENUITEM "Teal"       ID_COLOR_TEAL
-        MENUITEM "Grå"        ID_COLOR_GRAY
-        MENUITEM "Sølv"       ID_COLOR_SILVER
-        MENUITEM "Rød"        ID_COLOR_RED
-        MENUITEM "Lime"       ID_COLOR_LIME
-        MENUITEM "Gul"        ID_COLOR_YELLOW
-        MENUITEM "Blå"        ID_COLOR_BLUE
-        MENUITEM "Violet"     ID_COLOR_FUCHSIA
-        MENUITEM "Cyan"       ID_COLOR_AQUA
-        MENUITEM "Hvid"       ID_COLOR_WHITE
-        MENUITEM "Automatic"  ID_COLOR_AUTOMATIC
+        MENUITEM "Oliven",    ID_COLOR_OLIVE
+        MENUITEM "Navy",      ID_COLOR_NAVY
+        MENUITEM "Lilla",     ID_COLOR_PURPLE
+        MENUITEM "Teal",      ID_COLOR_TEAL
+        MENUITEM "Grå",       ID_COLOR_GRAY
+        MENUITEM "Sølv",      ID_COLOR_SILVER
+        MENUITEM "Rød",       ID_COLOR_RED
+        MENUITEM "Lime",      ID_COLOR_LIME
+        MENUITEM "Gul",       ID_COLOR_YELLOW
+        MENUITEM "Blå",       ID_COLOR_BLUE
+        MENUITEM "Violet",    ID_COLOR_FUCHSIA
+        MENUITEM "Cyan",      ID_COLOR_AQUA
+        MENUITEM "Hvid",      ID_COLOR_WHITE
+        MENUITEM "Automatic", ID_COLOR_AUTOMATIC
     END
 END
 
@@ -157,7 +157,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Formater afsnit"
+CAPTION "Formater afsnit"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Indryk", -1, 10, 10, 120, 68
@@ -175,7 +175,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Tabulatorer"
+CAPTION "Tabulatorer"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Tabulatorstop", -1, 10, 10, 120, 90
@@ -189,7 +189,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Liniebrydning", -1, 10, 10, 130, 85

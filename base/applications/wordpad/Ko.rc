@@ -79,9 +79,9 @@ BEGIN
     POPUP "형식(&O)"
     BEGIN
 	MENUITEM "글꼴(&F)...",                  ID_FONTSETTINGS
-        MENUITEM "강조 점(&U)"                ID_BULLET
-        MENUITEM "단락(&P)..."              ID_PARAFORMAT
-        MENUITEM "탭(&T)..."                   ID_TABSTOPS
+        MENUITEM "강조 점(&U)",               ID_BULLET
+        MENUITEM "단락(&P)...",             ID_PARAFORMAT
+        MENUITEM "탭(&T)...",                  ID_TABSTOPS
         POPUP "배경(&B)"
         BEGIN
             MENUITEM "시스템(&S)\tCtrl+1",         ID_BACK_1
@@ -90,7 +90,7 @@ BEGIN
     END
     POPUP "도움말(&H)"
     BEGIN
-        MENUITEM "Wine 워드패드 정보(&A)"       ID_ABOUT
+        MENUITEM "Wine 워드패드 정보(&A)",      ID_ABOUT
     END
 END
 
@@ -102,8 +102,8 @@ BEGIN
         MENUITEM "복사(&C)",             ID_EDIT_COPY
         MENUITEM "붙여넣기(&P)",          ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "강조점(&B)"        ID_BULLET
-        MENUITEM "단락(&P)..."      ID_PARAFORMAT
+        MENUITEM "강조점(&B)",       ID_BULLET
+        MENUITEM "단락(&P)...",     ID_PARAFORMAT
     END
 END
 
@@ -111,23 +111,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "검정"          ID_COLOR_BLACK
-        MENUITEM "밤색"          ID_COLOR_MAROON
-        MENUITEM "녹색"          ID_COLOR_GREEN
-        MENUITEM "올리브색"      ID_COLOR_OLIVE
-        MENUITEM "짙은 남색"     ID_COLOR_NAVY
-        MENUITEM "심홍색"        ID_COLOR_PURPLE
-        MENUITEM "검은 물오리색" ID_COLOR_TEAL
-        MENUITEM "회색"          ID_COLOR_GRAY
-        MENUITEM "은색"          ID_COLOR_SILVER
-        MENUITEM "빨강"          ID_COLOR_RED
-        MENUITEM "라임색"        ID_COLOR_LIME
-        MENUITEM "노랑"          ID_COLOR_YELLOW
-        MENUITEM "파랑"          ID_COLOR_BLUE
-        MENUITEM "자홍색"        ID_COLOR_FUCHSIA
-        MENUITEM "물색"          ID_COLOR_AQUA
-        MENUITEM "하양"          ID_COLOR_WHITE
-        MENUITEM "자동"     ID_COLOR_AUTOMATIC
+        MENUITEM "검정",         ID_COLOR_BLACK
+        MENUITEM "밤색",         ID_COLOR_MAROON
+        MENUITEM "녹색",         ID_COLOR_GREEN
+        MENUITEM "올리브색",     ID_COLOR_OLIVE
+        MENUITEM "짙은 남색",    ID_COLOR_NAVY
+        MENUITEM "심홍색",       ID_COLOR_PURPLE
+        MENUITEM "검은 물오리색",ID_COLOR_TEAL
+        MENUITEM "회색",         ID_COLOR_GRAY
+        MENUITEM "은색",         ID_COLOR_SILVER
+        MENUITEM "빨강",         ID_COLOR_RED
+        MENUITEM "라임색",       ID_COLOR_LIME
+        MENUITEM "노랑",         ID_COLOR_YELLOW
+        MENUITEM "파랑",         ID_COLOR_BLUE
+        MENUITEM "자홍색",       ID_COLOR_FUCHSIA
+        MENUITEM "물색",         ID_COLOR_AQUA
+        MENUITEM "하양",         ID_COLOR_WHITE
+        MENUITEM "자동",         ID_COLOR_AUTOMATIC
     END
 END
 
@@ -155,7 +155,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "단락 형식"
+CAPTION "단락 형식"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "들여쓰기", -1, 10, 10, 120, 68
@@ -173,7 +173,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "탭"
+CAPTION "탭"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "탭 정지", -1, 10, 10, 120, 90
@@ -187,7 +187,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "줄 넘기기", -1, 10, 10, 130, 85

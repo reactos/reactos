@@ -82,9 +82,9 @@ BEGIN
     POPUP "Forma&t"
     BEGIN
         MENUITEM "&Police...",                  ID_FONTSETTINGS
-        MENUITEM "Pu&ces"                ID_BULLET
-        MENUITEM "Para&graphe..."              ID_PARAFORMAT
-        MENUITEM "&Tabulations..."                   ID_TABSTOPS
+        MENUITEM "Pu&ces",                ID_BULLET
+        MENUITEM "Para&graphe...",              ID_PARAFORMAT
+        MENUITEM "&Tabulations...",                   ID_TABSTOPS
         POPUP "&Arrière-plan"
         BEGIN
             MENUITEM "&Système\tCtrl+1",         ID_BACK_1
@@ -93,7 +93,7 @@ BEGIN
     END
     POPUP "Aid&e"
     BEGIN
-        MENUITEM "À &propos du Wordpad de Wine"       ID_ABOUT
+        MENUITEM "À &propos du Wordpad de Wine",       ID_ABOUT
     END
 END
 
@@ -105,8 +105,8 @@ BEGIN
         MENUITEM "Co&pier",             ID_EDIT_COPY
         MENUITEM "C&oller",             ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "P&uces"       ID_BULLET
-        MENUITEM "Para&graphe"     ID_PARAFORMAT
+        MENUITEM "P&uces",       ID_BULLET
+        MENUITEM "Para&graphe",     ID_PARAFORMAT
     END
 END
 
@@ -114,23 +114,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Noir"        ID_COLOR_BLACK
-        MENUITEM "Marron"      ID_COLOR_MAROON
-        MENUITEM "Vert"        ID_COLOR_GREEN
-        MENUITEM "Olive"       ID_COLOR_OLIVE
-        MENUITEM "Bleu marine" ID_COLOR_NAVY
-        MENUITEM "Pourpre"     ID_COLOR_PURPLE
-        MENUITEM "Sarcelle"    ID_COLOR_TEAL
-        MENUITEM "Gris"        ID_COLOR_GRAY
-        MENUITEM "Argent"      ID_COLOR_SILVER
-        MENUITEM "Rouge"       ID_COLOR_RED
-        MENUITEM "Citron vert" ID_COLOR_LIME
-        MENUITEM "Jaune"       ID_COLOR_YELLOW
-        MENUITEM "Bleu"        ID_COLOR_BLUE
-        MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
-        MENUITEM "Eau"         ID_COLOR_AQUA
-        MENUITEM "Blanc"       ID_COLOR_WHITE
-        MENUITEM "Automatique" ID_COLOR_AUTOMATIC
+        MENUITEM "Noir",       ID_COLOR_BLACK
+        MENUITEM "Marron",     ID_COLOR_MAROON
+        MENUITEM "Vert",       ID_COLOR_GREEN
+        MENUITEM "Olive",      ID_COLOR_OLIVE
+        MENUITEM "Bleu marine",ID_COLOR_NAVY
+        MENUITEM "Pourpre",    ID_COLOR_PURPLE
+        MENUITEM "Sarcelle",   ID_COLOR_TEAL
+        MENUITEM "Gris",       ID_COLOR_GRAY
+        MENUITEM "Argent",     ID_COLOR_SILVER
+        MENUITEM "Rouge",      ID_COLOR_RED
+        MENUITEM "Citron vert",ID_COLOR_LIME
+        MENUITEM "Jaune",      ID_COLOR_YELLOW
+        MENUITEM "Bleu",       ID_COLOR_BLUE
+        MENUITEM "Fuchsia",    ID_COLOR_FUCHSIA
+        MENUITEM "Eau",        ID_COLOR_AQUA
+        MENUITEM "Blanc",      ID_COLOR_WHITE
+        MENUITEM "Automatique",ID_COLOR_AUTOMATIC
     END
 END
 
@@ -158,7 +158,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Format de paragraphe"
+CAPTION "Format de paragraphe"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Indentation", -1, 10, 10, 120, 68
@@ -176,7 +176,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Tabulations"
+CAPTION "Tabulations"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Taquets de tabulation", -1, 10, 10, 120, 90
@@ -190,7 +190,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Passage à la ligne automatique", -1, 10, 10, 140, 85

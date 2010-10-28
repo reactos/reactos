@@ -86,7 +86,7 @@ BEGIN
         MENUITEM "Пош&ук...",     CMD_HELP_SEARCH
         MENUITEM "Використ&ання довідки", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Про"           CMD_ABOUT
+        MENUITEM "&Про",          CMD_ABOUT
         MENUITEM "Про програм&у", CMD_ABOUT_WINE
     END
 END

@@ -83,9 +83,9 @@ BEGIN
     POPUP "F&ormatar"
     BEGIN
         MENUITEM "&Fonte...",       ID_FONTSETTINGS
-        MENUITEM "&Marcadores"      ID_BULLET
-        MENUITEM "&Parágrafo..."    ID_PARAFORMAT
-        MENUITEM "T&abulação..."    ID_TABSTOPS
+        MENUITEM "&Marcadores",     ID_BULLET
+        MENUITEM "&Parágrafo...",   ID_PARAFORMAT
+        MENUITEM "T&abulação...",   ID_TABSTOPS
         POPUP "&Fundo"
         BEGIN
             MENUITEM "&Sistema\tCtrl+1",            ID_BACK_1
@@ -94,7 +94,7 @@ BEGIN
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Sobre Wine Wordpad"       ID_ABOUT
+        MENUITEM "&Sobre Wine Wordpad",      ID_ABOUT
     END
 END
 
@@ -158,9 +158,9 @@ BEGIN
     POPUP "F&ormato"
     BEGIN
         MENUITEM "&Tipo de Letra...",                     ID_FONTSETTINGS
-        MENUITEM "&Lista de marcas"                ID_BULLET
-        MENUITEM "&Parágrafo..."                 ID_PARAFORMAT
-        MENUITEM "T&abulações..."                      ID_TABSTOPS
+        MENUITEM "&Lista de marcas",                ID_BULLET
+        MENUITEM "&Parágrafo...",                 ID_PARAFORMAT
+        MENUITEM "T&abulações...",                      ID_TABSTOPS
         POPUP "&Fundo"
         BEGIN
             MENUITEM "&Sistema\tCtrl+1",         ID_BACK_1
@@ -169,7 +169,7 @@ BEGIN
     END
     POPUP "&Ajuda"
     BEGIN
-        MENUITEM "&Sobre Wine Wordpad"       ID_ABOUT
+        MENUITEM "&Sobre Wine Wordpad",      ID_ABOUT
     END
 END
 
@@ -184,8 +184,8 @@ BEGIN
         MENUITEM "C&opiar",         ID_EDIT_COPY
         MENUITEM "Co&lar",          ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Marcadores"      ID_BULLET
-        MENUITEM "&Parágrafo..."    ID_PARAFORMAT
+        MENUITEM "&Marcadores",     ID_BULLET
+        MENUITEM "&Parágrafo...",   ID_PARAFORMAT
     END
 END
 
@@ -199,8 +199,8 @@ BEGIN
         MENUITEM "C&opiar",               ID_EDIT_COPY
         MENUITEM "Co&lar",              ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Lista de marcas"       ID_BULLET
-        MENUITEM "&Parágrafo..."        ID_PARAFORMAT
+        MENUITEM "&Lista de marcas",      ID_BULLET
+        MENUITEM "&Parágrafo...",       ID_PARAFORMAT
     END
 END
 
@@ -211,23 +211,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Preto"         ID_COLOR_BLACK
-        MENUITEM "Castanho"      ID_COLOR_MAROON
-        MENUITEM "Verde"         ID_COLOR_GREEN
-        MENUITEM "Verde-oliva"   ID_COLOR_OLIVE
-        MENUITEM "Azul-marinho"  ID_COLOR_NAVY
-        MENUITEM "Roxo"          ID_COLOR_PURPLE
-        MENUITEM "Azul-petróleo" ID_COLOR_TEAL
-        MENUITEM "Cinza"         ID_COLOR_GRAY
-        MENUITEM "Prateado"      ID_COLOR_SILVER
-        MENUITEM "Vermelho"      ID_COLOR_RED
-        MENUITEM "Verde-limão"   ID_COLOR_LIME
-        MENUITEM "Amarelo"       ID_COLOR_YELLOW
-        MENUITEM "Azul"          ID_COLOR_BLUE
-        MENUITEM "Fúcsia"        ID_COLOR_FUCHSIA
-        MENUITEM "Azul-piscina"  ID_COLOR_AQUA
-        MENUITEM "Branco"        ID_COLOR_WHITE
-        MENUITEM "Automático"    ID_COLOR_AUTOMATIC
+        MENUITEM "Preto",        ID_COLOR_BLACK
+        MENUITEM "Castanho",     ID_COLOR_MAROON
+        MENUITEM "Verde",        ID_COLOR_GREEN
+        MENUITEM "Verde-oliva",  ID_COLOR_OLIVE
+        MENUITEM "Azul-marinho", ID_COLOR_NAVY
+        MENUITEM "Roxo",         ID_COLOR_PURPLE
+        MENUITEM "Azul-petróleo",ID_COLOR_TEAL
+        MENUITEM "Cinza",        ID_COLOR_GRAY
+        MENUITEM "Prateado",     ID_COLOR_SILVER
+        MENUITEM "Vermelho",     ID_COLOR_RED
+        MENUITEM "Verde-limão",  ID_COLOR_LIME
+        MENUITEM "Amarelo",      ID_COLOR_YELLOW
+        MENUITEM "Azul",         ID_COLOR_BLUE
+        MENUITEM "Fúcsia",       ID_COLOR_FUCHSIA
+        MENUITEM "Azul-piscina", ID_COLOR_AQUA
+        MENUITEM "Branco",       ID_COLOR_WHITE
+        MENUITEM "Automático",   ID_COLOR_AUTOMATIC
     END
 END
 
@@ -255,7 +255,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 220, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Parágrafo"
+CAPTION "Parágrafo"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Identação", -1, 10, 10, 140, 68
@@ -273,7 +273,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Tabulações"
+CAPTION "Tabulações"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Marca de tabulação", -1, 10, 10, 120, 90
@@ -287,7 +287,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Moldar o texto", -1, 10, 10, 130, 85

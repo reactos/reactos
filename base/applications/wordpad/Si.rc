@@ -80,9 +80,9 @@ BEGIN
     POPUP "O&blika"
     BEGIN
         MENUITEM "&Pisava ...",                  ID_FONTSETTINGS
-        MENUITEM "&Vrstične oznake"                ID_BULLET
-        MENUITEM "O&dstavek ..."              ID_PARAFORMAT
-        MENUITEM "&Tabulator ..."                   ID_TABSTOPS
+        MENUITEM "&Vrstične oznake",               ID_BULLET
+        MENUITEM "O&dstavek ...",             ID_PARAFORMAT
+        MENUITEM "&Tabulator ...",                  ID_TABSTOPS
         POPUP "Ozad&je"
         BEGIN
             MENUITEM "&Sistemsko\tCtrl+1",         ID_BACK_1
@@ -91,7 +91,7 @@ BEGIN
     END
     POPUP "&Pomoč"
     BEGIN
-        MENUITEM "&O Wine Wordpadu"       ID_ABOUT
+        MENUITEM "&O Wine Wordpadu",      ID_ABOUT
     END
 END
 
@@ -103,8 +103,8 @@ BEGIN
         MENUITEM "&Kopiraj",               ID_EDIT_COPY
         MENUITEM "&Prilepi",              ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Vrstične oznake"       ID_BULLET
-        MENUITEM "O&dstavek ..."     ID_PARAFORMAT
+        MENUITEM "&Vrstične oznake",      ID_BULLET
+        MENUITEM "O&dstavek ...",    ID_PARAFORMAT
     END
 END
 
@@ -112,23 +112,23 @@ IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Črna"        ID_COLOR_BLACK
-        MENUITEM "Kostanjeva"  ID_COLOR_MAROON
-        MENUITEM "Zelena"      ID_COLOR_GREEN
-        MENUITEM "Olivna"      ID_COLOR_OLIVE
-        MENUITEM "Mornariška"  ID_COLOR_NAVY
-        MENUITEM "Vijolična"   ID_COLOR_PURPLE
-        MENUITEM "Zelenomodra" ID_COLOR_TEAL
-        MENUITEM "Siva"        ID_COLOR_GRAY
-        MENUITEM "Srebrna"     ID_COLOR_SILVER
-        MENUITEM "Rdeča"       ID_COLOR_RED
-        MENUITEM "Citronska"   ID_COLOR_LIME
-        MENUITEM "Rumena"      ID_COLOR_YELLOW
-        MENUITEM "Modra"       ID_COLOR_BLUE
-        MENUITEM "Roza"        ID_COLOR_FUCHSIA
-        MENUITEM "Akvamarin"   ID_COLOR_AQUA
-        MENUITEM "Bela"        ID_COLOR_WHITE
-        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+        MENUITEM "Črna",       ID_COLOR_BLACK
+        MENUITEM "Kostanjeva", ID_COLOR_MAROON
+        MENUITEM "Zelena",     ID_COLOR_GREEN
+        MENUITEM "Olivna",     ID_COLOR_OLIVE
+        MENUITEM "Mornariška", ID_COLOR_NAVY
+        MENUITEM "Vijolična",  ID_COLOR_PURPLE
+        MENUITEM "Zelenomodra",ID_COLOR_TEAL
+        MENUITEM "Siva",       ID_COLOR_GRAY
+        MENUITEM "Srebrna",    ID_COLOR_SILVER
+        MENUITEM "Rdeča",      ID_COLOR_RED
+        MENUITEM "Citronska",  ID_COLOR_LIME
+        MENUITEM "Rumena",     ID_COLOR_YELLOW
+        MENUITEM "Modra",      ID_COLOR_BLUE
+        MENUITEM "Roza",       ID_COLOR_FUCHSIA
+        MENUITEM "Akvamarin",  ID_COLOR_AQUA
+        MENUITEM "Bela",       ID_COLOR_WHITE
+        MENUITEM "Automatic",  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -156,7 +156,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Oblika odstavka"
+CAPTION "Oblika odstavka"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Zamiki", -1, 10, 10, 120, 68
@@ -174,7 +174,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "Tabulatorji"
+CAPTION "Tabulatorji"
 FONT 8, "MS SHell DLg"
 BEGIN
     GROUPBOX "Položaji tabulatorja", -1, 10, 10, 120, 90
@@ -188,7 +188,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Prelom vrstic", -1, 10, 10, 130, 85

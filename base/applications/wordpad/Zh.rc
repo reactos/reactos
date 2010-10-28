@@ -107,8 +107,8 @@ BEGIN
         MENUITEM "复制(&C)", ID_EDIT_COPY
         MENUITEM "粘贴(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "项目符号(&B)"       ID_BULLET
-        MENUITEM "段落(&P)..."        ID_PARAFORMAT
+        MENUITEM "项目符号(&B)",      ID_BULLET
+        MENUITEM "段落(&P)...",       ID_PARAFORMAT
     END
 END
 
@@ -119,20 +119,20 @@ BEGIN
         MENUITEM "黑色",      ID_COLOR_BLACK /* 未找到“标准译名表” */
         MENUITEM "栗色",     ID_COLOR_MAROON
         MENUITEM "调和绿",      ID_COLOR_GREEN
-        MENUITEM "橄榄色"       ID_COLOR_OLIVE
-        MENUITEM "藏青"        ID_COLOR_NAVY
-        MENUITEM "紫色"      ID_COLOR_PURPLE
-        MENUITEM "鸭翅绿"        ID_COLOR_TEAL
-        MENUITEM "灰色"        ID_COLOR_GRAY
-        MENUITEM "银色"      ID_COLOR_SILVER
-        MENUITEM "红色"         ID_COLOR_RED
-        MENUITEM "绿色"        ID_COLOR_LIME
-        MENUITEM "黄色"      ID_COLOR_YELLOW
-        MENUITEM "蓝色"        ID_COLOR_BLUE
-        MENUITEM "洋红"     ID_COLOR_FUCHSIA /* =magenta? */
-        MENUITEM "水绿"        ID_COLOR_AQUA
-        MENUITEM "白色"       ID_COLOR_WHITE
-        MENUITEM "自动"   ID_COLOR_AUTOMATIC
+        MENUITEM "橄榄色",      ID_COLOR_OLIVE
+        MENUITEM "藏青",       ID_COLOR_NAVY
+        MENUITEM "紫色",     ID_COLOR_PURPLE
+        MENUITEM "鸭翅绿",       ID_COLOR_TEAL
+        MENUITEM "灰色",       ID_COLOR_GRAY
+        MENUITEM "银色",     ID_COLOR_SILVER
+        MENUITEM "红色",        ID_COLOR_RED
+        MENUITEM "绿色",       ID_COLOR_LIME
+        MENUITEM "黄色",     ID_COLOR_YELLOW
+        MENUITEM "蓝色",       ID_COLOR_BLUE
+        MENUITEM "洋红",    ID_COLOR_FUCHSIA /* =magenta? */
+        MENUITEM "水绿",       ID_COLOR_AQUA
+        MENUITEM "白色",      ID_COLOR_WHITE
+        MENUITEM "自动",  ID_COLOR_AUTOMATIC
     END
 END
 
@@ -160,7 +160,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "段落格式"
+CAPTION "段落格式"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "缩进", -1, 10, 10, 120, 68
@@ -178,7 +178,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "制表位"
+CAPTION "制表位"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "制表位宽度", -1, 10, 10, 120, 90
@@ -192,7 +192,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "自动换行", -1, 10, 10, 130, 85
@@ -359,8 +359,8 @@ BEGIN
         MENUITEM "複製(&C)", ID_EDIT_COPY
         MENUITEM "貼上(&P)", ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "子彈點(&B)"       ID_BULLET
-        MENUITEM "段落(&P)..."        ID_PARAFORMAT
+        MENUITEM "子彈點(&B)",      ID_BULLET
+        MENUITEM "段落(&P)...",       ID_PARAFORMAT
     END
 END
 
@@ -388,7 +388,7 @@ END
 
 IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "段落格式"
+CAPTION "段落格式"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "縮進", -1, 10, 10, 120, 68
@@ -406,7 +406,7 @@ END
 
 IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-Caption "標籤"
+CAPTION "標籤"
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "標籤停點", -1, 10, 10, 120, 90
@@ -420,7 +420,7 @@ END
 
 IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
-Caption ""
+CAPTION ""
 FONT 9, "MS Shell Dlg"
 BEGIN
     GROUPBOX "自動換行", -1, 10, 10, 130, 85
