@@ -370,6 +370,7 @@ EngBitBlt(SURFOBJ *DestObj,
     }
     else
     {
+        InputPoint.x = InputPoint.y = 0;
         InputRect.left = 0;
         InputRect.right = DestRect->right - DestRect->left;
         InputRect.top = 0;
