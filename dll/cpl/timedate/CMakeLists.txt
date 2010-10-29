@@ -23,7 +23,9 @@ add_importlibs(timedate
     gdi32
     comctl32
     ws2_32
-    iphlpapi)
+    iphlpapi
+    msvcrt
+    kernel32)
 
 add_dependencies(timedate timedate_def)
 add_livecd_target(timedate reactos/system32)

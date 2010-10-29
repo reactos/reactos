@@ -1,15 +1,9 @@
 
 add_definitions(
-    -DUSE_EXTERNAL_DXTN_LIB
+    -DUSE_EXTERNAL_DXTN_LIB=1
     -DBUILD_GL32
     -DWIN32
-    -D_WINDOWS
-    -D_MBCS
-    -DHAVE_STAT
-    -DHAVE_WIN32_THREADS
-    -D_REENTRANT
-    -D_WINSOCKAPI_
-    -DLIBXML_STATIC)
+    -D_WINDOWS)
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
@@ -22,7 +16,7 @@ else()
 add_definitions(-DGL_NO_STDCALL)
 endif(ARCH MATCHES i386)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/main)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/glapi)
@@ -261,12 +255,14 @@ add_library(mesa32 SHARED ${SOURCE})
 set_entrypoint(mesa32 0)
 
 if (NOT MSVC)
-set_target_properties(mesa32 PROPERTIES LINK_FLAGS "-Wl,-w")
+# this hides all warnings, is this really wanted ?
+#add_definitions(-w)
+
 endif(NOT MSVC)
 
 
-target_link_libraries(mesa32 ${CMAKE_CURRENT_BINARY_DIR}/src/drivers/windows/icd/mesa.def)
+target_link_libraries(mesa32 ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/windows/icd/mesa.def)
 
-add_importlibs(mesa32 gdi32 user32 ntdll)
+add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
 
 add_dependencies(mesa32 psdk buildno_header)

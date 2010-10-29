@@ -15,3 +15,5 @@ target_link_libraries(wshtcpip
 
 add_importlibs(wshtcpip ws2_32 kernel32 ntdll)
 add_dependencies(wshtcpip wshtcpip_def psdk buildno_header)
+
+add_livecd_target(wshtcpip reactos/system32)

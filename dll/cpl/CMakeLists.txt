@@ -15,5 +15,5 @@ add_subdirectory(odbccp32)
 add_subdirectory(powercfg)
 add_subdirectory(sysdm)
 add_subdirectory(telephon)
-#add_subdirectory(timedate)#FIXME: timedate\\/lang/fr-FR.rc:37: syntax error
-#add_subdirectory(usrmgr)#\groups.c:436: error: 'LPNMLVDISPINFO' undeclared (first use in this function)
+add_subdirectory(timedate)
+add_subdirectory(usrmgr)

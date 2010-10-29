@@ -1,8 +1,7 @@
 
 set_unicode()
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(usrmgr ${CMAKE_CURRENT_SOURCE_DIR}/usrmgr.spec ${CMAKE_CURRENT_BINARY_DIR}/usrmgr.def)
 
@@ -26,6 +25,8 @@ add_importlibs(usrmgr
     gdi32
     comctl32
     netapi32
+    msvcrt
+    kernel32
     ntdll)
 
 add_dependencies(usrmgr usrmgr_def)

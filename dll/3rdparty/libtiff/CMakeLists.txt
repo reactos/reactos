@@ -53,8 +53,8 @@ add_library(libtiff SHARED
 
 set_entrypoint(libtiff 0)
 
-target_link_libraries(libtiff mingw_common zlib)
+target_link_libraries(libtiff mingw_common zlib getopt)
 
-add_importlibs(libtiff msvcrt getopt user32 kernel32)
+add_importlibs(libtiff user32 msvcrt kernel32)
 
 add_dependencies(libtiff psdk buildno_header)
