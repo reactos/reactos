@@ -699,15 +699,15 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
         if (!NT_SUCCESS(Status))
         {
             Gap = Position - m_CommonBufferOffset;
-            if (Gap > m_FrameSize)
+            if (Gap > BufferLength)
             {
                 // insert silence samples
                 DPRINT1("Inserting Silence Buffer Offset %lu GapLength %lu\n", m_CommonBufferOffset, BufferLength);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;
-                break;
             }
+            break;
         }
 
         BytesToCopy = min(BufferLength, BufferSize);
@@ -758,7 +758,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
         if (!NT_SUCCESS(Status))
         {
             Gap = m_CommonBufferSize - m_CommonBufferOffset + Position;
-            if (Gap > m_FrameSize)
+            if (Gap > BufferLength)
             {
                 // insert silence samples
                 DPRINT1("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
@@ -771,7 +771,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
 
         BytesToCopy = min(BufferLength, BufferSize);
 
-        if (m_Capture) 
+        if (m_Capture)
         {
             m_DmaChannel->CopyFrom(Buffer,
                                              (PUCHAR)m_CommonBuffer + m_CommonBufferOffset,
@@ -1290,7 +1290,7 @@ CPortPinWaveCyclic::Init(
     PC_ASSERT(NT_SUCCESS(Status));
     PC_ASSERT(m_FrameSize);
 
-    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u CommonBufferSize %lu\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize, m_CommonBufferSize);
+    DPRINT1("Bits %u Samples %u Channels %u Tag %u FrameSize %u CommonBufferSize %lu, CommonBuffer %p\n", ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wBitsPerSample, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nSamplesPerSec, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.nChannels, ((PKSDATAFORMAT_WAVEFORMATEX)(DataFormat))->WaveFormatEx.wFormatTag, m_FrameSize, m_CommonBufferSize, m_DmaChannel->SystemAddress());
 
 
     /* set up allocator framing */
