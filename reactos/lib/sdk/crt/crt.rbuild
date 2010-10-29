@@ -284,7 +284,6 @@
 	<directory name="misc">
 		<file>amsg.c</file>
 		<file>assert.c</file>
-		<file>crtmain.c</file>
 		<file>environ.c</file>
 		<file>getargs.c</file>
 		<file>initterm.c</file>
