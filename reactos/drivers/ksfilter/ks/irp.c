@@ -724,7 +724,16 @@ ProbeMdl:
                         Mdl = Irp->MdlAddress;
 
                         /* determine operation */
-                        Operation = (ProbeFlags & KSPROBE_STREAMWRITE) ? IoWriteAccess : IoReadAccess;
+                        if (!(ProbeFlags & KSPROBE_STREAMWRITE) || (ProbeFlags & KSPROBE_MODIFY))
+                        {
+                            /* operation is read / modify stream, need write access */
+                            Operation = IoWriteAccess;
+                        }
+                        else
+                        {
+                            /* operation is write to device, so we need read access */
+                            Operation = IoReadAccess;
+                        }
 
                         do
                         {
@@ -859,7 +868,8 @@ ProbeMdl:
                 if (StreamHeader->FrameExtent)
                 {
                     /* allocate an mdl */
-                    Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, Irp->MdlAddress != NULL, TRUE, Irp);
+                    ASSERT(Irp->MdlAddress == NULL);
+                    Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, FALSE, TRUE, Irp);
                     if (!Mdl)
                     {
                         /* not enough memory */
@@ -880,10 +890,10 @@ ProbeMdl:
 
         /* now probe the allocated mdl's */
         if (!NT_SUCCESS(Status))
-		{
+        {
             DPRINT("Status %x\n", Status);
             return Status;
-		}
+        }
         else
             goto ProbeMdl;
     }
