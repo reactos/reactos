@@ -43,8 +43,6 @@ protected:
 
     PMINIPORTWAVEPCI m_Miniport;
     PDEVICE_OBJECT m_pDeviceObject;
-    BOOL m_bInitialized;
-    PRESOURCELIST m_pResourceList;
     PSERVICEGROUP m_ServiceGroup;
     PPINCOUNT m_pPinCount;
     PPOWERNOTIFY m_pPowerNotify;
@@ -233,12 +231,6 @@ CPortWavePci::Init(
             this, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    if (m_bInitialized)
-    {
-        DPRINT("IPortWavePci_fnInit called again\n");
-        return STATUS_SUCCESS;
-    }
-
     Status = UnknownMiniport->QueryInterface(IID_IMiniportWavePci, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status))
     {
@@ -249,30 +241,20 @@ CPortWavePci::Init(
     // Initialize port object
     m_Miniport = Miniport;
     m_pDeviceObject = DeviceObject;
-    m_bInitialized = TRUE;
-    m_pResourceList = ResourceList;
+
     InitializeListHead(&m_EventList);
     KeInitializeSpinLock(&m_EventListLock);
 
     // increment reference on miniport adapter
     Miniport->AddRef();
 
-
-    if (ResourceList)
-    {
-        // increment reference on resource list
-        ResourceList->AddRef();
-    }
-
     Status = Miniport->Init(UnknownAdapter, ResourceList, this, &ServiceGroup);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IPortWavePci_fnInit failed with %x\n", Status);
-        m_bInitialized = FALSE;
+
         // release reference on miniport adapter
         Miniport->Release();
-        // increment reference on resource list
-        ResourceList->Release();
         return Status;
     }
 
@@ -282,7 +264,6 @@ CPortWavePci::Init(
     {
         DPRINT("failed to get description\n");
         Miniport->Release();
-        m_bInitialized = FALSE;
         return Status;
     }
 
@@ -307,7 +288,6 @@ CPortWavePci::Init(
     {
         DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
         Miniport->Release();
-        m_bInitialized = FALSE;
         return Status;
     }
 
@@ -361,12 +341,6 @@ CPortWavePci::NewRegistryKey(
     DPRINT("IPortWavePci_fnNewRegistryKey entered\n");
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    if (!m_bInitialized)
-    {
-        DPRINT("IPortWavePci_fnNewRegistryKey called w/o initiazed\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
     return PcNewRegistryKey(OutRegistryKey, 
                             OuterUnknown,
                             RegistryKeyType,
@@ -388,12 +362,6 @@ CPortWavePci::GetDeviceProperty(
 {
     DPRINT("IPortWavePci_fnGetDeviceProperty entered\n");
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
-
-    if (!m_bInitialized)
-    {
-        DPRINT("IPortWavePci_fnNewRegistryKey called w/o initiazed\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
     return IoGetDeviceProperty(m_pDeviceObject, DeviceRegistryProperty, BufferLength, PropertyBuffer, ReturnLength);
 }
@@ -434,8 +402,6 @@ NTAPI
 CPortWavePci::Notify(
     IN  PSERVICEGROUP ServiceGroup)
 {
-    //IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
-
     //DPRINT("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
 
     if (ServiceGroup)
@@ -492,8 +458,6 @@ NTSTATUS
 NTAPI
 CPortWavePci::ReleaseChildren()
 {
-    //IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblSubDevice);
-
     UNIMPLEMENTED
     return STATUS_UNSUCCESSFUL;
 }
