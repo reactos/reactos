@@ -293,7 +293,7 @@ CIrpQueue::UpdateMapping(
 {
     PKSSTREAM_HEADER StreamHeader;
     ULONG Size, NumData, Index;
-    PMDL CurMdl, NextMdl;
+    //PMDL CurMdl, NextMdl;
 
     if (!m_Irp)
     {
@@ -385,7 +385,7 @@ CIrpQueue::UpdateMapping(
             // done
             return;
         }
-
+#if 0
         // now free allocated mdls
         CurMdl = m_Irp->MdlAddress;
         for(Index = 0; Index < STREAMHEADER_COUNT(m_Irp); Index++)
@@ -418,6 +418,7 @@ CIrpQueue::UpdateMapping(
 
         // is this really needed?
         m_Irp->AssociatedIrp.SystemBuffer = NULL;
+#endif
 
         // store operation status
         m_Irp->IoStatus.Status = STATUS_SUCCESS;
