@@ -293,6 +293,7 @@ CIrpQueue::UpdateMapping(
 {
     PKSSTREAM_HEADER StreamHeader;
     ULONG Size, NumData, Index;
+    PMDL CurMdl, NextMdl;
 
     if (!m_Irp)
     {
@@ -385,13 +386,50 @@ CIrpQueue::UpdateMapping(
             return;
         }
 
+        // now free allocated mdls
+        CurMdl = m_Irp->MdlAddress;
+        for(Index = 0; Index < STREAMHEADER_COUNT(m_Irp); Index++)
+        {
+            // sanity check
+            ASSERT(CurMdl);
+
+            // get next mdl
+            NextMdl = CurMdl->Next;
+
+            // check if mdl is locked
+            if (CurMdl->MdlFlags & MDL_PAGES_LOCKED)
+            {
+                // unlock pages
+                MmUnlockPages(CurMdl);
+            }
+
+            // free mdl
+            IoFreeMdl(CurMdl);
+
+            // proceed to next mdl
+            CurMdl = NextMdl;
+        }
+
+        // all mdls have been freed now
+        m_Irp->MdlAddress = NULL;
+
+        // free allocated KSSTREAM_HEADER
+        ExFreePool(m_Irp->AssociatedIrp.SystemBuffer);
+
+        // is this really needed?
+        m_Irp->AssociatedIrp.SystemBuffer = NULL;
+
+        // store operation status
         m_Irp->IoStatus.Status = STATUS_SUCCESS;
         m_Irp->IoStatus.Information = NumData;
 
         // complete the request
         IoCompleteRequest(m_Irp, IO_SOUND_INCREMENT);
+
         // remove irp as it is complete
         m_Irp = NULL;
+
+        // reset offset
         m_CurrentOffset = 0;
     }
 }
