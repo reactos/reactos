@@ -206,14 +206,19 @@ InitVideo(
     DPRINT("Found %ld devices\n", ulMaxObjectNumber);
 
     /* Loop through all adapters */
-    cbValue = 256;
     for (iDevNum = 0; iDevNum <= ulMaxObjectNumber; iDevNum++)
     {
         /* Create the adapter's key name */
         swprintf(awcDeviceName, L"\\Device\\Video%lu", iDevNum);
 
         /* Read the reg key name */
+        cbValue = sizeof(awcBuffer);
         Status = RegQueryValue(hkey, awcDeviceName, REG_SZ, awcBuffer, &cbValue);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("failed to query the registry path:0x%lx\n", Status);
+            continue;
+        }
 
         pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
 
