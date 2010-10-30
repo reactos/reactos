@@ -9,7 +9,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 spec2def(mshtml.tlb mshtml.tlb.spec)
 
 add_library(mshtml.tlb SHARED rsrc.rc
-    ${CMAKE_CURRENT_SOURCE_DIR}/mshtml.def)
+    mshtml.def)
 
 set_entrypoint(mshtml.tlb 0)
 set_target_properties(mshtml.tlb PROPERTIES SUFFIX "")
