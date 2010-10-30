@@ -11,3 +11,4 @@ set_target_properties(serenum PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -
 
 add_importlibs(serenum ntoskrnl hal)
 add_dependencies(serenum psdk bugcodes)
+add_cab_target(serenum 2)

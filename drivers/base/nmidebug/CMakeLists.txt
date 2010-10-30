@@ -11,4 +11,4 @@ target_link_libraries(nmidebug
 
 add_dependencies(nmidebug psdk bugcodes)
 add_minicd_target(nmidebug reactos)
-add_livecd_target(nmidebug reactos/system32/drivers)
+add_cab_target(nmidebug 2)

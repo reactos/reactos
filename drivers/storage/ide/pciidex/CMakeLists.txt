@@ -14,3 +14,4 @@ set_target_properties(pciidex PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -
 
 add_importlibs(pciidex ntoskrnl)
 add_dependencies(pciidex psdk bugcodes)
+add_cab_target(pciidex 2)

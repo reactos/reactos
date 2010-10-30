@@ -18,3 +18,4 @@ set_target_properties(serial PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 
 add_importlibs(serial ntoskrnl hal)
 add_dependencies(serial psdk bugcodes)
+add_cab_target(serial 2)
