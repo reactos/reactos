@@ -50,5 +50,5 @@ add_importlibs(jscript
     kernel32
     ntdll)
 
-add_dependencies(jscript jsglobal jscript_def)
+add_dependencies(jscript jsglobal jscript_def stdole2)
 add_livecd_target(jscript reactos/system32)
