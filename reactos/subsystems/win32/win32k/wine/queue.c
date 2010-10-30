@@ -35,6 +35,12 @@
 enum message_kind { SEND_MESSAGE, POST_MESSAGE };
 #define NB_MSG_KINDS (POST_MESSAGE+1)
 
+typedef struct _QUEUE_WORKER_CONTEXT
+{
+    WORK_QUEUE_ITEM item;
+    struct msg_queue *queue;
+    struct message_result *result;
+} QUEUE_WORKER_CONTEXT, *PQUEUE_WORKER_CONTEXT;
 
 struct message_result
 {
@@ -50,7 +56,6 @@ struct message_result
     void                  *data;          /* message reply data */
     unsigned int           data_size;     /* size of message reply data */
     struct timeout_user   *timeout;       /* result timeout */
-    PWORK_QUEUE_ITEM       work_item;     /* work item pointer to free */
 };
 
 struct message
@@ -123,7 +128,6 @@ struct msg_queue
     struct thread_input   *input;           /* thread input descriptor */
     struct hook_table     *hooks;           /* hook table */
     timeout_t              last_get_msg;    /* time of last get message call */
-    PWORK_QUEUE_ITEM       work_item;       /* work item pointer to free */
 };
 
 static void msg_queue_dump( struct object *obj, int verbose );
@@ -527,7 +531,8 @@ VOID
 NTAPI
 result_timeout_worker( PVOID Context )
 {
-    struct message_result *result = Context;
+    PQUEUE_WORKER_CONTEXT work_context = Context;
+    struct message_result *result = work_context->result;
 
     UserEnterExclusive();
 
@@ -536,7 +541,7 @@ result_timeout_worker( PVOID Context )
     result->timeout = NULL;
 
     /* Free work item memory */
-    ExFreePool(result->work_item);
+    ExFreePool(work_context);
 
     if (result->msg)  /* not received yet */
     {
@@ -564,13 +569,15 @@ NTAPI
 result_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2)
 {
     struct message_result *result = Context;
+    PQUEUE_WORKER_CONTEXT work_context;
 
     /* Allocate memory for the work iteam */
-    result->work_item = ExAllocatePool(NonPagedPool, sizeof(WORK_QUEUE_ITEM));
+    work_context = ExAllocatePool(NonPagedPool, sizeof(QUEUE_WORKER_CONTEXT));
+    work_context->result = result;
 
     /* Queue a work item */
-    ExInitializeWorkItem(result->work_item, result_timeout_worker, result);
-    ExQueueWorkItem(result->work_item, DelayedWorkQueue);
+    ExInitializeWorkItem(&work_context->item, result_timeout_worker, result);
+    ExQueueWorkItem(&work_context->item, DelayedWorkQueue);
 }
 
 /* allocate and fill a message result structure */
@@ -1061,13 +1068,16 @@ VOID
 NTAPI
 timer_callback_worker( PVOID Context )
 {
-    struct msg_queue *queue = Context;
+    PQUEUE_WORKER_CONTEXT work_context = Context;
     struct list *ptr;
+    struct msg_queue *queue = work_context->queue;
+
+    ASSERT(queue);
 
     UserEnterExclusive();
 
     /* Free workitem */
-    ExFreePool(queue->work_item);
+    ExFreePool(work_context);
 
     queue->timeout = NULL;
     /* move on to the next timer */
@@ -1085,13 +1095,18 @@ NTAPI
 timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 )
 {
     struct msg_queue *queue = Context;
+    PQUEUE_WORKER_CONTEXT work_context;
+
+    ASSERT(queue);
 
     /* Allocate memory for the work iteam */
-    queue->work_item = ExAllocatePool(NonPagedPool, sizeof(WORK_QUEUE_ITEM));
+    work_context = ExAllocatePool(NonPagedPool, sizeof(QUEUE_WORKER_CONTEXT));
+
+    work_context->queue = queue;
 
     /* Queue a work item */
-    ExInitializeWorkItem(queue->work_item, timer_callback_worker, queue);
-    ExQueueWorkItem(queue->work_item, DelayedWorkQueue);
+    ExInitializeWorkItem(&work_context->item, timer_callback_worker, work_context);
+    ExQueueWorkItem(&work_context->item, DelayedWorkQueue);
 }
 
 /* link a timer at its rightful place in the queue list */
