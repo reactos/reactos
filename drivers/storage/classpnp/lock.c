@@ -78,7 +78,9 @@ Return Value:
     lock.
 
 --*/
+SCSIPORTAPI
 ULONG
+NTAPI
 ClassAcquireRemoveLockEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN OPTIONAL PVOID Tag,
@@ -123,14 +125,14 @@ ClassAcquireRemoveLockEx(
                                   &oldIrql);
 
                 commonExtension->RemoveTrackingUntrackedCount++;
-            
+
                 DebugPrint((ClassDebugWarning, ">>>>>ClassAcquireRemoveLock: "
                             "Cannot track Tag %p - currently %d untracked requsts\n",
                             Tag, commonExtension->RemoveTrackingUntrackedCount));
 
                 KeReleaseSpinLock(&commonExtension->RemoveTrackingSpinlock,
                                   oldIrql);
-            } 
+            }
             else {
                 PREMOVE_TRACKING_BLOCK *removeTrackingList =
                     (PREMOVE_TRACKING_BLOCK)&commonExtension->RemoveTrackingList;
@@ -208,7 +210,9 @@ Return Value:
     none
 
 --*/
+SCSIPORTAPI
 VOID
+NTAPI
 ClassReleaseRemoveLock(
     IN PDEVICE_OBJECT DeviceObject,
     IN OPTIONAL PIRP Tag
@@ -361,9 +365,9 @@ Routine Description:
 Arguments:
 
     DeviceObject - the device object that was handling this request
-    
+
     Irp - the irp to be completed by IoCompleteRequest
-    
+
     PriorityBoost - the priority boost to pass to IoCompleteRequest
 
 Return Value:
@@ -371,7 +375,9 @@ Return Value:
     none
 
 --*/
+SCSIPORTAPI
 VOID
+NTAPI
 ClassCompleteRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

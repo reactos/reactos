@@ -55,7 +55,10 @@ BOOLEAN ClasspMyStringMatches(IN PCHAR StringToMatch OPTIONAL, IN PCHAR TargetSt
 }
 
 
-VOID ClassGetDeviceParameter(
+SCSIPORTAPI
+VOID
+NTAPI
+ClassGetDeviceParameter(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PWSTR SubkeyName OPTIONAL,
     IN PWSTR ParameterName,
@@ -140,7 +143,10 @@ VOID ClassGetDeviceParameter(
 } // end ClassGetDeviceParameter()
 
 
-NTSTATUS ClassSetDeviceParameter(
+SCSIPORTAPI
+NTSTATUS
+NTAPI
+ClassSetDeviceParameter(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PWSTR SubkeyName OPTIONAL,
     IN PWSTR ParameterName,
@@ -218,7 +224,10 @@ NTSTATUS ClassSetDeviceParameter(
  *      hardware based upon id strings.  it does not check the registry.
  */
 
-VOID ClassScanForSpecial(
+SCSIPORTAPI
+VOID
+NTAPI
+ClassScanForSpecial(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN CLASSPNP_SCAN_FOR_SPECIAL_INFO DeviceList[],
     IN PCLASS_SCAN_FOR_SPECIAL_HANDLER Function)

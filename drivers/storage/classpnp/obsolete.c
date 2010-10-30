@@ -51,7 +51,10 @@ typedef struct _CSCAN_LIST_ENTRY {
  *      StartIo routine when the transfer size is too large for the hardware.
  *      We map it to our new read/write handler.
  */
-VOID ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes)
+SCSIPORTAPI
+VOID
+NTAPI
+ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
@@ -68,7 +71,7 @@ VOID ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes
     }
 
     ServiceTransferRequest(Fdo, Irp);
-} 
+}
 
 
 /*++////////////////////////////////////////////////////////////////////////////
@@ -99,7 +102,9 @@ Return Value:
     NT status
 
 --*/
+SCSIPORTAPI
 NTSTATUS
+NTAPI
 ClassIoCompleteAssociated(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -476,7 +481,9 @@ Return Value:
     NT Status
 
 --*/
+SCSIPORTAPI
 NTSTATUS
+NTAPI
 ClassBuildRequest(
     PDEVICE_OBJECT Fdo,
     PIRP Irp
@@ -739,13 +746,13 @@ VOID ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
     DBGWARN(("ClasspInsertCScanList is OBSOLETE !"));
 
     //
-    // Iterate through the list.  Insert this entry in the sorted list in 
-    // order (after other requests for the same block).  At each stop if 
+    // Iterate through the list.  Insert this entry in the sorted list in
+    // order (after other requests for the same block).  At each stop if
     // blockNumber(Entry) >= blockNumber(t) then move on.
     //
 
-    for(t = (PCSCAN_LIST_ENTRY) ListHead->Flink; 
-        t != (PCSCAN_LIST_ENTRY) ListHead; 
+    for(t = (PCSCAN_LIST_ENTRY) ListHead->Flink;
+        t != (PCSCAN_LIST_ENTRY) ListHead;
         t = (PCSCAN_LIST_ENTRY) t->Entry.Flink) {
 
         if(Entry->BlockNumber < t->BlockNumber) {
@@ -768,7 +775,7 @@ VOID ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
     }
 
     //
-    // Insert this entry at the tail of the list.  If the list was empty this 
+    // Insert this entry at the tail of the list.  If the list was empty this
     // will also be the head of the list.
     //
 
@@ -787,25 +794,25 @@ Routine Description:
     to the access of the list.
 
     Low priority requests are always scheduled to run on the next sweep across
-    the disk.  Normal priority requests will be inserted into the current or 
+    the disk.  Normal priority requests will be inserted into the current or
     next sweep based on the standard C-SCAN algorithm.
 
 Arguments:
 
     List - the list to insert into
-    
+
     Irp - the irp to be inserted.
-    
+
     BlockNumber - the block number for this request.
-    
-    LowPriority - indicates that the request is lower priority and should be 
-                  done on the next sweep across the disk.    
+
+    LowPriority - indicates that the request is lower priority and should be
+                  done on the next sweep across the disk.
 
 Return Value:
 
     none
-    
---*/                      
+
+--*/
 {
     PCSCAN_LIST_ENTRY entry = (PCSCAN_LIST_ENTRY)Irp->Tail.Overlay.DriverContext;
 
@@ -817,7 +824,7 @@ Return Value:
     entry->BlockNumber = BlockNumber;
 
     //
-    // If it's a normal priority request and further down the disk than our 
+    // If it's a normal priority request and further down the disk than our
     // current position then insert this entry into the current sweep.
     //
 
@@ -838,22 +845,22 @@ VOID ClassFreeOrReuseSrb(   IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
 
 Routine Description:
 
-    This routine will attempt to reuse the provided SRB to start a blocked 
-    read/write request.  
+    This routine will attempt to reuse the provided SRB to start a blocked
+    read/write request.
     If there is no need to reuse the request it will be returned
     to the SRB lookaside list.
 
 Arguments:
 
     Fdo - the device extension
-    
+
     Srb - the SRB which is to be reused or freed.
-    
+
 Return Value:
 
     none.
-    
---*/            
+
+--*/
 
 {
     PCLASS_PRIVATE_FDO_DATA privateData = FdoExtension->PrivateFdoData;
@@ -869,7 +876,7 @@ Return Value:
     // memory leak.
     //
     ASSERT(!TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_FREE_SENSE_BUFFER));
-   
+
     if (commonExt->IsSrbLookasideListInitialized){
         /*
          *  Put the SRB back in our lookaside list.
@@ -896,7 +903,7 @@ Routine Description:
 
     This routine deletes a lookaside listhead for srbs, and should be called
     only during the final removal.
-    
+
     If called at other times, the caller is responsible for
     synchronization and removal issues.
 
@@ -909,7 +916,10 @@ Return Value:
     None
 
 --*/
-VOID ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
+SCSIPORTAPI
+VOID
+NTAPI
+ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
 {
     PAGED_CODE();
 
@@ -923,7 +933,7 @@ VOID ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
     else {
         DBGWARN(("ClassDeleteSrbLookasideList: attempt to delete uninitialized or freed srblookasidelist"));
     }
-} 
+}
 
 
 /*++////////////////////////////////////////////////////////////////////////////
@@ -934,7 +944,7 @@ Routine Description:
 
     This routine sets up a lookaside listhead for srbs, and should be called
     only from the ClassInitDevice() routine to prevent race conditions.
-    
+
     If called from other locations, the caller is responsible for
     synchronization and removal issues.
 
@@ -944,7 +954,7 @@ Arguments:
 
     NumberElements  - Supplies the maximum depth of the lookaside list.
 
-    
+
 Note:
 
     The Windows 2000 version of classpnp did not return any status value from
@@ -952,7 +962,10 @@ Note:
 
 --*/
 
-VOID ClassInitializeSrbLookasideList(   IN PCOMMON_DEVICE_EXTENSION CommonExtension,
+SCSIPORTAPI
+VOID
+NTAPI
+ClassInitializeSrbLookasideList(   IN PCOMMON_DEVICE_EXTENSION CommonExtension,
                                         IN ULONG NumberElements)
 {
     PAGED_CODE();
@@ -973,8 +986,8 @@ VOID ClassInitializeSrbLookasideList(   IN PCOMMON_DEVICE_EXTENSION CommonExtens
 
         CommonExtension->IsSrbLookasideListInitialized = TRUE;
     }
-    
-} 
+
+}
 
 
 
@@ -1008,7 +1021,7 @@ VOID ClasspStartNextSweep(PCSCAN_LIST List)
     List->CurrentSweep = List->NextSweep;
 
     //
-    // Unlink the next sweep list from the list head now that we have a copy 
+    // Unlink the next sweep list from the list head now that we have a copy
     // of it.
     //
 

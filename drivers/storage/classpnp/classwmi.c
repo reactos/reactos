@@ -256,14 +256,14 @@ ClassSystemControl(
             ClassQueryWmiRegInfoEx = commonExtension->IsFdo ?
                                driverExtension->ClassFdoQueryWmiRegInfoEx :
                                driverExtension->ClassPdoQueryWmiRegInfoEx;
-        
+
             if (ClassQueryWmiRegInfoEx == NULL)
             {
                 status = classWmiInfo->ClassQueryWmiRegInfo(
                                                         DeviceObject,
                                                         &nameFlags,
                                                         &name);
-                
+
                 RtlInitUnicodeString(&mofName, MOFRESOURCENAME);
             } else {
                 RtlInitUnicodeString(&mofName, L"");
@@ -545,13 +545,13 @@ Arguments:
     DeviceObject - Supplies a pointer to the device object for this request.
 
     Irp - Supplies the Irp making the request.
-    
+
     Status - Status to complete the irp with.  STATUS_BUFFER_TOO_SMALL is used
         to indicate that more buffer is required for the data requested.
-    
+
     BufferUsed - number of bytes of actual data to return (not including WMI
         specific structures)
-    
+
     PriorityBoost - priority boost to pass to ClassCompleteRequest
 
 Return Value:
@@ -561,6 +561,7 @@ Return Value:
 --*/
 SCSIPORTAPI
 NTSTATUS
+NTAPI
 ClassWmiCompleteRequest(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -724,7 +725,9 @@ Return Value:
     status
 
 --*/
+SCSIPORTAPI
 NTSTATUS
+NTAPI
 ClassWmiFireEvent(
     IN PDEVICE_OBJECT DeviceObject,
     IN LPGUID Guid,
