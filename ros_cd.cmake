@@ -1,62 +1,47 @@
-#reactos.cab
+#reactos.dff
 add_custom_command(
-    OUTPUT ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.inf
-    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -L ${REACTOS_BINARY_DIR}/boot/bootcd/reactos -I
+    OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.dff
+    COMMAND ${CMAKE_COMMAND} -E copy ${REACTOS_SOURCE_DIR}/boot/bootdata/packages/reactos.dff.in ${REACTOS_BINARY_DIR}/boot/reactos.dff
+    DEPENDS ${REACTOS_SOURCE_DIR}/boot/bootdata/packages/reactos.dff.in
 )
-add_custom_target(
-    reactos_cab
-    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/bootcd/reactos/reactos.inf -L ${REACTOS_BINARY_DIR}/boot/bootcd/reactos -N
-    DEPENDS ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.inf
-)
-
-file(WRITE ${REACTOS_BINARY_DIR}/boot/reactos.dff
-"; Main ReactOS package
-
-.Set DiskLabelTemplate=\"ReactOS\"                ; Label of disk
-.Set CabinetNameTemplate=\"reactos.cab\"          ; reactos.cab
-.Set InfFileName=\"reactos.inf\"                  ; reactos.inf
-
-
-;.Set Cabinet=on
-;.Set Compress=on
-
-.InfBegin
-[Version]
-Signature = \"$ReactOS$\"
-
-[Directories]
-1 = system32
-2 = system32\\drivers
-3 = Fonts
-4 =
-5 = system32\\drivers\\etc
-6 = inf
-7 = bin
-8 = media
-
-.InfEnd
-
-; Contents of disk
-.InfBegin
-[SourceFiles]
-.InfEnd
-"
-)     
+    
 file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt CAB_TARGET_ENTRIES)
 foreach(ENTRY ${CAB_TARGET_ENTRIES})
     string(REGEX REPLACE "^(.*)\t.*" "\\1" _targetname ${ENTRY})
     string(REGEX REPLACE "^.*\t(.)" "\\1" _dir_num ${ENTRY})
     get_target_property(_FILENAME ${_targetname} LOCATION)
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/reactos.dff "${_FILENAME} ${_dir_num}\n")
-    add_dependencies(reactos_cab ${_targetname})
+    add_custom_command(
+        OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.dff
+        COMMAND ${CMAKE_COMMAND} -E echo ${_FILENAME} ${_dir_num} >> ${REACTOS_BINARY_DIR}/boot/reactos.dff
+        DEPENDS ${_targetname}
+        APPEND
+    )
 endforeach()
 
 file(STRINGS ${REACTOS_BINARY_DIR}/boot/ros_cab.txt CAB_TARGET_ENTRIES)
 foreach(ENTRY ${CAB_TARGET_ENTRIES})
     string(REGEX REPLACE "^(.*)\t.*" "\\1" _FILENAME ${ENTRY})
     string(REGEX REPLACE "^.*\t(.)" "\\1" _dir_num ${ENTRY})
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/reactos.dff "${_FILENAME} ${_dir_num}\n")
+        add_custom_command(
+        OUTPUT ${REACTOS_BINARY_DIR}/boot/reactos.dff
+        COMMAND ${CMAKE_COMMAND} -E echo ${_FILENAME} ${_dir_num} >> ${REACTOS_BINARY_DIR}/boot/reactos.dff
+        DEPENDS ${_FILENAME}
+        APPEND
+    )
 endforeach()
+
+#reactos.cab
+add_custom_command(
+    OUTPUT ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.inf
+    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -L ${REACTOS_BINARY_DIR}/boot/bootcd/reactos -I
+    DEPENDS ${REACTOS_BINARY_DIR}/boot/reactos.dff
+)
+add_custom_command(
+    OUTPUT ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.cab
+    COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/reactos.dff -RC ${REACTOS_BINARY_DIR}/boot/bootcd/reactos/reactos.inf -L ${REACTOS_BINARY_DIR}/boot/bootcd/reactos -N
+    DEPENDS ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.inf
+)
+list( APPEND BOOTCD_FILES ${REACTOS_BINARY_DIR}/bootcd/reactos/reactos.cab)
 
 #bootcd target
 set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
@@ -99,7 +84,7 @@ add_custom_target(bootcd
     COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${BOOTCD_DIR} REACTOS ${REACTOS_BINARY_DIR}/minicd.iso
     DEPENDS ${BOOTCD_FILES})
     
-add_dependencies(bootcd reactos_cab dosmbr ext2 fat32 fat isoboot isobtrt vgafonts)
+add_dependencies(bootcd dosmbr ext2 fat32 fat isoboot isobtrt vgafonts)
 
 set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/minicd.iso)
 
