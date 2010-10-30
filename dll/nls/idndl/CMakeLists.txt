@@ -17,3 +17,5 @@ endif(NOT MSVC)
 add_importlibs(idndl kernel32)
 
 add_dependencies(idndl idndl_def psdk buildno_header)
+
+add_livecd_target(idndl reactos)

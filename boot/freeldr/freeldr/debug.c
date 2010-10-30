@@ -25,9 +25,9 @@
 
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE
-//#define DEBUG_REACTOS
+#define DEBUG_REACTOS
 //#define DEBUG_CUSTOM
-#define DEBUG_NONE
+//#define DEBUG_NONE
 
 #if defined (DEBUG_ALL)
 ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY | DPRINT_FILESYSTEM |
