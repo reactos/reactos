@@ -93,7 +93,8 @@ list(APPEND SOURCE
     thread/thread.c
     thread/tls.c
     kernel32.rc
-    kernel32_stubs.c)
+    kernel32_stubs.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/kernel32.def)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -111,8 +112,7 @@ add_library(kernel32 SHARED
 
 set_module_type(kernel32 win32dll)
 
-target_link_libraries(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/kernel32.def
-    pseh)
+target_link_libraries(kernel32 pseh)
 
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})

@@ -5,19 +5,15 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 ADD_TYPELIB(std_ole_v2 std_ole_v2.idl)
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb.def
-    COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/stdole2.tlb.spec --filename stdole2.tlb
-    DEPENDS native-winebuild)
-set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb.def PROPERTIES GENERATED TRUE)
-add_custom_target(stdole2.tlb_def ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb.def)
+spec2def(stdole2.tlb stdole2.tlb.spec)
 
-add_library(stdole2.tlb SHARED rsrc.rc)
+add_library(stdole2.tlb SHARED rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/stdole2.def)
 
 set_entrypoint(stdole2.tlb 0)
 set_target_properties(stdole2.tlb PROPERTIES SUFFIX "")
 
 
 
-add_dependencies(stdole2.tlb std_ole_v2 stdole2.tlb_def)
+add_dependencies(stdole2.tlb std_ole_v2)
 add_cab_target(stdole2.tlb 1)

@@ -5,20 +5,15 @@ add_definitions(-D__WINESRC__ -DWIN32)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
 
-add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def
-    COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/winemp3.acm.spec --filename winemp3.acm
-    DEPENDS native-winebuild)
-set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def PROPERTIES GENERATED TRUE)
-add_custom_target(winemp3.acm_def ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def)
+spec2def(winemp3.acm winemp3.acm.spec)
 
-add_library(winemp3.acm SHARED mpegl3.c)
+add_library(winemp3.acm SHARED mpegl3.c
+    ${CMAKE_CURRENT_BINARY_DIR}/winemp3.def)
 
 set_entrypoint(winemp3.acm 0)
 set_target_properties(winemp3.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(winemp3.acm
-    ${CMAKE_CURRENT_BINARY_DIR}/winemp3.acm.def
     mingw_common
     wine
     libmpg123)

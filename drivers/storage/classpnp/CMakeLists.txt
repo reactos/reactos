@@ -26,13 +26,13 @@ list(APPEND SOURCE
     utils.c
     xferpkt.c
     class.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/class.def
 )
 
-spec2def(classpnp ${CMAKE_CURRENT_SOURCE_DIR}/class.spec ${CMAKE_CURRENT_BINARY_DIR}/class.def)
+spec2def(classpnp.sys class.spec)
 
 add_library(classpnp SHARED ${SOURCE})
-target_link_libraries(classpnp ${CMAKE_CURRENT_BINARY_DIR}/class.def pseh libcntpr)
-
+target_link_libraries(classpnp pseh libcntpr)
 
 set_module_type(classpnp kernelmodedriver)
 

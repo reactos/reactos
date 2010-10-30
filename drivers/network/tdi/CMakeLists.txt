@@ -5,7 +5,7 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
 add_definitions(-DNDIS40)
 add_definitions(-D_NTDRIVER_)
 
-spec2def(tdi ${CMAKE_CURRENT_SOURCE_DIR}/misc/tdi.spec ${CMAKE_CURRENT_BINARY_DIR}/tdi.def)
+spec2def(tdi.sys misc/tdi.spec)
 
 list(APPEND SOURCE
     cte/string.c
@@ -15,14 +15,14 @@ list(APPEND SOURCE
     tdi/dereg.c
     tdi/handler.c
     tdi/obsolete.c
-    tdi/stubs.c)
+    tdi/stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/tdi.def)
 
 add_library(tdi SHARED ${SOURCE})
 
 set_module_type(tdi kernelmodedriver)
 
 target_link_libraries(tdi
-    ${CMAKE_CURRENT_BINARY_DIR}/tdi.def
     -lntoskrnl
     -lhal)
 

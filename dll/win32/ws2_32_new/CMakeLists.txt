@@ -4,7 +4,7 @@ add_definitions(-DLE)
 include_directories(inc)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/winsock)
 
-spec2def(ws2_32_new ${CMAKE_CURRENT_SOURCE_DIR}/ws2_32.spec ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_new.def)
+spec2def(ws2_32_new.dll ws2_32.spec)
 
 add_library(ws2_32_new SHARED
     src/addrconv.c
@@ -43,13 +43,12 @@ add_library(ws2_32_new SHARED
     src/sputil.c
     src/startup.c
     src/wsautil.c
-    ws2_32.rc)
+    ws2_32.rc
+     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
 set_module_type(ws2_32_new win32dll)
 
-target_link_libraries(ws2_32_new
-     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_new.def
-     wine)
+target_link_libraries(ws2_32_new wine)
 
 add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help kernel32 ntdll)
 

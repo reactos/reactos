@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(hhctrl ${CMAKE_CURRENT_SOURCE_DIR}/hhctrl.ocx.spec ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
+spec2def(hhctrl.ocx hhctrl.ocx.spec)
 
 add_library(hhctrl SHARED
     chm.c
@@ -14,12 +14,12 @@ add_library(hhctrl SHARED
     search.c
     stream.c
     webbrowser.c
-    hhctrl.rc)
+    hhctrl.rc    
+    ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
 
 set_module_type(hhctrl win32ocx)
 
 target_link_libraries(hhctrl
-    ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def
     uuid
     wine)
 

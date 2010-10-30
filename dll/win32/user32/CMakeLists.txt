@@ -63,7 +63,8 @@ list(APPEND SOURCE
     windows/window.c
     windows/winpos.c
     user32_stubs.c
-    user32.rc)
+    user32.rc
+    ${CMAKE_CURRENT_SOURCE_DIR}/user32.def)
 
 add_library(user32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/user32_user32.h.gch
@@ -72,7 +73,6 @@ add_library(user32 SHARED
 set_module_type(user32 win32dll)
 
 target_link_libraries(user32
-    ${CMAKE_CURRENT_SOURCE_DIR}/user32.def
     wine
     win32ksys
     pseh)

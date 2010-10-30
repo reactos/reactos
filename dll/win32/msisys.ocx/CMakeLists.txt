@@ -2,14 +2,14 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(msisys ${CMAKE_CURRENT_SOURCE_DIR}/msisys.ocx.spec ${CMAKE_CURRENT_BINARY_DIR}/msisys.def)
+spec2def(msisys.ocx msisys.ocx.spec)
 
-add_library(msisys SHARED msisys.c)
+add_library(msisys SHARED msisys.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msisys.def)
 
 set_module_type(msisys win32ocx)
 
 target_link_libraries(msisys
-    ${CMAKE_CURRENT_BINARY_DIR}/msisys.def
     uuid
     wine)
 
