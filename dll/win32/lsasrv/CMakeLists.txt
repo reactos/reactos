@@ -24,4 +24,4 @@ target_link_libraries(lsasrv
 
 add_importlibs(lsasrv rpcrt4 kernel32 ntdll)
 add_dependencies(lsasrv lsasrv_def  psdk buildno_header)
-add_livecd_target(lsasrv reactos/system32)
+add_cab_target(lsasrv 1)

@@ -18,4 +18,4 @@ target_link_libraries(schannel
 
 add_importlibs(schannel secur32 kernel32 ntdll)
 add_dependencies(schannel schannel_def)
-add_livecd_target(schannel reactos/system32)
+add_cab_target(schannel 1)

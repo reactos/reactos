@@ -11,4 +11,4 @@ target_link_libraries(untfs
 
 add_importlibs(untfs kernel32 ntdll)
 add_dependencies(untfs untfs_def)
-add_livecd_target(untfs reactos/system32)
+add_cab_target(untfs 1)

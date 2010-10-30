@@ -30,4 +30,4 @@ add_importlibs(usrmgr
     ntdll)
 
 add_dependencies(usrmgr usrmgr_def)
-add_livecd_target(usrmgr reactos/system32)
+add_cab_target(usrmgr 1)

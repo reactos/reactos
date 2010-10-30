@@ -9,4 +9,4 @@ target_link_libraries(notifyhook
     -lkernel32
     -luser32)
 
-add_livecd_target(notifyhook reactos/system32)
+add_cab_target(notifyhook 1)

@@ -20,4 +20,4 @@ target_link_libraries(msvfw32
 
 add_importlibs(msvfw32 winmm version comctl32 user32 gdi32 advapi32 kernel32 ntdll)
 add_dependencies(msvfw32 msvfw32_def)
-add_livecd_target(msvfw32 reactos/system32)
+add_cab_target(msvfw32 1)

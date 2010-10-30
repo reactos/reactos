@@ -23,4 +23,4 @@ target_link_libraries(mpr
 
 add_importlibs(mpr advapi32 user32 kernel32 ntdll)
 add_dependencies(mpr mpr_def)
-add_livecd_target(mpr reactos/system32)
+add_cab_target(mpr 1)

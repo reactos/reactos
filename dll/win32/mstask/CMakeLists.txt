@@ -29,4 +29,4 @@ target_link_libraries(mstask
 
 add_importlibs(mstask ole32 ntdll)
 add_dependencies(mstask mstask_def)
-add_livecd_target(mstask reactos/system32)
+add_cab_target(mstask 1)

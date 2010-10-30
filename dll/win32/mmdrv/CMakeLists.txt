@@ -20,4 +20,4 @@ target_link_libraries(mmdrv ${CMAKE_CURRENT_BINARY_DIR}/mmdrv.def)
 
 add_importlibs(mmdrv winmm user32 kernel32 ntdll)
 add_dependencies(mmdrv mmdrv_def psdk buildno_header)
-add_livecd_target(mmdrv reactos/system32)
+add_cab_target(mmdrv 1)

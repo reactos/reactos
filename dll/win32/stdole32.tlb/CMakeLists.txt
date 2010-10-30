@@ -20,4 +20,4 @@ set_target_properties(stdole32.tlb PROPERTIES SUFFIX "")
 target_link_libraries(stdole32.tlb ${CMAKE_CURRENT_BINARY_DIR}/stdole32.tlb.def)
 
 add_dependencies(stdole32.tlb std_ole_v1 stdole32.tlb_def)
-add_livecd_target(stdole32.tlb reactos/system32)
+add_cab_target(stdole32.tlb 1)

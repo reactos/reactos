@@ -47,6 +47,18 @@ endif()
 
 else()
 
+#Some cleanup
+file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt)
+file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt)
+file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt)
+file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt)
+file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_cab.txt)
+file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
+
+#Some useful variables
+set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
+set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
+
 # Activate support for assembly source files
 enable_language(ASM)
 
@@ -99,44 +111,6 @@ add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/idl)
 add_subdirectory(include/reactos/wine)
 add_subdirectory(include/reactos/mc)
-
-#minicd target
-set(BOOTCD_DIR "${REACTOS_BINARY_DIR}/boot/bootcd")
-
-file(MAKE_DIRECTORY "${BOOTCD_DIR}")
-file(MAKE_DIRECTORY "${BOOTCD_DIR}/loader")
-file(MAKE_DIRECTORY "${BOOTCD_DIR}/reactos")
-file(MAKE_DIRECTORY "${BOOTCD_DIR}/reactos/system32")
-
-add_custom_target(minicd 
-    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${BOOTCD_DIR} REACTOS ${REACTOS_BINARY_DIR}/minicd.iso
-    DEPENDS native-cdmake)
-
-add_minicd(${REACTOS_SOURCE_DIR}/boot/bootdata/bootcd.ini "" freeldr.ini)
-set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/minicd.iso)
-
-#livecd target
-set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
-
-file(MAKE_DIRECTORY "${LIVECD_DIR}")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/loader")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/All Users")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/All Users/Desktop")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/Default User")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/Default User/Desktop")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/Profiles/Default User/My Documents")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/inf")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/fonts")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32")
-file(MAKE_DIRECTORY "${LIVECD_DIR}/reactos/system32/config")
-
-add_custom_target(livecd
-    COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${LIVECD_DIR} REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
-    DEPENDS native-cdmake)
-add_livecd(${REACTOS_SOURCE_DIR}/boot/bootdata/livecd.ini "" freeldr.ini)
-set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/livecd.iso)
 
 include(baseaddress.cmake)
 
@@ -206,6 +180,9 @@ add_custom_command(
     DEPENDS native-gendib) 
 
 add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
+
+#bootcd and livecd
+include(ros_cd.cmake)
 
 endif()
 

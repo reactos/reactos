@@ -18,4 +18,4 @@ target_link_libraries(msimtf
 
 add_importlibs(msimtf msvcrt imm32 kernel32 ntdll)
 add_dependencies(msimtf msimtf_def)
-add_livecd_target(msimtf reactos/system32)
+add_cab_target(msimtf 1)

@@ -32,4 +32,4 @@ target_link_libraries(dnsapi
 add_importlibs(dnsapi user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
 add_pch(dnsapi ${CMAKE_CURRENT_SOURCE_DIR}/dnsapi/precomp.h ${SOURCE})
 add_dependencies(dnsapi dnsapi_def psdk buildno_header)
-add_livecd_target(dnsapi reactos/system32)
+add_cab_target(dnsapi 1)

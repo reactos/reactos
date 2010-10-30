@@ -11,4 +11,4 @@ target_link_libraries(ufatx
 
 add_importlibs(ufatx gcc kernel32 ntdll)
 add_dependencies(ufatx ufatx_def psdk buildno_header)
-add_livecd_target(ufatx reactos/system32)
+add_cab_target(ufatx 1)

@@ -25,4 +25,4 @@ add_importlibs(mlang
     ntdll)
 
 add_dependencies(mlang mlang_def psdk buildno_header)
-add_livecd_target(mlang reactos/system32)
+add_cab_target(mlang 1)

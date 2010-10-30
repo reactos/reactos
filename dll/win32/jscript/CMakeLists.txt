@@ -51,4 +51,4 @@ add_importlibs(jscript
     ntdll)
 
 add_dependencies(jscript jsglobal jscript_def stdole2)
-add_livecd_target(jscript reactos/system32)
+add_cab_target(jscript 1)

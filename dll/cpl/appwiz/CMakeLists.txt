@@ -22,4 +22,4 @@ add_importlibs(appwiz
     kernel32)
 
 add_dependencies(appwiz appwiz_def)
-add_livecd_target(appwiz reactos/system32)
+add_cab_target(appwiz 1)

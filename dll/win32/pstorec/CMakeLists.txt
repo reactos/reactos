@@ -18,4 +18,4 @@ target_link_libraries(pstorec
 add_importlibs(pstorec msvcrt kernel32 ntdll)
 
 add_dependencies(pstorec pstorec_tlb pstorec_def)
-add_livecd_target(pstorec reactos/system32)
+add_cab_target(pstorec 1)

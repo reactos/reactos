@@ -14,4 +14,4 @@ target_link_libraries(mprapi
 
 add_importlibs(mprapi kernel32 ntdll)
 add_dependencies(mprapi mprapi_def)
-add_livecd_target(mprapi reactos/system32)
+add_cab_target(mprapi 1)

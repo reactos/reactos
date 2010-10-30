@@ -11,4 +11,4 @@ set_module_type(finger win32cui)
 
 add_importlibs(finger ws2_32 msvcrt kernel32)
 
-add_livecd_target(finger reactos/system32)
+add_cab_target(finger 1)

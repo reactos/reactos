@@ -15,4 +15,4 @@ add_dependencies(csrss psdk bugcodes)
 
 add_subdirectory(csrsrv)
 add_subdirectory(win32csr)
-add_livecd_target(csrss reactos/system32)
+add_cab_target(csrss 1)

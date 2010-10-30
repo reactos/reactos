@@ -20,4 +20,4 @@ target_link_libraries(twain_32
 
 add_importlibs(twain_32 msvcrt kernel32 ntdll)
 add_dependencies(twain_32 twain_32_def)
-add_livecd_target(twain_32 reactos/system32)
+add_cab_target(twain_32 1)

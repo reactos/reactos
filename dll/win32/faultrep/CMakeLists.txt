@@ -15,4 +15,4 @@ target_link_libraries(faultrep
 
 add_importlibs(faultrep advapi32 kernel32 ntdll)
 add_dependencies(faultrep faultrep_def)
-add_livecd_target(faultrep reactos/system32)
+add_cab_target(faultrep 1)

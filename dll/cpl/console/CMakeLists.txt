@@ -26,4 +26,4 @@ add_importlibs(console
 
 add_pch(console ${CMAKE_CURRENT_SOURCE_DIR}/console.h ${SOURCE})
 add_dependencies(console console_def)
-add_livecd_target(console reactos/system32)
+add_cab_target(console 1)

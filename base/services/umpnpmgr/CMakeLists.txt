@@ -17,4 +17,4 @@ add_importlibs(umpnpmgr
     kernel32
     ntdll)
 
-add_livecd_target(umpnpmgr reactos/system32)
+add_cab_target(umpnpmgr 1)

@@ -14,4 +14,4 @@ target_link_libraries(ntprint
 
 add_importlibs(ntprint winspool kernel32 ntdll)
 add_dependencies(ntprint ntprint_def psdk)
-add_livecd_target(ntprint reactos/system32)
+add_cab_target(ntprint 1)

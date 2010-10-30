@@ -69,4 +69,4 @@ add_importlibs(quartz
 
 add_dependencies(quartz quartz_def)
 rpcproxy(quartz quartz_strmif.idl)
-add_livecd_target(quartz reactos/system32)
+add_cab_target(quartz 1)

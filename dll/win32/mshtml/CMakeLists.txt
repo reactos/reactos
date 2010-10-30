@@ -100,4 +100,4 @@ add_importlibs(mshtml
     ntdll)
 
 add_dependencies(mshtml mshtml_nsiface_header mshtml_def)
-add_livecd_target(mshtml reactos/system32)
+add_cab_target(mshtml 1)

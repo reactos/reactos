@@ -9,4 +9,4 @@ target_link_libraries(dwnl uuid)
 
 add_importlibs(dwnl urlmon wininet msvcrt kernel32)
 
-add_livecd_target(dwnl reactos/system32)
+add_cab_target(dwnl 1)

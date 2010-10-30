@@ -94,4 +94,4 @@ add_importlibs(shell32
     ntdll)
 
 add_dependencies(shell32 shell32_def)
-add_livecd_target(shell32 reactos/system32)
+add_cab_target(shell32 1)

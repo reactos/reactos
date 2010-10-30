@@ -16,4 +16,4 @@ add_importlibs(joy
     shell32)
 
 add_dependencies(joy joy_def)
-add_livecd_target(joy reactos/system32)
+add_cab_target(joy 1)

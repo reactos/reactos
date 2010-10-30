@@ -14,4 +14,4 @@ target_link_libraries(sensapi
 
 add_importlibs(sensapi kernel32 ntdll)
 add_dependencies(sensapi sensapi_def)
-add_livecd_target(sensapi reactos/system32)
+add_cab_target(sensapi 1)

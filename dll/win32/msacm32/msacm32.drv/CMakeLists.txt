@@ -21,4 +21,4 @@ target_link_libraries(msacm32.drv
 
 add_importlibs(msacm32.drv msacm32 user32 winmm advapi32 kernel32 ntdll)
 add_dependencies(msacm32.drv msacm32.drv_def psdk buildno_header)
-add_livecd_target(msacm32.drv reactos/system32)
+add_cab_target(msacm32.drv 1)

@@ -13,4 +13,4 @@ set_target_properties(fs_rec PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 
 add_importlibs(fs_rec ntoskrnl hal)
 add_dependencies(fs_rec psdk bugcodes)
-add_livecd_target(fs_rec reactos/system32/drivers)
+add_cab_target(fs_rec 2)

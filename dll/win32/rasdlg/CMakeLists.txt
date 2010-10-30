@@ -12,4 +12,4 @@ target_link_libraries(rasdlg
 
 add_importlibs(rasdlg kernel32 ntdll)
 add_dependencies(rasdlg rasdlg_def)
-add_livecd_target(rasdlg reactos/system32)
+add_cab_target(rasdlg 1)

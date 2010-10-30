@@ -21,4 +21,4 @@ target_link_libraries(fusion
 
 add_importlibs(fusion shlwapi advapi32 dbghelp user32 kernel32 ntdll)
 add_dependencies(fusion fusion_def)
-add_livecd_target(fusion reactos/system32)
+add_cab_target(fusion 1)

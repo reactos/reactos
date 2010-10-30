@@ -34,4 +34,4 @@ add_importlibs(intl
     kernel32)
 
 add_dependencies(intl intl_def)
-add_livecd_target(intl reactos/system32)
+add_cab_target(intl 1)

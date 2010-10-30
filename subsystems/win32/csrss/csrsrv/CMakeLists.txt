@@ -25,4 +25,4 @@ add_importlibs(csrsrv ntdll smdll)
 add_pch(csrsrv ${CMAKE_CURRENT_SOURCE_DIR}/srv.h ${SOURCE})
 
 add_dependencies(csrsrv csrsrv_def psdk bugcodes)
-add_livecd_target(csrsrv reactos/system32)
+add_cab_target(csrsrv 1)

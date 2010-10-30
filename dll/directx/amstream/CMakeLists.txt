@@ -30,4 +30,4 @@ add_importlibs(amstream
     ntdll)
 
 add_dependencies(amstream amstream_def dxsdk)
-add_livecd_target(amstream reactos/system32)
+add_cab_target(amstream 1)

@@ -18,4 +18,4 @@ add_importlibs(telephon
     kernel32)
 
 add_dependencies(telephon telephon_def)
-add_livecd_target(telephon reactos/system32)
+add_cab_target(telephon 1)

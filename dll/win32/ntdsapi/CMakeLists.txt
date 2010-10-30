@@ -14,4 +14,4 @@ target_link_libraries(ntdsapi
 
 add_importlibs(ntdsapi user32 kernel32 ntdll)
 add_dependencies(ntdsapi ntdsapi_def psdk buildno_header)
-add_livecd_target(ntdsapi reactos/system32)
+add_cab_target(ntdsapi 1)

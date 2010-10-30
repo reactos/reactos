@@ -12,4 +12,4 @@ target_link_libraries(samlib ${CMAKE_CURRENT_BINARY_DIR}/samlib.def)
 
 add_importlibs(samlib advapi32 kernel32 ntdll)
 add_dependencies(samlib samlib_def)
-add_livecd_target(samlib reactos/system32)
+add_cab_target(samlib 1)

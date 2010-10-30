@@ -30,4 +30,4 @@ add_pch(smss ${CMAKE_CURRENT_SOURCE_DIR}/smss.h ${SOURCE})
 
 set_module_type(smss nativecui)
 add_importlibs(smss ntdll)
-add_livecd_target(smss reactos/system32)
+add_cab_target(smss 1)

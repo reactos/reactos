@@ -13,4 +13,4 @@ target_link_libraries(blue
 
 add_dependencies(blue psdk bugcodes)
 add_minicd_target(blue reactos blue.sys)
-add_livecd_target(blue reactos/system32/drivers)
+add_cab_target(blue 2)

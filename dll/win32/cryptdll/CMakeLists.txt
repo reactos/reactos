@@ -15,4 +15,4 @@ target_link_libraries(cryptdll
 
 add_importlibs(cryptdll kernel32 ntdll)
 add_dependencies(cryptdll cryptdll_def)
-add_livecd_target(cryptdll reactos/system32)
+add_cab_target(cryptdll 1)

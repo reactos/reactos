@@ -73,4 +73,4 @@ target_link_libraries(ole32
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
     
 add_dependencies(ole32 ole32_def ole32idl)
-add_livecd_target(ole32 reactos/system32)
+add_cab_target(ole32 1)

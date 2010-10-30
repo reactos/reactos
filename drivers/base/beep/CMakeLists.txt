@@ -10,4 +10,4 @@ target_link_libraries(beep
     -lhal)
 
 add_dependencies(beep psdk bugcodes)
-add_livecd_target(beep reactos/system32/drivers)
+add_cab_target(beep 2)

@@ -28,4 +28,4 @@ target_link_libraries(tdi
 
 add_dependencies(tdi tdi_def psdk bugcodes buildno_header)
 
-add_livecd_target(tdi reactos/system32/drivers)
+add_cab_target(tdi 2)

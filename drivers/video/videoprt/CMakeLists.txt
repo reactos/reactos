@@ -35,4 +35,4 @@ target_link_libraries(videoprt
 
 add_pch(videoprt ${CMAKE_CURRENT_SOURCE_DIR}/videoprt.h ${SOURCE})
 add_dependencies(videoprt videoprt_def psdk bugcodes buildno_header)
-add_livecd_target(videoprt reactos/system32/drivers)
+add_cab_target(videoprt 2)

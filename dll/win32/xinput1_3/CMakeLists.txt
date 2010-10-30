@@ -15,4 +15,4 @@ target_link_libraries(xinput1_3
 add_importlibs(xinput1_3 msvcrt kernel32 ntdll)
 
 add_dependencies(xinput1_3 xinput1_3_def)
-add_livecd_target(xinput1_3 reactos/system32)
+add_cab_target(xinput1_3 1)

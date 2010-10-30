@@ -117,29 +117,18 @@ MACRO(ADD_INTERFACE_DEFINITIONS TARGET)
 ENDMACRO()
 
 MACRO(add_minicd_target _targetname _dir) # optional parameter: _nameoncd
-    get_target_property(FILENAME ${_targetname} LOCATION)
-
     if("${ARGN}" STREQUAL "")
+        get_target_property(FILENAME ${_targetname} LOCATION)
     	get_filename_component(_nameoncd ${FILENAME} NAME)
     else()
     	set(_nameoncd ${ARGN})
     endif()
-
-    add_custom_target(${_targetname}_minicd 
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd}
-        DEPENDS ${_targetname})
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${BOOTCD_DIR}/${_dir}/${_nameoncd})
-
-    add_dependencies(minicd ${_targetname}_minicd)
+    
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt "${_targetname}\t${_dir}\t${_nameoncd}\n")
 ENDMACRO(add_minicd_target)
 
 MACRO(add_minicd FILENAME _dir _nameoncd)
-    add_custom_target(${_nameoncd}_minicd
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${BOOTCD_DIR}/${_dir}/${_nameoncd}
-        DEPENDS ${FILENAME})
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${BOOTCD_DIR}/${_dir}/${_nameoncd})
-    
-    add_dependencies(minicd ${_nameoncd}_minicd)
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt "${FILENAME}\t${_dir}\t${_nameoncd}\n")
 ENDMACRO(add_minicd)
 
 macro(set_cpp)
@@ -148,31 +137,66 @@ macro(set_cpp)
 endmacro()
 
 MACRO(add_livecd_target _targetname _dir )# optional parameter : _nameoncd
+    if("${ARGN}" STREQUAL "")
+        get_target_property(FILENAME ${_targetname} LOCATION)
+    	get_filename_component(_nameoncd ${FILENAME} NAME)
+    else()
+    	set(_nameoncd ${ARGN})
+    endif()
     
-    get_target_property(FILENAME ${_targetname} LOCATION)
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt "${_targetname}\t${_dir}\t${_nameoncd}\n")
+ENDMACRO(add_livecd_target)
 
+MACRO(add_livecd FILENAME _dir)# optional parameter : _nameoncd
     if("${ARGN}" STREQUAL "")
     	get_filename_component(_nameoncd ${FILENAME} NAME)
     else()
     	set(_nameoncd ${ARGN})
     endif()
-
-    add_custom_target(${_targetname}_livecd 
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd}
-        DEPENDS ${_targetname})
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${LIVECD_DIR}/${_dir}/${_nameoncd})
-
-    add_dependencies(livecd ${_targetname}_livecd)
-ENDMACRO(add_livecd_target)
-
-MACRO(add_livecd FILENAME _dir _nameoncd)
-    add_custom_target(${_nameoncd}_livecd
-        COMMAND ${CMAKE_COMMAND} -E copy ${FILENAME} ${LIVECD_DIR}/${_dir}/${_nameoncd}
-        DEPENDS ${FILENAME})
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${LIVECD_DIR}/${_dir}/${_nameoncd})
-
-    add_dependencies(livecd ${_nameoncd}_livecd)
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt "${FILENAME}\t${_dir}\t${_nameoncd}\n")
 ENDMACRO(add_livecd)
+
+macro(cab_to_dir _dir_num _var_name)
+#   1 = system32
+#   2 = system32\drivers
+#   3 = Fonts
+#   4 =
+#   5 = system32\drivers\etc
+#   6 = inf
+#   7 = bin
+#   8 = media
+    if(${_dir_num} STREQUAL "1")
+        set(${_var_name} "reactos/system32")
+    elseif(${_dir_num} STREQUAL "2")
+        set(${_var_name} "reactos/system32/drivers")
+    elseif(${_dir_num} STREQUAL "3")
+        set(${_var_name} "reactos/fonts")
+    elseif(${_dir_num} STREQUAL "4")
+        set(${_var_name} "reactos")
+    elseif(${_dir_num} STREQUAL "5")
+        set(${_var_name} "reactos/system32/drivers/etc")
+    elseif(${_dir_num} STREQUAL "6")
+        set(${_var_name} "reactos/inf")
+    elseif(${_dir_num} STREQUAL "7")
+        set(${_var_name} "reactos/bin")
+    elseif(${_dir_num} STREQUAL "8")
+        set(${_var_name} "reactos/system32/drivers")
+    else()
+        message(FATAL_ERROR "Wrong directory ${_dir_num}")
+    endif()
+endmacro()
+
+MACRO(add_cab_target _targetname _num )
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt "${_targetname}\t${_num}\n")
+    cab_to_dir(${_num} _dir)
+    add_livecd_target(${_targetname} ${_dir})
+ENDMACRO(add_cab_target)
+
+MACRO(add_cab FILENAME _num)
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/ros_cab.txt "${FILENAME}\t${_num}\n")
+    cab_to_dir(${_num} _dir)
+    add_livecd(${FILENAME} ${_dir})
+ENDMACRO(add_cab)    
 
 macro(custom_incdefs)
     if(NOT DEFINED result_incs) #rpc_defines

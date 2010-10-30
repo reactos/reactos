@@ -14,4 +14,4 @@ set_target_properties(msfs PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,
 add_importlibs(msfs ntoskrnl hal)
 add_pch(msfs ${CMAKE_CURRENT_SOURCE_DIR}/msfs.h ${SOURCE})
 add_dependencies(msfs psdk bugcodes)
-add_livecd_target(msfs reactos/system32/drivers)
+add_cab_target(msfs 2)

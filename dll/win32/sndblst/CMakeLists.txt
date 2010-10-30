@@ -17,4 +17,4 @@ target_link_libraries(sndblst
 
 add_importlibs(sndblst user32 winmm advapi32 kernel32 ntdll)
 add_dependencies(sndblst sndblst_def)
-add_livecd_target(sndblst reactos/system32)
+add_cab_target(sndblst 1)

@@ -20,4 +20,4 @@ target_link_libraries(vgaddi ${CMAKE_CURRENT_BINARY_DIR}/vgaddi.def)
 
 add_importlibs(vgaddi win32k)
 add_dependencies(vgaddi vgaddi_def psdk bugcodes)
-add_livecd_target(vgaddi reactos/system32)
+add_cab_target(vgaddi 1)

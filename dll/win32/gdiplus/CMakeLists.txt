@@ -43,4 +43,4 @@ target_link_libraries(gdiplus crt)
 endif(ARCH MATCHES amd64)
 
 add_dependencies(gdiplus gdiplus_def)
-add_livecd_target(gdiplus reactos/system32)
+add_cab_target(gdiplus 1)

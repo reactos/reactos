@@ -28,4 +28,4 @@ set_module_type(telnet win32cui)
 
 add_importlibs(telnet ws2_32 user32 kernel32 msvcrt)
 
-add_livecd_target(telnet reactos/system32)
+add_cab_target(telnet 1)

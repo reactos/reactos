@@ -34,4 +34,4 @@ add_importlibs(devenum
     ntdll)
 
 add_dependencies(devenum devenum_def)
-add_livecd_target(devenum reactos/system32)
+add_cab_target(devenum 1)

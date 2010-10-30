@@ -60,4 +60,4 @@ add_dependencies(oleaut32 oleaut32_def)
 
 rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
-add_livecd_target(oleaut32 reactos/system32)
+add_cab_target(oleaut32 1)

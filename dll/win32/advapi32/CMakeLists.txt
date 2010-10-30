@@ -59,4 +59,4 @@ target_link_libraries(advapi32
 add_importlibs(advapi32 rpcrt4 kernel32 ntdll)
 
 add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
-add_livecd_target(advapi32 reactos/system32)
+add_cab_target(advapi32 1)

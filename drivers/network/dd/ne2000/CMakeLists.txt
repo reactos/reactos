@@ -17,4 +17,4 @@ target_link_libraries(ne2000
 
 add_dependencies(ne2000 psdk bugcodes buildno_header)
 
-add_livecd_target(ne2000 reactos/system32/drivers)
+add_cab_target(ne2000 2)

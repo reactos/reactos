@@ -19,4 +19,4 @@ add_importlibs(shimgvw
     ntdll)
 
 add_dependencies(shimgvw shimgvw_def)
-add_livecd_target(shimgvw reactos/system32)
+add_cab_target(shimgvw 1)

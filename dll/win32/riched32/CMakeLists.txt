@@ -14,4 +14,4 @@ target_link_libraries(riched32
 
 add_importlibs(riched32 riched20 user32 kernel32 ntdll)
 add_dependencies(riched32 riched32_def)
-add_livecd_target(riched32 reactos/system32)
+add_cab_target(riched32 1)

@@ -14,4 +14,4 @@ target_link_libraries(olecli32
 
 add_importlibs(olecli32 ole32 gdi32 kernel32 ntdll)
 add_dependencies(olecli32 olecli32_def psdk buildno_header)
-add_livecd_target(olecli32 reactos/system32)
+add_cab_target(olecli32 1)

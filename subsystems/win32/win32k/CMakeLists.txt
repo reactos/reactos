@@ -188,4 +188,4 @@ target_link_libraries(win32k
 add_importlibs(win32k ntoskrnl hal ftfd)
 add_pch(win32k ${CMAKE_CURRENT_SOURCE_DIR}/pch.h ${SOURCE})
 add_dependencies(win32k gendib_generated subsystem_napi)
-add_livecd_target(win32k reactos/system32)
+add_cab_target(win32k 1)

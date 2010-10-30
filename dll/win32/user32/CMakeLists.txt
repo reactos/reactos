@@ -79,4 +79,4 @@ target_link_libraries(user32
                       
 add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
 add_importlibs(user32 gdi32 advapi32 imm32 kernel32 ntdll)
-add_livecd_target(user32 reactos/system32)
+add_cab_target(user32 1)

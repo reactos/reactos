@@ -20,4 +20,4 @@ target_link_libraries(pcnet
 
 add_dependencies(pcnet psdk bugcodes buildno_header)
 
-add_livecd_target(pcnet reactos/system32/drivers)
+add_cab_target(pcnet 2)

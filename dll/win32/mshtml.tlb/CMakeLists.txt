@@ -21,4 +21,4 @@ set_target_properties(mshtml.tlb PROPERTIES SUFFIX "")
 target_link_libraries(mshtml.tlb ${CMAKE_CURRENT_BINARY_DIR}/mshtml.tlb.def)
 
 add_dependencies(mshtml.tlb mshtml_tlb mshtml.tlb_def)
-add_livecd_target(mshtml.tlb reactos/system32)
+add_cab_target(mshtml.tlb 1)

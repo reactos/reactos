@@ -15,4 +15,4 @@ target_link_libraries(compstui
 
 add_importlibs(compstui kernel32 ntdll)
 add_dependencies(compstui compstui_def)
-add_livecd_target(compstui reactos/system32)
+add_cab_target(compstui 1)

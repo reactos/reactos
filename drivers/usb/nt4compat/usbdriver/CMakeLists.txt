@@ -31,4 +31,4 @@ set_target_properties(usbdriver PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8
 add_importlibs(usbdriver ntoskrnl hal)
 add_pch(usbdriver ${CMAKE_CURRENT_SOURCE_DIR}/usbdriver.h ${SOURCE})
 add_dependencies(usbdriver psdk bugcodes)
-add_livecd_target(usbdriver reactos/system32/drivers)
+add_cab_target(usbdriver 2)

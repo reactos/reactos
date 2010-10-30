@@ -42,4 +42,4 @@ target_link_libraries(windowscodecs
 
 add_importlibs(windowscodecs uuid ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
 add_dependencies(windowscodecs windowscodecs_def)
-add_livecd_target(windowscodecs reactos/system32)
+add_cab_target(windowscodecs 1)

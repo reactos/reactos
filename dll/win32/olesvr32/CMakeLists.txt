@@ -15,4 +15,4 @@ target_link_libraries(olesvr32
 
 add_importlibs(olesvr32 kernel32 ntdll)
 add_dependencies(olesvr32 olesvr32_def psdk buildno_header)
-add_livecd_target(olesvr32 reactos/system32)
+add_cab_target(olesvr32 1)

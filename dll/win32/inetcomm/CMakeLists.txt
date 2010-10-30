@@ -33,4 +33,4 @@ add_importlibs(inetcomm
     ntdll)
 
 add_dependencies(inetcomm inetcomm_def)
-add_livecd_target(inetcomm reactos/system32)
+add_cab_target(inetcomm 1)

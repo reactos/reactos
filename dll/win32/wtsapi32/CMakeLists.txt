@@ -14,4 +14,4 @@ target_link_libraries(wtsapi32
 
 add_importlibs(wtsapi32 advapi32 kernel32 ntdll)
 add_dependencies(wtsapi32 wtsapi32_def)
-add_livecd_target(wtsapi32 reactos/system32)
+add_cab_target(wtsapi32 1)

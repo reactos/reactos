@@ -15,4 +15,4 @@ target_link_libraries(rasadhlp ${CMAKE_CURRENT_BINARY_DIR}/rasadhlp.def)
 add_importlibs(rasadhlp ws2_32 kernel32 ntdll)
 
 add_dependencies(rasadhlp rasadhlp_def)
-add_livecd_target(rasadhlp reactos/system32)
+add_cab_target(rasadhlp 1)

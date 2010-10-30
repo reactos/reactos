@@ -36,4 +36,4 @@ add_importlibs(syssetup
     ntdll)
 
 add_dependencies(syssetup syssetup_def)
-add_livecd_target(syssetup reactos/system32)
+add_cab_target(syssetup 1)

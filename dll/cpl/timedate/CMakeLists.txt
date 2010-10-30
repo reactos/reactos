@@ -28,4 +28,4 @@ add_importlibs(timedate
     kernel32)
 
 add_dependencies(timedate timedate_def)
-add_livecd_target(timedate reactos/system32)
+add_cab_target(timedate 1)

@@ -11,4 +11,4 @@ target_link_libraries(batt ${CMAKE_CURRENT_BINARY_DIR}/batt.def)
 
 add_importlibs(batt kernel32)
 add_dependencies(batt batt_def)
-add_livecd_target(batt reactos/system32)
+add_cab_target(batt 1)

@@ -13,4 +13,4 @@ target_link_libraries(getuname ${CMAKE_CURRENT_BINARY_DIR}/getuname.def)
 
 add_importlibs(getuname kernel32 ntdll)
 add_dependencies(getuname getuname_def)
-add_livecd_target(getuname reactos/system32)
+add_cab_target(getuname 1)

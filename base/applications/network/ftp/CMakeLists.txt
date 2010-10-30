@@ -12,4 +12,4 @@ set_module_type(ftp win32cui)
 
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
 
-add_livecd_target(ftp reactos/system32)
+add_cab_target(ftp 1)

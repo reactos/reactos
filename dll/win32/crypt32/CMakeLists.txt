@@ -50,4 +50,4 @@ target_link_libraries(crypt32
 
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(crypt32 crypt32_def)
-add_livecd_target(crypt32 reactos/system32)
+add_cab_target(crypt32 1)

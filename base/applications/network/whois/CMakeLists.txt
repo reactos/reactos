@@ -5,4 +5,4 @@ set_module_type(whois win32cui)
 
 add_importlibs(whois ws2_32 msvcrt kernel32)
 
-add_livecd_target(whois reactos/system32)
+add_cab_target(whois 1)

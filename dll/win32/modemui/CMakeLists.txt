@@ -11,4 +11,4 @@ target_link_libraries(modemui ${CMAKE_CURRENT_BINARY_DIR}/modemui.def)
 
 add_importlibs(modemui kernel32)
 add_dependencies(modemui modemui_def)
-add_livecd_target(modemui reactos/system32)
+add_cab_target(modemui 1)

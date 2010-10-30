@@ -15,4 +15,4 @@ target_link_libraries(mscoree
 
 add_importlibs(mscoree advapi32 shell32 kernel32 ntdll)
 add_dependencies(mscoree mscoree_def)
-add_livecd_target(mscoree reactos/system32)
+add_cab_target(mscoree 1)

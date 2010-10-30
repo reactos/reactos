@@ -39,4 +39,4 @@ rpcproxy(actxprxy
     actxprxy_shobjidl.idl
     actxprxy_urlhist.idl)
 
-add_livecd_target(actxprxy reactos/system32)
+add_cab_target(actxprxy 1)

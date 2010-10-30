@@ -21,4 +21,4 @@ add_importlibs(ntmarta
     ntdll)
 
 add_dependencies(ntmarta ntmarta_def)
-add_livecd_target(ntmarta reactos/system32)
+add_cab_target(ntmarta 1)

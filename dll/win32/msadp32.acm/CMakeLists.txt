@@ -22,4 +22,4 @@ target_link_libraries(msadp32.acm
 
 add_importlibs(msadp32.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(msadp32.acm msadp32.acm_def psdk buildno_header)
-add_livecd_target(msadp32.acm reactos/system32)
+add_cab_target(msadp32.acm 1)

@@ -6,4 +6,4 @@ set_module_type(ping win32cui)
 
 add_importlibs(ping ws2_32 msvcrt kernel32)
 
-add_livecd_target(ping reactos/system32)
+add_cab_target(ping 1)

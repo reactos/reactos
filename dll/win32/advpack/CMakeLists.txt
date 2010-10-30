@@ -21,4 +21,4 @@ target_link_libraries(advpack
 
 add_importlibs(advpack ole32 setupapi version advapi32 kernel32 ntdll)
 add_dependencies(advpack advpack_def)
-add_livecd_target(advpack reactos/system32)
+add_cab_target(advpack 1)

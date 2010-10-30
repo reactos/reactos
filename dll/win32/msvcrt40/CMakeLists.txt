@@ -16,4 +16,4 @@ target_link_libraries(msvcrt40
 
 add_importlibs(msvcrt40 msvcrt kernel32 ntdll)
 add_dependencies(msvcrt40 msvcrt40_def)
-add_livecd_target(msvcrt40 reactos/system32)
+add_cab_target(msvcrt40 1)

@@ -28,4 +28,4 @@ add_importlibs(itss
     ntdll)
 
 add_dependencies(itss itss_def wineheaders)
-add_livecd_target(itss reactos/system32)
+add_cab_target(itss 1)

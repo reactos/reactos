@@ -14,4 +14,4 @@ target_link_libraries(lz32
 
 add_importlibs(lz32 kernel32 ntdll)
 add_dependencies(lz32 lz32_def psdk buildno_header)
-add_livecd_target(lz32 reactos/system32)
+add_cab_target(lz32 1)

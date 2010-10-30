@@ -26,4 +26,4 @@ target_link_libraries(wuapi
 
 add_importlibs(wuapi ole32 advapi32 kernel32 ntdll)
 add_dependencies(wuapi wuapi_def)
-add_livecd_target(wuapi reactos/system32)
+add_cab_target(wuapi 1)

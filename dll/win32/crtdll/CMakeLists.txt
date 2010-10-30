@@ -28,4 +28,4 @@ target_link_libraries(crtdll
 add_importlibs(crtdll kernel32 ntdll)
 add_pch(crtdll ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(crtdll crtdll_def)
-add_livecd_target(crtdll reactos/system32)
+add_cab_target(crtdll 1)

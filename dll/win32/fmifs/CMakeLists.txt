@@ -21,4 +21,4 @@ target_link_libraries(fmifs ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
 add_importlibs(fmifs kernel32 ntdll)
 add_dependencies(fmifs fmifs_def psdk buildno_header)
-add_livecd_target(fmifs reactos/system32)
+add_cab_target(fmifs 1)

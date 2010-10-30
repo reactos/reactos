@@ -19,4 +19,4 @@ target_link_libraries(mciavi32
 
 add_importlibs(mciavi32 msvfw32 winmm user32 gdi32 kernel32 ntdll)
 add_dependencies(mciavi32 mciavi32_def)
-add_livecd_target(mciavi32 reactos/system32)
+add_cab_target(mciavi32 1)

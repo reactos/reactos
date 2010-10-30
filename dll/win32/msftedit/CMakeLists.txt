@@ -18,4 +18,4 @@ target_link_libraries(msftedit
 add_importlibs(msftedit riched20 kernel32 ntdll)
 
 add_dependencies(msftedit msftedit_def)
-add_livecd_target(msftedit reactos/system32)
+add_cab_target(msftedit 1)

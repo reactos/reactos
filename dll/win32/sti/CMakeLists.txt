@@ -38,4 +38,4 @@ add_importlibs(sti
 add_dependencies(sti sti_def)
 
 rpcproxy(sti sti_wia.idl)
-add_livecd_target(sti reactos/system32)
+add_cab_target(sti 1)

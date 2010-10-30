@@ -26,4 +26,4 @@ target_link_libraries(imagehlp
 add_importlibs(imagehlp dbghelp kernel32 ntdll)
 add_pch(imagehlp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(imagehlp imagehlp_def)
-add_livecd_target(imagehlp reactos/system32)
+add_cab_target(imagehlp 1)

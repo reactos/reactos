@@ -16,4 +16,4 @@ target_link_libraries(framebuf
 
 add_importlibs(framebuf win32k)
 add_dependencies(framebuf framebuf_def psdk bugcodes)
-add_livecd_target(framebuf reactos/system32)
+add_cab_target(framebuf 1)

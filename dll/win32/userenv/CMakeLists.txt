@@ -26,4 +26,4 @@ target_link_libraries(userenv
 add_importlibs(userenv advapi32 user32 kernel32 ntdll)
 add_pch(userenv ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(userenv userenv_def)
-add_livecd_target(userenv reactos/system32)
+add_cab_target(userenv 1)

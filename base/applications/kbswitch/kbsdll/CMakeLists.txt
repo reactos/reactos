@@ -11,4 +11,4 @@ set_module_type(kbsdll win32dll)
 add_importlibs(kbsdll user32 comctl32 kernel32)
 
 add_dependencies(kbsdll kbsdll_def)
-add_livecd_target(kbsdll reactos/system32)
+add_cab_target(kbsdll 1)

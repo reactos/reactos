@@ -19,4 +19,4 @@ target_link_libraries(ftfd
     libcntpr)
 
 add_dependencies(ftfd psdk)
-add_livecd_target(ftfd reactos/system32)
+add_cab_target(ftfd 1)

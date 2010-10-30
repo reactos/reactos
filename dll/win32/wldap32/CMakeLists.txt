@@ -35,4 +35,4 @@ target_link_libraries(wldap32
 
 add_importlibs(wldap32 user32 kernel32 ntdll)
 add_dependencies(wldap32 wldap32_def)
-add_livecd_target(wldap32 reactos/system32)
+add_cab_target(wldap32 1)

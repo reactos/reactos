@@ -22,4 +22,4 @@ add_importlibs(slayer
 
 add_pch(slayer ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(slayer slayer_def)
-add_livecd_target(slayer reactos/system32)
+add_cab_target(slayer 1)

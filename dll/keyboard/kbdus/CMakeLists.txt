@@ -9,4 +9,4 @@ set_entrypoint(kbdus 0)
 target_link_libraries(kbdus ${CMAKE_CURRENT_BINARY_DIR}/kbdus.def)
 
 add_dependencies(kbdus kbdus_def psdk buildno_header)
-add_livecd_target(kbdus reactos/system32)
+add_cab_target(kbdus 1)

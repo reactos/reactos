@@ -26,4 +26,4 @@ add_importlibs(localspl
     ntdll)
 
 add_dependencies(localspl localspl_def)
-add_livecd_target(localspl reactos/system32)
+add_cab_target(localspl 1)

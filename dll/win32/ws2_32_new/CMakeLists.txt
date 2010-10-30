@@ -53,4 +53,4 @@ target_link_libraries(ws2_32_new
 
 add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help kernel32 ntdll)
 add_dependencies(ws2_32_new ws2_32_new_def)
-add_livecd_target(ws2_32_new reactos/system32)
+add_cab_target(ws2_32_new 1)

@@ -14,4 +14,4 @@ target_link_libraries(msimg32
 
 add_importlibs(msimg32 gdi32 kernel32 ntdll)
 add_dependencies(msimg32 msimg32_def)
-add_livecd_target(msimg32 reactos/system32)
+add_cab_target(msimg32 1)

@@ -34,4 +34,4 @@ add_importlibs(atl
     ntdll)
 
 add_dependencies(atl atl_atliface_header atl_def)
-add_livecd_target(atl reactos/system32)
+add_cab_target(atl 1)

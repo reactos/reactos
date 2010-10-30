@@ -16,4 +16,4 @@ target_link_libraries(msvcrt20
 
 add_importlibs(msvcrt20 msvcrt kernel32 ntdll)
 add_dependencies(msvcrt20 msvcrt20_def psdk buildno_header)
-add_livecd_target(msvcrt20 reactos/system32)
+add_cab_target(msvcrt20 1)

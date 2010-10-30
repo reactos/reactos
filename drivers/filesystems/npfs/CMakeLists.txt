@@ -16,4 +16,4 @@ add_importlibs(npfs ntoskrnl hal)
 
 add_pch(npfs ${CMAKE_CURRENT_SOURCE_DIR}/npfs.h ${SOURCE})
 add_dependencies(npfs psdk bugcodes)
-add_livecd_target(npfs reactos/system32/drivers)
+add_cab_target(npfs 2)

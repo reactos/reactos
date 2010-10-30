@@ -14,4 +14,4 @@ target_link_libraries(slbcsp
 
 add_importlibs(slbcsp kernel32 ntdll)
 add_dependencies(slbcsp slbcsp_def)
-add_livecd_target(slbcsp reactos/system32)
+add_cab_target(slbcsp 1)

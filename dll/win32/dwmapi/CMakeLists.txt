@@ -15,4 +15,4 @@ target_link_libraries(dwmapi
 
 add_importlibs(dwmapi kernel32 ntdll)
 add_dependencies(dwmapi dwmapi_def)
-add_livecd_target(dwmapi reactos/system32)
+add_cab_target(dwmapi 1)

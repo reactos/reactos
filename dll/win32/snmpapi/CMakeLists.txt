@@ -17,4 +17,4 @@ target_link_libraries(snmpapi
 
 add_importlibs(snmpapi kernel32 ntdll)
 add_dependencies(snmpapi snmpapi_def)
-add_livecd_target(snmpapi reactos/system32)
+add_cab_target(snmpapi 1)

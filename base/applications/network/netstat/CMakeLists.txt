@@ -5,4 +5,4 @@ set_module_type(netstat win32cui)
 
 add_importlibs(netstat user32 ws2_32 snmpapi iphlpapi msvcrt kernel32)
 
-add_livecd_target(netstat reactos/system32)
+add_cab_target(netstat 1)

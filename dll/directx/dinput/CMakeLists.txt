@@ -36,4 +36,4 @@ add_importlibs(dinput
     ntdll)
 
 add_dependencies(dinput dinput_def)
-add_livecd_target(dinput reactos/system32)
+add_cab_target(dinput 1)

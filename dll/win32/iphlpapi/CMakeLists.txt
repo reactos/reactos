@@ -30,4 +30,4 @@ target_link_libraries(iphlpapi
 
 add_importlibs(iphlpapi dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(iphlpapi iphlpapi_def)
-add_livecd_target(iphlpapi reactos/system32)
+add_cab_target(iphlpapi 1)

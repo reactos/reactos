@@ -22,4 +22,4 @@ add_importlibs(cryptdlg
     ntdll)
 
 add_dependencies(cryptdlg cryptdlg_def)
-add_livecd_target(cryptdlg reactos/system32)
+add_cab_target(cryptdlg 1)

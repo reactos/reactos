@@ -16,4 +16,4 @@ target_link_libraries(t2embed
 add_importlibs(t2embed gdi32 user32 advapi32 version kernel32 ntdll)
 
 add_dependencies(t2embed t2embed_def)
-add_livecd_target(t2embed reactos/system32)
+add_cab_target(t2embed 1)

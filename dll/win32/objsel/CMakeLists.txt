@@ -29,4 +29,4 @@ add_importlibs(objsel
     ntdll)
 
 add_dependencies(objsel objsel_def)
-add_livecd_target(objsel reactos/system32)
+add_cab_target(objsel 1)

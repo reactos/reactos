@@ -15,4 +15,4 @@ target_link_libraries(iccvid
 
 add_importlibs(iccvid user32 kernel32 ntdll)
 add_dependencies(iccvid iccvid_def)
-add_livecd_target(iccvid reactos/system32)
+add_cab_target(iccvid 1)

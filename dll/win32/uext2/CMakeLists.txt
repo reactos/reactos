@@ -11,4 +11,4 @@ target_link_libraries(uext2
 
 add_importlibs(uext2 kernel32 ntdll)
 add_dependencies(uext2 uext2_def)
-add_livecd_target(uext2 reactos/system32)
+add_cab_target(uext2 1)

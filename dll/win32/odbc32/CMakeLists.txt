@@ -21,4 +21,4 @@ add_importlibs(odbc32
     ntdll)
 
 add_dependencies(odbc32 odbc32_def)
-add_livecd_target(odbc32 reactos/system32)
+add_cab_target(odbc32 1)

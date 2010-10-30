@@ -30,4 +30,4 @@ add_importlibs(devmgr
 
 add_pch(devmgr ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(devmgr devmgr_def)
-add_livecd_target(devmgr reactos/system32)
+add_cab_target(devmgr 1)

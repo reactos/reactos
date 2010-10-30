@@ -28,4 +28,4 @@ add_importlibs(cryptui
     ntdll)
 
 add_dependencies(cryptui cryptui_def)
-add_livecd_target(cryptui reactos/system32)
+add_cab_target(cryptui 1)

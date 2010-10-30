@@ -40,4 +40,4 @@ target_link_libraries(tcpip
 add_pch(tcpip ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
 add_dependencies(tcpip tcpip_def psdk bugcodes buildno_header)
 
-add_livecd_target(tcpip reactos/system32/drivers)
+add_cab_target(tcpip 2)

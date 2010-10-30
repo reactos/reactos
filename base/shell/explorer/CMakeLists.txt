@@ -82,4 +82,4 @@ target_link_libraries(explorer
 set_image_base(explorer 0x00400000)
 
 add_dependencies(explorer psdk buildno_header)
-add_livecd_target(explorer reactos)
+add_cab_target(explorer 4)

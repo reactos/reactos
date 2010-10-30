@@ -21,4 +21,4 @@ add_importlibs(inetmib1
     ntdll)
 
 add_dependencies(inetmib1 inetmib1_def)
-add_livecd_target(inetmib1 reactos/system32)
+add_cab_target(inetmib1 1)

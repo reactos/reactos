@@ -50,4 +50,4 @@ add_importlibs(shdocvw
     ntdll)
 
 add_dependencies(shdocvw shdocvw_v1 shdocvw_def)
-add_livecd_target(shdocvw reactos/system32)
+add_cab_target(shdocvw 1)

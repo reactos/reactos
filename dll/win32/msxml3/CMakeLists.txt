@@ -77,4 +77,4 @@ add_importlibs(msxml3
     ntdll)
 
 add_dependencies(msxml3 msxml3_v1 msxml3_def)
-add_livecd_target(msxml3 reactos/system32)
+add_cab_target(msxml3 1)

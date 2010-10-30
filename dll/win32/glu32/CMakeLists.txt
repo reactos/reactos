@@ -116,4 +116,4 @@ add_importlibs(
     ntdll)
 
 add_dependencies(glu32 glu32_def)
-add_livecd_target(glu32 reactos/system32)
+add_cab_target(glu32 1)

@@ -5,4 +5,4 @@ set_module_type(arp win32cui)
 
 add_importlibs(arp iphlpapi ws2_32 shlwapi msvcrt kernel32)
 
-add_livecd_target(arp reactos/system32)
+add_cab_target(arp 1)
