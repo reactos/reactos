@@ -464,6 +464,13 @@ WdmAudReadWrite(
         return SetIrpIoStatus(Irp, Status, 0);
     }
 
+    /* check if mdl is locked */
+    if (Mdl->MdlFlags & MDL_PAGES_LOCKED)
+    {
+        /* unlock pages */
+        MmUnlockPages(Mdl);
+    }
+
     /* now free the mdl */
     IoFreeMdl(Mdl);
 
