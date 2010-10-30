@@ -1,15 +1,14 @@
 
-spec2def(rasman ${CMAKE_CURRENT_SOURCE_DIR}/rasman.spec ${CMAKE_CURRENT_BINARY_DIR}/rasman.def)
+spec2def(rasman.dll rasman.spec)
 
-add_library(rasman SHARED rasman.c rasman.rc)
+add_library(rasman SHARED rasman.c rasman.rc ${CMAKE_CURRENT_BINARY_DIR}/rasman.def)
 
 set_module_type(rasman win32dll)
 
 target_link_libraries(rasman
-    ${CMAKE_CURRENT_BINARY_DIR}/rasman.def
     wine
     uuid)
 
 add_importlibs(rasman kernel32 ntdll)
-add_dependencies(rasman rasman_def)
+
 add_cab_target(rasman 1)

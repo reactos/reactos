@@ -1,11 +1,9 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 add_definitions(-D_VIDEOPORT_)
 
-spec2def(videoprt ${CMAKE_CURRENT_SOURCE_DIR}/videoprt.spec ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def)
+spec2def(videoprt.sys videoprt.spec)
 
 list(APPEND SOURCE
     agp.c
@@ -22,17 +20,15 @@ list(APPEND SOURCE
     stubs.c
     timer.c
     videoprt.c
-    videoprt.rc)
+    videoprt.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def)
 
 add_library(videoprt SHARED ${CMAKE_CURRENT_BINARY_DIR}/videoprt_videoprt.h.gch ${SOURCE})
 
-set_target_properties(videoprt PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(videoprt kernelmodedriver)
 
-target_link_libraries(videoprt
-    ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def
-    -lntoskrnl
-    -lhal)
+add_importlibs(videoprt ntoskrnl hal)
 
 add_pch(videoprt ${CMAKE_CURRENT_SOURCE_DIR}/videoprt.h ${SOURCE})
-add_dependencies(videoprt videoprt_def psdk bugcodes buildno_header)
+add_dependencies(videoprt psdk bugcodes buildno_header)
 add_cab_target(videoprt 2)

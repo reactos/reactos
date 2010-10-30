@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdfi ${CMAKE_CURRENT_SOURCE_DIR}/kbdfi.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdfi.def)
+spec2def(kbdfi.dll kbdfi.spec)
 
-add_library(kbdfi SHARED kbdfi.c kbdfi.rc)
+add_library(kbdfi SHARED kbdfi.c kbdfi.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdfi.def)
 
 set_entrypoint(kbdfi 0)
 
-target_link_libraries(kbdfi ${CMAKE_CURRENT_BINARY_DIR}/kbdfi.def)
 
-add_dependencies(kbdfi kbdfi_def psdk buildno_header)
+
+add_dependencies(kbdfi psdk buildno_header)

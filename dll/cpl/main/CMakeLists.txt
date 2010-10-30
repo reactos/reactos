@@ -3,17 +3,16 @@ set_unicode()
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-spec2def(main ${CMAKE_CURRENT_SOURCE_DIR}/main.spec ${CMAKE_CURRENT_BINARY_DIR}/main.def)
+spec2def(main.cpl main.spec)
 
 add_library(main SHARED
     keyboard.c
     main.c
     mouse.c
-    main.rc)
+    main.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/main.def)
 
 set_module_type(main cpl)
-
-target_link_libraries(main ${CMAKE_CURRENT_BINARY_DIR}/main.def)
 
 add_importlibs(main
     msvcrt
@@ -26,5 +25,4 @@ add_importlibs(main
     gdi32
     kernel32)
 
-add_dependencies(main main_def)
 add_cab_target(main 1)

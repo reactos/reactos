@@ -1,12 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdvntc ${CMAKE_CURRENT_SOURCE_DIR}/kbdvntc.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdvntc.def)
+spec2def(kbdvntc.dll kbdvntc.spec)
 
-add_library(kbdvntc SHARED kbdvntc.c kbdvntc.rc)
+add_library(kbdvntc SHARED kbdvntc.c kbdvntc.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdvntc.def)
 
 set_entrypoint(kbdvntc 0)
 
-target_link_libraries(kbdvntc ${CMAKE_CURRENT_BINARY_DIR}/kbdvntc.def)
-
-add_dependencies(kbdvntc kbdvntc_def psdk buildno_header)
+add_dependencies(kbdvntc psdk buildno_header)

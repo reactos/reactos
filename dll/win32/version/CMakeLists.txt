@@ -1,6 +1,6 @@
 
 add_definitions(-D__WINESRC__)
-spec2def(version ${CMAKE_CURRENT_SOURCE_DIR}/version.spec ${CMAKE_CURRENT_BINARY_DIR}/version.def)
+spec2def(version.dll version.spec)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -8,14 +8,13 @@ add_library(version SHARED
     info.c
     install.c
     resource.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/version.def)
 
 set_entrypoint(version 0)
 
-target_link_libraries(version
-    ${CMAKE_CURRENT_BINARY_DIR}/version.def
-    wine)
+target_link_libraries(version wine)
 
 add_importlibs(version lz32 kernel32 ntdll)
-add_dependencies(version version_def psdk buildno_header)
+add_dependencies(version psdk buildno_header)
 add_cab_target(version 1)

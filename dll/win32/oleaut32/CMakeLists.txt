@@ -18,7 +18,8 @@ list(APPEND SOURCE
     variant.c
     vartype.c
     oleaut32.rc
-    oleaut32_oaidl.idl)
+    oleaut32_oaidl.idl
+    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -41,14 +42,13 @@ endif(MSC)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(oleaut32 ${CMAKE_CURRENT_SOURCE_DIR}/oleaut32.spec ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def)
+spec2def(oleaut32.dll oleaut32.spec)
 
 add_library(oleaut32 SHARED ${SOURCE})
 
 set_module_type(oleaut32 win32dll)
 
 target_link_libraries(oleaut32
-    ${CMAKE_CURRENT_BINARY_DIR}/oleaut32.def
     oleaut32_proxy
     wine
     wineldr
@@ -56,7 +56,7 @@ target_link_libraries(oleaut32
     pseh)
 
 add_importlibs(oleaut32 windowscodecs ole32 rpcrt4 user32 gdi32 advapi32 comctl32 urlmon msvcrt kernel32 ntdll)
-add_dependencies(oleaut32 oleaut32_def)
+
 
 rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
 

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdhe ${CMAKE_CURRENT_SOURCE_DIR}/kbdhe.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdhe.def)
+spec2def(kbdhe.dll kbdhe.spec)
 
-add_library(kbdhe SHARED kbdhe.c kbdhe.rc)
+add_library(kbdhe SHARED kbdhe.c kbdhe.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdhe.def)
 
 set_entrypoint(kbdhe 0)
 
-target_link_libraries(kbdhe ${CMAKE_CURRENT_BINARY_DIR}/kbdhe.def)
 
-add_dependencies(kbdhe kbdhe_def psdk buildno_header)
+
+add_dependencies(kbdhe psdk buildno_header)

@@ -3,7 +3,7 @@ add_definitions(-D_WINE)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dsound ${CMAKE_CURRENT_SOURCE_DIR}/dsound.spec ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
+spec2def(dsound.dll dsound.spec)
 
 add_library(dsound SHARED
     buffer.c
@@ -17,12 +17,12 @@ add_library(dsound SHARED
     propset.c
     regsvr.c
     sound3d.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dsound.def)
 
 set_module_type(dsound win32dll)
 
 target_link_libraries(dsound
-    ${CMAKE_CURRENT_BINARY_DIR}/dsound.def
     dxguid
     uuid
     wine)
@@ -36,5 +36,5 @@ add_importlibs(dsound
     kernel32
     ntdll)
 
-add_dependencies(dsound dsound_def)
+
 add_cab_target(dsound 1)

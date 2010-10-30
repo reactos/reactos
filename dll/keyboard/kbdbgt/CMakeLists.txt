@@ -1,12 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdbgt ${CMAKE_CURRENT_SOURCE_DIR}/kbdbgt.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdbgt.def)
+spec2def(kbdbgt.dll kbdbgt.spec)
 
-add_library(kbdbgt SHARED kbdbgt.c kbdbgt.rc)
+add_library(kbdbgt SHARED kbdbgt.c kbdbgt.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdbgt.def)
 
 set_entrypoint(kbdbgt 0)
 
-target_link_libraries(kbdbgt ${CMAKE_CURRENT_BINARY_DIR}/kbdbgt.def)
-
-add_dependencies(kbdbgt kbdbgt_def psdk buildno_header)
+add_dependencies(kbdbgt psdk buildno_header)

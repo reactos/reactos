@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdgeo ${CMAKE_CURRENT_SOURCE_DIR}/kbdgeo.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdgeo.def)
+spec2def(kbdgeo.dll kbdgeo.spec)
 
-add_library(kbdgeo SHARED kbdgeo.c kbdgeo.rc)
+add_library(kbdgeo SHARED kbdgeo.c kbdgeo.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdgeo.def)
 
 set_entrypoint(kbdgeo 0)
 
-target_link_libraries(kbdgeo ${CMAKE_CURRENT_BINARY_DIR}/kbdgeo.def)
 
-add_dependencies(kbdgeo kbdgeo_def psdk buildno_header)
+
+add_dependencies(kbdgeo psdk buildno_header)

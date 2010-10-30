@@ -2,15 +2,14 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(shfolder ${CMAKE_CURRENT_SOURCE_DIR}/shfolder.spec ${CMAKE_CURRENT_BINARY_DIR}/shfolder.def)
+spec2def(shfolder.dll shfolder.spec)
 
-add_library(shfolder SHARED version.rc)
+add_library(shfolder SHARED version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shfolder.def)
 
 set_entrypoint(shfolder 0)
 
-target_link_libraries(shfolder
-    ${CMAKE_CURRENT_BINARY_DIR}/shfolder.def
-    wine)
+target_link_libraries(shfolder wine)
 
 add_importlibs(shfolder shell32 kernel32 ntdll)
-add_dependencies(shfolder shfolder_def psdk buildno_header)
+add_dependencies(shfolder psdk buildno_header)

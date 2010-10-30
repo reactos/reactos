@@ -6,18 +6,18 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(objsel ${CMAKE_CURRENT_SOURCE_DIR}/objsel.spec ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
+spec2def(objsel.dll objsel.spec)
 
 add_library(objsel SHARED
     factory.c
     objsel.c
     regsvr.c
-    objsel.rc)
+    objsel.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
 
 set_module_type(objsel win32dll)
 
 target_link_libraries(objsel
-    ${CMAKE_CURRENT_BINARY_DIR}/objsel.def
     uuid
     wine)
 
@@ -28,5 +28,5 @@ add_importlibs(objsel
     kernel32
     ntdll)
 
-add_dependencies(objsel objsel_def)
+
 add_cab_target(objsel 1)

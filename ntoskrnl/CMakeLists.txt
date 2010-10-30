@@ -241,7 +241,8 @@ list(APPEND SOURCE
     vf/driver.c
     wmi/wmi.c
     ntoskrnl.rc
-    ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
+    ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/ntoskrnl_${ARCH}.def)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -404,7 +405,6 @@ add_executable(ntoskrnl ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.
 set_target_properties(ntoskrnl PROPERTIES LINK_FLAGS "-Wl,-entry,_KiSystemStartup@4 -Wl,--image-base,0x80800000 -Wl,--subsystem,native")
 
 target_link_libraries(ntoskrnl
-    ${CMAKE_CURRENT_SOURCE_DIR}/ntoskrnl_i386.def
     cportlib
     csq
     -lhal

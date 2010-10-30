@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdsk ${CMAKE_CURRENT_SOURCE_DIR}/kbdsk.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdsk.def)
+spec2def(kbdsk.dll kbdsk.spec)
 
-add_library(kbdsk SHARED kbdsk.c kbdsk.rc)
+add_library(kbdsk SHARED kbdsk.c kbdsk.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdsk.def)
 
 set_entrypoint(kbdsk 0)
 
-target_link_libraries(kbdsk ${CMAKE_CURRENT_BINARY_DIR}/kbdsk.def)
 
-add_dependencies(kbdsk kbdsk_def psdk buildno_header)
+
+add_dependencies(kbdsk psdk buildno_header)

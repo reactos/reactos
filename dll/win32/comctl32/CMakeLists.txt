@@ -8,7 +8,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(comctl32 ${CMAKE_CURRENT_SOURCE_DIR}/comctl32.spec ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
+spec2def(comctl32.dll comctl32.spec)
 
 add_library(comctl32 SHARED
     animate.c
@@ -47,12 +47,12 @@ add_library(comctl32 SHARED
     trackbar.c
     treeview.c
     updown.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
 set_module_type(comctl32 win32dll)
 
 target_link_libraries(comctl32
-    ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def
     uuid
     wine)
 
@@ -66,5 +66,4 @@ add_importlibs(comctl32
     kernel32
     ntdll)
 
-add_dependencies(comctl32 comctl32_def)
 add_cab_target(comctl32 1)

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdtuf ${CMAKE_CURRENT_SOURCE_DIR}/kbdtuf.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdtuf.def)
+spec2def(kbdtuf.dll kbdtuf.spec)
 
-add_library(kbdtuf SHARED kbdtuf.c kbdtuf.rc)
+add_library(kbdtuf SHARED kbdtuf.c kbdtuf.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdtuf.def)
 
 set_entrypoint(kbdtuf 0)
 
-target_link_libraries(kbdtuf ${CMAKE_CURRENT_BINARY_DIR}/kbdtuf.def)
 
-add_dependencies(kbdtuf kbdtuf_def psdk buildno_header)
+
+add_dependencies(kbdtuf psdk buildno_header)

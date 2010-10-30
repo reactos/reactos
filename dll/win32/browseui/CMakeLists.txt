@@ -7,7 +7,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/lib/atl)
 
-spec2def(browseui ${CMAKE_CURRENT_SOURCE_DIR}/browseui.spec ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
+spec2def(browseui.dll browseui.spec)
 
 add_library(browseui SHARED
     aclmulti.cpp
@@ -29,12 +29,12 @@ add_library(browseui SHARED
     toolsband.cpp
     travellog.cpp
     utility.cpp
-    browseui.rc)
+    browseui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
 set_module_type(browseui win32dll)
 
 target_link_libraries(browseui
-    ${CMAKE_CURRENT_BINARY_DIR}/browseui.def
     atlnew
     uuid
     wine)
@@ -51,5 +51,4 @@ add_importlibs(browseui
     advapi32
     ntdll)
 
-add_dependencies(browseui browseui_def)
 add_cab_target(browseui 1)

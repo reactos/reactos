@@ -3,7 +3,7 @@ add_definitions(-Dtzset=_tzset)
 
 include_directories(include)
 
-spec2def(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/dhcpcsvc.spec ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
+spec2def(dhcpcsvc.dll dhcpcsvc.spec)
 
 list(APPEND SOURCE 
     dhcp/adapter.c
@@ -19,7 +19,8 @@ list(APPEND SOURCE
     dhcp/tables.c
     dhcp/util.c
     dhcpcsvc.c
-    dhcpcsvc.rc)
+    dhcpcsvc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
 
 add_library(dhcpcsvc SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc_rosdhcp.h.gch
@@ -27,9 +28,9 @@ add_library(dhcpcsvc SHARED
 
 set_module_type(dhcpcsvc win32dll)
 
-target_link_libraries(dhcpcsvc ${CMAKE_CURRENT_BINARY_DIR}/dhcpcsvc.def)
+
 
 add_importlibs(dhcpcsvc ws2_32 iphlpapi advapi32 msvcrt kernel32 ntdll)
 add_pch(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/include/rosdhcp.h ${SOURCE})
-add_dependencies(dhcpcsvc dhcpcsvc_def)
+
 add_cab_target(dhcpcsvc 1)

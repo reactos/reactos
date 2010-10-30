@@ -5,7 +5,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dinput ${CMAKE_CURRENT_SOURCE_DIR}/dinput.spec ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
+spec2def(dinput.dll dinput.spec)
 
 add_library(dinput SHARED
     data_formats.c
@@ -17,12 +17,12 @@ add_library(dinput SHARED
     keyboard.c
     mouse.c
     regsvr.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dinput.def)
 
 set_module_type(dinput win32dll)
 
 target_link_libraries(dinput
-    ${CMAKE_CURRENT_BINARY_DIR}/dinput.def
     dxguid
     uuid
     wine)
@@ -35,5 +35,5 @@ add_importlibs(dinput
     kernel32
     ntdll)
 
-add_dependencies(dinput dinput_def)
+
 add_cab_target(dinput 1)

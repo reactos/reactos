@@ -4,7 +4,7 @@ add_definitions(-D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mpr ${CMAKE_CURRENT_SOURCE_DIR}/mpr.spec ${CMAKE_CURRENT_BINARY_DIR}/mpr.def)
+spec2def(mpr.dll mpr.spec)
 
 add_library(mpr SHARED
     auth.c
@@ -13,14 +13,13 @@ add_library(mpr SHARED
     nps.c
     pwcache.c
     wnet.c
-    mpr.rc)
+    mpr.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mpr.def)
 
 set_module_type(mpr win32dll)
 
-target_link_libraries(mpr
-    ${CMAKE_CURRENT_BINARY_DIR}/mpr.def
-    wine)
+target_link_libraries(mpr wine)
 
 add_importlibs(mpr advapi32 user32 kernel32 ntdll)
-add_dependencies(mpr mpr_def)
+
 add_cab_target(mpr 1)

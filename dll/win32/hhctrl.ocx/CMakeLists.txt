@@ -34,4 +34,4 @@ add_importlibs(hhctrl
     kernel32
     ntdll)
 
-add_dependencies(hhctrl hhctrl_def)
+

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdda ${CMAKE_CURRENT_SOURCE_DIR}/kbdda.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdda.def)
+spec2def(kbdda.dll kbdda.spec)
 
-add_library(kbdda SHARED kbdda.c kbdda.rc)
+add_library(kbdda SHARED kbdda.c kbdda.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdda.def)
 
 set_entrypoint(kbdda 0)
 
-target_link_libraries(kbdda ${CMAKE_CURRENT_BINARY_DIR}/kbdda.def)
 
-add_dependencies(kbdda kbdda_def psdk buildno_header)
+
+add_dependencies(kbdda psdk buildno_header)

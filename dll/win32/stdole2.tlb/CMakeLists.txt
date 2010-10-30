@@ -17,7 +17,7 @@ add_library(stdole2.tlb SHARED rsrc.rc)
 set_entrypoint(stdole2.tlb 0)
 set_target_properties(stdole2.tlb PROPERTIES SUFFIX "")
 
-target_link_libraries(stdole2.tlb ${CMAKE_CURRENT_BINARY_DIR}/stdole2.tlb.def)
+
 
 add_dependencies(stdole2.tlb std_ole_v2 stdole2.tlb_def)
 add_cab_target(stdole2.tlb 1)

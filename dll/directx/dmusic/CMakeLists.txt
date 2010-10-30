@@ -6,7 +6,7 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dmusic ${CMAKE_CURRENT_SOURCE_DIR}/dmusic.spec ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def)
+spec2def(dmusic.dll dmusic.spec)
 
 add_library(dmusic SHARED
     buffer.c
@@ -19,12 +19,12 @@ add_library(dmusic SHARED
     instrument.c
     port.c
     regsvr.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def)
 
 set_entrypoint(dmusic 0)
 
 target_link_libraries(dmusic
-    ${CMAKE_CURRENT_BINARY_DIR}/dmusic.def
     dxguid
     uuid
     wine)
@@ -37,4 +37,4 @@ add_importlibs(dmusic
     kernel32
     ntdll)
 
-add_dependencies(dmusic dmusic_def psdk buildno_header)
+add_dependencies(dmusic psdk buildno_header)

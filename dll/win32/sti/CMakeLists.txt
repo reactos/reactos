@@ -10,18 +10,18 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(sti ${CMAKE_CURRENT_SOURCE_DIR}/sti.spec ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
+spec2def(sti.dll sti.spec)
 
 add_library(sti SHARED
     regsvr.c
     sti.c
     sti_main.c
-    sti_wia.idl)
+    sti_wia.idl
+    ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
 
 set_entrypoint(sti 0)
 
 target_link_libraries(sti
-    ${CMAKE_CURRENT_BINARY_DIR}/sti.def
     sti_proxy
     wine
     uuid
@@ -35,7 +35,7 @@ add_importlibs(sti
     kernel32
     ntdll)
 
-add_dependencies(sti sti_def)
+
 
 rpcproxy(sti sti_wia.idl)
 add_cab_target(sti 1)

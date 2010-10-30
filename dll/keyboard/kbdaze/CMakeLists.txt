@@ -1,12 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdaze ${CMAKE_CURRENT_SOURCE_DIR}/kbdaze.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdaze.def)
+spec2def(kbdaze.dll kbdaze.spec)
 
-add_library(kbdaze SHARED kbdaze.c kbdaze.rc)
+add_library(kbdaze SHARED kbdaze.c kbdaze.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdaze.def)
 
 set_entrypoint(kbdaze 0)
 
-target_link_libraries(kbdaze ${CMAKE_CURRENT_BINARY_DIR}/kbdaze.def)
-
-add_dependencies(kbdaze kbdaze_def psdk buildno_header)
+add_dependencies(kbdaze psdk buildno_header)

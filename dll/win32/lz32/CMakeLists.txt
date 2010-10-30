@@ -2,16 +2,15 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(lz32 ${CMAKE_CURRENT_SOURCE_DIR}/lz32.spec ${CMAKE_CURRENT_BINARY_DIR}/lz32.def)
+spec2def(lz32.dll lz32.spec)
 
-add_library(lz32 SHARED version.rc)
+add_library(lz32 SHARED version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/lz32.def)
 
 set_entrypoint(lz32 0)
 
-target_link_libraries(lz32
-    ${CMAKE_CURRENT_BINARY_DIR}/lz32.def
-    wine)
+target_link_libraries(lz32 wine)
 
 add_importlibs(lz32 kernel32 ntdll)
-add_dependencies(lz32 lz32_def psdk buildno_header)
+add_dependencies(lz32 psdk buildno_header)
 add_cab_target(lz32 1)

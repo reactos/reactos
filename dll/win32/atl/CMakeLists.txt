@@ -8,18 +8,18 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(atl ${CMAKE_CURRENT_SOURCE_DIR}/atl.spec ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
+spec2def(atl.dll atl.spec)
 
 add_library(atl SHARED
     atl_ax.c
     atl_main.c
     registrar.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
 
 set_module_type(atl win32dll)
 
 target_link_libraries(atl
-    ${CMAKE_CURRENT_BINARY_DIR}/atl.def
     uuid
     wine)
 
@@ -33,5 +33,5 @@ add_importlibs(atl
     kernel32
     ntdll)
 
-add_dependencies(atl atl_atliface_header atl_def)
+add_dependencies(atl atl_atliface_header)
 add_cab_target(atl 1)

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdinasa ${CMAKE_CURRENT_SOURCE_DIR}/kbdinasa.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdinasa.def)
+spec2def(kbdinasa.dll kbdinasa.spec)
 
-add_library(kbdinasa SHARED kbdinasa.c kbdinasa.rc)
+add_library(kbdinasa SHARED kbdinasa.c kbdinasa.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdinasa.def)
 
 set_entrypoint(kbdinasa 0)
 
-target_link_libraries(kbdinasa ${CMAKE_CURRENT_BINARY_DIR}/kbdinasa.def)
 
-add_dependencies(kbdinasa kbdinasa_def psdk buildno_header)
+
+add_dependencies(kbdinasa psdk buildno_header)

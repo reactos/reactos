@@ -1,18 +1,19 @@
 
 set_unicode()
 
-spec2def(deskadp ${CMAKE_CURRENT_SOURCE_DIR}/deskadp.spec ${CMAKE_CURRENT_BINARY_DIR}/deskadp.def)
+spec2def(deskadp.dll deskadp.spec)
 
 list(APPEND SOURCE
     deskadp.c
     shxiface.c
-    deskadp.rc)
+    deskadp.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/deskadp.def)
 
 add_library(deskadp SHARED ${CMAKE_CURRENT_BINARY_DIR}/deskadp_precomp.h.gch ${SOURCE})
 
 set_module_type(deskadp win32dll)
 
-target_link_libraries(deskadp ${CMAKE_CURRENT_BINARY_DIR}/deskadp.def uuid)
+target_link_libraries(deskadp uuid)
 
 add_importlibs(deskadp
     user32
@@ -23,5 +24,5 @@ add_importlibs(deskadp
     ntdll)
 
 add_pch(deskadp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(deskadp deskadp_def)
+
 add_cab_target(deskadp 1)

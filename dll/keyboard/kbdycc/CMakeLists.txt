@@ -1,12 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdycc ${CMAKE_CURRENT_SOURCE_DIR}/kbdycc.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdycc.def)
+spec2def(kbdycc.dll kbdycc.spec)
 
-add_library(kbdycc SHARED kbdycc.c kbdycc.rc)
+add_library(kbdycc SHARED kbdycc.c kbdycc.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdycc.def)
 
 set_entrypoint(kbdycc 0)
 
-target_link_libraries(kbdycc ${CMAKE_CURRENT_BINARY_DIR}/kbdycc.def)
-
-add_dependencies(kbdycc kbdycc_def psdk buildno_header)
+add_dependencies(kbdycc psdk buildno_header)

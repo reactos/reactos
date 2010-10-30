@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdro ${CMAKE_CURRENT_SOURCE_DIR}/kbdro.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdro.def)
+spec2def(kbdro.dll kbdro.spec)
 
-add_library(kbdro SHARED kbdro.c kbdro.rc)
+add_library(kbdro SHARED kbdro.c kbdro.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdro.def)
 
 set_entrypoint(kbdro 0)
 
-target_link_libraries(kbdro ${CMAKE_CURRENT_BINARY_DIR}/kbdro.def)
 
-add_dependencies(kbdro kbdro_def psdk buildno_header)
+
+add_dependencies(kbdro psdk buildno_header)

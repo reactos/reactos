@@ -2,16 +2,15 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(rsabase ${CMAKE_CURRENT_SOURCE_DIR}/rsabase.spec ${CMAKE_CURRENT_BINARY_DIR}/rsabase.def)
+spec2def(rsabase.dll rsabase.spec)
 
-add_library(rsabase SHARED version.rc)
+add_library(rsabase SHARED version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/rsabase.def)
 
 set_entrypoint(rsabase 0)
 
-target_link_libraries(rsabase
-    ${CMAKE_CURRENT_BINARY_DIR}/rsabase.def
-    wine)
+target_link_libraries(rsabase wine)
 
 add_importlibs(rsabase rsaenh ntdll)
-add_dependencies(rsabase rsabase_def)
+
 add_cab_target(rsabase 1)

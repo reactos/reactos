@@ -14,4 +14,4 @@ target_link_libraries(msisys
     wine)
 
 add_importlibs(msisys kernel32 ntdll)
-add_dependencies(msisys msisys_def)
+

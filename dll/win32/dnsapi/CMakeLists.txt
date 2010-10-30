@@ -7,7 +7,7 @@ include_directories(
 add_definitions(-D_DLL -D__USE_CRTIMP)
 add_definitions(-DADNS_JGAA_WIN32)
 
-spec2def(dnsapi ${CMAKE_CURRENT_SOURCE_DIR}/dnsapi.spec ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def)
+spec2def(dnsapi.dll dnsapi.spec)
 
 list(APPEND SOURCE 
     dnsapi/adns.c
@@ -17,7 +17,8 @@ list(APPEND SOURCE
     dnsapi/query.c
     dnsapi/record.c
     dnsapi/stubs.c
-    dnsapi.rc)
+    dnsapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def)
 
 add_library(dnsapi SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/dnsapi_precomp.h.gch
@@ -25,11 +26,9 @@ add_library(dnsapi SHARED
 
 set_entrypoint(dnsapi 0)
 
-target_link_libraries(dnsapi
-    ${CMAKE_CURRENT_BINARY_DIR}/dnsapi.def
-    adns)
+target_link_libraries(dnsapi adns)
 
 add_importlibs(dnsapi user32 ws2_32 iphlpapi msvcrt kernel32 ntdll)
 add_pch(dnsapi ${CMAKE_CURRENT_SOURCE_DIR}/dnsapi/precomp.h ${SOURCE})
-add_dependencies(dnsapi dnsapi_def psdk buildno_header)
+add_dependencies(dnsapi psdk buildno_header)
 add_cab_target(dnsapi 1)

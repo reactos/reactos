@@ -1,5 +1,5 @@
 
-spec2def(pciidex ${CMAKE_CURRENT_SOURCE_DIR}/pciidex.spec ${CMAKE_CURRENT_BINARY_DIR}/pciidex.def)
+spec2def(pciidex.sys pciidex.spec)
 
 add_library(pciidex SHARED
     fdo.c
@@ -7,12 +7,10 @@ add_library(pciidex SHARED
     misc.c
     pciidex.c
     pdo.c
-    pciidex.rc)
+    pciidex.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/pciidex.def)
 
 set_target_properties(pciidex PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
 
-target_link_libraries(pciidex
-    ${CMAKE_CURRENT_BINARY_DIR}/pciidex.def)
-
 add_importlibs(pciidex ntoskrnl)
-add_dependencies(pciidex pciidex_def psdk bugcodes)
+add_dependencies(pciidex psdk bugcodes)

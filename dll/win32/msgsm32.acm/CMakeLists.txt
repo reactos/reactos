@@ -21,5 +21,5 @@ target_link_libraries(msgsm32.acm
     wine)
 
 add_importlibs(msgsm32.acm winmm user32 msvcrt kernel32 ntdll)
-add_dependencies(msgsm32.acm msgsm32.acm_def psdk buildno_header)
+add_dependencies(msgsm32.acm psdk buildno_header)
 add_cab_target(msgsm32.acm 1)

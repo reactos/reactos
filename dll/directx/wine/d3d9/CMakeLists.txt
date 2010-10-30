@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__)
 add_definitions(-DUSE_WIN32_OPENGL)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(d3d9 ${CMAKE_CURRENT_SOURCE_DIR}/d3d9.spec ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)
+spec2def(d3d9.dll d3d9.spec)
 
 add_library(d3d9 SHARED
     cubetexture.c
@@ -24,12 +24,12 @@ add_library(d3d9 SHARED
     vertexshader.c
     volume.c
     volumetexture.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def)
 
 set_module_type(d3d9 win32dll)
 
 target_link_libraries(d3d9
-    ${CMAKE_CURRENT_BINARY_DIR}/d3d9.def
     uuid
     wine)
 
@@ -39,5 +39,5 @@ add_importlibs(d3d9
     advapi32
     wined3d)
 
-add_dependencies(d3d9 d3d9_def wineheaders)
+add_dependencies(d3d9 wineheaders)
 add_cab_target(d3d9 1)

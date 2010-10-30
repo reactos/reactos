@@ -5,7 +5,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(avifil32 ${CMAKE_CURRENT_SOURCE_DIR}/avifil32.spec ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
+spec2def(avifil32.dll avifil32.spec)
 
 add_library(avifil32 SHARED
     acmstream.c
@@ -19,12 +19,12 @@ add_library(avifil32 SHARED
     regsvr.c
     tmpfile.c
     wavfile.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
 set_module_type(avifil32 win32dll)
 
 target_link_libraries(avifil32
-    ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def
     uuid
     wine)
 
@@ -39,5 +39,5 @@ add_importlibs(avifil32
     kernel32
     ntdll)
 
-add_dependencies(avifil32 avifil32_def)
+
 add_cab_target(avifil32 1)

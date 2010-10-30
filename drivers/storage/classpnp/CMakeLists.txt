@@ -32,7 +32,7 @@ spec2def(classpnp ${CMAKE_CURRENT_SOURCE_DIR}/class.spec ${CMAKE_CURRENT_BINARY_
 
 add_library(classpnp SHARED ${SOURCE})
 target_link_libraries(classpnp ${CMAKE_CURRENT_BINARY_DIR}/class.def pseh libcntpr)
-add_dependencies(classpnp classpnp_def)
+
 
 set_module_type(classpnp kernelmodedriver)
 

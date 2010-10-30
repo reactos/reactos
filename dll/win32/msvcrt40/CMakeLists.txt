@@ -4,16 +4,14 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 add_definitions(-DCRTDLL)
 
-spec2def(msvcrt40 ${CMAKE_CURRENT_SOURCE_DIR}/msvcrt40.spec ${CMAKE_CURRENT_BINARY_DIR}/msvcrt40.def)
+spec2def(msvcrt40.dll msvcrt40.spec)
 
-add_library(msvcrt40 SHARED msvcrt40.c)
+add_library(msvcrt40 SHARED msvcrt40.c ${CMAKE_CURRENT_BINARY_DIR}/msvcrt40.def)
 
 set_module_type(msvcrt40 win32dll)
 
-target_link_libraries(msvcrt40
-    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt40.def
-    wine)
+target_link_libraries(msvcrt40 wine)
 
 add_importlibs(msvcrt40 msvcrt kernel32 ntdll)
-add_dependencies(msvcrt40 msvcrt40_def)
+
 add_cab_target(msvcrt40 1)

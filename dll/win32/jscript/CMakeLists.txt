@@ -11,7 +11,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(jscript ${CMAKE_CURRENT_SOURCE_DIR}/jscript.spec ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
+spec2def(jscript.dll jscript.spec)
 
 add_library(jscript SHARED
     activex.c
@@ -33,13 +33,12 @@ add_library(jscript SHARED
     bool.c
     function.c
     global.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
 set_module_type(jscript win32dll)
 
-target_link_libraries(jscript
-    ${CMAKE_CURRENT_BINARY_DIR}/jscript.def
-    wine)
+target_link_libraries(jscript wine)
 
 add_importlibs(jscript
     msvcrt
@@ -50,5 +49,5 @@ add_importlibs(jscript
     kernel32
     ntdll)
 
-add_dependencies(jscript jsglobal jscript_def stdole2)
+add_dependencies(jscript jsglobal stdole2)
 add_cab_target(jscript 1)

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdinguj ${CMAKE_CURRENT_SOURCE_DIR}/kbdinguj.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdinguj.def)
+spec2def(kbdinguj.dll kbdinguj.spec)
 
-add_library(kbdinguj SHARED kbdinguj.c kbdinguj.rc)
+add_library(kbdinguj SHARED kbdinguj.c kbdinguj.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdinguj.def)
 
 set_entrypoint(kbdinguj 0)
 
-target_link_libraries(kbdinguj ${CMAKE_CURRENT_BINARY_DIR}/kbdinguj.def)
 
-add_dependencies(kbdinguj kbdinguj_def psdk buildno_header)
+
+add_dependencies(kbdinguj psdk buildno_header)

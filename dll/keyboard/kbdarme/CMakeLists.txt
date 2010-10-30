@@ -1,12 +1,10 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdarme ${CMAKE_CURRENT_SOURCE_DIR}/kbdarme.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdarme.def)
+spec2def(kbdarme.dll kbdarme.spec)
 
-add_library(kbdarme SHARED kbdarme.c kbdarme.rc)
+add_library(kbdarme SHARED kbdarme.c kbdarme.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdarme.def)
 
 set_entrypoint(kbdarme 0)
 
-target_link_libraries(kbdarme ${CMAKE_CURRENT_BINARY_DIR}/kbdarme.def)
-
-add_dependencies(kbdarme kbdarme_def psdk buildno_header)
+add_dependencies(kbdarme psdk buildno_header)

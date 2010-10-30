@@ -35,7 +35,8 @@ list(APPEND SOURCE
     storage32.c
     stubmanager.c
     usrmarshal.c
-    ole32res.rc)
+    ole32res.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -56,14 +57,13 @@ rpcproxy(ole32
     ole32_objidl.idl
     ole32_oleidl.idl)
     
-spec2def(ole32 ${CMAKE_CURRENT_SOURCE_DIR}/ole32.spec ${CMAKE_CURRENT_BINARY_DIR}/ole32.def)
+spec2def(ole32.dll ole32.spec)
 
 add_library(ole32 SHARED ${SOURCE})
 
 set_module_type(ole32 win32dll)
 
 target_link_libraries(ole32
-    ${CMAKE_CURRENT_BINARY_DIR}/ole32.def
     wine
     irot_client
     ole32_proxy
@@ -72,5 +72,5 @@ target_link_libraries(ole32
     
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
     
-add_dependencies(ole32 ole32_def ole32idl)
+add_dependencies(ole32 ole32idl)
 add_cab_target(ole32 1)

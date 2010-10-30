@@ -43,4 +43,4 @@ set_target_properties(pcix PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,
 add_importlibs(pcix ntoskrnl hal)
 
 add_pch(pcix ${CMAKE_CURRENT_SOURCE_DIR}/pci.h ${SOURCE})
-add_dependencies(pcix pcix_def psdk pciclass buildno_header)
+add_dependencies(pcix psdk pciclass buildno_header)

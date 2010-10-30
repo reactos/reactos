@@ -10,7 +10,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(crypt32 ${CMAKE_CURRENT_SOURCE_DIR}/crypt32.spec ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
+spec2def(crypt32.dll crypt32.spec)
 
 add_library(crypt32 SHARED
     base64.c
@@ -38,16 +38,16 @@ add_library(crypt32 SHARED
     store.c
     str.c
     crypt32.rc
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def)
 
 set_module_type(crypt32 win32dll)
 
 target_link_libraries(crypt32
-    ${CMAKE_CURRENT_BINARY_DIR}/crypt32.def
     wine
     pseh
     oldnames)
 
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
-add_dependencies(crypt32 crypt32_def)
+
 add_cab_target(crypt32 1)

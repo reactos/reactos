@@ -2,7 +2,7 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(portcls ${CMAKE_CURRENT_SOURCE_DIR}/portcls.spec ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
+spec2def(portcls.sys portcls.spec)
 
 add_library(portcls SHARED
     adapter.cpp
@@ -46,10 +46,10 @@ add_library(portcls SHARED
     undoc.cpp
     unregister.cpp
     version.cpp
-    portcls.rc)
+    portcls.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/portcls.def)
 
 target_link_libraries(portcls
-    ${CMAKE_CURRENT_BINARY_DIR}/portcls.def
     libcntpr
     pseh)
 
@@ -59,7 +59,7 @@ else()
     set_target_properties(portcls PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif(MSVC)
 
-set_target_properties(portcls PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(portcls kernelmodedriver)
 
 add_importlibs(portcls ntoskrnl ks drmk hal stdc++ gcc msvcrt)
-add_dependencies(portcls portcls_def psdk bugcodes)
+add_dependencies(portcls psdk bugcodes)

@@ -7,7 +7,7 @@ add_definitions(-DWINSOCK_API_LINKAGE=DECLSPEC_EXPORT)
 include_directories(BEFORE include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(ws2_32 ${CMAKE_CURRENT_SOURCE_DIR}/ws2_32.spec ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
+spec2def(ws2_32.dll ws2_32.spec)
 
 list(APPEND SOURCE
     misc/bsd.c
@@ -20,17 +20,16 @@ list(APPEND SOURCE
     misc/stubs.c
     misc/upcall.c
     misc/async.c
-    ws2_32.rc)
+    ws2_32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
 add_library(ws2_32 SHARED ${CMAKE_CURRENT_BINARY_DIR}/ws2_32_ws2_32.h.gch ${SOURCE})
 
 set_module_type(ws2_32 win32dll)
 
-target_link_libraries(ws2_32
-     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def
-     wine)
+target_link_libraries(ws2_32 wine)
 
 add_importlibs(ws2_32 user32 advapi32 dnsapi ws2help kernel32 ntdll)
 add_pch(ws2_32 ${CMAKE_CURRENT_SOURCE_DIR}/include/ws2_32.h ${SOURCE})
-add_dependencies(ws2_32 ws2_32_def)
+
 add_cab_target(ws2_32 1)

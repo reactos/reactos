@@ -6,16 +6,15 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(pdh ${CMAKE_CURRENT_SOURCE_DIR}/pdh.spec ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
+spec2def(pdh.dll pdh.spec)
 
-add_library(pdh SHARED pdh_main.c)
+add_library(pdh SHARED pdh_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
 
 set_entrypoint(pdh 0)
 
-target_link_libraries(pdh
-    ${CMAKE_CURRENT_BINARY_DIR}/pdh.def
-    wine)
+target_link_libraries(pdh wine)
 
 add_importlibs(pdh kernel32 ntdll)
-add_dependencies(pdh pdh_def)
+
 add_cab_target(pdh 1)

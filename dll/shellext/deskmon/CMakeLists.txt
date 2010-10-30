@@ -1,18 +1,19 @@
 
 set_unicode()
 
-spec2def(deskmon ${CMAKE_CURRENT_SOURCE_DIR}/deskmon.spec ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def)
+spec2def(deskmon.dll deskmon.spec)
 
 list(APPEND SOURCE
     deskmon.c
     shxiface.c
-    deskmon.rc)
+    deskmon.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def)
 
 add_library(deskmon SHARED ${CMAKE_CURRENT_BINARY_DIR}/deskmon_precomp.h.gch ${SOURCE})
 
 set_module_type(deskmon win32dll)
 
-target_link_libraries(deskmon ${CMAKE_CURRENT_BINARY_DIR}/deskmon.def uuid)
+target_link_libraries(deskmon uuid)
 
 add_importlibs(deskmon
     user32
@@ -23,5 +24,5 @@ add_importlibs(deskmon
     ntdll)
 
 add_pch(deskmon ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(deskmon deskmon_def)
+
 add_cab_target(deskmon 1)

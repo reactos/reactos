@@ -18,7 +18,7 @@ add_library(mshtml.tlb SHARED rsrc.rc)
 set_entrypoint(mshtml.tlb 0)
 set_target_properties(mshtml.tlb PROPERTIES SUFFIX "")
 
-target_link_libraries(mshtml.tlb ${CMAKE_CURRENT_BINARY_DIR}/mshtml.tlb.def)
+
 
 add_dependencies(mshtml.tlb mshtml_tlb mshtml.tlb_def)
 add_cab_target(mshtml.tlb 1)

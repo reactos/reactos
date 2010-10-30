@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(console ${CMAKE_CURRENT_SOURCE_DIR}/console.spec ${CMAKE_CURRENT_BINARY_DIR}/console.def)
+spec2def(console.dll console.spec)
 
 list(APPEND SOURCE
     console.c
@@ -9,13 +9,12 @@ list(APPEND SOURCE
     font.c
     layout.c
     colors.c
-    console.rc)
+    console.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/console.def)
 
 add_library(console SHARED ${CMAKE_CURRENT_BINARY_DIR}/console_console.h.gch ${SOURCE})
 
 set_module_type(console win32dll)
-
-target_link_libraries(console ${CMAKE_CURRENT_BINARY_DIR}/console.def)
 
 add_importlibs(console
     msvcrt
@@ -25,5 +24,4 @@ add_importlibs(console
     kernel32)
 
 add_pch(console ${CMAKE_CURRENT_SOURCE_DIR}/console.h ${SOURCE})
-add_dependencies(console console_def)
 add_cab_target(console 1)

@@ -3,17 +3,15 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(activeds ${CMAKE_CURRENT_SOURCE_DIR}/activeds.spec ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
+spec2def(activeds.dll activeds.spec)
 
-add_library(activeds SHARED activeds_main.c)
+add_library(activeds SHARED activeds_main.c ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
 
 set_module_type(activeds win32dll)
 
-target_link_libraries(activeds 
-     ${CMAKE_CURRENT_BINARY_DIR}/activeds.def
-     wine)
+target_link_libraries(activeds wine)
 
 add_importlibs(activeds kernel32 ntdll)
 
-add_dependencies(activeds activeds_def)
+
 add_cab_target(activeds 1)

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdpo ${CMAKE_CURRENT_SOURCE_DIR}/kbdpo.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdpo.def)
+spec2def(kbdpo.dll kbdpo.spec)
 
-add_library(kbdpo SHARED kbdpo.c kbdpo.rc)
+add_library(kbdpo SHARED kbdpo.c kbdpo.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdpo.def)
 
 set_entrypoint(kbdpo 0)
 
-target_link_libraries(kbdpo ${CMAKE_CURRENT_BINARY_DIR}/kbdpo.def)
 
-add_dependencies(kbdpo kbdpo_def psdk buildno_header)
+
+add_dependencies(kbdpo psdk buildno_header)

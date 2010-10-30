@@ -1,14 +1,13 @@
 
-spec2def(ufatx ${CMAKE_CURRENT_SOURCE_DIR}/ufatx.spec ${CMAKE_CURRENT_BINARY_DIR}/ufatx.def)
+spec2def(ufatx.dll ufatx.spec)
 
-add_library(ufatx SHARED ufatx.rc)
+add_library(ufatx SHARED ufatx.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ufatx.def)
 
 set_entrypoint(ufatx 0)
 
-target_link_libraries(ufatx
-    ${CMAKE_CURRENT_BINARY_DIR}/ufatx.def
-    vfatxlib)
+target_link_libraries(ufatx vfatxlib)
 
 add_importlibs(ufatx gcc kernel32 ntdll)
-add_dependencies(ufatx ufatx_def psdk buildno_header)
+add_dependencies(ufatx psdk buildno_header)
 add_cab_target(ufatx 1)

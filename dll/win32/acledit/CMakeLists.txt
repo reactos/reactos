@@ -6,14 +6,12 @@ list(APPEND SOURCE
     stubs.c
     acledit.rc)
 
-spec2def(acledit ${CMAKE_CURRENT_SOURCE_DIR}/acledit.spec ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
+spec2def(acledit.dll acledit.spec)
 
-add_library(acledit SHARED ${SOURCE})
+add_library(acledit SHARED ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
 
 set_module_type(acledit win32dll)
 
-target_link_libraries(acledit ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
 add_importlibs(acledit ntdll)
 
-add_dependencies(acledit acledit_def)
 add_cab_target(acledit 1)

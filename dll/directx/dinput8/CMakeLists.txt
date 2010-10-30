@@ -5,17 +5,17 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(dinput8 ${CMAKE_CURRENT_SOURCE_DIR}/dinput8.spec ${CMAKE_CURRENT_BINARY_DIR}/dinput8.def)
+spec2def(dinput8.dll dinput8.spec)
 
 add_library(dinput8 SHARED
     dinput8_main.c
     regsvr.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dinput8.def)
 
 set_entrypoint(dinput8 0)
 
 target_link_libraries(dinput8
-    ${CMAKE_CURRENT_BINARY_DIR}/dinput8.def
     dxguid
     uuid
     wine)
@@ -29,4 +29,4 @@ add_importlibs(dinput8
     kernel32
     ntdll)
 
-add_dependencies(dinput8 dinput8_def psdk buildno_header)
+add_dependencies(dinput8 psdk buildno_header)

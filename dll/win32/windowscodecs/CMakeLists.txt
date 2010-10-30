@@ -11,7 +11,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
 
-spec2def(windowscodecs ${CMAKE_CURRENT_SOURCE_DIR}/windowscodecs.spec ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
+spec2def(windowscodecs.dll windowscodecs.spec)
 
 add_library(windowscodecs SHARED
     bmpdecode.c
@@ -32,14 +32,13 @@ add_library(windowscodecs SHARED
     stream.c
     tiffformat.c
     ungif.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
 
 set_module_type(windowscodecs win32dll)
 
-target_link_libraries(windowscodecs
-    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def
-    wine)
+target_link_libraries(windowscodecs wine)
 
 add_importlibs(windowscodecs uuid ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
-add_dependencies(windowscodecs windowscodecs_def)
+
 add_cab_target(windowscodecs 1)

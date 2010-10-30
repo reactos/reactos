@@ -2,16 +2,14 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(sccbase ${CMAKE_CURRENT_SOURCE_DIR}/sccbase.spec ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def)
+spec2def(sccbase.dll sccbase.spec)
 
-add_library(sccbase SHARED main.c)
+add_library(sccbase SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def)
 
 set_module_type(sccbase win32dll)
 
-target_link_libraries(sccbase
-    ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def
-    wine)
+target_link_libraries(sccbase wine)
 
 add_importlibs(sccbase kernel32 ntdll)
-add_dependencies(sccbase sccbase_def)
+
 add_cab_target(sccbase 1)

@@ -30,4 +30,4 @@ add_importlibs(winemp3.acm
     kernel32
     ntdll)
 
-add_dependencies(winemp3.acm winemp3.acm_def psdk)
+add_dependencies(winemp3.acm psdk)

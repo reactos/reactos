@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(sysdm ${CMAKE_CURRENT_SOURCE_DIR}/sysdm.spec ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
+spec2def(sysdm.cpl sysdm.spec)
 
 list(APPEND SOURCE
     advanced.c
@@ -14,13 +14,12 @@ list(APPEND SOURCE
     sysdm.c
     userprofile.c
     virtmem.c
-    sysdm.rc)
+    sysdm.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
 
 add_library(sysdm SHARED ${CMAKE_CURRENT_BINARY_DIR}/sysdm_precomp.h.gch ${SOURCE})
 
 set_module_type(sysdm cpl)
-
-target_link_libraries(sysdm ${CMAKE_CURRENT_BINARY_DIR}/sysdm.def)
 
 add_importlibs(sysdm
     msvcrt
@@ -37,5 +36,4 @@ add_importlibs(sysdm
     kernel32)
 
 add_pch(sysdm ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(sysdm sysdm_def)
 add_cab_target(sysdm 1)

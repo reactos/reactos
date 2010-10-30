@@ -1,5 +1,5 @@
 
-spec2def(ksproxy ${CMAKE_CURRENT_SOURCE_DIR}/ksproxy.spec ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
+spec2def(ksproxy.ax ksproxy.spec)
 
 add_library(ksproxy SHARED
     allocator.cpp
@@ -19,7 +19,8 @@ add_library(ksproxy SHARED
     node.cpp
     output_pin.cpp
     proxy.cpp
-    qualityforward.cpp)
+    qualityforward.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def)
 
 set_entrypoint(ksproxy 0)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
@@ -30,7 +31,7 @@ else()
 endif(MSVC)
 
 
-target_link_libraries(ksproxy ${CMAKE_CURRENT_BINARY_DIR}/ksproxy.def strmiids)
+target_link_libraries(ksproxy strmiids)
 
 add_importlibs(ksproxy
     advapi32
@@ -40,4 +41,4 @@ add_importlibs(ksproxy
     ksuser
     ntdll)
 
-add_dependencies(ksproxy ksproxy_def psdk buildno_header)
+add_dependencies(ksproxy psdk buildno_header)

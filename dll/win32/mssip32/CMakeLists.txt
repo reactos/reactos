@@ -2,16 +2,14 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(mssip32 ${CMAKE_CURRENT_SOURCE_DIR}/mssip32.spec ${CMAKE_CURRENT_BINARY_DIR}/mssip32.def)
+spec2def(mssip32.dll mssip32.spec)
 
-add_library(mssip32 SHARED main.c)
+add_library(mssip32 SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/mssip32.def)
 
 set_module_type(mssip32 win32dll)
 
-target_link_libraries(mssip32
-    ${CMAKE_CURRENT_BINARY_DIR}/mssip32.def
-    wine)
+target_link_libraries(mssip32 wine)
 
 add_importlibs(mssip32 kernel32 ntdll)
-add_dependencies(mssip32 mssip32_def)
+
 add_cab_target(mssip32 1)

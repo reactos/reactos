@@ -41,16 +41,13 @@ MACRO(add_pch _target_name _header_filename _src_list)
 
 ENDMACRO(add_pch _target_name _header_filename _src_list)
 
-MACRO(spec2def _target_name _spec_file _def_file)
-
+MACRO(spec2def _dllname _spec_file)
+    get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
-        OUTPUT ${_def_file}
-        COMMAND native-winebuild -o ${_def_file} --def -E ${_spec_file} --filename ${_target_name}.dll
-        DEPENDS native-winebuild)
-    set_source_files_properties(${_def_file} PROPERTIES GENERATED TRUE)
-    add_custom_target(${_target_name}_def ALL DEPENDS ${_def_file})
-
-ENDMACRO(spec2def _target_name _spec_file _def_file)
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} --filename ${_dllname}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+ENDMACRO(spec2def _dllname _spec_file)
 
 if (NOT MSVC)
 MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)

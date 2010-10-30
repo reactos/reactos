@@ -1,5 +1,5 @@
 
-spec2def(framebuf_new ${CMAKE_CURRENT_SOURCE_DIR}/framebuf_new.spec ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new.def)
+spec2def(framebuf_new.dll framebuf_new.spec)
 
 list(APPEND SOURCE
     debug.c
@@ -7,7 +7,8 @@ list(APPEND SOURCE
     palette.c
     pointer.c
     screen.c
-    framebuf_new.rc)
+    framebuf_new.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new.def)
 
 add_library(framebuf_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new_driver.h.gch ${SOURCE})
 
@@ -20,10 +21,8 @@ endif()
 
 set_target_properties(framebuf_new PROPERTIES LINK_FLAGS "-Wl,-entry,_DrvEnableDriver@12 -Wl,--image-base,0x00010000 -Wl,--subsystem,native")
 
-target_link_libraries(framebuf_new
-    ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new.def
-    libcntpr)
+target_link_libraries(framebuf_new libcntpr)
 
 add_importlibs(framebuf_new win32k)
 add_pch(framebuf_new ${CMAKE_CURRENT_SOURCE_DIR}/driver.h ${SOURCE})
-add_dependencies(framebuf_new framebuf_new_def psdk bugcodes)
+add_dependencies(framebuf_new psdk bugcodes)

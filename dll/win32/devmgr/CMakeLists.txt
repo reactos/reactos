@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(devmgr ${CMAKE_CURRENT_SOURCE_DIR}/devmgr.spec ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
+spec2def(devmgr.dll devmgr.spec)
 
 list(APPEND SOURCE
     devmgr.rc
@@ -9,14 +9,14 @@ list(APPEND SOURCE
     devprblm.c
     hwpage.c
     misc.c
-    stubs.c)
+    stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def)
 
 add_library(devmgr SHARED ${CMAKE_CURRENT_BINARY_DIR}/devmgr_precomp.h.gch ${SOURCE})
 
 set_module_type(devmgr win32dll)
 
 target_link_libraries(devmgr
-    ${CMAKE_CURRENT_BINARY_DIR}/devmgr.def
     uuid
     wine)
 
@@ -29,5 +29,5 @@ add_importlibs(devmgr
     ntdll)
 
 add_pch(devmgr ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(devmgr devmgr_def)
+
 add_cab_target(devmgr 1)

@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(access ${CMAKE_CURRENT_SOURCE_DIR}/access.spec ${CMAKE_CURRENT_BINARY_DIR}/access.def)
+spec2def(access.cpl access.spec)
 
 add_library(access SHARED
     access.c
@@ -10,11 +10,10 @@ add_library(access SHARED
     keyboard.c
     mouse.c
     sound.c
-    access.rc)
+    access.rc
+     ${CMAKE_CURRENT_BINARY_DIR}/access.def)
 
 set_module_type(access cpl)
-
-target_link_libraries(access ${CMAKE_CURRENT_BINARY_DIR}/access.def)
 
 add_importlibs(access
     msvcrt
@@ -24,5 +23,4 @@ add_importlibs(access
     comctl32
     kernel32)
 
-add_dependencies(access access_def)
 add_cab_target(access 1)

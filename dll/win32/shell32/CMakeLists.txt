@@ -52,7 +52,8 @@ list(APPEND SOURCE
     she_ocmenu.c
     shv_item_new.c
     folder_options.c
-    shell32.rc)
+    shell32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -60,7 +61,7 @@ add_definitions(-D_SHELL32_)
 add_definitions(-DCOM_NO_WINDOWS_H)
 add_definitions(-D_WINE)
 
-spec2def(shell32 ${CMAKE_CURRENT_SOURCE_DIR}/shell32.spec ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
+spec2def(shell32.dll shell32.spec)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/lib/recyclebin)
@@ -72,7 +73,6 @@ add_library(shell32 SHARED ${CMAKE_CURRENT_BINARY_DIR}/shell32_precomp.h.gch ${S
 set_module_type(shell32 win32dll)
 
 target_link_libraries(shell32
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def
     wine
     uuid
     recyclebin)
@@ -93,5 +93,5 @@ add_importlibs(shell32
     msvcrt
     ntdll)
 
-add_dependencies(shell32 shell32_def)
+
 add_cab_target(shell32 1)

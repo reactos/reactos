@@ -11,7 +11,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mshtml ${CMAKE_CURRENT_SOURCE_DIR}/mshtml.spec ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
+spec2def(mshtml.dll mshtml.spec)
 
 add_library(mshtml SHARED
     conpoint.c
@@ -75,12 +75,12 @@ add_library(mshtml SHARED
     task.c
     txtrange.c
     view.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
 set_module_type(mshtml win32dll)
 
 target_link_libraries(mshtml
-    ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def
     uuid
     wine
     strmiids
@@ -99,5 +99,5 @@ add_importlibs(mshtml
     kernel32
     ntdll)
 
-add_dependencies(mshtml mshtml_nsiface_header mshtml_def)
+add_dependencies(mshtml mshtml_nsiface_header)
 add_cab_target(mshtml 1)

@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdheb ${CMAKE_CURRENT_SOURCE_DIR}/kbdheb.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdheb.def)
+spec2def(kbdheb.dll kbdheb.spec)
 
-add_library(kbdheb SHARED kbdheb.c kbdheb.rc)
+add_library(kbdheb SHARED kbdheb.c kbdheb.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdheb.def)
 
 set_entrypoint(kbdheb 0)
 
-target_link_libraries(kbdheb ${CMAKE_CURRENT_BINARY_DIR}/kbdheb.def)
 
-add_dependencies(kbdheb kbdheb_def psdk buildno_header)
+
+add_dependencies(kbdheb psdk buildno_header)

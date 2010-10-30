@@ -1,5 +1,5 @@
 
-spec2def(winsta ${CMAKE_CURRENT_SOURCE_DIR}/winsta.spec ${CMAKE_CURRENT_BINARY_DIR}/winsta.def)
+spec2def(winsta.dll winsta.spec)
 
 list(APPEND SOURCE
     logon.c
@@ -9,7 +9,8 @@ list(APPEND SOURCE
     security.c
     server.c
     ws.c
-    winsta.rc)
+    winsta.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/winsta.def)
 
 add_library(winsta SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/winsta_winsta.h.gch
@@ -17,11 +18,9 @@ add_library(winsta SHARED
     
 set_module_type(winsta win32dll)
 
-target_link_libraries(winsta
-    ${CMAKE_CURRENT_BINARY_DIR}/winsta.def
-    wine)
+target_link_libraries(winsta wine)
 
 add_importlibs(winsta kernel32 ntdll)
 add_pch(winsta ${CMAKE_CURRENT_SOURCE_DIR}/winsta.h ${SOURCE})
-add_dependencies(winsta winsta_def)
+
 add_cab_target(winsta 1)

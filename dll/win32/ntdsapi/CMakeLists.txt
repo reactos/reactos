@@ -2,16 +2,15 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(ntdsapi ${CMAKE_CURRENT_SOURCE_DIR}/ntdsapi.spec ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def)
+spec2def(ntdsapi.dll ntdsapi.spec)
 
-add_library(ntdsapi SHARED ntdsapi.c)
+add_library(ntdsapi SHARED ntdsapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def)
 
 set_entrypoint(ntdsapi 0)
 
-target_link_libraries(ntdsapi
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def
-    wine)
+target_link_libraries(ntdsapi wine)
 
 add_importlibs(ntdsapi user32 kernel32 ntdll)
-add_dependencies(ntdsapi ntdsapi_def psdk buildno_header)
+add_dependencies(ntdsapi psdk buildno_header)
 add_cab_target(ntdsapi 1)

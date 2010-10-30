@@ -3,7 +3,7 @@ add_definitions(-D_NETSHELL_)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(netshell ${CMAKE_CURRENT_SOURCE_DIR}/netshell.spec ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
+spec2def(netshell.dll netshell.spec)
 
 list(APPEND SOURCE
     netshell.c
@@ -13,7 +13,8 @@ list(APPEND SOURCE
     classfactory.c
     connectmanager.c
     lanconnectui.c
-    lanstatusui.c)
+    lanstatusui.c
+    ${CMAKE_CURRENT_BINARY_DIR}/netshell.def)
 
 add_library(netshell SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/netshell_precomp.h.gch
@@ -22,7 +23,6 @@ add_library(netshell SHARED
 set_module_type(netshell win32dll)
 
 target_link_libraries(netshell
-    ${CMAKE_CURRENT_BINARY_DIR}/netshell.def
     uuid
     wine)
 
@@ -41,5 +41,5 @@ add_importlibs(netshell
     kernel32)
 
 add_pch(netshell ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_dependencies(netshell netshell_def)
+
 add_cab_target(netshell 1)

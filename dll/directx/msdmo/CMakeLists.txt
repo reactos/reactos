@@ -4,12 +4,13 @@ set_unicode()
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(msdmo ${CMAKE_CURRENT_SOURCE_DIR}/msdmo.spec ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
+spec2def(msdmo.dll msdmo.spec)
 
 add_library(msdmo SHARED
     dmoreg.c
     dmort.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
 set_entrypoint(msdmo 0)
 
@@ -25,4 +26,4 @@ add_importlibs(msdmo
     kernel32
     ntdll)
 
-add_dependencies(msdmo msdmo_def dxdsk psdk buildno_header)
+add_dependencies(msdmo dxdsk psdk buildno_header)

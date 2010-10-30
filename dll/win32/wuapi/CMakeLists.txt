@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(wuapi ${CMAKE_CURRENT_SOURCE_DIR}/wuapi.spec ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
+spec2def(wuapi.dll wuapi.spec)
 
 add_library(wuapi SHARED
     downloader.c
@@ -15,15 +15,15 @@ add_library(wuapi SHARED
     regsvr.c
     searcher.c
     session.c
-    updates.c)
+    updates.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
 
 set_module_type(wuapi win32dll)
 
 target_link_libraries(wuapi
-    ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def
     wine
     uuid)
 
 add_importlibs(wuapi ole32 advapi32 kernel32 ntdll)
-add_dependencies(wuapi wuapi_def)
+
 add_cab_target(wuapi 1)

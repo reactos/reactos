@@ -3,7 +3,7 @@ set_unicode()
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-spec2def(syssetup ${CMAKE_CURRENT_SOURCE_DIR}/syssetup.spec ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)
+spec2def(syssetup.dll syssetup.spec)
 
 add_library(syssetup SHARED
     classinst.c
@@ -11,12 +11,12 @@ add_library(syssetup SHARED
     install.c
     logfile.c
     wizard.c
-    syssetup.rc)
+    syssetup.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)
 
 set_module_type(syssetup win32dll)
 
 target_link_libraries(syssetup
-    ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def
     uuid
     pseh)
 
@@ -35,5 +35,5 @@ add_importlibs(syssetup
     kernel32
     ntdll)
 
-add_dependencies(syssetup syssetup_def)
+
 add_cab_target(syssetup 1)

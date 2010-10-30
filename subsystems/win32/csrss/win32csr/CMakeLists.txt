@@ -6,7 +6,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers
     ${REACTOS_SOURCE_DIR}/dll/cpl/console)
 
-spec2def(win32csr ${CMAKE_CURRENT_SOURCE_DIR}/win32csr.spec ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
+spec2def(win32csr.dll win32csr.spec)
 
 set_rc_compiler()
 
@@ -24,12 +24,12 @@ list(APPEND SOURCE
     harderror.c
     lineinput.c
     tuiconsole.c
-    win32csr.rc)
+    win32csr.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def)
 
 add_library(win32csr SHARED ${CMAKE_CURRENT_BINARY_DIR}/win32csr_w32csr.h.gch ${SOURCE})
 
 target_link_libraries(win32csr
-    ${CMAKE_CURRENT_BINARY_DIR}/win32csr.def
     win32ksys
     pseh)
 
@@ -39,5 +39,5 @@ add_importlibs(win32csr user32 gdi32 advapi32 psapi kernel32 ntdll)
 
 add_pch(win32csr ${CMAKE_CURRENT_SOURCE_DIR}/w32csr.h ${SOURCE})
 
-add_dependencies(win32csr win32csr_def bugcodes)
+add_dependencies(win32csr bugcodes)
 add_cab_target(win32csr 1)

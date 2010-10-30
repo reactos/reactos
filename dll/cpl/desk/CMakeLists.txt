@@ -4,7 +4,7 @@ set_unicode()
 add_definitions(-D_WIN32)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-spec2def(desk ${CMAKE_CURRENT_SOURCE_DIR}/desk.spec ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
+spec2def(desk.cpl desk.spec)
 
 add_library(desk SHARED
     advmon.c
@@ -24,11 +24,12 @@ add_library(desk SHARED
     general.c
     desk.rc
     draw.c
-    theme.c)
+    theme.c
+    ${CMAKE_CURRENT_BINARY_DIR}/desk.def)
 
 set_module_type(desk cpl)
 
-target_link_libraries(desk ${CMAKE_CURRENT_BINARY_DIR}/desk.def uuid)
+target_link_libraries(desk uuid)
 
 add_importlibs(desk
     msvcrt
@@ -44,5 +45,4 @@ add_importlibs(desk
     kernel32
     ntdll)
 
-add_dependencies(desk desk_def)
 add_cab_target(desk 1)

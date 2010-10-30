@@ -9,7 +9,7 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mstask ${CMAKE_CURRENT_SOURCE_DIR}/mstask.spec ${CMAKE_CURRENT_BINARY_DIR}/mstask.def)
+spec2def(mstask.dll mstask.spec)
 
 add_library(mstask SHARED
     factory.c
@@ -17,16 +17,16 @@ add_library(mstask SHARED
     task.c
     task_scheduler.c
     task_trigger.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mstask.def)
 
 set_module_type(mstask win32dll)
 
 target_link_libraries(mstask
-    ${CMAKE_CURRENT_BINARY_DIR}/mstask.def
     mstask_local_interface
     uuid
     wine)
 
 add_importlibs(mstask ole32 ntdll)
-add_dependencies(mstask mstask_def)
+
 add_cab_target(mstask 1)

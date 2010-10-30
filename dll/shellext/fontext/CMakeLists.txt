@@ -1,16 +1,17 @@
 
 set_unicode()
 
-spec2def(fontext ${CMAKE_CURRENT_SOURCE_DIR}/fontext.spec ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
+spec2def(fontext.dll fontext.spec)
 
 add_library(fontext SHARED
     fontext.c
     regsvr.c
-    fontext.rc)
+    fontext.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/fontext.def)
 
 set_module_type(fontext win32dll)
 
-target_link_libraries(fontext ${CMAKE_CURRENT_BINARY_DIR}/fontext.def uuid)
+target_link_libraries(fontext uuid)
 
 add_importlibs(fontext
     user32
@@ -23,5 +24,4 @@ add_importlibs(fontext
     kernel32
     ntdll)
 
-add_dependencies(fontext fontext_def)
 add_cab_target(fontext 1)

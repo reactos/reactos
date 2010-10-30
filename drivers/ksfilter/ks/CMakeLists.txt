@@ -36,4 +36,4 @@ target_link_libraries(ks
     pseh)
 
 add_importlibs(ks ntoskrnl hal msvcrt)
-add_dependencies(ks ks_def psdk bugcodes)
+add_dependencies(ks psdk bugcodes)

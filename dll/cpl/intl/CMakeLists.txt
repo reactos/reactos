@@ -3,7 +3,7 @@ set_unicode()
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-spec2def(intl ${CMAKE_CURRENT_SOURCE_DIR}/intl.spec ${CMAKE_CURRENT_BINARY_DIR}/intl.def)
+spec2def(intl.cpl intl.spec)
 
 add_library(intl SHARED
     currency.c
@@ -22,8 +22,6 @@ add_library(intl SHARED
 
 set_module_type(intl cpl)
 
-target_link_libraries(intl ${CMAKE_CURRENT_BINARY_DIR}/intl.def)
-
 add_importlibs(intl
     msvcrt
     user32
@@ -33,5 +31,4 @@ add_importlibs(intl
     shell32
     kernel32)
 
-add_dependencies(intl intl_def)
 add_cab_target(intl 1)

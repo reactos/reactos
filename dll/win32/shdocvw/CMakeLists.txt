@@ -6,7 +6,7 @@ add_definitions(-D_SHDOCVW_)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(shdocvw ${CMAKE_CURRENT_SOURCE_DIR}/shdocvw.spec ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
+spec2def(shdocvw.dll shdocvw.spec)
 
 add_library(shdocvw SHARED
     classinfo.c
@@ -27,12 +27,12 @@ add_library(shdocvw SHARED
     urlhist.c
     view.c
     webbrowser.c
-    shdocvw.rc)
+    shdocvw.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
 set_module_type(shdocvw win32dll)
 
 target_link_libraries(shdocvw
-    ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def
     uuid
     wine)
 

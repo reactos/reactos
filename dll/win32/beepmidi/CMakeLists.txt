@@ -1,14 +1,12 @@
 
 set_unicode()
 
-spec2def(beepmidi ${CMAKE_CURRENT_SOURCE_DIR}/beepmidi.spec ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def)
+spec2def(beepmidi.dll beepmidi.spec)
 
-add_library(beepmidi SHARED beepmidi.c)
+add_library(beepmidi SHARED beepmidi.c ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def)
 
 set_entrypoint(beepmidi 0)
 
-target_link_libraries(beepmidi ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def)
-
 add_importlibs(beepmidi winmm kernel32 ntdll)
-add_dependencies(beepmidi beepmidi_def psdk)
+add_dependencies(beepmidi psdk)
 add_cab_target(beepmidi 1)

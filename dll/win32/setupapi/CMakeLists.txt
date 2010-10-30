@@ -12,7 +12,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_BINARY_DIR}/include/reactos/idl)
 
-spec2def(setupapi ${CMAKE_CURRENT_SOURCE_DIR}/setupapi.spec ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
+spec2def(setupapi.dll setupapi.spec)
 
 add_library(setupapi SHARED
     cfgmgr.c
@@ -31,12 +31,12 @@ add_library(setupapi SHARED
     stringtable.c
     stubs.c
     rpc.c
-    setupapi.rc)
+    setupapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
 
 set_module_type(setupapi win32dll)
 
 target_link_libraries(setupapi
-    ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def
     pnp_client
     uuid
     wine
@@ -54,5 +54,5 @@ add_importlibs(setupapi
     kernel32
     ntdll)
 
-add_dependencies(setupapi setupapi_def)
+
 add_cab_target(setupapi 1)

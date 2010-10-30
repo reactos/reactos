@@ -3,7 +3,7 @@ set_unicode()
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-spec2def(mmsys ${CMAKE_CURRENT_SOURCE_DIR}/mmsys.spec ${CMAKE_CURRENT_BINARY_DIR}/mmsys.def)
+spec2def(mmsys.cpl mmsys.spec)
 
 add_library(mmsys SHARED
     mmsys.c
@@ -11,11 +11,10 @@ add_library(mmsys SHARED
     volume.c
     audio.c
     voice.c
-    mmsys.rc)
+    mmsys.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mmsys.def)
 
 set_module_type(mmsys cpl)
-
-target_link_libraries(mmsys ${CMAKE_CURRENT_BINARY_DIR}/mmsys.def)
 
 add_importlibs(mmsys
     msvcrt
@@ -31,5 +30,4 @@ add_importlibs(mmsys
     ntdll
     kernel32)
 
-add_dependencies(mmsys mmsys_def)
 add_cab_target(mmsys 1)

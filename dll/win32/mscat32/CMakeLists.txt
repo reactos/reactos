@@ -3,16 +3,14 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mscat32 ${CMAKE_CURRENT_SOURCE_DIR}/mscat32.spec ${CMAKE_CURRENT_BINARY_DIR}/mscat32.def)
+spec2def(mscat32.dll mscat32.spec)
 
-add_library(mscat32 SHARED main.c)
+add_library(mscat32 SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/mscat32.def)
 
 set_module_type(mscat32 win32dll)
 
-target_link_libraries(mscat32
-    ${CMAKE_CURRENT_BINARY_DIR}/mscat32.def
-    wine)
+target_link_libraries(mscat32 wine)
 
 add_importlibs(mscat32 wintrust kernel32 ntdll)
-add_dependencies(mscat32 mscat32_def)
+
 add_cab_target(mscat32 1)

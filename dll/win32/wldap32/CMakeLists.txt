@@ -2,7 +2,7 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(wldap32 ${CMAKE_CURRENT_SOURCE_DIR}/wldap32.spec ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def)
+spec2def(wldap32.dll wldap32.spec)
 
 add_library(wldap32 SHARED
     add.c
@@ -25,14 +25,13 @@ add_library(wldap32 SHARED
     rename.c
     search.c
     value.c
-    wldap32.rc)
+    wldap32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def)
 
 set_module_type(wldap32 win32dll)
 
-target_link_libraries(wldap32
-     ${CMAKE_CURRENT_BINARY_DIR}/wldap32.def
-     wine)
+target_link_libraries(wldap32 wine)
 
 add_importlibs(wldap32 user32 kernel32 ntdll)
-add_dependencies(wldap32 wldap32_def)
+
 add_cab_target(wldap32 1)

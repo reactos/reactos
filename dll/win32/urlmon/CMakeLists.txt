@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(urlmon ${CMAKE_CURRENT_SOURCE_DIR}/urlmon.spec ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
+spec2def(urlmon.dll urlmon.spec)
 
 add_library(urlmon SHARED
     bindctx.c
@@ -31,12 +31,12 @@ add_library(urlmon SHARED
     uri.c
     urlmon_main.c
     usrmarshal.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def)
 
 set_module_type(urlmon win32dll)
 
 target_link_libraries(urlmon
-    ${CMAKE_CURRENT_BINARY_DIR}/urlmon.def
     urlmon_proxy
     uuid
     wine
@@ -54,7 +54,7 @@ add_importlibs(urlmon
     kernel32
     ntdll)
 
-add_dependencies(urlmon urlmon_def)
+
 add_definitions(-DENTRY_PREFIX=URLMON_)
 add_definitions(-DPROXY_DELEGATION)
 add_definitions(-DREGISTER_PROXY_DLL)

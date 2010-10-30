@@ -5,7 +5,7 @@ add_definitions(-D__WINESRC__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-spec2def(shlwapi ${CMAKE_CURRENT_SOURCE_DIR}/shlwapi.spec ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
+spec2def(shlwapi.dll shlwapi.spec)
 
 add_library(shlwapi SHARED
     assoc.c
@@ -22,12 +22,12 @@ add_library(shlwapi SHARED
     thread.c
     url.c
     wsprintf.c
-    shlwapi.rc)
+    shlwapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
 set_module_type(shlwapi win32dll)
 
 target_link_libraries(shlwapi
-    ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def
     wine
     uuid)
 
@@ -48,5 +48,5 @@ add_importlibs(shlwapi
     kernel32
     ntdll)
 
-add_dependencies(shlwapi shlwapi_def)
+
 add_cab_target(shlwapi 1)

@@ -4,14 +4,13 @@ add_dependencies(pstorec_tlb stdole2)
 
 add_definitions(-D__WINESRC__)
 
-spec2def(pstorec ${CMAKE_CURRENT_SOURCE_DIR}/pstorec.spec ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def)
+spec2def(pstorec.dll pstorec.spec)
 
-add_library(pstorec SHARED pstorec.c rsrc.rc)
+add_library(pstorec SHARED pstorec.c rsrc.rc ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def)
 
 set_module_type(pstorec win32dll)
 
 target_link_libraries(pstorec
-    ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def
     uuid
     wine)
 

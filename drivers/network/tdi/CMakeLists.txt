@@ -26,6 +26,6 @@ target_link_libraries(tdi
     -lntoskrnl
     -lhal)
 
-add_dependencies(tdi tdi_def psdk bugcodes buildno_header)
+add_dependencies(tdi psdk bugcodes buildno_header)
 
 add_cab_target(tdi 2)

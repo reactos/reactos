@@ -1,16 +1,17 @@
 
 set_unicode()
 
-spec2def(appwiz ${CMAKE_CURRENT_SOURCE_DIR}/appwiz.spec ${CMAKE_CURRENT_BINARY_DIR}/appwiz.def)
+spec2def(appwiz.cpl appwiz.spec)
 
 add_library(appwiz SHARED
     appwiz.c
     createlink.c
-    appwiz.rc)
+    appwiz.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/appwiz.def)
 
 set_module_type(appwiz cpl)
 
-target_link_libraries(appwiz ${CMAKE_CURRENT_BINARY_DIR}/appwiz.def uuid)
+target_link_libraries(appwiz uuid)
 
 add_importlibs(appwiz
     msvcrt
@@ -21,5 +22,4 @@ add_importlibs(appwiz
     shell32
     kernel32)
 
-add_dependencies(appwiz appwiz_def)
 add_cab_target(appwiz 1)

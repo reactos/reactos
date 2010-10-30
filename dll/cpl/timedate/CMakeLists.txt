@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(timedate ${CMAKE_CURRENT_SOURCE_DIR}/timedate.spec ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)
+spec2def(timedate.cpl timedate.spec)
 
 add_library(timedate SHARED
     clock.c
@@ -11,11 +11,10 @@ add_library(timedate SHARED
     ntpclient.c
     timedate.c
     timezone.c
-    timedate.rc)
+    timedate.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)
 
 set_module_type(timedate cpl)
-
-target_link_libraries(timedate ${CMAKE_CURRENT_BINARY_DIR}/timedate.def)
 
 add_importlibs(timedate
     advapi32
@@ -27,5 +26,4 @@ add_importlibs(timedate
     msvcrt
     kernel32)
 
-add_dependencies(timedate timedate_def)
 add_cab_target(timedate 1)

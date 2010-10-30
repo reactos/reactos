@@ -1,13 +1,12 @@
 
 set_unicode()
 
-spec2def(wing32 ${CMAKE_CURRENT_SOURCE_DIR}/wing32.spec ${CMAKE_CURRENT_BINARY_DIR}/wing32.def)
+spec2def(wing32.dll wing32.spec)
 
-add_library(wing32 SHARED wing32.c)
+add_library(wing32 SHARED wing32.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wing32.def)
 
 set_entrypoint(wing32 0)
 
-target_link_libraries(wing32 ${CMAKE_CURRENT_BINARY_DIR}/wing32.def)
-
 add_importlibs(wing32 user32 gdi32)
-add_dependencies(wing32 wing32_def psdk)
+add_dependencies(wing32 psdk)

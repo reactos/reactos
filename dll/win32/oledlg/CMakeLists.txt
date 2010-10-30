@@ -2,20 +2,19 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(oledlg ${CMAKE_CURRENT_SOURCE_DIR}/oledlg.spec ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def)
+spec2def(oledlg.dll oledlg.spec)
 
 add_library(oledlg SHARED
     insobjdlg.c
     oledlg_main.c
     pastespl.c
-    rsrc.rc)
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def)
 
 set_module_type(oledlg win32dll)
 
-target_link_libraries(oledlg
-    ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def
-    wine)
+target_link_libraries(oledlg wine)
 
 add_importlibs(oledlg ole32 comdlg32 user32 advapi32 kernel32 ntdll)
-add_dependencies(oledlg oledlg_def)
+
 add_cab_target(oledlg 1)

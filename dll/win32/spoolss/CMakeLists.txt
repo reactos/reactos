@@ -2,16 +2,14 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(spoolss ${CMAKE_CURRENT_SOURCE_DIR}/spoolss.spec ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def)
+spec2def(spoolss.dll spoolss.spec)
 
-add_library(spoolss SHARED spoolss_main.c router.c)
+add_library(spoolss SHARED spoolss_main.c router.c ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def)
 
 set_module_type(spoolss win32dll)
 
-target_link_libraries(spoolss
-    ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def
-    wine)
+target_link_libraries(spoolss wine)
 
 add_importlibs(spoolss winspool kernel32 ntdll)
-add_dependencies(spoolss spoolss_def)
+
 add_cab_target(spoolss 1)

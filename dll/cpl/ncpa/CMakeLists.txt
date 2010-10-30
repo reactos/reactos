@@ -1,18 +1,15 @@
 
 set_unicode()
 
-spec2def(ncpa ${CMAKE_CURRENT_SOURCE_DIR}/ncpa.spec ${CMAKE_CURRENT_BINARY_DIR}/ncpa.def)
+spec2def(ncpa.cpl ncpa.spec)
 
-add_library(ncpa SHARED ncpa.c)
+add_library(ncpa SHARED ncpa.c ${CMAKE_CURRENT_BINARY_DIR}/ncpa.def)
 
 set_module_type(ncpa cpl)
-
-target_link_libraries(ncpa ${CMAKE_CURRENT_BINARY_DIR}/ncpa.def)
 
 add_importlibs(ncpa
     msvcrt
     advapi32
     shell32)
 
-add_dependencies(ncpa ncpa_def)
 add_cab_target(ncpa 1)

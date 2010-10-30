@@ -12,7 +12,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(quartz ${CMAKE_CURRENT_SOURCE_DIR}/quartz.spec ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
+spec2def(quartz.dll quartz.spec)
 
 add_library(quartz SHARED
     avidec.c
@@ -39,7 +39,8 @@ add_library(quartz SHARED
     enummedia.c
     control.c
     avisplit.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
 set_module_type(quartz win32dll)
 
@@ -67,6 +68,6 @@ add_importlibs(quartz
     kernel32
     ntdll)
 
-add_dependencies(quartz quartz_def)
+
 rpcproxy(quartz quartz_strmif.idl)
 add_cab_target(quartz 1)

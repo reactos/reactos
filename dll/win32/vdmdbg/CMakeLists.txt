@@ -1,9 +1,11 @@
 
 set_unicode()
 
-spec2def(vdmdbg ${CMAKE_CURRENT_SOURCE_DIR}/vdmdbg.spec ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg.def)
+spec2def(vdmdbg.dll vdmdbg.spec)
 
-list(APPEND SOURCE vdmdbg.c)
+list(APPEND SOURCE
+    vdmdbg.c
+    ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg.def)
 
 add_library(vdmdbg SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg_vdmdbg.h.gch
@@ -11,9 +13,7 @@ add_library(vdmdbg SHARED
 
 set_module_type(vdmdbg win32dll)
 
-target_link_libraries(vdmdbg ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg.def)
-
 add_importlibs(vdmdbg kernel32 ntdll)
 add_pch(vdmdbg ${CMAKE_CURRENT_SOURCE_DIR}/vdmdbg.h ${SOURCE})
-add_dependencies(vdmdbg vdmdbg_def)
+
 add_cab_target(vdmdbg 1)

@@ -1,5 +1,5 @@
 
-spec2def(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/fmifs.spec ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
+spec2def(fmifs.dll fmifs.spec)
 
 list(APPEND SOURCE
     chkdsk.c
@@ -10,15 +10,14 @@ list(APPEND SOURCE
     init.c
     media.c
     query.c
-    fmifs.rc)
+    fmifs.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
 
 add_pch(fmifs ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_library(fmifs SHARED ${CMAKE_CURRENT_BINARY_DIR}/fmifs_precomp.h.gch ${SOURCE})
 
 set_entrypoint(fmifs InitializeFmIfs@12)
 
-target_link_libraries(fmifs ${CMAKE_CURRENT_BINARY_DIR}/fmifs.def)
-
 add_importlibs(fmifs kernel32 ntdll)
-add_dependencies(fmifs fmifs_def psdk buildno_header)
+add_dependencies(fmifs psdk buildno_header)
 add_cab_target(fmifs 1)

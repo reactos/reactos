@@ -1,20 +1,19 @@
 
 set_unicode()
 
-spec2def(newdev ${CMAKE_CURRENT_SOURCE_DIR}/newdev.spec ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
+spec2def(newdev.dll newdev.spec)
 
 add_library(newdev SHARED
     newdev.c
     stubs.c
     wizard.c
-    newdev.rc)
+    newdev.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
 
 set_module_type(newdev win32dll)
 
-target_link_libraries(newdev
-    ${CMAKE_CURRENT_BINARY_DIR}/newdev.def
-    wine)
+target_link_libraries(newdev wine)
 
 add_importlibs(newdev gdi32 comctl32 setupapi advapi32 user32 shell32 kernel32 ntdll)
-add_dependencies(newdev newdev_def)
+
 add_cab_target(newdev 1)

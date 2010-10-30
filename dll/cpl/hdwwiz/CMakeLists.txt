@@ -1,13 +1,11 @@
 
 set_unicode()
 
-spec2def(hdwwiz ${CMAKE_CURRENT_SOURCE_DIR}/hdwwiz.spec ${CMAKE_CURRENT_BINARY_DIR}/hdwwiz.def)
+spec2def(hdwwiz.cpl hdwwiz.spec)
 
-add_library(hdwwiz SHARED hdwwiz.c hdwwiz.rc)
+add_library(hdwwiz SHARED hdwwiz.c hdwwiz.rc ${CMAKE_CURRENT_BINARY_DIR}/hdwwiz.def)
 
 set_module_type(hdwwiz cpl)
-
-target_link_libraries(hdwwiz ${CMAKE_CURRENT_BINARY_DIR}/hdwwiz.def)
 
 add_importlibs(hdwwiz
     msvcrt
@@ -21,5 +19,4 @@ add_importlibs(hdwwiz
     kernel32
     ntdll)
 
-add_dependencies(hdwwiz hdwwiz_def)
 add_cab_target(hdwwiz 1)

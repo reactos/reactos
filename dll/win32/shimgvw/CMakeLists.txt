@@ -1,13 +1,11 @@
 
-spec2def(shimgvw ${CMAKE_CURRENT_SOURCE_DIR}/shimgvw.spec ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
+spec2def(shimgvw.dll shimgvw.spec)
 
-add_library(shimgvw SHARED shimgvw.c shimgvw.rc)
+add_library(shimgvw SHARED shimgvw.c shimgvw.rc ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
 
 set_module_type(shimgvw win32dll)
 
-target_link_libraries(shimgvw
-    ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def
-    wine)
+target_link_libraries(shimgvw wine)
 
 add_importlibs(shimgvw
     advapi32
@@ -18,5 +16,5 @@ add_importlibs(shimgvw
     kernel32
     ntdll)
 
-add_dependencies(shimgvw shimgvw_def)
+
 add_cab_target(shimgvw 1)

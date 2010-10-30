@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(powercfg ${CMAKE_CURRENT_SOURCE_DIR}/powercfg.spec ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)
+spec2def(powercfg.cpl powercfg.spec)
 
 add_library(powercfg SHARED
     powercfg.c
@@ -9,12 +9,12 @@ add_library(powercfg SHARED
     alarms.c
     advanced.c
     hibernate.c
-    powercfg.rc)
-
+    powercfg.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)
 
 set_module_type(powercfg cpl)
 
-target_link_libraries(powercfg ${CMAKE_CURRENT_BINARY_DIR}/powercfg.def)
+
 
 add_importlibs(powercfg
     msvcrt
@@ -25,5 +25,4 @@ add_importlibs(powercfg
     advapi32
     kernel32)
 
-add_dependencies(powercfg powercfg_def)
 add_cab_target(powercfg 1)

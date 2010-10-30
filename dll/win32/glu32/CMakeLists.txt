@@ -10,7 +10,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libnurbs/nurbtess)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libtess)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libutil)
 
-spec2def(glu32 ${CMAKE_CURRENT_SOURCE_DIR}/glu32.spec ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
+spec2def(glu32.dll glu32.spec)
 
 add_library(glu32 SHARED
     libnurbs/interface/bezierEval.cc
@@ -101,11 +101,11 @@ add_library(glu32 SHARED
     libutil/mipmap.c
     libutil/project.c
     libutil/quad.c
-    libutil/registry.c)
+    libutil/registry.c
+    ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
 set_entrypoint(glu32 0)
 
-target_link_libraries(glu32 ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 add_importlibs(
     glu32
     gcc
@@ -115,5 +115,4 @@ add_importlibs(
     kernel32
     ntdll)
 
-add_dependencies(glu32 glu32_def)
 add_cab_target(glu32 1)

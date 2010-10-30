@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdit ${CMAKE_CURRENT_SOURCE_DIR}/kbdit.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdit.def)
+spec2def(kbdit.dll kbdit.spec)
 
-add_library(kbdit SHARED kbdit.c kbdit.rc)
+add_library(kbdit SHARED kbdit.c kbdit.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdit.def)
 
 set_entrypoint(kbdit 0)
 
-target_link_libraries(kbdit ${CMAKE_CURRENT_BINARY_DIR}/kbdit.def)
 
-add_dependencies(kbdit kbdit_def psdk buildno_header)
+
+add_dependencies(kbdit psdk buildno_header)

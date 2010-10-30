@@ -3,7 +3,7 @@ add_definitions(-D__WINESRC__)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(gdiplus ${CMAKE_CURRENT_SOURCE_DIR}/gdiplus.spec ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
+spec2def(gdiplus.dll gdiplus.spec)
 
 add_library(gdiplus SHARED
     brush.c
@@ -18,12 +18,12 @@ add_library(gdiplus SHARED
     pathiterator.c
     pen.c
     region.c
-    stringformat.c)
+    stringformat.c
+    ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
 
 set_module_type(gdiplus win32dll)
 
 target_link_libraries(gdiplus
-    ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def
     uuid
     wine)
 
@@ -42,5 +42,5 @@ if(ARCH MATCHES amd64)
 target_link_libraries(gdiplus crt)
 endif(ARCH MATCHES amd64)
 
-add_dependencies(gdiplus gdiplus_def)
+
 add_cab_target(gdiplus 1)

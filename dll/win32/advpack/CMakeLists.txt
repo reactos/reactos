@@ -7,18 +7,17 @@ list(APPEND SOURCE
     advpack.c
     files.c
     install.c
-    reg.c)
+    reg.c
+    ${CMAKE_CURRENT_BINARY_DIR}/advpack.def)
 
-spec2def(advpack ${CMAKE_CURRENT_SOURCE_DIR}/advpack.spec ${CMAKE_CURRENT_BINARY_DIR}/advpack.def)
+spec2def(advpack.dll advpack.spec)
 
 add_library(advpack SHARED ${SOURCE})
 
 set_module_type(advpack win32dll)
 
-target_link_libraries(advpack
-    ${CMAKE_CURRENT_BINARY_DIR}/advpack.def
-    wine)
+target_link_libraries(advpack wine)
 
 add_importlibs(advpack ole32 setupapi version advapi32 kernel32 ntdll)
-add_dependencies(advpack advpack_def)
+
 add_cab_target(advpack 1)

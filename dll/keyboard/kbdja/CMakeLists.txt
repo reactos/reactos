@@ -1,12 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdja ${CMAKE_CURRENT_SOURCE_DIR}/kbdja.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdja.def)
+spec2def(kbdja.dll kbdja.spec)
 
-add_library(kbdja SHARED kbdja.c kbdja.rc)
+add_library(kbdja SHARED kbdja.c kbdja.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdja.def)
 
 set_entrypoint(kbdja 0)
 
-target_link_libraries(kbdja ${CMAKE_CURRENT_BINARY_DIR}/kbdja.def)
 
-add_dependencies(kbdja kbdja_def psdk buildno_header)
+
+add_dependencies(kbdja psdk buildno_header)

@@ -1,12 +1,12 @@
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
-spec2def(kbdus ${CMAKE_CURRENT_SOURCE_DIR}/kbdus.spec ${CMAKE_CURRENT_BINARY_DIR}/kbdus.def)
+spec2def(kbdus.dll kbdus.spec)
 
-add_library(kbdus SHARED kbdus.c kbdus.rc)
+add_library(kbdus SHARED kbdus.c kbdus.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdus.def)
 
 set_entrypoint(kbdus 0)
 
-target_link_libraries(kbdus ${CMAKE_CURRENT_BINARY_DIR}/kbdus.def)
 
-add_dependencies(kbdus kbdus_def psdk buildno_header)
+
+add_dependencies(kbdus psdk buildno_header)
 add_cab_target(kbdus 1)

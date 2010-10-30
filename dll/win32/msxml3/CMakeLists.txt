@@ -18,7 +18,7 @@ endif(MSVC)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(msxml3 ${CMAKE_CURRENT_SOURCE_DIR}/msxml3.spec ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
+spec2def(msxml3.dll msxml3.spec)
 
 add_library(msxml3 SHARED
     attribute.c
@@ -47,12 +47,12 @@ add_library(msxml3 SHARED
     docfrag.c
     domimpl.c
     entityref.c
-    version.rc)
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
 
 set_module_type(msxml3 win32dll)
 
 target_link_libraries(msxml3
-    ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def
     libxml2
     uuid
     wine
@@ -76,5 +76,5 @@ add_importlibs(msxml3
     kernel32
     ntdll)
 
-add_dependencies(msxml3 msxml3_v1 msxml3_def)
+add_dependencies(msxml3 msxml3_v1)
 add_cab_target(msxml3 1)

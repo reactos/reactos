@@ -1,16 +1,14 @@
 
 set_unicode()
 
-spec2def(powrprof ${CMAKE_CURRENT_SOURCE_DIR}/powrprof.spec ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
+spec2def(powrprof.dll powrprof.spec)
 
-add_library(powrprof SHARED powrprof.c powrprof.rc)
+add_library(powrprof SHARED powrprof.c powrprof.rc ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
 
 set_module_type(powrprof win32dll)
 
-target_link_libraries(powrprof
-    ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def
-    wine)
+target_link_libraries(powrprof wine)
 
 add_importlibs(powrprof advapi32 user32 comctl32 kernel32 ntdll)
-add_dependencies(powrprof powrprof_def)
+
 add_cab_target(powrprof 1)
