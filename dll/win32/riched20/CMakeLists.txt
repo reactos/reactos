@@ -36,7 +36,7 @@ target_link_libraries(riched20
     uuid)
 
 if(MSVC)
-    set_target_properties(portcls PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
+    set_target_properties(riched20 PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
 endif(MSVC)
 
 add_importlibs(riched20
