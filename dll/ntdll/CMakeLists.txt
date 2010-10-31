@@ -18,7 +18,10 @@ list(APPEND SOURCE
     ldr/actctx.c
     rtl/libsupp.c
     rtl/version.c
-    def/ntdll.rc)
+    def/ntdll.rc
+    def/ntdll.def)
+    
+set_source_files_properties(def/ntdll.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE dispatch/i386/dispatch.S)
