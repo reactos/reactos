@@ -4,7 +4,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_USAGE, "Sucht in einer Datei nach einer Zeichenfolge.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] ""string"" [ file... ]\n\
     /C  Zeigt nur die Anzahl der die Zeichenfolge enthaltenen Zeilen an.\n\
     /I  Ignoriert Groﬂ-/Kleinbuchstaben bei der Suche.\n\
     /N  Zeigt die Zeilen mit ihren Zeilennummern an.\n\
