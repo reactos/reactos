@@ -1,4 +1,6 @@
 
+spec2def(kernel32.dll kernel32.spec)
+
 add_definitions(-D_KERNEL32_)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -94,7 +96,7 @@ list(APPEND SOURCE
     thread/tls.c
     kernel32.rc
     kernel32_stubs.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/kernel32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -118,3 +120,4 @@ add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
 add_dependencies(kernel32 errcodes)
 add_cab_target(kernel32 1)
+add_importlib_target(kernel32)

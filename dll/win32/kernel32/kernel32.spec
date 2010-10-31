@@ -1,5 +1,3 @@
-#undef i386
-
 @ stdcall AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
 @ stdcall AcquireSRWLockShared(ptr) ntdll.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
@@ -613,7 +611,7 @@
 @ stdcall GetPrivateProfileStructW(wstr wstr ptr long wstr)
 @ stdcall GetProcAddress(long str)
 @ stdcall GetProcessAffinityMask(long ptr ptr)
-//@ stdcall GetProcessFlags(long)
+;@ stdcall GetProcessFlags(long)
 ;@ stdcall GetProcessDEPPolicy ; Win 7
 ;@ stdcall GetProcessGroupAffinity ; Win 7
 @ stdcall GetProcessHandleCount(long ptr)
