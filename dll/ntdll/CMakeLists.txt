@@ -1,12 +1,12 @@
 
+add_definitions(
+    -D__NTDLL__
+    -D_NTOSKRNL_
+    -DCRTDLL)
 
-
-add_definitions(-D__NTDLL__)
-add_definitions(-D_NTOSKRNL_)
-add_definitions(-DCRTDLL)
-
-include_directories(BEFORE include)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+include_directories(
+    BEFORE include
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
 list(APPEND SOURCE
     csr/api.c
@@ -31,19 +31,25 @@ list(APPEND SOURCE dispatch/dispatch.c)
 endif(ARCH MATCHES i386)
 
 add_library(ntdll SHARED
-    ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_ntdll.h.gch)
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_ntdll.h.gch
+    ${SOURCE})
 
-set_target_properties(ntdll PROPERTIES LINK_FLAGS "-Wl,-entry,0")
+set_entrypoint(ntdll 0)
 
-target_link_libraries(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.def
-                      -Wl,--whole-archive rtl -Wl,--no-whole-archive
-                      ntdllsys
-                      libcntpr
-                      pseh)
+if(MSVC)
+target_link_libraries(ntdll rtl)
+else()
+target_link_libraries(ntdll -Wl,--whole-archive rtl -Wl,--no-whole-archive)
+endif()
+
+target_link_libraries(ntdll
+    ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.def
+    ntdllsys
+    libcntpr
+    pseh)
                       
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
-add_dependencies(ntdll ntstatus version)
+add_dependencies(ntdll ntstatus)
 
 add_minicd_target(ntdll reactos/system32 ntdll.dll)
 add_cab_target(ntdll 1)
