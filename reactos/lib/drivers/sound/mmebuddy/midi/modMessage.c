@@ -64,6 +64,24 @@ modMessage(
             Result = MmeGetDeviceInterfaceString(MIDI_OUT_DEVICE_TYPE, DeviceId, (LPWSTR)Parameter1, Parameter2, NULL); //FIXME DWORD_PTR
             break;
         }
+
+        case MODM_OPEN :
+        {
+            Result = MmeOpenDevice(MIDI_OUT_DEVICE_TYPE,
+                                   DeviceId,
+                                   (LPWAVEOPENDESC) Parameter1, /* unused */
+                                   Parameter2,
+                                   (DWORD_PTR*)PrivateHandle);
+            break;
+        }
+
+        case MODM_CLOSE :
+        {
+            Result = MmeCloseDevice(PrivateHandle);
+
+            break;
+        }
+
     }
 
     SND_TRACE(L"modMessage returning MMRESULT %d\n", Result);
