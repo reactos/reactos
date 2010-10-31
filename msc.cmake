@@ -48,12 +48,6 @@ macro(set_image_base MODULE IMAGE_BASE)
     set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
 endmacro()
 
-macro(add_importlibs MODULE)
-    foreach(LIB ${ARGN})
-        target_link_libraries(${MODULE} ${LIB}.LIB)
-    endforeach()
-endmacro()
-
 macro(set_module_type MODULE TYPE)
     add_dependencies(${MODULE} psdk buildno_header)
     if(${TYPE} MATCHES nativecui)
@@ -87,4 +81,25 @@ set(IDL_TYPELIB_ARG /tlb) #.tlb
 set(IDL_SERVER_ARG /sstub) #.c for stub server library
 set(IDL_CLIENT_ARG /cstub) #.c for stub client library
 
+
+macro(add_importlib_target _name)
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+        COMMAND LINK /LIB /MACHINE:X86 /DEF:${CMAKE_CURRENT_BINARY_DIR}/${_name}.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def
+    )
+    add_custom_target(lib${_name}
+        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+    )
+endmacro()
+
+macro(add_importlibs MODULE)
+    foreach(LIB ${ARGN})
+        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.lib)
+    endforeach()
+endmacro()
+
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
+
 endif()
+
