@@ -31,6 +31,11 @@ const GUID KSPROPSETID_General                  = {0x1464EDA5L, 0x6A8F, 0x11D1, 
 const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSEVENTSETID_AudioControlChange      = {0xE85E9698L, 0xFA2F, 0x11D1, {0x95, 0xBD, 0x00, 0xC0, 0x4F, 0xB9, 0x25, 0xD3}};
 
+const GUID KSDATAFORMAT_TYPE_MUSIC = {0xE725D360L, 0x62CC, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSDATAFORMAT_SUBTYPE_MIDI = {0x1D262760L, 0xE957, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSDATAFORMAT_SPECIFIER_NONE = {0x0F6417D6L, 0xC318, 0x11D0, {0xA4, 0x3F, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+
+
 MIXER_STATUS
 MMixerVerifyContext(
     IN PMIXER_CONTEXT MixerContext)
@@ -444,7 +449,7 @@ MMixerCreateMixerData(
 MIXER_STATUS
 MMixerGetDeviceName(
     IN PMIXER_CONTEXT MixerContext,
-    IN LPMIXER_INFO MixerInfo,
+    OUT LPWSTR DeviceName,
     IN HANDLE hKey)
 {
     LPWSTR Name;
@@ -457,10 +462,10 @@ MMixerGetDeviceName(
     if (Status == MM_STATUS_SUCCESS)
     {
         /* copy device name */
-        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+        MixerContext->Copy(DeviceName, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
 
         /* make sure its null terminated */
-        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+        DeviceName[MAXPNAMELEN-1] = L'\0';
 
         /* free device name */
         MixerContext->Free(Name);
@@ -473,14 +478,14 @@ MMixerGetDeviceName(
     if (Status != MM_STATUS_SUCCESS)
         return Status;
 
-    Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
+    Status = MixerContext->QueryKeyValue(hTemp, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
         /* copy device name */
-        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+        MixerContext->Copy(DeviceName, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
 
         /* make sure its null terminated */
-        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+        DeviceName[MAXPNAMELEN-1] = L'\0';
 
         /* free device name */
         MixerContext->Free(Name);
@@ -489,3 +494,21 @@ MMixerGetDeviceName(
     MixerContext->CloseKey(hTemp);
     return Status;
 }
+
+VOID
+MMixerInitializePinConnect(
+    IN OUT PKSPIN_CONNECT PinConnect,
+    IN ULONG PinId)
+{
+    PinConnect->Interface.Set = KSINTERFACESETID_Standard;
+    PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
+    PinConnect->Interface.Flags = 0;
+    PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
+    PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
+    PinConnect->Medium.Flags = 0;
+    PinConnect->PinToHandle = NULL;
+    PinConnect->PinId = PinId;
+    PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
+    PinConnect->Priority.PrioritySubClass = 1;
+}
+

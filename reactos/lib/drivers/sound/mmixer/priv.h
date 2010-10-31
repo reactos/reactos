@@ -130,14 +130,36 @@ typedef struct
 
 typedef struct
 {
+    LIST_ENTRY Entry;
+    ULONG DeviceId;
+    ULONG PinId;
+    union
+    {
+        MIDIOUTCAPSW OutCaps;
+        MIDIINCAPSW InCaps;
+    }u;
+
+}MIDI_INFO, *LPMIDI_INFO;
+
+typedef struct
+{
     ULONG MixerListCount;
     LIST_ENTRY MixerList;
+
     ULONG MixerDataCount;
     LIST_ENTRY MixerData;
+
     ULONG WaveInListCount;
     LIST_ENTRY WaveInList;
+
     ULONG WaveOutListCount;
     LIST_ENTRY WaveOutList;
+
+    ULONG MidiInListCount;
+    LIST_ENTRY MidiInList;
+
+    ULONG MidiOutListCount;
+    LIST_ENTRY MidiOutList;
 }MIXER_LIST, *PMIXER_LIST;
 
 typedef struct
@@ -197,26 +219,11 @@ MMixerFreeMixerInfo(
     IN LPMIXER_INFO MixerInfo);
 
 MIXER_STATUS
-MMixerGetTargetPins(
-    IN PMIXER_CONTEXT MixerContext,
-    IN PKSMULTIPLE_ITEM NodeTypes,
-    IN PKSMULTIPLE_ITEM NodeConnections,
-    IN ULONG NodeIndex,
-    IN ULONG bUpDirection,
-    OUT PULONG Pins,
-    IN ULONG PinCount);
-
-MIXER_STATUS
 MMixerGetPhysicalConnection(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE hMixer,
     IN ULONG PinId,
     OUT PKSPIN_PHYSICALCONNECTION *OutConnection);
-
-ULONG
-MMixerGetIndexOfGuid(
-    PKSMULTIPLE_ITEM MultipleItem,
-    LPCGUID NodeType);
 
 MIXER_STATUS
 MMixerSetupFilter(
@@ -225,24 +232,24 @@ MMixerSetupFilter(
     IN LPMIXER_DATA MixerData,
     IN PULONG DeviceCount);
 
-MIXER_STATUS
-MMixerGetTargetPinsByNodeConnectionIndex(
+PKSPIN_CONNECT
+MMixerAllocatePinConnect(
     IN PMIXER_CONTEXT MixerContext,
-    IN PKSMULTIPLE_ITEM NodeConnections,
-    IN PKSMULTIPLE_ITEM NodeTypes,
-    IN ULONG bUpDirection,
-    IN ULONG NodeConnectionIndex,
-    IN ULONG PinCount,
-    OUT PULONG Pins);
+    ULONG DataFormatSize);
 
 MIXER_STATUS
-MMixerGetControlsFromPin(
+MMixerGetAudioPinDataRanges(
     IN PMIXER_CONTEXT MixerContext,
-    IN PKSMULTIPLE_ITEM NodeConnections,
-    IN PKSMULTIPLE_ITEM NodeTypes,
+    IN HANDLE hDevice,
     IN ULONG PinId,
-    IN ULONG bUpDirection,
-    OUT PULONG Nodes);
+    IN OUT PKSMULTIPLE_ITEM * OutMultipleItem);
+
+VOID
+MMixerInitializeMidiForFilter(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
+    IN LPMIXER_DATA MixerData,
+    IN PTOPOLOGY Topology);
 
 MIXER_STATUS
 MMixerVerifyContext(
@@ -315,12 +322,6 @@ MMixerCreateMixerData(
     IN HANDLE hKey);
 
 MIXER_STATUS
-MMixerGetDeviceName(
-    IN PMIXER_CONTEXT MixerContext,
-    IN LPMIXER_INFO MixerInfo,
-    IN HANDLE hKey);
-
-MIXER_STATUS
 MMixerInitializeWaveInfo(
     IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_LIST MixerList,
@@ -336,6 +337,18 @@ MMixerAddEvent(
     IN OUT LPMIXER_INFO MixerInfo,
     IN PVOID MixerEvent,
     IN PMIXER_EVENT MixerEventRoutine);
+
+MIXER_STATUS
+MMixerGetDeviceName(
+    IN PMIXER_CONTEXT MixerContext,
+    OUT LPWSTR DeviceName,
+    IN HANDLE hKey);
+
+VOID
+MMixerInitializePinConnect(
+    IN OUT PKSPIN_CONNECT PinConnect,
+    IN ULONG PinId);
+
 
 /* topology.c */
 
@@ -448,3 +461,9 @@ MMixerIsTopologyNodeReserved(
     IN PTOPOLOGY Topology,
     IN ULONG NodeIndex,
     OUT PULONG bReserved);
+
+VOID
+MMixerGetTopologyPinCount(
+    IN PTOPOLOGY Topology,
+    OUT PULONG PinCount);
+

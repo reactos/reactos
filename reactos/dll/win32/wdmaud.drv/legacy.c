@@ -171,7 +171,7 @@ WdmAudGetCapabilitiesByLegacy(
     {
         case MIXER_DEVICE_TYPE:
         {
-            LPMIXERCAPS MixerCaps = (LPMIXERCAPS) Capabilities;
+            LPMIXERCAPSW MixerCaps = (LPMIXERCAPSW) Capabilities;
 
             DeviceInfo.u.MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
             CopyWideString(MixerCaps->szPname, DeviceInfo.u.MixCaps.szPname);
@@ -185,13 +185,13 @@ WdmAudGetCapabilitiesByLegacy(
         }
         case WAVE_OUT_DEVICE_TYPE :
         {
-            LPWAVEOUTCAPS WaveOutCaps = (LPWAVEOUTCAPS) Capabilities;
+            LPWAVEOUTCAPSW WaveOutCaps = (LPWAVEOUTCAPSW) Capabilities;
 
             DeviceInfo.u.WaveOutCaps.szPname[MAXPNAMELEN-1] = L'\0';
             WaveOutCaps->wMid = DeviceInfo.u.WaveOutCaps.wMid;
             WaveOutCaps->wPid = DeviceInfo.u.WaveOutCaps.wPid;
 
-            WaveOutCaps->vDriverVersion = 0x0001;
+            WaveOutCaps->vDriverVersion = DeviceInfo.u.WaveOutCaps.vDriverVersion;
             CopyWideString(WaveOutCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
 
             WaveOutCaps->dwFormats = DeviceInfo.u.WaveOutCaps.dwFormats;
@@ -208,12 +208,40 @@ WdmAudGetCapabilitiesByLegacy(
             WaveInCaps->wMid = DeviceInfo.u.WaveInCaps.wMid;
             WaveInCaps->wPid = DeviceInfo.u.WaveInCaps.wPid;
 
-            WaveInCaps->vDriverVersion = 0x0001;
+            WaveInCaps->vDriverVersion = DeviceInfo.u.WaveInCaps.vDriverVersion;
             CopyWideString(WaveInCaps->szPname, DeviceInfo.u.WaveInCaps.szPname);
 
             WaveInCaps->dwFormats = DeviceInfo.u.WaveInCaps.dwFormats;
             WaveInCaps->wChannels = DeviceInfo.u.WaveInCaps.wChannels;
             WaveInCaps->wReserved1 = 0;
+            break;
+        }
+        case MIDI_IN_DEVICE_TYPE :
+        {
+            LPMIDIINCAPSW MidiInCaps = (LPMIDIINCAPSW)Capabilities;
+
+            DeviceInfo.u.MidiInCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+            MidiInCaps->vDriverVersion = DeviceInfo.u.MidiInCaps.vDriverVersion;
+            MidiInCaps->wMid = DeviceInfo.u.MidiInCaps.wMid;
+            MidiInCaps->wPid = DeviceInfo.u.MidiInCaps.wPid;
+            MidiInCaps->dwSupport = DeviceInfo.u.MidiInCaps.dwSupport;
+
+            CopyWideString(MidiInCaps->szPname, DeviceInfo.u.MidiInCaps.szPname);
+            break;
+        }
+        case MIDI_OUT_DEVICE_TYPE :
+        {
+            LPMIDIOUTCAPSW MidiOutCaps = (LPMIDIOUTCAPSW)Capabilities;
+
+            DeviceInfo.u.MidiOutCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+            MidiOutCaps->vDriverVersion = DeviceInfo.u.MidiOutCaps.vDriverVersion;
+            MidiOutCaps->wMid = DeviceInfo.u.MidiOutCaps.wMid;
+            MidiOutCaps->wPid = DeviceInfo.u.MidiOutCaps.wPid;
+            MidiOutCaps->dwSupport = DeviceInfo.u.MidiOutCaps.dwSupport;
+
+            CopyWideString(MidiOutCaps->szPname, DeviceInfo.u.MidiOutCaps.szPname);
             break;
         }
     }

@@ -27,6 +27,12 @@ WdmAudControlOpen(
         return WdmAudControlOpenWave(DeviceObject, Irp, DeviceInfo, ClientInfo);
     }
 
+    if (DeviceInfo->DeviceType == MIDI_OUT_DEVICE_TYPE || DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE)
+    {
+        return WdmAudControlOpenMidi(DeviceObject, Irp, DeviceInfo, ClientInfo);
+    }
+
+
     return SetIrpIoStatus(Irp, STATUS_NOT_SUPPORTED, sizeof(WDMAUD_DEVICE_INFO));
 }
 
@@ -55,6 +61,15 @@ WdmAudControlDeviceType(
     {
         Result = WdmAudGetWaveOutDeviceCount();
     }
+    else if (DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE)
+    {
+        Result = WdmAudGetMidiInDeviceCount();
+    }
+    else if (DeviceInfo->DeviceType == MIDI_OUT_DEVICE_TYPE)
+    {
+        Result = WdmAudGetMidiOutDeviceCount();
+    }
+
 
     /* store result count */
     DeviceInfo->DeviceCount = Result;
@@ -120,6 +135,10 @@ WdmAudCapabilities(
     else if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
         Status = WdmAudWaveCapabilities(DeviceObject, DeviceInfo, ClientInfo, DeviceExtension);
+    }
+    else if (DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE || DeviceInfo->DeviceType == MIDI_OUT_DEVICE_TYPE)
+    {
+        Status = WdmAudMidiCapabilities(DeviceObject, DeviceInfo, ClientInfo, DeviceExtension);
     }
 
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
@@ -219,80 +238,38 @@ WdmAudGetDeviceInterface(
     /* get device interface string input length */
     Size = DeviceInfo->u.Interface.DeviceInterfaceStringSize;
 
-    if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE || DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
+   /* get mixer info */
+   Status = WdmAudGetPnpNameByIndexAndType(DeviceInfo->DeviceIndex, DeviceInfo->DeviceType, &Device);
+
+   /* check for success */
+   if (!NT_SUCCESS(Status))
+   {
+        /* invalid device id */
+        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+   }
+
+   /* calculate length */
+   Length = (wcslen(Device)+1) * sizeof(WCHAR);
+
+    if (!Size)
     {
-        /* get wave info */
-        Status = WdmAudGetPnpNameByIndexAndType(DeviceInfo->DeviceIndex, DeviceInfo->DeviceType, &Device);
-
-        /* check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            /* invalid device id */
-            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-        }
-
-        /* calculate length */
-        Length = (wcslen(Device)+1) * sizeof(WCHAR);
-
-        if (!Size)
-        {
-            /* store device interface size */
-            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
-        }
-        else if (Size < Length)
-        {
-            /* buffer too small */
-            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
-            return SetIrpIoStatus(Irp, STATUS_BUFFER_OVERFLOW, sizeof(WDMAUD_DEVICE_INFO));
-        }
-        else
-        {
-            //FIXME SEH
-            RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
-        }
-
-        FreeItem(Device);
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+        /* store device interface size */
+        DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
     }
-    else if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
+    else if (Size < Length)
     {
-        if (DeviceInfo->DeviceIndex >= WdmAudGetMixerDeviceCount())
-        {
-            /* invalid device id */
-            return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, sizeof(WDMAUD_DEVICE_INFO));
-        }
-
-        Status = WdmAudGetMixerPnpNameByIndex(DeviceInfo->DeviceIndex, &Device);
-        /* check for success */
-        if (!NT_SUCCESS(Status))
-        {
-            /* invalid device id */
-            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-        }
-
-        /* calculate length */
-        Length = (wcslen(Device)+1) * sizeof(WCHAR);
-
-        if (!Size)
-        {
-            /* store device interface size */
-            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
-        }
-        else if (Size < Length)
-        {
-            /* buffer too small */
-            DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
-            return SetIrpIoStatus(Irp, STATUS_BUFFER_OVERFLOW, sizeof(WDMAUD_DEVICE_INFO));
-        }
-        else
-        {
-            //FIXME SEH
-            RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
-        }
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+        /* buffer too small */
+        DeviceInfo->u.Interface.DeviceInterfaceStringSize = Length;
+        return SetIrpIoStatus(Irp, STATUS_BUFFER_OVERFLOW, sizeof(WDMAUD_DEVICE_INFO));
+    }
+    else
+    {
+        //FIXME SEH
+        RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
     }
 
-    return SetIrpIoStatus(Irp, STATUS_INVALID_DEVICE_REQUEST, sizeof(WDMAUD_DEVICE_INFO));
+    FreeItem(Device);
+    return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 NTSTATUS

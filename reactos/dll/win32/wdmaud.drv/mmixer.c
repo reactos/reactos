@@ -655,17 +655,46 @@ WdmAudSetWaveStateByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN BOOL bStart)
 {
-    if (bStart)
+    MMDEVICE_TYPE DeviceType;
+    PSOUND_DEVICE SoundDevice;
+    MMRESULT Result;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
-        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
-        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_RUN);
+        if (bStart)
+        {
+            MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+            MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+            MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_RUN);
+        }
+        else
+        {
+            MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+            MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+            MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
+        }
     }
-    else
+    else if (DeviceType == MIDI_IN_DEVICE_TYPE || DeviceType == MIDI_OUT_DEVICE_TYPE)
     {
-        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
-        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
-        MMixerSetWaveStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
+        if (bStart)
+        {
+            MMixerSetMidiStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+            MMixerSetMidiStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+            MMixerSetMidiStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_RUN);
+        }
+        else
+        {
+            MMixerSetMidiStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_PAUSE);
+            MMixerSetMidiStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_ACQUIRE);
+            MMixerSetMidiStatus(&MixerContext, SoundDeviceInstance->Handle, KSSTATE_STOP);
+        }
     }
 
     return MMSYSERR_NOERROR;
