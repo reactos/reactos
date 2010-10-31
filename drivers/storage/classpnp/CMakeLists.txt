@@ -10,6 +10,10 @@ add_definitions(
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512
 )
 
+if(NOT MSVC)
+    add_definitions(-mrtd -fno-builtin -w)
+endif()
+
 list(APPEND SOURCE
     autorun.c
     class.c
