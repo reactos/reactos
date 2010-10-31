@@ -699,10 +699,8 @@ DWORD RControlService(
         }
 
         /* Send control code to the service */
-        dwError = ScmSendServiceCommand(lpService,
-                                        dwControl,
-                                        0,
-                                        NULL);
+        dwError = ScmControlService(lpService,
+                                    dwControl);
 
         /* Return service status information */
         RtlCopyMemory(lpServiceStatus,
@@ -2866,10 +2864,7 @@ DWORD RStartServiceW(
     }
 
     /* Start the service */
-    dwError = ScmSendServiceCommand(lpService,
-                                    SERVICE_CONTROL_START,
-                                    argc,
-                                    (LPWSTR *)argv);
+    dwError = ScmStartService(lpService, argc, (LPWSTR *)argv);
 
     return dwError;
 }
@@ -4077,10 +4072,7 @@ DWORD RStartServiceA(
     /* FIXME: Convert argument vector to Unicode */
 
     /* Start the service */
-    dwError = ScmSendServiceCommand(lpService,
-                                    SERVICE_CONTROL_START,
-                                    0,
-                                    NULL);
+    dwError = ScmStartService(lpService, 0, NULL);
 
     /* FIXME: Free argument vector */
 

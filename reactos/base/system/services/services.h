@@ -104,10 +104,9 @@ VOID ScmShutdownServiceDatabase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
 VOID ScmAutoShutdownServices(VOID);
-DWORD ScmSendServiceCommand(PSERVICE Service,
-                            DWORD dwControl,
-                            DWORD argc,
-                            LPWSTR *argv);
+DWORD ScmStartService(PSERVICE Service,
+                      DWORD argc,
+                      LPWSTR *argv);
 
 PSERVICE ScmGetServiceEntryByName(LPCWSTR lpServiceName);
 PSERVICE ScmGetServiceEntryByDisplayName(LPCWSTR lpDisplayName);
@@ -116,6 +115,9 @@ DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
+
+DWORD ScmControlService(PSERVICE Service,
+                        DWORD dwControl);
 
 BOOL ScmLockDatabaseExclusive(VOID);
 BOOL ScmLockDatabaseShared(VOID);
