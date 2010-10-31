@@ -1,36 +1,53 @@
-
-include_directories(include)
+include_directories(.)
+include_directories(./include)
 
 add_definitions(-D__MINGW32__ -DLIBXML_STATIC -D_REENTRANT -DHAVE_WIN32_THREADS -D_MBCS -D_WINDOWS -DWIN32 -DHAVE_CONFIG_H)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-file(GLOB_RECURSE SOURCE "*.c")
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runsuite.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runtest.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runxmlconf.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/schematron.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testapi.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testAutomata.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testC14N.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testchar.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testdict.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testdso.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testHTML.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testModule.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testReader.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testrecurse.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testRegexp.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testRelax.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testSAX.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testSchemas.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testThreads.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testThreadsWin32.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testURI.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/testXPath.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/trio.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/trionan.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/triostr.c)
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/xmlint.c)
+list(APPEND SOURCE
+	c14n.c
+	catalog.c
+	chvalid.c
+	debugXML.c
+	dict.c
+	DOCBparser.c
+	encoding.c
+	entities.c
+	error.c
+	globals.c
+	hash.c
+	HTMLparser.c
+	HTMLtree.c
+	legacy.c
+	list.c
+	nanoftp.c
+	nanohttp.c
+	parser.c
+	parserInternals.c
+	pattern.c
+	relaxng.c
+	SAX.c
+	SAX2.c
+	threads.c
+	tree.c
+	uri.c
+	valid.c
+	xinclude.c
+	xlink.c
+	xmlIO.c
+	xmlmemory.c
+	xmlreader.c
+	xmlregexp.c
+	xmlmodule.c
+	xmlsave.c
+	xmlschemas.c
+	xmlschemastypes.c
+	xmlunicode.c
+	xmlwriter.c
+	xpath.c
+	xpointer.c
+	xmlstring.c
+)
 
 add_library(libxml2 ${SOURCE})
 target_link_libraries(libxml2 oldnames)
