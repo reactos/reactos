@@ -47,6 +47,8 @@ MACRO(spec2def _dllname _spec_file)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} --filename ${_dllname}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
 ENDMACRO(spec2def _dllname _spec_file)
 
 if (NOT MSVC)

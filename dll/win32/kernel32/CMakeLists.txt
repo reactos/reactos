@@ -100,8 +100,8 @@ list(APPEND SOURCE
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
-#    thread/i386/fiber.S
-#    thread/i386/thread.S
+    thread/i386/fiber.S
+    thread/i386/thread.S
 )
 elseif(ARCH MATCHES amd64)
 list(APPEND SOURCE
