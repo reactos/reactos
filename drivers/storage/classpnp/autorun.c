@@ -148,14 +148,14 @@ ClassSendEjectionNotification(
     // ejection request occured, we could see if any locks for the media
     // existed.  if locked, broadcast.  if not, we send the eject irp.
     //
-
+    
     //
     // for now, just always broadcast.  make this a public routine,
     // so class drivers can add special hacks to broadcast this for their
     // non-MMC-compliant devices also from sense codes.
     //
 
-    DBGTRACE(ClassDebugTrace, ("ClassSendEjectionNotification: media EJECT_REQUEST"));
+    DBGTRACE(ClassDebugTrace, ("ClassSendEjectionNotification: media EJECT_REQUEST"));    
     ClasspSendNotification(FdoExtension,
                            &GUID_IO_MEDIA_EJECT_REQUEST,
                            0,
@@ -174,7 +174,7 @@ ClasspSendNotification(
 {
     PTARGET_DEVICE_CUSTOM_NOTIFICATION notification;
     ULONG requiredSize;
-
+        
     requiredSize =
         (sizeof(TARGET_DEVICE_CUSTOM_NOTIFICATION) - sizeof(UCHAR)) +
         ExtraDataSize;
@@ -186,11 +186,11 @@ ClasspSendNotification(
                    requiredSize));
         return;
     }
-
+    
     notification = ExAllocatePoolWithTag(NonPagedPool,
                                          requiredSize,
                                          'oNcS');
-
+    
     //
     // if none allocated, exit
     //
@@ -202,7 +202,7 @@ ClasspSendNotification(
     //
     // Prepare and send the request!
     //
-
+    
     RtlZeroMemory(notification, requiredSize);
     notification->Version = 1;
     notification->Size = (USHORT)(requiredSize);
@@ -214,7 +214,7 @@ ClasspSendNotification(
     IoReportTargetDeviceChangeAsynchronous(FdoExtension->LowerPdo,
                                            notification,
                                            NULL, NULL);
-
+    
     ExFreePool(notification);
     notification = NULL;
     return;
@@ -236,7 +236,7 @@ Routine Description:
 Arguments:
 
     FdoExtension - the device
-
+    
     DataBuffer - the resulting data from a GESN event.
         requires at least EIGHT valid bytes (header == 4, data == 4)
 
@@ -245,14 +245,14 @@ Arguments:
         event was of the DEVICE BUSY class, else true.
 
 Return Value:
-
+    
     None
-
+    
 Notes:
 
     DataBuffer must be at least four bytes of valid data (header == 4 bytes),
     and have at least eight bytes of allocated memory (all events == 4 bytes).
-
+    
     The call to StartNextPacket may occur before this routine is completed.
     the operational change notifications are informational in nature, and
     while useful, are not neccessary to ensure proper operation.  For example,
@@ -261,12 +261,12 @@ Notes:
     IOCTL_IS_DISK_WRITABLE may be called and get an incorrect response.  If
     a device supports software write protect, it is expected that the
     application can handle such a case.
-
+    
     NOTE: perhaps setting the updaterequired byte to one should be done here.
     if so, it relies upon the setting of a 32-byte value to be an atomic
     operation.  unfortunately, there is no simple way to notify a class driver
     which wants to know that the device behavior requires updating.
-
+    
     Not ready events may be sent every second.  For example, if we were
     to minimize the number of asynchronous notifications, an application may
     register just after a large busy time was reported.  This would then
@@ -339,7 +339,7 @@ ClasspInterpretGesnData(
         lowestSetBit ^= (info->Gesn.EventMask);
 
         if (thisEventBit != lowestSetBit) {
-
+            
             //
             // HACKHACK - REF #0001
             // the first time we ever see an event set that is not the lowest
@@ -352,11 +352,11 @@ ClasspInterpretGesnData(
                        "Classpnp => GESN::NONE: Compliant drive found, "
                        "removing GESN hack (%x, %x)\n",
                        thisEventBit, info->Gesn.EventMask));
-
+            
             info->Gesn.HackEventMask = FALSE;
 
         } else if (thisEvent == 0) {
-
+            
             //
             // HACKHACK - REF #0001
             // note: this hack prevents poorly implemented firmware from constantly
@@ -409,13 +409,13 @@ ClasspInterpretGesnData(
                            &GUID_IO_GENERIC_GESN_EVENT,
                            sizeof(NOTIFICATION_EVENT_STATUS_HEADER) + dataLength,
                            Header)
-*/
+*/                           
 
     switch (Header->NotificationClass) {
 
     case NOTIFICATION_EXTERNAL_REQUEST_CLASS_EVENTS: { // 0x3
-
-        PNOTIFICATION_EXTERNAL_STATUS externalInfo =
+        
+        PNOTIFICATION_EXTERNAL_STATUS externalInfo = 
             (PNOTIFICATION_EXTERNAL_STATUS)(Header->ClassEventData);
         DEVICE_EVENT_EXTERNAL_REQUEST externalData;
 
@@ -424,12 +424,12 @@ ClasspInterpretGesnData(
         // about keys being pressed, and not released.  this makes keys
         // single-function, but simplifies the code significantly.
         //
-
+        
         if (externalInfo->ExternalEvent !=
             NOTIFICATION_EXTERNAL_EVENT_BUTTON_DOWN) {
             break;
         }
-
+        
         *ResendImmediately = TRUE;
         KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                    "Classpnp => GESN::EXTERNAL: Event: %x Status %x Req %x\n",
@@ -447,28 +447,28 @@ ClasspInterpretGesnData(
         KeQuerySystemTime(&(externalData.SystemTime));
         externalData.SystemTime.QuadPart *= (LONGLONG)KeQueryTimeIncrement();
 
-        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media DEVICE_EXTERNAL_REQUEST"));
+        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media DEVICE_EXTERNAL_REQUEST"));        
         ClasspSendNotification(FdoExtension,
                                &GUID_IO_DEVICE_EXTERNAL_REQUEST,
                                sizeof(DEVICE_EVENT_EXTERNAL_REQUEST),
                                &externalData);
         return;
     }
-
+    
     case NOTIFICATION_MEDIA_STATUS_CLASS_EVENTS: { // 0x4
-
+        
         PNOTIFICATION_MEDIA_STATUS mediaInfo =
             (PNOTIFICATION_MEDIA_STATUS)(Header->ClassEventData);
-
+        
         if (mediaInfo->MediaEvent == NOTIFICATION_MEDIA_EVENT_NO_CHANGE) {
             break;
         }
-
+        
         *ResendImmediately = TRUE;
         KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                    "Classpnp => GESN::MEDIA: Event: %x Status %x\n",
                    mediaInfo->MediaEvent, mediaInfo->MediaStatus));
-
+        
         if ((mediaInfo->MediaEvent == NOTIFICATION_MEDIA_EVENT_NEW_MEDIA) ||
             (mediaInfo->MediaEvent == NOTIFICATION_MEDIA_EVENT_MEDIA_CHANGE)) {
 
@@ -489,29 +489,29 @@ ClasspInterpretGesnData(
                                         TRUE);
 
         } else if (mediaInfo->MediaEvent == NOTIFICATION_MEDIA_EVENT_MEDIA_REMOVAL) {
-
+            
             ClasspSetMediaChangeStateEx(FdoExtension,
                                         MediaNotPresent,
                                         FALSE,
                                         TRUE);
-
+        
         } else if (mediaInfo->MediaEvent == NOTIFICATION_MEDIA_EVENT_EJECT_REQUEST) {
 
             KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugError,
                        "Classpnp => GESN Ejection request received!\n"));
             ClassSendEjectionNotification(FdoExtension);
-
+        
         }
         break;
 
     }
-
+    
     case NOTIFICATION_DEVICE_BUSY_CLASS_EVENTS: { // lowest priority events...
-
+        
         PNOTIFICATION_BUSY_STATUS busyInfo =
             (PNOTIFICATION_BUSY_STATUS)(Header->ClassEventData);
         DEVICE_EVENT_BECOMING_READY busyData;
-
+        
         //
         // NOTE: we never actually need to immediately retry for these
         //       events: if one exists, the device is busy, and if not,
@@ -521,7 +521,7 @@ ClasspInterpretGesnData(
         if (busyInfo->DeviceBusyStatus == NOTIFICATION_BUSY_STATUS_NO_EVENT) {
             break;
         }
-
+        
         //
         // else we want to report the approximated time till it's ready.
         //
@@ -531,28 +531,28 @@ ClasspInterpretGesnData(
         busyData.Reason = busyInfo->DeviceBusyStatus;
         busyData.Estimated100msToReady = (busyInfo->Time[0] << 8) |
                                          (busyInfo->Time[1] & 0xff);
-
+        
         KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                    "Classpnp => GESN::BUSY: Event: %x Status %x Time %x\n",
                    busyInfo->DeviceBusyEvent, busyInfo->DeviceBusyStatus,
                    busyData.Estimated100msToReady
                    ));
 
-        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media BECOMING_READY"));
+        DBGTRACE(ClassDebugTrace, ("ClasspInterpretGesnData: media BECOMING_READY"));                
         ClasspSendNotification(FdoExtension,
                                &GUID_IO_DEVICE_BECOMING_READY,
                                sizeof(DEVICE_EVENT_BECOMING_READY),
                                &busyData);
         break;
     }
-
+    
     default: {
-
+        
         break;
 
     }
-
-    } // end switch on notification class
+    
+    } // end switch on notification class    
     return;
 }
 
@@ -577,7 +577,7 @@ Arguments:
 
     MediaPresent - indicates whether the device has media inserted into it
                    (TRUE) or not (FALSE).
-
+ 
 Return Value:
 
     none
@@ -656,7 +656,7 @@ ClasspInternalSetMediaChangeState(
                                sizeof(ULONG),
                                &data);
 
-    }
+    } 
     else if (NewState == MediaNotPresent) {
 
         DBGTRACE(ClassDebugTrace, ("ClasspInternalSetMediaChangeState: media REMOVAL"));
@@ -673,7 +673,7 @@ ClasspInternalSetMediaChangeState(
 
         return;
     }
-
+    
     return;
 } // end ClasspInternalSetMediaChangeState()
 
@@ -769,10 +769,7 @@ ClasspSetMediaChangeStateEx(
 
     return;
 } // end ClassSetMediaChangeStateEx()
-
-SCSIPORTAPI
 VOID
-NTAPI
 ClassSetMediaChangeState(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN MEDIA_CHANGE_DETECTION_STATE NewState,
@@ -836,11 +833,11 @@ ClasspMediaChangeDetectionCompletion(
 
     /*
      *  HACK for IoMega 2GB Jaz drive:
-     *  This drive spins down on its own to preserve the media.
+     *  This drive spins down on its own to preserve the media.  
      *  When spun down, TUR fails with 2/4/0 (SCSI_SENSE_NOT_READY/SCSI_ADSENSE_LUN_NOT_READY/?).
      *  ClassInterpretSenseInfo would then call ClassSendStartUnit to spin the media up, which defeats the
      *  purpose of the spindown.
-     *  So in this case, make this into a successful TUR.
+     *  So in this case, make this into a successful TUR.  
      *  This allows the drive to stay spun down until it is actually accessed again.
      *  (If the media were actually removed, TUR would fail with 2/3a/0 ).
      *  This hack only applies to drives with the CAUSE_NOT_REPORTABLE_HACK bit set; this
@@ -849,15 +846,15 @@ ClasspMediaChangeDetectionCompletion(
     if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
         TEST_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_CAUSE_NOT_REPORTABLE_HACK) &&
         (Srb->SenseInfoBufferLength >= RTL_SIZEOF_THROUGH_FIELD(SENSE_DATA, AdditionalSenseCode))){
-
+        
         PSENSE_DATA senseData = Srb->SenseInfoBuffer;
-
-        if ((senseData->SenseKey == SCSI_SENSE_NOT_READY) &&
+        
+        if ((senseData->SenseKey == SCSI_SENSE_NOT_READY) && 
             (senseData->AdditionalSenseCode == SCSI_ADSENSE_LUN_NOT_READY)){
             Srb->SrbStatus = SRB_STATUS_SUCCESS;
         }
-    }
-
+    }       
+        
 
     //
     // use ClassInterpretSenseInfo() to check for media state, and also
@@ -876,15 +873,15 @@ ClasspMediaChangeDetectionCompletion(
                                 &status,
                                 NULL);
 
-    }
+    } 
     else {
-
+        
         fdoData->LoggedTURFailureSinceLastIO = FALSE;
-
+        
         if (!info->Gesn.Supported) {
 
             DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion - succeeded and GESN NOT supported, setting MediaPresent."));
-
+        
             //
             // success != media for GESN case
             //
@@ -896,7 +893,7 @@ ClasspMediaChangeDetectionCompletion(
             DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion - succeeded (GESN supported)."));
         }
     }
-
+    
     if (info->Gesn.Supported) {
 
         if (status == STATUS_DATA_OVERRUN) {
@@ -904,7 +901,7 @@ ClasspMediaChangeDetectionCompletion(
             status = STATUS_SUCCESS;
         }
 
-        if (!NT_SUCCESS(status)) {
+        if (!NT_SUCCESS(status)) {            
             DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion: GESN failed with status %x", status));
         } else {
 
@@ -912,7 +909,7 @@ ClasspMediaChangeDetectionCompletion(
             // for GESN, need to interpret the results of the data.
             // this may also require an immediate retry
             //
-
+            
             if (Irp->IoStatus.Information == 8 ) {
                 ClasspInterpretGesnData(fdoExtension,
                                         (PVOID)info->Gesn.Buffer,
@@ -949,7 +946,7 @@ ClasspMediaChangeDetectionCompletion(
     //
 
     if (retryImmediately) {
-
+        
         info->MediaChangeRetryCount++;
         if (info->MediaChangeRetryCount > MAXIMUM_IMMEDIATE_MCN_RETRIES) {
             ASSERT(!"Recursing too often in MCN?");
@@ -958,7 +955,7 @@ ClasspMediaChangeDetectionCompletion(
         }
 
     } else {
-
+        
         info->MediaChangeRetryCount = 0;
 
     }
@@ -973,7 +970,7 @@ ClasspMediaChangeDetectionCompletion(
         ClassAcquireRemoveLock(DeviceObject, (PIRP)(&uniqueValue));
         ClassReleaseRemoveLock(DeviceObject, Irp);
 
-
+        
         //
         // set the irp as not in use
         //
@@ -995,18 +992,18 @@ ClasspMediaChangeDetectionCompletion(
         else {
             DBGTRACE(ClassDebugMCN, ("ClasspMediaChangeDetectionCompletion - not retrying immediately"));
         }
-
+        
         //
         // release the temporary remove lock
         //
-
+        
         ClassReleaseRemoveLock(DeviceObject, (PIRP)(&uniqueValue));
     }
 
     DBGTRACE(ClassDebugMCN, ("< ClasspMediaChangeDetectionCompletion"));
 
     return STATUS_MORE_PROCESSING_REQUIRED;
-}
+} 
 
 /*++////////////////////////////////////////////////////////////////////////////
 
@@ -1018,8 +1015,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -1060,7 +1057,7 @@ ClasspPrepareMcnIrp(
     if (status == REMOVE_COMPLETE) {
         ASSERT(status != REMOVE_COMPLETE);
         return NULL;
-    }
+    } 
     else if (status == REMOVE_PENDING) {
         ClassReleaseRemoveLock(FdoExtension->DeviceObject, irp);
         return NULL;
@@ -1108,12 +1105,12 @@ ClasspPrepareMcnIrp(
     srb->ScsiStatus = 0;
     srb->OriginalRequest = irp;
     srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
-
+    
     srb->SrbFlags = FdoExtension->SrbFlags;
     SET_FLAG(srb->SrbFlags, Info->SrbFlags);
 
     srb->TimeOutValue = FdoExtension->TimeOutValue * 2;
-
+    
     if (srb->TimeOutValue == 0) {
 
         if (FdoExtension->TimeOutValue == 0) {
@@ -1122,9 +1119,9 @@ ClasspPrepareMcnIrp(
                        "ClassSendTestUnitIrp: FdoExtension->TimeOutValue "
                        "is set to zero?! -- resetting to 10\n"));
             srb->TimeOutValue = 10 * 2;  // reasonable default
-
+        
         } else {
-
+            
             KdPrintEx((DPFLTR_CLASSPNP_ID, DPFLTR_ERROR_LEVEL,
                        "ClassSendTestUnitIrp: Someone set "
                        "srb->TimeOutValue to zero?! -- resetting to %x\n",
@@ -1134,9 +1131,9 @@ ClasspPrepareMcnIrp(
         }
 
     }
-
+    
     if (!UseGesn) {
-
+        
         srb->CdbLength = 6;
         srb->DataTransferLength = 0;
         SET_FLAG(srb->SrbFlags, SRB_FLAGS_NO_DATA_TRANSFER);
@@ -1145,16 +1142,16 @@ ClasspPrepareMcnIrp(
         srb->DataBuffer = NULL;
         srb->DataTransferLength = 0;
         irp->MdlAddress = NULL;
-
+        
         cdb = (PCDB) &srb->Cdb[0];
         cdb->CDB6GENERIC.OperationCode = SCSIOP_TEST_UNIT_READY;
 
     } else {
-
+        
         ASSERT(Info->Gesn.Buffer);
 
         srb->TimeOutValue = GESN_TIMEOUT_VALUE; // much shorter timeout for GESN
-
+        
         srb->CdbLength = 10;
         SET_FLAG(srb->SrbFlags, SRB_FLAGS_DATA_IN);
         nextIrpStack->Parameters.DeviceIoControl.IoControlCode =
@@ -1197,8 +1194,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -1349,7 +1346,7 @@ ClasspSendMediaStateIrp(
             //       device object directly or to the device's StartIo
             //       routine (which doesn't acquire the lock).
             //
-
+            
             requestPending = TRUE;
 
             DBGTRACE(ClassDebugMCN, ("  ClasspSendMediaStateIrp - calling IoCallDriver."));
@@ -1368,7 +1365,7 @@ ClasspSendMediaStateIrp(
     }
 
     DBGTRACE(ClassDebugMCN, ("< ClasspSendMediaStateIrp"));
-
+    
     return;
 } // end ClasspSendMediaStateIrp()
 
@@ -1391,9 +1388,7 @@ Return Value:
     none
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassCheckMediaState(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -1434,7 +1429,7 @@ ClassResetMediaChangeTimer()
 Routine Description:
 
     Resets the media change count down timer to the default number of seconds.
-
+    
 Arguments:
 
     FdoExtension - the device to reset the timer for
@@ -1444,9 +1439,7 @@ Return Value:
     None
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassResetMediaChangeTimer(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -1470,8 +1463,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -1509,11 +1502,11 @@ ClasspInitializePolling(
 
         /*
          *  Allocate an IRP to carry the Test-Unit-Ready.
-         *  Allocate an extra IRP stack location
+         *  Allocate an extra IRP stack location 
          *  so we can cache our device object in the top location.
          */
         irp = IoAllocateIrp((CCHAR)(fdo->StackSize+1), FALSE);
-
+        
         if (irp != NULL) {
 
             PVOID buffer;
@@ -1634,7 +1627,7 @@ ClasspInitializePolling(
                                "ClasspInitializePolling: GESN *NOT* available "
                                "for %p\n", FdoExtension->DeviceObject));
                 }
-
+                
                 ASSERT(info->Gesn.Supported == 0);
                 ASSERT(info->Gesn.Buffer == NULL);
                 ASSERT(info->Gesn.BufferSize == 0);
@@ -1661,7 +1654,7 @@ ClasspInitializeGesn(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PMEDIA_CHANGE_DETECTION_INFO Info
     )
-{
+{    
     PNOTIFICATION_EVENT_STATUS_HEADER header;
     CLASS_DETECTION_STATE detectionState = ClassDetectionUnknown;
     PSTORAGE_ADAPTER_DESCRIPTOR adapterDescriptor;
@@ -1672,7 +1665,7 @@ ClasspInitializeGesn(
     ULONG i;
     ULONG atapiResets;
 
-
+    
     PAGED_CODE();
     ASSERT(Info == FdoExtension->MediaChangeDetectionInfo);
 
@@ -1684,7 +1677,7 @@ ClasspInitializeGesn(
                             CLASSP_REG_SUBKEY_NAME,
                             CLASSP_REG_MMC_DETECTION_VALUE_NAME,
                             (PULONG)&detectionState);
-
+    
     if (detectionState == ClassDetectionUnsupported) {
         goto ExitWithError;
     }
@@ -1695,7 +1688,7 @@ ClasspInitializeGesn(
 
     if (TEST_FLAG(FdoExtension->PrivateFdoData->HackFlags,
                   FDO_HACK_GESN_IS_BAD)) {
-
+        
         detectionState = ClassDetectionUnsupported;
         ClassSetDeviceParameter(FdoExtension,
                                 CLASSP_REG_SUBKEY_NAME,
@@ -1707,7 +1700,7 @@ ClasspInitializeGesn(
 
 
     //
-    // else go through the process since we allocate buffers and
+    // else go through the process since we allocate buffers and 
     // get all sorts of device settings.
     //
 
@@ -1750,7 +1743,7 @@ ClasspInitializeGesn(
     atapiResets = 0;
     retryImmediately = TRUE;
     for (i = 0; i < 16 && retryImmediately == TRUE; i++) {
-
+    
         irp = ClasspPrepareMcnIrp(FdoExtension, Info, TRUE);
         if (irp == NULL) {
             status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1758,19 +1751,19 @@ ClasspInitializeGesn(
         }
 
         ASSERT(TEST_FLAG(Info->MediaChangeSrb.SrbFlags, SRB_FLAGS_NO_QUEUE_FREEZE));
-
+    
         //
         // replace the completion routine with a different one this time...
         //
-
+    
         IoSetCompletionRoutine(irp,
                                ClassSignalCompletion,
                                &event,
                                TRUE, TRUE, TRUE);
         KeInitializeEvent(&event, SynchronizationEvent, FALSE);
-
+    
         status = IoCallDriver(FdoExtension->CommonExtension.LowerDeviceObject, irp);
-
+    
         if (status == STATUS_PENDING) {
             status = KeWaitForSingleObject(&event,
                                            Executive,
@@ -1780,7 +1773,7 @@ ClasspInitializeGesn(
             ASSERT(NT_SUCCESS(status));
         }
         ClassReleaseRemoveLock(FdoExtension->DeviceObject, irp);
-
+    
         if (SRB_STATUS(Info->MediaChangeSrb.SrbStatus) != SRB_STATUS_SUCCESS) {
             ClassInterpretSenseInfo(FdoExtension->DeviceObject,
                                     &(Info->MediaChangeSrb),
@@ -1815,18 +1808,18 @@ ClasspInitializeGesn(
         if (status == STATUS_DATA_OVERRUN) {
             status = STATUS_SUCCESS;
         }
-
+    
         if ((status == STATUS_INVALID_DEVICE_REQUEST) ||
             (status == STATUS_TIMEOUT) ||
             (status == STATUS_IO_DEVICE_ERROR) ||
             (status == STATUS_IO_TIMEOUT)
             ) {
-
+    
             //
             // with these error codes, we don't ever want to try this command
             // again on this device, since it reacts poorly.
             //
-
+    
             ClassSetDeviceParameter(FdoExtension,
                                     CLASSP_REG_SUBKEY_NAME,
                                     CLASSP_REG_MMC_DETECTION_VALUE_NAME,
@@ -1836,9 +1829,9 @@ ClasspInitializeGesn(
                        status, FdoExtension->DeviceObject));
             goto ExitWithError;
 
-
+    
         }
-
+    
         if (!NT_SUCCESS(status)) {
 
             //
@@ -1851,21 +1844,21 @@ ClasspInitializeGesn(
                        status, FdoExtension->DeviceObject));
             goto ExitWithError;
         }
-
+    
         if (i == 0) {
 
             //
             // the first time, the request was just retrieving a mask of
             // available bits.  use this to mask future requests.
             //
-
+        
             header = (PNOTIFICATION_EVENT_STATUS_HEADER)(Info->Gesn.Buffer);
-
+            
             KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                        "Classpnp => Fdo %p supports event mask %x\n",
                        FdoExtension->DeviceObject, header->SupportedEventClasses));
-
-
+            
+        
             if (TEST_FLAG(header->SupportedEventClasses,
                           NOTIFICATION_MEDIA_STATUS_CLASS_MASK)) {
                 KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
@@ -1886,13 +1879,13 @@ ClasspInitializeGesn(
             // therefore, we should not bother querying for the other,
             // unknown events. clear all but the above flags.
             //
-
+        
             Info->Gesn.EventMask &=
                 NOTIFICATION_EXTERNAL_REQUEST_CLASS_MASK |
                 NOTIFICATION_MEDIA_STATUS_CLASS_MASK     |
                 NOTIFICATION_DEVICE_BUSY_CLASS_MASK      ;
-
-
+        
+        
             //
             // HACKHACK - REF #0001
             // Some devices will *never* report an event if we've also requested
@@ -1906,7 +1899,7 @@ ClasspInitializeGesn(
             // drives, default to enabling the hack until we find evidence of
             // proper firmware.
             //
-
+        
             if (CountOfSetBitsUChar(Info->Gesn.EventMask) == 1) {
                 KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                            "Classpnp => GESN hack %s for FDO %p\n",
@@ -1919,7 +1912,7 @@ ClasspInitializeGesn(
             }
 
         } else {
-
+            
             //
             // not the first time looping through, so interpret the results.
             //
@@ -1942,13 +1935,13 @@ ClasspInitializeGesn(
     // since we also rely upon NOT_READY events to change the cursor
     // into a "wait" cursor, we can't use GESN without NOT_READY support.
     //
-
+    
     if (TEST_FLAG(Info->Gesn.EventMask,
                   NOTIFICATION_MEDIA_STATUS_CLASS_MASK) &&
         TEST_FLAG(Info->Gesn.EventMask,
                   NOTIFICATION_DEVICE_BUSY_CLASS_MASK)
         ) {
-
+        
         KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                    "Classpnp => Enabling GESN support for fdo %p\n",
                    FdoExtension->DeviceObject));
@@ -1962,7 +1955,7 @@ ClasspInitializeGesn(
         return STATUS_SUCCESS;
 
     }
-
+    
     KdPrintEx((DPFLTR_CLASSPNP_ID, ClassDebugMCN,
                "Classpnp => GESN available but not enabled for fdo %p\n",
                FdoExtension->DeviceObject));
@@ -2001,18 +1994,16 @@ Routine Description:
 Arguments:
 
     FdoExtension is the device to poll
-
+    
     AllowDriveToSleep says whether to attempt to allow the drive to sleep
-        or not.  This only affects system-known spin down states, so if a
+        or not.  This only affects system-known spin down states, so if a 
         drive spins itself down, this has no effect until the system spins
         it down.
 
 Return Value:
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassInitializeTestUnitPolling(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN BOOLEAN AllowDriveToSleep
@@ -2031,24 +2022,22 @@ Routine Description:
     to autorun) for a given device.  It will then check the device-type wide
     key "Autorun" in the service key (for legacy reasons), and then look in
     the device-specific key to potentially override that setting.
-
+    
     If MCN is to be enabled, all neccessary structures and memory are
     allocated and initialized.
-
+    
     This routine MUST be called only from the ClassInit() callback.
 
 Arguments:
 
     FdoExtension - the device to initialize MCN for, if appropriate
-
+    
     EventPrefix - unused, legacy argument.  Set to zero.
 
 Return Value:
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassInitializeMediaChangeDetection(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     IN PUCHAR EventPrefix
@@ -2119,7 +2108,7 @@ ClassInitializeMediaChangeDetection(
     if (disabled) {
         return;
     }
-
+    
     //
     // if the drive is not a CDROM, allow the drive to sleep
     //
@@ -2672,7 +2661,7 @@ ClasspIsMediaChangeDisabledForClass(
 
     }
     ZwClose(serviceKey);
-
+    
     DebugPrint((ClassDebugMCN, "ClassCheckServiceMCN: "
                 "Autoplay for device %p is %s\n",
                 FdoExtension->DeviceObject,
@@ -2698,15 +2687,13 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassEnableMediaChangeDetection(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -2782,17 +2769,15 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
 --*/
 ULONG BreakOnMcnDisable = FALSE;
 
-SCSIPORTAPI
 VOID
-NTAPI
 ClassDisableMediaChangeDetection(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -2837,9 +2822,7 @@ Arguments:
 Return Value:
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassCleanupMediaChangeDetection(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -2853,7 +2836,7 @@ ClassCleanupMediaChangeDetection(
     }
 
     FdoExtension->MediaChangeDetectionInfo = NULL;
-
+    
     if (info->Gesn.Buffer) {
         ExFreePool(info->Gesn.Buffer);
     }
@@ -2873,8 +2856,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -3067,8 +3050,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -3214,8 +3197,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -3264,8 +3247,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -3317,8 +3300,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -3450,9 +3433,7 @@ Arguments:
 Return Value:
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassNotifyFailurePredicted(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     PUCHAR Buffer,
@@ -3535,9 +3516,7 @@ Return Value:
     NT Status
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassSetFailurePredictionPoll(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     FAILURE_PREDICTION_METHOD FailurePredictionMethod,

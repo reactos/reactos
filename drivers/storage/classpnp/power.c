@@ -77,8 +77,8 @@ Routine Description:
 
 Arguments:
 
-    DeviceObject -
-    Irp -
+    DeviceObject - 
+    Irp - 
 
 Return Value:
 
@@ -151,7 +151,7 @@ Return Value:
 
     STATUS_MORE_PROCESSING_REQUIRED or
     STATUS_SUCCESS
-
+    
 --*/
 NTSTATUS
 ClasspPowerUpCompletion(
@@ -389,7 +389,7 @@ ClasspPowerUpCompletion(
                     break;
 
                 }
-
+                
                 // reset retries
                 Context->RetryCount = MAXIMUM_RETRIES;
 
@@ -406,7 +406,7 @@ ClasspPowerUpCompletionFailure:
                 Context->Srb.SrbFlags = SRB_FLAGS_BYPASS_LOCKED_QUEUE;
                 Context->Srb.SrbStatus = Context->Srb.ScsiStatus = 0;
                 Context->Srb.DataTransferLength = 0;
-
+                
                 nextStack->Parameters.Scsi.Srb = &(Context->Srb);
                 nextStack->MajorFunction = IRP_MJ_SCSI;
 
@@ -466,7 +466,7 @@ ClasspPowerUpCompletionFailure:
             // Indicate to Po that we've been successfully powered up so
             // it can do it's notification stuff.
             //
-
+            
             PoSetPowerState(DeviceObject,
                             currentStack->Parameters.Power.Type,
                             currentStack->Parameters.Power.State);
@@ -623,45 +623,45 @@ ClasspPowerDownCompletion(
                 //
                 // send SCSIOP_SYNCHRONIZE_CACHE
                 //
-
+    
                 Context->Srb.Length = sizeof(SCSI_REQUEST_BLOCK);
                 Context->Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
-
+    
                 Context->Srb.TimeOutValue = fdoExtension->TimeOutValue;
-
+    
                 Context->Srb.SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER |
                                         SRB_FLAGS_DISABLE_AUTOSENSE |
                                         SRB_FLAGS_DISABLE_SYNCH_TRANSFER |
                                         SRB_FLAGS_NO_QUEUE_FREEZE |
                                         SRB_FLAGS_BYPASS_LOCKED_QUEUE;
-
+    
                 Context->Srb.SrbStatus = Context->Srb.ScsiStatus = 0;
                 Context->Srb.DataTransferLength = 0;
-
+    
                 Context->Srb.CdbLength = 10;
-
+    
                 cdb = (PCDB) Context->Srb.Cdb;
-
+                
                 RtlZeroMemory(cdb, sizeof(CDB));
                 cdb->SYNCHRONIZE_CACHE10.OperationCode = SCSIOP_SYNCHRONIZE_CACHE;
-
+    
                 IoSetCompletionRoutine(Irp,
                                        ClasspPowerDownCompletion,
                                        Context,
                                        TRUE,
                                        TRUE,
                                        TRUE);
-
+    
                 nextStack->Parameters.Scsi.Srb = &(Context->Srb);
                 nextStack->MajorFunction = IRP_MJ_SCSI;
-
+    
                 status = IoCallDriver(commonExtension->LowerDeviceObject, Irp);
-
+    
                 DebugPrint((1, "(%p)\tIoCallDriver returned %lx\n", Irp, status));
                 break;
-
+            
             } else {
-
+               
                 DebugPrint((1, "(%p)\tPower Down: not sending SYNCH_CACHE\n",
                             DeviceObject));
                 Context->PowerChangeState.PowerDown2++;
@@ -671,7 +671,7 @@ ClasspPowerDownCompletion(
             // no break in case the device doesn't like synch_cache commands
 
         }
-
+         
         case PowerDownDeviceFlushed2: {
 
             PCDB cdb;
@@ -843,9 +843,9 @@ ClasspPowerDownCompletion(
             //
 
             if (!NT_SUCCESS(status)) {
-
+                
                 PSENSE_DATA senseBuffer = Context->Srb.SenseInfoBuffer;
-
+                
                 if (TEST_FLAG(Context->Srb.SrbStatus,
                               SRB_STATUS_AUTOSENSE_VALID) &&
                     ((senseBuffer->SenseKey & 0xf) == SCSI_SENSE_NOT_READY) &&
@@ -881,7 +881,7 @@ ClasspPowerDownCompletion(
                 DebugPrint((1, "(%p)\tPoCallDriver returned %lx\n", Irp, status));
                 break;
             }
-
+            
             // else fall through w/o sending the power irp, since the device
             // is reporting an error that would be "really bad" to power down
             // during.
@@ -900,7 +900,7 @@ ClasspPowerDownCompletion(
             if (Context->QueueLocked) {
 
                 DebugPrint((1, "(%p)\tUnlocking queue\n", Irp));
-
+                
                 Context->Srb.Length = sizeof(SCSI_REQUEST_BLOCK);
 
                 Context->Srb.SrbStatus = Context->Srb.ScsiStatus = 0;
@@ -956,7 +956,7 @@ ClasspPowerDownCompletion(
             Irp->IoStatus.Information = 0;
 
             if (NT_SUCCESS(status)) {
-
+                
                 //
                 // Set the new power state
                 //
@@ -989,7 +989,7 @@ Routine Description:
     This routine reduces the number of useless spinups and spindown requests
     sent to a given device by ignoring transitions to power states we are
     currently in.
-
+    
     ISSUE-2000/02/20-henrygab - by ignoring spin-up requests, we may be
           allowing the drive
 
@@ -1046,7 +1046,7 @@ ClasspPowerHandler(
                         irpStack->Parameters.Power.State.SystemState));
 
                 switch (irpStack->Parameters.Power.ShutdownType){
-
+                    
                     case PowerActionSleep:
                     case PowerActionHibernate:
                         if (fdoData->HotplugInfo.MediaRemovable || fdoData->HotplugInfo.MediaHotplug){
@@ -1060,7 +1060,7 @@ ClasspPowerHandler(
                         }
                         break;
                 }
-
+            
             break;
         }
 
@@ -1311,7 +1311,7 @@ ClassMinimalPowerHandler(
 
         if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
 
-            PFUNCTIONAL_DEVICE_EXTENSION fdoExtension =
+            PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = 
                 DeviceObject->DeviceExtension;
 
             //
@@ -1319,9 +1319,9 @@ ClassMinimalPowerHandler(
             //
             if (irpStack->MinorFunction == IRP_MN_SET_POWER){
                 PVPB vpb;
-
+                
                 switch (irpStack->Parameters.Power.ShutdownType){
-
+                    
                     case PowerActionSleep:
                     case PowerActionHibernate:
                         //
@@ -1331,11 +1331,11 @@ ClassMinimalPowerHandler(
                         //
                         vpb = ClassGetVpb(fdoExtension->DeviceObject);
                         if (vpb && (vpb->Flags & VPB_MOUNTED)){
-                            SET_FLAG(fdoExtension->DeviceObject->Flags, DO_VERIFY_VOLUME);
-                        }
+                            SET_FLAG(fdoExtension->DeviceObject->Flags, DO_VERIFY_VOLUME);  
+                        } 
                         break;
                 }
-            }
+            } 
         }
 
         IoCopyCurrentIrpStackLocationToNext(Irp);
@@ -1345,7 +1345,7 @@ ClassMinimalPowerHandler(
 
         if (irpStack->MinorFunction != IRP_MN_SET_POWER &&
             irpStack->MinorFunction != IRP_MN_QUERY_POWER) {
-
+           
             NOTHING;
 
         } else {
@@ -1371,7 +1371,7 @@ Routine Description:
     a start and a stop to be sent to the device.  (actually the starts are
     almost always optional, since most device power themselves on to process
     commands, but i digress).
-
+    
     Determines proper use of spinup, spindown, and queue locking based upon
     ScanForSpecialFlags in the FdoExtension.  This is the most common power
     handler passed into classpnp.sys
@@ -1387,9 +1387,7 @@ Return Value:
     None
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassSpinDownPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -1451,14 +1449,12 @@ Routine Description:
     This routine is an outdated call.  To achieve equivalent functionality,
     the driver should set the following flags in ScanForSpecialFlags in the
     FdoExtension:
-
+        
         CLASS_SPECIAL_DISABLE_SPIN_UP
         CLASS_SPECIAL_NO_QUEUE_LOCK
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassStopUnitPowerHandler(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp

@@ -115,9 +115,7 @@ Return Value:
     A valid return code for a DriverEntry routine.
 
 --*/
-SCSIPORTAPI
 ULONG
-NTAPI
 ClassInitialize(
     IN  PVOID            Argument1,
     IN  PVOID            Argument2,
@@ -132,7 +130,7 @@ ClassInitialize(
     NTSTATUS        status;
 
     PAGED_CODE();
-
+    
     DebugPrint((3,"\n\nSCSI Class Driver\n"));
 
     ClasspInitializeDebugGlobals();
@@ -363,9 +361,7 @@ Return Value:
     Status Code
 
 --*/
-SCSIPORTAPI
 ULONG
-NTAPI
 ClassInitializeEx(
     IN  PDRIVER_OBJECT   DriverObject,
     IN  LPGUID           Guid,
@@ -1729,10 +1725,7 @@ Return Value:
     Status is returned.
 
 --*/
-SCSIPORTAPI
-NTSTATUS
-NTAPI
-ClassReadDriveCapacity(IN PDEVICE_OBJECT Fdo)
+NTSTATUS ClassReadDriveCapacity(IN PDEVICE_OBJECT Fdo)
 {
     READ_CAPACITY_DATA readCapacityBuffer = {0};
     NTSTATUS status;
@@ -2015,9 +2008,7 @@ Return Value:
     None.
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassSendStartUnit(
     IN PDEVICE_OBJECT Fdo
     )
@@ -2170,9 +2161,7 @@ Return Value:
     None.
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassAsynchronousCompletion(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
@@ -2438,9 +2427,7 @@ Return Value:
     NT status
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassIoComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -2656,9 +2643,7 @@ Return Value:
        Srb->DataTransferLength
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassSendSrbSynchronous(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -3004,9 +2989,7 @@ Return Value:
             FALSE: Drivers should not retry this request.
 
 --*/
-SCSIPORTAPI
 BOOLEAN
-NTAPI
 ClassInterpretSenseInfo(
     IN PDEVICE_OBJECT Fdo,
     IN PSCSI_REQUEST_BLOCK Srb,
@@ -4070,7 +4053,7 @@ ClassInterpretSenseInfo(
 
         /*
          *  If logError is set, also save this log in the system's error log.
-         *  But make sure we don't log TUR failures over and over
+         *  But make sure we don't log TUR failures over and over 
          *  (e.g. if an external drive was switched off and we're still sending TUR's to it every second).
          */
         if ((((PCDB)Srb->Cdb)->CDB10.OperationCode == SCSIOP_TEST_UNIT_READY) && logError){
@@ -4078,7 +4061,7 @@ ClassInterpretSenseInfo(
                 logError = FALSE;
             }
             else {
-                fdoData->LoggedTURFailureSinceLastIO = TRUE;
+                fdoData->LoggedTURFailureSinceLastIO = TRUE;    
             }
         }
         if (logError){
@@ -4137,10 +4120,7 @@ Return Value:
     Length of the transferred data is returned.
 
 --*/
-SCSIPORTAPI
-ULONG
-NTAPI
-ClassModeSense(   IN PDEVICE_OBJECT Fdo,
+ULONG ClassModeSense(   IN PDEVICE_OBJECT Fdo,
                         IN PCHAR ModeSenseBuffer,
                         IN ULONG Length,
                         IN UCHAR PageMode)
@@ -4226,9 +4206,7 @@ Return Value:
     then NULL is return.
 
 --*/
-SCSIPORTAPI
 PVOID
-NTAPI
 ClassFindModePage(
     IN PCHAR ModeSenseBuffer,
     IN ULONG Length,
@@ -4339,9 +4317,7 @@ Return Value:
     or returns a status value to indicate why it failed.
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassSendSrbAsynchronous(
     PDEVICE_OBJECT Fdo,
     PSCSI_REQUEST_BLOCK Srb,
@@ -4609,9 +4585,7 @@ Return Value:
    Returns back a STATUS_PENDING or a completion status.
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassDeviceControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -5634,7 +5608,6 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI
 ClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -5707,9 +5680,7 @@ Return Value:
     NTSTATUS
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassCreateDeviceObject(
     IN PDRIVER_OBJECT          DriverObject,
     IN PCCHAR                  ObjectNameBuffer,
@@ -6006,9 +5977,7 @@ Return Value:
     Returns a status indicating success or failure of the operation.
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassClaimDevice(
     IN PDEVICE_OBJECT LowerDeviceObject,
     IN BOOLEAN Release
@@ -6139,9 +6108,7 @@ Return Value:
    Returns back a STATUS_PENDING or a completion status.
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassInternalIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -6213,9 +6180,7 @@ Return Value:
     None, but it sets a new default timeout for a class of devices.
 
 --*/
-SCSIPORTAPI
 ULONG
-NTAPI
 ClassQueryTimeOutRegistryValue(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -6322,9 +6287,7 @@ Return Value:
     NT status
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassCheckVerifyComplete(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -6389,9 +6352,7 @@ Return Value:
     buffer allocated on behalf of the caller.
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassGetDescriptor(
     IN PDEVICE_OBJECT DeviceObject,
     IN PSTORAGE_PROPERTY_ID PropertyId,
@@ -6540,9 +6501,7 @@ Return Value:
     STATUS_MORE_PROCESSING_REQUIRED
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassSignalCompletion(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -6629,9 +6588,7 @@ Return Value:
     None
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassMarkChildrenMissing(
     IN PFUNCTIONAL_DEVICE_EXTENSION Fdo
     )
@@ -6683,9 +6640,7 @@ Return Value:
     to PNP.
 
 --*/
-SCSIPORTAPI
 BOOLEAN
-NTAPI
 ClassMarkChildMissing(
     IN PPHYSICAL_DEVICE_EXTENSION Child,
     IN BOOLEAN AcquireChildLock
@@ -6939,9 +6894,7 @@ Return Value:
     none
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassInvalidateBusRelations(
     IN PDEVICE_OBJECT Fdo
     )
@@ -6996,9 +6949,7 @@ Return Value:
     status
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR RemoveType
@@ -7262,9 +7213,7 @@ Return Value:
     Either NULL if none, or a pointer to the driver extension
 
 --*/
-SCSIPORTAPI
 PCLASS_DRIVER_EXTENSION
-NTAPI
 ClassGetDriverExtension(
     IN PDRIVER_OBJECT DriverObject
     )
@@ -7348,9 +7297,7 @@ Return Value:
     None
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassUpdateInformationInRegistry(
     IN PDEVICE_OBJECT     Fdo,
     IN PCHAR              DeviceName,
@@ -7687,9 +7634,7 @@ Arguments:
 Return Value:
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassSendDeviceIoControlSynchronous(
     IN ULONG IoControlCode,
     IN PDEVICE_OBJECT TargetDeviceObject,
@@ -7946,9 +7891,7 @@ Arguments:
 Return Value:
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassForwardIrpSynchronous(
     IN PCOMMON_DEVICE_EXTENSION CommonExtension,
     IN PIRP Irp
@@ -7977,9 +7920,7 @@ Arguments:
 Return Value:
 
 --*/
-SCSIPORTAPI
 NTSTATUS
-NTAPI
 ClassSendIrpSynchronous(
     IN PDEVICE_OBJECT TargetDeviceObject,
     IN PIRP Irp
@@ -8078,9 +8019,7 @@ Return Value:
     the VPB, or NULL if none.
 
 --*/
-SCSIPORTAPI
 PVPB
-NTAPI
 ClassGetVpb(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -8189,9 +8128,7 @@ Return Value:
     None.
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassReleaseQueue(
     IN PDEVICE_OBJECT Fdo
     )
@@ -8511,9 +8448,7 @@ Return Value:
     None
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassAcquireChildLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -8555,9 +8490,7 @@ Return Value:
     None.
 
 --*/
-SCSIPORTAPI
 VOID
-NTAPI
 ClassReleaseChildLock(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )

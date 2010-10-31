@@ -424,7 +424,7 @@ struct _CLASS_PRIVATE_FDO_DATA {
 
     BOOLEAN TimerStarted;
     BOOLEAN LoggedTURFailureSinceLastIO;
-
+    
     //
     // privately allocated release queue irp
     // protected by fdoExtension->ReleaseQueueSpinLock
@@ -508,7 +508,6 @@ static inline BOOLEAN SimpleIsSlistEmpty(SINGLE_LIST_ENTRY *SListHdr)
 }
 
 NTSTATUS
-NTAPI
 DriverEntry(
     IN PDRIVER_OBJECT DriverObject,
     IN PUNICODE_STRING RegistryPath
@@ -557,6 +556,12 @@ ClassDeviceControlDispatch(
     );
 
 NTSTATUS
+ClassDeviceControl(
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp
+    );
+
+NTSTATUS
 ClassDispatchPnp(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp
@@ -568,7 +573,12 @@ ClassPnpStartDevice(
     );
 
 NTSTATUS
-NTAPI
+ClassInternalIoControl (
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    );
+
+NTSTATUS
 ClassShutdownFlush(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
