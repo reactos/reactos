@@ -801,12 +801,20 @@ FASTCALL
 HOOK_DestroyThreadHooks(PETHREAD Thread)
 {
    PTHREADINFO pti;
+   PDESKTOP pdo;
    int HookId;
    PHOOK HookObj;
    PLIST_ENTRY pElem;
 
    pti = Thread->Tcb.Win32Thread;
-   if (!pti || !pti->pDeskInfo) return;
+   pdo = IntGetActiveDesktop();
+
+   if (!pti || !pdo)
+   {
+      DPRINT1("Kill Thread Hooks pti 0x%x pdo 0x%x\n",pti,pdo);
+      return;
+   }
+   ObReferenceObject(pti->pEThread);
 
 // Local Thread cleanup.
    if (pti->fsHooks)
@@ -831,11 +839,11 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
       pti->fsHooks = 0;
    }
 // Global search based on Thread and cleanup.
-   if (pti->rpdesk->pDeskInfo->fsHooks)
+   if (pdo->pDeskInfo->fsHooks)
    {
       for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
       {
-         PLIST_ENTRY pGLE = &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
+         PLIST_ENTRY pGLE = &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
 
          if (IsListEmpty(pGLE)) continue;
 
@@ -845,7 +853,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
          {
             if (!HookObj) break;
             if (HookObj->head.pti == pti)
-            {
+            {  DPRINT1("Global Hook Removed\n");
                if (IntRemoveHook(HookObj)) break;
             }
             pElem = HookObj->Chain.Flink;
@@ -854,6 +862,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
          while (pElem != pGLE);
       }
    }
+   ObDereferenceObject(pti->pEThread);
    return;
 }
 
