@@ -21,7 +21,7 @@ list(APPEND SOURCE
     rtl/libsupp.c
     rtl/version.c
     def/ntdll.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/def/ntdll.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
     
 if(ARCH MATCHES i386)
 list(APPEND SOURCE dispatch/i386/dispatch.S)
