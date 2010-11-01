@@ -46,7 +46,6 @@ NTSTATUS NTAPI SynchronizedDMusMPUWrite(PINTERRUPTSYNC InterruptSync,PVOID syncW
 
 const BOOLEAN   COMMAND   = TRUE;
 const BOOLEAN   DATA      = FALSE;
-
 const ULONG      kMPUInputBufferSize = 128;
 
 
