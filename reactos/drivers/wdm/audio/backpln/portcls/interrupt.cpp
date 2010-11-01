@@ -232,21 +232,21 @@ CInterruptSync::Connect()
     if (IsListEmpty(&m_ServiceRoutines))
         return STATUS_UNSUCCESSFUL;
 
-    DPRINT("Vector %u Level %u Flags %x Affinity %x\n", Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Level, Descriptor->Flags, Descriptor->u.Interrupt.Affinity);
+    DPRINT1("Vector %u Level %u Flags %x Affinity %x\n", Descriptor->u.Interrupt.Vector, Descriptor->u.Interrupt.Level, Descriptor->Flags, Descriptor->u.Interrupt.Affinity);
 
     Status = IoConnectInterrupt(&m_Interrupt,
                                 IInterruptServiceRoutine,
                                 (PVOID)this,
-                                &m_Lock,
+                                NULL, //&m_Lock,
                                 Descriptor->u.Interrupt.Vector,
                                 (KIRQL)Descriptor->u.Interrupt.Level,
                                 (KIRQL)Descriptor->u.Interrupt.Level,
                                 (KINTERRUPT_MODE)(Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED),
-                                (Descriptor->Flags != CM_RESOURCE_INTERRUPT_LATCHED),
+                                (Descriptor->ShareDisposition != CmResourceShareDeviceExclusive),
                                 Descriptor->u.Interrupt.Affinity,
                                 FALSE);
 
-    DPRINT("CInterruptSync::Connect result %x\n", Status);
+    DPRINT1("CInterruptSync::Connect result %x\n", Status);
     return Status;
 }
 

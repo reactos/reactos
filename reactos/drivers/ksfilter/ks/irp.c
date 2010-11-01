@@ -898,10 +898,6 @@ ProbeMdl:
             goto ProbeMdl;
     }
 
-#if 0
-    // HACK for MS PORTCLS
-	HeaderSize = Length;
-#endif
     /* probe user mode buffers */
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
@@ -1370,7 +1366,7 @@ KsRemoveIrpFromCancelableQueue(
     PLIST_ENTRY CurEntry;
     KIRQL OldIrql;
 
-    //DPRINT("KsRemoveIrpFromCancelableQueue ListHead %p SpinLock %p ListLocation %x RemovalOperation %x\n", QueueHead, SpinLock, ListLocation, RemovalOperation);
+    DPRINT("KsRemoveIrpFromCancelableQueue ListHead %p SpinLock %p ListLocation %x RemovalOperation %x\n", QueueHead, SpinLock, ListLocation, RemovalOperation);
 
     /* check parameters */
     if (!QueueHead || !SpinLock)
@@ -1629,10 +1625,25 @@ KsAddIrpToCancelableQueue(
     PIO_STACK_LOCATION IoStack;
     KIRQL OldLevel;
 
-    DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
     /* check for required parameters */
     if (!QueueHead || !SpinLock || !Irp)
         return;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
+
+    // HACK for ms portcls
+    if (IoStack->MajorFunction == IRP_MJ_CREATE)
+    {
+        // complete the request
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return;
+    }
+
 
     if (!DriverCancel)
     {
@@ -1640,8 +1651,6 @@ KsAddIrpToCancelableQueue(
         DriverCancel = KsCancelRoutine;
     }
 
-    /* get current irp stack */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* acquire spinlock */
     KeAcquireSpinLock(SpinLock, &OldLevel);
@@ -1973,12 +1982,6 @@ KsSetMajorFunctionHandler(
     IN  ULONG MajorFunction)
 {
     DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
-#if 1
-    // HACK
-    // for MS PORTCLS
-    //
-    DriverObject->MajorFunction[IRP_MJ_CREATE] = KspCreate;
-#endif
 
     switch ( MajorFunction )
     {
@@ -2016,7 +2019,7 @@ KsDispatchIrp(
     PKSIDEVICE_HEADER DeviceHeader;
     PDEVICE_EXTENSION DeviceExtension;
 
-    //DPRINT("KsDispatchIrp DeviceObject %p Irp %p\n", DeviceObject, Irp);
+    DPRINT("KsDispatchIrp DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;

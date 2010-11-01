@@ -293,7 +293,6 @@ CIrpQueue::UpdateMapping(
 {
     PKSSTREAM_HEADER StreamHeader;
     ULONG Size, NumData, Index;
-    //PMDL CurMdl, NextMdl;
 
     if (!m_Irp)
     {
@@ -340,8 +339,7 @@ CIrpQueue::UpdateMapping(
             return;
         }
 
-       // irp has been processed completly
-
+        // irp has been processed completly
         NumData = 0;
         if (m_Irp->RequestorMode == KernelMode)
             StreamHeader = (PKSSTREAM_HEADER)m_Irp->UserBuffer;
@@ -385,44 +383,10 @@ CIrpQueue::UpdateMapping(
             // done
             return;
         }
-#if 0
-        // now free allocated mdls
-        CurMdl = m_Irp->MdlAddress;
-        for(Index = 0; Index < STREAMHEADER_COUNT(m_Irp); Index++)
-        {
-            // sanity check
-            ASSERT(CurMdl);
-
-            // get next mdl
-            NextMdl = CurMdl->Next;
-
-            // check if mdl is locked
-            if (CurMdl->MdlFlags & MDL_PAGES_LOCKED)
-            {
-                // unlock pages
-                MmUnlockPages(CurMdl);
-            }
-
-            // free mdl
-            IoFreeMdl(CurMdl);
-
-            // proceed to next mdl
-            CurMdl = NextMdl;
-        }
-
-        // all mdls have been freed now
-        m_Irp->MdlAddress = NULL;
-
-        // free allocated KSSTREAM_HEADER
-        ExFreePool(m_Irp->AssociatedIrp.SystemBuffer);
-
-        // is this really needed?
-        m_Irp->AssociatedIrp.SystemBuffer = NULL;
-#endif
 
         // store operation status
         m_Irp->IoStatus.Status = STATUS_SUCCESS;
-        m_Irp->IoStatus.Information = NumData;
+        m_Irp->IoStatus.Information = 0;
 
         // complete the request
         IoCompleteRequest(m_Irp, IO_SOUND_INCREMENT);

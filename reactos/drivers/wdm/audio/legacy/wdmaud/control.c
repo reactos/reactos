@@ -384,6 +384,91 @@ WdmAudDeviceControl(
     return SetIrpIoStatus(Irp, STATUS_NOT_IMPLEMENTED, 0);
 }
 
+NTSTATUS
+NTAPI
+IoCompletion (
+    PDEVICE_OBJECT DeviceObject,
+    PIRP Irp,
+    PVOID Ctx)
+{
+    PKSSTREAM_HEADER Header;
+    ULONG Length = 0;
+    PMDL Mdl, NextMdl;
+    PWDMAUD_COMPLETION_CONTEXT Context = (PWDMAUD_COMPLETION_CONTEXT)Ctx;
+
+    /* get stream header */
+    Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+
+    /* sanity check */
+    ASSERT(Header);
+
+    /* iterate through all stream headers and collect size */
+    do
+    {
+        if (Context->Function == IOCTL_KS_READ_STREAM)
+        {
+            /* length is stored in DataUsed */
+            Length += Header->DataUsed;
+        }
+        else
+        {
+            /* length stored in frameextend */
+            Length += Header->FrameExtent;
+        }
+
+        /* subtract size */
+        Context->Length -= Header->Size;
+
+        /* move to next stream header */
+        Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
+
+    }while(Context->Length);
+
+    /* time to free all allocated mdls */
+    Mdl = Irp->MdlAddress;
+
+    while(Mdl)
+    {
+        /* get next mdl */
+        NextMdl = Mdl->Next;
+
+        /* unlock pages */
+        MmUnlockPages(Mdl);
+
+        /* grab next mdl */
+        Mdl = NextMdl;
+    }
+
+    /* clear mdl list */
+    Irp->MdlAddress = NULL;
+
+   /* check if mdl is locked */
+    if (Context->Mdl->MdlFlags & MDL_PAGES_LOCKED)
+    {
+        /* unlock pages */
+        MmUnlockPages(Context->Mdl);
+    }
+
+    /* now free the mdl */
+    IoFreeMdl(Context->Mdl);
+
+    /* now free the stream header */
+    ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+
+    DPRINT("IoCompletion Irp %p IoStatus %lx Information %lx Length %lu\n", Irp, Irp->IoStatus.Status, Irp->IoStatus.Information, Length);
+
+    if (Irp->IoStatus.Status == STATUS_SUCCESS)
+    {
+        /* store the length */
+        Irp->IoStatus.Information = Length;
+    }
+
+    /* free context */
+    FreeItem(Context);
+
+    return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -398,6 +483,20 @@ WdmAudReadWrite(
     ULONG Length;
     PMDL Mdl;
     BOOLEAN Read = TRUE;
+    PWDMAUD_COMPLETION_CONTEXT Context;
+
+    /* allocate completion context */
+    Context = AllocateItem(NonPagedPool, sizeof(WDMAUD_COMPLETION_CONTEXT));
+
+    if (!Context)
+    {
+        /* not enough memory */
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        /* done */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -413,6 +512,11 @@ WdmAudReadWrite(
 
     /* store outputbuffer length */
     IoStack->Parameters.DeviceIoControl.OutputBufferLength = Length;
+
+    /* setup context */
+    Context->Length = Length;
+    Context->Function = (IoStack->MajorFunction == IRP_MJ_WRITE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
+    Context->Mdl = Irp->MdlAddress;
 
     /* store mdl address */
     Mdl = Irp->MdlAddress;
@@ -440,16 +544,6 @@ WdmAudReadWrite(
         Irp->MdlAddress = Mdl;
         return SetIrpIoStatus(Irp, Status, 0);
     }
-
-    /* check if mdl is locked */
-    if (Mdl->MdlFlags & MDL_PAGES_LOCKED)
-    {
-        /* unlock pages */
-        MmUnlockPages(Mdl);
-    }
-
-    /* now free the mdl */
-    IoFreeMdl(Mdl);
 
     /* get device info */
     DeviceInfo = (PWDMAUD_DEVICE_INFO)Irp->AssociatedIrp.SystemBuffer;
@@ -482,6 +576,9 @@ WdmAudReadWrite(
     IoStack->FileObject = FileObject;
     IoStack->Parameters.Write.Length = Length;
     IoStack->MajorFunction = IRP_MJ_WRITE;
+
+    IoSetCompletionRoutine(Irp, IoCompletion, (PVOID)Context, TRUE, TRUE, TRUE);
+
 
     /* mark irp as pending */
 //    IoMarkIrpPending(Irp);

@@ -18,6 +18,14 @@
 
 typedef struct
 {
+    PMDL Mdl;
+    ULONG Length;
+    ULONG Function;
+}WDMAUD_COMPLETION_CONTEXT, *PWDMAUD_COMPLETION_CONTEXT;
+
+
+typedef struct
+{
     HANDLE Handle;
     SOUND_DEVICE_TYPE Type;
     ULONG FilterId;
