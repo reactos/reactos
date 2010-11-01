@@ -145,7 +145,12 @@ list(APPEND SOURCE
     objects/xformobj.c
     stubs/stubs.c
     stubs/umpdstubs.c
-    win32k.rc)
+    win32k.rc
+    win32k_${ARCH}.def)
+    
+if(NOT MSVC)
+    set_source_files_properties(win32k_${ARCH}.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 list(APPEND GENDIB_GENERATED
     ${CMAKE_CURRENT_BINARY_DIR}/dib/dib8gen.c
@@ -180,7 +185,6 @@ add_library(win32k SHARED
 set_module_type(win32k kernelmodedriver)
 
 target_link_libraries(win32k
-    ${CMAKE_CURRENT_SOURCE_DIR}/win32k_i386.def
     ${PSEH_LIB}
     dxguid
     libcntpr)
