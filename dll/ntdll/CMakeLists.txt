@@ -21,10 +21,8 @@ list(APPEND SOURCE
     rtl/libsupp.c
     rtl/version.c
     def/ntdll.rc
-    def/ntdll.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/def/ntdll.def)
     
-set_source_files_properties(def/ntdll.def PROPERTIES EXTERNAL_OBJECT TRUE)
-
 if(ARCH MATCHES i386)
 list(APPEND SOURCE dispatch/i386/dispatch.S)
 elseif(ARCH MATCHES amd64)
@@ -48,7 +46,6 @@ target_link_libraries(ntdll -Wl,--whole-archive rtl -Wl,--no-whole-archive)
 endif()
 
 target_link_libraries(ntdll
-    ${CMAKE_CURRENT_BINARY_DIR}/def/ntdll.def
                       ntdllsys
                       libcntpr
                       pseh)
