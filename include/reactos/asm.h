@@ -68,7 +68,6 @@ ENDM
 
 /* Force intel syntax */
 .intel_syntax noprefix
-.code64
 
 .altmacro
 
