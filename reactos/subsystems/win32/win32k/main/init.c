@@ -374,6 +374,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Create stock objects */
     CreateStockObjects();
 
+    /* Initialize timers */
+    InitTimeThread();
+
     /* Init video driver implementation */
     InitDcImpl();
 

@@ -123,14 +123,13 @@ struct object;
 static inline int check_object_access(struct object *obj, unsigned int *access) { return TRUE; };
 
 // timeout stuff
-struct timeout_user
-{
-    KTIMER Timer;
-    KDPC Dpc;
-};
+VOID NTAPI InitTimeThread();
+struct timeout_user;
 
-typedef PKDEFERRED_ROUTINE timeout_callback;
 #define TICKS_PER_SEC 10000000
+
+typedef void (*timeout_callback)( void *private );
+
 void remove_timeout_user( struct timeout_user *user );
 struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, void *private );
 
@@ -140,7 +139,7 @@ get_current_time(timeout_t *value)
     LARGE_INTEGER time;
     KeQuerySystemTime(&time);
 
-    *value = time.QuadPart / 10;
+    *value = time.QuadPart;
 }
 
 

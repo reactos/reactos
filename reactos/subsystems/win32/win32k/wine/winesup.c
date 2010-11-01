@@ -49,40 +49,6 @@ const SID *token_get_user( void *token )
     return NULL;
 }
 
-struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, void *private )
-{
-    LARGE_INTEGER DueTime;
-    struct timeout_user *TimeoutUser;
-
-    DueTime.QuadPart = (LONGLONG)when * 10;
-
-    /* Allocate memory for timeout structure */
-    TimeoutUser = ExAllocatePool(NonPagedPool, sizeof(struct timeout_user));
-
-    //DPRINT1("add_timeout_user(%p when %I64d, diff %I64d msecs, func %p)\n", TimeoutUser, when, secs, func);
-
-    /* Initialize timer and DPC objects */
-    KeInitializeTimer(&TimeoutUser->Timer);
-    KeInitializeDpc(&TimeoutUser->Dpc, func, private);
-
-    /* Set the timer */
-    KeSetTimer(&TimeoutUser->Timer, DueTime, &TimeoutUser->Dpc);
-
-    return TimeoutUser;
-}
-
-/* remove a timeout user */
-void remove_timeout_user( struct timeout_user *user )
-{
-    //DPRINT1("remove_timeout_user %p, current time %I64d\n", user, current_time);
-
-    /* Cancel the timer */
-    KeCancelTimer(&user->Timer);
-
-    /* Free memory */
-    ExFreePool(user);
-}
-
 /* default map_access() routine for objects that behave like an fd */
 unsigned int default_fd_map_access( struct object *obj, unsigned int access )
 {

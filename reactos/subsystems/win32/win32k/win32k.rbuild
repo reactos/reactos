@@ -148,6 +148,7 @@
 		<file>queue.c</file>
 		<file>region.c</file>
 		<file>stubs.c</file>
+		<file>timeout.c</file>
 		<file>user.c</file>
 		<file>window.c</file>
 		<file>winesup.c</file>

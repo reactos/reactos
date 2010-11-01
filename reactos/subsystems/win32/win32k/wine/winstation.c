@@ -467,12 +467,9 @@ done:
     clear_error();
 }
 
-static
-VOID
-NTAPI
-close_desktop_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 )
+static void close_desktop_timeout( void *private )
 {
-    struct desktop *desktop = Context;
+    struct desktop *desktop = private;
 
     desktop->close_timeout = NULL;
     unlink_named_object( &desktop->obj );  /* make sure no other process can open it */

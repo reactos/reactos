@@ -139,7 +139,7 @@ static void msg_queue_destroy( struct object *obj );
 static void msg_queue_poll_event( struct fd *fd, int event );
 static void thread_input_dump( struct object *obj, int verbose );
 static void thread_input_destroy( struct object *obj );
-static VOID NTAPI timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 );
+static void timer_callback( void *private );
 
 static const struct object_ops msg_queue_ops =
 {
@@ -527,21 +527,14 @@ static void remove_queue_message( struct msg_queue *queue, struct message *msg,
     free_message( msg );
 }
 
-VOID
-NTAPI
-result_timeout_worker( PVOID Context )
+/* message timed out without getting a reply */
+static void result_timeout( void *private )
 {
-    PQUEUE_WORKER_CONTEXT work_context = Context;
-    struct message_result *result = work_context->result;
-
-    UserEnterExclusive();
+    struct message_result *result = private;
 
     assert( !result->replied );
 
     result->timeout = NULL;
-
-    /* Free work item memory */
-    ExFreePool(work_context);
 
     if (result->msg)  /* not received yet */
     {
@@ -554,30 +547,11 @@ result_timeout_worker( PVOID Context )
         if (!result->sender)
         {
             free_result( result );
-            UserLeave();
             return;
         }
     }
 
     store_message_result( result, 0, STATUS_TIMEOUT );
-    UserLeave();
-}
-
-/* message timed out without getting a reply */
-static VOID
-NTAPI
-result_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2)
-{
-    struct message_result *result = Context;
-    PQUEUE_WORKER_CONTEXT work_context;
-
-    /* Allocate memory for the work iteam */
-    work_context = ExAllocatePool(NonPagedPool, sizeof(QUEUE_WORKER_CONTEXT));
-    work_context->result = result;
-
-    /* Queue a work item */
-    ExInitializeWorkItem(&work_context->item, result_timeout_worker, result);
-    ExQueueWorkItem(&work_context->item, DelayedWorkQueue);
 }
 
 /* allocate and fill a message result structure */
@@ -1063,21 +1037,10 @@ static struct timer *find_timer( struct msg_queue *queue, user_handle_t win,
 }
 
 /* callback for the next timer expiration */
-static
-VOID
-NTAPI
-timer_callback_worker( PVOID Context )
+static void timer_callback( void *private )
 {
-    PQUEUE_WORKER_CONTEXT work_context = Context;
     struct list *ptr;
-    struct msg_queue *queue = work_context->queue;
-
-    ASSERT(queue);
-
-    UserEnterExclusive();
-
-    /* Free workitem */
-    ExFreePool(work_context);
+    struct msg_queue *queue = private;
 
     queue->timeout = NULL;
     /* move on to the next timer */
@@ -1085,26 +1048,6 @@ timer_callback_worker( PVOID Context )
     list_remove( ptr );
     list_add_tail( &queue->expired_timers, ptr );
     set_next_timer( queue );
-
-    UserLeave();
-}
-
-static
-VOID
-NTAPI
-timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 )
-{
-    struct msg_queue *queue = Context;
-    PQUEUE_WORKER_CONTEXT work_context;
-
-    /* Allocate memory for the work iteam */
-    work_context = ExAllocatePool(NonPagedPool, sizeof(QUEUE_WORKER_CONTEXT));
-
-    work_context->queue = queue;
-
-    /* Queue a work item */
-    ExInitializeWorkItem(&work_context->item, timer_callback_worker, work_context);
-    ExQueueWorkItem(&work_context->item, DelayedWorkQueue);
 }
 
 /* link a timer at its rightful place in the queue list */
