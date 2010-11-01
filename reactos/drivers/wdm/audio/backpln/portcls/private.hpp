@@ -22,6 +22,8 @@
 #include "interfaces.hpp"
 #include <ks.h>
 #include <ksmedia.h>
+#include <stdio.h>
+
 //#include <intrin.h>
 
 #define TAG_PORTCLASS 'SLCP'
