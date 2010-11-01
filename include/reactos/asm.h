@@ -12,7 +12,9 @@
 OPTION DOTNAME
 
 .586
+.XMM
 .MODEL FLAT
+ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 
 /* Hex numbers need to be in 01ABh format */
 #define HEX(x) 0##x##h
@@ -58,6 +60,26 @@ ENDM
     .code
 ENDM
 
+.align MACRO alignment
+    ALIGN alignment
+ENDM
+
+.byte MACRO args:VARARG
+    db args
+ENDM
+
+.short MACRO args:VARARG
+    dw args
+ENDM
+
+.long MACRO args:VARARG
+    dd args
+ENDM
+
+.double MACRO args:VARARG
+    dq args
+ENDM
+
 UNIMPLEMENTED MACRO name
 ENDM
 
@@ -98,6 +120,10 @@ ENDM
 /* MASM compatible PUBLIC */
 .macro PUBLIC symbol
     .global \symbol
+.endm
+
+/* Dummy ASSUME */
+.macro ASSUME
 .endm
 
 /* MASM compatible ALIGN */
