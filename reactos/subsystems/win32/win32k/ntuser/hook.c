@@ -808,7 +808,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
 
    pti = Thread->Tcb.Win32Thread;
    pdo = IntGetActiveDesktop();
-
+DPRINT1("DestroyThreadHooks 1\n");
    if (!pti || !pdo)
    {
       DPRINT1("Kill Thread Hooks pti 0x%x pdo 0x%x\n",pti,pdo);
@@ -838,6 +838,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
       }
       pti->fsHooks = 0;
    }
+DPRINT1("DestroyThreadHooks 2\n");
 // Global search based on Thread and cleanup.
    if (pdo->pDeskInfo->fsHooks)
    {
@@ -863,6 +864,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
       }
    }
    ObDereferenceObject(pti->pEThread);
+DPRINT1("DestroyThreadHooks 3\n");
    return;
 }
 
