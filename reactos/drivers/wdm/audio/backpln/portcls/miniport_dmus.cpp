@@ -1,6 +1,17 @@
+/*****************************************************************************
+ * miniport_dmus.cpp - UART miniport implementation
+ *****************************************************************************
+ * Copyright (c) 1997-2000 Microsoft Corporation.  All Rights Reserved.
+ *
+ *      Feb 98    MartinP   --  based on UART, began deltas for DirectMusic.
+ *
+ */
+
+
 #include "private.hpp"
 
 //  + for absolute / - for relative
+
 #define kOneMillisec (10 * 1000)
 
 //
@@ -272,13 +283,7 @@ public:
     friend STDMETHODIMP_(NTSTATUS) SnapTimeStamp(PINTERRUPTSYNC InterruptSync,PVOID pStream);
 };
 
-/*****************************************************************************
- * miniport.cpp - UART miniport implementation
- *****************************************************************************
- * Copyright (c) 1997-2000 Microsoft Corporation.  All Rights Reserved.
- *
- *      Feb 98    MartinP   --  based on UART, began deltas for DirectMusic.
- */
+
 
 #define STR_MODULENAME "DMusUART:Miniport: "
 
