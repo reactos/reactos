@@ -1,11 +1,15 @@
+
+#include <reactos/asm.h>
 #include <ndk/asm.h>
-.intel_syntax noprefix
+
+EXTERN _LdrpAccessResource@16:PROC
 
 /*
  * On x86, Shrinker, an executable compressor, depends on the
  * "call access_resource" instruction being there.
  */
-.globl _LdrAccessResource@16
+.code
+PUBLIC _LdrAccessResource@16
 _LdrAccessResource@16:
     push ebp
     mov ebp, esp
@@ -18,3 +22,5 @@ _LdrAccessResource@16:
     call _LdrpAccessResource@16
     leave
     ret 16
+
+END
