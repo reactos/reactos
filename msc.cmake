@@ -96,6 +96,7 @@ endmacro()
 macro(add_importlibs MODULE)
     foreach(LIB ${ARGN})
         target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.lib)
+        add_dependencies(${MODULE} lib${LIB})
     endforeach()
 endmacro()
 
