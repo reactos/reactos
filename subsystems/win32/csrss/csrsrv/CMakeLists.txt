@@ -15,7 +15,7 @@ list(APPEND SOURCE
 
 add_library(csrsrv SHARED ${CMAKE_CURRENT_BINARY_DIR}/csrsrv_srv.h.gch ${SOURCE})
 
-target_link_libraries(csrsrv pseh)
+target_link_libraries(csrsrv ${PSEH_LIB})
 
 set_module_type(csrsrv nativedll)
 

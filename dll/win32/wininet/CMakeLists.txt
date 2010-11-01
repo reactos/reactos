@@ -30,7 +30,7 @@ set_module_type(wininet win32dll)
 target_link_libraries(wininet
     wine
     zlib
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 secur32 crypt32 ws2_32 msvcrt kernel32 ntdll)
 

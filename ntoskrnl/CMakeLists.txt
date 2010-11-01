@@ -409,7 +409,7 @@ set_target_properties(ntoskrnl PROPERTIES LINK_FLAGS "-Wl,-entry,_KiSystemStartu
 target_link_libraries(ntoskrnl
     cportlib
     csq
-    pseh
+    ${PSEH_LIB}
     cmlib
     rtl
     rossym

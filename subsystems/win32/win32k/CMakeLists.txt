@@ -181,7 +181,7 @@ set_module_type(win32k kernelmodedriver)
 
 target_link_libraries(win32k
     ${CMAKE_CURRENT_SOURCE_DIR}/win32k_i386.def
-    pseh
+    ${PSEH_LIB}
     dxguid
     libcntpr)
 

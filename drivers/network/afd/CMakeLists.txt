@@ -22,7 +22,7 @@ add_library(afd SHARED ${CMAKE_CURRENT_BINARY_DIR}/afd_afd.h.gch ${SOURCE})
 set_module_type(afd kernelmodedriver)
 
 target_link_libraries(afd
-    pseh
+    ${PSEH_LIB}
     -lntoskrnl
     -lhal)
 

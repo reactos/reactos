@@ -45,7 +45,7 @@ set_module_type(crypt32 win32dll)
 
 target_link_libraries(crypt32
     wine
-    pseh
+    ${PSEH_LIB}
     oldnames)
 
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)

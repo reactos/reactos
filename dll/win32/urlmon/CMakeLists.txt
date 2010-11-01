@@ -40,7 +40,7 @@ target_link_libraries(urlmon
     urlmon_proxy
     uuid
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(urlmon
     rpcrt4

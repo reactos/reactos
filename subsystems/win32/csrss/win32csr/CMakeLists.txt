@@ -31,7 +31,7 @@ add_library(win32csr SHARED ${CMAKE_CURRENT_BINARY_DIR}/win32csr_w32csr.h.gch ${
 
 target_link_libraries(win32csr
     win32ksys
-    pseh)
+    ${PSEH_LIB})
 
 set_module_type(win32csr win32dll)
 

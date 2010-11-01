@@ -241,7 +241,7 @@ EXPORTS
   GetEffectiveRightsFromAclA
   GetEffectiveRightsFromAclW
   GetEventLogInformation
-  GetExplicitEntriesFromAclAadvapi32.GetExplicitEntriesFromAclW
+  GetExplicitEntriesFromAclA=GetExplicitEntriesFromAclW
   GetExplicitEntriesFromAclW
   GetFileSecurityA
   GetFileSecurityW
@@ -271,7 +271,7 @@ EXPORTS
   GetSecurityDescriptorControl
   GetSecurityDescriptorDacl
   GetSecurityDescriptorGroup
-  GetSecurityDescriptorLengthtdll.RtlLengthSecurityDescriptor
+  GetSecurityDescriptorLengtht=ntdll.RtlLengthSecurityDescriptor
   GetSecurityDescriptorOwner
   GetSecurityDescriptorRMControl
   GetSecurityDescriptorSacl
@@ -321,7 +321,7 @@ EXPORTS
   InitiateSystemShutdownW
   InstallApplication=__wine_stub_advapi32_dll_318
   IsProcessRestricted=__wine_stub_advapi32_dll_319
-  IsTextUnicodentdll.RtlIsTextUnicode
+  IsTextUnicode=ntdll.RtlIsTextUnicode
   IsTokenRestricted
   IsTokenUntrusted=__wine_stub_advapi32_dll_322
   IsValidAcl
@@ -418,7 +418,7 @@ EXPORTS
   MakeAbsoluteSD
   MakeAbsoluteSD2
   MakeSelfRelativeSD
-  MapGenericMasktdll.RtlMapGenericMask
+  MapGenericMask=ntdll.RtlMapGenericMask
   NotifyBootConfigStatus
   NotifyChangeEventLog
   ObjectCloseAuditAlarmA

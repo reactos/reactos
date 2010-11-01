@@ -33,7 +33,7 @@ set_image_base(ks 0x00010000)
 
 target_link_libraries(ks
     ${CMAKE_CURRENT_SOURCE_DIR}/ks.def
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(ks ntoskrnl hal msvcrt)
 add_dependencies(ks psdk bugcodes)

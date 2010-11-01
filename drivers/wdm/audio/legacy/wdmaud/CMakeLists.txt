@@ -17,7 +17,7 @@ set_target_properties(wdmaud PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -W
 target_link_libraries(wdmaud
     mmixer
     libcntpr
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(wdmaud ntoskrnl ks hal)
 add_dependencies(wdmaud psdk bugcodes)

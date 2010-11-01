@@ -77,7 +77,7 @@ set_module_type(user32 win32dll)
 target_link_libraries(user32
     wine
     win32ksys
-    pseh)
+    ${PSEH_LIB})
                       
 add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
 add_importlibs(user32 gdi32 advapi32 imm32 kernel32 ntdll)

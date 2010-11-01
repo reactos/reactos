@@ -51,7 +51,7 @@ add_library(portcls SHARED
 
 target_link_libraries(portcls
     libcntpr
-    pseh)
+    ${PSEH_LIB})
 
 if(MSVC)
     set_target_properties(portcls PROPERTIES COMPILE_FLAGS "/GR-")

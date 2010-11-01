@@ -48,11 +48,11 @@ endif()
 target_link_libraries(ntdll
                       ntdllsys
                       libcntpr
-                      pseh)
+                      ${PSEH_LIB})
                       
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
 add_dependencies(ntdll ntstatus)
 
 add_minicd_target(ntdll reactos/system32 ntdll.dll)
 add_cab_target(ntdll 1)
-add_importlib_target(ntdll)
+add_importlib_def(${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)

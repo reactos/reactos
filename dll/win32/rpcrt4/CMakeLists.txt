@@ -40,7 +40,7 @@ target_link_libraries(rpcrt4
     wine
     uuid
     epm_client
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 ntdll)
 add_dependencies(rpcrt4 winesdk)

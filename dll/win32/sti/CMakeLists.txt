@@ -25,7 +25,7 @@ target_link_libraries(sti
     sti_proxy
     wine
     uuid
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(sti
     ole32

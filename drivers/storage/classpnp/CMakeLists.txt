@@ -36,7 +36,7 @@ list(APPEND SOURCE
 spec2def(classpnp.sys class.spec)
 
 add_library(classpnp SHARED ${SOURCE})
-target_link_libraries(classpnp pseh libcntpr)
+target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 
 set_module_type(classpnp kernelmodedriver)
 

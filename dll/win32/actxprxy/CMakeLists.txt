@@ -13,7 +13,7 @@ target_link_libraries(actxprxy
     actxprxy_proxy
     uuid
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(actxprxy
     rpcrt4

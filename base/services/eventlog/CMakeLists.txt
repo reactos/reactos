@@ -12,7 +12,7 @@ list(APPEND SOURCE
 
 add_executable(eventlog ${CMAKE_CURRENT_BINARY_DIR}/eventlog_eventlog.h.gch ${SOURCE})
 
-target_link_libraries(eventlog eventlogrpc_server pseh)
+target_link_libraries(eventlog eventlogrpc_server ${PSEH_LIB})
 
 add_pch(eventlog ${CMAKE_CURRENT_SOURCE_DIR}/eventlog.h ${SOURCE})
 

@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_executable(umpnpmgr umpnpmgr.c umpnpmgr.rc)
 
-target_link_libraries(umpnpmgr pnp_server wdmguid pseh)
+target_link_libraries(umpnpmgr pnp_server wdmguid ${PSEH_LIB})
 
 set_module_type(umpnpmgr win32cui)
 add_importlibs(umpnpmgr

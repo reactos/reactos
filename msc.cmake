@@ -82,25 +82,26 @@ set(IDL_SERVER_ARG /sstub) #.c for stub server library
 set(IDL_CLIENT_ARG /cstub) #.c for stub client library
 
 
-macro(add_importlib_target _name)
-    add_custom_command(
-        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        COMMAND LINK /LIB /MACHINE:X86 /DEF:${CMAKE_CURRENT_BINARY_DIR}/${_name}.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def
-    )
-    add_custom_target(lib${_name}
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+macro(add_importlib_def _def_file)
+    get_filename_component(_name ${_def_file} NAME_WE)
+    add_custom_target(
+        lib${_name}
+        COMMAND LINK /LIB /MACHINE:X86 /DEF:${CMAKE_CURRENT_BINARY_DIR}/${_file}.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+        DEPENDS ${_def_file}
     )
 endmacro()
 
 macro(add_importlibs MODULE)
     foreach(LIB ${ARGN})
         target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.lib)
-        add_dependencies(${MODULE} lib${LIB})
+        #add_dependencies(${MODULE} lib${LIB})
     endforeach()
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
+
+#pseh workaround
+set(PSEH_LIB "")
 
 endif()
 

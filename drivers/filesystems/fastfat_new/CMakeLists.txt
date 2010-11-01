@@ -28,7 +28,7 @@ add_library(fastfat_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/fastfat_new_fastfat.h
 set_target_properties(fastfat_new PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
 
 target_link_libraries(fastfat_new
-    pseh
+    ${PSEH_LIB}
     fullfat)
 
 add_importlibs(fastfat_new ntoskrnl hal)

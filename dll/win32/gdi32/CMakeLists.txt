@@ -50,7 +50,7 @@ set_module_type(gdi32 win32dll)
 target_link_libraries(gdi32
     win32ksys
     dxguid
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})

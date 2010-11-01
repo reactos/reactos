@@ -16,7 +16,7 @@ add_executable(services ${CMAKE_CURRENT_BINARY_DIR}/services_services.h.gch ${SO
 
 target_link_libraries(services
     svcctl_server
-    pseh)
+    ${PSEH_LIB})
 
 add_pch(services ${CMAKE_CURRENT_SOURCE_DIR}/services.h ${SOURCE})
 

@@ -20,7 +20,7 @@ set_entrypoint(lsasrv 0)
 target_link_libraries(lsasrv
     lsa_server
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(lsasrv rpcrt4 kernel32 ntdll)
 add_dependencies(lsasrv  psdk buildno_header)

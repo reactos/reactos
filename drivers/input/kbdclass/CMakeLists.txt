@@ -9,7 +9,7 @@ add_library(kbdclass SHARED
 
 set_module_type(kbdclass kernelmodedriver)
 
-target_link_libraries(kbdclass pseh)
+target_link_libraries(kbdclass ${PSEH_LIB})
 
 add_importlibs(kbdclass ntoskrnl hal)
 

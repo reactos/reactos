@@ -46,7 +46,7 @@ set_module_type(dbghelp win32dll)
 
 target_link_libraries(dbghelp
     wine
-    pseh
+    ${PSEH_LIB}
     oldnames)
 
 add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)

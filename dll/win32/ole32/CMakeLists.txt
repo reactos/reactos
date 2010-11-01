@@ -68,7 +68,7 @@ target_link_libraries(ole32
     irot_client
     ole32_proxy
     uuid
-    pseh)
+    ${PSEH_LIB})
     
 add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
     

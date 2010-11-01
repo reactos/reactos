@@ -23,7 +23,7 @@ set_module_type(winmm win32dll)
 
 target_link_libraries(winmm
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(winmm advapi32 user32 msvcrt kernel32 ntdll)
 

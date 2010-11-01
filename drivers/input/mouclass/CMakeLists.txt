@@ -8,7 +8,7 @@ add_library(mouclass SHARED
 
 set_module_type(mouclass kernelmodedriver)
 
-target_link_libraries(mouclass pseh)
+target_link_libraries(mouclass ${PSEH_LIB})
 
 add_importlibs(mouclass ntoskrnl hal)
 

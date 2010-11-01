@@ -50,7 +50,7 @@ target_link_libraries(quartz
     strmiids
     uuid
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(quartz
     msvcrt

@@ -31,7 +31,7 @@ set_module_type(tcpip kernelmodedriver)
 target_link_libraries(tcpip
     ip
     oskittcp
-    pseh
+    ${PSEH_LIB}
     chew
     -lndis
     -lntoskrnl

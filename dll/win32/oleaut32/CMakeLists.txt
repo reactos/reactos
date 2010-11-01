@@ -53,7 +53,7 @@ target_link_libraries(oleaut32
     wine
     wineldr
     uuid
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(oleaut32 windowscodecs ole32 rpcrt4 user32 gdi32 advapi32 comctl32 urlmon msvcrt kernel32 ntdll)
 

@@ -115,10 +115,10 @@ add_library(kernel32 SHARED
 
 set_module_type(kernel32 win32dll)
 
-target_link_libraries(kernel32 pseh)
+target_link_libraries(kernel32 ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
 add_dependencies(kernel32 errcodes)
 add_cab_target(kernel32 1)
-add_importlib_target(kernel32)
+add_importlib_def(${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)

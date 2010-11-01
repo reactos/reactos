@@ -18,7 +18,7 @@ set_module_type(syssetup win32dll)
 
 target_link_libraries(syssetup
     uuid
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(syssetup
     msvcrt

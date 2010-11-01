@@ -40,7 +40,7 @@ target_link_libraries(setupapi
     pnp_client
     uuid
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(setupapi
     msvcrt
