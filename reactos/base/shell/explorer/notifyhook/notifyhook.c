@@ -70,7 +70,7 @@ LRESULT CALLBACK NotifyHookProc(int code, WPARAM wparam, LPARAM lparam)
 		data.dwData = WM_GETMODULEPATH;
 		data.cbData = sizeof(cds);
 		data.lpData = &cds;
-
+DPRINT1("Hook, Going to SendMessage\n");
 		SendMessage((HWND)pmsg->wParam, WM_COPYDATA, (WPARAM)pmsg->hwnd, (LPARAM)&data);
 
 		return 0;
