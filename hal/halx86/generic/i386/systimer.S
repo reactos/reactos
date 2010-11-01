@@ -39,7 +39,7 @@ EXTERN _HalpPerfCounterCutoff:DWORD
 /* GLOBALS *******************************************************************/
 
 .data
-ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
+//ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 
 PUBLIC _HalpPerfCounter
 _HalpLastPerfCounterLow:    .long 0
