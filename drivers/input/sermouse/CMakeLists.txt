@@ -18,3 +18,5 @@ target_link_libraries(sermouse
     -lhal)
 
 add_dependencies(sermouse psdk bugcodes)
+
+add_cab_target(sermouse 2)

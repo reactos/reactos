@@ -7,13 +7,11 @@ add_library(kbdclass SHARED
     setup.c
     kbdclass.rc)
 
-set_target_properties(kbdclass PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols" SUFFIX ".sys")
+set_module_type(kbdclass kernelmodedriver)
 
-target_link_libraries(kbdclass
-    pseh
-    -lntoskrnl
-    -lhal)
+target_link_libraries(kbdclass pseh)
 
-add_dependencies(kbdclass psdk bugcodes)
+add_importlibs(kbdclass ntoskrnl hal)
+
 add_minicd_target(kbdclass reactos kbdclass.sys)
 add_livecd_target(kbdclass reactos/system32/drivers)

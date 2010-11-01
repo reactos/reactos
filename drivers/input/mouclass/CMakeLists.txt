@@ -6,12 +6,10 @@ add_library(mouclass SHARED
     mouclass.c
     mouclass.rc)
 
-set_target_properties(mouclass PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols" SUFFIX ".sys")
+set_module_type(mouclass kernelmodedriver)
 
-target_link_libraries(mouclass
-    pseh
-    -lntoskrnl
-    -lhal)
+target_link_libraries(mouclass pseh)
 
-add_dependencies(mouclass psdk bugcodes)
+add_importlibs(mouclass ntoskrnl hal)
+
 add_cab_target(mouclass 2)
