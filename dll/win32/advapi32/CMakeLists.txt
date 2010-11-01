@@ -40,7 +40,12 @@ list(APPEND SOURCE
     token/privilege.c
     token/token.c
     advapi32_stubs.c
-    advapi32.rc)
+    advapi32.rc
+    advapi32.def)
+    
+if(NOT MSVC)
+    set_source_files_properties(advapi32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(advapi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_advapi32.h.gch
@@ -49,12 +54,11 @@ add_library(advapi32 SHARED
 set_module_type(advapi32 win32dll)
 
 target_link_libraries(advapi32
-    ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.def
     svcctl_client
     lsa_client
     eventlogrpc_client
     wine
-    pseh)
+    ${PSEH_LIB})
 
 add_importlibs(advapi32 rpcrt4 kernel32 ntdll)
 
