@@ -1,4 +1,6 @@
 
+spec2def(ntdll.dll def/ntdll.spec)
+
 add_definitions(
     -D__NTDLL__
     -D_NTOSKRNL_
@@ -46,13 +48,14 @@ target_link_libraries(ntdll -Wl,--whole-archive rtl -Wl,--no-whole-archive)
 endif()
 
 target_link_libraries(ntdll
-    ${CMAKE_CURRENT_SOURCE_DIR}/def/ntdll.def
-    ntdllsys
-    libcntpr
-    pseh)
+    ${CMAKE_CURRENT_BINARY_DIR}/def/ntdll.def
+                      ntdllsys
+                      libcntpr
+                      pseh)
                       
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
 add_dependencies(ntdll ntstatus)
 
 add_minicd_target(ntdll reactos/system32 ntdll.dll)
 add_cab_target(ntdll 1)
+add_importlib_target(ntdll)
