@@ -13,6 +13,7 @@ OPTION DOTNAME
 
 .586
 .MODEL FLAT
+ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 
 /* Hex numbers need to be in 01ABh format */
 #define HEX(x) 0##x##h
@@ -58,6 +59,22 @@ ENDM
     .code
 ENDM
 
+.align MACRO alignment
+    ALIGN alignment
+ENDM
+
+.byte MACRO args:VARARG
+    db args
+ENDM
+
+.short MACRO args:VARARG
+    dw args
+ENDM
+
+.long MACRO args:VARARG
+    dd args
+ENDM
+
 UNIMPLEMENTED MACRO name
 ENDM
 
@@ -68,7 +85,6 @@ ENDM
 
 /* Force intel syntax */
 .intel_syntax noprefix
-.code64
 
 .altmacro
 
