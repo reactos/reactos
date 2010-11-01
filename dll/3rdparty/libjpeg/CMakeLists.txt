@@ -59,3 +59,5 @@ set_entrypoint(libjpeg 0)
 add_importlibs(libjpeg msvcrt)
 
 add_dependencies(libjpeg psdk buildno_header)
+
+add_cab_target(libjpeg 1)

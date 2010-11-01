@@ -15,3 +15,5 @@ set_entrypoint(dxtn 0)
 add_importlibs(dxtn msvcrt)
 
 add_dependencies(dxtn psdk buildno_header)
+
+add_cab_target(dxtn 1)

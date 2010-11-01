@@ -218,7 +218,11 @@ list(APPEND SOURCE
     src/vbo/vbo_save_loopback.c
     src/vbo/vbo_split.c
     src/vbo/vbo_split_copy.c
-    src/vbo/vbo_split_inplace.c)
+    src/vbo/vbo_split_inplace.c
+    src/drivers/windows/icd/mesa.def)
+
+set_source_files_properties(src/drivers/windows/icd/mesa.def
+    PROPERTIES EXTERNAL_OBJECT TRUE)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -261,8 +265,8 @@ if (NOT MSVC)
 endif(NOT MSVC)
 
 
-target_link_libraries(mesa32 ${CMAKE_CURRENT_SOURCE_DIR}/src/drivers/windows/icd/mesa.def)
-
 add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
 
 add_dependencies(mesa32 psdk buildno_header)
+
+add_cab_target(mesa32 1)

@@ -40,3 +40,5 @@ target_link_libraries(libxslt libxml2)
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
 
 add_dependencies(libxslt psdk buildno_header)
+
+add_cab_target(libxslt 1)

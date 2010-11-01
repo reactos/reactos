@@ -64,7 +64,9 @@ list(APPEND SOURCE
     windows/winpos.c
     user32_stubs.c
     user32.rc
-    ${CMAKE_CURRENT_SOURCE_DIR}/user32.def)
+    user32.def)
+    
+set_source_files_properties(user32.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
 add_library(user32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/user32_user32.h.gch

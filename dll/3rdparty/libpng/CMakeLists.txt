@@ -30,3 +30,5 @@ target_link_libraries(libpng mingw_common zlib)
 add_importlibs(libpng msvcrt kernel32)
 
 add_dependencies(libpng psdk buildno_header)
+
+add_cab_target(libpng 1)
