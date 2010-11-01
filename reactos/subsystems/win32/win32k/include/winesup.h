@@ -129,11 +129,20 @@ struct timeout_user
     KDPC Dpc;
 };
 
-enum timeout_t;
 typedef PKDEFERRED_ROUTINE timeout_callback;
 #define TICKS_PER_SEC 10000000
 void remove_timeout_user( struct timeout_user *user );
 struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, void *private );
+
+VOID FORCEINLINE
+get_current_time(timeout_t *value)
+{
+    LARGE_INTEGER time;
+    KeQuerySystemTime(&time);
+
+    *value = time.QuadPart / 10;
+}
+
 
 thread_id_t get_thread_id (PTHREADINFO Thread);
 process_id_t get_process_id(PPROCESSINFO Process);

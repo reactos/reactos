@@ -278,7 +278,7 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
         queue->timeout         = NULL;
         queue->input           = (struct thread_input *)grab_object( input );
         queue->hooks           = NULL;
-        KeQuerySystemTime((PLARGE_INTEGER)&queue->last_get_msg);
+        get_current_time(&queue->last_get_msg);
         list_init( &queue->send_result );
         list_init( &queue->callback_result );
         list_init( &queue->pending_timers );
@@ -585,7 +585,7 @@ static struct message_result *alloc_message_result( struct msg_queue *send_queue
                                                     struct msg_queue *recv_queue,
                                                     struct message *msg, timeout_t timeout )
 {
-    struct message_result *result = ExAllocatePool( NonPagedPool, sizeof(*result) );
+    struct message_result *result = ExAllocatePool( PagedPool, sizeof(*result) );
     if (result)
     {
         result->msg       = msg;
@@ -804,11 +804,11 @@ static void cleanup_results( struct msg_queue *queue )
 static int is_queue_hung( struct msg_queue *queue )
 {
     //struct wait_queue_entry *entry;
-    LARGE_INTEGER current_time;
+    timeout_t current_time;
 
-    KeQuerySystemTime(&current_time);
+    get_current_time(&current_time);
 
-    if (current_time.QuadPart - queue->last_get_msg <= 5 * TICKS_PER_SEC)
+    if (current_time - queue->last_get_msg <= 5 * TICKS_PER_SEC)
         return 0;  /* less than 5 seconds since last get message -> not hung */
 
 #if 0
@@ -1097,8 +1097,6 @@ timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArg
     struct msg_queue *queue = Context;
     PQUEUE_WORKER_CONTEXT work_context;
 
-    ASSERT(queue);
-
     /* Allocate memory for the work iteam */
     work_context = ExAllocatePool(NonPagedPool, sizeof(QUEUE_WORKER_CONTEXT));
 
@@ -1133,11 +1131,11 @@ static void free_timer( struct msg_queue *queue, struct timer *timer )
 /* restart an expired timer */
 static void restart_timer( struct msg_queue *queue, struct timer *timer )
 {
-    LARGE_INTEGER current_time;
-    KeQuerySystemTime(&current_time);
+    timeout_t current_time;
+    get_current_time(&current_time);
 
     list_remove( &timer->entry );
-    while (timer->when <= current_time.QuadPart) timer->when += (timeout_t)timer->rate * 10000;
+    while (timer->when <= current_time) timer->when += (timeout_t)timer->rate * 10000;
     link_timer( queue, timer );
     set_next_timer( queue );
 }
@@ -1165,15 +1163,15 @@ static struct timer *find_expired_timer( struct msg_queue *queue, user_handle_t 
 /* add a timer */
 static struct timer *set_timer( struct msg_queue *queue, unsigned int rate )
 {
-    LARGE_INTEGER current_time;
+    timeout_t current_time;
     struct timer *timer;
-    KeQuerySystemTime(&current_time);
+    get_current_time(&current_time);
 
     timer = mem_alloc( sizeof(*timer) );
     if (timer)
     {
         timer->rate = max( rate, 1 );
-        timer->when = current_time.QuadPart + (timeout_t)timer->rate * 10000;
+        timer->when = current_time + (timeout_t)timer->rate * 10000;
         link_timer( queue, timer );
         /* check if we replaced the next timer */
         if (list_head( &queue->pending_timers ) == &timer->entry) set_next_timer( queue );
@@ -1564,7 +1562,7 @@ void post_message( user_handle_t win, unsigned int message, lparam_t wparam, lpa
 
     if (!thread) return;
 
-    if (thread->queue && (msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
+    if (thread->queue && (msg = ExAllocatePool( PagedPool, sizeof(*msg) )))
     {
         msg->type      = MSG_POSTED;
         msg->win       = get_user_full_handle( win );
@@ -1591,7 +1589,7 @@ void post_win_event( PTHREADINFO thread, unsigned int event,
 {
     struct message *msg;
 
-    if (thread->queue && (msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
+    if (thread->queue && (msg = ExAllocatePool( PagedPool, sizeof(*msg) )))
     {
         struct winevent_msg_data *data;
 
@@ -1753,7 +1751,7 @@ DECL_HANDLER(send_message)
         return;
     }
 
-    if ((msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
+    if ((msg = ExAllocatePool( PagedPool, sizeof(*msg) )))
     {
         msg->type      = req->type;
         msg->win       = get_user_full_handle( req->win );
@@ -1844,7 +1842,7 @@ DECL_HANDLER(send_hardware_message)
     data->y    = req->y;
     data->info = req->info;
 
-    if ((msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
+    if ((msg = ExAllocatePool( PagedPool, sizeof(*msg) )))
     {
         msg->type      = MSG_HARDWARE;
         msg->win       = get_user_full_handle( req->win );
@@ -1878,7 +1876,7 @@ DECL_HANDLER(post_quit_message)
 /* get a message from the current queue */
 DECL_HANDLER(get_message)
 {
-    LARGE_INTEGER current_time;
+    timeout_t current_time;
     struct timer *timer;
     struct list *ptr;
     PPROCESSINFO process = PsGetCurrentProcessWin32Process();
@@ -1889,8 +1887,8 @@ DECL_HANDLER(get_message)
     reply->active_hooks = get_active_hooks();
 
     if (!queue) return;
-    KeQuerySystemTime(&current_time);
-    queue->last_get_msg = current_time.QuadPart;
+    get_current_time(&current_time);
+    queue->last_get_msg = current_time;
     if (!filter) filter = QS_ALLINPUT;
 
     /* first check for sent messages */

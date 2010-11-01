@@ -54,12 +54,12 @@ struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, vo
     LARGE_INTEGER DueTime;
     struct timeout_user *TimeoutUser;
 
-    DueTime.QuadPart = (LONGLONG)when;
-
-    DPRINT("add_timeout_user(when %I64d, func %p)\n", when, func);
+    DueTime.QuadPart = (LONGLONG)when * 10;
 
     /* Allocate memory for timeout structure */
     TimeoutUser = ExAllocatePool(NonPagedPool, sizeof(struct timeout_user));
+
+    //DPRINT1("add_timeout_user(%p when %I64d, diff %I64d msecs, func %p)\n", TimeoutUser, when, secs, func);
 
     /* Initialize timer and DPC objects */
     KeInitializeTimer(&TimeoutUser->Timer);
@@ -74,7 +74,7 @@ struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, vo
 /* remove a timeout user */
 void remove_timeout_user( struct timeout_user *user )
 {
-    DPRINT("remove_timeout_user %p\n", user);
+    //DPRINT1("remove_timeout_user %p, current time %I64d\n", user, current_time);
 
     /* Cancel the timer */
     KeCancelTimer(&user->Timer);
