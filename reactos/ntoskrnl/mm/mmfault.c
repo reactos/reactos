@@ -9,6 +9,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
+#ifdef NEWCC
+#include "../cache/section/newmm.h"
+#endif
 #define NDEBUG
 #include <debug.h>
 
@@ -84,6 +87,18 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
          case MEMORY_AREA_VIRTUAL_MEMORY:
             Status = STATUS_ACCESS_VIOLATION;
             break;
+
+#ifdef NEWCC
+	     case MEMORY_AREA_CACHE:
+			// This code locks for itself to keep from having to break a lock
+			// passed in.
+			if (!FromMdl)
+				MmUnlockAddressSpace(AddressSpace);
+		    Status = MmAccessFaultCacheSection(Mode, Address, Locked);
+			if (!FromMdl)
+				MmLockAddressSpace(AddressSpace);
+			break;
+#endif
 
          default:
             Status = STATUS_ACCESS_VIOLATION;
@@ -174,6 +189,18 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                                                     (PVOID)Address,
                                                     Locked);
             break;
+
+#ifdef  NEWCC
+	    case MEMORY_AREA_CACHE:
+			// This code locks for itself to keep from having to break a lock
+			// passed in.
+			if (!FromMdl)
+				MmUnlockAddressSpace(AddressSpace);
+		    Status = MmNotPresentFaultCacheSection(Mode, Address, Locked);
+			if (!FromMdl)
+				MmLockAddressSpace(AddressSpace);
+			break;
+#endif
 
          default:
             Status = STATUS_ACCESS_VIOLATION;

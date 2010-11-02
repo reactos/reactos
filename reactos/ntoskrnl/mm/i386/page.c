@@ -467,6 +467,18 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
 
 VOID
 NTAPI
+MmGetPageFileMapping(PEPROCESS Process, PVOID Address,
+					 SWAPENTRY* SwapEntry)
+/*
+ * FUNCTION: Get a page file mapping
+ */
+{
+	ULONG Entry = MmGetPageEntryForProcess(Process, Address);
+	*SwapEntry = Entry >> 1;
+}
+
+VOID
+NTAPI
 MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
                         SWAPENTRY* SwapEntry)
 /*

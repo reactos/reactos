@@ -248,6 +248,8 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
+struct _MM_CACHE_SECTION_SEGMENT;
+
 typedef struct _MEMORY_AREA
 {
     PVOID StartingAddress;
@@ -270,6 +272,11 @@ typedef struct _MEMORY_AREA
             PMM_SECTION_SEGMENT Segment;
             LIST_ENTRY RegionListHead;
         } SectionData;
+		struct
+		{
+            LARGE_INTEGER ViewOffset;
+            struct _MM_CACHE_SECTION_SEGMENT *Segment;
+		} CacheData;
         struct
         {
             LIST_ENTRY RegionListHead;
@@ -1285,6 +1292,14 @@ MmEnableVirtualMapping(
 VOID
 NTAPI
 MmRawDeleteVirtualMapping(PVOID Address);
+
+
+VOID
+NTAPI
+MmGetPageFileMapping(
+	struct _EPROCESS *Process, 
+	PVOID Address,
+	SWAPENTRY* SwapEntry);
 
 VOID
 NTAPI

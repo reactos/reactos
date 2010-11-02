@@ -744,8 +744,10 @@ NtSetSystemPowerState(IN POWER_ACTION SystemAction,
         /* Check if we're still in an invalid status */
         if (!NT_SUCCESS(Status)) break;
         
+#ifndef NEWCC
         /* Flush dirty cache pages */
         CcRosFlushDirtyPages(-1, &Dummy);
+#endif
 
         /* Flush all volumes and the registry */
         DPRINT1("Flushing volumes, cache flushed %d pages\n", Dummy);
