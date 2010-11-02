@@ -45,12 +45,12 @@
 				<file>ip_addr.c</file>
 				<file>ip_frag.c</file>
 			</directory>
-			<directory name="ipv6">
+			<!--directory name="ipv6">
 				<file>icmp6.c</file>
 				<file>inet6.c</file>
 				<file>ip6_addr.c</file>
 				<file>ip6.c</file>
-			</directory>
+			</directory-->
 			<directory name="snmp">
 				<file>asn1_dec.c</file>
 				<file>asn1_enc.c</file>

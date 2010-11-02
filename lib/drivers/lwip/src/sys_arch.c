@@ -15,13 +15,10 @@ static LARGE_INTEGER StartTime;
 
 typedef struct _thread_t
 {
-    PVOID ThreadId;
     HANDLE Handle;
-    struct sys_timeouts Timeouts;
     void (* ThreadFunction)(void *arg);
     void *ThreadContext;
     LIST_ENTRY ListEntry;
-    char Name[1];
 } *thread_t;
 
 u32_t sys_now(void)
@@ -36,23 +33,14 @@ u32_t sys_now(void)
 void
 sys_arch_protect(sys_prot_t *lev)
 {
-    KIRQL OldIrql;
-
-    KeAcquireSpinLock(&lev->Lock, &OldIrql);
-
-    lev->OldIrql = OldIrql;
+    /* Preempt the dispatcher */
+    KeRaiseIrql(DISPATCH_LEVEL, lev);
 }
 
 void
-sys_arch_unprotect(sys_prot_t *lev)
+sys_arch_unprotect(sys_prot_t lev)
 {
-    KeReleaseSpinLock(&lev->Lock, lev->OldIrql);
-}
-
-void
-sys_arch_decl_protect(sys_prot_t *lev)
-{
-    KeInitializeSpinLock(&lev->Lock);
+    KeLowerIrql(lev);
 }
 
 err_t
@@ -64,21 +52,35 @@ sys_sem_new(sys_sem_t *sem, u8_t count)
      * so I optimize for this case by using a synchronization event and setting its initial state
      * to signalled for a lock and non-signalled for a completion event */
 
-    KeInitializeEvent(sem, SynchronizationEvent, count);
+    KeInitializeEvent(&sem->Event, SynchronizationEvent, count);
+    
+    sem->Valid = 1;
     
     return ERR_OK;
+}
+
+int sys_sem_valid(sys_sem_t *sem)
+{
+    return sem->Valid;
+}
+
+void sys_sem_set_invalid(sys_sem_t *sem)
+{
+    sem->Valid = 0;
 }
 
 void
 sys_sem_free(sys_sem_t* sem)
 {
     /* No op (allocated in stack) */
+    
+    sys_sem_set_invalid(sem);
 }
 
 void
 sys_sem_signal(sys_sem_t* sem)
 {
-    KeSetEvent(sem, IO_NO_INCREMENT, FALSE);
+    KeSetEvent(&sem->Event, IO_NO_INCREMENT, FALSE);
 }
 
 u32_t
@@ -87,7 +89,7 @@ sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
     LARGE_INTEGER LargeTimeout, PreWaitTime, PostWaitTime;
     UINT64 TimeDiff;
     NTSTATUS Status;
-    PVOID WaitObjects[] = {sem, &TerminationEvent};
+    PVOID WaitObjects[] = {&sem->Event, &TerminationEvent};
 
     LargeTimeout.QuadPart = Int32x32To64(timeout, -10000);
     
@@ -131,7 +133,19 @@ sys_mbox_new(sys_mbox_t *mbox, int size)
     
     KeInitializeEvent(&mbox->Event, NotificationEvent, FALSE);
     
+    mbox->Valid = 1;
+    
     return ERR_OK;
+}
+
+int sys_mbox_valid(sys_mbox_t *mbox)
+{
+    return mbox->Valid;
+}
+
+void sys_mbox_set_invalid(sys_mbox_t *mbox)
+{
+    mbox->Valid = 0;
 }
 
 void
@@ -139,7 +153,7 @@ sys_mbox_free(sys_mbox_t *mbox)
 {
     ASSERT(IsListEmpty(&mbox->ListHead));
     
-    /* No op (allocated on stack) */
+    sys_mbox_set_invalid(mbox);
 }
 
 void
@@ -236,51 +250,12 @@ sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
     return ERR_OK;
 }
 
-struct sys_timeouts *sys_arch_timeouts(void)
-{
-    KIRQL OldIrql;
-    PLIST_ENTRY CurrentEntry;
-    thread_t Container;
-    
-    KeAcquireSpinLock(&ThreadListLock, &OldIrql);
-    CurrentEntry = ThreadListHead.Flink;
-    while (CurrentEntry != &ThreadListHead)
-    {
-        Container = CONTAINING_RECORD(CurrentEntry, struct _thread_t, ListEntry);
-        
-        if (Container->ThreadId == KeGetCurrentThread())
-        {
-            KeReleaseSpinLock(&ThreadListLock, OldIrql);
-            return &Container->Timeouts;
-        }
-        
-        CurrentEntry = CurrentEntry->Flink;
-    }
-    KeReleaseSpinLock(&ThreadListLock, OldIrql);
-    
-    Container = ExAllocatePool(NonPagedPool, sizeof(*Container));
-    if (!Container)
-        return SYS_ARCH_NULL;
-    
-    Container->Name[0] = ANSI_NULL;
-    Container->ThreadFunction = NULL;
-    Container->ThreadContext = NULL;
-    Container->Timeouts.next = NULL;
-    Container->ThreadId = KeGetCurrentThread();
-    
-    ExInterlockedInsertHeadList(&ThreadListHead, &Container->ListEntry, &ThreadListLock);
-    
-    return &Container->Timeouts;
-}
-
 VOID
 NTAPI
 LwipThreadMain(PVOID Context)
 {
     thread_t Container = Context;
     KIRQL OldIrql;
-    
-    Container->ThreadId = KeGetCurrentThread();
     
     ExInterlockedInsertHeadList(&ThreadListHead, &Container->ListEntry, &ThreadListLock);
     
@@ -301,14 +276,12 @@ sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize
     thread_t Container;
     NTSTATUS Status;
 
-    Container = ExAllocatePool(NonPagedPool, strlen(name) + sizeof(*Container));
+    Container = ExAllocatePool(NonPagedPool, sizeof(*Container));
     if (!Container)
         return 0;
 
-    strcpy(Container->Name, name);
     Container->ThreadFunction = thread;
     Container->ThreadContext = arg;
-    Container->Timeouts.next = NULL;
 
     Status = PsCreateSystemThread(&Container->Handle,
                                   THREAD_ALL_ACCESS,

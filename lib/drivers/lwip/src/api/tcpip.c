@@ -46,6 +46,7 @@
 #include "lwip/pbuf.h"
 #include "lwip/tcpip.h"
 #include "lwip/init.h"
+#include "lwip/ip.h"
 #include "netif/etharp.h"
 #include "netif/ppp_oe.h"
 

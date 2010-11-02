@@ -1,20 +1,21 @@
 /* ReactOS-Specific lwIP binding header - by Cameron Gutman */
 
 /* Implmentation specific structs */
-typedef KEVENT sys_sem_t;
+typedef struct _sys_sem_t
+{
+    KEVENT Event;
+    int Valid;
+} sys_sem_t;
 
 typedef struct _sys_mbox_t
 {
     KSPIN_LOCK Lock;
     LIST_ENTRY ListHead;
     KEVENT Event;
+    int Valid;
 } sys_mbox_t;
 
-typedef struct _sys_prot_t
-{
-    KSPIN_LOCK Lock;
-    KIRQL OldIrql;
-} sys_prot_t;
+typedef KIRQL sys_prot_t;
 
 typedef u32_t sys_thread_t;
 
@@ -35,10 +36,7 @@ void
 sys_arch_protect(sys_prot_t *lev);
 
 void
-sys_arch_unprotect(sys_prot_t *lev);
-
-void
-sys_arch_decl_protect(sys_prot_t *lev);
+sys_arch_unprotect(sys_prot_t lev);
 
 void
 sys_shutdown(void);
