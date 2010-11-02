@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl _fabs
- 
-.intel_syntax noprefix
 
+#include <reactos/asm.h>
+
+PUBLIC _fabs
+ 
 /* FUNCTIONS ***************************************************************/
+.code
 
 _fabs:
         push    ebp
@@ -47,3 +48,5 @@ _fabs:
         fabs                            // Take the absolute value
         pop     ebp
         ret
+
+END

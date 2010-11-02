@@ -2,29 +2,32 @@
 */
 
 #include "tchar.h"
+#include <reactos/asm.h>
 
-.globl _tcsnlen
+PUBLIC _tcsnlen
+.code
 
 _tcsnlen:
- push  %edi
- mov   0x8(%esp), %edi
- mov   0xC(%esp), %ecx
- xor   %eax, %eax
- test  %ecx, %ecx
- jz    .L1
- mov   %ecx, %edx
+    push edi
+    mov edi, [esp + 8]
+    mov ecx, [esp + 12]
+    xor eax, eax
+    test ecx, ecx
+    jz .L1
+    mov edx, ecx
 
- cld
+    cld
 
- repne _tscas
+    repne _tscas
 
- sete  %al
- sub   %ecx, %edx
- sub   %eax, %edx
- mov   %edx, %eax
+    sete al
+    sub edx, ecx
+    sub edx, eax
+    mov eax, edx
 
 .L1:
- pop   %edi
- ret
+    pop edi
+    ret
 
+END
 /* EOF */

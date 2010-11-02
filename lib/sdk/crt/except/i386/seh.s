@@ -8,24 +8,26 @@
 
 /* INCLUDES ******************************************************************/
 
+#include <reactos/asm.h>
 #include <ndk/asm.h>
-.intel_syntax noprefix
 
 #define DISPOSITION_DISMISS         0
 #define DISPOSITION_CONTINUE_SEARCH 1
 #define DISPOSITION_COLLIDED_UNWIND 3
 
+EXTERN _RtlUnwind@16:PROC
+
 /* GLOBALS *******************************************************************/
 
-.globl __global_unwind2
-.globl __local_unwind2
-.globl __abnormal_termination
-.globl __except_handler2
-.globl __except_handler3
+PUBLIC __global_unwind2
+PUBLIC __local_unwind2
+PUBLIC __abnormal_termination
+PUBLIC __except_handler2
+PUBLIC __except_handler3
 
 /* FUNCTIONS *****************************************************************/
 
-.func unwind_handler
+.code
 _unwind_handler:
 
     /* Check if we were unwinding and continue search if not */
@@ -56,9 +58,8 @@ _unwind_handler:
 
 unwind_handler_return:
     ret
-.endfunc
 
-.func _global_unwind2
+
 __global_unwind2:
 
     /* Create stack and save all registers */
@@ -85,9 +86,8 @@ glu_return:
     mov esp, ebp
     pop ebp
     ret
-.endfunc
 
-.func _abnormal_termination
+
 __abnormal_termination:
 
     /* Assume false */
@@ -112,9 +112,8 @@ __abnormal_termination:
     /* Return */
 ab_return:
     ret
-.endfunc
 
-.func _local_unwind2
+
 __local_unwind2:
 
     /* Save volatiles */
@@ -175,9 +174,8 @@ unwind_return:
     pop esi
     pop ebx
     ret
-.endfunc
 
-.func _except_handler2
+
 __except_handler2:
 
     /* Setup stack and save volatiles */
@@ -256,7 +254,7 @@ except_loop2:
     mov [ebx+12], eax
 
     /* Call except handler */
-    call [edi+ecx*4+8]
+    call dword ptr [edi+ecx*4+8]
 
 except_continue2:
     /* Reload try level and except again */
@@ -297,9 +295,8 @@ except_return2:
     mov esp, ebp
     pop ebp
     ret
-.endfunc
 
-.func _except_handler3
+
 __except_handler3:
 
     /* Setup stack and save volatiles */
@@ -437,4 +434,5 @@ except_return3:
     mov esp, ebp
     pop ebp
     ret
-.endfunc
+
+END

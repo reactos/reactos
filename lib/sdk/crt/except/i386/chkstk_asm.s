@@ -7,8 +7,13 @@
  * PROGRAMER:         KJK::Hyperion <noog@libero.it>
  */
 
-.globl __chkstk
-.globl __alloca_probe
+#include <reactos/asm.h>
+#include <ndk/asm.h>
+#define PAGE_SIZE 4096
+
+PUBLIC __chkstk
+PUBLIC __alloca_probe
+.code
 
 /*
  _chkstk() is called by all stack allocations of more than 4 KB. It grows the
@@ -18,49 +23,50 @@
 __chkstk:
 __alloca_probe:
 
-/* EAX = size to be allocated */
-/* save the ECX register */
- pushl %ecx
+    /* EAX = size to be allocated */
+    /* save the ECX register */
+    push ecx
 
-/* ECX = top of the previous stack frame */
- leal 8(%esp), %ecx
+    /* ECX = top of the previous stack frame */
+    lea eax, [esp + 8]
 
-/* probe the desired memory, page by page */
- cmpl $0x1000, %eax
- jge .l_MoreThanAPage
- jmp .l_LessThanAPage
+    /* probe the desired memory, page by page */
+    cmp eax, PAGE_SIZE
+    jge .l_MoreThanAPage
+    jmp .l_LessThanAPage
 
 .l_MoreThanAPage:
 
-/* raise the top of the stack by a page and probe */
- subl $0x1000, %ecx
- testl %eax, 0(%ecx)
+    /* raise the top of the stack by a page and probe */
+    sub ecx, PAGE_SIZE
+    test [ecx], eax
 
-/* loop if still more than a page must be probed */
- subl $0x1000, %eax
- cmpl $0x1000, %eax
- jge .l_MoreThanAPage
+    /* loop if still more than a page must be probed */
+    sub eax, PAGE_SIZE
+    cmp eax, PAGE_SIZE
+    jge .l_MoreThanAPage
 
 .l_LessThanAPage:
 
-/* raise the top of the stack by EAX bytes (size % 4096) and probe */
- subl %eax, %ecx
- testl %eax, 0(%ecx)
+    /* raise the top of the stack by EAX bytes (size % 4096) and probe */
+    sub ecx, eax
+    test [ecx], eax
 
-/* EAX = top of the stack */
- movl %esp, %eax
+    /* EAX = top of the stack */
+    mov eax, esp
 
-/* allocate the memory */
- movl %ecx, %esp
+    /* allocate the memory */
+    mov esp, ecx
 
-/* restore ECX */
- movl 0(%eax), %ecx
+    /* restore ECX */
+    mov ecx, [eax]
 
-/* restore the return address */
- movl 4(%eax), %eax
- pushl %eax
+    /* restore the return address */
+    mov eax, [eax + 4]
+    push eax
 
-/* return */
- ret
+    /* return */
+    ret
 
 /* EOF */
+END

@@ -8,6 +8,8 @@
  *              25/11/05: Added license header
  */
 
+#ifndef _MSC_VER
+
 #if defined(__GNUC__) && !defined(__clang__)
 #define __int64 long long
 #endif
@@ -49,3 +51,5 @@ char* _strset(char* szToFill, int szFill)
 	}
 	return t;
 }
+
+#endif

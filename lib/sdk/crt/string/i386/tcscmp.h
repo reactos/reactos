@@ -2,33 +2,36 @@
  */
 
 #include "tchar.h"
+#include <reactos/asm.h>
 
-.globl	_tcscmp
+PUBLIC _tcscmp
+.code
 
 _tcscmp:
- push %esi
- push %edi
- mov  0x0C(%esp), %esi
- mov  0x10(%esp), %edi
- xor  %eax, %eax
- cld
+    push esi
+    push edi
+    mov esi, [esp + 12]
+    mov edi, [esp + 16]
+    xor eax, eax
+    cld
 
 .L1:
- _tlods
- _tscas
- jne  .L2
- test %eax, %eax
- jne  .L1
- xor  %eax, %eax
- jmp  .L3
+    _tlods
+    _tscas
+    jne .L2
+    test eax, eax
+    jne .L1
+    xor eax, eax
+    jmp .L3
 
 .L2:
- sbb  %eax, %eax
- or   $1, %al
+    sbb eax, eax
+    or al, 1
 
 .L3:
- pop  %edi
- pop  %esi
- ret
+    pop edi
+    pop esi
+    ret
 
+END
 /* EOF */

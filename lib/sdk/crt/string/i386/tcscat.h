@@ -2,31 +2,34 @@
  */
 
 #include "tchar.h"
+#include <reactos/asm.h>
 
-.globl _tcscat
+PUBLIC _tcscat
+.code
 
 _tcscat:
- push  %esi
- push  %edi
- mov   0x0C(%esp), %edi
- mov   0x10(%esp), %esi
+    push esi
+    push edi
+    mov edi, [esp + 12]
+    mov esi, [esp + 16]
 
- xor   %eax, %eax
- mov   $-1, %ecx
- cld
+    xor eax, eax
+    mov ecx, -1
+    cld
 
- repne _tscas
- _tdec(%edi)
+    repne _tscas
+    _tdec(edi)
 
 .L1:
- _tlods
- _tstos
- test  %_treg(a), %_treg(a)
- jnz   .L1
+    _tlods
+    _tstos
+    test _treg(a), _treg(a)
+    jnz .L1
 
- mov   0x0C(%esp), %eax
- pop   %edi
- pop   %esi
- ret
+    mov eax, [esp + 12]
+    pop edi
+    pop esi
+    ret
 
+END
 /* EOF */

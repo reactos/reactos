@@ -2,26 +2,29 @@
  */
 
 #include "tchar.h"
+#include <reactos/asm.h>
 
-.globl	_tcscpy
+PUBLIC _tcscpy
+.code
 
 _tcscpy:
- push %esi
- push %edi
- mov  0x0C(%esp), %edi
- mov  0x10(%esp), %esi
- cld
+    push esi
+    push edi
+    mov edi, [esp + 12]
+    mov esi, [esp + 16]
+    cld
 
 .L1:
- _tlods
- _tstos
- test %_treg(a), %_treg(a)
- jnz  .L1
+    _tlods
+    _tstos
+    test _treg(a), _treg(a)
+    jnz .L1
 
- mov  0x0C(%esp), %eax
+    mov eax, [esp + 12]
 
- pop  %edi
- pop  %esi
- ret
+    pop edi
+    pop esi
+    ret
 
+END
 /* EOF */

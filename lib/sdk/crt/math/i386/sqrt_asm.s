@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl _sqrt
- 
-.intel_syntax noprefix
 
+#include <reactos/asm.h>
+
+PUBLIC _sqrt
+ 
 /* FUNCTIONS ***************************************************************/
+.code
 
 _sqrt:
         push    ebp
@@ -47,3 +48,5 @@ _sqrt:
         fsqrt                           // Take the square root
         pop     ebp
         ret
+
+END

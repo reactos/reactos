@@ -335,7 +335,6 @@ list(APPEND CRT_SOURCE
     math/i386/ldexp.c
     math/i386/sqrtf.c
     mem/i386/memchr_asm.s
-    mem/i386/memcpy_asm.s
     mem/i386/memmove_asm.s
     mem/i386/memset_asm.s
     string/i386/strcat_asm.s
@@ -516,7 +515,6 @@ endif(ARCH MATCHES i386)
 if(ARCH MATCHES i386)
 list(APPEND LIBCNTPR_SOURCE
     mem/i386/memchr_asm.s
-    mem/i386/memcpy_asm.s
     mem/i386/memmove_asm.s
     mem/i386/memset_asm.s
     string/i386/strcat_asm.s

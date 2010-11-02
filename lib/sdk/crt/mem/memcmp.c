@@ -2,6 +2,8 @@
  * $Id$
  */
 
+#ifndef _MSC_VER
+
 #include <string.h>
 
 int memcmp(const void *s1, const void *s2, size_t n)
@@ -15,3 +17,5 @@ int memcmp(const void *s1, const void *s2, size_t n)
     }
     return 0;
 }
+
+#endif
