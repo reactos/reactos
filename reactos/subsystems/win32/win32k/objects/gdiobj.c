@@ -8,7 +8,7 @@
 
 /** INCLUDES ******************************************************************/
 
-#define GDI_DEBUG
+//#define GDI_DEBUG
 
 #include <win32k.h>
 #define NDEBUG
