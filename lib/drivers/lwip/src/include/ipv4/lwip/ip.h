@@ -50,6 +50,7 @@ extern "C" {
 #define IP_HLEN 20
 
 #define IP_PROTO_ICMP    1
+#define IP_PROTO_IGMP    2
 #define IP_PROTO_UDP     17
 #define IP_PROTO_UDPLITE 136
 #define IP_PROTO_TCP     6
@@ -74,10 +75,10 @@ extern "C" {
    having to change all PCB structs. */
 #define IP_PCB \
   /* ip addresses in network byte order */ \
-  struct ip_addr local_ip; \
-  struct ip_addr remote_ip; \
+  ip_addr_t local_ip; \
+  ip_addr_t remote_ip; \
    /* Socket options */  \
-  u16_t so_options;      \
+  u8_t so_options;      \
    /* Type Of Service */ \
   u8_t tos;              \
   /* Time To Live */     \
@@ -93,16 +94,19 @@ struct ip_pcb {
 /*
  * Option flags per-socket. These are the same like SO_XXX.
  */
-#define SOF_DEBUG       (u16_t)0x0001U    /* turn on debugging info recording */
-#define SOF_ACCEPTCONN  (u16_t)0x0002U    /* socket has had listen() */
-#define SOF_REUSEADDR   (u16_t)0x0004U    /* allow local address reuse */
-#define SOF_KEEPALIVE   (u16_t)0x0008U    /* keep connections alive */
-#define SOF_DONTROUTE   (u16_t)0x0010U    /* just use interface addresses */
-#define SOF_BROADCAST   (u16_t)0x0020U    /* permit to send and to receive broadcast messages (see IP_SOF_BROADCAST option) */
-#define SOF_USELOOPBACK (u16_t)0x0040U    /* bypass hardware when possible */
-#define SOF_LINGER      (u16_t)0x0080U    /* linger on close if data present */
-#define SOF_OOBINLINE   (u16_t)0x0100U    /* leave received OOB data in line */
-#define SOF_REUSEPORT   (u16_t)0x0200U    /* allow local address & port reuse */
+/*#define SOF_DEBUG       (u8_t)0x01U     Unimplemented: turn on debugging info recording */
+#define SOF_ACCEPTCONN    (u8_t)0x02U  /* socket has had listen() */
+#define SOF_REUSEADDR     (u8_t)0x04U  /* allow local address reuse */
+#define SOF_KEEPALIVE     (u8_t)0x08U  /* keep connections alive */
+/*#define SOF_DONTROUTE   (u8_t)0x10U     Unimplemented: just use interface addresses */
+#define SOF_BROADCAST     (u8_t)0x20U  /* permit to send and to receive broadcast messages (see IP_SOF_BROADCAST option) */
+/*#define SOF_USELOOPBACK (u8_t)0x40U     Unimplemented: bypass hardware when possible */
+#define SOF_LINGER        (u8_t)0x80U  /* linger on close if data present */
+/*#define SOF_OOBINLINE   (u16_t)0x0100U     Unimplemented: leave received OOB data in line */
+/*#define SOF_REUSEPORT   (u16_t)0x0200U     Unimplemented: allow local address & port reuse */
+
+/* These flags are inherited (e.g. from a listen-pcb to a connection-pcb): */
+#define SOF_INHERITED   (SOF_REUSEADDR|SOF_KEEPALIVE|SOF_LINGER/*|SOF_DEBUG|SOF_DONTROUTE|SOF_OOBINLINE*/)
 
 
 #ifdef PACK_STRUCT_USE_INCLUDES
@@ -122,13 +126,15 @@ struct ip_hdr {
 #define IP_DF 0x4000        /* dont fragment flag */
 #define IP_MF 0x2000        /* more fragments flag */
 #define IP_OFFMASK 0x1fff   /* mask for fragmenting bits */
-  /* time to live / protocol*/
-  PACK_STRUCT_FIELD(u16_t _ttl_proto);
+  /* time to live */
+  PACK_STRUCT_FIELD(u8_t _ttl);
+  /* protocol*/
+  PACK_STRUCT_FIELD(u8_t _proto);
   /* checksum */
   PACK_STRUCT_FIELD(u16_t _chksum);
   /* source and destination IP addresses */
-  PACK_STRUCT_FIELD(struct ip_addr src);
-  PACK_STRUCT_FIELD(struct ip_addr dest); 
+  PACK_STRUCT_FIELD(ip_addr_p_t src);
+  PACK_STRUCT_FIELD(ip_addr_p_t dest); 
 } PACK_STRUCT_STRUCT;
 PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
@@ -141,37 +147,41 @@ PACK_STRUCT_END
 #define IPH_LEN(hdr) ((hdr)->_len)
 #define IPH_ID(hdr) ((hdr)->_id)
 #define IPH_OFFSET(hdr) ((hdr)->_offset)
-#define IPH_TTL(hdr) (ntohs((hdr)->_ttl_proto) >> 8)
-#define IPH_PROTO(hdr) (ntohs((hdr)->_ttl_proto) & 0xff)
+#define IPH_TTL(hdr) ((hdr)->_ttl)
+#define IPH_PROTO(hdr) ((hdr)->_proto)
 #define IPH_CHKSUM(hdr) ((hdr)->_chksum)
 
 #define IPH_VHLTOS_SET(hdr, v, hl, tos) (hdr)->_v_hl_tos = (htons(((v) << 12) | ((hl) << 8) | (tos)))
 #define IPH_LEN_SET(hdr, len) (hdr)->_len = (len)
 #define IPH_ID_SET(hdr, id) (hdr)->_id = (id)
 #define IPH_OFFSET_SET(hdr, off) (hdr)->_offset = (off)
-#define IPH_TTL_SET(hdr, ttl) (hdr)->_ttl_proto = (htons(IPH_PROTO(hdr) | ((u16_t)(ttl) << 8)))
-#define IPH_PROTO_SET(hdr, proto) (hdr)->_ttl_proto = (htons((proto) | (IPH_TTL(hdr) << 8)))
+#define IPH_TTL_SET(hdr, ttl) (hdr)->_ttl = (u8_t)(ttl)
+#define IPH_PROTO_SET(hdr, proto) (hdr)->_proto = (u8_t)(proto)
 #define IPH_CHKSUM_SET(hdr, chksum) (hdr)->_chksum = (chksum)
 
 /** The interface that provided the packet for the current callback invocation. */
 extern struct netif *current_netif;
 /** Header of the input packet currently being processed. */
 extern const struct ip_hdr *current_header;
+/** Source IP address of current_header */
+extern ip_addr_t current_iphdr_src;
+/** Destination IP address of current_header */
+extern ip_addr_t current_iphdr_dest;
 
 #define ip_init() /* Compatibility define, not init needed. */
-struct netif *ip_route(struct ip_addr *dest);
+struct netif *ip_route(ip_addr_t *dest);
 err_t ip_input(struct pbuf *p, struct netif *inp);
-err_t ip_output(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
+err_t ip_output(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto);
-err_t ip_output_if(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
+err_t ip_output_if(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto,
        struct netif *netif);
 #if LWIP_NETIF_HWADDRHINT
-err_t ip_output_hinted(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
+err_t ip_output_hinted(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto, u8_t *addr_hint);
 #endif /* LWIP_NETIF_HWADDRHINT */
 #if IP_OPTIONS_SEND
-err_t ip_output_if_opt(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
+err_t ip_output_if_opt(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest,
        u8_t ttl, u8_t tos, u8_t proto, struct netif *netif, void *ip_options,
        u16_t optlen);
 #endif /* IP_OPTIONS_SEND */
@@ -183,6 +193,11 @@ err_t ip_output_if_opt(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest
  * This function must only be called from a receive callback (udp_recv,
  * raw_recv, tcp_accept). It will return NULL otherwise. */
 #define ip_current_header() (current_header)
+/** Source IP address of current_header */
+#define ip_current_src_addr()  (&current_iphdr_src)
+/** Destination IP address of current_header */
+#define ip_current_dest_addr() (&current_iphdr_dest)
+
 #if IP_DEBUG
 void ip_debug_print(struct pbuf *p);
 #else

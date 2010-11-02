@@ -48,6 +48,10 @@
 extern "C" {
 #endif
 
+#define NETCONN_SHUT_RD   1
+#define NETCONN_SHUT_WR   2
+#define NETCONN_SHUT_RDWR 3
+
 /* IP addresses and port numbers are expected to be in
  * the same byte order as in the corresponding pcb.
  */
@@ -58,6 +62,8 @@ struct api_msg_msg {
   /** The netconn which to process - always needed: it includes the semaphore
       which is used to block the application thread until the function finished. */
   struct netconn *conn;
+  /** The return value of the function executed in tcpip_thread. */
+  err_t err;
   /** Depending on the executed function, one of these union members is used */
   union {
     /** used for do_send */
@@ -68,12 +74,12 @@ struct api_msg_msg {
     } n;
     /** used for do_bind and do_connect */
     struct {
-      struct ip_addr *ipaddr;
+      ip_addr_t *ipaddr;
       u16_t port;
     } bc;
     /** used for do_getaddr */
     struct {
-      struct ip_addr *ipaddr;
+      ip_addr_t *ipaddr;
       u16_t *port;
       u8_t local;
     } ad;
@@ -85,13 +91,17 @@ struct api_msg_msg {
     } w;
     /** used for do_recv */
     struct {
-      u16_t len;
+      u32_t len;
     } r;
+    /** used for do_close (/shutdown) */
+    struct {
+      u8_t shut;
+    } sd;
 #if LWIP_IGMP
     /** used for do_join_leave_group */
     struct {
-      struct ip_addr *multiaddr;
-      struct ip_addr *interface;
+      ip_addr_t *multiaddr;
+      ip_addr_t *netif_addr;
       enum netconn_igmp join_or_leave;
     } jl;
 #endif /* LWIP_IGMP */
@@ -122,10 +132,10 @@ struct dns_api_msg {
   /** Hostname to query or dotted IP address string */
   const char *name;
   /** Rhe resolved address is stored here */
-  struct ip_addr *addr;
+  ip_addr_t *addr;
   /** This semaphore is posted when the name is resolved, the application thread
       should wait on it. */
-  sys_sem_t sem;
+  sys_sem_t *sem;
   /** Errors are given back here */
   err_t *err;
 };
@@ -142,6 +152,7 @@ void do_recv            ( struct api_msg_msg *msg);
 void do_write           ( struct api_msg_msg *msg);
 void do_getaddr         ( struct api_msg_msg *msg);
 void do_close           ( struct api_msg_msg *msg);
+void do_shutdown        ( struct api_msg_msg *msg);
 #if LWIP_IGMP
 void do_join_leave_group( struct api_msg_msg *msg);
 #endif /* LWIP_IGMP */

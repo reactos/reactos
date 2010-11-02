@@ -26,6 +26,8 @@
  * Author: Simon Goldschmidt
  *
  */
+#ifndef __LWIP_NETDB_H__
+#define __LWIP_NETDB_H__
 
 #include "lwip/opt.h"
 
@@ -33,6 +35,7 @@
 
 #include <stddef.h> /* for size_t */
 
+#include "lwip/inet.h"
 #include "lwip/sockets.h"
 
 /* some rarely used options */
@@ -109,3 +112,5 @@ int lwip_getaddrinfo(const char *nodename,
 #endif /* LWIP_COMPAT_SOCKETS */
 
 #endif /* LWIP_DNS && LWIP_SOCKET */
+
+#endif /* __LWIP_NETDB_H__ */

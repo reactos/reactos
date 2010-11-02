@@ -41,6 +41,9 @@
 extern "C" {
 #endif
 
+typedef void (*netifapi_void_fn)(struct netif *netif);
+typedef err_t (*netifapi_errt_fn)(struct netif *netif);
+
 struct netifapi_msg_msg {
 #if !LWIP_TCPIP_CORE_LOCKING
   sys_sem_t sem;
@@ -49,16 +52,16 @@ struct netifapi_msg_msg {
   struct netif *netif;
   union {
     struct {
-      struct ip_addr *ipaddr;
-      struct ip_addr *netmask;
-      struct ip_addr *gw;
+      ip_addr_t *ipaddr;
+      ip_addr_t *netmask;
+      ip_addr_t *gw;
       void *state;
-      err_t (* init) (struct netif *netif);
-      err_t (* input)(struct pbuf *p, struct netif *netif);
+      netif_init_fn init;
+      netif_input_fn input;
     } add;
     struct {
-      void  (* voidfunc)(struct netif *netif);
-      err_t (* errtfunc)(struct netif *netif);
+      netifapi_void_fn voidfunc;
+      netifapi_errt_fn errtfunc;
     } common;
   } msg;
 };
@@ -71,21 +74,21 @@ struct netifapi_msg {
 
 /* API for application */
 err_t netifapi_netif_add       ( struct netif *netif,
-                                 struct ip_addr *ipaddr,
-                                 struct ip_addr *netmask,
-                                 struct ip_addr *gw,
+                                 ip_addr_t *ipaddr,
+                                 ip_addr_t *netmask,
+                                 ip_addr_t *gw,
                                  void *state,
-                                 err_t (* init)(struct netif *netif),
-                                 err_t (* input)(struct pbuf *p, struct netif *netif) );
+                                 netif_init_fn init,
+                                 netif_input_fn input);
 
 err_t netifapi_netif_set_addr  ( struct netif *netif,
-                                 struct ip_addr *ipaddr,
-                                 struct ip_addr *netmask,
-                                 struct ip_addr *gw );
+                                 ip_addr_t *ipaddr,
+                                 ip_addr_t *netmask,
+                                 ip_addr_t *gw );
 
 err_t netifapi_netif_common    ( struct netif *netif,
-                                 void  (* voidfunc)(struct netif *netif),
-                                 err_t (* errtfunc)(struct netif *netif) );
+                                 netifapi_void_fn voidfunc,
+                                 netifapi_errt_fn errtfunc);
 
 #define netifapi_netif_remove(n)      netifapi_netif_common(n, netif_remove, NULL)
 #define netifapi_netif_set_up(n)      netifapi_netif_common(n, netif_set_up, NULL)

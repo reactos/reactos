@@ -37,6 +37,35 @@
 #include "lwip/pbuf.h"
 #include "lwip/ip_addr.h"
 
+/** Swap the bytes in an u16_t: much like htons() for little-endian */
+#ifndef SWAP_BYTES_IN_WORD
+#if LWIP_PLATFORM_BYTESWAP && (BYTE_ORDER == LITTLE_ENDIAN)
+/* little endian and PLATFORM_BYTESWAP defined */
+#define SWAP_BYTES_IN_WORD(w) LWIP_PLATFORM_HTONS(w)
+#else /* LWIP_PLATFORM_BYTESWAP && (BYTE_ORDER == LITTLE_ENDIAN) */
+/* can't use htons on big endian (or PLATFORM_BYTESWAP not defined)... */
+#define SWAP_BYTES_IN_WORD(w) (((w) & 0xff) << 8) | (((w) & 0xff00) >> 8)
+#endif /* LWIP_PLATFORM_BYTESWAP && (BYTE_ORDER == LITTLE_ENDIAN)*/
+#endif /* SWAP_BYTES_IN_WORD */
+
+/** Split an u32_t in two u16_ts and add them up */
+#ifndef FOLD_U32T
+#define FOLD_U32T(u)          (((u) >> 16) + ((u) & 0x0000ffffUL))
+#endif
+
+#if LWIP_CHECKSUM_ON_COPY
+/** Function-like macro: same as MEMCPY but returns the checksum of copied data
+    as u16_t */
+#ifndef LWIP_CHKSUM_COPY
+#define LWIP_CHKSUM_COPY(dst, src, len) lwip_chksum_copy(dst, src, len)
+#ifndef LWIP_CHKSUM_COPY_ALGORITHM
+#define LWIP_CHKSUM_COPY_ALGORITHM 1
+#endif /* LWIP_CHKSUM_COPY_ALGORITHM */
+#endif /* LWIP_CHKSUM_COPY */
+#else /* LWIP_CHECKSUM_ON_COPY */
+#define LWIP_CHKSUM_COPY_ALGORITHM 0
+#endif /* LWIP_CHECKSUM_ON_COPY */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,13 +73,14 @@ extern "C" {
 u16_t inet_chksum(void *dataptr, u16_t len);
 u16_t inet_chksum_pbuf(struct pbuf *p);
 u16_t inet_chksum_pseudo(struct pbuf *p,
-       struct ip_addr *src, struct ip_addr *dest,
+       ip_addr_t *src, ip_addr_t *dest,
        u8_t proto, u16_t proto_len);
-#if LWIP_UDPLITE
 u16_t inet_chksum_pseudo_partial(struct pbuf *p,
-       struct ip_addr *src, struct ip_addr *dest,
+       ip_addr_t *src, ip_addr_t *dest,
        u8_t proto, u16_t proto_len, u16_t chksum_len);
-#endif
+#if LWIP_CHKSUM_COPY_ALGORITHM
+u16_t lwip_chksum_copy(void *dst, const void *src, u16_t len);
+#endif /* LWIP_CHKSUM_COPY_ALGORITHM */
 
 #ifdef __cplusplus
 }

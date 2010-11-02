@@ -32,8 +32,13 @@
 #ifndef __LWIP_DEF_H__
 #define __LWIP_DEF_H__
 
-/* this might define NULL already */
+/* arch.h might define NULL already */
 #include "lwip/arch.h"
+#include "lwip/opt.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define LWIP_MAX(x , y)  (((x) > (y)) ? (x) : (y))
 #define LWIP_MIN(x , y)  (((x) < (y)) ? (x) : (y))
@@ -42,6 +47,81 @@
 #define NULL ((void *)0)
 #endif
 
+/** Get the absolute difference between 2 u32_t values (correcting overflows)
+ * 'a' is expected to be 'higher' (without overflow) than 'b'. */
+#define LWIP_U32_DIFF(a, b) (((a) >= (b)) ? ((a) - (b)) : (((a) + ((b) ^ 0xFFFFFFFF) + 1))) 
+
+/* Endianess-optimized shifting of two u8_t to create one u16_t */
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define LWIP_MAKE_U16(a, b) ((a << 8) | b)
+#else
+#define LWIP_MAKE_U16(a, b) ((b << 8) | a)
+#endif 
+
+#ifndef LWIP_PLATFORM_BYTESWAP
+#define LWIP_PLATFORM_BYTESWAP 0
+#endif
+
+#ifndef LWIP_PREFIX_BYTEORDER_FUNCS
+/* workaround for naming collisions on some platforms */
+
+#ifdef htons
+#undef htons
+#endif /* htons */
+#ifdef htonl
+#undef htonl
+#endif /* htonl */
+#ifdef ntohs
+#undef ntohs
+#endif /* ntohs */
+#ifdef ntohl
+#undef ntohl
+#endif /* ntohl */
+
+#define htons(x) lwip_htons(x)
+#define ntohs(x) lwip_ntohs(x)
+#define htonl(x) lwip_htonl(x)
+#define ntohl(x) lwip_ntohl(x)
+#endif /* LWIP_PREFIX_BYTEORDER_FUNCS */
+
+#if BYTE_ORDER == BIG_ENDIAN
+#define lwip_htons(x) (x)
+#define lwip_ntohs(x) (x)
+#define lwip_htonl(x) (x)
+#define lwip_ntohl(x) (x)
+#define PP_HTONS(x) (x)
+#define PP_NTOHS(x) (x)
+#define PP_HTONL(x) (x)
+#define PP_NTOHL(x) (x)
+#else /* BYTE_ORDER != BIG_ENDIAN */
+#if LWIP_PLATFORM_BYTESWAP
+#define lwip_htons(x) LWIP_PLATFORM_HTONS(x)
+#define lwip_ntohs(x) LWIP_PLATFORM_HTONS(x)
+#define lwip_htonl(x) LWIP_PLATFORM_HTONL(x)
+#define lwip_ntohl(x) LWIP_PLATFORM_HTONL(x)
+#else /* LWIP_PLATFORM_BYTESWAP */
+u16_t lwip_htons(u16_t x);
+u16_t lwip_ntohs(u16_t x);
+u32_t lwip_htonl(u32_t x);
+u32_t lwip_ntohl(u32_t x);
+#endif /* LWIP_PLATFORM_BYTESWAP */
+
+/* These macros should be calculated by the preprocessor and are used
+   with compile-time constants only (so that there is no little-endian
+   overhead at runtime). */
+#define PP_HTONS(x) ((((x) & 0xff) << 8) | (((x) & 0xff00) >> 8))
+#define PP_NTOHS(x) PP_HTONS(x)
+#define PP_HTONL(x) ((((x) & 0xff) << 24) | \
+                     (((x) & 0xff00) << 8) | \
+                     (((x) & 0xff0000UL) >> 8) | \
+                     (((x) & 0xff000000UL) >> 24))
+#define PP_NTOHL(x) PP_HTONL(x)
+
+#endif /* BYTE_ORDER == BIG_ENDIAN */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __LWIP_DEF_H__ */
 

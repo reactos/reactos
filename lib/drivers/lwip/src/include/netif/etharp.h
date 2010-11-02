@@ -37,7 +37,7 @@
 
 #include "lwip/opt.h"
 
-#if LWIP_ARP /* don't build if not configured for use in lwipopts.h */
+#if LWIP_ARP || LWIP_ETHERNET /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/pbuf.h"
 #include "lwip/ip_addr.h"
@@ -46,10 +46,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef ETH_PAD_SIZE
-#define ETH_PAD_SIZE          0
 #endif
 
 #ifndef ETHARP_HWADDR_LEN
@@ -72,6 +68,7 @@ PACK_STRUCT_END
 #  include "arch/bpstruct.h"
 #endif
 PACK_STRUCT_BEGIN
+/** Ethernet header */
 struct eth_hdr {
 #if ETH_PAD_SIZE
   PACK_STRUCT_FIELD(u8_t padding[ETH_PAD_SIZE]);
@@ -93,6 +90,9 @@ PACK_STRUCT_END
 #  include "arch/bpstruct.h"
 #endif
 PACK_STRUCT_BEGIN
+/** VLAN header inserted between ethernet header and payload
+ * if 'type' in ethernet header is ETHTYPE_VLAN.
+ * See IEEE802.Q */
 struct eth_vlan_hdr {
   PACK_STRUCT_FIELD(u16_t tpid);
   PACK_STRUCT_FIELD(u16_t prio_vid);
@@ -111,11 +111,12 @@ PACK_STRUCT_END
 #  include "arch/bpstruct.h"
 #endif
 PACK_STRUCT_BEGIN
-/** the ARP message */
+/** the ARP message, see RFC 826 ("Packet format") */
 struct etharp_hdr {
   PACK_STRUCT_FIELD(u16_t hwtype);
   PACK_STRUCT_FIELD(u16_t proto);
-  PACK_STRUCT_FIELD(u16_t _hwlen_protolen);
+  PACK_STRUCT_FIELD(u8_t  hwlen);
+  PACK_STRUCT_FIELD(u8_t  protolen);
   PACK_STRUCT_FIELD(u16_t opcode);
   PACK_STRUCT_FIELD(struct eth_addr shwaddr);
   PACK_STRUCT_FIELD(struct ip_addr2 sipaddr);
@@ -139,9 +140,33 @@ PACK_STRUCT_END
 #define ETHTYPE_PPPOEDISC 0x8863  /* PPP Over Ethernet Discovery Stage */
 #define ETHTYPE_PPPOE     0x8864  /* PPP Over Ethernet Session Stage */
 
+/** MEMCPY-like macro to copy to/from struct eth_addr's that are local variables
+ * or known to be 32-bit aligned within the protocol header. */
+#ifndef ETHADDR32_COPY
+#define ETHADDR32_COPY(src, dst)  SMEMCPY(src, dst, ETHARP_HWADDR_LEN)
+#endif
+
+/** MEMCPY-like macro to copy to/from struct eth_addr's that are no local
+ * variables and known to be 16-bit aligned within the protocol header. */
+#ifndef ETHADDR16_COPY
+#define ETHADDR16_COPY(src, dst)  SMEMCPY(src, dst, ETHARP_HWADDR_LEN)
+#endif
+
+#if LWIP_ARP /* don't build if not configured for use in lwipopts.h */
+
 /** ARP message types (opcodes) */
 #define ARP_REQUEST 1
 #define ARP_REPLY   2
+
+/** Define this to 1 and define LWIP_ARP_FILTER_NETIF_FN(pbuf, netif, type)
+ * to a filter function that returns the correct netif when using multiple
+ * netifs on one hardware interface where the netif's low-level receive
+ * routine cannot decide for the correct netif (e.g. when mapping multiple
+ * IP addresses to one hardware interface).
+ */
+#ifndef LWIP_ARP_FILTER_NETIF
+#define LWIP_ARP_FILTER_NETIF 0
+#endif
 
 #if ARP_QUEUEING
 /** struct for queueing outgoing packets for unknown address
@@ -155,38 +180,42 @@ struct etharp_q_entry {
 
 #define etharp_init() /* Compatibility define, not init needed. */
 void etharp_tmr(void);
-s8_t etharp_find_addr(struct netif *netif, struct ip_addr *ipaddr,
-         struct eth_addr **eth_ret, struct ip_addr **ip_ret);
-void etharp_ip_input(struct netif *netif, struct pbuf *p);
-void etharp_arp_input(struct netif *netif, struct eth_addr *ethaddr,
-         struct pbuf *p);
-err_t etharp_output(struct netif *netif, struct pbuf *q, struct ip_addr *ipaddr);
-err_t etharp_query(struct netif *netif, struct ip_addr *ipaddr, struct pbuf *q);
-err_t etharp_request(struct netif *netif, struct ip_addr *ipaddr);
+s8_t etharp_find_addr(struct netif *netif, ip_addr_t *ipaddr,
+         struct eth_addr **eth_ret, ip_addr_t **ip_ret);
+err_t etharp_output(struct netif *netif, struct pbuf *q, ip_addr_t *ipaddr);
+err_t etharp_query(struct netif *netif, ip_addr_t *ipaddr, struct pbuf *q);
+err_t etharp_request(struct netif *netif, ip_addr_t *ipaddr);
 /** For Ethernet network interfaces, we might want to send "gratuitous ARP";
  *  this is an ARP packet sent by a node in order to spontaneously cause other
  *  nodes to update an entry in their ARP cache.
  *  From RFC 3220 "IP Mobility Support for IPv4" section 4.6. */
 #define etharp_gratuitous(netif) etharp_request((netif), &(netif)->ip_addr)
 
-err_t ethernet_input(struct pbuf *p, struct netif *netif);
+#if ETHARP_SUPPORT_STATIC_ENTRIES
+err_t etharp_add_static_entry(ip_addr_t *ipaddr, struct eth_addr *ethaddr);
+err_t etharp_remove_static_entry(ip_addr_t *ipaddr);
+#endif /* ETHARP_SUPPORT_STATIC_ENTRIES */
 
 #if LWIP_AUTOIP
 err_t etharp_raw(struct netif *netif, const struct eth_addr *ethsrc_addr,
                  const struct eth_addr *ethdst_addr,
-                 const struct eth_addr *hwsrc_addr, const struct ip_addr *ipsrc_addr,
-                 const struct eth_addr *hwdst_addr, const struct ip_addr *ipdst_addr,
+                 const struct eth_addr *hwsrc_addr, const ip_addr_t *ipsrc_addr,
+                 const struct eth_addr *hwdst_addr, const ip_addr_t *ipdst_addr,
                  const u16_t opcode);
 #endif /* LWIP_AUTOIP */
+
+#endif /* LWIP_ARP */
+
+err_t ethernet_input(struct pbuf *p, struct netif *netif);
 
 #define eth_addr_cmp(addr1, addr2) (memcmp((addr1)->addr, (addr2)->addr, ETHARP_HWADDR_LEN) == 0)
 
 extern const struct eth_addr ethbroadcast, ethzero;
 
+#endif /* LWIP_ARP || LWIP_ETHERNET */
+
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* LWIP_ARP */
 
 #endif /* __NETIF_ARP_H__ */

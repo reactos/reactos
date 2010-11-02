@@ -66,30 +66,49 @@
 #define DNS_RRCLASS_HS            4     /* Hesiod [Dyer 87] */
 #define DNS_RRCLASS_FLUSH         0x800 /* Flush bit */
 
+/* The size used for the next line is rather a hack, but it prevents including socket.h in all files
+   that include memp.h, and that would possibly break portability (since socket.h defines some types
+   and constants possibly already define by the OS).
+   Calculation rule:
+   sizeof(struct addrinfo) + sizeof(struct sockaddr_in) + DNS_MAX_NAME_LENGTH + 1 byte zero-termination */
+#define NETDB_ELEM_SIZE           (32 + 16 + DNS_MAX_NAME_LENGTH + 1)
+
+#if DNS_LOCAL_HOSTLIST
+/** struct used for local host-list */
+struct local_hostlist_entry {
+  /** static hostname */
+  const char *name;
+  /** static host address in network byteorder */
+  ip_addr_t addr;
+  struct local_hostlist_entry *next;
+};
+#if DNS_LOCAL_HOSTLIST_IS_DYNAMIC
+#ifndef DNS_LOCAL_HOSTLIST_MAX_NAMELEN
+#define DNS_LOCAL_HOSTLIST_MAX_NAMELEN  DNS_MAX_NAME_LENGTH
+#endif
+#define LOCALHOSTLIST_ELEM_SIZE ((sizeof(struct local_hostlist_entry) + DNS_LOCAL_HOSTLIST_MAX_NAMELEN + 1))
+#endif /* DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
+#endif /* DNS_LOCAL_HOSTLIST */
+
 /** Callback which is invoked when a hostname is found.
  * A function of this type must be implemented by the application using the DNS resolver.
  * @param name pointer to the name that was looked up.
- * @param ipaddr pointer to a struct ip_addr containing the IP address of the hostname,
+ * @param ipaddr pointer to an ip_addr_t containing the IP address of the hostname,
  *        or NULL if the name could not be found (or on any other error).
  * @param callback_arg a user-specified callback argument passed to dns_gethostbyname
 */
-typedef void (*dns_found_callback)(const char *name, struct ip_addr *ipaddr, void *callback_arg);
-
+typedef void (*dns_found_callback)(const char *name, ip_addr_t *ipaddr, void *callback_arg);
 
 void           dns_init(void);
-
 void           dns_tmr(void);
-
-void           dns_setserver(u8_t numdns, struct ip_addr *dnsserver);
-
-struct ip_addr dns_getserver(u8_t numdns);
-
-err_t          dns_gethostbyname(const char *hostname, struct ip_addr *addr,
+void           dns_setserver(u8_t numdns, ip_addr_t *dnsserver);
+ip_addr_t      dns_getserver(u8_t numdns);
+err_t          dns_gethostbyname(const char *hostname, ip_addr_t *addr,
                                  dns_found_callback found, void *callback_arg);
 
 #if DNS_LOCAL_HOSTLIST && DNS_LOCAL_HOSTLIST_IS_DYNAMIC
-int            dns_local_removehost(const char *hostname, const struct ip_addr *addr);
-err_t          dns_local_addhost(const char *hostname, const struct ip_addr *addr);
+int            dns_local_removehost(const char *hostname, const ip_addr_t *addr);
+err_t          dns_local_addhost(const char *hostname, const ip_addr_t *addr);
 #endif /* DNS_LOCAL_HOSTLIST && DNS_LOCAL_HOSTLIST_IS_DYNAMIC */
 
 #endif /* LWIP_DNS */

@@ -38,10 +38,14 @@
 #include "lwip/opt.h"
 #include "lwip/snmp.h"
 #include "lwip/snmp_structs.h"
+#include "lwip/ip_addr.h"
+#include "lwip/err.h"
 
 #if LWIP_SNMP
 
 #if SNMP_PRIVATE_MIB
+/* When using a private MIB, you have to create a file 'private_mib.h' that contains
+ * a 'struct mib_array_node mib_private' which contains your MIB. */
 #include "private_mib.h"
 #endif
 
@@ -219,7 +223,7 @@ struct snmp_msg_pstat
   /* lwIP local port (161) binding */
   struct udp_pcb *pcb;
   /* source IP address */
-  struct ip_addr sip;
+  ip_addr_t sip;
   /* source UDP port */
   u16_t sp;
   /* request type */
@@ -258,7 +262,7 @@ struct snmp_msg_trap
   /* lwIP local port (161) binding */
   struct udp_pcb *pcb;
   /* destination IP address in network order */
-  struct ip_addr dip;
+  ip_addr_t dip;
 
   /* source enterprise ID (sysObjectID) */
   struct snmp_obj_id *enterprise;
@@ -286,7 +290,7 @@ extern struct snmp_msg_trap trap_msg;
 /** Agent setup, start listening to port 161. */
 void snmp_init(void);
 void snmp_trap_dst_enable(u8_t dst_idx, u8_t enable);
-void snmp_trap_dst_ip_set(u8_t dst_idx, struct ip_addr *dst);
+void snmp_trap_dst_ip_set(u8_t dst_idx, ip_addr_t *dst);
 
 /** Varbind-list functions. */
 struct snmp_varbind* snmp_varbind_alloc(struct snmp_obj_id *oid, u8_t type, u8_t len);

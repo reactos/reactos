@@ -71,18 +71,26 @@ struct stats_proto {
 };
 
 struct stats_igmp {
-  STAT_COUNTER lenerr;           /* Invalid length error. */
+  STAT_COUNTER xmit;             /* Transmitted packets. */
+  STAT_COUNTER recv;             /* Received packets. */
+  STAT_COUNTER drop;             /* Dropped packets. */
   STAT_COUNTER chkerr;           /* Checksum error. */
-  STAT_COUNTER v1_rxed;          /* */
-  STAT_COUNTER join_sent;        /* */
-  STAT_COUNTER leave_sent;       /* */
-  STAT_COUNTER unicast_query;    /* */
-  STAT_COUNTER report_sent;      /* */
-  STAT_COUNTER report_rxed;      /* */
-  STAT_COUNTER group_query_rxed; /* */
+  STAT_COUNTER lenerr;           /* Invalid length error. */
+  STAT_COUNTER memerr;           /* Out of memory error. */
+  STAT_COUNTER proterr;          /* Protocol error. */
+  STAT_COUNTER rx_v1;            /* Received v1 frames. */
+  STAT_COUNTER rx_group;         /* Received group-specific queries. */
+  STAT_COUNTER rx_general;       /* Received general queries. */
+  STAT_COUNTER rx_report;        /* Received reports. */
+  STAT_COUNTER tx_join;          /* Sent joins. */
+  STAT_COUNTER tx_leave;         /* Sent leaves. */
+  STAT_COUNTER tx_report;        /* Sent reports. */
 };
 
 struct stats_mem {
+#ifdef LWIP_DEBUG
+  const char *name;
+#endif /* LWIP_DEBUG */
   mem_size_t avail;
   mem_size_t used;
   mem_size_t max;
@@ -98,6 +106,7 @@ struct stats_syselem {
 
 struct stats_sys {
   struct stats_syselem sem;
+  struct stats_syselem mutex;
   struct stats_syselem mbox;
 };
 
@@ -139,14 +148,20 @@ struct stats_ {
 
 extern struct stats_ lwip_stats;
 
-#define stats_init() /* Compatibility define, not init needed. */
+void stats_init(void);
 
 #define STATS_INC(x) ++lwip_stats.x
 #define STATS_DEC(x) --lwip_stats.x
-#else
+#define STATS_INC_USED(x, y) do { lwip_stats.x.used += y; \
+                                if (lwip_stats.x.max < lwip_stats.x.used) { \
+                                    lwip_stats.x.max = lwip_stats.x.used; \
+                                } \
+                             } while(0)
+#else /* LWIP_STATS */
 #define stats_init()
 #define STATS_INC(x)
 #define STATS_DEC(x)
+#define STATS_INC_USED(x)
 #endif /* LWIP_STATS */
 
 #if TCP_STATS
@@ -216,11 +231,7 @@ extern struct stats_ lwip_stats;
 #if MEM_STATS
 #define MEM_STATS_AVAIL(x, y) lwip_stats.mem.x = y
 #define MEM_STATS_INC(x) STATS_INC(mem.x)
-#define MEM_STATS_INC_USED(x, y) do { lwip_stats.mem.used += y; \
-                                    if (lwip_stats.mem.max < lwip_stats.mem.used) { \
-                                        lwip_stats.mem.max = lwip_stats.mem.used; \
-                                    } \
-                                 } while(0)
+#define MEM_STATS_INC_USED(x, y) STATS_INC_USED(mem, y)
 #define MEM_STATS_DEC_USED(x, y) lwip_stats.mem.x -= y
 #define MEM_STATS_DISPLAY() stats_display_mem(&lwip_stats.mem, "HEAP")
 #else
@@ -235,11 +246,7 @@ extern struct stats_ lwip_stats;
 #define MEMP_STATS_AVAIL(x, i, y) lwip_stats.memp[i].x = y
 #define MEMP_STATS_INC(x, i) STATS_INC(memp[i].x)
 #define MEMP_STATS_DEC(x, i) STATS_DEC(memp[i].x)
-#define MEMP_STATS_INC_USED(x, i) do { ++lwip_stats.memp[i].used; \
-                                    if (lwip_stats.memp[i].max < lwip_stats.memp[i].used) { \
-                                        lwip_stats.memp[i].max = lwip_stats.memp[i].used; \
-                                    } \
-                                 } while(0)
+#define MEMP_STATS_INC_USED(x, i) STATS_INC_USED(memp[i], 1)
 #define MEMP_STATS_DISPLAY(i) stats_display_memp(&lwip_stats.memp[i], i)
 #else
 #define MEMP_STATS_AVAIL(x, i, y)
@@ -252,10 +259,12 @@ extern struct stats_ lwip_stats;
 #if SYS_STATS
 #define SYS_STATS_INC(x) STATS_INC(sys.x)
 #define SYS_STATS_DEC(x) STATS_DEC(sys.x)
+#define SYS_STATS_INC_USED(x) STATS_INC_USED(sys.x, 1)
 #define SYS_STATS_DISPLAY() stats_display_sys(&lwip_stats.sys)
 #else
 #define SYS_STATS_INC(x)
 #define SYS_STATS_DEC(x)
+#define SYS_STATS_INC_USED(x)
 #define SYS_STATS_DISPLAY()
 #endif
 
@@ -267,7 +276,7 @@ void stats_display_igmp(struct stats_igmp *igmp);
 void stats_display_mem(struct stats_mem *mem, char *name);
 void stats_display_memp(struct stats_mem *mem, int index);
 void stats_display_sys(struct stats_sys *sys);
-#else
+#else /* LWIP_STATS_DISPLAY */
 #define stats_display()
 #define stats_display_proto(proto, name)
 #define stats_display_igmp(igmp)

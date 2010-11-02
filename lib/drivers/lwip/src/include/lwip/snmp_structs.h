@@ -44,6 +44,8 @@
 #include "lwip/snmp.h"
 
 #if SNMP_PRIVATE_MIB
+/* When using a private MIB, you have to create a file 'private_mib.h' that contains
+ * a 'struct mib_array_node mib_private' which contains your MIB. */
 #include "private_mib.h"
 #endif
 
@@ -56,11 +58,15 @@ extern "C" {
 #define MIB_OBJECT_SCALAR 1
 #define MIB_OBJECT_TAB 2
 
+/* MIB access types */
+#define MIB_ACCESS_READ   1
+#define MIB_ACCESS_WRITE  2
+
 /* MIB object access */
-#define MIB_OBJECT_READ_ONLY 0
-#define MIB_OBJECT_READ_WRITE 1
-#define MIB_OBJECT_WRITE_ONLY 2
-#define MIB_OBJECT_NOT_ACCESSIBLE 3
+#define MIB_OBJECT_READ_ONLY      MIB_ACCESS_READ
+#define MIB_OBJECT_READ_WRITE     (MIB_ACCESS_READ | MIB_ACCESS_WRITE)
+#define MIB_OBJECT_WRITE_ONLY     MIB_ACCESS_WRITE
+#define MIB_OBJECT_NOT_ACCESSIBLE 0
 
 /** object definition returned by (get_object_def)() */
 struct obj_def
@@ -109,9 +115,9 @@ struct mib_node
   /** sets object value, only to be called when set_test()  */
   void (*set_value)(struct obj_def *od, u16_t len, void *value);  
   /** One out of MIB_NODE_AR, MIB_NODE_LR or MIB_NODE_EX */
-  const u8_t node_type;
+  u8_t node_type;
   /* array or max list length */
-  const u16_t maxlength;
+  u16_t maxlength;
 };
 
 /** derived node for scalars .0 index */
@@ -122,15 +128,15 @@ typedef struct mib_node mib_scalar_node;
 struct mib_array_node
 {
   /* inherited "base class" members */
-  void (* const get_object_def)(u8_t ident_len, s32_t *ident, struct obj_def *od);
-  void (* const get_value)(struct obj_def *od, u16_t len, void *value);
+  void (*get_object_def)(u8_t ident_len, s32_t *ident, struct obj_def *od);
+  void (*get_value)(struct obj_def *od, u16_t len, void *value);
   u8_t (*set_test)(struct obj_def *od, u16_t len, void *value);
   void (*set_value)(struct obj_def *od, u16_t len, void *value);
 
-  const u8_t node_type;
-  const u16_t maxlength;
+  u8_t node_type;
+  u16_t maxlength;
 
-  /* aditional struct members */
+  /* additional struct members */
   const s32_t *objid;
   struct mib_node* const *nptr;
 };
@@ -174,7 +180,7 @@ struct mib_list_rootnode
   u8_t node_type;
   u16_t maxlength;
 
-  /* aditional struct members */
+  /* additional struct members */
   struct mib_list_node *head;
   struct mib_list_node *tail;
   /* counts list nodes in list  */
@@ -194,8 +200,8 @@ struct mib_external_node
   u8_t node_type;
   u16_t maxlength;
 
-  /* aditional struct members */
-  /** points to an extenal (in memory) record of some sort of addressing
+  /* additional struct members */
+  /** points to an external (in memory) record of some sort of addressing
       information, passed to and interpreted by the funtions below */
   void* addr_inf;
   /** tree levels under this node */
@@ -234,8 +240,8 @@ void noleafs_get_value(struct obj_def *od, u16_t len, void *value);
 u8_t noleafs_set_test(struct obj_def *od, u16_t len, void *value);
 void noleafs_set_value(struct obj_def *od, u16_t len, void *value);
 
-void snmp_oidtoip(s32_t *ident, struct ip_addr *ip);
-void snmp_iptooid(struct ip_addr *ip, s32_t *ident);
+void snmp_oidtoip(s32_t *ident, ip_addr_t *ip);
+void snmp_iptooid(ip_addr_t *ip, s32_t *ident);
 void snmp_ifindextonetif(s32_t ifindex, struct netif **netif);
 void snmp_netiftoifindex(struct netif *netif, s32_t *ifidx);
 

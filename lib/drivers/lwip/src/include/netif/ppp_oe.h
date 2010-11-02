@@ -74,15 +74,17 @@
 
 #if PPPOE_SUPPORT > 0
 
+#include "netif/etharp.h"
+
 #ifdef PACK_STRUCT_USE_INCLUDES
 #  include "arch/bpstruct.h"
 #endif
 PACK_STRUCT_BEGIN
 struct pppoehdr {
-	PACK_STRUCT_FIELD(u8_t vertype);
-	PACK_STRUCT_FIELD(u8_t code);
-	PACK_STRUCT_FIELD(u16_t session);
-	PACK_STRUCT_FIELD(u16_t plen);
+  PACK_STRUCT_FIELD(u8_t vertype);
+  PACK_STRUCT_FIELD(u8_t code);
+  PACK_STRUCT_FIELD(u16_t session);
+  PACK_STRUCT_FIELD(u16_t plen);
 } PACK_STRUCT_STRUCT;
 PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
@@ -94,8 +96,8 @@ PACK_STRUCT_END
 #endif
 PACK_STRUCT_BEGIN
 struct pppoetag {
-	PACK_STRUCT_FIELD(u16_t tag);
-	PACK_STRUCT_FIELD(u16_t len);
+  PACK_STRUCT_FIELD(u16_t tag);
+  PACK_STRUCT_FIELD(u16_t len);
 } PACK_STRUCT_STRUCT;
 PACK_STRUCT_END
 #ifdef PACK_STRUCT_USE_INCLUDES
@@ -103,45 +105,71 @@ PACK_STRUCT_END
 #endif
 
 
-#define PPPOE_STATE_INITIAL	0
-#define PPPOE_STATE_PADI_SENT	1
-#define	PPPOE_STATE_PADR_SENT	2
-#define	PPPOE_STATE_SESSION	3
-#define	PPPOE_STATE_CLOSING	4
+#define PPPOE_STATE_INITIAL   0
+#define PPPOE_STATE_PADI_SENT 1
+#define PPPOE_STATE_PADR_SENT 2
+#define PPPOE_STATE_SESSION   3
+#define PPPOE_STATE_CLOSING   4
 /* passive */
-#define	PPPOE_STATE_PADO_SENT	1
+#define PPPOE_STATE_PADO_SENT 1
 
-#define PPPOE_HEADERLEN	sizeof(struct pppoehdr)
-#define	PPPOE_VERTYPE	0x11	/* VER=1, TYPE = 1 */
+#define PPPOE_HEADERLEN       sizeof(struct pppoehdr)
+#define PPPOE_VERTYPE         0x11    /* VER=1, TYPE = 1 */
 
-#define	PPPOE_TAG_EOL		0x0000		/* end of list */
-#define	PPPOE_TAG_SNAME		0x0101		/* service name */
-#define	PPPOE_TAG_ACNAME	0x0102		/* access concentrator name */
-#define	PPPOE_TAG_HUNIQUE	0x0103		/* host unique */
-#define	PPPOE_TAG_ACCOOKIE	0x0104		/* AC cookie */
-#define	PPPOE_TAG_VENDOR	0x0105		/* vendor specific */
-#define	PPPOE_TAG_RELAYSID	0x0110		/* relay session id */
-#define	PPPOE_TAG_SNAME_ERR	0x0201		/* service name error */
-#define	PPPOE_TAG_ACSYS_ERR	0x0202		/* AC system error */
-#define	PPPOE_TAG_GENERIC_ERR	0x0203		/* gerneric error */
+#define PPPOE_TAG_EOL         0x0000  /* end of list */
+#define PPPOE_TAG_SNAME       0x0101  /* service name */
+#define PPPOE_TAG_ACNAME      0x0102  /* access concentrator name */
+#define PPPOE_TAG_HUNIQUE     0x0103  /* host unique */
+#define PPPOE_TAG_ACCOOKIE    0x0104  /* AC cookie */
+#define PPPOE_TAG_VENDOR      0x0105  /* vendor specific */
+#define PPPOE_TAG_RELAYSID    0x0110  /* relay session id */
+#define PPPOE_TAG_SNAME_ERR   0x0201  /* service name error */
+#define PPPOE_TAG_ACSYS_ERR   0x0202  /* AC system error */
+#define PPPOE_TAG_GENERIC_ERR 0x0203  /* gerneric error */
 
-#define PPPOE_CODE_PADI		0x09		/* Active Discovery Initiation */
-#define	PPPOE_CODE_PADO		0x07		/* Active Discovery Offer */
-#define	PPPOE_CODE_PADR		0x19		/* Active Discovery Request */
-#define	PPPOE_CODE_PADS		0x65		/* Active Discovery Session confirmation */
-#define	PPPOE_CODE_PADT		0xA7		/* Active Discovery Terminate */
+#define PPPOE_CODE_PADI       0x09    /* Active Discovery Initiation */
+#define PPPOE_CODE_PADO       0x07    /* Active Discovery Offer */
+#define PPPOE_CODE_PADR       0x19    /* Active Discovery Request */
+#define PPPOE_CODE_PADS       0x65    /* Active Discovery Session confirmation */
+#define PPPOE_CODE_PADT       0xA7    /* Active Discovery Terminate */
 
 #ifndef ETHERMTU
 #define ETHERMTU 1500
 #endif
 
 /* two byte PPP protocol discriminator, then IP data */
-#define	PPPOE_MAXMTU	(ETHERMTU-PPPOE_HEADERLEN-2)
+#define PPPOE_MAXMTU          (ETHERMTU-PPPOE_HEADERLEN-2)
 
-struct pppoe_softc;
+#ifndef PPPOE_MAX_AC_COOKIE_LEN
+#define PPPOE_MAX_AC_COOKIE_LEN   64
+#endif
+
+struct pppoe_softc {
+  struct pppoe_softc *next;
+  struct netif *sc_ethif;      /* ethernet interface we are using */
+  int sc_pd;                   /* ppp unit number */
+  void (*sc_linkStatusCB)(int pd, int up);
+
+  int sc_state;                /* discovery phase or session connected */
+  struct eth_addr sc_dest;     /* hardware address of concentrator */
+  u16_t sc_session;            /* PPPoE session id */
+
+#ifdef PPPOE_TODO
+  char *sc_service_name;       /* if != NULL: requested name of service */
+  char *sc_concentrator_name;  /* if != NULL: requested concentrator id */
+#endif /* PPPOE_TODO */
+  u8_t sc_ac_cookie[PPPOE_MAX_AC_COOKIE_LEN]; /* content of AC cookie we must echo back */
+  size_t sc_ac_cookie_len;     /* length of cookie data */
+#ifdef PPPOE_SERVER
+  u8_t *sc_hunique;            /* content of host unique we must echo back */
+  size_t sc_hunique_len;       /* length of host unique */
+#endif
+  int sc_padi_retried;         /* number of PADI retries already done */
+  int sc_padr_retried;         /* number of PADR retries already done */
+};
 
 
-void pppoe_init(void);
+#define pppoe_init() /* compatibility define, no initialization needed */
 
 err_t pppoe_create(struct netif *ethif, int pd, void (*linkStatusCB)(int pd, int up), struct pppoe_softc **scptr);
 err_t pppoe_destroy(struct netif *ifp);
@@ -154,7 +182,8 @@ void pppoe_data_input(struct netif *netif, struct pbuf *p);
 
 err_t pppoe_xmit(struct pppoe_softc *sc, struct pbuf *pb);
 
-extern int pppoe_hdrlen;
+/** used in ppp.c */
+#define PPPOE_HDRLEN (sizeof(struct eth_hdr) + PPPOE_HEADERLEN)
 
 #endif /* PPPOE_SUPPORT */
 
