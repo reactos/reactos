@@ -55,6 +55,7 @@ add_library(mingw_wmain crt0_w.c crtexe.c dllargv.c)
 set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
 add_dependencies(mingw_wmain psdk)
 
+add_definitions(-DCRTDLL)
 add_library(mingw_dllmain crtdll.c dllargv.c)
 add_dependencies(mingw_dllmain psdk)
 
