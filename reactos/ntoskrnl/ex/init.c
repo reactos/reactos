@@ -87,6 +87,7 @@ BOOLEAN ExpRealTimeIsUniversal;
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     UNICODE_STRING LinkName;
@@ -198,6 +199,7 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+INIT_FUNCTION
 ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     LARGE_INTEGER SectionSize;
@@ -373,6 +375,7 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+INIT_FUNCTION
 ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
                       OUT PCHAR *ProcessEnvironment)
@@ -593,6 +596,7 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
 ULONG
 NTAPI
+INIT_FUNCTION
 ExComputeTickCountMultiplier(IN ULONG ClockIncrement)
 {
     ULONG MsRemainder = 0, MsIncrement;
@@ -625,6 +629,7 @@ ExComputeTickCountMultiplier(IN ULONG ClockIncrement)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 ExpInitSystemPhase0(VOID)
 {
     /* Initialize EXRESOURCE Support */
@@ -647,6 +652,7 @@ ExpInitSystemPhase0(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 ExpInitSystemPhase1(VOID)
 {
     /* Initialize worker threads */
@@ -684,6 +690,7 @@ ExpInitSystemPhase1(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 ExInitSystem(VOID)
 {
     /* Check the initialization phase */
@@ -709,6 +716,7 @@ ExInitSystem(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLOADER_PARAMETER_EXTENSION Extension;
@@ -734,6 +742,7 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+INIT_FUNCTION
 ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG i = 0;
@@ -826,6 +835,7 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+INIT_FUNCTION
 ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
              IN ULONG PagesToDestroy,
              IN TYPE_OF_MEMORY MemoryType)
@@ -871,6 +881,7 @@ ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 VOID
 NTAPI
+INIT_FUNCTION
 ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -1281,6 +1292,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
 VOID
 NTAPI
+INIT_FUNCTION
 Phase1InitializationDiscard(IN PVOID Context)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlock = Context;
@@ -1899,6 +1911,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(90);
 
     /* Launch initial process */
+    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
 
@@ -1945,6 +1958,7 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Free the boot buffer */
     ExFreePool(InitBuffer);
+    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 }
 
 VOID

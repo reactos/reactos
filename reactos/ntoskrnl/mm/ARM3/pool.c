@@ -177,6 +177,7 @@ MiProtectedPoolRemoveEntryList(IN PLIST_ENTRY Entry)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializeNonPagedPoolThresholds(VOID)
 {
     PFN_NUMBER Size = MmMaximumNonPagedPoolInPages;
@@ -193,6 +194,7 @@ MiInitializeNonPagedPoolThresholds(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializePoolEvents(VOID)
 {
     KIRQL OldIrql;
@@ -267,6 +269,7 @@ MiInitializePoolEvents(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
     ULONG i;

@@ -134,6 +134,7 @@ KdpPrintToLogFile(PCH String,
 
 VOID
 NTAPI
+INIT_FUNCTION
 KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
                 ULONG BootPhase)
 {

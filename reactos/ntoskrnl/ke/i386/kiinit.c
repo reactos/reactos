@@ -33,6 +33,7 @@ ULONGLONG BootCycles, BootCyclesEnd;
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiInitMachineDependent(VOID)
 {
     ULONG CpuCount;
@@ -325,6 +326,7 @@ KiInitMachineDependent(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKIPCR Pcr,
                 IN PKIDTENTRY Idt,
@@ -386,6 +388,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PKTHREAD InitThread,
                    IN PVOID IdleStack,
@@ -607,6 +610,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
 VOID
 FASTCALL
+INIT_FUNCTION
 KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIDTENTRY *Idt,
                          IN PKIPCR *Pcr,
@@ -647,6 +651,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiSystemStartupBootStack(VOID)
 {
     PKTHREAD Thread;
@@ -676,6 +681,7 @@ KiSystemStartupBootStack(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
@@ -689,10 +695,10 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Boot cycles timestamp */
     BootCycles = __rdtsc();
-    
+#if !defined(_X86_)   
     /* Check if we are being booted from FreeLDR */
     if (!((ULONG_PTR)LoaderBlock & 0x80000000)) KiRosPrepareForSystemStartup((PROS_LOADER_PARAMETER_BLOCK)LoaderBlock);
-
+#endif
     /* Save the loader block and get the current CPU */
     KeLoaderBlock = LoaderBlock;
     Cpu = KeNumberProcessors;

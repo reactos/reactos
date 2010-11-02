@@ -231,6 +231,7 @@ MiInitSystemMemoryAreas()
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiDbgDumpAddressSpace(VOID)
 {
     //
@@ -312,6 +313,7 @@ MmMpwThreadMain(PVOID Ignored)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MmInitMpwThread(VOID)
 {
    KPRIORITY Priority;
@@ -343,6 +345,7 @@ MmInitMpwThread(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MmInitBsmThread(VOID)
 {
     NTSTATUS Status;
@@ -366,6 +369,7 @@ MmInitBsmThread(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

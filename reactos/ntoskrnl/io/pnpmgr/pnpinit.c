@@ -44,6 +44,7 @@ IopInitializeArbiters(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PiInitCacheGroupInformation(VOID)
 {
     HANDLE KeyHandle;
@@ -355,6 +356,7 @@ PipCallDriverAddDevice(IN PDEVICE_NODE DeviceNode,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 IopInitializePlugPlayServices(VOID)
 {
     NTSTATUS Status;

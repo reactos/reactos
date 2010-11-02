@@ -39,6 +39,7 @@ MmZeroPageThread(VOID)
     /* FIXME: Get the discardable sections to free them */
 //    MiFindInitializationCode(&StartAddress, &EndAddress);
 //    if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
+    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 
     /* Set our priority to 0 */
     Thread->BasePriority = 0;

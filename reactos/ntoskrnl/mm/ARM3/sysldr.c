@@ -563,6 +563,7 @@ MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                IN PVOID OldBase,
                IN PVOID NewBase,
@@ -1364,6 +1365,7 @@ CheckDllState:
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
@@ -1552,6 +1554,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MiBuildImportsForBootDrivers(VOID)
 {
     PLIST_ENTRY NextEntry, NextEntry2;
@@ -1817,6 +1820,7 @@ MiBuildImportsForBootDrivers(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     ULONG_PTR DllBase;
@@ -1877,6 +1881,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry, NewEntry;

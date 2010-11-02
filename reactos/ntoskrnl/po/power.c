@@ -127,6 +127,7 @@ PopSetSystemPowerState(SYSTEM_POWER_STATE PowerState)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PoInitSystem(IN ULONG BootPhase)
 {
     PVOID NotificationEntry;
@@ -216,6 +217,7 @@ PopIdle0(IN PPROCESSOR_POWER_STATE PowerState)
 
 VOID
 NTAPI
+INIT_FUNCTION
 PoInitializePrcb(IN PKPRCB Prcb)
 {
     /* Initialize the Power State */

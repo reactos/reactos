@@ -33,6 +33,7 @@ MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiComputeNonPagedPoolVa(IN ULONG FreePages)
 {
     IN PFN_NUMBER PoolPages;
@@ -148,6 +149,7 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;

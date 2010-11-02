@@ -72,6 +72,7 @@ PspDeleteJob ( PVOID ObjectBody )
 
 VOID
 NTAPI
+INIT_FUNCTION
 PspInitializeJobStructures(VOID)
 {
     InitializeListHead(&PsJobListHead);

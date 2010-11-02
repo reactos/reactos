@@ -20,12 +20,6 @@ SECTIONS
      __text_end__ = .;
     *(.gcc_except_table)
   }
-  init BLOCK(__section_alignment__) :
-  {
-    __init_start__ = . ;
-    *(init)
-    __init_end__ = . ;
-  }
    /* The Cygwin32 library uses a section to avoid copying certain data
      on fork.  This used to be named ".data".  The linker used
      to include this between __data_start__ and __data_end__, but that
@@ -100,6 +94,12 @@ SECTIONS
   .stabstr BLOCK(__section_alignment__) (NOLOAD) :
   {
     [ .stabstr ]
+  }
+  INIT BLOCK(__section_alignment__) :
+  {
+    __init_start__ = . ;
+    *(INIT)
+    __init_end__ = . ;
   }
 }
 

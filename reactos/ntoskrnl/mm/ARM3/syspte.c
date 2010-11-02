@@ -366,6 +366,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializeSystemPtes(IN PMMPTE StartingPte,
                        IN ULONG NumberOfPtes,
                        IN MMSYSTEM_PTE_POOL_TYPE PoolType)
