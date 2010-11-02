@@ -8,7 +8,6 @@ add_definitions(-Dinline=__inline)
 if(NOT CMAKE_CROSSCOMPILING)
 
 
-
 else()
 
 add_definitions(/GS- /Zl /Zi)
@@ -100,8 +99,7 @@ macro(add_importlib_target _def_file)
     add_custom_target(
         lib${_name}
         COMMAND LINK /LIB /MACHINE:X86 /DEF:${CMAKE_CURRENT_BINARY_DIR}/${_file}.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        DEPENDS ${_def_file}
-    )
+        DEPENDS ${_def_file})
 endmacro()
 
 macro(add_importlibs MODULE)
@@ -117,4 +115,3 @@ file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 set(PSEH_LIB "")
 
 endif()
-
