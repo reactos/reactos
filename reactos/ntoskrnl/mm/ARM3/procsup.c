@@ -190,6 +190,7 @@ MmDeleteTeb(IN PEPROCESS Process,
         ASSERT((Vad->StartingVpn == ((ULONG_PTR)Teb >> PAGE_SHIFT) &&
                (Vad->EndingVpn == (TebEnd >> PAGE_SHIFT))));
         ASSERT(Vad->u.VadFlags.NoChange == TRUE);
+        ASSERT(Vad->u2.VadFlags2.OneSecured == TRUE);
         ASSERT(Vad->u2.VadFlags2.MultipleSecured == FALSE);
 
         /* Lock the working set */
@@ -1169,8 +1170,14 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
     PMM_AVL_TABLE VadTree;
     PETHREAD Thread = PsGetCurrentThread();
     
+    /* Only support this */
+    ASSERT(Process->AddressSpaceInitialized == 2);
+    
     /* Lock the process address space from changes */
     MmLockAddressSpace(&Process->Vm);
+    
+    /* VM is deleted now */
+    Process->VmDeleted = TRUE;
     
     /* Enumerate the VADs */
     VadTree = &Process->VadRoot;
