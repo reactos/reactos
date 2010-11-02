@@ -1427,7 +1427,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       if (!MmIsPagePresent(Process, Address))
       {
          Entry = MmGetPageEntrySectionSegment(Segment, Offset);
-		 DPRINT1("Entry %x\n", Entry);
          HasSwapEntry = MmIsPageSwapEntry(Process, (PVOID)PAddress);
 
          if (PAGE_FROM_SSE(Entry) == 0 || HasSwapEntry)
