@@ -1,9 +1,11 @@
 
 set_unicode()
 
-spec2def(powrprof.dll powrprof.spec)
+add_library(powrprof SHARED powrprof.c powrprof.rc powrprof.def)
 
-add_library(powrprof SHARED powrprof.c powrprof.rc ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
+if(NOT MSVC)
+    set_source_files_properties(powrprof.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(powrprof win32dll)
 

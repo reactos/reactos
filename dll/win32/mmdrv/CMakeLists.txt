@@ -3,8 +3,6 @@ set_unicode()
 
 add_definitions(-DNDEBUG)
 
-spec2def(mmdrv.dll mmdrv.spec)
-
 add_library(mmdrv SHARED
     entry.c
     mme.c
@@ -13,7 +11,11 @@ add_library(mmdrv SHARED
     common.c
     wave.c
     wave_io.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mmdrv.def)
+    mmdrv.def)
+
+if(NOT MSVC)
+    set_source_files_properties(mmdrv.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(mmdrv 0)
 

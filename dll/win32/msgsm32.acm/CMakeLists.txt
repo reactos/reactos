@@ -1,13 +1,15 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-D__WINESRC__)
+add_definitions(
+    -D_DLL -D__USE_CRTIMP
+    -D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(msgsm32.acm msgsm32.acm.spec)
+add_library(msgsm32.acm SHARED msgsm32.c msgsm32.def)
 
-add_library(msgsm32.acm SHARED msgsm32.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msgsm32.def)
+if(NOT MSVC)
+    set_source_files_properties(msgsm32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(msgsm32.acm 0)
 set_target_properties(msgsm32.acm PROPERTIES SUFFIX "")

@@ -6,14 +6,16 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(objsel.dll objsel.spec)
-
 add_library(objsel SHARED
     factory.c
     objsel.c
     regsvr.c
     objsel.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
+    objsel.def)
+
+if(NOT MSVC)
+    set_source_files_properties(objsel.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(objsel win32dll)
 
@@ -27,6 +29,5 @@ add_importlibs(objsel
     advapi32
     kernel32
     ntdll)
-
 
 add_cab_target(objsel 1)

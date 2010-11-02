@@ -1,0 +1,5 @@
+
+LIBRARY mciavi32.dll
+
+EXPORTS
+  DriverProc@20=MCIAVI_DriverProc@20 @1 PRIVATE

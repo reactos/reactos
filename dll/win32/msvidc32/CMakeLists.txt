@@ -1,12 +1,15 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_WINE)
+add_definitions(
+    -D__WINESRC__
+    -D_WINE)
 
-spec2def(msvidc32.dll msvidc32.spec)
+add_library(msvidc32 SHARED msvideo1.c rsrc.rc msvidc32.def)
 
-add_library(msvidc32 SHARED msvideo1.c rsrc.rc ${CMAKE_CURRENT_BINARY_DIR}/msvidc32.def)
+if(NOT MSVC)
+    set_source_files_properties(msvidc32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(msvidc32 win32dll)
 

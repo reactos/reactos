@@ -1,0 +1,5 @@
+
+LIBRARY iccvid.dll
+
+EXPORTS
+  DriverProc@20=ICCVID_DriverProc@20 @1 PRIVATE

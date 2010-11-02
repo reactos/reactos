@@ -1,11 +1,13 @@
 
-spec2def(psapi.dll psapi.spec)
-
 list(APPEND SOURCE
     malloc.c
     psapi.c
     psapi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/psapi.def)
+    psapi.def)
+
+if(NOT MSVC)
+    set_source_files_properties(psapi.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(psapi SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/psapi_precomp.h.gch

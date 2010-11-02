@@ -1,0 +1,6 @@
+
+LIBRARY mmdrv.dll
+
+EXPORTS
+  DriverProc@20 @1
+  wodMessage@20 @2

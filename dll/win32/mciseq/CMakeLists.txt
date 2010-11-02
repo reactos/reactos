@@ -2,10 +2,11 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mciseq.dll mciseq.spec)
+add_library(mciseq SHARED mcimidi.c mciseq.def)
 
-add_library(mciseq SHARED mcimidi.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mciseq.def)
+if(NOT MSVC)
+    set_source_files_properties(mciseq.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(mciseq 0)
 

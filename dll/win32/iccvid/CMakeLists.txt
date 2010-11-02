@@ -1,11 +1,12 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(iccvid.dll iccvid.spec)
+add_library(iccvid SHARED iccvid.c rsrc.rc iccvid.def)
 
-add_library(iccvid SHARED iccvid.c rsrc.rc ${CMAKE_CURRENT_BINARY_DIR}/iccvid.def)
+if(NOT MSVC)
+    set_source_files_properties(iccvid.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(iccvid win32dll)
 

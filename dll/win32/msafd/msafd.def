@@ -1,0 +1,5 @@
+
+LIBRARY msafd.dll
+
+EXPORTS
+  WSPStartup@76 @1

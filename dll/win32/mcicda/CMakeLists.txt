@@ -2,10 +2,11 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(mcicda.dll mcicda.spec)
+add_library(mcicda SHARED mcicda.c mcicda.def)
 
-add_library(mcicda SHARED mcicda.c
-    ${CMAKE_CURRENT_BINARY_DIR}/mcicda.def)
+if(NOT MSVC)
+    set_source_files_properties(mcicda.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(mcicda 0)
 

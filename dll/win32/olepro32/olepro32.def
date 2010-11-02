@@ -1,0 +1,15 @@
+
+LIBRARY olepro32.dll
+
+EXPORTS
+  OleIconToCursor@8=oleaut32.OleIconToCursor @248
+  OleCreatePropertyFrameIndirect@4=oleaut32.OleCreatePropertyFrameIndirect @249
+  OleCreatePropertyFrame@44=oleaut32.OleCreatePropertyFrame @250
+  OleLoadPicture@20=oleaut32.OleLoadPicture @251
+  OleCreatePictureIndirect@16=oleaut32.OleCreatePictureIndirect @252
+  OleCreateFontIndirect@12=oleaut32.OleCreateFontIndirect @253
+  OleTranslateColor@12=oleaut32.OleTranslateColor @254
+  DllCanUnloadNow@0 @255 PRIVATE
+  DllGetClassObject@12 @256 PRIVATE
+  DllRegisterServer@0 @257 PRIVATE
+  DllUnregisterServer@0 @258 PRIVATE

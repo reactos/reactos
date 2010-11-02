@@ -1,0 +1,5 @@
+
+LIBRARY mcicda.dll
+
+EXPORTS
+  DriverProc@20=MCICDA_DriverProc@20 @1 PRIVATE

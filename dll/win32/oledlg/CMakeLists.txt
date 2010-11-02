@@ -2,14 +2,16 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(oledlg.dll oledlg.spec)
-
 add_library(oledlg SHARED
     insobjdlg.c
     oledlg_main.c
     pastespl.c
     rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/oledlg.def)
+    oledlg.def)
+
+if(NOT MSVC)
+    set_source_files_properties(oledlg.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(oledlg win32dll)
 

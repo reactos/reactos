@@ -1,0 +1,16 @@
+
+LIBRARY lz32.dll
+
+EXPORTS
+  CopyLZFile@8=kernel32.CopyLZFile @1
+  GetExpandedNameA@8=kernel32.GetExpandedNameA @2
+  GetExpandedNameW@8=kernel32.GetExpandedNameW @3
+  LZClose@4=kernel32.LZClose @4
+  LZCopy@8=kernel32.LZCopy @5
+  LZDone@0=kernel32.LZDone @6
+  LZInit@4=kernel32.LZInit @7
+  LZOpenFileA@12=kernel32.LZOpenFileA @8
+  LZOpenFileW@12=kernel32.LZOpenFileW @9
+  LZRead@12=kernel32.LZRead @10
+  LZSeek@12=kernel32.LZSeek @11
+  LZStart@0=kernel32.LZStart @12

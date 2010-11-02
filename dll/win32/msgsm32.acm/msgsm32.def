@@ -1,0 +1,5 @@
+
+LIBRARY msgsm32.acm
+
+EXPORTS
+  DriverProc@20=GSM_DriverProc@20 @1 PRIVATE

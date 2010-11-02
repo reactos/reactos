@@ -4,10 +4,11 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(msadp32.acm msadp32.acm.spec)
+add_library(msadp32.acm SHARED msadp32.c msadp32.def)
 
-add_library(msadp32.acm SHARED msadp32.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msadp32.def)
+if(NOT MSVC)
+    set_source_files_properties(msadp32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(msadp32.acm 0)
 set_target_properties(msadp32.acm PROPERTIES SUFFIX "")

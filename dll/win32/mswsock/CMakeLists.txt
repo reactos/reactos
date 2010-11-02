@@ -10,7 +10,11 @@ add_library(mswsock SHARED
     extensions.c
     stubs.c
     mswsock.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)
+    mswsock.def)
+
+if(NOT MSVC)
+    set_source_files_properties(mswsock.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(mswsock win32dll)
 

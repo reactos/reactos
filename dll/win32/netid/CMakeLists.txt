@@ -1,7 +1,9 @@
 
-spec2def(netid.dll netid.spec)
+add_library(netid SHARED netid.c netid.rc netid.def)
 
-add_library(netid SHARED netid.c netid.rc ${CMAKE_CURRENT_BINARY_DIR}/netid.def)
+if(NOT MSVC)
+    set_source_files_properties(netid.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(netid win32dll)
 

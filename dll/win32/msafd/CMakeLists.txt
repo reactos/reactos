@@ -1,10 +1,9 @@
 
 set_unicode()
 
-include_directories(BEFORE include)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
-
-spec2def(msafd.dll msafd.spec)
+include_directories(
+    BEFORE include
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
 list(APPEND SOURCE
     msafd.rc
@@ -13,7 +12,11 @@ list(APPEND SOURCE
     misc/helpers.c
     misc/sndrcv.c
     misc/stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/msafd.def)
+    msafd.def)
+
+if(NOT MSVC)
+    set_source_files_properties(msafd.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(msafd SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/msafd_msafd.h.gch

@@ -2,9 +2,11 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(msimg32.dll msimg32.spec)
+add_library(msimg32 SHARED msimg32_main.c msimg32.def)
 
-add_library(msimg32 SHARED msimg32_main.c ${CMAKE_CURRENT_BINARY_DIR}/msimg32.def)
+if(NOT MSVC)
+    set_source_files_properties(msimg32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(msimg32 win32dll)
 
