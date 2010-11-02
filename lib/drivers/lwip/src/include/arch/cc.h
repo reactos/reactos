@@ -17,7 +17,7 @@ free(void *mem);
 void *
 realloc(void *mem, size_t size);
 
-#define mem_realloc(_m_, _s_) realloc(_m_, _s_)
+#define mem_trim(_m_, _s_) realloc(_m_, _s_)
 
 /* Unsigned int types */
 typedef unsigned char u8_t;

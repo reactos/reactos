@@ -278,6 +278,11 @@ again when the connection has been idle for a while.
   Aborts the connection by sending a RST (reset) segment to the remote
   host. The pcb is deallocated. This function never fails.
 
+  ATTENTION: When calling this from one of the TCP callbacks, make
+  sure you always return ERR_ABRT (and never return ERR_ABRT otherwise
+  or you will risk accessing deallocated memory or memory leaks!
+
+
 If a connection is aborted because of an error, the application is
 alerted of this event by the err callback. Errors that might abort a
 connection are when there is a shortage of memory. The callback
@@ -476,3 +481,24 @@ to match your application and network.
 For a production release it is recommended to set LWIP_STATS to 0.
 Note that speed performance isn't influenced much by simply setting
 high values to the memory options.
+
+For more optimization hints take a look at the lwIP wiki.
+
+--- Zero-copy MACs
+
+To achieve zero-copy on transmit, the data passed to the raw API must
+remain unchanged until sent. Because the send- (or write-)functions return
+when the packets have been enqueued for sending, data must be kept stable
+after that, too.
+
+This implies that PBUF_RAM/PBUF_POOL pbufs passed to raw-API send functions
+must *not* be reused by the application unless their ref-count is 1.
+
+For no-copy pbufs (PBUF_ROM/PBUF_REF), data must be kept unchanged, too,
+but the stack/driver will/must copy PBUF_REF'ed data when enqueueing, while
+PBUF_ROM-pbufs are just enqueued (as ROM-data is expected to never change).
+
+Also, data passed to tcp_write without the copy-flag must not be changed!
+
+Therefore, be careful which type of PBUF you use and if you copy TCP data
+or not!

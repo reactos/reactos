@@ -5,12 +5,6 @@ FUTURE
     problems with exoteric (/DSP) architectures showing these problems.
     We still have to fix some of these issues neatly.
 
-  * TODO: the PPP code is broken in a few ways. There are namespace
-    collisions on BSD systems and many assumptions on word-length
-    (sizeof(int)). In ppp.c an assumption is made on the availability of
-    a thread subsystem. Either PPP needs to be moved to contrib/ports/???
-    or rearranged to be more generic.
-
 HISTORY
 
 (CVS HEAD)
@@ -19,8 +13,503 @@ HISTORY
 
   ++ New features:
 
+  2010-07-12: Simon Goldschmidt (patch by Stephane Lesage)
+  * ip.c, udp.c/.h, pbuf.h, sockets.c: task #10495: Added support for
+    IP_MULTICAST_LOOP at socket- and raw-API level.
+
+  2010-06-16: Simon Goldschmidt
+  * ip.c: Added an optional define (LWIP_IP_ACCEPT_UDP_PORT) that can allow
+    link-layer-addressed UDP traffic to be received while a netif is down (just
+    like DHCP during configuration)
+
+  2010-05-22: Simon Goldschmidt
+  * many many files: bug #27352: removed packing from ip_addr_t, the packed
+    version is now only used in protocol headers. Added global storage for
+    current src/dest IP address while in input functions.
+
+  2010-05-16: Simon Goldschmidt
+  * def.h: task #10391: Add preprocessor-macros for compile-time htonl
+    calculation (and use them throughout the stack where applicable)
+
+  2010-05-16: Simon Goldschmidt
+  * opt.h, memp_std.h, memp.c, ppp_oe.h/.c: PPPoE now uses its own MEMP pool
+    instead of the heap (moved struct pppoe_softc from ppp_oe.c to ppp_oe.h)
+
+  2010-05-16: Simon Goldschmidt
+  * opt.h, memp_std.h, dns.h/.c: DNS_LOCAL_HOSTLIST_IS_DYNAMIC uses its own
+    MEMP pool instead of the heap
+
+  2010-05-13: Simon Goldschmidt
+  * tcp.c, udp.c: task #6995: Implement SO_REUSEADDR (correctly), added
+    new option SO_REUSE_RXTOALL to pass received UDP broadcast/multicast
+    packets to more than one pcb.
+
+  2010-05-02: Simon Goldschmidt
+  * netbuf.h/.c, sockets.c, api_msg.c: use checksum-on-copy for sending
+    UDP data for LWIP_NETIF_TX_SINGLE_PBUF==1
+
+  2010-04-30: Simon Goldschmidt
+  * udp.h/.c, pbuf.h/.c: task #6849: added udp_send(_to/_if) functions that
+    take a precalculated checksum, added pbuf_fill_chksum() to copy data
+    into a pbuf and at the same time calculating the checksum for that data
+
+  2010-04-29: Simon Goldschmidt
+  * ip_addr.h, etharp.h/.c, autoip.c: Create overridable macros for copying
+    2-byte-aligned IP addresses and MAC addresses
+
+  2010-04-28: Patch by Bill Auerbach
+  * ip.c: Inline generating IP checksum to save a function call
+
+  2010-04-14: Simon Goldschmidt
+  * tcpip.h/.c, timers.c: Added an overridable define to get informed when the
+    tcpip_thread processes messages or timeouts to implement a watchdog.
+
+  2010-03-28: Simon Goldschmidt
+  * ip_frag.c: create a new (contiguous) PBUF_RAM for every outgoing
+    fragment if LWIP_NETIF_TX_SINGLE_PBUF==1
+
+  2010-03-27: Simon Goldschmidt
+  * etharp.c: Speedup TX by moving code from find_entry to etharp_output/
+    etharp_query to prevent unnecessary function calls (inspired by
+    patch #7135).
+
+  2010-03-20: Simon Goldschmidt
+  * opt.h, tcpip.c/.h: Added an option to disable tcpip_(un)timeout code
+    since the linker cannot do this automatically to save space.
+
+  2010-03-20: Simon Goldschmidt
+  * opt.h, etharp.c/.h: Added support for static ARP table entries
+
+  2010-03-14: Simon Goldschmidt
+  * tcp_impl.h, tcp_out.c, inet_chksum.h/.c: task #6849: Calculate checksum
+    when creating TCP segments, not when (re-)transmitting them.
+
+  2010-03-07: Simon Goldschmidt
+  * sockets.c: bug #28775 (select/event_callback: only check select_cb_list
+    on change) plus use SYS_LIGHTWEIGHT_PROT to protect the select code.
+    This should speed up receiving data on sockets as the select code in
+    event_callback is only executed when select is waiting.
+
+  2010-03-06: Simon Goldschmidt
+  * tcp_out.c: task #7013 (Create option to have all packets delivered to
+    netif->output in one piece): Always copy to try to create single pbufs
+    in tcp_write.
+
+  2010-03-06: Simon Goldschmidt
+  * api.h, api_lib.c, sockets.c: task #10167 (sockets: speed up TCP recv
+    by not allocating a netbuf): added function netconn_recv_tcp_pbuf()
+    for tcp netconns to receive pbufs, not netbufs; use that function
+    for tcp sockets.
+
+  2010-03-05: Jakob Ole Stoklundsen / Simon Goldschmidt
+  * opt.h, tcp.h, tcp_impl.h, tcp.c, tcp_in.c, tcp_out.c: task #7040:
+    Work on tcp_enqueue: Don't waste memory when chaining segments,
+    added option TCP_OVERSIZE to prevent creating many small pbufs when
+    calling tcp_write with many small blocks of data. Instead, pbufs are
+    allocated larger than needed and the space is used for later calls to
+    tcp_write.
+
+  2010-02-21: Simon Goldschmidt
+  * stats.c/.h: Added const char* name to mem- and memp-stats for easier
+    debugging.
+
+  2010-02-21: Simon Goldschmidt
+  * tcp.h (and usages), added tcp_impl.h: Splitted API and internal
+    implementation of tcp to make API usage cleare to application programmers
+
+  2010-02-14: Simon Goldschmidt/Stephane Lesage
+  * ip_addr.h: Improved some defines working on ip addresses, added faster
+    macro to copy addresses that cannot be NULL
+
+  2010-02-13: Simon Goldschmidt
+  * api.h, api_lib.c, api_msg.c, sockets.c: task #7865 (implement non-
+    blocking send operation)
+
+  2010-02-12: Simon Goldschmidt
+  * sockets.c/.h: Added a minimal version of posix fctl() to have a
+    standardised way to set O_NONBLOCK for nonblocking sockets.
+
+  2010-02-12: Simon Goldschmidt
+  * dhcp.c/.h, autoip.c/.h: task #10139 (Prefer statically allocated
+    memory): added autoip_set_struct() and dhcp_set_struct() to let autoip
+    and dhcp work with user-allocated structs instead of callin mem_malloc
+
+  2010-02-12: Simon Goldschmidt/Jeff Barber
+  * tcp.c/h: patch #6865 (SO_REUSEADDR for TCP): if pcb.so_options has
+    SOF_REUSEADDR set, allow binding to endpoint in TIME_WAIT
+
+  2010-02-12: Simon Goldschmidt
+  * sys layer: task #10139 (Prefer statically allocated memory): converted
+    mbox and semaphore functions to take pointers to sys_mbox_t/sys_sem_t;
+    converted sys_mbox_new/sys_sem_new to take pointers and return err_t;
+    task #7212: Add Mutex concept in sys_arch (define LWIP_COMPAT_MUTEX
+    to let sys.h use binary semaphores instead of mutexes - as before)
+
+  2010-02-09: Simon Goldschmidt (Simon Kallweit)
+  * timers.c/.h: Added function sys_restart_timeouts() from patch #7085
+    (Restart system timeout handling)
+
+  2010-02-09: Simon Goldschmidt
+  * netif.c/.h, removed loopif.c/.h: task #10153 (Integrate loopif into
+    netif.c) - loopif does not have to be created by the port any more,
+    just define LWIP_HAVE_LOOPIF to 1.
+
+  2010-02-08: Simon Goldschmidt
+  * inet.h, ip_addr.c/.h: Added reentrant versions of inet_ntoa/ipaddr_ntoa
+    inet_ntoa_r/ipaddr_ntoa_r
+
+  2010-02-08: Simon Goldschmidt
+  * netif.h: Added netif_s/get_igmp_mac_filter() macros
+
+  2010-02-05: Simon Goldschmidt
+  * netif.h: Added function-like macros to get/set the hostname on a netif
+
+  2010-02-04: Simon Goldschmidt
+  * nearly every file: Replaced struct ip_addr by typedef ip_addr_t to
+    make changing the actual implementation behind the typedef easier.
+
+  2010-02-01: Simon Goldschmidt
+  * opt.h, memp_std.h, dns.h, netdb.c, memp.c: Let netdb use a memp pool
+    for allocating memory when getaddrinfo() is called.
+
+  2010-01-31: Simon Goldschmidt
+  * dhcp.h, dhcp.c: Reworked the code that parses DHCP options: parse
+    them once instead of parsing for every option. This also removes
+    the need for mem_malloc from dhcp_recv and makes it possible to
+    correctly retrieve the BOOTP file.
+
+  2010-01-30: simon Goldschmidt
+  * sockets.c: Use SYS_LIGHTWEIGHT_PROT instead of a semaphore to protect
+    the sockets array.
+
+  2010-01-29: Simon Goldschmidt (patch by Laura Garrett)
+  * api.h, api_msg.c, sockets.c: Added except set support in select
+    (patch #6860)
+
+  2010-01-29: Simon Goldschmidt (patch by Laura Garrett)
+  * api.h, sockets.h, err.h, api_lib.c, api_msg.c, sockets.c, err.c:
+    Add non-blocking support for connect (partly from patch #6860),
+    plus many cleanups in socket & netconn API.
+
+  2010-01-27: Simon Goldschmidt
+  * opt.h, tcp.h, init.c, api_msg.c: Added TCP_SNDQUEUELOWAT corresponding
+    to TCP_SNDLOWAT and added tcp_sndqueuelen() - this fixes bug #28605
+
+  2010-01-26: Simon Goldschmidt
+  * snmp: Use memp pools for snmp instead of the heap; added 4 new pools.
+
+  2010-01-14: Simon Goldschmidt
+  * ppp.c/.h: Fixed bug #27856: PPP: Set netif link- and status-callback
+    by adding ppp_set_netif_statuscallback()/ppp_set_netif_linkcallback()
+
+  2010-01-13: Simon Goldschmidt
+  * mem.c: The heap now may be moved to user-defined memory by defining
+    LWIP_RAM_HEAP_POINTER as a void pointer to that memory's address
+    (patch #6966 and bug #26133)
+
+  2010-01-10: Simon Goldschmidt (Bill Auerbach)
+  * opt.h, memp.c: patch #6822 (Add option to place memory pools in
+    separate arrays)
+
+  2010-01-10: Simon Goldschmidt
+  * init.c, igmp.c: patch #6463 (IGMP - Adding Random Delay): added define
+    LWIP_RAND() for lwip-wide randomization (to be defined in cc.h)
+
+  2009-12-31: Simon Goldschmidt
+  * tcpip.c, init.c, memp.c, sys.c, memp_std.h, sys.h, tcpip.h
+    added timers.c/.h: Separated timer implementation from semaphore/mbox
+    implementation, moved timer implementation to timers.c/.h, timers are
+    now only called from tcpip_thread or by explicitly checking them.
+    (TASK#7235)
+
+  2009-12-27: Simon Goldschmidt
+  * opt.h, etharp.h/.c, init.c, tcpip.c: Added an additional option
+    LWIP_ETHERNET to support ethernet without ARP (necessary for pure PPPoE)
+
 
   ++ Bugfixes:
+
+  2010-07-16: Kieran Mansley
+  * msg_in.c: Fixed SNMP ASN constant defines to not use ! operator 
+
+  2010-07-10: Simon Goldschmidt
+  * ip.c: Fixed bug #30402: CHECKSUM_GEN_IP_INLINE does not add IP options
+
+  2010-06-30: Simon Goldschmidt
+  * api_msg.c: fixed bug #30300 (shutdown parameter was not initialized in
+    netconn_delete)
+
+  2010-06-28: Kieran Mansley
+  * timers.c remove unportable printing of C function pointers
+
+  2010-06-24: Simon Goldschmidt
+  * init.c, timers.c/.h, opt.h, memp_std.h: From patch #7221: added flag
+    NO_SYS_NO_TIMERS to drop timer support for NO_SYS==1 for easier upgrading
+
+  2010-06-24: Simon Goldschmidt
+  * api(_lib).c/.h, api_msg.c/.h, sockets.c/.h: Fixed bug #10088: Correctly
+    implemented shutdown at socket level.
+
+  2010-06-21: Simon Goldschmidt
+  * pbuf.c/.h, ip_frag.c/.h, opt.h, memp_std.h: Fixed bug #29361 (ip_frag has
+    problems with zero-copy DMA MACs) by adding custom pbufs and implementing
+    custom pbufs that reference other (original) pbufs. Additionally set
+    IP_FRAG_USES_STATIC_BUF=0 as default to be on the safe side.
+
+  2010-06-15: Simon Goldschmidt
+  * dhcp.c: Fixed bug #29970: DHCP endian issue parsing option responses
+
+  2010-06-14: Simon Goldschmidt
+  * autoip.c: Fixed bug #30039: AutoIP does not reuse previous addresses
+
+  2010-06-12: Simon Goldschmidt
+  * dhcp.c: Fixed bug #30038: dhcp_network_changed doesn't reset AUTOIP coop
+    state
+
+  2010-05-17: Simon Goldschmidt
+  * netdb.c: Correctly NULL-terminate h_addr_list
+
+  2010-05-16: Simon Goldschmidt
+  * def.h/.c: changed the semantics of LWIP_PREFIX_BYTEORDER_FUNCS to prevent
+    "symbol already defined" i.e. when linking to winsock
+
+  2010-05-05: Simon Goldschmidt
+  * def.h, timers.c: Fixed bug #29769 (sys_check_timeouts: sys_now() may
+    overflow)
+
+  2010-04-21: Simon Goldschmidt
+  * api_msg.c: Fixed bug #29617 (sometime cause stall on delete listening
+    connection)
+
+  2010-03-28: Luca Ceresoli
+  * ip_addr.c/.h: patch #7143: Add a few missing const qualifiers
+
+  2010-03-27: Luca Ceresoli
+  * mib2.c: patch #7130: remove meaningless const qualifiers
+
+  2010-03-26: Simon Goldschmidt
+  * tcp_out.c: Make LWIP_NETIF_TX_SINGLE_PBUF work for TCP, too
+
+  2010-03-26: Simon Goldschmidt
+  * various files: Fixed compiling with different options disabled (TCP/UDP),
+    triggered by bug #29345; don't allocate acceptmbox if LWIP_TCP is disabled
+
+  2010-03-25: Simon Goldschmidt
+  * sockets.c: Fixed bug #29332: lwip_select() processes readset incorrectly
+
+  2010-03-25: Simon Goldschmidt
+  * tcp_in.c, test_tcp_oos.c: Fixed bug #29080: Correctly handle remote side
+    overrunning our rcv_wnd in ooseq case.
+
+  2010-03-22: Simon Goldschmidt
+  * tcp.c: tcp_listen() did not copy the pcb's prio.
+
+  2010-03-19: Simon Goldschmidt
+  * snmp_msg.c: Fixed bug #29256: SNMP Trap address was not correctly set
+
+  2010-03-14: Simon Goldschmidt
+  * opt.h, etharp.h: Fixed bug #29148 (Incorrect PBUF_POOL_BUFSIZE for ports
+    where ETH_PAD_SIZE > 0) by moving definition of ETH_PAD_SIZE to opt.h
+    and basing PBUF_LINK_HLEN on it.
+
+  2010-03-08: Simon Goldschmidt
+  * netif.c, ipv4/ip.c: task #10241 (AutoIP: don't break existing connections
+    when assiging routable address): when checking incoming packets and
+    aborting existing connection on address change, filter out link-local
+    addresses.
+
+  2010-03-06: Simon Goldschmidt
+  * sockets.c: Fixed LWIP_NETIF_TX_SINGLE_PBUF for LWIP_TCPIP_CORE_LOCKING
+
+  2010-03-06: Simon Goldschmidt
+  * ipv4/ip.c: Don't try to forward link-local addresses
+
+  2010-03-06: Simon Goldschmidt
+  * etharp.c: Fixed bug #29087: etharp: don't send packets for LinkLocal-
+    addresses to gw
+
+  2010-03-05: Simon Goldschmidt
+  * dhcp.c: Fixed bug #29072: Correctly set ciaddr based on message-type
+    and state.
+
+  2010-03-05: Simon Goldschmidt
+  * api_msg.c: Correctly set TCP_WRITE_FLAG_MORE when netconn_write is split
+    into multiple calls to tcp_write.    
+
+  2010-02-21: Simon Goldschmidt
+  * opt.h, mem.h, dns.c: task #10140: Remove DNS_USES_STATIC_BUF (keep
+    the implementation of DNS_USES_STATIC_BUF==1)
+
+  2010-02-20: Simon Goldschmidt
+  * tcp.h, tcp.c, tcp_in.c, tcp_out.c: Task #10088: Correctly implement
+    close() vs. shutdown(). Now the application does not get any more
+    recv callbacks after calling tcp_close(). Added tcp_shutdown().
+
+  2010-02-19: Simon Goldschmidt
+  * mem.c/.h, pbuf.c: Renamed mem_realloc() to mem_trim() to prevent
+    confusion with realloc()
+
+  2010-02-15: Simon Goldschmidt/Stephane Lesage
+  * netif.c/.h: Link status does not depend on LWIP_NETIF_LINK_CALLBACK
+    (fixes bug #28899)
+
+  2010-02-14: Simon Goldschmidt
+  * netif.c: Fixed bug #28877 (Duplicate ARP gratuitous packet with
+    LWIP_NETIF_LINK_CALLBACK set on) by only sending if both link- and
+    admin-status of a netif are up
+
+  2010-02-14: Simon Goldschmidt
+  * opt.h: Disable ETHARP_TRUST_IP_MAC by default since it slows down packet
+    reception and is not really necessary
+
+  2010-02-14: Simon Goldschmidt
+  * etharp.c/.h: Fixed ARP input processing: only add a new entry if a
+    request was directed as us (RFC 826, Packet Reception), otherwise
+    only update existing entries; internalized some functions
+
+  2010-02-14: Simon Goldschmidt
+  * netif.h, etharp.c, tcpip.c: Fixed bug #28183 (ARP and TCP/IP cannot be
+    disabled on netif used for PPPoE) by adding a new netif flag
+    (NETIF_FLAG_ETHERNET) that tells the stack the device is an ethernet
+    device but prevents usage of ARP (so that ethernet_input can be used
+    for PPPoE).
+
+  2010-02-12: Simon Goldschmidt
+  * netif.c: netif_set_link_up/down: only do something if the link state
+    actually changes
+
+  2010-02-12: Simon Goldschmidt/Stephane Lesage
+  * api_msg.c: Fixed bug #28865 (Cannot close socket/netconn in non-blocking
+    connect)
+
+  2010-02-12: Simon Goldschmidt
+  * mem.h: Fixed bug #28866 (mem_realloc function defined in mem.h)
+
+  2010-02-09: Simon Goldschmidt
+  * api_lib.c, api_msg.c, sockets.c, api.h, api_msg.h: Fixed bug #22110
+   (recv() makes receive window update for data that wasn't received by
+    application)
+
+  2010-02-09: Simon Goldschmidt/Stephane Lesage
+  * sockets.c: Fixed bug #28853 (lwip_recvfrom() returns 0 on receive time-out
+    or any netconn_recv() error)
+
+  2010-02-09: Simon Goldschmidt
+  * ppp.c: task #10154 (PPP: Update snmp in/out counters for tx/rx packets)
+
+  2010-02-09: Simon Goldschmidt
+  * netif.c: For loopback packets, adjust the stats- and snmp-counters
+    for the loopback netif.
+
+  2010-02-08: Simon Goldschmidt
+  * igmp.c/.h, ip.h: Moved most defines from igmp.h to igmp.c for clarity
+    since they are not used anywhere else.
+
+  2010-02-08: Simon Goldschmidt (Stéphane Lesage)
+  * igmp.c, igmp.h, stats.c, stats.h: Improved IGMP stats
+    (patch from bug #28798)
+
+  2010-02-08: Simon Goldschmidt (Stéphane Lesage)
+  * igmp.c: Fixed bug #28798 (Error in "Max Response Time" processing) and
+    another bug when LWIP_RAND() returns zero.
+
+  2010-02-04: Simon Goldschmidt
+  * nearly every file: Use macros defined in ip_addr.h (some of them new)
+    to work with IP addresses (preparation for bug #27352 - Change ip_addr
+    from struct to typedef (u32_t) - and better code).
+
+  2010-01-31: Simon Goldschmidt
+  * netif.c: Don't call the link-callback from netif_set_up/down() since
+    this invalidly retriggers DHCP.
+
+  2010-01-29: Simon Goldschmidt
+  * ip_addr.h, inet.h, def.h, inet.c, def.c, more: Cleanly separate the
+    portability file inet.h and its contents from the stack: moved htonX-
+    functions to def.h (and the new def.c - they are not ipv4 dependent),
+    let inet.h depend on ip_addr.h and not the other way round.
+    This fixes bug #28732.
+
+  2010-01-28: Kieran Mansley
+  * tcp.c: Ensure ssthresh >= 2*MSS
+
+  2010-01-27: Simon Goldschmidt
+  * tcp.h, tcp.c, tcp_in.c: Fixed bug #27871: Calling tcp_abort() in recv
+    callback can lead to accessing unallocated memory. As a consequence,
+    ERR_ABRT means the application has called tcp_abort()!
+
+  2010-01-25: Simon Goldschmidt
+  * snmp_structs.h, msg_in.c: Partly fixed bug #22070 (MIB_OBJECT_WRITE_ONLY
+    not implemented in SNMP): write-only or not-accessible are still
+    returned by getnext (though not by get)
+
+  2010-01-24: Simon Goldschmidt
+  * snmp: Renamed the private mib node from 'private' to 'mib_private' to
+    not use reserved C/C++ keywords
+
+  2010-01-23: Simon Goldschmidt
+  * sockets.c: Fixed bug #28716: select() returns 0 after waiting for less
+    than 1 ms
+
+  2010-01-21: Simon Goldschmidt
+  * tcp.c, api_msg.c: Fixed bug #28651 (tcp_connect: no callbacks called
+    if tcp_enqueue fails) both in raw- and netconn-API
+
+  2010-01-19: Simon Goldschmidt
+  * api_msg.c: Fixed bug #27316: netconn: Possible deadlock in err_tcp
+
+  2010-01-18: Iordan Neshev/Simon Goldschmidt
+  * src/netif/ppp: reorganised PPP sourcecode to 2.3.11 including some
+    bugfix backports from 2.4.x.
+
+  2010-01-18: Simon Goldschmidt
+  * mem.c: Fixed bug #28679: mem_realloc calculates mem_stats wrong
+
+  2010-01-17: Simon Goldschmidt
+  * api_lib.c, api_msg.c, (api_msg.h, api.h, sockets.c, tcpip.c):
+    task #10102: "netconn: clean up conn->err threading issues" by adding
+    error return value to struct api_msg_msg
+
+  2010-01-17: Simon Goldschmidt
+  * api.h, api_lib.c, sockets.c: Changed netconn_recv() and netconn_accept()
+    to return err_t (bugs #27709 and #28087)
+
+  2010-01-14: Simon Goldschmidt
+  * ...: Use typedef for function prototypes throughout the stack.
+
+  2010-01-13: Simon Goldschmidt
+  * api_msg.h/.c, api_lib.c: Fixed bug #26672 (close connection when receive
+    window = 0) by correctly draining recvmbox/acceptmbox
+
+  2010-01-11: Simon Goldschmidt
+  * pap.c: Fixed bug #13315 (PPP PAP authentication can result in
+    erroneous callbacks) by copying the code from recent pppd
+
+  2010-01-10: Simon Goldschmidt
+  * raw.c: Fixed bug #28506 (raw_bind should filter received packets)
+
+  2010-01-10: Simon Goldschmidt
+  * tcp.h/.c: bug #28127 (remove call to tcp_output() from tcp_ack(_now)())
+
+  2010-01-08: Simon Goldschmidt
+  * sockets.c: Fixed bug #28519 (lwip_recvfrom bug with len > 65535)
+
+  2010-01-08: Simon Goldschmidt
+  * dns.c: Copy hostname for DNS_LOCAL_HOSTLIST_IS_DYNAMIC==1 since string
+    passed to dns_local_addhost() might be volatile
+
+  2010-01-07: Simon Goldschmidt
+  * timers.c, tcp.h: Call tcp_timer_needed() with NO_SYS==1, too
+
+  2010-01-06: Simon Goldschmidt
+  * netdb.h: Fixed bug #28496: missing include guards in netdb.h
+
+  2009-12-31: Simon Goldschmidt
+  * many ppp files: Reorganised PPP source code from ucip structure to pppd
+    structure to easily compare our code against the pppd code (around v2.3.1)
+
+  2009-12-27: Simon Goldschmidt
+  * tcp_in.c: Another fix for bug #28241 (ooseq processing) and adapted
+    unit test
 
 
 (STABLE-1.3.2)

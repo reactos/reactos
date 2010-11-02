@@ -46,7 +46,7 @@ Loading additional MIBs
 
 Large SNMP message support
   The packet decoding and encoding routines are designed
-  to use pbuf-chains. Larger payloads then the minimum
+  to use pbuf-chains. Larger payloads than the minimum
   SNMP requirement of 484 octets are supported if the 
   PBUF_POOL_SIZE and IP_REASS_BUFSIZE are set to match your
   local requirement.
@@ -170,7 +170,7 @@ resembles the "auto-completion" operation)
 
 The middle part is usually located in ROM (const)
 to preserve precious RAM on small microcontrollers.
-However RAM location is possible for an dynamically
+However RAM location is possible for a dynamically
 changing private tree.
 
 The index part is handled by functions which in

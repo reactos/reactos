@@ -55,7 +55,7 @@
 struct snmp_trap_dst
 {
   /* destination IP address in network order */
-  struct ip_addr dip;
+  ip_addr_t dip;
   /* set to 0 when disabled, >0 when enabled */
   u8_t enable;
 };
@@ -92,11 +92,11 @@ snmp_trap_dst_enable(u8_t dst_idx, u8_t enable)
  * @param dst IPv4 address in host order.
  */
 void
-snmp_trap_dst_ip_set(u8_t dst_idx, struct ip_addr *dst)
+snmp_trap_dst_ip_set(u8_t dst_idx, ip_addr_t *dst)
 {
   if (dst_idx < SNMP_TRAP_DESTINATIONS)
   {
-    trap_dst[dst_idx].dip.addr = htonl(dst->addr);
+    ip_addr_set(&trap_dst[dst_idx].dip, dst);
   }
 }
 
@@ -221,23 +221,24 @@ snmp_send_trap(s8_t generic_trap, struct snmp_obj_id *eoid, s32_t specific_trap)
 {
   struct snmp_trap_dst *td;
   struct netif *dst_if;
-  struct ip_addr dst_ip;
+  ip_addr_t dst_ip;
   struct pbuf *p;
   u16_t i,tot_len;
 
   for (i=0, td = &trap_dst[0]; i<SNMP_TRAP_DESTINATIONS; i++, td++)
   {
-    if ((td->enable != 0) && (td->dip.addr != 0))
+    if ((td->enable != 0) && !ip_addr_isany(&td->dip))
     {
       /* network order trap destination */
-      trap_msg.dip.addr = td->dip.addr;
+      ip_addr_copy(trap_msg.dip, td->dip);
       /* lookup current source address for this dst */
       dst_if = ip_route(&td->dip);
-      dst_ip.addr = ntohl(dst_if->ip_addr.addr);
-      trap_msg.sip_raw[0] = dst_ip.addr >> 24;
-      trap_msg.sip_raw[1] = dst_ip.addr >> 16;
-      trap_msg.sip_raw[2] = dst_ip.addr >> 8;
-      trap_msg.sip_raw[3] = dst_ip.addr;
+      ip_addr_copy(dst_ip, dst_if->ip_addr);
+      /* @todo: what about IPv6? */
+      trap_msg.sip_raw[0] = ip4_addr1(&dst_ip);
+      trap_msg.sip_raw[1] = ip4_addr2(&dst_ip);
+      trap_msg.sip_raw[2] = ip4_addr3(&dst_ip);
+      trap_msg.sip_raw[3] = ip4_addr4(&dst_ip);
       trap_msg.gen_trap = generic_trap;
       trap_msg.spc_trap = specific_trap;
       if (generic_trap == SNMP_GENTRAP_ENTERPRISESPC)
@@ -269,11 +270,8 @@ snmp_send_trap(s8_t generic_trap, struct snmp_obj_id *eoid, s32_t specific_trap)
         snmp_inc_snmpouttraps();
         snmp_inc_snmpoutpkts();
 
-        /** connect to the TRAP destination */
-        udp_connect(trap_msg.pcb, &trap_msg.dip, SNMP_TRAP_PORT);
-        udp_send(trap_msg.pcb, p);
-        /** disassociate remote address and port with this pcb */
-        udp_disconnect(trap_msg.pcb);
+        /** send to the TRAP destination */
+        udp_sendto(trap_msg.pcb, p, &trap_msg.dip, SNMP_TRAP_PORT);
 
         pbuf_free(p);
       }
@@ -435,13 +433,13 @@ snmp_varbind_list_sum(struct snmp_varbind_root *root)
     switch (vb->value_type)
     {
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_INTEG):
-        sint_ptr = vb->value;
+        sint_ptr = (s32_t*)vb->value;
         snmp_asn1_enc_s32t_cnt(*sint_ptr, &vb->vlen);
         break;
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_COUNTER):
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_GAUGE):
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_TIMETICKS):
-        uint_ptr = vb->value;
+        uint_ptr = (u32_t*)vb->value;
         snmp_asn1_enc_u32t_cnt(*uint_ptr, &vb->vlen);
         break;
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_OC_STR):
@@ -451,7 +449,7 @@ snmp_varbind_list_sum(struct snmp_varbind_root *root)
         vb->vlen = vb->value_len;
         break;
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_OBJ_ID):
-        sint_ptr = vb->value;
+        sint_ptr = (s32_t*)vb->value;
         snmp_asn1_enc_oid_cnt(vb->value_len / sizeof(s32_t), sint_ptr, &vb->vlen);
         break;
       default:
@@ -649,25 +647,25 @@ snmp_varbind_list_enc(struct snmp_varbind_root *root, struct pbuf *p, u16_t ofs)
     switch (vb->value_type)
     {
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_INTEG):
-        sint_ptr = vb->value;
+        sint_ptr = (s32_t*)vb->value;
         snmp_asn1_enc_s32t(p, ofs, vb->vlen, *sint_ptr);
         break;
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_COUNTER):
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_GAUGE):
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_TIMETICKS):
-        uint_ptr = vb->value;
+        uint_ptr = (u32_t*)vb->value;
         snmp_asn1_enc_u32t(p, ofs, vb->vlen, *uint_ptr);
         break;
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_OC_STR):
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_IPADDR):
       case (SNMP_ASN1_APPLIC | SNMP_ASN1_PRIMIT | SNMP_ASN1_OPAQUE):
-        raw_ptr = vb->value;
+        raw_ptr = (u8_t*)vb->value;
         snmp_asn1_enc_raw(p, ofs, vb->vlen, raw_ptr);
         break;
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_NUL):
         break;
       case (SNMP_ASN1_UNIV | SNMP_ASN1_PRIMIT | SNMP_ASN1_OBJ_ID):
-        sint_ptr = vb->value;
+        sint_ptr = (s32_t*)vb->value;
         snmp_asn1_enc_oid(p, ofs, vb->value_len / sizeof(s32_t), sint_ptr);
         break;
       default:

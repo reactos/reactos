@@ -37,7 +37,8 @@
 #if LWIP_SNMP /* don't build if not configured for use in lwipopts.h */
 
 #include "lwip/snmp_structs.h"
-#include "lwip/mem.h"
+#include "lwip/memp.h"
+#include "lwip/netif.h"
 
 /** .iso.org.dod.internet address prefix, @see snmp_iso_*() */
 const s32_t prefix[4] = {1, 3, 6, 1};
@@ -94,7 +95,7 @@ void
 snmp_ifindextonetif(s32_t ifindex, struct netif **netif)
 {
   struct netif *nif = netif_list;
-  u16_t i, ifidx;
+  s32_t i, ifidx;
 
   ifidx = ifindex - 1;
   i = 0;
@@ -132,18 +133,9 @@ snmp_netiftoifindex(struct netif *netif, s32_t *ifidx)
  * @param ip points to output struct
  */
 void
-snmp_oidtoip(s32_t *ident, struct ip_addr *ip)
+snmp_oidtoip(s32_t *ident, ip_addr_t *ip)
 {
-  u32_t ipa;
-
-  ipa = ident[0];
-  ipa <<= 8;
-  ipa |= ident[1];
-  ipa <<= 8;
-  ipa |= ident[2];
-  ipa <<= 8;
-  ipa |= ident[3];
-  ip->addr = ipa;
+  IP4_ADDR(ip, ident[0], ident[1], ident[2], ident[3]);
 }
 
 /**
@@ -152,15 +144,12 @@ snmp_oidtoip(s32_t *ident, struct ip_addr *ip)
  * @param ident points to s32_t ident[4] output
  */
 void
-snmp_iptooid(struct ip_addr *ip, s32_t *ident)
+snmp_iptooid(ip_addr_t *ip, s32_t *ident)
 {
-  u32_t ipa;
-
-  ipa = ip->addr;
-  ident[0] = (ipa >> 24) & 0xff;
-  ident[1] = (ipa >> 16) & 0xff;
-  ident[2] = (ipa >> 8) & 0xff;
-  ident[3] = ipa & 0xff;
+  ident[0] = ip4_addr1(ip);
+  ident[1] = ip4_addr2(ip);
+  ident[2] = ip4_addr3(ip);
+  ident[3] = ip4_addr4(ip);
 }
 
 struct mib_list_node *
@@ -168,7 +157,7 @@ snmp_mib_ln_alloc(s32_t id)
 {
   struct mib_list_node *ln;
 
-  ln = (struct mib_list_node *)mem_malloc(sizeof(struct mib_list_node));
+  ln = (struct mib_list_node *)memp_malloc(MEMP_SNMP_NODE);
   if (ln != NULL)
   {
     ln->prev = NULL;
@@ -182,7 +171,7 @@ snmp_mib_ln_alloc(s32_t id)
 void
 snmp_mib_ln_free(struct mib_list_node *ln)
 {
-  mem_free(ln);
+  memp_free(MEMP_SNMP_NODE, ln);
 }
 
 struct mib_list_rootnode *
@@ -190,7 +179,7 @@ snmp_mib_lrn_alloc(void)
 {
   struct mib_list_rootnode *lrn;
 
-  lrn = (struct mib_list_rootnode*)mem_malloc(sizeof(struct mib_list_rootnode));
+  lrn = (struct mib_list_rootnode*)memp_malloc(MEMP_SNMP_ROOTNODE);
   if (lrn != NULL)
   {
     lrn->get_object_def = noleafs_get_object_def;
@@ -209,7 +198,7 @@ snmp_mib_lrn_alloc(void)
 void
 snmp_mib_lrn_free(struct mib_list_rootnode *lrn)
 {
-  mem_free(lrn);
+  memp_free(MEMP_SNMP_ROOTNODE, lrn);
 }
 
 /**
@@ -456,7 +445,7 @@ snmp_mib_node_delete(struct mib_list_rootnode *rn, struct mib_list_node *n)
  * @param node points to the root of the tree ('.internet')
  * @param ident_len the length of the supplied object identifier
  * @param ident points to the array of sub identifiers
- * @param np points to the found object instance (rerurn)
+ * @param np points to the found object instance (return)
  * @return pointer to the requested parent (!) node if success, NULL otherwise
  */
 struct mib_node *
@@ -753,7 +742,8 @@ snmp_expand_tree(struct mib_node *node, u8_t ident_len, s32_t *ident, struct snm
 
             LWIP_DEBUGF(SNMP_MIB_DEBUG,("non-leaf node\n"));
             /* non-leaf, store right child ptr and id */
-            j = i + 1;
+            LWIP_ASSERT("i < 0xff", i < 0xff);
+            j = (u8_t)i + 1;
             while ((j < an->maxlength) && (empty_table(an->nptr[j])))
             {
               j++;
@@ -995,7 +985,8 @@ snmp_expand_tree(struct mib_node *node, u8_t ident_len, s32_t *ident, struct snm
 
             LWIP_DEBUGF(SNMP_MIB_DEBUG,("non-leaf node\n"));
             /* non-leaf, store right child ptr and id */
-            j = i + 1;
+            LWIP_ASSERT("i < 0xff", i < 0xff);
+            j = (u8_t)i + 1;
             if (j < len)
             {
               /* right node is the current external node */

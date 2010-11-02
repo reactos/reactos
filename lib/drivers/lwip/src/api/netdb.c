@@ -39,16 +39,18 @@
 
 #include "lwip/err.h"
 #include "lwip/mem.h"
+#include "lwip/memp.h"
 #include "lwip/ip_addr.h"
 #include "lwip/api.h"
+#include "lwip/dns.h"
 
 #include <string.h>
 #include <stdlib.h>
 
 /** helper struct for gethostbyname_r to access the char* buffer */
 struct gethostbyname_r_helper {
-  struct ip_addr *addrs;
-  struct ip_addr addr;
+  ip_addr_t *addrs;
+  ip_addr_t addr;
   char *aliases;
 };
 
@@ -83,13 +85,13 @@ struct hostent*
 lwip_gethostbyname(const char *name)
 {
   err_t err;
-  struct ip_addr addr;
+  ip_addr_t addr;
 
   /* buffer variables for lwip_gethostbyname() */
   HOSTENT_STORAGE struct hostent s_hostent;
   HOSTENT_STORAGE char *s_aliases;
-  HOSTENT_STORAGE struct ip_addr s_hostent_addr;
-  HOSTENT_STORAGE struct ip_addr *s_phostent_addr;
+  HOSTENT_STORAGE ip_addr_t s_hostent_addr;
+  HOSTENT_STORAGE ip_addr_t *s_phostent_addr[2];
 
   /* query host IP address */
   err = netconn_gethostbyname(name, &addr);
@@ -101,11 +103,12 @@ lwip_gethostbyname(const char *name)
 
   /* fill hostent */
   s_hostent_addr = addr;
-  s_phostent_addr = &s_hostent_addr;
+  s_phostent_addr[0] = &s_hostent_addr;
+  s_phostent_addr[1] = NULL;
   s_hostent.h_name = (char*)name;
   s_hostent.h_aliases = &s_aliases;
   s_hostent.h_addrtype = AF_INET;
-  s_hostent.h_length = sizeof(struct ip_addr);
+  s_hostent.h_length = sizeof(ip_addr_t);
   s_hostent.h_addr_list = (char**)&s_phostent_addr;
 
 #if DNS_DEBUG
@@ -126,7 +129,7 @@ lwip_gethostbyname(const char *name)
     u8_t idx;
     for ( idx=0; s_hostent.h_addr_list[idx]; idx++) {
       LWIP_DEBUGF(DNS_DEBUG, ("hostent.h_addr_list[%i]   == %p\n", idx, s_hostent.h_addr_list[idx]));
-      LWIP_DEBUGF(DNS_DEBUG, ("hostent.h_addr_list[%i]-> == %s\n", idx, ip_ntoa(s_hostent.h_addr_list[idx])));
+      LWIP_DEBUGF(DNS_DEBUG, ("hostent.h_addr_list[%i]-> == %s\n", idx, ip_ntoa((ip_addr_t*)s_hostent.h_addr_list[idx])));
     }
   }
 #endif /* DNS_DEBUG */
@@ -211,7 +214,7 @@ lwip_gethostbyname_r(const char *name, struct hostent *ret, char *buf,
   ret->h_name = (char*)hostname;
   ret->h_aliases = &(h->aliases);
   ret->h_addrtype = AF_INET;
-  ret->h_length = sizeof(struct ip_addr);
+  ret->h_length = sizeof(ip_addr_t);
   ret->h_addr_list = (char**)&(h->addrs);
 
   /* set result != NULL */
@@ -235,7 +238,7 @@ lwip_freeaddrinfo(struct addrinfo *ai)
 
   while (ai != NULL) {
     next = ai->ai_next;
-    mem_free(ai);
+    memp_free(MEMP_NETDB, ai);
     ai = next;
   }
 }
@@ -264,7 +267,7 @@ lwip_getaddrinfo(const char *nodename, const char *servname,
        const struct addrinfo *hints, struct addrinfo **res)
 {
   err_t err;
-  struct ip_addr addr;
+  ip_addr_t addr;
   struct addrinfo *ai;
   struct sockaddr_in *sa = NULL;
   int port_nr = 0;
@@ -296,7 +299,7 @@ lwip_getaddrinfo(const char *nodename, const char *servname,
     }
   } else {
     /* service location specified, use loopback address */
-    addr.addr = htonl(INADDR_LOOPBACK);
+    ip_addr_set_loopback(&addr);
   }
 
   total_size = sizeof(struct addrinfo) + sizeof(struct sockaddr_in);
@@ -305,17 +308,20 @@ lwip_getaddrinfo(const char *nodename, const char *servname,
     LWIP_ASSERT("namelen is too long", (namelen + 1) <= (mem_size_t)-1);
     total_size += namelen + 1;
   }
-  ai = mem_malloc(total_size);
+  /* If this fails, please report to lwip-devel! :-) */
+  LWIP_ASSERT("total_size <= NETDB_ELEM_SIZE: please report this!",
+    total_size <= NETDB_ELEM_SIZE);
+  ai = (struct addrinfo *)memp_malloc(MEMP_NETDB);
   if (ai == NULL) {
     goto memerr;
   }
   memset(ai, 0, total_size);
   sa = (struct sockaddr_in*)((u8_t*)ai + sizeof(struct addrinfo));
   /* set up sockaddr */
-  sa->sin_addr.s_addr = addr.addr;
+  inet_addr_from_ipaddr(&sa->sin_addr, &addr);
   sa->sin_family = AF_INET;
   sa->sin_len = sizeof(struct sockaddr_in);
-  sa->sin_port = htons(port_nr);
+  sa->sin_port = htons((u16_t)port_nr);
 
   /* set up addrinfo */
   ai->ai_family = AF_INET;
@@ -338,7 +344,7 @@ lwip_getaddrinfo(const char *nodename, const char *servname,
   return 0;
 memerr:
   if (ai != NULL) {
-    mem_free(ai);
+    memp_free(MEMP_NETDB, ai);
   }
   return EAI_MEMORY;
 }

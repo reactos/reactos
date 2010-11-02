@@ -8,6 +8,10 @@
 #define MEM_LIBC_MALLOC                 1
 #define MEMP_MEM_MALLOC                 1
 
+/* Define LWIP_COMPAT_MUTEX if the port has no mutexes and binary semaphores
+ should be used instead */
+#define LWIP_COMPAT_MUTEX               1
+
 #define MEM_ALIGNMENT                   4
 
 #define LWIP_ARP                        0

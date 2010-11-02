@@ -49,11 +49,12 @@
 #include "lwip/ip.h"
 #include "lwip/raw.h"
 #include "lwip/udp.h"
-#include "lwip/tcp.h"
+#include "lwip/tcp_impl.h"
 #include "lwip/snmp_msg.h"
 #include "lwip/autoip.h"
 #include "lwip/igmp.h"
 #include "lwip/dns.h"
+#include "lwip/timers.h"
 #include "netif/etharp.h"
 
 /* Compile-time sanity checks for configuration errors.
@@ -80,11 +81,11 @@
 #if (!LWIP_UDP && LWIP_IGMP)
   #error "If you want to use IGMP, you have to define LWIP_UDP=1 in your lwipopts.h"
 #endif
+#if (!LWIP_UDP && LWIP_SNMP)
+  #error "If you want to use SNMP, you have to define LWIP_UDP=1 in your lwipopts.h"
+#endif
 #if (!LWIP_UDP && LWIP_DNS)
   #error "If you want to use DNS, you have to define LWIP_UDP=1 in your lwipopts.h"
-#endif
-#if (LWIP_ARP && (ARP_TABLE_SIZE > 0x7f))
-  #error "If you want to use ARP, ARP_TABLE_SIZE must fit in an s8_t, so, you have to reduce it in your lwipopts.h"
 #endif
 #if (LWIP_ARP && ARP_QUEUEING && (MEMP_NUM_ARP_QUEUE<=0))
   #error "If you want to use ARP Queueing, you have to define MEMP_NUM_ARP_QUEUE>=1 in your lwipopts.h"
@@ -113,9 +114,6 @@
 #if (LWIP_IGMP && (MEMP_NUM_IGMP_GROUP<=1))
   #error "If you want to use IGMP, you have to define MEMP_NUM_IGMP_GROUP>1 in your lwipopts.h"
 #endif
-#if (PPP_SUPPORT && (NO_SYS==1))
-  #error "If you want to use PPP, you have to define NO_SYS=0 in your lwipopts.h"
-#endif 
 #if (LWIP_NETIF_API && (NO_SYS==1))
   #error "If you want to use NETIF API, you have to define NO_SYS=0 in your lwipopts.h"
 #endif
@@ -147,7 +145,7 @@
   #error "One and exactly one of LWIP_EVENT_API and LWIP_CALLBACK_API has to be enabled in your lwipopts.h"
 #endif
 /* There must be sufficient timeouts, taking into account requirements of the subsystems. */
-#if ((NO_SYS==0) && (MEMP_NUM_SYS_TIMEOUT < (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_SUPPORT)))
+#if LWIP_TIMERS && (MEMP_NUM_SYS_TIMEOUT < (LWIP_TCP + IP_REASSEMBLY + LWIP_ARP + (2*LWIP_DHCP) + LWIP_AUTOIP + LWIP_IGMP + LWIP_DNS + PPP_SUPPORT))
   #error "MEMP_NUM_SYS_TIMEOUT is too low to accomodate all required timeouts"
 #endif
 #if (IP_REASSEMBLY && (MEMP_NUM_REASSDATA > IP_REASS_MAX_PBUFS))
@@ -171,6 +169,21 @@
 #if PPP_SUPPORT && !PPPOS_SUPPORT & !PPPOE_SUPPORT
   #error "PPP_SUPPORT needs either PPPOS_SUPPORT or PPPOE_SUPPORT turned on"
 #endif
+#if !LWIP_ETHERNET && (LWIP_ARP || PPPOE_SUPPORT)
+  #error "LWIP_ETHERNET needs to be turned on for LWIP_ARP or PPPOE_SUPPORT"
+#endif
+#if LWIP_IGMP && !defined(LWIP_RAND)
+  #error "When using IGMP, LWIP_RAND() needs to be defined to a random-function returning an u32_t random value"
+#endif
+#if LWIP_TCPIP_CORE_LOCKING_INPUT && !LWIP_TCPIP_CORE_LOCKING
+  #error "When using LWIP_TCPIP_CORE_LOCKING_INPUT, LWIP_TCPIP_CORE_LOCKING must be enabled, too"
+#endif
+#if LWIP_TCP && LWIP_NETIF_TX_SINGLE_PBUF && !TCP_OVERSIZE
+  #error "LWIP_NETIF_TX_SINGLE_PBUF needs TCP_OVERSIZE enabled to create single-pbuf TCP packets"
+#endif
+#if IP_FRAG && IP_FRAG_USES_STATIC_BUF && LWIP_NETIF_TX_SINGLE_PBUF
+  #error "LWIP_NETIF_TX_SINGLE_PBUF does not work with IP_FRAG_USES_STATIC_BUF==1 as that creates pbuf queues"
+#endif
 
 
 /* Compile-time checks for deprecated options.
@@ -193,11 +206,6 @@
 #ifdef ETHARP_ALWAYS_INSERT
   #error "ETHARP_ALWAYS_INSERT option is deprecated. Remove it from your lwipopts.h."
 #endif
-#if SO_REUSE
-/* I removed the lot since this was an ugly hack. It broke the raw-API.
-   It also came with many ugly goto's, Christiaan Simons. */
-  #error "SO_REUSE currently unavailable, this was a hack"
-#endif
 
 #ifdef LWIP_DEBUG
 static void
@@ -215,13 +223,28 @@ lwip_sanity_check(void)
     LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SND_BUF must be at least as much as (2 * TCP_MSS) for things to work smoothly\n"));
   if (TCP_SND_QUEUELEN < (2 * (TCP_SND_BUF/TCP_MSS)))
     LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SND_QUEUELEN must be at least as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work\n"));
-  if (TCP_SNDLOWAT > TCP_SND_BUF)
-    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SNDLOWAT must be less than or equal to TCP_SND_BUF.\n"));
+  if (TCP_SNDLOWAT >= TCP_SND_BUF)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SNDLOWAT must be less than TCP_SND_BUF.\n"));
+  if (TCP_SNDQUEUELOWAT >= TCP_SND_QUEUELEN)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_SNDQUEUELOWAT must be less than TCP_SND_QUEUELEN.\n"));
   if (TCP_WND > (PBUF_POOL_SIZE*PBUF_POOL_BUFSIZE))
     LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_WND is larger than space provided by PBUF_POOL_SIZE*PBUF_POOL_BUFSIZE\n"));
   if (TCP_WND < TCP_MSS)
     LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: TCP_WND is smaller than MSS\n"));
 #endif /* LWIP_TCP */
+#if LWIP_SOCKET
+  /* Check that the SO_* socket options and SOF_* lwIP-internal flags match */
+  if (SO_ACCEPTCONN != SOF_ACCEPTCONN)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_ACCEPTCONN != SOF_ACCEPTCONN\n"));
+  if (SO_REUSEADDR != SOF_REUSEADDR)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_REUSEADDR != SOF_REUSEADDR\n"));
+  if (SO_KEEPALIVE != SOF_KEEPALIVE)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_KEEPALIVE != SOF_KEEPALIVE\n"));
+  if (SO_BROADCAST != SOF_BROADCAST)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_BROADCAST != SOF_BROADCAST\n"));
+  if (SO_LINGER != SOF_LINGER)
+    LWIP_PLATFORM_DIAG(("lwip_sanity_check: WARNING: SO_LINGER != SOF_LINGER\n"));
+#endif /* LWIP_SOCKET */
 }
 #else  /* LWIP_DEBUG */
 #define lwip_sanity_check()
@@ -238,7 +261,9 @@ lwip_init(void)
 
   /* Modules initialization */
   stats_init();
+#if !NO_SYS
   sys_init();
+#endif /* !NO_SYS */
   mem_init();
   memp_init();
   pbuf_init();
@@ -271,4 +296,8 @@ lwip_init(void)
 #if LWIP_DNS
   dns_init();
 #endif /* LWIP_DNS */
+
+#if LWIP_TIMERS
+  sys_timeouts_init();
+#endif /* LWIP_TIMERS */
 }

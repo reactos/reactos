@@ -55,16 +55,10 @@ sys_arch_decl_protect(sys_prot_t *lev)
     KeInitializeSpinLock(&lev->Lock);
 }
 
-sys_sem_t
-sys_sem_new(u8_t count)
+err_t
+sys_sem_new(sys_sem_t *sem, u8_t count)
 {
-    sys_sem_t sem;
-    
     ASSERT(count == 0 || count == 1);
-    
-    sem = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
-    if (!sem)
-        return SYS_SEM_NULL;
     
     /* It seems lwIP uses the semaphore implementation as either a completion event or a lock
      * so I optimize for this case by using a synchronization event and setting its initial state
@@ -72,23 +66,23 @@ sys_sem_new(u8_t count)
 
     KeInitializeEvent(sem, SynchronizationEvent, count);
     
-    return sem;
+    return ERR_OK;
 }
 
 void
-sys_sem_free(sys_sem_t sem)
+sys_sem_free(sys_sem_t* sem)
 {
-    ExFreePool(sem);
+    /* No op (allocated in stack) */
 }
 
 void
-sys_sem_signal(sys_sem_t sem)
+sys_sem_signal(sys_sem_t* sem)
 {
     KeSetEvent(sem, IO_NO_INCREMENT, FALSE);
 }
 
 u32_t
-sys_arch_sem_wait(sys_sem_t sem, u32_t timeout)
+sys_arch_sem_wait(sys_sem_t* sem, u32_t timeout)
 {
     LARGE_INTEGER LargeTimeout, PreWaitTime, PostWaitTime;
     UINT64 TimeDiff;
@@ -128,33 +122,28 @@ sys_arch_sem_wait(sys_sem_t sem, u32_t timeout)
         return SYS_ARCH_TIMEOUT;
 }
 
-sys_mbox_t
-sys_mbox_new(int size)
-{
-    sys_mbox_t mbox = ExAllocatePool(NonPagedPool, sizeof(struct _sys_mbox_t));
-    
-    if (!mbox)
-        return SYS_MBOX_NULL;
-    
+err_t
+sys_mbox_new(sys_mbox_t *mbox, int size)
+{    
     KeInitializeSpinLock(&mbox->Lock);
     
     InitializeListHead(&mbox->ListHead);
     
     KeInitializeEvent(&mbox->Event, NotificationEvent, FALSE);
     
-    return mbox;
+    return ERR_OK;
 }
 
 void
-sys_mbox_free(sys_mbox_t mbox)
+sys_mbox_free(sys_mbox_t *mbox)
 {
     ASSERT(IsListEmpty(&mbox->ListHead));
     
-    ExFreePool(mbox);
+    /* No op (allocated on stack) */
 }
 
 void
-sys_mbox_post(sys_mbox_t mbox, void *msg)
+sys_mbox_post(sys_mbox_t *mbox, void *msg)
 {
     PLWIP_MESSAGE_CONTAINER Container;
     
@@ -171,7 +160,7 @@ sys_mbox_post(sys_mbox_t mbox, void *msg)
 }
 
 u32_t
-sys_arch_mbox_fetch(sys_mbox_t mbox, void **msg, u32_t timeout)
+sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 {
     LARGE_INTEGER LargeTimeout, PreWaitTime, PostWaitTime;
     UINT64 TimeDiff;
@@ -231,7 +220,7 @@ sys_arch_mbox_fetch(sys_mbox_t mbox, void **msg, u32_t timeout)
 }
 
 u32_t
-sys_arch_mbox_tryfetch(sys_mbox_t mbox, void **msg)
+sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 {
     if (sys_arch_mbox_fetch(mbox, msg, 1) != SYS_ARCH_TIMEOUT)
         return 0;
@@ -240,7 +229,7 @@ sys_arch_mbox_tryfetch(sys_mbox_t mbox, void **msg)
 }
 
 err_t
-sys_mbox_trypost(sys_mbox_t mbox, void *msg)
+sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 {
     sys_mbox_post(mbox, msg);
 
@@ -307,7 +296,7 @@ LwipThreadMain(PVOID Context)
 }
 
 sys_thread_t
-sys_thread_new(char *name, void (* thread)(void *arg), void *arg, int stacksize, int prio)
+sys_thread_new(const char *name, lwip_thread_fn thread, void *arg, int stacksize, int prio)
 {
     thread_t Container;
     NTSTATUS Status;

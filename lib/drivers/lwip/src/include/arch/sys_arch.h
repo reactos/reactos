@@ -1,14 +1,14 @@
 /* ReactOS-Specific lwIP binding header - by Cameron Gutman */
 
 /* Implmentation specific structs */
-typedef PRKEVENT sys_sem_t;
+typedef KEVENT sys_sem_t;
 
 typedef struct _sys_mbox_t
 {
     KSPIN_LOCK Lock;
     LIST_ENTRY ListHead;
     KEVENT Event;
-} *sys_mbox_t;
+} sys_mbox_t;
 
 typedef struct _sys_prot_t
 {

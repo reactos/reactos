@@ -86,7 +86,6 @@ Steve Reynolds
 #include "lwip/def.h"
 #include "lwip/mem.h"
 #include "lwip/ip.h"
-#include "lwip/inet.h"
 #include "lwip/inet_chksum.h"
 #include "lwip/netif.h"
 #include "lwip/icmp.h"
@@ -96,13 +95,60 @@ Steve Reynolds
 
 #include "string.h"
 
-/*-----------------------------------------------------------------------------
- * Globales
- *----------------------------------------------------------------------------*/
+/* 
+ * IGMP constants
+ */
+#define IGMP_TTL                       1
+#define IGMP_MINLEN                    8
+#define ROUTER_ALERT                   0x9404
+#define ROUTER_ALERTLEN                4
+
+/*
+ * IGMP message types, including version number.
+ */
+#define IGMP_MEMB_QUERY                0x11 /* Membership query         */
+#define IGMP_V1_MEMB_REPORT            0x12 /* Ver. 1 membership report */
+#define IGMP_V2_MEMB_REPORT            0x16 /* Ver. 2 membership report */
+#define IGMP_LEAVE_GROUP               0x17 /* Leave-group message      */
+
+/* Group  membership states */
+#define IGMP_GROUP_NON_MEMBER          0
+#define IGMP_GROUP_DELAYING_MEMBER     1
+#define IGMP_GROUP_IDLE_MEMBER         2
+
+/**
+ * IGMP packet format.
+ */
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/bpstruct.h"
+#endif
+PACK_STRUCT_BEGIN
+struct igmp_msg {
+ PACK_STRUCT_FIELD(u8_t           igmp_msgtype);
+ PACK_STRUCT_FIELD(u8_t           igmp_maxresp);
+ PACK_STRUCT_FIELD(u16_t          igmp_checksum);
+ PACK_STRUCT_FIELD(ip_addr_p_t    igmp_group_address);
+} PACK_STRUCT_STRUCT;
+PACK_STRUCT_END
+#ifdef PACK_STRUCT_USE_INCLUDES
+#  include "arch/epstruct.h"
+#endif
+
+
+static struct igmp_group *igmp_lookup_group(struct netif *ifp, ip_addr_t *addr);
+static err_t  igmp_remove_group(struct igmp_group *group);
+static void   igmp_timeout( struct igmp_group *group);
+static void   igmp_start_timer(struct igmp_group *group, u8_t max_time);
+static void   igmp_stop_timer(struct igmp_group *group);
+static void   igmp_delaying_member(struct igmp_group *group, u8_t maxresp);
+static err_t  igmp_ip_output_if(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest, struct netif *netif);
+static void   igmp_send(struct igmp_group *group, u8_t type);
+
 
 static struct igmp_group* igmp_group_list;
-static struct ip_addr     allsystems;
-static struct ip_addr     allrouters;
+static ip_addr_t     allsystems;
+static ip_addr_t     allrouters;
+
 
 /**
  * Initialize the IGMP module
@@ -128,7 +174,7 @@ igmp_dump_group_list()
   while (group != NULL) {
     LWIP_DEBUGF(IGMP_DEBUG, ("igmp_dump_group_list: [%"U32_F"] ", (u32_t)(group->group_state)));
     ip_addr_debug_print(IGMP_DEBUG, &group->group_address);
-    LWIP_DEBUGF(IGMP_DEBUG, (" on if %p\n", group->interface));
+    LWIP_DEBUGF(IGMP_DEBUG, (" on if %p\n", group->netif));
     group = group->next;
   }
   LWIP_DEBUGF(IGMP_DEBUG, ("\n"));
@@ -160,7 +206,7 @@ igmp_start(struct netif *netif)
       LWIP_DEBUGF(IGMP_DEBUG, ("igmp_start: igmp_mac_filter(ADD "));
       ip_addr_debug_print(IGMP_DEBUG, &allsystems);
       LWIP_DEBUGF(IGMP_DEBUG, (") on if %p\n", netif));
-      netif->igmp_mac_filter( netif, &allsystems, IGMP_ADD_MAC_FILTER);
+      netif->igmp_mac_filter(netif, &allsystems, IGMP_ADD_MAC_FILTER);
     }
 
     return ERR_OK;
@@ -185,7 +231,7 @@ igmp_stop(struct netif *netif)
   while (group != NULL) {
     next = group->next;
     /* is it a group joined on this interface? */
-    if (group->interface == netif) {
+    if (group->netif == netif) {
       /* is it the first group of the list? */
       if (group == igmp_group_list) {
         igmp_group_list = next;
@@ -219,15 +265,15 @@ igmp_stop(struct netif *netif)
  * @param netif network interface on which report IGMP memberships
  */
 void
-igmp_report_groups( struct netif *netif)
+igmp_report_groups(struct netif *netif)
 {
   struct igmp_group *group = igmp_group_list;
 
   LWIP_DEBUGF(IGMP_DEBUG, ("igmp_report_groups: sending IGMP reports on if %p\n", netif));
 
   while (group != NULL) {
-    if (group->interface == netif) {
-      igmp_delaying_member( group, IGMP_JOIN_DELAYING_MEMBER_TMR);
+    if (group->netif == netif) {
+      igmp_delaying_member(group, IGMP_JOIN_DELAYING_MEMBER_TMR);
     }
     group = group->next;
   }
@@ -242,12 +288,12 @@ igmp_report_groups( struct netif *netif)
  *         NULL if the group wasn't found.
  */
 struct igmp_group *
-igmp_lookfor_group(struct netif *ifp, struct ip_addr *addr)
+igmp_lookfor_group(struct netif *ifp, ip_addr_t *addr)
 {
   struct igmp_group *group = igmp_group_list;
 
   while (group != NULL) {
-    if ((group->interface == ifp) && (ip_addr_cmp(&(group->group_address), addr))) {
+    if ((group->netif == ifp) && (ip_addr_cmp(&(group->group_address), addr))) {
       return group;
     }
     group = group->next;
@@ -268,7 +314,7 @@ igmp_lookfor_group(struct netif *ifp, struct ip_addr *addr)
  *         NULL on memory error.
  */
 struct igmp_group *
-igmp_lookup_group(struct netif *ifp, struct ip_addr *addr)
+igmp_lookup_group(struct netif *ifp, ip_addr_t *addr)
 {
   struct igmp_group *group = igmp_group_list;
   
@@ -280,9 +326,9 @@ igmp_lookup_group(struct netif *ifp, struct ip_addr *addr)
   }
 
   /* Group doesn't exist yet, create a new one */
-  group = memp_malloc(MEMP_IGMP_GROUP);
+  group = (struct igmp_group *)memp_malloc(MEMP_IGMP_GROUP);
   if (group != NULL) {
-    group->interface          = ifp;
+    group->netif              = ifp;
     ip_addr_set(&(group->group_address), addr);
     group->timer              = 0; /* Not running */
     group->group_state        = IGMP_GROUP_NON_MEMBER;
@@ -306,7 +352,7 @@ igmp_lookup_group(struct netif *ifp, struct ip_addr *addr)
  * @param group the group to remove from the global igmp_group_list
  * @return ERR_OK if group was removed from the list, an err_t otherwise
  */
-err_t
+static err_t
 igmp_remove_group(struct igmp_group *group)
 {
   err_t err = ERR_OK;
@@ -341,15 +387,17 @@ igmp_remove_group(struct igmp_group *group)
  * @param dest destination ip address of the igmp packet
  */
 void
-igmp_input(struct pbuf *p, struct netif *inp, struct ip_addr *dest)
+igmp_input(struct pbuf *p, struct netif *inp, ip_addr_t *dest)
 {
   struct ip_hdr *    iphdr;
   struct igmp_msg*   igmp;
   struct igmp_group* group;
   struct igmp_group* groupref;
 
+  IGMP_STATS_INC(igmp.recv);
+
   /* Note that the length CAN be greater than 8 but only 8 are used - All are included in the checksum */    
-  iphdr = p->payload;
+  iphdr = (struct ip_hdr *)p->payload;
   if (pbuf_header(p, -(s16_t)(IPH_HL(iphdr) * 4)) || (p->len < IGMP_MINLEN)) {
     pbuf_free(p);
     IGMP_STATS_INC(igmp.lenerr);
@@ -373,11 +421,12 @@ igmp_input(struct pbuf *p, struct netif *inp, struct ip_addr *dest)
   }
 
   /* Packet is ok so find an existing group */
-  group = igmp_lookfor_group(inp, dest); /* use the incoming IP address! */
+  group = igmp_lookfor_group(inp, dest); /* use the destination IP address of incoming packet */
   
   /* If group can be found or create... */
   if (!group) {
     pbuf_free(p);
+    IGMP_STATS_INC(igmp.drop);
     LWIP_DEBUGF(IGMP_DEBUG, ("igmp_input: IGMP frame not for us\n"));
     return;
   }
@@ -386,50 +435,56 @@ igmp_input(struct pbuf *p, struct netif *inp, struct ip_addr *dest)
   switch (igmp->igmp_msgtype) {
    case IGMP_MEMB_QUERY: {
      /* IGMP_MEMB_QUERY to the "all systems" address ? */
-     if ((ip_addr_cmp(dest, &allsystems)) && (igmp->igmp_group_address.addr == 0)) {
+     if ((ip_addr_cmp(dest, &allsystems)) && ip_addr_isany(&igmp->igmp_group_address)) {
        /* THIS IS THE GENERAL QUERY */
        LWIP_DEBUGF(IGMP_DEBUG, ("igmp_input: General IGMP_MEMB_QUERY on \"ALL SYSTEMS\" address (224.0.0.1) [igmp_maxresp=%i]\n", (int)(igmp->igmp_maxresp)));
 
        if (igmp->igmp_maxresp == 0) {
-         IGMP_STATS_INC(igmp.v1_rxed);
+         IGMP_STATS_INC(igmp.rx_v1);
          LWIP_DEBUGF(IGMP_DEBUG, ("igmp_input: got an all hosts query with time== 0 - this is V1 and not implemented - treat as v2\n"));
          igmp->igmp_maxresp = IGMP_V1_DELAYING_MEMBER_TMR;
+       } else {
+         IGMP_STATS_INC(igmp.rx_general);
        }
 
-       IGMP_STATS_INC(igmp.group_query_rxed);
        groupref = igmp_group_list;
        while (groupref) {
          /* Do not send messages on the all systems group address! */
-         if ((groupref->interface == inp) && (!(ip_addr_cmp(&(groupref->group_address), &allsystems)))) {
-           igmp_delaying_member( groupref, igmp->igmp_maxresp);
+         if ((groupref->netif == inp) && (!(ip_addr_cmp(&(groupref->group_address), &allsystems)))) {
+           igmp_delaying_member(groupref, igmp->igmp_maxresp);
          }
          groupref = groupref->next;
        }
      } else {
        /* IGMP_MEMB_QUERY to a specific group ? */
-       if (group->group_address.addr != 0) {
+       if (!ip_addr_isany(&igmp->igmp_group_address)) {
          LWIP_DEBUGF(IGMP_DEBUG, ("igmp_input: IGMP_MEMB_QUERY to a specific group "));
-         ip_addr_debug_print(IGMP_DEBUG, &group->group_address);
-         if (ip_addr_cmp (dest, &allsystems)) {
+         ip_addr_debug_print(IGMP_DEBUG, &igmp->igmp_group_address);
+         if (ip_addr_cmp(dest, &allsystems)) {
+           ip_addr_t groupaddr;
            LWIP_DEBUGF(IGMP_DEBUG, (" using \"ALL SYSTEMS\" address (224.0.0.1) [igmp_maxresp=%i]\n", (int)(igmp->igmp_maxresp)));
-           /* we first need to re-lookfor the group since we used dest last time */
-           group = igmp_lookfor_group(inp, &igmp->igmp_group_address);
+           /* we first need to re-look for the group since we used dest last time */
+           ip_addr_copy(groupaddr, igmp->igmp_group_address);
+           group = igmp_lookfor_group(inp, &groupaddr);
          } else {
            LWIP_DEBUGF(IGMP_DEBUG, (" with the group address as destination [igmp_maxresp=%i]\n", (int)(igmp->igmp_maxresp)));
          }
 
          if (group != NULL) {
-           IGMP_STATS_INC(igmp.unicast_query);
-           igmp_delaying_member( group, igmp->igmp_maxresp);
+           IGMP_STATS_INC(igmp.rx_group);
+           igmp_delaying_member(group, igmp->igmp_maxresp);
+         } else {
+           IGMP_STATS_INC(igmp.drop);
          }
+       } else {
+         IGMP_STATS_INC(igmp.proterr);
        }
      }
      break;
    }
    case IGMP_V2_MEMB_REPORT: {
      LWIP_DEBUGF(IGMP_DEBUG, ("igmp_input: IGMP_V2_MEMB_REPORT\n"));
-
-     IGMP_STATS_INC(igmp.report_rxed);
+     IGMP_STATS_INC(igmp.rx_report);
      if (group->group_state == IGMP_GROUP_DELAYING_MEMBER) {
        /* This is on a specific group we have already looked up */
        group->timer = 0; /* stopped */
@@ -440,7 +495,8 @@ igmp_input(struct pbuf *p, struct netif *inp, struct ip_addr *dest)
    }
    default: {
      LWIP_DEBUGF(IGMP_DEBUG, ("igmp_input: unexpected msg %d in state %d on group %p on if %p\n",
-       igmp->igmp_msgtype, group->group_state, &group, group->interface));
+       igmp->igmp_msgtype, group->group_state, &group, group->netif));
+     IGMP_STATS_INC(igmp.proterr);
      break;
    }
   }
@@ -457,7 +513,7 @@ igmp_input(struct pbuf *p, struct netif *inp, struct ip_addr *dest)
  * @return ERR_OK if group was joined on the netif(s), an err_t otherwise
  */
 err_t
-igmp_joingroup(struct ip_addr *ifaddr, struct ip_addr *groupaddr)
+igmp_joingroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr)
 {
   err_t              err = ERR_VAL; /* no matching interface */
   struct igmp_group *group;
@@ -493,7 +549,7 @@ igmp_joingroup(struct ip_addr *ifaddr, struct ip_addr *groupaddr)
             netif->igmp_mac_filter(netif, groupaddr, IGMP_ADD_MAC_FILTER);
           }
 
-          IGMP_STATS_INC(igmp.join_sent);
+          IGMP_STATS_INC(igmp.tx_join);
           igmp_send(group, IGMP_V2_MEMB_REPORT);
 
           igmp_start_timer(group, IGMP_JOIN_DELAYING_MEMBER_TMR);
@@ -527,7 +583,7 @@ igmp_joingroup(struct ip_addr *ifaddr, struct ip_addr *groupaddr)
  * @return ERR_OK if group was left on the netif(s), an err_t otherwise
  */
 err_t
-igmp_leavegroup(struct ip_addr *ifaddr, struct ip_addr *groupaddr)
+igmp_leavegroup(ip_addr_t *ifaddr, ip_addr_t *groupaddr)
 {
   err_t              err = ERR_VAL; /* no matching interface */
   struct igmp_group *group;
@@ -556,7 +612,7 @@ igmp_leavegroup(struct ip_addr *ifaddr, struct ip_addr *groupaddr)
           /* If we are the last reporter for this group */
           if (group->last_reporter_flag) {
             LWIP_DEBUGF(IGMP_DEBUG, ("igmp_leavegroup: sending leaving group\n"));
-            IGMP_STATS_INC(igmp.leave_sent);
+            IGMP_STATS_INC(igmp.tx_leave);
             igmp_send(group, IGMP_LEAVE_GROUP);
           }
           
@@ -602,8 +658,8 @@ igmp_tmr(void)
   struct igmp_group *group = igmp_group_list;
 
   while (group != NULL) {
-    if (group->timer != 0) {
-      group->timer -= 1;
+    if (group->timer > 0) {
+      group->timer--;
       if (group->timer == 0) {
         igmp_timeout(group);
       }
@@ -618,15 +674,16 @@ igmp_tmr(void)
  *
  * @param group an igmp_group for which a timeout is reached
  */
-void
+static void
 igmp_timeout(struct igmp_group *group)
 {
   /* If the state is IGMP_GROUP_DELAYING_MEMBER then we send a report for this group */
   if (group->group_state == IGMP_GROUP_DELAYING_MEMBER) {
     LWIP_DEBUGF(IGMP_DEBUG, ("igmp_timeout: report membership for group with address "));
     ip_addr_debug_print(IGMP_DEBUG, &(group->group_address));
-    LWIP_DEBUGF(IGMP_DEBUG, (" on if %p\n", group->interface));
+    LWIP_DEBUGF(IGMP_DEBUG, (" on if %p\n", group->netif));
 
+    IGMP_STATS_INC(igmp.tx_report);
     igmp_send(group, IGMP_V2_MEMB_REPORT);
   }
 }
@@ -638,13 +695,15 @@ igmp_timeout(struct igmp_group *group)
  * @param max_time the time in multiples of IGMP_TMR_INTERVAL (decrease with
  *        every call to igmp_tmr())
  */
-void
+static void
 igmp_start_timer(struct igmp_group *group, u8_t max_time)
 {
-  /**
-   * @todo Important !! this should be random 0 -> max_time. Find out how to do this
-   */
-  group->timer = max_time;
+  /* ensure the input value is > 0 */
+  if (max_time == 0) {
+    max_time = 1;
+  }
+  /* ensure the random value is > 0 */
+  group->timer = (LWIP_RAND() % (max_time - 1)) + 1;
 }
 
 /**
@@ -652,7 +711,7 @@ igmp_start_timer(struct igmp_group *group, u8_t max_time)
  *
  * @param group the igmp_group for which to stop the timer
  */
-void
+static void
 igmp_stop_timer(struct igmp_group *group)
 {
   group->timer = 0;
@@ -664,12 +723,13 @@ igmp_stop_timer(struct igmp_group *group)
  * @param group the igmp_group for which "delaying" membership report
  * @param maxresp query delay
  */
-void
-igmp_delaying_member( struct igmp_group *group, u8_t maxresp)
+static void
+igmp_delaying_member(struct igmp_group *group, u8_t maxresp)
 {
   if ((group->group_state == IGMP_GROUP_IDLE_MEMBER) ||
-     ((group->group_state == IGMP_GROUP_DELAYING_MEMBER) && (maxresp > group->timer))) {
-    igmp_start_timer(group, (maxresp)/2);
+     ((group->group_state == IGMP_GROUP_DELAYING_MEMBER) &&
+      ((group->timer == 0) || (maxresp < group->timer)))) {
+    igmp_start_timer(group, maxresp);
     group->group_state = IGMP_GROUP_DELAYING_MEMBER;
   }
 }
@@ -693,15 +753,15 @@ igmp_delaying_member( struct igmp_group *group, u8_t maxresp)
  *         ERR_BUF if p doesn't have enough space for IP/LINK headers
  *         returns errors returned by netif->output
  */
-err_t
-igmp_ip_output_if(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
-                  u8_t ttl, u8_t proto, struct netif *netif)
+static err_t
+igmp_ip_output_if(struct pbuf *p, ip_addr_t *src, ip_addr_t *dest, struct netif *netif)
 {
   /* This is the "router alert" option */
   u16_t ra[2];
-  ra[0] = htons (ROUTER_ALERT);
+  ra[0] = PP_HTONS(ROUTER_ALERT);
   ra[1] = 0x0000; /* Router shall examine packet */
-  return ip_output_if_opt(p, src, dest, ttl, 0, proto, netif, ra, ROUTER_ALERTLEN);
+  IGMP_STATS_INC(igmp.xmit);
+  return ip_output_if_opt(p, src, dest, IGMP_TTL, 0, IP_PROTO_IGMP, netif, ra, ROUTER_ALERTLEN);
 }
 
 /**
@@ -710,32 +770,31 @@ igmp_ip_output_if(struct pbuf *p, struct ip_addr *src, struct ip_addr *dest,
  * @param group the group to which to send the packet
  * @param type the type of igmp packet to send
  */
-void
+static void
 igmp_send(struct igmp_group *group, u8_t type)
 {
   struct pbuf*     p    = NULL;
   struct igmp_msg* igmp = NULL;
-  struct ip_addr   src  = {0};
-  struct ip_addr*  dest = NULL;
+  ip_addr_t   src  = *IP_ADDR_ANY;
+  ip_addr_t*  dest = NULL;
 
   /* IP header + "router alert" option + IGMP header */
   p = pbuf_alloc(PBUF_TRANSPORT, IGMP_MINLEN, PBUF_RAM);
   
   if (p) {
-    igmp = p->payload;
+    igmp = (struct igmp_msg *)p->payload;
     LWIP_ASSERT("igmp_send: check that first pbuf can hold struct igmp_msg",
                (p->len >= sizeof(struct igmp_msg)));
-    ip_addr_set(&src, &((group->interface)->ip_addr));
+    ip_addr_copy(src, group->netif->ip_addr);
      
     if (type == IGMP_V2_MEMB_REPORT) {
       dest = &(group->group_address);
-      IGMP_STATS_INC(igmp.report_sent);
-      ip_addr_set(&(igmp->igmp_group_address), &(group->group_address));
+      ip_addr_copy(igmp->igmp_group_address, group->group_address);
       group->last_reporter_flag = 1; /* Remember we were the last to report */
     } else {
       if (type == IGMP_LEAVE_GROUP) {
         dest = &allrouters;
-        ip_addr_set(&(igmp->igmp_group_address), &(group->group_address));
+        ip_addr_copy(igmp->igmp_group_address, group->group_address);
       }
     }
 
@@ -743,14 +802,15 @@ igmp_send(struct igmp_group *group, u8_t type)
       igmp->igmp_msgtype  = type;
       igmp->igmp_maxresp  = 0;
       igmp->igmp_checksum = 0;
-      igmp->igmp_checksum = inet_chksum( igmp, IGMP_MINLEN);
+      igmp->igmp_checksum = inet_chksum(igmp, IGMP_MINLEN);
 
-      igmp_ip_output_if(p, &src, dest, IGMP_TTL, IP_PROTO_IGMP, group->interface);
+      igmp_ip_output_if(p, &src, dest, group->netif);
     }
 
     pbuf_free(p);
   } else {
     LWIP_DEBUGF(IGMP_DEBUG, ("igmp_send: not enough memory for igmp_send\n"));
+    IGMP_STATS_INC(igmp.memerr);
   }
 }
 
