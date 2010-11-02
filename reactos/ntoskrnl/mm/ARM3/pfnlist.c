@@ -812,6 +812,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
     ASSERT(PageFrameIndex > 0);
     ASSERT(MiGetPfnEntry(PageFrameIndex) != NULL);
     ASSERT(Pfn1 == MiGetPfnEntry(PageFrameIndex));
+    ASSERT(MI_IS_ROS_PFN(Pfn1) == FALSE);
 
     /* Page must be in-use */
     if ((Pfn1->u3.e1.PageLocation != ActiveAndValid) &&
