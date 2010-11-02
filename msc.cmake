@@ -14,6 +14,8 @@ else()
 add_definitions(/GS- /Zl /Zi)
 add_definitions(-Dinline=__inline -D__STDC__=1)
 
+link_directories("${REACTOS_BINARY_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw)
+
 set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
 
@@ -59,7 +61,18 @@ macro(set_module_type MODULE TYPE)
     endif ()
     if (${TYPE} MATCHES win32cui)
         set_subsystem(${MODULE} console)
+        set_entrypoint(${MODULE} mainCRTStartup)
     endif ()
+    if(${TYPE} MATCHES win32dll)
+        set_entrypoint(${MODULE} __DllMainCRTStartup)
+		if(DEFINED baseaddress_${MODULE})
+			set_image_base(${MODULE} ${baseaddress_${MODULE}})
+		else()
+			message(STATUS "${MODULE} has no base address")
+		endif()
+		target_link_libraries(${MODULE} mingw_common mingw_dllmain)
+    endif()
+
 endmacro()
 
 macro(set_unicode)
@@ -82,7 +95,7 @@ set(IDL_SERVER_ARG /sstub) #.c for stub server library
 set(IDL_CLIENT_ARG /cstub) #.c for stub client library
 
 
-macro(add_importlib_def _def_file)
+macro(add_importlib_target _def_file)
     get_filename_component(_name ${_def_file} NAME_WE)
     add_custom_target(
         lib${_name}

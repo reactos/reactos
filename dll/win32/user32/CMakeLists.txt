@@ -1,6 +1,8 @@
 
 set_unicode()
 
+spec2def(user32.dll user32.pspec)
+
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 include_directories(
@@ -64,7 +66,7 @@ list(APPEND SOURCE
     windows/winpos.c
     user32_stubs.c
     user32.rc
-    user32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
     
 set_source_files_properties(user32.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
@@ -82,3 +84,5 @@ target_link_libraries(user32
 add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
 add_importlibs(user32 gdi32 advapi32 imm32 kernel32 ntdll)
 add_cab_target(user32 1)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/user32.def)
+

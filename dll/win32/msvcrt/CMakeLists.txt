@@ -1,4 +1,6 @@
 
+spec2def(msvcrt.dll msvcrt.spec)
+
 add_definitions(
     -DUSE_MSVCRT_PREFIX
     -D_MSVCRT_
@@ -11,7 +13,11 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 
-list(APPEND SOURCE dllmain.c msvcrt_stubs.c msvcrt.rc)
+list(APPEND SOURCE
+     dllmain.c
+     msvcrt_stubs.c
+     msvcrt.rc
+     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 
 add_library(msvcrt SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_precomp.h.gch
@@ -21,7 +27,6 @@ set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
 set_module_type(msvcrt win32dll)
 
 target_link_libraries(msvcrt
-    ${CMAKE_CURRENT_SOURCE_DIR}/msvcrt.def
     crt
     wine
     ${PSEH_LIB})
@@ -29,3 +34,5 @@ target_link_libraries(msvcrt
 add_pch(msvcrt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_importlibs(msvcrt kernel32 ntdll)
 add_cab_target(msvcrt 1)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
+

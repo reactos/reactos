@@ -95,3 +95,5 @@ add_importlibs(shell32
 
 
 add_cab_target(shell32 1)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
+

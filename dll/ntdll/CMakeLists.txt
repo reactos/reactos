@@ -55,4 +55,4 @@ add_dependencies(ntdll ntstatus)
 
 add_minicd_target(ntdll reactos/system32 ntdll.dll)
 add_cab_target(ntdll 1)
-add_importlib_def(${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/ntdll.def)
