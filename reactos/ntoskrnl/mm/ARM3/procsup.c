@@ -363,6 +363,8 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         PointerPte++;
         
         /* Get a page and write the current invalid PTE */
+        MI_SET_USAGE(MI_USAGE_KERNEL_STACK);
+        MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
         PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         MI_WRITE_INVALID_PTE(PointerPte, InvalidPte);
 
@@ -447,6 +449,8 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     while (LimitPte >= NewLimitPte)
     {
         /* Get a page and write the current invalid PTE */
+        MI_SET_USAGE(MI_USAGE_KERNEL_STACK_EXPANSION);
+        MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
         PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         MI_WRITE_INVALID_PTE(LimitPte, InvalidPte);
 
@@ -1074,6 +1078,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     
     /* Get a zero page for the PDE, if possible */
     Color = MI_GET_NEXT_PROCESS_COLOR(Process);
+    MI_SET_USAGE(MI_USAGE_PAGE_DIRECTORY);
     PdeIndex = MiRemoveZeroPageSafe(Color);
     if (!PdeIndex)
     {
@@ -1087,6 +1092,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     }
     
     /* Get a zero page for hyperspace, if possible */
+    MI_SET_USAGE(MI_USAGE_PAGE_DIRECTORY);
     Color = MI_GET_NEXT_PROCESS_COLOR(Process);
     HyperIndex = MiRemoveZeroPageSafe(Color);
     if (!HyperIndex)

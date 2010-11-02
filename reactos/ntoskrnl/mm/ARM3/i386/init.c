@@ -531,6 +531,8 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     
     /* Allocate a page for hyperspace and create it */
+    MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+    MI_SET_PROCESS2("Kernel");
     PageFrameIndex = MiRemoveAnyPage(0);
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!

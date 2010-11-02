@@ -367,6 +367,8 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
    /*
     * Try to allocate a page
     */
+   MI_SET_USAGE(MI_USAGE_VAD);
+   MI_SET_PROCESS2(Process->ImageFileName);
    Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
    if (Status == STATUS_NO_MEMORY)
    {

@@ -223,6 +223,9 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 MmDeleteHyperspaceMapping(PageDir);
                 return NULL;
             }
+            MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
+            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
             Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
             if (!NT_SUCCESS(Status) || Pfn == 0)
             {
@@ -258,6 +261,9 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 {
                     return NULL;
                 }
+                MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
+                if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+                if (!Process) MI_SET_PROCESS2("Kernel Legacy");
                 Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
                 if (!NT_SUCCESS(Status) || Pfn == 0)
                 {
@@ -280,6 +286,9 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             {
                 return NULL;
             }
+            MI_SET_USAGE(MI_USAGE_LEGACY_PAGE_DIRECTORY);
+            if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+            if (!Process) MI_SET_PROCESS2("Kernel Legacy");
             Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
             if (!NT_SUCCESS(Status) || Pfn == 0)
             {

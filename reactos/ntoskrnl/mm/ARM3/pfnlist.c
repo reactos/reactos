@@ -55,6 +55,10 @@ PMMPFNLIST MmPageLocationList[] =
     NULL,
     NULL
 };
+
+ULONG MI_PFN_CURRENT_USAGE;
+CHAR MI_PFN_CURRENT_PROCESS_NAME[16] = "None yet";
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -204,6 +208,14 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
     }
+    
+#if MI_TRACE_PFNS
+    ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+    Entry->PfnUsage = MI_PFN_CURRENT_USAGE;
+    memcpy(Entry->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+//    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+//    memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
+#endif
 }
 
 PFN_NUMBER
@@ -320,6 +332,14 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
     }
+
+#if MI_TRACE_PFNS
+    //ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+    Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
+    memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+    //MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    //memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
+#endif
 
     /* Return the page */
     return PageIndex;
@@ -576,6 +596,11 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         MmZeroingPageThreadActive = TRUE;
         KeSetEvent(&MmZeroingPageEvent, IO_NO_INCREMENT, FALSE);
     }
+    
+#if MI_TRACE_PFNS
+    Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
+    RtlZeroMemory(Pfn1->ProcessName, 16);
+#endif
 }
 
 /* Note: This function is hardcoded only for the zeroed page list, for now */
@@ -691,6 +716,13 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
 
     /* One more paged on the colored list */
     ColorHead->Count++;
+    
+#if MI_TRACE_PFNS
+    //ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
+    Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
+    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    RtlZeroMemory(Pfn1->ProcessName, 16);
+#endif
 }
 
 VOID

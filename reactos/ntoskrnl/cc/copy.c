@@ -41,6 +41,8 @@ CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;
 
+   MI_SET_USAGE(MI_USAGE_CACHE);
+   //MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
    Status = MmRequestPageMemoryConsumer(MC_SYSTEM, TRUE, &CcZeroPage);
    if (!NT_SUCCESS(Status))
    {

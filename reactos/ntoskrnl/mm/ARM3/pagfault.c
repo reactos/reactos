@@ -18,6 +18,10 @@
 
 /* GLOBALS ********************************************************************/
 
+#if MI_TRACE_PFNS
+BOOLEAN UserPdeFault = FALSE;
+#endif
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PMMPTE
@@ -256,6 +260,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
     
     /* Do we need a zero page? */
     ASSERT(PointerPte->u.Hard.Valid == 0);
+#if MI_TRACE_PFNS
+    if (UserPdeFault) MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+    if (!UserPdeFault) MI_SET_USAGE(MI_USAGE_DEMAND_ZERO);
+#endif
+    if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+    if (!Process) MI_SET_PROCESS2("Kernel Demand 0");
     if ((NeedZero) && (Process))
     {
         /* Try to get one, if we couldn't grab a free page and zero it */
@@ -892,6 +902,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
 
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
+#if MI_TRACE_PFNS
+        UserPdeFault = TRUE;
+#endif
         Status = MiDispatchFault(TRUE,
                                  PointerPte,
                                  PointerPde,
@@ -900,7 +913,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                                  PsGetCurrentProcess(),
                                  TrapInformation,
                                  NULL);
-
+#if MI_TRACE_PFNS
+        UserPdeFault = FALSE;
+#endif
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
 #if (_MI_PAGING_LEVELS >= 3)
@@ -987,6 +1002,8 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         
         /* Try to get a zero page */
+        MI_SET_USAGE(MI_USAGE_PEB_TEB);
+        MI_SET_PROCESS2(CurrentProcess->ImageFileName);
         Color = MI_GET_NEXT_PROCESS_COLOR(CurrentProcess);
         PageFrameIndex = MiRemoveZeroPageSafe(Color);
         if (!PageFrameIndex)

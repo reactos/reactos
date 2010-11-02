@@ -230,6 +230,8 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         while (PagesFound < PageCount)
         {
             /* Grab a page */
+            MI_SET_USAGE(MI_USAGE_MDL);
+            MI_SET_PROCESS2("Kernel");
             Page = MiRemoveAnyPage(0);
             if (Page == 0)
             {
@@ -288,6 +290,8 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 
                 /* Remove the page from the free or zero list */
                 ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
+                MI_SET_USAGE(MI_USAGE_MDL);
+                MI_SET_PROCESS2("Kernel");
                 MiUnlinkFreeOrZeroedPage(Pfn1);
                 
                 //

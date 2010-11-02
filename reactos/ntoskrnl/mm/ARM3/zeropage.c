@@ -71,6 +71,8 @@ MmZeroPageThread(VOID)
             PageIndex = MmFreePageListHead.Flink;
             ASSERT(PageIndex != LIST_HEAD);
             Pfn1 = MiGetPfnEntry(PageIndex);
+            MI_SET_USAGE(MI_USAGE_ZERO_LOOP);
+            MI_SET_PROCESS2("Kernel 0 Loop");
             FreePage = MiRemoveAnyPage(MI_GET_PAGE_COLOR(PageIndex));
             
             /* The first global free page should also be the first on its own list */

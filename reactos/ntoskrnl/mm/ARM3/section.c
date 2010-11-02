@@ -339,6 +339,8 @@ MiFillSystemPageDirectory(IN PVOID Base,
         if (SystemMapPde->u.Hard.Valid == 0)
         {
             /* Grab a page for it */
+            MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+            MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
             PageFrameIndex = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
             ASSERT(PageFrameIndex);
             TempPde.u.Hard.PageFrameNumber = PageFrameIndex;

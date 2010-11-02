@@ -166,12 +166,24 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
 
     /* The driver is here */
     *ImageBase = DriverBase;
+    DPRINT1("Loading: %wZ at %p with %lx pages\n", FileName, DriverBase, PteCount);
 
     /* Loop the new driver PTEs */
     TempPte = ValidKernelPte;
     while (PointerPte < LastPte)
     {
         /* Allocate a page */
+        MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
+#if MI_TRACE_PFNS
+        PWCHAR pos = NULL;
+        ULONG len = 0;
+        if (FileName->Buffer)
+        {
+            pos = wcsrchr(FileName->Buffer, '\\');
+            len = wcslen(pos) * sizeof(WCHAR);
+            if (pos) snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
+        }   
+#endif
         TempPte.u.Hard.PageFrameNumber = MiAllocatePfn(PointerPte, MM_EXECUTE);
 
         /* Write it */
@@ -1385,6 +1397,23 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 (ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage,
                 &LdrEntry->FullDllName);
 
+        /* Get the first PTE and the number of PTEs we'll need */
+        PointerPte = StartPte = MiAddressToPte(LdrEntry->DllBase);
+        PteCount = ROUND_TO_PAGES(LdrEntry->SizeOfImage) >> PAGE_SHIFT;
+        LastPte = StartPte + PteCount;
+
+#if MI_TRACE_PFNS
+        /* Loop the PTEs */
+        while (PointerPte < LastPte)
+        {
+            ULONG len;
+            ASSERT(PointerPte->u.Hard.Valid == 1);
+            Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
+            len = wcslen(LdrEntry->BaseDllName.Buffer) * sizeof(WCHAR);
+            snprintf(Pfn1->ProcessName, min(16, len), "%S", LdrEntry->BaseDllName.Buffer);
+            PointerPte++;
+        }
+#endif
         /* Skip kernel and HAL */
         /* ROS HACK: Skip BOOTVID/KDCOM too */
         i++;
@@ -1424,12 +1453,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Remember the original address */
         DllBase = LdrEntry->DllBase;
         
-        /* Get the first PTE and the number of PTEs we'll need */
-        PointerPte = StartPte = MiAddressToPte(LdrEntry->DllBase);
-        PteCount = ROUND_TO_PAGES(LdrEntry->SizeOfImage) >> PAGE_SHIFT;
-        LastPte = StartPte + PteCount;
-        
         /* Loop the PTEs */
+        PointerPte = StartPte;
         while (PointerPte < LastPte)
         {
             /* Mark the page modified in the PFN database */
