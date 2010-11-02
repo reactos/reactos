@@ -246,12 +246,14 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             //
             ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
             
-            //
-            // Allocate it and mark it
-            //
+            /* Now setup the page and mark it */
+            Pfn1->u3.e2.ReferenceCount = 1;
+            Pfn1->u2.ShareCount = 1;
+            MI_SET_PFN_DELETED(Pfn1);
+            Pfn1->u4.PteFrame = 0x1FFEDCB;
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
-            Pfn1->u3.e2.ReferenceCount = 1;
+            Pfn1->u4.VerifierAllocation = 0;
             
             //
             // Save it into the MDL
@@ -370,7 +372,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     }
     
     //
-    // We're done, mark the pages as locked (should we lock them, though???)
+    // We're done, mark the pages as locked
     //
     Mdl->Process = NULL;
     Mdl->MdlFlags |= MDL_PAGES_LOCKED; 
