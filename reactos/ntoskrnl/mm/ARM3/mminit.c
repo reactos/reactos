@@ -1215,7 +1215,7 @@ MiAddHalIoMappings(VOID)
 
 VOID
 NTAPI
-MmDumpArmPfnDatabase(VOID)
+MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
 {
     ULONG i;
     PMMPFN Pfn1;

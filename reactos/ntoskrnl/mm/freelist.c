@@ -381,14 +381,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
 
 VOID
 NTAPI
-MmDumpPfnDatabase(VOID)
-{
-    /* Pretty useless for now, to be improved later */
-    return;
-}
-
-VOID
-NTAPI
 MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
 {
     KIRQL oldIrql;

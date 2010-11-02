@@ -1150,8 +1150,8 @@ MmInitializePageList(
 
 VOID
 NTAPI
-MmDumpPfnDatabase(
-   VOID
+MmDumpArmPfnDatabase(
+   IN BOOLEAN StatusOnly
 );
 
 PFN_NUMBER

@@ -594,13 +594,13 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                                       PointerPte,
                                       Process,
                                       MM_NOIRQL);
-    ASSERT(KeAreAllApcsDisabled () == TRUE);
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
     if (NT_SUCCESS(Status))
     {
         //
         // Make sure we're returning in a sane state and pass the status down
         //
-        ASSERT(OldIrql == KeGetCurrentIrql ());
+        ASSERT(OldIrql == KeGetCurrentIrql());
         ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
         return Status;
     }

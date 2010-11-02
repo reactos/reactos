@@ -307,11 +307,10 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MiComputeColorInformation();
     
     //
-    // Calculate the number of bytes for the PFN database, double it for ARM3,
+    // Calculate the number of bytes for the PFN database
     // then add the color tables and convert to pages
     //
     MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
-    //MxPfnAllocation <<= 1;
     MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
     MxPfnAllocation >>= PAGE_SHIFT;
     
