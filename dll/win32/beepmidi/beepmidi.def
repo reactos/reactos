@@ -1,0 +1,6 @@
+
+LIBRARY beepmidi.dll
+
+EXPORTS
+  DriverProc@20 @1
+  modMessage@20 @2

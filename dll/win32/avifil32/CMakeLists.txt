@@ -1,11 +1,11 @@
 
 add_definitions(-D__WINESRC__)
+add_definitions(-D_DLL -D__USE_CRTIMP)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(avifil32.dll avifil32.spec)
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(avifil32 SHARED
     acmstream.c
@@ -20,7 +20,11 @@ add_library(avifil32 SHARED
     tmpfile.c
     wavfile.c
     rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
+    avifil32.def)
+
+if(NOT MSVC)
+    set_source_files_properties(avifil32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(avifil32 win32dll)
 
@@ -38,6 +42,5 @@ add_importlibs(avifil32
     advapi32
     kernel32
     ntdll)
-
 
 add_cab_target(avifil32 1)

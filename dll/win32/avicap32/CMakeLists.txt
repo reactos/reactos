@@ -1,9 +1,11 @@
 
 set_unicode()
 
-spec2def(avicap32.dll avicap32.spec)
+add_library(avicap32 SHARED avicap32.c avicap32.rc avicap32.def)
 
-add_library(avicap32 SHARED avicap32.c avicap32.rc ${CMAKE_CURRENT_BINARY_DIR}/avicap32.def)
+if(NOT MSVC)
+    set_source_files_properties(avicap32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(avicap32 win32dll)
 

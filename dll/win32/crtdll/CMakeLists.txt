@@ -10,12 +10,14 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 
-spec2def(crtdll.dll crtdll.spec)
-
 list(APPEND SOURCE
     dllmain.c
     crtdll.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/crtdll.def)
+    crtdll.def)
+
+if(NOT MSVC)
+    set_source_files_properties(crtdll.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(crtdll SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/crtdll_precomp.h.gch

@@ -1,12 +1,16 @@
 
 add_definitions(-D__WINESRC__)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(comcat.dll comcat.spec)
+add_library(comcat SHARED comcat_main.c version.rc comcat.def)
 
-add_library(comcat SHARED comcat_main.c version.rc ${CMAKE_CURRENT_BINARY_DIR}/comcat.def)
+if(NOT MSVC)
+    set_source_files_properties(comcat.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(comcat 0)
 

@@ -3,9 +3,11 @@ set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(getuname.dll getuname.spec)
+add_library(getuname SHARED getuname.c getuname.rc getuname.def)
 
-add_library(getuname SHARED getuname.c getuname.rc ${CMAKE_CURRENT_BINARY_DIR}/getuname.def)
+if(NOT MSVC)
+    set_source_files_properties(getuname.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(getuname win32dll)
 

@@ -8,9 +8,11 @@ list(APPEND SOURCE
     files.c
     install.c
     reg.c
-    ${CMAKE_CURRENT_BINARY_DIR}/advpack.def)
+    advpack.def)
 
-spec2def(advpack.dll advpack.spec)
+if(NOT MSVC)
+    set_source_files_properties(advpack.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(advpack SHARED ${SOURCE})
 

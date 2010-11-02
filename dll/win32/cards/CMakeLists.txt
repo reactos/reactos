@@ -4,9 +4,11 @@ set_unicode()
 # Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN
 add_definitions(-DCARDSTYLE_DEFAULT)
 
-spec2def(cards.dll cards.spec)
+add_library(cards SHARED cards.c cards.rc cards.def)
 
-add_library(cards SHARED cards.c cards.rc ${CMAKE_CURRENT_BINARY_DIR}/cards.def)
+if(NOT MSVC)
+    set_source_files_properties(cards.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(cards win32dll)
 

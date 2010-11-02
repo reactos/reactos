@@ -4,8 +4,6 @@ set_unicode()
 add_definitions(-D_DLL -D__USE_CRTIMP)
 add_definitions(-DLANGPACK)
 
-spec2def(gdi32.dll gdi32.spec)
-
 include_directories(include)
 
 list(APPEND SOURCE
@@ -39,7 +37,11 @@ list(APPEND SOURCE
     objects/utils.c
     objects/path.c
     gdi32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)
+    gdi32.def)
+
+if(NOT MSVC)
+    set_source_files_properties(gdi32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(gdi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32_precomp.h.gch

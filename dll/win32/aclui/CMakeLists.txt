@@ -10,16 +10,18 @@ list(APPEND SOURCE
     misc.c
     sidcache.c
     aclui.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/aclui.def)
+    aclui.def)
 
-spec2def(aclui.dll aclui.spec)
+if(NOT MSVC)
+    set_source_files_properties(aclui.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
+
 
 add_library(aclui SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/aclui_precomp.h.gch
     ${SOURCE})
 
 set_module_type(aclui win32dll)
-
 
 add_importlibs(aclui user32 gdi32 comctl32 ole32 oleaut32 advapi32 uxtheme kernel32 ntdll)
 

@@ -1,9 +1,11 @@
 
 set_unicode()
 
-spec2def(beepmidi.dll beepmidi.spec)
+add_library(beepmidi SHARED beepmidi.c beepmidi.def)
 
-add_library(beepmidi SHARED beepmidi.c ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def)
+if(NOT MSVC)
+    set_source_files_properties(beepmidi.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(beepmidi 0)
 

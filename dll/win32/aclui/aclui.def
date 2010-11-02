@@ -1,0 +1,7 @@
+
+LIBRARY aclui.dll
+
+EXPORTS
+  CreateSecurityPage@4 @1
+  EditSecurity@8 @2
+  IID_ISecurityInformation @3 DATA

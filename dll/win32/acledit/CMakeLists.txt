@@ -4,11 +4,14 @@ set_unicode()
 list(APPEND SOURCE
     acledit.c
     stubs.c
-    acledit.rc)
+    acledit.rc
+    acledit.def)
 
-spec2def(acledit.dll acledit.spec)
+if(NOT MSVC)
+    set_source_files_properties(acledit.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
-add_library(acledit SHARED ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
+add_library(acledit SHARED ${SOURCE})
 
 set_module_type(acledit win32dll)
 
