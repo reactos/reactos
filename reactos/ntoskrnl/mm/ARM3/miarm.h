@@ -403,6 +403,7 @@ extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
+extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;

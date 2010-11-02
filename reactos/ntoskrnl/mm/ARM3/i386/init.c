@@ -24,6 +24,7 @@ MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1,
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
+MMPTE DemandZeroPte  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
 
 /* Template PTE for prototype page */
 MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)};
@@ -196,7 +197,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Set CR3 for the system process
     //
-    PointerPte = MiAddressToPde(PTE_BASE);
+    PointerPte = MiAddressToPde(PDE_BASE);
     PageFrameIndex = PFN_FROM_PTE(PointerPte) << PAGE_SHIFT;
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameIndex;
     
