@@ -6,8 +6,6 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(wuapi.dll wuapi.spec)
-
 add_library(wuapi SHARED
     downloader.c
     installer.c
@@ -16,7 +14,11 @@ add_library(wuapi SHARED
     searcher.c
     session.c
     updates.c
-    ${CMAKE_CURRENT_BINARY_DIR}/wuapi.def)
+    wuapi.def)
+
+if(NOT MSVC)
+    set_source_files_properties(wuapi.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(wuapi win32dll)
 

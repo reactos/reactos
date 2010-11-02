@@ -1,13 +1,15 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
 
-spec2def(smdll.dll smdll.spec)
-
 add_library(smdll SHARED
     dllmain.c
     query.c
     smdll.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/smdll.def)
+    smdll.def)
+
+if(NOT MSVC)
+    set_source_files_properties(smdll.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 target_link_libraries(smdll smlib)
 

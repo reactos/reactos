@@ -1,0 +1,10 @@
+
+LIBRARY wdmaud.drv
+
+EXPORTS
+  DriverProc@20 @1
+  mxdMessage@20 @2
+  auxMessage@20 @3
+  wodMessage@20 @4
+  widMessage@20 @5
+  modMessage@20 @6

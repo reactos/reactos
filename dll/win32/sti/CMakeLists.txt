@@ -10,14 +10,16 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(sti.dll sti.spec)
-
 add_library(sti SHARED
     regsvr.c
     sti.c
     sti_main.c
     sti_wia.idl
-    ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
+    sti.def)
+
+if(NOT MSVC)
+    set_source_files_properties(sti.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(sti 0)
 
@@ -34,8 +36,6 @@ add_importlibs(sti
     advapi32
     kernel32
     ntdll)
-
-
 
 rpcproxy(sti sti_wia.idl)
 add_cab_target(sti 1)

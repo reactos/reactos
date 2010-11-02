@@ -2,9 +2,11 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(xinput9_1_0.dll xinput9_1_0.spec)
+add_library(xinput9_1_0 SHARED xinput9_1_0_main.c version.rc xinput9_1_0.def)
 
-add_library(xinput9_1_0 SHARED xinput9_1_0_main.c version.rc ${CMAKE_CURRENT_BINARY_DIR}/xinput9_1_0.def)
+if(NOT MSVC)
+    set_source_files_properties(xinput9_1_0.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_importlibs(xinput9_1_0 kernel32)
 

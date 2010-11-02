@@ -1,0 +1,31 @@
+
+LIBRARY rsaenh.dll
+
+EXPORTS
+  CPAcquireContext@16=RSAENH_CPAcquireContext@16 @1
+  CPCreateHash@20=RSAENH_CPCreateHash@20 @2
+  CPDecrypt@28=RSAENH_CPDecrypt@28 @3
+  CPDeriveKey@20=RSAENH_CPDeriveKey@20 @4
+  CPDestroyHash@8=RSAENH_CPDestroyHash@8 @5
+  CPDestroyKey@8=RSAENH_CPDestroyKey@8 @6
+  CPDuplicateHash@20=RSAENH_CPDuplicateHash@20 @7
+  CPDuplicateKey@20=RSAENH_CPDuplicateKey@20 @8
+  CPEncrypt@32=RSAENH_CPEncrypt@32 @9
+  CPExportKey@28=RSAENH_CPExportKey@28 @10
+  CPGenKey@16=RSAENH_CPGenKey@16 @11
+  CPGenRandom@12=RSAENH_CPGenRandom@12 @12
+  CPGetHashParam@24=RSAENH_CPGetHashParam@24 @13
+  CPGetKeyParam@24=RSAENH_CPGetKeyParam@24 @14
+  CPGetProvParam@20=RSAENH_CPGetProvParam@20 @15
+  CPGetUserKey@12=RSAENH_CPGetUserKey@12 @16
+  CPHashData@20=RSAENH_CPHashData@20 @17
+  CPHashSessionKey@16=RSAENH_CPHashSessionKey@16 @18
+  CPImportKey@24=RSAENH_CPImportKey@24 @19
+  CPReleaseContext@8=RSAENH_CPReleaseContext@8 @20
+  CPSetHashParam@20=RSAENH_CPSetHashParam@20 @21
+  CPSetKeyParam@20=RSAENH_CPSetKeyParam@20 @22
+  CPSetProvParam@16=RSAENH_CPSetProvParam@16 @23
+  CPSignHash@28=RSAENH_CPSignHash@28 @24
+  CPVerifySignature@28=RSAENH_CPVerifySignature@28 @25
+  DllRegisterServer@0 @26 PRIVATE
+  DllUnregisterServer@0 @27 PRIVATE

@@ -2,9 +2,11 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-spec2def(sensapi.dll sensapi.spec)
+add_library(sensapi SHARED sensapi.c sensapi.def)
 
-add_library(sensapi SHARED sensapi.c ${CMAKE_CURRENT_BINARY_DIR}/sensapi.def)
+if(NOT MSVC)
+    set_source_files_properties(sensapi.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(sensapi win32dll)
 

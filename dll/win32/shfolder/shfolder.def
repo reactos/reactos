@@ -1,0 +1,6 @@
+
+LIBRARY shfolder.dll
+
+EXPORTS
+  SHGetFolderPathA@20=shell32.SHGetFolderPathA @1
+  SHGetFolderPathW@20=shell32.SHGetFolderPathW @2

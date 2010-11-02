@@ -1,10 +1,9 @@
 
-spec2def(ufat.dll ufat.spec)
+add_library(ufat SHARED ufat.c ufat.rc ufat.def)
 
-add_library(ufat SHARED
-    ufat.c
-    ufat.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ufat.def)
+if(NOT MSVC)
+    set_source_files_properties(ufat.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(ufat win32dll)
 

@@ -1,8 +1,9 @@
 
-spec2def(ufatx.dll ufatx.spec)
+add_library(ufatx SHARED ufatx.rc ufatx.def)
 
-add_library(ufatx SHARED ufatx.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/ufatx.def)
+if(NOT MSVC)
+    set_source_files_properties(ufatx.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(ufatx 0)
 

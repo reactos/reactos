@@ -1,0 +1,27 @@
+
+LIBRARY ws2help.dll
+
+EXPORTS
+  WahCloseApcHelper@4 @1
+  WahCloseHandleHelper@4 @2
+  WahCloseNotificationHandleHelper@4 @3
+  WahCloseSocketHandle@8 @4
+  WahCloseThread@8 @5
+  WahCompleteRequest@20 @6
+  WahCreateHandleContextTable@4 @7
+  WahCreateNotificationHandle@8 @8
+  WahCreateSocketHandle@8 @9
+  WahDestroyHandleContextTable@4 @10
+  WahDisableNonIFSHandleSupport@0 @11
+  WahEnableNonIFSHandleSupport@0 @12
+  WahEnumerateHandleContexts@12 @13
+  WahInsertHandleContext@8 @14
+  WahNotifyAllProcesses@4 @15
+  WahOpenApcHelper@4 @16
+  WahOpenCurrentThread@8 @17
+  WahOpenHandleHelper@4 @18
+  WahOpenNotificationHandleHelper@4 @19
+  WahQueueUserApc@16 @20
+  WahReferenceContextByHandle@8 @21
+  WahRemoveHandleContext@8 @22
+  WahWaitForNotification@16 @23

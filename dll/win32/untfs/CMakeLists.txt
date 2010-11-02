@@ -1,10 +1,9 @@
 
-spec2def(untfs.dll untfs.spec)
+add_library(untfs SHARED untfs.c untfs.rc untfs.def)
 
-add_library(untfs SHARED
-    untfs.c
-    untfs.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/untfs.def)
+if(NOT MSVC)
+    set_source_files_properties(untfs.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(untfs win32dll)
 

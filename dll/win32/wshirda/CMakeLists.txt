@@ -1,9 +1,11 @@
 
 set_unicode()
 
-spec2def(wshirda.dll wshirda.spec)
+add_library(wshirda SHARED wshirda.c wshirda.rc wshirda.def)
 
-add_library(wshirda SHARED wshirda.c wshirda.rc ${CMAKE_CURRENT_BINARY_DIR}/wshirda.def)
+if(NOT MSVC)
+    set_source_files_properties(wshirda.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(wshirda win32dll)
 

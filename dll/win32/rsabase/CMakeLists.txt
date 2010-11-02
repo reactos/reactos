@@ -2,10 +2,11 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(rsabase.dll rsabase.spec)
+add_library(rsabase SHARED version.rc rsabase.def)
 
-add_library(rsabase SHARED version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rsabase.def)
+if(NOT MSVC)
+    set_source_files_properties(rsabase.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(rsabase 0)
 

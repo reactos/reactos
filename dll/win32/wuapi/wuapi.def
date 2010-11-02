@@ -1,0 +1,8 @@
+
+LIBRARY wuapi.dll
+
+EXPORTS
+  DllCanUnloadNow@0 @1 PRIVATE
+  DllGetClassObject@12 @2 PRIVATE
+  DllRegisterServer@0 @3 PRIVATE
+  DllUnregisterServer@0 @4 PRIVATE

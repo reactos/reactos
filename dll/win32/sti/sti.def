@@ -1,0 +1,11 @@
+
+LIBRARY sti.dll
+
+EXPORTS
+  DllCanUnloadNow@0 @1 PRIVATE
+  DllGetClassObject@12 @2 PRIVATE
+  DllRegisterServer@0 @3 PRIVATE
+  DllUnregisterServer@0 @4 PRIVATE
+  StiCreateInstance@16=StiCreateInstanceW@16 @5
+  StiCreateInstanceA@16 @6
+  StiCreateInstanceW@16 @7

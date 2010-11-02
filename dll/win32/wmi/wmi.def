@@ -1,0 +1,49 @@
+
+LIBRARY wmi.dll
+
+EXPORTS
+  CloseTrace@4=advapi32.CloseTrace @1
+  ControlTraceA@16=advapi32.ControlTraceA @2
+  ControlTraceW@16=advapi32.ControlTraceW @3
+  CreateTraceInstanceId@8=advapi32.CreateTraceInstanceId @4
+  EnableTrace@20=advapi32.EnableTrace @5
+  GetTraceEnableFlags@4=advapi32.GetTraceEnableFlags @6
+  GetTraceEnableLevel@4=advapi32.GetTraceEnableLevel @7
+  GetTraceLoggerHandle@4=advapi32.GetTraceLoggerHandle @8
+  OpenTraceA@4=advapi32.OpenTraceA @9
+  OpenTraceW@4=advapi32.OpenTraceW @10
+  ProcessTrace@16=advapi32.ProcessTrace @11
+  QueryAllTracesA@12=advapi32.QueryAllTracesA @12
+  QueryAllTracesW@12=advapi32.QueryAllTracesW @13
+  RegisterTraceGuidsA@32=advapi32.RegisterTraceGuidsA @14
+  RegisterTraceGuidsW@32=advapi32.RegisterTraceGuidsW @15
+  RemoveTraceCallback@4=advapi32.RemoveTraceCallback @16
+  SetTraceCallback@8=advapi32.SetTraceCallback @17
+  StartTraceA@12=advapi32.StartTraceA @18
+  StartTraceW@12=advapi32.StartTraceW @19
+  TraceEvent@8=advapi32.TraceEvent @20
+  TraceEventInstance@16=advapi32.TraceEventInstance @21
+  UnregisterTraceGuids@4=advapi32.UnregisterTraceGuids @22
+  WmiCloseBlock@0=advapi32.WmiCloseBlock @23
+  WmiDevInstToInstanceNameA@0=advapi32.WmiDevInstToInstanceNameA @24
+  WmiDevInstToInstanceNameW@0=advapi32.WmiDevInstToInstanceNameW @25
+  WmiEnumerateGuids@0=advapi32.WmiEnumerateGuids @26
+  WmiExecuteMethodA@0=advapi32.WmiExecuteMethodA @27
+  WmiExecuteMethodW@0=advapi32.WmiExecuteMethodW @28
+  WmiFileHandleToInstanceNameA@0=advapi32.WmiFileHandleToInstanceNameA @29
+  WmiFileHandleToInstanceNameW@0=advapi32.WmiFileHandleToInstanceNameW @30
+  WmiFreeBuffer@0=advapi32.WmiFreeBuffer @31
+  WmiMofEnumerateResourcesA@0=advapi32.WmiMofEnumerateResourcesA @32
+  WmiMofEnumerateResourcesW@0=advapi32.WmiMofEnumerateResourcesW @33
+  WmiNotificationRegistrationA@0=advapi32.WmiNotificationRegistrationA @34
+  WmiNotificationRegistrationW@0=advapi32.WmiNotificationRegistrationW @35
+  WmiOpenBlock@0=advapi32.WmiOpenBlock @36
+  WmiQueryAllDataA@0=advapi32.WmiQueryAllDataA @37
+  WmiQueryAllDataW@0=advapi32.WmiQueryAllDataW @38
+  WmiQueryGuidInformation@0=advapi32.WmiQueryGuidInformation @39
+  WmiQuerySingleInstanceA@0=advapi32.WmiQuerySingleInstanceA @40
+  WmiQuerySingleInstanceW@0=advapi32.WmiQuerySingleInstanceW @41
+  WmiSetSingleInstanceA@0=advapi32.WmiSetSingleInstanceA @42
+  WmiSetSingleInstanceW@0=advapi32.WmiSetSingleInstanceW @43
+  WmiSetSingleItemA@0=advapi32.WmiSetSingleItemA @44
+  WmiSetSingleItemW@0=advapi32.WmiSetSingleItemW @45

@@ -1,6 +1,5 @@
 
 add_definitions(-D__WINESRC__)
-spec2def(version.dll version.spec)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -9,7 +8,11 @@ add_library(version SHARED
     install.c
     resource.c
     version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/version.def)
+    version.def)
+
+if(NOT MSVC)
+    set_source_files_properties(version.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(version 0)
 

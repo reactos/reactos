@@ -1,10 +1,9 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-
-spec2def(rsaenh.dll rsaenh.spec)
 
 add_library(rsaenh SHARED
     aes.c
@@ -19,13 +18,16 @@ add_library(rsaenh SHARED
     rsaenh.c
     sha2.c
     version.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rsaenh.def)
+    rsaenh.def)
+
+if(NOT MSVC)
+    set_source_files_properties(rsaenh.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(rsaenh win32dll)
 
 target_link_libraries(rsaenh wine)
 
 add_importlibs(rsaenh msvcrt crypt32 advapi32 kernel32 ntdll)
-
 
 add_cab_target(rsaenh 1)

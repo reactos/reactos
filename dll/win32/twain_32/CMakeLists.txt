@@ -1,8 +1,6 @@
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
-spec2def(twain_32.dll twain_32.spec)
-
 add_library(twain_32 SHARED
     capability.c
     ds_audio.c
@@ -11,7 +9,11 @@ add_library(twain_32 SHARED
     dsm_ctrl.c
     twain32_main.c
     twain_32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/twain_32.def)
+    twain_32.def)
+
+if(NOT MSVC)
+    set_source_files_properties(twain_32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(twain_32 win32dll)
 

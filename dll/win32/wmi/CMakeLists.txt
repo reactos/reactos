@@ -1,8 +1,9 @@
 
-spec2def(wmi.dll wmi.spec)
+add_library(wmi SHARED wmi.rc wmi.def)
 
-add_library(wmi SHARED wmi.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wmi.def)
+if(NOT MSVC)
+    set_source_files_properties(wmi.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(wmi 0)
 

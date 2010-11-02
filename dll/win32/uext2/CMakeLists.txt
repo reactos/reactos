@@ -1,10 +1,9 @@
 
-spec2def(uext2.dll uext2.spec)
+add_library(uext2 SHARED uext2.c uext2.rc uext2.def)
 
-add_library(uext2 SHARED
-    uext2.c
-    uext2.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/uext2.def)
+if(NOT MSVC)
+    set_source_files_properties(uext2.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(uext2 win32dll)
 

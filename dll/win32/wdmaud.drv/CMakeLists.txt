@@ -9,17 +9,20 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/drivers/sound/mmixer
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/libsamplerate)
 
-spec2def(wdmaud.drv wdmaud.spec)
-
 add_library(wdmaud.drv SHARED
     wdmaud.c
     mixer.c
     mmixer.c
     legacy.c
     wdmaud.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wdmaud.def)
+    wdmaud.def)
+
+if(NOT MSVC)
+    set_source_files_properties(wdmaud.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(wdmaud.drv win32dll)
+
 set_target_properties(wdmaud.drv PROPERTIES SUFFIX "")
 
 target_link_libraries(wdmaud.drv
@@ -28,4 +31,3 @@ target_link_libraries(wdmaud.drv
     mmixer)
 
 add_importlibs(wdmaud.drv user32 winmm advapi32 msvcrt setupapi ksuser kernel32 ntdll)
-

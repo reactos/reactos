@@ -1,10 +1,11 @@
 
 set_unicode()
 
-spec2def(samsrv.dll samsrv.spec)
+add_library(samsrv SHARED samsrv.c samsrv.rc samsrv.def)
 
-add_library(samsrv SHARED samsrv.c samsrv.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/samsrv.def)
+if(NOT MSVC)
+    set_source_files_properties(samsrv.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(samsrv 0)
 

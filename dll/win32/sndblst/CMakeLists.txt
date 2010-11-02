@@ -4,9 +4,11 @@ set_unicode()
 add_definitions(-DDEBUG_NT4)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
-spec2def(sndblst.dll sndblst.spec)
+add_library(sndblst SHARED sndblst.c sndblst.def)
 
-add_library(sndblst SHARED sndblst.c ${CMAKE_CURRENT_BINARY_DIR}/sndblst.def)
+if(NOT MSVC)
+    set_source_files_properties(sndblst.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(sndblst win32dll)
 

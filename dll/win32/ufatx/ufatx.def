@@ -1,0 +1,5 @@
+
+LIBRARY ufatx.dll
+
+EXPORTS
+  FormatEx@24=VfatxFormat@24 @1

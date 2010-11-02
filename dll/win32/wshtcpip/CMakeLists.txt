@@ -3,10 +3,11 @@ set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/tdilib)
 
-spec2def(wshtcpip.dll wshtcpip.spec)
+add_library(wshtcpip SHARED wshtcpip.c wshtcpip.rc wshtcpip.def)
 
-add_library(wshtcpip SHARED wshtcpip.c wshtcpip.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/wshtcpip.def)
+if(NOT MSVC)
+    set_source_files_properties(wshtcpip.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_entrypoint(wshtcpip 0)
 

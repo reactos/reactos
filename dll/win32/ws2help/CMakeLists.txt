@@ -1,15 +1,17 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/winsock)
 
-spec2def(ws2help.dll ws2help.spec)
-
 add_library(ws2help SHARED
     apc.c
     context.c
     dllmain.c
     handle.c
     notify.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ws2help.def)
+    ws2help.def)
+
+if(NOT MSVC)
+    set_source_files_properties(ws2help.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(ws2help win32dll)
 

@@ -2,8 +2,6 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-spec2def(winhttp.dll winhttp.spec)
-
 add_library(winhttp SHARED
     cookie.c
     handle.c
@@ -12,7 +10,11 @@ add_library(winhttp SHARED
     request.c
     session.c
     url.c
-    ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)
+    winhttp.def)
+
+if(NOT MSVC)
+    set_source_files_properties(winhttp.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(winhttp win32dll)
 

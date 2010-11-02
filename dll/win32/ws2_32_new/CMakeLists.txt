@@ -1,10 +1,9 @@
 
 add_definitions(-DLE)
 
-include_directories(inc)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/winsock)
-
-spec2def(ws2_32_new.dll ws2_32.spec)
+include_directories(
+    inc
+    ${REACTOS_SOURCE_DIR}/include/reactos/winsock)
 
 add_library(ws2_32_new SHARED
     src/addrconv.c
@@ -44,7 +43,11 @@ add_library(ws2_32_new SHARED
     src/startup.c
     src/wsautil.c
     ws2_32.rc
-     ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
+    ws2_32.def)
+
+if(NOT MSVC)
+    set_source_files_properties(ws2_32.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 set_module_type(ws2_32_new win32dll)
 

@@ -1,6 +1,4 @@
 
-spec2def(winsta.dll winsta.spec)
-
 list(APPEND SOURCE
     logon.c
     main.c
@@ -10,7 +8,11 @@ list(APPEND SOURCE
     server.c
     ws.c
     winsta.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/winsta.def)
+    winsta.def)
+
+if(NOT MSVC)
+    set_source_files_properties(winsta.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(winsta SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/winsta_winsta.h.gch

@@ -1,0 +1,6 @@
+
+LIBRARY ufat.dll
+
+EXPORTS
+  ChkdskEx@24=VfatChkdsk@24 @1
+  FormatEx@24=VfatFormat@24 @2

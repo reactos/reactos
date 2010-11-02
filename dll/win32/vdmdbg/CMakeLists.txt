@@ -1,11 +1,11 @@
 
 set_unicode()
 
-spec2def(vdmdbg.dll vdmdbg.spec)
+list(APPEND SOURCE vdmdbg.c vdmdbg.def)
 
-list(APPEND SOURCE
-    vdmdbg.c
-    ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg.def)
+if(NOT MSVC)
+    set_source_files_properties(vdmdbg.def PROPERTIES EXTERNAL_OBJECT TRUE)
+endif()
 
 add_library(vdmdbg SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg_vdmdbg.h.gch
