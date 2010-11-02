@@ -1286,7 +1286,7 @@ CheckDllState:
     /* Check if we have an import list */
     if (LoadedImports)
     {
-        /* Reset the count again, and loop entries*/
+        /* Reset the count again, and loop entries */
         ImportCount = 0;
         for (i = 0; i < LoadedImports->Count; i++)
         {

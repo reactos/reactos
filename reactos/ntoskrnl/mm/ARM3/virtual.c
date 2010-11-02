@@ -160,7 +160,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 MiDecrementShareCount(Pfn1, PageFrameIndex);
                 
                 /* Decrement the page table too */
-                DPRINT("FIXME: ARM3 should decrement the PT refcount for: %p\n", Pfn2);
+                DPRINT("FIXME: ARM3 should decrement the pool PDE refcount for: %p\n", PageTableIndex);
                 #if 0 // ARM3: Dont't trust this yet
                 MiDecrementShareCount(Pfn2, PageTableIndex);
                 #endif
@@ -184,7 +184,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
              *
              * Right now, we shouldn't expect any page file information in the PTE
              */
-             ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+            ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
              
             /* Destroy the PTE */
             PointerPte->u.Long = 0;
@@ -259,7 +259,7 @@ MiDeletePte(IN PMMPTE PointerPte,
         }
 #endif
         /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
-        //MiDecrementShareCount(MiGetPfnEntry(PFN_FROM_PTE(PointerPde)), PFN_FROM_PDE(PointerPde));
+        //MiDecrementShareCount(MiGetPfnEntry(PFN_FROM_PTE(PointerPde)), PFN_FROM_PTE(PointerPde));
 
         /* Drop the share count */
         MiDecrementShareCount(Pfn1, PageFrameIndex);
