@@ -1739,22 +1739,24 @@ FindMatchingCreateItem(
     PLIST_ENTRY Entry;
     PCREATE_ITEM_ENTRY CreateItemEntry;
     UNICODE_STRING RefString;
+    LPWSTR pStr;
 
+    /* get terminator */
+    pStr = wcschr(Buffer, L'\\');
 
-#ifndef MS_KSUSER
-    /* remove '\' slash */
-    Buffer++;
-    BufferSize -= sizeof(WCHAR);
-#endif
+    /* sanity check */
+    ASSERT(pStr != NULL);
 
-    if (!wcschr(Buffer, L'\\'))
+    if (pStr == Buffer)
     {
-        RtlInitUnicodeString(&RefString, Buffer);
+        // skip slash
+        RtlInitUnicodeString(&RefString, ++pStr);
     }
     else
     {
+        // request is for pin / node / allocator
         RefString.Buffer = Buffer;
-        RefString.Length = RefString.MaximumLength = ((ULONG_PTR)wcschr(Buffer, L'\\') - (ULONG_PTR)Buffer);
+        RefString.Length = BufferSize = RefString.MaximumLength = ((ULONG_PTR)pStr - (ULONG_PTR)Buffer);
     }
 
     /* point to first entry */

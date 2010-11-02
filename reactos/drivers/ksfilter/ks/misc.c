@@ -95,7 +95,7 @@ KspCopyCreateRequest(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* get object class length */
-    ObjectLength = (wcslen(ObjectClass) + 2) * sizeof(WCHAR);
+    ObjectLength = (wcslen(ObjectClass) + 1) * sizeof(WCHAR);
 
     /* check for minium length requirement */
     if (ObjectLength  + *Size > IoStack->FileObject->FileName.MaximumLength)

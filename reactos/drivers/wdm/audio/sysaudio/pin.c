@@ -398,7 +398,7 @@ GetConnectRequest(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* get object class length */
-    ObjectLength = (wcslen(KSSTRING_Pin) + 2) * sizeof(WCHAR);
+    ObjectLength = (wcslen(KSSTRING_Pin) + 1) * sizeof(WCHAR);
 
     /* check for minium length requirement */
     if (ObjectLength  + sizeof(KSPIN_CONNECT) > IoStack->FileObject->FileName.MaximumLength)
