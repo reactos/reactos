@@ -242,15 +242,15 @@ RosUserDeRegisterShellHookWindow(HWND hWnd)
     return FALSE;
 }
 
-HWND * NTAPI
-RosUserBuildShellHookHwndList()
+BOOL NTAPI
+RosUserBuildShellHookHwndList(HWND *list, UINT *cbSize)
 {
     //PPROCESSINFO process = PsGetCurrentProcessWin32Process();
     //struct desktop *desktop;
     struct list *entry, *shell_hooks;
     PSHELL_HOOK_WINDOW hook_entry;
     ULONG entries=0;
-    HWND* list = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     UserEnterExclusive();
 
@@ -266,22 +266,47 @@ RosUserBuildShellHookHwndList()
         {
             //release_object( desktop );
             UserLeave();
-            return NULL;
+            return FALSE;
         }
 
-        list = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(HWND) * (entries + 1)); /* alloc one extra for nullterm */
-        if (list)
+        /* Check if enough user buffer was provided */
+        if (*cbSize < sizeof(HWND) * entries)
         {
-            HWND* cursor = list;
+            *cbSize = sizeof(HWND) * entries;
+            //release_object( desktop );
+            UserLeave();
+            return FALSE;
+        }
 
-            LIST_FOR_EACH(entry, shell_hooks)
+        /* Fill the list */
+        _SEH2_TRY
+        {
+            if (list)
             {
-                hook_entry = LIST_ENTRY( entry, SHELL_HOOK_WINDOW, ListEntry );
+                HWND* cursor = list;
 
-                *cursor++ = hook_entry->hWnd;
+                LIST_FOR_EACH(entry, shell_hooks)
+                {
+                    hook_entry = LIST_ENTRY( entry, SHELL_HOOK_WINDOW, ListEntry );
+
+                    *cursor++ = hook_entry->hWnd;
+                }
+
+                *cbSize = sizeof(HWND) * entries;
             }
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
 
-            *cursor = NULL; /* nullterm list */
+        /* Return error in case of exception */
+        if (!NT_SUCCESS(Status))
+        {
+            //release_object( desktop );
+            UserLeave();
+            return FALSE;
         }
 
         //release_object( desktop );
@@ -289,7 +314,7 @@ RosUserBuildShellHookHwndList()
 
     UserLeave();
 
-    return list;
+    return TRUE;
 }
 
 /* EOF */
