@@ -10,7 +10,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#ifdef NEWCC
 #include "../cache/section/newmm.h"
+#endif
 #define NDEBUG
 #include <debug.h>
 
@@ -55,8 +57,6 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
    PMM_PAGEOP PageOp;
    ULONG Offset;
    NTSTATUS Status = STATUS_SUCCESS;
-
-   ASSERT(FALSE);
 
    ExAcquireFastMutex(&RmapListLock);
    entry = MmGetRmapListHeadPage(Page);
@@ -197,7 +197,9 @@ MmSetCleanAllRmaps(PFN_NUMBER Page)
    }
    while (current_entry != NULL)
    {
+#ifdef NEWCC
 	  if (!RMAP_IS_SEGMENT(current_entry->Address))
+#endif
 		  MmSetCleanPage(current_entry->Process, current_entry->Address);
 	  current_entry = current_entry->Next;
    }
@@ -219,7 +221,9 @@ MmSetDirtyAllRmaps(PFN_NUMBER Page)
    }
    while (current_entry != NULL)
    {
+#ifdef NEWCC
 	  if (!RMAP_IS_SEGMENT(current_entry->Address))
+#endif
 		  MmSetDirtyPage(current_entry->Process, current_entry->Address);
       current_entry = current_entry->Next;
    }
@@ -241,7 +245,10 @@ MmIsDirtyPageRmap(PFN_NUMBER Page)
    }
    while (current_entry != NULL)
    {
-	  if (!RMAP_IS_SEGMENT(current_entry->Address) && 
+	  if (
+#ifdef NEWCC
+	      !RMAP_IS_SEGMENT(current_entry->Address) && 
+#endif
 		  MmIsDirtyPage(current_entry->Process, current_entry->Address))
       {
          ExReleaseFastMutex(&RmapListLock);
@@ -261,8 +268,9 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
-
+#ifdef NEWCC
    if (!RMAP_IS_SEGMENT(Address))
+#endif
 	   Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
    new_entry = ExAllocateFromNPagedLookasideList(&RmapLookasideList);
@@ -280,7 +288,10 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 #endif
 #endif
 
-   if (!RMAP_IS_SEGMENT(Address) && 
+   if (
+#ifdef NEWCC
+       !RMAP_IS_SEGMENT(Address) && 
+#endif
 	   MmGetPfnForProcess(Process, Address) != Page)
    {
       DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
@@ -311,8 +322,9 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 #endif
    MmSetRmapListHeadPage(Page, new_entry);
    ExReleaseFastMutex(&RmapListLock);
-   
+#ifdef NEWCC
    if (!RMAP_IS_SEGMENT(Address)) 
+#endif
    {
 	   if (Process == NULL)
 	   {
@@ -352,7 +364,9 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
    {
       previous_entry = current_entry;
       current_entry = current_entry->Next;
+#ifdef NEWCC
 	  if (!RMAP_IS_SEGMENT(current_entry->Address)) 
+#endif
 	  {
 		  if (DeleteMapping)
 		  {
@@ -370,10 +384,12 @@ MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
 			  (void)InterlockedExchangeAddUL(&Process->Vm.WorkingSetSize, -PAGE_SIZE);
 		  }
 	  } 
+#ifdef NEWCC
 	  else 
 	  {
 		  ExFreeToNPagedLookasideList(&RmapLookasideList, previous_entry);
 	  }
+#endif
    }
 }
 
@@ -403,7 +419,10 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
          }
          ExReleaseFastMutex(&RmapListLock);
          ExFreeToNPagedLookasideList(&RmapLookasideList, current_entry);
-		 if (!RMAP_IS_SEGMENT(Address)) {
+#ifdef NEWCC
+		 if (!RMAP_IS_SEGMENT(Address))
+#endif
+		 {
 			 if (Process == NULL)
 			 {
 				 Process = PsInitialSystemProcess;
@@ -421,6 +440,7 @@ MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
    KeBugCheck(MEMORY_MANAGEMENT);
 }
 
+#ifdef NEWCC
 PVOID
 NTAPI
 MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
@@ -478,3 +498,4 @@ MmDeleteSectionAssociation(PFN_NUMBER Page)
    }
    ExReleaseFastMutex(&RmapListLock);
 }
+#endif
