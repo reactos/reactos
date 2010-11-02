@@ -164,6 +164,15 @@ BOOL
 APIENTRY
 RosUserGetAsyncKeyboardState(BYTE key_state_table[]);
 
+BOOL NTAPI
+RosUserRegisterShellHookWindow(HWND hWnd);
+
+BOOL NTAPI
+RosUserDeRegisterShellHookWindow(HWND hWnd);
+
+BOOL NTAPI
+RosUserBuildShellHookHwndList(HWND *list, UINT *cbSize);
+
 VOID NTAPI
 SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style);
 

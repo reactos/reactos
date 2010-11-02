@@ -415,16 +415,19 @@ LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL uni
 
     if (id == WH_SHELL)
     {
-        HWND *hook_windows = RosUserBuildShellHookHwndList();
-        if (hook_windows)
+        HWND hook_windows[4]; // FIXME: Not a good way, but dynamic allocation all the time is stupid too
+        UINT cbListSize = sizeof(hook_windows);
+        if (!RosUserBuildShellHookHwndList(hook_windows, &cbListSize))
+        {
+            ERR("Not enough hook windows array size!\n");
+        }
+        else
         {
             INT wm_shellhook = RegisterWindowMessageW(L"SHELLHOOK");
-            HWND* cursor = hook_windows;
+            INT wnd_num;
 
-            for (; *cursor; cursor++)
-                PostMessage(*cursor, wm_shellhook, code, wparam);
-
-            HeapFree(GetProcessHeap(), 0, hook_windows);
+            for (wnd_num = 0; wnd_num < cbListSize / sizeof(HWND); wnd_num++)
+                PostMessage(hook_windows[wnd_num], wm_shellhook, code, wparam);
         }
     }
 
