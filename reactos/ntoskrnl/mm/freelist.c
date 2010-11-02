@@ -79,6 +79,8 @@ MmGetLRUFirstUserPage(VOID)
     if (Position == 0xFFFFFFFF) return 0;
     
     /* Return it */
+    ASSERT(Position != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Position));
     return Position;
 }
 
@@ -89,6 +91,8 @@ MmInsertLRULastUserPage(PFN_NUMBER Pfn)
     KIRQL OldIrql;
 
     /* Set the page as a user page */
+    ASSERT(Pfn != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Pfn));
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     RtlSetBit(&MiUserPfnBitMap, Pfn);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -108,6 +112,8 @@ MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
     if (Position == 0xFFFFFFFF) return 0;
     
     /* Return it */
+    ASSERT(Position != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Position));
     return Position;
 }
 
@@ -116,6 +122,8 @@ NTAPI
 MmRemoveLRUUserPage(PFN_NUMBER Page)
 {
     /* Unset the page as a user page */
+    ASSERT(Page != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
     RtlClearBit(&MiUserPfnBitMap, Page);
 }
 
