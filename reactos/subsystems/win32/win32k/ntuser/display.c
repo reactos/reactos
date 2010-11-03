@@ -147,10 +147,9 @@ InitDisplayDriver(
     return pGraphicsDevice;
 }
 
-BOOL
-InitVideo(
-    PUNICODE_STRING pustrRegPath,
-    FLONG flags)
+NTSTATUS
+NTAPI
+InitVideo()
 {
     ULONG iDevNum, iVGACompatible = -1, ulMaxObjectNumber = 0;
     WCHAR awcDeviceName[20];
@@ -160,8 +159,9 @@ InitVideo(
     ULONG cbValue;
     HKEY hkey;
 
-    DPRINT1("----------------------------- InitVideo() -------------------------------\n");
+    DPRINT("----------------------------- InitVideo() -------------------------------\n");
 
+    /* Open the key for the boot command line */
     Status = RegOpenKey(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Control", &hkey);
     if (NT_SUCCESS(Status))
     {
@@ -185,7 +185,7 @@ InitVideo(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Could not open device registry key!\n");
-        ASSERT(FALSE);
+        return Status;
     }
 
     /* Read the name of the VGA adapter */
@@ -220,7 +220,9 @@ InitVideo(
             continue;
         }
 
+        /* Initialize the driver for this device */
         pGraphicsDevice = InitDisplayDriver(awcDeviceName, awcBuffer);
+        if (!pGraphicsDevice) continue;
 
         /* Check if this is the VGA adapter */
         if (iDevNum == iVGACompatible)
@@ -235,7 +237,15 @@ InitVideo(
             gpPrimaryGraphicsDevice = pGraphicsDevice;
     }
 
+    /* Close the device map registry key */
     ZwClose(hkey);
+
+    /* Check if we had any success */
+    if (!gpPrimaryGraphicsDevice)
+    {
+        DPRINT1("No usable display driver was found.\n");
+        return STATUS_UNSUCCESSFUL;
+    }
 
     if (gbBaseVideo)
     {

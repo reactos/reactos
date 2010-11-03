@@ -52,7 +52,7 @@ EngpRegisterGraphicsDevice(
     PDEVMODEW pdm, pdmEnd;
     PLDEVOBJ pldev;
 
-    DPRINT1("EngpRegisterGraphicsDevice(%S)\n", pustrDeviceName->Buffer);
+    DPRINT("EngpRegisterGraphicsDevice(%wZ)\n", pustrDeviceName);
 
     /* Allocate a GRAPHICS_DEVICE structure */
     pGraphicsDevice = ExAllocatePoolWithTag(PagedPool,
@@ -71,7 +71,7 @@ EngpRegisterGraphicsDevice(
                                       &pDeviceObject);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Could not open driver, 0x%lx\n", Status);
+        DPRINT1("Could not open driver %wZ, 0x%lx\n", pustrDeviceName, Status);
         ExFreePoolWithTag(pGraphicsDevice, GDITAG_GDEVICE);
         return NULL;
     }
