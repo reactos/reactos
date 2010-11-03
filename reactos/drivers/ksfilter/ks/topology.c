@@ -38,7 +38,7 @@ KspCreateObjectType(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* build a request which looks like \{ObjectClass}\CreateParameters 
+    /* build a request which looks like {ObjectClass}\CreateParameters 
      * For pins the parent is the reference string used in registration
      * For clocks it is full path for pin\{ClockGuid}\ClockCreateParams
      */

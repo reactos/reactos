@@ -319,9 +319,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
     DEFINE_ABSTRACT_UNKNOWN()
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
-        IN KSPIN_CONNECT *ConnectDetails,
+        IN PKSPIN_CONNECT ConnectDetails,
+        IN PKSPIN_DESCRIPTOR Descriptor,
         IN ULONG FrameSize,
-        IN ULONG Alignment) PURE;
+        IN ULONG Alignment,
+        IN ULONG TagSupportEnabled) PURE;
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PIRP Irp,
@@ -360,9 +362,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
 #define IMP_IIrpQueue                                  \
     STDMETHODIMP_(NTSTATUS) Init(THIS_                 \
-        IN KSPIN_CONNECT *ConnectDetails,              \
+        IN PKSPIN_CONNECT ConnectDetails,              \
+        IN PKSPIN_DESCRIPTOR Descriptor,               \
         IN ULONG FrameSize,                            \
-        IN ULONG Alignment);                           \
+        IN ULONG Alignment,                            \
+        IN ULONG TagSupportEnabled);                   \
                                                        \
     STDMETHODIMP_(NTSTATUS) AddMapping(THIS_           \
         IN PIRP Irp,                                   \

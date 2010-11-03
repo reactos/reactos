@@ -452,15 +452,17 @@ IoCompletion (
     /* now free the mdl */
     IoFreeMdl(Context->Mdl);
 
-    /* now free the stream header */
-    ExFreePool(Irp->AssociatedIrp.SystemBuffer);
-
     DPRINT("IoCompletion Irp %p IoStatus %lx Information %lx Length %lu\n", Irp, Irp->IoStatus.Status, Irp->IoStatus.Information, Length);
 
     if (Irp->IoStatus.Status == STATUS_SUCCESS)
     {
         /* store the length */
         Irp->IoStatus.Information = Length;
+    }
+    else
+    {
+        /* failed */
+        Irp->IoStatus.Information = 0;
     }
 
     /* free context */

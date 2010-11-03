@@ -661,6 +661,11 @@ KsProbeStreamIrp(
 
     if (Irp->RequestorMode == KernelMode || Irp->AssociatedIrp.SystemBuffer)
     {
+        if (Irp->RequestorMode == KernelMode)
+        {
+            /* no need to allocate stream header */
+            Irp->AssociatedIrp.SystemBuffer = Irp->UserBuffer;
+        }
 AllocMdl:
         /* check if alloc mdl flag is passed */
         if (!(ProbeFlags & KSPROBE_ALLOCATEMDL))
@@ -910,6 +915,9 @@ ProbeMdl:
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
+        /* mark irp as buffered so that changes the stream headers are propagated back */
+        Irp->Flags = IRP_DEALLOCATE_BUFFER | IRP_BUFFERED_IO;
+
         _SEH2_TRY
         {
             if (ProbeFlags & KSPROBE_STREAMWRITE)
@@ -923,6 +931,9 @@ ProbeMdl:
             {
                 /* stream reads means writing */
                 ProbeForWrite(Irp->UserBuffer, Length, sizeof(UCHAR));
+
+                /* set input operation flags */
+                Irp->Flags |= IRP_INPUT_OPERATION;
             }
 
             /* copy stream buffer */
