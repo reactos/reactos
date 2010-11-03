@@ -51,11 +51,9 @@ typedef u32_t mem_ptr_t;
 #define LWIP_PLATFORM_ASSERT(x) ASSERTMSG(x, FALSE)
 
 /* Synchronization */
-#define SYS_ARCH_DECL_PROTECT(lev) \
-    sys_prot_t lev; \
-    sys_arch_decl_protect(&lev)
-#define SYS_ARCH_PROTECT(lev) sys_arch_protect(&lev)
-#define SYS_ARCH_UNPROTECT(lev) sys_arch_unprotect(&lev)
+#define SYS_ARCH_DECL_PROTECT(lev) sys_prot_t (lev)
+#define SYS_ARCH_PROTECT(lev) sys_arch_protect(&(lev))
+#define SYS_ARCH_UNPROTECT(lev) sys_arch_unprotect(lev)
 
 /* Compiler hints for packing structures */
 #define PACK_STRUCT_STRUCT
