@@ -65,7 +65,11 @@ enable_language(ASM)
 # Activate language support for resource files
 enable_language(RC)
 
-set(IMPORT_EXECUTABLES "${REACTOS_SOURCE_DIR}/build/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
+if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
+  set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+endif()
+
+set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
 include(${IMPORT_EXECUTABLES})
 
 add_definitions(-DDBG=${DBG} -DKDBG=${KDBG})
