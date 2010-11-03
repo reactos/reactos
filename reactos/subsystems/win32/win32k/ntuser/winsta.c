@@ -56,7 +56,9 @@ static GENERIC_MAPPING IntWindowStationMapping =
    };
 
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitWindowStationImpl(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;

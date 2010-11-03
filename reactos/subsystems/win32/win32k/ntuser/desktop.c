@@ -170,8 +170,9 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+INIT_FUNCTION
 NTSTATUS
-FASTCALL
+NTAPI
 InitDesktopImpl(VOID)
 {
     /* Set Desktop Object Attributes */

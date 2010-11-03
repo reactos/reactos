@@ -59,6 +59,8 @@ enum BASEFLAGS
     BASEFLAG_READY_TO_DIE = 0x1000
 };
 
+extern PSECTION_OBJECT GdiTableSection;
+
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 BOOL    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
 BOOL    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
@@ -74,6 +76,11 @@ PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
 VOID INTERNAL_CALL GDIOBJ_LockMultipleObjs(ULONG ulCount, IN HGDIOBJ* ahObj, OUT PGDIOBJ* apObj);
 
 PVOID   INTERNAL_CALL GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process);
+
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitGdiHandleTable();
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)

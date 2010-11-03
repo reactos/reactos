@@ -29,7 +29,9 @@
  * Initialize windowing implementation.
  */
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitWindowImpl(VOID)
 {
    return STATUS_SUCCESS;

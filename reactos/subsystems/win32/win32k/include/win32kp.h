@@ -11,6 +11,9 @@
 #pragma once
 #define INTERNAL_CALL APIENTRY
 
+#define PLACE_IN_SECTION(s) __attribute__((section(s)))
+#define INIT_FUNCTION PLACE_IN_SECTION("INIT")
+
 /* Internal Win32k Headers */
 #include <include/accelerator.h>
 #include <include/clipboard.h>

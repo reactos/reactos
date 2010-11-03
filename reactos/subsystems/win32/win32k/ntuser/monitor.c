@@ -28,7 +28,9 @@ static PMONITOR gMonitorList = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
+INIT_FUNCTION
 NTSTATUS
+NTAPI
 InitMonitorImpl()
 {
     DPRINT("Initializing monitor implementation...\n");

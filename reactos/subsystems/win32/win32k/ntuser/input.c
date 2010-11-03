@@ -922,7 +922,9 @@ RawInputThreadMain(PVOID StartContext)
   DPRINT1("Raw Input Thread Exit!\n");
 }
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitInputImpl(VOID)
 {
    NTSTATUS Status;

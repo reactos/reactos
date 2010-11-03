@@ -81,6 +81,8 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 };
 
 static LARGE_INTEGER ShortDelay;
+PGDI_HANDLE_TABLE GdiHandleTable = NULL;
+PSECTION_OBJECT GdiTableSection = NULL;
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
@@ -151,7 +153,9 @@ GDI_CleanupDummy(PVOID ObjectBody)
  * Allocate GDI object table.
  * \param	Size - number of entries in the object table.
 */
-PGDI_HANDLE_TABLE INTERNAL_CALL
+INIT_FUNCTION
+PGDI_HANDLE_TABLE
+INTERNAL_CALL
 GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
 {
     PGDI_HANDLE_TABLE HandleTable = NULL;
@@ -220,6 +224,23 @@ GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
 
     return HandleTable;
 }
+
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitGdiHandleTable()
+{
+    /* Create the GDI handle table */
+    GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
+    if (GdiHandleTable == NULL)
+    {
+        DPRINT1("Failed to initialize the GDI handle table.\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    return STATUS_SUCCESS;
+}
+
 
 static void FASTCALL
 LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)

@@ -140,7 +140,9 @@ MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 }
 
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 MsqInitializeImpl(VOID)
 {
    /*CurrentFocusMessageQueue = NULL;*/

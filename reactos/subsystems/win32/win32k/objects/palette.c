@@ -57,7 +57,10 @@ unsigned short GetNumberOfBits(unsigned int dwMask)
 }
 
 // Create the system palette
-HPALETTE FASTCALL PALETTE_Init(VOID)
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitPaletteImpl()
 {
     int i;
     HPALETTE hpalette;
@@ -68,7 +71,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
                                    sizeof(LOGPALETTE) +
                                        (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)),
                                    TAG_PALETTE);
-    if (!palPtr) return FALSE;
+    if (!palPtr) return STATUS_NO_MEMORY;
 
     palPtr->palVersion = 0x300;
     palPtr->palNumEntries = NB_RESERVED_COLORS;
@@ -131,7 +134,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     appalSurfaceDefault[BMF_JPEG] = &gpalRGB;
     appalSurfaceDefault[BMF_PNG] = &gpalRGB;
 
-    return hpalette;
+    return STATUS_SUCCESS;
 }
 
 VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)

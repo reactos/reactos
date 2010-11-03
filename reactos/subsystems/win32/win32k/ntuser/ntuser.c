@@ -53,8 +53,10 @@ InitUserAtoms(VOID)
 
 /* FUNCTIONS *****************************************************************/
 
-
-NTSTATUS FASTCALL InitUserImpl(VOID)
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitUserImpl(VOID)
 {
    NTSTATUS Status;
 

@@ -18,12 +18,14 @@ PPDEVOBJ gppdevPrimary = NULL;
 static PPDEVOBJ gppdevList = NULL;
 static HSEMAPHORE ghsemPDEV;
 
-BOOL
+INIT_FUNCTION
+NTSTATUS
 NTAPI
 InitPDEVImpl()
 {
     ghsemPDEV = EngCreateSemaphore();
-    return TRUE;
+    if (!ghsemPDEV) return STATUS_INSUFFICIENT_RESOURCES;
+    return STATUS_SUCCESS;
 }
 
 

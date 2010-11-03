@@ -20,15 +20,16 @@ static PGRAPHICS_DEVICE gpGraphicsDeviceLast = NULL;
 static HSEMAPHORE ghsemGraphicsDeviceList;
 static ULONG giDevNum = 1;
 
-BOOL
+INIT_FUNCTION
+NTSTATUS
 NTAPI
 InitDeviceImpl()
 {
     ghsemGraphicsDeviceList = EngCreateSemaphore();
     if (!ghsemGraphicsDeviceList)
-        return FALSE;
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 

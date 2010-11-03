@@ -16,16 +16,11 @@ HANDLE hModuleWin;
 
 PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
-/* FIXME */
-PGDI_HANDLE_TABLE GdiHandleTable = NULL;
-PSECTION_OBJECT GdiTableSection = NULL;
 
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
 
 PSERVERINFO gpsi = NULL; // Global User Server Information.
-
-HSEMAPHORE hsemDriverMgmt = NULL;
 
 SHORT gusLanguageID;
 
@@ -315,8 +310,6 @@ CLEANUP:
     END_CLEANUP;
 }
 
-/* Only used in ntuser/input.c KeyboardThreadMain(). If it's
-   not called there anymore, please delete */
 NTSTATUS
 Win32kInitWin32Thread(PETHREAD Thread)
 {
@@ -354,11 +347,22 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
 C_ASSERT(sizeof(SERVERINFO) <= PAGE_SIZE);
 
+// Return on failure
+#define NT_ROF(x) \
+    Status = (x); \
+    if (!NT_SUCCESS(Status)) \
+    { \
+        DPRINT1("Failed '%s' (0x%lx)\n", #x, Status); \
+        return Status; \
+    }
+
 /*
  * This definition doesn't work
  */
-NTSTATUS APIENTRY
-DriverEntry (
+INIT_FUNCTION
+NTSTATUS
+APIENTRY
+DriverEntry(
     IN	PDRIVER_OBJECT	DriverObject,
     IN	PUNICODE_STRING	RegistryPath)
 {
@@ -407,146 +411,48 @@ DriverEntry (
     }
 
     /* Allocate global server info structure */
+    gpsi = UserHeapAlloc(sizeof(SERVERINFO));
     if (!gpsi)
     {
-        gpsi = UserHeapAlloc(sizeof(SERVERINFO));
-        if (gpsi)
-        {
-            RtlZeroMemory(gpsi, sizeof(SERVERINFO));
-            DPRINT("Global Server Data -> %x\n", gpsi);
-        }
-        else
-        {
-            ASSERT(FALSE);
-        }
-    }
-
-    if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore();
-
-    /* Create the GDI handle table */
-    GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
-    if (GdiHandleTable == NULL)
-    {
-        DPRINT1("Failed to initialize the GDI handle table.\n");
+        DPRINT1("Failed allocate server info structure!\n");
         return STATUS_UNSUCCESSFUL;
     }
 
-    /* Initialize default palettes */
-    PALETTE_Init();
+    RtlZeroMemory(gpsi, sizeof(SERVERINFO));
+    DPRINT("Global Server Data -> %x\n", gpsi);
+
+    NT_ROF(InitGdiHandleTable());
+    NT_ROF(InitPaletteImpl());
 
     /* Create stock objects, ie. precreated objects commonly
        used by win32 applications */
     CreateStockObjects();
     CreateSysColorObjects();
 
-    InitXlateImpl();
-    InitPDEVImpl();
-    InitLDEVImpl();
-    InitDeviceImpl();
-
-    Status = InitDcImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize Device context implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitUserImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize user implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitHotkeyImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize hotkey implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitWindowStationImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize window station implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitDesktopImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize desktop implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitWindowImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize window implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitMenuImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize menu implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = InitInputImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize input implementation.\n");
-        return(Status);
-    }
-
-    Status = InitKeyboardImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize keyboard implementation.\n");
-        return(Status);
-    }
-
-    Status = InitMonitorImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DbgPrint("Failed to initialize monitor implementation!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    Status = MsqInitializeImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize message queue implementation.\n");
-        return(Status);
-    }
-
-    Status = InitTimerImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize timer implementation.\n");
-        return(Status);
-    }
-
-    Status = InitAcceleratorImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize accelerator implementation.\n");
-        return(Status);
-    }
-
-    Status = InitGuiCheckImpl();
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to initialize GUI check implementation.\n");
-        return(Status);
-    }
+    NT_ROF(InitXlateImpl());
+    NT_ROF(InitPDEVImpl());
+    NT_ROF(InitLDEVImpl());
+    NT_ROF(InitDeviceImpl());
+    NT_ROF(InitDcImpl());
+    NT_ROF(InitUserImpl());
+    NT_ROF(InitHotkeyImpl());
+    NT_ROF(InitWindowStationImpl());
+    NT_ROF(InitDesktopImpl());
+    NT_ROF(InitWindowImpl());
+    NT_ROF(InitMenuImpl());
+    NT_ROF(InitInputImpl());
+    NT_ROF(InitKeyboardImpl());
+    NT_ROF(InitMonitorImpl());
+    NT_ROF(MsqInitializeImpl());
+    NT_ROF(InitTimerImpl());
+    NT_ROF(InitAcceleratorImpl());
+    NT_ROF(InitGuiCheckImpl());
 
     /* Initialize FreeType library */
     if (!InitFontSupport())
     {
         DPRINT1("Unable to initialize font support\n");
-        return STATUS_UNSUCCESSFUL;
+        return Status;
     }
 
     gusLanguageID = IntGdiGetLanguageID();

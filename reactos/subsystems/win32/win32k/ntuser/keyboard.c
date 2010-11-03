@@ -58,7 +58,10 @@ BYTE gQueueKeyStateTable[256];
 /* FUNCTIONS *****************************************************************/
 
 /* Initialization -- Right now, just zero the key state and init the lock */
-NTSTATUS FASTCALL InitKeyboardImpl(VOID)
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitKeyboardImpl(VOID)
 {
    RtlZeroMemory(&gQueueKeyStateTable,0x100);
    return STATUS_SUCCESS;

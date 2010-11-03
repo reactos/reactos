@@ -30,7 +30,8 @@ EngpRegisterGraphicsDevice(
     PUNICODE_STRING pustrDescription,
     PDEVMODEW pdmDefault);
 
-BOOL
+INIT_FUNCTION
+NTSTATUS
 NTAPI
 InitDeviceImpl();
 
