@@ -4,8 +4,7 @@ add_library(vbemp SHARED
     vbemp.c
     vbemp.rc)
 
-set_target_properties(vbemp PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native -Wl,--exclude-all-symbols" SUFFIX ".sys")
-
+set_module_type(vbemp kernelmodedriver)
 add_importlibs(vbemp videoprt)
-add_dependencies(vbemp psdk bugcodes)
+
 add_cab_target(vbemp 2)

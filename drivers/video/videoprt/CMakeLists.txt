@@ -26,9 +26,7 @@ list(APPEND SOURCE
 add_library(videoprt SHARED ${CMAKE_CURRENT_BINARY_DIR}/videoprt_videoprt.h.gch ${SOURCE})
 
 set_module_type(videoprt kernelmodedriver)
-
 add_importlibs(videoprt ntoskrnl hal)
 
 add_pch(videoprt ${CMAKE_CURRENT_SOURCE_DIR}/videoprt.h ${SOURCE})
-add_dependencies(videoprt psdk bugcodes buildno_header)
 add_cab_target(videoprt 2)

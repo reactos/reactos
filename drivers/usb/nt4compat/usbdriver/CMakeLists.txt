@@ -1,8 +1,9 @@
 
-add_definitions(-DINCLUDE_EHCI)
-add_definitions(-D_MULTI_UHCI)
-add_definitions(-D_MULTI_EHCI)
-add_definitions(-D_X86)
+add_definitions(
+    -DINCLUDE_EHCI
+    -D_MULTI_UHCI
+    -D_MULTI_EHCI
+    -D_X86)
 
 list(APPEND SOURCE
     ehci.c
@@ -26,9 +27,9 @@ list(APPEND SOURCE
 
 add_library(usbdriver SHARED ${CMAKE_CURRENT_BINARY_DIR}/usbdriver_usbdriver.h.gch ${SOURCE})
 
-set_target_properties(usbdriver PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
-
+set_module_type(usbdriver kernelmodedriver)
 add_importlibs(usbdriver ntoskrnl hal)
+
 add_pch(usbdriver ${CMAKE_CURRENT_SOURCE_DIR}/usbdriver.h ${SOURCE})
-add_dependencies(usbdriver psdk bugcodes)
+
 add_cab_target(usbdriver 2)

@@ -7,8 +7,7 @@ add_definitions(
     -DCLASS_GLOBAL_USE_DELAYED_RETRY=1
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT=0
     -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFER_SIZE=512
-    -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512
-)
+    -DCLASS_GLOBAL_BUFFERED_DEBUG_PRINT_BUFFERS=512)
 
 if(NOT MSVC)
     add_definitions(-mrtd -fno-builtin -w)
@@ -30,8 +29,7 @@ list(APPEND SOURCE
     utils.c
     xferpkt.c
     class.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/class.def
-)
+    ${CMAKE_CURRENT_BINARY_DIR}/class.def)
 
 spec2def(classpnp.sys class.spec)
 
@@ -39,7 +37,6 @@ add_library(classpnp SHARED ${SOURCE})
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
 
 set_module_type(classpnp kernelmodedriver)
-
 add_importlibs(classpnp hal ntoskrnl)
 
 add_minicd_target(classpnp reactos classpnp.sys)

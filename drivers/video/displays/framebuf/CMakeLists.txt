@@ -10,7 +10,9 @@ add_library(framebuf SHARED
     framebuf.rc
     ${CMAKE_CURRENT_BINARY_DIR}/framebuf.def)
 
-set_target_properties(framebuf PROPERTIES LINK_FLAGS "-Wl,-entry,_DrvEnableDriver@12 -Wl,--image-base,0x00010000 -Wl,--subsystem,native")
+set_entrypoint(framebuf DrvEnableDriver@12)
+set_subsystem(framebuf native)
+set_image_base(framebuf 0x00010000)
 
 add_importlibs(framebuf win32k)
 add_dependencies(framebuf psdk bugcodes)

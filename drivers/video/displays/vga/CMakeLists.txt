@@ -15,7 +15,9 @@ add_library(vgaddi SHARED
     vgaddi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/vgaddi.def)
 
-set_target_properties(vgaddi PROPERTIES LINK_FLAGS "-Wl,-entry,_DrvEnableDriver@12 -Wl,--subsystem,native -Wl,--image-base,0x00010000")
+set_entrypoint(vgaddi DrvEnableDriver@12)
+set_subsystem(vgaddi native)
+set_image_base(vgaddi 0x00010000)
 
 add_importlibs(vgaddi win32k)
 add_dependencies(vgaddi psdk bugcodes)

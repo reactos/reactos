@@ -1,6 +1,4 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/freetype/include)
 
 add_library(ftfd SHARED
@@ -10,13 +8,14 @@ add_library(ftfd SHARED
     rosglue.c
     sprintf.c)
 
-set_target_properties(ftfd PROPERTIES LINK_FLAGS "-Wl,-entry,_FtfdEnableDriver@12 -Wl,--subsystem,native")
+set_entrypoint(ftfd FtfdEnableDriver@12)
+set_subsystem(ftfd native)
 
 target_link_libraries(ftfd
     ${CMAKE_CURRENT_SOURCE_DIR}/freetype.def
-    -lwin32k
     freetype
     libcntpr)
 
+add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)
 add_cab_target(ftfd 1)

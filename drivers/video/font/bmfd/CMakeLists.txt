@@ -4,7 +4,9 @@ add_library(bmfd SHARED
     font.c
     glyph.c)
 
-set_target_properties(bmfd PROPERTIES LINK_FLAGS "-Wl,-entry,_BmfdEnableDriver@12 -Wl,--subsystem,native -Wl,--image-base,0x00010000")
+set_entrypoint(bmfd BmfdEnableDriver@12)
+set_subsystem(bmfd native)
+set_image_base(bmfd 0x00010000)
 
 target_link_libraries(bmfd libcntpr)
 

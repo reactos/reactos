@@ -9,9 +9,8 @@ add_library(sysaudio SHARED
     pin.c
     sysaudio.rc)
 
-set_target_properties(sysaudio PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(sysaudio kernelmodedriver)
 
 target_link_libraries(sysaudio libcntpr)
 
 add_importlibs(sysaudio ntoskrnl ks hal)
-add_dependencies(sysaudio psdk bugcodes)

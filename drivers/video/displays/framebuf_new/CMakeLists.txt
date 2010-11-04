@@ -13,13 +13,14 @@ list(APPEND SOURCE
 add_library(framebuf_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/framebuf_new_driver.h.gch ${SOURCE})
 
 if(ARCH MATCHES i386)
-    if(MSVC)
-    else()
+    if(NOT MSVC)
         set_target_properties(framebuf_new PROPERTIES COMPILE_FLAGS "-mrtd -fno-builtin")
     endif()
 endif()
 
-set_target_properties(framebuf_new PROPERTIES LINK_FLAGS "-Wl,-entry,_DrvEnableDriver@12 -Wl,--image-base,0x00010000 -Wl,--subsystem,native")
+set_entrypoint(framebuf_new DrvEnableDriver@12)
+set_subsystem(framebuf_new native)
+set_image_base(framebuf_new 0x00010000)
 
 target_link_libraries(framebuf_new libcntpr)
 

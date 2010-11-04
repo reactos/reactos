@@ -1,8 +1,9 @@
 
 add_definitions(-D_COMDDK_)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/sound/mmixer)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/drivers/sound/mmixer
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
 add_library(wdmaud SHARED
     control.c
@@ -12,7 +13,7 @@ add_library(wdmaud SHARED
     sup.c
     wdmaud.rc)
 
-set_target_properties(wdmaud PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(wdmaud kernelmodedriver)
 
 target_link_libraries(wdmaud
     mmixer
@@ -20,4 +21,3 @@ target_link_libraries(wdmaud
     ${PSEH_LIB})
 
 add_importlibs(wdmaud ntoskrnl ks hal)
-add_dependencies(wdmaud psdk bugcodes)

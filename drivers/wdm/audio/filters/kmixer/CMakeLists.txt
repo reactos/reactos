@@ -6,11 +6,10 @@ add_library(kmixer SHARED
     filter.c
     pin.c)
 
-set_target_properties(kmixer PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(kmixer kernelmodedriver)
 
 target_link_libraries(kmixer
     libcntpr
     libsamplerate)
 
 add_importlibs(kmixer ntoskrnl ks hal)
-add_dependencies(kmixer psdk bugcodes)
