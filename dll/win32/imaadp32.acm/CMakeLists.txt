@@ -11,7 +11,7 @@ if(NOT MSVC)
 endif()
 
 set_entrypoint(imaadp32.acm 0)
-set_target_properties(imaadp32.acm PROPERTIES SUFFIX ".acm")
+set_target_properties(imaadp32.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(imaadp32.acm wine)
 
