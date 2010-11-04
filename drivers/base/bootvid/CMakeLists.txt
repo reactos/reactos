@@ -18,12 +18,11 @@ endif(ARCH MATCHES i386 OR ARCH MATCHES amd64)
 
 add_library(bootvid SHARED ${CMAKE_CURRENT_BINARY_DIR}/bootvid_precomp.h.gch ${SOURCE})
 
-set_target_properties(bootvid PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-base,0x00010000")
+set_entrypoint(bootvid 0)
+set_subsystem(bootvid native)
+set_image_base(bootvid 0x00010000)
 
-target_link_libraries(bootvid
-    -lntoskrnl
-    -lhal)
-
+add_importlibs(bootvid ntoskrnl hal)
 add_pch(bootvid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_dependencies(bootvid psdk buildno_header bugcodes)
 add_minicd_target(bootvid reactos bootvid.dll)

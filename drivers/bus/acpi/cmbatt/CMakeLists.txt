@@ -8,9 +8,7 @@ list(APPEND SOURCE
 
 add_library(cmbatt SHARED ${CMAKE_CURRENT_BINARY_DIR}/cmbatt_cmbatt.h.gch ${SOURCE})
 
-set_target_properties(cmbatt PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
-
+set_module_type(cmbatt kernelmodedriver)
 add_importlibs(cmbatt ntoskrnl hal battc wmilib)
 
 add_pch(cmbatt ${CMAKE_CURRENT_SOURCE_DIR}/cmbatt.h ${SOURCE})
-add_dependencies(cmbatt psdk bugcodes)

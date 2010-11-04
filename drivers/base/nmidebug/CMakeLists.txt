@@ -1,14 +1,8 @@
 
-
-
 add_library(nmidebug SHARED nmidebug.c nmidebug.rc)
 
-set_target_properties(nmidebug PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols" SUFFIX ".sys")
+set_module_type(nmidebug kernelmodedriver)
+add_importlibs(nmidebug ntoskrnl hal)
 
-target_link_libraries(nmidebug
-    -lntoskrnl
-    -lhal)
-
-add_dependencies(nmidebug psdk bugcodes)
 add_minicd_target(nmidebug reactos)
 add_cab_target(nmidebug 2)

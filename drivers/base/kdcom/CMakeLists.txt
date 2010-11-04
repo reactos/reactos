@@ -12,11 +12,11 @@ list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/kdcom.def)
 
 add_library(kdcom SHARED ${SOURCE})
 
-set_target_properties(kdcom PROPERTIES LINK_FLAGS "-Wl,-entry,0 -Wl,--image-base,0x00010000")
+set_entrypoint(kdcom 0)
+set_subsystem(kdcom native)
+set_image_base(kdcom 0x00010000)
 
-target_link_libraries(kdcom
-    -lntoskrnl
-    -lhal)
+add_importlibs(kdcom ntoskrnl hal)
 
 add_dependencies(kdcom psdk buildno_header bugcodes)
 add_minicd_target(kdcom reactos kdcom.dll)

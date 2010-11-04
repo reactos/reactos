@@ -1,6 +1,7 @@
 
-include_directories(include)
-include_directories(acpica/include)
+include_directories(
+    include
+    acpica/include)
 
 add_library(acpica
     acpica/dispatcher/dsfield.c
@@ -137,14 +138,13 @@ add_library(acpi SHARED
     buspdo.c
     main.c)
 
-set_target_properties(acpi PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(acpi kernelmodedriver)
 
 target_link_libraries(acpi
     wdmguid
     acpica)
 
 add_importlibs(acpi ntoskrnl hal)
-add_dependencies(acpi psdk bugcodes)
 
 add_minicd_target(acpi reactos acpi.sys)
 add_livecd_target(acpi reactos/system32/drivers)
