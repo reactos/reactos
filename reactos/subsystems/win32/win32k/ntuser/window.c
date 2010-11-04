@@ -1910,9 +1910,9 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    LRESULT Result;
    USER_REFERENCE_ENTRY ParentRef, Ref;
    PTHREADINFO pti;
-   ANSI_STRING asClassName;
    DWORD dwShowMode = SW_SHOW;
    CREATESTRUCTW *pCsw;
+   PVOID pszClass = NULL, pszName = NULL;
    DECLARE_RETURN(PWND);
 
    /* Get the current window station and reference it */
@@ -1927,7 +1927,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
    pCsw = NULL;
    pCbtCreate = NULL;
-   RtlInitAnsiString(&asClassName, NULL);
 
    /* Get the class and reference it*/
    Class = IntGetAndReferenceClass(ClassName, Cs->hInstance);
@@ -2008,17 +2007,58 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    pCsw->dwExStyle = Cs->dwExStyle;
    dwStyle = Cs->style;       // Save it anyway.
    pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
+   pCsw->lpszName  = Cs->lpszName;
+   pCsw->lpszClass = Cs->lpszClass;
 
-   pCsw->lpszName  = (LPCWSTR) WindowName->Buffer;
-   pCsw->lpszClass = (LPCWSTR) ClassName->Buffer;
-
-   if (Window->state & WNDS_ANSICREATOR)
+   // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
+   if (!IS_ATOM(ClassName->Buffer))
    {
-      if (!IS_ATOM(ClassName->Buffer))
+      if (Window->state & WNDS_ANSICREATOR)
       {
-         RtlUnicodeStringToAnsiString(&asClassName, ClassName, TRUE);
-         pCsw->lpszClass = (LPCWSTR) asClassName.Buffer;
+         ANSI_STRING AnsiString;
+         AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
+         pszClass = UserHeapAlloc(AnsiString.MaximumLength);
+         RtlZeroMemory(pszClass, AnsiString.MaximumLength);
+         AnsiString.Buffer = (PCHAR)pszClass;
+         RtlUnicodeStringToAnsiString(&AnsiString, ClassName, FALSE);
       }
+      else
+      {
+         UNICODE_STRING UnicodeString;
+         UnicodeString.MaximumLength = ClassName->Length + sizeof(UNICODE_NULL);
+         pszClass = UserHeapAlloc(UnicodeString.MaximumLength);
+         RtlZeroMemory(pszClass, UnicodeString.MaximumLength);
+         UnicodeString.Buffer = (PWSTR)pszClass;
+         RtlCopyUnicodeString(&UnicodeString, ClassName);
+      }
+      if (pszClass) pCsw->lpszClass = UserHeapAddressToUser(pszClass);
+   }
+   if (WindowName->Length)
+   {
+      UNICODE_STRING Name;
+      Name.Buffer = WindowName->Buffer;
+      Name.Length = WindowName->Length;
+      Name.MaximumLength = WindowName->MaximumLength;
+
+      if (Window->state & WNDS_ANSICREATOR)
+      {
+         ANSI_STRING AnsiString;
+         AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(&Name)+sizeof(CHAR);
+         pszName = UserHeapAlloc(AnsiString.MaximumLength);
+         RtlZeroMemory(pszName, AnsiString.MaximumLength);
+         AnsiString.Buffer = (PCHAR)pszName;
+         RtlUnicodeStringToAnsiString(&AnsiString, &Name, FALSE);
+      }
+      else
+      {
+         UNICODE_STRING UnicodeString;
+         UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
+         pszName = UserHeapAlloc(UnicodeString.MaximumLength);
+         RtlZeroMemory(pszName, UnicodeString.MaximumLength);
+         UnicodeString.Buffer = (PWSTR)pszName; 
+         RtlCopyUnicodeString(&UnicodeString, &Name);
+      }
+      if (pszName) pCsw->lpszName = UserHeapAddressToUser(pszName);
    }
 
    pCbtCreate->lpcs = pCsw;
@@ -2037,7 +2077,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Cs->y = pCsw->y;
    hwndInsertAfter = pCbtCreate->hwndInsertAfter;
 
-   Cs->style = dwStyle; /* NCCREATE and WM_NCCALCSIZE need the original values*/
+   /* NCCREATE and WM_NCCALCSIZE need the original values */
+   Cs->style = dwStyle;
+   Cs->lpszName = (LPCWSTR) WindowName;
+   Cs->lpszClass = (LPCWSTR) ClassName;
 
    /* Send the WM_GETMINMAXINFO message*/
    Size.cx = Cs->cx;
@@ -2187,7 +2230,8 @@ CLEANUP:
 
    if (pCsw) ExFreePoolWithTag(pCsw, TAG_HOOK);
    if (pCbtCreate) ExFreePoolWithTag(pCbtCreate, TAG_HOOK);
-   RtlFreeAnsiString(&asClassName);
+   if (pszName) UserHeapFree(pszName);
+   if (pszClass) UserHeapFree(pszClass);
 
    if (Window)
    {
@@ -2337,10 +2381,11 @@ NtUserCreateWindowEx(
     Cs.cy = nHeight;
     Cs.x = x;
     Cs.y = y;
-//   Cs.lpszName = (LPCWSTR) WindowName->Buffer;
-//   Cs.lpszClass = (LPCWSTR) ClassName->Buffer;
-    Cs.lpszName = (LPCWSTR) plstrWindowName;
-    Cs.lpszClass = (LPCWSTR) &ustrClassName;
+    Cs.lpszName = (LPCWSTR) plstrWindowName->Buffer;
+    if (IS_ATOM(plstrClassName))
+       Cs.lpszClass = (LPCWSTR) plstrClassName;
+    else
+       Cs.lpszClass = (LPCWSTR) plstrClassName->Buffer;
     Cs.dwExStyle = dwExStyle;
 
     UserEnterExclusive();

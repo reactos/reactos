@@ -154,49 +154,18 @@ CallMsgFilterA(
   LPMSG lpMsg,
   int nCode)
 {
-   BOOL ret = FALSE;
-
-  if (nCode != HCBT_CREATEWND) ret = NtUserCallMsgFilter((LPMSG) lpMsg, nCode);
-  else
+  MSG Msg;
+  if (NtCurrentTeb()->Win32ThreadInfo && IsThreadHooked(GetWin32ClientInfo()))
+  {
+     if ( lpMsg->message & ~WM_MAXIMUM )
      {
-        UNICODE_STRING usBuffer;
-        CBT_CREATEWNDA *cbtcwA = (CBT_CREATEWNDA *)lpMsg->lParam;
-        CBT_CREATEWNDW cbtcwW;
-        CREATESTRUCTW csW;
-        MSG Msg;
-
-        Msg.hwnd = lpMsg->hwnd;
-        Msg.message = lpMsg->message;
-        Msg.time = lpMsg->time;
-        Msg.pt = lpMsg->pt;
-        Msg.wParam = lpMsg->wParam;
-
-        cbtcwW.lpcs = &csW;
-        cbtcwW.hwndInsertAfter = cbtcwA->hwndInsertAfter;
-        csW = *(CREATESTRUCTW *)cbtcwA->lpcs;
-
-        if (HIWORD(cbtcwA->lpcs->lpszName))
-        {
-            RtlCreateUnicodeStringFromAsciiz(&usBuffer,cbtcwA->lpcs->lpszName);
-            csW.lpszName = usBuffer.Buffer;
-        }
-        if (HIWORD(cbtcwA->lpcs->lpszClass))
-        {
-            RtlCreateUnicodeStringFromAsciiz(&usBuffer,cbtcwA->lpcs->lpszClass);
-            csW.lpszClass = usBuffer.Buffer;
-        }
-        Msg.lParam =(LPARAM) &cbtcwW;
-
-        ret = NtUserCallMsgFilter((LPMSG)&Msg, nCode);
-
-        lpMsg->time = Msg.time;
-        lpMsg->pt = Msg.pt;
-
-        cbtcwA->hwndInsertAfter = cbtcwW.hwndInsertAfter;
-        if (HIWORD(csW.lpszName)) HeapFree( GetProcessHeap(), 0, (LPWSTR)csW.lpszName );
-        if (HIWORD(csW.lpszClass)) HeapFree( GetProcessHeap(), 0, (LPWSTR)csW.lpszClass );
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
      }
-  return ret;
+     RtlCopyMemory(&Msg, lpMsg, sizeof(MSG));
+     return NtUserCallMsgFilter( &Msg, nCode);
+  }
+  return FALSE;
 }
 
 
@@ -209,7 +178,18 @@ CallMsgFilterW(
   LPMSG lpMsg,
   int nCode)
 {
-  return  NtUserCallMsgFilter((LPMSG) lpMsg, nCode);
+  MSG Msg;
+  if (NtCurrentTeb()->Win32ThreadInfo && IsThreadHooked(GetWin32ClientInfo()))
+  {
+     if ( lpMsg->message & ~WM_MAXIMUM )
+     {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+     }
+     RtlCopyMemory(&Msg, lpMsg, sizeof(MSG));
+     return  NtUserCallMsgFilter( &Msg, nCode);
+  }
+  return FALSE;
 }
 
 
@@ -454,7 +434,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
   KBDLLHOOKSTRUCT KeyboardLlData, *pKeyboardLlData;
   MSLLHOOKSTRUCT MouseLlData, *pMouseLlData;
-  MSG Msg, *pMsg;
+  MSG *pcMsg, *pMsg;
   PMOUSEHOOKSTRUCT pMHook;
   CWPSTRUCT CWP, *pCWP;
   CWPRETSTRUCT CWPR, *pCWPR;
@@ -476,13 +456,12 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         case HCBT_CREATEWND:
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
-          Csw = CbtCreatewndExtra->Cs;
-          Csw.lpszName = CbtCreatewndExtra->Cs.lpszName;
-          Csw.lpszClass = CbtCreatewndExtra->Cs.lpszClass;
-          wParam = Common->wParam;
+          RtlCopyMemory(&Csw, &CbtCreatewndExtra->Cs, sizeof(CREATESTRUCTW));
           CbtCreatewndw.lpcs = &Csw;
           CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+          wParam = Common->wParam;
           lParam = (LPARAM) &CbtCreatewndw;
+          ERR("HCBT_CREATEWND: hWnd 0x%x Name 0x%x Class 0x%x\n", Common->wParam, Csw.lpszName, Csw.lpszClass);
           break;
         case HCBT_CLICKSKIPPED:
             pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
@@ -524,7 +503,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       }
       else
       {
-         ERR("Common = 0x%x, Proc = 0x%x\n",Common,Common->Proc);
+         ERR("Null Proc! Common = 0x%x, Proc = 0x%x\n",Common,Common->Proc);
       }
       switch(Common->Code)
       {
@@ -545,6 +524,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &KeyboardLlData);
       break;
     case WH_MOUSE_LL:
+      ERR("WH_MOUSE_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pMouseLlData = (PMSLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       RtlCopyMemory(&MouseLlData, pMouseLlData, sizeof(MSLLHOOKSTRUCT));
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &MouseLlData);
@@ -562,7 +542,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       _SEH2_END;
       break;
     case WH_CALLWNDPROC:
-      ERR("WH_CALLWNDPROC: Code %d, wParam %d\n",Common->Code,Common->wParam);
+//      ERR("WH_CALLWNDPROC: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pCWP = (PCWPSTRUCT)((PCHAR) Common + Common->lParam);
       RtlCopyMemory(&CWP, pCWP, sizeof(CWPSTRUCT));
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &CWP);
@@ -573,14 +553,15 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &CWPR);
       break;
     case WH_MSGFILTER: /* All SEH support */
-      ERR("WH_MSGFILTER: Code %d, wParam %d\n",Common->Code,Common->wParam);
     case WH_SYSMSGFILTER:
     case WH_GETMESSAGE:
       pMsg = (PMSG)((PCHAR) Common + Common->lParam);
-      RtlCopyMemory(&Msg, pMsg, sizeof(MSG));
+      pcMsg = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MSG));
+      RtlCopyMemory(pcMsg, pMsg, sizeof(MSG));
+//      ERR("pMsg %d  pcMsg %d\n",pMsg->message, pcMsg->message);
       _SEH2_TRY
       {
-         Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &Msg);
+         Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) pcMsg);
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
@@ -588,11 +569,14 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       }
       _SEH2_END;
       if (!Hit && Common->HookId == WH_GETMESSAGE)
-         RtlCopyMemory(pMsg, &Msg, sizeof(MSG));
+         RtlCopyMemory(pMsg, pcMsg, sizeof(MSG));
+      HeapFree( GetProcessHeap(), 0, pcMsg );
       break;
-    case WH_FOREGROUNDIDLE: /* <-- SEH support */
     case WH_KEYBOARD:
     case WH_SHELL:
+      Result = Common->Proc(Common->Code, Common->wParam, Common->lParam);
+      break;    
+    case WH_FOREGROUNDIDLE: /* <-- SEH support */
       _SEH2_TRY
       {
          Result = Common->Proc(Common->Code, Common->wParam, Common->lParam);

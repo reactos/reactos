@@ -880,13 +880,23 @@ NtUserCreateDesktop(
    PUNICODE_STRING lpszDesktopName = NULL;
    UNICODE_STRING ClassName, MenuName;
    LARGE_STRING WindowName;
+   BOOL NoHooks = FALSE;
    PWND pWnd = NULL;
    CREATESTRUCTW Cs;
    INT i;
+   PTHREADINFO ptiCurrent;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
    UserEnterExclusive();
+
+   ptiCurrent = PsGetCurrentThreadWin32Thread();
+   if (ptiCurrent)
+   {
+   /* Turn off hooks when calling any CreateWindowEx from inside win32k. */
+      NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
+      ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
+   }
 
    _SEH2_TRY
    {
@@ -1102,6 +1112,7 @@ NtUserCreateDesktop(
    RETURN( Desktop);
 
 CLEANUP:
+   if (!NoHooks && ptiCurrent) ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
    DPRINT("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;

@@ -335,6 +335,7 @@ co_IntCallHookProc(INT HookId,
    PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
    PTHREADINFO pti;
    PWND pWnd;
+   PMSG pMsg = NULL;
    BOOL Hit = FALSE;
 
    ASSERT(Proc);
@@ -346,8 +347,8 @@ co_IntCallHookProc(INT HookId,
       return 0;
    }
 
-   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
-                    + ModuleName->Length;
+   ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
+
    switch(HookId)
    {
       case WH_CBT:
@@ -360,6 +361,7 @@ co_IntCallHookProc(INT HookId,
                   DPRINT1("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
                   goto Fault_Exit;
                }
+               DPRINT1("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
               // Due to KsStudio.exe, just pass the callers original pointers
               // except class which point to kernel space if not an atom.
               // Found by, Olaf Siejka
@@ -432,24 +434,20 @@ co_IntCallHookProc(INT HookId,
    Common->lParam = lParam;
    Common->Proc = Proc;
    Common->Ansi = Ansi;
-   Common->ModuleNameLength = ModuleName->Length;
-   if (ModuleName->Buffer)
-      RtlCopyMemory(Common->ModuleName, ModuleName->Buffer, ModuleName->Length);
-   Extra = (PCHAR) Common->ModuleName + Common->ModuleNameLength;
+   Extra = (PCHAR) Common + sizeof(HOOKPROC_CALLBACK_ARGUMENTS);
 
    switch(HookId)
    {
       case WH_CBT:
          switch(Code)
-         {
+         { // Need to remember this is not the first time through! Call Next Hook?
             case HCBT_CREATEWND:
-               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
                RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
-               CbtCreatewndExtra->Cs.lpszClass = CbtCreateWnd->lpcs->lpszClass; // if Atom
+               CbtCreatewndExtra->Cs.lpszClass = CbtCreateWnd->lpcs->lpszClass;
                CbtCreatewndExtra->Cs.lpszName = CbtCreateWnd->lpcs->lpszName;
-               Extra = (PCHAR) (CbtCreatewndExtra + 1);
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                break;
             case HCBT_CLICKSKIPPED:
                RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
@@ -488,7 +486,8 @@ co_IntCallHookProc(INT HookId,
       case WH_MSGFILTER:
       case WH_SYSMSGFILTER:
       case WH_GETMESSAGE:
-         RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MSG));
+         pMsg = (PMSG)lParam;
+         RtlCopyMemory(Extra, (PVOID) pMsg, sizeof(MSG));
          Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
          break;
       case WH_FOREGROUNDIDLE:
@@ -548,9 +547,9 @@ co_IntCallHookProc(INT HookId,
          break;
       // "The GetMsgProc hook procedure can examine or modify the message."
       case WH_GETMESSAGE:
-         if (lParam)
+         if (pMsg)
          {
-            RtlCopyMemory((PVOID) lParam, Extra, sizeof(MSG));
+            RtlCopyMemory((PVOID) pMsg, Extra, sizeof(MSG));
          }
          break;
    }

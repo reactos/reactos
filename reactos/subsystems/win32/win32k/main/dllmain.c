@@ -252,17 +252,41 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
                 }
             }
         }
+        else
+        {
+           DPRINT1("No Desktop handle for this Thread!\n");
+        }
         Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
         co_IntDestroyCaret(Win32Thread);
         Win32Thread->ppi = PsGetCurrentProcessWin32Process();
-        pTeb = NtCurrentTeb();
-        if (pTeb)
+        if (Win32Thread->rpdesk && !Win32Thread->pDeskInfo)
         {
-            Win32Thread->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
-            Win32Thread->pClientInfo->pClientThreadInfo = NULL;
+           Win32Thread->pDeskInfo = Win32Thread->rpdesk->pDeskInfo;
         }
         Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
         Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
+        pTeb = NtCurrentTeb();
+        if (pTeb)
+        { /* Attempt to startup client support which should have been initialized in IntSetThreadDesktop. */
+           PCLIENTINFO pci = (PCLIENTINFO)pTeb->Win32ClientInfo;
+           Win32Thread->pClientInfo = pci;
+           pci->pClientThreadInfo = NULL;
+           pci->ppi = Win32Thread->ppi;
+           pci->fsHooks = Win32Thread->fsHooks;
+           if (Win32Thread->KeyboardLayout) pci->hKL = Win32Thread->KeyboardLayout->hkl;
+           pci->dwTIFlags = Win32Thread->TIF_flags;
+           /* CI may not have been initialized. */
+           if (!pci->pDeskInfo && Win32Thread->pDeskInfo) 
+           {
+              if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
+
+              pci->pDeskInfo = (PVOID)((ULONG_PTR)Win32Thread->pDeskInfo - pci->ulClientDelta);
+           }
+        }
+        else
+        {
+           DPRINT1("No TEB for this Thread!\n");
+        }
         Win32Thread->pEThread = Thread;
     }
     else

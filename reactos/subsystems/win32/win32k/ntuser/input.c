@@ -22,6 +22,8 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
+PTHREADINFO ptiKeyboard;
+PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
@@ -233,6 +235,18 @@ MouseThreadMain(PVOID StartContext)
                        0,
                        FILE_SYNCHRONOUS_IO_ALERT);
    } while (!NT_SUCCESS(Status));
+
+ /* Need to setup basic win32k for this thread to process WH_MOUSE_LL messages. */
+   Status = Win32kInitWin32Thread(PsGetCurrentThread());
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed making mouse thread a win32 thread.\n");
+      return; //(Status);
+   }
+
+   ptiMouse = PsGetCurrentThreadWin32Thread();
+   ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
+   DPRINT1("\nMouse Thread 0x%x \n", ptiMouse);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -529,6 +543,10 @@ KeyboardThreadMain(PVOID StartContext)
       DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
       return; //(Status);
    }
+
+   ptiKeyboard = PsGetCurrentThreadWin32Thread();
+   ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
+   DPRINT1("\nKeyboard Thread 0x%x \n", ptiKeyboard);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -890,8 +908,8 @@ RawInputThreadMain(PVOID StartContext)
   }
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
-  DPRINT("\nRaw Input Thread 0x%x \n", ptiRawInput);
-
+  ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
+  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
