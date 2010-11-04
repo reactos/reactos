@@ -600,6 +600,7 @@ HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
                                IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 {
@@ -609,6 +610,7 @@ HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 {
     DPRINT1("Unimplemented!\n");
@@ -617,6 +619,7 @@ HalpReleasePciDeviceForDebugging(IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice)
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpRegisterPciDebuggingDeviceInfo(VOID)
 {
     BOOLEAN Found = FALSE;
@@ -853,6 +856,7 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
 
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
+INIT_FUNCTION
 HalpQueryPciRegistryInfo(VOID)
 {
 #ifndef _MINIHAL_
@@ -1085,6 +1089,7 @@ HalpQueryPciRegistryInfo(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpInitializePciStubs(VOID)
 {
     PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo;
