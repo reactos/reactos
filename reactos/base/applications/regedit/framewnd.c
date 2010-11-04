@@ -282,6 +282,105 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     return TRUE;
 }
 
+static INT_PTR CALLBACK LoadHive_KeyNameInHookProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    static LPTSTR sKey = NULL;
+    static INT sLength = 0;
+    switch(uMsg)
+    {
+     case WM_INITDIALOG:
+        sKey = (LPTSTR)lParam;
+        sLength = 128; /* FIXME: Ugly hack! */
+     case WM_COMMAND:
+        switch(LOWORD(wParam))
+        {
+         case IDOK:
+            if(GetDlgItemText(hWndDlg, IDC_EDIT_KEY, sKey, sLength))
+                return EndDialog(hWndDlg, -1);
+            else
+                return EndDialog(hWndDlg, 0);
+         case IDCANCEL:
+            return EndDialog(hWndDlg, 0);
+        }
+        break;
+    }
+    return FALSE;
+}
+
+static BOOL LoadHive(HWND hWnd)
+{
+    OPENFILENAME ofn;
+    TCHAR Caption[128];
+    LPCTSTR pszKeyPath;
+    TCHAR xPath[128];
+    HKEY hRootKey;
+    TCHAR Filter[1024];
+    FILTERPAIR filter;
+    /* get the item key to load the hive in */
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
+    /* initialize the "open file" dialog */
+    InitOpenFileName(hWnd, &ofn);
+    /* build the "All Files" filter up */
+    filter.DisplayID = IDS_FLT_ALLFILES;
+    filter.FilterID = IDS_FLT_ALLFILES_FLT;
+    BuildFilterStrings(Filter, &filter, sizeof(filter));
+    ofn.lpstrFilter = Filter;
+    /* load and set the caption and flags for dialog */
+    LoadString(hInst, IDS_LOAD_HIVE, Caption, COUNT_OF(Caption));
+    ofn.lpstrTitle = Caption;
+    ofn.Flags |= OFN_ENABLESIZING;
+    /*    ofn.lCustData = ;*/
+    /* now load the hive */
+    if (GetOpenFileName(&ofn))
+    {
+        if(DialogBoxParam(hInst, MAKEINTRESOURCE(IDD_LOADHIVE), hWnd, &LoadHive_KeyNameInHookProc, (LPARAM)xPath))
+        {
+            LONG regLoadResult = RegLoadKey(hRootKey, xPath, ofn.lpstrFile);
+            if(regLoadResult == ERROR_SUCCESS)
+            {
+                /* refresh tree and list views */
+                RefreshTreeView(g_pChildWnd->hTreeWnd);
+                pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
+                RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+            }
+            else
+            {
+                ErrorMessageBox(hWnd, Caption, regLoadResult);
+                return FALSE;
+            }
+        }
+    } else {
+        CheckCommDlgError(hWnd);
+    }
+    return TRUE;
+}
+
+static BOOL UnloadHive(HWND hWnd)
+{
+    TCHAR Caption[128];
+    LPCTSTR pszKeyPath;
+    HKEY hRootKey;
+    /* get the item key to unload */
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
+    /* load and set the caption and flags for dialog */
+    LoadString(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
+    /* now unload the hive */
+    LONG regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
+    if(regUnloadResult == ERROR_SUCCESS)
+    {
+        /* refresh tree and list views */
+        RefreshTreeView(g_pChildWnd->hTreeWnd);
+        pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
+        RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+    }
+    else
+    {
+        ErrorMessageBox(hWnd, Caption, regUnloadResult);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 static BOOL ImportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
@@ -315,7 +414,6 @@ static BOOL ImportRegistryFile(HWND hWnd)
 
     return TRUE;
 }
-
 
 static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -397,7 +495,7 @@ BOOL ExportRegistryFile(HWND hWnd)
     if (GetSaveFileName(&ofn)) {
         BOOL result;
         DWORD format;
- 
+
         if (ofn.nFilterIndex == 1)
             format = REG_FORMAT_5;
         else
@@ -758,6 +856,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(message);
 
     switch (LOWORD(wParam)) {
+    case ID_REGISTRY_LOADHIVE:
+        LoadHive(hWnd);
+        return TRUE;
+    case ID_REGISTRY_UNLOADHIVE:
+        UnloadHive(hWnd);
+        return TRUE;
     case ID_REGISTRY_IMPORTREGISTRYFILE:
         ImportRegistryFile(hWnd);
         return TRUE;
