@@ -1,11 +1,13 @@
 
 if(ARCH MATCHES i386)
 
-add_definitions(-D_NTHALDLL_)
-add_definitions(-D_NTHAL_)
+add_definitions(
+    -D_NTHALDLL_
+    -D_NTHAL_)
 
-include_directories(halx86/include)
-include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
+include_directories(
+    halx86/include
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 list(APPEND HAL_GENERIC_SOURCE
     halx86/generic/beep.c
@@ -43,8 +45,6 @@ list(APPEND HAL_GENERIC_UP_SOURCE
     halx86/up/pic.c
     halx86/up/processor.c)
 
-
-
 list(APPEND HAL_SOURCE
     ${CMAKE_CURRENT_BINARY_DIR}/hal_hal.h.gch
     ${HAL_GENERIC_SOURCE}
@@ -57,11 +57,14 @@ add_library(hal SHARED ${HAL_SOURCE})
 add_pch(hal ${CMAKE_CURRENT_SOURCE_DIR}/halx86/include/hal.h ${HAL_SOURCE})
 add_dependencies(hal psdk bugcodes)
 
-set_target_properties(hal PROPERTIES LINK_FLAGS "-Wl,-entry,_HalInitSystem@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native")
+set_entrypoint(hal HalInitSystem@8)
+set_subsystem(hal native)
+set_image_base(hal 0x00010000)
+
+add_importlibs(hal ntoskrnl)
 
 target_link_libraries(hal
     ${CMAKE_CURRENT_SOURCE_DIR}/halx86/hal_i386.def
-    -lntoskrnl
     libcntpr)
 
 list(APPEND MINI_HAL_SOURCE

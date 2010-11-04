@@ -1,9 +1,11 @@
 
-include_directories(src)
-include_directories(adns_win32)
+include_directories(
+    src
+    adns_win32)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-DADNS_JGAA_WIN32)
+add_definitions(
+    -D_DLL -D__USE_CRTIMP
+    -DADNS_JGAA_WIN32)
 
 list(APPEND SOURCE
     adns_win32/adns_unix_calls.c

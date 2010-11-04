@@ -1,3 +1,4 @@
+
 add_definitions(-DBZ_NO_STDIO -DBZ_DECOMPRESS_ONLY)
 
 spec2def(bzip2 unbzip2.spec)
@@ -13,8 +14,7 @@ list(APPEND SOURCE
 
 add_library(bzip2 SHARED ${SOURCE})
 
-set_target_properties(bzip2 PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" OUTPUT_NAME "unbzip2")
-
+set_module_type(bzip2 kernelmodedriver)
 add_importlibs(bzip2 ntoskrnl)
 
-add_dependencies(bzip2 bugcodes)
+set_target_properties(bzip2 PROPERTIES OUTPUT_NAME "unbzip2")
