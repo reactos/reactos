@@ -1,3 +1,4 @@
+
 include_directories(inc)
 
 list(APPEND SOURCE
@@ -22,13 +23,8 @@ list(APPEND SOURCE
     
 add_library(ext2fs SHARED ${SOURCE})
 
-set_target_properties(ext2fs PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(ext2fs kernelmodedriver)
+add_importlibs(ext2fs ntoskrnl hal)
 
-
-target_link_libraries(ext2fs
-    -lntoskrnl
-    -lhal)
-
-add_dependencies(ext2fs psdk bugcodes)
 add_minicd_target(ext2fs reactos ext2.sys)
 add_livecd_target(ext2fs reactos/system32/drivers ext2.sys)

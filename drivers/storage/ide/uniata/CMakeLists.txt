@@ -15,7 +15,6 @@ add_library(uniata SHARED
     ros_glue/ros_glue.cpp)
 
 set_module_type(uniata kernelmodedriver)
-
 add_importlibs(uniata scsiport ntoskrnl hal)
 
 add_minicd_target(uniata reactos uniata.sys)

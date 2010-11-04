@@ -1,6 +1,7 @@
 
-include_directories(BEFORE include)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+include_directories(
+    BEFORE include
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
 list(APPEND SOURCE
     afd/bind.c
@@ -18,15 +19,11 @@ list(APPEND SOURCE
     afd.rc)
 
 add_library(afd SHARED ${CMAKE_CURRENT_BINARY_DIR}/afd_afd.h.gch ${SOURCE})
+target_link_libraries(afd ${PSEH_LIB})
 
 set_module_type(afd kernelmodedriver)
-
-target_link_libraries(afd
-    ${PSEH_LIB}
-    -lntoskrnl
-    -lhal)
+add_importlibs(afd ntoskrnl hal)
 
 add_pch(afd ${CMAKE_CURRENT_SOURCE_DIR}/include/afd.h ${SOURCE})
-add_dependencies(afd psdk bugcodes buildno_header)
 
 add_cab_target(afd 2)

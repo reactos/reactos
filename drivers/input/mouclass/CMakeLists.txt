@@ -1,6 +1,4 @@
 
-
-
 add_library(mouclass SHARED
     misc.c
     mouclass.c

@@ -1,13 +1,14 @@
 
 include_directories(BEFORE include)
 
-add_definitions(-DNDIS_WRAPPER)
-add_definitions(-DNDIS51)
-add_definitions(-DNDIS51_MINIPORT)
-add_definitions(-DNDIS_LEGACY_DRIVER)
-add_definitions(-DNDIS_LEGACY_MINIPORT)
-add_definitions(-DNDIS_LEGACY_PROTOCOL)
-add_definitions(-DNDIS_MINIPORT_DRIVER)
+add_definitions(
+    -DNDIS_WRAPPER
+    -DNDIS51
+    -DNDIS51_MINIPORT
+    -DNDIS_LEGACY_DRIVER
+    -DNDIS_LEGACY_MINIPORT
+    -DNDIS_LEGACY_PROTOCOL
+    -DNDIS_MINIPORT_DRIVER)
 
 spec2def(ndis.sys ndis.spec)
 
@@ -36,12 +37,9 @@ list(APPEND SOURCE
 
 add_library(ndis SHARED ${CMAKE_CURRENT_BINARY_DIR}/ndis_ndissys.h.gch ${SOURCE})
 
-set_target_properties(ndis PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
-
-target_link_libraries(ndis
-    -lntoskrnl
-    -lhal)
+set_module_type(ndis kernelmodedriver)
+add_importlibs(ndis ntoskrnl hal)
 
 add_pch(ndis ${CMAKE_CURRENT_SOURCE_DIR}/include/ndissys.h ${SOURCE})
-add_dependencies(ndis psdk bugcodes buildno_header)
+
 add_cab_target(ndis 2)

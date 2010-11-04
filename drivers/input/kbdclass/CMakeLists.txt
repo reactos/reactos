@@ -1,6 +1,4 @@
 
-
-
 add_library(kbdclass SHARED
     kbdclass.c
     misc.c

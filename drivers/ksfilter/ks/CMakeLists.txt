@@ -1,6 +1,7 @@
 
-add_definitions(-DBUILDING_KS)
-add_definitions(-D_COMDDK_)
+add_definitions(
+    -DBUILDING_KS
+    -D_COMDDK_)
 
 add_library(ks SHARED
     api.c

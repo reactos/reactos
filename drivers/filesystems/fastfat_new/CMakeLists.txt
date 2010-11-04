@@ -1,6 +1,7 @@
 
-include_directories(.)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/fullfat)
+include_directories(
+    .
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/fullfat)
 
 list(APPEND SOURCE
     cleanup.c
@@ -25,7 +26,7 @@ list(APPEND SOURCE
 
 add_library(fastfat_new SHARED ${CMAKE_CURRENT_BINARY_DIR}/fastfat_new_fastfat.h.gch ${SOURCE})
 
-set_target_properties(fastfat_new PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
+set_module_type(fastfat_new kernelmodedriver)
 
 target_link_libraries(fastfat_new
     ${PSEH_LIB}
@@ -34,4 +35,3 @@ target_link_libraries(fastfat_new
 add_importlibs(fastfat_new ntoskrnl hal)
 
 add_pch(fastfat_new ${CMAKE_CURRENT_SOURCE_DIR}/fastfat.h ${SOURCE})
-add_dependencies(fastfat_new psdk bugcodes)

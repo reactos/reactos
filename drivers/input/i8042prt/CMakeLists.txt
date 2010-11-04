@@ -1,6 +1,4 @@
 
-
-
 add_library(i8042prt SHARED
     createclose.c
     i8042prt.c
@@ -15,7 +13,6 @@ add_library(i8042prt SHARED
     i8042prt.rc)
 
 set_module_type(i8042prt kernelmodedriver)
-
 add_importlibs(i8042prt ntoskrnl hal)
 
 add_minicd_target(i8042prt reactos i8042prt.sys)

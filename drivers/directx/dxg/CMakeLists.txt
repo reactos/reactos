@@ -9,8 +9,5 @@ add_library(dxg SHARED
     dxg.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dxg.def)
 
-set_target_properties(dxg PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--subsystem,native" SUFFIX ".sys")
-
-
+set_module_type(dxg kernelmodedriver)
 add_importlibs(dxg dxgthk ntoskrnl)
-add_dependencies(dxg psdk bugcodes)

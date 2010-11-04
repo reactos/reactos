@@ -1,9 +1,11 @@
 
-include_directories(BEFORE include)
-include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
+include_directories(
+    BEFORE include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
 
-add_definitions(-DNDIS40)
-add_definitions(-D_NTDRIVER_)
+add_definitions(
+    -DNDIS40
+    -D_NTDRIVER_)
 
 spec2def(tcpip.sys tcpip.spec)
 
@@ -26,18 +28,15 @@ list(APPEND SOURCE
 
 add_library(tcpip SHARED ${CMAKE_CURRENT_BINARY_DIR}/tcpip_precomp.h.gch ${SOURCE})
 
-set_module_type(tcpip kernelmodedriver)
-
 target_link_libraries(tcpip
     ip
     oskittcp
     ${PSEH_LIB}
-    chew
-    -lndis
-    -lntoskrnl
-    -lhal)
+    chew)
+
+set_module_type(tcpip kernelmodedriver)
+add_importlibs(tcpip ndis ntoskrnl hal)
 
 add_pch(tcpip ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
-add_dependencies(tcpip psdk bugcodes buildno_header)
 
 add_cab_target(tcpip 2)

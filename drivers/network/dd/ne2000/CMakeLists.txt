@@ -9,12 +9,6 @@ list(APPEND SOURCE
 add_library(ne2000 SHARED ${SOURCE})
 
 set_module_type(ne2000 kernelmodedriver)
-
-target_link_libraries(ne2000
-    -lndis
-    -lntoskrnl
-    -lhal)
-
-add_dependencies(ne2000 psdk bugcodes buildno_header)
+add_importlibs(ne2000 ndis ntoskrnl hal)
 
 add_cab_target(ne2000 2)

@@ -1,9 +1,11 @@
 
-include_directories(BEFORE include)
-include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
+include_directories(
+    BEFORE include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
 
-add_definitions(-DNDIS40)
-add_definitions(-D_NTDRIVER_)
+add_definitions(
+    -DNDIS40
+    -D_NTDRIVER_)
 
 spec2def(tdi.sys misc/tdi.spec)
 
@@ -21,11 +23,6 @@ list(APPEND SOURCE
 add_library(tdi SHARED ${SOURCE})
 
 set_module_type(tdi kernelmodedriver)
-
-target_link_libraries(tdi
-    -lntoskrnl
-    -lhal)
-
-add_dependencies(tdi psdk bugcodes buildno_header)
+add_importlibs(tdi ntoskrnl hal)
 
 add_cab_target(tdi 2)

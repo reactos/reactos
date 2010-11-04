@@ -1,6 +1,4 @@
 
-
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
 list(APPEND SOURCE
@@ -21,13 +19,10 @@ list(APPEND SOURCE
 
 add_library(cdfs SHARED ${CMAKE_CURRENT_BINARY_DIR}/cdfs_cdfs.h.gch ${SOURCE})
 
-set_target_properties(cdfs PROPERTIES LINK_FLAGS "-Wl,-entry,_DriverEntry@8 -Wl,--image-base,0x00010000 -Wl,--exclude-all-symbols -Wl,--subsystem,native" SUFFIX ".sys")
-
-target_link_libraries(cdfs
-    -lntoskrnl
-    -lhal)
+set_module_type(cdfs kernelmodedriver)
+add_importlibs(cdfs ntoskrnl hal)
 
 add_pch(cdfs ${CMAKE_CURRENT_SOURCE_DIR}/cdfs.h ${SOURCE})
-add_dependencies(cdfs psdk bugcodes)
+
 add_minicd_target(cdfs reactos cdfs.sys)
 add_livecd_target(cdfs reactos/system32/drivers cdfs.sys)
