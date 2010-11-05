@@ -327,7 +327,7 @@ CPortFilterWaveCyclic::Init(
 NTSTATUS
 NTAPI
 CPortFilterWaveCyclic::FreePin(
-    IN struct IPortPinWaveCyclic* Pin)
+    IN PPORTPINWAVECYCLIC Pin)
 {
     ULONG Index;
 

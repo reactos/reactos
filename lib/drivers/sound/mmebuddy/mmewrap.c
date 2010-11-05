@@ -119,7 +119,7 @@ MmeGetSoundDeviceCapabilities(
 }
 
 MMRESULT
-MmeOpenWaveDevice(
+MmeOpenDevice(
     IN  MMDEVICE_TYPE DeviceType,
     IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
@@ -127,33 +127,36 @@ MmeOpenWaveDevice(
     OUT DWORD_PTR* PrivateHandle)
 {
     MMRESULT Result;
-
+    UINT Message;
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     LPWAVEFORMATEX Format;
 
-    SND_TRACE(L"Opening wave device (WIDM_OPEN / WODM_OPEN)");
+    SND_TRACE(L"Opening device");
 
     VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );    /* FIXME? wave in too? */
     VALIDATE_MMSYS_PARAMETER( OpenParameters );
-
-    Format = OpenParameters->lpFormat;
 
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
-    /* Does this device support the format? */
-    Result = QueryWaveDeviceFormatSupport(SoundDevice, Format, sizeof(WAVEFORMATEX));
-    if ( ! MMSUCCESS(Result) )
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        SND_ERR(L"Format not supported\n");
-        return TranslateInternalMmResult(Result);
-    }
+        Format = OpenParameters->lpFormat;
 
-    /* If the caller just wanted to know if a format is supported, end here */
-    if ( Flags & WAVE_FORMAT_QUERY )
-        return MMSYSERR_NOERROR;
+        /* Does this device support the format? */
+        Result = QueryWaveDeviceFormatSupport(SoundDevice, Format, sizeof(WAVEFORMATEX));
+        if ( ! MMSUCCESS(Result) )
+        {
+            SND_ERR(L"Format not supported\n");
+            return TranslateInternalMmResult(Result);
+        }
+
+        /* If the caller just wanted to know if a format is supported, end here */
+        if ( Flags & WAVE_FORMAT_QUERY )
+            return MMSYSERR_NOERROR;
+    }
 
     /* Check that winmm gave us a private handle to fill */
     VALIDATE_MMSYS_PARAMETER( PrivateHandle );
@@ -175,20 +178,35 @@ MmeOpenWaveDevice(
 
     /* Store the additional information we were given - FIXME: Need flags! */
     SetSoundDeviceInstanceMmeData(SoundDeviceInstance,
-                                  (HDRVR)OpenParameters->hWave,
+                                  (HDRVR)OpenParameters->hWave, /* works because LPMIXEROPENDESC/etc has also the handle as first member */
                                   OpenParameters->dwCallback,
                                   OpenParameters->dwInstance,
                                   Flags);
 
-    /* Let the application know the device is open */
-    ReleaseEntrypointMutex(DeviceType);
-    NotifyMmeClient(SoundDeviceInstance,
-                    DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_OPEN : WIM_OPEN,
-                    0);
+    if (DeviceType == WAVE_OUT_DEVICE_TYPE || DeviceType == WAVE_IN_DEVICE_TYPE ||
+        DeviceType == MIDI_OUT_DEVICE_TYPE || DeviceType == MIDI_IN_DEVICE_TYPE)
+    {
+        /* Let the application know the device is open */
 
-    AcquireEntrypointMutex(DeviceType);
+        if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+            Message = WOM_OPEN;
+        else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+            Message = WIM_OPEN;
+        else if (DeviceType == MIDI_IN_DEVICE_TYPE)
+            Message = MIM_OPEN;
+        else
+            Message = MOM_OPEN;
 
-    SND_TRACE(L"Wave device now open\n");
+        ReleaseEntrypointMutex(DeviceType);
+
+        NotifyMmeClient(SoundDeviceInstance,
+                        Message,
+                        0);
+
+        AcquireEntrypointMutex(DeviceType);
+    }
+
+    SND_TRACE(L"device now open\n");
 
     return MMSYSERR_NOERROR;
 }
@@ -201,6 +219,7 @@ MmeCloseDevice(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
+    UINT Message = 0;
 
     SND_TRACE(L"Closing wave device (WIDM_CLOSE / WODM_CLOSE)\n");
 
@@ -221,12 +240,26 @@ MmeCloseDevice(
 
     /* TODO: Check device is stopped! */
 
-    ReleaseEntrypointMutex(DeviceType);
-    /* TODO: Work with MIDI devices too */
-    NotifyMmeClient(SoundDeviceInstance,
-                    DeviceType == WAVE_OUT_DEVICE_TYPE ? WOM_CLOSE : WIM_CLOSE,
-                    0);
-    AcquireEntrypointMutex(DeviceType);
+
+    if (DeviceType != MIXER_DEVICE_TYPE)
+    {
+        ReleaseEntrypointMutex(DeviceType);
+
+        if (DeviceType == WAVE_OUT_DEVICE_TYPE)
+            Message = WOM_CLOSE;
+        else if (DeviceType == WAVE_IN_DEVICE_TYPE)
+            Message = WIM_CLOSE;
+        else if (DeviceType == MIDI_IN_DEVICE_TYPE)
+            Message = MIM_CLOSE;
+        else if (DeviceType == MIDI_OUT_DEVICE_TYPE)
+            Message = MOM_CLOSE;
+
+        /* TODO: Work with MIDI devices too */
+        NotifyMmeClient(SoundDeviceInstance,
+                        Message,
+                        0);
+        AcquireEntrypointMutex(DeviceType);
+    }
 
     Result = DestroySoundDeviceInstance(SoundDeviceInstance);
 

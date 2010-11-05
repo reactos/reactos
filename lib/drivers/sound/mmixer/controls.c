@@ -955,7 +955,7 @@ MMixerInitializeFilter(
     MixerInfo->hMixer = MixerData->hDevice;
 
     /* get mixer name */
-    MMixerGetDeviceName(MixerContext, MixerInfo, MixerData->hDeviceInterfaceKey);
+    MMixerGetDeviceName(MixerContext, MixerInfo->MixCaps.szPname, MixerData->hDeviceInterfaceKey);
 
     /* initialize line list */
     InitializeListHead(&MixerInfo->LineList);
@@ -1127,6 +1127,9 @@ MMixerSetupFilter(
         }
 
     }
+
+    /* activate midi devices */
+    MMixerInitializeMidiForFilter(MixerContext, MixerList, MixerData, Topology);
 
     /* done */
     return Status;

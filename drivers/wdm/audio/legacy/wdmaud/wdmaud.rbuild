@@ -7,7 +7,6 @@
 	<define name="_COMDDK_" />
 	<library>mmixer</library>
 	<library>ntoskrnl</library>
-	<library>rtl</library>
 	<library>libcntpr</library>
 	<library>ks</library>
 	<library>pseh</library>

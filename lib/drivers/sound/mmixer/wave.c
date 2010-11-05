@@ -109,22 +109,7 @@ MMixerGetWaveInfoByIndexAndType(
 }
 
 
-VOID
-MMixerInitializePinConnect(
-    IN OUT PKSPIN_CONNECT PinConnect,
-    IN ULONG PinId)
-{
-    PinConnect->Interface.Set = KSINTERFACESETID_Standard;
-    PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
-    PinConnect->Interface.Flags = 0;
-    PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
-    PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
-    PinConnect->Medium.Flags = 0;
-    PinConnect->PinToHandle = NULL;
-    PinConnect->PinId = PinId;
-    PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
-    PinConnect->Priority.PrioritySubClass = 1;
-}
+
 
 VOID
 MMixerInitializeDataFormat(
@@ -369,7 +354,7 @@ MMixerInitializeWaveInfo(
     WaveInfo->PinId = Pins[0];
 
     /* sanity check */
-    ASSERT(wcslen(DeviceName) < MAXPNAMELEN);
+    ASSERT(wcslen(DeviceName) + 1 < MAXPNAMELEN);
 
     /* copy device name */
     if (bWaveIn)

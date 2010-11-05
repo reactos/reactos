@@ -447,11 +447,14 @@ MMixerInitialize(
      MixerList->MixerDataCount = 0;
      MixerList->WaveInListCount = 0;
      MixerList->WaveOutListCount = 0;
+     MixerList->MidiInListCount = 0;
+     MixerList->MidiOutListCount = 0;
      InitializeListHead(&MixerList->MixerList);
      InitializeListHead(&MixerList->MixerData);
      InitializeListHead(&MixerList->WaveInList);
      InitializeListHead(&MixerList->WaveOutList);
-
+     InitializeListHead(&MixerList->MidiInList);
+     InitializeListHead(&MixerList->MidiOutList);
 
      /* store mixer list */
      MixerContext->MixerContext = (PVOID)MixerList;
