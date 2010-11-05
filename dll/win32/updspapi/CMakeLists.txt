@@ -13,3 +13,5 @@ target_link_libraries(updspapi wine)
 
 add_importlibs(updspapi setupapi kernel32 ntdll)
 add_dependencies(updspapi psdk buildno_header)
+
+add_cab_target(updspapi 1)

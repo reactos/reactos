@@ -41,7 +41,7 @@ add_subdirectory(gdi32)
 add_subdirectory(gdiplus)
 add_subdirectory(getuname)
 #add_subdirectory(glu32)# FIXME: set_cpp()?
-#add_subdirectory(hhctrl.ocx)#FIXME: regsvr.c.obj:regsvr.c:(.text+0x393): undefined reference to `RegDeleteTreeW'
+add_subdirectory(hhctrl.ocx)
 add_subdirectory(hid)
 add_subdirectory(hlink)
 add_subdirectory(hnetcfg)

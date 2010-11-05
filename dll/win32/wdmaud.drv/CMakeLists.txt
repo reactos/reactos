@@ -31,3 +31,5 @@ target_link_libraries(wdmaud.drv
     mmixer)
 
 add_importlibs(wdmaud.drv user32 winmm advapi32 msvcrt setupapi ksuser kernel32 ntdll)
+
+add_cab_target(wdmaud.drv 1)

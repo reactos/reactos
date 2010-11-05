@@ -12,3 +12,4 @@ set_entrypoint(security 0)
 
 add_importlibs(security advapi32 ntdll)
 
+add_cab_target(security 1)

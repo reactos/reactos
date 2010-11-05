@@ -12,3 +12,5 @@ target_link_libraries(shdoclc wine)
 
 add_importlibs(shdoclc kernel32 ntdll)
 add_dependencies(shdoclc psdk buildno_header)
+
+add_cab_target(shdoclc 1)

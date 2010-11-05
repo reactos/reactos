@@ -1,3 +1,4 @@
+set_cpp()
 
 add_definitions(-DRESOLVE_3D_TEXTURE_SUPPORT)
 add_definitions(-DBUILD_GL32)

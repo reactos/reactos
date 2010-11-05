@@ -14,3 +14,5 @@ target_link_libraries(shfolder wine)
 
 add_importlibs(shfolder shell32 kernel32 ntdll)
 add_dependencies(shfolder psdk buildno_header)
+
+add_cab_target(shfolder 1)

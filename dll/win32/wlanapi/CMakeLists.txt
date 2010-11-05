@@ -15,3 +15,5 @@ target_link_libraries(wlanapi
 
 add_importlibs(wlanapi rpcrt4 kernel32 ntdll)
 add_dependencies(wlanapi psdk buildno_header)
+
+add_cab_target(wlanapi 1)

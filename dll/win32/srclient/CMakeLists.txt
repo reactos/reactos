@@ -8,3 +8,5 @@ set_entrypoint(srclient 0)
 
 add_importlibs(srclient kernel32 ntdll)
 add_dependencies(srclient psdk)
+
+add_cab_target(srclient 1)

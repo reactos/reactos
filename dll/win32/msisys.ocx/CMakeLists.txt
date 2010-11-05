@@ -16,3 +16,4 @@ target_link_libraries(msisys
 
 add_importlibs(msisys kernel32 ntdll)
 
+add_cab_target(msisys 1)

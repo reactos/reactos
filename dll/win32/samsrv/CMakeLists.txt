@@ -11,3 +11,5 @@ set_entrypoint(samsrv 0)
 
 add_importlibs(samsrv kernel32 ntdll)
 add_dependencies(samsrv psdk buildno_header)
+
+add_cab_target(samsrv 1)

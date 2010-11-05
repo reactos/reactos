@@ -13,3 +13,5 @@ target_link_libraries(sxs wine)
 
 add_importlibs(sxs kernel32 ntdll)
 add_dependencies(sxs psdk)
+
+add_cab_target(sxs 1)

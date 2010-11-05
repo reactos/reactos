@@ -13,4 +13,4 @@ target_link_libraries(softpub wine)
 
 add_importlibs(softpub wintrust)
 
-
+add_cab_target(softpub 1)
