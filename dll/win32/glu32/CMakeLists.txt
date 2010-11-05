@@ -1,15 +1,17 @@
-set_cpp()
 
-add_definitions(-DRESOLVE_3D_TEXTURE_SUPPORT)
-add_definitions(-DBUILD_GL32)
-add_definitions(-DLIBRARYBUILD)
-add_definitions(-D_DLL -D__USE_CRTIMP)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libnurbs/internals)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libnurbs/interface)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libnurbs/nurbtess)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libtess)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libutil)
+add_definitions(
+    -DRESOLVE_3D_TEXTURE_SUPPORT
+    -DBUILD_GL32
+    -DLIBRARYBUILD
+    -D_DLL -D__USE_CRTIMP)
+
+include_directories(
+    include
+    libnurbs/internals
+    libnurbs/interface
+    libnurbs/nurbtess
+    libtess
+    libutil)
 
 spec2def(glu32.dll glu32.spec)
 
@@ -107,12 +109,14 @@ add_library(glu32 SHARED
 
 set_entrypoint(glu32 0)
 
-add_importlibs(
-    glu32
-    gcc
-    msvcrt
+target_link_libraries(glu32 stlport -lsupc++ -lgcc)
+
+add_importlibs(glu32
+    mingw32
+    coldname
     opengl32
     gdi32
+    msvcrt
     kernel32
     ntdll)
 

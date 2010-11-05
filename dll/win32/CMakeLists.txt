@@ -40,7 +40,7 @@ add_subdirectory(fusion)
 add_subdirectory(gdi32)
 add_subdirectory(gdiplus)
 add_subdirectory(getuname)
-#add_subdirectory(glu32)# FIXME: set_cpp()?
+add_subdirectory(glu32)# FIXME: set_cpp()?
 add_subdirectory(hhctrl.ocx)
 add_subdirectory(hid)
 add_subdirectory(hlink)
@@ -199,7 +199,7 @@ add_subdirectory(vdmdbg)
 add_subdirectory(version)
 add_subdirectory(wdmaud.drv)
 add_subdirectory(windowscodecs)
-#add_subdirectory(winemp3.acm) #FIXME: ertr000001.o:(.rdata+0x0): undefined reference to `_pei386_runtime_relocator)'
+add_subdirectory(winemp3.acm)
 add_subdirectory(winfax)
 add_subdirectory(wing32)
 add_subdirectory(winhttp)
