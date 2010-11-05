@@ -1,11 +1,11 @@
 
-add_definitions(-D__NTDRIVER__)
-add_definitions(-DKERNEL)
+add_definitions(
+    -D__NTDRIVER__
+    -DKERNEL)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/sound/soundblaster)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/drivers/sound/soundblaster
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
-file(GLOB_RECURSE SOURCE "*.c")
-
-add_library(audioleg ${SOURCE})
+add_library(audioleg devname.c hardware.c)
 add_dependencies(audioleg bugcodes)

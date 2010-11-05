@@ -1,6 +1,7 @@
 
-add_definitions(-DUNICODE -D_UNICODE)
-add_definitions(-DNDEBUG=1)
+add_definitions(
+    -DUNICODE -D_UNICODE
+    -DNDEBUG=1)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 

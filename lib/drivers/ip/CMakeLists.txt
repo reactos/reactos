@@ -1,11 +1,35 @@
+
 add_definitions(-D__NTDRIVER__)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include)
-include_directories(${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
+include_directories(
+    BEFORE ${REACTOS_SOURCE_DIR}/drivers/network/tcpip/include
+    ${REACTOS_SOURCE_DIR}/lib/drivers/oskittcp/include)
 
-file(GLOB_RECURSE ARCH_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/network/${ARCH}/checksum.S)
-file(GLOB_RECURSE SOURCE "*.c")
+if(ARCH MATCHES i386)
+list(APPEND SOURCE network/i386/checksum.S)
+endif()
 
-add_library(ip ${ARCH_SOURCE} ${SOURCE})
+list(APPEND SOURCE
+    network/address.c
+    network/arp.c
+    network/checksum.c
+    network/icmp.c
+    network/interface.c
+    network/ip.c
+    network/loopback.c
+    network/neighbor.c
+    network/ports.c
+    network/receive.c
+    network/router.c
+    network/routines.c
+    network/transmit.c
+    transport/datagram/datagram.c
+    transport/rawip/rawip.c
+    transport/tcp/accept.c
+    transport/tcp/event.c
+    transport/tcp/if.c
+    transport/tcp/tcp.c
+    transport/udp/udp.c)
+
+add_library(ip ${SOURCE})
 add_dependencies(ip bugcodes)
-

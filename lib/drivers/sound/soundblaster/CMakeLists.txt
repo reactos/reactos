@@ -1,11 +1,16 @@
 
-add_definitions(-D__NTDRIVER__)
-add_definitions(-DKERNEL)
+add_definitions(
+    -D__NTDRIVER__
+    -DKERNEL)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
-file(GLOB_RECURSE SOURCE "*.c")
+file(APPEND SOURCE
+    dsp_io.c
+    version.c
+    speaker.c
+    rate.c
+    mixer.c)
 
 add_library(soundblaster ${SOURCE})
 add_dependencies(soundblaster bugcodes)
-
