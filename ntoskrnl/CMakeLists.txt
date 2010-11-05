@@ -1,17 +1,20 @@
 
-set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -i <SOURCE> <CMAKE_C_LINK_FLAGS> <DEFINES> -I${REACTOS_SOURCE_DIR}/include/psdk -I${REACTOS_BINARY_DIR}/include/psdk -I${REACTOS_SOURCE_DIR}/include/ -I${REACTOS_SOURCE_DIR}/include/reactos -I${REACTOS_BINARY_DIR}/include/reactos -I${REACTOS_SOURCE_DIR}/include/reactos/wine -I${REACTOS_SOURCE_DIR}/include/crt -I${REACTOS_SOURCE_DIR}/include/crt/mingw32 -I${REACTOS_SOURCE_DIR} -I${CMAKE_CURRENT_SOURCE_DIR}/include -O coff -o <OBJECT> ")
+include_directories(
+    ${REACTOS_SOURCE_DIR}
+    ${REACTOS_SOURCE_DIR}/lib/cmlib
+    include
+    ${CMAKE_CURRENT_BINARY_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/include/internal
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
-add_definitions(-D__NTOSKRNL__)
-add_definitions(-D_NTOSKRNL_)
-add_definitions(-D_NTSYSTEM_)
-add_definitions(-D_IN_KERNEL_)
-add_definitions(-DNTDDI_VERSION=0x05020400)
+add_definitions(
+    -D__NTOSKRNL__
+    -D_NTOSKRNL_
+    -D_NTSYSTEM_
+    -D_IN_KERNEL_
+    -DNTDDI_VERSION=0x05020400)
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/cmlib)
-include_directories(include)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/internal)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+set_rc_compiler()
 
 list(APPEND SOURCE
     cc/cacheman.c
@@ -402,9 +405,11 @@ endif(ARCH MATCHES i386)
 
 endif(NOT _WINKD_)
 
-add_executable(ntoskrnl ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch)
+add_executable(ntoskrnl ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch ${SOURCE})
 
-set_target_properties(ntoskrnl PROPERTIES LINK_FLAGS "-Wl,-entry,_KiSystemStartup@4 -Wl,--image-base,0x80800000 -Wl,--subsystem,native")
+set_entrypoint(ntoskrnl KiSystemStartup@4)
+set_subsystem(ntoskrnl native)
+set_image_base(ntoskrnl 0x80800000)
 
 target_link_libraries(ntoskrnl
     cportlib
