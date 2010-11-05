@@ -1,4 +1,3 @@
-#include "myfunc.h"
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library

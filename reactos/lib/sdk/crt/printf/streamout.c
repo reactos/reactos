@@ -11,6 +11,7 @@
 #include <tchar.h>
 #include <strings.h>
 #include <math.h>
+#include <float.h>
 
 #ifdef _UNICODE
 #define streamout wstreamout
