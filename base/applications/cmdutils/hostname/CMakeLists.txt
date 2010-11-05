@@ -1,3 +1,4 @@
+add_definitions(-D_DLL -D__USE_CRTIMP)
 
 add_executable(hostname hostname.c hostname.rc)
 
