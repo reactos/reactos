@@ -15,3 +15,5 @@ target_link_libraries(ntvdm
 
 add_importlibs(ntvdm ntdll user32 gdi32 advapi32 kernel32 msvcrt)
 add_dependencies(ntvdm ndk bugcodes)
+
+add_cab_target(ntvdm 1)

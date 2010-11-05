@@ -7,4 +7,4 @@ set_module_type(blue kernelmodedriver)
 add_importlibs(blue ntoskrnl hal)
 
 add_minicd_target(blue reactos blue.sys)
-add_cab_target(blue 2)
+add_livecd_target(blue reactos/system32/drivers)

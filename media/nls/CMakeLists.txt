@@ -51,6 +51,7 @@ list(APPEND NLS_FILES
     c_21866.nls
     c_28591.nls
     c_28592.nls
+    c_28593.nls
     c_28594.nls
     c_28595.nls
     c_28596.nls
