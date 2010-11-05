@@ -38,10 +38,10 @@ set(CMAKE_C_STANDARD_LIBRARIES "-lgcc" CACHE STRING "Standard C Libraries")
 set(CMAKE_CXX_STANDARD_LIBRARIES "" CACHE STRING "Standard C++ Libraries")
 
 if(ARCH MATCHES i386)
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at")
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at -Wl,--disable-auto-import")
 #-Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
 elseif(ARCH MATCHES amd64)
-set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at")
+set(CMAKE_SHARED_LINKER_FLAGS_INIT "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--enable-stdcall-fixup -Wl,--kill-at -Wl,--disable-auto-import")
 endif(ARCH MATCHES i386)
 
 # adjust the default behaviour of the FIND_XXX() commands:

@@ -2,7 +2,9 @@
 #uncomment this if you want to test c++ compilation
 #add_subdirectory(test)
 
-add_definitions(-D_STLP_USE_EXCEPTIONS)
+add_definitions(
+    -D_STLP_USE_EXCEPTIONS
+    -D_DLL -D__USE_CRTIMP)
 
 set_cpp()
 

@@ -1,4 +1,6 @@
-add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE)
+add_definitions(
+    -D_CRT_NONSTDC_NO_DEPRECATE
+    -D_DLL -D__USE_CRTIMP)
 
 set_cpp()
 

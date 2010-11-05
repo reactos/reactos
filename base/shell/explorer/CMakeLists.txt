@@ -8,8 +8,10 @@ set_unicode()
 #jgardou
 #set_cpp()
 
-add_definitions(-DWIN32)
-add_definitions(-D__WINDRES__)
+add_definitions(
+    -DWIN32
+    -D__WINDRES__
+    -D_DLL -D__USE_CRTIMP)
 
 #add_pch(explorer ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h SOURCE)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -47,7 +49,7 @@ list(APPEND SOURCE
     utility/dragdropimpl.cpp
     utility/utility.cpp
     utility/xmlstorage.cpp
-    utility/splitpath.c
+#   utility/splitpath.c     msvcrt has _wsplitpath already
     utility/window.cpp
     utility/shellbrowserimpl.cpp) #    utility/shelltests.cpp
 
@@ -78,7 +80,7 @@ target_link_libraries(explorer
     -lmsvcrt
     -lkernel32
     -lntdll)
-	
+
 set_image_base(explorer 0x00400000)
 
 add_dependencies(explorer psdk buildno_header)

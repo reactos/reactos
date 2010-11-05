@@ -5,7 +5,8 @@ add_definitions(
     -D__ROS_LONG64__
     -D_CRT_NONSTDC_NO_DEPRECATE
     -Dfileno=_fileno
-    -Disatty=_isatty)
+    -Disatty=_isatty
+    -D_DLL -D__USE_CRTIMP)
 
 add_executable(winhlp32
     callback.c
