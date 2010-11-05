@@ -1,9 +1,13 @@
 
-include_directories(lib)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/expat)
+include_directories(
+    lib
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/expat)
 
 add_definitions(-DHAVE_EXPAT_CONFIG_H)
-file(GLOB_RECURSE SOURCE "lib/*.c")
-LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/lib/xmltok_impl.c ${CMAKE_CURRENT_SOURCE_DIR}/lib/xmltok_ns.c)
+
+list(APPEND SOURCE
+    lib/xmlparse.c
+    lib/xmlrole.c
+    lib/xmltok.c)
 
 add_library(expat ${SOURCE})

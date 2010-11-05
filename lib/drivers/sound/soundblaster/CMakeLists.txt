@@ -5,7 +5,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 
-file(APPEND SOURCE
+list(APPEND SOURCE
     dsp_io.c
     version.c
     speaker.c
