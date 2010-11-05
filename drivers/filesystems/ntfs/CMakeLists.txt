@@ -23,3 +23,6 @@ set_module_type(ntfs kernelmodedriver)
 add_importlibs(ntfs ntoskrnl hal)
 
 add_pch(ntfs ${CMAKE_CURRENT_SOURCE_DIR}/ntfs.h ${SOURCE})
+
+add_minicd_target(ntfs reactos)
+add_livecd_target(ntfs reactos/system32/drivers)

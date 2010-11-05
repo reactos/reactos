@@ -6,3 +6,5 @@ add_library(mup SHARED
 
 set_module_type(mup kernelmodedriver)
 add_importlibs(mup ntoskrnl hal)
+
+add_cab_target(mup 2)
