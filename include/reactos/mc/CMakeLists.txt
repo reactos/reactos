@@ -33,7 +33,7 @@ endmacro (MACRO_ADD_MESSAGE_HEADERS)
 list(APPEND SOURCE
     bugcodes.mc
     errcodes.mc
-    netevent.mc
+    neteventmsg.mc
     ntstatus.mc
     pciclass.mc)
 MACRO_ADD_MESSAGE_HEADERS(${SOURCE})
