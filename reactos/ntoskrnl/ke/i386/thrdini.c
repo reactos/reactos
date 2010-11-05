@@ -258,7 +258,8 @@ KiIdleLoop(VOID)
 
     /* Initialize the idle loop: disable interrupts */
     _enable();
-    __asm__("nop; nop");
+    YieldProcessor();
+    YieldProcessor();
     _disable();
     
     /* Now loop forever */
@@ -298,7 +299,8 @@ KiIdleLoop(VOID)
             
             /* We are back in the idle thread -- disable interrupts again */
             _enable();
-            __asm__("nop");
+            YieldProcessor();
+            YieldProcessor();
             _disable();
         }
         else
