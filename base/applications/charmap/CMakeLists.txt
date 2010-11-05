@@ -17,3 +17,5 @@ add_pch(charmap ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 set_module_type(charmap win32gui)
 
 add_importlibs(charmap user32 gdi32 comctl32 kernel32 msvcrt)
+
+add_cab_target(charmap 1)

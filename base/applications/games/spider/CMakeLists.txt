@@ -16,3 +16,5 @@ target_link_libraries(spider cardlib)
 set_module_type(spider win32gui)
 
 add_importlibs(spider advapi32 comctl32 user32 gdi32 kernel32 msvcrt)
+
+add_cab_target(spider 1)

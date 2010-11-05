@@ -15,3 +15,5 @@ target_link_libraries(sol cardlib)
 set_module_type(sol win32gui)
 
 add_importlibs(sol advapi32 comctl32 user32 gdi32 kernel32 msvcrt)
+
+add_cab_target(sol 1)

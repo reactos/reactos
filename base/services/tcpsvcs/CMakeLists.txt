@@ -18,3 +18,6 @@ add_pch(tcpsvcs ${CMAKE_CURRENT_SOURCE_DIR}/tcpsvcs.h ${SOURCE})
 set_module_type(tcpsvcs win32cui)
 add_importlibs(tcpsvcs ws2_32 advapi32 msvcrt kernel32 ntdll)
 
+
+add_cab_target(tcpsvcs 1)
+add_cab(${CMAKE_CURRENT_SOURCE_DIR}/quotes 5)

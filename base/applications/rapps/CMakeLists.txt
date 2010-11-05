@@ -61,3 +61,4 @@ ENDMACRO (MACRO_ADD_MESSAGE_HEADERS)
 
 MACRO_ADD_MESSAGE_HEADERS(rappsmsg.mc)
 
+add_cab_target(rapps 1)

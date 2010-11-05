@@ -30,3 +30,5 @@ add_pch(servman ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 set_module_type(servman win32gui)
 
 add_importlibs(servman user32 gdi32 advapi32 version comctl32 shell32 comdlg32 msvcrt kernel32)
+
+add_cab_target(servman 1)
