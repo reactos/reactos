@@ -1,3 +1,2 @@
 
-file(GLOB_RECURSE SOURCE "*.c")
-add_library(vfatxlib ${SOURCE})
+add_library(vfatxlib fatx.c vfatxlib.c)

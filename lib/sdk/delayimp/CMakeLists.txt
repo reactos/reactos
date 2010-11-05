@@ -1,4 +1,3 @@
 
 add_definitions(-DUNICODE -D_UNICODE)
-file(GLOB_RECURSE SOURCE "*.c")
-add_library(delayimp ${SOURCE})
+add_library(delayimp delayimp.c)

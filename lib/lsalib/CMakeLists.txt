@@ -1,5 +1,3 @@
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
- 
-file(GLOB_RECURSE SOURCE "*.c")
 
-add_library(lsalib ${SOURCE})
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+add_library(lsalib lsa.c)

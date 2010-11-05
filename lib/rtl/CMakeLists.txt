@@ -1,8 +1,9 @@
 
-add_definitions(-D_NTOSKRNL_)
-add_definitions(-DNO_RTL_INLINES)
-add_definitions(-D_NTSYSTEM_)
-add_definitions(-D_NTDLLBUILD_)
+add_definitions(
+    -D_NTOSKRNL_
+    -DNO_RTL_INLINES
+    -D_NTSYSTEM_
+    -D_NTDLLBUILD_)
 
 list(APPEND SOURCE
     access.c
@@ -97,6 +98,6 @@ list(APPEND SOURCE
     powerpc/thread.c)
 endif(ARCH MATCHES i386)
 
-add_library(rtl ${SOURCE} ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch)
+add_library(rtl ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch ${SOURCE})
 add_pch(rtl ${CMAKE_CURRENT_SOURCE_DIR}/rtl.h ${SOURCE})
 add_dependencies(rtl psdk)

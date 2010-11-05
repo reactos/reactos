@@ -1,4 +1,5 @@
 
-file(GLOB_RECURSE SOURCE "*.c")
-
-add_library(epsapi ${SOURCE})
+add_library(epsapi
+    enum/drivers.c
+    enum/modules.c
+    enum/processes.c)

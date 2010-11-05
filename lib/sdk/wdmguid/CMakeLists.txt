@@ -1,3 +1,2 @@
 
-file(GLOB_RECURSE SOURCE "*.c")
-add_library(wdmguid ${SOURCE})
+add_library(wdmguid wdmguid.c)
