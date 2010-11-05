@@ -1,17 +1,17 @@
 
 if(MSVC)
-MACRO(MACRO_MC FILE)
+macro(MACRO_MC FILE)
     set (COMMAND_MC mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc)
-ENDMACRO()
+endmacro()
 else()
-MACRO(MACRO_MC FILE)
+macro(MACRO_MC FILE)
     set(COMMAND_MC ${MINGW_PREFIX}windmc -A -b ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc -r ${REACTOS_BINARY_DIR}/include/reactos -h ${REACTOS_BINARY_DIR}/include/reactos)
-ENDMACRO()
+endmacro()
 endif()
 
-MACRO (MACRO_ADD_MESSAGE_HEADERS)
+macro (MACRO_ADD_MESSAGE_HEADERS)
 
-  FOREACH(_in_FILE ${ARGN})
+  foreach(_in_FILE ${ARGN})
 
     get_filename_component(FILE ${_in_FILE} NAME_WE)
     MACRO_MC(${FILE})
@@ -26,9 +26,14 @@ MACRO (MACRO_ADD_MESSAGE_HEADERS)
     )
     add_custom_target(${FILE} ALL DEPENDS ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.rc)
 
-  ENDFOREACH(_in_FILE ${ARGN})
+  endforeach(_in_FILE ${ARGN})
 
-ENDMACRO (MACRO_ADD_MESSAGE_HEADERS)
+endmacro (MACRO_ADD_MESSAGE_HEADERS)
 
-file(GLOB_RECURSE SOURCE "*.mc")
+list(APPEND SOURCE
+    bugcodes.mc
+    errcodes.mc
+    netevent.mc
+    ntstatus.mc
+    pciclass.mc)
 MACRO_ADD_MESSAGE_HEADERS(${SOURCE})

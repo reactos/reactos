@@ -29,12 +29,13 @@ if(NOT CMAKE_CROSSCOMPILING)
 
 add_definitions(-DTARGET_i386)
 
-include_directories(${REACTOS_SOURCE_DIR}/tools/unicode)
-include_directories(include)
-include_directories(include/host)
-include_directories(include/reactos)
-include_directories(include/reactos/wine)
-include_directories(${REACTOS_BINARY_DIR}/include)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/tools/unicode
+    include
+    include/host
+    include/reactos
+    include/reactos/wine
+    ${REACTOS_BINARY_DIR}/include)
 
 add_subdirectory(tools)
 add_subdirectory(lib)
@@ -48,12 +49,13 @@ endif()
 else()
 
 #Some cleanup
-file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt)
-file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt)
-file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt)
-file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt)
-file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_cab.txt)
-file(REMOVE ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
+file(REMOVE
+    ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
+    ${REACTOS_BINARY_DIR}/boot/ros_livecd_target.txt
+    ${REACTOS_BINARY_DIR}/boot/ros_minicd.txt
+    ${REACTOS_BINARY_DIR}/boot/ros_minicd_target.txt
+    ${REACTOS_BINARY_DIR}/boot/ros_cab.txt
+    ${REACTOS_BINARY_DIR}/boot/ros_cab_target.txt)
 
 #Some useful variables
 set(LIVECD_DIR "${REACTOS_BINARY_DIR}/boot/livecd")
@@ -66,7 +68,7 @@ enable_language(ASM)
 enable_language(RC)
 
 if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
-  set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+    set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
 endif()
 
 set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
@@ -89,26 +91,27 @@ add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_W
 add_definitions(-D_M_IX86 -D_X86_ -D__i386__)
 
 # Other
-add_definitions(-DUSE_COMPILER_EXCEPTIONS)
-add_definitions(-D_USE_32BIT_TIME_T)
+add_definitions(-DUSE_COMPILER_EXCEPTIONS -D_USE_32BIT_TIME_T)
 
-include_directories(include)
-include_directories(include/psdk)
-include_directories(include/dxsdk)
-include_directories(${REACTOS_BINARY_DIR}/include)
-include_directories(${REACTOS_BINARY_DIR}/include/dxsdk)
-include_directories(${REACTOS_BINARY_DIR}/include/psdk)
-include_directories(${REACTOS_BINARY_DIR}/include/reactos)
-include_directories(include/crt)
+include_directories(
+    include
+    include/psdk
+    include/dxsdk
+    ${REACTOS_BINARY_DIR}/include
+    ${REACTOS_BINARY_DIR}/include/dxsdk
+    ${REACTOS_BINARY_DIR}/include/psdk
+    ${REACTOS_BINARY_DIR}/include/reactos
+    include/crt
+    include/ddk
+    include/ndk
+    include/reactos
+    include/reactos/libs)
+
 if(MSVC)
 include_directories(include/crt/msc)
 else()
 include_directories(include/crt/mingw32)
 endif(MSVC)
-include_directories(include/ddk)
-include_directories(include/ndk)
-include_directories(include/reactos)
-include_directories(include/reactos/libs)
 
 add_subdirectory(include/psdk)
 add_subdirectory(include/dxsdk)
@@ -189,4 +192,3 @@ add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
 include(ros_cd.cmake)
 
 endif()
-
