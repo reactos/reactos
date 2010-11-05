@@ -1,7 +1,7 @@
 
 set_unicode()
 
-spec2def(user32.dll user32.pspec)
+spec2def(user32.dll user32.spec)
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
