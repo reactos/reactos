@@ -1,3 +1,4 @@
+set_cpp()
 
 spec2def(ksproxy.ax ksproxy.spec)
 
@@ -37,8 +38,9 @@ add_importlibs(ksproxy
     advapi32
     ole32
     setupapi
-    msvcrt
     ksuser
+    msvcrt
+    kernel32
     ntdll)
 
 add_dependencies(ksproxy psdk buildno_header)

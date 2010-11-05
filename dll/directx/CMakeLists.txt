@@ -1,10 +1,10 @@
 
 add_subdirectory(amstream)
-#add_subdirectory(bdaplgin)
-#add_subdirectory(d3d8)
+#add_subdirectory(bdaplgin) #disabled in trunk
+#add_subdirectory(d3d8) #disabled in trunk
 add_subdirectory(d3d8thk)
-#add_subdirectory(d3d9)
-#add_subdirectory(ddraw)
+#add_subdirectory(d3d9) #disabled in trunk
+#add_subdirectory(ddraw) #disabled in trunk
 add_subdirectory(devenum)
 add_subdirectory(dinput)
 add_subdirectory(dinput8)
@@ -17,8 +17,8 @@ add_subdirectory(dxdiagn)
 #add_subdirectory(ksproxy)# undefined reference to `operator new(unsigned int)'
 add_subdirectory(ksuser)
 add_subdirectory(msdmo)
-#add_subdirectory(msdvbnp)
-#add_subdirectory(msvidctl)
+#add_subdirectory(msdvbnp) #disabled in trunk
+#add_subdirectory(msvidctl) #disabled in trunk
 add_subdirectory(qedit)
 add_subdirectory(quartz)
-#add_subdirectory(wine)
+add_subdirectory(wine)

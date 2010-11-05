@@ -27,3 +27,5 @@ add_importlibs(msdmo
     ntdll)
 
 add_dependencies(msdmo dxdsk psdk buildno_header)
+
+add_cab_target(msdmo 1)

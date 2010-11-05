@@ -22,3 +22,5 @@ add_importlibs(dplay
     ntdll)
 
 add_dependencies(dplay psdk buildno_header)
+
+add_cab_target(dplay 1)

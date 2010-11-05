@@ -30,3 +30,5 @@ add_importlibs(dinput8
     ntdll)
 
 add_dependencies(dinput8 psdk buildno_header)
+
+add_cab_target(dinput8 1)

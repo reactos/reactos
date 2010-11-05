@@ -12,7 +12,7 @@ add_subdirectory(avifil32)
 add_subdirectory(batt)
 add_subdirectory(bcrypt)
 add_subdirectory(beepmidi)
-#add_subdirectory(browseui)#FIXME: shellbrowser.cpp:152: error: expected constructor, destructor, or type conversion before 'SHAlloc'
+#add_subdirectory(browseui) #FIXME: shellbrowser.cpp:152: error: expected constructor, destructor, or type conversion before 'SHAlloc'
 add_subdirectory(cabinet)
 add_subdirectory(cards)
 add_subdirectory(cfgmgr32)
@@ -56,7 +56,7 @@ add_subdirectory(inetmib1)
 add_subdirectory(initpki)
 add_subdirectory(inseng)
 add_subdirectory(iphlpapi)
-#add_subdirectory(iprtprio)
+#add_subdirectory(iprtprio) # not built in trunk
 add_subdirectory(itircl)
 add_subdirectory(itss)
 add_subdirectory(jscript)
@@ -199,13 +199,13 @@ add_subdirectory(vdmdbg)
 add_subdirectory(version)
 add_subdirectory(wdmaud.drv)
 add_subdirectory(windowscodecs)
-#add_subdirectory(winemp3.acm)#FIXME: ertr000001.o:(.rdata+0x0): undefined reference to `_pei386_runtime_relocator)'
+#add_subdirectory(winemp3.acm) #FIXME: ertr000001.o:(.rdata+0x0): undefined reference to `_pei386_runtime_relocator)'
 add_subdirectory(winfax)
 add_subdirectory(wing32)
 add_subdirectory(winhttp)
 add_subdirectory(wininet)
 add_subdirectory(winmm)
-#add_subdirectory(winscard)
+#add_subdirectory(winscard) # not built in trunk
 add_subdirectory(winspool)
 add_subdirectory(winsta)
 add_subdirectory(wintrust)

@@ -1,0 +1,73 @@
+set_rc_compiler()
+
+spec2def(wined3.dll wined3d.spec)
+
+list(APPEND SOURCE
+    ati_fragment_shader.c
+    arb_program_shader.c
+    basetexture.c
+    buffer.c
+    clipper.c
+    context.c
+    cubetexture.c
+    device.c
+    directx.c
+    drawprim.c
+    gl_compat.c
+    glsl_shader.c
+    nvidia_texture_shader.c
+    palette.c
+    query.c
+    resource.c
+    shader.c
+    shader_sm1.c
+    shader_sm4.c
+    state.c
+    stateblock.c
+    surface_base.c
+    surface.c
+    surface_gdi.c 
+    swapchain.c
+    swapchain_base.c
+    swapchain_gdi.c
+    texture.c
+    utils.c
+    vertexdeclaration.c
+    view.c
+    volume.c
+    volumetexture.c
+    wined3d_main.c
+    version.rc
+    wined3d.def)
+
+if(ARCH MATCHES amd64)
+list(APPEND SOURCE
+     powf.c
+     sqrtf.c)
+endif()
+
+add_definitions(
+    -D__WINESRC__
+    -DUSE_WIN32_OPENGL)
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
+add_library(wined3d SHARED ${SOURCE})
+set_module_type(wined3d win32dll)
+
+target_link_libraries(wined3d
+    ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def
+    wine
+    uuid)
+
+add_importlibs(wined3d
+    user32
+    opengl32
+    gdi32
+    advapi32
+    msvcrt
+    kernel32
+    ntdll)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
+
+add_cab_target(wined3d 1)

@@ -38,3 +38,5 @@ add_importlibs(dmusic
     ntdll)
 
 add_dependencies(dmusic psdk buildno_header)
+
+add_cab_target(dmusic 1)

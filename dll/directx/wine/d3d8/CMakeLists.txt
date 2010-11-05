@@ -12,12 +12,12 @@ add_library(d3d8 SHARED
     d3d8_main.c
     device.c
     directx.c
-    indexbuffer.c
-    pixelshader.c
+    #indexbuffer.c
+    #pixelshader.c
     surface.c
     swapchain.c
     texture.c
-    vertexbuffer.c
+    #vertexbuffer.c
     vertexdeclaration.c
     vertexshader.c
     volume.c

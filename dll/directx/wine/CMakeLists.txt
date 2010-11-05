@@ -20,5 +20,5 @@
 #add_subdirectory(d3dx9_40)
 #add_subdirectory(d3dx9_41)
 #add_subdirectory(d3dx9_42)
-#add_subdirectory(ddraw)
-#add_subdirectory(wined3d)
+add_subdirectory(ddraw)
+add_subdirectory(wined3d)
