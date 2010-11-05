@@ -249,6 +249,64 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
 }
 
+VOID
+FASTCALL
+KiIdleLoop(VOID)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    PKTHREAD OldThread, NewThread;
+
+    /* Initialize the idle loop: disable interrupts */
+    _enable();
+    __asm__("nop; nop");
+    _disable();
+    
+    /* Now loop forever */
+    while (TRUE)
+    {
+        /* Check for pending timers, pending DPCs, or pending ready threads */
+        if ((Prcb->DpcData[0].DpcQueueDepth) ||
+            (Prcb->TimerRequest) ||
+            (Prcb->DeferredReadyListHead.Next))
+        {
+            /* Quiesce the DPC software interrupt */
+            HalClearSoftwareInterrupt(DISPATCH_LEVEL);
+        
+            /* Handle it */
+            KiRetireDpcList(Prcb);
+        }
+    
+        /* Check if a new thread is scheduled for execution */
+        if (Prcb->NextThread)
+        {
+            /* Enable interupts */
+            _enable();
+        
+            /* Capture current thread data */
+            OldThread = Prcb->CurrentThread;
+            NewThread = Prcb->NextThread;
+        
+            /* Set new thread data */
+            Prcb->NextThread = NULL;
+            Prcb->CurrentThread = NewThread;
+        
+            /* The thread is now running */
+            NewThread->State = Running;
+        
+            /* Switch away from the idle thread */
+            KiSwapContext(OldThread, NewThread);
+            
+            /* We are back in the idle thread -- disable interrupts again */
+            _enable();
+            __asm__("nop");
+            _disable();
+        }
+        else
+        {
+            /* Continue staying idle. Note the HAL returns with interrupts on */
+            Prcb->PowerState.IdleFunction(&Prcb->PowerState);
+        }
+    }
+}
+
 /* EOF */
-
-
