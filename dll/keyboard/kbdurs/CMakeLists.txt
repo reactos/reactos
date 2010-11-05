@@ -7,6 +7,6 @@ add_library(kbdurs SHARED kbdurs.c kbdurs.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdurs.
 
 set_entrypoint(kbdurs 0)
 
-
-
 add_dependencies(kbdurs psdk buildno_header)
+
+add_cab_target(kbdurs 1)

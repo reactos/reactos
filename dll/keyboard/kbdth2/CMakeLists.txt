@@ -7,6 +7,6 @@ add_library(kbdth2 SHARED kbdth2.c kbdth2.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdth2.
 
 set_entrypoint(kbdth2 0)
 
-
-
 add_dependencies(kbdth2 psdk buildno_header)
+
+add_cab_target(kbdth2 1)

@@ -7,6 +7,6 @@ add_library(kbdgerg SHARED kbdgerg.c kbdgerg.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdg
 
 set_entrypoint(kbdgerg 0)
 
-
-
 add_dependencies(kbdgerg psdk buildno_header)
+
+add_cab_target(kbdgerg 1)

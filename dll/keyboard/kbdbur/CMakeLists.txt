@@ -7,6 +7,6 @@ add_library(kbdbur SHARED kbdbur.c kbdbur.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdbur.
 
 set_entrypoint(kbdbur 0)
 
-
-
 add_dependencies(kbdbur psdk buildno_header)
+
+add_cab_target(kbdbur 1)

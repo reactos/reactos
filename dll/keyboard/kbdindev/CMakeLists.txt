@@ -7,6 +7,6 @@ add_library(kbdindev SHARED kbdindev.c kbdindev.rc ${CMAKE_CURRENT_BINARY_DIR}/k
 
 set_entrypoint(kbdindev 0)
 
-
-
 add_dependencies(kbdindev psdk buildno_header)
+
+add_cab_target(kbdindev 1)

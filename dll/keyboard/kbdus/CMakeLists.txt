@@ -6,7 +6,6 @@ add_library(kbdus SHARED kbdus.c kbdus.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdus.def)
 
 set_entrypoint(kbdus 0)
 
-
-
 add_dependencies(kbdus psdk buildno_header)
+
 add_cab_target(kbdus 1)

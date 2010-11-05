@@ -7,6 +7,6 @@ add_library(kbdsk1 SHARED kbdsk1.c kbdsk1.rc ${CMAKE_CURRENT_BINARY_DIR}/kbdsk1.
 
 set_entrypoint(kbdsk1 0)
 
-
-
 add_dependencies(kbdsk1 psdk buildno_header)
+
+add_cab_target(kbdsk1 1)

@@ -7,6 +7,6 @@ add_library(kbddv SHARED kbddv.c kbddv.rc ${CMAKE_CURRENT_BINARY_DIR}/kbddv.def)
 
 set_entrypoint(kbddv 0)
 
-
-
 add_dependencies(kbddv psdk buildno_header)
+
+add_cab_target(kbddv 1)
