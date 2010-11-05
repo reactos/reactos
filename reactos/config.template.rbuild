@@ -104,4 +104,9 @@
 -->
 <property name="NEWCC" value="0" />
 
+<!--
+    Whether to compile the new sprintf
+-->
+<property name="NEWSPRINTF" value="1" />
+
 </group>

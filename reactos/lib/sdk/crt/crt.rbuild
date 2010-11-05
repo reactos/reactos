@@ -26,6 +26,33 @@
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<define name="_CRTBLD" />
+
+	<if property="NEWSPRINTF" value="1">
+	<define name="USE_NEW_SPRINTF" />
+	<directory name="printf">
+		<file>_cprintf.c</file>
+		<file>_snprintf.c</file>
+		<file>_snwprintf.c</file>
+		<file>_vcprintf.c</file>
+		<file>_vsnprintf.c</file>
+		<file>_vsnwprintf.c</file>
+		<file>fprintf.c</file>
+		<file>fwprintf.c</file>
+		<file>printf.c</file>
+		<file>sprintf.c</file>
+		<file>streamout.c</file>
+		<file>swprintf.c</file>
+		<file>vfprintf.c</file>
+		<file>vfwprintf.c</file>
+		<file>vprintf.c</file>
+		<file>vsprintf.c</file>
+		<file>vswprintf.c</file>
+		<file>vwprintf.c</file>
+		<file>wprintf.c</file>
+		<file>wstreamout.c</file>
+	</directory>
+	</if>
+
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>
@@ -123,6 +150,7 @@
 		<file>ldiv.c</file>
 		<file>logf.c</file>
 		<file>modf.c</file>
+		<file>powf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
 		<file>sinf.c</file>
@@ -343,6 +371,7 @@
 		<file>wpopen.c</file>
 		<file>wstat.c</file>
 		<file>wstat64.c</file>
+		<file>lock_file.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>
