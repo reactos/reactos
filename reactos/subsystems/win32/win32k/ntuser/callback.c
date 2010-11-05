@@ -361,7 +361,7 @@ co_IntCallHookProc(INT HookId,
                   DPRINT1("WH_CBT HCBT_CREATEWND wParam bad hWnd!\n");
                   goto Fault_Exit;
                }
-               DPRINT1("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
+               DPRINT("HCBT_CREATEWND AnsiCreator %s, AnsiHook %s\n", pWnd->state & WNDS_ANSICREATOR ? "True" : "False", Ansi ? "True" : "False");
               // Due to KsStudio.exe, just pass the callers original pointers
               // except class which point to kernel space if not an atom.
               // Found by, Olaf Siejka

@@ -1406,7 +1406,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     Hook->Proc    = HookProc;
     Hook->Ansi    = Ansi;
 
-    DPRINT1("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n",pti->rpdesk, pti->pDeskInfo,Hook->head.rpdesk);
+    DPRINT("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n",pti->rpdesk, pti->pDeskInfo,Hook->head.rpdesk);
 
     if (ThreadId)  /* thread-local hook */
     {
