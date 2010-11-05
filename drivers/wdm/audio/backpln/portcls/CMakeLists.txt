@@ -62,3 +62,5 @@ endif(MSVC)
 set_module_type(portcls kernelmodedriver)
 
 add_importlibs(portcls ntoskrnl ks drmk hal stdc++ gcc msvcrt)
+
+add_cab_target(portcls 2)

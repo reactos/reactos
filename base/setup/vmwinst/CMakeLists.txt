@@ -17,3 +17,5 @@ add_importlibs(vmwinst
     msvcrt
     kernel32
     ntdll)
+
+add_cab_target(vmwinst 1)

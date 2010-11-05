@@ -8,3 +8,5 @@ add_library(dxgthk SHARED
 
 set_module_type(dxgthk kernelmodedriver)
 add_importlibs(dxgthk win32k)
+
+add_cab_target(dxgthk 2)

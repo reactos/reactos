@@ -5,3 +5,5 @@ add_library(battc SHARED battc.c battc.rc)
 
 set_module_type(battc kernelmodedriver)
 add_importlibs(battc ntoskrnl hal)
+
+add_cab_target(battc 2)

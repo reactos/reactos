@@ -10,3 +10,5 @@ add_library(dxapi SHARED
 
 set_module_type(dxapi kernelmodedriver)
 add_importlibs(dxapi ntoskrnl hal videoprt)
+
+add_cab_target(dxapi 2)

@@ -8,3 +8,5 @@ add_library(wmilib SHARED
 
 set_module_type(wmilib kernelmodedriver)
 add_importlibs(wmilib ntoskrnl)
+
+add_cab_target(wmilib 2)

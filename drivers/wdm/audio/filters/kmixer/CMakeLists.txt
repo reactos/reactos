@@ -13,3 +13,5 @@ target_link_libraries(kmixer
     libsamplerate)
 
 add_importlibs(kmixer ntoskrnl ks hal)
+
+add_cab_target(kmixer 2)

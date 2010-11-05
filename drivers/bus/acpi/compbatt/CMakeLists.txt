@@ -11,3 +11,5 @@ set_module_type(compbatt kernelmodedriver)
 add_importlibs(compbatt ntoskrnl hal battc)
 
 add_pch(compbatt ${CMAKE_CURRENT_SOURCE_DIR}/compbatt.h ${SOURCE})
+
+add_cab_target(compbatt 2)

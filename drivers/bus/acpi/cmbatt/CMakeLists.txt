@@ -12,3 +12,6 @@ set_module_type(cmbatt kernelmodedriver)
 add_importlibs(cmbatt ntoskrnl hal battc wmilib)
 
 add_pch(cmbatt ${CMAKE_CURRENT_SOURCE_DIR}/cmbatt.h ${SOURCE})
+
+
+add_cab_target(cmbatt 2)

@@ -21,3 +21,6 @@ target_link_libraries(wdmaud
     ${PSEH_LIB})
 
 add_importlibs(wdmaud ntoskrnl ks hal)
+
+
+add_cab_target(wdmaud 2)

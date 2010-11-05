@@ -3,7 +3,7 @@ add_definitions(
     -DUSE_EXTERNAL_DXTN_LIB=1
     -DBUILD_GL32
     -DWIN32
-    -D_WINDOWS)
+    -DUSE_3DNOW_ASM)
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 

@@ -34,3 +34,5 @@ add_importlibs(explorer_new
     msvcrt
     kernel32
     ntdll)
+
+add_cab_target(explorer_new 4)

@@ -14,3 +14,5 @@ add_importlibs(wlansvc
     msvcrt
     kernel32
     ntdll)
+
+add_cab_target(wlansvc 1)

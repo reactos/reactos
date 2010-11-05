@@ -14,3 +14,5 @@ set_module_type(sysaudio kernelmodedriver)
 target_link_libraries(sysaudio libcntpr)
 
 add_importlibs(sysaudio ntoskrnl ks hal)
+
+add_cab_target(sysaudio 2)
