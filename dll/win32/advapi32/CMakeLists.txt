@@ -1,6 +1,8 @@
 
 set_unicode()
 
+spec2def(advapi32.dll advapi32.spec)
+
 add_definitions(-D_ADVAPI32_)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -60,7 +62,9 @@ target_link_libraries(advapi32
     wine
     ${PSEH_LIB})
 
-add_importlibs(advapi32 rpcrt4 kernel32 ntdll)
+add_importlibs(advapi32 rpcrt4 kernel32 ntdll msvcrt)
 
 add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
 add_cab_target(advapi32 1)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
+
