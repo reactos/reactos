@@ -7,8 +7,9 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/subsys
     ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
-add_definitions(-DLANGPACK)
-add_definitions(-D_WIN32K_)
+add_definitions(
+    -DLANGPACK
+    -D_WIN32K_)
 
 list(APPEND SOURCE
     dib/alphablend.c

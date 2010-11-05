@@ -8,9 +8,8 @@ add_definitions(
     -DHAVE_WIN32_THREADS
     -D_REENTRANT
     -D_WINSOCKAPI_
-    -DLIBXML_STATIC)
-
-add_definitions(-D_DLL -D__USE_CRTIMP)
+    -DLIBXML_STATIC
+    -D_DLL -D__USE_CRTIMP)
 
 add_library(libxslt SHARED
     attributes.c

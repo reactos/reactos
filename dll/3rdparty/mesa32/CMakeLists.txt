@@ -3,9 +3,8 @@ add_definitions(
     -DUSE_EXTERNAL_DXTN_LIB=1
     -DBUILD_GL32
     -DWIN32
-    -DUSE_3DNOW_ASM)
-
-add_definitions(-D_DLL -D__USE_CRTIMP)
+    -DUSE_3DNOW_ASM
+    -D_DLL -D__USE_CRTIMP)
 
 if(ARCH MATCHES i386)
 add_definitions(
@@ -16,17 +15,18 @@ else()
 add_definitions(-DGL_NO_STDCALL)
 endif(ARCH MATCHES i386)
 
-include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/main)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/glapi)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/math)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/tnl)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/shader)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/shader/grammar)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/shader/slang)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/shader/slang/OSDependent/Linux)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/shader/slang/OGLCompilersDLL)
+include_directories(
+    BEFORE include
+    src
+    src/main
+    src/glapi
+    src/math
+    src/tnl
+    src/shader
+    src/shader/grammar
+    src/shader/slang
+    src/shader/slang/OSDependent/Linux
+    src/shader/slang/OGLCompilersDLL)
 
 list(APPEND SOURCE
     src/drivers/common/driverfuncs.c
@@ -221,8 +221,7 @@ list(APPEND SOURCE
     src/vbo/vbo_split_inplace.c
     src/drivers/windows/icd/mesa.def)
 
-set_source_files_properties(src/drivers/windows/icd/mesa.def
-    PROPERTIES EXTERNAL_OBJECT TRUE)
+set_source_files_properties(src/drivers/windows/icd/mesa.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
@@ -257,13 +256,6 @@ endif(ARCH MATCHES i386)
 add_library(mesa32 SHARED ${SOURCE})
 
 set_entrypoint(mesa32 0)
-
-if (NOT MSVC)
-# this hides all warnings, is this really wanted ?
-#add_definitions(-w)
-
-endif(NOT MSVC)
-
 
 add_importlibs(mesa32 gdi32 user32 msvcrt kernel32 ntdll)
 

@@ -4,12 +4,12 @@ add_definitions(
     -DNDEBUG
     -DBUILD_LIBTIFF_DLL
     -DDLL_EXPORT
-    -DUSE_WIN32_FILEIO)
+    -DUSE_WIN32_FILEIO
+    -D_DLL -D__USE_CRTIMP)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
 add_library(libtiff SHARED
     mkg3states.c

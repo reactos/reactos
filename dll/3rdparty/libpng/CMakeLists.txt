@@ -1,9 +1,14 @@
 
-add_definitions(-DWIN32 -DNDEBUG -D_WINDOWS -DPNG_BUILD_DLL)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -DWIN32
+    -DNDEBUG
+    -D_WINDOWS
+    -DPNG_BUILD_DLL
+    -D_DLL -D__USE_CRTIMP)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
 add_library(libpng SHARED
     png.c

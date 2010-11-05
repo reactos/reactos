@@ -1,10 +1,15 @@
 
-add_definitions(-DWIN32 -D_WINDOWS -D_MBCS -DJPEG_DLL)
-add_definitions(-Dmain=mainptr)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -DWIN32
+    -D_WINDOWS
+    -D_MBCS
+    -DJPEG_DLL
+    -Dmain=mainptr
+    -D_DLL -D__USE_CRTIMP)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/libjpeg
+    ${REACTOS_SOURCE_DIR}/include/reactos/libs/zlib)
 
 add_library(libjpeg SHARED
     jaricom.c
