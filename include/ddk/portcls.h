@@ -1958,6 +1958,12 @@ DECLARE_INTERFACE_(IPowerNotify, IUnknown)
 
 typedef IPowerNotify *PPOWERNOTIFY;
 
+#define IMP_IPowerNotify\
+    STDMETHODIMP_(void) PowerChangeNotify\
+    (   IN  POWER_STATE     PowerState\
+    )
+
+
 #undef INTERFACE
 
 /* ===============================================================
@@ -2157,6 +2163,11 @@ DECLARE_INTERFACE_(IPortClsVersion, IUnknown)
 typedef IPortClsVersion *PPORTCLSVERSION;
 
 #undef INTERFACE
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+DEFINE_GUID(IID_IMusicTechnology,
+0x80396C3CL, 0xCBCB, 0x409B, 0x9F, 0x65, 0x4F, 0x1E, 0x74, 0x67, 0xCD, 0xAF);
+#endif
 
 /* ===============================================================
     IDmaOperations Interface
@@ -2363,6 +2374,10 @@ PcRegisterPhysicalConnectionToExternal(
 PORTCLASSAPI ULONGLONG NTAPI
 PcGetTimeInterval(
   IN ULONGLONG Since);
+
+#define GTI_SECONDS(t)      (ULONGLONG(t)*10000000)
+#define GTI_MILLISECONDS(t) (ULONGLONG(t)*10000)
+#define GTI_MICROSECONDS(t) (ULONGLONG(t)*10)
 
 PORTCLASSAPI NTSTATUS NTAPI
 PcRegisterSubdevice(

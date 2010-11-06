@@ -68,7 +68,7 @@
             SND_TRACE(L"-- Current wave header list --\n"); \
             while ( CurrDumpHdr ) \
             { \
-                SND_TRACE(L"%x | %d bytes | flags: %x\n", CurrDumpHdr->lpData, \
+                SND_TRACE(L"%x | %d bytes | flags: %x\n", CurrDumpHdr, \
                           CurrDumpHdr->dwBufferLength, \
                           CurrDumpHdr->dwFlags); \
                 CurrDumpHdr = CurrDumpHdr->lpNext; \
@@ -364,6 +364,8 @@ typedef struct _SOUND_DEVICE_INSTANCE
     WAVEFORMATEX WaveFormatEx;
     HANDLE hNotifyEvent;
     HANDLE hStopEvent;
+    HANDLE hResetEvent;
+    BOOL ResetInProgress;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -411,7 +413,7 @@ MmeGetSoundDeviceCapabilities(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-MmeOpenWaveDevice(
+MmeOpenDevice(
     IN  MMDEVICE_TYPE DeviceType,
     IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
