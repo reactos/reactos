@@ -10,6 +10,7 @@
 
 int __defaultmatherr = 0;
 
+#if 0
 int __CRTDECL
 _matherr (struct _exception *pexcept)
 {
@@ -51,3 +52,4 @@ _matherr (struct _exception *pexcept)
   return 0;
 }
 
+#endif
