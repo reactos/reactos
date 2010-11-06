@@ -159,6 +159,16 @@ macro(add_importlib_target _def_file)
   # empty for now, while import libs are shipped
 endmacro()
 
+macro(pdef2def _pdef_file)
+    get_filename_component(_file ${_pdef_file} NAME_WE)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND ${MINGW_PREFIX}cpp -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -P -E ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
+endmacro(pdef2def _pdef_file)
+
 #pseh lib, needed with mingw
 set(PSEH_LIB "pseh")
 

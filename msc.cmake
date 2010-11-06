@@ -121,6 +121,10 @@ macro(add_importlibs MODULE)
     endforeach()
 endmacro()
 
+macro(pdef2def _pdef_file)
+# Dummy for now
+endmacro()
+
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #pseh workaround

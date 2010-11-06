@@ -7,7 +7,8 @@ add_definitions(
     -DEOVERFLOW=75
     -Dlseek=_lseek
     -Dread=_read
-    -Dstrdup=_strdup)
+    -Dstrdup=_strdup
+    -D_DLL -D__USE_CRTIMP)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/libs/libmpg123)
 
