@@ -551,7 +551,6 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 }
                 while (val64);
 
-                while (precision-- > 0) *--string = '0';
                 len = _tcslen(string);
                 break;
 
@@ -563,7 +562,8 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 
         /* Calculate padding */
         prefixlen = prefix ? _tcslen(prefix) : 0;
-        padding = fieldwidth - len - prefixlen;
+        if (precision < 0) precision = 0;
+        padding = fieldwidth - len - prefixlen - precision;
 
         /* Optional left space padding */
         if ((flags & (FLAG_ALIGN_LEFT | FLAG_PAD_ZERO)) == 0)
@@ -584,13 +584,11 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         }
 
         /* Optional left '0' padding */
-        if ((flags & (FLAG_ALIGN_LEFT | FLAG_PAD_ZERO)) == FLAG_PAD_ZERO)
+        if ((flags & FLAG_ALIGN_LEFT) == 0) precision += padding;
+        while (precision-- > 0)
         {
-            while (padding-- > 0)
-            {
-                if ((written = streamout_char(stream, _T('0'))) == -1) return -4;
-                written_all += written;
-            }
+            if ((written = streamout_char(stream, _T('0'))) == -1) return -4;
+            written_all += written;
         }
 
         /* Output the string */
