@@ -275,10 +275,10 @@ PropertyItemDispatch(
         // now call the handler
         UNICODE_STRING GuidBuffer;
         RtlStringFromGUID(Property->Set, &GuidBuffer);
-        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p\n",
+        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
                 PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
-                PropertyRequest->PropertyItem->Handler, PropertyRequest);
-#if 0
+                PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
+#if 1
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
 #else
         Status = STATUS_NOT_FOUND;
