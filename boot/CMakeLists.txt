@@ -215,7 +215,9 @@ add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/hivecls_${ARCH}.inf reactos hive
 add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/hivedef_${ARCH}.inf reactos hivedef.inf)
 add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/hivesft_${ARCH}.inf reactos hivesft.inf)
 add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/hivesys_${ARCH}.inf reactos hivesys.inf)
-
+add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/autorun.inf "" autorun.inf)
+add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/icon.ico "" icon.ico)
+add_minicd(${CMAKE_CURRENT_SOURCE_DIR}/bootdata/readme.txt "" readme.txt)
 # Livecd files
 list(APPEND LIVECD_HIVES
     ${CMAKE_CURRENT_SOURCE_DIR}/bootdata/livecd.inf

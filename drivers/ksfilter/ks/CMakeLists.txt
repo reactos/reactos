@@ -38,3 +38,5 @@ target_link_libraries(ks
 
 add_importlibs(ks ntoskrnl hal msvcrt)
 add_dependencies(ks psdk bugcodes)
+
+add_cab_target(ks 2)

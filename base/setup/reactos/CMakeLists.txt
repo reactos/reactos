@@ -14,3 +14,5 @@ add_importlibs(reactos
     msvcrt
     kernel32
     ntdll)
+
+add_minicd_target(reactos reactos)
