@@ -97,7 +97,8 @@ format_float(
     int num_digits, val32, base = 10;
     __int64 val64;
 
-    if (precision == -1) precision = 6;
+    if (precision < 0) precision = 6;
+    else if (precision > 512) precision = 512;
 
     fpval = va_arg_ffp(*argptr, flags);
     exponent = get_exp(fpval);
@@ -302,7 +303,15 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             /* Write the character to the stream */
             if ((written = streamout_char(stream, chr)) == -1) return -1;
             written_all += written;
-            /* Continue with next char */
+            continue;
+        }
+
+        /* Check for escaped % character */
+        if (*format == _T('%'))
+        {
+            /* Write % to the stream */
+            if ((written = streamout_char(stream, _T('%'))) == -1) return -1;
+            written_all += written;
             continue;
         }
 
@@ -323,6 +332,11 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         if (chr == _T('*'))
         {
             fieldwidth = va_arg(argptr, int);
+            if (fieldwidth < 0)
+            {
+                flags |= FLAG_ALIGN_LEFT;
+                fieldwidth = -fieldwidth;
+            }
             chr = *format++;
         }
         else
