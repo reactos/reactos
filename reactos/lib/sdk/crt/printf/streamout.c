@@ -145,7 +145,7 @@ format_float(
     }
 
     /* CHECKME: Windows seems to handle a max of 17 digits(?) */
-    num_digits = precision <= 17 ? precision : 17;
+    num_digits = precision <= 17 ? precision: 17;
 
     /* Handle sign */
     if (fpval < 0)
@@ -173,20 +173,19 @@ format_float(
     }
     else
     {
-        val64 = (__int64)fpval;
-        fpval -= val64;
         fpval *= pow(10., precision);
+        val64 = (__int64)(fpval + 0.5);
         
-        while (num_digits--)
+        while (num_digits-- > 0)
         {
-            *--(*string) = digits[(__int64)fpval % 10];
-            fpval /= 10;
+            *--(*string) = digits[val64 % 10];
+            val64 /= 10;
         }
     }
 
     *--(*string) = _T('.');
 
-    /* Gather digits in reverse order */
+    /* Digits before the decimal point */
     do
     {
         *--(*string) = digits[val64 % base];
@@ -286,7 +285,7 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
     int base, len, prefixlen, fieldwidth, precision, padding;
     int written = 1, written_all = 0;
     unsigned int flags;
-    __int64 val64;
+    unsigned __int64 val64;
 
     buffer[BUFFER_SIZE] = '\0';
 
@@ -297,20 +296,12 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         /* Check for end of format string */
         if (chr == _T('\0')) break;
 
-        /* Check for 'normal' character */
-        if (chr != _T('%'))
+        /* Check for 'normal' character or double % */
+        if ((chr != _T('%')) || 
+            (chr = *format++) == _T('%'))
         {
             /* Write the character to the stream */
             if ((written = streamout_char(stream, chr)) == -1) return -1;
-            written_all += written;
-            continue;
-        }
-
-        /* Check for escaped % character */
-        if (*format == _T('%'))
-        {
-            /* Write % to the stream */
-            if ((written = streamout_char(stream, _T('%'))) == -1) return -1;
             written_all += written;
             continue;
         }
@@ -319,13 +310,13 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         flags = 0;
         while (1)
         {
-            chr = *format++;
                  if (chr == _T('-')) flags |= FLAG_ALIGN_LEFT;
             else if (chr == _T('+')) flags |= FLAG_FORCE_SIGN;
             else if (chr == _T(' ')) flags |= FLAG_FORCE_SIGNSP;
             else if (chr == _T('0')) flags |= FLAG_PAD_ZERO;
             else if (chr == _T('#')) flags |= FLAG_SPECIAL;
             else break;
+            chr = *format++;
         }
 
         /* Handle field width modifier */
@@ -505,13 +496,14 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 /* Use external function, one for kernel one for user mode */
                 format_float(chr, flags, precision, &string, &prefix, &argptr);
                 len = _tcslen(string);
+                precision = 0;
                 break;
 
             case _T('d'):
             case _T('i'):
-                val64 = va_arg_f(argptr, flags);
+                val64 = (__int64)va_arg_f(argptr, flags);
 
-                if (val64 < 0)
+                if ((__int64)val64 < 0)
                 {
                     val64 = -val64;
                     prefix = _T("-");
@@ -526,11 +518,8 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
             case _T('o'):
                 base = 8;
                 if (flags & FLAG_SPECIAL) prefix = _T("0");
+                goto case_unsigned;
                 /* Fall through */
-
-            case _T('u'):
-                val64 = (unsigned __int64)va_arg_fu(argptr, flags);
-                goto case_number;
 
             case _T('p'):
                 precision = 2 * sizeof(void*);
@@ -543,12 +532,15 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
                 /* Fall through */
 
             case _T('x'):
-                val64 = (unsigned __int64)va_arg_fu(argptr, flags);
                 base = 16;
                 if (flags & FLAG_SPECIAL)
                 {
                     prefix = &digits[16];
                 }
+
+            case _T('u'):
+            case_unsigned:
+                val64 = va_arg_fu(argptr, flags);
 
             case_number:
 #ifdef _UNICODE
@@ -556,14 +548,15 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
 #else
                 flags &= ~FLAG_WIDECHAR;
 #endif
+                if (precision < 0) precision = 1;
+
                 /* Gather digits in reverse order */
-                do
+                while (val64)
                 {
                     *--string = digits[val64 % base];
                     val64 /= base;
                     precision--;
                 }
-                while (val64);
 
                 len = _tcslen(string);
                 break;
@@ -578,11 +571,12 @@ streamout(FILE *stream, const TCHAR *format, va_list argptr)
         prefixlen = prefix ? _tcslen(prefix) : 0;
         if (precision < 0) precision = 0;
         padding = fieldwidth - len - prefixlen - precision;
+        if (padding < 0) padding = 0;
 
         /* Optional left space padding */
         if ((flags & (FLAG_ALIGN_LEFT | FLAG_PAD_ZERO)) == 0)
         {
-            while (padding-- > 0)
+            for (; padding > 0; padding--)
             {
                 if ((written = streamout_char(stream, _T(' '))) == -1) return -2;
                 written_all += written;
