@@ -12,7 +12,7 @@ add_subdirectory(dmusic)
 add_subdirectory(dplay)
 add_subdirectory(dplayx)
 add_subdirectory(dsound)
-#add_subdirectory(dsound_new)
+#add_subdirectory(dsound_new) #disabled in trunk
 add_subdirectory(dxdiagn)
 #add_subdirectory(ksproxy)# undefined reference to `operator new(unsigned int)'
 add_subdirectory(ksuser)

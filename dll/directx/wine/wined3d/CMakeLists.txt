@@ -70,4 +70,5 @@ add_importlibs(wined3d
     ntdll)
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
+add_dependencies(wined3d wineheaders)
 add_cab_target(wined3d 1)

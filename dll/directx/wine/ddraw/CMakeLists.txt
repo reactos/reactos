@@ -34,7 +34,6 @@ add_library(ddraw SHARED ${SOURCE})
 set_module_type(ddraw win32dll)
 
 target_link_libraries(ddraw
-    ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def
     wine
     uuid
     dxguid
@@ -49,4 +48,6 @@ add_importlibs(ddraw
     msvcrt
     kernel32
     ntdll)
-    
+
+add_dependencies(ddraw wineheaders)
+add_cab_target(ddraw 1)
