@@ -1,5 +1,0 @@
-
-LIBRARY localui.dll
-
-EXPORTS
-  InitializePrintMonitorUI@0 @1

@@ -2,11 +2,10 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(localui SHARED localui.c localui.rc localui.def)
+add_library(localui SHARED localui.c localui.rc)
 
-if(NOT MSVC)
-    set_source_files_properties(localui.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+set_pdef_file(localui localui.pdef)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/localui.def)
 
 set_module_type(localui win32dll)
 

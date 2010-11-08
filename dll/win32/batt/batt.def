@@ -1,6 +1,0 @@
-
-LIBRARY batt.dll
-
-EXPORTS
-  BatteryClassCoInstaller@16 @1
-  BatteryClassInstall@12 @2

@@ -1,13 +1,12 @@
 
 set_unicode()
 
-add_library(avicap32 SHARED avicap32.c avicap32.rc avicap32.def)
-
-if(NOT MSVC)
-    set_source_files_properties(avicap32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(avicap32 SHARED avicap32.c avicap32.rc)
 
 set_module_type(avicap32 win32dll)
+
+set_pdef_file(avicap32 avicap32.pdef)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/avicap32.def)
 
 target_link_libraries(avicap32 wine)
 

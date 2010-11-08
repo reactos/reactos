@@ -4,11 +4,10 @@ set_unicode()
 add_definitions(-DLANGPACK)
 include_directories(include)
 
-add_library(lpk SHARED dllmain.c stub.c lpk.rc lpk.def)
+add_library(lpk SHARED dllmain.c stub.c lpk.rc)
 
-if(NOT MSVC)
-    set_source_files_properties(lpk.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+set_pdef_file(lpk lpk.pdef)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
 
 set_module_type(lpk win32dll)
 

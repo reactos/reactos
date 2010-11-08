@@ -4,8 +4,7 @@ set_unicode()
 list(APPEND SOURCE
     acledit.c
     stubs.c
-    acledit.rc
-    )
+    acledit.rc)
 
 add_library(acledit SHARED ${SOURCE})
 

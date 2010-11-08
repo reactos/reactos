@@ -1,5 +1,0 @@
-
-LIBRARY getuname.dll
-
-EXPORTS
-  GetUName@8 @1

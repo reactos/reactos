@@ -1,13 +1,12 @@
 
 set_unicode()
 
-add_library(batt SHARED batt.c batt.rc batt.def)
-
-if(NOT MSVC)
-    set_source_files_properties(batt.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(batt SHARED batt.c batt.rc)
 
 set_module_type(batt win32dll)
+
+set_pdef_file(batt batt.pdef)
+add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/batt.def)
 
 add_importlibs(batt kernel32)
 
