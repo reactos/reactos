@@ -13,6 +13,6 @@ _atan2:
     fpatan
 
     pop ebp
-    retn
+    ret
 
 END

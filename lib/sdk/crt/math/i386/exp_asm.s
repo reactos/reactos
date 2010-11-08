@@ -24,6 +24,6 @@ _exp:
     fstp st(1)
 
     pop ebp
-    retn
+    ret
 
 END
