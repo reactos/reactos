@@ -513,6 +513,7 @@ extern BOOLEAN MmZeroingPageThreadActive;
 extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;
+extern PMMWSL MmWorkingSetList;
 
 //
 // Figures out the hardware bits for a PTE

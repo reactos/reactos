@@ -19,6 +19,7 @@
 /* GLOBALS ********************************************************************/
 
 ULONG MmProcessColorSeed = 0x12345678;
+PMMWSL MmWorkingSetList;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -892,6 +893,32 @@ MmCreateTeb(IN PEPROCESS Process,
     return Status;
 }
 
+VOID
+NTAPI
+MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
+{
+    PMMPFN Pfn1;
+
+    /* Setup some bogus list data */
+    MmWorkingSetList->LastEntry = CurrentProcess->Vm.MinimumWorkingSetSize;
+    MmWorkingSetList->HashTable = NULL;
+    MmWorkingSetList->HashTableSize = 0;
+    MmWorkingSetList->NumberOfImageWaiters = 0;
+    MmWorkingSetList->Wsle = (PVOID)0xDEADBABE;
+    MmWorkingSetList->VadBitMapHint = 1;
+    MmWorkingSetList->HashTableStart = (PVOID)0xBADAB00B;
+    MmWorkingSetList->HighestPermittedHashAddress = (PVOID)0xCAFEBABE;
+    MmWorkingSetList->FirstFree = 1;
+    MmWorkingSetList->FirstDynamic = 2;
+    MmWorkingSetList->NextSlot = 3;
+    MmWorkingSetList->LastInitializedWsle = 4;
+    
+    /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
+    Pfn1 = MiGetPfnEntry(MiAddressToPte(PDE_BASE)->u.Hard.PageFrameNumber);
+    ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
+    Pfn1->u1.Event = (PKEVENT)CurrentProcess;
+}
+
 NTSTATUS
 NTAPI
 MmInitializeProcessAddressSpace(IN PEPROCESS Process,
@@ -912,6 +939,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PWCHAR Source;
     PCHAR Destination;
     USHORT Length = 0;
+    MMPTE TempPte;
     
     /* We should have a PDE */
     ASSERT(Process->Pcb.DirectoryTableBase[0] != 0);
@@ -944,6 +972,22 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PointerPde = MiAddressToPde(HYPER_SPACE);
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
     MiInitializePfn(PageFrameNumber, PointerPde, TRUE);
+    
+    /* Setup the PFN for the PTE for the working set */
+    PointerPte = MiAddressToPte(MI_WORKING_SET_LIST);
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, MM_READWRITE, 0);
+    ASSERT(PointerPte->u.Long != 0);
+    PageFrameNumber = PFN_FROM_PTE(PointerPte);
+    MI_WRITE_INVALID_PTE(PointerPte, DemandZeroPte);
+    MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
+    TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+    /* Now initialize the working set list */
+    MiInitializeWorkingSetList(Process);
+
+    /* Sanity check */
+    ASSERT(Process->PhysicalVadRoot == NULL);
 
     /* Release PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -1062,12 +1106,13 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                             OUT PULONG_PTR DirectoryTableBase)
 {
     KIRQL OldIrql;
-    PFN_NUMBER PdeIndex, HyperIndex;
+    PFN_NUMBER PdeIndex, HyperIndex, WsListIndex;
     PMMPTE PointerPte;
     MMPTE TempPte, PdePte;
     ULONG PdeOffset;
-    PMMPTE SystemTable;
+    PMMPTE SystemTable, HyperTable;
     ULONG Color;
+    PMMPFN Pfn1;
 
     /* Choose a process color */
     Process->NextPageColor = RtlRandom(&MmProcessColorSeed);
@@ -1105,6 +1150,21 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
         /* Zero it outside the PFN lock */
         KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
         MiZeroPhysicalPage(HyperIndex);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    }
+
+    /* Get a zero page for the woring set list, if possible */
+    MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+    Color = MI_GET_NEXT_PROCESS_COLOR(Process);
+    WsListIndex = MiRemoveZeroPageSafe(Color);
+    if (!WsListIndex)
+    {
+        /* No zero pages, grab a free one */
+        WsListIndex = MiRemoveAnyPage(Color);
+        
+        /* Zero it outside the PFN lock */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        MiZeroPhysicalPage(WsListIndex);
     }
     else
     {
@@ -1117,11 +1177,42 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     Process->AddressSpaceInitialized = 1;
 
     /* Set the base directory pointers */
+    Process->WorkingSetPage = WsListIndex;
     DirectoryTableBase[0] = PdeIndex << PAGE_SHIFT;
     DirectoryTableBase[1] = HyperIndex << PAGE_SHIFT;
 
     /* Make sure we don't already have a page directory setup */
     ASSERT(Process->Pcb.DirectoryTableBase[0] == 0);
+    
+    /* Get a PTE to map hyperspace */
+    PointerPte = MiReserveSystemPtes(1, SystemPteSpace);
+    ASSERT(PointerPte != NULL);
+
+    /* Build it */
+    MI_MAKE_HARDWARE_PTE_KERNEL(&PdePte,
+                                PointerPte,
+                                MM_READWRITE,
+                                HyperIndex);
+
+    /* Set it dirty and map it */
+    PdePte.u.Hard.Dirty = TRUE;
+    MI_WRITE_VALID_PTE(PointerPte, PdePte);
+
+    /* Now get hyperspace's page table */
+    HyperTable = MiPteToAddress(PointerPte);
+
+    /* Now write the PTE/PDE entry for the working set list index itself */
+    TempPte = ValidKernelPte;
+    TempPte.u.Hard.PageFrameNumber = WsListIndex;
+    PdeOffset = MiAddressToPteOffset(MmWorkingSetList);
+    HyperTable[PdeOffset] = TempPte;
+
+    /* Let go of the system PTE */
+    MiReleaseSystemPtes(PointerPte, 1, SystemPteSpace);
+
+    /* Save the PTE address of the page directory itself */
+    Pfn1 = MiGetPfnEntry(PdeIndex);
+    Pfn1->PteAddress = (PMMPTE)PDE_BASE;
 
     /* Insert us into the Mm process list */
     InsertTailList(&MmProcessList, &Process->MmProcessLinks);

@@ -991,6 +991,14 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return Status;
     }
+
+    /* Is this a user address? */
+    if (Address <= MM_HIGHEST_USER_ADDRESS)
+    {
+        /* Add an additional page table reference */
+        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+        ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+    }
     
     /* Did we get a prototype PTE back? */
     if (!ProtoPte)
