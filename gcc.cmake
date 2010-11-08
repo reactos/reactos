@@ -175,6 +175,7 @@ macro(set_pdef_file _module _pdef_file)
     pdef2def(${_pdef_file})
     get_filename_component(_file ${_pdef_file} NAME_WE)
     target_link_libraries(${_module} "${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
+    add_dependencies(${_module} ${_file}_def)
 endmacro()
 
 #pseh lib, needed with mingw
