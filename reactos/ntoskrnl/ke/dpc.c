@@ -534,7 +534,7 @@ KiQuantumEnd(VOID)
     Thread->WaitIrql = APC_LEVEL;
 
     /* Swap threads */
-    KiSwapContext(Thread, NextThread);
+    KiSwapContext(APC_LEVEL, Thread);
 
     /* Lower IRQL back to DISPATCH_LEVEL */
     KeLowerIrql(DISPATCH_LEVEL);

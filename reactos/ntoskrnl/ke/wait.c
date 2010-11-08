@@ -249,7 +249,7 @@ KiExitDispatcher(IN KIRQL OldIrql)
     Thread->WaitIrql = OldIrql;
 
     /* Swap threads and check if APCs were pending */
-    PendingApc = KiSwapContext(Thread, NextThread);
+    PendingApc = KiSwapContext(OldIrql, Thread);
     if (PendingApc)
     {
         /* Lower only to APC */

@@ -387,7 +387,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     WaitIrql = CurrentThread->WaitIrql;
 
     /* Swap contexts */
-    ApcState = KiSwapContext(CurrentThread, NextThread);
+    ApcState = KiSwapContext(WaitIrql, CurrentThread);
 
     /* Get the wait status */
     WaitStatus = CurrentThread->WaitStatus;
@@ -754,7 +754,7 @@ NtYieldExecution(VOID)
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
             /* Swap to new thread */
-            KiSwapContext(Thread, NextThread);
+            KiSwapContext(APC_LEVEL, Thread);
             Status = STATUS_SUCCESS;
         }
         else

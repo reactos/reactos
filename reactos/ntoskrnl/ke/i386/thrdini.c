@@ -309,7 +309,7 @@ KiIdleLoop(VOID)
             NewThread->State = Running;
         
             /* Switch away from the idle thread */
-            KiSwapContext(OldThread, NewThread);
+            KiSwapContext(APC_LEVEL, OldThread);
             
             /* We are back in the idle thread -- disable interrupts again */
             _enable();
@@ -416,9 +416,6 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     PKTHREAD OldThread, NewThread;
     ULONG Cr0, NewCr0;
 
-    /* Switch threads, check for APC disable */
-    ASSERT(OldThreadAndApcFlag &~ 1);
-
     /* Save APC bypass disable */
     SwitchFrame->ApcBypassDisable = OldThreadAndApcFlag & 3;
     SwitchFrame->ExceptionList = Pcr->NtTib.ExceptionList;
@@ -451,7 +448,7 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
 
     /* Now enable interrupts and do the switch */
     _enable();
-    KiSwitchThreads(OldThread, NewThread);
+    KiSwitchThreads(OldThread, NewThread->KernelStack);
 }
 
 VOID
@@ -509,8 +506,8 @@ KiDispatchInterrupt(VOID)
         /* Make the old thread ready */
         KxQueueReadyThread(OldThread, Prcb);
         
-        /* Swap to the new thread. FIXME: APC Bypass */
-        KiSwapContext(OldThread, NewThread);
+        /* Swap to the new thread */
+        KiSwapContext(APC_LEVEL, OldThread);
     }
 }
 
