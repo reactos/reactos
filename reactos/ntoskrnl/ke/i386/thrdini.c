@@ -42,6 +42,13 @@ typedef struct _KKINIT_FRAME
     FX_SAVE_AREA FxSaveArea;
 } KKINIT_FRAME, *PKKINIT_FRAME;
 
+VOID
+FASTCALL
+KiSwitchThreads(
+    IN PKTHREAD OldThread,
+    IN PKTHREAD NewThread
+);
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -309,6 +316,135 @@ KiIdleLoop(VOID)
             Prcb->PowerState.IdleFunction(&Prcb->PowerState);
         }
     }
+}
+
+BOOLEAN
+FASTCALL
+KiSwapContextExit(IN PKTHREAD OldThread,
+                  IN PKSWITCHFRAME SwitchFrame)
+{
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKPROCESS OldProcess, NewProcess;
+    PKGDTENTRY GdtEntry;
+    PKTHREAD NewThread;
+    PKUINIT_FRAME InitFrame;
+    
+    /* We are on the new thread stack now */
+    NewThread = Pcr->PrcbData.CurrentThread;
+
+    /* Now we are the new thread. Check if it's in a new process */
+    OldProcess = OldThread->ApcState.Process;
+    NewProcess = NewThread->ApcState.Process;
+    if (OldProcess != NewProcess)
+    {
+        /* Check if there is a different LDT */
+        if (*(PULONGLONG)&OldProcess->LdtDescriptor != *(PULONGLONG)&NewProcess->LdtDescriptor)
+        {
+            DPRINT1("LDT switch not implemented\n");
+            ASSERT(FALSE);            
+        }
+
+        /* Switch address space and flush TLB */
+        __writecr3(NewProcess->DirectoryTableBase[0]);
+    }
+    
+    /* Clear GS */
+    Ke386SetGs(0);
+    
+    /* Set the TEB */
+    Pcr->NtTib.Self = (PVOID)NewThread->Teb;
+    GdtEntry = &Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
+    GdtEntry->BaseLow = (USHORT)((ULONG_PTR)NewThread->Teb & 0xFFFF);
+    GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)NewThread->Teb >> 16);
+    GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)NewThread->Teb >> 24);
+    
+    /* Set new TSS fields */
+    InitFrame = (PKUINIT_FRAME)NewThread->InitialStack - 1;
+    Pcr->TSS->Esp0 = (ULONG_PTR)&InitFrame->TrapFrame;
+    if (!(InitFrame->TrapFrame.EFlags & EFLAGS_V86_MASK))
+    {
+        Pcr->TSS->Esp0 -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) - FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
+    }
+    Pcr->TSS->IoMapBase = NewProcess->IopmOffset;
+    
+    /* Increase thread context switches */
+    NewThread->ContextSwitches++;
+
+    /* Load data from switch frame */
+    Pcr->NtTib.ExceptionList = SwitchFrame->ExceptionList;
+
+    /* DPCs shouldn't be active */
+    if (Pcr->PrcbData.DpcRoutineActive)
+    {
+        /* Crash the machine */
+        KeBugCheckEx(ATTEMPTED_SWITCH_FROM_DPC,
+                     (ULONG_PTR)OldThread,
+                     (ULONG_PTR)NewThread,
+                     (ULONG_PTR)OldThread->InitialStack,
+                     0);
+    }
+    
+    /* Kernel APCs may be pending */
+    if (NewThread->ApcState.KernelApcPending)
+    {
+        /* Are APCs enabled? */
+        if (!NewThread->SpecialApcDisable)
+        {
+            /* Request APC delivery */
+            if (!SwitchFrame->ApcBypassDisable) HalRequestSoftwareInterrupt(APC_LEVEL);
+            return TRUE;
+        }
+    }
+    
+    /* Return */
+    return FALSE;
+}
+
+VOID
+FASTCALL
+KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
+                   IN ULONG_PTR OldThreadAndApcFlag)
+{
+    PKIPCR Pcr = (PKIPCR)KeGetPcr();
+    PKTHREAD OldThread, NewThread;
+    ULONG Cr0, NewCr0;
+
+    /* Switch threads, check for APC disable */
+    ASSERT(OldThreadAndApcFlag &~ 1);
+
+    /* Save APC bypass disable */
+    SwitchFrame->ApcBypassDisable = OldThreadAndApcFlag & 3;
+    SwitchFrame->ExceptionList = Pcr->NtTib.ExceptionList;
+
+    /* Increase context switch count and check if tracing is enabled */
+    Pcr->ContextSwitches++;
+    if (Pcr->PerfGlobalGroupMask)
+    {
+        /* We don't support this yet on x86 either */
+        DPRINT1("WMI Tracing not supported\n");
+        ASSERT(FALSE);
+    }
+
+    /* Get thread pointers */
+    OldThread = (PKTHREAD)(OldThreadAndApcFlag & ~3);
+    NewThread = Pcr->PrcbData.CurrentThread;
+    
+    /* Get the old thread and set its kernel stack */
+    OldThread->KernelStack = SwitchFrame;
+
+    /* ISRs can change FPU state, so disable interrupts while checking */
+    _disable();
+    
+    /* Get current and new CR0 and check if they've changed */
+    Cr0 = __readcr0();
+    NewCr0 = NewThread->NpxState |
+             (Cr0 & ~(CR0_MP | CR0_EM | CR0_TS)) |
+             ((PKUINIT_FRAME)NewThread->InitialStack - 1)->FxSaveArea.Cr0NpxState;
+    if (Cr0 != NewCr0)  __writecr0(NewCr0);
+
+    /* Now enable interrupts and do the switch */
+    _enable();
+    KiSwitchThreads(OldThread, NewThread);
 }
 
 /* EOF */

@@ -40,284 +40,16 @@
 .globl @KiSwapContextInternal@0
 .func @KiSwapContextInternal@0, @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
+    /* Set APC Bypass Disable and old thread pointer */
+    mov edx, edi
+    or dl, cl
 
-    /* Save the IRQL */
-    push ecx
-
-#ifdef CONFIG_SMP
-GetSwapLock:
-    /* Acquire the swap lock */
-    cmp byte ptr [esi+KTHREAD_SWAP_BUSY], 0
-    jz NotBusy
-    pause
-    jmp GetSwapLock
-NotBusy:
-#endif
-    /* Increase context switches (use ES for lazy load) */
-    inc dword ptr es:[ebx+KPCR_CONTEXT_SWITCHES]
-
-    /* Save the Exception list */
-    push [ebx+KPCR_EXCEPTION_LIST]
-
-    /* Check for WMI */
-    cmp dword ptr [ebx+KPCR_PERF_GLOBAL_GROUP_MASK], 0
-    jnz WmiTrace
-
-AfterTrace:
-#ifdef CONFIG_SMP
-#if DBG
-    /* Assert that we're on the right CPU */
-    mov cl, [esi+KTHREAD_NEXT_PROCESSOR]
-    cmp cl, [ebx+KPCR_PROCESSOR_NUMBER]
-    jnz WrongCpu
-#endif
-#endif
-
-    /* Get CR0 and save it */
-    mov ebp, cr0
-    mov edx, ebp
-
-#ifdef CONFIG_SMP
-    /* Check NPX State */
-    cmp byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_LOADED
-    jz NpxLoaded
-SetStack:
-#endif
-
-    /* Set new stack */
-    mov [edi+KTHREAD_KERNEL_STACK], esp
-
-    /* Checking NPX, disable interrupts now */
-    mov eax, [esi+KTHREAD_INITIAL_STACK]
-    cli
-
-    /* Get the NPX State */
-    movzx ecx, byte ptr [esi+KTHREAD_NPX_STATE]
-
-    /* Clear the other bits, merge in CR0, merge in FPU CR0 bits and compare */
-    and edx, ~(CR0_MP + CR0_EM + CR0_TS)
-    or ecx, edx
-    or ecx, [eax - (NPX_FRAME_LENGTH - FN_CR0_NPX_STATE)]
-    cmp ebp, ecx
-    jnz NewCr0
-
-StackOk:
-    /* Enable interrupts and set the current stack */
-    sti
-    mov esp, [esi+KTHREAD_KERNEL_STACK]
-
-    /* Check if address space switch is needed */
-    mov ebp, [esi+KTHREAD_APCSTATE_PROCESS]
-    mov eax, [edi+KTHREAD_APCSTATE_PROCESS]
-    cmp ebp, eax
-    jz SameProcess
-
-#ifdef CONFIG_SMP
-    /* Get the active processors and XOR with the process' */
-    mov ecx, [ebx+KPCR_SET_MEMBER_COPY]
-    lock xor [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
-    lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
-
-    /* Assert change went ok */
-#if DBG
-    test [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
-    jz WrongActiveCpu
-    test [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
-    jnz WrongActiveCpu
-#endif
-#endif
-
-    /* Check if we need an LDT */
-    mov ecx, [ebp+KPROCESS_LDT_DESCRIPTOR0]
-    or ecx, [eax+KPROCESS_LDT_DESCRIPTOR0]
-    jnz LdtReload
-
-UpdateCr3:
-    /* Switch address space */
-    mov eax, [ebp+KPROCESS_DIRECTORY_TABLE_BASE]
-    mov cr3, eax
-
-SameProcess:
-
-#ifdef CONFIG_SMP
-    /* Release swap lock */
-    and byte ptr [edi+KTHREAD_SWAP_BUSY], 0
-#endif
-
-    /* Clear gs */
-    xor eax, eax
-    mov gs, ax
-
-    /* Set the TEB */
-    mov eax, [esi+KTHREAD_TEB]
-    mov [ebx+KPCR_TEB], eax
-    mov ecx, [ebx+KPCR_GDT]
-    mov [ecx+0x3A], ax
-    shr eax, 16
-    mov [ecx+0x3C], al
-    mov [ecx+0x3F], ah
-
-    /* Get stack pointer */
-    mov eax, [esi+KTHREAD_INITIAL_STACK]
-
-    /* Make space for the NPX Frame */
-    sub eax, NPX_FRAME_LENGTH
-
-    /* Check if this isn't V86 Mode, so we can bias the Esp0 */
-    test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
-    jnz NoAdjust
-
-    /* Bias esp */
-    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
-
-NoAdjust:
-
-    /* Set new ESP0 */
-    mov ecx, [ebx+KPCR_TSS]
-    mov [ecx+KTSS_ESP0], eax
-
-    /* Set current IOPM offset in the TSS */
-    mov ax, [ebp+KPROCESS_IOPM_OFFSET]
-    mov [ecx+KTSS_IOMAPBASE], ax
-
-    /* Increase context switches */
-    inc dword ptr [esi+KTHREAD_CONTEXT_SWITCHES]
-
-    /* Restore exception list */
-    pop [ebx+KPCR_EXCEPTION_LIST]
-
-    /* Restore IRQL */
-    pop ecx
-
-    /* DPC shouldn't be active */
-    cmp byte ptr [ebx+KPCR_PRCB_DPC_ROUTINE_ACTIVE], 0
-    jnz BugCheckDpc
-
-    /* Check if kernel APCs are pending */
-    cmp byte ptr [esi+KTHREAD_PENDING_KERNEL_APC], 0
-    jnz CheckApc
-
-    /* No APCs, return */
-    xor eax, eax
-    ret
-
-CheckApc:
-
-    /* Check if they're disabled */
-    cmp word ptr [esi+KTHREAD_SPECIAL_APC_DISABLE], 0
-    jnz ApcReturn
-    test cl, cl
-    jz ApcReturn
-
-    /* Request APC Delivery */
-    mov cl, APC_LEVEL
-    call @HalRequestSoftwareInterrupt@4
-    or eax, esp
-
-ApcReturn:
-
-    /* Return with APC pending */
-    setz al
-    ret
-
-LdtReload:
-    /* Check if it's empty */
-    mov eax, [ebp+KPROCESS_LDT_DESCRIPTOR0]
-    test eax, eax
-    jz LoadLdt
-
-    /* Write the LDT Selector */
-    mov ecx, [ebx+KPCR_GDT]
-    mov [ecx+KGDT_LDT], eax
-    mov eax, [ebp+KPROCESS_LDT_DESCRIPTOR1]
-    mov [ecx+KGDT_LDT+4], eax
-
-    /* Write the INT21 handler */
-    mov ecx, [ebx+KPCR_IDT]
-    mov eax, [ebp+KPROCESS_INT21_DESCRIPTOR0]
-    mov [ecx+0x108], eax
-    mov eax, [ebp+KPROCESS_INT21_DESCRIPTOR1]
-    mov [ecx+0x10C], eax
-
-    /* Save LDT Selector */
-    mov eax, KGDT_LDT
-
-LoadLdt:
-    lldt ax
-    jmp UpdateCr3
-
-NewCr0:
-
-#if DBG
-    /* Assert NPX State */
-    test byte ptr [esi+KTHREAD_NPX_STATE], ~(NPX_STATE_NOT_LOADED)
-    jnz InvalidNpx
-    test dword ptr [eax - (NPX_FRAME_LENGTH - FN_CR0_NPX_STATE)], ~(CR0_PE + CR0_MP + CR0_EM + CR0_TS)
-    jnz InvalidNpx
-#endif
-
-    /* Update CR0 */
-    mov cr0, ecx
-    jmp StackOk
-
-#ifdef CONFIG_SMP
-NpxLoaded:
-
-    /* Mask out FPU flags */
-    and edx, ~(CR0_MP + CR0_EM + CR0_TS)
-
-    /* Get the NPX Frame */
-    mov ecx, [edi+KTHREAD_INITIAL_STACK]
-    sub ecx, NPX_FRAME_LENGTH
-
-    /* Check if we have a new CR0 */
-    cmp ebp, edx
-    jz Cr0Equal
-
-    /* We do, update it */
-    mov cr0, edx
-    mov ebp, edx
-
-Cr0Equal:
-
-    /* Save the NPX State */
-    fxsave [ecx]
-    mov byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
-
-    /* Clear the NPX Thread */
-    mov dword ptr [ebx+KPCR_NPX_THREAD], 0
-
-    /* Jump back */
-    jmp SetStack
-#endif
-
-WmiTrace:
-
-    /* No WMI support yet */
-    int 3
-
-    /* Jump back */
-    jmp AfterTrace
-
-BugCheckDpc:
-
-    /* Bugcheck the machine, printing out the threads being switched */
-    mov eax, [edi+KTHREAD_INITIAL_STACK]
-    push 0
-    push eax
-    push esi
-    push edi
-    push ATTEMPTED_SWITCH_FROM_DPC
-    call _KeBugCheckEx@20
-
-#if DBG
-InvalidNpx:
-    int 3
-WrongActiveCpu:
-    int 3
-WrongCpu:
-    int 3
-#endif
+    /* Build switch frame */
+    sub esp, 2 * 4
+    mov ecx, esp
+    call @KiSwapContextEntry@8
+    mov ecx, 0xB00BFACA
+    jmp $
 .endfunc
 
 /*++
@@ -509,6 +241,20 @@ _Ki386SetupAndExitToV86Mode@4:
     mov ecx, esp
     call @KiEnterV86Mode@4
     jmp $
+.endfunc
+
+.globl @KiSwitchThreads@8
+.func @KiSwitchThreads@8, @KiSwitchThreads@8
+@KiSwitchThreads@8:
+
+    /* Load the new kernel stack and switch OS to new thread */
+    mov esp, [edx+KTHREAD_KERNEL_STACK]
+    mov edx, esp
+    call @KiSwapContextExit@8
+    
+    /* Now we're on the new thread. Return to the caller to restore registers */
+    add esp, 2 * 4
+    ret
 .endfunc
 
 .globl @Ki386BiosCallReturnAddress@4
