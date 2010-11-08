@@ -23,36 +23,29 @@ link_directories("${REACTOS_BINARY_DIR}/importlibs" ${REACTOS_BINARY_DIR}/lib/3r
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
+macro(add_linkerflag MODULE _flag)
+    set(NEW_LINKER_FLAGS ${_flag})
+    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
+    if(LINKER_FLAGS)
+        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
+    endif()
+    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
+endmacro()
 
 macro(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        set(NEW_LINKER_FLAGS "/ENTRY:0")
+        add_linkerflag(${MODULE} "/ENTRY:0")
     else()
-        set(NEW_LINKER_FLAGS "/ENTRY:${ENTRYPOINT}")
+        add_linkerflag(${MODULE} "/ENTRY:${ENTRYPOINT}")
     endif()
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
 endmacro()
 
 macro(set_subsystem MODULE SUBSYSTEM)
-    set(NEW_LINKER_FLAGS "/subsystem:${SUBSYSTEM}")
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
+    add_linkerflag(${MODULE} "/subsystem:${SUBSYSTEM}")
 endmacro()
 
 macro(set_image_base MODULE IMAGE_BASE)
-    set(NEW_LINKER_FLAGS "/BASE:${IMAGE_BASE}")
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
+    add_linkerflag(${MODULE} "/BASE:${IMAGE_BASE}")
 endmacro()
 
 macro(set_module_type MODULE TYPE)
@@ -67,6 +60,7 @@ macro(set_module_type MODULE TYPE)
     if (${TYPE} MATCHES win32cui)
         set_subsystem(${MODULE} console)
         set_entrypoint(${MODULE} mainCRTStartup)
+		target_link_libraries(${MODULE} mingw_common mingw_wmain)
     endif ()
     if(${TYPE} MATCHES win32dll)
         # Need this only because mingw library is broken
@@ -77,6 +71,7 @@ macro(set_module_type MODULE TYPE)
 			message(STATUS "${MODULE} has no base address")
 		endif()
 		target_link_libraries(${MODULE} mingw_common mingw_dllmain)
+		add_importlibs(${MODULE} msvcrt kernel32)
     endif()
 
 endmacro()
@@ -122,7 +117,21 @@ macro(add_importlibs MODULE)
 endmacro()
 
 macro(pdef2def _pdef_file)
-# Dummy for now
+    get_filename_component(_file ${_pdef_file} NAME_WE)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND ${CMAKE_C_COMPILER} /EP /c ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file} > ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file})
+    add_custom_target(
+        ${_file}_def
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+endmacro(pdef2def _pdef_file)
+
+macro(set_pdef_file _module _pdef_file)
+    pdef2def(${_pdef_file})
+    get_filename_component(_file ${_pdef_file} NAME_WE)
+    add_linkerflag(${_module} "/DEF:${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
+    add_dependencies(${_module} ${_file}_def)
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)

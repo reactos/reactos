@@ -32,12 +32,8 @@ add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-e
 add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
 
 # Macros
-macro(set_entrypoint MODULE ENTRYPOINT)
-    if(${ENTRYPOINT} STREQUAL "0")
-        set(NEW_LINKER_FLAGS "-Wl,-entry,0")
-    else()
-        set(NEW_LINKER_FLAGS "-Wl,-entry,_${ENTRYPOINT}")
-    endif()
+macro(add_linkerflag MODULE _flag)
+    set(NEW_LINKER_FLAGS ${_flag})
     get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
     if(LINKER_FLAGS)
         set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
@@ -45,13 +41,16 @@ macro(set_entrypoint MODULE ENTRYPOINT)
     set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
 endmacro()
 
-macro(set_subsystem MODULE SUBSYSTEM)
-    set(NEW_LINKER_FLAGS "-Wl,--subsystem,${SUBSYSTEM}")
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
+macro(set_entrypoint MODULE ENTRYPOINT)
+    if(${ENTRYPOINT} STREQUAL "0")
+        add_linkerflag(${MODULE} "-Wl,-entry,0")
+    else()
+        add_linkerflag(${MODULE} "-Wl,-entry,_${ENTRYPOINT}")
     endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
+endmacro()
+
+macro(set_subsystem MODULE SUBSYSTEM)
+    add_linkerflag(${MODULE} "-Wl,--subsystem,${SUBSYSTEM}")
 endmacro()
 
 macro(set_image_base MODULE IMAGE_BASE)
@@ -167,7 +166,16 @@ macro(pdef2def _pdef_file)
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
+    add_custom_target(
+        ${_file}_def
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
 endmacro(pdef2def _pdef_file)
+
+macro(set_pdef_file _module _pdef_file)
+    pdef2def(${_pdef_file})
+    get_filename_component(_file ${_pdef_file} NAME_WE)
+    target_link_libraries(${_module} "${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
+endmacro()
 
 #pseh lib, needed with mingw
 set(PSEH_LIB "pseh")
