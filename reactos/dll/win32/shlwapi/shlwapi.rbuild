@@ -37,6 +37,7 @@
 	<library>shell32</library>
 	<library>winmm</library>
 	<library>version</library>
+	<library>msvcrt</library>
 	<library>ntdll</library>
 </module>
 </group>
