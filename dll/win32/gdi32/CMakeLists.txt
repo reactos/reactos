@@ -36,12 +36,7 @@ list(APPEND SOURCE
     objects/text.c
     objects/utils.c
     objects/path.c
-    gdi32.rc
-    gdi32.def)
-
-if(NOT MSVC)
-    set_source_files_properties(gdi32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+    gdi32.rc)
 
 add_library(gdi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32_precomp.h.gch
@@ -54,6 +49,9 @@ target_link_libraries(gdi32
     dxguid
     ${PSEH_LIB})
 
+set_pdef_file(gdi32 gdi32.pdef)
+
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
 add_cab_target(gdi32 1)
+add_importlib_target(gdi32.def)
