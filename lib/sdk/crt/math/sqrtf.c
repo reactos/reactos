@@ -6,7 +6,7 @@
 #include <math.h>
 
 float
-sqrtf(float x)
+_sqrtf(float x)
 {
    return ((float)sqrt((double)x));
 }
