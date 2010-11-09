@@ -18,7 +18,6 @@ list(APPEND MINGW_COMMON_SOURCE
     CRT_glob.c
     crt_handler.c
     dllentry.c
-    gccmain.c
     gs_support.c
     merr.c
     mingw_helpers.c
@@ -37,6 +36,12 @@ list(APPEND MINGW_COMMON_SOURCE
     xtxtmode.c
     ofmt_stub.c
     cxa_pure_virtual.c)
+
+if(MSVC)
+list(APPEND MINGW_COMMON_SOURCE mscmain.c)
+else()
+list(APPEND MINGW_COMMON_SOURCE gccmain.c)
+endif()
 
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
 
@@ -69,5 +74,5 @@ set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a PROPERTIES
 add_custom_target(oldnames ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
 
 add_library(getopt getopt.c)
-set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL1 __USE_CRTIMP)
 add_dependencies(getopt psdk)
