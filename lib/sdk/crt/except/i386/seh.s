@@ -9,11 +9,14 @@
 /* INCLUDES ******************************************************************/
 
 #include <reactos/asm.h>
-#include <ndk/asm.h>
 
 #define DISPOSITION_DISMISS         0
 #define DISPOSITION_CONTINUE_SEARCH 1
 #define DISPOSITION_COLLIDED_UNWIND 3
+
+#define EXCEPTION_EXIT_UNWIND 4
+#define EXCEPTION_UNWINDING 2
+
 
 EXTERN _RtlUnwind@16:PROC
 
