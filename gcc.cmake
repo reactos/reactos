@@ -158,6 +158,16 @@ macro(add_importlib_target _def_file)
   # empty for now, while import libs are shipped
 endmacro()
 
+MACRO(spec2def _dllname _spec_file)
+    get_filename_component(_file ${_spec_file} NAME_WE)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} --filename ${_dllname}
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
+ENDMACRO(spec2def _dllname _spec_file)
+
 macro(pdef2def _pdef_file)
     get_filename_component(_file ${_pdef_file} NAME_WE)
     add_custom_command(

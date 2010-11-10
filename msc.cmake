@@ -56,6 +56,8 @@ macro(set_module_type MODULE TYPE)
     endif()
     if (${TYPE} MATCHES win32gui)
         set_subsystem(${MODULE} windows)
+        set_entrypoint(${MODULE} WinMainCRTStartup)
+		target_link_libraries(${MODULE} mingw_common mingw_wmain)
     endif ()
     if (${TYPE} MATCHES win32cui)
         set_subsystem(${MODULE} console)
@@ -72,6 +74,7 @@ macro(set_module_type MODULE TYPE)
 		endif()
 		target_link_libraries(${MODULE} mingw_common mingw_dllmain)
 		add_importlibs(${MODULE} msvcrt kernel32)
+        add_linkerflag(${MODULE} "/DLL")
     endif()
 
 endmacro()
@@ -89,20 +92,48 @@ endmacro()
 
 #idl files support
 set(IDL_COMPILER midl)
-set(IDL_FLAGS /win32)
+set(IDL_FLAGS /win32 /Dstrict_context_handle=)
 set(IDL_HEADER_ARG /h) #.h
 set(IDL_TYPELIB_ARG /tlb) #.tlb
 set(IDL_SERVER_ARG /sstub) #.c for stub server library
 set(IDL_CLIENT_ARG /cstub) #.c for stub client library
 
+# Thanks MS for creating a stupid linker
+macro(add_importlib_target _spec_file)
+    get_filename_component(_name ${_spec_file} NAME_WE)
 
-macro(add_importlib_target _def_file)
-    get_filename_component(_name ${_def_file} NAME_WE)
+    # Generate the asm stub file
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        COMMAND native-spec2pdef -s ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+
+    # Generate a the export def file
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
+        COMMAND native-spec2pdef -n -r ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+
+    # Assemble the file
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj
+        COMMAND ${CMAKE_ASM_COMPILER} /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm"
+    )
+
+    # Add neccessary importlibs for redirections
+    foreach(_lib ${ARGN})
+        list(APPEND _libraries "${CMAKE_BINARY_DIR}/importlibs/${_lib}.lib")
+    endforeach()
+
+    # Build the importlib
     add_custom_command(
         OUTPUT {CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        COMMAND LINK /LIB /MACHINE:X86 /DEF:${_def_file} /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        DEPENDS ${_def_file}
+        COMMAND LINK /LIB /MACHINE:X86 /DEF:${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${_libraries}
+        DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj" "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def" ${_libraries}
     )
+
+    # Add the importlib target
     add_custom_target(
         lib${_name}
         DEPENDS {CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
@@ -115,6 +146,16 @@ macro(add_importlibs MODULE)
         add_dependencies(${MODULE} lib${LIB})
     endforeach()
 endmacro()
+
+MACRO(spec2def _dllname _spec_file)
+    get_filename_component(_file ${_spec_file} NAME_WE)
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND native-spec2pdef -n  --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
+ENDMACRO(spec2def _dllname _spec_file)
 
 macro(pdef2def _pdef_file)
     get_filename_component(_file ${_pdef_file} NAME_WE)

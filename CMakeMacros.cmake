@@ -41,16 +41,6 @@ MACRO(add_pch _target_name _header_filename _src_list)
 
 ENDMACRO(add_pch _target_name _header_filename _src_list)
 
-MACRO(spec2def _dllname _spec_file)
-    get_filename_component(_file ${_spec_file} NAME_WE)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} --filename ${_dllname}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
-ENDMACRO(spec2def _dllname _spec_file)
-
 if (NOT MSVC)
 MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
 
