@@ -121,7 +121,7 @@ MACRO(add_minicd FILENAME _dir _nameoncd)
 ENDMACRO(add_minicd)
 
 macro(set_cpp)
-  include_directories(BEFORE ${REACTOS_SOURCE_DIR}/lib/3rdparty/stlport/stlport)
+  include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/stlport)
   set(IS_CPP 1)
 endmacro()
 
