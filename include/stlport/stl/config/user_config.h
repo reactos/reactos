@@ -202,9 +202,7 @@
  * a Microsoft Visual Studio release. This change native C/C++ library location
  * and implementation, please define this to get correct STLport configuration.
  */
-/*
 #define _STLP_USING_PLATFORM_SDK_COMPILER 1
-*/
 
 /*
  * Some compilers support the automatic linking feature.

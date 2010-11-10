@@ -1,0 +1,34 @@
+// ISO C++ date and time declarations
+
+#include <cstddef>
+#include <time.h>
+
+#pragma once
+
+// Get rid of those macros defined in <time.h> in lieu of real functions.
+#undef clock
+#undef difftime
+#undef mktime
+#undef time
+#undef asctime
+#undef ctime
+#undef gmtime
+#undef localtime
+#undef strftime
+
+namespace std
+{
+  using ::clock_t;
+  using ::time_t;
+  using ::tm;
+
+  using ::clock;
+  using ::difftime;
+  using ::mktime;
+  using ::time;
+  using ::asctime;
+  using ::ctime;
+  using ::gmtime;
+  using ::localtime;
+  using ::strftime;
+}

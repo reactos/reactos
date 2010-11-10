@@ -127,7 +127,7 @@ void __cdecl __MINGW_NOTHROW _fpreset (void);
 void __cdecl __MINGW_NOTHROW fpreset (void);
 
 /* Global 'variable' for the current floating point error code. */
-_CRTIMP int * __cdecl __MINGW_NOTHROW __fpecode(void);
+__MINGW_NOTHROW _CRTIMP int * __cdecl __fpecode(void);
 #define	_fpecode	(*(__fpecode()))
 
 /*

@@ -1,4 +1,6 @@
 
+set_cpp()
+
 list(APPEND SOURCE
     cardbitmaps.cpp
     cardbutton.cpp
