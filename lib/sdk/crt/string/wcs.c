@@ -47,6 +47,10 @@
 #undef vprintf
 #undef vwprintf
 
+#ifdef _MSC_VER
+#pragma function(_wcsset)
+#endif
+
 #ifndef _LIBCNT_
 /*********************************************************************
  *		_wcsdup (MSVCRT.@)
