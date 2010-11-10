@@ -66,5 +66,5 @@ add_importlibs(advapi32 rpcrt4 kernel32 ntdll msvcrt)
 
 add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
 add_cab_target(advapi32 1)
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
+add_importlib_target(advapi32.spec libntdll)
 

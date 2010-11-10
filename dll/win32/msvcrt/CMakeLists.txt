@@ -34,5 +34,5 @@ target_link_libraries(msvcrt
 add_pch(msvcrt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 add_importlibs(msvcrt kernel32 ntdll)
 add_cab_target(msvcrt 1)
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
+add_importlib_target(msvcrt.spec)
 
