@@ -10,7 +10,6 @@
 
 int __defaultmatherr = 0;
 
-#if 0
 int __CRTDECL
 _matherr (struct _exception *pexcept)
 {
@@ -51,5 +50,3 @@ _matherr (struct _exception *pexcept)
 	  type, pexcept->name, pexcept->arg1, pexcept->arg2, pexcept->retval);
   return 0;
 }
-
-#endif
