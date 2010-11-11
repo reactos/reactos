@@ -79,7 +79,6 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
             //
             if (MiIsPfnInUse(Pfn1))
             {
-                //DPRINT1("In use: reset\n");
                 Length = 0;
                 continue;
             }
@@ -94,7 +93,6 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                 //
                 // It does not, so bail out
                 //
-                //DPRINT1("Doesn't match restrictions: reset\n");
                 continue;
             }
             
@@ -368,7 +366,7 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
         /* Write the PTE address */
         Pfn1->PteAddress = PointerPte;
         Pfn1->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte++));
-    } while (Pfn1++ < EndPfn);
+    } while (++Pfn1 < EndPfn);
     
     /* Return the address */
     return BaseAddress;
