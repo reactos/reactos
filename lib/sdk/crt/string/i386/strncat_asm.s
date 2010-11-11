@@ -1,6 +1,6 @@
 /* $Id$
  */
 
-#include "tcsncat.h"
+#include "tcsncat.inc"
 
 /* EOF */

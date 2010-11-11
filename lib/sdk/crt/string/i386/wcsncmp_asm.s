@@ -2,6 +2,6 @@
  */
 
 #define _UNICODE
-#include "tcsncmp.h"
+#include "tcsncmp.inc"
 
 /* EOF */

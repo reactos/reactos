@@ -2,6 +2,6 @@
  */
 
 #define _UNICODE
-#include "tcslen.h"
+#include "tcslen.inc"
 
 /* EOF */
