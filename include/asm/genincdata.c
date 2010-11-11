@@ -27,7 +27,7 @@ typedef struct
 #define TYPE_CONSTANT 2
 #define TYPE_HEADER 3
 
-#define RAW(x) {TYPE_RAW, #x, 0}
+#define RAW(x) {TYPE_RAW, x, 0}
 #define CONSTANT(name) {TYPE_CONSTANT, #name, name}
 #define OFFSET(name, struct, member) {TYPE_CONSTANT, #name, FIELD_OFFSET(struct, member)}
 #define RELOFFSET(name, struct, member, to) {TYPE_CONSTANT, #name, FIELD_OFFSET(struct, member) - FIELD_OFFSET(struct, to)}
