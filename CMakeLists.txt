@@ -41,9 +41,9 @@ add_subdirectory(tools)
 add_subdirectory(lib)
 
 if(NOT MSVC)
-export(TARGETS widl winebuild nci buildno gendib cabman cdmake mkhive spec2pdef FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci buildno gendib cabman cdmake mkhive spec2pdef geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 else()
-export(TARGETS winebuild nci buildno gendib cabman cdmake mkhive spec2pdef FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS winebuild nci buildno gendib cabman cdmake mkhive spec2pdef geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 endif()
 
 else()
@@ -118,6 +118,7 @@ add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/idl)
 add_subdirectory(include/reactos/wine)
 add_subdirectory(include/reactos/mc)
+add_subdirectory(include/asm)
 
 include(baseaddress.cmake)
 
