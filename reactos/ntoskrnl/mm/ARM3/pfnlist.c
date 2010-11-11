@@ -356,18 +356,15 @@ MiRemoveAnyPage(IN ULONG Color)
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
-#if 0
+
     /* Check the colored free list */
     PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
-    DPRINT1("Found free page: %lx\n", PageIndex);
     if (PageIndex == LIST_HEAD)
     {
         /* Check the colored zero list */
         PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
-        DPRINT1("Found zero page: %lx\n", PageIndex);
         if (PageIndex == LIST_HEAD)
         {
-#endif
             /* Check the free list */
             ASSERT_LIST_INVARIANT(&MmFreePageListHead);
             PageIndex = MmFreePageListHead.Flink;
@@ -385,10 +382,9 @@ MiRemoveAnyPage(IN ULONG Color)
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
             }
-#if 0
         }
     }
-#endif
+
     /* Remove the page from its list */
     PageIndex = MiRemovePageByColor(PageIndex, Color);
 
@@ -419,11 +415,9 @@ MiRemoveZeroPage(IN ULONG Color)
     ASSERT(Color < MmSecondaryColors);
 
     /* Check the colored zero list */
-#if 0
     PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
     if (PageIndex == LIST_HEAD)
     {
-#endif
         /* Check the zero list */
         ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
         PageIndex = MmZeroedPageListHead.Flink;
@@ -433,12 +427,11 @@ MiRemoveZeroPage(IN ULONG Color)
             /* This means there's no zero pages, we have to look for free ones */
             ASSERT(MmZeroedPageListHead.Total == 0);
             Zero = TRUE;
-#if 0
+
             /* Check the colored free list */
             PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
             if (PageIndex == LIST_HEAD)
             {
-#endif
                 /* Check the free list */
                 ASSERT_LIST_INVARIANT(&MmFreePageListHead);
                 PageIndex = MmFreePageListHead.Flink;
@@ -449,13 +442,9 @@ MiRemoveZeroPage(IN ULONG Color)
                     /* FIXME: Should check the standby list */
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
-#if 0
             }
-#endif
         }
-#if 0
     }
-#endif
 
     /* Sanity checks */
     Pfn1 = MI_PFN_ELEMENT(PageIndex);
