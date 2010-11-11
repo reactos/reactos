@@ -94,4 +94,5 @@ namespace std
   using ::vfprintf;
   using ::vprintf;
   using ::vsprintf;
+  using ::vsnprintf;
 }

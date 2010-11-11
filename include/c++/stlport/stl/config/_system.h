@@ -36,7 +36,9 @@
 #ifndef __stl_config__system_h
 #define __stl_config__system_h
 
-#if defined (__sun)
+#if defined (__REACTOS__)
+#  include <stl/config/_reactos.h>
+#elif defined (__sun)
 #  include <stl/config/_solaris.h>
 #  if defined (__GNUC__)
 #    include <stl/config/_gcc.h>

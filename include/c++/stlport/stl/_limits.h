@@ -52,6 +52,13 @@ enum float_denorm_style {
   denorm_present       =  1
 };
 
+#ifdef min
+# undef min
+#endif
+#ifdef max
+# undef max
+#endif
+
 _STLP_MOVE_TO_PRIV_NAMESPACE
 
 // Base class for all specializations of numeric_limits.
@@ -59,8 +66,8 @@ template <class __number>
 class _Numeric_limits_base {
 public:
 
-  static __number (_STLP_CALL min)() _STLP_NOTHROW { return __number(); }
-  static __number (_STLP_CALL max)() _STLP_NOTHROW { return __number(); }
+  static __number _STLP_CALL min() _STLP_NOTHROW { return __number(); }
+  static __number _STLP_CALL max() _STLP_NOTHROW { return __number(); }
 
   _STLP_STATIC_CONSTANT(int, digits = 0);
   _STLP_STATIC_CONSTANT(int, digits10 = 0);
@@ -118,8 +125,8 @@ template <class _Int,
 class _Integer_limits : public _Numeric_limits_base<_Int> {
 public:
 
-  static _Int (_STLP_CALL min) () _STLP_NOTHROW { return (_Int)__imin; }
-  static _Int (_STLP_CALL max) () _STLP_NOTHROW { return (_Int)__imax; }
+  static _Int _STLP_CALL min () _STLP_NOTHROW { return (_Int)__imin; }
+  static _Int _STLP_CALL max () _STLP_NOTHROW { return (_Int)__imax; }
 
   _STLP_STATIC_CONSTANT(int, digits = (__idigits < 0) ? ((int)((sizeof(_Int) * (CHAR_BIT))) - ((__imin == 0) ? 0 : 1)) : (__idigits));
   _STLP_STATIC_CONSTANT(int, digits10 = (digits * 301UL) / 1000);

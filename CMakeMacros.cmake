@@ -121,15 +121,11 @@ MACRO(add_minicd FILENAME _dir _nameoncd)
 ENDMACRO(add_minicd)
 
 macro(set_cpp)
-  include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/stlport)
+  include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
   set(IS_CPP 1)
   add_definitions(
-    -D_STLP_NATIVE_CPP_C_INCLUDE_PATH=../c++
-    -D_STLP_NATIVE_C_INCLUDE_PATH=../crt
-    -D_STLP_NATIVE_CPP_RUNTIME_INCLUDE_PATH=../c++
-    -D_STLP_USE_NEW_C_HEADERS
-    -D_STLP_NO_TYPEINFO
-  )
+    -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
+    -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
 endmacro()
 
 MACRO(add_livecd_target _targetname _dir )# optional parameter : _nameoncd
