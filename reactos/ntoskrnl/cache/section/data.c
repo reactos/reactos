@@ -107,7 +107,7 @@ MiZeroFillSection
 	PMEMORY_AREA MemoryArea;
 	PMM_CACHE_SECTION_SEGMENT Segment;
 	LARGE_INTEGER FileOffset = *FileOffsetPtr, End, FirstMapped;
-	DPRINT1("MiZeroFillSection(Address %x,Offset %x,Length %x)\n", Address, FileOffset.LowPart, Length);
+	DPRINT("MiZeroFillSection(Address %x,Offset %x,Length %x)\n", Address, FileOffset.LowPart, Length);
 	AddressSpace = MmGetKernelAddressSpace();
 	MmLockAddressSpace(AddressSpace);
 	MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
@@ -178,13 +178,14 @@ _MiFlushMappedSection
 	PFN_NUMBER Page;
 	PPFN_NUMBER Pages;
 
-	DPRINT1("MiFlushMappedSection(%x,%08x,%x,%d,%s:%d)\n", BaseAddress, BaseOffset->LowPart, FileSize, WriteData, File, Line);
+	DPRINT("MiFlushMappedSection(%x,%08x,%x,%d,%s:%d)\n", BaseAddress, BaseOffset->LowPart, FileSize, WriteData, File, Line);
 
 	MmLockAddressSpace(AddressSpace);
 	MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
-	if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) 
+	if (!MemoryArea || MemoryArea->Type != MEMORY_AREA_CACHE) 
 	{
 		MmUnlockAddressSpace(AddressSpace);
+		DPRINT("STATUS_NOT_MAPPED_DATA\n");
 		return STATUS_NOT_MAPPED_DATA;
 	}
 	BeginningAddress = PAGE_ROUND_DOWN((ULONG_PTR)MemoryArea->StartingAddress);
@@ -205,6 +206,8 @@ _MiFlushMappedSection
 	{
 		ASSERT(FALSE);
 	}
+
+	DPRINT("Getting pages in range %08x-%08x\n", BeginningAddress, EndingAddress);
 
 	for (PageAddress = BeginningAddress;
 		 PageAddress < EndingAddress;

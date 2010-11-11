@@ -247,7 +247,7 @@ MiCowCacheSectionPage
     * Lock the segment
     */
    MmLockCacheSectionSegment(Segment);
-
+ 
    /*
     * Find the offset of the page
     */
@@ -255,6 +255,44 @@ MiCowCacheSectionPage
    Offset.QuadPart = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress +
 	   MemoryArea->Data.CacheData.ViewOffset.QuadPart;
 
+#if 0 // XXX Cache sections are not CoW.  For now, treat all access violations this way.
+   if ((!Segment->WriteCopy &&
+        !MemoryArea->Data.CacheData.WriteCopyView) ||
+       Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
+#endif
+   {
+#if 0 // XXX Cache sections don't have regions at present, which streamlines things
+       if (Region->Protect == PAGE_READWRITE ||
+           Region->Protect == PAGE_EXECUTE_READWRITE)
+#endif
+       {
+           DPRINTC("setting non-cow page %x %x:%x offset %x (%x) to writable\n", Segment, Process, PAddress, Offset.u.LowPart, MmGetPfnForProcess(Process, Address));
+           if (Segment->FileObject)
+           {
+               DPRINTC("file %wZ\n", &Segment->FileObject->FileName);
+           }
+           ULONG Entry = MiGetPageEntryCacheSectionSegment(Segment, &Offset);
+           DPRINT("Entry %x\n", Entry);
+           if (Entry &&
+               !IS_SWAP_FROM_SSE(Entry) &&
+               PFN_FROM_SSE(Entry) == MmGetPfnForProcess(Process, Address)) {
+               MiSetPageEntryCacheSectionSegment(Segment, &Offset, DIRTY_SSE(Entry));
+           }
+           MmSetPageProtect(Process, PAddress, PAGE_READWRITE);
+           MmUnlockCacheSectionSegment(Segment);
+           DPRINT("Done\n");
+           return STATUS_SUCCESS;
+       }
+#if 0
+       else
+       {
+           DPRINT("Not supposed to be writable\n");
+           MmUnlockCacheSectionSegment(Segment);
+           return STATUS_ACCESS_VIOLATION;
+       }
+#endif
+   }
+   
    if (!Required->Page[0])
    {
 	   SWAPENTRY SwapEntry;
