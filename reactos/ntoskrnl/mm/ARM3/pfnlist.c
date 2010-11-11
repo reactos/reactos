@@ -265,7 +265,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     else
     {
         /* Set the list head's backlink instead */
-        ListHead->Blink = OldFlink;
+        ListHead->Blink = OldBlink;
     }
     
     /* Check if the back entry is the list head */
