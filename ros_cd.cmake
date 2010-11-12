@@ -128,6 +128,6 @@ endforeach()
 add_custom_target(livecd
     COMMAND native-cdmake -v -j -m -b ${CMAKE_CURRENT_BINARY_DIR}/boot/freeldr/bootsect/isoboot.bin ${LIVECD_DIR} REACTOS ${REACTOS_BINARY_DIR}/livecd.iso
     DEPENDS ${LIVECD_FILES})
-add_dependencies(livecd isoboot livecd_hives)
+add_dependencies(livecd isoboot livecd_hives vgafonts)
 
 set_directory_properties(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${REACTOS_BINARY_DIR}/livecd.iso)
