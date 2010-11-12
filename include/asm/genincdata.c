@@ -38,7 +38,7 @@ typedef struct
 #pragma section(".asmdef")
 __declspec(allocate(".asmdef"))
 #elif defined(__GNUC__)
-__attribute__ ((section (x))) ASMGENDATA Table[] =
+__attribute__ ((section(".asmdef")))
 #else
 #error Your compiler is not supported.
 #endif
@@ -1582,4 +1582,3 @@ void DummyEntry()
 {
     
 }
-
