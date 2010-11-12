@@ -54,12 +54,7 @@ macro(set_subsystem MODULE SUBSYSTEM)
 endmacro()
 
 macro(set_image_base MODULE IMAGE_BASE)
-    set(NEW_LINKER_FLAGS "-Wl,--image-base,${IMAGE_BASE}")
-    get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
-    if(LINKER_FLAGS)
-        set(NEW_LINKER_FLAGS "${LINKER_FLAGS} ${NEW_LINKER_FLAGS}")
-    endif()
-    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS ${NEW_LINKER_FLAGS})
+    add_linkerflag(${MODULE} "-Wl,--image-base,${IMAGE_BASE}")
 endmacro()
 
 macro(add_importlibs MODULE)
