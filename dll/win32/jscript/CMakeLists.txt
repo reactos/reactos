@@ -1,5 +1,6 @@
 
 ADD_TYPELIB(jsglobal jsglobal.idl)
+add_dependencies(jsglobal stdole2)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
@@ -51,5 +52,5 @@ add_importlibs(jscript
     kernel32
     ntdll)
 
-add_dependencies(jscript jsglobal stdole2)
+add_dependencies(jscript jsglobal)
 add_cab_target(jscript 1)
