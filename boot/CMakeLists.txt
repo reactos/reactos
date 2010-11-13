@@ -29,7 +29,7 @@ list(APPEND FREELDR_BASE64K_SOURCE
     freeldr/freeldr/arch/i386/i386trap.S
     freeldr/freeldr/arch/i386/int386.S
     freeldr/freeldr/arch/i386/linux.S
-    freeldr/freeldr/arch/i386/mb.S)
+    freeldr/freeldr/arch/i386/mb.S
     freeldr/freeldr/arch/i386/i386bug.c)
 elseif(ARCH MATCHES amd64)
 list(APPEND FREELDR_BASE64K_SOURCE
