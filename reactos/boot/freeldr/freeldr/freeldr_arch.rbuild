@@ -21,6 +21,7 @@
 				<file>hwacpi.c</file>
 				<file>hwapm.c</file>
 				<file>hwpci.c</file>
+				<file>i386bug.c</file>
 				<file>i386disk.c</file>
 				<file>i386rtl.c</file>
 				<file>i386vid.c</file>
