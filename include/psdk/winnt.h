@@ -5209,10 +5209,10 @@ InterlockedBitTestAndReset(IN LONG volatile *Base,
 #endif
 }
 
+#endif
+
 #define BitScanForward _BitScanForward
 #define BitScanReverse _BitScanReverse
-
-#endif
 
 /* TODO: Other architectures than X86 */
 #if defined(_M_IX86)
