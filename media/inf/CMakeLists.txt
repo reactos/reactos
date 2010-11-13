@@ -33,4 +33,4 @@ foreach(item ${INF_FILES})
     add_cab("${CMAKE_CURRENT_SOURCE_DIR}/${item}" 6)
 endforeach(item)
 
-add_livecd(${CMAKE_CURRENT_SOURCE_DIR}/syssetup.inf reactos/inf)
+add_cab(${CMAKE_CURRENT_SOURCE_DIR}/syssetup.inf 6)
