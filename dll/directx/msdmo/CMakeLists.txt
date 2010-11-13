@@ -15,7 +15,6 @@ add_library(msdmo SHARED
 set_entrypoint(msdmo 0)
 
 target_link_libraries(msdmo
-    ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def
     uuid
     wine)
 
@@ -26,6 +25,6 @@ add_importlibs(msdmo
     kernel32
     ntdll)
 
-add_dependencies(msdmo dxdsk psdk buildno_header)
+add_dependencies(msdmo dxsdk psdk buildno_header)
 
 add_cab_target(msdmo 1)
