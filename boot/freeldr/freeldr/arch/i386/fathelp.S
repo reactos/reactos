@@ -2,24 +2,24 @@
 // FAT12/16 Boot Sector Helper Code
 // Copyright (c) 1998, 2001, 2002, 2003 Brian Palmer
 
-.intel_syntax noprefix
+#include <asm.inc>
 
 //org 8000h
 
-.text
+//.text
 
 .code16
 
 
-#define BootSectorStackTop		0x7bf2
-#define DataAreaStartHigh		0x2
-#define DataAreaStartLow		0x4
-#define BiosCHSDriveSizeHigh	0x6
-#define BiosCHSDriveSizeLow		0x8
-#define BiosCHSDriveSize		0x8
-#define ReadSectorsOffset		0xa
-#define ReadClusterOffset		0xc
-#define PutCharsOffset			0xe
+#define BootSectorStackTop		HEX(7bf2)
+#define DataAreaStartHigh		2
+#define DataAreaStartLow		4
+#define BiosCHSDriveSizeHigh	6
+#define BiosCHSDriveSizeLow		8
+#define BiosCHSDriveSize		8
+#define ReadSectorsOffset		10
+#define ReadClusterOffset		12
+#define PutCharsOffset			14
 
 #define OEMName					3
 #define BytesPerSector			11
@@ -41,7 +41,7 @@
 #define VolumeLabel				43
 #define FileSystem				54
 
-#define BootPartition			0x7dfd
+#define BootPartition			HEX(7dfd)
 
 
 // This code will be stored in the first 512 bytes
@@ -52,13 +52,13 @@
 // This code is loaded at 0000:8000 so we have to
 // encode a jmp instruction to jump to 0000:8200
 
-.global _mainCRTStartup	// For Mingw32 builds where the linker looks for this symbol
+PUBLIC _mainCRTStartup	// For Mingw32 builds where the linker looks for this symbol
 _mainCRTStartup:
-.global start
+PUBLIC start
 start:
-        .byte	0xe9
-		.byte	0xfd
-		.byte	0x01
+        .byte	HEX(e9)
+		.byte	HEX(fd)
+		.byte	HEX(01)
 
 // Now starts the extra boot code that we will store
 // in the first 512 bytes of freeldr.sys. This code
@@ -74,7 +74,7 @@ FatHelperEntryPoint:
 
 		// Display "Loading FreeLoader..." message
         mov  esi, offset msgLoading			// Loading message
-        call [bp-PutCharsOffset]		// Display it
+        call word ptr [bp-PutCharsOffset]		// Display it
 
 
 		call ReadFatIntoMemory
@@ -82,7 +82,7 @@ FatHelperEntryPoint:
 		pop  ax							// Restore AX (start cluster)
 		// AX has start cluster of freeldr.sys
 
-        mov  bx,0x800
+        mov  bx, HEX(800)
         mov  es,bx
 
 LoadFile:
@@ -90,16 +90,16 @@ LoadFile:
 		call IsFat12
 		pop  ax
 		jnc  LoadFile2
-		cmp  ax,0x0ff8		    // Check to see if this is the last cluster in the chain
+		cmp  ax, HEX(0ff8)		    // Check to see if this is the last cluster in the chain
 		jmp  LoadFile3
 LoadFile2:
-		cmp  ax,0x0fff8
+		cmp  ax, HEX(0fff8)
 LoadFile3:
 		jae	 LoadFile_Done		// If so continue, if not then read then next one
 		push ax
         xor  bx,bx              // Load ROSLDR starting at 0000:8000h
 		push es
-		call [bp-ReadClusterOffset]
+		call word ptr [bp-ReadClusterOffset]
 		pop  es
 
 		xor  bx,bx
@@ -123,12 +123,12 @@ LoadFile5:
         jmp  LoadFile						// Load the next cluster (if any)
 
 LoadFile_Done:
-        mov  dl,BYTE PTR [bp+BootDrive]		// Load the boot drive into DL
-		mov  dh,[BootPartition]				// Load the boot partition into DH
+        mov  dl, byte ptr [bp+BootDrive]		// Load the boot drive into DL
+		mov  dh, byte ptr ds:[BootPartition]	// Load the boot partition into DH
 
 		push 0						// push segment (0x0000)
-		mov bx, [0x8000 + 0xA8]		// load the RVA of the EntryPoint into eax
-		add bx, 0x8000				// RVA -> VA and skip 3 bytes (jump to fathelper code)
+		mov bx, ds: [HEX(8000) + HEX(A8)]		// load the RVA of the EntryPoint into eax
+		add bx, HEX(8000)				// RVA -> VA and skip 3 bytes (jump to fathelper code)
 		push bx						// push offset
 		retf						// Transfer control to FreeLoader
 
@@ -139,10 +139,10 @@ ReadFatIntoMemory:
 		add   ax, [bp+ReservedSectors]
 		adc   dx, 0
 		mov   cx, [bp+SectorsPerFat]
-		mov   bx,0x7000
+		mov   bx, HEX(7000)
 		mov   es,bx
 		xor   bx,bx
-		call  [bp-ReadSectorsOffset]
+		call  word ptr [bp-ReadSectorsOffset]
 		ret
 
 
@@ -155,7 +155,7 @@ GetFatEntry16:
 		mul   cx
 		shl   dx,12
 
-        mov   bx,0x7000
+        mov   bx, HEX(7000)
 		add   bx,dx
         mov   es,bx
 		mov   bx,ax						// Restore FAT entry offset
@@ -174,19 +174,19 @@ GetFatEntry12:
 		shr   ax,1
 		add   ax,cx						// AX = AX * 1.5 (AX = AX + (AX / 2)) (since FAT12 entries are 12 bits)
 
-        mov   bx,0x7000
+        mov   bx, HEX(7000)
         mov   es,bx
 		mov   bx,ax						// Put FAT entry offset into BX
 		mov   ax, es:[bx]	    	// Get FAT entry
 		pop   cx						// Get cluster number from stack
 		and   cx,1
 		jz    UseLow12Bits
-		and   ax,0x0fff0
+		and   ax, HEX(0fff0)
 		shr   ax,4
 		jmp   GetFatEntry12_Done
 
 UseLow12Bits:
-		and   ax,0x0fff
+		and   ax, HEX(0fff)
 
 GetFatEntry12_Done:
 
@@ -197,17 +197,17 @@ GetFatEntry12_Done:
 // Otherwise CF = 0 for FAT16
 IsFat12:
 
-		mov   ebx, [bp-DataAreaStartLow]
+		mov   ebx, dword ptr [bp-DataAreaStartLow]
         // EBX now has the number of the starting sector of the data area
 		// starting from the beginning of the disk, so subtrace hidden sectors
-		sub   ebx, [bp+HiddenSectors]
+		sub   ebx, dword ptr [bp+HiddenSectors]
 
 
 		xor   eax,eax
-		mov   ax, [bp+TotalSectors]
+		mov   ax, word ptr [bp+TotalSectors]
 		cmp   ax, 0
 		jnz   IsFat12_2
-		mov   eax, [bp+TotalSectorsBig]
+		mov   eax, dword ptr [bp+TotalSectorsBig]
 
 		// EAX now contains the number of sectors on the volume
 
@@ -231,5 +231,9 @@ IsFat12_Done:
 
 msgLoading:	.asciz "Loading FreeLoader...\r\n"
 
-            .org 0x1fe				// Pad to 510 bytes
-			.word 0x0aa55			// BootSector signature
+            .org HEX(1fe)				// Pad to 510 bytes
+			.word HEX(0aa55)			// BootSector signature
+
+.endcode16
+
+END
