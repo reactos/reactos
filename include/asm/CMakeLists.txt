@@ -3,7 +3,6 @@ add_library(genincdata SHARED genincdata.c)
 
 set_entrypoint(genincdata DummyEntry)
 add_dependencies(genincdata bugcodes)
-endif()
 
 if(MSVC)
 set(OPT_MS "-ms")
