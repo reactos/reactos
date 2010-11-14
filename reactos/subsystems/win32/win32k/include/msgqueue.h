@@ -127,7 +127,7 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN PWND Window,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
-	       OUT PUSER_MESSAGE* Message);
+	       OUT PMSG Message);
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL

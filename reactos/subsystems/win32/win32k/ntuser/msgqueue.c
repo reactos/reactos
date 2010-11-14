@@ -535,7 +535,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window, UINT 
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
                           UINT FilterLow, UINT FilterHigh, BOOL Remove,
-                          PUSER_MESSAGE* Message)
+                          PMSG Message)
 {
    KIRQL OldIrql;
    POINT ScreenPoint;
@@ -587,14 +587,15 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
                                               DesktopWindow, &ScreenPoint, FALSE, &CurrentEntry);
          if (Accept)
          {
+            *Message = Current->Msg;
             if (Remove)
             {
                RemoveEntryList(&Current->ListEntry);
+               MsqDestroyMessage(Current);
             }
             IntUnLockHardwareMessageQueue(MessageQueue);
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
-            *Message = Current;
-
+          
             if (Desk)
                 Desk->LastInputWasKbd = FALSE;
 
@@ -604,13 +605,14 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
       }
       else
       {
+         *Message = Current->Msg;
          if (Remove)
          {
             RemoveEntryList(&Current->ListEntry);
+            MsqDestroyMessage(Current);
          }
          IntUnLockHardwareMessageQueue(MessageQueue);
          IntUnLockSystemHardwareMessageQueueLock(FALSE);
-         *Message = Current;
 
          RETURN(TRUE);
       }
@@ -693,7 +695,12 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
                IntUnLockHardwareMessageQueue(MessageQueue);
             }
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
-            *Message = Current;
+            *Message = Current->Msg;
+
+            if (Remove)
+            {
+                MsqDestroyMessage(Current);
+            }
 
             RETURN(TRUE);
          }
@@ -1325,7 +1332,7 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                   IN PWND Window,
                   IN UINT MsgFilterLow,
                   IN UINT MsgFilterHigh,
-                  OUT PUSER_MESSAGE* Message)
+                  OUT PMSG Message)
 {
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
@@ -1359,7 +1366,13 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
             RemoveEntryList(&CurrentMessage->ListEntry);
          }
 
-         *Message = CurrentMessage;
+         *Message= CurrentMessage->Msg;
+
+         if (Remove)
+         {
+             MsqDestroyMessage(CurrentMessage);
+         }
+
          return(TRUE);
       }
       CurrentEntry = CurrentEntry->Flink;

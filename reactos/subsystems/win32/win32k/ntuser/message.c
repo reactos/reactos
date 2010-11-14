@@ -887,7 +887,7 @@ BOOL ProcessHardwareMessage(MSG* Msg, BOOLEAN RemoveMessages)
 * Internal version of PeekMessage() doing all the work
 */
 BOOL FASTCALL
-co_IntPeekMessage( PUSER_MESSAGE Msg,
+co_IntPeekMessage( PMSG Msg,
                    PWND Window,
                    UINT MsgFilterMin,
                    UINT MsgFilterMax,
@@ -896,7 +896,6 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
     PTHREADINFO pti;
     LARGE_INTEGER LargeTickCount;
     PUSER_MESSAGE_QUEUE ThreadQueue;
-    PUSER_MESSAGE Message;
     BOOL RemoveMessages;
 
     pti = PsGetCurrentThreadWin32Thread();
@@ -920,10 +919,10 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
         {
             /* According to the PSDK, WM_QUIT messages are always returned, regardless
         of the filter specified */
-            Msg->Msg.hwnd = NULL;
-            Msg->Msg.message = WM_QUIT;
-            Msg->Msg.wParam = ThreadQueue->QuitExitCode;
-            Msg->Msg.lParam = 0;
+            Msg->hwnd = NULL;
+            Msg->message = WM_QUIT;
+            Msg->wParam = ThreadQueue->QuitExitCode;
+            Msg->lParam = 0;
             if (RemoveMessages)
             {
                 ThreadQueue->QuitPosted = FALSE;
@@ -939,14 +938,9 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
                                Window,
                                MsgFilterMin,
                                MsgFilterMax,
-                               &Message ))
+                               Msg ))
         {
-            RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
-            if (RemoveMessages)
-            {
-                MsqDestroyMessage(Message);
-            }
-            break;
+            return TRUE;
         }
 
         /* Check for hardware events. */
@@ -956,18 +950,13 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
                               Window,
                               MsgFilterMin,
                               MsgFilterMax,
-                              &Message ))
+                              Msg ))
         {
-            RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
-            if (RemoveMessages)
-            {
-                MsqDestroyMessage(Message);
-            }
 
-            if(!ProcessHardwareMessage(&Msg->Msg, RemoveMessages))
+            if(!ProcessHardwareMessage(Msg, RemoveMessages))
                 continue;
 
-            break;
+            return TRUE;
         }
 
         /* Check for sent messages again. */
@@ -979,10 +968,10 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
                                 MsgFilterMin,
                                 MsgFilterMax,
                                 pti,
-                                &Msg->Msg,
+                                Msg,
                                 RemoveMessages))
         {
-            break;
+            return TRUE;
         }
 
         if (PostTimerMessages(Window))
@@ -1099,7 +1088,7 @@ co_IntWaitMessage( PWND Window,
     PTHREADINFO pti;
     PUSER_MESSAGE_QUEUE ThreadQueue;
     NTSTATUS Status = STATUS_SUCCESS;
-    USER_MESSAGE Msg;
+    MSG Msg;
 
     pti = PsGetCurrentThreadWin32Thread();
     ThreadQueue = pti->MessageQueue;
@@ -1142,7 +1131,6 @@ co_IntGetPeekMessage( PMSG pMsg,
                       BOOL bGMSG )
 {
     PWND Window;
-    USER_MESSAGE Msg;
     BOOL Present = FALSE;
 
     if ( hWnd == HWND_TOPMOST || hWnd == HWND_BROADCAST )
@@ -1170,19 +1158,15 @@ co_IntGetPeekMessage( PMSG pMsg,
         MsgFilterMax = 0;
     }
 
-    RtlZeroMemory(&Msg, sizeof(USER_MESSAGE));
-
     do
     {
-        Present = co_IntPeekMessage( &Msg,
+        Present = co_IntPeekMessage( pMsg,
                                      Window,
                                      MsgFilterMin,
                                      MsgFilterMax,
                                      RemoveMsg );
         if (Present)
         {
-           RtlCopyMemory( pMsg, &Msg.Msg, sizeof(MSG));
-
            // The WH_GETMESSAGE hook enables an application to monitor messages about to
            // be returned by the GetMessage or PeekMessage function.
 
@@ -2764,7 +2748,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
 
         case STATUS_WAIT_2:
             {
-               USER_MESSAGE Msg;
+               MSG Msg;
                co_IntPeekMessage( &Msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
                DPRINT1("WFII: WAIT 2\n");
             }
