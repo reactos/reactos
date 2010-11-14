@@ -2,6 +2,8 @@
 add_library(genincdata SHARED genincdata.c)
 
 set_entrypoint(genincdata DummyEntry)
+add_dependencies(genincdata bugcodes)
+endif()
 
 if(MSVC)
 set(OPT_MS "-ms")
@@ -19,7 +21,7 @@ endif()
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc
     COMMAND native-geninc ${CMAKE_CURRENT_BINARY_DIR}/genincdata.dll  ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc ${OPT_MS}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/genincdata.dll
+    DEPENDS genincdata
 )
 
 add_custom_target(
