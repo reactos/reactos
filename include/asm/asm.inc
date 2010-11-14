@@ -107,6 +107,10 @@ ENDM
     dq args
 ENDM
 
+.org MACRO value
+    ORG value
+ENDM
+
 .fill MACRO repeat, size, value
 // FIXME
 ENDM
