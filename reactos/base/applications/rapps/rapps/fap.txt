@@ -14,5 +14,8 @@ CDPath = none
 [Section.0407]
 Description = Kleiner und einfacher Mediaplayer.
 
+[Section.0415]
+Description = Prosty i lekki odtwarzacz audio.
+
 [Section.0422]
 Description = Простий та маленький програвач аудіо файлів.

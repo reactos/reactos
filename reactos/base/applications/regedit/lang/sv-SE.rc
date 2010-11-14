@@ -175,6 +175,16 @@ END
 /*
  * Dialog
  */
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
@@ -274,6 +284,10 @@ BEGIN
     ID_REGISTRY_IMPORTREGISTRYFILE "Importerar en textfil till registret"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exporterar hela eller en del av registret till en textfil"
+    ID_REGISTRY_LOADHIVE
+                            "Loads a hive file into the registry"
+    ID_REGISTRY_UNLOADHIVE
+                            "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Ansluter till en annan dators register"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -330,6 +344,8 @@ BEGIN
     IDS_MY_COMPUTER         "Den här datorn"
     IDS_IMPORT_REG_FILE     "Importera registerfil"
     IDS_EXPORT_REG_FILE     "Exportera registerfil"
+    IDS_LOAD_HIVE           "Load Hive"
+    IDS_UNLOAD_HIVE         "Unload Hive"
     IDS_INVALID_DWORD       "(felaktigt DWORD-värde)"
 END
 

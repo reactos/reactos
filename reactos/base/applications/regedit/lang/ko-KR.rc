@@ -162,6 +162,16 @@ END
 /*
  * Dialog
  */
+IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load Hive"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
+    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
+    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
+}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
@@ -261,6 +271,10 @@ BEGIN
     ID_REGISTRY_IMPORTREGISTRYFILE "텍스트 파일을 레지스트리로 불러 옵니다"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "텍스트 파일로 레지스트리의 전체나 일부를 내보냅니다"
+    ID_REGISTRY_LOADHIVE
+                            "Loads a hive file into the registry"
+    ID_REGISTRY_UNLOADHIVE
+                            "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "원격 컴퓨터의 레지스트리로 접속합니다"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -317,6 +331,8 @@ BEGIN
     IDS_MY_COMPUTER         "내 컴퓨터"
     IDS_IMPORT_REG_FILE     "레지스트리 파일 불러오기"
     IDS_EXPORT_REG_FILE     "레지스트리 파일 내보내기"
+    IDS_LOAD_HIVE           "Load Hive"
+    IDS_UNLOAD_HIVE         "Unload Hive"
     IDS_INVALID_DWORD       "(잘못된 DWORD값)"
 END
 
