@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
+
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
 typedef struct
@@ -321,6 +323,52 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     ASSERT(FALSE);
 
     return STATUS_INVALID_PARAMETER;
+}
+
+//
+// Wakeup any thread/process waiting on idle input.
+//
+VOID FASTCALL
+IdlePing(VOID)
+{
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+   PUSER_MESSAGE_QUEUE ForegroundQueue;
+   PTHREADINFO pti, ptiForeground = NULL;
+
+   ForegroundQueue = IntGetFocusMessageQueue();
+
+   if (ForegroundQueue)
+      ptiForeground = ForegroundQueue->Thread->Tcb.Win32Thread;
+     
+   pti = PsGetCurrentThreadWin32Thread();
+
+   if ( pti && pti->pDeskInfo && pti == ptiForeground )
+   {
+      if ( pti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) ||
+           pti->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE) )
+      {
+         co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
+      }
+   }
+
+   DPRINT("IdlePing ppi 0x%x\n",ppi);
+   if ( ppi && ppi->InputIdleEvent )
+   {
+      DPRINT("InputIdleEvent\n");
+      KeSetEvent( ppi->InputIdleEvent, IO_NO_INCREMENT, FALSE);
+   }
+}
+
+VOID FASTCALL
+IdlePong(VOID)
+{
+   PPROCESSINFO ppi = PsGetCurrentProcessWin32Process();
+
+   DPRINT("IdlePong ppi 0x%x\n",ppi);
+   if ( ppi && ppi->InputIdleEvent )
+   {
+      KeClearEvent(ppi->InputIdleEvent);
+   }
 }
 
 static VOID FASTCALL
@@ -856,6 +904,8 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
 
     RemoveMessages = RemoveMsg & PM_REMOVE;
 
+    IdlePong();
+
     do
     {
         KeQueryTickCount(&LargeTickCount);
@@ -944,10 +994,6 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
     }
     while (TRUE);
 
-    // The WH_GETMESSAGE hook enables an application to monitor messages about to
-    // be returned by the GetMessage or PeekMessage function.
-
-    co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg->Msg);
     return TRUE;
 }
 
@@ -1068,6 +1114,7 @@ co_IntWaitMessage( PWND Window,
         {
             return TRUE;
         }
+
         /* Nothing found. Wait for new messages. */
         Status = co_MsqWaitForNewMessages( ThreadQueue,
                                             Window,
@@ -1094,9 +1141,9 @@ co_IntGetPeekMessage( PMSG pMsg,
                       UINT RemoveMsg,
                       BOOL bGMSG )
 {
-    BOOL Present;
     PWND Window;
     USER_MESSAGE Msg;
+    BOOL Present = FALSE;
 
     if ( hWnd == HWND_TOPMOST || hWnd == HWND_BROADCAST )
         hWnd = HWND_BOTTOM;
@@ -1123,6 +1170,8 @@ co_IntGetPeekMessage( PMSG pMsg,
         MsgFilterMax = 0;
     }
 
+    RtlZeroMemory(&Msg, sizeof(USER_MESSAGE));
+
     do
     {
         Present = co_IntPeekMessage( &Msg,
@@ -1132,33 +1181,40 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      RemoveMsg );
         if (Present)
         {
-            RtlCopyMemory( pMsg, &Msg.Msg, sizeof(MSG));
+           RtlCopyMemory( pMsg, &Msg.Msg, sizeof(MSG));
 
-            if (bGMSG)
-                return (WM_QUIT != pMsg->message);
-            else
-                return TRUE;
+           // The WH_GETMESSAGE hook enables an application to monitor messages about to
+           // be returned by the GetMessage or PeekMessage function.
+
+           co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)pMsg);
+
+           if ( bGMSG )
+              return (WM_QUIT != pMsg->message);
         }
 
-        if ( bGMSG && !co_IntWaitMessage(Window, MsgFilterMin, MsgFilterMax) )
+        if ( bGMSG )
         {
-            return -1;
+           if ( !co_IntWaitMessage(Window, MsgFilterMin, MsgFilterMax) )
+              return -1;
         }
         else
         {
-            if (!(RemoveMsg & PM_NOYIELD))
-            {
-                // Yield this thread!
-                UserLeave();
-                ZwYieldExecution();
-                UserEnterExclusive();
-                // Fall through to fail.
-            }
+           if (!(RemoveMsg & PM_NOYIELD))
+           {
+              IdlePing();
+              // Yield this thread!
+              UserLeave();
+              ZwYieldExecution();
+              UserEnterExclusive();
+              // Fall through to exit.
+              IdlePong();
+           }
+           break;
         }
     }
     while( bGMSG && !Present );
 
-    return FALSE;
+    return Present;
 }
 
 BOOL FASTCALL
@@ -2049,49 +2105,30 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
 *                     retrieved.
 */
 {
-    BOOL GotMessage;
     NTUSERGETMESSAGEINFO Info;
     NTSTATUS Status;
     /* FIXME: if initialization is removed, gcc complains that this may be used before initialization. Please review */
-    PWND Window = NULL;
     PMSGMEMORY MsgMemoryEntry;
     PVOID UserMem;
     ULONG Size;
-    USER_MESSAGE Msg;
+    MSG Msg;
+    BOOL GotMessage;
 
-    DPRINT("Enter NtUserGetMessage\n");
+    if ( (MsgFilterMin|MsgFilterMax) & ~WM_MAXIMUM )
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     UserEnterExclusive();
 
-    /* Validate input */
-    if (hWnd && !(Window = UserGetWindowObject(hWnd)))
-    {
-        UserLeave();
-        return -1;
-    }
+    RtlZeroMemory(&Msg, sizeof(MSG));
 
-    //   if (Window) UserRefObjectCo(Window, &Ref);
-
-    if (MsgFilterMax < MsgFilterMin)
-    {
-        MsgFilterMin = 0;
-        MsgFilterMax = 0;
-    }
-
-    do
-    {
-        GotMessage = co_IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, PM_REMOVE);
-
-        if (!GotMessage && !co_IntWaitMessage(Window, MsgFilterMin, MsgFilterMax))
-        {
-            UserLeave();
-            return -1;
-        }
-    }
-    while (! GotMessage);
+    GotMessage = co_IntGetPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, PM_REMOVE, TRUE);
 
     UserLeave();
 
-    Info.Msg = Msg.Msg;
+    Info.Msg = Msg; //.Msg;
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
 
@@ -2103,7 +2140,7 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
         if (NULL == MsgMemoryEntry)
         {
             /* Not present, no copying needed */
-            Info.LParamSize = 0;
+            UnsafeInfo->LParamSize = 0;
         }
         else
         {
@@ -2127,8 +2164,8 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
             ProbeForWrite(UserMem, Size, 1);
             RtlCopyMemory(UserMem, (PVOID)Info.Msg.lParam, Size);
 
-            Info.LParamSize = Size;
-            Info.Msg.lParam = (LPARAM) UserMem;
+            UnsafeInfo->LParamSize = Size;
+            UnsafeInfo->Msg.lParam = (LPARAM) UserMem;
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2144,7 +2181,7 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
     }
     _SEH2_END;
     
-    return (Info.Msg.message != WM_QUIT );
+    return GotMessage;
 }
 
 
@@ -2163,9 +2200,9 @@ NtUserGetMessageX(PMSG pMsg,
         return FALSE;
     }
 
-    RtlZeroMemory(&Msg, sizeof(MSG));
-
     UserEnterExclusive();
+
+    RtlZeroMemory(&Msg, sizeof(MSG));
 
     Ret = co_IntGetPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, PM_REMOVE, TRUE);
 
@@ -2197,46 +2234,30 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                   UINT RemoveMsg)
 {
     NTSTATUS Status;
-    BOOL Ret;
     NTUSERGETMESSAGEINFO Info;
-    PWND Window;
     PMSGMEMORY MsgMemoryEntry;
     PVOID UserMem = NULL;
     ULONG Size;
-    USER_MESSAGE Msg;
+    MSG Msg;
+    BOOL Ret;
+
+    if ( RemoveMsg & PM_BADMSGFLAGS )
+    {
+        SetLastWin32Error(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
 
     UserEnterExclusive();
 
-    if (hWnd == (HWND)-1 || hWnd == (HWND)0x0000FFFF || hWnd == (HWND)0xFFFFFFFF)
-        hWnd = (HWND)1;
+    RtlZeroMemory(&Msg, sizeof(MSG));
 
-    /* Validate input */
-    if (hWnd && hWnd != (HWND)1)
-    {
-        if (!(Window = UserGetWindowObject(hWnd)))
-        {
-            UserLeave();
-            return -1;
-        }
-    }
-    else
-    {
-        Window = (PWND)hWnd;
-    }
-
-    if (MsgFilterMax < MsgFilterMin)
-    {
-        MsgFilterMin = 0;
-        MsgFilterMax = 0;
-    }
-
-    Ret = co_IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, RemoveMsg);
+    Ret = co_IntGetPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg, FALSE);
 
     UserLeave();
 
     if (Ret)
     {
-        Info.Msg = Msg.Msg;
+        Info.Msg = Msg;
         /* See if this message type is present in the table */
         MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
 
@@ -2248,7 +2269,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
             if (NULL == MsgMemoryEntry)
             {
                 /* Not present, no copying needed */
-                Info.LParamSize = 0;
+                UnsafeInfo->LParamSize = 0;
             }
             else
             {
@@ -2272,8 +2293,8 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                 ProbeForWrite(UserMem, Size, 1);
                 RtlCopyMemory(UserMem, (PVOID)Info.Msg.lParam, Size);
 
-                Info.LParamSize = Size;
-                Info.Msg.lParam = (LPARAM) UserMem;
+                UnsafeInfo->LParamSize = Size;
+                UnsafeInfo->Msg.lParam = (LPARAM) UserMem;
             }
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2308,9 +2329,9 @@ NtUserPeekMessageX( PMSG pMsg,
         return FALSE;
     }
 
-    RtlZeroMemory(&Msg, sizeof(MSG));
-
     UserEnterExclusive();
+
+    RtlZeroMemory(&Msg, sizeof(MSG));
 
     Ret = co_IntGetPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg, FALSE);
 
@@ -2665,10 +2686,10 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
 {
     PEPROCESS Process;
     PPROCESSINFO W32Process;
+    PTHREADINFO pti;
     NTSTATUS Status;
-    HANDLE Handles[2];
+    HANDLE Handles[3];
     LARGE_INTEGER Timeout;
-    ULONGLONG StartTime, Run, Elapsed = 0;
 
     UserEnterExclusive();
 
@@ -2686,8 +2707,13 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
         return WAIT_FAILED;
     }
 
+    pti = PsGetCurrentThreadWin32Thread();
+
     W32Process = (PPROCESSINFO)Process->Win32Process;
-    if (!W32Process)
+
+    if ( PsGetProcessExitProcessCalled(Process) ||
+         !W32Process ||
+         pti->ppi == W32Process)
     {
         ObDereferenceObject(Process);
         UserLeave();
@@ -2695,10 +2721,9 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
         return WAIT_FAILED;
     }
 
-    EngCreateEvent((PEVENT *)&W32Process->InputIdleEvent);
-
     Handles[0] = Process;
     Handles[1] = W32Process->InputIdleEvent;
+    Handles[2] = pti->MessageQueue->NewMessages; // pEventQueueServer; IntMsqSetWakeMask returns hEventQueueClient
 
     if (!Handles[1])
     {
@@ -2707,16 +2732,15 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
         return STATUS_SUCCESS;  /* no event to wait on */
     }
 
-    StartTime = EngGetTickCount();
+    if (dwMilliseconds != INFINITE)
+       Timeout.QuadPart = (LONGLONG) dwMilliseconds * (LONGLONG) -10000;
 
-    Run = dwMilliseconds;
-
+    DPRINT("WFII: ppi 0x%x\n",W32Process);
     DPRINT("WFII: waiting for %p\n", Handles[1] );
     do
     {
-        Timeout.QuadPart = Run - Elapsed;
         UserLeave();
-        Status = KeWaitForMultipleObjects( 2,
+        Status = KeWaitForMultipleObjects( 3,
                                            Handles,
                                            WaitAny,
                                            UserRequest,
@@ -2736,21 +2760,19 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
         switch (Status)
         {
         case STATUS_WAIT_0:
-            Status = WAIT_FAILED;
             goto WaitExit;
 
         case STATUS_WAIT_2:
             {
-                USER_MESSAGE Msg;
-                co_IntPeekMessage( &Msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
-                break;
+               USER_MESSAGE Msg;
+               co_IntPeekMessage( &Msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
+               DPRINT1("WFII: WAIT 2\n");
             }
+            break;
 
-        case STATUS_USER_APC:
-        case STATUS_ALERTED:
         case STATUS_TIMEOUT:
             DPRINT1("WFII: timeout\n");
-            Status = STATUS_TIMEOUT;
+        case WAIT_FAILED:
             goto WaitExit;
 
         default:
@@ -2758,24 +2780,10 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
             Status = STATUS_SUCCESS;
             goto WaitExit;
         }
-
-        if (dwMilliseconds != INFINITE)
-        {
-            Elapsed = EngGetTickCount() - StartTime;
-
-            if (Elapsed > Run)
-                Status = STATUS_TIMEOUT;
-            break;
-        }
     }
-    while (1);
+    while (TRUE);
 
 WaitExit:
-    if (W32Process->InputIdleEvent)
-    {
-        EngFreeMem((PVOID)W32Process->InputIdleEvent);
-        W32Process->InputIdleEvent = NULL;
-    }
     ObDereferenceObject(Process);
     UserLeave();
     return Status;

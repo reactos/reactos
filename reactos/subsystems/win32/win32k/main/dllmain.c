@@ -103,6 +103,8 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         ExInitializeFastMutex(&Win32Process->DriverObjListLock);
 
         Win32Process->KeyboardLayout = W32kGetDefaultKeyLayout();
+        EngCreateEvent((PEVENT *)&Win32Process->InputIdleEvent);
+        KeInitializeEvent(Win32Process->InputIdleEvent, NotificationEvent, FALSE);
 
         if(Process->Peb != NULL)
         {
@@ -118,6 +120,13 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     else
     {
         DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
+        Win32Process->W32PF_flags |= W32PF_TERMINATED;
+        if (Win32Process->InputIdleEvent)
+        {
+           EngFreeMem((PVOID)Win32Process->InputIdleEvent);
+           Win32Process->InputIdleEvent = NULL;
+        }
+
         IntCleanupMenus(Process, Win32Process);
         IntCleanupCurIcons(Process, Win32Process);
         CleanupMonitorImpl();

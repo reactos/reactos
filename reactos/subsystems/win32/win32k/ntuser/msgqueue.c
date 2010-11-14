@@ -62,32 +62,6 @@ static PAGED_LOOKASIDE_LIST MessageLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
-//
-// Wakeup any thread/process waiting on idle input.
-//
-static VOID FASTCALL
-IdlePing(VOID)
-{
-  HWND hWnd;
-  PWND Window;
-  PPROCESSINFO W32d = PsGetCurrentProcessWin32Process();
-
-  hWnd = UserGetForegroundWindow();
-
-  Window = UserGetWindowObject(hWnd);
-
-  if (Window && Window->head.pti)
-  {
-     if (Window->head.pti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE))
-     {
-        co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
-     }
-  }
-
-  if (W32d && W32d->InputIdleEvent)
-     KePulseEvent( W32d->InputIdleEvent, EVENT_INCREMENT, TRUE);
-}
-
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
@@ -578,8 +552,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
    WaitObjects[0] = &HardwareMessageQueueLock;
    do
    {
-      IdlePing();
-
       UserLeaveCo();
 
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
@@ -1185,8 +1157,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    if(Block)
    {
-      IdlePing();
-
       UserLeaveCo();
 
       /* don't process messages sent to the thread */
@@ -1248,8 +1218,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
       WaitObjects[1] = ThreadQueue->NewMessages;
       do
       {
-         IdlePing();
-
          UserLeaveCo();
 
          WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
@@ -1406,8 +1374,6 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
 {
    PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
    NTSTATUS ret;
-
-   IdlePing(); // Going to wait so send Idle ping.
 
    UserLeaveCo();
 
