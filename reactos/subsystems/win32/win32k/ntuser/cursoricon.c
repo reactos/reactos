@@ -217,7 +217,7 @@ BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
         Msg.wParam = CurInfo->ButtonsDown;
         Msg.lParam = MAKELPARAM(x, y);
         Msg.pt = pt;
-        MsqInsertSystemMessage(&Msg);
+        MsqInsertMouseMessage(&Msg);
     }
 
     /* Store the new cursor position */

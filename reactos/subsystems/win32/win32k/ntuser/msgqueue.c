@@ -137,7 +137,7 @@ MsqInitializeImpl(VOID)
 }
 
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg)
+MsqInsertMouseMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
