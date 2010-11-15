@@ -402,8 +402,6 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    DestroyTimersForWindow(ThreadData, Window);
 
-   HOOK_DestroyThreadHooks(ThreadData->pEThread); // This is needed here too!
-
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
 
