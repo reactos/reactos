@@ -10,16 +10,22 @@ include_directories(BEFORE freeldr/freeldr/include)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
 if(ARCH MATCHES i386)
+if(MSVC)
+list(APPEND FREELDR_BASE64K_SOURCE
+    freeldr/freeldr/arch/i386/realmode.S)
+else()
 list(APPEND FREELDR_STARTUP_SOURCE
     freeldr/freeldr/arch/i386/fathelp.S
     freeldr/freeldr/arch/i386/arch.S)
+endif()
 elseif(ARCH MATCHES amd64)
 list(APPEND FREELDR_STARTUP_SOURCE
-    freeldr/freeldr/arch/amd64/fathelp.S
+    freeldr/freeldr/arch/i386/fathelp.S
     freeldr/freeldr/arch/amd64/arch.S)
 endif(ARCH MATCHES i386)
 
 if(ARCH MATCHES i386)
+if(NOT MSVC)
 list(APPEND FREELDR_BASE64K_SOURCE
     freeldr/freeldr/arch/i386/boot.S
     freeldr/freeldr/arch/i386/drvmap.S
@@ -31,12 +37,13 @@ list(APPEND FREELDR_BASE64K_SOURCE
     freeldr/freeldr/arch/i386/linux.S
     freeldr/freeldr/arch/i386/mb.S
     freeldr/freeldr/arch/i386/i386bug.c)
+endif()
 elseif(ARCH MATCHES amd64)
 list(APPEND FREELDR_BASE64K_SOURCE
-    freeldr/freeldr/arch/amd64/drvmap.S
-    freeldr/freeldr/arch/amd64/i386cpu.S
-    freeldr/freeldr/arch/amd64/i386idt.S
-    freeldr/freeldr/arch/amd64/i386trap.S
+    freeldr/freeldr/arch/i386/drvmap.S
+    freeldr/freeldr/arch/i386/i386cpu.S
+    freeldr/freeldr/arch/i386/i386idt.S
+    freeldr/freeldr/arch/i386/i386trap.S
     freeldr/freeldr/arch/amd64/mb.S)
 endif(ARCH MATCHES i386)
 
@@ -107,7 +114,6 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/elf)
 
 if(ARCH MATCHES i386)
 list(APPEND FREELDR_ARCH_SOURCE
-    freeldr/freeldr/arch/i386/_alloca.S
     freeldr/freeldr/arch/i386/archmach.c
     freeldr/freeldr/arch/i386/custom.c
     freeldr/freeldr/arch/i386/drivemap.c
@@ -171,7 +177,16 @@ add_library(freeldr SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/freeldr_freeldr.h.gch
     ${FREELDR_SOURCE})
 
-set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys")
+if(NOT MSVC)
+set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys")
+set_image_base(freeldr 0x8000)
+else()
+set_target_properties(freeldr PROPERTIES LINK_FLAGS "/DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" SUFFIX ".sys")
+set_image_base(freeldr 0x10000)
+endif()
+
+set_subsystem(freeldr native)
+set_entrypoint(freeldr mainCRTStartup)
 
 if(ARCH MATCHES i386)
 target_link_libraries(freeldr mini_hal)
@@ -184,6 +199,7 @@ target_link_libraries(freeldr
     rtl
     libcntpr)
 add_pch(freeldr ${CMAKE_CURRENT_SOURCE_DIR}/freeldr/freeldr/include/freeldr.h ${FREELDR_SOURCE})
+add_dependencies(freeldr ks386)
 
 list(APPEND SETUPLDR_SOURCE
     ${FREELDR_STARTUP_SOURCE}
@@ -194,7 +210,15 @@ list(APPEND SETUPLDR_SOURCE
 
 add_library(setupldr SHARED ${SETUPLDR_SOURCE})
 
-set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,-entry,_mainCRTStartup -Wl,--image-base,0x8000 -Wl,--exclude-all-symbols -Wl,--subsystem,native -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+if(NOT MSVC)
+set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+set_image_base(setupldr 0x8000)
+else()
+set_target_properties(setupldr PROPERTIES LINK_FLAGS "/SECTION:.text,ERWP,ALIGN=0x1000" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+endif()
+
+set_subsystem(setupldr native)
+set_entrypoint(freeldr mainCRTStartup)
 
 if(ARCH MATCHES i386)
 target_link_libraries(setupldr mini_hal)
@@ -206,7 +230,9 @@ target_link_libraries(setupldr
     cmlib
     rtl
     libcntpr)
-    
+
+add_dependencies(setupldr ks386)
+
 # Bootcd files
 add_minicd_target(setupldr loader setupldr.sys)
 add_minicd_target(freeldr loader freeldr.sys)

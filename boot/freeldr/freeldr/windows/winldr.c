@@ -39,6 +39,11 @@ extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
 
+extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
+extern BOOLEAN WinLdrTerminalConnected;
+
+extern void WinLdrSetupEms(IN PCHAR BootOptions);
+
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                         IN PCH DllName,
@@ -205,8 +210,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
     
     /* Set headless block pointer */
-    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
-    extern BOOLEAN WinLdrTerminalConnected;
     if (WinLdrTerminalConnected)
     {
         Extension->HeadlessLoaderBlock = MmHeapAlloc(sizeof(HEADLESS_LOADER_BLOCK));
@@ -535,7 +538,6 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	AllocateAndInitLPB(&LoaderBlock);
     
    	/* Setup redirection support */
-	extern void WinLdrSetupEms(IN PCHAR BootOptions);
 	WinLdrSetupEms(BootOptions);
 
 	/* Detect hardware */

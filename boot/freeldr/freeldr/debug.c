@@ -341,7 +341,6 @@ MsgBoxPrint(const char *Format, ...)
 }
 
 NTKERNELAPI
-DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(

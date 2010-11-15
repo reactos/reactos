@@ -17,16 +17,19 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-.intel_syntax noprefix
-#define HEX(y) 0x##y
-
-#define ASM
+#include <asm.inc>
 #include <arch.h>
 #include <multiboot.h>
 
-	.code16
+EXTERN _BootMain:PROC
+EXTERN __bss_start__:DWORD
+EXTERN __bss_end__:DWORD
+EXTERN i386idtptr:FWORD
 
-EXTERN(RealEntryPoint)
+.code16
+
+PUBLIC RealEntryPoint
+RealEntryPoint:
 
 	cli
 
@@ -44,9 +47,10 @@ EXTERN(RealEntryPoint)
 	sti
 
 	/* Init pmode */
-	call	switch_to_prot
+	call switch_to_prot
 
-	.code32
+.endcode16
+.code32
 
 	/* Zero BootDrive and BootPartition */
 	xor eax, eax
@@ -64,7 +68,7 @@ EXTERN(RealEntryPoint)
 	call	_BootMain
 
 	call	switch_to_real
-	.code16
+.code16
 
 	int HEX(19)
 
@@ -78,9 +82,8 @@ stop:
  * Switches the processor to protected mode
  * it destroys eax
  */
-EXTERN(switch_to_prot)
-
-.code16
+PUBLIC switch_to_prot
+switch_to_prot:
 
 	cli		/* None of these */
 
@@ -104,9 +107,9 @@ EXTERN(switch_to_prot)
 	mov word ptr ds:[stack16], sp
 
 	/* Load the GDT */
-	lgdt	gdtptr
+	lgdt gdtptr
 	/* Load the IDT */
-	lidt	i386idtptr
+	lidt i386idtptr
 
 	/* Enable Protected Mode */
 	mov eax, cr0
@@ -114,12 +117,12 @@ EXTERN(switch_to_prot)
 	mov cr0, eax
 
 	/* Clear prefetch queue & correct CS */
-	//ljmp	PMODE_CS, inpmode
-    jmp far ptr PMODE_CS:inpmode
-
-.code32
+	ljmp16 PMODE_CS, inpmode
 
 inpmode:
+.endcode16
+.code32
+
 	/* Setup segment selectors */
 	mov ax, PMODE_DS
 	mov ds, ax
@@ -139,9 +142,8 @@ inpmode:
  * Switches the processor back to real mode
  * it destroys eax
  */
-EXTERN(switch_to_real)
-
-.code32
+PUBLIC switch_to_real
+switch_to_real:
 
 	/* We don't know what values are currently */
 	/* in the segment registers. So we are */
@@ -182,7 +184,7 @@ switch_to_real16:
 	mov	cr0, eax
 
 	/* Clear prefetch queue & correct CS */
-	//ljmp	$0, $inrmode
+	//ljmp16 0, offset inrmode
 	jmp far ptr 0:inrmode
 
 inrmode:
@@ -207,7 +209,7 @@ inrmode:
 	push word ptr ds:[code16ret]
 
 	/* Load IDTR with real mode value */
-	lidt	rmode_idtptr
+	lidt rmode_idtptr
 
 	sti		/* These are ok now */
 
@@ -218,9 +220,8 @@ inrmode:
 	/*
 	 * Needed for enabling the a20 address line
 	 */
-.code16
 empty_8042:
-	.word	0x00eb,0x00eb            // jmp $+2, jmp $+2
+	.word HEX(00eb), HEX(00eb)            // jmp $+2, jmp $+2
 	in al, HEX(64)
 	cmp al, HEX(ff)               // legacy-free machine without keyboard
 	jz empty_8042_ret           // controllers on Intel Macs read back 0xFF
@@ -229,11 +230,14 @@ empty_8042:
 empty_8042_ret:
 	ret
 
+.endcode16
+.code32
+
 	/*
 	 * Enable the A20 address line (to allow access to over 1mb)
 	 */
-EXTERN(_EnableA20)
-.code32
+PUBLIC _EnableA20
+_EnableA20:
 
 	pusha
 
@@ -248,7 +252,9 @@ EXTERN(_EnableA20)
 	out	HEX(60), al
 	call empty_8042
 	call switch_to_prot
-	.code32
+
+.endcode16
+.code32
 
 	popa
 
@@ -257,23 +263,26 @@ EXTERN(_EnableA20)
 	/*
 	 * Disable the A20 address line
 	 */
-EXTERN(_DisableA20)
-.code32
+PUBLIC _DisableA20
+_DisableA20:
 
 	pusha
 
 	call switch_to_real
-	.code16
 
-	call	empty_8042
+.code16
+
+	call empty_8042
 	mov al, HEX(D1)                // command write
 	out HEX(64), al
 	call empty_8042
 	mov al, HEX(DD)                // A20 off
 	out HEX(60), al
-	call	empty_8042
-	call	switch_to_prot
-	.code32
+	call empty_8042
+	call switch_to_prot
+
+.endcode16
+.code32
 
 	popa
 
@@ -301,7 +310,7 @@ EXTERN(_DisableA20)
 #define INITIAL_BASE HEX(200000)
 
 	/* Align 32 bits boundary */
-.align 4
+	.align 4
 	
 	/* Multiboot header */
 MultibootHeader:
@@ -331,10 +340,10 @@ MultibootEntry:
 	/* Although the multiboot spec says we should be called with the
 	 * segment registers set to 4GB flat mode, let's be sure and set up
 	 * our own */
-	lgdt	gdtptrhigh + INITIAL_BASE - FREELDR_BASE
+	lgdt gdtptrhigh + INITIAL_BASE - FREELDR_BASE
 	/* Reload segment selectors */
-	//ljmp	$PMODE_CS, $(mb1 + INITIAL_BASE - FREELDR_BASE)
-	jmp far ptr PMODE_CS: (mb1 + INITIAL_BASE - FREELDR_BASE)
+	ljmp PMODE_CS, (mb1 + INITIAL_BASE - FREELDR_BASE)
+	//jmp far ptr PMODE_CS: (offset mb1 + INITIAL_BASE - FREELDR_BASE)
 mb1:
 	mov dx, PMODE_DS
 	mov ds, dx
@@ -374,13 +383,13 @@ mb3:
 	rep movsd
 
 	/* Load the GDT and IDT */
-	lgdt	gdtptr
-	lidt	i386idtptr
+	lgdt gdtptr
+	lidt i386idtptr
 
 	/* Clear prefetch queue & correct CS,
 	 * jump to low mem */
-	//ljmp	$PMODE_CS, $mb4
-	jmp far ptr PMODE_CS:mb4
+	ljmp PMODE_CS, mb4
+	//jmp far ptr PMODE_CS:mb4
 mb4:
 	/* Reload segment selectors */
 	mov dx, PMODE_DS
@@ -416,15 +425,17 @@ mb7:
 
 	/* GO! */
 	push eax	
-	call	_BootMain
+	call _BootMain
 
 mbfail:
 	call	switch_to_real
-	.code16
-	int	0x19
-mbstop:	jmp	mbstop	/* We should never get here */
+.code16
+	int	HEX(19)
+mbstop:
+	jmp	mbstop	/* We should never get here */
 
-	.code32
+.endcode16
+.code32
 
 	/* 16-bit stack pointer */
 stack16:
@@ -496,8 +507,13 @@ mb_info:
 cmdline:
 	.fill	CMDLINE_SIZE, 1, 0
 
-EXTERN(_BootDrive)
+PUBLIC _BootDrive
+_BootDrive:
     .long 0
-    
-EXTERN(_BootPartition)
+
+PUBLIC _BootPartition
+_BootPartition:
     .long 0
+
+END
+

@@ -53,3 +53,14 @@ VOID BootMain(LPSTR CmdLine)
 #endif
 	RunLoader();
 }
+
+#ifdef _MSC_VER
+long _ftol2(double f)
+{
+    return _ftol(f);
+}
+long _ftol2_sse(double f)
+{
+    return _ftol(f);
+}
+#endif
