@@ -9,8 +9,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 
 EXTERN _RtlpCheckForActiveDebugger@0:PROC
 EXTERN _RtlDispatchException@8:PROC

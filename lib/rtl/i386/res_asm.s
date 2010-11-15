@@ -1,6 +1,13 @@
+/*
+ * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
+ * PROJECT:           ReactOS Run-Time Library
+ * PURPOSE:           
+ * FILE:              lib/rtl/i386/res_asm.S
+ * PROGRAMER:         
+ */
 
-#include <reactos/asm.h>
-#include <ndk/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 
 EXTERN _LdrpAccessResource@16:PROC
 

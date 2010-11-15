@@ -6,7 +6,7 @@
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 /* GLOBALS ****************************************************************/
 

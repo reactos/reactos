@@ -6,7 +6,7 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 /* FUNCTIONS ****************************************************************/
 .code

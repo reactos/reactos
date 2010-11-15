@@ -1,12 +1,12 @@
 /*
- * COPYRIGHT:         See COPYING in the top level directory
+ * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Memory functions
  * FILE:              lib/rtl/i386/rtlswap.S
  * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 /* GLOBALS *******************************************************************/
 
