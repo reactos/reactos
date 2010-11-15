@@ -28,7 +28,10 @@ typedef struct
 #define TYPE_HEADER 3
 
 #define RAW(x) {TYPE_RAW, x, 0}
-#define CONSTANT(name) {TYPE_CONSTANT, #name, name > (ULONG)-1 ? (ULONGLONG)name : (ULONG)name}
+#define CONSTANT(name) {TYPE_CONSTANT, #name, (ULONG)name}
+#define CONSTANT64(name) {TYPE_CONSTANT, #name, (ULONGLONG)name}
+#define CONSTANTPTR(name) {TYPE_CONSTANT, #name, (ULONG_PTR)name}
+#define CONSTANTX(name, value) {TYPE_CONSTANT, #name, value}
 #define OFFSET(name, struct, member) {TYPE_CONSTANT, #name, FIELD_OFFSET(struct, member)}
 #define RELOFFSET(name, struct, member, to) {TYPE_CONSTANT, #name, FIELD_OFFSET(struct, member) - FIELD_OFFSET(struct, to)}
 #define SIZE(name, struct) {TYPE_CONSTANT, #name, sizeof(struct)}
