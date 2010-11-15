@@ -14,10 +14,13 @@ HandlePropertyInstances(
     IN PKSIDENTIFIER  Request,
     IN OUT PVOID  Data,
     IN PSUBDEVICE_DESCRIPTOR Descriptor,
-    IN BOOL Global)
+    IN BOOL Global,
+    IN ISubdevice *SubDevice)
 {
     KSPIN_CINSTANCES * Instances;
     KSP_PIN * Pin = (KSP_PIN*)Request;
+    ULONG FilterNecessary, FilterCurrent, FilterPossible, GlobalCurrent, GlobalPossible;
+    NTSTATUS Status;
 
     if (Pin->PinId >= Descriptor->Factory.PinDescriptorCount)
     {
@@ -28,12 +31,31 @@ HandlePropertyInstances(
 
     Instances = (KSPIN_CINSTANCES*)Data;
 
-    if (Global)
-        Instances->PossibleCount = Descriptor->Factory.Instances[Pin->PinId].MaxGlobalInstanceCount;
-    else
-        Instances->PossibleCount = Descriptor->Factory.Instances[Pin->PinId].MaxFilterInstanceCount;
+    // check if the miniport supports the IPinCount interface
+    Status = SubDevice->PinCount(Pin->PinId, &FilterNecessary, &FilterCurrent, &FilterPossible, &GlobalCurrent, &GlobalPossible);
 
-    Instances->CurrentCount = Descriptor->Factory.Instances[Pin->PinId].CurrentPinInstanceCount;
+    if (NT_SUCCESS(Status))
+    {
+         if (Global)
+         {
+             Instances->PossibleCount = GlobalPossible;
+             Instances->CurrentCount = GlobalCurrent;
+         }
+         else
+         {
+             Instances->PossibleCount = FilterPossible;
+             Instances->CurrentCount = FilterCurrent;
+         }
+    }
+    else
+    {
+        if (Global)
+            Instances->PossibleCount = Descriptor->Factory.Instances[Pin->PinId].MaxGlobalInstanceCount;
+        else
+            Instances->PossibleCount = Descriptor->Factory.Instances[Pin->PinId].MaxFilterInstanceCount;
+
+        Instances->CurrentCount = Descriptor->Factory.Instances[Pin->PinId].CurrentPinInstanceCount;
+    }
 
     IoStatus->Information = sizeof(KSPIN_CINSTANCES);
     IoStatus->Status = STATUS_SUCCESS;
@@ -45,10 +67,13 @@ HandleNecessaryPropertyInstances(
     IN PIO_STATUS_BLOCK IoStatus,
     IN PKSIDENTIFIER  Request,
     IN OUT PVOID  Data,
-    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+    IN PSUBDEVICE_DESCRIPTOR Descriptor,
+    IN ISubdevice *SubDevice)
 {
     PULONG Result;
     KSP_PIN * Pin = (KSP_PIN*)Request;
+    ULONG FilterNecessary, FilterCurrent, FilterPossible, GlobalCurrent, GlobalPossible;
+    NTSTATUS Status;
 
     if (Pin->PinId >= Descriptor->Factory.PinDescriptorCount)
     {
@@ -58,7 +83,19 @@ HandleNecessaryPropertyInstances(
     }
 
     Result = (PULONG)Data;
-    *Result = Descriptor->Factory.Instances[Pin->PinId].MinFilterInstanceCount;
+
+
+    // check if the miniport supports the IPinCount interface
+    Status = SubDevice->PinCount(Pin->PinId, &FilterNecessary, &FilterCurrent, &FilterPossible, &GlobalCurrent, &GlobalPossible);
+
+    if (NT_SUCCESS(Status))
+    {
+        *Result = FilterNecessary;
+    }
+    else
+    {
+        *Result = Descriptor->Factory.Instances[Pin->PinId].MinFilterInstanceCount;
+    }
 
     IoStatus->Information = sizeof(ULONG);
     IoStatus->Status = STATUS_SUCCESS;
@@ -236,13 +273,13 @@ PinPropertyHandler(
             Status = KsPinPropertyHandler(Irp, Request, Data, Descriptor->Factory.PinDescriptorCount, Descriptor->Factory.KsPinDescriptor);
             break;
         case KSPROPERTY_PIN_GLOBALCINSTANCES:
-            Status = HandlePropertyInstances(&Irp->IoStatus, Request, Data, Descriptor, TRUE);
+            Status = HandlePropertyInstances(&Irp->IoStatus, Request, Data, Descriptor, TRUE, SubDevice);
             break;
         case KSPROPERTY_PIN_CINSTANCES:
-            Status = HandlePropertyInstances(&Irp->IoStatus, Request, Data, Descriptor, FALSE);
+            Status = HandlePropertyInstances(&Irp->IoStatus, Request, Data, Descriptor, FALSE, SubDevice);
             break;
         case KSPROPERTY_PIN_NECESSARYINSTANCES:
-            Status = HandleNecessaryPropertyInstances(&Irp->IoStatus, Request, Data, Descriptor);
+            Status = HandleNecessaryPropertyInstances(&Irp->IoStatus, Request, Data, Descriptor, SubDevice);
             break;
 
         case KSPROPERTY_PIN_DATAINTERSECTION:

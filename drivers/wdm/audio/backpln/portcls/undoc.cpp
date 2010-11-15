@@ -280,6 +280,7 @@ PropertyItemDispatch(
                 PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
 #if 1
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
+        DPRINT1("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
 #else
         Status = STATUS_NOT_FOUND;
 #endif
