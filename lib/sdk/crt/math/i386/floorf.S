@@ -8,7 +8,7 @@
  *   Danny Smith <dannysmith@users.sourceforge.net>
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 .code
 .align 4

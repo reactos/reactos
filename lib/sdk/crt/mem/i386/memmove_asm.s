@@ -1,10 +1,10 @@
 /*
  * void *memcpy (void *to, const void *from, size_t count)
  *
- * NOTE: This code is a duplicate of memmove function from memmove_asm.s
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 
 PUBLIC _memcpy
 PUBLIC _memmove

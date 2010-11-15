@@ -7,8 +7,9 @@
  * PROGRAMER:         KJK::Hyperion <noog@libero.it>
  */
 
-#include <reactos/asm.h>
-#include <ndk/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
+
 #define PAGE_SIZE 4096
 
 PUBLIC __chkstk
@@ -28,12 +29,11 @@ __alloca_probe:
     push ecx
 
     /* ECX = top of the previous stack frame */
-    lea eax, [esp + 8]
+    lea ecx, [esp + 8]
 
     /* probe the desired memory, page by page */
     cmp eax, PAGE_SIZE
-    jge .l_MoreThanAPage
-    jmp .l_LessThanAPage
+    jl .l_LessThanAPage
 
 .l_MoreThanAPage:
 

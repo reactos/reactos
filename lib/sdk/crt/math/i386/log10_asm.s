@@ -8,7 +8,7 @@
  *                    
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 PUBLIC _log10
 

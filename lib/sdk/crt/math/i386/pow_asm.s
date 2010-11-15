@@ -20,7 +20,7 @@
    02111-1307 USA.  */
 
 /* Reactos modifications */
-#include <reactos/asm.h>
+#include <asm.inc>
 
 #define ALIGNARG(log2) log2
 #define ASM_TYPE_DIRECTIVE(name,typearg)
@@ -29,9 +29,8 @@
 
 PUBLIC _pow
 
-    .data
-	.text
-ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
+.data
+ASSUME nothing
 
 	.align ALIGNARG(4)
 	ASM_TYPE_DIRECTIVE(infinity,@object)
@@ -77,8 +76,7 @@ p63:
 #define MOX(op,x,f) op[x*f]
 #endif
 
-    .code
-	.text
+.code
 _pow:
 	fld qword ptr [esp + 12]	// y
 	fxam

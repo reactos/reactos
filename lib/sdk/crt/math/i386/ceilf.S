@@ -4,7 +4,7 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 .code
 .align 4

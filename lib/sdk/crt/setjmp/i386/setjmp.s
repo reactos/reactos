@@ -9,8 +9,7 @@
  *                    complete implementation
  */
 
-#include <reactos/asm.h>
-#include <ndk/asm.h>
+#include <asm.inc>
 
 #define JB_BP  0
 #define JB_BX  1

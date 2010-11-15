@@ -2,7 +2,8 @@
  * $Id$
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 
 /*
  * void *memset (void *src, int val, size_t count)

@@ -5,7 +5,8 @@
  * FILE:            lib/sdk/crt/mem/i386/memchr.s
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 
 /*
  * void* memchr(const void* s, int c, size_t n)

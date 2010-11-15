@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/amd64/asm.h>
+#include <asm.inc>
+#include <ksamd64.inc>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -26,8 +26,8 @@ ceilf:
     /* Change fpu control word to round up */
     fstcw [rsp + 8]
     mov eax, [rsp + 8]
-    or  eax, 0x00800
-    and eax, 0x0fbff
+    or  eax, HEX(00800)
+    and eax, HEX(0fbff)
     mov [rsp + 12], eax
     fldcw [rsp + 12]
 
@@ -42,3 +42,5 @@ ceilf:
     
     add rsp, 16
     ret
+
+END

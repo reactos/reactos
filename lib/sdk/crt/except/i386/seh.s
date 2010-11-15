@@ -8,7 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 #define DISPOSITION_DISMISS         0
 #define DISPOSITION_CONTINUE_SEARCH 1
