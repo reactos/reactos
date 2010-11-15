@@ -1,13 +1,7 @@
-#include "include/reactos/msvctarget.h"
-#undef i386
-
-#ifdef _M_ARM
-@ fastcall ExAcquireFastMutex(ptr)
-@ fastcall ExReleaseFastMutex(ptr)
-#else
+@ fastcall -arch=arm ExAcquireFastMutex(ptr)
+@ fastcall -arch=arm ExReleaseFastMutex(ptr)
 @ fastcall -arch=i386 ExAcquireFastMutex(ptr) ExiAcquireFastMutex
 @ fastcall -arch=i386 ExReleaseFastMutex(ptr) ExiReleaseFastMutex
-#endif
 @ fastcall -arch=i386 ExTryToAcquireFastMutex(ptr) ntoskrnl.ExiTryToAcquireFastMutex
 @ fastcall -arch=arm ExTryToAcquireFastMutex(ptr)
 @ fastcall HalClearSoftwareInterrupt(long)
