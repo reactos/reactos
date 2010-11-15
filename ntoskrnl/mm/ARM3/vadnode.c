@@ -98,11 +98,13 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
              IN PMMADDRESS_NODE Parent,
              IN TABLE_SEARCH_RESULT Result)
 {
+    PMMVAD Vad;
+
     /* Insert it into the tree */
     RtlpInsertAvlTreeNode(Table, NewNode, Parent, Result);
 
     /* Now insert an ARM3 MEMORY_AREA for this node, unless the insert was already from the MEMORY_AREA code */
-    PMMVAD Vad = (PMMVAD)NewNode;
+    Vad = (PMMVAD)NewNode;
     if (Vad->u.VadFlags.Spare == 0)
     {
         NTSTATUS Status;
@@ -166,6 +168,8 @@ NTAPI
 MiRemoveNode(IN PMMADDRESS_NODE Node,
              IN PMM_AVL_TABLE Table)
 {
+    PMMVAD Vad;
+
     /* Call the AVL code */
     RtlpDeleteAvlTreeNode(Table, Node);
     
@@ -181,7 +185,7 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
     }
 
     /* Free the node from ReactOS view as well */
-    PMMVAD Vad = (PMMVAD)Node;
+    Vad = (PMMVAD)Node;
     if (Vad->u.VadFlags.Spare == 0)
     {
         PMEMORY_AREA MemoryArea;
