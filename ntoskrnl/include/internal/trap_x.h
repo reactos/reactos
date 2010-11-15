@@ -21,6 +21,7 @@
 #endif
 #elif _MSC_VER
 #define UNREACHABLE __assume(0)
+#define __builtin_expect(a,b) (a)
 #else
 #define UNREACHABLE
 #endif

@@ -1149,7 +1149,7 @@ ExReleasePushLockExclusive(PEX_PUSH_LOCK PushLock)
 
     /* Unlock the pushlock */
     OldValue.Value = InterlockedExchangeAddSizeT((PSIZE_T)PushLock,
-                                                 -(SIZE_T)EX_PUSH_LOCK_LOCK);
+                                                 -(SSIZE_T)EX_PUSH_LOCK_LOCK);
 
     /* Sanity checks */
     ASSERT(OldValue.Locked);
