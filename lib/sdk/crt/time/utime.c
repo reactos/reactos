@@ -7,6 +7,7 @@
  */
 #include <precomp.h>
 #include <tchar.h>
+#define RC_INVOKED 1 // to prevent inline functions
 #include <sys/utime.h>
 #include "bitsfixup.h"
 

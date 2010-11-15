@@ -63,6 +63,17 @@ typedef struct _rtti_object_locator
 
 #define THISCALL(func) __thiscall_ ## func
 #define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
+
+#ifdef _MSC_VER
+#pragma message ("DEFINE_THISCALL_WRAPPER broken")
+#define DEFINE_THISCALL_WRAPPER(func,args) \
+    extern void THISCALL(func)(void);
+//    __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
+//                      pop eax \
+//                      push ecx \
+//                      push eax \
+//                      jmp __ASM_NAME(#func) __ASM_STDCALL(args) )
+#else
 #define DEFINE_THISCALL_WRAPPER(func,args) \
     extern void THISCALL(func)(void); \
     __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
@@ -70,6 +81,8 @@ typedef struct _rtti_object_locator
                       "pushl %ecx\n\t" \
                       "pushl %eax\n\t" \
                       "jmp " __ASM_NAME(#func) __ASM_STDCALL(args) )
+#endif /* _MSC_VER */
+
 #else /* __i386__ */
 
 #define THISCALL(func) func
