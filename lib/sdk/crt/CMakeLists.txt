@@ -413,7 +413,7 @@ add_library(crt ${CMAKE_CURRENT_BINARY_DIR}/crt_precomp.h.gch ${CRT_SOURCE})
 
 set_property(TARGET crt PROPERTY COMPILE_DEFINITIONS __MINGW_IMPORT=extern USE_MSVCRT_PREFIX _MSVCRT_LIB_ _MSVCRT_ _MT)
 add_pch(crt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${CRT_SOURCE})
-add_dependencies(crt psdk)
+add_dependencies(crt psdk buildno_header ks386)
 
 list(APPEND LIBCNTPR_SOURCE
     except/${ARCH}/chkstk_asm.s
