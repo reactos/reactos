@@ -318,7 +318,9 @@ typedef enum _TRUSTED_INFORMATION_CLASS {
   TrustedDomainInformationBasic,
   TrustedDomainInformationEx,
   TrustedDomainAuthInformation,
-  TrustedDomainFullInformation
+  TrustedDomainFullInformation,
+  TrustedDomainAuthInformationInternal,
+  TrustedDomainFullInformationInternal
 } TRUSTED_INFORMATION_CLASS, *PTRUSTED_INFORMATION_CLASS;
 typedef enum _LSA_FOREST_TRUST_RECORD_TYPE {
   ForestTrustTopLevelName,

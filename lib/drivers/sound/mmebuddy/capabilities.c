@@ -62,32 +62,32 @@ GetSoundDeviceCapabilities(
     {
         case WAVE_OUT_DEVICE_TYPE :
         {
-            GoodSize = CapabilitiesSize >= sizeof(WAVEOUTCAPS);
+            GoodSize = CapabilitiesSize >= sizeof(WAVEOUTCAPSW);
             break;
         }
         case WAVE_IN_DEVICE_TYPE :
         {
-            GoodSize = CapabilitiesSize >= sizeof(WAVEINCAPS);
+            GoodSize = CapabilitiesSize >= sizeof(WAVEINCAPSW);
             break;
         }
         case MIDI_OUT_DEVICE_TYPE :
         {
-            GoodSize = CapabilitiesSize >= sizeof(MIDIOUTCAPS);
+            GoodSize = CapabilitiesSize >= sizeof(MIDIOUTCAPSW);
             break;
         }
         case MIDI_IN_DEVICE_TYPE :
         {
-            GoodSize = CapabilitiesSize >= sizeof(MIDIINCAPS);
+            GoodSize = CapabilitiesSize >= sizeof(MIDIINCAPSW);
             break;
         }
         case AUX_DEVICE_TYPE :
         {
-            GoodSize = CapabilitiesSize >= sizeof(AUXCAPS);
+            GoodSize = CapabilitiesSize >= sizeof(AUXCAPSW);
             break;
         }
         case MIXER_DEVICE_TYPE :
         {
-            GoodSize = CapabilitiesSize >= sizeof(MIXERCAPS);
+            GoodSize = CapabilitiesSize >= sizeof(MIXERCAPSW);
             break;
         }
     };

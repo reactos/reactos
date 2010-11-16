@@ -63,7 +63,8 @@ LDEVOBJ_pdmiGetModes(
     PLDEVOBJ pldev,
     HANDLE hDriver);
 
-BOOL
+INIT_FUNCTION
+NTSTATUS
 NTAPI
 InitLDEVImpl();
 

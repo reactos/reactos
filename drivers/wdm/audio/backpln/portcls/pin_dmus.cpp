@@ -604,7 +604,7 @@ CPortPinDMus::Init(
         }
     }
 
-    Status = m_IrpQueue->Init(ConnectDetails, 0, 0);
+    Status = m_IrpQueue->Init(ConnectDetails, KsPinDescriptor, 0, 0, FALSE);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IrpQueue_Init failed with %x\n", Status);

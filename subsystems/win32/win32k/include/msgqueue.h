@@ -127,7 +127,7 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN PWND Window,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
-	       OUT PUSER_MESSAGE* Message);
+	       OUT PMSG Message);
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
@@ -138,7 +138,9 @@ VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqGetHardwareMessageQueue(VOID);
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
@@ -194,7 +196,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg);
+MsqInsertMouseMessage(MSG* Msg);
 BOOL FASTCALL
 MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL

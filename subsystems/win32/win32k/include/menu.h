@@ -104,7 +104,9 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                   PROSMENUITEMINFO ItemInfo);
 
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitMenuImpl(VOID);
 
 NTSTATUS FASTCALL

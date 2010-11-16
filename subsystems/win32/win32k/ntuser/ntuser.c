@@ -53,8 +53,10 @@ InitUserAtoms(VOID)
 
 /* FUNCTIONS *****************************************************************/
 
-
-NTSTATUS FASTCALL InitUserImpl(VOID)
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitUserImpl(VOID)
 {
    NTSTATUS Status;
 
@@ -80,8 +82,9 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
    return STATUS_SUCCESS;
 }
 
-BOOL
-InitVideo(ULONG);
+NTSTATUS
+NTAPI
+InitVideo();
 
 NTSTATUS
 NTAPI
@@ -89,11 +92,16 @@ UserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
+    NTSTATUS Status;
+
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
 // Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
 // Create Event for Diconnect Desktop.
-    InitVideo(0);
-// Initialize Video.
+
+    /* Initialize Video. */
+    Status = InitVideo();
+    if (!NT_SUCCESS(Status)) return Status;
+
 // {
 //     DrvInitConsole.
 //     DrvChangeDisplaySettings.

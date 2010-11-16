@@ -21,6 +21,7 @@ typedef struct _HOOKPACK
 {
   PHOOK pHk; 
   LPARAM lParam;
+  PVOID pHookStructs;
 } HOOKPACK, *PHOOKPACK;
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -36,6 +37,9 @@ IntCallLowLevelHook( PHOOK Hook,
     NTSTATUS Status;
     PTHREADINFO pti;
     PHOOKPACK pHP;
+    INT Size;
+    UINT uTimeout = 300;
+    BOOL Block = FALSE;
     ULONG_PTR uResult = 0;
 
     if (Hook->Thread)
@@ -48,6 +52,40 @@ IntCallLowLevelHook( PHOOK Hook,
 
     pHP->pHk = Hook;
     pHP->lParam = lParam;
+    pHP->pHookStructs = NULL;
+    Size = 0;
+
+// This prevents stack corruption from the caller.
+    switch(Hook->HookId)
+    {
+       case WH_JOURNALPLAYBACK:
+       case WH_JOURNALRECORD:
+          uTimeout = 0;
+          Size = sizeof(EVENTMSG);
+          break;
+       case WH_KEYBOARD_LL:
+          Size = sizeof(KBDLLHOOKSTRUCT);
+          break;
+       case WH_MOUSE_LL:
+          Size = sizeof(MSLLHOOKSTRUCT);
+          break;
+       case WH_MOUSE:
+          uTimeout = 200;
+          Block = TRUE;
+          Size = sizeof(MOUSEHOOKSTRUCT);
+          break;
+       case WH_KEYBOARD:
+          uTimeout = 200;
+          Block = TRUE;
+          Size = sizeof(KBDLLHOOKSTRUCT);
+          break;
+    }
+
+    if (Size)
+    {
+       pHP->pHookStructs = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_HOOK);
+       if (pHP->pHookStructs) RtlCopyMemory(pHP->pHookStructs, (PVOID)lParam, Size);
+    }
 
     /* FIXME should get timeout from
      * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
@@ -55,43 +93,20 @@ IntCallLowLevelHook( PHOOK Hook,
                                 IntToPtr(Code), // hWnd
                                 Hook->HookId,   // Msg
                                 wParam,
-                                (LPARAM)pHP,
-                                5000,
-                                TRUE,
+                               (LPARAM)pHP,
+                                uTimeout,
+                                Block,
                                 MSQ_ISHOOK,
                                &uResult);
     if (!NT_SUCCESS(Status))
     {
        DPRINT1("Error Hook Call SendMsg. %d Status: 0x%x\n", Hook->HookId, Status);
+       if (pHP->pHookStructs) ExFreePoolWithTag(pHP->pHookStructs, TAG_HOOK);
        ExFreePoolWithTag(pHP, TAG_HOOK);
     }
     return NT_SUCCESS(Status) ? uResult : 0;
 }
 
-static
-LRESULT
-FASTCALL
-co_HOOK_CallHookNext( PHOOK Hook,
-                      INT Code,
-                      WPARAM wParam,
-                      LPARAM lParam)
-{
-    if ( (Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL) )
-    {
-        DPRINT1("Calling Next HOOK from another Thread. %d\n", Hook->HookId);
-        return IntCallLowLevelHook(Hook, Code, wParam, lParam);
-    }
-
-    DPRINT("Calling Next HOOK %d\n", Hook->HookId);
-
-    return co_IntCallHookProc( Hook->HookId,
-                               Code,
-                               wParam,
-                               lParam,
-                               Hook->Proc,
-                               Hook->Ansi,
-                              &Hook->ModuleName);
-}
 
 //
 // Dispatch MsgQueue Hook Call processor!
@@ -108,17 +123,52 @@ co_CallHook( INT HookId,
     PHOOKPACK pHP = (PHOOKPACK)lParam;
 
     phk = pHP->pHk;
+    lParam = pHP->lParam;
+
+    switch(HookId)
+    {
+       case WH_JOURNALPLAYBACK:
+       case WH_JOURNALRECORD:
+       case WH_KEYBOARD:
+       case WH_KEYBOARD_LL:
+       case WH_MOUSE_LL:
+       case WH_MOUSE:
+          lParam = (LPARAM)pHP->pHookStructs;
+          break;
+    }
+
     /* The odds are high for this to be a Global call. */
     Result = co_IntCallHookProc( HookId,
                                  Code,
                                  wParam,
-                                 pHP->lParam,
+                                 lParam,
                                  phk->Proc,
                                  phk->Ansi,
                                 &phk->ModuleName);
 
+    /* The odds so high, no one is waiting for the results. */
+    if (pHP->pHookStructs) ExFreePoolWithTag(pHP->pHookStructs, TAG_HOOK);
     ExFreePoolWithTag(pHP, TAG_HOOK);
     return Result;
+}
+
+static
+LRESULT
+FASTCALL
+co_HOOK_CallHookNext( PHOOK Hook,
+                      INT Code,
+                      WPARAM wParam,
+                      LPARAM lParam)
+{
+    DPRINT("Calling Next HOOK %d\n", Hook->HookId);
+
+    return co_IntCallHookProc( Hook->HookId,
+                               Code,
+                               wParam,
+                               lParam,
+                               Hook->Proc,
+                               Hook->Ansi,
+                              &Hook->ModuleName);
 }
 
 LRESULT
@@ -704,6 +754,20 @@ IntGetFirstHook(PLIST_ENTRY Table)
     return Elem == Table ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain);
 }
 
+static
+PHOOK
+FASTCALL
+IntGetNextGlobalHook(PHOOK Hook, PDESKTOP pdo)
+{
+    int HookId = Hook->HookId;
+    PLIST_ENTRY Elem;
+
+    Elem = Hook->Chain.Flink;
+    if (Elem != &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)])
+       return CONTAINING_RECORD(Elem, HOOK, Chain);
+    return NULL;
+}
+
 /* find the next hook in the chain  */
 PHOOK
 FASTCALL
@@ -724,10 +788,7 @@ IntGetNextHook(PHOOK Hook)
     else
     {
        pti = PsGetCurrentThreadWin32Thread();
-
-       Elem = Hook->Chain.Flink;
-       if (Elem != &pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)])
-          return CONTAINING_RECORD(Elem, HOOK, Chain);
+       return IntGetNextGlobalHook(Hook, pti->rpdesk);
     }
     return NULL;
 }
@@ -756,6 +817,7 @@ IntRemoveHook(PHOOK Hook)
 {
     INT HookId;
     PTHREADINFO pti;
+    PDESKTOP pdo;
 
     HookId = Hook->HookId;
 
@@ -783,13 +845,13 @@ IntRemoveHook(PHOOK Hook)
     {
        IntFreeHook( Hook);
 
-       pti = PsGetCurrentThreadWin32Thread();
+       pdo = IntGetActiveDesktop();
 
-       if ( pti->rpdesk &&
-            pti->rpdesk->pDeskInfo &&
-            IsListEmpty(&pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
+       if ( pdo &&
+            pdo->pDeskInfo &&
+            IsListEmpty(&pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)]) )
        {
-          pti->rpdesk->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
+          pdo->pDeskInfo->fsHooks &= ~HOOKID_TO_FLAG(HookId);
           return TRUE;
        }
     }
@@ -801,12 +863,20 @@ FASTCALL
 HOOK_DestroyThreadHooks(PETHREAD Thread)
 {
    PTHREADINFO pti;
+   PDESKTOP pdo;
    int HookId;
    PHOOK HookObj;
    PLIST_ENTRY pElem;
 
    pti = Thread->Tcb.Win32Thread;
-   if (!pti || !pti->pDeskInfo) return;
+   pdo = IntGetActiveDesktop();
+
+   if (!pti || !pdo)
+   {
+      DPRINT1("Kill Thread Hooks pti 0x%x pdo 0x%x\n",pti,pdo);
+      return;
+   }
+   ObReferenceObject(Thread);
 
 // Local Thread cleanup.
    if (pti->fsHooks)
@@ -831,11 +901,11 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
       pti->fsHooks = 0;
    }
 // Global search based on Thread and cleanup.
-   if (pti->rpdesk->pDeskInfo->fsHooks)
+   if (pdo->pDeskInfo->fsHooks)
    {
       for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
       {
-         PLIST_ENTRY pGLE = &pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
+         PLIST_ENTRY pGLE = &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
 
          if (IsListEmpty(pGLE)) continue;
 
@@ -854,6 +924,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
          while (pElem != pGLE);
       }
    }
+   ObDereferenceObject(Thread);
    return;
 }
 
@@ -871,6 +942,7 @@ co_HOOK_CallHooks( INT HookId,
     PTHREADINFO pti;
     PCLIENTINFO ClientInfo;
     PLIST_ENTRY pLLE, pGLE;
+    PDESKTOP pdo;
     BOOL Local = FALSE, Global = FALSE;
     LRESULT Result = 0;
 
@@ -878,10 +950,27 @@ co_HOOK_CallHooks( INT HookId,
 
     pti = PsGetCurrentThreadWin32Thread();
     if (!pti || !pti->rpdesk || !pti->rpdesk->pDeskInfo)
-       goto Exit; // Must have a desktop running for hooks.
+    {
+       pdo = IntGetActiveDesktop();
+    /* If KeyboardThread|MouseThread|(RawInputThread or RIT) aka system threads,
+       pti->fsHooks most likely, is zero. So process KbT & MsT to "send" the message.
+     */
+       if ( !pti || !pdo || (!(HookId == WH_KEYBOARD_LL) && !(HookId == WH_MOUSE_LL)) )
+       {
+          DPRINT("No PDO %d\n", HookId);
+          goto Exit;
+       }
+    }
+    else
+    {
+       pdo = pti->rpdesk;
+    }
 
-    if ( pti->TIF_flags & TIF_INCLEANUP)
+    if ( pti->TIF_flags & (TIF_INCLEANUP|TIF_DISABLEHOOKS))
+    {
+       DPRINT("Hook Thread dead %d\n", HookId);
        goto Exit;
+    }
 
     if ( ISITHOOKED(HookId) )
     {
@@ -889,7 +978,7 @@ co_HOOK_CallHooks( INT HookId,
        Local = TRUE;
     }
 
-    if ( pti->rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
+    if ( pdo->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId) )
     {
        DPRINT("Global Hooker %d\n", HookId);
        Global = TRUE;
@@ -897,8 +986,6 @@ co_HOOK_CallHooks( INT HookId,
 
     if ( !Local && !Global ) goto Exit; // No work!
 
-    pLLE = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
-    pGLE = &pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
     Hook = NULL;
 
     /* SetWindowHookEx sorts out the Thread issue by placing the Hook to
@@ -906,6 +993,7 @@ co_HOOK_CallHooks( INT HookId,
      */
     if ( Local )
     {
+       pLLE = &pti->aphkStart[HOOKID_TO_INDEX(HookId)];
        Hook = IntGetFirstHook(pLLE);
        if (!Hook)
        {
@@ -959,6 +1047,7 @@ co_HOOK_CallHooks( INT HookId,
     {
        PTHREADINFO ptiHook;
 
+       pGLE = &pdo->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)];
        Hook = IntGetFirstHook(pGLE);
        if (!Hook)
        {
@@ -977,19 +1066,28 @@ co_HOOK_CallHooks( INT HookId,
          /* "Global hook monitors messages for all threads in the same desktop
           *  as the calling thread."
           */
-          if ( ptiHook->TIF_flags & TIF_INCLEANUP ||
-               ptiHook->rpdesk != pti->rpdesk)
+          if ( ptiHook->TIF_flags & (TIF_INCLEANUP|TIF_DISABLEHOOKS) ||
+               ptiHook->rpdesk != pdo)
           {
-             Hook = IntGetNextHook(Hook);
+             DPRINT("Next Hook 0x%x, 0x%x\n",ptiHook->rpdesk,pdo);
+             Hook = IntGetNextGlobalHook(Hook, pdo);
              if (!Hook) break;
              continue;
           }
           // Lockup the thread while this links through user world.
           ObReferenceObject(ptiHook->pEThread);
           if (ptiHook != pti )
-          {
-             DPRINT("\nGlobal Hook posting to another Thread! %d\n",HookId );
-             Result = IntCallLowLevelHook(Hook, Code, wParam, lParam);
+          {                                       // Block | TimeOut
+             if ( HookId == WH_JOURNALPLAYBACK || //   1   |    0
+                  HookId == WH_JOURNALRECORD   || //   1   |    0
+                  HookId == WH_KEYBOARD        || //   1   |   200
+                  HookId == WH_MOUSE           || //   1   |   200
+                  HookId == WH_KEYBOARD_LL     || //   0   |   300
+                  HookId == WH_MOUSE_LL )         //   0   |   300
+             {
+                DPRINT("\nGlobal Hook posting to another Thread! %d\n",HookId );
+                Result = IntCallLowLevelHook(Hook, Code, wParam, lParam);
+             }
           }
           else
           { /* Make the direct call. */
@@ -1003,7 +1101,7 @@ co_HOOK_CallHooks( INT HookId,
                                          &Hook->ModuleName);
           }
           ObDereferenceObject(ptiHook->pEThread);
-          Hook = IntGetNextHook(Hook);
+          Hook = IntGetNextGlobalHook(Hook, pdo);
        }
        while ( Hook );
        DPRINT("Ret: Global HookId %d Result 0x%x\n", HookId,Result);
@@ -1158,7 +1256,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     DPRINT("Enter NtUserSetWindowsHookEx\n");
     UserEnterExclusive();
 
-    ptiCurrent = GetW32ThreadInfo();
+    ptiCurrent = PsGetCurrentThreadWin32Thread();
 
     if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
     {
@@ -1237,7 +1335,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        }
     }
     else  /* system-global hook */
-    {
+    {                                                                                
        pti = ptiCurrent; // gptiCurrent;
        if ( !Mod &&
             (HookId == WH_GETMESSAGE ||
@@ -1283,6 +1381,8 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     Hook->Proc    = HookProc;
     Hook->Ansi    = Ansi;
 
+    DPRINT("Set Hook Desk 0x%x DeskInfo 0x%x Handle Desk 0x%x\n",pti->rpdesk, pti->pDeskInfo,Hook->head.rpdesk);
+
     if (ThreadId)  /* thread-local hook */
     {
        InsertHeadList(&pti->aphkStart[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
@@ -1297,7 +1397,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              _SEH2_TRY
              {
                 pti->pClientInfo->fsHooks = pti->fsHooks;
-                pti->pClientInfo->phkCurrent = 0;
+                pti->pClientInfo->phkCurrent = NULL;
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
@@ -1315,7 +1415,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              _SEH2_TRY
              {
                 pti->pClientInfo->fsHooks = pti->fsHooks;
-                pti->pClientInfo->phkCurrent = 0;
+                pti->pClientInfo->phkCurrent = NULL;
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
@@ -1332,10 +1432,12 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     }
     else
     {
-       InsertHeadList(&pti->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
+       InsertHeadList(&pti->rpdesk->pDeskInfo->aphkStart[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
        Hook->ptiHooked = NULL;
        //gptiCurrent->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
-       pti->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
+       pti->rpdesk->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
+       pti->sphkCurrent = NULL;
+       pti->pClientInfo->phkCurrent = NULL;
     }
 
     RtlInitUnicodeString(&Hook->ModuleName, NULL);
@@ -1382,7 +1484,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     else
        Hook->offPfn = 0;
 
-    DPRINT1("Installing: HookId %d Global %s\n", HookId, !ThreadId ? "TRUE" : "FALSE");
+    DPRINT("Installing: HookId %d Global %s\n", HookId, !ThreadId ? "TRUE" : "FALSE");
     RETURN( Handle);
 
 CLEANUP:

@@ -39,10 +39,8 @@ public:
     virtual ~CPortWaveCyclic(){}
 
 protected:
-    BOOL m_bInitialized;
     PDEVICE_OBJECT m_pDeviceObject;
     PMINIPORTWAVECYCLIC m_pMiniport;
-    PRESOURCELIST m_pResourceList;
     PPINCOUNT m_pPinCount;
     PPOWERNOTIFY m_pPowerNotify;
     PPCFILTER_DESCRIPTOR m_pDescriptor;
@@ -202,12 +200,6 @@ CPortWaveCyclic::GetDeviceProperty(
 {
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    if (!m_bInitialized)
-    {
-        DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initiazed\n");
-        return STATUS_UNSUCCESSFUL;
-    }
-
     return IoGetDeviceProperty(m_pDeviceObject, DeviceRegistryProperty, BufferLength, PropertyBuffer, ReturnLength);
 }
 
@@ -228,12 +220,6 @@ CPortWaveCyclic::Init(
     DPRINT("IPortWaveCyclic_Init entered %p\n", this);
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    if (m_bInitialized)
-    {
-        DPRINT("IPortWaveCyclic_Init called again\n");
-        return STATUS_SUCCESS;
-    }
-
     Status = UnknownMiniport->QueryInterface(IID_IMiniportWaveCyclic, (PVOID*)&Miniport);
     if (!NT_SUCCESS(Status))
     {
@@ -244,22 +230,13 @@ CPortWaveCyclic::Init(
     // Initialize port object
     m_pMiniport = Miniport;
     m_pDeviceObject = DeviceObject;
-    m_bInitialized = TRUE;
-    m_pResourceList = ResourceList;
 
-
-    if (ResourceList)
-    {
-        // increment reference on resource list
-        ResourceList->AddRef();
-    }
-
+    // initialize miniport
     Status = Miniport->Init(UnknownAdapter, ResourceList, this);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IMiniportWaveCyclic_Init failed with %x\n", Status);
         Miniport->Release();
-        m_bInitialized = FALSE;
         return Status;
     }
 
@@ -270,7 +247,6 @@ CPortWaveCyclic::Init(
     {
         DPRINT("failed to get description\n");
         Miniport->Release();
-        m_bInitialized = FALSE;
         return Status;
     }
 
@@ -294,7 +270,6 @@ CPortWaveCyclic::Init(
     {
         DPRINT("PcCreateSubdeviceDescriptor failed with %x\n", Status);
         Miniport->Release();
-        m_bInitialized = FALSE;
         return Status;
     }
 
@@ -335,11 +310,6 @@ CPortWaveCyclic::NewRegistryKey(
 {
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    if (!m_bInitialized)
-    {
-        DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initialized\n");
-        return STATUS_UNSUCCESSFUL;
-    }
     return PcNewRegistryKey(OutRegistryKey, OuterUnknown, RegistryKeyType, DesiredAccess, m_pDeviceObject, (ISubdevice*)this, ObjectAttributes, CreateOptions, Disposition);
 }
 
@@ -364,12 +334,6 @@ CPortWaveCyclic::NewMasterDmaChannel(
     DEVICE_DESCRIPTION DeviceDescription;
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
-
-    if (!m_bInitialized)
-    {
-        DPRINT("IPortWaveCyclic_fnNewSlaveDmaChannel called w/o initialized\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
     Status = PcDmaMasterDescription(ResourceList, (Dma32BitAddresses | Dma64BitAddresses), Dma32BitAddresses, 0, Dma64BitAddresses, DmaWidth, DmaSpeed, MaximumLength, 0, &DeviceDescription);
     if (NT_SUCCESS(Status))
@@ -396,12 +360,6 @@ CPortWaveCyclic::NewSlaveDmaChannel(
     NTSTATUS Status;
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
-
-    if (!m_bInitialized)
-    {
-        DPRINT("IPortWaveCyclic_fnNewSlaveDmaChannel called w/o initialized\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
     // FIXME
     // Check for F-Type DMA Support

@@ -62,32 +62,6 @@ static PAGED_LOOKASIDE_LIST MessageLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
-//
-// Wakeup any thread/process waiting on idle input.
-//
-static VOID FASTCALL
-IdlePing(VOID)
-{
-  HWND hWnd;
-  PWND Window;
-  PPROCESSINFO W32d = PsGetCurrentProcessWin32Process();
-
-  hWnd = UserGetForegroundWindow();
-
-  Window = UserGetWindowObject(hWnd);
-
-  if (Window && Window->head.pti)
-  {
-     if (Window->head.pti->fsHooks & HOOKID_TO_FLAG(WH_FOREGROUNDIDLE))
-     {
-        co_HOOK_CallHooks(WH_FOREGROUNDIDLE,HC_ACTION,0,0);
-     }
-  }
-
-  if (W32d && W32d->InputIdleEvent)
-     KePulseEvent( W32d->InputIdleEvent, EVENT_INCREMENT, TRUE);
-}
-
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask)
 {
@@ -140,7 +114,9 @@ MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 }
 
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 MsqInitializeImpl(VOID)
 {
    /*CurrentFocusMessageQueue = NULL;*/
@@ -161,7 +137,7 @@ MsqInitializeImpl(VOID)
 }
 
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg)
+MsqInsertMouseMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
@@ -559,7 +535,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window, UINT 
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
                           UINT FilterLow, UINT FilterHigh, BOOL Remove,
-                          PUSER_MESSAGE* Message)
+                          PMSG Message)
 {
    KIRQL OldIrql;
    POINT ScreenPoint;
@@ -576,8 +552,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
    WaitObjects[0] = &HardwareMessageQueueLock;
    do
    {
-      IdlePing();
-
       UserLeaveCo();
 
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
@@ -613,14 +587,15 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
                                               DesktopWindow, &ScreenPoint, FALSE, &CurrentEntry);
          if (Accept)
          {
+            *Message = Current->Msg;
             if (Remove)
             {
                RemoveEntryList(&Current->ListEntry);
+               MsqDestroyMessage(Current);
             }
             IntUnLockHardwareMessageQueue(MessageQueue);
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
-            *Message = Current;
-
+          
             if (Desk)
                 Desk->LastInputWasKbd = FALSE;
 
@@ -630,13 +605,14 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
       }
       else
       {
+         *Message = Current->Msg;
          if (Remove)
          {
             RemoveEntryList(&Current->ListEntry);
+            MsqDestroyMessage(Current);
          }
          IntUnLockHardwareMessageQueue(MessageQueue);
          IntUnLockSystemHardwareMessageQueueLock(FALSE);
-         *Message = Current;
 
          RETURN(TRUE);
       }
@@ -719,7 +695,12 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
                IntUnLockHardwareMessageQueue(MessageQueue);
             }
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
-            *Message = Current;
+            *Message = Current->Msg;
+
+            if (Remove)
+            {
+                MsqDestroyMessage(Current);
+            }
 
             RETURN(TRUE);
          }
@@ -1183,8 +1164,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
    if(Block)
    {
-      IdlePing();
-
       UserLeaveCo();
 
       /* don't process messages sent to the thread */
@@ -1246,8 +1225,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
       WaitObjects[1] = ThreadQueue->NewMessages;
       do
       {
-         IdlePing();
-
          UserLeaveCo();
 
          WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
@@ -1355,7 +1332,7 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                   IN PWND Window,
                   IN UINT MsgFilterLow,
                   IN UINT MsgFilterHigh,
-                  OUT PUSER_MESSAGE* Message)
+                  OUT PMSG Message)
 {
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
@@ -1389,7 +1366,13 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
             RemoveEntryList(&CurrentMessage->ListEntry);
          }
 
-         *Message = CurrentMessage;
+         *Message= CurrentMessage->Msg;
+
+         if (Remove)
+         {
+             MsqDestroyMessage(CurrentMessage);
+         }
+
          return(TRUE);
       }
       CurrentEntry = CurrentEntry->Flink;
@@ -1404,8 +1387,6 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
 {
    PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
    NTSTATUS ret;
-
-   IdlePing(); // Going to wait so send Idle ping.
 
    UserLeaveCo();
 

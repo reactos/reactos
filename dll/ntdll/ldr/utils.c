@@ -256,7 +256,7 @@ LdrpQueryAppPaths(IN PCWSTR ImageName)
     /* Copy it to the heap allocd memory */
     Path = RtlAllocateHeap(RtlGetProcessHeap(),
                            0,
-                           wcslen(SearchPathBuffer) * sizeof(WCHAR));
+                           (wcslen(SearchPathBuffer) + 1) * sizeof(WCHAR));
 
     if (!Path)
     {

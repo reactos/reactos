@@ -79,6 +79,8 @@ MmGetLRUFirstUserPage(VOID)
     if (Position == 0xFFFFFFFF) return 0;
     
     /* Return it */
+    ASSERT(Position != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Position));
     return Position;
 }
 
@@ -89,6 +91,8 @@ MmInsertLRULastUserPage(PFN_NUMBER Pfn)
     KIRQL OldIrql;
 
     /* Set the page as a user page */
+    ASSERT(Pfn != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Pfn));
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     RtlSetBit(&MiUserPfnBitMap, Pfn);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -108,6 +112,8 @@ MmGetLRUNextUserPage(PFN_NUMBER PreviousPfn)
     if (Position == 0xFFFFFFFF) return 0;
     
     /* Return it */
+    ASSERT(Position != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Position));
     return Position;
 }
 
@@ -116,6 +122,8 @@ NTAPI
 MmRemoveLRUUserPage(PFN_NUMBER Page)
 {
     /* Unset the page as a user page */
+    ASSERT(Page != 0);
+    ASSERT_IS_ROS_PFN(MiGetPfnEntry(Page));
     RtlClearBit(&MiUserPfnBitMap, Page);
 }
 
@@ -222,6 +230,8 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         while (PagesFound < PageCount)
         {
             /* Grab a page */
+            MI_SET_USAGE(MI_USAGE_MDL);
+            MI_SET_PROCESS2("Kernel");
             Page = MiRemoveAnyPage(0);
             if (Page == 0)
             {
@@ -238,12 +248,14 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             //
             ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
             
-            //
-            // Allocate it and mark it
-            //
+            /* Now setup the page and mark it */
+            Pfn1->u3.e2.ReferenceCount = 1;
+            Pfn1->u2.ShareCount = 1;
+            MI_SET_PFN_DELETED(Pfn1);
+            Pfn1->u4.PteFrame = 0x1FFEDCB;
             Pfn1->u3.e1.StartOfAllocation = 1;
             Pfn1->u3.e1.EndOfAllocation = 1;
-            Pfn1->u3.e2.ReferenceCount = 1;
+            Pfn1->u4.VerifierAllocation = 0;
             
             //
             // Save it into the MDL
@@ -278,6 +290,8 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 
                 /* Remove the page from the free or zero list */
                 ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
+                MI_SET_USAGE(MI_USAGE_MDL);
+                MI_SET_PROCESS2("Kernel");
                 MiUnlinkFreeOrZeroedPage(Pfn1);
                 
                 //
@@ -362,19 +376,11 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     }
     
     //
-    // We're done, mark the pages as locked (should we lock them, though???)
+    // We're done, mark the pages as locked
     //
     Mdl->Process = NULL;
     Mdl->MdlFlags |= MDL_PAGES_LOCKED; 
     return Mdl;
-}
-
-VOID
-NTAPI
-MmDumpPfnDatabase(VOID)
-{
-    /* Pretty useless for now, to be improved later */
-    return;
 }
 
 VOID

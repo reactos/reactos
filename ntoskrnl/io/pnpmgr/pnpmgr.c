@@ -2601,6 +2601,7 @@ cleanup:
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 IopUpdateRootKey(VOID)
 {
    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");

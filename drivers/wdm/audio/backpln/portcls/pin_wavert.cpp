@@ -283,7 +283,7 @@ NTAPI
 CPortPinWaveRT::HandleKsStream(
     IN PIRP Irp)
 {
-    DPRINT("IPortPinWaveRT_HandleKsStream entered State %u Stream %p\n", m_State, m_Stream);
+    DPRINT("IPortPinWaveRT_HandleKsStream entered State %u Stream %p is UNIMPLEMENTED\n", m_State, m_Stream);
 
     return STATUS_PENDING;
 }
@@ -587,7 +587,7 @@ CPortPinWaveRT::Init(
         goto cleanup;
     }
 
-    Status = m_IrpQueue->Init(ConnectDetails, 0, 0);
+    Status = m_IrpQueue->Init(ConnectDetails, KsPinDescriptor, 0, 0, FALSE);
     if (!NT_SUCCESS(Status))
     {
         goto cleanup;
@@ -624,7 +624,7 @@ CPortPinWaveRT::Init(
     // delay of 10 milisec
     m_Delay = Int32x32To64(10, -10000);
 
-	Status = m_Stream->AllocateAudioBuffer(16384 * 11, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);
+    Status = m_Stream->AllocateAudioBuffer(16384 * 11, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("AllocateAudioBuffer failed with %x\n", Status);

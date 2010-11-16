@@ -612,25 +612,44 @@ WdmAudGetWaveOutDeviceCount()
     return MMixerGetWaveOutCount(&MixerContext);
 }
 
-NTSTATUS
-WdmAudGetMixerPnpNameByIndex(
-    IN  ULONG DeviceIndex,
-    OUT LPWSTR * Device)
+ULONG
+WdmAudGetMidiInDeviceCount()
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    return MMixerGetMidiInCount(&MixerContext);
+}
+
+ULONG
+WdmAudGetMidiOutDeviceCount()
+{
+    return MMixerGetWaveOutCount(&MixerContext);
 }
 
 NTSTATUS
 WdmAudGetPnpNameByIndexAndType(
-    IN ULONG DeviceIndex, 
-    IN SOUND_DEVICE_TYPE DeviceType, 
+    IN ULONG DeviceIndex,
+    IN SOUND_DEVICE_TYPE DeviceType,
     OUT LPWSTR *DevicePath)
 {
-    if (MMixerGetWaveDevicePath(&MixerContext, DeviceType == WAVE_IN_DEVICE_TYPE, DeviceIndex, DevicePath) == MM_STATUS_SUCCESS)
-        return STATUS_SUCCESS;
-    else
-        return STATUS_UNSUCCESSFUL;
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        if (MMixerGetWaveDevicePath(&MixerContext, DeviceType == WAVE_IN_DEVICE_TYPE, DeviceIndex, DevicePath) == MM_STATUS_SUCCESS)
+            return STATUS_SUCCESS;
+        else
+            return STATUS_UNSUCCESSFUL;
+    }
+    else if (DeviceType == MIDI_IN_DEVICE_TYPE || DeviceType == MIDI_OUT_DEVICE_TYPE)
+    {
+        if (MMixerGetMidiDevicePath(&MixerContext, DeviceType == MIDI_IN_DEVICE_TYPE, DeviceIndex, DevicePath) == MM_STATUS_SUCCESS)
+            return STATUS_SUCCESS;
+        else
+            return STATUS_UNSUCCESSFUL;
+    }
+    else if (DeviceType == MIXER_DEVICE_TYPE)
+    {
+        UNIMPLEMENTED;
+    }
+
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -640,7 +659,7 @@ WdmAudWaveCapabilities(
     IN PWDMAUD_CLIENT ClientInfo,
     IN PWDMAUD_DEVICE_EXTENSION DeviceExtension)
 {
-    MIXER_STATUS Status;
+    MIXER_STATUS Status = MM_STATUS_UNSUCCESSFUL;
 
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE)
     {
@@ -652,10 +671,31 @@ WdmAudWaveCapabilities(
         /* get capabilities */
         Status = MMixerWaveOutCapabilities(&MixerContext, DeviceInfo->DeviceIndex, &DeviceInfo->u.WaveOutCaps);
     }
+
+    if (Status == MM_STATUS_SUCCESS)
+        return STATUS_SUCCESS;
     else
+        return Status;
+}
+
+NTSTATUS
+WdmAudMidiCapabilities(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN PWDMAUD_CLIENT ClientInfo,
+    IN PWDMAUD_DEVICE_EXTENSION DeviceExtension)
+{
+    MIXER_STATUS Status = MM_STATUS_UNSUCCESSFUL;
+
+    if (DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE)
     {
-        ASSERT(0);
-        return STATUS_UNSUCCESSFUL;
+        /* get capabilities */
+        Status = MMixerMidiInCapabilities(&MixerContext, DeviceInfo->DeviceIndex, &DeviceInfo->u.MidiInCaps);
+    }
+    else if (DeviceInfo->DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        /* get capabilities */
+        Status = MMixerMidiOutCapabilities(&MixerContext, DeviceInfo->DeviceIndex, &DeviceInfo->u.MidiOutCaps);
     }
 
     if (Status == MM_STATUS_SUCCESS)
@@ -737,3 +777,26 @@ WdmAudControlOpenWave(
     else
         return SetIrpIoStatus(Irp, STATUS_NOT_SUPPORTED, sizeof(WDMAUD_DEVICE_INFO));
 }
+
+NTSTATUS
+WdmAudControlOpenMidi(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    MIXER_STATUS Status;
+    PIN_CREATE_CONTEXT Context;
+
+    Context.ClientInfo = ClientInfo;
+    Context.DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Context.DeviceType = DeviceInfo->DeviceType;
+
+    Status = MMixerOpenMidi(&MixerContext, DeviceInfo->DeviceIndex, DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE, CreatePinCallback, &Context, &DeviceInfo->hDevice);
+
+    if (Status == MM_STATUS_SUCCESS)
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    else
+        return SetIrpIoStatus(Irp, STATUS_NOT_SUPPORTED, sizeof(WDMAUD_DEVICE_INFO));
+}
+

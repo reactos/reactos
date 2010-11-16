@@ -403,6 +403,7 @@ extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
+extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
@@ -512,6 +513,7 @@ extern BOOLEAN MmZeroingPageThreadActive;
 extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;
+extern PMMWSL MmWorkingSetList;
 
 //
 // Figures out the hardware bits for a PTE
@@ -848,6 +850,18 @@ MI_GET_PROTOTYPE_PTE_FOR_VPN(IN PMMVAD Vad,
     ASSERT(ProtoPte <= Vad->LastContiguousPte);
     return ProtoPte;
 }
+
+//
+// Returns the PFN Database entry for the given page number
+// Warning: This is not necessarily a valid PFN database entry!
+//
+FORCEINLINE
+PMMPFN
+MI_PFN_ELEMENT(IN PFN_NUMBER Pfn)
+{
+    /* Get the entry */
+    return &MmPfnDatabase[Pfn];
+};
 
 BOOLEAN
 NTAPI

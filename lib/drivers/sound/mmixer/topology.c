@@ -983,6 +983,15 @@ MMixerGetNextNodesFromNodeIndex(
     *OutNodesCount = TopologyNodesCount;
 }
 
+VOID
+MMixerGetTopologyPinCount(
+    IN PTOPOLOGY Topology,
+    OUT PULONG PinCount)
+{
+    /* store pin count */
+    *PinCount = Topology->TopologyPinsCount;
+}
+
 MIXER_STATUS
 MMixerAllocateTopologyPinArray(
     IN PMIXER_CONTEXT MixerContext,

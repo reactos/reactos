@@ -392,6 +392,7 @@ static inline int pf_output_format_A( pf_output *out, LPCSTR str,
     return r;
 }
 
+#ifndef USE_NEW_SPRINTF
 static int pf_handle_string_format( pf_output *out, const void* str, int len,
                              pf_flags *flags, BOOL capital_letter)
 {
@@ -882,6 +883,7 @@ int CDECL vswprintf( wchar_t* str, const wchar_t* format, va_list args )
 {
     return _vsnwprintf( str, INT_MAX, format, args );
 }
+#endif
 #endif
 
 /*********************************************************************

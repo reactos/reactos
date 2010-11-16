@@ -46,6 +46,7 @@ add_importlibs(shlwapi
     version
     shell32
     kernel32
+    msvcrt
     ntdll)
 
 

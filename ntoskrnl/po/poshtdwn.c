@@ -9,6 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
+#ifdef NEWCC
+#include "../cache/newcc.h"
+#endif
 #define NDEBUG
 #include <debug.h>
 
@@ -153,6 +156,10 @@ PopGracefulShutdown(IN PVOID Context)
     DPRINT1("I/O manager shutting down in phase 1\n"); 
     IoShutdownSystem(1);
     CcWaitForCurrentLazyWriterActivity();
+
+#ifdef NEWCC
+	CcShutdownSystem();
+#endif
 
     /* Note that here, we should broadcast the power IRP to devices */
 

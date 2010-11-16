@@ -1,3 +1,6 @@
+
+set_unicode()
+
 list(APPEND SOURCE
     aboutdlg.c
     available.c

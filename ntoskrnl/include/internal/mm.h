@@ -248,6 +248,8 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
+struct _MM_CACHE_SECTION_SEGMENT;
+
 typedef struct _MEMORY_AREA
 {
     PVOID StartingAddress;
@@ -270,6 +272,11 @@ typedef struct _MEMORY_AREA
             PMM_SECTION_SEGMENT Segment;
             LIST_ENTRY RegionListHead;
         } SectionData;
+		struct
+		{
+            LARGE_INTEGER ViewOffset;
+            struct _MM_CACHE_SECTION_SEGMENT *Segment;
+		} CacheData;
         struct
         {
             LIST_ENTRY RegionListHead;
@@ -287,6 +294,43 @@ typedef struct _MM_RMAP_ENTRY
 #endif
 }
 MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
+
+#if MI_TRACE_PFNS
+extern ULONG MI_PFN_CURRENT_USAGE;
+extern CHAR MI_PFN_CURRENT_PROCESS_NAME[16];
+#define MI_SET_USAGE(x)     MI_PFN_CURRENT_USAGE = x
+#define MI_SET_PROCESS2(x)  memcpy(MI_PFN_CURRENT_PROCESS_NAME, x, 16)
+#else
+#define MI_SET_USAGE(x)
+#define MI_SET_PROCESS2(x)
+#endif
+
+typedef enum _MI_PFN_USAGES
+{
+    MI_USAGE_NOT_SET = 0,
+    MI_USAGE_PAGED_POOL,
+    MI_USAGE_NONPAGED_POOL,
+    MI_USAGE_NONPAGED_POOL_EXPANSION,
+    MI_USAGE_KERNEL_STACK,
+    MI_USAGE_KERNEL_STACK_EXPANSION,
+    MI_USAGE_SYSTEM_PTE,
+    MI_USAGE_VAD,
+    MI_USAGE_PEB_TEB,
+    MI_USAGE_SECTION,
+    MI_USAGE_PAGE_TABLE,
+    MI_USAGE_PAGE_DIRECTORY,
+    MI_USAGE_LEGACY_PAGE_DIRECTORY,
+    MI_USAGE_DRIVER_PAGE,
+    MI_USAGE_CONTINOUS_ALLOCATION,
+    MI_USAGE_MDL,
+    MI_USAGE_DEMAND_ZERO,
+    MI_USAGE_ZERO_LOOP,
+    MI_USAGE_CACHE,
+    MI_USAGE_PFN_DATABASE,
+    MI_USAGE_BOOT_DRIVER,
+    MI_USAGE_INIT_MEMORY,
+    MI_USAGE_FREE_PAGE
+} MI_PFN_USAGES;
 
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
@@ -355,6 +399,10 @@ typedef struct _MMPFN
             ULONG_PTR MustBeCached:1;
         };
     } u4;
+#if MI_TRACE_PFNS
+    MI_PFN_USAGES PfnUsage;
+    CHAR ProcessName[16];
+#endif
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
@@ -1143,8 +1191,8 @@ MmInitializePageList(
 
 VOID
 NTAPI
-MmDumpPfnDatabase(
-   VOID
+MmDumpArmPfnDatabase(
+   IN BOOLEAN StatusOnly
 );
 
 PFN_NUMBER
@@ -1285,6 +1333,14 @@ MmEnableVirtualMapping(
 VOID
 NTAPI
 MmRawDeleteVirtualMapping(PVOID Address);
+
+
+VOID
+NTAPI
+MmGetPageFileMapping(
+	struct _EPROCESS *Process, 
+	PVOID Address,
+	SWAPENTRY* SwapEntry);
 
 VOID
 NTAPI

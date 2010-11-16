@@ -1,3 +1,5 @@
+
+#ifndef USE_NEW_SPRINTF
 /*
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl
@@ -741,3 +743,5 @@ int __cdecl vsprintf(char *buf, const char *fmt, va_list args)
 }
 
 /* EOF */
+#endif
+

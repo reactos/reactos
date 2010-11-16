@@ -22,6 +22,8 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
+PTHREADINFO ptiKeyboard;
+PTHREADINFO ptiMouse;
 PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
@@ -233,6 +235,18 @@ MouseThreadMain(PVOID StartContext)
                        0,
                        FILE_SYNCHRONOUS_IO_ALERT);
    } while (!NT_SUCCESS(Status));
+
+ /* Need to setup basic win32k for this thread to process WH_MOUSE_LL messages. */
+   Status = Win32kInitWin32Thread(PsGetCurrentThread());
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed making mouse thread a win32 thread.\n");
+      return; //(Status);
+   }
+
+   ptiMouse = PsGetCurrentThreadWin32Thread();
+   ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
+   DPRINT1("\nMouse Thread 0x%x \n", ptiMouse);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -529,6 +543,10 @@ KeyboardThreadMain(PVOID StartContext)
       DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
       return; //(Status);
    }
+
+   ptiKeyboard = PsGetCurrentThreadWin32Thread();
+   ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
+   DPRINT1("\nKeyboard Thread 0x%x \n", ptiKeyboard);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -890,8 +908,8 @@ RawInputThreadMain(PVOID StartContext)
   }
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
-  DPRINT("\nRaw Input Thread 0x%x \n", ptiRawInput);
-
+  ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
+  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -922,7 +940,9 @@ RawInputThreadMain(PVOID StartContext)
   DPRINT1("Raw Input Thread Exit!\n");
 }
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitInputImpl(VOID)
 {
    NTSTATUS Status;
@@ -1136,7 +1156,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[0][SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
    {
@@ -1144,7 +1164,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[1][SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
    {
@@ -1152,7 +1172,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = WM_MBUTTONDOWN;
       CurInfo->ButtonsDown |= MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
    {
@@ -1160,7 +1180,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = WM_MBUTTONUP;
       CurInfo->ButtonsDown &= ~MK_MBUTTON;
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
    {
@@ -1168,7 +1188,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[0][!SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
    {
@@ -1176,7 +1196,7 @@ IntMouseInput(MOUSEINPUT *mi)
       Msg.message = SwapBtnMsg[1][!SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
       Msg.wParam |= CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
 
    if((mi->dwFlags & (MOUSEEVENTF_XDOWN | MOUSEEVENTF_XUP)) &&
@@ -1194,14 +1214,14 @@ IntMouseInput(MOUSEINPUT *mi)
          gQueueKeyStateTable[VK_XBUTTON1] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         MsqInsertSystemMessage(&Msg);
+         MsqInsertMouseMessage(&Msg);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] |= 0xc0;
          CurInfo->ButtonsDown |= MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         MsqInsertSystemMessage(&Msg);
+         MsqInsertMouseMessage(&Msg);
       }
    }
    else if(mi->dwFlags & MOUSEEVENTF_XUP)
@@ -1212,21 +1232,21 @@ IntMouseInput(MOUSEINPUT *mi)
          gQueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         MsqInsertSystemMessage(&Msg);
+         MsqInsertMouseMessage(&Msg);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
          CurInfo->ButtonsDown &= ~MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         MsqInsertSystemMessage(&Msg);
+         MsqInsertMouseMessage(&Msg);
       }
    }
    if(mi->dwFlags & MOUSEEVENTF_WHEEL)
    {
       Msg.message = WM_MOUSEWHEEL;
       Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, mi->mouseData);
-      MsqInsertSystemMessage(&Msg);
+      MsqInsertMouseMessage(&Msg);
    }
 
    return TRUE;

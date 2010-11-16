@@ -8,6 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/libs/sound)
 list(APPEND SOURCE
     controls.c
     filter.c
+    midi.c
     mixer.c
     sup.c
     wave.c

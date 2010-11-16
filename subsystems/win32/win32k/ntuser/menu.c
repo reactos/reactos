@@ -86,7 +86,9 @@ UserMenuInfo(
         ( ((r).bottom >=  y)) && \
         ( ((r).top <= y)) )
 
-NTSTATUS FASTCALL
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitMenuImpl(VOID)
 {
    return(STATUS_SUCCESS);

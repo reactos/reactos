@@ -42,6 +42,8 @@ typedef struct
         WAVEOUTCAPSW WaveOutCaps;
         AUXCAPSW     AuxCaps;
         WAVEINCAPSW  WaveInCaps;
+        MIDIINCAPSW  MidiInCaps;
+        MIDIOUTCAPSW MidiOutCaps;
         ULONGLONG    Position;
         struct
         {

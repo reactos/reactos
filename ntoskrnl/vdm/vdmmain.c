@@ -15,11 +15,11 @@
 
 /* GLOBALS *******************************************************************/
 
-
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
 NTAPI
+INIT_FUNCTION
 Ki386VdmEnablePentiumExtentions(IN BOOLEAN Enable)
 {
     ULONG EFlags, Cr4;
@@ -38,6 +38,7 @@ Ki386VdmEnablePentiumExtentions(IN BOOLEAN Enable)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KeI386VdmInitialize(VOID)
 {
     NTSTATUS Status;
@@ -84,6 +85,7 @@ KeI386VdmInitialize(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 VdmpInitialize(PVOID ControlData)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;

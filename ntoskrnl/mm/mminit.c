@@ -231,6 +231,7 @@ MiInitSystemMemoryAreas()
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiDbgDumpAddressSpace(VOID)
 {
     //
@@ -302,12 +303,17 @@ MmMpwThreadMain(PVOID Ignored)
 
       PagesWritten = 0;
 
+#ifndef NEWCC
+	  // XXX arty -- we flush when evicting pages or destorying cache
+	  // sections.
       CcRosFlushDirtyPages(128, &PagesWritten);
+#endif
    }
 }
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MmInitMpwThread(VOID)
 {
    KPRIORITY Priority;
@@ -339,6 +345,7 @@ MmInitMpwThread(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 MmInitBsmThread(VOID)
 {
     NTSTATUS Status;
@@ -362,6 +369,7 @@ MmInitBsmThread(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

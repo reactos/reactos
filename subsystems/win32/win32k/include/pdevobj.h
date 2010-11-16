@@ -174,17 +174,10 @@ PDEVOBJ_vGetDeviceCaps(
     PPDEVOBJ ppdev,
     PDEVCAPS pDevCaps);
 
-BOOL
+INIT_FUNCTION
+NTSTATUS
 NTAPI
 InitPDEVImpl();
-
-BOOL
-NTAPI
-InitLDEVImpl();
-
-BOOL
-NTAPI
-InitDeviceImpl();
 
 PSIZEL
 FASTCALL

@@ -8,6 +8,7 @@ list(APPEND SOURCE
     about.c
     childwnd.c
     edit.c
+    error.c
     find.c
     framewnd.c
     hexedit.c

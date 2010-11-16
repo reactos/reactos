@@ -21,7 +21,7 @@ Description = X es necesario para varias aplicaciones.
 
 [Section.0415]
 Licence = Nieznana
-Description = X jest używana przez część aplikacji.
+Description = Microsoft Visual Basic 6.0 Common Controls jest używany przez część aplikacji.
 
 [Section.0422]
 Licence = Невідома

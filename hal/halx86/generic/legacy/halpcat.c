@@ -23,6 +23,7 @@ PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* There is no ACPI on these HALs */
@@ -31,6 +32,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpBuildAddressMap(VOID)
 {
     /* FIXME: Inherit ROM blocks from the registry */
@@ -42,6 +44,7 @@ HalpBuildAddressMap(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 HalpGetDebugPortTable(VOID)
 {
     /* No ACPI */
@@ -50,6 +53,7 @@ HalpGetDebugPortTable(VOID)
 
 ULONG
 NTAPI
+INIT_FUNCTION
 HalpIs16BitPortDecodeSupported(VOID)
 {
     /* Only EISA systems support this */
@@ -58,9 +62,11 @@ HalpIs16BitPortDecodeSupported(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 HaliInitPnpDriver(VOID)
 {
     /* On PC-AT, this will interface with the PCI driver */
+    //HalpDebugPciBus();
     return STATUS_SUCCESS;
 }
 
@@ -69,6 +75,7 @@ HaliInitPnpDriver(VOID)
  */
 VOID
 NTAPI
+INIT_FUNCTION
 HalReportResourceUsage(VOID)
 {
     INTERFACE_TYPE InterfaceType;

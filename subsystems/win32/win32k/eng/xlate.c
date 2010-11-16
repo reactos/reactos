@@ -634,11 +634,13 @@ EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
     pexlo->xlo.pulXlate = pexlo->aulXlate;
 }
 
-VOID
+INIT_FUNCTION
+NTSTATUS
+NTAPI
 InitXlateImpl(VOID)
 {
-
     EXLATEOBJ_vInitTrivial(&gexloTrivial);
+    return STATUS_SUCCESS;
 }
 
 

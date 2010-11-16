@@ -14,7 +14,7 @@
  *  Lars Wirzenius & Linus Torvalds
  *  Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
-
+#ifndef USE_NEW_SPRINTF
 #include <precomp.h>
 
 #include <wchar.h>
@@ -879,3 +879,4 @@ int __cdecl vsprintf(char *buf, const char *fmt, va_list args)
 }
 #endif
 /* EOF */
+#endif

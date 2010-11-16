@@ -2808,6 +2808,53 @@ Return Value:
         // Fall through and let the class driver process the request.
         //
 
+    case IOCTL_DISK_GET_LENGTH_INFO:
+
+        //
+        // Validate buffer length.
+        //
+
+        if (irpStack->Parameters.DeviceIoControl.OutputBufferLength <
+            sizeof(GET_LENGTH_INFORMATION)) {
+            status = STATUS_BUFFER_TOO_SMALL;
+
+        } else {
+
+            PGET_LENGTH_INFORMATION lengthInformation = Irp->AssociatedIrp.SystemBuffer;
+
+            //
+            // Update the geometry in case it has changed.
+            //
+
+            status = UpdateRemovableGeometry (DeviceObject, Irp);
+
+            if (!NT_SUCCESS(status)) {
+
+                //
+                // Note the drive is not ready.
+                //
+
+                diskData->DriveNotReady = TRUE;
+                break;
+            }
+
+            //
+            // Note the drive is now ready.
+            //
+
+            diskData->DriveNotReady = FALSE;
+
+            //
+            // Output data, and return
+            //
+
+            lengthInformation->Length.QuadPart = deviceExtension->PartitionLength.QuadPart;
+            status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(GET_LENGTH_INFORMATION);
+        }
+
+        break;
+
     default:
 
         //

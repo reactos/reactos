@@ -8,6 +8,8 @@
 
 /* INCLUDES *****************************************************************/
 
+#if !defined(_X86_)
+
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
@@ -1412,3 +1414,4 @@ KiRosPrepareForSystemStartup(IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
     /* Do general System Startup */
     KiSystemStartup(NtLoaderBlock);
 }
+#endif

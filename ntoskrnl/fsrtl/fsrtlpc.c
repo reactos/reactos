@@ -155,6 +155,7 @@ PUCHAR FsRtlLegalAnsiCharacterArray = LegalAnsiCharacterArray;
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 FsRtlInitSystem(VOID)
 {
     ULONG i;

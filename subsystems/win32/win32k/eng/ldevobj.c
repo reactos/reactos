@@ -26,7 +26,8 @@ LDEVOBJ *gpldevWin32k = NULL;
 
 /** Private functions *********************************************************/
 
-BOOL
+INIT_FUNCTION
+NTSTATUS
 NTAPI
 InitLDEVImpl()
 {
@@ -34,7 +35,7 @@ InitLDEVImpl()
     ghsemLDEVList = EngCreateSemaphore();
     if (!ghsemLDEVList)
     {
-        return FALSE;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Allocate a LDEVOBJ for win32k */
@@ -44,7 +45,7 @@ InitLDEVImpl()
                                          GDITAG_LDEV);
     if (!gpldevWin32k)
     {
-        return FALSE;
+        return STATUS_NO_MEMORY;
     }
 
     /* Initialize the LDEVOBJ for win32k */
@@ -62,7 +63,7 @@ InitLDEVImpl()
     gpldevWin32k->pGdiDriverInfo->ExportSectionPointer = NULL;
     gpldevWin32k->pGdiDriverInfo->ImageLength = 0; // FIXME;
 
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 PLDEVOBJ

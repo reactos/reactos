@@ -329,35 +329,7 @@ NtCreateThread(
     IN BOOLEAN CreateSuspended
 );
 
-#ifndef NTOS_MODE_USER
-#if defined(_M_IX86)
-FORCEINLINE
-PTEB
-NtCurrentTeb(VOID)
-{
-#ifndef __GNUC__
-    return (PTEB)(ULONG_PTR)__readfsdword(0x18);
-#else
-    struct _TEB *ret;
-
-    __asm__ __volatile__ (
-        "movl %%fs:0x18, %0\n"
-        : "=r" (ret)
-        : /* no inputs */
-    );
-
-    return ret;
-#endif
-}
-#elif defined (_M_AMD64)
-FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
-{
-    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
-}
-#endif
-#else
-struct _TEB * NtCurrentTeb(void);
-#endif
+#include "inline_ntcurrentteb.h"
 
 NTSYSCALLAPI
 NTSTATUS

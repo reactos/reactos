@@ -177,6 +177,7 @@ MiProtectedPoolRemoveEntryList(IN PLIST_ENTRY Entry)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializeNonPagedPoolThresholds(VOID)
 {
     PFN_NUMBER Size = MmMaximumNonPagedPoolInPages;
@@ -193,6 +194,7 @@ MiInitializeNonPagedPoolThresholds(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializePoolEvents(VOID)
 {
     KIRQL OldIrql;
@@ -267,6 +269,7 @@ MiInitializePoolEvents(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
     ULONG i;
@@ -476,11 +479,10 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 ASSERT(PointerPde->u.Hard.Valid == 0);
                 
                 /* Request a page */
-                DPRINT1("Requesting %d PDEs\n", i);
+                MI_SET_USAGE(MI_USAGE_PAGED_POOL);
+                MI_SET_PROCESS2("Kernel");
                 PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
                 TempPde.u.Hard.PageFrameNumber = PageFrameNumber;
-                DPRINT1("We have a PDE: %lx\n", PageFrameNumber);
-
 #if (_MI_PAGING_LEVELS >= 3)
                 /* On PAE/x64 systems, there's no double-buffering */
                 ASSERT(FALSE);
@@ -773,6 +775,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     do
     {
         /* Allocate a page */
+        MI_SET_USAGE(MI_USAGE_PAGED_POOL);
+        MI_SET_PROCESS2("Kernel");
         PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         
         /* Get the PFN entry for it and fill it out */

@@ -10,3 +10,6 @@ Category = 14
 URLSite = http://www.microsoft.com/downloads/details.aspx?FamilyId=262D25E3-F589-4842-8157-034D1E7CF3A3
 URLDownload = http://download.microsoft.com/download/a/a/c/aac39226-8825-44ce-90e3-bf8203e74006/dotnetfx.exe
 CDPath = none
+
+[Section.0415]
+Description = Microsoft .NET Framework Wersja 1.1 - Pakiet Dystrybucyjny.

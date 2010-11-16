@@ -16,6 +16,7 @@
 
 ULONG_PTR
 NTAPI
+INIT_FUNCTION
 Ki386EnableGlobalPage(IN volatile ULONG_PTR Context)
 {
     volatile PLONG Count = (PLONG)Context;
@@ -52,6 +53,7 @@ Ki386EnableGlobalPage(IN volatile ULONG_PTR Context)
 
 VOID
 NTAPI
+INIT_FUNCTION
 KiInitializePAT(VOID)
 {
     /* FIXME: Support this */

@@ -70,6 +70,7 @@ KdRegisterDebuggerDataBlock(IN ULONG Tag,
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 KdInitSystem(IN ULONG BootPhase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

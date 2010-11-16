@@ -1343,7 +1343,7 @@ MmUnlockPages(IN PMDL Mdl)
             InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
             
             /* Do the last dereference, we're done here */
-            MiDecrementReferenceCount(Pfn1, *MdlPages);
+            MiDecrementReferenceCount(Pfn1, MiGetPfnEntryIndex(Pfn1));
         }
         else
         {
