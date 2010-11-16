@@ -120,7 +120,7 @@ IntCallLowLevelEvent( PEVENTHOOK pEH,
                                event,
                                0,
                               (LPARAM)pEP,
-                               5000,
+                               300,
                                TRUE,
                                MSQ_ISEVENT,
                               &uResult);

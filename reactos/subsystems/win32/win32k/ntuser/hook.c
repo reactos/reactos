@@ -38,6 +38,8 @@ IntCallLowLevelHook( PHOOK Hook,
     PTHREADINFO pti;
     PHOOKPACK pHP;
     INT Size;
+    UINT uTimeout = 300;
+    BOOL Block = FALSE;
     ULONG_PTR uResult = 0;
 
     if (Hook->Thread)
@@ -53,25 +55,13 @@ IntCallLowLevelHook( PHOOK Hook,
     pHP->pHookStructs = NULL;
     Size = 0;
 
-// Once the rest is enabled again, This prevents stack corruption from the caller.
+// This prevents stack corruption from the caller.
     switch(Hook->HookId)
     {
-       case WH_CBT:   
-          switch(Code)
-          {
-             case HCBT_CREATEWND:
-                Size = sizeof(CBT_CREATEWNDW);
-                break;
-             case HCBT_MOVESIZE:
-                Size = sizeof(RECTL);
-                break;
-             case HCBT_ACTIVATE:
-                Size = sizeof(CBTACTIVATESTRUCT);
-                break;
-             case HCBT_CLICKSKIPPED:
-                Size = sizeof(MOUSEHOOKSTRUCT);
-                break;
-          }
+       case WH_JOURNALPLAYBACK:
+       case WH_JOURNALRECORD:
+          uTimeout = 0;
+          Size = sizeof(EVENTMSG);
           break;
        case WH_KEYBOARD_LL:
           Size = sizeof(KBDLLHOOKSTRUCT);
@@ -80,18 +70,14 @@ IntCallLowLevelHook( PHOOK Hook,
           Size = sizeof(MSLLHOOKSTRUCT);
           break;
        case WH_MOUSE:
+          uTimeout = 200;
+          Block = TRUE;
           Size = sizeof(MOUSEHOOKSTRUCT);
           break;
-       case WH_CALLWNDPROC:
-          Size = sizeof(CWPSTRUCT);
-          break;
-       case WH_CALLWNDPROCRET:
-          Size = sizeof(CWPRETSTRUCT);
-          break;
-       case WH_MSGFILTER:
-       case WH_SYSMSGFILTER:
-       case WH_GETMESSAGE:
-          Size = sizeof(MSG);
+       case WH_KEYBOARD:
+          uTimeout = 200;
+          Block = TRUE;
+          Size = sizeof(KBDLLHOOKSTRUCT);
           break;
     }
 
@@ -107,9 +93,9 @@ IntCallLowLevelHook( PHOOK Hook,
                                 IntToPtr(Code), // hWnd
                                 Hook->HookId,   // Msg
                                 wParam,
-                                (LPARAM)pHP,
-                                5000,
-                                TRUE,
+                               (LPARAM)pHP,
+                                uTimeout,
+                                Block,
                                 MSQ_ISHOOK,
                                &uResult);
     if (!NT_SUCCESS(Status))
@@ -141,25 +127,12 @@ co_CallHook( INT HookId,
 
     switch(HookId)
     {
-       case WH_CBT:   
-          switch(Code)
-          {
-             case HCBT_CREATEWND:
-             case HCBT_MOVESIZE:
-             case HCBT_ACTIVATE:
-             case HCBT_CLICKSKIPPED:
-                lParam = (LPARAM)pHP->pHookStructs;
-                break;
-          }
-          break;
+       case WH_JOURNALPLAYBACK:
+       case WH_JOURNALRECORD:
+       case WH_KEYBOARD:
        case WH_KEYBOARD_LL:
        case WH_MOUSE_LL:
        case WH_MOUSE:
-       case WH_CALLWNDPROC:
-       case WH_CALLWNDPROCRET:
-       case WH_MSGFILTER:
-       case WH_SYSMSGFILTER:
-       case WH_GETMESSAGE:
           lParam = (LPARAM)pHP->pHookStructs;
           break;
     }
@@ -187,12 +160,6 @@ co_HOOK_CallHookNext( PHOOK Hook,
                       WPARAM wParam,
                       LPARAM lParam)
 {
-    if ( (Hook->Thread != PsGetCurrentThread()) && (Hook->Thread != NULL) )
-    {
-        DPRINT1("Calling Next HOOK from another Thread. %d\n", Hook->HookId);
-        return IntCallLowLevelHook(Hook, Code, wParam, lParam);
-    }
-
     DPRINT("Calling Next HOOK %d\n", Hook->HookId);
 
     return co_IntCallHookProc( Hook->HookId,
@@ -989,7 +956,10 @@ co_HOOK_CallHooks( INT HookId,
        pti->fsHooks most likely, is zero. So process KbT & MsT to "send" the message.
      */
        if ( !pti || !pdo || (!(HookId == WH_KEYBOARD_LL) && !(HookId == WH_MOUSE_LL)) )
+       {
+          DPRINT("No PDO %d\n", HookId);
           goto Exit;
+       }
     }
     else
     {
@@ -997,7 +967,10 @@ co_HOOK_CallHooks( INT HookId,
     }
 
     if ( pti->TIF_flags & (TIF_INCLEANUP|TIF_DISABLEHOOKS))
+    {
+       DPRINT("Hook Thread dead %d\n", HookId);
        goto Exit;
+    }
 
     if ( ISITHOOKED(HookId) )
     {
@@ -1104,11 +1077,13 @@ co_HOOK_CallHooks( INT HookId,
           // Lockup the thread while this links through user world.
           ObReferenceObject(ptiHook->pEThread);
           if (ptiHook != pti )
-          {
-             /* This fixed the ros regtest. Wine does this too. Need more time
-                to investigate this. MSDN "Hooks Overview" can't be wrong?
-              */
-             if (HookId == WH_KEYBOARD_LL || HookId == WH_MOUSE_LL)
+          {                                       // Block | TimeOut
+             if ( HookId == WH_JOURNALPLAYBACK || //   1   |    0
+                  HookId == WH_JOURNALRECORD   || //   1   |    0
+                  HookId == WH_KEYBOARD        || //   1   |   200
+                  HookId == WH_MOUSE           || //   1   |   200
+                  HookId == WH_KEYBOARD_LL     || //   0   |   300
+                  HookId == WH_MOUSE_LL )         //   0   |   300
              {
                 DPRINT("\nGlobal Hook posting to another Thread! %d\n",HookId );
                 Result = IntCallLowLevelHook(Hook, Code, wParam, lParam);
@@ -1281,7 +1256,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
     DPRINT("Enter NtUserSetWindowsHookEx\n");
     UserEnterExclusive();
 
-    ptiCurrent = GetW32ThreadInfo();
+    ptiCurrent = PsGetCurrentThreadWin32Thread();
 
     if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
     {
@@ -1422,7 +1397,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              _SEH2_TRY
              {
                 pti->pClientInfo->fsHooks = pti->fsHooks;
-                pti->pClientInfo->phkCurrent = 0;
+                pti->pClientInfo->phkCurrent = NULL;
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
@@ -1440,7 +1415,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              _SEH2_TRY
              {
                 pti->pClientInfo->fsHooks = pti->fsHooks;
-                pti->pClientInfo->phkCurrent = 0;
+                pti->pClientInfo->phkCurrent = NULL;
              }
              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
              {
@@ -1461,6 +1436,8 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        Hook->ptiHooked = NULL;
        //gptiCurrent->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
        pti->rpdesk->pDeskInfo->fsHooks |= HOOKID_TO_FLAG(HookId);
+       pti->sphkCurrent = NULL;
+       pti->pClientInfo->phkCurrent = NULL;
     }
 
     RtlInitUnicodeString(&Hook->ModuleName, NULL);
