@@ -352,6 +352,7 @@ co_IntCallHookProc(INT HookId,
    switch(HookId)
    {
       case WH_CBT:
+         DPRINT("WH_CBT: Code %d\n", Code);
          switch(Code)
          {
             case HCBT_CREATEWND:
@@ -524,6 +525,7 @@ co_IntCallHookProc(INT HookId,
 
    if (!NT_SUCCESS(Status))
    {
+      DPRINT1("Failure to make Callback! Status 0x%x",Status);
       goto Fault_Exit;
    }
    /* Support write backs... SEH is in UserCallNextHookEx. */

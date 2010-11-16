@@ -451,6 +451,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   {
     case WH_CBT:
     {
+      //ERR("WH_CBT: Code %d\n", Common->Code);
       switch(Common->Code)
       {
         case HCBT_CREATEWND:
@@ -461,7 +462,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
           wParam = Common->wParam;
           lParam = (LPARAM) &CbtCreatewndw;
-          ERR("HCBT_CREATEWND: hWnd 0x%x Name 0x%x Class 0x%x\n", Common->wParam, Csw.lpszName, Csw.lpszClass);
+          //ERR("HCBT_CREATEWND: hWnd 0x%x Name 0x%x Class 0x%x\n", Common->wParam, Csw.lpszName, Csw.lpszClass);
           break;
         case HCBT_CLICKSKIPPED:
             pMHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
@@ -518,13 +519,13 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       break;
     }
     case WH_KEYBOARD_LL:
-      ERR("WH_KEYBOARD_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
+      //ERR("WH_KEYBOARD_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pKeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       RtlCopyMemory(&KeyboardLlData, pKeyboardLlData, sizeof(KBDLLHOOKSTRUCT));
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &KeyboardLlData);
       break;
     case WH_MOUSE_LL:
-      ERR("WH_MOUSE_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
+      //ERR("WH_MOUSE_LL: Code %d, wParam %d\n",Common->Code,Common->wParam);
       pMouseLlData = (PMSLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       RtlCopyMemory(&MouseLlData, pMouseLlData, sizeof(MSLLHOOKSTRUCT));
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) &MouseLlData);
