@@ -398,7 +398,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         if (!NewThread->SpecialApcDisable)
         {
             /* Request APC delivery */
-            if (!SwitchFrame->ApcBypassDisable) HalRequestSoftwareInterrupt(APC_LEVEL);
+            if (SwitchFrame->ApcBypassDisable) HalRequestSoftwareInterrupt(APC_LEVEL);
             return TRUE;
         }
     }
