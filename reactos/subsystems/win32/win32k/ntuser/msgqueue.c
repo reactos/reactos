@@ -98,13 +98,19 @@ IntMsqClearWakeMask(VOID)
 }
 
 VOID FASTCALL
+MsqWakeQueue(PUSER_MESSAGE_QUEUE Queue, DWORD MessageBits)
+{
+   Queue->QueueBits |= MessageBits;
+   Queue->ChangedBits |= MessageBits;
+   if (Queue->WakeMask & MessageBits)
+      KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
+}
+
+VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
    Queue->PaintCount++;
-   Queue->QueueBits |= QS_PAINT;
-   Queue->ChangedBits |= QS_PAINT;
-   if (Queue->WakeMask & QS_PAINT)
-      KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
+   MsqWakeQueue(Queue, QS_PAINT);
 }
 
 VOID FASTCALL
@@ -137,7 +143,7 @@ MsqInitializeImpl(VOID)
 }
 
 VOID FASTCALL
-MsqInsertMouseMessage(MSG* Msg)
+co_MsqInsertMouseMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
@@ -425,17 +431,11 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window, UINT 
          /* save the pointer to the WM_MOUSEMOVE message in the new queue */
          CaptureWindow->head.pti->MessageQueue->MouseMoveMsg = Message;
 
-         CaptureWindow->head.pti->MessageQueue->QueueBits |= QS_MOUSEMOVE;
-         CaptureWindow->head.pti->MessageQueue->ChangedBits |= QS_MOUSEMOVE;
-         if (CaptureWindow->head.pti->MessageQueue->WakeMask & QS_MOUSEMOVE)
-            KeSetEvent(CaptureWindow->head.pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+         MsqWakeQueue(CaptureWindow->head.pti->MessageQueue, QS_MOUSEMOVE);
       }
       else
       {
-         CaptureWindow->head.pti->MessageQueue->QueueBits |= QS_MOUSEBUTTON;
-         CaptureWindow->head.pti->MessageQueue->ChangedBits |= QS_MOUSEBUTTON;
-         if (CaptureWindow->head.pti->MessageQueue->WakeMask & QS_MOUSEBUTTON)
-            KeSetEvent(CaptureWindow->head.pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+          MsqWakeQueue(CaptureWindow->head.pti->MessageQueue, QS_MOUSEBUTTON);
       }
       IntUnLockHardwareMessageQueue(CaptureWindow->head.pti->MessageQueue);
 
@@ -533,9 +533,12 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window, UINT 
 }
 
 BOOL APIENTRY
-co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWND Window,
-                          UINT FilterLow, UINT FilterHigh, BOOL Remove,
-                          PMSG Message)
+co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+                          IN BOOL Remove,
+                          IN PWND Window,
+                          IN UINT FilterLow,
+                          IN UINT FilterHigh,
+                          OUT PMSG Message)
 {
    KIRQL OldIrql;
    POINT ScreenPoint;
@@ -852,9 +855,6 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    UserDereferenceObject(Window);
    ObDereferenceObject (Thread);
 
-   //  InsertHeadList(&pThread->MessageQueue->PostedMessagesListHead,
-   //   &Message->ListEntry);
-   //  KeSetEvent(pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
 }
 
 PUSER_MESSAGE FASTCALL
@@ -1097,10 +1097,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 {
    InsertTailList(&MessageQueue->NotifyMessagesListHead,
                   &NotifyMessage->ListEntry);
-   MessageQueue->QueueBits |= QS_SENDMESSAGE;
-   MessageQueue->ChangedBits |= QS_SENDMESSAGE;
-   if (MessageQueue->WakeMask & QS_SENDMESSAGE)
-      KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+   MsqWakeQueue(MessageQueue, QS_SENDMESSAGE);
 }
 
 NTSTATUS FASTCALL
@@ -1155,10 +1152,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    /* queue it in the destination's message queue */
    InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
 
-   MessageQueue->QueueBits |= QS_SENDMESSAGE;
-   MessageQueue->ChangedBits |= QS_SENDMESSAGE;
-   if (MessageQueue->WakeMask & QS_SENDMESSAGE)
-      KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+   MsqWakeQueue(MessageQueue, QS_SENDMESSAGE);
 
    /* we can't access the Message anymore since it could have already been deleted! */
 
@@ -1308,10 +1302,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
    }
-   MessageQueue->QueueBits |= MessageBits;
-   MessageQueue->ChangedBits |= MessageBits;
-   if (MessageQueue->WakeMask & MessageBits)
-      KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+   MsqWakeQueue(MessageQueue, MessageBits);
 }
 
 VOID FASTCALL
@@ -1319,15 +1310,11 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
 {
    MessageQueue->QuitPosted = TRUE;
    MessageQueue->QuitExitCode = ExitCode;
-   MessageQueue->QueueBits |= QS_POSTMESSAGE;
-   MessageQueue->ChangedBits |= QS_POSTMESSAGE;
-   if (MessageQueue->WakeMask & QS_POSTMESSAGE)
-      KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+   MsqWakeQueue(MessageQueue, QS_POSTMESSAGE);
 }
 
 BOOLEAN APIENTRY
-co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-                  IN BOOLEAN Hardware,
+MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                   IN BOOLEAN Remove,
                   IN PWND Window,
                   IN UINT MsgFilterLow,
@@ -1337,17 +1324,7 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PLIST_ENTRY ListHead;
-
-   if (Hardware)
-   {
-      return(co_MsqPeekHardwareMessage( MessageQueue,
-                                        Window,
-                                        MsgFilterLow,
-                                        MsgFilterHigh,
-                                        Remove,
-                                        Message));
-   }
-
+   
    CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
    ListHead = &MessageQueue->PostedMessagesListHead;
    while (CurrentEntry != ListHead)
@@ -1361,15 +1338,11 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
               ( MsgFilterLow <= CurrentMessage->Msg.message &&
                 MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
-         if (Remove)
-         {
-            RemoveEntryList(&CurrentMessage->ListEntry);
-         }
-
          *Message= CurrentMessage->Msg;
 
          if (Remove)
          {
+             RemoveEntryList(&CurrentMessage->ListEntry);
              MsqDestroyMessage(CurrentMessage);
          }
 

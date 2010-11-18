@@ -121,13 +121,19 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY
-co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-	       IN BOOLEAN Hardware,
-	       IN BOOLEAN Remove,
-	       IN PWND Window,
-	       IN UINT MsgFilterLow,
-	       IN UINT MsgFilterHigh,
-	       OUT PMSG Message);
+MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+               IN BOOLEAN Remove,
+               IN PWND Window,
+               IN UINT MsgFilterLow,
+               IN UINT MsgFilterHigh,
+               OUT PMSG Message);
+BOOL APIENTRY
+co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+                          IN BOOL Remove,
+                          IN PWND Window,
+                          IN UINT MsgFilterLow,
+                          IN UINT MsgFilterHigh,
+                          OUT MSG* pMsg);
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
@@ -196,7 +202,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
-MsqInsertMouseMessage(MSG* Msg);
+co_MsqInsertMouseMessage(MSG* Msg);
 BOOL FASTCALL
 MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL

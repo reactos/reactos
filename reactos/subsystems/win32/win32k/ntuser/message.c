@@ -932,25 +932,23 @@ co_IntPeekMessage( PMSG Msg,
         }
 
         /* Now check for normal messages. */
-        if (co_MsqFindMessage( ThreadQueue,
-                               FALSE,
-                               RemoveMessages,
-                               Window,
-                               MsgFilterMin,
-                               MsgFilterMax,
-                               Msg ))
+        if (MsqPeekMessage( ThreadQueue,
+                            RemoveMessages,
+                            Window,
+                            MsgFilterMin,
+                            MsgFilterMax,
+                            Msg ))
         {
             return TRUE;
         }
 
         /* Check for hardware events. */
-        if(co_MsqFindMessage( ThreadQueue,
-                              TRUE,
-                              RemoveMessages,
-                              Window,
-                              MsgFilterMin,
-                              MsgFilterMax,
-                              Msg ))
+        if(co_MsqPeekHardwareMessage( ThreadQueue,
+                                     RemoveMessages, 
+                                     Window, 
+                                     MsgFilterMin, 
+                                     MsgFilterMax, 
+                                     Msg))
         {
 
             if(!ProcessHardwareMessage(Msg, RemoveMessages))
