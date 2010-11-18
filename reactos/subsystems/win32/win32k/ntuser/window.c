@@ -1898,7 +1898,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 {
    PWND Window = NULL, ParentWindow = NULL, OwnerWindow;
    HWND hWnd, hWndParent, hWndOwner, hwndInsertAfter;
-   DWORD dwStyle;
    PWINSTATION_OBJECT WinSta;
    PCLS Class = NULL;
    SIZE Size;
@@ -1987,8 +1986,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    UserRefObjectCo(Window, &Ref);
    ObDereferenceObject(WinSta);
 
-   dwStyle = Window->style;
-
    //// Check for a hook to eliminate overhead. ////
    if ( ISITHOOKED(WH_CBT) ||  (pti->rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)) )
    {
@@ -1998,7 +1995,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 
       /* Fill the new CREATESTRUCTW */
       RtlCopyMemory(pCsw, Cs, sizeof(CREATESTRUCTW));
-      pCsw->style = dwStyle; /* HCBT_CREATEWND needs the real window style */
+      pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
 
       // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
       if (!IS_ATOM(ClassName->Buffer))
@@ -2077,7 +2074,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Size.cx = Cs->cx;
    Size.cy = Cs->cy;
 
-   if ((dwStyle & WS_THICKFRAME) || !(dwStyle & (WS_POPUP | WS_CHILD)))
+   if ((Cs->style & WS_THICKFRAME) || !(Cs->style & (WS_POPUP | WS_CHILD)))
    {
       POINT MaxSize, MaxPos, MinTrack, MaxTrack;
 
@@ -2105,7 +2102,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if (NULL != ParentWindow)
    {
       /* link the window into the siblings list */
-      if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
+      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
           IntLinkHwnd(Window, HWND_BOTTOM);
       else
           IntLinkHwnd(Window, hwndInsertAfter);
