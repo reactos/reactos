@@ -43,7 +43,7 @@ list(APPEND SOURCE
     token/token.c
     advapi32_stubs.c
     advapi32.rc
-    advapi32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
     
 if(NOT MSVC)
     set_source_files_properties(advapi32.def PROPERTIES EXTERNAL_OBJECT TRUE)

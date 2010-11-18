@@ -11,6 +11,7 @@ set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LI
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_CXX_COMPILER> <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 set(CMAKE_EXE_LINKER_FLAGS "-nodefaultlibs -nostdlib -Wl,--enable-auto-image-base -Wl,--kill-at -Wl,--disable-auto-import")
 # -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
 # Compiler Core
 add_definitions(-pipe -fms-extensions)
@@ -112,7 +113,7 @@ macro(set_module_type MODULE TYPE)
         set_target_properties(${MODULE} PROPERTIES SUFFIX ".cpl")
     endif()
 	if(${TYPE} MATCHES kernelmodedriver)
-	    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols" SUFFIX ".sys")
+	    set_target_properties(${MODULE} PROPERTIES LINK_FLAGS "-Wl,--exclude-all-symbols -Wl,-file-alignment=0x1000 -Wl,-section-alignment=0x1000" SUFFIX ".sys")
 	    set_entrypoint(${MODULE} DriverEntry@8)
 		set_subsystem(${MODULE} native)
         set_image_base(${MODULE} 0x00010000)

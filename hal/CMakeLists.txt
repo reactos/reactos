@@ -72,7 +72,6 @@ list(APPEND MINI_HAL_SOURCE
     halx86/generic/legacy/bus/cmosbus.c
     halx86/generic/legacy/bus/isabus.c
     halx86/generic/legacy/bus/pcibus.c
-    halx86/generic/legacy/bus/pcidata.c
     halx86/generic/legacy/bus/sysbus.c
     halx86/generic/legacy/bussupp.c
     halx86/generic/beep.c

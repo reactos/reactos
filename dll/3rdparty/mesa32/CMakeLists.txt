@@ -15,6 +15,10 @@ else()
 add_definitions(-DGL_NO_STDCALL)
 endif(ARCH MATCHES i386)
 
+if(NOT MSVC)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--enable-stdcall-fixup")
+endif()
+
 include_directories(
     BEFORE include
     src

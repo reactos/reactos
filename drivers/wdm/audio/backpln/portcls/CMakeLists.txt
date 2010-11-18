@@ -59,7 +59,10 @@ else()
     set_target_properties(portcls PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif(MSVC)
 
-set_module_type(portcls kernelmodedriver)
+set_entrypoint(portcls 0)
+set_image_base(portcls 0x00010000)
+set_subsystem(portcls native)
+set_target_properties(portcls PROPERTIES SUFFIX ".sys")
 
 add_importlibs(portcls ntoskrnl ks drmk hal stdc++ gcc msvcrt)
 

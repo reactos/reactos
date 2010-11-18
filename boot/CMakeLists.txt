@@ -60,6 +60,7 @@ list(APPEND FREELDR_BASE_SOURCE
     freeldr/freeldr/disk/disk.c
     freeldr/freeldr/disk/partition.c
     freeldr/freeldr/disk/ramdisk.c
+    freeldr/freeldr/disk/scsiport.c
     freeldr/freeldr/fs/ext2.c
     freeldr/freeldr/fs/fat.c
     freeldr/freeldr/fs/fs.c
@@ -178,7 +179,7 @@ add_library(freeldr SHARED
     ${FREELDR_SOURCE})
 
 if(NOT MSVC)
-set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys")
+set_target_properties(freeldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr/freeldr/freeldr_i386.lnk" SUFFIX ".sys")
 set_image_base(freeldr 0x8000)
 else()
 set_target_properties(freeldr PROPERTIES LINK_FLAGS "/DRIVER /FIXED /ALIGN:0x400 /SECTION:.text,ERW /SECTION:.data,RW /MERGE:.text16=.text /MERGE:.data=.text /MERGE:.rdata=.text /MERGE:.bss=.text /SUBSYSTEM:BOOT_APPLICATION" SUFFIX ".sys")
@@ -211,14 +212,14 @@ list(APPEND SETUPLDR_SOURCE
 add_library(setupldr SHARED ${SETUPLDR_SOURCE})
 
 if(NOT MSVC)
-set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${REACTOS_SOURCE_DIR}/global.lds" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
+set_target_properties(setupldr PROPERTIES LINK_FLAGS "-Wl,--strip-all -Wl,--exclude-all-symbols -Wl,--file-alignment,0x1000 -Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/freeldr/freeldr/freeldr_i386.lnk" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 set_image_base(setupldr 0x8000)
 else()
 set_target_properties(setupldr PROPERTIES LINK_FLAGS "/SECTION:.text,ERWP,ALIGN=0x1000" SUFFIX ".sys" COMPILE_DEFINITIONS "FREELDR_REACTOS_SETUP")
 endif()
 
 set_subsystem(setupldr native)
-set_entrypoint(freeldr mainCRTStartup)
+set_entrypoint(setupldr mainCRTStartup)
 
 if(ARCH MATCHES i386)
 target_link_libraries(setupldr mini_hal)
