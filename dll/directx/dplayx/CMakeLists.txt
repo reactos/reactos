@@ -35,4 +35,5 @@ add_importlibs(dplayx
     msvcrt
     kernel32
     ntdll)
-    
+
+add_cab_target(dplayx 1)

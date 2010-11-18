@@ -14,7 +14,7 @@ add_subdirectory(dplayx)
 add_subdirectory(dsound)
 #add_subdirectory(dsound_new) #disabled in trunk
 add_subdirectory(dxdiagn)
-#add_subdirectory(ksproxy)# undefined reference to `operator new(unsigned int)'
+add_subdirectory(ksproxy)
 add_subdirectory(ksuser)
 add_subdirectory(msdmo)
 #add_subdirectory(msdvbnp) #disabled in trunk
