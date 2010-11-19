@@ -23,5 +23,9 @@ LIST(APPEND SOURCE
     videoacc.idl
     #vmrender.idl
 )
-    
-ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
+
+# HACK: dxsdk is broken
+if (NOT MSVC)
+    ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
+endif()
+
