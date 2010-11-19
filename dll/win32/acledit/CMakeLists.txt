@@ -4,7 +4,8 @@ set_unicode()
 list(APPEND SOURCE
     acledit.c
     stubs.c
-    acledit.rc)
+    acledit.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
 
 add_library(acledit SHARED ${SOURCE})
 

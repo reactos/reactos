@@ -154,7 +154,7 @@ macro(add_importlib_target _def_file)
   # empty for now, while import libs are shipped
 endmacro()
 
-MACRO(spec2def _dllname _spec_file)
+macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
@@ -162,10 +162,7 @@ MACRO(spec2def _dllname _spec_file)
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
-    add_custom_target(
-        ${_dllname}.def
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
-ENDMACRO(spec2def _dllname _spec_file)
+endmacro()
 
 # Optional 3rd parameter: dllname
 macro(set_export_spec _module _spec_file)
@@ -176,8 +173,6 @@ macro(set_export_spec _module _spec_file)
         set(_dllname ${_file}.dll)
     endif()
     spec2def(${_dllname} ${_spec_file})
-    target_link_libraries(${_module} "${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
-    add_dependencies(${_module} ${_dllname}.def)
 endmacro()
 
 #pseh lib, needed with mingw

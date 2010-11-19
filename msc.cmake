@@ -148,18 +148,15 @@ macro(add_importlibs MODULE)
     endforeach()
 endmacro()
 
-MACRO(spec2def _dllname _spec_file)
+macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        COMMAND native-spec2def -n  --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND native-spec2def -n --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE)
-    add_custom_target(
-        ${_dllname}.def
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
-ENDMACRO(spec2def _dllname _spec_file)
+endmacro()
 
 # Optional 3rd parameter: dllname
 macro(set_export_spec _module _spec_file)
@@ -170,8 +167,6 @@ macro(set_export_spec _module _spec_file)
         set(_dllname ${_file}.dll)
     endif()
     spec2def(${_dllname} ${_spec_file})
-    add_linkerflag(${_module} "/DEF:${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
-    add_dependencies(${_module} ${_dllname}.def)
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
