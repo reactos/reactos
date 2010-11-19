@@ -923,7 +923,7 @@
 ;@ stdcall RtlTraceDatabaseUnlock
 ;@ stdcall RtlTraceDatabaseValidate
 @ stdcall RtlTryEnterCriticalSection(ptr)
-@ stdcall -i386 @RtlUlongByteSwap(long)
+@ stdcall -arch=i386 @RtlUlongByteSwap(long)
 @ stdcall -ret64 @RtlUlonglongByteSwap(double)
 ;@ stdcall RtlUnhandledExceptionFilter2
 @ stdcall RtlUnhandledExceptionFilter(ptr)
@@ -955,7 +955,7 @@
 @ stdcall RtlUpperChar(long)
 @ stdcall RtlUpperString(ptr ptr)
 @ stdcall RtlUsageHeap(ptr long ptr)
-@ stdcall -i386 @RtlUshortByteSwap(long)
+@ stdcall -arch=i386 @RtlUshortByteSwap(long)
 @ stdcall RtlValidAcl(ptr)
 @ stdcall RtlValidRelativeSecurityDescriptor(ptr long long)
 @ stdcall RtlValidSecurityDescriptor(ptr)
