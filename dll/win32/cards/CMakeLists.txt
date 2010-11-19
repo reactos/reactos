@@ -4,7 +4,10 @@ set_unicode()
 # Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN
 add_definitions(-DCARDSTYLE_DEFAULT)
 
-add_library(cards SHARED cards.c cards.rc)
+add_library(cards SHARED
+    cards.c
+    cards.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/cards.def)
 
 set_export_spec(cards cards.spec)
 

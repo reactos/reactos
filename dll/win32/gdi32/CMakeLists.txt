@@ -36,7 +36,8 @@ list(APPEND SOURCE
     objects/text.c
     objects/utils.c
     objects/path.c
-    gdi32.rc)
+    gdi32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/gdi32.def)
 
 add_library(gdi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/gdi32_precomp.h.gch

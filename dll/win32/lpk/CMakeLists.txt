@@ -4,7 +4,11 @@ set_unicode()
 add_definitions(-DLANGPACK)
 include_directories(include)
 
-add_library(lpk SHARED dllmain.c stub.c lpk.rc)
+add_library(lpk SHARED
+    dllmain.c
+    stub.c
+    lpk.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
 
 set_export_spec(lpk lpk.spec)
 

@@ -9,7 +9,8 @@ list(APPEND SOURCE
     guid.c
     misc.c
     sidcache.c
-    aclui.rc)
+    aclui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/aclui.def)
 
 add_library(aclui SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/aclui_precomp.h.gch

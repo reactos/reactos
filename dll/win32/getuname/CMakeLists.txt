@@ -3,7 +3,10 @@ set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(getuname SHARED getuname.c getuname.rc)
+add_library(getuname SHARED
+    getuname.c
+    getuname.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/getuname.def)
 
 set_export_spec(getuname getuname.spec)
 

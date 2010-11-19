@@ -1,7 +1,7 @@
 
 set_unicode()
 
-add_library(beepmidi SHARED beepmidi.c)
+add_library(beepmidi SHARED beepmidi.c ${CMAKE_CURRENT_BINARY_DIR}/beepmidi.def)
 
 set_export_spec(beepmidi beepmidi.spec)
 

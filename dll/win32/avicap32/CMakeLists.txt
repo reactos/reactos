@@ -1,7 +1,10 @@
 
 set_unicode()
 
-add_library(avicap32 SHARED avicap32.c avicap32.rc)
+add_library(avicap32 SHARED
+    avicap32.c
+    avicap32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/avicap32.def)
 
 set_module_type(avicap32 win32dll)
 

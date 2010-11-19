@@ -1,7 +1,10 @@
 
 set_unicode()
 
-add_library(batt SHARED batt.c batt.rc)
+add_library(batt SHARED
+    batt.c
+    batt.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/batt.def)
 
 set_module_type(batt win32dll)
 
