@@ -12,7 +12,7 @@
   #define PTR(x) x
 #endif
 
-#if defined(_WIN64) && !defined(EXPLICIT_32BIT)
+#if (defined(_WIN64) && !defined(EXPLICIT_32BIT)) || defined(EXPLICIT_64BIT)
   #define GDI_HANDLE_BUFFER_SIZE 60
 #else
   #define GDI_HANDLE_BUFFER_SIZE 34
