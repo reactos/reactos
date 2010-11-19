@@ -44,7 +44,7 @@
 #  endif
 #endif /* _STLP_BIG_ENDIAN */
 
-#if !defined (_STLP_WINDOWS_H_INCLUDED) && !defined(_WDMDDK_) //let's hope it will work long enough...
+#if !defined (_STLP_WINDOWS_H_INCLUDED)
 #  define _STLP_WINDOWS_H_INCLUDED
 #  if defined (__BUILDING_STLPORT)
 #    include <stl/config/_native_headers.h>
@@ -94,7 +94,7 @@ extern "C" {
 #      endif
 #    endif
 
-#    if defined (_STLP_NEW_PLATFORM_SDK)
+#    if defined (_STLP_NEW_PLATFORM_SDK) && !defined(_WDMDDK_)
 #      include <windef.h>
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedIncrement(IN OUT LONG volatile *);
 _STLP_IMPORT_DECLSPEC LONG _STLP_STDCALL InterlockedDecrement(IN OUT LONG volatile *);
@@ -198,7 +198,7 @@ _STLP_IMPORT_DECLSPEC void _STLP_STDCALL OutputDebugStringA(const char* lpOutput
  * to avoid macro definition conflict. */
 #  if !defined (_WIN64)
 /* Under 32 bits platform we rely on a simple InterlockedExchange call. */
-#    if defined (__cplusplus)
+#    if defined (__cplusplus) && defined(__BUILDING_STLPORT)
 /* We do not define this function if we are not in a C++ translation unit just
  * because of the 'inline' keyword portability issue it would introduce. We will
  * have to fix it the day we need this function for a C translation unit.

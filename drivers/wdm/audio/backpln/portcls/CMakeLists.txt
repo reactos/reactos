@@ -1,4 +1,6 @@
 
+set_cpp()
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -51,11 +53,13 @@ add_library(portcls SHARED
 
 target_link_libraries(portcls
     libcntpr
+    stlport
     ${PSEH_LIB})
 
 if(MSVC)
     set_target_properties(portcls PROPERTIES COMPILE_FLAGS "/GR-")
 else()
+    target_link_libraries(portcls -lgcc)
     set_target_properties(portcls PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif(MSVC)
 
@@ -64,6 +68,6 @@ set_image_base(portcls 0x00010000)
 set_subsystem(portcls native)
 set_target_properties(portcls PROPERTIES SUFFIX ".sys")
 
-add_importlibs(portcls ntoskrnl ks drmk hal stdc++ gcc msvcrt)
+add_importlibs(portcls ntoskrnl ks drmk hal msvcrt)
 
 add_cab_target(portcls 2)

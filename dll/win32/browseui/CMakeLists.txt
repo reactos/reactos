@@ -1,9 +1,9 @@
 
 set_unicode()
+set_cpp()
 
 add_definitions(
     -D__WINESRC__
-    -DUNICODE -D_UNICODE
     -DROS_Headers)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -39,8 +39,6 @@ add_library(browseui SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
 set_module_type(browseui win32dll)
-
-target_link_libraries(browseui stlport -lsupc++ -lgcc)
 
 target_link_libraries(browseui
     atlnew
