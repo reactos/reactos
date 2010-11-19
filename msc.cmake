@@ -105,13 +105,13 @@ macro(add_importlib_target _spec_file)
     # Generate the asm stub file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
-        COMMAND native-spec2pdef -s ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        COMMAND native-spec2def -s ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
 
     # Generate a the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2pdef -n -r ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
+        COMMAND native-spec2def -n -r ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
 
     # Assemble the file
@@ -152,10 +152,13 @@ MACRO(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        COMMAND native-spec2pdef -n  --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND native-spec2def -n  --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE)
+    add_custom_target(
+        ${_dllname}.def
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
 ENDMACRO(spec2def _dllname _spec_file)
 
 # Optional 3rd parameter: dllname
@@ -168,7 +171,7 @@ macro(set_export_spec _module _spec_file)
     endif()
     spec2def(${_dllname} ${_spec_file})
     add_linkerflag(${_module} "/DEF:${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
-    add_dependencies(${_module} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
+    add_dependencies(${_module} ${_dllname}.def)
 endmacro()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
