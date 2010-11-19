@@ -105,3 +105,5 @@ add_livecd_target(hal reactos/system32)
 else()
 #TBD
 endif(ARCH MATCHES i386)
+
+add_importlib_target(hal.spec)

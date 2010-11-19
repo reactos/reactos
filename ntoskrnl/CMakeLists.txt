@@ -426,7 +426,8 @@ add_importlibs(ntoskrnl hal kdcom bootvid)
 
 add_pch(ntoskrnl ${CMAKE_CURRENT_SOURCE_DIR}/include/ntoskrnl.h ${SOURCE})
 set_source_files_properties(${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S PROPERTIES GENERATED TRUE)
-add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi)
+add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi asm)
 
 add_minicd_target(ntoskrnl reactos ntoskrnl.exe)
 add_livecd_target(ntoskrnl reactos/system32)
+add_importlib_target(ntoskrnl.spec)

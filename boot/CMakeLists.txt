@@ -200,7 +200,7 @@ target_link_libraries(freeldr
     rtl
     libcntpr)
 add_pch(freeldr ${CMAKE_CURRENT_SOURCE_DIR}/freeldr/freeldr/include/freeldr.h ${FREELDR_SOURCE})
-add_dependencies(freeldr ks386)
+add_dependencies(freeldr asm)
 
 list(APPEND SETUPLDR_SOURCE
     ${FREELDR_STARTUP_SOURCE}
@@ -232,7 +232,7 @@ target_link_libraries(setupldr
     rtl
     libcntpr)
 
-add_dependencies(setupldr ks386)
+add_dependencies(setupldr asm)
 
 # Bootcd files
 add_minicd_target(setupldr loader setupldr.sys)

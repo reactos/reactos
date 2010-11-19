@@ -700,7 +700,7 @@
 @ fastcall KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
-@ fastcall -arch=i386 KiEoiHelper(ptr) /* FIXME: Evaluate decision */
+@ fastcall -arch=i386 KiEoiHelper(ptr)
 @ fastcall KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData
 @ stdcall KiCheckForKernelApcDelivery()

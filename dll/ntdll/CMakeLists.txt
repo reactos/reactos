@@ -51,7 +51,7 @@ target_link_libraries(ntdll
                       ${PSEH_LIB})
                       
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
-add_dependencies(ntdll ntstatus)
+add_dependencies(ntdll ntstatus asm)
 
 add_minicd_target(ntdll reactos/system32 ntdll.dll)
 add_cab_target(ntdll 1)
