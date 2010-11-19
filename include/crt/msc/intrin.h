@@ -283,7 +283,12 @@ void __writedr(unsigned reg, unsigned __int64 value);
 unsigned long __readcr0(void);
 unsigned long __readcr2(void);
 unsigned long __readcr3(void);
-unsigned long __readcr4(void);
+//unsigned long __readcr4(void);
+//#pragma intrinsic(__readcr4)
+// HACK: MSVC is broken
+unsigned long  ___readcr4(void);
+#define __readcr4 ___readcr4
+
 unsigned int __readdr(unsigned int reg);
 void __writedr(unsigned reg, unsigned int value);
 #endif
