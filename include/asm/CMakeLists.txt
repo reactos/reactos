@@ -5,25 +5,21 @@ set_entrypoint(genincdata DummyEntry)
 add_dependencies(genincdata bugcodes)
 
 if(MSVC)
-set(OPT_MS "-ms")
+    set(OPT_MS "-ms")
 else()
-set(OPT_MS "")
+    set(OPT_MS "")
 endif()
 
 if(ARCH MATCHES i386)
-set(_filename ks386)
-endif()
-if(ARCH MATCHES amd64)
-set(_filename ksamd64)
+    set(_filename ks386)
+elseif(ARCH MATCHES amd64)
+    set(_filename ksamd64)
 endif()
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc
     COMMAND native-geninc ${CMAKE_CURRENT_BINARY_DIR}/genincdata.dll  ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc ${OPT_MS}
-    DEPENDS genincdata
-)
+    DEPENDS genincdata)
 
-add_custom_target(
-    asm
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc
-)
+add_custom_target(asm
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc)
