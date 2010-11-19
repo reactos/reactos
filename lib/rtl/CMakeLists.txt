@@ -100,4 +100,5 @@ endif(ARCH MATCHES i386)
 
 add_library(rtl ${CMAKE_CURRENT_BINARY_DIR}/rtl_rtl.h.gch ${SOURCE})
 add_pch(rtl ${CMAKE_CURRENT_SOURCE_DIR}/rtl.h ${SOURCE})
-add_dependencies(rtl psdk ks386)
+add_dependencies(rtl psdk asm)
+
