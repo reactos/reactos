@@ -48,8 +48,8 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
                            IN PIRP Irp)
 {
     PNPFS_CONTEXT Context;
-    PNPFS_DEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION IoStack;
+    PNPFS_VCB Vcb;
     PNPFS_CCB Ccb;
     PLIST_ENTRY ListEntry;
     PNPFS_THREAD_CONTEXT ThreadContext;
@@ -60,17 +60,17 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
     IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
-    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Ccb = IoStack->FileObject->FsContext2;
 
-    KeLockMutex(&DeviceExt->PipeListLock);
+    KeLockMutex(&Vcb->PipeListLock);
     ExAcquireFastMutex(&Ccb->DataListLock);
     switch(IoStack->MajorFunction)
     {
     case IRP_MJ_READ:
-        ListEntry = DeviceExt->ThreadListHead.Flink;
-        while (ListEntry != &DeviceExt->ThreadListHead)
+        ListEntry = Vcb->ThreadListHead.Flink;
+        while (ListEntry != &Vcb->ThreadListHead)
         {
             ThreadContext = CONTAINING_RECORD(ListEntry, NPFS_THREAD_CONTEXT, ListEntry);
             /* Real events start at index 1 */
@@ -92,7 +92,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
                     KeSetEvent(&ThreadContext->Event, IO_NO_INCREMENT, FALSE);
 
                     ExReleaseFastMutex(&Ccb->DataListLock);
-                    KeUnlockMutex(&DeviceExt->PipeListLock);
+                    KeUnlockMutex(&Vcb->PipeListLock);
 
                     return;
                 }
@@ -103,7 +103,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
         RemoveEntryList(&Context->ListEntry);
 
         ExReleaseFastMutex(&Ccb->DataListLock);
-        KeUnlockMutex(&DeviceExt->PipeListLock);
+        KeUnlockMutex(&Vcb->PipeListLock);
 
         Irp->IoStatus.Status = STATUS_CANCELLED;
         Irp->IoStatus.Information = 0;
@@ -126,12 +126,12 @@ NpfsWaiterThread(PVOID InitContext)
     PIO_STACK_LOCATION IoStack = NULL;
     KIRQL OldIrql;
 
-    KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
+    KeLockMutex(&ThreadContext->Vcb->PipeListLock);
 
     while (1)
     {
         CurrentCount = ThreadContext->Count;
-        KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
+        KeUnlockMutex(&ThreadContext->Vcb->PipeListLock);
         IoAcquireCancelSpinLock(&OldIrql);
         if (Irp && IoSetCancelRoutine(Irp, NULL) != NULL)
         {
@@ -162,14 +162,14 @@ NpfsWaiterThread(PVOID InitContext)
         {
             ASSERT(FALSE);
         }
-        KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
+        KeLockMutex(&ThreadContext->Vcb->PipeListLock);
         Count = Status - STATUS_WAIT_0;
         ASSERT (Count < CurrentCount);
         if (Count > 0)
         {
             Irp = ThreadContext->WaitIrpArray[Count];
             ThreadContext->Count--;
-            ThreadContext->DeviceExt->EmptyWaiterCount++;
+            ThreadContext->Vcb->EmptyWaiterCount++;
             ThreadContext->WaitObjectArray[Count] = ThreadContext->WaitObjectArray[ThreadContext->Count];
             ThreadContext->WaitIrpArray[Count] = ThreadContext->WaitIrpArray[ThreadContext->Count];
         }
@@ -184,18 +184,18 @@ NpfsWaiterThread(PVOID InitContext)
                 if (ThreadContext->WaitIrpArray[i] == NULL)
                 {
                    ThreadContext->Count--;
-                   ThreadContext->DeviceExt->EmptyWaiterCount++;
+                   ThreadContext->Vcb->EmptyWaiterCount++;
                    ThreadContext->WaitObjectArray[i] = ThreadContext->WaitObjectArray[ThreadContext->Count];
                    ThreadContext->WaitIrpArray[i] = ThreadContext->WaitIrpArray[ThreadContext->Count];
                 }
             }
         }
-        if (ThreadContext->Count == 1 && ThreadContext->DeviceExt->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
+        if (ThreadContext->Count == 1 && ThreadContext->Vcb->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
         {
             /* it exist an other thread with empty wait slots, we can remove our thread from the list */
             RemoveEntryList(&ThreadContext->ListEntry);
-            ThreadContext->DeviceExt->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
-            KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
+            ThreadContext->Vcb->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
+            KeUnlockMutex(&ThreadContext->Vcb->PipeListLock);
             break;
         }
     }
@@ -208,19 +208,21 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
 {
     PLIST_ENTRY ListEntry;
     PNPFS_THREAD_CONTEXT ThreadContext = NULL;
-    NTSTATUS Status;
+    PNPFS_CONTEXT Context;
     HANDLE hThread;
+    PNPFS_VCB Vcb;
     KIRQL oldIrql;
+    NTSTATUS Status;
 
-    PNPFS_CONTEXT Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
-    PNPFS_DEVICE_EXTENSION DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
+    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
 
     DPRINT("NpfsAddWaitingReadWriteRequest(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
-    KeLockMutex(&DeviceExt->PipeListLock);
+    KeLockMutex(&Vcb->PipeListLock);
 
-    ListEntry = DeviceExt->ThreadListHead.Flink;
-    while (ListEntry != &DeviceExt->ThreadListHead)
+    ListEntry = Vcb->ThreadListHead.Flink;
+    while (ListEntry != &Vcb->ThreadListHead)
     {
         ThreadContext = CONTAINING_RECORD(ListEntry, NPFS_THREAD_CONTEXT, ListEntry);
         if (ThreadContext->Count < MAXIMUM_WAIT_OBJECTS)
@@ -229,19 +231,20 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
         }
         ListEntry = ListEntry->Flink;
     }
-    if (ListEntry == &DeviceExt->ThreadListHead)
+
+    if (ListEntry == &Vcb->ThreadListHead)
     {
         ThreadContext = ExAllocatePool(NonPagedPool, sizeof(NPFS_THREAD_CONTEXT));
         if (ThreadContext == NULL)
         {
-            KeUnlockMutex(&DeviceExt->PipeListLock);
+            KeUnlockMutex(&Vcb->PipeListLock);
             return STATUS_NO_MEMORY;
         }
-        ThreadContext->DeviceExt = DeviceExt;
+
+        ThreadContext->Vcb = Vcb;
         KeInitializeEvent(&ThreadContext->Event, SynchronizationEvent, FALSE);
         ThreadContext->Count = 1;
         ThreadContext->WaitObjectArray[0] = &ThreadContext->Event;
-
 
         DPRINT("Creating a new system thread for waiting read/write requests\n");
 
@@ -255,11 +258,12 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
         if (!NT_SUCCESS(Status))
         {
             ExFreePool(ThreadContext);
-            KeUnlockMutex(&DeviceExt->PipeListLock);
+            KeUnlockMutex(&Vcb->PipeListLock);
             return Status;
         }
-        InsertHeadList(&DeviceExt->ThreadListHead, &ThreadContext->ListEntry);
-        DeviceExt->EmptyWaiterCount += MAXIMUM_WAIT_OBJECTS - 1;
+
+        InsertHeadList(&Vcb->ThreadListHead, &ThreadContext->ListEntry);
+        Vcb->EmptyWaiterCount += MAXIMUM_WAIT_OBJECTS - 1;
     }
     IoMarkIrpPending(Irp);
 
@@ -276,11 +280,11 @@ NpfsAddWaitingReadWriteRequest(IN PDEVICE_OBJECT DeviceObject,
         ThreadContext->WaitObjectArray[ThreadContext->Count] = Context->WaitEvent;
         ThreadContext->WaitIrpArray[ThreadContext->Count] = Irp;
         ThreadContext->Count++;
-        DeviceExt->EmptyWaiterCount--;
+        Vcb->EmptyWaiterCount--;
         KeSetEvent(&ThreadContext->Event, IO_NO_INCREMENT, FALSE);
         Status = STATUS_SUCCESS;
     }
-    KeUnlockMutex(&DeviceExt->PipeListLock);
+    KeUnlockMutex(&Vcb->PipeListLock);
     return Status;
 }
 
