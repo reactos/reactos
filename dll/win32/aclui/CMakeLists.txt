@@ -17,7 +17,8 @@ add_library(aclui SHARED
 
 set_module_type(aclui win32dll)
 
-set_pdef_file(aclui aclui.pdef)
+set_export_spec(aclui aclui.spec aclui.dll)
+
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/aclui.def)
 
 add_importlibs(aclui user32 gdi32 comctl32 ole32 oleaut32 advapi32 uxtheme kernel32 ntdll)

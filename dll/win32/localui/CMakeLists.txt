@@ -4,7 +4,8 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(localui SHARED localui.c localui.rc)
 
-set_pdef_file(localui localui.pdef)
+set_export_spec(localui localui.spec)
+
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/localui.def)
 
 set_module_type(localui win32dll)

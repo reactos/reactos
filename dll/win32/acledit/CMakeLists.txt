@@ -1,18 +1,16 @@
 
 set_unicode()
 
-spec2def(acledit.dll acledit.spec)
-
 list(APPEND SOURCE
     acledit.c
     stubs.c
-    acledit.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/acledit.def)
-
+    acledit.rc)
 
 add_library(acledit SHARED ${SOURCE})
 
 set_module_type(acledit win32dll)
+
+set_export_spec(acledit acledit.spec)
 
 add_importlibs(acledit ntdll)
 

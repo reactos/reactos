@@ -161,27 +161,20 @@ MACRO(spec2def _dllname _spec_file)
         COMMAND native-winebuild -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def --def -E ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} --filename ${_dllname}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
+        PROPERTIES GENERATED TRUE)
 ENDMACRO(spec2def _dllname _spec_file)
 
-macro(pdef2def _pdef_file)
-    get_filename_component(_file ${_pdef_file} NAME_WE)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        COMMAND ${MINGW_PREFIX}cpp -o ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -P -E ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_pdef_file})
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
-    add_custom_target(
-        ${_file}_def
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
-endmacro(pdef2def _pdef_file)
-
-macro(set_pdef_file _module _pdef_file)
-    pdef2def(${_pdef_file})
-    get_filename_component(_file ${_pdef_file} NAME_WE)
+# Optional 3rd parameter: dllname
+macro(set_export_spec _module _spec_file)
+    get_filename_component(_file ${_spec_file} NAME_WE)
+    if (${ARGC} GREATER 2)
+        set(_dllname ${ARGV2})
+    else()
+        set(_dllname ${_file}.dll)
+    endif()
+    spec2def(${_dllname} ${_spec_file})
     target_link_libraries(${_module} "${CMAKE_CURRENT_BINARY_DIR}/${_file}.def")
-    add_dependencies(${_module} ${_file}_def)
+    add_dependencies(${_module} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def)
 endmacro()
 
 #pseh lib, needed with mingw

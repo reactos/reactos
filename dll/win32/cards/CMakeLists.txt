@@ -6,7 +6,8 @@ add_definitions(-DCARDSTYLE_DEFAULT)
 
 add_library(cards SHARED cards.c cards.rc)
 
-set_pdef_file(cards cards.pdef)
+set_export_spec(cards cards.spec)
+
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/cards.def)
 
 set_module_type(cards win32dll)

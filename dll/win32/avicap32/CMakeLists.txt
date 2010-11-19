@@ -5,7 +5,8 @@ add_library(avicap32 SHARED avicap32.c avicap32.rc)
 
 set_module_type(avicap32 win32dll)
 
-set_pdef_file(avicap32 avicap32.pdef)
+set_export_spec(avicap32 avicap32.spec)
+
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/avicap32.def)
 
 target_link_libraries(avicap32 wine)

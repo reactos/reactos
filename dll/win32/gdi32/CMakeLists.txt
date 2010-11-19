@@ -49,7 +49,7 @@ target_link_libraries(gdi32
     dxguid
     ${PSEH_LIB})
 
-set_pdef_file(gdi32 gdi32.pdef)
+set_export_spec(gdi32 gdi32.spec)
 
 add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
 add_pch(gdi32 ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})

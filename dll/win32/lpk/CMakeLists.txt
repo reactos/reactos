@@ -6,7 +6,8 @@ include_directories(include)
 
 add_library(lpk SHARED dllmain.c stub.c lpk.rc)
 
-set_pdef_file(lpk lpk.pdef)
+set_export_spec(lpk lpk.spec)
+
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
 
 set_module_type(lpk win32dll)

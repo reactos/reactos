@@ -5,7 +5,8 @@ add_library(batt SHARED batt.c batt.rc)
 
 set_module_type(batt win32dll)
 
-set_pdef_file(batt batt.pdef)
+set_export_spec(batt batt.spec)
+
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/batt.def)
 
 add_importlibs(batt kernel32)
