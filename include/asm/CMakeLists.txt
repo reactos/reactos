@@ -24,6 +24,6 @@ add_custom_command(
 )
 
 add_custom_target(
-    ${_filename}
+    asm
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_filename}.inc
 )
