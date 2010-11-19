@@ -127,8 +127,6 @@ int access_dirW(const wchar_t *_path);
 
 int _isnanl(long double x);
 int _isinfl(long double x);
-int _isnan(double x);
-int _isinf(double x);
 
 /* Flags for the iobuf structure (for reference) */
 #if 0
