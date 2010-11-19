@@ -6,13 +6,11 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-.globl _DIB_32BPP_HLine
-.intel_syntax noprefix
+#include <asm.inc>
 
-.def   _DIB_32BPP_HLine;
-.scl	2;
-.type	32;
-.endef
+.code
+
+PUBLIC _DIB_32BPP_HLine
 
 _DIB_32BPP_HLine:
                   sub     esp, 12             // rember the base is not hex it is dec
@@ -55,3 +53,4 @@ _save_rest:
                   add     esp, 12
                   ret
 
+END
