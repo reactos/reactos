@@ -334,7 +334,6 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     PKPROCESS OldProcess, NewProcess;
     PKGDTENTRY GdtEntry;
     PKTHREAD NewThread;
-    PKUINIT_FRAME InitFrame;
 
     /* We are on the new thread stack now */
     NewThread = Pcr->PrcbData.CurrentThread;
@@ -366,12 +365,12 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)NewThread->Teb >> 24);
 
     /* Set new TSS fields */
-    InitFrame = (PKUINIT_FRAME)NewThread->InitialStack - 1;
-    Pcr->TSS->Esp0 = (ULONG_PTR)&InitFrame->TrapFrame;
-    if (!(InitFrame->TrapFrame.EFlags & EFLAGS_V86_MASK))
+    Pcr->TSS->Esp0 = (ULONG_PTR)NewThread->InitialStack;
+    if (!((KeGetTrapFrame(NewThread))->EFlags & EFLAGS_V86_MASK))
     {
         Pcr->TSS->Esp0 -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) - FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
     }
+    Pcr->TSS->Esp0 -= NPX_FRAME_LENGTH;
     Pcr->TSS->IoMapBase = NewProcess->IopmOffset;
 
     /* Increase thread context switches */
@@ -443,7 +442,7 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     Cr0 = __readcr0();
     NewCr0 = NewThread->NpxState |
              (Cr0 & ~(CR0_MP | CR0_EM | CR0_TS)) |
-             ((PKUINIT_FRAME)NewThread->InitialStack - 1)->FxSaveArea.Cr0NpxState;
+             KiGetThreadNpxArea(NewThread)->Cr0NpxState;
     if (Cr0 != NewCr0)  __writecr0(NewCr0);
 
     /* Now enable interrupts and do the switch */
