@@ -65,7 +65,7 @@ KiThreadStartup(VOID)
     PKTRAP_FRAME TrapFrame;
     PKSTART_FRAME StartFrame;
     PKUINIT_FRAME InitFrame;
-    
+
     /* Get the start and trap frames */
     InitFrame = KeGetCurrentThread()->KernelStack;
     StartFrame = &InitFrame->StartFrame;
@@ -73,13 +73,13 @@ KiThreadStartup(VOID)
 
     /* Lower to APC level */
     KfLowerIrql(APC_LEVEL);
-    
+
     /* Call the system routine */
     StartFrame->SystemRoutine(StartFrame->StartRoutine, StartFrame->StartContext);
-    
+
     /* If we returned, we better be a user thread */
     if (!StartFrame->UserThread) DbgBreakPoint();
-    
+
     /* Exit to user-mode */
     KiServiceExit2(TrapFrame);
 }
@@ -275,7 +275,7 @@ KiIdleLoop(VOID)
     YieldProcessor();
     YieldProcessor();
     _disable();
-    
+
     /* Now loop forever */
     while (TRUE)
     {
@@ -286,31 +286,31 @@ KiIdleLoop(VOID)
         {
             /* Quiesce the DPC software interrupt */
             HalClearSoftwareInterrupt(DISPATCH_LEVEL);
-        
+
             /* Handle it */
             KiRetireDpcList(Prcb);
         }
-    
+
         /* Check if a new thread is scheduled for execution */
         if (Prcb->NextThread)
         {
             /* Enable interupts */
             _enable();
-        
+
             /* Capture current thread data */
             OldThread = Prcb->CurrentThread;
             NewThread = Prcb->NextThread;
-        
+
             /* Set new thread data */
             Prcb->NextThread = NULL;
             Prcb->CurrentThread = NewThread;
-        
+
             /* The thread is now running */
             NewThread->State = Running;
-        
+
             /* Switch away from the idle thread */
             KiSwapContext(APC_LEVEL, OldThread);
-            
+
             /* We are back in the idle thread -- disable interrupts again */
             _enable();
             YieldProcessor();
@@ -335,7 +335,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     PKGDTENTRY GdtEntry;
     PKTHREAD NewThread;
     PKUINIT_FRAME InitFrame;
-    
+
     /* We are on the new thread stack now */
     NewThread = Pcr->PrcbData.CurrentThread;
 
@@ -354,17 +354,17 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         /* Switch address space and flush TLB */
         __writecr3(NewProcess->DirectoryTableBase[0]);
     }
-    
+
     /* Clear GS */
     Ke386SetGs(0);
-    
+
     /* Set the TEB */
     Pcr->NtTib.Self = (PVOID)NewThread->Teb;
     GdtEntry = &Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)];
     GdtEntry->BaseLow = (USHORT)((ULONG_PTR)NewThread->Teb & 0xFFFF);
     GdtEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)NewThread->Teb >> 16);
     GdtEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)NewThread->Teb >> 24);
-    
+
     /* Set new TSS fields */
     InitFrame = (PKUINIT_FRAME)NewThread->InitialStack - 1;
     Pcr->TSS->Esp0 = (ULONG_PTR)&InitFrame->TrapFrame;
@@ -373,7 +373,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
         Pcr->TSS->Esp0 -= (FIELD_OFFSET(KTRAP_FRAME, V86Gs) - FIELD_OFFSET(KTRAP_FRAME, HardwareSegSs));
     }
     Pcr->TSS->IoMapBase = NewProcess->IopmOffset;
-    
+
     /* Increase thread context switches */
     NewThread->ContextSwitches++;
 
@@ -390,7 +390,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
                      (ULONG_PTR)OldThread->InitialStack,
                      0);
     }
-    
+
     /* Kernel APCs may be pending */
     if (NewThread->ApcState.KernelApcPending)
     {
@@ -402,7 +402,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
             return TRUE;
         }
     }
-    
+
     /* Return */
     return FALSE;
 }
@@ -432,13 +432,13 @@ KiSwapContextEntry(IN PKSWITCHFRAME SwitchFrame,
     /* Get thread pointers */
     OldThread = (PKTHREAD)(OldThreadAndApcFlag & ~3);
     NewThread = Pcr->PrcbData.CurrentThread;
-    
+
     /* Get the old thread and set its kernel stack */
     OldThread->KernelStack = SwitchFrame;
 
     /* ISRs can change FPU state, so disable interrupts while checking */
     _disable();
-    
+
     /* Get current and new CR0 and check if they've changed */
     Cr0 = __readcr0();
     NewCr0 = NewThread->NpxState |
@@ -459,10 +459,10 @@ KiDispatchInterrupt(VOID)
     PKPRCB Prcb = &Pcr->PrcbData;
     PVOID OldHandler;
     PKTHREAD NewThread, OldThread;
-    
+
     /* Disable interrupts */
     _disable();
-    
+
     /* Check for pending timers, pending DPCs, or pending ready threads */
     if ((Prcb->DpcData[0].DpcQueueDepth) ||
         (Prcb->TimerRequest) ||
@@ -471,17 +471,17 @@ KiDispatchInterrupt(VOID)
         /* Switch to safe execution context */
         OldHandler = Pcr->NtTib.ExceptionList;
         Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
-        
+
         /* Retire DPCs while under the DPC stack */
         KiRetireDpcListInDpcStack(Prcb, Prcb->DpcStack);
-        
+
         /* Restore context */
         Pcr->NtTib.ExceptionList = OldHandler;
     }
-    
+
     /* Re-enable interrupts */
     _enable();
-    
+
     /* Check for quantum end */
     if (Prcb->QuantumEnd)
     {
@@ -494,18 +494,18 @@ KiDispatchInterrupt(VOID)
         /* Capture current thread data */
         OldThread = Prcb->CurrentThread;
         NewThread = Prcb->NextThread;
-    
+
         /* Set new thread data */
         Prcb->NextThread = NULL;
         Prcb->CurrentThread = NewThread;
-    
+
         /* The thread is now running */
         NewThread->State = Running;
         OldThread->WaitReason = WrDispatchInt;
-        
+
         /* Make the old thread ready */
         KxQueueReadyThread(OldThread, Prcb);
-        
+
         /* Swap to the new thread */
         KiSwapContext(APC_LEVEL, OldThread);
     }
