@@ -190,4 +190,23 @@ RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
   return Ret;
 }
 
+PVOID
+NTAPI
+RtlAddVectoredContinueHandler(
+    IN ULONG FirstHandler,
+    IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
+ULONG
+NTAPI
+RtlRemoveVectoredContinueHandler(
+    IN PVOID VectoredHandlerHandle)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */
