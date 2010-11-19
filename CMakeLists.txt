@@ -41,7 +41,7 @@ add_subdirectory(tools)
 add_subdirectory(lib)
 
 if(NOT MSVC)
-export(TARGETS widl winebuild nci buildno gendib cabman cdmake mkhive spec2pdef geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 else()
 export(TARGETS winebuild nci buildno gendib cabman cdmake mkhive spec2def geninc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 endif()
