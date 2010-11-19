@@ -100,12 +100,6 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IWebBrowser2 *iface, REFIID riid
     }else if(IsEqualGUID(&IID_IOleCommandTarget, riid)) {
         TRACE("(%p)->(IID_IOleCommandTarget %p)\n", This, ppv);
         *ppv = OLECMD(This);
-    }else if(IsEqualGUID(&IID_IHlinkFrame, riid)) {
-        TRACE("(%p)->(IID_IHlinkFrame %p)\n", This, ppv);
-        *ppv = HLINKFRAME(This);
-    }else if(IsEqualGUID(&IID_ITargetFrame2, riid)) {
-        TRACE("(%p)->(IID_ITargetFrame2 %p)\n", This, ppv);
-        *ppv = TARGETFRAME2(This);
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         *ppv = SERVPROV(This);
         TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
@@ -133,6 +127,17 @@ static HRESULT WINAPI WebBrowser_QueryInterface(IWebBrowser2 *iface, REFIID riid
     }else if(IsEqualGUID(&IID_IViewObjectEx, riid)) {
         TRACE("(%p)->(IID_IViewObjectEx %p) returning NULL\n", This, ppv);
         return E_NOINTERFACE;
+    }else if(IsEqualGUID(&IID_IOleLink, riid)) {
+        TRACE("(%p)->(IID_IOleLink %p) returning NULL\n", This, ppv);
+        return E_NOINTERFACE;
+    }else if(IsEqualGUID(&IID_IMarshal, riid)) {
+        TRACE("(%p)->(IID_IMarshal %p) returning NULL\n", This, ppv);
+        return E_NOINTERFACE;
+    }else if(IsEqualGUID(&IID_IStdMarshalInfo, riid)) {
+        TRACE("(%p)->(IID_IStdMarshalInfo %p) returning NULL\n", This, ppv);
+        return E_NOINTERFACE;
+    }else if(HlinkFrame_QI(&This->hlink_frame, riid, ppv)) {
+        return S_OK;
     }
 
     if(*ppv) {
@@ -1130,6 +1135,62 @@ static const IServiceProviderVtbl ServiceProviderVtbl =
     WebBrowser_IServiceProvider_QueryService
 };
 
+#define DOCHOST_THIS(iface) DEFINE_THIS2(WebBrowser,doc_host,iface)
+
+static void WINAPI DocHostContainer_GetDocObjRect(DocHost* This, RECT* rc)
+{
+    GetClientRect(This->frame_hwnd, rc);
+}
+
+static HRESULT WINAPI DocHostContainer_SetStatusText(DocHost* This, LPCWSTR text)
+{
+    return E_NOTIMPL;
+}
+
+static void WINAPI DocHostContainer_SetURL(DocHost* This, LPCWSTR url)
+{
+
+}
+
+static HRESULT DocHostContainer_exec(DocHost *doc_host, const GUID *cmd_group, DWORD cmdid, DWORD execopt, VARIANT *in,
+        VARIANT *out)
+{
+    WebBrowser *This = DOCHOST_THIS(doc_host);
+    IOleCommandTarget *cmdtrg = NULL;
+    HRESULT hres;
+
+    if(This->client) {
+        hres = IOleClientSite_QueryInterface(This->client, &IID_IOleCommandTarget, (void**)&cmdtrg);
+        if(FAILED(hres))
+            cmdtrg = NULL;
+    }
+
+    if(!cmdtrg && This->container) {
+        hres = IOleContainer_QueryInterface(This->container, &IID_IOleCommandTarget, (void**)&cmdtrg);
+        if(FAILED(hres))
+            cmdtrg = NULL;
+    }
+
+    if(!cmdtrg)
+        return S_OK;
+
+    hres = IOleCommandTarget_Exec(cmdtrg, cmd_group, cmdid, execopt, in, out);
+    IOleCommandTarget_Release(cmdtrg);
+    if(FAILED(hres))
+        FIXME("Exec failed\n");
+
+    return hres;
+}
+
+#undef DOCHOST_THIS
+
+static const IDocHostContainerVtbl DocHostContainerVtbl = {
+    DocHostContainer_GetDocObjRect,
+    DocHostContainer_SetStatusText,
+    DocHostContainer_SetURL,
+    DocHostContainer_exec
+};
+
 static HRESULT WebBrowser_Create(INT version, IUnknown *pOuter, REFIID riid, void **ppv)
 {
     WebBrowser *ret;
@@ -1144,7 +1205,7 @@ static HRESULT WebBrowser_Create(INT version, IUnknown *pOuter, REFIID riid, voi
     ret->ref = 1;
     ret->version = version;
 
-    DocHost_Init(&ret->doc_host, (IDispatch*)WEBBROWSER2(ret));
+    DocHost_Init(&ret->doc_host, (IDispatch*)WEBBROWSER2(ret), &DocHostContainerVtbl);
 
     ret->visible = VARIANT_TRUE;
     ret->menu_bar = VARIANT_TRUE;
@@ -1157,7 +1218,8 @@ static HRESULT WebBrowser_Create(INT version, IUnknown *pOuter, REFIID riid, voi
     WebBrowser_DataObject_Init(ret);
     WebBrowser_Persist_Init(ret);
     WebBrowser_ClassInfo_Init(ret);
-    WebBrowser_HlinkFrame_Init(ret);
+
+    HlinkFrame_Init(&ret->hlink_frame, (IUnknown*)WEBBROWSER2(ret), &ret->doc_host);
 
     SHDOCVW_LockModule();
 

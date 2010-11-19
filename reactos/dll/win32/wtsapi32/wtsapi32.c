@@ -142,6 +142,16 @@ void WINAPI WTSFreeMemory(PVOID pMemory)
 }
 
 /************************************************************
+ *                WTSLogoffSession (WTSAPI32.@)
+ */
+BOOL WINAPI WTSLogoffSession(HANDLE hserver, DWORD session_id, BOOL bwait)
+{
+    FIXME("(%p, 0x%x, %d): stub\n", hserver, session_id, bwait);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/************************************************************
  *                WTSOpenServerA (WTSAPI32.@)
  */
 HANDLE WINAPI WTSOpenServerA(LPSTR pServerName)

@@ -49,9 +49,38 @@ IDR_BROWSE_MAIN_MENU MENU
         MENUITEM "Print previe&w...",           ID_BROWSE_PRINT_PREVIEW
         MENUITEM SEPARATOR
         MENUITEM "&Properties...",              ID_BROWSE_PROPERTIES
+        MENUITEM "&Close",                      ID_BROWSE_QUIT
+    }
+    POPUP "&View"
+    {
+        POPUP "&Toolbars"
+        {
+            MENUITEM "&Standard bar"            ID_BROWSE_BAR_STD
+            MENUITEM "&Address bar"             ID_BROWSE_BAR_ADDR
+        }
+    }
+    POPUP "&Favorites"
+    {
+        MENUITEM "&Add to Favorites..."         ID_BROWSE_ADDFAV
+        MENUITEM SEPARATOR
     }
     POPUP "&Help"
     {
         MENUITEM "&About Internet Explorer...", ID_BROWSE_ABOUT
     }
+}
+
+STRINGTABLE
+{
+    IDS_TB_BACK             "Back"
+    IDS_TB_FORWARD          "Forward"
+    IDS_TB_STOP             "Stop"
+    IDS_TB_REFRESH          "Refresh"
+    IDS_TB_HOME             "Home"
+    IDS_TB_PRINT            "Print"
+}
+
+STRINGTABLE
+{
+    IDS_ADDRESS             "Address"
 }

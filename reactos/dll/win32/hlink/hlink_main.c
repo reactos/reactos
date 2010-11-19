@@ -428,6 +428,71 @@ HRESULT WINAPI HlinkResolveMonikerForData(LPMONIKER pimkReference, DWORD reserve
     return IMoniker_BindToStorage(pimkReference, pibc, NULL, &IID_IUnknown, &obj);
 }
 
+/***********************************************************************
+ *             HlinkClone (HLINK.@)
+ */
+HRESULT WINAPI HlinkClone(IHlink *hlink, REFIID riid, IHlinkSite *hls,
+        DWORD site_data, void **obj)
+{
+    IMoniker *mk, *clone_mk = NULL;
+    WCHAR *loc, *name = NULL;
+    HRESULT hres;
+
+    if(!hlink || !riid || !obj)
+        return E_INVALIDARG;
+
+    *obj = NULL;
+
+    hres = IHlink_GetMonikerReference(hlink, HLINKGETREF_DEFAULT, &mk, &loc);
+    if(FAILED(hres))
+        return hres;
+
+    if(mk) {
+        IStream *strm;
+        LARGE_INTEGER lgint;
+
+        hres = CreateStreamOnHGlobal(NULL, TRUE, &strm);
+        if(FAILED(hres)) {
+            IMoniker_Release(mk);
+            goto cleanup;
+        }
+
+        hres = OleSaveToStream((IPersistStream*)mk, strm);
+        if(FAILED(hres)) {
+            IStream_Release(strm);
+            IMoniker_Release(mk);
+            goto cleanup;
+        }
+        IMoniker_Release(mk);
+
+        lgint.QuadPart = 0;
+        hres = IStream_Seek(strm, lgint, STREAM_SEEK_SET, NULL);
+        if(FAILED(hres)) {
+            IStream_Release(strm);
+            goto cleanup;
+        }
+
+        hres = OleLoadFromStream(strm, &IID_IMoniker, (void**)&clone_mk);
+        IStream_Release(strm);
+        if(FAILED(hres))
+            goto cleanup;
+    }
+
+    hres = IHlink_GetFriendlyName(hlink, HLFNAMEF_DEFAULT, &name);
+    if(FAILED(hres))
+        goto cleanup;
+
+    hres = HlinkCreateFromMoniker(clone_mk, loc, name, hls, site_data, NULL,
+            &IID_IHlink, obj);
+
+cleanup:
+    if(clone_mk)
+        IMoniker_Release(clone_mk);
+    CoTaskMemFree(loc);
+    CoTaskMemFree(name);
+    return hres;
+}
+
 static HRESULT WINAPI HLinkCF_fnQueryInterface ( LPCLASSFACTORY iface,
         REFIID riid, LPVOID *ppvObj)
 {
