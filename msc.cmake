@@ -117,26 +117,27 @@ macro(add_importlib_target _spec_file)
     # Assemble the file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj
-        COMMAND ${CMAKE_ASM_COMPILER} /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        COMMAND ${CMAKE_ASM_COMPILER} /NOLOGO /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
         DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm"
     )
 
     # Add neccessary importlibs for redirections
+    set(_libraries "")
     foreach(_lib ${ARGN})
         list(APPEND _libraries "${CMAKE_BINARY_DIR}/importlibs/${_lib}.lib")
     endforeach()
 
     # Build the importlib
     add_custom_command(
-        OUTPUT {CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
-        COMMAND LINK /LIB /MACHINE:X86 /DEF:${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${_libraries}
-        DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj" "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def" ${_libraries}
+        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+        COMMAND LINK /LIB /NOLOGO /MACHINE:X86 /DEF:${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${_libraries}
+        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def ${_libraries}
     )
 
     # Add the importlib target
     add_custom_target(
         lib${_name}
-        DEPENDS {CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
+        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
     )
 endmacro()
 
