@@ -119,6 +119,6 @@ target_link_libraries(kernel32 ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
-add_dependencies(kernel32 errcodes)
+add_dependencies(kernel32 errcodes asm)
 add_cab_target(kernel32 1)
 add_importlib_target(kernel32.spec)
