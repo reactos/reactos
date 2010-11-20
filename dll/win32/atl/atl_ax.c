@@ -1053,6 +1053,9 @@ HRESULT WINAPI AtlAxAttachControl(IUnknown* pControl, HWND hWnd, IUnknown** ppUn
         *ppUnkContainer = (IUnknown*) pUnkContainer;
     }
 
+    if(!hWnd)
+        return S_FALSE;
+
     return hr;
 }
 

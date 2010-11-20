@@ -1206,14 +1206,10 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                               0,
                               &Base);
     
-    //
-    // Check if we have a ramdisk
-    //
+    /* Check if we have a ramdisk */
     if ((RosLoaderBlock->RdAddr) && (RosLoaderBlock->RdLength))
     {
-        //
-        // Build a descriptor for it
-        //
+        /* Build a descriptor for it */
         KiRosAllocateNtDescriptor(LoaderXIPRom,
                                   KERNEL_DESCRIPTOR_PAGE(RosLoaderBlock->RdAddr),
                                   (RosLoaderBlock->RdLength + PAGE_SIZE - 1) >> PAGE_SHIFT,
@@ -1267,7 +1263,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     HalPath = strchr(BootPath + 1, ' ');
     *HalPath = ANSI_NULL;
     BldrNtBootPath[0] = '\\';
-    strncat(BldrNtBootPath, BootPath + 1, 63);
+    strncat(BldrNtBootPath, BootPath + 1, 61);
     strcat(BldrNtBootPath,"\\");
     LoaderBlock->NtBootPathName = BldrNtBootPath;
 

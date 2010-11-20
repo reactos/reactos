@@ -884,6 +884,7 @@ GpStatus WINGDIPAPI GdipGetRegionDataSize(GpRegion *region, UINT *needed)
 static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
 {
     HDC new_hdc=NULL;
+    GpGraphics *new_graphics=NULL;
     GpStatus stat;
     INT save_state;
 
@@ -893,12 +894,19 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
         if (!new_hdc)
             return OutOfMemory;
 
-        stat = GdipCreateFromHDC(new_hdc, &graphics);
+        stat = GdipCreateFromHDC(new_hdc, &new_graphics);
+        graphics = new_graphics;
         if (stat != Ok)
         {
             ReleaseDC(0, new_hdc);
             return stat;
         }
+    }
+    else if (!graphics->hdc)
+    {
+        graphics->hdc = new_hdc = GetDC(0);
+        if (!new_hdc)
+            return OutOfMemory;
     }
 
     save_state = SaveDC(graphics->hdc);
@@ -918,7 +926,10 @@ static GpStatus get_path_hrgn(GpPath *path, GpGraphics *graphics, HRGN *hrgn)
     if (new_hdc)
     {
         ReleaseDC(0, new_hdc);
-        GdipDeleteGraphics(graphics);
+        if (new_graphics)
+            GdipDeleteGraphics(new_graphics);
+        else
+            graphics->hdc = NULL;
     }
 
     return stat;
@@ -1248,11 +1259,66 @@ GpStatus WINGDIPAPI GdipSetInfinite(GpRegion *region)
     return stat;
 }
 
+/* Transforms GpRegion elements with given matrix */
+static GpStatus transform_region_element(region_element* element, GpMatrix *matrix)
+{
+    GpStatus stat;
+
+    switch(element->type)
+    {
+        case RegionDataEmptyRect:
+        case RegionDataInfiniteRect:
+            return Ok;
+        case RegionDataRect:
+        {
+            /* We can't transform a rectangle, so convert it to a path. */
+            GpRegion *new_region;
+            GpPath *path;
+
+            stat = GdipCreatePath(FillModeAlternate, &path);
+            if (stat == Ok)
+            {
+                stat = GdipAddPathRectangle(path,
+                    element->elementdata.rect.X, element->elementdata.rect.Y,
+                    element->elementdata.rect.Width, element->elementdata.rect.Height);
+
+                if (stat == Ok)
+                    stat = GdipCreateRegionPath(path, &new_region);
+
+                GdipDeletePath(path);
+            }
+
+            if (stat == Ok)
+            {
+                /* Steal the element from the created region. */
+                memcpy(element, &new_region->node, sizeof(region_element));
+                HeapFree(GetProcessHeap(), 0, new_region);
+            }
+            else
+                return stat;
+        }
+        /* Fall-through to do the actual conversion. */
+        case RegionDataPath:
+            stat = GdipTransformMatrixPoints(matrix,
+                element->elementdata.pathdata.path->pathdata.Points,
+                element->elementdata.pathdata.path->pathdata.Count);
+            return stat;
+        default:
+            stat = transform_region_element(element->elementdata.combine.left, matrix);
+            if (stat == Ok)
+                stat = transform_region_element(element->elementdata.combine.right, matrix);
+            return stat;
+    }
+}
+
 GpStatus WINGDIPAPI GdipTransformRegion(GpRegion *region, GpMatrix *matrix)
 {
-    FIXME("(%p, %p): stub\n", region, matrix);
+    TRACE("(%p, %p)\n", region, matrix);
 
-    return NotImplemented;
+    if (!region || !matrix)
+        return InvalidParameter;
+
+    return transform_region_element(&region->node, matrix);
 }
 
 /* Translates GpRegion elements with specified offsets */
@@ -1307,14 +1373,150 @@ GpStatus WINGDIPAPI GdipTranslateRegionI(GpRegion *region, INT dx, INT dy)
     return GdipTranslateRegion(region, (REAL)dx, (REAL)dy);
 }
 
+static GpStatus get_region_scans_data(GpRegion *region, GpMatrix *matrix, LPRGNDATA *data)
+{
+    GpRegion *region_copy;
+    GpStatus stat;
+    HRGN hrgn;
+    DWORD data_size;
+
+    stat = GdipCloneRegion(region, &region_copy);
+
+    if (stat == Ok)
+    {
+        stat = GdipTransformRegion(region_copy, matrix);
+
+        if (stat == Ok)
+            stat = GdipGetRegionHRgn(region_copy, NULL, &hrgn);
+
+        if (stat == Ok)
+        {
+            if (hrgn)
+            {
+                data_size = GetRegionData(hrgn, 0, NULL);
+
+                *data = GdipAlloc(data_size);
+
+                if (*data)
+                    GetRegionData(hrgn, data_size, *data);
+                else
+                    stat = OutOfMemory;
+
+                DeleteObject(hrgn);
+            }
+            else
+            {
+                data_size = sizeof(RGNDATAHEADER) + sizeof(RECT);
+
+                *data = GdipAlloc(data_size);
+
+                if (*data)
+                {
+                    (*data)->rdh.dwSize = sizeof(RGNDATAHEADER);
+                    (*data)->rdh.iType = RDH_RECTANGLES;
+                    (*data)->rdh.nCount = 1;
+                    (*data)->rdh.nRgnSize = sizeof(RECT);
+                    (*data)->rdh.rcBound.left = (*data)->rdh.rcBound.top = -0x400000;
+                    (*data)->rdh.rcBound.right = (*data)->rdh.rcBound.bottom = 0x400000;
+
+                    memcpy(&(*data)->Buffer, &(*data)->rdh.rcBound, sizeof(RECT));
+                }
+                else
+                    stat = OutOfMemory;
+            }
+        }
+
+        GdipDeleteRegion(region_copy);
+    }
+
+    return stat;
+}
+
 GpStatus WINGDIPAPI GdipGetRegionScansCount(GpRegion *region, UINT *count, GpMatrix *matrix)
 {
-    static int calls;
+    GpStatus stat;
+    LPRGNDATA data;
 
     TRACE("(%p, %p, %p)\n", region, count, matrix);
 
-    if (!(calls++))
-        FIXME("not implemented\n");
+    if (!region || !count || !matrix)
+        return InvalidParameter;
 
-    return NotImplemented;
+    stat = get_region_scans_data(region, matrix, &data);
+
+    if (stat == Ok)
+    {
+        *count = data->rdh.nCount;
+        GdipFree(data);
+    }
+
+    return stat;
+}
+
+GpStatus WINGDIPAPI GdipGetRegionScansI(GpRegion *region, GpRect *scans, INT *count, GpMatrix *matrix)
+{
+    GpStatus stat;
+    INT i;
+    LPRGNDATA data;
+    RECT *rects;
+
+    if (!region || !count || !matrix)
+        return InvalidParameter;
+
+    stat = get_region_scans_data(region, matrix, &data);
+
+    if (stat == Ok)
+    {
+        *count = data->rdh.nCount;
+        rects = (RECT*)&data->Buffer;
+
+        if (scans)
+        {
+            for (i=0; i<data->rdh.nCount; i++)
+            {
+                scans[i].X = rects[i].left;
+                scans[i].Y = rects[i].top;
+                scans[i].Width = rects[i].right - rects[i].left;
+                scans[i].Height = rects[i].bottom - rects[i].top;
+            }
+        }
+
+        GdipFree(data);
+    }
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetRegionScans(GpRegion *region, GpRectF *scans, INT *count, GpMatrix *matrix)
+{
+    GpStatus stat;
+    INT i;
+    LPRGNDATA data;
+    RECT *rects;
+
+    if (!region || !count || !matrix)
+        return InvalidParameter;
+
+    stat = get_region_scans_data(region, matrix, &data);
+
+    if (stat == Ok)
+    {
+        *count = data->rdh.nCount;
+        rects = (RECT*)&data->Buffer;
+
+        if (scans)
+        {
+            for (i=0; i<data->rdh.nCount; i++)
+            {
+                scans[i].X = rects[i].left;
+                scans[i].Y = rects[i].top;
+                scans[i].Width = rects[i].right - rects[i].left;
+                scans[i].Height = rects[i].bottom - rects[i].top;
+            }
+        }
+
+        GdipFree(data);
+    }
+
+    return Ok;
 }

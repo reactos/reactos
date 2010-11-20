@@ -2066,14 +2066,16 @@ SendMessageW(HWND Wnd,
   {
       if ( Window != NULL &&
            Window->head.pti == ti &&
-          !IsThreadHooked(GetWin32ClientInfo()) &&
+//          !IsThreadHooked(GetWin32ClientInfo()) && // Enable to test message system bug.
+          !ISITHOOKED(WH_CALLWNDPROC) &&
+          !ISITHOOKED(WH_CALLWNDPROCRET) &&
           !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
 
                    * Window belongs to calling thread
-                   * The calling thread is not being hooked
+                   * The calling thread is not being hooked for CallWndProc
                    * Not calling a server side proc:
                      Desktop, Switch, ScrollBar, Menu, IconTitle, or hWndMessage
            */
@@ -2137,14 +2139,16 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   {
       if ( Window != NULL &&
            Window->head.pti == ti &&
-          !IsThreadHooked(GetWin32ClientInfo()) &&
+//          !IsThreadHooked(GetWin32ClientInfo()) && // Enable to test message system bug.
+          !ISITHOOKED(WH_CALLWNDPROC) &&
+          !ISITHOOKED(WH_CALLWNDPROCRET) &&
           !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
 
                    * Window belongs to calling thread
-                   * The calling thread is not being hooked
+                   * The calling thread is not being hooked for CallWndProc
                    * Not calling a server side proc: 
                      Desktop, Switch, ScrollBar, Menu, IconTitle, or hWndMessage
            */
@@ -2694,9 +2698,8 @@ USER_MESSAGE_PUMP_ADDRESSES gmph = {sizeof(USER_MESSAGE_PUMP_ADDRESSES),
 DWORD gfMessagePumpHook = 0;
 
 BOOL WINAPI IsInsideMessagePumpHook()
-{  // Fixme: Need to fully implement this! FF uses this and polls it when Min/Max
+{  // FF uses this and polls it when Min/Max
    PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
-//   FIXME("IIMPH %x\n",pcti);
    return (gfMessagePumpHook && pcti && (pcti->dwcPumpHook > 0));
 }
 

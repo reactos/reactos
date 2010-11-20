@@ -15,7 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
 /* dialog resources appear to pass this in 16 bits, handle them properly */
 #define CW_USEDEFAULT16 (0x8000)
 
@@ -402,6 +401,9 @@ static LRESULT co_UserFreeWindow(PWND Window,
 
    DestroyTimersForWindow(ThreadData, Window);
 
+   /* Unregister hot keys */
+   UnregisterWindowHotKeys (Window);
+
    /* flush the message queue */
    MsqRemoveWindowMessagesFromQueue(Window);
 
@@ -420,9 +422,6 @@ static LRESULT co_UserFreeWindow(PWND Window,
       if (Window->head.h == ThreadData->rpdesk->rpwinstaParent->ShellListView)
          ThreadData->rpdesk->rpwinstaParent->ShellListView = NULL;
    }
-
-   /* Unregister hot keys */
-   UnregisterWindowHotKeys (Window);
 
    /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 
@@ -1899,7 +1898,6 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 {
    PWND Window = NULL, ParentWindow = NULL, OwnerWindow;
    HWND hWnd, hWndParent, hWndOwner, hwndInsertAfter;
-   DWORD dwStyle;
    PWINSTATION_OBJECT WinSta;
    PCLS Class = NULL;
    SIZE Size;
@@ -1909,7 +1907,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    USER_REFERENCE_ENTRY ParentRef, Ref;
    PTHREADINFO pti;
    DWORD dwShowMode = SW_SHOW;
-   CREATESTRUCTW *pCsw;
+   CREATESTRUCTW *pCsw = NULL;
    PVOID pszClass = NULL, pszName = NULL;
    DECLARE_RETURN(PWND);
 
@@ -1983,100 +1981,92 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    }
 
    hWnd = UserHMGetHandle(Window);
+   hwndInsertAfter = HWND_TOP;
 
    UserRefObjectCo(Window, &Ref);
    ObDereferenceObject(WinSta);
 
-   //// Call the WH_CBT hook ////
-
-   // Allocate the calling structures Justin Case this goes Global.
-   pCsw = ExAllocatePoolWithTag(NonPagedPool, sizeof(CREATESTRUCTW), TAG_HOOK);
-   pCbtCreate = ExAllocatePoolWithTag(NonPagedPool, sizeof(CBT_CREATEWNDW), TAG_HOOK);
-
-   /* Fill the new CREATESTRUCTW */
-   pCsw->lpCreateParams = Cs->lpCreateParams;
-   pCsw->hInstance = Cs->hInstance;
-   pCsw->hMenu = Cs->hMenu;
-   pCsw->hwndParent = Cs->hwndParent;
-   pCsw->cx = Cs->cx;
-   pCsw->cy = Cs->cy;
-   pCsw->x = Cs->x;
-   pCsw->y = Cs->y;
-   pCsw->dwExStyle = Cs->dwExStyle;
-   dwStyle = Cs->style;       // Save it anyway.
-   pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
-   pCsw->lpszName  = Cs->lpszName;
-   pCsw->lpszClass = Cs->lpszClass;
-
-   // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
-   if (!IS_ATOM(ClassName->Buffer))
+   //// Check for a hook to eliminate overhead. ////
+   if ( ISITHOOKED(WH_CBT) ||  (pti->rpdesk->pDeskInfo->fsHooks & HOOKID_TO_FLAG(WH_CBT)) )
    {
-      if (Window->state & WNDS_ANSICREATOR)
-      {
-         ANSI_STRING AnsiString;
-         AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
-         pszClass = UserHeapAlloc(AnsiString.MaximumLength);
-         RtlZeroMemory(pszClass, AnsiString.MaximumLength);
-         AnsiString.Buffer = (PCHAR)pszClass;
-         RtlUnicodeStringToAnsiString(&AnsiString, ClassName, FALSE);
-      }
-      else
-      {
-         UNICODE_STRING UnicodeString;
-         UnicodeString.MaximumLength = ClassName->Length + sizeof(UNICODE_NULL);
-         pszClass = UserHeapAlloc(UnicodeString.MaximumLength);
-         RtlZeroMemory(pszClass, UnicodeString.MaximumLength);
-         UnicodeString.Buffer = (PWSTR)pszClass;
-         RtlCopyUnicodeString(&UnicodeString, ClassName);
-      }
-      if (pszClass) pCsw->lpszClass = UserHeapAddressToUser(pszClass);
-   }
-   if (WindowName->Length)
-   {
-      UNICODE_STRING Name;
-      Name.Buffer = WindowName->Buffer;
-      Name.Length = WindowName->Length;
-      Name.MaximumLength = WindowName->MaximumLength;
+      // Allocate the calling structures Justin Case this goes Global.
+      pCsw = ExAllocatePoolWithTag(NonPagedPool, sizeof(CREATESTRUCTW), TAG_HOOK);
+      pCbtCreate = ExAllocatePoolWithTag(NonPagedPool, sizeof(CBT_CREATEWNDW), TAG_HOOK);
 
-      if (Window->state & WNDS_ANSICREATOR)
-      {
-         ANSI_STRING AnsiString;
-         AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(&Name)+sizeof(CHAR);
-         pszName = UserHeapAlloc(AnsiString.MaximumLength);
-         RtlZeroMemory(pszName, AnsiString.MaximumLength);
-         AnsiString.Buffer = (PCHAR)pszName;
-         RtlUnicodeStringToAnsiString(&AnsiString, &Name, FALSE);
-      }
-      else
-      {
-         UNICODE_STRING UnicodeString;
-         UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
-         pszName = UserHeapAlloc(UnicodeString.MaximumLength);
-         RtlZeroMemory(pszName, UnicodeString.MaximumLength);
-         UnicodeString.Buffer = (PWSTR)pszName; 
-         RtlCopyUnicodeString(&UnicodeString, &Name);
-      }
-      if (pszName) pCsw->lpszName = UserHeapAddressToUser(pszName);
-   }
+      /* Fill the new CREATESTRUCTW */
+      RtlCopyMemory(pCsw, Cs, sizeof(CREATESTRUCTW));
+      pCsw->style = Window->style; /* HCBT_CREATEWND needs the real window style */
 
-   pCbtCreate->lpcs = pCsw;
-   pCbtCreate->hwndInsertAfter = HWND_TOP;
+      // Based on the assumption this is from "unicode source" user32, ReactOS, answer is yes.
+      if (!IS_ATOM(ClassName->Buffer))
+      {
+         if (Window->state & WNDS_ANSICREATOR)
+         {
+            ANSI_STRING AnsiString;
+            AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(ClassName)+sizeof(CHAR);
+            pszClass = UserHeapAlloc(AnsiString.MaximumLength);
+            RtlZeroMemory(pszClass, AnsiString.MaximumLength);
+            AnsiString.Buffer = (PCHAR)pszClass;
+            RtlUnicodeStringToAnsiString(&AnsiString, ClassName, FALSE);
+         }
+         else
+         {
+            UNICODE_STRING UnicodeString;
+            UnicodeString.MaximumLength = ClassName->Length + sizeof(UNICODE_NULL);
+            pszClass = UserHeapAlloc(UnicodeString.MaximumLength);
+            RtlZeroMemory(pszClass, UnicodeString.MaximumLength);
+            UnicodeString.Buffer = (PWSTR)pszClass;
+            RtlCopyUnicodeString(&UnicodeString, ClassName);
+         }
+         if (pszClass) pCsw->lpszClass = UserHeapAddressToUser(pszClass);
+      }
+      if (WindowName->Length)
+      {
+         UNICODE_STRING Name;
+         Name.Buffer = WindowName->Buffer;
+         Name.Length = WindowName->Length;
+         Name.MaximumLength = WindowName->MaximumLength;
 
-   Result = co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) pCbtCreate);
-   if (Result != 0)
-   {
-      DPRINT1("WH_CBT HCBT_CREATEWND hook failed! 0x%x\n", Result);
-      RETURN( (PWND) NULL);
+         if (Window->state & WNDS_ANSICREATOR)
+         {
+            ANSI_STRING AnsiString;
+            AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(&Name)+sizeof(CHAR);
+            pszName = UserHeapAlloc(AnsiString.MaximumLength);
+            RtlZeroMemory(pszName, AnsiString.MaximumLength);
+            AnsiString.Buffer = (PCHAR)pszName;
+            RtlUnicodeStringToAnsiString(&AnsiString, &Name, FALSE);
+         }
+         else
+         {
+            UNICODE_STRING UnicodeString;
+            UnicodeString.MaximumLength = Name.Length + sizeof(UNICODE_NULL);
+            pszName = UserHeapAlloc(UnicodeString.MaximumLength);
+            RtlZeroMemory(pszName, UnicodeString.MaximumLength);
+            UnicodeString.Buffer = (PWSTR)pszName; 
+            RtlCopyUnicodeString(&UnicodeString, &Name);
+         }
+         if (pszName) pCsw->lpszName = UserHeapAddressToUser(pszName);
+      }
+
+      pCbtCreate->lpcs = pCsw;
+      pCbtCreate->hwndInsertAfter = hwndInsertAfter;
+
+      //// Call the WH_CBT hook ////
+      Result = co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) pCbtCreate);
+      if (Result != 0)
+      {
+         DPRINT1("WH_CBT HCBT_CREATEWND hook failed! 0x%x\n", Result);
+         RETURN( (PWND) NULL);
+      }
+      // Write back changes.
+      Cs->cx = pCsw->cx;
+      Cs->cy = pCsw->cy;
+      Cs->x = pCsw->x;
+      Cs->y = pCsw->y;
+      hwndInsertAfter = pCbtCreate->hwndInsertAfter;
    }
-   // Write back changes.
-   Cs->cx = pCsw->cx;
-   Cs->cy = pCsw->cy;
-   Cs->x = pCsw->x;
-   Cs->y = pCsw->y;
-   hwndInsertAfter = pCbtCreate->hwndInsertAfter;
 
    /* NCCREATE and WM_NCCALCSIZE need the original values */
-   Cs->style = dwStyle;
    Cs->lpszName = (LPCWSTR) WindowName;
    Cs->lpszClass = (LPCWSTR) ClassName;
 
@@ -2084,7 +2074,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    Size.cx = Cs->cx;
    Size.cy = Cs->cy;
 
-   if ((dwStyle & WS_THICKFRAME) || !(dwStyle & (WS_POPUP | WS_CHILD)))
+   if ((Cs->style & WS_THICKFRAME) || !(Cs->style & (WS_POPUP | WS_CHILD)))
    {
       POINT MaxSize, MaxPos, MinTrack, MaxTrack;
 
@@ -2112,10 +2102,10 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    if (NULL != ParentWindow)
    {
       /* link the window into the siblings list */
-      if ((dwStyle & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
+      if ((Cs->style & (WS_CHILD|WS_MAXIMIZE)) == WS_CHILD)
           IntLinkHwnd(Window, HWND_BOTTOM);
       else
-          IntLinkHwnd(Window, HWND_TOP);
+          IntLinkHwnd(Window, hwndInsertAfter);
    }
    
    /* Send the NCCREATE message */
@@ -2219,6 +2209,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
 CLEANUP:
    if (!_ret_)
    {
+       DPRINT("co_UserCreateWindowEx(): Error Created window!\n");
        /* If the window was created, the class will be dereferenced by co_UserDestroyWindow */
        if (Window) 
             co_UserDestroyWindow(Window);
@@ -2567,7 +2558,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
     msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
     msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
     msg.pt = gpsi->ptCursor;
-    MsqInsertMouseMessage(&msg);
+    co_MsqInsertMouseMessage(&msg);
 
    if (!IntIsWindow(Window->head.h))
    {

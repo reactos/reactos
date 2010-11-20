@@ -37,6 +37,7 @@ target_link_libraries(shdocvw
     wine)
 
 add_importlibs(shdocvw
+    comctl32
     ole32
     oleaut32
     shlwapi

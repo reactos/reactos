@@ -19,8 +19,8 @@
 /*
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
- * PURPOSE:         Input
+ * FILE:            dll/win32/user32/windows/hook.c
+ * PURPOSE:         Hooks
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *      09-05-2001  CSH  Created
@@ -155,7 +155,8 @@ CallMsgFilterA(
   int nCode)
 {
   MSG Msg;
-  if (NtCurrentTeb()->Win32ThreadInfo && IsThreadHooked(GetWin32ClientInfo()))
+  if ( NtCurrentTeb()->Win32ThreadInfo &&
+      (ISITHOOKED(WH_MSGFILTER) || ISITHOOKED(WH_SYSMSGFILTER)) )
   {
      if ( lpMsg->message & ~WM_MAXIMUM )
      {
@@ -179,7 +180,8 @@ CallMsgFilterW(
   int nCode)
 {
   MSG Msg;
-  if (NtCurrentTeb()->Win32ThreadInfo && IsThreadHooked(GetWin32ClientInfo()))
+  if ( NtCurrentTeb()->Win32ThreadInfo &&
+      (ISITHOOKED(WH_MSGFILTER) || ISITHOOKED(WH_SYSMSGFILTER)) )
   {
      if ( lpMsg->message & ~WM_MAXIMUM )
      {

@@ -252,7 +252,7 @@ NtUserCallOneParam(
             RETURN( FALSE);
          }
 
-      case ONEPARAM_ROUTINE_MSQSETWAKEMASK:
+      case ONEPARAM_ROUTINE_GETINPUTEVENT:
          RETURN( (DWORD_PTR)IntMsqSetWakeMask(Param));
 
       case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
@@ -269,12 +269,7 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETQUEUESTATUS:
       {
-         DWORD Ret;
-         WORD changed_bits, wake_bits;
-         Ret = IntGetQueueStatus(FALSE);
-         changed_bits = LOWORD(Ret);
-         wake_bits = HIWORD(Ret);
-         RETURN( MAKELONG(changed_bits & Param, wake_bits & Param));
+         RETURN (IntGetQueueStatus((DWORD)Param));
       }
       case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
          /* FIXME: Should use UserEnterShared */

@@ -7,7 +7,7 @@
 @ stdcall WTSEnumerateSessionsA(long long long ptr ptr)
 @ stdcall WTSEnumerateSessionsW(long long long ptr ptr)
 @ stdcall WTSFreeMemory(ptr)
-@ stub WTSLogoffSession
+@ stdcall WTSLogoffSession(ptr long long)
 @ stdcall WTSOpenServerA(ptr)
 @ stdcall WTSOpenServerW(ptr)
 @ stdcall WTSQuerySessionInformationA(long long long ptr ptr)

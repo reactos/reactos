@@ -264,19 +264,14 @@ KiInitMachineDependent(VOID)
             if (KeFeatureBits & KF_FXSR)
             {
                 /* Get the current thread NPX state */
-                FxSaveArea = (PVOID)
-                             ((ULONG_PTR)KeGetCurrentThread()->InitialStack -
-                             NPX_FRAME_LENGTH);
+                FxSaveArea = KiGetThreadNpxArea(KeGetCurrentThread());
 
                 /* Clear initial MXCsr mask */
                 FxSaveArea->U.FxArea.MXCsrMask = 0;
 
                 /* Save the current NPX State */
-#ifdef __GNUC__
-                asm volatile("fxsave %0\n\t" : "=m" (*FxSaveArea));
-#else
-                __asm fxsave [FxSaveArea]
-#endif
+                Ke386SaveFpuState(FxSaveArea);
+
                 /* Check if the current mask doesn't match the reserved bits */
                 if (FxSaveArea->U.FxArea.MXCsrMask != 0)
                 {

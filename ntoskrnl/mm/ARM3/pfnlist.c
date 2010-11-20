@@ -407,7 +407,7 @@ MiRemoveZeroPage(IN ULONG Color)
 {
     PFN_NUMBER PageIndex;
     PMMPFN Pfn1;
-    BOOLEAN Zero;
+    BOOLEAN Zero = FALSE;
 
     /* Make sure PFN lock is held and we have pages */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -421,7 +421,6 @@ MiRemoveZeroPage(IN ULONG Color)
         /* Check the zero list */
         ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
         PageIndex = MmZeroedPageListHead.Flink;
-        Color = PageIndex & MmSecondaryColorMask;
         if (PageIndex == LIST_HEAD)
         {
             /* This means there's no zero pages, we have to look for free ones */
@@ -443,6 +442,10 @@ MiRemoveZeroPage(IN ULONG Color)
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
             }
+        }
+        else
+        {
+            Color = PageIndex & MmSecondaryColorMask;
         }
     }
 

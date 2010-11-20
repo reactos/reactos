@@ -279,7 +279,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         { /* Attempt to startup client support which should have been initialized in IntSetThreadDesktop. */
            PCLIENTINFO pci = (PCLIENTINFO)pTeb->Win32ClientInfo;
            Win32Thread->pClientInfo = pci;
-           pci->pClientThreadInfo = NULL;
            pci->ppi = Win32Thread->ppi;
            pci->fsHooks = Win32Thread->fsHooks;
            if (Win32Thread->KeyboardLayout) pci->hKL = Win32Thread->KeyboardLayout->hkl;
@@ -291,6 +290,10 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
               pci->pDeskInfo = (PVOID)((ULONG_PTR)Win32Thread->pDeskInfo - pci->ulClientDelta);
            }
+           if (Win32Thread->pcti && pci->pDeskInfo)
+              pci->pClientThreadInfo = (PVOID)((ULONG_PTR)Win32Thread->pcti - pci->ulClientDelta);
+           else
+              pci->pClientThreadInfo = NULL;
         }
         else
         {
@@ -331,6 +334,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
         IntSetThreadDesktop(NULL,
                             TRUE);
+
 
         PsSetThreadWin32Thread(Thread, NULL);
     }
