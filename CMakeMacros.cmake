@@ -61,7 +61,7 @@ MACRO(CreateBootSectorTarget _target_name _asm_file _object_file)
     add_custom_command(
         OUTPUT ${_object_file}
         COMMAND nasm -o ${_object_file} ${result_incs} ${result_defs} -f bin ${_asm_file}
-        DEPENDS native-winebuild)
+        DEPENDS ${_asm_file})
     set_source_files_properties(${_object_file} PROPERTIES GENERATED TRUE)
     add_custom_target(${_target_name} ALL DEPENDS ${_object_file})
     add_minicd(${_object_file} loader ${OBJECT_NAME})
