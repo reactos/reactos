@@ -336,6 +336,7 @@ list(APPEND CRT_SOURCE
     mem/i386/memchr_asm.s
     mem/i386/memmove_asm.s
     mem/i386/memset_asm.s
+    misc/i386/readcr4.S
     string/i386/strcat_asm.s
     string/i386/strchr_asm.s
     string/i386/strcmp_asm.s
