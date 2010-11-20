@@ -342,9 +342,7 @@ list(APPEND SOURCE
 if(KDBG)
 list(APPEND SOURCE
     kdbg/i386/i386-dis.c
-    kdbg/i386/kdb_help.S
-    kdbg/i386/longjmp.S
-    kdbg/i386/setjmp.S)
+    kdbg/i386/kdb_help.S)
 endif(KDBG)
 
 elseif(ARCH MATCHES amd64)
