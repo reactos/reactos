@@ -8,13 +8,22 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
-.intel_syntax noprefix
+#include <asm.inc>
+#include <ks386.inc>
+
+EXTERN _LdrpInit@12:PROC
+EXTERN _NtTestAlert@0:PROC
+EXTERN _RtlDispatchException@8:PROC
+EXTERN _RtlRaiseException@4:PROC
+EXTERN _RtlRaiseStatus@4:PROC
+EXTERN _ZwCallbackReturn@12:PROC
+EXTERN _ZwContinue@8:PROC
+EXTERN _ZwRaiseException@12:PROC
 
 /* FUNCTIONS ****************************************************************/
+.code
 
-.func LdrInitializeThunk@16
-.globl _LdrInitializeThunk@16
+PUBLIC _LdrInitializeThunk@16
 _LdrInitializeThunk@16:
 
     /* Get the APC Context */
@@ -28,9 +37,8 @@ _LdrInitializeThunk@16:
 
     /* Jump into the C initialization routine */
     jmp _LdrpInit@12
-.endfunc
 
-.func KiUserApcExceptionHandler
+
 _KiUserApcExceptionHandler:
 
     /* Put the exception record in ECX and check the Flags */
@@ -45,10 +53,9 @@ _KiUserApcExceptionHandler:
     /* We'll execute handler */
     mov eax, EXCEPTION_EXECUTE_HANDLER
     ret 16
-.endfunc
 
-.func KiUserApcDispatcher@16
-.globl _KiUserApcDispatcher@16
+
+PUBLIC _KiUserApcDispatcher@16
 _KiUserApcDispatcher@16:
 
     /* Setup SEH stack */
@@ -86,9 +93,8 @@ StatusRaiseApc:
     call _RtlRaiseStatus@4
     jmp StatusRaiseApc
     ret 16
-.endfunc
 
-.func KiUserCallbackExceptionHandler
+
 _KiUserCallbackExceptionHandler:
 
     /* Put the exception record in ECX and check the Flags */
@@ -106,10 +112,9 @@ return:
     /* We'll execute the handler */
     mov eax, EXCEPTION_EXECUTE_HANDLER
     ret 16
-.endfunc
 
-.func KiUserCallbackDispatcher@12
-.globl _KiUserCallbackDispatcher@12
+
+PUBLIC _KiUserCallbackDispatcher@12
 _KiUserCallbackDispatcher@12:
 
     /* Setup SEH stack */
@@ -131,7 +136,7 @@ _KiUserCallbackDispatcher@12:
     mov eax, [eax+PEB_KERNEL_CALLBACK_TABLE]
 
     /* Call the routine */
-    call [eax+edx*4]
+    call dword ptr [eax+edx*4]
 
     /* Return from callback */
     push eax
@@ -148,10 +153,9 @@ StatusRaise:
     call _RtlRaiseStatus@4
     jmp StatusRaise
     ret 12
-.endfunc
 
-.func KiRaiseUserExceptionDispatcher@0
-.globl _KiRaiseUserExceptionDispatcher@0
+
+PUBLIC _KiRaiseUserExceptionDispatcher@0
 _KiRaiseUserExceptionDispatcher@0:
 
     /* Setup stack for EXCEPTION_RECORD */
@@ -177,10 +181,9 @@ _KiRaiseUserExceptionDispatcher@0:
     mov esp, ebp
     pop ebp
     ret
-.endfunc
 
-.func KiUserExceptionDispatcher@8
-.globl _KiUserExceptionDispatcher@8
+
+PUBLIC _KiUserExceptionDispatcher@8
 _KiUserExceptionDispatcher@8:
 
     /* Clear direction flag */
@@ -236,39 +239,35 @@ Exit:
     push esp
     call _RtlRaiseException@4
     ret 8
-.endfunc
 
-.func KiIntSystemCall@0
-.globl _KiIntSystemCall@0
+
+PUBLIC _KiIntSystemCall@0
 _KiIntSystemCall@0:
 
     /* Set stack in EDX and do the interrupt */
     lea edx, [esp+8]
-    int 0x2E
+    int HEX(2E)
 
     /* Return to caller */
     ret
-.endfunc
 
-.func KiFastSystemCall@0
-.globl _KiFastSystemCall@0
+
+PUBLIC _KiFastSystemCall@0
 _KiFastSystemCall@0:
 
     /* Put ESP in EDX and do the SYSENTER */
     mov edx, esp
     sysenter
-.endfunc
 
-.func KiFastSystemCallRet@0
-.globl _KiFastSystemCallRet@0
+
+PUBLIC _KiFastSystemCallRet@0
 _KiFastSystemCallRet@0:
 
     /* Just return to caller */
     ret
-.endfunc
 
-.func RtlpGetStackLimits@8
-.globl _RtlpGetStackLimits@8
+
+PUBLIC _RtlpGetStackLimits@8
 _RtlpGetStackLimits@8:
 
     /* Get the stack limits */
@@ -283,4 +282,5 @@ _RtlpGetStackLimits@8:
 
     /* return */
     ret 8
-.endfunc
+
+END

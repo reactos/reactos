@@ -437,7 +437,7 @@
 @ stdcall RtlAddMandatoryAce(ptr long long long long ptr)
 @ stdcall RtlAddRefActivationContext(ptr)
 ;@ stdcall RtlAddRefMemoryStream
-;@ stdcall RtlAddVectoredContinueHandler
+@ stdcall RtlAddVectoredContinueHandler(long ptr)
 @ stdcall RtlAddVectoredExceptionHandler(long ptr)
 ;@ stdcall RtlAddressInSectionTable
 @ stdcall RtlAdjustPrivilege(long long long ptr)
@@ -723,6 +723,7 @@
 @ stdcall RtlInt64ToUnicodeString(double long ptr)
 @ stdcall RtlIntegerToChar(long long long ptr)
 @ stdcall RtlIntegerToUnicodeString(long long ptr)
+;@ stdcall RtlInterlockedCompareExchange64
 @ stdcall -arch=i386,x86_64 RtlInterlockedFlushSList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPopEntrySList(ptr)
 @ stdcall -arch=i386,x86_64 RtlInterlockedPushEntrySList(ptr ptr)
@@ -849,7 +850,7 @@
 @ stdcall RtlReleaseSRWLockExclusive(ptr)
 @ stdcall RtlReleaseSRWLockShared(ptr)
 @ stdcall RtlRemoteCall(ptr ptr ptr long ptr long long)
-;@ stdcall RtlRemoveVectoredContinueHandler
+@ stdcall RtlRemoveVectoredContinueHandler(ptr)
 @ stdcall RtlRemoveVectoredExceptionHandler(ptr)
 @ stdcall RtlResetRtlTranslations(ptr)
 @ stdcall RtlRestoreLastWin32Error(long) RtlSetLastWin32Error
