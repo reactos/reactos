@@ -28,7 +28,7 @@
 
 /* One/Two Param Functions */
 #define NtUserMsqSetWakeMask(dwWaitMask) \
-  (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_MSQSETWAKEMASK)
+  (HANDLE)NtUserCallOneParam(dwWaitMask, ONEPARAM_ROUTINE_GETINPUTEVENT)
 
 #define NtUserMsqClearWakeMask() \
   NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK)

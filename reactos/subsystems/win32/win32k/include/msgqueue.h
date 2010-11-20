@@ -275,4 +275,7 @@ MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
     return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
 }
 
+VOID FASTCALL IdlePing(VOID);
+VOID FASTCALL IdlePong(VOID);
+
 /* EOF */

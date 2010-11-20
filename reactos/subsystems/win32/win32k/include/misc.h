@@ -24,7 +24,7 @@ extern HGDIOBJ StockObjects[];
 extern SHORT gusLanguageID;
 
 SHORT FASTCALL IntGdiGetLanguageID(VOID);
-DWORD APIENTRY IntGetQueueStatus(BOOL ClearChanges);
+DWORD APIENTRY IntGetQueueStatus(DWORD);
 VOID FASTCALL IntUserManualGuiCheck(LONG Check);
 PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
 VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);

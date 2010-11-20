@@ -125,7 +125,7 @@ NtUserGetThreadState(
          break;
 
       case THREADSTATE_GETINPUTSTATE:
-         ret = HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON);
+         ret = LOWORD(IntGetQueueStatus(QS_POSTMESSAGE|QS_TIMER|QS_PAINT|QS_SENDMESSAGE|QS_INPUT)) & (QS_KEY | QS_MOUSEBUTTON);
          break;
    }
 
@@ -472,8 +472,6 @@ GetW32ThreadInfo(VOID)
     /* initialize it */
     pti->ppi = ppi = GetW32ProcessInfo();
 
-    pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
-
     if (pti->rpdesk != NULL)
     {
        pti->pDeskInfo = pti->rpdesk->pDeskInfo;
@@ -494,7 +492,6 @@ GetW32ThreadInfo(VOID)
 
         Teb->Win32ThreadInfo = (PW32THREAD) pti;
 
-        pci->pClientThreadInfo = NULL; // FIXME Need to set it in desktop.c!
         pci->ppi = ppi;
         pci->fsHooks = pti->fsHooks;
         if (pti->KeyboardLayout) pci->hKL = pti->KeyboardLayout->hkl;
@@ -506,6 +503,11 @@ GetW32ThreadInfo(VOID)
 
            pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
         }
+        if (pti->pcti && pci->pDeskInfo)
+           pci->pClientThreadInfo = (PVOID)((ULONG_PTR)pti->pcti - pci->ulClientDelta);
+        else
+           pci->pClientThreadInfo = NULL;
+
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

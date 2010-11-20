@@ -1901,7 +1901,7 @@ UserSendNotifyMessage( HWND hWnd,
 
 
 DWORD APIENTRY
-IntGetQueueStatus(BOOL ClearChanges)
+IntGetQueueStatus(DWORD Changes)
 {
     PTHREADINFO pti;
     PUSER_MESSAGE_QUEUE Queue;
@@ -1909,12 +1909,18 @@ IntGetQueueStatus(BOOL ClearChanges)
 
     pti = PsGetCurrentThreadWin32Thread();
     Queue = pti->MessageQueue;
+// wine:
+    Changes &= (QS_ALLINPUT|QS_ALLPOSTMESSAGE|QS_SMRESULT);
 
-    Result = MAKELONG(Queue->QueueBits, Queue->ChangedBits);
-    if (ClearChanges)
+    Result = MAKELONG(Queue->ChangedBits & Changes, Queue->QueueBits & Changes);
+
+    if (pti->pcti)
     {
-        Queue->ChangedBits = 0;
+       pti->pcti->fsChangeBits = Queue->ChangedBits;
+       pti->pcti->fsChangeBits &= ~Changes;
     }
+
+    Queue->ChangedBits &= ~Changes;
 
     return Result;
 }
@@ -2089,7 +2095,6 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
 {
     NTUSERGETMESSAGEINFO Info;
     NTSTATUS Status;
-    /* FIXME: if initialization is removed, gcc complains that this may be used before initialization. Please review */
     PMSGMEMORY MsgMemoryEntry;
     PVOID UserMem;
     ULONG Size;
@@ -2110,7 +2115,7 @@ NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
 
     UserLeave();
 
-    Info.Msg = Msg; //.Msg;
+    Info.Msg = Msg;
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
 

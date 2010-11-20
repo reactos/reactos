@@ -77,6 +77,11 @@ IntMsqSetWakeMask(DWORD WakeMask)
    MessageQueue->WakeMask = WakeMask;
    MessageEventHandle = MessageQueue->NewMessagesHandle;
 
+   if (Win32Thread->pcti)
+      Win32Thread->pcti->fsWakeMask = WakeMask;
+
+   IdlePing();
+
    return MessageEventHandle;
 }
 
@@ -93,6 +98,11 @@ IntMsqClearWakeMask(VOID)
    MessageQueue = Win32Thread->MessageQueue;
 // HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
    MessageQueue->WakeMask = ~0;
+
+   if (Win32Thread->pcti)
+      Win32Thread->pcti->fsWakeMask = 0;
+
+   IdlePong();
 
    return TRUE;
 }
