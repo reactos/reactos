@@ -95,7 +95,6 @@ list(APPEND SOURCE
     thread/thread.c
     thread/tls.c
     kernel32.rc
-    kernel32_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32.def)
 
 if(ARCH MATCHES i386)
