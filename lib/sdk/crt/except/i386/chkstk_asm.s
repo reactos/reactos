@@ -14,7 +14,36 @@
 
 PUBLIC __chkstk
 PUBLIC __alloca_probe
+PUBLIC __alloca_probe_16
 .code
+
+    /* 16 byte aligned alloca probe
+     * EAX = size to be allocated */
+__alloca_probe_16:
+    /* save the ECX register */
+    push ecx
+
+    /* ecx = top of the previous stack frame */
+    lea ecx, [esp + 8]
+
+    /* Calculate end of allocation */
+    sub ecx, eax
+
+    /* Get the misalignment */
+    and ecx, 15
+
+    /* Add the misalignment to the original alloc size */
+    add eax, ecx
+
+    /* Check for overflow */
+    jnc l1
+
+    /* Set maximum value */
+    mov eax, HEX(0ffffffff)
+l1:
+    /* Restore ecx */
+    pop ecx
+    /* Fall through to __chkstk */
 
 /*
  _chkstk() is called by all stack allocations of more than 4 KB. It grows the
