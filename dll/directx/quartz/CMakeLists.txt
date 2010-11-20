@@ -39,6 +39,7 @@ add_library(quartz SHARED
     enummedia.c
     control.c
     avisplit.c
+    stubs.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def)
 
