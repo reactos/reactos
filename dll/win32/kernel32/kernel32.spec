@@ -15,7 +15,7 @@
 @ stdcall AddVectoredExceptionHandler(long ptr) ntdll.RtlAddVectoredExceptionHandler
 ;@ stdcall AdjustCalendarDate ; Win 7
 @ stdcall AllocConsole()
-@ stub AllocLSCallback ; missing in XP SP3 and 2003 R2 and Win 7
+;@ stub AllocLSCallback ; missing in XP SP3 and 2003 R2 and Win 7
 @ stdcall AllocateUserPhysicalPages(long ptr ptr)
 ;@ stdcall AllocateUserPhysicalPagesNuma ; Win 7
 ;@ stdcall ApplicationRecoveryFinished ; Win 7
@@ -28,7 +28,7 @@
 @ stdcall BackupWrite(ptr ptr long ptr long long ptr)
 @ stdcall BaseCheckAppcompatCache(long long long ptr) ;check
 ;@ stdcall BaseCheckAppcompatCacheEx ; Win7
-@ stub BaseCheckRunApp
+;@ stub BaseCheckRunApp ; Win7
 @ stdcall BaseCleanupAppcompatCache() ; missing in Win 7
 @ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 ;@ stdcall BaseDllReadWriteIniFile ; Win 7
@@ -52,8 +52,8 @@
 ;@ stdcall BasepAnsiStringToDynamicUnicodeString ; Win 7
 ;@ stdcall BasepCheckAppCompat ; Win 7
 ;@ stdcall BasepCheckBadapp ; Win 7
-@ stub BasepCheckWinSaferRestrictions
-@ stub BasepDebugDump ; missing in XP SP3 and Win 7
+@ stdcall BasepCheckWinSaferRestrictions(long long long long long long)
+;@ stub BasepDebugDump ; missing in XP SP3 and Win 7
 ;@ stdcall BasepFreeActivationContextActivationBlock ; Win 7
 ;@ stdcall BasepFreeAppCompatData ; Win 7
 ;@ stdcall BasepMapModuleHandle ; Win 7
@@ -88,7 +88,7 @@
 @ stdcall CloseHandle(long)
 ;@ stdcall ClosePrivateNamespace ; Win 7
 @ stdcall CloseProfileUserMapping()
-@ stub CloseSystemHandle ; missing in XP SP3 and Win 7
+; @ stub CloseSystemHandle ; missing in XP SP3 and Win 7
 ;@ stdcall CloseThreadpool(ptr) ntdll.TpReleasePool ; Win 7
 ;@ stdcall CloseThreadpoolCleanupGroup(ptr) ntdll.TpReleaseCleanupGroup ; Win 7
 ;@ stdcall CloseThreadpoolCleanupGroupMembers(ptr long ptr) ntdll.TpReleaseCleanupGroupMembers ; Win 7
@@ -107,7 +107,7 @@
 @ stdcall CompareStringW(long long wstr long wstr long)
 @ stdcall ConnectNamedPipe(long ptr)
 @ stdcall ConsoleMenuControl(long long long)
-@ stub ConsoleSubst ; missing in XP SP3 and Win 7
+; @ stub ConsoleSubst ; missing in XP SP3 and Win 7
 @ stdcall ContinueDebugEvent(long long long)
 ;@ stdcall ConvertCalDateTimeToSystemTime ; Win 7
 @ stdcall ConvertDefaultLocale (long)
@@ -157,7 +157,7 @@
 @ stdcall CreateJobObjectA(ptr str)
 @ stdcall CreateJobObjectW(ptr wstr)
 @ stdcall CreateJobSet(long ptr long)
-@ stub CreateKernelThread ; missing in XP SP3 and Win 7
+;@ stub CreateKernelThread ; missing in XP SP3 and Win 7
 @ stdcall CreateMailslotA(ptr long long ptr)
 @ stdcall CreateMailslotW(ptr long long ptr)
 @ stdcall CreateMemoryResourceNotification(long)
@@ -475,7 +475,7 @@
 @ stdcall GetDateFormatA(long long ptr str ptr long)
 ;@ stdcall GetDateFormatEx ; Win 7
 @ stdcall GetDateFormatW(long long ptr wstr ptr long)
-@ stub GetDaylightFlag ; missing in XP SP3 and Win 7
+;@ stub GetDaylightFlag ; missing in XP SP3 and Win 7
 @ stdcall GetDefaultCommConfigA(str ptr long)
 @ stdcall GetDefaultCommConfigW(wstr ptr long)
 @ stdcall GetDefaultSortkeySize(ptr) ; missing in Win 7
@@ -533,8 +533,8 @@
 @ stdcall GetGeoInfoW(long long ptr long long)
 @ stdcall GetHandleContext(long) ; missing on x64
 @ stdcall GetHandleInformation(long ptr)
-@ stub GetSCallbackTarget ; missing in XP SP3 and Win 7
-@ stub GetSCallbackTemplate ; missing in XP SP3 and Win 7
+;@ stub GetSCallbackTarget ; missing in XP SP3 and Win 7
+;@ stub GetSCallbackTemplate ; missing in XP SP3 and Win 7
 @ stdcall GetLargePageMinimum()
 @ stdcall GetLargestConsoleWindowSize(long)
 @ stdcall GetLastError() ntdll.RtlGetLastWin32Error
@@ -629,7 +629,7 @@
 ;@ stdcall GetProcessWorkingSetSizeEx ; Win 7
 ;@ stdcall GetProcessorSystemCycleTime ; Win 7
 ;@ stdcall GetProductInfo(long long long long ptr) ; Win 7
-@ stub GetProductName
+;@ stub GetProductName
 @ stdcall GetProfileIntA(str str long)
 @ stdcall GetProfileIntW(wstr wstr long)
 @ stdcall GetProfileSectionA(str ptr long)
@@ -638,8 +638,8 @@
 @ stdcall GetProfileStringW(wstr wstr wstr ptr long)
 @ stdcall GetQueuedCompletionStatus(long ptr ptr ptr long)
 ;@ stdcall GetQueuedCompletionStatusEx ; Win 7
-@ stub GetLSCallbackTarget ; missing in XP SP3 and Win 7
-@ stub GetLSCallbackTemplate ; missing in XP SP3 and Win 7
+;@ stub GetLSCallbackTarget ; missing in XP SP3 and Win 7
+;@ stub GetLSCallbackTemplate ; missing in XP SP3 and Win 7
 @ stdcall GetShortPathNameA(str ptr long)
 @ stdcall GetShortPathNameW(wstr ptr long)
 @ stdcall GetStartupInfoA(ptr)
@@ -759,7 +759,7 @@
 @ stdcall HeapQueryInformation(long long ptr long ptr)
 @ stdcall HeapQueryTagW(long long long long ptr) ; missing in Win 7
 @ stdcall HeapReAlloc(long long ptr long) ntdll.RtlReAllocateHeap
-@ stub HeapSetFlags ; missing in XP SP3 and Win 7
+;@ stub HeapSetFlags ; missing in XP SP3 and Win 7
 @ stdcall HeapSetInformation(ptr long ptr long)
 @ stdcall HeapSize(long long ptr) ntdll.RtlSizeHeap
 @ stdcall HeapSummary(long long ptr)
@@ -784,7 +784,7 @@
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stdcall InitializeSRWLock(ptr) ntdll.RtlInitializeSRWLock
 @ stdcall -arch=i386 InterlockedCompareExchange (ptr long long)
-@ stdcall -arch=i386 -ret64 InterlockedCompareExchange64(ptr double double) ntdll.RtlInterlockedCompareExchange64
+;@ stdcall -arch=i386 -ret64 InterlockedCompareExchange64(ptr double double) ntdll.RtlInterlockedCompareExchange64
 @ stdcall -arch=i386 InterlockedDecrement(ptr)
 @ stdcall -arch=i386 InterlockedExchange(ptr long)
 @ stdcall -arch=i386 InterlockedExchangeAdd (ptr long )
@@ -794,7 +794,7 @@
 @ stdcall InterlockedPushEntrySList(ptr ptr) ntdll.RtlInterlockedPushEntrySList
 ;@ stdcall InterlockedPushListSList ntdll.RtlInterlockedPushListSList ; Win 7
 @ stdcall InvalidateConsoleDIBits(long long)
-@ stub InvalidateNSCache ; missing in XP SP3 and Win 7
+;@ stub InvalidateNSCache ; missing in XP SP3 and Win 7
 @ stdcall IsBadCodePtr(ptr)
 @ stdcall IsBadHugeReadPtr(ptr long)
 @ stdcall IsBadHugeWritePtr(ptr long)
@@ -920,13 +920,13 @@
 @ stdcall NlsConvertIntegerToString(long long long wstr long) ; missing in Win 7
 ;@ stdcall NlsEventDataDescCreate ; Win 7
 @ stdcall NlsGetCacheUpdateCount()
-@ stub NlsResetProcessLocale ; missing in XP SP3 and Win 7
+;@ stub NlsResetProcessLocale ; missing in XP SP3 and Win 7
 ;@ stdcall NlsUpdateLocale ; Win 7
 ;@ stdcall NlsUpdateSystemLocale ; Win 7
 ;@ stdcall NlsWriteEtwEvent ; Win 7
 ;@ stdcall NormalizeString ; Win 7
 ;@ stdcall NotifyMountMgr ; Win 7
-@ stub NotifyNLSUserCache ; missing in XP SP3 and win 7
+;@ stub NotifyNLSUserCache ; missing in XP SP3 and win 7
 ;@ stdcall NotifyUILanguageChange ; Win 7
 @ stdcall NumaVirtualQueryNode(long long long long) ; missing in win 7
 @ stdcall OpenConsoleW(wstr long long long)
@@ -983,8 +983,8 @@
 ;@ stdcall QueryIdleProcessorCycleTimeEx ; Win 7
 @ stdcall QueryInformationJobObject(long long ptr long ptr)
 @ stdcall QueryMemoryResourceNotification(ptr ptr)
-@ stub QueryNumberOfEventLogRecords ; missing in XP SP3 and Win 7
-@ stub QueryOldestEventLogRecord ; missing in XP SP3 and Win 7
+;@ stub QueryNumberOfEventLogRecords ; missing in XP SP3 and Win 7
+;@ stub QueryOldestEventLogRecord ; missing in XP SP3 and Win 7
 @ stdcall QueryPerformanceCounter(ptr)
 @ stdcall QueryPerformanceFrequency(ptr)
 ;@ stdcall QueryProcessAffinityUpdateMode ; Win 7
@@ -999,7 +999,7 @@
 @ stdcall QueueUserWorkItem(ptr ptr long)
 @ stdcall RaiseException(long long long ptr)
 ;@ stdcall RaiseFailFastException ; Win 7
-@ stub ReOpenFile ;@ stdcall ReOpenFile(ptr long long long)
+@ stdcall ReOpenFile(ptr long long long)
 @ stdcall ReadConsoleA(long ptr long ptr ptr)
 @ stdcall ReadConsoleInputA(long ptr long ptr)
 @ stdcall ReadConsoleInputExA(long ptr long ptr long)
@@ -1065,7 +1065,7 @@
 @ stdcall RegisterConsoleOS2(long)
 @ stdcall RegisterConsoleVDM(long long long long long long long long long long long)
 ;@ stub RegisterServiceProcess ; missing in XP SP3 and Win 7
-@ stub RegisterSysMsgHandler ; missing in XP SP3 and win 7
+;@ stub RegisterSysMsgHandler ; missing in XP SP3 and win 7
 @ stdcall RegisterWaitForInputIdle(ptr)
 @ stdcall RegisterWaitForSingleObject(ptr long ptr ptr long long)
 @ stdcall RegisterWaitForSingleObjectEx(long ptr ptr long long)
@@ -1170,7 +1170,7 @@
 ;@ stdcall SetCurrentConsoleFontEx ; Win 7
 @ stdcall SetCurrentDirectoryA(str)
 @ stdcall SetCurrentDirectoryW(wstr)
-@ stub SetDaylightFlag ; missing in XP SP3 and Win 7
+;@ stub SetDaylightFlag ; missing in XP SP3 and Win 7
 @ stdcall SetDefaultCommConfigA(str ptr long)
 @ stdcall SetDefaultCommConfigW(wstr ptr long)
 @ stdcall SetDllDirectoryA(str)
@@ -1207,10 +1207,10 @@
 @ stdcall SetHandleCount(long)
 @ stdcall SetHandleInformation(long long long)
 @ stdcall SetInformationJobObject(long long ptr long)
-@ stub SetLastConsoleEventActive ; missing in XP SP3
+@ stdcall SetLastConsoleEventActive() ; missing in XP SP3
 @ stdcall SetLastError(long) ntdll.RtlSetLastWin32Error
-@ stub SetLocalPrimaryComputerNameA ; missing in XP SP3
-@ stub SetLocalPrimaryComputerNameW ; missing in XP SP3
+@ stdcall SetLocalPrimaryComputerNameA(long long) ; missing in XP SP3
+@ stdcall SetLocalPrimaryComputerNameW(long long) ; missing in XP SP3
 @ stdcall SetLocalTime(ptr)
 @ stdcall SetLocaleInfoA(long long str)
 @ stdcall SetLocaleInfoW(long long wstr)
@@ -1292,9 +1292,9 @@
 @ stdcall Thread32First(long ptr)
 @ stdcall Thread32Next(long ptr)
 @ stdcall TlsAlloc()
-@ stub TlsAllocInternal ; missing in XP SP3 and Win 7
+;@ stub TlsAllocInternal ; missing in XP SP3 and Win 7
 @ stdcall TlsFree(long)
-@ stub TlsFreeInternal ; missing in XP SP3 and Win 7
+;@ stub TlsFreeInternal ; missing in XP SP3 and Win 7
 @ stdcall TlsGetValue(long)
 @ stdcall TlsSetValue(long ptr)
 @ stdcall Toolhelp32ReadProcessMemory(long ptr ptr long ptr)
@@ -1325,8 +1325,8 @@
 @ stdcall UpdateResourceW(long wstr wstr long ptr long)
 @ stdcall VDMConsoleOperation(long long)
 @ stdcall VDMOperationStarted(long)
-@ stub ValidateCType ; missing in XP SP3 and Win 7
-@ stub ValidateLocale ; missing in XP SP3 and Win 7
+;@ stub ValidateCType ; missing in XP SP3 and Win 7
+;@ stub ValidateLocale ; missing in XP SP3 and Win 7
 @ stdcall VerLanguageNameA(long str long)
 @ stdcall VerLanguageNameW(long wstr long)
 @ stdcall -ret64 VerSetConditionMask(long long long long) ntdll.VerSetConditionMask
@@ -1415,8 +1415,8 @@
 ;@ stdcall -arch=x86_64 __C_specific_handler ntdll.__C_specific_handler
 ;@ stdcall -arch=x86_64 __chkstk ntdll.__chkstk
 ;@ stdcall -arch=x86_64 __misaligned_access ntdll.__misaligned_access
-@ stub _DebugOut ; missing in XP SP3 and Win 7
-@ stub _DebugPrintf ; missing in XP SP3 and Win 7
+;@ stub _DebugOut ; missing in XP SP3 and Win 7
+;@ stub _DebugPrintf ; missing in XP SP3 and Win 7
 @ stdcall _hread(long ptr long)
 @ stdcall _hwrite(long ptr long)
 @ stdcall _lclose(long)
@@ -1426,7 +1426,7 @@
 @ stdcall _lopen(str long)
 @ stdcall _lread(long ptr long) _hread
 @ stdcall _lwrite(long ptr long) _hwrite
-@ stub dprintf ; missing in XP SP3 and Win 7
+;@ stub dprintf ; missing in XP SP3 and Win 7
 @ stdcall lstrcat(str str) lstrcatA
 @ stdcall lstrcatA(str str)
 @ stdcall lstrcatW(wstr wstr)
