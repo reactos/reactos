@@ -4,7 +4,10 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(loadperf.dll loadperf.spec)
 
-add_library(loadperf SHARED loadperf_main.c ${CMAKE_CURRENT_BINARY_DIR}/loadperf.def)
+add_library(loadperf SHARED
+            loadperf_main.c
+            stubs.c
+            ${CMAKE_CURRENT_BINARY_DIR}/loadperf.def)
 
 set_module_type(loadperf win32dll)
 
