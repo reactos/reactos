@@ -73,7 +73,6 @@ macro(set_module_type MODULE TYPE)
 			message(STATUS "${MODULE} has no base address")
 		endif()
 		target_link_libraries(${MODULE} mingw_common mingw_dllmain)
-		add_importlibs(${MODULE} msvcrt kernel32)
         add_linkerflag(${MODULE} "/DLL")
     endif()
 
