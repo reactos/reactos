@@ -19,3 +19,4 @@ target_link_libraries(ftfd
 add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)
 add_cab_target(ftfd 1)
+add_importlib_target(ftfd.spec)
