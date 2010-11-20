@@ -1,68 +1,72 @@
-#include <ndk/asm.h>
 
-.text
+#include <asm.inc>
+#include <ks386.inc>
 
-.globl _KdbEnter
+EXTERN _KdbEnterDebuggerException:PROC
+
+.code
+
+PUBLIC _KdbEnter
 _KdbEnter:
     /*
      * Set up a trap frame
      */
-    pushfl                      /* Eflags */
-    pushl   %cs                 /* Cs */
-    pushl   $0                  /* ErrorCode */
-    pushl   %ebp                /* Ebp */
-    pushl   %ebx                /* Ebx */
-    movl    20(%esp), %ebp      /* Eip */
-    movl    16(%esp), %ebx      /* Eflags */
-    movl    %ebx, 20(%esp)
-    movl    12(%esp), %ebx      /* Cs */
-    movl    %ebx, 16(%esp)
-    movl    %ebp, 12(%esp)
-    pushl   %esi                /* Esi */
-    pushl   %edi                /* Edi */
-    pushl   %fs                 /* Fs */
-    pushl   $0                  /* ExceptionList */
-    pushl   $0                  /* PreviousMode */
-    pushl   %eax                /* Eax */
-    pushl   %ecx                /* Ecx */
-    pushl   %edx                /* Edx */
-    pushl   %ds                 /* Ds */
-    pushl   %es                 /* Es */
-    pushl   %gs                 /* Gs */
-    movl    %dr7, %eax
-    pushl   %eax                /* Dr7 */
+    pushf                      /* Eflags */
+    push cs                 /* Cs */
+    push 0                  /* ErrorCode */
+    push ebp                /* Ebp */
+    push ebx                /* Ebx */
+    mov ebp, [esp + 20]      /* Eip */
+    mov ebx, [esp + 16]      /* Eflags */
+    mov [esp + 20], ebx
+    mov ebx, [esp + 12]      /* Cs */
+    mov [esp + 16], ebx
+    mov [esp + 12], ebp
+    push esi                /* Esi */
+    push edi                /* Edi */
+    push fs                 /* Fs */
+    push 0                  /* ExceptionList */
+    push 0                  /* PreviousMode */
+    push eax                /* Eax */
+    push ecx                /* Ecx */
+    push edx                /* Edx */
+    push ds                 /* Ds */
+    push es                 /* Es */
+    push gs                 /* Gs */
+    mov eax, dr7
+    push eax                /* Dr7 */
 
     /* Clear all breakpoint enables in dr7. */
-    andl    $0xFFFF0000, %eax
-    movl    %eax, %dr7
-    movl    %dr6, %eax
-    pushl   %eax                /* Dr6 */
-    movl    %dr3, %eax
-    pushl   %eax                /* Dr3 */
-    movl    %dr2, %eax
-    pushl   %eax                /* Dr2 */
-    movl    %dr1, %eax
-    pushl   %eax                /* Dr1 */
-    movl    %dr0, %eax
-    pushl   %eax                /* Dr0 */
-    leal    0x58(%esp), %eax
-    pushl   %eax                /* TempEsp */
-    pushl   %ss                 /* TempSegSs */
-    pushl   $0                  /* DebugPointer */
-    pushl   $3                  /* DebugArgMark (Exception number) */
-    pushl   0x60(%esp)          /* DebugEip */
-    pushl   %ebp                /* DebugEbp */
+    and eax, HEX(0FFFF0000)
+    mov dr7, eax
+    mov eax, dr6
+    push eax                /* Dr6 */
+    mov eax, dr3
+    push eax                /* Dr3 */
+    mov eax, dr2
+    push eax                /* Dr2 */
+    mov eax, dr1
+    push eax                /* Dr1 */
+    mov eax, dr0
+    push eax                /* Dr0 */
+    lea eax, [esp + HEX(58)]
+    push eax                /* TempEsp */
+    push ss                 /* TempSegSs */
+    push 0                  /* DebugPointer */
+    push 3                  /* DebugArgMark (Exception number) */
+    push [esp + HEX(60)]          /* DebugEip */
+    push ebp                /* DebugEbp */
 
     /*
      * Call KDB
      */
-    movl    %esp, %eax
-    pushl   $1                  /* FirstChance */
-    pushl   %eax                /* Push a pointer to the trap frame */
-    pushl   $0                  /* Context */
-    pushl   $0                  /* PreviousMode (KernelMode) */
-    pushl   $0                  /* ExceptionRecord */
-    call    _KdbEnterDebuggerException
+    mov eax, esp
+    push 1                  /* FirstChance */
+    push eax                /* Push a pointer to the trap frame */
+    push 0                  /* Context */
+    push 0                  /* PreviousMode (KernelMode) */
+    push 0                  /* ExceptionRecord */
+    call _KdbEnterDebuggerException
 
     /*
      * Pop the arguments and unused portions of the trap frame:
@@ -73,41 +77,41 @@ _KdbEnter:
      *   TempSegSs
      *   TempEsp
      */
-    addl    $(11*4), %esp
+    add esp, 11*4
 
     /*
      * Restore/update debugging registers.
      */
-    popl    %eax            /* Dr0 */
-    movl    %eax, %dr0
-    popl    %eax            /* Dr1 */
-    movl    %eax, %dr1
-    popl    %eax            /* Dr2 */
-    movl    %eax, %dr2
-    popl    %eax            /* Dr3 */
-    movl    %eax, %dr3
-    popl    %eax            /* Dr6 */
-    movl    %eax, %dr6
-    popl    %eax            /* Dr7 */
-    movl    %eax, %dr7
+    pop eax            /* Dr0 */
+    mov dr0, eax
+    pop eax            /* Dr1 */
+    mov dr1, eax
+    pop eax            /* Dr2 */
+    mov dr2, eax
+    pop eax            /* Dr3 */
+    mov dr3, eax
+    pop eax            /* Dr6 */
+    mov dr6, eax
+    pop eax            /* Dr7 */
+    mov dr7, eax
 
     /*
      * Restore registers including any that might have been changed
      * inside the debugger.
      */
-    popl    %gs         /* Gs */
-    popl    %es         /* Es */
-    popl    %ds         /* Ds */
-    popl    %edx        /* Edx */
-    popl    %ecx        /* Ecx */
-    popl    %eax        /* Eax */
-    addl    $8, %esp    /* PreviousMode, ExceptionList */
-    popl    %fs         /* Fs */
-    popl    %edi        /* Edi */
-    popl    %esi        /* Esi */
-    popl    %ebx        /* Ebx */
-    popl    %ebp        /* Ebp */
-    addl    $4, %esp    /* ErrorCode */
+    pop gs         /* Gs */
+    pop es         /* Es */
+    pop ds         /* Ds */
+    pop edx        /* Edx */
+    pop ecx        /* Ecx */
+    pop eax        /* Eax */
+    add esp, 8    /* PreviousMode, ExceptionList */
+    pop fs         /* Fs */
+    pop edi        /* Edi */
+    pop esi        /* Esi */
+    pop ebx        /* Ebx */
+    pop ebp        /* Ebp */
+    add esp, 4    /* ErrorCode */
 
     /*
      * Return to the caller.
@@ -115,26 +119,27 @@ _KdbEnter:
     iret
 
 
-.globl _KdbpStackSwitchAndCall@8
+PUBLIC _KdbpStackSwitchAndCall@8
 _KdbpStackSwitchAndCall@8:
-    pushl   %ebp
-    movl    %esp, %ebp
+    push ebp
+    mov ebp, esp
 
-    movl    0x8(%esp), %eax         /* New stack */
-    movl    0xC(%esp), %ecx         /* Function to call */
-    movl    %esp, %edx              /* Old stack */
+    mov eax, [esp + 8]         /* New stack */
+    mov ecx, [esp + 12]         /* Function to call */
+    mov edx, esp              /* Old stack */
 
     /* Switch stack */
-    movl    %eax, %esp
-    pushl   %edx
+    mov esp, eax
+    push edx
 
     /* Call function */
-    call    *%ecx
+    call ecx
 
     /* Switch back to old stack */
-    popl    %esp
+    pop esp
 
     /* Return */
-    popl    %ebp
-    ret     $8
+    pop ebp
+    ret 8
 
+END

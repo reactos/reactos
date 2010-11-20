@@ -10,22 +10,27 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/asm.h>
-.intel_syntax noprefix
+#include <asm.inc>
+#include <ks386.inc>
+
+EXTERN @KiSwapContextEntry@8:PROC
+EXTERN @KiSwapContextExit@8:PROC
+EXTERN @KiRetireDpcList@4:PROC
+EXTERN @KiEnterV86Mode@4:PROC
+EXTERN @KiExitV86Mode@4:PROC
 
 /* FUNCTIONS ****************************************************************/
+.code
 
-.globl @KiSwapContextInternal@0
-.func @KiSwapContextInternal@0, @KiSwapContextInternal@0
+PUBLIC @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
     /* Build switch frame */
     sub esp, 2 * 4
     mov ecx, esp
     jmp @KiSwapContextEntry@8
-.endfunc
 
-.globl @KiSwapContext@8
-.func @KiSwapContext@8, @KiSwapContext@8
+
+PUBLIC @KiSwapContext@8
 @KiSwapContext@8:
     /* Save 4 registers */
     sub esp, 4 * 4
@@ -51,10 +56,9 @@
     /* Clean stack */
     add esp, 4 * 4
     ret
-.endfunc
 
-.globl @KiSwitchThreads@8
-.func @KiSwitchThreads@8, @KiSwitchThreads@8
+
+PUBLIC @KiSwitchThreads@8
 @KiSwitchThreads@8:
     /* Load the new kernel stack and switch OS to new thread */
     mov esp, edx
@@ -63,10 +67,9 @@
     /* Now we're on the new thread. Return to the caller to restore registers */
     add esp, 2 * 4
     ret
-.endfunc
 
-.globl @KiRetireDpcListInDpcStack@8
-.func @KiRetireDpcListInDpcStack@8, @KiRetireDpcListInDpcStack@8
+
+PUBLIC @KiRetireDpcListInDpcStack@8
 @KiRetireDpcListInDpcStack@8:
     /* Switch stacks and retire DPCs */
     mov eax, esp
@@ -77,11 +80,10 @@
     /* Return on original stack */
     pop esp
     ret
-.endfunc
+
 
 /* FIXFIX: Move to C code ****/
-.globl _Ki386SetupAndExitToV86Mode@4
-.func Ki386SetupAndExitToV86Mode@4
+PUBLIC _Ki386SetupAndExitToV86Mode@4
 _Ki386SetupAndExitToV86Mode@4:
 
     /* Enter V8086 mode */
@@ -90,9 +92,9 @@ _Ki386SetupAndExitToV86Mode@4:
     mov ecx, esp
     call @KiEnterV86Mode@4
     jmp $
-.endfunc
 
-.globl @Ki386BiosCallReturnAddress@4
+
+PUBLIC @Ki386BiosCallReturnAddress@4
 @Ki386BiosCallReturnAddress@4:
 
     /* Exit V8086 mode */
@@ -102,3 +104,4 @@ _Ki386SetupAndExitToV86Mode@4:
     popad
     ret 4
 
+END

@@ -2,14 +2,14 @@
  * FILE:            ntoskrnl/ke/i386/boot.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         FreeLDR Wrapper Bootstrap Code and Bootstrap Trampoline
- * PROGRAMMERs:     Alex Ionescu (alex@relsoft.net)
- *                  Thomas Weidenmueller <w3seek@reactos.org>
+ * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/amd64/asm.h>
+#include <asm.inc>
+
+#include <ksamd64.inc>
 
 EXTERN KiInitializeKernelAndGotoIdleLoop:PROC
 
