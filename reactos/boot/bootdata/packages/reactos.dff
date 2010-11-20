@@ -456,6 +456,7 @@ dll\win32\uxtheme\uxtheme.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
 dll\win32\version\version.dll                       1
 dll\win32\wdmaud.drv\wdmaud.drv                     1
+dll\win32\wer\wer.dll                               1
 dll\win32\windowscodecs\windowscodecs.dll           1
 dll\win32\winemp3.acm\winemp3.acm                   1
 dll\win32\winfax\winfax.dll                         1
