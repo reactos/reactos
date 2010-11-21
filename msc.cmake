@@ -75,6 +75,13 @@ macro(set_module_type MODULE TYPE)
 		target_link_libraries(${MODULE} mingw_common mingw_dllmain)
         add_linkerflag(${MODULE} "/DLL")
     endif()
+	if(${TYPE} MATCHES kernelmodedriver)
+	    set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
+	    set_entrypoint(${MODULE} DriverEntry@8)
+		set_subsystem(${MODULE} native)
+        set_image_base(${MODULE} 0x00010000)
+		add_dependencies(${MODULE} bugcodes)
+	endif()
 
 endmacro()
 

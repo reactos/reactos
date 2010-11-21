@@ -161,7 +161,7 @@ macro(spec2def _dllname _spec_file)
         COMMAND native-spec2def --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        PROPERTIES GENERATED TRUE)
+        PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
 endmacro()
 
 # Optional 3rd parameter: dllname
