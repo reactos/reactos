@@ -23,7 +23,7 @@ import "oaidl.idl";
 [
     object,
     dual,
-    uuid(D97A6DA0-A864-11cf-83BE-00A0C90C2BD8)
+    uuid(D97A6DA0-A85F-11df-83AE-00A0C90C2BD8)
 ]
 interface IRequestDictionary : IDispatch
 {
