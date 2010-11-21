@@ -9,6 +9,7 @@ spec2def(msdmo.dll msdmo.spec)
 add_library(msdmo SHARED
     dmoreg.c
     dmort.c
+    stubs.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msdmo.def)
 
