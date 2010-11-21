@@ -38,6 +38,7 @@
 #define InterlockedIncrement _InterlockedIncrement
 #define InterlockedDecrement _InterlockedDecrement
 #define InterlockedExchangeAdd _InterlockedExchangeAdd
+#define InterlockedExchange _InterlockedExchange
 #endif
 
 #endif /* RTL_H */
