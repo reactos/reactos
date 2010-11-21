@@ -10,12 +10,6 @@
 int _fltused;
 
 void
-_cdecl
-_alloca_probe_16(void)
-{
-}
-
-void
 __do_global_dtors (void)
 {
 
