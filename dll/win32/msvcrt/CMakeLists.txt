@@ -23,7 +23,9 @@ add_library(msvcrt SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_precomp.h.gch
     ${SOURCE})
 
+if (NOT MSVC)
 set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
+endif()
 set_module_type(msvcrt win32dll)
 
 target_link_libraries(msvcrt

@@ -144,7 +144,7 @@
 @ cdecl __dllonexit(ptr ptr ptr)
 @ cdecl __doserrno() __doserrno
 @ cdecl __fpecode()
-@ stub __get_app_type
+@ cdecl __get_app_type()
 @ cdecl __getmainargs(ptr ptr ptr long ptr)
 @ extern __initenv __initenv
 @ cdecl __iob_func() __p__iob
@@ -152,7 +152,7 @@
 @ cdecl __iscsym(long) __iscsym
 @ cdecl __iscsymf(long) __iscsymf
 @ extern __lc_codepage MSVCRT___lc_codepage
-@ stub __lc_collate
+# @ stub __lc_collate # not in XP / 7
 @ extern __lc_collate_cp MSVCRT___lc_collate_cp
 @ extern __lc_handle MSVCRT___lc_handle
 @ cdecl __lconv_init()
@@ -190,10 +190,10 @@
 @ cdecl -arch=i386 __p__daylight()
 @ cdecl -arch=i386 __p__dstbias()
 @ cdecl -arch=i386 __p__environ()
-@ stub -arch=i386 __p__fileinfo #()
+@ cdecl -arch=i386 __p__fileinfo()
 @ cdecl -arch=i386 __p__fmode()
 @ cdecl -arch=i386 __p__iob()
-@ stub -arch=i386 __p__mbcasemap #()
+@ cdecl -arch=i386 __p__mbcasemap()
 @ cdecl -arch=i386 __p__mbctype()
 @ cdecl -arch=i386 __p__osver()
 @ cdecl -arch=i386 __p__pctype() __pctype_func
@@ -260,7 +260,7 @@
 # stub _aligned_realloc_dbg
 @ cdecl _amsg_exit(long)
 @ cdecl _assert(str str long) 
-@ stub _atodbl #(ptr str)
+@ cdecl _atodbl(ptr str)
 # stub _atodbl_l
 # @ cdecl _atof_l(str ptr)
 # stub _atoflt_l
@@ -365,7 +365,7 @@
 @ cdecl _fgetchar()
 @ cdecl _fgetwchar()
 @ cdecl _filbuf(ptr)
-# extern _fileinfo
+@ extern _fileinfo
 @ cdecl _filelength(long)
 @ cdecl -ret64 _filelengthi64(long)
 @ cdecl _fileno(ptr)
@@ -439,8 +439,8 @@
 # stub _get_winminor
 # stub _get_winver
 # stub _get_wpgmptr
-@ stub _get_terminate
-@ stub _get_unexpected
+# @ stub _get_terminate # not in XP / 7
+# @ stub _get_unexpected # not in XP / 7
 @ cdecl _getch()
 @ cdecl _getche()
 @ cdecl _getcwd(str long)
@@ -466,7 +466,7 @@
 @ cdecl _heapchk()
 @ cdecl _heapmin()
 @ cdecl _heapset(long)
-@ stub _heapused #(ptr ptr)
+# @ stub _heapused #(ptr ptr) # not in XP / 7
 @ cdecl _heapwalk(ptr)
 @ cdecl _hypot(double double)
 @ cdecl _i64toa(long long ptr long)
@@ -475,10 +475,10 @@
 # stub _i64tow_s
 @ cdecl _initterm(ptr ptr)
 # stub _initterm_e
-@ stub _inp #(long) -i386
-@ stub _inpd #(long) -i386
-@ stub _inpw #(long) -i386
-# @ cdecl _invalid_parameter(wstr wstr wstr long long)
+@ cdecl -arch=i386 _inp(long)
+@ cdecl -arch=i386 _inpd(long)
+@ cdecl -arch=i386 _inpw(long)
+@ cdecl _invalid_parameter(wstr wstr wstr long long)
 @ extern _iob
 # stub _isalnum_l
 # stub _isalpha_l
@@ -500,9 +500,9 @@
 # stub _ismbbkalnum_l
 @ cdecl _ismbbkana(long)
 # stub _ismbbkana_l
-@ stub _ismbbkprint #(long)
+@ cdecl _ismbbkprint(long)
 # stub _ismbbkprint_l
-@ stub _ismbbkpunct #(long)
+@ cdecl _ismbbkpunct(long)
 # stub _ismbbkpunct_l
 @ cdecl _ismbblead(long)
 # stub _ismbblead_l
@@ -602,7 +602,7 @@
 @ cdecl _mbbtombc(long)
 # stub _mbbtombc_l
 @ cdecl _mbbtype(long long)
-# extern _mbcasemap
+@ extern _mbcasemap
 @ cdecl _mbccpy (str str)
 # stub _mbccpy_l
 # stub _mbccpy_s
@@ -757,9 +757,9 @@
 @ cdecl _open_osfhandle(long long)
 @ extern _osplatform _osplatform
 @ extern _osver _osver
-@ stub _outp #(long long)
-@ stub _outpd #(long long)
-@ stub _outpw #(long long)
+@ cdecl _outp(long long)
+@ cdecl _outpd(long long)
+@ cdecl _outpw(long long)
 @ cdecl _pclose (ptr)
 @ extern _pctype _pctype
 @ extern _pgmptr _pgmptr
@@ -1091,7 +1091,7 @@
 # stub _wmktemp_s
 @ varargs _wopen(wstr long)
 # stub _woutput_s
-@ stub _wperror #(wstr)
+@ cdecl _wperror(wstr)
 @ extern _wpgmptr
 @ cdecl _wpopen (wstr wstr)
 # stub _wprintf_l

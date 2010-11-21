@@ -5,6 +5,91 @@
 #include "wine/config.h"
 #include "wine/exception.h"
 
+#define NDEBUG
+#include <debug.h>
+
+int __get_app_type()
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+int _fileinfo;
+
+void *
+__p__fileinfo()
+{
+    return &_fileinfo;
+}
+
+unsigned char _mbcasemap[1];
+
+void *
+__p__mbcasemap()
+{
+    return _mbcasemap;
+}
+
+int _atodbl(
+   void * value,
+   char * str)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+int _ismbbkprint(
+   unsigned int c)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+int _inp( 
+   unsigned short port)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+unsigned short _inpw( 
+   unsigned short port)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+unsigned long _inpd( 
+   unsigned short port)
+{
+    return 0;
+}
+
+
+int _outp(
+   unsigned short port,
+   int databyte)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+unsigned short _outpw(
+   unsigned short port,
+   unsigned short dataword)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+unsigned long _outpd(
+   unsigned short port,
+   unsigned long dataword)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 void __wine_spec_unimplemented_stub( const char *module, const char *function )
 {
     ULONG_PTR args[2];
@@ -16,26 +101,18 @@ void __wine_spec_unimplemented_stub( const char *module, const char *function )
 
 static const char __wine_spec_file_name[] = "msvcrt.dll";
 
-void __wine_stub_msvcrt_dll_107(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "__get_app_type"); }
 void __wine_stub_msvcrt_dll_115(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "__lc_collate"); }
-void __wine_stub_msvcrt_dll_132(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "__p__fileinfo"); }
-void __wine_stub_msvcrt_dll_135(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "__p__mbcasemap"); }
 void __wine_stub_msvcrt_dll_140(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "__p__pwctype"); }
 void __wine_stub_msvcrt_dll_151(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "__pxcptinfoptrs"); }
-void __wine_stub_msvcrt_dll_189(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_atodbl"); }
 void __wine_stub_msvcrt_dll_267(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_fpieee_flt"); }
 void __wine_stub_msvcrt_dll_288(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_get_terminate"); }
 void __wine_stub_msvcrt_dll_289(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_get_unexpected"); }
 void __wine_stub_msvcrt_dll_301(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_getsystime"); }
 void __wine_stub_msvcrt_dll_311(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_heapused"); }
-void __wine_stub_msvcrt_dll_317(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_inp"); }
-void __wine_stub_msvcrt_dll_318(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_inpd"); }
-void __wine_stub_msvcrt_dll_319(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_inpw"); }
 void __wine_stub_msvcrt_dll_323(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbalnum"); }
 void __wine_stub_msvcrt_dll_324(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbalpha"); }
 void __wine_stub_msvcrt_dll_325(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbgraph"); }
 void __wine_stub_msvcrt_dll_326(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbkalnum"); }
-void __wine_stub_msvcrt_dll_328(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbkprint"); }
 void __wine_stub_msvcrt_dll_329(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbkpunct"); }
 void __wine_stub_msvcrt_dll_331(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbprint"); }
 void __wine_stub_msvcrt_dll_332(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_ismbbpunct"); }
@@ -49,9 +126,6 @@ void __wine_stub_msvcrt_dll_405(void) { __wine_spec_unimplemented_stub(__wine_sp
 void __wine_stub_msvcrt_dll_409(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_mbsnbicoll"); }
 void __wine_stub_msvcrt_dll_414(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_mbsncoll"); }
 void __wine_stub_msvcrt_dll_418(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_mbsnicoll"); }
-void __wine_stub_msvcrt_dll_447(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_outp"); }
-void __wine_stub_msvcrt_dll_448(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_outpd"); }
-void __wine_stub_msvcrt_dll_449(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_outpw"); }
 void __wine_stub_msvcrt_dll_480(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_setsystime"); }
 void __wine_stub_msvcrt_dll_505(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_strncoll"); }
 void __wine_stub_msvcrt_dll_507(void) { __wine_spec_unimplemented_stub(__wine_spec_file_name, "_strnicoll"); }
