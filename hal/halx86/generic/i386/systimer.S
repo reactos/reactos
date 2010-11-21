@@ -7,8 +7,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/asm.h>
+#include <asm.inc>
+
+#include <ks386.inc>
 
 EXTERN _HalpAcquireSystemHardwareSpinLock@0:PROC
 EXTERN _HalpReleaseCmosSpinLock@0:PROC
@@ -39,7 +40,7 @@ EXTERN _HalpPerfCounterCutoff:DWORD
 /* GLOBALS *******************************************************************/
 
 .data
-//ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
+ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 
 PUBLIC _HalpPerfCounter
 _HalpLastPerfCounterLow:    .long 0

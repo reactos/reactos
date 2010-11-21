@@ -197,9 +197,9 @@ HalpDispatchV86Opcode(IN PKTRAP_FRAME TrapFrame)
 /* V86 TRAP HANDLERS **********************************************************/
 
 #ifndef _MINIHAL_
+DECLSPEC_NORETURN
 VOID
 FASTCALL
-DECLSPEC_NORETURN
 HalpTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
 {
     /* Enter the trap */

@@ -1,4 +1,6 @@
 
+spec2def(hal.dll hal.spec)
+
 if(ARCH MATCHES i386)
 
 add_definitions(
@@ -51,7 +53,8 @@ list(APPEND HAL_SOURCE
     ${HAL_GENERIC_PCAT_SOURCE}
     ${HAL_GENERIC_UP_SOURCE}
     halx86/up/halinit_up.c
-    halx86/up/halup.rc)
+    halx86/up/halup.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
 
 add_library(hal SHARED ${HAL_SOURCE})
 add_pch(hal ${CMAKE_CURRENT_SOURCE_DIR}/halx86/include/hal.h ${HAL_SOURCE})
@@ -63,9 +66,7 @@ set_image_base(hal 0x00010000)
 
 add_importlibs(hal ntoskrnl)
 
-target_link_libraries(hal
-    ${CMAKE_CURRENT_SOURCE_DIR}/halx86/hal_i386.def
-    libcntpr)
+target_link_libraries(hal libcntpr)
 
 list(APPEND MINI_HAL_SOURCE
     halx86/generic/legacy/bus/bushndlr.c
