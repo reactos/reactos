@@ -1,7 +1,7 @@
 
 add_library(genincdata SHARED genincdata.c)
 
-set_entrypoint(genincdata DummyEntry)
+set_entrypoint(genincdata 0)
 add_dependencies(genincdata bugcodes)
 
 if(MSVC)

@@ -77,7 +77,3 @@ ASMGENDATA Table[] =
     {TYPE_END, "", 0}
 };
 
-LONG NTAPI DummyEntry(HANDLE hinstDLL, ULONG fdwReason, PVOID lpvReserved)
-{
-    return 0;
-}

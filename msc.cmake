@@ -46,7 +46,7 @@ endmacro()
 
 macro(set_entrypoint MODULE ENTRYPOINT)
     if(${ENTRYPOINT} STREQUAL "0")
-        add_linkerflag(${MODULE} "/ENTRY:0")
+        add_linkerflag(${MODULE} "/NOENTRY")
     else()
         add_linkerflag(${MODULE} "/ENTRY:${ENTRYPOINT}")
     endif()
