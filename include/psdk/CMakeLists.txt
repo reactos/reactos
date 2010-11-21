@@ -2,6 +2,8 @@
 LIST(APPEND SOURCE
 #   access.idl
     activaut.idl
+    activscp.idl
+    asptlb.idl
 #   asynot.idl
 #   asysta.idl
     bdaiface.idl
@@ -41,6 +43,7 @@ LIST(APPEND SOURCE
     mscoree.idl
     msdadc.idl
     mshtmhst.idl
+    mshtml.idl
     msinkaut.idl
     mstask.idl
     msxml.idl
@@ -72,6 +75,7 @@ LIST(APPEND SOURCE
 #   sesprp.idl
     shdeprecated.idl
     shldisp.idl
+    shobjidl.idl
     shtypes.idl
 #   stdole2.idl
     strmif.idl
@@ -94,14 +98,10 @@ LIST(APPEND SOURCE
 
 if(NOT MSVC)
   LIST(APPEND SOURCE
-    activscp.idl
     activdbg.idl
-    asptlb.idl
     ctfutb.idl
     mlang.idl
     msctf.idl
-    mshtml.idl
-    shobjidl.idl
     wincodec.idl
     wuapi.idl
 )
