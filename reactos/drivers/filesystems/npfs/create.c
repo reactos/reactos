@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+//#define USING_PROPER_NPFS_WAIT_SEMANTICS
+
 /* FUNCTIONS *****************************************************************/
 
 PNPFS_FCB
@@ -146,6 +148,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     PNPFS_VCB Vcb;
     ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    BOOLEAN SpecialAccess;
+#endif
 
     DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -160,6 +165,14 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     DPRINT("FileName %wZ\n", &FileObject->FileName);
 
     Irp->IoStatus.Information = 0;
+
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    SpecialAccess = ((DesiredAccess & SPECIFIC_RIGHTS_ALL) == FILE_READ_ATTRIBUTES);
+    if (SpecialAccess)
+    {
+        DPRINT("NpfsCreate() open client end for special use!\n");
+    }
+#endif
 
     if (FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL)
     {
@@ -217,8 +230,11 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     ClientCcb->Fcb = Fcb;
     ClientCcb->PipeEnd = FILE_PIPE_CLIENT_END;
     ClientCcb->OtherSide = NULL;
-//    ClientCcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    ClientCcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
+#else
     ClientCcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+#endif
     InitializeListHead(&ClientCcb->ReadRequestListHead);
 
     DPRINT("CCB: %p\n", ClientCcb);
@@ -256,10 +272,10 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     /*
     * Step 3. Search for listening server CCB.
     */
-/*
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     if (!SpecialAccess)
     {
-*/
+#endif
         /*
         * WARNING: Point of no return! Once we get the server CCB it's
         * possible that we completed a wait request and so we have to
@@ -315,7 +331,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
             /* FIXME: Merge this with the NpfsFindListeningServerInstance routine. */
             NpfsSignalAndRemoveListeningServerInstance(Fcb, ServerCcb);
         }
-/*
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     }
     else if (IsListEmpty(&Fcb->ServerCcbListHead))
     {
@@ -333,7 +349,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_UNSUCCESSFUL;
     }
-*/
+#endif
 
     /*
     * Step 4. Add the client CCB to a list and connect it if possible.

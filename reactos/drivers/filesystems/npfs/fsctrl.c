@@ -15,6 +15,8 @@
 #define NDEBUG
 #include <debug.h>
 
+//#define USING_PROPER_NPFS_WAIT_SEMANTICS
+
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_CANCEL NpfsListeningCancelRoutine;
@@ -293,18 +295,21 @@ NpfsWaitPipe(PIRP Irp,
              PNPFS_CCB Ccb)
 {
     PLIST_ENTRY current_entry;
-    PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB ServerCcb;
     PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
     LARGE_INTEGER TimeOut;
-    UNICODE_STRING PipeName;
     NTSTATUS Status;
+#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
+    PNPFS_VCB Vcb;
+    UNICODE_STRING PipeName;
+#endif
 
     DPRINT("NpfsWaitPipe\n");
 
     WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
 
+#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
     /* Fail, if the CCB does not represent the root directory */
     if (Ccb->Type != CCB_DIRECTORY)
         return STATUS_ILLEGAL_FUNCTION;
@@ -352,6 +357,15 @@ NpfsWaitPipe(PIRP Irp,
     }
 
     DPRINT("Fcb %p\n", Fcb);
+#else
+    Fcb = Ccb->Fcb;
+
+    if (Ccb->PipeState != 0)
+    {
+        DPRINT("Pipe is not in passive (waiting) state!\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+#endif
 
     /* search for listening server */
     current_entry = Fcb->ServerCcbListHead.Flink;
