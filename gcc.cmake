@@ -33,6 +33,18 @@ add_definitions(-Wall -Wno-char-subscripts -Wpointer-arith -Wno-multichar -Wno-e
 add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpreferred-stack-boundary=2 -fno-set-stack-executable -fno-optimize-sibling-calls)
 
 # Macros
+MACRO(add_pch _target_name _header_filename _src_list)
+    get_filename_component(FILE ${_header_filename} NAME)
+    set(_gch_filename "${_target_name}_${FILE}.gch")
+    list(APPEND ${_src_list} ${_gch_filename})
+    _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
+    file(REMOVE ${_gch_filename})
+    add_custom_command(
+        OUTPUT ${_gch_filename}
+        COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args}
+        DEPENDS ${_header_filename})
+ENDMACRO(add_pch _target_name _header_filename _src_list)
+
 macro(add_linkerflag MODULE _flag)
     set(NEW_LINKER_FLAGS ${_flag})
     get_target_property(LINKER_FLAGS ${MODULE} LINK_FLAGS)
