@@ -3,8 +3,8 @@
 
 .code
 
-PUBLIC ___readcr4
-___readcr4:
+PUBLIC ____readcr4
+____readcr4:
     mov eax, cr4
     ret
 

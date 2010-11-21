@@ -486,12 +486,14 @@ list(APPEND LIBCNTPR_SOURCE
     math/i386/fabs_asm.s
     math/i386/floor_asm.s
     math/i386/ftol_asm.s
+    math/i386/ftol2_asm.s
     math/i386/log_asm.s
     math/i386/pow_asm.s
     math/i386/sin_asm.s
     math/i386/sqrt_asm.s
     math/i386/tan_asm.s
-    math/i386/ci.c)
+    math/i386/ci.c
+    misc/i386/readcr4.S)
 elseif(ARCH MATCHES amd64)
 list(APPEND LIBCNTPR_SOURCE
     math/cos.c
