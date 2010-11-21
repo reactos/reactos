@@ -1,7 +1,7 @@
 @ fastcall -arch=arm ExAcquireFastMutex(ptr)
 @ fastcall -arch=arm ExReleaseFastMutex(ptr)
-@ fastcall -arch=i386 ExAcquireFastMutex(ptr) ExiAcquireFastMutex
-@ fastcall -arch=i386 ExReleaseFastMutex(ptr) ExiReleaseFastMutex
+@ fastcall -arch=i386 ExAcquireFastMutex(ptr) ntoskrnl.ExiAcquireFastMutex
+@ fastcall -arch=i386 ExReleaseFastMutex(ptr) ntoskrnl.ExiReleaseFastMutex
 @ fastcall -arch=i386 ExTryToAcquireFastMutex(ptr) ntoskrnl.ExiTryToAcquireFastMutex
 @ fastcall -arch=arm ExTryToAcquireFastMutex(ptr)
 @ fastcall HalClearSoftwareInterrupt(long)
