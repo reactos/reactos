@@ -5,7 +5,7 @@
  */
 #define PLACE_IN_SECTION(s)	__attribute__((section (s)))
 #ifdef __GNUC__
-#define INIT_FUNCTION			PLACE_IN_SECTION("INIT")
+#define INIT_FUNCTION
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
 #else
