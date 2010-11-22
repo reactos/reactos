@@ -360,12 +360,14 @@ static BOOL UnloadHive(HWND hWnd)
     TCHAR Caption[128];
     LPCTSTR pszKeyPath;
     HKEY hRootKey;
+    LONG regUnloadResult;
+
     /* get the item key to unload */
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hRootKey);
     /* load and set the caption and flags for dialog */
     LoadString(hInst, IDS_UNLOAD_HIVE, Caption, COUNT_OF(Caption));
     /* now unload the hive */
-    LONG regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
+    regUnloadResult = RegUnLoadKey(hRootKey, pszKeyPath);
     if(regUnloadResult == ERROR_SUCCESS)
     {
         /* refresh tree and list views */
