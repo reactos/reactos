@@ -1,4 +1,6 @@
 
+spec2def(ntoskrnl.exe ntoskrnl.spec)
+
 include_directories(
     ${REACTOS_SOURCE_DIR}
     ${REACTOS_SOURCE_DIR}/lib/cmlib
@@ -246,7 +248,7 @@ list(APPEND SOURCE
     wmi/wmi.c
     ntoskrnl.rc
     ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
-    ntoskrnl_${ARCH}.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
     
 set_source_files_properties(ntoskrnl_${ARCH}.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
@@ -408,7 +410,11 @@ add_executable(ntoskrnl ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl_ntoskrnl.h.gch ${SO
 
 set_entrypoint(ntoskrnl KiSystemStartup@4)
 set_subsystem(ntoskrnl native)
-set_image_base(ntoskrnl 0x80800000)
+if(MSVC)
+  set_image_base(ntoskrnl 0x00400000)
+else()
+  set_image_base(ntoskrnl 0x80800000)
+endif()
 
 target_link_libraries(ntoskrnl
     cportlib
