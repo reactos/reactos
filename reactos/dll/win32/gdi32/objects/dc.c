@@ -746,7 +746,7 @@ GetAspectRatioFilterEx(
                 LPSIZE lpAspectRatio
                       )
 {
-  return NtGdiGetDCPoint( hdc, GdiGetAspectRatioFilter, (LPPOINT) lpAspectRatio );
+  return NtGdiGetDCPoint( hdc, GdiGetAspectRatioFilter, (PPOINTL) lpAspectRatio );
 }
 
 
@@ -760,7 +760,7 @@ GetDCOrgEx(
     LPPOINT lpPoint
     )
 {
-  return NtGdiGetDCPoint( hdc, GdiGetDCOrg, lpPoint );
+  return NtGdiGetDCPoint( hdc, GdiGetDCOrg, (PPOINTL)lpPoint );
 }
 
 
