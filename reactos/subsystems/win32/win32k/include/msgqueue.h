@@ -58,8 +58,12 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY HardwareMessagesListHead;
   /* Lock for the hardware message list. */
   KMUTEX HardwareLock;
-  /* Pointer to the current WM_MOUSEMOVE message */
-  PUSER_MESSAGE MouseMoveMsg;
+  /* True if a WM_MOUSEMOVE is pending */
+  BOOLEAN MouseMoved;
+  /* Current WM_MOUSEMOVE message */
+  MSG MouseMoveMsg;
+  /* Last click message for translating double clicks */
+  MSG msgDblClk;
   /* True if a WM_QUIT message is pending. */
   BOOLEAN QuitPosted;
   /* The quit exit code. */
@@ -122,18 +126,25 @@ VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY
 MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-               IN BOOLEAN Remove,
-               IN PWND Window,
-               IN UINT MsgFilterLow,
-               IN UINT MsgFilterHigh,
-               OUT PMSG Message);
+	              IN BOOLEAN Remove,
+	              IN PWND Window,
+	              IN UINT MsgFilterLow,
+	              IN UINT MsgFilterHigh,
+	              OUT PMSG Message);
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-                          IN BOOL Remove,
-                          IN PWND Window,
-                          IN UINT MsgFilterLow,
-                          IN UINT MsgFilterHigh,
-                          OUT MSG* pMsg);
+	                      IN BOOL Remove,
+	                      IN PWND Window,
+	                      IN UINT MsgFilterLow,
+	                      IN UINT MsgFilterHigh,
+	                      OUT MSG* pMsg);
+BOOL APIENTRY
+co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
+                    IN BOOL Remove,
+                    IN PWND Window,
+                    IN UINT MsgFilterLow,
+                    IN UINT MsgFilterHigh,
+                    OUT MSG* pMsg);
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL

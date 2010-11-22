@@ -4424,6 +4424,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    POINT pt;
    HWND Ret;
    PWND DesktopWindow = NULL, Window = NULL;
+   USHORT hittest;
    DECLARE_RETURN(HWND);
    USER_REFERENCE_ENTRY Ref;
 
@@ -4442,7 +4443,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       UserRefObjectCo(DesktopWindow, &Ref);
 
       pti = PsGetCurrentThreadWin32Thread();
-      co_WinPosWindowFromPoint(DesktopWindow, pti->MessageQueue, &pt, &Window);
+      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
 
       if(Window)
       {
