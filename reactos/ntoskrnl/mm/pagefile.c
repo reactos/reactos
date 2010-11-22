@@ -132,7 +132,7 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
 
 BOOLEAN
 NTAPI
-MmIsFileAPagingFile(PFILE_OBJECT FileObject)
+MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject)
 {
     ULONG i;
 
