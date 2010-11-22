@@ -12,6 +12,20 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PRIVATE FUNCTIONS *********************************************************/
+
+typedef struct _FILE_OBJECT_FILTER_CONTEXTS
+{
+    FAST_MUTEX FilterContextsMutex;
+    LIST_ENTRY FilterContexts;
+} FILE_OBJECT_FILTER_CONTEXTS, *PFILE_OBJECT_FILTER_CONTEXTS;
+
+VOID
+FsRtlPTeardownPerFileObjectContexts(IN PFILE_OBJECT FileObject)
+{
+}
+
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -33,6 +47,19 @@ NTAPI
 FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 {
     return MmIsFileObjectAPagingFile(FileObject);
+}
+
+/*
+ * @unimplemented
+ */
+PFSRTL_PER_FILEOBJECT_CONTEXT
+NTAPI
+FsRtlLookupPerFileObjectContext(IN PFILE_OBJECT FileObject,
+                                IN PVOID OwnerId OPTIONAL,
+                                IN PVOID InstanceId OPTIONAL)
+{
+    KeBugCheck(FILE_SYSTEM);
+    return FALSE;
 }
 
 /*
@@ -86,14 +113,13 @@ FsRtlLookupPerStreamContextInternal(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader,
 /*
  * @unimplemented
  */
-PFSRTL_PER_FILEOBJECT_CONTEXT
+NTSTATUS
 NTAPI
-FsRtlLookupPerFileObjectContext(IN PFILE_OBJECT FileObject,
-                                IN PVOID OwnerId OPTIONAL,
-                                IN PVOID InstanceId OPTIONAL)
+FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
+                                IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
 {
     KeBugCheck(FILE_SYSTEM);
-    return FALSE;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /*
@@ -113,6 +139,19 @@ FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader,
     InsertHeadList(&(AdvFcbHeader->FilterContexts), &(PerStreamContext->Links));
     ExReleaseFastMutex(AdvFcbHeader->FastMutex);
     return STATUS_SUCCESS;
+}
+
+/*
+ * @unimplemented
+ */
+PFSRTL_PER_FILEOBJECT_CONTEXT
+NTAPI
+FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
+                                IN PVOID OwnerId OPTIONAL,
+                                IN PVOID InstanceId OPTIONAL)
+{
+    KeBugCheck(FILE_SYSTEM);
+    return NULL;
 }
 
 /*
@@ -168,31 +207,6 @@ FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader,
 
     return PerStreamContext;
 
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
-                                IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
-{
-    KeBugCheck(FILE_SYSTEM);
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-PFSRTL_PER_FILEOBJECT_CONTEXT
-NTAPI
-FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
-                                IN PVOID OwnerId OPTIONAL,
-                                IN PVOID InstanceId OPTIONAL)
-{
-    KeBugCheck(FILE_SYSTEM);
-    return NULL;
 }
 
 /*
