@@ -2,6 +2,7 @@
 LIST(APPEND SOURCE
 #   access.idl
     activaut.idl
+    activdbg.idl
     activscp.idl
     asptlb.idl
 #   asynot.idl
@@ -98,7 +99,6 @@ LIST(APPEND SOURCE
 
 if(NOT MSVC)
   LIST(APPEND SOURCE
-    activdbg.idl
     ctfutb.idl
     mlang.idl
     msctf.idl
