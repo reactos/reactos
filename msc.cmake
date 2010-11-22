@@ -26,12 +26,9 @@ set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> <CMAKE_SHARED_LIBRARY_C_F
 MACRO(add_pch _target_name _header_filename _src_list)
     get_filename_component(FILE ${_header_filename} NAME)
     set(_gch_filename "${_target_name}_${FILE}.gch")
-    list(APPEND ${_src_list} ${_gch_filename})
-    _PCH_GET_COMPILE_FLAGS(${_target_name} _args ${_header_filename})
-    file(REMOVE ${_gch_filename})
     add_custom_command(
         OUTPUT ${_gch_filename}
-        COMMAND ${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1} ${_args}
+        COMMAND echo Ignoring precompiled header
         DEPENDS ${_header_filename})
 ENDMACRO(add_pch _target_name _header_filename _src_list)
 
