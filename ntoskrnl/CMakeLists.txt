@@ -215,6 +215,7 @@ list(APPEND SOURCE
     ob/obsecure.c
     ob/obwait.c
     po/events.c
+    po/guid.c
     po/poshtdwn.c
     po/povolume.c
     po/power.c
