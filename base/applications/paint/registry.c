@@ -16,10 +16,10 @@
 void
 SetWallpaper(TCHAR * FileName, DWORD dwStyle, DWORD dwTile) //FIXME: Has to be called 2x to apply the pattern (tiled/stretched) too
 {
-    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) FileName, SPIF_UPDATEINIFILE);
-
     HKEY hDesktop;
     TCHAR szStyle[3], szTile[3];
+
+    SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) FileName, SPIF_UPDATEINIFILE);
 
     if ((dwStyle > 2) || (dwTile > 2))
         return;
