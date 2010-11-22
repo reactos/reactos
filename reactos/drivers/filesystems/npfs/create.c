@@ -106,6 +106,35 @@ NpfsSignalAndRemoveListeningServerInstance(PNPFS_FCB Fcb,
 
 
 static VOID
+NpfsOpenFileSystem(PNPFS_FCB Fcb,
+                   PFILE_OBJECT FileObject,
+                   PIO_STATUS_BLOCK IoStatus)
+{
+    PNPFS_CCB Ccb;
+
+    DPRINT("NpfsOpenFileSystem()\n");
+
+    Ccb = ExAllocatePool(NonPagedPool, sizeof(NPFS_CCB));
+    if (Ccb == NULL)
+    {
+        IoStatus->Status = STATUS_NO_MEMORY;
+        return;
+    }
+
+    Ccb->Type = CCB_DEVICE;
+    Ccb->Fcb = Fcb;
+
+    FileObject->FsContext = Fcb;
+    FileObject->FsContext2 = Ccb;
+
+    IoStatus->Information = FILE_OPENED;
+    IoStatus->Status = STATUS_SUCCESS;
+
+    return;
+}
+
+
+static VOID
 NpfsOpenRootDirectory(PNPFS_FCB Fcb,
                       PFILE_OBJECT FileObject,
                       PIO_STATUS_BLOCK IoStatus)
@@ -174,6 +203,24 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     }
 #endif
 
+    DPRINT("FileName->Length: %hu  RelatedFileObject: %p\n", FileName->Length, RelatedFileObject);
+
+    /* Open the file system */
+    if (FileName->Length == 0 &&
+        (RelatedFileObject == NULL || ((PNPFS_CCB)RelatedFileObject->FsContext2)->Type == CCB_DEVICE))
+    {
+        DPRINT("Open the file system\n");
+
+        NpfsOpenFileSystem(Vcb->DeviceFcb,
+                           FileObject,
+                           &Irp->IoStatus);
+
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    /* Open the root directory */
     if (FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL)
     {
         DPRINT("Open the root directory\n");
@@ -662,6 +709,15 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
         return STATUS_SUCCESS;
     }
 
+    if (Ccb->Type == CCB_DEVICE)
+    {
+        DPRINT("Cleanup the file system!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
     if (Ccb->Type == CCB_DIRECTORY)
     {
         DPRINT("Cleanup the root directory!\n");
@@ -800,6 +856,20 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     if (Ccb == NULL)
     {
         DPRINT("Success!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    if (Ccb->Type == CCB_DEVICE)
+    {
+        DPRINT("Closing the file system!\n");
+
+        ExFreePool(Ccb);
+        FileObject->FsContext = NULL;
+        FileObject->FsContext2 = NULL;
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
