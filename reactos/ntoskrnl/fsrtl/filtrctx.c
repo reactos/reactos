@@ -20,9 +20,26 @@ typedef struct _FILE_OBJECT_FILTER_CONTEXTS
     LIST_ENTRY FilterContexts;
 } FILE_OBJECT_FILTER_CONTEXTS, *PFILE_OBJECT_FILTER_CONTEXTS;
 
+/*
+ * @implemented
+ */
 VOID
+NTAPI
 FsRtlPTeardownPerFileObjectContexts(IN PFILE_OBJECT FileObject)
 {
+    PFILE_OBJECT_FILTER_CONTEXTS FOContext = NULL;
+
+    ASSERT(FileObject);
+
+    if (!(FOContext = IoGetFileObjectFilterContext(FileObject)))
+    {
+        return;
+    }
+
+    ASSERT(IoChangeFileObjectFilterContext(FileObject, FOContext, FALSE) == STATUS_SUCCESS);
+    ASSERT(IsListEmpty(&(FOContext->FilterContexts)));
+
+    ExFreePoolWithTag(FOContext, 'FOCX');
 }
 
 
@@ -50,7 +67,7 @@ FsRtlIsPagingFile(IN PFILE_OBJECT FileObject)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PFSRTL_PER_FILEOBJECT_CONTEXT
 NTAPI
@@ -58,8 +75,47 @@ FsRtlLookupPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {
-    KeBugCheck(FILE_SYSTEM);
-    return FALSE;
+    PLIST_ENTRY NextEntry;
+    PFILE_OBJECT_FILTER_CONTEXTS FOContext = NULL;
+    PFSRTL_PER_FILEOBJECT_CONTEXT TmpPerFOContext, PerFOContext = NULL;
+
+    if (!FileObject || !(FOContext = IoGetFileObjectFilterContext(FileObject)))
+    {
+        return NULL;
+    }
+
+    ExAcquireFastMutex(&(FOContext->FilterContextsMutex));
+
+    /* If list is empty, no need to browse it */
+    if (!IsListEmpty(&(FOContext->FilterContexts)))
+    {
+        for (NextEntry = FOContext->FilterContexts.Flink;
+             NextEntry != &(FOContext->FilterContexts);
+             NextEntry = NextEntry->Flink)
+        {
+            /* If we don't have any criteria for search, first entry will be enough */
+            if (!OwnerId && !InstanceId)
+            {
+                PerFOContext = (PFSRTL_PER_FILEOBJECT_CONTEXT)NextEntry;
+                break;
+            }
+            /* Else, we've to find something that matches with the parameters. */
+            else
+            {
+                TmpPerFOContext = CONTAINING_RECORD(NextEntry, FSRTL_PER_FILEOBJECT_CONTEXT, Links);
+                if ((InstanceId && TmpPerFOContext->InstanceId == InstanceId && TmpPerFOContext->OwnerId == OwnerId) ||
+                    (OwnerId && TmpPerFOContext->OwnerId == OwnerId))
+                {
+                    PerFOContext = TmpPerFOContext;
+                    break;
+                }
+            }
+        }
+    }
+
+    ExReleaseFastMutex(&(FOContext->FilterContextsMutex));
+
+    return PerFOContext;
 }
 
 /*
@@ -105,21 +161,62 @@ FsRtlLookupPerStreamContextInternal(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader,
             }
         }
     }
+
     ExReleaseFastMutex(AdvFcbHeader->FastMutex);
 
     return PerStreamContext;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PFSRTL_PER_FILEOBJECT_CONTEXT Ptr)
 {
-    KeBugCheck(FILE_SYSTEM);
-    return STATUS_NOT_IMPLEMENTED;
+    PFILE_OBJECT_FILTER_CONTEXTS FOContext = NULL;
+
+    if (!FileObject)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (!(FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION))
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    FOContext = IoGetFileObjectFilterContext(FileObject);
+    if (!FOContext)
+    {
+        FOContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(FILE_OBJECT_FILTER_CONTEXTS), 'FOCX');
+        if (!FOContext)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        ExInitializeFastMutex(&(FOContext->FilterContextsMutex));
+        InitializeListHead(&(FOContext->FilterContexts));
+
+        if (!IoChangeFileObjectFilterContext(FileObject, FOContext, TRUE))
+        {
+            ExFreePoolWithTag(FOContext, 'FOCX');
+
+            FOContext = IoGetFileObjectFilterContext(FileObject);
+            if (!FOContext)
+            {
+                ASSERT(FALSE);
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
+    }
+
+    ExAcquireFastMutex(&(FOContext->FilterContextsMutex));
+    InsertHeadList(&(FOContext->FilterContexts), &(Ptr->Links));
+    ExReleaseFastMutex(&(FOContext->FilterContextsMutex));
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -142,16 +239,61 @@ FsRtlInsertPerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PFSRTL_PER_FILEOBJECT_CONTEXT
 NTAPI
-FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
+FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {
-    KeBugCheck(FILE_SYSTEM);
-    return NULL;
+    PLIST_ENTRY NextEntry;
+    PFILE_OBJECT_FILTER_CONTEXTS FOContext = NULL;
+    PFSRTL_PER_FILEOBJECT_CONTEXT TmpPerFOContext, PerFOContext = NULL;
+
+    if (!FileObject || !(FOContext = IoGetFileObjectFilterContext(FileObject)))
+    {
+        return NULL;
+    }
+
+    ExAcquireFastMutex(&(FOContext->FilterContextsMutex));
+
+    /* If list is empty, no need to browse it */
+    if (!IsListEmpty(&(FOContext->FilterContexts)))
+    {
+        for (NextEntry = FOContext->FilterContexts.Flink;
+             NextEntry != &(FOContext->FilterContexts);
+             NextEntry = NextEntry->Flink)
+        {
+            /* If we don't have any criteria for search, first entry will be enough */
+            if (!OwnerId && !InstanceId)
+            {
+                PerFOContext = (PFSRTL_PER_FILEOBJECT_CONTEXT)NextEntry;
+                break;
+            }
+            /* Else, we've to find something that matches with the parameters. */
+            else
+            {
+                TmpPerFOContext = CONTAINING_RECORD(NextEntry, FSRTL_PER_FILEOBJECT_CONTEXT, Links);
+                if ((InstanceId && TmpPerFOContext->InstanceId == InstanceId && TmpPerFOContext->OwnerId == OwnerId) ||
+                    (OwnerId && TmpPerFOContext->OwnerId == OwnerId))
+                {
+                    PerFOContext = TmpPerFOContext;
+                    break;
+                }
+            }
+        }
+
+        /* Finally remove entry from list */
+        if (PerFOContext)
+        {
+            RemoveEntryList(&(PerFOContext->Links));
+        }
+    }
+
+    ExReleaseFastMutex(&(FOContext->FilterContextsMutex));
+
+    return PerFOContext;
 }
 
 /*
@@ -197,6 +339,7 @@ FsRtlRemovePerStreamContext(IN PFSRTL_ADVANCED_FCB_HEADER AdvFcbHeader,
                 }
             }
         }
+
         /* Finally remove entry from list */
         if (PerStreamContext)
         {

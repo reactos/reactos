@@ -1049,6 +1049,13 @@ IopDeleteFile(IN PVOID ObjectBody)
             ExFreePool(FileObject->CompletionContext);
         }
 
+        /* Check if the FO had extension */
+        if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
+        {
+            /* Release filter context structure if any */
+            FsRtlPTeardownPerFileObjectContexts(FileObject);
+        }
+
         /* Check if dereference has been done yet */
         if (!DereferenceDone)
         {
@@ -1608,6 +1615,36 @@ IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
 
     /* Return status */
     return Status;
+}
+
+PVOID
+NTAPI
+IoGetFileObjectFilterContext(IN PFILE_OBJECT FileObject)
+{
+    if (FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION)
+    {
+        UNIMPLEMENTED;
+        /* FIXME: return NULL for the moment ~ */
+        return NULL;
+    }
+
+    return NULL;
+}
+
+NTSTATUS
+NTAPI
+IoChangeFileObjectFilterContext(IN PFILE_OBJECT FileObject,
+                                IN PVOID FilterContext,
+                                IN BOOLEAN Define)
+{
+    if (!(FileObject->Flags & FO_FILE_OBJECT_HAS_EXTENSION))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    UNIMPLEMENTED;
+
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* FUNCTIONS *****************************************************************/

@@ -54,6 +54,15 @@ FsRtlInitSystem(
 );
 
 //
+// File contexts Routines
+//
+VOID
+NTAPI
+FsRtlPTeardownPerFileObjectContexts(
+    IN PFILE_OBJECT FileObject
+);
+
+//
 // Global data inside the File System Runtime Library
 //
 extern PERESOURCE FsRtlPagingIoResources;
