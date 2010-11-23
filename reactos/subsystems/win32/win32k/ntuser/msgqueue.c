@@ -870,14 +870,6 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
 
     msg->hwnd = UserHMGetHandle(pwndMsg);
 
-    /* FIXME: is this really the right place for this hook? */
-    event.message = msg->message;
-    event.time    = msg->time;
-    event.hwnd    = msg->hwnd;
-    event.paramL  = msg->pt.x;
-    event.paramH  = msg->pt.y;
-    co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&event );
-
 #if 0
     if (!check_hwnd_filter( msg, hwnd_filter )) RETURN(FALSE);
 #endif
@@ -988,6 +980,15 @@ BOOL co_IntProcessMouseMessage(MSG* msg, BOOL* RemoveMessages, UINT first, UINT 
     }
 
     /* message is accepted now (but may still get dropped) */
+
+    pti->rpdesk->htEx = hittest; /* Now set the capture hit. */
+
+    event.message = msg->message;
+    event.time    = msg->time;
+    event.hwnd    = msg->hwnd;
+    event.paramL  = msg->pt.x;
+    event.paramH  = msg->pt.y;
+    co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&event );
 
     hook.pt           = msg->pt;
     hook.hwnd         = msg->hwnd;
