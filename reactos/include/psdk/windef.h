@@ -1,17 +1,5 @@
-/**
- * This file has no copyright assigned and is placed in the Public Domain.
- * This file is part of the w64 mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER.PD within this package.
- */
-#ifndef _WINDEF_
-#define _WINDEF_
-
-#define _WINDEF_H // wine ...
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4255)
-#endif
+#ifndef _WINDEF_H
+#define _WINDEF_H
 
 #ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)
@@ -21,68 +9,62 @@
 #endif
 #endif
 
-#ifndef NO_STRICT
-#ifndef STRICT
-#define STRICT 1
-#endif
-#endif
-
-#ifndef WIN32
-#define WIN32
-#endif
-
-#if defined(_MAC) && !defined(_WIN32)
-#define _WIN32
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4255)
+#endif
+
 #ifndef WINVER
-#define WINVER 0x0502
+#define WINVER 0x0400
+/*
+ * If you need Win32 API features newer the Win95 and WinNT then you must
+ * define WINVER before including windows.h or any other method of including
+ * the windef.h header.
+ */
 #endif
-
-#ifndef BASETYPES
-#define BASETYPES
-#ifndef __ROS_LONG64__
-typedef unsigned long ULONG;
-#else
-typedef unsigned int ULONG;
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT WINVER
+/*
+ * There may be the need to define _WIN32_WINNT to a value different from
+ * the value of WINVER.  I don't have any example of why you would do that.
+ * However, if you must then define _WIN32_WINNT to the value required before
+ * including windows.h or any other method of including the windef.h header.
+ */
 #endif
-typedef ULONG *PULONG;
-typedef unsigned short USHORT;
-typedef USHORT *PUSHORT;
-typedef unsigned char UCHAR;
-typedef UCHAR *PUCHAR;
-typedef char *PSZ;
-typedef int INT;
-#endif  /* BASETYPES */
-
+#ifndef WIN32
+#define WIN32
+#endif
+#ifndef _WIN32
+#define _WIN32
+#endif
+#define FAR
+#define far
+#define NEAR
+#define near
+#ifndef CONST
+#define CONST const
+#endif
 #undef MAX_PATH
 #define MAX_PATH 260
 
 #ifndef NULL
 #ifdef __cplusplus
-#ifndef _WIN64
 #define NULL 0
 #else
-#define NULL 0LL
-#endif  /* W64 */
-#else
-#define NULL ((void *)0)
+#define NULL ((void*)0)
 #endif
 #endif
-
 #ifndef FALSE
 #define FALSE 0
 #endif
-
 #ifndef TRUE
 #define TRUE 1
 #endif
 
-#ifndef _NO_W32_PSEUDO_MODIFIERS
 #ifndef IN
 #define IN
 #endif
@@ -92,307 +74,6 @@ typedef int INT;
 #ifndef OPTIONAL
 #define OPTIONAL
 #endif
-#endif
-
-#ifdef __GNUC__
-#define PACKED __attribute__((packed))
-#ifndef __declspec
-#define __declspec(e) __attribute__((e))
-#endif
-#ifndef _declspec
-#define _declspec(e) __attribute__((e))
-#endif
-#elif defined(__WATCOMC__)
-#define PACKED
-#else
-#define PACKED
-#define _cdecl
-#define __cdecl
-#endif
-
-#ifdef __GNUC__
-#define DECLSPEC_NORETURN __declspec(noreturn)
-#define DECLARE_STDCALL_P( type ) __stdcall type
-#elif defined(__WATCOMC__)
-#define DECLSPEC_NORETURN
-#define DECLARE_STDCALL_P( type ) type __stdcall
-#elif defined(_MSC_VER)
-#define DECLSPEC_NORETURN __declspec(noreturn)
-#define DECLARE_STDCALL_P( type ) type __stdcall
-#endif /* __GNUC__/__WATCOMC__ */
-
-#define DECLSPEC_IMPORT __declspec(dllimport)
-#define DECLSPEC_EXPORT __declspec(dllexport)
-#ifndef DECLSPEC_NOINLINE
-#if (_MSC_VER >= 1300)
-#define DECLSPEC_NOINLINE  __declspec(noinline)
-#elif defined(__GNUC__)
-#define DECLSPEC_NOINLINE __attribute__((noinline))
-#else
-#define DECLSPEC_NOINLINE
-#endif
-#endif
-
-#undef far
-#undef near
-#undef pascal
-
-#define far
-#define near
-#define pascal __stdcall
-
-//#define cdecl _cdecl
-#ifndef CDECL
-#define CDECL _cdecl
-#endif
-
-#if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
-#ifndef CALLBACK
-#define CALLBACK __stdcall
-#endif
-#ifndef WINAPI
-#define WINAPI __stdcall
-#endif
-#define WINAPIV __cdecl
-#define APIENTRY WINAPI
-#define APIPRIVATE WINAPI
-#define PASCAL WINAPI
-#else
-#define CALLBACK
-#define WINAPI
-#define WINAPIV
-#define APIENTRY WINAPI
-#define APIPRIVATE
-#define PASCAL pascal
-#endif
-
-#undef FAR
-#undef NEAR
-#define FAR
-#define NEAR
-
-#ifndef CONST
-#define CONST const
-#endif
-
-#ifndef _DEF_WINBOOL_
-#define _DEF_WINBOOL_
-typedef int WINBOOL;
-#pragma push_macro("BOOL")
-#undef BOOL
-#if !defined(__OBJC__) && !defined(__OBJC_BOOL) && !defined(__objc_INCLUDE_GNU)
-typedef int BOOL;
-#endif
-#define BOOL WINBOOL
-typedef BOOL *PBOOL;
-typedef BOOL *LPBOOL;
-#pragma pop_macro("BOOL")
-#endif /* _DEF_WINBOOL_ */
-
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-#ifndef __ROS_LONG64__
-    typedef unsigned long DWORD;
-#else
-    typedef unsigned int DWORD;
-#endif
-typedef float FLOAT;
-typedef FLOAT *PFLOAT;
-typedef BYTE *PBYTE;
-typedef BYTE *LPBYTE;
-typedef int *PINT;
-typedef int *LPINT;
-typedef WORD *PWORD;
-typedef WORD *LPWORD;
-#ifndef __ROS_LONG64__
-typedef long *LPLONG;
-#else
-typedef int *LPLONG;
-#endif
-typedef DWORD *PDWORD;
-typedef DWORD *LPDWORD;
-typedef void *LPVOID;
-#ifndef _LPCVOID_DEFINED
-#define _LPCVOID_DEFINED
-typedef CONST void *LPCVOID;
-#endif
-//typedef int INT;
-typedef unsigned int UINT;
-typedef unsigned int *PUINT;
-typedef unsigned int *LPUINT;
-
-
-
-
-#ifndef NT_INCLUDED
-#include <winnt.h>
-#endif
-
-#include <specstrings.h>
-
-typedef UINT_PTR WPARAM;
-typedef LONG_PTR LPARAM;
-typedef LONG_PTR LRESULT;
-#ifndef _HRESULT_DEFINED
-typedef LONG HRESULT;
-#define _HRESULT_DEFINED
-#endif
-
-#ifndef NOMINMAX
-#ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#endif
-#ifndef min
-#define min(a,b) (((a) < (b)) ? (a) : (b))
-#endif
-#endif
-
-#define MAKEWORD(a,b) ((WORD)(((BYTE)((DWORD_PTR)(a) & 0xff)) | ((WORD)((BYTE)((DWORD_PTR)(b) & 0xff))) << 8))
-#define MAKELONG(a,b) ((LONG)(((WORD)((DWORD_PTR)(a) & 0xffff)) | ((DWORD)((WORD)((DWORD_PTR)(b) & 0xffff))) << 16))
-#define LOWORD(l) ((WORD)((DWORD_PTR)(l) & 0xffff))
-#define HIWORD(l) ((WORD)((DWORD_PTR)(l) >> 16))
-#define LOBYTE(w) ((BYTE)((DWORD_PTR)(w) & 0xff))
-#define HIBYTE(w) ((BYTE)((DWORD_PTR)(w) >> 8))
-
-#ifndef WIN_INTERNAL
-DECLARE_HANDLE (HWND);
-//DECLARE_HANDLE (HHOOK);
-#ifdef WINABLE
-DECLARE_HANDLE (HEVENT);
-#endif
-#endif
-
-typedef WORD ATOM;
-
-typedef HANDLE *SPHANDLE;
-typedef HANDLE *LPHANDLE;
-typedef HANDLE HGLOBAL;
-typedef HANDLE HLOCAL;
-typedef HANDLE GLOBALHANDLE;
-typedef HANDLE LOCALHANDLE;
-#ifdef _WIN64
-typedef INT_PTR (WINAPI *FARPROC)();
-typedef INT_PTR (WINAPI *NEARPROC)();
-typedef INT_PTR (WINAPI *PROC)();
-#else
-typedef int (WINAPI *FARPROC)();
-typedef int (WINAPI *NEARPROC)();
-typedef int (WINAPI *PROC)();
-#endif
-
-typedef void *HGDIOBJ;
-
-DECLARE_HANDLE(HKEY);
-typedef HKEY *PHKEY;
-
-DECLARE_HANDLE(HACCEL);
-DECLARE_HANDLE(HBITMAP);
-DECLARE_HANDLE(HBRUSH);
-DECLARE_HANDLE(HCOLORSPACE);
-DECLARE_HANDLE(HDC);
-DECLARE_HANDLE(HGLRC);
-DECLARE_HANDLE(HDESK);
-DECLARE_HANDLE(HENHMETAFILE);
-DECLARE_HANDLE(HFONT);
-DECLARE_HANDLE(HICON);
-DECLARE_HANDLE(HMENU);
-DECLARE_HANDLE(HMETAFILE);
-DECLARE_HANDLE(HINSTANCE);
-typedef HINSTANCE HMODULE;
-DECLARE_HANDLE(HPALETTE);
-DECLARE_HANDLE(HPEN);
-DECLARE_HANDLE(HRGN);
-DECLARE_HANDLE(HRSRC);
-DECLARE_HANDLE(HSTR);
-DECLARE_HANDLE(HTASK);
-DECLARE_HANDLE(HWINSTA);
-DECLARE_HANDLE(HKL);
-DECLARE_HANDLE(HMONITOR);
-DECLARE_HANDLE(HWINEVENTHOOK);
-DECLARE_HANDLE(HUMPD);
-
-typedef int HFILE;
-typedef HICON HCURSOR;
-typedef DWORD COLORREF;
-typedef DWORD *LPCOLORREF;
-
-#define HFILE_ERROR ((HFILE)-1)
-
-typedef struct tagRECT {
-	LONG left;
-	LONG top;
-	LONG right;
-	LONG bottom;
-} RECT,*PRECT,*NPRECT,*LPRECT;
-
-typedef const RECT *LPCRECT;
-
-typedef struct _RECTL {
-	LONG left;
-	LONG top;
-	LONG right;
-	LONG bottom;
-} RECTL,*PRECTL,*LPRECTL;
-
-typedef const RECTL *LPCRECTL;
-
-typedef struct tagPOINT {
-	LONG x;
-	LONG y;
-} POINT,*PPOINT,*NPPOINT,*LPPOINT;
-
-typedef struct _POINTL {
-  LONG x;
-  LONG y;
-} POINTL,*PPOINTL;
-
-typedef struct tagSIZE {
-	LONG cx;
-	LONG cy;
-} SIZE,*PSIZE,*LPSIZE;
-
-typedef SIZE SIZEL;
-typedef SIZE *PSIZEL,*LPSIZEL;
-
-typedef struct tagPOINTS {
-	SHORT x;
-	SHORT y;
-} POINTS,*PPOINTS,*LPPOINTS;
-
-typedef struct _FILETIME {
-  DWORD dwLowDateTime;
-  DWORD dwHighDateTime;
-} FILETIME,*PFILETIME,*LPFILETIME;
-#define _FILETIME_
-
-#define DM_UPDATE 1
-#define DM_COPY 2
-#define DM_PROMPT 4
-#define DM_MODIFY 8
-
-#define DM_IN_BUFFER DM_MODIFY
-#define DM_IN_PROMPT DM_PROMPT
-#define DM_OUT_BUFFER DM_COPY
-#define DM_OUT_DEFAULT DM_UPDATE
-
-#define DC_FIELDS 1
-#define DC_PAPERS 2
-#define DC_PAPERSIZE 3
-#define DC_MINEXTENT 4
-#define DC_MAXEXTENT 5
-#define DC_BINS 6
-#define DC_DUPLEX 7
-#define DC_SIZE 8
-#define DC_EXTRA 9
-#define DC_VERSION 10
-#define DC_DRIVER 11
-#define DC_BINNAMES 12
-#define DC_ENUMRESOLUTIONS 13
-#define DC_FILEDEPENDENCIES 14
-#define DC_TRUETYPE 15
-#define DC_PAPERNAMES 16
-#define DC_ORIENTATION 17
-#define DC_COPIES 18
 
 /* needed by header files generated by WIDL */
 #ifdef __WINESRC__
@@ -417,41 +98,26 @@ typedef struct _FILETIME {
 # define DECL_WINELIB_TYPE_AW(type)  typedef WINELIB_NAME_AW(type) type;
 #endif
 
-#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
-#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
-#define DBG_UNREFERENCED_PARAMETER(P)
-#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
-
-#ifndef __WATCOMC__
-#ifndef _export
-#define _export
-#endif
-#ifndef __export
-#define __export
-#endif
-#endif
-
-#if 0
 #ifdef __GNUC__
 #define PACKED __attribute__((packed))
-//#ifndef _fastcall
-//#define _fastcall __attribute__((fastcall))
-//#endif
-//#ifndef __fastcall
-//#define __fastcall __attribute__((fastcall))
-//#endif
-//#ifndef _stdcall
-//#define _stdcall __attribute__((stdcall))
-//#endif
-//#ifndef __stdcall
-//#define __stdcall __attribute__((stdcall))
-//#endif
-//#ifndef _cdecl
-//#define _cdecl __attribute__((cdecl))
-//#endif
-//#ifndef __cdecl
-//#define __cdecl __attribute__((cdecl))
-//#endif
+#ifndef _fastcall
+#define _fastcall __attribute__((fastcall))
+#endif
+#ifndef __fastcall
+#define __fastcall __attribute__((fastcall))
+#endif
+#ifndef _stdcall
+#define _stdcall __attribute__((stdcall))
+#endif
+#ifndef __stdcall
+#define __stdcall __attribute__((stdcall))
+#endif
+#ifndef _cdecl
+#define _cdecl __attribute__((cdecl))
+#endif
+#ifndef __cdecl
+#define __cdecl __attribute__((cdecl))
+#endif
 #ifndef __declspec
 #define __declspec(e) __attribute__((e))
 #endif
@@ -465,9 +131,186 @@ typedef struct _FILETIME {
 #define _cdecl
 #define __cdecl
 #endif
+
+#undef pascal
+#undef _pascal
+#undef __pascal
+#define pascal __stdcall
+#define _pascal __stdcall
+#define __pascal __stdcall
+
+#define CDECL _cdecl
+
+#if !defined(__x86_64__) //defined(_STDCALL_SUPPORTED)
+#define CALLBACK    __stdcall
+#define WINAPI      __stdcall
+#define WINAPIV     __cdecl
+#define APIENTRY    WINAPI
+#define APIPRIVATE  __stdcall
+#define PASCAL      __stdcall
+#else
+#define CALLBACK
+#define WINAPI
+#define WINAPIV
+#define APIENTRY    WINAPI
+#define APIPRIVATE
+#define PASCAL      pascal
 #endif
 
-#if 1 // needed by shlwapi.h
+#define DECLSPEC_IMPORT __declspec(dllimport)
+#define DECLSPEC_EXPORT __declspec(dllexport)
+#ifndef DECLSPEC_NOINLINE
+#if (_MSC_VER >= 1300)
+#define DECLSPEC_NOINLINE  __declspec(noinline)
+#elif defined(__GNUC__)
+#define DECLSPEC_NOINLINE __attribute__((noinline))
+#else
+#define DECLSPEC_NOINLINE
+#endif
+#endif
+#ifdef __GNUC__
+#define DECLSPEC_NORETURN __declspec(noreturn)
+#define DECLARE_STDCALL_P( type ) __stdcall type
+#elif defined(__WATCOMC__)
+#define DECLSPEC_NORETURN
+#define DECLARE_STDCALL_P( type ) type __stdcall
+#elif defined(_MSC_VER)
+#define DECLSPEC_NORETURN __declspec(noreturn)
+#define DECLARE_STDCALL_P( type ) type __stdcall
+#endif /* __GNUC__/__WATCOMC__ */
+#define MAKEWORD(a,b)	((WORD)(((BYTE)(a))|(((WORD)((BYTE)(b)))<<8)))
+#define MAKELONG(a,b)	((LONG)(((WORD)(a))|(((DWORD)((WORD)(b)))<<16)))
+#define LOWORD(l)	((WORD)((DWORD_PTR)(l)))
+#define HIWORD(l)	((WORD)(((DWORD_PTR)(l)>>16)&0xFFFF))
+#define LOBYTE(w)	((BYTE)(w))
+#define HIBYTE(w)	((BYTE)(((WORD)(w)>>8)&0xFF))
+
+#ifndef __WATCOMC__
+#ifndef _export
+#define _export
+#endif
+#ifndef __export
+#define __export
+#endif
+#endif
+
+#ifndef NOMINMAX
+    #ifndef max
+        #define max(a,b) ((a)>(b)?(a):(b))
+    #endif
+
+    #ifndef min
+        #define min(a,b) ((a)<(b)?(a):(b))
+    #endif
+#endif
+
+#define UNREFERENCED_PARAMETER(P) {(P)=(P);}
+#define UNREFERENCED_LOCAL_VARIABLE(L) {(L)=(L);}
+#define DBG_UNREFERENCED_PARAMETER(P)
+#define DBG_UNREFERENCED_LOCAL_VARIABLE(L)
+
+#ifndef __ANONYMOUS_DEFINED
+#define __ANONYMOUS_DEFINED
+
+#ifndef NONAMELESSUNION
+#ifdef __GNUC__
+#define _ANONYMOUS_UNION __extension__
+#define _ANONYMOUS_STRUCT __extension__
+#elif defined(__WATCOMC__) || defined(_MSC_VER)
+#define _ANONYMOUS_UNION
+#define _ANONYMOUS_STRUCT
+#endif /* __GNUC__/__WATCOMC__ */
+#endif /* NONAMELESSUNION */
+
+#ifndef _ANONYMOUS_UNION
+#define _ANONYMOUS_UNION
+#define _UNION_NAME(x) x
+#define DUMMYUNIONNAME	u
+#define DUMMYUNIONNAME1	u1
+#define DUMMYUNIONNAME2	u2
+#define DUMMYUNIONNAME3	u3
+#define DUMMYUNIONNAME4	u4
+#define DUMMYUNIONNAME5	u5
+#define DUMMYUNIONNAME6	u6
+#define DUMMYUNIONNAME7	u7
+#define DUMMYUNIONNAME8	u8
+#else
+#define _UNION_NAME(x)
+#define DUMMYUNIONNAME
+#define DUMMYUNIONNAME1
+#define DUMMYUNIONNAME2
+#define DUMMYUNIONNAME3
+#define DUMMYUNIONNAME4
+#define DUMMYUNIONNAME5
+#define DUMMYUNIONNAME6
+#define DUMMYUNIONNAME7
+#define DUMMYUNIONNAME8
+#endif
+#ifndef _ANONYMOUS_STRUCT
+#define _ANONYMOUS_STRUCT
+#define _STRUCT_NAME(x) x
+#define DUMMYSTRUCTNAME	s
+#define DUMMYSTRUCTNAME1 s1
+#define DUMMYSTRUCTNAME2 s2
+#define DUMMYSTRUCTNAME3 s3
+#define DUMMYSTRUCTNAME4 s4
+#define DUMMYSTRUCTNAME5 s5
+#else
+#define _STRUCT_NAME(x)
+#define DUMMYSTRUCTNAME
+#define DUMMYSTRUCTNAME1
+#define DUMMYSTRUCTNAME2
+#define DUMMYSTRUCTNAME3
+#define DUMMYSTRUCTNAME4
+#define DUMMYSTRUCTNAME5
+#endif
+
+#endif /* __ANONYMOUS_DEFINED */
+
+#ifndef NO_STRICT
+#ifndef STRICT
+#define STRICT 1
+#endif
+#endif
+
+#ifndef DWORD_DEFINED
+#define DWORD_DEFINED
+#ifndef __ROS_LONG64__
+    typedef unsigned long DWORD;
+#else
+    typedef unsigned int DWORD;
+#endif
+#endif//DWORD_DEFINED
+
+typedef int WINBOOL,*PWINBOOL,*LPWINBOOL;
+/* FIXME: Is there a good solution to this? */
+#ifndef XFree86Server
+#ifndef __OBJC__
+typedef WINBOOL BOOL;
+#else
+#define BOOL WINBOOL
+#endif
+typedef unsigned char BYTE;
+#endif /* ndef XFree86Server */
+typedef BOOL *PBOOL,*LPBOOL;
+typedef unsigned short WORD;
+typedef float FLOAT;
+typedef FLOAT *PFLOAT;
+typedef BYTE *PBYTE,*LPBYTE;
+typedef int *PINT,*LPINT;
+typedef WORD *PWORD,*LPWORD;
+#ifndef __ROS_LONG64__
+typedef long *LPLONG;
+#else
+typedef int *LPLONG;
+#endif
+typedef DWORD *PDWORD,*LPDWORD;
+typedef CONST void *LPCVOID;
+
+typedef unsigned int UINT,*PUINT,*LPUINT;
+
+typedef void *LPVOID;
+
 #ifndef __ms_va_list
 # if defined(__x86_64__) && defined (__GNUC__)
 #  define __ms_va_list __builtin_ms_va_list
@@ -479,7 +322,115 @@ typedef struct _FILETIME {
 #  define __ms_va_end(list) va_end(list)
 # endif
 #endif
+
+//
+// Check if ntdef.h already defined these for us
+//
+#ifndef BASETYPES
+#define BASETYPES
+#ifndef __ROS_LONG64__
+typedef unsigned long ULONG, *PULONG;
+#else
+typedef unsigned int ULONG, *PULONG;
 #endif
+typedef unsigned short USHORT, *PUSHORT;
+typedef unsigned char UCHAR, *PUCHAR;
+typedef char *PSZ;
+typedef int INT;
+#endif  /* BASETYPES */
+
+#ifndef NT_INCLUDED
+#include <winnt.h>
+#endif
+
+typedef HANDLE *LPHANDLE;
+typedef UINT_PTR WPARAM;
+typedef LONG_PTR LPARAM;
+typedef LONG_PTR LRESULT;
+#ifndef _HRESULT_DEFINED
+typedef LONG HRESULT;
+#define _HRESULT_DEFINED
+#endif
+#ifndef XFree86Server
+typedef WORD ATOM;
+#endif /* XFree86Server */
+typedef HANDLE HGLOBAL;
+typedef HANDLE HLOCAL;
+typedef HANDLE GLOBALHANDLE;
+typedef HANDLE LOCALHANDLE;
+typedef void *HGDIOBJ;
+DECLARE_HANDLE(HACCEL);
+DECLARE_HANDLE(HBITMAP);
+DECLARE_HANDLE(HBRUSH);
+DECLARE_HANDLE(HCOLORSPACE);
+DECLARE_HANDLE(HDC);
+DECLARE_HANDLE(HGLRC);
+DECLARE_HANDLE(HDESK);
+DECLARE_HANDLE(HENHMETAFILE);
+DECLARE_HANDLE(HFONT);
+DECLARE_HANDLE(HICON);
+DECLARE_HANDLE(HKEY);
+/* FIXME: How to handle these. SM_CMONITORS etc in winuser.h also. */
+/* #if (WINVER >= 0x0500) */
+DECLARE_HANDLE(HMONITOR);
+DECLARE_HANDLE(HUMPD);
+#define HMONITOR_DECLARED 1
+DECLARE_HANDLE(HTERMINAL);
+DECLARE_HANDLE(HWINEVENTHOOK);
+/* #endif */
+typedef HKEY *PHKEY;
+DECLARE_HANDLE(HMENU);
+DECLARE_HANDLE(HMETAFILE);
+DECLARE_HANDLE(HINSTANCE);
+typedef HINSTANCE HMODULE;
+DECLARE_HANDLE(HPALETTE);
+DECLARE_HANDLE(HPEN);
+DECLARE_HANDLE(HRGN);
+DECLARE_HANDLE(HRSRC);
+DECLARE_HANDLE(HSTR);
+DECLARE_HANDLE(HTASK);
+DECLARE_HANDLE(HWND);
+DECLARE_HANDLE(HWINSTA);
+DECLARE_HANDLE(HKL);
+typedef int HFILE;
+typedef HICON HCURSOR;
+typedef DWORD COLORREF;
+typedef DWORD* LPCOLORREF;
+#ifdef _WIN64
+typedef INT_PTR (FAR WINAPI *FARPROC)();
+typedef INT_PTR (NEAR WINAPI *NEARPROC)();
+typedef INT_PTR (WINAPI *PROC)();
+#else
+typedef int (FAR WINAPI *FARPROC)();
+typedef int (NEAR WINAPI *NEARPROC)();
+typedef int (WINAPI *PROC)();
+#endif
+typedef struct tagRECT {
+	LONG left;
+	LONG top;
+	LONG right;
+	LONG bottom;
+} RECT,*PRECT,*LPRECT;
+typedef const RECT *LPCRECT;
+typedef struct tagRECTL {
+	LONG left;
+	LONG top;
+	LONG right;
+	LONG bottom;
+} RECTL,*PRECTL,*LPRECTL;
+typedef const RECTL *LPCRECTL;
+typedef struct tagPOINT {
+	LONG x;
+	LONG y;
+} POINT,POINTL,*PPOINT,*LPPOINT,*PPOINTL,*LPPOINTL;
+typedef struct tagSIZE {
+	LONG cx;
+	LONG cy;
+} SIZE,SIZEL,*PSIZE,*LPSIZE,*PSIZEL,*LPSIZEL;
+typedef struct tagPOINTS {
+	SHORT x;
+	SHORT y;
+} POINTS,*PPOINTS,*LPPOINTS;
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -488,6 +439,4 @@ typedef struct _FILETIME {
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _WINDEF_ */
-
+#endif
