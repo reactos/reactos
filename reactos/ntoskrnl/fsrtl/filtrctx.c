@@ -187,31 +187,39 @@ FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
+    /* Get filter contexts */
     FOContext = IoGetFileObjectFilterContext(FileObject);
     if (!FOContext)
     {
+        /* If there's none, allocate new structure */
         FOContext = ExAllocatePoolWithTag(NonPagedPool, sizeof(FILE_OBJECT_FILTER_CONTEXTS), 'FOCX');
         if (!FOContext)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
+        /* Initialize it */
         ExInitializeFastMutex(&(FOContext->FilterContextsMutex));
         InitializeListHead(&(FOContext->FilterContexts));
 
+        /* Set it */
         if (!IoChangeFileObjectFilterContext(FileObject, FOContext, TRUE))
         {
+            /* If it fails, it means that someone else has set it in the meanwhile */
             ExFreePoolWithTag(FOContext, 'FOCX');
 
+            /* So, we can get it */
             FOContext = IoGetFileObjectFilterContext(FileObject);
             if (!FOContext)
             {
+                /* If we fall down here, something went very bad. This shouldn't happen */
                 ASSERT(FALSE);
                 return STATUS_UNSUCCESSFUL;
             }
         }
     }
 
+    /* Finally, insert */
     ExAcquireFastMutex(&(FOContext->FilterContextsMutex));
     InsertHeadList(&(FOContext->FilterContexts), &(Ptr->Links));
     ExReleaseFastMutex(&(FOContext->FilterContextsMutex));
