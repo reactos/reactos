@@ -1558,7 +1558,7 @@ CreateProcessInternalA(HANDLE hToken,
             NtCurrentTeb()->StaticUnicodeString.MaximumLength)
         {
             /* Cache it in the TEB */
-            CommandLine = Basep8BitStringToCachedUnicodeString(lpCommandLine);
+            CommandLine = Basep8BitStringToStaticUnicodeString(lpCommandLine);
         }
         else
         {

@@ -57,28 +57,27 @@ Basep8BitStringToLiveUnicodeString(OUT PUNICODE_STRING UnicodeString,
  */
 PUNICODE_STRING
 WINAPI
-Basep8BitStringToCachedUnicodeString(IN LPCSTR String)
+Basep8BitStringToStaticUnicodeString(IN LPCSTR String)
 {
-    PUNICODE_STRING StaticString = &NtCurrentTeb()->StaticUnicodeString;
+    PUNICODE_STRING StaticString = &(NtCurrentTeb()->StaticUnicodeString);
     ANSI_STRING AnsiString;
     NTSTATUS Status;
-    
-    DPRINT("Basep8BitStringToCachedUnicodeString\n");
-    
+
     /* Initialize an ANSI String */
-    RtlInitAnsiString(&AnsiString, String);
-    
-    /* Convert it */
-    Status = Basep8BitStringToUnicodeString(StaticString, &AnsiString, FALSE);
-    
-    /* Handle failure */
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(RtlInitAnsiStringEx(&AnsiString, String)))
     {
-        SetLastErrorByStatus(Status);
+        SetLastError(ERROR_FILENAME_EXCED_RANGE);
         return NULL;
     }
-    
-    /* Return pointer to the string */
+
+    /* Convert it */
+    Status = Basep8BitStringToUnicodeString(StaticString, &AnsiString, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        BaseSetLastNTError(Status);
+        return NULL;
+    }
+
     return StaticString;
 }
 
