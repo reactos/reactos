@@ -520,7 +520,7 @@ extern PMMWSL MmWorkingSetList;
 //
 ULONG
 FORCEINLINE
-MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
+MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
     
@@ -529,14 +529,15 @@ MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
     
     /* Make it valid and accessed */
     TempPte.u.Hard.Valid = TRUE;
-    TempPte.u.Hard.Accessed = TRUE;
+    MI_MAKE_ACCESSED_PAGE(&TempPte);
     
     /* Is this for user-mode? */
-    if ((PointerPte <= MiHighestUserPte) ||
-        ((PointerPte >= MiAddressToPde(NULL)) && (PointerPte <= MiHighestUserPde)))
+    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
+        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
+         (PointerPte <= (PVOID)MiHighestUserPde)))
     {
         /* Set the owner bit */
-        TempPte.u.Hard.Owner = TRUE;
+        MI_MAKE_OWNER_PAGE(&TempPte);
     }
     
     /* FIXME: We should also set the global bit */

@@ -20,6 +20,7 @@
 #define PTE_BASE    0xC0000000
 #define PTE_TOP     0xC03FFFFF
 #define PDE_BASE    0xC0400000
+#define PDE_TOP     0xC04FFFFF
 #define HYPER_SPACE 0xC0500000
 
 #if 0
@@ -106,6 +107,7 @@ PULONG MmGetPageDirectory(VOID);
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
 #define MI_MAKE_DIRTY_PAGE(x)      
+#define MI_MAKE_ACCESSED_PAGE(x)      
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
