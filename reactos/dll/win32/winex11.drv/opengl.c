@@ -1793,6 +1793,7 @@ BOOL CDECL X11DRV_wglDeleteContext(HGLRC hglrc)
     if (ctx->tid != 0 && ctx->tid != GetCurrentThreadId())
     {
         TRACE("Cannot delete context=%p because it is current in another thread.\n", ctx);
+        SetLastError(ERROR_BUSY);
         return FALSE;
     }
 
@@ -1807,6 +1808,7 @@ BOOL CDECL X11DRV_wglDeleteContext(HGLRC hglrc)
         wine_tsx11_unlock();
     }
 
+    free_context(ctx);
     return TRUE;
 }
 

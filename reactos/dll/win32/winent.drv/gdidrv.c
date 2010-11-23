@@ -422,6 +422,12 @@ BOOL CDECL RosDrv_GetICMProfile( NTDRV_PDEVICE *physDev, LPDWORD size, LPWSTR fi
     return FALSE;
 }
 
+INT CDECL RosDrv_EnumICMProfiles( NTDRV_PDEVICE *physDev, ICMENUMPROCW proc, LPARAM lparam )
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
 COLORREF CDECL RosDrv_GetNearestColor( NTDRV_PDEVICE *physDev, COLORREF color )
 {
     UNIMPLEMENTED;

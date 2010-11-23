@@ -135,11 +135,18 @@ BOOL WINAPI wglDeleteContext(HGLRC hglrc)
 
     TRACE("hglrc: (%p)\n", hglrc);
     if(ctx == NULL)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
+    }
 
     /* Retrieve the HDC associated with the context to access the display driver */
     dc = get_dc_ptr(ctx->hdc);
-    if (!dc) return FALSE;
+    if (!dc)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
     if (!dc->funcs->pwglDeleteContext) FIXME(" :stub\n");
     else ret = dc->funcs->pwglDeleteContext(hglrc);

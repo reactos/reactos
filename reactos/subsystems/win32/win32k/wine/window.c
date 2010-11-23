@@ -564,9 +564,13 @@ int make_window_active( user_handle_t window )
 
     if (!win) return 0;
 
-    /* set last active for window and its owner */
-    win->last_active = win->handle;
-    if ((owner = get_user_object( win->owner, USER_WINDOW ))) owner->last_active = win->handle;
+    /* set last active for window and its owners */
+    owner = win;
+    while (owner)
+    {
+        owner->last_active = win->handle;
+        owner = get_user_object( owner->owner, USER_WINDOW );
+    }
     return 1;
 }
 

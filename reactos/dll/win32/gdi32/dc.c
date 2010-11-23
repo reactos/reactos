@@ -30,7 +30,6 @@
 #include "winreg.h"
 #include "winternl.h"
 #include "winerror.h"
-#include "wownt32.h"
 #include "gdi_private.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"

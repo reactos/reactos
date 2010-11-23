@@ -73,14 +73,30 @@ extern BOOL ximInComposeMode;
 
 #define DndURL          128   /* KDE drag&drop */
 
+#define XEMBED_EMBEDDED_NOTIFY        0
+#define XEMBED_WINDOW_ACTIVATE        1
+#define XEMBED_WINDOW_DEACTIVATE      2
+#define XEMBED_REQUEST_FOCUS          3
+#define XEMBED_FOCUS_IN               4
+#define XEMBED_FOCUS_OUT              5
+#define XEMBED_FOCUS_NEXT             6
+#define XEMBED_FOCUS_PREV             7
+#define XEMBED_MODALITY_ON            10
+#define XEMBED_MODALITY_OFF           11
+#define XEMBED_REGISTER_ACCELERATOR   12
+#define XEMBED_UNREGISTER_ACCELERATOR 13
+#define XEMBED_ACTIVATE_ACCELERATOR   14
+
   /* Event handlers */
 static void X11DRV_FocusIn( HWND hwnd, XEvent *event );
 static void X11DRV_FocusOut( HWND hwnd, XEvent *event );
 static void X11DRV_Expose( HWND hwnd, XEvent *event );
 static void X11DRV_MapNotify( HWND hwnd, XEvent *event );
+static void X11DRV_ReparentNotify( HWND hwnd, XEvent *event );
 static void X11DRV_ConfigureNotify( HWND hwnd, XEvent *event );
 static void X11DRV_PropertyNotify( HWND hwnd, XEvent *event );
 static void X11DRV_ClientMessage( HWND hwnd, XEvent *event );
+static void X11DRV_GravityNotify( HWND hwnd, XEvent *event );
 
 struct event_handler
 {
@@ -112,10 +128,10 @@ static struct event_handler handlers[MAX_EVENT_HANDLERS] =
     /* UnmapNotify */
     { MapNotify,        X11DRV_MapNotify },
     /* MapRequest */
-    /* ReparentNotify */
+    { ReparentNotify,   X11DRV_ReparentNotify },
     { ConfigureNotify,  X11DRV_ConfigureNotify },
     /* ConfigureRequest */
-    /* GravityNotify */
+    { GravityNotify,    X11DRV_GravityNotify },
     /* ResizeRequest */
     /* CirculateNotify */
     /* CirculateRequest */
@@ -128,7 +144,7 @@ static struct event_handler handlers[MAX_EVENT_HANDLERS] =
     { MappingNotify,    X11DRV_MappingNotify },
 };
 
-static int nb_event_handlers = 18;  /* change this if you add handlers above */
+static int nb_event_handlers = 20;  /* change this if you add handlers above */
 
 
 /* return the name of an X event */
@@ -499,6 +515,17 @@ static void set_focus( Display *display, HWND hwnd, Time time )
 
 
 /**********************************************************************
+ *              handle_manager_message
+ */
+static void handle_manager_message( HWND hwnd, XClientMessageEvent *event )
+{
+    if (hwnd != GetDesktopWindow()) return;
+    if (systray_atom && event->data.l[1] == systray_atom)
+        change_systray_owner( event->display, event->data.l[2] );
+}
+
+
+/**********************************************************************
  *              handle_wm_protocols
  */
 static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
@@ -774,7 +801,7 @@ static void X11DRV_MapNotify( HWND hwnd, XEvent *event )
     struct x11drv_win_data *data;
 
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
-    if (!data->mapped) return;
+    if (!data->mapped || data->embedded) return;
 
     if (!data->managed)
     {
@@ -792,6 +819,8 @@ static BOOL is_net_wm_state_maximized( Display *display, struct x11drv_win_data 
     Atom type, *state;
     int format, ret = 0;
     unsigned long i, count, remaining;
+
+    if (!data->whole_window) return FALSE;
 
     wine_tsx11_lock();
     if (!XGetWindowProperty( display, data->whole_window, x11drv_atom(_NET_WM_STATE), 0,
@@ -815,6 +844,57 @@ static BOOL is_net_wm_state_maximized( Display *display, struct x11drv_win_data 
 
 
 /***********************************************************************
+ *           X11DRV_ReparentNotify
+ */
+static void X11DRV_ReparentNotify( HWND hwnd, XEvent *xev )
+{
+    XReparentEvent *event = &xev->xreparent;
+    struct x11drv_win_data *data;
+    HWND parent, old_parent;
+    DWORD style;
+
+    if (!(data = X11DRV_get_win_data( hwnd ))) return;
+    if (!data->embedded) return;
+
+    if (data->whole_window)
+    {
+        if (event->parent == root_window)
+        {
+            TRACE( "%p/%lx reparented to root\n", hwnd, data->whole_window );
+            data->embedder = 0;
+            SendMessageW( hwnd, WM_CLOSE, 0, 0 );
+            return;
+        }
+        data->embedder = event->parent;
+    }
+
+    TRACE( "%p/%lx reparented to %lx\n", hwnd, data->whole_window, event->parent );
+
+    style = GetWindowLongW( hwnd, GWL_STYLE );
+    if (event->parent == root_window)
+    {
+        parent = GetDesktopWindow();
+        style = (style & ~WS_CHILD) | WS_POPUP;
+    }
+    else
+    {
+        if (!(parent = create_foreign_window( event->display, event->parent ))) return;
+        style = (style & ~WS_POPUP) | WS_CHILD;
+    }
+
+    ShowWindow( hwnd, SW_HIDE );
+    old_parent = SetParent( hwnd, parent );
+    SetWindowLongW( hwnd, GWL_STYLE, style );
+    SetWindowPos( hwnd, HWND_TOP, event->x, event->y, 0, 0,
+                  SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOCOPYBITS |
+                  ((style & WS_VISIBLE) ? SWP_SHOWWINDOW : 0) );
+
+    /* make old parent destroy itself if it no longer has children */
+    if (old_parent != GetDesktopWindow()) PostMessageW( old_parent, WM_CLOSE, 0, 0 );
+}
+
+
+/***********************************************************************
  *		X11DRV_ConfigureNotify
  */
 void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
@@ -823,11 +903,16 @@ void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
     struct x11drv_win_data *data;
     RECT rect;
     UINT flags;
+    HWND parent;
+    BOOL root_coords;
     int cx, cy, x = event->x, y = event->y;
 
     if (!hwnd) return;
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
-    if (!data->mapped || data->iconic || !data->managed) return;
+    if (!data->mapped || data->iconic) return;
+    if (data->whole_window && !data->managed) return;
+    /* ignore synthetic events on foreign windows */
+    if (event->send_event && !data->whole_window) return;
     if (data->configure_serial && (long)(data->configure_serial - event->serial) > 0)
     {
         TRACE( "win %p/%lx event %d,%d,%dx%d ignoring old serial %lu/%lu\n",
@@ -838,23 +923,26 @@ void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
 
     /* Get geometry */
 
-    if (!event->send_event)  /* normal event, need to map coordinates to the root */
+    parent = GetAncestor( hwnd, GA_PARENT );
+    root_coords = event->send_event;  /* synthetic events are always in root coords */
+
+    if (!root_coords && parent == GetDesktopWindow()) /* normal event, map coordinates to the root */
     {
         Window child;
         wine_tsx11_lock();
-        XTranslateCoordinates( event->display, data->whole_window, root_window,
+        XTranslateCoordinates( event->display, event->window, root_window,
                                0, 0, &x, &y, &child );
         wine_tsx11_unlock();
+        root_coords = TRUE;
     }
     rect.left   = x;
     rect.top    = y;
     rect.right  = x + event->width;
     rect.bottom = y + event->height;
-    OffsetRect( &rect, virtual_screen_rect.left, virtual_screen_rect.top );
+    if (root_coords) OffsetRect( &rect, virtual_screen_rect.left, virtual_screen_rect.top );
     TRACE( "win %p/%lx new X rect %d,%d,%dx%d (event %d,%d,%dx%d)\n",
            hwnd, data->whole_window, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
            event->x, event->y, event->width, event->height );
-    X11DRV_X_to_window_rect( data, &rect );
 
     if (is_net_wm_state_maximized( event->display, data ))
     {
@@ -875,6 +963,9 @@ void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
         }
     }
 
+    X11DRV_X_to_window_rect( data, &rect );
+    if (root_coords) MapWindowPoints( 0, parent, (POINT *)&rect, 2 );
+
     /* Compare what has changed */
 
     x     = rect.left;
@@ -882,6 +973,8 @@ void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
     cx    = rect.right - rect.left;
     cy    = rect.bottom - rect.top;
     flags = SWP_NOACTIVATE | SWP_NOZORDER;
+
+    if (!data->whole_window) flags |= SWP_NOCOPYBITS;  /* we can't copy bits of foreign windows */
 
     if (data->window_rect.left == x && data->window_rect.top == y) flags |= SWP_NOMOVE;
     else
@@ -901,6 +994,34 @@ void X11DRV_ConfigureNotify( HWND hwnd, XEvent *xev )
                data->window_rect.bottom - data->window_rect.top, cx, cy );
 
     SetWindowPos( hwnd, 0, x, y, cx, cy, flags );
+}
+
+
+/**********************************************************************
+ *           X11DRV_GravityNotify
+ */
+static void X11DRV_GravityNotify( HWND hwnd, XEvent *xev )
+{
+    XGravityEvent *event = &xev->xgravity;
+    struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
+    RECT rect;
+
+    if (!data || data->whole_window) return;  /* only handle this for foreign windows */
+
+    rect.left   = event->x;
+    rect.top    = event->y;
+    rect.right  = rect.left + data->whole_rect.right - data->whole_rect.left;
+    rect.bottom = rect.top + data->whole_rect.bottom - data->whole_rect.top;
+
+    TRACE( "win %p/%lx new X rect %d,%d,%dx%d (event %d,%d)\n",
+           hwnd, data->whole_window, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top,
+           event->x, event->y );
+
+    X11DRV_X_to_window_rect( data, &rect );
+
+    if (data->window_rect.left != rect.left || data ->window_rect.top != rect.top)
+        SetWindowPos( hwnd, 0, rect.left, rect.top, 0, 0,
+                      SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS );
 }
 
 
@@ -1335,6 +1456,30 @@ static void EVENT_DropURLs( HWND hWnd, XClientMessageEvent *event )
   }
 }
 
+
+/**********************************************************************
+ *              handle_xembed_protocol
+ */
+static void handle_xembed_protocol( HWND hwnd, XClientMessageEvent *event )
+{
+    struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
+
+    if (!data) return;
+
+    switch (event->data.l[1])
+    {
+    case XEMBED_EMBEDDED_NOTIFY:
+        TRACE( "win %p/%lx XEMBED_EMBEDDED_NOTIFY owner %lx\n", hwnd, event->window, event->data.l[3] );
+        data->embedder = event->data.l[3];
+        break;
+    default:
+        TRACE( "win %p/%lx XEMBED message %lu(%lu)\n",
+               hwnd, event->window, event->data.l[1], event->data.l[2] );
+        break;
+    }
+}
+
+
 /**********************************************************************
  *              handle_dnd_protocol
  */
@@ -1366,7 +1511,9 @@ struct client_message_handler
 
 static const struct client_message_handler client_messages[] =
 {
+    { XATOM_MANAGER,      handle_manager_message },
     { XATOM_WM_PROTOCOLS, handle_wm_protocols },
+    { XATOM__XEMBED,      handle_xembed_protocol },
     { XATOM_DndProtocol,  handle_dnd_protocol },
     { XATOM_XdndEnter,    X11DRV_XDND_EnterEvent },
     { XATOM_XdndPosition, X11DRV_XDND_PositionEvent },
@@ -1415,7 +1562,7 @@ UINT CDECL X11DRV_SendInput( UINT count, LPINPUT inputs, int size )
         switch(inputs->type)
         {
         case INPUT_MOUSE:
-            X11DRV_send_mouse_input( 0, inputs->u.mi.dwFlags, inputs->u.mi.dx, inputs->u.mi.dy,
+            X11DRV_send_mouse_input( 0, 0, inputs->u.mi.dwFlags, inputs->u.mi.dx, inputs->u.mi.dy,
                                      inputs->u.mi.mouseData, inputs->u.mi.time,
                                      inputs->u.mi.dwExtraInfo, LLMHF_INJECTED );
             break;

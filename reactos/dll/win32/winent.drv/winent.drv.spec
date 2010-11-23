@@ -12,6 +12,7 @@
 @ cdecl DeleteDC(ptr) RosDrv_DeleteDC
 @ cdecl DescribePixelFormat(ptr long long ptr) RosDrv_DescribePixelFormat
 @ cdecl Ellipse(ptr long long long long) RosDrv_Ellipse
+@ cdecl EnumICMProfiles(ptr ptr long) RosDrv_EnumICMProfiles
 @ cdecl EnumDeviceFonts(ptr ptr ptr long) RosDrv_EnumDeviceFonts
 @ cdecl ExtEscape(ptr long long ptr long ptr) RosDrv_ExtEscape
 @ cdecl ExtFloodFill(ptr long long long long) RosDrv_ExtFloodFill

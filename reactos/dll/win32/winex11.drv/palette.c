@@ -874,6 +874,49 @@ static inline BOOL colour_is_brighter(RGBQUAD c1, RGBQUAD c2)
 }
 
 /***********************************************************************
+ *           X11DRV_PALETTE_GetColor
+ *
+ * Resolve PALETTEINDEX/PALETTERGB/DIBINDEX COLORREFs to an RGB COLORREF.
+ */
+COLORREF X11DRV_PALETTE_GetColor( X11DRV_PDEVICE *physDev, COLORREF color )
+{
+    HPALETTE             hPal = GetCurrentObject(physDev->hdc, OBJ_PAL );
+    unsigned char        spec_type = color >> 24;
+    unsigned             idx = color & 0xffff;
+    PALETTEENTRY         entry;
+    RGBQUAD              quad;
+
+    switch(spec_type)
+    {
+      case 2:  /* PALETTERGB */
+        idx = GetNearestPaletteIndex( hPal, color );
+        /* fall through to PALETTEINDEX */
+
+      case 1: /* PALETTEINDEX */
+        if (!GetPaletteEntries( hPal, idx, 1, &entry ))
+        {
+            WARN("PALETTEINDEX(%x) : idx %d is out of bounds, assuming black\n", color, idx);
+            return 0;
+        }
+        return RGB( entry.peRed, entry.peGreen, entry.peBlue );
+
+      case 0x10: /* DIBINDEX */
+        if( GetDIBColorTable( physDev->hdc, idx, 1, &quad ) != 1 ) {
+            WARN("DIBINDEX(%x) : idx %d is out of bounds, assuming black\n", color , idx);
+            return 0;
+        }
+        return RGB( quad.rgbRed, quad.rgbGreen, quad.rgbBlue );
+
+      default:
+        color &= 0xffffff;
+        /* fall through to RGB */
+
+      case 0: /* RGB */
+        return color;
+    }
+}
+
+/***********************************************************************
  *           X11DRV_PALETTE_ToPhysical
  *
  * Return the physical color closest to 'color'.
@@ -898,16 +941,11 @@ int X11DRV_PALETTE_ToPhysical( X11DRV_PDEVICE *physDev, COLORREF color )
 
 	unsigned 	long red, green, blue;
 	unsigned	idx = color & 0xffff;
-        RGBQUAD         quad;
 
 	switch(spec_type)
         {
           case 0x10: /* DIBINDEX */
-            if( GetDIBColorTable( physDev->hdc, idx, 1, &quad ) != 1 ) {
-                WARN("DIBINDEX(%x) : idx %d is out of bounds, assuming black\n", color , idx);
-                return 0;
-            }
-            color = RGB( quad.rgbRed, quad.rgbGreen, quad.rgbBlue );
+            color = X11DRV_PALETTE_GetColor( physDev, color );
             break;
                 
           case 1: /* PALETTEINDEX */

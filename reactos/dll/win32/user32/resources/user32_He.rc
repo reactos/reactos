@@ -1,0 +1,88 @@
+/*
+ * Copyright 1995 Alexandre Julliard
+ * Copyright 2010 Yaron Shahrabani <sh.yaron@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_HEBREW, SUBLANG_DEFAULT
+
+SYSMENU MENU
+{
+ MENUITEM "&שחזור", 61728
+ MENUITEM "ה&זזה", 61456
+ MENUITEM "ג&ודל", 61440
+ MENUITEM "מז&עור", 61472
+ MENUITEM "ה&גדלה", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "&סגירה\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "על &אודות Wine...", 61761
+}
+
+EDITMENU MENU
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "&ביטול", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "ג&זירה", WM_CUT
+		MENUITEM "ה&עתקה", WM_COPY
+		MENUITEM "ה&דבקה", WM_PASTE
+		MENUITEM "&מחיקה", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "בחירת ה&כול", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "&אישור", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&ביטול", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&סיום", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&ניסיון חוזר", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "ה&תעלמות", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&כן", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&לא", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&ניסיון חוזר", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "ה&משך", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "עזרה", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_LAYOUTRTL
+CAPTION "בחירת חלון"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "אישור", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "ביטול", IDCANCEL, 120, 100, 35, 14
+END
+
+
+STRINGTABLE
+{
+    IDS_ERROR "שגיאה"
+    IDS_MDI_MOREWINDOWS "חלונות &נוספים..."
+}

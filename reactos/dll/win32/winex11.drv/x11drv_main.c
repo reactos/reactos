@@ -83,6 +83,8 @@ int usexcomposite = 1;
 int use_xkb = 1;
 int use_take_focus = 1;
 int use_primary_selection = 0;
+int use_system_cursors = 1;
+int show_systray = 1;
 int managed_mode = 1;
 int decorated_mode = 1;
 int private_color_map = 0;
@@ -118,6 +120,7 @@ static const char * const atom_names[NB_XATOMS - FIRST_XATOM] =
     "CLIPBOARD",
     "COMPOUND_TEXT",
     "INCR",
+    "MANAGER",
     "MULTIPLE",
     "SELECTION_DATA",
     "TARGETS",
@@ -159,6 +162,7 @@ static const char * const atom_names[NB_XATOMS - FIRST_XATOM] =
     "_NET_WM_WINDOW_TYPE_NORMAL",
     "_NET_WM_WINDOW_TYPE_UTILITY",
     "_NET_WORKAREA",
+    "_XEMBED",
     "_XEMBED_INFO",
     "XdndAware",
     "XdndEnter",
@@ -396,6 +400,12 @@ static void setup_options(void)
 
     if (!get_config_key( hkey, appkey, "UsePrimarySelection", buffer, sizeof(buffer) ))
         use_primary_selection = IS_OPTION_TRUE( buffer[0] );
+
+    if (!get_config_key( hkey, appkey, "UseSystemCursors", buffer, sizeof(buffer) ))
+        use_system_cursors = IS_OPTION_TRUE( buffer[0] );
+
+    if (!get_config_key( hkey, appkey, "ShowSystray", buffer, sizeof(buffer) ))
+        show_systray = IS_OPTION_TRUE( buffer[0] );
 
     screen_depth = 0;
     if (!get_config_key( hkey, appkey, "ScreenDepth", buffer, sizeof(buffer) ))

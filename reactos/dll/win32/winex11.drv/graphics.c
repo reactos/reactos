@@ -1508,35 +1508,35 @@ extern void WINAPI A_SHAInit( sha_ctx * );
 extern void WINAPI A_SHAUpdate( sha_ctx *, const unsigned char *, unsigned int );
 extern void WINAPI A_SHAFinal( sha_ctx *, unsigned char * );
 
+static const WCHAR mntr_key[] =
+    {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+     'W','i','n','d','o','w','s',' ','N','T','\\','C','u','r','r','e','n','t',
+     'V','e','r','s','i','o','n','\\','I','C','M','\\','m','n','t','r',0};
+
+static const WCHAR color_path[] =
+    {'\\','s','p','o','o','l','\\','d','r','i','v','e','r','s','\\','c','o','l','o','r','\\',0};
+
 /***********************************************************************
  *              GetICMProfile (X11DRV.@)
  */
 BOOL CDECL X11DRV_GetICMProfile( X11DRV_PDEVICE *physDev, LPDWORD size, LPWSTR filename )
 {
-    static const WCHAR path[] =
-        {'\\','s','p','o','o','l','\\','d','r','i','v','e','r','s',
-         '\\','c','o','l','o','r','\\',0};
     static const WCHAR srgb[] =
         {'s','R','G','B',' ','C','o','l','o','r',' ','S','p','a','c','e',' ',
          'P','r','o','f','i','l','e','.','i','c','m',0};
-    static const WCHAR mntr[] =
-        {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-         'W','i','n','d','o','w','s',' ','N','T','\\','C','u','r','r','e','n','t',
-         'V','e','r','s','i','o','n','\\','I','C','M','\\','m','n','t','r',0};
-
     HKEY hkey;
     DWORD required, len;
-    WCHAR profile[MAX_PATH], fullname[2*MAX_PATH + sizeof(path)/sizeof(WCHAR)];
+    WCHAR profile[MAX_PATH], fullname[2*MAX_PATH + sizeof(color_path)/sizeof(WCHAR)];
     unsigned char *buffer;
     unsigned long buflen;
 
     if (!size) return FALSE;
 
     GetSystemDirectoryW( fullname, MAX_PATH );
-    strcatW( fullname, path );
+    strcatW( fullname, color_path );
 
     len = sizeof(profile)/sizeof(WCHAR);
-    if (!RegCreateKeyExW( HKEY_LOCAL_MACHINE, mntr, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL ) &&
+    if (!RegCreateKeyExW( HKEY_LOCAL_MACHINE, mntr_key, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hkey, NULL ) &&
         !RegEnumValueW( hkey, 0, profile, &len, NULL, NULL, NULL, NULL )) /* FIXME handle multiple values */
     {
         strcatW( fullname, profile );
@@ -1588,4 +1588,58 @@ BOOL CDECL X11DRV_GetICMProfile( X11DRV_PDEVICE *physDev, LPDWORD size, LPWSTR f
     }
     *size = required;
     return TRUE;
+}
+
+/***********************************************************************
+ *              EnumICMProfiles (X11DRV.@)
+ */
+INT CDECL X11DRV_EnumICMProfiles( X11DRV_PDEVICE *physDev, ICMENUMPROCW proc, LPARAM lparam )
+{
+    HKEY hkey;
+    DWORD len_sysdir, len_path, len, index = 0;
+    WCHAR sysdir[MAX_PATH], *profile;
+    LONG res;
+    INT ret;
+
+    TRACE("%p, %p, %ld\n", physDev, proc, lparam);
+
+    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, mntr_key, 0, KEY_ALL_ACCESS, &hkey ))
+        return -1;
+
+    len_sysdir = GetSystemDirectoryW( sysdir, MAX_PATH );
+    len_path = len_sysdir + sizeof(color_path) / sizeof(color_path[0]) - 1;
+    len = 64;
+    for (;;)
+    {
+        if (!(profile = HeapAlloc( GetProcessHeap(), 0, (len_path + len) * sizeof(WCHAR) )))
+        {
+            RegCloseKey( hkey );
+            return -1;
+        }
+        res = RegEnumValueW( hkey, index, profile + len_path, &len, NULL, NULL, NULL, NULL );
+        while (res == ERROR_MORE_DATA)
+        {
+            len *= 2;
+            HeapFree( GetProcessHeap(), 0, profile );
+            if (!(profile = HeapAlloc( GetProcessHeap(), 0, (len_path + len) * sizeof(WCHAR) )))
+            {
+                RegCloseKey( hkey );
+                return -1;
+            }
+            res = RegEnumValueW( hkey, index, profile + len_path, &len, NULL, NULL, NULL, NULL );
+        }
+        if (res != ERROR_SUCCESS)
+        {
+            HeapFree( GetProcessHeap(), 0, profile );
+            break;
+        }
+        memcpy( profile, sysdir, len_sysdir * sizeof(WCHAR) );
+        memcpy( profile + len_sysdir, color_path, sizeof(color_path) - sizeof(WCHAR) );
+        ret = proc( profile, lparam );
+        HeapFree( GetProcessHeap(), 0, profile );
+        if (!ret) break;
+        index++;
+    }
+    RegCloseKey( hkey );
+    return -1;
 }

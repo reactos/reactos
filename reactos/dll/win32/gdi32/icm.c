@@ -38,13 +38,62 @@
 WINE_DEFAULT_DEBUG_CHANNEL(icm);
 
 
+struct enum_profiles
+{
+    BOOL unicode;
+    union
+    {
+        ICMENUMPROCA funcA;
+        ICMENUMPROCW funcW;
+    } callback;
+    LPARAM data;
+};
+
+INT CALLBACK enum_profiles_callback( LPWSTR filename, LPARAM lparam )
+{
+    int len, ret = -1;
+    struct enum_profiles *ep = (struct enum_profiles *)lparam;
+    char *filenameA;
+
+    if (ep->unicode)
+        return ep->callback.funcW( filename, ep->data );
+
+    len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
+    filenameA = HeapAlloc( GetProcessHeap(), 0, len );
+    if (filenameA)
+    {
+        WideCharToMultiByte( CP_ACP, 0, filename, -1, filenameA, len, NULL, NULL );
+        ret = ep->callback.funcA( filenameA, ep->data );
+        HeapFree( GetProcessHeap(), 0, filenameA );
+    }
+    return ret;
+}
+
 /***********************************************************************
  *           EnumICMProfilesA    (GDI32.@)
  */
 INT WINAPI EnumICMProfilesA(HDC hdc, ICMENUMPROCA func, LPARAM lparam)
 {
-	FIXME("%p, %p, 0x%08lx stub\n", hdc, func, lparam);
-	return -1;
+    DC *dc;
+    INT ret = -1;
+
+    TRACE("%p, %p, 0x%08lx\n", hdc, func, lparam);
+
+    if (!func) return -1;
+    if ((dc = get_dc_ptr(hdc)))
+    {
+        if (dc->funcs->pEnumICMProfiles)
+        {
+            struct enum_profiles ep;
+
+            ep.unicode        = FALSE;
+            ep.callback.funcA = func;
+            ep.data           = lparam;
+            ret = dc->funcs->pEnumICMProfiles(dc->physDev, enum_profiles_callback, (LPARAM)&ep);
+        }
+        release_dc_ptr(dc);
+    }
+    return ret;
 }
 
 /***********************************************************************
@@ -52,8 +101,26 @@ INT WINAPI EnumICMProfilesA(HDC hdc, ICMENUMPROCA func, LPARAM lparam)
  */
 INT WINAPI EnumICMProfilesW(HDC hdc, ICMENUMPROCW func, LPARAM lparam)
 {
-	FIXME("%p, %p, 0x%08lx stub\n", hdc, func, lparam);
-	return -1;
+    DC *dc;
+    INT ret = -1;
+
+    TRACE("%p, %p, 0x%08lx\n", hdc, func, lparam);
+
+    if (!func) return -1;
+    if ((dc = get_dc_ptr(hdc)))
+    {
+        if (dc->funcs->pEnumICMProfiles)
+        {
+            struct enum_profiles ep;
+
+            ep.unicode        = TRUE;
+            ep.callback.funcW = func;
+            ep.data           = lparam;
+            ret = dc->funcs->pEnumICMProfiles(dc->physDev, enum_profiles_callback, (LPARAM)&ep);
+        }
+        release_dc_ptr(dc);
+    }
+    return ret;
 }
 
 /**********************************************************************
@@ -137,6 +204,17 @@ BOOL WINAPI GetLogColorSpaceW(HCOLORSPACE colorspace, LPLOGCOLORSPACEW buffer, D
 BOOL WINAPI SetICMProfileA(HDC hdc, LPSTR filename)
 {
     FIXME("%p %s stub\n", hdc, debugstr_a(filename));
+
+    if (!filename)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if (!hdc)
+    {
+        SetLastError( ERROR_INVALID_HANDLE );
+        return FALSE;
+    }
     return TRUE;
 }
 
@@ -146,6 +224,17 @@ BOOL WINAPI SetICMProfileA(HDC hdc, LPSTR filename)
 BOOL WINAPI SetICMProfileW(HDC hdc, LPWSTR filename)
 {
     FIXME("%p %s stub\n", hdc, debugstr_w(filename));
+
+    if (!filename)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return FALSE;
+    }
+    if (!hdc)
+    {
+        SetLastError( ERROR_INVALID_HANDLE );
+        return FALSE;
+    }
     return TRUE;
 }
 

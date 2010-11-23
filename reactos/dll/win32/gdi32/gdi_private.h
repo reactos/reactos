@@ -99,6 +99,7 @@ typedef struct tagDC_FUNCS
     INT      (CDECL *pEndDoc)(PHYSDEV);
     INT      (CDECL *pEndPage)(PHYSDEV);
     BOOL     (CDECL *pEndPath)(PHYSDEV);
+    INT      (CDECL *pEnumICMProfiles)(PHYSDEV,ICMENUMPROCW,LPARAM);
     BOOL     (CDECL *pEnumDeviceFonts)(PHYSDEV,LPLOGFONTW,FONTENUMPROCW,LPARAM);
     INT      (CDECL *pExcludeClipRect)(PHYSDEV,INT,INT,INT,INT);
     INT      (CDECL *pExtDeviceMode)(LPSTR,HWND,LPDEVMODEA,LPSTR,LPSTR,LPDEVMODEA,LPSTR,DWORD);

@@ -183,17 +183,18 @@ static Pixmap BRUSH_DitherMono( COLORREF color )
  */
 static void BRUSH_SelectSolidBrush( X11DRV_PDEVICE *physDev, COLORREF color )
 {
+    COLORREF colorRGB = X11DRV_PALETTE_GetColor( physDev, color );
     if ((physDev->depth > 1) && (screen_depth <= 8) && !X11DRV_IsSolidColor( color ))
     {
 	  /* Dithered brush */
-	physDev->brush.pixmap = BRUSH_DitherColor( color, physDev->depth );
+	physDev->brush.pixmap = BRUSH_DitherColor( colorRGB, physDev->depth );
 	physDev->brush.fillStyle = FillTiled;
 	physDev->brush.pixel = 0;
     }
-    else if (physDev->depth == 1 && color != WHITE && color != BLACK)
+    else if (physDev->depth == 1 && colorRGB != WHITE && colorRGB != BLACK)
     {
 	physDev->brush.pixel = 0;
-	physDev->brush.pixmap = BRUSH_DitherMono( color );
+	physDev->brush.pixmap = BRUSH_DitherMono( colorRGB );
 	physDev->brush.fillStyle = FillTiled;
     }
     else
