@@ -5265,12 +5265,24 @@ MemoryBarrier(VOID)
 #endif
 
 #if defined(_M_IX86)
+
 #ifdef _MSC_VER
+#pragma intrinsic(__int2c)
 #pragma intrinsic(_mm_pause)
 #define YieldProcessor _mm_pause
 #else
 #define YieldProcessor() __asm__ __volatile__("pause");
+#define __int2c() __asm__ __volatile__("int $0x2c");
 #endif
+
+
+FORCEINLINE
+VOID
+DbgRaiseAssertionFailure(VOID)
+{
+    __int2c();
+}
+
 #elif defined (_M_AMD64)
 #ifdef _MSC_VER
 #pragma intrinsic(_mm_pause)
