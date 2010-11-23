@@ -15,10 +15,10 @@
 
 <!--
 	Sub-architecture (board) to build for. Specify one of:
-		kurobox versatile omap3
+		kurobox versatile omap3-zoom2 omap3-beagle
 		
 -->
-<property name="SARCH" value="versatile" />
+<property name="SARCH" value="omap3-zoom2" />
 
 
 <!--
