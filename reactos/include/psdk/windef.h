@@ -228,7 +228,7 @@ typedef unsigned int *LPUINT;
 #include <winnt.h>
 #endif
 
-#include <specstrings.h>
+//#include <specstrings.h>
 
 typedef UINT_PTR WPARAM;
 typedef LONG_PTR LPARAM;
