@@ -407,6 +407,7 @@
 					 all buffers allocated are a
 					 multiple of this size.  This
 					 MUST be a power of two. */
+#ifndef _M_ARM
 
 #define BufDump     1		      /* Define this symbol to enable the
 					 bpoold() function which dumps the
@@ -442,6 +443,8 @@
 #define BECtl	    1		      /* Define this symbol to enable the
 					 bectl() function for automatic
 					 pool space control.  */
+#else
+#endif
 
 #include <stdio.h>
 
