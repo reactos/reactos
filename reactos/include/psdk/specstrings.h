@@ -29,7 +29,9 @@
 #define __deref_opt_in_bcount_opt(size)
 #define __out_awcount(expr,size)
 #define __in_awcount(expr,size)
+#ifndef __cplusplus
 #define __null
+#endif
 #define __notnull
 #define __maybenull
 #define __readonly
@@ -64,7 +66,9 @@
 #define __inner_data_entrypoint(category)
 #define __ecount(size)
 #define __bcount(size)
+#ifndef __cplusplus
 #define __in
+#endif
 #define __in_opt
 #define __in_nz
 #define __in_nz_opt
@@ -270,4 +274,5 @@
 #define __analysis_assume(expr)
 #endif
 
+//#endif
 
