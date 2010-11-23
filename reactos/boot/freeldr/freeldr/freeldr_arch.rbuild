@@ -64,7 +64,6 @@
 		</directory>
 		<directory name="arm">
 			<if property="ARCH" value="arm">
-				<file first="true">boot.s</file>
 				<file>macharm.c</file>
 			</if>
 		</directory>
