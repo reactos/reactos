@@ -24,10 +24,7 @@ ULONG MmMaximumNonPagedPoolInBytes;
 PVOID MmNonPagedSystemStart;
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
-PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
-PVOID MmPagedPoolStart = MI_PAGED_POOL_START;
 PVOID MmPagedPoolEnd;
-ULONG MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
 PVOID MiSessionSpaceEnd;
 PVOID MiSessionImageEnd;
 PVOID MiSessionImageStart;
@@ -49,7 +46,7 @@ RTL_BITMAP MiPfnBitMap;
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
-ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
+ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage;
 ULONG MmBootImageSize;
 ULONG MmUserProbeAddress;
 PVOID MmHighestUserAddress;
@@ -61,17 +58,17 @@ PVOID MmHyperSpaceEnd;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-BOOLEAN
+NTSTATUS
 NTAPI
-MmArmInitSystem(IN ULONG Phase,
-                IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+INIT_FUNCTION
+MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     //
     // Always return success for now
     //
     DPRINT1("NEVER TELL ME THE ODDS!\n");
     while (TRUE);
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

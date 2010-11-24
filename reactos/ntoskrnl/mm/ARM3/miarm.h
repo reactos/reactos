@@ -130,12 +130,12 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 //
 // Access Flags
 //
-#define PTE_READONLY            0
+#define PTE_READONLY            0 // Doesn't exist on x86
 #define PTE_EXECUTE             0 // Not worrying about NX yet
 #define PTE_EXECUTE_READ        0 // Not worrying about NX yet
 #define PTE_READWRITE           0x2
 #define PTE_WRITECOPY           0x200
-#define PTE_EXECUTE_READWRITE   0x0
+#define PTE_EXECUTE_READWRITE   0x2 // Not worrying about NX yet
 #define PTE_EXECUTE_WRITECOPY   0x200
 #define PTE_PROTOTYPE           0x400
 //
@@ -145,6 +145,20 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_DISABLE_CACHE       0x10
 #define PTE_WRITECOMBINED_CACHE 0x10
 #elif defined(_M_ARM)
+#define PTE_READONLY            0x200
+#define PTE_EXECUTE             0 // Not worrying about NX yet
+#define PTE_EXECUTE_READ        0 // Not worrying about NX yet
+#define PTE_READWRITE           0 // Doesn't exist on ARM
+#define PTE_WRITECOPY           0 // Doesn't exist on ARM
+#define PTE_EXECUTE_READWRITE   0 // Not worrying about NX yet
+#define PTE_EXECUTE_WRITECOPY   0 // Not worrying about NX yet
+#define PTE_PROTOTYPE           0x400 // Using the Shared bit
+//
+// Cache flags
+//
+#define PTE_ENABLE_CACHE        0
+#define PTE_DISABLE_CACHE       0x10
+#define PTE_WRITECOMBINED_CACHE 0x10
 #else
 #error Define these please!
 #endif
@@ -179,7 +193,7 @@ extern const ULONG MmProtectToValue[32];
 #ifdef _M_IX86
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #elif _M_ARM
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   6
 #elif _M_AMD64
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #else

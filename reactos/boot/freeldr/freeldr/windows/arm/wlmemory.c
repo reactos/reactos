@@ -200,7 +200,7 @@ MempAllocatePageTables(VOID)
     PFN_NUMBER Pfn;
 
     /* Setup templates */
-    TempPte.Accessed = TempPte.Valid = TempLargePte.LargePage = TempLargePte.Accessed = TempPde.Valid = 1;
+    TempPte.Sbo = TempPte.Valid = TempLargePte.LargePage = TempLargePte.Sbo = TempPde.Valid = 1;
 
     /* Allocate the 1MB "PDR" (Processor Data Region). Must be 1MB aligned */
     PdrPage = MmAllocateMemoryAtAddress(sizeof(KPDR_PAGE),

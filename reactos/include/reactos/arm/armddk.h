@@ -252,6 +252,35 @@ KeRaiseIrqlToDpcLevel(
 #define KeLowerIrql(NewIrql) KfLowerIrql(NewIrql)
 #define KeRaiseIrql(NewIrql, OldIrql) *(OldIrql) = KfRaiseIrql(NewIrql)
 
+NTHALAPI
+KIRQL
+FASTCALL
+KfAcquireSpinLock(
+  IN OUT PKSPIN_LOCK SpinLock);
+#define KeAcquireSpinLock(a,b) *(b) = KfAcquireSpinLock(a)
+
+NTHALAPI
+VOID
+FASTCALL
+KfReleaseSpinLock(
+  IN OUT PKSPIN_LOCK SpinLock,
+  IN KIRQL NewIrql);
+#define KeReleaseSpinLock(a,b) KfReleaseSpinLock(a,b)
+
+NTKERNELAPI
+VOID
+FASTCALL
+KefAcquireSpinLockAtDpcLevel(
+  IN OUT PKSPIN_LOCK SpinLock);
+#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
+
+NTKERNELAPI
+VOID
+FASTCALL
+KefReleaseSpinLockFromDpcLevel(
+  IN OUT PKSPIN_LOCK SpinLock);
+#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+
 //
 // Cache clean and flush
 //

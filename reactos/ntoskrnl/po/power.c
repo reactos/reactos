@@ -9,6 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
+#include "initguid.h"
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
