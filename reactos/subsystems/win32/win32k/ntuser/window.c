@@ -1240,19 +1240,6 @@ IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserAlterWindowStyle(DWORD Unknown0,
-                       DWORD Unknown1,
-                       DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return(0);
-}
-
-/*
  * As best as I can figure, this function is used by EnumWindows,
  * EnumChildWindows, EnumDesktopWindows, & EnumThreadWindows.
  *
@@ -2367,25 +2354,7 @@ cleanup:
 
    return hwnd;
 }
-
-/*
- * @unimplemented
- */
-HDWP APIENTRY
-NtUserDeferWindowPos(HDWP WinPosInfo,
-                     HWND Wnd,
-                     HWND WndInsertAfter,
-                     int x,
-                     int y,
-                     int cx,
-                     int cy,
-                     UINT Flags)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
+    
 
 BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 {
@@ -2566,56 +2535,6 @@ CLEANUP:
    DPRINT("Leave NtUserDestroyWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-
-/*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtUserDrawMenuBarTemp(
-   HWND hWnd,
-   HDC hDC,
-   PRECT hRect,
-   HMENU hMenu,
-   HFONT hFont)
-{
-   /* we'll use this function just for caching the menu bar */
-   UNIMPLEMENTED
-   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserEndDeferWindowPosEx(DWORD Unknown0,
-                          DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
- * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
- */
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserFillWindow(HWND hWndPaint,
-                 HWND hWndPaint1,
-                 HDC  hDC,
-                 HBRUSH hBrush)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 
@@ -2895,18 +2814,6 @@ CLEANUP:
    DPRINT("Leave NtUserFindWindowEx, ret %i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 
@@ -3756,19 +3663,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserLockWindowUpdate(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
 /*
  * @implemented
  */
@@ -3858,20 +3752,6 @@ CLEANUP:
 
 
 /*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserRealChildWindowFromPoint(DWORD Unknown0,
-                               DWORD Unknown1,
-                               DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
  * @implemented
  */
 UINT APIENTRY
@@ -3907,62 +3787,6 @@ CLEANUP:
    DPRINT("Leave NtUserRegisterWindowMessage, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserSetImeOwnerWindow(DWORD Unknown0,
-                        DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserSetInternalWindowPos(
-   HWND    hwnd,
-   UINT    showCmd,
-   LPRECT  rect,
-   LPPOINT pt)
-{
-   UNIMPLEMENTED
-
-   return 0;
-
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserSetLayeredWindowAttributes(HWND hwnd,
-			   COLORREF crKey,
-			   BYTE bAlpha,
-			   DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserSetLogonNotifyWindow(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 
@@ -4344,40 +4168,6 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 #else
    return NtUserShowWindow(hWnd, nCmdShow);
 #endif
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtUserUpdateLayeredWindow(
-   HWND hwnd,
-   HDC hdcDst,
-   POINT *pptDst,
-   SIZE *psize,
-   HDC hdcSrc,
-   POINT *pptSrc,
-   COLORREF crKey,
-   BLENDFUNCTION *pblend,
-   DWORD dwFlags,
-   RECT *prcDirty)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
- *    @unimplemented
- */
-HWND APIENTRY
-NtUserWindowFromPhysicalPoint(POINT Point)
-{
-   UNIMPLEMENTED
-
-   return NULL;
 }
 
 /*

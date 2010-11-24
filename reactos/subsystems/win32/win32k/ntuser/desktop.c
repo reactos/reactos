@@ -1686,20 +1686,6 @@ CLEANUP:
 }
 
 /*
- * NtUserResolveDesktopForWOW
- *
- * Status
- *    @unimplemented
- */
-
-DWORD APIENTRY
-NtUserResolveDesktopForWOW(DWORD Unknown0)
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
-/*
  * NtUserGetThreadDesktop
  *
  * Status

@@ -1012,16 +1012,6 @@ CleanupInputImp(VOID)
    return(STATUS_SUCCESS);
 }
 
-BOOL
-APIENTRY
-NtUserDragDetect(
-   HWND hWnd,
-   POINT pt) // Just like the User call.
-{
-   UNIMPLEMENTED
-   return 0;
-}
-
 BOOL FASTCALL
 IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
 {

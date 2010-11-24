@@ -1616,15 +1616,6 @@ NtUserPostThreadMessage(DWORD idThread,
     return ret;
 }
 
-DWORD APIENTRY
-NtUserQuerySendMessage(DWORD Unknown0)
-{
-    UNIMPLEMENTED;
-
-    return 0;
-}
-
-
 ////////// API on the way out!
 LRESULT APIENTRY
 NtUserSendMessageTimeout( HWND hWnd,
