@@ -32,9 +32,7 @@ STRINGTABLE
     STRING_PAUSE,    "Tryck <enter> för att börja kopiera\n"
     STRING_SIMCOPY,  "%d fil(er) skulle kopieras\n"
     STRING_COPY,     "%d fil(er) kopierade\n"
-    STRING_QISDIR,   "Är '%s' ett filnamn eller en katalog\n" \
-                     "på målet?\n" \
-                     "(F - Fil, K - Katalog)\n"
+    STRING_QISDIR,   "Är '%s' ett filnamn eller en katalog\npå målet?\n(F - Fil, K - Katalog)\n"
     STRING_SRCPROMPT,"%s? (Ja|Nej)\n"
     STRING_OVERWRITE,"Skriv över %s? (Ja|Nej|Alla)\n"
     STRING_COPYFAIL, "Kunde inte kopiera '%s' till '%s'; misslyckades med r/c %d\n"
