@@ -51,3 +51,4 @@ add_importlibs(ddraw
 
 add_dependencies(ddraw wineheaders)
 add_cab_target(ddraw 1)
+add_importlib_target(ddraw.spec)

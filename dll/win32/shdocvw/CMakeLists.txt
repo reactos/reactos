@@ -52,3 +52,4 @@ add_importlibs(shdocvw
 
 add_dependencies(shdocvw shdocvw_v1 shdocvw_def)
 add_cab_target(shdocvw 1)
+add_importlib_target(shdocvw.spec)

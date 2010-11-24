@@ -51,3 +51,4 @@ add_importlibs(shlwapi
 
 
 add_cab_target(shlwapi 1)
+add_importlib_target(shlwapi.spec)

@@ -16,3 +16,4 @@ target_link_libraries(snmpapi wine)
 add_importlibs(snmpapi kernel32 ntdll)
 
 add_cab_target(snmpapi 1)
+add_importlib_target(snmpapi.spec)

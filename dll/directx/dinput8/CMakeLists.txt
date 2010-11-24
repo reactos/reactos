@@ -32,3 +32,4 @@ add_importlibs(dinput8
 add_dependencies(dinput8 psdk buildno_header)
 
 add_cab_target(dinput8 1)
+add_importlib_target(dinput8.spec)

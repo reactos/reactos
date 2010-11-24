@@ -44,3 +44,4 @@ add_importlibs(d3d9
 
 add_dependencies(d3d9 wineheaders)
 add_cab_target(d3d9 1)
+add_importlib_target(d3d9.spec)

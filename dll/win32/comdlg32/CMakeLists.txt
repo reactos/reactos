@@ -39,3 +39,4 @@ add_importlibs(comdlg32
 
 
 add_cab_target(comdlg32 1)
+add_importlib_target(comdlg32.spec)

@@ -18,3 +18,4 @@ target_link_libraries(loadperf
 add_importlibs(loadperf kernel32 ntdll)
 
 add_cab_target(loadperf 1)
+add_importlib_target(loadperf.spec)

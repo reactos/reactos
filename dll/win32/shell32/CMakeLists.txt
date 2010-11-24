@@ -1,3 +1,6 @@
+
+spec2def(shell32.dll shell32.spec)
+
 list(APPEND SOURCE
     authors.c
     autocomplete.c
@@ -61,8 +64,6 @@ add_definitions(-D_SHELL32_)
 add_definitions(-DCOM_NO_WINDOWS_H)
 add_definitions(-D_WINE)
 
-spec2def(shell32.dll shell32.spec)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 include_directories(${REACTOS_SOURCE_DIR}/lib/recyclebin)
 include_directories(${REACTOS_SOURCE_DIR})
@@ -95,5 +96,5 @@ add_importlibs(shell32
 
 
 add_cab_target(shell32 1)
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
+add_importlib_target(shell32.spec)
 

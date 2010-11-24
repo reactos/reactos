@@ -66,3 +66,4 @@ add_definitions(-DPROXY_CLSID_IS={0x79EAC9F1,0xBAF9,0x11CE,{0x8C,0x82,0x00,0xAA,
 
 rpcproxy(urlmon urlmon_urlmon.idl)
 add_cab_target(urlmon 1)
+add_importlib_target(urlmon.spec)

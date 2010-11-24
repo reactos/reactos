@@ -31,3 +31,4 @@ add_importlibs(devmgr
 add_pch(devmgr ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(devmgr 1)
+add_importlib_target(devmgr.spec)

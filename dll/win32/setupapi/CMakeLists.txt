@@ -56,3 +56,4 @@ add_importlibs(setupapi
 
 
 add_cab_target(setupapi 1)
+add_importlib_target(setupapi.spec)

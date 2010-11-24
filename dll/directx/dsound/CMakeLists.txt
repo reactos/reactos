@@ -38,3 +38,4 @@ add_importlibs(dsound
 
 
 add_cab_target(dsound 1)
+add_importlib_target(dsound.spec)

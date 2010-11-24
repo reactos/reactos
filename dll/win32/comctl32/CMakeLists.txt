@@ -67,3 +67,4 @@ add_importlibs(comctl32
     ntdll)
 
 add_cab_target(comctl32 1)
+add_importlib_target(comctl32.spec)

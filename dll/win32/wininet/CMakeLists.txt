@@ -35,3 +35,4 @@ target_link_libraries(wininet
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 secur32 crypt32 ws2_32 msvcrt kernel32 ntdll)
 
 add_cab_target(wininet 1)
+add_importlib_target(wininet.spec)

@@ -74,3 +74,4 @@ add_importlibs(ole32 advapi32 user32 gdi32 rpcrt4 msvcrt kernel32 ntdll)
     
 add_dependencies(ole32 ole32idl)
 add_cab_target(ole32 1)
+add_importlib_target(ole32.spec)
