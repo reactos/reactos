@@ -375,7 +375,7 @@ NTAPI
 MiAllocatePoolPages(IN POOL_TYPE PoolType,
                     IN SIZE_T SizeInBytes)
 {
-    PFN_NUMBER SizeInPages, PageFrameNumber;
+    PFN_NUMBER SizeInPages, PageFrameNumber, PageTableCount;
     ULONG i;
     KIRQL OldIrql;
     PLIST_ENTRY NextEntry, NextHead, LastHead;
@@ -422,7 +422,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Check if there is enougn paged pool expansion space left
             //
             if (MmPagedPoolInfo.NextPdeForPagedPoolExpansion >
-                MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
+                (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
             {
                 //
                 // Out of memory!
@@ -436,23 +436,23 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Check if we'll have to expand past the last PTE we have available
             //            
             if (((i - 1) + MmPagedPoolInfo.NextPdeForPagedPoolExpansion) >
-                 MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
+                 (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
             {
                 //
                 // We can only support this much then
                 //
-                SizeInPages = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool) - 
-                              MmPagedPoolInfo.NextPdeForPagedPoolExpansion +
-                              1;
-                ASSERT(SizeInPages < i);
-                i = SizeInPages;
+                PageTableCount = (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool) - 
+                                         MmPagedPoolInfo.NextPdeForPagedPoolExpansion +
+                                         1;
+                ASSERT(PageTableCount < i);
+                i = PageTableCount;
             }
             else
             {
                 //
                 // Otherwise, there is plenty of space left for this expansion
                 //
-                SizeInPages = i;
+                PageTableCount = i;
             }
             
             //
@@ -464,7 +464,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the first PTE in expansion space
             //
             PointerPde = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
-            BaseVa = MiPteToAddress(PointerPde);
+            BaseVa = MiPdeToAddress(PointerPde);
             BaseVaStart = BaseVa;
             
             //
@@ -494,11 +494,11 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                             
                 /* Initialize the PFN */
                 MiInitializePfnForOtherProcess(PageFrameNumber,
-                                               PointerPde,
+                                               (PMMPTE)PointerPde,
                                                MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
                              
                 /* Write the actual PDE now */
-                MI_WRITE_VALID_PTE(PointerPde, TempPde);
+                MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #endif                
                 //
                 // Move on to the next expansion address
@@ -517,26 +517,25 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // These pages are now available, clear their availablity bits
             //
             EndAllocation = (MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
-                             MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
+                             (PMMPDE)MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
                              PTE_COUNT;
             RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap,
                          EndAllocation,
-                         SizeInPages * PTE_COUNT);
+                         PageTableCount * PTE_COUNT);
                         
             //
             // Update the next expansion location
             //
-            MmPagedPoolInfo.NextPdeForPagedPoolExpansion += SizeInPages;
+            MmPagedPoolInfo.NextPdeForPagedPoolExpansion += PageTableCount;
             
             //
             // Zero out the newly available memory
             //
-            RtlZeroMemory(BaseVaStart, SizeInPages * PAGE_SIZE);
+            RtlZeroMemory(BaseVaStart, PageTableCount * PAGE_SIZE);
             
             //
             // Now try consuming the pages again
             //
-            SizeInPages = BYTES_TO_PAGES(SizeInBytes);
             i = RtlFindClearBitsAndSet(MmPagedPoolInfo.PagedPoolAllocationMap,
                                        SizeInPages,
                                        0);

@@ -15,6 +15,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
+#if 0
 VOID
 KiIdleLoop(VOID)
 {
@@ -89,6 +90,7 @@ KiIdleLoop(VOID)
         }
     }
 }
+#endif
 
 VOID
 NTAPI
@@ -116,6 +118,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     while (TRUE);
 }
 
+#if 0
 BOOLEAN
 KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)
@@ -220,6 +223,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
     //
     return FALSE;
 }
+#endif
 
 VOID
 KiApcInterrupt(VOID)
@@ -262,6 +266,7 @@ KiApcInterrupt(VOID)
     KiDeliverApc(PreviousMode, &ExceptionFrame, TrapFrame);
 }
 
+#if 0
 VOID
 KiDispatchInterrupt(VOID)
 {
@@ -343,6 +348,7 @@ KiDispatchInterrupt(VOID)
         KiSwapContext(OldThread, NewThread);
     }
 }
+#endif
 
 VOID
 KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,

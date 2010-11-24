@@ -161,7 +161,7 @@ SIZE_T MmSystemViewSize;
 // address.
 //
 PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
-PMMPTE MmSystemPagePtes;
+PMMPDE MmSystemPagePtes;
 #endif
 
 //
@@ -679,7 +679,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 /* Yes we do, set it up */
                 Pfn1 = MiGetPfnEntry(PageFrameIndex);
                 Pfn1->u4.PteFrame = StartupPdIndex;
-                Pfn1->PteAddress = PointerPde;
+                Pfn1->PteAddress = (PMMPTE)PointerPde;
                 Pfn1->u2.ShareCount++;
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -771,7 +771,7 @@ MiBuildPfnDatabaseZeroPage(VOID)
         /* Make it a bogus page to catch errors */
         PointerPde = MiAddressToPde(0xFFFFFFFF);
         Pfn1->u4.PteFrame = PFN_FROM_PTE(PointerPde);
-        Pfn1->PteAddress = PointerPde;
+        Pfn1->PteAddress = (PMMPTE)PointerPde;
         Pfn1->u2.ShareCount++;
         Pfn1->u3.e2.ReferenceCount = 0xFFF0;
         Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -1192,7 +1192,7 @@ INIT_FUNCTION
 MiAddHalIoMappings(VOID)
 {
     PVOID BaseAddress;
-    PMMPTE PointerPde;
+    PMMPDE PointerPde;
     PMMPTE PointerPte;
     ULONG i, j, PdeCount;
     PFN_NUMBER PageFrameIndex;
@@ -1203,12 +1203,12 @@ MiAddHalIoMappings(VOID)
 
     /* Check how many PDEs the heap has */
     PointerPde = MiAddressToPde(BaseAddress);
-    PdeCount = PDE_COUNT - ADDR_TO_PDE_OFFSET(BaseAddress);
+    PdeCount = PDE_COUNT - MiGetPdeOffset(BaseAddress);
     for (i = 0; i < PdeCount; i++)
     {
         /* Does the HAL own this mapping? */
         if ((PointerPde->u.Hard.Valid == 1) &&
-            (PointerPde->u.Hard.LargePage == 0))
+            (MI_IS_PAGE_LARGE(PointerPde) == FALSE))
         {
             /* Get the PTE for it and scan each page */
             PointerPte = MiAddressToPte(BaseAddress);
@@ -1556,8 +1556,10 @@ NTAPI
 INIT_FUNCTION
 MiBuildPagedPool(VOID)
 {
-    PMMPTE PointerPte, PointerPde;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte = ValidKernelPte;
+    MMPDE TempPde = ValidKernelPde;
     PFN_NUMBER PageFrameIndex;
     KIRQL OldIrql;
     ULONG Size, BitMapSize;
@@ -1648,7 +1650,7 @@ MiBuildPagedPool(VOID)
 #endif
 
     RtlZeroMemory(PointerPde,
-                  (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPTE));
+                  (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPDE));
 
     //
     // Next, get the first and last PTE
@@ -1666,8 +1668,8 @@ MiBuildPagedPool(VOID)
     MI_SET_USAGE(MI_USAGE_PAGED_POOL);
     MI_SET_PROCESS2("Kernel");
     PageFrameIndex = MiRemoveZeroPage(0);
-    TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-    MI_WRITE_VALID_PTE(PointerPde, TempPte);
+    TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
+    MI_WRITE_VALID_PDE(PointerPde, TempPde);
 #if (_MI_PAGING_LEVELS >= 3)
     /* Use the PPE of MmPagedPoolStart that was setup above */
 //    Bla = PFN_FROM_PTE(PpeAddress(MmPagedPool...));
@@ -1678,8 +1680,8 @@ MiBuildPagedPool(VOID)
 
     /* Initialize the PFN entry for it */
     MiInitializePfnForOtherProcess(PageFrameIndex,
-                                   PointerPde,
-                                   MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]);
+                                   (PMMPTE)PointerPde,
+                                   MmSystemPageDirectory[(PointerPde - (PMMPDE)PDE_BASE) / PDE_COUNT]);
 #endif
 
     //

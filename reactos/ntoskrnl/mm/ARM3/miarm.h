@@ -235,7 +235,7 @@ extern const ULONG MmProtectToValue[32];
 #define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
-#ifdef _M_IX86
+#ifndef _M_AMD64
 //
 // Decodes a Prototype PTE into the underlying PTE
 //
@@ -462,7 +462,7 @@ extern PMMPTE MiSessionImagePteEnd;
 extern PMMPTE MiSessionBasePte;
 extern PMMPTE MiSessionLastPte;
 extern SIZE_T MmSizeOfPagedPoolInBytes;
-extern PMMPTE MmSystemPagePtes;
+extern PMMPDE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
@@ -607,7 +607,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
 
-#ifdef _M_IX86
+#ifndef _M_AMD64
 //
 // Builds a Prototype PTE for the address of the PTE
 //
@@ -675,6 +675,33 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Writes a valid PDE
+//
+VOID
+FORCEINLINE
+MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
+                   IN MMPDE TempPde)
+{
+    /* Write the valid PDE */
+    ASSERT(PointerPde->u.Hard.Valid == 0);
+    ASSERT(TempPde.u.Hard.Valid == 1);
+    *PointerPde = TempPde;
+}
+
+//
+// Writes an invalid PDE
+//
+VOID
+FORCEINLINE
+MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
+                     IN MMPDE InvalidPde)
+{
+    /* Write the invalid PDE */
+    ASSERT(InvalidPde.u.Hard.Valid == 0);
+    *PointerPde = InvalidPde;
 }
 
 //

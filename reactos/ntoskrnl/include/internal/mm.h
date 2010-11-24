@@ -486,7 +486,7 @@ typedef struct _MM_PAGED_POOL_INFO
     PRTL_BITMAP EndOfPagedPoolBitmap;
     PMMPTE FirstPteForPagedPool;
     PMMPTE LastPteForPagedPool;
-    PMMPTE NextPdeForPagedPoolExpansion;
+    PMMPDE NextPdeForPagedPoolExpansion;
     ULONG PagedPoolHint;
     SIZE_T PagedPoolCommit;
     SIZE_T AllocatedPagedPool;

@@ -42,7 +42,7 @@ ULONG MmSessionImageSize;
 PVOID MiSystemViewStart;
 ULONG MmSystemViewSize;
 PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
-PMMPTE MmSystemPagePtes;
+PMMPDE MmSystemPagePtes;
 ULONG MmNumberOfSystemPtes;
 ULONG MxPfnAllocation;
 RTL_BITMAP MiPfnBitMap;
@@ -61,7 +61,7 @@ PVOID MmHyperSpaceEnd;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS
+BOOLEAN
 NTAPI
 MmArmInitSystem(IN ULONG Phase,
                 IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -71,7 +71,7 @@ MmArmInitSystem(IN ULONG Phase,
     //
     DPRINT1("NEVER TELL ME THE ODDS!\n");
     while (TRUE);
-    return STATUS_SUCCESS;
+    return TRUE;
 }
 
 /* EOF */
