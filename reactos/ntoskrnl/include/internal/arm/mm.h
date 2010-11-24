@@ -150,8 +150,9 @@ PULONG MmGetPageDirectory(VOID);
 #define MiAddressToPte(x)  MiGetPteAddress(x)
 
 /* Retrives the PDE offset for the given VA */
-#define MiGetPdeOffset(x) (((ULONG)(x)) >> 20)
-//#define MiGetPteOffset(x) (((ULONG)(x)) >> 12)
+#define MiGetPdeOffset(x)       (((ULONG)(x)) >> 20)
+#define MiGetPteOffset(x)       ((((ULONG)(x)) << 12) >> 24)
+#define MiAddressToPteOffset(x) MiGetPteOffset(x)
     
 /* Convert a PTE into a corresponding address */
 #define MiPteToAddress(x) ((PVOID)((ULONG)(x) << 10))
