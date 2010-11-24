@@ -262,9 +262,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Gemme ændringer i «%s»?"
     STRING_SEARCH_FINISHED,      "Færdig med at søge i dokumentet."
     STRING_LOAD_RICHED_FAILED,   "Kunne ikke indlæse RichEdit-biblioteket."
-    STRING_SAVE_LOSEFORMATTING,  "Du har valgt at gemme i rent tekstformat, noget som " \
-                                 "vil medføre at al formatering går tabt. Er du " \
-                                 "sikker på at du vil fortsætte?"
+    STRING_SAVE_LOSEFORMATTING,  "Du har valgt at gemme i rent tekstformat, noget som vil medføre at al formatering går tabt. Er du sikker på at du vil fortsætte?"
     STRING_INVALID_NUMBER,       "Ugyldigt talformat"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage dokumenter er ikke understøttet"
     STRING_WRITE_FAILED,              "Kunne ikke gemme filen."

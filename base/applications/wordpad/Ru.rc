@@ -262,9 +262,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Сохранить изменения в '%s'?"
     STRING_SEARCH_FINISHED,      "Поиск в документе завершен."
     STRING_LOAD_RICHED_FAILED,   "Ошибка загрузки библиотеки RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Сохранение документа в виде неформатированного текста " \
-                                 "приведёт к потере форматирования. Подтверждаете выполнение" \
-                                 "этой операции?"
+    STRING_SAVE_LOSEFORMATTING,  "Сохранение документа в виде неформатированного текста приведёт к потере форматирования. Подтверждаете выполнение этой операции?"
     STRING_INVALID_NUMBER,       "Неправильный числовой формат."
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документы не поддерживаются."
     STRING_WRITE_FAILED,              "Невозможно сохранить файл."

@@ -258,9 +258,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Зберегти зміни в '%s'?"
     STRING_SEARCH_FINISHED,      "Покуш документу завершено."
     STRING_LOAD_RICHED_FAILED,   "Не вдалось завантажити бібліотеку RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Ви вибрали збереження в форматі простого тексту, " \
-                                 "що призведе до втрати форматування. " \
-                                 "Ви справді цього хочете?"
+    STRING_SAVE_LOSEFORMATTING,  "Ви вибрали збереження в форматі простого тексту, що призведе до втрати форматування. Ви справді цього хочете?"
     STRING_INVALID_NUMBER,       "Невірний числовий формат"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документи не підтримуються"
     STRING_WRITE_FAILED,              "Неможливо зберегти файл."

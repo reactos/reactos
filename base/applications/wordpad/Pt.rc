@@ -375,9 +375,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Salvar as alterações de '%s'?"
     STRING_SEARCH_FINISHED,      "Acabou a pesquisa do documento."
     STRING_LOAD_RICHED_FAILED,   "Falha ao carregar a biblioteca RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Foi escolhido salvar em formato de texto simples, " \
-                                 "o que vai anular todas as formatações. " \
-                                 "Tem a certeza que deseja fazer isto?"
+    STRING_SAVE_LOSEFORMATTING,  "Foi escolhido salvar em formato de texto simples, o que vai anular todas as formatações. Tem a certeza que deseja fazer isto?"
     STRING_INVALID_NUMBER,       "Formato de número inválido"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Documentos OLE não são suportados"
     STRING_WRITE_FAILED,              "Não foi possível salvar o arquivo."
@@ -396,9 +394,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Guardar alterações a '%s'?"
     STRING_SEARCH_FINISHED,      "Acabou a pesquisa do documento."
     STRING_LOAD_RICHED_FAILED,   "Falhou o carregamento da biblioteca RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Escolheu guardar em formato de texto simples, " \
-                                 "o que vai anular todas as formatações. " \
-                                 "Tem a certeza que quer fazer isto?"
+    STRING_SAVE_LOSEFORMATTING,  "Escolheu guardar em formato de texto simples, o que vai anular todas as formatações. Tem a certeza que quer fazer isto?"
     STRING_INVALID_NUMBER,       "Formato de número inválido"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Documentos OLE não são suportados"
     STRING_WRITE_FAILED,              "Não foi possível guardar o ficheiro."

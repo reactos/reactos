@@ -254,9 +254,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Wijzigingen opslaan naar '%s'?"
     STRING_SEARCH_FINISHED,      "Doorzoeken van document voltooid."
     STRING_LOAD_RICHED_FAILED,   "Laden van de RichEdit library is mislukt."
-    STRING_SAVE_LOSEFORMATTING,  "U koos voor opslaan in gewoon tekst formaat, " \
-                                 "waardoor alle formattering verloren zal gaan. " \
-                                 "Weet u zeker dat u dit wilt?"
+    STRING_SAVE_LOSEFORMATTING,  "U koos voor opslaan in gewoon tekst formaat, waardoor alle formattering verloren zal gaan. Weet u zeker dat u dit wilt?"
     STRING_INVALID_NUMBER,       "Foutief nummerformaat"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documenten worden niet ondersteund"
     STRING_WRITE_FAILED,         "Bestand kon niet worden opgeslagen."

@@ -262,9 +262,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Išsaugoti „%s“ pakeitimus?"
     STRING_SEARCH_FINISHED,      "Paieška dokumente baigta."
     STRING_LOAD_RICHED_FAILED,   "Nepavyko įkelti RichEdit bibliotekos."
-    STRING_SAVE_LOSEFORMATTING,  "Jūs pasirinkote išsaugoti paprasto teksto formatu, " \
-                                 "todėl bus prarastas visas formatavimas. " \
-                                 "Ar tikrai norite tai padaryti?"
+    STRING_SAVE_LOSEFORMATTING,  "Jūs pasirinkote išsaugoti paprasto teksto formatu, todėl bus prarastas visas formatavimas. Ar tikrai norite tai padaryti?"
     STRING_INVALID_NUMBER,       "Neteisingas skaičiaus formatas"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE saugyklos dokumentai yra nepalaikomi"
     STRING_WRITE_FAILED,              "Nepavyko išsaugoti failo."

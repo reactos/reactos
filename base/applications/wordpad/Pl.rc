@@ -261,9 +261,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Zapisaæ zmiany w pliku '%s'?"
     STRING_SEARCH_FINISHED,      "Zakoñczono przeszukiwanie dokumentu."
     STRING_LOAD_RICHED_FAILED,   "Nie uda³o siê za³adowaæ biblioteki systemowej RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Wybrano zapisanie dokumentu jako zwyk³y tekst, " \
-                                 "w wyniku czego formatowanie zostanie utracone. " \
-                                 "Czy na pewno chcesz to zrobiæ?"
+    STRING_SAVE_LOSEFORMATTING,  "Wybrano zapisanie dokumentu jako zwyk³y tekst, w wyniku czego formatowanie zostanie utracone. Czy na pewno chcesz to zrobiæ?"
     STRING_INVALID_NUMBER,       "Z³y format liczby"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Dokumenty typu OLE storage nie s¹ obs³ugiwane"
     STRING_WRITE_FAILED,              "Nie mo¿na by³o zapisaæ pliku."

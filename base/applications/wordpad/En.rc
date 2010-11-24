@@ -251,9 +251,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Save changes to '%s'?"
     STRING_SEARCH_FINISHED,      "Finished searching the document."
     STRING_LOAD_RICHED_FAILED,   "Failed to load the RichEdit library."
-    STRING_SAVE_LOSEFORMATTING,  "You have chosen to save in plain text format, " \
-                                 "which will cause all formatting to be lost. " \
-                                 "Are you sure that you wish to do this?"
+    STRING_SAVE_LOSEFORMATTING,  "You have chosen to save in plain text format, which will cause all formatting to be lost. Are you sure that you wish to do this?"
     STRING_INVALID_NUMBER,       "Invalid number format"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
     STRING_WRITE_FAILED,              "Could not save the file."

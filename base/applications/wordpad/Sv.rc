@@ -265,9 +265,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Spara ändringar i '%s'?"
     STRING_SEARCH_FINISHED,      "Sökningen i dokumentet har slutförts."
     STRING_LOAD_RICHED_FAILED,   "Misslyckades att ladda RichEdit-biblioteket."
-    STRING_SAVE_LOSEFORMATTING,  "Du har valt att spara i rent textformat, " \
-                                 "vilket kommer leda till att all formatering förloras. " \
-                                 "Är du säker att du vill göra detta?"
+    STRING_SAVE_LOSEFORMATTING,  "Du har valt att spara i rent textformat, vilket kommer leda till att all formatering förloras. Är du säker att du vill göra detta?"
     STRING_INVALID_NUMBER,       "Ogiltigt talformat"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
     STRING_WRITE_FAILED,              "Kunde inte spara filen."

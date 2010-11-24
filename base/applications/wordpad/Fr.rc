@@ -263,9 +263,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Enregistrer les modifications de « %s » ?"
     STRING_SEARCH_FINISHED,      "Recherche terminée dans le document."
     STRING_LOAD_RICHED_FAILED,   "Impossible de charger la bibliothèque RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Vous avez choisi d'enregistrer en texte simple, " \
-                                 "ce qui causera la perte de tout formattage. " \
-                                 "Voulez-vous vraiment continuer ?"
+    STRING_SAVE_LOSEFORMATTING,  "Vous avez choisi d'enregistrer en texte simple, ce qui causera la perte de tout formattage. Voulez-vous vraiment continuer ?"
     STRING_INVALID_NUMBER,       "Format de nombre invalide"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Les documents conteneur OLE ne sont pas supportés"
     STRING_WRITE_FAILED,              "Impossible d'enregistrer le fichier."

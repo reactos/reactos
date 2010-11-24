@@ -261,10 +261,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Ali naj shranim spremembe v '%s'?"
     STRING_SEARCH_FINISHED,      "Konec iskanja po dokumentu."
     STRING_LOAD_RICHED_FAILED,   "Napaka pri nalaganju RichEdit knjižnice."
-    STRING_SAVE_LOSEFORMATTING,  "Izbrali ste shranjevanje v čisti besedilni " \
-                                 "obliki, kar bo povzročilo izgubo oblikovanja. " \
-                                 "Ali ste prepričani, da želite shraniti " \
-                                 "dokument v tej obliki?"
+    STRING_SAVE_LOSEFORMATTING,  "Izbrali ste shranjevanje v čisti besedilni obliki, kar bo povzročilo izgubo oblikovanja. Ali ste prepričani, da želite shraniti dokument v tej obliki?"
     STRING_INVALID_NUMBER,       "Neveljavna oblika števila"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "Dokumenti z OLE predmeti niso podprti"
     STRING_WRITE_FAILED,              "Napaka pri shranjevanju datoteke."

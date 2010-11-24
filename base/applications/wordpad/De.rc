@@ -261,9 +261,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Änderungen an '%s' speichern?"
     STRING_SEARCH_FINISHED,      "Wordpad hat das Durchsuchen des Dokuments beendet."
     STRING_LOAD_RICHED_FAILED,   "Die RichEdit-Bibliothek konnte nicht geladen werden."
-    STRING_SAVE_LOSEFORMATTING,  "Sie sind dabei, die Datei als Textdatei zu speichern. " \
-                                 "Dadurch geht die Formatierung verloren. " \
-                                 "Möchten Sie den Vorgang trotzdem fortsetzen?"
+    STRING_SAVE_LOSEFORMATTING,  "Sie sind dabei, die Datei als Textdatei zu speichern. Dadurch geht die Formatierung verloren. Möchten Sie den Vorgang trotzdem fortsetzen?"
     STRING_INVALID_NUMBER,       "Diese Maßeinheit ist nicht zulässig."
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE-Dokumentenspeicherung wird nicht unterstützt."
     STRING_WRITE_FAILED,         "Die Datei konnte nicht gespeichert werden."

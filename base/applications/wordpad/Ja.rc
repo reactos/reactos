@@ -254,9 +254,7 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "'%s'への変更を保存しますか?"
     STRING_SEARCH_FINISHED,      "文書の検索を完了。"
     STRING_LOAD_RICHED_FAILED,   "RichEditライブラリの読み込みに失敗。"
-    STRING_SAVE_LOSEFORMATTING,  "プレーンテキスト形式で保存すると、" \
-                                 "すべての書式が失われます。" \
-                                 "それでもよいですか？"
+    STRING_SAVE_LOSEFORMATTING,  "プレーンテキスト形式で保存すると、すべての書式が失われます。それでもよいですか？"
     STRING_INVALID_NUMBER,       "数の書式が不正"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLEストレージ文書はサポートされていません。"
     STRING_WRITE_FAILED,              "ファイルを保存できません。"
