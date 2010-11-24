@@ -529,7 +529,7 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
                                Address,
                                KiGetPreviousMode(TrapFrame),
                                TrapFrame);
-        if (Status == STATUS_SUCCESS) return Status;
+        if (NT_SUCCESS(Status)) return Status;
     }
 
     //
