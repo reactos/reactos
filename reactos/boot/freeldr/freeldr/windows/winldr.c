@@ -624,7 +624,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	/* Save final value of LoaderPagesSpanned */
 	LoaderBlockVA->Extension->LoaderPagesSpanned = LoaderPagesSpanned;
 
-	printf( "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
+	DPRINTM(DPRINT_WINDOWS, "Hello from paged mode, KiSystemStartup %p, LoaderBlockVA %p!\n",
 		KiSystemStartup, LoaderBlockVA);
 
 	WinLdrpDumpMemoryDescriptors(LoaderBlockVA);
