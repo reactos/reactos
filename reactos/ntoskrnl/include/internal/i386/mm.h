@@ -39,7 +39,7 @@ PULONG MmGetPageDirectory(VOID);
 // Convert a PTE into a corresponding address
 //
 #define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
-#define MiPdeToAddress(PDE) ((PVOID)((ULONG)(PDE) << 18))
+#define MiPdeToAddress(PDE) ((PVOID)((ULONG)(PDE) << 10))
 
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
