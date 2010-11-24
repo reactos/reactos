@@ -264,7 +264,6 @@ VOID
 HalSweepIcache(
     VOID
 );
-#endif
 
 FORCEINLINE
 VOID
@@ -285,6 +284,7 @@ _KeQueryTickCount(
   }
 }
 #define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
+#endif
 
 //
 // Intrinsics
