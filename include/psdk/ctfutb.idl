@@ -18,7 +18,9 @@
 
 #ifndef DO_NO_IMPORTS
 import "oaidl.idl";
+#ifdef __midl
 import "msctf.idl";
+#endif
 #endif
 
 interface ITfLangBarEventSink;
