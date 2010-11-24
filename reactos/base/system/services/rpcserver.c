@@ -834,8 +834,8 @@ DWORD RQueryServiceObjectSecurity(
         return ERROR_INVALID_HANDLE;
     }
 
-    if (dwSecurityInformation & (DACL_SECURITY_INFORMATION ||
-                                 GROUP_SECURITY_INFORMATION ||
+    if (dwSecurityInformation & (DACL_SECURITY_INFORMATION |
+                                 GROUP_SECURITY_INFORMATION |
                                  OWNER_SECURITY_INFORMATION))
         DesiredAccess |= READ_CONTROL;
 
