@@ -1,10 +1,15 @@
-/*
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            dll/win32/kernel32/misc/error.c
- * PURPOSE:         Error functions
- * PROGRAMMER:      Pierre Schweitzer (pierre.schweitzer@reactos.org)
+ * PURPOSE:         Environment functions
+ * PROGRAMMER:      Emanuele Aliberti
+ *                  Thomas Weidenmueller
+ * UPDATE HISTORY:
+ *                  Created 05/10/98
  */
+
 
 #include <k32.h>
 
@@ -12,34 +17,83 @@
 #include <debug.h>
 
 
-DWORD g_dwLastErrorToBreakOn;
-
-/* FUNCTIONS ******************************************************************/
-
-VOID
+/*
+ * @implemented
+ */
+BOOL
 WINAPI
-SetLastError(
-    IN DWORD dwErrCode)
+Beep (DWORD dwFreq, DWORD dwDuration)
 {
-    if (g_dwLastErrorToBreakOn)
+    HANDLE hBeep;
+    UNICODE_STRING BeepDevice;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    BEEP_SET_PARAMETERS BeepSetParameters;
+    NTSTATUS Status;
+
+    /* check the parameters */
+    if ((dwFreq >= 0x25 && dwFreq <= 0x7FFF) ||
+        (dwFreq == 0x0 && dwDuration == 0x0))
     {
-        /* If we have error to break on and if current matches, break */
-        if (g_dwLastErrorToBreakOn == dwErrCode)
+        /* open the device */
+        RtlInitUnicodeString(&BeepDevice,
+                             L"\\Device\\Beep");
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &BeepDevice,
+                                   0,
+                                   NULL,
+                                   NULL);
+
+        Status = NtCreateFile(&hBeep,
+                              FILE_READ_DATA | FILE_WRITE_DATA,
+                              &ObjectAttributes,
+                              &IoStatusBlock,
+                              NULL,
+                              0,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE,
+                              FILE_OPEN_IF,
+                              0,
+                              NULL,
+                              0);
+        if (NT_SUCCESS(Status))
         {
-            DbgBreakPoint();
+            /* Set beep data */
+            BeepSetParameters.Frequency = dwFreq;
+            BeepSetParameters.Duration = dwDuration;
+
+            Status = NtDeviceIoControlFile(hBeep,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &IoStatusBlock,
+                                           IOCTL_BEEP_SET,
+                                           &BeepSetParameters,
+                                           sizeof(BEEP_SET_PARAMETERS),
+                                           NULL,
+                                           0);
+
+            /* do an alertable wait if necessary */
+            if (NT_SUCCESS(Status) &&
+                (dwFreq != 0x0 || dwDuration != 0x0) && dwDuration != MAXDWORD)
+            {
+                SleepEx(dwDuration,
+                        TRUE);
+            }
+
+            NtClose(hBeep);
         }
     }
+    else
+        Status = STATUS_INVALID_PARAMETER;
 
-    /* Set last error */
-    NtCurrentTeb()->LastErrorValue = dwErrCode;
-}
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus (Status);
+        return FALSE;
+    }
 
-VOID
-WINAPI
-BaseSetLastNTError(
-    IN NTSTATUS Status)
-{
-    SetLastError(RtlNtStatusToDosError(Status));
+    return TRUE;
 }
 
 /* EOF */

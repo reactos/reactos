@@ -102,18 +102,19 @@ GetDllLoadPath(LPCWSTR lpModule)
  */
 BOOL
 WINAPI
-DisableThreadLibraryCalls(
-    IN HMODULE hLibModule)
+DisableThreadLibraryCalls (
+	HMODULE	hLibModule
+	)
 {
-    NTSTATUS Status;
+	NTSTATUS Status;
 
-    Status = LdrDisableThreadCalloutsForDll((PVOID)hLibModule);
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-    return TRUE;
+	Status = LdrDisableThreadCalloutsForDll ((PVOID)hLibModule);
+	if (!NT_SUCCESS (Status))
+	{
+		SetLastErrorByStatus (Status);
+		return FALSE;
+	}
+	return TRUE;
 }
 
 
@@ -135,17 +136,18 @@ LoadLibraryA (
  */
 HINSTANCE
 WINAPI
-LoadLibraryExA(
-    LPCSTR lpLibFileName,
-    HANDLE hFile,
-    DWORD dwFlags)
+LoadLibraryExA (
+	LPCSTR	lpLibFileName,
+	HANDLE	hFile,
+	DWORD	dwFlags
+	)
 {
-   PUNICODE_STRING FileNameW;
+   PWCHAR FileNameW;
 
-    if (!(FileNameW = Basep8BitStringToStaticUnicodeString(lpLibFileName)))
-        return NULL;
+   if (!(FileNameW = FilenameA2W(lpLibFileName, FALSE)))
+      return FALSE;
 
-    return LoadLibraryExW(FileNameW->Buffer, hFile, dwFlags);
+   return LoadLibraryExW(FileNameW, hFile, dwFlags);
 }
 
 
