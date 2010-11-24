@@ -655,7 +655,7 @@ BEGIN
     IDS_Running                   "½ÇÇà Áß"
 END
 
-
+#pragma code_page(1252)
 #endif    // Korean resources
 /////////////////////////////////////////////////////////////////////////////
 

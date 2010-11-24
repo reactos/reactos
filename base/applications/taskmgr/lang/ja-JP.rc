@@ -14,85 +14,85 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
-    POPUP "�t�@�C��(&F)"
+    POPUP "ƒtƒ@ƒCƒ‹(&F)"
     BEGIN
-        MENUITEM "�V�����^�X�N�̎��s(&N)",      ID_FILE_NEW
+        MENUITEM "V‚µ‚¢ƒ^ƒXƒN‚ÌŽÀs(&N)",      ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "�^�X�N �}�l�[�W���̏I��(&X)", ID_FILE_EXIT
+        MENUITEM "ƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚ÌI—¹(&X)", ID_FILE_EXIT
     END
-    POPUP "�I�v�V����(&O)"
+    POPUP "ƒIƒvƒVƒ‡ƒ“(&O)"
     BEGIN
-        MENUITEM "��Ɏ�O�ɕ\\��(&A)",         ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "í‚ÉŽè‘O‚É•\\Ž¦(&A)",         ID_OPTIONS_ALWAYSONTOP
         , CHECKED
-        MENUITEM "���g�p���ɍŏ���(&M)",        ID_OPTIONS_MINIMIZEONUSE
+        MENUITEM "–¢Žg—pŽž‚ÉÅ¬‰»(&M)",        ID_OPTIONS_MINIMIZEONUSE
         , CHECKED
-        MENUITEM "�ŏ������ɉB��(&H)",          ID_OPTIONS_HIDEWHENMINIMIZED
+        MENUITEM "Å¬‰»Žž‚É‰B‚·(&H)",          ID_OPTIONS_HIDEWHENMINIMIZED
         , CHECKED
-        MENUITEM "16 �r�b�g �^�X�N�̕\\��(&S)", ID_OPTIONS_SHOW16BITTASKS
+        MENUITEM "16 ƒrƒbƒg ƒ^ƒXƒN‚Ì•\\Ž¦(&S)", ID_OPTIONS_SHOW16BITTASKS
         , CHECKED
     END
-    POPUP "�\\��(&V)"
+    POPUP "•\\Ž¦(&V)"
     BEGIN
-        MENUITEM "�ŐV�̏�ԂɍX�V(&R)",        ID_VIEW_REFRESH
-        POPUP "�X�V�̕p�x(&U)"
+        MENUITEM "ÅV‚Ìó‘Ô‚ÉXV(&R)",        ID_VIEW_REFRESH
+        POPUP "XV‚Ì•p“x(&U)"
         BEGIN
-            MENUITEM "��(&H)",                      ID_VIEW_UPDATESPEED_HIGH
-            MENUITEM "�ʏ�(&N)",                    ID_VIEW_UPDATESPEED_NORMAL
+            MENUITEM "‚(&H)",                      ID_VIEW_UPDATESPEED_HIGH
+            MENUITEM "’Êí(&N)",                    ID_VIEW_UPDATESPEED_NORMAL
             , CHECKED
-            MENUITEM "��(&L)",                      ID_VIEW_UPDATESPEED_LOW
-            MENUITEM "�ꎞ��~(&P)",                ID_VIEW_UPDATESPEED_PAUSED
+            MENUITEM "’á(&L)",                      ID_VIEW_UPDATESPEED_LOW
+            MENUITEM "ˆêŽž’âŽ~(&P)",                ID_VIEW_UPDATESPEED_PAUSED
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "�傫���A�C�R��(&G)",          ID_VIEW_LARGE
-        MENUITEM "�������A�C�R��(&M)",          ID_VIEW_SMALL
-        MENUITEM "�ڍ�(&D)",                    ID_VIEW_DETAILS, CHECKED
-        MENUITEM "��̑I��(&S)...",             ID_VIEW_SELECTCOLUMNS
-        POPUP "CPU �̗���(&C)"
+        MENUITEM "‘å‚«‚¢ƒAƒCƒRƒ“(&G)",          ID_VIEW_LARGE
+        MENUITEM "¬‚³‚¢ƒAƒCƒRƒ“(&M)",          ID_VIEW_SMALL
+        MENUITEM "Ú×(&D)",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "—ñ‚Ì‘I‘ð(&S)...",             ID_VIEW_SELECTCOLUMNS
+        POPUP "CPU ‚Ì—š—ð(&C)"
         BEGIN
-            MENUITEM "���ׂĂ� CPU �� 1 �O���t(&O)",ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "‚·‚×‚Ä‚Ì CPU ‚Å 1 ƒOƒ‰ƒt(&O)",ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "CPU ���Ƃ� 1 �O���t(&P)",     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
+            MENUITEM "CPU ‚²‚Æ‚É 1 ƒOƒ‰ƒt(&P)",     ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "�J�[�l�����Ԃ�\\������(&S)",  ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "ƒJ[ƒlƒ‹ŽžŠÔ‚ð•\\Ž¦‚·‚é(&S)",  ID_VIEW_SHOWKERNELTIMES
     END
-    POPUP "�E�B���h�E(&W)"
+    POPUP "ƒEƒBƒ“ƒhƒE(&W)"
     BEGIN
-        MENUITEM "�㉺�ɕ��ׂĕ\\��(&H)",       ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "���E�ɕ��ׂĕ\\��(&V)",       ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "�ŏ���(&M)",                  ID_WINDOWS_MINIMIZE
-        MENUITEM "�ő剻(&X)",                  ID_WINDOWS_MAXIMIZE
-        MENUITEM "�d�˂ĕ\\��(&C)",             ID_WINDOWS_CASCADE
-        MENUITEM "��O�ɕ\\��(&B)",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "ã‰º‚É•À‚×‚Ä•\\Ž¦(&H)",       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "¶‰E‚É•À‚×‚Ä•\\Ž¦(&V)",       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Å¬‰»(&M)",                  ID_WINDOWS_MINIMIZE
+        MENUITEM "Å‘å‰»(&X)",                  ID_WINDOWS_MAXIMIZE
+        MENUITEM "d‚Ë‚Ä•\\Ž¦(&C)",             ID_WINDOWS_CASCADE
+        MENUITEM "Žè‘O‚É•\\Ž¦(&B)",             ID_WINDOWS_BRINGTOFRONT
     END
-    POPUP "�w���v(&H)"
+    POPUP "ƒwƒ‹ƒv(&H)"
     BEGIN
-        MENUITEM "�g�s�b�N�̌���(&H)",          ID_HELP_TOPICS
+        MENUITEM "ƒgƒsƒbƒN‚ÌŒŸõ(&H)",          ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "�o�[�W�������(&A)",          ID_HELP_ABOUT
+        MENUITEM "ƒo[ƒWƒ‡ƒ“î•ñ(&A)",          ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "�㉺�ɕ��ׂĕ\\��(&H)",       ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "���E�ɕ��ׂĕ\\��(&V)",       ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "�ŏ���(&M)",                  ID_WINDOWS_MINIMIZE
-    MENUITEM "�ő剻(&X)",                  ID_WINDOWS_MAXIMIZE
-    MENUITEM "�d�˂ĕ\\��(&C)",             ID_WINDOWS_CASCADE
-    MENUITEM "��O�ɕ\\��(&B)",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "ã‰º‚É•À‚×‚Ä•\\Ž¦(&H)",       ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "¶‰E‚É•À‚×‚Ä•\\Ž¦(&V)",       ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "Å¬‰»(&M)",                  ID_WINDOWS_MINIMIZE
+    MENUITEM "Å‘å‰»(&X)",                  ID_WINDOWS_MAXIMIZE
+    MENUITEM "d‚Ë‚Ä•\\Ž¦(&C)",             ID_WINDOWS_CASCADE
+    MENUITEM "Žè‘O‚É•\\Ž¦(&B)",             ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "�V�����^�X�N�̎��s(&N)",      ID_FILE_NEW
+        MENUITEM "V‚µ‚¢ƒ^ƒXƒN‚ÌŽÀs(&N)",      ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "�傫���A�C�R��(&G)",          ID_VIEW_LARGE
-        MENUITEM "�������A�C�R��(&M)",          ID_VIEW_SMALL
-        MENUITEM "�ڍ�(&D)",                    ID_VIEW_DETAILS, CHECKED
+        MENUITEM "‘å‚«‚¢ƒAƒCƒRƒ“(&G)",          ID_VIEW_LARGE
+        MENUITEM "¬‚³‚¢ƒAƒCƒRƒ“(&M)",          ID_VIEW_SMALL
+        MENUITEM "Ú×(&D)",                    ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -100,17 +100,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "�؂�ւ�(&S)",                ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "��O�ɕ\\��(&B)",             ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "Ø‚è‘Ö‚¦(&S)",                ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "Žè‘O‚É•\\Ž¦(&B)",             ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "�㉺�ɕ��ׂĕ\\��(&H)",       ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "���E�ɕ��ׂĕ\\��(&V)",       ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "�ŏ���(&M)",                  ID_WINDOWS_MINIMIZE
-        MENUITEM "�ő剻(&X)",                  ID_WINDOWS_MAXIMIZE
-        MENUITEM "�d�˂ĕ\\��(&C)",             ID_WINDOWS_CASCADE
+        MENUITEM "ã‰º‚É•À‚×‚Ä•\\Ž¦(&H)",       ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "¶‰E‚É•À‚×‚Ä•\\Ž¦(&V)",       ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "Å¬‰»(&M)",                  ID_WINDOWS_MINIMIZE
+        MENUITEM "Å‘å‰»(&X)",                  ID_WINDOWS_MAXIMIZE
+        MENUITEM "d‚Ë‚Ä•\\Ž¦(&C)",             ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "�^�X�N�̏I��(&E)",            ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "�v���Z�X�̕\\��(&G)",         ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "ƒ^ƒXƒN‚ÌI—¹(&E)",            ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "ƒvƒƒZƒX‚Ì•\\Ž¦(&G)",         ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -119,10 +119,10 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "���̃T�C�Y�ɖ߂�(&R)",        ID_RESTORE
-        MENUITEM "����(&C)",                  ID_FILE_EXIT
+        MENUITEM "Œ³‚ÌƒTƒCƒY‚É–ß‚·(&R)",        ID_RESTORE
+        MENUITEM "•Â‚¶‚é(&C)",                  ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "��Ɏ�O�ɕ\\��(&A)",         ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "í‚ÉŽè‘O‚É•\\Ž¦(&A)",         ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -130,28 +130,28 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "�v���Z�X�̏I��(&E)",          ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "�v���Z�X �c���[�̏I��(&T)",   ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "ƒvƒƒZƒX‚ÌI—¹(&E)",          ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "ƒvƒƒZƒX ƒcƒŠ[‚ÌI—¹(&T)",   ID_PROCESS_PAGE_ENDPROCESSTREE
 
-        MENUITEM "�f�o�b�O(&D)",                ID_PROCESS_PAGE_DEBUG
+        MENUITEM "ƒfƒoƒbƒO(&D)",                ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
-        POPUP "�D��x�̐ݒ�(&P)"
+        POPUP "—Dæ“x‚ÌÝ’è(&P)"
         BEGIN
-            MENUITEM "���A���^�C��(&R)",            ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "ƒŠƒAƒ‹ƒ^ƒCƒ€(&R)",            ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
-            MENUITEM "��(&H)",                      ID_PROCESS_PAGE_SETPRIORITY_HIGH
+            MENUITEM "‚(&H)",                      ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "�ʏ�ȏ�(&A)",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "’ÊíˆÈã(&A)",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
-            MENUITEM "�ʏ�(&N)",                    ID_PROCESS_PAGE_SETPRIORITY_NORMAL
+            MENUITEM "’Êí(&N)",                    ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "�ʏ�ȉ�(&B)",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "’ÊíˆÈ‰º(&B)",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "��(&L)",                      ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "’á(&L)",                      ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "�֌W�̐ݒ�(&A)...",           ID_PROCESS_PAGE_SETAFFINITY
-	MENUITEM "�f�o�b�O �`�����l���̕ύX(&C)...",	ID_PROCESS_PAGE_DEBUGCHANNELS
+        MENUITEM "ŠÖŒW‚ÌÝ’è(&A)...",           ID_PROCESS_PAGE_SETAFFINITY
+	MENUITEM "ƒfƒoƒbƒO ƒ`ƒƒƒ“ƒlƒ‹‚Ì•ÏX(&C)...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 
@@ -166,7 +166,7 @@ IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU |
     WS_THICKFRAME
-CAPTION "�^�X�N �}�l�[�W��"
+CAPTION "Task Manager"
 MENU IDR_TASKMANAGER
 FONT 9, "MS UI Gothic"
 BEGIN
@@ -179,9 +179,9 @@ FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "�V�����^�X�N(&N)...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "�؂�ւ�(&S)",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "�^�X�N�̏I��(&E)",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "V‚µ‚¢ƒ^ƒXƒN(&N)...",IDC_NEWTASK,187,189,53,14
+    PUSHBUTTON      "Ø‚è‘Ö‚¦(&S)",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
+    PUSHBUTTON      "ƒ^ƒXƒN‚ÌI—¹(&E)",IDC_ENDTASK,75,189,53,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -191,8 +191,8 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "�v���Z�X�̏I��(&E)",IDC_ENDPROCESS,171,189,69,14
-    CONTROL         "�S���[�U�[�̃v���Z�X��\\������(&S)",IDC_SHOWALLPROCESSES,
+    PUSHBUTTON      "ƒvƒƒZƒX‚ÌI—¹(&E)",IDC_ENDPROCESS,171,189,69,14
+    CONTROL         "‘Sƒ†[ƒU[‚ÌƒvƒƒZƒX‚ð•\\Ž¦‚·‚é(&S)",IDC_SHOWALLPROCESSES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
 END
 
@@ -201,77 +201,77 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 9, "MS UI Gothic"
 BEGIN
-    GROUPBOX        "CPU �g�p��",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�������g�p��",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT,WS_EX_TRANSPARENT
-    GROUPBOX        "���v",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�R�~�b�g �`���[�W (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "���������� (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�J�[�l�� ������ (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "�n���h��",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
-    LTEXT           "�X���b�h",IDS_TOTALS_THREAD_COUNT,12,140,27,8
-    LTEXT           "�v���Z�X",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
+    GROUPBOX        "CPU Žg—p—¦",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "MEM Usage",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT,WS_EX_TRANSPARENT
+    GROUPBOX        "‡Œv",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "ƒRƒ~ƒbƒg ƒ`ƒƒ[ƒW (KB)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "•¨—ƒƒ‚ƒŠ (KB)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "ƒJ[ƒlƒ‹ ƒƒ‚ƒŠ (KB)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    LTEXT           "ƒnƒ“ƒhƒ‹",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
+    LTEXT           "ƒXƒŒƒbƒh",IDS_TOTALS_THREAD_COUNT,12,140,27,8
+    LTEXT           "ƒvƒƒZƒX",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_THREAD_COUNT,65,140,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "���v",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "�����l",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
-    LTEXT           "�ő�l",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "‡Œv",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
+    LTEXT           "§ŒÀ’l",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
+    LTEXT           "Å‘å’l",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "���v",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "���p�\\",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
-    LTEXT           "�V�X�e�� �L���b�V��",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
+    LTEXT           "‡Œv",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
+    LTEXT           "Available",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
+    LTEXT           "ƒVƒXƒeƒ€ ƒLƒƒƒbƒVƒ…",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT           "���v",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "�y�[�W",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "��y�[�W",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
+    LTEXT           "‡Œv",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
+    LTEXT           "ƒy[ƒW",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
+    LTEXT           "”ñƒy[ƒW",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
     EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    GROUPBOX        "CPU �g�p���̗���",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "�������g�p�ʂ̗���",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU �g�p���̕\\��",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "�������g�p�ʂ̕\\��",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "CPU �g�p���̗���",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
+    GROUPBOX        "CPU Žg—p—¦‚Ì—š—ð",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "ƒƒ‚ƒŠŽg—p—Ê‚Ì—š—ð",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    PUSHBUTTON      "CPU Žg—p—¦‚Ì•\\Ž¦",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "ƒƒ‚ƒŠŽg—p—Ê‚Ì•\\Ž¦",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU Žg—p—¦‚Ì—š—ð",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
-    PUSHBUTTON      "�������g�p�ʂ̗���",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
+    PUSHBUTTON      "ƒƒ‚ƒŠŽg—p—Ê‚Ì—š—ð",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
 END
 
 IDD_DEBUG_CHANNELS_DIALOG DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "�f�o�b�O �`�����l��"
+CAPTION "ƒfƒoƒbƒO ƒ`ƒƒƒ“ƒlƒ‹"
 FONT 9, "MS UI Gothic"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
-    PUSHBUTTON      "����",IDOK,171,189,69,14
+    PUSHBUTTON      "•Â‚¶‚é",IDOK,171,189,69,14
 END
 
 IDD_AFFINITY_DIALOG DIALOGEX DISCARDABLE  0, 0, 231, 154
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "�v���Z�b�T�̊֌W"
+CAPTION "ƒvƒƒZƒbƒT‚ÌŠÖŒW"
 FONT 9, "MS UI Gothic"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,120,133,50,14
-    PUSHBUTTON      "�L�����Z��",IDCANCEL,174,133,50,14
-    LTEXT           "�v���Z�b�T�̊֌W�̐ݒ�́A�ǂ� CPU �Ńv���Z�X�����s���邩�𐧌䂵�܂��B",
+    PUSHBUTTON      "ƒLƒƒƒ“ƒZƒ‹",IDCANCEL,174,133,50,14
+    LTEXT           "ƒvƒƒZƒbƒT‚ÌŠÖŒW‚ÌÝ’è‚ÍA‚Ç‚Ì CPU ‚ÅƒvƒƒZƒX‚ðŽÀs‚·‚é‚©‚ð§Œä‚µ‚Ü‚·B",
                     IDC_STATIC,5,5,220,16
     CONTROL         "CPU 0",IDC_CPU0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
                     11,28,37,10
@@ -341,62 +341,62 @@ END
 
 IDD_COLUMNS_DIALOG DIALOGEX DISCARDABLE  0, 0, 195, 199
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "��̑I��"
+CAPTION "—ñ‚Ì‘I‘ð"
 FONT 9, "MS UI Gothic"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,84,178,50,14
-    PUSHBUTTON      "�L�����Z��",IDCANCEL,138,178,50,14
-    LTEXT           "�^�X�N �}�l�[�W���� [�v���Z�X] �y�[�W�ɕ\\��������I�����܂��B",
+    PUSHBUTTON      "ƒLƒƒƒ“ƒZƒ‹",IDCANCEL,138,178,50,14
+    LTEXT           "ƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚Ì [ƒvƒƒZƒX] ƒy[ƒW‚É•\\Ž¦‚·‚é—ñ‚ð‘I‘ð‚µ‚Ü‚·B",
                     IDC_STATIC,7,7,181,17
-    CONTROL         "�C���[�W��(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒCƒ[ƒW–¼(&I)",IDC_IMAGENAME,"Button",BS_AUTOCHECKBOX |
                     WS_DISABLED | WS_TABSTOP,7,28,56,10
-    CONTROL         "PID (�v���Z�X ID)(&P)",IDC_PID,"Button",
+    CONTROL         "PID (ƒvƒƒZƒX ID)(&P)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,88,10
-    CONTROL         "CPU �g�p��(&C)",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "CPU Žg—p—¦(&C)",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,50,53,10
-    CONTROL         "CPU ����(&E)",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "CPU ŽžŠÔ(&E)",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
-    CONTROL         "�������g�p��(&M)",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒƒ‚ƒŠŽg—p—Ê(&M)",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,72,63,10
-    CONTROL         "�������g�p�ʃf���^(&D)",IDC_MEMORYUSAGEDELTA,"Button",
+    CONTROL         "ƒƒ‚ƒŠŽg—p—Êƒfƒ‹ƒ^(&D)",IDC_MEMORYUSAGEDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,83,82,10
-    CONTROL         "�ő僁�����g�p��(&K)",IDC_PEAKMEMORYUSAGE,"Button",
+    CONTROL         "Å‘åƒƒ‚ƒŠŽg—p—Ê(&K)",IDC_PEAKMEMORYUSAGE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,94,82,10
-    CONTROL         "�y�[�W �t�H���g(&F)",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒy[ƒW ƒtƒHƒ‹ƒg(&F)",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,53,10
-    CONTROL         "USER �I�u�W�F�N�g(&U)",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "USER ƒIƒuƒWƒFƒNƒg(&U)",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
-    CONTROL         "I/O �ǂݎ��",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O “Ç‚ÝŽæ‚è",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,49,10
-    CONTROL         "I/O �ǂݎ��o�C�g��",IDC_IOREADBYTES,"Button",
+    CONTROL         "I/O Read Bytes",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
-    CONTROL         "�Z�b�V���� ID(&S)",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒZƒbƒVƒ‡ƒ“ ID(&S)",IDC_SESSIONID,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,149,50,10
-    CONTROL         "���[�U�[��(&N)",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒ†[ƒU[–¼(&N)",IDC_USERNAME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,160,51,10
-    CONTROL         "�y�[�W �t�H���g �f���^(&A)",IDC_PAGEFAULTSDELTA,"Button",
+    CONTROL         "ƒy[ƒW ƒtƒHƒ‹ƒg ƒfƒ‹ƒ^(&A)",IDC_PAGEFAULTSDELTA,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,28,72,10
-    CONTROL         "���z������ �T�C�Y(&V)",IDC_VIRTUALMEMORYSIZE,"Button",
+    CONTROL         "‰¼‘zƒƒ‚ƒŠ ƒTƒCƒY(&V)",IDC_VIRTUALMEMORYSIZE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,39,77,10
-    CONTROL         "�y�[�W �v�[��(&G)",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒy[ƒW ƒv[ƒ‹(&G)",IDC_PAGEDPOOL,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,50,53,10
-    CONTROL         "��y�[�W �v�[��(&O)",IDC_NONPAGEDPOOL,"Button",
+    CONTROL         "”ñƒy[ƒW ƒv[ƒ‹(&O)",IDC_NONPAGEDPOOL,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,61,67,10
-    CONTROL         "��{�D��x(&R)",IDC_BASEPRIORITY,"Button",
+    CONTROL         "Šî–{—Dæ“x(&R)",IDC_BASEPRIORITY,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,72,55,10
-    CONTROL         "�n���h���̐�(&H)",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒnƒ“ƒhƒ‹‚Ì”(&H)",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,59,10
-    CONTROL         "�X���b�h�̐�(&T)",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "ƒXƒŒƒbƒh‚Ì”(&T)",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,94,59,10
-    CONTROL         "GDI �I�u�W�F�N�g",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "GDI ƒIƒuƒWƒFƒNƒg",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,105,55,10
-    CONTROL         "I/O ��������",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O Writes",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,49,10
-    CONTROL         "I/O �������݃o�C�g��",IDC_IOWRITEBYTES,"Button",
+    CONTROL         "I/O Write Bytes",IDC_IOWRITEBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,127,65,10
-    CONTROL         "I/O ���̑�",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "I/O ‚»‚Ì‘¼",IDC_IOOTHER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,138,46,10
-    CONTROL         "I/O ���̑��̃o�C�g��",IDC_IOOTHERBYTES,"Button",
+    CONTROL         "I/O Other Bytes",IDC_IOOTHERBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,107,149,65,10
 END
 
@@ -521,135 +521,135 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "�^�X�N �}�l�[�W��"
-    IDC_TASKMGR             "�^�X�N �}�l�[�W��"
+    IDS_APP_TITLE           "Task Manager"
+    IDC_TASKMGR             "Task Manager"
     IDS_IDLE_PROCESS        "System Idle Process"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_FILE_NEW             "�V�����v���O���������s���܂�"
-    ID_OPTIONS_ALWAYSONTOP  "�ŏ�������Ȃ�����A��Ƀ^�X�N �}�l�[�W�����ق��̂��ׂẴE�B���h�E������O�ɕ\\������܂�"
+    ID_FILE_NEW             "V‚µ‚¢ƒvƒƒOƒ‰ƒ€‚ðŽÀs‚µ‚Ü‚·"
+    ID_OPTIONS_ALWAYSONTOP  "Å¬‰»‚³‚ê‚È‚¢ŒÀ‚èAí‚Éƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚ª‚Ù‚©‚Ì‚·‚×‚Ä‚ÌƒEƒBƒ“ƒhƒE‚æ‚è‚àŽè‘O‚É•\\Ž¦‚³‚ê‚Ü‚·"
     ID_OPTIONS_MINIMIZEONUSE
-                            "[�؂�ւ�] ��������s����ƁA�^�X�N �}�l�[�W�����ŏ�������܂�"
-    ID_OPTIONS_HIDEWHENMINIMIZED "�ŏ������ꂽ�Ƃ��ɁA�^�X�N �}�l�[�W�����B���܂�"
-    ID_VIEW_REFRESH         "[�X�V�̕p�x] �̐ݒ�ɂ�����炸�A�������^�X�N �}�l�[�W�����X�V���܂�"
-    ID_VIEW_LARGE           "�傫���A�C�R�����g���ă^�X�N��\\�����܂�"
-    ID_VIEW_SMALL           "�������A�C�R�����g���ă^�X�N��\\�����܂�"
-    ID_VIEW_DETAILS         "�e�^�X�N�̏���\\�����܂�"
-    ID_VIEW_UPDATESPEED_HIGH "���b 2 ��\\�����X�V���܂�"
-    ID_VIEW_UPDATESPEED_NORMAL "2 �b�� 1 ��\\�����X�V���܂�"
-    ID_VIEW_UPDATESPEED_LOW "4 �b�� 1 ��\\�����X�V���܂�"
+                            "[Ø‚è‘Ö‚¦] ‘€ì‚ðŽÀs‚·‚é‚ÆAƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚ªÅ¬‰»‚³‚ê‚Ü‚·"
+    ID_OPTIONS_HIDEWHENMINIMIZED "Å¬‰»‚³‚ê‚½‚Æ‚«‚ÉAƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚ð‰B‚µ‚Ü‚·"
+    ID_VIEW_REFRESH         "[XV‚Ì•p“x] ‚ÌÝ’è‚É‚©‚©‚í‚ç‚¸A¡‚·‚®ƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚ðXV‚µ‚Ü‚·"
+    ID_VIEW_LARGE           "‘å‚«‚¢ƒAƒCƒRƒ“‚ðŽg‚Á‚Äƒ^ƒXƒN‚ð•\\Ž¦‚µ‚Ü‚·"
+    ID_VIEW_SMALL           "¬‚³‚¢ƒAƒCƒRƒ“‚ðŽg‚Á‚Äƒ^ƒXƒN‚ð•\\Ž¦‚µ‚Ü‚·"
+    ID_VIEW_DETAILS         "Šeƒ^ƒXƒN‚Ìî•ñ‚ð•\\Ž¦‚µ‚Ü‚·"
+    ID_VIEW_UPDATESPEED_HIGH "–ˆ•b 2 ‰ñ•\\Ž¦‚ðXV‚µ‚Ü‚·"
+    ID_VIEW_UPDATESPEED_NORMAL "2 •b‚É 1 ‰ñ•\\Ž¦‚ðXV‚µ‚Ü‚·"
+    ID_VIEW_UPDATESPEED_LOW "4 •b‚É 1 ‰ñ•\\Ž¦‚ðXV‚µ‚Ü‚·"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_VIEW_UPDATESPEED_PAUSED "�\\���������I�ɍX�V���܂���"
+    ID_VIEW_UPDATESPEED_PAUSED "•\\Ž¦‚ðŽ©“®“I‚ÉXV‚µ‚Ü‚¹‚ñ"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "�f�X�N�g�b�v��ŃE�B���h�E���d�Ȃ�Ȃ��悤�ɏ㉺�ɕ��ׂĕ\\�����܂�"
-    ID_WINDOWS_TILEVERTICALLY "�f�X�N�g�b�v��ŃE�B���h�E���d�Ȃ�Ȃ��悤�ɍ��E�ɕ��ׂĕ\\�����܂�"
-    ID_WINDOWS_MINIMIZE     "�E�B���h�E���ŏ������܂�"
-    ID_WINDOWS_MAXIMIZE     "�E�B���h�E���ő剻���܂�"
-    ID_WINDOWS_CASCADE      "�f�X�N�g�b�v��ŃE�B���h�E���d�˂ĕ\\�����܂�"
-    ID_WINDOWS_BRINGTOFRONT "�E�B���h�E����O�ɕ\\�����܂����A�؂�ւ��܂���B"
-    ID_HELP_TOPICS          "�^�X�N �}�l�[�W���̃w���v �g�s�b�N��\\�����܂�"
-    ID_HELP_ABOUT           "�v���O�������A�o�[�W�����ԍ��A���쌠��\\�����܂�"
-    ID_FILE_EXIT            "�^�X�N �}�l�[�W�� �A�v���P�[�V�������I�����܂�"
+                            "ƒfƒXƒNƒgƒbƒvã‚ÅƒEƒBƒ“ƒhƒE‚ðd‚È‚ç‚È‚¢‚æ‚¤‚Éã‰º‚É•À‚×‚Ä•\\Ž¦‚µ‚Ü‚·"
+    ID_WINDOWS_TILEVERTICALLY "ƒfƒXƒNƒgƒbƒvã‚ÅƒEƒBƒ“ƒhƒE‚ðd‚È‚ç‚È‚¢‚æ‚¤‚É¶‰E‚É•À‚×‚Ä•\\Ž¦‚µ‚Ü‚·"
+    ID_WINDOWS_MINIMIZE     "ƒEƒBƒ“ƒhƒE‚ðÅ¬‰»‚µ‚Ü‚·"
+    ID_WINDOWS_MAXIMIZE     "ƒEƒBƒ“ƒhƒE‚ðÅ‘å‰»‚µ‚Ü‚·"
+    ID_WINDOWS_CASCADE      "ƒfƒXƒNƒgƒbƒvã‚ÅƒEƒBƒ“ƒhƒE‚ðd‚Ë‚Ä•\\Ž¦‚µ‚Ü‚·"
+    ID_WINDOWS_BRINGTOFRONT "ƒEƒBƒ“ƒhƒE‚ðŽè‘O‚É•\\Ž¦‚µ‚Ü‚·‚ªAØ‚è‘Ö‚¦‚Ü‚¹‚ñB"
+    ID_HELP_TOPICS          "ƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚Ìƒwƒ‹ƒv ƒgƒsƒbƒN‚ð•\\Ž¦‚µ‚Ü‚·"
+    ID_HELP_ABOUT           "ƒvƒƒOƒ‰ƒ€î•ñAƒo[ƒWƒ‡ƒ“”Ô†A’˜ìŒ ‚ð•\\Ž¦‚µ‚Ü‚·"
+    ID_FILE_EXIT            "ƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ðI—¹‚µ‚Ü‚·"
     ID_OPTIONS_SHOW16BITTASKS
-                            "16 �r�b�g �^�X�N���A�֘A�t����ꂽ ntvdm.exe �̉��ɕ\\�����܂�"
-    ID_VIEW_SELECTCOLUMNS   "[�v���Z�X] �y�[�W�ɕ\\��������I�����܂�"
-    ID_VIEW_SHOWKERNELTIMES "�J�[�l�����Ԃ��p�t�H�[�}���X �O���t��ɕ\\�����܂�"
+                            "16 ƒrƒbƒg ƒ^ƒXƒN‚ðAŠÖ˜A•t‚¯‚ç‚ê‚½ ntvdm.exe ‚Ì‰º‚É•\\Ž¦‚µ‚Ü‚·"
+    ID_VIEW_SELECTCOLUMNS   "[ƒvƒƒZƒX] ƒy[ƒW‚É•\\Ž¦‚·‚é—ñ‚ð‘I‘ð‚µ‚Ü‚·"
+    ID_VIEW_SHOWKERNELTIMES "ƒJ[ƒlƒ‹ŽžŠÔ‚ðƒpƒtƒH[ƒ}ƒ“ƒX ƒOƒ‰ƒtã‚É•\\Ž¦‚µ‚Ü‚·"
     ID_VIEW_CPUHISTORY_ONEGRAPHALL
-                            "1 �̗����O���t�� CPU �g�p���̍��v��\\�����܂�"
-    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "CPU �g�p���̗����� CPU ���ƂɃO���t�ŕ\\�����܂�"
+                            "1 ‚Â‚Ì—š—ðƒOƒ‰ƒt‚Å CPU Žg—p—¦‚Ì‡Œv‚ð•\\Ž¦‚µ‚Ü‚·"
+    ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU "CPU Žg—p—¦‚Ì—š—ð‚ð CPU ‚²‚Æ‚ÉƒOƒ‰ƒt‚Å•\\Ž¦‚µ‚Ü‚·"
     ID_APPLICATION_PAGE_SWITCHTO
-                            "�^�X�N����O�ɕ\\�����A�t�H�[�J�X��؂�ւ��܂�"
+                            "ƒ^ƒXƒN‚ðŽè‘O‚É•\\Ž¦‚µAƒtƒH[ƒJƒX‚ðØ‚è‘Ö‚¦‚Ü‚·"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_ENDTASK              "�I������Ă���^�X�N�ɏI������悤�w�����܂�"
-    ID_GOTOPROCESS          "�I������Ă���^�X�N�̃v���Z�X�Ƀt�H�[�J�X��؂�ւ��܂�"
-    ID_RESTORE              "�B��Ă����^�X�N �}�l�[�W�������ɖ߂��܂�"
-    ID_PROCESS_PAGE_ENDPROCESS "�V�X�e������v���Z�X���폜���܂�"
+    ID_ENDTASK              "‘I‘ð‚³‚ê‚Ä‚¢‚éƒ^ƒXƒN‚ÉI—¹‚·‚é‚æ‚¤ŽwŽ¦‚µ‚Ü‚·"
+    ID_GOTOPROCESS          "‘I‘ð‚³‚ê‚Ä‚¢‚éƒ^ƒXƒN‚ÌƒvƒƒZƒX‚ÉƒtƒH[ƒJƒX‚ðØ‚è‘Ö‚¦‚Ü‚·"
+    ID_RESTORE              "‰B‚ê‚Ä‚¢‚½ƒ^ƒXƒN ƒ}ƒl[ƒWƒƒ‚ðŒ³‚É–ß‚µ‚Ü‚·"
+    ID_PROCESS_PAGE_ENDPROCESS "ƒVƒXƒeƒ€‚©‚çƒvƒƒZƒX‚ðíœ‚µ‚Ü‚·"
     ID_PROCESS_PAGE_ENDPROCESSTREE
-                            "���̃v���Z�X�Ǝq�v���Z�X�����ׂč폜���܂�"
-    ID_PROCESS_PAGE_DEBUG   "���̃v���Z�X�Ƀf�o�b�K��Y�t���܂�"
+                            "‚±‚ÌƒvƒƒZƒX‚ÆŽqƒvƒƒZƒX‚ð‚·‚×‚Äíœ‚µ‚Ü‚·"
+    ID_PROCESS_PAGE_DEBUG   "‚±‚ÌƒvƒƒZƒX‚ÉƒfƒoƒbƒK‚ð“Y•t‚µ‚Ü‚·"
     ID_PROCESS_PAGE_SETAFFINITY
-                            "�ǂ̃v���Z�b�T�Ńv���Z�X�����s���邩�𐧌䂵�܂�"
+                            "‚Ç‚ÌƒvƒƒZƒbƒT‚ÅƒvƒƒZƒX‚ðŽÀs‚·‚é‚©‚ð§Œä‚µ‚Ü‚·"
     ID_PROCESS_PAGE_SETPRIORITY_REALTIME
-                            "�v���Z�X�����A���^�C���D��x�N���X�ɐݒ肵�܂�"
-    ID_PROCESS_PAGE_SETPRIORITY_HIGH "�v���Z�X�����D��x�N���X�ɐݒ肵�܂�"
+                            "ƒvƒƒZƒX‚ðƒŠƒAƒ‹ƒ^ƒCƒ€—Dæ“xƒNƒ‰ƒX‚ÉÝ’è‚µ‚Ü‚·"
+    ID_PROCESS_PAGE_SETPRIORITY_HIGH "ƒvƒƒZƒX‚ð‚—Dæ“xƒNƒ‰ƒX‚ÉÝ’è‚µ‚Ü‚·"
     ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
-                            "�v���Z�X��ʏ�ȏ�̗D��x�N���X�ɐݒ肵�܂�"
+                            "ƒvƒƒZƒX‚ð’ÊíˆÈã‚Ì—Dæ“xƒNƒ‰ƒX‚ÉÝ’è‚µ‚Ü‚·"
     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
-                            "�v���Z�X��ʏ�D��x�N���X�ɐݒ肵�܂�"
+                            "ƒvƒƒZƒX‚ð’Êí—Dæ“xƒNƒ‰ƒX‚ÉÝ’è‚µ‚Ü‚·"
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
-                            "�v���Z�X��ʏ�ȉ��̗D��x�N���X�ɐݒ肵�܂�"
-    ID_PROCESS_PAGE_SETPRIORITY_LOW "�v���Z�X���D��x�N���X�ɐݒ肵�܂�"
+                            "ƒvƒƒZƒX‚ð’ÊíˆÈ‰º‚Ì—Dæ“xƒNƒ‰ƒX‚ÉÝ’è‚µ‚Ü‚·"
+    ID_PROCESS_PAGE_SETPRIORITY_LOW "ƒvƒƒZƒX‚ð’á—Dæ“xƒNƒ‰ƒX‚ÉÝ’è‚µ‚Ü‚·"
 END
 
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TAB_APPS                  "�A�v���P�[�V����"
-    IDS_TAB_PROCESSES             "�v���Z�X"
-    IDS_TAB_PERFORMANCE           "�p�t�H�[�}���X"
-    IDS_TAB_TASK                  "�^�X�N"
-    IDS_TAB_STATUS                "���"
-    IDS_TAB_IMAGENAME             "�C���[�W��"
+    IDS_TAB_APPS                  "Applications"
+    IDS_TAB_PROCESSES             "ƒvƒƒZƒX"
+    IDS_TAB_PERFORMANCE           "ƒpƒtƒH[ƒ}ƒ“ƒX"
+    IDS_TAB_TASK                  "ƒ^ƒXƒN"
+    IDS_TAB_STATUS                "Status"
+    IDS_TAB_IMAGENAME             "ƒCƒ[ƒW–¼"
     IDS_TAB_PID                   "PID"
-    IDS_TAB_USERNAME              "���[�U�[��"
-    IDS_TAB_SESSIONID             "�Z�b�V���� ID"
+    IDS_TAB_USERNAME              "ƒ†[ƒU[–¼"
+    IDS_TAB_SESSIONID             "ƒZƒbƒVƒ‡ƒ“ ID"
     IDS_TAB_CPU                   "CPU"
-    IDS_TAB_CPUTIME               "CPU ����"
-    IDS_TAB_MEMUSAGE              "�������g�p��"
-    IDS_TAB_PEAKMEMUSAGE          "�ő僁�����g�p��"
-    IDS_TAB_MEMDELTA              "������ �f���^"
-    IDS_TAB_PAGEFAULT             "�y�[�W �t�H���g"
-    IDS_TAB_PFDELTA               "�y�[�W �t�H���g �f���^"
-    IDS_TAB_VMSIZE                "���z������ �T�C�Y"
-    IDS_TAB_PAGEDPOOL             "�y�[�W �v�[��"
-    IDS_TAB_NPPOOL                "��y�[�W �v�[��"
-    IDS_TAB_BASEPRI               "��{�D��x"
-    IDS_TAB_HANDLES               "�n���h��"
-    IDS_TAB_THREADS               "�X���b�h"
-    IDS_TAB_USERPBJECTS           "USER �I�u�W�F�N�g"
-    IDS_TAB_GDIOBJECTS            "GDI �I�u�W�F�N�g"
-    IDS_TAB_IOREADS               "I/O �ǂݎ��"
-    IDS_TAB_IOWRITES              "I/O ��������"
-    IDS_TAB_IOOTHER               "I/O ���̑�"
-    IDS_TAB_IOREADBYTES           "I/O �ǂݎ��o�C�g��"
-    IDS_TAB_IOWRITESBYTES         "I/O �������݃o�C�g��"
-    IDS_TAB_IOOTHERBYTES          "I/O ���̑��̃o�C�g��"
-    IDS_MENU_SELECTCOLUMNS        "��̑I��(&S)..."
-    IDS_MENU_16BITTASK            "16 �r�b�g �^�X�N�̕\\��(&S)"
-    IDS_MENU_WINDOWS              "�E�B���h�E(&W)"
-    IDS_MENU_LARGEICONS           "�傫���A�C�R��(&G)"
-    IDS_MENU_SMALLICONS           "�������A�C�R��(&M)"
-    IDS_MENU_DETAILS              "�ڍ�(&D)"
-    IDS_MENU_ONEGRAPHALLCPUS      "���ׂĂ� CPU �� 1 �O���t(&O)"
-    IDS_MENU_ONEGRAPHPERCPU       "CPU ���Ƃ� 1 �O���t(&P)"
-    IDS_MENU_CPUHISTORY           "CPU ����(&C)"
-    IDS_MENU_SHOWKERNELTIMES      "�J�[�l�����Ԃ�\\������(&S)"
-    IDS_CREATENEWTASK             "�V�����^�X�N�̍쐬"
-    IDS_CREATENEWTASK_DESC        "���s����v���O�������A�܂��͊J���t�H���_��h�L�������g���A�C���^�[�l�b�g ���\\�[�X������͂��Ă��������B"
-    IDS_MSG_ACCESSPROCESSAFF      "�v���Z�X�̊֌W�ւ̃A�N�Z�X�܂��͐ݒ肪�ł��܂���"
-    IDS_MSG_PROCESSONEPRO         "�v���Z�X�́A���Ȃ��Ƃ� 1 �̃v���Z�b�T�Ɗ֌W�������Ȃ���΂Ȃ�܂���B"
-    IDS_MSG_INVALIDOPTION         "�����ȃI�v�V����"
-    IDS_MSG_UNABLEDEBUGPROCESS    "�f�o�b�K��Y�t�ł��܂���"
-    IDS_MSG_WARNINGDEBUG          "�x��: ���̃v���Z�X���f�o�b�O����ƁA�f�[�^��������\\��������܂��B\n�f�o�b�K��Y�t���܂���?"
-    IDS_MSG_TASKMGRWARNING        "�^�X�N �}�l�[�W���̌x��"
-    IDS_MSG_WARNINGTERMINATING    "�x��: �v���Z�X���I������ƁA�f�[�^������ꂽ��A�V�X�e����\n�s����ɂȂ����肷��Ȃǂ́A�\\�����Ȃ����ʂɂȂ邱�Ƃ�����܂��B\n�v���Z�X���I������O�ɁA��Ԃ܂��̓f�[�^��ۑ����邩�ǂ�����\n�m�F���b�Z�[�W�͕\\������܂���B�v���Z�X���I�����܂���?"
-    IDS_MSG_UNABLETERMINATEPRO    "�v���Z�X���I���ł��܂���"
-    IDS_MSG_UNABLECHANGEPRIORITY  "�D��x��ύX�ł��܂���"
-    IDS_MSG_WARNINGCHANGEPRIORITY "�x��: ���̃v���Z�X�̗D��x�N���X��ύX����ƁA�V�X�e�����s�����\n�Ȃ�ȂǁA�\\�����Ȃ����ʂɂȂ邱�Ƃ�����܂��B\n�D��x�N���X��ύX���܂���?"
-    IDS_MSG_TRAYICONCPUUSAGE      "CPU �g�p��: %d%%"
-    IDS_STATUS_MEMUSAGE           "�������g�p��: %dKB / %dKB"
-    IDS_STATUS_CPUUSAGE           "CPU �g�p��: %3d%%"
-    IDS_STATUS_PROCESSES          "�v���Z�X: %d"
-    IDS_Not_Responding            "�����Ȃ�"
-    IDS_Running                   "���s��"
+    IDS_TAB_CPUTIME               "CPU Time"
+    IDS_TAB_MEMUSAGE              "Mem Usage"
+    IDS_TAB_PEAKMEMUSAGE          "Peak Mem Usage"
+    IDS_TAB_MEMDELTA              "ƒƒ‚ƒŠ ƒfƒ‹ƒ^"
+    IDS_TAB_PAGEFAULT             "ƒy[ƒW ƒtƒHƒ‹ƒg"
+    IDS_TAB_PFDELTA               "ƒy[ƒW ƒtƒHƒ‹ƒg ƒfƒ‹ƒ^"
+    IDS_TAB_VMSIZE                "‰¼‘zƒƒ‚ƒŠ ƒTƒCƒY"
+    IDS_TAB_PAGEDPOOL             "ƒy[ƒW ƒv[ƒ‹"
+    IDS_TAB_NPPOOL                "”ñƒy[ƒW ƒv[ƒ‹"
+    IDS_TAB_BASEPRI               "Šî–{—Dæ“x"
+    IDS_TAB_HANDLES               "ƒnƒ“ƒhƒ‹"
+    IDS_TAB_THREADS               "ƒXƒŒƒbƒh"
+    IDS_TAB_USERPBJECTS           "USER ƒIƒuƒWƒFƒNƒg"
+    IDS_TAB_GDIOBJECTS            "GDI ƒIƒuƒWƒFƒNƒg"
+    IDS_TAB_IOREADS               "I/O “Ç‚ÝŽæ‚è"
+    IDS_TAB_IOWRITES              "I/O Writes"
+    IDS_TAB_IOOTHER               "I/O ‚»‚Ì‘¼"
+    IDS_TAB_IOREADBYTES           "I/O Read Bytes"
+    IDS_TAB_IOWRITESBYTES         "I/O Write Bytes"
+    IDS_TAB_IOOTHERBYTES          "I/O Other Bytes"
+    IDS_MENU_SELECTCOLUMNS        "—ñ‚Ì‘I‘ð(&S)..."
+    IDS_MENU_16BITTASK            "16 ƒrƒbƒg ƒ^ƒXƒN‚Ì•\\Ž¦(&S)"
+    IDS_MENU_WINDOWS              "ƒEƒBƒ“ƒhƒE(&W)"
+    IDS_MENU_LARGEICONS           "‘å‚«‚¢ƒAƒCƒRƒ“(&G)"
+    IDS_MENU_SMALLICONS           "¬‚³‚¢ƒAƒCƒRƒ“(&M)"
+    IDS_MENU_DETAILS              "Ú×(&D)"
+    IDS_MENU_ONEGRAPHALLCPUS      "‚·‚×‚Ä‚Ì CPU ‚Å 1 ƒOƒ‰ƒt(&O)"
+    IDS_MENU_ONEGRAPHPERCPU       "CPU ‚²‚Æ‚É 1 ƒOƒ‰ƒt(&P)"
+    IDS_MENU_CPUHISTORY           "CPU —š—ð(&C)"
+    IDS_MENU_SHOWKERNELTIMES      "ƒJ[ƒlƒ‹ŽžŠÔ‚ð•\\Ž¦‚·‚é(&S)"
+    IDS_CREATENEWTASK             "V‚µ‚¢ƒ^ƒXƒN‚Ìì¬"
+    IDS_CREATENEWTASK_DESC        "ŽÀs‚·‚éƒvƒƒOƒ‰ƒ€–¼A‚Ü‚½‚ÍŠJ‚­ƒtƒHƒ‹ƒ_‚âƒhƒLƒ…ƒƒ“ƒg–¼AƒCƒ“ƒ^[ƒlƒbƒg ƒŠƒ\\[ƒX–¼‚ð“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B"
+    IDS_MSG_ACCESSPROCESSAFF      "ƒvƒƒZƒX‚ÌŠÖŒW‚Ö‚ÌƒAƒNƒZƒX‚Ü‚½‚ÍÝ’è‚ª‚Å‚«‚Ü‚¹‚ñ"
+    IDS_MSG_PROCESSONEPRO         "ƒvƒƒZƒX‚ÍA­‚È‚­‚Æ‚à 1 ‚Â‚ÌƒvƒƒZƒbƒT‚ÆŠÖŒW‚ðŽ‚½‚È‚¯‚ê‚Î‚È‚è‚Ü‚¹‚ñB"
+    IDS_MSG_INVALIDOPTION         "Invalid Option"
+    IDS_MSG_UNABLEDEBUGPROCESS    "ƒfƒoƒbƒK‚ð“Y•t‚Å‚«‚Ü‚¹‚ñ"
+    IDS_MSG_WARNINGDEBUG          "Œx: ‚±‚ÌƒvƒƒZƒX‚ðƒfƒoƒbƒO‚·‚é‚ÆAƒf[ƒ^‚ªŽ¸‚í‚ê‚é‰Â”\\«‚ª‚ ‚è‚Ü‚·B\nƒfƒoƒbƒK‚ð“Y•t‚µ‚Ü‚·‚©?"
+    IDS_MSG_TASKMGRWARNING        "Task Manager Warning"
+    IDS_MSG_WARNINGTERMINATING    "Œx: ƒvƒƒZƒX‚ðI—¹‚·‚é‚ÆAƒf[ƒ^‚ªŽ¸‚í‚ê‚½‚èAƒVƒXƒeƒ€‚ª\n•sˆÀ’è‚É‚È‚Á‚½‚è‚·‚é‚È‚Ç‚ÌA—\\Šú‚µ‚È‚¢Œ‹‰Ê‚É‚È‚é‚±‚Æ‚ª‚ ‚è‚Ü‚·B\nƒvƒƒZƒX‚ðI—¹‚·‚é‘O‚ÉAó‘Ô‚Ü‚½‚Íƒf[ƒ^‚ð•Û‘¶‚·‚é‚©‚Ç‚¤‚©‚Ì\nŠm”FƒƒbƒZ[ƒW‚Í•\\Ž¦‚³‚ê‚Ü‚¹‚ñBƒvƒƒZƒX‚ðI—¹‚µ‚Ü‚·‚©?"
+    IDS_MSG_UNABLETERMINATEPRO    "ƒvƒƒZƒX‚ðI—¹‚Å‚«‚Ü‚¹‚ñ"
+    IDS_MSG_UNABLECHANGEPRIORITY  "—Dæ“x‚ð•ÏX‚Å‚«‚Ü‚¹‚ñ"
+    IDS_MSG_WARNINGCHANGEPRIORITY "Œx: ‚±‚ÌƒvƒƒZƒX‚Ì—Dæ“xƒNƒ‰ƒX‚ð•ÏX‚·‚é‚ÆAƒVƒXƒeƒ€‚ª•sˆÀ’è‚É\n‚È‚é‚È‚ÇA—\\Šú‚µ‚È‚¢Œ‹‰Ê‚É‚È‚é‚±‚Æ‚ª‚ ‚è‚Ü‚·B\n—Dæ“xƒNƒ‰ƒX‚ð•ÏX‚µ‚Ü‚·‚©?"
+    IDS_MSG_TRAYICONCPUUSAGE      "CPU Žg—p—¦: %d%%"
+    IDS_STATUS_MEMUSAGE           "ƒƒ‚ƒŠŽg—p—Ê: %dKB / %dKB"
+    IDS_STATUS_CPUUSAGE           "CPU Žg—p—¦: %3d%%"
+    IDS_STATUS_PROCESSES          "ƒvƒƒZƒX: %d"
+    IDS_Not_Responding            "‰ž“š‚È‚µ"
+    IDS_Running                   "ŽÀs’†"
 END
 
 
