@@ -121,3 +121,4 @@ add_importlibs(glu32
     ntdll)
 
 add_cab_target(glu32 1)
+add_importlib_target(glu32.spec)

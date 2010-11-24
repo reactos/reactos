@@ -30,3 +30,4 @@ add_importlibs(opengl32
 add_pch(opengl32 ${CMAKE_CURRENT_SOURCE_DIR}/opengl32.h ${SOURCE})
 
 add_cab_target(opengl32 1)
+add_importlib_target(opengl32.spec)
