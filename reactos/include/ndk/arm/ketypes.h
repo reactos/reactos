@@ -473,8 +473,13 @@ typedef struct _KIPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
+    UCHAR Spare0;
+    UCHAR SecondLevelCacheAssociativity;
+    ULONG VdmAlert;
+    ULONG KernelReserved[14];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];  
     // arm part
-    UCHAR Spare0[2];
     UCHAR IrqlMask[32];
     ULONG IrqlTable[32];
     PKINTERRUPT_ROUTINE InterruptRoutine[32];

@@ -173,6 +173,12 @@ typedef struct _KPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
+    UCHAR Spare0;
+    UCHAR SecondLevelCacheAssociativity;
+    ULONG VdmAlert;
+    ULONG KernelReserved[14];
+    ULONG SecondLevelCacheSize;
+    ULONG HalReserved[16];
 } KPCR, *PKPCR;
 
 //
@@ -259,6 +265,26 @@ HalSweepIcache(
     VOID
 );
 #endif
+
+FORCEINLINE
+VOID
+_KeQueryTickCount(
+  OUT PLARGE_INTEGER CurrentCount)
+{
+  for (;;) {
+#ifdef NONAMELESSUNION
+    CurrentCount->s.HighPart = KeTickCount.High1Time;
+    CurrentCount->s.LowPart = KeTickCount.LowPart;
+    if (CurrentCount->s.HighPart == KeTickCount.High2Time) break;
+#else
+    CurrentCount->HighPart = KeTickCount.High1Time;
+    CurrentCount->LowPart = KeTickCount.LowPart;
+    if (CurrentCount->HighPart == KeTickCount.High2Time) break;
+#endif
+    YieldProcessor();
+  }
+}
+#define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
 
 //
 // Intrinsics
