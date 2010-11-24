@@ -271,7 +271,7 @@ MmFreePagesFromMdl(IN PMDL Mdl)
         //
         Pfn1->u3.e1.StartOfAllocation = 0;
         Pfn1->u3.e1.EndOfAllocation = 0;
-        Pfn1->u2.ShareCount == 0;
+        Pfn1->u2.ShareCount = 0;
         
         //
         // Dereference it
