@@ -1,6 +1,3 @@
-#include "include/reactos/msvctarget.h"
-#undef i386
-
 @ stdcall -arch=i386 FLOATOBJ_AddFloatObj(ptr ptr) FLOATOBJ_Add
 @ stdcall -arch=i386 FLOATOBJ_DivFloatObj(ptr ptr) FLOATOBJ_Div
 @ stdcall -arch=i386 FLOATOBJ_MulFloatObj(ptr ptr) FLOATOBJ_Mul
