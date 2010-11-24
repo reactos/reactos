@@ -41,7 +41,9 @@ LIST(APPEND SOURCE
     indexsrv.idl
     mimeinfo.idl
     mimeole.idl
+    mlang.idl
     mscoree.idl
+    msctf.idl
     msdadc.idl
     mshtmhst.idl
     mshtml.idl
@@ -95,13 +97,11 @@ LIST(APPEND SOURCE
     wtypes.idl
     xmldom.idl
     xmldso.idl
+    ctfutb.idl
     xmllite.idl)
 
 if(NOT MSVC)
   LIST(APPEND SOURCE
-    ctfutb.idl
-    mlang.idl
-    msctf.idl
     wincodec.idl
     wuapi.idl
 )
