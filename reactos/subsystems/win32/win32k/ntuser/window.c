@@ -656,22 +656,6 @@ IntSetWindowProc(PWND pWnd,
    return Ret;
 }
 
-// Move this to user space!
-BOOL FASTCALL
-IntGetWindowInfo(PWND Wnd, PWINDOWINFO pwi)
-{
-   pwi->cbSize = sizeof(WINDOWINFO);
-   pwi->rcWindow = Wnd->rcWindow;
-   pwi->rcClient = Wnd->rcClient;
-   pwi->dwStyle = Wnd->style;
-   pwi->dwExStyle = Wnd->ExStyle;
-   pwi->dwWindowStatus = (UserGetForegroundWindow() == Wnd->head.h); /* WS_ACTIVECAPTION */
-   IntGetWindowBorderMeasures(Wnd, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
-   pwi->atomWindowType = (Wnd->pcls ? Wnd->pcls->atomClassName : 0);
-   pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
-   return TRUE;
-}
-
 static BOOL FASTCALL
 IntSetMenu(
    PWND Wnd,
@@ -799,25 +783,6 @@ IntGetClientRect(PWND Window, RECTL *Rect)
    Rect->bottom = Window->rcClient.bottom - Window->rcClient.top;
 }
 
-
-#if 0
-HWND FASTCALL
-IntGetFocusWindow(VOID)
-{
-   PUSER_MESSAGE_QUEUE Queue;
-   PDESKTOP pdo = IntGetActiveDesktop();
-
-   if( !pdo )
-      return NULL;
-
-   Queue = (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
-
-   if (Queue == NULL)
-      return(NULL);
-   else
-      return(Queue->FocusWindow);
-}
-#endif
 
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)

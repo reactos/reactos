@@ -165,9 +165,6 @@ NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
 VOID FASTCALL
-MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
-VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);

@@ -360,34 +360,6 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
    ExFreeToPagedLookasideList(&MessageLookasideList, Message);
 }
 
-VOID FASTCALL
-co_MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
-{
-   PLIST_ENTRY ListEntry;
-   PUSER_SENT_MESSAGE_NOTIFY Message;
-
-   while (!IsListEmpty(&MessageQueue->SentMessagesListHead))
-   {
-      ListEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
-      Message = CONTAINING_RECORD(ListEntry, USER_SENT_MESSAGE_NOTIFY,
-                                  ListEntry);
-
-      co_IntCallSentMessageCallback(Message->CompletionCallback,
-                                    Message->hWnd,
-                                    Message->Msg,
-                                    Message->CompletionCallbackContext,
-                                    Message->Result);
-
-   }
-
-}
-
-BOOLEAN FASTCALL
-MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
-{
-   return(!IsListEmpty(&MessageQueue->SentMessagesListHead));
-}
-
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
@@ -570,15 +542,6 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          CurrentEntry = CurrentEntry->Flink;
       }
    }
-}
-
-VOID FASTCALL
-MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-                     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage)
-{
-   InsertTailList(&MessageQueue->NotifyMessagesListHead,
-                  &NotifyMessage->ListEntry);
-   MsqWakeQueue(MessageQueue, QS_SENDMESSAGE);
 }
 
 NTSTATUS FASTCALL
