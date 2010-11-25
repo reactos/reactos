@@ -407,7 +407,7 @@
 					 all buffers allocated are a
 					 multiple of this size.  This
 					 MUST be a power of two. */
-#ifndef _M_ARM
+#ifdef MM_DBG
 
 #define BufDump     1		      /* Define this symbol to enable the
 					 bpoold() function which dumps the
