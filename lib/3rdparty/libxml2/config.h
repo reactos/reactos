@@ -302,6 +302,12 @@
 #define vsnprintf _vsnprintf
 #endif
 
+#if defined(_MSC_VER)
+#define GetModuleHandleA GetModuleHandleA_
+#endif
 #if defined(__MINGW32__)
 #include <windows.h>
+#endif
+#if defined(_MSC_VER)
+#undef GetModuleHandleA
 #endif
