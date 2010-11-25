@@ -136,9 +136,6 @@ extern "C" {
 #define _JMP_BUF_DEFINED
 #endif
 
-#ifdef _MSC_VER
-int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
-#else
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX
 #if defined(__x86_64)
@@ -150,19 +147,18 @@ int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
 #endif
 #define setjmp(BUF) _setjmp((BUF),mingw_getsp())
   int __cdecl __MINGW_NOTHROW _setjmp(jmp_buf _Buf,void *_Ctx);
-#else
+#else /* _INC_SETJMPEX */
 #undef setjmp
 #define setjmp(BUF) _setjmpex((BUF),mingw_getsp())
 #define setjmpex(BUF) _setjmpex((BUF),mingw_getsp())
   int __cdecl __MINGW_NOTHROW _setjmpex(jmp_buf _Buf,void *_Ctx);
-#endif
-#else
+#endif /* _INC_SETJMPEX */
+#else /* !USE_MINGW_SETJMP_TWO_ARGS */
 #ifndef _INC_SETJMPEX
 #define setjmp _setjmp
 #endif
   int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
-#endif
-#endif
+#endif /* !USE_MINGW_SETJMP_TWO_ARGS */
 
   __declspec(noreturn) __MINGW_NOTHROW void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
   __declspec(noreturn) __MINGW_NOTHROW void __cdecl longjmp(jmp_buf _Buf,int _Value);
