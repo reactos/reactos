@@ -163,6 +163,7 @@ static BOOL set_active_window( HWND hwnd, HWND *prev, BOOL mouse, BOOL focus )
     {
         GUITHREADINFO info;
 
+        info.cbSize = sizeof(info);
         GetGUIThreadInfo( GetCurrentThreadId(), &info );
         /* Do not change focus if the window is no more active */
         if (hwnd == info.hwndActive)

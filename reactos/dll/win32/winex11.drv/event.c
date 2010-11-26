@@ -498,6 +498,7 @@ static void set_focus( Display *display, HWND hwnd, Time time )
     TRACE( "setting foreground window to %p\n", hwnd );
     SetForegroundWindow( hwnd );
 
+    threadinfo.cbSize = sizeof(threadinfo);
     GetGUIThreadInfo(0, &threadinfo);
     focus = threadinfo.hwndFocus;
     if (!focus) focus = threadinfo.hwndActive;

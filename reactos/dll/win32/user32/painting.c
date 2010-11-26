@@ -802,6 +802,7 @@ static HWND fix_caret(HWND hWnd, const RECT *scroll_rect, INT dx, INT dy,
     RECT rect, mapped_rcCaret;
     BOOL hide_caret = FALSE;
 
+    info.cbSize = sizeof(info);
     if (!GetGUIThreadInfo( GetCurrentThreadId(), &info )) return 0;
     if (!info.hwndCaret) return 0;
     

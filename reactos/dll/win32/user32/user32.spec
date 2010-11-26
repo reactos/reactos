@@ -436,7 +436,7 @@
 @ stdcall IsDialogMessageA(long ptr)
 @ stdcall IsDialogMessageW(long ptr)
 @ stdcall IsDlgButtonChecked(long long)
-@ stub IsGUIThread
+@ stdcall IsGUIThread(long)
 @ stdcall IsHungAppWindow(long)
 # @ stub IsHungThread
 @ stdcall IsIconic(long)

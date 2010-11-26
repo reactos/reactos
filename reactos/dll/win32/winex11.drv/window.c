@@ -79,6 +79,7 @@ static XContext win_data_context;
 static Time last_user_time;
 static Window user_time_window;
 
+static const char foreign_window_prop[] = "__wine_x11_foreign_window";
 static const char whole_window_prop[] = "__wine_x11_whole_window";
 static const char client_window_prop[]= "__wine_x11_client_window";
 static const char icon_window_prop[]  = "__wine_x11_icon_window";
@@ -1754,7 +1755,23 @@ done:
  */
 static void destroy_whole_window( Display *display, struct x11drv_win_data *data, BOOL already_destroyed )
 {
-    if (!data->whole_window) return;
+    if (!data->whole_window)
+    {
+        if (data->embedded)
+        {
+            Window xwin = (Window)GetPropA( data->hwnd, foreign_window_prop );
+            if (xwin)
+            {
+                wine_tsx11_lock();
+                if (!already_destroyed) XSelectInput( display, xwin, 0 );
+                XDeleteContext( display, xwin, winContext );
+                wine_tsx11_unlock();
+                RemovePropA( data->hwnd, foreign_window_prop );
+            }
+        }
+        return;
+    }
+
 
     TRACE( "win %p xwin %lx/%lx\n", data->hwnd, data->whole_window, data->client_window );
     wine_tsx11_lock();
@@ -1895,14 +1912,7 @@ void X11DRV_DestroyNotify( HWND hwnd, XEvent *event )
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
     if (!data->embedded) FIXME( "window %p/%lx destroyed from the outside\n", hwnd, data->whole_window );
 
-    if (!data->whole_window)
-    {
-        wine_tsx11_lock();
-        XDeleteContext( display, event->xdestroywindow.window, winContext );
-        wine_tsx11_unlock();
-    }
-    else destroy_whole_window( display, data, TRUE );
-
+    destroy_whole_window( display, data, TRUE );
     if (data->embedded) SendMessageW( hwnd, WM_CLOSE, 0, 0 );
 }
 
@@ -2154,6 +2164,7 @@ HWND create_foreign_window( Display *display, Window xwin )
     data->embedded = TRUE;
     data->mapped = TRUE;
 
+    SetPropA( hwnd, foreign_window_prop, (HANDLE)xwin );
     wine_tsx11_lock();
     XSaveContext( display, xwin, winContext, (char *)data->hwnd );
     wine_tsx11_unlock();
