@@ -9,7 +9,7 @@
 #if defined(_M_IA64) || defined(_M_AMD64)
 #define _ATTRIBUTES
 #else
-#define _ATTRIBUTES shared
+#define _ATTRIBUTES read
 #endif
 
 /* Reference list of existing section for msvcrt.  */
