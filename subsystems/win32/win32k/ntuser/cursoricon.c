@@ -619,23 +619,6 @@ cleanup:
 
 
 /*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtUserGetCursorFrameInfo(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-/*
  * @implemented
  */
 BOOL
@@ -1175,18 +1158,6 @@ CLEANUP:
     END_CLEANUP;
 }
 #endif
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtUserSetSystemCursor(
-    HCURSOR hcur,
-    DWORD id)
-{
-    return FALSE;
-}
 
 /* Mostly inspired from wine code */
 BOOL

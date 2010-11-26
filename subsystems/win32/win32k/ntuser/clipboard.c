@@ -1198,33 +1198,4 @@ NtUserGetClipboardSequenceNumber(VOID)
     return sn;
 }
 
-
-/**************** VISTA FUNCTIONS******************/
-
-BOOL APIENTRY NtUserAddClipboardFormatListener(
-    HWND hwnd
-)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL APIENTRY NtUserRemoveClipboardFormatListener(
-    HWND hwnd
-)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
-    PUINT lpuiFormats,
-    UINT cFormats,
-    PUINT pcFormatsOut
-)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 /* EOF */

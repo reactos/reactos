@@ -9,6 +9,12 @@ CreateBootSectorTarget(isobtrt ${CMAKE_CURRENT_SOURCE_DIR}/freeldr/bootsect/isob
 include_directories(BEFORE freeldr/freeldr/include)
 include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 
+if(ARCH MATCHES arm)
+    if(SARCH MATCHES omap-zoom2)
+        add_definitions(-D_ZOOM2_)
+    endif()    
+endif()
+
 if(ARCH MATCHES i386)
 if(MSVC)
 list(APPEND FREELDR_BASE64K_SOURCE
@@ -90,7 +96,6 @@ list(APPEND FREELDR_BASE_SOURCE
     freeldr/freeldr/video/palette.c
     freeldr/freeldr/video/video.c
     freeldr/freeldr/windows/conversion.c
-    freeldr/freeldr/windows/headless.c
     freeldr/freeldr/windows/peloader.c
     freeldr/freeldr/windows/winldr.c
     freeldr/freeldr/windows/wlmemory.c
@@ -105,7 +110,9 @@ list(APPEND FREELDR_BASE_SOURCE
     freeldr/freeldr/oslist.c)
 
 if(ARCH MATCHES i386)
-list(APPEND FREELDR_BASE_SOURCE freeldr/freeldr/disk/scsiport.c)
+list(APPEND FREELDR_BASE_SOURCE
+    freeldr/freeldr/windows/headless.c
+    freeldr/freeldr/disk/scsiport.c)
 endif(ARCH MATCHES i386)
 
 set_source_files_properties(${FREELDR_BASE_SOURCE} PROPERTIES COMPILE_DEFINITIONS "_NTHAL_;_BLDR_;_NTSYSTEM_")

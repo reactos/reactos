@@ -1127,25 +1127,6 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
    return Ret;
 }
 
-/*
- * NtUserSetWindowStationUser
- *
- * Status
- *    @unimplemented
- */
-
-DWORD APIENTRY
-NtUserSetWindowStationUser(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 static NTSTATUS FASTCALL
 BuildWindowStationNameList(
    ULONG dwSize,

@@ -130,12 +130,12 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 //
 // Access Flags
 //
-#define PTE_READONLY            0
+#define PTE_READONLY            0 // Doesn't exist on x86
 #define PTE_EXECUTE             0 // Not worrying about NX yet
 #define PTE_EXECUTE_READ        0 // Not worrying about NX yet
 #define PTE_READWRITE           0x2
 #define PTE_WRITECOPY           0x200
-#define PTE_EXECUTE_READWRITE   0x0
+#define PTE_EXECUTE_READWRITE   0x2 // Not worrying about NX yet
 #define PTE_EXECUTE_WRITECOPY   0x200
 #define PTE_PROTOTYPE           0x400
 
@@ -153,6 +153,20 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_DISABLE_CACHE       0x10
 #define PTE_WRITECOMBINED_CACHE 0x10
 #elif defined(_M_ARM)
+#define PTE_READONLY            0x200
+#define PTE_EXECUTE             0 // Not worrying about NX yet
+#define PTE_EXECUTE_READ        0 // Not worrying about NX yet
+#define PTE_READWRITE           0 // Doesn't exist on ARM
+#define PTE_WRITECOPY           0 // Doesn't exist on ARM
+#define PTE_EXECUTE_READWRITE   0 // Not worrying about NX yet
+#define PTE_EXECUTE_WRITECOPY   0 // Not worrying about NX yet
+#define PTE_PROTOTYPE           0x400 // Using the Shared bit
+//
+// Cache flags
+//
+#define PTE_ENABLE_CACHE        0
+#define PTE_DISABLE_CACHE       0x10
+#define PTE_WRITECOMBINED_CACHE 0x10
 #else
 #error Define these please!
 #endif
@@ -187,7 +201,7 @@ extern const ULONG MmProtectToValue[32];
 #ifdef _M_IX86
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #elif _M_ARM
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   6
 #elif _M_AMD64
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #else
@@ -243,7 +257,7 @@ extern const ULONG MmProtectToValue[32];
 #define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
-#ifdef _M_IX86
+#ifndef _M_AMD64
 //
 // Decodes a Prototype PTE into the underlying PTE
 //
@@ -470,7 +484,7 @@ extern PMMPTE MiSessionImagePteEnd;
 extern PMMPTE MiSessionBasePte;
 extern PMMPTE MiSessionLastPte;
 extern SIZE_T MmSizeOfPagedPoolInBytes;
-extern PMMPTE MmSystemPagePtes;
+extern PMMPDE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
@@ -528,7 +542,7 @@ extern PMMWSL MmWorkingSetList;
 //
 ULONG
 FORCEINLINE
-MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
+MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
     
@@ -537,14 +551,15 @@ MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
     
     /* Make it valid and accessed */
     TempPte.u.Hard.Valid = TRUE;
-    TempPte.u.Hard.Accessed = TRUE;
+    MI_MAKE_ACCESSED_PAGE(&TempPte);
     
     /* Is this for user-mode? */
-    if ((PointerPte <= MiHighestUserPte) ||
-        ((PointerPte >= MiAddressToPde(NULL)) && (PointerPte <= MiHighestUserPde)))
+    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
+        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
+         (PointerPte <= (PVOID)MiHighestUserPde)))
     {
         /* Set the owner bit */
-        TempPte.u.Hard.Owner = TRUE;
+        MI_MAKE_OWNER_PAGE(&TempPte);
     }
     
     /* FIXME: We should also set the global bit */
@@ -614,7 +629,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
 
-#ifdef _M_IX86
+#ifndef _M_AMD64
 //
 // Builds a Prototype PTE for the address of the PTE
 //
@@ -682,6 +697,33 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Writes a valid PDE
+//
+VOID
+FORCEINLINE
+MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
+                   IN MMPDE TempPde)
+{
+    /* Write the valid PDE */
+    ASSERT(PointerPde->u.Hard.Valid == 0);
+    ASSERT(TempPde.u.Hard.Valid == 1);
+    *PointerPde = TempPde;
+}
+
+//
+// Writes an invalid PDE
+//
+VOID
+FORCEINLINE
+MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
+                     IN MMPDE InvalidPde)
+{
+    /* Write the invalid PDE */
+    ASSERT(InvalidPde.u.Hard.Valid == 0);
+    *PointerPde = InvalidPde;
 }
 
 //

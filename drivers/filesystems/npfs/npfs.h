@@ -28,6 +28,7 @@ typedef struct _NPFS_VCB
     ULONG MinQuota;
     ULONG DefaultQuota;
     ULONG MaxQuota;
+    struct _NPFS_FCB *DeviceFcb;
     struct _NPFS_FCB *RootFcb;
 } NPFS_VCB, *PNPFS_VCB;
 

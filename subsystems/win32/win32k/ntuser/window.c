@@ -656,22 +656,6 @@ IntSetWindowProc(PWND pWnd,
    return Ret;
 }
 
-// Move this to user space!
-BOOL FASTCALL
-IntGetWindowInfo(PWND Wnd, PWINDOWINFO pwi)
-{
-   pwi->cbSize = sizeof(WINDOWINFO);
-   pwi->rcWindow = Wnd->rcWindow;
-   pwi->rcClient = Wnd->rcClient;
-   pwi->dwStyle = Wnd->style;
-   pwi->dwExStyle = Wnd->ExStyle;
-   pwi->dwWindowStatus = (UserGetForegroundWindow() == Wnd->head.h); /* WS_ACTIVECAPTION */
-   IntGetWindowBorderMeasures(Wnd, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
-   pwi->atomWindowType = (Wnd->pcls ? Wnd->pcls->atomClassName : 0);
-   pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
-   return TRUE;
-}
-
 static BOOL FASTCALL
 IntSetMenu(
    PWND Wnd,
@@ -799,25 +783,6 @@ IntGetClientRect(PWND Window, RECTL *Rect)
    Rect->bottom = Window->rcClient.bottom - Window->rcClient.top;
 }
 
-
-#if 0
-HWND FASTCALL
-IntGetFocusWindow(VOID)
-{
-   PUSER_MESSAGE_QUEUE Queue;
-   PDESKTOP pdo = IntGetActiveDesktop();
-
-   if( !pdo )
-      return NULL;
-
-   Queue = (PUSER_MESSAGE_QUEUE)pdo->ActiveMessageQueue;
-
-   if (Queue == NULL)
-      return(NULL);
-   else
-      return(Queue->FocusWindow);
-}
-#endif
 
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWND Window, BOOL bRevert, BOOL RetMenu)
@@ -1273,19 +1238,6 @@ IntGetWindowPlacement(PWND Wnd, WINDOWPLACEMENT *lpwndpl)
 
 
 /* FUNCTIONS *****************************************************************/
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserAlterWindowStyle(DWORD Unknown0,
-                       DWORD Unknown1,
-                       DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return(0);
-}
 
 /*
  * As best as I can figure, this function is used by EnumWindows,
@@ -2402,25 +2354,7 @@ cleanup:
 
    return hwnd;
 }
-
-/*
- * @unimplemented
- */
-HDWP APIENTRY
-NtUserDeferWindowPos(HDWP WinPosInfo,
-                     HWND Wnd,
-                     HWND WndInsertAfter,
-                     int x,
-                     int y,
-                     int cx,
-                     int cy,
-                     UINT Flags)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
+    
 
 BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
 {
@@ -2601,56 +2535,6 @@ CLEANUP:
    DPRINT("Leave NtUserDestroyWindow, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-
-/*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtUserDrawMenuBarTemp(
-   HWND hWnd,
-   HDC hDC,
-   PRECT hRect,
-   HMENU hMenu,
-   HFONT hFont)
-{
-   /* we'll use this function just for caching the menu bar */
-   UNIMPLEMENTED
-   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserEndDeferWindowPosEx(DWORD Unknown0,
-                          DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
- * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
- */
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserFillWindow(HWND hWndPaint,
-                 HWND hWndPaint1,
-                 HDC  hDC,
-                 HBRUSH hBrush)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 
@@ -2930,18 +2814,6 @@ CLEANUP:
    DPRINT("Leave NtUserFindWindowEx, ret %i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 
@@ -3791,19 +3663,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserLockWindowUpdate(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
 /*
  * @implemented
  */
@@ -3893,20 +3752,6 @@ CLEANUP:
 
 
 /*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserRealChildWindowFromPoint(DWORD Unknown0,
-                               DWORD Unknown1,
-                               DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
  * @implemented
  */
 UINT APIENTRY
@@ -3942,62 +3787,6 @@ CLEANUP:
    DPRINT("Leave NtUserRegisterWindowMessage, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserSetImeOwnerWindow(DWORD Unknown0,
-                        DWORD Unknown1)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD APIENTRY
-NtUserSetInternalWindowPos(
-   HWND    hwnd,
-   UINT    showCmd,
-   LPRECT  rect,
-   LPPOINT pt)
-{
-   UNIMPLEMENTED
-
-   return 0;
-
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserSetLayeredWindowAttributes(HWND hwnd,
-			   COLORREF crKey,
-			   BYTE bAlpha,
-			   DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtUserSetLogonNotifyWindow(HWND hWnd)
-{
-   UNIMPLEMENTED
-
-   return 0;
 }
 
 
@@ -4381,40 +4170,6 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 #endif
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtUserUpdateLayeredWindow(
-   HWND hwnd,
-   HDC hdcDst,
-   POINT *pptDst,
-   SIZE *psize,
-   HDC hdcSrc,
-   POINT *pptSrc,
-   COLORREF crKey,
-   BLENDFUNCTION *pblend,
-   DWORD dwFlags,
-   RECT *prcDirty)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-/*
- *    @unimplemented
- */
-HWND APIENTRY
-NtUserWindowFromPhysicalPoint(POINT Point)
-{
-   UNIMPLEMENTED
-
-   return NULL;
-}
-
 /*
  *    @implemented
  */
@@ -4424,6 +4179,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    POINT pt;
    HWND Ret;
    PWND DesktopWindow = NULL, Window = NULL;
+   USHORT hittest;
    DECLARE_RETURN(HWND);
    USER_REFERENCE_ENTRY Ref;
 
@@ -4442,7 +4198,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       UserRefObjectCo(DesktopWindow, &Ref);
 
       pti = PsGetCurrentThreadWin32Thread();
-      co_WinPosWindowFromPoint(DesktopWindow, pti->MessageQueue, &pt, &Window);
+      Window = co_WinPosWindowFromPoint(DesktopWindow, &pt, &hittest);
 
       if(Window)
       {

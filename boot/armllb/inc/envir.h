@@ -25,6 +25,11 @@ typedef struct _ATAG_MEM
     ULONG Start;
 } ATAG_MEM, *PATAG_MEM;
 
+typedef struct _ATAG_REVISION
+{
+    ULONG Rev;
+} ATAG_REVISION, *PATAG_REVISION;
+
 typedef struct _ATAG_INITRD2
 {
     ULONG Start;
@@ -43,6 +48,7 @@ typedef struct _ATAG
     {
         ATAG_CORE Core;
         ATAG_MEM Mem;
+        ATAG_REVISION Revision;
         ATAG_INITRD2 InitRd2;
         ATAG_CMDLINE CmdLine;
     } u;

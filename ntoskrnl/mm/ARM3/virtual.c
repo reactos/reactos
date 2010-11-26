@@ -146,7 +146,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 ASSERT(Pfn1->u1.WsIndex == 0);
                 
                 /* Actual valid, legitimate, pages */
-                if (ValidPages) *ValidPages++;
+                if (ValidPages) (*ValidPages)++;
                 
                 /* Get the page table entry */
                 PageTableIndex = Pfn1->u4.PteFrame;
@@ -305,7 +305,8 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                          IN ULONG_PTR EndingAddress,
                          IN PMMVAD Vad)
 {
-    PMMPTE PointerPte, PointerPde, PrototypePte, LastPrototypePte;
+    PMMPTE PointerPte, PrototypePte, LastPrototypePte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
     PEPROCESS CurrentProcess;
     KIRQL OldIrql;
@@ -1099,7 +1100,8 @@ MiQueryAddressState(IN PVOID Va,
                     OUT PVOID *NextVa)
 {
 
-    PMMPTE PointerPte, PointerPde;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
     BOOLEAN DemandZeroPte = TRUE, ValidPte = FALSE;
     ULONG State = MEM_RESERVE, Protect = 0, LockChange;

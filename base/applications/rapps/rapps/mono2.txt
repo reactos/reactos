@@ -2,13 +2,13 @@
 
 [Section]
 Name = Mono .net Development Framework
-Version = 2.8
+Version = 2.8.1
 Licence = Unknown
 Description = Open Source .net Framework.
-Size = 78MB
+Size = 77MB
 Category = 14
 URLSite = http://www.mono-project.com/Main_Page
-URLDownload = http://ftp.novell.com/pub/mono/archive/2.8/windows-installer/9/mono-2.8-gtksharp-2.12.10-win32-9.exe
+URLDownload = http://ftp.novell.com/pub/mono/archive/2.8.1/windows-installer/3/mono-2.8.1-gtksharp-2.12.10-win32-3.exe
 CDPath = none
 
 [Section.0415]

@@ -85,7 +85,6 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 PVOID MmHeapAlloc(ULONG MemorySize)
 {
 	PVOID Result;
-	LONG CurAlloc, TotalFree, MaxFree, NumberOfGets, NumberOfRels;
 
 	if (MemorySize > MM_PAGE_SIZE)
 	{
@@ -99,13 +98,17 @@ PVOID MmHeapAlloc(ULONG MemorySize)
 	{
 		DPRINTM(DPRINT_MEMORY, "Heap allocation for %d bytes failed\n", MemorySize);
 	}
+#if MM_DBG
+    {
+    	LONG CurAlloc, TotalFree, MaxFree, NumberOfGets, NumberOfRels;
 
-	// Gather some stats
-	bstats(&CurAlloc, &TotalFree, &MaxFree, &NumberOfGets, &NumberOfRels);
+	    // Gather some stats
+	    bstats(&CurAlloc, &TotalFree, &MaxFree, &NumberOfGets, &NumberOfRels);
 
-	DPRINTM(DPRINT_MEMORY, "Current alloced %d bytes, free %d bytes, allocs %d, frees %d\n",
-		CurAlloc, TotalFree, NumberOfGets, NumberOfRels);
-
+	    DPRINTM(DPRINT_MEMORY, "Current alloced %d bytes, free %d bytes, allocs %d, frees %d\n",
+		    CurAlloc, TotalFree, NumberOfGets, NumberOfRels);
+	}
+#endif
 	return Result;
 }
 

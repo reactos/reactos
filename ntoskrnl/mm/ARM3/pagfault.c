@@ -325,7 +325,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     }
     
     /* Set it dirty if it's a writable page */
-    if (TempPte.u.Hard.Write) TempPte.u.Hard.Dirty = TRUE;
+    if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
     
     /* Write it */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -899,7 +899,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         ASSERT(ProtectionCode != MM_NOACCESS);
 
         /* Make the PDE demand-zero */
-        MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
+        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
 
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
 #if MI_TRACE_PFNS
@@ -907,7 +907,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
         Status = MiDispatchFault(TRUE,
                                  PointerPte,
-                                 PointerPde,
+                                 (PMMPTE)PointerPde,
                                  NULL,
                                  FALSE,
                                  PsGetCurrentProcess(),
@@ -1058,7 +1058,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
 
         /* Write the dirty bit for writeable pages */
-        if (TempPte.u.Hard.Write) TempPte.u.Hard.Dirty = TRUE;
+        if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
 
         /* And now write down the PTE, making the address valid */
         MI_WRITE_VALID_PTE(PointerPte, TempPte);

@@ -23,8 +23,9 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
                                IN PWCHAR UpcaseTable OPTIONAL)
 {
     ULONG i = 0, j, k = 0;
+    PAGED_CODE();
 
-    ASSERT(!FsRtlDoesNameContainWildCards(Name));
+    ASSERT(!IgnoreCase || UpcaseTable);
 
     while (i < Name->Length / sizeof(WCHAR) && k < Expression->Length / sizeof(WCHAR))
     {
@@ -119,6 +120,7 @@ FsRtlAreNamesEqual(IN PCUNICODE_STRING Name1,
     BOOLEAN StringsAreEqual, MemoryAllocated = FALSE;
     ULONG i;
     NTSTATUS Status;
+    PAGED_CODE();
 
     /* Well, first check their size */
     if (Name1->Length != Name2->Length) return FALSE;
@@ -210,6 +212,7 @@ FsRtlDissectName(IN UNICODE_STRING Name,
 {
     ULONG FirstPosition, i;
     ULONG SkipFirstSlash = 0;
+    PAGED_CODE();
 
     /* Zero the strings before continuing */
     RtlZeroMemory(FirstPart, sizeof(UNICODE_STRING));
@@ -272,6 +275,7 @@ NTAPI
 FsRtlDoesNameContainWildCards(IN PUNICODE_STRING Name)
 {
     PWCHAR Ptr;
+    PAGED_CODE();
 
     /* Loop through every character */
     if (Name->Length)

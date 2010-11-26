@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+//#define USING_PROPER_NPFS_WAIT_SEMANTICS
+
 /* FUNCTIONS *****************************************************************/
 
 PNPFS_FCB
@@ -104,6 +106,35 @@ NpfsSignalAndRemoveListeningServerInstance(PNPFS_FCB Fcb,
 
 
 static VOID
+NpfsOpenFileSystem(PNPFS_FCB Fcb,
+                   PFILE_OBJECT FileObject,
+                   PIO_STATUS_BLOCK IoStatus)
+{
+    PNPFS_CCB Ccb;
+
+    DPRINT("NpfsOpenFileSystem()\n");
+
+    Ccb = ExAllocatePool(NonPagedPool, sizeof(NPFS_CCB));
+    if (Ccb == NULL)
+    {
+        IoStatus->Status = STATUS_NO_MEMORY;
+        return;
+    }
+
+    Ccb->Type = CCB_DEVICE;
+    Ccb->Fcb = Fcb;
+
+    FileObject->FsContext = Fcb;
+    FileObject->FsContext2 = Ccb;
+
+    IoStatus->Information = FILE_OPENED;
+    IoStatus->Status = STATUS_SUCCESS;
+
+    return;
+}
+
+
+static VOID
 NpfsOpenRootDirectory(PNPFS_FCB Fcb,
                       PFILE_OBJECT FileObject,
                       PIO_STATUS_BLOCK IoStatus)
@@ -146,6 +177,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     PNPFS_VCB Vcb;
     ACCESS_MASK DesiredAccess;
     NTSTATUS Status;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    BOOLEAN SpecialAccess;
+#endif
 
     DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -161,6 +195,32 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
 
     Irp->IoStatus.Information = 0;
 
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    SpecialAccess = ((DesiredAccess & SPECIFIC_RIGHTS_ALL) == FILE_READ_ATTRIBUTES);
+    if (SpecialAccess)
+    {
+        DPRINT("NpfsCreate() open client end for special use!\n");
+    }
+#endif
+
+    DPRINT("FileName->Length: %hu  RelatedFileObject: %p\n", FileName->Length, RelatedFileObject);
+
+    /* Open the file system */
+    if (FileName->Length == 0 &&
+        (RelatedFileObject == NULL || ((PNPFS_CCB)RelatedFileObject->FsContext2)->Type == CCB_DEVICE))
+    {
+        DPRINT("Open the file system\n");
+
+        NpfsOpenFileSystem(Vcb->DeviceFcb,
+                           FileObject,
+                           &Irp->IoStatus);
+
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    /* Open the root directory */
     if (FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL)
     {
         DPRINT("Open the root directory\n");
@@ -217,8 +277,11 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     ClientCcb->Fcb = Fcb;
     ClientCcb->PipeEnd = FILE_PIPE_CLIENT_END;
     ClientCcb->OtherSide = NULL;
-//    ClientCcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    ClientCcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
+#else
     ClientCcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+#endif
     InitializeListHead(&ClientCcb->ReadRequestListHead);
 
     DPRINT("CCB: %p\n", ClientCcb);
@@ -256,10 +319,10 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     /*
     * Step 3. Search for listening server CCB.
     */
-/*
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     if (!SpecialAccess)
     {
-*/
+#endif
         /*
         * WARNING: Point of no return! Once we get the server CCB it's
         * possible that we completed a wait request and so we have to
@@ -315,7 +378,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
             /* FIXME: Merge this with the NpfsFindListeningServerInstance routine. */
             NpfsSignalAndRemoveListeningServerInstance(Fcb, ServerCcb);
         }
-/*
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     }
     else if (IsListEmpty(&Fcb->ServerCcbListHead))
     {
@@ -333,7 +396,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_UNSUCCESSFUL;
     }
-*/
+#endif
 
     /*
     * Step 4. Add the client CCB to a list and connect it if possible.
@@ -646,6 +709,15 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
         return STATUS_SUCCESS;
     }
 
+    if (Ccb->Type == CCB_DEVICE)
+    {
+        DPRINT("Cleanup the file system!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
     if (Ccb->Type == CCB_DIRECTORY)
     {
         DPRINT("Cleanup the root directory!\n");
@@ -784,6 +856,20 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     if (Ccb == NULL)
     {
         DPRINT("Success!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    if (Ccb->Type == CCB_DEVICE)
+    {
+        DPRINT("Closing the file system!\n");
+
+        ExFreePool(Ccb);
+        FileObject->FsContext = NULL;
+        FileObject->FsContext2 = NULL;
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);

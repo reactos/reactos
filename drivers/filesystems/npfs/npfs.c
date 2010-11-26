@@ -85,12 +85,16 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     Vcb->DefaultQuota = 8 * PAGE_SIZE;
     Vcb->MaxQuota = 64 * PAGE_SIZE;
 
+    /* Create the device FCB */
+    Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
+    Fcb->Type = FCB_DEVICE;
+    Fcb->Vcb = Vcb;
+    Vcb->DeviceFcb = Fcb;
+
+    /* Create the root directory FCB */
     Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
     Fcb->Type = FCB_DIRECTORY;
     Fcb->Vcb = Vcb;
-
-
-
     Vcb->RootFcb = Fcb;
 
     return STATUS_SUCCESS;

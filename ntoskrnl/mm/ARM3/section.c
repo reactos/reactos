@@ -347,17 +347,17 @@ MiFillSystemPageDirectory(IN PVOID Base,
 
             /* Initialize its PFN entry, with the parent system page directory page table */
             MiInitializePfnForOtherProcess(PageFrameIndex,
-                                           PointerPde,
+                                           (PMMPTE)PointerPde,
                                            MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
 
             /* Make the system PDE entry valid */
-            MI_WRITE_VALID_PTE(SystemMapPde, TempPde);
+            MI_WRITE_VALID_PDE(SystemMapPde, TempPde);
             
             /* The system PDE entry might be the PDE itself, so check for this */
             if (PointerPde->u.Hard.Valid == 0)
             {
                 /* It's different, so make the real PDE valid too */
-                MI_WRITE_VALID_PTE(PointerPde, TempPde);
+                MI_WRITE_VALID_PDE(PointerPde, TempPde);
             }
         }
 

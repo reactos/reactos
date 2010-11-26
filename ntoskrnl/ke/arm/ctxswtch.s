@@ -13,6 +13,10 @@
     TEXTAREA
     NESTED_ENTRY KiSwapContext
     PROLOG_END KiSwapContext
+
+	// BUSTEDDDD
+	b .
+
     //
     // a1 = Old Thread
     // a2 = New Thread
@@ -104,3 +108,19 @@
     b .
     
     ENTRY_END KiThreadStartup
+
+    NESTED_ENTRY KiSwitchThreads
+    PROLOG_END KiSwitchThreads
+
+	// BUSTEDDDD
+	b .
+
+    ENTRY_END KiSwitchThreads
+
+    NESTED_ENTRY KiSwapContextInternal
+    PROLOG_END KiSwapContextInternal
+
+	// BUSTEDDDD
+	b .
+
+    ENTRY_END KiSwapContextInternal

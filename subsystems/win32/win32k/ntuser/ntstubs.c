@@ -1151,5 +1151,335 @@ NtUserCtxDisplayIOCtl(
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+APIENTRY
+NtUserDrawMenuBarTemp(
+   HWND hWnd,
+   HDC hDC,
+   PRECT hRect,
+   HMENU hMenu,
+   HFONT hFont)
+{
+   /* we'll use this function just for caching the menu bar */
+   UNIMPLEMENTED
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD APIENTRY
+NtUserEndDeferWindowPosEx(DWORD Unknown0,
+                          DWORD Unknown1)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
+ */
+/*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserFillWindow(HWND hWndPaint,
+                 HWND hWndPaint1,
+                 HDC  hDC,
+                 HBRUSH hBrush)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserLockWindowUpdate(HWND hWnd)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD APIENTRY
+NtUserRealChildWindowFromPoint(DWORD Unknown0,
+                               DWORD Unknown1,
+                               DWORD Unknown2)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD APIENTRY
+NtUserSetImeOwnerWindow(DWORD Unknown0,
+                        DWORD Unknown1)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD APIENTRY
+NtUserSetInternalWindowPos(
+   HWND    hwnd,
+   UINT    showCmd,
+   LPRECT  rect,
+   LPPOINT pt)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserSetLayeredWindowAttributes(HWND hwnd,
+			   COLORREF crKey,
+			   BYTE bAlpha,
+			   DWORD dwFlags)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserSetLogonNotifyWindow(HWND hWnd)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtUserUpdateLayeredWindow(
+   HWND hwnd,
+   HDC hdcDst,
+   POINT *pptDst,
+   SIZE *psize,
+   HDC hdcSrc,
+   POINT *pptSrc,
+   COLORREF crKey,
+   BLENDFUNCTION *pblend,
+   DWORD dwFlags,
+   RECT *prcDirty)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ *    @unimplemented
+ */
+HWND APIENTRY
+NtUserWindowFromPhysicalPoint(POINT Point)
+{
+   UNIMPLEMENTED
+
+   return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+HDWP APIENTRY
+NtUserDeferWindowPos(HDWP WinPosInfo,
+                     HWND Wnd,
+                     HWND WndInsertAfter,
+                     int x,
+                     int y,
+                     int cx,
+                     int cy,
+                     UINT Flags)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+
+/*
+ * NtUserResolveDesktopForWOW
+ *
+ * Status
+ *    @unimplemented
+ */
+
+DWORD APIENTRY
+NtUserResolveDesktopForWOW(DWORD Unknown0)
+{
+   UNIMPLEMENTED
+   return 0;
+}
+
+BOOL
+APIENTRY
+NtUserDragDetect(
+   HWND hWnd,
+   POINT pt) // Just like the User call.
+{
+   UNIMPLEMENTED
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserEndMenu(VOID)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
+ * @implemented
+ */
+/* NOTE: unused function */
+BOOL APIENTRY
+NtUserTrackPopupMenuEx(
+   HMENU hMenu,
+   UINT fuFlags,
+   int x,
+   int y,
+   HWND hWnd,
+   LPTPMPARAMS lptpm)
+{
+   UNIMPLEMENTED
+
+   return FALSE;
+}
+
+DWORD APIENTRY
+NtUserQuerySendMessage(DWORD Unknown0)
+{
+    UNIMPLEMENTED;
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD APIENTRY
+NtUserAlterWindowStyle(DWORD Unknown0,
+                       DWORD Unknown1,
+                       DWORD Unknown2)
+{
+   UNIMPLEMENTED
+
+   return(0);
+}
+
+/*
+ * NtUserSetWindowStationUser
+ *
+ * Status
+ *    @unimplemented
+ */
+
+DWORD APIENTRY
+NtUserSetWindowStationUser(
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+BOOL APIENTRY NtUserAddClipboardFormatListener(
+    HWND hwnd
+)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL APIENTRY NtUserRemoveClipboardFormatListener(
+    HWND hwnd
+)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
+    PUINT lpuiFormats,
+    UINT cFormats,
+    PUINT pcFormatsOut
+)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+APIENTRY
+NtUserGetCursorFrameInfo(
+    DWORD Unknown0,
+    DWORD Unknown1,
+    DWORD Unknown2,
+    DWORD Unknown3)
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtUserSetSystemCursor(
+    HCURSOR hcur,
+    DWORD id)
+{
+    return FALSE;
+}
 
 /* EOF */

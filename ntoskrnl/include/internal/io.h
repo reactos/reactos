@@ -1155,6 +1155,20 @@ IopCloseFile(
     IN ULONG SystemHandleCount
 );
 
+PVOID
+NTAPI
+IoGetFileObjectFilterContext(
+    IN PFILE_OBJECT FileObject
+);
+
+NTSTATUS
+NTAPI
+IoChangeFileObjectFilterContext(
+    IN PFILE_OBJECT FileObject,
+    IN PVOID FilterContext,
+    IN BOOLEAN Define
+);
+
 //
 // I/O Timer Routines
 //

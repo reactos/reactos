@@ -971,7 +971,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Do the same for hyperspace */
     PointerPde = MiAddressToPde(HYPER_SPACE);
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
-    MiInitializePfn(PageFrameNumber, PointerPde, TRUE);
+    MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
     
     /* Setup the PFN for the PTE for the working set */
     PointerPte = MiAddressToPte(MI_WORKING_SET_LIST);
@@ -1195,7 +1195,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                                 HyperIndex);
 
     /* Set it dirty and map it */
-    PdePte.u.Hard.Dirty = TRUE;
+    MI_MAKE_DIRTY_PAGE(&PdePte);
     MI_WRITE_VALID_PTE(PointerPte, PdePte);
 
     /* Now get hyperspace's page table */
@@ -1228,7 +1228,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
                                 PdeIndex);
 
     /* Set it dirty and map it */
-    PdePte.u.Hard.Dirty = TRUE;
+    MI_MAKE_DIRTY_PAGE(&PdePte);
     MI_WRITE_VALID_PTE(PointerPte, PdePte);
 
     /* Now get the page directory (which we'll double map, so call it a page table */
