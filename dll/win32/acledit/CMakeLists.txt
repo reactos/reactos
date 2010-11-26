@@ -13,7 +13,7 @@ set_module_type(acledit win32dll)
 
 set_export_spec(acledit acledit.spec)
 
-add_importlibs(acledit ntdll)
+add_importlibs(acledit msvcrt kernel32 ntdll)
 
 add_cab_target(acledit 1)
 
