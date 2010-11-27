@@ -296,7 +296,7 @@ LdrUnloadDll(
     IN PVOID BaseAddress
 );
 
-typedef VOID NTAPI (*PLDR_CALLBACK)(PVOID CallbackContext, PVOID Name);
+typedef VOID (NTAPI *PLDR_CALLBACK)(PVOID CallbackContext, PVOID Name);
 NTSTATUS
 NTAPI
 LdrVerifyImageMatchesChecksum(
