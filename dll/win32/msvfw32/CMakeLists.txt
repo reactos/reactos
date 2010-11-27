@@ -17,7 +17,7 @@ set_module_type(msvfw32 win32dll)
 
 target_link_libraries(msvfw32 wine)
 
-add_importlibs(msvfw32 winmm version comctl32 user32 gdi32 advapi32 kernel32 ntdll)
+add_importlibs(msvfw32 winmm version comctl32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(msvfw32 1)
 add_importlib_target(msvfw32.spec)

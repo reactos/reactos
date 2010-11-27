@@ -30,6 +30,7 @@ add_importlibs(devenum
     winmm
     user32
     avicap32
+    msvcrt
     kernel32
     ntdll)
 

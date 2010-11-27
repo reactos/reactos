@@ -15,6 +15,7 @@ add_importlibs(telephon
     comctl32
     ole32
     shell32
+    msvcrt
     kernel32)
 
 add_cab_target(telephon 1)

@@ -53,6 +53,6 @@ set_module_type(ws2_32_new win32dll)
 
 target_link_libraries(ws2_32_new wine)
 
-add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help kernel32 ntdll)
+add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
 
 add_cab_target(ws2_32_new 1)

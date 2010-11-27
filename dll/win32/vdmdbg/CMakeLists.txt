@@ -13,7 +13,7 @@ add_library(vdmdbg SHARED
 
 set_module_type(vdmdbg win32dll)
 
-add_importlibs(vdmdbg kernel32 ntdll)
+add_importlibs(vdmdbg msvcrt kernel32 ntdll)
 add_pch(vdmdbg ${CMAKE_CURRENT_SOURCE_DIR}/vdmdbg.h ${SOURCE})
 
 add_cab_target(vdmdbg 1)

@@ -12,6 +12,6 @@ set_module_type(traffic win32dll)
 
 target_link_libraries(traffic wine)
 
-add_importlibs(traffic kernel32 ntdll)
+add_importlibs(traffic msvcrt kernel32 ntdll)
 add_dependencies(traffic psdk buildno_header)
 add_cab_target(traffic 1)

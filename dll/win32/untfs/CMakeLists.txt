@@ -9,6 +9,6 @@ set_module_type(untfs win32dll)
 
 target_link_libraries(untfs ntfslib)
 
-add_importlibs(untfs kernel32 ntdll)
+add_importlibs(untfs msvcrt kernel32 ntdll)
 
 add_cab_target(untfs 1)

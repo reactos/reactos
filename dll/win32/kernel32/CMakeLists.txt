@@ -113,6 +113,7 @@ add_library(kernel32 SHARED
     ${SOURCE})
 
 set_module_type(kernel32 win32dll)
+set_entrypoint(kernel32 DllMain@12)
 
 target_link_libraries(kernel32 ${PSEH_LIB})
 

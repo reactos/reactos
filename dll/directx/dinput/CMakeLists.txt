@@ -32,6 +32,7 @@ add_importlibs(dinput
     advapi32
     ole32
     winmm
+    msvcrt
     kernel32
     ntdll)
 

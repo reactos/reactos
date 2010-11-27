@@ -11,7 +11,7 @@ set_module_type(xmllite win32dll)
 target_link_libraries(xmllite
     wine)
 
-add_importlibs(xmllite kernel32 ntdll)
+add_importlibs(xmllite msvcrt kernel32 ntdll)
 
 
 add_cab_target(xmllite 1)

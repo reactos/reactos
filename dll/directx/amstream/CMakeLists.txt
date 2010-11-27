@@ -26,6 +26,7 @@ target_link_libraries(amstream
 add_importlibs(amstream
     ole32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

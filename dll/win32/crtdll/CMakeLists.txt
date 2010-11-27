@@ -25,6 +25,8 @@ add_library(crtdll SHARED
 
 set_module_type(crtdll win32dll)
 
+set_entrypoint(crtdll DllMain@12)
+
 target_link_libraries(crtdll
     wine
     crt)

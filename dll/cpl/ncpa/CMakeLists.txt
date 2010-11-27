@@ -10,6 +10,7 @@ set_module_type(ncpa cpl)
 add_importlibs(ncpa
     msvcrt
     advapi32
-    shell32)
+    shell32
+    kernel32)
 
 add_cab_target(ncpa 1)

@@ -82,7 +82,7 @@ target_link_libraries(user32
     ${PSEH_LIB})
                       
 add_pch(user32 ${CMAKE_CURRENT_SOURCE_DIR}/include/user32.h ${SOURCE})
-add_importlibs(user32 gdi32 advapi32 imm32 kernel32 ntdll)
+add_importlibs(user32 gdi32 advapi32 imm32 msvcrt kernel32 ntdll)
 add_cab_target(user32 1)
 add_importlib_target(user32.spec)
 

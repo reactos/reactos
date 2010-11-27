@@ -23,6 +23,7 @@ add_importlibs(dxdiagn
     advapi32
     ole32
     oleaut32
+    msvcrt
     kernel32
     ntdll)
 
