@@ -45,6 +45,32 @@ BOOL WINAPI DllMain(HINSTANCE hinst, DWORD reason, LPVOID reserved)
 }
 
 /***********************************************************************
+ * MprAdminGetErrorString (MPRAPI.@)
+ *
+ * Return a unicode string for the given mpr errorcode
+ *
+ * PARAMS
+ *  mprerror [i] errorcode, for which a description is requested
+ *  localstr [o] pointer, where a buffer with the error description is returned
+ *
+ * RETURNS
+ *  Failure: ERROR_MR_MID_NOT_FOUND, when mprerror is not known
+ *  Success: ERROR_SUCCESS, and in localstr a pointer to a buffer from LocalAlloc,
+ *           which contains the error description.
+ *
+ * NOTES
+ *  The caller must free the returned buffer with LocalFree
+ *
+ */
+DWORD APIENTRY MprAdminGetErrorString(DWORD mprerror, LPWSTR *localstr)
+{
+    FIXME("(0x%x/%u, %p): stub!\n", mprerror, mprerror, localstr);
+
+    *localstr = NULL;
+    return ERROR_MR_MID_NOT_FOUND;
+}
+
+/***********************************************************************
  *      MprAdminIsServiceRunning (MPRAPI.@)
  */
 BOOL APIENTRY MprAdminIsServiceRunning(LPWSTR server)
