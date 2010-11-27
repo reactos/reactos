@@ -27,9 +27,8 @@ if (NOT MSVC)
 set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
 endif()
 
-set_module_type(msvcrt win32dll)
-
 set_entrypoint(msvcrt DllMain@12)
+set_image_base(msvcrt ${baseaddress_msvcrt})
 
 target_link_libraries(msvcrt
     crt
