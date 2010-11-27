@@ -30,7 +30,7 @@ GreRectangle(PDC pDC,
     BOOLEAN bRet;
     RECTL DestRect;
     MIX Mix;
-    POINT BrushOrigin;
+    POINTL BrushOrigin;
 
     DestRect.left = LeftRect + pDC->rcDcRect.left + pDC->rcVport.left;
     DestRect.right = RightRect + pDC->rcDcRect.left + pDC->rcVport.left;
@@ -105,7 +105,7 @@ GrePolygon(PDC pDC,
     BOOLEAN bRet;
     MIX Mix;
     INT i;
-    POINT BrushOrigin;
+    POINTL BrushOrigin;
 
     BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
     BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;

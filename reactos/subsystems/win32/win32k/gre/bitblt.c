@@ -313,7 +313,7 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
           INT XSrc, INT YSrc, DWORD rop)
 {
     BOOLEAN bRet;
-    POINT SourcePoint, BrushOrigin;
+    POINTL SourcePoint, BrushOrigin;
     RECTL DestRect;
     EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
