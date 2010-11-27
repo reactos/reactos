@@ -18,7 +18,6 @@
 
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
-#pragma warning ( disable : 4996 )
 #endif//_MSC_VER
 
 #ifdef WIN32
@@ -42,6 +41,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "xml.h"
+#include "ssprintf.h"
 
 #ifndef MAX_PATH
 #define MAX_PATH _MAX_PATH
@@ -100,9 +100,7 @@ XMLException::XMLException (
 
 void XMLException::SetExceptionV ( const std::string& location, const char* format, va_list args )
 {
-    char buffer[1024];
-    _vsnprintf(buffer, sizeof(buffer)-1, format, args);
-    _e = location + ": " + buffer;
+    _e = location + ": " + ssvprintf(format,args);
 }
 
 void XMLException::SetException ( const std::string& location, const char* format, ... )
@@ -426,14 +424,13 @@ string
 XMLFile::Location() const
 {
     int line = 1;
-    char line_str[10];
     const char* p = strchr ( _buf.c_str(), '\n' );
     while ( p && p < _p )
     {
         ++line;
         p = strchr ( p+1, '\n' );
     }
-    return _filename + "(" + itoa(line, line_str, 10) + ")";
+    return ssprintf ( "%s(%i)",_filename.c_str(), line );
 }
 
 XMLAttribute::XMLAttribute()
