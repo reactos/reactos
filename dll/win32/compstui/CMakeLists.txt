@@ -10,7 +10,7 @@ set_export_spec(compstui compstui.spec)
 
 target_link_libraries(compstui wine)
 
-add_importlibs(compstui kernel32 ntdll)
+add_importlibs(compstui msvcrt kernel32 ntdll)
 
 add_cab_target(compstui 1)
 add_importlib_target(compstui.spec)

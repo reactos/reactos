@@ -20,6 +20,7 @@ add_importlibs(deskadp
     gdi32
     comctl32
     ole32
+    msvcrt
     kernel32
     ntdll)
 

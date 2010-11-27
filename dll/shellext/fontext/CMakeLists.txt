@@ -21,6 +21,7 @@ add_importlibs(fontext
     lz32
     advapi32
     setupapi
+    msvcrt
     kernel32
     ntdll)
 

@@ -20,6 +20,6 @@ set_module_type(advpack win32dll)
 
 target_link_libraries(advpack wine)
 
-add_importlibs(advpack ole32 setupapi version advapi32 kernel32 ntdll)
+add_importlibs(advpack ole32 setupapi version advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(advpack 1)

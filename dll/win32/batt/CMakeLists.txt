@@ -12,6 +12,6 @@ set_export_spec(batt batt.spec)
 
 add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/batt.def)
 
-add_importlibs(batt kernel32)
+add_importlibs(batt msvcrt kernel32)
 
 add_cab_target(batt 1)

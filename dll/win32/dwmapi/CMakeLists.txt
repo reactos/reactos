@@ -11,6 +11,6 @@ set_module_type(dwmapi win32dll)
 
 target_link_libraries(dwmapi wine)
 
-add_importlibs(dwmapi kernel32 ntdll)
+add_importlibs(dwmapi msvcrt kernel32 ntdll)
 
 add_cab_target(dwmapi 1)

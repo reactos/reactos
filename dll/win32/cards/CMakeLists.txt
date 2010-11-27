@@ -15,6 +15,6 @@ add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/cards.def)
 
 set_module_type(cards win32dll)
 
-add_importlibs(cards user32 gdi32)
+add_importlibs(cards user32 gdi32 msvcrt kernel32)
 
 add_cab_target(cards 1)

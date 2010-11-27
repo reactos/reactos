@@ -52,7 +52,7 @@ target_link_libraries(gdi32
 
 set_export_spec(gdi32 gdi32.spec)
 
-add_importlibs(gdi32 user32 advapi32 kernel32 ntdll)
+add_importlibs(gdi32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(gdi32 ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})
 add_cab_target(gdi32 1)
 add_importlib_target(gdi32.spec)

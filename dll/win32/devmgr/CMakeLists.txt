@@ -25,6 +25,7 @@ add_importlibs(devmgr
     advapi32
     user32
     version
+    msvcrt
     kernel32
     ntdll)
 

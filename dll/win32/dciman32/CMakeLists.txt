@@ -11,6 +11,6 @@ set_module_type(dciman32 win32dll)
 
 target_link_libraries(dciman32 wine)
 
-add_importlibs(dciman32 kernel32 ntdll)
+add_importlibs(dciman32 msvcrt kernel32 ntdll)
 
 add_cab_target(dciman32 1)

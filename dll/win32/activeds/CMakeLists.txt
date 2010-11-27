@@ -11,7 +11,7 @@ set_module_type(activeds win32dll)
 
 target_link_libraries(activeds wine)
 
-add_importlibs(activeds kernel32 ntdll)
+add_importlibs(activeds msvcrt kernel32 ntdll)
 
 
 add_cab_target(activeds 1)

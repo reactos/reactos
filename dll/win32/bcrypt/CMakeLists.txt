@@ -13,7 +13,7 @@ set_module_type(bcrypt win32dll)
 
 target_link_libraries(bcrypt wine)
 
-add_importlibs(bcrypt kernel32 ntdll)
+add_importlibs(bcrypt msvcrt kernel32 ntdll)
 
 
 add_cab_target(bcrypt 1)

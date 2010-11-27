@@ -13,6 +13,7 @@ target_link_libraries(cryptnet wine)
 add_importlibs(cryptnet
     crypt32
     wininet
+    msvcrt
     kernel32
     ntdll)
 

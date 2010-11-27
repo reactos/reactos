@@ -29,6 +29,7 @@ add_importlibs(inetcomm
     ws2_32
     user32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

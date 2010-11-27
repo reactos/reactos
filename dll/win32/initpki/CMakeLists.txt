@@ -10,6 +10,6 @@ set_module_type(initpki win32dll)
 
 target_link_libraries(initpki wine)
 
-add_importlibs(initpki kernel32 ntdll)
+add_importlibs(initpki msvcrt kernel32 ntdll)
 
 add_cab_target(initpki 1)

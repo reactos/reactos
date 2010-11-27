@@ -17,6 +17,7 @@ target_link_libraries(inseng
 add_importlibs(inseng
     ole32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

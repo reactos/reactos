@@ -16,9 +16,7 @@ add_library(authz SHARED
 
 set_module_type(authz win32dll)
 
-
-
 add_pch(authz ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-add_importlibs(authz advapi32 kernel32 ntdll)
+add_importlibs(authz advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(authz 1)

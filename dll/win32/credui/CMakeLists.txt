@@ -11,6 +11,6 @@ set_module_type(credui win32dll)
 
 target_link_libraries(credui wine)
 
-add_importlibs(credui advapi32 user32 comctl32 kernel32 ntdll)
+add_importlibs(credui advapi32 user32 comctl32 msvcrt kernel32 ntdll)
 
 add_cab_target(credui 1)

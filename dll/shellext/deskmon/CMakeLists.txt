@@ -20,6 +20,7 @@ add_importlibs(deskmon
     gdi32
     comctl32
     ole32
+    msvcrt
     kernel32
     ntdll)
 

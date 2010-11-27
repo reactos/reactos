@@ -12,7 +12,7 @@ set_module_type(avicap32 win32dll)
 
 target_link_libraries(avicap32 wine)
 
-add_importlibs(avicap32 advapi32 user32 version kernel32 ntdll)
+add_importlibs(avicap32 advapi32 user32 version msvcrt kernel32 ntdll)
 
 add_cab_target(avicap32 1)
 add_importlib_target(avicap32.spec)

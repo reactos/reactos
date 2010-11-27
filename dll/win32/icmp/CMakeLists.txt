@@ -9,6 +9,6 @@ set_module_type(icmp win32dll)
 
 target_link_libraries(icmp wine)
 
-add_importlibs(icmp ws2_32 kernel32 ntdll)
+add_importlibs(icmp ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(icmp psdk)
 add_cab_target(icmp 1)

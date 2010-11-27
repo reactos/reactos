@@ -23,6 +23,7 @@ add_importlibs(cryptui
     wintrust
     comctl32
     comdlg32
+    msvcrt
     kernel32
     ntdll)
 

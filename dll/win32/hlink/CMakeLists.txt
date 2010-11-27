@@ -22,6 +22,7 @@ add_importlibs(hlink
     ole32
     advapi32
     urlmon
+    msvcrt
     kernel32
     ntdll)
 

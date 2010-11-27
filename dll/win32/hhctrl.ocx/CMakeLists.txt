@@ -34,6 +34,7 @@ add_importlibs(hhctrl
     oleaut32
     user32
     gdi32
+    msvcrt
     kernel32
     ntdll)
 

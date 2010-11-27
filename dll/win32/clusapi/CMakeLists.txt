@@ -11,6 +11,6 @@ set_module_type(clusapi win32dll)
 
 target_link_libraries(clusapi wine)
 
-add_importlibs(clusapi kernel32 ntdll)
+add_importlibs(clusapi msvcrt kernel32 ntdll)
 
 add_cab_target(clusapi 1)

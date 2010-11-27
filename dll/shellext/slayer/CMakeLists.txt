@@ -20,6 +20,7 @@ add_importlibs(slayer
     advapi32
     ole32
     shell32
+    msvcrt
     kernel32
     ntdll)
 

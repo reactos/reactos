@@ -29,7 +29,7 @@ target_link_libraries(crtdll
     wine
     crt)
 
-add_importlibs(crtdll kernel32 ntdll)
+add_importlibs(crtdll msvcrt kernel32 ntdll)
 add_pch(crtdll ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(crtdll 1)

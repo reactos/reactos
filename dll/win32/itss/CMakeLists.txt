@@ -24,6 +24,7 @@ add_importlibs(itss
     urlmon
     shlwapi
     ole32
+    msvcrt
     kernel32
     ntdll)
 

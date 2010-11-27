@@ -18,6 +18,6 @@ set_module_type(fusion win32dll)
 
 target_link_libraries(fusion wine)
 
-add_importlibs(fusion shlwapi advapi32 dbghelp user32 kernel32 ntdll)
+add_importlibs(fusion shlwapi advapi32 dbghelp user32 msvcrt kernel32 ntdll)
 
 add_cab_target(fusion 1)

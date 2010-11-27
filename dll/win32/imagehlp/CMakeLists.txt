@@ -22,7 +22,7 @@ set_module_type(imagehlp win32dll)
 
 target_link_libraries(imagehlp wine)
 
-add_importlibs(imagehlp dbghelp kernel32 ntdll)
+add_importlibs(imagehlp dbghelp msvcrt kernel32 ntdll)
 add_pch(imagehlp ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(imagehlp 1)

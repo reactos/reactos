@@ -11,6 +11,7 @@ add_importlibs(devcpux
     user32
     powrprof
     comctl32
+    msvcrt
     kernel32
     ntdll)
 

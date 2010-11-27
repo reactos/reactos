@@ -28,6 +28,7 @@ target_link_libraries(hnetcfg wine)
 add_importlibs(hnetcfg
     ole32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

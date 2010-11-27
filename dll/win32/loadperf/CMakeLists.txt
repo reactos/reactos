@@ -15,7 +15,7 @@ target_link_libraries(loadperf
     ${CMAKE_CURRENT_BINARY_DIR}/loadperf.def
     wine)
 
-add_importlibs(loadperf kernel32 ntdll)
+add_importlibs(loadperf msvcrt kernel32 ntdll)
 
 add_cab_target(loadperf 1)
 add_importlib_target(loadperf.spec)

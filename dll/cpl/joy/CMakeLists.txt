@@ -13,6 +13,9 @@ add_importlibs(joy
     user32
     comctl32
     ole32
-    shell32)
+    shell32
+    msvcrt
+    kernel32
+    ntdll)
 
 add_cab_target(joy 1)

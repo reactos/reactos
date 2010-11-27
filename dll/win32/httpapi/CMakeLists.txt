@@ -11,6 +11,6 @@ set_module_type(httpapi win32dll)
 
 target_link_libraries(httpapi wine)
 
-add_importlibs(httpapi kernel32 ntdll)
+add_importlibs(httpapi msvcrt kernel32 ntdll)
 
 add_cab_target(httpapi 1)
