@@ -156,7 +156,7 @@ macro(add_importlib_target _spec_file)
     # Assemble the file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj
-        COMMAND ${CMAKE_ASM_COMPILER} /NOLOGO /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        COMMAND ${CMAKE_ASM_COMPILER} /nologo /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
         DEPENDS "${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm"
     )
 
