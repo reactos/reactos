@@ -24,3 +24,4 @@ target_link_libraries(uxtheme wine)
 add_importlibs(uxtheme user32 advapi32 gdi32 msimg32 kernel32 ntdll)
 
 add_cab_target(uxtheme 1)
+add_importlib_target(uxtheme.spec)

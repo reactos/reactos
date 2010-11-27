@@ -17,3 +17,4 @@ target_link_libraries(imm32 wine)
 add_importlibs(imm32 advapi32 user32 kernel32 ntdll)
 
 add_cab_target(imm32 1)
+add_importlib_target(imm32.spec)

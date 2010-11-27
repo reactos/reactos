@@ -26,3 +26,4 @@ add_importlibs(userenv advapi32 user32 kernel32 ntdll)
 add_pch(userenv ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(userenv 1)
+add_importlib_target(userenv.spec)

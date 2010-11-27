@@ -23,3 +23,4 @@ target_link_libraries(mpr wine)
 add_importlibs(mpr advapi32 user32 kernel32 ntdll)
 
 add_cab_target(mpr 1)
+add_importlib_target(mpr.spec)

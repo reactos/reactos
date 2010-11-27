@@ -61,3 +61,4 @@ add_importlibs(oleaut32 windowscodecs ole32 rpcrt4 user32 gdi32 advapi32 comctl3
 rpcproxy(oleaut32 oleaut32_oaidl.idl oleaut32_ocidl.idl)
 
 add_cab_target(oleaut32 1)
+add_importlib_target(oleaut32.spec)

@@ -25,3 +25,4 @@ add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
 
 add_subdirectory(msacm32.drv)
 add_cab_target(msacm32 1)
+add_importlib_target(msacm32.spec)

@@ -51,3 +51,4 @@ target_link_libraries(crypt32
 add_importlibs(crypt32 user32 advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(crypt32 1)
+add_importlib_target(crypt32.spec)
