@@ -112,13 +112,13 @@ add_library(kernel32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/kernel32_k32.h.gch
     ${SOURCE})
 
-set_module_type(kernel32 win32dll)
 set_entrypoint(kernel32 DllMain@12)
+set_image_base(kernel32 ${baseaddress_kernel32})
 
 target_link_libraries(kernel32 ${PSEH_LIB})
 
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 ${CMAKE_CURRENT_SOURCE_DIR}/k32.h ${SOURCE})
-add_dependencies(kernel32 errcodes asm)
+add_dependencies(kernel32 psdk buildno_header errcodes asm)
 add_cab_target(kernel32 1)
 add_importlib_target(kernel32.spec)
