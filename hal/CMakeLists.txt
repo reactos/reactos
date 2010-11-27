@@ -100,7 +100,7 @@ endif(ARCH MATCHES i386)
 
 add_library(mini_hal ${MINI_HAL_SOURCE})
 set_property(TARGET mini_hal PROPERTY COMPILE_DEFINITIONS "_BLDR_;_MINIHAL_")
-add_dependencies(mini_hal psdk bugcodes)
+add_dependencies(mini_hal psdk bugcodes asm)
 add_minicd_target(hal reactos hal.dll)
 add_livecd_target(hal reactos/system32)
 else()
