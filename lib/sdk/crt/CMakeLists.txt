@@ -573,10 +573,9 @@ add_dependencies(libcntpr psdk buildno_header asm)
 
 # This is a temporary solution until we have proper crt libs
 list(APPEND MSVCSUP_SOURCE
-     misc/fltused.c
-     except/i386/chkstk_asm.s
-     math/i386/ftol2_asm.S
-)
+#   misc/fltused.c         FIXME: missing file ?
+    except/i386/chkstk_asm.s
+    math/i386/ftol2_asm.S)
 
 add_library(msvcsup ${MSVCSUP_SOURCE})
 add_dependencies(msvcsup psdk buildno_header asm)
