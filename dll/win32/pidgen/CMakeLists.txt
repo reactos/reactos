@@ -10,6 +10,6 @@ set_module_type(pidgen win32dll)
 
 target_link_libraries(pidgen wine)
 
-add_importlibs(pidgen kernel32 ntdll)
+add_importlibs(pidgen msvcrt kernel32 ntdll)
 
 add_cab_target(pidgen 1)

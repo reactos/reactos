@@ -18,6 +18,6 @@ set_module_type(mscms win32dll)
 
 target_link_libraries(mscms wine)
 
-add_importlibs(mscms kernel32 ntdll)
+add_importlibs(mscms msvcrt kernel32 ntdll)
 
 add_cab_target(mscms 1)

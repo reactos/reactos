@@ -12,7 +12,7 @@ set_module_type(msimg32 win32dll)
 
 target_link_libraries(msimg32 wine)
 
-add_importlibs(msimg32 gdi32 kernel32 ntdll)
+add_importlibs(msimg32 gdi32 msvcrt kernel32 ntdll)
 
 add_cab_target(msimg32 1)
 add_importlib_target(msimg32.spec)

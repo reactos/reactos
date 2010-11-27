@@ -14,6 +14,6 @@ target_link_libraries(mciqtz32
     wine
     strmiids)
 
-add_importlibs(mciqtz32 winmm oleaut32 ole32 user32 gdi32 kernel32 ntdll)
+add_importlibs(mciqtz32 winmm oleaut32 ole32 user32 gdi32 msvcrt kernel32 ntdll)
 
 add_cab_target(mciqtz32 1)

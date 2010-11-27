@@ -12,6 +12,6 @@ set_module_type(riched32 win32dll)
 
 target_link_libraries(riched32 wine)
 
-add_importlibs(riched32 riched20 user32 kernel32 ntdll)
+add_importlibs(riched32 riched20 user32 msvcrt kernel32 ntdll)
 
 add_cab_target(riched32 1)

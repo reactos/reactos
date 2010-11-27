@@ -22,6 +22,7 @@ add_importlibs(localspl
     spoolss
     user32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

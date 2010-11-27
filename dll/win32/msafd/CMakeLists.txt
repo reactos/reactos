@@ -26,6 +26,6 @@ set_module_type(msafd win32dll)
 
 add_pch(msafd ${CMAKE_CURRENT_SOURCE_DIR}/msafd.h ${SOURCE})
 
-add_importlibs(msafd advapi32 kernel32 ntdll)
+add_importlibs(msafd advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(msafd 1)

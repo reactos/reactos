@@ -22,7 +22,7 @@ set_module_type(winsta win32dll)
 
 target_link_libraries(winsta wine)
 
-add_importlibs(winsta kernel32 ntdll)
+add_importlibs(winsta msvcrt kernel32 ntdll)
 add_pch(winsta ${CMAKE_CURRENT_SOURCE_DIR}/winsta.h ${SOURCE})
 
 add_cab_target(winsta 1)

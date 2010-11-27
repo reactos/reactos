@@ -20,7 +20,7 @@ set_module_type(secur32 win32dll)
 
 target_link_libraries(secur32 lsalib)
 
-add_importlibs(secur32 advapi32 kernel32 ntdll)
+add_importlibs(secur32 advapi32 msvcrt kernel32 ntdll)
 add_pch(secur32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(secur32 1)

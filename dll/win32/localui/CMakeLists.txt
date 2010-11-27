@@ -17,6 +17,6 @@ target_link_libraries(localui
     uuid
     wine)
 
-add_importlibs(localui winspool user32 kernel32 ntdll)
+add_importlibs(localui winspool user32 msvcrt kernel32 ntdll)
 
 add_cab_target(localui 1)

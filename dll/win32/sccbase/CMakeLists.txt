@@ -10,6 +10,6 @@ set_module_type(sccbase win32dll)
 
 target_link_libraries(sccbase wine)
 
-add_importlibs(sccbase kernel32 ntdll)
+add_importlibs(sccbase msvcrt kernel32 ntdll)
 
 add_cab_target(sccbase 1)

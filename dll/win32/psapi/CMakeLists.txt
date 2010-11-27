@@ -19,7 +19,7 @@ target_link_libraries(psapi
     epsapi
     ${PSEH_LIB})
 
-add_importlibs(psapi kernel32 ntdll)
+add_importlibs(psapi msvcrt kernel32 ntdll)
 add_pch(psapi ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(psapi 1)

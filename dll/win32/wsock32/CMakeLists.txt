@@ -9,5 +9,5 @@ endif()
 
 set_module_type(wsock32 win32dll)
 
-add_importlibs(wsock32 ws2_32 kernel32 ntdll)
+add_importlibs(wsock32 ws2_32 msvcrt kernel32 ntdll)
 add_cab_target(wsock32 1)

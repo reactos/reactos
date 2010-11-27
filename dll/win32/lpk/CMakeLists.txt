@@ -16,6 +16,6 @@ add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/lpk.def)
 
 set_module_type(lpk win32dll)
 
-add_importlibs(lpk user32 usp10 kernel32 ntdll)
+add_importlibs(lpk user32 usp10 msvcrt kernel32 ntdll)
 
 add_cab_target(lpk 1)

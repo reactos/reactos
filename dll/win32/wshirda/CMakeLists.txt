@@ -9,6 +9,6 @@ endif()
 
 set_module_type(wshirda win32dll)
 
-add_importlibs(wshirda ws2_32 kernel32 ntdll)
+add_importlibs(wshirda ws2_32 msvcrt kernel32 ntdll)
 
 add_cab_target(wshirda 1)

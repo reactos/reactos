@@ -11,9 +11,7 @@ add_library(sfc SHARED
 
 set_module_type(sfc win32dll)
 
-
-
-add_importlibs(sfc kernel32)
+add_importlibs(sfc msvcrt kernel32)
 add_pch(sfc ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 add_cab_target(sfc 1)

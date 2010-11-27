@@ -15,6 +15,6 @@ target_link_libraries(msftedit
     uuid
     wine)
 
-add_importlibs(msftedit riched20 kernel32 ntdll)
+add_importlibs(msftedit riched20 msvcrt kernel32 ntdll)
 
 add_cab_target(msftedit 1)

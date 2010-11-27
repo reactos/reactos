@@ -9,6 +9,6 @@ endif()
 
 set_module_type(serialui win32dll)
 
-add_importlibs(serialui user32 shlwapi kernel32)
+add_importlibs(serialui user32 shlwapi msvcrt kernel32)
 
 add_cab_target(serialui 1)

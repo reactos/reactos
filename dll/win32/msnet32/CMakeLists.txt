@@ -10,6 +10,6 @@ set_module_type(msnet32 win32dll)
 
 target_link_libraries(msnet32 wine)
 
-add_importlibs(msnet32 kernel32 ntdll)
+add_importlibs(msnet32 msvcrt kernel32 ntdll)
 
 add_cab_target(msnet32 1)

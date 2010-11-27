@@ -23,7 +23,7 @@ set_module_type(netapi32 win32dll)
 
 target_link_libraries(netapi32 wine)
 
-add_importlibs(netapi32 iphlpapi ws2_32 advapi32 kernel32 ntdll)
+add_importlibs(netapi32 iphlpapi ws2_32 advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(netapi32 1)
 add_importlib_target(netapi32.spec)

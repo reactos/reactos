@@ -10,6 +10,6 @@ set_module_type(mssign32 win32dll)
 
 target_link_libraries(mssign32 wine)
 
-add_importlibs(mssign32 kernel32 ntdll)
+add_importlibs(mssign32 msvcrt kernel32 ntdll)
 
 add_cab_target(mssign32 1)

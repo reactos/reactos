@@ -27,6 +27,7 @@ add_importlibs(objsel
     ole32
     user32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 

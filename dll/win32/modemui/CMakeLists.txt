@@ -7,6 +7,6 @@ add_library(modemui SHARED modemui.c modemui.rc ${CMAKE_CURRENT_BINARY_DIR}/mode
 
 set_module_type(modemui win32dll)
 
-add_importlibs(modemui kernel32)
+add_importlibs(modemui msvcrt kernel32)
 
 add_cab_target(modemui 1)

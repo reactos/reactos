@@ -7,6 +7,6 @@ endif()
 
 set_module_type(netid win32dll)
 
-add_importlibs(netid user32 gdi32 comctl32 advapi32 netapi32 kernel32 ntdll)
+add_importlibs(netid user32 gdi32 comctl32 advapi32 netapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(netid 1)

@@ -87,7 +87,6 @@ target_link_libraries(mshtml
     oldnames)
 
 add_importlibs(mshtml
-#    msvcrt
     urlmon
     shlwapi
     ole32
@@ -96,6 +95,7 @@ add_importlibs(mshtml
     gdi32
     advapi32
     wininet
+    msvcrt
     kernel32
     ntdll)
 

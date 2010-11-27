@@ -10,6 +10,6 @@ set_module_type(msisip win32dll)
 
 target_link_libraries(msisip wine)
 
-add_importlibs(msisip crypt32 ole32 kernel32 ntdll)
+add_importlibs(msisip crypt32 ole32 msvcrt kernel32 ntdll)
 
 add_cab_target(msisip 1)

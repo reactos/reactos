@@ -16,6 +16,6 @@ target_link_libraries(sndblst
     mment4
     mmebuddy)
 
-add_importlibs(sndblst user32 winmm advapi32 kernel32 ntdll)
+add_importlibs(sndblst user32 winmm advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(sndblst 1)

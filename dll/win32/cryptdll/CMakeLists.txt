@@ -16,6 +16,6 @@ target_link_libraries(cryptdll
     ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def
     wine)
 
-add_importlibs(cryptdll kernel32 ntdll)
+add_importlibs(cryptdll msvcrt kernel32 ntdll)
 
 add_cab_target(cryptdll 1)

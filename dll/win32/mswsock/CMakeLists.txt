@@ -18,6 +18,6 @@ endif()
 
 set_module_type(mswsock win32dll)
 
-add_importlibs(mswsock ws2_32 kernel32)
+add_importlibs(mswsock ws2_32 msvcrt kernel32)
 
 add_cab_target(mswsock 1)

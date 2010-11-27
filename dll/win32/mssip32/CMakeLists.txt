@@ -10,6 +10,6 @@ set_module_type(mssip32 win32dll)
 
 target_link_libraries(mssip32 wine)
 
-add_importlibs(mssip32 kernel32 ntdll)
+add_importlibs(mssip32 msvcrt kernel32 ntdll)
 
 add_cab_target(mssip32 1)

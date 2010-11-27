@@ -17,6 +17,6 @@ set_module_type(oledlg win32dll)
 
 target_link_libraries(oledlg wine)
 
-add_importlibs(oledlg ole32 comdlg32 user32 advapi32 kernel32 ntdll)
+add_importlibs(oledlg ole32 comdlg32 user32 advapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(oledlg 1)

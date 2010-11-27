@@ -10,6 +10,6 @@ set_module_type(resutils win32dll)
 
 target_link_libraries(resutils wine)
 
-add_importlibs(resutils kernel32 ntdll)
+add_importlibs(resutils msvcrt kernel32 ntdll)
 
 add_cab_target(resutils 1)

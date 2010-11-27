@@ -10,6 +10,6 @@ set_module_type(olethk32 win32dll)
 
 target_link_libraries(olethk32 wine)
 
-add_importlibs(olethk32 kernel32 ntdll)
+add_importlibs(olethk32 msvcrt kernel32 ntdll)
 add_dependencies(olethk32 psdk)
 add_cab_target(olethk32 1)

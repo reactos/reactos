@@ -47,6 +47,7 @@ add_importlibs(shdocvw
     gdi32
     version
     urlmon
+    msvcrt
     kernel32
     ntdll)
 

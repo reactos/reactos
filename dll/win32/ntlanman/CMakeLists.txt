@@ -9,6 +9,6 @@ set_module_type(ntlanman win32dll)
 
 target_link_libraries(ntlanman wine)
 
-add_importlibs(ntlanman netapi32 kernel32 ntdll)
+add_importlibs(ntlanman netapi32 msvcrt kernel32 ntdll)
 
 add_cab_target(ntlanman 1)

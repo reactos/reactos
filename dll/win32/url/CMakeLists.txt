@@ -12,6 +12,6 @@ set_module_type(url win32dll)
 
 target_link_libraries(url wine)
 
-add_importlibs(url shell32 shlwapi kernel32 ntdll)
+add_importlibs(url shell32 shlwapi msvcrt kernel32 ntdll)
 
 add_cab_target(url 1)

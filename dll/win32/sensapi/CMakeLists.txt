@@ -12,6 +12,6 @@ set_module_type(sensapi win32dll)
 
 target_link_libraries(sensapi wine)
 
-add_importlibs(sensapi kernel32 ntdll)
+add_importlibs(sensapi msvcrt kernel32 ntdll)
 
 add_cab_target(sensapi 1)

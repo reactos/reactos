@@ -10,6 +10,6 @@ set_module_type(spoolss win32dll)
 
 target_link_libraries(spoolss wine)
 
-add_importlibs(spoolss winspool kernel32 ntdll)
+add_importlibs(spoolss winspool msvcrt kernel32 ntdll)
 
 add_cab_target(spoolss 1)

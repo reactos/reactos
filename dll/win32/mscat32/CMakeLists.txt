@@ -11,6 +11,6 @@ set_module_type(mscat32 win32dll)
 
 target_link_libraries(mscat32 wine)
 
-add_importlibs(mscat32 wintrust kernel32 ntdll)
+add_importlibs(mscat32 wintrust msvcrt kernel32 ntdll)
 
 add_cab_target(mscat32 1)

@@ -12,6 +12,6 @@ target_link_libraries(query
     wine
     uuid)
 
-add_importlibs(query kernel32 ntdll)
+add_importlibs(query msvcrt kernel32 ntdll)
 
 add_cab_target(query 1)

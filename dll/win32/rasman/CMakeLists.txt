@@ -9,6 +9,6 @@ target_link_libraries(rasman
     wine
     uuid)
 
-add_importlibs(rasman kernel32 ntdll)
+add_importlibs(rasman msvcrt kernel32 ntdll)
 
 add_cab_target(rasman 1)

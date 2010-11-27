@@ -9,7 +9,7 @@ add_library(netevent SHARED netevent.c netevt.rc ${CMAKE_CURRENT_BINARY_DIR}/net
 
 set_module_type(netevent win32dll)
 
-add_importlibs(netevent kernel32)
+add_importlibs(netevent msvcrt kernel32)
 
 add_dependencies(netevent neteventmsg)
 add_cab_target(netevent 1)

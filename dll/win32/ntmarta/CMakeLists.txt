@@ -17,6 +17,7 @@ set_module_type(ntmarta win32dll)
 add_importlibs(ntmarta
     user32
     advapi32
+    msvcrt
     kernel32
     ntdll)
 
