@@ -53,47 +53,43 @@ int _ismbbkprint(
     return 0;
 }
 
-int _inp( 
+
+int MSVCRT__inp( 
    unsigned short port)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return _inp(port);
 }
 
-unsigned short _inpw( 
+unsigned short MSVCRT__inpw( 
    unsigned short port)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return _inpw(port);
 }
 
-unsigned long _inpd( 
+unsigned long MSVCRT__inpd( 
    unsigned short port)
 {
-    return 0;
+    return _inpd(port);
 }
 
 
-int _outp(
+int MSVCRT__outp(
    unsigned short port,
    int databyte)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return _outp(port, databyte);
 }
 
-unsigned short _outpw(
+unsigned short MSVCRT__outpw(
    unsigned short port,
    unsigned short dataword)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return _outpw(port, dataword);
 }
 
-unsigned long _outpd(
+unsigned long MSVCRT__outpd(
    unsigned short port,
    unsigned long dataword)
 {
-    UNIMPLEMENTED;
-    return 0;
+    return _outpd(port, dataword);
 }

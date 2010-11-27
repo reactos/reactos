@@ -137,7 +137,7 @@
 @ extern __badioinfo __badioinfo
 @ cdecl __crtCompareStringA(long long str long str long) kernel32.CompareStringA
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
-@ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfo
+@ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfoW
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
@@ -475,9 +475,9 @@
 # stub _i64tow_s
 @ cdecl _initterm(ptr ptr)
 # stub _initterm_e
-@ cdecl -arch=i386 _inp(long)
-@ cdecl -arch=i386 _inpd(long)
-@ cdecl -arch=i386 _inpw(long)
+@ cdecl -arch=i386 _inp(long) MSVCRT__inp
+@ cdecl -arch=i386 _inpd(long) MSVCRT__inpd
+@ cdecl -arch=i386 _inpw(long) MSVCRT__inpw
 @ cdecl _invalid_parameter(wstr wstr wstr long long)
 @ extern _iob
 # stub _isalnum_l
@@ -757,9 +757,9 @@
 @ cdecl _open_osfhandle(long long)
 @ extern _osplatform _osplatform
 @ extern _osver _osver
-@ cdecl _outp(long long)
-@ cdecl _outpd(long long)
-@ cdecl _outpw(long long)
+@ cdecl _outp(long long) MSVCRT__outp
+@ cdecl _outpd(long long) MSVCRT__outpd
+@ cdecl _outpw(long long) MSVCRT__outpw
 @ cdecl _pclose (ptr)
 @ extern _pctype _pctype
 @ extern _pgmptr _pgmptr
