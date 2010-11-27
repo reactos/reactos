@@ -8,8 +8,8 @@ if(NOT MSVC)
     set_source_files_properties(xinput9_1_0.def PROPERTIES EXTERNAL_OBJECT TRUE)
 endif()
 
-add_importlibs(xinput9_1_0 msvcrt kernel32)
-
 set_module_type(xinput9_1_0 win32dll)
+
+add_importlibs(xinput9_1_0 msvcrt kernel32)
 
 add_cab_target(xinput9_1_0 1)
