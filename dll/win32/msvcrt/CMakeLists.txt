@@ -13,6 +13,8 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 
+set_rc_compiler()
+
 list(APPEND SOURCE
      dllmain.c
      msvcrt_stubs.c
@@ -27,6 +29,7 @@ if (NOT MSVC)
 set_target_properties(msvcrt PROPERTIES LINK_FLAGS "-u __seh_longjmp_unwind@4")
 endif()
 
+add_dependencies(msvcrt psdk buildno_header)
 set_entrypoint(msvcrt DllMain@12)
 set_image_base(msvcrt ${baseaddress_msvcrt})
 
