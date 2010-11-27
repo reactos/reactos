@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
- .globl __aulldiv
 
-.intel_syntax noprefix
+#include <asm.inc>
+
+PUBLIC __aulldiv
 
 /* FUNCTIONS ***************************************************************/
+.code
 
 //
 // ulldiv - unsigned long divide
@@ -105,7 +106,7 @@ __aulldiv:
 
         mov     eax,DVSRHI // check to see if divisor < 4194304K
         or      eax,eax
-        jnz     short ..L1        // nope, gotta do this the hard way
+        jnz     short .L1        // nope, gotta do this the hard way
         mov     ecx,DVSRLO // load divisor
         mov     eax,DVNDHI // load high word of dividend
         xor     edx,edx
@@ -114,24 +115,24 @@ __aulldiv:
         mov     eax,DVNDLO // edx:eax <- remainder:lo word of dividend
         div     ecx             // get low order bits of quotient
         mov     edx,ebx         // edx:eax <- quotient hi:quotient lo
-        jmp     short ..L2        // restore stack and return
+        jmp     short .L2        // restore stack and return
 
 //
 // Here we do it the hard way.  Remember, eax contains DVSRHI
 //
 
-..L1:
+.L1:
         mov     ecx,eax         // ecx:ebx <- divisor
         mov     ebx,DVSRLO
         mov     edx,DVNDHI // edx:eax <- dividend
         mov     eax,DVNDLO
-..L3:
+.L3:
         shr     ecx,1           // shift divisor right one bit// hi bit <- 0
         rcr     ebx,1
         shr     edx,1           // shift dividend right one bit// hi bit <- 0
         rcr     eax,1
         or      ecx,ecx
-        jnz     short ..L3        // loop until divisor < 4194304K
+        jnz     short .L3        // loop until divisor < 4194304K
         div     ebx             // now divide, ignore remainder
         mov     esi,eax         // save quotient
 
@@ -147,7 +148,7 @@ __aulldiv:
         mov     eax,DVSRLO
         mul     esi             // QUOT * DVSRLO
         add     edx,ecx         // EDX:EAX = QUOT * DVSR
-        jc      short ..L4        // carry means Quotient is off by 1
+        jc      short .L4        // carry means Quotient is off by 1
 
 //
 // do long compare here between original dividend and the result of the
@@ -156,13 +157,13 @@ __aulldiv:
 //
 
         cmp     edx,DVNDHI // compare hi words of result and original
-        ja      short ..L4        // if result > original, do subtract
-        jb      short ..L5        // if result < original, we are ok
+        ja      short .L4        // if result > original, do subtract
+        jb      short .L5        // if result < original, we are ok
         cmp     eax,DVNDLO // hi words are equal, compare lo words
-        jbe     short ..L5        // if less or equal we are ok, else subtract
-..L4:
+        jbe     short .L5        // if less or equal we are ok, else subtract
+.L4:
         dec     esi             // subtract 1 from quotient
-..L5:
+.L5:
         xor     edx,edx         // edx:eax <- quotient
         mov     eax,esi
 
@@ -171,9 +172,11 @@ __aulldiv:
 // Restore the saved registers and return.
 //
 
-..L2:
+.L2:
 
         pop     esi
         pop     ebx
 
         ret     16
+
+END

@@ -33,12 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
-.globl _sin
 
-.intel_syntax noprefix
+#include <asm.inc>
+
+PUBLIC _sin
 
 /* FUNCTIONS ***************************************************************/
+.code
 
 _sin:
         push    ebp                     // Save register bp
@@ -47,3 +48,5 @@ _sin:
         fsin                            // Take the sine
         pop     ebp                     // Restore register bp
         ret
+
+END

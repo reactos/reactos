@@ -7,11 +7,12 @@
  *              KJK::Hyperion <noog@libero.it>
  */
 
-#include <ndk/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 
-.globl _SwitchToFiber@4
-.intel_syntax noprefix
+.code
 
+PUBLIC _SwitchToFiber@4
 _SwitchToFiber@4:
     /* Get the TEB */
     mov edx, fs:[TEB_SELF]
@@ -30,7 +31,7 @@ _SwitchToFiber@4:
     mov [eax+FIBER_CONTEXT_EIP], ebx
 
     /* Check if we're to save FPU State */
-    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL | CONTEXT_FLOATING_POINT
+    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL OR CONTEXT_FLOATING_POINT
     jnz NoFpuStateSave
     
     /* Save the FPU State (Status and Control)*/
@@ -80,7 +81,7 @@ NoFpuStateSave:
     mov [edx+TEB_ACTIVATION_CONTEXT_STACK_POINTER], esi
     
     /* Restore FPU State */
-    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL | CONTEXT_FLOATING_POINT
+    cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL OR CONTEXT_FLOATING_POINT
     jnz NoFpuStateRestore
     
     /* Check if the Status Word Changed */
@@ -96,7 +97,7 @@ NoFpuStateSave:
 StatusWordChanged:
 
     /* Load the new one */
-    mov word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD], 0xFFFF
+    mov word ptr [ecx+FIBER_CONTEXT_FLOAT_SAVE_TAG_WORD], HEX(0FFFF)
     fldenv [ecx+FIBER_CONTEXT_FLOAT_SAVE_CONTROL_WORD]
     
 ControlWordEqual:
@@ -120,6 +121,7 @@ NoFpuStateRestore:
     mov [edx+TEB_FLS_DATA], eax
 
     /* Jump to new fiber */
-    jmp [ecx+FIBER_CONTEXT_EIP]
+    jmp dword ptr [ecx+FIBER_CONTEXT_EIP]
 
+END
 /* EOF */

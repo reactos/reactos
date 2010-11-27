@@ -2,6 +2,6 @@
  */
 
 #define _UNICODE
-#include "tcsrchr.h"
+#include "tcsrchr.inc"
 
 /* EOF */

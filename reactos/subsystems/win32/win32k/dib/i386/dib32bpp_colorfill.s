@@ -7,15 +7,16 @@
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-.intel_syntax noprefix
+#include <asm.inc>
 
+.code
 /* 
  * BOOLEAN
  * _cdecl
  * DIB_32BPP_ColorFill(SURFOBJ* pso, RECTL* prcl, ULONG iColor);
 */
 
-.globl _DIB_32BPP_ColorFill
+PUBLIC _DIB_32BPP_ColorFill
 _DIB_32BPP_ColorFill:
         push    ebp
         mov     ebp, esp
@@ -27,22 +28,22 @@ _DIB_32BPP_ColorFill:
         mov     edx, [ebp+12]     /* edx = prcl */
         mov     ecx, [ebp+8]      /* ecx = pso */
 
-        mov     ebx, [ecx+0x24]   /* ebx = pso->lDelta; */
+        mov     ebx, [ecx+36]   /* ebx = pso->lDelta; */
         mov     [esp], ebx        /* lDelta = pso->lDelta; */
         mov     edi, [edx+4]      /* edi = prcl->top; */
         mov     eax, edi          /* eax = prcl->top; */
         imul    eax, ebx          /* eax = prcl->top * pso->lDelta; */
-        add     eax, [ecx+0x20]   /* eax += pso->pvScan0; */
+        add     eax, [ecx+32]   /* eax += pso->pvScan0; */
         mov     ebx, [edx]        /* ebx = prcl->left; */
         lea     esi, [eax+ebx*4]  /* esi = pvLine0 = eax + 4 * prcl->left; */
 
         mov     ebx, [edx+8]      /* ebx = prcl->right; */
         sub     ebx, [edx]        /* ebx = prcl->right - prcl->left; */
-        jbe     end               /* if (ebx <= 0) goto end; */
+        jbe     .end               /* if (ebx <= 0) goto end; */
 
         mov     edx, [edx+12]     /* edx = prcl->bottom; */
         sub     edx, edi          /* edx -= prcl->top; */
-        jbe     end               /* if (eax <= 0) goto end; */
+        jbe     .end               /* if (eax <= 0) goto end; */
 
         mov     eax, [ebp+16]     /* eax = iColor; */
         cld
@@ -55,7 +56,7 @@ for_loop:                         /* do { */
         dec     edx               /*   cy--; */
         jnz     for_loop          /* } while (cy > 0); */
 
-end:
+.end:
         mov     eax, 1
         add     esp, 4
         pop     edi
@@ -63,3 +64,5 @@ end:
         pop     ebx
         pop     ebp
         ret
+
+END

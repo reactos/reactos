@@ -7,12 +7,13 @@
  * PROGRAMER:         Magnus Olsen (magnus@greatlord.com)
  *                    
  */
- 
-.globl _log10
 
-.intel_syntax noprefix
+#include <asm.inc>
+
+PUBLIC _log10
 
 /* FUNCTIONS ***************************************************************/
+.code
 
 _log10:
 
@@ -25,3 +26,4 @@ _log10:
     pop     ebp
     ret
 
+END

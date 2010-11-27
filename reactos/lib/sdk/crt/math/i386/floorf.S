@@ -7,57 +7,34 @@
  * Removed header file dependency for use in libmingwex.a by
  *   Danny Smith <dannysmith@users.sourceforge.net>
  */
-#include <_mingw_mac.h>
 
-	.file	"floorf.S"
-	.text
-#ifdef _WIN64
-	.align 8
-#else
-	.align 4
-#endif
-.globl __MINGW_USYMBOL(floorf)
-	.def	__MINGW_USYMBOL(floorf);	.scl	2;	.type	32;	.endef
-__MINGW_USYMBOL(floorf):
-#ifdef _WIN64
-	subq	$24,%rsp
-	movss	%xmm0,8(%rsp)
-	flds	8(%rsp)
+#include <asm.inc>
 
-	fstcw	4(%rsp)			/* store fpu control word */
-	movl	$0x400,%edx		/* round towards -oo */
-	orl	4(%rsp),%edx
-	andl	$0xf7ff,%edx
-	movl	%edx,(%rsp)
-	fldcw	(%rsp)			/* load modified control word */
+.code
+.align 4
 
-	frndint				/* round */
+PUBLIC _floorf
+_floorf:
 
-	fldcw	4(%rsp)			/* restore original control word */
+	fld dword ptr [esp + 4]
+	sub esp, 8
 
-	fstps	8(%rsp)
-	movss	8(%rsp),%xmm0
-	addq	$24,%rsp
-	ret
-#else
-	flds	4(%esp)
-	subl	$8,%esp
-
-	fstcw	4(%esp)			/* store fpu control word */
+	fstcw [esp + 4]		/* store fpu control word */
 
 	/* We use here %edx although only the low 1 bits are defined.
 	   But none of the operations should care and they are faster
 	   than the 16 bit operations.  */
-	movl	$0x400,%edx		/* round towards -oo */
-	orl	4(%esp),%edx
-	andl	$0xf7ff,%edx
-	movl	%edx,(%esp)
-	fldcw	(%esp)			/* load modified control word */
+	mov edx, [esp + 4]
+	or edx, HEX(0400)		/* round towards -oo */
+	and edx, HEX(0f7ff)
+	mov [esp], edx
+	fldcw [esp]			/* load modified control word */
 
 	frndint				/* round */
 
-	fldcw	4(%esp)			/* restore original control word */
+	fldcw [esp + 4]			/* restore original control word */
 
-	addl	$8,%esp
+	add esp, 8
 	ret
-#endif
+
+END

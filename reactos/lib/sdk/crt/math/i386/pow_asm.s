@@ -19,41 +19,53 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* Reacros modifications */
+/* Reactos modifications */
+#include <asm.inc>
+
 #define ALIGNARG(log2) log2
 #define ASM_TYPE_DIRECTIVE(name,typearg)
 #define ASM_SIZE_DIRECTIVE(name)
 #define cfi_adjust_cfa_offset(x)
-#define ENTRY(x)
-#define END(x)
-.global _pow
 
-	.text
+PUBLIC _pow
+
+.data
+ASSUME nothing
 
 	.align ALIGNARG(4)
 	ASM_TYPE_DIRECTIVE(infinity,@object)
+
 inf_zero:
 infinity:
-	.byte 0, 0, 0, 0, 0, 0, 0xf0, 0x7f
+	.byte 0, 0, 0, 0, 0, 0, HEX(f0), HEX(7f)
 	ASM_SIZE_DIRECTIVE(infinity)
 	ASM_TYPE_DIRECTIVE(zero,@object)
-zero:	.double 0.0
+zero:
+	.double 0.0
 	ASM_SIZE_DIRECTIVE(zero)
 	ASM_TYPE_DIRECTIVE(minf_mzero,@object)
+
 minf_mzero:
 minfinity:
-	.byte 0, 0, 0, 0, 0, 0, 0xf0, 0xff
+	.byte 0, 0, 0, 0, 0, 0, HEX(f0), HEX(ff)
+
 mzero:
-	.byte 0, 0, 0, 0, 0, 0, 0, 0x80
+	.byte 0, 0, 0, 0, 0, 0, 0, HEX(80)
 	ASM_SIZE_DIRECTIVE(minf_mzero)
 	ASM_TYPE_DIRECTIVE(one,@object)
-one:	.double 1.0
+
+one:
+	.double 1.0
 	ASM_SIZE_DIRECTIVE(one)
 	ASM_TYPE_DIRECTIVE(limit,@object)
-limit:	.double 0.29
+
+limit:
+	.double 0.29
 	ASM_SIZE_DIRECTIVE(limit)
 	ASM_TYPE_DIRECTIVE(p63,@object)
-p63:	.byte 0, 0, 0, 0, 0, 0, 0xe0, 0x43
+
+p63:
+	.byte 0, 0, 0, 0, 0, 0, HEX(e0), HEX(43)
 	ASM_SIZE_DIRECTIVE(p63)
 
 #ifdef PIC
@@ -61,308 +73,309 @@ p63:	.byte 0, 0, 0, 0, 0, 0, 0xe0, 0x43
 #define MOX(op,x,f) op##@GOTOFF(%ecx,x,f)
 #else
 #define MO(op) op
-#define MOX(op,x,f) op(,x,f)
+#define MOX(op,x,f) op[x*f]
 #endif
 
-	.text
+.code
 _pow:
-ENTRY(__ieee754_pow)
-	fldl	12(%esp)	// y
+	fld qword ptr [esp + 12]	// y
 	fxam
 
 #ifdef	PIC
 	LOAD_PIC_REG (cx)
 #endif
 
-	fnstsw
-	movb	%ah, %dl
-	andb	$0x45, %ah
-	cmpb	$0x40, %ah	// is y == 0 ?
-	je	11f
+	fnstsw ax
+	mov dl, ah
+	and ah, HEX(045)
+	cmp	ah, HEX(040)	// is y == 0 ?
+	je	L11
 
-	cmpb	$0x05, %ah	// is y == ±inf ?
-	je	12f
+	cmp ah, 5	// is y == ±inf ?
+	je	L12
 
-	cmpb	$0x01, %ah	// is y == NaN ?
-	je	30f
+	cmp ah, 1	// is y == NaN ?
+	je	L30
 
-	fldl	4(%esp)		// x : y
+	fld qword ptr [esp + 4]	// x : y
 
-	subl	$8,%esp
+	sub esp, 8
 	cfi_adjust_cfa_offset (8)
 
 	fxam
-	fnstsw
-	movb	%ah, %dh
-	andb	$0x45, %ah
-	cmpb	$0x40, %ah
-	je	20f		// x is ±0
+	fnstsw ax
+	mov dh, ah
+	and ah, HEX(45)
+	cmp ah, HEX(040)
+	je	L20		// x is ±0
 
-	cmpb	$0x05, %ah
-	je	15f		// x is ±inf
+	cmp ah, 5
+	je	L15		// x is ±inf
 
-	fxch			// y : x
+	fxch st(1)			// y : x
 
 	/* fistpll raises invalid exception for |y| >= 1L<<63.  */
-	fld	%st		// y : y : x
+	fld	st		// y : y : x
 	fabs			// |y| : y : x
-	fcompl	MO(p63)		// y : x
-	fnstsw
+	fcomp qword ptr MO(p63)		// y : x
+	fnstsw ax
 	sahf
-	jnc	2f
+	jnc	L2
 
 	/* First see whether `y' is a natural number.  In this case we
 	   can use a more precise algorithm.  */
-	fld	%st		// y : y : x
-	fistpll	(%esp)		// y : x
-	fildll	(%esp)		// int(y) : y : x
-	fucomp	%st(1)		// y : x
-	fnstsw
+	fld	st		// y : y : x
+	fistp qword ptr [esp]		// y : x
+	fild qword ptr [esp]		// int(y) : y : x
+	fucomp st(1)		// y : x
+	fnstsw ax
 	sahf
-	jne	2f
+	jne	L2
 
 	/* OK, we have an integer value for y.  */
-	popl	%eax
+	pop eax
 	cfi_adjust_cfa_offset (-4)
-	popl	%edx
+	pop	edx
 	cfi_adjust_cfa_offset (-4)
-	orl	$0, %edx
-	fstp	%st(0)		// x
-	jns	4f		// y >= 0, jump
-	fdivrl	MO(one)		// 1/x		(now referred to as x)
-	negl	%eax
-	adcl	$0, %edx
-	negl	%edx
-4:	fldl	MO(one)		// 1 : x
-	fxch
+	or edx, 0
+	fstp st		// x
+	jns	L4		// y >= 0, jump
+	fdivr qword ptr MO(one)		// 1/x		(now referred to as x)
+	neg eax
+	adc edx, 0
+	neg edx
+L4:	fld qword ptr MO(one)		// 1 : x
+	fxch st(1)
 
-6:	shrdl	$1, %edx, %eax
-	jnc	5f
-	fxch
-	fmul	%st(1)		// x : ST*x
-	fxch
-5:	fmul	%st(0), %st	// x*x : ST*x
-	shrl	$1, %edx
-	movl	%eax, %ecx
-	orl	%edx, %ecx
-	jnz	6b
-	fstp	%st(0)		// ST*x
+L6:	shrd eax, edx, 1
+	jnc	L5
+	fxch st(1)
+	fmul st, st(1)		// x : ST*x
+	fxch st(1)
+L5:	fmul st, st	// x*x : ST*x
+	shr edx, 1
+	mov ecx, eax
+	or ecx, edx
+	jnz	L6
+	fstp st		// ST*x
 	ret
 
 	/* y is ±NAN */
-30:	fldl	4(%esp)		// x : y
-	fldl	MO(one)		// 1.0 : x : y
-	fucomp	%st(1)		// x : y
-	fnstsw
+L30:
+	fld qword ptr [esp + 4]		// x : y
+	fld qword ptr MO(one)		// 1.0 : x : y
+	fucomp st(1)		// x : y
+	fnstsw ax
 	sahf
-	je	31f
-	fxch			// y : x
-31:	fstp	%st(1)
+	je	L31
+	fxch st(1)			// y : x
+L31:fstp st(1)
 	ret
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-2:	/* y is a real number.  */
-	fxch			// x : y
-	fldl	MO(one)		// 1.0 : x : y
-	fldl	MO(limit)	// 0.29 : 1.0 : x : y
-	fld	%st(2)		// x : 0.29 : 1.0 : x : y
-	fsub	%st(2)		// x-1 : 0.29 : 1.0 : x : y
+L2:	/* y is a real number.  */
+	fxch st(1)			// x : y
+	fld qword ptr MO(one)		// 1.0 : x : y
+	fld qword ptr MO(limit)	// 0.29 : 1.0 : x : y
+	fld	st(2)		// x : 0.29 : 1.0 : x : y
+	fsub st, st(2)		// x-1 : 0.29 : 1.0 : x : y
 	fabs			// |x-1| : 0.29 : 1.0 : x : y
 	fucompp			// 1.0 : x : y
-	fnstsw
-	fxch			// x : 1.0 : y
+	fnstsw ax
+	fxch st(1)			// x : 1.0 : y
 	sahf
-	ja	7f
-	fsub	%st(1)		// x-1 : 1.0 : y
+	ja	L7
+	fsub st, st(1)		// x-1 : 1.0 : y
 	fyl2xp1			// log2(x) : y
-	jmp	8f
+	jmp	L8
 
-7:	fyl2x			// log2(x) : y
-8:	fmul	%st(1)		// y*log2(x) : y
-	fst	%st(1)		// y*log2(x) : y*log2(x)
+L7:	fyl2x			// log2(x) : y
+L8:	fmul st, st(1)		// y*log2(x) : y
+	fst st(1)		// y*log2(x) : y*log2(x)
 	frndint			// int(y*log2(x)) : y*log2(x)
-	fsubr	%st, %st(1)	// int(y*log2(x)) : fract(y*log2(x))
+	fsubr st(1), st	// int(y*log2(x)) : fract(y*log2(x))
 	fxch			// fract(y*log2(x)) : int(y*log2(x))
 	f2xm1			// 2^fract(y*log2(x))-1 : int(y*log2(x))
-	faddl	MO(one)		// 2^fract(y*log2(x)) : int(y*log2(x))
+	fadd qword ptr MO(one)		// 2^fract(y*log2(x)) : int(y*log2(x))
 	fscale			// 2^fract(y*log2(x))*2^int(y*log2(x)) : int(y*log2(x))
-	addl	$8, %esp
+	add esp, 8
 	cfi_adjust_cfa_offset (-8)
-	fstp	%st(1)		// 2^fract(y*log2(x))*2^int(y*log2(x))
+	fstp st(1)		// 2^fract(y*log2(x))*2^int(y*log2(x))
 	ret
 
 
 	// pow(x,±0) = 1
 	.align ALIGNARG(4)
-11:	fstp	%st(0)		// pop y
-	fldl	MO(one)
+L11:fstp st(0)		// pop y
+	fld qword ptr MO(one)
 	ret
 
 	// y == ±inf
 	.align ALIGNARG(4)
-12:	fstp	%st(0)		// pop y
-	fldl	MO(one)		// 1
-	fldl	4(%esp)		// x : 1
+L12:	fstp st(0)		// pop y
+	fld qword ptr MO(one)		// 1
+	fld qword ptr [esp + 4]		// x : 1
 	fabs			// abs(x) : 1
 	fucompp			// < 1, == 1, or > 1
-	fnstsw
-	andb	$0x45, %ah
-	cmpb	$0x45, %ah
-	je	13f		// jump if x is NaN
+	fnstsw ax
+	and ah, HEX(45)
+	cmp ah, HEX(45)
+	je	L13		// jump if x is NaN
 
-	cmpb	$0x40, %ah
-	je	14f		// jump if |x| == 1
+	cmp ah, HEX(40)
+	je	L14		// jump if |x| == 1
 
-	shlb	$1, %ah
-	xorb	%ah, %dl
-	andl	$2, %edx
-	fldl	MOX(inf_zero, %edx, 4)
+	shl ah, 1
+	xor dl, ah
+	and edx, 2
+	fld qword ptr MOX(inf_zero, edx, 4)
 	ret
 
 	.align ALIGNARG(4)
-14:	fldl	MO(one)
+L14:fld qword ptr MO(one)
 	ret
 
 	.align ALIGNARG(4)
-13:	fldl	4(%esp)		// load x == NaN
+L13:fld qword ptr [esp + 4]		// load x == NaN
 	ret
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
 	// x is ±inf
-15:	fstp	%st(0)		// y
-	testb	$2, %dh
-	jz	16f		// jump if x == +inf
+L15:	fstp st(0)		// y
+	test dh, 2
+	jz	L16		// jump if x == +inf
 
 	// We must find out whether y is an odd integer.
-	fld	%st		// y : y
-	fistpll	(%esp)		// y
-	fildll	(%esp)		// int(y) : y
+	fld	st		// y : y
+	fistp qword ptr [esp]		// y
+	fild qword ptr [esp]		// int(y) : y
 	fucompp			// <empty>
-	fnstsw
+	fnstsw ax
 	sahf
-	jne	17f
+	jne	L17
 
 	// OK, the value is an integer, but is the number of bits small
 	// enough so that all are coming from the mantissa?
-	popl	%eax
+	pop eax
 	cfi_adjust_cfa_offset (-4)
-	popl	%edx
+	pop edx
 	cfi_adjust_cfa_offset (-4)
-	andb	$1, %al
-	jz	18f		// jump if not odd
-	movl	%edx, %eax
-	orl	%edx, %edx
-	jns	155f
-	negl	%eax
-155:	cmpl	$0x00200000, %eax
-	ja	18f		// does not fit in mantissa bits
+	and al, 1
+	jz	L18		// jump if not odd
+	mov eax, edx
+	or edx, edx
+	jns	L155
+	neg eax
+L155:
+	cmp eax, HEX(000200000)
+	ja	L18		// does not fit in mantissa bits
 	// It's an odd integer.
-	shrl	$31, %edx
-	fldl	MOX(minf_mzero, %edx, 8)
+	shr edx, 31
+	fld qword ptr MOX(minf_mzero, edx, 8)
 	ret
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-16:	fcompl	MO(zero)
-	addl	$8, %esp
+L16:fcomp qword ptr MO(zero)
+	add esp, 8
 	cfi_adjust_cfa_offset (-8)
-	fnstsw
-	shrl	$5, %eax
-	andl	$8, %eax
-	fldl	MOX(inf_zero, %eax, 1)
+	fnstsw ax
+	shr eax, 5
+	and eax, 8
+	fld qword ptr MOX(inf_zero, eax, 1)
 	ret
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
-17:	shll	$30, %edx	// sign bit for y in right position
-	addl	$8, %esp
+L17:	shl ecx, 30	// sign bit for y in right position
+	add esp, 8
 	cfi_adjust_cfa_offset (-8)
-18:	shrl	$31, %edx
-	fldl	MOX(inf_zero, %edx, 8)
+L18:	shr edx, 31
+	fld qword ptr MOX(inf_zero, edx, 8)
 	ret
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
 	// x is ±0
-20:	fstp	%st(0)		// y
-	testb	$2, %dl
-	jz	21f		// y > 0
+L20:	fstp st(0)		// y
+	test dl, 2
+	jz	L21		// y > 0
 
 	// x is ±0 and y is < 0.  We must find out whether y is an odd integer.
-	testb	$2, %dh
-	jz	25f
+	test dh, 2
+	jz	L25
 
-	fld	%st		// y : y
-	fistpll	(%esp)		// y
-	fildll	(%esp)		// int(y) : y
+	fld st		// y : y
+	fistp qword ptr [esp]		// y
+	fild qword ptr [esp]		// int(y) : y
 	fucompp			// <empty>
-	fnstsw
+	fnstsw ax
 	sahf
-	jne	26f
+	jne	L26
 
 	// OK, the value is an integer, but is the number of bits small
 	// enough so that all are coming from the mantissa?
-	popl	%eax
+	pop eax
 	cfi_adjust_cfa_offset (-4)
-	popl	%edx
+	pop edx
 	cfi_adjust_cfa_offset (-4)
-	andb	$1, %al
-	jz	27f		// jump if not odd
-	cmpl	$0xffe00000, %edx
-	jbe	27f		// does not fit in mantissa bits
+	and al, 1
+	jz	L27		// jump if not odd
+	cmp edx, HEX(0ffe00000)
+	jbe	L27		// does not fit in mantissa bits
 	// It's an odd integer.
 	// Raise divide-by-zero exception and get minus infinity value.
-	fldl	MO(one)
-	fdivl	MO(zero)
+	fld qword ptr MO(one)
+	fdiv qword ptr MO(zero)
 	fchs
 	ret
 
 	cfi_adjust_cfa_offset (8)
-25:	fstp	%st(0)
-26:	addl	$8, %esp
+L25:	fstp st(0)
+L26:	add esp, 8
 	cfi_adjust_cfa_offset (-8)
-27:	// Raise divide-by-zero exception and get infinity value.
-	fldl	MO(one)
-	fdivl	MO(zero)
+L27:	// Raise divide-by-zero exception and get infinity value.
+	fld qword ptr MO(one)
+	fdiv qword ptr MO(zero)
 	ret
 
 	cfi_adjust_cfa_offset (8)
 	.align ALIGNARG(4)
 	// x is ±0 and y is > 0.  We must find out whether y is an odd integer.
-21:	testb	$2, %dh
-	jz	22f
+L21:test dh, 2
+	jz	L22
 
-	fld	%st		// y : y
-	fistpll	(%esp)		// y
-	fildll	(%esp)		// int(y) : y
+	fld st		// y : y
+	fistp qword ptr [esp]		// y
+	fild qword ptr [esp]		// int(y) : y
 	fucompp			// <empty>
-	fnstsw
+	fnstsw ax
 	sahf
-	jne	23f
+	jne	L23
 
 	// OK, the value is an integer, but is the number of bits small
 	// enough so that all are coming from the mantissa?
-	popl	%eax
+	pop eax
 	cfi_adjust_cfa_offset (-4)
-	popl	%edx
+	pop edx
 	cfi_adjust_cfa_offset (-4)
-	andb	$1, %al
-	jz	24f		// jump if not odd
-	cmpl	$0xffe00000, %edx
-	jae	24f		// does not fit in mantissa bits
+	and al, 1
+	jz	L24		// jump if not odd
+	cmp edx, HEX(0ffe00000)
+	jae	L24		// does not fit in mantissa bits
 	// It's an odd integer.
-	fldl	MO(mzero)
+	fld qword ptr MO(mzero)
 	ret
 
 	cfi_adjust_cfa_offset (8)
-22:	fstp	%st(0)
-23:	addl	$8, %esp	// Don't use 2 x pop
+L22:	fstp st(0)
+L23:	add esp, 8	// Don't use 2 x pop
 	cfi_adjust_cfa_offset (-8)
-24:	fldl	MO(zero)
+L24:	fld qword ptr MO(zero)
 	ret
 
-END(__ieee754_pow)
+END
 
 

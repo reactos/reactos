@@ -6,7 +6,7 @@
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#include <reactos/asm.h>
+#include <asm.inc>
 
 /* GLOBALS ****************************************************************/
 

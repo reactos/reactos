@@ -60,8 +60,8 @@
 // @remark None.
 //
 MACRO(idt, Handler, Bits)
-    .long \Handler
-    .short \Bits
+    .long VAL(Handler)
+    .short VAL(Bits)
     .short KGDT_R0_CODE
 ENDM
 
@@ -128,17 +128,17 @@ MACRO(KiEnterTrap, Flags)
     mov [esp + KTRAP_FRAME_EAX], eax
 
     /* Does the caller want nonvolatiles only? */
-    if ((Flags AND KI_NONVOLATILES_ONLY) == 0)
+    if (NOT (Flags AND KI_NONVOLATILES_ONLY))
         /* Otherwise, save the volatiles as well */
         mov [esp + KTRAP_FRAME_ECX], ecx
         mov [esp + KTRAP_FRAME_EDX], edx
     endif
 
     /* Save segment registers? */
-    if ((Flags AND KI_DONT_SAVE_SEGS) == 0)
+    if (NOT (Flags AND KI_DONT_SAVE_SEGS))
 
         /* Check for V86 mode */
-        test byte ptr [esp + KTRAP_FRAME_EFLAGS + 2], (EFLAGS_V86_MASK >> 16)
+        test byte ptr [esp + KTRAP_FRAME_EFLAGS + 2], (EFLAGS_V86_MASK / HEX(10000))
         jz not_v86_trap
 
             /* Restore V8086 segments into Protected Mode segments */
@@ -173,7 +173,7 @@ set_sane_segs:
     mov es, ax
 
     /* Fast system calls have fs already fixed */
-    if ((Flags AND KI_FAST_SYSTEM_CALL) == 0)
+    if (NOT (Flags AND KI_FAST_SYSTEM_CALL))
         /* Otherwise fix fs now */
         mov ax, KGDT_R0_PCR
         mov fs, ax
@@ -296,7 +296,7 @@ PUBLIC @&Name&@4
         mov ecx, [esp - OffsetEsp + KTRAP_FRAME_ESP]
 
         /* Keep interrupts disabled until the sti / sysexit */
-        and byte ptr [esp - OffsetEsp + KTRAP_FRAME_EFLAGS + 1], ~(EFLAGS_INTERRUPT_MASK >> 8)
+        and byte ptr [esp - OffsetEsp + KTRAP_FRAME_EFLAGS + 1], NOT (EFLAGS_INTERRUPT_MASK / HEX(100))
 
     endif
 
