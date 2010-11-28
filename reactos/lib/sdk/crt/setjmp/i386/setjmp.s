@@ -101,13 +101,13 @@ _longjmp:
 
     mov eax, [esp + 8]      /* Second argument is return value.  */
     /* Save the return address now.  */
-    mov edx, [edx + JB_IP*4]
+    mov edx, [ecx + JB_IP*4]
     /* Restore registers.  */
-    mov ebp, [edx + JB_BP*4]
-    mov ebx, [edx + JB_BX*4]
-    mov edi, [edx + JB_DI*4]
-    mov esi, [edx + JB_SI*4]
-    mov esp, [edx + JB_SP*4]
+    mov ebp, [ecx + JB_BP*4]
+    mov ebx, [ecx + JB_BX*4]
+    mov edi, [ecx + JB_DI*4]
+    mov esi, [ecx + JB_SI*4]
+    mov esp, [ecx + JB_SP*4]
     /* Jump to saved PC.  */
     jmp dword ptr [edx]
 
