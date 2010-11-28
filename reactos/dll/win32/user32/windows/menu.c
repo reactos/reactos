@@ -3487,13 +3487,22 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
 
     HideCaret(0);
 
+    MenuGetRosMenuInfo(&MenuInfo, hMenu);
+    /* This makes the menus of applications built with Delphi work.
+     * It also enables menus to be displayed in more than one window,
+     * but there are some bugs left that need to be fixed in this case.
+     */
+    if(MenuInfo.Self == hMenu)
+    {
+        MenuInfo.Wnd = hWnd;
+        MenuSetRosMenuInfo(&MenuInfo);
+    }
+
     /* Send WM_ENTERMENULOOP and WM_INITMENU message only if TPM_NONOTIFY flag is not specified */
     if (!(wFlags & TPM_NONOTIFY))
        SendMessageW( hWnd, WM_ENTERMENULOOP, bPopup, 0 );
 
     SendMessageW( hWnd, WM_SETCURSOR, (WPARAM)hWnd, HTCAPTION );
-
-    MenuGetRosMenuInfo(&MenuInfo, hMenu);
 
     if (!(wFlags & TPM_NONOTIFY))
     {
@@ -3510,16 +3519,6 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
                        SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
 
        }
-    }
-
-    /* This makes the menus of applications built with Delphi work.
-     * It also enables menus to be displayed in more than one window,
-     * but there are some bugs left that need to be fixed in this case.
-     */
-    if(MenuInfo.Self == hMenu)
-    {
-        MenuInfo.Wnd = hWnd;
-        MenuSetRosMenuInfo(&MenuInfo);
     }
 
     IntNotifyWinEvent( EVENT_SYSTEM_MENUSTART,
@@ -3652,11 +3651,19 @@ BOOL WINAPI TrackPopupMenuEx( HMENU Menu, UINT Flags, int x, int y,
                               HWND Wnd, LPTPMPARAMS Tpm)
 {
     BOOL ret = FALSE;
+    ROSMENUINFO MenuInfo;
 
     if (!IsMenu(Menu))    
     {
       SetLastError( ERROR_INVALID_MENU_HANDLE );
       return FALSE;
+    }
+
+    MenuGetRosMenuInfo(&MenuInfo, Menu);
+    if (IsWindow(MenuInfo.Wnd))
+    {
+        SetLastError( ERROR_POPUP_ALREADY_ACTIVE );
+        return FALSE;
     }
 
     MenuInitTracking(Wnd, Menu, TRUE, Flags);
