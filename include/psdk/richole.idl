@@ -131,3 +131,8 @@ interface IRichEditOleCallback : IUnknown
     HRESULT GetDragDropEffect(BOOL fDrag, DWORD grfKeyState, LPDWORD pdwEffect);
     HRESULT GetContextMenu(WORD seltype, LPOLEOBJECT lpoleobj, CHARRANGE *lpchrg, HMENU *lphmenu);
 }
+
+#ifndef __WIDL__
+cpp_quote("DEFINE_GUID(IID_IRichEditOle,         0x00020D00, 0, 0, 0xC0,0,0,0,0,0,0,0x46);")
+cpp_quote("DEFINE_GUID(IID_IRichEditOleCallback, 0x00020D03, 0, 0, 0xC0,0,0,0,0,0,0,0x46);")
+#endif
