@@ -150,7 +150,11 @@ struct statfs;
 
 /* Constructor functions */
 
-#ifdef __GNUC__
+#ifdef _MSC_VER // ReactOS
+#pragma message("DECL_GLOBAL_CONSTRUCTOR is not properly defined")
+# define DECL_GLOBAL_CONSTRUCTOR(func) \
+    static void func(void)
+#elif defined(__GNUC__)
 # define DECL_GLOBAL_CONSTRUCTOR(func) \
     static void func(void) __attribute__((constructor)); \
     static void func(void)
