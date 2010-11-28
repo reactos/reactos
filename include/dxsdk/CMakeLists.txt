@@ -25,7 +25,5 @@ LIST(APPEND SOURCE
 )
 
 # HACK: dxsdk is broken
-if (NOT MSVC)
     ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
-endif()
 
