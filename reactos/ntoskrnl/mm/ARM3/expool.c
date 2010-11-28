@@ -248,7 +248,7 @@ VOID
 NTAPI
 ExpCheckPoolBlocks(IN PVOID Block)
 {
-    BOOLEAN FoundBlock;
+    BOOLEAN FoundBlock = FALSE;
     SIZE_T Size = 0;
     PPOOL_HEADER Entry;
     
