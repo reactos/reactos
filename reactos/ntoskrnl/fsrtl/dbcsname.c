@@ -140,7 +140,7 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 
 /*++
  * @name FsRtlIsDbcsInExpression
- * @halfplemented
+ * @implemented
  *
  * Check if the Name string is in the Expression string.
  *
@@ -152,7 +152,7 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
  *
  * @return TRUE if Name is found in Expression, FALSE otherwise
  *
- * @remarks Implementation should be fixed to handle wildcards
+ * @remarks
  *
  *--*/
 BOOLEAN
