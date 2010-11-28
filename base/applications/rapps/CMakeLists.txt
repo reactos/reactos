@@ -24,9 +24,10 @@ include_directories(${REACTOS_BINARY_DIR}/include/reactos)
 set_rc_compiler()
 
 add_executable(rapps ${SOURCE})
+set_module_type(rapps win32gui)
 target_link_libraries(rapps uuid)
 
-add_importlibs(rapps advapi32 comctl32 gdi32 urlmon user32 shell32 shlwapi kernel32 ntdll)
+add_importlibs(rapps advapi32 comctl32 gdi32 urlmon user32 shell32 shlwapi kernel32 msvcrt ntdll)
 add_dependencies(rapps rappsmsg)
 
 #FIXME : move this to cmakemacros + gcc/msvc.cmake
