@@ -1,4 +1,6 @@
 
+spec2def(ks.sys ks.spec)
+
 add_definitions(
     -DBUILDING_KS
     -D_COMDDK_)
@@ -25,7 +27,8 @@ add_library(ks SHARED
     unknown.c
     worker.c
     kcom.c
-    ks.rc)
+    ks.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ks.def)
 
 set_target_properties(ks PROPERTIES SUFFIX ".sys")
 set_entrypoint(ks 0)
@@ -33,10 +36,10 @@ set_subsystem(ks native)
 set_image_base(ks 0x00010000)
 
 target_link_libraries(ks
-    ${CMAKE_CURRENT_SOURCE_DIR}/ks.def
     ${PSEH_LIB})
 
 add_importlibs(ks ntoskrnl hal msvcrt)
 add_dependencies(ks psdk bugcodes)
 
 add_cab_target(ks 2)
+add_importlib_target(ks.spec)

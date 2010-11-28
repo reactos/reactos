@@ -13,3 +13,4 @@ add_importlibs(class2 scsiport ntoskrnl hal)
 
 add_minicd_target(class2 reactos class2.sys)
 add_livecd_target(class2 reactos/system32/drivers)
+add_importlib_target(class2.spec)

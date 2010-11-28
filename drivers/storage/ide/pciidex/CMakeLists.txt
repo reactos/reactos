@@ -14,3 +14,4 @@ set_module_type(pciidex kernelmodedriver)
 add_importlibs(pciidex ntoskrnl)
 
 add_cab_target(pciidex 2)
+add_importlib_target(pciidex.spec)
