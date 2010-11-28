@@ -13,8 +13,6 @@ list(APPEND MINGW_COMMON_SOURCE
     binmode.c
     charmax.c
     cinitexe.c
-    CRT_fp10.c
-    CRT_fp8.c
     CRT_glob.c
     crt_handler.c
     dllentry.c
@@ -64,6 +62,7 @@ add_definitions(-DCRTDLL -D_WINDOWS_)
 add_library(mingw_dllmain crtdll.c dllargv.c)
 add_dependencies(mingw_dllmain psdk)
 
+if (NOT MSVC)
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
   COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_SOURCE_DIR}/moldname-msvcrt.def --kill-at --output-lib ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a
@@ -72,6 +71,7 @@ add_custom_command(
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a PROPERTIES GENERATED TRUE)
 
 add_custom_target(oldnames ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/liboldnames.a)
+endif()
 
 add_library(getopt getopt.c)
 set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL1 __USE_CRTIMP)
