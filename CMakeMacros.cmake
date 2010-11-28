@@ -172,8 +172,8 @@ macro(rpcproxy TARGET)
         get_filename_component(FILE ${_in_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c
-            COMMAND native-widl ${result_incs} ${result_defs} -m32 --win32 -h -H ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.h -p -P ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
-            DEPENDS native-widl)
+            COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_HEADER_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.h ${IDL_PROXY_ARG} ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}.idl)
         set_source_files_properties(
             ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_c.h ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c
             PROPERTIES GENERATED TRUE)
@@ -184,17 +184,17 @@ macro(rpcproxy TARGET)
             DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_p.c)
         #add_dependencies(${TARGET}_proxy ${TARGET}_${FILE}_p)
     endforeach(_in_FILE ${ARGN})
+
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
+        COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} ${IDL_FLAGS} ${IDL_DLLDATA_ARG}${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${IDLS}
+        DEPENDS ${IDLS})
+    set_source_files_properties(
+        ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
+        PROPERTIES GENERATED TRUE)
     
-    	add_custom_command(
-    	    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
-    	    COMMAND native-widl ${result_incs} ${result_defs}  -m32 --win32 --dlldata-only --dlldata=${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c ${IDLS}
-    	    DEPENDS native-widl)
-    	set_source_files_properties(
-    	    ${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_proxy.dlldata.c
-    	    PROPERTIES GENERATED TRUE)
-        
-        add_library(${TARGET}_proxy ${SOURCE})
-        add_dependencies(${TARGET}_proxy psdk ${PROXY_DEPENDS})
+    add_library(${TARGET}_proxy ${SOURCE})
+    add_dependencies(${TARGET}_proxy psdk ${PROXY_DEPENDS})
 endmacro(rpcproxy)
 
 macro (MACRO_IDL_FILES)

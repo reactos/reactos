@@ -136,6 +136,8 @@ set(IDL_HEADER_ARG /h) #.h
 set(IDL_TYPELIB_ARG /tlb) #.tlb
 set(IDL_SERVER_ARG /sstub) #.c for stub server library
 set(IDL_CLIENT_ARG /cstub) #.c for stub client library
+set(IDL_PROXY_ARG /proxy)
+set(IDL_DLLDATA_ARG /dlldata )
 
 # Thanks MS for creating a stupid linker
 macro(add_importlib_target _spec_file)

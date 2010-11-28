@@ -190,6 +190,8 @@ set(IDL_HEADER_ARG -h -H) #.h
 set(IDL_TYPELIB_ARG -t -T) #.tlb
 set(IDL_SERVER_ARG -s -S) #.c for server library
 set(IDL_CLIENT_ARG -c -C) #.c for stub client library
+set(IDL_PROXY_ARG -p -P)
+set(IDL_DLLDATA_ARG --dlldata-only --dlldata=)
 
 macro(add_importlib_target _def_file)
   # empty for now, while import libs are shipped
