@@ -164,13 +164,14 @@ macro(add_importlib_target _spec_file)
     set(_libraries "")
     foreach(_lib ${ARGN})
         list(APPEND _libraries "${CMAKE_BINARY_DIR}/importlibs/${_lib}.lib")
+        list(APPEND _dependencies ${_lib})
     endforeach()
 
     # Build the importlib
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
         COMMAND LINK /LIB /NOLOGO /MACHINE:X86 /DEF:${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def /OUT:${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${_libraries}
-        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def ${_libraries}
+        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
     )
 
     # Add the importlib target
@@ -178,6 +179,8 @@ macro(add_importlib_target _spec_file)
         lib${_name}
         DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.lib
     )
+    
+    add_dependencies(lib${_name} asm ${_dependencies})
 endmacro()
 
 macro(add_importlibs MODULE)
