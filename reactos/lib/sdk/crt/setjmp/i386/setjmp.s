@@ -109,6 +109,6 @@ _longjmp:
     mov esi, [ecx + JB_SI*4]
     mov esp, [ecx + JB_SP*4]
     /* Jump to saved PC.  */
-    jmp dword ptr [edx]
+    jmp edx
 
 END
