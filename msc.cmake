@@ -131,7 +131,7 @@ endmacro()
 
 #idl files support
 set(IDL_COMPILER midl)
-set(IDL_FLAGS /win32 /Dstrict_context_handle=)
+set(IDL_FLAGS /win32)
 set(IDL_HEADER_ARG /h) #.h
 set(IDL_TYPELIB_ARG /tlb) #.tlb
 set(IDL_SERVER_ARG /sstub) #.c for stub server library
