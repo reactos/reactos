@@ -38,3 +38,4 @@ add_importlibs(dinput
 
 
 add_cab_target(dinput 1)
+add_importlib_target(dinput.spec)

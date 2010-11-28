@@ -46,7 +46,6 @@ add_library(quartz SHARED
 set_module_type(quartz win32dll)
 
 target_link_libraries(quartz
-    ${CMAKE_CURRENT_BINARY_DIR}/quartz.def
     quartz_proxy
     strmiids
     uuid

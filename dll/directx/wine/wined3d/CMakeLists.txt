@@ -38,7 +38,7 @@ list(APPEND SOURCE
     volumetexture.c
     wined3d_main.c
     version.rc
-    wined3d.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
 if(ARCH MATCHES amd64)
 list(APPEND SOURCE
@@ -55,10 +55,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_library(wined3d SHARED ${SOURCE})
 set_module_type(wined3d win32dll)
 
-target_link_libraries(wined3d
-    ${CMAKE_CURRENT_BINARY_DIR}/wined3d.def
-    wine
-    uuid)
+target_link_libraries(wined3d wine uuid)
 
 add_importlibs(wined3d
     user32
@@ -68,7 +65,7 @@ add_importlibs(wined3d
     msvcrt
     kernel32
     ntdll)
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/wined3d.def)
 
 add_dependencies(wined3d wineheaders)
 add_cab_target(wined3d 1)
+add_importlib_target(wined3d.spec)

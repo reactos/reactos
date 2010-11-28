@@ -37,6 +37,9 @@ set_entrypoint(libxslt 0)
 target_link_libraries(libxslt libxml2)
 
 add_importlibs(libxslt msvcrt ws2_32 kernel32)
+if(MSVC)
+add_importlibs(libxslt ntdll)
+endif()
 
 add_dependencies(libxslt psdk buildno_header)
 
