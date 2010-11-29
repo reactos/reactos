@@ -131,7 +131,7 @@ endmacro()
 
 #idl files support
 set(IDL_COMPILER midl)
-set(IDL_FLAGS /win32 /DIEnumVARIANT=IEnumXVARIANT)
+set(IDL_FLAGS /win32)
 set(IDL_HEADER_ARG /h) #.h
 set(IDL_TYPELIB_ARG /tlb) #.tlb
 set(IDL_SERVER_ARG /sstub) #.c for stub server library
@@ -146,13 +146,13 @@ macro(add_importlib_target _spec_file)
     # Generate the asm stub file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
-        COMMAND native-spec2def -s ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
+        COMMAND native-spec2def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
 
     # Generate a the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        COMMAND native-spec2def -n -r ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
+        COMMAND native-spec2def -@ -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
 
     # Assemble the file
@@ -196,7 +196,7 @@ macro(spec2def _dllname _spec_file)
     get_filename_component(_file ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
-        COMMAND native-spec2def -n --dll ${_dllname} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
+        COMMAND native-spec2def -@ -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE)
