@@ -254,7 +254,9 @@ interface IGuideDataLoader : IUnknown
 ]
 library PSISLOADLib
 {
+#ifndef __midl
     importlib("stdole32.tlb");
+#endif
     importlib("stdole2.tlb");
 
     [
