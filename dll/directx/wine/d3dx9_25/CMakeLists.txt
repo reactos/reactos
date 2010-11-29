@@ -5,6 +5,7 @@ spec2def(d3dx9_25.dll d3dx9_25.spec)
 list(APPEND SOURCE
     d3dx9_25_main.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_25_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_25.def)
 
 add_definitions(-D__WINESRC__)
@@ -18,6 +19,7 @@ target_link_libraries(d3dx9_25
     wine)
 
 add_importlibs(d3dx9_25
+    d3dx9_36
     d3d9
     user32
     gdi32
@@ -29,3 +31,4 @@ add_importlibs(d3dx9_25
 
 add_dependencies(d3dx9_25 wineheaders)
 add_cab_target(d3dx9_25 1)
+add_importlib_target(d3dx9_25.spec libd3dx9_36)

@@ -5,6 +5,10 @@ add_definitions(-D__WINESRC__)
 add_definitions(-DUSE_WIN32_OPENGL)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+if(MSVC)
+    add_definitions(-FImsvchelper.h)
+endif()
+
 spec2def(d3d8.dll d3d8.spec)
 
 list(APPEND SOURCE
@@ -21,7 +25,7 @@ list(APPEND SOURCE
     volume.c
     volumetexture.c
     version.rc
-    d3d8.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
 add_library(d3d8 SHARED ${SOURCE})
 

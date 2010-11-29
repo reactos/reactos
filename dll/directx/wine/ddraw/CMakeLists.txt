@@ -19,7 +19,8 @@ list(APPEND SOURCE
     vertexbuffer.c
     viewport.c
     version.rc
-    ddraw.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/ddraw_stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
 
 add_definitions(
     -D__WINESRC__

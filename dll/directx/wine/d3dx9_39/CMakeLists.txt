@@ -18,6 +18,7 @@ target_link_libraries(d3dx9_39
     wine)
 
 add_importlibs(d3dx9_39
+    d3dx9_36
     d3d9
     user32
     gdi32

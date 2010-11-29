@@ -5,6 +5,7 @@ spec2def(d3dx9_30.dll d3dx9_30.spec)
 list(APPEND SOURCE
     d3dx9_30_main.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_30_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_30.def)
 
 add_definitions(-D__WINESRC__)
@@ -19,6 +20,7 @@ target_link_libraries(d3dx9_30
 
 add_importlibs(d3dx9_30
     d3d9
+    d3dx9_36
     user32
     gdi32
     advapi32
