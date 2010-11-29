@@ -14,6 +14,7 @@ list(APPEND SOURCE
     texture.c
     util.c
     version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_36_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/d3dx9_36.def)
 
 add_definitions(-D__WINESRC__)
@@ -38,3 +39,4 @@ add_importlibs(d3dx9_36
 
 add_dependencies(d3dx9_36 wineheaders)
 add_cab_target(d3dx9_36 1)
+add_importlib_target(d3dx9_36.spec)
