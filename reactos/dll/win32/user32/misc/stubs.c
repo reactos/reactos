@@ -311,7 +311,7 @@ AlignRects(LPRECT rect, DWORD b, DWORD c, DWORD d)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 LRESULT
 WINAPI
@@ -320,8 +320,9 @@ DefRawInputProc(
     INT nInput,
     UINT cbSizeHeader)
 {
-  UNIMPLEMENTED;
-  return 0;
+  if (cbSizeHeader == sizeof(RAWINPUTHEADER))
+     return S_OK;
+  return 1;
 }
 
 /*
@@ -384,20 +385,6 @@ GetRegisteredRawInputDevices(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-PrintWindow(
-    HWND hwnd,
-    HDC hdcBlt,
-    UINT nFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /*
