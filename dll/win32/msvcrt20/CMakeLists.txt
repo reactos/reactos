@@ -6,9 +6,11 @@ add_definitions(-DCRTDLL)
 
 spec2def(msvcrt20.dll msvcrt20.spec)
 
-add_library(msvcrt20 SHARED msvcrt20.c
+list(APPEND SOURCE
+    msvcrt20.c
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt20.def)
 
+add_library(msvcrt20 SHARED ${SOURCE})
 set_entrypoint(msvcrt20 0)
 
 target_link_libraries(msvcrt20 wine)

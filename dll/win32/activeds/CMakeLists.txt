@@ -5,7 +5,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(activeds.dll activeds.spec)
 
-add_library(activeds SHARED activeds_main.c ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
+list(APPEND SOURCE
+    activeds_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
+
+add_library(activeds SHARED ${SOURCE})
 
 set_module_type(activeds win32dll)
 

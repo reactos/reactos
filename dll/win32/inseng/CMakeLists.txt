@@ -6,7 +6,12 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(inseng.dll inseng.spec)
 
-add_library(inseng SHARED inseng_main.c regsvr.c ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
+list(APPEND SOURCE
+    inseng_main.c
+    regsvr.c
+    ${CMAKE_CURRENT_BINARY_DIR}/inseng.def)
+
+add_library(inseng SHARED ${SOURCE})
 
 set_module_type(inseng win32dll)
 

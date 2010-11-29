@@ -6,7 +6,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(inetcomm.dll inetcomm.spec)
 
-add_library(inetcomm SHARED
+list(APPEND SOURCE
     imaptransport.c
     inetcomm_main.c
     internettransport.c
@@ -16,6 +16,8 @@ add_library(inetcomm SHARED
     regsvr.c
     smtptransport.c
     ${CMAKE_CURRENT_BINARY_DIR}/inetcomm.def)
+
+add_library(inetcomm SHARED ${SOURCE})
 
 set_module_type(inetcomm win32dll)
 
@@ -32,6 +34,5 @@ add_importlibs(inetcomm
     msvcrt
     kernel32
     ntdll)
-
 
 add_cab_target(inetcomm 1)

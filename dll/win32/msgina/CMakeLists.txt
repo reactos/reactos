@@ -1,16 +1,18 @@
-
 include_directories(include)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(msgina.dll msgina.spec)
 
-add_library(msgina SHARED
+list(APPEND SOURCE
     gui.c
     msgina.c
     stubs.c
     tui.c
     msgina.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msgina.def)
+
+add_library(msgina SHARED ${SOURCE})
 
 set_module_type(msgina win32dll)
 

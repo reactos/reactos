@@ -3,9 +3,14 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(dciman32.dll dciman32.spec)
 
-add_library(dciman32 SHARED dciman_main.c ${CMAKE_CURRENT_BINARY_DIR}/dciman32.def)
+list(APPEND SOURCE
+    dciman_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/dciman32.def)
+
+add_library(dciman32 SHARED ${SOURCE})
 
 set_module_type(dciman32 win32dll)
 

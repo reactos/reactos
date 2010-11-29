@@ -1,13 +1,15 @@
-
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(msftedit.dll msftedit.spec)
 
-add_library(msftedit SHARED
+list(APPEND SOURCE
     msftedit_main.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msftedit.def)
+
+add_library(msftedit SHARED ${SOURCE})
 
 set_module_type(msftedit win32dll)
 

@@ -4,7 +4,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(msisip.dll msisip.spec)
 
-add_library(msisip SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/msisip.def)
+list(APPEND SOURCE
+    main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msisip.def)
+
+add_library(msisip SHARED ${SOURCE})
 
 set_module_type(msisip win32dll)
 

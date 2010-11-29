@@ -1,6 +1,4 @@
 
-ADD_INTERFACE_DEFINITIONS(mshtml_nsiface_header nsiface.idl)
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -11,9 +9,12 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+ADD_INTERFACE_DEFINITIONS(mshtml_nsiface_header nsiface.idl)
+
+set_rc_compiler()
 spec2def(mshtml.dll mshtml.spec)
 
-add_library(mshtml SHARED
+list(APPEND SOURCE
     conpoint.c
     dispex.c
     editor.c
@@ -77,6 +78,8 @@ add_library(mshtml SHARED
     view.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
+
+add_library(mshtml SHARED ${SOURCE})
 
 set_module_type(mshtml win32dll)
 

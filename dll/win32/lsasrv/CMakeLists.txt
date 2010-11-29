@@ -1,12 +1,12 @@
-
 set_unicode()
 
 include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
 
+set_rc_compiler()
 spec2def(lsasrv.dll lsasrv.spec)
 
-add_library(lsasrv SHARED
+list(APPEND SOURCE
     authport.c
     lsarpc.c
     lsasrv.c
@@ -14,6 +14,8 @@ add_library(lsasrv SHARED
     sids.c
     lsasrv.rc
     ${CMAKE_CURRENT_BINARY_DIR}/lsasrv.def)
+
+add_library(lsasrv SHARED ${SOURCE})
 
 set_entrypoint(lsasrv 0)
 

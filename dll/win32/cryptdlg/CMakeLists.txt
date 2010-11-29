@@ -2,9 +2,15 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(cryptdlg.dll cryptdlg.spec)
 
-add_library(cryptdlg SHARED main.c cryptdlg.rc ${CMAKE_CURRENT_BINARY_DIR}/cryptdlg.def)
+list(APPEND SOURCE
+    main.c
+    cryptdlg.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptdlg.def)
+
+add_library(cryptdlg SHARED ${SOURCE})
 
 set_module_type(cryptdlg win32dll)
 

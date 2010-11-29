@@ -6,8 +6,12 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(mlang.dll mlang.spec)
 
-add_library(mlang SHARED mlang.c regsvr.c
+list(APPEND SOURCE
+    mlang.c
+    regsvr.c
     ${CMAKE_CURRENT_BINARY_DIR}/mlang.def)
+
+add_library(mlang SHARED ${SOURCE})
 
 set_entrypoint(mlang 0)
 

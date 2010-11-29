@@ -3,9 +3,10 @@ add_definitions(-D__WINESRC__)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(gdiplus.dll gdiplus.spec)
 
-add_library(gdiplus SHARED
+list(APPEND SOURCE
     brush.c
     customlinecap.c
     font.c
@@ -20,6 +21,8 @@ add_library(gdiplus SHARED
     region.c
     stringformat.c
     ${CMAKE_CURRENT_BINARY_DIR}/gdiplus.def)
+
+add_library(gdiplus SHARED ${SOURCE})
 
 set_module_type(gdiplus win32dll)
 

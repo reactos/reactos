@@ -4,7 +4,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(cryptnet.dll cryptnet.spec)
 
-add_library(cryptnet SHARED cryptnet_main.c ${CMAKE_CURRENT_BINARY_DIR}/cryptnet.def)
+list(APPEND SOURCE
+    cryptnet_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptnet.def)
+
+add_library(cryptnet SHARED ${SOURCE})
 
 set_module_type(cryptnet win32dll)
 

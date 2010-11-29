@@ -4,10 +4,16 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
+set_rc_compiler()
 
 spec2def(snmpapi.dll snmpapi.spec)
 
-add_library(snmpapi SHARED main.c snmpapi.rc ${CMAKE_CURRENT_BINARY_DIR}/snmpapi.def)
+list(APPEND SOURCE
+    main.c
+    snmpapi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/snmpapi.def)
+    
+add_library(snmpapi SHARED ${SOURCE})
 
 set_module_type(snmpapi win32dll)
 

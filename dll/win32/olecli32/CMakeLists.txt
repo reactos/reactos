@@ -2,11 +2,14 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
+set_rc_compiler()
 spec2def(olecli32.dll olecli32.spec)
 
-add_library(olecli32 SHARED olecli_main.c
+list(APPEND SOURCE
+    olecli_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/olecli32.def)
 
+add_library(olecli32 SHARED ${SOURCE})
 set_entrypoint(olecli32 0)
 
 target_link_libraries(olecli32 wine)

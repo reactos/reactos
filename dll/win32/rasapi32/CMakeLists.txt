@@ -2,11 +2,14 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
+set_rc_compiler()
 spec2def(rasapi32.dll rasapi32.spec)
 
-add_library(rasapi32 SHARED rasapi.c
+list(APPEND SOURCE
+    rasapi.c
     ${CMAKE_CURRENT_BINARY_DIR}/rasapi32.def)
 
+add_library(rasapi32 SHARED ${SOURCE})
 set_entrypoint(rasapi32 0)
 
 target_link_libraries(rasapi32 wine)

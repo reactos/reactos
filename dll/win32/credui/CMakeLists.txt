@@ -3,9 +3,15 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(credui.dll credui.spec)
 
-add_library(credui SHARED credui_main.c credui.rc ${CMAKE_CURRENT_BINARY_DIR}/credui.def)
+list(APPEND SOURCE
+    credui_main.c
+    credui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/credui.def)
+
+add_library(credui SHARED ${SOURCE})
 
 set_module_type(credui win32dll)
 

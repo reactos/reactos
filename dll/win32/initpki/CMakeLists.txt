@@ -4,7 +4,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(initpki.dll initpki.spec)
 
-add_library(initpki SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/initpki.def)
+list(APPEND SOURCE
+    main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/initpki.def)
+
+add_library(initpki SHARED ${SOURCE})
 
 set_module_type(initpki win32dll)
 

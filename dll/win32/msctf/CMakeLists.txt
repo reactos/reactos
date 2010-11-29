@@ -1,13 +1,13 @@
-
 add_definitions(-D__WINESRC__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(msctf.dll msctf.spec)
 
-add_library(msctf SHARED
+list(APPEND SOURCE
     categorymgr.c
     compartmentmgr.c
     context.c
@@ -21,6 +21,8 @@ add_library(msctf SHARED
     threadmgr.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msctf.def)
+
+add_library(msctf SHARED ${SOURCE})
 
 set_module_type(msctf win32dll)
 

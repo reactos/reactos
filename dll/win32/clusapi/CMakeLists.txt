@@ -3,9 +3,14 @@ add_definitions(-D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(clusapi.dll clusapi.spec)
 
-add_library(clusapi SHARED clusapi.c ${CMAKE_CURRENT_BINARY_DIR}/clusapi.def)
+list(APPEND SOURCE
+    clusapi.c
+    ${CMAKE_CURRENT_BINARY_DIR}/clusapi.def)
+
+add_library(clusapi SHARED ${SOURCE})
 
 set_module_type(clusapi win32dll)
 

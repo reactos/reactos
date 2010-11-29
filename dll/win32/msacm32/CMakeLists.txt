@@ -4,9 +4,10 @@ set_unicode()
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(msacm32.dll msacm32.spec)
 
-add_library(msacm32 SHARED
+list(APPEND SOURCE
     driver.c
     filter.c
     format.c
@@ -16,12 +17,13 @@ add_library(msacm32 SHARED
     stream.c
     ${CMAKE_CURRENT_BINARY_DIR}/msacm32.def)
 
+add_library(msacm32 SHARED ${SOURCE})
+
 set_module_type(msacm32 win32dll)
 
 target_link_libraries(msacm32 wine)
 
 add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
-
 
 add_subdirectory(msacm32.drv)
 add_cab_target(msacm32 1)

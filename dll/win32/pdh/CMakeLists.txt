@@ -8,9 +8,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(pdh.dll pdh.spec)
 
-add_library(pdh SHARED pdh_main.c
+list(APPEND SOURCE
+    pdh_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/pdh.def)
 
+add_library(pdh SHARED ${SOURCE})
 set_entrypoint(pdh 0)
 
 target_link_libraries(pdh wine)

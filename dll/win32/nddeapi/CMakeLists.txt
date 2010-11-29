@@ -4,9 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(nddeapi.dll nddeapi.spec)
 
-add_library(nddeapi SHARED nddeapi.c
+list(APPEND SOURCE
+    nddeapi.c
     ${CMAKE_CURRENT_BINARY_DIR}/nddeapi.def)
 
+add_library(nddeapi SHARED ${SOURCE})
 set_entrypoint(nddeapi 0)
 
 target_link_libraries(nddeapi wine)

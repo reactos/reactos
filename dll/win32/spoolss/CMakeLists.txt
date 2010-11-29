@@ -4,7 +4,12 @@ add_definitions(-D__WINESRC__)
 
 spec2def(spoolss.dll spoolss.spec)
 
-add_library(spoolss SHARED spoolss_main.c router.c ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def)
+list(APPEND SOURCE
+    spoolss_main.c
+    router.c
+    ${CMAKE_CURRENT_BINARY_DIR}/spoolss.def)
+
+add_library(spoolss SHARED ${SOURCE})
 
 set_module_type(spoolss win32dll)
 

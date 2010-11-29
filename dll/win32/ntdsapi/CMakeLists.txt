@@ -4,9 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(ntdsapi.dll ntdsapi.spec)
 
-add_library(ntdsapi SHARED ntdsapi.c
+list(APPEND SOURCE
+    ntdsapi.c
     ${CMAKE_CURRENT_BINARY_DIR}/ntdsapi.def)
 
+add_library(ntdsapi SHARED ${SOURCE})
 set_entrypoint(ntdsapi 0)
 
 target_link_libraries(ntdsapi wine)

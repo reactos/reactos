@@ -1,12 +1,15 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(oleacc.dll oleacc.spec)
 
-add_library(oleacc SHARED main.c oleacc.rc
+list(APPEND SOURCE
+    main.c oleacc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oleacc.def)
+
+add_library(oleacc SHARED ${SOURCE})
 
 set_entrypoint(oleacc 0)
 

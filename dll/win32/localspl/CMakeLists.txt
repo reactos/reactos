@@ -4,14 +4,17 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(localspl.dll localspl.spec)
 
-add_library(localspl SHARED
+list(APPEND SOURCE
     localmon.c
     localspl_main.c
     provider.c
     localspl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/localspl.def)
+
+add_library(localspl SHARED ${SOURCE})
 
 set_module_type(localspl win32dll)
 

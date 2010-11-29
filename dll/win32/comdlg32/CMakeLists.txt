@@ -4,9 +4,10 @@ add_definitions(-D_WINE)
 add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(comdlg32.dll comdlg32.spec)
 
-add_library(comdlg32 SHARED
+list(APPEND SOURCE
     cdlg32.c
     colordlg.c
     filedlg.c
@@ -17,6 +18,8 @@ add_library(comdlg32 SHARED
     printdlg.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comdlg32.def)
+
+add_library(comdlg32 SHARED ${SOURCE})
 
 set_module_type(comdlg32 win32dll)
 

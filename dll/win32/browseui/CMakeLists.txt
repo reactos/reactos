@@ -1,4 +1,3 @@
-
 set_unicode()
 set_cpp()
 
@@ -13,9 +12,10 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_SOURCE_DIR}/lib/atl)
 
+set_rc_compiler()
 spec2def(browseui.dll browseui.spec)
 
-add_library(browseui SHARED
+list(APPEND SOURCE
     aclmulti.cpp
     addressband.cpp
     addresseditbox.cpp
@@ -38,6 +38,7 @@ add_library(browseui SHARED
     browseui.rc
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
+add_library(browseui SHARED ${SOURCE})
 set_module_type(browseui win32dll)
 
 target_link_libraries(browseui

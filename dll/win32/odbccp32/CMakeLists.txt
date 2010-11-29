@@ -6,9 +6,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(odbccp32.dll odbccp32.spec)
 
-add_library(odbccp32 SHARED odbccp32.c
+list(APPEND SOURCE
+    odbccp32.c
     ${CMAKE_CURRENT_BINARY_DIR}/odbccp32.def)
 
+add_library(odbccp32 SHARED ${SOURCE})
 set_entrypoint(odbccp32 0)
 
 target_link_libraries(odbccp32

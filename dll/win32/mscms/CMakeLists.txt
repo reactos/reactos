@@ -1,10 +1,10 @@
-
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(mscms.dll mscms.spec)
 
-add_library(mscms SHARED
+list(APPEND SOURCE
     handle.c
     icc.c
     mscms_main.c
@@ -13,6 +13,8 @@ add_library(mscms SHARED
     transform.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mscms.def)
+
+add_library(mscms SHARED ${SOURCE})
 
 set_module_type(mscms win32dll)
 

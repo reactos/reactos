@@ -4,9 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(traffic.dll traffic.spec)
 
-add_library(traffic SHARED
+list(APPEND SOURCE
     traffic_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/traffic.def)
+
+add_library(traffic SHARED ${SOURCE})
 
 set_module_type(traffic win32dll)
 

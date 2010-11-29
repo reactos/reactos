@@ -4,9 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(updspapi.dll updspapi.spec)
 
-add_library(updspapi SHARED main.c
+list(APPEND SOURCE
+    main.c
     ${CMAKE_CURRENT_BINARY_DIR}/updspapi.def)
 
+add_library(updspapi SHARED ${SOURCE})
 set_entrypoint(updspapi 0)
 
 target_link_libraries(updspapi wine)

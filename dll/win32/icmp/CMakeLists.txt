@@ -1,9 +1,15 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(icmp.dll icmp.spec)
 
-add_library(icmp SHARED icmp_main.c icmp.rc ${CMAKE_CURRENT_BINARY_DIR}/icmp.def)
+list(APPEND SOURCE
+    icmp_main.c
+    icmp.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/icmp.def)
+
+add_library(icmp SHARED ${SOURCE})
 
 set_module_type(icmp win32dll)
 

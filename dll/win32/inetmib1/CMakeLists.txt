@@ -5,7 +5,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(inetmib1.dll inetmib1.spec)
 
-add_library(inetmib1 SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/inetmib1.def)
+list(APPEND SOURCE
+    main.c 
+    ${CMAKE_CURRENT_BINARY_DIR}/inetmib1.def)
+
+add_library(inetmib1 SHARED ${SOURCE})
 
 set_module_type(inetmib1 win32dll)
 
@@ -17,6 +21,5 @@ add_importlibs(inetmib1
     iphlpapi
     kernel32
     ntdll)
-
 
 add_cab_target(inetmib1 1)
