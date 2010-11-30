@@ -99,7 +99,7 @@ INT cmd_cls (LPTSTR);
 
 
 /* Prototypes for CMD.C */
-INT ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator);
+INT ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeperator);
 HANDLE RunFile(DWORD, LPTSTR, LPTSTR, LPTSTR, INT);
 INT ParseCommandLine(LPTSTR);
 struct _PARSED_COMMAND;

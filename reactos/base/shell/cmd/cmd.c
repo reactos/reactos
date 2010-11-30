@@ -180,7 +180,7 @@ WORD wDefColor;           /* default color */
  * insert commas into a number
  */
 INT
-ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator)
+ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeperator)
 {
 	TCHAR temp[39];   /* maximum length with nNumberGroups == 1 */
 	UINT  n, iTarget;

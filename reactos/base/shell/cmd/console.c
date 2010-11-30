@@ -131,7 +131,7 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 			error_out_of_memory();
 			return;
 		}
-		len = MultiByteToWideChar(OutputCodePage, 0, str, len, buffer, len, NULL, NULL);
+		len = MultiByteToWideChar(OutputCodePage, 0, str, len, buffer, len);
 		str = (PVOID)buffer;
 #endif
 		WriteFile(hOutput, str, len * sizeof(WCHAR), &dwWritten, NULL);
