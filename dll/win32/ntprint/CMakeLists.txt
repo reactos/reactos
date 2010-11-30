@@ -1,10 +1,15 @@
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
+set_rc_compiler()
 spec2def(ntprint.dll ntprint.spec)
 
-add_library(ntprint SHARED ntprint.c ntprint.rc ${CMAKE_CURRENT_BINARY_DIR}/ntprint.def)
+list(APPEND SOURCE
+    ntprint.c
+    ntprint.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntprint.def)
+
+add_library(ntprint SHARED ${SOURCE})
 
 set_module_type(ntprint win32dll)
 

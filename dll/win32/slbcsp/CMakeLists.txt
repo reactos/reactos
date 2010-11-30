@@ -4,7 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(slbcsp.dll slbcsp.spec)
 
-add_library(slbcsp SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/slbcsp.def)
+list(APPEND SOURCE
+    main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/slbcsp.def)
+
+add_library(slbcsp SHARED ${SOURCE})
 
 set_module_type(slbcsp win32dll)
 

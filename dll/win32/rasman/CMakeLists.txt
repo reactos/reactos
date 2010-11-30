@@ -1,7 +1,12 @@
-
+set_rc_compiler()
 spec2def(rasman.dll rasman.spec)
 
-add_library(rasman SHARED rasman.c rasman.rc ${CMAKE_CURRENT_BINARY_DIR}/rasman.def)
+list(APPEND SOURCE
+    rasman.c
+    rasman.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/rasman.def)
+
+add_library(rasman SHARED ${SOURCE})
 
 set_module_type(rasman win32dll)
 

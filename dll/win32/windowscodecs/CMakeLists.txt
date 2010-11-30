@@ -11,9 +11,11 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libpng
     ${REACTOS_SOURCE_DIR}/include/reactos/libs/libtiff)
 
+set_rc_compiler()
+
 spec2def(windowscodecs.dll windowscodecs.spec)
 
-add_library(windowscodecs SHARED
+list(APPEND SOURCE
     bmpdecode.c
     bmpencode.c
     clsfactory.c
@@ -34,6 +36,8 @@ add_library(windowscodecs SHARED
     ungif.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
+
+add_library(windowscodecs SHARED ${SOURCE})
 
 set_module_type(windowscodecs win32dll)
 

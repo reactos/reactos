@@ -4,8 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(olesvr32.dll olesvr32.spec)
 
-add_library(olesvr32 SHARED olesvr_main.c
+list(APPEND SOURCE
+    olesvr_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/olesvr32.def)
+
+add_library(olesvr32 SHARED ${SOURCE})
 
 set_entrypoint(olesvr32 0)
 

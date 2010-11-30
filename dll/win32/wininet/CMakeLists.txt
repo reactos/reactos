@@ -10,7 +10,7 @@ spec2def(wininet.dll wininet.spec)
 
 set_rc_compiler()
 
-add_library(wininet SHARED
+list(APPEND SOURCE
     cookie.c
     dialogs.c
     ftp.c
@@ -24,6 +24,8 @@ add_library(wininet SHARED
     rsrc.rc
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
+
+add_library(wininet SHARED ${SOURCE})
 
 set_module_type(wininet win32dll)
 

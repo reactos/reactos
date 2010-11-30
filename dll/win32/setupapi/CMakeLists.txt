@@ -12,9 +12,10 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/include/reactos/wine
     ${REACTOS_BINARY_DIR}/include/reactos/idl)
 
+set_rc_compiler()
 spec2def(setupapi.dll setupapi.spec)
 
-add_library(setupapi SHARED
+list(APPEND SOURCE
     cfgmgr.c
     devclass.c
     devinst.c
@@ -33,6 +34,8 @@ add_library(setupapi SHARED
     rpc.c
     setupapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/setupapi.def)
+
+add_library(setupapi SHARED ${SOURCE})
 
 set_module_type(setupapi win32dll)
 

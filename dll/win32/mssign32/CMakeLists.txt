@@ -4,7 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(mssign32.dll mssign32.spec)
 
-add_library(mssign32 SHARED mssign32_main.c ${CMAKE_CURRENT_BINARY_DIR}/mssign32.def)
+list(APPEND SOURCE
+    mssign32_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mssign32.def)
+
+add_library(mssign32 SHARED ${SOURCE})
 
 set_module_type(mssign32 win32dll)
 

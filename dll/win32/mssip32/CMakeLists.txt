@@ -4,7 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(mssip32.dll mssip32.spec)
 
-add_library(mssip32 SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/mssip32.def)
+list(APPEND SOURCE
+    main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mssip32.def)
+
+add_library(mssip32 SHARED ${SOURCE})
 
 set_module_type(mssip32 win32dll)
 

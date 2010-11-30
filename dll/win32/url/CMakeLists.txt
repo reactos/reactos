@@ -4,9 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(url.dll url.spec)
 
-add_library(url SHARED
+list(APPEND SOURCE
     url_main.c
     ${CMAKE_CURRENT_BINARY_DIR}/url.def)
+
+add_library(url SHARED ${SOURCE})
 
 set_module_type(url win32dll)
 

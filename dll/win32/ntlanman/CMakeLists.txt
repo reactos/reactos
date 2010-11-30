@@ -3,7 +3,12 @@ set_unicode()
 
 spec2def(ntlanman.dll ntlanman.spec)
 
-add_library(ntlanman SHARED ntlanman.c ntlanman.rc ${CMAKE_CURRENT_BINARY_DIR}/ntlanman.def)
+list(APPEND SOURCE
+    ntlanman.c
+    ntlanman.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntlanman.def)
+
+add_library(ntlanman SHARED ${SOURCE})
 
 set_module_type(ntlanman win32dll)
 

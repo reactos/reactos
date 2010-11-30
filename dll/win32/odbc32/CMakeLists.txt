@@ -6,7 +6,11 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(odbc32.dll odbc32.spec)
 
-add_library(odbc32 SHARED proxyodbc.c ${CMAKE_CURRENT_BINARY_DIR}/odbc32.def)
+list(APPEND SOURCE
+    proxyodbc.c
+    ${CMAKE_CURRENT_BINARY_DIR}/odbc32.def)
+
+add_library(odbc32 SHARED ${SOURCE})
 
 set_module_type(odbc32 win32dll)
 

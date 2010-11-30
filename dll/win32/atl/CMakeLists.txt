@@ -1,6 +1,3 @@
-
-ADD_INTERFACE_DEFINITIONS(atl_atliface_header atliface.idl)
-
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
@@ -8,14 +5,19 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+ADD_INTERFACE_DEFINITIONS(atl_atliface_header atliface.idl)
+
+set_rc_compiler()
 spec2def(atl.dll atl.spec)
 
-add_library(atl SHARED
+list(APPEND SOURCE
     atl_ax.c
     atl_main.c
     registrar.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
+
+add_library(atl SHARED ${SOURCE})
 
 set_module_type(atl win32dll)
 

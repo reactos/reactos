@@ -4,7 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(resutils.dll resutils.spec)
 
-add_library(resutils SHARED resutils.c ${CMAKE_CURRENT_BINARY_DIR}/resutils.def)
+list(APPEND SOURCE
+    resutils.c
+    ${CMAKE_CURRENT_BINARY_DIR}/resutils.def)
+
+add_library(resutils SHARED ${SOURCE})
 
 set_module_type(resutils win32dll)
 

@@ -2,9 +2,10 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(wintrust.dll wintrust.spec)
 
-add_library(wintrust SHARED
+list(APPEND SOURCE
     crypt.c
     register.c
     wintrust_main.c
@@ -12,6 +13,8 @@ add_library(wintrust SHARED
     softpub.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wintrust.def)
+
+add_library(wintrust SHARED ${SOURCE})
 
 set_module_type(wintrust win32dll)
 

@@ -4,7 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(sccbase.dll sccbase.spec)
 
-add_library(sccbase SHARED main.c ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def)
+list(APPEND SOURCE
+    main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/sccbase.def)
+
+add_library(sccbase SHARED ${SOURCE})
 
 set_module_type(sccbase win32dll)
 

@@ -3,11 +3,13 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/winsock)
 
 spec2def(rasadhlp.dll rasadhlp.spec)
 
-add_library(rasadhlp SHARED
+list(APPEND SOURCE
     autodial.c
     init.c
     winsock.c
     ${CMAKE_CURRENT_BINARY_DIR}/rasadhlp.def)
+
+add_library(rasadhlp SHARED ${SOURCE})
 
 set_module_type(rasadhlp win32dll)
 

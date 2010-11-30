@@ -3,8 +3,11 @@ include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
 
 spec2def(wlanapi.dll wlanapi.spec)
 
-add_library(wlanapi SHARED main.c
+list(APPEND SOURCE
+    main.c
     ${CMAKE_CURRENT_BINARY_DIR}/wlanapi.def)
+
+add_library(wlanapi SHARED ${SOURCE})
 
 set_entrypoint(wlanapi 0)
 

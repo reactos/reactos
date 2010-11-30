@@ -3,12 +3,14 @@ set_unicode()
 
 spec2def(newdev.dll newdev.spec)
 
-add_library(newdev SHARED
+list(APPEND SOURCE
     newdev.c
     stubs.c
     wizard.c
     newdev.rc
     ${CMAKE_CURRENT_BINARY_DIR}/newdev.def)
+
+add_library(newdev SHARED ${SOURCE})
 
 set_module_type(newdev win32dll)
 

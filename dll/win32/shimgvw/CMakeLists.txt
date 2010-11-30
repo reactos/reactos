@@ -1,7 +1,12 @@
 
 spec2def(shimgvw.dll shimgvw.spec)
 
-add_library(shimgvw SHARED shimgvw.c shimgvw.rc ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
+list(APPEND SOURCE
+    shimgvw.c
+    shimgvw.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shimgvw.def)
+
+add_library(shimgvw SHARED ${SOURCE})
 
 set_module_type(shimgvw win32dll)
 
@@ -16,6 +21,5 @@ add_importlibs(shimgvw
     msvcrt
     kernel32
     ntdll)
-
 
 add_cab_target(shimgvw 1)

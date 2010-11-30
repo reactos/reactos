@@ -4,9 +4,15 @@ add_dependencies(pstorec_tlb stdole2)
 
 add_definitions(-D__WINESRC__)
 
+set_rc_compiler()
 spec2def(pstorec.dll pstorec.spec)
 
-add_library(pstorec SHARED pstorec.c rsrc.rc ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def)
+list(APPEND SOURCE
+    pstorec.c
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/pstorec.def)
+
+add_library(pstorec SHARED ${SOURCE})
 
 set_module_type(pstorec win32dll)
 

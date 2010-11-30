@@ -1,7 +1,12 @@
 
 spec2def(rasdlg.dll rasdlg.spec)
 
-add_library(rasdlg SHARED rasdlg.c rasdlg.rc ${CMAKE_CURRENT_BINARY_DIR}/rasdlg.def)
+list(APPEND SOURCE
+    rasdlg.c
+    rasdlg.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/rasdlg.def)
+
+add_library(rasdlg SHARED ${SOURCE})
 
 set_module_type(rasdlg win32dll)
 

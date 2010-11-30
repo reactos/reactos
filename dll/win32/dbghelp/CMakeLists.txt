@@ -13,9 +13,10 @@ endif(ARCH MATCHES amd64)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(dbghelp.dll dbghelp.spec)
 
-add_library(dbghelp SHARED
+list(APPEND SOURCE
     coff.c
     cpu_i386.c
     cpu_ppc.c
@@ -41,6 +42,8 @@ add_library(dbghelp SHARED
     type.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
+
+add_library(dbghelp SHARED ${SOURCE})
 
 set_module_type(dbghelp win32dll)
 

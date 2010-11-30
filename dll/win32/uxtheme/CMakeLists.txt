@@ -1,10 +1,11 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
+set_rc_compiler()
 
 spec2def(uxtheme.dll uxtheme.spec)
 
-add_library(uxtheme SHARED
+list(APPEND SOURCE
     buffer.c
     draw.c
     main.c
@@ -16,6 +17,8 @@ add_library(uxtheme SHARED
     uxini.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/uxtheme.def)
+
+add_library(uxtheme SHARED ${SOURCE})
 
 set_module_type(uxtheme win32dll)
 

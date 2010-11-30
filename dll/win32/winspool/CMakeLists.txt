@@ -5,12 +5,15 @@ set_unicode()
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(winspool SHARED
+set_rc_compiler()
+
+list(APPEND SOURCE
     info.c
     stubs.c
-    winspool_winspool.stubs.c
     winspool.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winspool.def)
+
+add_library(winspool SHARED ${SOURCE})
 
 set_target_properties(winspool PROPERTIES SUFFIX ".drv")
 set_module_type(winspool win32dll)

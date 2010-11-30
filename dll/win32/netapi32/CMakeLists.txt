@@ -4,7 +4,7 @@ add_definitions(-D__WINESRC__)
 
 spec2def(netapi32.dll netapi32.spec)
 
-add_library(netapi32 SHARED
+list(APPEND SOURCE
     access.c
     apibuf.c
     browsr.c
@@ -18,6 +18,8 @@ add_library(netapi32 SHARED
     share.c
     wksta.c
     ${CMAKE_CURRENT_BINARY_DIR}/netapi32.def)
+
+add_library(netapi32 SHARED ${SOURCE})
 
 set_module_type(netapi32 win32dll)
 

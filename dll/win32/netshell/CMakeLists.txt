@@ -1,8 +1,8 @@
-
 add_definitions(-D_NETSHELL_)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
+set_rc_compiler()
 spec2def(netshell.dll netshell.spec)
 
 list(APPEND SOURCE
@@ -38,7 +38,8 @@ add_importlibs(netshell
     setupapi
     ws2_32
     comctl32
-    kernel32)
+    kernel32
+    ntdll)
 
 add_pch(netshell ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 

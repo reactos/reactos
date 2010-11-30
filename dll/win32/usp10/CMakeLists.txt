@@ -4,13 +4,15 @@ add_definitions(-D__WINESRC__)
 
 spec2def(usp10.dll usp10.spec)
 
-add_library(usp10 SHARED
+list(APPEND SOURCE
     bidi.c
     usp10.c
     mirror.c
     shape.c
     shaping.c
     ${CMAKE_CURRENT_BINARY_DIR}/usp10.def)
+
+add_library(usp10 SHARED ${SOURCE})
 
 set_module_type(usp10 win32dll)
 
