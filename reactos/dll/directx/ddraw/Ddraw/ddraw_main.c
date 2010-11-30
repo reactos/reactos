@@ -533,6 +533,9 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
     }
     _SEH2_END;
 
+    if(*ppSurf != NULL)
+        Main_DirectDraw_AddRef(This);
+
     LeaveCriticalSection(&ddcs);
     return ret;
 }
@@ -540,7 +543,32 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
 /* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
 
+HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
+                  LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
+{
+	HRESULT ret = DD_OK;
+    DX_WINDBG_trace();
 
+    EnterCriticalSection(&ddcs);
+    *ppPalette = NULL;
+
+    _SEH2_TRY
+    {
+        ret = Internal_CreatePalette(This, dwFlags, palent, ppPalette, pUnkOuter);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        ret = DDERR_INVALIDPARAMS;
+    }
+    _SEH2_END;
+
+    //Versions 7 and 4 are addref'ed
+    if((This->lpVtbl == &DirectDraw7_Vtable || This->lpVtbl == &DirectDraw4_Vtable) && *ppPalette != NULL)
+        Main_DirectDraw_AddRef(This) ;
+
+    LeaveCriticalSection(&ddcs);
+    return ret;
+}
 
 
 
