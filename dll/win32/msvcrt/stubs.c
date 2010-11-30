@@ -5,15 +5,7 @@
 #include "wine/config.h"
 #include "wine/exception.h"
 
-void __wine_spec_unimplemented_stub( const char *module, const char *function )
-{
-    ULONG_PTR args[2];
-
-    args[0] = (ULONG_PTR)module;
-    args[1] = (ULONG_PTR)function;
-    RaiseException( EXCEPTION_WINE_STUB, EH_NONCONTINUABLE, 2, args );
-}
-
+void __wine_spec_unimplemented_stub( const char *module, const char *function );
 #define UNIMPLEMENTED __wine_spec_unimplemented_stub("msvcrt.dll", __FUNCTION__)
 
 int __get_app_type()
@@ -54,19 +46,19 @@ int _ismbbkprint(
 }
 
 
-int MSVCRT__inp( 
+int MSVCRT__inp(
    unsigned short port)
 {
     return _inp(port);
 }
 
-unsigned short MSVCRT__inpw( 
+unsigned short MSVCRT__inpw(
    unsigned short port)
 {
     return _inpw(port);
 }
 
-unsigned long MSVCRT__inpd( 
+unsigned long MSVCRT__inpd(
    unsigned short port)
 {
     return _inpd(port);

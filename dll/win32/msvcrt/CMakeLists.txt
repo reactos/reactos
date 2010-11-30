@@ -17,7 +17,7 @@ set_rc_compiler()
 
 list(APPEND SOURCE
      dllmain.c
-     msvcrt_stubs.c
+     stubs.c
      msvcrt.rc
      ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 

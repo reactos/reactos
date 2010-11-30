@@ -4,7 +4,11 @@ add_definitions(-D__WINESRC__)
 
 spec2def(query.dll query.spec)
 
-add_library(query SHARED query_main.c ${CMAKE_CURRENT_BINARY_DIR}/query.def)
+list(APPEND SOURCE
+    query_main.c
+    ${CMAKE_CURRENT_BINARY_DIR}/query.def)
+
+add_library(query SHARED ${SOURCE})
 
 set_module_type(query win32dll)
 
