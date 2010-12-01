@@ -1,4 +1,3 @@
-
 ADD_TYPELIB(msxml3_v1 msxml3_v1.idl)
 add_dependencies(msxml3_v1 stdole2)
 
@@ -18,9 +17,10 @@ endif(MSVC)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(msxml3.dll msxml3.spec)
 
-add_library(msxml3 SHARED
+list(APPEND SOURCE
     attribute.c
     comment.c
     domdoc.c
@@ -49,6 +49,8 @@ add_library(msxml3 SHARED
     entityref.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
+
+add_library(msxml3 SHARED ${SOURCE})
 
 set_module_type(msxml3 win32dll)
 

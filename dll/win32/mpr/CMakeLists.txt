@@ -1,12 +1,12 @@
-
 add_definitions(-D__WINESRC__)
 add_definitions(-D_WINE)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+set_rc_compiler()
 spec2def(mpr.dll mpr.spec)
 
-add_library(mpr SHARED
+list(APPEND SOURCE
     auth.c
     mpr_main.c
     multinet.c
@@ -15,6 +15,8 @@ add_library(mpr SHARED
     wnet.c
     mpr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mpr.def)
+
+add_library(mpr SHARED ${SOURCE})
 
 set_module_type(mpr win32dll)
 
