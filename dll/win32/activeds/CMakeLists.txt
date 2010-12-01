@@ -7,6 +7,7 @@ spec2def(activeds.dll activeds.spec)
 
 list(APPEND SOURCE
     activeds_main.c
+    stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/activeds.def)
 
 add_library(activeds SHARED ${SOURCE})
