@@ -9,6 +9,7 @@ list(APPEND SOURCE
     cabinet_main.c
     fci.c
     fdi.c
+    stubs.c
     cabinet.rc
     ${CMAKE_CURRENT_BINARY_DIR}/cabinet.def)
 
