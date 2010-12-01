@@ -36,6 +36,7 @@ list(APPEND SOURCE
     travellog.cpp
     utility.cpp
     browseui.rc
+    dllinstall.c
     ${CMAKE_CURRENT_BINARY_DIR}/browseui.def)
 
 add_library(browseui SHARED ${SOURCE})
