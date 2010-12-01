@@ -14,6 +14,7 @@ list(APPEND SOURCE
     atl_ax.c
     atl_main.c
     registrar.c
+    stubs.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/atl.def)
 
