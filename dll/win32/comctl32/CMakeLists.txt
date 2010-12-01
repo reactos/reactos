@@ -47,6 +47,7 @@ add_library(comctl32 SHARED
     trackbar.c
     treeview.c
     updown.c
+    stubs.c
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
