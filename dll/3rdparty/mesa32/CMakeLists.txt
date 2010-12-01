@@ -1,4 +1,8 @@
 
+if(NOT MSVC)
+add_definitions(-w)
+endif()
+
 add_definitions(
     -DUSE_EXTERNAL_DXTN_LIB=1
     -DBUILD_GL32
