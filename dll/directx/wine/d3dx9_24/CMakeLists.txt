@@ -31,3 +31,4 @@ add_importlibs(d3dx9_24
 
 add_dependencies(d3dx9_24 wineheaders)
 add_cab_target(d3dx9_24 1)
+add_importlib_target(d3dx9_24.spec libd3dx9_36)

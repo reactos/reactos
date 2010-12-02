@@ -20,6 +20,7 @@ target_link_libraries(d3dx9_30
 
 add_importlibs(d3dx9_30
     d3d9
+    d3dx9_24
     d3dx9_36
     user32
     gdi32

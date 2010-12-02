@@ -20,6 +20,7 @@ target_link_libraries(d3dx9_25
 
 add_importlibs(d3dx9_25
     d3dx9_36
+    d3dx9_24
     d3d9
     user32
     gdi32
@@ -31,4 +32,4 @@ add_importlibs(d3dx9_25
 
 add_dependencies(d3dx9_25 wineheaders)
 add_cab_target(d3dx9_25 1)
-add_importlib_target(d3dx9_25.spec libd3dx9_36)
+add_importlib_target(d3dx9_25.spec libd3dx9_24 libd3dx9_36)
