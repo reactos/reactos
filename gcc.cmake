@@ -173,14 +173,14 @@ macro(set_rc_compiler)
     get_directory_property(includes INCLUDE_DIRECTORIES)
 
     foreach(arg ${defines})
-        set(result_defs "${result_defs} -D${arg}")
+        set(rc_result_defs "${rc_result_defs} -D${arg}")
     endforeach(arg ${defines})
 
     foreach(arg ${includes})
-        set(result_incs "-I${arg} ${result_incs}")
+        set(rc_result_incs "-I${arg} ${rc_result_incs}")
     endforeach(arg ${includes})
 
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${result_defs} ${result_incs} -i <SOURCE> -O coff -o <OBJECT>")
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_result_defs} ${rc_result_incs} -i <SOURCE> -O coff -o <OBJECT>")
 endmacro()
 
 #idl files support
@@ -206,6 +206,7 @@ macro(spec2def _dllname _spec_file)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}.def
         PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
     set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c PROPERTIES GENERATED TRUE)
+    list(APPEND SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c)
 endmacro()
 
 # Optional 3rd parameter: dllname

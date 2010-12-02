@@ -13,6 +13,9 @@ if(NOT MSVC)
     add_definitions(-mrtd -fno-builtin -w)
 endif()
 
+spec2def(classpnp.sys class.spec)
+
+list(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_BINARY_DIR}/class_stubs.c)
 list(APPEND SOURCE
     autorun.c
     class.c
@@ -30,8 +33,6 @@ list(APPEND SOURCE
     xferpkt.c
     class.rc
     ${CMAKE_CURRENT_BINARY_DIR}/class.def)
-
-spec2def(classpnp.sys class.spec)
 
 add_library(classpnp SHARED ${SOURCE})
 target_link_libraries(classpnp ${PSEH_LIB} libcntpr)
