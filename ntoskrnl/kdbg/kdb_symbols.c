@@ -401,23 +401,11 @@ KdbSymProcessSymbols(
     if (LdrEntry->PatchInformation)
         KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
 
-    /* Load new symbol information */
-    if (! RosSymCreateFromMem(LdrEntry->DllBase,
-        LdrEntry->SizeOfImage,
-        (PROSSYM_INFO*)&LdrEntry->PatchInformation))
-    {
-        /* Error loading symbol info, try to load it from file */
-        KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
+	/* Error loading symbol info, try to load it from file */
+	KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
             (PROSSYM_INFO*)&LdrEntry->PatchInformation);
 
-        /* It already added symbols to cache */
-    }
-    else
-    {
-        /* Add file to cache */
-        KdbpSymAddCachedFile(&LdrEntry->FullDllName, LdrEntry->PatchInformation);
-    }
-
+	/* It already added symbols to cache */
     DPRINT("Installed symbols: %wZ@%p-%p %p\n",
            &LdrEntry->BaseDllName,
            LdrEntry->DllBase,
@@ -522,7 +510,7 @@ KdbInitialize(
 
         RosSymInitKernelMode();
     }
-    else if (BootPhase == 1)
+    else if (BootPhase == 3)
     {
         /* Load symbols for NTOSKRNL.EXE.
            It is always the first module in PsLoadedModuleList. KeLoaderBlock can't be used here as its content is just temporary. */

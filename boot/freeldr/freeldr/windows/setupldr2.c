@@ -274,31 +274,31 @@ VOID LoadReactOSSetup2(VOID)
     UseRealHeap = TRUE;
     LoaderBlock->ConfigurationRoot = MachHwDetect();
 
+	strcpy(FileName, "\\ArcName\\");
+
     /* Load kernel */
-    strcpy(FileName, BootPath);
+    strcpy(FileName+strlen("\\ArcName\\"), BootPath);
     strcat(FileName, "NTOSKRNL.EXE");
-    Status = WinLdrLoadImage(FileName, LoaderSystemCode, &NtosBase);
+    Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderSystemCode, &NtosBase);
     DPRINTM(DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase);
+    WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
+        FileName, NtosBase, &KernelDTE);
 
     /* Load HAL */
-    strcpy(FileName, BootPath);
+    strcpy(FileName+strlen("\\ArcName\\"), BootPath);
     strcat(FileName, "HAL.DLL");
-    Status = WinLdrLoadImage(FileName, LoaderHalCode, &HalBase);
+    Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderHalCode, &HalBase);
     DPRINTM(DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase);
+    WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
+        FileName, HalBase, &HalDTE);
 
     /* Load kernel-debugger support dll */
-    strcpy(FileName, BootPath);
+    strcpy(FileName+strlen("\\ArcName\\"), BootPath);
     strcat(FileName, "KDCOM.DLL");
-    Status = WinLdrLoadImage(FileName, LoaderBootDriver, &KdComBase);
+    Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderBootDriver, &KdComBase);
     DPRINTM(DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase);
-
-    /* Allocate data table entries for above-loaded modules */
-    WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
-        "NTOSKRNL.EXE", NtosBase, &KernelDTE);
-    WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
-        "HAL.DLL", HalBase, &HalDTE);
     WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
-        "KDCOM.DLL", KdComBase, &KdComDTE);
+        FileName, KdComBase, &KdComDTE);
 
     /* Load all referenced DLLs for kernel, HAL and kdcom.dll */
     strcpy(SearchPath, BootPath);

@@ -39,11 +39,6 @@ extern BOOLEAN UseRealHeap;
 extern ULONG LoaderPagesSpanned;
 extern BOOLEAN AcpiPresent;
 
-extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
-extern BOOLEAN WinLdrTerminalConnected;
-
-extern void WinLdrSetupEms(IN PCHAR BootOptions);
-
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                         IN PCH DllName,
@@ -211,6 +206,8 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
     
 #ifndef _M_ARM
     /* Set headless block pointer */
+    extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
+    extern BOOLEAN WinLdrTerminalConnected;
     if (WinLdrTerminalConnected)
     {
         Extension->HeadlessLoaderBlock = MmHeapAlloc(sizeof(HEADLESS_LOADER_BLOCK));
@@ -285,13 +282,14 @@ WinLdrLoadDeviceDriver(PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	// It's not loaded, we have to load it
-	_snprintf(FullPath, sizeof(FullPath), "%s%wZ", BootPath, FilePath);
-	Status = WinLdrLoadImage(FullPath, LoaderBootDriver, &DriverBase);
+	strcpy(FullPath, "\\ArcName\\");
+	_snprintf(FullPath+strlen("\\ArcName\\"), sizeof(FullPath), "%s%wZ", BootPath, FilePath);
+	Status = WinLdrLoadImage(FullPath+strlen("\\ArcName\\"), LoaderBootDriver, &DriverBase);
 	if (!Status)
 		return FALSE;
 
 	// Allocate a DTE for it
-	Status = WinLdrAllocateDataTableEntry(LoaderBlock, DllName, DllName, DriverBase, DriverDTE);
+	Status = WinLdrAllocateDataTableEntry(LoaderBlock, DllName, FullPath, DriverBase, DriverDTE);
 	if (!Status)
 	{
 		DPRINTM(DPRINT_WINDOWS, "WinLdrAllocateDataTableEntry() failed\n");
@@ -540,6 +538,7 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
     
 #ifndef _M_ARM
    	/* Setup redirection support */
+	extern void WinLdrSetupEms(IN PCHAR BootOptions);
 	WinLdrSetupEms(BootOptions);
 #endif
 	/* Detect hardware */
@@ -553,36 +552,33 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	if (OperatingSystemVersion == 0)
 		OperatingSystemVersion = WinLdrDetectVersion();
 
+	strcpy(FileName, "\\ArcName\\");
+
 	/* Load kernel */
-	strcpy(FileName, BootPath);
+	strcpy(FileName+strlen("\\ArcName\\"), BootPath);
 	strcat(FileName, "SYSTEM32\\NTOSKRNL.EXE");
-	Status = WinLdrLoadImage(FileName, LoaderSystemCode, &NtosBase);
+	Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderSystemCode, &NtosBase);
 	DPRINTM(DPRINT_WINDOWS, "Ntos loaded with status %d at %p\n", Status, NtosBase);
+	WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
+		FileName, NtosBase, &KernelDTE);
 
 	/* Load HAL */
-	strcpy(FileName, BootPath);
+	strcpy(FileName+strlen("\\ArcName\\"), BootPath);
 	strcat(FileName, "SYSTEM32\\HAL.DLL");
-	Status = WinLdrLoadImage(FileName, LoaderHalCode, &HalBase);
+	Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderHalCode, &HalBase);
 	DPRINTM(DPRINT_WINDOWS, "HAL loaded with status %d at %p\n", Status, HalBase);
+	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
+		FileName, HalBase, &HalDTE);
 
 	/* Load kernel-debugger support dll */
 	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
 	{
-		strcpy(FileName, BootPath);
+		strcpy(FileName+strlen("\\ArcName\\"), BootPath);
 		strcat(FileName, "SYSTEM32\\KDCOM.DLL");
-		Status = WinLdrLoadImage(FileName, LoaderBootDriver, &KdComBase);
+		Status = WinLdrLoadImage(FileName+strlen("\\ArcName\\"), LoaderBootDriver, &KdComBase);
 		DPRINTM(DPRINT_WINDOWS, "KdCom loaded with status %d at %p\n", Status, KdComBase);
-	}
-
-	/* Allocate data table entries for above-loaded modules */
-	WinLdrAllocateDataTableEntry(LoaderBlock, "ntoskrnl.exe",
-		"WINDOWS\\SYSTEM32\\NTOSKRNL.EXE", NtosBase, &KernelDTE);
-	WinLdrAllocateDataTableEntry(LoaderBlock, "hal.dll",
-		"WINDOWS\\SYSTEM32\\HAL.DLL", HalBase, &HalDTE);
-	if (OperatingSystemVersion > _WIN32_WINNT_WIN2K)
-	{
 		WinLdrAllocateDataTableEntry(LoaderBlock, "kdcom.dll",
-			"WINDOWS\\SYSTEM32\\KDCOM.DLL", KdComBase, &KdComDTE);
+			FileName, KdComBase, &KdComDTE);
 	}
 
 	/* Load all referenced DLLs for kernel, HAL and kdcom.dll */
