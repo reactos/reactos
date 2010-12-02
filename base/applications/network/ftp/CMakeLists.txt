@@ -13,5 +13,9 @@ add_executable(ftp
 set_module_type(ftp win32cui)
 
 add_importlibs(ftp ws2_32 iphlpapi msvcrt kernel32)
+if(MSVC)
+target_link_libraries(ftp oldnames)
+add_importlibs(ftp ntdll)
+endif()
 
 add_cab_target(ftp 1)
