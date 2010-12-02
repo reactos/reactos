@@ -1,11 +1,6 @@
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
-#include "wine/config.h"
-#include "wine/exception.h"
+#include <stubs.h>
 
-void __wine_spec_unimplemented_stub( const char *module, const char *function );
 #define UNIMPLEMENTED __wine_spec_unimplemented_stub("msvcrt.dll", __FUNCTION__)
 
 int __get_app_type()
