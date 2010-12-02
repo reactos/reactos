@@ -24,6 +24,4 @@ LIST(APPEND SOURCE
     #vmrender.idl
 )
 
-# HACK: dxsdk is broken
-    ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
-
+ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
