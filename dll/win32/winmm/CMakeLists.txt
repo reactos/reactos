@@ -6,7 +6,7 @@ spec2def(winmm.dll winmm.spec)
 
 set_rc_compiler()
 
-add_library(winmm SHARED
+list(APPEND SOURCE
     driver.c
     joystick.c
     lolvldrv.c
@@ -18,6 +18,8 @@ add_library(winmm SHARED
     winmm.c
     winmm_res.rc
     ${CMAKE_CURRENT_BINARY_DIR}/winmm.def)
+
+add_library(winmm SHARED ${SOURCE})
 
 set_module_type(winmm win32dll)
 

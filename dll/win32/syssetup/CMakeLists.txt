@@ -1,11 +1,11 @@
-
 set_unicode()
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
+set_rc_compiler()
 spec2def(syssetup.dll syssetup.spec)
 
-add_library(syssetup SHARED
+list(APPEND SOURCE
     classinst.c
     dllmain.c
     install.c
@@ -13,6 +13,8 @@ add_library(syssetup SHARED
     wizard.c
     syssetup.rc
     ${CMAKE_CURRENT_BINARY_DIR}/syssetup.def)
+
+add_library(syssetup SHARED ${SOURCE})
 
 set_module_type(syssetup win32dll)
 
