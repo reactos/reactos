@@ -92,7 +92,7 @@
 @ stdcall -stub D3DXCreateTeapot(ptr ptr ptr)
 @ stdcall -stub D3DXCreateTextA(ptr long ptr long long ptr ptr ptr)
 @ stdcall -stub D3DXCreateTextW(ptr long ptr long long ptr ptr ptr)
-@ stdcall -stub D3DXCreateTexture(ptr long long long long long long ptr)
+@ stdcall D3DXCreateTexture(ptr long long long long long long ptr)
 @ stdcall -stub D3DXCreateTextureFromFileA(ptr ptr ptr)
 @ stdcall -stub D3DXCreateTextureFromFileExA(ptr ptr long long long long long long long long long ptr ptr ptr)
 @ stdcall -stub D3DXCreateTextureFromFileExW(ptr ptr long long long long long long long long long ptr ptr ptr)
