@@ -1,29 +1,9 @@
+
 cmake_minimum_required(VERSION 2.8)
 project(REACTOS)
 
 # Compile options
 include(config.cmake)
-
-# Compiler specific definitions and macros
-if(MSVC)
-include(msc.cmake)
-else()
-include(gcc.cmake)
-endif(MSVC)
-
-# Generic macros
-include(CMakeMacros.cmake)
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-
-set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
-set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
-
-set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
-
-add_definitions(-D__REACTOS__)
 
 if(NOT CMAKE_CROSSCOMPILING)
 
@@ -48,6 +28,40 @@ endif()
 
 else()
 
+if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
+    set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
+endif()
+
+set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
+include(${IMPORT_EXECUTABLES})
+
+endif(NOT CMAKE_CROSSCOMPILING)
+
+# Compiler specific definitions and macros
+if(MSVC)
+include(msc.cmake)
+else()
+include(gcc.cmake)
+endif(MSVC)
+
+# Generic macros
+include(CMakeMacros.cmake)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+
+set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
+set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
+
+set(CMAKE_COLOR_MAKEFILE OFF)
+
+set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
+
+add_definitions(-D__REACTOS__)
+
+if(CMAKE_CROSSCOMPILING)
+
 #Some cleanup
 file(REMOVE
     ${REACTOS_BINARY_DIR}/boot/ros_livecd.txt
@@ -66,13 +80,6 @@ enable_language(ASM)
 
 # Activate language support for resource files
 enable_language(RC)
-
-if(NOT DEFINED REACTOS_BUILD_TOOLS_DIR)
-    set(REACTOS_BUILD_TOOLS_DIR ${REACTOS_SOURCE_DIR}/build)
-endif()
-
-set(IMPORT_EXECUTABLES "${REACTOS_BUILD_TOOLS_DIR}/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
-include(${IMPORT_EXECUTABLES})
 
 add_definitions(-DDBG=${DBG} -DKDBG=${KDBG})
 
@@ -188,6 +195,8 @@ add_custom_command(
     DEPENDS native-gendib) 
 
 add_custom_target(gendib_generated ALL DEPENDS ${OUTPUT_FILES})
+
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/importlibs)
 
 #bootcd and livecd
 include(ros_cd.cmake)

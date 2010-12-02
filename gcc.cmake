@@ -96,12 +96,6 @@ macro(set_image_base MODULE IMAGE_BASE)
     add_linkerflag(${MODULE} "-Wl,--image-base,${IMAGE_BASE}")
 endmacro()
 
-macro(add_importlibs MODULE)
-  foreach(LIB ${ARGN})
-    target_link_libraries(${MODULE} ${LIB}.dll.a)
-  endforeach()
-endmacro()
-
 macro(set_module_type MODULE TYPE)
 
     add_dependencies(${MODULE} psdk buildno_header)
@@ -193,8 +187,23 @@ set(IDL_CLIENT_ARG -c -C) #.c for stub client library
 set(IDL_PROXY_ARG -p -P)
 set(IDL_DLLDATA_ARG --dlldata-only --dlldata=)
 
-macro(add_importlib_target _def_file)
-  # empty for now, while import libs are shipped
+macro(add_importlibs MODULE)
+    foreach(LIB ${ARGN})
+        target_link_libraries(${MODULE} ${CMAKE_BINARY_DIR}/importlibs/lib${LIB}.a)
+        add_dependencies(${MODULE} lib${LIB})
+    endforeach()
+endmacro()
+
+macro(add_importlib_target _spec_file)
+    get_filename_component(_name ${_spec_file} NAME_WE)
+    add_custom_command(
+        OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+        COMMAND native-spec2def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def
+        COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
+    add_custom_target(
+        lib${_name}
+        DEPENDS ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a)
 endmacro()
 
 macro(spec2def _dllname _spec_file)
