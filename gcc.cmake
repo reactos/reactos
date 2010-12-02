@@ -198,7 +198,7 @@ macro(add_importlib_target _spec_file)
     get_filename_component(_name ${_spec_file} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
-        COMMAND native-spec2def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def
+        COMMAND native-spec2def -d=${CMAKE_CURRENT_BINARY_DIR}/${_name}.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         COMMAND ${MINGW_PREFIX}dlltool --def ${CMAKE_CURRENT_BINARY_DIR}/${_name}.def --kill-at --output-lib=${CMAKE_BINARY_DIR}/importlibs/lib${_name}.a
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
     add_custom_target(
