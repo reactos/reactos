@@ -142,15 +142,13 @@ set(IDL_DLLDATA_ARG /dlldata )
 macro(add_importlib_target _spec_file)
     get_filename_component(_name ${_spec_file} NAME_WE)
 
+    # Generate the asm stub file and the export def file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def
-        # Generate the asm stub file
-        COMMAND native-spec2def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
-        # Generate a the export def file
-        COMMAND native-spec2def -@ -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -@ -r -d=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_exp.def -l=${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file})
 
-    # Assemble the file
+    # Assemble the stub file
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj
         COMMAND ${CMAKE_ASM_COMPILER} /nologo /Fo${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.obj /c /Ta ${CMAKE_BINARY_DIR}/importlibs/lib${_name}_stubs.asm
