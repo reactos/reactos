@@ -5,7 +5,10 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(dplay.dll dplay.spec)
 
-add_library(dplay SHARED dplay_main.c version.rc ${CMAKE_CURRENT_BINARY_DIR}/dplay.def)
+add_library(dplay SHARED
+    dplay_main.c
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/dplay.def)
 
 set_entrypoint(dplay 0)
 
@@ -19,8 +22,10 @@ add_importlibs(dplay
     ole32
     winmm
     dinput
+    dplayx
     ntdll)
 
 add_dependencies(dplay psdk buildno_header)
 
 add_cab_target(dplay 1)
+add_importlib_target(dplay.spec libdplayx)

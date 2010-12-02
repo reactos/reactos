@@ -14,7 +14,7 @@ list(APPEND SOURCE
     name_server.c
     regsvr.c
     version.rc
-    dplayx.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/dplayx.def)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -22,7 +22,6 @@ add_library(dplayx SHARED ${SOURCE})
 set_module_type(dplayx win32dll)
 
 target_link_libraries(dplayx
-    ${CMAKE_CURRENT_BINARY_DIR}/dplayx.def
     wine
     uuid
     dxguid)
@@ -37,3 +36,4 @@ add_importlibs(dplayx
     ntdll)
 
 add_cab_target(dplayx 1)
+add_importlib_target(dplayx.spec)
