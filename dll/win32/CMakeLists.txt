@@ -96,7 +96,7 @@ add_subdirectory(msimg32)
 add_subdirectory(msimtf)
 add_subdirectory(msisip)
 add_subdirectory(msisys.ocx)
-add_subdirectory(msnet32)
+#add_subdirectory(msnet32) #to be deleted in trunk.
 add_subdirectory(msrle32)
 add_subdirectory(mssign32)
 add_subdirectory(mssip32)
