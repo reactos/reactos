@@ -12,6 +12,6 @@ add_library(drmk SHARED ${SOURCE})
 
 set_module_type(drmk kernelmodedriver)
 add_importlibs(drmk ntoskrnl)
-add_importlib_target(drmk.spec)
+add_importlib_target(drmk.spec drmk.sys)
 
 add_cab_target(drmk 2)

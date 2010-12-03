@@ -43,4 +43,4 @@ add_importlibs(ndis ntoskrnl hal)
 add_pch(ndis ${CMAKE_CURRENT_SOURCE_DIR}/include/ndissys.h ${SOURCE})
 
 add_cab_target(ndis 2)
-add_importlib_target(ndis.spec)
+add_importlib_target(ndis.spec ndis.sys)

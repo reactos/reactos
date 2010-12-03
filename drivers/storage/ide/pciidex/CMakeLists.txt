@@ -1,7 +1,7 @@
 
 spec2def(pciidex.sys pciidex.spec)
 
-add_library(pciidex SHARED
+list(APPEND SOURCE
     fdo.c
     miniport.c
     misc.c
@@ -10,8 +10,10 @@ add_library(pciidex SHARED
     pciidex.rc
     ${CMAKE_CURRENT_BINARY_DIR}/pciidex.def)
 
+add_library(pciidex SHARED ${SOURCE})
+
 set_module_type(pciidex kernelmodedriver)
 add_importlibs(pciidex ntoskrnl)
 
 add_cab_target(pciidex 2)
-add_importlib_target(pciidex.spec)
+add_importlib_target(pciidex.spec pciidex.sys)
