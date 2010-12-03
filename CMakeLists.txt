@@ -8,6 +8,9 @@ include(config.cmake)
 if(NOT CMAKE_CROSSCOMPILING)
 
 add_definitions(-DTARGET_i386)
+if(MSVC)
+add_definitions(-Dinline=__inline)
+endif()
 
 include_directories(
     ${REACTOS_SOURCE_DIR}/tools/unicode
