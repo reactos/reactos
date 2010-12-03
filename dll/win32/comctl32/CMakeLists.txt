@@ -1,16 +1,19 @@
 
 set_unicode()
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_WINE)
-add_definitions(-D_COMCTL32_)
+add_definitions(
+    -D__WINESRC__
+    -D_WINE
+    -D_COMCTL32_)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
+
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(comctl32.dll comctl32.spec)
 
-add_library(comctl32 SHARED
+list(APPEND SOURCE
     animate.c
     comboex.c
     comctl32undoc.c
@@ -51,11 +54,11 @@ add_library(comctl32 SHARED
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
+add_library(comctl32 SHARED ${SOURCE})
+
 set_module_type(comctl32 win32dll)
 
-target_link_libraries(comctl32
-    uuid
-    wine)
+target_link_libraries(comctl32 uuid wine)
 
 add_importlibs(comctl32
     user32

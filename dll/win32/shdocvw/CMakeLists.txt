@@ -8,7 +8,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(shdocvw.dll shdocvw.spec)
 
-add_library(shdocvw SHARED
+list(APPEND SOURCE
     classinfo.c
     client.c
     dochost.c
@@ -30,11 +30,11 @@ add_library(shdocvw SHARED
     shdocvw.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shdocvw.def)
 
+add_library(shdocvw SHARED ${SOURCE})
+
 set_module_type(shdocvw win32dll)
 
-target_link_libraries(shdocvw
-    uuid
-    wine)
+target_link_libraries(shdocvw uuid wine)
 
 add_importlibs(shdocvw
     comctl32
@@ -51,6 +51,6 @@ add_importlibs(shdocvw
     kernel32
     ntdll)
 
-add_dependencies(shdocvw shdocvw_v1 shdocvw_def)
+add_dependencies(shdocvw shdocvw_v1)
 add_cab_target(shdocvw 1)
 add_importlib_target(shdocvw.spec)

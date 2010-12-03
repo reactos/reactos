@@ -1,12 +1,16 @@
 
 spec2def(wmilib.sys wmilib.spec)
 
-add_library(wmilib SHARED
+list(APPEND SOURCE
     wmilib.c
     wmilib.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wmilib.def)
 
+add_library(wmilib SHARED ${SOURCE})
+
 set_module_type(wmilib kernelmodedriver)
+
 add_importlibs(wmilib ntoskrnl)
+add_importlib_target(wmilib.spec)
 
 add_cab_target(wmilib 2)

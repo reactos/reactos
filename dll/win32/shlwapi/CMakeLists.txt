@@ -7,7 +7,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 spec2def(shlwapi.dll shlwapi.spec)
 
-add_library(shlwapi SHARED
+list(APPEND SOURCE
     assoc.c
     clist.c
     istream.c
@@ -25,11 +25,11 @@ add_library(shlwapi SHARED
     shlwapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
+add_library(shlwapi SHARED ${SOURCE})
+
 set_module_type(shlwapi win32dll)
 
-target_link_libraries(shlwapi
-    wine
-    uuid)
+target_link_libraries(shlwapi wine uuid)
 
 add_importlibs(shlwapi
     user32
@@ -49,6 +49,6 @@ add_importlibs(shlwapi
     msvcrt
     ntdll)
 
-
 add_cab_target(shlwapi 1)
+
 add_importlib_target(shlwapi.spec)
