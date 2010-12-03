@@ -30,4 +30,7 @@ target_link_libraries(rsaenh wine)
 
 add_importlibs(rsaenh msvcrt crypt32 advapi32 kernel32 ntdll)
 
+add_importlib_target(rsaenh.spec)
+
 add_cab_target(rsaenh 1)
+

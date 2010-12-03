@@ -109,11 +109,9 @@ add_library(glu32 SHARED
 
 set_entrypoint(glu32 0)
 
-target_link_libraries(glu32 stlport -lsupc++ -lgcc)
+target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 -lcoldname)
 
 add_importlibs(glu32
-    mingw32
-    coldname
     opengl32
     gdi32
     msvcrt
@@ -122,3 +120,4 @@ add_importlibs(glu32
 
 add_cab_target(glu32 1)
 add_importlib_target(glu32.spec)
+

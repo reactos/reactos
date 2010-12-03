@@ -24,4 +24,7 @@ target_link_libraries(wintrust
 
 add_importlibs(wintrust crypt32 cryptui user32 advapi32 imagehlp msvcrt kernel32 ntdll)
 
+add_importlib_target(wintrust.spec)
+
 add_cab_target(wintrust 1)
+
