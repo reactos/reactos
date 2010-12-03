@@ -64,7 +64,6 @@ list(APPEND SOURCE
     windows/text.c
     windows/window.c
     windows/winpos.c
-    stubs.c
     user32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/user32.def)
     
