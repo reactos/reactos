@@ -384,7 +384,7 @@ WdmAudCleanupByMMixer()
 
 MMRESULT
 WdmAudGetMixerCapabilties(
-    IN ULONG DeviceId, 
+    IN ULONG DeviceId,
     LPMIXERCAPSW Capabilities)
 {
     if (MMixerGetCapabilities(&MixerContext, DeviceId, Capabilities) == MM_STATUS_SUCCESS)
@@ -396,10 +396,11 @@ WdmAudGetMixerCapabilties(
 MMRESULT
 WdmAudGetLineInfo(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINEW MixLine,
     IN ULONG Flags)
 {
-    if (MMixerGetLineInfo(&MixerContext, hMixer, Flags, MixLine)  == MM_STATUS_SUCCESS)
+    if (MMixerGetLineInfo(&MixerContext, hMixer, MixerId, Flags, MixLine)  == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -408,10 +409,11 @@ WdmAudGetLineInfo(
 MMRESULT
 WdmAudGetLineControls(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERLINECONTROLSW MixControls,
     IN ULONG Flags)
 {
-    if (MMixerGetLineControls(&MixerContext, hMixer, Flags, MixControls) == MM_STATUS_SUCCESS)
+    if (MMixerGetLineControls(&MixerContext, hMixer, MixerId, Flags, MixControls) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -420,10 +422,11 @@ WdmAudGetLineControls(
 MMRESULT
 WdmAudSetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags)
 {
-    if (MMixerSetControlDetails(&MixerContext, hMixer, Flags, MixDetails) == MM_STATUS_SUCCESS)
+    if (MMixerSetControlDetails(&MixerContext, hMixer, MixerId, Flags, MixDetails) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -433,10 +436,11 @@ WdmAudSetControlDetails(
 MMRESULT
 WdmAudGetControlDetails(
     IN HANDLE hMixer,
+    IN DWORD MixerId,
     IN LPMIXERCONTROLDETAILS MixDetails,
     IN ULONG Flags)
 {
-    if (MMixerGetControlDetails(&MixerContext, hMixer, Flags, MixDetails) == MM_STATUS_SUCCESS)
+    if (MMixerGetControlDetails(&MixerContext, hMixer, MixerId, Flags, MixDetails) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_ERROR;
@@ -610,6 +614,7 @@ WdmAudGetNumWdmDevsByMMixer(
 MMRESULT
 WdmAudQueryMixerInfoByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN DWORD MixerId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags)
@@ -617,6 +622,7 @@ WdmAudQueryMixerInfoByMMixer(
     LPMIXERLINEW MixLine;
     LPMIXERLINECONTROLSW MixControls;
     LPMIXERCONTROLDETAILS MixDetails;
+    HANDLE hMixer = NULL;
 
     MixLine = (LPMIXERLINEW)Parameter;
     MixControls = (LPMIXERLINECONTROLSW)Parameter;
@@ -624,19 +630,23 @@ WdmAudQueryMixerInfoByMMixer(
 
     /* FIXME param checks */
 
+    if (SoundDeviceInstance)
+    {
+        hMixer = SoundDeviceInstance->Handle;
+    }
+
     switch(uMsg)
     {
         case MXDM_GETLINEINFO:
-            return WdmAudGetLineInfo(SoundDeviceInstance->Handle, MixLine, Flags);
+            return WdmAudGetLineInfo(hMixer, MixerId, MixLine, Flags);
         case MXDM_GETLINECONTROLS:
-            return WdmAudGetLineControls(SoundDeviceInstance->Handle, MixControls, Flags);
+            return WdmAudGetLineControls(hMixer, MixerId, MixControls, Flags);
        case MXDM_SETCONTROLDETAILS:
-            return WdmAudSetControlDetails(SoundDeviceInstance->Handle, MixDetails, Flags);
-            break;
+            return WdmAudSetControlDetails(hMixer, MixerId, MixDetails, Flags);
        case MXDM_GETCONTROLDETAILS:
-            return WdmAudGetControlDetails(SoundDeviceInstance->Handle, MixDetails, Flags);
-            break;
+            return WdmAudGetControlDetails(hMixer, MixerId, MixDetails, Flags);
        default:
+           DPRINT1("MixerId %lu, uMsg %lu, Parameter %p, Flags %lu\n", MixerId, uMsg, Parameter, Flags);
            SND_ASSERT(0);
            return MMSYSERR_NOTSUPPORTED;
     }

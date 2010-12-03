@@ -89,7 +89,7 @@ MMixerOpen(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* invalid context passed */
-		DPRINT1("invalid context\n");
+        DPRINT1("invalid context\n");
         return Status;
     }
 
@@ -98,7 +98,7 @@ MMixerOpen(
     if (!MixerInfo)
     {
         /* invalid mixer id */
-		DPRINT1("invalid mixer id %lu\n", MixerId);
+        DPRINT1("invalid mixer id %lu\n", MixerId);
         return MM_STATUS_INVALID_PARAMETER;
     }
 
@@ -115,8 +115,9 @@ MMixerOpen(
 MIXER_STATUS
 MMixerGetLineInfo(
     IN PMIXER_CONTEXT MixerContext,
-    IN  HANDLE MixerHandle,
-    IN  ULONG Flags,
+    IN HANDLE MixerHandle,
+    IN ULONG MixerId,
+    IN ULONG Flags,
     OUT LPMIXERLINEW MixerLine)
 {
     MIXER_STATUS Status;
@@ -130,6 +131,17 @@ MMixerGetLineInfo(
     {
         /* invalid context passed */
         return Status;
+    }
+    if ((Flags & (MIXER_OBJECTF_MIXER | MIXER_OBJECTF_HMIXER)) == MIXER_OBJECTF_MIXER)
+    {
+        /* caller passed mixer id */
+        MixerHandle = (HANDLE)MMixerGetMixerInfoByIndex(MixerContext, MixerId);
+
+        if (!MixerHandle)
+        {
+            /* invalid parameter */
+            return MM_STATUS_INVALID_PARAMETER;
+        }
     }
 
     /* clear hmixer from flags */
@@ -220,6 +232,7 @@ MIXER_STATUS
 MMixerGetLineControls(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERLINECONTROLSW MixerLineControls)
 {
@@ -236,6 +249,18 @@ MMixerGetLineControls(
     {
         /* invalid context passed */
         return Status;
+    }
+
+    if ((Flags & (MIXER_OBJECTF_MIXER | MIXER_OBJECTF_HMIXER)) == MIXER_OBJECTF_MIXER)
+    {
+        /* caller passed mixer id */
+        MixerHandle = (HANDLE)MMixerGetMixerInfoByIndex(MixerContext, MixerId);
+
+        if (!MixerHandle)
+        {
+            /* invalid parameter */
+            return MM_STATUS_INVALID_PARAMETER;
+        }
     }
 
     Flags &= ~MIXER_OBJECTF_HMIXER;
@@ -312,6 +337,7 @@ MIXER_STATUS
 MMixerSetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails)
 {
@@ -328,6 +354,18 @@ MMixerSetControlDetails(
     {
         /* invalid context passed */
         return Status;
+    }
+
+    if ((Flags & (MIXER_OBJECTF_MIXER | MIXER_OBJECTF_HMIXER)) == MIXER_OBJECTF_MIXER)
+    {
+        /* caller passed mixer id */
+        MixerHandle = (HANDLE)MMixerGetMixerInfoByIndex(MixerContext, MixerId);
+
+        if (!MixerHandle)
+        {
+            /* invalid parameter */
+            return MM_STATUS_INVALID_PARAMETER;
+        }
     }
 
     /* get mixer info */
@@ -362,6 +400,7 @@ MIXER_STATUS
 MMixerGetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails)
 {
@@ -378,6 +417,18 @@ MMixerGetControlDetails(
     {
         /* invalid context passed */
         return Status;
+    }
+
+    if ((Flags & (MIXER_OBJECTF_MIXER | MIXER_OBJECTF_HMIXER)) == MIXER_OBJECTF_MIXER)
+    {
+        /* caller passed mixer id */
+        MixerHandle = (HANDLE)MMixerGetMixerInfoByIndex(MixerContext, MixerId);
+
+        if (!MixerHandle)
+        {
+            /* invalid parameter */
+            return MM_STATUS_INVALID_PARAMETER;
+        }
     }
 
     /* get mixer info */

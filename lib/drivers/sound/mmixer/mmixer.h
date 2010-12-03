@@ -149,7 +149,8 @@ MMixerOpen(
 MIXER_STATUS
 MMixerGetLineInfo(
     IN PMIXER_CONTEXT MixerContext,
-    IN  HANDLE MixerHandle,
+    IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN  ULONG Flags,
     OUT LPMIXERLINEW MixerLine);
 
@@ -157,6 +158,7 @@ MIXER_STATUS
 MMixerGetLineControls(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERLINECONTROLSW MixerLineControls);
 
@@ -164,6 +166,7 @@ MIXER_STATUS
 MMixerSetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
 
@@ -171,6 +174,7 @@ MIXER_STATUS
 MMixerGetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE MixerHandle,
+    IN ULONG MixerId,
     IN ULONG Flags,
     OUT LPMIXERCONTROLDETAILS MixerControlDetails);
 
