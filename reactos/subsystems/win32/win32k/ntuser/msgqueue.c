@@ -532,7 +532,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    /* free the message */
    ExFreePoolWithTag(Message, TAG_USRMSG);
 
-   pti->pcti->CTI_flags &= ~CTI_INSENDMESSAGE;
+   /* do not hangup on the user if this is reentering */
+   if (!SaveMsg) pti->pcti->CTI_flags &= ~CTI_INSENDMESSAGE;
    pti->pusmCurrent = SaveMsg;
 
    return(TRUE);
