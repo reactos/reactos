@@ -702,7 +702,7 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
             if (Gap > BufferLength)
             {
                 // insert silence samples
-                DPRINT("Inserting Silence Buffer Offset %lu GapLength %lu\n", m_CommonBufferOffset, BufferLength);
+                DPRINT1("Inserting Silence Buffer Offset %lu GapLength %lu\n", m_CommonBufferOffset, BufferLength);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;
@@ -761,7 +761,7 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
             if (Gap > BufferLength)
             {
                 // insert silence samples
-                DPRINT("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
+                DPRINT1("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;

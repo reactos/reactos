@@ -16,7 +16,4 @@
 	<directory name="legacy">
 		<xi:include href="legacy/directory.rbuild" />
 	</directory>
-	<directory name="sysaudio">
-		<xi:include href="sysaudio/sysaudio.rbuild" />
-	</directory>
 </group>
