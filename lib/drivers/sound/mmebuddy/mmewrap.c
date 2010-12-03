@@ -130,11 +130,11 @@ MmeOpenDevice(
     UINT Message;
     PSOUND_DEVICE SoundDevice;
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
-    LPWAVEFORMATEX Format;
+    LPWAVEFORMATEX Format = NULL;
 
     SND_TRACE(L"Opening device");
 
-    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) );    /* FIXME? wave in too? */
+    VALIDATE_MMSYS_PARAMETER( IS_WAVE_DEVICE_TYPE(DeviceType) || IS_MIXER_DEVICE_TYPE(DeviceType) || IS_MIDI_DEVICE_TYPE(DeviceType) );    /* FIXME? wave in too? */
     VALIDATE_MMSYS_PARAMETER( OpenParameters );
 
     Result = GetSoundDevice(DeviceType, DeviceId, &SoundDevice);
