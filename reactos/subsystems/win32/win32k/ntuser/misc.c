@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Misc User funcs
- * FILE:             subsystem/win32/win32k/ntuser/misc.c
+ * FILE:             subsystems/win32/win32k/ntuser/misc.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY:
  *       2003/05/22  Created
@@ -102,6 +102,8 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_INSENDMESSAGE:
          {
+           PUSER_SENT_MESSAGE Message;
+           PLIST_ENTRY Entry;
            PUSER_MESSAGE_QUEUE MessageQueue = 
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue;
            DPRINT1("THREADSTATE_INSENDMESSAGE\n");
@@ -109,19 +111,37 @@ NtUserGetThreadState(
            ret = ISMEX_NOSEND;
            if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
            {
-             ret = ISMEX_SEND;
+             Entry = MessageQueue->SentMessagesListHead.Flink; 
+             Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+
+             if (Message->SenderQueue)
+                ret = ISMEX_SEND;
+             else
+             {
+                if (Message->CompletionCallback)
+                   ret = ISMEX_CALLBACK;
+                else
+                   ret = ISMEX_NOTIFY;
+             }
+             /* if ReplyMessage */
+             if (Message->QS_Flags & QS_SMRESULT) ret |= ISMEX_REPLIED;
            }
-           else if (!IsListEmpty(&MessageQueue->NotifyMessagesListHead))
-           {
-           /* FIXME Need to set message flag when in callback mode with notify */
-             ret = ISMEX_NOTIFY;
-           }
-           /* FIXME Need to set message flag if replied to or ReplyMessage */
+
            break;         
          }
-      case THREADSTATE_GETMESSAGETIME: 
-         /* FIXME Needs more work! */
+      case THREADSTATE_GETMESSAGETIME:
          ret = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast;
+         break;
+
+      case THREADSTATE_UPTIMELASTREAD:
+         {
+           PTHREADINFO pti;
+           LARGE_INTEGER LargeTickCount;
+           pti = PsGetCurrentThreadWin32Thread();
+           KeQueryTickCount(&LargeTickCount);
+           pti->MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
+           pti->pcti->tickLastMsgChecked = LargeTickCount.u.LowPart;
+         }
          break;
 
       case THREADSTATE_GETINPUTSTATE:

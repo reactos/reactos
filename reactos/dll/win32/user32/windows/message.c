@@ -1097,7 +1097,6 @@ WINAPI
 InSendMessage(VOID)
 {
   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
-//  FIXME("ISM %x\n",pcti);
   if ( pcti )
   {
     if (pcti->CTI_flags & CTI_INSENDMESSAGE)
@@ -1118,7 +1117,6 @@ InSendMessageEx(
   LPVOID lpReserved)
 {
   PCLIENTTHREADINFO pcti = GetWin32ClientInfo()->pClientThreadInfo;
-//  FIXME("ISMEX %x\n",pcti);
   if (pcti && !(pcti->CTI_flags & CTI_INSENDMESSAGE))
      return ISMEX_NOSEND;
   else
@@ -1442,6 +1440,12 @@ IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN 
     
     Class = DesktopPtrToUser(Wnd->pcls); 
     WndProc = NULL;
+
+    if ( Wnd->head.pti != GetW32ThreadInfo())
+    {  // Must be inside the same thread!
+       SetLastError( ERROR_MESSAGE_SYNC_ONLY );
+       return 0;
+    }
   /*
       This is the message exchange for user32. If there's a need to monitor messages,
       do it here!
@@ -1586,11 +1590,16 @@ DispatchMessageA(CONST MSG *lpmsg)
     MSG UnicodeMsg;
     PWND Wnd;
 
+    if ( lpmsg->message & ~WM_MAXIMUM )
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+
     if (lpmsg->hwnd != NULL)
     {
         Wnd = ValidateHwnd(lpmsg->hwnd);
-        if (!Wnd || Wnd->head.pti != GetW32ThreadInfo())
-            return 0;
+        if (!Wnd) return 0;
     }
     else
         Wnd = NULL;
@@ -1602,7 +1611,7 @@ DispatchMessageA(CONST MSG *lpmsg)
         if ( lpmsg->message == WM_SYSTIMER )
            return NtUserDispatchMessage( (PMSG)lpmsg );
 
-       _SEH2_TRY // wine does this.
+       _SEH2_TRY // wine does this. Hint: Prevents call to another thread....
        {
            Ret = WndProc(lpmsg->hwnd,
                          lpmsg->message,
@@ -1613,7 +1622,6 @@ DispatchMessageA(CONST MSG *lpmsg)
        {
        }
        _SEH2_END;
-
     }
     else if (Wnd != NULL)
     {
@@ -1654,11 +1662,16 @@ DispatchMessageW(CONST MSG *lpmsg)
     LRESULT Ret = 0;
     PWND Wnd;
 
+    if ( lpmsg->message & ~WM_MAXIMUM )
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+
     if (lpmsg->hwnd != NULL)
     {
         Wnd = ValidateHwnd(lpmsg->hwnd);
-        if (!Wnd || Wnd->head.pti != GetW32ThreadInfo())
-            return 0;
+        if (!Wnd) return 0;
     }
     else
         Wnd = NULL;
@@ -1795,6 +1808,42 @@ GetMessageW(LPMSG lpMsg,
   return Res;
 }
 
+BOOL WINAPI
+PeekMessageWorker(PNTUSERGETMESSAGEINFO pInfo,
+	          HWND hWnd,
+	          UINT wMsgFilterMin,
+	          UINT wMsgFilterMax,
+	          UINT wRemoveMsg)
+{
+  PCLIENTINFO pci;
+  PCLIENTTHREADINFO pcti;
+  pci = GetWin32ClientInfo();
+  pcti = pci->pClientThreadInfo;
+
+  if (!hWnd && pci && pcti)
+  {
+     pci->cSpins++;
+
+     if ((pci->cSpins >= 100) && (pci->dwTIFlags & TIF_SPINNING))
+     {  // Yield after 100 spin cycles and ready to swap vinyl.
+        if (!(pci->dwTIFlags & TIF_WAITFORINPUTIDLE))
+        {  // Not waiting for idle event.
+           if (!pcti->fsChangeBits && !pcti->fsWakeBits)
+           {  // No messages are available.
+              if ((GetTickCount() - pcti->tickLastMsgChecked) > 1000)
+              {  // Up the msg read count if over 1 sec.
+                 NtUserGetThreadState(THREADSTATE_UPTIMELASTREAD);
+              }
+              pci->cSpins = 0;
+              ZwYieldExecution();
+              FIXME("seeSpins!\n");
+              return FALSE;
+           }
+        }
+     }
+  }
+  return NtUserPeekMessage(pInfo, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+}
 
 /*
  * @implemented
@@ -1812,7 +1861,7 @@ PeekMessageA(LPMSG lpMsg,
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
   MsgConversionCleanup(lpMsg, TRUE, FALSE, NULL);
-  Res = NtUserPeekMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  Res = PeekMessageWorker(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
     {
       return FALSE;
@@ -1865,7 +1914,7 @@ PeekMessageW(
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
   MsgConversionCleanup(lpMsg, FALSE, FALSE, NULL);
-  Res = NtUserPeekMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  Res = PeekMessageWorker(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
     {
       return FALSE;
@@ -2567,7 +2616,8 @@ DWORD
 WINAPI
 RealGetQueueStatus(UINT flags)
 {
-   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_ALLINPUT))
+   #define QS_TEMPALLINPUT 255 // ATM, do not support QS_RAWINPUT
+   if (flags & ~(QS_SMRESULT|QS_ALLPOSTMESSAGE|QS_TEMPALLINPUT))
    {
       SetLastError( ERROR_INVALID_FLAGS );
       return 0;
@@ -2802,6 +2852,8 @@ RealMsgWaitForMultipleObjectsEx(
    LPHANDLE RealHandles;
    HANDLE MessageQueueHandle;
    DWORD Result;
+   PCLIENTINFO pci;
+   PCLIENTTHREADINFO pcti;
 
    if (dwFlags & ~(MWMO_WAITALL | MWMO_ALERTABLE | MWMO_INPUTAVAILABLE))
    {
@@ -2809,14 +2861,21 @@ RealMsgWaitForMultipleObjectsEx(
       return WAIT_FAILED;
    }
 
-/*
-   if (dwFlags & MWMO_INPUTAVAILABLE)
-   {
-      RealGetQueueStatus(dwWakeMask);
-   }
-   */
+   pci = GetWin32ClientInfo();
+   if (!pci) return WAIT_FAILED;
 
-   MessageQueueHandle = NtUserMsqSetWakeMask(dwWakeMask);
+   pcti = pci->pClientThreadInfo;
+   if (pcti && ( !nCount || !(dwFlags & MWMO_WAITALL) ))
+   {
+      if ( (pcti->fsChangeBits & LOWORD(dwWakeMask)) ||
+           ( (dwFlags & MWMO_INPUTAVAILABLE) && (pcti->fsWakeBits & LOWORD(dwWakeMask)) ) )
+      {
+         //FIXME("Chg 0x%x Wake 0x%x Mask 0x%x nCnt %d\n",pcti->fsChangeBits, pcti->fsWakeBits, dwWakeMask, nCount);
+         return nCount;
+      }
+   }
+
+   MessageQueueHandle = NtUserMsqSetWakeMask(MAKELONG(dwWakeMask, dwFlags));
    if (MessageQueueHandle == NULL)
    {
       SetLastError(0); /* ? */
@@ -2840,7 +2899,7 @@ RealMsgWaitForMultipleObjectsEx(
 
    HeapFree(GetProcessHeap(), 0, RealHandles);
    NtUserMsqClearWakeMask();
-
+   //FIXME("Result 0X%x\n",Result);
    return Result;
 }
 

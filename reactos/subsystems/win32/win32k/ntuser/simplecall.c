@@ -333,6 +333,8 @@ NtUserCallOneParam(
           _SEH2_END;
           RETURN(Ret);
       }
+      case ONEPARAM_ROUTINE_REPLYMESSAGE:
+          RETURN (co_MsqReplyMessage((LRESULT) Param));
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);

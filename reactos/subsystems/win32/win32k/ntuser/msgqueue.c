@@ -1,22 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License along
- *  with this program; if not, write to the Free Software Foundation, Inc.,
- *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- */
-/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Message queues
@@ -41,74 +23,6 @@ static PAGED_LOOKASIDE_LIST MessageLookasideList;
 
 /* FUNCTIONS *****************************************************************/
 
-HANDLE FASTCALL
-IntMsqSetWakeMask(DWORD WakeMask)
-{
-   PTHREADINFO Win32Thread;
-   PUSER_MESSAGE_QUEUE MessageQueue;
-   HANDLE MessageEventHandle;
-
-   Win32Thread = PsGetCurrentThreadWin32Thread();
-   if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
-      return 0;
-
-   MessageQueue = Win32Thread->MessageQueue;
-   MessageQueue->WakeMask = WakeMask;
-   MessageEventHandle = MessageQueue->NewMessagesHandle;
-
-   if (Win32Thread->pcti)
-      Win32Thread->pcti->fsWakeMask = WakeMask;
-
-   IdlePing();
-
-   return MessageEventHandle;
-}
-
-BOOL FASTCALL
-IntMsqClearWakeMask(VOID)
-{
-   PTHREADINFO Win32Thread;
-   PUSER_MESSAGE_QUEUE MessageQueue;
-
-   Win32Thread = PsGetCurrentThreadWin32Thread();
-   if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
-      return FALSE;
-
-   MessageQueue = Win32Thread->MessageQueue;
-// HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
-   MessageQueue->WakeMask = ~0;
-
-   if (Win32Thread->pcti)
-      Win32Thread->pcti->fsWakeMask = 0;
-
-   IdlePong();
-
-   return TRUE;
-}
-
-VOID FASTCALL
-MsqWakeQueue(PUSER_MESSAGE_QUEUE Queue, DWORD MessageBits)
-{
-   Queue->QueueBits |= MessageBits;
-   Queue->ChangedBits |= MessageBits;
-   if (Queue->WakeMask & MessageBits)
-      KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
-}
-
-VOID FASTCALL
-MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
-{
-   Queue->PaintCount++;
-   MsqWakeQueue(Queue, QS_PAINT);
-}
-
-VOID FASTCALL
-MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
-{
-   Queue->PaintCount--;
-}
-
-
 INIT_FUNCTION
 NTSTATUS
 NTAPI
@@ -125,12 +39,153 @@ MsqInitializeImpl(VOID)
    return(STATUS_SUCCESS);
 }
 
+HANDLE FASTCALL
+IntMsqSetWakeMask(DWORD WakeMask)
+{
+   PTHREADINFO Win32Thread;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+   HANDLE MessageEventHandle;
+   DWORD dwFlags = HIWORD(WakeMask);
+
+   Win32Thread = PsGetCurrentThreadWin32Thread();
+   if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
+      return 0;
+
+   MessageQueue = Win32Thread->MessageQueue;
+// Win32Thread->pEventQueueServer; IntMsqSetWakeMask returns Win32Thread->hEventQueueClient
+   MessageEventHandle = MessageQueue->NewMessagesHandle;
+
+   if (Win32Thread->pcti)
+   {
+      if ( (Win32Thread->pcti->fsChangeBits & LOWORD(WakeMask)) ||
+           ( (dwFlags & MWMO_INPUTAVAILABLE) && (Win32Thread->pcti->fsWakeBits & LOWORD(WakeMask)) ) )
+      {
+         DPRINT1("Chg 0x%x Wake 0x%x Mask 0x%x\n",Win32Thread->pcti->fsChangeBits, Win32Thread->pcti->fsWakeBits, WakeMask);
+         KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE); // Wake it up!
+         return MessageEventHandle;
+      }
+   }
+
+   IdlePing();
+
+   return MessageEventHandle;
+}
+
+BOOL FASTCALL
+IntMsqClearWakeMask(VOID)
+{
+   PTHREADINFO Win32Thread;
+
+   Win32Thread = PsGetCurrentThreadWin32Thread();
+   if (Win32Thread == NULL || Win32Thread->MessageQueue == NULL)
+      return FALSE;
+   // Very hacky, but that is what they do.
+   Win32Thread->pcti->fsWakeBits = 0;
+
+   IdlePong();
+
+   return TRUE;
+}
+
+/*
+   Due to the uncertainty of knowing what was set in our multilevel message queue,
+   and even if the bits are all cleared. The same as cTimers/cPaintsReady.
+   I think this is the best solution... (jt) */
+VOID FASTCALL
+MsqWakeQueue(PUSER_MESSAGE_QUEUE Queue, DWORD MessageBits, BOOL KeyEvent)
+{
+   PTHREADINFO pti;
+
+   pti = Queue->Thread->Tcb.Win32Thread;
+   pti->pcti->fsWakeBits |= MessageBits;
+   pti->pcti->fsChangeBits |= MessageBits;
+
+   // Start bit accounting to help clear the main set of bits.
+   if (MessageBits & QS_KEY)         Queue->nCntsQBits[QSRosKey]++;
+   if (MessageBits & QS_MOUSEMOVE)   Queue->nCntsQBits[QSRosMouseMove]++;
+   if (MessageBits & QS_MOUSEBUTTON) Queue->nCntsQBits[QSRosMouseButton]++;
+   if (MessageBits & QS_POSTMESSAGE) Queue->nCntsQBits[QSRosPostMessage]++;
+   if (MessageBits & QS_SENDMESSAGE) Queue->nCntsQBits[QSRosSendMessage]++;
+   if (MessageBits & QS_HOTKEY)      Queue->nCntsQBits[QSRosHotKey]++;
+
+   if (KeyEvent)
+      KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
+}
+
+VOID FASTCALL
+ClearMsgBitsMask(PUSER_MESSAGE_QUEUE Queue, UINT MessageBits)
+{
+   PTHREADINFO pti;
+   UINT ClrMask = 0;
+
+   pti = Queue->Thread->Tcb.Win32Thread;
+
+   if (MessageBits & QS_KEY)
+   {  
+      if (--Queue->nCntsQBits[QSRosKey] == 0) ClrMask |= QS_KEY;
+   }
+   if (MessageBits & QS_MOUSEMOVE) // ReactOS hard coded.
+   {  // Account for tracking mouse moves..
+      if (--Queue->nCntsQBits[QSRosMouseMove] == 0) ClrMask |= QS_MOUSEMOVE;
+      // Handle mouse move bits here.
+      if (Queue->MouseMoved) ClrMask |= QS_MOUSEMOVE;
+   }
+   if (MessageBits & QS_MOUSEBUTTON)
+   {
+      if (--Queue->nCntsQBits[QSRosMouseButton] == 0) ClrMask |= QS_MOUSEBUTTON;
+   }
+   if (MessageBits & QS_POSTMESSAGE)
+   {
+      if (--Queue->nCntsQBits[QSRosPostMessage] == 0) ClrMask |= QS_POSTMESSAGE;
+   }
+   if (MessageBits & QS_TIMER) // ReactOS hard coded.
+   {  // Handle timer bits here.
+      if ( pti->cTimersReady )
+      {
+         if (--pti->cTimersReady == 0) ClrMask |= QS_TIMER;
+      }
+   }
+   if (MessageBits & QS_PAINT) // ReactOS hard coded.
+   {  // Handle paint bits here.
+      if ( pti->cPaintsReady )
+      {
+         if (--pti->cPaintsReady == 0) ClrMask |= QS_PAINT;
+      }
+   }
+   if (MessageBits & QS_SENDMESSAGE)
+   {
+      if (--Queue->nCntsQBits[QSRosSendMessage] == 0) ClrMask |= QS_SENDMESSAGE;
+   }
+   if (MessageBits & QS_HOTKEY)
+   {
+      if (--Queue->nCntsQBits[QSRosHotKey] == 0) ClrMask |= QS_HOTKEY;
+   }
+
+   pti->pcti->fsWakeBits &= ~ClrMask;
+   pti->pcti->fsChangeBits &= ~ClrMask;
+}
+
+VOID FASTCALL
+MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
+{
+   PTHREADINFO pti;
+   pti = Queue->Thread->Tcb.Win32Thread;
+   pti->cPaintsReady++;
+   MsqWakeQueue(Queue, QS_PAINT, TRUE);
+}
+
+VOID FASTCALL
+MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
+{
+   ClearMsgBitsMask(Queue, QS_PAINT);
+}
+
 VOID FASTCALL
 MsqPostMouseMove(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg)
 {
     MessageQueue->MouseMoveMsg = *Msg;
     MessageQueue->MouseMoved = TRUE;
-    MsqWakeQueue(MessageQueue, QS_MOUSEMOVE);
+    MsqWakeQueue(MessageQueue, QS_MOUSEMOVE, TRUE);
 }
 
 VOID FASTCALL
@@ -366,6 +421,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_SENT_MESSAGE Message;
    PLIST_ENTRY Entry;
    LRESULT Result;
+   PTHREADINFO pti;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
@@ -376,10 +432,19 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
    Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
 
+   pti = MessageQueue->Thread->Tcb.Win32Thread;
+   // Processing a message sent to it from another thread.
+   if ( MessageQueue != Message->SenderQueue ) // most likely, but, to be sure.
+   {
+      pti->pcti->CTI_flags |= CTI_INSENDMESSAGE; // Let the user know...
+   }
+
    /* insert it to the list of messages that are currently dispatched by this
       message queue */
    InsertTailList(&MessageQueue->LocalDispatchingMessagesHead,
                   &Message->ListEntry);
+
+   ClearMsgBitsMask(MessageQueue, Message->QS_Flags);
 
    if (Message->HookMessage == MSQ_ISHOOK)
    {  // Direct Hook Call processor
@@ -419,6 +484,11 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    /* still keep the sender's message queue locked, so the sender can't exit the
       MsqSendMessage() function (if timed out) */
 
+   if (Message->QS_Flags & QS_SMRESULT)
+   {
+      Result = Message->lResult;
+   }
+
    /* Let the sender know the result. */
    if (Message->Result != NULL)
    {
@@ -456,6 +526,9 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
    /* free the message */
    ExFreePoolWithTag(Message, TAG_USRMSG);
+
+   pti->pcti->CTI_flags &= ~CTI_INSENDMESSAGE;
+
    return(TRUE);
 }
 
@@ -483,6 +556,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
       if (PostedMessage->Msg.hwnd == Window->head.h)
       {
          RemoveEntryList(&PostedMessage->ListEntry);
+         ClearMsgBitsMask(MessageQueue, PostedMessage->QS_Flags);
          MsqDestroyMessage(PostedMessage);
          CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
       }
@@ -504,6 +578,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
          RemoveEntryList(&SentMessage->ListEntry);
+         ClearMsgBitsMask(MessageQueue, SentMessage->QS_Flags);
 
          /* remove the message from the dispatching list if neede */
          if ((!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
@@ -581,6 +656,8 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Message->Msg.lParam = lParam;
    Message->CompletionEvent = &CompletionEvent;
    Message->Result = &Result;
+   Message->lResult = 0;
+   Message->QS_Flags = 0;
    Message->SenderQueue = ThreadQueue;
    IntReferenceMessageQueue(ThreadQueue);
    Message->CompletionCallback = NULL;
@@ -596,7 +673,8 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    /* queue it in the destination's message queue */
    InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
 
-   MsqWakeQueue(MessageQueue, QS_SENDMESSAGE);
+   Message->QS_Flags = QS_SENDMESSAGE;
+   MsqWakeQueue(MessageQueue, QS_SENDMESSAGE, TRUE);
 
    /* we can't access the Message anymore since it could have already been deleted! */
 
@@ -746,7 +824,9 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN HardwareMessa
        InsertTailList(&MessageQueue->HardwareMessagesListHead,
                       &Message->ListEntry);
    }
-   MsqWakeQueue(MessageQueue, MessageBits);
+
+   Message->QS_Flags = MessageBits;
+   MsqWakeQueue(MessageQueue, MessageBits, (MessageBits & QS_TIMER ? FALSE : TRUE));
 }
 
 VOID FASTCALL
@@ -754,7 +834,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
 {
    MessageQueue->QuitPosted = TRUE;
    MessageQueue->QuitExitCode = ExitCode;
-   MsqWakeQueue(MessageQueue, QS_POSTMESSAGE);
+   MsqWakeQueue(MessageQueue, QS_POSTMESSAGE|QS_ALLPOSTMESSAGE, TRUE);
 }
 
 /***********************************************************************
@@ -1122,9 +1202,29 @@ co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
         *pMsg = msg;
 
     if(Remove)
+    {
+        ClearMsgBitsMask(MessageQueue, QS_MOUSEMOVE);
         MessageQueue->MouseMoved = FALSE;
+    }
 
    return AcceptMessage;
+}
+
+/* check whether a message filter contains at least one potential hardware message */
+static INT FASTCALL
+filter_contains_hw_range( UINT first, UINT last )
+{
+   /* hardware message ranges are (in numerical order):
+    *   WM_NCMOUSEFIRST .. WM_NCMOUSELAST
+    *   WM_KEYFIRST .. WM_KEYLAST
+    *   WM_MOUSEFIRST .. WM_MOUSELAST
+    */
+    if (!last) --last;
+    if (last < WM_NCMOUSEFIRST) return 0;
+    if (first > WM_NCMOUSELAST && last < WM_KEYFIRST) return 0;
+    if (first > WM_KEYLAST && last < WM_MOUSEFIRST) return 0;
+    if (first > WM_MOUSELAST) return 0;
+    return 1;
 }
 
 BOOL APIENTRY
@@ -1133,6 +1233,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                          IN PWND Window,
                          IN UINT MsgFilterLow,
                          IN UINT MsgFilterHigh,
+                         IN UINT QSflags,
                          OUT MSG* pMsg)
 {
 
@@ -1141,33 +1242,45 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
     PLIST_ENTRY ListHead, CurrentEntry = NULL;
     MSG msg;
 
+    if (!filter_contains_hw_range( MsgFilterLow, MsgFilterHigh )) return FALSE;
+
     ListHead = &MessageQueue->HardwareMessagesListHead;
     CurrentEntry = ListHead->Flink;
 
-    while(CurrentEntry != ListHead)
-    {
-        CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
+    if (IsListEmpty(CurrentEntry)) return FALSE;
+
+    CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                           ListEntry);
-
-        msg = CurrentMessage->Msg;
-
-        AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
-
+    do 
+    {
+        if (IsListEmpty(CurrentEntry)) break;
+        if (!CurrentMessage) break;
         CurrentEntry = CurrentMessage->ListEntry.Flink;
 
-        if (Remove)
+        if ( (( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && (CurrentMessage->QS_Flags & QSflags)) ||
+             ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) )
         {
-            RemoveEntryList(&CurrentMessage->ListEntry);
-            MsqDestroyMessage(CurrentMessage);
-        }
+           msg = CurrentMessage->Msg;
 
-        if(AcceptMessage)
-        {
-            *pMsg = msg;
-            return TRUE;
-        }
+           AcceptMessage = co_IntProcessHardwareMessage(&msg, &Remove, MsgFilterLow, MsgFilterHigh);
 
+           if (Remove)
+           {
+               RemoveEntryList(&CurrentMessage->ListEntry);
+               ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
+               MsqDestroyMessage(CurrentMessage);
+           }
+
+           if (AcceptMessage)
+           {
+              *pMsg = msg;
+              return TRUE;
+           }
+        }
+        CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
+                                          ListEntry);
     }
+    while(CurrentEntry != ListHead);
 
     return FALSE;
 }
@@ -1178,6 +1291,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                   IN PWND Window,
                   IN UINT MsgFilterLow,
                   IN UINT MsgFilterHigh,
+                  IN UINT QSflags,
                   OUT PMSG Message)
 {
    PLIST_ENTRY CurrentEntry;
@@ -1186,29 +1300,35 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
    
    CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
    ListHead = &MessageQueue->PostedMessagesListHead;
-   while (CurrentEntry != ListHead)
-   {
-      CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
+
+   if (IsListEmpty(CurrentEntry)) return FALSE;
+
+   CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
                                          ListEntry);
-      if ( ( !Window ||
-            PtrToInt(Window) == 1 ||
-            Window->head.h == CurrentMessage->Msg.hwnd ) &&
-            ( (MsgFilterLow == 0 && MsgFilterHigh == 0) ||
-              ( MsgFilterLow <= CurrentMessage->Msg.message &&
-                MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
+   do
+   {
+      if (IsListEmpty(CurrentEntry)) break;
+      if (!CurrentMessage) break;
+      CurrentEntry = CurrentEntry->Flink;
+
+      if ( ( !Window || Window == HWND_BOTTOM || Window->head.h == CurrentMessage->Msg.hwnd ) &&
+            ( ( ( MsgFilterLow == 0 && MsgFilterHigh == 0 ) && CurrentMessage->QS_Flags & QSflags ) ||
+              ( MsgFilterLow <= CurrentMessage->Msg.message && MsgFilterHigh >= CurrentMessage->Msg.message ) ) )
       {
-         *Message= CurrentMessage->Msg;
+         *Message = CurrentMessage->Msg;
 
          if (Remove)
          {
              RemoveEntryList(&CurrentMessage->ListEntry);
+             ClearMsgBitsMask(MessageQueue, CurrentMessage->QS_Flags);
              MsqDestroyMessage(CurrentMessage);
          }
-
          return(TRUE);
       }
-      CurrentEntry = CurrentEntry->Flink;
+      CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
+                                         ListEntry);
    }
+   while (CurrentEntry != ListHead);
 
    return(FALSE);
 }
@@ -1257,9 +1377,6 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    KeQueryTickCount(&LargeTickCount);
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
    MessageQueue->FocusWindow = NULL;
-   MessageQueue->PaintCount = 0;
-// HACK!!!!!!! Newbies that wrote this should hold your head down in shame! (jt)
-   MessageQueue->WakeMask = ~0;
    MessageQueue->NewMessagesHandle = NULL;
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
@@ -1288,6 +1405,10 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    PLIST_ENTRY CurrentEntry;
    PUSER_MESSAGE CurrentMessage;
    PUSER_SENT_MESSAGE CurrentSentMessage;
+   PTHREADINFO pti;
+   
+   pti = MessageQueue->Thread->Tcb.Win32Thread;
+
 
    /* cleanup posted messages */
    while (!IsListEmpty(&MessageQueue->PostedMessagesListHead))
@@ -1391,6 +1512,16 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          locked later */
    }
 
+   // Clear it all out.
+   pti->pcti->fsWakeBits = 0;
+   pti->pcti->fsChangeBits = 0;
+
+   MessageQueue->nCntsQBits[QSRosKey] = 0;
+   MessageQueue->nCntsQBits[QSRosMouseMove] = 0;
+   MessageQueue->nCntsQBits[QSRosMouseButton] = 0;
+   MessageQueue->nCntsQBits[QSRosPostMessage] = 0;
+   MessageQueue->nCntsQBits[QSRosSendMessage] = 0;
+   MessageQueue->nCntsQBits[QSRosHotKey] = 0;
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -1473,6 +1604,38 @@ MsqGetMessageExtraInfo(VOID)
    }
 
    return MessageQueue->ExtraInfo;
+}
+
+BOOL FASTCALL
+co_MsqReplyMessage( LRESULT lResult )
+{
+   PUSER_SENT_MESSAGE Message;
+   PLIST_ENTRY Entry;
+   PTHREADINFO pti;
+   PUSER_MESSAGE_QUEUE MessageQueue;
+
+   pti = PsGetCurrentThreadWin32Thread();
+   MessageQueue = pti->MessageQueue;
+
+   if(!MessageQueue) return FALSE;
+
+   if (IsListEmpty(&MessageQueue->SentMessagesListHead))
+   {
+      return(FALSE);
+   }
+   // Do we loop through all msgs or just set the first one?
+   Entry = MessageQueue->SentMessagesListHead.Flink; 
+   Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+
+   if (Message->QS_Flags & QS_SMRESULT) return FALSE;
+
+   if (Message->SenderQueue || Message->CompletionCallback)
+   {
+      Message->lResult = lResult;
+      Message->QS_Flags |= QS_SMRESULT;
+      MsqWakeQueue(MessageQueue, 0, TRUE); // Wake it up!? Bits?
+   }
+   return TRUE;
 }
 
 HWND FASTCALL

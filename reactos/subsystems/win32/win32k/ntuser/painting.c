@@ -2,7 +2,7 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          Window painting function
- *  FILE:             subsys/win32k/ntuser/painting.c
+ *  FILE:             subsystems/win32/win32k/ntuser/painting.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
  *  REVISION HISTORY:
  *       06/06/2001   Created (?)
@@ -660,9 +660,7 @@ IntGetPaintMessage(
    MSG *Message,
    BOOL Remove)
 {
-   PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
-
-   if (!MessageQueue->PaintCount)
+   if (!Thread->cPaintsReady)
       return FALSE;
 
    if ((MsgFilterMin != 0 || MsgFilterMax != 0) &&
@@ -673,9 +671,9 @@ IntGetPaintMessage(
 
    if (Message->hwnd == NULL)
    {
-      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found! Counts %d\n",Thread->cPaintsReady);
       /* Hack to stop spamming the debuglog ! */
-      MessageQueue->PaintCount = 0;
+      Thread->cPaintsReady = 0;
       return FALSE;
    }
 

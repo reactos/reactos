@@ -2,7 +2,7 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
- * FILE:             subsys/win32k/ntuser/class.c
+ * FILE:             subsystems/win32/win32k/ntuser/input.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
@@ -205,13 +205,6 @@ MouseThreadMain(PVOID StartContext)
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    MOUSE_ATTRIBUTES MouseAttr;
-
-   Status = Win32kInitWin32Thread(PsGetCurrentThread());
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
-      return; //(Status);
-   }
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -1399,8 +1392,9 @@ IntKeyboardInput(KEYBDINPUT *ki)
          FocusMessageQueue->Desktop->pDeskInfo->LastInputWasKbd = TRUE;
 
          Msg.pt = gpsi->ptCursor;
-
-         MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);
+      // Post to hardware queue, based on the first part of wine "some GetMessage tests"
+      // in test_PeekMessage()
+         MsqPostMessage(FocusMessageQueue, &Msg, TRUE, QS_KEY);
    }
    else
    {

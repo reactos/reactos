@@ -1926,7 +1926,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
 
         RtlZeroMemory(&ctiSave, sizeof(CLIENTTHREADINFO));
 
-        if (W32Thread->pcti && OldDesktop)
+        if (W32Thread->pcti && OldDesktop && NtCurrentTeb())
         {
            RtlCopyMemory(&ctiSave, W32Thread->pcti, sizeof(CLIENTTHREADINFO));
            DPRINT("Free ClientThreadInfo\n");
@@ -1934,7 +1934,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
            W32Thread->pcti = NULL;
         }
 
-        if (!W32Thread->pcti && DesktopObject)
+        if (!W32Thread->pcti && DesktopObject && NtCurrentTeb())
         { 
            DPRINT("Allocate ClientThreadInfo\n");
            W32Thread->pcti = DesktopHeapAlloc( DesktopObject,

@@ -3182,7 +3182,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
     SetCapture(mt.OwnerWnd);
     (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, mt.OwnerWnd);
 
-    ERR("MenuTrackMenu 1\n");
+    FIXME("MenuTrackMenu 1\n");
     while (! fEndMenu)
     {
         PVOID menu = ValidateHandle(mt.CurrentMenu, VALIDATE_TYPE_MENU);
@@ -3210,6 +3210,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
                 }
                 WaitMessage();
             }
+            //FIXME("MenuTrackMenu loop 1\n");
         }
 
         /* check if EndMenu() tried to cancel us, by posting this message */
@@ -3417,6 +3418,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         {
             PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
             DispatchMessageW( &msg );
+            //FIXME("MenuTrackMenu loop 2\n");
             continue;
         }
 
@@ -3427,8 +3429,9 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
         if (fRemove && !(mt.TrackFlags & TF_SKIPREMOVE) )
             PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
         else mt.TrackFlags &= ~TF_SKIPREMOVE;
+        //FIXME("MenuTrackMenu loop 3\n");
     }
-    ERR("MenuTrackMenu 2\n");
+    FIXME("MenuTrackMenu 2\n");
 
     (void)NtUserSetGUIThreadHandle(MSQ_STATE_MENUOWNER, NULL);
     SetCapture(NULL);  /* release the capture */

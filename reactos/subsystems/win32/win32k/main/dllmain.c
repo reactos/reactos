@@ -268,6 +268,9 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         Win32Thread->TIF_flags &= ~TIF_INCLEANUP;
         co_IntDestroyCaret(Win32Thread);
         Win32Thread->ppi = PsGetCurrentProcessWin32Process();
+        Win32Thread->ptiSibling = Win32Thread->ppi->ptiList;
+        Win32Thread->ppi->ptiList = Win32Thread;
+        Win32Thread->ppi->cThreads++;
         if (Win32Thread->rpdesk && !Win32Thread->pDeskInfo)
         {
            Win32Thread->pDeskInfo = Win32Thread->rpdesk->pDeskInfo;
@@ -298,16 +301,39 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         else
         {
            DPRINT1("No TEB for this Thread!\n");
+           // System thread running! Now SendMessage should be okay.
+           Win32Thread->pcti = &Win32Thread->cti;
         }
         Win32Thread->pEThread = Thread;
     }
     else
     {
+        PTHREADINFO pti;
         PSINGLE_LIST_ENTRY e;
 
         DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
         Win32Thread->TIF_flags |= TIF_INCLEANUP;
+        pti = Win32Thread->ppi->ptiList;
+        if (pti == Win32Thread)
+        {
+           Win32Thread->ppi->ptiList = Win32Thread->ptiSibling;
+           Win32Thread->ppi->cThreads--;
+        }
+        else
+        {
+           do
+           {
+               if (pti->ptiSibling == Win32Thread)
+               {
+                  pti->ptiSibling = Win32Thread->ptiSibling;
+                  Win32Thread->ppi->cThreads--;
+                  break;
+               }
+               pti = pti->ptiSibling;
+           }
+           while (pti);
+        }
         DceFreeThreadDCE(Win32Thread);
         HOOK_DestroyThreadHooks(Thread);
         EVENT_DestroyThreadEvents(Thread);
@@ -332,9 +358,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
             e = PopEntryList(&Win32Thread->ReferencesList);
         }
 
-        IntSetThreadDesktop(NULL,
-                            TRUE);
-
+        IntSetThreadDesktop(NULL, TRUE);
 
         PsSetThreadWin32Thread(Thread, NULL);
     }

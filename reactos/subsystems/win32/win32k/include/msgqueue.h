@@ -8,10 +8,23 @@
 #define MSQ_ISEVENT     2
 #define MSQ_SENTNOWAIT  0x80000000
 
+#define QSIDCOUNTS 6
+
+typedef enum _QS_ROS_TYPES
+{
+    QSRosKey = 0,
+    QSRosMouseMove,
+    QSRosMouseButton,
+    QSRosPostMessage,
+    QSRosSendMessage,
+    QSRosHotKey,
+}QS_ROS_TYPES,*PQS_ROS_TYPES;
+
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
+  DWORD QS_Flags;
 } USER_MESSAGE, *PUSER_MESSAGE;
 
 struct _USER_MESSAGE_QUEUE;
@@ -20,8 +33,10 @@ typedef struct _USER_SENT_MESSAGE
 {
   LIST_ENTRY ListEntry;
   MSG Msg;
+  DWORD QS_Flags;  // Original QS bits used to create this message.
   PKEVENT CompletionEvent;
   LRESULT* Result;
+  LRESULT lResult;
   struct _USER_MESSAGE_QUEUE* SenderQueue;
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
@@ -30,16 +45,6 @@ typedef struct _USER_SENT_MESSAGE
   INT HookMessage;
   BOOL HasPackedLParam;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
-
-typedef struct _USER_SENT_MESSAGE_NOTIFY
-{
-  SENDASYNCPROC CompletionCallback;
-  ULONG_PTR CompletionCallbackContext;
-  LRESULT Result;
-  HWND hWnd;
-  UINT Msg;
-  LIST_ENTRY ListEntry;
-} USER_SENT_MESSAGE_NOTIFY, *PUSER_SENT_MESSAGE_NOTIFY;
 
 typedef struct _USER_MESSAGE_QUEUE
 {
@@ -52,8 +57,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY SentMessagesListHead;
   /* Queue of messages posted to the queue. */
   LIST_ENTRY PostedMessagesListHead;
-  /* Queue of sent-message notifies for the queue. */
-  LIST_ENTRY NotifyMessagesListHead;
   /* Queue for hardware messages for the queue. */
   LIST_ENTRY HardwareMessagesListHead;
   /* Lock for the hardware message list. */
@@ -76,8 +79,6 @@ typedef struct _USER_MESSAGE_QUEUE
   ULONG LastMsgRead;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
   HWND FocusWindow;
-  /* Count of paints pending. */
-  ULONG PaintCount;
   /* Current active window for this queue. */
   HWND ActiveWindow;
   /* Current capture window for this queue. */
@@ -92,9 +93,11 @@ typedef struct _USER_MESSAGE_QUEUE
   PTHRDCARETINFO CaretInfo;
 
   /* queue state tracking */
-  WORD WakeMask;
-  WORD QueueBits;
-  WORD ChangedBits;
+  // Send list QS_SENDMESSAGE
+  // Post list QS_POSTMESSAGE|QS_HOTKEY|QS_PAINT|QS_TIMER|QS_KEY
+  // Hard list QS_MOUSE|QS_KEY only
+  // Accounting of queue bit sets, the rest are flags. QS_TIMER QS_PAINT counts are handled in thread information.
+  DWORD nCntsQBits[QSIDCOUNTS]; // QS_KEY QS_MOUSEMOVE QS_MOUSEBUTTON QS_POSTMESSAGE QS_SENDMESSAGE QS_HOTKEY
 
   /* extra message information */
   LPARAM ExtraInfo;
@@ -130,6 +133,7 @@ MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	              IN PWND Window,
 	              IN UINT MsgFilterLow,
 	              IN UINT MsgFilterHigh,
+	              IN UINT QSflags,
 	              OUT PMSG Message);
 BOOL APIENTRY
 co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
@@ -137,6 +141,7 @@ co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	                      IN PWND Window,
 	                      IN UINT MsgFilterLow,
 	                      IN UINT MsgFilterHigh,
+	                      IN UINT QSflags,
 	                      OUT MSG* pMsg);
 BOOL APIENTRY
 co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
@@ -220,7 +225,6 @@ MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, HWND hWnd);
 
 __inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 __inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
-__inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 BOOL APIENTRY IntInitMessagePumpHook();
 BOOL APIENTRY IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
@@ -285,5 +289,9 @@ MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 
 VOID FASTCALL IdlePing(VOID);
 VOID FASTCALL IdlePong(VOID);
+BOOL FASTCALL co_MsqReplyMessage(LRESULT);
+UINT FASTCALL GetWakeMask(UINT, UINT);
+VOID FASTCALL MsqWakeQueue(PUSER_MESSAGE_QUEUE,DWORD,BOOL);
+VOID FASTCALL ClearMsgBitsMask(PUSER_MESSAGE_QUEUE,UINT);
 
 /* EOF */

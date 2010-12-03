@@ -361,7 +361,7 @@ PostTimerMessages(PWND Window)
 
            MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_TIMER);
            pTmr->flags &= ~TMRF_READY;
-           ThreadQueue->WakeMask = ~QS_TIMER;
+           pti->cTimersReady++;
            Hit = TRUE;
            break;
         }
