@@ -2,11 +2,10 @@
 	<importlibrary definition="wdmaud.spec" />
 	<include base="wdmaud.drv">.</include>
 	<include base="ReactOS">include/reactos/libs/sound</include>
-	<include base="wdmaud_kernel">.</include>
 	<include base="mmixer">.</include>
 	<include base="libsamplerate">.</include>
 	<define name="NDEBUG">1</define>
-	<!-- <define name="USE_MMIXER_LIB">1</define> Enable this line to bypass wdmaud + sysaudio -->
+	<define name="USE_MMIXER_LIB">1</define>
 	<!-- <define name="USERMODE_MIXER">1</define> Enable this line to for usermode mixing support -->
 	<library>mmebuddy</library>
 	<library>ntdll</library>
@@ -21,6 +20,5 @@
 	<file>wdmaud.c</file>
 	<file>mixer.c</file>
 	<file>mmixer.c</file>
-	<file>legacy.c</file>
 	<file>wdmaud.rc</file>
 </module>

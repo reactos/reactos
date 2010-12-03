@@ -232,7 +232,7 @@ CompleteIO(
 
 	}while(dwNumberOfBytesTransferred);
 
-    DoWaveStreaming(SoundDeviceInstance);
+    //DoWaveStreaming(SoundDeviceInstance);
 
     //CompleteWavePortion(SoundDeviceInstance, dwNumberOfBytesTransferred);
 

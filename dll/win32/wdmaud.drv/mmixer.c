@@ -9,6 +9,13 @@
 
 #include "wdmaud.h"
 
+typedef struct
+{
+    KSSTREAM_HEADER Header;
+    HANDLE hDevice;
+    PSOUND_OVERLAPPED Overlap;
+    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
+}IO_PACKET, *LPIO_PACKET;
 
 PVOID Alloc(ULONG NumBytes);
 MIXER_STATUS Close(HANDLE hDevice);
@@ -719,6 +726,39 @@ WdmAudGetWavePositionByMMixer(
     return MMSYSERR_NOTSUPPORTED;
 }
 
+DWORD
+WINAPI
+IoStreamingThread(
+    LPVOID lpParameter)
+{
+    DWORD Length;
+    MMRESULT Result;
+    LPIO_PACKET Packet = (LPIO_PACKET)lpParameter;
+
+    Result =  SyncOverlappedDeviceIoControl(Packet->hDevice,
+                    IOCTL_KS_WRITE_STREAM, //FIXME IOCTL_KS_READ_STREAM
+                    NULL,
+                    0,
+                    &Packet->Header,
+                    sizeof(KSSTREAM_HEADER),
+                    &Length);
+
+    /* HACK:
+     * don't call completion routine directly
+     */
+
+    Packet->CompletionRoutine(ERROR_SUCCESS, Packet->Header.DataUsed, (LPOVERLAPPED)Packet->Overlap);
+
+    HeapFree(GetProcessHeap(), 0, Packet);
+    return 0;
+}
+
+
+
+
+
+
+
 MMRESULT
 WdmAudCommitWaveBufferByMMixer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -727,10 +767,11 @@ WdmAudCommitWaveBufferByMMixer(
     IN  PSOUND_OVERLAPPED Overlap,
     IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine)
 {
-    KSSTREAM_HEADER Packet;
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
     MMRESULT Result;
+    LPIO_PACKET Packet;
+    HANDLE hThread;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
 
@@ -742,31 +783,36 @@ WdmAudCommitWaveBufferByMMixer(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
+    Packet = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IO_PACKET));
+    if ( ! Packet )
+    {
+        /* no memory */
+        return MMSYSERR_NOMEM;
+    }
+
     /* setup stream packet */
-    ZeroMemory(&Packet, sizeof(KSSTREAM_HEADER));
-    Packet.Size = sizeof(KSSTREAM_HEADER);
-    Packet.PresentationTime.Numerator = 1;
-    Packet.PresentationTime.Denominator = 1;
-    Packet.Data = OffsetPtr;
-    Packet.FrameExtent = Length;
+    Packet->Header.Size = sizeof(KSSTREAM_HEADER);
+    Packet->Header.PresentationTime.Numerator = 1;
+    Packet->Header.PresentationTime.Denominator = 1;
+    Packet->Header.Data = OffsetPtr;
+    Packet->Header.FrameExtent = Length;
+    Packet->hDevice = SoundDeviceInstance->Handle;
+    Packet->Overlap = Overlap;
+    Packet->CompletionRoutine = CompletionRoutine;
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Packet.DataUsed = Length;
+        Packet->Header.DataUsed = Length;
     }
 
-    Result =  SyncOverlappedDeviceIoControl(SoundDeviceInstance->Handle,
-                    IOCTL_KS_WRITE_STREAM,
-                    NULL,
-                    0,
-                    &Packet,
-                    sizeof(KSSTREAM_HEADER),
-                    &Length);
+    hThread = CreateThread(NULL, 0, IoStreamingThread, (LPVOID)Packet, 0, NULL);
+    if (hThread == NULL)
+    {
+        /* error */
+        return MMSYSERR_ERROR;
+    }
 
-    /* HACK:
-     * don't call completion routine directly
-     */
-    CompletionRoutine(ERROR_SUCCESS, Length, (LPOVERLAPPED)Overlap);
+    CloseHandle(hThread);
 
     return MMSYSERR_NOERROR;
 }

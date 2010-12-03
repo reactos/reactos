@@ -18,7 +18,7 @@
 #include <samplerate.h>
 #include <float_cast.h>
 #include <debug.h>
-#include "interface.h"
+
 
 
 extern HANDLE KernelHandle;
@@ -423,7 +423,7 @@ MixerCompletionRoutine(
     /* Call mmebuddy overlap routine */
     Overlap->OriginalCompletionRoutine(dwErrorCode, Overlap->OriginalBufferSize, lpOverlapped);
 }
-
+#if 0
 MMRESULT
 WriteFileEx_Remixer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -556,4 +556,4 @@ WriteFileEx_Remixer(
 
     return MMSYSERR_NOERROR;
 }
-
+#endif

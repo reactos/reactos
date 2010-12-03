@@ -10,7 +10,6 @@
 
 #include <ks.h>
 #include <ksmedia.h>
-#include "interface.h"
 #include "mmixer.h"
 #include <debug.h>
 
