@@ -212,7 +212,7 @@ add_subdirectory(wintrust)
 add_subdirectory(wlanapi)
 add_subdirectory(wldap32)
 add_subdirectory(wmi)
-#add_subdirectory(ws2_32) SPEC
+add_subdirectory(ws2_32)
 add_subdirectory(ws2_32_new)
 add_subdirectory(ws2help)
 add_subdirectory(wshirda)
