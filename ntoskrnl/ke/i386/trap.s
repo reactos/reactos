@@ -9,8 +9,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/i386/asm.h>
+#include <asm.inc>
+#include <ks386.inc>
 #include <internal/i386/asmmacro.S>
 
 MACRO(GENERATE_IDT_STUB, Number)
@@ -18,16 +18,19 @@ idt _KiUnexpectedInterrupt&Number, INT_32_DPL0
 ENDM
 
 MACRO(GENERATE_INT_HANDLER, Number)
-.func KiUnexpectedInterrupt&Number
+//.func KiUnexpectedInterrupt&Number
 _KiUnexpectedInterrupt&Number:
     push PRIMARY_VECTOR_BASE + Number
     jmp _KiEndUnexpectedRange@0
-.endfunc
+//.endfunc
 ENDM
+
+EXTERN _KiTrap02:PROC
 
 /* GLOBALS *******************************************************************/
 
 .data
+ASSUME nothing
 
 PUBLIC _KiIdt
 _KiIdt:
@@ -52,9 +55,9 @@ idt _KiTrap10,         INT_32_DPL0  /* INT 10: x87 FPU Error (#MF)          */
 idt _KiTrap11,         INT_32_DPL0  /* INT 11: Align Check Exception (#AC)  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 12: Machine Check Exception (#MC)*/
 idt _KiTrap0F,         INT_32_DPL0  /* INT 13: SIMD FPU Exception (#XF)     */
-.rept 22
+REPEAT 22
 idt _KiTrap0F,         INT_32_DPL0  /* INT 14-29: UNDEFINED INTERRUPTS      */
-.endr
+ENDR
 idt _KiGetTickCount,   INT_32_DPL3  /* INT 2A: Get Tick Count Handler       */
 idt _KiCallbackReturn, INT_32_DPL3  /* INT 2B: User-Mode Callback Return    */
 idt _KiRaiseAssertion, INT_32_DPL3  /* INT 2C: Debug Assertion Handler      */
@@ -62,15 +65,15 @@ idt _KiDebugService,   INT_32_DPL3  /* INT 2D: Debug Service Handler        */
 idt _KiSystemService,  INT_32_DPL3  /* INT 2E: System Call Service Handler  */
 idt _KiTrap0F,         INT_32_DPL0  /* INT 2F: RESERVED                     */
 i = 0
-.rept 208
+REPEAT 208
     GENERATE_IDT_STUB %i
     i = i + 1
-.endr
+ENDR
 
 PUBLIC _KiIdtDescriptor
 _KiIdtDescriptor:
     .short 0
-    .short 0x7FF
+    .short HEX(7FF)
     .long _KiIdt
 
 PUBLIC _KiUnexpectedEntrySize
@@ -78,8 +81,7 @@ _KiUnexpectedEntrySize:
     .long _KiUnexpectedInterrupt1 - _KiUnexpectedInterrupt0
 
 /******************************************************************************/
-.code32
-.text
+.code
 
 TRAP_ENTRY KiTrap00, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiTrap01, KI_PUSH_FAKE_ERROR_CODE
@@ -106,7 +108,7 @@ TRAP_ENTRY KiDebugService, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY KiUnexpectedInterruptTail, 0
 
 ALIGN 4
-EXTERN @KiInterruptTemplateHandler@8
+EXTERN @KiInterruptTemplateHandler@8:PROC
 PUBLIC _KiInterruptTemplate
 _KiInterruptTemplate:
     KiEnterTrap KI_PUSH_FAKE_ERROR_CODE
@@ -135,10 +137,10 @@ _KiFastCallEntry:
 PUBLIC _KiStartUnexpectedRange@0
 _KiStartUnexpectedRange@0:
 i = 0
-.rept 208
+REPEAT 208
     GENERATE_INT_HANDLER %i
     i = i + 1
-.endr
+ENDR
 PUBLIC _KiEndUnexpectedRange@0
 _KiEndUnexpectedRange@0:
     jmp _KiUnexpectedInterruptTail

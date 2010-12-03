@@ -5,28 +5,34 @@
  * FILE:            lib/sdk/crt/mem/i386/memchr.s
  */
 
+#include <asm.inc>
+#include <ks386.inc>
+
 /*
  * void* memchr(const void* s, int c, size_t n)
  */
 
-.globl	_memchr
+PUBLIC	_memchr
+.code
 
 _memchr:
-	push	%ebp
-	mov	%esp,%ebp
-	push	%edi
-	mov	0x8(%ebp),%edi
-	mov	0xc(%ebp),%eax
-	mov	0x10(%ebp),%ecx
+	push ebp
+	mov ebp, esp
+	push edi
+	mov	edi, [ebp + 8]
+	mov	eax, [ebp + 12]
+	mov	ecx, [ebp + 16]
 	cld
-	jecxz	.Lnotfound
-	repne	scasb
-	je	.Lfound
+	jecxz .Lnotfound
+	repne scasb
+	je .Lfound
 .Lnotfound:
-	mov	$1,%edi
+	mov edi, 1
 .Lfound:
-	mov	%edi,%eax
-	dec	%eax
-	pop	%edi
+	mov eax, edi
+	dec eax
+	pop edi
 	leave
 	ret
+
+END

@@ -367,18 +367,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     return TRUE;
 }
 
-VOID
-NTAPI
-MmUpdatePageDir(IN PEPROCESS Process,
-                IN PVOID Address,
-                IN ULONG Size)
-{
-    //
-    // Nothing to do
-    //
-    return;
-}
-
 NTSTATUS
 NTAPI
 Mmi386ReleaseMmInfo(IN PEPROCESS Process)
@@ -389,30 +377,6 @@ Mmi386ReleaseMmInfo(IN PEPROCESS Process)
     UNIMPLEMENTED;
     while (TRUE);
     return 0;
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG DirectoryTableBase)
-{
-    //
-    // Share the directory base with the idle process
-    //
-    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
-    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
-    
-    //
-    // Initialize the Addresss Space
-    //
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->VadRoot.BalancedRoot.u1.Parent = NULL;
-    
-    //
-    // The process now has an address space
-    //
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
 }
 
 PULONG

@@ -356,6 +356,12 @@ NTAPI
 MiInsertVad(IN PMMVAD Vad,
 IN PEPROCESS Process);
 
+ULONG
+NTAPI
+MiMakeProtectionMask(
+    IN ULONG Protect
+);
+
 static VOID
 MmInsertMemoryArea(
    PMMSUPPORT AddressSpace,
@@ -389,6 +395,7 @@ MmInsertMemoryArea(
         }
        Vad->u.VadFlags.Spare = 1;
        Vad->u.VadFlags.PrivateMemory = 1;
+       Vad->u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
        MiInsertVad(Vad, MmGetAddressSpaceOwner(AddressSpace));
        marea->Vad = Vad;
    }
@@ -485,13 +492,16 @@ MmFindGapBottomUp(
          break;
 
       AlignedAddress = MM_ROUND_UP(PreviousNode->EndingAddress, Granularity);
-      if (Node->StartingAddress > AlignedAddress &&
-          (ULONG_PTR)Node->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
+      if (AlignedAddress >= LowestAddress)
       {
-         DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
-         return AlignedAddress;
+          if (Node->StartingAddress > AlignedAddress &&
+              (ULONG_PTR)Node->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
+          {
+             DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
+             ASSERT(AlignedAddress >= LowestAddress);
+             return AlignedAddress;
+          }
       }
-
       PreviousNode = Node;
    }
 
@@ -501,6 +511,7 @@ MmFindGapBottomUp(
        (ULONG_PTR)HighestAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
       DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
+      ASSERT(AlignedAddress >= LowestAddress);
       return AlignedAddress;
    }
 
@@ -510,6 +521,7 @@ MmFindGapBottomUp(
        (ULONG_PTR)FirstNode->StartingAddress - (ULONG_PTR)AlignedAddress >= Length)
    {
       DPRINT("MmFindGapBottomUp: %p\n", AlignedAddress);
+      ASSERT(AlignedAddress >= LowestAddress);
       return AlignedAddress;
    }
 

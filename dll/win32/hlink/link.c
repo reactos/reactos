@@ -69,20 +69,40 @@ static inline HlinkImpl* HlinkImpl_from_IDataObject( IDataObject* iface)
     return (HlinkImpl*) ((CHAR*)iface - FIELD_OFFSET(HlinkImpl, lpDOVtbl));
 }
 
-static inline void __GetMoniker(HlinkImpl* This, IMoniker** moniker)
+static HRESULT __GetMoniker(HlinkImpl* This, IMoniker** moniker,
+        DWORD ref_type)
 {
-    *moniker = NULL;
-    if (This->Moniker)
+    HRESULT hres;
+
+    if (ref_type == HLINKGETREF_DEFAULT)
+        ref_type = HLINKGETREF_RELATIVE;
+
+    if (ref_type == HLINKGETREF_ABSOLUTE && This->Site)
     {
-        *moniker = This->Moniker;
-        if (*moniker)
-            IMoniker_AddRef(*moniker);
+        IMoniker *hls_moniker;
+
+        hres = IHlinkSite_GetMoniker(This->Site, This->SiteData,
+                OLEGETMONIKER_FORCEASSIGN, OLEWHICHMK_CONTAINER, &hls_moniker);
+        if (FAILED(hres))
+            return hres;
+
+        if (This->Moniker)
+        {
+            hres = IMoniker_ComposeWith(hls_moniker, This->Moniker, FALSE,
+                    moniker);
+            IMoniker_Release(hls_moniker);
+            return hres;
+        }
+
+        *moniker = hls_moniker;
+        return S_OK;
     }
-    else if (This->Site)
-    {
-        IHlinkSite_GetMoniker(This->Site, This->SiteData,
-                OLEGETMONIKER_FORCEASSIGN, OLEWHICHMK_CONTAINER, moniker);
-    }
+
+    *moniker = This->Moniker;
+    if (*moniker)
+        IMoniker_AddRef(*moniker);
+
+    return S_OK;
 }
 
 HRESULT WINAPI HLink_Constructor(IUnknown *pUnkOuter, REFIID riid,
@@ -191,10 +211,11 @@ static HRESULT WINAPI IHlink_fnGetHlinkSite( IHlink* iface,
     TRACE("(%p)->(%p %p)\n", This, ppihlSite, pdwSiteData);
 
     *ppihlSite = This->Site;
-    *pdwSiteData = This->SiteData;
 
-    if (This->Site)
+    if (This->Site) {
         IHlinkSite_AddRef(This->Site);
+        *pdwSiteData = This->SiteData;
+    }
 
     return S_OK;
 }
@@ -307,8 +328,16 @@ static HRESULT WINAPI IHlink_fnGetMonikerReference(IHlink* iface,
     TRACE("(%p) -> (%i %p %p)\n", This, dwWhichRef, ppimkTarget,
             ppwzLocation);
 
-    if(ppimkTarget)
-        __GetMoniker(This, ppimkTarget);
+    if (ppimkTarget)
+    {
+        HRESULT hres = __GetMoniker(This, ppimkTarget, dwWhichRef);
+        if (FAILED(hres))
+        {
+            if (ppwzLocation)
+                *ppwzLocation = NULL;
+            return hres;
+        }
+    }
 
     if (ppwzLocation)
         IHlink_GetStringReference(iface, dwWhichRef, NULL, ppwzLocation);
@@ -323,7 +352,6 @@ static HRESULT WINAPI IHlink_fnGetStringReference (IHlink* iface,
 
     TRACE("(%p) -> (%i %p %p)\n", This, dwWhichRef, ppwzTarget, ppwzLocation);
 
-    /* note: undocumented behavior with dwWhichRef == -1 */
     if(dwWhichRef != -1 && dwWhichRef & ~(HLINKGETREF_DEFAULT | HLINKGETREF_ABSOLUTE | HLINKGETREF_RELATIVE))
     {
         if(ppwzTarget)
@@ -333,13 +361,16 @@ static HRESULT WINAPI IHlink_fnGetStringReference (IHlink* iface,
         return E_INVALIDARG;
     }
 
-    if(dwWhichRef != HLINKGETREF_DEFAULT)
-        FIXME("unhandled flags: 0x%x\n", dwWhichRef);
-
     if (ppwzTarget)
     {
         IMoniker* mon;
-        __GetMoniker(This, &mon);
+        HRESULT hres = __GetMoniker(This, &mon, dwWhichRef);
+        if (FAILED(hres))
+        {
+            if (ppwzLocation)
+                *ppwzLocation = NULL;
+            return hres;
+        }
         if (mon)
         {
             IBindCtx *pbc;
@@ -389,7 +420,12 @@ static HRESULT WINAPI IHlink_fnGetFriendlyName (IHlink* iface,
     else
     {
         IMoniker *moniker;
-        __GetMoniker(This, &moniker);
+        HRESULT hres = __GetMoniker(This, &moniker, HLINKGETREF_DEFAULT);
+        if (FAILED(hres))
+        {
+            *ppwzFriendlyName = NULL;
+            return hres;
+        }
         if (moniker)
         {
             IBindCtx *bcxt;
@@ -440,20 +476,17 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
 {
     HlinkImpl  *This = (HlinkImpl*)iface;
     IMoniker *mon = NULL;
+    HRESULT r;
 
     FIXME("Semi-Stub:(%p)->(%i %p %p %p)\n", This, grfHLNF, pbc, pbsc, phbc);
 
-    if (This->Site)
-        IHlinkSite_ReadyToNavigate(This->Site, This->SiteData, 0);
-
-    __GetMoniker(This, &mon);
+    r = __GetMoniker(This, &mon, HLINKGETREF_ABSOLUTE);
     TRACE("Moniker %p\n", mon);
 
-    if (mon)
+    if (SUCCEEDED(r))
     {
         IBindCtx *bcxt;
         IHlinkTarget *target = NULL;
-        HRESULT r = S_OK;
 
         CreateBindCtx(0, &bcxt);
 
@@ -488,10 +521,10 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
     }
 
     if (This->Site)
-        IHlinkSite_OnNavigationComplete(This->Site, This->SiteData, 0, 0, NULL);
+        IHlinkSite_OnNavigationComplete(This->Site, This->SiteData, 0, r, NULL);
 
     TRACE("Finished Navigation\n");
-    return S_OK;
+    return r;
 }
 
 static HRESULT WINAPI IHlink_fnSetAdditonalParams(IHlink* iface,
@@ -782,14 +815,17 @@ end:
 static HRESULT WINAPI IPersistStream_fnSave(IPersistStream* iface,
         IStream* pStm, BOOL fClearDirty)
 {
-    HRESULT r = E_FAIL;
+    HRESULT r;
     HlinkImpl *This = HlinkImpl_from_IPersistStream(iface);
     DWORD hdr[2];
     IMoniker *moniker;
 
     TRACE("(%p) Moniker(%p)\n", This, This->Moniker);
 
-    __GetMoniker(This, &moniker);
+    r = __GetMoniker(This, &moniker, HLINKGETREF_DEFAULT);
+    if (FAILED(r))
+        return r;
+    r = E_FAIL;
 
     hdr[0] = HLINK_SAVE_MAGIC;
     hdr[1] = 0;
@@ -850,7 +886,7 @@ end:
 static HRESULT WINAPI IPersistStream_fnGetSizeMax(IPersistStream* iface,
         ULARGE_INTEGER* pcbSize)
 {
-    HRESULT r = E_FAIL;
+    HRESULT r;
     HlinkImpl *This = HlinkImpl_from_IPersistStream(iface);
     IMoniker *moniker;
 
@@ -864,7 +900,11 @@ static HRESULT WINAPI IPersistStream_fnGetSizeMax(IPersistStream* iface,
     if (This->FriendlyName)
         pcbSize->QuadPart += size_hlink_string(This->FriendlyName);
 
-    __GetMoniker(This, &moniker);
+    r = __GetMoniker(This, &moniker, HLINKGETREF_DEFAULT);
+    if (FAILED(r))
+        return r;
+    r = E_FAIL;
+
     if (moniker)
     {
         IPersistStream* monstream = NULL;

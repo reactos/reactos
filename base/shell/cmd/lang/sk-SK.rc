@@ -1,9 +1,9 @@
 /* Slovak translation for CMD
  * TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  21-03-2009
- * LastChange:  21-06-2009
+ * LastChange:  10-08-2010
  * _________________________________________________________________
- * NOTE      :  this file is not really translated (only scrap yet)
+ * NOTE      :  this file is not fully translated
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -118,7 +118,7 @@ dec  hex  name       dec  hex  name\n\
 6    6    Yellow     14   E    Bright Yellow\n\
 7    7    White      15   F    Bright White\n"
 
-STRING_COPY_HELP1,  "Overwrite %s (Yes/No/All)? "
+STRING_COPY_HELP1,  "PrepÌsaù %s (Yes/No/All)? "
 
 STRING_COPY_HELP2, "SkopÌruje jeden alebo viac s˙borov na inÈ umiestnenie.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
@@ -141,7 +141,7 @@ STRING_DATE_HELP2, "\nZadajte nov˝ d·tum (dd%cmm%crrrr): "
 
 STRING_DATE_HELP3, "\nZadajte nov˝ d·tum (rrrr%cmm%cdd): "
 
-STRING_DATE_HELP4, "Displays or sets the date.\n\n\
+STRING_DATE_HELP4, "ZobrazÌ alebo nastavÌ d·tum.\n\n\
 DATE [/T][date]\n\n\
   /T    display only\n\n\
 Type DATE without parameters to display the current date setting and\n\
@@ -469,7 +469,7 @@ STRING_TITLE_HELP, "Sets the window title for the command prompt window.\n\n\
 TITLE [string]\n\n\
 string       Specifies the title for the command prompt window.\n"
 
-STRING_TIME_HELP1, "Displays or sets the system time.\n\n\
+STRING_TIME_HELP1, "ZobrazÌ alebo nastavÌ systÈmov˝ Ëas.\n\n\
 TIME [/T][time]\n\n\
   /T    display only\n\n\
 Type TIME with no parameters to display the current time setting and a prompt\n\
@@ -547,18 +547,18 @@ STRING_WINDOW_HELP1, "change console window aspect\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 /POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window"
+MIN           minimalizovaù okno\n\
+MAX           maximalizujte okno\n\
+RESTORE       obnoviù okno"
 
 STRING_WINDOW_HELP2, "change console window aspect\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile of window on which perform actions\n\
 /POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window\n\
+MIN           minimalizovaù okno\n\
+MAX           maximalizujte okno\n\
+RESTORE       obnoviù okno\n\
 title         new title\n"
 
 
@@ -576,7 +576,7 @@ CLS      Vymaûe obrazovku.\n\
 CMD      Starts a new instance of the ReactOS command interpreter.\n\
 COLOR    Sets the default console foreground and background colors.\n\
 COPY     SkopÌruje jeden alebo viac s˙borov na inÈ umiestnenie.\n\
-DATE     Displays or sets the date.\n\
+DATE     ZobrazÌ alebo nastavÌ d·tum.\n\
 DELETE   Deletes one or more files.\n\
 DIR      Displays a list of files and subdirectories in a directory.\n\
 ECHO     Displays messages, or turns command echoing on or off.\n\
@@ -590,8 +590,8 @@ HELP     Provides Help information for ReactOS commands.\n\
 HISTORY  List all commands which has been used\n\
 IF       Performs conditional processing in batch programs.\n\
 LABEL    Creates, changes, or deletes the volume label of a disk.\n\
-MD       Creates a directory.\n\
-MKDIR    Creates a directory.\n\
+MD       VytvorÌ adres·r.\n\
+MKDIR    VytvorÌ adres·r.\n\
 MKLINK   Creates a filesystem link object.\n\
 MOVE     Moves one or more files from one directory to another\n\
          directory.\n\
@@ -603,8 +603,8 @@ PROMPT   Changes the command prompt.\n\
 PUSHD    Saves the current directory then changes it.\n\
 RD       Removes a directory.\n\
 REM      Records comments (remarks) in batch files.\n\
-REN      Renames a file or files.\n\
-RENAME   Renames a file or files.\n\
+REN      Premenuje s˙bor alebo s˙bory.\n\
+RENAME   Premenuje s˙bor alebo s˙bory.\n\
 REPLACE  Replaces files.\n\
 RMDIR    Removes a directory.\n\
 SCREEN   Move cursor and optionally print text.\n\
@@ -612,7 +612,7 @@ SET      Displays, sets, or removes ReactOS environment variables.\n\
 SHIFT    Shifts the position of replaceable parameters in batch files.\n"
 STRING_HELP2, "START    Starts a separate window to run a specified program or command.\n\
          Executes command.\n\
-TIME     Displays or sets the system time.\n\
+TIME     ZobrazÌ alebo nastavÌ systÈmov˝ Ëas.\n\
 TIMER    Allow the use of ten stopwatches.\n\
 TITLE    Sets the window title for a CMD.EXE session.\n\
 TYPE     Displays the contents of a text file.\n\
@@ -651,9 +651,9 @@ STRING_COPY_ERROR3,          "Error writing destination!\n"
 STRING_COPY_ERROR4,          "Chyba: Zatiaæ neimplementovanÈ!\n" //Not implemented yet
 STRING_DATE_ERROR,           "Neplatn˝ d·tum."
 STRING_DEL_ERROR5,           "The file %s will be deleted! "
-STRING_DEL_ERROR6,           "Are you sure (Y/N)?"
+STRING_DEL_ERROR6,           "Ste si ist˝ (Y/N)?"
 STRING_DEL_ERROR7,           "Deleting: %s\n"
-STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
+STRING_ERROR_ERROR1,         "Nezn·ma chyba! KÛd chyby: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax error"
 STRING_FOR_ERROR1,           "'in' missing in for statement."
 STRING_FOR_ERROR2,           "no brackets found."
@@ -675,47 +675,47 @@ STRING_TIME_ERROR1,          "Neplatn˝ Ëas."
 
 STRING_TYPE_ERROR1,          "Invalid option '/%s'\n"
 
-STRING_WINDOW_ERROR1,        "window not found"
+STRING_WINDOW_ERROR1,        "okno sa nenaölo"
 
 
 STRING_ERROR_PARAMETERF_ERROR,     "Parameter format not correct - %c\n"
-STRING_ERROR_INVALID_SWITCH,       "Invalid switch - /%c\n"
+STRING_ERROR_INVALID_SWITCH,       "Neplatn˝ prepÌnaË - /%c\n"
 STRING_ERROR_TOO_MANY_PARAMETERS,  "PrÌliö veæa parametrov - %s\n"
-STRING_ERROR_PATH_NOT_FOUND,       "Path not found\n"
-STRING_ERROR_FILE_NOT_FOUND,       "File not found\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Cesta sa nenaöla\n"
+STRING_ERROR_FILE_NOT_FOUND,       "S˙bor sa nenaöiel\n"
 STRING_ERROR_REQ_PARAM_MISSING,    "Required parameter missing\n"
 STRING_ERROR_INVALID_DRIVE,        "Invalid drive specification\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Invalid parameter format - %s\n"
-STRING_ERROR_BADCOMMAND,           "Bad command or filename - %s\n"
+STRING_ERROR_BADCOMMAND,           "Chybn˝ prÌkaz alebo n·zov s˙boru - %s\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Chyba (z) nedostatku pam‰te.\n" //Out of memory error.
-STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary file!\n"
+STRING_ERROR_CANNOTPIPE,           "Chyba!  Cannot pipe!  Cannot open temporary file!\n"
 STRING_ERROR_D_PAUSEMSG,           "PokraËujte stlaËenÌm æubovoænÈho kl·vesu ..."
-STRING_ERROR_DRIVER_NOT_READY,     "Drive not ready"
+STRING_ERROR_DRIVER_NOT_READY,     "Jednotka nie je pripraven·"
 
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
-STRING_REPLACE_ERROR1, "Invalid switch - %s\n"
-STRING_REPLACE_ERROR2, "Path not found - %s\n"
+STRING_REPLACE_ERROR1, "Neplatn˝ prepÌnaË - %s\n"
+STRING_REPLACE_ERROR2, "Cesta sa nenaöla - %s\n"
 STRING_REPLACE_ERROR3, "The filename, directory name, or volume label syntax is incorrect.\n"
 STRING_REPLACE_ERROR4, "Invalid parameter combination\n"
-STRING_REPLACE_ERROR5, "Access denied - %s\n"
-STRING_REPLACE_ERROR6, "No files found - %s\n"
+STRING_REPLACE_ERROR5, "PrÌstup zamietnut˝ - %s\n"
+STRING_REPLACE_ERROR6, "éiadne s˙bory sa nenaöli - %s\n"
 STRING_REPLACE_ERROR7, "Extended Error 32\n"
 
 STRING_REACTOS_VERSION,            "OperaËn˝ systÈm ReactOS [Verzia %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter\nVerzia %s %s"
+STRING_CMD_SHELLINFO,              "\nInterprÈter prÌkazovÈho riadku systÈmu ReactOS\nVerzia %s %s"
 STRING_VERSION_RUNVER,             " running on %s"
 STRING_COPY_FILE ,                 "        %d s˙bor(ov) skopÌrovan˝(ch)\n"
 STRING_DELETE_WIPE,                "wiped"
 STRING_FOR_ERROR,                  "bad variable specification."
-STRING_SCREEN_COL,                 "invalid value for col"
-STRING_SCREEN_ROW,                 "invalid value for row"
+STRING_SCREEN_COL,                 "neplatn· hodnota pre stÂpec"
+STRING_SCREEN_ROW,                 "neplatn· hodnota pre riadok"
 STRING_TIMER_TIME                  "Timer %d is %s: "
 STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
 STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
 STRING_MORE,                       "Viac? " //"More? "
-STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
+STRING_CANCEL_BATCH_FILE,          "\r\nStlaËenÈ Ctrl-Break.  Cancel batch file? (Yes/No/All) "
 
 STRING_INVALID_OPERAND,            "Invalid operand."
 STRING_EXPECTED_CLOSE_PAREN,       "OËak·van· ')'."

@@ -48,6 +48,19 @@ SIZEDEFINITION LegalSizes[] = {
 };
 
 
+int LoadStringAndOem(HINSTANCE hInst,
+		UINT uID,
+		LPTSTR szStr,
+		int Siz
+)	
+{
+  TCHAR szTmp[RC_STRING_MAX_SIZE];
+  int res = LoadString(hInst, uID, szTmp, sizeof(szTmp)); 
+  CharToOem(szTmp, szStr);
+  return(res);
+}
+
+
 //----------------------------------------------------------------------
 //
 // PrintWin32Error
@@ -171,7 +184,7 @@ FormatExCallback (
 
 	case PROGRESS:
 		percent = (PDWORD) Argument;
-		LoadString( GetModuleHandle(NULL), STRING_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf(szMsg, *percent);
 		break;
 
@@ -184,7 +197,7 @@ FormatExCallback (
 		status = (PBOOLEAN) Argument;
 		if( *status == FALSE ) {
 
-			LoadString( GetModuleHandle(NULL), STRING_FORMAT_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_FORMAT_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 			_tprintf("%s", szMsg);
 			Error = TRUE;
 		}
@@ -203,7 +216,7 @@ FormatExCallback (
 	case UNKNOWND:
 	case STRUCTUREPROGRESS:
 	case CLUSTERSIZETOOSMALL:
-		LoadString( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_SUPPORT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf("%s", szMsg);
 		return FALSE;
 	}
@@ -261,7 +274,7 @@ static VOID Usage( LPTSTR ProgramName )
 	BYTE dummy;
 	BOOLEAN lastestVersion;
 
-	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+	LoadStringAndOem( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	if (!LoadFMIFSEntryPoints())
 	{
 		_tprintf(szMsg, ProgramName, _T(""));
@@ -319,7 +332,7 @@ _tmain(int argc, TCHAR *argv[])
 	// Get function pointers
 	//
 	if( !LoadFMIFSEntryPoints()) {
-		LoadString( GetModuleHandle(NULL), STRING_FMIFS_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_FMIFS_FAIL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf("%s", szMsg);
 		return -1;
 	}
@@ -329,7 +342,7 @@ _tmain(int argc, TCHAR *argv[])
 	//
 	if( (badArg = ParseCommandLine( argc, argv ))) {
 
-		LoadString( GetModuleHandle(NULL), STRING_UNKNOW_ARG, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_UNKNOW_ARG, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf(szMsg, argv[badArg] );
 
 		Usage(argv[0]);
@@ -341,7 +354,7 @@ _tmain(int argc, TCHAR *argv[])
 	//
 	if( !Drive ) {
 
-		LoadString( GetModuleHandle(NULL), STRING_DRIVE_PARM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_DRIVE_PARM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf(szMsg);
 		Usage( argv[0] );
 		return -1;
@@ -359,7 +372,7 @@ _tmain(int argc, TCHAR *argv[])
 	driveType = GetDriveType( RootDirectory );
 
 	if( driveType == 0 ) {
-		LoadString( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_ERROR_DRIVE_TYPE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
@@ -371,7 +384,7 @@ _tmain(int argc, TCHAR *argv[])
 	}
 
 	if( driveType != DRIVE_FIXED ) {
-		LoadString( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf(szMsg, RootDirectory[0] );
 		_fgetts( input, sizeof(input)/2, stdin );
 
@@ -386,7 +399,7 @@ _tmain(int argc, TCHAR *argv[])
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
@@ -396,11 +409,11 @@ _tmain(int argc, TCHAR *argv[])
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
 
-		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
-	LoadString( GetModuleHandle(NULL), STRING_FILESYSTEM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+	LoadStringAndOem( GetModuleHandle(NULL), STRING_FILESYSTEM, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	_tprintf(szMsg, fileSystem );
 
 	//
@@ -412,7 +425,7 @@ _tmain(int argc, TCHAR *argv[])
 
 			while(1 ) {
 
-				LoadString( GetModuleHandle(NULL), STRING_LABEL_NAME_EDIT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+				LoadStringAndOem( GetModuleHandle(NULL), STRING_LABEL_NAME_EDIT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 				_tprintf(szMsg, RootDirectory[0] );
 				_fgetts( input, sizeof(input)/2, stdin );
 				input[ _tcslen( input ) - 1] = 0;
@@ -421,15 +434,15 @@ _tmain(int argc, TCHAR *argv[])
 
 					break;
 				}
-				LoadString( GetModuleHandle(NULL), STRING_ERROR_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+				LoadStringAndOem( GetModuleHandle(NULL), STRING_ERROR_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 				_tprintf("%s", szMsg);
 			}
 		}
 
-		LoadString( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_YN_FORMAT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf(szMsg, RootDirectory[0] );
 
-		LoadString( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_YES_NO_FAQ, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 
 		while( 1 ) {
 			_fgetts( input, sizeof(input)/2, stdin );
@@ -460,7 +473,7 @@ _tmain(int argc, TCHAR *argv[])
 		}
 	} else {
 
-		LoadString( GetModuleHandle(NULL), STRING_FAST_FMT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_FAST_FMT, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		if( totalNumberOfBytes.QuadPart > 1024*1024*10 ) {
 
 			_tprintf(_T("%s %luM\n"),szMsg, (DWORD) (totalNumberOfBytes.QuadPart/(1024*1024)));
@@ -470,7 +483,7 @@ _tmain(int argc, TCHAR *argv[])
 			_tprintf(_T("%s %.2fM\n"),szMsg,
 				((float)(LONGLONG)totalNumberOfBytes.QuadPart)/(float)(1024.0*1024.0));
 		}
-		LoadString( GetModuleHandle(NULL), STRING_CREATE_FSYS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_CREATE_FSYS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		_tprintf("%s", szMsg);
 	}
 
@@ -488,7 +501,7 @@ _tmain(int argc, TCHAR *argv[])
 			ClusterSize, FormatExCallback );
 #endif
 	if( Error ) return -1;
-	LoadString( GetModuleHandle(NULL), STRING_FMT_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+	LoadStringAndOem( GetModuleHandle(NULL), STRING_FMT_COMPLETE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	_tprintf("%s", szMsg);
 
 	//
@@ -503,7 +516,7 @@ _tmain(int argc, TCHAR *argv[])
 		if( !EnableVolumeCompression( RootDirectory, TRUE )) {
 #endif
 
-			LoadString( GetModuleHandle(NULL), STRING_VOL_COMPRESS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_VOL_COMPRESS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 			_tprintf("%s", szMsg);
 		}
 	}
@@ -520,7 +533,7 @@ _tmain(int argc, TCHAR *argv[])
 		input[ _tcslen(input)-1] = 0;
 		if( !SetVolumeLabel( RootDirectory, input )) {
 
-			LoadString( GetModuleHandle(NULL), STRING_NO_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+			LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_LABEL, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 			PrintWin32Error(szMsg, GetLastError());
 			return -1;
 		}
@@ -531,7 +544,7 @@ _tmain(int argc, TCHAR *argv[])
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
@@ -544,12 +557,12 @@ _tmain(int argc, TCHAR *argv[])
 			&totalNumberOfBytes,
 			&totalNumberOfFreeBytes )) {
 
-		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_VOLUME_SIZE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error(szMsg, GetLastError());
 		return -1;
 	}
 
-	LoadString( GetModuleHandle(NULL), STRING_FREE_SPACE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+	LoadStringAndOem( GetModuleHandle(NULL), STRING_FREE_SPACE, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	_tprintf(szMsg, totalNumberOfBytes.QuadPart, totalNumberOfFreeBytes.QuadPart );
 
 	//
@@ -560,11 +573,11 @@ _tmain(int argc, TCHAR *argv[])
 						&serialNumber, &maxComponent, &flags,
 						fileSystem, sizeof(fileSystem)/2)) {
 
-		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		LoadStringAndOem( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
-	LoadString( GetModuleHandle(NULL), STRING_SERIAL_NUMBER, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+	LoadStringAndOem( GetModuleHandle(NULL), STRING_SERIAL_NUMBER, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	_tprintf(szMsg, (unsigned int)(serialNumber >> 16),
 					(unsigned int)(serialNumber & 0xFFFF) );
 

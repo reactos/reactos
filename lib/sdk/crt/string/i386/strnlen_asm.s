@@ -1,6 +1,6 @@
 /* $Id$
  */
 
-#include "tcsnlen.h"
+#include "tcsnlen.inc"
 
 /* EOF */

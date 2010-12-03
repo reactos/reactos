@@ -18,6 +18,10 @@
 
 /* GLOBALS ********************************************************************/
 
+#if MI_TRACE_PFNS
+BOOLEAN UserPdeFault = FALSE;
+#endif
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PMMPTE
@@ -256,6 +260,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
     
     /* Do we need a zero page? */
     ASSERT(PointerPte->u.Hard.Valid == 0);
+#if MI_TRACE_PFNS
+    if (UserPdeFault) MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+    if (!UserPdeFault) MI_SET_USAGE(MI_USAGE_DEMAND_ZERO);
+#endif
+    if (Process) MI_SET_PROCESS2(Process->ImageFileName);
+    if (!Process) MI_SET_PROCESS2("Kernel Demand 0");
     if ((NeedZero) && (Process))
     {
         /* Try to get one, if we couldn't grab a free page and zero it */
@@ -315,7 +325,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     }
     
     /* Set it dirty if it's a writable page */
-    if (TempPte.u.Hard.Write) TempPte.u.Hard.Dirty = TRUE;
+    if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
     
     /* Write it */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
@@ -594,13 +604,13 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
                                       PointerPte,
                                       Process,
                                       MM_NOIRQL);
-    ASSERT(KeAreAllApcsDisabled () == TRUE);
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
     if (NT_SUCCESS(Status))
     {
         //
         // Make sure we're returning in a sane state and pass the status down
         //
-        ASSERT(OldIrql == KeGetCurrentIrql ());
+        ASSERT(OldIrql == KeGetCurrentIrql());
         ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
         return Status;
     }
@@ -805,21 +815,23 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             /* Get the prototype PTE! */
             ProtoPte = MiProtoPteToPte(&TempPte);
         }
+        else
+        {        
+            //
+            // We don't implement transition PTEs
+            //
+            ASSERT(TempPte.u.Soft.Transition == 0);
         
-        //
-        // We don't implement transition PTEs
-        //
-        ASSERT(TempPte.u.Soft.Transition == 0);
-        
-        /* Check for no-access PTE */
-        if (TempPte.u.Soft.Protection == MM_NOACCESS)
-        {
-            /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
-            KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
-                         (ULONG_PTR)Address,
-                         StoreInstruction,
-                         (ULONG_PTR)TrapInformation,
-                         1);
+            /* Check for no-access PTE */
+            if (TempPte.u.Soft.Protection == MM_NOACCESS)
+            {
+                /* Bad boy, bad boy, whatcha gonna do, whatcha gonna do when ARM3 comes for you! */
+                KeBugCheckEx(PAGE_FAULT_IN_NONPAGED_AREA,
+                             (ULONG_PTR)Address,
+                             StoreInstruction,
+                             (ULONG_PTR)TrapInformation,
+                             1);
+            }
         }
         
         /* Check for demand page */
@@ -874,8 +886,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
 
     /* First things first, is the PDE valid? */
-//    DPRINT1("The PDE we faulted on: %lx %lx\n", PointerPde, MiAddressToPde(PTE_BASE));
-    //ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
     ASSERT(PointerPde->u.Hard.LargePage == 0);
     if (PointerPde->u.Hard.Valid == 0)
     {
@@ -889,18 +899,23 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         ASSERT(ProtectionCode != MM_NOACCESS);
 
         /* Make the PDE demand-zero */
-        MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
+        MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
 
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
+#if MI_TRACE_PFNS
+        UserPdeFault = TRUE;
+#endif
         Status = MiDispatchFault(TRUE,
                                  PointerPte,
-                                 PointerPde,
+                                 (PMMPTE)PointerPde,
                                  NULL,
                                  FALSE,
                                  PsGetCurrentProcess(),
                                  TrapInformation,
                                  NULL);
-
+#if MI_TRACE_PFNS
+        UserPdeFault = FALSE;
+#endif
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
 #if (_MI_PAGING_LEVELS >= 3)
@@ -918,7 +933,6 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     if (TempPte.u.Long == (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS))
     {
         /* Resolve the fault */
-        //DPRINT1("VAD demand-zero fault: %p\n", Address);
         MiResolveDemandZeroFault(Address,
                                  PointerPte,
                                  CurrentProcess,
@@ -977,6 +991,14 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
         return Status;
     }
+
+    /* Is this a user address? */
+    if (Address <= MM_HIGHEST_USER_ADDRESS)
+    {
+        /* Add an additional page table reference */
+        MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)]++;
+        ASSERT(MmWorkingSetList->UsedPageTableEntries[MiGetPdeOffset(Address)] <= PTE_COUNT);
+    }
     
     /* Did we get a prototype PTE back? */
     if (!ProtoPte)
@@ -988,6 +1010,8 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
         
         /* Try to get a zero page */
+        MI_SET_USAGE(MI_USAGE_PEB_TEB);
+        MI_SET_PROCESS2(CurrentProcess->ImageFileName);
         Color = MI_GET_NEXT_PROCESS_COLOR(CurrentProcess);
         PageFrameIndex = MiRemoveZeroPageSafe(Color);
         if (!PageFrameIndex)
@@ -1034,7 +1058,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         }
 
         /* Write the dirty bit for writeable pages */
-        if (TempPte.u.Hard.Write) TempPte.u.Hard.Dirty = TRUE;
+        if (MI_IS_PAGE_WRITEABLE(&TempPte)) MI_MAKE_DIRTY_PAGE(&TempPte);
 
         /* And now write down the PTE, making the address valid */
         MI_WRITE_VALID_PTE(PointerPte, TempPte);

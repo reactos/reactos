@@ -17,7 +17,7 @@
 
 /*++
  * @name FsRtlBalanceReads
- * @implemented NT 4.0
+ * @implemented NT 5.2
  *
  *     The FsRtlBalanceReads routine sends an IRP to an FTDISK Driver
  *     requesting the driver to balance read requests across a mirror set.
@@ -65,6 +65,8 @@ FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
                                        KernelMode,
                                        FALSE,
                                        NULL);
+        ASSERT(Status == STATUS_SUCCESS);
+
         /* Return Status */
         Status = IoStatusBlock.Status;
     }
@@ -75,7 +77,7 @@ FsRtlBalanceReads(PDEVICE_OBJECT TargetDevice)
 
 /*++
  * @name FsRtlSyncVolumes
- * @implemented NT 4.0
+ * @implemented NT 5.2
  *
  *     The FsRtlSyncVolumes routine is deprecated.
  *

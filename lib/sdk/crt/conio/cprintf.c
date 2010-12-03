@@ -5,6 +5,7 @@
  * PURPOSE:          C Runtime
  * PROGRAMMER:       Magnus Olsen (Imported from wine cvs 2006-05-23)
  */
+#ifndef USE_NEW_SPRINTF
 
 #include <precomp.h>
 
@@ -38,3 +39,5 @@ _cprintf(const char *fmt, ...)
       free (mem);
   return retval;
 }
+
+#endif

@@ -21,12 +21,12 @@
 #define _tlods lodsw
 #define _tstos stosw
 
-#define _tsize $2
+#define _tsize 2
 
 #define _treg(_O_) _O_ ## x
 
-#define _tdec(_O_) sub $2, _O_
-#define _tinc(_O_) add $2, _O_
+#define _tdec(_O_) sub _O_, 2
+#define _tinc(_O_) add _O_, 2
 
 #else
 
@@ -45,7 +45,7 @@
 #define _tlods lodsb
 #define _tstos stosb
 
-#define _tsize  $1
+#define _tsize  1
 
 #define _treg(_O_) _O_ ## l
 

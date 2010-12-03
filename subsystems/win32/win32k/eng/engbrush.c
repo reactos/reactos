@@ -18,8 +18,6 @@ VOID
 NTAPI
 EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 {
-    HPALETTE hpal = NULL;
-
     ASSERT(pebo);
     ASSERT(pbrush);
     ASSERT(pdc);
@@ -35,14 +33,11 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     pebo->crCurrentText = pdc->pdcattr->crForegroundClr;
 
     pebo->psurfTrg = pdc->dclevel.pSurface;
-//    ASSERT(pebo->psurfTrg); // FIXME: some dcs don't have a surface
+    ASSERT(pebo->psurfTrg);
+    ASSERT(pebo->psurfTrg->ppal);
 
-    if (pebo->psurfTrg)
-        hpal = pebo->psurfTrg->hDIBPalette;
-    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
-    pebo->ppalSurf = PALETTE_ShareLockPalette(hpal);
-    if (!pebo->ppalSurf)
-        pebo->ppalSurf = &gpalRGB;
+    pebo->ppalSurf = pebo->psurfTrg->ppal;
+    GDIOBJ_IncrementShareCount(&pebo->ppalSurf->BaseObject);
 
     if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {
@@ -80,7 +75,12 @@ EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor)
     pebo->ulRGBColor = crColor;
 
     /* Initialize an XLATEOBJ RGB -> surface */
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, pebo->ppalSurf, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exlo,
+                          &gpalRGB,
+                          pebo->ppalSurf,
+                          pebo->crCurrentBack,
+                          0,
+                          0);
 
     /* Translate the brush color to the target format */
     iSolidColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
@@ -109,8 +109,7 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
         pebo->BrushObject.pvRbrush = NULL;
     }
 
-    if (pebo->ppalSurf != &gpalRGB)
-        PALETTE_ShareUnlockPalette(pebo->ppalSurf);
+    PALETTE_ShareUnlockPalette(pebo->ppalSurf);
 }
 
 VOID
@@ -145,7 +144,7 @@ EngRealizeBrush(
     ULONG lWidth;
 
     /* Calculate width in bytes of the realized brush */
-    lWidth = DIB_GetDIBWidthBytes(psoPattern->sizlBitmap.cx,
+    lWidth = WIDTH_BYTES_ALIGN32(psoPattern->sizlBitmap.cx,
                                   BitsPerFormat(psoDst->iBitmapFormat));
 
     /* Allocate a bitmap */
@@ -192,12 +191,8 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     PPDEVOBJ ppdev = NULL;
     EXLATEOBJ exlo;
 
-    // FIXME: all EBRUSHOBJs need a surface, see EBRUSHOBJ_vInit
-    if (!pebo->psurfTrg)
-    {
-        DPRINT1("Pattern brush has no target surface!\n");
-        return FALSE;
-    }
+    /* All EBRUSHOBJs have a surface, see EBRUSHOBJ_vInit */
+    ASSERT(pebo->psurfTrg);
 
     ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
 
@@ -210,16 +205,18 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 
     psurfPattern = SURFACE_ShareLockSurface(pebo->pbrush->hbmPattern);
     ASSERT(psurfPattern);
+    ASSERT(psurfPattern->ppal);
 
     /* FIXME: implement mask */
     psurfMask = NULL;
 
     /* Initialize XLATEOBJ for the brush */
-    EXLATEOBJ_vInitBrushXlate(&exlo,
-                              pebo->pbrush,
-                              pebo->psurfTrg,
-                              pebo->crCurrentText,
-                              pebo->crCurrentBack);
+    EXLATEOBJ_vInitialize(&exlo, 
+                          psurfPattern->ppal,
+                          pebo->psurfTrg->ppal,
+                          0,
+                          pebo->crCurrentBack,
+                          pebo->crCurrentText);
 
     /* Create the realization */
     bResult = pfnRealzizeBrush(&pebo->BrushObject,

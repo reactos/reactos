@@ -2,8 +2,8 @@
 
 #include <include/winsta.h>
 
-INT  INTERNAL_CALL MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);
-INT  INTERNAL_CALL MouseSafetyOnDrawEnd(SURFOBJ *SurfObj);
+INT  INTERNAL_CALL MouseSafetyOnDrawStart(PPDEVOBJ ppdev, LONG HazardX1, LONG HazardY1, LONG HazardX2, LONG HazardY2);
+INT  INTERNAL_CALL MouseSafetyOnDrawEnd(PPDEVOBJ ppdev);
 
 #ifndef XBUTTON1
 #define XBUTTON1	(0x01)

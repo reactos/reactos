@@ -6,6 +6,9 @@
  * PROGRAMMER:        Timo Kreuzer
  */
 
+#include <asm.inc>
+
+.code
 
 /*******************************************************************************
  * IEEE 754-1985 single precision floating point
@@ -72,9 +75,6 @@
  * FLOATOBJ_SubLong - wrapper
  */
 
-.intel_syntax noprefix
-.text
-
 #define lMant 0
 #define lExp 4
 
@@ -87,24 +87,24 @@
  * FLOATOBJ_SetFloat(IN OUT PFLOATOBJ pf, IN FLOATL f);
  */
 _FLOATOBJ_SetFloat@8:
-.global _FLOATOBJ_SetFloat@8
+PUBLIC _FLOATOBJ_SetFloat@8
 	push ebp
 	mov ebp, esp
 
 	mov ecx, [esp + PARAM2]		/* Load the float into ecx */
 	mov eax, ecx				/* Copy float to eax for later */
 
-	test ecx, 0x7f800000		/* Check for zero exponent - 0 or denormal */
+	test ecx, HEX(7f800000)		/* Check for zero exponent - 0 or denormal */
 	jz SetFloat0				/* If it's all zero, ... */
 
 	shl ecx, 7					/* Put the bits for the mantissa in place */
 	
 	cdq							/* Fill edx with the sign from the FLOATL in eax */
-	and ecx, 0x7fffffff			/* Mask out invalid field in the mantissa */
+	and ecx, HEX(7fffffff)			/* Mask out invalid field in the mantissa */
 
 	shr eax, 23					/* Shift the exponent in eax in place */
-	or ecx, 0x40000000			/* Set bit for 1 in the mantissa */
-	and eax, 0xff				/* Mask out invalid fields in the exponent in eax */
+	or ecx, HEX(40000000)		/* Set bit for 1 in the mantissa */
+	and eax, HEX(0ff)			/* Mask out invalid fields in the exponent in eax */
 
 	xor ecx, edx				/* Make use of the sign bit expanded to full edx */
 
@@ -136,7 +136,7 @@ SetFloat0:
  *
  */
 _FLOATOBJ_GetFloat@4:
-.global _FLOATOBJ_GetFloat@4
+PUBLIC _FLOATOBJ_GetFloat@4
 	push ebp
 	mov ebp, esp
 
@@ -152,13 +152,13 @@ _FLOATOBJ_GetFloat@4:
 	sub eax, edx
 	jz GetFloatRet
 
-	and ecx, 0xff				/* Mask out invalid fields in the exponent */
-	and eax, 0x3fffffff			/* Mask out invalid fields in mantissa */
+	and ecx, HEX(0ff)			/* Mask out invalid fields in the exponent */
+	and eax, HEX(3fffffff)		/* Mask out invalid fields in mantissa */
 
 	shl ecx, 23					/* Shift exponent in place */
 	shr eax, 7					/* Shift mantissa in place */
 
-	and edx, 0x80000000			/* Reduce edx to sign bit only */
+	and edx, HEX(80000000)			/* Reduce edx to sign bit only */
 
 	or eax, ecx					/* Set exponent in result */
 	or eax, edx					/* Set sign bit in result */
@@ -178,7 +178,7 @@ GetFloatRet:
  * Instead of using abs(l), which is 3 + 2 instructions, use a branch.
  */
 _FLOATOBJ_SetLong@8:
-.global _FLOATOBJ_SetLong@8
+PUBLIC _FLOATOBJ_SetLong@8
 	push ebp
 	mov ebp, esp
 
@@ -236,7 +236,7 @@ SetLong0:
  *
  */
 _FLOATOBJ_GetLong@4:
-.global _FLOATOBJ_GetLong@4
+PUBLIC _FLOATOBJ_GetLong@4
 	push ebp
 	mov ebp, esp
 
@@ -263,7 +263,7 @@ GetLong2:
  * FLOATOBJ_Equal(IN PFLOATOBJ pf1, IN PFLOATOBJ pf2);
  */
 _FLOATOBJ_Equal@8:
-.global _FLOATOBJ_Equal@8
+PUBLIC _FLOATOBJ_Equal@8
 	push ebp
 	mov ebp, esp
 
@@ -291,7 +291,7 @@ _FLOATOBJ_Equal@8:
  * FLOATOBJ_EqualLong(IN PFLOATOBJ pf, IN LONG l);
  */
 _FLOATOBJ_EqualLong@8:
-.global _FLOATOBJ_EqualLong@8
+PUBLIC _FLOATOBJ_EqualLong@8
 	push ebp
 	mov ebp, esp
 
@@ -325,7 +325,7 @@ EqualLongFalse:
  *
  */
 _FLOATOBJ_GreaterThan@8:
-.global _FLOATOBJ_GreaterThan@8
+PUBLIC _FLOATOBJ_GreaterThan@8
 	push ebp
 	mov ebp, esp
 
@@ -415,7 +415,7 @@ GreaterThan_neg2:
  * LOATOBJ_GreaterThan
  */
 _FLOATOBJ_GreaterThanLong@8:
-.global _FLOATOBJ_GreaterThanLong@8
+PUBLIC _FLOATOBJ_GreaterThanLong@8
 	push ebp
 	mov ebp, esp
 
@@ -445,7 +445,7 @@ _FLOATOBJ_GreaterThanLong@8:
  *
  */
 _FLOATOBJ_LessThan@8:
-.global _FLOATOBJ_LessThan@8
+PUBLIC _FLOATOBJ_LessThan@8
 	push ebp
 	mov ebp, esp
 
@@ -536,7 +536,7 @@ LessThan_neg2:
  * Currently implemented as a wrapper around FLOATOBJ_SetLong and FLOATOBJ_LessThan
  */
 _FLOATOBJ_LessThanLong@8:
-.global _FLOATOBJ_LessThanLong@8
+PUBLIC _FLOATOBJ_LessThanLong@8
 	push ebp
 	mov ebp, esp
 
@@ -569,7 +569,7 @@ _FLOATOBJ_LessThanLong@8:
  *  No special handling for 0, where mantissa is 0
  */
 _FLOATOBJ_Mul@8:
-.global _FLOATOBJ_Mul@8
+PUBLIC _FLOATOBJ_Mul@8
 	push ebp
 	mov ebp, esp
 
@@ -620,7 +620,7 @@ MulNeg:
 
 
 	lea edx, [edx + ecx -2]		/* Normalize exponent in edx */
-	or eax, 0x80000000			/* Set sign bit */
+	or eax, HEX(80000000)			/* Set sign bit */
 
 	mov ecx, [esp + PARAM1]		/* Load pf1 into ecx */
 	mov [ecx + lMant], eax		/* Save back mantissa */
@@ -646,7 +646,7 @@ Mul0:
  * Currently implemented as a wrapper around FLOATOBJ_SetFloat and FLOATOBJ_Mul
  */
 _FLOATOBJ_MulFloat@8:
-.global _FLOATOBJ_MulFloat@8
+PUBLIC _FLOATOBJ_MulFloat@8
 	push ebp
 	mov ebp, esp
 
@@ -675,7 +675,7 @@ _FLOATOBJ_MulFloat@8:
  * Currently implemented as a wrapper around FLOATOBJ_SetLong and FLOATOBJ_Mul
  */
 _FLOATOBJ_MulLong@8:
-.global _FLOATOBJ_MulLong@8
+PUBLIC _FLOATOBJ_MulLong@8
 	push ebp
 	mov ebp, esp
 
@@ -703,7 +703,7 @@ _FLOATOBJ_MulLong@8:
  *
  */
 _FLOATOBJ_Div@8:
-.global _FLOATOBJ_Div@8
+PUBLIC _FLOATOBJ_Div@8
 	push ebp
 	mov ebp, esp
 	push ebx
@@ -736,7 +736,7 @@ _FLOATOBJ_Div@8:
 	div ecx						/* Do an unsigned divide */
 
 	xor ecx, ecx				/* Adjust result */
-	test eax, 0x80000000
+	test eax, HEX(80000000)
 	setnz cl
 	shr eax, cl
 
@@ -773,7 +773,7 @@ Div0:
  * Currently implemented as a wrapper around FLOATOBJ_SetFloat and FLOATOBJ_Div
  */
 _FLOATOBJ_DivFloat@8:
-.global _FLOATOBJ_DivFloat@8
+PUBLIC _FLOATOBJ_DivFloat@8
 	push ebp
 	mov ebp, esp
 	sub esp, 8					/* Make room for a FLOATOBJ on the stack */
@@ -802,7 +802,7 @@ _FLOATOBJ_DivFloat@8:
  * Currently implemented as a wrapper around FLOATOBJ_SetLong and FLOATOBJ_Div
  */
 _FLOATOBJ_DivLong@8:
-.global _FLOATOBJ_DivLong@8
+PUBLIC _FLOATOBJ_DivLong@8
 	push ebp
 	mov ebp, esp
 	sub esp, 8					/* Make room for a FLOATOBJ on the stack */
@@ -829,7 +829,7 @@ _FLOATOBJ_DivLong@8:
  *
  */
 _FLOATOBJ_Add@8:
-.global _FLOATOBJ_Add@8
+PUBLIC _FLOATOBJ_Add@8
 	push ebp
 	mov ebp, esp
 	push ebx
@@ -928,7 +928,7 @@ AddIs0:
  * Currently implemented as a wrapper around FLOATOBJ_SetFloat and FLOATOBJ_Add
  */
 _FLOATOBJ_AddFloat@8:
-.global _FLOATOBJ_AddFloat@8
+PUBLIC _FLOATOBJ_AddFloat@8
 	push ebp
 	mov ebp, esp
 	sub esp, 8					/* Make room for a FLOATOBJ on the stack */
@@ -957,7 +957,7 @@ _FLOATOBJ_AddFloat@8:
  * Currently implemented as a wrapper around FLOATOBJ_SetLong and FLOATOBJ_Add
  */
 _FLOATOBJ_AddLong@8:
-.global _FLOATOBJ_AddLong@8
+PUBLIC _FLOATOBJ_AddLong@8
 	push ebp
 	mov ebp, esp
 	sub esp, 8					/* Make room for a FLOATOBJ on the stack */
@@ -985,7 +985,7 @@ _FLOATOBJ_AddLong@8:
  *
  */
 _FLOATOBJ_Sub@8:
-.global _FLOATOBJ_Sub@8
+PUBLIC _FLOATOBJ_Sub@8
 	push ebp
 	mov ebp, esp
 	push ebx
@@ -1083,7 +1083,7 @@ SubIs0:
  * Currently implemented as a wrapper around FLOATOBJ_SetFloat and FLOATOBJ_Sub
  */
 _FLOATOBJ_SubFloat@8:
-.global _FLOATOBJ_SubFloat@8
+PUBLIC _FLOATOBJ_SubFloat@8
 	push ebp
 	mov ebp, esp
 	sub esp, 8					/* Make room for a FLOATOBJ on the stack */
@@ -1112,7 +1112,7 @@ _FLOATOBJ_SubFloat@8:
  * Currently implemented as a wrapper around FLOATOBJ_SetLong and FLOATOBJ_Sub
  */
 _FLOATOBJ_SubLong@8:
-.global _FLOATOBJ_SubLong@8
+PUBLIC _FLOATOBJ_SubLong@8
 	push ebp
 	mov ebp, esp
 	sub esp, 8					/* Make room for a FLOATOBJ on the stack */
@@ -1140,7 +1140,7 @@ _FLOATOBJ_SubLong@8:
  *
  */
 _FLOATOBJ_Neg@4:
-.global _FLOATOBJ_Neg@4
+PUBLIC _FLOATOBJ_Neg@4
 	push ebp
 	mov ebp, esp
 
@@ -1150,5 +1150,5 @@ _FLOATOBJ_Neg@4:
 	pop ebp						/* Return */
 	ret 4
 
-
+END
 /* EOF */

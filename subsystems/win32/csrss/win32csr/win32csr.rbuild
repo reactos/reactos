@@ -9,9 +9,10 @@
 	<include base="console">.</include>
 	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<library>ntdll</library>
-	<library>user32</library>
-	<library>gdi32</library>
-	<library>advapi32</library>
+	<library delayimport="true">user32</library>
+	<library delayimport="true">gdi32</library>
+	<library delayimport="true">advapi32</library>
+	<library>delayimp</library>
 	<library>win32ksys</library>
 	<library>psapi</library>
 	<library>pseh</library>

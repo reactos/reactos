@@ -514,6 +514,21 @@ IopAssignDeviceResources(
     IN PDEVICE_NODE DeviceNode
 );
 
+NTSTATUS
+NTAPI
+IopCreateResourceListFromRequirements(
+    IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
+    OUT PCM_RESOURCE_LIST *ResourceList
+);
+
+NTSTATUS
+NTAPI
+IopDetectResourceConflict(
+     IN PCM_RESOURCE_LIST ResourceList,
+     IN BOOLEAN Silent,
+     OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor
+);
+
 //
 // PNP Routines
 //
@@ -1138,6 +1153,20 @@ IopCloseFile(
     IN ACCESS_MASK GrantedAccess,
     IN ULONG ProcessHandleCount,
     IN ULONG SystemHandleCount
+);
+
+PVOID
+NTAPI
+IoGetFileObjectFilterContext(
+    IN PFILE_OBJECT FileObject
+);
+
+NTSTATUS
+NTAPI
+IoChangeFileObjectFilterContext(
+    IN PFILE_OBJECT FileObject,
+    IN PVOID FilterContext,
+    IN BOOLEAN Define
 );
 
 //

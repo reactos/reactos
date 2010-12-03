@@ -47,14 +47,6 @@ static LONG MiBalancerWork = 0;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID MmPrintMemoryStatistic(VOID)
-{
-   DbgPrint("MC_CACHE %d, MC_USER %d, MC_PPOOL %d, MC_NPPOOL %d, MmAvailablePages %d\n",
-            MiMemoryConsumers[MC_CACHE].PagesUsed, MiMemoryConsumers[MC_USER].PagesUsed,
-            MiMemoryConsumers[MC_PPOOL].PagesUsed, MiMemoryConsumers[MC_NPPOOL].PagesUsed,
-            MmAvailablePages);
-}
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -80,13 +72,7 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     {
         MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;        
     }
-   MiMemoryConsumers[MC_USER].PagesTarget =
-      NrAvailablePages - MiMinimumAvailablePages;
-   MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
-   MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
-   MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
-   MiMemoryConsumers[MC_SYSTEM].PagesTarget = 0xFFFFFFFF;
-   MiMemoryConsumers[MC_SYSTEM].PagesUsed = 0;
+   MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
 }
 
 VOID
@@ -261,7 +247,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    /*
     * Allocate always memory for the non paged pool and for the pager thread.
     */
-   if ((Consumer == MC_NPPOOL) || (Consumer == MC_SYSTEM) || MiIsBalancerThread())
+   if ((Consumer == MC_SYSTEM) || MiIsBalancerThread())
    {
       OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
       Page = MmAllocPage(Consumer);

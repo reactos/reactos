@@ -14,6 +14,9 @@
 	<if property="_ELF_" value="1">
 		<define name="_ELF_" />
 	</if>
+	<if property="NEWCC" value="1">
+	  <define name="NEWCC" />
+	</if>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
 	<include base="ntoskrnl" root="intermediate"></include>
@@ -130,14 +133,35 @@
 		<file>timerobj.c</file>
 		<file>wait.c</file>
 	</directory>
-	<directory name="cc">
+	<if property="NEWCC" value="0">
+	  <directory name="cc">
 		<file>cacheman.c</file>
 		<file>copy.c</file>
 		<file>fs.c</file>
 		<file>mdl.c</file>
 		<file>pin.c</file>
 		<file>view.c</file>
-	</directory>
+	  </directory>
+	</if>
+	<if property="NEWCC" value="1">
+	  <directory name="cache">
+		<file>cachesub.c</file>
+		<file>copysup.c</file>
+		<file>fssup.c</file>
+		<file>lazyrite.c</file>
+		<file>logsup.c</file>
+		<file>mdlsup.c</file>
+		<file>pinsup.c</file>
+		<directory name="section">
+		  <file>data.c</file>
+		  <file>fault.c</file>
+		  <file>io.c</file>
+		  <file>reqtools.c</file>
+		  <file>sptab.c</file>
+		  <file>swapout.c</file>
+		</directory>
+	  </directory>
+	</if>
 	<directory name="config">
 		<if property="ARCH" value="i386">
 			<directory name="i386">

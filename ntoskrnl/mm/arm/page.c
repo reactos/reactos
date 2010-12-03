@@ -12,10 +12,111 @@
 #define NDEBUG
 #include <debug.h>
 
+#line 15 "ARM³::ARMPAGE"
+#define MODULE_INVOLVED_IN_ARM3
+#include "../ARM3/miarm.h"
+
 /* GLOBALS ********************************************************************/
 
+const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
+
+const
+ULONG MmProtectToValue[32] =
+{
+    PAGE_NOACCESS,
+    PAGE_READONLY,
+    PAGE_EXECUTE,
+    PAGE_EXECUTE_READ,
+    PAGE_READWRITE,
+    PAGE_WRITECOPY,
+    PAGE_EXECUTE_READWRITE,
+    PAGE_EXECUTE_WRITECOPY,
+    PAGE_NOACCESS,
+    PAGE_NOCACHE | PAGE_READONLY,
+    PAGE_NOCACHE | PAGE_EXECUTE,
+    PAGE_NOCACHE | PAGE_EXECUTE_READ,
+    PAGE_NOCACHE | PAGE_READWRITE,
+    PAGE_NOCACHE | PAGE_WRITECOPY,
+    PAGE_NOCACHE | PAGE_EXECUTE_READWRITE,
+    PAGE_NOCACHE | PAGE_EXECUTE_WRITECOPY,
+    PAGE_NOACCESS,
+    PAGE_GUARD | PAGE_READONLY,
+    PAGE_GUARD | PAGE_EXECUTE,
+    PAGE_GUARD | PAGE_EXECUTE_READ,
+    PAGE_GUARD | PAGE_READWRITE,
+    PAGE_GUARD | PAGE_WRITECOPY,
+    PAGE_GUARD | PAGE_EXECUTE_READWRITE,
+    PAGE_GUARD | PAGE_EXECUTE_WRITECOPY,
+    PAGE_NOACCESS,
+    PAGE_WRITECOMBINE | PAGE_READONLY,
+    PAGE_WRITECOMBINE | PAGE_EXECUTE,
+    PAGE_WRITECOMBINE | PAGE_EXECUTE_READ,
+    PAGE_WRITECOMBINE | PAGE_READWRITE,
+    PAGE_WRITECOMBINE | PAGE_WRITECOPY,
+    PAGE_WRITECOMBINE | PAGE_EXECUTE_READWRITE,
+    PAGE_WRITECOMBINE | PAGE_EXECUTE_WRITECOPY
+};
+
 ULONG MmGlobalKernelPageDirectory[4096];
-MMPDE HyperTemplatePde;
+
+/* Template PTE and PDE for a kernel page */
+MMPDE ValidKernelPde = {.u.Hard.Valid = 1};
+MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Sbo = 1};
+
+/* Template PDE for a demand-zero page */
+MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
+MMPTE DemandZeroPte  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
+
+/* Template PTE for prototype page */
+MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)};
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -47,25 +148,6 @@ MmUpdatePageDir(IN PEPROCESS Process,
 {
     /* Nothing to do */
     return;
-}
-
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(IN PEPROCESS Process)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG DirectoryTableBase)
-{
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
 }
 
 PULONG
@@ -246,16 +328,7 @@ MmInitGlobalKernelPageDirectory(VOID)
 {
     ULONG i;
     PULONG CurrentPageDirectory = (PULONG)PDE_BASE;
-    extern MMPTE HyperTemplatePte;
-    
-    /* Setup PTE template */
-    HyperTemplatePte.u.Long = 0;
-    HyperTemplatePte.u.Hard.Valid = 1;
-    HyperTemplatePte.u.Hard.Access = 1;
 
-    /* Setup PDE template */
-    HyperTemplatePde.u.Long = 0;
-    HyperTemplatePde.u.Hard.Valid = 1;
         
     /* Loop the 2GB of address space which belong to the kernel */
     for (i = MiGetPdeOffset(MmSystemRangeStart); i < 2048; i++)

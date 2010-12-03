@@ -255,7 +255,7 @@ GetViewportExtEx(
 
   if ((Dc_Attr->flXform & PAGE_EXTENTS_CHANGED) && (Dc_Attr->iMapMode == MM_ISOTROPIC))
      // Something was updated, go to kernel.
-     return NtGdiGetDCPoint( hdc, GdiGetViewPortExt, (LPPOINT) lpSize );
+     return NtGdiGetDCPoint( hdc, GdiGetViewPortExt, (PPOINTL) lpSize );
   else
   {
      lpSize->cx = Dc_Attr->szlViewportExt.cx;

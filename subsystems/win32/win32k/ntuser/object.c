@@ -330,8 +330,8 @@ UserCreateObject( PUSER_HANDLE_TABLE ht,
    {
       case otWindow:
 //      case otMenu:
-//      case otHook:
-//      case otCallProc:
+      case otHook:
+      case otCallProc:
       case otInputContext:
          Object = DesktopHeapAlloc(rpdesk, size);
          dt = TRUE;
@@ -420,8 +420,8 @@ UserDereferenceObject(PVOID object)
      {
         case otWindow:
 //        case otMenu:
-//        case otHook:
-//        case otCallProc:
+        case otHook:
+        case otCallProc:
         case otInputContext:
            return DesktopHeapFree(((PTHRDESKHEAD)object)->rpdesk, object);
 

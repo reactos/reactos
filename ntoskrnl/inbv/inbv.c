@@ -28,6 +28,7 @@ BT_PROGRESS_INDICATOR InbvProgressIndicator = {0, 25, 0};
 
 PVOID
 NTAPI
+INIT_FUNCTION
 FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                    IN ULONG ResourceId)
 {
@@ -92,6 +93,7 @@ FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      IN ULONG Count)
 {
@@ -174,6 +176,7 @@ InbvReleaseLock(VOID)
 
 VOID
 NTAPI
+INIT_FUNCTION
 InbvEnableBootDriver(IN BOOLEAN Enable)
 {
     /* Check if we're installed */
@@ -408,6 +411,7 @@ InbvSolidColorFill(IN ULONG Left,
 
 VOID
 NTAPI
+INIT_FUNCTION
 InbvUpdateProgressBar(IN ULONG Progress)
 {
     ULONG FillCount, BoundedProgress;
@@ -523,6 +527,7 @@ InbvSetProgressBarSubset(IN ULONG Floor,
 
 VOID
 NTAPI
+INIT_FUNCTION
 InbvIndicateProgress(VOID)
 {
     ULONG Percentage;
@@ -570,6 +575,7 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
 
 VOID
 NTAPI
+INIT_FUNCTION
 DisplayBootBitmap(IN BOOLEAN SosMode)
 {
     PVOID Header, Band, Text, Screen;
@@ -705,6 +711,7 @@ DisplayBootBitmap(IN BOOLEAN SosMode)
 
 VOID
 NTAPI
+INIT_FUNCTION
 FinalizeBootLogo(VOID)
 {
     /* Acquire lock and check the display state */

@@ -68,6 +68,46 @@ MiMakeSystemAddressValid(IN PVOID PageTableVirtualAddress,
     return LockChange;
 }
 
+ULONG
+NTAPI
+MiMakeSystemAddressValidPfn(IN PVOID VirtualAddress,
+                            IN KIRQL OldIrql)
+{
+    NTSTATUS Status;
+    BOOLEAN LockChange = FALSE;
+
+    /* Must be e kernel address */
+    ASSERT(VirtualAddress > MM_HIGHEST_USER_ADDRESS);
+
+    /* Check if the page is valid */
+    while (!MmIsAddressValid(VirtualAddress))
+    {
+        /* Release the PFN database */
+        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+        
+        /* Fault it in */
+        Status = MmAccessFault(FALSE, VirtualAddress, KernelMode, NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            /* This should not fail */
+            KeBugCheckEx(KERNEL_DATA_INPAGE_ERROR,
+                         3,
+                         Status,
+                         0,
+                         (ULONG_PTR)VirtualAddress);
+        }
+
+        /* This flag will be useful later when we do better locking */
+        LockChange = TRUE;
+        
+        /* Lock the PFN database */
+        OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    }
+
+    /* Let caller know what the lock state is */
+    return LockChange;
+}
+
 PFN_NUMBER
 NTAPI
 MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
@@ -106,7 +146,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 ASSERT(Pfn1->u1.WsIndex == 0);
                 
                 /* Actual valid, legitimate, pages */
-                if (ValidPages) *ValidPages++;
+                if (ValidPages) (*ValidPages)++;
                 
                 /* Get the page table entry */
                 PageTableIndex = Pfn1->u4.PteFrame;
@@ -120,7 +160,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 MiDecrementShareCount(Pfn1, PageFrameIndex);
                 
                 /* Decrement the page table too */
-                DPRINT("FIXME: ARM3 should decrement the PT refcount for: %p\n", Pfn2);
+                DPRINT("FIXME: ARM3 should decrement the pool PDE refcount for: %p\n", PageTableIndex);
                 #if 0 // ARM3: Dont't trust this yet
                 MiDecrementShareCount(Pfn2, PageTableIndex);
                 #endif
@@ -144,7 +184,7 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
              *
              * Right now, we shouldn't expect any page file information in the PTE
              */
-             ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+            ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
              
             /* Destroy the PTE */
             PointerPte->u.Long = 0;
@@ -169,53 +209,90 @@ VOID
 NTAPI
 MiDeletePte(IN PMMPTE PointerPte,
             IN PVOID VirtualAddress,
-            IN PEPROCESS CurrentProcess)
+            IN PEPROCESS CurrentProcess,
+            IN PMMPTE PrototypePte)
 {
     PMMPFN Pfn1;
-    MMPTE PteContents;
+    MMPTE TempPte;
     PFN_NUMBER PageFrameIndex;
+    PMMPDE PointerPde;
 
     /* PFN lock must be held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Capture the PTE */
-    PteContents = *PointerPte;
+    TempPte = *PointerPte;
 
     /* We only support valid PTEs for now */
-    ASSERT(PteContents.u.Hard.Valid == 1);
-    ASSERT(PteContents.u.Soft.Prototype == 0);
-    ASSERT(PteContents.u.Soft.Transition == 0);
-
-    /* Get the PFN entry */
-    PageFrameIndex = PFN_FROM_PTE(&PteContents);
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
-
-    /* We don't support deleting prototype PTEs for now */
-    ASSERT(Pfn1->u3.e1.PrototypePte == 0);
-
-    /* Make sure the saved PTE address is valid */
-    if ((PMMPTE)((ULONG_PTR)Pfn1->PteAddress & ~0x1) != PointerPte)
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    if (TempPte.u.Hard.Valid == 0)
     {
-        /* The PFN entry is illegal, or invalid */
-        KeBugCheckEx(MEMORY_MANAGEMENT,
-                     0x401, 
-                     (ULONG_PTR)PointerPte,
-                     PointerPte->u.Long,
-                     (ULONG_PTR)Pfn1->PteAddress);
+        /* Invalid PTEs not supported yet */
+        ASSERT(TempPte.u.Soft.Prototype == 0);
+        ASSERT(TempPte.u.Soft.Transition == 0);
     }
 
-    /* There should only be 1 shared reference count */
-    ASSERT(Pfn1->u2.ShareCount == 1);
-    
-    /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
-    //MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+    /* Get the PFN entry */
+    PageFrameIndex = PFN_FROM_PTE(&TempPte);
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
-    /* Mark the PFN for deletion and dereference what should be the last ref */
-    MI_SET_PFN_DELETED(Pfn1);
-    MiDecrementShareCount(Pfn1, PageFrameIndex);
+    /* Check if this is a valid, prototype PTE */
+    if (Pfn1->u3.e1.PrototypePte == 1)
+    {
+        /* Get the PDE and make sure it's faulted in */
+        PointerPde = MiAddressToPde(PointerPte);
+        if (PointerPde->u.Hard.Valid == 0)
+        {
+#if (_MI_PAGING_LEVELS == 2) 
+            /* Could be paged pool access from a new process -- synchronize the page directories */
+            if (!NT_SUCCESS(MiCheckPdeForPagedPool(VirtualAddress)))
+            {
+#endif
+                /* The PDE must be valid at this point */
+                KeBugCheckEx(MEMORY_MANAGEMENT,
+                             0x61940,
+                             (ULONG_PTR)PointerPte,
+                             PointerPte->u.Long,
+                             (ULONG_PTR)VirtualAddress);
+            }
+#if (_MI_PAGING_LEVELS == 2) 
+        }
+#endif
+        /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
+        //MiDecrementShareCount(MiGetPfnEntry(PFN_FROM_PTE(PointerPde)), PFN_FROM_PTE(PointerPde));
+
+        /* Drop the share count */
+        MiDecrementShareCount(Pfn1, PageFrameIndex);
+        
+        /* No fork yet */
+        if (PointerPte <= MiHighestUserPte) ASSERT(PrototypePte == Pfn1->PteAddress);
+    }
+    else
+    {
+        /* Make sure the saved PTE address is valid */
+        if ((PMMPTE)((ULONG_PTR)Pfn1->PteAddress & ~0x1) != PointerPte)
+        {
+            /* The PFN entry is illegal, or invalid */
+            KeBugCheckEx(MEMORY_MANAGEMENT,
+                         0x401, 
+                         (ULONG_PTR)PointerPte,
+                         PointerPte->u.Long,
+                         (ULONG_PTR)Pfn1->PteAddress);
+        }
+
+        /* There should only be 1 shared reference count */
+        ASSERT(Pfn1->u2.ShareCount == 1);
     
-    /* We should eventually do this */
-    //CurrentProcess->NumberOfPrivatePages--;
+        /* FIXME: Drop the reference on the page table. For now, leak it until RosMM is gone */
+        //MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+
+        /* Mark the PFN for deletion and dereference what should be the last ref */
+        MI_SET_PFN_DELETED(Pfn1);
+        MiDecrementShareCount(Pfn1, PageFrameIndex);
+    
+        /* We should eventually do this */
+        //CurrentProcess->NumberOfPrivatePages--;
+    }
 
     /* Destroy the PTE and flush the TLB */
     PointerPte->u.Long = 0;
@@ -228,27 +305,35 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                          IN ULONG_PTR EndingAddress,
                          IN PMMVAD Vad)
 {
-    PMMPTE PointerPte, PointerPde;
+    PMMPTE PointerPte, PrototypePte, LastPrototypePte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
     PEPROCESS CurrentProcess;
     KIRQL OldIrql;
+    BOOLEAN AddressGap = FALSE;
+    PSUBSECTION Subsection;
+
+    /* Get out if this is a fake VAD, RosMm will free the marea pages */
+    if ((Vad) && (Vad->u.VadFlags.Spare == 1)) return;
 
     /* Grab the process and PTE/PDE for the address being deleted */
     CurrentProcess = PsGetCurrentProcess();
     PointerPde = MiAddressToPde(Va);
     PointerPte = MiAddressToPte(Va);
 
-    /* We usually only get a VAD when it's not a VM address */
-    if (Vad)
+    /* Check if this is a section VAD or a VM VAD */
+    if (!(Vad) || (Vad->u.VadFlags.PrivateMemory) || !(Vad->FirstPrototypePte))
     {
-        /* Get out if this is a fake VAD, RosMm will free the marea pages */
-        if (Vad->u.VadFlags.Spare == 1) return;
-
-        /* At process deletion, we may get a VAD, but it should be a VM VAD */
-        ASSERT(Vad->u.VadFlags.PrivateMemory);
-        //ASSERT(Vad->FirstPrototypePte == NULL); memory_area fuckers
+        /* Don't worry about prototypes */
+        PrototypePte = LastPrototypePte = NULL;
     }
-    
+    else
+    {
+        /* Get the prototype PTE */
+        PrototypePte = Vad->FirstPrototypePte;
+        LastPrototypePte = Vad->FirstPrototypePte + 1;
+    }
+
     /* In all cases, we don't support fork() yet */
     ASSERT(CurrentProcess->CloneRoot == NULL);
 
@@ -256,8 +341,11 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
     while (TRUE)
     {
         /* First keep going until we find a valid PDE */
-        while (PointerPde->u.Long == 0)
+        while (!PointerPde->u.Long)
         {
+            /* There are gaps in the address space */
+            AddressGap = TRUE;
+
             /* Still no valid PDE, try the next 4MB (or whatever) */
             PointerPde++;
             
@@ -270,7 +358,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         }
         
         /* Now check if the PDE is mapped in */
-        if (PointerPde->u.Hard.Valid == 0)
+        if (!PointerPde->u.Hard.Valid)
         {
             /* It isn't, so map it in */
             PointerPte = MiPteToAddress(PointerPde);
@@ -280,6 +368,26 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
         /* Now we should have a valid PDE, mapped in, and still have some VA */
         ASSERT(PointerPde->u.Hard.Valid == 1);
         ASSERT(Va <= EndingAddress);
+        
+        /* Check if this is a section VAD with gaps in it */
+        if ((AddressGap) && (LastPrototypePte))
+        {
+            /* We need to skip to the next correct prototype PTE */
+            PrototypePte = MI_GET_PROTOTYPE_PTE_FOR_VPN(Vad, Va >> PAGE_SHIFT);
+            
+            /* And we need the subsection to skip to the next last prototype PTE */
+            Subsection = MiLocateSubsection(Vad, Va >> PAGE_SHIFT);
+            if (Subsection)
+            {
+                /* Found it! */
+                LastPrototypePte = &Subsection->SubsectionBase[Subsection->PtesInSubsection];
+            }
+            else
+            {
+                /* No more subsections, we are done with prototype PTEs */
+                PrototypePte = NULL;
+            }
+        }
         
         /* Lock the PFN Database while we delete the PTEs */
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
@@ -292,11 +400,41 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                 /* Check if the PTE is actually mapped in */
                 if (TempPte.u.Long & 0xFFFFFC01)
                 {
-                    /* It is, we don't support prototype PTEs for now though */
-                    ASSERT(TempPte.u.Soft.Prototype == 0);
+                    /* Are we dealing with section VAD? */
+                    if ((LastPrototypePte) && (PrototypePte > LastPrototypePte))
+                    {
+                        /* We need to skip to the next correct prototype PTE */
+                        PrototypePte = MI_GET_PROTOTYPE_PTE_FOR_VPN(Vad, Va >> PAGE_SHIFT);
+        
+                        /* And we need the subsection to skip to the next last prototype PTE */
+                        Subsection = MiLocateSubsection(Vad, Va >> PAGE_SHIFT);
+                        if (Subsection)
+                        {
+                            /* Found it! */
+                            LastPrototypePte = &Subsection->SubsectionBase[Subsection->PtesInSubsection];
+                        }
+                        else
+                        {
+                            /* No more subsections, we are done with prototype PTEs */
+                            PrototypePte = NULL;
+                        }
+                    }
                     
-                    /* Delete the PTE proper */
-                    MiDeletePte(PointerPte, (PVOID)Va, CurrentProcess);
+                    /* Check for prototype PTE */
+                    if ((TempPte.u.Hard.Valid == 0) &&
+                        (TempPte.u.Soft.Prototype == 1))
+                    {
+                        /* Just nuke it */
+                        PointerPte->u.Long = 0;
+                    }
+                    else
+                    {
+                        /* Delete the PTE proper */
+                        MiDeletePte(PointerPte,
+                                    (PVOID)Va, 
+                                    CurrentProcess,
+                                    PrototypePte);
+                    }
                 }
                 else
                 {
@@ -308,6 +446,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
             /* Update the address and PTE for it */
             Va += PAGE_SIZE;
             PointerPte++;
+            PrototypePte++;
             
             /* Making sure the PDE is still valid */
             ASSERT(PointerPde->u.Hard.Valid == 1);    
@@ -323,6 +462,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
 
         /* Otherwise, we exited because we hit a new PDE boundary, so start over */
         PointerPde = MiAddressToPde(Va);
+        AddressGap = FALSE;
     }
 }
 
@@ -907,6 +1047,152 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
     // Fake success
     //
     return STATUS_SUCCESS;
+}
+
+ULONG
+NTAPI
+MiGetPageProtection(IN PMMPTE PointerPte)
+{
+    MMPTE TempPte;
+    PMMPFN Pfn;
+    PAGED_CODE();
+
+    /* Copy this PTE's contents */
+    TempPte = *PointerPte;
+
+    /* Assure it's not totally zero */
+    ASSERT(TempPte.u.Long);
+
+    /* Check for a special prototype format */
+    if (TempPte.u.Soft.Valid == 0 &&
+        TempPte.u.Soft.Prototype == 1)
+    {
+        /* Unsupported now */
+        UNIMPLEMENTED;
+        ASSERT(FALSE);
+    }
+
+    /* In the easy case of transition or demand zero PTE just return its protection */
+    if (!TempPte.u.Hard.Valid) return MmProtectToValue[TempPte.u.Soft.Protection];
+
+    /* If we get here, the PTE is valid, so look up the page in PFN database */
+    Pfn = MiGetPfnEntry(TempPte.u.Hard.PageFrameNumber);
+
+    if (!Pfn->u3.e1.PrototypePte)
+    {
+        /* Return protection of the original pte */
+        return MmProtectToValue[Pfn->OriginalPte.u.Soft.Protection];
+    }
+
+    /* This is hardware PTE */
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+
+    return PAGE_NOACCESS;
+}
+
+ULONG
+NTAPI
+MiQueryAddressState(IN PVOID Va,
+                    IN PMMVAD Vad,
+                    IN PEPROCESS TargetProcess,
+                    OUT PULONG ReturnedProtect,
+                    OUT PVOID *NextVa)
+{
+
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
+    MMPTE TempPte;
+    BOOLEAN DemandZeroPte = TRUE, ValidPte = FALSE;
+    ULONG State = MEM_RESERVE, Protect = 0, LockChange;
+    ASSERT((Vad->StartingVpn <= ((ULONG_PTR)Va >> PAGE_SHIFT)) &&
+           (Vad->EndingVpn >= ((ULONG_PTR)Va >> PAGE_SHIFT)));
+
+    /* Only normal VADs supported */
+    ASSERT(Vad->u.VadFlags.VadType == VadNone);
+        
+    /* Get the PDE and PTE for the address */
+    PointerPde = MiAddressToPde(Va);
+    PointerPte = MiAddressToPte(Va);
+
+    /* Return the next range */
+    *NextVa = (PVOID)((ULONG_PTR)Va + PAGE_SIZE);
+
+    /* Loop to make sure the PDE is valid */
+    do
+    {
+        /* Try again */
+        LockChange = 0;
+
+        /* Is the PDE empty? */
+        if (!PointerPde->u.Long)
+        {
+            /* No address in this range used yet, move to the next PDE range */
+            *NextVa = MiPteToAddress(MiPteToAddress(PointerPde + 1));
+            break;
+        }
+
+        /* The PDE is empty, but is it faulted in? */
+        if (!PointerPde->u.Hard.Valid)
+        {
+            /* It isn't, go ahead and do the fault */
+            LockChange = MiMakeSystemAddressValid(MiPteToAddress(PointerPde),
+                                                  TargetProcess);
+        }
+
+        /* Check if the PDE was faulted in, making the PTE readable */
+        if (!LockChange) ValidPte = TRUE;
+    } while (LockChange);
+
+    /* Is it safe to try reading the PTE? */
+    if (ValidPte)
+    {
+        /* FIXME: watch out for large pages */
+        
+        /* Capture the PTE */
+        TempPte = *PointerPte;
+        if (TempPte.u.Long)
+        {
+            /* The PTE is valid, so it's not zeroed out */
+            DemandZeroPte = FALSE;
+
+            /* Check if it's valid or has a valid protection mask */
+            ASSERT(TempPte.u.Soft.Prototype == 0);
+            if ((TempPte.u.Soft.Protection != MM_DECOMMIT) ||
+                (TempPte.u.Hard.Valid == 1))
+            {
+                /* This means it's committed */
+                State = MEM_COMMIT;
+
+                /* Get protection state of this page */
+                Protect = MiGetPageProtection(PointerPte);
+            }
+            else
+            {
+                /* Otherwise our defaults should hold */
+                ASSERT(Protect == 0);
+                ASSERT(State == MEM_RESERVE);
+            }
+        }
+    }
+
+    /* Check if this was a demand-zero PTE, since we need to find the state */
+    if (DemandZeroPte)
+    {
+        /* Check if the VAD is for committed memory */
+        if (Vad->u.VadFlags.MemCommit)
+        {
+            /* This is committed memory */
+            State = MEM_COMMIT;
+            
+            /* Convert the protection */
+            Protect = MmProtectToValue[Vad->u.VadFlags.Protection];
+        }
+    }
+
+    /* Return the protection code */
+    *ReturnedProtect = Protect;
+    return State;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
@@ -2049,6 +2335,412 @@ NtResetWriteWatch(IN HANDLE ProcessHandle,
     // Return success
     //
     return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
+                              IN PVOID BaseAddress,
+                              OUT PVOID MemoryInformation,
+                              IN SIZE_T MemoryInformationLength,
+                              OUT PSIZE_T ReturnLength)
+{
+    PEPROCESS TargetProcess;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PMMVAD Vad = NULL;
+    PVOID Address, NextAddress;
+    BOOLEAN Found = FALSE;
+    ULONG NewProtect, NewState, BaseVpn;
+    MEMORY_BASIC_INFORMATION MemoryInfo;
+    KAPC_STATE ApcState;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    /* Check for illegal addresses in user-space, or the shared memory area */
+    if ((BaseAddress > MM_HIGHEST_VAD_ADDRESS) ||
+        (PAGE_ALIGN(BaseAddress) == (PVOID)USER_SHARED_DATA))
+    {
+        Address = PAGE_ALIGN(BaseAddress);
+
+        /* Make up an info structure describing this range */
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationProtect = PAGE_READONLY;
+        MemoryInfo.Type = MEM_PRIVATE;
+
+        /* Special case for shared data */
+        if (Address == (PVOID)USER_SHARED_DATA)
+        {
+            MemoryInfo.AllocationBase = (PVOID)USER_SHARED_DATA;
+            MemoryInfo.State = MEM_COMMIT;
+            MemoryInfo.Protect = PAGE_READONLY;
+            MemoryInfo.RegionSize = PAGE_SIZE;
+        }
+        else
+        {
+            MemoryInfo.AllocationBase = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1;
+            MemoryInfo.State = MEM_RESERVE;
+            MemoryInfo.Protect = PAGE_NOACCESS;
+            MemoryInfo.RegionSize = (ULONG_PTR)MemoryInfo.AllocationBase - (ULONG_PTR)Address;
+        }
+
+        /* Return the data, NtQueryInformation already probed it*/
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+                if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+            }
+             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+            if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+        }
+
+        return Status;
+    }
+
+    /* Check if this is for a local or remote process */
+    if (ProcessHandle == NtCurrentProcess())
+    {
+        TargetProcess = PsGetCurrentProcess();
+    }
+    else
+    {
+        /* Reference the target process */
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_QUERY_INFORMATION,
+                                           PsProcessType,
+                                           ExGetPreviousMode(),
+                                           (PVOID*)&TargetProcess,
+                                           NULL);
+        if (!NT_SUCCESS(Status)) return Status;
+        
+        /* Attach to it now */
+        KeStackAttachProcess(&TargetProcess->Pcb, &ApcState);
+    }
+
+    /* Loop the VADs */
+    ASSERT(TargetProcess->VadRoot.NumberGenericTableElements);
+    if (TargetProcess->VadRoot.NumberGenericTableElements)
+    {
+        /* Scan on the right */
+        Vad = (PMMVAD)TargetProcess->VadRoot.BalancedRoot.RightChild;
+        BaseVpn = (ULONG_PTR)BaseAddress >> PAGE_SHIFT;
+        while (Vad)
+        {
+            /* Check if this VAD covers the allocation range */
+            if ((BaseVpn >= Vad->StartingVpn) &&
+                (BaseVpn <= Vad->EndingVpn))
+            {
+                /* We're done */
+                Found = TRUE;
+                break;
+            }
+
+            /* Check if this VAD is too high */
+            if (BaseVpn < Vad->StartingVpn)
+            {
+                /* Search on the left next */
+                Vad = Vad->LeftChild;
+            }
+            else
+            {
+                /* Then this VAD is too low, keep searching on the right */
+                ASSERT(BaseVpn > Vad->EndingVpn);
+                Vad = Vad->RightChild;
+            }
+        }
+    }
+
+    /* Was a VAD found? */
+    if (!Found)
+    {
+        Address = PAGE_ALIGN(BaseAddress);
+
+        /* Calculate region size */
+        if (Vad)
+        {
+            if (Vad->StartingVpn >= BaseVpn)
+            {
+                /* Region size is the free space till the start of that VAD */
+                MemoryInfo.RegionSize = (ULONG_PTR)(Vad->StartingVpn << PAGE_SHIFT) - (ULONG_PTR)Address;
+            }
+            else
+            {
+                /* Get the next VAD */
+                Vad = (PMMVAD)MiGetNextNode((PMMADDRESS_NODE)Vad);
+                if (Vad)
+                {
+                    /* Region size is the free space till the start of that VAD */
+                    MemoryInfo.RegionSize = (ULONG_PTR)(Vad->StartingVpn << PAGE_SHIFT) - (ULONG_PTR)Address;
+                }
+                else
+                {
+                    /* Maximum possible region size with that base address */
+                    MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
+                }
+            }
+        }
+        else
+        {
+            /* Maximum possible region size with that base address */
+            MemoryInfo.RegionSize = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1 - (PCHAR)Address;
+        }
+
+        /* Check if we were attached */
+        if (ProcessHandle != NtCurrentProcess())
+        {
+            /* Detach and derefernece the process */
+            KeUnstackDetachProcess(&ApcState);
+            ObDereferenceObject(TargetProcess);
+        }
+
+        /* Build the rest of the initial information block */
+        MemoryInfo.BaseAddress = Address;
+        MemoryInfo.AllocationBase = NULL;
+        MemoryInfo.AllocationProtect = 0;
+        MemoryInfo.State = MEM_FREE;
+        MemoryInfo.Protect = PAGE_NOACCESS;
+        MemoryInfo.Type = 0;
+
+        /* Return the data, NtQueryInformation already probed it*/
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+                if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+            }
+             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+            if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+        }
+
+        return Status;
+    }
+
+    /* This must be a VM VAD */
+    ASSERT(Vad->u.VadFlags.PrivateMemory);
+   
+    /* Build the initial information block */
+    Address = PAGE_ALIGN(BaseAddress);
+    MemoryInfo.BaseAddress = Address;
+    MemoryInfo.AllocationBase = (PVOID)(Vad->StartingVpn << PAGE_SHIFT);
+    MemoryInfo.AllocationProtect = MmProtectToValue[Vad->u.VadFlags.Protection];
+    MemoryInfo.Type = MEM_PRIVATE;
+    
+    /* Find the largest chunk of memory which has the same state and protection mask */
+    MemoryInfo.State = MiQueryAddressState(Address,
+                                           Vad,
+                                           TargetProcess,
+                                           &MemoryInfo.Protect,
+                                           &NextAddress);
+    Address = NextAddress;
+    while (((ULONG_PTR)Address >> PAGE_SHIFT) <= Vad->EndingVpn)
+    {
+        /* Keep going unless the state or protection mask changed */
+        NewState = MiQueryAddressState(Address, Vad, TargetProcess, &NewProtect, &NextAddress);
+        if ((NewState != MemoryInfo.State) || (NewProtect != MemoryInfo.Protect)) break;
+        Address = NextAddress;
+    }
+
+    /* Now that we know the last VA address, calculate the region size */
+    MemoryInfo.RegionSize = ((ULONG_PTR)Address - (ULONG_PTR)MemoryInfo.BaseAddress);
+
+    /* Check if we were attached */
+    if (ProcessHandle != NtCurrentProcess())
+    {
+        /* Detach and derefernece the process */
+        KeUnstackDetachProcess(&ApcState);
+        ObDereferenceObject(TargetProcess);
+    }
+
+    /* Return the data, NtQueryInformation already probed it*/
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+            if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+        }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        *(PMEMORY_BASIC_INFORMATION)MemoryInformation = MemoryInfo;
+        if (ReturnLength) *ReturnLength = sizeof(MEMORY_BASIC_INFORMATION);
+    }
+
+    /* All went well */
+    DPRINT("Base: %p AllocBase: %p Protect: %lx AllocProtect: %lx "
+            "State: %lx Type: %lx Size: %lx\n",
+            MemoryInfo.BaseAddress, MemoryInfo.AllocationBase,
+            MemoryInfo.AllocationProtect, MemoryInfo.Protect,
+            MemoryInfo.State, MemoryInfo.Type, MemoryInfo.RegionSize);
+
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MiQueryMemorySectionName(IN HANDLE ProcessHandle,
+                         IN PVOID BaseAddress,
+                         OUT PVOID MemoryInformation,
+                         IN SIZE_T MemoryInformationLength,
+                         OUT PSIZE_T ReturnLength)
+{
+    PEPROCESS Process;
+    NTSTATUS Status;
+    WCHAR ModuleFileNameBuffer[MAX_PATH] = {0};
+    UNICODE_STRING ModuleFileName;
+    PMEMORY_SECTION_NAME SectionName = NULL;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_QUERY_INFORMATION,
+                                       NULL,
+                                       PreviousMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("MiQueryMemorySectionName: ObReferenceObjectByHandle returned %x\n",Status);
+        return Status;
+    }
+
+    RtlInitEmptyUnicodeString(&ModuleFileName, ModuleFileNameBuffer, sizeof(ModuleFileNameBuffer));
+    Status = MmGetFileNameForAddress(BaseAddress, &ModuleFileName);
+
+    if (NT_SUCCESS(Status))
+    {
+        SectionName = MemoryInformation;
+        if (PreviousMode != KernelMode)
+        {
+            _SEH2_TRY
+            {
+                RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
+                SectionName->SectionFileName.MaximumLength = MemoryInformationLength;
+                RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
+
+                if (ReturnLength) *ReturnLength = ModuleFileName.Length;
+
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+        }
+        else
+        {
+            RtlInitUnicodeString(&SectionName->SectionFileName, SectionName->NameBuffer);
+            SectionName->SectionFileName.MaximumLength = MemoryInformationLength;
+            RtlCopyUnicodeString(&SectionName->SectionFileName, &ModuleFileName);
+
+            if (ReturnLength) *ReturnLength = ModuleFileName.Length;
+
+        }
+    }
+    ObDereferenceObject(Process);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtQueryVirtualMemory(IN HANDLE ProcessHandle,
+                     IN PVOID BaseAddress,
+                     IN MEMORY_INFORMATION_CLASS MemoryInformationClass,
+                     OUT PVOID MemoryInformation,
+                     IN SIZE_T MemoryInformationLength,
+                     OUT PSIZE_T ReturnLength)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode;
+
+    DPRINT("Querying class %d about address: %p\n", MemoryInformationClass, BaseAddress);
+
+    /* Bail out if the address is invalid */
+    if (BaseAddress > MM_HIGHEST_USER_ADDRESS) return STATUS_INVALID_PARAMETER;
+
+    /* Probe return buffer */
+    PreviousMode =  ExGetPreviousMode();
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWrite(MemoryInformation,
+                          MemoryInformationLength,
+                          sizeof(ULONG_PTR));
+
+            if (ReturnLength) ProbeForWriteSize_t(ReturnLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    switch(MemoryInformationClass)
+    {
+        case MemoryBasicInformation:
+            /* Validate the size information of the class */
+            if (MemoryInformationLength < sizeof(MEMORY_BASIC_INFORMATION))
+            {
+                /* The size is invalid */
+                return STATUS_INFO_LENGTH_MISMATCH;
+            }
+            Status = MiQueryMemoryBasicInformation(ProcessHandle,
+                                                   BaseAddress, 
+                                                   MemoryInformation,
+                                                   MemoryInformationLength,
+                                                   ReturnLength);
+            break;
+
+        case MemorySectionName:
+            /* Validate the size information of the class */
+            if (MemoryInformationLength < sizeof(MEMORY_SECTION_NAME))
+            {
+                /* The size is invalid */
+                return STATUS_INFO_LENGTH_MISMATCH;
+            }
+            Status = MiQueryMemorySectionName(ProcessHandle,
+                                              BaseAddress, 
+                                              MemoryInformation,
+                                              MemoryInformationLength,
+                                              ReturnLength);
+            break;
+        case MemoryWorkingSetList:
+        case MemoryBasicVlmInformation:
+        default:
+            DPRINT1("Unhandled memory information class %d\n", MemoryInformationClass);
+            break;
+    }
+
+    return Status;
 }
 
 /* EOF */

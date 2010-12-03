@@ -34,6 +34,7 @@ typedef struct _REGISTRY_CALLBACK
 
 VOID
 NTAPI
+INIT_FUNCTION
 CmpInitCallback(VOID)
 {
     ULONG i;

@@ -12,6 +12,7 @@
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>advapi32</library>
+	<library>comctl32</library>
 	<library>user32</library>
 	<library>ole32</library>
 	<library>oleaut32</library>

@@ -24,6 +24,11 @@
 #define IDR_BROWSE_MAIN_MENU           1000
 #define IDD_BROWSE_OPEN                1001
 #define IDC_BROWSE_OPEN_URL            1002
+#define IDC_BROWSE_REBAR               1003
+#define IDC_BROWSE_ADDRESSBAR          1004
+#define IDC_BROWSE_STATUSBAR           1005
+#define IDC_BROWSE_TOOLBAR             1006
+#define IDB_IETOOLBAR                  1007
 
 #define ID_BROWSE_NEW_WINDOW           275
 #define ID_BROWSE_OPEN                 256
@@ -33,4 +38,23 @@
 #define ID_BROWSE_PRINT                260
 #define ID_BROWSE_PRINT_PREVIEW        277
 #define ID_BROWSE_PROPERTIES           262
+#define ID_BROWSE_QUIT                 278
 #define ID_BROWSE_ABOUT                336
+
+#define ID_BROWSE_ADDFAV               1200
+#define ID_BROWSE_HOME                 1201
+
+#define ID_BROWSE_BAR_STD              1300
+#define ID_BROWSE_BAR_ADDR             1301
+
+#define ID_BROWSE_GOTOFAV_FIRST        2000
+#define ID_BROWSE_GOTOFAV_MAX          65000
+
+#define IDS_TB_BACK                    1100
+#define IDS_TB_FORWARD                 1101
+#define IDS_TB_STOP                    1102
+#define IDS_TB_REFRESH                 1103
+#define IDS_TB_HOME                    1104
+#define IDS_TB_PRINT                   1105
+
+#define IDS_ADDRESS                    1106

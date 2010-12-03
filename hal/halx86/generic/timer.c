@@ -44,6 +44,7 @@ LARGE_INTEGER HalpRolloverTable[15] =
 
 VOID
 NTAPI
+INIT_FUNCTION
 HalpInitializeClock(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();

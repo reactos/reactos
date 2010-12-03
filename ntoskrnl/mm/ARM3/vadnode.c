@@ -133,8 +133,9 @@ MiInsertNode(IN PMM_AVL_TABLE Table,
         }
         else
         {
-            /* This is a section VAD, this code doesn't happen yet */
-            ASSERT(FALSE);
+            /* This is a section VAD. Store the MAREA here for now */
+            DPRINT("Storing %p in %p\n", MemoryArea, Vad);
+            Vad->ControlArea->WaitingForDeletion = (PVOID)MemoryArea;
         }
     }
 }
@@ -191,23 +192,25 @@ MiRemoveNode(IN PMMADDRESS_NODE Node,
         {
             /* We store the ReactOS MEMORY_AREA here */
             MemoryArea = (PMEMORY_AREA)Vad->FirstPrototypePte;
-            if (MemoryArea)
-            {
-                /* Get the process */
-                Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
-                
-                /* We only create fake memory-areas for ARM3 VADs */
-                ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
-                ASSERT(MemoryArea->Vad == NULL);
-            
-                /* Free it */
-                MmFreeMemoryArea(&Process->Vm, MemoryArea, NULL, NULL);
-            }
         }
         else
         {
-            /* This is a section VAD, this code doesn't happen yet */
-            ASSERT(FALSE);
+            /* This is a section VAD. We store the ReactOS MEMORY_AREA here */
+            MemoryArea = (PMEMORY_AREA)Vad->ControlArea->WaitingForDeletion;
+        }
+        
+        /* Make sure one actually still exists */
+        if (MemoryArea)
+        {
+            /* Get the process */
+            Process = CONTAINING_RECORD(Table, EPROCESS, VadRoot);
+            
+            /* We only create fake memory-areas for ARM3 VADs */
+            ASSERT(MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3);
+            ASSERT(MemoryArea->Vad == NULL);
+        
+            /* Free it */
+            MmFreeMemoryArea(&Process->Vm, MemoryArea, NULL, NULL);
         }
     }
 }

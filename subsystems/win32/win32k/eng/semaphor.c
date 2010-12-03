@@ -69,6 +69,19 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
   IntGdiReleaseSemaphore ( hsem );
 }
 
+VOID
+NTAPI
+EngAcquireSemaphoreShared(
+    IN HSEMAPHORE hsem)
+{
+    PTHREADINFO pti;
+
+    ASSERT(hsem);
+    ExEnterCriticalRegionAndAcquireResourceShared((PERESOURCE)hsem);
+    pti = PsGetThreadWin32Thread(PsGetCurrentThread());
+    if (pti) ++pti->dwEngAcquireCount;
+}
+
 /*
  * @implemented
  */

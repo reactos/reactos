@@ -55,6 +55,10 @@ PMMPFNLIST MmPageLocationList[] =
     NULL,
     NULL
 };
+
+ULONG MI_PFN_CURRENT_USAGE;
+CHAR MI_PFN_CURRENT_PROCESS_NAME[16] = "None yet";
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -109,7 +113,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     if (OldFlink != LIST_HEAD)
     {
         /* It is not, so set the backlink of the actual entry, to our backlink */
-        MiGetPfnEntry(OldFlink)->u2.Blink = OldBlink;
+        MI_PFN_ELEMENT(OldFlink)->u2.Blink = OldBlink;
     }
     else
     {
@@ -121,7 +125,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     if (OldBlink != LIST_HEAD)
     {
         /* It is not, so set the backlink of the actual entry, to our backlink */
-        MiGetPfnEntry(OldBlink)->u1.Flink = OldFlink;
+        MI_PFN_ELEMENT(OldBlink)->u1.Flink = OldFlink;
     }
     else
     {
@@ -145,7 +149,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
         if (ColorTable->Flink != LIST_HEAD)
         {
             /* And make the previous link point to the head now */
-            MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = COLORED_LIST_HEAD;
+            MI_PFN_ELEMENT(ColorTable->Flink)->u4.PteFrame = COLORED_LIST_HEAD;
         }
         else
         {
@@ -159,14 +163,14 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
         ASSERT(Entry->u4.PteFrame != COLORED_LIST_HEAD);
 
         /* Make the back link point to whoever the next page is */
-        Pfn1 = MiGetPfnEntry(Entry->u4.PteFrame);
+        Pfn1 = MI_PFN_ELEMENT(Entry->u4.PteFrame);
         Pfn1->OriginalPte.u.Long = Entry->OriginalPte.u.Long;
 
         /* Check if this page was pointing to the head */
         if (Entry->OriginalPte.u.Long != LIST_HEAD)
         {
             /* Make the back link point to the head */
-            Pfn1 = MiGetPfnEntry(Entry->OriginalPte.u.Long);
+            Pfn1 = MI_PFN_ELEMENT(Entry->OriginalPte.u.Long);
             Pfn1->u4.PteFrame = Entry->u4.PteFrame;
         }
         else
@@ -204,6 +208,14 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     {
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
     }
+    
+#if MI_TRACE_PFNS
+    ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+    Entry->PfnUsage = MI_PFN_CURRENT_USAGE;
+    memcpy(Entry->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+//    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+//    memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
+#endif
 }
 
 PFN_NUMBER
@@ -223,7 +235,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     ASSERT(Color < MmSecondaryColors);
 
     /* Get the PFN entry */
-    Pfn1 = MiGetPfnEntry(PageIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageIndex);
     ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
     ASSERT(Pfn1->u3.e1.Rom == 0);
     
@@ -248,19 +260,19 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     if (OldFlink != LIST_HEAD)
     {
         /* It is not, so set the backlink of the actual entry, to our backlink */
-        MiGetPfnEntry(OldFlink)->u2.Blink = OldBlink;
+        MI_PFN_ELEMENT(OldFlink)->u2.Blink = OldBlink;
     }
     else
     {
         /* Set the list head's backlink instead */
-        ListHead->Blink = OldFlink;
+        ListHead->Blink = OldBlink;
     }
     
     /* Check if the back entry is the list head */
     if (OldBlink != LIST_HEAD)
     {
         /* It is not, so set the backlink of the actual entry, to our backlink */
-        MiGetPfnEntry(OldBlink)->u1.Flink = OldFlink;
+        MI_PFN_ELEMENT(OldBlink)->u1.Flink = OldFlink;
     }
     else
     {
@@ -294,7 +306,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     else
     {
         /* The list is empty, so we are the first page */
-        MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = COLORED_LIST_HEAD;
+        MI_PFN_ELEMENT(ColorTable->Flink)->u4.PteFrame = COLORED_LIST_HEAD;
     }
     
     /* One less page */
@@ -321,6 +333,14 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
         /* FIXME: Should wake up the MPW and working set manager, if we had one */
     }
 
+#if MI_TRACE_PFNS
+    //ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+    Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
+    memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+    //MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    //memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
+#endif
+
     /* Return the page */
     return PageIndex;
 }
@@ -336,18 +356,15 @@ MiRemoveAnyPage(IN ULONG Color)
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT(MmAvailablePages != 0);
     ASSERT(Color < MmSecondaryColors);
-#if 0
+
     /* Check the colored free list */
     PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
-    DPRINT1("Found free page: %lx\n", PageIndex);
     if (PageIndex == LIST_HEAD)
     {
         /* Check the colored zero list */
         PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
-        DPRINT1("Found zero page: %lx\n", PageIndex);
         if (PageIndex == LIST_HEAD)
         {
-#endif
             /* Check the free list */
             ASSERT_LIST_INVARIANT(&MmFreePageListHead);
             PageIndex = MmFreePageListHead.Flink;
@@ -365,15 +382,14 @@ MiRemoveAnyPage(IN ULONG Color)
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
             }
-#if 0
         }
     }
-#endif
+
     /* Remove the page from its list */
     PageIndex = MiRemovePageByColor(PageIndex, Color);
 
     /* Sanity checks */
-    Pfn1 = MiGetPfnEntry(PageIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageIndex);
     ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
            (Pfn1->u3.e1.PageLocation == ZeroedPageList));
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
@@ -391,7 +407,7 @@ MiRemoveZeroPage(IN ULONG Color)
 {
     PFN_NUMBER PageIndex;
     PMMPFN Pfn1;
-    BOOLEAN Zero;
+    BOOLEAN Zero = FALSE;
 
     /* Make sure PFN lock is held and we have pages */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
@@ -399,26 +415,22 @@ MiRemoveZeroPage(IN ULONG Color)
     ASSERT(Color < MmSecondaryColors);
 
     /* Check the colored zero list */
-#if 0
     PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
     if (PageIndex == LIST_HEAD)
     {
-#endif
         /* Check the zero list */
         ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
         PageIndex = MmZeroedPageListHead.Flink;
-        Color = PageIndex & MmSecondaryColorMask;
         if (PageIndex == LIST_HEAD)
         {
             /* This means there's no zero pages, we have to look for free ones */
             ASSERT(MmZeroedPageListHead.Total == 0);
             Zero = TRUE;
-#if 0
+
             /* Check the colored free list */
             PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
             if (PageIndex == LIST_HEAD)
             {
-#endif
                 /* Check the free list */
                 ASSERT_LIST_INVARIANT(&MmFreePageListHead);
                 PageIndex = MmFreePageListHead.Flink;
@@ -429,22 +441,22 @@ MiRemoveZeroPage(IN ULONG Color)
                     /* FIXME: Should check the standby list */
                     ASSERT(MmZeroedPageListHead.Total == 0);
                 }
-#if 0
             }
-#endif
         }
-#if 0
+        else
+        {
+            Color = PageIndex & MmSecondaryColorMask;
+        }
     }
-#endif
 
     /* Sanity checks */
-    Pfn1 = MiGetPfnEntry(PageIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageIndex);
     ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
            (Pfn1->u3.e1.PageLocation == ZeroedPageList));
 
     /* Remove the page from its list */
     PageIndex = MiRemovePageByColor(PageIndex, Color);
-    ASSERT(Pfn1 == MiGetPfnEntry(PageIndex));
+    ASSERT(Pfn1 == MI_PFN_ELEMENT(PageIndex));
     
     /* Zero it, if needed */
     if (Zero) MiZeroPhysicalPage(PageIndex);
@@ -477,7 +489,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
            (PageFrameIndex >= MmLowestPhysicalPage));
 
     /* Get the PFN entry */
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
 
     /* Sanity checks that a right kind of page is being inserted here */
     ASSERT(Pfn1->u4.MustBeCached == 0);
@@ -496,7 +508,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     if (LastPage != LIST_HEAD)
     {
         /* Link us with the previous page, so we're at the end now */
-        MiGetPfnEntry(LastPage)->u1.Flink = PageFrameIndex;
+        MI_PFN_ELEMENT(LastPage)->u1.Flink = PageFrameIndex;
     }
     else
     {
@@ -551,19 +563,15 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         /* Get the previous page */
         Blink = (PMMPFN)ColorTable->Blink;
         
-        /* Make it link to us */
-        Pfn1->u4.PteFrame = MiGetPfnEntryIndex(Blink);
-         
-        /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-        ASSERT(Blink->u3.e1.ParityError == FALSE);
+        /* Make it link to us, and link back to it */
         Blink->OriginalPte.u.Long = PageFrameIndex;
+        Pfn1->u4.PteFrame = MiGetPfnEntryIndex(Blink);
     }
     
     /* Now initialize our own list pointers */
     ColorTable->Blink = Pfn1;
 
-    /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-    ASSERT(Pfn1->u3.e1.ParityError == FALSE);
+    /* This page is now the last */
     Pfn1->OriginalPte.u.Long = LIST_HEAD;
     
     /* And increase the count in the colored list */
@@ -576,6 +584,11 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         MmZeroingPageThreadActive = TRUE;
         KeSetEvent(&MmZeroingPageEvent, IO_NO_INCREMENT, FALSE);
     }
+    
+#if MI_TRACE_PFNS
+    Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
+    RtlZeroMemory(Pfn1->ProcessName, 16);
+#endif
 }
 
 /* Note: This function is hardcoded only for the zeroed page list, for now */
@@ -602,7 +615,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
            (PageFrameIndex >= MmLowestPhysicalPage));
  
     /* Page should be unused */
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
     ASSERT(Pfn1->u3.e1.Rom != 1);
 
@@ -626,7 +639,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     if (Flink != LIST_HEAD)
     {
         /* It wasn't, so update the backlink of the previous head page */
-        Pfn2 = MiGetPfnEntry(Flink);
+        Pfn2 = MI_PFN_ELEMENT(Flink);
         Pfn2->u2.Blink = PageFrameIndex;
     }
     else
@@ -666,9 +679,6 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     /* Get the old head */
     Flink = ColorHead->Flink;
 
-    /* If there is an original pte, it should be an old link, NOT a ReactOS RMAP */
-    ASSERT(Pfn1->u3.e1.ParityError == FALSE);
-    
     /* Make this page point back to the list, and point forwards to the old head */
     Pfn1->OriginalPte.u.Long = Flink;
     Pfn1->u4.PteFrame = COLORED_LIST_HEAD;
@@ -680,7 +690,7 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     if (Flink != LIST_HEAD)
     {
         /* No, so make the old head point to this page */
-        Pfn2 = MiGetPfnEntry(Flink);
+        Pfn2 = MI_PFN_ELEMENT(Flink);
         Pfn2->u4.PteFrame = PageFrameIndex;
     }
     else
@@ -691,6 +701,13 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
 
     /* One more paged on the colored list */
     ColorHead->Count++;
+    
+#if MI_TRACE_PFNS
+    //ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
+    Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
+    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    RtlZeroMemory(Pfn1->ProcessName, 16);
+#endif
 }
 
 VOID
@@ -705,7 +722,7 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* Setup the PTE */
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->PteAddress = PointerPte;
 
     /* Check if this PFN is part of a valid address space */
@@ -756,7 +773,7 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     Pfn1->u4.PteFrame = PageFrameIndex;
 
     /* Increase its share count so we don't get rid of it */
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->u2.ShareCount++;
 }
 
@@ -810,8 +827,9 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
                       IN PFN_NUMBER PageFrameIndex)
 {
     ASSERT(PageFrameIndex > 0);
-    ASSERT(MiGetPfnEntry(PageFrameIndex) != NULL);
-    ASSERT(Pfn1 == MiGetPfnEntry(PageFrameIndex));
+    ASSERT(MI_PFN_ELEMENT(PageFrameIndex) != NULL);
+    ASSERT(Pfn1 == MI_PFN_ELEMENT(PageFrameIndex));
+    ASSERT(MI_IS_ROS_PFN(Pfn1) == FALSE);
 
     /* Page must be in-use */
     if ((Pfn1->u3.e1.PageLocation != ActiveAndValid) &&
@@ -847,13 +865,7 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
 
             /* Clear the last reference */
             Pfn1->u3.e2.ReferenceCount = 0;
-
-            /*
-             * OriginalPte is used by AweReferenceCount in ReactOS, but either 
-             * ways we shouldn't be seeing RMAP entries at this point
-             */
             ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
-            ASSERT(Pfn1->u3.e1.ParityError == FALSE);
 
             /* Mark the page temporarily as valid, we're going to make it free soon */
             Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -871,6 +883,49 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
 
 VOID
 NTAPI
+MiDecrementReferenceCount(IN PMMPFN Pfn1,
+                          IN PFN_NUMBER PageFrameIndex)
+{
+    /* PFN lock must be held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* Sanity checks on the page */
+    ASSERT(PageFrameIndex < MmHighestPhysicalPage);
+    ASSERT(Pfn1 == MI_PFN_ELEMENT(PageFrameIndex));
+    ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+
+    /* Dereference the page, bail out if it's still alive */
+    InterlockedDecrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+    if (Pfn1->u3.e2.ReferenceCount) return;
+
+    /* Nobody should still have reference to this page */
+    if (Pfn1->u2.ShareCount != 0)
+    {
+        /* Otherwise something's really wrong */
+        KeBugCheckEx(PFN_LIST_CORRUPT, 7, PageFrameIndex, Pfn1->u2.ShareCount, 0);
+    }
+
+    /* And it should be lying on some page list */
+    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+
+    /* Did someone set the delete flag? */
+    if (MI_IS_PFN_DELETED(Pfn1))
+    {
+        /* Insert it into the free list, there's nothing left to do */
+        MiInsertPageInFreeList(PageFrameIndex);
+        return;
+    }
+
+    /* We don't have a modified list yet */
+    ASSERT(Pfn1->u3.e1.Modified == 0);
+    ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
+
+    /* FIXME: Normally it would go on the standby list, but we're pushing it on the free list */
+    MiInsertPageInFreeList(PageFrameIndex);
+}
+
+VOID
+NTAPI
 MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
                                IN PMMPTE PointerPte,
                                IN PFN_NUMBER PteFrame)
@@ -878,7 +933,7 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
     PMMPFN Pfn1;
     
     /* Setup the PTE */
-    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     Pfn1->PteAddress = PointerPte;
 
     /* Make this a software PTE */
@@ -899,7 +954,7 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
         Pfn1->u4.PteFrame = PteFrame;
         
         /* Increase its share count so we don't get rid of it */    
-        Pfn1 = MiGetPfnEntry(PteFrame);
+        Pfn1 = MI_PFN_ELEMENT(PteFrame);
         Pfn1->u2.ShareCount++;
     }
 }

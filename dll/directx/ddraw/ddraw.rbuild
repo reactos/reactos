@@ -8,7 +8,7 @@
 	<library>d3d8thk</library>
 	<library>dxguid</library>
 	<library>ole32</library>
-	<library>user32</library>
+	<library>uuid</library>
 	<library>advapi32</library>
 	<library>pseh</library>
 
@@ -49,7 +49,8 @@
 		<file>kernel_stubs.c</file>
 	</directory>
 	<directory name="Palette">
-		<file>palette_stubs.c</file>
+		<file>palette.c</file>
+		<file>createpalette.c</file>
 	</directory>
 	<directory name="Videoport">
 		<file>videoport_stubs.c</file>

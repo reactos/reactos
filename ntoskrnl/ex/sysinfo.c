@@ -547,8 +547,7 @@ QSI_DEF(SystemPerformanceInformation)
      *   Add up all the used "Committed" memory + pagefile.
      *   Not sure this is right. 8^\
      */
-    Spi->CommittedPages = MiMemoryConsumers[MC_PPOOL].PagesUsed +
-                          MiMemoryConsumers[MC_NPPOOL].PagesUsed +
+    Spi->CommittedPages = MiMemoryConsumers[MC_SYSTEM].PagesUsed +
                           MiMemoryConsumers[MC_CACHE].PagesUsed +
                           MiMemoryConsumers[MC_USER].PagesUsed +
                           MiUsedSwapPages;
@@ -574,10 +573,10 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->MappedPagesWriteCount = 0; /* FIXME */
     Spi->MappedWriteIoCount = 0; /* FIXME */
 
-    Spi->PagedPoolPages = MiMemoryConsumers[MC_PPOOL].PagesUsed;
+    Spi->PagedPoolPages = 0; /* FIXME */
     Spi->PagedPoolAllocs = 0; /* FIXME */
     Spi->PagedPoolFrees = 0; /* FIXME */
-    Spi->NonPagedPoolPages = MiMemoryConsumers[MC_NPPOOL].PagesUsed;
+    Spi->NonPagedPoolPages = 0; /* FIXME */
     Spi->NonPagedPoolAllocs = 0; /* FIXME */
     Spi->NonPagedPoolFrees = 0; /* FIXME */
 
@@ -592,7 +591,7 @@ QSI_DEF(SystemPerformanceInformation)
     Spi->Spare3Count = 0; /* FIXME */
 
     Spi->ResidentSystemCachePage = MiMemoryConsumers[MC_CACHE].PagesUsed;
-    Spi->ResidentPagedPoolPage = MiMemoryConsumers[MC_PPOOL].PagesUsed; /* FIXME */
+    Spi->ResidentPagedPoolPage = 0; /* FIXME */
 
     Spi->ResidentSystemDriverPage = 0; /* FIXME */
     Spi->CcFastReadNoWait = 0; /* FIXME */

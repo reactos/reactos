@@ -33,18 +33,22 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
- 
- .globl __alldiv
- .globl __fltused
- 
+
+#include <asm.inc>
+
+PUBLIC __alldiv
+PUBLIC __fltused
+
  /* DATA ********************************************************************/
+.data
+ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
 
 __fltused:
-        .long 0x9875
+        .long HEX(9875)
 
-.intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/
+.code
 
 //
 // lldiv - signed long divide
@@ -222,3 +226,5 @@ L8:
         pop     edi
 
         ret     16
+
+END

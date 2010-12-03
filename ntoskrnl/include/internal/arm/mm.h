@@ -1,5 +1,7 @@
 #pragma once
 
+#define _MI_PAGING_LEVELS 2
+
 #define PDE_SHIFT 20
 
 //
@@ -20,6 +22,7 @@
 #define PTE_BASE    0xC0000000
 #define PTE_TOP     0xC03FFFFF
 #define PDE_BASE    0xC0400000
+#define PDE_TOP     0xC04FFFFF
 #define HYPER_SPACE 0xC0500000
 
 #if 0
@@ -106,6 +109,7 @@ PULONG MmGetPageDirectory(VOID);
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.NonGlobal = 1)
 #define MI_MAKE_DIRTY_PAGE(x)      
+#define MI_MAKE_ACCESSED_PAGE(x)      
 #define MI_MAKE_OWNER_PAGE(x)      ((x)->u.Hard.Owner = 1)
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
 #define MI_PAGE_DISABLE_CACHE(x)   ((x)->u.Hard.Cached = 0)
@@ -114,6 +118,7 @@ PULONG MmGetPageDirectory(VOID);
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.ReadOnly == 0)
 #define MI_IS_PAGE_COPY_ON_WRITE(x)FALSE
 #define MI_IS_PAGE_DIRTY(x)        TRUE
+#define MI_IS_PAGE_LARGE(x)        FALSE
 
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
@@ -129,6 +134,12 @@ PULONG MmGetPageDirectory(VOID);
                                              MI_HYPERSPACE_PTES * PAGE_SIZE)
 #define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
                                              PAGE_SIZE)
+#define MI_DUMMY_PTE                        (PMMPTE)(MI_MAPPING_RANGE_END + \
+                                             PAGE_SIZE)
+#define MI_VAD_BITMAP                       (PMMPTE)(MI_DUMMY_PTE + \
+                                             PAGE_SIZE)
+#define MI_WORKING_SET_LIST                 (PMMPTE)(MI_VAD_BITMAP + \
+                                             PAGE_SIZE)
 
 /* Retrives the PDE entry for the given VA */
 #define MiGetPdeAddress(x) ((PMMPDE)(PDE_BASE + (((ULONG)(x) >> 20) << 2)))
@@ -139,8 +150,10 @@ PULONG MmGetPageDirectory(VOID);
 #define MiAddressToPte(x)  MiGetPteAddress(x)
 
 /* Retrives the PDE offset for the given VA */
-#define MiGetPdeOffset(x) (((ULONG)(x)) >> 20)
-
+#define MiGetPdeOffset(x)       (((ULONG)(x)) >> 20)
+#define MiGetPteOffset(x)       ((((ULONG)(x)) << 12) >> 24)
+#define MiAddressToPteOffset(x) MiGetPteOffset(x)
+    
 /* Convert a PTE into a corresponding address */
 #define MiPteToAddress(x) ((PVOID)((ULONG)(x) << 10))
 #define MiPdeToAddress(x) ((PVOID)((ULONG)(x) << 18))

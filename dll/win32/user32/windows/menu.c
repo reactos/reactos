@@ -1636,6 +1636,8 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
         top_popup_hmenu = hmenu;
     }
 
+    IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPSTART, MenuInfo.Wnd, OBJID_CLIENT, CHILDID_SELF, 0);
+
     /* Display the window */
 
     SetWindowPos( MenuInfo.Wnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -3445,6 +3447,7 @@ static INT FASTCALL MenuTrackMenu(HMENU hmenu, UINT wFlags, INT x, INT y,
 
                 if (MenuInfo.Flags & MF_POPUP)
                 {
+                    IntNotifyWinEvent(EVENT_SYSTEM_MENUPOPUPEND, MenuInfo.Wnd, OBJID_CLIENT, CHILDID_SELF, 0);
                     DestroyWindow(MenuInfo.Wnd);
                     MenuInfo.Wnd = NULL;
 
@@ -3484,13 +3487,22 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
 
     HideCaret(0);
 
+    MenuGetRosMenuInfo(&MenuInfo, hMenu);
+    /* This makes the menus of applications built with Delphi work.
+     * It also enables menus to be displayed in more than one window,
+     * but there are some bugs left that need to be fixed in this case.
+     */
+    if(MenuInfo.Self == hMenu)
+    {
+        MenuInfo.Wnd = hWnd;
+        MenuSetRosMenuInfo(&MenuInfo);
+    }
+
     /* Send WM_ENTERMENULOOP and WM_INITMENU message only if TPM_NONOTIFY flag is not specified */
     if (!(wFlags & TPM_NONOTIFY))
        SendMessageW( hWnd, WM_ENTERMENULOOP, bPopup, 0 );
 
     SendMessageW( hWnd, WM_SETCURSOR, (WPARAM)hWnd, HTCAPTION );
-
-    MenuGetRosMenuInfo(&MenuInfo, hMenu);
 
     if (!(wFlags & TPM_NONOTIFY))
     {
@@ -3509,16 +3521,10 @@ static BOOL FASTCALL MenuInitTracking(HWND hWnd, HMENU hMenu, BOOL bPopup, UINT 
        }
     }
 
-    /* This makes the menus of applications built with Delphi work.
-     * It also enables menus to be displayed in more than one window,
-     * but there are some bugs left that need to be fixed in this case.
-     */
-    if(MenuInfo.Self == hMenu)
-    {
-        MenuInfo.Wnd = hWnd;
-        MenuSetRosMenuInfo(&MenuInfo);
-    }
- 
+    IntNotifyWinEvent( EVENT_SYSTEM_MENUSTART,
+                       hWnd,
+                       MenuInfo.Flags & MF_SYSMENU ? OBJID_SYSMENU : OBJID_MENU,
+                       CHILDID_SELF, 0);
     return TRUE;
 }
 /***********************************************************************
@@ -3528,6 +3534,7 @@ static BOOL FASTCALL MenuExitTracking(HWND hWnd, BOOL bPopup)
 {
     TRACE("hwnd=%p\n", hWnd);
 
+    IntNotifyWinEvent( EVENT_SYSTEM_MENUEND, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
     SendMessageW( hWnd, WM_EXITMENULOOP, bPopup, 0 );
     ShowCaret(0);
     top_popup = 0;
@@ -3644,11 +3651,19 @@ BOOL WINAPI TrackPopupMenuEx( HMENU Menu, UINT Flags, int x, int y,
                               HWND Wnd, LPTPMPARAMS Tpm)
 {
     BOOL ret = FALSE;
+    ROSMENUINFO MenuInfo;
 
-    if (!IsMenu(Menu))
+    if (!IsMenu(Menu))    
     {
       SetLastError( ERROR_INVALID_MENU_HANDLE );
       return FALSE;
+    }
+
+    MenuGetRosMenuInfo(&MenuInfo, Menu);
+    if (IsWindow(MenuInfo.Wnd))
+    {
+        SetLastError( ERROR_POPUP_ALREADY_ACTIVE );
+        return FALSE;
     }
 
     MenuInitTracking(Wnd, Menu, TRUE, Flags);

@@ -67,12 +67,40 @@ __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destinat
 
 __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	short a, b;
+
+	__asm__ __volatile__ (    "0:\n\t"
+                          "ldr %1, [%2]\n\t"
+                          "cmp %1, %4\n\t"
+                          "bne 1f\n\t"
+                          "swp %0, %3, [%2]\n\t"
+                          "cmp %0, %1\n\t"
+                          "swpne %3, %0, [%2]\n\t"
+                          "bne 0b\n\t"
+                          "1:"
+                          : "=&r" (a), "=&r" (b)
+                          : "r" (Destination), "r" (Exchange), "r" (Comperand)
+                          : "cc", "memory");
+
+	return a;
 }
 
-__INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+__INTRIN_INLINE short _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
 {
-	return __sync_fetch_and_add(Addend, Value);
+	short a, b, c;
+
+	__asm__ __volatile__ (  "0:\n\t"
+                          "ldr %0, [%3]\n\t"
+                          "add %1, %0, %4\n\t"
+                          "swp %2, %1, [%3]\n\t"
+                          "cmp %0, %2\n\t"
+                          "swpne %1, %2, [%3]\n\t"
+                          "bne 0b"
+                          : "=&r" (a), "=&r" (b), "=&r" (c)
+                          : "r" (Value), "r" (Addend)
+                          : "cc", "memory");
+
+	return a;
 }
 
 __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const dest, const long exch, const long comp)

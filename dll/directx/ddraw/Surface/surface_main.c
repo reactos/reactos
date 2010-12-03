@@ -264,14 +264,28 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDDRAWI_DDRAWSURFACE_INT This)
 {
-
     /* FIXME
        This is not right exiame how it should be done
      */
-    DX_STUB_str("FIXME This is not right exiame how it should be done\n");
-    return This->dwIntRefCnt;
+    ULONG ret = --This->dwIntRefCnt;
+    if(!ret)
+    {
+        DX_STUB_str("Release is a bit simplistic right now\n");
+        AcquireDDThreadLock();
+        DxHeapMemFree(This);
+        ReleaseDDThreadLock();
+    }
+    return ret;
 }
 
+ULONG WINAPI Main_DDrawSurface_Release4(LPDDRAWI_DDRAWSURFACE_INT This)
+{
+    ULONG ref = Main_DDrawSurface_Release(This) ;
+
+    if(ref == 0) Main_DirectDraw_Release(This->lpLcl->lpSurfMore->lpDD_int);
+
+    return ref;
+}
 
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDDRAWI_DDRAWSURFACE_INT ThisDest, LPRECT rdst,
                                      LPDDRAWI_DDRAWSURFACE_INT ThisSrc, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)

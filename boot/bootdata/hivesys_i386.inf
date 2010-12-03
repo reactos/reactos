@@ -1085,7 +1085,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Beep","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Group",0x00000000,"Video Init"
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","ImagePath",0x00020000,"system32\drivers\blue.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Blue","Type",0x00010001,0x00000001
 
 ; Cdfs (ISO96660) filesystem driver

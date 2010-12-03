@@ -9,10 +9,11 @@
 #include "precomp.h"
 
 ULONG LlbEnvHwPageSize;
-ULONG LlbEnvHwMemStart;
-ULONG LlbEnvHwMemSize;
-ULONG LlbEnvRamDiskStart;
-ULONG LlbEnvRamDiskSize;
+ULONG LlbEnvHwMemStart = 0;
+ULONG LlbEnvHwMemSize = 0;
+ULONG LlbEnvRamDiskStart = 0;
+ULONG LlbEnvRamDiskSize = 0;
+ULONG LlbEnvHwRevision;
 CHAR LlbEnvCmdLine[256];
 CHAR LlbValueData[32];
     
@@ -35,11 +36,17 @@ LlbEnvParseArguments(IN PATAG Arguments)
                 LlbEnvHwPageSize = Atag->u.Core.PageSize;
                 break;
                 
+            case ATAG_REVISION:
+
+                /* Save page size */
+                LlbEnvHwRevision = Atag->u.Revision.Rev;
+                break;
+                
             case ATAG_MEM:
             
                 /* Save RAM start and size */
-                LlbEnvHwMemStart = Atag->u.Mem.Start;
-                LlbEnvHwMemSize = Atag->u.Mem.Size;
+                if (!LlbEnvHwMemStart) LlbEnvHwMemStart = Atag->u.Mem.Start;
+                LlbEnvHwMemSize += Atag->u.Mem.Size;
                 break;
                 
             case ATAG_INITRD2:
@@ -48,6 +55,7 @@ LlbEnvParseArguments(IN PATAG Arguments)
                 LlbEnvRamDiskStart = Atag->u.InitRd2.Start;
                 LlbEnvRamDiskSize = Atag->u.InitRd2.Size;
                 
+#ifdef _BEAGLE_
                 /* Make sure it's 16MB-aligned */
                 LlbEnvRamDiskSize = (LlbEnvRamDiskSize + (16 * 1024 * 1024) - 1) 
                                     &~ ((16 * 1024 * 1024) - 1);
@@ -55,6 +63,7 @@ LlbEnvParseArguments(IN PATAG Arguments)
                 /* The RAMDISK actually starts 16MB later */
                 LlbEnvRamDiskStart += 16 * 1024 * 1024;
                 LlbEnvRamDiskSize  -= 16 * 1024 * 1024;
+#endif
                 break;
                 
             case ATAG_CMDLINE:
@@ -68,7 +77,7 @@ LlbEnvParseArguments(IN PATAG Arguments)
             /* Nothing left to handle */
             case ATAG_NONE:
             default:
-                return;
+                break;
         }
         
         /* Next tag */
@@ -76,8 +85,11 @@ LlbEnvParseArguments(IN PATAG Arguments)
     }
     
     /* For debugging */
-    DbgPrint("[BOOTROM] PageSize: %dKB RAM: %dMB CMDLINE: %s\n",
-             LlbEnvHwPageSize / 1024, LlbEnvHwMemSize / 1024 / 1024, LlbEnvCmdLine);
+    DbgPrint("[BOOTROM] Board Revision: %lx PageSize: %dKB RAM: %dMB CMDLINE: %s\n"
+             "[RAMDISK] Base: %lx Size: %dMB\n",
+             LlbEnvHwRevision,
+             LlbEnvHwPageSize / 1024, LlbEnvHwMemSize / 1024 / 1024, LlbEnvCmdLine,
+             LlbEnvRamDiskStart, LlbEnvRamDiskSize / 1024 / 1024);
 }
 
 VOID

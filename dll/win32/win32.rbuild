@@ -595,6 +595,9 @@
 <directory name="wdmaud.drv">
 	<xi:include href="wdmaud.drv/wdmaud.rbuild" />
 </directory>
+<directory name="wer">
+	<xi:include href="wer/wer.rbuild" />
+</directory>
 <directory name="windowscodecs">
 	<xi:include href="windowscodecs/windowscodecs.rbuild" />
 </directory>

@@ -633,7 +633,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 	TVITEM tvi;
 
     /* Total no-good hack */
-    if (!_tcsncmp(keyPath, _T("My Computer\\"), 12))
+    if (!_tcsnicmp(keyPath, _T("My Computer\\"), 12))
         keyPath += 12;
 
 	hRoot = TreeView_GetRoot(hwndTV);
@@ -647,17 +647,17 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 		/* Special case for root to expand root key abbreviations */
 		if (hItem == hRoot)
 		{
-			if (!_tcscmp(szPathPart, TEXT("HKCR")))
+			if (!_tcsicmp(szPathPart, TEXT("HKCR")))
 				_tcscpy(szPathPart, TEXT("HKEY_CLASSES_ROOT"));
-			else if (!_tcscmp(szPathPart, TEXT("HKCU")))
+			else if (!_tcsicmp(szPathPart, TEXT("HKCU")))
 				_tcscpy(szPathPart, TEXT("HKEY_CURRENT_USER"));
-			else if (!_tcscmp(szPathPart, TEXT("HKLM")))
+			else if (!_tcsicmp(szPathPart, TEXT("HKLM")))
 				_tcscpy(szPathPart, TEXT("HKEY_LOCAL_MACHINE"));
-			else if (!_tcscmp(szPathPart, TEXT("HKU")))
+			else if (!_tcsicmp(szPathPart, TEXT("HKU")))
 				_tcscpy(szPathPart, TEXT("HKEY_USERS"));
-			else if (!_tcscmp(szPathPart, TEXT("HKCC")))
+			else if (!_tcsicmp(szPathPart, TEXT("HKCC")))
 				_tcscpy(szPathPart, TEXT("HKEY_CURRENT_CONFIG"));
-			else if (!_tcscmp(szPathPart, TEXT("HKDD")))
+			else if (!_tcsicmp(szPathPart, TEXT("HKDD")))
 				_tcscpy(szPathPart, TEXT("HKEY_DYN_DATA"));
 		}
 
@@ -672,7 +672,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 
 			(void)TreeView_GetItem(hwndTV, &tvi);
 
-			if (!_tcscmp(szBuffer, szPathPart))
+			if (!_tcsicmp(szBuffer, szPathPart))
 				break;
 		}
 

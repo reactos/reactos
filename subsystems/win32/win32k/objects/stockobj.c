@@ -180,7 +180,7 @@ CreateStockObjects(void)
     StockObjects[NULL_PEN]  = IntCreateStockPen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor);
 
     StockObjects[20] = NULL; /* TODO: Unknown internal stock object */
-    StockObjects[DEFAULT_BITMAP] = IntGdiCreateBitmap(1, 1, 1, 1, NULL);
+    StockObjects[DEFAULT_BITMAP] = GreCreateBitmap(1, 1, 1, 1, NULL);
 
     (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
     (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
@@ -190,7 +190,7 @@ CreateStockObjects(void)
     (void) TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
     (void) TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
 
-    StockObjects[DEFAULT_PALETTE] = (HGDIOBJ)PALETTE_Init();
+    StockObjects[DEFAULT_PALETTE] = (HGDIOBJ)gppalDefault->BaseObject.hHmgr;
 
     for (Object = 0; Object < NB_STOCK_OBJECTS; Object++)
     {

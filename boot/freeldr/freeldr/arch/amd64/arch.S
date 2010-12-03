@@ -1,9 +1,12 @@
-.intel_syntax noprefix
-.text
-.code16
 
 #define ASM
+
+#include <asm.inc>
+
 #include <arch.h>
+
+.text
+.code16
 
 //.org 0x8000
 

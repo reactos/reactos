@@ -9,8 +9,12 @@
 		<property name="BASEADDRESS_FREELDR" value="0x8000" />
 	</if>
 	<if property="ARCH" value="arm">
-		<if property="SARCH" value="omap3">
+		<if property="SARCH" value="omap3-beagle">
 			<property name="BASEADDRESS_FREELDR" value="0x80FFF000" />
+		</if>
+		<if property="SARCH" value="omap3-zoom2">
+			<define name="_ZOOM2_" />
+			<property name="BASEADDRESS_FREELDR" value="0x8106F000" />
 		</if>
 		<if property="SARCH" value="versatile">
 			<property name="BASEADDRESS_FREELDR" value="0x0001F000" />

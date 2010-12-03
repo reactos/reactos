@@ -2249,7 +2249,7 @@ TextIntGetTextExtentPoint(PDC dc,
 
     Size->cx = (TotalWidth + 32) >> 6;
     Size->cy = (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight);
-    Size->cy = EngMulDiv(Size->cy, IntGdiGetDeviceCaps(dc, LOGPIXELSY), 72);
+    Size->cy = EngMulDiv(Size->cy, dc->ppdev->gdiinfo.ulLogPixelsY, 72);
 
     return TRUE;
 }
@@ -3160,7 +3160,7 @@ GreExtTextOutW(
     LONGLONG TextLeft, RealXStart;
     ULONG TextTop, previous, BackgroundLeft;
     FT_Bool use_kerning;
-    RECTL DestRect, MaskRect;
+    RECTL DestRect, MaskRect, DummyRect = {0, 0, 0, 0};
     POINTL SourcePoint, BrushOrigin;
     HBITMAP HSourceGlyph;
     SURFOBJ *SourceGlyphSurf;
@@ -3175,8 +3175,6 @@ GreExtTextOutW(
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
-    HPALETTE hDestPalette;
-    PPALETTE ppalDst;
     USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
@@ -3195,9 +3193,6 @@ GreExtTextOutW(
     }
 
     pdcattr = dc->pdcattr;
-
-    if (pdcattr->ulDirty_ & DIRTY_TEXT)
-        DC_vUpdateTextBrush(dc);
 
     if ((fuOptions & ETO_OPAQUE) || pdcattr->jBkMode == OPAQUE)
     {
@@ -3232,13 +3227,6 @@ GreExtTextOutW(
         IntLPtoDP(dc, (POINT *)lprc, 2);
     }
 
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
-    {
-        goto fail;
-    }
-    SurfObj = &psurf->SurfObj;
-
     Start.x = XStart;
     Start.y = YStart;
     IntLPtoDP(dc, &Start, 1);
@@ -3267,8 +3255,13 @@ GreExtTextOutW(
         DestRect.right  += dc->ptlDCOrig.x;
         DestRect.bottom += dc->ptlDCOrig.y;
 
+        DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+
+        if (pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+            DC_vUpdateBackgroundBrush(dc);
+
         IntEngBitBlt(
-            &psurf->SurfObj,
+            &dc->dclevel.pSurface->SurfObj,
             NULL,
             NULL,
             dc->rosdc.CombinedClip,
@@ -3280,6 +3273,7 @@ GreExtTextOutW(
             &BrushOrigin,
             ROP3_TO_ROP4(PATCOPY));
         fuOptions &= ~ETO_OPAQUE;
+        DC_vFinishBlit(dc, NULL);
     }
     else
     {
@@ -3444,19 +3438,24 @@ GreExtTextOutW(
     TextTop = YStart;
     BackgroundLeft = (RealXStart + 32) >> 6;
 
-    /* Create the xlateobj */
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
-    ppalDst = PALETTE_LockPalette(hDestPalette);
-    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
-    EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
-    PALETTE_UnlockPalette(ppalDst);
+    /* Lock blit with a dummy rect */
+    DC_vPrepareDCsForBlit(dc, DummyRect, NULL, DummyRect);
 
+    psurf = dc->dclevel.pSurface ;
+    SurfObj = &psurf->SurfObj ;
+
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, psurf->ppal, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, psurf->ppal, &gpalRGB, 0, 0, 0);
+
+	if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
+        DC_vUpdateBackgroundBrush(dc) ;
+
+    if(dc->pdcattr->ulDirty_ & DIRTY_TEXT)
+        DC_vUpdateTextBrush(dc) ;
 
     /*
      * The main rendering loop.
      */
-
     for (i = 0; i < Count; i++)
     {
         if (fuOptions & ETO_GLYPH_INDEX)
@@ -3505,6 +3504,7 @@ GreExtTextOutW(
             DestRect.right = (TextLeft + (realglyph->root.advance.x >> 10) + 32) >> 6;
             DestRect.top = TextTop + yoff - ((face->size->metrics.ascender + 32) >> 6);
             DestRect.bottom = TextTop + yoff + ((32 - face->size->metrics.descender) >> 6);
+            MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
             IntEngBitBlt(
                 &psurf->SurfObj,
                 NULL,
@@ -3517,7 +3517,9 @@ GreExtTextOutW(
                 &dc->eboBackground.BrushObject,
                 &BrushOrigin,
                 ROP3_TO_ROP4(PATCOPY));
+            MouseSafetyOnDrawEnd(dc->ppdev);
             BackgroundLeft = DestRect.right;
+
         }
 
         DestRect.left = ((TextLeft + 32) >> 6) + realglyph->left;
@@ -3570,7 +3572,7 @@ GreExtTextOutW(
             DestRect.right = lprc->right + dc->ptlDCOrig.x;
             DoBreak = TRUE;
         }
-
+        MouseSafetyOnDrawStart(dc->ppdev, DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
         IntEngMaskBlt(
             SurfObj,
             SourceGlyphSurf,
@@ -3581,6 +3583,7 @@ GreExtTextOutW(
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
             &BrushOrigin);
+        MouseSafetyOnDrawEnd(dc->ppdev) ;
 
         EngUnlockSurface(SourceGlyphSurf);
         EngDeleteSurface((HSURF)HSourceGlyph);
@@ -3610,9 +3613,9 @@ GreExtTextOutW(
 
         String++;
     }
-
     IntUnLockFreeType;
 
+    DC_vFinishBlit(dc, NULL) ;
     EXLATEOBJ_vCleanup(&exloRGB2Dst);
     EXLATEOBJ_vCleanup(&exloDst2RGB);
     if (TextObj != NULL)
@@ -3628,6 +3631,7 @@ fail2:
 fail:
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
+
     DC_UnlockDc(dc);
 
     return FALSE;

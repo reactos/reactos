@@ -17,27 +17,29 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.text
-	.code16
+.intel_syntax noprefix
+#define HEX(y) 0x##y
 
 #define ASM
 #include <arch.h>
 #include <multiboot.h>
 
+	.code16
 
 EXTERN(RealEntryPoint)
 
 	cli
 
 	/* Setup segment registers */
-	xorw	%ax,%ax
-	movw	%ax,%ds
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
-	movw	%ax,%ss
+	xor ax, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+
 	/* Setup a stack */
-	movw	stack16,%sp
+	mov sp, word ptr ds:stack16
 
 	sti
 
@@ -47,24 +49,24 @@ EXTERN(RealEntryPoint)
 	.code32
 
 	/* Zero BootDrive and BootPartition */
-	xorl	%eax,%eax
-	movl	%eax,(_BootDrive)
-	movl	%eax,(_BootPartition)
+	xor eax, eax
+	mov dword ptr [_BootDrive], eax
+	mov dword ptr [_BootPartition], eax
 
 	/* Store the boot drive */
-	movb	%dl,(_BootDrive)
+	mov byte ptr [_BootDrive], dl
 
 	/* Store the boot partition */
-	movb	%dh,(_BootPartition)
+	mov byte ptr [_BootPartition], dh
 
 	/* GO! */
-	pushl	%eax
+	push eax
 	call	_BootMain
 
 	call	switch_to_real
 	.code16
 
-	int	$0x19
+	int HEX(19)
 
 	/* We should never get here */
 stop:
@@ -78,7 +80,7 @@ stop:
  */
 EXTERN(switch_to_prot)
 
-	.code16
+.code16
 
 	cli		/* None of these */
 
@@ -88,18 +90,18 @@ EXTERN(switch_to_prot)
 	/* Of course CS has to already be valid. */
 	/* We are currently in real-mode so we */
 	/* need real-mode segment values. */
-	xorw	%ax,%ax
-	movw	%ax,%ds
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
-	movw	%ax,%ss
+	xor ax, ax
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
 
 	/* Get the return address off the stack */
-	popw	(code32ret)
+	pop word ptr ds:[code32ret]
 
 	/* Save 16-bit stack pointer */
-	movw	%sp,stack16
+	mov word ptr ds:[stack16], sp
 
 	/* Load the GDT */
 	lgdt	gdtptr
@@ -107,28 +109,28 @@ EXTERN(switch_to_prot)
 	lidt	i386idtptr
 
 	/* Enable Protected Mode */
-	mov	%cr0,%eax
-	orl	$CR0_PE_SET,%eax
-	mov	%eax,%cr0
+	mov eax, cr0
+	or eax, CR0_PE_SET
+	mov cr0, eax
 
 	/* Clear prefetch queue & correct CS */
-	ljmp	$PMODE_CS, $inpmode
+	//ljmp	PMODE_CS, inpmode
+    jmp far ptr PMODE_CS:inpmode
 
-
-	.code32
+.code32
 
 inpmode:
 	/* Setup segment selectors */
-	movw	$PMODE_DS,%ax
-	movw	%ax,%ds
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
-	movw	%ax,%ss
-	movl	stack32,%esp
+	mov ax, PMODE_DS
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
+	mov esp, dword ptr [stack32]
 
 	/* Put the return address back onto the stack */
-	pushl	(code32ret)
+	push dword ptr [code32ret]
 
 	/* Now return in p-mode! */
 	ret
@@ -139,7 +141,7 @@ inpmode:
  */
 EXTERN(switch_to_real)
 
-	.code32
+.code32
 
 	/* We don't know what values are currently */
 	/* in the segment registers. So we are */
@@ -147,48 +149,49 @@ EXTERN(switch_to_real)
 	/* Of course CS has to already be valid. */
 	/* We are currently in protected-mode so we */
 	/* need protected-mode segment values. */
-	movw	$PMODE_DS,%ax
-	movw	%ax,%ds
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
-	movw	%ax,%ss
+	mov ax, PMODE_DS
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
 
 	/* Get the return address off the stack */
-	popl	(code16ret)
+	pop dword ptr [code16ret]
 
 	/* Save 32-bit stack pointer */
-	movl	%esp,stack32
+	mov dword ptr [stack32], esp
 
 	/* jmp to 16-bit segment to set the limit correctly */
-	ljmp	$RMODE_CS, $switch_to_real16
+	ljmp RMODE_CS, switch_to_real16
 
 switch_to_real16:
-	.code16
+.code16
 
 	/* Restore segment registers to correct limit */
-	movw	$RMODE_DS,%ax
-	movw	%ax,%ds
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
-	movw	%ax,%ss
+	mov ax, RMODE_DS
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
 
 	/* Disable Protected Mode */
-	mov	%cr0,%eax
-	andl	$CR0_PE_CLR,%eax
-	mov	%eax,%cr0
+	mov	eax, cr0
+	and eax, CR0_PE_CLR
+	mov	cr0, eax
 
 	/* Clear prefetch queue & correct CS */
-	ljmp	$0, $inrmode
+	//ljmp	$0, $inrmode
+	jmp far ptr 0:inrmode
 
 inrmode:
-	movw	%cs,%ax
-	movw	%ax,%ds
-	movw	%ax,%es
-	movw	%ax,%fs
-	movw	%ax,%gs
-	movw	%ax,%ss
+	mov ax, cs
+	mov ds, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+	mov ss, ax
 
 	/* Clear out the high 16-bits of ESP */
 	/* This is needed because I have one */
@@ -196,12 +199,12 @@ inrmode:
 	/* anything other than 0x0000 is in the high */
 	/* 16-bits of ESP. Even though real-mode */
 	/* code should only use SP and not ESP. */
-	xorl	%esp,%esp
+	xor esp, esp
 
-	movw	stack16,%sp
+	mov sp, word ptr ds:[stack16]
 
 	/* Put the return address back onto the stack */
-	pushw	(code16ret)
+	push word ptr ds:[code16ret]
 
 	/* Load IDTR with real mode value */
 	lidt	rmode_idtptr
@@ -215,14 +218,14 @@ inrmode:
 	/*
 	 * Needed for enabling the a20 address line
 	 */
-	.code16
+.code16
 empty_8042:
 	.word	0x00eb,0x00eb            // jmp $+2, jmp $+2
-	inb	$0x64,%al
-	cmp	$0xff, %al               // legacy-free machine without keyboard
-	jz	empty_8042_ret           // controllers on Intel Macs read back 0xFF
-	testb	$0x02,%al
-	jnz	empty_8042
+	in al, HEX(64)
+	cmp al, HEX(ff)               // legacy-free machine without keyboard
+	jz empty_8042_ret           // controllers on Intel Macs read back 0xFF
+	test al, 2
+	jnz empty_8042
 empty_8042_ret:
 	ret
 
@@ -230,24 +233,24 @@ empty_8042_ret:
 	 * Enable the A20 address line (to allow access to over 1mb)
 	 */
 EXTERN(_EnableA20)
+.code32
+
+	pusha
+
+	call switch_to_real
+.code16
+
+	call empty_8042
+	mov al, HEX(D1)                // command write
+	out HEX(64), al
+	call empty_8042
+	mov al, HEX(DF)                // A20 on
+	out	HEX(60), al
+	call empty_8042
+	call switch_to_prot
 	.code32
 
-	pushal
-
-	call	switch_to_real
-	.code16
-
-	call	empty_8042
-	movb	$0xD1,%al                // command write
-	outb	%al,$0x64
-	call	empty_8042
-	mov	$0xDF,%al                // A20 on
-	out	%al,$0x60
-	call	empty_8042
-	call	switch_to_prot
-	.code32
-
-	popal
+	popa
 
 	ret
 
@@ -255,24 +258,24 @@ EXTERN(_EnableA20)
 	 * Disable the A20 address line
 	 */
 EXTERN(_DisableA20)
-	.code32
+.code32
 
-	pushal
+	pusha
 
-	call	switch_to_real
+	call switch_to_real
 	.code16
 
 	call	empty_8042
-	movb	$0xD1,%al                // command write
-	outb	%al,$0x64
-	call	empty_8042
-	mov	$0xDD,%al                // A20 off
-	out	%al,$0x60
+	mov al, HEX(D1)                // command write
+	out HEX(64), al
+	call empty_8042
+	mov al, HEX(DD)                // A20 off
+	out HEX(60), al
 	call	empty_8042
 	call	switch_to_prot
 	.code32
 
-	popal
+	popa
 
 	ret
 
@@ -294,11 +297,11 @@ EXTERN(_DisableA20)
  * above 1MB. So we let Grub load us there and then relocate
  * ourself to 0x8000
  */
-#define FREELDR_BASE 0x8000
-#define INITIAL_BASE 0x200000
+#define FREELDR_BASE HEX(8000)
+#define INITIAL_BASE HEX(200000)
 
 	/* Align 32 bits boundary */
-	.align 4
+.align 4
 	
 	/* Multiboot header */
 MultibootHeader:
@@ -330,44 +333,45 @@ MultibootEntry:
 	 * our own */
 	lgdt	gdtptrhigh + INITIAL_BASE - FREELDR_BASE
 	/* Reload segment selectors */
-	ljmp	$PMODE_CS, $(mb1 + INITIAL_BASE - FREELDR_BASE)
+	//ljmp	$PMODE_CS, $(mb1 + INITIAL_BASE - FREELDR_BASE)
+	jmp far ptr PMODE_CS: (mb1 + INITIAL_BASE - FREELDR_BASE)
 mb1:
-	movw	$PMODE_DS,%dx
-	movw	%dx,%ds
-	movw	%dx,%es
+	mov dx, PMODE_DS
+	mov ds, dx
+	mov es, dx
 
 	/* Check for valid multiboot signature */
-	cmpl	$MULTIBOOT_BOOTLOADER_MAGIC,%eax
-	jne	mbfail
+	cmp eax, MULTIBOOT_BOOTLOADER_MAGIC
+	jne mbfail
 
 	/* Store multiboot info in a safe place */
-	movl	%ebx,%esi
-	movl	$(mb_info + INITIAL_BASE - FREELDR_BASE),%edi
-	movl	$MB_INFO_SIZE,%ecx
+	mov esi, ebx
+	mov edi, offset mb_info + INITIAL_BASE - FREELDR_BASE
+	mov ecx, MB_INFO_SIZE
 	rep movsb
 
 	/* Save commandline */
-	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
-	testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
-	jz	mb3
-	movl	MB_INFO_COMMAND_LINE_OFFSET(%ebx),%esi
-	movl	$(cmdline + INITIAL_BASE - FREELDR_BASE),%edi
-	movl	$CMDLINE_SIZE,%ecx
+	mov edx, [ebx + MB_INFO_FLAGS_OFFSET]
+	test dword ptr [ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
+	jz mb3
+	mov esi, [ebx + MB_INFO_COMMAND_LINE_OFFSET]
+	mov edi, offset cmdline + INITIAL_BASE - FREELDR_BASE
+	mov ecx, CMDLINE_SIZE
 mb2:	lodsb
 	stosb
-	testb	%al,%al
-	jz	mb3
-	dec	%ecx
-	jnz	mb2
+	test al, al
+	jz mb3
+	dec ecx
+	jnz mb2
 mb3:
 
 	/* Copy to low mem */
-	movl	$INITIAL_BASE,%esi
-	movl	$FREELDR_BASE,%edi
-	movl	$(__bss_end__ - FREELDR_BASE),%ecx
-	addl	$3,%ecx
-	shrl	$2,%ecx
-	rep movsl
+	mov esi, INITIAL_BASE
+	mov edi, FREELDR_BASE
+	mov ecx, (offset __bss_end__ - FREELDR_BASE)
+	add ecx, 3
+	shr ecx, 2
+	rep movsd
 
 	/* Load the GDT and IDT */
 	lgdt	gdtptr
@@ -375,47 +379,49 @@ mb3:
 
 	/* Clear prefetch queue & correct CS,
 	 * jump to low mem */
-	ljmp	$PMODE_CS, $mb4
+	//ljmp	$PMODE_CS, $mb4
+	jmp far ptr PMODE_CS:mb4
 mb4:
 	/* Reload segment selectors */
-	movw	$PMODE_DS,%dx
-	movw	%dx,%ds
-	movw	%dx,%es
-	movw	%dx,%fs
-	movw	%dx,%gs
-	movw	%dx,%ss
-	movl	$STACK32ADDR,%esp
+	mov dx, PMODE_DS
+	mov ds, dx
+	mov es, dx
+	mov fs, dx
+	mov gs, dx
+	mov ss, dx
+	mov esp, STACK32ADDR
 
-	movl	$mb_info,%ebx
+	mov ebx, offset mb_info
 	/* See if the boot device was passed in */
-	movl	MB_INFO_FLAGS_OFFSET(%ebx),%edx
-	testl	$MB_INFO_FLAG_BOOT_DEVICE,%edx
-	jz	mb5
+	mov edx, [ebx + MB_INFO_FLAGS_OFFSET]
+	test edx, MB_INFO_FLAG_BOOT_DEVICE
+	jz mb5
 	/* Retrieve boot device info */
-	movl	MB_INFO_BOOT_DEVICE_OFFSET(%ebx),%eax
-	shrl	$16,%eax
-	incb	%al
-	movb	%al,_BootPartition
-	movb	%ah,_BootDrive
-	jmp	mb6
+	mov eax, [ebx + MB_INFO_BOOT_DEVICE_OFFSET]
+	shr eax, 16
+	inc al
+	mov byte ptr _BootPartition, al
+	mov byte ptr _BootDrive, ah
+	jmp mb6
 mb5:	/* No boot device known, assume first partition of first harddisk */
-	movb	$0x80,_BootDrive
-	movb	$1,_BootPartition
+	mov byte ptr _BootDrive, HEX(80)
+	mov byte ptr _BootPartition, 1
 mb6:
 	/* Check for command line */
-	mov	$cmdline,%eax
-	testl	$MB_INFO_FLAG_COMMAND_LINE,MB_INFO_FLAGS_OFFSET(%ebx)
-	jnz	mb7
-	xorl	%eax,%eax
+	mov eax, offset cmdline
+	test dword ptr [ebx + MB_INFO_FLAGS_OFFSET], MB_INFO_FLAG_COMMAND_LINE
+	jnz mb7
+	xor eax, eax
 mb7:
 
 	/* GO! */
-	pushl	%eax	
+	push eax	
 	call	_BootMain
 
-mbfail:	call	switch_to_real
+mbfail:
+	call	switch_to_real
 	.code16
-	int	$0x19
+	int	0x19
 mbstop:	jmp	mbstop	/* We should never get here */
 
 	.code32
@@ -437,52 +443,52 @@ code32ret:
 	.long	0
 
 
-	.p2align	2	/* force 4-byte alignment */
+    .align 4	/* force 4-byte alignment */
 gdt:
 	/* NULL Descriptor */
-	.word	0x0000
-	.word	0x0000
-	.word	0x0000
-	.word	0x0000
+	.word HEX(0000)
+	.word HEX(0000)
+	.word HEX(0000)
+	.word HEX(0000)
 
 	/* 32-bit flat CS */
-	.word	0xFFFF
-	.word	0x0000
-	.word	0x9A00
-	.word	0x00CF
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9A00)
+	.word HEX(00CF)
 
 	/* 32-bit flat DS */
-	.word	0xFFFF
-	.word	0x0000
-	.word	0x9200
-	.word	0x00CF
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9200)
+	.word HEX(00CF)
 
 	/* 16-bit real mode CS */
-	.word	0xFFFF
-	.word	0x0000
-	.word	0x9E00
-	.word	0x0000
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9E00)
+	.word HEX(0000)
 
 	/* 16-bit real mode DS */
-	.word	0xFFFF
-	.word	0x0000
-	.word	0x9200
-	.word	0x0000
+	.word HEX(FFFF)
+	.word HEX(0000)
+	.word HEX(9200)
+	.word HEX(0000)
 
 /* GDT table pointer */
 gdtptr:
-	.word	0x27		/* Limit */
-	.long	gdt			/* Base Address */
+	.word HEX(27)		/* Limit */
+	.long gdt			/* Base Address */
 
 /* Initial GDT table pointer for multiboot */
 gdtptrhigh:
-	.word	0x27		/* Limit */
-	.long	gdt + INITIAL_BASE - FREELDR_BASE	/* Base Address */
+	.word HEX(27)		/* Limit */
+	.long gdt + INITIAL_BASE - FREELDR_BASE	/* Base Address */
 
 /* Real-mode IDT pointer */
 rmode_idtptr:
-	.word	0x3ff		/* Limit */
-	.long	0			/* Base Address */
+	.word HEX(3ff)		/* Limit */
+	.long 0			/* Base Address */
 
 mb_info:
 	.fill	MB_INFO_SIZE, 1, 0

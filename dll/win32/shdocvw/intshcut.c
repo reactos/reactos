@@ -27,11 +27,17 @@
  * The installer for the Zuma Deluxe Popcap game is good for testing.
  */
 
+#include <stdarg.h>
+#include <stdio.h>
+
 #include "wine/debug.h"
 #include "shdocvw.h"
 #include "objidl.h"
 #include "shobjidl.h"
 #include "intshcut.h"
+#include "shellapi.h"
+#include "winreg.h"
+#include "shlwapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -237,8 +243,47 @@ static HRESULT WINAPI UniformResourceLocatorW_GetUrl(IUniformResourceLocatorW *u
 
 static HRESULT WINAPI UniformResourceLocatorW_InvokeCommand(IUniformResourceLocatorW *url, PURLINVOKECOMMANDINFOW pCommandInfo)
 {
-    FIXME("(%p, %p): stub\n", url, pCommandInfo);
-    return E_NOTIMPL;
+    InternetShortcut *This = impl_from_IUniformResourceLocatorW(url);
+    WCHAR app[64];
+    HKEY hkey;
+    static const WCHAR wszURLProtocol[] = {'U','R','L',' ','P','r','o','t','o','c','o','l',0};
+    SHELLEXECUTEINFOW sei;
+    DWORD res, type;
+    HRESULT hres;
+
+    TRACE("%p %p\n", This, pCommandInfo );
+
+    if (pCommandInfo->dwcbSize < sizeof (URLINVOKECOMMANDINFOW))
+        return E_INVALIDARG;
+
+    if (pCommandInfo->dwFlags != IURL_INVOKECOMMAND_FL_USE_DEFAULT_VERB)
+    {
+        FIXME("(%p, %p): non-default verbs not implemented\n", url, pCommandInfo);
+        return E_NOTIMPL;
+    }
+
+    hres = CoInternetParseUrl(This->url, PARSE_SCHEMA, 0, app, sizeof(app)/sizeof(WCHAR), NULL, 0);
+    if(FAILED(hres))
+        return E_FAIL;
+
+    res = RegOpenKeyW(HKEY_CLASSES_ROOT, app, &hkey);
+    if(res != ERROR_SUCCESS)
+        return E_FAIL;
+
+    res = RegQueryValueExW(hkey, wszURLProtocol, NULL, &type, NULL, NULL);
+    RegCloseKey(hkey);
+    if(res != ERROR_SUCCESS || type != REG_SZ)
+        return E_FAIL;
+
+    memset(&sei, 0, sizeof(sei));
+    sei.cbSize = sizeof(sei);
+    sei.lpFile = This->url;
+    sei.nShow = SW_SHOW;
+
+    if( ShellExecuteExW(&sei) )
+        return S_OK;
+    else
+        return E_FAIL;
 }
 
 static HRESULT WINAPI UniformResourceLocatorA_QueryInterface(IUniformResourceLocatorA *url, REFIID riid, PVOID *ppvObject)
@@ -299,8 +344,26 @@ static HRESULT WINAPI UniformResourceLocatorA_GetUrl(IUniformResourceLocatorA *u
 
 static HRESULT WINAPI UniformResourceLocatorA_InvokeCommand(IUniformResourceLocatorA *url, PURLINVOKECOMMANDINFOA pCommandInfo)
 {
-    FIXME("(%p, %p): stub\n", url, pCommandInfo);
-    return E_NOTIMPL;
+    URLINVOKECOMMANDINFOW wideCommandInfo;
+    int len;
+    WCHAR *wideVerb;
+    HRESULT res;
+    InternetShortcut *This = impl_from_IUniformResourceLocatorA(url);
+
+    wideCommandInfo.dwcbSize = sizeof wideCommandInfo;
+    wideCommandInfo.dwFlags = pCommandInfo->dwFlags;
+    wideCommandInfo.hwndParent = pCommandInfo->hwndParent;
+
+    len = MultiByteToWideChar(CP_ACP, 0, pCommandInfo->pcszVerb, -1, NULL, 0);
+    wideVerb = heap_alloc(len * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, pCommandInfo->pcszVerb, -1, wideVerb, len);
+
+    wideCommandInfo.pcszVerb = wideVerb;
+
+    res = UniformResourceLocatorW_InvokeCommand(&This->uniformResourceLocatorW, &wideCommandInfo);
+    heap_free(wideVerb);
+
+    return res;
 }
 
 static HRESULT WINAPI PersistFile_QueryInterface(IPersistFile *pFile, REFIID riid, PVOID *ppvObject)
@@ -506,6 +569,22 @@ static const IPersistFileVtbl persistFileVtbl = {
     PersistFile_GetCurFile
 };
 
+static InternetShortcut *create_shortcut(void)
+{
+    InternetShortcut *newshortcut;
+
+    newshortcut = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(InternetShortcut));
+    if (newshortcut)
+    {
+        newshortcut->uniformResourceLocatorA.lpVtbl = &uniformResourceLocatorAVtbl;
+        newshortcut->uniformResourceLocatorW.lpVtbl = &uniformResourceLocatorWVtbl;
+        newshortcut->persistFile.lpVtbl = &persistFileVtbl;
+        newshortcut->refCount = 0;
+    }
+
+    return newshortcut;
+}
+
 HRESULT InternetShortcut_Create(IUnknown *pOuter, REFIID riid, void **ppv)
 {
     InternetShortcut *This;
@@ -518,13 +597,9 @@ HRESULT InternetShortcut_Create(IUnknown *pOuter, REFIID riid, void **ppv)
     if(pOuter)
         return CLASS_E_NOAGGREGATION;
 
-    This = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(InternetShortcut));
+    This = create_shortcut();
     if (This)
     {
-        This->uniformResourceLocatorA.lpVtbl = &uniformResourceLocatorAVtbl;
-        This->uniformResourceLocatorW.lpVtbl = &uniformResourceLocatorWVtbl;
-        This->persistFile.lpVtbl = &persistFileVtbl;
-        This->refCount = 0;
         hr = Unknown_QueryInterface(This, riid, ppv);
         if (SUCCEEDED(hr))
             SHDOCVW_LockModule();
@@ -534,4 +609,40 @@ HRESULT InternetShortcut_Create(IUnknown *pOuter, REFIID riid, void **ppv)
     }
     else
         return E_OUTOFMEMORY;
+}
+
+
+/**********************************************************************
+ * OpenURL  (SHDOCVW.@)
+ */
+void WINAPI OpenURL(HWND hWnd, HINSTANCE hInst, LPCSTR lpcstrUrl, int nShowCmd)
+{
+    InternetShortcut *shortcut;
+    WCHAR* urlfilepath = NULL;
+    shortcut = create_shortcut();
+
+    if (shortcut)
+    {
+        int len;
+
+        len = MultiByteToWideChar(CP_ACP, 0, lpcstrUrl, -1, NULL, 0);
+        urlfilepath = heap_alloc(len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, lpcstrUrl, -1, urlfilepath, len);
+
+        if(SUCCEEDED(IPersistFile_Load(&shortcut->persistFile, urlfilepath, 0)))
+        {
+            URLINVOKECOMMANDINFOW ici;
+
+            memset( &ici, 0, sizeof ici );
+            ici.dwcbSize = sizeof ici;
+            ici.dwFlags = IURL_INVOKECOMMAND_FL_USE_DEFAULT_VERB;
+            ici.hwndParent = hWnd;
+
+            if FAILED(UniformResourceLocatorW_InvokeCommand(&shortcut->uniformResourceLocatorW, (PURLINVOKECOMMANDINFOW) &ici))
+                    TRACE("failed to open URL: %s\n.",debugstr_a(lpcstrUrl));
+        }
+
+        heap_free(shortcut);
+        heap_free(urlfilepath);
+    }
 }

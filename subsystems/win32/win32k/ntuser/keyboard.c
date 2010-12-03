@@ -58,7 +58,10 @@ BYTE gQueueKeyStateTable[256];
 /* FUNCTIONS *****************************************************************/
 
 /* Initialization -- Right now, just zero the key state and init the lock */
-NTSTATUS FASTCALL InitKeyboardImpl(VOID)
+INIT_FUNCTION
+NTSTATUS
+NTAPI
+InitKeyboardImpl(VOID)
 {
    RtlZeroMemory(&gQueueKeyStateTable,0x100);
    return STATUS_SUCCESS;
@@ -939,6 +942,12 @@ W32kKeyProcessMessage(LPMSG Msg,
       else if( Prefix == 0xE1 )
       {
          VscVkTable = KeyboardLayout->pVSCtoVK_E1;
+      }
+
+      if (!VscVkTable)
+      {
+          DPRINT1("somethings wrong, Prefix=0x%x", Prefix);
+          return;
       }
 
       RawVk = 0xff;

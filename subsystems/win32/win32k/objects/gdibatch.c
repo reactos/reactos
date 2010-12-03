@@ -51,8 +51,9 @@ SynchonizeDriver(FLONG Flags)
       Flags = DSS_TIMER_EVENT;
 
   Device = IntEnumHDev();
-
-  SurfObj = EngLockSurface( Device->pSurface );
+//  UNIMPLEMENTED;
+//ASSERT(FALSE);
+  SurfObj = 0;// EngLockSurface( Device->pSurface );
   if(!SurfObj) return;
   DoDeviceSync( SurfObj, NULL, Flags);
   EngUnlockSurface(SurfObj);

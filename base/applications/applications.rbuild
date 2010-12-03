@@ -22,6 +22,9 @@
 	<directory name="extrac32">
 		<xi:include href="extrac32/extrac32.rbuild" />
 	</directory>
+	<directory name="findstr">
+		<xi:include href="findstr/findstr.rbuild" />
+	</directory>
 	<directory name="fontview">
 		<xi:include href="fontview/fontview.rbuild" />
 	</directory>

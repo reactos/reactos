@@ -13,17 +13,19 @@
 #define NDEBUG
 #include <debug.h>
 
+//#define USING_PROPER_NPFS_WAIT_SEMANTICS
+
 /* FUNCTIONS *****************************************************************/
 
-static PNPFS_FCB
-NpfsFindPipe(PNPFS_DEVICE_EXTENSION DeviceExt,
+PNPFS_FCB
+NpfsFindPipe(PNPFS_VCB Vcb,
              PUNICODE_STRING PipeName)
 {
     PLIST_ENTRY CurrentEntry;
     PNPFS_FCB Fcb;
 
-    CurrentEntry = DeviceExt->PipeListHead.Flink;
-    while (CurrentEntry != &DeviceExt->PipeListHead)
+    CurrentEntry = Vcb->PipeListHead.Flink;
+    while (CurrentEntry != &Vcb->PipeListHead)
     {
         Fcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, PipeListEntry);
         if (RtlCompareUnicodeString(PipeName,
@@ -103,53 +105,153 @@ NpfsSignalAndRemoveListeningServerInstance(PNPFS_FCB Fcb,
 }
 
 
+static VOID
+NpfsOpenFileSystem(PNPFS_FCB Fcb,
+                   PFILE_OBJECT FileObject,
+                   PIO_STATUS_BLOCK IoStatus)
+{
+    PNPFS_CCB Ccb;
+
+    DPRINT("NpfsOpenFileSystem()\n");
+
+    Ccb = ExAllocatePool(NonPagedPool, sizeof(NPFS_CCB));
+    if (Ccb == NULL)
+    {
+        IoStatus->Status = STATUS_NO_MEMORY;
+        return;
+    }
+
+    Ccb->Type = CCB_DEVICE;
+    Ccb->Fcb = Fcb;
+
+    FileObject->FsContext = Fcb;
+    FileObject->FsContext2 = Ccb;
+
+    IoStatus->Information = FILE_OPENED;
+    IoStatus->Status = STATUS_SUCCESS;
+
+    return;
+}
+
+
+static VOID
+NpfsOpenRootDirectory(PNPFS_FCB Fcb,
+                      PFILE_OBJECT FileObject,
+                      PIO_STATUS_BLOCK IoStatus)
+{
+    PNPFS_CCB Ccb;
+
+    DPRINT("NpfsOpenRootDirectory()\n");
+
+    Ccb = ExAllocatePool(NonPagedPool, sizeof(NPFS_CCB));
+    if (Ccb == NULL)
+    {
+        IoStatus->Status = STATUS_NO_MEMORY;
+        return;
+    }
+
+    Ccb->Type = CCB_DIRECTORY;
+    Ccb->Fcb = Fcb;
+
+    FileObject->FsContext = Fcb;
+    FileObject->FsContext2 = Ccb;
+
+    IoStatus->Information = FILE_OPENED;
+    IoStatus->Status = STATUS_SUCCESS;
+
+    return;
+}
+
+
 NTSTATUS NTAPI
 NpfsCreate(PDEVICE_OBJECT DeviceObject,
            PIRP Irp)
 {
     PEXTENDED_IO_STACK_LOCATION IoStack;
+    PUNICODE_STRING FileName;
     PFILE_OBJECT FileObject;
+    PFILE_OBJECT RelatedFileObject;
     PNPFS_FCB Fcb;
     PNPFS_CCB ClientCcb;
     PNPFS_CCB ServerCcb = NULL;
-    PNPFS_DEVICE_EXTENSION DeviceExt;
-    BOOLEAN SpecialAccess;
+    PNPFS_VCB Vcb;
     ACCESS_MASK DesiredAccess;
+    NTSTATUS Status;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
+    BOOLEAN SpecialAccess;
+#endif
 
     DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
+    RelatedFileObject = FileObject->RelatedFileObject;
+    FileName = &FileObject->FileName;
     DesiredAccess = IoStack->Parameters.CreatePipe.SecurityContext->DesiredAccess;
+
     DPRINT("FileObject %p\n", FileObject);
     DPRINT("FileName %wZ\n", &FileObject->FileName);
 
     Irp->IoStatus.Information = 0;
 
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     SpecialAccess = ((DesiredAccess & SPECIFIC_RIGHTS_ALL) == FILE_READ_ATTRIBUTES);
     if (SpecialAccess)
     {
         DPRINT("NpfsCreate() open client end for special use!\n");
     }
+#endif
+
+    DPRINT("FileName->Length: %hu  RelatedFileObject: %p\n", FileName->Length, RelatedFileObject);
+
+    /* Open the file system */
+    if (FileName->Length == 0 &&
+        (RelatedFileObject == NULL || ((PNPFS_CCB)RelatedFileObject->FsContext2)->Type == CCB_DEVICE))
+    {
+        DPRINT("Open the file system\n");
+
+        NpfsOpenFileSystem(Vcb->DeviceFcb,
+                           FileObject,
+                           &Irp->IoStatus);
+
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    /* Open the root directory */
+    if (FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL)
+    {
+        DPRINT("Open the root directory\n");
+
+        NpfsOpenRootDirectory(Vcb->RootFcb,
+                              FileObject,
+                              &Irp->IoStatus);
+
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
 
     /*
     * Step 1. Find the pipe we're trying to open.
     */
-    KeLockMutex(&DeviceExt->PipeListLock);
-    Fcb = NpfsFindPipe(DeviceExt,
+    KeLockMutex(&Vcb->PipeListLock);
+    Fcb = NpfsFindPipe(Vcb,
         &FileObject->FileName);
     if (Fcb == NULL)
     {
         /* Not found, bail out with error. */
         DPRINT("No pipe found!\n");
-        KeUnlockMutex(&DeviceExt->PipeListLock);
+        KeUnlockMutex(&Vcb->PipeListLock);
         Irp->IoStatus.Status = STATUS_OBJECT_NAME_NOT_FOUND;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-    KeUnlockMutex(&DeviceExt->PipeListLock);
+    KeUnlockMutex(&Vcb->PipeListLock);
 
     /*
     * Acquire the lock for CCB lists. From now on no modifications to the
@@ -170,11 +272,16 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         return STATUS_NO_MEMORY;
     }
 
+    ClientCcb->Type = CCB_PIPE;
     ClientCcb->Thread = (struct ETHREAD *)Irp->Tail.Overlay.Thread;
     ClientCcb->Fcb = Fcb;
     ClientCcb->PipeEnd = FILE_PIPE_CLIENT_END;
     ClientCcb->OtherSide = NULL;
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     ClientCcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
+#else
+    ClientCcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+#endif
     InitializeListHead(&ClientCcb->ReadRequestListHead);
 
     DPRINT("CCB: %p\n", ClientCcb);
@@ -212,9 +319,10 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     /*
     * Step 3. Search for listening server CCB.
     */
-
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     if (!SpecialAccess)
     {
+#endif
         /*
         * WARNING: Point of no return! Once we get the server CCB it's
         * possible that we completed a wait request and so we have to
@@ -270,6 +378,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
             /* FIXME: Merge this with the NpfsFindListeningServerInstance routine. */
             NpfsSignalAndRemoveListeningServerInstance(Fcb, ServerCcb);
         }
+#ifndef USING_PROPER_NPFS_WAIT_SEMANTICS
     }
     else if (IsListEmpty(&Fcb->ServerCcbListHead))
     {
@@ -287,6 +396,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_UNSUCCESSFUL;
     }
+#endif
 
     /*
     * Step 4. Add the client CCB to a list and connect it if possible.
@@ -326,7 +436,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 {
     PEXTENDED_IO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
-    PNPFS_DEVICE_EXTENSION DeviceExt;
+    PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     PNAMED_PIPE_CREATE_PARAMETERS Buffer;
@@ -334,7 +444,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
     FileObject = IoStack->FileObject;
     DPRINT("FileObject %p\n", FileObject);
@@ -360,13 +470,14 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         return STATUS_NO_MEMORY;
     }
 
+    Ccb->Type = CCB_PIPE;
     Ccb->Thread = (struct ETHREAD *)Irp->Tail.Overlay.Thread;
-    KeLockMutex(&DeviceExt->PipeListLock);
+    KeLockMutex(&Vcb->PipeListLock);
 
     /*
     * First search for existing Pipe with the same name.
     */
-    Fcb = NpfsFindPipe(DeviceExt,
+    Fcb = NpfsFindPipe(Vcb,
         &FileObject->FileName);
     if (Fcb != NULL)
     {
@@ -374,7 +485,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         * Found Pipe with the same name. Check if we are
         * allowed to use it.
         */
-        KeUnlockMutex(&DeviceExt->PipeListLock);
+        KeUnlockMutex(&Vcb->PipeListLock);
 
         if (Fcb->CurrentInstances >= Fcb->MaximumInstances)
         {
@@ -402,7 +513,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
         if (Fcb == NULL)
         {
-            KeUnlockMutex(&DeviceExt->PipeListLock);
+            KeUnlockMutex(&Vcb->PipeListLock);
             ExFreePool(Ccb);
             Irp->IoStatus.Status = STATUS_NO_MEMORY;
             Irp->IoStatus.Information = 0;
@@ -410,12 +521,14 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
             return STATUS_NO_MEMORY;
         }
 
+        Fcb->Type = FCB_PIPE;
+        Fcb->Vcb = Vcb;
         Fcb->PipeName.Length = FileObject->FileName.Length;
         Fcb->PipeName.MaximumLength = Fcb->PipeName.Length + sizeof(UNICODE_NULL);
         Fcb->PipeName.Buffer = ExAllocatePool(NonPagedPool, Fcb->PipeName.MaximumLength);
         if (Fcb->PipeName.Buffer == NULL)
         {
-            KeUnlockMutex(&DeviceExt->PipeListLock);
+            KeUnlockMutex(&Vcb->PipeListLock);
             ExFreePool(Fcb);
             ExFreePool(Ccb);
             Irp->IoStatus.Status = STATUS_NO_MEMORY;
@@ -457,18 +570,18 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         {
             if (Buffer->InboundQuota == 0)
             {
-                Fcb->InboundQuota = DeviceExt->DefaultQuota;
+                Fcb->InboundQuota = Vcb->DefaultQuota;
             }
             else
             {
                 Fcb->InboundQuota = PAGE_ROUND_UP(Buffer->InboundQuota);
-                if (Fcb->InboundQuota < DeviceExt->MinQuota)
+                if (Fcb->InboundQuota < Vcb->MinQuota)
                 {
-                    Fcb->InboundQuota = DeviceExt->MinQuota;
+                    Fcb->InboundQuota = Vcb->MinQuota;
                 }
-                else if (Fcb->InboundQuota > DeviceExt->MaxQuota)
+                else if (Fcb->InboundQuota > Vcb->MaxQuota)
                 {
-                    Fcb->InboundQuota = DeviceExt->MaxQuota;
+                    Fcb->InboundQuota = Vcb->MaxQuota;
                 }
             }
         }
@@ -481,18 +594,18 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
         {
             if (Buffer->OutboundQuota == 0)
             {
-                Fcb->OutboundQuota = DeviceExt->DefaultQuota;
+                Fcb->OutboundQuota = Vcb->DefaultQuota;
             }
             else
             {
                 Fcb->OutboundQuota = PAGE_ROUND_UP(Buffer->OutboundQuota);
-                if (Fcb->OutboundQuota < DeviceExt->MinQuota)
+                if (Fcb->OutboundQuota < Vcb->MinQuota)
                 {
-                    Fcb->OutboundQuota = DeviceExt->MinQuota;
+                    Fcb->OutboundQuota = Vcb->MinQuota;
                 }
-                else if (Fcb->OutboundQuota > DeviceExt->MaxQuota)
+                else if (Fcb->OutboundQuota > Vcb->MaxQuota)
                 {
-                    Fcb->OutboundQuota = DeviceExt->MaxQuota;
+                    Fcb->OutboundQuota = Vcb->MaxQuota;
                 }
             }
         }
@@ -501,8 +614,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
             Fcb->OutboundQuota = 0;
         }
 
-        InsertTailList(&DeviceExt->PipeListHead, &Fcb->PipeListEntry);
-        KeUnlockMutex(&DeviceExt->PipeListLock);
+        InsertTailList(&Vcb->PipeListHead, &Fcb->PipeListEntry);
+        KeUnlockMutex(&Vcb->PipeListLock);
     }
 
     if (Fcb->InboundQuota)
@@ -514,9 +627,9 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
             if (NewPipe)
             {
-                KeLockMutex(&DeviceExt->PipeListLock);
+                KeLockMutex(&Vcb->PipeListLock);
                 RemoveEntryList(&Fcb->PipeListEntry);
-                KeUnlockMutex(&DeviceExt->PipeListLock);
+                KeUnlockMutex(&Vcb->PipeListLock);
                 RtlFreeUnicodeString(&Fcb->PipeName);
                 ExFreePool(Fcb);
             }
@@ -573,7 +686,7 @@ NTSTATUS NTAPI
 NpfsCleanup(PDEVICE_OBJECT DeviceObject,
             PIRP Irp)
 {
-    PNPFS_DEVICE_EXTENSION DeviceExt;
+    PNPFS_VCB Vcb;
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     PNPFS_CCB Ccb, OtherSide;
@@ -583,13 +696,31 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
     DPRINT("NpfsCleanup(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = FileObject->FsContext2;
 
     if (Ccb == NULL)
     {
         DPRINT("Success!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    if (Ccb->Type == CCB_DEVICE)
+    {
+        DPRINT("Cleanup the file system!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    if (Ccb->Type == CCB_DIRECTORY)
+    {
+        DPRINT("Cleanup the root directory!\n");
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -708,9 +839,9 @@ NTSTATUS NTAPI
 NpfsClose(PDEVICE_OBJECT DeviceObject,
           PIRP Irp)
 {
-    PNPFS_DEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
+    PNPFS_VCB Vcb;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
     BOOLEAN Server;
@@ -718,13 +849,41 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
     FileObject = IoStack->FileObject;
     Ccb = FileObject->FsContext2;
 
     if (Ccb == NULL)
     {
         DPRINT("Success!\n");
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    if (Ccb->Type == CCB_DEVICE)
+    {
+        DPRINT("Closing the file system!\n");
+
+        ExFreePool(Ccb);
+        FileObject->FsContext = NULL;
+        FileObject->FsContext2 = NULL;
+
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    if (Ccb->Type == CCB_DIRECTORY)
+    {
+        DPRINT("Closing the root directory!\n");
+
+        ExFreePool(Ccb);
+        FileObject->FsContext = NULL;
+        FileObject->FsContext2 = NULL;
+
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -771,9 +930,9 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
         IsListEmpty(&Fcb->ClientCcbListHead))
     {
         RtlFreeUnicodeString(&Fcb->PipeName);
-        KeLockMutex(&DeviceExt->PipeListLock);
+        KeLockMutex(&Vcb->PipeListLock);
         RemoveEntryList(&Fcb->PipeListEntry);
-        KeUnlockMutex(&DeviceExt->PipeListLock);
+        KeUnlockMutex(&Vcb->PipeListLock);
         ExFreePool(Fcb);
         FileObject->FsContext = NULL;
     }

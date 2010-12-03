@@ -1816,3 +1816,14 @@ IoSetTopLevelIrp(IN PIRP Irp)
     /* Set the IRP */
     PsGetCurrentThread()->TopLevelIrp = (ULONG_PTR)Irp;
 }
+
+#if defined (_WIN64)
+BOOLEAN
+NTAPI
+IoIs32bitProcess(
+    IN PIRP Irp OPTIONAL)
+{
+#pragma message IoIs32bitProcess is hardcoded to FALSE
+    return FALSE;
+}
+#endif

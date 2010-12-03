@@ -65,6 +65,7 @@ BOOLEAN PspDoingGiveBacks;
 
 USHORT
 NTAPI
+INIT_FUNCTION
 NameToOrdinal(IN PCHAR Name,
               IN PVOID DllBase,
               IN ULONG NumberOfNames,
@@ -107,6 +108,7 @@ NameToOrdinal(IN PCHAR Name,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 LookupEntryPoint(IN PVOID DllBase,
                  IN PCHAR Name,
                  OUT PVOID *EntryPoint)
@@ -158,6 +160,7 @@ LookupEntryPoint(IN PVOID DllBase,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspLookupSystemDllEntryPoint(IN PCHAR Name,
                              IN PVOID *EntryPoint)
 {
@@ -167,6 +170,7 @@ PspLookupSystemDllEntryPoint(IN PCHAR Name,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspLookupKernelUserEntryPoints(VOID)
 {
     NTSTATUS Status;
@@ -239,6 +243,7 @@ PspLookupKernelUserEntryPoints(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspMapSystemDll(IN PEPROCESS Process,
                 IN PVOID *DllBase,
                 IN BOOLEAN UseLargePages)
@@ -272,6 +277,7 @@ PspMapSystemDll(IN PEPROCESS Process,
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PsLocateSystemDll(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -357,6 +363,7 @@ PsLocateSystemDll(VOID)
 
 NTSTATUS
 NTAPI
+INIT_FUNCTION
 PspInitializeSystemDll(VOID)
 {
     NTSTATUS Status;
@@ -389,6 +396,7 @@ PspInitializeSystemDll(VOID)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PspInitPhase1()
 {
     /* Initialize the System DLL and return status of operation */
@@ -398,6 +406,7 @@ PspInitPhase1()
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     NTSTATUS Status;
@@ -616,6 +625,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 BOOLEAN
 NTAPI
+INIT_FUNCTION
 PsInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Check the initialization phase */

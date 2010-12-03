@@ -404,6 +404,51 @@ GpStatus WINGDIPAPI GdipResetPenTransform(GpPen *pen)
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipSetPenTransform(GpPen *pen, GpMatrix *matrix)
+{
+    static int calls;
+
+    TRACE("(%p,%p)\n", pen, matrix);
+
+    if(!pen || !matrix)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetPenTransform(GpPen *pen, GpMatrix *matrix)
+{
+    static int calls;
+
+    TRACE("(%p,%p)\n", pen, matrix);
+
+    if(!pen || !matrix)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipTranslatePenTransform(GpPen *pen, REAL dx, REAL dy, GpMatrixOrder order)
+{
+    static int calls;
+
+    TRACE("(%p,%0.2f,%0.2f,%u)\n", pen, dx, dy, order);
+
+    if(!pen)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipScalePenTransform(GpPen *pen, REAL sx, REAL sy, GpMatrixOrder order)
 {
     static int calls;
@@ -415,6 +460,21 @@ GpStatus WINGDIPAPI GdipScalePenTransform(GpPen *pen, REAL sx, REAL sy, GpMatrix
 
     if(!(calls++))
         FIXME("(%p, %.2f, %.2f, %d) stub\n", pen, sx, sy, order);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipRotatePenTransform(GpPen *pen, REAL angle, GpMatrixOrder order)
+{
+    static int calls;
+
+    TRACE("(%p,%0.2f,%u)\n", pen, angle, order);
+
+    if(!pen)
+        return InvalidParameter;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
 
     return NotImplemented;
 }

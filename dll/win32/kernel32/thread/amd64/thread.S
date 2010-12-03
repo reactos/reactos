@@ -6,9 +6,11 @@
  * PROGRAMMER: Alex Ionescu (alex@relsoft.net)
  */
 
-.globl BaseThreadStartupThunk
-.globl BaseProcessStartThunk
-.intel_syntax noprefix
+#include <asm.inc>
+
+
+PUBLIC BaseThreadStartupThunk
+PUBLIC BaseProcessStartThunk
 
 BaseThreadStartupThunk:
     
@@ -29,4 +31,5 @@ BaseProcessStartThunk:
     push 0                    /* Return RIP */
     jmp BaseProcessStartup
 
+END
 /* EOF */

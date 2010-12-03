@@ -15,6 +15,9 @@ CDPath = none
 Licence = Unbekannt
 Description = Tahoma Font pack, der von einigen Anwendungen benötigt wird (Steam).
 
+[Section.0415]
+Description = Pakiet Czcionki Tahoma wymagany przez niektóre programy (np. Steam).
+
 [Section.0422]
 Licence = Невідома
 Description = Пакет шрифтів Tahoma, що необхідні деяким програмам (Steam).

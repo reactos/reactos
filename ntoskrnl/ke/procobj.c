@@ -96,9 +96,6 @@ KiAttachProcess(IN PKTHREAD Thread,
 
         /* Release lock */
         KiReleaseApcLockFromDpcLevel(ApcLock);
-        
-        /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-        MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
         /* Swap Processes */
         KiSwapProcess(Process, SavedApcState->Process);
@@ -449,9 +446,6 @@ KeAttachProcess(IN PKPROCESS Process)
     PKTHREAD Thread = KeGetCurrentThread();
     ASSERT_PROCESS(Process);
     ASSERT_IRQL_LESS_OR_EQUAL(DISPATCH_LEVEL);
-
-    /* Make sure that we are in the right page directory (ReactOS Mm Hack) */
-    MiSyncForProcessAttach(Thread, (PEPROCESS)Process);
 
     /* Check if we're already in that process */
     if (Thread->ApcState.Process == Process) return;

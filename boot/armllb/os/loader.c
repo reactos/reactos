@@ -91,6 +91,38 @@ LlbBuildMemoryMap(VOID)
     LlbHwBuildMemoryMap(MemoryMap);
 }
 
+//
+// Should go to hwdev.c
+//
+POSLOADER_INIT
+NTAPI
+LlbHwLoadOsLoaderFromRam(VOID)
+{
+    ULONG Base, RootFs, Size;
+    PCHAR Offset;
+    CHAR CommandLine[64];
+    
+    /* On versatile we load the RAMDISK with initrd */
+    LlbEnvGetRamDiskInformation(&RootFs, &Size);
+    DbgPrint("Root fs: %lx, size: %lx\n", RootFs, Size);
+    
+    /* The OS Loader is at 0x20000, always */
+    Base = 0x20000;
+    
+    /* Read image offset */
+    Offset = LlbEnvRead("rdoffset");
+    
+    /* Set parameters for the OS loader */
+    snprintf(CommandLine,
+             sizeof(CommandLine),
+             "rdbase=0x%x rdsize=0x%x rdoffset=%s",
+             RootFs, Size, Offset);
+    LlbSetCommandLine(CommandLine);
+    
+    /* Return the OS loader base address */
+    return (POSLOADER_INIT)Base;
+}
+
 VOID
 NTAPI
 LlbLoadOsLoader(VOID)
@@ -118,6 +150,11 @@ LlbLoadOsLoader(VOID)
     {
         //todo
     }
+    
+    LoaderInit = (PVOID)0x80000000;
+#ifdef _ZOOM2_ // need something better than this...
+    LoaderInit = (PVOID)0x81070000;
+#endif
     printf("OS Loader loaded at 0x%p...JUMP!\n\n\n\n\n", LoaderInit);
 }
 
@@ -133,7 +170,7 @@ LlbBoot(VOID)
     
     /* Load the OS loader */
     LlbLoadOsLoader();
-    
+
     /* Jump to the OS Loader (FreeLDR in this case) */
     LoaderInit(&ArmBlock);
 }

@@ -1,4 +1,4 @@
-  /*
+/*
  * PROJECT:          ReactOS Win32 Subsystem
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             subsystems/win32/win32k/ntddraw/dxeng.c
@@ -297,8 +297,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_hSpooler:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_hSpooler\n");
-         // retVal = (DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
-        retVal = (DWORD_PTR) PDev->VideoFileObject->DeviceObject;
+        retVal = 0;//(DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
         break;
       case DxEGShDevData_DitherFmt:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");

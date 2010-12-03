@@ -29,7 +29,7 @@
 		<xi:include href="dplayx/dplayx.rbuild" />
 	</directory>
 	<directory name="dsound_new">
-		<xi:include href="dsound_new/dsound.rbuild" />
+		<xi:include href="dsound_new/dsound_new.rbuild" />
 	</directory>
 	<directory name="dxdiagn">
 		<xi:include href="dxdiagn/dxdiagn.rbuild" />

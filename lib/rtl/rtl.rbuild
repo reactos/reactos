@@ -6,6 +6,11 @@
 	<define name="_NTSYSTEM_" />
 	<define name="_NTDLLBUILD_" />
 	<include base="rtl">.</include>
+
+	<if property="NEWSPRINTF" value="1">
+		<define name="USE_NEW_SPRINTF" />
+	</if>
+
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>debug_asm.S</file>

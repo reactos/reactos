@@ -2814,6 +2814,7 @@ FILE* CDECL tmpfile(void)
   return file;
 }
 
+#ifndef USE_NEW_SPRINTF
 /*********************************************************************
  *		vfprintf (MSVCRT.@)
  */
@@ -2947,6 +2948,7 @@ int CDECL printf(const char *format, ...)
     va_end(valist);
     return res;
 }
+#endif
 
 /*********************************************************************
  *		ungetc (MSVCRT.@)
@@ -2984,6 +2986,7 @@ wint_t CDECL ungetwc(wint_t wc, FILE * file)
 	return mwc;
 }
 
+#ifndef USE_NEW_SPRINTF
 /*********************************************************************
  *		wprintf (MSVCRT.@)
  */
@@ -2996,6 +2999,7 @@ int CDECL wprintf(const wchar_t *format, ...)
     va_end(valist);
     return res;
 }
+#endif
 
 /*********************************************************************
  *		_getmaxstdio (MSVCRT.@)

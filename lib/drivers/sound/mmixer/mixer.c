@@ -89,6 +89,7 @@ MMixerOpen(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* invalid context passed */
+		DPRINT1("invalid context\n");
         return Status;
     }
 
@@ -97,6 +98,7 @@ MMixerOpen(
     if (!MixerInfo)
     {
         /* invalid mixer id */
+		DPRINT1("invalid mixer id %lu\n", MixerId);
         return MM_STATUS_INVALID_PARAMETER;
     }
 

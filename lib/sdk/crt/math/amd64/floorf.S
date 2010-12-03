@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <reactos/asm.h>
-#include <ndk/amd64/asm.h>
+#include <asm.inc>
+#include <ksamd64.inc>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -17,24 +17,29 @@
 
 PUBLIC floorf
 floorf:
+    sub rsp, 16
+
     /* Put parameter on the stack */
-    movss [rsp - 0x10], xmm0
+    movss [rsp], xmm0
     fld   dword ptr [rsp]
 
     /* Change fpu control word to round down */
-    fstcw [rsp - 0x10]
-    mov   eax, [rsp - 0x10]
+    fstcw [rsp]
+    mov   eax, [rsp]
     or    eax, 0x00400
     and   eax, 0x0f7ff
-    mov   [rsp - 0x08], eax
-    fldcw [rsp - 0x08]
+    mov   [rsp + 8], eax
+    fldcw [rsp + 8]
 
     /* Round to integer */
     frndint
 
     /* Restore fpu control word */
-    fldcw [rsp - 0x10]
+    fldcw [rsp]
 
-    fstp  dword ptr [rsp - 0x10]
-    movss xmm0, [rsp - 0x10]
+    fstp  dword ptr [rsp]
+    movss xmm0, [rsp]
+    add rsp, 16
     ret
+
+END

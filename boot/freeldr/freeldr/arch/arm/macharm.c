@@ -74,7 +74,8 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
     /* This should probably go away once we support more boards */
     ASSERT((ArmBoardBlock->BoardType == MACH_TYPE_FEROCEON) ||
            (ArmBoardBlock->BoardType == MACH_TYPE_VERSATILE_PB) ||
-           (ArmBoardBlock->BoardType == MACH_TYPE_OMAP3_BEAGLE));
+           (ArmBoardBlock->BoardType == MACH_TYPE_OMAP3_BEAGLE) ||
+           (ArmBoardBlock->BoardType == MACH_TYPE_OMAP_ZOOM2));
 
     /* Call FreeLDR's portable entrypoint with our command-line */
     BootMain(ArmBoardBlock->CommandLine);
@@ -156,6 +157,16 @@ ArmMemGetMemoryMap(OUT PBIOS_MEMORY_MAP BiosMemoryMap,
 VOID
 MachInit(IN PCCH CommandLine)
 {
+    /* Copy Machine Routines from Firmware Table */
+    MachVtbl.ConsPutChar = ArmBoardBlock->ConsPutChar;
+    MachVtbl.ConsKbHit = ArmBoardBlock->ConsKbHit;
+    MachVtbl.ConsGetCh = ArmBoardBlock->ConsGetCh;
+    MachVtbl.VideoClearScreen = ArmBoardBlock->VideoClearScreen;
+    MachVtbl.VideoSetDisplayMode = ArmBoardBlock->VideoSetDisplayMode;
+    MachVtbl.VideoGetDisplaySize = ArmBoardBlock->VideoGetDisplaySize;
+    MachVtbl.VideoPutChar = ArmBoardBlock->VideoPutChar;
+    MachVtbl.GetTime = ArmBoardBlock->GetTime;
+    
     /* Setup board-specific ARM routines */
     switch (ArmBoardBlock->BoardType)
     {
@@ -164,29 +175,24 @@ MachInit(IN PCCH CommandLine)
             TuiPrintf("Not implemented\n");
             while (TRUE);
             break;
+
+        /* Check for TI OMAP3 ZOOM-II MDK */
+        case MACH_TYPE_OMAP_ZOOM2:
+            
+            /* Setup the disk and file system buffers */
+            gDiskReadBuffer = 0x81094000;
+            gFileSysBuffer = 0x81094000;
+            break;
             
         /* Check for ARM Versatile PB boards */
         case MACH_TYPE_VERSATILE_PB:
             
-            /* Copy Machine Routines from Firmware Table */
-            MachVtbl.ConsPutChar = ArmBoardBlock->ConsPutChar;
-            MachVtbl.ConsKbHit = ArmBoardBlock->ConsKbHit;
-            MachVtbl.ConsGetCh = ArmBoardBlock->ConsGetCh;
-            MachVtbl.VideoClearScreen = ArmBoardBlock->VideoClearScreen;
-            MachVtbl.VideoSetDisplayMode = ArmBoardBlock->VideoSetDisplayMode;
-            MachVtbl.VideoGetDisplaySize = ArmBoardBlock->VideoGetDisplaySize;
-            MachVtbl.VideoPutChar = ArmBoardBlock->VideoPutChar;
-            MachVtbl.GetTime = ArmBoardBlock->GetTime;
-                        
             /* Setup the disk and file system buffers */
             gDiskReadBuffer = 0x00090000;
             gFileSysBuffer = 0x00090000;
             break;
             
-        /* 
-         * Check for TI OMAP3 boards
-         * For now that means only Beagle, but ZOOM and others should be ok too
-         */
+        /* Check for TI OMAP3 Beagleboard */
         case MACH_TYPE_OMAP3_BEAGLE:
             TuiPrintf("Not implemented\n");
             while (TRUE);
@@ -195,7 +201,7 @@ MachInit(IN PCCH CommandLine)
         default:
             ASSERT(FALSE);
     }
-        
+    
     /* Setup generic ARM routines for all boards */
     MachVtbl.PrepareForReactOS = ArmPrepareForReactOS;
     MachVtbl.GetMemoryMap = ArmMemGetMemoryMap;
