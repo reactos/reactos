@@ -17,6 +17,10 @@ typedef struct
     LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
 }IO_PACKET, *LPIO_PACKET;
 
+BOOL MMixerLibraryInitialized = FALSE;
+
+
+
 PVOID Alloc(ULONG NumBytes);
 MIXER_STATUS Close(HANDLE hDevice);
 VOID Free(PVOID Block);
@@ -331,6 +335,13 @@ WdmAudInitUserModeMixer()
     HDEVINFO DeviceHandle;
     MIXER_STATUS Status;
 
+    if (MMixerLibraryInitialized)
+    {
+        /* library is already initialized */
+        return TRUE;
+    }
+
+
     /* create a device list */
     DeviceHandle = SetupDiGetClassDevs(&CategoryGuid,
                                        NULL,
@@ -356,6 +367,9 @@ WdmAudInitUserModeMixer()
         DPRINT1("Failed to initialize mixer library with %x\n", Status);
         return FALSE;
     }
+
+    /* library is now initialized */
+    MMixerLibraryInitialized = TRUE;
 
     /* completed successfully */
     return TRUE;
