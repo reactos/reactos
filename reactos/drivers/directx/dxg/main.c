@@ -12,6 +12,8 @@
 #include <dxg_int.h>
 #include "dxg_driver.h"
 
+#define DXG_DRIVER_VERSION 0x80000 
+
 LONG gcDummyPageRefCnt = 0;
 HSEMAPHORE ghsemDummyPage = NULL;
 VOID *gpDummyPage = NULL;
@@ -28,7 +30,7 @@ NTSTATUS NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -59,7 +61,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     /*
      * Setup internal driver functions list we got from dxg driver functions list
      */
-    pDxgDrv->iDriverVersion = 0x80000; /* Note 12/1-2004 : DirectX 8 ? */
+	pDxgDrv->iDriverVersion = DXG_DRIVER_VERSION;
     pDxgDrv->c = gcDxgFuncs;
     pDxgDrv->pdrvfn = gaDxgFuncs;
 
@@ -133,6 +135,6 @@ DxDdCleanupDxGraphics(VOID)
         ghsemDummyPage = 0;
     }
 
-    return 0;
+    return STATUS_SUCCESS;
 }
 

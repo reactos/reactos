@@ -7,6 +7,7 @@
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
  *       15/10-2007   Magnus Olsen
+ *       20/11-2010   Magnus Olsen All function match windows7
  */
 
 #include <dxg_int.h>
@@ -39,7 +40,7 @@
 * Always returns DDHAL_DRIVER_NOTHANDLED
 *
 * @remarks.
-* This function is no longer used in Windows NT 2000/XP/2003
+* This function is no longer used in Windows NT 2000/XP/2003/2008/7
 *
 *--*/
 DWORD
@@ -74,7 +75,7 @@ DxDxgGenericThunk(ULONG_PTR ulIndex,
 * Always returns DDERR_UNSUPPORTED
 *
 * @remarks.
-* This function is no longer used in Windows NT 2000/XP/2003
+* This function is no longer used in Windows NT 2000/XP/2003/2008/7
 *
 *--*/
 DWORD

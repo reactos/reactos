@@ -10,6 +10,10 @@
 
 #include <dxg_int.h>
 
+#define GET_DHMG_INDEX(xxhandle) ((DWORD)(DWORD_PTR)xxhandle & 0x1FFFFF)
+#define GET_DHMG_ENTRY(index) (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * index))
+
+
 /* The DdHmgr manger stuff */
 ULONG gcSizeDdHmgr =  64 * sizeof(DD_ENTRY);
 PDD_ENTRY gpentDdHmgr = NULL;
@@ -19,15 +23,6 @@ PDD_ENTRY gpentDdHmgrLast = NULL;
 
 HANDLE ghFreeDdHmgr = 0;
 HSEMAPHORE ghsemHmgr = NULL;
-
-BOOL
-FASTCALL
-VerifyObjectOwner(PDD_ENTRY pEntry)
-{
-    DWORD Pid = (DWORD)(DWORD_PTR)PsGetCurrentProcessId() & 0xFFFFFFFC;
-    DWORD check = pEntry->ObjectOwner.ulObj & 0xFFFFFFFE;
-    return ( (check == Pid) || (!check));
-}
 
 /*++
 * @name DdHmgCreate
@@ -61,6 +56,7 @@ DdHmgCreate(VOID)
             if (gpLockShortDelay)
             {
                 gpLockShortDelay->HighPart = -1;
+                gpLockShortDelay->LowPart = -100000;
                 return TRUE;
             }
 
@@ -144,32 +140,26 @@ PVOID
 FASTCALL
 DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 {
-
-    DWORD Index = (DWORD)(DWORD_PTR)DdHandle & 0x1FFFFF;
+    DWORD Index = GET_DHMG_INDEX(DdHandle);
     PDD_ENTRY pEntry = NULL;
-    PVOID Object = NULL;
+    PDD_ENTRY Object = NULL;
 
-    if ( !LockOwned )
+    if ( LockOwned )
     {
         EngAcquireSemaphore(ghsemHmgr);
     }
 
     if ( Index < gcMaxDdHmgr )
     {
-        pEntry = (PDD_ENTRY)((PBYTE)gpentDdHmgr + (sizeof(DD_ENTRY) * Index));
-        if ( VerifyObjectOwner(pEntry) )
+        pEntry = GET_DHMG_ENTRY(Index);
+
+        if ( (pEntry->Objt == ObjectType ) &&
+             (pEntry->FullUnique == (((DWORD)DdHandle >> 21) & 0x7FF) ) &&
+             (pEntry->pobj->cExclusiveLock == 0) &&
+             (pEntry->pobj->Tid == PsGetCurrentThread()) )
         {
-            /* FIXME
-            if ( (pEntry->Objt == ObjectType ) &&
-                 (pEntry->FullUnique == (((DWORD)DdHandle >> 21) & 0x7FF) ) &&
-                 (pEntry->pobj->cExclusiveLock == 0) &&
-                 (pEntry->pobj->Tid == PsGetCurrentThread()))
-               {
-                    InterlockedIncrement(&pEntry->pobj->cExclusiveLock);
-                    pEntry->pobj->Tid = PsGetCurrentThread();
-                    Object = pEntry->pobj;
-               }
-           */
+            // FIXME InterlockedIncrement(&pEntry->pobj->cExclusiveLock);
+            Object = pEntry;
         }
     }
 
@@ -180,3 +170,4 @@ DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned)
 
     return Object;
 }
+
