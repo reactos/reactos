@@ -5,7 +5,7 @@
 #include "wine/config.h"
 #include "wine/exception.h"
 
-#include <debug.h>
+#include <reactos/debug.h>
 
 #define __wine_spec_unimplemented_stub(module, function) \
 { \
