@@ -60,15 +60,19 @@ list(APPEND SOURCE
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D_SHELL32_)
-add_definitions(-DCOM_NO_WINDOWS_H)
-add_definitions(-D_WINE)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-include_directories(${REACTOS_SOURCE_DIR}/lib/recyclebin)
-include_directories(${REACTOS_SOURCE_DIR})
+add_definitions(
+    -D_SHELL32_
+    -DCOM_NO_WINDOWS_H
+    -D_WINE)
+
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/lib/recyclebin
+    ${REACTOS_SOURCE_DIR})
 
 add_pch(shell32 ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
+
 add_library(shell32 SHARED ${CMAKE_CURRENT_BINARY_DIR}/shell32_precomp.h.gch ${SOURCE})
 
 set_module_type(shell32 win32dll)
@@ -94,7 +98,5 @@ add_importlibs(shell32
     msvcrt
     ntdll)
 
-
 add_cab_target(shell32 1)
 add_importlib_target(shell32.spec)
-

@@ -66,20 +66,9 @@ target_link_libraries(explorer
     wine
     mingw_wmain
     mingw_common
-    uuid
-    -ladvapi32
-    -lgdi32
-    -luser32
-    -lws2_32
-    -lmsimg32
-    -lcomctl32
-    -lole32
-    -loleaut32
-    -lshell32
-    -lnotifyhook
-    -lmsvcrt
-    -lkernel32
-    -lntdll)
+    uuid)
+
+add_importlibs(explorer advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 notifyhook msvcrt kernel32 ntdll)
 
 set_image_base(explorer 0x00400000)
 

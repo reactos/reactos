@@ -1,13 +1,18 @@
 
 add_definitions(-D_NOTIFYHOOK_IMPL)
 
-add_library(notifyhook SHARED
+spec2def(notifyhook.dll notifyhook.spec)
+
+list(APPEND SOURCE
     notifyhook.c
     notifyhook.rc
-    notifyhook.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/notifyhook.def)
+
+add_library(notifyhook SHARED ${SOURCE})
 
 set_module_type(notifyhook win32dll)
 
 add_importlibs(notifyhook user32 msvcrt kernel32)
+add_importlib_target(notifyhook.spec)
 
 add_cab_target(notifyhook 1)
