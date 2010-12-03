@@ -435,4 +435,4 @@ add_dependencies(ntoskrnl psdk bugcodes kernel_zw kernel_napi asm)
 
 add_minicd_target(ntoskrnl reactos ntoskrnl.exe)
 add_livecd_target(ntoskrnl reactos/system32)
-add_importlib_target(ntoskrnl.spec)
+add_importlib_target(ntoskrnl.spec ntoskrnl.exe)
