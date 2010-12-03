@@ -1,9 +1,12 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(gdiplus.dll gdiplus.spec)
 
 list(APPEND SOURCE
@@ -26,9 +29,7 @@ add_library(gdiplus SHARED ${SOURCE})
 
 set_module_type(gdiplus win32dll)
 
-target_link_libraries(gdiplus
-    uuid
-    wine)
+target_link_libraries(gdiplus uuid wine)
 
 add_importlibs(gdiplus
     msvcrt
@@ -41,9 +42,10 @@ add_importlibs(gdiplus
     kernel32
     ntdll)
 
+add_importlib_target(gdiplus.spec)
+    
 if(ARCH MATCHES amd64)
 target_link_libraries(gdiplus crt)
 endif(ARCH MATCHES amd64)
-
 
 add_cab_target(gdiplus 1)

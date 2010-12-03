@@ -54,4 +54,6 @@ target_link_libraries(dbghelp
 
 add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)
 
+add_importlib_target(dbghelp.spec)
+
 add_cab_target(dbghelp 1)

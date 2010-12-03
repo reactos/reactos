@@ -1,10 +1,12 @@
+
 spec2def(ksproxy.ax ksproxy.spec)
 
 add_definitions(-D_DLL -D__USE_CRTIMP)
-  include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
-  add_definitions(
+add_definitions(
     -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
     -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
+
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/include/c++/stlport)
 
 add_library(ksproxy SHARED
     allocator.cpp
@@ -36,14 +38,11 @@ else()
     #set_target_properties(ksproxy PROPERTIES COMPILE_FLAGS "-fno-exceptions -fno-rtti")
 endif(MSVC)
 
-
 target_link_libraries(ksproxy 
-    stlport -lsupc++ -lgcc
+    stlport -lsupc++ -lgcc -lmingw32 -lcoldname
     strmiids)
     
 add_importlibs(ksproxy
-    mingw32
-    coldname
     advapi32
     ole32
     setupapi

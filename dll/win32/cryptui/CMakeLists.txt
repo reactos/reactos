@@ -1,9 +1,12 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_WINE)
+add_definitions(
+    -D__WINESRC__
+    -D_WINE)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(cryptui.dll cryptui.spec)
 
 list(APPEND SOURCE
@@ -33,5 +36,6 @@ add_importlibs(cryptui
     kernel32
     ntdll)
 
+add_importlib_target(cryptui.spec)
 
 add_cab_target(cryptui 1)

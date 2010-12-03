@@ -45,10 +45,6 @@ list(APPEND SOURCE
     advapi32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32.def)
     
-if(NOT MSVC)
-    set_source_files_properties(advapi32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
-
 add_library(advapi32 SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/advapi32_advapi32.h.gch
     ${SOURCE})
@@ -66,5 +62,4 @@ add_importlibs(advapi32 rpcrt4 kernel32 ntdll msvcrt)
 
 add_pch(advapi32 ${CMAKE_CURRENT_SOURCE_DIR}/advapi32.h ${SOURCE})
 add_cab_target(advapi32 1)
-add_importlib_target(advapi32.spec libntdll)
-
+add_importlib_target(advapi32.spec)

@@ -19,5 +19,6 @@ set_module_type(usp10 win32dll)
 target_link_libraries(usp10 wine)
 
 add_importlibs(usp10 gdi32 msvcrt kernel32 ntdll)
+add_importlib_target(usp10.spec)
 
 add_cab_target(usp10 1)

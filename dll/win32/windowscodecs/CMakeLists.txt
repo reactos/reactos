@@ -41,8 +41,9 @@ add_library(windowscodecs SHARED ${SOURCE})
 
 set_module_type(windowscodecs win32dll)
 
-target_link_libraries(windowscodecs wine)
+target_link_libraries(windowscodecs wine uuid)
 
-add_importlibs(windowscodecs uuid ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
+add_importlibs(windowscodecs ole32 shlwapi advapi32 msvcrt kernel32 ntdll)
+add_importlib_target(windowscodecs.spec)
 
 add_cab_target(windowscodecs 1)

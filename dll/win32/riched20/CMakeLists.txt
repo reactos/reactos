@@ -5,6 +5,8 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+spec2def(riched20.dll riched20.spec)
+
 add_library(riched20 SHARED
     caret.c
     clipboard.c
@@ -26,17 +28,11 @@ add_library(riched20 SHARED
     wrap.c
     writer.c
     version.rc
-    riched20.def)
-
-if(NOT MSVC)
-    set_source_files_properties(riched20.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+    ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
 set_module_type(riched20 win32dll)
 
-target_link_libraries(riched20
-    wine
-    uuid)
+target_link_libraries(riched20 wine uuid)
 
 if(MSVC)
     set_target_properties(riched20 PROPERTIES COMPILE_FLAGS "/FIwine/typeof.h")
@@ -51,5 +47,7 @@ add_importlibs(riched20
     gdi32
     kernel32
     ntdll)
+
+add_importlib_target(riched20.spec)
 
 add_cab_target(riched20 1)

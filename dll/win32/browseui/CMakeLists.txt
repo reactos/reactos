@@ -1,3 +1,4 @@
+
 set_unicode()
 set_cpp()
 
@@ -13,6 +14,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/atl)
 
 set_rc_compiler()
+
 spec2def(browseui.dll browseui.spec)
 
 list(APPEND SOURCE
@@ -45,11 +47,11 @@ set_module_type(browseui win32dll)
 target_link_libraries(browseui
     atlnew
     uuid
-    wine)
+    wine
+    -lmingw32
+    -lcoldname)
 
 add_importlibs(browseui
-    mingw32
-    coldname
     shlwapi
     shell32
     comctl32

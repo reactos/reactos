@@ -10,7 +10,7 @@ include_directories(
 
 spec2def(iphlpapi.dll iphlpapi.spec)
 
-add_library(iphlpapi SHARED 
+list(APPEND SOURCE
     dhcp_reactos.c
     ifenum_reactos.c
     ipstats_reactos.c
@@ -22,11 +22,11 @@ add_library(iphlpapi SHARED
     iphlpapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/iphlpapi.def)
 
+add_library(iphlpapi SHARED ${SOURCE})
+
 set_module_type(iphlpapi win32dll)
 
-target_link_libraries(iphlpapi
-    wine
-    tdilib)
+target_link_libraries(iphlpapi wine tdilib)
 
 add_importlibs(iphlpapi dhcpcsvc advapi32 ws2_32 msvcrt kernel32 ntdll)
 

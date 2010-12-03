@@ -28,9 +28,9 @@ add_library(dhcpcsvc SHARED
 
 set_module_type(dhcpcsvc win32dll)
 
-
-
 add_importlibs(dhcpcsvc ws2_32 iphlpapi advapi32 msvcrt kernel32 ntdll)
+add_importlib_target(dhcpcsvc.spec)
+
 add_pch(dhcpcsvc ${CMAKE_CURRENT_SOURCE_DIR}/include/rosdhcp.h ${SOURCE})
 
 add_cab_target(dhcpcsvc 1)
