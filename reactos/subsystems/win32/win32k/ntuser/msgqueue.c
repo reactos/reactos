@@ -418,7 +418,7 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-   PUSER_SENT_MESSAGE Message;
+   PUSER_SENT_MESSAGE SaveMsg, Message;
    PLIST_ENTRY Entry;
    LRESULT Result;
    PTHREADINFO pti;
@@ -433,9 +433,14 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
 
    pti = MessageQueue->Thread->Tcb.Win32Thread;
+
+   SaveMsg = pti->pusmCurrent;
+   pti->pusmCurrent = Message;
+
    // Processing a message sent to it from another thread.
-   if ( MessageQueue != Message->SenderQueue ) // most likely, but, to be sure.
-   {
+   if ( ( Message->SenderQueue && MessageQueue != Message->SenderQueue) ||
+        ( Message->CallBackSenderQueue && MessageQueue != Message->CallBackSenderQueue ))
+   {  // most likely, but, to be sure.
       pti->pcti->CTI_flags |= CTI_INSENDMESSAGE; // Let the user know...
    }
 
@@ -528,6 +533,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    ExFreePoolWithTag(Message, TAG_USRMSG);
 
    pti->pcti->CTI_flags &= ~CTI_INSENDMESSAGE;
+   pti->pusmCurrent = SaveMsg;
 
    return(TRUE);
 }
@@ -659,6 +665,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    Message->lResult = 0;
    Message->QS_Flags = 0;
    Message->SenderQueue = ThreadQueue;
+   Message->CallBackSenderQueue = NULL;
    IntReferenceMessageQueue(ThreadQueue);
    Message->CompletionCallback = NULL;
    Message->CompletionCallbackContext = 0;
@@ -1606,34 +1613,26 @@ MsqGetMessageExtraInfo(VOID)
    return MessageQueue->ExtraInfo;
 }
 
+// ReplyMessage is called by the thread receiving the window message.
 BOOL FASTCALL
 co_MsqReplyMessage( LRESULT lResult )
 {
    PUSER_SENT_MESSAGE Message;
-   PLIST_ENTRY Entry;
    PTHREADINFO pti;
-   PUSER_MESSAGE_QUEUE MessageQueue;
 
    pti = PsGetCurrentThreadWin32Thread();
-   MessageQueue = pti->MessageQueue;
+   Message = pti->pusmCurrent;
 
-   if(!MessageQueue) return FALSE;
-
-   if (IsListEmpty(&MessageQueue->SentMessagesListHead))
-   {
-      return(FALSE);
-   }
-   // Do we loop through all msgs or just set the first one?
-   Entry = MessageQueue->SentMessagesListHead.Flink; 
-   Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
+   if(!Message) return FALSE;
 
    if (Message->QS_Flags & QS_SMRESULT) return FALSE;
 
+   //     SendMessageXxx    || Callback msg and not a notify msg
    if (Message->SenderQueue || Message->CompletionCallback)
    {
       Message->lResult = lResult;
       Message->QS_Flags |= QS_SMRESULT;
-      MsqWakeQueue(MessageQueue, 0, TRUE); // Wake it up!? Bits?
+   // See co_MsqDispatchOneSentMessage, change bits already accounted for and cleared and this msg is going away..
    }
    return TRUE;
 }

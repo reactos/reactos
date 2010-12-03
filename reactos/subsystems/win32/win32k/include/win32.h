@@ -75,6 +75,7 @@ typedef struct _THREADINFO
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
     PUNICODE_STRING     pstrAppName;
+    struct _USER_SENT_MESSAGE *pusmCurrent;
     LONG                timeLast;
     ULONG_PTR           idLast;
     INT                 exitCode;

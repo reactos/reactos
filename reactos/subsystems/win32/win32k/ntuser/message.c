@@ -1383,7 +1383,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
     Message->Result = 0;
     Message->lResult = 0;
     Message->QS_Flags = 0;
-    Message->SenderQueue = NULL; // mjmartin, you are right! This is null. Win32Thread->MessageQueue;
+    Message->SenderQueue = NULL; // mjmartin, you are right! This is null.
+    Message->CallBackSenderQueue = Win32Thread->MessageQueue;
 
     IntReferenceMessageQueue(Window->head.pti->MessageQueue);
     Message->CompletionCallback = CompletionCallback;

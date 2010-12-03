@@ -38,6 +38,7 @@ typedef struct _USER_SENT_MESSAGE
   LRESULT* Result;
   LRESULT lResult;
   struct _USER_MESSAGE_QUEUE* SenderQueue;
+  struct _USER_MESSAGE_QUEUE* CallBackSenderQueue;
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
   /* entry in the dispatching list of the sender's message queue */

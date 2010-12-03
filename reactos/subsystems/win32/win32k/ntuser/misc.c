@@ -102,18 +102,13 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_INSENDMESSAGE:
          {
-           PUSER_SENT_MESSAGE Message;
-           PLIST_ENTRY Entry;
-           PUSER_MESSAGE_QUEUE MessageQueue = 
-                ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue;
+           PUSER_SENT_MESSAGE Message = 
+                ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->pusmCurrent;
            DPRINT1("THREADSTATE_INSENDMESSAGE\n");
 
            ret = ISMEX_NOSEND;
-           if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
+           if (Message)
            {
-             Entry = MessageQueue->SentMessagesListHead.Flink; 
-             Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
-
              if (Message->SenderQueue)
                 ret = ISMEX_SEND;
              else
