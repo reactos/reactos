@@ -10,6 +10,7 @@ list(APPEND SOURCE
     prop.c
     sendmail.c
     util.c
+    stubs.c
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/mapi32.def)
 
