@@ -247,7 +247,7 @@ Main_DirectDraw_Release (LPDDRAWI_DIRECTDRAW_INT This)
 HRESULT WINAPI
 Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
 {
-	return DDERR_ALREADYINITIALIZED;
+    return DDERR_ALREADYINITIALIZED;
 }
 
 
@@ -518,7 +518,7 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
                                LPDDRAWI_DDRAWSURFACE_INT *ppSurf, IUnknown *pUnkOuter)
 {
     HRESULT ret = DD_OK;
-    DX_WINDBG_trace();
+    DX_WINDBG_trace()
 
     EnterCriticalSection(&ddcs);
     *ppSurf = NULL;
@@ -546,7 +546,7 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
 HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                   LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
 {
-	HRESULT ret = DD_OK;
+    HRESULT ret = DD_OK;
     DX_WINDBG_trace();
 
     EnterCriticalSection(&ddcs);
