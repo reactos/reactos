@@ -95,6 +95,20 @@ NpfsConnectPipe(PIRP Irp,
 
     DPRINT("NpfsConnectPipe()\n");
 
+    /* Fail, if the CCB is not a pipe CCB */
+    if (Ccb->Type != CCB_PIPE)
+    {
+        DPRINT1("Not a pipe\n");
+        return STATUS_ILLEGAL_FUNCTION;
+    }
+
+    /* Fail, if the CCB is not a server end CCB */
+    if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
+    {
+        DPRINT1("Not the server end\n");
+        return STATUS_ILLEGAL_FUNCTION;
+    }
+
     if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
     {
         KeResetEvent(&Ccb->ConnectEvent);
@@ -191,6 +205,20 @@ NpfsDisconnectPipe(PNPFS_CCB Ccb)
     BOOLEAN Server;
 
     DPRINT("NpfsDisconnectPipe()\n");
+
+    /* Fail, if the CCB is not a pipe CCB */
+    if (Ccb->Type != CCB_PIPE)
+    {
+        DPRINT1("Not a pipe\n");
+        return STATUS_ILLEGAL_FUNCTION;
+    }
+
+    /* Fail, if the CCB is not a server end CCB */
+    if (Ccb->PipeEnd != FILE_PIPE_SERVER_END)
+    {
+        DPRINT1("Not the server end\n");
+        return STATUS_ILLEGAL_FUNCTION;
+    }
 
     Fcb = Ccb->Fcb;
     KeLockMutex(&Fcb->CcbListLock);
