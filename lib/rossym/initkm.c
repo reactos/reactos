@@ -14,7 +14,7 @@
 #include <reactos/rossym.h>
 #include "rossympriv.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define TAG_ROSSYM 'MYSR'

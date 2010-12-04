@@ -14,7 +14,7 @@
 #include "rossympriv.h"
 #include <ntimage.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "dwarf.h"
