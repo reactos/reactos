@@ -49,7 +49,8 @@ target_link_libraries(ntdll
                       ntdllsys
                       libcntpr
                       ${PSEH_LIB})
-                      
+
+set_image_base(ntdll ${baseaddress_ntdll})
 add_pch(ntdll ${CMAKE_CURRENT_SOURCE_DIR}/include/ntdll.h ${SOURCE})
 add_dependencies(ntdll ntstatus asm)
 
