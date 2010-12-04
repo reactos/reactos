@@ -745,16 +745,15 @@ MMixerGetUpOrDownstreamNodes(
         /* node should not have been visited */
         ASSERT(Node->Visited == FALSE);
 
+        /* mark node as visited */
+        TopologyNode->Visited = TRUE;
+
         /* add them to node array */
         MMixerAddPinIndexToArray(MixerContext, Node->NodeIndex, Topology->TopologyNodesCount, OutNodeCount, OutNodes);
 
         /* recursively visit them */
         MMixerGetUpOrDownstreamNodes(MixerContext, Topology, TopologyNodes[Index], bUpStream, OutNodeCount, OutNodes);
     }
-
-    /* mark node as visited */
-    TopologyNode->Visited = TRUE;
-
 }
 
 MIXER_STATUS

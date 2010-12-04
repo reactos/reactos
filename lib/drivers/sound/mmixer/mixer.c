@@ -123,6 +123,7 @@ MMixerGetLineInfo(
     MIXER_STATUS Status;
     LPMIXER_INFO MixerInfo;
     LPMIXERLINE_EXT MixerLineSrc;
+    ULONG DestinationLineID;
 
     /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
@@ -144,24 +145,43 @@ MMixerGetLineInfo(
         }
     }
 
+    if (MixerLine->cbStruct != sizeof(MIXERLINEW))
+	{
+		DPRINT1("MixerLine Expected %lu but got %lu\n", sizeof(MIXERLINEW), MixerLine->cbStruct);
+		return MM_STATUS_INVALID_PARAMETER;
+	}
+
+
     /* clear hmixer from flags */
     Flags &=~MIXER_OBJECTF_HMIXER;
+
+    DPRINT1("MMixerGetLineInfo MixerId %lu Flags %lu\n", MixerId, Flags);
 
     if (Flags == MIXER_GETLINEINFOF_DESTINATION)
     {
         /* cast to mixer info */
         MixerInfo = (LPMIXER_INFO)MixerHandle;
 
-        if (MixerLine->dwDestination != 0)
-        {
-            /* destination line member must be zero */
-            return MM_STATUS_INVALID_PARAMETER;
-        }
+        /* calculate destination line id */
+        DestinationLineID = (MixerLine->dwDestination + DESTINATION_LINE);
 
-        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
-        ASSERT(MixerLineSrc);
+        /* get destination line */
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
+
+        if (MixerLineSrc == NULL)
+        {
+            DPRINT1("MixerCaps Name %S DestinationLineCount %lu dwDestination %lu not found\n", MixerInfo->MixCaps.szPname, MixerInfo->MixCaps.cDestinations, MixerLine->dwDestination);
+            return MM_STATUS_UNSUCCESSFUL;
+        }
+        /* copy mixer line */
         MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
 
+        /* make sure it is null terminated */
+        MixerLine->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+        MixerLine->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+        MixerLine->Target.szPname[MAXPNAMELEN-1] = L'\0';
+
+        /* done */
         return MM_STATUS_SUCCESS;
     }
     else if (Flags == MIXER_GETLINEINFOF_SOURCE)
@@ -169,41 +189,71 @@ MMixerGetLineInfo(
         /* cast to mixer info */
         MixerInfo = (LPMIXER_INFO)MixerHandle;
 
+        /* calculate destination line id */
+        DestinationLineID = (MixerLine->dwDestination + DESTINATION_LINE);
 
-        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DESTINATION_LINE);
-        ASSERT(MixerLineSrc);
+        /* get destination line */
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
 
+        if (MixerLineSrc == NULL)
+        {
+            DPRINT1("MixerCaps Name %S DestinationLineCount %lu dwDestination %lu not found\n", MixerInfo->MixCaps.szPname, MixerInfo->MixCaps.cDestinations, MixerLine->dwDestination);
+            return MM_STATUS_UNSUCCESSFUL;
+        }
+
+        /* check if dwSource is out of bounds */
         if (MixerLine->dwSource >= MixerLineSrc->Line.cConnections)
         {
-            DPRINT("dwSource %u > Destinations %u\n", MixerLine->dwSource, MixerLineSrc->Line.cConnections);
-
-            /* invalid parameter */
-            return MM_STATUS_INVALID_PARAMETER;
+            DPRINT1("MixerCaps Name %S MixerLineName %S Connections %lu dwSource %lu not found\n", MixerInfo->MixCaps.szPname, MixerLineSrc->Line.szName, MixerLineSrc->Line.cConnections, MixerLine->dwSource);
+            return MM_STATUS_UNSUCCESSFUL;
         }
 
-        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLine->dwSource * 0x10000);
-        if (MixerLineSrc)
-        {
-            DPRINT("Line %u Name %S\n", MixerLineSrc->Line.dwSource, MixerLineSrc->Line.szName);
-            MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
-            return MM_STATUS_SUCCESS;
-        }
-        return MM_STATUS_UNSUCCESSFUL;
+        /* calculate destination line id */
+        DestinationLineID = (MixerLine->dwSource * DESTINATION_LINE) + MixerLine->dwDestination;
+
+        /* get target destination line id */
+        MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
+
+        /* sanity check */
+        ASSERT(MixerLineSrc);
+
+        DPRINT("Line %u Name %S\n", MixerLineSrc->Line.dwSource, MixerLineSrc->Line.szName);
+
+        /* copy mixer line */
+        MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+
+        /* make sure it is null terminated */
+        MixerLine->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+        MixerLine->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+        MixerLine->Target.szPname[MAXPNAMELEN-1] = L'\0';
+
+        /* done */
+        return MM_STATUS_SUCCESS;
     }
     else if (Flags == MIXER_GETLINEINFOF_LINEID)
     {
         /* cast to mixer info */
         MixerInfo = (LPMIXER_INFO)MixerHandle;
 
+        /* try to find line */
         MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLine->dwLineID);
         if (!MixerLineSrc)
         {
             /* invalid parameter */
+            DPRINT1("MixerName %S Line not found %lu\n", MixerInfo->MixCaps.szPname, MixerLine->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
 
-        /* copy cached data */
+        DPRINT("Line %u Name %S\n", MixerLineSrc->Line.dwSource, MixerLineSrc->Line.szName);
+
+        /* copy mixer line*/
         MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+
+        /* make sure it is null terminated */
+        MixerLine->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+        MixerLine->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+        MixerLine->Target.szPname[MAXPNAMELEN-1] = L'\0';
+
         return MM_STATUS_SUCCESS;
     }
     else if (Flags == MIXER_GETLINEINFOF_COMPONENTTYPE)
@@ -211,6 +261,7 @@ MMixerGetLineInfo(
         /* cast to mixer info */
         MixerInfo = (LPMIXER_INFO)MixerHandle;
 
+        /* find mixer line by component type */
         MixerLineSrc = MMixerGetSourceMixerLineByComponentType(MixerInfo, MixerLine->dwComponentType);
         if (!MixerLineSrc)
         {
@@ -218,11 +269,24 @@ MMixerGetLineInfo(
             return MM_STATUS_UNSUCCESSFUL;
         }
 
-        ASSERT(MixerLineSrc);
-
-        /* copy cached data */
+        /* copy mixer line */
         MixerContext->Copy(MixerLine, &MixerLineSrc->Line, sizeof(MIXERLINEW));
+
+        /* make sure it is null terminated */
+        MixerLine->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+        MixerLine->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+        MixerLine->Target.szPname[MAXPNAMELEN-1] = L'\0';
+
+        /* done */
         return MM_STATUS_SUCCESS;
+    }
+    else if (Flags == MIXER_GETLINEINFOF_TARGETTYPE)
+    {
+        DPRINT1("MIXER_GETLINEINFOF_TARGETTYPE handling is unimplemented\n");
+    }
+    else
+    {
+        DPRINT1("Unknown Flags %lx handling is unimplemented\n", Flags);
     }
 
     return MM_STATUS_NOT_IMPLEMENTED;
@@ -459,6 +523,66 @@ MMixerGetControlDetails(
     return Status;
 }
 
+VOID
+MMixerPrintMixers(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList)
+{
+    ULONG Index, SubIndex, DestinationLineID;
+    LPMIXER_INFO MixerInfo;
+    LPMIXERLINE_EXT DstMixerLine;
+
+    DPRINT1("MixerList %p\n", MixerList);
+    DPRINT1("MidiInCount %lu\n", MixerList->MidiInListCount);
+    DPRINT1("MidiOutCount %lu\n", MixerList->MidiOutListCount);
+    DPRINT1("WaveInCount %lu\n", MixerList->WaveInListCount);
+    DPRINT1("WaveOutCount %lu\n", MixerList->WaveOutListCount);
+    DPRINT1("MixerCount %p\n", MixerList->MixerListCount);
+
+
+    for(Index = 0; Index < MixerList->MixerListCount; Index++)
+    {
+        /* get mixer info */
+        MixerInfo = MMixerGetMixerInfoByIndex(MixerContext, Index);
+
+        ASSERT(MixerInfo);
+        DPRINT1("\n");
+        DPRINT1("Name :%S\n", MixerInfo->MixCaps.szPname);
+        DPRINT1("cDestinations: %lu\n", MixerInfo->MixCaps.cDestinations);
+        DPRINT1("fdwSupport %lu\n", MixerInfo->MixCaps.fdwSupport);
+        DPRINT1("vDriverVersion %lx\n", MixerInfo->MixCaps.vDriverVersion);
+        DPRINT1("wMid %lx\n", MixerInfo->MixCaps.wMid);
+        DPRINT1("wPid %lx\n", MixerInfo->MixCaps.wPid);
+
+        for(SubIndex = 0; SubIndex < MixerInfo->MixCaps.cDestinations; SubIndex++)
+        {
+            /* calculate destination line id */
+            DestinationLineID = (SubIndex + DESTINATION_LINE);
+
+            /* get destination line */
+            DstMixerLine = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
+            DPRINT1("\n");
+            DPRINT1("cChannels %lu\n", DstMixerLine->Line.cChannels);
+            DPRINT1("cConnections %lu\n", DstMixerLine->Line.cConnections);
+            DPRINT1("cControls %lu\n", DstMixerLine->Line.cControls);
+            DPRINT1("dwComponentType %lx\n", DstMixerLine->Line.dwComponentType);
+            DPRINT1("dwDestination %lu\n", DstMixerLine->Line.dwDestination);
+            DPRINT1("dwLineID %lx\n", DstMixerLine->Line.dwLineID);
+            DPRINT1("dwSource %lx\n", DstMixerLine->Line.dwSource);
+            DPRINT1("dwUser %lu\n", DstMixerLine->Line.dwUser);
+            DPRINT1("fdwLine %lu\n", DstMixerLine->Line.fdwLine);
+            DPRINT1("szName %S\n", DstMixerLine->Line.szName);
+            DPRINT1("szShortName %S\n", DstMixerLine->Line.szShortName);
+            DPRINT1("Target.dwDeviceId %lu\n", DstMixerLine->Line.Target.dwDeviceID);
+            DPRINT1("Target.dwType %lu\n", DstMixerLine->Line.Target.dwType);
+            DPRINT1("Target.szName %S\n", DstMixerLine->Line.Target.szPname);
+            DPRINT1("Target.vDriverVersion %lx\n", DstMixerLine->Line.Target.vDriverVersion);
+            DPRINT1("Target.wMid %lx\n", DstMixerLine->Line.Target.wMid );
+            DPRINT1("Target.wPid %lx\n", DstMixerLine->Line.Target.wPid);
+        }
+    }
+}
+
 MIXER_STATUS
 MMixerInitialize(
     IN PMIXER_CONTEXT MixerContext,
@@ -559,6 +683,8 @@ MMixerInitialize(
         MMixerSetupFilter(MixerContext, MixerList, MixerData, &Count);
         Entry = Entry->Flink;
     }
+
+    MMixerPrintMixers(MixerContext, MixerList);
 
     /* done */
     return MM_STATUS_SUCCESS;

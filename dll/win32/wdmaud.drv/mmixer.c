@@ -121,7 +121,7 @@ Free(PVOID Block)
 VOID
 Copy(PVOID Src, PVOID Dst, ULONG NumBytes)
 {
-    CopyMemory(Src, Dst, NumBytes);
+    RtlMoveMemory(Src, Dst, NumBytes);
 }
 
 MIXER_STATUS
