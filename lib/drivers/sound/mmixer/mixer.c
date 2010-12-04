@@ -209,8 +209,12 @@ MMixerGetLineInfo(
         }
 
         /* calculate destination line id */
-        DestinationLineID = (MixerLine->dwSource * DESTINATION_LINE) + MixerLine->dwDestination;
+        DestinationLineID = (MixerLine->dwSource * SOURCE_LINE) + MixerLine->dwDestination;
 
+        DPRINT("MixerName %S cDestinations %lu MixerLineName %S cConnections %lu dwSource %lu dwDestination %lu ID %lx\n", MixerInfo->MixCaps.szPname, MixerInfo->MixCaps.cDestinations,
+                                                                                                                            MixerLineSrc->Line.szName, MixerLineSrc->Line.cConnections,
+                                                                                                                            MixerLine->dwSource, MixerLine->dwDestination,
+                                                                                                                            DestinationLineID);
         /* get target destination line id */
         MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
 
@@ -240,7 +244,7 @@ MMixerGetLineInfo(
         if (!MixerLineSrc)
         {
             /* invalid parameter */
-            DPRINT1("MixerName %S Line not found %lu\n", MixerInfo->MixCaps.szPname, MixerLine->dwLineID);
+            DPRINT1("MMixerGetLineInfo: MixerName %S Line not found %lu\n", MixerInfo->MixCaps.szPname, MixerLine->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
 
@@ -329,6 +333,9 @@ MMixerGetLineControls(
 
     Flags &= ~MIXER_OBJECTF_HMIXER;
 
+    DPRINT("MMixerGetLineControls MixerId %lu Flags %lu\n", MixerId, Flags);
+
+
     if (Flags == MIXER_GETLINECONTROLSF_ALL)
     {
         /* cast to mixer info */
@@ -339,6 +346,7 @@ MMixerGetLineControls(
         if (!MixerLineSrc)
         {
             /* invalid line id */
+            DPRINT("MMixerGetLineControls Line not found %lx\n", MixerLineControls->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
         /* copy line control(s) */
@@ -351,20 +359,25 @@ MMixerGetLineControls(
         /* cast to mixer info */
         MixerInfo = (LPMIXER_INFO)MixerHandle;
 
+        /* get mixer line */
         MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLineControls->dwLineID);
 
         if (!MixerLineSrc)
         {
             /* invalid line id */
+            DPRINT1("MMixerGetLineControls Line not found %lx\n", MixerLineControls->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
 
-        ASSERT(MixerLineSrc);
+        /* sanity checks */
+        ASSERT(MixerLineControls->cControls == 1);
+        ASSERT(MixerLineControls->cbmxctrl == sizeof(MIXERCONTROLW));
+        ASSERT(MixerLineControls->pamxctrl != NULL);
 
         Index = 0;
         for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
         {
-            DPRINT("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
+            DPRINT1("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
             if (MixerLineControls->dwControlType == MixerLineSrc->LineControls[Index].dwControlType)
             {
                 /* found a control with that type */
@@ -385,15 +398,24 @@ MMixerGetLineControls(
         if (Status != MM_STATUS_SUCCESS)
         {
             /* invalid parameter */
+            DPRINT("MMixerGetLineControls ControlID not found %lx\n", MixerLineControls->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
 
+        ASSERT(MixerLineControls->cControls == 1);
+        ASSERT(MixerLineControls->cbmxctrl == sizeof(MIXERCONTROLW));
+        ASSERT(MixerLineControls->pamxctrl != NULL);
+
+       DPRINT("MMixerGetLineControls ControlID %lx ControlType %lx Name %S\n", MixerControl->dwControlID, MixerControl->dwControlType, MixerControl->szName);
+
         /* copy the controls */
         MixerContext->Copy(MixerLineControls->pamxctrl, MixerControl, sizeof(MIXERCONTROLW));
+        MixerLineControls->pamxctrl->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
+        MixerLineControls->pamxctrl->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
+
         return MM_STATUS_SUCCESS;
     }
-
-
+    UNIMPLEMENTED
     return MM_STATUS_NOT_IMPLEMENTED;
 }
 

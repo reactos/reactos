@@ -564,7 +564,7 @@ MMixerBuildMixerSourceLine(
     SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
     SrcLine->Line.dwDestination = 0;
     SrcLine->Line.dwSource = DstLine->Line.cConnections;
-    SrcLine->Line.dwLineID = (DstLine->Line.cConnections * 0x10000)+ (MixerInfo->MixCaps.cDestinations-1);
+    SrcLine->Line.dwLineID = (DstLine->Line.cConnections * SOURCE_LINE)+ (MixerInfo->MixCaps.cDestinations-1);
     SrcLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE | MIXERLINE_LINEF_SOURCE;
     SrcLine->Line.dwUser = 0;
     SrcLine->Line.cChannels = DstLine->Line.cChannels;
