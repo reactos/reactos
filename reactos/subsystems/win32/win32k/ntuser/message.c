@@ -19,14 +19,6 @@ BOOLEAN NTAPI PsGetProcessExitProcessCalled(PEPROCESS Process);
 
 #define PM_BADMSGFLAGS ~((QS_RAWINPUT << 16)|PM_QS_SENDMESSAGE|PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_QS_INPUT|PM_NOYIELD|PM_REMOVE)
 
-typedef struct
-{
-    UINT uFlags;
-    UINT uTimeout;
-    ULONG_PTR Result;
-}
-DOSENDMESSAGE, *PDOSENDMESSAGE;
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS FASTCALL
@@ -864,6 +856,8 @@ co_IntGetPeekMessage( PMSG pMsg,
        RemoveMsg |= ((GetWakeMask( MsgFilterMin, MsgFilterMax ))<< 16);
     }
 
+    pti = PsGetCurrentThreadWin32Thread();
+
     do
     {
         Present = co_IntPeekMessage( pMsg,
@@ -874,6 +868,9 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      bGMSG );
         if (Present)
         {
+           pti->timeLast = pMsg->time;
+           pti->ptLast   = pMsg->pt;
+
            // The WH_GETMESSAGE hook enables an application to monitor messages about to
            // be returned by the GetMessage or PeekMessage function.
 
@@ -911,7 +908,6 @@ co_IntGetPeekMessage( PMSG pMsg,
     }
     while( bGMSG && !Present );
 
-    pti = PsGetCurrentThreadWin32Thread();
     // Been spinning, time to swap vinyl...
     if (pti->pClientInfo->cSpins >= 100)
     {
@@ -962,7 +958,7 @@ UserPostThreadMessage( DWORD idThread,
         Message.pt = gpsi->ptCursor;
 
         KeQueryTickCount(&LargeTickCount);
-        pThread->timeLast = Message.time = MsqCalculateMessageTime(&LargeTickCount);
+        Message.time = MsqCalculateMessageTime(&LargeTickCount);
         MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
         ObDereferenceObject( peThread );
         return TRUE;
@@ -1052,7 +1048,7 @@ UserPostMessage( HWND Wnd,
             Message.lParam = lParam;
             Message.pt = gpsi->ptCursor;
             KeQueryTickCount(&LargeTickCount);
-            pti->timeLast = Message.time = MsqCalculateMessageTime(&LargeTickCount);
+            Message.time = MsqCalculateMessageTime(&LargeTickCount);
             MsqPostMessage(Window->head.pti->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
         }
     }
@@ -1451,29 +1447,21 @@ co_IntDoSendMessage( HWND hWnd,
                      UINT Msg,
                      WPARAM wParam,
                      LPARAM lParam,
-                     PDOSENDMESSAGE dsm,
-                     PNTUSERSENDMESSAGEINFO UnsafeInfo )
+                     PDOSENDMESSAGE dsm)
 {
     PTHREADINFO pti;
     LRESULT Result = TRUE;
     NTSTATUS Status;
     PWND Window = NULL;
-    NTUSERSENDMESSAGEINFO Info;
     MSG UserModeMsg;
     MSG KernelModeMsg;
     PMSGMEMORY MsgMemoryEntry;
 
-    RtlZeroMemory(&Info, sizeof(NTUSERSENDMESSAGEINFO));
-
-    /* FIXME: Call hooks. */
     if (HWND_BROADCAST != hWnd)
     {
         Window = UserGetWindowObject(hWnd);
         if ( !Window )
         {
-            /* Tell usermode to not touch this one */
-            Info.HandledByKernel = TRUE;
-            MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
             return 0;
         }
     }
@@ -1487,84 +1475,46 @@ co_IntDoSendMessage( HWND hWnd,
     /* See if the current thread can handle the message */
     pti = PsGetCurrentThreadWin32Thread();
 
-    // This is checked in user mode!!!!!!!
-    if ( HWND_BROADCAST != hWnd &&
-         NULL != pti &&
-         Window->head.pti->MessageQueue == pti->MessageQueue &&
-         !ISITHOOKED(WH_CALLWNDPROC) &&
-         !ISITHOOKED(WH_CALLWNDPROCRET) &&
-         ( Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST ) )
+    UserModeMsg.hwnd = hWnd;
+    UserModeMsg.message = Msg;
+    UserModeMsg.wParam = wParam;
+    UserModeMsg.lParam = lParam;
+    MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+
+    Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
+    if (! NT_SUCCESS(Status))
     {
-        /* Gather the information usermode needs to call the window proc directly */
-        Info.HandledByKernel = FALSE;
+       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       return (dsm ? 0 : -1);
+    }
 
-        Status = MmCopyFromCaller(&(Info.Ansi), &(UnsafeInfo->Ansi), sizeof(BOOL));
-        if (! NT_SUCCESS(Status))
-        {
-            Info.Ansi = ! Window->Unicode;
-        }
-
-        Info.Ansi = !Window->Unicode;
-        Info.Proc = Window->lpfnWndProc;
+    if (!dsm)
+    {
+       Result = co_IntSendMessage( KernelModeMsg.hwnd,
+                                   KernelModeMsg.message,
+                                   KernelModeMsg.wParam,
+                                   KernelModeMsg.lParam );
     }
     else
     {
-        /* Must be handled by other thread */
-        //      if (HWND_BROADCAST != hWnd)
-        //      {
-        //         UserDereferenceObject(Window);
-        //      }
-        Info.HandledByKernel = TRUE;
-        UserModeMsg.hwnd = hWnd;
-        UserModeMsg.message = Msg;
-        UserModeMsg.wParam = wParam;
-        UserModeMsg.lParam = lParam;
-        MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
-
-        Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
-        if (! NT_SUCCESS(Status))
-        {
-            MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            return (dsm ? 0 : -1);
-        }
-
-        if(!dsm)
-        {
-            Result = co_IntSendMessage( KernelModeMsg.hwnd,
-                                        KernelModeMsg.message,
-                                        KernelModeMsg.wParam,
-                                        KernelModeMsg.lParam );
-        }
-        else
-        {
-            Result = co_IntSendMessageTimeout( KernelModeMsg.hwnd,
-                                               KernelModeMsg.message,
-                                               KernelModeMsg.wParam,
-                                               KernelModeMsg.lParam,
-                                               dsm->uFlags,
-                                               dsm->uTimeout,
-                                               &dsm->Result );
-        }
-
-        Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
-        if (! NT_SUCCESS(Status))
-        {
-            MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            return(dsm ? 0 : -1);
-        }
+       Result = co_IntSendMessageTimeout( KernelModeMsg.hwnd,
+                                          KernelModeMsg.message,
+                                          KernelModeMsg.wParam,
+                                          KernelModeMsg.lParam,
+                                          dsm->uFlags,
+                                          dsm->uTimeout,
+                                         &dsm->Result );
     }
 
-    Status = MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
+    Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
     if (! NT_SUCCESS(Status))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       return(dsm ? 0 : -1);
     }
 
     return (LRESULT)Result;
 }
-
 
 BOOL FASTCALL
 UserSendNotifyMessage( HWND hWnd,
@@ -1708,68 +1658,6 @@ NtUserPostThreadMessage(DWORD idThread,
     
     return ret;
 }
-
-////////// API on the way out!
-LRESULT APIENTRY
-NtUserSendMessageTimeout( HWND hWnd,
-                          UINT Msg,
-                          WPARAM wParam,
-                          LPARAM lParam,
-                          UINT uFlags,
-                          UINT uTimeout,
-                          ULONG_PTR *uResult,
-                          PNTUSERSENDMESSAGEINFO UnsafeInfo )
-{
-    DOSENDMESSAGE dsm;
-    LRESULT Result;
-
-    DPRINT("Enter NtUserSendMessageTimeout\n");
-
-    dsm.uFlags = uFlags;
-    dsm.uTimeout = uTimeout;
-
-    UserEnterExclusive();
-
-    Result = co_IntDoSendMessage(hWnd, Msg, wParam, lParam, &dsm, UnsafeInfo);
-
-    UserLeave();
-
-    if(uResult != NULL && Result != 0)
-    {
-        _SEH2_TRY
-        {
-            ProbeForWrite(uResult, sizeof(ULONG_PTR), 1);
-            RtlCopyMemory(uResult, &dsm.Result, sizeof(ULONG_PTR));
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);;
-            Result = FALSE;
-        }
-        _SEH2_END;
-    }
-
-    return Result;
-}
-
-LRESULT APIENTRY
-NtUserSendMessage( HWND Wnd,
-                   UINT Msg,
-                   WPARAM wParam,
-                   LPARAM lParam,
-                   PNTUSERSENDMESSAGEINFO UnsafeInfo )
-{
-    BOOL ret;
-
-    UserEnterExclusive();
-
-    ret = co_IntDoSendMessage(Wnd, Msg, wParam, lParam, NULL, UnsafeInfo);
-
-    UserLeave();
-
-    return ret;
-}
-//////////
 
 BOOL APIENTRY
 NtUserWaitMessage(VOID)
@@ -2220,32 +2108,32 @@ NtUserMessageCall( HWND hWnd,
                     if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
                     {
                         co_IntSendMessageTimeout( HWND_BROADCAST,
-						                          Msg,
-						                          wParam,
-						                          lParam,
-						                          SMTO_ABORTIFHUNG,
-						                          2000,
-						                          &RetVal);
+                                                  Msg,
+                                                  wParam,
+                                                  lParam,
+                                                  SMTO_ABORTIFHUNG,
+                                                  2000,
+                                                 &RetVal);
                     }
                     else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
                     {
                         co_IntSendMessageTimeout( HWND_BROADCAST,
-						                          Msg,
+                                                  Msg,
                                                   wParam,
-						                          lParam,
-						                          SMTO_NOTIMEOUTIFNOTHUNG,
-						                          2000,
-						                          &RetVal);
+                                                  lParam,
+                                                  SMTO_NOTIMEOUTIFNOTHUNG,
+                                                  2000,
+                                                 &RetVal);
                     }
                     else
                     {
                         co_IntSendMessageTimeout( HWND_BROADCAST,
-						                          Msg,
-						                          wParam,
-						                          lParam,
-						                          SMTO_NORMAL,
-						                          2000,
-						                          &RetVal);
+                                                  Msg,
+			                          wParam,
+                                                  lParam,
+                                                  SMTO_NORMAL,
+                                                  2000,
+                                                 &RetVal);
                     }
                     Ret = RetVal;
                 }
@@ -2275,6 +2163,62 @@ NtUserMessageCall( HWND hWnd,
             }
         }
         break;
+    case FNID_SENDMESSAGE:
+        {
+            Ret = co_IntDoSendMessage(hWnd, Msg, wParam, lParam, 0);
+
+            if (ResultInfo)
+            {
+                _SEH2_TRY
+                {
+                    ProbeForWrite((PVOID)ResultInfo, sizeof(ULONG_PTR), 1);
+                    RtlCopyMemory((PVOID)ResultInfo, &Ret, sizeof(ULONG_PTR));
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Ret = FALSE;
+                    _SEH2_YIELD(break);
+                }
+                _SEH2_END;
+            }
+            break;
+        }
+    case FNID_SENDMESSAGETIMEOUT:
+        {
+            DOSENDMESSAGE dsm, *pdsm = (PDOSENDMESSAGE)ResultInfo;
+            if (ResultInfo)
+            {
+                _SEH2_TRY
+                {
+                    ProbeForRead(pdsm, sizeof(DOSENDMESSAGE), 1);
+                    RtlCopyMemory(&dsm, pdsm, sizeof(DOSENDMESSAGE));
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Ret = FALSE;
+                    _SEH2_YIELD(break);
+                }
+                _SEH2_END;
+            }
+            
+            Ret = co_IntDoSendMessage( hWnd, Msg, wParam, lParam, &dsm );
+
+            if (pdsm)
+            {
+                _SEH2_TRY
+                {
+                    ProbeForWrite(pdsm, sizeof(DOSENDMESSAGE), 1);
+                    RtlCopyMemory(pdsm, &dsm, sizeof(DOSENDMESSAGE));
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Ret = FALSE;
+                    _SEH2_YIELD(break);
+                }
+                _SEH2_END;
+            }
+            break;
+        }
         // CallNextHook bypass.
     case FNID_CALLWNDPROC:
     case FNID_CALLWNDPROCRET:

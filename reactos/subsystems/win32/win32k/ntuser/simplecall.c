@@ -113,6 +113,12 @@ NtUserCallNoParam(DWORD Routine)
       case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
          RETURN( (DWORD_PTR)IntMsqClearWakeMask());
 
+      case NOPARAM_ROUTINE_GETMSESSAGEPOS:
+      {
+         PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+         RETURN( (DWORD_PTR)MAKELONG(pti->ptLast.x, pti->ptLast.y));
+      }
+
       default:
          DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
          SetLastWin32Error(ERROR_INVALID_PARAMETER);

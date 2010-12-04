@@ -2255,6 +2255,15 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
+
+typedef struct tagDOSENDMESSAGE
+{
+  UINT uFlags;
+  UINT uTimeout;
+  ULONG_PTR Result;
+}
+DOSENDMESSAGE, *PDOSENDMESSAGE;
+
 BOOL
 NTAPI
 NtUserMessageCall(
@@ -3301,33 +3310,6 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
-
-
-typedef struct tagNTUSERSENDMESSAGEINFO
-{
-  BOOL HandledByKernel;
-  BOOL Ansi;
-  WNDPROC Proc;
-} NTUSERSENDMESSAGEINFO, *PNTUSERSENDMESSAGEINFO;
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessage(HWND hWnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-          PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-LRESULT NTAPI
-NtUserSendMessageTimeout(HWND hWnd,
-			 UINT Msg,
-			 WPARAM wParam,
-			 LPARAM lParam,
-			 UINT uFlags,
-			 UINT uTimeout,
-			 ULONG_PTR *uResult,
-             PNTUSERSENDMESSAGEINFO Info);
 
 typedef struct _SETSCROLLBARINFO
 {

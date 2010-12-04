@@ -267,14 +267,6 @@ MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
 }
 
 static BOOL FASTCALL
-MsgiUMToKMReply(PMSG UMMsg, PMSG KMMsg, LRESULT *Result)
-{
-  MsgiUMToKMCleanup(UMMsg, KMMsg);
-
-  return TRUE;
-}
-
-static BOOL FASTCALL
 MsgiKMToUMMessage(PMSG KMMsg, PMSG UMMsg)
 {
   *UMMsg = *KMMsg;
@@ -1074,6 +1066,7 @@ GetMessagePos(VOID)
 {
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
   return(MAKELONG(ThreadData->LastMessage.pt.x, ThreadData->LastMessage.pt.y));
+  //return NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
 }
 
 
@@ -2103,7 +2096,6 @@ SendMessageW(HWND Wnd,
 	     LPARAM lParam)
 {
   MSG UMMsg, KMMsg;
-  NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
@@ -2137,32 +2129,21 @@ SendMessageW(HWND Wnd,
   UMMsg.message = Msg;
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
+
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, FALSE))
   {
      return FALSE;
   }
-  Info.Ansi = FALSE;
-  Result = NtUserSendMessage( KMMsg.hwnd,
-                              KMMsg.message,
+
+  Result = NtUserMessageCall( KMMsg.hwnd,
+                              KMMsg.message, 
                               KMMsg.wParam,
                               KMMsg.lParam,
-                              &Info);
-  if (! Info.HandledByKernel)
-  {
-     MsgiUMToKMCleanup(&UMMsg, &KMMsg);
-     /* We need to send the message ourselves */
-     Result = IntCallWindowProcW( Info.Ansi,
-                                  Info.Proc,
-                                  Window,
-                                  UMMsg.hwnd,
-                                  UMMsg.message,
-                                  UMMsg.wParam,
-                                  UMMsg.lParam);
-  }
-  else if (! MsgiUMToKMReply(&UMMsg, &KMMsg, &Result))
-  {
-     return FALSE;
-  }
+                             (ULONG_PTR)&Result,
+                              FNID_SENDMESSAGE,
+                              FALSE);
+  
+  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
 }
@@ -2174,10 +2155,8 @@ SendMessageW(HWND Wnd,
 LRESULT WINAPI
 SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  MSG AnsiMsg, UcMsg;
-  MSG KMMsg;
+  MSG AnsiMsg, UcMsg, KMMsg;
   LRESULT Result;
-  NTUSERSENDMESSAGEINFO Info;
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
@@ -2210,57 +2189,28 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
 
-  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, FALSE))
-    {
+  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  {
+     return FALSE;
+  }
+
+  if (!MsgiUMToKMMessage(&UcMsg, &KMMsg, FALSE))
+  {
       MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
       return FALSE;
-    }
-  Info.Ansi = TRUE;
-  Result = NtUserSendMessage( KMMsg.hwnd,
-                              KMMsg.message,
+  }
+
+  Result = NtUserMessageCall( KMMsg.hwnd,
+                              KMMsg.message, 
                               KMMsg.wParam,
                               KMMsg.lParam,
-                              &Info);
-  if (! Info.HandledByKernel)
-    {
-      /* We need to send the message ourselves */
-      if (Info.Ansi)
-        {
-          /* Ansi message and Ansi window proc, that's easy. Clean up
-             the Unicode message though */
-          MsgiUMToKMCleanup(&UcMsg, &KMMsg);
-          MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Window, Wnd, Msg, wParam, lParam);
-        }
-      else
-        {
-          /* Unicode winproc. Although we started out with an Ansi message we
-             already converted it to Unicode for the kernel call. Reuse that
-             message to avoid another conversion */
-          Result = IntCallWindowProcW( Info.Ansi,
-                                       Info.Proc,
-                                       Window,
-                                       UcMsg.hwnd,
-                                       UcMsg.message,
-                                       UcMsg.wParam,
-                                       UcMsg.lParam);
-          if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
-            {
-              return FALSE;
-            }
-        }
-    }
-  /* Message sent by kernel. Convert back to Ansi */
-  else if (! MsgiUMToKMReply(&UcMsg, &KMMsg, &Result) ||
-           ! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
-    {
-      return FALSE;
-    }
+                             (ULONG_PTR)&Result,
+                              FNID_SENDMESSAGE,
+                              TRUE);
+
+  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
+  MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
 
   return Result;
 }
@@ -2278,18 +2228,34 @@ SendMessageCallbackA(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
+  BOOL Result;
+  MSG AnsiMsg, UcMsg;
   CALL_BACK_INFO CallBackInfo;
 
   CallBackInfo.CallBack = lpCallBack;
   CallBackInfo.Context = dwData;
 
-  return NtUserMessageCall(hWnd,
-                            Msg, 
-                         wParam,
-                         lParam,
-       (ULONG_PTR)&CallBackInfo,
-       FNID_SENDMESSAGECALLBACK,
-                           TRUE);
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+
+  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  {
+      return FALSE;
+  }
+
+  Result = NtUserMessageCall( UcMsg.hwnd,
+                              UcMsg.message,
+                              UcMsg.wParam,
+                              UcMsg.lParam,
+                             (ULONG_PTR)&CallBackInfo,
+                              FNID_SENDMESSAGECALLBACK,
+                              TRUE);
+
+  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+
+  return Result;
 }
 
 /*
@@ -2305,7 +2271,6 @@ SendMessageCallbackW(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
-
   CALL_BACK_INFO CallBackInfo;
 
   CallBackInfo.CallBack = lpCallBack;
@@ -2334,76 +2299,47 @@ SendMessageTimeoutA(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
-  MSG AnsiMsg;
-  MSG UcMsg;
+  MSG AnsiMsg, UcMsg;
   LRESULT Result;
-  NTUSERSENDMESSAGEINFO Info;
+  DOSENDMESSAGE dsm;
+
+  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
+
+  if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return 0;
+  }
+  
+  if (lpdwResult) *lpdwResult = 0;
+
+  dsm.uFlags = fuFlags;
+  dsm.uTimeout = uTimeout;
 
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
+
   if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
-
-  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
-
-  Info.Ansi = TRUE;
-  Result = NtUserSendMessageTimeout(UcMsg.hwnd, UcMsg.message,
-                                    UcMsg.wParam, UcMsg.lParam,
-                                    fuFlags, uTimeout, (ULONG_PTR*)lpdwResult, &Info);
-  if(!Result)
   {
-      SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
       return FALSE;
   }
-  if (! Info.HandledByKernel)
-    {
-      PWND pWnd;
-      pWnd = ValidateHwnd(hWnd);
-      /* We need to send the message ourselves */
-      if (Info.Ansi)
-        {
-          /* Ansi message and Ansi window proc, that's easy. Clean up
-             the Unicode message though */
-          MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-          Result = IntCallWindowProcA(Info.Ansi, Info.Proc, pWnd, hWnd, Msg, wParam, lParam);
-        }
-      else
-        {
-          /* Unicode winproc. Although we started out with an Ansi message we
-             already converted it to Unicode for the kernel call. Reuse that
-             message to avoid another conversion */
-          Result = IntCallWindowProcW( Info.Ansi,
-                                       Info.Proc,
-                                       pWnd,
-                                       UcMsg.hwnd,
-                                       UcMsg.message,
-                                       UcMsg.wParam,
-                                       UcMsg.lParam);
-          if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
-            {
-                SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
-                return FALSE;
-            }
-        }
-      if(lpdwResult)
-        *lpdwResult = Result;
-      Result = TRUE;
-    }
-  else
-    {
-      /* Message sent by kernel. Convert back to Ansi */
-      if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
-        {
-            SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
-            return FALSE;
-        }
-    }
+
+  Result = NtUserMessageCall( UcMsg.hwnd,
+                              UcMsg.message,
+                              UcMsg.wParam,
+                              UcMsg.lParam,
+                             (ULONG_PTR)&dsm,
+                              FNID_SENDMESSAGETIMEOUT,
+                              TRUE);
+
+  MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result);
+
+  if (lpdwResult) *lpdwResult = dsm.Result;
 
   SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
+
   return Result;
 }
 
@@ -2422,28 +2358,34 @@ SendMessageTimeoutW(
   UINT uTimeout,
   PDWORD_PTR lpdwResult)
 {
-  NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
+  DOSENDMESSAGE dsm;
 
   SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
-  Info.Ansi = FALSE;
-  Result = NtUserSendMessageTimeout(hWnd, Msg, wParam, lParam, fuFlags, uTimeout,
-                                    lpdwResult, &Info);
-  if (! Info.HandledByKernel)
-    {
-      PWND pWnd;
-      pWnd = ValidateHwnd(hWnd);
-      /* We need to send the message ourselves */
-      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, pWnd, hWnd, Msg, wParam, lParam);
-      if(lpdwResult)
-        *lpdwResult = Result;
+  if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return 0;
+  }
+  
+  if (lpdwResult) *lpdwResult = 0;
 
-      SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
-      return TRUE;
-    }
+  dsm.uFlags = fuFlags;
+  dsm.uTimeout = uTimeout;
+
+  Result = NtUserMessageCall( hWnd,
+                              Msg, 
+                              wParam,
+                              lParam,
+                             (ULONG_PTR)&dsm,
+                              FNID_SENDMESSAGETIMEOUT,
+                              FALSE);
+
+  if (lpdwResult) *lpdwResult = dsm.Result;
 
   SPY_ExitMessage(SPY_RESULT_OK, hWnd, Msg, Result, wParam, lParam);
+
   return Result;
 }
 
