@@ -84,15 +84,18 @@ enable_language(ASM)
 # Activate language support for resource files
 enable_language(RC)
 
-add_definitions(-DDBG=${DBG} -DKDBG=${KDBG})
 
 if(DBG)
-add_definitions(-D_SEH_ENABLE_TRACE)
+add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
+else()
+add_definitions(-DDBG=0)
 endif(DBG)
 
-if(DBG OR KDBG)
-set(DBG_OR_KDBG true)
-endif(DBG OR KDBG)
+if(KDBG)
+add_definitions(-DKDBG=1)
+else()
+add_definitions(-DKDBG=0)
+endif(KDBG)
 
 # Version Options
 add_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502 -D_WIN32_WINDOWS=0x502 -D_SETUPAPI_VER=0x502)
