@@ -201,6 +201,11 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_NOTIFY:
         ProcessPageOnNotify(wParam, lParam);
         break;
+
+    case WM_KEYDOWN:
+        if (wParam == VK_DELETE)
+            ProcessPage_OnEndProcess();
+        break;
     }
 
     return 0;
@@ -249,6 +254,12 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
         case NM_RCLICK:
 
             ProcessPageShowContextMenu(GetSelectedProcessId());
+            break;
+
+        case LVN_KEYDOWN:
+
+            if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
+                ProcessPage_OnEndProcess();
             break;
 
         }
