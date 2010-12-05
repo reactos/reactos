@@ -349,6 +349,14 @@ MMixerInitializePinConnect(
     IN OUT PKSPIN_CONNECT PinConnect,
     IN ULONG PinId);
 
+MIXER_STATUS
+MMixerGetPinDataFlowAndCommunication(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE hDevice,
+    IN ULONG PinId,
+    OUT PKSPIN_DATAFLOW DataFlow,
+    OUT PKSPIN_COMMUNICATION Communication);
+
 
 /* topology.c */
 

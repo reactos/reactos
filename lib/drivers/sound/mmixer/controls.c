@@ -8,6 +8,26 @@
  
 #include "priv.h"
 
+const GUID KSNODETYPE_DESKTOP_MICROPHONE = {0xDFF21BE2, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_LEGACY_AUDIO_CONNECTOR = {0xDFF21FE4, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_TELEPHONE = {0xDFF21EE2, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_PHONE_LINE = {0xDFF21EE1, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_DOWN_LINE_PHONE = {0xDFF21EE3, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_DESKTOP_SPEAKER = {0xDFF21CE4, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_ROOM_SPEAKER = {0xDFF21CE5, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_COMMUNICATION_SPEAKER = {0xDFF21CE6, 0xF70F, 0x11D0, {0xB9,0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_HEADPHONES = {0xDFF21CE2, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_HEAD_MOUNTED_DISPLAY_AUDIO = {0xDFF21CE3, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_MICROPHONE = {0xDFF21BE1, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9,0x22, 0x31, 0x96}};
+const GUID KSCATEGORY_AUDIO = {0x6994AD04L, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_SPDIF_INTERFACE = {0xDFF21FE5, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_ANALOG_CONNECTOR = {0xDFF21FE1, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_SPEAKER = {0xDFF21CE1, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_CD_PLAYER = {0xDFF220E3, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_SYNTHESIZER = {0xDFF220F3, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
+const GUID KSNODETYPE_LINE_CONNECTOR = {0xDFF21FE3, 0xF70F, 0x11D0, {0xB9, 0x17, 0x00, 0xA0,0xC9, 0x22, 0x31, 0x96}};
+const GUID PINNAME_VIDEO_CAPTURE  = {0xfb6c4281, 0x353, 0x11d1, {0x90, 0x5f, 0x0, 0x0, 0xc0, 0xcc, 0x16, 0xba}};
+
 MIXER_STATUS
 MMixerAddMixerControl(
     IN PMIXER_CONTEXT MixerContext,
@@ -528,6 +548,204 @@ MMixerAddMixerControlsToMixerLineByNodeIndexArray(
 }
 
 MIXER_STATUS
+MMixerGetComponentAndTargetType(
+    IN PMIXER_CONTEXT MixerContext,
+    IN OUT LPMIXER_INFO MixerInfo,
+    IN ULONG PinId,
+    OUT PULONG ComponentType,
+    OUT PULONG TargetType)
+{
+    KSPIN_DATAFLOW DataFlow;
+    KSPIN_COMMUNICATION Communication;
+    MIXER_STATUS Status;
+    KSP_PIN Request;
+    ULONG BytesReturned;
+    GUID Guid;
+    BOOLEAN BridgePin = FALSE;
+    PKSPIN_PHYSICALCONNECTION Connection;
+
+    /* first dataflow type */
+    Status = MMixerGetPinDataFlowAndCommunication(MixerContext, MixerInfo->hMixer, PinId, &DataFlow, &Communication);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* failed to get dataflow */
+        return Status;
+    }
+
+    /* now get pin category guid */
+    Request.PinId = PinId;
+    Request.Reserved = 0;
+    Request.Property.Flags = KSPROPERTY_TYPE_GET;
+    Request.Property.Set = KSPROPSETID_Pin;
+    Request.Property.Id = KSPROPERTY_PIN_CATEGORY;
+
+
+    /* get pin category */
+    Status = MixerContext->Control(MixerInfo->hMixer, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSP_PIN), &Guid, sizeof(GUID), &BytesReturned);
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* failed to get dataflow */
+        return Status;
+    }
+
+    /* check if it has a physical connection */
+    Status = MMixerGetPhysicalConnection(MixerContext, MixerInfo->hMixer, PinId, &Connection);
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        /* pin is a brige pin */
+        BridgePin = TRUE;
+
+        /* free physical connection */
+        MixerContext->Free(Connection);
+    }
+
+    if (DataFlow == KSPIN_DATAFLOW_IN)
+    {
+        if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_MICROPHONE) ||
+            IsEqualGUIDAligned(&Guid, &KSNODETYPE_DESKTOP_MICROPHONE))
+        {
+            /* type microphone */
+            *TargetType = MIXERLINE_TARGETTYPE_WAVEIN;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_MICROPHONE;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_LEGACY_AUDIO_CONNECTOR) ||
+                 IsEqualGUIDAligned(&Guid, &KSCATEGORY_AUDIO) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_SPEAKER))
+        {
+            /* type waveout */
+            *TargetType = MIXERLINE_TARGETTYPE_WAVEOUT;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_WAVEOUT;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_CD_PLAYER))
+        {
+            /* type cd player */
+            *TargetType = MIXERLINE_TARGETTYPE_UNDEFINED;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_COMPACTDISC;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_SYNTHESIZER))
+        {
+            /* type synthesizer */
+            *TargetType = MIXERLINE_TARGETTYPE_MIDIOUT;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_SYNTHESIZER;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_LINE_CONNECTOR))
+        {
+            /* type line */
+            *TargetType = MIXERLINE_TARGETTYPE_UNDEFINED;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_LINE;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_TELEPHONE) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_PHONE_LINE) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_DOWN_LINE_PHONE))
+        {
+            /* type telephone */
+            *TargetType =  MIXERLINE_TARGETTYPE_UNDEFINED;
+            *ComponentType =  MIXERLINE_COMPONENTTYPE_SRC_TELEPHONE;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_ANALOG_CONNECTOR))
+        {
+            /* type analog */
+            if (BridgePin)
+                *TargetType = MIXERLINE_TARGETTYPE_WAVEIN;
+            else
+                *TargetType = MIXERLINE_TARGETTYPE_WAVEOUT;
+
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_ANALOG;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_SPDIF_INTERFACE))
+        {
+            /* type analog */
+            if (BridgePin)
+                *TargetType = MIXERLINE_TARGETTYPE_WAVEIN;
+            else
+                *TargetType = MIXERLINE_TARGETTYPE_WAVEOUT;
+
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_DIGITAL;
+        }
+        else
+        {
+            /* unknown type */
+            *TargetType = MIXERLINE_TARGETTYPE_UNDEFINED;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_SRC_UNDEFINED;
+            DPRINT1("Unknown Category for PinId %lu BridgePin %lu\n", PinId, BridgePin);
+        }
+    }
+    else
+    {
+        if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_SPEAKER) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_DESKTOP_SPEAKER) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_ROOM_SPEAKER) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_COMMUNICATION_SPEAKER))
+        {
+            /* type waveout */
+            *TargetType =  MIXERLINE_TARGETTYPE_WAVEOUT;
+            *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSCATEGORY_AUDIO) ||
+                 IsEqualGUIDAligned(&Guid, &PINNAME_CAPTURE))
+        {
+            /* type wavein */
+            *TargetType =  MIXERLINE_TARGETTYPE_WAVEIN;
+            *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_WAVEIN;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_HEADPHONES) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_HEAD_MOUNTED_DISPLAY_AUDIO))
+        {
+            /* type head phones */
+            *TargetType =  MIXERLINE_TARGETTYPE_WAVEOUT;
+            *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_HEADPHONES;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_TELEPHONE) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_PHONE_LINE) ||
+                 IsEqualGUIDAligned(&Guid, &KSNODETYPE_DOWN_LINE_PHONE))
+        {
+            /* type waveout */
+            *TargetType =   MIXERLINE_TARGETTYPE_UNDEFINED;
+            *ComponentType =   MIXERLINE_COMPONENTTYPE_DST_TELEPHONE;
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_ANALOG_CONNECTOR))
+        {
+            /* type analog */
+            if (BridgePin)
+            {
+                *TargetType =  MIXERLINE_TARGETTYPE_WAVEOUT;
+                *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+            }
+            else
+            {
+                *TargetType =  MIXERLINE_TARGETTYPE_WAVEIN;
+                *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_WAVEIN;
+            }
+        }
+        else if (IsEqualGUIDAligned(&Guid, &KSNODETYPE_SPDIF_INTERFACE))
+        {
+            /* type spdif */
+            if (BridgePin)
+            {
+                *TargetType =  MIXERLINE_TARGETTYPE_WAVEOUT;
+                *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
+            }
+            else
+            {
+                *TargetType =  MIXERLINE_TARGETTYPE_WAVEIN;
+                *ComponentType =  MIXERLINE_COMPONENTTYPE_DST_WAVEIN;
+            }
+        }
+        else
+        {
+            /* unknown type */
+            *TargetType = MIXERLINE_TARGETTYPE_UNDEFINED;
+            *ComponentType = MIXERLINE_COMPONENTTYPE_DST_UNDEFINED;
+            DPRINT1("Unknown Category for PinId %lu BridgePin %lu\n", PinId, BridgePin);
+        }
+    }
+
+    /* done */
+    return MM_STATUS_SUCCESS;
+}
+
+MIXER_STATUS
 MMixerBuildMixerSourceLine(
     IN PMIXER_CONTEXT MixerContext,
     IN OUT LPMIXER_INFO MixerInfo,
@@ -541,6 +759,16 @@ MMixerBuildMixerSourceLine(
     LPMIXERLINE_EXT SrcLine, DstLine;
     LPWSTR PinName;
     MIXER_STATUS Status;
+    ULONG ComponentType, TargetType;
+
+    /* get component and target type */
+    Status = MMixerGetComponentAndTargetType(MixerContext, MixerInfo, PinId, &ComponentType, &TargetType);
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* failed to get component status */
+        TargetType = MIXERLINE_TARGETTYPE_UNDEFINED;
+        ComponentType = MIXERLINE_COMPONENTTYPE_DST_UNDEFINED;
+    }
 
     /* construct source line */
     SrcLine = (LPMIXERLINE_EXT)MixerContext->Alloc(sizeof(MIXERLINE_EXT));
@@ -562,14 +790,15 @@ MMixerBuildMixerSourceLine(
 
     /* initialize mixer line */
     SrcLine->Line.cbStruct = sizeof(MIXERLINEW);
-    SrcLine->Line.dwDestination = 0;
+    SrcLine->Line.dwDestination = MixerInfo->MixCaps.cDestinations-1;
     SrcLine->Line.dwSource = DstLine->Line.cConnections;
     SrcLine->Line.dwLineID = (DstLine->Line.cConnections * SOURCE_LINE)+ (MixerInfo->MixCaps.cDestinations-1);
     SrcLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE | MIXERLINE_LINEF_SOURCE;
+    SrcLine->Line.dwComponentType = ComponentType;
     SrcLine->Line.dwUser = 0;
     SrcLine->Line.cChannels = DstLine->Line.cChannels;
     SrcLine->Line.cConnections = 0;
-    SrcLine->Line.Target.dwType = 1;
+    SrcLine->Line.Target.dwType = TargetType;
     SrcLine->Line.Target.dwDeviceID = DstLine->Line.Target.dwDeviceID;
     SrcLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
     SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;

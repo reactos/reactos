@@ -11,7 +11,7 @@
 MIXER_STATUS
 MMixerGetPinDataFlowAndCommunication(
     IN PMIXER_CONTEXT MixerContext,
-    IN LPMIXER_DATA MixerData,
+    IN HANDLE hDevice,
     IN ULONG PinId,
     OUT PKSPIN_DATAFLOW DataFlow,
     OUT PKSPIN_COMMUNICATION Communication)
@@ -28,7 +28,7 @@ MMixerGetPinDataFlowAndCommunication(
     Pin.Property.Set = KSPROPSETID_Pin;
 
     /* get pin dataflow */
-    Status = MixerContext->Control(MixerData->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+    Status = MixerContext->Control(hDevice, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to retrieve dataflow */
@@ -39,7 +39,7 @@ MMixerGetPinDataFlowAndCommunication(
     Pin.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
 
     /* get pin communication */
-    Status = MixerContext->Control(MixerData->hDevice, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+    Status = MixerContext->Control(hDevice, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSP_PIN), (PVOID)Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
 
     return Status;
 }
@@ -142,7 +142,7 @@ MMixerCheckFilterPinMidiSupport(
             IsEqualGUIDAligned(&DataRange->Specifier, &KSDATAFORMAT_SPECIFIER_NONE))
         {
             /* pin supports midi datarange */
-            if (MMixerGetPinDataFlowAndCommunication(MixerContext, MixerData, PinId, &DataFlow, &Communication) == MM_STATUS_SUCCESS)
+            if (MMixerGetPinDataFlowAndCommunication(MixerContext, MixerData->hDevice, PinId, &DataFlow, &Communication) == MM_STATUS_SUCCESS)
             {
                 if (DataFlow == KSPIN_DATAFLOW_IN && Communication == KSPIN_COMMUNICATION_SINK)
                 {

@@ -550,9 +550,9 @@ MMixerPrintMixers(
     IN PMIXER_CONTEXT MixerContext,
     IN PMIXER_LIST MixerList)
 {
-    ULONG Index, SubIndex, DestinationLineID;
+    ULONG Index, SubIndex, DestinationLineID, SrcIndex;
     LPMIXER_INFO MixerInfo;
-    LPMIXERLINE_EXT DstMixerLine;
+    LPMIXERLINE_EXT DstMixerLine, SrcMixerLine;
 
     DPRINT1("MixerList %p\n", MixerList);
     DPRINT1("MidiInCount %lu\n", MixerList->MidiInListCount);
@@ -601,6 +601,36 @@ MMixerPrintMixers(
             DPRINT1("Target.vDriverVersion %lx\n", DstMixerLine->Line.Target.vDriverVersion);
             DPRINT1("Target.wMid %lx\n", DstMixerLine->Line.Target.wMid );
             DPRINT1("Target.wPid %lx\n", DstMixerLine->Line.Target.wPid);
+
+
+            for(SrcIndex = 0; SrcIndex < DstMixerLine->Line.cConnections; SrcIndex++)
+            {
+                /* calculate destination line id */
+                DestinationLineID = (SOURCE_LINE * SrcIndex) + SubIndex;
+
+                /* get source line */
+                SrcMixerLine = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
+                DPRINT1("\n");
+                DPRINT1("SourceIndex: %lu\n", SrcIndex);
+                DPRINT1("\n");
+                DPRINT1("cChannels %lu\n", SrcMixerLine->Line.cChannels);
+                DPRINT1("cConnections %lu\n", SrcMixerLine->Line.cConnections);
+                DPRINT1("cControls %lu\n", SrcMixerLine->Line.cControls);
+                DPRINT1("dwComponentType %lx\n", SrcMixerLine->Line.dwComponentType);
+                DPRINT1("dwDestination %lu\n", SrcMixerLine->Line.dwDestination);
+                DPRINT1("dwLineID %lx\n", SrcMixerLine->Line.dwLineID);
+                DPRINT1("dwSource %lx\n", SrcMixerLine->Line.dwSource);
+                DPRINT1("dwUser %lu\n", SrcMixerLine->Line.dwUser);
+                DPRINT1("fdwLine %lu\n", SrcMixerLine->Line.fdwLine);
+                DPRINT1("szName %S\n", SrcMixerLine->Line.szName);
+                DPRINT1("szShortName %S\n", SrcMixerLine->Line.szShortName);
+                DPRINT1("Target.dwDeviceId %lu\n", SrcMixerLine->Line.Target.dwDeviceID);
+                DPRINT1("Target.dwType %lu\n", SrcMixerLine->Line.Target.dwType);
+                DPRINT1("Target.szName %S\n", SrcMixerLine->Line.Target.szPname);
+                DPRINT1("Target.vDriverVersion %lx\n", SrcMixerLine->Line.Target.vDriverVersion);
+                DPRINT1("Target.wMid %lx\n", SrcMixerLine->Line.Target.wMid );
+                DPRINT1("Target.wPid %lx\n", SrcMixerLine->Line.Target.wPid);
+            }
         }
     }
 }
