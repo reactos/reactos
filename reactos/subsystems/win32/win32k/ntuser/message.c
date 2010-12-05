@@ -977,10 +977,42 @@ UserPostMessage( HWND Wnd,
                  LPARAM lParam )
 {
     PTHREADINFO pti;
-    MSG Message;
+    MSG Message, KernelModeMsg;
     LARGE_INTEGER LargeTickCount;
+    PMSGMEMORY MsgMemoryEntry;
 
-    if (FindMsgMemory(Msg) != 0)
+    Message.hwnd = Wnd;
+    Message.message = Msg;
+    Message.wParam = wParam;
+    Message.lParam = lParam;
+    Message.pt = gpsi->ptCursor;
+    KeQueryTickCount(&LargeTickCount);
+    Message.time = MsqCalculateMessageTime(&LargeTickCount);
+
+    MsgMemoryEntry = FindMsgMemory(Message.message);
+
+    if( Msg >= WM_DDE_FIRST && Msg <= WM_DDE_LAST )
+    {
+        NTSTATUS Status;
+
+        Status = CopyMsgToKernelMem(&KernelModeMsg, &Message, MsgMemoryEntry);
+        if (! NT_SUCCESS(Status))
+        {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+        co_IntSendMessageNoWait(KernelModeMsg.hwnd, 
+                                KernelModeMsg.message, 
+                                KernelModeMsg.wParam, 
+                                KernelModeMsg.lParam);
+
+        if(MsgMemoryEntry)
+            ExFreePool((PVOID) KernelModeMsg.lParam);
+
+        return TRUE;
+    }
+
+    if (MsgMemoryEntry)
     {
         SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -1035,20 +1067,13 @@ UserPostMessage( HWND Wnd,
             /* FIXME - last error code? */
             return FALSE;
         }
-
+		
         if (WM_QUIT == Msg)
         {
             MsqPostQuitMessage(Window->head.pti->MessageQueue, wParam);
         }
         else
         { 
-            Message.hwnd = Wnd;
-            Message.message = Msg;
-            Message.wParam = wParam;
-            Message.lParam = lParam;
-            Message.pt = gpsi->ptCursor;
-            KeQueryTickCount(&LargeTickCount);
-            Message.time = MsqCalculateMessageTime(&LargeTickCount);
             MsqPostMessage(Window->head.pti->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
         }
     }
