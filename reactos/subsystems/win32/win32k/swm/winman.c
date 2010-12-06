@@ -356,7 +356,8 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
     Win->Window.bottom = WindowRect->bottom;
 
     Win->Visible = create_empty_region();
-    set_region_rect(Win->Visible, &Win->Window);
+    Win->Hidden = TRUE;
+    //set_region_rect(Win->Visible, &Win->Window);
 
     /* Set window's flags */
     if (ex_style & WS_EX_TOPMOST) Win->Topmost = TRUE;
@@ -375,9 +376,9 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
     }
 
     /* Now ensure it is visible on screen */
-    SwmInvalidateRegion(Win, Win->Visible, &Win->Window);
+    //SwmInvalidateRegion(Win, Win->Visible, &Win->Window);
 
-    SwmClipAllWindows();
+    //SwmClipAllWindows();
 
     //SwmDumpWindows();
 
@@ -855,6 +856,7 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show, UINT SwpFlags)
         DPRINT("Unhiding %x, rect (%d,%d)-(%d,%d)\n", Win->hwnd, Win->Window.left, Win->Window.top, Win->Window.right, Win->Window.bottom);
         Win->Hidden = FALSE;
 
+#if 0
         /* Make it topmost window if needed */
         if (!(SwpFlags & SWP_NOZORDER))
         {
@@ -864,6 +866,7 @@ SwmShowWindow(HWND hWnd, BOOLEAN Show, UINT SwpFlags)
             /* Add it to the head of the list */
             InsertHeadList(&SwmWindows, &Win->Entry);
         }
+#endif
 
         /* Calculate visible regions for all windows */
         SwmClipAllWindows();
