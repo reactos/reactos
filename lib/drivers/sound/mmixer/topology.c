@@ -264,7 +264,9 @@ MMixerHandleNodeToNodeConnection(
 {
     PTOPOLOGY_NODE InNode, OutNode;
     PTOPOLOGY_NODE * NewNodes;
+    PULONG NewLogicalPinNodeConnectedFrom;
     ULONG Count;
+    ULONG LogicalPinId;
 
     /* sanity checks */
     ASSERT(Topology->TopologyNodesCount > Connection->ToNode);
@@ -273,6 +275,9 @@ MMixerHandleNodeToNodeConnection(
     /* get node */
     InNode = &Topology->TopologyNodes[Connection->FromNode];
     OutNode = &Topology->TopologyNodes[Connection->ToNode];
+
+    /* get logical pin node id */
+    LogicalPinId = Connection->ToNodePin;
 
     /* get existing count */
     Count = OutNode->NodeConnectedFromCount;
@@ -286,20 +291,41 @@ MMixerHandleNodeToNodeConnection(
         return MM_STATUS_NO_MEMORY;
     }
 
+    /* allocate logical pin nodes array */
+    NewLogicalPinNodeConnectedFrom = MixerContext->Alloc((Count + 1) * sizeof(ULONG));
+    if (!NewLogicalPinNodeConnectedFrom)
+    {
+        /* out of memory */
+        MixerContext->Free(NewNodes);
+        return MM_STATUS_NO_MEMORY;
+    }
+
     if (Count)
     {
         /* copy existing nodes */
         MixerContext->Copy(NewNodes, OutNode->NodeConnectedFrom, sizeof(PTOPOLOGY) * Count);
 
+        /* copy existing logical pin node array */
+        MixerContext->Copy(NewLogicalPinNodeConnectedFrom, OutNode->LogicalPinNodeConnectedFrom, sizeof(ULONG) * Count);
+
         /* release old nodes array */
         MixerContext->Free(OutNode->NodeConnectedFrom);
+
+        /* release old logical pin node array */
+        MixerContext->Free(OutNode->LogicalPinNodeConnectedFrom);
     }
 
     /* add new topology node */
     NewNodes[OutNode->NodeConnectedFromCount] = InNode;
 
+    /* add logical node id */
+    NewLogicalPinNodeConnectedFrom[OutNode->NodeConnectedFromCount] = LogicalPinId;
+
     /* replace old nodes array */
     OutNode->NodeConnectedFrom = NewNodes;
+
+    /* replace old logical pin node array */
+    OutNode->LogicalPinNodeConnectedFrom = NewLogicalPinNodeConnectedFrom;
 
     /* increment nodes count */
     OutNode->NodeConnectedFromCount++;

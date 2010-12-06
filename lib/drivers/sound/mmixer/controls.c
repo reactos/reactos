@@ -53,19 +53,7 @@ MMixerAddMixerControl(
     MixerControl->dwControlType = MMixerGetControlTypeFromTopologyNode(NodeType);
 
     MixerControl->fdwControl = MIXERCONTROL_CONTROLF_UNIFORM; /* FIXME */
-    MixerControl->cMultipleItems = 0; /* FIXME */
-
-    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
-    {
-        MixerControl->Bounds.dwMinimum = 0;
-        MixerControl->Bounds.dwMaximum = 1;
-    }
-    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
-    {
-        MixerControl->Bounds.dwMinimum = 0;
-        MixerControl->Bounds.dwMaximum = 0xFFFF;
-        MixerControl->Metrics.cSteps = 0xC0; /* FIXME */
-    }
+    MixerControl->cMultipleItems = 0;
 
     /* setup request to retrieve name */
     Node.NodeId = NodeIndex;
@@ -104,34 +92,56 @@ MMixerAddMixerControl(
     }
 
     MixerInfo->ControlId++;
-#if 0
+
     if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUX)
     {
-        KSNODEPROPERTY Property;
-        ULONG PinId = 2;
+        ULONG NodesCount;
+        PULONG Nodes;
 
-        /* setup the request */
-        RtlZeroMemory(&Property, sizeof(KSNODEPROPERTY));
+        /* allocate topology nodes array */
+        Status = MMixerAllocateTopologyNodeArray(MixerContext, Topology, &Nodes);
 
-        Property.NodeId = NodeIndex;
-        Property.Property.Id = KSPROPERTY_AUDIO_MUX_SOURCE;
-        Property.Property.Flags = KSPROPERTY_TYPE_SET;
-        Property.Property.Set = KSPROPSETID_Audio;
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            /* out of memory */
+            return STATUS_NO_MEMORY;
+        }
 
-        /* get node volume level info */
-        Status = MixerContext->Control(hDevice, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSNODEPROPERTY), (PVOID)&PinId, sizeof(ULONG), &BytesReturned);
+        /* get connected node count */
+        MMixerGetNextNodesFromNodeIndex(MixerContext, Topology, NodeIndex, TRUE, &NodesCount, Nodes);
 
-        DPRINT1("Status %x NodeIndex %u PinId %u\n", Status, NodeIndex, PinId);
-        //DbgBreakPoint();
-    }else
-#endif
-    if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
+        /* TODO */
+        MixerContext->Free(Nodes);
+
+        /* setup mux bounds */
+        MixerControl->Bounds.dwMinimum = 0;
+        MixerControl->Bounds.dwMaximum = NodesCount - 1;
+        MixerControl->Metrics.dwReserved[0] = NodesCount;
+        MixerControl->cMultipleItems = NodesCount;
+        MixerControl->fdwControl |= MIXERCONTROL_CONTROLF_MULTIPLE;
+    }
+    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
+    {
+        MixerControl->Bounds.dwMinimum = 0;
+        MixerControl->Bounds.dwMaximum = 1;
+    }
+    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_ONOFF)
+    {
+        /* only needs to set bounds */
+        MixerControl->Bounds.dwMinimum = 0;
+        MixerControl->Bounds.dwMaximum = 1;
+    }
+    else if (MixerControl->dwControlType == MIXERCONTROL_CONTROLTYPE_VOLUME)
     {
         KSNODEPROPERTY_AUDIO_CHANNEL Property;
         ULONG Length;
         PKSPROPERTY_DESCRIPTION Desc;
         PKSPROPERTY_MEMBERSHEADER Members;
         PKSPROPERTY_STEPPING_LONG Range;
+
+        MixerControl->Bounds.dwMinimum = 0;
+        MixerControl->Bounds.dwMaximum = 0xFFFF;
+        MixerControl->Metrics.cSteps = 0xC0; /* FIXME */
 
         Length = sizeof(KSPROPERTY_DESCRIPTION) + sizeof(KSPROPERTY_MEMBERSHEADER) + sizeof(KSPROPERTY_STEPPING_LONG);
         Desc = (PKSPROPERTY_DESCRIPTION)MixerContext->Alloc(Length);
@@ -142,7 +152,7 @@ MMixerAddMixerControl(
 
         Property.NodeProperty.NodeId = NodeIndex;
         Property.NodeProperty.Property.Id = KSPROPERTY_AUDIO_VOLUMELEVEL;
-        Property.NodeProperty.Property.Flags = KSPROPERTY_TYPE_BASICSUPPORT;
+        Property.NodeProperty.Property.Flags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_TOPOLOGY;
         Property.NodeProperty.Property.Set = KSPROPSETID_Audio;
 
         /* get node volume level info */

@@ -27,6 +27,7 @@ typedef struct __TOPOLOGY_NODE__
 
     ULONG NodeConnectedFromCount;
     struct __TOPOLOGY_NODE__ ** NodeConnectedFrom;
+    PULONG LogicalPinNodeConnectedFrom;
 
     ULONG PinConnectedFromCount;
     PULONG PinConnectedFrom;
@@ -53,6 +54,7 @@ typedef struct
 
     ULONG PinConnectedToCount;
     PULONG PinConnectedTo;
+
 
     ULONG Visited;
 }PIN, *PPIN;
