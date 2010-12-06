@@ -490,6 +490,132 @@ MMixerCountMixerControls(
 }
 
 MIXER_STATUS
+MMixerGetChannelCountEnhanced(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NodeId,
+    OUT PULONG MaxChannels)
+{
+    KSPROPERTY_DESCRIPTION Description;
+    PKSPROPERTY_DESCRIPTION NewDescription;
+    PKSPROPERTY_MEMBERSHEADER Header;
+    ULONG BytesReturned;
+    KSP_NODE Request;
+    MIXER_STATUS Status;
+
+    /* try #1 obtain it via description */
+    Request.NodeId = NodeId;
+    Request.Reserved = 0;
+    Request.Property.Set = KSPROPSETID_Audio;
+    Request.Property.Flags = KSPROPERTY_TYPE_BASICSUPPORT | KSPROPERTY_TYPE_TOPOLOGY;
+    Request.Property.Id = KSPROPERTY_AUDIO_VOLUMELEVEL;
+
+
+    /* get description */
+    Status = MixerContext->Control(MixerInfo->hMixer, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSP_NODE), (PVOID)&Description, sizeof(KSPROPERTY_DESCRIPTION), &BytesReturned);
+    if (Status == MM_STATUS_SUCCESS)
+    {
+        if (Description.DescriptionSize >= sizeof(KSPROPERTY_DESCRIPTION) + sizeof(KSPROPERTY_MEMBERSHEADER) && (Description.MembersListCount > 0))
+        {
+            /* allocate new description */
+            NewDescription = MixerContext->Alloc(Description.DescriptionSize);
+
+            if (!NewDescription)
+            {
+                /* not enough memory */
+                return MM_STATUS_NO_MEMORY;
+            }
+
+            /* get description */
+            Status = MixerContext->Control(MixerInfo->hMixer, IOCTL_KS_PROPERTY, (PVOID)&Request, sizeof(KSP_NODE), (PVOID)NewDescription, Description.DescriptionSize, &BytesReturned);
+            if (Status == MM_STATUS_SUCCESS)
+            {
+                /* get header */
+                Header = (PKSPROPERTY_MEMBERSHEADER)(NewDescription + 1);
+
+                if (Header->Flags & KSPROPERTY_MEMBER_FLAG_BASICSUPPORT_MULTICHANNEL)
+                {
+                    /* found enhanced flag */
+                    ASSERT(Header->MembersCount > 1);
+
+                    /* store channel count */
+                    *MaxChannels = Header->MembersCount;
+
+                    /* free description */
+                    MixerContext->Free(NewDescription);
+
+                    /* done */
+                    return MM_STATUS_SUCCESS;
+                }
+            }
+
+            /* free description */
+            MixerContext->Free(NewDescription);
+        }
+    }
+
+    /* failed to get channel count enhanced */
+    return MM_STATUS_UNSUCCESSFUL;
+}
+
+VOID
+MMixerGetChannelCountLegacy(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NodeId,
+    OUT PULONG MaxChannels)
+{
+    ULONG BytesReturned;
+    MIXER_STATUS Status;
+    KSNODEPROPERTY_AUDIO_CHANNEL Channel;
+    LONG Volume;
+
+    /* setup request */
+    Channel.Reserved = 0;
+    Channel.NodeProperty.NodeId = NodeId;
+    Channel.NodeProperty.Reserved = 0;
+    Channel.NodeProperty.Property.Flags = KSPROPERTY_TYPE_GET | KSPROPERTY_TYPE_TOPOLOGY;
+    Channel.NodeProperty.Property.Set = KSPROPSETID_Audio;
+    Channel.Channel = 0;
+    Channel.NodeProperty.Property.Id = KSPROPERTY_AUDIO_VOLUMELEVEL;
+
+    do
+    {
+        /* get channel volume */
+        Status = MixerContext->Control(MixerInfo->hMixer, IOCTL_KS_PROPERTY, (PVOID)&Channel, sizeof(KSNODEPROPERTY_AUDIO_CHANNEL), (PVOID)&Volume, sizeof(LONG), &BytesReturned);
+        if (Status != MM_STATUS_SUCCESS)
+            break;
+
+        /* increment channel count */
+        Channel.Channel++;
+
+    }while(TRUE);
+
+    /* store channel count */
+    *MaxChannels = Channel.Channel;
+
+}
+
+VOID
+MMixerGetMaxChannelsForNode(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NodeId,
+    OUT PULONG MaxChannels)
+{
+    MIXER_STATUS Status;
+
+    /* try to get it enhanced */
+    Status = MMixerGetChannelCountEnhanced(MixerContext, MixerInfo, NodeId, MaxChannels);
+
+    if (Status != MM_STATUS_SUCCESS)
+    {
+        /* get it old-fashioned way */
+        MMixerGetChannelCountLegacy(MixerContext, MixerInfo, NodeId, MaxChannels);
+    }
+}
+
+MIXER_STATUS
 MMixerAddMixerControlsToMixerLineByNodeIndexArray(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo,
@@ -500,6 +626,8 @@ MMixerAddMixerControlsToMixerLineByNodeIndexArray(
 {
     ULONG Index, Count, bReserved;
     MIXER_STATUS Status;
+    LPGUID NodeType;
+    ULONG MaxChannels;
 
     /* store nodes array */
     DstLine->NodeIds = Nodes;
@@ -529,6 +657,20 @@ MMixerAddMixerControlsToMixerLineByNodeIndexArray(
 #endif
         /* set node status as used */
         MMixerSetTopologyNodeReserved(Topology, Nodes[Index]);
+
+        /* query node type */
+        NodeType = MMixerGetNodeTypeFromTopology(Topology, Nodes[Index]);
+
+        if (IsEqualGUIDAligned(NodeType, &KSNODETYPE_VOLUME))
+        {
+            /* calculate maximum channel count for node */
+            MMixerGetMaxChannelsForNode(MixerContext, MixerInfo, Nodes[Index], &MaxChannels);
+
+            DPRINT("NodeId %lu MaxChannels %lu Line %S Id %lu\n", Nodes[Index], MaxChannels, DstLine->Line.szName, DstLine->Line.dwLineID);
+            /* calculate maximum channels */
+            DstLine->Line.cChannels = min(DstLine->Line.cChannels, MaxChannels);
+        }
+
 
         /* now add the mixer control */
         Status = MMixerAddMixerControl(MixerContext, MixerInfo, Topology, Nodes[Index], DstLine, &DstLine->LineControls[Count]);
