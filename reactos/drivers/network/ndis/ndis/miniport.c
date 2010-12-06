@@ -316,6 +316,7 @@ MiniIndicateReceivePacket(
               if (!LookAheadBuffer)
               {
                   NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate lookahead buffer!\n"));
+                  KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
                   return;
               }
 
@@ -2454,7 +2455,20 @@ NdisMRegisterMiniport(
         break;
 
       case 0x05:
-        MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
+        switch (MiniportCharacteristics->MinorNdisVersion)
+        {
+            case 0x00:
+                MinSize = sizeof(NDIS50_MINIPORT_CHARACTERISTICS);
+                break;
+                
+            case 0x01:
+                MinSize = sizeof(NDIS51_MINIPORT_CHARACTERISTICS);
+                break;
+                
+            default:
+                NDIS_DbgPrint(MIN_TRACE, ("Bad 5.x minor characteristics version.\n"));
+                return NDIS_STATUS_BAD_VERSION;
+        }
         break;
 
       default:
@@ -2531,8 +2545,6 @@ NdisMRegisterMiniport(
           return NDIS_STATUS_BAD_CHARACTERISTICS;
         }
     }
-
-  /* TODO: verify NDIS5 and NDIS5.1 */
 
   RtlCopyMemory(&Miniport->MiniportCharacteristics, MiniportCharacteristics, MinSize);
 
