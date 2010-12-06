@@ -2175,14 +2175,23 @@ NtUserMessageCall( HWND hWnd,
         break;
     case FNID_SENDMESSAGECALLBACK:
         {
-            PCALL_BACK_INFO CallBackInfo = (PCALL_BACK_INFO)ResultInfo;
+            CALL_BACK_INFO CallBackInfo;
             ULONG_PTR uResult;
-
-            if (!CallBackInfo)
-                break;
+            
+            _SEH2_TRY
+            {
+                ProbeForRead((PVOID)ResultInfo, sizeof(CALL_BACK_INFO), 1);
+                RtlCopyMemory(&CallBackInfo, (PVOID)ResultInfo, sizeof(CALL_BACK_INFO));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Ret = FALSE;
+                _SEH2_YIELD(break);
+            }
+            _SEH2_END;
 
             if (!co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
-                        CallBackInfo->CallBack, CallBackInfo->Context, &uResult))
+                        CallBackInfo.CallBack, CallBackInfo.Context, &uResult))
             {
                 DPRINT1("Callback failure!\n");
             }
