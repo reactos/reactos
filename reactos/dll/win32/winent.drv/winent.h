@@ -37,6 +37,9 @@ struct ntdrv_win_data
     RECT        whole_rect;     /* X window rectangle for the whole window relative to parent */
     RECT        client_rect;    /* client area relative to parent */
     HCURSOR     cursor;         /* current cursor */
+    BOOL        mapped : 1;     /* is window mapped? (in either normal or iconic state) */
+    BOOL        iconic : 1;     /* is window in iconic state? */
+    BOOL        shaped : 1;     /* is window using a custom region shape? */
 };
 
 /* clipboard.c */
@@ -84,3 +87,9 @@ struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd );
 struct ntdrv_win_data *NTDRV_create_desktop_win_data( HWND hwnd );
 void NTDRV_destroy_win_data( HWND hwnd );
 VOID CDECL RosDrv_UpdateZOrder(HWND hwnd, RECT *rect);
+void map_window( struct ntdrv_win_data *data, DWORD new_style );
+void unmap_window( struct ntdrv_win_data *data );
+BOOL is_window_rect_mapped( const RECT *rect );
+void sync_window_position( struct ntdrv_win_data *data,
+                           UINT swp_flags, const RECT *old_window_rect,
+                           const RECT *old_whole_rect, const RECT *old_client_rect );

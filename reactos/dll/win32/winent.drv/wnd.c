@@ -194,5 +194,95 @@ void NTDRV_destroy_win_data( HWND hwnd )
     SwmRemoveWindow( hwnd );
 }
 
+/***********************************************************************
+ *     map_window
+ */
+void map_window( struct ntdrv_win_data *data, DWORD new_style )
+{
+    TRACE( "win %p/%lx\n", data->hwnd, data->whole_window );
+
+    SwmShowWindow( data->hwnd, TRUE, 0);
+
+    data->mapped = TRUE;
+    data->iconic = (new_style & WS_MINIMIZE) != 0;
+}
+
+
+/***********************************************************************
+ *     unmap_window
+ */
+void unmap_window( struct ntdrv_win_data *data )
+{
+    TRACE( "win %p/%lx\n", data->hwnd, data->whole_window );
+
+    SwmShowWindow( data->hwnd, FALSE, 0);
+
+    data->mapped = FALSE;
+    //data->net_wm_state = 0;
+}
+
+/***********************************************************************
+ *		is_window_rect_mapped
+ *
+ * Check if the SWM whole window should be mapped based on its rectangle
+ */
+BOOL is_window_rect_mapped( const RECT *rect )
+{
+    /* don't map if rect is off-screen */
+    /*if (rect->left >= virtual_screen_rect.right ||
+        rect->top >= virtual_screen_rect.bottom ||
+        rect->right <= virtual_screen_rect.left ||
+        rect->bottom <= virtual_screen_rect.top)
+        return FALSE;*/
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *		sync_window_position
+ *
+ * Synchronize the SWM window position with the Windows one
+ */
+void sync_window_position( struct ntdrv_win_data *data,
+                           UINT swp_flags, const RECT *old_window_rect,
+                           const RECT *old_whole_rect, const RECT *old_client_rect )
+{
+    SwmPosChanged(data->hwnd, &data->whole_rect, old_whole_rect, NULL, swp_flags);
+
+    if (!(swp_flags & SWP_NOZORDER) || (swp_flags & SWP_SHOWWINDOW))
+    {
+        /* find window that this one must be after */
+        HWND prev = GetWindow( data->hwnd, GW_HWNDPREV );
+        while (prev && !(GetWindowLongW( prev, GWL_STYLE ) & WS_VISIBLE))
+            prev = GetWindow( prev, GW_HWNDPREV );
+        if (!prev)  /* top child */
+        {
+            /* Bring this window to foreground */
+            SwmSetForeground(data->hwnd);
+        }
+        /* should use stack_mode Below but most window managers don't get it right */
+        /* and Above with a sibling doesn't work so well either, so we ignore it */
+    }
+
+#ifdef HAVE_LIBXSHAPE
+    if (IsRectEmpty( old_window_rect ) != IsRectEmpty( &data->window_rect ))
+        sync_window_region( display, data, (HRGN)1 );
+    if (data->shaped)
+    {
+        int old_x_offset = old_window_rect->left - old_whole_rect->left;
+        int old_y_offset = old_window_rect->top - old_whole_rect->top;
+        int new_x_offset = data->window_rect.left - data->whole_rect.left;
+        int new_y_offset = data->window_rect.top - data->whole_rect.top;
+        if (old_x_offset != new_x_offset || old_y_offset != new_y_offset)
+            XShapeOffsetShape( display, data->whole_window, ShapeBounding,
+                               new_x_offset - old_x_offset, new_y_offset - old_y_offset );
+    }
+#endif
+
+    TRACE( "win %p/%lx pos %d,%d,%dx%d\n",
+           data->hwnd, data->whole_window, data->whole_rect.left, data->whole_rect.top,
+           data->whole_rect.right - data->whole_rect.left,
+           data->whole_rect.bottom - data->whole_rect.top );
+}
 
 /* EOF */

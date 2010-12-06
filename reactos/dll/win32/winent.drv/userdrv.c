@@ -583,11 +583,11 @@ void CDECL RosDrv_SetCapture( HWND hwnd, UINT flags )
     if (hwnd)
     {
         /* Capturing */
-        FIXME("Capture set for hwnd %x\n", hwnd);
+        TRACE("Capture set for hwnd %x\n", hwnd);
     }
     else
     {
-        FIXME("Capture released\n");
+        TRACE("Capture released\n");
     }
 }
 
@@ -628,7 +628,27 @@ void CDECL RosDrv_SetLayeredWindowAttributes( HWND hwnd, COLORREF key, BYTE alph
 
 void CDECL RosDrv_SetParent( HWND hwnd, HWND parent, HWND old_parent )
 {
-    UNIMPLEMENTED;
+    struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
+
+    if (!data) return;
+    if (parent == old_parent) return;
+
+    if (parent != GetDesktopWindow()) /* a child window */
+    {
+        if (old_parent == GetDesktopWindow())
+        {
+            /* destroy the old windows */
+            //destroy_whole_window( data, FALSE );
+            //destroy_icon_window( data );
+            FIXME("Should destroy hwnd %x\n", data->hwnd);
+        }
+    }
+    else  /* new top level window */
+    {
+        /* FIXME: we ignore errors since we can't really recover anyway */
+        //create_whole_window( data );
+        FIXME("Should create a new whole window for hwnd %x\n", data->hwnd);
+    }
 }
 
 int CDECL RosDrv_SetWindowRgn( HWND hwnd, HRGN hrgn, BOOL redraw )
@@ -658,6 +678,11 @@ void CDECL RosDrv_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
 
         /* Do some magic... */
         TRACE("Window %x is being made visible1\n", hwnd);
+
+        if (data->whole_window && is_window_rect_mapped( &data->window_rect ))
+        {
+            if (!data->mapped) map_window( data, style->styleNew );
+        }
     }
 
     if (offset == GWL_STYLE && (changed & WS_DISABLED))
@@ -737,14 +762,16 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
                                     const RECT *window_rect, const RECT *rectClient,
                                     const RECT *visible_rect, const RECT *valid_rects )
 {
-    RECT old_whole_rect, old_client_rect;
+    RECT old_whole_rect, old_client_rect, old_window_rect;
     struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
+    DWORD new_style = GetWindowLongW( hwnd, GWL_STYLE );
 
     if (!data) return;
 
     TRACE( "win %x pos changed. new vis rect %s, old whole rect %s, swp_flags %x insert_after %x\n",
            hwnd, wine_dbgstr_rect(visible_rect), wine_dbgstr_rect(&data->whole_rect), swp_flags, insert_after );
 
+    old_window_rect = data->window_rect;
     old_whole_rect  = data->whole_rect;
     old_client_rect = data->client_rect;
     data->window_rect = *window_rect;
@@ -778,18 +805,38 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     if (!data->whole_window) return;
 
-    /* Sync position change */
-    if (!(swp_flags & SWP_NOREDRAW)) // HACK: When removing this, explorer's start menu starts to appear partially. Investigate!
+    /* Sync window position with the SWM */
+    sync_window_position( data, swp_flags,
+                          &old_window_rect, &old_whole_rect, &old_client_rect );
+
+    if (data->mapped)
     {
-        /* SWM: Change windows position */
-        SwmPosChanged(hwnd, &data->whole_rect, &old_whole_rect, insert_after, swp_flags);
+        if (((swp_flags & SWP_HIDEWINDOW) && !(new_style & WS_VISIBLE)) ||
+            (!is_window_rect_mapped( window_rect ) && is_window_rect_mapped( &old_window_rect )))
+            unmap_window( data );
     }
 
     /* Pass show/hide information to the window manager */
-    if (swp_flags & SWP_SHOWWINDOW)
-        SwmShowWindow(hwnd, TRUE, swp_flags);
-    else if (swp_flags & SWP_HIDEWINDOW)
-        SwmShowWindow(hwnd, FALSE, swp_flags);
+    if ((new_style & WS_VISIBLE) &&
+        ((new_style & WS_MINIMIZE) || is_window_rect_mapped( window_rect )))
+    {
+        //if (!data->mapped || (swp_flags & (SWP_FRAMECHANGED|SWP_STATECHANGED)))
+            //set_wm_hints( display, data );
+
+        if (!data->mapped)
+        {
+            map_window( data, new_style );
+        }
+        else if ((swp_flags & SWP_STATECHANGED) && (!data->iconic != !(new_style & WS_MINIMIZE)))
+        {
+            data->iconic = (new_style & WS_MINIMIZE) != 0;
+            FIXME( "changing win %p iconic state to %u\n", data->hwnd, data->iconic );
+            //if (data->iconic)
+            //    XIconifyWindow( display, data->whole_window, DefaultScreen(display) );
+            //else if (is_window_rect_mapped( rectWindow ))
+            //    XMapWindow( display, data->whole_window );
+        }
+    }
 }
 
 /* EOF */
