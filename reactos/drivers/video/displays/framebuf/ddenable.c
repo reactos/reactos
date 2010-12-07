@@ -49,19 +49,20 @@ DrvEnableDirectDraw(
         /* Fill in the HAL Callback pointers */
 
         pCallBacks->dwSize                = sizeof(DD_CALLBACKS);
-        pCallBacks->dwFlags               = DDHAL_CB32_CANCREATESURFACE |
+        pCallBacks->dwFlags               = DDHAL_CB32_MAPMEMORY |
+                                            DDHAL_CB32_CANCREATESURFACE |
                                             DDHAL_CB32_CREATESURFACE ;
         //                                = DDHAL_CB32_WAITFORVERTICALBLANK |
-        //                                  DDHAL_CB32_MAPMEMORY |
         //                                  DDHAL_CB32_GETSCANLINE |
 
-        pCallBacks->CreateSurface         = DdCreateSurface;
-        // pCallBacks->SetColorKey           = DdSetColorKey;
-        // pCallBacks->WaitForVerticalBlank  = DdWaitForVerticalBlank;
-        pCallBacks->CanCreateSurface      = DdCanCreateSurface;
-        // pCallBacks->CreatePalette         = DdCreatePalette;
-        // pCallBacks->GetScanLine           = DdGetScanLine;
-        // pCallBacks->MapMemory             = DdMapMemory;
+        pCallBacks->CanCreateSurface      = (PDD_CANCREATESURFACE) DdCanCreateSurface;
+        pCallBacks->CreateSurface         = (PDD_CREATESURFACE) DdCreateSurface;
+        pCallBacks->MapMemory             = (PDD_MAPMEMORY) DdMapMemory;
+        // pCallBacks->SetColorKey           = (PDD_SETCOLORKEY) DdSetColorKey;
+        // pCallBacks->WaitForVerticalBlank  = (PDD_WAITFORVERTICALBLANK) DdWaitForVerticalBlank;
+        // pCallBacks->CreatePalette         = (PDD_CREATEPALETTE) DdCreatePalette;
+        // pCallBacks->GetScanLine           = (PDD_GETSCANLINE) DdGetScanLine;
+        
 
         /* Unused on Microsoft Windows 2000 and later and should be ignored by the driver.  '
             pCallBacks->DestroyDriver
@@ -82,29 +83,28 @@ DrvEnableDirectDraw(
         //                                          DDHAL_SURFCB32_BLT |
         //                                          DDHAL_SURFCB32_GETBLTSTATUS |
         //                                          DDHAL_SURFCB32_GETFLIPSTATUS;
-        // pSurfaceCallBacks->DestroySurface      = DdDestroySurface;
-        // pSurfaceCallBacks->Flip                = DdFlip;
-        // pSurfaceCallBacks->SetClipList         = DdSetClipList;
-        // pSurfaceCallBacks->Lock                = DdLock;
-        // pSurfaceCallBacks->Unlock              = DdUnlock;
-        // pSurfaceCallBacks->Blt                 = DdBlt;
-        // pSurfaceCallBacks->SetColorKey         = DdSetColorKey;
-        // pSurfaceCallBacks->AddAttachedSurface  = DdAddAttachedSurface;
-        // pSurfaceCallBacks->GetBltStatus        = DdGetBltStatus;
-        // pSurfaceCallBacks->GetFlipStatus       = DdGetFlipStatus;
-        // pSurfaceCallBacks->UpdateOverlay       = DdUpdateOverlay;
-        // pSurfaceCallBacks->SetOverlayPosition  = DdSetOverlayPosition;
-        // pSurfaceCallBacks->SetPalette          = DdSetPalette;
+        // pSurfaceCallBacks->DestroySurface      = (PDD_SURFCB_DESTROYSURFACE) DdDestroySurface;
+        // pSurfaceCallBacks->Flip                = (PDD_SURFCB_FLIP) DdFlip;
+        // pSurfaceCallBacks->SetClipList         = (PDD_SURFCB_SETCLIPLIST) DdSetClipList;
+        // pSurfaceCallBacks->Lock                = (PDD_SURFCB_LOCK ) DdLock;
+        // pSurfaceCallBacks->Unlock              = (PDD_SURFCB_UNLOCK) DdUnlock;
+        // pSurfaceCallBacks->Blt                 = (PDD_SURFCB_BLT) DdBlt;
+        // pSurfaceCallBacks->SetColorKey         = (PDD_SURFCB_SETCOLORKEY) DdSetColorKey;
+        // pSurfaceCallBacks->AddAttachedSurface  = (PDD_SURFCB_ADDATTACHEDSURFACE) DdAddAttachedSurface;
+        // pSurfaceCallBacks->GetBltStatus        = (PDD_SURFCB_GETBLTSTATUS) DdGetBltStatus;
+        // pSurfaceCallBacks->GetFlipStatus       = (PDD_SURFCB_GETFLIPSTATUS) DdGetFlipStatus;
+        // pSurfaceCallBacks->UpdateOverlay       = (PDD_SURFCB_UPDATEOVERLAY) DdUpdateOverlay;
+        // pSurfaceCallBacks->SetOverlayPosition  = (PDD_SURFCB_SETOVERLAYPOSITION) DdSetOverlayPosition;
+        // pSurfaceCallBacks->SetPalette          = (PDD_SURFCB_SETPALETTE) DdSetPalette;
     }
 
     if (pPaletteCallBacks !=NULL)
     {
         memset(pPaletteCallBacks,0,sizeof(DD_PALETTECALLBACKS));
         /* FILL pPaletteCallBacks with hal stuff */
-        pPaletteCallBacks->dwSize           = sizeof(DD_PALETTECALLBACKS);
-        pPaletteCallBacks->dwFlags          = 0;
-        // pPaletteCallBacks->DestroyPalette;
-        // pPaletteCallBacks->SetEntries;
+        pPaletteCallBacks->dwSize               = sizeof(DD_PALETTECALLBACKS);
+        // pPaletteCallBacks->DestroyPalette    = (PDD_PALCB_DESTROYPALETTE) DdDestorypalette;
+        // pPaletteCallBacks->SetEntries        = (PDD_PALCB_SETENTRIES) DdSetentries;
     }
 
     ppdev->bDDInitialized = TRUE;
