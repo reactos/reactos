@@ -221,7 +221,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     }
 
     /* Open the root directory */
-    if (FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL)
+    if ((FileName->Length == 2 && FileName->Buffer[0] == L'\\' && RelatedFileObject == NULL) ||
+        (FileName->Length == 0 && ((PNPFS_CCB)RelatedFileObject->FsContext2)->Type == CCB_DIRECTORY))
     {
         DPRINT("Open the root directory\n");
 
