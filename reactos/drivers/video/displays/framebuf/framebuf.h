@@ -20,6 +20,13 @@
 
 #pragma once
 
+#include <windows.h>
+#include <stdio.h>
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <d3dhal.h>
+#include <ddrawgdi.h>
+
 #include <stdarg.h>
 #include <windef.h>
 #include <guiddef.h>
@@ -27,7 +34,7 @@
 #include <winddi.h>
 #include <winioctl.h>
 #include <ntddvdeo.h>
-#include <ddrawi.h>
+
 
 //#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
 
