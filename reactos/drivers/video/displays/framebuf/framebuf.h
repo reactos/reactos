@@ -27,6 +27,7 @@
 #include <winddi.h>
 #include <winioctl.h>
 #include <ntddvdeo.h>
+#include <ddrawi.h>
 
 //#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
 
@@ -69,6 +70,15 @@ typedef struct _PDEV
 
 #define DEVICE_NAME	L"framebuf"
 #define ALLOC_TAG	'FUBF'
+
+DWORD CALLBACK 
+DdCanCreateSurface( LPDDHAL_CANCREATESURFACEDATA pccsd );
+
+DWORD CALLBACK 
+DdCreateSurface( LPDDHAL_CREATESURFACEDATA pcsd);
+
+DWORD CALLBACK
+DdMapMemory(PDD_MAPMEMORYDATA lpMapMemory);
 
 
 DHPDEV APIENTRY
@@ -159,3 +169,24 @@ IntSetPalette(
    IN PPALETTEENTRY ppalent,
    IN ULONG iStart,
    IN ULONG cColors);
+
+VOID APIENTRY
+DrvDisableDirectDraw(
+  IN DHPDEV  dhpdev);
+
+BOOL APIENTRY
+DrvEnableDirectDraw(
+  IN DHPDEV  dhpdev,
+  OUT DD_CALLBACKS  *pCallBacks,
+  OUT DD_SURFACECALLBACKS  *pSurfaceCallBacks,
+  OUT DD_PALETTECALLBACKS  *pPaletteCallBacks);
+
+BOOL APIENTRY
+DrvGetDirectDrawInfo(
+  IN DHPDEV  dhpdev,
+  OUT DD_HALINFO  *pHalInfo,
+  OUT DWORD  *pdwNumHeaps,
+  OUT VIDEOMEMORY  *pvmList,
+  OUT DWORD  *pdwNumFourCCCodes,
+  OUT DWORD  *pdwFourCC);
+

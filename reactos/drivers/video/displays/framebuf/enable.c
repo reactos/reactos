@@ -20,6 +20,8 @@
 
 #include "framebuf.h"
 
+HSEMAPHORE g_cs = (HSEMAPHORE)0;
+
 static DRVFN DrvFunctionTable[] =
 {
    {INDEX_DrvEnablePDEV, (PFN)DrvEnablePDEV},
@@ -52,17 +54,39 @@ DrvEnableDriver(
    ULONG cj,
    PDRVENABLEDATA pded)
 {
+   ULONG i;
+   BOOL status = FALSE;
+   ULONG SupportedVersions[] =
+   {
+      DDI_DRIVER_VERSION_NT5,         // win2000
+      DDI_DRIVER_VERSION_NT5_01,      // win xp
+      DDI_DRIVER_VERSION_NT5_01_SP1,  // win xp sp1
+   };
+
    if (cj >= sizeof(DRVENABLEDATA))
    {
       pded->c = sizeof(DrvFunctionTable) / sizeof(DRVFN);
       pded->pdrvfn = DrvFunctionTable;
-      pded->iDriverVersion = DDI_DRIVER_VERSION_NT5;
-      return TRUE;
+
+      // check see if it win2000/win xp or reactos, if no version found return false
+      for (i=0; i < sizeof(SupportedVersions) / sizeof(ULONG) ; i++)
+      {
+          if (SupportedVersions[i] == iEngineVersion )
+          {
+              pded->iDriverVersion = SupportedVersions[i];
+
+              // Initialize sync semaphore.
+              g_cs = EngCreateSemaphore();
+              if (g_cs)
+              {
+                 status = TRUE;
+              }
+              break;
+          }
+      }
+
    }
-   else
-   {
-      return FALSE;
-   }
+   return status;
 }
 
 /*
