@@ -100,6 +100,33 @@ MMixerGetMixerInfoByIndex(
     return NULL;
 }
 
+MIXER_STATUS
+MMixerGetMixerByName(
+    IN PMIXER_LIST MixerList,
+    IN LPWSTR MixerName,
+    OUT LPMIXER_INFO *OutMixerInfo)
+{
+    LPMIXER_INFO MixerInfo;
+    PLIST_ENTRY Entry;
+
+    Entry = MixerList->MixerList.Flink;
+    while(Entry != &MixerList->MixerList)
+    {
+        MixerInfo = (LPMIXER_INFO)CONTAINING_RECORD(Entry, MIXER_INFO, Entry);
+
+        DPRINT1("MixerName %S MixerName %S\n", MixerInfo->MixCaps.szPname, MixerName);
+        if (wcsicmp(MixerInfo->MixCaps.szPname, MixerName) == 0)
+        {
+            *OutMixerInfo = MixerInfo;
+            return MM_STATUS_SUCCESS;
+        }
+        /* move to next mixer entry */
+        Entry = Entry->Flink;
+    }
+
+    return MM_STATUS_UNSUCCESSFUL;
+}
+
 LPMIXERLINE_EXT
 MMixerGetSourceMixerLineByLineId(
     LPMIXER_INFO MixerInfo,

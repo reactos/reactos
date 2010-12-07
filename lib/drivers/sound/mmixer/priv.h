@@ -122,6 +122,7 @@ typedef struct
     HANDLE hDeviceInterfaceKey;
     LPWSTR DeviceName;
     PTOPOLOGY Topology;
+    LPMIXER_INFO MixerInfo;
 }MIXER_DATA, *LPMIXER_DATA;
 
 typedef struct
@@ -372,6 +373,11 @@ MMixerHandleAlternativeMixers(
     IN LPMIXER_DATA MixerData,
     IN PTOPOLOGY Topology);
 
+MIXER_STATUS
+MMixerGetMixerByName(
+    IN PMIXER_LIST MixerList,
+    IN LPWSTR MixerName,
+    OUT LPMIXER_INFO *MixerInfo);
 
 /* topology.c */
 

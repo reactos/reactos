@@ -249,13 +249,16 @@ MMixerCreateDestinationLine(
 
     /* initialize mixer destination line */
     DestinationLine->Line.cbStruct = sizeof(MIXERLINEW);
-    DestinationLine->Line.dwSource = MAXULONG;
-    DestinationLine->Line.dwLineID = MixerInfo->MixCaps.cDestinations + DESTINATION_LINE;
-    DestinationLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE;
-    DestinationLine->Line.dwUser = 0;
-    DestinationLine->Line.dwDestination = MixerInfo->MixCaps.cDestinations;
-    DestinationLine->Line.dwComponentType = (bInputMixer == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
     DestinationLine->Line.cChannels = 2; /* FIXME */
+    DestinationLine->Line.cConnections = 0;
+    DestinationLine->Line.cControls = 0;
+    DestinationLine->Line.dwComponentType = (bInputMixer == 0 ? MIXERLINE_COMPONENTTYPE_DST_SPEAKERS : MIXERLINE_COMPONENTTYPE_DST_WAVEIN);
+    DestinationLine->Line.dwDestination = MixerInfo->MixCaps.cDestinations;
+    DestinationLine->Line.dwLineID = MixerInfo->MixCaps.cDestinations + DESTINATION_LINE;
+    DestinationLine->Line.dwSource = MAXULONG;
+    DestinationLine->Line.dwUser = 0;
+    DestinationLine->Line.fdwLine = MIXERLINE_LINEF_ACTIVE;
+
 
     if (LineName)
     {
@@ -1267,6 +1270,12 @@ MMixerHandlePhysicalConnection(
 
     DPRINT1("Name %S, Pin %lu bInput %lu\n", OutConnection->SymbolicLinkName, OutConnection->Pin, bInput);
 
+    /* sanity check */
+    ASSERT(MixerData->MixerInfo == NULL || MixerData->MixerInfo == MixerInfo);
+
+    /* associate with mixer */
+    MixerData->MixerInfo = MixerInfo;
+
     if (MixerData->Topology == NULL)
     {
         /* construct new topology */
@@ -1418,6 +1427,9 @@ MMixerInitializeFilter(
         /* initialize line list */
         InitializeListHead(&MixerInfo->LineList);
         InitializeListHead(&MixerInfo->EventList);
+
+        /* associate with mixer data */
+        MixerData->MixerInfo = MixerInfo;
     }
 
     /* store mixer info */
@@ -1535,6 +1547,9 @@ MMixerHandleAlternativeMixers(
     IN PTOPOLOGY Topology)
 {
     ULONG Index, PinCount, Reserved;
+    MIXER_STATUS Status;
+    ULONG DestinationLineID, LineTerminator;
+    LPMIXERLINE_EXT DstLine;
 
     DPRINT1("DeviceName %S\n", MixerData->DeviceName);
 
@@ -1546,10 +1561,54 @@ MMixerHandleAlternativeMixers(
         MMixerIsTopologyPinReserved(Topology, Index, &Reserved);
 
         /* check if it has already been reserved */
-        if (Reserved == FALSE)
+        if (Reserved == TRUE)
         {
-            DPRINT1("MixerName %S Available PinID %lu\n", MixerData->DeviceName, Index);
+            /* pin has already been reserved */
+            continue;
         }
+
+        DPRINT("MixerName %S Available PinID %lu\n", MixerData->DeviceName, Index);
+
+        /* sanity check */
+        ASSERT(MixerData->MixerInfo);
+
+        if (!MixerData->MixerInfo)
+        {
+            DPRINT1("Expected mixer info\n");
+            continue;
+        }
+
+        /* build the destination line */
+        Status = MMixerBuildMixerDestinationLine(MixerContext, MixerData->MixerInfo, MixerData->hDevice, Index, TRUE);
+        if (Status != MM_STATUS_SUCCESS)
+        {
+            /* failed to build destination line */
+            continue;
+        }
+
+        /* calculate destination line id */
+        DestinationLineID = (DESTINATION_LINE + MixerData->MixerInfo->MixCaps.cDestinations-1);
+
+        /* add mixer controls to destination line */
+        Status = MMixerAddMixerControlsToDestinationLine(MixerContext, MixerData->MixerInfo, MixerData->hDevice, MixerData->Topology, Index, TRUE, DestinationLineID,  &LineTerminator);
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* now add the rest of the source lines */
+            Status = MMixerAddMixerSourceLines(MixerContext, MixerData->MixerInfo, MixerData->hDevice, MixerData->Topology, DestinationLineID, LineTerminator);
+        }
+
+        /* mark pin as consumed */
+        MMixerSetTopologyPinReserved(Topology, Index);
+
+        /* now grab destination line */
+        DstLine = MMixerGetSourceMixerLineByLineId(MixerData->MixerInfo, DestinationLineID);
+
+        /* set type and target as undefined */
+        DstLine->Line.dwComponentType = MIXERLINE_COMPONENTTYPE_DST_UNDEFINED;
+        DstLine->Line.Target.dwType = MIXERLINE_TARGETTYPE_UNDEFINED;
+        DstLine->Line.Target.vDriverVersion = 0;
+        DstLine->Line.Target.wMid = 0;
+        DstLine->Line.Target.wPid = 0;
     }
 }
 
@@ -1625,7 +1684,7 @@ MMixerSetupFilter(
     /* TODO: apply hacks for Wave source line */
 
     /* activate midi devices */
-    MMixerInitializeMidiForFilter(MixerContext, MixerList, MixerData, Topology);
+    //MMixerInitializeMidiForFilter(MixerContext, MixerList, MixerData, Topology);
 
     /* done */
     return Status;
