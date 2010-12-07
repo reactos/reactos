@@ -24,9 +24,4 @@
 //
 #define MACH_TYPE_OMAP3_BEAGLE 1546
 
-//
-// LogicPD ZOOM-II MDK Board, OMAP3530 SoC
-//
-#define MACH_TYPE_OMAP_ZOOM2   1967
-
 /* EOF */

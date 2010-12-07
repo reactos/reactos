@@ -20,8 +20,5 @@ Description = Reproductor multimedia.
 [Section.0419]
 Description = Мультимедийный проигрыватель.
 
-[Section.0415]
-Description = Odtwarzacz multimediów.
-
 [Section.0422]
 Description = Мультимедійний програвач.

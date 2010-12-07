@@ -153,6 +153,18 @@ EngFindResource(
 /*
  * @unimplemented
  */
+LPWSTR
+APIENTRY
+EngGetDriverName ( IN HDEV hdev )
+{
+  // www.osr.com/ddk/graphics/gdifncs_2gx3.htm
+  UNIMPLEMENTED;
+  return NULL;
+}
+
+/*
+ * @unimplemented
+ */
 BOOL
 APIENTRY
 EngGetFileChangeTime(

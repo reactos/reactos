@@ -24,29 +24,17 @@ Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
     LPDDRAWI_DIRECTDRAW_INT This;
 
     DX_WINDBG_trace();
-    BOOL linking = FALSE;
 
-    if (pIface == NULL)
+    if ((IsBadReadPtr(pIface,sizeof(LPDIRECTDRAW))) ||
+       (IsBadWritePtr(pIface,sizeof(LPDIRECTDRAW))))
     {
         return DDERR_INVALIDPARAMS;
     }
 
     This = (LPDDRAWI_DIRECTDRAW_INT)*pIface;
 
-    DX_STUB_str("Linking?\n")
-
-    _SEH2_TRY
-    {
-        linking = This->lpLcl ? TRUE:FALSE;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        linking = FALSE;
-    }
-    _SEH2_END;
-
-    /* fixme linking too second link when we shall not doing it */
-    if (!linking)
+    if ( (IsBadWritePtr(This,sizeof(LPDDRAWI_DIRECTDRAW_INT)) != 0) || 
+         (IsBadWritePtr(This->lpLcl,sizeof(LPDDRAWI_DIRECTDRAW_LCL)) != 0) )
     {
         /* We do not have a DirectDraw interface, we need alloc it*/
         LPDDRAWI_DIRECTDRAW_INT memThis;
@@ -322,7 +310,6 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
             return DDERR_NODIRECTDRAWSUPPORT;
         }
         dwFlags |= DDRAWI_NOHARDWARE;
-        DX_STUB_str("No hardware support\n");
     }
 
     if (hel_ret!=DD_OK)

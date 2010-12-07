@@ -40,7 +40,7 @@ int printf(const char *fmt, ...)
     return puts(printbuffer);
 }
 
-ULONG
+VOID
 DbgPrint(const char *fmt, ...)
 {
     va_list args;
@@ -52,7 +52,6 @@ DbgPrint(const char *fmt, ...)
     va_end(args);
     
     for (j = 0; j < i; j++) LlbSerialPutChar(Buffer[j]);
-    return 0;
 }
 
 /* EOF */

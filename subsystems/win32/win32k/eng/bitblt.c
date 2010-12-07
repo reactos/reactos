@@ -370,7 +370,6 @@ EngBitBlt(SURFOBJ *DestObj,
     }
     else
     {
-        InputPoint.x = InputPoint.y = 0;
         InputRect.left = 0;
         InputRect.right = DestRect->right - DestRect->left;
         InputRect.top = 0;
@@ -523,7 +522,7 @@ EngBitBlt(SURFOBJ *DestObj,
 }
 
 BOOL APIENTRY
-IntEngBitBlt(
+IntEngBitBltEx(
     SURFOBJ *psoTrg,
     SURFOBJ *psoSrc,
     SURFOBJ *psoMask,
@@ -534,7 +533,8 @@ IntEngBitBlt(
     POINTL *pptlMask,
     BRUSHOBJ *pbo,
     POINTL *pptlBrush,
-    ROP4 rop4)
+    ROP4 rop4,
+    BOOL bRemoveMouse)
 {
     SURFACE *psurfTrg;
     SURFACE *psurfSrc = NULL;
@@ -583,11 +583,28 @@ IntEngBitBlt(
         psurfSrc = NULL;
     }
 
+    if (bRemoveMouse)
+    {
+        SURFACE_LockBitmapBits(psurfTrg);
+
+        if (psoSrc)
+        {
+            if (psoSrc != psoTrg)
+            {
+                SURFACE_LockBitmapBits(psurfSrc);
+            }
+            MouseSafetyOnDrawStart(psoSrc, rclSrc.left, rclSrc.top,
+                                   rclSrc.right, rclSrc.bottom);
+        }
+        MouseSafetyOnDrawStart(psoTrg, rclClipped.left, rclClipped.top,
+                               rclClipped.right, rclClipped.bottom);
+    }
+
     /* Is the target surface device managed? */
-    if (psurfTrg->flags & HOOK_BITBLT)
+    if (psurfTrg->flHooks & HOOK_BITBLT)
     {
         /* Is the source a different device managed surface? */
-        if (psoSrc && psoSrc->hdev != psoTrg->hdev && psurfSrc->flags & HOOK_BITBLT)
+        if (psoSrc && psoSrc->hdev != psoTrg->hdev && psurfSrc->flHooks & HOOK_BITBLT)
         {
             DPRINT1("Need to copy to standard bitmap format!\n");
             ASSERT(FALSE);
@@ -597,7 +614,7 @@ IntEngBitBlt(
     }
 
     /* Is the source surface device managed? */
-    else if (psoSrc && psurfSrc->flags & HOOK_BITBLT)
+    else if (psoSrc && psurfSrc->flHooks & HOOK_BITBLT)
     {
         pfnBitBlt = GDIDEVFUNCS(psoSrc).BitBlt;
     }
@@ -619,6 +636,21 @@ IntEngBitBlt(
                         rop4);
 
     // FIXME: cleanup temp surface!
+
+    if (bRemoveMouse)
+    {
+        MouseSafetyOnDrawEnd(psoTrg);
+        if (psoSrc)
+        {
+            MouseSafetyOnDrawEnd(psoSrc);
+            if (psoSrc != psoTrg)
+            {
+                SURFACE_UnlockBitmapBits(psurfSrc);
+            }
+        }
+
+        SURFACE_UnlockBitmapBits(psurfTrg);
+    }
 
     return bResult;
 }
@@ -951,20 +983,27 @@ IntEngMaskBlt(SURFOBJ *psoDest,
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
+    SURFACE_LockBitmapBits(psurfDest);
+    MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
+                           OutputRect.right, OutputRect.bottom);
+
     /* Dummy BitBlt to let driver know that it should flush its changes.
        This should really be done using a call to DrvSynchronizeSurface,
        but the VMware driver doesn't hook that call. */
-    IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
+    IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   R4_NOOP);
+                   R4_NOOP, FALSE);
 
     ret = EngMaskBitBlt(psoDest, psoMask, ClipRegion, DestColorTranslation, SourceColorTranslation,
                         &OutputRect, &InputPoint, pbo, BrushOrigin);
 
     /* Dummy BitBlt to let driver know that something has changed. */
-    IntEngBitBlt(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
+    IntEngBitBltEx(psoDest, NULL, psoMask, ClipRegion, DestColorTranslation,
                    DestRect, pptlMask, pptlMask, pbo, BrushOrigin,
-                   R4_NOOP);
+                   R4_NOOP, FALSE);
+
+    MouseSafetyOnDrawEnd(psoDest);
+    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

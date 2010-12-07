@@ -43,8 +43,7 @@
 #include <pseh/pseh2.h>
 
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
-#define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId) ||\
-                           (GetWin32ClientInfo()->pDeskInfo && GetWin32ClientInfo()->pDeskInfo->fsHooks & HOOKID_TO_FLAG(HookId)))
+#define ISITHOOKED(HookId) (GetWin32ClientInfo()->fsHooks & HOOKID_TO_FLAG(HookId))
 
 /* Temporarily in here for now. */
 typedef struct _USERAPIHOOKINFO
@@ -169,7 +168,7 @@ SharedPtrToKernel(PVOID Ptr)
 static __inline BOOL
 IsThreadHooked(PCLIENTINFO pci)
 {
-    return (pci->fsHooks|pci->pDeskInfo->fsHooks) != 0;
+    return pci->fsHooks != 0;
 }
 
 static __inline PDESKTOPINFO
@@ -195,4 +194,3 @@ VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
 BOOL FASTCALL TestWindowProcess(PWND);
 VOID UserGetWindowBorders(DWORD, DWORD, SIZE *, BOOL);
-VOID FASTCALL IntNotifyWinEvent(DWORD, HWND, LONG, LONG, DWORD);

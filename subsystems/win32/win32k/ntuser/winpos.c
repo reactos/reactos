@@ -299,10 +299,8 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
    WinPosInitInternalPos(Wnd, &Size, &Wnd->rcWindow);
 
    if (co_HOOK_CallHooks( WH_CBT, HCBT_MINMAX, (WPARAM)Wnd->head.h, ShowFlag))
-   {
-      DPRINT1("WinPosMinMaximize WH_CBT Call Hook return!\n");
       return SWP_NOSIZE | SWP_NOMOVE;
-   }
+
       if (Wnd->style & WS_MINIMIZE)
       {
          if (!co_IntSendMessageNoWait(Wnd->head.h, WM_QUERYOPEN, 0, 0))
@@ -387,6 +385,7 @@ co_WinPosMinMaximize(PWND Wnd, UINT ShowFlag, RECT* NewPos)
                }
             }
       }
+
    return(SwpFlags);
 }
 
@@ -1359,14 +1358,6 @@ co_WinPosSetWindowPos(
       co_IntSendMessageNoWait(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
    }
 
-   if ( WinPos.flags & SWP_FRAMECHANGED  || WinPos.flags & SWP_STATECHANGED ||
-      !(WinPos.flags & SWP_NOCLIENTSIZE) || !(WinPos.flags & SWP_NOCLIENTMOVE) )
-   {
-      PWND pWnd = UserGetWindowObject(WinPos.hwnd);
-      if (pWnd)
-         IntNotifyWinEvent(EVENT_OBJECT_LOCATIONCHANGE, pWnd, OBJID_WINDOW, CHILDID_SELF, WEF_SETBYWNDPTI);
-   }
-
    return TRUE;
 }
 
@@ -1578,99 +1569,162 @@ co_WinPosShowWindow(PWND Wnd, INT Cmd)
    return(WasVisible);
 }
 
+
+#if 0
+
+/* find child of 'parent' that contains the given point (in parent-relative coords) */
+PWND child_window_from_point(PWND parent, int x, int y )
+{
+    PWND Wnd;// = parent->spwndChild;
+
+//    LIST_FOR_EACH_ENTRY( Wnd, &parent->children, struct window, entry )
+    for (Wnd = parent->spwndChild; Wnd; Wnd = Wnd->spwndNext)
+    {
+        if (!IntPtInWindow( Wnd, x, y )) continue;  /* skip it */
+
+        /* if window is minimized or disabled, return at once */
+        if (Wnd->style & (WS_MINIMIZE|WS_DISABLED)) return Wnd;
+
+        /* if point is not in client area, return at once */
+        if (x < Wnd->rcClient.left || x >= Wnd->rcClient.right ||
+            y < Wnd->rcClient.top || y >= Wnd->rcClient.bottom)
+            return Wnd;
+
+        return child_window_from_point( Wnd, x - Wnd->rcClient.left, y - Wnd->rcClient.top );
+    }
+    return parent;  /* not found any child */
+}
+#endif
+
+/* wine server: child_window_from_point
+
+Caller must dereference the "returned" Window
+*/
 static
-PWND FASTCALL
+VOID FASTCALL
 co_WinPosSearchChildren(
    PWND ScopeWin,
+   PUSER_MESSAGE_QUEUE OnlyHitTests,
    POINT *Point,
+   PWND* Window,
    USHORT *HitTest
    )
 {
-    PWND pwndChild;
-    HWND *List, *phWnd;
-
-    if (!(ScopeWin->style & WS_VISIBLE))
-    {
-        return NULL;
-    }
-
-    if ((ScopeWin->style & WS_DISABLED))
-    {
-        return NULL;
-    }
-
-    if (!IntPtInWindow(ScopeWin, Point->x, Point->y))
-    {
-        return NULL;
-    }
-
-    UserReferenceObject(ScopeWin);
-
-    if (Point->x - ScopeWin->rcClient.left < ScopeWin->rcClient.right &&
-        Point->y - ScopeWin->rcClient.top < ScopeWin->rcClient.bottom )
-    {
-        List = IntWinListChildren(ScopeWin);
-        if(List)
-        {
-            for (phWnd = List; *phWnd; ++phWnd)
-            {
-                if (!(pwndChild = UserGetWindowObject(*phWnd)))
-                {
-                    continue;
-                }
-
-                pwndChild = co_WinPosSearchChildren(pwndChild, Point, HitTest);
-
-                if(pwndChild != NULL)
-                {
-                    /* We found a window. Don't send any more WM_NCHITTEST messages */
-                    UserDereferenceObject(ScopeWin);
-                    return pwndChild;
-                }
-            }
-        }
-
-        ExFreePool(List);
-    }
-
-    *HitTest = co_IntSendMessage(ScopeWin->head.h, WM_NCHITTEST, 0,
-                                 MAKELONG(Point->x, Point->y));
-    if ((*HitTest) == (USHORT)HTTRANSPARENT)
-    {
-         UserDereferenceObject(ScopeWin);
-         return NULL;
-    }
-    
-    return ScopeWin;
-}
-
-PWND FASTCALL
-co_WinPosWindowFromPoint(PWND ScopeWin, POINT *WinPoint, USHORT* HitTest)
-{
-   PWND Window;
-   POINT Point = *WinPoint;
+   PWND Current;
+   HWND *List, *phWnd;
    USER_REFERENCE_ENTRY Ref;
 
-   if( ScopeWin == NULL )
+   ASSERT_REFS_CO(ScopeWin);
+
+   if ((List = IntWinListChildren(ScopeWin)))
    {
-       ScopeWin = UserGetDesktopWindow();
-       if(ScopeWin == NULL)
-           return NULL;
+      for (phWnd = List; *phWnd; ++phWnd)
+      {
+         if (!(Current = UserGetWindowObject(*phWnd)))
+            continue;
+
+         if (!(Current->style & WS_VISIBLE))
+         {
+            continue;
+         }
+
+         if ((Current->style & (WS_POPUP | WS_CHILD | WS_DISABLED)) ==
+               (WS_CHILD | WS_DISABLED))
+         {
+            continue;
+         }
+
+         if (!IntPtInWindow(Current, Point->x, Point->y))
+         {
+             continue;
+         }
+
+         if (*Window) UserDereferenceObject(*Window);
+         *Window = Current;
+         UserReferenceObject(*Window);
+
+         if (Current->style & WS_MINIMIZE)
+         {
+            *HitTest = HTCAPTION;
+            break;
+         }
+
+         if (Current->style & WS_DISABLED)
+         {
+            *HitTest = HTERROR;
+            break;
+         }
+
+         UserRefObjectCo(Current, &Ref);
+
+         if (OnlyHitTests && (Current->head.pti->MessageQueue == OnlyHitTests))
+         {
+            *HitTest = co_IntSendMessage(Current->head.h, WM_NCHITTEST, 0,
+                                         MAKELONG(Point->x, Point->y));
+            if ((*HitTest) == (USHORT)HTTRANSPARENT)
+            {
+               UserDerefObjectCo(Current);
+               continue;
+            }
+         }
+         else
+            *HitTest = HTCLIENT;
+
+         if (Point->x >= Current->rcClient.left &&
+               Point->x < Current->rcClient.right &&
+               Point->y >= Current->rcClient.top &&
+               Point->y < Current->rcClient.bottom)
+         {
+            co_WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
+         }
+
+         UserDerefObjectCo(Current);
+
+         break;
+      }
+      ExFreePool(List);
+   }
+}
+
+/* wine: WINPOS_WindowFromPoint */
+USHORT FASTCALL
+co_WinPosWindowFromPoint(PWND ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
+                         PWND* Window)
+{
+   HWND DesktopWindowHandle;
+   PWND DesktopWindow;
+   POINT Point = *WinPoint;
+   USHORT HitTest;
+
+   ASSERT_REFS_CO(ScopeWin);
+
+   *Window = NULL;
+
+   if(!ScopeWin)
+   {
+      DPRINT1("WinPosWindowFromPoint(): ScopeWin == NULL!\n");
+      return(HTERROR);
    }
 
-   *HitTest = HTNOWHERE;
+   if (ScopeWin->style & WS_DISABLED)
+   {
+      return(HTERROR);
+   }
 
-   ASSERT_REFS_CO(ScopeWin);
-   UserRefObjectCo(ScopeWin, &Ref);
+   /* Translate the point to the space of the scope window. */
+   DesktopWindowHandle = IntGetDesktopWindow();
+   if((DesktopWindowHandle != ScopeWin->head.h) &&
+         (DesktopWindow = UserGetWindowObject(DesktopWindowHandle)))
+   {
+      Point.x += ScopeWin->rcClient.left - DesktopWindow->rcClient.left;
+      Point.y += ScopeWin->rcClient.top - DesktopWindow->rcClient.top;
+   }
 
-   Window = co_WinPosSearchChildren(ScopeWin, &Point, HitTest);
+   HitTest = HTNOWHERE;
 
-   UserDerefObjectCo(ScopeWin);
-   if(Window)
-       ASSERT_REFS_CO(Window);
-   ASSERT_REFS_CO(ScopeWin);
+   co_WinPosSearchChildren(ScopeWin, OnlyHitTests, &Point, Window, &HitTest);
 
-   return Window;
+   return ((*Window) ? HitTest : HTNOWHERE);
 }
 
 BOOL

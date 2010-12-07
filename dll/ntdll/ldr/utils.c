@@ -256,7 +256,7 @@ LdrpQueryAppPaths(IN PCWSTR ImageName)
     /* Copy it to the heap allocd memory */
     Path = RtlAllocateHeap(RtlGetProcessHeap(),
                            0,
-                           (wcslen(SearchPathBuffer) + 1) * sizeof(WCHAR));
+                           wcslen(SearchPathBuffer) * sizeof(WCHAR));
 
     if (!Path)
     {
@@ -3236,9 +3236,9 @@ LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders)
  */
 NTSTATUS NTAPI
 LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
-                               IN PLDR_CALLBACK Callback,
-                               IN PVOID CallbackContext,
-                               OUT PUSHORT ImageCharacterstics)
+                               ULONG Unknown1,
+                               ULONG Unknown2,
+                               ULONG Unknown3)
 {
   FILE_STANDARD_INFORMATION FileInfo;
   IO_STATUS_BLOCK IoStatusBlock;

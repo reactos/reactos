@@ -130,9 +130,7 @@ IntUserManualGuiCheck(LONG Check)
 
 }
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitGuiCheckImpl (VOID)
 {
    return STATUS_SUCCESS;

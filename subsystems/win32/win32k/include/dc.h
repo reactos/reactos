@@ -1,5 +1,4 @@
-#ifndef __WIN32K_DC_H
-#define __WIN32K_DC_H
+#pragma once
 
 typedef struct _DC *PDC;
 
@@ -23,30 +22,6 @@ typedef struct _DC *PDC;
 /* fl */
 #define DC_FL_PAL_BACK 1
 
-#define DC_DISPLAY  1
-#define DC_DIRECT 2
-#define DC_CANCELED 4
-#define DC_PERMANANT 0x08
-#define DC_DIRTY_RAO 0x10
-#define DC_ACCUM_WMGR 0x20
-#define DC_ACCUM_APP 0x40
-#define DC_RESET 0x80
-#define DC_SYNCHRONIZEACCESS 0x100
-#define DC_EPSPRINTINGESCAPE 0x200
-#define DC_TEMPINFODC 0x400
-#define DC_FULLSCREEN 0x800
-#define DC_IN_CLONEPDEV 0x1000
-#define DC_REDIRECTION 0x2000
-#define DC_SHAREACCESS 0x4000
-
-typedef enum
-{
-  DCTYPE_DIRECT = 0,
-  DCTYPE_MEMORY = 1,
-  DCTYPE_INFO = 2,
-} DCTYPE;
-
-
 /* Type definitions ***********************************************************/
 
 typedef struct _ROS_DC_INFO
@@ -54,7 +29,7 @@ typedef struct _ROS_DC_INFO
   HRGN     hClipRgn;     /* Clip region (may be 0) */
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
 
-  CLIPOBJ     *CombinedClip;
+  CLIPOBJ     *CombinedClip; /* Use XCLIPOBJ in DC. */
 
   UNICODE_STRING    DriverName;
 
@@ -159,14 +134,15 @@ typedef struct _DC
 
 extern PDC defaultDCstate;
 
-INIT_FUNCTION NTSTATUS NTAPI InitDcImpl();
+NTSTATUS FASTCALL InitDcImpl(VOID);
 PPDEVOBJ FASTCALL IntEnumHDev(VOID);
-PDC NTAPI DC_AllocDcWithHandle();
+HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
+HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_AllocateDcAttr(HDC);
 VOID FASTCALL DC_FreeDcAttr(HDC);
 BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
-BOOL FASTCALL DC_SetOwnership(HDC hDC, PEPROCESS Owner);
+BOOL FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 VOID FASTCALL DC_LockDisplay(HDC);
 VOID FASTCALL DC_UnlockDisplay(HDC);
 BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
@@ -179,16 +155,10 @@ VOID FASTCALL DC_vUpdateFillBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateLineBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateTextBrush(PDC pdc);
 VOID FASTCALL DC_vUpdateBackgroundBrush(PDC pdc);
-VOID FASTCALL DC_vFinishBlit(PDC pdc1, PDC pdc2);
-VOID FASTCALL DC_vPrepareDCsForBlit(PDC pdc1, RECT rc1, PDC pdc2, RECT rc2);
-
-VOID NTAPI DC_vRestoreDC(IN PDC pdc, INT iSaveLevel);
 
 BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC);
 BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC);
 VOID FASTCALL DCU_SetDcUndeletable(HDC);
-VOID NTAPI DC_vFreeDcAttr(PDC pdc);
-VOID NTAPI DC_vInitDc(PDC pdc, DCTYPE dctype, PPDEVOBJ ppdev);
 
 COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
 INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
@@ -204,8 +174,11 @@ VOID FASTCALL IntGdiUnreferencePdev(PPDEVOBJ pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
+INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 BOOL FASTCALL MakeInfoDC(PDC,BOOL);
 BOOL FASTCALL IntSetDefaultRegion(PDC);
+
+extern PPDEVOBJ pPrimarySurface;
 
 VOID
 FORCEINLINE
@@ -255,6 +228,5 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
     pdc->dclevel.ppal = ppal;
 }
 
-extern PBRUSH pbrDefaultBrush ;
-
-#endif /* not __WIN32K_DC_H */
+BOOL FASTCALL IntPrepareDriverIfNeeded(VOID);
+extern PDEVOBJ PrimarySurface;

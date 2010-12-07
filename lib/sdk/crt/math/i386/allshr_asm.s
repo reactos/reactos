@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
-#include <asm.inc>
-
-PUBLIC __allshr
  
+.globl __allshr
+ 
+.intel_syntax noprefix
+
 /* FUNCTIONS ***************************************************************/
-.code
 
 //
 // llshr - long shift right
@@ -94,5 +93,3 @@ __allshr:
         sar     edx,31
         mov     eax,edx
         ret
-
-END

@@ -166,10 +166,6 @@ SetPixelFormat(HDC  hdc,
                INT  iPixelFormat,
                CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
-  /* Can only be set once */
-  INT current = GetPixelFormat(hdc);
-  if(current) return current == iPixelFormat ;
-  
   if (glSetPixelFormat == NULL)
     if (OpenGLEnable() == FALSE)
       return(0);

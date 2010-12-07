@@ -17,9 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <asm.inc>
-
-
 	.intel_syntax noprefix
 	.text
 	.code16
@@ -171,5 +168,3 @@ Int386_vector_opcode:
 	mov eax, Int386_eax
 
 	ret
-
-END

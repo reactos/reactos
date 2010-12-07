@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
+ 
+.globl _ceil
 
-#include <asm.inc>
-
-PUBLIC _ceil
+.intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/
-.code
 
 _ceil:
         push    ebp
@@ -48,7 +47,7 @@ _ceil:
         fld     qword ptr [ebp+8]       // Load real from stack
         fstcw   [ebp-2]                 // Save control word
         fclex                           // Clear exceptions
-        mov     word ptr [ebp-4], HEX(0b63)  // Rounding control word
+        mov     word ptr [ebp-4],0xb63  // Rounding control word
         fldcw   [ebp-4]                 // Set new rounding control
         frndint                         // Round to integer
         fclex                           // Clear exceptions
@@ -56,5 +55,3 @@ _ceil:
         mov     esp,ebp                 // Deallocate temporary space
         pop     ebp
         ret
-
-END

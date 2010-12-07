@@ -27,16 +27,10 @@ extern PATTACHINFO gpai;
 #define KBL_PRELOAD 2
 #define KBL_RESET 4
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitInputImpl(VOID);
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitKeyboardImpl(VOID);
-
 PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue(VOID);
 VOID W32kUnregisterPrimitiveMessageQueue(VOID);
 PKBL W32kGetDefaultKeyLayout(VOID);

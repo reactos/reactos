@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ksamd64.inc>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* DATA *********************************************************************/
 
@@ -17,5 +17,3 @@ PUBLIC sqrtf
 sqrtf:
     sqrtss	xmm0, xmm0
     ret
-
-END

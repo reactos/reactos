@@ -152,7 +152,6 @@ HalpSetCmosData(IN ULONG BusNumber,
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializeCmos(VOID)
 {
     /* Set default century offset byte */

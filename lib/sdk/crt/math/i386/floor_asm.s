@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
-#include <asm.inc>
-
-PUBLIC _floor
  
+.globl _floor
+ 
+.intel_syntax noprefix
+
 /* FUNCTIONS ***************************************************************/
-.code
 
 _floor:
         push    ebp
@@ -48,7 +47,7 @@ _floor:
         fld     qword ptr [ebp+8]       // Load real from stack
         fstcw   [ebp-2]                 // Save control word
         fclex                           // Clear exceptions
-        mov     word ptr [ebp-4], HEX(0763)  // Rounding control word
+        mov     word ptr [ebp-4],0x763  // Rounding control word
         fldcw   [ebp-4]                 // Set new rounding control
         frndint                         // Round to integer
         fclex                           // Clear exceptions
@@ -56,5 +55,3 @@ _floor:
         mov     esp,ebp
         pop     ebp
         ret
-
-END

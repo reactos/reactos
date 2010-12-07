@@ -7,42 +7,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-
-#include <ks386.inc>
-
-EXTERN _HalpAcquireSystemHardwareSpinLock@0:PROC
-EXTERN _HalpReleaseCmosSpinLock@0:PROC
-EXTERN _DbgBreakPoint@0:PROC
-EXTERN _HalpCurrentRollOver:DWORD
-EXTERN _HalpPerfCounterCutoff:DWORD
-
-#define PIC1_BASE         HEX(20) /* IO base address for master PIC */
-#define PIC2_BASE         HEX(A0) /* IO base address for slave PIC */
-#define PIC1_COMMAND      PIC1_BASE
-#define PIC1_DATA         (PIC1_BASE+1)
-#define PIC2_COMMAND      PIC2_BASE
-#define PIC2_DATA         (PIC2_BASE+1)
-#define PIC_EOI           HEX(20)
-#define PIC_SPECIFIC_EOI2 HEX(62)
-
-#define CMOS_ADDR HEX(70)
-#define CMOS_DATA HEX(71)
-#define CMOS_REGISTER_A HEX(0A)
-#define CMOS_REGISTER_B HEX(0B)
-#define CMOS_REGISTER_C HEX(0C)
-#define CMOS_REGISTER_D HEX(0D)
-
-#define PIT_CH0    HEX(40)
-#define PIT_MODE   HEX(43)
-#define SYSTEM_CTRL_PORT_A HEX(92)
+#include <asm.h>
+.intel_syntax noprefix
 
 /* GLOBALS *******************************************************************/
 
-.data
-ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
-
-PUBLIC _HalpPerfCounter
+.globl _HalpPerfCounter
 _HalpLastPerfCounterLow:    .long 0
 _HalpLastPerfCounterHigh:   .long 0
 _HalpPerfCounter:
@@ -52,8 +22,8 @@ _HalpSystemHardwareFlags:   .long 0
 
 /* FUNCTIONS *****************************************************************/
 
-.code
-PUBLIC _HalpCalibrateStallExecution@0
+.global _HalpCalibrateStallExecution@0
+.func HalpCalibrateStallExecution@0
 _HalpCalibrateStallExecution@0:
 
     /* Setup the stack frame */
@@ -67,27 +37,27 @@ _HalpCalibrateStallExecution@0:
     
     /* Get the current interrupt mask on the PICs */
     xor eax, eax
-    in al, PIC2_DATA
+    in al, 0xA1
     shl eax, 8
-    in al, PIC1_DATA
+    in al, 0x21
     
     /* Save it */
     push eax
     
     /* Now mask everything except the RTC and PIC 2 chain-interrupt */
-    mov eax, NOT (HEX(04) OR HEX(100))
+    mov eax, ~((1 << 2) | (1 << 8))
     
     /* Program the PICs */
-    out PIC1_DATA, al
+    out 0x21, al
     shr eax, 8
-    out PIC2_DATA, al
+    out 0xA1, al
     
     /* Now get the IDT */
     sidt [ebp-8]
     mov ecx, [ebp-6]
     
     /* Get the IDT entry for the RTC */
-    mov eax, HEX(38)
+    mov eax, 0x38
     shl eax, 3
     add ecx, eax
     
@@ -100,7 +70,7 @@ _HalpCalibrateStallExecution@0:
     mov eax, offset OnlyOnePersonCanWriteHalCode
     mov [ecx], ax
     mov word ptr [ecx+2], KGDT_R0_CODE
-    mov word ptr [ecx+4], HEX(08E00)
+    mov word ptr [ecx+4], 0x8E00
     shr eax, 16
     mov [ecx+6], ax
 
@@ -111,18 +81,18 @@ _HalpCalibrateStallExecution@0:
     call _HalpAcquireSystemHardwareSpinLock@0
     
     /* Now initialize register A on the CMOS */
-    mov ax, HEX(2D00) OR CMOS_REGISTER_A
-    out CMOS_ADDR, al
+    mov ax, (0x2D << 8) | 0xA
+    out 0x70, al
     jmp $+2
     mov al, ah
-    out CMOS_DATA, al
+    out 0x71, al
     jmp $+2
     
     /* Read register B */
-    mov ax, CMOS_REGISTER_B
-    out CMOS_ADDR, al
+    mov ax, 0xB
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Don't touch the LastKnownGoodConfig hack */
@@ -130,28 +100,28 @@ _HalpCalibrateStallExecution@0:
     mov ah, al
     
     /* Enable the interrupt */
-    or ah, HEX(42)
+    or ah, 0x42
     
     /* Now write the register B */
-    mov al, CMOS_REGISTER_B
-    out CMOS_ADDR, al
+    mov al, 0xB
+    out 0x70, al
     jmp $+2
     mov al, ah
-    out CMOS_DATA, al
+    out 0x71, al
     jmp $+2
     
     /* Read register C */
-    mov al, CMOS_REGISTER_C
-    out CMOS_ADDR, al
+    mov al, 0xC
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Read register D */
-    mov al, CMOS_REGISTER_D
-    out CMOS_ADDR, al
+    mov al, 0xD
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Release CMOS lock */
@@ -199,18 +169,18 @@ OnlyOnePersonCanWriteHalCode:
     call _HalpAcquireSystemHardwareSpinLock@0
     
     /* Now initialize register A on the CMOS */
-    mov ax, HEX(2D00) OR CMOS_REGISTER_A
-    out CMOS_ADDR, al
+    mov ax, (0x2D << 8) | 0xA
+    out 0x70, al
     jmp $+2
     mov al, ah
-    out CMOS_DATA, al
+    out 0x71, al
     jmp $+2
     
     /* Read register B */
-    mov ax, CMOS_REGISTER_B
-    out CMOS_ADDR, al
+    mov ax, 0xB
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Don't touch the LastKnownGoodConfig hack */
@@ -218,38 +188,38 @@ OnlyOnePersonCanWriteHalCode:
     mov ah, al
     
     /* Enable the interrupt */
-    or ah, HEX(42)
+    or ah, 0x42
     
     /* Now write the register B */
-    mov al, CMOS_REGISTER_B
-    out CMOS_ADDR, al
+    mov al, 0xB
+    out 0x70, al
     jmp $+2
     mov al, ah
-    out CMOS_DATA, al
+    out 0x71, al
     jmp $+2
     
     /* Read register C */
-    mov al, CMOS_REGISTER_C
-    out CMOS_ADDR, al
+    mov al, 0xC
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Read register D */
-    mov al, CMOS_REGISTER_D
-    out CMOS_ADDR, al
+    mov al, 0xD
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Release CMOS lock */
     call _HalpReleaseCmosSpinLock@0
     
     /* Dismiss the interrupt */
-    mov al, PIC_EOI
-    out PIC2_COMMAND, al
-    mov al, PIC_SPECIFIC_EOI2
-    out PIC1_COMMAND, al
+    mov al, 0x20
+    out 0xA0, al
+    mov al, 0x62
+    out 0x20, al
     
     /* Reset the counter and return back to the looper */
     xor eax, eax
@@ -278,24 +248,24 @@ FoundFactor:
     /* Prepare for interrupt return */
     pop eax
     push offset AndItsNotYou
-    mov eax, HEX(13)
+    mov eax, 0x13
     
     /* Acquire CMOS lock */
     call _HalpAcquireSystemHardwareSpinLock@0
     
     /* Now initialize register A on the CMOS */
-    mov ax, HEX(2D00) OR CMOS_REGISTER_A
-    out CMOS_ADDR, al
+    mov ax, (0x2D << 8) | 0xA
+    out 0x70, al
     jmp $+2
     mov al, ah
-    out CMOS_DATA, al
+    out 0x71, al
     jmp $+2
     
     /* Read register B */
-    mov ax, CMOS_REGISTER_B
-    out CMOS_ADDR, al
+    mov ax, 0xB
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Don't touch the LastKnownGoodConfig hack */
@@ -303,34 +273,34 @@ FoundFactor:
     mov ah, al
     
     /* Disable the interrupt */
-    or ah, 2
+    or ah, 0x2
     
     /* Now write the register B */
-    mov al, CMOS_REGISTER_B
-    out CMOS_ADDR, al
+    mov al, 0xB
+    out 0x70, al
     jmp $+2
     mov al, ah
-    out CMOS_DATA, al
+    out 0x71, al
     jmp $+2
     
     /* Read register C */
-    mov al, CMOS_REGISTER_C
-    out CMOS_ADDR, al
+    mov al, 0xC
+    out 0x70, al
     jmp $+2
-    in al, CMOS_DATA
+    in al, 0x71
     jmp $+2
     
     /* Release CMOS lock */
     call _HalpReleaseCmosSpinLock@0
     
     /* Dismiss the interrupt */
-    mov al, PIC_EOI
-    out PIC2_COMMAND, al
-    mov al, PIC_SPECIFIC_EOI2
-    out PIC1_COMMAND, al
+    mov al, 0x20
+    out 0xA0, al
+    mov al, 0x62
+    out 0x20, al
     
     /* Disable interrupts on return */
-    and word ptr [esp+8], NOT EFLAGS_INTERRUPT_MASK
+    and word ptr [esp+8], ~EFLAGS_INTERRUPT_MASK
     iretd
     
     /************************* WE ARE BACK FROM RTC ***************************/
@@ -343,9 +313,9 @@ AndItsNotYou:
     
     /* Restore the mask */
     pop eax
-    out PIC1_DATA, al
+    out 0x21, al
     shr eax, 8
-    out PIC2_DATA, al
+    out 0xA1, al
     
     /* Restore EFLAGS */
     popf
@@ -354,10 +324,11 @@ AndItsNotYou:
     mov esp, ebp
     pop ebp
     ret
-
+.endfunc
 
 #ifndef _MINIHAL_
-PUBLIC _KeStallExecutionProcessor@4
+.globl _KeStallExecutionProcessor@4
+.func KeStallExecutionProcessor@4
 _KeStallExecutionProcessor@4:
 
     /* Get the number of microseconds required */
@@ -385,9 +356,11 @@ SubtractLoop:
 Done:
     /* Return */
     ret 4
+.endfunc
 #endif
 
-PUBLIC _KeQueryPerformanceCounter@4
+.global _KeQueryPerformanceCounter@4
+.func KeQueryPerformanceCounter@4
 _KeQueryPerformanceCounter@4:
 
     /* Check if we were called too early */
@@ -407,20 +380,20 @@ LoopPreInt:
 LoopPostInt:
 
     /* Get the current value */
-    mov ebx, dword ptr _HalpPerfCounterLow
-    mov esi, dword ptr _HalpPerfCounterHigh
+    mov ebx, _HalpPerfCounterLow
+    mov esi, _HalpPerfCounterHigh
 
     /* Read 8254 timer */
-    mov al, 0 /* Interrupt on terminal count */
-    out PIT_MODE, al
-    in al, SYSTEM_CTRL_PORT_A
-    or al, byte ptr _HalpPerfCounterCutoff
-    out SYSTEM_CTRL_PORT_A, al
+    mov al, 0
+    out 0x43, al
+    in al, 0x92
+    or al, _HalpPerfCounterCutoff
+    out 0x92, al
     jmp $+2
-    in al, PIT_CH0
+    in al, 0x40
     jmp $+2
     movzx ecx, al
-    in al, PIT_CH0
+    in al, 0x40
     mov ch, al
 
     /* Enable interrupts and do a short wait */
@@ -433,8 +406,8 @@ LoopPostInt:
     cli
 
     /* Get the counter value again */
-    mov eax, dword ptr _HalpPerfCounterLow
-    mov edx, dword ptr _HalpPerfCounterHigh
+    mov eax, _HalpPerfCounterLow
+    mov edx, _HalpPerfCounterHigh
 
     /* Check if someone updated the counter */
     cmp eax, ebx
@@ -444,7 +417,7 @@ LoopPostInt:
 
     /* Check if the current 8254 value causes rollover */
     neg ecx
-    add ecx, dword ptr _HalpCurrentRollOver
+    add ecx, _HalpCurrentRollOver
     jnb DoRollOver
 
 SetSum:
@@ -454,19 +427,19 @@ SetSum:
     adc edx, 0
 
     /* Check if we're above or below the last high value */
-    cmp edx, dword ptr _HalpLastPerfCounterHigh
+    cmp edx, _HalpLastPerfCounterHigh
     jb short BelowHigh
     jnz short BelowLow
 
     /* Check if we're above or below the last low value */
-    cmp eax, dword ptr _HalpLastPerfCounterLow
+    cmp eax, _HalpLastPerfCounterLow
     jb BelowHigh
 
 BelowLow:
 
     /* Update the last value and bring back interrupts */
-    mov dword ptr _HalpLastPerfCounterLow, eax
-    mov dword ptr _HalpLastPerfCounterHigh, edx
+    mov _HalpLastPerfCounterLow, eax
+    mov _HalpLastPerfCounterHigh, edx
     popf
 
     /* Check if caller wants frequency */
@@ -496,7 +469,7 @@ DoRollOver:
 
     /* We might have an incoming interrupt, save EFLAGS and reset rollover */
     mov esi, [esp]
-    mov ecx, dword ptr _HalpCurrentRollOver
+    mov ecx, _HalpCurrentRollOver
     popf
 
     /* Check if interrupts were enabled and try again */
@@ -510,8 +483,8 @@ DoRollOver:
 BelowHigh:
 
     /* Get the last counter values */
-    mov ebx, dword ptr _HalpLastPerfCounterLow
-    mov esi, dword ptr _HalpLastPerfCounterHigh
+    mov ebx, _HalpLastPerfCounterLow
+    mov esi, _HalpLastPerfCounterHigh
 
     /* Check if the previous value was 0 and go back if yes */
     mov ecx, ebx
@@ -522,7 +495,7 @@ BelowHigh:
     sub ebx, eax
     sbb esi, edx
     jnz InvalidCount
-    cmp ebx, dword ptr _HalpCurrentRollOver
+    cmp ebx, _HalpCurrentRollOver
     jg InvalidCount
 
     /* Fixup the count with the last known value */
@@ -544,8 +517,7 @@ BelowHigh:
 InvalidCount:
     popf
     xor eax, eax
-    mov dword ptr _HalpLastPerfCounterLow, eax
-    mov dword ptr _HalpLastPerfCounterHigh, eax
+    mov _HalpLastPerfCounterLow, eax
+    mov _HalpLastPerfCounterHigh, eax
     jmp LoopPreInt
-
-END
+.endfunc

@@ -30,16 +30,13 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
     ULONG i = 0;
     PMMPFN Pfn1, EndPfn;
     KIRQL OldIrql;
-    PAGED_CODE();
+    PAGED_CODE ();
     ASSERT(SizeInPages != 0);
         
     //
     // Convert the boundary PFN into an alignment mask
     //
     BoundaryMask = ~(BoundaryPfn - 1);
-
-    /* Disable APCs */
-    KeEnterGuardedRegion();
     
     //
     // Loop all the physical memory blocks
@@ -72,16 +69,12 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
         // Now scan all the relevant PFNs in this run
         //
         Length = 0;
-        for (Pfn1 = MI_PFN_ELEMENT(Page); Page < LastPage; Page++, Pfn1++)
+        for (Pfn1 = MiGetPfnEntry(Page); Page < LastPage; Page++, Pfn1++)
         {
             //
             // If this PFN is in use, ignore it
             //
-            if (MiIsPfnInUse(Pfn1))
-            {
-                Length = 0;
-                continue;
-            }
+            if (MiIsPfnInUse(Pfn1)) continue;
             
             //
             // If we haven't chosen a start PFN yet and the caller specified an
@@ -137,8 +130,6 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             //
                             // This PFN is now a used page, set it up
                             //
-                            MI_SET_USAGE(MI_USAGE_CONTINOUS_ALLOCATION);
-                            MI_SET_PROCESS2("Kernel Driver");
                             MiUnlinkFreeOrZeroedPage(Pfn1);
                             Pfn1->u3.e2.ReferenceCount = 1;
                             Pfn1->u2.ShareCount = 1;
@@ -171,17 +162,14 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                         // Quick sanity check that the last PFN is consistent
                         //
                         EndPfn = Pfn1 + SizeInPages;
-                        ASSERT(EndPfn == MI_PFN_ELEMENT(Page + 1));
+                        ASSERT(EndPfn == MiGetPfnEntry(Page + 1));
                         
                         //
                         // Compute the first page, and make sure it's consistent
                         //
-                        Page = Page - SizeInPages + 1;
-                        ASSERT(Pfn1 == MI_PFN_ELEMENT(Page));
+                        Page -= SizeInPages - 1;
+                        ASSERT(Pfn1 == MiGetPfnEntry(Page));
                         ASSERT(Page != 0);
-                        
-                        /* Enable APCs and return the page */
-                        KeLeaveGuardedRegion();
                         return Page;                                
                     }
                     
@@ -366,7 +354,7 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
         /* Write the PTE address */
         Pfn1->PteAddress = PointerPte;
         Pfn1->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte++));
-    } while (++Pfn1 < EndPfn);
+    } while (Pfn1++ < EndPfn);
     
     /* Return the address */
     return BaseAddress;

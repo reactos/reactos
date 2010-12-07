@@ -23,7 +23,6 @@
 #include <stdarg.h>
 #include <math.h>
 #include <time.h>
-#include <assert.h>
 
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>

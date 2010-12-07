@@ -25,17 +25,6 @@
 HINSTANCE hInstance;
 HANDLE ProcessHeap;
 
-int LoadStringAndOem(HINSTANCE hInst,
-		UINT uID,
-		LPTSTR szNode,
-		int Siz
-)	
-{
-  TCHAR szTmp[25];
-  int res = LoadString(hInst, uID, szTmp, sizeof(szTmp)); 
-  CharToOem(szTmp, szNode);
-  return(res);
-}
 
 LPTSTR GetNodeTypeName(UINT NodeType)
 {
@@ -44,27 +33,27 @@ LPTSTR GetNodeTypeName(UINT NodeType)
     switch (NodeType)
     {
         case 1:
-            if (!LoadStringAndOem(hInstance, IDS_BCAST, szNode,  sizeof(szNode)))
+            if (!LoadString(hInstance, IDS_BCAST, szNode, sizeof(szNode)))
                 return NULL;
             break;
 
         case 2:
-            if (!LoadStringAndOem(hInstance, IDS_P2P, szNode,  sizeof(szNode)))
+            if (!LoadString(hInstance, IDS_P2P, szNode, sizeof(szNode)))
                 return NULL;
             break;
 
         case 4:
-            if (!LoadStringAndOem(hInstance, IDS_MIXED, szNode,  sizeof(szNode)))
+            if (!LoadString(hInstance, IDS_MIXED, szNode,  sizeof(szNode)))
                 return NULL;
             break;
 
         case 8:
-            if (!LoadStringAndOem(hInstance, IDS_HYBRID, szNode,  sizeof(szNode)))
+            if (!LoadString(hInstance, IDS_HYBRID, szNode,  sizeof(szNode)))
                 return NULL;
             break;
 
         default :
-            if (!LoadStringAndOem(hInstance, IDS_UNKNOWN, szNode,  sizeof(szNode)))
+            if (!LoadString(hInstance, IDS_UNKNOWN, szNode,  sizeof(szNode)))
                 return NULL;
             break;
     }
@@ -80,42 +69,42 @@ LPTSTR GetInterfaceTypeName(UINT InterfaceType)
     switch (InterfaceType)
     {
         case MIB_IF_TYPE_OTHER:
-            if (!LoadStringAndOem(hInstance, IDS_OTHER, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_OTHER, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         case MIB_IF_TYPE_ETHERNET:
-            if (!LoadStringAndOem(hInstance, IDS_ETH, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_ETH, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         case MIB_IF_TYPE_TOKENRING:
-            if (!LoadStringAndOem(hInstance, IDS_TOKEN, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_TOKEN, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         case MIB_IF_TYPE_FDDI:
-            if (!LoadStringAndOem(hInstance, IDS_FDDI, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_FDDI, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         case MIB_IF_TYPE_PPP:
-            if (!LoadStringAndOem(hInstance, IDS_PPP, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_PPP, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         case MIB_IF_TYPE_LOOPBACK:
-            if (!LoadStringAndOem(hInstance, IDS_LOOP, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_LOOP, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         case MIB_IF_TYPE_SLIP:
-            if (!LoadStringAndOem(hInstance, IDS_SLIP, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_SLIP, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
 
         default:
-            if (!LoadStringAndOem(hInstance, IDS_UNKNOWN, szIntType, sizeof(szIntType)))
+            if (!LoadString(hInstance, IDS_UNKNOWN, szIntType, sizeof(szIntType)))
                 return NULL;
             break;
     }
@@ -164,7 +153,6 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
 {
     HKEY hKey = NULL;
     LPTSTR ConType = NULL;
-    LPTSTR ConTypeTmp = NULL;
     TCHAR Path[256];
     LPTSTR PrePath  = _T("SYSTEM\\CurrentControlSet\\Control\\Network\\{4D36E972-E325-11CE-BFC1-08002BE10318}\\");
     LPTSTR PostPath = _T("\\Connection");
@@ -192,34 +180,24 @@ LPTSTR GetConnectionType(LPTSTR lpClass)
                            NULL,
                            &dwDataSize) == ERROR_SUCCESS)
         {
-            ConTypeTmp = (LPTSTR)HeapAlloc(ProcessHeap,
-                                        0,
-                                        dwDataSize);
-
             ConType = (LPTSTR)HeapAlloc(ProcessHeap,
                                         0,
                                         dwDataSize);
-            if (ConType && ConTypeTmp)
+            if (ConType)
             {
                 if(RegQueryValueEx(hKey,
                                    _T("Name"),
                                    NULL,
                                    &dwType,
-                                   (PBYTE)ConTypeTmp,
+                                   (PBYTE)ConType,
                                    &dwDataSize) != ERROR_SUCCESS)
                 {
                     HeapFree(ProcessHeap,
                              0,
                              ConType);
 
-                    HeapFree(ProcessHeap,
-                             0,
-                             ConTypeTmp);
-
                     ConType = NULL;
                 }
-
-                if (ConType) CharToOem(ConTypeTmp, ConType);
             }
         }
     }
@@ -696,7 +674,7 @@ VOID Usage(VOID)
             if (lpUsage == NULL)
                 return;
 
-            if (LoadStringAndOem(hInstance,
+            if (LoadString(hInstance,
                            IDS_USAGE,
                            lpUsage,
                            Size))

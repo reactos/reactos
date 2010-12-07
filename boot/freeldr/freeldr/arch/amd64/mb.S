@@ -17,9 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <asm.inc>
-
-
 	.text
 	.code16
 
@@ -64,5 +61,3 @@ pd_startup:
 	.fill 4096, 1, 0
 
 PageDirectoryEnd:
-
-END

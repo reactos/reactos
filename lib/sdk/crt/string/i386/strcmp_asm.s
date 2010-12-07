@@ -1,6 +1,6 @@
 /* $Id$
  */
 
-#include "tcscmp.inc"
+#include "tcscmp.h"
 
 /* EOF */

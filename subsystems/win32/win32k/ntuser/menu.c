@@ -86,9 +86,7 @@ UserMenuInfo(
         ( ((r).bottom >=  y)) && \
         ( ((r).top <= y)) )
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitMenuImpl(VOID)
 {
    return(STATUS_SUCCESS);
@@ -1714,6 +1712,17 @@ CLEANUP:
 }
 
 /*
+ * @unimplemented
+ */
+BOOL APIENTRY
+NtUserEndMenu(VOID)
+{
+   UNIMPLEMENTED
+
+   return 0;
+}
+
+/*
  * @implemented
  */
 BOOL APIENTRY
@@ -2443,6 +2452,25 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
+
+/*
+ * @implemented
+ */
+/* NOTE: unused function */
+BOOL APIENTRY
+NtUserTrackPopupMenuEx(
+   HMENU hMenu,
+   UINT fuFlags,
+   int x,
+   int y,
+   HWND hWnd,
+   LPTPMPARAMS lptpm)
+{
+   UNIMPLEMENTED
+
+   return FALSE;
+}
+
 
 ////// ReactOS NtUserBad
 /*

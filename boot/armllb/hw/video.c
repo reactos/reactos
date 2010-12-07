@@ -326,11 +326,7 @@ LlbVideoClearScreen(IN BOOLEAN OsLoader)
     else
     {
         /* Deep blue */
-#ifdef BLUE_SCREEN
         BackColor = LlbHwVideoCreateColor(14, 0, 82);
-#else
-        BackColor = LlbHwVideoCreateColor(0, 0, 0);
-#endif
         BackColor = (BackColor << 16) | BackColor;
     }
     
@@ -350,12 +346,8 @@ LlbVideoPutChar(IN UCHAR c)
 {
     ULONG cx, cy, CharsPerLine, BackColor, ScreenWidth;
     
-    /* Backcolor on this machine */
-#ifdef BLUE_SCREEN
-      BackColor = LlbHwVideoCreateColor(14, 0, 82);
-#else
-      BackColor = LlbHwVideoCreateColor(0, 0, 0);
-#endif
+    /* Forecolor on this machine */
+    BackColor = LlbHwVideoCreateColor(14, 0, 82);
     
     /* Amount of characters in a line */
     ScreenWidth = LlbHwGetScreenWidth();

@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
+ 
+.globl __allshl
 
-#include <asm.inc>
-
-PUBLIC __allshl
+.intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/
-.code
 
 //
 // llshl - long shift left
@@ -93,5 +92,3 @@ RETZERO:
         xor     eax,eax
         xor     edx,edx
         ret
-
-END

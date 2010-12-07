@@ -12,6 +12,12 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS
+IopDetectResourceConflict(
+   IN PCM_RESOURCE_LIST ResourceList,
+   IN BOOLEAN Silent,
+   OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor);
+
 static
 BOOLEAN
 IopCheckDescriptorForConflict(PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc, OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
@@ -181,8 +187,8 @@ IopFindInterruptResource(
    return FALSE;
 }
 
-
-NTSTATUS NTAPI
+static
+NTSTATUS
 IopCreateResourceListFromRequirements(
    IN PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList,
    OUT PCM_RESOURCE_LIST *ResourceList)
@@ -329,6 +335,9 @@ IopCheckResourceDescriptor(
 {
    ULONG i, ii;
    BOOLEAN Result = FALSE;
+
+   if (ResDesc->ShareDisposition == CmResourceShareShared)
+       return FALSE;
 
    for (i = 0; i < ResourceList->Count; i++)
    {
@@ -606,61 +615,40 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
 
   if (DeviceNode->ResourceList)
   {
+      PWCHAR DeviceName = NULL;
       UNICODE_STRING NameU;
-      UNICODE_STRING RawSuffix, TranslatedSuffix;
+      UNICODE_STRING Suffix;
       ULONG OldLength = 0;
 
       ASSERT(DeviceNode->ResourceListTranslated);
-      
-      RtlInitUnicodeString(&TranslatedSuffix, L".Translated");
-      RtlInitUnicodeString(&RawSuffix, L".Raw");
 
       Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
                                    DevicePropertyPhysicalDeviceObjectName,
                                    0,
                                    NULL,
                                    &OldLength);
-      if (Status == STATUS_BUFFER_OVERFLOW || Status == STATUS_BUFFER_TOO_SMALL)
-      {
-          ASSERT(OldLength);
-          
-          NameU.Buffer = ExAllocatePool(PagedPool, OldLength + TranslatedSuffix.Length);
-          if (!NameU.Buffer)
-          {
-              ZwClose(PnpMgrLevel2);
-              return STATUS_INSUFFICIENT_RESOURCES;
-          }
-          
-          NameU.Length = 0;
-          NameU.MaximumLength = OldLength + TranslatedSuffix.Length;
-          
-          Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
-                                       DevicePropertyPhysicalDeviceObjectName,
-                                       NameU.MaximumLength,
-                                       NameU.Buffer,
-                                       &OldLength);
-          if (!NT_SUCCESS(Status))
-          {
-              ZwClose(PnpMgrLevel2);
-              ExFreePool(NameU.Buffer);
-              return Status;
-          }
-      }
-      else if (!NT_SUCCESS(Status))
-      {
-          /* Some failure */
-          ZwClose(PnpMgrLevel2);
-          return Status;
-      }
-      else
-      {
-          /* This should never happen */
-          ASSERT(FALSE);
-      }
-      
-      NameU.Length = OldLength;
+     if ((OldLength != 0) && (Status == STATUS_BUFFER_TOO_SMALL))
+     {
+        DeviceName = ExAllocatePool(NonPagedPool, OldLength);
+        ASSERT(DeviceName);
 
-      RtlAppendUnicodeStringToString(&NameU, &RawSuffix);
+        IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
+                            DevicePropertyPhysicalDeviceObjectName,
+                            OldLength,
+                            DeviceName,
+                            &OldLength);
+                            
+        RtlInitUnicodeString(&NameU, DeviceName);
+     }
+     else
+     {
+        /* Some failure */
+        ASSERT(!NT_SUCCESS(Status));
+        return Status;
+     }
+
+      RtlInitUnicodeString(&Suffix, L".Raw");
+      RtlAppendUnicodeStringToString(&NameU, &Suffix);
 
       Status = ZwSetValueKey(PnpMgrLevel2,
                              &NameU,
@@ -671,14 +659,14 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
       if (!NT_SUCCESS(Status))
       {
           ZwClose(PnpMgrLevel2);
-          ExFreePool(NameU.Buffer);
           return Status;
       }
 
       /* "Remove" the suffix by setting the length back to what it used to be */
-      NameU.Length = OldLength;
+      NameU.Length = (USHORT)OldLength;
 
-      RtlAppendUnicodeStringToString(&NameU, &TranslatedSuffix);
+      RtlInitUnicodeString(&Suffix, L".Translated");
+      RtlAppendUnicodeStringToString(&NameU, &Suffix);
 
       Status = ZwSetValueKey(PnpMgrLevel2,
                              &NameU,
@@ -687,8 +675,8 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
                              DeviceNode->ResourceListTranslated,
                              PnpDetermineResourceListSize(DeviceNode->ResourceListTranslated));
       ZwClose(PnpMgrLevel2);
-      ExFreePool(NameU.Buffer);
-
+      ASSERT(DeviceName);
+      ExFreePool(DeviceName);
       if (!NT_SUCCESS(Status))
           return Status;
   }
@@ -730,7 +718,7 @@ IopTranslateDeviceResources(
    DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool, ListSize);
    if (!DeviceNode->ResourceListTranslated)
    {
-      Status = STATUS_NO_MEMORY;
+      Status =STATUS_NO_MEMORY;
       goto cleanup;
    }
    RtlCopyMemory(DeviceNode->ResourceListTranslated, DeviceNode->ResourceList, ListSize);
@@ -755,7 +743,6 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Port.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
-                  DPRINT1("Failed to translate port resource (Start: 0xI64x)\n", DescriptorRaw->u.Port.Start.QuadPart);
                   goto cleanup;
                }
                break;
@@ -769,14 +756,6 @@ IopTranslateDeviceResources(
                   DescriptorRaw->u.Interrupt.Vector,
                   (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
                   &DescriptorTranslated->u.Interrupt.Affinity);
-                
-               if (!DescriptorTranslated->u.Interrupt.Vector)
-               {
-                   Status = STATUS_UNSUCCESSFUL;
-                   DPRINT1("Failed to translate interrupt resource (Vector: 0x%x | Level: 0x%x)\n", DescriptorRaw->u.Interrupt.Vector,
-                                                                                                   DescriptorRaw->u.Interrupt.Level);
-                   goto cleanup;
-               }
                break;
             }
             case CmResourceTypeMemory:
@@ -790,7 +769,6 @@ IopTranslateDeviceResources(
                   &DescriptorTranslated->u.Memory.Start))
                {
                   Status = STATUS_UNSUCCESSFUL;
-                  DPRINT1("Failed to translate memory resource (Start: 0xI64x)\n", DescriptorRaw->u.Memory.Start.QuadPart);
                   goto cleanup;
                }
             }
@@ -886,21 +864,16 @@ IopAssignDeviceResources(
    Status = IopCreateResourceListFromRequirements(DeviceNode->ResourceRequirements,
                                                   &DeviceNode->ResourceList);
    if (!NT_SUCCESS(Status))
-   {
-       DPRINT1("Failed to create a resource list from supplied resources for %wZ\n", &DeviceNode->InstancePath);
        goto ByeBye;
-   }
 
-   /* IopCreateResourceListFromRequirements should NEVER succeed with a conflicting list */
-   ASSERT(IopDetectResourceConflict(DeviceNode->ResourceList, FALSE, NULL) != STATUS_CONFLICTING_ADDRESSES);
+   Status = IopDetectResourceConflict(DeviceNode->ResourceList, FALSE, NULL);
+   if (!NT_SUCCESS(Status))
+       goto ByeBye;
 
 Finish:
    Status = IopTranslateDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
-   {
-       DPRINT1("Failed to translate resources for %wZ\n", &DeviceNode->InstancePath);
        goto ByeBye;
-   }
 
    Status = IopUpdateResourceMapForPnPDevice(DeviceNode);
    if (!NT_SUCCESS(Status))
@@ -962,7 +935,7 @@ ByeBye:
    return Result;
 }
 
-NTSTATUS NTAPI
+NTSTATUS
 IopDetectResourceConflict(
    IN PCM_RESOURCE_LIST ResourceList,
    IN BOOLEAN Silent,

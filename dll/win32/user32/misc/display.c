@@ -457,6 +457,7 @@ ChangeDisplaySettingsExA(
   LONG rc;
   UNICODE_STRING DeviceName;
   PUNICODE_STRING pDeviceName = &DeviceName;
+  LPDEVMODEW pDevModeW;
 
   if (lpszDeviceName != NULL)
     {
@@ -470,19 +471,14 @@ ChangeDisplaySettingsExA(
     pDeviceName = NULL;
 
   if (lpDevMode != NULL)
-  {
-    LPDEVMODEW pDevModeW;
     pDevModeW = GdiConvertToDevmodeW(lpDevMode);
-    if(pDevModeW)
-    {
-      rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
-      RtlFreeHeap(GetProcessHeap(), 0, pDevModeW);
-    }
-    else
-      rc = DISP_CHANGE_SUCCESSFUL;
-  }
   else
-    rc = NtUserChangeDisplaySettings ( pDeviceName, NULL, hwnd, dwflags, lParam );
+    pDevModeW = NULL;
+
+  rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
+
+  if (pDevModeW != NULL)
+    RtlFreeHeap(GetProcessHeap(), 0, pDevModeW);
 
   if (lpszDeviceName != NULL)
     RtlFreeUnicodeString ( &DeviceName );
@@ -543,6 +539,6 @@ ChangeDisplaySettingsW(
   DWORD dwflags)
 {
   if(lpDevMode)
-    lpDevMode->dmDriverExtra = 0;
+    lpDevMode->dmDriverExtra = 0; 
   return ChangeDisplaySettingsExW ( NULL, lpDevMode, NULL, dwflags, 0 );
 }

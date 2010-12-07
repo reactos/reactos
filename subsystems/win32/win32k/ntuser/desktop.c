@@ -170,9 +170,8 @@ IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_FUNCTION
 NTSTATUS
-NTAPI
+FASTCALL
 InitDesktopImpl(VOID)
 {
     /* Set Desktop Object Attributes */
@@ -617,6 +616,8 @@ UserRedrawDesktop()
 {
     PWND Window = NULL;
 
+    UserEnterExclusive();
+
     Window = UserGetDesktopWindow();
 
     IntInvalidateWindows( Window,
@@ -625,6 +626,7 @@ UserRedrawDesktop()
                        RDW_ERASE |
                   RDW_INVALIDATE |
                  RDW_ALLCHILDREN);
+    UserLeave();
 }
 
 
@@ -880,23 +882,12 @@ NtUserCreateDesktop(
    PUNICODE_STRING lpszDesktopName = NULL;
    UNICODE_STRING ClassName, MenuName;
    LARGE_STRING WindowName;
-   BOOL NoHooks = FALSE;
    PWND pWnd = NULL;
    CREATESTRUCTW Cs;
-   INT i;
-   PTHREADINFO ptiCurrent;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
    UserEnterExclusive();
-
-   ptiCurrent = PsGetCurrentThreadWin32Thread();
-   if (ptiCurrent)
-   {
-   /* Turn off hooks when calling any CreateWindowEx from inside win32k. */
-      NoHooks = (ptiCurrent->TIF_flags & TIF_DISABLEHOOKS);
-      ptiCurrent->TIF_flags |= TIF_DISABLEHOOKS;
-   }
 
    _SEH2_TRY
    {
@@ -1035,11 +1026,6 @@ NtUserCreateDesktop(
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);
    DesktopObject->ActiveMessageQueue = NULL;
-   /* Setup Global Hooks. */
-   for (i = 0; i < NB_HOOKS; i++)
-   {
-      InitializeListHead(&DesktopObject->pDeskInfo->aphkStart[i]);
-   }
    ExFreePoolWithTag(DesktopName.Buffer, TAG_STRING);
 
    if (! NT_SUCCESS(Status))
@@ -1112,7 +1098,6 @@ NtUserCreateDesktop(
    RETURN( Desktop);
 
 CLEANUP:
-   if (!NoHooks && ptiCurrent) ptiCurrent->TIF_flags &= ~TIF_DISABLEHOOKS;
    DPRINT("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -1686,6 +1671,20 @@ CLEANUP:
 }
 
 /*
+ * NtUserResolveDesktopForWOW
+ *
+ * Status
+ *    @unimplemented
+ */
+
+DWORD APIENTRY
+NtUserResolveDesktopForWOW(DWORD Unknown0)
+{
+   UNIMPLEMENTED
+   return 0;
+}
+
+/*
  * NtUserGetThreadDesktop
  *
  * Status
@@ -1821,6 +1820,7 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 static NTSTATUS
 IntMapDesktopView(IN PDESKTOP DesktopObject)
 {
+    PTHREADINFO ti;
     PPROCESSINFO CurrentWin32Process;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     PVOID UserBase = NULL;
@@ -1883,6 +1883,19 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
 
     ObReferenceObject(DesktopObject);
 
+    /* create a W32THREADINFO structure if not already done, or update it */
+    ti = GetW32ThreadInfo();
+    GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
+    if (ti != NULL)
+    {
+        if (GetWin32ClientInfo()->pDeskInfo == NULL)
+        {
+           GetWin32ClientInfo()->pDeskInfo = 
+                (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - 
+                                          GetWin32ClientInfo()->ulClientDelta);
+        }
+    }
+
     return STATUS_SUCCESS;
 }
 
@@ -1894,7 +1907,6 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
     PTHREADINFO W32Thread;
     NTSTATUS Status;
     BOOL MapHeap;
-    CLIENTTHREADINFO ctiSave;
 
     DPRINT("IntSetThreadDesktop() DO=%p, FOF=%d\n", DesktopObject, FreeOnFailure);
     MapHeap = (PsGetCurrentProcess() != PsInitialSystemProcess);
@@ -1921,27 +1933,9 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
                 SetLastNtError(Status);
                 return FALSE;
             }
-            W32Thread->pDeskInfo = DesktopObject->pDeskInfo;
         }
 
-        RtlZeroMemory(&ctiSave, sizeof(CLIENTTHREADINFO));
-
-        if (W32Thread->pcti && OldDesktop)
-        {
-           RtlCopyMemory(&ctiSave, W32Thread->pcti, sizeof(CLIENTTHREADINFO));
-           DPRINT("Free ClientThreadInfo\n");
-           DesktopHeapFree(OldDesktop, W32Thread->pcti);
-           W32Thread->pcti = NULL;
-        }
-
-        if (!W32Thread->pcti && DesktopObject)
-        { 
-           DPRINT("Allocate ClientThreadInfo\n");
-           W32Thread->pcti = DesktopHeapAlloc( DesktopObject,
-                                               sizeof(CLIENTTHREADINFO));
-           RtlCopyMemory(W32Thread->pcti, &ctiSave, sizeof(CLIENTTHREADINFO));
-        }
-
+        /* Hack for system threads */
         if (NtCurrentTeb())
         {
             PCLIENTINFO pci = GetWin32ClientInfo();
@@ -1949,7 +1943,6 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             if (DesktopObject)
             {
                 pci->pDeskInfo = (PVOID)((ULONG_PTR)DesktopObject->pDeskInfo - pci->ulClientDelta);
-                if (W32Thread->pcti) pci->pClientThreadInfo = (PVOID)((ULONG_PTR)W32Thread->pcti - pci->ulClientDelta);
             }
         }
 

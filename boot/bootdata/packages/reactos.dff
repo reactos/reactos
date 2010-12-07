@@ -45,7 +45,6 @@ base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
 base\applications\dxdiag\dxdiag.exe                     1
 base\applications\extrac32\extrac32.exe                 1
-base\applications\findstr\findstr.exe                   1
 base\applications\fontview\fontview.exe                 1
 base\applications\games\solitaire\sol.exe               1
 base\applications\games\spider\spider.exe               1
@@ -162,7 +161,7 @@ dll\directx\dinput8\dinput8.dll                     1
 dll\directx\dmusic\dmusic.dll                       1
 dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
-dll\directx\dsound_new\dsound.dll                   1
+dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
 dll\directx\ksproxy\ksproxy.ax                      1
 dll\directx\ksuser\ksuser.dll                       1
@@ -457,7 +456,6 @@ dll\win32\uxtheme\uxtheme.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
 dll\win32\version\version.dll                       1
 dll\win32\wdmaud.drv\wdmaud.drv                     1
-dll\win32\wer\wer.dll                               1
 dll\win32\windowscodecs\windowscodecs.dll           1
 dll\win32\winemp3.acm\winemp3.acm                   1
 dll\win32\winfax\winfax.dll                         1
@@ -585,8 +583,6 @@ media\fonts\symbol.ttf                              3
 media\fonts\tahoma.ttf                              3
 media\fonts\tahomabd.ttf                            3
 
-media\vgafonts\vgafonts.cab                         4
-
 media\nls\c_037.nls                                 1
 media\nls\c_424.nls                                 1
 media\nls\c_500.nls                                 1
@@ -713,8 +709,6 @@ modules\optional\vmx_mode.dll                       1  optional
 modules\optional\vmx_svga.inf                       6  optional
 modules\optional\vmx_svga.sys                       2  optional
 modules\optional\wine_gecko-1.0.0-x86.cab           4  optional
-modules\optional\winamp.exe                         7  optional
-modules\optional\b.mp3                              7  optional
 
 ; Rosapps
 modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional

@@ -23,7 +23,6 @@
 	<file>hexedit.c</file>
 	<file>listview.c</file>
 	<file>main.c</file>
-	<file>error.c</file>
 	<file>regedit.c</file>
 	<file>regproc.c</file>
 	<file>security.c</file>

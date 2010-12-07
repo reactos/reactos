@@ -167,6 +167,9 @@ IntGetSysColor(INT nIndex);
 
 /* Other Stuff */
 
+INT FASTCALL
+IntGdiGetDeviceCaps(PDC dc, INT Index);
+
 INT
 FASTCALL
 IntGdiEscape(PDC    dc,
@@ -182,6 +185,14 @@ IntEnumDisplaySettings(
   IN DWORD iModeNum,
   IN OUT LPDEVMODEW pDevMode,
   IN DWORD dwFlags);
+
+LONG
+FASTCALL
+IntChangeDisplaySettings(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN LPDEVMODEW pDevMode,
+  IN DWORD dwflags,
+  IN PVOID lParam  OPTIONAL);
 
 HBITMAP
 FASTCALL

@@ -51,9 +51,7 @@ LIST_ENTRY gHotkeyList;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitHotkeyImpl(VOID)
 {
    InitializeListHead(&gHotkeyList);

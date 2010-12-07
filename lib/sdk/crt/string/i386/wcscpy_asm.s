@@ -2,6 +2,6 @@
  */
 
 #define _UNICODE
-#include "tcscpy.inc"
+#include "tcscpy.h"
 
 /* EOF */

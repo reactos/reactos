@@ -8,7 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* DATA *********************************************************************/
 
@@ -16,5 +17,3 @@ PUBLIC ldexp
 ldexp:
     UNIMPLEMENTED ldexp
     ret
-
-END

@@ -248,7 +248,7 @@ VOID
 NTAPI
 ExpCheckPoolBlocks(IN PVOID Block)
 {
-    BOOLEAN FoundBlock = FALSE;
+    BOOLEAN FoundBlock;
     SIZE_T Size = 0;
     PPOOL_HEADER Entry;
     
@@ -288,7 +288,6 @@ ExpCheckPoolBlocks(IN PVOID Block)
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
                            IN POOL_TYPE PoolType,
                            IN ULONG PoolIndex,
@@ -334,7 +333,6 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
 
 VOID
 NTAPI
-INIT_FUNCTION
 InitializePool(IN POOL_TYPE PoolType,
                IN ULONG Threshold)
 {

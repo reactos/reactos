@@ -9,13 +9,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ks386.inc>
-
-EXTERN _RtlpCheckForActiveDebugger@0:PROC
-EXTERN _RtlDispatchException@8:PROC
-EXTERN _ZwContinue@8:PROC
-EXTERN _ZwRaiseException@12:PROC
+#include <ndk/asm.h>
+.intel_syntax noprefix
 
 #define ExceptionContinueSearch     1
 #define ExceptionNestedException    2
@@ -23,17 +18,17 @@ EXTERN _ZwRaiseException@12:PROC
 
 /* FUNCTIONS *****************************************************************/
 
-.code
-
-PUBLIC _RtlpGetExceptionList@0
+.func RtlpGetExceptionList@0
+.globl _RtlpGetExceptionList@0
 _RtlpGetExceptionList@0:
 
     /* Return the exception list */
     mov eax, fs:[TEB_EXCEPTION_LIST]
     ret
+.endfunc
 
-
-PUBLIC _RtlpSetExceptionList@4
+.func RtlpSetExceptionList@4
+.globl _RtlpSetExceptionList@4
 _RtlpSetExceptionList@4:
 
     /* Get the new list */
@@ -45,9 +40,10 @@ _RtlpSetExceptionList@4:
 
     /* Return */
     ret 4
+.endfunc
 
-
-PUBLIC _RtlCaptureContext@4
+.func RtlCaptureContext@4
+.globl _RtlCaptureContext@4
 _RtlCaptureContext@4:
 
     /* Preserve EBX and put the context in it */
@@ -65,9 +61,10 @@ _RtlCaptureContext@4:
 
     /* Capture the other regs */
     jmp CaptureRest
+.endfunc
 
-
-PUBLIC _RtlpCaptureContext@4
+.func RtlpCaptureContext@4
+.globl _RtlpCaptureContext@4
 _RtlpCaptureContext@4:
 
     /* Preserve EBX and put the context in it */
@@ -110,9 +107,10 @@ CaptureRest:
     /* Return to the caller */
     pop ebx
     ret 4
+.endfunc
 
-
-PUBLIC _RtlpExecuteHandlerForException@20
+.func RtlpExecuteHandlerForException@20
+.globl _RtlpExecuteHandlerForException@20
 _RtlpExecuteHandlerForException@20:
 
     /* Copy the routine in EDX */
@@ -120,14 +118,16 @@ _RtlpExecuteHandlerForException@20:
 
     /* Jump to common routine */
     jmp _RtlpExecuteHandler@20
+.endfunc
 
-
-PUBLIC _RtlpExecuteHandlerForUnwind@20
+.func RtlpExecuteHandlerForUnwind@20
+.globl _RtlpExecuteHandlerForUnwind@20
 _RtlpExecuteHandlerForUnwind@20:
     /* Copy the routine in EDX */
     mov edx, offset _RtlpUnwindProtector
+.endfunc
 
-
+.func RtlpExecuteHandler@20
 _RtlpExecuteHandler@20:
 
     /* Save non-volatile */
@@ -142,21 +142,22 @@ _RtlpExecuteHandler@20:
     xor edi, edi
 
     /* Call the 2nd-stage executer */
-    push [esp+32]
-    push [esp+32]
-    push [esp+32]
-    push [esp+32]
-    push [esp+32]
+    push [esp+0x20]
+    push [esp+0x20]
+    push [esp+0x20]
+    push [esp+0x20]
+    push [esp+0x20]
     call _RtlpExecuteHandler2@20
 
     /* Restore non-volatile */
     pop edi
     pop esi
     pop ebx
-    ret 20
+    ret 0x14
+.endfunc
 
-
-PUBLIC _RtlpExecuteHandler2@20
+.func RtlpExecuteHandler2@20
+.globl _RtlpExecuteHandler2@20
 _RtlpExecuteHandler2@20:
 
     /* Set up stack frame */
@@ -164,7 +165,7 @@ _RtlpExecuteHandler2@20:
     mov ebp, esp
 
     /* Save the Frame */
-    push [ebp+12]
+    push [ebp+0xC]
 
     /* Push handler address */
     push edx
@@ -176,11 +177,11 @@ _RtlpExecuteHandler2@20:
     mov [fs:TEB_EXCEPTION_LIST], esp
 
     /* Call the handler */
-    push [ebp+20]
-    push [ebp+16]
-    push [ebp+12]
+    push [ebp+0x14]
+    push [ebp+0x10]
+    push [ebp+0xC]
     push [ebp+8]
-    mov ecx, [ebp+24]
+    mov ecx, [ebp+0x18]
     call ecx
 
     /* Unlink us */
@@ -192,9 +193,10 @@ _RtlpExecuteHandler2@20:
     /* Undo stack frame and return */
     mov esp, ebp
     pop ebp
-    ret 20
+    ret 0x14
+.endfunc
 
-
+.func RtlpExceptionProtector
 _RtlpExceptionProtector:
 
     /* Assume we'll continue */
@@ -220,8 +222,9 @@ _RtlpExceptionProtector:
 
 return:
     ret 16
+.endfunc
 
-
+.func RtlpUnwindProtector
 _RtlpUnwindProtector:
 
     /* Assume we'll continue */
@@ -247,9 +250,10 @@ _RtlpUnwindProtector:
 
 .return:
     ret 16
+.endfunc
 
-
-PUBLIC _RtlRaiseException@4
+.func RtlRaiseException@4
+.globl _RtlRaiseException@4
 _RtlRaiseException@4:
 
     /* Set up stack frame */
@@ -321,9 +325,10 @@ RaiseStatus1:
     /* If we returned, raise a status */
     push eax
     call _RtlRaiseStatus@4
+.endfunc
 
-
-PUBLIC _RtlRaiseStatus@4
+.func RtlRaiseStatus@4
+.globl _RtlRaiseStatus@4
 _RtlRaiseStatus@4:
 
     /* Set up stack frame */
@@ -393,5 +398,4 @@ RaiseStatus2:
     /* If we returned, raise a status */
     push eax
     call _RtlRaiseStatus@4
-
-END
+.endfunc

@@ -17,7 +17,6 @@
 
 PMEMORY_ALLOCATION_DESCRIPTOR
 NTAPI
-INIT_FUNCTION
 XIPpFindMemoryDescriptor(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
@@ -41,7 +40,6 @@ XIPpFindMemoryDescriptor(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 XIPInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCHAR CommandLine, XipBoot, XipRom, XipMegs, XipVerbose, XipRam;

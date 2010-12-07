@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ksamd64.inc>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -19,5 +19,3 @@ PUBLIC floor
 floor:
     UNIMPLEMENTED floor
     ret
-
-END

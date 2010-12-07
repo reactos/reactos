@@ -45,7 +45,7 @@ IntEngLineTo(SURFOBJ *Surface,
              MIX mix);
 
 BOOL APIENTRY
-IntEngBitBlt(SURFOBJ *DestObj,
+IntEngBitBltEx(SURFOBJ *DestObj,
                SURFOBJ *SourceObj,
                SURFOBJ *Mask,
                CLIPOBJ *ClipRegion,
@@ -55,7 +55,14 @@ IntEngBitBlt(SURFOBJ *DestObj,
                POINTL *MaskOrigin,
                BRUSHOBJ *Brush,
                POINTL *BrushOrigin,
-               ROP4 Rop4);
+               ROP4 Rop4,
+               BOOL RemoveMouse);
+#define IntEngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, \
+                     DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, \
+                     Rop4) \
+        IntEngBitBltEx((DestObj), (SourceObj), (Mask), (ClipRegion), \
+                       (ColorTranslation), (DestRect), (SourcePoint), \
+                       (MaskOrigin), (Brush), (BrushOrigin), (Rop4), TRUE)
 
 BOOL APIENTRY
 IntEngStretchBlt(SURFOBJ *DestObj,
@@ -81,6 +88,32 @@ IntEngGradientFill(SURFOBJ *psoDest,
                    RECTL *prclExtents,
                    POINTL *pptlDitherOrg,
                    ULONG ulMode);
+
+VOID InitXlateImpl(VOID);
+
+XLATEOBJ* FASTCALL
+IntEngCreateXlate(USHORT DestPalType,
+                  USHORT SourcePalType,
+                  HPALETTE PaletteDest,
+                  HPALETTE PaletteSource);
+
+XLATEOBJ* FASTCALL
+IntEngCreateMonoXlate(USHORT SourcePalType,
+                      HPALETTE PaletteDest,
+                      HPALETTE PaletteSource,
+                      ULONG BackgroundColor);
+
+XLATEOBJ* FASTCALL
+IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
+                         ULONG Color0,
+                         ULONG Color1);
+
+XLATEOBJ*
+IntCreateBrushXlate(BRUSH *pbrush, SURFACE * psurf, COLORREF crBackgroundClr);
+
+HPALETTE FASTCALL
+IntEngGetXlatePalette(XLATEOBJ *XlateObj,
+                      ULONG Palette);
 
 BOOL APIENTRY
 IntEngPolyline(SURFOBJ *DestSurf,

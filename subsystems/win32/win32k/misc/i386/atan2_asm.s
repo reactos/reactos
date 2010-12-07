@@ -33,13 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
-#include <asm.inc>
  
-/* FUNCTIONS ***************************************************************/
-.code
+.globl _atan2
+ 
+.intel_syntax noprefix
 
-PUBLIC _atan2
+/* FUNCTIONS ***************************************************************/
+
 _atan2:
         push    ebp
         mov     ebp,esp
@@ -49,5 +49,3 @@ _atan2:
         mov     esp,ebp
         pop     ebp
         ret
-
-END

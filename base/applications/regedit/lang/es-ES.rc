@@ -180,16 +180,6 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
@@ -289,10 +279,6 @@ BEGIN
     ID_REGISTRY_IMPORTREGISTRYFILE "Importa un archivo de texto al registro"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Exporta todo o parte del registro a un archivo de texto"
-    ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "Se conecta al registro de un ordenador remoto"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -349,8 +335,6 @@ BEGIN
     IDS_MY_COMPUTER         "Mi PC"
     IDS_IMPORT_REG_FILE     "Importa Fichero de Registro"
     IDS_EXPORT_REG_FILE     "Exporta Fichero de Registro"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
     IDS_INVALID_DWORD       "(valor DWORD invalido)"
 END
 

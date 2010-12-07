@@ -1,6 +1,6 @@
 /* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-01-2008
- * LAST CHANGE:  17-09-2010
+ * LAST CHANGE:  31-05-2010
  * ---------------------------------------
  * TODO:
  * pridanie navigaèných znaèiek "&" ?
@@ -545,9 +545,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_ENERGY_15_C_CALORIES        "15 °C calories"
-    IDS_ENERGY_BTUS                 "Britské termálne jednotky"
+    IDS_ENERGY_BTUS                 "British Thermal Units"
     IDS_ENERGY_ERGS                 "Ergs"
-    IDS_ENERGY_EVS                  "Elektron-Volty"
+    IDS_ENERGY_EVS                  "Electron-Volts"
     IDS_ENERGY_FOOT_POUNDS          "Foot-Pounds"
     IDS_ENERGY_IT_CALORIES          "International Table calories"
     IDS_ENERGY_IT_KILOCALORIES      "International Table kilocalories"
@@ -593,7 +593,7 @@ BEGIN
     IDS_LENGTH_MILLIMETERS          "Milimetre"
     IDS_LENGTH_NAUTICAL_MILES       "Námorné míle"
     IDS_LENGTH_NIEU                 "Nieu"
-    IDS_LENGTH_PARSECS              "Parseky"
+    IDS_LENGTH_PARSECS              "Parsecy"
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japonsko)"
     IDS_LENGTH_RI_KOREA             "Ri (Kórea)"
@@ -626,10 +626,10 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosféry"
     IDS_PRESSURE_BARS               "Bary"
-    IDS_PRESSURE_HECTOPASCALS       "Hektopascaly"
-    IDS_PRESSURE_KILOPASCALS        "Kilopascaly"
-    IDS_PRESSURE_MM_OF_MERCURY      "Milimetre ortuti"
-    IDS_PRESSURE_PASCALS            "Pascaly"
+    IDS_PRESSURE_HECTOPASCALS       "Hektopascals"
+    IDS_PRESSURE_KILOPASCALS        "Kilopascals"
+    IDS_PRESSURE_MM_OF_MERCURY      "Millimeters of mercury"
+    IDS_PRESSURE_PASCALS            "Pascals"
     IDS_PRESSURE_PSI                "Libry na štvorcový palec"
 END
 

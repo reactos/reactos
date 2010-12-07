@@ -709,7 +709,6 @@ MiResolveImageReferences(IN PVOID ImageBase,
 //
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
                        PUNICODE_STRING FileName,
                        PLDR_DATA_TABLE_ENTRY *ModuleObject)
@@ -785,7 +784,6 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
     PDEVICE_NODE DeviceNode;
@@ -872,7 +870,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
  */
 VOID
 FASTCALL
-INIT_FUNCTION
 IopInitializeBootDrivers(VOID)
 {
     PLIST_ENTRY ListHead, NextEntry, NextEntry2;
@@ -1064,7 +1061,6 @@ IopInitializeBootDrivers(VOID)
 
 VOID
 FASTCALL
-INIT_FUNCTION
 IopInitializeSystemDrivers(VOID)
 {
     PUNICODE_STRING *DriverList, *SavedList;

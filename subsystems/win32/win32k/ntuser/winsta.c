@@ -56,9 +56,7 @@ static GENERIC_MAPPING IntWindowStationMapping =
    };
 
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitWindowStationImpl(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1125,6 +1123,25 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
 
    ObDereferenceObject(Object);
    return Ret;
+}
+
+/*
+ * NtUserSetWindowStationUser
+ *
+ * Status
+ *    @unimplemented
+ */
+
+DWORD APIENTRY
+NtUserSetWindowStationUser(
+   DWORD Unknown0,
+   DWORD Unknown1,
+   DWORD Unknown2,
+   DWORD Unknown3)
+{
+   UNIMPLEMENTED
+
+   return 0;
 }
 
 static NTSTATUS FASTCALL

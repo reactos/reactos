@@ -2860,7 +2860,7 @@ Initialize(TcpipConfNotifyImpl * This)
                 }
                 pCurSettings->AutoconfigActive = pPerInfo->AutoconfigActive;
             }
-            CoTaskMemFree(pPerInfo);
+            CoTaskMemFree(pInfo);
         }
     }
 

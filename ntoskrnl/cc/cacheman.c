@@ -19,7 +19,6 @@ PFSN_PREFETCHER_GLOBALS CcPfGlobals;
 
 VOID
 NTAPI
-INIT_FUNCTION
 CcPfInitializePrefetcher(VOID)
 {
     /* Notify debugger */
@@ -37,7 +36,6 @@ CcPfInitializePrefetcher(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 CcInitializeCacheManager(VOID)
 {
     CcInitView();

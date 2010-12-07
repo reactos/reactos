@@ -15,10 +15,7 @@
     PROLOG_END KiSystemStartup
     
     /* Put us in FIQ mode, set IRQ stack */
-    b .
-    mrs r3, cpsr
-    orr r3, r1, #CPSR_FIQ_MODE
-    msr cpsr, r3
+    msr cpsr_c, #CPSR_FIQ_MODE
     ldr sp, [a1, #LpbInterruptStack]
     
     /* Repeat for IRQ mode */

@@ -8,13 +8,14 @@
  
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ks386.inc>
+#include <reactos/asm.h>
+#include <ndk/asm.h>
 #include <internal/i386/asmmacro.S>
 
 /* FUNCTIONS ****************************************************************/
 
 .code32
+.text
 
 /*
  * NOTE: These functions must obey the following rules:
@@ -29,7 +30,7 @@
  *ExInterlockedAddLargeStatistic(IN PLARGE_INTEGER Addend,
  *                               IN ULONG Increment)
  */
-PUBLIC @ExInterlockedAddLargeStatistic@8
+.global @ExInterlockedAddLargeStatistic@8
 @ExInterlockedAddLargeStatistic@8:
 
 #ifdef CONFIG_SMP
@@ -37,10 +38,10 @@ PUBLIC @ExInterlockedAddLargeStatistic@8
     lock add [ecx], edx
 
     /* Check for carry bit and return */
-    jb .l1
+    jb 1f
     ret
 
-.l1:
+1:
     /* Add carry */
     lock adc dword ptr [ecx+4], 0
 #else
@@ -57,7 +58,7 @@ PUBLIC @ExInterlockedAddLargeStatistic@8
  *                       IN ULONG Increment,
  *                       IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedAddUlong@12
+.global @ExfInterlockedAddUlong@12
 @ExfInterlockedAddUlong@12:
 
     /* Save flags */
@@ -102,7 +103,7 @@ PUBLIC @ExfInterlockedAddUlong@12
  *                             IN PLIST_ENTRY ListEntry,
  *                             IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedInsertHeadList@12
+.global @ExfInterlockedInsertHeadList@12
 @ExfInterlockedInsertHeadList@12:
 
 #ifdef CONFIG_SMP
@@ -138,11 +139,11 @@ PUBLIC @ExfInterlockedInsertHeadList@12
 
     /* Check if list was empty */
     xor eax, ecx
-    jz .l2
+    jz 2f
 
     /* Return list pointer */
     xor eax, ecx
-.l2:
+2:
     ret 4
 
 #ifdef CONFIG_SMP
@@ -158,7 +159,7 @@ PUBLIC @ExfInterlockedInsertHeadList@12
  *                            IN PLIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedInsertTailList@12
+.global @ExfInterlockedInsertTailList@12
 @ExfInterlockedInsertTailList@12:
 
 #ifdef CONFIG_SMP
@@ -194,11 +195,11 @@ PUBLIC @ExfInterlockedInsertTailList@12
 
     /* Check if list was empty */
     xor eax, ecx
-    jz .l3
+    jz 2f
 
     /* Return list pointer */
     xor eax, ecx
-.l3:
+2:
     ret 4
 
 #ifdef CONFIG_SMP
@@ -213,7 +214,7 @@ PUBLIC @ExfInterlockedInsertTailList@12
  *ExfInterlockedRemoveHeadList(IN PLIST_ENTRY ListHead,
  *                             IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedRemoveHeadList@8
+.global @ExfInterlockedRemoveHeadList@8
 @ExfInterlockedRemoveHeadList@8:
 
     /* Save flags and disable interrupts */
@@ -227,7 +228,7 @@ PUBLIC @ExfInterlockedRemoveHeadList@8
 
     /* Check if it's empty */
     cmp eax, ecx
-    je .l4
+    je 2f
 
     /* Get the next entry and do the deletion */
 #ifdef CONFIG_SMP
@@ -253,7 +254,7 @@ PUBLIC @ExfInterlockedRemoveHeadList@8
     /* Return */
     ret
 
-.l4:
+2:
     /* Release lock */
     RELEASE_SPINLOCK(edx)
 
@@ -275,7 +276,7 @@ PUBLIC @ExfInterlockedRemoveHeadList@8
  *ExfInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
  *                           IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedPopEntryList@8
+.global @ExfInterlockedPopEntryList@8
 @ExfInterlockedPopEntryList@8:
 
     /* Save flags and disable interrupts */
@@ -289,7 +290,7 @@ PUBLIC @ExfInterlockedPopEntryList@8
 
     /* Check if it's empty */
     or eax, eax
-    je .l6
+    je 3f
 
     /* Get next entry and do deletion */
 #ifdef CONFIG_SMP
@@ -301,7 +302,7 @@ PUBLIC @ExfInterlockedPopEntryList@8
     pop edx
 #endif
 
-.l5:
+2:
     /* Release lock */
     RELEASE_SPINLOCK(edx)
 
@@ -311,10 +312,10 @@ PUBLIC @ExfInterlockedPopEntryList@8
     /* Return */
     ret
 
-.l6:
+3:
     /* Return empty list */
     xor eax, eax
-    jmp .l5
+    jmp 2b
 
 #ifdef CONFIG_SMP
 .spin5:
@@ -328,7 +329,7 @@ PUBLIC @ExfInterlockedPopEntryList@8
  *                            IN PSINGLE_LIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedPushEntryList@12
+.global @ExfInterlockedPushEntryList@12
 @ExfInterlockedPushEntryList@12:
 
     /* Save flags */
@@ -382,11 +383,11 @@ PUBLIC @ExfInterlockedPushEntryList@12
  *ExInterlockedPopEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
  *                           IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExInterlockedPopEntrySList@8
-PUBLIC @InterlockedPopEntrySList@4
-PUBLIC _ExpInterlockedPopEntrySListResume@0
-PUBLIC _ExpInterlockedPopEntrySListFault@0
-PUBLIC _ExpInterlockedPopEntrySListEnd@0
+.global @ExInterlockedPopEntrySList@8
+.global @InterlockedPopEntrySList@4
+.global _ExpInterlockedPopEntrySListResume@0
+.global _ExpInterlockedPopEntrySListFault@0
+.global _ExpInterlockedPopEntrySListEnd@0
 @ExInterlockedPopEntrySList@8:
 @InterlockedPopEntrySList@4:
 
@@ -404,7 +405,7 @@ _ExpInterlockedPopEntrySListResume@0:
 
     /* Check if the list is empty */
     or eax, eax
-    jz .l7
+    jz 2f
 
     /* Copy sequence number and adjust it */
     lea ecx, [edx-1]
@@ -417,7 +418,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     jnz _ExpInterlockedPopEntrySListResume@0
 
     /* Restore registers and return */
-.l7:
+2:
     pop ebp
     pop ebx
     ret
@@ -428,13 +429,13 @@ _ExpInterlockedPopEntrySListEnd@0:
  *                            IN PSINGLE_LIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExInterlockedPushEntrySList@12
+.global @ExInterlockedPushEntrySList@12
 @ExInterlockedPushEntrySList@12:
 
     /* So we can fall through below */
     pop [esp]
 
-PUBLIC @InterlockedPushEntrySList@8
+.global @InterlockedPushEntrySList@8
 @InterlockedPushEntrySList@8:
 
     /* Save registers */
@@ -449,18 +450,19 @@ PUBLIC @InterlockedPushEntrySList@8
     mov edx, [ebp+4]
     mov eax, [ebp]
 
-.l8:
+1:
     /* Set link pointer */
     mov [ebx], eax
 
     /* Copy sequence number and adjust it */
-    lea ecx, [edx + HEX(10001)]
+    lea ecx, [edx+0x10001]
 
     /* Do the exchange */
     LOCK cmpxchg8b qword ptr [ebp]
-    jnz .l8
+    jnz 1b
 
     /* Restore registers and return */
+2:
     pop ebp
     pop ebx
     ret
@@ -469,7 +471,7 @@ PUBLIC @InterlockedPushEntrySList@8
  *FASTCALL
  *ExInterlockedFlushSList(IN PSINGLE_LIST_ENTRY ListHead)
  */
-PUBLIC @ExInterlockedFlushSList@4
+.global @ExInterlockedFlushSList@4
 @ExInterlockedFlushSList@4:
 
     /* Save registers */
@@ -486,10 +488,10 @@ PUBLIC @ExInterlockedFlushSList@4
     mov edx, [ebp+4]
     mov eax, [ebp]
 
-.l9:
+1:
     /* Check if the list is empty */
     or eax, eax
-    jz .l10
+    jz 2f
 
     /* Clear sequence and pointer */
     mov ecx, edx
@@ -497,10 +499,10 @@ PUBLIC @ExInterlockedFlushSList@4
 
     /* Do the exchange */
     LOCK cmpxchg8b qword ptr [ebp]
-    jnz .l9
+    jnz 1b
 
     /* Restore registers and return */
-.l10:
+2:
     pop ebp
     pop ebx
     ret
@@ -509,7 +511,7 @@ PUBLIC @ExInterlockedFlushSList@4
  *FASTCALL
  *Exfi386InterlockedIncrementLong(IN PLONG Addend)
  */
-PUBLIC @Exfi386InterlockedIncrementLong@4
+.global @Exfi386InterlockedIncrementLong@4
 @Exfi386InterlockedIncrementLong@4:
 
     /* Do the op */
@@ -524,7 +526,7 @@ PUBLIC @Exfi386InterlockedIncrementLong@4
  *FASTCALL
  *Exfi386InterlockedDecrementLong(IN PLONG Addend)
  */
-PUBLIC @Exfi386InterlockedDecrementLong@4
+.global @Exfi386InterlockedDecrementLong@4
 @Exfi386InterlockedDecrementLong@4:
 
     /* Do the op */
@@ -540,7 +542,7 @@ PUBLIC @Exfi386InterlockedDecrementLong@4
  *Exfi386InterlockedExchangeUlong(IN PULONG Taget,
  *                                IN ULONG Value)
  */
-PUBLIC @Exfi386InterlockedExchangeUlong@8
+.global @Exfi386InterlockedExchangeUlong@8
 @Exfi386InterlockedExchangeUlong@8:
 
 #ifdef CONFIG_SMP
@@ -550,9 +552,9 @@ PUBLIC @Exfi386InterlockedExchangeUlong@8
 #else
     /* On UP, use cmpxchg */
     mov eax, [ecx]
-.l11:
+1:
     cmpxchg [ecx], edx
-    jnz .l11
+    jnz 1b
 #endif
 
     /* Return */
@@ -564,7 +566,7 @@ PUBLIC @Exfi386InterlockedExchangeUlong@8
  *                                IN PLONGLONG Exchange,
  *                                IN PLONGLONG Comperand)
  */
-PUBLIC @ExfInterlockedCompareExchange64@12
+.global @ExfInterlockedCompareExchange64@12
 @ExfInterlockedCompareExchange64@12:
 
     /* Save registers */
@@ -596,7 +598,7 @@ PUBLIC @ExfInterlockedCompareExchange64@12
  *                                IN PLONGLONG Comperand,
  *                                IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExInterlockedCompareExchange64@16
+.global @ExInterlockedCompareExchange64@16
 @ExInterlockedCompareExchange64@16:
 
     /* Save registers */
@@ -628,7 +630,7 @@ PUBLIC @ExInterlockedCompareExchange64@16
  *ExfInterlockedPopEntrySList(IN PSINGLE_LIST_ENTRY ListHead,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedPopEntrySList@8
+.global @ExfInterlockedPopEntrySList@8
 @ExfInterlockedPopEntrySList@8:
 
     /* Save flags */
@@ -644,7 +646,7 @@ PUBLIC @ExfInterlockedPopEntrySList@8
     /* Get the next link and check if it's empty */
     mov eax, [ecx]
     or eax, eax
-    jz .l12
+    jz 1f
 
     /* Get address of the next link and store it */
     push [eax]
@@ -653,7 +655,7 @@ PUBLIC @ExfInterlockedPopEntrySList@8
     /* Decrement list depth */
     dec dword ptr [ecx+4]
 
-.l12:
+1:
 #ifdef CONFIG_SMP
     /* Release spinlock */
     RELEASE_SPINLOCK(edx)
@@ -676,7 +678,7 @@ PUBLIC @ExfInterlockedPopEntrySList@8
  *                             IN PSINGLE_LIST_ENTRY ListEntry,
  *                             IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExfInterlockedPushEntrySList@12
+.global @ExfInterlockedPushEntrySList@12
 @ExfInterlockedPushEntrySList@12:
 
     /* Save flags */
@@ -725,7 +727,7 @@ PUBLIC @ExfInterlockedPushEntrySList@12
  *                                IN PLONGLONG Comperand,
  *                                IN PKSPIN_LOCK Lock)
  */
-PUBLIC @ExpInterlockedCompareExchange64@16
+.global @ExpInterlockedCompareExchange64@16
 @ExpInterlockedCompareExchange64@16:
 
     /* Save registers */
@@ -800,6 +802,4 @@ NoMatch:
     pushfd
     SPIN_ON_LOCK(esi, .startc)
 #endif
-
-END
 /* EOF */

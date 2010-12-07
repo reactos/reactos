@@ -399,10 +399,6 @@ PsChargeProcessPageFileQuota(
     IN SIZE_T Amount
 );
 
-BOOLEAN
-NTAPI
-PspIsProcessExiting(IN PEPROCESS Process);
-
 //
 // Global data inside the Process Manager
 //

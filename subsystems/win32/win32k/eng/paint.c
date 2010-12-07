@@ -32,13 +32,14 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
+static BOOL APIENTRY FillSolidUnlocked(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
 {
   LONG y;
   ULONG LineWidth;
 
   ASSERT(pso);
   ASSERT(pRect);
+  MouseSafetyOnDrawStart(pso, pRect->left, pRect->top, pRect->right, pRect->bottom);
   LineWidth  = pRect->right - pRect->left;
   DPRINT(" LineWidth: %d, top: %d, bottom: %d\n", LineWidth, pRect->top, pRect->bottom);
   for (y = pRect->top; y < pRect->bottom; y++)
@@ -46,7 +47,20 @@ BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
     DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_HLine(
       pso, pRect->left, pRect->right, y, iColor);
   }
+  MouseSafetyOnDrawEnd(pso);
+
   return TRUE;
+}
+
+BOOL APIENTRY FillSolid(SURFOBJ *pso, PRECTL pRect, ULONG iColor)
+{
+  SURFACE *psurf;
+  BOOL Result;
+  psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+  SURFACE_LockBitmapBits(psurf);
+  Result = FillSolidUnlocked(pso, pRect, iColor);
+  SURFACE_UnlockBitmapBits(psurf);
+  return Result;
 }
 
 BOOL APIENTRY
@@ -71,7 +85,7 @@ EngPaintRgn(SURFOBJ *pso, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
 
     if (ClipRegion->iDComplexity == DC_RECT)
     {
-      FillSolid(pso, &(ClipRegion->rclBounds), iColor);
+      FillSolidUnlocked(pso, &(ClipRegion->rclBounds), iColor);
     } else {
 
       /* Enumerate all the rectangles and draw them */
@@ -80,7 +94,7 @@ EngPaintRgn(SURFOBJ *pso, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
       do {
         EnumMore = CLIPOBJ_bEnum(ClipRegion, sizeof(RectEnum), (PVOID) &RectEnum);
         for (i = 0; i < RectEnum.c; i++) {
-          FillSolid(pso, RectEnum.arcl + i, iColor);
+          FillSolidUnlocked(pso, RectEnum.arcl + i, iColor);
         }
       } while (EnumMore);
     }
@@ -122,11 +136,18 @@ IntEngPaint(IN SURFOBJ *pso,
 
   DPRINT("pso->iType == %d\n", pso->iType);
   /* Is the surface's Paint function hooked? */
-  if((pso->iType!=STYPE_BITMAP) && (psurf->flags & HOOK_PAINT))
+  if((pso->iType!=STYPE_BITMAP) && (psurf->flHooks & HOOK_PAINT))
   {
     // Call the driver's DrvPaint
+    SURFACE_LockBitmapBits(psurf);
+    MouseSafetyOnDrawStart(pso, ClipRegion->rclBounds.left,
+	                         ClipRegion->rclBounds.top, ClipRegion->rclBounds.right,
+							 ClipRegion->rclBounds.bottom);
+
     ret = GDIDEVFUNCS(pso).Paint(
       pso, ClipRegion, Brush, BrushOrigin, Mix);
+    MouseSafetyOnDrawEnd(pso);
+    SURFACE_UnlockBitmapBits(psurf);
     return ret;
   }
   return EngPaint(pso, ClipRegion, Brush, BrushOrigin, Mix );

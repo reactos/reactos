@@ -48,7 +48,6 @@ FsRtlDissectDbcs(IN ANSI_STRING Name,
 {
     ULONG FirstPosition, i;
     ULONG SkipFirstSlash = 0;
-    PAGED_CODE();
 
     /* Zero the strings before continuing */
     RtlZeroMemory(FirstPart, sizeof(ANSI_STRING));
@@ -117,7 +116,6 @@ NTAPI
 FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
 {
     ULONG i;
-    PAGED_CODE();
 
     /* Check every character */
     for (i = 0; i < Name->Length; i++)
@@ -152,7 +150,7 @@ FsRtlDoesDbcsContainWildCards(IN PANSI_STRING Name)
  *
  * @return TRUE if Name is found in Expression, FALSE otherwise
  *
- * @remarks
+ * @remarks None
  *
  *--*/
 BOOLEAN
@@ -161,10 +159,7 @@ FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
     ULONG ExpressionPosition, NamePosition, MatchingChars = 0;
-    PAGED_CODE();
 
-    ASSERT(Name->Length);
-    ASSERT(Expression->Length);
     ASSERT(!FsRtlDoesDbcsContainWildCards(Name));
 
     /* One can't be null, both can be */
@@ -247,7 +242,6 @@ FsRtlIsFatDbcsLegal(IN ANSI_STRING DbcsName,
     ANSI_STRING FirstPart, RemainingPart, Name;
     BOOLEAN LastDot;
     ULONG i;
-    PAGED_CODE();
 
     /* Just quit if the string is empty */
     if (!DbcsName.Length)
@@ -384,7 +378,6 @@ FsRtlIsHpfsDbcsLegal(IN ANSI_STRING DbcsName,
 {
     ANSI_STRING FirstPart, RemainingPart, Name;
     ULONG i;
-    PAGED_CODE();
 
     /* Just quit if the string is empty */
     if (!DbcsName.Length)

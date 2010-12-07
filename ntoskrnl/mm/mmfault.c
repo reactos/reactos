@@ -9,9 +9,6 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#ifdef NEWCC
-#include "../cache/section/newmm.h"
-#endif
 #define NDEBUG
 #include <debug.h>
 
@@ -19,6 +16,37 @@
 #include "ARM3/miarm.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+FASTCALL
+MiSyncForProcessAttach(IN PKTHREAD Thread,
+                       IN PEPROCESS Process)
+{
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread, sizeof(ETHREAD));
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(IN PKTHREAD Thread)
+{
+    PVOID Process = PsGetCurrentProcess();
+    PETHREAD Ethread = CONTAINING_RECORD(Thread, ETHREAD, Tcb);
+
+    /* Hack Sync because Mm is broken */
+    MmUpdatePageDir(Process, Ethread->ThreadsProcess, sizeof(EPROCESS));
+    MmUpdatePageDir(Process,
+                    (PVOID)Thread->StackLimit,
+                    Thread->LargeStack ?
+                    KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
+}
 
 NTSTATUS
 NTAPI
@@ -87,18 +115,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
          case MEMORY_AREA_VIRTUAL_MEMORY:
             Status = STATUS_ACCESS_VIOLATION;
             break;
-
-#ifdef NEWCC
-	     case MEMORY_AREA_CACHE:
-			// This code locks for itself to keep from having to break a lock
-			// passed in.
-			if (!FromMdl)
-				MmUnlockAddressSpace(AddressSpace);
-		    Status = MmAccessFaultCacheSection(Mode, Address, Locked);
-			if (!FromMdl)
-				MmLockAddressSpace(AddressSpace);
-			break;
-#endif
 
          default:
             Status = STATUS_ACCESS_VIOLATION;
@@ -190,18 +206,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                                                     Locked);
             break;
 
-#ifdef  NEWCC
-	    case MEMORY_AREA_CACHE:
-			// This code locks for itself to keep from having to break a lock
-			// passed in.
-			if (!FromMdl)
-				MmUnlockAddressSpace(AddressSpace);
-		    Status = MmNotPresentFaultCacheSection(Mode, Address, Locked);
-			if (!FromMdl)
-				MmLockAddressSpace(AddressSpace);
-			break;
-#endif
-
          default:
             Status = STATUS_ACCESS_VIOLATION;
             break;
@@ -226,7 +230,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
               IN KPROCESSOR_MODE Mode,
               IN PVOID TrapInformation)
 {
-    PMEMORY_AREA MemoryArea = NULL;
+    PMEMORY_AREA MemoryArea;
 
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
@@ -241,24 +245,27 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
     }
     
-    /* Is there a ReactOS address space yet? */
-    if (MmGetKernelAddressSpace())
+    /* 
+     * Check if this is an ARM3 memory area or if there's no memory area at all.
+     * The latter can happen early in the boot cycle when ARM3 paged pool is in
+     * use before having defined the memory areas proper.
+     * A proper fix would be to define memory areas in the ARM3 code, but we want
+     * to avoid adding this ReactOS-specific construct to ARM3 code.
+     * Either way, in the future, as ReactOS-paged pool is eliminated, this hack
+     * can go away.
+     */
+    MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+    if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
     {
-        /* Check if this is an ARM3 memory area */
-        MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
-        if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
-        {
-            /* Could this be a VAD fault from user-mode? */
-            MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
-        }
+        /* Could this be a VAD fault from user-mode? */
+        MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
     }
-    
-    /* Is this an ARM3 memory area, or is there no address space yet? */
-    if (((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)) ||
-        (!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
-        (!MmGetKernelAddressSpace()))
+    if ((!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
+        ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)))
     {
-        /* This is an ARM3 fault */
+        //
+        // Hand it off to more competent hands...
+        //
         DPRINT("ARM3 fault %p\n", MemoryArea);
         return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
     }

@@ -79,7 +79,6 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
     }
 
   /* TODO: Add allocation info to AVL tree (stored inside W32PROCESS structure) */
-  //hSecure = EngSecureMem(NewMem, cj);
 
   return NewMem;
 }
@@ -167,7 +166,6 @@ HackUnsecureVirtualMemory(
 HANDLE APIENTRY
 EngSecureMem(PVOID Address, ULONG Length)
 {
-    return (HANDLE)-1; // HACK!!!
   return MmSecureVirtualMemory(Address, Length, PAGE_READWRITE);
 }
 
@@ -177,7 +175,6 @@ EngSecureMem(PVOID Address, ULONG Length)
 VOID APIENTRY
 EngUnsecureMem(HANDLE Mem)
 {
-    if (Mem == (HANDLE)-1) return;  // HACK!!!
   MmUnsecureVirtualMemory((PVOID) Mem);
 }
 

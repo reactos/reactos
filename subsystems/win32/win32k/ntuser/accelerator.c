@@ -56,9 +56,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitAcceleratorImpl(VOID)
 {
    return(STATUS_SUCCESS);

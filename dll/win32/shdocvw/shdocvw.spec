@@ -120,7 +120,7 @@
 @ stub HlinkFrameNavigateNHL
 @ stub IEAboutBox
 @ stub IEWriteErrorLog
-@ stdcall ImportPrivacySettings(wstr ptr ptr)
+@ stub ImportPrivacySettings
 @ stub InstallReg_RunDLL
 @ stdcall OpenURL(long long str long)
 @ stub SHGetIDispatchForFolder

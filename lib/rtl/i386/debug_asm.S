@@ -6,39 +6,43 @@
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
  */
 
-#include <asm.inc>
+.intel_syntax noprefix
 
 /* GLOBALS ****************************************************************/
 
-PUBLIC _DbgBreakPoint@0
-PUBLIC _DbgBreakPointWithStatus@4
-PUBLIC _DbgUserBreakPoint@0
-PUBLIC _DebugService@20
-PUBLIC _DebugService2@12
-PUBLIC _DbgBreakPointNoBugCheck@0
-PUBLIC _RtlpBreakWithStatusInstruction@0
+.globl _DbgBreakPoint@0
+.globl _DbgBreakPointWithStatus@4
+.globl _DbgUserBreakPoint@0
+.globl _DebugService@20
+.globl _DebugService2@12
+.globl _DbgBreakPointNoBugCheck@0
+.globl _RtlpBreakWithStatusInstruction@0
 
 /* FUNCTIONS ***************************************************************/
 
-.code
-
+.func DbgBreakPointNoBugCheck@0
 _DbgBreakPointNoBugCheck@0:
     int 3
     ret
+.endfunc
 
+.func DbgBreakPoint@0
 _DbgBreakPoint@0:
 _DbgUserBreakPoint@0:
     int 3
     ret
+.endfunc
 
+.func DbgBreakPointWithStatus@4
 _DbgBreakPointWithStatus@4:
     mov eax, [esp+4]
 
 _RtlpBreakWithStatusInstruction@0:
     int 3
     ret 4
+.endfunc
 
-
+.func DebugService2@12
 _DebugService2@12:
 
     /* Setup the stack */
@@ -49,14 +53,15 @@ _DebugService2@12:
     mov eax, [ebp+16]
     mov ecx, [ebp+8]
     mov edx, [ebp+12]
-    int HEX(2D)
+    int 0x2D
     int 3
 
     /* Restore stack */
     pop ebp
     ret 12
+.endfunc
 
-
+.func DebugService@20
 _DebugService@20:
 
     /* Setup the stack */
@@ -73,7 +78,7 @@ _DebugService@20:
     mov edx, [ebp+16]
     mov ebx, [ebp+20]
     mov edi, [ebp+24]
-    int HEX(2D)
+    int 0x2D
     int 3
  
     /* Restore registers */
@@ -83,5 +88,4 @@ _DebugService@20:
     /* Return */
     pop ebp
     ret 20
-
-END
+.endfunc

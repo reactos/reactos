@@ -372,13 +372,20 @@ typedef __WCHAR_TYPE__ wchar_t;
 #endif /* __sys_stdtypes_h */
 
 /* A null pointer constant.  */
-#ifndef NULL
-#ifdef __cplusplus
+
+#if defined (_STDDEF_H) || defined (__need_NULL)
+#undef NULL		/* in case <stdio.h> has defined it. */
+#ifdef __GNUG__
+#define NULL __null
+#else   /* G++ */
+#ifndef __cplusplus
+#define NULL ((void *)0)
+#else   /* C++ */
 #define NULL 0
-#else
-#define NULL ((void*)0)
-#endif
-#endif
+#endif  /* C++ */
+#endif  /* G++ */
+#endif	/* NULL not defined and <stddef.h> or need NULL.  */
+#undef	__need_NULL
 
 #ifndef offsetof
 

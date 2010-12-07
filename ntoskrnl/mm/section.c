@@ -45,9 +45,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#ifdef NEWCC
-#include "../cache/section/newmm.h"
-#endif
 #define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>
@@ -748,7 +745,7 @@ MmspCompleteAndReleasePageOp(PMM_PAGEOP PageOp)
  * ARGUMENTS: PFILE_OBJECT to wait for.
  * RETURNS:   Status of the wait.
  */
-NTSTATUS
+static NTSTATUS
 MmspWaitForFileLock(PFILE_OBJECT File)
 {
     return STATUS_SUCCESS;
@@ -982,11 +979,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
             NTSTATUS Status;
             Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
             IsDirectMapped = TRUE;
-#ifndef NEWCC
             Status = CcRosUnmapCacheSegment(Bcb, FileOffset, Dirty);
-#else
-			Status = STATUS_SUCCESS;
-#endif
             if (!NT_SUCCESS(Status))
             {
                DPRINT1("CcRosUnmapCacheSegment failed, status = %x\n", Status);
@@ -1064,7 +1057,6 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
                        ULONG SegOffset)
 {
-#ifndef NEWCC
    if (!(MemoryArea->Data.SectionData.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
       PBCB Bcb;
@@ -1077,7 +1069,6 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
          return TRUE;
       }
    }
-#endif
    return FALSE;
 }
 
@@ -1100,7 +1091,6 @@ MiCopyFromUserPage(PFN_NUMBER DestPage, PVOID SourceAddress)
     return(STATUS_SUCCESS);
 }
 
-#ifndef NEWCC
 NTSTATUS
 NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
@@ -1193,8 +1183,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
        * Allocate a page, this is rather complicated by the possibility
        * we might have to move other things out of memory
        */
-      MI_SET_USAGE(MI_USAGE_SECTION);
-      MI_SET_PROCESS2(PsGetCurrentProcess()->ImageFileName);
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, Page);
       if (!NT_SUCCESS(Status))
       {
@@ -1279,35 +1267,6 @@ MiReadPage(PMEMORY_AREA MemoryArea,
    }
    return(STATUS_SUCCESS);
 }
-#else
-NTSTATUS
-NTAPI
-MiReadPage(PMEMORY_AREA MemoryArea,
-           ULONG SegOffset,
-           PPFN_NUMBER Page)
-/*
- * FUNCTION: Read a page for a section backed memory area.
- * PARAMETERS:
- *       MemoryArea - Memory area to read the page for.
- *       Offset - Offset of the page to read.
- *       Page - Variable that receives a page contains the read data.
- */
-{
-   MM_REQUIRED_RESOURCES Resources = { };
-   
-   Resources.Context = MemoryArea->Data.SectionData.Section->FileObject;
-   Resources.FileOffset.QuadPart = SegOffset + 
-	   MemoryArea->Data.SectionData.Segment->FileOffset;
-   Resources.Consumer = MC_USER;
-   Resources.Amount = PAGE_SIZE;
-
-   DPRINT1("%S, offset %x, len %d, page %x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
-
-   NTSTATUS Status = MiReadFilePage(NULL, NULL, &Resources);
-   *Page = Resources.Page[0];
-   return Status;
-}
-#endif
 
 NTSTATUS
 NTAPI
@@ -1488,9 +1447,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmDeletePageFileMapping(Process, (PVOID)PAddress, &SwapEntry);
 
       MmUnlockAddressSpace(AddressSpace);
-      MI_SET_USAGE(MI_USAGE_SECTION);
-      if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-      if (!Process) MI_SET_PROCESS2("Kernel Section");
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
       if (!NT_SUCCESS(Status))
       {
@@ -1572,9 +1528,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
    if (Segment->Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
    {
       MmUnlockSectionSegment(Segment);
-      MI_SET_USAGE(MI_USAGE_SECTION);
-      if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-      if (!Process) MI_SET_PROCESS2("Kernel Section");
       Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
       if (!NT_SUCCESS(Status))
       {
@@ -1629,15 +1582,11 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
           (Offset >= PAGE_ROUND_UP(Segment->RawLength) && Section->AllocationAttributes & SEC_IMAGE))
       {
-         MI_SET_USAGE(MI_USAGE_SECTION);
-         if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-         if (!Process) MI_SET_PROCESS2("Kernel Section");
          Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
          if (!NT_SUCCESS(Status))
          {
             DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
          }
-		 
       }
       else
       {
@@ -1675,7 +1624,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       if (Entry != Entry1)
       {
          DPRINT1("Someone changed ppte entry while we slept\n");
-		 KeBugCheck(MEMORY_MANAGEMENT);
+          KeBugCheck(MEMORY_MANAGEMENT);
       }
 
       /*
@@ -1715,9 +1664,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
       MmUnlockSectionSegment(Segment);
 
       MmUnlockAddressSpace(AddressSpace);
-      MI_SET_USAGE(MI_USAGE_SECTION);
-      if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-      if (!Process) MI_SET_PROCESS2("Kernel Section");
+
       Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
       if (!NT_SUCCESS(Status))
       {
@@ -1925,9 +1872,6 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
    /*
     * Allocate a page
     */
-   MI_SET_USAGE(MI_USAGE_SECTION);
-   if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-   if (!Process) MI_SET_PROCESS2("Kernel Section");
    Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &NewPage);
    if (!NT_SUCCESS(Status))
    {
@@ -2207,11 +2151,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                  Address);
          KeBugCheck(MEMORY_MANAGEMENT);
       }
-#ifndef NEWCC
       Status = CcRosUnmapCacheSegment(Bcb, FileOffset, FALSE);
-#else
-	  Status = STATUS_SUCCESS;
-#endif
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("CCRosUnmapCacheSegment failed, status = %x\n", Status);
@@ -2489,9 +2429,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    if (DirectMapped && !Private)
    {
       ASSERT(SwapEntry == 0);
-#ifndef NEWCC
       CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
-#endif
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
       return(STATUS_SUCCESS);
@@ -2779,9 +2717,7 @@ MmpDeleteSection(PVOID ObjectBody)
    }
    if (Section->FileObject != NULL)
    {
-#ifndef NEWCC
       CcRosDereferenceCache(Section->FileObject);
-#endif
       ObDereferenceObject(Section->FileObject);
       Section->FileObject = NULL;
    }
@@ -3186,9 +3122,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    MmUnlockSectionSegment(Segment);
    Section->FileObject = FileObject;
    Section->MaximumSize = MaximumSize;
-#ifndef NEWCC
    CcRosReferenceCache(FileObject);
-#endif
    //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(STATUS_SUCCESS);
@@ -3919,15 +3853,11 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
 
-#ifndef NEWCC
    /*
     * Initialized caching for this file object if previously caching
     * was initialized for the same on disk file
     */
    Status = CcTryToInitializeFileCache(FileObject);
-#else
-   Status = STATUS_SUCCESS;
-#endif
 
    if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
    {
@@ -4020,9 +3950,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
       Status = STATUS_SUCCESS;
    }
    Section->FileObject = FileObject;
-#ifndef NEWCC
    CcRosReferenceCache(FileObject);
-#endif
    //KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
    *SectionObject = Section;
    return(Status);
@@ -4134,9 +4062,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
       {
          FileObject = MemoryArea->Data.SectionData.Section->FileObject;
          Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
-#ifndef NEWCC
          CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
-#endif
          ASSERT(SwapEntry == 0);
       }
    }
@@ -4823,9 +4749,7 @@ MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
          {
             return FALSE;
          }
-#ifndef NEWCC
          CcRosSetRemoveOnClose(SectionObjectPointer);
-#endif
          return TRUE;
       case MmFlushForWrite:
          break;
@@ -4978,7 +4902,7 @@ MmCreateSection (OUT PVOID  * Section,
    PROS_SECTION_OBJECT *SectionObject = (PROS_SECTION_OBJECT *)Section;
    
     /* Check if an ARM3 section is being created instead */
-    if (AllocationAttributes & 1)
+    if (AllocationAttributes & 0xC0000000)
     {
         DPRINT1("arm 3 path\n");
         return MmCreateArm3Section(Section,
@@ -4986,7 +4910,7 @@ MmCreateSection (OUT PVOID  * Section,
                                    ObjectAttributes,
                                    MaximumSize,
                                    SectionPageProtection,
-                                   AllocationAttributes &~ 1,
+                                   AllocationAttributes &~ 0xC0000000,
                                    FileHandle,
                                    File);
     }

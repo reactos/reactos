@@ -556,12 +556,18 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         /*                } */
         /*                dwValSize = max_val_size; */
         while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
+            /* Remove unwanted path from key name */
+            TCHAR *pLastBl = _tcsrchr(ValName, TEXT('\\'));
+            if (pLastBl != NULL)
+                ++pLastBl;
+            else
+                pLastBl = ValName;
             /* Add a terminating 0 character. Usually this is only necessary for strings. */
             ValBuf[dwValSize] = 0;
 #ifdef UNICODE
             ValBuf[dwValSize + 1] = 0;
 #endif
-            AddEntryToList(hwndLV, ValName, dwValType, ValBuf, dwValSize, -1, TRUE);
+            AddEntryToList(hwndLV, pLastBl, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
             dwValType = 0L;

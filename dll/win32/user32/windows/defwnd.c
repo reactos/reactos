@@ -103,7 +103,6 @@ BOOL
 FASTCALL
 DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
 {
-  BOOL Ret;
   LARGE_STRING lsString;
 
   if ( String )
@@ -113,12 +112,7 @@ DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
      else
         RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)&lsString, String, 0);
   }
-  Ret = NtUserDefSetText(hWnd, (String ? &lsString : NULL));
-
-  if (Ret)
-     IntNotifyWinEvent(EVENT_OBJECT_NAMECHANGE, hWnd, OBJID_WINDOW, CHILDID_SELF, 0);
-
-  return Ret;
+  return NtUserDefSetText(hWnd, (String ? &lsString : NULL));
 }
 
 void
@@ -1975,6 +1969,7 @@ RealDefWindowProcA(HWND hWnd,
             {
                 DefWndNCPaint(hWnd, (HRGN)1, -1);
             }
+
             Result = 1;
             break;
         }

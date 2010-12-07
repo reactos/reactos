@@ -18,7 +18,7 @@ Description = Open Source Office Suite, basierend auf Open Office, aber viel bes
 Description = La suite de ofimática de código abierto.
 
 [Section.0415]
-Description = Otwarty pakiet biurowy, bazujący na Open Office, ale znacznie lepszy.
+Description = Otwarty pakiet biurowy.
 
 [Section.0422]
 Description = Відкритий офісний пакет.

@@ -33,9 +33,6 @@ static HRESULT WINAPI InPlaceFrame_QueryInterface(IOleInPlaceFrame *iface,
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = INPLACEFRAME(This);
-    }else if(IsEqualGUID(&IID_IOleWindow, riid)) {
-        TRACE("(%p)->(IID_IOleWindow %p)\n", This, ppv);
-        *ppv = INPLACEFRAME(This);
     }else if(IsEqualGUID(&IID_IOleInPlaceUIWindow, riid)) {
         TRACE("(%p)->(IID_IOleInPlaceUIWindow %p)\n", This, ppv);
         *ppv = INPLACEFRAME(This);
@@ -138,8 +135,8 @@ static HRESULT WINAPI InPlaceFrame_SetStatusText(IOleInPlaceFrame *iface,
                                                  LPCOLESTR pszStatusText)
 {
     DocHost *This = INPLACEFRAME_THIS(iface);
-    TRACE("(%p)->(%s)\n", This, debugstr_w(pszStatusText));
-    return This->container_vtbl->SetStatusText(This, pszStatusText);
+    FIXME("(%p)->(%s)\n", This, debugstr_w(pszStatusText));
+    return E_NOTIMPL;
 }
 
 static HRESULT WINAPI InPlaceFrame_EnableModeless(IOleInPlaceFrame *iface, BOOL fEnable)

@@ -526,7 +526,7 @@
 @ stdcall PostQuitMessage(long)
 @ stdcall PostThreadMessageA(long long long long)
 @ stdcall PostThreadMessageW(long long long long)
-@ stdcall PrintWindow(ptr ptr long) NtUserPrintWindow
+; @ stub PrintWindow
 @ stdcall PrivateExtractIconExA(str long ptr ptr long)
 @ stdcall PrivateExtractIconExW(wstr long ptr ptr long)
 @ stdcall PrivateExtractIconsA(str long long long ptr ptr long long)

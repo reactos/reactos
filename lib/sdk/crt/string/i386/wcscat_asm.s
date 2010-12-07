@@ -2,6 +2,6 @@
  */
 
 #define _UNICODE
-#include "tcscat.inc"
+#include "tcscat.h"
 
 /* EOF */

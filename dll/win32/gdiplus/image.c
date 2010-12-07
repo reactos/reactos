@@ -1626,10 +1626,11 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     PixelFormat format, BYTE* scan0, GpBitmap** bitmap)
 {
     BITMAPINFO* pbmi;
-    HBITMAP hbitmap=NULL;
+    HBITMAP hbitmap;
     INT row_size, dib_stride;
     HDC hdc;
-    BYTE *bits=NULL, *own_bits=NULL;
+    BYTE *bits;
+    int i;
     REAL xres, yres;
     GpStatus stat;
 
@@ -1654,62 +1655,46 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     if(stride == 0)
         stride = dib_stride;
 
-    if (format & PixelFormatGDI && !(format & (PixelFormatAlpha|PixelFormatIndexed)) && !scan0)
-    {
-        pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-        if (!pbmi)
-            return OutOfMemory;
+    pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
+    if (!pbmi)
+        return OutOfMemory;
 
-        pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-        pbmi->bmiHeader.biWidth = width;
-        pbmi->bmiHeader.biHeight = -height;
-        pbmi->bmiHeader.biPlanes = 1;
-        /* FIXME: use the rest of the data from format */
-        pbmi->bmiHeader.biBitCount = PIXELFORMATBPP(format);
-        pbmi->bmiHeader.biCompression = BI_RGB;
-        pbmi->bmiHeader.biSizeImage = 0;
-        pbmi->bmiHeader.biXPelsPerMeter = 0;
-        pbmi->bmiHeader.biYPelsPerMeter = 0;
-        pbmi->bmiHeader.biClrUsed = 0;
-        pbmi->bmiHeader.biClrImportant = 0;
+    pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    pbmi->bmiHeader.biWidth = width;
+    pbmi->bmiHeader.biHeight = -height;
+    pbmi->bmiHeader.biPlanes = 1;
+    /* FIXME: use the rest of the data from format */
+    pbmi->bmiHeader.biBitCount = PIXELFORMATBPP(format);
+    pbmi->bmiHeader.biCompression = BI_RGB;
+    pbmi->bmiHeader.biSizeImage = 0;
+    pbmi->bmiHeader.biXPelsPerMeter = 0;
+    pbmi->bmiHeader.biYPelsPerMeter = 0;
+    pbmi->bmiHeader.biClrUsed = 0;
+    pbmi->bmiHeader.biClrImportant = 0;
 
-        hdc = CreateCompatibleDC(NULL);
-        if (!hdc) {
-            GdipFree(pbmi);
-            return GenericError;
-        }
-
-        hbitmap = CreateDIBSection(hdc, pbmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
-
-        DeleteDC(hdc);
+    hdc = CreateCompatibleDC(NULL);
+    if (!hdc) {
         GdipFree(pbmi);
-
-        if (!hbitmap) return GenericError;
-
-        stride = dib_stride;
+        return GenericError;
     }
-    else
-    {
-        /* Not a GDI format; don't try to make an HBITMAP. */
-        if (scan0)
-            bits = scan0;
-        else
-        {
-            INT size = abs(stride) * height;
 
-            own_bits = bits = GdipAlloc(size);
-            if (!own_bits) return OutOfMemory;
+    hbitmap = CreateDIBSection(hdc, pbmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
 
-            if (stride < 0)
-                bits += stride * (1 - height);
-        }
-    }
+    DeleteDC(hdc);
+    GdipFree(pbmi);
+
+    if (!hbitmap) return GenericError;
+
+    /* copy bits to the dib if necessary */
+    /* FIXME: should reference the bits instead of copying them */
+    if (scan0)
+        for (i=0; i<height; i++)
+            memcpy(bits+i*dib_stride, scan0+i*stride, row_size);
 
     *bitmap = GdipAlloc(sizeof(GpBitmap));
     if(!*bitmap)
     {
         DeleteObject(hbitmap);
-        GdipFree(own_bits);
         return OutOfMemory;
     }
 
@@ -1729,12 +1714,7 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromScan0(INT width, INT height, INT stride,
     (*bitmap)->hbitmap = hbitmap;
     (*bitmap)->hdc = NULL;
     (*bitmap)->bits = bits;
-    (*bitmap)->stride = stride;
-    (*bitmap)->own_bits = own_bits;
-
-    /* set format-related flags */
-    if (format & (PixelFormatAlpha|PixelFormatPAlpha|PixelFormatIndexed))
-        (*bitmap)->image.flags |= ImageFlagsHasAlpha;
+    (*bitmap)->stride = dib_stride;
 
     if (format == PixelFormat1bppIndexed ||
         format == PixelFormat4bppIndexed ||
@@ -1936,7 +1916,6 @@ static void move_bitmap(GpBitmap *dst, GpBitmap *src, BOOL clobber_palette)
     dst->hdc = src->hdc;
     dst->bits = src->bits;
     dst->stride = src->stride;
-    dst->own_bits = src->own_bits;
 
     GdipFree(src);
 }
@@ -1948,22 +1927,15 @@ GpStatus WINGDIPAPI GdipDisposeImage(GpImage *image)
     if(!image)
         return InvalidParameter;
 
+    if (image->picture)
+        IPicture_Release(image->picture);
     if (image->type == ImageTypeBitmap)
     {
         GdipFree(((GpBitmap*)image)->bitmapbits);
-        GdipFree(((GpBitmap*)image)->own_bits);
         DeleteDC(((GpBitmap*)image)->hdc);
         DeleteObject(((GpBitmap*)image)->hbitmap);
     }
-    else if (image->type != ImageTypeMetafile)
-    {
-        WARN("invalid image: %p\n", image);
-        return ObjectBusy;
-    }
-    if (image->picture)
-        IPicture_Release(image->picture);
     GdipFree(image->palette_entries);
-    image->type = ~0;
     GdipFree(image);
 
     return Ok;
@@ -2036,15 +2008,14 @@ GpStatus WINGDIPAPI GdipGetImageDimension(GpImage *image, REAL *width,
 
     if(image->type == ImageTypeMetafile){
         HDC hdc = GetDC(0);
-        REAL res = (REAL)GetDeviceCaps(hdc, LOGPIXELSX);
 
-        ReleaseDC(0, hdc);
-
-        *height = convert_unit(res, ((GpMetafile*)image)->unit) *
+        *height = convert_unit(hdc, ((GpMetafile*)image)->unit) *
                         ((GpMetafile*)image)->bounds.Height;
 
-        *width = convert_unit(res, ((GpMetafile*)image)->unit) *
+        *width = convert_unit(hdc, ((GpMetafile*)image)->unit) *
                         ((GpMetafile*)image)->bounds.Width;
+
+        ReleaseDC(0, hdc);
     }
 
     else if(image->type == ImageTypeBitmap){
@@ -2076,23 +2047,18 @@ GpStatus WINGDIPAPI GdipGetImageGraphicsContext(GpImage *image,
         return NotImplemented;
     }
 
-    if (((GpBitmap*)image)->hbitmap)
-    {
-        hdc = ((GpBitmap*)image)->hdc;
+    hdc = ((GpBitmap*)image)->hdc;
 
-        if(!hdc){
-            hdc = CreateCompatibleDC(0);
-            SelectObject(hdc, ((GpBitmap*)image)->hbitmap);
-            ((GpBitmap*)image)->hdc = hdc;
-        }
-
-        stat = GdipCreateFromHDC(hdc, graphics);
-
-        if (stat == Ok)
-            (*graphics)->image = image;
+    if(!hdc){
+        hdc = CreateCompatibleDC(0);
+        SelectObject(hdc, ((GpBitmap*)image)->hbitmap);
+        ((GpBitmap*)image)->hdc = hdc;
     }
-    else
-        stat = graphics_from_image(image, graphics);
+
+    stat = GdipCreateFromHDC(hdc, graphics);
+
+    if (stat == Ok)
+        (*graphics)->image = image;
 
     return stat;
 }
@@ -2106,12 +2072,11 @@ GpStatus WINGDIPAPI GdipGetImageHeight(GpImage *image, UINT *height)
 
     if(image->type == ImageTypeMetafile){
         HDC hdc = GetDC(0);
-        REAL res = (REAL)GetDeviceCaps(hdc, LOGPIXELSX);
+
+        *height = roundr(convert_unit(hdc, ((GpMetafile*)image)->unit) *
+                        ((GpMetafile*)image)->bounds.Height);
 
         ReleaseDC(0, hdc);
-
-        *height = roundr(convert_unit(res, ((GpMetafile*)image)->unit) *
-                        ((GpMetafile*)image)->bounds.Height);
     }
     else if(image->type == ImageTypeBitmap)
         *height = ((GpBitmap*)image)->height;
@@ -2213,12 +2178,11 @@ GpStatus WINGDIPAPI GdipGetImageWidth(GpImage *image, UINT *width)
 
     if(image->type == ImageTypeMetafile){
         HDC hdc = GetDC(0);
-        REAL res = (REAL)GetDeviceCaps(hdc, LOGPIXELSX);
+
+        *width = roundr(convert_unit(hdc, ((GpMetafile*)image)->unit) *
+                        ((GpMetafile*)image)->bounds.Width);
 
         ReleaseDC(0, hdc);
-
-        *width = roundr(convert_unit(res, ((GpMetafile*)image)->unit) *
-                        ((GpMetafile*)image)->bounds.Width);
     }
     else if(image->type == ImageTypeBitmap)
         *width = ((GpBitmap*)image)->width;
@@ -2602,18 +2566,6 @@ static GpStatus decode_image_wic(IStream* stream, REFCLSID clsid, GpImage **imag
                     *image = NULL;
                     GdipDisposeImage((GpImage*)bitmap);
                 }
-
-                if (SUCCEEDED(hr) && status == Ok)
-                {
-                    double dpix, dpiy;
-                    hr = IWICBitmapSource_GetResolution(source, &dpix, &dpiy);
-                    if (SUCCEEDED(hr))
-                    {
-                        bitmap->image.xres = dpix;
-                        bitmap->image.yres = dpiy;
-                    }
-                    hr = S_OK;
-                }
             }
 
             IWICBitmapSource_Release(source);
@@ -2628,12 +2580,6 @@ end:
     if (SUCCEEDED(initresult)) CoUninitialize();
 
     if (FAILED(hr) && status == Ok) status = hresult_to_status(hr);
-
-    if (status == Ok)
-    {
-        /* Native GDI+ used to be smarter, but since Win7 it just sets these flags. */
-        bitmap->image.flags |= ImageFlagsReadOnly|ImageFlagsHasRealPixelSize|ImageFlagsHasRealDPI|ImageFlagsColorSpaceRGB;
-    }
 
     return status;
 }
@@ -3809,17 +3755,4 @@ GpStatus WINGDIPAPI GdipImageRotateFlip(GpImage *image, RotateFlipType type)
         GdipDisposeImage((GpImage*)new_bitmap);
 
     return stat;
-}
-
-/*****************************************************************************
- * GdipConvertToEmfPlusToFile [GDIPLUS.@]
- */
-
-GpStatus WINGDIPAPI GdipConvertToEmfPlusToFile(const GpGraphics* refGraphics,
-                                               GpMetafile* metafile, BOOL* conversionSuccess,
-                                               const WCHAR* filename, EmfType emfType,
-                                               const WCHAR* description, GpMetafile** out_metafile)
-{
-    FIXME("stub: %p, %p, %p, %p, %u, %p, %p\n", refGraphics, metafile, conversionSuccess, filename, emfType, description, out_metafile);
-    return NotImplemented;
 }

@@ -422,7 +422,7 @@ AllocateBuffers(PAPPINFO pInfo)
 
     pInfo->RecvPacket = (PIPv4_HEADER)HeapAlloc(GetProcessHeap(),
                                                 0,
-                                                MAX_PING_PACKET_SIZE);
+                                                sizeof(IPv4_HEADER) + PACKET_SIZE);
     if (!pInfo->RecvPacket)
     {
         HeapFree(GetProcessHeap(),

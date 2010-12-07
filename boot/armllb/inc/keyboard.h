@@ -12,10 +12,4 @@ LlbKeyboardGetChar(
     VOID
 );
 
-CHAR
-NTAPI
-LlbKeypadGetChar(
-    VOID
-);
-
 /* EOF */

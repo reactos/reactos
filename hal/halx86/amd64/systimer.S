@@ -7,9 +7,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-
-#include <ksamd64.inc>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -91,4 +90,3 @@ HalpClockInterrupt:
     UNIMPLEMENTED _HalpClockInterrupt
     iret
 
-END

@@ -109,7 +109,7 @@ UserSetCursor(
     PCURICON_OBJECT OldCursor;
     HCURSOR hOldCursor = (HCURSOR)0;
     HDC hdcScreen;
-
+	
 	CurInfo = IntGetSysCursorInfo();
 
     OldCursor = CurInfo->CurrentCursorObject;
@@ -217,7 +217,7 @@ BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg)
         Msg.wParam = CurInfo->ButtonsDown;
         Msg.lParam = MAKELPARAM(x, y);
         Msg.pt = pt;
-        co_MsqInsertMouseMessage(&Msg);
+        MsqInsertSystemMessage(&Msg);
     }
 
     /* Store the new cursor position */
@@ -483,7 +483,6 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 
 }
 
-
 /*
  * @implemented
  */
@@ -619,6 +618,23 @@ cleanup:
 
 
 /*
+ * @unimplemented
+ */
+DWORD
+APIENTRY
+NtUserGetCursorFrameInfo(
+    DWORD Unknown0,
+    DWORD Unknown1,
+    DWORD Unknown2,
+    DWORD Unknown3)
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+
+/*
  * @implemented
  */
 BOOL
@@ -676,35 +692,6 @@ CLEANUP:
     END_CLEANUP;
 }
 
-BOOL
-APIENTRY
-UserClipCursor(
-    RECTL *prcl)
-{
-    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
-    PSYSTEM_CURSORINFO CurInfo;
-    PWND DesktopWindow = NULL;
-
-    CurInfo = IntGetSysCursorInfo();
-
-    DesktopWindow = UserGetDesktopWindow();
-
-    if (prcl != NULL &&
-       (prcl->right > prcl->left) &&
-       (prcl->bottom > prcl->top) &&
-        DesktopWindow != NULL)
-    {
-        CurInfo->bClipped = TRUE;
-        RECTL_bIntersectRect(&CurInfo->rcClip, prcl, &DesktopWindow->rcWindow);
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
-    }
-    else
-    {
-        CurInfo->bClipped = FALSE;
-    }
-
-    return TRUE;
-}
 
 /*
  * @implemented
@@ -712,37 +699,45 @@ UserClipCursor(
 BOOL
 APIENTRY
 NtUserClipCursor(
-    RECTL *prcl)
+    RECTL *UnsafeRect)
 {
-    RECTL rclLocal;
-    BOOL bResult;
+    /* FIXME - check if process has WINSTA_WRITEATTRIBUTES */
+    PSYSTEM_CURSORINFO CurInfo;
+    RECTL Rect;
+    PWND DesktopWindow = NULL;
+    DECLARE_RETURN(BOOL);
 
-    if (prcl)
+    DPRINT("Enter NtUserClipCursor\n");
+    UserEnterExclusive();
+
+    if (NULL != UnsafeRect && ! NT_SUCCESS(MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT))))
     {
-        _SEH2_TRY
-        {
-            /* Probe and copy rect */
-            ProbeForRead(prcl, sizeof(RECTL), 1);
-            rclLocal = *prcl;
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH2_YIELD(return FALSE;)
-        }
-        _SEH2_END
-
-        prcl = &rclLocal;
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        RETURN(FALSE);
     }
-	
-	UserEnterExclusive();
 
-    /* Call the internal function */
-    bResult = UserClipCursor(prcl);
+    CurInfo = IntGetSysCursorInfo();
 
+    DesktopWindow = UserGetDesktopWindow();
+
+    if ((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
+            && DesktopWindow && UnsafeRect != NULL)
+    {
+
+        CurInfo->bClipped = TRUE;
+        RECTL_bIntersectRect(&CurInfo->rcClip, &Rect, &DesktopWindow->rcWindow);
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
+
+        RETURN(TRUE);
+    }
+
+    CurInfo->bClipped = FALSE;
+    RETURN(TRUE);
+
+CLEANUP:
+    DPRINT("Leave NtUserClipCursor, ret=%i\n",_ret_);
     UserLeave();
-
-    return bResult;
+    END_CLEANUP;
 }
 
 
@@ -942,12 +937,12 @@ NtUserSetCursorContents(
 
     /* Delete old bitmaps */
     if ((CurIcon->IconInfo.hbmColor)
-			&& (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor))
+		&& (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor))
     {
         GreDeleteObject(CurIcon->IconInfo.hbmColor);
     }
     if ((CurIcon->IconInfo.hbmMask)
-			&& CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
+		&& (CurIcon->IconInfo.hbmMask != IconInfo.hbmMask))
     {
         GreDeleteObject(CurIcon->IconInfo.hbmMask);
     }
@@ -973,8 +968,8 @@ NtUserSetCursorContents(
         CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy / 2;
 
         SURFACE_UnlockSurface(psurfBmp);
+        GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
     }
-	GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
 
     Ret = TRUE;
 
@@ -1159,6 +1154,18 @@ CLEANUP:
 }
 #endif
 
+/*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtUserSetSystemCursor(
+    HCURSOR hcur,
+    DWORD id)
+{
+    return FALSE;
+}
+
 /* Mostly inspired from wine code */
 BOOL
 UserDrawIconEx(
@@ -1280,11 +1287,22 @@ UserDrawIconEx(
 	if(bAlpha && (diFlags & DI_IMAGE))
 	{
 		BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-        BYTE Alpha;
+        DWORD Pixel;
+        BYTE Red, Green, Blue, Alpha;
+        DWORD Count = 0;
         INT i, j;
         PSURFACE psurf;
-        PBYTE ptr ;
+        PBYTE pBits ;
         HBITMAP hMemBmp = NULL;
+
+        pBits = ExAllocatePoolWithTag(PagedPool,
+                                      bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
+                                      TAG_BITMAP);
+        if (pBits == NULL)
+        {
+            Ret = FALSE;
+            goto CleanupAlpha;
+        }
 
         hMemBmp = BITMAP_CopyBitmap(hbmColor);
         if(!hMemBmp)
@@ -1299,22 +1317,35 @@ UserDrawIconEx(
             DPRINT1("SURFACE_LockSurface failed!\n");
             goto CleanupAlpha;
         }
+        /* get color bits */
+        IntGetBitmapBits(psurf,
+                         bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
+                         pBits);
 
         /* premultiply with the alpha channel value */
-        for (i = 0; i < psurf->SurfObj.sizlBitmap.cy; i++)
+        for (i = 0; i < abs(bmpColor.bmHeight); i++)
         {
-			ptr = (PBYTE)psurf->SurfObj.pvScan0 + i*psurf->SurfObj.lDelta;
-            for (j = 0; j < psurf->SurfObj.sizlBitmap.cx; j++)
+			Count = i*bmpColor.bmWidthBytes;
+            for (j = 0; j < bmpColor.bmWidth; j++)
             {
-                Alpha = ptr[3];
-                ptr[0] = (ptr[0] * Alpha) / 0xff;
-                ptr[1] = (ptr[1] * Alpha) / 0xff;
-                ptr[2] = (ptr[2] * Alpha) / 0xff;
+                Pixel = *(DWORD *)(pBits + Count);
 
-				ptr += 4;
+                Alpha = ((BYTE)(Pixel >> 24) & 0xff);
+
+                Red   = (((BYTE)(Pixel >>  0)) * Alpha) / 0xff;
+                Green = (((BYTE)(Pixel >>  8)) * Alpha) / 0xff;
+                Blue  = (((BYTE)(Pixel >> 16)) * Alpha) / 0xff;
+
+                *(DWORD *)(pBits + Count) = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
+
+                Count += sizeof(DWORD);
             }
         }
 
+        /* set mem bits */
+        IntSetBitmapBits(psurf,
+                         bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
+                         pBits);
         SURFACE_UnlockSurface(psurf);
 
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
@@ -1333,9 +1364,11 @@ UserDrawIconEx(
                               NULL);
         NtGdiSelectBitmap(hMemDC, hTmpBmp);
     CleanupAlpha:
+        if(pBits) ExFreePoolWithTag(pBits, TAG_BITMAP);
         if(hMemBmp) NtGdiDeleteObjectApp(hMemBmp);
 		if(Ret) goto done;
     }
+
 
     if (diFlags & DI_MASK)
     {

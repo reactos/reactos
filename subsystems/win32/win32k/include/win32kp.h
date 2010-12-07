@@ -11,13 +11,6 @@
 #pragma once
 #define INTERNAL_CALL APIENTRY
 
-#ifndef _MSC_VER
-#define PLACE_IN_SECTION(s) __attribute__((section(s)))
-#define INIT_FUNCTION PLACE_IN_SECTION("INIT")
-#else
-#define INIT_FUNCTION
-#endif
-
 /* Internal Win32k Headers */
 #include <include/accelerator.h>
 #include <include/clipboard.h>
@@ -85,6 +78,4 @@
 #include <include/gdifloat.h>
 #include <include/engobjects.h>
 #include <include/engevent.h>
-#include <include/ldevobj.h>
-#include <include/device.h>
 #include <dib/dib.h>

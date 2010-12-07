@@ -20,7 +20,6 @@ BOOLEAN HalpPciLockSettings;
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PCHAR CommandLine;
@@ -46,7 +45,6 @@ HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
  */
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalInitSystem(IN ULONG BootPhase,
               IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {

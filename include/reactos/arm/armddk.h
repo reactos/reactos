@@ -173,12 +173,6 @@ typedef struct _KPCR
     ULONG StallScaleFactor;
     UCHAR SpareUnused;
     UCHAR Number;
-    UCHAR Spare0;
-    UCHAR SecondLevelCacheAssociativity;
-    ULONG VdmAlert;
-    ULONG KernelReserved[14];
-    ULONG SecondLevelCacheSize;
-    ULONG HalReserved[16];
 } KPCR, *PKPCR;
 
 //
@@ -252,35 +246,6 @@ KeRaiseIrqlToDpcLevel(
 #define KeLowerIrql(NewIrql) KfLowerIrql(NewIrql)
 #define KeRaiseIrql(NewIrql, OldIrql) *(OldIrql) = KfRaiseIrql(NewIrql)
 
-NTHALAPI
-KIRQL
-FASTCALL
-KfAcquireSpinLock(
-  IN OUT PKSPIN_LOCK SpinLock);
-#define KeAcquireSpinLock(a,b) *(b) = KfAcquireSpinLock(a)
-
-NTHALAPI
-VOID
-FASTCALL
-KfReleaseSpinLock(
-  IN OUT PKSPIN_LOCK SpinLock,
-  IN KIRQL NewIrql);
-#define KeReleaseSpinLock(a,b) KfReleaseSpinLock(a,b)
-
-NTKERNELAPI
-VOID
-FASTCALL
-KefAcquireSpinLockAtDpcLevel(
-  IN OUT PKSPIN_LOCK SpinLock);
-#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
-
-NTKERNELAPI
-VOID
-FASTCALL
-KefReleaseSpinLockFromDpcLevel(
-  IN OUT PKSPIN_LOCK SpinLock);
-#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
-
 //
 // Cache clean and flush
 //
@@ -293,26 +258,6 @@ VOID
 HalSweepIcache(
     VOID
 );
-
-FORCEINLINE
-VOID
-_KeQueryTickCount(
-  OUT PLARGE_INTEGER CurrentCount)
-{
-  for (;;) {
-#ifdef NONAMELESSUNION
-    CurrentCount->s.HighPart = KeTickCount.High1Time;
-    CurrentCount->s.LowPart = KeTickCount.LowPart;
-    if (CurrentCount->s.HighPart == KeTickCount.High2Time) break;
-#else
-    CurrentCount->HighPart = KeTickCount.High1Time;
-    CurrentCount->LowPart = KeTickCount.LowPart;
-    if (CurrentCount->HighPart == KeTickCount.High2Time) break;
-#endif
-    YieldProcessor();
-  }
-}
-#define KeQueryTickCount(CurrentCount) _KeQueryTickCount(CurrentCount)
 #endif
 
 //

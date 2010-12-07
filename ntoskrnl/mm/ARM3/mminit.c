@@ -161,7 +161,7 @@ SIZE_T MmSystemViewSize;
 // address.
 //
 PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
-PMMPDE MmSystemPagePtes;
+PMMPTE MmSystemPagePtes;
 #endif
 
 //
@@ -353,19 +353,35 @@ SIZE_T MmAllocationFragment;
 SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommitLimitMaximum;
 
-/* Internal setting used for debugging memory descriptors */
-BOOLEAN MiDbgEnableMdDump =
-#ifdef _ARM_
-TRUE;
-#else
-FALSE;
-#endif
-
 /* PRIVATE FUNCTIONS **********************************************************/
+
+#ifndef _M_AMD64
+//
+// In Bavaria, this is probably a hate crime
+//
+VOID
+FASTCALL
+MiSyncARM3WithROS(IN PVOID AddressStart,
+                  IN PVOID AddressEnd)
+{
+    //
+    // Puerile piece of junk-grade carbonized horseshit puss sold to the lowest bidder
+    //
+    ULONG Pde = ADDR_TO_PDE_OFFSET(AddressStart);
+    while (Pde <= ADDR_TO_PDE_OFFSET(AddressEnd))
+    {
+        //
+        // This both odious and heinous
+        //
+        extern ULONG MmGlobalKernelPageDirectory[1024];
+        MmGlobalKernelPageDirectory[Pde] = ((PULONG)PDE_BASE)[Pde];
+        Pde++;
+    }
+}
+#endif
 
 PFN_NUMBER
 NTAPI
-INIT_FUNCTION
 MxGetNextPage(IN PFN_NUMBER PageCount)
 {
     PFN_NUMBER Pfn;
@@ -390,7 +406,6 @@ MxGetNextPage(IN PFN_NUMBER PageCount)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiComputeColorInformation(VOID)
 {
     ULONG L2Associativity;
@@ -444,7 +459,6 @@ MiComputeColorInformation(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeColorTables(VOID)
 {
     ULONG i;
@@ -494,7 +508,6 @@ MiInitializeColorTables(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 MiIsRegularMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                   IN PFN_NUMBER Pfn)
 {
@@ -553,7 +566,6 @@ MiIsRegularMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
@@ -649,7 +661,6 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PMMPDE PointerPde;
@@ -679,15 +690,11 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 /* Yes we do, set it up */
                 Pfn1 = MiGetPfnEntry(PageFrameIndex);
                 Pfn1->u4.PteFrame = StartupPdIndex;
-                Pfn1->PteAddress = (PMMPTE)PointerPde;
+                Pfn1->PteAddress = PointerPde;
                 Pfn1->u2.ShareCount++;
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
                 Pfn1->u3.e1.CacheAttribute = MiNonCached;
-#if MI_TRACE_PFNS
-                Pfn1->PfnUsage = MI_USAGE_INIT_MEMORY;
-                memcpy(Pfn1->ProcessName, "Initial PDE", 16);
-#endif
             }
             else
             {
@@ -731,10 +738,6 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                 Pfn2->u3.e2.ReferenceCount = 1;
                                 Pfn2->u3.e1.PageLocation = ActiveAndValid;
                                 Pfn2->u3.e1.CacheAttribute = MiNonCached;
-#if MI_TRACE_PFNS
-                                Pfn2->PfnUsage = MI_USAGE_INIT_MEMORY;
-                                memcpy(Pfn1->ProcessName, "Initial PTE", 16);
-#endif
                             }
                         }
                     }
@@ -758,7 +761,6 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseZeroPage(VOID)
 {
     PMMPFN Pfn1;
@@ -771,7 +773,7 @@ MiBuildPfnDatabaseZeroPage(VOID)
         /* Make it a bogus page to catch errors */
         PointerPde = MiAddressToPde(0xFFFFFFFF);
         Pfn1->u4.PteFrame = PFN_FROM_PTE(PointerPde);
-        Pfn1->PteAddress = (PMMPTE)PointerPde;
+        Pfn1->PteAddress = PointerPde;
         Pfn1->u2.ShareCount++;
         Pfn1->u3.e2.ReferenceCount = 0xFFF0;
         Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -781,7 +783,6 @@ MiBuildPfnDatabaseZeroPage(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
@@ -892,9 +893,6 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                         Pfn1->u3.e2.ReferenceCount = 1;
                         Pfn1->u3.e1.PageLocation = ActiveAndValid;
                         Pfn1->u3.e1.CacheAttribute = MiNonCached;
-#if MI_TRACE_PFNS
-                        Pfn1->PfnUsage = MI_USAGE_BOOT_DRIVER;
-#endif
                         
                         /* Check for RAM disk page */
                         if (MdBlock->MemoryType == LoaderXIPRom)
@@ -925,7 +923,6 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabaseSelf(VOID)
 {
     PMMPTE PointerPte, LastPte;
@@ -943,9 +940,6 @@ MiBuildPfnDatabaseSelf(VOID)
             Pfn1 = MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber);
             Pfn1->u2.ShareCount = 1;
             Pfn1->u3.e2.ReferenceCount = 1;
-#if MI_TRACE_PFNS
-            Pfn1->PfnUsage = MI_USAGE_PFN_DATABASE;
-#endif
         }
         
         /* Next */
@@ -955,7 +949,6 @@ MiBuildPfnDatabaseSelf(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Scan memory and start setting up PFN entries */
@@ -973,7 +966,6 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiAdjustWorkingSetManagerParameters(IN BOOLEAN Client)
 {
     /* This function needs to do more work, for now, we tune page minimums */
@@ -988,7 +980,6 @@ MiAdjustWorkingSetManagerParameters(IN BOOLEAN Client)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiNotifyMemoryEvents(VOID)
 {
     /* Are we in a low-memory situation? */
@@ -1014,7 +1005,6 @@ MiNotifyMemoryEvents(VOID)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 MiCreateMemoryEvent(IN PUNICODE_STRING Name,
                     OUT PKEVENT *Event)
 {
@@ -1109,7 +1099,6 @@ CleanUp:
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 MiInitializeMemoryEvents(VOID)
 {
     UNICODE_STRING LowString = RTL_CONSTANT_STRING(L"\\KernelObjects\\LowMemoryCondition");
@@ -1188,11 +1177,10 @@ MiInitializeMemoryEvents(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiAddHalIoMappings(VOID)
 {
     PVOID BaseAddress;
-    PMMPDE PointerPde;
+    PMMPTE PointerPde;
     PMMPTE PointerPte;
     ULONG i, j, PdeCount;
     PFN_NUMBER PageFrameIndex;
@@ -1203,12 +1191,12 @@ MiAddHalIoMappings(VOID)
 
     /* Check how many PDEs the heap has */
     PointerPde = MiAddressToPde(BaseAddress);
-    PdeCount = PDE_COUNT - MiGetPdeOffset(BaseAddress);
+    PdeCount = PDE_COUNT - ADDR_TO_PDE_OFFSET(BaseAddress);
     for (i = 0; i < PdeCount; i++)
     {
         /* Does the HAL own this mapping? */
         if ((PointerPde->u.Hard.Valid == 1) &&
-            (MI_IS_PAGE_LARGE(PointerPde) == FALSE))
+            (PointerPde->u.Hard.LargePage == 0))
         {
             /* Get the PTE for it and scan each page */
             PointerPte = MiAddressToPte(BaseAddress);
@@ -1244,53 +1232,24 @@ MiAddHalIoMappings(VOID)
 
 VOID
 NTAPI
-MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
+MmDumpArmPfnDatabase(VOID)
 {
     ULONG i;
     PMMPFN Pfn1;
     PCHAR Consumer = "Unknown";
     KIRQL OldIrql;
     ULONG ActivePages = 0, FreePages = 0, OtherPages = 0;
-#if MI_TRACE_PFNS
-    ULONG UsageBucket[MI_USAGE_FREE_PAGE + 1] = {0};
-    PCHAR MI_USAGE_TEXT[MI_USAGE_FREE_PAGE + 1] =
-    {
-        "Not set",
-        "Paged Pool",
-        "Nonpaged Pool",
-        "Nonpaged Pool Ex",
-        "Kernel Stack",
-        "Kernel Stack Ex",
-        "System PTE",
-        "VAD",
-        "PEB/TEB",
-        "Section",
-        "Page Table",
-        "Page Directory",
-        "Old Page Table",
-        "Driver Page",
-        "Contiguous Alloc",
-        "MDL",
-        "Demand Zero",
-        "Zero Loop",
-        "Cache",
-        "PFN Database",
-        "Boot Driver",
-        "Initial Memory",
-        "Free Page"
-    };
-#endif
+    
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
+    
     //
     // Loop the PFN database
     //
-    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
     for (i = 0; i <= MmHighestPhysicalPage; i++)
     {
         Pfn1 = MiGetPfnEntry(i);
         if (!Pfn1) continue;
-#if MI_TRACE_PFNS
-        ASSERT(Pfn1->PfnUsage <= MI_USAGE_FREE_PAGE);
-#endif
+        
         //
         // Get the page location
         //
@@ -1301,18 +1260,12 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
                 Consumer = "Active and Valid";
                 ActivePages++;
                 break;
-   
-            case ZeroedPageList:
-
-                Consumer = "Zero Page List";
-                FreePages++;
-                break;//continue;
-                                 
+                
             case FreePageList:
                 
                 Consumer = "Free Page List";
                 FreePages++;
-                break;//continue;
+                break;
                 
             default:
                 
@@ -1320,55 +1273,23 @@ MmDumpArmPfnDatabase(IN BOOLEAN StatusOnly)
                 OtherPages++;
                 break;
         }
-        
-#if MI_TRACE_PFNS
-        /* Add into bucket */
-        UsageBucket[Pfn1->PfnUsage]++;
-#endif
-
+                
         //
         // Pretty-print the page
         //
-        if (!StatusOnly)
-        DbgPrint("0x%08p:\t%20s\t(%04d.%04d)\t[%16s - %16s])\n",
+        DbgPrint("0x%08p:\t%20s\t(%02d.%02d) [%08p-%08p])\n",
                  i << PAGE_SHIFT,
                  Consumer,
                  Pfn1->u3.e2.ReferenceCount,
-                 Pfn1->u2.ShareCount == LIST_HEAD ? 0xFFFF : Pfn1->u2.ShareCount,
-#if MI_TRACE_PFNS
-                 MI_USAGE_TEXT[Pfn1->PfnUsage],
-                 Pfn1->ProcessName);
-#else
-                 "Page tracking",
-                 "is disabled");
-#endif
+                 Pfn1->u2.ShareCount,
+                 Pfn1->PteAddress,
+                 Pfn1->u4.PteFrame);
     }
     
-    DbgPrint("Active:               %5d pages\t[%6d KB]\n", ActivePages,  (ActivePages    << PAGE_SHIFT) / 1024);
-    DbgPrint("Free:                 %5d pages\t[%6d KB]\n", FreePages,    (FreePages      << PAGE_SHIFT) / 1024);
-    DbgPrint("-----------------------------------------\n");
-#if MI_TRACE_PFNS
-    OtherPages = UsageBucket[MI_USAGE_BOOT_DRIVER];
-    DbgPrint("Boot Images:          %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_DRIVER_PAGE];
-    DbgPrint("System Drivers:       %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_PFN_DATABASE];
-    DbgPrint("PFN Database:         %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_PAGE_TABLE] + UsageBucket[MI_USAGE_LEGACY_PAGE_DIRECTORY];
-    DbgPrint("Page Tables:          %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_NONPAGED_POOL] + UsageBucket[MI_USAGE_NONPAGED_POOL_EXPANSION];
-    DbgPrint("NonPaged Pool:        %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_PAGED_POOL];
-    DbgPrint("Paged Pool:           %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_KERNEL_STACK] + UsageBucket[MI_USAGE_KERNEL_STACK_EXPANSION];
-    DbgPrint("Kernel Stack:         %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_INIT_MEMORY];
-    DbgPrint("Init Memory:          %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_SECTION];
-    DbgPrint("Sections:             %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-    OtherPages = UsageBucket[MI_USAGE_CACHE];
-    DbgPrint("Cache:                %5d pages\t[%6d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
-#endif
+    DbgPrint("Active:               %d pages\t[%d KB]\n", ActivePages,  (ActivePages    << PAGE_SHIFT) / 1024);
+    DbgPrint("Free:                 %d pages\t[%d KB]\n", FreePages,    (FreePages      << PAGE_SHIFT) / 1024);
+    DbgPrint("Other:                %d pages\t[%d KB]\n", OtherPages,   (OtherPages     << PAGE_SHIFT) / 1024);
+    
     KeLowerIrql(OldIrql);
 }
 
@@ -1416,7 +1337,6 @@ MiPagesInLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
-INIT_FUNCTION
 MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                          IN PBOOLEAN IncludeType)
 {
@@ -1553,13 +1473,10 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPagedPool(VOID)
 {
-    PMMPTE PointerPte;
-    PMMPDE PointerPde;
+    PMMPTE PointerPte, PointerPde;
     MMPTE TempPte = ValidKernelPte;
-    MMPDE TempPde = ValidKernelPde;
     PFN_NUMBER PageFrameIndex;
     KIRQL OldIrql;
     ULONG Size, BitMapSize;
@@ -1650,7 +1567,7 @@ MiBuildPagedPool(VOID)
 #endif
 
     RtlZeroMemory(PointerPde,
-                  (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPDE));
+                  (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPTE));
 
     //
     // Next, get the first and last PTE
@@ -1665,11 +1582,9 @@ MiBuildPagedPool(VOID)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Allocate a page and map the first paged pool PDE */
-    MI_SET_USAGE(MI_USAGE_PAGED_POOL);
-    MI_SET_PROCESS2("Kernel");
     PageFrameIndex = MiRemoveZeroPage(0);
-    TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
-    MI_WRITE_VALID_PDE(PointerPde, TempPde);
+    TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+    MI_WRITE_VALID_PTE(PointerPde, TempPte);
 #if (_MI_PAGING_LEVELS >= 3)
     /* Use the PPE of MmPagedPoolStart that was setup above */
 //    Bla = PFN_FROM_PTE(PpeAddress(MmPagedPool...));
@@ -1680,8 +1595,8 @@ MiBuildPagedPool(VOID)
 
     /* Initialize the PFN entry for it */
     MiInitializePfnForOtherProcess(PageFrameIndex,
-                                   (PMMPTE)PointerPde,
-                                   MmSystemPageDirectory[(PointerPde - (PMMPDE)PDE_BASE) / PDE_COUNT]);
+                                   PointerPde,
+                                   MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]);
 #endif
 
     //
@@ -1764,61 +1679,8 @@ MiBuildPagedPool(VOID)
     MiInitializeSystemSpaceMap(NULL);
 }
 
-VOID
+NTSTATUS
 NTAPI
-INIT_FUNCTION
-MiDbgDumpMemoryDescriptors(VOID)
-{
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR Md;
-    ULONG TotalPages = 0;
-    PCHAR
-    MemType[] =
-    {
-        "ExceptionBlock    ",
-        "SystemBlock       ",
-        "Free              ",
-        "Bad               ",
-        "LoadedProgram     ",
-        "FirmwareTemporary ",
-        "FirmwarePermanent ",
-        "OsloaderHeap      ",
-        "OsloaderStack     ",
-        "SystemCode        ",
-        "HalCode           ",
-        "BootDriver        ",
-        "ConsoleInDriver   ",
-        "ConsoleOutDriver  ",
-        "StartupDpcStack   ",
-        "StartupKernelStack",
-        "StartupPanicStack ",
-        "StartupPcrPage    ",
-        "StartupPdrPage    ",
-        "RegistryData      ",
-        "MemoryData        ",
-        "NlsData           ",
-        "SpecialMemory     ",
-        "BBTMemory         ",
-        "LoaderReserve     ",
-        "LoaderXIPRom      "
-    };
-    
-    DPRINT1("Base\t\tLength\t\tType\n");
-    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-        DPRINT1("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
-        TotalPages += Md->PageCount;
-    }
-
-    DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
-}
-
-BOOLEAN
-NTAPI
-INIT_FUNCTION
 MmArmInitSystem(IN ULONG Phase,
                 IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -1828,9 +1690,6 @@ MmArmInitSystem(IN ULONG Phase,
     PPHYSICAL_MEMORY_RUN Run;
     PFN_NUMBER PageCount;
     
-    /* Dump memory descriptors */
-    if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
-        
     //
     // Instantiate memory that we don't consider RAM/usable
     // We use the same exclusions that Windows does, in order to try to be
@@ -2033,7 +1892,14 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the platform-specific parts */       
         MiInitMachineDependent(LoaderBlock);
-
+        
+        //
+        // Sync us up with ReactOS Mm
+        //
+        MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
+        MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
+        MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
+      
         //
         // Build the physical memory block
         //
@@ -2231,7 +2097,7 @@ MmArmInitSystem(IN ULONG Phase,
     //
     // Always return success for now
     //
-    return TRUE;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

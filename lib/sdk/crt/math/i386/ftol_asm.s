@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
-#include <asm.inc>
-
-PUBLIC __ftol
  
+.globl __ftol
+ 
+.intel_syntax noprefix
+
 /* FUNCTIONS ***************************************************************/
-.code
 
 /*
  * This routine is called by MSVC-generated code to convert from floating point
@@ -55,7 +54,7 @@ __ftol:
     fstcw [ebp-2]
     wait
     mov ax, [ebp-2]
-    or ah, 12
+    or ah, 0xC
     mov [ebp-4], ax
     fldcw [ebp-4]
     
@@ -72,5 +71,3 @@ __ftol:
     /* Remove stack frame and return*/
     leave
     ret
-
-END

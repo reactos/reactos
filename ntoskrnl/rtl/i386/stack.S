@@ -8,13 +8,13 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ks386.inc>
+#include <ndk/asm.h>
+.intel_syntax noprefix
 
 /* FUNCTIONS *****************************************************************/
-.code
 
-PUBLIC _RtlpGetStackLimits@8
+.func RtlpGetStackLimits@8
+.globl _RtlpGetStackLimits@8
 _RtlpGetStackLimits@8:
 
     /* Get the current thread */
@@ -34,5 +34,4 @@ _RtlpGetStackLimits@8:
 
     /* return */
     ret 8
-
-END
+.endfunc

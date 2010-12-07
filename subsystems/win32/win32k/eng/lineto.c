@@ -565,7 +565,10 @@ IntEngLineTo(SURFOBJ *psoDest,
     if (b.left == b.right) b.right++;
     if (b.top == b.bottom) b.bottom++;
 
-    if (psurfDest->flags & HOOK_LINETO)
+    SURFACE_LockBitmapBits(psurfDest);
+    MouseSafetyOnDrawStart(psoDest, x1, y1, x2, y2);
+
+    if (psurfDest->flHooks & HOOK_LINETO)
     {
         /* Call the driver's DrvLineTo */
         ret = GDIDEVFUNCS(psoDest).LineTo(
@@ -573,7 +576,7 @@ IntEngLineTo(SURFOBJ *psoDest,
     }
 
 #if 0
-    if (! ret && (psurfDest->flags & HOOK_STROKEPATH))
+    if (! ret && (psurfDest->flHooks & HOOK_STROKEPATH))
     {
         /* FIXME: Emulate LineTo using drivers DrvStrokePath and set ret on success */
     }
@@ -583,6 +586,9 @@ IntEngLineTo(SURFOBJ *psoDest,
     {
         ret = EngLineTo(psoDest, ClipObj, pbo, x1, y1, x2, y2, RectBounds, Mix);
     }
+
+    MouseSafetyOnDrawEnd(psoDest);
+    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }

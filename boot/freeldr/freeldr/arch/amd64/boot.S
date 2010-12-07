@@ -17,17 +17,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <asm.inc>
-
-
 	.text
 	.code16
 
 #define ASM
 #include <arch.h>
 
-PUBLIC ChainLoadBiosBootSectorCode
-ChainLoadBiosBootSectorCode:
+
+EXTERN(ChainLoadBiosBootSectorCode)
 	.code64
 
 	call x86_64_SwitchToReal
@@ -49,8 +46,7 @@ ChainLoadBiosBootSectorCode:
 //	ljmpl	$0x0000,$0x7C00
 	jmp 0x7c00:0x0000
 
-PUBLIC SoftReboot
-SoftReboot:
+EXTERN(SoftReboot)
 	.code64
 
 	call	x86_64_SwitchToReal

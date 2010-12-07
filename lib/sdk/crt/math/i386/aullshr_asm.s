@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
-#include <asm.inc>
-
-PUBLIC __aullshr
  
+.globl __aullshr
+ 
+.intel_syntax noprefix
+
 /* FUNCTIONS ***************************************************************/
-.code
 
 //
 // ullshr - long shift right
@@ -66,13 +65,13 @@ __aullshr:
 // depends only on the high order bit of edx).
 //
         cmp     cl,64
-        jae     short .RETZERO
+        jae     short ..RETZERO
 
 //
 // Handle shifts of between 0 and 31 bits
 //
         cmp     cl, 32
-        jae     short .MORE32
+        jae     short ..MORE32
         shrd    eax,edx,cl
         shr     edx,cl
         ret
@@ -80,7 +79,7 @@ __aullshr:
 //
 // Handle shifts of between 32 and 63 bits
 //
-.MORE32:
+..MORE32:
         mov     eax,edx
         xor     edx,edx
         and     cl,31
@@ -90,9 +89,7 @@ __aullshr:
 //
 // return 0 in edx:eax
 //
-.RETZERO:
+..RETZERO:
         xor     eax,eax
         xor     edx,edx
         ret
-
-END

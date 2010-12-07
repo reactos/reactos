@@ -8,23 +8,20 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ks386.inc>
+#include <ndk/asm.h>
 
-/* FUNCTIONS *****************************************************************/
-.code
+/* GLOBALS *******************************************************************/
 
-PUBLIC __EH_prolog
+.globl __EH_prolog
+
 // Copied from Wine.
 __EH_prolog:
-    push -1
-    push eax
-    push fs:0
-    mov fs:0, esp
-    mov eax, [esp + 12]
-    mov [esp + 12], ebp
-    lea ebp, [esp + 12]
-    push eax
+    pushl    $-1
+    pushl    %eax
+    pushl    %fs:0
+    movl     %esp, %fs:0
+    movl     12(%esp), %eax
+    movl     %ebp, 12(%esp)
+    leal     12(%esp), %ebp
+    pushl    %eax
     ret
-
-END

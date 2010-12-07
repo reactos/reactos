@@ -39,6 +39,9 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context);
 
 NTSTATUS
+IopDetectResourceConflict(IN PCM_RESOURCE_LIST ResourceList);
+
+NTSTATUS
 PpSetCustomTargetEvent(IN PDEVICE_OBJECT DeviceObject,
                        IN OUT PKEVENT SyncEvent OPTIONAL,
                        IN OUT PNTSTATUS SyncStatus OPTIONAL,
@@ -376,7 +379,7 @@ IoReportResourceForDetection(IN PDRIVER_OBJECT DriverObject,
         ResourceList = DriverList;
 
     /* Look for a resource conflict */
-    Status = IopDetectResourceConflict(ResourceList, FALSE, NULL);
+    Status = IopDetectResourceConflict(ResourceList);
     if (Status == STATUS_CONFLICTING_ADDRESSES)
     {
         /* Oh noes */

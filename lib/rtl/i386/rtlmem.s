@@ -1,26 +1,26 @@
 /*
- * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
+ * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Memory functions
  * FILE:              lib/rtl/i386/rtlswap.S
  * PROGRAMER:         Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-#include <asm.inc>
+.intel_syntax noprefix
 
 /* GLOBALS *******************************************************************/
 
-PUBLIC _RtlCompareMemory@12
-PUBLIC _RtlCompareMemoryUlong@12
-PUBLIC _RtlFillMemory@12
-PUBLIC _RtlFillMemoryUlong@12
-PUBLIC _RtlMoveMemory@12
-PUBLIC _RtlZeroMemory@8
-PUBLIC @RtlPrefetchMemoryNonTemporal@8
+.globl _RtlCompareMemory@12
+.globl _RtlCompareMemoryUlong@12
+.globl _RtlFillMemory@12
+.globl _RtlFillMemoryUlong@12
+.globl _RtlMoveMemory@12
+.globl _RtlZeroMemory@8
+.globl @RtlPrefetchMemoryNonTemporal@8
 
 /* FUNCTIONS *****************************************************************/
-.code
 
+.func RtlCompareMemory@12
 _RtlCompareMemory@12:
 
     /* Save volatiles */
@@ -74,8 +74,9 @@ NotEqual2:
     pop edi
     pop esi
     ret 12
+.endfunc
 
-
+.func RtlCompareMemoryUlong@12
 _RtlCompareMemoryUlong@12:
 
     /* Get pointers and size in ULONGs */
@@ -96,8 +97,9 @@ Done:
     mov eax, edi
     pop edi
     ret 12
+.endfunc
 
-
+.func RtlFillMemory@12
 _RtlFillMemory@12:
 
     /* Get pointers and size  */
@@ -132,8 +134,9 @@ ByteFill:
     rep stosb
     pop edi
     ret 12
+.endfunc
 
-
+.func RtlFillMemoryUlong@12
 _RtlFillMemoryUlong@12:
 
     /* Get pointer, size and pattern */
@@ -147,8 +150,9 @@ _RtlFillMemoryUlong@12:
     rep stosd
     pop edi
     ret 12
+.endfunc
 
-
+.func RtlFillMemoryUlonglong@16
 _RtlFillMemoryUlonglong@16:
 
     /* Save volatiles */
@@ -175,8 +179,9 @@ _RtlFillMemoryUlonglong@16:
     pop esi
     pop edi
     ret 16
+.endfunc
 
-
+.func RtlZeroMemory@8
 _RtlZeroMemory@8:
 
     /* Get pointers and size  */
@@ -207,8 +212,9 @@ ByteZero:
     rep stosb
     pop edi
     ret 8
+.endfunc
 
-
+.func RtlMoveMemory@12
 _RtlMoveMemory@12:
 
     /* Save volatiles */
@@ -274,8 +280,9 @@ Overlap:
     rep movsb
     cld
     jmp DoneMove
+.endfunc
 
-
+.func @RtlPrefetchMemoryNonTemporal@8, @RtlPrefetchMemoryNonTemporal@8
 @RtlPrefetchMemoryNonTemporal@8:
 
     /*
@@ -299,10 +306,8 @@ FetchLine:
     /* Keep looping for the next line, or return if done */
     ja FetchLine
     ret
-
+.endfunc
 
 /* FIXME: HACK */
 _Ke386CacheAlignment:
-    .long   64
-
-END
+    .long   0x40

@@ -24,7 +24,6 @@ CHAR HalpSerialNumber[31];
 #ifndef _MINIHAL_
 VOID
 NTAPI
-INIT_FUNCTION
 HalpReportSerialNumber(VOID)
 {
     NTSTATUS Status;
@@ -55,7 +54,6 @@ HalpReportSerialNumber(VOID)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpMarkAcpiHal(VOID)
 {
     NTSTATUS Status;

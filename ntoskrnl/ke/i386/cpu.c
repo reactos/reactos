@@ -120,7 +120,6 @@ RDMSR(IN ULONG Register)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiSetProcessorType(VOID)
 {
     ULONG EFlags, NewEFlags;
@@ -187,7 +186,6 @@ KiSetProcessorType(VOID)
 
 ULONG
 NTAPI
-INIT_FUNCTION
 KiGetCpuVendor(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -249,7 +247,6 @@ KiGetCpuVendor(VOID)
 
 ULONG
 NTAPI
-INIT_FUNCTION
 KiGetFeatureBits(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
@@ -475,7 +472,6 @@ KiGetFeatureBits(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiGetCacheInformation(VOID)
 {
     PKIPCR Pcr = (PKIPCR)KeGetPcr();
@@ -778,7 +774,6 @@ KiGetCacheInformation(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiSetCR0Bits(VOID)
 {
     ULONG Cr0;
@@ -795,7 +790,6 @@ KiSetCR0Bits(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeTSS2(IN PKTSS Tss,
                  IN PKGDTENTRY TssEntry OPTIONAL)
 {
@@ -849,7 +843,6 @@ KiInitializeTSS(IN PKTSS Tss)
 
 VOID
 FASTCALL
-INIT_FUNCTION
 Ki386InitializeTss(IN PKTSS Tss,
                    IN PKIDTENTRY Idt,
                    IN PKGDTENTRY Gdt)
@@ -1009,7 +1002,6 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeMachineType(VOID)
 {
     /* Set the Machine Type we got from NTLDR */
@@ -1018,7 +1010,6 @@ KiInitializeMachineType(VOID)
 
 ULONG_PTR
 NTAPI
-INIT_FUNCTION
 KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 {
     /* Set CS and ESP */
@@ -1032,7 +1023,6 @@ KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiRestoreFastSyscallReturnState(VOID)
 {
     /* Check if the CPU Supports fast system call */
@@ -1066,7 +1056,6 @@ KiRestoreFastSyscallReturnState(VOID)
 
 ULONG_PTR
 NTAPI
-INIT_FUNCTION
 Ki386EnableDE(IN ULONG_PTR Context)
 {
     /* Enable DE */
@@ -1076,7 +1065,6 @@ Ki386EnableDE(IN ULONG_PTR Context)
 
 ULONG_PTR
 NTAPI
-INIT_FUNCTION
 Ki386EnableFxsr(IN ULONG_PTR Context)
 {
     /* Enable FXSR */
@@ -1086,7 +1074,6 @@ Ki386EnableFxsr(IN ULONG_PTR Context)
 
 ULONG_PTR
 NTAPI
-INIT_FUNCTION
 Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 {
     PKIDTENTRY IdtEntry;
@@ -1109,7 +1096,6 @@ Ki386EnableXMMIExceptions(IN ULONG_PTR Context)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiI386PentiumLockErrataFixup(VOID)
 {
     KDESCRIPTOR IdtDescriptor;
@@ -1201,7 +1187,6 @@ KiSaveProcessorState(IN PKTRAP_FRAME TrapFrame,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 KiIsNpxPresent(VOID)
 {
     ULONG Cr0;
@@ -1242,7 +1227,6 @@ KiIsNpxPresent(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 KiIsNpxErrataPresent(VOID)
 {
     BOOLEAN ErrataPresent;

@@ -8,10 +8,11 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
+#include <reactos/asm.h>
 
+.intel_syntax noprefix
 
-PUBLIC MsgUnimplemented
+.global MsgUnimplemented
 MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
@@ -26,5 +27,4 @@ MsgUnimplemented:
     ret
 .endp
 
-END
 /* EOF */

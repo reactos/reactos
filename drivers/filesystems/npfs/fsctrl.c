@@ -15,8 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-//#define USING_PROPER_NPFS_WAIT_SEMANTICS
-
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_CANCEL NpfsListeningCancelRoutine;
@@ -298,66 +296,12 @@ NpfsWaitPipe(PIRP Irp,
     PNPFS_FCB Fcb;
     PNPFS_CCB ServerCcb;
     PFILE_PIPE_WAIT_FOR_BUFFER WaitPipe;
-    LARGE_INTEGER TimeOut;
     NTSTATUS Status;
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
-    PNPFS_VCB Vcb;
-    UNICODE_STRING PipeName;
-#endif
+    LARGE_INTEGER TimeOut;
 
     DPRINT("NpfsWaitPipe\n");
 
     WaitPipe = (PFILE_PIPE_WAIT_FOR_BUFFER)Irp->AssociatedIrp.SystemBuffer;
-
-#ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
-    /* Fail, if the CCB does not represent the root directory */
-    if (Ccb->Type != CCB_DIRECTORY)
-        return STATUS_ILLEGAL_FUNCTION;
-
-    /* Calculate the pipe name length and allocate the buffer */
-    PipeName.Length = WaitPipe->NameLength + sizeof(WCHAR);
-    PipeName.MaximumLength = PipeName.Length + sizeof(WCHAR);
-    PipeName.Buffer = ExAllocatePool(NonPagedPool, PipeName.MaximumLength);
-    if (PipeName.Buffer == NULL)
-    {
-        DPRINT1("Could not allocate memory for the pipe name!\n");
-        return STATUS_NO_MEMORY;
-    }
-
-    /* Copy the pipe name into the buffer, prepend a backslash and append a 0 character */
-    PipeName.Buffer[0] = L'\\';
-    RtlCopyMemory(&PipeName.Buffer[1],
-                  &WaitPipe->Name[0],
-                  WaitPipe->NameLength);
-    PipeName.Buffer[PipeName.Length / sizeof(WCHAR)] = 0;
-
-    DPRINT("Waiting for Pipe %wZ\n", &PipeName);
-
-    /* Get the VCB */
-    Vcb = Ccb->Fcb->Vcb;
-
-    /* Lock the pipe list */
-    KeLockMutex(&Vcb->PipeListLock);
-
-    /* File a pipe with the given name */
-    Fcb = NpfsFindPipe(Vcb,
-                       &PipeName);
-
-    /* Unlock the pipe list */
-    KeUnlockMutex(&Vcb->PipeListLock);
-
-    /* Release the pipe name buffer */
-    ExFreePool(PipeName.Buffer);
-
-    /* Fail if not pipe was found */
-    if (Fcb == NULL)
-    {
-        DPRINT("No pipe found!\n", Fcb);
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-
-    DPRINT("Fcb %p\n", Fcb);
-#else
     Fcb = Ccb->Fcb;
 
     if (Ccb->PipeState != 0)
@@ -365,7 +309,6 @@ NpfsWaitPipe(PIRP Irp,
         DPRINT("Pipe is not in passive (waiting) state!\n");
         return STATUS_UNSUCCESSFUL;
     }
-#endif
 
     /* search for listening server */
     current_entry = Fcb->ServerCcbListHead.Flink;
@@ -541,13 +484,13 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
-    PNPFS_VCB Vcb;
+    PNPFS_DEVICE_EXTENSION DeviceExt;
     PNPFS_FCB Fcb;
     PNPFS_CCB Ccb;
 
     DPRINT("NpfsFileSystemContol(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
+    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     DPRINT("IoStack: %p\n", IoStack);
     FileObject = IoStack->FileObject;

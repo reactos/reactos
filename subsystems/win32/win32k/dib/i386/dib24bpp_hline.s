@@ -6,12 +6,13 @@
  * PROGRAMMERS:     Magnus Olsen
  */
 
-#include <asm.inc>
+.globl _DIB_24BPP_HLine
+.intel_syntax noprefix
 
-.code
-
-PUBLIC _DIB_24BPP_HLine
-
+.def   _DIB_24BPP_HLine;
+.scl	2;
+.type	32;
+.endef
       _DIB_24BPP_HLine:
                          push    edi
                          push    esi
@@ -150,5 +151,3 @@ PUBLIC _DIB_24BPP_HLine
                          pop     esi
                          pop     edi
                          ret
-
-END

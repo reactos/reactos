@@ -8,8 +8,8 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ksamd64.inc>
+#include <ndk/asm.h>
+.intel_syntax noprefix
 
 #define DISPOSITION_DISMISS         0
 #define DISPOSITION_CONTINUE_SEARCH 1
@@ -54,5 +54,3 @@ _except_handler2:
 _except_handler3:
     ret
 .endfunc
-
-END

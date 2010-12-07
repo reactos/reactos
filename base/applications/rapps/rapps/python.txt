@@ -14,9 +14,5 @@ CDPath = none
 [Section.0407]
 Description = Eine sehr mächtige, dynamische Programmiersprache.
 
-
-[Section.0415]
-Description = Potęży i dynamiczny język programowania.
-
 [Section.0422]
 Description = Дуже потужна динамічна мова програмування.

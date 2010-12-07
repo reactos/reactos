@@ -15,7 +15,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
 {
  UNICODE_STRING Device, Output;
  HDC hDC = NULL;
- BOOL Display = FALSE, Default = FALSE;
+ BOOL Display = FALSE, Default = TRUE;
  ULONG UMdhpdev = 0;
 
  HANDLE hspool = NULL;
@@ -31,7 +31,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
 
  if ((!lpwszDevice) && (!lpwszDriver))
  {
-     Default = TRUE;  // Ask Win32k to set Default device.
+     Default = FALSE;  // Ask Win32k to set Default device.
      Display = TRUE;   // Most likely to be DISPLAY.
  }
  else
@@ -60,7 +60,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     DPRINT1("Not a DISPLAY device! %wZ\n", &Device);
  }
 
- hDC = NtGdiOpenDCW( (Default ? NULL : &Device),
+ hDC = NtGdiOpenDCW( (Default ? &Device : NULL),
                      (PDEVMODEW) lpInitData,
                      (lpwszOutput ? &Output : NULL),
                       iType,             // DCW 0 and ICW 1.
@@ -318,7 +318,7 @@ WINAPI
 DeleteObject(HGDIOBJ hObject)
 {
   UINT Type = 0;
-
+    
   /* From Wine: DeleteObject does not SetLastError() on a null object */
   if(!hObject) return FALSE;
 
@@ -332,7 +332,7 @@ DeleteObject(HGDIOBJ hObject)
 
   Type = GDI_HANDLE_GET_TYPE(hObject);
 
-  if ((Type == GDI_OBJECT_TYPE_METAFILE) ||
+  if ((Type == GDI_OBJECT_TYPE_METAFILE) || 
       (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
      return FALSE;
 
@@ -348,7 +348,7 @@ DeleteObject(HGDIOBJ hObject)
      case GDI_OBJECT_TYPE_METADC:
        return MFDRV_DeleteObject( hObject );
      case GDI_OBJECT_TYPE_EMF:
-     {
+     {          
        PLDC pLDC = GdiGetLDC(hObject);
        if ( !pLDC ) return FALSE;
        return EMFDRV_DeleteObject( hObject );
@@ -533,7 +533,7 @@ GetDeviceCaps(HDC hDC,
         return NtGdiGetDeviceCaps(hDC,i);
   }
   DPRINT("Device CAPS2\n");
-
+  
   switch (i)
   {
     case DRIVERVERSION:
@@ -746,7 +746,7 @@ GetAspectRatioFilterEx(
                 LPSIZE lpAspectRatio
                       )
 {
-  return NtGdiGetDCPoint( hdc, GdiGetAspectRatioFilter, (PPOINTL) lpAspectRatio );
+  return NtGdiGetDCPoint( hdc, GdiGetAspectRatioFilter, (LPPOINT) lpAspectRatio );
 }
 
 
@@ -760,7 +760,7 @@ GetDCOrgEx(
     LPPOINT lpPoint
     )
 {
-  return NtGdiGetDCPoint( hdc, GdiGetDCOrg, (PPOINTL)lpPoint );
+  return NtGdiGetDCPoint( hdc, GdiGetDCOrg, lpPoint );
 }
 
 
@@ -1603,7 +1603,7 @@ SelectObject(HDC hDC,
 
 #if 0
         case GDI_OBJECT_TYPE_METADC:
-            return MFDRV_SelectObject( hDC, hGdiObj);
+            return MFDRV_SelectObject( hDC, hGdiObj); 
         case GDI_OBJECT_TYPE_EMF:
             PLDC pLDC = GdiGetLDC(hDC);
             if ( !pLDC ) return NULL;

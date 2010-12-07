@@ -39,7 +39,6 @@ MmZeroPageThread(VOID)
     /* FIXME: Get the discardable sections to free them */
 //    MiFindInitializationCode(&StartAddress, &EndAddress);
 //    if (StartAddress) MiFreeInitializationCode(StartAddress, EndAddress);
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 
     /* Set our priority to 0 */
     Thread->BasePriority = 0;
@@ -72,8 +71,6 @@ MmZeroPageThread(VOID)
             PageIndex = MmFreePageListHead.Flink;
             ASSERT(PageIndex != LIST_HEAD);
             Pfn1 = MiGetPfnEntry(PageIndex);
-            MI_SET_USAGE(MI_USAGE_ZERO_LOOP);
-            MI_SET_PROCESS2("Kernel 0 Loop");
             FreePage = MiRemoveAnyPage(MI_GET_PAGE_COLOR(PageIndex));
             
             /* The first global free page should also be the first on its own list */

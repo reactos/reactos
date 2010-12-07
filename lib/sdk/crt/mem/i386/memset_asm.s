@@ -2,51 +2,46 @@
  * $Id$
  */
 
-#include <asm.inc>
-#include <ks386.inc>
-
 /*
  * void *memset (void *src, int val, size_t count)
  */
 
-PUBLIC _memset
-.code
+.globl	_memset
 
 _memset:
-	push ebp
-	mov ebp, esp
-	push edi
-	mov edi, [ebp + 8]
-	movzx eax, byte ptr [ebp + 12]
-	mov ecx, [ebp + 16]
+	push	%ebp
+	mov	%esp,%ebp
+	push	%edi
+	mov	0x8(%ebp),%edi
+	movzb	0xc(%ebp),%eax
+	mov	0x10(%ebp),%ecx
 	cld
-	cmp ecx, 16
-	jb .L1
-	mov edx, HEX(01010101)
-	mul edx
-	mov edx, ecx
-	test edi, 3
-	je .L2
-	mov ecx, edi
-	and ecx, 3
-	sub ecx, 5
-	not ecx
-	sub edx, ecx
-	rep stosb
-	mov ecx, edx
+	cmp	$16,%ecx
+	jb	.L1
+	mov	$0x01010101,%edx
+	mul	%edx
+	mov	%ecx,%edx
+	test	$3,%edi
+	je	.L2
+	mov	%edi,%ecx
+	and	$3,%ecx
+	sub	$5,%ecx
+	not	%ecx
+	sub	%ecx,%edx
+	rep	stosb
+	mov	%edx,%ecx
 .L2:
-	shr ecx, 2
-	rep stosd
-	mov ecx, edx
-	and ecx, 3
+	shr	$2,%ecx
+	rep	stosl
+	mov	%edx,%ecx
+	and	$3,%ecx
 .L1:	
-	test ecx, ecx
-	je .L3
-	rep stosb
+	test	%ecx,%ecx
+	je	.L3
+	rep	stosb
 .L3:
-	pop edi
-	mov eax, [ebp + 8]
+	pop	%edi
+	mov	0x8(%ebp),%eax
 	leave
 	ret
 
-END

@@ -65,7 +65,6 @@ HalpAllocateBusHandler(IN INTERFACE_TYPE InterfaceType,
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpRegisterInternalBusHandlers(VOID)
 {
     PBUS_HANDLER Bus;
@@ -140,7 +139,6 @@ HalpRegisterInternalBusHandlers(VOID)
 #ifndef _MINIHAL_
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
 {
     NTSTATUS Status;
@@ -188,7 +186,6 @@ HalpMarkChipsetDecode(BOOLEAN OverrideEnable)
 
 PBUS_HANDLER
 NTAPI
-INIT_FUNCTION
 HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
                                  IN ULONG BusNo,
                                  IN BOOLEAN TestAllocation)
@@ -273,7 +270,6 @@ HalpAllocateAndInitPciBusHandler(IN ULONG PciType,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalpIsValidPCIDevice(IN PBUS_HANDLER BusHandler,
                      IN PCI_SLOT_NUMBER Slot)
 {
@@ -335,7 +331,6 @@ static BOOLEAN WarningsGiven[5];
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 HalpGetChipHacks(IN USHORT VendorId,
                  IN USHORT DeviceId,
                  IN UCHAR RevisionId,
@@ -399,7 +394,6 @@ HalpGetChipHacks(IN USHORT VendorId,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
                      IN PPCI_COMMON_CONFIG PciData,
                      IN ULONG Flags)
@@ -480,7 +474,6 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
     /* Simple test first */
@@ -533,7 +526,6 @@ HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
     /* Either this is a PCI-to-PCI Bridge, or a CardBUS Bridge */
@@ -547,7 +539,6 @@ HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
     
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 HalpGetPciBridgeConfig(IN ULONG PciType,
                        IN PUCHAR BusCount)
 {
@@ -600,7 +591,6 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpFixupPciSupportedRanges(IN ULONG BusCount)
 {
     ULONG i;
@@ -663,7 +653,6 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
 
 VOID
 NTAPI
-INIT_FUNCTION
 ShowSize(ULONG x)
 {
     if (!x) return;
@@ -689,7 +678,6 @@ ShowSize(ULONG x)
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpDebugPciDumpBus(IN ULONG i,
                     IN ULONG j,
                     IN ULONG k,
@@ -841,7 +829,6 @@ HalpDebugPciDumpBus(IN ULONG i,
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitializePciBus(VOID)
 {
 #ifndef _MINIHAL_
@@ -1106,7 +1093,6 @@ HalpInitializePciBus(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpInitBusHandlers(VOID)
 {
     /* Register the HAL Bus Handler support */
@@ -1115,7 +1101,6 @@ HalpInitBusHandlers(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 HalpRegisterKdSupportFunctions(VOID)
 {
     /* Register PCI Device Functions */

@@ -69,7 +69,6 @@ HdlspEnableTerminal(
 
 VOID
 NTAPI
-INIT_FUNCTION
 HeadlessInit(
 	IN PLOADER_PARAMETER_BLOCK LoaderBlock
 	)

@@ -3,34 +3,53 @@
  * This file is part of the w64 mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
+#include <_mingw_mac.h>
 
-#include <asm.inc>
+	.file	"ceilf.S"
+	.text
+	.align 4
+.globl __MINGW_USYMBOL(ceilf)
+	.def	__MINGW_USYMBOL(ceilf);	.scl	2;	.type	32;	.endef
+__MINGW_USYMBOL(ceilf):
+#ifdef _WIN64
+	subq	$24,%rsp
+	movss	%xmm0,8(%rsp)
+	flds	8(%rsp)
 
-.code
-.align 4
+	fstcw	4(%rsp)			/* store fpu control word */
 
-PUBLIC _ceilf
-_ceilf:
+	movl	$0x0800,%edx		/* round towards +oo */
+	orl	4(%rsp),%edx
+	andl	$0xfbff,%edx
+	movl	%edx,(%rsp)
+	fldcw	(%rsp)			/* load modified control word */
 
-	fld dword ptr [esp + 4]
-	sub esp, 8
+	frndint				/* round */
 
-	fstcw [esp + 4]			/* store fpu control word */
+	fldcw	4(%rsp)			/* restore original control word */
+	fstps	8(%rsp)
+	movss	8(%rsp),%xmm0
+	addq	$24,%rsp
+	ret
+#else
+	flds	4(%esp)
+	subl	$8,%esp
+
+	fstcw	4(%esp)			/* store fpu control word */
 
 	/* We use here %edx although only the low 1 bits are defined.
 	   But none of the operations should care and they are faster
 	   than the 16 bit operations.  */
-	mov edx, [esp + 4]
-	or edx,  HEX(0800)		/* round towards +oo */
-	and edx, HEX(fbff)
-	mov [esp], edx
-	fldcw [esp]			/* load modified control word */
+	movl	$0x0800,%edx		/* round towards +oo */
+	orl	4(%esp),%edx
+	andl	$0xfbff,%edx
+	movl	%edx,(%esp)
+	fldcw	(%esp)			/* load modified control word */
 
 	frndint				/* round */
 
-	fldcw [esp + 4]			/* restore original control word */
+	fldcw	4(%esp)			/* restore original control word */
 
-	add esp, 8
+	addl	$8,%esp
 	ret
-
-END
+#endif

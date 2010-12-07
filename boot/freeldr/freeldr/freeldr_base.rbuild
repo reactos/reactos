@@ -75,9 +75,7 @@
 		<file>winldr.c</file>
 		<file>wlmemory.c</file>
 		<file>wlregistry.c</file>
-		<if property="ARCH" value="i386">
-			<file>headless.c</file>
-		</if>
+		<file>headless.c</file>
 	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>

@@ -15,10 +15,10 @@
 
 <!--
 	Sub-architecture (board) to build for. Specify one of:
-		kurobox versatile omap3-zoom2 omap3-beagle
+		kurobox versatile omap3
 		
 -->
-<property name="SARCH" value="omap3-zoom2" />
+<property name="SARCH" value="versatile" />
 
 
 <!--
@@ -89,20 +89,5 @@
 	you're doing.
 -->
 <property name="_ELF_" value="0" />
-
-<!--
-	Whether to compile the multi processor versions for ntoskrnl and hal.
--->
-<property name="BUILD_MP" value="1" />
-
-<!--
-    Whether to compile the new cache manager
--->
-<property name="NEWCC" value="0" />
-
-<!--
-    Whether to compile the new sprintf
--->
-<property name="NEWSPRINTF" value="0" />
 
 </group>

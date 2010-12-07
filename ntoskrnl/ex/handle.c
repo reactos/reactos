@@ -23,7 +23,6 @@ EX_PUSH_LOCK HandleTableListLock;
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExpInitializeHandleTables(VOID)
 {
     /* Initialize the list of handle tables and the lock */

@@ -9,8 +9,6 @@
  *                    complete implementation
  */
 
-#include <asm.inc>
-
 #define JB_BP  0
 #define JB_BX  1
 #define JB_DI  2
@@ -22,7 +20,6 @@
 
 #define JMPBUF 4
 
-.code
 /*
  * int
  * _setjmp(jmp_buf env);
@@ -36,20 +33,20 @@
  * Notes:
  *   Sets up the jmp_buf
  */
-PUBLIC __setjmp
+.globl __setjmp
 __setjmp:
-    xor eax, eax
-    mov edx, JMPBUF[esp]
+    xorl %eax, %eax
+    movl JMPBUF(%esp), %edx
 
     /* Save registers.  */
-    mov [edx + JB_BP*4], ebp /* Save caller's frame pointer.  */
-    mov [edx + JB_BX*4], ebx
-    mov [edx + JB_DI*4], edi
-    mov [edx + JB_SI*4], esi
-    lea ecx, JMPBUF[esp]    /* Save SP as it will be after we return.  */
-    mov [edx + JB_SP*4], ecx
-    mov ecx, PCOFF[esp]     /* Save PC we are returning to now.  */
-    mov [edx + JB_IP*4], ecx
+    movl %ebp, (JB_BP*4)(%edx) /* Save caller's frame pointer.  */
+    movl %ebx, (JB_BX*4)(%edx)
+    movl %edi, (JB_DI*4)(%edx)
+    movl %esi, (JB_SI*4)(%edx)
+    leal JMPBUF(%esp), %ecx    /* Save SP as it will be after we return.  */
+    movl %ecx, (JB_SP*4)(%edx)
+    movl PCOFF(%esp), %ecx     /* Save PC we are returning to now.  */
+    movl %ecx, (JB_IP*4)(%edx)
     ret
 
 /*
@@ -65,21 +62,23 @@ __setjmp:
  * Notes:
  *   Sets up the jmp_buf
  */
-PUBLIC __setjmp3
+.globl __setjmp3
 __setjmp3:
-    xor eax, eax
-    mov edx, JMPBUF[esp]
+    xorl %eax, %eax
+    movl JMPBUF(%esp), %edx
 
     /* Save registers.  */
-    mov [edx + JB_BP*4], ebp /* Save caller's frame pointer.  */
-    mov [edx + JB_BX*4], ebx
-    mov [edx + JB_DI*4], edi
-    mov [edx + JB_SI*4], esi
-    lea ecx, JMPBUF[esp]    /* Save SP as it will be after we return.  */
-    mov [edx + JB_SP*4], ecx
-    mov ecx, PCOFF[esp]     /* Save PC we are returning to now.  */
-    mov [edx + JB_IP*4], ecx
+    movl %ebp, (JB_BP*4)(%edx) /* Save caller's frame pointer.  */
+    movl %ebx, (JB_BX*4)(%edx)
+    movl %edi, (JB_DI*4)(%edx)
+    movl %esi, (JB_SI*4)(%edx)
+    leal JMPBUF(%esp), %ecx    /* Save SP as it will be after we return.  */
+    movl %ecx, (JB_SP*4)(%edx)
+    movl PCOFF(%esp), %ecx     /* Save PC we are returning to now.  */
+    movl %ecx, (JB_IP*4)(%edx)
     ret
+
+#define VAL 8
 
 /*
  * void
@@ -95,20 +94,18 @@ __setjmp3:
  * Notes:
  *   Non-local goto
  */
-PUBLIC _longjmp
+.globl _longjmp
 _longjmp:
-    mov ecx, JMPBUF[esp]   /* User's jmp_buf in %ecx.  */
+    movl JMPBUF(%esp), %ecx   /* User's jmp_buf in %ecx.  */
 
-    mov eax, [esp + 8]      /* Second argument is return value.  */
+    movl VAL(%esp), %eax      /* Second argument is return value.  */
     /* Save the return address now.  */
-    mov edx, [ecx + JB_IP*4]
+    movl (JB_IP*4)(%ecx), %edx
     /* Restore registers.  */
-    mov ebp, [ecx + JB_BP*4]
-    mov ebx, [ecx + JB_BX*4]
-    mov edi, [ecx + JB_DI*4]
-    mov esi, [ecx + JB_SI*4]
-    mov esp, [ecx + JB_SP*4]
+    movl (JB_BP*4)(%ecx), %ebp
+    movl (JB_BX*4)(%ecx), %ebx
+    movl (JB_DI*4)(%ecx), %edi
+    movl (JB_SI*4)(%ecx), %esi
+    movl (JB_SP*4)(%ecx), %esp
     /* Jump to saved PC.  */
-    jmp edx
-
-END
+    jmp *%edx

@@ -98,7 +98,6 @@ PspReturnProcessQuotaSpecifiedPool(IN PEPROCESS Process,
 
 VOID
 NTAPI
-INIT_FUNCTION
 PsInitializeQuotaSystem(VOID)
 {
     RtlZeroMemory(&PspDefaultQuotaBlock, sizeof(PspDefaultQuotaBlock));

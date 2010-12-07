@@ -8,18 +8,17 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ks386.inc>
+#include <reactos/asm.h>
+#include <ndk/i386/asm.h>
 #include <internal/i386/asmmacro.S>
 
-EXTERN _MmGrowKernelStack@4:PROC
-EXTERN _KeUserCallbackDispatcher:PROC
-EXTERN @KiServiceExit@8:PROC
-
 /* FUNCTIONS ****************************************************************/
-.code
 
-PUBLIC _KiGetUserModeStackAddress@0
+.code32
+.text
+
+.globl _KiGetUserModeStackAddress@0
+.func KiGetUserModeStackAddress@0
 _KiGetUserModeStackAddress@0:
 
     /* Get the current thread's trapframe and return the esp */
@@ -28,6 +27,7 @@ _KiGetUserModeStackAddress@0:
     lea eax, [eax+KTRAP_FRAME_ESP]
     ret
 
+.endfunc
 
 /*++
  * @name KiCallUserMode 
@@ -53,7 +53,8 @@ _KiGetUserModeStackAddress@0:
  *         This call MUST be paired by interrupt 0x2B or NtCallbackReturn.
  *
  *--*/
-PUBLIC _KiCallUserMode@8
+.globl _KiCallUserMode@8
+.func KiCallUserMode@8
 _KiCallUserMode@8:
 
     /* Save volatile registers */
@@ -101,7 +102,7 @@ ApcsEnabled:
 #endif
 
     /* Get the lowest stack limit and check if we can handle it */
-    lea eax, [esp-HEX(3000)]
+    lea eax, [esp-0x3000]
     cmp eax, [ebx+KTHREAD_STACK_LIMIT]
     jnb StackOk
 
@@ -129,7 +130,7 @@ StackOk:
     mov [ebx+KTHREAD_CALLBACK_STACK], esp
 
     /* Align stack on 16-byte boundary */
-    and esp, NOT 15
+    and esp, ~15
     mov edi, esp
 
     /* Set destination and origin NPX Areas */
@@ -180,7 +181,7 @@ DontBias:
 
     /* Copy DR7 */
     mov edi, [edx+KTRAP_FRAME_DR7]
-    test edi, NOT DR7_RESERVED_MASK
+    test edi, ~DR7_RESERVED_MASK
     mov [esp+KTRAP_FRAME_DR7], edi
 
     /* Check if we need to save debug registers */
@@ -225,6 +226,7 @@ GrowFailed:
     /* Return */
     ret 8
 
+.endfunc
 
 /*++
  * @name NtCallbackReturn
@@ -249,7 +251,8 @@ GrowFailed:
  * @remark This call MUST be paired with KeUserModeCallback.
  *
  *--*/
-PUBLIC _NtCallbackReturn@12
+.globl _NtCallbackReturn@12
+.func NtCallbackReturn@12
 _NtCallbackReturn@12:
 
     /* Get the current thread and make sure we have a callback stack */
@@ -313,7 +316,7 @@ CheckDebug:
     and dword ptr [edi+KTRAP_FRAME_DR7], 0
 
     /* Check if debugging was active */
-    test byte ptr [eax+KTHREAD_DEBUG_ACTIVE], HEX(0FF)
+    test byte ptr [eax+KTHREAD_DEBUG_ACTIVE], 0xFF
     jnz RestoreDebug
 
 RestoreStack:
@@ -404,6 +407,7 @@ NoStack:
     /* Return failure */
     mov eax, STATUS_NO_CALLBACK_ACTIVE
     ret 12
+.endfunc
 
 /*++
  * @name KeSwitchKernelStack 
@@ -425,7 +429,8 @@ NoStack:
  *         this routine.
  *
  *--*/
-PUBLIC _KeSwitchKernelStack@8
+.globl _KeSwitchKernelStack@8
+.func KeSwitchKernelStack@8
 _KeSwitchKernelStack@8:
 
     /* Save volatiles */
@@ -510,5 +515,4 @@ V86Switch:
     pop edi
     pop esi
     ret 8
-
-END
+.endfunc

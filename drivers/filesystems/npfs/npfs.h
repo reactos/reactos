@@ -4,22 +4,7 @@
 #include <ntifs.h>
 #include <ndk/iotypes.h>
 
-typedef enum _FCB_TYPE
-{
-    FCB_DEVICE,
-    FCB_DIRECTORY,
-    FCB_PIPE
-} FCB_TYPE;
-
-typedef enum _CCB_TYPE
-{
-    CCB_DEVICE,
-    CCB_DIRECTORY,
-    CCB_PIPE
-} CCB_TYPE;
-
-/* Volume Control Block (VCB) aka Device Extension */
-typedef struct _NPFS_VCB
+typedef struct _NPFS_DEVICE_EXTENSION
 {
     LIST_ENTRY PipeListHead;
     LIST_ENTRY ThreadListHead;
@@ -28,14 +13,11 @@ typedef struct _NPFS_VCB
     ULONG MinQuota;
     ULONG DefaultQuota;
     ULONG MaxQuota;
-    struct _NPFS_FCB *DeviceFcb;
-    struct _NPFS_FCB *RootFcb;
-} NPFS_VCB, *PNPFS_VCB;
+} NPFS_DEVICE_EXTENSION, *PNPFS_DEVICE_EXTENSION;
 
 typedef struct _NPFS_FCB
 {
-    FCB_TYPE Type;
-    PNPFS_VCB Vcb;
+    FSRTL_COMMON_FCB_HEADER RFCB;
     UNICODE_STRING PipeName;
     LIST_ENTRY PipeListEntry;
     KMUTEX CcbListLock;
@@ -58,11 +40,9 @@ typedef struct _NPFS_FCB
 typedef struct _NPFS_CCB
 {
     LIST_ENTRY CcbListEntry;
-    CCB_TYPE Type;
-    PNPFS_FCB Fcb;
-
     struct _NPFS_CCB* OtherSide;
     struct ETHREAD *Thread;
+    PNPFS_FCB Fcb;
     KEVENT ConnectEvent;
     KEVENT ReadEvent;
     KEVENT WriteEvent;
@@ -91,7 +71,7 @@ typedef struct _NPFS_THREAD_CONTEXT
 {
     ULONG Count;
     KEVENT Event;
-    PNPFS_VCB Vcb;
+    PNPFS_DEVICE_EXTENSION DeviceExt;
     LIST_ENTRY ListEntry;
     PVOID WaitObjectArray[MAXIMUM_WAIT_OBJECTS];
     KWAIT_BLOCK WaitBlockArray[MAXIMUM_WAIT_OBJECTS];
@@ -154,10 +134,5 @@ NTSTATUS NTAPI NpfsQueryVolumeInformation (PDEVICE_OBJECT DeviceObject, PIRP Irp
 NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath);
-
-PNPFS_FCB
-NpfsFindPipe(PNPFS_VCB Vcb,
-             PUNICODE_STRING PipeName);
-
 
 #endif /* __DRIVERS_FS_NP_NPFS_H */

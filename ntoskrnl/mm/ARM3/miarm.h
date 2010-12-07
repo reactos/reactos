@@ -130,12 +130,12 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 //
 // Access Flags
 //
-#define PTE_READONLY            0 // Doesn't exist on x86
+#define PTE_READONLY            0
 #define PTE_EXECUTE             0 // Not worrying about NX yet
 #define PTE_EXECUTE_READ        0 // Not worrying about NX yet
 #define PTE_READWRITE           0x2
 #define PTE_WRITECOPY           0x200
-#define PTE_EXECUTE_READWRITE   0x2 // Not worrying about NX yet
+#define PTE_EXECUTE_READWRITE   0x0
 #define PTE_EXECUTE_WRITECOPY   0x200
 #define PTE_PROTOTYPE           0x400
 //
@@ -145,20 +145,6 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_DISABLE_CACHE       0x10
 #define PTE_WRITECOMBINED_CACHE 0x10
 #elif defined(_M_ARM)
-#define PTE_READONLY            0x200
-#define PTE_EXECUTE             0 // Not worrying about NX yet
-#define PTE_EXECUTE_READ        0 // Not worrying about NX yet
-#define PTE_READWRITE           0 // Doesn't exist on ARM
-#define PTE_WRITECOPY           0 // Doesn't exist on ARM
-#define PTE_EXECUTE_READWRITE   0 // Not worrying about NX yet
-#define PTE_EXECUTE_WRITECOPY   0 // Not worrying about NX yet
-#define PTE_PROTOTYPE           0x400 // Using the Shared bit
-//
-// Cache flags
-//
-#define PTE_ENABLE_CACHE        0
-#define PTE_DISABLE_CACHE       0x10
-#define PTE_WRITECOMBINED_CACHE 0x10
 #else
 #error Define these please!
 #endif
@@ -193,7 +179,7 @@ extern const ULONG MmProtectToValue[32];
 #ifdef _M_IX86
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #elif _M_ARM
-#define MM_PTE_SOFTWARE_PROTECTION_BITS   6
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #elif _M_AMD64
 #define MM_PTE_SOFTWARE_PROTECTION_BITS   5
 #else
@@ -249,13 +235,13 @@ extern const ULONG MmProtectToValue[32];
 #define MI_GET_NEXT_COLOR(x)                (MI_GET_PAGE_COLOR(++MmSystemPageColor))
 #define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
 
-#ifndef _M_AMD64
+#ifdef _M_IX86
 //
 // Decodes a Prototype PTE into the underlying PTE
 //
 #define MiProtoPteToPte(x)                  \
     (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             (((x)->u.Proto.ProtoAddressHigh << 7) | (x)->u.Proto.ProtoAddressLow))
+             ((x)->u.Proto.ProtoAddressHigh | (x)->u.Proto.ProtoAddressLow))
 #endif
 
 //
@@ -417,7 +403,6 @@ extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
-extern MMPTE DemandZeroPte;
 extern MMPTE PrototypePte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
@@ -476,7 +461,7 @@ extern PMMPTE MiSessionImagePteEnd;
 extern PMMPTE MiSessionBasePte;
 extern PMMPTE MiSessionLastPte;
 extern SIZE_T MmSizeOfPagedPoolInBytes;
-extern PMMPDE MmSystemPagePtes;
+extern PMMPTE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
 extern PVOID MmSystemCacheEnd;
 extern MMSUPPORT MmSystemCacheWs;
@@ -527,14 +512,13 @@ extern BOOLEAN MmZeroingPageThreadActive;
 extern KEVENT MmZeroingPageEvent;
 extern ULONG MmSystemPageColor;
 extern ULONG MmProcessColorSeed;
-extern PMMWSL MmWorkingSetList;
 
 //
 // Figures out the hardware bits for a PTE
 //
 ULONG
 FORCEINLINE
-MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
+MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
 {
     MMPTE TempPte;
     
@@ -543,15 +527,14 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
     
     /* Make it valid and accessed */
     TempPte.u.Hard.Valid = TRUE;
-    MI_MAKE_ACCESSED_PAGE(&TempPte);
+    TempPte.u.Hard.Accessed = TRUE;
     
     /* Is this for user-mode? */
-    if ((PointerPte <= (PVOID)MiHighestUserPte) ||
-        ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
-         (PointerPte <= (PVOID)MiHighestUserPde)))
+    if ((PointerPte <= MiHighestUserPte) ||
+        ((PointerPte >= MiAddressToPde(NULL)) && (PointerPte <= MiHighestUserPde)))
     {
         /* Set the owner bit */
-        MI_MAKE_OWNER_PAGE(&TempPte);
+        TempPte.u.Hard.Owner = TRUE;
     }
     
     /* FIXME: We should also set the global bit */
@@ -621,7 +604,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
 
-#ifndef _M_AMD64
+#ifdef _M_IX86
 //
 // Builds a Prototype PTE for the address of the PTE
 //
@@ -641,11 +624,10 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
      * lets us only use 28 bits for the adress of the PTE
      */
     Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
-
+    
     /* 7 bits go in the "low", and the other 21 bits go in the "high" */
     NewPte->u.Proto.ProtoAddressLow = Offset & 0x7F;
-    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0xFFFFFF80) >> 7;
-    ASSERT(MiProtoPteToPte(NewPte) == PointerPte);
+    NewPte->u.Proto.ProtoAddressHigh = Offset & 0xFFFFF80;
 }
 #endif
 
@@ -689,33 +671,6 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
     *PointerPte = InvalidPte;
-}
-
-//
-// Writes a valid PDE
-//
-VOID
-FORCEINLINE
-MI_WRITE_VALID_PDE(IN PMMPDE PointerPde,
-                   IN MMPDE TempPde)
-{
-    /* Write the valid PDE */
-    ASSERT(PointerPde->u.Hard.Valid == 0);
-    ASSERT(TempPde.u.Hard.Valid == 1);
-    *PointerPde = TempPde;
-}
-
-//
-// Writes an invalid PDE
-//
-VOID
-FORCEINLINE
-MI_WRITE_INVALID_PDE(IN PMMPDE PointerPde,
-                     IN MMPDE InvalidPde)
-{
-    /* Write the invalid PDE */
-    ASSERT(InvalidPde.u.Hard.Valid == 0);
-    *PointerPde = InvalidPde;
 }
 
 //
@@ -877,35 +832,7 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
     KeLeaveGuardedRegion();
 }
 
-//
-// Returns the ProtoPTE inside a VAD for the given VPN
-//
-FORCEINLINE
-PMMPTE
-MI_GET_PROTOTYPE_PTE_FOR_VPN(IN PMMVAD Vad,
-                             IN ULONG_PTR Vpn)
-{
-    PMMPTE ProtoPte;
-
-    /* Find the offset within the VAD's prototype PTEs */
-    ProtoPte = Vad->FirstPrototypePte + (Vpn - Vad->StartingVpn);
-    ASSERT(ProtoPte <= Vad->LastContiguousPte);
-    return ProtoPte;
-}
-
-//
-// Returns the PFN Database entry for the given page number
-// Warning: This is not necessarily a valid PFN database entry!
-//
-FORCEINLINE
-PMMPFN
-MI_PFN_ELEMENT(IN PFN_NUMBER Pfn)
-{
-    /* Get the entry */
-    return &MmPfnDatabase[Pfn];
-};
-
-BOOLEAN
+NTSTATUS
 NTAPI
 MmArmInitSystem(
     IN ULONG Phase,
@@ -1131,13 +1058,6 @@ MiDecrementShareCount(
     IN PFN_NUMBER PageFrameIndex
 );
 
-VOID
-NTAPI
-MiDecrementReferenceCount(
-    IN PMMPFN Pfn1,
-    IN PFN_NUMBER PageFrameIndex
-);
-
 PFN_NUMBER
 NTAPI
 MiRemoveAnyPage(
@@ -1297,27 +1217,6 @@ MiMakeSystemAddressValid(
     IN PVOID PageTableVirtualAddress,
     IN PEPROCESS CurrentProcess
 );
-
-ULONG
-NTAPI
-MiMakeSystemAddressValidPfn(
-    IN PVOID VirtualAddress,
-    IN KIRQL OldIrql
-);
-
-VOID
-NTAPI
-MiRemoveMappedView(
-    IN PEPROCESS CurrentProcess,
-    IN PMMVAD Vad
-);
-
-PSUBSECTION
-NTAPI
-MiLocateSubsection(
-    IN PMMVAD Vad,
-    IN ULONG_PTR Vpn
-);
                          
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
@@ -1333,19 +1232,5 @@ MiRemoveZeroPageSafe(IN ULONG Color)
     if (MmFreePagesByColor[ZeroedPageList][Color].Flink != LIST_HEAD) return MiRemoveZeroPage(Color);
     return 0;
 }
-
-//
-// New ARM3<->RosMM PAGE Architecture
-//
-#define MI_GET_ROS_DATA(x)   ((PMMROSPFN)(x->RosMmData))
-#define MI_IS_ROS_PFN(x)     (((x)->u4.AweAllocation == TRUE) && (MI_GET_ROS_DATA(x) != NULL))
-#define ASSERT_IS_ROS_PFN(x) ASSERT(MI_IS_ROS_PFN(x) == TRUE);
-typedef struct _MMROSPFN
-{
-    PMM_RMAP_ENTRY RmapListHead;
-    SWAPENTRY SwapEntry;
-} MMROSPFN, *PMMROSPFN;
-
-#define RosMmData            AweReferenceCount
 
 /* EOF */

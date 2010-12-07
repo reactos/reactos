@@ -1,5 +1,6 @@
-#ifndef __WIN32K_PDEVOBJ_H
-#define __WIN32K_PDEVOBJ_H
+#pragma once
+
+#include <drivers/directx/directxint.h>
 
 /* PDEVOBJ flags */
 #define PDEV_DISPLAY             0x00000001 /* Display device */
@@ -36,21 +37,6 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of PDEVOBJ ak
   RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
 } GDIPOINTER, *PGDIPOINTER;
 
-typedef struct _DEVMODEINFO
-{
-    struct _DEVMODEINFO *pdmiNext;
-    struct _LDEVOBJ *pldev;
-    ULONG cbdevmode;
-    DEVMODEW adevmode[1];
-} DEVMODEINFO, *PDEVMODEINFO;
-
-typedef struct
-{
-    DWORD dwFlags;
-    PDEVMODEW pdm;
-
-} DEVMODEENTRY, *PDEVMODEENTRY;
-
 typedef struct _GRAPHICS_DEVICE
 {
     WCHAR            szNtDeviceName[CCHDEVICENAME/2];
@@ -62,17 +48,15 @@ typedef struct _GRAPHICS_DEVICE
     DWORD            hkClassDriverConfig;
     DWORD            StateFlags;                     /* See DISPLAY_DEVICE_* */
     ULONG            cbdevmodeInfo;
-    PDEVMODEINFO     pdevmodeInfo;
-    ULONG            cDevModes;
-    PDEVMODEENTRY    pDevModeList;
-    LPWSTR           pDiplayDrivers;
+    PVOID            devmodeInfo;
+    DWORD            cbdevmodeInfo1;
+    PVOID            devmodeInfo1;
+    LPWSTR           pwszDeviceNames;
     LPWSTR           pwszDescription;
     DWORD            dwUnknown;
     PVOID            pUnknown;
     PFILE_OBJECT     FileObject;
     DWORD            ProtocolType;
-    ULONG            iDefaultMode;
-    ULONG            iCurrentMode;
 } GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
 
 typedef struct _PDEVOBJ
@@ -80,8 +64,8 @@ typedef struct _PDEVOBJ
     BASEOBJECT                BaseObject;
 
     struct _PDEVOBJ *         ppdevNext;
-    LONG                      cPdevRefs;
-    LONG                      cPdevOpenRefs;
+    INT                       cPdevRefs;
+    INT                       cPdevOpenRefs;
     struct _PDEVOBJ *         ppdevParent;
     FLONG                     flFlags;  // flags
 //  FLONG                     flAccelerated;
@@ -114,17 +98,17 @@ typedef struct _PDEVOBJ
 //  PFN_DrvSetPalette         pfnDrvSetPalette;
 //  PFN_DrvNotify             pfnDrvNotify;
 //  ULONG                     TagSig;
-    struct _LDEVOBJ *         pldev;
+//  PLDEVOBJ                  pldev;
     DHPDEV                    dhpdev;         /* DHPDEV for device. */
-    struct _PALETTE*          ppalSurf;       /* PEPALOBJ/PPALETTE for this device. */
+    PVOID                     ppalSurf;       /* PEPALOBJ/PPALETTE for this device. */
     DEVINFO                   devinfo;
     GDIINFO                   gdiinfo;
-    PSURFACE                  pSurface;       /* SURFACE for this device. */
+    HSURF                     pSurface;       /* SURFACE for this device., FIXME: PSURFACE */
 //  HANDLE                    hSpooler;       /* Handle to spooler, if spooler dev driver. */
 //  PVOID                     pDesktopId;
     PGRAPHICS_DEVICE          pGraphicsDevice;
     POINTL                    ptlOrigion;
-    PDEVMODEW                 pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
+    PVOID                     pdmwDev;        /* Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size. */
 //  DWORD                     Unknown3;
     FLONG                     DxDd_Flags;     /* DxDD active status flags. */
 //  LONG                      devAttr;
@@ -133,12 +117,15 @@ typedef struct _PDEVOBJ
     union
     {
       DRIVER_FUNCTIONS        DriverFunctions;
-      DRIVER_FUNCTIONS        pfn;
       PVOID                   apfn[INDEX_LAST];         // B8C 0x0598
     };
 
     /* ros specific */
     ULONG         DxDd_nCount;
+    ULONG         DisplayNumber;
+    DEVMODEW      DMW;
+    PFILE_OBJECT  VideoFileObject;
+    BOOLEAN       PreparedDriver;
     GDIPOINTER    Pointer;
     /* Stuff to keep track of software cursors; win32k gdi part */
     UINT SafetyRemoveLevel; /* at what level was the cursor removed?
@@ -147,40 +134,13 @@ typedef struct _PDEVOBJ
     struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } PDEVOBJ, *PPDEVOBJ;
 
-/* Globals ********************************************************************/
+/* PDEV and EDDX extra data container.*/
+typedef struct _PDEVEDD
+{
+    PDEVOBJ pdevobj;
+    EDD_DIRECTDRAW_GLOBAL EDDgpl;
+} PDEVEDD, *PPDEVEDD;
 
-extern PPDEVOBJ gppdevPrimary;
-#define pPrimarySurface gppdevPrimary
+PSIZEL FASTCALL PDEV_sizl(PPDEVOBJ, PSIZEL);
 
-
-/* Function prototypes ********************************************************/
-
-PPDEVOBJ
-NTAPI
-EngpGetPDEV(PUNICODE_STRING pustrDevice);
-
-VOID
-NTAPI
-PDEVOBJ_vRelease(PPDEVOBJ ppdev);
-
-PSURFACE
-NTAPI
-PDEVOBJ_pSurface(
-    PPDEVOBJ ppdev);
-
-VOID
-NTAPI
-PDEVOBJ_vGetDeviceCaps(
-    PPDEVOBJ ppdev,
-    PDEVCAPS pDevCaps);
-
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitPDEVImpl();
-
-PSIZEL
-FASTCALL
-PDEVOBJ_sizl(PPDEVOBJ, PSIZEL);
-
-#endif /* !__WIN32K_PDEVOBJ_H */
+extern ULONG gdwDirectDrawContext;

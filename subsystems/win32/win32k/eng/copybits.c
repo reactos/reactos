@@ -53,7 +53,13 @@ EngCopyBits(SURFOBJ *psoDest,
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
     psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+    SURFACE_LockBitmapBits(psurfSource);
+
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+    if (psoDest != psoSource)
+    {
+        SURFACE_LockBitmapBits(psurfDest);
+    }
 
     // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
     //        mark the copy block function to be DrvCopyBits instead of the
@@ -67,7 +73,7 @@ EngCopyBits(SURFOBJ *psoDest,
         if (psoDest->iType!=STYPE_BITMAP)
         {
             /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-            if (psurfDest->flags & HOOK_COPYBITS)
+            if (psurfDest->flHooks & HOOK_COPYBITS)
             {
                 ret = GDIDEVFUNCS(psoDest).CopyBits(
                           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
@@ -80,7 +86,7 @@ EngCopyBits(SURFOBJ *psoDest,
         if (psoSource->iType!=STYPE_BITMAP)
         {
             /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-            if (psurfSource->flags & HOOK_COPYBITS)
+            if (psurfSource->flHooks & HOOK_COPYBITS)
             {
                 ret = GDIDEVFUNCS(psoSource).CopyBits(
                           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
@@ -174,6 +180,12 @@ EngCopyBits(SURFOBJ *psoDest,
     }
 
 cleanup:
+    if (psoDest != psoSource)
+    {
+        SURFACE_UnlockBitmapBits(psurfDest);
+    }
+    SURFACE_UnlockBitmapBits(psurfSource);
+
     return ret;
 }
 
@@ -186,7 +198,20 @@ IntEngCopyBits(
     RECTL *prclDest,
     POINTL *ptlSource)
 {
-    return EngCopyBits(psoDest, psoSource, pco, pxlo, prclDest, ptlSource);
+    BOOL bResult;
+
+    MouseSafetyOnDrawStart(psoSource, ptlSource->x, ptlSource->y,
+                           (ptlSource->x + abs(prclDest->right - prclDest->left)),
+                           (ptlSource->y + abs(prclDest->bottom - prclDest->top)));
+
+    MouseSafetyOnDrawStart(psoDest, prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
+
+    bResult = EngCopyBits(psoDest, psoSource, pco, pxlo, prclDest, ptlSource);
+
+    MouseSafetyOnDrawEnd(psoDest);
+    MouseSafetyOnDrawEnd(psoSource);
+
+    return bResult;
 }
 
 

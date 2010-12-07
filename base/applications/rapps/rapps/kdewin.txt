@@ -14,8 +14,5 @@ CDPath = none
 [Section.0407]
 Description = KDE für Windows.
 
-[Section.0415]
-Description = KDE dla Windows.
-
 [Section.0422]
 Description = KDE для Windows.

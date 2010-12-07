@@ -59,10 +59,19 @@ void error(HWND hwnd, INT resId, ...)
 
 static void error_code_messagebox(HWND hwnd, DWORD error_code)
 {
+    LPTSTR lpMsgBuf;
+    DWORD status;
     TCHAR title[256];
+    static const TCHAR fallback[] = TEXT("Error displaying error message.\n");
     if (!LoadString(hInst, IDS_ERROR, title, COUNT_OF(title)))
         lstrcpy(title, TEXT("Error"));
-    ErrorMessageBox(hwnd, title, error_code);
+    status = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+                           NULL, error_code, 0, (LPTSTR)&lpMsgBuf, 0, NULL);
+    if (!status)
+        lpMsgBuf = (LPTSTR)fallback;
+    MessageBox(hwnd, lpMsgBuf, title, MB_OK | MB_ICONERROR);
+    if (lpMsgBuf != fallback)
+        LocalFree(lpMsgBuf);
 }
 
 void warning(HWND hwnd, INT resId, ...)

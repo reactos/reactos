@@ -298,8 +298,8 @@ KeReadStateThread(IN PKTHREAD Thread);
 BOOLEAN
 FASTCALL
 KiSwapContext(
-    IN KIRQL WaitIrql,
-    IN PKTHREAD CurrentThread
+    IN PKTHREAD CurrentThread,
+    IN PKTHREAD NewThread
 );
 
 VOID

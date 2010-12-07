@@ -177,7 +177,6 @@ MiProtectedPoolRemoveEntryList(IN PLIST_ENTRY Entry)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeNonPagedPoolThresholds(VOID)
 {
     PFN_NUMBER Size = MmMaximumNonPagedPoolInPages;
@@ -194,7 +193,6 @@ MiInitializeNonPagedPoolThresholds(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializePoolEvents(VOID)
 {
     KIRQL OldIrql;
@@ -269,7 +267,6 @@ MiInitializePoolEvents(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeNonPagedPool(VOID)
 {
     ULONG i;
@@ -375,7 +372,7 @@ NTAPI
 MiAllocatePoolPages(IN POOL_TYPE PoolType,
                     IN SIZE_T SizeInBytes)
 {
-    PFN_NUMBER SizeInPages, PageFrameNumber, PageTableCount;
+    PFN_NUMBER SizeInPages, PageFrameNumber;
     ULONG i;
     KIRQL OldIrql;
     PLIST_ENTRY NextEntry, NextHead, LastHead;
@@ -422,7 +419,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Check if there is enougn paged pool expansion space left
             //
             if (MmPagedPoolInfo.NextPdeForPagedPoolExpansion >
-                (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
+                MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
             {
                 //
                 // Out of memory!
@@ -436,23 +433,23 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Check if we'll have to expand past the last PTE we have available
             //            
             if (((i - 1) + MmPagedPoolInfo.NextPdeForPagedPoolExpansion) >
-                 (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
+                 MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool))
             {
                 //
                 // We can only support this much then
                 //
-                PageTableCount = (PMMPDE)MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool) - 
-                                         MmPagedPoolInfo.NextPdeForPagedPoolExpansion +
-                                         1;
-                ASSERT(PageTableCount < i);
-                i = PageTableCount;
+                SizeInPages = MiAddressToPte(MmPagedPoolInfo.LastPteForPagedPool) - 
+                              MmPagedPoolInfo.NextPdeForPagedPoolExpansion +
+                              1;
+                ASSERT(SizeInPages < i);
+                i = SizeInPages;
             }
             else
             {
                 //
                 // Otherwise, there is plenty of space left for this expansion
                 //
-                PageTableCount = i;
+                SizeInPages = i;
             }
             
             //
@@ -464,7 +461,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the first PTE in expansion space
             //
             PointerPde = MmPagedPoolInfo.NextPdeForPagedPoolExpansion;
-            BaseVa = MiPdeToAddress(PointerPde);
+            BaseVa = MiPteToAddress(PointerPde);
             BaseVaStart = BaseVa;
             
             //
@@ -479,10 +476,11 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 ASSERT(PointerPde->u.Hard.Valid == 0);
                 
                 /* Request a page */
-                MI_SET_USAGE(MI_USAGE_PAGED_POOL);
-                MI_SET_PROCESS2("Kernel");
+                DPRINT1("Requesting %d PDEs\n", i);
                 PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
                 TempPde.u.Hard.PageFrameNumber = PageFrameNumber;
+                DPRINT1("We have a PDE: %lx\n", PageFrameNumber);
+
 #if (_MI_PAGING_LEVELS >= 3)
                 /* On PAE/x64 systems, there's no double-buffering */
                 ASSERT(FALSE);
@@ -494,11 +492,11 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                             
                 /* Initialize the PFN */
                 MiInitializePfnForOtherProcess(PageFrameNumber,
-                                               (PMMPTE)PointerPde,
+                                               PointerPde,
                                                MmSystemPageDirectory[(PointerPde - MiAddressToPde(NULL)) / PDE_COUNT]);
                              
                 /* Write the actual PDE now */
-                MI_WRITE_VALID_PDE(PointerPde, TempPde);
+                MI_WRITE_VALID_PTE(PointerPde, TempPde);
 #endif                
                 //
                 // Move on to the next expansion address
@@ -517,25 +515,26 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // These pages are now available, clear their availablity bits
             //
             EndAllocation = (MmPagedPoolInfo.NextPdeForPagedPoolExpansion -
-                             (PMMPDE)MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
+                             MiAddressToPte(MmPagedPoolInfo.FirstPteForPagedPool)) *
                              PTE_COUNT;
             RtlClearBits(MmPagedPoolInfo.PagedPoolAllocationMap,
                          EndAllocation,
-                         PageTableCount * PTE_COUNT);
+                         SizeInPages * PTE_COUNT);
                         
             //
             // Update the next expansion location
             //
-            MmPagedPoolInfo.NextPdeForPagedPoolExpansion += PageTableCount;
+            MmPagedPoolInfo.NextPdeForPagedPoolExpansion += SizeInPages;
             
             //
             // Zero out the newly available memory
             //
-            RtlZeroMemory(BaseVaStart, PageTableCount * PAGE_SIZE);
+            RtlZeroMemory(BaseVaStart, SizeInPages * PAGE_SIZE);
             
             //
             // Now try consuming the pages again
             //
+            SizeInPages = BYTES_TO_PAGES(SizeInBytes);
             i = RtlFindClearBitsAndSet(MmPagedPoolInfo.PagedPoolAllocationMap,
                                        SizeInPages,
                                        0);
@@ -774,8 +773,6 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     do
     {
         /* Allocate a page */
-        MI_SET_USAGE(MI_USAGE_PAGED_POOL);
-        MI_SET_PROCESS2("Kernel");
         PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
         
         /* Get the PFN entry for it and fill it out */

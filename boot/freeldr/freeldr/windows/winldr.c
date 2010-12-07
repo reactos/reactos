@@ -204,7 +204,6 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		Extension->AcpiTable = (PVOID)1;
 	}
     
-#ifndef _M_ARM
     /* Set headless block pointer */
     extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
     extern BOOLEAN WinLdrTerminalConnected;
@@ -223,7 +222,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
             sizeof(HEADLESS_LOADER_BLOCK));
         Extension->HeadlessLoaderBlock = PaToVa(Extension->HeadlessLoaderBlock);
     }
-#endif
+
 	/* Load drivers database */
 	strcpy(MiscFiles, BootPath);
 	strcat(MiscFiles, "AppPatch\\drvmain.sdb");
@@ -535,11 +534,10 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 	/* Allocate and minimalistic-initialize LPB */
 	AllocateAndInitLPB(&LoaderBlock);
     
-#ifndef _M_ARM
    	/* Setup redirection support */
 	extern void WinLdrSetupEms(IN PCHAR BootOptions);
 	WinLdrSetupEms(BootOptions);
-#endif
+
 	/* Detect hardware */
 	UseRealHeap = TRUE;
 	LoaderBlock->ConfigurationRoot = MachHwDetect();

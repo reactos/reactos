@@ -2,13 +2,13 @@
 
 [Section]
 Name = 7-Zip
-Version = 9.20
+Version = 4.65
 Licence = LGPL
 Description = Utility to create and open 7zip, zip, tar, rar and other archive files.
-Size = 1.0M
+Size = 0.9M
 Category = 12
 URLSite = http://www.7-zip.org/
-URLDownload = http://ovh.dl.sourceforge.net/project/sevenzip/7-Zip/9.20/7z920.exe
+URLDownload = http://ovh.dl.sourceforge.net/project/sevenzip/7-Zip/4.65/7z465.exe
 CDPath = none
 
 [Section.0407]
@@ -16,9 +16,6 @@ Description = Tool zum Erstellen und Öffnen von 7zip, zip, tar, rar und andrern
 
 [Section.040a]
 Description = Utilidad para crear y abrir 7zip, zip, tar, rar y otros archivos comprimidos.
-
-[Section.0415]
-Description = Narzędzie do tworzenia i otwierania plików typu 7zip, zip, tar, i innych plików archiwizacyjnych.
 
 [Section.0422]
 Description = Утиліта для створення та відкриття 7zip, zip, tar, rar та інших архівних файлів.

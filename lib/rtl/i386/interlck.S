@@ -6,20 +6,20 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <asm.inc>
+.intel_syntax noprefix
 
 /* FUNCTIONS ****************************************************************/
-.code
+
 
 /* PSLIST_ENTRY
  * NTAPI
  * RtlInterlockedPopEntrySList(
  *     IN PSLIST_HEADER ListHead);
  */
-PUBLIC _ExpInterlockedPopEntrySListResume@0
-PUBLIC _ExpInterlockedPopEntrySListEnd@0
-PUBLIC _ExpInterlockedPopEntrySListFault@0
-PUBLIC _RtlInterlockedPopEntrySList@4
+.global _ExpInterlockedPopEntrySListResume@0
+.global _ExpInterlockedPopEntrySListEnd@0
+.global _ExpInterlockedPopEntrySListFault@0
+.global _RtlInterlockedPopEntrySList@4
 _RtlInterlockedPopEntrySList@4:
 
     /* Save registers */
@@ -35,9 +35,10 @@ _ExpInterlockedPopEntrySListResume@0:
     /* Load ListHead->Depth and ListHead->Sequence into edx */
     mov edx, [ebp + 4]
 
+1:
     /* Check if ListHead->Next is NULL */
     or eax, eax
-    jz _ExpInterlockedPopEntrySList2
+    jz 2f
 
     /* Copy Depth and Sequence number and adjust Depth */
     lea ecx, [edx - 1]
@@ -53,7 +54,7 @@ _ExpInterlockedPopEntrySListEnd@0:
     jnz _ExpInterlockedPopEntrySListResume@0
 
     /* Restore registers and return */
-_ExpInterlockedPopEntrySList2:
+2:
     pop ebp
     pop ebx
     ret 4
@@ -65,7 +66,7 @@ _ExpInterlockedPopEntrySList2:
  *     IN PSLIST_HEADER ListHead,
  *     IN PSLIST_ENTRY ListEntry);
  */
-PUBLIC _RtlInterlockedPushEntrySList@8
+.global _RtlInterlockedPushEntrySList@8
 _RtlInterlockedPushEntrySList@8:
 
     /* Save registers */
@@ -84,18 +85,18 @@ _RtlInterlockedPushEntrySList@8:
     /* Load ListHead->Depth and ListHead->Sequence into edx */
     mov edx, [ebp + 4]
 
-_RtlpInterlockedPushEntrySListResume:
+1:
     /* Set ListEntry->Next to ListHead->Next */
     mov [ebx], eax
 
     /* Copy ListHead->Depth and ListHead->Sequence and adjust them */
-    lea ecx, [edx + HEX(10001)]
+    lea ecx, [edx + 0x10001]
 
     /* If [ebp] equals edx:eax, exchange it with ecx:ebx */
     LOCK cmpxchg8b qword ptr [ebp]
  
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
-    jnz _RtlpInterlockedPushEntrySListResume
+    jnz 1b
 
     /* Restore registers and return */
     pop ebp
@@ -108,7 +109,7 @@ _RtlpInterlockedPushEntrySListResume:
  * RtlInterlockedFlushSList(
  *     IN PSINGLE_LIST_ENTRY ListHead);
  */
-PUBLIC _RtlInterlockedFlushSList@4
+.global _RtlInterlockedFlushSList@4
 _RtlInterlockedFlushSList@4:
 
     /* Save registers */
@@ -127,10 +128,10 @@ _RtlInterlockedFlushSList@4:
     /* Load ListHead->Depth and ListHead->Sequence into edx */
     mov edx, [ebp + 4]
 
-_RtlpInterlockedFlushSListResume:
+1:
     /* Check if ListHead->Next is NULL */
     or eax, eax
-    jz _RtlpInterlockedFlushSListEnd
+    jz 2f
 
     /* Copy Depth and Sequence number to ecx */
     mov ecx, edx
@@ -142,12 +143,10 @@ _RtlpInterlockedFlushSListResume:
     LOCK cmpxchg8b qword ptr [ebp]
  
     /* If not equal, retry with edx:eax, being the content of [ebp] now */
-    jnz _RtlpInterlockedFlushSListResume
+    jnz 1b
 
     /* Restore registers and return */
-_RtlpInterlockedFlushSListEnd:
+2:
     pop ebp
     pop ebx
     ret 4
-    
-END

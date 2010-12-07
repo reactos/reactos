@@ -76,7 +76,7 @@ EngTransparentBlt(SURFOBJ *psoDest,
     OutputRect.top = DestRect->bottom;
     OutputRect.bottom = DestRect->top;
   }
-
+    
   if(Clip)
   {
     if(OutputRect.left < Clip->rclBounds.left)
@@ -284,7 +284,17 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
     OutputRect = InputClippedRect;
   }
 
-  if(psurfDest->flags & HOOK_TRANSPARENTBLT)
+  if(psoSource != psoDest)
+  {
+    SURFACE_LockBitmapBits(psurfSource);
+    MouseSafetyOnDrawStart(psoSource, InputRect.left, InputRect.top,
+                           InputRect.right, InputRect.bottom);
+  }
+  SURFACE_LockBitmapBits(psurfDest);
+  MouseSafetyOnDrawStart(psoDest, OutputRect.left, OutputRect.top,
+                         OutputRect.right, OutputRect.bottom);
+
+  if(psurfDest->flHooks & HOOK_TRANSPARENTBLT)
   {
     Ret = GDIDEVFUNCS(psoDest).TransparentBlt(
       psoDest, psoSource, Clip, ColorTranslation, &OutputRect,
@@ -297,6 +307,14 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
   {
     Ret = EngTransparentBlt(psoDest, psoSource, Clip, ColorTranslation,
                             &OutputRect, &InputRect, iTransColor, Reserved);
+  }
+
+  MouseSafetyOnDrawEnd(psoDest);
+  SURFACE_UnlockBitmapBits(psurfDest);
+  if(psoSource != psoDest)
+  {
+    MouseSafetyOnDrawEnd(psoSource);
+    SURFACE_UnlockBitmapBits(psurfSource);
   }
 
   return Ret;

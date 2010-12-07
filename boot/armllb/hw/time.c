@@ -11,12 +11,7 @@
 #define LEAPS_THRU_END_OF(y) ((y)/4 - (y)/100 + (y)/400)
 
 UCHAR LlbDaysInMonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
-#ifndef _ZOOM2_
 TIMEINFO LlbTime;
-#else
-extern TIMEINFO LlbTime;
-#endif
 
 BOOLEAN
 NTAPI
@@ -87,10 +82,9 @@ LlbGetTime(VOID)
 
     /* Read RTC time */
     RtcTime = LlbHwRtcRead();
-#ifndef _ZOOM2_
+
     /* Convert it */
     LlbConvertRtcTime(RtcTime, &LlbTime);
-#endif
     return &LlbTime;
 }
 

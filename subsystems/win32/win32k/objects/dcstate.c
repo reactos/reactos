@@ -15,14 +15,9 @@ VOID
 FASTCALL
 DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
 {
-    DPRINT("DC_vCopyState(%p, %p)\n", pdcSrc->BaseObject.hHmgr, pdcDst->BaseObject.hHmgr);
-
     /* Copy full DC attribute */
     *pdcDst->pdcattr = *pdcSrc->pdcattr;
-
-    /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
-    /* The VisRectRegion field needs to be set to a valid state */
-
+    
     /* Mark some fields as dirty */
     pdcDst->pdcattr->ulDirty_ |= 0x0012001f; // Note: Use if, To is FALSE....
 
@@ -41,6 +36,7 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     pdcDst->dclevel.hpal            = pdcSrc->dclevel.hpal;
 
     /* Handle references here correctly */
+    DC_vSelectSurface(pdcDst, pdcSrc->dclevel.pSurface);
     DC_vSelectFillBrush(pdcDst, pdcSrc->dclevel.pbrFill);
     DC_vSelectLineBrush(pdcDst, pdcSrc->dclevel.pbrLine);
     DC_vSelectPalette(pdcDst, pdcSrc->dclevel.ppal);
@@ -95,96 +91,16 @@ NtGdiResetDC(
 }
 
 
-VOID
-NTAPI
-DC_vRestoreDC(
-    IN PDC pdc,
-    INT iSaveLevel)
-{
-    PEPROCESS pepCurrentProcess;
-    HDC hdcSave;
-    PDC pdcSave;
-
-    ASSERT(iSaveLevel > 0);
-    DPRINT("DC_vRestoreDC(%p, %ld)\n", pdc->BaseObject.hHmgr, iSaveLevel);
-
-    /* Get current process */
-    pepCurrentProcess = PsGetCurrentProcess();
-
-    /* Loop the save levels */
-    while (pdc->dclevel.lSaveDepth > iSaveLevel)
-    {
-        hdcSave = pdc->dclevel.hdcSave;
-        DPRINT("RestoreDC = %p\n", hdcSave);
-
-        /* Set us as the owner */
-        if (!GDIOBJ_SetOwnership(hdcSave, pepCurrentProcess))
-        {
-            /* Could not get ownership. That's bad! */
-            DPRINT1("Could not get ownership of saved DC (%p) for hdc %p!\n",
-                    hdcSave, pdc->BaseObject.hHmgr);
-            return;// FALSE;
-        }
-
-        /* Lock the saved dc */
-        pdcSave = DC_LockDc(hdcSave);
-        if (!pdcSave)
-        {
-            /* WTF? Internal error! */
-            DPRINT1("Could not lock the saved DC (%p) for dc %p!\n",
-                    hdcSave, pdc->BaseObject.hHmgr);
-            return;// FALSE;
-        }
-
-        /* Remove the saved dc from the queue */
-        pdc->dclevel.hdcSave = pdcSave->dclevel.hdcSave;
-
-        /* Decrement save level */
-        pdc->dclevel.lSaveDepth--;
-
-        /* Is this the state we want? */
-        if (pdc->dclevel.lSaveDepth == iSaveLevel)
-        {
-            /* Copy the state back */
-            DC_vCopyState(pdcSave, pdc, FALSE);
-
-            /* Only memory DC's change their surface */
-            if (pdc->dctype == DCTYPE_MEMORY)
-                DC_vSelectSurface(pdc, pdcSave->dclevel.pSurface);
-
-            // Restore Path by removing it, if the Save flag is set.
-            // BeginPath will takecare of the rest.
-            if (pdc->dclevel.hPath && pdc->dclevel.flPath & DCPATH_SAVE)
-            {
-                PATH_Delete(pdc->dclevel.hPath);
-                pdc->dclevel.hPath = 0;
-                pdc->dclevel.flPath &= ~DCPATH_SAVE;
-            }
-        }
-
-        /* Prevent save dc from being restored */
-        pdcSave->dclevel.lSaveDepth = 1;
-
-        /* Unlock it */
-        DC_UnlockDc(pdcSave);
-        /* Delete the saved dc */
-        GreDeleteObject(hdcSave);
-    }
-
-    DPRINT("Leave DC_vRestoreDC()\n");
-}
-
-
-
 BOOL
 APIENTRY
 NtGdiRestoreDC(
     HDC hdc,
     INT iSaveLevel)
 {
-    PDC pdc;
+    PDC pdc, pdcSave;
+    HDC hdcSave;
 
-    DPRINT("NtGdiRestoreDC(%p, %d)\n", hdc, iSaveLevel);
+    DPRINT("NtGdiRestoreDC(%lx, %d)\n", hdc, iSaveLevel);
 
     /* Lock the original DC */
     pdc = DC_LockDc(hdc);
@@ -210,12 +126,67 @@ NtGdiRestoreDC(
         return FALSE;
     }
 
-    /* Call the internal function */
-    DC_vRestoreDC(pdc, iSaveLevel);
+    /* Loop the save levels */
+    while (pdc->dclevel.lSaveDepth > iSaveLevel)
+    {
+        hdcSave = pdc->dclevel.hdcSave;
+
+        /* Set us as the owner */
+        if (!IntGdiSetDCOwnerEx(hdcSave, GDI_OBJ_HMGR_POWNED, FALSE ))
+        {
+            /* Could not get ownership. That's bad! */
+            DPRINT1("Could not get ownership of saved DC (%p) for dc %p!\n",
+                    hdcSave, hdc);
+            return FALSE;
+        }
+
+        /* Lock the saved dc */
+        pdcSave = DC_LockDc(hdcSave);
+        if (!pdcSave)
+        {
+            /* WTF? Internal error! */
+            DPRINT1("Could not lock the saved DC (%p) for dc %p!\n",
+                    hdcSave, hdc);
+            DC_UnlockDc(pdc);
+            return FALSE;
+        }
+
+        /* Remove the saved dc from the queue */
+        pdc->dclevel.hdcSave = pdcSave->dclevel.hdcSave;
+
+        /* Decrement save level */
+        pdc->dclevel.lSaveDepth--;
+
+        /* Is this the state we want? */
+        if (pdc->dclevel.lSaveDepth == iSaveLevel)
+        {
+            /* Copy the state back */
+            DC_vCopyState(pdcSave, pdc, FALSE);
+
+            // Restore Path by removing it, if the Save flag is set.
+            // BeginPath will takecare of the rest.
+            if (pdc->dclevel.hPath && pdc->dclevel.flPath & DCPATH_SAVE)
+            {
+                PATH_Delete(pdc->dclevel.hPath);
+                pdc->dclevel.hPath = 0;
+                pdc->dclevel.flPath &= ~DCPATH_SAVE;
+            }
+            // Attempt to plug the leak!
+            if (pdcSave->rosdc.hClipRgn)
+            {
+               DPRINT("Have hClipRgn!\n");
+               REGION_FreeRgnByHandle(pdcSave->rosdc.hClipRgn);
+            }
+            // FIXME! Handle prgnMeta!
+        }
+
+        /* Delete the saved dc */
+        GreDeleteObject(hdcSave);
+    }
 
     DC_UnlockDc(pdc);
 
-    DPRINT("Leave NtGdiRestoreDC\n");
+    DPRINT("Leaving NtGdiRestoreDC\n");
     return TRUE;
 }
 
@@ -229,7 +200,7 @@ NtGdiSaveDC(
     PDC pdc, pdcSave;
     INT lSaveDepth;
 
-    DPRINT("NtGdiSaveDC(%p)\n", hDC);
+    DPRINT("NtGdiSaveDC(%lx)\n", hDC);
 
     /* Lock the original dc */
     pdc = DC_LockDc(hDC);
@@ -241,7 +212,7 @@ NtGdiSaveDC(
     }
 
     /* Allocate a new dc */
-    pdcSave = DC_AllocDcWithHandle();
+    pdcSave = DC_AllocDC(NULL);
     if (pdcSave == NULL)
     {
         DPRINT("Could not allocate a new DC\n");
@@ -250,25 +221,12 @@ NtGdiSaveDC(
     }
     hdcSave = pdcSave->BaseObject.hHmgr;
 
-    InterlockedIncrement(&pdc->ppdev->cPdevRefs);
-    DC_vInitDc(pdcSave, DCTYPE_MEMORY, pdc->ppdev);
-
-    /* Handle references here correctly */
-//    pdcSrc->dclevel.pSurface = NULL;
-//    pdcSrc->dclevel.pbrFill = NULL;
-//    pdcSrc->dclevel.pbrLine = NULL;
-//    pdcSrc->dclevel.ppal = NULL;
-
-    /* Make it a kernel handle
-       (FIXME: windows handles this different, see wiki)*/
-    GDIOBJ_SetOwnership(hdcSave, NULL);
-
     /* Copy the current state */
     DC_vCopyState(pdc, pdcSave, TRUE);
 
-    /* Only memory DC's change their surface */
-    if (pdc->dctype == DCTYPE_MEMORY)
-        DC_vSelectSurface(pdcSave, pdc->dclevel.pSurface);
+    /* Make it a kernel handle
+       (FIXME: windows handles this different, see wiki)*/
+    IntGdiSetDCOwnerEx(hdcSave, GDI_OBJ_HMGR_NONE, FALSE);
 
     /* Copy path. FIXME: why this way? */
     pdcSave->dclevel.hPath = pdc->dclevel.hPath;
@@ -285,7 +243,7 @@ NtGdiSaveDC(
     DC_UnlockDc(pdcSave);
     DC_UnlockDc(pdc);
 
-    DPRINT("Leave NtGdiSaveDC: %ld, hdcSave = %p\n", lSaveDepth, hdcSave);
+    DPRINT("Leave NtGdiSaveDC: %ld\n", lSaveDepth);
     return lSaveDepth;
 }
 

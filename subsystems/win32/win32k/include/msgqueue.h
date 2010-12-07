@@ -58,12 +58,8 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY HardwareMessagesListHead;
   /* Lock for the hardware message list. */
   KMUTEX HardwareLock;
-  /* True if a WM_MOUSEMOVE is pending */
-  BOOLEAN MouseMoved;
-  /* Current WM_MOUSEMOVE message */
-  MSG MouseMoveMsg;
-  /* Last click message for translating double clicks */
-  MSG msgDblClk;
+  /* Pointer to the current WM_MOUSEMOVE message */
+  PUSER_MESSAGE MouseMoveMsg;
   /* True if a WM_QUIT message is pending. */
   BOOLEAN QuitPosted;
   /* The quit exit code. */
@@ -90,6 +86,9 @@ typedef struct _USER_MESSAGE_QUEUE
   BYTE MenuState;
   /* Caret information for this queue */
   PTHRDCARETINFO CaretInfo;
+
+  /* Window hooks */
+  PHOOKTABLE Hooks;
 
   /* queue state tracking */
   WORD WakeMask;
@@ -125,26 +124,13 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN APIENTRY
-MsqPeekMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-	              IN BOOLEAN Remove,
-	              IN PWND Window,
-	              IN UINT MsgFilterLow,
-	              IN UINT MsgFilterHigh,
-	              OUT PMSG Message);
-BOOL APIENTRY
-co_MsqPeekHardwareMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
-	                      IN BOOL Remove,
-	                      IN PWND Window,
-	                      IN UINT MsgFilterLow,
-	                      IN UINT MsgFilterHigh,
-	                      OUT MSG* pMsg);
-BOOL APIENTRY
-co_MsqPeekMouseMove(IN PUSER_MESSAGE_QUEUE MessageQueue,
-                    IN BOOL Remove,
-                    IN PWND Window,
-                    IN UINT MsgFilterLow,
-                    IN UINT MsgFilterHigh,
-                    OUT MSG* pMsg);
+co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+	       IN BOOLEAN Hardware,
+	       IN BOOLEAN Remove,
+	       IN PWND Window,
+	       IN UINT MsgFilterLow,
+	       IN UINT MsgFilterHigh,
+	       OUT PUSER_MESSAGE* Message);
 BOOLEAN FASTCALL
 MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQueue);
 VOID FASTCALL
@@ -155,15 +141,16 @@ VOID FASTCALL
 MsqDestroyMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue);
 PUSER_MESSAGE_QUEUE FASTCALL
 MsqGetHardwareMessageQueue(VOID);
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
 co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
+VOID FASTCALL
+MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
 VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL
@@ -210,7 +197,7 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
-co_MsqInsertMouseMessage(MSG* Msg);
+MsqInsertSystemMessage(MSG* Msg);
 BOOL FASTCALL
 MsqIsClkLck(LPMSG Msg, BOOL Remove);
 BOOL FASTCALL
@@ -224,6 +211,9 @@ __inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 BOOL APIENTRY IntInitMessagePumpHook();
 BOOL APIENTRY IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
+
+PHOOKTABLE FASTCALL MsqGetHooks(PUSER_MESSAGE_QUEUE Queue);
+VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
@@ -282,8 +272,5 @@ MsqCalculateMessageTime(IN PLARGE_INTEGER TickCount)
 {
     return (LONG)(TickCount->QuadPart * (KeQueryTimeIncrement() / 10000));
 }
-
-VOID FASTCALL IdlePing(VOID);
-VOID FASTCALL IdlePong(VOID);
 
 /* EOF */

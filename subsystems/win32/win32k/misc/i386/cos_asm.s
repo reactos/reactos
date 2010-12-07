@@ -33,13 +33,13 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
+ 
+.globl _cos
 
-#include <asm.inc>
+.intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/
-.code
 
-PUBLIC _cos
 _cos:
         push    ebp
         mov     ebp,esp                 // Point to the stack frame
@@ -47,5 +47,3 @@ _cos:
         fcos                            // Take the cosine
         pop     ebp
         ret
-
-END

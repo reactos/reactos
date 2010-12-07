@@ -24,7 +24,6 @@ MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1,
 
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
-MMPTE DemandZeroPte  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
 
 /* Template PTE for prototype page */
 MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | (MI_PTE_LOOKUP_NEEDED << PAGE_SHIFT)};
@@ -33,7 +32,6 @@ MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS
 
 VOID
 NTAPI
-INIT_FUNCTION
 MiComputeNonPagedPoolVa(IN ULONG FreePages)
 {
     IN PFN_NUMBER PoolPages;
@@ -149,7 +147,6 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY NextEntry;
@@ -160,9 +157,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
     KIRQL OldIrql;
-    PMMPFN Pfn1;
-    ULONG Flags;
-    
+
     /* Check for kernel stack size that's too big */
     if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
     {
@@ -201,7 +196,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Set CR3 for the system process
     //
-    PointerPte = MiAddressToPde(PDE_BASE);
+    PointerPte = MiAddressToPde(PTE_BASE);
     PageFrameIndex = PFN_FROM_PTE(PointerPte) << PAGE_SHIFT;
     PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameIndex;
     
@@ -312,10 +307,11 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MiComputeColorInformation();
     
     //
-    // Calculate the number of bytes for the PFN database
+    // Calculate the number of bytes for the PFN database, double it for ARM3,
     // then add the color tables and convert to pages
     //
     MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
+    //MxPfnAllocation <<= 1;
     MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
     MxPfnAllocation >>= PAGE_SHIFT;
     
@@ -535,8 +531,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     
     /* Allocate a page for hyperspace and create it */
-    MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
-    MI_SET_PROCESS2("Kernel");
     PageFrameIndex = MiRemoveAnyPage(0);
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
@@ -560,9 +554,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
     MmLastReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_END);
     MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
-    
-    /* Set the working set address */
-    MmWorkingSetList = (PVOID)MI_WORKING_SET_LIST;
 
     //
     // Reserve system PTEs for zeroing PTEs and clear them
@@ -576,75 +567,16 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
     
-    /* Lock PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
-    /* Reset the ref/share count so that MmInitializeProcessAddressSpace works */
-    Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(MiAddressToPde(PDE_BASE)));
-    Pfn1->u2.ShareCount = 0;
-    Pfn1->u3.e2.ReferenceCount = 0;
-    
-    /* Get a page for the working set list */
-    MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
-    MI_SET_PROCESS2("Kernel WS List");
-    PageFrameIndex = MiRemoveAnyPage(0);
-    TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-    
-    /* Map the working set list */
-    PointerPte = MiAddressToPte(MmWorkingSetList);
-    MI_WRITE_VALID_PTE(PointerPte, TempPte);
-        
-    /* Zero it out, and save the frame index */
-    RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
-    PsGetCurrentProcess()->WorkingSetPage = PageFrameIndex;
-        
     /* Check for Pentium LOCK errata */
     if (KiI386PentiumLockErrataPresent)
     {
         /* Mark the 1st IDT page as Write-Through to prevent a lockup
-           on a F00F instruction. 
+           on a FOOF instruction. 
            See http://www.rcollins.org/Errata/Dec97/F00FBug.html */
         PointerPte = MiAddressToPte(KeGetPcr()->IDT);
         PointerPte->u.Hard.WriteThrough = 1;
     }
 
-    /* Release the lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-
-    /* Initialize the bogus address space */
-    Flags = 0;
-    MmInitializeProcessAddressSpace(PsGetCurrentProcess(), NULL, NULL, &Flags, NULL);
-    
-    /* Make sure the color lists are valid */
-    ASSERT(MmFreePagesByColor[0] < (PMMCOLOR_TABLES)PTE_BASE);
-    StartPde = MiAddressToPde(MmFreePagesByColor[0]);
-    ASSERT(StartPde->u.Hard.Valid == 1);
-    PointerPte = MiAddressToPte(MmFreePagesByColor[0]);
-    ASSERT(PointerPte->u.Hard.Valid == 1);
-    LastPte = MiAddressToPte((ULONG_PTR)&MmFreePagesByColor[1][MmSecondaryColors] - 1);
-    ASSERT(LastPte->u.Hard.Valid == 1);
-
-    /* Loop the color list PTEs */
-    while (PointerPte <= LastPte)
-    {
-        /* Get the PFN entry */
-        Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
-        if (!Pfn1->u3.e2.ReferenceCount)
-        {
-            /* Fill it out */
-            Pfn1->u4.PteFrame = PFN_FROM_PTE(StartPde);
-            Pfn1->PteAddress = PointerPte;
-            Pfn1->u2.ShareCount++;
-            Pfn1->u3.e2.ReferenceCount = 1;
-            Pfn1->u3.e1.PageLocation = ActiveAndValid;
-            Pfn1->u3.e1.CacheAttribute = MiCached;
-        }
-        
-        /* Keep going */
-        PointerPte++;
-    }
-    
-    /* All done */
     return STATUS_SUCCESS;
 }
 

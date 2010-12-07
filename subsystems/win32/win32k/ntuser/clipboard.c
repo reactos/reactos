@@ -243,61 +243,33 @@ IntEmptyClipboardData(VOID)
 /*==============================================================*/
 
 HANDLE FASTCALL
-renderBITMAPfromDIB(LPBYTE pDIB)
+renderBITMAPfromDIB(LPBYTE hDIB)
 {
     HDC hdc;
     HBITMAP hbitmap;
-    PBITMAPINFO pBmi, pConvertedBmi = NULL;
-    NTSTATUS Status ;
-	UINT offset = 0; /* Stupid compiler */
-
-	pBmi = (BITMAPINFO*)pDIB;
+    unsigned int offset;
+    BITMAPINFOHEADER *ih;
 
     //hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
     hdc = UserGetDCEx(ClipboardWindow, NULL, DCX_USESTYLE);
 
-    /* Probe it */
-    _SEH2_TRY
-    {
-        ProbeForRead(&pBmi->bmiHeader.biSize, sizeof(DWORD), 1);
-		ProbeForRead(pBmi, pBmi->bmiHeader.biSize, 1);
-		ProbeForRead(pBmi, DIB_BitmapInfoSize(pBmi, DIB_RGB_COLORS), 1);
-		pConvertedBmi = DIB_ConvertBitmapInfo(pBmi, DIB_RGB_COLORS);
-		if(!pConvertedBmi)
-		{
-			Status = STATUS_INVALID_PARAMETER;
-		}
-		else
-		{
-			offset = DIB_BitmapInfoSize((BITMAPINFO*)pBmi, DIB_RGB_COLORS);
-			ProbeForRead(pDIB + offset, pConvertedBmi->bmiHeader.biSizeImage, 1);
-		}
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
+    ih = (BITMAPINFOHEADER *)hDIB;
 
-    if(!NT_SUCCESS(Status))
-    {
-        UserReleaseDC(ClipboardWindow, hdc, FALSE);
-        return NULL;
-    }
+    offset = sizeof(BITMAPINFOHEADER) + ((ih->biBitCount <= 8) ? (sizeof(RGBQUAD) * (1 << ih->biBitCount)) : 0);
 
-    hbitmap = GreCreateDIBitmapInternal(hdc,
-                                        pConvertedBmi->bmiHeader.biWidth,
-                                        pConvertedBmi->bmiHeader.biHeight,
-                                        CBM_INIT,
-                                        pDIB+offset,
-                                        pConvertedBmi,
-                                        DIB_RGB_COLORS,
-                                        0,
-                                        0);
+    hbitmap = NtGdiCreateDIBitmapInternal(hdc,
+                                          ih->biWidth,
+                                          ih->biHeight,
+                                          CBM_INIT,
+                                          (LPBYTE)ih+offset,
+                                          (LPBITMAPINFO)ih,
+                                          DIB_RGB_COLORS,
+                                          ih->biBitCount,
+                                          ih->biSizeImage,
+                                          0,
+                                          0);
     //UserReleaseDC(NULL, hdc, FALSE);
     UserReleaseDC(ClipboardWindow, hdc, FALSE);
-
-	DIB_FreeConvertedBitmapInfo(pConvertedBmi, pBmi);
 
     return hbitmap;
 }
@@ -1196,6 +1168,35 @@ NtUserGetClipboardSequenceNumber(VOID)
     //sn = ClipboardSequenceNumber;
 
     return sn;
+}
+
+
+/**************** VISTA FUNCTIONS******************/
+
+BOOL APIENTRY NtUserAddClipboardFormatListener(
+    HWND hwnd
+)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL APIENTRY NtUserRemoveClipboardFormatListener(
+    HWND hwnd
+)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+BOOL APIENTRY NtUserGetUpdatedClipboardFormats(
+    PUINT lpuiFormats,
+    UINT cFormats,
+    PUINT pcFormatsOut
+)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

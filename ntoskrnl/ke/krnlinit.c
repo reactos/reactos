@@ -57,7 +57,6 @@ KSPIN_LOCK KiReverseStallIpiLock;
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitSystem(VOID)
 {
     ULONG i;
@@ -109,7 +108,6 @@ KiInitSystem(VOID)
 
 LARGE_INTEGER
 NTAPI
-INIT_FUNCTION
 KiComputeReciprocal(IN LONG Divisor,
                     OUT PUCHAR Shift)
 {
@@ -173,7 +171,6 @@ KiComputeReciprocal(IN LONG Divisor,
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitSpinLocks(IN PKPRCB Prcb,
                 IN CCHAR Number)
 {
@@ -279,7 +276,6 @@ KiInitSpinLocks(IN PKPRCB Prcb,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 KeInitSystem(VOID)
 {
     /* Check if Threaded DPCs are enabled */

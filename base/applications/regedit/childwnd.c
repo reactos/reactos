@@ -67,21 +67,19 @@ static void draw_splitbar(HWND hWnd, int x)
 
 static void ResizeWnd(ChildWnd* pChildWnd, int cx, int cy)
 {
-    HDWP hdwp = BeginDeferWindowPos(3);
-    RECT rt, rs, rb;
-    const int tHeight = 18;
+    HDWP hdwp = BeginDeferWindowPos(2);
+    RECT rt, rs;
+
     SetRect(&rt, 0, 0, cx, cy);
     cy = 0;
     if (hStatusBar != NULL) {
         GetWindowRect(hStatusBar, &rs);
-        cy = rs.bottom - rs.top;
+        cy = rs.bottom - rs.top + 8;
     }
-    GetWindowRect(pChildWnd->hAddressBtnWnd, &rb);
     cx = pChildWnd->nSplitPos + SPLIT_WIDTH/2;
-    DeferWindowPos(hdwp, pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left - tHeight-2, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hAddressBtnWnd, 0, rt.right - tHeight, rt.top, tHeight, tHeight, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top + tHeight+2, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
-    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx, rt.top + tHeight+2, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, pChildWnd->hAddressBarWnd, 0, rt.left, rt.top, rt.right-rt.left, 23, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hTreeWnd, 0, rt.left, rt.top + 25, pChildWnd->nSplitPos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
+    DeferWindowPos(hdwp, pChildWnd->hListWnd, 0, rt.left+cx  , rt.top + 25, rt.right-cx, rt.bottom-rt.top-cy, SWP_NOZORDER|SWP_NOACTIVATE);
     EndDeferWindowPos(hdwp);
 }
 
@@ -261,7 +259,7 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 		/* Check CLSID key */
 		if (RegOpenKey(hRootKey, pszKeyPath, &hSubKey) == ERROR_SUCCESS)
 		{
-			if (QueryStringValue(hSubKey, TEXT("CLSID"), NULL, szBuffer,
+			if (QueryStringValue(hSubKey, TEXT("CLSID"), NULL, szBuffer, 
 			                     COUNT_OF(szBuffer)) == ERROR_SUCCESS)
 			{
 				lstrcpyn(pszSuggestions, TEXT("HKCR\\CLSID\\"), (int) iSuggestionsLength);
@@ -326,35 +324,29 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         /* load "My Computer" string */
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
 
-        g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
+	    g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
 
         if (!pChildWnd) return 0;
         _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
         pChildWnd->nSplitPos = 250;
         pChildWnd->hWnd = hWnd;
-        pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
+		pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
 										CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 										hWnd, (HMENU)0, hInst, 0);
-        pChildWnd->hAddressBtnWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Button"), _T("»"), WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP | BS_DEFPUSHBUTTON,
-                                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-                                        hWnd, (HMENU)0, hInst, 0);
 		pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, (HMENU) TREE_WINDOW);
         pChildWnd->hListWnd = CreateListView(hWnd, (HMENU) LIST_WINDOW/*, pChildWnd->szPath*/);
         SetFocus(pChildWnd->hTreeWnd);
 
-        /* set the address bar and button font */
-        if ((pChildWnd->hAddressBarWnd) && (pChildWnd->hAddressBtnWnd))
+        /* set the address bar font */
+        if (pChildWnd->hAddressBarWnd)
         {
             hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
             SendMessage(pChildWnd->hAddressBarWnd,
                         WM_SETFONT,
                         (WPARAM)hFont,
                         0);
-            SendMessage(pChildWnd->hAddressBtnWnd,
-                        WM_SETFONT,
-                        (WPARAM)hFont,
-                        0);
         }
+
 		/* Subclass the AddressBar */
 		oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC);
         SetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_USERDATA, (DWORD_PTR)oldproc);
@@ -362,10 +354,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;
     }
     case WM_COMMAND:
-        if(HIWORD(wParam) == BN_CLICKED){
-            PostMessage(pChildWnd->hAddressBarWnd, WM_KEYUP, VK_RETURN, 0);
-        }
-        else if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
+        if (!_CmdWndProc(hWnd, message, wParam, lParam)) {
             goto def;
         }
         break;
@@ -488,28 +477,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			rootName = get_root_key_name(hRootKey);
 			fullPath = HeapAlloc(GetProcessHeap(), 0, (_tcslen(rootName) + 1 + _tcslen(keyPath) + 1) * sizeof(TCHAR));
 			if (fullPath) {
-			    /* set (correct) the address bar text */
-                if(keyPath[0] != '\0')
-                    _stprintf(fullPath, _T("%s\\%s"), rootName, keyPath);
-                else
-                    fullPath = _tcscpy(fullPath, rootName);
+			    _stprintf(fullPath, _T("%s\\%s"), rootName, keyPath);
 			    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)fullPath);
 				SendMessage(pChildWnd->hAddressBarWnd, WM_SETTEXT, 0, (LPARAM)fullPath);
-                HeapFree(GetProcessHeap(), 0, fullPath);
-                /* disable hive manipulation items temporarily (enable only if necessary) */
-                EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-                EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_GRAYED);
-				/* compare the strings to see if we should enable/disable the "Load Hive" menus accordingly */
-				if (!(_tcsicmp(rootName, TEXT("HKEY_LOCAL_MACHINE")) &&
-                      _tcsicmp(rootName, TEXT("HKEY_USERS"))))
-                {
-                    // enable the unload menu item if at the root
-                    // otherwise enable the load menu item if there is no slash in keyPath (ie. immediate child selected)
-				    if(keyPath[0] == '\0')
-                        EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_LOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-				    else if(!_tcschr(keyPath, _T('\\')))
-                        EnableMenuItem(GetSubMenu(hMenuFrame,0), ID_REGISTRY_UNLOADHIVE, MF_BYCOMMAND | MF_ENABLED);
-				}
+			    HeapFree(GetProcessHeap(), 0, fullPath);
 
 			    {
 			        HKEY hKey;

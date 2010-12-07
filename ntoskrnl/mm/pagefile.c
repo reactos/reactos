@@ -132,7 +132,7 @@ MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
 
 BOOLEAN
 NTAPI
-MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject)
+MmIsFileAPagingFile(PFILE_OBJECT FileObject)
 {
     ULONG i;
 
@@ -252,7 +252,6 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
    MmBuildMdlFromPages(Mdl, &Page);
-   MmReferencePage(Page);
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 
    file_offset.QuadPart = offset * PAGE_SIZE;
@@ -314,7 +313,6 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 
    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
    MmBuildMdlFromPages(Mdl, &Page);
-   MmReferencePage(Page);
    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
 
    file_offset.QuadPart = offset * PAGE_SIZE;

@@ -6,7 +6,7 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
-#include <guiddef.h>
+#include "initguid.h"
 #include <poclass.h>
 
 //

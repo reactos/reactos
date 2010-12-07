@@ -16,11 +16,8 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
-/* GLOBALS ********************************************************************/
- 
 BOOLEAN MmTrackPtes;
 BOOLEAN MmTrackLockedPages;
-SIZE_T MmSystemLockPagesCount;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -251,47 +248,34 @@ MmFreePagesFromMdl(IN PMDL Mdl)
         //
         // Reached the last page
         //
-        if (*Pages == LIST_HEAD) break;
-
+        if (*Pages == -1) break;
+        
+        //
+        // Sanity check
+        //
+        ASSERT(*Pages <= MmHighestPhysicalPage);
+        
         //
         // Get the page entry
         //
         Pfn1 = MiGetPfnEntry(*Pages);
-        ASSERT(Pfn1);
-        ASSERT(Pfn1->u2.ShareCount == 1);
-        ASSERT(MI_IS_PFN_DELETED(Pfn1) == TRUE);
-        if (Pfn1->u4.PteFrame != 0x1FFEDCB) 
-        {
-            /* Corrupted PFN entry or invalid free */
-            KeBugCheckEx(MEMORY_MANAGEMENT, 0x1236, (ULONG_PTR)Mdl, (ULONG_PTR)Pages, *Pages);
-        }
+        ASSERT(Pfn1->u3.ReferenceCount == 1);
         
         //
         // Clear it
         //
         Pfn1->u3.e1.StartOfAllocation = 0;
         Pfn1->u3.e1.EndOfAllocation = 0;
-        Pfn1->u2.ShareCount = 0;
         
         //
         // Dereference it
         //
-        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
-        if (Pfn1->u3.e2.ReferenceCount != 1)
-        {
-            /* Just take off one reference */
-            InterlockedDecrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
-        }
-        else
-        {
-            /* We'll be nuking the whole page */
-            MiDecrementReferenceCount(Pfn1, *Pages);
-        }
+        MmDereferencePage(*Pages);
         
         //
         // Clear this page and move on
         //
-        *Pages++ = LIST_HEAD;
+        *Pages++ = -1;
     } while (--NumberOfPages != 0);
 
     //
@@ -427,7 +411,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
             //
             // We're done here
             //
-            if (*MdlPages == LIST_HEAD) break;
+            if (*MdlPages == -1) break;
             
             //
             // Write the PTE
@@ -589,14 +573,13 @@ MmProbeAndLockPages(IN PMDL Mdl,
     ULONG LockPages, TotalPages;
     NTSTATUS Status = STATUS_SUCCESS;
     PEPROCESS CurrentProcess;
+    PMMSUPPORT AddressSpace;
     NTSTATUS ProbeStatus;
     PMMPTE PointerPte, LastPte;
     PMMPDE PointerPde;
     PFN_NUMBER PageFrameIndex;
     BOOLEAN UsePfnLock;
     KIRQL OldIrql;
-    USHORT OldRefCount, RefCount;
-    PMMPFN Pfn1;
     DPRINT("Probing MDL: %p\n", Mdl);
     
     //
@@ -625,17 +608,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
     LockPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(Address, Mdl->ByteCount);
     ASSERT(LockPages != 0);
     
-    /* Block invalid access */
-    if ((AccessMode != KernelMode) &&
-        ((LastAddress > (PVOID)MM_USER_PROBE_ADDRESS) || (Address >= LastAddress)))
-    {
-        /* Caller should be in SEH, raise the error */
-        *MdlPages = LIST_HEAD;
-        ExRaiseStatus(STATUS_ACCESS_VIOLATION);
-    }
-    
     //
-    // Get the process
+    // Get theprocess
     //
     if (Address <= MM_HIGHEST_USER_ADDRESS)
     {
@@ -658,9 +632,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
     TotalPages = LockPages;
     StartAddress = Address;
     
-    /* Large pages not supported */
-    ASSERT(!MI_IS_PHYSICAL_ADDRESS(Address));
-    
     //
     // Now probe them
     //
@@ -675,7 +646,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
             //
             // Assume failure
             //
-            *MdlPages = LIST_HEAD;
+            *MdlPages = -1;
             
             //
             // Read
@@ -697,7 +668,8 @@ MmProbeAndLockPages(IN PMDL Mdl,
             //
             // Next address...
             //
-            Address = PAGE_ALIGN((ULONG_PTR)Address + PAGE_SIZE);
+            Address = (PVOID)((ULONG_PTR)Address + PAGE_SIZE);
+            Address = PAGE_ALIGN(Address);
             
             //
             // Next page...
@@ -739,10 +711,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
     //
     PointerPte = MiAddressToPte(StartAddress);
     PointerPde = MiAddressToPde(StartAddress);
-#if (_MI_PAGING_LEVELS >= 3)
-    DPRINT1("PAE/x64 Not Implemented\n");
-    ASSERT(FALSE);
-#endif
     
     //
     // Sanity check
@@ -793,6 +761,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         //
         UsePfnLock = TRUE;
         OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+        AddressSpace = NULL; // Keep compiler happy
     }
     else
     {
@@ -813,10 +782,13 @@ MmProbeAndLockPages(IN PMDL Mdl,
         //
         Mdl->Process = CurrentProcess;
         
-        /* Lock the process working set */
-        MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+        //
+        // Use the process lock
+        //
         UsePfnLock = FALSE;
-        OldIrql = MM_NOIRQL;
+        AddressSpace = &CurrentProcess->Vm;
+        MmLockAddressSpace(AddressSpace);
+        OldIrql = DISPATCH_LEVEL; // Keep compiler happy
     }
     
     //
@@ -832,7 +804,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         //
         // Assume failure and check for non-mapped pages
         //
-        *MdlPages = LIST_HEAD;
+        *MdlPages = -1;
 #if (_MI_PAGING_LEVELS >= 3)
         /* Should be checking the PPE and PXE */
         ASSERT(FALSE);
@@ -852,8 +824,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
             }
             else
             {
-                /* Release process working set */
-                MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+                //
+                // Release process address space lock
+                //
+                MmUnlockAddressSpace(AddressSpace);
             }
             
             //
@@ -882,8 +856,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
             }
             else
             {
-                /* Lock the process working set */
-                MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+                //
+                // Use the address space lock
+                //
+                MmLockAddressSpace(AddressSpace);
             }
         }
         
@@ -920,8 +896,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
                         }
                         else
                         {
-                            /* Release process working set */
-                            MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+                            //
+                            // Release process address space lock
+                            //
+                            MmUnlockAddressSpace(AddressSpace);
                         }
                         
                         //
@@ -949,8 +927,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
                         }
                         else
                         {
-                            /* Lock the process working set */
-                            MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+                            //
+                            // Use the address space lock
+                            //
+                            MmLockAddressSpace(AddressSpace);
                         }
                         
                         //
@@ -972,55 +952,14 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Grab the PFN
         //
         PageFrameIndex = PFN_FROM_PTE(PointerPte);
-        Pfn1 = MiGetPfnEntry(PageFrameIndex);
-        if (Pfn1)
+        if (PageFrameIndex <= MmHighestPhysicalPage)
         {
-            /* Either this is for kernel-mode, or the working set is held */
             ASSERT((CurrentProcess == NULL) || (UsePfnLock == FALSE));
             
-            /* No Physical VADs supported yet */
-            if (CurrentProcess) ASSERT(CurrentProcess->PhysicalVadRoot == NULL);
-            
-            /* This address should already exist and be fully valid */
-            ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
-            if (MI_IS_ROS_PFN(Pfn1))
-            {
-                /* ReactOS Mm doesn't track share count */
-                ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-            }
-            else
-            {
-                /* On ARM3 pages, we should see a valid share count */
-                ASSERT((Pfn1->u2.ShareCount != 0) && (Pfn1->u3.e1.PageLocation == ActiveAndValid));
-                
-                /* We don't support mapping a prototype page yet */
-                ASSERT((Pfn1->u3.e1.PrototypePte == 0) && (Pfn1->OriginalPte.u.Soft.Prototype == 0));
-            }
-
-            /* More locked pages! */
-            InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, 1);
-
-            /* Loop trying to update the reference count */
-            do
-            {
-                /* Get the current reference count, make sure it's valid */
-                OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                ASSERT(OldRefCount != 0);
-                ASSERT(OldRefCount < 2500);
-
-                /* Bump it up by one */
-                RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
-                                                        OldRefCount + 1,
-                                                        OldRefCount);
-                ASSERT(RefCount != 0);
-            } while (OldRefCount != RefCount);
-            
-            /* Was this the first lock attempt? */
-            if (OldRefCount != 1)
-            {
-                /* Someone else came through */
-                InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-            }
+            //
+            // Now lock the page
+            //
+            MmReferencePage(PageFrameIndex);
         }
         else
         {
@@ -1034,10 +973,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Write the page and move on
         //
         *MdlPages++ = PageFrameIndex;
-        PointerPte++;
-        
-        /* Check if we're on a PDE boundary */
-        if (!((ULONG_PTR)PointerPte & (PD_SIZE - 1))) PointerPde++;
+        if (!((ULONG_PTR)(++PointerPte) & (PAGE_SIZE - 1))) PointerPde++;
     } while (PointerPte <= LastPte);
     
     //
@@ -1052,8 +988,10 @@ MmProbeAndLockPages(IN PMDL Mdl,
     }
     else
     {
-        /* Release process working set */
-        MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+        //
+        // Release process address space lock
+        //
+        MmUnlockAddressSpace(AddressSpace);
     }
     
     //
@@ -1080,8 +1018,10 @@ CleanupWithLock:
     }
     else
     {
-        /* Release process working set */
-        MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+        //
+        // Release process address space lock
+        //
+        MmUnlockAddressSpace(AddressSpace);
     }
 Cleanup:
     //
@@ -1108,8 +1048,6 @@ MmUnlockPages(IN PMDL Mdl)
     PVOID Base;
     ULONG Flags, PageCount;
     KIRQL OldIrql;
-    USHORT RefCount, OldRefCount;
-    PMMPFN Pfn1;
     DPRINT("Unlocking MDL: %p\n", Mdl);
     
     //
@@ -1169,71 +1107,17 @@ MmUnlockPages(IN PMDL Mdl)
             //
             // Last page, break out
             //
-            if (*MdlPages == LIST_HEAD) break;
+            if (*MdlPages == -1) break;
             
             //
             // Check if this page is in the PFN database
             //
-            Pfn1 = MiGetPfnEntry(*MdlPages);
-            if (Pfn1);
+            if (*MdlPages <= MmHighestPhysicalPage)
             {
-                /* Get the current entry and reference count */
-                OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                ASSERT(OldRefCount != 0);
-
-                /* Is this already the last dereference */
-                if (OldRefCount == 1)
-                {
-                    /* It should be on a free list waiting for us */
-                    ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
-                    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-                    ASSERT(Pfn1->u2.ShareCount == 0);
-                    
-                    /* Not supported yet */
-                    ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                            (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
-
-                    /* One less page */
-                    InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-                    
-                    /* Do the last dereference, we're done here */
-                    MiDecrementReferenceCount(Pfn1, *MdlPages);
-                }
-                else
-                {
-                    /* Loop decrementing one reference */
-                    do
-                    {
-                        /* Make sure it's still valid */
-                        OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                        ASSERT(OldRefCount != 0);
-
-                        /* Take off one reference */
-                        RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
-                                                                OldRefCount - 1,
-                                                                OldRefCount);
-                        ASSERT(RefCount != 0);
-                     } while (OldRefCount != RefCount);
-                     ASSERT(RefCount > 1);
-
-                     /* Are there only lock references left? */
-                     if (RefCount == 2)
-                     {
-                         /* And does the page still have users? */
-                         if (Pfn1->u2.ShareCount >= 1)
-                         {
-                            /* Then it should still be valid */
-                            ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-
-                            /* Not supported yet */
-                            ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                                    (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
-
-                            /* But there is one less "locked" page though */
-                            InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-                         }
-                     }
-                 }
+                //
+                // Unlock and dereference
+                //
+                MmDereferencePage(*MdlPages);
             }
         } while (++MdlPages < LastPage);
         
@@ -1285,7 +1169,7 @@ MmUnlockPages(IN PMDL Mdl)
         //
         // Last page reached
         //
-        if (*MdlPages == LIST_HEAD)
+        if (*MdlPages == -1)
         {
             //
             // Were there no pages at all?
@@ -1306,9 +1190,10 @@ MmUnlockPages(IN PMDL Mdl)
             break;
         }
         
-        /* Save the PFN entry instead for the secondary loop */
-        *MdlPages = (PFN_NUMBER)MiGetPfnEntry(*MdlPages);
-        ASSERT((*MdlPages) != 0);
+        //
+        // Sanity check
+        //
+        ASSERT(*MdlPages <= MmHighestPhysicalPage);
     } while (++MdlPages < LastPage);
     
     //
@@ -1322,64 +1207,10 @@ MmUnlockPages(IN PMDL Mdl)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     do
     {
-        /* Get the current entry and reference count */
-        Pfn1 = (PMMPFN)(*MdlPages);
-        OldRefCount = Pfn1->u3.e2.ReferenceCount;
-        ASSERT(OldRefCount != 0);
-
-        /* Is this already the last dereference */
-        if (OldRefCount == 1)
-        {
-            /* It should be on a free list waiting for us */
-            ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
-            ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
-            ASSERT(Pfn1->u2.ShareCount == 0);
-            
-            /* Not supported yet */
-            ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                    (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
-
-            /* One less page */
-            InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-            
-            /* Do the last dereference, we're done here */
-            MiDecrementReferenceCount(Pfn1, MiGetPfnEntryIndex(Pfn1));
-        }
-        else
-        {
-            /* Loop decrementing one reference */
-            do
-            {
-                /* Make sure it's still valid */
-                OldRefCount = Pfn1->u3.e2.ReferenceCount;
-                ASSERT(OldRefCount != 0);
-
-                /* Take off one reference */
-                RefCount = InterlockedCompareExchange16((PSHORT)&Pfn1->u3.e2.ReferenceCount,
-                                                        OldRefCount - 1,
-                                                        OldRefCount);
-                ASSERT(RefCount != 0);
-             } while (OldRefCount != RefCount);
-             ASSERT(RefCount > 1);
-
-             /* Are there only lock references left? */
-             if (RefCount == 2)
-             {
-                 /* And does the page still have users? */
-                 if (Pfn1->u2.ShareCount >= 1)
-                 {
-                    /* Then it should still be valid */
-                    ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-
-                    /* Not supported yet */
-                    ASSERT(((Pfn1->u3.e1.PrototypePte == 0) &&
-                            (Pfn1->OriginalPte.u.Soft.Prototype == 0)));
-
-                    /* But there is one less "locked" page though */
-                    InterlockedExchangeAddSizeT(&MmSystemLockPagesCount, -1);
-                 }
-             }
-         }
+        //
+        // Unlock and dereference
+        //
+        MmDereferencePage(*MdlPages);
     } while (++MdlPages < LastPage);
     
     //

@@ -129,15 +129,6 @@ extern "C" {
     SETJMP_FLOAT128 Xmm15;
   } _JUMP_BUFFER;
 
-#elif defined(_M_ARM)
-
-#define _JBLEN  11
-#define _JBTYPE int
-
-#else
-
-#error Define Setjmp for this architecture!
-
 #endif
 
 #ifndef _JMP_BUF_DEFINED

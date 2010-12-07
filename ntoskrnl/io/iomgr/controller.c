@@ -63,11 +63,7 @@ IoCreateController(IN ULONG Size)
    PAGED_CODE();
 
    /* Initialize an empty OBA */
-   InitializeObjectAttributes(&ObjectAttributes,
-                              NULL,
-                              OBJ_KERNEL_HANDLE,
-                              NULL,
-                              NULL);
+   InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
 
    /* Create the Object */
    Status = ObCreateObject(KernelMode,
@@ -91,7 +87,7 @@ IoCreateController(IN ULONG Size)
    if (!NT_SUCCESS(Status)) return NULL;
 
     /* Close the dummy handle */
-    ObCloseHandle(Handle, KernelMode);
+    NtClose(Handle);
 
     /* Zero the Object and set its data */
     RtlZeroMemory(Controller, sizeof(CONTROLLER_OBJECT) + Size);

@@ -6,8 +6,8 @@
  * PROGRAMMERS:     Timo Kreuzer
  */
 
-#include <asm.inc>
-#include <ksamd64.inc>
+#include <reactos/asm.h>
+#include <ndk/amd64/asm.h>
 
 #define SLIST8A_DEPTH_MASK       HEX(000000000000FFFF)
 #define SLIST8A_DEPTH_INC        HEX(0000000000000001)

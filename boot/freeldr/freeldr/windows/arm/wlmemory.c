@@ -19,31 +19,16 @@
 #define PTE_BASE                    0xC0000000
 #define PDE_BASE                    0xC0400000
 #define PDR_BASE                    0xFFD00000
+#define MMIO_BASE                   0x10000000
 #define VECTOR_BASE                 0xFFFF0000
 
-#ifdef _ZOOM2_
-#define IDMAP_BASE                  0x81000000
-#define MMIO_BASE                   0x10000000
-#else
-#define IDMAP_BASE                  0x00000000
-#define MMIO_BASE                   0x10000000
-#endif
-
-#define LowMemPageTableIndex        (IDMAP_BASE >> PDE_SHIFT)
-#define MmioPageTableIndex          (MMIO_BASE >> PDE_SHIFT)
+#define LowMemPageTableIndex        0
 #define KernelPageTableIndex        (KSEG0_BASE >> PDE_SHIFT)
 #define StartupPtePageTableIndex    (PTE_BASE >> PDE_SHIFT)
 #define StartupPdePageTableIndex    (PDE_BASE >> PDE_SHIFT)
+#define MmioPageTableIndex          (MMIO_BASE >> PDE_SHIFT)
 #define PdrPageTableIndex           (PDR_BASE >> PDE_SHIFT)
 #define VectorPageTableIndex        (VECTOR_BASE >> PDE_SHIFT)
-
-#ifndef _ZOOM2_
-PVOID MempPdrBaseAddress = (PVOID)0x70000;
-PVOID MempKernelBaseAddress = (PVOID)0;
-#else
-PVOID MempPdrBaseAddress = (PVOID)0x81100000;
-PVOID MempKernelBaseAddress = (PVOID)0x80000000;
-#endif
 
 /* Converts a Physical Address into a Page Frame Number */
 #define PaToPfn(p)                  ((p) >> PFN_SHIFT)
@@ -200,21 +185,18 @@ MempAllocatePageTables(VOID)
     PFN_NUMBER Pfn;
 
     /* Setup templates */
-    TempPte.Sbo = TempPte.Valid = TempLargePte.LargePage = TempLargePte.Sbo = TempPde.Valid = 1;
+    TempPte.Accessed = TempPte.Valid = TempLargePte.LargePage = TempLargePte.Accessed = TempPde.Valid = 1;
 
     /* Allocate the 1MB "PDR" (Processor Data Region). Must be 1MB aligned */
-    PdrPage = MmAllocateMemoryAtAddress(sizeof(KPDR_PAGE),
-                                        MempPdrBaseAddress,
-                                        LoaderMemoryData);
+    PdrPage = MmAllocateMemoryAtAddress(sizeof(KPDR_PAGE), (PVOID)0x700000, LoaderMemoryData);
 
     /* Setup the Low Memory PDE as an identity-mapped Large Page (1MB) */
     LargePte = &PdrPage->PageDir.Pte[LowMemPageTableIndex];
-    TempLargePte.PageFrameNumber = PaToLargePfn(IDMAP_BASE);
     *LargePte = TempLargePte;
 
     /* Setup the MMIO PDE as two identity mapped large pages -- the kernel will blow these away later */
     LargePte = &PdrPage->PageDir.Pte[MmioPageTableIndex];
-    Pfn = PaToLargePfn(MMIO_BASE);
+    Pfn = PaToLargePfn(0x10000000);
     for (i = 0; i < 2; i++)
     {
         TempLargePte.PageFrameNumber = Pfn++;
@@ -233,13 +215,13 @@ MempAllocatePageTables(VOID)
 
     /* Setup the Kernel PTEs */
     PointerPte = PdrPage->KernelPageTable[0].Pte;
-    Pfn = PaPtrToPfn(MempKernelBaseAddress);
+    Pfn = 0;
     for (i = 0; i < 3072; i++)
     {
         TempPte.PageFrameNumber = Pfn++;
         *PointerPte++ = TempPte;
     }
-
+    
     /* Done */
     return TRUE;
 }

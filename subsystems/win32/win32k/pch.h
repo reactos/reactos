@@ -33,9 +33,6 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define PRECT PRECTL
 #define LPRECT LPRECTL
 #define LPCRECT LPCRECTL
-#define POINT POINTL
-#define LPPOINT PPOINTL
-#define PPOINT PPOINTL
 
 #include <winerror.h>
 #include <wingdi.h>

@@ -18,7 +18,6 @@
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeMTRR(IN BOOLEAN FinalCpu)
 {
     /* FIXME: Support this */
@@ -27,7 +26,6 @@ KiInitializeMTRR(IN BOOLEAN FinalCpu)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KiAmdK6InitializeMTRR(VOID)
 {
     /* FIXME: Support this */

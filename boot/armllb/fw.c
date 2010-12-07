@@ -49,11 +49,7 @@ INT
 LlbFwGetCh(VOID)
 {
     /* Return the key pressed */
-#ifdef _ZOOM2_
-    return LlbKeypadGetChar();
-#else
     return LlbKeyboardGetChar();
-#endif
 }
 
 ULONG

@@ -86,7 +86,6 @@ SepInitExports(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 SepInitializationPhase0(VOID)
 {
     PAGED_CODE();
@@ -118,7 +117,6 @@ SepInitializationPhase0(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 SepInitializationPhase1(VOID)
 {
     NTSTATUS Status;
@@ -141,7 +139,6 @@ SepInitializationPhase1(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 SeInitSystem(VOID)
 {
     /* Check the initialization phase */
@@ -171,7 +168,6 @@ SeInitSystem(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 SeInitSRM(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;

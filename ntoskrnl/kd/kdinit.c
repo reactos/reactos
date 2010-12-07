@@ -44,7 +44,6 @@ PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
 
 PCHAR
 NTAPI
-INIT_FUNCTION
 KdpGetDebugMode(PCHAR Currentp2)
 {
     PCHAR p2 = Currentp2;
@@ -119,7 +118,6 @@ KdpGetDebugMode(PCHAR Currentp2)
 
 VOID
 NTAPI
-INIT_FUNCTION
 KdpCallInitRoutine(ULONG BootPhase)
 {
     PLIST_ENTRY CurrentEntry;

@@ -53,10 +53,8 @@ InitUserAtoms(VOID)
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
-InitUserImpl(VOID)
+
+NTSTATUS FASTCALL InitUserImpl(VOID)
 {
    NTSTATUS Status;
 
@@ -75,6 +73,16 @@ InitUserImpl(VOID)
       return Status;
    }
 
+   if (!gpsi)
+   {
+      gpsi = UserHeapAlloc(sizeof(SERVERINFO));
+      if (gpsi)
+      {
+         RtlZeroMemory(gpsi, sizeof(SERVERINFO));
+         DPRINT("Global Server Data -> %x\n", gpsi);
+      }
+   }
+
    InitUserAtoms();
 
    InitSysParams();
@@ -82,9 +90,6 @@ InitUserImpl(VOID)
    return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
-InitVideo();
 
 NTSTATUS
 NTAPI
@@ -92,16 +97,10 @@ UserInitialize(
   HANDLE  hPowerRequestEvent,
   HANDLE  hMediaRequestEvent)
 {
-    NTSTATUS Status;
-
 // Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
 // Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
 // Create Event for Diconnect Desktop.
-
-    /* Initialize Video. */
-    Status = InitVideo();
-    if (!NT_SUCCESS(Status)) return Status;
-
+// Initialize Video.
 // {
 //     DrvInitConsole.
 //     DrvChangeDisplaySettings.
@@ -140,8 +139,8 @@ NtUserInitialize(
 {
     NTSTATUS Status;
 
-    DPRINT1("Enter NtUserInitialize(%lx, %p, %p)\n",
-            dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
+    DPRINT("Enter NtUserInitialize(%lx, %p, %p)\n",
+           dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
 
     /* Check the Windows version */
     if (dwWinVersion != 0)

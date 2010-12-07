@@ -58,7 +58,6 @@ typedef struct {
     HWND    hTreeWnd;
     HWND    hListWnd;
 	HWND    hAddressBarWnd;
-	HWND    hAddressBtnWnd;
     int     nFocusPanel;      /* 0: left  1: right */
     int	    nSplitPos;
     WINDOWPLACEMENT pos;
@@ -88,9 +87,6 @@ extern void ShowAboutBox(HWND hWnd);
 
 /* childwnd.c */
 extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
-
-/* error.c */
-extern void ErrorMessageBox(HWND hWnd, LPCTSTR title, DWORD code);
 
 /* find.c */
 extern void FindDialog(HWND hWnd);

@@ -1,22 +1,11 @@
-/*
- * COPYRIGHT:         GNU GPL - See COPYING in the top level directory
- * PROJECT:           ReactOS Run-Time Library
- * PURPOSE:           
- * FILE:              lib/rtl/i386/res_asm.S
- * PROGRAMER:         
- */
-
-#include <asm.inc>
-#include <ks386.inc>
-
-EXTERN _LdrpAccessResource@16:PROC
+#include <ndk/asm.h>
+.intel_syntax noprefix
 
 /*
  * On x86, Shrinker, an executable compressor, depends on the
  * "call access_resource" instruction being there.
  */
-.code
-PUBLIC _LdrAccessResource@16
+.globl _LdrAccessResource@16
 _LdrAccessResource@16:
     push ebp
     mov ebp, esp
@@ -29,5 +18,3 @@ _LdrAccessResource@16:
     call _LdrpAccessResource@16
     leave
     ret 16
-
-END

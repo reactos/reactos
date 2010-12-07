@@ -25,6 +25,7 @@ PVOID HalpHeapStart = MM_HAL_HEAP_START;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+
 ULONG
 NTAPI
 HalpAllocPhysicalMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,

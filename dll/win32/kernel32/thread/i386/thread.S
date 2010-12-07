@@ -6,15 +6,9 @@
  * PROGRAMMER: Alex Ionescu (alex@relsoft.net)
  */
 
-#include <asm.inc>
-
-.code
-
-EXTERN _BaseThreadStartup@8:PROC
-EXTERN _BaseProcessStartup@4:PROC
-
-PUBLIC _BaseThreadStartupThunk@0
-PUBLIC _BaseProcessStartThunk@0
+.globl _BaseThreadStartupThunk@0
+.globl _BaseProcessStartThunk@0
+.intel_syntax noprefix
 
 _BaseThreadStartupThunk@0:
     
@@ -35,5 +29,4 @@ _BaseProcessStartThunk@0:
     push 0                    /* Return EIP */
     jmp _BaseProcessStartup@4
 
-END
 /* EOF */

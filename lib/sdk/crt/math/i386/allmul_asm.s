@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
+ 
+.globl __allmul
 
-#include <asm.inc>
-
-PUBLIC __allmul
+.intel_syntax noprefix
 
 /* FUNCTIONS ***************************************************************/
-.code
 
 //
 // llmul - long multiply routine
@@ -114,4 +113,3 @@ hard:
 
         ret     16              // callee restores the stack
 
-END

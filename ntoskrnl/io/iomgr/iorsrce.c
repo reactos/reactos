@@ -841,7 +841,7 @@ IoGetConfigurationInformation(VOID)
 }
 
 /*
- * @halfplemented
+ * @unimplemented
  */
 NTSTATUS NTAPI
 IoReportResourceUsage(PUNICODE_STRING DriverClassName,
@@ -876,48 +876,13 @@ IoReportResourceUsage(PUNICODE_STRING DriverClassName,
       *       a conflict is detected with another driver.
       */
 {
-    NTSTATUS Status;
-    PCM_RESOURCE_LIST ResourceList;
-    
-    DPRINT1("IoReportResourceUsage is halfplemented!\n");
-    
-    if (!DriverList && !DeviceList)
-        return STATUS_INVALID_PARAMETER;
-    
-    if (DeviceList)
-        ResourceList = DeviceList;
-    else
-        ResourceList = DriverList;
-    
-    Status = IopDetectResourceConflict(ResourceList, FALSE, NULL);
-    if (Status == STATUS_CONFLICTING_ADDRESSES)
-    {
-        *ConflictDetected = TRUE;
-        
-        if (!OverrideConflict)
-        {
-            DPRINT1("Denying an attempt to claim resources currently in use by another device!\n");
-            return STATUS_CONFLICTING_ADDRESSES;
-        }
-        else
-        {
-            DPRINT1("Proceeding with conflicting resources\n");
-        }
-    }
-    else if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    /* TODO: Claim resources in registry */
-    
-    *ConflictDetected = FALSE;
-    
-    return STATUS_SUCCESS;
+   UNIMPLEMENTED;
+   *ConflictDetected = FALSE;
+   return STATUS_SUCCESS;
 }
 
 /*
- * @halfplemented
+ * @unimplemented
  */
 NTSTATUS NTAPI
 IoAssignResources(PUNICODE_STRING RegistryPath,
@@ -927,23 +892,8 @@ IoAssignResources(PUNICODE_STRING RegistryPath,
 		  PIO_RESOURCE_REQUIREMENTS_LIST RequestedResources,
 		  PCM_RESOURCE_LIST* AllocatedResources)
 {
-    NTSTATUS Status;
-    
-    DPRINT1("IoAssignResources is halfplemented!\n");
-    
-    Status = IopCreateResourceListFromRequirements(RequestedResources,
-                                                   AllocatedResources);
-    if (!NT_SUCCESS(Status))
-    {
-        if (Status == STATUS_CONFLICTING_ADDRESSES)
-            DPRINT1("Denying an attempt to claim resources currently in use by another device!\n");
-        
-        return Status;
-    }
-    
-    /* TODO: Claim resources in registry */
-    
-    return STATUS_SUCCESS;
+   UNIMPLEMENTED;
+   return(STATUS_NOT_IMPLEMENTED);
 }
 
 /*

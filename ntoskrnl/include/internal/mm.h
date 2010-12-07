@@ -114,8 +114,10 @@ typedef ULONG SWAPENTRY;
 
 #define MC_CACHE                            (0)
 #define MC_USER                             (1)
-#define MC_SYSTEM                           (2)
-#define MC_MAXIMUM                          (3)
+#define MC_PPOOL                            (2)
+#define MC_NPPOOL                           (3)
+#define MC_SYSTEM                           (4)
+#define MC_MAXIMUM                          (5)
 
 #define PAGED_POOL_MASK                     1
 #define MUST_SUCCEED_POOL_MASK              2
@@ -248,8 +250,6 @@ typedef struct _ROS_SECTION_OBJECT
     };
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
-struct _MM_CACHE_SECTION_SEGMENT;
-
 typedef struct _MEMORY_AREA
 {
     PVOID StartingAddress;
@@ -272,65 +272,12 @@ typedef struct _MEMORY_AREA
             PMM_SECTION_SEGMENT Segment;
             LIST_ENTRY RegionListHead;
         } SectionData;
-		struct
-		{
-            LARGE_INTEGER ViewOffset;
-            struct _MM_CACHE_SECTION_SEGMENT *Segment;
-		} CacheData;
         struct
         {
             LIST_ENTRY RegionListHead;
         } VirtualMemoryData;
     } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
-
-typedef struct _MM_RMAP_ENTRY
-{
-   struct _MM_RMAP_ENTRY* Next;
-   PEPROCESS Process;
-   PVOID Address;
-#if DBG
-   PVOID Caller;
-#endif
-}
-MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
-
-#if MI_TRACE_PFNS
-extern ULONG MI_PFN_CURRENT_USAGE;
-extern CHAR MI_PFN_CURRENT_PROCESS_NAME[16];
-#define MI_SET_USAGE(x)     MI_PFN_CURRENT_USAGE = x
-#define MI_SET_PROCESS2(x)  memcpy(MI_PFN_CURRENT_PROCESS_NAME, x, 16)
-#else
-#define MI_SET_USAGE(x)
-#define MI_SET_PROCESS2(x)
-#endif
-
-typedef enum _MI_PFN_USAGES
-{
-    MI_USAGE_NOT_SET = 0,
-    MI_USAGE_PAGED_POOL,
-    MI_USAGE_NONPAGED_POOL,
-    MI_USAGE_NONPAGED_POOL_EXPANSION,
-    MI_USAGE_KERNEL_STACK,
-    MI_USAGE_KERNEL_STACK_EXPANSION,
-    MI_USAGE_SYSTEM_PTE,
-    MI_USAGE_VAD,
-    MI_USAGE_PEB_TEB,
-    MI_USAGE_SECTION,
-    MI_USAGE_PAGE_TABLE,
-    MI_USAGE_PAGE_DIRECTORY,
-    MI_USAGE_LEGACY_PAGE_DIRECTORY,
-    MI_USAGE_DRIVER_PAGE,
-    MI_USAGE_CONTINOUS_ALLOCATION,
-    MI_USAGE_MDL,
-    MI_USAGE_DEMAND_ZERO,
-    MI_USAGE_ZERO_LOOP,
-    MI_USAGE_CACHE,
-    MI_USAGE_PFN_DATABASE,
-    MI_USAGE_BOOT_DRIVER,
-    MI_USAGE_INIT_MEMORY,
-    MI_USAGE_FREE_PAGE
-} MI_PFN_USAGES;
 
 //
 // These two mappings are actually used by Windows itself, based on the ASSERTS
@@ -399,10 +346,6 @@ typedef struct _MMPFN
             ULONG_PTR MustBeCached:1;
         };
     } u4;
-#if MI_TRACE_PFNS
-    MI_PFN_USAGES PfnUsage;
-    CHAR ProcessName[16];
-#endif
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
@@ -486,7 +429,7 @@ typedef struct _MM_PAGED_POOL_INFO
     PRTL_BITMAP EndOfPagedPoolBitmap;
     PMMPTE FirstPteForPagedPool;
     PMMPTE LastPteForPagedPool;
-    PMMPDE NextPdeForPagedPoolExpansion;
+    PMMPTE NextPdeForPagedPoolExpansion;
     ULONG PagedPoolHint;
     SIZE_T PagedPoolCommit;
     SIZE_T AllocatedPagedPool;
@@ -777,10 +720,6 @@ MmFreeSwapPage(SWAPENTRY Entry);
 VOID
 NTAPI
 MmInitPagingFile(VOID);
-
-BOOLEAN
-NTAPI
-MmIsFileObjectAPagingFile(PFILE_OBJECT FileObject);
 
 NTSTATUS
 NTAPI
@@ -1195,8 +1134,8 @@ MmInitializePageList(
 
 VOID
 NTAPI
-MmDumpArmPfnDatabase(
-   IN BOOLEAN StatusOnly
+MmDumpPfnDatabase(
+   VOID
 );
 
 PFN_NUMBER
@@ -1337,14 +1276,6 @@ MmEnableVirtualMapping(
 VOID
 NTAPI
 MmRawDeleteVirtualMapping(PVOID Address);
-
-
-VOID
-NTAPI
-MmGetPageFileMapping(
-	struct _EPROCESS *Process, 
-	PVOID Address,
-	SWAPENTRY* SwapEntry);
 
 VOID
 NTAPI
@@ -1737,6 +1668,20 @@ NTAPI
 MmCallDllInitialize(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     IN PLIST_ENTRY ListHead
+);
+
+/* ReactOS Mm Hacks */
+VOID
+FASTCALL
+MiSyncForProcessAttach(
+    IN PKTHREAD NextThread,
+    IN PEPROCESS Process
+);
+
+VOID
+FASTCALL
+MiSyncForContextSwitch(
+    IN PKTHREAD Thread
 );
 
 extern PMMSUPPORT MmKernelAddressSpace;

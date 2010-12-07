@@ -177,16 +177,6 @@ END
 /*
  * Dialog
  */
-IDD_LOADHIVE DIALOGEX DISCARDABLE 0, 0, 193, 34
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Load Hive"
-FONT 8, "Ms Shell Dlg"
-{
-    LTEXT           "&Key:", IDC_STATIC, 4, 4, 15, 8, SS_LEFT
-    EDITTEXT        IDC_EDIT_KEY, 23, 2, 167, 13
-    DEFPUSHBUTTON   "OK", IDOK, 140, 17, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 89, 17, 50, 14
-}
 
 IDD_EDIT_STRING DIALOGEX  32, 24, 252, 84
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
@@ -286,10 +276,6 @@ BEGIN
     ID_REGISTRY_IMPORTREGISTRYFILE "将文件导入到注册表中。"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "将注册表全部或部分导出到文件中。"
-    ID_REGISTRY_LOADHIVE
-                            "Loads a hive file into the registry"
-    ID_REGISTRY_UNLOADHIVE
-                            "Unloads a hive from the registry"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
                             "连接到远程计算机的注册表。"
     ID_REGISTRY_DISCONNECTNETWORKREGISTRY
@@ -346,8 +332,6 @@ BEGIN
     IDS_MY_COMPUTER         "My Computer"
     IDS_IMPORT_REG_FILE     "导入注册表文件"
     IDS_EXPORT_REG_FILE     "导出注册表文件"
-    IDS_LOAD_HIVE           "Load Hive"
-    IDS_UNLOAD_HIVE         "Unload Hive"
     IDS_INVALID_DWORD       "(不正确的 DWORD 值)"
 END
 

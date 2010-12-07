@@ -12,12 +12,7 @@
 #include <mbstring.h>
 #include <stdlib.h>
 
-#ifdef _LIBCNT_
-unsigned short *NlsLeadByteInfo;
-#define isleadbyte(c) NlsLeadByteInfo[c]
-#else
 int isleadbyte(int byte);
-#endif
 
 /*
  * @implemented

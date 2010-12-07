@@ -19,7 +19,6 @@
  */
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
-INIT_FUNCTION
 KeFindConfigurationEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
                          IN CONFIGURATION_CLASS Class,
                          IN CONFIGURATION_TYPE Type,
@@ -40,7 +39,6 @@ KeFindConfigurationEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
  */
 PCONFIGURATION_COMPONENT_DATA
 NTAPI
-INIT_FUNCTION
 KeFindConfigurationNextEntry(IN PCONFIGURATION_COMPONENT_DATA Child,
                              IN CONFIGURATION_CLASS Class,
                              IN CONFIGURATION_TYPE Type,

@@ -8,13 +8,14 @@
  
 /* INCLUDES ******************************************************************/
 
-#include <asm.inc>
-#include <ks386.inc>
+#include <reactos/asm.h>
+#include <ndk/asm.h>
 #include <internal/i386/asmmacro.S>
 
 /* FUNCTIONS ****************************************************************/
 
 .code32
+.text
 
 /*
  * NOTE: These functions must obey the following rules:
@@ -30,7 +31,7 @@
  *                             IN PLIST_ENTRY ListEntry,
  *                             IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedAddLargeInteger@16
+.global _ExInterlockedAddLargeInteger@16
 _ExInterlockedAddLargeInteger@16:
 
     /* Prepare stack frame */
@@ -96,7 +97,7 @@ _ExInterlockedAddLargeInteger@16:
  *                            IN PLIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedAddUlong@12
+.global _ExInterlockedAddUlong@12
 _ExInterlockedAddUlong@12:
 
     /* Save flags and disable interrupts */
@@ -152,7 +153,7 @@ _ExInterlockedAddUlong@12:
  *                            IN PLIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedInsertHeadList@12
+.global _ExInterlockedInsertHeadList@12
 _ExInterlockedInsertHeadList@12:
 
     /* Save lock pointer */
@@ -188,12 +189,12 @@ _ExInterlockedInsertHeadList@12:
 
     /* check if the list was empty and return NULL */
     xor eax, edx
-    jz .l2
+    jz 2f
 
     /* Return pointer */
     mov eax, edx
 
-.l2:
+2:
     ret 12
 
 #ifdef CONFIG_SMP
@@ -208,7 +209,7 @@ _ExInterlockedInsertHeadList@12:
  *                            IN PLIST_ENTRY ListEntry,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedInsertTailList@12
+.global _ExInterlockedInsertTailList@12
 _ExInterlockedInsertTailList@12:
 
     /* Save lock pointer */
@@ -244,12 +245,12 @@ _ExInterlockedInsertTailList@12:
 
     /* Check if the list was empty and return NULL */
     xor eax, edx
-    jz .l3
+    jz 2f
 
     /* Return pointer */
     mov eax, edx
 
-.l3:
+2:
     ret 12
 
 #ifdef CONFIG_SMP
@@ -263,7 +264,7 @@ _ExInterlockedInsertTailList@12:
  *ExInterlockedRemoveHeadList(IN PLIST_ENTRY ListHead,
  *                            IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedRemoveHeadList@8
+.global _ExInterlockedRemoveHeadList@8
 _ExInterlockedRemoveHeadList@8:
 
     /* Save lock pointer */
@@ -283,7 +284,7 @@ _ExInterlockedRemoveHeadList@8:
 
     /* Check if it's empty */
     cmp eax, edx
-    je .l4
+    je 2f
 
     /* Get next entry and do deletion */
     mov ecx, [eax]
@@ -302,7 +303,7 @@ _ExInterlockedRemoveHeadList@8:
     /* Return */
     ret 8
 
-.l4:
+2:
     /* Release lock */
 #ifdef CONFIG_SMP
     mov edx, [esp+12]
@@ -327,7 +328,7 @@ _ExInterlockedRemoveHeadList@8:
  *ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
  *                          IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedPopEntryList@8
+.global _ExInterlockedPopEntryList@8
 _ExInterlockedPopEntryList@8:
 
     /* Save lock pointer */
@@ -347,13 +348,13 @@ _ExInterlockedPopEntryList@8:
 
     /* Check if it's empty */
     or eax, eax
-    je .l6
+    je 3f
 
     /* Get next entry and do deletion */
     mov edx, [eax]
     mov [ecx], edx
 
-.l5:
+2:
     /* Release lock */
 #ifdef CONFIG_SMP
     mov ecx, [esp+12]
@@ -366,10 +367,10 @@ _ExInterlockedPopEntryList@8:
     /* Return */
     ret 8
 
-.l6:
+3:
     /* Return empty list */
     xor eax, eax
-    jmp .l5
+    jmp 2b
 
 #ifdef CONFIG_SMP
 .spin6:
@@ -383,7 +384,7 @@ _ExInterlockedPopEntryList@8:
  *                           IN PSINGLE_LIST_ENTRY ListEntry,
  *                           IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedPushEntryList@12
+.global _ExInterlockedPushEntryList@12
 _ExInterlockedPushEntryList@12:
 
     /* Save lock pointer */
@@ -429,7 +430,7 @@ _ExInterlockedPushEntryList@12:
  *ExInterlockedIncrementLong(IN PLONG Addend,
  *                           IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedIncrementLong@8
+.global _ExInterlockedIncrementLong@8
 _ExInterlockedIncrementLong@8:
 
     /* Get addend */
@@ -448,7 +449,7 @@ _ExInterlockedIncrementLong@8:
  *ExInterlockedDecrementLong(IN PLONG Addend,
  *                           IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedDecrementLong@8
+.global _ExInterlockedDecrementLong@8
 _ExInterlockedDecrementLong@8:
 
     /* Get addend */
@@ -468,7 +469,7 @@ _ExInterlockedDecrementLong@8:
  *                           IN ULONG Value,
  *                           IN PKSPIN_LOCK Lock)
  */
-PUBLIC _ExInterlockedExchangeUlong@12
+.global _ExInterlockedExchangeUlong@12
 _ExInterlockedExchangeUlong@12:
 
     /* Get pointers */
@@ -497,7 +498,7 @@ _ExInterlockedExchangeUlong@12:
  *Exi386InterlockedIncrementLong(IN PLONG Addend,
  *                               IN PKSPIN_LOCK Lock)
  */
-PUBLIC _Exi386InterlockedIncrementLong@4
+.global _Exi386InterlockedIncrementLong@4
 _Exi386InterlockedIncrementLong@4:
 
     /* Get addend */
@@ -516,7 +517,7 @@ _Exi386InterlockedIncrementLong@4:
  *Exi386InterlockedDecrementLong(IN PLONG Addend,
  *                               IN PKSPIN_LOCK Lock)
  */
-PUBLIC _Exi386InterlockedDecrementLong@4
+.global _Exi386InterlockedDecrementLong@4
 _Exi386InterlockedDecrementLong@4:
 
     /* Get addend */
@@ -536,7 +537,7 @@ _Exi386InterlockedDecrementLong@4:
  *                               IN ULONG Value,
  *                               IN PKSPIN_LOCK Lock)
  */
-PUBLIC _Exi386InterlockedExchangeUlong@12
+.global _Exi386InterlockedExchangeUlong@12
 _Exi386InterlockedExchangeUlong@12:
 
     /* Get pointers */
@@ -559,6 +560,5 @@ _Exi386InterlockedExchangeUlong@12:
 
     /* Return */
     ret 8
-
-END
+	
 /* EOF */

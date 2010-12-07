@@ -43,8 +43,6 @@
 #include "resource.h"
 
 
-#define WM_UPDATEADDRBAR    (WM_APP+1)
-
 /**********************************************************************
  * Shell Instance Objects
  */
@@ -68,14 +66,6 @@ typedef struct {
     IUnknown *impl;
 } ConnectionPointContainer;
 
-typedef struct {
-    const IHlinkFrameVtbl    *lpIHlinkFrameVtbl;
-    const ITargetFrame2Vtbl  *lpITargetFrame2Vtbl;
-
-    IUnknown *outer;
-    DocHost *doc_host;
-} HlinkFrame;
-
 struct _task_header_t;
 
 typedef void (*task_proc_t)(DocHost*, struct _task_header_t*);
@@ -83,14 +73,6 @@ typedef void (*task_proc_t)(DocHost*, struct _task_header_t*);
 typedef struct _task_header_t {
     task_proc_t proc;
 } task_header_t;
-
-typedef struct _IDocHostContainerVtbl
-{
-    void (WINAPI* GetDocObjRect)(DocHost*,RECT*);
-    HRESULT (WINAPI* SetStatusText)(DocHost*,LPCWSTR);
-    void (WINAPI* SetURL)(DocHost*,LPCWSTR);
-    HRESULT (*exec)(DocHost*,const GUID*,DWORD,DWORD,VARIANT*,VARIANT*);
-} IDocHostContainerVtbl;
 
 struct DocHost {
     const IOleClientSiteVtbl      *lpOleClientSiteVtbl;
@@ -114,8 +96,6 @@ struct DocHost {
     IUnknown *document;
     IOleDocumentView *view;
     IUnknown *doc_navigate;
-
-    const IDocHostContainerVtbl *container_vtbl;
 
     HWND hwnd;
     HWND frame_hwnd;
@@ -148,9 +128,10 @@ struct WebBrowser {
     const IViewObject2Vtbl              *lpViewObjectVtbl;
     const IOleInPlaceActiveObjectVtbl   *lpOleInPlaceActiveObjectVtbl;
     const IOleCommandTargetVtbl         *lpOleCommandTargetVtbl;
+    const IHlinkFrameVtbl               *lpHlinkFrameVtbl;
+    const ITargetFrame2Vtbl             *lpITargetFrame2Vtbl;
     const IServiceProviderVtbl          *lpServiceProviderVtbl;
     const IDataObjectVtbl               *lpDataObjectVtbl;
-    HlinkFrame hlink_frame;
 
     LONG ref;
 
@@ -185,13 +166,10 @@ struct WebBrowser {
 
 struct InternetExplorer {
     const IWebBrowser2Vtbl *lpWebBrowser2Vtbl;
-    HlinkFrame hlink_frame;
 
     LONG ref;
 
     HWND frame_hwnd;
-    HWND status_hwnd;
-    HMENU menu;
 
     DocHost doc_host;
 };
@@ -210,7 +188,9 @@ struct InternetExplorer {
 #define VIEWOBJ2(x)     ((IViewObject2*)                &(x)->lpViewObjectVtbl);
 #define ACTIVEOBJ(x)    ((IOleInPlaceActiveObject*)     &(x)->lpOleInPlaceActiveObjectVtbl)
 #define OLECMD(x)       ((IOleCommandTarget*)           &(x)->lpOleCommandTargetVtbl)
+#define HLINKFRAME(x)   ((IHlinkFrame*)                 &(x)->lpHlinkFrameVtbl)
 #define DATAOBJECT(x)   ((IDataObject*)                 &(x)->lpDataObjectVtbl)
+#define TARGETFRAME2(x) ((ITargetFrame2*)               &(x)->lpITargetFrame2Vtbl)
 
 #define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
 #define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
@@ -223,18 +203,16 @@ struct InternetExplorer {
 
 #define INPLACEFRAME(x) ((IOleInPlaceFrame*)            &(x)->lpOleInPlaceFrameVtbl)
 
-#define HLINKFRAME(x)   ((IHlinkFrame*)                 &(x)->lpIHlinkFrameVtbl)
-#define TARGETFRAME2(x) ((ITargetFrame2*)               &(x)->lpITargetFrame2Vtbl)
-
 void WebBrowser_OleObject_Init(WebBrowser*);
 void WebBrowser_ViewObject_Init(WebBrowser*);
 void WebBrowser_DataObject_Init(WebBrowser*);
 void WebBrowser_Persist_Init(WebBrowser*);
 void WebBrowser_ClassInfo_Init(WebBrowser*);
+void WebBrowser_HlinkFrame_Init(WebBrowser*);
 
 void WebBrowser_OleObject_Destroy(WebBrowser*);
 
-void DocHost_Init(DocHost*,IDispatch*,const IDocHostContainerVtbl*);
+void DocHost_Init(DocHost*,IDispatch*);
 void DocHost_ClientSite_Init(DocHost*);
 void DocHost_Frame_Init(DocHost*);
 void release_dochost_client(DocHost*);
@@ -244,9 +222,6 @@ void DocHost_ClientSite_Release(DocHost*);
 
 void ConnectionPointContainer_Init(ConnectionPointContainer*,IUnknown*);
 void ConnectionPointContainer_Destroy(ConnectionPointContainer*);
-
-void HlinkFrame_Init(HlinkFrame*,IUnknown*,DocHost*);
-BOOL HlinkFrame_QI(HlinkFrame*,REFIID,void**);
 
 HRESULT WebBrowserV1_Create(IUnknown*,REFIID,void**);
 HRESULT WebBrowserV2_Create(IUnknown*,REFIID,void**);
@@ -272,8 +247,7 @@ HRESULT InternetShortcut_Create(IUnknown*,REFIID,void**);
 
 HRESULT TaskbarList_Create(IUnknown*,REFIID,void**);
 
-#define DEFINE_THIS2(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,ifc)))
-#define DEFINE_THIS(cls,ifc,iface) DEFINE_THIS2(cls,lp ## ifc ## Vtbl,iface)
+#define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
 /**********************************************************************
  * Dll lifetime tracking declaration for shdocvw.dll
@@ -285,7 +259,6 @@ static inline void SHDOCVW_UnlockModule(void) { InterlockedDecrement( &SHDOCVW_r
 extern HINSTANCE shdocvw_hinstance;
 extern void register_iewindow_class(void);
 extern void unregister_iewindow_class(void);
-extern HRESULT update_ie_statustext(InternetExplorer*, LPCWSTR);
 
 HRESULT register_class_object(BOOL);
 HRESULT get_typeinfo(ITypeInfo**);

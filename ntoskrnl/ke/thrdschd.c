@@ -386,8 +386,11 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     /* Save the wait IRQL */
     WaitIrql = CurrentThread->WaitIrql;
 
+    /* REACTOS Mm Hack of Doom */
+    MiSyncForContextSwitch(NextThread);
+
     /* Swap contexts */
-    ApcState = KiSwapContext(WaitIrql, CurrentThread);
+    ApcState = KiSwapContext(CurrentThread, NextThread);
 
     /* Get the wait status */
     WaitStatus = CurrentThread->WaitStatus;
@@ -753,8 +756,11 @@ NtYieldExecution(VOID)
             /* Sanity check */
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
+            /* REACTOS Mm Hack of Doom */
+            MiSyncForContextSwitch(NextThread);
+
             /* Swap to new thread */
-            KiSwapContext(APC_LEVEL, Thread);
+            KiSwapContext(Thread, NextThread);
             Status = STATUS_SUCCESS;
         }
         else

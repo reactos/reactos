@@ -19,10 +19,9 @@ NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
+    PNPFS_DEVICE_EXTENSION DeviceExtension;
     PDEVICE_OBJECT DeviceObject;
     UNICODE_STRING DeviceName;
-    PNPFS_VCB Vcb;
-    PNPFS_FCB Fcb;
     NTSTATUS Status;
 
     DPRINT("Named Pipe FSD 0.0.2\n");
@@ -57,7 +56,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 
     RtlInitUnicodeString(&DeviceName, L"\\Device\\NamedPipe");
     Status = IoCreateDevice(DriverObject,
-        sizeof(NPFS_VCB),
+        sizeof(NPFS_DEVICE_EXTENSION),
         &DeviceName,
         FILE_DEVICE_NAMED_PIPE,
         0,
@@ -69,33 +68,21 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
         return Status;
     }
 
-    /* Initialize the device object */
+    /* initialize the device object */
     DeviceObject->Flags |= DO_DIRECT_IO;
     DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-    /* Initialize the Volume Control Block (VCB) */
-    Vcb = (PNPFS_VCB)DeviceObject->DeviceExtension;
-    InitializeListHead(&Vcb->PipeListHead);
-    InitializeListHead(&Vcb->ThreadListHead);
-    KeInitializeMutex(&Vcb->PipeListLock, 0);
-    Vcb->EmptyWaiterCount = 0;
+    /* initialize the device extension */
+    DeviceExtension = DeviceObject->DeviceExtension;
+    InitializeListHead(&DeviceExtension->PipeListHead);
+    InitializeListHead(&DeviceExtension->ThreadListHead);
+    KeInitializeMutex(&DeviceExtension->PipeListLock, 0);
+    DeviceExtension->EmptyWaiterCount = 0;
 
     /* set the size quotas */
-    Vcb->MinQuota = PAGE_SIZE;
-    Vcb->DefaultQuota = 8 * PAGE_SIZE;
-    Vcb->MaxQuota = 64 * PAGE_SIZE;
-
-    /* Create the device FCB */
-    Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
-    Fcb->Type = FCB_DEVICE;
-    Fcb->Vcb = Vcb;
-    Vcb->DeviceFcb = Fcb;
-
-    /* Create the root directory FCB */
-    Fcb = ExAllocatePool(NonPagedPool, sizeof(NPFS_FCB));
-    Fcb->Type = FCB_DIRECTORY;
-    Fcb->Vcb = Vcb;
-    Vcb->RootFcb = Fcb;
+    DeviceExtension->MinQuota = PAGE_SIZE;
+    DeviceExtension->DefaultQuota = 8 * PAGE_SIZE;
+    DeviceExtension->MaxQuota = 64 * PAGE_SIZE;
 
     return STATUS_SUCCESS;
 }

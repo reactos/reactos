@@ -33,13 +33,12 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF 
  * SUCH DAMAGE.
  */
-
-#include <asm.inc>
-
-PUBLIC _log
  
+.globl _log
+ 
+.intel_syntax noprefix
+
 /* FUNCTIONS ***************************************************************/
-.code
 
 _log:
         push    ebp
@@ -50,5 +49,3 @@ _log:
         fyl2x                           // Compute the natural log(x)
         pop     ebp
         ret
-
-END

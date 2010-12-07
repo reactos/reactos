@@ -15,7 +15,6 @@
 
 /* FUNCTIONS **************************************************************/
 
-#ifndef _ZOOM2_
 /* Arch-specific addresses translation implementation */
 PVOID
 VaToPa(PVOID Va)
@@ -28,19 +27,6 @@ PaToVa(PVOID Pa)
 {
 	return (PVOID)((ULONG_PTR)Pa | KSEG0_BASE);
 }
-#else
-PVOID
-VaToPa(PVOID Va)
-{
-    return Va;
-}
-
-PVOID
-PaToVa(PVOID Pa)
-{
-    return Pa;
-}
-#endif
 
 VOID
 List_PaToVa(LIST_ENTRY *ListEntry)

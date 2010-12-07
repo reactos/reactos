@@ -84,21 +84,13 @@ static BYTE convert_path_point_type(BYTE type)
     return ret;
 }
 
-static REAL graphics_res(GpGraphics *graphics)
-{
-    if (graphics->image) return graphics->image->xres;
-    else return (REAL)GetDeviceCaps(graphics->hdc, LOGPIXELSX);
-}
-
 static INT prepare_dc(GpGraphics *graphics, GpPen *pen)
 {
     HPEN gdipen;
     REAL width;
-    INT save_state, i, numdashes;
+    INT save_state = SaveDC(graphics->hdc), i, numdashes;
     GpPointF pt[2];
     DWORD dash_array[MAX_DASHLEN];
-
-    save_state = SaveDC(graphics->hdc);
 
     EndPath(graphics->hdc);
 
@@ -116,7 +108,7 @@ static INT prepare_dc(GpGraphics *graphics, GpPen *pen)
         width = sqrt((pt[1].X - pt[0].X) * (pt[1].X - pt[0].X) +
                      (pt[1].Y - pt[0].Y) * (pt[1].Y - pt[0].Y)) / sqrt(2.0);
 
-        width *= pen->width * convert_unit(graphics_res(graphics),
+        width *= pen->width * convert_unit(graphics->hdc,
                               pen->unit == UnitWorld ? graphics->unit : pen->unit);
     }
 
@@ -164,7 +156,7 @@ static void transform_and_round_points(GpGraphics *graphics, POINT *pti,
     GpMatrix *matrix;
     int i;
 
-    unitscale = convert_unit(graphics_res(graphics), graphics->unit);
+    unitscale = convert_unit(graphics->hdc, graphics->unit);
 
     /* apply page scale */
     if(graphics->unit != UnitDisplay)
@@ -1139,8 +1131,6 @@ static GpStatus restore_container(GpGraphics* graphics,
 static GpStatus get_graphics_bounds(GpGraphics* graphics, GpRectF* rect)
 {
     RECT wnd_rect;
-    GpStatus stat=Ok;
-    GpUnit unit;
 
     if(graphics->hwnd) {
         if(!GetClientRect(graphics->hwnd, &wnd_rect))
@@ -1150,10 +1140,6 @@ static GpStatus get_graphics_bounds(GpGraphics* graphics, GpRectF* rect)
         rect->Y = wnd_rect.top;
         rect->Width = wnd_rect.right - wnd_rect.left;
         rect->Height = wnd_rect.bottom - wnd_rect.top;
-    }else if (graphics->image){
-        stat = GdipGetImageBounds(graphics->image, rect, &unit);
-        if (stat == Ok && unit != UnitPixel)
-            FIXME("need to convert from unit %i\n", unit);
     }else{
         rect->X = 0;
         rect->Y = 0;
@@ -1161,7 +1147,7 @@ static GpStatus get_graphics_bounds(GpGraphics* graphics, GpRectF* rect)
         rect->Height = GetDeviceCaps(graphics->hdc, VERTRES);
     }
 
-    return stat;
+    return Ok;
 }
 
 /* on success, rgn will contain the region of the graphics object which
@@ -1232,45 +1218,6 @@ GpStatus WINGDIPAPI GdipCreateFromHDC2(HDC hdc, HANDLE hDevice, GpGraphics **gra
     (*graphics)->hdc = hdc;
     (*graphics)->hwnd = WindowFromDC(hdc);
     (*graphics)->owndc = FALSE;
-    (*graphics)->smoothing = SmoothingModeDefault;
-    (*graphics)->compqual = CompositingQualityDefault;
-    (*graphics)->interpolation = InterpolationModeDefault;
-    (*graphics)->pixeloffset = PixelOffsetModeDefault;
-    (*graphics)->compmode = CompositingModeSourceOver;
-    (*graphics)->unit = UnitDisplay;
-    (*graphics)->scale = 1.0;
-    (*graphics)->busy = FALSE;
-    (*graphics)->textcontrast = 4;
-    list_init(&(*graphics)->containers);
-    (*graphics)->contid = 0;
-
-    TRACE("<-- %p\n", *graphics);
-
-    return Ok;
-}
-
-GpStatus graphics_from_image(GpImage *image, GpGraphics **graphics)
-{
-    GpStatus retval;
-
-    *graphics = GdipAlloc(sizeof(GpGraphics));
-    if(!*graphics)  return OutOfMemory;
-
-    if((retval = GdipCreateMatrix(&(*graphics)->worldtrans)) != Ok){
-        GdipFree(*graphics);
-        return retval;
-    }
-
-    if((retval = GdipCreateRegion(&(*graphics)->clip)) != Ok){
-        GdipFree((*graphics)->worldtrans);
-        GdipFree(*graphics);
-        return retval;
-    }
-
-    (*graphics)->hdc = NULL;
-    (*graphics)->hwnd = NULL;
-    (*graphics)->owndc = FALSE;
-    (*graphics)->image = image;
     (*graphics)->smoothing = SmoothingModeDefault;
     (*graphics)->compqual = CompositingQualityDefault;
     (*graphics)->interpolation = InterpolationModeDefault;
@@ -1499,12 +1446,6 @@ GpStatus WINGDIPAPI GdipDrawArc(GpGraphics *graphics, GpPen *pen, REAL x,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     num_pts = arc2polybezier(points, x, y, width, height, startAngle, sweepAngle);
 
     save_state = prepare_dc(graphics, pen);
@@ -1541,12 +1482,6 @@ GpStatus WINGDIPAPI GdipDrawBezier(GpGraphics *graphics, GpPen *pen, REAL x1,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     pt[0].X = x1;
     pt[0].Y = y1;
     pt[1].X = x2;
@@ -1580,12 +1515,6 @@ GpStatus WINGDIPAPI GdipDrawBezierI(GpGraphics *graphics, GpPen *pen, INT x1,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     pt[0].X = x1;
     pt[0].Y = y1;
@@ -1793,12 +1722,6 @@ GpStatus WINGDIPAPI GdipDrawCurve2(GpGraphics *graphics, GpPen *pen,
     if(count < 2)
         return InvalidParameter;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     pt = GdipAlloc(len_pt * sizeof(GpPointF));
     if(!pt)
         return OutOfMemory;
@@ -1913,12 +1836,6 @@ GpStatus WINGDIPAPI GdipDrawEllipse(GpGraphics *graphics, GpPen *pen, REAL x,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf[0].X = x;
     ptf[0].Y = y;
@@ -2044,11 +1961,6 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
     if (image->picture)
     {
-        if (!graphics->hdc)
-        {
-            FIXME("graphics object has no HDC\n");
-        }
-
         /* FIXME: partially implemented (only works for rectangular parallelograms) */
         if(srcUnit == UnitInch)
             dx = dy = (REAL) INCH_HIMETRIC;
@@ -2071,7 +1983,7 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
             return GenericError;
         }
     }
-    else if (image->type == ImageTypeBitmap)
+    else if (image->type == ImageTypeBitmap && ((GpBitmap*)image)->hbitmap)
     {
         GpBitmap* bitmap = (GpBitmap*)image;
         int use_software=0;
@@ -2085,7 +1997,6 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
         if (imageAttributes ||
             (graphics->image && graphics->image->type == ImageTypeBitmap) ||
-            !((GpBitmap*)image)->hbitmap ||
             ptf[1].Y != ptf[0].Y || ptf[2].X != ptf[0].X)
             use_software = 1;
 
@@ -2472,12 +2383,6 @@ GpStatus WINGDIPAPI GdipDrawLine(GpGraphics *graphics, GpPen *pen, REAL x1,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     pt[0].X = x1;
     pt[0].Y = y1;
     pt[1].X = x2;
@@ -2507,12 +2412,6 @@ GpStatus WINGDIPAPI GdipDrawLineI(GpGraphics *graphics, GpPen *pen, INT x1,
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     pt[0].X = (REAL)x1;
     pt[0].Y = (REAL)y1;
     pt[1].X = (REAL)x2;
@@ -2541,12 +2440,6 @@ GpStatus WINGDIPAPI GdipDrawLines(GpGraphics *graphics, GpPen *pen, GDIPCONST
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     save_state = prepare_dc(graphics, pen);
 
     retval = draw_polyline(graphics, pen, points, count, TRUE);
@@ -2571,12 +2464,6 @@ GpStatus WINGDIPAPI GdipDrawLinesI(GpGraphics *graphics, GpPen *pen, GDIPCONST
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf = GdipAlloc(count * sizeof(GpPointF));
     if(!ptf) return OutOfMemory;
@@ -2609,12 +2496,6 @@ GpStatus WINGDIPAPI GdipDrawPath(GpGraphics *graphics, GpPen *pen, GpPath *path)
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     save_state = prepare_dc(graphics, pen);
 
     retval = draw_poly(graphics, pen, path->pathdata.Points,
@@ -2638,12 +2519,6 @@ GpStatus WINGDIPAPI GdipDrawPie(GpGraphics *graphics, GpPen *pen, REAL x,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     save_state = prepare_dc(graphics, pen);
     SelectObject(graphics->hdc, GetStockObject(NULL_BRUSH));
@@ -2678,12 +2553,6 @@ GpStatus WINGDIPAPI GdipDrawRectangle(GpGraphics *graphics, GpPen *pen, REAL x,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf[0].X = x;
     ptf[0].Y = y;
@@ -2727,12 +2596,6 @@ GpStatus WINGDIPAPI GdipDrawRectangles(GpGraphics *graphics, GpPen *pen,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf = GdipAlloc(4 * count * sizeof(GpPointF));
     pti = GdipAlloc(4 * count * sizeof(POINT));
@@ -2810,9 +2673,6 @@ GpStatus WINGDIPAPI GdipFillClosedCurve2(GpGraphics *graphics, GpBrush *brush,
     if(graphics->busy)
         return ObjectBusy;
 
-    if(count == 1)    /* Do nothing */
-        return Ok;
-
     stat = GdipCreatePath(fill, &path);
     if(stat != Ok)
         return stat;
@@ -2844,11 +2704,8 @@ GpStatus WINGDIPAPI GdipFillClosedCurve2I(GpGraphics *graphics, GpBrush *brush,
     TRACE("(%p, %p, %p, %d, %.2f, %d)\n", graphics, brush, points,
             count, tension, fill);
 
-    if(!points || count == 0)
+    if(!points || count <= 0)
         return InvalidParameter;
-
-    if(count == 1)    /* Do nothing */
-        return Ok;
 
     ptf = GdipAlloc(sizeof(GpPointF)*count);
     if(!ptf)
@@ -2866,22 +2723,6 @@ GpStatus WINGDIPAPI GdipFillClosedCurve2I(GpGraphics *graphics, GpBrush *brush,
     return stat;
 }
 
-GpStatus WINGDIPAPI GdipFillClosedCurve(GpGraphics *graphics, GpBrush *brush,
-    GDIPCONST GpPointF *points, INT count)
-{
-    TRACE("(%p, %p, %p, %d)\n", graphics, brush, points, count);
-    return GdipFillClosedCurve2(graphics, brush, points, count,
-               0.5f, FillModeAlternate);
-}
-
-GpStatus WINGDIPAPI GdipFillClosedCurveI(GpGraphics *graphics, GpBrush *brush,
-    GDIPCONST GpPoint *points, INT count)
-{
-    TRACE("(%p, %p, %p, %d)\n", graphics, brush, points, count);
-    return GdipFillClosedCurve2I(graphics, brush, points, count,
-               0.5f, FillModeAlternate);
-}
-
 GpStatus WINGDIPAPI GdipFillEllipse(GpGraphics *graphics, GpBrush *brush, REAL x,
     REAL y, REAL width, REAL height)
 {
@@ -2896,12 +2737,6 @@ GpStatus WINGDIPAPI GdipFillEllipse(GpGraphics *graphics, GpBrush *brush, REAL x
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf[0].X = x;
     ptf[0].Y = y;
@@ -2945,12 +2780,6 @@ GpStatus WINGDIPAPI GdipFillPath(GpGraphics *graphics, GpBrush *brush, GpPath *p
     if(graphics->busy)
         return ObjectBusy;
 
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     save_state = SaveDC(graphics->hdc);
     EndPath(graphics->hdc);
     SetPolyFillMode(graphics->hdc, (path->fill == FillModeAlternate ? ALTERNATE
@@ -2987,12 +2816,6 @@ GpStatus WINGDIPAPI GdipFillPie(GpGraphics *graphics, GpBrush *brush, REAL x,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     save_state = SaveDC(graphics->hdc);
     EndPath(graphics->hdc);
@@ -3032,12 +2855,6 @@ GpStatus WINGDIPAPI GdipFillPolygon(GpGraphics *graphics, GpBrush *brush,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf = GdipAlloc(count * sizeof(GpPointF));
     pti = GdipAlloc(count * sizeof(POINT));
@@ -3085,12 +2902,6 @@ GpStatus WINGDIPAPI GdipFillPolygonI(GpGraphics *graphics, GpBrush *brush,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf = GdipAlloc(count * sizeof(GpPointF));
     pti = GdipAlloc(count * sizeof(POINT));
@@ -3157,12 +2968,6 @@ GpStatus WINGDIPAPI GdipFillRectangle(GpGraphics *graphics, GpBrush *brush,
     if(graphics->busy)
         return ObjectBusy;
 
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     ptf[0].X = x;
     ptf[0].Y = y;
     ptf[1].X = x + width;
@@ -3202,12 +3007,6 @@ GpStatus WINGDIPAPI GdipFillRectangleI(GpGraphics *graphics, GpBrush *brush,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     ptf[0].X = x;
     ptf[0].Y = y;
@@ -3300,12 +3099,6 @@ GpStatus WINGDIPAPI GdipFillRegion(GpGraphics* graphics, GpBrush* brush,
 
     if(graphics->busy)
         return ObjectBusy;
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
 
     status = GdipGetRegionHRgn(region, graphics, &hrgn);
     if(status != Ok)
@@ -3907,7 +3700,6 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
     int i;
     HFONT oldfont;
     struct measure_ranges_args args;
-    HDC temp_hdc=NULL;
 
     TRACE("(%p %s %d %p %s %p %d %p)\n", graphics, debugstr_w(string),
             length, font, debugstr_rectf(layoutRect), stringFormat, regionCount, regions);
@@ -3917,12 +3709,6 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
 
     if (regionCount < stringFormat->range_count)
         return InvalidParameter;
-
-    if(!graphics->hdc)
-    {
-        temp_hdc = graphics->hdc = CreateCompatibleDC(0);
-        if (!temp_hdc) return OutOfMemory;
-    }
 
     if (stringFormat->attr)
         TRACE("may be ignoring some format flags: attr %x\n", stringFormat->attr);
@@ -3942,12 +3728,6 @@ GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
         measure_ranges_callback, &args);
 
     DeleteObject(SelectObject(graphics->hdc, oldfont));
-
-    if (temp_hdc)
-    {
-        graphics->hdc = NULL;
-        DeleteDC(temp_hdc);
-    }
 
     return stat;
 }
@@ -3991,7 +3771,6 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
 {
     HFONT oldfont;
     struct measure_string_args args;
-    HDC temp_hdc=NULL;
 
     TRACE("(%p, %s, %i, %p, %s, %p, %p, %p, %p)\n", graphics,
         debugstr_wn(string, length), length, font, debugstr_rectf(rect), format,
@@ -3999,12 +3778,6 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
 
     if(!graphics || !string || !font || !rect || !bounds)
         return InvalidParameter;
-
-    if(!graphics->hdc)
-    {
-        temp_hdc = graphics->hdc = CreateCompatibleDC(0);
-        if (!temp_hdc) return OutOfMemory;
-    }
 
     if(linesfilled) *linesfilled = 0;
     if(codepointsfitted) *codepointsfitted = 0;
@@ -4027,12 +3800,6 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
         measure_string_callback, &args);
 
     DeleteObject(SelectObject(graphics->hdc, oldfont));
-
-    if (temp_hdc)
-    {
-        graphics->hdc = NULL;
-        DeleteDC(temp_hdc);
-    }
 
     return Ok;
 }
@@ -4083,12 +3850,6 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     if((brush->bt != BrushTypeSolidColor)){
         FIXME("not implemented for given parameters\n");
         return NotImplemented;
-    }
-
-    if(!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
     }
 
     if(format){
@@ -4654,12 +4415,6 @@ GpStatus WINGDIPAPI GdipDrawPolygon(GpGraphics *graphics,GpPen *pen,GDIPCONST Gp
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc)
-    {
-        FIXME("graphics object has no HDC\n");
-        return Ok;
-    }
-
     pti = GdipAlloc(sizeof(POINT) * count);
 
     save_state = prepare_dc(graphics, pen);
@@ -4707,10 +4462,7 @@ GpStatus WINGDIPAPI GdipGetDpiX(GpGraphics *graphics, REAL* dpi)
     if(graphics->busy)
         return ObjectBusy;
 
-    if (graphics->image)
-        *dpi = graphics->image->xres;
-    else
-        *dpi = (REAL)GetDeviceCaps(graphics->hdc, LOGPIXELSX);
+    *dpi = (REAL)GetDeviceCaps(graphics->hdc, LOGPIXELSX);
 
     return Ok;
 }
@@ -4725,10 +4477,7 @@ GpStatus WINGDIPAPI GdipGetDpiY(GpGraphics *graphics, REAL* dpi)
     if(graphics->busy)
         return ObjectBusy;
 
-    if (graphics->image)
-        *dpi = graphics->image->yres;
-    else
-        *dpi = (REAL)GetDeviceCaps(graphics->hdc, LOGPIXELSY);
+    *dpi = (REAL)GetDeviceCaps(graphics->hdc, LOGPIXELSY);
 
     return Ok;
 }
@@ -4756,9 +4505,6 @@ GpStatus WINGDIPAPI GdipMultiplyWorldTransform(GpGraphics *graphics, GDIPCONST G
     return ret;
 }
 
-/* Color used to fill bitmaps so we can tell which parts have been drawn over by gdi32. */
-static const COLORREF DC_BACKGROUND_KEY = 0x0c0b0d;
-
 GpStatus WINGDIPAPI GdipGetDC(GpGraphics *graphics, HDC *hdc)
 {
     TRACE("(%p, %p)\n", graphics, hdc);
@@ -4769,61 +4515,7 @@ GpStatus WINGDIPAPI GdipGetDC(GpGraphics *graphics, HDC *hdc)
     if(graphics->busy)
         return ObjectBusy;
 
-    if (!graphics->hdc ||
-        (graphics->image && graphics->image->type == ImageTypeBitmap && ((GpBitmap*)graphics->image)->format & PixelFormatAlpha))
-    {
-        /* Create a fake HDC and fill it with a constant color. */
-        HDC temp_hdc;
-        HBITMAP hbitmap;
-        GpStatus stat;
-        GpRectF bounds;
-        BITMAPINFOHEADER bmih;
-        int i;
-
-        stat = get_graphics_bounds(graphics, &bounds);
-        if (stat != Ok)
-            return stat;
-
-        graphics->temp_hbitmap_width = bounds.Width;
-        graphics->temp_hbitmap_height = bounds.Height;
-
-        bmih.biSize = sizeof(bmih);
-        bmih.biWidth = graphics->temp_hbitmap_width;
-        bmih.biHeight = -graphics->temp_hbitmap_height;
-        bmih.biPlanes = 1;
-        bmih.biBitCount = 32;
-        bmih.biCompression = BI_RGB;
-        bmih.biSizeImage = 0;
-        bmih.biXPelsPerMeter = 0;
-        bmih.biYPelsPerMeter = 0;
-        bmih.biClrUsed = 0;
-        bmih.biClrImportant = 0;
-
-        hbitmap = CreateDIBSection(NULL, (BITMAPINFO*)&bmih, DIB_RGB_COLORS,
-            (void**)&graphics->temp_bits, NULL, 0);
-        if (!hbitmap)
-            return GenericError;
-
-        temp_hdc = CreateCompatibleDC(0);
-        if (!temp_hdc)
-        {
-            DeleteObject(hbitmap);
-            return GenericError;
-        }
-
-        for (i=0; i<(graphics->temp_hbitmap_width * graphics->temp_hbitmap_height); i++)
-            ((DWORD*)graphics->temp_bits)[i] = DC_BACKGROUND_KEY;
-
-        SelectObject(temp_hdc, hbitmap);
-
-        graphics->temp_hbitmap = hbitmap;
-        *hdc = graphics->temp_hdc = temp_hdc;
-    }
-    else
-    {
-        *hdc = graphics->hdc;
-    }
-
+    *hdc = graphics->hdc;
     graphics->busy = TRUE;
 
     return Ok;
@@ -4833,39 +4525,11 @@ GpStatus WINGDIPAPI GdipReleaseDC(GpGraphics *graphics, HDC hdc)
 {
     TRACE("(%p, %p)\n", graphics, hdc);
 
-    if(!graphics || !hdc)
+    if(!graphics)
         return InvalidParameter;
 
-    if((graphics->hdc != hdc && graphics->temp_hdc != hdc) || !(graphics->busy))
+    if(graphics->hdc != hdc || !(graphics->busy))
         return InvalidParameter;
-
-    if (graphics->temp_hdc == hdc)
-    {
-        DWORD* pos;
-        int i;
-
-        /* Find the pixels that have changed, and mark them as opaque. */
-        pos = (DWORD*)graphics->temp_bits;
-        for (i=0; i<(graphics->temp_hbitmap_width * graphics->temp_hbitmap_height); i++)
-        {
-            if (*pos != DC_BACKGROUND_KEY)
-            {
-                *pos |= 0xff000000;
-            }
-            pos++;
-        }
-
-        /* Write the changed pixels to the real target. */
-        alpha_blend_pixels(graphics, 0, 0, graphics->temp_bits,
-            graphics->temp_hbitmap_width, graphics->temp_hbitmap_height,
-            graphics->temp_hbitmap_width * 4);
-
-        /* Clean up. */
-        DeleteDC(graphics->temp_hdc);
-        DeleteObject(graphics->temp_hbitmap);
-        graphics->temp_hdc = NULL;
-        graphics->temp_hbitmap = NULL;
-    }
 
     graphics->busy = FALSE;
 
@@ -4916,7 +4580,7 @@ GpStatus WINGDIPAPI GdipTransformPoints(GpGraphics *graphics, GpCoordinateSpace 
     stat = GdipCreateMatrix(&matrix);
     if (stat == Ok)
     {
-        unitscale = convert_unit(graphics_res(graphics), graphics->unit);
+        unitscale = convert_unit(graphics->hdc, graphics->unit);
 
         if(graphics->unit != UnitDisplay)
             unitscale *= graphics->scale;

@@ -308,7 +308,6 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -362,7 +361,6 @@ Quickie:
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     UNICODE_STRING ConfigName = RTL_CONSTANT_STRING(L"Control\\IDConfigDB");
@@ -691,7 +689,6 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PVOID HiveBase;
@@ -820,7 +817,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 CmpCreateObjectTypes(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
@@ -853,7 +849,6 @@ CmpCreateObjectTypes(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 CmpCreateRootNode(IN PHHIVE Hive,
                   IN PCWSTR Name,
                   OUT PHCELL_INDEX Index)
@@ -914,7 +909,6 @@ CmpCreateRootNode(IN PHHIVE Hive,
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 CmpCreateRegistryRoot(VOID)
 {
     UNICODE_STRING KeyName;
@@ -1372,7 +1366,6 @@ CmpInitializeHiveList(IN USHORT Flag)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 CmInitSystem1(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1584,7 +1577,6 @@ CmInitSystem1(VOID)
 
 VOID
 NTAPI
-INIT_FUNCTION
 CmpFreeDriverList(IN PHHIVE Hive,
                   IN PLIST_ENTRY DriverList)
 {
@@ -1633,7 +1625,6 @@ CmpFreeDriverList(IN PHHIVE Hive,
 
 PUNICODE_STRING*
 NTAPI
-INIT_FUNCTION
 CmGetSystemDriverList(VOID)
 {
     LIST_ENTRY DriverList;

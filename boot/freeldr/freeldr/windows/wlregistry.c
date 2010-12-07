@@ -88,7 +88,7 @@ WinLdrLoadSystemHive(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	}
 
 	/* Convert address to virtual */
-    HiveDataVirtual = PaToVa((PVOID)HiveDataPhysical);
+	HiveDataVirtual = (PVOID)(KSEG0_BASE | HiveDataPhysical);
 
 	/* Fill LoaderBlock's entries */
 	LoaderBlock->RegistryLength = HiveFileSize;
@@ -379,7 +379,7 @@ WinLdrLoadNLSData(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	if (NlsDataBase == 0)
 		goto Failure;
 
-	NlsVirtual = PaToVa((PVOID)NlsDataBase);
+	NlsVirtual = (PVOID)(KSEG0_BASE | NlsDataBase);
 	LoaderBlock->NlsData->AnsiCodePageData = NlsVirtual;
 	LoaderBlock->NlsData->OemCodePageData = (PVOID)((PUCHAR)NlsVirtual +
 		(MM_SIZE_TO_PAGES(AnsiFileSize) << MM_PAGE_SHIFT));

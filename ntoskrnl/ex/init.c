@@ -14,14 +14,6 @@
 #include <debug.h>
 #include "ntstrsafe.h"
 
-/* Temporary hack */
-BOOLEAN
-NTAPI
-MmArmInitSystem(
-    IN ULONG Phase,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock
-);
-
 typedef struct _INIT_BUFFER
 {
     WCHAR DebugBuffer[256];
@@ -87,7 +79,6 @@ BOOLEAN ExpRealTimeIsUniversal;
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     UNICODE_STRING LinkName;
@@ -199,7 +190,6 @@ ExpCreateSystemRootLink(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     LARGE_INTEGER SectionSize;
@@ -331,7 +321,6 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Copy the codepage data in its new location. */
-    ASSERT(SectionBase > MmSystemRangeStart);
     RtlCopyMemory(SectionBase, ExpNlsTableBase, ExpNlsTableSize);
 
     /* Free the previously allocated buffer and set the new location */
@@ -375,7 +364,6 @@ ExpInitNls(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
                       OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
                       OUT PCHAR *ProcessEnvironment)
@@ -596,7 +584,6 @@ ExpLoadInitialProcess(IN PINIT_BUFFER InitBuffer,
 
 ULONG
 NTAPI
-INIT_FUNCTION
 ExComputeTickCountMultiplier(IN ULONG ClockIncrement)
 {
     ULONG MsRemainder = 0, MsIncrement;
@@ -629,7 +616,6 @@ ExComputeTickCountMultiplier(IN ULONG ClockIncrement)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 ExpInitSystemPhase0(VOID)
 {
     /* Initialize EXRESOURCE Support */
@@ -652,7 +638,6 @@ ExpInitSystemPhase0(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 ExpInitSystemPhase1(VOID)
 {
     /* Initialize worker threads */
@@ -690,7 +675,6 @@ ExpInitSystemPhase1(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 ExInitSystem(VOID)
 {
     /* Check the initialization phase */
@@ -716,7 +700,6 @@ ExInitSystem(VOID)
 
 BOOLEAN
 NTAPI
-INIT_FUNCTION
 ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLOADER_PARAMETER_EXTENSION Extension;
@@ -742,7 +725,6 @@ ExpIsLoaderValid(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG i = 0;
@@ -835,7 +817,6 @@ ExpLoadBootSymbols(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
              IN ULONG PagesToDestroy,
              IN TYPE_OF_MEMORY MemoryType)
@@ -881,7 +862,6 @@ ExBurnMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 VOID
 NTAPI
-INIT_FUNCTION
 ExpInitializeExecutive(IN ULONG Cpu,
                        IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -1065,7 +1045,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     if (!ExInitSystem()) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
     /* Initialize the memory manager at phase 0 */
-    if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
+    if (!MmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
 
     /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);
@@ -1292,7 +1272,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
 VOID
 NTAPI
-INIT_FUNCTION
 Phase1InitializationDiscard(IN PVOID Context)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlock = Context;
@@ -1598,7 +1577,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     if (!MmInitSystem(1, LoaderBlock)) KeBugCheck(MEMORY1_INITIALIZATION_FAILED);
 
     /* Create NLS section */
-    ExpInitNls(LoaderBlock);
+    ExpInitNls(KeLoaderBlock);
 
     /* Initialize Cache Views */
     if (!CcInitializeCacheManager()) KeBugCheck(CACHE_INITIALIZATION_FAILED);
@@ -1883,8 +1862,8 @@ Phase1InitializationDiscard(IN PVOID Context)
         NtClose(OptionHandle);
     }
 
-    /* FIXME: This doesn't do anything for now */
-    MmArmInitSystem(2, LoaderBlock);
+    /* Unmap Low memory, and initialize the MPW and Balancer Thread */
+    MmInitSystem(2, LoaderBlock);
 
     /* Update progress bar */
     InbvUpdateProgressBar(80);
@@ -1911,7 +1890,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvUpdateProgressBar(90);
 
     /* Launch initial process */
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
     ProcessInfo = &InitBuffer->ProcessInfo;
     ExpLoadInitialProcess(InitBuffer, &ProcessParameters, &Environment);
 
@@ -1958,7 +1936,6 @@ Phase1InitializationDiscard(IN PVOID Context)
 
     /* Free the boot buffer */
     ExFreePool(InitBuffer);
-    DPRINT1("Free non-cache pages: %lx\n", MmAvailablePages + MiMemoryConsumers[MC_CACHE].PagesUsed);
 }
 
 VOID

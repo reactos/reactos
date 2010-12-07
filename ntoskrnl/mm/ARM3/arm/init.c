@@ -24,7 +24,10 @@ ULONG MmMaximumNonPagedPoolInBytes;
 PVOID MmNonPagedSystemStart;
 PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
+PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
+PVOID MmPagedPoolStart = MI_PAGED_POOL_START;
 PVOID MmPagedPoolEnd;
+ULONG MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
 PVOID MiSessionSpaceEnd;
 PVOID MiSessionImageEnd;
 PVOID MiSessionImageStart;
@@ -39,14 +42,14 @@ ULONG MmSessionImageSize;
 PVOID MiSystemViewStart;
 ULONG MmSystemViewSize;
 PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
-PMMPDE MmSystemPagePtes;
+PMMPTE MmSystemPagePtes;
 ULONG MmNumberOfSystemPtes;
 ULONG MxPfnAllocation;
 RTL_BITMAP MiPfnBitMap;
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
-ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage;
+ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
 ULONG MmBootImageSize;
 ULONG MmUserProbeAddress;
 PVOID MmHighestUserAddress;
@@ -60,8 +63,8 @@ PVOID MmHyperSpaceEnd;
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
-MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+MmArmInitSystem(IN ULONG Phase,
+                IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     //
     // Always return success for now

@@ -1076,7 +1076,6 @@ RawUnload(IN PDRIVER_OBJECT DriverObject)
 
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 RawFsDriverEntry(IN PDRIVER_OBJECT DriverObject,
                  IN PUNICODE_STRING RegistryPath)
 {

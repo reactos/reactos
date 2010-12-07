@@ -527,9 +527,7 @@ IntKillTimer(PWND Window, UINT_PTR IDEvent, BOOL SystemTimer)
    return pTmr ? TRUE :  FALSE;
 }
 
-INIT_FUNCTION
-NTSTATUS
-NTAPI
+NTSTATUS FASTCALL
 InitTimerImpl(VOID)
 {
    ULONG BitmapBytes;

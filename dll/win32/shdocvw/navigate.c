@@ -125,8 +125,6 @@ static HRESULT set_dochost_url(DocHost *This, const WCHAR *url)
 
     heap_free(This->url);
     This->url = new_url;
-
-    This->container_vtbl->SetURL(This, This->url);
     return S_OK;
 }
 
@@ -761,7 +759,7 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
                 Flags, Flags ? V_VT(Flags) : -1, TargetFrameName,
                 TargetFrameName ? V_VT(TargetFrameName) : -1);
 
-    if(PostData && V_VT(PostData) == (VT_ARRAY | VT_UI1) && V_ARRAY(PostData)) {
+    if(PostData && V_VT(PostData) == (VT_ARRAY | VT_UI1)) {
         SafeArrayAccessData(V_ARRAY(PostData), (void**)&post_data);
         post_data_len = V_ARRAY(PostData)->rgsabound[0].cElements;
     }
@@ -783,8 +781,7 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
             DWORD size;
 
             size = sizeof(new_url)/sizeof(WCHAR);
-            hres = UrlApplySchemeW(url, new_url, &size,
-                    URL_APPLY_GUESSSCHEME | URL_APPLY_DEFAULT);
+            hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME);
             if(FAILED(hres)) {
                 WARN("UrlApplyScheme failed: %08x\n", hres);
                 new_url[0] = 0;
@@ -884,30 +881,30 @@ HRESULT go_home(DocHost *This)
     return navigate_url(This, wszPageName, NULL, NULL, NULL, NULL);
 }
 
-#define HLINKFRAME_THIS(iface) DEFINE_THIS(HlinkFrame, IHlinkFrame, iface)
+#define HLINKFRAME_THIS(iface) DEFINE_THIS(WebBrowser, HlinkFrame, iface)
 
 static HRESULT WINAPI HlinkFrame_QueryInterface(IHlinkFrame *iface, REFIID riid, void **ppv)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
-    return IUnknown_QueryInterface(This->outer, riid, ppv);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
+    return IWebBrowser2_QueryInterface(WEBBROWSER2(This), riid, ppv);
 }
 
 static ULONG WINAPI HlinkFrame_AddRef(IHlinkFrame *iface)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
-    return IUnknown_AddRef(This->outer);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
+    return IWebBrowser2_AddRef(WEBBROWSER2(This));
 }
 
 static ULONG WINAPI HlinkFrame_Release(IHlinkFrame *iface)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
-    return IUnknown_Release(This->outer);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
+    return IWebBrowser2_Release(WEBBROWSER2(This));
 }
 
 static HRESULT WINAPI HlinkFrame_SetBrowseContext(IHlinkFrame *iface,
                                                   IHlinkBrowseContext *pihlbc)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pihlbc);
     return E_NOTIMPL;
 }
@@ -915,7 +912,7 @@ static HRESULT WINAPI HlinkFrame_SetBrowseContext(IHlinkFrame *iface,
 static HRESULT WINAPI HlinkFrame_GetBrowseContext(IHlinkFrame *iface,
                                                   IHlinkBrowseContext **ppihlbc)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
     FIXME("(%p)->(%p)\n", This, ppihlbc);
     return E_NOTIMPL;
 }
@@ -923,7 +920,7 @@ static HRESULT WINAPI HlinkFrame_GetBrowseContext(IHlinkFrame *iface,
 static HRESULT WINAPI HlinkFrame_Navigate(IHlinkFrame *iface, DWORD grfHLNF, LPBC pbc,
                                           IBindStatusCallback *pibsc, IHlink *pihlNavigate)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
     IMoniker *mon;
     LPWSTR location = NULL;
 
@@ -948,13 +945,13 @@ static HRESULT WINAPI HlinkFrame_Navigate(IHlinkFrame *iface, DWORD grfHLNF, LPB
         return E_NOTIMPL;
     }
 
-    return navigate_hlink(This->doc_host, mon, pbc, pibsc);
+    return navigate_hlink(&This->doc_host, mon, pbc, pibsc);
 }
 
 static HRESULT WINAPI HlinkFrame_OnNavigate(IHlinkFrame *iface, DWORD grfHLNF,
         IMoniker *pimkTarget, LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName, DWORD dwreserved)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
     FIXME("(%p)->(%08x %p %s %s %d)\n", This, grfHLNF, pimkTarget, debugstr_w(pwzLocation),
           debugstr_w(pwzFriendlyName), dwreserved);
     return E_NOTIMPL;
@@ -963,7 +960,7 @@ static HRESULT WINAPI HlinkFrame_OnNavigate(IHlinkFrame *iface, DWORD grfHLNF,
 static HRESULT WINAPI HlinkFrame_UpdateHlink(IHlinkFrame *iface, ULONG uHLID,
         IMoniker *pimkTarget, LPCWSTR pwzLocation, LPCWSTR pwzFriendlyName)
 {
-    HlinkFrame *This = HLINKFRAME_THIS(iface);
+    WebBrowser *This = HLINKFRAME_THIS(iface);
     FIXME("(%p)->(%u %p %s %s)\n", This, uHLID, pimkTarget, debugstr_w(pwzLocation),
           debugstr_w(pwzFriendlyName));
     return E_NOTIMPL;
@@ -982,106 +979,106 @@ static const IHlinkFrameVtbl HlinkFrameVtbl = {
     HlinkFrame_UpdateHlink
 };
 
-#define TARGETFRAME2_THIS(iface) DEFINE_THIS(HlinkFrame, ITargetFrame2, iface)
+#define TARGETFRAME2_THIS(iface) DEFINE_THIS(WebBrowser, ITargetFrame2, iface)
 
 static HRESULT WINAPI TargetFrame2_QueryInterface(ITargetFrame2 *iface, REFIID riid, void **ppv)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
-    return IUnknown_QueryInterface(This->outer, riid, ppv);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
+    return IWebBrowser2_QueryInterface(WEBBROWSER2(This), riid, ppv);
 }
 
 static ULONG WINAPI TargetFrame2_AddRef(ITargetFrame2 *iface)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
-    return IUnknown_AddRef(This->outer);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
+    return IWebBrowser2_AddRef(WEBBROWSER2(This));
 }
 
 static ULONG WINAPI TargetFrame2_Release(ITargetFrame2 *iface)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
-    return IUnknown_Release(This->outer);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
+    return IWebBrowser2_Release(WEBBROWSER2(This));
 }
 
 static HRESULT WINAPI TargetFrame2_SetFrameName(ITargetFrame2 *iface, LPCWSTR pszFrameName)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(pszFrameName));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetFrameName(ITargetFrame2 *iface, LPWSTR *ppszFrameName)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, ppszFrameName);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetParentFrame(ITargetFrame2 *iface, IUnknown **ppunkParent)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, ppunkParent);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_SetFrameSrc(ITargetFrame2 *iface, LPCWSTR pszFrameSrc)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%s)\n", This, debugstr_w(pszFrameSrc));
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetFrameSrc(ITargetFrame2 *iface, LPWSTR *ppszFrameSrc)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->()\n", This);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetFramesContainer(ITargetFrame2 *iface, IOleContainer **ppContainer)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, ppContainer);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_SetFrameOptions(ITargetFrame2 *iface, DWORD dwFlags)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%x)\n", This, dwFlags);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetFrameOptions(ITargetFrame2 *iface, DWORD *pdwFlags)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pdwFlags);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_SetFrameMargins(ITargetFrame2 *iface, DWORD dwWidth, DWORD dwHeight)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%d %d)\n", This, dwWidth, dwHeight);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetFrameMargins(ITargetFrame2 *iface, DWORD *pdwWidth, DWORD *pdwHeight)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%p %p)\n", This, pdwWidth, pdwHeight);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_FindFrame(ITargetFrame2 *iface, LPCWSTR pszTargetName, DWORD dwFlags, IUnknown **ppunkTargetFrame)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%s %x %p)\n", This, debugstr_w(pszTargetName), dwFlags, ppunkTargetFrame);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI TargetFrame2_GetTargetAlias(ITargetFrame2 *iface, LPCWSTR pszTargetName, LPWSTR *ppszTargetAlias)
 {
-    HlinkFrame *This = TARGETFRAME2_THIS(iface);
+    WebBrowser *This = TARGETFRAME2_THIS(iface);
     FIXME("(%p)->(%s %p)\n", This, debugstr_w(pszTargetName), ppszTargetAlias);
     return E_NOTIMPL;
 }
@@ -1106,27 +1103,8 @@ static const ITargetFrame2Vtbl TargetFrame2Vtbl = {
     TargetFrame2_GetTargetAlias
 };
 
-BOOL HlinkFrame_QI(HlinkFrame *This, REFIID riid, void **ppv)
+void WebBrowser_HlinkFrame_Init(WebBrowser *This)
 {
-    if(IsEqualGUID(&IID_IHlinkFrame, riid)) {
-        TRACE("(%p)->(IID_IHlinkFrame %p)\n", This, ppv);
-        *ppv = HLINKFRAME(This);
-    }else if(IsEqualGUID(&IID_ITargetFrame2, riid)) {
-        TRACE("(%p)->(IID_ITargetFrame2 %p)\n", This, ppv);
-        *ppv = TARGETFRAME2(This);
-    }else {
-        return FALSE;
-    }
-
-    IUnknown_AddRef((IUnknown*)*ppv);
-    return TRUE;
-}
-
-void HlinkFrame_Init(HlinkFrame *This, IUnknown *outer, DocHost *doc_host)
-{
-    This->lpIHlinkFrameVtbl   = &HlinkFrameVtbl;
+    This->lpHlinkFrameVtbl = &HlinkFrameVtbl;
     This->lpITargetFrame2Vtbl = &TargetFrame2Vtbl;
-
-    This->outer = outer;
-    This->doc_host = doc_host;
 }
