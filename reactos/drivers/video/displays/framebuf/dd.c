@@ -24,7 +24,7 @@
 
 
 DWORD CALLBACK
-DdCanCreateSurface( LPDDHAL_CANCREATESURFACEDATA pccsd)
+DdCanCreateSurface( PDD_CANCREATESURFACEDATA pccsd)
 {
     /* We do not needit if we need it here it is 
        PPDEV ppdev=(PPDEV)pccsd->lpDD->dhpdev;
@@ -38,7 +38,7 @@ DdCanCreateSurface( LPDDHAL_CANCREATESURFACEDATA pccsd)
     }
 
     /* We do not support texture yet so we fail here */
-    if (pccsd->lplpSList[0]->lpSurfMore->ddsCapsEx.dwCaps2 & DDSCAPS2_TEXTUREMANAGE)
+    if (pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSD_TEXTURESTAGE)
     {
         pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
     }
@@ -54,11 +54,10 @@ DdCanCreateSurface( LPDDHAL_CANCREATESURFACEDATA pccsd)
 }
 
 DWORD CALLBACK
-DdCreateSurface( LPDDHAL_CREATESURFACEDATA pcsd )
+DdCreateSurface( PDD_CREATESURFACEDATA pcsd )
 {
-    PPDEV pDev = (PPDEV)pcsd->lpDD->dhpdev;
-    DD_SURFACE_LOCAL*   lpSurfaceLocal;
-    DD_SURFACE_GLOBAL*  lpSurfaceGlobal;
+    PDD_SURFACE_LOCAL   lpSurfaceLocal;
+    PDD_SURFACE_GLOBAL   lpSurfaceGlobal;
     LPDDSURFACEDESC     lpSurfaceDesc;
 
     /* Driver DdCreateSurface should only support to create one surface not more that */
@@ -102,16 +101,16 @@ DdCreateSurface( LPDDHAL_CREATESURFACEDATA pcsd )
     {
         /* We maybe should alloc it with EngAlloc
            for now we trusting ddraw alloc it        */
-        lpSurfaceGlobal->lpGbl->fpVidMem = 0;
+        lpSurfaceGlobal->fpVidMem = 0;
     }
     else
     {
         /* We maybe should alloc it with EngAlloc
             for now we trusting ddraw alloc it        */
 
-        lpSurfaceGlobal->lpGbl->fpVidMem = 0;
+        lpSurfaceGlobal->fpVidMem = 0;
 
-        if ( (lpSurfaceLocal->lpSurfMore->ddsCapsEx.dwCaps2 & DDSCAPS2_TEXTUREMANAGE) &&
+        if ( (lpSurfaceLocal->lpSurfMore->ddsCapsEx.dwCaps2 & DDSCAPS2_TEXTUREMANAGE) )
         {
             if (lpSurfaceDesc->dwFlags & DDSD_PIXELFORMAT)
             {

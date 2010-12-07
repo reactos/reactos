@@ -24,16 +24,20 @@ HSEMAPHORE g_cs = (HSEMAPHORE)0;
 
 static DRVFN DrvFunctionTable[] =
 {
-   {INDEX_DrvEnablePDEV, (PFN)DrvEnablePDEV},
-   {INDEX_DrvCompletePDEV, (PFN)DrvCompletePDEV},
-   {INDEX_DrvDisablePDEV, (PFN)DrvDisablePDEV},
-   {INDEX_DrvEnableSurface, (PFN)DrvEnableSurface},
-   {INDEX_DrvDisableSurface, (PFN)DrvDisableSurface},
-   {INDEX_DrvAssertMode, (PFN)DrvAssertMode},
-   {INDEX_DrvGetModes, (PFN)DrvGetModes},
-   {INDEX_DrvSetPalette, (PFN)DrvSetPalette},
-   {INDEX_DrvSetPointerShape, (PFN)DrvSetPointerShape},
-   {INDEX_DrvMovePointer, (PFN)DrvMovePointer}
+   { INDEX_DrvEnablePDEV,           (PFN) DrvEnablePDEV},
+   { INDEX_DrvCompletePDEV,         (PFN) DrvCompletePDEV},
+   { INDEX_DrvDisablePDEV,          (PFN) DrvDisablePDEV},
+   { INDEX_DrvEnableSurface,        (PFN) DrvEnableSurface},
+   { INDEX_DrvDisableSurface,       (PFN) DrvDisableSurface},
+   { INDEX_DrvAssertMode,           (PFN) DrvAssertMode},
+   { INDEX_DrvGetModes,             (PFN) DrvGetModes},
+   { INDEX_DrvSetPalette,           (PFN) DrvSetPalette},
+   { INDEX_DrvSetPointerShape,      (PFN) DrvSetPointerShape},
+   { INDEX_DrvMovePointer,          (PFN) DrvMovePointer},
+   { INDEX_DrvMovePointer,          (PFN) DrvMovePointer},
+   { INDEX_DrvGetDirectDrawInfo,    (PFN) DrvGetDirectDrawInfo},
+   { INDEX_DrvEnableDirectDraw,     (PFN) DrvEnableDirectDraw},
+   { INDEX_DrvDisableDirectDraw,    (PFN) DrvDisableDirectDraw},
 
 };
 
