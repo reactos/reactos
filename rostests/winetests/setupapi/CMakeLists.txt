@@ -1,0 +1,20 @@
+
+add_definitions(
+    -D__ROS_LONG64__
+    -D_DLL -D__USE_CRTIMP)
+
+list(APPEND SOURCE
+    devclass.c
+    devinst.c
+    install.c
+    misc.c
+    parser.c
+    query.c
+    setupcab.c
+    stringtable.c
+    testlist.c)
+
+add_executable(setupapi_winetest ${SOURCE})
+target_link_libraries(setupapi_winetest wine)
+set_module_type(setupapi_winetest win32cui)
+add_importlibs(setupapi_winetest advapi32 setupapi user32 msvcrt kernel32 ntdll)
