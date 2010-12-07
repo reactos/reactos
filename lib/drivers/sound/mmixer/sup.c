@@ -256,7 +256,7 @@ MMixerNotifyControlChange(
     PEVENT_NOTIFICATION_ENTRY NotificationEntry;
 
     /* enumerate list and add a notification entry */
-    Entry = MixerInfo->LineList.Flink;
+    Entry = MixerInfo->EventList.Flink;
     while(Entry != &MixerInfo->EventList)
     {
         /* get notification entry offset */
