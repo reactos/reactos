@@ -207,10 +207,10 @@ BOOL WINAPI DllMain(
             SND_TRACE(L"WDMAUD.DRV - Process detached\n");
             break;
         case DLL_THREAD_ATTACH :
-            SND_TRACE(L"WDMAUD.DRV - Thread attached\n");
+            //SND_TRACE(L"WDMAUD.DRV - Thread attached\n");
             break;
         case DLL_THREAD_DETACH :
-            SND_TRACE(L"WDMAUD.DRV - Thread detached\n");
+            //SND_TRACE(L"WDMAUD.DRV - Thread detached\n");
             break;
     }
 
