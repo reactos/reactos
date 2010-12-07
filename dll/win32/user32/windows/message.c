@@ -1260,14 +1260,14 @@ IntCallWindowProcW(BOOL IsAnsiProc,
 
       if (PreResult) goto Exit;
 
-      _SEH2_TRY
-      {
+      //_SEH2_TRY
+      //{
          Result = WndProc(hWnd, Msg, wParam, lParam);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-      }
-      _SEH2_END;
+      //}
+      //_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      //{
+      //}
+      //_SEH2_END;
 
       if (Hook && MsgOverride)
       {
