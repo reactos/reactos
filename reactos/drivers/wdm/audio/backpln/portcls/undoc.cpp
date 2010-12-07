@@ -165,7 +165,7 @@ PropertyItemDispatch(
 
     // get instance / value size
     InstanceSize = IoStack->Parameters.DeviceIoControl.InputBufferLength;
-    Instance = Data;
+    Instance = Request;
     ValueSize = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
 
      // initialize property request
@@ -273,17 +273,15 @@ PropertyItemDispatch(
     if (PropertyRequest->PropertyItem && PropertyRequest->PropertyItem->Handler)
     {
         // now call the handler
-        UNICODE_STRING GuidBuffer;
-        RtlStringFromGUID(Property->Set, &GuidBuffer);
-        DPRINT1("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p\n",
-                PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
-                PropertyRequest->PropertyItem->Handler, PropertyRequest);
-#if 0
+        //UNICODE_STRING GuidBuffer;
+        //RtlStringFromGUID(Property->Set, &GuidBuffer);
+        //DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+        //        PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
+        //        PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
+
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
-#else
-        Status = STATUS_NOT_FOUND;
-#endif
-         Irp->IoStatus.Information = PropertyRequest->ValueSize;
+        //DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
+        Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
         if (Status != STATUS_PENDING)
         {
