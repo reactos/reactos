@@ -1056,9 +1056,9 @@ MMixerAddMixerSourceLines(
     AllPinsCount = 0;
     MMixerGetAllUpOrDownstreamPinsFromNodeIndex(MixerContext, Topology, LineTerminator, TRUE, &AllPinsCount, AllPins);
 
-    DPRINT1("LineTerminator %lu\n", LineTerminator);
-    DPRINT1("PinCount %lu\n", AllPinsCount);
-    DPRINT1("AllNodesCount %lu\n", AllNodesCount);
+    DPRINT("LineTerminator %lu\n", LineTerminator);
+    DPRINT("PinCount %lu\n", AllPinsCount);
+    DPRINT("AllNodesCount %lu\n", AllNodesCount);
 
     /* now construct the source lines which are attached to the destination line */
     Index = AllPinsCount;
@@ -1268,7 +1268,7 @@ MMixerHandlePhysicalConnection(
          return MM_STATUS_UNSUCCESSFUL;
      }
 
-    DPRINT1("Name %S, Pin %lu bInput %lu\n", OutConnection->SymbolicLinkName, OutConnection->Pin, bInput);
+    DPRINT("Name %S, Pin %lu bInput %lu\n", OutConnection->SymbolicLinkName, OutConnection->Pin, bInput);
 
     /* sanity check */
     ASSERT(MixerData->MixerInfo == NULL || MixerData->MixerInfo == MixerInfo);
@@ -1551,7 +1551,7 @@ MMixerHandleAlternativeMixers(
     ULONG DestinationLineID, LineTerminator;
     LPMIXERLINE_EXT DstLine;
 
-    DPRINT1("DeviceName %S\n", MixerData->DeviceName);
+    DPRINT("DeviceName %S\n", MixerData->DeviceName);
 
     /* get topology pin count */
     MMixerGetTopologyPinCount(Topology, &PinCount);

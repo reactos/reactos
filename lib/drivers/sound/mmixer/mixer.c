@@ -146,16 +146,15 @@ MMixerGetLineInfo(
     }
 
     if (MixerLine->cbStruct != sizeof(MIXERLINEW))
-	{
-		DPRINT1("MixerLine Expected %lu but got %lu\n", sizeof(MIXERLINEW), MixerLine->cbStruct);
-		return MM_STATUS_INVALID_PARAMETER;
-	}
-
+    {
+        DPRINT1("MixerLine Expected %lu but got %lu\n", sizeof(MIXERLINEW), MixerLine->cbStruct);
+        return MM_STATUS_INVALID_PARAMETER;
+    }
 
     /* clear hmixer from flags */
     Flags &=~MIXER_OBJECTF_HMIXER;
 
-    DPRINT1("MMixerGetLineInfo MixerId %lu Flags %lu\n", MixerId, Flags);
+    DPRINT("MMixerGetLineInfo MixerId %lu Flags %lu\n", MixerId, Flags);
 
     if (Flags == MIXER_GETLINEINFOF_DESTINATION)
     {
@@ -511,7 +510,7 @@ MMixerSetControlDetails(
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    DPRINT1("MMixerSetControlDetails ControlType %lx MixerControlName %S MixerLineName %S NodeID %lu\n", MixerControl->Control.dwControlType, MixerControl->Control.szName, MixerLine->Line.szName, NodeId);
+    DPRINT("MMixerSetControlDetails ControlType %lx MixerControlName %S MixerLineName %S NodeID %lu\n", MixerControl->Control.dwControlType, MixerControl->Control.szName, MixerLine->Line.szName, NodeId);
     switch(MixerControl->Control.dwControlType)
     {
         case MIXERCONTROL_CONTROLTYPE_MUTE:

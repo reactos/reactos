@@ -44,7 +44,7 @@ PopulateWdmDeviceList(
         return TranslateInternalMmResult(Result);
     }
 
-    SND_TRACE(L"%d devices of type %d found\n", DeviceCount, DeviceType);
+    //SND_TRACE(L"%d devices of type %d found\n", DeviceCount, DeviceType);
 
 
     for ( i = 0; i < DeviceCount; ++ i )
@@ -112,7 +112,7 @@ DriverProc(
         case DRV_LOAD :
         {
             MMRESULT Result;
-            SND_TRACE(L"DRV_LOAD\n");
+            //SND_TRACE(L"DRV_LOAD\n");
 
             Result = InitEntrypointMutexes();
 
@@ -130,7 +130,7 @@ DriverProc(
             }
 
             /* Populate the device lists */
-            SND_TRACE(L"Populating device lists\n");
+            //SND_TRACE(L"Populating device lists\n");
             PopulateWdmDeviceList(WAVE_OUT_DEVICE_TYPE);
             PopulateWdmDeviceList(WAVE_IN_DEVICE_TYPE);
             PopulateWdmDeviceList(MIDI_OUT_DEVICE_TYPE);
@@ -138,7 +138,7 @@ DriverProc(
             PopulateWdmDeviceList(AUX_DEVICE_TYPE);
             PopulateWdmDeviceList(MIXER_DEVICE_TYPE);
 
-            SND_TRACE(L"Initialisation complete\n");
+            //SND_TRACE(L"Initialisation complete\n");
 
             return 1L;
         }
@@ -163,14 +163,14 @@ DriverProc(
         case DRV_ENABLE :
         case DRV_DISABLE :
         {
-            SND_TRACE(L"DRV_ENABLE / DRV_DISABLE\n");
+            //SND_TRACE(L"DRV_ENABLE / DRV_DISABLE\n");
             return 1L;
         }
 
         case DRV_OPEN :
         case DRV_CLOSE :
         {
-            SND_TRACE(L"DRV_OPEN / DRV_CLOSE\n");
+            //SND_TRACE(L"DRV_OPEN / DRV_CLOSE\n");
             return 1L;
         }
 

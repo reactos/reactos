@@ -293,7 +293,6 @@ Enum(
         HeapFree(GetProcessHeap(), 0, DetailData);
         return MM_STATUS_NO_MEMORY;
     }
-	DPRINT1("DeviceName %S\n", DetailData->DevicePath);
     wcscpy(*DeviceName, DetailData->DevicePath);
     HeapFree(GetProcessHeap(), 0, DetailData);
 
