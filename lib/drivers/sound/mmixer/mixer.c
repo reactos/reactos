@@ -306,8 +306,9 @@ MMixerGetLineControls(
 {
     LPMIXER_INFO MixerInfo;
     LPMIXERLINE_EXT MixerLineSrc;
-    LPMIXERCONTROLW MixerControl;
+    LPMIXERCONTROL_EXT MixerControl;
     MIXER_STATUS Status;
+    PLIST_ENTRY Entry;
     ULONG Index;
 
     /* verify mixer context */
@@ -317,6 +318,20 @@ MMixerGetLineControls(
     {
         /* invalid context passed */
         return Status;
+    }
+
+    if (MixerLineControls->cbStruct != sizeof(MIXERLINECONTROLSW))
+    {
+        DPRINT1("Invalid MixerLineControls cbStruct passed %lu expected %lu\n", MixerLineControls->cbStruct, sizeof(MIXERLINECONTROLSW));
+        /* invalid parameter */
+        return MM_STATUS_INVALID_PARAMETER;
+    }
+
+    if (MixerLineControls->cbmxctrl != sizeof(MIXERCONTROLW))
+    {
+        DPRINT1("Invalid MixerLineControls cbmxctrl passed %lu expected %lu\n", MixerLineControls->cbStruct, sizeof(MIXERLINECONTROLSW));
+        /* invalid parameter */
+        return MM_STATUS_INVALID_PARAMETER;
     }
 
     if ((Flags & (MIXER_OBJECTF_MIXER | MIXER_OBJECTF_HMIXER)) == MIXER_OBJECTF_MIXER)
@@ -335,12 +350,12 @@ MMixerGetLineControls(
 
     DPRINT("MMixerGetLineControls MixerId %lu Flags %lu\n", MixerId, Flags);
 
-
     if (Flags == MIXER_GETLINECONTROLSF_ALL)
     {
         /* cast to mixer info */
         MixerInfo = (LPMIXER_INFO)MixerHandle;
 
+        /* get mixer line */
         MixerLineSrc = MMixerGetSourceMixerLineByLineId(MixerInfo, MixerLineControls->dwLineID);
 
         if (!MixerLineSrc)
@@ -349,9 +364,31 @@ MMixerGetLineControls(
             DPRINT("MMixerGetLineControls Line not found %lx\n", MixerLineControls->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
-        /* copy line control(s) */
-        MixerContext->Copy(MixerLineControls->pamxctrl, MixerLineSrc->LineControls, min(MixerLineSrc->Line.cControls, MixerLineControls->cControls) * sizeof(MIXERCONTROLW));
 
+        if (MixerLineSrc->Line.cControls != MixerLineControls->cControls)
+        {
+            /* invalid parameter */
+            DPRINT1("Invalid control count %lu expected %lu\n", MixerLineControls->cControls, MixerLineSrc->Line.cControls);
+            return MM_STATUS_INVALID_PARAMETER;
+        }
+
+        /* copy line control(s) */
+        Entry = MixerLineSrc->ControlsList.Flink;
+        Index = 0;
+        while(Entry != &MixerLineSrc->ControlsList)
+        {
+            /* get mixer control */
+            MixerControl = (LPMIXERCONTROL_EXT)CONTAINING_RECORD(Entry, MIXERCONTROL_EXT, Entry);
+
+            /* copy mixer control */
+            MixerContext->Copy(&MixerLineControls->pamxctrl[Index], &MixerControl->Control, sizeof(MIXERCONTROLW));
+
+            /* move to next */
+            Entry = Entry->Flink;
+
+            /* increment mixer control offset */
+            Index++;
+        }
         return MM_STATUS_SUCCESS;
     }
     else if (Flags == MIXER_GETLINECONTROLSF_ONEBYTYPE)
@@ -374,19 +411,23 @@ MMixerGetLineControls(
         ASSERT(MixerLineControls->cbmxctrl == sizeof(MIXERCONTROLW));
         ASSERT(MixerLineControls->pamxctrl != NULL);
 
-        Index = 0;
-        for(Index = 0; Index < MixerLineSrc->Line.cControls; Index++)
+        Entry = MixerLineSrc->ControlsList.Flink;
+        while(Entry != &MixerLineSrc->ControlsList)
         {
-            DPRINT1("dwControlType %x\n", MixerLineSrc->LineControls[Index].dwControlType);
-            if (MixerLineControls->dwControlType == MixerLineSrc->LineControls[Index].dwControlType)
+            MixerControl = (LPMIXERCONTROL_EXT)CONTAINING_RECORD(Entry, MIXERCONTROL_EXT, Entry);
+            if (MixerLineControls->dwControlType == MixerControl->Control.dwControlType)
             {
                 /* found a control with that type */
-                MixerContext->Copy(MixerLineControls->pamxctrl, &MixerLineSrc->LineControls[Index], sizeof(MIXERCONTROLW));
+                MixerContext->Copy(MixerLineControls->pamxctrl, &MixerControl->Control, sizeof(MIXERCONTROLW));
                 return MM_STATUS_SUCCESS;
             }
-        }
-        DPRINT("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", MixerLineControls->dwControlType, MixerLineControls->dwLineID, MixerLineSrc->Line.cControls);
-        return MM_STATUS_UNSUCCESSFUL;
+
+            /* move to next entry */
+            Entry = Entry->Flink;
+         }
+
+         DPRINT("DeviceInfo->u.MixControls.dwControlType %x not found in Line %x cControls %u \n", MixerLineControls->dwControlType, MixerLineControls->dwLineID, MixerLineSrc->Line.cControls);
+         return MM_STATUS_UNSUCCESSFUL;
     }
     else if (Flags == MIXER_GETLINECONTROLSF_ONEBYID)
     {
@@ -406,10 +447,10 @@ MMixerGetLineControls(
         ASSERT(MixerLineControls->cbmxctrl == sizeof(MIXERCONTROLW));
         ASSERT(MixerLineControls->pamxctrl != NULL);
 
-       DPRINT("MMixerGetLineControls ControlID %lx ControlType %lx Name %S\n", MixerControl->dwControlID, MixerControl->dwControlType, MixerControl->szName);
+       DPRINT("MMixerGetLineControls ControlID %lx ControlType %lx Name %S\n", MixerControl->Control.dwControlID, MixerControl->Control.dwControlType, MixerControl->Control.szName);
 
         /* copy the controls */
-        MixerContext->Copy(MixerLineControls->pamxctrl, MixerControl, sizeof(MIXERCONTROLW));
+        MixerContext->Copy(MixerLineControls->pamxctrl, &MixerControl->Control, sizeof(MIXERCONTROLW));
         MixerLineControls->pamxctrl->szName[MIXER_LONG_NAME_CHARS-1] = L'\0';
         MixerLineControls->pamxctrl->szShortName[MIXER_SHORT_NAME_CHARS-1] = L'\0';
 
@@ -431,7 +472,7 @@ MMixerSetControlDetails(
     ULONG NodeId;
     LPMIXER_INFO MixerInfo;
     LPMIXERLINE_EXT MixerLine;
-    LPMIXERCONTROLW MixerControl;
+    LPMIXERCONTROL_EXT MixerControl;
 
     /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
@@ -439,6 +480,7 @@ MMixerSetControlDetails(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* invalid context passed */
+        DPRINT1("invalid context\n");
         return Status;
     }
 
@@ -450,6 +492,7 @@ MMixerSetControlDetails(
         if (!MixerHandle)
         {
             /* invalid parameter */
+            DPRINT1("invalid handle\n");
             return MM_STATUS_INVALID_PARAMETER;
         }
     }
@@ -464,18 +507,21 @@ MMixerSetControlDetails(
     if (Status != MM_STATUS_SUCCESS)
     {
         /* failed to find control id */
+        DPRINT1("invalid control id %lu\n", MixerControlDetails->dwControlID);
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    switch(MixerControl->dwControlType)
+    DPRINT1("MMixerSetControlDetails ControlType %lx MixerControlName %S MixerLineName %S NodeID %lu\n", MixerControl->Control.dwControlType, MixerControl->Control.szName, MixerLine->Line.szName, NodeId);
+    switch(MixerControl->Control.dwControlType)
     {
         case MIXERCONTROL_CONTROLTYPE_MUTE:
-            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo->hMixer, NodeId, MixerLine->Line.dwLineID, MixerControlDetails, TRUE);
+            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo, MixerControl, MixerLine->Line.dwLineID, MixerControlDetails, TRUE);
             break;
         case MIXERCONTROL_CONTROLTYPE_VOLUME:
-            Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo->hMixer, NodeId, TRUE, MixerControl, MixerControlDetails, MixerLine);
+            Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo, NodeId, TRUE, MixerControl, MixerControlDetails, MixerLine);
             break;
         default:
+            ASSERT(0);
             Status = MM_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -494,7 +540,7 @@ MMixerGetControlDetails(
     ULONG NodeId;
     LPMIXER_INFO MixerInfo;
     LPMIXERLINE_EXT MixerLine;
-    LPMIXERCONTROLW MixerControl;
+    LPMIXERCONTROL_EXT MixerControl;
 
     /* verify mixer context */
     Status = MMixerVerifyContext(MixerContext);
@@ -530,19 +576,58 @@ MMixerGetControlDetails(
         return MM_STATUS_INVALID_PARAMETER;
     }
 
-    switch(MixerControl->dwControlType)
+    switch(MixerControl->Control.dwControlType)
     {
         case MIXERCONTROL_CONTROLTYPE_MUTE:
-            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo, NodeId, MixerLine->Line.dwLineID, MixerControlDetails, FALSE);
+            Status = MMixerSetGetMuteControlDetails(MixerContext, MixerInfo, MixerControl, MixerLine->Line.dwLineID, MixerControlDetails, FALSE);
             break;
         case MIXERCONTROL_CONTROLTYPE_VOLUME:
             Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo, NodeId, FALSE, MixerControl, MixerControlDetails, MixerLine);
             break;
         default:
             Status = MM_STATUS_NOT_IMPLEMENTED;
+            DPRINT1("ControlType %lu not implemented\n", MixerControl->Control.dwControlType);
     }
 
     return Status;
+}
+
+VOID
+MMixerPrintMixerLineControls(
+    IN LPMIXERLINE_EXT MixerLine)
+{
+    PLIST_ENTRY Entry;
+    LPMIXERCONTROL_EXT MixerControl;
+    ULONG Index = 0;
+
+    Entry = MixerLine->ControlsList.Flink;
+    while(Entry != &MixerLine->ControlsList)
+    {
+        MixerControl = (LPMIXERCONTROL_EXT)CONTAINING_RECORD(Entry, MIXERCONTROL_EXT, Entry);
+
+        DPRINT1("\n");
+        DPRINT1("Control Index: %lu\n", Index);
+        DPRINT("\n");
+        DPRINT1("cbStruct %u\n", MixerControl->Control.cbStruct);
+        DPRINT1("dwControlID %lu\n", MixerControl->Control.dwControlID);
+        DPRINT1("dwControlType %lx\n", MixerControl->Control.dwControlType);
+        DPRINT1("fdwControl %lu\n", MixerControl->Control.fdwControl);
+        DPRINT1("cMultipleItems %lu\n", MixerControl->Control.cMultipleItems);
+        DPRINT1("szShortName %S\n", MixerControl->Control.szShortName);
+        DPRINT1("szName %S\n", MixerControl->Control.szName);
+        DPRINT1("Bounds.dwMinimum %lu\n", MixerControl->Control.Bounds.dwMinimum);
+        DPRINT1("Bounds.dwMaximum %lu\n", MixerControl->Control.Bounds.dwMaximum);
+
+        DPRINT1("Metrics.Reserved[0] %lu\n", MixerControl->Control.Metrics.dwReserved[0]);
+        DPRINT1("Metrics.Reserved[1] %lu\n", MixerControl->Control.Metrics.dwReserved[1]);
+        DPRINT1("Metrics.Reserved[2] %lu\n", MixerControl->Control.Metrics.dwReserved[2]);
+        DPRINT1("Metrics.Reserved[3] %lu\n", MixerControl->Control.Metrics.dwReserved[3]);
+        DPRINT1("Metrics.Reserved[4] %lu\n", MixerControl->Control.Metrics.dwReserved[4]);
+        DPRINT1("Metrics.Reserved[5] %lu\n", MixerControl->Control.Metrics.dwReserved[5]);
+
+        Entry = Entry->Flink;
+        Index++;
+    }
 }
 
 VOID
@@ -583,6 +668,9 @@ MMixerPrintMixers(
 
             /* get destination line */
             DstMixerLine = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
+            DPRINT1("//----------------------------------------------------------------------------------------------\n");
+            DPRINT1("\n");
+            DPRINT1("Destination Index %lu\n", SubIndex);
             DPRINT1("\n");
             DPRINT1("cChannels %lu\n", DstMixerLine->Line.cChannels);
             DPRINT1("cConnections %lu\n", DstMixerLine->Line.cConnections);
@@ -601,7 +689,7 @@ MMixerPrintMixers(
             DPRINT1("Target.vDriverVersion %lx\n", DstMixerLine->Line.Target.vDriverVersion);
             DPRINT1("Target.wMid %lx\n", DstMixerLine->Line.Target.wMid );
             DPRINT1("Target.wPid %lx\n", DstMixerLine->Line.Target.wPid);
-
+            MMixerPrintMixerLineControls(DstMixerLine);
 
             for(SrcIndex = 0; SrcIndex < DstMixerLine->Line.cConnections; SrcIndex++)
             {
@@ -610,8 +698,9 @@ MMixerPrintMixers(
 
                 /* get source line */
                 SrcMixerLine = MMixerGetSourceMixerLineByLineId(MixerInfo, DestinationLineID);
+                DPRINT1("//==============================================================================================\n");
                 DPRINT1("\n");
-                DPRINT1("SourceIndex: %lu\n", SrcIndex);
+                DPRINT1("SrcLineIndex : %lu\n", SrcIndex);
                 DPRINT1("\n");
                 DPRINT1("cChannels %lu\n", SrcMixerLine->Line.cChannels);
                 DPRINT1("cConnections %lu\n", SrcMixerLine->Line.cConnections);
@@ -630,6 +719,7 @@ MMixerPrintMixers(
                 DPRINT1("Target.vDriverVersion %lx\n", SrcMixerLine->Line.Target.vDriverVersion);
                 DPRINT1("Target.wMid %lx\n", SrcMixerLine->Line.Target.wMid );
                 DPRINT1("Target.wPid %lx\n", SrcMixerLine->Line.Target.wPid);
+                MMixerPrintMixerLineControls(SrcMixerLine);
             }
         }
     }
@@ -736,7 +826,17 @@ MMixerInitialize(
         Entry = Entry->Flink;
     }
 
-    MMixerPrintMixers(MixerContext, MixerList);
+    Entry = MixerList->MixerData.Flink;
+    while(Entry != &MixerList->MixerData)
+    {
+        MixerData = (LPMIXER_DATA)CONTAINING_RECORD(Entry, MIXER_DATA, Entry);
+
+        /* now handle alternative mixer types */
+        MMixerHandleAlternativeMixers(MixerContext, MixerList, MixerData, MixerData->Topology);
+        Entry = Entry->Flink;
+    }
+
+    //MMixerPrintMixers(MixerContext, MixerList);
 
     /* done */
     return MM_STATUS_SUCCESS;

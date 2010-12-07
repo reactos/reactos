@@ -57,9 +57,7 @@ WdmAudGetCapabilitiesByMMixer(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-WdmAudOpenSoundDeviceByMMixer(
-    IN  struct _SOUND_DEVICE* SoundDevice,
-    OUT PVOID* Handle);
+WdmAudOpenSoundDeviceByMMixer();
 
 MMRESULT
 WdmAudCloseSoundDeviceByMMixer(

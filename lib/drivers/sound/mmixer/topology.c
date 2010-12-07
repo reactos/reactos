@@ -1174,6 +1174,31 @@ MMixerGetNodeTypeFromTopology(
 }
 
 VOID
+MMixerSetTopologyPinReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG PinId)
+{
+    /* sanity check */
+    ASSERT(PinId < Topology->TopologyPinsCount);
+
+    /* set reserved */
+    Topology->TopologyPins[PinId].Reserved = TRUE;
+}
+
+VOID
+MMixerIsTopologyPinReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG PinId,
+    OUT PULONG bReserved)
+{
+    /* sanity check */
+    ASSERT(PinId < Topology->TopologyPinsCount);
+
+    /* get reserved status */
+    *bReserved = Topology->TopologyPins[PinId].Reserved;
+}
+
+VOID
 MMixerSetTopologyNodeReserved(
     IN PTOPOLOGY Topology,
     IN ULONG NodeIndex)

@@ -55,8 +55,8 @@ typedef struct
     ULONG PinConnectedToCount;
     PULONG PinConnectedTo;
 
-
     ULONG Visited;
+    ULONG Reserved;
 }PIN, *PPIN;
 
 
@@ -74,7 +74,6 @@ typedef struct
 {
     LIST_ENTRY    Entry;
     MIXERCAPSW    MixCaps;
-    HANDLE        hMixer;
     LIST_ENTRY    LineList;
     ULONG         ControlId;
     LIST_ENTRY    EventList;
@@ -83,12 +82,19 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
-    ULONG PinId;
+    MIXERCONTROLW Control;
+    ULONG NodeID;
     HANDLE hDevice;
+    PVOID ExtraData;
+}MIXERCONTROL_EXT, *LPMIXERCONTROL_EXT;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    ULONG PinId;
     MIXERLINEW Line;
-    LPMIXERCONTROLW LineControls;
-    PULONG          NodeIds;
-    LIST_ENTRY LineControlsExtraData;
+    LIST_ENTRY ControlsList;
+
 }MIXERLINE_EXT, *LPMIXERLINE_EXT;
 
 typedef struct
@@ -272,14 +278,14 @@ MMixerGetMixerControlById(
     LPMIXER_INFO MixerInfo,
     DWORD dwControlID,
     LPMIXERLINE_EXT *MixerLine,
-    LPMIXERCONTROLW *MixerControl,
+    LPMIXERCONTROL_EXT *MixerControl,
     PULONG NodeId);
 
 MIXER_STATUS
 MMixerSetGetMuteControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN LPMIXER_INFO MixerInfo,
-    IN ULONG NodeId,
+    IN LPMIXERCONTROL_EXT MixerControl,
     IN ULONG dwLineID,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
     IN ULONG bSet);
@@ -290,7 +296,7 @@ MMixerSetGetVolumeControlDetails(
     IN LPMIXER_INFO MixerInfo,
     IN ULONG NodeId,
     IN ULONG bSet,
-    LPMIXERCONTROLW MixerControl,
+    LPMIXERCONTROL_EXT MixerControl,
     IN LPMIXERCONTROLDETAILS MixerControlDetails,
     LPMIXERLINE_EXT MixerLine);
 
@@ -358,6 +364,13 @@ MMixerGetPinDataFlowAndCommunication(
     IN ULONG PinId,
     OUT PKSPIN_DATAFLOW DataFlow,
     OUT PKSPIN_COMMUNICATION Communication);
+
+VOID
+MMixerHandleAlternativeMixers(
+    IN PMIXER_CONTEXT MixerContext,
+    IN PMIXER_LIST MixerList,
+    IN LPMIXER_DATA MixerData,
+    IN PTOPOLOGY Topology);
 
 
 /* topology.c */
@@ -470,6 +483,17 @@ VOID
 MMixerIsTopologyNodeReserved(
     IN PTOPOLOGY Topology,
     IN ULONG NodeIndex,
+    OUT PULONG bReserved);
+
+VOID
+MMixerSetTopologyPinReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG PinId);
+
+VOID
+MMixerIsTopologyPinReserved(
+    IN PTOPOLOGY Topology,
+    IN ULONG PinId,
     OUT PULONG bReserved);
 
 VOID

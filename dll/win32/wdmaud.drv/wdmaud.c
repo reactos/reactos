@@ -111,7 +111,6 @@ DriverProc(
     {
         case DRV_LOAD :
         {
-            HANDLE Handle;
             MMRESULT Result;
             SND_TRACE(L"DRV_LOAD\n");
 
@@ -120,11 +119,11 @@ DriverProc(
             if ( ! MMSUCCESS(Result) )
                 return 0L;
 
-            Result = WdmAudOpenSoundDeviceByMMixer(NULL, &Handle);
+            Result = WdmAudOpenSoundDeviceByMMixer();
 
             if ( Result != MMSYSERR_NOERROR )
             {
-                SND_ERR(L"Failed to open \\\\.\\wdmaud\n");
+                SND_ERR(L"Failed to initialize MMixer Library");
                 //UnlistAllSoundDevices();
 
                 return 0L;
