@@ -304,3 +304,11 @@ VBESetColorRegisters(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_CLUT ColorLookUpTable,
    PSTATUS_BLOCK StatusBlock);
+
+
+BOOLEAN FASTCALL
+VBEVideoShareVideoMemmory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_SHARE_MEMORY pShareMemory,
+   PVIDEO_SHARE_MEMORY_INFORMATION pShareMemoryInformation,
+   PSTATUS_BLOCK StatusBlock);

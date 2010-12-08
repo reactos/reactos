@@ -525,6 +525,19 @@ VBEStartIO(
             (PVIDEO_MODE_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
          break;
+      case IOCTL_VIDEO_SHARE_VIDEO_MEMORY:
+         if ( (RequestPacket->InputBufferLength < sizeof(VIDEO_MEMORY)) ||
+              (RequestPacket->OutputBufferLength < sizeof(VIDEO_SHARE_MEMORY_INFORMATION)) )
+         {
+            RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
+            return TRUE;
+         }
+         Result = VBEVideoShareVideoMemmory(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+            (PVIDEO_SHARE_MEMORY)RequestPacket->InputBufferLength,
+            (PVIDEO_SHARE_MEMORY_INFORMATION)RequestPacket->OutputBuffer,
+            RequestPacket->StatusBlock);
+         break;
 
       default:
          RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
@@ -538,7 +551,7 @@ VBEStartIO(
    else
    {
       RequestPacket->StatusBlock->Information = 0;
-      StatusBlock->Status = ERROR_INVALID_FUNCTION;
+      RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
     }
 
    return TRUE;
@@ -825,9 +838,8 @@ VBEUnmapVideoMemory(
    PSTATUS_BLOCK StatusBlock)
 {
    BOOLEAN retvalue;
-   StatusBlock->Status VideoPortUnmapMemory(DeviceExtension, VideoMemory->RequestedVirtualAddress,
-      NULL);
 
+   StatusBlock->Status = VideoPortUnmapMemory(DeviceExtension, VideoMemory->RequestedVirtualAddress, NULL);
    if (StatusBlock->Status == NO_ERROR)
    {
       retvalue = TRUE;
@@ -840,6 +852,70 @@ VBEUnmapVideoMemory(
    return retvalue;
 }
 
+/*
+ * VBEQueryNumAvailModes
+ *
+ */
+BOOLEAN FASTCALL
+VBEVideoShareVideoMemmory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_SHARE_MEMORY pShareMemory,
+   PVIDEO_SHARE_MEMORY_INFORMATION pShareMemoryInformation,
+   PSTATUS_BLOCK StatusBlock)
+{
+    PHYSICAL_ADDRESS shareAddress;
+    PVOID virtualAddress;
+    ULONG sharedViewSize;
+    BOOLEAN retvalue;
+    ULONG inIoSpace; 
+    
+    /* in ms ddk xp it have two flag that are use full for us here 
+       VIDEO_MEMORY_SPACE_USER_MODE or VIDEO_MEMORY_SPACE_P6CACHE
+       the ddk say VIDEO_MEMORY_SPACE_P6CACHE does not care if it
+       user mode or kmode memory. But we want be 100% sure it is
+       vitual user mode memory adddress we mappin from kmode video memmory.
+     */
+    inIoSpace = VIDEO_MEMORY_SPACE_USER_MODE;
+
+    if (DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].ModeAttributes & VBE_MODEATTR_LINEAR)
+    {
+        StatusBlock->Information = sizeof(VIDEO_SHARE_MEMORY_INFORMATION);
+
+        /* FIXME calc see we do not go over the video memory size */
+
+        virtualAddress = pShareMemory->ProcessHandle;
+        sharedViewSize = pShareMemory->ViewSize;
+
+        shareAddress.QuadPart = DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
+
+        /* we iggnore the ViewOffset */
+
+        StatusBlock->Status  = VideoPortMapMemory(  DeviceExtension,
+                                                    shareAddress,
+                                                    &sharedViewSize,
+                                                    &inIoSpace,
+                                                    &virtualAddress );
+
+        if (StatusBlock->Status == NO_ERROR)
+        {
+            pShareMemoryInformation->SharedViewOffset = pShareMemory->ViewOffset;
+            pShareMemoryInformation->VirtualAddress = virtualAddress;
+            pShareMemoryInformation->SharedViewSize = sharedViewSize;
+            retvalue = TRUE;
+        }
+        else
+        {
+            retvalue = FALSE;
+        }
+        
+    }
+    else
+    {
+        retvalue = FALSE;
+    }
+
+    return retvalue;
+}
 /*
  * VBEQueryNumAvailModes
  *
