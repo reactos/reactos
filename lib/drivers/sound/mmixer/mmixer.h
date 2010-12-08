@@ -47,7 +47,7 @@ typedef MIXER_STATUS(*PMIXER_CLOSE)(
 typedef MIXER_STATUS(*PMIXER_CLOSEKEY)(
     IN HANDLE hKey);
 
-typedef VOID (*PMIXER_EVENT)(
+typedef VOID (CALLBACK *PMIXER_EVENT)(
     IN PVOID MixerEventContext,
     IN HANDLE hMixer,
     IN ULONG NotificationType,

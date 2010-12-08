@@ -1570,7 +1570,7 @@ MMixerHandleAlternativeMixers(
         DPRINT("MixerName %S Available PinID %lu\n", MixerData->DeviceName, Index);
 
         /* sanity check */
-        ASSERT(MixerData->MixerInfo);
+        //ASSERT(MixerData->MixerInfo);
 
         if (!MixerData->MixerInfo)
         {
@@ -1730,7 +1730,7 @@ MMixerAddEvent(
 
     /* initialize notification entry */
     EventData->MixerEventContext = MixerEventContext;
-    EventData->MixerEventRoutine;
+    EventData->MixerEventRoutine = MixerEventRoutine;
 
     /* store event */
     InsertTailList(&MixerInfo->EventList, &EventData->Entry);

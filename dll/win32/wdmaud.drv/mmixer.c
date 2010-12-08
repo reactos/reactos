@@ -663,6 +663,25 @@ WdmAudGetDeviceInterfaceStringByMMixer(
     return MMSYSERR_NOTSUPPORTED;
 }
 
+VOID
+CALLBACK
+MixerEventCallback(
+    IN PVOID MixerEventContext,
+    IN HANDLE hMixer,
+    IN ULONG NotificationType,
+    IN ULONG Value)
+{
+    PSOUND_DEVICE_INSTANCE Instance = (PSOUND_DEVICE_INSTANCE)MixerEventContext;
+
+    DriverCallback(Instance->WinMM.ClientCallback,
+                   HIWORD(Instance->WinMM.Flags),
+                   Instance->WinMM.Handle,
+                   NotificationType,
+                   Instance->WinMM.ClientCallbackInstanceData,
+                   (DWORD_PTR)Value,
+                   0);
+}
+
 MMRESULT
 WdmAudSetMixerDeviceFormatByMMixer(
     IN  PSOUND_DEVICE_INSTANCE Instance,
@@ -670,11 +689,7 @@ WdmAudSetMixerDeviceFormatByMMixer(
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize)
 {
-    Instance->hNotifyEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if ( ! Instance->hNotifyEvent )
-        return MMSYSERR_NOMEM;
-
-    if (MMixerOpen(&MixerContext, DeviceId, Instance->hNotifyEvent, NULL /* FIXME */, &Instance->Handle) == MM_STATUS_SUCCESS)
+    if (MMixerOpen(&MixerContext, DeviceId, (PVOID)Instance, MixerEventCallback, &Instance->Handle) == MM_STATUS_SUCCESS)
         return MMSYSERR_NOERROR;
 
     return MMSYSERR_BADDEVICEID;

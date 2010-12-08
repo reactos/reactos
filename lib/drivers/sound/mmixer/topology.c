@@ -1162,6 +1162,32 @@ MMixerIsNodeConnectedToPin(
     return MM_STATUS_SUCCESS;
 }
 
+VOID
+MMixerGetConnectedFromLogicalTopologyPins(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    OUT PULONG OutPinCount,
+    OUT PULONG OutPins)
+{
+    ULONG Index;
+    PTOPOLOGY_NODE Node;
+
+    /* sanity check */
+    ASSERT(NodeIndex < Topology->TopologyNodesCount);
+
+    /* get node */
+    Node = &Topology->TopologyNodes[NodeIndex];
+
+    for(Index = 0; Index < Node->NodeConnectedFromCount; Index++)
+    {
+        /* copy logical pin id */
+        OutPins[Index] = Node->LogicalPinNodeConnectedFrom[Index];
+    }
+
+    /* store pin count */
+    *OutPinCount = Node->NodeConnectedFromCount;
+}
+
 LPGUID
 MMixerGetNodeTypeFromTopology(
     IN PTOPOLOGY Topology,

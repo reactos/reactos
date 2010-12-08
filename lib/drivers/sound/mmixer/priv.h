@@ -302,6 +302,18 @@ MMixerSetGetVolumeControlDetails(
     LPMIXERLINE_EXT MixerLine);
 
 MIXER_STATUS
+MMixerSetGetMuxControlDetails(
+    IN PMIXER_CONTEXT MixerContext,
+    IN LPMIXER_INFO MixerInfo,
+    IN ULONG NodeId,
+    IN ULONG bSet,
+    IN ULONG Flags,
+    LPMIXERCONTROL_EXT MixerControl,
+    IN LPMIXERCONTROLDETAILS MixerControlDetails,
+    LPMIXERLINE_EXT MixerLine);
+
+
+MIXER_STATUS
 MMixerSetGetControlDetails(
     IN PMIXER_CONTEXT MixerContext,
     IN HANDLE hMixer,
@@ -507,3 +519,9 @@ MMixerGetTopologyPinCount(
     IN PTOPOLOGY Topology,
     OUT PULONG PinCount);
 
+VOID
+MMixerGetConnectedFromLogicalTopologyPins(
+    IN PTOPOLOGY Topology,
+    IN ULONG NodeIndex,
+    OUT PULONG OutPinCount,
+    OUT PULONG OutPins);

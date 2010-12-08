@@ -108,7 +108,6 @@ MMixerOpen(
 
     /* store result */
     *MixerHandle = (HANDLE)MixerInfo;
-
     return MM_STATUS_SUCCESS;
 }
 
@@ -243,7 +242,7 @@ MMixerGetLineInfo(
         if (!MixerLineSrc)
         {
             /* invalid parameter */
-            DPRINT1("MMixerGetLineInfo: MixerName %S Line not found %lu\n", MixerInfo->MixCaps.szPname, MixerLine->dwLineID);
+            DPRINT1("MMixerGetLineInfo: MixerName %S Line not found 0x%lx\n", MixerInfo->MixCaps.szPname, MixerLine->dwLineID);
             return MM_STATUS_INVALID_PARAMETER;
         }
 
@@ -519,8 +518,10 @@ MMixerSetControlDetails(
         case MIXERCONTROL_CONTROLTYPE_VOLUME:
             Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo, NodeId, TRUE, MixerControl, MixerControlDetails, MixerLine);
             break;
+        case MIXERCONTROL_CONTROLTYPE_MUX:
+            Status = MMixerSetGetMuxControlDetails(MixerContext, MixerInfo, NodeId, TRUE, Flags, MixerControl, MixerControlDetails, MixerLine);
+            break;
         default:
-            ASSERT(0);
             Status = MM_STATUS_NOT_IMPLEMENTED;
     }
 
@@ -583,9 +584,16 @@ MMixerGetControlDetails(
         case MIXERCONTROL_CONTROLTYPE_VOLUME:
             Status = MMixerSetGetVolumeControlDetails(MixerContext, MixerInfo, NodeId, FALSE, MixerControl, MixerControlDetails, MixerLine);
             break;
+        case MIXERCONTROL_CONTROLTYPE_ONOFF:
+            DPRINT1("Not Implemented MIXERCONTROL_CONTROLTYPE_ONOFF\n");
+            break;
+        case MIXERCONTROL_CONTROLTYPE_MUX:
+            Status = MMixerSetGetMuxControlDetails(MixerContext, MixerInfo, NodeId, FALSE, Flags, MixerControl, MixerControlDetails, MixerLine);
+            break;
+
         default:
             Status = MM_STATUS_NOT_IMPLEMENTED;
-            DPRINT1("ControlType %lu not implemented\n", MixerControl->Control.dwControlType);
+            DPRINT1("ControlType %lx not implemented\n", MixerControl->Control.dwControlType);
     }
 
     return Status;
