@@ -532,7 +532,14 @@ VBEStartIO(
    }
 
    if (Result)
+   {
       RequestPacket->StatusBlock->Status = NO_ERROR;
+   }
+   else
+   {
+      RequestPacket->StatusBlock->Information = 0;
+      StatusBlock->Status = ERROR_INVALID_FUNCTION;
+    }
 
    return TRUE;
 }
@@ -755,6 +762,7 @@ VBEMapVideoMemory(
 {
    PHYSICAL_ADDRESS FrameBuffer;
    ULONG inIoSpace = VIDEO_MEMORY_SPACE_MEMORY;
+   BOOLEAN retvalue;
 
    StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 
@@ -776,24 +784,31 @@ VBEMapVideoMemory(
             DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].LinBytesPerScanLine *
             DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
       }
+
+       StatusBlock->Status = VideoPortMapMemory(DeviceExtension, 
+                                                FrameBuffer,
+                                                &MapInformation->VideoRamLength,
+                                                &inIoSpace,
+                                                &MapInformation->VideoRamBase);
+       if (StatusBlock->Status == NO_ERROR)
+       {
+            /* The frame buffer and virtual memory and equivalent in this case.*/
+            MapInformation->FrameBufferBase = MapInformation->VideoRamBase;
+            MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
+            retvalue = TRUE;
+       }
+       else
+       {
+           retvalue = FALSE;
+       }
    }
-#ifdef VBE12_SUPPORT
    else
    {
-      FrameBuffer.QuadPart = 0xA0000;
-      MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
-      MapInformation->VideoRamLength = 0x10000;
+      /*  we can not map no linear video mode for VBE 2.0 and higher */
+      retvalue = FALSE;
    }
-#endif
 
-   VideoPortMapMemory(DeviceExtension, FrameBuffer,
-      &MapInformation->VideoRamLength, &inIoSpace,
-      &MapInformation->VideoRamBase);
-
-   MapInformation->FrameBufferBase = MapInformation->VideoRamBase;
-   MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
-
-   return TRUE;
+   return retvalue;
 }
 
 /*
@@ -809,9 +824,20 @@ VBEUnmapVideoMemory(
    PVIDEO_MEMORY VideoMemory,
    PSTATUS_BLOCK StatusBlock)
 {
-   VideoPortUnmapMemory(DeviceExtension, VideoMemory->RequestedVirtualAddress,
+   BOOLEAN retvalue;
+   StatusBlock->Status VideoPortUnmapMemory(DeviceExtension, VideoMemory->RequestedVirtualAddress,
       NULL);
-   return TRUE;
+
+   if (StatusBlock->Status == NO_ERROR)
+   {
+      retvalue = TRUE;
+   }
+   else
+   {
+      retvalue = FALSE;
+   }
+
+   return retvalue;
 }
 
 /*
