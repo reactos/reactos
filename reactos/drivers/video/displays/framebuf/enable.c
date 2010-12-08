@@ -78,13 +78,8 @@ DrvEnableDriver(
           if (SupportedVersions[i] == iEngineVersion )
           {
               pded->iDriverVersion = SupportedVersions[i];
+              status = TRUE;
 
-              // Initialize sync semaphore.
-              g_cs = EngCreateSemaphore();
-              if (g_cs)
-              {
-                 status = TRUE;
-              }
               break;
           }
       }

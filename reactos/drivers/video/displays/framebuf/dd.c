@@ -174,13 +174,13 @@ DdMapMemory(PDD_MAPMEMORYDATA lpMapMemory)
         ShareMemory.ViewSize                = 0;
         ShareMemory.RequestedVirtualAddress = (VOID*) lpMapMemory->fpProcess;
 
-        if (EngDeviceIoControl(ppdev->hDriver,
-                       IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY,
-                       &ShareMemory,
-                       sizeof(VIDEO_SHARE_MEMORY),
-                       NULL,
-                       0,
-                       &ReturnedDataLength))
+        if (EngDeviceIoControl( ppdev->hDriver,
+                                IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY,
+                                &ShareMemory,
+                                sizeof(VIDEO_SHARE_MEMORY),
+                                NULL,
+                                0,
+                                &ReturnedDataLength))
         {
             lpMapMemory->ddRVal = DDERR_GENERIC;
         }
