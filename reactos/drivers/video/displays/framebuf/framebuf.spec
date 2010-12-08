@@ -1,1 +1,1 @@
-@ stdcall DrvEnableDriver(long long ptr)
+@ stdcall DriverEntry(long long ptr) = DrvEnableDriver
