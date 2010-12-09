@@ -35,7 +35,8 @@ MMixerAddMixerControl(
     IN HANDLE hMixer,
     IN PTOPOLOGY Topology,
     IN ULONG NodeIndex,
-    IN LPMIXERLINE_EXT MixerLine)
+    IN LPMIXERLINE_EXT MixerLine,
+    IN ULONG MaxChannels)
 {
     LPGUID NodeType;
     KSP_NODE Node;
@@ -66,7 +67,7 @@ MMixerAddMixerControl(
     /* store control type */
     MixerControl->Control.dwControlType = MMixerGetControlTypeFromTopologyNode(NodeType);
 
-    MixerControl->Control.fdwControl = MIXERCONTROL_CONTROLF_UNIFORM; /* FIXME */
+    MixerControl->Control.fdwControl = (MaxChannels > 1 ? 0 : MIXERCONTROL_CONTROLF_UNIFORM);
     MixerControl->Control.cMultipleItems = 0;
 
     /* setup request to retrieve name */
@@ -136,7 +137,7 @@ MMixerAddMixerControl(
         MixerControl->Control.Bounds.dwMaximum = NodesCount - 1;
         MixerControl->Control.Metrics.dwReserved[0] = NodesCount;
         MixerControl->Control.cMultipleItems = NodesCount;
-        MixerControl->Control.fdwControl |= MIXERCONTROL_CONTROLF_MULTIPLE;
+        MixerControl->Control.fdwControl |= MIXERCONTROL_CONTROLF_UNIFORM | MIXERCONTROL_CONTROLF_MULTIPLE;
     }
     else if (MixerControl->Control.dwControlType == MIXERCONTROL_CONTROLTYPE_MUTE)
     {
@@ -695,9 +696,14 @@ MMixerAddMixerControlsToMixerLineByNodeIndexArray(
             /* calculate maximum channels */
             DstLine->Line.cChannels = min(DstLine->Line.cChannels, MaxChannels);
         }
+        else
+        {
+            /* use default of one channel */
+            MaxChannels = 1;
+        }
 
         /* now add the mixer control */
-        Status = MMixerAddMixerControl(MixerContext, MixerInfo, hMixer, Topology, Nodes[Index], DstLine);
+        Status = MMixerAddMixerControl(MixerContext, MixerInfo, hMixer, Topology, Nodes[Index], DstLine, MaxChannels);
 
         if (Status == MM_STATUS_SUCCESS)
         {

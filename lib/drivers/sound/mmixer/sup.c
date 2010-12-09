@@ -536,6 +536,14 @@ MMixerSetGetMuxControlDetails(
                 return Status;
             }
 
+            /* gets the corresponding mixer data */
+            MixerData = MMixerGetMixerDataByDeviceHandle(MixerContext, MixerControl->hDevice);
+
+            /* sanity check */
+            ASSERT(MixerData);
+            ASSERT(MixerData->Topology);
+            ASSERT(MixerData->MixerInfo == MixerInfo);
+
             /* get logical pin nodes */
             MMixerGetConnectedFromLogicalTopologyPins(MixerData->Topology, MixerControl->NodeID, &LogicalNodesCount, LogicalNodes);
 
