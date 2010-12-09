@@ -355,8 +355,12 @@ EngLoadImageEx(
     RtlAppendUnicodeToString(&strDriverName, pwsz);
 
     /* MSDN says "The driver must include this suffix in the pwszDriver string."
-       But in fact it's optional. */
-    if (_wcsnicmp(pwszDriverName + cwcLength - 4, L".dll", 4) != 0)
+       But in fact it's optional.
+
+       ms win32k EngLoadImageEx loading .sys file without append .dll
+    */
+    if ( (_wcsnicmp(pwszDriverName + cwcLength - 4, L".dll", 4) != 0) &&
+         (_wcsnicmp(pwszDriverName + cwcLength - 4, L".sys", 4) != 0) )
     {
         /* Append the .dll suffix */
         RtlAppendUnicodeToString(&strDriverName, L".dll");
