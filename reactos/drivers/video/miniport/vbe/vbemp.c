@@ -538,6 +538,17 @@ VBEStartIO(
             (PVIDEO_SHARE_MEMORY_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
          break;
+      case IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY:
+         if (RequestPacket->InputBufferLength < sizeof(VIDEO_SHARE_MEMORY)) 
+         {
+           RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
+           return TRUE;
+         }
+         Result = VBEVideoUnShareVideoMemmory(
+            (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
+            (PVIDEO_SHARE_MEMORY)RequestPacket->InputBufferLength,
+            RequestPacket->StatusBlock);
+         break;
 
       default:
          RequestPacket->StatusBlock->Status = ERROR_INVALID_FUNCTION;
@@ -853,7 +864,7 @@ VBEUnmapVideoMemory(
 }
 
 /*
- * VBEQueryNumAvailModes
+ * VBEVideoShareVideoMemmory
  *
  */
 BOOLEAN FASTCALL
@@ -877,8 +888,8 @@ VBEVideoShareVideoMemmory(
      */
 
     if ( ((DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].ModeAttributes & VBE_MODEATTR_LINEAR) != VBE_MODEATTR_LINEAR) ||
-         (pShareMemory->ViewOffset > VBEDeviceExtension->VbeInfo.TotalMemory) ||
-         ((pShareMemory->ViewOffset + pShareMemory->ViewSize) > VBEDeviceExtension->VbeInfo.TotalMemory) )
+         (pShareMemory->ViewOffset > DeviceExtension->VbeInfo.TotalMemory) ||
+         ((pShareMemory->ViewOffset + pShareMemory->ViewSize) > DeviceExtension->VbeInfo.TotalMemory) )
     {
         retvalue = FALSE;
     }
@@ -912,9 +923,35 @@ VBEVideoShareVideoMemmory(
         }
     }
 
-
     return retvalue;
 }
+
+/*
+ * VBEVideoUnShareVideoMemmory
+ *
+ */
+BOOLEAN FASTCALL
+VBEVideoUnShareVideoMemmory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_SHARE_MEMORY pShareMemory,
+   PSTATUS_BLOCK StatusBlock)
+{
+    BOOLEAN retvalue;
+
+    StatusBlock->Status = VideoPortUnmapMemory( DeviceExtension,
+                                                pShareMemory->RequestedVirtualAddress,
+                                                pShareMemory->ProcessHandle);
+    if (StatusBlock->Status == NO_ERROR)
+    {
+        retvalue = TRUE;
+    }
+    else
+    {
+        retvalue = FALSE;
+    }
+    return retvalue;
+}
+
 /*
  * VBEQueryNumAvailModes
  *
@@ -1091,7 +1128,7 @@ VBESetColorRegisters(
     * For VGA compatible adapters program the color registers directly.
     */
 
-   if (!(DeviceExtension->VbeInfo.Capabilities & 2))
+   if (!(DeviceExtension->VbeInfo.Capabilities & VBE_CHECK_VGA_COMPATIBLE))
    {
       for (Entry = ColorLookUpTable->FirstEntry;
            Entry < ColorLookUpTable->NumEntries + ColorLookUpTable->FirstEntry;

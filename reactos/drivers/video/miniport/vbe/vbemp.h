@@ -101,6 +101,12 @@
 #define VBE_GETRETURNCODE(x) (x & 0xFFFF)
 
 /*
+ * VBE checkflags Codes
+ */
+#define VBE_CHECK_VGA_COMPATIBLE            0x02
+#define VBE_CHECK_STEROSCOPIC_HW_SUPPORT    0x08
+
+/*
  * VBE specification defined structure for general adapter info
  * returned by function VBE_GET_CONTROLLER_INFORMATION command.
  */
@@ -311,4 +317,10 @@ VBEVideoShareVideoMemmory(
    PVBE_DEVICE_EXTENSION DeviceExtension,
    PVIDEO_SHARE_MEMORY pShareMemory,
    PVIDEO_SHARE_MEMORY_INFORMATION pShareMemoryInformation,
+   PSTATUS_BLOCK StatusBlock);
+
+BOOLEAN FASTCALL
+VBEVideoUnShareVideoMemmory(
+   PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_SHARE_MEMORY pShareMemory,
    PSTATUS_BLOCK StatusBlock);
