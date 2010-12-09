@@ -868,28 +868,31 @@ VBEVideoShareVideoMemmory(
     ULONG sharedViewSize;
     BOOLEAN retvalue;
     ULONG inIoSpace; 
-    
+
     /* in ms ddk xp it have two flag that are use full for us here 
        VIDEO_MEMORY_SPACE_USER_MODE or VIDEO_MEMORY_SPACE_P6CACHE
        the ddk say VIDEO_MEMORY_SPACE_P6CACHE does not care if it
        user mode or kmode memory. But we want be 100% sure it is
        vitual user mode memory adddress we mappin from kmode video memmory.
      */
-    inIoSpace = VIDEO_MEMORY_SPACE_USER_MODE;
 
-    if (DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].ModeAttributes & VBE_MODEATTR_LINEAR)
+    if ( ((DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].ModeAttributes & VBE_MODEATTR_LINEAR) != VBE_MODEATTR_LINEAR) ||
+         (pShareMemory->ViewOffset > VBEDeviceExtension->VbeInfo.TotalMemory) ||
+         ((pShareMemory->ViewOffset + pShareMemory->ViewSize) > VBEDeviceExtension->VbeInfo.TotalMemory) )
+    {
+        retvalue = FALSE;
+    }
+    else
     {
         StatusBlock->Information = sizeof(VIDEO_SHARE_MEMORY_INFORMATION);
-
-        /* FIXME calc see we do not go over the video memory size */
-
         virtualAddress = pShareMemory->ProcessHandle;
         sharedViewSize = pShareMemory->ViewSize;
 
         shareAddress.QuadPart = DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
 
-        /* we iggnore the ViewOffset */
+        /* FIXME we iggnore the ViewOffset */
 
+        inIoSpace = VIDEO_MEMORY_SPACE_USER_MODE;
         StatusBlock->Status  = VideoPortMapMemory(  DeviceExtension,
                                                     shareAddress,
                                                     &sharedViewSize,
@@ -907,12 +910,8 @@ VBEVideoShareVideoMemmory(
         {
             retvalue = FALSE;
         }
-        
     }
-    else
-    {
-        retvalue = FALSE;
-    }
+
 
     return retvalue;
 }
