@@ -21,9 +21,7 @@ add_library(inetcomm SHARED ${SOURCE})
 
 set_module_type(inetcomm win32dll)
 
-target_link_libraries(inetcomm
-    uuid
-    wine)
+target_link_libraries(inetcomm uuid wine)
 
 add_importlibs(inetcomm
     ole32
@@ -35,4 +33,5 @@ add_importlibs(inetcomm
     kernel32
     ntdll)
 
+add_importlib_target(inetcomm.spec)
 add_cab_target(inetcomm 1)

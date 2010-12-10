@@ -36,5 +36,5 @@ set_module_type(wldap32 win32dll)
 target_link_libraries(wldap32 wine)
 
 add_importlibs(wldap32 user32 msvcrt kernel32 ntdll)
-
+add_importlib_target(wldap32.spec)
 add_cab_target(wldap32 1)

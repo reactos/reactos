@@ -22,9 +22,7 @@ add_library(atl SHARED ${SOURCE})
 
 set_module_type(atl win32dll)
 
-target_link_libraries(atl
-    uuid
-    wine)
+target_link_libraries(atl uuid wine)
 
 add_importlibs(atl
     msvcrt
@@ -35,6 +33,8 @@ add_importlibs(atl
     gdi32
     kernel32
     ntdll)
+
+add_importlib_target(atl.spec)
 
 add_dependencies(atl atl_atliface_header)
 add_cab_target(atl 1)

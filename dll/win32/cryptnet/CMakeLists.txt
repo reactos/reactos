@@ -21,5 +21,5 @@ add_importlibs(cryptnet
     kernel32
     ntdll)
 
-
+add_importlib_target(cryptnet.spec)
 add_cab_target(cryptnet 1)

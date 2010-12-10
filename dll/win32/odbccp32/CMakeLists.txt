@@ -1,6 +1,7 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
@@ -13,9 +14,7 @@ list(APPEND SOURCE
 add_library(odbccp32 SHARED ${SOURCE})
 set_entrypoint(odbccp32 0)
 
-target_link_libraries(odbccp32
-    uuid
-    wine)
+target_link_libraries(odbccp32 uuid wine)
 
 add_importlibs(odbccp32
     msvcrt
@@ -23,5 +22,5 @@ add_importlibs(odbccp32
     kernel32
     ntdll)
 
-
+add_importlib_target(odbccp32.spec)
 add_cab_target(odbccp32 1)

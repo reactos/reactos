@@ -13,9 +13,8 @@ add_library(xmllite SHARED ${SOURCE})
 
 set_module_type(xmllite win32dll)
 
-target_link_libraries(xmllite
-    wine)
+target_link_libraries(xmllite wine)
 
 add_importlibs(xmllite msvcrt kernel32 ntdll)
-
+add_importlib_target(xmllite.spec)
 add_cab_target(xmllite 1)

@@ -28,5 +28,5 @@ add_importlibs(hlink
     kernel32
     ntdll)
 
-
+add_importlib_target(hlink.spec)
 add_cab_target(hlink 1)

@@ -6,7 +6,8 @@ set_rc_compiler()
 spec2def(oleacc.dll oleacc.spec)
 
 list(APPEND SOURCE
-    main.c oleacc.rc
+    main.c
+    oleacc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/oleacc.def)
 
 add_library(oleacc SHARED ${SOURCE})
@@ -20,5 +21,5 @@ add_importlibs(oleacc
     kernel32
     ntdll)
 
-
+add_importlib_target(oleacc.spec)
 add_cab_target(oleacc 1)

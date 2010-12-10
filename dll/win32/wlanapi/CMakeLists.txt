@@ -17,6 +17,7 @@ target_link_libraries(wlanapi
     ${PSEH_LIB})
 
 add_importlibs(wlanapi rpcrt4 kernel32 ntdll)
-add_dependencies(wlanapi psdk buildno_header)
+add_importlib_target(wlanapi.spec)
 
+add_dependencies(wlanapi psdk buildno_header)
 add_cab_target(wlanapi 1)

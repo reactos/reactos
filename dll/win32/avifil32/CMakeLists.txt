@@ -7,6 +7,8 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+spec2def(avifil32.dll avifil32.spec)
+
 add_library(avifil32 SHARED
     acmstream.c
     api.c
@@ -20,17 +22,11 @@ add_library(avifil32 SHARED
     tmpfile.c
     wavfile.c
     rsrc.rc
-    avifil32.def)
-
-if(NOT MSVC)
-    set_source_files_properties(avifil32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+    ${CMAKE_CURRENT_BINARY_DIR}/avifil32.def)
 
 set_module_type(avifil32 win32dll)
 
-target_link_libraries(avifil32
-    uuid
-    wine)
+target_link_libraries(avifil32 uuid wine)
 
 add_importlibs(avifil32
     msvcrt
@@ -43,4 +39,5 @@ add_importlibs(avifil32
     kernel32
     ntdll)
 
+add_importlib_target(avifil32.spec)
 add_cab_target(avifil32 1)
