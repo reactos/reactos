@@ -39,8 +39,6 @@ intEnableReactXDriver(HDC hdc)
     PGD_DXDDENABLEDIRECTDRAW pfnDdEnableDirectDraw = NULL;
     BOOL success = FALSE;
 
-    /* FIXME get the process data */
-
     /* Do not try load dxg.sys when it have already been load once */
     if (gpfnStartupDxGraphics == NULL)
     {
@@ -61,6 +59,20 @@ intEnableReactXDriver(HDC hdc)
 
     pDev = pDC->ppdev;
 
+    /* This code should be where primary surface is create
+       but we save some memory use to alloc it when it is need it */
+    if (pDev->pEDDgpl == NULL)
+    {
+        pDev->pEDDgpl = ExAllocatePoolWithTag(PagedPool, sizeof(EDD_DIRECTDRAW_GLOBAL), TAG_EDDGBL);
+        if (!pDev->pEDDgpl)
+        {
+            DPRINT1("Warning : Failed to allocate memmory for EDD_DIRECTDRAW_GLOBAL\n");
+            DC_UnlockDc(pDC);
+            return FALSE;
+        }
+        RtlZeroMemory( pDev->pEDDgpl ,sizeof(EDD_DIRECTDRAW_GLOBAL));
+    }
+
     /* test see if drv got a dx interface or not */
     if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
           ( pDev->DriverFunctions.EnableDirectDraw == NULL))
@@ -69,8 +81,7 @@ intEnableReactXDriver(HDC hdc)
     }
     else
     {
-
-        /* CHeck see if dx have been enable or not */
+        /* Check see if dx have been enable or not */
         if ( pDev->pEDDgpl->pvmList == NULL)
         {
             pDev->pEDDgpl->ddCallbacks.dwSize = sizeof(DD_CALLBACKS);
@@ -98,7 +109,6 @@ intEnableReactXDriver(HDC hdc)
             success = TRUE;
         }
     }
-
 
     DPRINT1("Return value : 0x%08x\n",success);
     DC_UnlockDc(pDC);
