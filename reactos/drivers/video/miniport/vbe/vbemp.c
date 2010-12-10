@@ -350,8 +350,8 @@ VBEInitialize(PVOID HwDeviceExtension)
 
       /* Is this mode acceptable? */
       if (VBE_GETRETURNCODE(BiosRegisters.Eax) == VBE_SUCCESS &&
-          VbeModeInfo->XResolution >= 640 &&
-          VbeModeInfo->YResolution >= 480 &&
+          VbeModeInfo->XResolution >= 300 &&
+          VbeModeInfo->YResolution >= 200 &&
           (VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_PACKEDPIXEL ||
            VbeModeInfo->MemoryModel == VBE_MEMORYMODEL_DIRECTCOLOR) &&
           VbeModeInfo->PhysBasePtr != 0)
