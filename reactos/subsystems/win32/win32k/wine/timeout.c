@@ -113,7 +113,7 @@ const char *get_timeout_str( timeout_t timeout )
 }
 
 /* process pending timeouts and return the time until the next timeout, in milliseconds */
-static int get_next_timeout(void)
+static void get_next_timeout(LARGE_INTEGER *result)
 {
     timeout_t current_time;
     get_current_time(&current_time);
@@ -150,27 +150,32 @@ static int get_next_timeout(void)
         if ((ptr = list_head( &timeout_list )) != NULL)
         {
             struct timeout_user *timeout = LIST_ENTRY( ptr, struct timeout_user, entry );
-            //int diff = (timeout->when - current_time + 9999) / 10000;
-            int diff = timeout->when - current_time + 1;
-            if (diff < 0) diff = 0;
-            return diff;
+            LARGE_INTEGER diff;
+            diff.QuadPart = timeout->when - current_time;
+            //DPRINT1("diff %d, when %I64d, current %I64d\n", diff, timeout->when, current_time);
+            if (diff.QuadPart < 0) diff.QuadPart = 0;
+
+            result->QuadPart = diff.QuadPart;
+            return;
         }
     }
-    return -1;  /* no pending timeouts */
+
+    result->QuadPart = -1LL;
+    return;  /* no pending timeouts */
 }
 
 VOID
 ProcessTimers()
 {
-    int timeout;
+    LARGE_INTEGER timeout;
     LARGE_INTEGER DueTime;
 
-    timeout = get_next_timeout();
-
-    if (timeout != -1)
+    get_next_timeout(&timeout);
+    DPRINT("ProcessTimers() timeout %I64d\n", timeout.QuadPart);
+    if (timeout.QuadPart != -1LL)
     {
         /* Wait for the next time out */
-        DueTime.QuadPart = -timeout;
+        DueTime.QuadPart = -timeout.QuadPart;
         KeSetTimer(MasterTimer, DueTime, NULL);
     }
     else
