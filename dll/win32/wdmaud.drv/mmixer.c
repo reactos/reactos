@@ -15,6 +15,7 @@ typedef struct
     HANDLE hDevice;
     PSOUND_OVERLAPPED Overlap;
     LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
+    DWORD IoCtl;
 }IO_PACKET, *LPIO_PACKET;
 
 BOOL MMixerLibraryInitialized = FALSE;
@@ -786,28 +787,18 @@ IoStreamingThread(
     LPIO_PACKET Packet = (LPIO_PACKET)lpParameter;
 
     Result =  SyncOverlappedDeviceIoControl(Packet->hDevice,
-                    IOCTL_KS_WRITE_STREAM, //FIXME IOCTL_KS_READ_STREAM
+                    Packet->IoCtl,
                     NULL,
                     0,
                     &Packet->Header,
                     sizeof(KSSTREAM_HEADER),
                     &Length);
 
-    /* HACK:
-     * don't call completion routine directly
-     */
-
     Packet->CompletionRoutine(ERROR_SUCCESS, Packet->Header.DataUsed, (LPOVERLAPPED)Packet->Overlap);
 
     HeapFree(GetProcessHeap(), 0, Packet);
     return 0;
 }
-
-
-
-
-
-
 
 MMRESULT
 WdmAudCommitWaveBufferByMMixer(
@@ -849,6 +840,7 @@ WdmAudCommitWaveBufferByMMixer(
     Packet->hDevice = SoundDeviceInstance->Handle;
     Packet->Overlap = Overlap;
     Packet->CompletionRoutine = CompletionRoutine;
+    Packet->IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
