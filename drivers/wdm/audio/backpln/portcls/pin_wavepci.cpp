@@ -60,7 +60,6 @@ protected:
 
     ULONG m_TotalPackets;
     KSAUDIO_POSITION m_Position;
-    ULONG m_StopCount;
 
     BOOL m_bUsePrefetch;
     ULONG m_PrefetchOffset;
