@@ -45,7 +45,6 @@ intEnableReactXDriver(HDC hdc)
         Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Warning : Failed to create the directx interface\n");
             return FALSE;
         }
     }
@@ -53,7 +52,6 @@ intEnableReactXDriver(HDC hdc)
     pDC = DC_LockDc(hdc);
     if (pDC == NULL)
     {
-        DPRINT1("Warning : Failed to lock hdc\n");
         return FALSE;
     }
 
@@ -66,7 +64,6 @@ intEnableReactXDriver(HDC hdc)
         pDev->pEDDgpl = ExAllocatePoolWithTag(PagedPool, sizeof(EDD_DIRECTDRAW_GLOBAL), TAG_EDDGBL);
         if (!pDev->pEDDgpl)
         {
-            DPRINT1("Warning : Failed to allocate memmory for EDD_DIRECTDRAW_GLOBAL\n");
             DC_UnlockDc(pDC);
             return FALSE;
         }
@@ -74,12 +71,8 @@ intEnableReactXDriver(HDC hdc)
     }
 
     /* test see if drv got a dx interface or not */
-    if  ( ( pDev->DriverFunctions.DisableDirectDraw == NULL) ||
-          ( pDev->DriverFunctions.EnableDirectDraw == NULL))
-    {
-        DPRINT1("Waring : DisableDirectDraw and EnableDirectDraw are NULL, no dx driver \n");
-    }
-    else
+    if  ( ( pDev->DriverFunctions.DisableDirectDraw != NULL) &&
+          ( pDev->DriverFunctions.EnableDirectDraw != NULL))
     {
         /* Check see if dx have been enable or not */
         if ( pDev->pEDDgpl->pvmList == NULL)
@@ -89,13 +82,8 @@ intEnableReactXDriver(HDC hdc)
             pDev->pEDDgpl->ddPaletteCallbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
             pfnDdEnableDirectDraw = (PGD_DXDDENABLEDIRECTDRAW)gpDxFuncs[DXG_INDEX_DxDdEnableDirectDraw].pfn;
-            if (pfnDdEnableDirectDraw == NULL)
+            if (pfnDdEnableDirectDraw != NULL)
             {
-                DPRINT1("Warning: no pfnDdEnableDirectDraw\n");
-            }
-            else
-            {
-                DPRINT1(" call to pfnDdEnableDirectDraw \n ");
                 /* Note it is the hdev struct it want, not the drv hPDev aka pdc->PDev */
                 success = pfnDdEnableDirectDraw(pDC->ppdev, TRUE);
 
@@ -105,14 +93,10 @@ intEnableReactXDriver(HDC hdc)
         }
         else
         {
-            DPRINT1(" The dxg.sys and graphic card driver interface is enabled \n ");
             success = TRUE;
         }
     }
-
-    DPRINT1("Return value : 0x%08x\n",success);
     DC_UnlockDc(pDC);
-    DPRINT1(" end call to pfnDdEnableDirectDraw \n ");
     return success;
 }
 
@@ -148,12 +132,10 @@ DxDdStartupDxGraphics(  ULONG ulc1,
 
     /* Loading the kernel interface of directx for win32k */
 
-    DPRINT1("Warning: trying loading xp/2003/windows7/reactos dxg.sys\n");
     ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
     if ( ghDxGraphics == NULL)
     {
         Status = STATUS_DLL_NOT_FOUND;
-        DPRINT1("Warning: no ReactX or DirectX kernel driver found\n");
     }
     else
     {
@@ -187,7 +169,6 @@ DxDdStartupDxGraphics(  ULONG ulc1,
                 EngUnloadImage( ghDxGraphics);
                 ghDxGraphics = NULL;
             }
-            DPRINT1("Warning: DirectX graphics interface can not be initialized\n");
         }
         else
         {
