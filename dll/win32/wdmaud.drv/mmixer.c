@@ -751,7 +751,19 @@ WdmAudResetStreamByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     IN  BOOLEAN bStartReset)
 {
-    /* FIXME */
+    MIXER_STATUS Status;
+
+    if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
+    {
+        Status = MMixerSetWaveResetState(&MixerContext, SoundDeviceInstance->Handle, bStartReset);
+        if (Status == MM_STATUS_SUCCESS)
+        {
+            /* completed successfully */
+            return MMSYSERR_NOERROR;
+        }
+    }
+
+
     return MMSYSERR_NOTSUPPORTED;
 }
 

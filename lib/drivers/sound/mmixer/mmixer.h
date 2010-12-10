@@ -207,6 +207,12 @@ MMixerSetWaveStatus(
     IN KSSTATE State);
 
 MIXER_STATUS
+MMixerSetWaveResetState(
+    IN PMIXER_CONTEXT MixerContext,
+    IN HANDLE PinHandle,
+    IN ULONG bBegin);
+
+MIXER_STATUS
 MMixerGetWaveDevicePath(
     IN PMIXER_CONTEXT MixerContext,
     IN ULONG bWaveIn,

@@ -111,6 +111,11 @@ wodMessage(
             /* Continue playback when paused */
             break;
         }
+        case WODM_PAUSE :
+        {
+            /* pause playback */
+            break;
+        }
 
         case WODM_GETPOS :
         {
