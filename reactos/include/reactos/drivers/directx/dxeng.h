@@ -77,6 +77,7 @@ BOOLEAN NTAPI DxEngNUIsTermSrv();
 PDC NTAPI DxEngLockDC(HDC hDC);
 BOOLEAN NTAPI DxEngUnlockDC(PDC pDC);
 DWORD_PTR NTAPI DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
+
 BOOLEAN NTAPI DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD_PTR);
 BOOLEAN NTAPI DxEngLockHdev(HDEV hdev);
 BOOLEAN NTAPI DxEngUnlockHdev(HDEV hdev);
@@ -120,4 +121,16 @@ DWORD NTAPI DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
 DWORD NTAPI DxEngGetRedirectionBitmap(DWORD x1);
 DWORD NTAPI DxEngLoadImage(DWORD x1,DWORD x2);
 
+/***********************************************************************************/
+/* Driver Functions Protypes                                                       */
+/***********************************************************************************/
+typedef BOOLEAN     (NTAPI *PGD_DXENGNUISTERMSRV)();
+typedef PDC         (NTAPI *PGD_DXENGLOCKDC)(HDC hDC);
+typedef BOOLEAN     (NTAPI *PGD_DXENGUNLOCKDC)(PDC pDC);
+typedef DWORD_PTR   (NTAPI *PGD_DXENGGETHDEVDATA)(HDEV, DXEGSHDEVDATA);
 
+
+/***********************************************************************************/
+/* DxEGShDevData_dd_flags value                                                       */
+/***********************************************************************************/
+#define DDFLAG_DIRECTX_3D_ON       0x04
