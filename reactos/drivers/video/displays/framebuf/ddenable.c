@@ -62,7 +62,7 @@ DrvEnableDirectDraw(
         // pCallBacks->WaitForVerticalBlank  = (PDD_WAITFORVERTICALBLANK) DdWaitForVerticalBlank;
         // pCallBacks->CreatePalette         = (PDD_CREATEPALETTE) DdCreatePalette;
         // pCallBacks->GetScanLine           = (PDD_GETSCANLINE) DdGetScanLine;
-        
+
 
         /* Unused on Microsoft Windows 2000 and later and should be ignored by the driver.  '
             pCallBacks->DestroyDriver
@@ -76,7 +76,7 @@ DrvEnableDirectDraw(
         memset(pSurfaceCallBacks,0,sizeof(DD_SURFACECALLBACKS));
 
         /* FILL pSurfaceCallBacks with hal stuff */
-        // pSurfaceCallBacks->dwSize              = sizeof(DDHAL_DDSURFACECALLBACKS);
+        pSurfaceCallBacks->dwSize              = sizeof(DDHAL_DDSURFACECALLBACKS);
         //                                          DDHAL_SURFCB32_DESTROYSURFACE |
         //                                          DDHAL_SURFCB32_FLIP     |
         //                                          DDHAL_SURFCB32_LOCK     |
@@ -111,6 +111,23 @@ DrvEnableDirectDraw(
     return ppdev->bDDInitialized;
 }
 
+/*
+ * Note DrvGetDirectDrawInfo
+ *   ms dxg.sys call DrvGetDirectDrawInfo before it call DrvEnableDirectDraw
+ *   so we can not check if the drv have enable the directx or not
+ *
+ * Optimze tip ms dxg.sys frist time it call on this api the
+ *   pdwNumHeaps and pdwFourCC is NULL,
+ *   next time it call it have alloc memmory for them
+ *   in the EDD_DIRECTDRAW_GLOBAL in their memory
+ *   pdwFourCC have pool tag 'fddG' and
+ *   pvmList  have pool tag 'vddG'
+ *   so we only need fill pHalInfo,pdwNumHeaps,pdwNumFourCCCodes in the
+ *   frist call.
+ *
+ * Importet do not forget to fill in pHalInfo->vmiData.pvPrimary if we
+ *  forget that no directx hardware acclartions.
+ */
 BOOL APIENTRY
 DrvGetDirectDrawInfo(
   IN DHPDEV  dhpdev,
@@ -121,39 +138,33 @@ DrvGetDirectDrawInfo(
   OUT DWORD  *pdwFourCC)
 {
     PPDEV ppdev = (PPDEV)dhpdev;
-    DWORD heap = 1; /* we always alloc one heap */
-    BOOL bDDrawHeap = FALSE;
-
-    if (ppdev->bDDInitialized == FALSE);
-    {
-        return FALSE;
-    }
-
-    /*  Setup heap */
-    if ( (ppdev->ScreenWidth < ppdev->MemWidth) || (ppdev->ScreenHeight < ppdev->MemHeight))
-    {
-       bDDrawHeap = TRUE;
-       heap++;
-    }
-
-    ppdev->dwHeap = heap;
-    *pdwNumHeaps  = heap;
-
-    /* We do not support other fourcc */
-    *pdwNumFourCCCodes = 0;
 
 
     /*
-        check see if pvmList and pdwFourCC are frist call
-        or frist. Secon call  we fill in pHalInfo info
+        check see if it is our frist call
+        if it is fill pHalInfo and pdwNumHeaps and  pdwNumFourCCCodes.
+
+        if it our second call we must fill in pdwFourCC or pvmList
+        if one or two of them have been set.
+
+        But we do not support heap or any fourcc so we skipp it
     */
 
-    if(!(pvmList && pdwFourCC))
+    if( (!pvmList) && (!pdwFourCC) )
     {
+        /*  Setup heap */
+        ppdev->dwHeap = 0;
+        *pdwNumHeaps = 0;
+
+        /* We do not support other fourcc */
+        *pdwNumFourCCCodes = 0;
+
+
+        /* not document ms dxg.sys call this api twice, frist time it call, the pvmList and pdwFourCC is NULL */
         RtlZeroMemory(pHalInfo, sizeof(DD_HALINFO));
         pHalInfo->dwSize = sizeof(DD_HALINFO);
 
-        pHalInfo->ddCaps.dwCaps = DDCAPS_NOHARDWARE;
+        pHalInfo->ddCaps.dwCaps = 0;
         /* we do not support all this caps
         pHalInfo->ddCaps.dwCaps =  DDCAPS_BLT        | DDCAPS_BLTQUEUE | DDCAPS_BLTCOLORFILL | DDCAPS_READSCANLINE |
                                    DDCAPS_BLTSTRETCH | DDCAPS_COLORKEY | DDCAPS_CANBLTSYSMEM;
@@ -180,6 +191,8 @@ DrvGetDirectDrawInfo(
         pHalInfo->ddCaps.dwVidMemTotal = (ppdev->MemHeight - ppdev->ScreenHeight) * ppdev->ScreenDelta;
 
         /* fill in some basic info that we need */
+
+        /* if we do not fill in pHalInfo->vmiData.pvPrimary dxg.sys will not activate the dx */
         pHalInfo->vmiData.pvPrimary                 = ppdev->ScreenPtr;
         pHalInfo->vmiData.dwDisplayWidth            = ppdev->ScreenWidth;
         pHalInfo->vmiData.dwDisplayHeight           = ppdev->ScreenHeight;
@@ -201,29 +214,6 @@ DrvGetDirectDrawInfo(
         {
             pHalInfo->vmiData.ddpfDisplay.dwFlags |= DDPF_PALETTEINDEXED4;
         }
-    }
-
-    /* Now build pvmList info */
-    if(pvmList)
-    {
-        ppdev->pvmList = pvmList;
-
-        if ( bDDrawHeap == TRUE)
-        {
-            pvmList->dwFlags        = VIDMEM_ISLINEAR ;
-            pvmList->fpStart        = ppdev->ScreenHeight * ppdev->ScreenDelta;
-            pvmList->fpEnd          = ppdev->MemHeight * ppdev->ScreenDelta - 1;
-            pvmList->ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-            pvmList++;
-        }
-
-        pvmList->fpStart = 0;
-        pvmList->fpEnd = (ppdev->MemHeight * ppdev->ScreenDelta)  - 1;
-        pvmList->dwFlags = VIDMEM_ISNONLOCAL | VIDMEM_ISLINEAR | VIDMEM_ISWC;
-        pvmList->ddsCaps.dwCaps =  DDSCAPS_FRONTBUFFER | DDSCAPS_BACKBUFFER ;
-        pvmList->ddsCapsAlt.dwCaps = DDSCAPS_FRONTBUFFER | DDSCAPS_BACKBUFFER;
-
-        pvmList = ppdev->pvmList;
     }
 
     return TRUE;
