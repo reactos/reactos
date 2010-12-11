@@ -283,12 +283,6 @@ DxEngGetHdevData(HDEV hDev,
     DWORD_PTR retVal = 0;
     PPDEVOBJ PDev = (PPDEVOBJ)hDev;
 
-    DPRINT1("ReactX Calling : DxEngGetHdevData DXEGSHDEVDATA : %ld\n", Type);
-
-#if 1
-    DPRINT1("HDEV hDev %08lx\n", hDev);
-#endif
-
     switch ( Type )
     {
       case DxEGShDevData_Surface:
@@ -372,10 +366,6 @@ DxEngGetHdevData(HDEV hDev,
       default:
         break;
     }
-
-#if 1
-    DPRINT1("return value %08lx\n", retVal);
-#endif
 
     return retVal;
 
@@ -743,7 +733,7 @@ DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set)
    if (pDC)
    {
       if (SetType == 1)
-      {   
+      {
         if ( Set )
             pDC->fs |= DC_FLAG_FULLSCREEN;
         else
