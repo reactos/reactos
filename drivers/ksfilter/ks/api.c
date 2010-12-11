@@ -1743,6 +1743,9 @@ KsCreateBusEnumObject(
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
     PDEVICE_EXTENSION DeviceExtension;
 
+    DPRINT1("KsCreateBusEnumObject %S\n", ServiceRelativePath);
+    DbgBreakPoint();
+
     /* calculate sizeof bus enum device extension */
     Length = wcslen(BusIdentifier) * sizeof(WCHAR);
     Length += sizeof(BUS_ENUM_DEVICE_EXTENSION);
@@ -1757,6 +1760,9 @@ KsCreateBusEnumObject(
     /* zero device extension */
     RtlZeroMemory(BusDeviceExtension, sizeof(BUS_ENUM_DEVICE_EXTENSION));
 
+    /* store bus device extension */
+    *((PVOID*)BusDeviceObject->DeviceExtension) = BusDeviceExtension;
+
     /* initialize bus device extension */
     wcscpy(BusDeviceExtension->BusIdentifier, BusIdentifier);
 
@@ -1767,7 +1773,7 @@ KsCreateBusEnumObject(
     if (ServiceRelativePath)
     {
         /* relative path for devices */
-        Length += wcslen(ServiceRelativePath) + 2 * sizeof(WCHAR);
+        Length += (wcslen(ServiceRelativePath) + 2) * sizeof(WCHAR);
     }
 
     BusDeviceExtension->ServicePath.Length = 0;
@@ -1841,6 +1847,11 @@ KsCreateBusEnumObject(
 
             return STATUS_DEVICE_REMOVED;
         }
+    }
+    else
+    {
+        /* directly attach */
+        BusDeviceExtension->PnpDeviceObject = PnpDeviceObject;
     }
 
     /* attach device extension */
@@ -1980,7 +1991,7 @@ KsDeviceRegisterAdapterObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1988,9 +1999,70 @@ NTAPI
 KsGetBusEnumIdentifier(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
+    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Length;
+    NTSTATUS Status;
+    LPWSTR Buffer;
 
-    return STATUS_UNSUCCESSFUL;
+    /* get stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity checks */
+    ASSERT(IoStack->DeviceObject);
+    ASSERT(IoStack->DeviceObject->DeviceExtension);
+
+    /* get bus device extension */
+    BusDeviceExtension = *(PBUS_ENUM_DEVICE_EXTENSION*)(IoStack->DeviceObject->DeviceExtension);
+
+    if (!BusDeviceExtension)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* get length */
+    Length = (wcslen(BusDeviceExtension->BusIdentifier)+1) * sizeof(WCHAR);
+
+    /* is there an output buffer provided */
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength)
+    {
+        if (Length > IoStack->Parameters.DeviceIoControl.InputBufferLength)
+        {
+            /* buffer is too small */
+            return STATUS_BUFFER_TOO_SMALL;
+        }
+
+        /* now allocate buffer */
+        Buffer = AllocateItem(NonPagedPool, Length);
+        if (!Buffer)
+        {
+            /* no memory */
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+        else
+        {
+            /* copy bus identifier */
+            wcscpy(Buffer, BusDeviceExtension->BusIdentifier);
+
+            /* store buffer */
+            Irp->AssociatedIrp.SystemBuffer = Buffer;
+
+            /* set flag that buffer gets copied back */
+            Irp->Flags |= IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER | IRP_INPUT_OPERATION;
+
+            /* done */
+            Status = STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        /* no buffer provided */
+        Status = STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* done */
+    return Status;
 }
 
 /*
@@ -2003,12 +2075,13 @@ KsGetBusEnumParentFDOFromChildPDO(
     IN PDEVICE_OBJECT DeviceObject,
     OUT PDEVICE_OBJECT *FunctionalDeviceObject)
 {
-    UNIMPLEMENTED
+    DPRINT1("KsGetBusEnumParentFDOFromChildPDO\n");
+    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -2017,8 +2090,29 @@ KsGetBusEnumPnpDeviceObject(
     IN PDEVICE_OBJECT DeviceObject,
     IN PDEVICE_OBJECT *PnpDeviceObject)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+
+    if (!DeviceObject->DeviceExtension)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* get bus device extension */
+    BusDeviceExtension = *(PBUS_ENUM_DEVICE_EXTENSION*)(DeviceObject->DeviceExtension);
+
+    if (!BusDeviceExtension)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* store result */
+    *PnpDeviceObject = BusDeviceExtension->PnpDeviceObject;
+
+
+    /* done */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -2071,6 +2165,8 @@ KsInstallBusEnumInterface(
     PIRP Irp)
 {
     UNIMPLEMENTED
+    DPRINT1("KsInstallBusEnumInterface\n");
+    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -2085,6 +2181,8 @@ KsIsBusEnumChildDevice(
     OUT PBOOLEAN ChildDevice)
 {
     UNIMPLEMENTED
+    DPRINT1("KsIsBusEnumChildDevice\n");
+    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -2609,6 +2707,8 @@ KsServiceBusEnumCreateRequest(
     IN OUT PIRP Irp)
 {
     UNIMPLEMENTED
+    DPRINT1("KsServiceBusEnumCreateRequest\n");
+    DbgBreakPoint();
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -2624,6 +2724,51 @@ KsServiceBusEnumPnpRequest(
     IN OUT PIRP Irp)
 {
     UNIMPLEMENTED
+    DPRINT1("KsServiceBusEnumPnpRequest\n");
+    DbgBreakPoint();
+/*
+KsServiceBusEnumPnpRequest services the following Plug and Play IRPs for an FDO or parent device:
+
+    *
+      IRP_MN_START_DEVICE
+      IRP_MN_QUERY_BUS_INFORMATION OK
+      IRP_MN_QUERY_DEVICE_RELATIONS
+      IRP_MN_QUERY_STOP_DEVICE
+      IRP_MN_QUERY_REMOVE_DEVICE
+      IRP_MN_CANCEL_STOP_DEVICE
+      IRP_MN_CANCEL_REMOVE_DEVICE
+      IRP_MN_STOP_DEVICE
+      IRP_MN_REMOVE_DEVICE
+*/
+
+/*
+Plug and Play IRPs for a PDO or child device:
+
+    *
+      IRP_MN_START_DEVICE
+      IRP_MN_QUERY_STOP_DEVICE
+      IRP_MN_QUERY_REMOVE_DEVICE
+      IRP_MN_STOP_DEVICE
+      IRP_MN_REMOVE_DEVICE
+      IRP_MN_QUERY_DEVICE_RELATIONS (TargetDeviceRelations)
+      IRP_MN_QUERY_PNP_DEVICE_STATE
+      IRP_MN_QUERY_ID
+      IRP_MN_QUERY_INTERFACE
+      IRP_MN_QUERY_RESOURCES               NOP
+      IRP_MN_QUERY_RESOURCE_REQUIREMENTS   NOP
+      IRP_MN_READ_CONFIG
+      IRP_MN_WRITE_CONFIG
+      IRP_MN_QUERY_CAPABILITIES
+
+*/
+/**
+   Request: IRP_MN_QUERY_BUS_INFORMATION
+ : GUID PNP_BUS_INFORMATION
+                      BusTypeGuid:   KSMEDIUMSETID_Standard
+                      LegacyBusType: InterfaceTypeUndefined
+                      BusNumber: 0
+*/
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -2662,6 +2807,9 @@ KsRemoveBusEnumInterface(
     LUID luid;
     KSREMOVE_BUS_INTERFACE_CTX Ctx;
     WORK_QUEUE_ITEM WorkItem;
+
+    DPRINT1("KsRemoveBusEnumInterface\n");
+    DbgBreakPoint();
 
     /* get previous mode */
     Mode = ExGetPreviousMode();
