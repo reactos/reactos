@@ -2600,10 +2600,11 @@ DWORD ROpenServiceW(
 /* Function 17 */
 DWORD RQueryServiceConfigW(
     SC_RPC_HANDLE hService,
-    LPQUERY_SERVICE_CONFIGW lpServiceConfig,
+    LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGW lpServiceConfig,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_8K pcbBytesNeeded)
 {
+    LPQUERY_SERVICE_CONFIGW lpServiceConfig = (LPQUERY_SERVICE_CONFIGW)lpBuf;
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
@@ -3777,10 +3778,11 @@ DWORD ROpenServiceA(
 /* Function 29 */
 DWORD RQueryServiceConfigA(
     SC_RPC_HANDLE hService,
-    LPQUERY_SERVICE_CONFIGA lpServiceConfig,
+    LPBYTE lpBuf, //LPQUERY_SERVICE_CONFIGA lpServiceConfig,
     DWORD cbBufSize,
     LPBOUNDED_DWORD_8K pcbBytesNeeded)
 {
+    LPQUERY_SERVICE_CONFIGA lpServiceConfig = (LPQUERY_SERVICE_CONFIGA)lpBuf;
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService = NULL;
