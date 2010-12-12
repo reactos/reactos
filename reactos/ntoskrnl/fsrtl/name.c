@@ -29,55 +29,53 @@ FsRtlIsNameInExpressionPrivate(IN PUNICODE_STRING Expression,
 
     while (i < Name->Length / sizeof(WCHAR) && k < Expression->Length / sizeof(WCHAR))
     {
-      if ((Expression->Buffer[k] == (IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i])) ||
-          (Expression->Buffer[k] == L'?') || (Expression->Buffer[k] == DOS_QM) ||
-          (Expression->Buffer[k] == DOS_DOT && (Name->Buffer[i] == L'.' || Name->Buffer[i] == L'0')))
-      {
-        i++;
-        k++;
-      }
-      else if (Expression->Buffer[k] == L'*')
-      {
-        if (k < (Expression->Length / sizeof(WCHAR) - 1))
+        if ((Expression->Buffer[k] == (IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i])) ||
+            (Expression->Buffer[k] == L'?') || (Expression->Buffer[k] == DOS_QM) ||
+            (Expression->Buffer[k] == DOS_DOT && Name->Buffer[i] == L'.'))
         {
-          if (Expression->Buffer[k+1] != L'*' && Expression->Buffer[k+1] != L'?' &&
-              Expression->Buffer[k+1] != DOS_DOT && Expression->Buffer[k+1] != DOS_QM &&
-              Expression->Buffer[k+1] != DOS_STAR)
-          {
-            while ((IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i]) != Expression->Buffer[k+1] &&
-                   i < Name->Length / sizeof(WCHAR)) i++;
-          }
-          else
-          {
-            if (!(Expression->Buffer[k+1] != DOS_DOT && (Name->Buffer[i] == L'.' || Name->Buffer[i] == L'0')))
+            i++;
+            k++;
+        }
+        else if (Expression->Buffer[k] == L'*')
+        {
+            if (k < (Expression->Length / sizeof(WCHAR) - 1))
             {
-              i++;
+                if (Expression->Buffer[k+1] != L'*' && Expression->Buffer[k+1] != L'?' &&
+                    Expression->Buffer[k+1] != DOS_DOT && Expression->Buffer[k+1] != DOS_QM &&
+                    Expression->Buffer[k+1] != DOS_STAR)
+                {
+                    while ((IgnoreCase ? UpcaseTable[Name->Buffer[i]] : Name->Buffer[i]) != Expression->Buffer[k+1] &&
+                           i < Name->Length / sizeof(WCHAR)) i++;
+                }
             }
-          }
+            else
+            {
+                i = Name->Length / sizeof(WCHAR);
+            }
+            k++;
+        }
+        else if (Expression->Buffer[k] == DOS_STAR)
+        {
+            j = i;
+            while (j < Name->Length / sizeof(WCHAR))
+            {
+                if (Name->Buffer[j] == L'.')
+                {
+                    i = j;
+                }
+                j++;
+            }
+            k++;
         }
         else
         {
-          i = Name->Length / sizeof(WCHAR);
+            i = Name->Length / sizeof(WCHAR);
         }
+    }
+    if (k + 1 == Expression->Length / sizeof(WCHAR) && i == Name->Length / sizeof(WCHAR) &&
+        Expression->Buffer[k] == DOS_DOT)
+    {
         k++;
-      }
-      else if (Expression->Buffer[k] == DOS_STAR)
-      {
-        j = i;
-        while (j < Name->Length / sizeof(WCHAR))
-        {
-          if (Name->Buffer[j] == L'.')
-          {
-            i = j;
-          }
-          j++;
-        }
-        k++;
-      }
-      else
-      {
-        i = Name->Length / sizeof(WCHAR);
-      }
     }
 
     return (k == Expression->Length / sizeof(WCHAR) && i == Name->Length / sizeof(WCHAR));
