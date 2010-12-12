@@ -33,6 +33,12 @@ VOID FsRtlIsNameInExpressionTest()
 {
     UNICODE_STRING Expression, Name;
 
+    RtlInitUnicodeString(&Expression, L"*");
+    RtlInitUnicodeString(&Name, L"");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
     RtlInitUnicodeString(&Expression, L"ntdll.dll");
     RtlInitUnicodeString(&Name, L".");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
@@ -111,6 +117,23 @@ VOID FsRtlIsNameInExpressionTest()
     RtlInitUnicodeString(&Name, L"..");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
     RtlInitUnicodeString(&Name, L"SETUP.INI");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitUnicodeString(&Expression, L"\"ntoskrnl.exe");
+    RtlInitUnicodeString(&Name, L"ntoskrnl.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"ntoskrnl\"exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Expression, L"ntoskrn\".exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"ntoskrn\"\"exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"ntoskrnl.\"exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == FALSE, "expected FALSE, got TRUE");
+    RtlInitUnicodeString(&Expression, L"ntoskrnl.exe\"");
+    RtlInitUnicodeString(&Name, L"ntoskrnl.exe");
+    ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
+    RtlInitUnicodeString(&Name, L"ntoskrnl.exe.");
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
 }
 
