@@ -137,12 +137,121 @@ VOID FsRtlIsNameInExpressionTest()
     ok(FsRtlIsNameInExpression(&Expression, &Name, FALSE, NULL) == TRUE, "expected TRUE, got FALSE");
 }
 
+VOID FsRtlIsDbcsInExpressionTest()
+{
+    ANSI_STRING Expression, Name;
+
+    RtlInitAnsiString(&Expression, "*");
+    RtlInitAnsiString(&Name, "");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "ntdll.dll");
+    RtlInitAnsiString(&Name, ".");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "~1");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "..");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "ntdll.dll");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "smss.exe");
+    RtlInitAnsiString(&Name, ".");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "~1");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "..");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "ntdll.dll");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "NTDLL.dll");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "nt??krnl.???");
+    RtlInitAnsiString(&Name, "ntoskrnl.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "he*o");
+    RtlInitAnsiString(&Name, "hello");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "helo");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "hella");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "he*");
+    RtlInitAnsiString(&Name, "hello");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "helo");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "hella");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "*.cpl");
+    RtlInitAnsiString(&Name, "kdcom.dll");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "bootvid.dll");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "ntoskrnl.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, ".");
+    RtlInitAnsiString(&Name, "NTDLL.DLL");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "F0_*.*");
+    RtlInitAnsiString(&Name, ".");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "..");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "SETUP.EXE");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "F0_001");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "*.TTF");
+    RtlInitAnsiString(&Name, ".");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "..");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Name, "SETUP.INI");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+
+    RtlInitAnsiString(&Expression, "*");
+    RtlInitAnsiString(&Name, ".");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "..");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "SETUP.INI");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+
+    RtlInitAnsiString(&Expression, "\"ntoskrnl.exe");
+    RtlInitAnsiString(&Name, "ntoskrnl.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "ntoskrnl\"exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Expression, "ntoskrn\".exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "ntoskrn\"\"exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "ntoskrnl.\"exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == FALSE, "expected FALSE, got TRUE");
+    RtlInitAnsiString(&Expression, "ntoskrnl.exe\"");
+    RtlInitAnsiString(&Name, "ntoskrnl.exe");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+    RtlInitAnsiString(&Name, "ntoskrnl.exe.");
+    ok(FsRtlIsDbcsInExpression(&Expression, &Name) == TRUE, "expected TRUE, got FALSE");
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
 NtoskrnlFsRtlTest(HANDLE KeyHandle)
 {
     FsRtlIsNameInExpressionTest();
+    FsRtlIsDbcsInExpressionTest();
 
     FinishTest(KeyHandle, L"FsRtlTest");
 }
