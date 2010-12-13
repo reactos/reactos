@@ -24,9 +24,11 @@ list(APPEND SOURCE
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D_RPCRT4_)
-add_definitions(-DCOM_NO_WINDOWS_H)
-add_definitions(-DMSWMSG)
+
+add_definitions(
+    -D_RPCRT4_
+    -DCOM_NO_WINDOWS_H
+    -DMSWMSG)
 
 spec2def(rpcrt4.dll rpcrt4.spec)
 
@@ -34,8 +36,10 @@ add_library(rpcrt4 SHARED ${SOURCE})
 
 set_module_type(rpcrt4 win32dll)
 
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine
+    ${REACTOS_BINARY_DIR}/include/reactos/wine)
+
 target_link_libraries(rpcrt4
     wine
     uuid
@@ -46,4 +50,3 @@ add_importlibs(rpcrt4 msvcrt user32 advapi32 secur32 iphlpapi ws2_32 kernel32 nt
 add_dependencies(rpcrt4 winesdk)
 add_cab_target(rpcrt4 1)
 add_importlib_target(rpcrt4.spec)
-

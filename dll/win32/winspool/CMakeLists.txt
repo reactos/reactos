@@ -23,4 +23,4 @@ target_link_libraries(winspool wine)
 add_importlibs(winspool advapi32 shlwapi msvcrt kernel32 ntdll)
 
 add_cab_target(winspool 1)
-add_importlib_target(winspool.spec)
+add_importlib_target(winspool.spec winspool.drv)

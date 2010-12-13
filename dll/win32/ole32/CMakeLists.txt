@@ -1,3 +1,4 @@
+
 list(APPEND SOURCE
     antimoniker.c
     bindctx.c
@@ -40,15 +41,18 @@ list(APPEND SOURCE
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D__WINESRC__)
-add_definitions(-D_OLE32_)
-add_definitions(-DENTRY_PREFIX=OLE32_)
-add_definitions(-DPROXY_CLSID=CLSID_PSFactoryBuffer)
-add_definitions(-DREGISTER_PROXY_DLL)
-add_definitions(-DCOM_NO_WINDOWS_H)
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+add_definitions(
+    -D__WINESRC__
+    -D_OLE32_
+    -DENTRY_PREFIX=OLE32_
+    -DPROXY_CLSID=CLSID_PSFactoryBuffer
+    -DREGISTER_PROXY_DLL
+    -DCOM_NO_WINDOWS_H)
+
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 ADD_INTERFACE_DEFINITIONS(ole32idl dcom.idl irot.idl)
 rpcproxy(ole32
