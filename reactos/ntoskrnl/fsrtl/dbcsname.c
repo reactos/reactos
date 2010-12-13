@@ -160,55 +160,66 @@ NTAPI
 FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
                         IN PANSI_STRING Name)
 {
-    ULONG ExpressionPosition, NamePosition, MatchingChars = 0;
+    USHORT ExpressionPosition = 0, NamePosition = 0, MatchingChars;
     PAGED_CODE();
 
     ASSERT(Name->Length);
     ASSERT(Expression->Length);
     ASSERT(!FsRtlDoesDbcsContainWildCards(Name));
 
-    /* One can't be null, both can be */
-    if (!Expression->Length || !Name->Length)
+    while (NamePosition < Name->Length && ExpressionPosition < Expression->Length)
     {
-        return !(Expression->Length ^ Name->Length);
-    }
-
-    for (ExpressionPosition = 0; ExpressionPosition < Expression->Length; ExpressionPosition++)
-    {
-        if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[MatchingChars]) ||
-            (Expression->Buffer[ExpressionPosition] == '?') ||
-            (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
-            (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT &&
-            (Name->Buffer[MatchingChars] == '.' || Name->Buffer[MatchingChars] == '0')))
+        if ((Expression->Buffer[ExpressionPosition] == Name->Buffer[NamePosition]) ||
+            (Expression->Buffer[ExpressionPosition] == '?') || (Expression->Buffer[ExpressionPosition] == ANSI_DOS_QM) ||
+            (Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT && Name->Buffer[NamePosition] == '.'))
         {
-            MatchingChars++;
+            NamePosition++;
+            ExpressionPosition++;
         }
         else if (Expression->Buffer[ExpressionPosition] == '*')
         {
-            MatchingChars = Name->Length;
+            if (ExpressionPosition < (Expression->Length - 1))
+            {
+                if (Expression->Buffer[ExpressionPosition+1] != '*' && Expression->Buffer[ExpressionPosition+1] != '?' &&
+                    Expression->Buffer[ExpressionPosition+1] != ANSI_DOS_DOT &&
+                    Expression->Buffer[ExpressionPosition+1] != ANSI_DOS_QM &&
+                    Expression->Buffer[ExpressionPosition+1] != ANSI_DOS_STAR)
+                {
+                    while (Name->Buffer[NamePosition] != Expression->Buffer[ExpressionPosition+1] &&
+                           NamePosition < Name->Length) NamePosition++;
+                }
+            }
+            else
+            {
+                NamePosition = Name->Length;
+            }
+            ExpressionPosition++;
         }
         else if (Expression->Buffer[ExpressionPosition] == ANSI_DOS_STAR)
         {
-            for (NamePosition = MatchingChars; NamePosition < Name->Length; NamePosition++)
+            MatchingChars = NamePosition;
+            while (MatchingChars < Name->Length)
             {
-                if (Name->Buffer[NamePosition] == '.')
+                if (Name->Buffer[MatchingChars] == '.')
                 {
-                    MatchingChars = NamePosition;
-                    break;
+                    NamePosition = MatchingChars;
                 }
+                MatchingChars++;
             }
+            ExpressionPosition++;
         }
         else
         {
-            MatchingChars = 0;
-        }
-        if (MatchingChars == Name->Length)
-        {
-            return TRUE;
+            NamePosition = Name->Length;
         }
     }
+    if (ExpressionPosition + 1 == Expression->Length && NamePosition == Name->Length &&
+        Expression->Buffer[ExpressionPosition] == ANSI_DOS_DOT)
+    {
+        ExpressionPosition++;
+    }
 
-    return FALSE;
+    return (ExpressionPosition == Expression->Length && NamePosition == Name->Length);
 }
 
 /*++
