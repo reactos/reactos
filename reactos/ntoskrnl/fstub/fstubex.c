@@ -558,16 +558,16 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
     CHAR Guid[38];
     PAGED_CODE();
 
-    DPRINT1("FSTUB: DRIVE_LAYOUT_INFORMATION_EX: %p\n", DriveLayout);
+    DPRINT("FSTUB: DRIVE_LAYOUT_INFORMATION_EX: %p\n", DriveLayout);
     switch (DriveLayout->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
             if (DriveLayout->PartitionCount % 4 != 0)
             {
-                DPRINT1("Warning: Partition count isn't a 4-factor: %ld!\n", DriveLayout->PartitionCount);
+                DPRINT("Warning: Partition count isn't a 4-factor: %ld!\n", DriveLayout->PartitionCount);
             }
 
-            DPRINT1("Signature: %8.8x\n", DriveLayout->Mbr.Signature);
+            DPRINT("Signature: %8.8x\n", DriveLayout->Mbr.Signature);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
@@ -576,10 +576,10 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
             break;
         case PARTITION_STYLE_GPT:
             FstubDbgGuidToString(&(DriveLayout->Gpt.DiskId), Guid);
-            DPRINT1("DiskId: %s\n", Guid);
-            DPRINT1("StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
-            DPRINT1("UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
-            DPRINT1("MaxPartitionCount: %ld\n", DriveLayout->Gpt.MaxPartitionCount);
+            DPRINT("DiskId: %s\n", Guid);
+            DPRINT("StartingUsableOffset: %I64x\n", DriveLayout->Gpt.StartingUsableOffset.QuadPart);
+            DPRINT("UsableLength: %I64x\n", DriveLayout->Gpt.UsableLength.QuadPart);
+            DPRINT("MaxPartitionCount: %ld\n", DriveLayout->Gpt.MaxPartitionCount);
             for (i = 0; i < DriveLayout->PartitionCount; i++)
             {
                 FstubDbgPrintPartitionEx(DriveLayout->PartitionEntry, i);
@@ -587,7 +587,7 @@ FstubDbgPrintDriveLayoutEx(IN PDRIVE_LAYOUT_INFORMATION_EX DriveLayout)
 
             break;
         default:
-            DPRINT1("Unsupported partition style: %ld\n", DriveLayout->PartitionStyle);
+            DPRINT("Unsupported partition style: %ld\n", DriveLayout->PartitionStyle);
     }
 }
 
@@ -599,34 +599,34 @@ FstubDbgPrintPartitionEx(IN PPARTITION_INFORMATION_EX PartitionEntry,
     CHAR Guid[38];
     PAGED_CODE();
 
-    DPRINT1("Printing partition %ld\n", PartitionNumber);
+    DPRINT("Printing partition %ld\n", PartitionNumber);
 
     switch (PartitionEntry[PartitionNumber].PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            DPRINT1("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
-            DPRINT1("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT1("  RewritePartition: %d\n", PartitionEntry[PartitionNumber].RewritePartition);
-            DPRINT1("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
-            DPRINT1("  BootIndicator: %d\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
-            DPRINT1("  RecognizedPartition: %d\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
-            DPRINT1("  HiddenSectors: %ld\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
+            DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
+            DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
+            DPRINT("  RewritePartition: %d\n", PartitionEntry[PartitionNumber].RewritePartition);
+            DPRINT("  PartitionType: %02x\n", PartitionEntry[PartitionNumber].Mbr.PartitionType);
+            DPRINT("  BootIndicator: %d\n", PartitionEntry[PartitionNumber].Mbr.BootIndicator);
+            DPRINT("  RecognizedPartition: %d\n", PartitionEntry[PartitionNumber].Mbr.RecognizedPartition);
+            DPRINT("  HiddenSectors: %ld\n", PartitionEntry[PartitionNumber].Mbr.HiddenSectors);
 
             break;
         case PARTITION_STYLE_GPT:
-            DPRINT1("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
-            DPRINT1("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
-            DPRINT1("  RewritePartition: %d\n", PartitionEntry[PartitionNumber].RewritePartition);
+            DPRINT("  StartingOffset: %I64x\n", PartitionEntry[PartitionNumber].StartingOffset.QuadPart);
+            DPRINT("  PartitionLength: %I64x\n", PartitionEntry[PartitionNumber].PartitionLength.QuadPart);
+            DPRINT("  RewritePartition: %d\n", PartitionEntry[PartitionNumber].RewritePartition);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionType), Guid);
-            DPRINT1("  PartitionType: %s\n", Guid);
+            DPRINT("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry[PartitionNumber].Gpt.PartitionId), Guid);
-            DPRINT1("  PartitionId: %s\n", Guid);
-            DPRINT1("  Attributes: %16x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
-            DPRINT1("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
+            DPRINT("  PartitionId: %s\n", Guid);
+            DPRINT("  Attributes: %16x\n", PartitionEntry[PartitionNumber].Gpt.Attributes);
+            DPRINT("  Name: %ws\n", PartitionEntry[PartitionNumber].Gpt.Name);
 
             break;
         default:
-            DPRINT1("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
+            DPRINT("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
     }
 }
 
@@ -638,25 +638,25 @@ FstubDbgPrintSetPartitionEx(IN PSET_PARTITION_INFORMATION_EX PartitionEntry,
     CHAR Guid[38];
     PAGED_CODE();
 
-    DPRINT1("FSTUB: SET_PARTITION_INFORMATION_EX: %p\n", PartitionEntry);
-    DPRINT1("Modifying partition %ld\n", PartitionNumber);
+    DPRINT("FSTUB: SET_PARTITION_INFORMATION_EX: %p\n", PartitionEntry);
+    DPRINT("Modifying partition %ld\n", PartitionNumber);
     switch (PartitionEntry->PartitionStyle)
     {
         case PARTITION_STYLE_MBR:
-            DPRINT1("  PartitionType: %02x\n", PartitionEntry->Mbr.PartitionType);
+            DPRINT("  PartitionType: %02x\n", PartitionEntry->Mbr.PartitionType);
 
             break;
         case PARTITION_STYLE_GPT:
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionType), Guid);
-            DPRINT1("  PartitionType: %s\n", Guid);
+            DPRINT("  PartitionType: %s\n", Guid);
             FstubDbgGuidToString(&(PartitionEntry->Gpt.PartitionId), Guid);
-            DPRINT1("  PartitionId: %s\n", Guid);
-            DPRINT1("  Attributes: %16x\n", PartitionEntry->Gpt.Attributes);
-            DPRINT1("  Name: %ws\n", PartitionEntry->Gpt.Name);
+            DPRINT("  PartitionId: %s\n", Guid);
+            DPRINT("  Attributes: %16x\n", PartitionEntry->Gpt.Attributes);
+            DPRINT("  Name: %ws\n", PartitionEntry->Gpt.Name);
 
             break;
         default:
-            DPRINT1("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
+            DPRINT("  Unsupported partition style: %ld\n", PartitionEntry[PartitionNumber].PartitionStyle);
     }
 }
 
