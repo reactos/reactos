@@ -48,6 +48,10 @@ typedef struct  _PDEV
 // eVb: 3.1 [DDK Change] - Support new VGA Miniport behavior w.r.t updated framebuffer remapping
     LONG flHooks;
 // eVb: 3.1 [END]
+// eVb: 3.1 [VGARISC Change] - Add new fields for VGA support
+    SURFOBJ* pso;
+    UCHAR* pjBase;
+// eVb: 3.1 [END]
 } PDEV, *PPDEV;
 
 DWORD getAvailableModes(HANDLE, PVIDEO_MODE_INFORMATION *, DWORD *);
@@ -68,8 +72,35 @@ VOID vDisableSURF(PPDEV);
 
 #define DRIVER_EXTRA_SIZE 0
 
-#define DLL_NAME                L"framebuf"   // Name of the DLL in UNICODE
-#define STANDARD_DEBUG_PREFIX   "FRAMEBUF: "  // All debug output is prefixed
-#define ALLOC_TAG               'bfDD'        // Four byte tag (characters in
+// eVb: 3.2 [VGARISC Change] - Transform into VGA driver
+#define DLL_NAME                L"vga"   // Name of the DLL in UNICODE
+#define STANDARD_DEBUG_PREFIX   "Vga risc: "  // All debug output is prefixed
+#define ALLOC_TAG               'rgvD'        // Four byte tag (characters in
                                               // reverse order) used for memory
                                               // allocations
+// eVb: 3.2 [END]
+
+// eVb: 3.3 [VGARISC Change] - Add new macros for VGA usage
+//
+// Each pixel in 4BPP being a nibble, the color data for that pixel is thus
+// located at the xth bit within the nibble, where x is the plane number [0-3].
+// Each nibble being 4 bytes, the color data is thus at the (nibble * 4 + x).
+// That color data is then taken from its linear position and shifted to the
+// correct position within the 16-bit planar buffer word.
+//
+#define VAL(data, px, pl, pos)   ((data) >> (((px) * 4) + (pl)) & 1) << (pos)
+
+//
+// This figures out which pixel in the planar word data corresponds to which pixel
+// in the 4BPP linear data.
+//
+#define SET_PLANE_DATA(x, y, a, b)  \
+    (x) |= VAL(y, (((-1 + ((((b) % 8) % 2) << 1) - (((b) % 8) + 1) + 8))), a, b)
+
+/* Alignment Macros */
+#define ALIGN_DOWN_BY(size, align) \
+    ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
+
+#define ALIGN_UP_BY(size, align) \
+    (ALIGN_DOWN_BY(((ULONG_PTR)(size) + align - 1), align))
+// eVb: 3.3 [END]

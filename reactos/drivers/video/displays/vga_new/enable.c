@@ -20,8 +20,12 @@ static DRVFN gadrvfn[] =
     {   INDEX_DrvDisableSurface,        (PFN) DrvDisableSurface     },
     {   INDEX_DrvAssertMode,            (PFN) DrvAssertMode         },
     {   INDEX_DrvSetPalette,            (PFN) DrvSetPalette         },
+// eVb: 1.1 [VGARISC Change] - Disable hardware pointer support
+#if 0
     {   INDEX_DrvMovePointer,           (PFN) DrvMovePointer        },
     {   INDEX_DrvSetPointerShape,       (PFN) DrvSetPointerShape    },
+#endif
+// eVb: 1.1 [END]
     {   INDEX_DrvGetModes,              (PFN) DrvGetModes           }
 };
 
@@ -126,6 +130,8 @@ HANDLE      hDriver)        // Handle to base driver
         goto error_free;
     }
 
+// eVb: 1.2 [VGARISC Change] - Disable hardware pointer support
+#if 0
     // Initialize the cursor information.
 
     if (!bInitPointer(ppdev, &DevInfo))
@@ -134,6 +140,8 @@ HANDLE      hDriver)        // Handle to base driver
         DISPDBG((0, "DrvEnablePDEV failed bInitPointer\n"));
     }
 
+#endif
+// eVb: 1.2 [END]
     // Initialize palette information.
 
     if (!bInitPaletteInfo(ppdev, &DevInfo))
