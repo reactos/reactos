@@ -19,7 +19,9 @@ static DRVFN gadrvfn[] =
     {   INDEX_DrvEnableSurface,         (PFN) DrvEnableSurface      },
     {   INDEX_DrvDisableSurface,        (PFN) DrvDisableSurface     },
     {   INDEX_DrvAssertMode,            (PFN) DrvAssertMode         },
+// eVb: 1.2 [VGARISC Change] - Disable hardware palette support
     {   INDEX_DrvSetPalette,            (PFN) DrvSetPalette         },
+// eVb: 1.2 [END]
 // eVb: 1.1 [VGARISC Change] - Disable hardware pointer support
 #if 0
     {   INDEX_DrvMovePointer,           (PFN) DrvMovePointer        },
@@ -227,6 +229,8 @@ DHPDEV dhpdev)
     sizl.cx = ppdev->cxScreen;
     sizl.cy = ppdev->cyScreen;
 
+// eVb: 1.3 [VGARISC Change] - Disable dynamic palette and > 4BPP support
+#if 0
     if (ppdev->ulBitCount == 8)
     {
         if (!bInit256ColorPalette(ppdev)) {
@@ -253,6 +257,10 @@ DHPDEV dhpdev)
     }
 // eVb: 1.3 [DDK Change] - Support new VGA Miniport behavior w.r.t updated framebuffer remapping
     ppdev->flHooks = flHooks;
+// eVb: 1.3 [END]
+#else
+    ulBitmapType = BMF_4BPP;
+#endif
 // eVb: 1.3 [END]
 // eVb: 1.4 [DDK Change] - Use EngCreateDeviceSurface instead of EngCreateBitmap
     hsurf = (HSURF)EngCreateDeviceSurface((DHSURF)ppdev, 
@@ -281,7 +289,35 @@ DHPDEV dhpdev)
     }
 // eVb: 1.5 [END]
     ppdev->hsurfEng = hsurf;
+// eVb: 1.4 [VGARISC Change] - Allocate 4BPP DIB that will store GDI drawing
+    HSURF hSurfBitmap;
+    hSurfBitmap = (HSURF)EngCreateBitmap(sizl, 0, ulBitmapType, 0, NULL);
+    if (hSurfBitmap == (HSURF) 0)
+    {
+        RIP("DISP DrvEnableSurface failed EngCreateBitmap\n");
+        return(FALSE);
+    }
 
+    if ( !EngModifySurface(hSurfBitmap,
+                           ppdev->hdevEng,
+                           ppdev->flHooks | HOOK_SYNCHRONIZE,
+                           MS_NOTSYSTEMMEMORY,
+                           (DHSURF)ppdev,
+                           ppdev->pjScreen,
+                           ppdev->lDeltaScreen,
+                           NULL))
+    {
+        RIP("DISP DrvEnableSurface failed second EngModifySurface\n");
+        return(FALSE);
+    }
+
+    ppdev->pso = EngLockSurface(hSurfBitmap);
+    if (ppdev->pso == NULL)
+    {
+        RIP("DISP DrvEnableSurface failed EngLockSurface\n");
+        return(FALSE);
+    }
+// eVb: 1.4 [END]
     return(hsurf);
 }
 
