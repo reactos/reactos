@@ -16,7 +16,9 @@
 // on information passed back from the miniport driver.
 
 const DEVINFO gDevInfoFrameBuffer = {
-    ( GCAPS_OPAQUERECT
+// eVb: 2.1 [VGARISC CHANGE] - No capabilities
+    ( 0
+// eVb: 2.1 [END]
 // eVb: 2.8 [DDK CHANGE] - No dithering support
 // eVb: 2.8 [END]
                    ), /* Graphics capabilities         */
@@ -24,7 +26,9 @@ const DEVINFO gDevInfoFrameBuffer = {
     HELVE_LOGFONT,    /* ANSI variable font description   */
     COURI_LOGFONT,    /* ANSI fixed font description          */
     0,                /* Count of device fonts          */
-    0,                /* Preferred DIB format          */
+// eVb: 2.2 [VGARISC CHANGE] - DIB format is 4BPP
+    BMF_4BPP,         /* Preferred DIB format          */
+// eVb: 2.2 [END]
 // eVb: 2.9 [DDK CHANGE] - No dithering support
     0,                /* Width of color dither          */
     0,                /* Height of color dither   */
@@ -32,6 +36,127 @@ const DEVINFO gDevInfoFrameBuffer = {
     0                 /* Default palette to use for this device */
 };
 
+// eVb: 2.3 [VGARISC CHANGE] - Add VGA structures from NT4 DDK Sample VGA driver
+/******************************Public*Data*Struct*************************\
+* This contains the GDIINFO structure that contains the device capabilities
+* which are passed to the NT GDI engine during dhpdevEnablePDEV.
+*
+\**************************************************************************/
+
+GDIINFO gaulCap = {
+
+     GDI_DRIVER_VERSION,
+     DT_RASDISPLAY,         // ulTechnology
+     0,                     // ulHorzSize
+     0,                     // ulVertSize
+     0,                     // ulHorzRes (filled in at initialization)
+     0,                     // ulVertRes (filled in at initialization)
+     4,                     // cBitsPixel
+     1,                     // cPlanes
+     16,                    // ulNumColors
+     0,                     // flRaster (DDI reserved field)
+
+     0,                     // ulLogPixelsX (filled in at initialization)
+     0,                     // ulLogPixelsY (filled in at initialization)
+
+     TC_RA_ABLE | TC_SCROLLBLT,  // flTextCaps
+
+     6,                     // ulDACRed
+     6,                     // ulDACGree
+     6,                     // ulDACBlue
+
+     0x0024,                // ulAspectX  (one-to-one aspect ratio)
+     0x0024,                // ulAspectY
+     0x0033,                // ulAspectXY
+
+     1,                     // xStyleStep
+     1,                     // yStyleSte;
+     3,                     // denStyleStep
+
+     { 0, 0 },              // ptlPhysOffset
+     { 0, 0 },              // szlPhysSize
+
+     0,                     // ulNumPalReg (win3.1 16 color drivers say 0 too)
+
+// These fields are for halftone initialization.
+
+     {                                          // ciDevice, ColorInfo
+        { 6700, 3300, 0 },                      // Red
+        { 2100, 7100, 0 },                      // Green
+        { 1400,  800, 0 },                      // Blue
+        { 1750, 3950, 0 },                      // Cyan
+        { 4050, 2050, 0 },                      // Magenta
+        { 4400, 5200, 0 },                      // Yellow
+        { 3127, 3290, 0 },                      // AlignmentWhite
+        20000,                                  // RedGamma
+        20000,                                  // GreenGamma
+        20000,                                  // BlueGamma
+        0, 0, 0, 0, 0, 0
+     },
+
+     0,                      // ulDevicePelsDPI  (filled in at initialization)
+     PRIMARY_ORDER_CBA,                         // ulPrimaryOrder
+     HT_PATSIZE_4x4_M,                          // ulHTPatternSize
+     HT_FORMAT_4BPP_IRGB,                       // ulHTOutputFormat
+     HT_FLAG_ADDITIVE_PRIMS,                    // flHTFlags
+
+     0,                                         // ulVRefresh
+// eVb: 2.4 [VGARISC DDK CHANGE] - Use 1 bit alignment, not 8
+     1,                      // ulBltAlignment (preferred window alignment
+// eVb: 2.4 [END]
+                             //   for fast-text routines)                            
+     0,                                         // ulPanningHorzRes
+     0,                                         // ulPanningVertRes
+};
+
+/******************************Module*Header*******************************\
+* Color tables
+\**************************************************************************/
+
+// Values for the internal, EGA-compatible palette.
+
+static WORD PaletteBuffer[] = {
+
+        16, // 16 entries
+        0,  // start with first palette register
+
+// On the VGA, the palette contains indices into the array of color DACs.
+// Since we can program the DACs as we please, we'll just put all the indices
+// down at the beginning of the DAC array (that is, pass pixel values through
+// the internal palette unchanged).
+
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+};
+
+
+// These are the values for the first 16 DAC registers, the only ones we'll
+// work with. These correspond to the RGB colors (6 bits for each primary, with
+// the fourth entry unused) for pixel values 0-15.
+
+static BYTE ColorBuffer[] = {
+
+      16, // 16 entries
+      0,
+      0,
+      0,  // start with first palette register
+                0x00, 0x00, 0x00, 0x00, // black
+                0x2A, 0x00, 0x15, 0x00, // red
+                0x00, 0x2A, 0x15, 0x00, // green
+                0x2A, 0x2A, 0x15, 0x00, // mustard/brown
+                0x00, 0x00, 0x2A, 0x00, // blue
+                0x2A, 0x15, 0x2A, 0x00, // magenta
+                0x15, 0x2A, 0x2A, 0x00, // ScanLinesan
+                0x21, 0x22, 0x23, 0x00, // dark gray   2A
+                0x30, 0x31, 0x32, 0x00, // light gray  39
+                0x3F, 0x00, 0x00, 0x00, // bright red
+                0x00, 0x3F, 0x00, 0x00, // bright green
+                0x3F, 0x3F, 0x00, 0x00, // bright yellow
+                0x00, 0x00, 0x3F, 0x00, // bright blue
+                0x3F, 0x00, 0x3F, 0x00, // bright magenta
+                0x00, 0x3F, 0x3F, 0x00, // bright ScanLinesan
+                0x3F, 0x3F, 0x3F, 0x00  // bright white
+};
+// eVb: 2.3 [END]
 /******************************Public*Routine******************************\
 * bInitSURF
 *
@@ -288,13 +413,18 @@ DEVINFO *pDevInfo)
     ppdev->ulMode = pVideoModeSelected->ModeIndex;
     ppdev->cxScreen = pVideoModeSelected->VisScreenWidth;
     ppdev->cyScreen = pVideoModeSelected->VisScreenHeight;
+    ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
+// eVb: 2.8 [VGARISC CHANGE] - Extra fields not required on VGA, start with defaults
+#if 0
     ppdev->ulBitCount = pVideoModeSelected->BitsPerPlane *
                         pVideoModeSelected->NumberOfPlanes;
-    ppdev->lDeltaScreen = pVideoModeSelected->ScreenStride;
-
     ppdev->flRed = pVideoModeSelected->RedMask;
     ppdev->flGreen = pVideoModeSelected->GreenMask;
     ppdev->flBlue = pVideoModeSelected->BlueMask;
+#else
+    *pGdiInfo = gaulCap;
+#endif
+// eVb: 2.8 [END]
 
 
     pGdiInfo->ulVersion    = GDI_DRIVER_VERSION;
@@ -316,6 +446,8 @@ DEVINFO *pDevInfo)
     pGdiInfo->ulLogPixelsX = pDevMode->dmLogPixels;
     pGdiInfo->ulLogPixelsY = pDevMode->dmLogPixels;
 
+// eVb: 2.9 [VGARISC CHANGE] - Extra fields not required on VGA
+#if 0
 #ifdef MIPS
     if (ppdev->ulBitCount == 8)
         pGdiInfo->flTextCaps = (TC_RA_ABLE | TC_SCROLLBLT);
@@ -324,11 +456,15 @@ DEVINFO *pDevInfo)
     pGdiInfo->flTextCaps = TC_RA_ABLE;
 
     pGdiInfo->flRaster = 0;           // flRaster is reserved by DDI
+#endif
+// eVb: 2.9 [END]
 
     pGdiInfo->ulDACRed   = pVideoModeSelected->NumberRedBits;
     pGdiInfo->ulDACGreen = pVideoModeSelected->NumberGreenBits;
     pGdiInfo->ulDACBlue  = pVideoModeSelected->NumberBlueBits;
 
+// eVb: 2.7 [VGARISC CHANGE] - Extra fields not required on VGA
+#if 0
     pGdiInfo->ulAspectX    = 0x24;    // One-to-one aspect ratio
     pGdiInfo->ulAspectY    = 0x24;
     pGdiInfo->ulAspectXY   = 0x33;
@@ -439,11 +575,15 @@ DEVINFO *pDevInfo)
     pGdiInfo->ulHTPatternSize = HT_PATSIZE_4x4_M;
 
     pGdiInfo->flHTFlags = HT_FLAG_ADDITIVE_PRIMS;
+// eVb: 2.7 [END]
+#endif
 
     // Fill in the basic devinfo structure
 
     *pDevInfo = gDevInfoFrameBuffer;
 
+// eVb: 2.6 [VGARISC CHANGE] - Use defaults in gaulCap for GDI Info
+#if 0
     // Fill in the rest of the devinfo and GdiInfo structures.
 
     if (ppdev->ulBitCount == 8)
@@ -483,6 +623,8 @@ DEVINFO *pDevInfo)
             pDevInfo->iDitherFormat = BMF_32BPP;
         }
     }
+#endif
+// eVb: 2.6 [END]
 
     EngFreeMem(pVideoBuffer);
 
@@ -575,22 +717,19 @@ DWORD *cbModeSize)
     ulTemp = modes.NumModes;
     pVideoTemp = *modeInformation;
 
+// eVb: 2.5 [VGARISC CHANGE] - Add correct mode checks for VGA
     //
-    // Mode is rejected if it is not one plane, or not graphics, or is not
-    // one of 8, 16 or 32 bits per pel.
+    // Mode is rejected if it is not 4 planes, or not graphics, or is not
+    // one of 1 bits per pel.
     //
 
     while (ulTemp--)
     {
-        if ((pVideoTemp->NumberOfPlanes != 1 ) ||
+        if ((pVideoTemp->NumberOfPlanes != 4 ) ||
             !(pVideoTemp->AttributeFlags & VIDEO_MODE_GRAPHICS) ||
-// eVb: 2.6 [DDK CHANGE] - Do not process banked video modes
-             (pVideoTemp->AttributeFlags & VIDEO_MODE_BANKED) ||
-// eVb: 2.6 [END]
-            ((pVideoTemp->BitsPerPlane != 8) &&
-             (pVideoTemp->BitsPerPlane != 16) &&
-             (pVideoTemp->BitsPerPlane != 24) &&
-             (pVideoTemp->BitsPerPlane != 32)))
+            ((pVideoTemp->BitsPerPlane != 1) ||
+             (pVideoTemp->VisScreenWidth > 800)))
+// eVb: 2.5 [END]
         {
             pVideoTemp->Length = 0;
         }
