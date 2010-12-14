@@ -1,18 +1,36 @@
 /*
  * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/framebuf/palette.c
+ * FILE:            boot/drivers/video/displays/vga/palette.c
  * PURPOSE:         Palette Support
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  */
 
 #include "driver.h"
 
-// Global Table defining the 20 Window Default Colors.        For 256 color
-// palettes the first 10 must be put at the beginning of the palette
-// and the last 10 at the end of the palette.
+// eVb: 4.1 [VGARISC Change] - Add static 16-color VGA palette from VGA NT4 DDK Sample
 
-const PALETTEENTRY BASEPALETTE[20] =
+/******************************Public*Data*Struct*************************\
+* LOGPALETTE
+*
+* This is the palette for the VGA.
+*
+\**************************************************************************/
+
+// Little bit of hacking to get this to compile happily.
+
+typedef struct _VGALOGPALETTE
+{
+    USHORT ident;
+    USHORT NumEntries;
+    PALETTEENTRY palPalEntry[16];
+} VGALOGPALETTE;
+
+const VGALOGPALETTE logPalVGA =
+{
+
+0x400,  // driver version
+16,     // num entries
 {
     { 0,   0,   0,   0 },       // 0
     { 0x80,0,   0,   0 },       // 1
@@ -21,20 +39,19 @@ const PALETTEENTRY BASEPALETTE[20] =
     { 0,   0,   0x80,0 },       // 4
     { 0x80,0,   0x80,0 },       // 5
     { 0,   0x80,0x80,0 },       // 6
-    { 0xC0,0xC0,0xC0,0 },       // 7
-    { 192, 220, 192, 0 },       // 8
-    { 166, 202, 240, 0 },       // 9
-    { 255, 251, 240, 0 },       // 10
-    { 160, 160, 164, 0 },       // 11
-    { 0x80,0x80,0x80,0 },       // 12
-    { 0xFF,0,   0   ,0 },       // 13
-    { 0,   0xFF,0   ,0 },       // 14
-    { 0xFF,0xFF,0   ,0 },       // 15
-    { 0   ,0,   0xFF,0 },       // 16
-    { 0xFF,0,   0xFF,0 },       // 17
-    { 0,   0xFF,0xFF,0 },       // 18
-    { 0xFF,0xFF,0xFF,0 },       // 19
+    { 0x80,0x80,0x80,0 },       // 7
+
+    { 0xC0,0xC0,0xC0,0 },       // 8
+    { 0xFF,0,   0,   0 },       // 9
+    { 0,   0xFF,0,   0 },       // 10
+    { 0xFF,0xFF,0,   0 },       // 11
+    { 0,   0,   0xFF,0 },       // 12
+    { 0xFF,0,   0xFF,0 },       // 13
+    { 0,   0xFF,0xFF,0 },       // 14
+    { 0xFF,0xFF,0xFF,0 }        // 15
+}
 };
+// eVb: 4.1 [END]
 
 BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo);
 
@@ -72,8 +89,12 @@ VOID vDisablePalette(PPDEV ppdev)
         ppdev->hpalDefault = (HPALETTE) 0;
     }
 
+// eVb: 4.2 [VGARISC Change] - VGA Palette is static, no need to free
+#if 0
     if (ppdev->pPal != (PPALETTEENTRY)NULL)
         EngFreeMem((PVOID)ppdev->pPal);
+#endif
+// eVb: 4.2 [END]
 }
 
 /******************************Public*Routine******************************\
@@ -85,6 +106,8 @@ VOID vDisablePalette(PPDEV ppdev)
 
 BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 {
+// eVb: 4.3 [VGARISC Change] - VGA Palette is static, no need to build
+#if 0
     if (ppdev->ulBitCount == 8)
     {
         ULONG ulLoop;
@@ -141,20 +164,26 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
             ppdev->pPal[246 + ulLoop] = BASEPALETTE[ulLoop+10];
         }
 
+#endif
+// eVb: 4.3 [END]
         //
         // Create handle for palette.
         //
 
         ppdev->hpalDefault =
         pDevInfo->hpalDefault = EngCreatePalette(PAL_INDEXED,
-                                                   256,
-                                                   (PULONG) ppdev->pPal,
+// eVb: 4.4 [VGARISC Change] - VGA Palette is 16 colors, not 256, and static
+                                                   16,
+                                                   (PULONG) &logPalVGA.palPalEntry,
+// eVb: 4.4 [END]
                                                    0,0,0);
 
         if (ppdev->hpalDefault == (HPALETTE) 0)
         {
             RIP("DISP bInitDefaultPalette failed EngCreatePalette\n");
-            EngFreeMem(ppdev->pPal);
+// eVb: 4.5 [VGARISC Change] - VGA Palette is static, no need to free
+            //EngFreeMem(ppdev->pPal);
+// eVb: 4.5 [END]        
             return(FALSE);
         }
 
@@ -164,6 +193,8 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
 
         return(TRUE);
 
+// eVb: 4.6 [VGARISC Change] - VGA Palette is static, no bitfield palette needed
+#if 0
     } else {
 
         ppdev->hpalDefault =
@@ -181,6 +212,8 @@ BOOL bInitDefaultPalette(PPDEV ppdev, DEVINFO *pDevInfo)
     }
 
     return(TRUE);
+#endif
+// eVb: 4.6 [END]  
 }
 
 /******************************Public*Routine******************************\

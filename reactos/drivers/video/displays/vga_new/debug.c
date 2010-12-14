@@ -1,7 +1,7 @@
 /*
- * PROJECT:         ReactOS Framebuffer Display Driver
+ * PROJECT:         ReactOS VGA Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            boot/drivers/video/displays/framebuf/debug.c
+ * FILE:            boot/drivers/video/displays/vga/debug.c
  * PURPOSE:         Debug Support
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  */
