@@ -40,6 +40,7 @@ dwarfopen(Pe *pe)
 	return d;
 
 err:
+	DPRINT("Failed to open dwarf\n");
 	free(d->abbrev.data);
 	free(d->aranges.data);
 	free(d->frame.data);

@@ -22,11 +22,6 @@
 VOID
 RosSymDelete(PROSSYM_INFO RosSymInfo)
 {
-	int i;
-	for (i = 0; i < RosSymInfo->pe->nsections; i++) {
-		RtlFreeAnsiString(ANSI_NAME_STRING(&RosSymInfo->pe->sect[i]));
-	}
-	RosSymFreeMem(RosSymInfo->pe->sect);
 	dwarfclose(RosSymInfo);
 }
 
