@@ -931,121 +931,6 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
   return TRUE;
 }
 
-typedef struct tagMSGCONVERSION
-{
-  BOOL InUse;
-  BOOL Ansi;
-  MSG KMMsg;
-  MSG UnicodeMsg;
-  MSG AnsiMsg;
-  PMSG FinalMsg;
-  SIZE_T LParamSize;
-} MSGCONVERSION, *PMSGCONVERSION;
-
-static PMSGCONVERSION MsgConversions = NULL;
-static unsigned MsgConversionNumAlloc = 0;
-static unsigned MsgConversionNumUsed = 0;
-static CRITICAL_SECTION MsgConversionCrst;
-
-static BOOL FASTCALL
-MsgConversionAdd(PMSGCONVERSION Conversion)
-{
-  unsigned i;
-
-  EnterCriticalSection(&MsgConversionCrst);
-
-  if (MsgConversionNumUsed == MsgConversionNumAlloc)
-    {
-#define GROWBY  4
-      PMSGCONVERSION New;
-      if (NULL != MsgConversions)
-        {
-          New = HeapReAlloc(GetProcessHeap(), 0, MsgConversions,
-                            (MsgConversionNumAlloc + GROWBY) * sizeof(MSGCONVERSION));
-        }
-      else
-        {
-          New = HeapAlloc(GetProcessHeap(), 0,
-                          (MsgConversionNumAlloc + GROWBY) * sizeof(MSGCONVERSION));
-        }
-
-      if (NULL == New)
-        {
-          LeaveCriticalSection(&MsgConversionCrst);
-          return FALSE;
-        }
-      MsgConversions = New;
-      /* zero out newly allocated part */
-      memset(MsgConversions + MsgConversionNumAlloc, 0, GROWBY * sizeof(MSGCONVERSION));
-      MsgConversionNumAlloc += GROWBY;
-#undef GROWBY
-    }
-
-  for (i = 0; i < MsgConversionNumAlloc; i++)
-    {
-      if (! MsgConversions[i].InUse)
-        {
-          MsgConversions[i] = *Conversion;
-          MsgConversions[i].InUse = TRUE;
-          MsgConversionNumUsed++;
-          break;
-        }
-    }
-  LeaveCriticalSection(&MsgConversionCrst);
-
-  return TRUE;
-}
-
-static void FASTCALL
-MsgConversionCleanup(CONST MSG *Msg, BOOL Ansi, BOOL CheckMsgContents, LRESULT *Result)
-{
-  BOOL Found;
-  PMSGCONVERSION Conversion;
-  LRESULT Dummy;
-
-  EnterCriticalSection(&MsgConversionCrst);
-  for (Conversion = MsgConversions;
-       Conversion < MsgConversions + MsgConversionNumAlloc;
-       Conversion++)
-    {
-      if (Conversion->InUse &&
-          ((Ansi && Conversion->Ansi) ||
-           (! Ansi && ! Conversion->Ansi)))
-        {
-          Found = (Conversion->FinalMsg == Msg);
-          if (! Found && CheckMsgContents)
-            {
-              if (Ansi)
-                {
-                  Found = (0 == memcmp(Msg, &Conversion->AnsiMsg, sizeof(MSG)));
-                }
-              else
-                {
-                  Found = (0 == memcmp(Msg, &Conversion->UnicodeMsg, sizeof(MSG)));
-                }
-            }
-          if (Found)
-            {
-              if (Ansi)
-                {
-                  MsgiUnicodeToAnsiReply(&Conversion->AnsiMsg, &Conversion->UnicodeMsg,
-                                         NULL == Result ? &Dummy : Result);
-                }
-              MsgiKMToUMReply(&Conversion->KMMsg, &Conversion->UnicodeMsg,
-                              NULL == Result ? &Dummy : Result);
-              if (0 != Conversion->LParamSize)
-                {
-                  NtFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Conversion->KMMsg.lParam,
-                                      &Conversion->LParamSize, MEM_DECOMMIT);
-                }
-              Conversion->InUse = FALSE;
-              MsgConversionNumUsed--;
-            }
-        }
-    }
-  LeaveCriticalSection(&MsgConversionCrst);
-}
-
 /*
  * @implemented
  */
@@ -1712,50 +1597,26 @@ DispatchMessageW(CONST MSG *lpmsg)
  */
 BOOL WINAPI
 GetMessageA(LPMSG lpMsg,
-	    HWND hWnd,
-	    UINT wMsgFilterMin,
-	    UINT wMsgFilterMax)
+	        HWND hWnd,
+	        UINT wMsgFilterMin,
+	        UINT wMsgFilterMax)
 {
   BOOL Res;
-  MSGCONVERSION Conversion;
-  NTUSERGETMESSAGEINFO Info;
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
-  MsgConversionCleanup(lpMsg, TRUE, FALSE, NULL);
-  Res = NtUserGetMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax);
+  Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
     {
       return Res;
     }
-  Conversion.LParamSize = Info.LParamSize;
-  Conversion.KMMsg = Info.Msg;
 
-  if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
-    {
-      return (BOOL) -1;
-    }
-  if (! MsgiUnicodeToAnsiMessage(&Conversion.AnsiMsg, &Conversion.UnicodeMsg))
-    {
-      MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
-      return (BOOL) -1;
-    }
-  if (!lpMsg)
-  {
-     SetLastError( ERROR_NOACCESS );
-     return FALSE;
-  }
-  *lpMsg = Conversion.AnsiMsg;
-  Conversion.Ansi = TRUE;
-  Conversion.FinalMsg = lpMsg;
-  MsgConversionAdd(&Conversion);
   if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
     {
-      ThreadData->LastMessage = Info.Msg;
+      ThreadData->LastMessage = *lpMsg;
     }
 
   return Res;
 }
-
 
 /*
  * @implemented
@@ -1767,46 +1628,28 @@ GetMessageW(LPMSG lpMsg,
 	    UINT wMsgFilterMax)
 {
   BOOL Res;
-  MSGCONVERSION Conversion;
-  NTUSERGETMESSAGEINFO Info;
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
-  MsgConversionCleanup(lpMsg, FALSE, FALSE, NULL);
-  Res = NtUserGetMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax);
+  Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
     {
       return Res;
     }
-  Conversion.LParamSize = Info.LParamSize;
-  Conversion.KMMsg = Info.Msg;
 
-  if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
-    {
-      return (BOOL) -1;
-    }
-  if (!lpMsg)
-  {
-     SetLastError( ERROR_NOACCESS );
-     return FALSE;
-  }
-  *lpMsg = Conversion.UnicodeMsg;
-  Conversion.Ansi = FALSE;
-  Conversion.FinalMsg = lpMsg;
-  MsgConversionAdd(&Conversion);
   if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
     {
-      ThreadData->LastMessage = Info.Msg;
+      ThreadData->LastMessage = *lpMsg;
     }
 
   return Res;
 }
 
 BOOL WINAPI
-PeekMessageWorker(PNTUSERGETMESSAGEINFO pInfo,
-	          HWND hWnd,
-	          UINT wMsgFilterMin,
-	          UINT wMsgFilterMax,
-	          UINT wRemoveMsg)
+PeekMessageWorker(PMSG pMsg,
+	              HWND hWnd,
+	              UINT wMsgFilterMin,
+	              UINT wMsgFilterMax,
+	              UINT wRemoveMsg)
 {
   PCLIENTINFO pci;
   PCLIENTTHREADINFO pcti;
@@ -1835,7 +1678,7 @@ PeekMessageWorker(PNTUSERGETMESSAGEINFO pInfo,
         }
      }
   }
-  return NtUserPeekMessage(pInfo, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  return NtUserPeekMessage(pMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
 }
 
 /*
@@ -1849,40 +1692,17 @@ PeekMessageA(LPMSG lpMsg,
 	     UINT wRemoveMsg)
 {
   BOOL Res;
-  MSGCONVERSION Conversion;
-  NTUSERGETMESSAGEINFO Info;
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
-  MsgConversionCleanup(lpMsg, TRUE, FALSE, NULL);
-  Res = PeekMessageWorker(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
     {
       return FALSE;
     }
-  Conversion.LParamSize = Info.LParamSize;
-  Conversion.KMMsg = Info.Msg;
 
-  if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
-    {
-      return FALSE;
-    }
-  if (! MsgiUnicodeToAnsiMessage(&Conversion.AnsiMsg, &Conversion.UnicodeMsg))
-    {
-      MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
-      return FALSE;
-    }
-  if (!lpMsg)
-  {
-     SetLastError( ERROR_NOACCESS );
-     return FALSE;
-  }
-  *lpMsg = Conversion.AnsiMsg;
-  Conversion.Ansi = TRUE;
-  Conversion.FinalMsg = lpMsg;
-  MsgConversionAdd(&Conversion);
   if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
     {
-      ThreadData->LastMessage = Info.Msg;
+        ThreadData->LastMessage = *lpMsg;
     }
 
   return Res;
@@ -1902,35 +1722,17 @@ PeekMessageW(
   UINT wRemoveMsg)
 {
   BOOL Res;
-  MSGCONVERSION Conversion;
-  NTUSERGETMESSAGEINFO Info;
   PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
-  MsgConversionCleanup(lpMsg, FALSE, FALSE, NULL);
-  Res = PeekMessageWorker(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+  Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
     {
       return FALSE;
     }
-  Conversion.LParamSize = Info.LParamSize;
-  Conversion.KMMsg = Info.Msg;
 
-  if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
-    {
-      return FALSE;
-    }
-  if (!lpMsg)
-  {
-     SetLastError( ERROR_NOACCESS );
-     return FALSE;
-  }
-  *lpMsg = Conversion.UnicodeMsg;
-  Conversion.Ansi = FALSE;
-  Conversion.FinalMsg = lpMsg;
-  MsgConversionAdd(&Conversion);
   if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
     {
-      ThreadData->LastMessage = Info.Msg;
+      ThreadData->LastMessage = *lpMsg;
     }
 
   return Res;
@@ -2878,7 +2680,6 @@ MsgWaitForMultipleObjects(
 BOOL FASTCALL MessageInit(VOID)
 {
   InitializeCriticalSection(&DdeCrst);
-  InitializeCriticalSection(&MsgConversionCrst);
   InitializeCriticalSection(&gcsMPH);
 
   return TRUE;
@@ -2887,7 +2688,6 @@ BOOL FASTCALL MessageInit(VOID)
 VOID FASTCALL MessageCleanup(VOID)
 {
   DeleteCriticalSection(&DdeCrst);
-  DeleteCriticalSection(&MsgConversionCrst);
   DeleteCriticalSection(&gcsMPH);
 }
 

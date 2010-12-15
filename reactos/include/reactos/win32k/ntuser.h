@@ -1996,19 +1996,11 @@ NTAPI
 NtUserGetListBoxInfo(
   HWND hWnd);
 
-typedef struct tagNTUSERGETMESSAGEINFO
-{
-  MSG Msg;
-  ULONG LParamSize;
-} NTUSERGETMESSAGEINFO, *PNTUSERGETMESSAGEINFO;
-
-BOOL
-NTAPI
-NtUserGetMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax);
+BOOL APIENTRY
+NtUserGetMessage(PMSG pMsg,
+                 HWND hWnd,
+                 UINT MsgFilterMin,
+                 UINT MsgFilterMax);
 
 DWORD
 NTAPI
@@ -2373,14 +2365,12 @@ NtUserPaintMenuBar(
     DWORD dwUnknown5,
     DWORD dwUnknown6);
 
-BOOL
-NTAPI
-NtUserPeekMessage(
-  PNTUSERGETMESSAGEINFO MsgInfo,
-  HWND hWnd,
-  UINT wMsgFilterMin,
-  UINT wMsgFilterMax,
-  UINT wRemoveMsg);
+BOOL APIENTRY
+NtUserPeekMessage( PMSG pMsg,
+                   HWND hWnd,
+                   UINT MsgFilterMin,
+                   UINT MsgFilterMax,
+                   UINT RemoveMsg);
 
 BOOL
 NTAPI

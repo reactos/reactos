@@ -426,10 +426,7 @@ IntDispatchMessage(PMSG pMsg)
     LARGE_INTEGER TickCount;
     LONG Time;
     LRESULT retval = 0;
-    PMSGMEMORY MsgMemoryEntry;
-    INT lParamBufferSize;
     PTHREADINFO pti;
-    LPARAM lParamPacked;
     PWND Window = NULL;
 
     if (pMsg->hwnd)
@@ -452,7 +449,6 @@ IntDispatchMessage(PMSG pMsg)
     {
         if (pMsg->message == WM_TIMER)
         {
-            ObReferenceObject(pti->pEThread);
             if (ValidateTimerCallback(pti,pMsg->lParam))
             {
                 KeQueryTickCount(&TickCount);
@@ -463,9 +459,8 @@ IntDispatchMessage(PMSG pMsg)
                                               WM_TIMER,
                                               pMsg->wParam,
                                               (LPARAM)Time,
-                                              sizeof(LPARAM));
+                                              0);
             }
-            ObDereferenceObject(pti->pEThread);
             return retval;        
         }
         else
@@ -483,35 +478,17 @@ IntDispatchMessage(PMSG pMsg)
     // Need a window!
     if ( !Window ) return 0;
 
-    /* See if this message type is present in the table */
-    MsgMemoryEntry = FindMsgMemory(pMsg->message);
-    if ( !MsgMemoryEntry )
-    {
-        lParamBufferSize = -1;
-    }
-    else
-    {
-        lParamBufferSize = MsgMemorySize(MsgMemoryEntry, pMsg->wParam, pMsg->lParam);
-    }
+    /* Since we are doing a callback on the same thread right away, there is 
+       no need to copy the lparam to kernel mode and then back to usermode.
+       We just pretend it isn't a pointer */
 
-    if (! NT_SUCCESS(PackParam(&lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam, FALSE)))
-    {
-        DPRINT1("Failed to pack message parameters\n");
-        return 0;
-    }
-    ObReferenceObject(pti->pEThread);
     retval = co_IntCallWindowProc( Window->lpfnWndProc,
                                    !Window->Unicode,
                                    pMsg->hwnd,
                                    pMsg->message,
                                    pMsg->wParam,
-                                   lParamPacked,
-                                   lParamBufferSize);
-
-    if (! NT_SUCCESS(UnpackParam(lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam, FALSE)))
-    {
-        DPRINT1("Failed to unpack message parameters\n");
-    }
+                                   pMsg->lParam,
+                                   0);
 
     if (pMsg->message == WM_PAINT)
     {
@@ -520,7 +497,7 @@ IntDispatchMessage(PMSG pMsg)
         co_UserGetUpdateRgn( Window, hrgn, TRUE );
         REGION_FreeRgnByHandle( hrgn );
     }
-    ObDereferenceObject(pti->pEThread);
+
     return retval;
 }
 
@@ -868,6 +845,9 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      bGMSG );
         if (Present)
         {
+           /* GetMessage or PostMessage must never get messages that contain pointers */
+           ASSERT(FindMsgMemory(pMsg->message) == NULL);
+
            pti->timeLast = pMsg->time;
            pti->ptLast   = pMsg->pt;
 
@@ -1698,107 +1678,11 @@ NtUserWaitMessage(VOID)
     return ret;
 }
 
-
 BOOL APIENTRY
-NtUserGetMessage( PNTUSERGETMESSAGEINFO UnsafeInfo,
+NtUserGetMessage(PMSG pMsg,
                   HWND hWnd,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax )
-/*
-* FUNCTION: Get a message from the calling thread's message queue.
-* ARGUMENTS:
-*      UnsafeMsg - Pointer to the structure which receives the returned message.
-*      Wnd - Window whose messages are to be retrieved.
-*      MsgFilterMin - Integer value of the lowest message value to be
-*                     retrieved.
-*      MsgFilterMax - Integer value of the highest message value to be
-*                     retrieved.
-*/
-{
-    NTUSERGETMESSAGEINFO Info;
-    NTSTATUS Status;
-    PMSGMEMORY MsgMemoryEntry;
-    PVOID UserMem;
-    ULONG Size;
-    MSG Msg;
-    BOOL GotMessage;
-
-    if ( (MsgFilterMin|MsgFilterMax) & ~WM_MAXIMUM )
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    UserEnterExclusive();
-
-    RtlZeroMemory(&Msg, sizeof(MSG));
-
-    GotMessage = co_IntGetPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, PM_REMOVE, TRUE);
-
-    UserLeave();
-
-    Info.Msg = Msg;
-    /* See if this message type is present in the table */
-    MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
-
-    _SEH2_TRY
-    {
-        ProbeForWrite(UnsafeInfo, sizeof(NTUSERGETMESSAGEINFO), 1);
-        RtlCopyMemory(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
-
-        if (NULL == MsgMemoryEntry)
-        {
-            /* Not present, no copying needed */
-            UnsafeInfo->LParamSize = 0;
-        }
-        else
-        {
-            /* Determine required size */
-            Size = MsgMemorySize(MsgMemoryEntry, Info.Msg.wParam, Info.Msg.lParam);
-
-            /* Allocate required amount of user-mode memory */
-            Status = ZwAllocateVirtualMemory(NtCurrentProcess(), 
-                                             &UserMem, 
-                                             0,
-                                             &Size, 
-                                             MEM_COMMIT, 
-                                             PAGE_READWRITE);
-            if (! NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                _SEH2_YIELD(return (BOOL) -1);
-            }
-
-            /* Transfer lParam data to user-mode mem */
-            ProbeForWrite(UserMem, Size, 1);
-            RtlCopyMemory(UserMem, (PVOID)Info.Msg.lParam, Size);
-
-            UnsafeInfo->LParamSize = Size;
-            UnsafeInfo->Msg.lParam = (LPARAM) UserMem;
-        }
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-
-        if(UserMem != NULL)
-        {
-            ZwFreeVirtualMemory(NtCurrentProcess(), &UserMem, &Size, MEM_RELEASE);
-        }
-
-        _SEH2_YIELD(return (BOOL) -1);
-    }
-    _SEH2_END;
-    
-    return GotMessage;
-}
-
-
-BOOL APIENTRY
-NtUserGetMessageX(PMSG pMsg,
-                  HWND hWnd,
-                  UINT MsgFilterMin,
-                  UINT MsgFilterMax)
 {
     MSG Msg;
     BOOL Ret;
@@ -1836,98 +1720,11 @@ NtUserGetMessageX(PMSG pMsg,
 }
 
 BOOL APIENTRY
-NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
+NtUserPeekMessage( PMSG pMsg,
                   HWND hWnd,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax,
                   UINT RemoveMsg)
-{
-    NTSTATUS Status;
-    NTUSERGETMESSAGEINFO Info;
-    PMSGMEMORY MsgMemoryEntry;
-    PVOID UserMem = NULL;
-    ULONG Size;
-    MSG Msg;
-    BOOL Ret;
-
-    if ( RemoveMsg & PM_BADMSGFLAGS )
-    {
-        SetLastWin32Error(ERROR_INVALID_FLAGS);
-        return FALSE;
-    }
-
-    UserEnterExclusive();
-
-    RtlZeroMemory(&Msg, sizeof(MSG));
-
-    Ret = co_IntGetPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg, FALSE);
-
-    UserLeave();
-
-    if (Ret)
-    {
-        Info.Msg = Msg;
-        /* See if this message type is present in the table */
-        MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
-
-        _SEH2_TRY
-        {
-            ProbeForWrite(UnsafeInfo, sizeof(NTUSERGETMESSAGEINFO), 1);
-            RtlCopyMemory(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
-
-            if (NULL == MsgMemoryEntry)
-            {
-                /* Not present, no copying needed */
-                UnsafeInfo->LParamSize = 0;
-            }
-            else
-            {
-                /* Determine required size */
-                Size = MsgMemorySize(MsgMemoryEntry, Info.Msg.wParam, Info.Msg.lParam);
-
-                /* Allocate required amount of user-mode memory */
-                Status = ZwAllocateVirtualMemory(NtCurrentProcess(), 
-                                                 &UserMem, 
-                                                 0,
-                                                 &Size, 
-                                                 MEM_COMMIT, 
-                                                 PAGE_READWRITE);
-                if (! NT_SUCCESS(Status))
-                {
-                    SetLastNtError(Status);
-                    _SEH2_YIELD(return (BOOL) -1);
-                }
-
-                /* Transfer lParam data to user-mode mem */
-                ProbeForWrite(UserMem, Size, 1);
-                RtlCopyMemory(UserMem, (PVOID)Info.Msg.lParam, Size);
-
-                UnsafeInfo->LParamSize = Size;
-                UnsafeInfo->Msg.lParam = (LPARAM) UserMem;
-            }
-        }
-        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-        {
-            SetLastNtError(_SEH2_GetExceptionCode());
-            Ret = (BOOL) -1;
-
-            if(UserMem != NULL)
-            {
-                ZwFreeVirtualMemory(NtCurrentProcess(), &UserMem, &Size, MEM_RELEASE);
-            }
-        }
-        _SEH2_END;
-    }
-
-    return Ret;
-}
-
-BOOL APIENTRY
-NtUserPeekMessageX( PMSG pMsg,
-                    HWND hWnd,
-                    UINT MsgFilterMin,
-                    UINT MsgFilterMax,
-                    UINT RemoveMsg)
 {
     MSG Msg;
     BOOL Ret;
