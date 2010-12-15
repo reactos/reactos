@@ -239,7 +239,7 @@ static UNICODE_STRING xmlstr2unicode(const xmlstr_t *xmlstr)
     UNICODE_STRING res;
 
     res.Buffer = (PWSTR)xmlstr->ptr;
-    res.Length = res.MaximumLength = xmlstr->len;
+    res.Length = res.MaximumLength = xmlstr->len * sizeof(WCHAR);
 
     return res;
 }
