@@ -10,5 +10,6 @@
 	<file>ddhmg.c</file>
 	<file>eng.c</file>
 	<file>historic.c</file>
+	<file>stub.c</file>
 	<file>dxg.rc</file>
 </module>
