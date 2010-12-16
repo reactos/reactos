@@ -551,7 +551,7 @@ NtUserEnumDisplaySettings(
     ULONG cbSize, cbExtra;
     DEVMODEW dmReg, *pdm;
 
-    DPRINT1("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
+    DPRINT("Enter NtUserEnumDisplaySettings(%ls, %ld)\n",
             pustrDevice ? pustrDevice->Buffer : 0, iModeNum);
 
     if (pustrDevice)

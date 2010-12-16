@@ -124,7 +124,7 @@ EngpRegisterGraphicsDevice(
      * This is a REG_MULTI_SZ string */
     for (; *pwsz; pwsz += wcslen(pwsz) + 1)
     {
-        DPRINT1("trying driver: %ls\n", pwsz);
+        DPRINT("trying driver: %ls\n", pwsz);
         /* Try to load the display driver */
         pldev = EngLoadImageEx(pwsz, LDEV_DEVICE_DISPLAY);
         if (!pldev)
@@ -197,7 +197,7 @@ EngpRegisterGraphicsDevice(
             {
                 pGraphicsDevice->iDefaultMode = i;
                 pGraphicsDevice->iCurrentMode = i;
-                DPRINT1("Found default entry: %ld '%ls'\n", i, pdm->dmDeviceName);
+                DPRINT("Found default entry: %ld '%ls'\n", i, pdm->dmDeviceName);
             }
 
             /* Initialize the entry */
@@ -221,7 +221,7 @@ EngpRegisterGraphicsDevice(
 
     /* Unlock loader */
     EngReleaseSemaphore(ghsemGraphicsDeviceList);
-    DPRINT1("Prepared %ld modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
+    DPRINT("Prepared %ld modes for %ls\n", cModes, pGraphicsDevice->pwszDescription);
 
     return pGraphicsDevice;
 }

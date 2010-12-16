@@ -572,7 +572,7 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
                                       QueryTable, NULL, NULL);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT1("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
+         DPRINT("RtlQueryRegistryValues failed for PaintDesktopVersion (%x)\n",
                  Status);
          g_PaintDesktopVersion = FALSE;
          return FALSE;

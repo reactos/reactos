@@ -117,7 +117,7 @@ PDEVOBJ_bEnablePDEV(
 {
     PFN_DrvEnablePDEV pfnEnablePDEV;
 
-    DPRINT1("PDEVOBJ_bEnablePDEV()\n");
+    DPRINT("PDEVOBJ_bEnablePDEV()\n");
 
     /* Get the DrvEnablePDEV function */
     pfnEnablePDEV = ppdev->pldev->pfn.EnablePDEV;
@@ -146,7 +146,7 @@ PDEVOBJ_bEnablePDEV(
     GDIOBJ_SetOwnership(ppdev->devinfo.hpalDefault, NULL);
     ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
-    DPRINT1("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
+    DPRINT("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 
     return TRUE;
 }
@@ -266,7 +266,7 @@ EngpCreatePDEV(
     {
         /* ... use the device's default one */
         pdm = pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
-        DPRINT1("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
+        DPRINT("Using iDefaultMode = %ld\n", pGraphicsDevice->iDefaultMode);
     }
 
     /* Try to get a diplay driver */
