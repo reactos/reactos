@@ -910,8 +910,6 @@ UserPostThreadMessage( DWORD idThread,
     LARGE_INTEGER LargeTickCount;
     NTSTATUS Status;
 
-    DPRINT1("UserPostThreadMessage wParam 0x%x  lParam 0x%x\n", wParam,lParam);
-
     if (FindMsgMemory(Msg) != 0)
     {
         SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
