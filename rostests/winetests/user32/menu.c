@@ -3067,9 +3067,6 @@ static void test_menu_cancelmode(void)
         ok( g_got_enteridle == 0, "received %d WM_ENTERIDLE messages, none expected\n", g_got_enteridle);
     }
     ok( g_got_enteridle < 2, "received %d WM_ENTERIDLE messages, should be less than 2\n", g_got_enteridle);
-
-    skip("skipping TrackPopupMenu, that hangs on reactos\n");
-#if 0
     /* menu owner is child window */
     g_hwndtosend = hwndchild;
     ret = TrackPopupMenu( menu, TPM_RETURNCMD, 100,100, 0, hwndchild, NULL);
@@ -3082,7 +3079,6 @@ static void test_menu_cancelmode(void)
     g_hwndtosend = hwnd;
     ret = TrackPopupMenu( menu, TPM_RETURNCMD, 100,100, 0, hwndchild, NULL);
     ok( g_got_enteridle == 2, "received %d WM_ENTERIDLE messages, should be 2\n", g_got_enteridle);
-#endif
     /* cleanup */
     DestroyMenu( menu);
     DestroyWindow( hwndchild);
