@@ -18,8 +18,56 @@ SwDispatchPower(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
+    NTSTATUS Status, PnpStatus;
+    BOOLEAN ChildDevice;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT PnpDeviceObject = NULL;
 
-    UNIMPLEMENTED;
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* check if the device object is a child device */
+    Status = KsIsBusEnumChildDevice(DeviceObject, &ChildDevice);
+
+    /* get bus enum pnp object */
+    PnpStatus = KsGetBusEnumPnpDeviceObject(DeviceObject, &PnpDeviceObject);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(PnpStatus))
+    {
+        /* start next power irp */
+        PoStartNextPowerIrp(Irp);
+
+        /* just complete the irp */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        /* complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        /* done */
+        return STATUS_SUCCESS;
+    }
+
+    if (IoStack->MinorFunction == IRP_MN_SET_POWER || IoStack->MinorFunction == IRP_MN_QUERY_POWER)
+    {
+        /* fake success */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+    }
+
+    if (!ChildDevice)
+    {
+        /* forward to pnp device object */
+        PoStartNextPowerIrp(Irp);
+
+        /* skip current location */
+        IoSkipCurrentIrpStackLocation(Irp);
+
+        /* done */
+        return PoCallDriver(PnpDeviceObject, Irp);
+    }
+
+    /* start next power irp */
+    PoStartNextPowerIrp(Irp);
 
     /* just complete the irp */
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -29,7 +77,6 @@ SwDispatchPower(
 
     /* done */
     return STATUS_SUCCESS;
-
 }
 
 NTSTATUS
