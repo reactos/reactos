@@ -1255,6 +1255,11 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 
+; Software BUS Driver
+HKLM,"SYSTEM\CurrentControlSet\Services\SWENUM","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\SWENUM","Group",0x00000000,"Boot Bus 
+HKLM,"SYSTEM\CurrentControlSet\Services\SWENUM","Tag",0x00010001,0x00000002
+
 ; PCI Bus driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus 

@@ -245,6 +245,9 @@ SwAddDevice(
     NTSTATUS Status;
     PDEVICE_OBJECT FunctionalDeviceObject;
 
+    DPRINT1("SWENUM AddDevice\n");
+    DbgBreakPoint();
+
     /* create the device */
     Status = IoCreateDevice(DriverObject, sizeof(KSDEVICE_HEADER), NULL, FILE_DEVICE_BUS_EXTENDER, 0, FALSE, &FunctionalDeviceObject);
 
@@ -303,7 +306,8 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = SwDispatchDeviceControl;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = SwDispatchSystemControl;
 
-
+    DPRINT1("SWENUM loaded\n");
+    DbgBreakPoint();
     return STATUS_SUCCESS;
 }
 

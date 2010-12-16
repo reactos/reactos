@@ -36,6 +36,7 @@ kbdclass.sys=,,,,,,x,,,,,,4
 l_intl.nls=,,,,,,,,,,,,2
 ntfs.sys=,,,,,,,,,,,,4
 pci.sys=,,,,,,,,,,,,4
+swenum.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 fastfat.sys=,,,,,,x,,,,,,4
 ramdisk.sys=,,,,,,x,,,,,,4
@@ -47,11 +48,13 @@ ext2.sys=,,,,,,x,,,,,,4
 *PNP0C08 = acpi
 ;PCI\CC_0601 = isapnp
 PCI\CC_0604 = pci
+ROOT\SWENUM = swenum
 
 [BootBusExtenders.Load]
 acpi = acpi.sys
 pci = pci.sys
 isapnp = isapnp.sys
+swenum = swenum.sys
 
 [Cabinets]
 Cabinet=reactos.cab
