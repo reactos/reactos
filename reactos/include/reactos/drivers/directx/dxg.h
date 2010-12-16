@@ -47,7 +47,6 @@
 #define DXG_INDEX_DxDdGetMoCompGuids              0x24
 #define DXG_INDEX_DxDdGetMoCompFormats            0x25
 #define DXG_INDEX_DxDdGetScanLine                 0x26
-/* DXG_INDEX_DxDdLock and  DXG_INDEX_DxDdLockD3D are same */
 #define DXG_INDEX_DxDdLock                        0x27
 #define DXG_INDEX_DxDdLockD3D                     0x28
 #define DXG_INDEX_DxDdQueryDirectDrawObject       0x29
@@ -115,6 +114,8 @@
 #define DXG_INDEX_DxDdSetAccelLevel               0x58
 #define DXG_INDEX_DxDdGetSurfaceLock              0x59
 #define DXG_INDEX_DxDdEnumLockedSurfaceRect       0x5A
+#define DXG_INDEX_DxDdIoctl                       0x5B
+#define DXG_INDEX_DxDdSwitchToGDI                 0x5C
 
 
 /***********************************************************************************/
