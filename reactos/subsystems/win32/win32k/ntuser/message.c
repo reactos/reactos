@@ -61,6 +61,7 @@ static MSGMEMORY MsgMemory[] =
     { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
     { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
     { WM_COPYDATA, MMS_SIZE_SPECIAL, MMS_FLAG_READ },
+    { WM_COPYGLOBALDATA, MMS_SIZE_WPARAM, MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
     { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
 };
@@ -132,10 +133,6 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 
             case WM_COPYDATA:
                 Size = sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
-                break;
-
-            case WM_COPYGLOBALDATA:
-                Size = wParam;
                 break;
 
             default:
@@ -243,7 +240,6 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
         ASSERT(CsData == (PCHAR) PackedCs + Size);
         *lParamPacked = (LPARAM) PackedCs;
     }
-
     else if (PoolType == NonPagedPool)
     {
         PMSGMEMORY MsgMemoryEntry;
@@ -315,6 +311,100 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL No
     ASSERT(FALSE);
 
     return STATUS_INVALID_PARAMETER;
+}
+
+static NTSTATUS FASTCALL
+CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry)
+{
+    NTSTATUS Status;
+
+    PVOID KernelMem;
+    UINT Size;
+
+    *KernelModeMsg = *UserModeMsg;
+
+    /* See if this message type is present in the table */
+    if (NULL == MsgMemoryEntry)
+    {
+        /* Not present, no copying needed */
+        return STATUS_SUCCESS;
+    }
+
+    /* Determine required size */
+    Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
+
+    if (0 != Size)
+    {
+        /* Allocate kernel mem */
+        KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
+        if (NULL == KernelMem)
+        {
+            DPRINT1("Not enough memory to copy message to kernel mem\n");
+            return STATUS_NO_MEMORY;
+        }
+        KernelModeMsg->lParam = (LPARAM) KernelMem;
+
+        /* Copy data if required */
+        if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
+        {
+            Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
+            if (! NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+                ExFreePoolWithTag(KernelMem, TAG_MSG);
+                return Status;
+            }
+        }
+        else
+        {
+            /* Make sure we don't pass any secrets to usermode */
+            RtlZeroMemory(KernelMem, Size);
+        }
+    }
+    else
+    {
+        KernelModeMsg->lParam = 0;
+    }
+
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS FASTCALL
+CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
+{
+    NTSTATUS Status;
+    PMSGMEMORY MsgMemoryEntry;
+    UINT Size;
+
+    /* See if this message type is present in the table */
+    MsgMemoryEntry = FindMsgMemory(UserModeMsg->message);
+    if (NULL == MsgMemoryEntry)
+    {
+        /* Not present, no copying needed */
+        return STATUS_SUCCESS;
+    }
+
+    /* Determine required size */
+    Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
+
+    if (0 != Size)
+    {
+        /* Copy data if required */
+        if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
+        {
+            Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
+            if (! NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
+                ExFreePool((PVOID) KernelModeMsg->lParam);
+                return Status;
+            }
+        }
+
+        ExFreePool((PVOID) KernelModeMsg->lParam);
+    }
+
+    return STATUS_SUCCESS;
 }
 
 //
@@ -654,100 +744,6 @@ co_IntPeekMessage( PMSG Msg,
     return TRUE;
 }
 
-static NTSTATUS FASTCALL
-CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry)
-{
-    NTSTATUS Status;
-
-    PVOID KernelMem;
-    UINT Size;
-
-    *KernelModeMsg = *UserModeMsg;
-
-    /* See if this message type is present in the table */
-    if (NULL == MsgMemoryEntry)
-    {
-        /* Not present, no copying needed */
-        return STATUS_SUCCESS;
-    }
-
-    /* Determine required size */
-    Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
-
-    if (0 != Size)
-    {
-        /* Allocate kernel mem */
-        KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
-        if (NULL == KernelMem)
-        {
-            DPRINT1("Not enough memory to copy message to kernel mem\n");
-            return STATUS_NO_MEMORY;
-        }
-        KernelModeMsg->lParam = (LPARAM) KernelMem;
-
-        /* Copy data if required */
-        if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
-        {
-            Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-            if (! NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-                ExFreePoolWithTag(KernelMem, TAG_MSG);
-                return Status;
-            }
-        }
-        else
-        {
-            /* Make sure we don't pass any secrets to usermode */
-            RtlZeroMemory(KernelMem, Size);
-        }
-    }
-    else
-    {
-        KernelModeMsg->lParam = 0;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-static NTSTATUS FASTCALL
-CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
-{
-    NTSTATUS Status;
-    PMSGMEMORY MsgMemoryEntry;
-    UINT Size;
-
-    /* See if this message type is present in the table */
-    MsgMemoryEntry = FindMsgMemory(UserModeMsg->message);
-    if (NULL == MsgMemoryEntry)
-    {
-        /* Not present, no copying needed */
-        return STATUS_SUCCESS;
-    }
-
-    /* Determine required size */
-    Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
-
-    if (0 != Size)
-    {
-        /* Copy data if required */
-        if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
-        {
-            Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
-            if (! NT_SUCCESS(Status))
-            {
-                DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
-                ExFreePool((PVOID) KernelModeMsg->lParam);
-                return Status;
-            }
-        }
-
-        ExFreePool((PVOID) KernelModeMsg->lParam);
-    }
-
-    return STATUS_SUCCESS;
-}
-
 static BOOL FASTCALL
 co_IntWaitMessage( PWND Window,
                    UINT MsgFilterMin,
@@ -775,9 +771,9 @@ co_IntWaitMessage( PWND Window,
 
         /* Nothing found. Wait for new messages. */
         Status = co_MsqWaitForNewMessages( ThreadQueue,
-                                            Window,
-                                            MsgFilterMin,
-                                            MsgFilterMax);
+                                           Window,
+                                           MsgFilterMin,
+                                           MsgFilterMax);
     }
     while ( (STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) ||
             STATUS_TIMEOUT == Status );
@@ -834,6 +830,7 @@ co_IntGetPeekMessage( PMSG pMsg,
     }
 
     pti = PsGetCurrentThreadWin32Thread();
+    pti->pClientInfo->cSpins++; // Bump up the spin count.
 
     do
     {
@@ -848,8 +845,11 @@ co_IntGetPeekMessage( PMSG pMsg,
            /* GetMessage or PostMessage must never get messages that contain pointers */
            ASSERT(FindMsgMemory(pMsg->message) == NULL);
 
-           pti->timeLast = pMsg->time;
-           pti->ptLast   = pMsg->pt;
+           if (pMsg->message != WM_PAINT && pMsg->message != WM_QUIT)
+           {
+              pti->timeLast = pMsg->time;
+              pti->ptLast   = pMsg->pt;
+           }
 
            // The WH_GETMESSAGE hook enables an application to monitor messages about to
            // be returned by the GetMessage or PeekMessage function.
@@ -984,7 +984,7 @@ UserPostMessage( HWND Wnd,
                                 KernelModeMsg.wParam, 
                                 KernelModeMsg.lParam);
 
-        if(MsgMemoryEntry)
+        if (MsgMemoryEntry && KernelModeMsg.lParam)
             ExFreePool((PVOID) KernelModeMsg.lParam);
 
         return TRUE;
@@ -1019,7 +1019,7 @@ UserPostMessage( HWND Wnd,
             {
                 UserPostMessage(List[i], Msg, wParam, lParam);
             }
-            ExFreePool(List);
+            ExFreePoolWithTag(List,TAG_WINLIST);//ExFreePool(List);
         }
     }
     else

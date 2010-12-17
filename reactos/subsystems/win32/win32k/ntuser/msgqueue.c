@@ -1624,7 +1624,7 @@ co_MsqReplyMessage( LRESULT lResult )
    pti = PsGetCurrentThreadWin32Thread();
    Message = pti->pusmCurrent;
 
-   if(!Message) return FALSE;
+   if (!Message) return FALSE;
 
    if (Message->QS_Flags & QS_SMRESULT) return FALSE;
 

@@ -145,7 +145,8 @@ DdeGetPair(HGLOBAL ServerMem)
   return Ret;
 }
 
-static BOOL FASTCALL
+static
+BOOL FASTCALL
 MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
 {
   *KMMsg = *UMMsg;
@@ -249,7 +250,8 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
   return TRUE;
 }
 
-static VOID FASTCALL
+static
+VOID FASTCALL
 MsgiUMToKMCleanup(PMSG UMMsg, PMSG KMMsg)
 {
   switch (KMMsg->message)
@@ -949,9 +951,7 @@ DWORD
 WINAPI
 GetMessagePos(VOID)
 {
-  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
-  return(MAKELONG(ThreadData->LastMessage.pt.x, ThreadData->LastMessage.pt.y));
-  //return NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
+  return NtUserCallNoParam(NOPARAM_ROUTINE_GETMSESSAGEPOS);
 }
 
 
@@ -961,9 +961,7 @@ GetMessagePos(VOID)
 LONG WINAPI
 GetMessageTime(VOID)
 {
-  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
-  return(ThreadData->LastMessage.time);
-//  return NtUserGetThreadState(THREADSTATE_GETMESSAGETIME);
+  return NtUserGetThreadState(THREADSTATE_GETMESSAGETIME);
 }
 
 
@@ -1602,17 +1600,17 @@ GetMessageA(LPMSG lpMsg,
 	        UINT wMsgFilterMax)
 {
   BOOL Res;
-  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+
+  if ( (wMsgFilterMin|wMsgFilterMax) & ~WM_MAXIMUM )
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return FALSE;
+  }
 
   Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
     {
       return Res;
-    }
-
-  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
-    {
-      ThreadData->LastMessage = *lpMsg;
     }
 
   return Res;
@@ -1628,7 +1626,12 @@ GetMessageW(LPMSG lpMsg,
 	    UINT wMsgFilterMax)
 {
   BOOL Res;
-  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
+
+  if ( (wMsgFilterMin|wMsgFilterMax) & ~WM_MAXIMUM )
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return FALSE;
+  }
 
   Res = NtUserGetMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax);
   if (-1 == (int) Res)
@@ -1636,20 +1639,15 @@ GetMessageW(LPMSG lpMsg,
       return Res;
     }
 
-  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
-    {
-      ThreadData->LastMessage = *lpMsg;
-    }
-
   return Res;
 }
 
 BOOL WINAPI
-PeekMessageWorker(PMSG pMsg,
-	              HWND hWnd,
-	              UINT wMsgFilterMin,
-	              UINT wMsgFilterMax,
-	              UINT wRemoveMsg)
+PeekMessageWorker( PMSG pMsg,
+                   HWND hWnd,
+                   UINT wMsgFilterMin,
+                   UINT wMsgFilterMax,
+                   UINT wRemoveMsg)
 {
   PCLIENTINFO pci;
   PCLIENTTHREADINFO pcti;
@@ -1692,17 +1690,11 @@ PeekMessageA(LPMSG lpMsg,
 	     UINT wRemoveMsg)
 {
   BOOL Res;
-  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
   Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
     {
       return FALSE;
-    }
-
-  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
-    {
-        ThreadData->LastMessage = *lpMsg;
     }
 
   return Res;
@@ -1722,7 +1714,6 @@ PeekMessageW(
   UINT wRemoveMsg)
 {
   BOOL Res;
-  PUSER32_THREAD_DATA ThreadData = User32GetThreadData();
 
   Res = PeekMessageWorker(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
   if (-1 == (int) Res || !Res)
@@ -1730,44 +1721,7 @@ PeekMessageW(
       return FALSE;
     }
 
-  if (Res && lpMsg->message != WM_PAINT && lpMsg->message != WM_QUIT)
-    {
-      ThreadData->LastMessage = *lpMsg;
-    }
-
   return Res;
-}
-
-//
-// Worker function for post message.
-//
-BOOL
-FASTCALL
-PostMessageWorker(
-  HWND Wnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  MSG UMMsg, KMMsg;
-  LRESULT Result;
-
-  UMMsg.hwnd = Wnd;
-  UMMsg.message = Msg;
-  UMMsg.wParam = wParam;
-  UMMsg.lParam = lParam;
-  if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-  {
-     return FALSE;
-  }
-  Result = NtUserPostMessage( Wnd,
-                              KMMsg.message,
-                              KMMsg.wParam,
-                              KMMsg.lParam);
-
-  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
-
-  return Result;
 }
 
 /*
@@ -1781,24 +1735,38 @@ PostMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
-  MSG AnsiMsg, UcMsg;
-  BOOL Ret;
+  LRESULT Ret;
 
-  AnsiMsg.hwnd = hWnd;
-  AnsiMsg.message = Msg;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-
-  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  /* Check for combo box or a list box to send names. */
+  if (Msg == CB_DIR || Msg == LB_DIR)
   {
-      return FALSE;
+  /*
+     Set DDL_POSTMSGS, so use the PostMessage function to send messages to the
+     combo/list box. Forces a call like DlgDirListComboBox.
+  */
+    //wParam |= DDL_POSTMSGS;
+    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
   }
 
-  Ret = PostMessageW( hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+  /* No drop files or current Process, just post message. */
+  if ( (Msg != WM_DROPFILES) ||
+       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
+                  PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
+  {
+    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
+  }
 
-  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+  /* We have drop files and this is not the same process for this window. */
 
-  return Ret;
+  /* Just incase, check wParam for Global memory handle and send size. */
+  Ret = SendMessageA( hWnd,
+                      WM_COPYGLOBALDATA,
+                      (WPARAM)GlobalSize((HGLOBAL)wParam), // Zero if not a handle.
+                      (LPARAM)wParam);                     // Send wParam as lParam.
+
+  if ( Ret ) return NtUserPostMessage(hWnd, Msg, (WPARAM)Ret, lParam);
+
+  return FALSE;
 }
 
 /*
@@ -1821,8 +1789,8 @@ PostMessageW(
      Set DDL_POSTMSGS, so use the PostMessage function to send messages to the
      combo/list box. Forces a call like DlgDirListComboBox.
   */
-    wParam |= DDL_POSTMSGS;
-    return PostMessageWorker(hWnd, Msg, wParam, lParam);
+    //wParam |= DDL_POSTMSGS;
+    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
   }
 
   /* No drop files or current Process, just post message. */
@@ -1830,7 +1798,7 @@ PostMessageW(
        ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
                   PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
   {
-    return PostMessageWorker(hWnd, Msg, wParam, lParam);
+    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
   }
 
   /* We have drop files and this is not the same process for this window. */
@@ -1841,7 +1809,7 @@ PostMessageW(
                       (WPARAM)GlobalSize((HGLOBAL)wParam), // Zero if not a handle.
                       (LPARAM)wParam);                     // Send wParam as lParam.
 
-  if ( Ret ) return PostMessageWorker(hWnd, Msg, (WPARAM)Ret, lParam);
+  if ( Ret ) return NtUserPostMessage(hWnd, Msg, (WPARAM)Ret, lParam);
 
   return FALSE;
 }
@@ -1902,11 +1870,16 @@ SendMessageW(HWND Wnd,
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
-  Window = ValidateHwnd(Wnd);
-  if (!Window) return FALSE;
+  if ( Msg & ~WM_MAXIMUM )
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return 0;
+  }
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
+      Window = ValidateHwnd(Wnd);
+
       if ( Window != NULL &&
            Window->head.pti == ti &&
 //          !IsThreadHooked(GetWin32ClientInfo()) && // Enable to test message system bug.
@@ -1937,7 +1910,7 @@ SendMessageW(HWND Wnd,
      return FALSE;
   }
 
-  Result = NtUserMessageCall( KMMsg.hwnd,
+  Result = NtUserMessageCall( Wnd,
                               KMMsg.message, 
                               KMMsg.wParam,
                               KMMsg.lParam,
@@ -1962,11 +1935,16 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   PWND Window;
   PTHREADINFO ti = GetW32ThreadInfo();
 
-  Window = ValidateHwnd(Wnd);
-  if (!Window) return FALSE;
+  if ( Msg & ~WM_MAXIMUM )
+  {
+     SetLastError( ERROR_INVALID_PARAMETER );
+     return 0;
+  }
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
+      Window = ValidateHwnd(Wnd);
+
       if ( Window != NULL &&
            Window->head.pti == ti &&
 //          !IsThreadHooked(GetWin32ClientInfo()) && // Enable to test message system bug.
@@ -2003,7 +1981,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
   }
 
-  Result = NtUserMessageCall( KMMsg.hwnd,
+  Result = NtUserMessageCall( Wnd,
                               KMMsg.message, 
                               KMMsg.wParam,
                               KMMsg.lParam,
@@ -2047,7 +2025,7 @@ SendMessageCallbackA(
       return FALSE;
   }
 
-  Result = NtUserMessageCall( UcMsg.hwnd,
+  Result = NtUserMessageCall( hWnd,
                               UcMsg.message,
                               UcMsg.wParam,
                               UcMsg.lParam,
@@ -2104,8 +2082,8 @@ SendMessageTimeoutA(
   MSG AnsiMsg, UcMsg;
   LRESULT Result;
   DOSENDMESSAGE dsm;
-
-  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
+  PWND Window;
+  PTHREADINFO ti = GetW32ThreadInfo();
 
   if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
   {
@@ -2114,6 +2092,23 @@ SendMessageTimeoutA(
   }
   
   if (lpdwResult) *lpdwResult = 0;
+
+  if (hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  {
+      Window = ValidateHwnd(hWnd);
+
+      if ( Window != NULL &&
+           Window->head.pti == ti &&
+          !ISITHOOKED(WH_CALLWNDPROC) &&
+          !ISITHOOKED(WH_CALLWNDPROCRET) &&
+          !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
+      {
+          Result = IntCallMessageProc(Window, hWnd, Msg, wParam, lParam, TRUE);
+          if (lpdwResult) *lpdwResult = Result;
+          return TRUE;
+      }
+  }
+  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
   dsm.uTimeout = uTimeout;
@@ -2128,7 +2123,7 @@ SendMessageTimeoutA(
       return FALSE;
   }
 
-  Result = NtUserMessageCall( UcMsg.hwnd,
+  Result = NtUserMessageCall( hWnd,
                               UcMsg.message,
                               UcMsg.wParam,
                               UcMsg.lParam,
@@ -2162,8 +2157,8 @@ SendMessageTimeoutW(
 {
   LRESULT Result;
   DOSENDMESSAGE dsm;
-
-  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
+  PWND Window;
+  PTHREADINFO ti = GetW32ThreadInfo();
 
   if ( Msg & ~WM_MAXIMUM || fuFlags & ~(SMTO_NOTIMEOUTIFNOTHUNG|SMTO_ABORTIFHUNG|SMTO_BLOCK))
   {
@@ -2172,6 +2167,23 @@ SendMessageTimeoutW(
   }
   
   if (lpdwResult) *lpdwResult = 0;
+
+  if (hWnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  {
+      Window = ValidateHwnd(hWnd);
+
+      if ( Window != NULL &&
+           Window->head.pti == ti &&
+          !ISITHOOKED(WH_CALLWNDPROC) &&
+          !ISITHOOKED(WH_CALLWNDPROCRET) &&
+          !(Window->state & WNDS_SERVERSIDEWINDOWPROC) )
+      {
+          Result = IntCallMessageProc(Window, hWnd, Msg, wParam, lParam, FALSE);
+          if (lpdwResult) *lpdwResult = Result;
+          return TRUE;
+      }
+  }
+  SPY_EnterMessage(SPY_SENDMESSAGE, hWnd, Msg, wParam, lParam);
 
   dsm.uFlags = fuFlags;
   dsm.uTimeout = uTimeout;
