@@ -60,7 +60,7 @@ APIENTRY
 NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
                           PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
-    PGD_DDCANCREATED3DBUFFER pfnDdCanCreateD3DBuffer = (PGD_DDCANCREATED3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdCanCreateD3DBuffer].pfn;
+    PGD_DDCANCREATED3DBUFFER pfnDdCanCreateD3DBuffer = (PGD_DDCANCREATED3DBUFFER)gpDxFuncs[DXG_INDEX_DXDDCANCREATED3DBUFFER].pfn;
 
     if (pfnDdCanCreateD3DBuffer == NULL)
     {
@@ -119,7 +119,7 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
                       HANDLE hSurfZ,
                       LPD3DNTHAL_CONTEXTCREATEDATA pdcci)
 {
-    PGD_D3DCONTEXTCREATE pfnD3dContextCreate = (PGD_D3DCONTEXTCREATE)gpDxFuncs[DXG_INDEX_DxD3dContextCreate].pfn;
+    PGD_D3DCONTEXTCREATE pfnD3dContextCreate = (PGD_D3DCONTEXTCREATE)gpDxFuncs[DXG_INDEX_DXD3DCONTEXTCREATE].pfn;
 
     if (pfnD3dContextCreate == NULL)
     {
@@ -154,7 +154,7 @@ DWORD
 APIENTRY
 NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
 {
-    PGD_D3DCONTEXTDESTROY pfnD3dContextDestroy = (PGD_D3DCONTEXTDESTROY)gpDxFuncs[DXG_INDEX_DxD3dContextDestroy].pfn;
+    PGD_D3DCONTEXTDESTROY pfnD3dContextDestroy = (PGD_D3DCONTEXTDESTROY)gpDxFuncs[DXG_INDEX_DXD3DCONTEXTDESTROY].pfn;
 
     if ( pfnD3dContextDestroy == NULL)
     {
@@ -192,7 +192,7 @@ DWORD
 APIENTRY
 NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
 {
-    PGD_D3DCONTEXTDESTROYALL pfnD3dContextDestroyAll = (PGD_D3DCONTEXTDESTROYALL)gpDxFuncs[DXG_INDEX_DxD3dContextDestroyAll].pfn;
+    PGD_D3DCONTEXTDESTROYALL pfnD3dContextDestroyAll = (PGD_D3DCONTEXTDESTROYALL)gpDxFuncs[DXG_INDEX_DXD3DCONTEXTDESTROYALL].pfn;
 
     if (pfnD3dContextDestroyAll == NULL)
     {
@@ -267,7 +267,7 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
                        PDD_CREATESURFACEDATA puCreateSurfaceData,
                        HANDLE *puhSurface)
 {
-    PGD_DDCREATED3DBUFFER pfnDdCreateD3DBuffer = (PGD_DDCREATED3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdCreateD3DBuffer].pfn;
+    PGD_DDCREATED3DBUFFER pfnDdCreateD3DBuffer = (PGD_DDCREATED3DBUFFER)gpDxFuncs[DXG_INDEX_DXDDCREATED3DBUFFER].pfn;
 
     if (pfnDdCreateD3DBuffer == NULL)
     {
@@ -289,7 +289,7 @@ DWORD
 APIENTRY
 NtGdiDdDestroyD3DBuffer(HANDLE hSurface)
 {
-    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = (PGD_DXDDDESTROYD3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdDestroyD3DBuffer].pfn;  
+    PGD_DXDDDESTROYD3DBUFFER pfnDdDestroyD3DBuffer = (PGD_DXDDDESTROYD3DBUFFER)gpDxFuncs[DXG_INDEX_DXDDDESTROYD3DBUFFER].pfn;  
     
     if (pfnDdDestroyD3DBuffer == NULL)
     {
@@ -314,7 +314,7 @@ NtGdiD3dDrawPrimitives2(HANDLE hCmdBuf,
                         FLATPTR *pfpVidMemVtx,
                         DWORD *pdwSizeVtx)
 {
-    PGD_D3DDRAWPRIMITIVES2 pfnD3dDrawPrimitives2  = (PGD_D3DDRAWPRIMITIVES2)gpDxFuncs[DXG_INDEX_DxD3dDrawPrimitives2].pfn;  
+    PGD_D3DDRAWPRIMITIVES2 pfnD3dDrawPrimitives2  = (PGD_D3DDRAWPRIMITIVES2)gpDxFuncs[DXG_INDEX_DXD3DDRAWPRIMITIVES2].pfn;  
     
     if (pfnD3dDrawPrimitives2 == NULL)
     {
@@ -335,7 +335,7 @@ APIENTRY
 NtGdiDdLockD3D(HANDLE hSurface,
                PDD_LOCKDATA puLockData)
 {
-    PGD_DXDDLOCKD3D pfnDdLockD3D  = (PGD_DXDDLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdLockD3D].pfn;  
+    PGD_DXDDLOCKD3D pfnDdLockD3D  = (PGD_DXDDLOCKD3D)gpDxFuncs[DXG_INDEX_DXDDLOCKD3D].pfn;  
     
     if (pfnDdLockD3D == NULL)
     {
@@ -354,7 +354,7 @@ DWORD
 APIENTRY
 NtGdiD3dValidateTextureStageState(LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData)
 {
-    PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState = (PGD_D3DVALIDATETEXTURESTAGESTATE)gpDxFuncs[DXG_INDEX_DxD3dValidateTextureStageState].pfn;  
+    PGD_D3DVALIDATETEXTURESTAGESTATE pfnD3dValidateTextureStageState = (PGD_D3DVALIDATETEXTURESTAGESTATE)gpDxFuncs[DXG_INDEX_DXD3DVALIDATETEXTURESTAGESTATE].pfn;  
    
     if (pfnD3dValidateTextureStageState == NULL)
     {
@@ -374,7 +374,7 @@ APIENTRY
 NtGdiDdUnlockD3D(HANDLE hSurface,
                  PDD_UNLOCKDATA puUnlockData)
 {
-    PGD_DXDDUNLOCKD3D pfnDdUnlockD3D = (PGD_DXDDUNLOCKD3D)gpDxFuncs[DXG_INDEX_DxDdUnlockD3D].pfn;
+    PGD_DXDDUNLOCKD3D pfnDdUnlockD3D = (PGD_DXDDUNLOCKD3D)gpDxFuncs[DXG_INDEX_DXDDUNLOCKD3D].pfn;
    
     if (pfnDdUnlockD3D == NULL)
     {

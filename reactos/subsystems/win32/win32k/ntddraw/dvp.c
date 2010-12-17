@@ -20,7 +20,7 @@ APIENTRY
 NtGdiDvpCanCreateVideoPort(HANDLE hDirectDraw,
                            PDD_CANCREATEVPORTDATA puCanCreateVPortData)
 {
-    PGD_DVPCANCREATEVIDEOPORT pfnDvpCanCreateVideoPort = (PGD_DVPCANCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpCanCreateVideoPort].pfn;
+    PGD_DVPCANCREATEVIDEOPORT pfnDvpCanCreateVideoPort = (PGD_DVPCANCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DXDVPCANCREATEVIDEOPORT].pfn;
     
     if (pfnDvpCanCreateVideoPort == NULL)
     {
@@ -40,7 +40,7 @@ APIENTRY
 NtGdiDvpColorControl(HANDLE hVideoPort,
                      PDD_VPORTCOLORDATA puVPortColorData)
 {
-    PGD_DVPCOLORCONTROL pfnDvpColorControl = (PGD_DVPCOLORCONTROL)gpDxFuncs[DXG_INDEX_DxDvpColorControl].pfn;
+    PGD_DVPCOLORCONTROL pfnDvpColorControl = (PGD_DVPCOLORCONTROL)gpDxFuncs[DXG_INDEX_DXDVPCOLORCONTROL].pfn;
     
     if (pfnDvpColorControl == NULL)
     {
@@ -60,7 +60,7 @@ APIENTRY
 NtGdiDvpCreateVideoPort(HANDLE hDirectDraw,
                         PDD_CREATEVPORTDATA puCreateVPortData)
 {
-    PGD_DVPCREATEVIDEOPORT pfnDvpCreateVideoPort = (PGD_DVPCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpCreateVideoPort].pfn;
+    PGD_DVPCREATEVIDEOPORT pfnDvpCreateVideoPort = (PGD_DVPCREATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DXDVPCREATEVIDEOPORT].pfn;
     
     if (pfnDvpCreateVideoPort == NULL)
     {
@@ -80,7 +80,7 @@ APIENTRY
 NtGdiDvpDestroyVideoPort(HANDLE hVideoPort,
                          PDD_DESTROYVPORTDATA puDestroyVPortData)
 {
-    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort  = (PGD_DVPDESTROYVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpDestroyVideoPort].pfn;
+    PGD_DVPDESTROYVIDEOPORT pfnDvpDestroyVideoPort  = (PGD_DVPDESTROYVIDEOPORT)gpDxFuncs[DXG_INDEX_DXDVPDESTROYVIDEOPORT].pfn;
     
     if (pfnDvpDestroyVideoPort == NULL)
     {
@@ -102,7 +102,7 @@ NtGdiDvpFlipVideoPort(HANDLE hVideoPort,
                       HANDLE hDDSurfaceTarget,
                       PDD_FLIPVPORTDATA puFlipVPortData)
 {
-    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort  = (PGD_DVPFLIPVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpFlipVideoPort].pfn;
+    PGD_DVPFLIPVIDEOPORT pfnDvpFlipVideoPort  = (PGD_DVPFLIPVIDEOPORT)gpDxFuncs[DXG_INDEX_DXDVPFLIPVIDEOPORT].pfn;
 
     if (pfnDvpFlipVideoPort == NULL)
     {
@@ -123,7 +123,7 @@ APIENTRY
 NtGdiDvpGetVideoPortBandwidth(HANDLE hVideoPort,
                               PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData)
 {
-    PGD_DVPGETVIDEOPORTBANDWITH pfnDvpGetVideoPortBandwidth = (PGD_DVPGETVIDEOPORTBANDWITH)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortBandwidth].pfn;
+    PGD_DVPGETVIDEOPORTBANDWITH pfnDvpGetVideoPortBandwidth = (PGD_DVPGETVIDEOPORTBANDWITH)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTBANDWIDTH].pfn;
 
     if (pfnDvpGetVideoPortBandwidth == NULL)
     {
@@ -144,7 +144,7 @@ APIENTRY
 NtGdiDvpGetVideoPortFlipStatus(HANDLE hDirectDraw,
                                PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData)
 {
-    PGD_DXDVPGETVIDEOPORTFLIPSTATUS pfnDvpGetVideoPortFlipStatus = (PGD_DXDVPGETVIDEOPORTFLIPSTATUS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortFlipStatus].pfn;
+    PGD_DXDVPGETVIDEOPORTFLIPSTATUS pfnDvpGetVideoPortFlipStatus = (PGD_DXDVPGETVIDEOPORTFLIPSTATUS)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTFLIPSTATUS].pfn;
 
     if (pfnDvpGetVideoPortFlipStatus == NULL)
     {
@@ -165,7 +165,7 @@ APIENTRY
 NtGdiDvpGetVideoPortInputFormats(HANDLE hVideoPort,
                                  PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData)
 {
-    PGD_DXDVPGETVIDEOPORTINPUTFORMATS pfnDvpGetVideoPortInputFormats = (PGD_DXDVPGETVIDEOPORTINPUTFORMATS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortInputFormats].pfn;
+    PGD_DXDVPGETVIDEOPORTINPUTFORMATS pfnDvpGetVideoPortInputFormats = (PGD_DXDVPGETVIDEOPORTINPUTFORMATS)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTINPUTFORMATS].pfn;
 
     if (pfnDvpGetVideoPortInputFormats == NULL)
     {
@@ -186,7 +186,7 @@ APIENTRY
 NtGdiDvpGetVideoPortLine(HANDLE hVideoPort,
                          PDD_GETVPORTLINEDATA puGetVPortLineData)
 {
-    PGD_DXDVPGETVIDEOPORTLINE pfnDvpGetVideoPortLine = (PGD_DXDVPGETVIDEOPORTLINE)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortLine].pfn;
+    PGD_DXDVPGETVIDEOPORTLINE pfnDvpGetVideoPortLine = (PGD_DXDVPGETVIDEOPORTLINE)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTLINE].pfn;
 
     if (pfnDvpGetVideoPortLine == NULL)
     {
@@ -207,7 +207,7 @@ APIENTRY
 NtGdiDvpGetVideoPortOutputFormats(HANDLE hVideoPort,
                                   PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData)
 {
-    PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS pfnDvpGetVideoPortOutputFormats = (PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortOutputFormats].pfn;
+    PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS pfnDvpGetVideoPortOutputFormats = (PGD_DXDVPGETVIDEOPORTOUTPUTFORMATS)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTOUTPUTFORMATS].pfn;
 
     if (pfnDvpGetVideoPortOutputFormats == NULL)
     {
@@ -229,7 +229,7 @@ APIENTRY
 NtGdiDvpGetVideoPortConnectInfo(HANDLE hDirectDraw,
                                 PDD_GETVPORTCONNECTDATA puGetVPortConnectData)
 {
-    PGD_DXDVPGETVIDEOPORTCONNECTINFO pfnDvpGetVideoPortConnectInfo = (PGD_DXDVPGETVIDEOPORTCONNECTINFO)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortConnectInfo].pfn;
+    PGD_DXDVPGETVIDEOPORTCONNECTINFO pfnDvpGetVideoPortConnectInfo = (PGD_DXDVPGETVIDEOPORTCONNECTINFO)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTCONNECTINFO].pfn;
 
     if (pfnDvpGetVideoPortConnectInfo == NULL)
     {
@@ -250,7 +250,7 @@ APIENTRY
 NtGdiDvpGetVideoSignalStatus(HANDLE hVideoPort,
                              PDD_GETVPORTSIGNALDATA puGetVPortSignalData)
 {
-    PGD_DXDVPGETVIDEOSIGNALSTATUS pfnDvpGetVideoSignalStatus = (PGD_DXDVPGETVIDEOSIGNALSTATUS)gpDxFuncs[DXG_INDEX_DxDvpGetVideoSignalStatus].pfn;
+    PGD_DXDVPGETVIDEOSIGNALSTATUS pfnDvpGetVideoSignalStatus = (PGD_DXDVPGETVIDEOSIGNALSTATUS)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOSIGNALSTATUS].pfn;
 
     if (pfnDvpGetVideoSignalStatus == NULL)
     {
@@ -274,7 +274,7 @@ NtGdiDvpUpdateVideoPort(HANDLE hVideoPort,
                         HANDLE* phSurfaceVbi,
                         PDD_UPDATEVPORTDATA puUpdateVPortData)
 {
-    PGD_DXDVPUPDATEVIDEOPORT pfnDvpUpdateVideoPort = (PGD_DXDVPUPDATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DxDvpUpdateVideoPort].pfn;
+    PGD_DXDVPUPDATEVIDEOPORT pfnDvpUpdateVideoPort = (PGD_DXDVPUPDATEVIDEOPORT)gpDxFuncs[DXG_INDEX_DXDVPUPDATEVIDEOPORT].pfn;
 
     if (pfnDvpUpdateVideoPort == NULL)
     {
@@ -296,7 +296,7 @@ APIENTRY
 NtGdiDvpWaitForVideoPortSync(HANDLE hVideoPort,
                              PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData)
 {
-    PGD_DXDVPWAITFORVIDEOPORTSYNC pfnDvpWaitForVideoPortSync = (PGD_DXDVPWAITFORVIDEOPORTSYNC)gpDxFuncs[DXG_INDEX_DxDvpWaitForVideoPortSync].pfn;
+    PGD_DXDVPWAITFORVIDEOPORTSYNC pfnDvpWaitForVideoPortSync = (PGD_DXDVPWAITFORVIDEOPORTSYNC)gpDxFuncs[DXG_INDEX_DXDVPWAITFORVIDEOPORTSYNC].pfn;
 
     if (pfnDvpWaitForVideoPortSync == NULL)
     {
@@ -318,7 +318,7 @@ NtGdiDvpAcquireNotification(HANDLE hVideoPort,
                             HANDLE* hEvent,
                             LPDDVIDEOPORTNOTIFY pNotify)
 {
-    PGD_DXDVPACQUIRENOTIFICATION pfnDvpAcquireNotification = (PGD_DXDVPACQUIRENOTIFICATION)gpDxFuncs[DXG_INDEX_DxDvpAcquireNotification].pfn;
+    PGD_DXDVPACQUIRENOTIFICATION pfnDvpAcquireNotification = (PGD_DXDVPACQUIRENOTIFICATION)gpDxFuncs[DXG_INDEX_DXDVPACQUIRENOTIFICATION].pfn;
 
     if (pfnDvpAcquireNotification == NULL)
     {
@@ -339,7 +339,7 @@ APIENTRY
 NtGdiDvpReleaseNotification(HANDLE hVideoPort,
                             HANDLE hEvent)
 {
-    PGD_DXDVPRELEASENOTIFICATION pfnDvpReleaseNotification = (PGD_DXDVPRELEASENOTIFICATION)gpDxFuncs[DXG_INDEX_DxDvpReleaseNotification].pfn;
+    PGD_DXDVPRELEASENOTIFICATION pfnDvpReleaseNotification = (PGD_DXDVPRELEASENOTIFICATION)gpDxFuncs[DXG_INDEX_DXDVPRELEASENOTIFICATION].pfn;
 
     if (pfnDvpReleaseNotification == NULL)
     {
@@ -361,7 +361,7 @@ APIENTRY
 NtGdiDvpGetVideoPortField(HANDLE hVideoPort,
                           PDD_GETVPORTFIELDDATA puGetVPortFieldData)
 {
-    PGD_DXDVPGETVIDEOPORTFIELD pfnDvpGetVideoPortField = (PGD_DXDVPGETVIDEOPORTFIELD)gpDxFuncs[DXG_INDEX_DxDvpGetVideoPortField].pfn;
+    PGD_DXDVPGETVIDEOPORTFIELD pfnDvpGetVideoPortField = (PGD_DXDVPGETVIDEOPORTFIELD)gpDxFuncs[DXG_INDEX_DXDVPGETVIDEOPORTFIELD].pfn;
 
     if (pfnDvpGetVideoPortField == NULL)
     {

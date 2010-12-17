@@ -20,7 +20,7 @@ APIENTRY
 NtGdiDdBeginMoCompFrame(HANDLE hMoComp,
                         PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData)
 {
-    PGD_DDBEGINMOCOMPFRAME pfnDdBeginMoCompFrame = (PGD_DDBEGINMOCOMPFRAME)gpDxFuncs[DXG_INDEX_DxDdBeginMoCompFrame].pfn;
+    PGD_DDBEGINMOCOMPFRAME pfnDdBeginMoCompFrame = (PGD_DDBEGINMOCOMPFRAME)gpDxFuncs[DXG_INDEX_DXDDBEGINMOCOMPFRAME].pfn;
 
     if (pfnDdBeginMoCompFrame == NULL)
     {
@@ -39,7 +39,7 @@ HANDLE
 APIENTRY
 NtGdiDdCreateMoComp(HANDLE hDirectDraw, PDD_CREATEMOCOMPDATA puCreateMoCompData)
 {
-    PGD_DXDDCREATEMOCOMP pfnDdCreateMoComp = (PGD_DXDDCREATEMOCOMP)gpDxFuncs[DXG_INDEX_DxDdCreateMoComp].pfn;
+    PGD_DXDDCREATEMOCOMP pfnDdCreateMoComp = (PGD_DXDDCREATEMOCOMP)gpDxFuncs[DXG_INDEX_DXDDCREATEMOCOMP].pfn;
 
     if (pfnDdCreateMoComp == NULL)
     {
@@ -59,7 +59,7 @@ APIENTRY
 NtGdiDdDestroyMoComp(HANDLE hMoComp,
                      PDD_DESTROYMOCOMPDATA puBeginFrameData)
 {
-    PGD_DXDDDESTROYMOCOMP pfnDxDdDestroyMoComp = (PGD_DXDDDESTROYMOCOMP)gpDxFuncs[DXG_INDEX_DxDdDestroyMoComp].pfn;
+    PGD_DXDDDESTROYMOCOMP pfnDxDdDestroyMoComp = (PGD_DXDDDESTROYMOCOMP)gpDxFuncs[DXG_INDEX_DXDDDESTROYMOCOMP].pfn;
 
     if (pfnDxDdDestroyMoComp == NULL)
     {
@@ -79,7 +79,7 @@ APIENTRY
 NtGdiDdEndMoCompFrame(HANDLE hMoComp,
                       PDD_ENDMOCOMPFRAMEDATA puEndFrameData)
 {
-    PGD_DXDDENDMOCOMPFRAME pfnDdEndMoCompFrame = (PGD_DXDDENDMOCOMPFRAME)gpDxFuncs[DXG_INDEX_DxDdEndMoCompFrame].pfn;
+    PGD_DXDDENDMOCOMPFRAME pfnDdEndMoCompFrame = (PGD_DXDDENDMOCOMPFRAME)gpDxFuncs[DXG_INDEX_DXDDENDMOCOMPFRAME].pfn;
 
     if (pfnDdEndMoCompFrame == NULL)
     {
@@ -99,7 +99,7 @@ APIENTRY
 NtGdiDdGetInternalMoCompInfo(HANDLE hDirectDraw,
                              PDD_GETINTERNALMOCOMPDATA puGetInternalData)
 {
-    PGD_DXDDGETINTERNALMOCOMPINFO pfnDdGetInternalMoCompInfo = (PGD_DXDDGETINTERNALMOCOMPINFO)gpDxFuncs[DXG_INDEX_DxDdGetInternalMoCompInfo].pfn;
+    PGD_DXDDGETINTERNALMOCOMPINFO pfnDdGetInternalMoCompInfo = (PGD_DXDDGETINTERNALMOCOMPINFO)gpDxFuncs[DXG_INDEX_DXDDGETINTERNALMOCOMPINFO].pfn;
 
     if (pfnDdGetInternalMoCompInfo == NULL)
     {
@@ -120,7 +120,7 @@ APIENTRY
 NtGdiDdGetMoCompBuffInfo(HANDLE hDirectDraw,
                          PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData)
 {
-    PGD_DXDDGETMOCOMPBUFFINFO pfnDdGetMoCompBuffInfo = (PGD_DXDDGETMOCOMPBUFFINFO)gpDxFuncs[DXG_INDEX_DxDdGetMoCompBuffInfo].pfn;
+    PGD_DXDDGETMOCOMPBUFFINFO pfnDdGetMoCompBuffInfo = (PGD_DXDDGETMOCOMPBUFFINFO)gpDxFuncs[DXG_INDEX_DXDDGETMOCOMPBUFFINFO].pfn;
 
     if (pfnDdGetMoCompBuffInfo == NULL)
     {
@@ -140,7 +140,7 @@ APIENTRY
 NtGdiDdGetMoCompFormats(HANDLE hDirectDraw,
                         PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData)
 {
-    PGD_DXDDGETMOCOMPFORMATS pfnDdGetMoCompFormats = (PGD_DXDDGETMOCOMPFORMATS)gpDxFuncs[DXG_INDEX_DxDdGetMoCompFormats].pfn;
+    PGD_DXDDGETMOCOMPFORMATS pfnDdGetMoCompFormats = (PGD_DXDDGETMOCOMPFORMATS)gpDxFuncs[DXG_INDEX_DXDDGETMOCOMPFORMATS].pfn;
 
     if (pfnDdGetMoCompFormats == NULL)
     {
@@ -161,7 +161,7 @@ APIENTRY
 NtGdiDdGetMoCompGuids(HANDLE hDirectDraw,
                       PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData)
 {
-    PGD_DXDDGETMOCOMPGUIDS pfnDdGetMoCompGuids = (PGD_DXDDGETMOCOMPGUIDS)gpDxFuncs[DXG_INDEX_DxDdGetMoCompGuids].pfn;
+    PGD_DXDDGETMOCOMPGUIDS pfnDdGetMoCompGuids = (PGD_DXDDGETMOCOMPGUIDS)gpDxFuncs[DXG_INDEX_DXDDGETMOCOMPGUIDS].pfn;
 
     if (pfnDdGetMoCompGuids == NULL)
     {
@@ -183,7 +183,7 @@ APIENTRY
 NtGdiDdQueryMoCompStatus(HANDLE hMoComp,
                          PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData)
 {
-    PGD_DXDDQUERYMOCOMPSTATUS pfnDdQueryMoCompStatus = (PGD_DXDDQUERYMOCOMPSTATUS)gpDxFuncs[DXG_INDEX_DxDdQueryMoCompStatus].pfn;
+    PGD_DXDDQUERYMOCOMPSTATUS pfnDdQueryMoCompStatus = (PGD_DXDDQUERYMOCOMPSTATUS)gpDxFuncs[DXG_INDEX_DXDDQUERYMOCOMPSTATUS].pfn;
 
     if (pfnDdQueryMoCompStatus == NULL)
     {
@@ -204,7 +204,7 @@ APIENTRY
 NtGdiDdRenderMoComp(HANDLE hMoComp,
                     PDD_RENDERMOCOMPDATA puRenderMoCompData)
 {
-    PGD_DXDDRENDERMOCOMP pfnDdRenderMoComp = (PGD_DXDDRENDERMOCOMP)gpDxFuncs[DXG_INDEX_DxDdRenderMoComp].pfn;
+    PGD_DXDDRENDERMOCOMP pfnDdRenderMoComp = (PGD_DXDDRENDERMOCOMP)gpDxFuncs[DXG_INDEX_DXDDRENDERMOCOMP].pfn;
 
     if (pfnDdRenderMoComp == NULL)
     {

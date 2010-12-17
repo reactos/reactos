@@ -18,7 +18,7 @@ DWORD
 APIENTRY
 NtGdiDdDestroySurface(HANDLE hSurface, BOOL bRealDestroy)
 {
-    PGD_DXDDDESTROYSURFACE pfnDdDestroySurface = (PGD_DXDDDESTROYSURFACE)gpDxFuncs[DXG_INDEX_DxDdDestroySurface].pfn;
+    PGD_DXDDDESTROYSURFACE pfnDdDestroySurface = (PGD_DXDDDESTROYSURFACE)gpDxFuncs[DXG_INDEX_DXDDDESTROYSURFACE].pfn;
     
     if (pfnDdDestroySurface == NULL)
     {
@@ -41,7 +41,7 @@ NtGdiDdFlip(HANDLE hSurfaceCurrent,
             HANDLE hSurfaceTargetLeft,
             PDD_FLIPDATA puFlipData)
 {
-    PGD_DXDDFLIP pfnDdDdFlip = (PGD_DXDDFLIP)gpDxFuncs[DXG_INDEX_DxDdFlip].pfn;
+    PGD_DXDDFLIP pfnDdDdFlip = (PGD_DXDDFLIP)gpDxFuncs[DXG_INDEX_DXDDFLIP].pfn;
    
     if (pfnDdDdFlip == NULL)
     {
@@ -54,7 +54,7 @@ NtGdiDdFlip(HANDLE hSurfaceCurrent,
 }
 
 /************************************************************************/
-/* NtGdiDdUnlock                                                        */
+/* NtGdiDdLock                                                        */
 /************************************************************************/
 DWORD
 APIENTRY
@@ -62,7 +62,7 @@ NtGdiDdLock(HANDLE hSurface,
             PDD_LOCKDATA puLockData,
             HDC hdcClip)
 {
-    PGD_DXDDLOCK pfnDdLock = (PGD_DXDDLOCK)gpDxFuncs[DXG_INDEX_DxDdLock].pfn;
+    PGD_DXDDLOCK pfnDdLock = (PGD_DXDDLOCK)gpDxFuncs[DXG_INDEX_DXDDLOCK].pfn;
     
     if (pfnDdLock == NULL)
     {
@@ -82,7 +82,7 @@ APIENTRY
 NtGdiDdUnlock(HANDLE hSurface, 
               PDD_UNLOCKDATA puUnlockData)
 {
-    PGD_DXDDUNLOCK pfnDdUnlock = (PGD_DXDDUNLOCK)gpDxFuncs[DXG_INDEX_DxDdUnlock].pfn;
+    PGD_DXDDUNLOCK pfnDdUnlock = (PGD_DXDDUNLOCK)gpDxFuncs[DXG_INDEX_DXDDUNLOCK].pfn;
    
     if (pfnDdUnlock == NULL)
     {
@@ -103,7 +103,7 @@ NtGdiDdBlt(HANDLE hSurfaceDest,
            HANDLE hSurfaceSrc,
            PDD_BLTDATA puBltData)
 {
-    PGD_DDBLT pfnDdBlt = (PGD_DDBLT)gpDxFuncs[DXG_INDEX_DxDdBlt].pfn;
+    PGD_DDBLT pfnDdBlt = (PGD_DDBLT)gpDxFuncs[DXG_INDEX_DXDDBLT].pfn;
     
     if (pfnDdBlt == NULL)
     {
@@ -123,7 +123,7 @@ APIENTRY
 NtGdiDdSetColorKey(HANDLE hSurface,
                    PDD_SETCOLORKEYDATA puSetColorKeyData)
 {
-    PGD_DXDDSETCOLORKEY pfnDdSetColorKey = (PGD_DXDDSETCOLORKEY)gpDxFuncs[DXG_INDEX_DxDdSetColorKey].pfn;
+    PGD_DXDDSETCOLORKEY pfnDdSetColorKey = (PGD_DXDDSETCOLORKEY)gpDxFuncs[DXG_INDEX_DXDDSETCOLORKEY].pfn;
     
     if (pfnDdSetColorKey == NULL)
     {
@@ -146,7 +146,7 @@ NtGdiDdAddAttachedSurface(HANDLE hSurface,
                           HANDLE hSurfaceAttached,
                           PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData)
 {
-    PGD_DDADDATTACHEDSURFACE pfnDdAddAttachedSurface = (PGD_DDADDATTACHEDSURFACE)gpDxFuncs[DXG_INDEX_DxDdAddAttachedSurface].pfn;
+    PGD_DDADDATTACHEDSURFACE pfnDdAddAttachedSurface = (PGD_DDADDATTACHEDSURFACE)gpDxFuncs[DXG_INDEX_DXDDADDATTACHEDSURFACE].pfn;
     
     if (pfnDdAddAttachedSurface == NULL)
     {
@@ -166,7 +166,7 @@ APIENTRY
 NtGdiDdGetBltStatus(HANDLE hSurface,
                     PDD_GETBLTSTATUSDATA puGetBltStatusData)
 {
-    PGD_DXDDGETBLTSTATUS pfnDdGetBltStatus = (PGD_DXDDGETBLTSTATUS)gpDxFuncs[DXG_INDEX_DxDdGetBltStatus].pfn;
+    PGD_DXDDGETBLTSTATUS pfnDdGetBltStatus = (PGD_DXDDGETBLTSTATUS)gpDxFuncs[DXG_INDEX_DXDDGETBLTSTATUS].pfn;
     
     if (pfnDdGetBltStatus == NULL)
     {
@@ -186,7 +186,7 @@ APIENTRY
 NtGdiDdGetFlipStatus(HANDLE hSurface,
                      PDD_GETFLIPSTATUSDATA puGetFlipStatusData)
 {
-    PGD_DXDDGETFLIPSTATUS pfnDdGetFlipStatus = (PGD_DXDDGETFLIPSTATUS)gpDxFuncs[DXG_INDEX_DxDdGetFlipStatus].pfn;
+    PGD_DXDDGETFLIPSTATUS pfnDdGetFlipStatus = (PGD_DXDDGETFLIPSTATUS)gpDxFuncs[DXG_INDEX_DXDDGETFLIPSTATUS].pfn;
     
     if (pfnDdGetFlipStatus == NULL)
     {
@@ -207,7 +207,7 @@ NtGdiDdUpdateOverlay(HANDLE hSurfaceDestination,
                      HANDLE hSurfaceSource,
                      PDD_UPDATEOVERLAYDATA puUpdateOverlayData)
 {
-    PGD_DXDDUPDATEOVERLAY pfnDdUpdateOverlay = (PGD_DXDDUPDATEOVERLAY)gpDxFuncs[DXG_INDEX_DxDdUpdateOverlay].pfn;
+    PGD_DXDDUPDATEOVERLAY pfnDdUpdateOverlay = (PGD_DXDDUPDATEOVERLAY)gpDxFuncs[DXG_INDEX_DXDDUPDATEOVERLAY].pfn;
    
     if (pfnDdUpdateOverlay == NULL)
     {
@@ -229,7 +229,7 @@ NtGdiDdSetOverlayPosition(HANDLE hSurfaceSource,
                           HANDLE hSurfaceDestination,
                           PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData)
 {
-    PGD_DXDDSETOVERLAYPOSITION pfnDdSetOverlayPosition = (PGD_DXDDSETOVERLAYPOSITION)gpDxFuncs[DXG_INDEX_DxDdSetOverlayPosition].pfn;
+    PGD_DXDDSETOVERLAYPOSITION pfnDdSetOverlayPosition = (PGD_DXDDSETOVERLAYPOSITION)gpDxFuncs[DXG_INDEX_DXDDSETOVERLAYPOSITION].pfn;
   
     if (pfnDdSetOverlayPosition == NULL)
     {
@@ -256,7 +256,7 @@ NtGdiDdAlphaBlt(HANDLE hSurfaceDest,
                 HANDLE hSurfaceSrc,
                 PDD_BLTDATA puBltData)
 {
-    PGD_DDALPHABLT pfnDdAlphaBlt = (PGD_DDALPHABLT)gpDxFuncs[DXG_INDEX_DxDdAlphaBlt].pfn;
+    PGD_DDALPHABLT pfnDdAlphaBlt = (PGD_DDALPHABLT)gpDxFuncs[DXG_INDEX_DXDDALPHABLT].pfn;
    
     if (pfnDdAlphaBlt == NULL)
     {
@@ -277,7 +277,7 @@ NtGdiDdAttachSurface(HANDLE hSurfaceFrom,
                      HANDLE hSurfaceTo
 )
 {
-    PGD_DDATTACHSURFACE pfnDdAttachSurface = (PGD_DDATTACHSURFACE)gpDxFuncs[DXG_INDEX_DxDdAttachSurface].pfn;
+    PGD_DDATTACHSURFACE pfnDdAttachSurface = (PGD_DDATTACHSURFACE)gpDxFuncs[DXG_INDEX_DXDDATTACHSURFACE].pfn;
   
     if (pfnDdAttachSurface == NULL)
     {
@@ -301,7 +301,7 @@ APIENTRY
 NtGdiDdUnattachSurface(HANDLE hSurface,
                        HANDLE hSurfaceAttached)
 {
-    PGD_DXDDUNATTACHSURFACE pfnDdUnattachSurface = (PGD_DXDDUNATTACHSURFACE)gpDxFuncs[DXG_INDEX_DxDdUnattachSurface].pfn;  
+    PGD_DXDDUNATTACHSURFACE pfnDdUnattachSurface = (PGD_DXDDUNATTACHSURFACE)gpDxFuncs[DXG_INDEX_DXDDUNATTACHSURFACE].pfn;  
     if (pfnDdUnattachSurface == NULL)
     {
         DPRINT1("Warring no pfnDdUnattachSurface");

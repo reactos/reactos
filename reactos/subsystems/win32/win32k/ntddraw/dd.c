@@ -25,7 +25,7 @@ NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
                      PDD_CREATESURFACEDATA puCreateSurfaceData,
                      HANDLE *puhSurface)
 {
-    PGD_DDCREATESURFACE pfnDdCreateSurface = (PGD_DDCREATESURFACE)gpDxFuncs[DXG_INDEX_DxDdCreateSurface].pfn;
+    PGD_DDCREATESURFACE pfnDdCreateSurface = (PGD_DDCREATESURFACE)gpDxFuncs[DXG_INDEX_DXDDCREATESURFACE].pfn;
    
     if (pfnDdCreateSurface == NULL)
     {
@@ -46,7 +46,7 @@ APIENTRY
 NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
                             PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData)
 {
-    PGD_DXDDWAITFORVERTICALBLANK pfnDdWaitForVerticalBlank = (PGD_DXDDWAITFORVERTICALBLANK)gpDxFuncs[DXG_INDEX_DxDdWaitForVerticalBlank].pfn;
+    PGD_DXDDWAITFORVERTICALBLANK pfnDdWaitForVerticalBlank = (PGD_DXDDWAITFORVERTICALBLANK)gpDxFuncs[DXG_INDEX_DXDDWAITFORVERTICALBLANK].pfn;
    
     if (pfnDdWaitForVerticalBlank == NULL)
     {
@@ -66,7 +66,7 @@ APIENTRY
 NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
                         PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
-    PGD_DDCANCREATESURFACE pfnDdCanCreateSurface = (PGD_DDCANCREATESURFACE)gpDxFuncs[DXG_INDEX_DxDdCanCreateSurface].pfn;
+    PGD_DDCANCREATESURFACE pfnDdCanCreateSurface = (PGD_DDCANCREATESURFACE)gpDxFuncs[DXG_INDEX_DXDDCANCREATESURFACE].pfn;
     
     if (pfnDdCanCreateSurface == NULL)
     {
@@ -87,7 +87,7 @@ APIENTRY
 NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
                    PDD_GETSCANLINEDATA puGetScanLineData)
 {
-    PGD_DXDDGETSCANLINE  pfnDdGetScanLine = (PGD_DXDDGETSCANLINE)gpDxFuncs[DXG_INDEX_DxDdGetScanLine].pfn;
+    PGD_DXDDGETSCANLINE  pfnDdGetScanLine = (PGD_DXDDGETSCANLINE)gpDxFuncs[DXG_INDEX_DXDDGETSCANLINE].pfn;
    
     if (pfnDdGetScanLine == NULL)
     {
@@ -115,7 +115,7 @@ NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
                        HANDLE hSurface,
                        DWORD dwSurfaceHandle)
 {
-    PGD_DXDDCREATESURFACEEX pfnDdCreateSurfaceEx  = (PGD_DXDDCREATESURFACEEX)gpDxFuncs[DXG_INDEX_DxDdCreateSurfaceEx].pfn;
+    PGD_DXDDCREATESURFACEEX pfnDdCreateSurfaceEx  = (PGD_DXDDCREATESURFACEEX)gpDxFuncs[DXG_INDEX_DXDDCREATESURFACEEX].pfn;
    
     if (pfnDdCreateSurfaceEx == NULL)
     {

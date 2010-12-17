@@ -25,7 +25,7 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
                        LPSURFACEALIGNMENT lpAlignment,
                        LPLONG lpNewPitch)
 {
-    PGD_HEAPVIDMEMALLOCALIGNED pfnHeapVidMemAllocAligned = (PGD_HEAPVIDMEMALLOCALIGNED)gpDxFuncs[DXG_INDEX_DxDdHeapVidMemAllocAligned].pfn;
+    PGD_HEAPVIDMEMALLOCALIGNED pfnHeapVidMemAllocAligned = (PGD_HEAPVIDMEMALLOCALIGNED)gpDxFuncs[DXG_INDEX_DXDDHEAPVIDMEMALLOCALIGNED].pfn;
 
     if (pfnHeapVidMemAllocAligned == NULL)
     {
@@ -45,7 +45,7 @@ APIENTRY
 VidMemFree(LPVMEMHEAP pvmh,
            FLATPTR ptr)
 {
-    PGD_VIDMEMFREE pfnVidMemFree = (PGD_VIDMEMFREE)gpDxFuncs[DXG_INDEX_DxDdHeapVidMemFree].pfn;
+    PGD_VIDMEMFREE pfnVidMemFree = (PGD_VIDMEMFREE)gpDxFuncs[DXG_INDEX_DXDDHEAPVIDMEMFREE].pfn;
 
     if (pfnVidMemFree == NULL)
     {
@@ -67,7 +67,7 @@ EngAllocPrivateUserMem(PDD_SURFACE_LOCAL  psl,
                        SIZE_T  cj,
                        ULONG  tag)
 {
-    PGD_ENGALLOCPRIVATEUSERMEM pfnEngAllocPrivateUserMem = (PGD_ENGALLOCPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DxDdAllocPrivateUserMem].pfn;
+    PGD_ENGALLOCPRIVATEUSERMEM pfnEngAllocPrivateUserMem = (PGD_ENGALLOCPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DXDDALLOCPRIVATEUSERMEM].pfn;
 
     if (pfnEngAllocPrivateUserMem == NULL)
     {
@@ -87,7 +87,7 @@ APIENTRY
 EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
                       PVOID  pv)
 {
-    PGD_ENGFREEPRIVATEUSERMEM pfnEngFreePrivateUserMem = (PGD_ENGFREEPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DxDdFreePrivateUserMem].pfn;
+    PGD_ENGFREEPRIVATEUSERMEM pfnEngFreePrivateUserMem = (PGD_ENGFREEPRIVATEUSERMEM)gpDxFuncs[DXG_INDEX_DXDDFREEPRIVATEUSERMEM].pfn;
 
     if (pfnEngFreePrivateUserMem == NULL)
     {
@@ -130,7 +130,7 @@ EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,
            ULONG ulBufferSize)
 {
-    PGD_ENGDXIOCTL pfnEngDxIoctl = (PGD_ENGDXIOCTL)gpDxFuncs[DXG_INDEX_DxDdIoctl].pfn;
+    PGD_ENGDXIOCTL pfnEngDxIoctl = (PGD_ENGDXIOCTL)gpDxFuncs[DXG_INDEX_DXDDIOCTL].pfn;
     DWORD retVal = DDERR_UNSUPPORTED;
 
     DPRINT1("Calling dxg.sys pfnEngDxIoctl\n");
@@ -163,7 +163,7 @@ PDD_SURFACE_LOCAL
 APIENTRY
 EngLockDirectDrawSurface(HANDLE hSurface)
 {
-    PGD_ENGLOCKDIRECTDRAWSURFACE pfnEngLockDirectDrawSurface = (PGD_ENGLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DxDdLockDirectDrawSurface].pfn;
+    PGD_ENGLOCKDIRECTDRAWSURFACE pfnEngLockDirectDrawSurface = (PGD_ENGLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DXDDLOCKDIRECTDRAWSURFACE].pfn;
     PDD_SURFACE_LOCAL retVal = NULL;
 
     DPRINT1("Calling dxg.sys pfnEngLockDirectDrawSurface\n");
@@ -197,7 +197,7 @@ BOOL
 APIENTRY
 EngUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 {
-    PGD_ENGUNLOCKDIRECTDRAWSURFACE pfnEngUnlockDirectDrawSurface = (PGD_ENGUNLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DxDdUnlockDirectDrawSurface].pfn;
+    PGD_ENGUNLOCKDIRECTDRAWSURFACE pfnEngUnlockDirectDrawSurface = (PGD_ENGUNLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DXDDUNLOCKDIRECTDRAWSURFACE].pfn;
     BOOL retVal = FALSE;
 
     DPRINT1("Calling dxg.sys pfnEngUnlockDirectDrawSurface\n");
