@@ -10,9 +10,9 @@
 
 
 #include <dxg_int.h>
-#include "dxg_driver.h"
+#include <debug.h>
 
-#define stub DPRINT1("UNIMPLEMENT"); /
+#define stub UNIMPLEMENTED \
 					return DDERR_UNSUPPORTED;
 					
 
@@ -81,7 +81,7 @@ DxDdAttachSurface(DWORD x1, DWORD x2)
 
 NTSTATUS
 NTAPI
-DxDdBeginMoCompFrame)(DWORD x1, DWORD x2)
+DxDdBeginMoCompFrame(DWORD x1, DWORD x2)
 {
 	stub;
 }
@@ -102,7 +102,7 @@ DxDdCanCreateSurface(DWORD x1, DWORD x2)
 
 NTSTATUS
 NTAPI
-DxDdCanCreateD3DBuffer)(
+DxDdCanCreateD3DBuffer(DWORD x1, DWORD x2)
 {
 	stub;
 }
@@ -138,7 +138,7 @@ DxDdCreateMoComp(DWORD x1, DWORD x2)
 
 NTSTATUS
 NTAPI
-DxDdCreateSurfaceObject(DWORD x1, DWORD x2, DWORD x2, DWORD x3, DWORD x4, DWORD x5)
+DxDdCreateSurfaceObject(DWORD x1, DWORD x2, DWORD x3, DWORD x4, DWORD x5, DWORD x6)
 {
 	stub;
 }
@@ -159,7 +159,7 @@ DxDdDeleteSurfaceObject(DWORD x1)
 
 NTSTATUS
 NTAPI
-DxDdDestroyMoComp)(DWORD x1, DWORD x2)
+DxDdDestroyMoComp(DWORD x1, DWORD x2)
 {
 	stub;
 }

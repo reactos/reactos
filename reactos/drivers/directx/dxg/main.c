@@ -12,7 +12,7 @@
 #include <dxg_int.h>
 #include "dxg_driver.h"
 
-#define DXG_DRIVER_VERSION 0x80000 
+#define DXG_DRIVER_VERSION 0x80000
 
 LONG gcDummyPageRefCnt = 0;
 HSEMAPHORE ghsemDummyPage = NULL;
@@ -22,7 +22,7 @@ PLARGE_INTEGER gpLockShortDelay = NULL;
 
 
 PDRVFN gpEngFuncs;
-const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
+const ULONG gcDxgFuncs = DXG_INDEX_LAST;
 
 
 
@@ -137,4 +137,7 @@ DxDdCleanupDxGraphics(VOID)
 
     return STATUS_SUCCESS;
 }
+
+
+
 
