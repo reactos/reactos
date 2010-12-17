@@ -19,11 +19,14 @@ list(APPEND SOURCE
 
 add_library(msacm32 SHARED ${SOURCE})
 
-set_module_type(msacm32 win32dll)
+set_entrypoint(msacm32 DllMain@12)
+set_image_base(msacm32 ${baseaddress_msacm32})
 
 target_link_libraries(msacm32 wine)
 
 add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
+
+add_dependencies(msacm32 psdk buildno_header)
 
 add_subdirectory(msacm32.drv)
 add_cab_target(msacm32 1)
