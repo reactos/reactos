@@ -7,82 +7,82 @@
 /***************************************************************************/
 /* This driver functions are exported raw from NtGdiDd* / NtDvp* / NtD3d*  */
 /***************************************************************************/
-#define DXG_INDEX_DxDxgGenericThunk               0x00
-#define DXG_INDEX_DxD3dContextCreate              0x01
-#define DXG_INDEX_DxD3dContextDestroy             0x02
-#define DXG_INDEX_DxD3dContextDestroyAll          0x03
-#define DXG_INDEX_DxD3dValidateTextureStageState  0x04
-#define DXG_INDEX_DxD3dDrawPrimitives2            0x05
-#define DXG_INDEX_DxDdGetDriverState              0x06
-#define DXG_INDEX_DxDdAddAttachedSurface          0x07
-#define DXG_INDEX_DxDdAlphaBlt                    0x08
-#define DXG_INDEX_DxDdAttachSurface               0x09
-#define DXG_INDEX_DxDdBeginMoCompFrame            0x0A
-#define DXG_INDEX_DxDdBlt                         0x0B
-#define DXG_INDEX_DxDdCanCreateSurface            0x0C
-#define DXG_INDEX_DxDdCanCreateD3DBuffer          0x0D
-#define DXG_INDEX_DxDdColorControl                0x0E
-#define DXG_INDEX_DxDdCreateDirectDrawObject      0x0F
+#define DXG_INDEX_DXDXGGENERICTHUNK               0X00
+#define DXG_INDEX_DXD3DCONTEXTCREATE              0X01
+#define DXG_INDEX_DXD3DCONTEXTDESTROY             0X02
+#define DXG_INDEX_DXD3DCONTEXTDESTROYALL          0X03
+#define DXG_INDEX_DXD3DVALIDATETEXTURESTAGESTATE  0X04
+#define DXG_INDEX_DXD3DDRAWPRIMITIVES2            0X05
+#define DXG_INDEX_DXDDGETDRIVERSTATE              0X06
+#define DXG_INDEX_DXDDADDATTACHEDSURFACE          0X07
+#define DXG_INDEX_DXDDALPHABLT                    0X08
+#define DXG_INDEX_DXDDATTACHSURFACE               0X09
+#define DXG_INDEX_DXDDBEGINMOCOMPFRAME            0X0A
+#define DXG_INDEX_DXDDBLT                         0X0B
+#define DXG_INDEX_DXDDCANCREATESURFACE            0X0C
+#define DXG_INDEX_DXDDCANCREATED3DBUFFER          0X0D
+#define DXG_INDEX_DXDDCOLORCONTROL                0X0E
+#define DXG_INDEX_DXDDCREATEDIRECTDRAWOBJECT      0X0F
 /* DXG_INDEX_DxDdCreateSurface and  DXG_INDEX_DxDdCreateD3DBuffer2 are same */
-#define DXG_INDEX_DxDdCreateSurface               0x10
-#define DXG_INDEX_DxDdCreateD3DBuffer             0x11
-#define DXG_INDEX_DxDdCreateMoComp                0x12
-#define DXG_INDEX_DxDdCreateSurfaceObject         0x13
-#define DXG_INDEX_DxDdDeleteDirectDrawObject      0x14
-#define DXG_INDEX_DxDdDeleteSurfaceObject         0x15
-#define DXG_INDEX_DxDdDestroyMoComp               0x16
-#define DXG_INDEX_DxDdDestroySurface              0x17
-#define DXG_INDEX_DxDdDestroyD3DBuffer            0x18
-#define DXG_INDEX_DxDdEndMoCompFrame              0x19
-#define DXG_INDEX_DxDdFlip                        0x1A
-#define DXG_INDEX_DxDdFlipToGDISurface            0x1B
-#define DXG_INDEX_DxDdGetAvailDriverMemory        0x1C
-#define DXG_INDEX_DxDdGetBltStatus                0x1D
-#define DXG_INDEX_DxDdGetDC                       0x1E
-#define DXG_INDEX_DxDdGetDriverInfo               0x1F
-#define DXG_INDEX_DxDdGetDxHandle                 0x20
-#define DXG_INDEX_DxDdGetFlipStatus               0x21
-#define DXG_INDEX_DxDdGetInternalMoCompInfo       0x22
-#define DXG_INDEX_DxDdGetMoCompBuffInfo           0x23
-#define DXG_INDEX_DxDdGetMoCompGuids              0x24
-#define DXG_INDEX_DxDdGetMoCompFormats            0x25
-#define DXG_INDEX_DxDdGetScanLine                 0x26
-#define DXG_INDEX_DxDdLock                        0x27
-#define DXG_INDEX_DxDdLockD3D                     0x28
-#define DXG_INDEX_DxDdQueryDirectDrawObject       0x29
-#define DXG_INDEX_DxDdQueryMoCompStatus           0x2A
-#define DXG_INDEX_DxDdReenableDirectDrawObject    0x2B
-#define DXG_INDEX_DxDdReleaseDC                   0x2C
-#define DXG_INDEX_DxDdRenderMoComp                0x2D
-#define DXG_INDEX_DxDdResetVisrgn                 0x2E
-#define DXG_INDEX_DxDdSetColorKey                 0x2F
-#define DXG_INDEX_DxDdSetExclusiveMode            0x30
-#define DXG_INDEX_DxDdSetGammaRamp                0x31
-#define DXG_INDEX_DxDdCreateSurfaceEx             0x32
-#define DXG_INDEX_DxDdSetOverlayPosition          0x33
-#define DXG_INDEX_DxDdUnattachSurface             0x34
+#define DXG_INDEX_DXDDCREATESURFACE               0X10
+#define DXG_INDEX_DXDDCREATED3DBUFFER             0X11
+#define DXG_INDEX_DXDDCREATEMOCOMP                0X12
+#define DXG_INDEX_DXDDCREATESURFACEOBJECT         0X13
+#define DXG_INDEX_DXDDDELETEDIRECTDRAWOBJECT      0X14
+#define DXG_INDEX_DXDDDELETESURFACEOBJECT         0X15
+#define DXG_INDEX_DXDDDESTROYMOCOMP               0X16
+#define DXG_INDEX_DXDDDESTROYSURFACE              0X17
+#define DXG_INDEX_DXDDDESTROYD3DBUFFER            0X18
+#define DXG_INDEX_DXDDENDMOCOMPFRAME              0X19
+#define DXG_INDEX_DXDDFLIP                        0X1A
+#define DXG_INDEX_DXDDFLIPTOGDISURFACE            0X1B
+#define DXG_INDEX_DXDDGETAVAILDRIVERMEMORY        0X1C
+#define DXG_INDEX_DXDDGETBLTSTATUS                0X1D
+#define DXG_INDEX_DXDDGETDC                       0X1E
+#define DXG_INDEX_DXDDGETDRIVERINFO               0X1F
+#define DXG_INDEX_DXDDGETDXHANDLE                 0X20
+#define DXG_INDEX_DXDDGETFLIPSTATUS               0X21
+#define DXG_INDEX_DXDDGETINTERNALMOCOMPINFO       0X22
+#define DXG_INDEX_DXDDGETMOCOMPBUFFINFO           0X23
+#define DXG_INDEX_DXDDGETMOCOMPGUIDS              0X24
+#define DXG_INDEX_DXDDGETMOCOMPFORMATS            0X25
+#define DXG_INDEX_DXDDGETSCANLINE                 0X26
+#define DXG_INDEX_DXDDLOCK                        0X27
+#define DXG_INDEX_DXDDLOCKD3D                     0X28
+#define DXG_INDEX_DXDDQUERYDIRECTDRAWOBJECT       0X29
+#define DXG_INDEX_DXDDQUERYMOCOMPSTATUS           0X2A
+#define DXG_INDEX_DXDDREENABLEDIRECTDRAWOBJECT    0X2B
+#define DXG_INDEX_DXDDRELEASEDC                   0X2C
+#define DXG_INDEX_DXDDRENDERMOCOMP                0X2D
+#define DXG_INDEX_DXDDRESETVISRGN                 0X2E
+#define DXG_INDEX_DXDDSETCOLORKEY                 0X2F
+#define DXG_INDEX_DXDDSETEXCLUSIVEMODE            0X30
+#define DXG_INDEX_DXDDSETGAMMARAMP                0X31
+#define DXG_INDEX_DXDDCREATESURFACEEX             0X32
+#define DXG_INDEX_DXDDSETOVERLAYPOSITION          0X33
+#define DXG_INDEX_DXDDUNATTACHSURFACE             0X34
 /* DXG_INDEX_DxDdUnlock and  DXG_INDEX_DxDdUnlockD3D are same */
-#define DXG_INDEX_DxDdUnlock                      0x35
-#define DXG_INDEX_DxDdUnlockD3D                   0x36
-#define DXG_INDEX_DxDdUpdateOverlay               0x37
-#define DXG_INDEX_DxDdWaitForVerticalBlank        0x38
-#define DXG_INDEX_DxDvpCanCreateVideoPort         0x39
-#define DXG_INDEX_DxDvpColorControl               0x3A
-#define DXG_INDEX_DxDvpCreateVideoPort            0x3B
-#define DXG_INDEX_DxDvpDestroyVideoPort           0x3C
-#define DXG_INDEX_DxDvpFlipVideoPort              0x3D
-#define DXG_INDEX_DxDvpGetVideoPortBandwidth      0x3E
-#define DXG_INDEX_DxDvpGetVideoPortField          0x3F
-#define DXG_INDEX_DxDvpGetVideoPortFlipStatus     0x40
-#define DXG_INDEX_DxDvpGetVideoPortInputFormats   0x41
-#define DXG_INDEX_DxDvpGetVideoPortLine           0x42
-#define DXG_INDEX_DxDvpGetVideoPortOutputFormats  0x43
-#define DXG_INDEX_DxDvpGetVideoPortConnectInfo    0x44
-#define DXG_INDEX_DxDvpGetVideoSignalStatus       0x45
-#define DXG_INDEX_DxDvpUpdateVideoPort            0x46
-#define DXG_INDEX_DxDvpWaitForVideoPortSync       0x47
-#define DXG_INDEX_DxDvpAcquireNotification        0x48
-#define DXG_INDEX_DxDvpReleaseNotification        0x49
+#define DXG_INDEX_DXDDUNLOCK                      0X35
+#define DXG_INDEX_DXDDUNLOCKD3D                   0X36
+#define DXG_INDEX_DXDDUPDATEOVERLAY               0X37
+#define DXG_INDEX_DXDDWAITFORVERTICALBLANK        0X38
+#define DXG_INDEX_DXDVPCANCREATEVIDEOPORT         0X39
+#define DXG_INDEX_DXDVPCOLORCONTROL               0X3A
+#define DXG_INDEX_DXDVPCREATEVIDEOPORT            0X3B
+#define DXG_INDEX_DXDVPDESTROYVIDEOPORT           0X3C
+#define DXG_INDEX_DXDVPFLIPVIDEOPORT              0X3D
+#define DXG_INDEX_DXDVPGETVIDEOPORTBANDWIDTH      0X3E
+#define DXG_INDEX_DXDVPGETVIDEOPORTFIELD          0X3F
+#define DXG_INDEX_DXDVPGETVIDEOPORTFLIPSTATUS     0X40
+#define DXG_INDEX_DXDVPGETVIDEOPORTINPUTFORMATS   0X41
+#define DXG_INDEX_DXDVPGETVIDEOPORTLINE           0X42
+#define DXG_INDEX_DXDVPGETVIDEOPORTOUTPUTFORMATS  0X43
+#define DXG_INDEX_DXDVPGETVIDEOPORTCONNECTINFO    0X44
+#define DXG_INDEX_DXDVPGETVIDEOSIGNALSTATUS       0X45
+#define DXG_INDEX_DXDVPUPDATEVIDEOPORT            0X46
+#define DXG_INDEX_DXDVPWAITFORVIDEOPORTSYNC       0X47
+#define DXG_INDEX_DXDVPACQUIRENOTIFICATION        0X48
+#define DXG_INDEX_DXDVPRELEASENOTIFICATION        0X49
 
 /***********************************************************************************/
 /* This driver functions are exported raw from Eng* it only exists in the def file */
@@ -90,38 +90,38 @@
 /* for them are in the export list                                                 */
 /***********************************************************************************/
 /* not addedd yet */
-#define DXG_INDEX_DxDdHeapVidMemAllocAligned      0x4A
-#define DXG_INDEX_DxDdHeapVidMemFree              0x4B
-#define DXG_INDEX_DxDdAllocPrivateUserMem         0x54
-#define DXG_INDEX_DxDdFreePrivateUserMem          0x55
-#define DXG_INDEX_DxDdLockDirectDrawSurface       0x56
-#define DXG_INDEX_DxDdUnlockDirectDrawSurface     0x57
-#define DXG_INDEX_DxDdIoctl                       0x5B
+#define DXG_INDEX_DXDDHEAPVIDMEMALLOCALIGNED      0X4A
+#define DXG_INDEX_DXDDHEAPVIDMEMFREE              0X4B
+#define DXG_INDEX_DXDDALLOCPRIVATEUSERMEM         0X54
+#define DXG_INDEX_DXDDFREEPRIVATEUSERMEM          0X55
+#define DXG_INDEX_DXDDLOCKDIRECTDRAWSURFACE       0X56
+#define DXG_INDEX_DXDDUNLOCKDIRECTDRAWSURFACE     0X57
+#define DXG_INDEX_DXDDIOCTL                       0X5B
 
 
 /***********************************************************************************/
 /* Internal use in diffent part in Windows and ReactOS                             */
 /***********************************************************************************/
 /* not inuse yet */
-#define DXG_INDEX_DxDdEnableDirectDraw            0x4C
-#define DXG_INDEX_DxDdDisableDirectDraw           0x4D
-#define DXG_INDEX_DxDdSuspendDirectDraw           0x4E
-#define DXG_INDEX_DxDdResumeDirectDraw            0x4F
-#define DXG_INDEX_DxDdDynamicModeChange           0x50
-#define DXG_INDEX_DxDdCloseProcess                0x51
-#define DXG_INDEX_DxDdGetDirectDrawBound          0x52
-#define DXG_INDEX_DxDdEnableDirectDrawRedirection 0x53
-#define DXG_INDEX_DxDdSetAccelLevel               0x58
-#define DXG_INDEX_DxDdGetSurfaceLock              0x59
-#define DXG_INDEX_DxDdEnumLockedSurfaceRect       0x5A
-#define DXG_INDEX_DxDdIoctl                       0x5B
-#define DXG_INDEX_DxDdSwitchToGDI                 0x5C
+#define DXG_INDEX_DXDDENABLEDIRECTDRAW            0X4C
+#define DXG_INDEX_DXDDDISABLEDIRECTDRAW           0X4D
+#define DXG_INDEX_DXDDSUSPENDDIRECTDRAW           0X4E
+#define DXG_INDEX_DXDDRESUMEDIRECTDRAW            0X4F
+#define DXG_INDEX_DXDDDYNAMICMODECHANGE           0X50
+#define DXG_INDEX_DXDDCLOSEPROCESS                0X51
+#define DXG_INDEX_DXDDGETDIRECTDRAWBOUND          0X52
+#define DXG_INDEX_DXDDENABLEDIRECTDRAWREDIRECTION 0X53
+#define DXG_INDEX_DXDDSETACCELLEVEL               0X58
+#define DXG_INDEX_DXDDGETSURFACELOCK              0X59
+#define DXG_INDEX_DXDDENUMLOCKEDSURFACERECT       0X5A
+#define DXG_INDEX_DXDDIOCTL                       0X5B
+#define DXG_INDEX_DXDDSWITCHTOGDI                 0X5C
+#define DXG_INDEX_LAST                            DXG_INDEX_DXDDSWITCHTOGDI + 1
 
 
 /***********************************************************************************/
 /* Driver Functions Protypes                                                       */
 /***********************************************************************************/
-typedef DWORD (NTAPI *PGD_DXGENERICTRUNK)(ULONG_PTR, ULONG_PTR, SIZE_T*, PVOID, SIZE_T*, PVOID);
 //typedef x (NTAPI *PGD_DxD3dContextCreate)(
 //typedef x (NTAPI *PGD_DxD3dContextDestroy)(
 //typedef x (NTAPI *PGD_DxD3dContextDestroyAll)(
@@ -197,7 +197,6 @@ typedef DWORD (NTAPI *PGD_DXGENERICTRUNK)(ULONG_PTR, ULONG_PTR, SIZE_T*, PVOID, 
 //typedef x (NTAPI *PGD_DxDvpReleaseNotification)(
 //typedef x (NTAPI *PGD_DxDdHeapVidMemAllocAligned)(
 //typedef x (NTAPI *PGD_DxDdHeapVidMemFree)(
-typedef BOOLEAN (NTAPI *PGD_DXDDENABLEDIRECTDRAW)(PVOID, BOOLEAN);
 //typedef x (NTAPI *PGD_DxDdDisableDirectDraw)(
 //typedef x (NTAPI *PGD_DxDdSuspendDirectDraw)(
 //typedef x (NTAPI *PGD_DxDdResumeDirectDraw)(
@@ -207,11 +206,14 @@ typedef BOOLEAN (NTAPI *PGD_DXDDENABLEDIRECTDRAW)(PVOID, BOOLEAN);
 //typedef x (NTAPI *PGD_DxDdEnableDirectDrawRedirection)(
 //typedef x (NTAPI *PGD_DxDdAllocPrivateUserMem)(
 //typedef x (NTAPI *PGD_DxDdFreePrivateUserMem)(
-typedef PDD_SURFACE_LOCAL (NTAPI *PGD_DxDdLockDirectDrawSurface)(HANDLE hDdSurface);
-typedef BOOL (NTAPI *PGD_DxDdUnlockDirectDrawSurface)(HANDLE hDdSurface);
 //typedef x (NTAPI *PGD_DxDdSetAccelLevel)(
 //typedef x (NTAPI *PGD_DxDdGetSurfaceLock)(
 //typedef x (NTAPI *PGD_DxDdEnumLockedSurfaceRect)(
+
+typedef DWORD (NTAPI *PGD_DXGENERICTRUNK)(ULONG_PTR, ULONG_PTR, SIZE_T*, PVOID, SIZE_T*, PVOID);
+typedef BOOLEAN (NTAPI *PGD_DXDDENABLEDIRECTDRAW)(PVOID, BOOLEAN);
+typedef PDD_SURFACE_LOCAL (NTAPI *PGD_DXDDLOCKDIRECTDRAWSURFACE)(HANDLE hDdSurface);
+typedef BOOL (NTAPI *PGD_DXDDUNLOCKDIRECTDRAWSURFACE)(HANDLE hDdSurface);
 typedef DWORD (NTAPI *PGD_ENGDXIOCTL)(ULONG, PVOID, ULONG);
 
 
