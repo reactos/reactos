@@ -12,9 +12,6 @@ list(APPEND SOURCE
 add_library(mscoree SHARED ${SOURCE})
 
 set_module_type(mscoree win32dll)
-
 target_link_libraries(mscoree wine uuid)
-
 add_importlibs(mscoree advapi32 shell32 msvcrt kernel32 ntdll)
-
 add_cab_target(mscoree 1)

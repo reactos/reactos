@@ -4,8 +4,9 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/adns/src
     ${REACTOS_SOURCE_DIR}/lib/3rdparty/adns/adns_win32)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-DADNS_JGAA_WIN32)
+add_definitions(
+    -D_DLL -D__USE_CRTIMP
+    -DADNS_JGAA_WIN32)
 
 spec2def(dnsapi.dll dnsapi.spec)
 

@@ -1,3 +1,4 @@
+
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 set_unicode()
@@ -13,7 +14,5 @@ add_executable(sndvol32 ${CMAKE_CURRENT_BINARY_DIR}/sndvol32_sndvol32.h.gch ${SO
 add_pch(sndvol32 ${CMAKE_CURRENT_SOURCE_DIR}/sndvol32.h ${SOURCE})
 
 set_module_type(sndvol32 win32gui)
-
 add_importlibs(sndvol32 user32 advapi32 gdi32 comctl32 shell32 winmm msvcrt kernel32 ntdll)
-
 add_cab_target(sndvol32 1)

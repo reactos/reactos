@@ -1,7 +1,8 @@
 
-include_directories(${REACTOS_SOURCE_DIR}/lib/newinflib)
-include_directories(${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/drivers)
+include_directories(
+    ${REACTOS_SOURCE_DIR}/lib/newinflib
+    ${REACTOS_SOURCE_DIR}/lib/3rdparty/zlib
+    ${REACTOS_SOURCE_DIR}/include/reactos/drivers)
 
 add_executable(usetup
     interface/usetup.c

@@ -18,9 +18,7 @@ add_library(cryptui SHARED ${SOURCE})
 
 set_module_type(cryptui win32dll)
 
-target_link_libraries(cryptui
-    uuid
-    wine)
+target_link_libraries(cryptui uuid wine)
 
 add_importlibs(cryptui
     user32
@@ -37,5 +35,4 @@ add_importlibs(cryptui
     ntdll)
 
 add_importlib_target(cryptui.spec)
-
 add_cab_target(cryptui 1)

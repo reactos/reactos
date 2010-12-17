@@ -4,6 +4,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(faultrep.dll faultrep.spec)
 
 list(APPEND SOURCE
@@ -13,9 +14,6 @@ list(APPEND SOURCE
 add_library(faultrep SHARED ${SOURCE})
 
 set_module_type(faultrep win32dll)
-
 target_link_libraries(faultrep wine)
-
 add_importlibs(faultrep advapi32 msvcrt kernel32 ntdll)
-
 add_cab_target(faultrep 1)

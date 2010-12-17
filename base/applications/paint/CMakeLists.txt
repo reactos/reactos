@@ -17,7 +17,5 @@ add_executable(paint
     rsrc.rc)
 
 set_module_type(paint win32gui)
-
 add_importlibs(paint comdlg32 shell32 user32 gdi32 advapi32 comctl32 msvcrt kernel32)
-
 add_cab_target(paint 1)

@@ -1,10 +1,13 @@
 
 add_definitions(-D__WINESRC__)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(localspl.dll localspl.spec)
 
 list(APPEND SOURCE
@@ -18,8 +21,7 @@ add_library(localspl SHARED ${SOURCE})
 
 set_module_type(localspl win32dll)
 
-target_link_libraries(localspl
-    wine)
+target_link_libraries(localspl wine)
 
 add_importlibs(localspl
     spoolss
@@ -28,6 +30,5 @@ add_importlibs(localspl
     msvcrt
     kernel32
     ntdll)
-
 
 add_cab_target(localspl 1)

@@ -15,7 +15,7 @@ include_directories(
 
 spec2def(glu32.dll glu32.spec)
 
-add_library(glu32 SHARED
+list(APPEND SOURCE
     libnurbs/interface/bezierEval.cc
     libnurbs/interface/bezierPatch.cc
     libnurbs/interface/bezierPatchMesh.cc
@@ -107,6 +107,8 @@ add_library(glu32 SHARED
     libutil/registry.c
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
+add_library(glu32 SHARED ${SOURCE})
+
 set_entrypoint(glu32 0)
 
 target_link_libraries(glu32 stlport -lsupc++ -lgcc -lmingw32 -lcoldname)
@@ -120,4 +122,3 @@ add_importlibs(glu32
 
 add_cab_target(glu32 1)
 add_importlib_target(glu32.spec)
-

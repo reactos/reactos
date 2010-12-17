@@ -17,6 +17,5 @@ target_link_libraries(eventlog eventlogrpc_server ${PSEH_LIB})
 add_pch(eventlog ${CMAKE_CURRENT_SOURCE_DIR}/eventlog.h ${SOURCE})
 
 set_module_type(eventlog win32cui)
-
 add_importlibs(eventlog advapi32 rpcrt4 msvcrt kernel32 ntdll)
 add_cab_target(eventlog 1)

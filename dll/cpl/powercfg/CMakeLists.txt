@@ -14,8 +14,6 @@ add_library(powercfg SHARED
 
 set_module_type(powercfg cpl)
 
-
-
 add_importlibs(powercfg
     msvcrt
     user32

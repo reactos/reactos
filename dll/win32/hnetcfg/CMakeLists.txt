@@ -6,7 +6,9 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(hnetcfg SHARED
+spec2def(hnetcfg.dll hnetcfg.spec)
+
+list(APPEND SOURCE
     apps.c
     hnetcfg.c
     manager.c
@@ -15,11 +17,9 @@ add_library(hnetcfg SHARED
     profile.c
     regsvr.c
     service.c
-    hnetcfg.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/hnetcfg.def)
 
-if(NOT MSVC)
-    set_source_files_properties(hnetcfg.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(hnetcfg SHARED ${SOURCE})
 
 set_module_type(hnetcfg win32dll)
 

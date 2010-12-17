@@ -14,9 +14,7 @@ add_library(dxdiagn SHARED
 
 set_module_type(dxdiagn win32dll)
 
-target_link_libraries(dxdiagn
-    uuid
-    wine)
+target_link_libraries(dxdiagn uuid wine)
 
 add_importlibs(dxdiagn
     user32

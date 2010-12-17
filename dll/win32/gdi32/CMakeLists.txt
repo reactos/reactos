@@ -1,10 +1,13 @@
 
 set_unicode()
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-DLANGPACK)
+add_definitions(
+    -D_DLL -D__USE_CRTIMP
+    -DLANGPACK)
 
 include_directories(include)
+
+spec2def(gdi32.dll gdi32.spec)
 
 list(APPEND SOURCE
     main/dllmain.c
@@ -49,8 +52,6 @@ target_link_libraries(gdi32
     win32ksys
     dxguid
     ${PSEH_LIB})
-
-set_export_spec(gdi32 gdi32.spec)
 
 add_importlibs(gdi32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(gdi32 ${CMAKE_CURRENT_SOURCE_DIR}/include/precomp.h ${SOURCE})

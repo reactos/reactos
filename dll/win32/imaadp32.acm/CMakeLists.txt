@@ -1,14 +1,17 @@
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
-add_definitions(-D__WINESRC__)
+add_definitions(
+    -D_DLL -D__USE_CRTIMP
+    -D__WINESRC__)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(imaadp32.acm SHARED imaadp32.c imaadp32.def)
+spec2def(imaadp32.acm imaadp32.acm.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(imaadp32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    imaadp32.c
+    ${CMAKE_CURRENT_BINARY_DIR}/imaadp32.def)
+
+add_library(imaadp32.acm SHARED ${SOURCE})
 
 set_entrypoint(imaadp32.acm 0)
 set_target_properties(imaadp32.acm PROPERTIES SUFFIX "")

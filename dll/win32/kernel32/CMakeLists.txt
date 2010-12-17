@@ -1,12 +1,12 @@
 
-spec2def(kernel32.dll kernel32.spec)
-
 add_definitions(-D_KERNEL32_)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys)
+
+spec2def(kernel32.dll kernel32.spec)
 
 list(APPEND SOURCE
     debug/debugger.c
@@ -100,8 +100,7 @@ list(APPEND SOURCE
 if(ARCH MATCHES i386)
 list(APPEND SOURCE
     thread/i386/fiber.S
-    thread/i386/thread.S
-)
+    thread/i386/thread.S)
 elseif(ARCH MATCHES amd64)
 list(APPEND SOURCE
     thread/amd64/fiber.S

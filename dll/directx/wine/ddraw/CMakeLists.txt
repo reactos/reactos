@@ -1,3 +1,14 @@
+
+add_definitions(
+    -D__WINESRC__
+    -DUSE_WIN32_OPENGL)
+
+if(MSVC)
+    add_definitions(/FIwine/typeof.h)
+endif()
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
 set_rc_compiler()
 
 spec2def(ddraw.dll ddraw.spec)
@@ -21,15 +32,6 @@ list(APPEND SOURCE
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/ddraw.def)
-
-add_definitions(
-    -D__WINESRC__
-    -DUSE_WIN32_OPENGL)
-
-if(MSVC)
-    add_definitions(/FIwine/typeof.h)
-endif()
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(ddraw SHARED ${SOURCE})
 set_module_type(ddraw win32dll)

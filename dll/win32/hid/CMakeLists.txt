@@ -17,5 +17,4 @@ set_module_type(hid win32dll)
 
 add_importlibs(hid msvcrt kernel32 ntdll)
 add_pch(hid ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
-
 add_cab_target(hid 1)

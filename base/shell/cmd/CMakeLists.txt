@@ -1,8 +1,9 @@
 
 set_unicode()
 
-add_definitions(-DANONYMOUSUNIONS)
-add_definitions(-D_DEBUG_MEM)
+add_definitions(
+    -DANONYMOUSUNIONS
+    -D_DEBUG_MEM)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 

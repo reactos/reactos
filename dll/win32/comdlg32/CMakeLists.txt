@@ -1,10 +1,13 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_WINE)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_WINE
+    -D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(comdlg32.dll comdlg32.spec)
 
 list(APPEND SOURCE
@@ -23,9 +26,7 @@ add_library(comdlg32 SHARED ${SOURCE})
 
 set_module_type(comdlg32 win32dll)
 
-target_link_libraries(comdlg32
-    uuid
-    wine)
+target_link_libraries(comdlg32 uuid wine)
 
 add_importlibs(comdlg32
     shell32
@@ -39,7 +40,6 @@ add_importlibs(comdlg32
     msvcrt
     kernel32
     ntdll)
-
 
 add_cab_target(comdlg32 1)
 add_importlib_target(comdlg32.spec)

@@ -4,6 +4,7 @@ add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(fusion.dll fusion.spec)
 
 list(APPEND SOURCE
@@ -18,9 +19,6 @@ list(APPEND SOURCE
 add_library(fusion SHARED ${SOURCE})
 
 set_module_type(fusion win32dll)
-
 target_link_libraries(fusion wine)
-
 add_importlibs(fusion shlwapi advapi32 dbghelp user32 msvcrt kernel32 ntdll)
-
 add_cab_target(fusion 1)

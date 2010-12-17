@@ -11,9 +11,6 @@ list(APPEND SOURCE
 add_library(mprapi SHARED ${SOURCE})
 
 set_module_type(mprapi win32dll)
-
 target_link_libraries(mprapi wine)
-
 add_importlibs(mprapi msvcrt kernel32 ntdll)
-
 add_cab_target(mprapi 1)

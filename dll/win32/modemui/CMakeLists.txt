@@ -11,7 +11,5 @@ list(APPEND SOURCE
 add_library(modemui SHARED ${SOURCE})
 
 set_module_type(modemui win32dll)
-
 add_importlibs(modemui msvcrt kernel32 ntdll)
-
 add_cab_target(modemui 1)

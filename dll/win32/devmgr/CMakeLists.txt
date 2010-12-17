@@ -16,9 +16,7 @@ add_library(devmgr SHARED ${CMAKE_CURRENT_BINARY_DIR}/devmgr_precomp.h.gch ${SOU
 
 set_module_type(devmgr win32dll)
 
-target_link_libraries(devmgr
-    uuid
-    wine)
+target_link_libraries(devmgr uuid wine)
 
 add_importlibs(devmgr
     setupapi

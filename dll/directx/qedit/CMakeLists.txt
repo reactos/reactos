@@ -1,10 +1,13 @@
 
 set_unicode()
 
-add_definitions(-D__WINESRC__)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(qedit.dll qedit.spec)

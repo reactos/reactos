@@ -5,17 +5,14 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(cryptdll.dll cryptdll.spec)
 
-add_library(cryptdll SHARED
-            cryptdll.c
-            stubs.c
-            ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def)
+list(APPEND SOURCE
+    cryptdll.c
+    stubs.c
+    ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def)
+
+add_library(cryptdll SHARED ${SOURCE})
 
 set_module_type(cryptdll win32dll)
-
-target_link_libraries(cryptdll
-    ${CMAKE_CURRENT_BINARY_DIR}/cryptdll.def
-    wine)
-
+target_link_libraries(cryptdll wine)
 add_importlibs(cryptdll msvcrt kernel32 ntdll)
-
 add_cab_target(cryptdll 1)

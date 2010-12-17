@@ -5,6 +5,7 @@ add_definitions(-D_DLL -D__USE_CRTIMP)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(msacm32.dll msacm32.spec)
 
 list(APPEND SOURCE
@@ -23,11 +24,10 @@ set_entrypoint(msacm32 DllMain@12)
 set_image_base(msacm32 ${baseaddress_msacm32})
 
 target_link_libraries(msacm32 wine)
-
 add_importlibs(msacm32 msvcrt advapi32 user32 winmm kernel32 ntdll)
-
 add_dependencies(msacm32 psdk buildno_header)
 
-add_subdirectory(msacm32.drv)
 add_cab_target(msacm32 1)
 add_importlib_target(msacm32.spec)
+
+add_subdirectory(msacm32.drv)

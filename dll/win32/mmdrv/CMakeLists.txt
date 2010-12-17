@@ -3,7 +3,9 @@ set_unicode()
 
 add_definitions(-DNDEBUG)
 
-add_library(mmdrv SHARED
+spec2def(mmdrv.dll mmdrv.spec)
+
+list(APPEND SOURCE
     entry.c
     mme.c
     kernel.c
@@ -11,14 +13,11 @@ add_library(mmdrv SHARED
     common.c
     wave.c
     wave_io.c
-    mmdrv.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/mmdrv.def)
 
-if(NOT MSVC)
-    set_source_files_properties(mmdrv.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(mmdrv SHARED ${SOURCE})
 
 set_entrypoint(mmdrv 0)
-
 add_importlibs(mmdrv winmm user32 kernel32 ntdll)
 add_dependencies(mmdrv psdk buildno_header)
 add_cab_target(mmdrv 1)

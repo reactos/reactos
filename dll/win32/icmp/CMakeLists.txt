@@ -2,6 +2,7 @@
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(icmp.dll icmp.spec)
 
 list(APPEND SOURCE
@@ -14,7 +15,6 @@ add_library(icmp SHARED ${SOURCE})
 set_module_type(icmp win32dll)
 
 target_link_libraries(icmp wine)
-
 add_importlibs(icmp ws2_32 msvcrt kernel32 ntdll)
 add_importlib_target(icmp.spec)
 add_cab_target(icmp 1)

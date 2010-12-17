@@ -12,7 +12,9 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(jscript SHARED
+spec2def(jscript.dll jscript.spec)
+
+list(APPEND SOURCE
     activex.c
     date.c
     dispex.c
@@ -33,11 +35,9 @@ add_library(jscript SHARED
     function.c
     global.c
     rsrc.rc
-    jscript.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/jscript.def)
 
-if(NOT MSVC)
-    set_source_files_properties(jscript.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(jscript SHARED ${SOURCE})
 
 set_module_type(jscript win32dll)
 

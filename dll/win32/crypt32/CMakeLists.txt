@@ -11,6 +11,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(crypt32.dll crypt32.spec)
 
 list(APPEND SOURCE

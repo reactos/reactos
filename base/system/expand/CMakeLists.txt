@@ -1,3 +1,4 @@
+
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
@@ -5,7 +6,5 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_executable(expand expand.c expand.rc)
 
 set_module_type(expand win32cui)
-
 add_importlibs(expand lz32 setupapi user32 msvcrt kernel32 ntdll)
-
 add_cab_target(expand 1)

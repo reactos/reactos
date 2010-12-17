@@ -1,3 +1,10 @@
+
+add_definitions(
+    -D__WINESRC__
+    -DUSE_WIN32_OPENGL)
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
 set_rc_compiler()
 
 spec2def(wined3.dll wined3d.spec)
@@ -45,12 +52,6 @@ list(APPEND SOURCE
      powf.c
      sqrtf.c)
 endif()
-
-add_definitions(
-    -D__WINESRC__
-    -DUSE_WIN32_OPENGL)
-
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 add_library(wined3d SHARED ${SOURCE})
 set_module_type(wined3d win32dll)

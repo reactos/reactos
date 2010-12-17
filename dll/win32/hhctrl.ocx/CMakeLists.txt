@@ -1,5 +1,6 @@
 
 add_definitions(-D__WINESRC__)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -22,9 +23,7 @@ add_library(hhctrl SHARED
 
 set_module_type(hhctrl win32ocx)
 
-target_link_libraries(hhctrl
-    uuid
-    wine)
+target_link_libraries(hhctrl uuid wine)
 
 add_importlibs(hhctrl
     advapi32

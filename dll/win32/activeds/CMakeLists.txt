@@ -18,5 +18,4 @@ target_link_libraries(activeds wine)
 
 add_importlibs(activeds msvcrt kernel32 ntdll)
 
-
 add_cab_target(activeds 1)

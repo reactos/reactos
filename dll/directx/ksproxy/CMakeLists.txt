@@ -1,8 +1,8 @@
 
 spec2def(ksproxy.ax ksproxy.spec)
 
-add_definitions(-D_DLL -D__USE_CRTIMP)
 add_definitions(
+    -D_DLL -D__USE_CRTIMP
     -DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/include/c++
     -DNATIVE_C_INCLUDE=${REACTOS_SOURCE_DIR}/include/crt)
 

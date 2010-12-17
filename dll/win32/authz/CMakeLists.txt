@@ -1,14 +1,14 @@
 
 set_unicode()
 
+spec2def(authz.dll authz.spec)
+
 list(APPEND SOURCE
     authz.c
     clictx.c
     resman.c
     authz.rc
     ${CMAKE_CURRENT_BINARY_DIR}/authz.def)
-
-spec2def(authz.dll authz.spec)
 
 add_library(authz SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/authz_precomp.h.gch

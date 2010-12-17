@@ -14,7 +14,5 @@ add_executable(devmgmt ${CMAKE_CURRENT_BINARY_DIR}/devmgmt_precomp.h.gch ${SOURC
 add_pch(devmgmt ${CMAKE_CURRENT_SOURCE_DIR}/precomp.h ${SOURCE})
 
 set_module_type(devmgmt win32gui)
-
 add_importlibs(devmgmt setupapi gdi32 user32 comctl32 advapi32 devmgr msvcrt kernel32)
-
 add_cab_target(devmgmt 1)

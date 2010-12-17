@@ -1,7 +1,9 @@
+
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(mapi32.dll mapi32.spec)
 
 list(APPEND SOURCE
@@ -18,10 +20,6 @@ add_library(mapi32 SHARED ${SOURCE})
 
 set_module_type(mapi32 win32dll)
 
-target_link_libraries(mapi32
-    wine
-    uuid)
-
+target_link_libraries(mapi32 wine uuid)
 add_importlibs(mapi32 shlwapi shell32 user32 advapi32 msvcrt kernel32 ntdll)
-
 add_cab_target(mapi32 1)

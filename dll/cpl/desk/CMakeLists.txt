@@ -1,8 +1,9 @@
 
 set_unicode()
 
-add_definitions(-D_WIN32)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D_WIN32
+    -D_DLL -D__USE_CRTIMP)
 
 spec2def(desk.cpl desk.spec)
 

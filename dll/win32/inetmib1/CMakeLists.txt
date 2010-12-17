@@ -1,6 +1,8 @@
 
-add_definitions(-D__WINESRC__)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(inetmib1.dll inetmib1.spec)

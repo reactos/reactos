@@ -5,11 +5,13 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(msgsm32.acm SHARED msgsm32.c msgsm32.def)
+spec2def(msgsm32.acm msgsm32.acm.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(msgsm32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    msgsm32.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msgsm32.def)
+
+add_library(msgsm32.acm SHARED ${SOURCE})
 
 set_entrypoint(msgsm32.acm 0)
 set_target_properties(msgsm32.acm PROPERTIES SUFFIX "")

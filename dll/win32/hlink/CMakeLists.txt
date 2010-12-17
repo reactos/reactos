@@ -15,9 +15,7 @@ add_library(hlink SHARED ${SOURCE})
 
 set_module_type(hlink win32dll)
 
-target_link_libraries(hlink
-    uuid
-    wine)
+target_link_libraries(hlink uuid wine)
 
 add_importlibs(hlink
     shell32

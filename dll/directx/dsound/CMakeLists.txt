@@ -1,6 +1,8 @@
 
-add_definitions(-D_WINE)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D_WINE
+    -D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(dsound.dll dsound.spec)
@@ -35,7 +37,6 @@ add_importlibs(dsound
     winmm
     kernel32
     ntdll)
-
 
 add_cab_target(dsound 1)
 add_importlib_target(dsound.spec)

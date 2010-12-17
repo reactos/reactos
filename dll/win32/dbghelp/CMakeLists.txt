@@ -14,6 +14,7 @@ endif(ARCH MATCHES amd64)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(dbghelp.dll dbghelp.spec)
 
 list(APPEND SOURCE
@@ -53,7 +54,5 @@ target_link_libraries(dbghelp
     oldnames)
 
 add_importlibs(dbghelp psapi version msvcrt kernel32 ntdll)
-
 add_importlib_target(dbghelp.spec)
-
 add_cab_target(dbghelp 1)

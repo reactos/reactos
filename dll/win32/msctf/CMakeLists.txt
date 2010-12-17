@@ -1,10 +1,15 @@
-add_definitions(-D__WINESRC__)
+
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-add_definitions(-D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(msctf.dll msctf.spec)
 
 list(APPEND SOURCE
@@ -26,10 +31,6 @@ add_library(msctf SHARED ${SOURCE})
 
 set_module_type(msctf win32dll)
 
-target_link_libraries(msctf
-    uuid
-    wine)
-
+target_link_libraries(msctf uuid wine)
 add_importlibs(msctf ole32 oleaut32 user32 advapi32 msvcrt kernel32 ntdll)
-
 add_cab_target(msctf 1)

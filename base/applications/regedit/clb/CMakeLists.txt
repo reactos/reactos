@@ -10,7 +10,5 @@ add_library(clb SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/clb.def)
 
 set_module_type(clb win32dll)
-
-
 add_importlibs(clb user32 gdi32 comctl32 kernel32 ntdll)
     

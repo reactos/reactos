@@ -14,5 +14,4 @@ set_module_type(notifyhook win32dll)
 
 add_importlibs(notifyhook user32 msvcrt kernel32)
 add_importlib_target(notifyhook.spec)
-
 add_cab_target(notifyhook 1)

@@ -1,7 +1,10 @@
-include_directories(include)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
+
+include_directories(
+    include
+    ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(msgina.dll msgina.spec)
 
 list(APPEND SOURCE
@@ -15,9 +18,6 @@ list(APPEND SOURCE
 add_library(msgina SHARED ${SOURCE})
 
 set_module_type(msgina win32dll)
-
 target_link_libraries(msgina wine)
-
 add_importlibs(msgina advapi32 user32 gdi32 userenv msvcrt kernel32 ntdll)
-
 add_cab_target(msgina 1)

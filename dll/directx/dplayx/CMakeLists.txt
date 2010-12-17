@@ -1,3 +1,4 @@
+
 set_rc_compiler()
 
 spec2def(dplayx.dll dplayx.spec)

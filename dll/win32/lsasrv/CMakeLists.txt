@@ -1,9 +1,12 @@
+
 set_unicode()
 
-include_directories(${REACTOS_BINARY_DIR}/include/reactos/idl)
-include_directories(${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
+include_directories(
+    ${REACTOS_BINARY_DIR}/include/reactos/idl
+    ${REACTOS_SOURCE_DIR}/include/reactos/subsys/lsass)
 
 set_rc_compiler()
+
 spec2def(lsasrv.dll lsasrv.spec)
 
 list(APPEND SOURCE
@@ -25,6 +28,6 @@ target_link_libraries(lsasrv
     ${PSEH_LIB})
 
 add_importlibs(lsasrv rpcrt4 kernel32 ntdll)
-add_dependencies(lsasrv  psdk buildno_header)
+add_dependencies(lsasrv psdk buildno_header)
 add_cab_target(lsasrv 1)
 add_importlib_target(lsasrv.spec)

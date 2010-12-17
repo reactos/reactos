@@ -2,22 +2,19 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(mciavi32 SHARED
+spec2def(mciavi32.dll mciavi32.spec)
+
+list(APPEND SOURCE
     info.c
     mciavi.c
     mmoutput.c
     wnd.c
     mciavi_res.rc
-    mciavi32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/mciavi32.def)
 
-if(NOT MSVC)
-    set_source_files_properties(mciavi32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(mciavi32 SHARED ${SOURCE})
 
 set_module_type(mciavi32 win32dll)
-
 target_link_libraries(mciavi32 wine)
-
 add_importlibs(mciavi32 msvfw32 winmm user32 gdi32 msvcrt kernel32 ntdll)
-
 add_cab_target(mciavi32 1)

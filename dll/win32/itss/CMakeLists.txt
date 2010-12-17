@@ -1,8 +1,12 @@
 
-add_definitions(-D__WINESRC__ -D_DLL -D__USE_CRTIMP)
+add_definitions(
+    -D__WINESRC__
+    -D_DLL -D__USE_CRTIMP)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(itss.dll itss.spec)
 
 list(APPEND SOURCE
@@ -19,9 +23,7 @@ add_library(itss SHARED ${SOURCE})
 
 set_module_type(itss win32dll)
 
-target_link_libraries(itss
-    uuid
-    wine)
+target_link_libraries(itss uuid wine)
 
 add_importlibs(itss
     urlmon

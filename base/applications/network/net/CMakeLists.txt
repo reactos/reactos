@@ -11,7 +11,5 @@ list(APPEND SOURCE
 add_executable(net ${SOURCE})
 
 set_module_type(net win32cui)
-
 add_importlibs(net ws2_32 msvcrt kernel32)
-
 add_cab_target(net 1)

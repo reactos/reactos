@@ -1,7 +1,9 @@
+
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 set_rc_compiler()
+
 spec2def(mscms.dll mscms.spec)
 
 list(APPEND SOURCE
@@ -17,9 +19,6 @@ list(APPEND SOURCE
 add_library(mscms SHARED ${SOURCE})
 
 set_module_type(mscms win32dll)
-
 target_link_libraries(mscms wine)
-
 add_importlibs(mscms msvcrt kernel32 ntdll)
-
 add_cab_target(mscms 1)

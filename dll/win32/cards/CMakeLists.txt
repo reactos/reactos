@@ -4,17 +4,16 @@ set_unicode()
 # Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN
 add_definitions(-DCARDSTYLE_DEFAULT)
 
-add_library(cards SHARED
+spec2def(cards.dll cards.spec)
+
+list(APPEND SOURCE
     cards.c
     cards.rc
     ${CMAKE_CURRENT_BINARY_DIR}/cards.def)
 
-set_export_spec(cards cards.spec)
-
-add_importlib_target(${CMAKE_CURRENT_BINARY_DIR}/cards.def)
+add_library(cards SHARED ${SOURCE})
 
 set_module_type(cards win32dll)
-
 add_importlibs(cards user32 gdi32 msvcrt kernel32)
-
+add_importlib_target(cards.spec)
 add_cab_target(cards 1)

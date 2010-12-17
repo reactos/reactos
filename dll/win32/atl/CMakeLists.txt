@@ -1,3 +1,4 @@
+
 add_definitions(-D__WINESRC__)
 
 remove_definitions(-D_WIN32_WINNT=0x502)

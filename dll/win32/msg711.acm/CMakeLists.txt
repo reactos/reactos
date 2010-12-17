@@ -5,17 +5,18 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(msg711.acm SHARED msg711.c msg711.def)
+spec2def(msg711.acm msg711.acm.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(msg711.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    msg711.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msg711.def)
+
+add_library(msg711.acm SHARED ${SOURCE})
 
 set_entrypoint(msg711.acm 0)
 set_target_properties(msg711.acm PROPERTIES SUFFIX "")
 
 target_link_libraries(msg711.acm wine)
-
 add_importlibs(msg711.acm winmm user32 msvcrt kernel32 ntdll)
 add_dependencies(msg711.acm psdk buildno_header)
 add_cab_target(msg711.acm 1)

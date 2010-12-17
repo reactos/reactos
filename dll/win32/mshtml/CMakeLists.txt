@@ -12,6 +12,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 ADD_INTERFACE_DEFINITIONS(mshtml_nsiface_header nsiface.idl)
 
 set_rc_compiler()
+
 spec2def(mshtml.dll mshtml.spec)
 
 list(APPEND SOURCE

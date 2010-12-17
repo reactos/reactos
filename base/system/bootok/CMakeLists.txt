@@ -1,3 +1,4 @@
+
 add_definitions(-D_DLL -D__USE_CRTIMP)
 
 set_unicode()
@@ -5,7 +6,5 @@ set_unicode()
 add_executable(bootok bootok.c bootok.rc)
 
 set_module_type(bootok win32cui)
-
 add_importlibs(bootok advapi32 msvcrt kernel32 ntdll)
-
 add_cab_target(bootok 1)

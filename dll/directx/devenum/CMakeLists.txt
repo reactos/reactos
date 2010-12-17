@@ -3,6 +3,7 @@ set_unicode()
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
+
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(devenum.dll devenum.spec)
@@ -33,6 +34,5 @@ add_importlibs(devenum
     msvcrt
     kernel32
     ntdll)
-
 
 add_cab_target(devenum 1)

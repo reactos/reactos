@@ -1,11 +1,15 @@
 
 set_unicode()
 
-add_library(kbsdll SHARED kbsdll.c kbsdll.rc ${CMAKE_CURRENT_BINARY_DIR}/kbsdll.def)
-
 spec2def(kbsdll.dll kbsdll.spec)
+
+list(APPEND SOURCE
+    kbsdll.c
+    kbsdll.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/kbsdll.def)
+
+add_library(kbsdll SHARED ${SOURCE})
 
 set_module_type(kbsdll win32dll)
 add_importlibs(kbsdll user32 comctl32 kernel32 msvcrt)
-
 add_cab_target(kbsdll 1)
