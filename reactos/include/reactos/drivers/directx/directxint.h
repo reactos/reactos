@@ -135,7 +135,7 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
                                                                           in second, if this value are set to 0 it disable directdraw acclatrions.
                                                                           it is normal set to 7 (7 sec in windwos xp/2003)
                                                                         */
-
+/* 0x02C */    ULONG unk_02C;
 /* 0x030 */    DWORD dwNumHeaps;                                       // 0x030 <-- verified to match Windows XP, dwNumHeaps
 /* 0x034 */    VIDEOMEMORY *pvmList;                                   // 0x034 <-- verified to match Windows XP, pvmList
 /* 0x038 */    DWORD dwNumFourCC;                                      // 0x038 <-- verified to match Windows XP, dwNumFourCC
