@@ -291,7 +291,14 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_hSpooler:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_hSpooler\n");
-        retVal = 0;//(DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
+        /* NOTE : the hSpooler handler is a PDEVICE_OBJECT and it contain
+                  second loaded drv, in ms win32k it load in same drv twice
+                  or the printer drv here. so we hack it for now
+                  to Dev->pGraphicsDevice->DeviceObject
+        */
+        // retVal = (DWORD_PTR) PDev->hSpooler; // If the device is a spooler driver.
+        retVal = (DWORD_PTR) PDev->pGraphicsDevice->DeviceObject; // Hack until printer drv stack have been written
+        
         break;
       case DxEGShDevData_DitherFmt:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");
