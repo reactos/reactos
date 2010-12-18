@@ -22,7 +22,7 @@ PLARGE_INTEGER gpLockShortDelay = NULL;
 
 
 PDRVFN gpEngFuncs;
-const ULONG gcDxgFuncs = DXG_INDEX_LAST;
+
 
 
 
@@ -62,7 +62,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
      * Setup internal driver functions list we got from dxg driver functions list
      */
 	pDxgDrv->iDriverVersion = DXG_DRIVER_VERSION;
-    pDxgDrv->c = gcDxgFuncs;
+    pDxgDrv->c = DXG_INDEX_LAST;
     pDxgDrv->pdrvfn = gaDxgFuncs;
 
     /* check how many driver functions and fail if the value does not match */
