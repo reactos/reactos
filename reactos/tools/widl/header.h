@@ -39,6 +39,7 @@ extern void write_type_decl_left(FILE *f, type_t *t);
 extern int needs_space_after(type_t *t);
 extern int is_object(const type_t *iface);
 extern int is_local(const attr_list_t *list);
+extern int count_methods(const type_t *iface);
 extern int need_stub(const type_t *iface);
 extern int need_proxy(const type_t *iface);
 extern int need_stub_files(const statement_list_t *stmts);

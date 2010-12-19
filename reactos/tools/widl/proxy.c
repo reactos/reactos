@@ -114,20 +114,6 @@ static void init_proxy(const statement_list_t *stmts)
   print_proxy( "#define DECLSPEC_HIDDEN\n");
   print_proxy( "#endif\n");
   print_proxy( "\n");
-  write_exceptions( proxy );
-  print_proxy( "\n");
-  print_proxy( "struct __proxy_frame\n");
-  print_proxy( "{\n");
-  print_proxy( "    __DECL_EXCEPTION_FRAME\n");
-  print_proxy( "    MIDL_STUB_MESSAGE _StubMsg;\n");
-  print_proxy( "    void             *This;\n");
-  print_proxy( "};\n");
-  print_proxy( "\n");
-  print_proxy("static int __proxy_filter( struct __proxy_frame *__frame )\n");
-  print_proxy( "{\n");
-  print_proxy( "    return (__frame->_StubMsg.dwStubPhase != PROXY_SENDRECEIVE);\n");
-  print_proxy( "}\n");
-  print_proxy( "\n");
 }
 
 static void clear_output_vars( const var_list_t *args )
@@ -504,7 +490,7 @@ static void gen_stub(type_t *iface, const var_t *func, const char *cas,
   print_proxy("\n");
 }
 
-static int count_methods(type_t *iface)
+int count_methods(const type_t *iface)
 {
     const statement_t *stmt;
     int count = 0;
@@ -593,7 +579,7 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   /* FIXME: check for [oleautomation], shouldn't generate proxies/stubs if specified */
 
   STATEMENTS_FOR_EACH_FUNC(stmt, type_iface_get_stmts(iface)) {
-    const var_t *func = stmt->u.var;
+    var_t *func = stmt->u.var;
     if (first_func) {
       fprintf(proxy, "/*****************************************************************************\n");
       fprintf(proxy, " * %s interface\n", iface->name);
@@ -615,6 +601,7 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
               }
           }
       }
+      func->procstring_offset = *proc_offset;
       gen_proxy(iface, func, idx, *proc_offset);
       gen_stub(iface, func, cname, *proc_offset);
       *proc_offset += get_size_procformatstring_func( func );
@@ -622,6 +609,8 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   }
 
   count = count_methods(iface);
+
+  write_procformatstring_offsets( proxy, iface );
 
   /* proxy vtable */
   print_proxy( "static %sCINTERFACE_PROXY_VTABLE(%d) _%sProxyVtbl =\n",
@@ -640,8 +629,22 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   indent--;
   print_proxy( "}\n");
   indent--;
-  print_proxy( "};\n");
-  fprintf(proxy, "\n\n");
+  print_proxy( "};\n\n");
+
+  /* server info */
+  print_proxy( "static const MIDL_SERVER_INFO %s_ServerInfo =\n", iface->name );
+  print_proxy( "{\n" );
+  indent++;
+  print_proxy( "&Object_StubDesc,\n" );
+  print_proxy( "0,\n" );
+  print_proxy( "__MIDL_ProcFormatString.Format,\n" );
+  print_proxy( "&%s_FormatStringOffsetTable[-3],\n", iface->name );
+  print_proxy( "0,\n" );
+  print_proxy( "0,\n" );
+  print_proxy( "0,\n" );
+  print_proxy( "0\n" );
+  indent--;
+  print_proxy( "};\n\n" );
 
   /* stub vtable */
   print_proxy( "static const PRPC_STUB_FUNCTION %s_table[] =\n", iface->name);
@@ -659,7 +662,7 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   print_proxy( "{\n");
   indent++;
   print_proxy( "&IID_%s,\n", iface->name);
-  print_proxy( "0,\n");
+  print_proxy( "&%s_ServerInfo,\n", iface->name );
   print_proxy( "%d,\n", count);
   print_proxy( "&%s_table[-3],\n", iface->name);
   indent--;
@@ -775,6 +778,25 @@ static void write_proxy_routines(const statement_list_t *stmts)
 {
   int expr_eval_routines;
   unsigned int proc_offset = 0;
+  char *file_id = proxy_token;
+  int i, count, have_baseiid;
+  type_t **interfaces;
+  const type_t * delegate_to;
+
+  write_exceptions( proxy );
+  print_proxy( "\n");
+  print_proxy( "struct __proxy_frame\n");
+  print_proxy( "{\n");
+  print_proxy( "    __DECL_EXCEPTION_FRAME\n");
+  print_proxy( "    MIDL_STUB_MESSAGE _StubMsg;\n");
+  print_proxy( "    void             *This;\n");
+  print_proxy( "};\n");
+  print_proxy( "\n");
+  print_proxy("static int __proxy_filter( struct __proxy_frame *__frame )\n");
+  print_proxy( "{\n");
+  print_proxy( "    return (__frame->_StubMsg.dwStubPhase != PROXY_SENDRECEIVE);\n");
+  print_proxy( "}\n");
+  print_proxy( "\n");
 
   write_formatstringsdecl(proxy, indent, stmts, need_proxy);
   write_stubdescproto();
@@ -792,42 +814,6 @@ static void write_proxy_routines(const statement_list_t *stmts)
   print_proxy( "\n");
   write_procformatstring(proxy, stmts, need_proxy);
   write_typeformatstring(proxy, stmts, need_proxy);
-
-}
-
-void write_proxies(const statement_list_t *stmts)
-{
-  char *file_id = proxy_token;
-  int i, count, have_baseiid;
-  type_t **interfaces;
-  const type_t * delegate_to;
-
-  if (!do_proxies) return;
-  if (do_everything && !need_proxy_file(stmts)) return;
-
-  init_proxy(stmts);
-  if(!proxy) return;
-
-  if (do_win32 && do_win64)
-  {
-      fprintf(proxy, "\n#ifndef _WIN64\n\n");
-      pointer_size = 4;
-      write_proxy_routines( stmts );
-      fprintf(proxy, "\n#else /* _WIN64 */\n\n");
-      pointer_size = 8;
-      write_proxy_routines( stmts );
-      fprintf(proxy, "#endif /* _WIN64 */\n\n");
-  }
-  else if (do_win32)
-  {
-      pointer_size = 4;
-      write_proxy_routines( stmts );
-  }
-  else if (do_win64)
-  {
-      pointer_size = 8;
-      write_proxy_routines( stmts );
-  }
 
   interfaces = sort_interfaces(stmts, &count);
   fprintf(proxy, "static const CInterfaceProxyVtbl* const _%s_ProxyVtblList[] =\n", file_id);
@@ -901,6 +887,36 @@ void write_proxies(const statement_list_t *stmts)
   fprintf(proxy, "    0,\n");
   fprintf(proxy, "    0\n");
   fprintf(proxy, "};\n");
+}
+
+void write_proxies(const statement_list_t *stmts)
+{
+  if (!do_proxies) return;
+  if (do_everything && !need_proxy_file(stmts)) return;
+
+  init_proxy(stmts);
+  if(!proxy) return;
+
+  if (do_win32 && do_win64)
+  {
+      fprintf(proxy, "\n#ifndef _WIN64\n\n");
+      pointer_size = 4;
+      write_proxy_routines( stmts );
+      fprintf(proxy, "\n#else /* _WIN64 */\n\n");
+      pointer_size = 8;
+      write_proxy_routines( stmts );
+      fprintf(proxy, "\n#endif /* _WIN64 */\n");
+  }
+  else if (do_win32)
+  {
+      pointer_size = 4;
+      write_proxy_routines( stmts );
+  }
+  else if (do_win64)
+  {
+      pointer_size = 8;
+      write_proxy_routines( stmts );
+  }
 
   fclose(proxy);
 }
