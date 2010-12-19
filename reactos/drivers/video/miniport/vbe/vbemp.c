@@ -534,7 +534,7 @@ VBEStartIO(
          }
          Result = VBEVideoShareVideoMemmory(
             (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
-            (PVIDEO_SHARE_MEMORY)RequestPacket->InputBufferLength,
+            (PVIDEO_SHARE_MEMORY)RequestPacket->InputBuffer,
             (PVIDEO_SHARE_MEMORY_INFORMATION)RequestPacket->OutputBuffer,
             RequestPacket->StatusBlock);
          break;
