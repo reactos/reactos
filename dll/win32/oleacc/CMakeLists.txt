@@ -12,14 +12,11 @@ list(APPEND SOURCE
 
 add_library(oleacc SHARED ${SOURCE})
 
-set_entrypoint(oleacc 0)
+set_module_type(oleacc win32dll)
 
 target_link_libraries(oleacc wine)
 
-add_importlibs(oleacc
-    user32
-    kernel32
-    ntdll)
+add_importlibs(oleacc user32 msvcrt kernel32 ntdll)
 
 add_importlib_target(oleacc.spec)
 add_cab_target(oleacc 1)
