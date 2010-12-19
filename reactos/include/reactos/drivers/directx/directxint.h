@@ -141,8 +141,8 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x038 */    DWORD dwNumFourCC;                                      // 0x038 <-- verified to match Windows XP, dwNumFourCC
 /* 0x03C */    PDWORD pdwFourCC;                                       // 0x03C <-- verified to match Windows XP, pdwFourCC
 /* 0x040 */    DD_HALINFO ddHalInfo;                                   // 0x040 <-- verified to match Windows XP, ddHalInfo
-/* 0x1E0 */    ULONG unk_1e0[46];
-/* 0x298 */    DD_CALLBACKS ddCallbacks;                               // 0x298 <-- verified to match Windows XP, ddCallbacks
+/* 0x1E0 */    ULONG unk_1e0[47];
+/* 0x29C */    DD_CALLBACKS ddCallbacks;                               // 0x29C <-- verified to match Windows XP, ddCallbacks
 /* 0x2C4 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;                 // 0x2C4 <-- verified to match Windows XP, ddSurfaceCallbacks
 /* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;                 // 0x304 <-- verified to match Windows XP, ddPaletteCallbacks
 /* 0x314 */    D3DNTHAL_GLOBALDRIVERDATA d3dNtGlobalDriverData;        // 0x304 <-- verified to match Windows XP, d3dNtGlobalDriverData
