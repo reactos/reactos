@@ -21,6 +21,8 @@ import "propidl.idl";
 import "objidl.idl";
 import "ocidl.idl";
 
+cpp_quote("#define WINCODEC_SDK_VERSION 0x0236")
+
 #define CODEC_FORCE_DWORD 0x7fffffff
 
 typedef enum WICDecodeOptions {
@@ -158,6 +160,7 @@ cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppGray, 0x6fddc324,0x4e03,0x4bfe,0x
 
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppBGR555, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x09);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppBGR565, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0a);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat16bppBGRA5551, 0x05ec7c2b,0xf1e6,0x4961,0xad,0x46,0xe1,0xcc,0x81,0x0a,0x87,0xd2);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat24bppBGR, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0c);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppBGR, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0e);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppBGRA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x0f);")
@@ -165,6 +168,9 @@ cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppPBGRA, 0x6fddc324,0x4e03,0x4bfe,0
 
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat48bppRGB, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x15);")
 cpp_quote("DEFINE_GUID(GUID_WICPixelFormat64bppRGBA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x16);")
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat64bppPRGBA, 0x6fddc324,0x4e03,0x4bfe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x17);")
+
+cpp_quote("DEFINE_GUID(GUID_WICPixelFormat32bppCMYK, 0x6fddc324,0x4e03,0x4fbe,0xb1,0x85,0x3d,0x77,0x76,0x8d,0xc9,0x1c);")
 
 typedef struct WICRect {
     INT X;
@@ -184,6 +190,7 @@ typedef struct WICBitmapPattern {
 typedef UINT32 WICColor;
 
 cpp_quote("#define WINCODEC_ERR_WRONGSTATE 0x88982f04")
+cpp_quote("#define WINCODEC_ERR_VALUEOUTOFRANGE 0x88982f05")
 cpp_quote("#define WINCODEC_ERR_NOTINITIALIZED 0x88982f0c")
 cpp_quote("#define WINCODEC_ERR_CODECNOTHUMBNAIL 0x88982f44")
 cpp_quote("#define WINCODEC_ERR_PALETTEUNAVAILABLE 0x88982f45")
@@ -194,10 +201,6 @@ cpp_quote("#define WINCODEC_ERR_UNSUPPORTEDOPERATION 0x88982f81")
 cpp_quote("#define WINCODEC_ERR_INSUFFICIENTBUFFER 0x88982f8c")
 
 interface IWICPalette;
-interface IWICColorTransform;
-interface IWICFastMetadataEncoder;
-interface IWICMetadataQueryReader;
-interface IWICMetadataQueryWriter;
 
 [
     object,
@@ -385,6 +388,42 @@ interface IWICComponentInfo : IUnknown
         [in] UINT cchFriendlyName,
         [in, out, unique, size_is(cchFriendlyName)] WCHAR *wzFriendlyName,
         [out] UINT *pcchActual);
+}
+
+[
+    object,
+    uuid(30989668-e1c9-4597-b395-458eedb808df)
+]
+interface IWICMetadataQueryReader : IUnknown
+{
+    HRESULT GetContainerFormat(
+        [out] GUID *pguidContainerFormat);
+
+    HRESULT GetLocation(
+        [in] UINT cchMaxLength,
+        [in, out, unique, size_is(cchMaxLength)] WCHAR *wzNamespace,
+        [out] UINT *pcchActualLength);
+
+    HRESULT GetMetadataByName(
+        [in] LPCWSTR wzName,
+        [in, out, unique] PROPVARIANT *pvarValue);
+
+    HRESULT GetEnumerator(
+        [out] IEnumString **ppIEnumString);
+}
+
+[
+    object,
+    uuid(a721791a-0def-4d06-bd91-2118bf1db10b)
+]
+interface IWICMetadataQueryWriter : IWICMetadataQueryReader
+{
+    HRESULT SetMetadataByName(
+        [in] LPCWSTR wzName,
+        [in] const PROPVARIANT *pvarValue);
+
+    HRESULT RemoveMetadataByName(
+        [in] LPCWSTR wzName);
 }
 
 [
@@ -706,6 +745,31 @@ interface IWICBitmapClipper : IWICBitmapSource
     HRESULT Initialize(
         [in] IWICBitmapSource *pISource,
         [in] const WICRect *prc);
+}
+
+[
+    object,
+    uuid(b66f034f-d0e2-40ab-b436-6de39e321a94)
+]
+interface IWICColorTransform : IWICBitmapSource
+{
+    HRESULT Initialize(
+        [in] IWICBitmapSource *pIBitmapSource,
+        [in] IWICColorContext *pIContextSource,
+        [in] IWICColorContext *pIContextDest,
+        [in] REFWICPixelFormatGUID pixelFmtDest);
+}
+
+[
+    object,
+    uuid(b84e2c09-78c9-4ac4-8bd3-524ae1663a2f)
+]
+interface IWICFastMetadataEncoder : IUnknown
+{
+    HRESULT Commit();
+
+    HRESULT GetMetadataQueryWriter(
+        [out] IWICMetadataQueryWriter **ppIMetadataQueryWriter);
 }
 
 cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);")

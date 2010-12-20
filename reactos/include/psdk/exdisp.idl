@@ -409,7 +409,9 @@ dispinterface DWebBrowserEvents2
     void SetSecureLockIcon([in] long SecureLockIcon);
 
     [id(DISPID_FILEDOWNLOAD)]
-    void FileDownload([in, out] VARIANT_BOOL* Cancel);
+    void FileDownload(
+            [in] VARIANT_BOOL ActiveDocument,
+            [in, out] VARIANT_BOOL *Cancel);
 
     [id(DISPID_NAVIGATEERROR)]
     void NavigateError(
@@ -525,7 +527,8 @@ enum ShellWindowTypeConstants {
     SWC_EXPLORER = 0,
     SWC_BROWSER  = 1,
     SWC_3RDPARTY = 2,
-    SWC_CALLBACK = 4
+    SWC_CALLBACK = 4,
+    SWC_DESKTOP  = 8
 } ShellWindowTypeConstants;
 
 typedef
@@ -658,10 +661,69 @@ interface IShellUIHelper : IDispatch {
 }
 
 [
+    uuid(a7fe6eda-1932-4281-b881-87b31b8bc52c),
+    oleautomation,
+    dual
+]
+interface IShellUIHelper2 : IShellUIHelper {
+    [id(DISPID_ADDSEARCHPROVIDER)]
+    HRESULT AddSearchProvider([in] BSTR URL);
+
+    [id(DISPID_RUNONCESHOWN)]
+    HRESULT RunOnceShown();
+
+    [id(DISPID_SKIPRUNONCE)]
+    HRESULT SkipRunOnce();
+
+    [id(DISPID_CUSTOMIZESETTINGS)] HRESULT CustomizeSettings(
+        [in] VARIANT_BOOL fSQM,
+        [in] VARIANT_BOOL fPhishing,
+        [in] BSTR bstrLocale);
+
+    [id(DISPID_SQMENABLED)]
+    HRESULT SqmEnabled([out, retval] VARIANT_BOOL *pfEnabled);
+
+    [id(DISPID_PHISHINGENABLED)]
+    HRESULT PhishingEnabled([out, retval] VARIANT_BOOL *pfEnabled);
+
+    [id(DISPID_BRANDIMAGEURI)]
+    HRESULT BrandImageUri([out, retval] BSTR *pbstrUri);
+
+    [id(DISPID_SKIPTABSWELCOME)]
+    HRESULT SkipTabsWelcome();
+
+    [id(DISPID_DIAGNOSECONNECTION)]
+    HRESULT DiagnoseConnection();
+
+    [id(DISPID_CUSTOMIZECLEARTYPE)]
+    HRESULT CustomizeClearType([in] VARIANT_BOOL fSet);
+
+    [id(DISPID_ISSEARCHPROVIDERINSTALLED)]
+    HRESULT IsSearchProviderInstalled(
+        [in] BSTR URL,
+        [out, retval] DWORD *pdwResult);
+
+    [id(DISPID_ISSEARCHMIGRATED)]
+    HRESULT IsSearchMigrated([out, retval] VARIANT_BOOL *pfMigrated);
+
+    [id(DISPID_DEFAULTSEARCHPROVIDER)]
+    HRESULT DefaultSearchProvider([out, retval] BSTR *pbstrName);
+
+    [id(DISPID_RUNONCEREQUIREDSETTINGSCOMPLETE)]
+    HRESULT RunOnceRequiredSettingsComplete([in] VARIANT_BOOL fComplete);
+
+    [id(DISPID_RUNONCEHASSHOWN)]
+    HRESULT RunOnceHasShown([out, retval] VARIANT_BOOL *pfShown);
+
+    [id(DISPID_SEARCHGUIDEURL)]
+    HRESULT SearchGuideUrl([out, retval] BSTR *pbstrUrl);
+}
+
+[
     uuid(64ab4bb7-111e-11d1-8f79-00c04fc2fbe1)
 ]
 coclass ShellUIHelper {
-    [default] interface IShellUIHelper;
+    [default] interface IShellUIHelper2;
 }
 
 [
@@ -789,7 +851,8 @@ interface IScriptErrorList : IDispatch {
 
 [
     uuid(efd01300-160f-11d2-bb2e-00805ff7efca),
-    hidden
+    hidden,
+    noncreatable
 ]
 coclass CScriptErrorList {
     [default] interface IScriptErrorList;

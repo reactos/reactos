@@ -1826,6 +1826,30 @@ interface IUriBuilder: IUnknown
         [out] BOOL *pfModified);
 };
 
+cpp_quote("HRESULT WINAPI CreateIUriBuilder(IUri*,DWORD,DWORD_PTR,IUriBuilder**);")
+
+/*****************************************************************************
+ * IUriBuilderFactory interface
+ */
+[
+    local,
+    object,
+    uuid(e982ce48-0b96-440c-bc37-0c869b27a29e),
+    pointer_default(unique)
+]
+interface IUriBuilderFactory : IUnknown
+{
+    HRESULT CreateInitializedIUriBuilder(
+        [in]  DWORD dwFlags,
+        [in]  DWORD_PTR dwReserved,
+        [out] IUriBuilder **ppIUriBuilder);
+
+    HRESULT CreateIUriBuilder(
+        [in]  DWORD dwFlags,
+        [in]  DWORD_PTR dwReserved,
+        [out] IUriBuilder **ppIUriBuilder);
+};
+
 /*****************************************************************************
  * IInternetProtocolEx interface
  */
@@ -1897,13 +1921,19 @@ cpp_quote("#define INET_E_SECURITY_PROBLEM          _HRESULT_TYPEDEF_(0x800C000E
 cpp_quote("#define INET_E_CANNOT_LOAD_DATA          _HRESULT_TYPEDEF_(0x800C000F)")
 cpp_quote("#define INET_E_CANNOT_INSTANTIATE_OBJECT _HRESULT_TYPEDEF_(0x800C0010)")
 cpp_quote("#define INET_E_USE_DEFAULT_PROTOCOLHANDLER _HRESULT_TYPEDEF_(0x800C0011)")
-cpp_quote("#define INET_E_USE_DEFAULT_SETTING       _HRESULT_TYPEDEF_(0x800C0012)")
+cpp_quote("#define INET_E_USE_DEFAULT_SETTING       _HRESULT_TYPEDEF_(0x800C0012L)")
+cpp_quote("#define INET_E_DEFAULT_ACTION            INET_E_USE_DEFAULT_PROTOCOLHANDLER")
 cpp_quote("#define INET_E_QUERYOPTION_UNKNOWN       _HRESULT_TYPEDEF_(0x800C0013)")
 cpp_quote("#define INET_E_REDIRECT_FAILED           _HRESULT_TYPEDEF_(0x800C0014)")
 cpp_quote("#define INET_E_REDIRECT_TO_DIR           _HRESULT_TYPEDEF_(0x800C0015)")
 cpp_quote("#define INET_E_CANNOT_LOCK_REQUEST       _HRESULT_TYPEDEF_(0x800C0016)")
-cpp_quote("#define INET_E_ERROR_LAST                INET_E_REDIRECT_TO_DIR")
-cpp_quote("#define INET_E_DEFAULT_ACTION            INET_E_USE_DEFAULT_PROTOCOLHANDLER")
+cpp_quote("#define INET_E_CODE_DOWNLOAD_DECLINED    _HRESULT_TYPEDEF_(0x800C0100)")
+cpp_quote("#define INET_E_RESULT_DISPATCHED         _HRESULT_TYPEDEF_(0x800C0200)")
+cpp_quote("#define INET_E_CANNOT_REPLACE_SFP_FILE   _HRESULT_TYPEDEF_(0x800C0300)")
+cpp_quote("#define INET_E_CODE_INSTALL_SUPPRESSED   _HRESULT_TYPEDEF_(0x800C0400)")
+cpp_quote("#define INET_E_CODE_INSTALL_BLOCKED_BY_HASH_POLICY  _HRESULT_TYPEDEF_(0x800C0500)")
+cpp_quote("#define INET_E_DOWNLOAD_BLOCKED_BY_INPRIVATE        _HRESULT_TYPEDEF_(0x800C0501)")
+cpp_quote("#define INET_E_ERROR_LAST                INET_E_DOWNLOAD_BLOCKED_BY_INPRIVATE")
 
 cpp_quote("HRESULT WINAPI CoGetClassObjectFromURL(REFCLSID, LPCWSTR, DWORD, DWORD, LPCWSTR, LPBINDCTX, DWORD, LPVOID, REFIID, LPVOID*);")
 cpp_quote("HRESULT WINAPI CreateURLMoniker(IMoniker *pmkContext, LPCWSTR szURL, IMoniker **ppmk);")
@@ -1922,9 +1952,12 @@ cpp_quote("HRESULT WINAPI CreateAsyncBindCtx(DWORD, IBindStatusCallback*, IEnumF
 cpp_quote("HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx*,DWORD,IBindStatusCallback*,IEnumFORMATETC*,IBindCtx**,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetCreateSecurityManager(IServiceProvider*,IInternetSecurityManager**,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetCombineUrl(LPCWSTR,LPCWSTR,DWORD,LPWSTR,DWORD,DWORD*,DWORD);")
+cpp_quote("HRESULT WINAPI CoInternetCombineUrlEx(IUri*,LPCWSTR,DWORD,IUri**,DWORD_PTR);")
 cpp_quote("HRESULT WINAPI CoInternetCompareUrl(LPCWSTR,LPCWSTR,DWORD);")
+cpp_quote("HRESULT WINAPI CoInternetCombineIUri(IUri*,IUri*,DWORD,IUri**,DWORD_PTR);")
 cpp_quote("HRESULT WINAPI CoInternetCreateZoneManager(IServiceProvider*, IInternetZoneManager**, DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetParseUrl(LPCWSTR,PARSEACTION,DWORD,LPWSTR,DWORD,DWORD*,DWORD);")
+cpp_quote("HRESULT WINAPI CoInternetParseIUri(IUri*,PARSEACTION,DWORD,LPWSTR,DWORD,DWORD*,DWORD_PTR);")
 cpp_quote("HRESULT WINAPI CoInternetQueryInfo(LPCWSTR,QUERYOPTION,DWORD,LPVOID,DWORD,DWORD*,DWORD);")
 cpp_quote("HRESULT WINAPI CoInternetSetFeatureEnabled(INTERNETFEATURELIST,DWORD,BOOL);")
 cpp_quote("HRESULT WINAPI CoInternetGetSecurityUrl(LPCWSTR,LPWSTR*,PSUACTION,DWORD);")

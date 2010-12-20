@@ -16,26 +16,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-cpp_quote("DEFINE_GUID(CLSID_AutomaticUpdates, 0xbfe18e9c,0x6d87,0x4450,0xb3,0x7c,0xe0,0x2f,0x0b,0x37,0x38,0x03);")
-cpp_quote("DEFINE_GUID(CLSID_UpdateSession, 0x4cb43d7f,0x7eee,0x4906,0x86,0x98,0x60,0xda,0x1c,0x38,0xf2,0xfe);")
-
 import "oaidl.idl";
 
-interface IAutomaticUpdates;
-interface IAutomaticUpdatesSettings;
-interface IDownloadJob;
-interface IDownloadResult;
-interface IInstallationJob;
-interface IInstallationResult;
-interface ISearchJob;
-interface ISearchResult;
+#ifndef __WIDL__
+#define threading(model)
+#define progid(str)
+#define vi_progid(str)
+#endif
+
+[
+    helpstring("WUAPI 2.0 Type Library"),
+    uuid(b596cc9f-56e5-419e-a622-e01bb457431e),
+    version(2.0)
+]
+library WUApiLib {
+
+importlib("stdole2.tlb");
+
+interface ICategoryCollection;
+interface IStringCollection;
 interface IUpdateCollection;
 interface IUpdateDownloader;
-interface IUpdateHistoryEntryCollection;
 interface IUpdateInstaller;
 interface IUpdateSearcher;
-interface IUpdateSession;
-interface IWebProxy;
 
 typedef [public] enum tagDownloadPriority
 {
@@ -51,6 +54,126 @@ typedef [public] enum tagServerSelection
     ssWindowsUpdate = 2,
     ssOthers        = 3,
 } ServerSelection;
+
+typedef [public] enum tagAutomaticUpdatesNotificationLevel
+{
+    aunlNotConfigured,
+    aunlDisabled,
+    aunlNotifyBeforeDownload,
+    aunlNotifyBeforeInstallation,
+    aunlScheduledInstallation,
+} AutomaticUpdatesNotificationLevel;
+
+typedef [public] enum tagAutomaticUpdatesScheduledInstallationDay
+{
+    ausidEveryDay,
+    ausidEverySunday,
+    ausidEveryMonday,
+    ausidEveryTuesday,
+    ausidEveryWednesday,
+    ausidEveryThursday,
+    ausidEveryFriday,
+    ausidEverySaturday,
+} AutomaticUpdatesScheduledInstallationDay;
+
+typedef [public] enum tagDownloadPhase
+{
+    dphInitializing,
+    dphDownloading,
+    dphVerifying,
+} DownloadPhase;
+
+typedef [public] enum tagOperationResultCode
+{
+    orcNotStarted,
+    orcInProgress,
+    orcSucceeded,
+    orcSucceededWithErrors,
+    orcFailed,
+    orcAborted,
+} OperationResultCode;
+
+typedef [public] enum tagUpdateExceptionContext
+{
+    uecGeneral = 1,
+    uecWindowsDriver,
+    uecWindowsInstaller
+} UpdateExceptionContext;
+
+typedef [public] enum tagInstallationImpact
+{
+    iiNormal,
+    iiMinor,
+    iiRequiresExclusiveHandling
+} InstallationImpact;
+
+typedef [public] enum tagInstallationRebootBehavior
+{
+    irbNeverReboots,
+    irbAlwaysRequiresReboot,
+    irbCanRequestReboot
+} InstallationRebootBehavior;
+
+typedef [public] enum tagUpdateType
+{
+    utSoftware = 1,
+    utDriver
+} UpdateType;
+
+typedef [public] enum tagUpdateOperation
+{
+    uoInstallation = 1,
+    uoUninstallation
+} UpdateOperation;
+
+typedef [public] enum tagDeploymentAction
+{
+    daNone,
+    daInstallation,
+    daUninstallation,
+    daDetection
+} DeploymentAction;
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(2ee48f22-af3c-405f-8970-f71be12ee9a2),
+    pointer_default(unique)
+]
+interface IAutomaticUpdatesSettings : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT NotificationLevel( [out, retval] AutomaticUpdatesNotificationLevel *retval );
+
+    [propput, id(0x60020001)]
+    HRESULT NotificationLevel( [in] AutomaticUpdatesNotificationLevel value );
+
+    [propget, id(0x60020002)]
+    HRESULT ReadOnly( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT Required( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT ScheduledInstallationDay( [out, retval] AutomaticUpdatesScheduledInstallationDay *retval );
+
+    [propput, id(0x60020004)]
+    HRESULT ScheduledInstallationDay( [in] AutomaticUpdatesScheduledInstallationDay value );
+
+    [propget, id(0x60020005)]
+    HRESULT ScheduledInstallationTime( [out, retval] LONG *retval );
+
+    [propput, id(0x60020005)]
+    HRESULT ScheduledInstallationTime( [in] LONG value );
+
+    [id(0x60020006)]
+    HRESULT Refresh();
+
+    [id(0x60020007)]
+    HRESULT Save();
+}
 
 [
     object,
@@ -77,6 +200,61 @@ interface IAutomaticUpdates : IDispatch
         [out, retval] VARIANT_BOOL *retval);
 
     HRESULT EnableService();
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(174c81fe-aecd-4dae-b8a0-2c6318dd86a8),
+    pointer_default(unique),
+]
+interface IWebProxy : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT Address( [out, retval] BSTR *retval );
+
+    [propput, id(0x60020001)]
+    HRESULT Address( [in] BSTR value );
+
+    [propget, id(0x60020002)]
+    HRESULT BypassList( [out, retval] IStringCollection **retval );
+
+    [propput, id(0x60020002)]
+    HRESULT BypassList( [in] IStringCollection *value );
+
+    [propget, id(0x60020003)]
+    HRESULT BypassProxyOnLocal( [out, retval] VARIANT_BOOL *retval );
+
+    [propput, id(0x60020003)]
+    HRESULT BypassProxyOnLocal( [in] VARIANT_BOOL value );
+
+    [propget, id(0x60020004)]
+    HRESULT ReadOnly( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020005)]
+    HRESULT UserName( [out, retval] BSTR *retval );
+
+    [propput, id(0x60020005)]
+    HRESULT UserName( [in] BSTR value );
+
+    [id(0x60020006)]
+    HRESULT SetPassword( [in] BSTR value );
+
+    [id(0x60020007)]
+    HRESULT PromptForCredentials( [in, unique] IUnknown *parentWindow,
+                                  [in] BSTR title );
+
+    [restricted, id(0x60020008)]
+    HRESULT PromptForCredentialsFromHwnd( [in, unique] HWND parentWindow,
+                                          [in] BSTR title );
+
+    [propget, id(0x60020009)]
+    HRESULT AutoDetect( [out, retval] VARIANT_BOOL *retval );
+
+    [propput, id(0x60020009)]
+    HRESULT AutoDetect( [in] VARIANT_BOOL value );
 }
 
 [
@@ -117,6 +295,566 @@ interface IUpdateSession : IDispatch
 
     HRESULT CreateUpdateInstaller(
         [out, retval] IUpdateInstaller **retval);
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(7c907864-346c-4aeb-8f3f-57da289f969f),
+    pointer_default(unique),
+]
+interface IImageInformation : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT AltText( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT Height( [out, retval] LONG *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT Source( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT Width( [out, retval] LONG *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(81ddc1b8-9d35-47a6-b471-5b80f519223b),
+    pointer_default(unique),
+]
+interface ICategory : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Name( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020001)]
+    HRESULT CategoryID( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT Children( [out, retval] ICategoryCollection **retval );
+
+    [propget, id(0x60020003)]
+    HRESULT Description( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT Image( [out, retval] IImageInformation **retval );
+
+    [propget, id(0x60020005)]
+    HRESULT Order( [out, retval] LONG *retval );
+
+    [propget, id(0x60020006)]
+    HRESULT Parent( [out, retval] ICategory **retval );
+
+    [propget, id(0x60020007)]
+    HRESULT Type( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020008)]
+    HRESULT Updates( [out, retval] IUpdateCollection **retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(3a56bfb8-576c-43f7-9335-fe4838fd7e37),
+    pointer_default(unique),
+]
+interface ICategoryCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                [out, retval] ICategory **retval );
+
+    [propget, id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **retval );
+
+    [propget, id(0x60020001)]
+    HRESULT Count( [out, retval] LONG *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(eff90582-2ddc-480f-a06d-60f3fbc362c3),
+    pointer_default(unique),
+    hidden
+]
+interface IStringCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                  [out, retval] BSTR *retval );
+
+    [propput, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                [in] BSTR value );
+
+    [propget, id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **retval );
+
+    [propget, id(0x60020001)]
+    HRESULT Count( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT ReadOnly( [out, retval] VARIANT_BOOL *retval );
+
+    [id(0x60020003)]
+    HRESULT Add( [in] BSTR value,
+                 [out, retval] LONG *retval );
+
+    [id(0x60020004)]
+    HRESULT Clear();
+
+    [id(0x60020005)]
+    HRESULT Copy( [out, retval] IStringCollection **retval );
+
+    [id(0x60020006)]
+    HRESULT Insert( [in] LONG index,
+                    [in] BSTR value );
+
+    [id(0x60020007)]
+    HRESULT RemoveAt( [in] LONG index );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(a376dd5e-09d4-427f-af7c-fed5b6e1c1d6),
+    pointer_default(unique),
+]
+interface IUpdateException : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Message( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020001)]
+    HRESULT HResult( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT Context( [out, retval] UpdateExceptionContext *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(503626a3-8e14-4729-9355-0fe664bd2321),
+    pointer_default(unique),
+]
+interface IUpdateExceptionCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                  [out, retval] IUpdateException **retval );
+
+    [propget, id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **retval );
+
+    [propget, id(0x60020001)]
+    HRESULT Count( [out, retval] LONG *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(46297823-9940-4c09-aed9-cd3ea6d05968),
+    pointer_default(unique)
+]
+interface IUpdateIdentity : IDispatch
+{
+    [propget, id(0x60020002)]
+    HRESULT RevisionNumber( [out, retval] LONG *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT UpdateID( [out, retval] BSTR *retval );
+}
+
+[
+    ,
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(d9a59339-e245-4dbd-9686-4d5763e39624),
+    pointer_default(unique),
+]
+interface IInstallationBehavior : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT CanRequestUserInput( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT Impact( [out, retval] InstallationImpact *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT RebootBehavior( [out, retval] InstallationRebootBehavior *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT RequiresNetworkConnectivity( [out, retval] VARIANT_BOOL *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(54a2cb2d-9a0c-48b6-8a50-9abb69ee2d02),
+    pointer_default(unique),
+]
+interface IUpdateDownloadContent : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT DownloadUrl( [out, retval] BSTR *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(bc5513c8-b3b8-4bf7-a4d4-361c0d8c88ba),
+    pointer_default(unique),
+]
+interface IUpdateDownloadContentCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                  [out, retval] IUpdateDownloadContent **retval );
+
+    [propget, id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **retval );
+
+    [propget, id(0x60020001)]
+    HRESULT Count( [out, retval] LONG *retval );
+}
+
+[
+
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(6a92b07a-d821-4682-b423-5c805022cc4d),
+    pointer_default(unique),
+]
+interface IUpdate : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Title( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020001)]
+    HRESULT AutoSelectOnWebSites( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT BundledUpdates( [out, retval] IUpdateCollection **retval );
+
+    [propget, id(0x60020003)]
+    HRESULT CanRequireSource( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT Categories( [out, retval] ICategoryCollection **retval );
+
+    [propget, id(0x60020005)]
+    HRESULT Deadline( [out, retval] VARIANT *retval );
+
+    [propget, id(0x60020006)]
+    HRESULT DeltaCompressedContentAvailable( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020007)]
+    HRESULT DeltaCompressedContentPreferred( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020008)]
+    HRESULT Description( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020009)]
+    HRESULT EulaAccepted( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x6002000a)]
+    HRESULT EulaText( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002000b)]
+    HRESULT HandlerID( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002000c)]
+    HRESULT Identity( [out, retval] IUpdateIdentity **retval );
+
+    [propget, id(0x6002000d)]
+    HRESULT Image( [out, retval] IImageInformation **retval );
+
+    [propget, id(0x6002000e)]
+    HRESULT InstallationBehavior( [out, retval] IInstallationBehavior **retval );
+
+    [propget, id(0x6002000f)]
+    HRESULT IsBeta( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020010)]
+    HRESULT IsDownloaded( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020011)]
+    HRESULT IsHidden( [out, retval] VARIANT_BOOL *retval );
+
+    [propput, id(0x60020011)]
+    HRESULT IsHidden( [in] VARIANT_BOOL value );
+
+    [propget, id(0x60020012)]
+    HRESULT IsInstalled( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020013)]
+    HRESULT IsMandatory( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020014)]
+    HRESULT IsUninstallable( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020015)]
+    HRESULT Languages( [out, retval] IStringCollection **retval );
+
+    [propget, id(0x60020016)]
+    HRESULT LastDeploymentChangeTime( [out, retval] DATE *retval );
+
+    [propget, id(0x60020017)]
+    HRESULT MaxDownloadSize( [out, retval] DECIMAL *retval );
+
+    [propget, id(0x60020018)]
+    HRESULT MinDownloadSize( [out, retval] DECIMAL *retval );
+
+    [propget, id(0x60020019)]
+    HRESULT MoreInfoUrls( [out, retval] IStringCollection **retval );
+
+    [propget, id(0x6002001a)]
+    HRESULT MsrcSeverity( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002001b)]
+    HRESULT RecommendedCpuSpeed( [out, retval] LONG *retval );
+
+    [propget, id(0x6002001c)]
+    HRESULT RecommendedHardDiskSpace( [out, retval] LONG *retval );
+
+    [propget, id(0x6002001d)]
+    HRESULT RecommendedMemory( [out, retval] LONG *retval );
+
+    [propget, id(0x6002001e)]
+    HRESULT ReleaseNotes( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002001f)]
+    HRESULT SecurityBulletinIDs( [out, retval] IStringCollection **retval );
+
+    [propget, id(0x60020021)]
+    HRESULT SupersededUpdateIDs( [out, retval] IStringCollection **retval );
+
+    [propget, id(0x60020022)]
+    HRESULT SupportUrl( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020023)]
+    HRESULT Type( [out, retval] UpdateType *retval );
+
+    [propget, id(0x60020024)]
+    HRESULT UninstallationNotes( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020025)]
+    HRESULT UninstallationBehavior( [out, retval] IInstallationBehavior **retval );
+
+    [propget, id(0x60020026)]
+    HRESULT UninstallationSteps( [out, retval] IStringCollection **retval );
+
+    [propget, id(0x60020028)]
+    HRESULT KBArticleIDs( [out, retval] IStringCollection **retval );
+
+    [id(0x60020027)]
+    HRESULT AcceptEula();
+
+    [propget, id(0x60020029)]
+    HRESULT DeploymentAction( [out, retval] DeploymentAction *retval );
+
+    [id(0x6002002a)]
+    HRESULT CopyFromCache( [in, ref] BSTR path,
+                           [in] VARIANT_BOOL toExtractCabFiles );
+
+    [propget, id(0x6002002b)]
+    HRESULT DownloadPriority( [out, retval] DownloadPriority *retval );
+
+    [propget, id(0x6002002c)]
+    HRESULT DownloadContents( [out, retval] IUpdateDownloadContentCollection **retval );
+}
+
+[
+
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(07f7438c-7709-4ca5-b518-91279288134e),
+    pointer_default(unique),
+    hidden
+]
+interface IUpdateCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                  [out, retval] IUpdate **retval );
+
+    [propput, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                  [in] IUpdate *value );
+
+    [propget, id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **retval );
+
+    [propget, id(0x60020001)]
+    HRESULT Count( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT ReadOnly( [out, retval] VARIANT_BOOL *retval );
+
+    [id(0x60020003)]
+    HRESULT Add( [in] IUpdate *value,
+                 [out, retval] LONG *retval );
+
+    [id(0x60020004)]
+    HRESULT Clear();
+
+    [id(0x60020005)]
+    HRESULT Copy( [out, retval] IUpdateCollection **retval );
+
+    [id(0x60020006)]
+    HRESULT Insert( [in] LONG index,
+                [in] IUpdate *value );
+
+    [id(0x60020007)]
+    HRESULT RemoveAt( [in] LONG index );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(7366ea16-7a1a-4ea2-b042-973d3e9cd99b),
+    pointer_default(unique),
+]
+interface ISearchJob : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT AsyncState( [out, retval] VARIANT *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT IsCompleted( [out, retval] VARIANT_BOOL *retval );
+
+    [id(0x60020003)]
+    HRESULT CleanUp();
+
+    [id(0x60020004)]
+    HRESULT RequestAbort();
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(d40cff62-e08c-4498-941a-01e25f0fd33c),
+    pointer_default(unique),
+]
+interface ISearchResult : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT ResultCode( [out, retval] OperationResultCode *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT RootCategories( [out, retval] ICategoryCollection **retval );
+
+    [propget, id(0x60020003)]
+    HRESULT Updates( [out, retval] IUpdateCollection **retval );
+
+    [propget, id(0x60020004)]
+    HRESULT Warnings( [out, retval] IUpdateExceptionCollection **retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(be56a644-af0e-4e0e-a311-c1d8e695cbff),
+    pointer_default(unique),
+]
+interface IUpdateHistoryEntry : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT Operation( [out, retval] UpdateOperation *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT ResultCode( [out, retval] OperationResultCode *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT HResult( [out, retval] LONG *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT Date( [out, retval] DATE *retval );
+
+    [propget, id(0x60020005)]
+    HRESULT UpdateIdentity( [out, retval] IUpdateIdentity **retval );
+
+    [propget, id(0x60020006)]
+    HRESULT Title( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020007)]
+    HRESULT Description( [out, retval] BSTR *retval );
+
+    [propget, id(0x60020008)]
+    HRESULT UnmappedResultCode( [out, retval] LONG *retval );
+
+    [propget, id(0x60020009)]
+    HRESULT ClientApplicationID( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002000a)]
+    HRESULT ServerSelection( [out, retval] ServerSelection *retval );
+
+    [propget, id(0x6002000b)]
+    HRESULT ServiceID( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002000c)]
+    HRESULT UninstallationSteps( [out, retval] IStringCollection **retval );
+
+    [propget, id(0x6002000d)]
+    HRESULT UninstallationNotes( [out, retval] BSTR *retval );
+
+    [propget, id(0x6002000e)]
+    HRESULT SupportUrl( [out, retval] BSTR *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(a7f04f3c-a290-435b-aadf-a116c3357a5c),
+    pointer_default(unique),
+]
+interface IUpdateHistoryEntryCollection : IDispatch
+{
+    [propget, id(DISPID_VALUE)]
+    HRESULT Item( [in] LONG index,
+                  [out, retval] IUpdateHistoryEntry **retval );
+
+    [propget, id(DISPID_NEWENUM)]
+    HRESULT _NewEnum( [out, retval] IUnknown **retval );
+
+    [propget, id(0x60020001)]
+    HRESULT Count( [out, retval] LONG *retval );
 }
 
 [
@@ -206,6 +944,113 @@ interface IUpdateSearcher : IDispatch
 
 [
     object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(bf99af76-b575-42ad-8aa4-33cbb5477af1),
+    pointer_default(unique),
+]
+interface IUpdateDownloadResult : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT HResult( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT ResultCode( [out, retval] OperationResultCode *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(d31a5bac-f719-4178-9dbb-5e2cb47fd18a),
+    pointer_default(unique),
+]
+interface IDownloadProgress : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT CurrentUpdateBytesDownloaded( [out, retval] DECIMAL *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT CurrentUpdateBytesToDownload( [out, retval] DECIMAL *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT CurrentUpdateIndex( [out, retval] LONG *retval );
+
+    [propget, id(0x60020004)]
+    HRESULT PercentComplete( [out, retval] LONG *retval );
+
+    [propget, id(0x60020005)]
+    HRESULT TotalBytesDownloaded( [out, retval] DECIMAL *retval );
+
+    [propget, id(0x60020006)]
+    HRESULT TotalBytesToDownload( [out, retval] DECIMAL *retval );
+
+    [id(0x60020007)]
+    HRESULT GetUpdateResult( [in] LONG updateIndex,
+                             [out, retval] IUpdateDownloadResult **retval );
+
+
+    [propget, id(0x60020008)]
+    HRESULT CurrentUpdateDownloadPhase( [out, retval] DownloadPhase *retval );
+
+    [propget, id(0x60020009)]
+    HRESULT CurrentUpdatePercentComplete( [out, retval] LONG *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(c574de85-7358-43f6-aae8-8697e62d8ba7),
+    pointer_default(unique),
+]
+interface IDownloadJob : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT AsyncState( [out, retval] VARIANT *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT IsCompleted( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT Updates( [out, retval] IUpdateCollection **retval );
+
+    [id(0x60020004)]
+    HRESULT CleanUp();
+
+    [id(0x60020005)]
+    HRESULT GetProgress( [out, retval] IDownloadProgress **retval );
+
+    [id(0x60020006)]
+    HRESULT RequestAbort();
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(daa4fdd0-4727-4dbe-a1e7-745dca317144),
+    pointer_default(unique),
+]
+interface IDownloadResult : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT HResult( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT ResultCode( [out, retval] OperationResultCode *retval );
+
+    [id(0x60020003)]
+    HRESULT GetUpdateResult( [in] LONG updateIndex,
+                             [out, retval] IUpdateDownloadResult **retval );
+}
+
+[
+    object,
     uuid(68f1c6f9-7ecc-4666-a464-247fe12496c3),
     oleautomation,
     dual,
@@ -259,6 +1104,103 @@ interface IUpdateDownloader : IDispatch
     HRESULT EndDownload(
         [in] IDownloadJob *value,
         [out, retval] IDownloadResult **retval);
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(d940f0f8-3cbb-4fd0-993f-471e7f2328ad),
+    pointer_default(unique),
+]
+interface IUpdateInstallationResult : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT HResult( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT RebootRequired( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT ResultCode( [out, retval] OperationResultCode *retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(345c8244-43a3-4e32-a368-65f073b76f36),
+    pointer_default(unique),
+]
+interface IInstallationProgress : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT CurrentUpdateIndex( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT CurrentUpdatePercentComplete( [out, retval] LONG *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT PercentComplete( [out, retval] LONG *retval );
+
+    [id(0x60020004)]
+    HRESULT GetUpdateResult( [in] LONG updateIndex,
+                             [out, retval] IUpdateInstallationResult **retval );
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(5c209f0b-bad5-432a-9556-4699bed2638a),
+    pointer_default(unique),
+]
+interface IInstallationJob : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT AsyncState( [out, retval] VARIANT *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT IsCompleted( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT Updates( [out, retval] IUpdateCollection **retval );
+
+    [id(0x60020004)]
+    HRESULT CleanUp();
+
+    [id(0x60020005)]
+    HRESULT GetProgress( [out, retval] IInstallationProgress **retval );
+
+    [id(0x60020006)]
+    HRESULT RequestAbort();
+}
+
+[
+    object,
+    oleautomation,
+    dual,
+    nonextensible,
+    uuid(a43c56d6-7451-48d4-af96-b6cd2d0d9b7a),
+    pointer_default(unique),
+]
+interface IInstallationResult : IDispatch
+{
+    [propget, id(0x60020001)]
+    HRESULT HResult( [out, retval] LONG *retval );
+
+    [propget, id(0x60020002)]
+    HRESULT RebootRequired( [out, retval] VARIANT_BOOL *retval );
+
+    [propget, id(0x60020003)]
+    HRESULT ResultCode( [out, retval] OperationResultCode *retval );
+
+    [id(0x60020004)]
+    HRESULT GetUpdateResult( [in] LONG updateIndex,
+                             [out, retval] IUpdateInstallationResult **retval );
 }
 
 [
@@ -357,3 +1299,23 @@ interface IUpdateInstaller : IDispatch
     HRESULT RebootRequiredBeforeInstallation(
         [out, retval] VARIANT_BOOL *retval);
 }
+
+[
+    helpstring("AutomaticUpdates Class"),
+    threading(both),
+    progid("Microsoft.Update.AutoUpdate.1"),
+    vi_progid("Microsoft.Update.AutoUpdate"),
+    uuid(bfe18e9c-6d87-4450-b37c-e02f0b373803)
+]
+coclass AutomaticUpdates { interface IAutomaticUpdates; }
+
+[
+    helpstring("UpdateSession Class"),
+    threading(both),
+    progid("Microsoft.Update.Session.1"),
+    vi_progid("Microsoft.Update.Session"),
+    uuid(4cb43d7f-7eee-4906-8698-60da1c38f2fe)
+]
+coclass UpdateSession { interface IUpdateSession; }
+
+} /* WUApiLib */
