@@ -156,7 +156,7 @@
 		<file>sinf.c</file>
 		<file>sinh.c</file>
 		<file>tanh.c</file>
-		<file>pow_asm.c</file>
+		<file>powl.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
