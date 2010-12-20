@@ -307,3 +307,5 @@ DECLARE_INTERFACE_(IKsDevice, IUnknown)
     STDMETHOD_(NTSTATUS, CheckIoCapability)(THIS_
         IN ULONG Unknown)PURE;
 };
+
+#undef INTERFACE

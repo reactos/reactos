@@ -32,4 +32,5 @@
 	<file>unknown.c</file>
 	<file>worker.c</file>
 	<file>kcom.c</file>
+	<file>swenum.c</file>
 </module>
