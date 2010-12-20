@@ -200,6 +200,7 @@ static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IM
 {
     URLMoniker *This = MONIKER_THIS(iface);
     IRunningObjectTable *obj_tbl;
+    IUri *uri;
     HRESULT hres;
 
     TRACE("(%p)->(%p,%p,%s,%p): stub\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppv);
@@ -210,20 +211,36 @@ static HRESULT WINAPI URLMoniker_BindToObject(IMoniker *iface, IBindCtx* pbc, IM
         IRunningObjectTable_Release(obj_tbl);
     }
 
-    return bind_to_object(iface, This->URLName, pbc, riid, ppv);
+    hres = CreateUri(This->URLName, Uri_CREATE_FILE_USE_DOS_PATH, 0, &uri);
+    if(FAILED(hres))
+        return hres;
+
+    hres = bind_to_object(iface, uri, pbc, riid, ppv);
+
+    IUri_Release(uri);
+    return hres;
 }
 
 static HRESULT WINAPI URLMoniker_BindToStorage(IMoniker* iface, IBindCtx* pbc,
         IMoniker* pmkToLeft, REFIID riid, void **ppvObject)
 {
     URLMoniker *This = MONIKER_THIS(iface);
+    IUri *uri;
+    HRESULT hres;
 
     TRACE("(%p)->(%p %p %s %p)\n", This, pbc, pmkToLeft, debugstr_guid(riid), ppvObject);
 
     if(pmkToLeft)
         FIXME("Unsupported pmkToLeft\n");
 
-    return bind_to_storage(This->URLName, pbc, riid, ppvObject);
+    hres = CreateUri(This->URLName, Uri_CREATE_FILE_USE_DOS_PATH, 0, &uri);
+    if(FAILED(hres))
+        return hres;
+
+    hres = bind_to_storage(uri, pbc, riid, ppvObject);
+
+    IUri_Release(uri);
+    return hres;
 }
 
 static HRESULT WINAPI URLMoniker_Reduce(IMoniker *iface, IBindCtx *pbc,

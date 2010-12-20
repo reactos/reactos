@@ -11,7 +11,9 @@
 @ stdcall CoGetClassObjectFromURL(ptr wstr long long wstr ptr long ptr ptr ptr)
 @ stub CoInstall
 @ stdcall CoInternetCombineUrl(wstr wstr long wstr long ptr long)
+@ stdcall CoInternetCombineUrlEx(ptr wstr long ptr long)
 @ stdcall CoInternetCompareUrl(wstr wstr long)
+@ stdcall CoInternetCombineIUri(ptr ptr long ptr long)
 @ stdcall CoInternetCreateSecurityManager(ptr ptr long)
 @ stdcall CoInternetCreateZoneManager(ptr ptr long)
 @ stub CoInternetGetProtocolFlags
@@ -19,6 +21,7 @@
 @ stdcall CoInternetGetSession(long ptr long)
 @ stdcall CoInternetIsFeatureEnabled(long long)
 @ stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
+@ stdcall CoInternetParseIUri(ptr long long wstr long ptr long)
 @ stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
 @ stdcall CoInternetSetFeatureEnabled(long long long)
 @ stub CompareSecurityIds
