@@ -114,7 +114,7 @@ static CRITICAL_SECTION init_ssl_cs = { &init_ssl_cs_debug, -1, 0, 0, 0, 0 };
 static void *OpenSSL_ssl_handle;
 static void *OpenSSL_crypto_handle;
 
-#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER> 0x1000000)
+#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER > 0x10000000)
 static const SSL_METHOD *meth;
 #else
 static SSL_METHOD *meth;
@@ -152,7 +152,6 @@ MAKE_FUNCPTR(SSL_CTX_set_default_verify_paths);
 MAKE_FUNCPTR(SSL_CTX_set_verify);
 MAKE_FUNCPTR(SSL_get_current_cipher);
 MAKE_FUNCPTR(SSL_CIPHER_get_bits);
-MAKE_FUNCPTR(X509_STORE_CTX_get_ex_data);
 
 /* OpenSSL's libcrypto functions that we use */
 MAKE_FUNCPTR(BIO_new_fp);
@@ -162,6 +161,7 @@ MAKE_FUNCPTR(CRYPTO_set_locking_callback);
 MAKE_FUNCPTR(ERR_free_strings);
 MAKE_FUNCPTR(ERR_get_error);
 MAKE_FUNCPTR(ERR_error_string);
+MAKE_FUNCPTR(X509_STORE_CTX_get_ex_data);
 MAKE_FUNCPTR(i2d_X509);
 MAKE_FUNCPTR(sk_num);
 MAKE_FUNCPTR(sk_value);
@@ -228,13 +228,15 @@ static DWORD netconn_verify_cert(PCCERT_CONTEXT cert, HCERTSTORE store,
     PCCERT_CHAIN_CONTEXT chain;
     char oid_server_auth[] = szOID_PKIX_KP_SERVER_AUTH;
     char *server_auth[] = { oid_server_auth };
-    DWORD err = ERROR_SUCCESS;
+    DWORD err = ERROR_SUCCESS, chainFlags = 0;
 
     TRACE("verifying %s\n", debugstr_w(server));
     chainPara.RequestedUsage.Usage.cUsageIdentifier = 1;
     chainPara.RequestedUsage.Usage.rgpszUsageIdentifier = server_auth;
-    if ((ret = CertGetCertificateChain(NULL, cert, NULL, store, &chainPara, 0,
-        NULL, &chain)))
+    if (!(security_flags & SECURITY_FLAG_IGNORE_REVOCATION))
+        chainFlags |= CERT_CHAIN_REVOCATION_CHECK_CHAIN_EXCLUDE_ROOT;
+    if ((ret = CertGetCertificateChain(NULL, cert, NULL, store, &chainPara,
+        chainFlags, NULL, &chain)))
     {
         if (chain->TrustStatus.dwErrorStatus)
         {
@@ -431,7 +433,6 @@ DWORD NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
 	DYNSSL(SSL_CTX_set_verify);
         DYNSSL(SSL_get_current_cipher);
         DYNSSL(SSL_CIPHER_get_bits);
-	DYNSSL(X509_STORE_CTX_get_ex_data);
 #undef DYNSSL
 
 #define DYNCRYPTO(x) \
@@ -449,6 +450,7 @@ DWORD NETCON_init(WININET_NETCONNECTION *connection, BOOL useSSL)
 	DYNCRYPTO(ERR_free_strings);
 	DYNCRYPTO(ERR_get_error);
 	DYNCRYPTO(ERR_error_string);
+	DYNCRYPTO(X509_STORE_CTX_get_ex_data);
 	DYNCRYPTO(i2d_X509);
 	DYNCRYPTO(sk_num);
 	DYNCRYPTO(sk_value);
@@ -877,7 +879,11 @@ LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection)
 int NETCON_GetCipherStrength(WININET_NETCONNECTION *connection)
 {
 #ifdef SONAME_LIBSSL
+#if defined(OPENSSL_VERSION_NUMBER) && (OPENSSL_VERSION_NUMBER >= 0x0090707f)
+    const SSL_CIPHER *cipher;
+#else
     SSL_CIPHER *cipher;
+#endif
     int bits = 0;
 
     if (!connection->useSSL)
