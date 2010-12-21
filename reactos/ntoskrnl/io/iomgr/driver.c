@@ -191,7 +191,7 @@ IopSuffixUnicodeString(
  * Display 'Loading XXX...' message.
  */
 
-VOID 
+VOID
 FASTCALL
 INIT_FUNCTION
 IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
@@ -993,7 +993,7 @@ IopInitializeBootDrivers(VOID)
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
             if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
-                ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1))))
+                ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1)))) // yes, it's an assignment!
             {
                 /* Save the handle */
                 DriverInfo->ServiceHandle = KeyHandle;
@@ -1068,24 +1068,24 @@ INIT_FUNCTION
 IopInitializeSystemDrivers(VOID)
 {
     PUNICODE_STRING *DriverList, *SavedList;
-    
+
     /* No system drivers on the boot cd */
     if (KeLoaderBlock->SetupLdrBlock) return;
-    
+
     /* Get the driver list */
     SavedList = DriverList = CmGetSystemDriverList();
     ASSERT(DriverList);
-    
+
     /* Loop it */
     while (*DriverList)
     {
         /* Load the driver */
         ZwLoadDriver(*DriverList);
-        
+
         /* Free the entry */
         RtlFreeUnicodeString(*DriverList);
         ExFreePool(*DriverList);
-        
+
         /* Next entry */
         InbvIndicateProgress();
         DriverList++;
