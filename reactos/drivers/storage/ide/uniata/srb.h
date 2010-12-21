@@ -935,7 +935,7 @@ ScsiPortWriteRegisterBufferUlong(
 SCSIPORT_API
 SCSI_PHYSICAL_ADDRESS NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
-    ULONG UlongAddress
+    ULONG_PTR UlongAddress
     );
 
 SCSIPORT_API
