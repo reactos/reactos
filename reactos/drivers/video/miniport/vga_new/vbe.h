@@ -94,7 +94,7 @@
 
 typedef struct _VBE_CONTROLLER_INFO
 {
-   CHAR Signature[4];
+   ULONG Signature;
    USHORT Version;
    ULONG OemStringPtr;
    LONG Capabilities;
@@ -213,5 +213,8 @@ ValidateVbeInfo(IN PHW_DEVICE_EXTENSION VgaExtension,
                 IN PVBE_INFO VbeInfo);
 
 extern BOOLEAN g_bIntelBrookdaleBIOS;
+
+/* VBE2 magic number */
+#define VBE2_MAGIC ('V' + ('B' << 8) + ('E' << 16) + ('2' << 24))
 
 /* EOF */

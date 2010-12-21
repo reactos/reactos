@@ -42,7 +42,7 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
 {
     ULONG i;
     CHAR Version[21];
-    
+
     /* If the broken VESA bios found, turn VESA off */
     VideoPortDebugPrint(0, "Vendor: %s Product: %s Revision: %s (%lx)\n", Vendor, Product, Revision, OemRevision);
     for (i = 0; i < (sizeof(BrokenVesaBiosList) / sizeof(PCHAR)); i++)
@@ -52,7 +52,7 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
 
     /* For Brookdale-G (Intel), special hack used */
     g_bIntelBrookdaleBIOS = !strncmp(Product, IntelBrookdale, sizeof(IntelBrookdale));
-    
+
     /* For NVIDIA make sure */
     if (!(strncmp(Vendor, Nv11Vendor, sizeof(Nv11Vendor))) &&
         !(strncmp(Product, Nv11Board, sizeof(Nv11Board))) &&
@@ -64,10 +64,10 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
                                        0xC000,
                                        345,
                                        Version,
-                                       sizeof(Version))) return FALSE;                                        
+                                       sizeof(Version))) return FALSE;
         if (!strncmp(Version, "Version 3.11.01.24N16", sizeof(Version))) return FALSE;
     }
-    
+
     /* VESA ok */
     //VideoPortDebugPrint(0, "Vesa ok\n");
     return TRUE;
@@ -85,13 +85,13 @@ ValidateVbeInfo(IN PHW_DEVICE_EXTENSION VgaExtension,
     CHAR ProductName[80];
     CHAR VendorName[80];
     VP_STATUS Status;
-    
+
     /* Set default */
     VesaBiosOk = FALSE;
     Context = VgaExtension->Int10Interface.Context;
-    
+
     /* Check magic and version */
-    if (strncmp(VbeInfo->Info.Signature, "VESA", 4)) return VesaBiosOk;
+    if (VbeInfo->Info.Signature == VESA_MAGIC) return VesaBiosOk;
     if (VbeInfo->Info.Version < 0x102) return VesaBiosOk;
 
     /* Read strings */
@@ -125,13 +125,13 @@ ValidateVbeInfo(IN PHW_DEVICE_EXTENSION VgaExtension,
     ProductName[sizeof(OemString) - 1] = ANSI_NULL;
     ProductRevision[sizeof(OemString) - 1] = ANSI_NULL;
     OemString[sizeof(OemString) - 1] = ANSI_NULL;
-                
+
     /* Check for known bad BIOS */
     VesaBiosOk = IsVesaBiosOk(&VgaExtension->Int10Interface,
                               VbeInfo->Info.OemSoftwareRevision,
                               VendorName,
                               ProductName,
-                              ProductRevision);        
+                              ProductRevision);
     VgaExtension->VesaBiosOk = VesaBiosOk;
     return VesaBiosOk;
 }
@@ -151,7 +151,7 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
     USHORT i;
 
     Entries = ClutBuffer->NumEntries;
-      
+
     /* Allocate INT10 context/buffer */
     VesaClut = VideoPortAllocatePool(VgaExtension, 1, sizeof(ULONG) * Entries, 0x20616756u);
     if (!VesaClut) return ERROR_INVALID_PARAMETER;
@@ -178,7 +178,7 @@ VbeSetColorLookup(IN PHW_DEVICE_EXTENSION VgaExtension,
                                                          Entries * sizeof(ULONG));
     if (Status != NO_ERROR) return ERROR_INVALID_PARAMETER;
 
-    /* Write new palette */                                                      
+    /* Write new palette */
     BiosArguments.Ebx = 0;
     BiosArguments.Ecx = Entries;
     BiosArguments.Edx = ClutBuffer->FirstEntry;
