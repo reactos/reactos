@@ -993,7 +993,7 @@ IopInitializeBootDrivers(VOID)
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
             if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
-                ((KeLoaderBlock->SetupLdrBlock) && (KeyHandle = (PVOID)1)))
+                ((KeLoaderBlock->SetupLdrBlock) && (KeyHandle == (PVOID)1)))
             {
                 /* Save the handle */
                 DriverInfo->ServiceHandle = KeyHandle;
