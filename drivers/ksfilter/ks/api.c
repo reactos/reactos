@@ -1332,7 +1332,7 @@ KopDispatchClose(
 
     /* complete request */
     Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_SUCCESS;
 }
@@ -1416,7 +1416,7 @@ KopDispatchCreate(
     IoStack->FileObject->FsContext2 = (PVOID)Header;
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return Status;
 
@@ -1429,7 +1429,7 @@ cleanup:
         FreeItem(Header);
 
     Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return Status;
 }
 
@@ -1703,7 +1703,7 @@ KsCompletePendingRequest(
     if (IoStack->MajorFunction != IRP_MJ_CLOSE)
     {
         /* can be completed immediately */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return;
     }
 
@@ -1711,7 +1711,7 @@ KsCompletePendingRequest(
     if (!NT_SUCCESS(Irp->IoStatus.Status))
     {
         /* closing failed, complete irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return;
     }
 

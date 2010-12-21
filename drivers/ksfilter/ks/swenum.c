@@ -35,7 +35,7 @@ KspCreatePDO(
     CurDeviceId = InterlockedIncrement(&KsDeviceCount);
 
     /* generate new device id */
-    swprintf(Buffer, L"\\Device\\KSENUM%08x\n", CurDeviceId);
+    swprintf(Buffer, L"\\Device\\KSENUM%08x", CurDeviceId);
 
     /* initialize new device name */
     RtlInitUnicodeString(&DeviceName, Buffer);
@@ -71,8 +71,8 @@ KspCreatePDO(
     /* TODO: update last creation time in bus device extension */
 
     /* setup flags */
-    DeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
-
+    DeviceObject->Flags |= DO_POWER_PAGABLE;
+    DeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
     /* TODO: fire time when expired */
 
     *OutDeviceObject = DeviceObject;
@@ -330,6 +330,7 @@ KspCreateDeviceReference(
     BOOLEAN ItemExists = FALSE;
     UNICODE_STRING String;
     NTSTATUS Status;
+    KIRQL OldLevel;
 
     /* first construct device name & reference guid */
     Length = wcslen(DeviceCategory) + wcslen(ReferenceString);
@@ -347,9 +348,7 @@ KspCreateDeviceReference(
     }
 
     /* construct device name */
-    wcscpy(DeviceName, DeviceCategory);
-    wcscat(DeviceName, L"&");
-    wcscat(DeviceName, ReferenceString);
+    swprintf(DeviceName, L"%s&%s", DeviceCategory, ReferenceString);
 
     /* scan list and check if it is already present */
     Entry = BusDeviceExtension->Common.Entry.Flink;
@@ -437,8 +436,17 @@ KspCreateDeviceReference(
         return Status;
     }
 
-    /* successfully initialized entry */
-    InsertTailList(&BusDeviceExtension->Common.Entry, &DeviceEntry->Entry);
+    if (!ItemExists)
+    {
+        /* acquire lock */
+        KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
+
+        /* successfully initialized entry */
+        InsertTailList(&BusDeviceExtension->Common.Entry, &DeviceEntry->Entry);
+
+        /* release lock */
+        KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+    }
 
     /* done */
     return Status;
@@ -585,8 +593,8 @@ KspBusDereferenceDeviceObject(
 
 NTSTATUS
 KspQueryBusDeviceInterface(
-    IN PIRP Irp,
-    IN PCOMMON_DEVICE_EXTENSION ChildDeviceExtension)
+    IN PCOMMON_DEVICE_EXTENSION ChildDeviceExtension,
+    IN PIRP Irp)
 {
     PBUS_INTERFACE_SWENUM Interface;
     PIO_STACK_LOCATION IoStack;
@@ -628,6 +636,7 @@ KspEnableBusDeviceInterface(
     {
         /* get bus instance entry */
         InstanceEntry = (PBUS_INSTANCE_ENTRY)CONTAINING_RECORD(Entry, BUS_INSTANCE_ENTRY, Entry);
+        DPRINT1("Enabling %u %wZ Irql %u\n", bEnable, &InstanceEntry->SymbolicLink, KeGetCurrentIrql());
 
         /* set interface state */
         Status = IoSetDeviceInterfaceState(&InstanceEntry->SymbolicLink, bEnable);
@@ -672,7 +681,7 @@ KspDoReparseForIrp(
     Length += 2; 
 
     /* allocate buffer */
-    Buffer = AllocateItem(PagedPool, Length * sizeof(WCHAR));
+    Buffer = AllocateItem(NonPagedPool, Length * sizeof(WCHAR));
     if (!Buffer)
     {
         /* no resources */
@@ -680,11 +689,8 @@ KspDoReparseForIrp(
     }
 
     /* construct buffer */
-    wcscpy(Buffer, DeviceEntry->PDODeviceName);
-    wcscat(Buffer, L"\\");
-    wcscat(Buffer, DeviceEntry->Instance);
+    swprintf(Buffer, L"%s\\%s", DeviceEntry->PDODeviceName, DeviceEntry->Instance);
 
-    /* free old file name */
     ExFreePool(IoStack->FileObject->FileName.Buffer);
 
     /* store new file name */
@@ -704,7 +710,6 @@ KspCompletePendingIrps(
     NTSTATUS Status;
 
     /* go through list */
-
     while(!IsListEmpty(&DeviceEntry->IrpPendingList))
     {
         /* get first entry */
@@ -727,11 +732,12 @@ KspCompletePendingIrps(
         /* store result code */
         Irp->IoStatus.Status = Status;
 
-        DPRINT1("Completing IRP %p\n", Irp);
+        DPRINT1("Completing IRP %p Status %x\n", Irp, Status);
 
         /* complete the request */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
+
 }
 
 
@@ -760,7 +766,7 @@ KspStartBusDevice(
     }
 
     /* allocate device name buffer */
-    Name = AllocateItem(PagedPool, ResultLength);
+    Name = AllocateItem(NonPagedPool, (ResultLength + 1) * sizeof(WCHAR));
     if (!Name)
     {
         /* no memory */
@@ -784,10 +790,13 @@ KspStartBusDevice(
     /* mark device as started */
     DeviceEntry->DeviceState = Started;
 
-    DPRINT1("KspStartBusDevice Name %S Started\n", Name);
+    /* reference start time */
+    KeQuerySystemTime(&DeviceEntry->TimeCreated);
 
-    /* now complete pending i/o */
-    KspCompletePendingIrps(DeviceEntry, STATUS_REPARSE);
+    DPRINT1("KspStartBusDevice Name %S DeviceName %S Instance %S Started\n", Name, DeviceEntry->DeviceName, DeviceEntry->Instance);
+
+    /* enable device classes */
+    //KspEnableBusDeviceInterface(DeviceEntry, TRUE);
 
     /* done */
     return STATUS_SUCCESS;
@@ -806,6 +815,8 @@ KspQueryBusDeviceCapabilities(
 
     /* get capabilities */
     Capabilities = IoStack->Parameters.DeviceCapabilities.Capabilities;
+
+    RtlZeroMemory(Capabilities, sizeof(DEVICE_CAPABILITIES));
 
     /* setup capabilities */
     Capabilities->UniqueID = TRUE;
@@ -935,9 +946,7 @@ KspQueryId(
         }
 
         /* construct id */
-        wcscpy(Name, BusDeviceExtension->BusIdentifier);
-        wcscat(Name, L"\\");
-        wcscat(Name, DeviceEntry->BusId);
+        swprintf(Name, L"%s\\%s", BusDeviceExtension->BusIdentifier, DeviceEntry->BusId);
 
         /* store result */
         Irp->IoStatus.Information = (ULONG_PTR)Name;
@@ -948,8 +957,8 @@ KspQueryId(
     else
     {
         /* other ids are not supported */
-        DPRINT1("Not Supported ID Type %x\n", IoStack->Parameters.QueryId.IdType);
-        return STATUS_NOT_SUPPORTED;
+        //DPRINT1("Not Supported ID Type %x\n", IoStack->Parameters.QueryId.IdType);
+        return Irp->IoStatus.Status;
     }
 }
 
@@ -1123,8 +1132,83 @@ NTAPI
 KspBusWorkerRoutine(
   IN PVOID Parameter)
 {
-    /* TODO: implement sweeping */
-    UNIMPLEMENTED
+    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+    PBUS_DEVICE_ENTRY DeviceEntry;
+    PLIST_ENTRY Entry;
+    LARGE_INTEGER Time, Diff;
+    BOOLEAN DoInvalidate = FALSE;
+    KIRQL OldLevel;
+
+    /* acquire lock */
+    KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
+
+    /* get device extension */
+    BusDeviceExtension = (PBUS_ENUM_DEVICE_EXTENSION)Parameter;
+
+    /* get current time */
+    KeQuerySystemTime(&Time);
+
+    /* enumerate all device entries */
+    Entry = BusDeviceExtension->Common.Entry.Flink;
+    while(Entry != &BusDeviceExtension->Common.Entry)
+    {
+        /* get offset to device entry */
+        DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
+
+        /* sanity check */
+        ASSERT(DeviceEntry);
+
+        //DPRINT1("DeviceEntry %p PDO %p State %x\n", DeviceEntry, DeviceEntry->PDO, DeviceEntry->DeviceState);
+
+        if (DeviceEntry->PDO)
+        {
+            if (DeviceEntry->DeviceState == NotStarted)
+            {
+                Diff.QuadPart = Time.QuadPart - DeviceEntry->TimeCreated.QuadPart;
+
+                if (Diff.QuadPart > Int32x32To64(15000, 10000))
+                {
+                     DPRINT1("DeviceID %S  Instance %S TimeCreated %I64u Now %I64u Diff %I64u hung\n", DeviceEntry->DeviceName, DeviceEntry->Instance, DeviceEntry->TimeCreated.QuadPart, Time.QuadPart, Diff.QuadPart);
+
+                     /* release spin lock */
+                     KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+
+                     /* deactivate interfaces */
+                     //KspEnableBusDeviceInterface(DeviceEntry, FALSE);
+
+                     /* re-acquire lock */
+                     KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
+
+                     /* pending remove device object */
+                     DeviceEntry->DeviceState = StopPending;
+
+                     /* perform invalidation */
+                     DoInvalidate = TRUE;
+                }
+            }
+            else if (DeviceEntry->DeviceState == Started)
+            {
+                /* found pending irps */
+                KspCompletePendingIrps(DeviceEntry, STATUS_REPARSE);
+            }
+        }
+
+
+        /* move to next */
+        Entry = Entry->Flink;
+    }
+
+   /* release lock */
+    KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
+
+    if (DoInvalidate)
+    {
+        /* invalidate device relations */
+        IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
+    }
+
+    Time.QuadPart = Int32x32To64(5000, -10000);
+    KeSetTimer(&BusDeviceExtension->Timer, Time, &BusDeviceExtension->Dpc);
 }
 
 VOID
@@ -1173,9 +1257,10 @@ KspQueryBusRelations(
     PLIST_ENTRY Entry;
     PBUS_DEVICE_ENTRY DeviceEntry;
     ULONG Count = 0, Length;
+    KIRQL OldLevel;
 
-
-    /* FIXME locks */
+    /* acquire lock */
+    KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
 
     /* first scan all device entries */
     Entry = BusDeviceExtension->Common.Entry.Flink;
@@ -1186,7 +1271,7 @@ KspQueryBusRelations(
         DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
 
         /* is there a pdo yet */
-        if (DeviceEntry->PDO)
+        if (DeviceEntry->PDO && (DeviceEntry->DeviceState == NotStarted || DeviceEntry->DeviceState == Started))
         {
             /* increment count */
             Count++;
@@ -1205,6 +1290,7 @@ KspQueryBusRelations(
     if (!DeviceRelations)
     {
         /* not enough memory */
+        KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1217,7 +1303,7 @@ KspQueryBusRelations(
         DeviceEntry = (PBUS_DEVICE_ENTRY)CONTAINING_RECORD(Entry, BUS_DEVICE_ENTRY, Entry);
 
         /* is there a pdo yet */
-        if (DeviceEntry->PDO)
+        if (DeviceEntry->PDO && (DeviceEntry->DeviceState == NotStarted || DeviceEntry->DeviceState == Started))
         {
             /* store pdo */
             DeviceRelations->Objects[DeviceRelations->Count] = DeviceEntry->PDO;
@@ -1232,6 +1318,9 @@ KspQueryBusRelations(
         /* move to next entry */
         Entry = Entry->Flink;
     }
+
+    /* release lock */
+    KeReleaseSpinLock(&BusDeviceExtension->Lock, OldLevel);
 
     /* FIXME handle existing device relations */
     ASSERT(Irp->IoStatus.Information == 0);
@@ -1328,6 +1417,7 @@ KsGetBusEnumIdentifier(
     }
 
     /* done */
+    Irp->IoStatus.Status = Status;
     return Status;
 }
 
@@ -1550,7 +1640,7 @@ KsCreateBusEnumObject(
         FreeItem(BusDeviceExtension);
     }
 
-    DPRINT1("KsCreateBusEnumObject cp %x\n", Status);
+    DPRINT("KsCreateBusEnumObject Status %x\n", Status);
     /* done */
     return Status;
 }
@@ -1569,7 +1659,7 @@ KsGetBusEnumPnpDeviceObject(
     PCOMMON_DEVICE_EXTENSION CommonDeviceExtension;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
 
-    DPRINT1("KsGetBusEnumPnpDeviceObject\n");
+    DPRINT("KsGetBusEnumPnpDeviceObject\n");
 
     if (!DeviceObject->DeviceExtension)
     {
@@ -1712,13 +1802,12 @@ KsServiceBusEnumCreateRequest(
     PLIST_ENTRY Entry;
     PBUS_DEVICE_ENTRY DeviceEntry = NULL; /* fix gcc */
     PIO_STACK_LOCATION IoStack;
-    BOOLEAN ItemExists;
+    BOOLEAN ItemExists = FALSE;
     PDEV_EXTENSION DeviceExtension;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
     //PCOMMON_DEVICE_EXTENSION ChildDeviceExtension;
     NTSTATUS Status;
-
-    DPRINT1("KsServiceBusEnumCreateRequest\n");
+    LARGE_INTEGER Time;
 
     /* FIXME: locks */
 
@@ -1734,6 +1823,8 @@ KsServiceBusEnumCreateRequest(
     /* sanity checks */
     ASSERT(IoStack->FileObject);
     ASSERT(IoStack->FileObject->FileName.Buffer);
+
+    DPRINT1("KsServiceBusEnumCreateRequest IRP %p Name %wZ\n", Irp, &IoStack->FileObject->FileName);
 
     /* scan list and check if it is already present */
     Entry = BusDeviceExtension->Common.Entry.Flink;
@@ -1768,7 +1859,11 @@ KsServiceBusEnumCreateRequest(
         if (DeviceEntry->DeviceState == Started)
         {
             /* issue reparse */
-            return KspDoReparseForIrp(Irp, DeviceEntry);
+            Status =  KspDoReparseForIrp(Irp, DeviceEntry);
+            DPRINT("REPARSE Irp %p '%wZ'\n", Irp, &IoStack->FileObject->FileName);
+
+            Irp->IoStatus.Status = Status;
+            return Status;
         }
 
         /* delay processing until pnp is finished with enumeration */
@@ -1777,9 +1872,14 @@ KsServiceBusEnumCreateRequest(
         /* insert into irp pending list */
         InsertTailList(&DeviceEntry->IrpPendingList, &Irp->Tail.Overlay.ListEntry);
 
-        /* HACK */
-        IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
+        Time.QuadPart = Int32x32To64(1500, -10000);
+        DbgPrint("PENDING Irp %p %wZ\n", Irp, &IoStack->FileObject->FileName);
 
+        /* query current time */
+        KeQuerySystemTime(&DeviceEntry->TimeCreated);
+
+        /* set timer */
+        KeSetTimer(&BusDeviceExtension->Timer, Time, &BusDeviceExtension->Dpc);
 
         /* done for now */
         return STATUS_PENDING;
@@ -1796,6 +1896,7 @@ KsServiceBusEnumCreateRequest(
             DPRINT1("KsServiceBusEnumCreateRequest failed to create PDO with %x\n", Status);
             return Status;
         }
+        DPRINT1("PENDING CREATE Irp %p %wZ\n", Irp, &IoStack->FileObject->FileName);
 
         /* delay processing until pnp is finished with enumeration */
         IoMarkIrpPending(Irp);
@@ -1826,9 +1927,12 @@ KsServiceBusEnumPnpRequest(
 {
     PDEV_EXTENSION DeviceExtension;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+    PCOMMON_DEVICE_EXTENSION ChildDeviceExtension;
     PIO_STACK_LOCATION IoStack;
-
-    DPRINT1("KsServiceBusEnumPnpRequest %p\n", DeviceObject);
+    NTSTATUS Status;
+    LARGE_INTEGER Time;
+    PDEVICE_RELATIONS DeviceRelation;
+    PBUS_DEVICE_ENTRY DeviceEntry;
 
     /* get device extension */
     DeviceExtension = (PDEV_EXTENSION)DeviceObject->DeviceExtension;
@@ -1844,64 +1948,154 @@ KsServiceBusEnumPnpRequest(
         if (IoStack->MinorFunction == IRP_MN_START_DEVICE)
         {
             /* no op for bus driver */
-            return STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS)
         {
             /* handle bus device relations */
             ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == BusRelations);
 
-            return KspQueryBusRelations(BusDeviceExtension, Irp);
+            Status = KspQueryBusRelations(BusDeviceExtension, Irp);
         }
-        DPRINT1("KsServiceBusEnumPnpRequest BusObject MinorFunction %x\n", IoStack->MinorFunction);
-        return STATUS_NOT_SUPPORTED;
+        else
+        {
+            /* get default status */
+            Status = Irp->IoStatus.Status;
+        }
     }
     else
     {
+        /* get child device extension */
+        ChildDeviceExtension = DeviceExtension->Ext;
+
+        /* get bus device extension */
+        BusDeviceExtension = ChildDeviceExtension->BusDeviceExtension;
+
         if (IoStack->MinorFunction == IRP_MN_QUERY_ID)
         {
             /* query id */
-            return KspQueryId(&BusDeviceExtension->Common, Irp);
+            Status = KspQueryId(ChildDeviceExtension, Irp);
+        }
+        else if (IoStack->MinorFunction == IRP_MN_REMOVE_DEVICE)
+        {
+            ASSERT(ChildDeviceExtension->DeviceEntry->DeviceState != Started || ChildDeviceExtension->DeviceEntry->DeviceState == NotStarted);
+            ASSERT(ChildDeviceExtension->DeviceEntry->PDO == DeviceObject);
+
+            /* backup device entry */
+            DeviceEntry = ChildDeviceExtension->DeviceEntry;
+
+            /* free device extension */
+            FreeItem(ChildDeviceExtension);
+
+            /* clear PDO reference */
+            DeviceEntry->PDO = NULL;
+
+            /* delete the device */
+            IoDeleteDevice(DeviceObject);
+
+            if (DeviceEntry->PDODeviceName)
+            {
+                /* delete pdo device name */
+                FreeItem(DeviceEntry->PDODeviceName);
+
+                /* set to null */
+                DeviceEntry->PDODeviceName = NULL;
+            }
+
+            /* set state no notstarted */
+            DeviceEntry->DeviceState = NotStarted;
+
+        /* time to create PDO */
+        KspCreatePDO(BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
+
+        /* invalidate device relations */
+        IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
+
+            /* done */
+            Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_BUS_INFORMATION)
         {
             /* query bus information */
-            return KspQueryBusInformation(&BusDeviceExtension->Common, Irp);
+            Status = KspQueryBusInformation(ChildDeviceExtension, Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_RESOURCES)
         {
             /* no op */
-            return STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_RESOURCE_REQUIREMENTS)
         {
             /* no op */
-            return STATUS_SUCCESS;
+            Status = STATUS_SUCCESS;
         }
         else if (IoStack->MinorFunction == IRP_MN_START_DEVICE)
         {
             /* start bus */
-            return KspStartBusDevice(DeviceObject, &BusDeviceExtension->Common, Irp);
+            Status = KspStartBusDevice(DeviceObject, ChildDeviceExtension, Irp);
+
+            /* set time out */
+            Time.QuadPart = Int32x32To64(1500, -10000);
+
+            /* sanity check */
+            ASSERT(BusDeviceExtension);
+
+            /* set timer */
+            KeSetTimer(&BusDeviceExtension->Timer, Time, &BusDeviceExtension->Dpc);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_CAPABILITIES)
         {
             /* query capabilities */
-            return KspQueryBusDeviceCapabilities(&BusDeviceExtension->Common, Irp);
+            Status = KspQueryBusDeviceCapabilities(ChildDeviceExtension, Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_PNP_DEVICE_STATE)
         {
             /* query pnp state */
-            return KspQueryBusDevicePnpState(&BusDeviceExtension->Common, Irp);
+            Status = KspQueryBusDevicePnpState(ChildDeviceExtension, Irp);
         }
         else if (IoStack->MinorFunction == IRP_MN_QUERY_INTERFACE)
         {
             /* query interface */
-            return KspQueryBusDeviceInterface(Irp, &BusDeviceExtension->Common);
+            Status = KspQueryBusDeviceInterface(ChildDeviceExtension, Irp);
         }
+        else if (IoStack->MinorFunction == IRP_MN_QUERY_DEVICE_RELATIONS && IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation)
+        {
+            /* handle target device relations */
+            ASSERT(IoStack->Parameters.QueryDeviceRelations.Type == TargetDeviceRelation);
+            ASSERT(Irp->IoStatus.Information == 0);
 
-        DPRINT1("KsServiceBusEnumPnpRequest BusObject MinorFunction %x\n", IoStack->MinorFunction);
-        return STATUS_NOT_SUPPORTED;
+            /* allocate device relation */
+            DeviceRelation = AllocateItem(PagedPool, sizeof(DEVICE_RELATIONS));
+            if (DeviceRelation)
+            {
+                DeviceRelation->Count = 1;
+                DeviceRelation->Objects[0] = DeviceObject;
+
+                /* reference self */
+                ObReferenceObject(DeviceObject);
+
+                /* store result */
+                Irp->IoStatus.Information = (ULONG_PTR)DeviceRelation;
+
+                /* done */
+                Status = STATUS_SUCCESS;
+            }
+            else
+            {
+                /* no memory */
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
+        else
+        {
+            /* get default status */
+            Status = Irp->IoStatus.Status;
+        }
     }
+
+    DPRINT("KsServiceBusEnumPnpRequest %p Bus %u Function %x Status %x\n", DeviceObject, BusDeviceExtension->Common.IsBus, IoStack->MinorFunction, Status);
+    Irp->IoStatus.Status = Status;
+    return Status;
 }
 
 /*

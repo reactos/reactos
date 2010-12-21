@@ -145,7 +145,7 @@ typedef struct
 typedef BOOLEAN (NTAPI *PKSEVENT_SYNCHRONIZED_ROUTINE)(PKSEVENT_CTX Context);
 
 struct __BUS_ENUM_DEVICE_EXTENSION__;
-struct BUS_DEVICE_ENTRY;
+struct __BUS_DEVICE_ENTRY__;
 
 typedef struct
 {
@@ -158,7 +158,7 @@ typedef struct
     };
     union
     {
-        PVOID DeviceEntry;
+        struct __BUS_DEVICE_ENTRY__* DeviceEntry;
         ULONG Dummy1;
     };
     struct __BUS_ENUM_DEVICE_EXTENSION__ *BusDeviceExtension;
@@ -191,7 +191,7 @@ typedef enum
 }DEVICE_STATE;
 
 
-typedef struct
+typedef struct __BUS_DEVICE_ENTRY__
 {
     LIST_ENTRY Entry;
     LIST_ENTRY DeviceInterfaceList;

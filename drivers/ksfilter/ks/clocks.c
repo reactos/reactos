@@ -339,7 +339,7 @@ IKsClock_DispatchDeviceIoControl(
 
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_SUCCESS;
 }
@@ -353,7 +353,7 @@ IKsClock_DispatchClose(
     UNIMPLEMENTED
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
 
     return STATUS_SUCCESS;
 }

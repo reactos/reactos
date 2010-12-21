@@ -485,7 +485,7 @@ IKsFilter_GetFilterFromIrp(
         Irp->IoStatus.Status = Status;
 
         /* complete and forget irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
     return Status;
@@ -522,7 +522,7 @@ IKsFilter_DispatchClose(
         /* save the result */
         Irp->IoStatus.Status = Status;
         /* complete irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
 
         /* remove our instance from the filter factory */
         IKsFilter_RemoveFilterFromFilterFactory(This, This->Factory);
@@ -535,7 +535,7 @@ IKsFilter_DispatchClose(
         /* complete and forget */
         Irp->IoStatus.Status = Status;
         /* complete irp */
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -881,7 +881,7 @@ IKsFilter_DispatchDeviceIoControl(
     if (Status != STATUS_PENDING)
     {
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -1227,7 +1227,7 @@ IKsFilter_DispatchCreatePin(
     {
         /* complete request */
         Irp->IoStatus.Status = Status;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        CompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -1243,7 +1243,7 @@ IKsFilter_DispatchCreateNode(
 {
     UNIMPLEMENTED
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    CompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -1608,7 +1608,7 @@ KsFilterAttemptProcessing(
     IN PKSFILTER Filter,
     IN BOOLEAN Asynchronous)
 {
-    UNIMPLEMENTED
+    //UNIMPLEMENTED
 }
 
 /*
