@@ -1440,6 +1440,10 @@ NtCreateSection(OUT PHANDLE SectionHandle,
     }
     else if (!MaximumSize) MaximumSize = &SafeMaximumSize;
 
+    /* Check that MaximumSize is valid if backed by paging file */
+    if ((!FileHandle) && (!MaximumSize->QuadPart))
+        return STATUS_INVALID_PARAMETER_4;
+
     /* Create the section */
     Status = MmCreateSection(&SectionObject,
                              DesiredAccess,
