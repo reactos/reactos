@@ -932,16 +932,16 @@ IopInitializeBootDrivers(VOID)
     /* Get highest group order index */
     IopGroupIndex = PpInitGetGroupOrderIndex(NULL);
     if (IopGroupIndex == 0xFFFF) ASSERT(FALSE);
-    
+
     /* Allocate the group table */
     IopGroupTable = ExAllocatePoolWithTag(PagedPool,
                                           IopGroupIndex * sizeof(LIST_ENTRY),
                                           TAG_IO);
     if (IopGroupTable == NULL) ASSERT(FALSE);
-    
+
     /* Initialize the group table lists */
     for (i = 0; i < IopGroupIndex; i++) InitializeListHead(&IopGroupTable[i]);
-    
+
     /* Loop the boot modules */
     ListHead = &KeLoaderBlock->LoadOrderListHead;
     NextEntry = ListHead->Flink;
@@ -951,18 +951,18 @@ IopInitializeBootDrivers(VOID)
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
-                                     
+
         /* Check if the DLL needs to be initialized */
         if (LdrEntry->Flags & LDRP_DRIVER_DEPENDENT_DLL)
         {
             /* Call its entrypoint */
             MmCallDllInitialize(LdrEntry, NULL);
         }
-        
+
         /* Go to the next driver */
         NextEntry = NextEntry->Flink;
     }
-    
+
     /* Loop the boot drivers */
     ListHead = &KeLoaderBlock->BootDriverListHead;
     NextEntry = ListHead->Flink;
@@ -972,10 +972,10 @@ IopInitializeBootDrivers(VOID)
         BootEntry = CONTAINING_RECORD(NextEntry,
                                       BOOT_DRIVER_LIST_ENTRY,
                                       Link);
-        
+
         /* Get the driver loader entry */
         LdrEntry = BootEntry->LdrEntry;
-        
+
         /* Allocate our internal accounting structure */
         DriverInfo = ExAllocatePoolWithTag(PagedPool,
                                            sizeof(DRIVER_INFORMATION),
@@ -986,24 +986,24 @@ IopInitializeBootDrivers(VOID)
             RtlZeroMemory(DriverInfo, sizeof(DRIVER_INFORMATION));
             InitializeListHead(&DriverInfo->Link);
             DriverInfo->DataTableEntry = BootEntry;
-            
+
             /* Open the registry key */
             Status = IopOpenRegistryKeyEx(&KeyHandle,
                                           NULL,
                                           &BootEntry->RegistryPath,
                                           KEY_READ);
             if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
-                ((KeLoaderBlock->SetupLdrBlock) && (KeyHandle == (PVOID)1)))
+                ((KeLoaderBlock->SetupLdrBlock) && ((KeyHandle = (PVOID)1))))
             {
                 /* Save the handle */
                 DriverInfo->ServiceHandle = KeyHandle;
-                
+
                 /* Get the group oder index */
                 Index = PpInitGetGroupOrderIndex(KeyHandle);
-                
+
                 /* Get the tag position */
                 DriverInfo->TagPosition = PipGetDriverTagPriority(KeyHandle);
-                
+
                 /* Insert it into the list, at the right place */
                 ASSERT(Index < IopGroupIndex);
                 NextEntry2 = IopGroupTable[Index].Flink;
@@ -1013,18 +1013,18 @@ IopInitializeBootDrivers(VOID)
                     DriverInfoTag = CONTAINING_RECORD(NextEntry2,
                                                       DRIVER_INFORMATION,
                                                       Link);
-                    
+
                     /* Check if we found the right tag position */
                     if (DriverInfoTag->TagPosition > DriverInfo->TagPosition)
                     {
                         /* We're done */
                         break;
                     }
-                    
+
                     /* Next entry */
                     NextEntry2 = NextEntry2->Flink;
                 }
-                
+
                 /* Insert us right before the next entry */
                 NextEntry2 = NextEntry2->Blink;
                 InsertHeadList(NextEntry2, &DriverInfo->Link);
@@ -1046,18 +1046,18 @@ IopInitializeBootDrivers(VOID)
             DriverInfo = CONTAINING_RECORD(NextEntry,
                                            DRIVER_INFORMATION,
                                            Link);
-            
+
             /* Get the driver loader entry */
             LdrEntry = DriverInfo->DataTableEntry->LdrEntry;
-            
+
             /* Initialize it */
             IopInitializeBuiltinDriver(LdrEntry);
-            
+
             /* Next entry */
             NextEntry = NextEntry->Flink;
         }
     }
-    
+
     /* In old ROS, the loader list became empty after this point. Simulate. */
     InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
