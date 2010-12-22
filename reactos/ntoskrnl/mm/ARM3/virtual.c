@@ -2446,6 +2446,9 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
             /* Check if this VAD is too high */
             if (BaseVpn < Vad->StartingVpn)
             {
+                /* Stop if there is no left child */
+                if (!Vad->LeftChild) break;
+
                 /* Search on the left next */
                 Vad = Vad->LeftChild;
             }
@@ -2453,6 +2456,11 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
             {
                 /* Then this VAD is too low, keep searching on the right */
                 ASSERT(BaseVpn > Vad->EndingVpn);
+
+                /* Stop if there is no right child */
+                if (!Vad->LeftChild) break;
+
+                /* Search on the right next */
                 Vad = Vad->RightChild;
             }
         }
