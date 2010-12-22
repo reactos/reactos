@@ -1286,8 +1286,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->NtMinorVersion = NtMinorVersion;
 
     /* Set the machine type */
-    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_ARCHITECTURE;
-    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
+    SharedUserData->ImageNumberLow = IMAGE_FILE_MACHINE_NATIVE;
+    SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_NATIVE;
 }
 
 VOID

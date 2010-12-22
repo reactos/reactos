@@ -75,8 +75,6 @@ extern ULONG KeI386FxsrPresent;
 extern ULONG KeI386CpuType;
 extern ULONG KeI386CpuStep;
 
-#define IMAGE_FILE_MACHINE_ARCHITECTURE IMAGE_FILE_MACHINE_AMD64
-
 //
 // INT3 is 1 byte long
 //
@@ -171,7 +169,7 @@ FORCEINLINE
 VOID
 KeRegisterInterruptHandler(IN ULONG Vector,
                            IN PVOID Handler)
-{                           
+{
     UCHAR Entry;
     PKIDTENTRY64 Idt;
 
@@ -207,8 +205,8 @@ KeQueryInterruptHandler(IN ULONG Vector)
     Idt = &KeGetPcr()->IdtBase[Entry];
 
     /* Return the address */
-    return (PVOID)((ULONG64)Idt->OffsetHigh << 32 | 
-                   (ULONG64)Idt->OffsetMiddle << 16 | 
+    return (PVOID)((ULONG64)Idt->OffsetHigh << 32 |
+                   (ULONG64)Idt->OffsetMiddle << 16 |
                    (ULONG64)Idt->OffsetLow);
 }
 

@@ -85,31 +85,21 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 #define PTE_COUNT PTE_PER_PAGE
 #endif
 
-#ifdef _M_IX86
-#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_I386
-#elif _M_ARM
-#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_ARM
-#elif _M_AMD64
-#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_AMD64
-#else
-#error Define these please!
-#endif
-
 //
 // Protection Bits part of the internal memory manager Protection Mask
 // Taken from http://www.reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
 // and public assertions.
 //
 #define MM_ZERO_ACCESS         0
-#define MM_READONLY            1 
-#define MM_EXECUTE             2 
-#define MM_EXECUTE_READ        3 
+#define MM_READONLY            1
+#define MM_EXECUTE             2
+#define MM_EXECUTE_READ        3
 #define MM_READWRITE           4
-#define MM_WRITECOPY           5 
-#define MM_EXECUTE_READWRITE   6 
-#define MM_EXECUTE_WRITECOPY   7 
-#define MM_NOCACHE             8 
-#define MM_DECOMMIT            0x10 
+#define MM_WRITECOPY           5
+#define MM_EXECUTE_READWRITE   6
+#define MM_EXECUTE_WRITECOPY   7
+#define MM_NOCACHE             8
+#define MM_DECOMMIT            0x10
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
 #define MM_INVALID_PROTECTION  0xFFFFFFFF
 
@@ -122,7 +112,7 @@ C_ASSERT(SYSTEM_PD_SIZE == PAGE_SIZE);
 //
 // For example, in the logical attributes, we want to express read-only as a flag
 // but on x86, it is writability that must be set. On the other hand, on x86, just
-// like in the kernel, it is disabling the caches that requires a special flag, 
+// like in the kernel, it is disabling the caches that requires a special flag,
 // while on certain architectures such as ARM, it is enabling the cache which
 // requires a flag.
 //
@@ -171,10 +161,10 @@ extern const ULONG MmProtectToValue[32];
 //
 #define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
     (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
-    
+
 #define MI_IS_SESSION_ADDRESS(Address) \
     (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
-        
+
 #define MI_IS_SESSION_PTE(Pte) \
     ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
 
@@ -186,7 +176,7 @@ extern const ULONG MmProtectToValue[32];
 
 #define MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address) \
     (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
-    
+
 //
 // Corresponds to MMPTE_SOFTWARE.Protection
 //
@@ -537,14 +527,14 @@ FORCEINLINE
 MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
 {
     MMPTE TempPte;
-    
+
     /* Start fresh */
     TempPte.u.Long = 0;
-    
+
     /* Make it valid and accessed */
     TempPte.u.Hard.Valid = TRUE;
     MI_MAKE_ACCESSED_PAGE(&TempPte);
-    
+
     /* Is this for user-mode? */
     if ((PointerPte <= (PVOID)MiHighestUserPte) ||
         ((PointerPte >= (PVOID)MiAddressToPde(NULL)) &&
@@ -553,9 +543,9 @@ MiDetermineUserGlobalPteMask(IN PVOID PointerPte)
         /* Set the owner bit */
         MI_MAKE_OWNER_PAGE(&TempPte);
     }
-    
+
     /* FIXME: We should also set the global bit */
-    
+
     /* Return the protection */
     return TempPte.u.Long;
 }
@@ -574,10 +564,10 @@ MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
     ASSERT(MappingPte > MiHighestUserPte);
     ASSERT(!MI_IS_SESSION_PTE(MappingPte));
     ASSERT((MappingPte < (PMMPTE)PDE_BASE) || (MappingPte > (PMMPTE)PDE_TOP));
-    
+
     /* Start fresh */
     *NewPte = ValidKernelPte;
-    
+
     /* Set the protection and page */
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
@@ -611,10 +601,10 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
 {
     /* Only valid for kernel, non-session PTEs */
     ASSERT(MappingPte <= MiHighestUserPte);
-    
+
     /* Start fresh */
     *NewPte = ValidKernelPte;
-    
+
     /* Set the protection and page */
     NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
@@ -635,7 +625,7 @@ MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
     /* Mark this as a prototype */
     NewPte->u.Long = 0;
     NewPte->u.Proto.Prototype = 1;
-    
+
     /*
      * Prototype PTEs are only valid in paged pool by design, this little trick
      * lets us only use 28 bits for the adress of the PTE
@@ -658,7 +648,7 @@ BOOLEAN
 MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
 {
     PMMPDE PointerPde;
-    
+
     /* Large pages are never paged out, always physically resident */
     PointerPde = MiAddressToPde(Address);
     return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
@@ -785,11 +775,11 @@ MiUnlockProcessWorkingSet(IN PEPROCESS Process,
     ASSERT(MI_WS_OWNER(Process));
     /* This can't be checked because Vm is used by MAREAs) */
     //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
-    
+
     /* The thread doesn't own it anymore */
     ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
     Thread->OwnsProcessWorkingSetExclusive = FALSE;
-         
+
     /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
 
     /* Unblock APCs */
@@ -806,15 +796,15 @@ MiLockWorkingSet(IN PETHREAD Thread,
 {
     /* Block APCs */
     KeEnterGuardedRegion();
-    
+
     /* Working set should be in global memory */
     ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
-    
+
     /* Thread shouldn't already be owning something */
     ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
-    
+
     /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
-    
+
     /* Which working set is this? */
     if (WorkingSet == &MmSystemCacheWs)
     {
@@ -848,7 +838,7 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
 {
     /* Working set should be in global memory */
     ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
-    
+
     /* Which working set is this? */
     if (WorkingSet == &MmSystemCacheWs)
     {
@@ -870,7 +860,7 @@ MiUnlockWorkingSet(IN PETHREAD Thread,
                (Thread->OwnsProcessWorkingSetShared));
         Thread->OwnsProcessWorkingSetExclusive = FALSE;
     }
-    
+
     /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
 
     /* Unblock APCs */
@@ -947,7 +937,7 @@ NTAPI
 MiInitializeMemoryEvents(
     VOID
 );
-    
+
 PFN_NUMBER
 NTAPI
 MxGetNextPage(
@@ -960,21 +950,21 @@ MmInitializeMemoryLimits(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PBOOLEAN IncludeType
 );
-                         
+
 PFN_NUMBER
 NTAPI
 MiPagesInLoaderBlock(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     IN PBOOLEAN IncludeType
 );
-                     
+
 VOID
 FASTCALL
 MiSyncARM3WithROS(
     IN PVOID AddressStart,
     IN PVOID AddressEnd
 );
-                         
+
 NTSTATUS
 NTAPI
 MmArmAccessFault(
@@ -1170,7 +1160,7 @@ MiDeleteSystemPageableVm(
     IN ULONG Flags,
     OUT PPFN_NUMBER ValidPages
 );
-                         
+
 PLDR_DATA_TABLE_ENTRY
 NTAPI
 MiLookupDataTableEntry(
@@ -1318,7 +1308,7 @@ MiLocateSubsection(
     IN PMMVAD Vad,
     IN ULONG_PTR Vpn
 );
-                         
+
 //
 // MiRemoveZeroPage will use inline code to zero out the page manually if only
 // free pages are available. In some scenarios, we don't/can't run that piece of
