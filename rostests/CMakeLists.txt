@@ -1,5 +1,5 @@
 
-#add_subdirectory(apitests)
+add_subdirectory(apitests)
 #add_subdirectory(dibtests)
 #add_subdirectory(dxtest)
 #add_subdirectory(regtests)
