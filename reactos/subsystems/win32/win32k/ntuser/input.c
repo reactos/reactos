@@ -239,7 +239,7 @@ MouseThreadMain(PVOID StartContext)
 
    ptiMouse = PsGetCurrentThreadWin32Thread();
    ptiMouse->TIF_flags |= TIF_SYSTEMTHREAD;
-   DPRINT1("\nMouse Thread 0x%x \n", ptiMouse);
+   DPRINT("Mouse Thread 0x%x \n", ptiMouse);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -539,7 +539,7 @@ KeyboardThreadMain(PVOID StartContext)
 
    ptiKeyboard = PsGetCurrentThreadWin32Thread();
    ptiKeyboard->TIF_flags |= TIF_SYSTEMTHREAD;
-   DPRINT1("\nKeyboard Thread 0x%x \n", ptiKeyboard);
+   DPRINT("Keyboard Thread 0x%x \n", ptiKeyboard);
 
    KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -902,7 +902,7 @@ RawInputThreadMain(PVOID StartContext)
 
   ptiRawInput = PsGetCurrentThreadWin32Thread();
   ptiRawInput->TIF_flags |= TIF_SYSTEMTHREAD;
-  DPRINT1("\nRaw Input Thread 0x%x \n", ptiRawInput);
+  DPRINT("Raw Input Thread 0x%x \n", ptiRawInput);
 
   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
                        LOW_REALTIME_PRIORITY + 3);
@@ -1342,7 +1342,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
 
    /* All messages have to contain the cursor point. */
    Msg.pt = gpsi->ptCursor;
-   
+
    KbdHookData.vkCode = vk_hook;
    KbdHookData.scanCode = ki->wScan;
    KbdHookData.flags = flags >> 8;
