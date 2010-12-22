@@ -142,6 +142,7 @@ add_subdirectory(drivers)
 add_subdirectory(hal)
 add_subdirectory(lib)
 add_subdirectory(media)
+add_subdirectory(modules)
 add_subdirectory(ntoskrnl)
 add_subdirectory(subsystems)
 
