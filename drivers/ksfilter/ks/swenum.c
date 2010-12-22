@@ -973,6 +973,9 @@ KspInstallInterface(
     NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
 
+    /* sanity check */
+    ASSERT(InstallInterface);
+
     /* calculate length */
     Length = wcslen(InstallInterface->ReferenceString);
 
@@ -1059,13 +1062,18 @@ KspInstallBusEnumInterface(
     PLIST_ENTRY Entry;
     PBUS_DEVICE_ENTRY DeviceEntry;
     PSWENUM_INSTALL_INTERFACE InstallInterface;
+    KIRQL OldLevel;
     PBUS_INSTALL_ENUM_CONTEXT Context = (PBUS_INSTALL_ENUM_CONTEXT)Ctx;
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Context->Irp);
 
     /* get install request */
-    InstallInterface = (PSWENUM_INSTALL_INTERFACE)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    InstallInterface = (PSWENUM_INSTALL_INTERFACE)Context->Irp->AssociatedIrp.SystemBuffer;
+
+    /* sanity check */
+    ASSERT(InstallInterface);
+    ASSERT(Context->BusDeviceExtension);
 
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(SWENUM_INSTALL_INTERFACE))
     {
@@ -1095,6 +1103,9 @@ KspInstallBusEnumInterface(
         return;
     }
 
+    /* acquire device entry lock */
+    KeAcquireSpinLock(&Context->BusDeviceExtension->Lock, &OldLevel);
+
     /* now iterate all device entries */
     Entry = Context->BusDeviceExtension->Common.Entry.Flink;
     while(Entry != &Context->BusDeviceExtension->Common.Entry)
@@ -1114,7 +1125,13 @@ KspInstallBusEnumInterface(
                 break;
             }
         }
+
+        /* move to next entry */
+        Entry = Entry->Flink;
     }
+
+    /* release device entry lock */
+    KeReleaseSpinLock(&Context->BusDeviceExtension->Lock, OldLevel);
 
     /* signal that bus driver relations has changed */
     IoInvalidateDeviceRelations(Context->BusDeviceExtension->PhysicalDeviceObject, BusRelations);
@@ -1364,7 +1381,7 @@ KsGetBusEnumIdentifier(
     DeviceExtension = (PDEV_EXTENSION)IoStack->DeviceObject->DeviceExtension;
 
     /* get bus device extension */
-    BusDeviceExtension = (PBUS_ENUM_DEVICE_EXTENSION)DeviceExtension->Ext->BusDeviceExtension;
+    BusDeviceExtension = (PBUS_ENUM_DEVICE_EXTENSION)DeviceExtension->Ext;
 
     /* sanity checks */
     ASSERT(BusDeviceExtension);
@@ -1715,7 +1732,7 @@ KsInstallBusEnumInterface(
     PDEV_EXTENSION DeviceExtension;
     PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
 
-    DPRINT1("KsGetBusEnumPnpDeviceObject\n");
+    DPRINT1("KsInstallBusEnumInterface\n");
 
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1737,7 +1754,7 @@ KsInstallBusEnumInterface(
     DeviceExtension = (PDEV_EXTENSION)IoStack->DeviceObject->DeviceExtension;
 
     /* get bus device extension */
-    BusDeviceExtension = DeviceExtension->Ext->BusDeviceExtension;
+    BusDeviceExtension = (PBUS_ENUM_DEVICE_EXTENSION)DeviceExtension->Ext;
 
 
     /* initialize context */
@@ -1748,9 +1765,11 @@ KsInstallBusEnumInterface(
 
     /* queue the work item */
     ExQueueWorkItem(&Context.WorkItem, DelayedWorkQueue);
-
     /* wait for completion */
     KeWaitForSingleObject(&Context.Event, Executive, KernelMode, FALSE, NULL);
+
+    /* store result */
+    Irp->IoStatus.Status = Context.Status;
 
     /* done */
     return Context.Status;

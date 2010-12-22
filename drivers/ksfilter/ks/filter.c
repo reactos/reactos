@@ -1858,7 +1858,6 @@ KsFilterAttemptProcessing(
     if (!KsGateCaptureThreshold(Gate))
     {
         /* filter control gate is closed */
-        DPRINT1("Gate %p Closed %x\n", Gate, Gate->Count);
         return;
     }
 DPRINT1("processing\n");
