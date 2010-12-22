@@ -330,6 +330,7 @@ LdrpInit2(PCONTEXT Context,
     SYSTEM_BASIC_INFORMATION SystemInformation;
     NTSTATUS Status;
     PVOID BaseAddress = SystemArgument1;
+    ULONG ErrorResponse;
 
     DPRINT("LdrpInit()\n");
     DPRINT("Peb %p\n", Peb);
@@ -344,14 +345,23 @@ LdrpInit2(PCONTEXT Context,
 
     /*  If MZ header exists  */
     PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
+    NTHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)ImageBase + PEDosHeader->e_lfanew);
     DPRINT("PEDosHeader %p\n", PEDosHeader);
 
     if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
         PEDosHeader->e_lfanew == 0L ||
-        *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_NT_SIGNATURE)
+        NTHeaders->Signature != IMAGE_NT_SIGNATURE)
     {
         DPRINT1("Image has bad header\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
+    }
+
+    if (NTHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE)
+    {
+        DPRINT1("Image is for a foreign architecture (0x%x).\n",
+                NTHeaders->FileHeader.Machine);
+        NtRaiseHardError(STATUS_IMAGE_MACHINE_TYPE_MISMATCH, 0, 0, NULL, OptionOk, &ErrorResponse);
+        ZwTerminateProcess(NtCurrentProcess(), STATUS_IMAGE_MACHINE_TYPE_MISMATCH);
     }
 
     /* normalize process parameters */
@@ -363,8 +373,6 @@ LdrpInit2(PCONTEXT Context,
                      Peb->UnicodeCaseTableData,
                      &NlsTable);
     RtlResetRtlTranslations(&NlsTable);
-
-    NTHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)ImageBase + PEDosHeader->e_lfanew);
 
     /* Get number of processors */
     DPRINT("Here\n");
