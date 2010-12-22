@@ -22,9 +22,10 @@
 
 BOOLEAN
 NTAPI
-LdrVerifyMappedImageMatchesChecksum(IN PVOID BaseAddress,
-                                    IN ULONG NumberOfBytes,
-                                    IN ULONG FileLength)
+LdrVerifyMappedImageMatchesChecksum(
+    IN PVOID BaseAddress,
+    IN ULONG NumberOfBytes,
+    IN ULONG FileLength)
 {
     /* FIXME: TODO */
     return TRUE;
@@ -33,26 +34,26 @@ LdrVerifyMappedImageMatchesChecksum(IN PVOID BaseAddress,
 /*
  * @implemented
  */
-PIMAGE_NT_HEADERS NTAPI
-RtlImageNtHeader (IN PVOID BaseAddress)
+PIMAGE_NT_HEADERS
+NTAPI
+RtlImageNtHeader(IN PVOID BaseAddress)
 {
-  PIMAGE_NT_HEADERS NtHeader;
-  PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
+    PIMAGE_NT_HEADERS NtHeader;
+    PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
 
-  if (DosHeader && SWAPW(DosHeader->e_magic) != IMAGE_DOS_SIGNATURE)
+    if (DosHeader && SWAPW(DosHeader->e_magic) != IMAGE_DOS_SIGNATURE)
     {
-      DPRINT1("DosHeader->e_magic %x\n", SWAPW(DosHeader->e_magic));
-      DPRINT1("NtHeader 0x%lx\n", ((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew)));
+        DPRINT1("DosHeader->e_magic %x\n", SWAPW(DosHeader->e_magic));
+        DPRINT1("NtHeader 0x%lx\n", ((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew)));
+    }
+    else
+    {
+        NtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew));
+        if (SWAPD(NtHeader->Signature) == IMAGE_NT_SIGNATURE)
+            return NtHeader;
     }
 
-  if (DosHeader && SWAPW(DosHeader->e_magic) == IMAGE_DOS_SIGNATURE)
-    {
-      NtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)BaseAddress + SWAPD(DosHeader->e_lfanew));
-      if (SWAPD(NtHeader->Signature) == IMAGE_NT_SIGNATURE)
-	return NtHeader;
-    }
-
-  return NULL;
+    return NULL;
 }
 
 
@@ -61,40 +62,41 @@ RtlImageNtHeader (IN PVOID BaseAddress)
  */
 PVOID
 NTAPI
-RtlImageDirectoryEntryToData(PVOID BaseAddress,
-                             BOOLEAN MappedAsImage,
-                             USHORT Directory,
-                             PULONG Size)
+RtlImageDirectoryEntryToData(
+    PVOID BaseAddress,
+    BOOLEAN MappedAsImage,
+    USHORT Directory,
+    PULONG Size)
 {
-	PIMAGE_NT_HEADERS NtHeader;
-	ULONG Va;
+    PIMAGE_NT_HEADERS NtHeader;
+    ULONG Va;
 
-	/* Magic flag for non-mapped images. */
-	if ((ULONG_PTR)BaseAddress & 1)
-	{
-		BaseAddress = (PVOID)((ULONG_PTR)BaseAddress & ~1);
-		MappedAsImage = FALSE;
-        }
+    /* Magic flag for non-mapped images. */
+    if ((ULONG_PTR)BaseAddress & 1)
+    {
+        BaseAddress = (PVOID)((ULONG_PTR)BaseAddress & ~1);
+        MappedAsImage = FALSE;
+    }
 
 
-	NtHeader = RtlImageNtHeader (BaseAddress);
-	if (NtHeader == NULL)
-		return NULL;
+    NtHeader = RtlImageNtHeader (BaseAddress);
+    if (NtHeader == NULL)
+        return NULL;
 
-	if (Directory >= SWAPD(NtHeader->OptionalHeader.NumberOfRvaAndSizes))
-		return NULL;
+    if (Directory >= SWAPD(NtHeader->OptionalHeader.NumberOfRvaAndSizes))
+        return NULL;
 
-	Va = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress);
-	if (Va == 0)
-		return NULL;
+    Va = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].VirtualAddress);
+    if (Va == 0)
+        return NULL;
 
-	*Size = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].Size);
+    *Size = SWAPD(NtHeader->OptionalHeader.DataDirectory[Directory].Size);
 
-	if (MappedAsImage || Va < SWAPD(NtHeader->OptionalHeader.SizeOfHeaders))
-		return (PVOID)((ULONG_PTR)BaseAddress + Va);
+    if (MappedAsImage || Va < SWAPD(NtHeader->OptionalHeader.SizeOfHeaders))
+        return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
-	/* image mapped as ordinary file, we must find raw pointer */
-	return RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
+    /* image mapped as ordinary file, we must find raw pointer */
+    return RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
 }
 
 
@@ -103,28 +105,27 @@ RtlImageDirectoryEntryToData(PVOID BaseAddress,
  */
 PIMAGE_SECTION_HEADER
 NTAPI
-RtlImageRvaToSection (
-	PIMAGE_NT_HEADERS	NtHeader,
-	PVOID			BaseAddress,
-	ULONG			Rva
-	)
+RtlImageRvaToSection(
+    PIMAGE_NT_HEADERS NtHeader,
+    PVOID BaseAddress,
+    ULONG Rva)
 {
-	PIMAGE_SECTION_HEADER Section;
-	ULONG Va;
-	ULONG Count;
+    PIMAGE_SECTION_HEADER Section;
+    ULONG Va;
+    ULONG Count;
 
-	Count = SWAPW(NtHeader->FileHeader.NumberOfSections);
-	Section = IMAGE_FIRST_SECTION(NtHeader);
+    Count = SWAPW(NtHeader->FileHeader.NumberOfSections);
+    Section = IMAGE_FIRST_SECTION(NtHeader);
 
-	while (Count--)
-	{
-		Va = SWAPD(Section->VirtualAddress);
-		if ((Va <= Rva) &&
-		    (Rva < Va + SWAPD(Section->Misc.VirtualSize)))
-			return Section;
-		Section++;
-	}
-	return NULL;
+    while (Count--)
+    {
+        Va = SWAPD(Section->VirtualAddress);
+        if ((Va <= Rva) &&
+                (Rva < Va + SWAPD(Section->Misc.VirtualSize)))
+            return Section;
+        Section++;
+    }
+    return NULL;
 }
 
 
@@ -133,34 +134,33 @@ RtlImageRvaToSection (
  */
 PVOID
 NTAPI
-RtlImageRvaToVa (
-	PIMAGE_NT_HEADERS	NtHeader,
-	PVOID			BaseAddress,
-	ULONG			Rva,
-	PIMAGE_SECTION_HEADER	*SectionHeader
-	)
+RtlImageRvaToVa(
+    PIMAGE_NT_HEADERS NtHeader,
+    PVOID BaseAddress,
+    ULONG Rva,
+    PIMAGE_SECTION_HEADER *SectionHeader)
 {
-	PIMAGE_SECTION_HEADER Section = NULL;
+    PIMAGE_SECTION_HEADER Section = NULL;
 
-	if (SectionHeader)
-		Section = *SectionHeader;
+    if (SectionHeader)
+        Section = *SectionHeader;
 
-	if (Section == NULL ||
-	    Rva < SWAPD(Section->VirtualAddress) ||
-	    Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize))
-	{
-		Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
-		if (Section == NULL)
-			return 0;
+    if (Section == NULL ||
+            Rva < SWAPD(Section->VirtualAddress) ||
+            Rva >= SWAPD(Section->VirtualAddress) + SWAPD(Section->Misc.VirtualSize))
+    {
+        Section = RtlImageRvaToSection (NtHeader, BaseAddress, Rva);
+        if (Section == NULL)
+            return 0;
 
-		if (SectionHeader)
-			*SectionHeader = Section;
-	}
+        if (SectionHeader)
+            *SectionHeader = Section;
+    }
 
-	return (PVOID)((ULONG_PTR)BaseAddress +
-	               Rva +
-	               SWAPD(Section->PointerToRawData) -
-	               (ULONG_PTR)SWAPD(Section->VirtualAddress));
+    return (PVOID)((ULONG_PTR)BaseAddress +
+                   Rva +
+                   SWAPD(Section->PointerToRawData) -
+                   (ULONG_PTR)SWAPD(Section->VirtualAddress));
 }
 
 PIMAGE_BASE_RELOCATION
@@ -169,8 +169,7 @@ LdrProcessRelocationBlockLongLong(
     IN ULONG_PTR Address,
     IN ULONG Count,
     IN PUSHORT TypeOffset,
-    IN LONGLONG Delta
-    )
+    IN LONGLONG Delta)
 {
     SHORT Offset;
     USHORT Type;
@@ -197,8 +196,8 @@ LdrProcessRelocationBlockLongLong(
         {*/
         switch (Type)
         {
-        /* case IMAGE_REL_BASED_SECTION : */
-        /* case IMAGE_REL_BASED_REL32 : */
+            /* case IMAGE_REL_BASED_SECTION : */
+            /* case IMAGE_REL_BASED_REL32 : */
         case IMAGE_REL_BASED_ABSOLUTE:
             break;
 
@@ -242,8 +241,7 @@ LdrRelocateImageWithBias(
     IN PCCH  LoaderName,
     IN ULONG Success,
     IN ULONG Conflict,
-    IN ULONG Invalid
-    )
+    IN ULONG Invalid)
 {
     PIMAGE_NT_HEADERS NtHeaders;
     PIMAGE_DATA_DIRECTORY RelocationDDir;
@@ -275,16 +273,16 @@ LdrRelocateImageWithBias(
     RelocationEnd = (PIMAGE_BASE_RELOCATION)((ULONG_PTR)RelocationDir + SWAPD(RelocationDDir->Size));
 
     while (RelocationDir < RelocationEnd &&
-	   SWAPW(RelocationDir->SizeOfBlock) > 0)
+            SWAPW(RelocationDir->SizeOfBlock) > 0)
     {
         Count = (SWAPW(RelocationDir->SizeOfBlock) - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(USHORT);
         Address = (ULONG_PTR)RVA(BaseAddress, SWAPD(RelocationDir->VirtualAddress));
         TypeOffset = (PUSHORT)(RelocationDir + 1);
 
         RelocationDir = LdrProcessRelocationBlockLongLong(Address,
-                                                          Count,
-                                                          TypeOffset,
-                                                          Delta);
+                        Count,
+                        TypeOffset,
+                        Delta);
 
         if (RelocationDir == NULL)
         {
@@ -295,4 +293,5 @@ LdrRelocateImageWithBias(
 
     return Success;
 }
+
 /* EOF */
