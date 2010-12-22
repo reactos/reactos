@@ -220,8 +220,16 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   }
   else
   {
-    RtlCopyMemory(VolumeLabelDirEntry.Fat.Filename, cString, LabelLen);
-    memset(&VolumeLabelDirEntry.Fat.Filename[LabelLen], ' ', 11 - LabelLen);
+    RtlCopyMemory(VolumeLabelDirEntry.Fat.Filename, cString, max(sizeof(VolumeLabelDirEntry.Fat.Filename), LabelLen));
+    if (LabelLen > sizeof(VolumeLabelDirEntry.Fat.Filename))
+    {
+      memset(VolumeLabelDirEntry.Fat.Ext, ' ', sizeof(VolumeLabelDirEntry.Fat.Ext));
+      RtlCopyMemory(VolumeLabelDirEntry.Fat.Ext, cString + sizeof(VolumeLabelDirEntry.Fat.Filename), LabelLen - sizeof(VolumeLabelDirEntry.Fat.Filename));
+    }
+    else
+    {
+      memset(&VolumeLabelDirEntry.Fat.Filename[LabelLen], ' ', sizeof(VolumeLabelDirEntry.Fat.Filename) - LabelLen);
+    }
     VolumeLabelDirEntry.Fat.Attrib = 0x08;
   }
 
