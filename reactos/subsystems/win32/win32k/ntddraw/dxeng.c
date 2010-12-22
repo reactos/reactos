@@ -357,9 +357,8 @@ DxEngGetHdevData(HDEV hDev,
         retVal = (DWORD_PTR) PDev->gdiinfo.flRaster & RC_PALETTE;
         break;
       case DxEGShDevData_ldev:
-          DPRINT1("DxEGShDevData_ldev not supported yet\n");
-      // ATM we do not support the Loader Device driver structure.
-//        retVal = (DWORD) PDev->pldev;
+          DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_ldev \n");
+        retVal = (DWORD_PTR) PDev->pldev;
         break;
       case DxEGShDevData_GDev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_GDev\n");
@@ -441,8 +440,7 @@ DxEngSetHdevData(HDEV hDev,
 *
 * @remarks.
 * We do not have type 2 implemented yet
-*
-*--*/
+**--*/
 DWORD_PTR
 APIENTRY
 DxEngGetDCState(HDC hDC,
