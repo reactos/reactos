@@ -140,10 +140,10 @@ MACRO(KiEnterTrap, Flags)
         /* Initialize TrapFrame segment registers with sane values */
         mov eax, 0x23
         mov ecx, fs
-        mov [esp - FrameSize + KTRAP_FRAME_DS], eax
-        mov [esp - FrameSize + KTRAP_FRAME_ES], eax
-        mov [esp - FrameSize + KTRAP_FRAME_FS], ecx
-        mov dword ptr [esp - FrameSize + KTRAP_FRAME_GS], 0
+        mov [esp + KTRAP_FRAME_DS], eax
+        mov [esp + KTRAP_FRAME_ES], eax
+        mov [esp + KTRAP_FRAME_FS], ecx
+        mov dword ptr [esp + KTRAP_FRAME_GS], 0
 
     else
 
