@@ -135,7 +135,17 @@ MACRO(KiEnterTrap, Flags)
     endif
 
     /* Save segment registers? */
-    if (NOT (Flags AND KI_DONT_SAVE_SEGS))
+    if (Flags AND KI_DONT_SAVE_SEGS)
+
+        /* Initialize TrapFrame segment registers with sane values */
+        mov eax, 0x23
+        mov ecx, fs
+        mov [esp - FrameSize + KTRAP_FRAME_DS], eax
+        mov [esp - FrameSize + KTRAP_FRAME_ES], eax
+        mov [esp - FrameSize + KTRAP_FRAME_FS], ecx
+        mov dword ptr [esp - FrameSize + KTRAP_FRAME_GS], 0
+
+    else
 
         /* Check for V86 mode */
         test byte ptr [esp + KTRAP_FRAME_EFLAGS + 2], (EFLAGS_V86_MASK / HEX(10000))
