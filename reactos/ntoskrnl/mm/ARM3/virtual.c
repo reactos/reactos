@@ -2379,7 +2379,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
             MemoryInfo.AllocationBase = (PCHAR)MM_HIGHEST_VAD_ADDRESS + 1;
             MemoryInfo.State = MEM_RESERVE;
             MemoryInfo.Protect = PAGE_NOACCESS;
-            MemoryInfo.RegionSize = (ULONG_PTR)MemoryInfo.AllocationBase - (ULONG_PTR)Address;
+            MemoryInfo.RegionSize = (ULONG_PTR)MM_HIGHEST_USER_ADDRESS + 1 - (ULONG_PTR)Address;
         }
 
         /* Return the data, NtQueryInformation already probed it*/
