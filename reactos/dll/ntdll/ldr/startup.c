@@ -330,7 +330,6 @@ LdrpInit2(PCONTEXT Context,
     SYSTEM_BASIC_INFORMATION SystemInformation;
     NTSTATUS Status;
     PVOID BaseAddress = SystemArgument1;
-    ULONG ErrorResponse;
 
     DPRINT("LdrpInit()\n");
     DPRINT("Peb %p\n", Peb);
@@ -354,14 +353,6 @@ LdrpInit2(PCONTEXT Context,
     {
         DPRINT1("Image has bad header\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
-    }
-
-    if (NTHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE)
-    {
-        DPRINT1("Image is for a foreign architecture (0x%x).\n",
-                NTHeaders->FileHeader.Machine);
-        NtRaiseHardError(STATUS_IMAGE_MACHINE_TYPE_MISMATCH, 0, 0, NULL, OptionOk, &ErrorResponse);
-        ZwTerminateProcess(NtCurrentProcess(), STATUS_IMAGE_MACHINE_TYPE_MISMATCH);
     }
 
     /* normalize process parameters */
@@ -406,6 +397,47 @@ LdrpInit2(PCONTEXT Context,
     {
         DPRINT1("Failed to create process heap\n");
         ZwTerminateProcess(NtCurrentProcess(), STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+    /* Check for correct machine type */
+    if (NTHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE)
+    {
+        ULONG_PTR HardErrorParameters[1];
+        UNICODE_STRING ImageNameU;
+        ANSI_STRING ImageNameA;
+        WCHAR *Ptr;
+        ULONG ErrorResponse;
+
+        DPRINT1("Image %wZ is for a foreign architecture (0x%x).\n",
+                &Peb->ProcessParameters->ImagePathName, NTHeaders->FileHeader.Machine);
+
+        /* Get the full image path name */
+        ImageNameU = Peb->ProcessParameters->ImagePathName;
+
+        /* Get the file name */
+        Ptr = Peb->ProcessParameters->ImagePathName.Buffer +
+              (Peb->ProcessParameters->ImagePathName.Length / sizeof(WCHAR)) -1;
+        while ((Ptr >= Peb->ProcessParameters->ImagePathName.Buffer) &&
+               (*Ptr != L'\\')) Ptr--;
+        ImageNameU.Buffer = Ptr + 1;
+        ImageNameU.Length = Peb->ProcessParameters->ImagePathName.Length -
+            (ImageNameU.Buffer - Peb->ProcessParameters->ImagePathName.Buffer) * sizeof(WCHAR);
+        ImageNameU.MaximumLength = ImageNameU.Length;
+
+        /*`Convert to ANSI, harderror message needs that */
+        RtlUnicodeStringToAnsiString(&ImageNameA, &ImageNameU, TRUE);
+
+        /* Raise harderror */
+        HardErrorParameters[0] = (ULONG_PTR)&ImageNameA;
+        NtRaiseHardError(STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE,
+                         1,
+                         1,
+                         HardErrorParameters,
+                         OptionOk,
+                         &ErrorResponse);
+
+        RtlFreeAnsiString(&ImageNameA);
+        ZwTerminateProcess(NtCurrentProcess(), STATUS_IMAGE_MACHINE_TYPE_MISMATCH_EXE);
     }
 
     /* initialized vectored exception handling */
