@@ -2665,39 +2665,6 @@ LdrAddRefDll(IN ULONG Flags,
 /*
  * @implemented
  */
-PVOID NTAPI
-RtlPcToFileHeader(IN PVOID PcValue,
-                  PVOID* BaseOfImage)
-{
-    PLIST_ENTRY ModuleListHead;
-    PLIST_ENTRY Entry;
-    PLDR_DATA_TABLE_ENTRY Module;
-    PVOID ImageBase = NULL;
-
-    RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
-    ModuleListHead = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-    Entry = ModuleListHead->Flink;
-    while (Entry != ModuleListHead)
-    {
-        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-        if ((ULONG_PTR)PcValue >= (ULONG_PTR)Module->DllBase &&
-                (ULONG_PTR)PcValue < (ULONG_PTR)Module->DllBase + Module->SizeOfImage)
-        {
-            ImageBase = Module->DllBase;
-            break;
-        }
-        Entry = Entry->Flink;
-    }
-    RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
-
-    *BaseOfImage = ImageBase;
-    return ImageBase;
-}
-
-/*
- * @implemented
- */
 NTSTATUS NTAPI
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
