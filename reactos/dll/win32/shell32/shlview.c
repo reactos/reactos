@@ -2072,7 +2072,14 @@ static HRESULT WINAPI IShellView_fnCreateViewWindow(
 
 
 	TRACE("(%p)->(shlview=%p set=%p shlbrs=%p rec=%p hwnd=%p) incomplete\n",This, lpPrevView,lpfs, psb, prcView, phWnd);
-	TRACE("-- vmode=%x flags=%x left=%i top=%i right=%i bottom=%i\n",lpfs->ViewMode, lpfs->fFlags ,prcView->left,prcView->top, prcView->right, prcView->bottom);
+	if (lpfs != NULL)
+		TRACE("-- vmode=%x flags=%x\n", lpfs->ViewMode, lpfs->fFlags);
+	if (prcView != NULL)
+		TRACE("-- left=%i top=%i right=%i bottom=%i\n", prcView->left, prcView->top, prcView->right, prcView->bottom);
+
+	/* Validate the Shell Browser */
+	if (psb == NULL)
+		return E_UNEXPECTED;
 
 	/*set up the member variables*/
 	This->pShellBrowser = psb;
@@ -2534,8 +2541,13 @@ static HRESULT WINAPI ISVDropTarget_DragLeave(IDropTarget *iface) {
         IDropTarget_Release(This->pCurDropTarget);
         This->pCurDropTarget = NULL;
     }
-    IDataObject_Release(This->pCurDataObject);
-    This->pCurDataObject = NULL;
+
+    if (This->pCurDataObject != NULL)
+    {
+        IDataObject_Release(This->pCurDataObject);
+        This->pCurDataObject = NULL;
+    }
+
     This->iDragOverItem = 0;
 
     return S_OK;
@@ -2553,8 +2565,12 @@ static HRESULT WINAPI ISVDropTarget_Drop(IDropTarget *iface, IDataObject* pDataO
         This->pCurDropTarget = NULL;
     }
 
-    IDataObject_Release(This->pCurDataObject);
-    This->pCurDataObject = NULL;
+    if (This->pCurDataObject != NULL)
+    {
+        IDataObject_Release(This->pCurDataObject);
+        This->pCurDataObject = NULL;
+    }
+
     This->iDragOverItem = 0;
 
     return S_OK;
