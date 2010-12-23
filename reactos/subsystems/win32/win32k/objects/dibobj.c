@@ -971,7 +971,7 @@ NtGdiGetDIBitsInternal(
 			Status = STATUS_SUCCESS;
 			_SEH2_TRY
 			{
-				RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, height, bpp));
+				RtlCopyMemory(Bits, pDIBits, DIB_GetDIBImageBytes (width, ScanLines, bpp));
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
