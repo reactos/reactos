@@ -189,12 +189,12 @@ _CcpFlushCache(IN PNOCC_CACHE_MAP Map,
 				CcpDereferenceCache(Bcb - CcCacheSections, FALSE);
 			}
 			else
-				CcpUnpinData(Bcb);
+				CcpUnpinData(Bcb, TRUE);
 		}
 		else
 		{
 			ListEntry = ListEntry->Flink;
-			CcpUnpinData(Bcb);
+			CcpUnpinData(Bcb, TRUE);
 		}
 
 		DPRINT("End loop\n");

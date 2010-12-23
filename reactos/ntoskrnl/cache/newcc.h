@@ -65,9 +65,9 @@ VOID
 NTAPI
 CcInitView(VOID);
 
-VOID
+BOOLEAN
 NTAPI
-CcpUnpinData(PNOCC_BCB Bcb);
+CcpUnpinData(PNOCC_BCB Bcb, BOOLEAN ActuallyRelease);
 
 BOOLEAN
 NTAPI

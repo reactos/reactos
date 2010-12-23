@@ -53,7 +53,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 		// Reference a cache stripe so it won't go away
 		CcpLock();
 		if (CcCacheSections[BcbHead].BaseAddress) {
-			CcpReferenceCache(i);
+			CcpReferenceCache(BcbHead);
 			CcpUnlock();
 		} else {
 			CcpUnlock();
@@ -68,7 +68,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 		*NrFreed += Freed;
 
 		CcpLock();
-		CcpDereferenceCache(BcbHead, FALSE);
+		CcpUnpinData(&CcCacheSections[BcbHead], TRUE);
 		CcpUnlock();
 	}
 
@@ -474,10 +474,10 @@ CcZeroData(IN PFILE_OBJECT FileObject,
 			CcpLock();
 			ListEntry = ListEntry->Flink;
 			// Return from pin state
-			CcpUnpinData(PinnedBcb);
+			CcpUnpinData(PinnedBcb, TRUE);
 		}
 
-		CcpUnpinData(Bcb);
+		CcpUnpinData(Bcb, TRUE);
 	}
 
 	CcpUnlock();

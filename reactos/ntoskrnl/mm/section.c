@@ -2039,7 +2039,9 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
    ULONG FileOffset;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
+#ifndef NEWCC
    PBCB Bcb = NULL;
+#endif
    BOOLEAN DirectMapped;
    BOOLEAN IsImageSection;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
@@ -2061,6 +2063,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 
    FileObject = Context.Section->FileObject;
    DirectMapped = FALSE;
+#ifndef NEWCC
    if (FileObject != NULL &&
        !(Context.Segment->Characteristics & IMAGE_SCN_MEM_SHARED))
    {
@@ -2077,6 +2080,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
          DirectMapped = TRUE;
       }
    }
+#endif
 
 
    /*
