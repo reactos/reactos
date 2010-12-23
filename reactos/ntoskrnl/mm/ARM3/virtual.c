@@ -2458,7 +2458,7 @@ MiQueryMemoryBasicInformation(IN HANDLE ProcessHandle,
                 ASSERT(BaseVpn > Vad->EndingVpn);
 
                 /* Stop if there is no right child */
-                if (!Vad->LeftChild) break;
+                if (!Vad->RightChild) break;
 
                 /* Search on the right next */
                 Vad = Vad->RightChild;
