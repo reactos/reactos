@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2008 Alexander A. Telyatnikov (Alter)
+Copyright (c) 2002-2010 Alexander A. Telyatnikov (Alter)
 
 Module Name:
     id_dma.cpp
@@ -182,7 +182,7 @@ err_1:
             }
         }
     }
-#endif //USE_OWN_DMA
+
 
     if(deviceExtension->HwFlags & UNIATA_AHCI) {
         if(chan->AHCI_CL) {
@@ -206,7 +206,7 @@ err_1:
             }
         }
     }
-
+    #endif //USE_OWN_DMA
     return;
 } // end AtapiDmaAlloc()
 
@@ -289,7 +289,7 @@ retry_DB_IO:
     if(!dma_count || ((LONG)(dma_base) == -1)) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No 1st block\n" ));
         //AtaReq->dma_base = NULL;
-        AtaReq->ahci_base64 = 0;
+        AtaReq->ahci_base64 = NULL;
         return FALSE;
     }
 
@@ -311,7 +311,7 @@ retry_DB_IO:
         if (i >= max_entries) {
             KdPrint2((PRINT_PREFIX "too many segments in DMA table\n" ));
             //AtaReq->dma_base = NULL;
-            AtaReq->ahci_base64 = 0;
+            AtaReq->ahci_base64 = NULL;
             return FALSE;
         }
         KdPrint2((PRINT_PREFIX "  get Phys(data[n]=%x)\n", data ));
@@ -1028,6 +1028,13 @@ set_new_acard:
         /********************/
         /* AMD, nVidia, VIA */
         /********************/
+        if((VendorID == ATA_VIA_ID) &&
+           (ChipFlags & VIASATA) &&
+           (Channel == 0)) {
+            AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_SA150);
+            return;
+        }
+
         static const UCHAR via_modes[5][7] = {
             { 0xc2, 0xc1, 0xc0, 0x00, 0x00, 0x00, 0x00 },        /* ATA33 and New Chips */
             { 0xee, 0xec, 0xea, 0xe9, 0xe8, 0x00, 0x00 },        /* ATA66 */
@@ -1052,11 +1059,14 @@ set_new_acard:
                 return;
             }
         }
-        for(i = wdmamode; i>=0; i--) {
-            SetPciConfig1(reg-0x08, via_pio[5+i]);
-            if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                SetPciConfig1(reg, 0x8b);
-                return;
+        if(!(ChipFlags & VIABAR)) {
+	    /* This chip can't do WDMA. */
+            for(i = wdmamode; i>=0; i--) {
+                SetPciConfig1(reg-0x08, via_pio[5+i]);
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                    SetPciConfig1(reg, 0x8b);
+                    return;
+                }
             }
         }
         /* set PIO mode timings */
@@ -1244,6 +1254,48 @@ set_new_acard:
                     return;
                 }
             }
+            break;
+        }
+
+        if(deviceExtension->DevID == ATA_ISCH) {
+            ULONG tim;
+            GetPciConfig4(0x80 + dev*4, tim);
+
+            for(i=udmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
+                    tim |= (0x1 << 31);
+                    tim &= ~(0x7 << 16);
+                    tim |= (i << 16);
+
+                    idx = i+8;
+                    udma_ok = TRUE;
+                    apiomode = ATA_PIO4;
+                    break;
+                }
+            }
+            if(!udma_ok) {
+                for(i=wdmamode; i>=0; i--) {
+                    if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+                        tim &= ~(0x1 << 31);
+                        tim &= ~(0x3 << 8);
+                        tim |= (i << 8);
+
+                        idx = i+5;
+                        udma_ok = TRUE;
+                        apiomode = (i == 0) ? ATA_PIO0 :
+                            (i == 1) ? ATA_PIO3 : ATA_PIO4;
+                        break;
+                    }
+                }
+            }
+            if(!udma_ok) {
+                AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
+                idx = apiomode;
+            }
+            tim &= ~(0x7);
+            tim |= (apiomode & 0x7);
+            SetPciConfig4(0x80 + dev*4, tim);
+
             break;
         }
 
@@ -1751,6 +1803,94 @@ setup_drive_ite:
                 SetPciConfig1(0x54 + offset, chtiming[apiomode]);
             }
             return;
+        } else
+        if(ChipType == ITE_133_NEW) {
+            //static const USHORT reg54_timings[] = { 0x0000, 0x0000, 0x0001, 0x0001, 0x0001, 0x1001, 0x1001 };
+            static const UCHAR udmatiming[] =
+                { 0x00, 0x01, 0x10, 0x01, 0x10, 0x01, 0x10  };
+            static const UCHAR timings[] =
+                { 0x00, 0x00, 0x10, 0x21, 0x23, 0x10, 0x21, 0x23,
+			   0x23, 0x23, 0x23, 0x23, 0x23, 0x02, 0x02 };
+            BOOLEAN udma_ok = FALSE;
+            BOOLEAN ok = FALSE;
+            UCHAR timing = 0;
+
+            WCHAR reg40;
+            UCHAR reg44;
+            USHORT reg4a;
+            USHORT reg54;
+            USHORT mask40=0, new40=0;
+            UCHAR mask44=0, new44=0;
+
+            GetPciConfig2(0x40, reg40);
+            GetPciConfig1(0x44, reg44);
+            GetPciConfig2(0x4a, reg4a);
+            GetPciConfig2(0x54, reg54);
+
+            if(!(reg54 & (0x10 << dev))) {
+                // 80-pin check
+                udmamode = min(udmamode, 2);
+            }
+
+            for(i=udmamode; i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
+                    ChangePciConfig1(0x48, a | (1 << dev) );
+            	    ChangePciConfig2(0x4a,
+            			     (a & ~(0x3 << (dev*4))) |
+            			     (udmatiming[i] << (dev*4)) );
+                    ok=TRUE;
+                    udma_ok=TRUE;
+                    timing = timings[i+8];
+                    break;
+                }
+            }
+             
+            for(i=wdmamode; !ok && i>=0; i--) {
+                if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
+
+                    ok=TRUE;
+                    timing = timings[i+5];
+                    break;
+                }
+            }
+
+            if(!ok) {
+                AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
+                timing = timings[apiomode];
+            }
+
+            if(!udma_ok) {
+                ChangePciConfig1(0x48, a & ~(1 << dev) );
+                ChangePciConfig2(0x4a, a & ~(0x3 << (dev << 2)) );
+            }
+            if (udma_ok && udmamode >= ATA_UDMA2) {
+                reg54 |= (0x1 << dev);
+            } else {
+                reg54 &= ~(0x1 << dev);
+            }
+            if (udma_ok && udmamode >= ATA_UDMA5) {
+                reg54 |= (0x1000 << dev);
+            } else {
+                reg54 &= ~(0x1000 << dev);
+            }
+            SetPciConfig2(0x54, reg54 );
+
+            reg40 &= 0xff00;
+            reg40 |= 0x4033;
+
+            if(!(ldev & 1)) {
+                reg40 |= (ATAPI_DEVICE(deviceExtension, ldev) ? 0x04 : 0x00);
+                mask40 = 0x3300;
+                new40 = timing << 8;
+            } else {
+                reg40 |= (ATAPI_DEVICE(deviceExtension, ldev) ? 0x40 : 0x00);
+                mask44 = 0x0f;
+                new44 = ((timing & 0x30) >> 2) |
+                        (timing & 0x03);
+            }
+            SetPciConfig2(0x40, (reg40 & ~mask40) | new40);
+            SetPciConfig1(0x44, (reg44 & ~mask44) | new44);
+            return;
         }
 
         return;
@@ -2092,7 +2232,8 @@ via82c_timing(
     }
 
     // Newer chips dislike this:
-    if(!(deviceExtension->HwFlags & VIAAST)) {
+    if(/*!(deviceExtension->HwFlags & VIAAST)*/
+        deviceExtension->MaxTransferMode < ATA_UDMA6) {
         /* PIO address setup */
         GetPciConfig1(0x4c, t);
         t = (t & ~(3 << ((3 - dev) << 1))) | (FIT(setup - 1, 0, 3) << ((3 - dev) << 1));

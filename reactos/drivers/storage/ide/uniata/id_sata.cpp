@@ -1,10 +1,44 @@
+/*++
+
+Copyright (c) 2008-2010 Alexandr A. Telyatnikov (Alter)
+
+Module Name:
+    id_probe.cpp
+
+Abstract:
+    This module handles SATA-related staff
+
+Author:
+    Alexander A. Telyatnikov (Alter)
+
+Environment:
+    kernel mode only
+
+Notes:
+
+    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+    OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+    IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+    NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+    THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Revision History:
+
+--*/
+
 #include "stdafx.h"
 
 UCHAR
 NTAPI
 UniataSataConnect(
     IN PVOID HwDeviceExtension,
-    IN ULONG lChannel          // logical channel
+    IN ULONG lChannel,          // logical channel
+    IN ULONG pm_port /* for port multipliers */
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
@@ -26,11 +60,11 @@ UniataSataConnect(
     }
 
     /* clear SATA error register, some controllers need this */
-    AtapiWritePort4(chan, IDX_SATA_SError,
-        AtapiReadPort4(chan, IDX_SATA_SError));
+    UniataSataWritePort4(chan, IDX_SATA_SError,
+        UniataSataReadPort4(chan, IDX_SATA_SError, pm_port), pm_port);
     /* wait up to 1 second for "connect well" */
     for(i=0; i<100; i++) {
-        SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
+        SStatus.Reg = UniataSataReadPort4(chan, IDX_SATA_SStatus, pm_port);
         if(SStatus.SPD == SStatus_SPD_Gen1 ||
            SStatus.SPD == SStatus_SPD_Gen2) {
             deviceExtension->lun[lChannel*2].TransferMode = ATA_SA150 + (UCHAR)(SStatus.SPD - 1);
@@ -43,8 +77,8 @@ UniataSataConnect(
         return 0xff;
     }
     /* clear SATA error register */
-    AtapiWritePort4(chan, IDX_SATA_SError,
-        AtapiReadPort4(chan, IDX_SATA_SError));
+    UniataSataWritePort4(chan, IDX_SATA_SError,
+        UniataSataReadPort4(chan, IDX_SATA_SError, pm_port), pm_port);
 
     Status = WaitOnBaseBusyLong(chan);
     if(Status & IDE_STATUS_BUSY) {
@@ -65,7 +99,8 @@ UCHAR
 NTAPI
 UniataSataPhyEnable(
     IN PVOID HwDeviceExtension,
-    IN ULONG lChannel          // logical channel
+    IN ULONG lChannel,          // logical channel
+    IN ULONG pm_port /* for port multipliers */
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
@@ -80,10 +115,10 @@ UniataSataPhyEnable(
         return IDE_STATUS_IDLE;
     }
 
-    SControl.Reg = AtapiReadPort4(chan, IDX_SATA_SControl);
+    SControl.Reg = UniataSataReadPort4(chan, IDX_SATA_SControl, pm_port);
     KdPrint2((PRINT_PREFIX "SControl %x\n", SControl.Reg));
     if(SControl.DET == SControl_DET_Idle) {
-        return UniataSataConnect(HwDeviceExtension, lChannel);
+        return UniataSataConnect(HwDeviceExtension, lChannel, pm_port);
     }
 
     for (retry = 0; retry < 10; retry++) {
@@ -91,9 +126,9 @@ UniataSataPhyEnable(
 	for (loop = 0; loop < 10; loop++) {
 	    SControl.Reg = 0;
 	    SControl.DET = SControl_DET_Init;
-            AtapiWritePort4(chan, IDX_SATA_SControl, SControl.Reg);
+            UniataSataWritePort4(chan, IDX_SATA_SControl, SControl.Reg, pm_port);
             AtapiStallExecution(100);
-            SControl.Reg = AtapiReadPort4(chan, IDX_SATA_SControl);
+            SControl.Reg = UniataSataReadPort4(chan, IDX_SATA_SControl, pm_port);
             KdPrint2((PRINT_PREFIX "  SControl %8.8%x\n", SControl.Reg));
             if(SControl.DET == SControl_DET_Init) {
 		break;
@@ -105,12 +140,12 @@ UniataSataPhyEnable(
 	    SControl.Reg = 0;
 	    SControl.DET = SControl_DET_DoNothing;
 	    SControl.IPM = SControl_IPM_NoPartialSlumber;
-            AtapiWritePort4(chan, IDX_SATA_SControl, SControl.Reg);
+            UniataSataWritePort4(chan, IDX_SATA_SControl, SControl.Reg, pm_port);
             AtapiStallExecution(100);
-            SControl.Reg = AtapiReadPort4(chan, IDX_SATA_SControl);
+            SControl.Reg = UniataSataReadPort4(chan, IDX_SATA_SControl, pm_port);
             KdPrint2((PRINT_PREFIX "  SControl %8.8%x\n", SControl.Reg));
             if(SControl.DET == SControl_DET_Idle) {
-                return UniataSataConnect(HwDeviceExtension, lChannel);
+                return UniataSataConnect(HwDeviceExtension, lChannel, pm_port);
 	    }
 	}
     }
@@ -124,7 +159,8 @@ NTAPI
 UniataSataClearErr(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel,          // logical channel
-    IN BOOLEAN do_connect
+    IN BOOLEAN do_connect,
+    IN ULONG pm_port /* for port multipliers */
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
@@ -136,8 +172,8 @@ UniataSataClearErr(
     if(UniataIsSATARangeAvailable(deviceExtension, lChannel)) {
     //if(ChipFlags & UNIATA_SATA) {
 
-        SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
-        SError.Reg  = AtapiReadPort4(chan, IDX_SATA_SError); 
+        SStatus.Reg = UniataSataReadPort4(chan, IDX_SATA_SStatus, pm_port);
+        SError.Reg  = UniataSataReadPort4(chan, IDX_SATA_SError, pm_port); 
 
         if(SStatus.Reg) {
             KdPrint2((PRINT_PREFIX "  SStatus %x\n", SStatus.Reg));
@@ -145,16 +181,16 @@ UniataSataClearErr(
         if(SError.Reg) {
             KdPrint2((PRINT_PREFIX "  SError %x\n", SError.Reg));
             /* clear error bits/interrupt */
-            AtapiWritePort4(chan, IDX_SATA_SError, SError.Reg);
+            UniataSataWritePort4(chan, IDX_SATA_SError, SError.Reg, pm_port);
 
             if(do_connect) {
                 /* if we have a connection event deal with it */
                 if(SError.DIAG.N) {
                     KdPrint2((PRINT_PREFIX "  catch SATA connect/disconnect\n"));
                     if(SStatus.SPD >= SStatus_SPD_Gen1) {
-                        UniataSataEvent(deviceExtension, lChannel, UNIATA_SATA_EVENT_ATTACH);
+                        UniataSataEvent(deviceExtension, lChannel, UNIATA_SATA_EVENT_ATTACH, pm_port);
                     } else {
-                        UniataSataEvent(deviceExtension, lChannel, UNIATA_SATA_EVENT_DETACH);
+                        UniataSataEvent(deviceExtension, lChannel, UNIATA_SATA_EVENT_DETACH, pm_port);
                     }
                     return TRUE;
                 }
@@ -169,12 +205,13 @@ NTAPI
 UniataSataEvent(
     IN PVOID HwDeviceExtension,
     IN ULONG lChannel,          // logical channel
-    IN ULONG Action
+    IN ULONG Action,
+    IN ULONG pm_port /* for port multipliers */
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
     UCHAR Status;
-    ULONG ldev = lChannel*2;
+    ULONG ldev = lChannel*2 + (pm_port ? 1 : 0);
 
     if(!UniataIsSATARangeAvailable(deviceExtension, lChannel)) {
         return FALSE;
@@ -183,12 +220,12 @@ UniataSataEvent(
     switch(Action) {
     case UNIATA_SATA_EVENT_ATTACH:
         KdPrint2((PRINT_PREFIX "  CONNECTED\n"));
-        Status = UniataSataConnect(HwDeviceExtension, lChannel);
+        Status = UniataSataConnect(HwDeviceExtension, lChannel, pm_port);
         KdPrint2((PRINT_PREFIX "  Status %x\n", Status));
         if(Status != IDE_STATUS_IDLE) {
             return FALSE;
         }
-        CheckDevice(HwDeviceExtension, lChannel, 0 /*dev*/, FALSE);
+        CheckDevice(HwDeviceExtension, lChannel, pm_port ? 1 : 0 /*dev*/, FALSE);
         return TRUE;
         break;
     case UNIATA_SATA_EVENT_DETACH:
@@ -199,6 +236,135 @@ UniataSataEvent(
     }
     return FALSE;
 } // end UniataSataEvent()
+
+ULONG
+UniataSataReadPort4(
+    IN PHW_CHANNEL chan,
+    IN ULONG io_port_ndx,
+    IN ULONG pm_port /* for port multipliers */
+    )
+{
+    if(chan && (io_port_ndx < IDX_MAX_REG) &&
+       chan->RegTranslation[io_port_ndx].Proc) {
+
+        PHW_DEVICE_EXTENSION deviceExtension = chan->DeviceExtension;
+        PVOID HwDeviceExtension = (PVOID)deviceExtension;
+        ULONG slotNumber = deviceExtension->slotNumber;
+        ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+        ULONG VendorID =  deviceExtension->DevID        & 0xffff;
+        ULONG offs;
+        ULONG p;
+
+        switch(VendorID) {
+        case ATA_INTEL_ID: {
+            p = pm_port ? 1 : 0;
+            if(deviceExtension->HwFlags & ICH5) {
+                offs = 0x50+chan->lun[p]->SATA_lun_map*0x10;
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += 0;
+                    break;
+                case IDX_SATA_SError:
+                    offs += 1*4;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += 2*4;
+                    break;
+                default:
+                    return -1;
+                }
+                SetPciConfig4(0xa0, offs);
+                GetPciConfig4(0xa4, offs);
+                return offs;
+            } else {
+                offs = ((deviceExtension->Channel+chan->lChannel)*2+p) * 0x100;
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += 0;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += 1;
+                    break;
+                case IDX_SATA_SError:
+                    offs += 2;
+                    break;
+                default:
+                    return -1;
+                }
+                AtapiWritePort4(chan, IDX_INDEXED_ADDR, offs);
+                return AtapiReadPort4(chan, IDX_INDEXED_DATA);
+            }
+        } // ATA_INTEL_ID
+        } // end switch(VendorID)
+        return -1;
+    }
+    return AtapiReadPort4(chan, io_port_ndx);
+} // end UniataSataReadPort4()
+
+VOID
+UniataSataWritePort4(
+    IN PHW_CHANNEL chan,
+    IN ULONG io_port_ndx,
+    IN ULONG data,
+    IN ULONG pm_port /* for port multipliers */
+    )
+{
+    if(chan && (io_port_ndx < IDX_MAX_REG) &&
+       chan->RegTranslation[io_port_ndx].Proc) {
+
+        PHW_DEVICE_EXTENSION deviceExtension = chan->DeviceExtension;
+        PVOID HwDeviceExtension = (PVOID)deviceExtension;
+        ULONG slotNumber = deviceExtension->slotNumber;
+        ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+        ULONG VendorID =  deviceExtension->DevID        & 0xffff;
+        ULONG offs;
+        ULONG p;
+
+        switch(VendorID) {
+        case ATA_INTEL_ID: {
+            p = pm_port ? 1 : 0;
+            if(deviceExtension->HwFlags & ICH5) {
+                offs = 0x50+chan->lun[p]->SATA_lun_map*0x10;
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += 0;
+                    break;
+                case IDX_SATA_SError:
+                    offs += 1*4;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += 2*4;
+                    break;
+                default:
+                    return;
+                }
+                SetPciConfig4(0xa0, offs);
+                SetPciConfig4(0xa4, data);
+                return;
+            } else {
+                offs = ((deviceExtension->Channel+chan->lChannel)*2+p) * 0x100;
+                switch(io_port_ndx) {
+                case IDX_SATA_SStatus:
+                    offs += 0;
+                    break;
+                case IDX_SATA_SControl:
+                    offs += 1;
+                    break;
+                case IDX_SATA_SError:
+                    offs += 2;
+                    break;
+                default:
+                    return;
+                }
+                AtapiWritePort4(chan, IDX_INDEXED_ADDR, offs);
+                AtapiWritePort4(chan, IDX_INDEXED_DATA, data);
+            }
+        } // ATA_INTEL_ID
+        } // end switch(VendorID)
+        return;
+    }
+    AtapiWritePort4(chan, io_port_ndx, data);
+} // end UniataSataWritePort4()
 
 BOOLEAN
 NTAPI
@@ -316,7 +482,8 @@ UCHAR
 NTAPI
 UniataAhciStatus(
     IN PVOID HwDeviceExtension,
-    IN ULONG lChannel
+    IN ULONG lChannel,
+    IN ULONG DeviceNumber
     )
 {
     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
@@ -451,4 +618,3 @@ UniataAhciSetupFIS(
     fis[19] = 0x00;
     return 20;
 } // end UniataAhciSetupFIS()
-

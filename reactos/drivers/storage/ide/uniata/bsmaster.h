@@ -1,6 +1,6 @@
 /*++
 
-Copyright (c) 2002-2008 Alexandr A. Telyatnikov (Alter)
+Copyright (c) 2002-2010 Alexandr A. Telyatnikov (Alter)
 
 Module Name:
     bsmaster.h
@@ -188,6 +188,7 @@ typedef struct _IDE_AHCI_REGISTERS {
         ULONG AE:1;    // AHCI enable
     } GHC;
 
+#define AHCI_GHC   0x04
 #define AHCI_GHC_HR    0x00000001
 #define AHCI_GHC_IE    0x00000002
 #define AHCI_GHC_AE    0x80000000
@@ -347,7 +348,14 @@ typedef struct _IDE_SATA_REGISTERS {
 #define IDX_SATA_SActive                (3+IDX_SATA_IO)
 #define IDX_SATA_SNTF_PMN               (4+IDX_SATA_IO)
 
-#define IDX_MAX_REG                     (IDX_SATA_IO+IDX_SATA_IO_SZ)
+#define IDX_INDEXED_IO                  (IDX_SATA_IO+IDX_SATA_IO_SZ)
+#define IDX_INDEXED_IO_SZ               2
+
+#define IDX_INDEXED_ADDR                (0+IDX_INDEXED_IO)
+#define IDX_INDEXED_DATA                (1+IDX_INDEXED_IO)
+
+#define IDX_MAX_REG                     (IDX_INDEXED_IO+IDX_INDEXED_IO_SZ)
+
 
 typedef union _AHCI_IS_REG {
     struct {
@@ -712,9 +720,10 @@ struct _HW_DEVICE_EXTENSION;
 struct _HW_LU_EXTENSION;
 
 typedef struct _IORES {
-    ULONG Addr;
-    ULONG MemIo:1;
-    ULONG Reserved:31;
+    ULONG Addr;          /* Base address*/
+    ULONG MemIo:1;       /* Memory mapping (1) vs IO ports (0) */
+    ULONG Proc:1;        /* Need special process via IO_Proc */
+    ULONG Reserved:30;
 } IORES, *PIORES;
 
 // Channel extension
@@ -825,6 +834,9 @@ typedef struct _HW_CHANNEL {
 #define CTRFLAGS_LBA48                  0x0040
 #define CTRFLAGS_DSC_BSY                0x0080
 #define CTRFLAGS_NO_SLAVE               0x0100
+//#define CTRFLAGS_PATA                   0x0200
+
+#define CTRFLAGS_PERMANENT  (CTRFLAGS_DMA_RO | CTRFLAGS_NO_SLAVE)
 
 #define GEOM_AUTO                       0xffffffff
 #define GEOM_STD                        0x0000
@@ -882,6 +894,13 @@ typedef struct _HW_LU_EXTENSION {
     struct _SBadBlockListItem* bbListDescr;
     struct _SBadBlockRange* arrBadBlocks;
     ULONG           nBadBlocks;
+
+    // Controller-specific LUN options
+    union {
+        /* for tricky controllers, those can change Logical-to-Physical LUN mapping.
+           mainly for mapping SATA ports to compatible PATA registers */
+        ULONG          SATA_lun_map; 
+    };
 
     struct _HW_DEVICE_EXTENSION* DeviceExtension;
 
@@ -988,6 +1007,11 @@ typedef struct _HW_DEVICE_EXTENSION {
     BOOLEAN        opt_AtapiDmaReadWrite;    // default TRUE
 
     PCCH           FullDevName;
+
+    // Controller specific state/options
+    union {
+        ULONG      HwCfg;
+    };
 
 } HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
 
@@ -1210,7 +1234,7 @@ UniataChipDetectChannels(
     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo
     );
 
-extern BOOLEAN
+extern NTSTATUS
 NTAPI
 UniataChipDetect(
     IN PVOID HwDeviceExtension,
