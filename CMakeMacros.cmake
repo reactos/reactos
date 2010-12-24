@@ -236,3 +236,12 @@ macro(ADD_TYPELIB TARGET)
   endforeach()
   add_custom_target(${TARGET} ALL DEPENDS ${OBJECTS})
 endmacro()
+
+macro(add_idl_interface IDL_FILE)
+    custom_incdefs()
+    get_filename_component(FILE ${IDL_FILE} NAME_WE)
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c
+                       COMMAND ${IDL_COMPILER} ${result_incs} ${result_defs} -m32 --win32 -u -U ${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c ${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}
+                       DEPENDS ${IDL_FILE})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${FILE}_i.c PROPERTIES GENERATED TRUE)
+endmacro()
