@@ -1,13 +1,14 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(actxprxy SHARED usrmarshal.c actxprxy.def)
+spec2def(actxprxy.dll actxprxy.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(actxprxy.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    usrmarshal.c
+    ${CMAKE_CURRENT_BINARY_DIR}/actxprxy.def)
+
+add_library(actxprxy SHARED ${SOURCE})
 
 set_entrypoint(actxprxy 0)
 

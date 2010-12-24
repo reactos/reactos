@@ -6,8 +6,6 @@ list(APPEND SOURCE
     irotp.c
     rpcss_main.c
     service_main.c
-    epm.idl
-    irot.idl
     rpcss.rc)
 
 include_directories(${REACTOS_BINARY_DIR}/include/reactos/wine)

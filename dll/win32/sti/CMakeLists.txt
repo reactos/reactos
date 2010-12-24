@@ -10,16 +10,15 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(sti SHARED
+spec2def(sti.dll sti.spec)
+
+list(APPEND SOURCE
     regsvr.c
     sti.c
     sti_main.c
-    sti_wia.idl
-    sti.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/sti.def)
 
-if(NOT MSVC)
-    set_source_files_properties(sti.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(sti SHARED ${SOURCE})
 
 set_entrypoint(sti 0)
 
