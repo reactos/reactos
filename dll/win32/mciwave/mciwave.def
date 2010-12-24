@@ -1,5 +1,0 @@
-
-LIBRARY mciwave.dll
-
-EXPORTS
-  DriverProc@20=MCIWAVE_DriverProc@20 @1 PRIVATE

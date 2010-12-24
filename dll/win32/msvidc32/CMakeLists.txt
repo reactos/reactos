@@ -5,16 +5,16 @@ add_definitions(
     -D__WINESRC__
     -D_WINE)
 
-add_library(msvidc32 SHARED msvideo1.c rsrc.rc msvidc32.def)
+spec2def(msvidc32.dll msvidc32.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(msvidc32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    msvideo1.c
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msvidc32.def)
+
+add_library(msvidc32 SHARED ${SOURCE})
 
 set_module_type(msvidc32 win32dll)
-
 target_link_libraries(msvidc32 wine)
-
 add_importlibs(msvidc32 user32 msvcrt kernel32 ntdll)
-
 add_cab_target(msvidc32 1)

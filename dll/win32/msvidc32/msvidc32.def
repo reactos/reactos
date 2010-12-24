@@ -1,5 +1,0 @@
-
-LIBRARY msvidc32.dll
-
-EXPORTS
-  DriverProc@20=CRAM_DriverProc@20 @1 PRIVATE

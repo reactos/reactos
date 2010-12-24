@@ -1,5 +1,0 @@
-
-LIBRARY msadp32.acm
-
-EXPORTS
-  DriverProc@20=ADPCM_DriverProc@20 @1 PRIVATE

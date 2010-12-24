@@ -5,16 +5,16 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(msrle32 SHARED msrle32.c rsrc.rc msrle32.def)
+spec2def(msrle32.dll msrle32.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(msrle32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    msrle32.c
+    rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msrle32.def)
+
+add_library(msrle32 SHARED ${SOURCE})
 
 set_module_type(msrle32 win32dll)
-
 target_link_libraries(msrle32 wine)
-
 add_importlibs(msrle32 msvcrt winmm user32 kernel32 ntdll)
-
 add_cab_target(msrle32 1)

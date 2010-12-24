@@ -6,11 +6,14 @@ add_definitions(-D__WINESRC__)
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_library(ntmarta SHARED ntmarta.c ntmarta.rc ntmarta.def)
+spec2def(ntmarta.dll ntmarta.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(ntmarta.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    ntmarta.c
+    ntmarta.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ntmarta.def)
+
+add_library(ntmarta SHARED ${SOURCE})
 
 set_module_type(ntmarta win32dll)
 

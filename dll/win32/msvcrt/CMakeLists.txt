@@ -16,10 +16,10 @@ include_directories(${REACTOS_SOURCE_DIR}/lib/sdk/crt/include)
 set_rc_compiler()
 
 list(APPEND SOURCE
-     dllmain.c
-     stubs.c
-     msvcrt.rc
-     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
+    dllmain.c
+    stubs.c
+    msvcrt.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msvcrt.def)
 
 add_library(msvcrt SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/msvcrt_precomp.h.gch

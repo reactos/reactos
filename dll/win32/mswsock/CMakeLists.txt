@@ -6,18 +6,14 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(mswsock.dll mswsock.spec)
 
-add_library(mswsock SHARED
+list(APPEND SOURCE
     extensions.c
     stubs.c
     mswsock.rc
-    mswsock.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/mswsock.def)
 
-if(NOT MSVC)
-    set_source_files_properties(mswsock.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(mswsock SHARED ${SOURCE})
 
 set_module_type(mswsock win32dll)
-
 add_importlibs(mswsock ws2_32 msvcrt kernel32)
-
 add_cab_target(mswsock 1)

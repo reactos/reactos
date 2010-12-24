@@ -1,5 +1,0 @@
-
-LIBRARY msg711.acm
-
-EXPORTS
-  DriverProc@20=G711_DriverProc@20 @1 PRIVATE

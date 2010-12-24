@@ -1,5 +1,0 @@
-
-LIBRARY msrle32.dll
-
-EXPORTS
-  DriverProc@20=MSRLE32_DriverProc@20 @1 PRIVATE

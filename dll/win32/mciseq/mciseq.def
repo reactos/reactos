@@ -1,5 +1,0 @@
-
-LIBRARY mciseq.dll
-
-EXPORTS
-  DriverProc@20=MCIMIDI_DriverProc@20 @1 PRIVATE

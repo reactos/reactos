@@ -1,5 +1,0 @@
-
-LIBRARY mciqtz32.dll
-
-EXPORTS
-  DriverProc@20=MCIQTZ_DriverProc@20 @1 PRIVATE

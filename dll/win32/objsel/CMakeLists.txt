@@ -6,22 +6,20 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(objsel SHARED
+spec2def(objsel.dll objsel.spec)
+
+list(APPEND SOURCE
     factory.c
     objsel.c
     regsvr.c
     objsel.rc
-    objsel.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/objsel.def)
 
-if(NOT MSVC)
-    set_source_files_properties(objsel.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(objsel SHARED ${SOURCE})
 
 set_module_type(objsel win32dll)
 
-target_link_libraries(objsel
-    uuid
-    wine)
+target_link_libraries(objsel uuid wine)
 
 add_importlibs(objsel
     ole32

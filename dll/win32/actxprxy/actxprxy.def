@@ -1,9 +1,0 @@
-
-LIBRARY actxprxy.dll
-
-EXPORTS
-  GetProxyDllInfo@8 @3 PRIVATE
-  DllCanUnloadNow@0 @4 PRIVATE
-  DllGetClassObject@12 @5 PRIVATE
-  DllRegisterServer@0 @6 PRIVATE
-  DllUnregisterServer@0 @7 PRIVATE

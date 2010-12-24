@@ -2,18 +2,15 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(msisys SHARED msisys.c msisys.def)
+spec2def(msisys.ocx msisys.ocx.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(msisys.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    msisys.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msisys.def)
+
+add_library(msisys SHARED ${SOURCE})
 
 set_module_type(msisys win32ocx)
-
-target_link_libraries(msisys
-    uuid
-    wine)
-
+target_link_libraries(msisys uuid wine)
 add_importlibs(msisys msvcrt kernel32 ntdll)
-
 add_cab_target(msisys 1)
