@@ -170,11 +170,18 @@ NtGdiCreateBitmap(
     iFormat = BitmapFormat(cBitsPixel, BI_RGB);
 
     /* Check parameters */
-    if (iFormat == 0 || nWidth <= 0 || nWidth >= 0x8000000 || nHeight <= 0)
+    if (iFormat == 0 || nWidth <= 0 || nHeight <= 0)
     {
         DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
                 nWidth, nHeight, cBitsPixel);
-        EngSetLastError(ERROR_INVALID_PARAMETER);
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return NULL;
+    }
+
+    if(WIDTH_BYTES_ALIGN16(nWidth, cBitsPixel)*nHeight >= 0x8000000)
+    {
+        /* I just can't get enough, I just can't get enough */
+        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 

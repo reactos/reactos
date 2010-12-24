@@ -4,6 +4,36 @@
 #include <debug.h>
 
 /*
+ *           DIB_BitmapInfoSize
+ *
+ * Return the size of the bitmap info structure including color table.
+ * 11/16/1999 (RJJ) lifted from wine
+ */
+
+INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
+{
+    unsigned int colors, size, masks = 0;
+
+    if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+        const BITMAPCOREHEADER *core = (const BITMAPCOREHEADER *)info;
+        colors = (core->bcBitCount <= 8) ? 1 << core->bcBitCount : 0;
+        return sizeof(BITMAPCOREHEADER) + colors *
+             ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBTRIPLE) : sizeof(WORD));
+    }
+    else  /* assume BITMAPINFOHEADER */
+    {
+        colors = info->bmiHeader.biClrUsed;
+        if (colors > 256) colors = 256;
+        if (!colors && (info->bmiHeader.biBitCount <= 8))
+            colors = 1 << info->bmiHeader.biBitCount;
+        if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
+        size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
+        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+    }
+}
+
+/*
  * Return the full scan size for a bitmap.
  *
  * Based on Wine, Utils.c and Windows Graphics Prog pg 595, SDK amvideo.h.
@@ -391,59 +421,40 @@ GetDIBits(
     LPBITMAPINFO lpbmi,
     UINT uUsage)
 {
-  INT Ret = 0;
-  UINT cjBmpScanSize;
-  PVOID pvSafeBits = lpvBits;
+    UINT cjBmpScanSize;
+    UINT cjInfoSize;
 
-  if (!hDC || !GdiIsHandleValid((HGDIOBJ)hDC))
-  {
-     GdiSetLastError(ERROR_INVALID_PARAMETER);
-     return Ret;
-  }
+    if (!hDC || !GdiIsHandleValid((HGDIOBJ)hDC) || !lpbmi)
+    {
+        GdiSetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
-  cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+    cjBmpScanSize = DIB_BitmapMaxBitsSize(lpbmi, cScanLines);
+    cjInfoSize = DIB_BitmapInfoSize(lpbmi, uUsage);
 
-  if ( lpvBits )
-  {
-     if ( lpbmi )
-     {
+    if ( lpvBits )
+    {
         if ( lpbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER) )
         {
-           if ( lpbmi->bmiHeader.biCompression == BI_JPEG ||
-                lpbmi->bmiHeader.biCompression == BI_PNG )
-           {
-              SetLastError(ERROR_INVALID_PARAMETER);
-              return Ret;
-           }
+            if ( lpbmi->bmiHeader.biCompression == BI_JPEG ||
+                 lpbmi->bmiHeader.biCompression == BI_PNG )
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
         }
-     }
+    }
 
-     if ((ULONG)lpvBits & (sizeof(DWORD) - 1))
-     {
-         pvSafeBits = RtlAllocateHeap(RtlGetProcessHeap(), 0, cjBmpScanSize);
-         if (!pvSafeBits)
-            return Ret;
-     }
-  }
-
-  Ret = NtGdiGetDIBitsInternal(hDC,
+  return NtGdiGetDIBitsInternal(hDC,
                                hbmp,
                                uStartScan,
                                cScanLines,
-                               pvSafeBits,
+                               lpvBits,
                                lpbmi,
                                uUsage,
                                cjBmpScanSize,
-                               0);
-  if (lpvBits != pvSafeBits)
-  {
-     if (Ret)
-     {
-        RtlCopyMemory(lpvBits, pvSafeBits, cjBmpScanSize);
-     }
-     RtlFreeHeap(RtlGetProcessHeap(), 0, pvSafeBits);
-  }
-  return Ret;
+                               cjInfoSize);
 }
 
 /*
