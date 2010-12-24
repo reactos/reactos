@@ -740,11 +740,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
       for (; *cursor; cursor++)
       {
-         DPRINT("Sending notify\n");
-         co_IntPostOrSendMessage(*cursor,
-                                 MsgType,
-                                 Message,
-                                 lParam);
+         co_IntSendMessageNoWait(*cursor, MsgType, Message, lParam);
       }
 
       ExFreePool(HwndList);

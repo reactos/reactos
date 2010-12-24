@@ -1404,47 +1404,6 @@ CLEANUP:
     END_CLEANUP;
 }
 
-/* This function posts a message if the destination's message queue belongs to
-another thread, otherwise it sends the message. It does not support broadcast
-messages! */
-LRESULT FASTCALL
-co_IntPostOrSendMessage( HWND hWnd,
-                         UINT Msg,
-                         WPARAM wParam,
-                         LPARAM lParam )
-{
-    ULONG_PTR Result;
-    PTHREADINFO pti;
-    PWND Window;
-
-    if ( hWnd == HWND_BROADCAST )
-    {
-        return 0;
-    }
-
-    if(!(Window = UserGetWindowObject(hWnd)))
-    {
-        return 0;
-    }
-
-    pti = PsGetCurrentThreadWin32Thread();
-
-    if ( Window->head.pti->MessageQueue != pti->MessageQueue &&
-         FindMsgMemory(Msg) == 0 )
-    {
-        Result = UserPostMessage(hWnd, Msg, wParam, lParam);
-    }
-    else
-    {
-        if ( !co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result) )
-        {
-            Result = 0;
-        }
-    }
-
-    return (LRESULT)Result;
-}
-
 LRESULT FASTCALL
 co_IntDoSendMessage( HWND hWnd,
                      UINT Msg,

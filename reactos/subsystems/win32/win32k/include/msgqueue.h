@@ -180,11 +180,6 @@ co_IntSendMessage(HWND hWnd,
 		WPARAM wParam,
 		LPARAM lParam);
 LRESULT FASTCALL
-co_IntPostOrSendMessage(HWND hWnd,
-		     UINT Msg,
-		     WPARAM wParam,
-		     LPARAM lParam);
-LRESULT FASTCALL
 co_IntSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
