@@ -1,84 +1,92 @@
 
-spec2def(msi.dll msi.spec)
-
-if (0)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 add_definitions(-D__WINESRC__)
 
-add_library(msi SHARED
-            action.c
-            alter.c
-            appsearch.c
-            automation.c
-            classes.c
-            cond.tab.c
-            create.c</file>
-            custom.c</file>
-            database.c</file>
-            delete.c</file>
-            dialog.c</file>
-            distinct.c</file>
-            drop.c</file>
-            events.c</file>
-            files.c</file>
-            font.c</file>
-            format.c</file>
-            handle.c</file>
-            helpers.c</file>
-            insert.c</file>
-            install.c</file>
-            join.c</file>
-            media.c</file>
-            msi.c</file>
-            msi_main.c</file>
-            msiquery.c</file>
-            package.c</file>
-            preview.c</file>
-            record.c</file>
-            registry.c</file>
-            regsvr.c</file>
-            script.c</file>
-            select.c</file>
-            source.c</file>
-            sql.tab.c</file>
-            storages.c</file>
-            streams.c</file>
-            string.c</file>
-            suminfo.c</file>
-            table.c</file>
-            tokenize.c</file>
-            update.c</file>
-            upgrade.c</file>
-            where.c</file>
-            msi.rc</file>
-            ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
+remove_definitions(-D_WIN32_WINNT=0x502)
+add_definitions(-D_WIN32_WINNT=0x600)
+
+spec2def(msi.dll msi.spec)
+
+add_idl_interface(msiserver.idl)
+
+list(APPEND SOURCE
+    action.c
+    alter.c
+    appsearch.c
+    automation.c
+    classes.c
+    cond.tab.c
+    create.c
+    custom.c
+    database.c
+    delete.c
+    dialog.c
+    distinct.c
+    drop.c
+    events.c
+    files.c
+    font.c
+    format.c
+    handle.c
+    helpers.c
+    insert.c
+    install.c
+    join.c
+    media.c
+    msi.c
+    msi_main.c
+    msiquery.c
+    package.c
+    preview.c
+    record.c
+    registry.c
+    regsvr.c
+    script.c
+    select.c
+    source.c
+    sql.tab.c
+    storages.c
+    streams.c
+    string.c
+    suminfo.c
+    table.c
+    tokenize.c
+    update.c
+    upgrade.c
+    where.c
+    msi.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
+
+add_library(msi SHARED ${SOURCE})
+
+add_interface_definitions(msi_idlheader msiserver.idl)
+
+add_typelib(msi_tlb msiserver.idl)
 
 set_module_type(msi win32dll)
 
-target_link_libraries(msi wine uuid PSEH_LIB)
+target_link_libraries(msi uuid ${PSEH_LIB} wine)
+
+add_dependencies(msi msi_idlheader msi_tlb)
 
 add_importlibs(msi
-               kernel32
-               urlmon
-               wininet
-               comctl32
-               shell32
-               shlwapi
-               cabinet
-               oleaut32
-               ole32
-               version
-               user32
-               gdi32
-               advapi32
-               odbccp32
-               ntdll)
-
-#	<library>msiserver_interface</library>
-#	<dependency>msiserver</dependency>
-#	<dependency>msiheader</dependency>
+    advapi32
+    cabinet
+    comctl32
+    gdi32
+    odbccp32
+    ole32
+    oleaut32
+    shell32
+    shlwapi
+    urlmon
+    user32
+    version
+    wininet
+    msvcrt
+    kernel32
+    ntdll)
 
 add_cab_target(msi 1)
-endif()
 add_importlib_target(msi.spec)
