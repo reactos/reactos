@@ -1,6 +1,0 @@
-
-LIBRARY uext2.dll
-
-EXPORTS
-  ChkdskEx@24=Ext2Chkdsk@24 @1
-  FormatEx@24=Ext2Format@24 @2

@@ -2,11 +2,14 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(olepro32 SHARED olepro32stubs.c version.rc olepro32.def)
+spec2def(olepro32.dll olepro32.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(olepro32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    olepro32stubs.c
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/olepro32.def)
+
+add_library(olepro32 SHARED ${SOURCE})
 
 set_entrypoint(olepro32 0)
 

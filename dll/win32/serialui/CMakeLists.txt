@@ -1,14 +1,15 @@
 
 set_unicode()
 
-add_library(serialui SHARED serialui.c serialui.rc serialui.def)
+spec2def(serialui.dll serialui.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(serialui.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    serialui.c
+    serialui.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/serialui.def)
+
+add_library(serialui SHARED ${SOURCE})
 
 set_module_type(serialui win32dll)
-
 add_importlibs(serialui user32 shlwapi msvcrt kernel32)
-
 add_cab_target(serialui 1)

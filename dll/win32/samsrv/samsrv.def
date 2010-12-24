@@ -1,6 +1,0 @@
-
-LIBRARY samsrv.dll
-
-EXPORTS
-  SamIInitialize@0 @1
-  SampInitializeRegistry@0 @2

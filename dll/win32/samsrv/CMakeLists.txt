@@ -1,15 +1,16 @@
 
 set_unicode()
 
-add_library(samsrv SHARED samsrv.c samsrv.rc samsrv.def)
+spec2def(samsrv.dll samsrv.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(samsrv.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    samsrv.c
+    samsrv.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/samsrv.def)
+
+add_library(samsrv SHARED ${SOURCE})
 
 set_entrypoint(samsrv 0)
-
 add_importlibs(samsrv kernel32 ntdll)
 add_dependencies(samsrv psdk buildno_header)
-
 add_cab_target(samsrv 1)

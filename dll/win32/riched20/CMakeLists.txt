@@ -7,7 +7,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(riched20.dll riched20.spec)
 
-add_library(riched20 SHARED
+list(APPEND SOURCE
     caret.c
     clipboard.c
     context.c
@@ -30,8 +30,8 @@ add_library(riched20 SHARED
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/riched20.def)
 
+add_library(riched20 SHARED ${SOURCE})
 set_module_type(riched20 win32dll)
-
 target_link_libraries(riched20 wine uuid)
 
 if(MSVC)

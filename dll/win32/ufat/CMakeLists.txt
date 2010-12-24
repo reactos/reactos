@@ -1,14 +1,14 @@
 
-add_library(ufat SHARED ufat.c ufat.rc ufat.def)
+spec2def(ufat.dll ufat.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(ufat.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    ufat.c
+    ufat.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/ufat.def)
+
+add_library(ufat SHARED ${SOURCE})
 
 set_module_type(ufat win32dll)
-
 target_link_libraries(ufat vfatlib)
-
 add_importlibs(ufat msvcrt kernel32 ntdll)
-
 add_cab_target(ufat 1)

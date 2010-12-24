@@ -1,14 +1,14 @@
 
-add_library(uext2 SHARED uext2.c uext2.rc uext2.def)
+spec2def(uext2.dll uext2.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(uext2.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    uext2.c
+    uext2.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/uext2.def)
+
+add_library(uext2 SHARED ${SOURCE})
 
 set_module_type(uext2 win32dll)
-
 target_link_libraries(uext2 ext2lib)
-
 add_importlibs(uext2 msvcrt kernel32 ntdll)
-
 add_cab_target(uext2 1)

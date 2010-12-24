@@ -1,19 +1,17 @@
 
 set_unicode()
 
-list(APPEND SOURCE vdmdbg.c vdmdbg.def)
+spec2def(vdmdbg.dll vdmdbg.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(vdmdbg.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    vdmdbg.c
+    ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg.def)
 
 add_library(vdmdbg SHARED
     ${CMAKE_CURRENT_BINARY_DIR}/vdmdbg_vdmdbg.h.gch
     ${SOURCE})
 
 set_module_type(vdmdbg win32dll)
-
 add_importlibs(vdmdbg msvcrt kernel32 ntdll)
 add_pch(vdmdbg ${CMAKE_CURRENT_SOURCE_DIR}/vdmdbg.h ${SOURCE})
-
 add_cab_target(vdmdbg 1)

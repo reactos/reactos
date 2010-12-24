@@ -4,9 +4,9 @@ spec2def(powrprof.dll powrprof.spec)
 set_unicode()
 
 add_library(powrprof SHARED
-            powrprof.c
-            powrprof.rc
-            ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
+    powrprof.c
+    powrprof.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/powrprof.def)
 
 set_module_type(powrprof win32dll)
 

@@ -1,5 +1,0 @@
-
-LIBRARY twain_32.dll
-
-EXPORTS
-  DSM_Entry@24 @1

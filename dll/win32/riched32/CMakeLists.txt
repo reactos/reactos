@@ -2,16 +2,16 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(riched32 SHARED richedit.c version.rc riched32.def)
+spec2def(riched32.dll riched32.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(riched32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    richedit.c
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/riched32.def)
+
+add_library(riched32 SHARED ${SOURCE})
 
 set_module_type(riched32 win32dll)
-
 target_link_libraries(riched32 wine)
-
 add_importlibs(riched32 riched20 user32 msvcrt kernel32 ntdll)
-
 add_cab_target(riched32 1)

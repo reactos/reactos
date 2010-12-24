@@ -1,5 +1,0 @@
-
-LIBRARY riched32.dll
-
-EXPORTS
-  DllGetVersion@4 @2 PRIVATE

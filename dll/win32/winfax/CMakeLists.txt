@@ -1,14 +1,15 @@
 
-add_library(winfax SHARED winfax.c winfax.rc winfax.def)
+spec2def(winfax.dll winfax.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(winfax.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    winfax.c
+    winfax.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/winfax.def)
+
+add_library(winfax SHARED ${SOURCE})
 
 set_entrypoint(winfax 0)
 
 add_importlibs(winfax kernel32 ntdll)
-
 add_dependencies(winfax psdk)
-
 add_cab_target(winfax 1)
