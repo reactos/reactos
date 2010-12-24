@@ -360,40 +360,13 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
 {
     struct ntdrv_escape_set_drawable escape;
     struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
+    //HWND parent;
 
     escape.code        = NTDRV_SET_DRAWABLE;
     escape.clip_children = FALSE;
     escape.gl_copy     = FALSE;
-    escape.hwnd        = hwnd;
+    escape.hwnd        = 0;
     escape.release     = FALSE;
-
-    if (top == hwnd && data && IsIconic( hwnd ) /*&& data->icon_window*/)
-    {
-        //escape.drawable = data->icon_window;
-    }
-    else if (top == hwnd)
-    {
-        //escape.fbconfig_id = data ? data->fbconfig_id : (XID)GetPropA( hwnd, fbconfig_id_prop );
-        /* GL draws to the client area even for window DCs */
-        /*escape.gl_drawable = data ? data->client_window : X11DRV_get_client_window( hwnd );
-        if (flags & DCX_WINDOW)
-            escape.drawable = data ? data->whole_window : X11DRV_get_whole_window( hwnd );
-        else
-            escape.drawable = escape.gl_drawable;*/
-    }
-    else
-    {
-        //escape.drawable    = X11DRV_get_client_window( top );
-        //escape.fbconfig_id = data ? data->fbconfig_id : (XID)GetPropA( hwnd, fbconfig_id_prop );
-        //escape.gl_drawable = data ? data->gl_drawable : (Drawable)GetPropA( hwnd, gl_drawable_prop );
-        //escape.pixmap      = data ? data->pixmap : (Pixmap)GetPropA( hwnd, pixmap_prop );
-        //escape.gl_copy     = (escape.gl_drawable != 0);
-
-        if (flags & DCX_CLIPCHILDREN) escape.clip_children = TRUE;
-    }
-
-    //FIXME("hdc %x, hwnd %x, top %x\n win_rect %s, top_rect %s\n", hdc, hwnd, top,
-    //    wine_dbgstr_rect(win_rect), wine_dbgstr_rect(top_rect));
 
     escape.dc_rect.left         = win_rect->left - top_rect->left;
     escape.dc_rect.top          = win_rect->top - top_rect->top;
@@ -403,6 +376,69 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top, const RECT *win_rect,
     escape.drawable_rect.top    = top_rect->top;
     escape.drawable_rect.right  = top_rect->right;
     escape.drawable_rect.bottom = top_rect->bottom;
+
+    if (top == hwnd)
+    {
+        //if (flags & DCX_WINDOW)
+        {
+            if (data)
+            {
+                /* SWM window already exists */
+                escape.hwnd = hwnd;
+            }
+            else
+            {
+                /* There is no SWM window for this hwnd.
+                   If this is desktop, it's fine otherwise reject any drawing operations */
+                if (hwnd == GetDesktopWindow())
+                    escape.hwnd = hwnd;
+                else
+                    escape.hwnd = 0;
+            }
+        }
+    }
+    else
+    {
+#if 0
+        /* find the first ancestor that has a drawable */
+        if (data) escape.hwnd = hwnd;
+
+        for (parent = hwnd; parent && parent != top; parent = GetAncestor( parent, GA_PARENT ))
+        {
+            data = NTDRV_get_win_data( parent );
+            if (data)
+            {
+                escape.hwnd = parent;
+                break;
+            }
+        }
+FIXME("Found hwnd %x backed by an SWM window\n", escape.hwnd);
+        if (escape.hwnd)
+        {
+            POINT pt = { 0, 0 };
+            MapWindowPoints( top, parent, &pt, 1 );
+            //OffsetRect( &escape.dc_rect, pt.x, pt.y );
+            //OffsetRect( &escape.drawable_rect, -pt.x, -pt.y );
+
+            FIXME("Offset by (%d, %d)\n", pt.x, pt.y);
+        }
+        else
+        {
+            if (NTDRV_get_win_data(top) || (top == GetDesktopWindow()))
+            {
+                /* SWM window already exists */
+                escape.hwnd = top;
+            }
+        }
+#else
+        escape.hwnd = GetAncestor(hwnd, GA_ROOT);
+#endif
+
+        if (flags & DCX_CLIPCHILDREN) escape.clip_children = TRUE;
+    }
+
+    TRACE("hdc %x, hwnd %x, top %x\n win_rect %s, top_rect %s\n", hdc, hwnd, top,
+        wine_dbgstr_rect(win_rect), wine_dbgstr_rect(top_rect));
 
     ExtEscape( hdc, NTDRV_ESCAPE, sizeof(escape), (LPSTR)&escape, 0, NULL );
 }

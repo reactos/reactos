@@ -31,6 +31,38 @@ HANDLE hStockBitmap;
 
 BOOL CDECL RosDrv_PatBlt( NTDRV_PDEVICE *physDev, INT left, INT top, INT width, INT height, DWORD rop );
 
+/* get the rectangle in device coordinates, with optional mirroring */
+static RECT get_device_rect( HDC hdc, int left, int top, int right, int bottom )
+{
+    RECT rect;
+
+    rect.left   = left;
+    rect.top    = top;
+    rect.right  = right;
+    rect.bottom = bottom;
+    if (GetLayout( hdc ) & LAYOUT_RTL)
+    {
+        /* shift the rectangle so that the right border is included after mirroring */
+        /* it would be more correct to do this after LPtoDP but that's not what Windows does */
+        rect.left--;
+        rect.right--;
+    }
+    LPtoDP( hdc, (POINT *)&rect, 2 );
+    if (rect.left > rect.right)
+    {
+        int tmp = rect.left;
+        rect.left = rect.right;
+        rect.right = tmp;
+    }
+    if (rect.top > rect.bottom)
+    {
+        int tmp = rect.top;
+        rect.top = rect.bottom;
+        rect.bottom = tmp;
+    }
+    return rect;
+}
+
 BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *physDevDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
                              NTDRV_PDEVICE *physDevSrc, INT xSrc, INT ySrc, INT widthSrc, INT heightSrc,
                              BLENDFUNCTION blendfn)
@@ -317,8 +349,6 @@ BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
 INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data )
 {
-    HWND hwnd;
-
     switch(escape)
     {
     case NTDRV_ESCAPE:
@@ -333,10 +363,8 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
 
                     RosGdiSetDcRects(physDev->hKernelDC, (RECT*)&data->dc_rect, (RECT*)&data->drawable_rect);
 
-                    hwnd = GetAncestor(data->hwnd, GA_ROOT);
-
                     if (!data->release)
-                        RosGdiGetDC(physDev->hKernelDC, hwnd, data->clip_children);
+                        RosGdiGetDC(physDev->hKernelDC, data->hwnd, data->clip_children);
                     else
                         RosGdiReleaseDC(physDev->hKernelDC);
 
@@ -613,11 +641,7 @@ UINT CDECL RosDrv_RealizePalette( NTDRV_PDEVICE *physDev, HPALETTE hpal, BOOL pr
 BOOL CDECL RosDrv_Rectangle(NTDRV_PDEVICE *physDev, INT left, INT top, INT right, INT bottom)
 {
     POINT ptBrush;
-    RECT rc;
-
-    /* Convert coordinates */
-    SetRect(&rc, left, top, right, bottom);
-    LPtoDP(physDev->hUserDC, (POINT*)&rc, 2);
+    RECT rc = get_device_rect( physDev->hUserDC, left, top, right, bottom );
 
     if ((rc.left == rc.right) || (rc.top == rc.bottom)) return TRUE;
 

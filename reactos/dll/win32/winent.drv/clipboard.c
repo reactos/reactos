@@ -2437,7 +2437,7 @@ static void X11DRV_CLIPBOARD_ReleaseSelection(Display *display, Atom selType, Wi
  */
 static BOOL NTDRV_CLIPBOARD_IsSelectionOwner(void)
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
     //return selectionAcquired;
     return TRUE;
 }
