@@ -635,7 +635,17 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
     pDC = DC_LockDc(physDev);
 
     /* Get a pointer to this window */
-    pDC->pWindow = SwmFindByHwnd(hwnd);
+    if (hwnd)
+        pDC->pWindow = SwmFindByHwnd(hwnd);
+
+    /* Handle situation when drawing is forbidden */
+    if (!hwnd || !pDC->pWindow)
+    {
+        /* Make up a dummy window object which will have empty visibility */
+        pDC->pWindow = ExAllocatePool(PagedPool, sizeof(SWM_WINDOW));
+        RtlZeroMemory(pDC->pWindow, sizeof(SWM_WINDOW));
+        pDC->pWindow->Visible = create_empty_region();
+    }
 
     /* Release the object */
     DC_UnlockDc(pDC);
@@ -650,6 +660,13 @@ VOID APIENTRY RosGdiReleaseDC(HDC physDev)
 
     /* Get a pointer to the DC */
     pDC = DC_LockDc(physDev);
+
+    /* Check if it was a dummy window */
+    if (!pDC->pWindow->hwnd)
+    {
+        /* Free it */
+        ExFreePool(pDC->pWindow);
+    }
 
     /* No window clipping is to be performed */
     pDC->pWindow = NULL;
