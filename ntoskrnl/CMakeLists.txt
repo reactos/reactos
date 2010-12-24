@@ -18,13 +18,35 @@ add_definitions(
 
 set_rc_compiler()
 
+set(NEWCC FALSE)
+
+if(NEWCC)
+add_definitions(-DNEWCC)
+list(APPEND SOURCE
+    cache/cachesub.c
+    cache/copysup.c
+    cache/fssup.c
+    cache/lazyrite.c
+    cache/logsup.c
+    cache/mdlsup.c
+    cache/pinsup.c
+    cache/section/data.c
+    cache/section/fault.c
+    cache/section/io.c
+    cache/section/reqtools.c
+    cache/section/sptab.c
+    cache/section/swapout.c)
+else()
 list(APPEND SOURCE
     cc/cacheman.c
     cc/copy.c
     cc/fs.c
     cc/mdl.c
     cc/pin.c
-    cc/view.c
+    cc/view.c)
+endif()
+
+list(APPEND SOURCE
     config/cmalloc.c
     config/cmapi.c
     config/cmboot.c
