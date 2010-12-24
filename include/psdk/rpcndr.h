@@ -118,7 +118,7 @@ typedef unsigned char boolean;
 #define midl_user_free MIDL_user_free
 #define midl_user_allocate MIDL_user_allocate
 
-void  * __RPC_USER MIDL_user_allocate(size_t size);
+void  * __RPC_USER MIDL_user_allocate(SIZE_T size);
 void             __RPC_USER MIDL_user_free( void  * );
 
 #define NdrFcShort(s) (unsigned char)(s & 0xff), (unsigned char)(s >> 8)
