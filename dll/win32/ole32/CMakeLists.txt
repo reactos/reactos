@@ -54,7 +54,8 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
     ${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-ADD_INTERFACE_DEFINITIONS(ole32idl dcom.idl irot.idl)
+add_interface_definitions(ole32idl dcom.idl irot.idl)
+
 rpcproxy(ole32
     dcom.idl
     ole32_unknwn.idl

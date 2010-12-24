@@ -9,7 +9,7 @@ add_definitions(
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-ADD_INTERFACE_DEFINITIONS(mshtml_nsiface_header nsiface.idl)
+add_interface_definitions(mshtml_nsiface_header nsiface.idl)
 
 set_rc_compiler()
 

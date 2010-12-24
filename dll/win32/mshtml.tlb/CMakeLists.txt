@@ -1,5 +1,5 @@
 
-ADD_TYPELIB(mshtml_tlb mshtml_tlb.idl)
+add_typelib(mshtml_tlb mshtml_tlb.idl)
 add_dependencies(mshtml_tlb stdole2)
 
 add_definitions(-D__WINESRC__)

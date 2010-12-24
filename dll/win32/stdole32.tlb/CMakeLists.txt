@@ -1,13 +1,13 @@
 
 add_definitions(-D__WINESRC__)
-
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-ADD_TYPELIB(std_ole_v1 std_ole_v1.idl)
+add_typelib(std_ole_v1 std_ole_v1.idl)
 
 spec2def(stdole32.tlb stdole32.tlb.spec)
 
-add_library(stdole32.tlb SHARED rsrc.rc
+add_library(stdole32.tlb SHARED
+    rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/stdole32.def)
 
 set_entrypoint(stdole32.tlb 0)

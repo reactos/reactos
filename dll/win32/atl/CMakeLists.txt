@@ -6,7 +6,7 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-ADD_INTERFACE_DEFINITIONS(atl_atliface_header atliface.idl)
+add_interface_definitions(atl_atliface_header atliface.idl)
 
 set_rc_compiler()
 spec2def(atl.dll atl.spec)

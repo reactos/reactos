@@ -1,4 +1,5 @@
-ADD_TYPELIB(msxml3_v1 msxml3_v1.idl)
+
+add_typelib(msxml3_v1 msxml3_v1.idl)
 add_dependencies(msxml3_v1 stdole2)
 
 remove_definitions(-D_WIN32_WINNT=0x502)

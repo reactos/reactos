@@ -1,9 +1,9 @@
 
-ADD_INTERFACE_DEFINITIONS(wineheaders itss.idl wined3d.idl)
+add_interface_definitions(wineheaders itss.idl wined3d.idl)
 
 list(APPEND SOURCE
     epm.idl
     irot.idl)
 
-MACRO_IDL_FILES(${SOURCE})
-ADD_INTERFACE_DEFINITIONS(winesdk ${SOURCE})
+idl_files(${SOURCE})
+add_interface_definitions(winesdk ${SOURCE})

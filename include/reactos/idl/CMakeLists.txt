@@ -7,7 +7,9 @@ list(APPEND SOURCE
     svcctl.idl
     wlansvc.idl)
 
-MACRO_IDL_FILES(${SOURCE})
+idl_files(${SOURCE})
+
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
-MACRO_IDL_FILES(pnp.idl)
+
+idl_files(pnp.idl)

@@ -1,5 +1,5 @@
 
-ADD_TYPELIB(jsglobal jsglobal.idl)
+add_typelib(jsglobal jsglobal.idl)
 add_dependencies(jsglobal stdole2)
 
 remove_definitions(-D_WIN32_WINNT=0x502)

@@ -1,5 +1,5 @@
 
-LIST(APPEND SOURCE
+list(APPEND SOURCE
 #   access.idl
     activaut.idl
     activdbg.idl
@@ -103,10 +103,9 @@ LIST(APPEND SOURCE
 if(NOT MSVC)
   LIST(APPEND SOURCE
     wincodec.idl
-    wuapi.idl
-)
+    wuapi.idl)
 endif()
 
-ADD_INTERFACE_DEFINITIONS(psdk ${SOURCE})
+add_interface_definitions(psdk ${SOURCE})
 
-ADD_TYPELIB(stdole2 stdole2.idl)
+add_typelib(stdole2 stdole2.idl)

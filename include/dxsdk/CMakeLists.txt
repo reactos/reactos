@@ -1,5 +1,5 @@
 
-LIST(APPEND SOURCE
+list(APPEND SOURCE
     amstream.idl
     amvideo.idl
     austream.idl
@@ -24,4 +24,4 @@ LIST(APPEND SOURCE
     #vmrender.idl
 )
 
-ADD_INTERFACE_DEFINITIONS(dxsdk ${SOURCE})
+add_interface_definitions(dxsdk ${SOURCE})
