@@ -5,28 +5,30 @@ remove_definitions(-DWINVER=0x502)
 add_definitions(-DWINVER=0x600)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D__WINESRC__)
+add_definitions(-D_WIN32_WINNT=0x600)
 
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
+add_idl_interface(mstask_local.idl)
+
 spec2def(mstask.dll mstask.spec)
 
-add_library(mstask SHARED
+list(APPEND SOURCE
     factory.c
     mstask_main.c
     task.c
     task_scheduler.c
     task_trigger.c
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/mstask_local_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/mstask.def)
+
+add_library(mstask SHARED ${SOURCE})
 
 set_module_type(mstask win32dll)
 
-target_link_libraries(mstask
-    mstask_local_interface
-    uuid
-    wine)
+target_link_libraries(mstask uuid wine)
 
-add_importlibs(mstask ole32 ntdll)
+add_importlibs(mstask ole32 msvcrt kernel32 ntdll)
 
 add_cab_target(mstask 1)

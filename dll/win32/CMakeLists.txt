@@ -100,7 +100,7 @@ add_subdirectory(msisys.ocx)
 add_subdirectory(msrle32)
 add_subdirectory(mssign32)
 add_subdirectory(mssip32)
-#add_subdirectory(mstask)
+add_subdirectory(mstask)
 add_subdirectory(msvcrt)
 #add_subdirectory(msvcrt20) FIX spec2def
 #add_subdirectory(msvcrt40) FIX spec2def
