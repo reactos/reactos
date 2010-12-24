@@ -2,14 +2,15 @@
 add_definitions(-D__WINESRC__)
 include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
-add_library(xinput1_1 SHARED xinput1_1_main.c version.rc xinput1_1.def)
+spec2def(xinput1_1.dll xinput1_1.spec)
 
-if(NOT MSVC)
-    set_source_files_properties(xinput1_1.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+list(APPEND SOURCE
+    xinput1_1_main.c
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/xinput1_1.def)
+
+add_library(xinput1_1 SHARED ${SOURCE})
 
 set_module_type(xinput1_1 win32dll)
-
 add_importlibs(xinput1_1 msvcrt kernel32)
-
 add_cab_target(xinput1_1 1)

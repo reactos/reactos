@@ -4,7 +4,7 @@ include_directories(${REACTOS_SOURCE_DIR}/include/reactos/wine)
 
 spec2def(winhttp.dll winhttp.spec)
 
-add_library(winhttp SHARED
+list(APPEND SOURCE
     cookie.c
     handle.c
     main.c
@@ -13,6 +13,8 @@ add_library(winhttp SHARED
     session.c
     url.c
     ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)
+
+add_library(winhttp SHARED ${SOURCE})
 
 set_module_type(winhttp win32dll)
 target_link_libraries(winhttp wine)

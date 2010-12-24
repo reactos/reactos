@@ -5,7 +5,9 @@ include_directories(
     inc
     ${REACTOS_SOURCE_DIR}/include/reactos/winsock)
 
-add_library(ws2_32_new SHARED
+spec2def(ws2_32_new.dll ws2_32.spec)
+
+list(APPEND SOURCE
     src/addrconv.c
     src/addrinfo.c
     src/async.c
@@ -43,16 +45,11 @@ add_library(ws2_32_new SHARED
     src/startup.c
     src/wsautil.c
     ws2_32.rc
-    ws2_32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/ws2_32.def)
 
-if(NOT MSVC)
-    set_source_files_properties(ws2_32.def PROPERTIES EXTERNAL_OBJECT TRUE)
-endif()
+add_library(ws2_32_new SHARED ${SOURCE})
 
 set_module_type(ws2_32_new win32dll)
-
 target_link_libraries(ws2_32_new wine)
-
 add_importlibs(ws2_32_new user32 advapi32 dnsapi ws2help msvcrt kernel32 ntdll)
-
 add_cab_target(ws2_32_new 1)
