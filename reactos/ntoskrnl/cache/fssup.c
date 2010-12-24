@@ -25,6 +25,7 @@ extern VOID NTAPI CcpUnmapThread(PVOID Unused);
 extern VOID NTAPI CcpLazyWriteThread(PVOID Unused);
 HANDLE CcUnmapThreadHandle, CcLazyWriteThreadHandle;
 CLIENT_ID CcUnmapThreadId, CcLazyWriteThreadId;
+FAST_MUTEX GlobalPageOperation;
 
 typedef struct _NOCC_PRIVATE_CACHE_MAP
 {
@@ -98,6 +99,7 @@ CcInitializeCacheManager(VOID)
 	CcCacheBitmap->SizeOfBitMap = ROUND_UP(CACHE_NUM_SECTIONS, 32);
 	DPRINT("Cache has %d entries\n", CcCacheBitmap->SizeOfBitMap);
 	ExInitializeFastMutex(&CcMutex);
+	ExInitializeFastMutex(&GlobalPageOperation);
 
 	// MM stub
 	KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
