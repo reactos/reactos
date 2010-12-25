@@ -1759,6 +1759,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
       RtlCopyMemory(pWnd->strName.Buffer, WindowName->Buffer, WindowName->Length);
       pWnd->strName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
       pWnd->strName.Length = WindowName->Length;
+      pWnd->strName.MaximumLength = WindowName->Length + sizeof(UNICODE_NULL);
    }
 
    /* Correct the window style. */
