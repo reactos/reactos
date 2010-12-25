@@ -5,22 +5,28 @@
 
 /*
  * @implemented
+ * http://msdn.microsoft.com/en-us/library/ff564940%28VS.85%29.aspx
  */
 ULONG
 APIENTRY
-EngGetLastError ( VOID )
+EngGetLastError(VOID)
 {
-  // www.osr.com/ddk/graphics/gdifncs_3non.htm
-  return GetLastNtError();
+    PTEB pTeb = NtCurrentTeb();
+    if (pTeb)
+        return NtCurrentTeb()->LastErrorValue;
+    else
+        return ERROR_SUCCESS;
 }
 
 /*
  * @implemented
+ * http://msdn.microsoft.com/en-us/library/ff565015%28VS.85%29.aspx
  */
 VOID
 APIENTRY
-EngSetLastError ( IN ULONG iError )
+EngSetLastError(IN ULONG iError)
 {
-  // www.osr.com/ddk/graphics/gdifncs_95m0.htm
-  SetLastNtError ( iError );
+    PTEB pTeb = NtCurrentTeb();
+    if (pTeb)
+        pTeb->LastErrorValue = iError;
 }
