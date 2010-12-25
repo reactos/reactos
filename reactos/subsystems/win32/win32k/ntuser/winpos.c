@@ -78,7 +78,7 @@ UserGetClientOrigin(PWND Window, LPPOINT Point)
 
    if(!Point)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
@@ -86,7 +86,7 @@ UserGetClientOrigin(PWND Window, LPPOINT Point)
 
    if(!Ret)
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
 
@@ -1011,14 +1011,14 @@ co_WinPosSetWindowPos(
    /* Fix up the flags. */
    if (!WinPosFixupFlags(&WinPos, Window))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
 

@@ -619,7 +619,7 @@ NtGdiGetDeviceCaps(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
@@ -769,7 +769,7 @@ NtGdiGetDeviceCapsAll(
     pdc = DC_LockDc(hDC);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 

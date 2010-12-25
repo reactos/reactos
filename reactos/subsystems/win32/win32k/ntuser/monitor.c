@@ -101,14 +101,14 @@ UserGetMonitorObject(IN HMONITOR hMonitor)
 
     if (!hMonitor)
     {
-        SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+        EngSetLastError(ERROR_INVALID_MONITOR_HANDLE);
         return NULL;
     }
 
     Monitor = (PMONITOR)UserGetObject(gHandleTable, hMonitor, otMonitor);
     if (!Monitor)
     {
-        SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+        EngSetLastError(ERROR_INVALID_MONITOR_HANDLE);
         return NULL;
     }
 
@@ -523,7 +523,7 @@ NtUserEnumDisplayMonitors(
         safeHMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * listSize, USERTAG_MONITORRECTS);
         if (safeHMonitorList == NULL)
         {
-            /* FIXME: SetLastWin32Error? */
+            /* FIXME: EngSetLastError? */
             return -1;
         }
     }
@@ -533,7 +533,7 @@ NtUserEnumDisplayMonitors(
         if (safeRectList == NULL)
         {
             ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
-            /* FIXME: SetLastWin32Error? */
+            /* FIXME: EngSetLastError? */
             return -1;
         }
     }
@@ -773,7 +773,7 @@ NtUserMonitorFromRect(
                                          USERTAG_MONITORRECTS);
     if (hMonitorList == NULL)
     {
-        /* FIXME: SetLastWin32Error? */
+        /* FIXME: EngSetLastError? */
         return (HMONITOR)NULL;
     }
 
@@ -783,7 +783,7 @@ NtUserMonitorFromRect(
     if (rectList == NULL)
     {
         ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
-        /* FIXME: SetLastWin32Error? */
+        /* FIXME: EngSetLastError? */
         return (HMONITOR)NULL;
     }
 

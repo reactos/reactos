@@ -57,14 +57,14 @@ BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam)
 
     if (Flags & ~(UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
     switch (Action)
     {
         case UIS_INITIALIZE:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
 
         case UIS_SET:
@@ -112,21 +112,21 @@ PWND FASTCALL UserGetWindowObject(HWND hWnd)
        ti = GetW32ThreadInfo();
        if (ti == NULL)
        {
-          SetLastWin32Error(ERROR_ACCESS_DENIED);
+          EngSetLastError(ERROR_ACCESS_DENIED);
           return NULL;
        }
    }
 
    if (!hWnd)
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
 
    Window = (PWND)UserGetObject(gHandleTable, hWnd, otWindow);
    if (!Window || 0 != (Window->state & WNDS_DESTROYED))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
 
@@ -205,7 +205,7 @@ IntWinListChildren(PWND Window)
    if(!List)
    {
       DPRINT1("Failed to allocate memory for children array\n");
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return NULL;
    }
    for (Child = Window->spwndChild, Index = 0;
@@ -666,7 +666,7 @@ IntSetMenu(
 
    if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
 
@@ -695,7 +695,7 @@ IntSetMenu(
          {
             IntReleaseMenuObject(OldMenu);
          }
-         SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+         EngSetLastError(ERROR_INVALID_MENU_HANDLE);
          return FALSE;
       }
       if (NULL != NewMenu->MenuInfo.Wnd)
@@ -705,7 +705,7 @@ IntSetMenu(
          {
             IntReleaseMenuObject(OldMenu);
          }
-         SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+         EngSetLastError(ERROR_INVALID_MENU_HANDLE);
          return FALSE;
       }
 
@@ -1101,7 +1101,7 @@ co_IntSetParent(PWND Wnd, PWND WndNewParent)
    /* Some applications try to set a child as a parent */
    if (IntIsChildWindow(Wnd, WndNewParent))
    {
-      SetLastWin32Error( ERROR_INVALID_PARAMETER );
+      EngSetLastError( ERROR_INVALID_PARAMETER );
       return NULL;
    }
 
@@ -1736,7 +1736,7 @@ PWND FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
 
       if (!CallProc)
       {
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
          DPRINT1("Warning: Unable to create CallProc for edit control. Control may not operate correctly! hwnd %x\n",hWnd);
       }
       else
@@ -1903,7 +1903,7 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
     else if ((Cs->style & (WS_CHILD|WS_POPUP)) == WS_CHILD)
     {
          DPRINT1("Cannot create a child window without a parrent!\n");
-         SetLastWin32Error(ERROR_TLW_WITH_WSCHILD);
+         EngSetLastError(ERROR_TLW_WITH_WSCHILD);
          RETURN(NULL);  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
     }
 
@@ -2373,7 +2373,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWND Window)
    if ( (Window->head.pti->pEThread != PsGetCurrentThread()) ||
         Window->head.pti != PsGetCurrentThreadWin32Thread() )
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -2652,7 +2652,7 @@ NtUserFindWindowEx(HWND hwndParent,
                }
                else if (!IS_ATOM(ClassName.Buffer))
                {
-                   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                   EngSetLastError(ERROR_INVALID_PARAMETER);
                    _SEH2_LEAVE;
                }
 
@@ -2686,7 +2686,7 @@ NtUserFindWindowEx(HWND hwndParent,
            if (ClassName.Length == 0 && ClassName.Buffer != NULL &&
                !IS_ATOM(ClassName.Buffer))
            {
-               SetLastWin32Error(ERROR_INVALID_PARAMETER);
+               EngSetLastError(ERROR_INVALID_PARAMETER);
                RETURN(NULL);
            }
            else if (ClassAtom == (RTL_ATOM)0)
@@ -3067,13 +3067,13 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 
    if (IntIsBroadcastHwnd(hWndChild) || IntIsBroadcastHwnd(hWndNewParent))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return( NULL);
    }
 
    if (hWndChild == IntGetDesktopWindow())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return( NULL);
    }
 
@@ -3396,7 +3396,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
    if (hWnd == IntGetDesktopWindow())
    {
-      SetLastWin32Error(STATUS_ACCESS_DENIED);
+      EngSetLastError(STATUS_ACCESS_DENIED);
       return( 0);
    }
 
@@ -3409,7 +3409,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    {
       if ((Index + sizeof(LONG)) > Window->cbwndExtra)
       {
-         SetLastWin32Error(ERROR_INVALID_INDEX);
+         EngSetLastError(ERROR_INVALID_INDEX);
          return( 0);
       }
 
@@ -3463,7 +3463,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             if ( Window->head.pti->ppi != PsGetCurrentProcessWin32Process() ||
                  Window->fnid & FNID_FREED)
             {
-               SetLastWin32Error(ERROR_ACCESS_DENIED);
+               EngSetLastError(ERROR_ACCESS_DENIED);
                return( 0);
             }
             OldValue = (LONG)IntSetWindowProc(Window,
@@ -3497,7 +3497,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
          default:
             DPRINT1("NtUserSetWindowLong(): Unsupported index %d\n", Index);
-            SetLastWin32Error(ERROR_INVALID_INDEX);
+            EngSetLastError(ERROR_INVALID_INDEX);
             OldValue = 0;
             break;
       }
@@ -3566,14 +3566,14 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
       default:
          if (Index < 0)
          {
-            SetLastWin32Error(ERROR_INVALID_INDEX);
+            EngSetLastError(ERROR_INVALID_INDEX);
             RETURN( 0);
          }
    }
 
    if (Index > Window->cbwndExtra - sizeof(WORD))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -3768,7 +3768,7 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 
    if(MessageNameUnsafe == NULL)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -4328,7 +4328,7 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
          }
          else
          {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             Ret = FALSE;
             goto Exit;
          }
@@ -4378,7 +4378,7 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
 
    if(lpString && (nMaxCount <= 1))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -4499,7 +4499,7 @@ NtUserValidateHandleSecure(
        PUSER_HANDLE_ENTRY entry;
        if (!(entry = handle_to_entry(gHandleTable, handle )))
        {
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          EngSetLastError(ERROR_INVALID_HANDLE);
           return FALSE;
        }
        uType = entry->type;
@@ -4548,7 +4548,7 @@ NtUserValidateHandleSecure(
          return UserGetCallProcInfo( handle, &Proc );
        }
        default:
-         SetLastWin32Error(ERROR_INVALID_HANDLE);
+         EngSetLastError(ERROR_INVALID_HANDLE);
      }
    }
    else

@@ -245,7 +245,7 @@ IntSetTimer( PWND Window,
       {
          IntUnlockWindowlessTimerBitmap();
          DPRINT1("Unable to find a free window-less timer id\n");
-         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+         EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
          ASSERT(FALSE);
          return 0;
       }
@@ -323,7 +323,7 @@ SystemTimerSet( PWND Window,
 {
   if (Window && Window->head.pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
-     SetLastWin32Error(ERROR_ACCESS_DENIED);
+     EngSetLastError(ERROR_ACCESS_DENIED);
      DPRINT("SysemTimerSet: Access Denied!\n");
      return 0;
   }

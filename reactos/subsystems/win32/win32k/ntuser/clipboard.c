@@ -78,7 +78,7 @@ IntAddWindowToChain(PWND window)
         wce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDCHAINELEMENT), USERTAG_CLIPBOARD);
         if (wce == NULL)
         {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+            EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
             goto exit_addChain;
         }
 
@@ -170,7 +170,7 @@ intAddFormatedData(UINT format, HANDLE hData, DWORD size)
     ce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDELEMENT), USERTAG_CLIPBOARD);
     if (ce == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
     else
     {
@@ -483,7 +483,7 @@ NtUserCloseClipboard(VOID)
     }
     else
     {
-        SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
     }
 
     recentlySetClipboard = FALSE;
@@ -595,7 +595,7 @@ NtUserEmptyClipboard(VOID)
     }
     else
     {
-        SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
     }
 
     if (ret && ClipboardOwnerWindow)
@@ -718,7 +718,7 @@ NtUserGetClipboardData(UINT uFormat, PVOID pBuffer)
     }
     else
     {
-        SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
     }
 
     UserLeave();
@@ -742,7 +742,7 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
 
     if((cchMaxCount < 1) || !FormatName)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -1143,7 +1143,7 @@ IntEnumClipboardFormats(UINT uFormat)
     }
     else
     {
-        SetLastWin32Error(ERROR_CLIPBOARD_NOT_OPEN);
+        EngSetLastError(ERROR_CLIPBOARD_NOT_OPEN);
     }
 
     return ret;

@@ -30,3 +30,10 @@ EngSetLastError(IN ULONG iError)
     if (pTeb)
         pTeb->LastErrorValue = iError;
 }
+
+VOID
+FASTCALL
+SetLastNtError(NTSTATUS Status)
+{
+    EngSetLastError(RtlNtStatusToDosError(Status));
+}

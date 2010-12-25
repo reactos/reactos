@@ -49,7 +49,7 @@ IntGdiPolygon(PDC    dc,
 
     if (!Points || Count < 2 )
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -214,7 +214,7 @@ NtGdiEllipse(
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-       SetLastWin32Error(ERROR_INVALID_HANDLE);
+       EngSetLastError(ERROR_INVALID_HANDLE);
        return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -253,7 +253,7 @@ NtGdiEllipse(
     {
         DPRINT1("Ellipse Fail 1\n");
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
@@ -301,7 +301,7 @@ NtGdiEllipse(
     if (NULL == pFillBrushObj)
     {
         DPRINT1("FillEllipse Fail\n");
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         ret = FALSE;
     }
     else
@@ -418,7 +418,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     if (nInvalid != 0)
     {
         /* If at least one poly count is 0 or 1, fail */
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -428,7 +428,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
                                   TAG_SHAPE);
     if (!pTemp)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -465,7 +465,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         ExFreePool(pTemp);
         return FALSE;
     }
@@ -506,7 +506,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
             Ret = IntGdiPolyBezierTo(dc, SafePoints, *SafeCounts);
             break;
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             Ret = FALSE;
     }
 
@@ -667,7 +667,7 @@ NtGdiRectangle(HDC  hDC,
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)
@@ -751,7 +751,7 @@ IntRoundRect(
     if (!pbrushLine)
     {
         /* Nothing to do, as we don't have a bitmap */
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
@@ -787,7 +787,7 @@ IntRoundRect(
     if (NULL == pbrushFill)
     {
         DPRINT1("FillRound Fail\n");
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         ret = FALSE;
     }
     else
@@ -839,7 +839,7 @@ NtGdiRoundRect(
     if ( !dc )
     {
         DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
     }
     else if (dc->dctype == DC_TYPE_INFO)
     {
@@ -885,7 +885,7 @@ GreGradientFill(
                 pTriangle->Vertex2 >= nVertex ||
                 pTriangle->Vertex3 >= nVertex)
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
         }
@@ -897,7 +897,7 @@ GreGradientFill(
         {
             if (pRect->UpperLeft >= nVertex || pRect->LowerRight >= nVertex)
             {
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 return FALSE;
             }
         }
@@ -907,7 +907,7 @@ GreGradientFill(
     pdc = DC_LockDc(hdc);
     if(!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -991,7 +991,7 @@ NtGdiGradientFill(
     /* Validate parameters */
     if (!pVertex || !nVertex || !pMesh || !nMesh)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -1005,7 +1005,7 @@ NtGdiGradientFill(
             cbMesh = nMesh * sizeof(GRADIENT_TRIANGLE);
             break;
         default:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 
@@ -1020,7 +1020,7 @@ NtGdiGradientFill(
     SafeVertex = ExAllocatePoolWithTag(PagedPool, cbVertex + cbMesh, TAG_SHAPE);
     if(!SafeVertex)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -1070,7 +1070,7 @@ NtGdiExtFloodFill(
     dc = DC_LockDc(hDC);
     if (!dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     if (dc->dctype == DC_TYPE_INFO)

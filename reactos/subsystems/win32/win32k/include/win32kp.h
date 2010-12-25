@@ -36,7 +36,6 @@
 #include <include/dib.h>
 #include <include/driver.h>
 #include <include/driverobj.h>
-#include <include/error.h>
 #include <include/floatobj.h>
 #include <include/gdiobj.h>
 #include <include/palette.h>

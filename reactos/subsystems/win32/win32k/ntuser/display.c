@@ -809,7 +809,7 @@ NtUserChangeDisplaySettings(
     if ((dwflags != CDS_VIDEOPARAMETERS && lParam != NULL) ||
         (hwnd != NULL))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return DISP_CHANGE_BADPARAM;
     }
 

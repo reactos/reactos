@@ -529,7 +529,7 @@ IntDispatchMessage(PMSG pMsg)
 
     if ( Window->head.pti != pti)
     {
-       SetLastWin32Error( ERROR_MESSAGE_SYNC_ONLY );
+       EngSetLastError( ERROR_MESSAGE_SYNC_ONLY );
        return 0;
     }
 
@@ -912,7 +912,7 @@ UserPostThreadMessage( DWORD idThread,
 
     if (FindMsgMemory(Msg) != 0)
     {
-        SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
     }
 
@@ -976,7 +976,7 @@ UserPostMessage( HWND Wnd,
         Status = CopyMsgToKernelMem(&KernelModeMsg, &Message, MsgMemoryEntry);
         if (! NT_SUCCESS(Status))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
         }
         co_IntSendMessageNoWait(KernelModeMsg.hwnd, 
@@ -992,7 +992,7 @@ UserPostMessage( HWND Wnd,
 
     if (MsgMemoryEntry)
     {
-        SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
     }
 
@@ -1196,7 +1196,7 @@ MSDN says:
     To get extended error information, call GetLastError. If GetLastError
     returns ERROR_TIMEOUT, then the function timed out.
 */
-        SetLastWin32Error(ERROR_TIMEOUT);
+        EngSetLastError(ERROR_TIMEOUT);
         RETURN( FALSE);
     }
     else if (! NT_SUCCESS(Status))
@@ -1233,7 +1233,7 @@ co_IntSendMessageTimeout( HWND hWnd,
     DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
     if (NULL == DesktopWindow)
     {
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return 0;
     }
 
@@ -1446,7 +1446,7 @@ co_IntDoSendMessage( HWND hWnd,
     Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
     if (! NT_SUCCESS(Status))
     {
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       EngSetLastError(ERROR_INVALID_PARAMETER);
        return (dsm ? 0 : -1);
     }
 
@@ -1471,7 +1471,7 @@ co_IntDoSendMessage( HWND hWnd,
     Status = CopyMsgToUserMem(&UserModeMsg, &KernelModeMsg);
     if (! NT_SUCCESS(Status))
     {
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       EngSetLastError(ERROR_INVALID_PARAMETER);
        return(dsm ? 0 : -1);
     }
 
@@ -1488,7 +1488,7 @@ UserSendNotifyMessage( HWND hWnd,
 
     if (FindMsgMemory(Msg) != 0)
     {
-        SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+        EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
     }
 
@@ -1646,7 +1646,7 @@ NtUserGetMessage(PMSG pMsg,
 
     if ( (MsgFilterMin|MsgFilterMax) & ~WM_MAXIMUM )
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -1688,7 +1688,7 @@ NtUserPeekMessage( PMSG pMsg,
 
     if ( RemoveMsg & PM_BADMSGFLAGS )
     {
-        SetLastWin32Error(ERROR_INVALID_FLAGS);
+        EngSetLastError(ERROR_INVALID_FLAGS);
         return FALSE;
     }
 
@@ -2145,7 +2145,7 @@ NtUserWaitForInputIdle( IN HANDLE hProcess,
     {
         ObDereferenceObject(Process);
         UserLeave();
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return WAIT_FAILED;
     }
 

@@ -1904,7 +1904,7 @@ IntGdiGetObject(IN HANDLE Handle,
   pGdiObject = GDIOBJ_LockObj(Handle, GDI_OBJECT_TYPE_DONTCARE);
   if (!pGdiObject)
     {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return 0;
     }
 

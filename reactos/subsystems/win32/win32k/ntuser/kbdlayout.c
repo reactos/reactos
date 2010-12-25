@@ -453,7 +453,7 @@ UserGetKeyboardLayout(
    Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return NULL;
    }
 

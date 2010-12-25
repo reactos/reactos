@@ -532,7 +532,7 @@ PWND FASTCALL UserGetDesktopWindow(VOID)
 HWND FASTCALL IntGetMessageWindow(VOID)
 {
    PDESKTOP pdo = IntGetActiveDesktop();
-   
+
    if (!pdo)
    {
       DPRINT("No active desktop\n");
@@ -598,7 +598,7 @@ UserGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
     HDC DesktopHDC = 0;
 
     if (DcType == DC_TYPE_DIRECT)
-    {        
+    {
         DesktopObject = UserGetDesktopWindow();
         DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
     }
@@ -724,7 +724,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
       DPRINT("MsgType = %x\n", MsgType);
       if (!MsgType)
-         DPRINT1("LastError: %x\n", GetLastNtError());
+         DPRINT1("LastError: %x\n", EngGetLastError());
    }
 
    if (!Desktop)
@@ -1703,14 +1703,14 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
 
    if(!dwThreadId)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN(0);
    }
 
    Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN(0);
    }
 
@@ -1903,7 +1903,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
         if (!IsListEmpty(&W32Thread->WindowListHead))
         {
             DPRINT1("Attempted to change thread desktop although the thread has windows!\n");
-            SetLastWin32Error(ERROR_BUSY);
+            EngSetLastError(ERROR_BUSY);
             return FALSE;
         }
 
@@ -1931,7 +1931,7 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
         }
 
         if (!W32Thread->pcti && DesktopObject && NtCurrentTeb())
-        { 
+        {
            DPRINT("Allocate ClientThreadInfo\n");
            W32Thread->pcti = DesktopHeapAlloc( DesktopObject,
                                                sizeof(CLIENTTHREADINFO));

@@ -106,14 +106,14 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
 
    if (!hMenu)
    {
-      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      EngSetLastError(ERROR_INVALID_MENU_HANDLE);
       return NULL;
    }
 
    Menu = (PMENU_OBJECT)UserGetObject(gHandleTable, hMenu, otMenu);
    if (!Menu)
    {
-      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      EngSetLastError(ERROR_INVALID_MENU_HANDLE);
       return NULL;
    }
 
@@ -861,7 +861,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 
    if (MAX_MENU_ITEMS <= MenuObject->MenuInfo.MenuItemCount)
    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
    }
 
@@ -894,7 +894,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    MenuItem = ExAllocatePoolWithTag(PagedPool, sizeof(MENU_ITEM), TAG_MENUITEM);
    if (NULL == MenuItem)
    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
    }
 
@@ -1420,7 +1420,7 @@ intGetTitleBarInfo(PWND pWindowObject, PTITLEBARINFO bti)
     }
     else
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         retValue = FALSE;
     }
 
@@ -1444,7 +1444,7 @@ UserInsertMenuItem(
       if (sizeof(MENUITEMINFOW) != ItemInfo.cbSize
          && FIELD_OFFSET(MENUITEMINFOW, hbmpItem) != ItemInfo.cbSize)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          return FALSE;
       }
       return IntInsertMenuItem(Menu, uItem, fByPosition, &ItemInfo);
@@ -1456,7 +1456,7 @@ UserInsertMenuItem(
    {
       if (FIELD_OFFSET(MENUITEMINFOW, hbmpItem) != ItemInfo.cbSize)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          return FALSE;
       }
       ItemInfo.hbmpItem = (HBITMAP)0;
@@ -1584,7 +1584,7 @@ NtUserGetTitleBarInfo(
     /* Vaildate the windows handle */
     if (!(WindowObject = UserGetWindowObject(hwnd)))
     {
-        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
         retValue = FALSE;
     }
 
@@ -1597,7 +1597,7 @@ NtUserGetTitleBarInfo(
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Fail copy the data */ 
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         retValue = FALSE;
     }
     _SEH2_END
@@ -1617,7 +1617,7 @@ NtUserGetTitleBarInfo(
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Fail copy the data */ 
-                SetLastWin32Error(ERROR_INVALID_PARAMETER);
+                EngSetLastError(ERROR_INVALID_PARAMETER);
                 retValue = FALSE;
             }
             _SEH2_END
@@ -1646,7 +1646,7 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu)
 
    if(Menu->Process != PsGetCurrentProcess())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1673,7 +1673,7 @@ NtUserDestroyMenu(
 
    if(Menu->Process != PsGetCurrentProcess())
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( FALSE);
    }
 
@@ -1738,7 +1738,7 @@ NtUserGetMenuBarInfo(
 
    if (!(WindowObject = UserGetWindowObject(hwnd)))
      {
-        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
         RETURN(FALSE);
      }
 
@@ -1746,13 +1746,13 @@ NtUserGetMenuBarInfo(
 
    if (!(MenuObject = UserGetMenuObject(hMenu)))
      {
-       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+       EngSetLastError(ERROR_INVALID_MENU_HANDLE);
        RETURN(FALSE);
      }
 
    if (pmbi->cbSize != sizeof(MENUBARINFO))
      {
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
+       EngSetLastError(ERROR_INVALID_PARAMETER);
        RETURN(FALSE);
      }
 
@@ -2097,7 +2097,7 @@ UserMenuInfo(
    }
    if(Size < sizeof(MENUINFO) || sizeof(ROSMENUINFO) < Size)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return( FALSE);
    }
    Status = MmCopyFromCaller(&MenuInfo, UnsafeMenuInfo, Size);
@@ -2205,7 +2205,7 @@ UserMenuItemInfo(
          && FIELD_OFFSET(MENUITEMINFOW, hbmpItem) != Size
          && sizeof(ROSMENUITEMINFO) != Size)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return( FALSE);
    }
    Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, Size);
@@ -2219,7 +2219,7 @@ UserMenuItemInfo(
    if (FIELD_OFFSET(MENUITEMINFOW, hbmpItem) == Size
          && 0 != (ItemInfo.fMask & MIIM_BITMAP))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return( FALSE);
    }
 
@@ -2227,7 +2227,7 @@ UserMenuItemInfo(
                             (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND),
                             NULL, &MenuItem, NULL) < 0)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return( FALSE);
    }
 

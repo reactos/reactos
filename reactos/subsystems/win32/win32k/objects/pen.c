@@ -87,7 +87,7 @@ IntGdiExtCreatePen(
 
    if (!pbrushPen)
    {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       DPRINT("Can't allocate pen\n");
       return 0;
    }
@@ -187,7 +187,7 @@ IntGdiExtCreatePen(
    return hPen;
 
 ExitCleanup:
-   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   EngSetLastError(ERROR_INVALID_PARAMETER);
    pbrushPen->pStyle = NULL;
    PEN_UnlockPen(pbrushPen);
    if (bOldStylePen)
@@ -287,7 +287,7 @@ NtGdiCreatePen(
 {
    if ( PenStyle < PS_SOLID || PenStyle > PS_INSIDEFRAME )
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return NULL;
    }
 
@@ -325,7 +325,7 @@ NtGdiExtCreatePen(
    if ((int)dwStyleCount < 0) return 0;
    if (dwStyleCount > 16)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return 0;
    }
 

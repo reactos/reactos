@@ -890,7 +890,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
 
     if (Entries == 0)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -900,14 +900,14 @@ IntGetSystemPaletteEntries(HDC  hDC,
         if (Entries != EntriesSize / sizeof(pe[0]))
         {
             /* Integer overflow! */
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return 0;
         }
     }
 
     if (!(dc = DC_LockDc(hDC)))
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 
@@ -1123,7 +1123,7 @@ NtGdiUpdateColors(HDC hDC)
    Wnd = UserGetWindowObject(IntWindowFromDC(hDC));
    if (Wnd == NULL)
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
 
       if (!calledFromUser){
          UserLeave();

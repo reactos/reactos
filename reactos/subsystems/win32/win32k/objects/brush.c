@@ -260,7 +260,7 @@ IntGdiCreateDIBBrush(
 
     if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return NULL;
     }
 
@@ -269,7 +269,7 @@ IntGdiCreateDIBBrush(
     hPattern = DIB_CreateDIBSection(NULL, BitmapInfo, ColorSpec, &pvDIBits, NULL, 0, 0);
     if (hPattern == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 	RtlCopyMemory(pvDIBits,
@@ -282,7 +282,7 @@ IntGdiCreateDIBBrush(
     if (pbrush == NULL)
     {
         GreDeleteObject(hPattern);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hBrush = pbrush->BaseObject.hHmgr;
@@ -316,7 +316,7 @@ IntGdiCreateHatchBrush(
     hPattern = GreCreateBitmap(8, 8, 1, 1, (LPBYTE)HatchBrushes[Style]);
     if (hPattern == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 
@@ -324,7 +324,7 @@ IntGdiCreateHatchBrush(
     if (pbrush == NULL)
     {
         GreDeleteObject(hPattern);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hBrush = pbrush->BaseObject.hHmgr;
@@ -352,7 +352,7 @@ IntGdiCreatePatternBrush(
     hPattern = BITMAP_CopyBitmap(hBitmap);
     if (hPattern == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 
@@ -360,7 +360,7 @@ IntGdiCreatePatternBrush(
     if (pbrush == NULL)
     {
         GreDeleteObject(hPattern);
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hBrush = pbrush->BaseObject.hHmgr;
@@ -387,7 +387,7 @@ IntGdiCreateSolidBrush(
     pbrush = BRUSH_AllocBrushWithHandle();
     if (pbrush == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hBrush = pbrush->BaseObject.hHmgr;
@@ -412,7 +412,7 @@ IntGdiCreateNullBrush(VOID)
     pbrush = BRUSH_AllocBrushWithHandle();
     if (pbrush == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
     hBrush = pbrush->BaseObject.hHmgr;
@@ -457,7 +457,7 @@ NtGdiCreateDIBBrush(
     SafeBitmapInfoAndData = EngAllocMem(FL_ZERO_MEMORY, BitmapInfoSize, TAG_DIB);
     if (SafeBitmapInfoAndData == NULL)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return NULL;
     }
 
@@ -535,7 +535,7 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
     dc = DC_LockDc(hDC);
     if (dc == NULL)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
     pdcattr = dc->pdcattr;

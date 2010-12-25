@@ -83,7 +83,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 
     if (!hCurIcon)
     {
-        SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
 
@@ -91,7 +91,7 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     if (!CurIcon)
     {
         /* we never set ERROR_INVALID_ICON_HANDLE. lets hope noone ever checks for it */
-        SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
+        EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
         return NULL;
     }
 
@@ -347,7 +347,7 @@ IntCreateCurIconHandle()
 
     if (!CurIcon)
     {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
@@ -508,7 +508,7 @@ NtUserGetIconInfo(
 
     if (!IconInfo)
     {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         goto leave;
     }
 
@@ -655,7 +655,7 @@ NtUserGetCursorInfo(
         }
         else
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -727,7 +727,7 @@ NtUserClipCursor(
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             _SEH2_YIELD(return FALSE;)
         }
         _SEH2_END
@@ -806,7 +806,7 @@ NtUserFindExistingCursorIcon(
         RETURN(Ret);
     }
 
-    SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
+    EngSetLastError(ERROR_INVALID_CURSOR_HANDLE);
     RETURN((HANDLE)0);
 
 CLEANUP:

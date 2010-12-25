@@ -81,7 +81,7 @@ NtUserGetLastInputInfo(PLASTINPUTINFO plii)
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             ret = FALSE;
             _SEH2_LEAVE;
         }
@@ -1027,7 +1027,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    if(!ThreadHasInputAccess(W32Thread) ||
          !IntIsActiveDesktop(W32Thread->rpdesk))
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       return FALSE;
    }
 
@@ -1037,7 +1037,7 @@ IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt)
    {
       if(OldBlock != W32Thread)
       {
-         SetLastWin32Error(ERROR_ACCESS_DENIED);
+         EngSetLastError(ERROR_ACCESS_DENIED);
          return FALSE;
       }
       W32Thread->rpdesk->BlockInputThread = (BlockIt ? W32Thread : NULL);
@@ -1481,7 +1481,7 @@ NtUserSendInput(
 
    if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -1492,7 +1492,7 @@ NtUserSendInput(
    if(!ThreadHasInputAccess(W32Thread) ||
          !IntIsActiveDesktop(W32Thread->rpdesk))
    {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( 0);
    }
 

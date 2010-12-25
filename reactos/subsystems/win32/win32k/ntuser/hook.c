@@ -725,14 +725,14 @@ IntGetHookObject(HHOOK hHook)
     
     if (!hHook)
     {
-       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
+       EngSetLastError(ERROR_INVALID_HOOK_HANDLE);
        return NULL;
     }
 
     Hook = (PHOOK)UserGetObject(gHandleTable, hHook, otHook);
     if (!Hook)
     {
-       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
+       EngSetLastError(ERROR_INVALID_HOOK_HANDLE);
        return NULL;
     }
 
@@ -1120,7 +1120,7 @@ IntUnhookWindowsHook(int HookId, HOOKPROC pfnFilterProc)
 
     if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
     {
-       SetLastWin32Error(ERROR_INVALID_HOOK_FILTER);
+       EngSetLastError(ERROR_INVALID_HOOK_FILTER);
        return FALSE;
     }
 
@@ -1145,7 +1145,7 @@ IntUnhookWindowsHook(int HookId, HOOKPROC pfnFilterProc)
              }
              else
              {
-                SetLastWin32Error(ERROR_ACCESS_DENIED);
+                EngSetLastError(ERROR_ACCESS_DENIED);
                 return FALSE;
              }
           }
@@ -1260,13 +1260,13 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
 
     if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId )
     {
-        SetLastWin32Error(ERROR_INVALID_HOOK_FILTER);
+        EngSetLastError(ERROR_INVALID_HOOK_FILTER);
         RETURN( NULL);
     }
 
     if (!HookProc)
     {
-        SetLastWin32Error(ERROR_INVALID_FILTER_PROC);
+        EngSetLastError(ERROR_INVALID_FILTER_PROC);
         RETURN( NULL);
     }
 
@@ -1280,14 +1280,14 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        {
            DPRINT1("Local hook installing Global HookId: %d\n",HookId);
            /* these can only be global */
-           SetLastWin32Error(ERROR_GLOBAL_ONLY_HOOK);
+           EngSetLastError(ERROR_GLOBAL_ONLY_HOOK);
            RETURN( NULL);
        }
 
        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
        {
           DPRINT1("Invalid thread id 0x%x\n", ThreadId);
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          EngSetLastError(ERROR_INVALID_PARAMETER);
           RETURN( NULL);
        }
 
@@ -1298,7 +1298,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        if ( pti->rpdesk != ptiCurrent->rpdesk) // gptiCurrent->rpdesk)
        {
           DPRINT1("Local hook wrong desktop HookId: %d\n",HookId);
-          SetLastWin32Error(ERROR_ACCESS_DENIED);
+          EngSetLastError(ERROR_ACCESS_DENIED);
           RETURN( NULL);
        }
 
@@ -1315,7 +1315,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                HookId == WH_CALLWNDPROCRET) )
           {
              DPRINT1("Local hook needs hMod HookId: %d\n",HookId);
-             SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
+             EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
              RETURN( NULL);
           }
 
@@ -1329,7 +1329,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
                 HookId == WH_FOREGROUNDIDLE ||
                 HookId == WH_CALLWNDPROCRET) )
           {
-             SetLastWin32Error(ERROR_HOOK_TYPE_NOT_ALLOWED);
+             EngSetLastError(ERROR_HOOK_TYPE_NOT_ALLOWED);
              RETURN( NULL);
           }
        }
@@ -1349,7 +1349,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
              HookId == WH_CALLWNDPROCRET) )
        {
           DPRINT1("Global hook needs hMod HookId: %d\n",HookId);
-          SetLastWin32Error(ERROR_HOOK_NEEDS_HMOD);
+          EngSetLastError(ERROR_HOOK_NEEDS_HMOD);
           RETURN( NULL);
        }
     }
@@ -1460,7 +1460,7 @@ NtUserSetWindowsHookEx( HINSTANCE Mod,
        if (NULL == Hook->ModuleName.Buffer)
        {
           IntRemoveHook(Hook);
-          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+          EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
           RETURN( NULL);
        }
 

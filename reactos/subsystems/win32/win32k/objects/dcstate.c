@@ -190,7 +190,7 @@ NtGdiRestoreDC(
     pdc = DC_LockDc(hdc);
     if (!pdc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
@@ -206,7 +206,7 @@ NtGdiRestoreDC(
         DPRINT("Illegal save level, requested: %ld, current: %ld\n",
                iSaveLevel, pdc->dclevel.lSaveDepth);
         DC_UnlockDc(pdc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 
@@ -236,7 +236,7 @@ NtGdiSaveDC(
     if (pdc == NULL)
     {
         DPRINT("Could not lock DC\n");
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
 

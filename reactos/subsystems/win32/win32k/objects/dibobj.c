@@ -136,14 +136,14 @@ IntSetDIBColorTable(
     if (psurf == NULL)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
     if (psurf->hSecure == NULL)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -156,7 +156,7 @@ IntSetDIBColorTable(
         if (psurf->ppal == NULL)
         {
             DC_UnlockDc(dc);
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return 0;
         }
 
@@ -208,14 +208,14 @@ IntGetDIBColorTable(
     if (psurf == NULL)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
     if (psurf->hSecure == NULL)
     {
         DC_UnlockDc(dc);
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        EngSetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
 
@@ -229,7 +229,7 @@ IntGetDIBColorTable(
         if (psurf->ppal == NULL)
         {
             DC_UnlockDc(dc);
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
+            EngSetLastError(ERROR_INVALID_HANDLE);
             return 0;
         }
 
@@ -277,7 +277,7 @@ IntSetDIBits(
 	if (0 == SourceBitmap)
     {
 		DPRINT1("Error : Could not create a DIBSection.\n");
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
 
@@ -375,7 +375,7 @@ NtGdiSetDIBits(
     Dc = DC_LockDc(hDC);
     if (NULL == Dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
     if (Dc->dctype == DC_TYPE_INFO)
@@ -447,7 +447,7 @@ NtGdiSetDIBitsToDeviceInternal(
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return 0;
     }
     if (pDC->dctype == DC_TYPE_INFO)
@@ -490,7 +490,7 @@ NtGdiSetDIBitsToDeviceInternal(
                                     (PVOID) Bits);
     if (!hSourceBitmap)
     {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         Status = STATUS_NO_MEMORY;
         goto Exit;
     }
@@ -508,7 +508,7 @@ NtGdiSetDIBitsToDeviceInternal(
     hpalDIB = BuildDIBPalette(bmi);
     if (!hpalDIB)
     {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         Status = STATUS_NO_MEMORY;
         goto Exit;
     }
@@ -517,7 +517,7 @@ NtGdiSetDIBitsToDeviceInternal(
     ppalDIB = PALETTE_LockPalette(hpalDIB);
     if (!ppalDIB)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         Status = STATUS_UNSUCCESSFUL;
         goto Exit;
     }
@@ -624,7 +624,7 @@ NtGdiGetDIBitsInternal(
 	if(bitmap_type == -1)
 	{
 		DPRINT("Wrong bitmap format\n");
-		SetLastWin32Error(ERROR_INVALID_PARAMETER);
+		EngSetLastError(ERROR_INVALID_PARAMETER);
 		return 0;
 	}
 	else if(bitmap_type == 0)
@@ -939,7 +939,7 @@ NtGdiGetDIBitsInternal(
 		if(!hBmpDest)
 		{
 			DPRINT1("Unable to create a DIB Section!\n");
-			SetLastWin32Error(ERROR_INVALID_PARAMETER);
+			EngSetLastError(ERROR_INVALID_PARAMETER);
 			ScanLines = 0;
 			goto done ;
 		}
@@ -1038,14 +1038,14 @@ NtGdiStretchDIBitsInternal(
 	safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
 	if(!safeBits)
 	{
-		SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+		EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		return 0;
 	}
 
     if (!(pdc = DC_LockDc(hDC)))
 	{
 		ExFreePoolWithTag(safeBits, TAG_DIB);
-		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		EngSetLastError(ERROR_INVALID_HANDLE);
 		return 0;
 	}
 
@@ -1227,7 +1227,7 @@ NtGdiCreateDIBitmapInternal(
 		safeBits = ExAllocatePoolWithTag(PagedPool, cjMaxBits, TAG_DIB);
 		if(!safeBits)
 		{
-			SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+			EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			return NULL;
 		}
 	}
@@ -1302,7 +1302,7 @@ GreCreateDIBitmapInternal(
     Dc = DC_LockDc(hdcDest);
     if (!Dc)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
         return NULL;
     }
     /* It's OK to set bpp=0 here, as IntCreateDIBitmap will create a compatible Bitmap
@@ -1380,7 +1380,7 @@ NtGdiCreateDIBSection(
     }
     else
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        EngSetLastError(ERROR_INVALID_HANDLE);
     }
 
     if (bDesktopDC)
@@ -1473,7 +1473,7 @@ DIB_CreateDIBSection(
                                     PAGE_READWRITE);
         if (!NT_SUCCESS(Status))
         {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             return NULL;
         }
 
@@ -1533,13 +1533,13 @@ DIB_CreateDIBSection(
 							0);
     if (!res)
     {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        EngSetLastError(ERROR_NO_SYSTEM_RESOURCES);
         goto cleanup;
     }
     bmp = SURFACE_LockSurface(res);
     if (NULL == bmp)
     {
-		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		EngSetLastError(ERROR_INVALID_HANDLE);
         goto cleanup;
     }
 

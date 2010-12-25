@@ -76,7 +76,7 @@ NtGdiEscape(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (dc == NULL)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    EngSetLastError(ERROR_INVALID_HANDLE);
     return SP_ERROR;
   }
 
@@ -144,7 +144,7 @@ NtGdiExtEscape(
    pDC = DC_LockDc(hDC);
    if ( pDC == NULL )
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return -1;
    }
    if ( pDC->dctype == DC_TYPE_INFO)
@@ -178,7 +178,7 @@ NtGdiExtEscape(
       if ( !SafeInData )
       {
          DC_UnlockDc(pDC);
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
          return -1;
       }
 
@@ -227,7 +227,7 @@ NtGdiExtEscape(
       SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, TAG_PRINT );
       if ( !SafeOutData )
       {
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
 freeout:
          if ( SafeInData )
             ExFreePoolWithTag ( SafeInData, TAG_PRINT );

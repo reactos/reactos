@@ -194,7 +194,7 @@ NtUserGetGUIThreadInfo(
 
    if(SafeGui.cbSize != sizeof(GUITHREADINFO))
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( FALSE);
    }
 
@@ -203,7 +203,7 @@ NtUserGetGUIThreadInfo(
       Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
       if(!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(ERROR_ACCESS_DENIED);
+         EngSetLastError(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
       Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->rpdesk;
@@ -227,7 +227,7 @@ NtUserGetGUIThreadInfo(
    {
       if(idThread && Thread)
          ObDereferenceObject(Thread);
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
+      EngSetLastError(ERROR_ACCESS_DENIED);
       RETURN( FALSE);
    }
 
@@ -305,7 +305,7 @@ NtUserGetGuiResources(
    if(!W32Process)
    {
       ObDereferenceObject(Process);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       RETURN( 0);
    }
 
@@ -323,7 +323,7 @@ NtUserGetGuiResources(
          }
       default:
          {
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            EngSetLastError(ERROR_INVALID_PARAMETER);
             break;
          }
    }

@@ -28,7 +28,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
                                        &Process);
    if (!NT_SUCCESS(Status))
    {
-      SetLastWin32Error(RtlNtStatusToDosError(Status));
+      EngSetLastError(RtlNtStatusToDosError(Status));
       return FALSE;
    }
 
@@ -121,7 +121,7 @@ NtUserCallNoParam(DWORD Routine)
 
       default:
          DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          break;
    }
    RETURN(Result);
@@ -205,7 +205,7 @@ NtUserCallOneParam(
 
             if (!(CurIcon = IntCreateCurIconHandle()))
             {
-               SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+               EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
                RETURN(0);
             }
 
@@ -312,7 +312,7 @@ NtUserCallOneParam(
              ppi->dwLayout = Param;
              RETURN(TRUE);
           }
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          EngSetLastError(ERROR_INVALID_PARAMETER);
           RETURN(FALSE);
       }
       case ONEPARAM_ROUTINE_GETPROCDEFLAYOUT:
@@ -322,7 +322,7 @@ NtUserCallOneParam(
           PDWORD pdwLayout;
           if ( PsGetCurrentProcess() == CsrProcess)
           {
-             SetLastWin32Error(ERROR_INVALID_ACCESS);
+             EngSetLastError(ERROR_INVALID_ACCESS);
              RETURN(FALSE);
           }
           ppi = PsGetCurrentProcessWin32Process();
@@ -344,7 +344,7 @@ NtUserCallOneParam(
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
-   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   EngSetLastError(ERROR_INVALID_PARAMETER);
    RETURN( 0);
 
 CLEANUP:
@@ -466,7 +466,7 @@ NtUserCallTwoParam(
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
-   SetLastWin32Error(ERROR_INVALID_PARAMETER);
+   EngSetLastError(ERROR_INVALID_PARAMETER);
    RETURN( 0);
 
 CLEANUP:

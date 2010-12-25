@@ -84,12 +84,12 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
 
   if (!hrgn)
   {
-  	SetLastWin32Error(ERROR_INVALID_PARAMETER);
+  	EngSetLastError(ERROR_INVALID_PARAMETER);
   	return ERROR;
   }
   if (!(dc = DC_LockDc(hdc)))
   {
-  	SetLastWin32Error(ERROR_INVALID_HANDLE);
+  	EngSetLastError(ERROR_INVALID_HANDLE);
   	return ERROR;
   }
 
@@ -127,7 +127,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     }
     else
     {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return ERROR;
     }
   }
@@ -167,7 +167,7 @@ int APIENTRY NtGdiExtSelectClipRgn(HDC  hDC,
 
   if (!(dc = DC_LockDc(hDC)))
   {
-  	SetLastWin32Error(ERROR_INVALID_HANDLE);
+  	EngSetLastError(ERROR_INVALID_HANDLE);
   	return ERROR;
   }
 
@@ -278,7 +278,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
 
    if (!dc)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return ERROR;
    }
 
@@ -332,7 +332,7 @@ int APIENTRY NtGdiIntersectClipRect(HDC  hDC,
 
    if (!dc)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return ERROR;
    }
 
@@ -375,7 +375,7 @@ int APIENTRY NtGdiOffsetClipRgn(HDC  hDC,
 
   if(!(dc = DC_LockDc(hDC)))
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    EngSetLastError(ERROR_INVALID_HANDLE);
     return ERROR;
   }
 
@@ -404,7 +404,7 @@ BOOL APIENTRY NtGdiPtVisible(HDC  hDC,
 
   if(!(dc = DC_LockDc(hDC)))
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
 
@@ -425,7 +425,7 @@ BOOL APIENTRY NtGdiRectVisible(HDC  hDC,
 
    if (!dc)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
    }
 
@@ -526,7 +526,7 @@ int APIENTRY NtGdiSetMetaRgn(HDC  hDC)
 
   if (!pDC)
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return ERROR;
   }
   Ret = IntGdiSetMetaRgn(pDC);

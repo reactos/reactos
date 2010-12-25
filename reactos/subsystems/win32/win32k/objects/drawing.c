@@ -1202,7 +1202,7 @@ IntFillRect( DC *dc,
   psurf = dc->dclevel.pSurface;
   if (psurf == NULL)
   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return 0;
   }
 
@@ -1276,7 +1276,7 @@ IntFillArc( PDC dc,
   if (!pbrush)
   {
       DPRINT1("FillArc Fail\n");
-      SetLastWin32Error(ERROR_INTERNAL_ERROR);
+      EngSetLastError(ERROR_INTERNAL_ERROR);
       return FALSE;
   }
   // Sort out alignment here.

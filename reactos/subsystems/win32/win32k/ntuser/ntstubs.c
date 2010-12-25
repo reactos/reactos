@@ -40,13 +40,13 @@ NtUserAttachThreadInput(
   Status = PsLookupThreadByThreadId((HANDLE)idAttach, &Thread);
   if (!NT_SUCCESS(Status))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      goto Exit;
   }
   Status = PsLookupThreadByThreadId((HANDLE)idAttachTo, &ThreadTo);
   if (!NT_SUCCESS(Status))
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      ObDereferenceObject(Thread);
      goto Exit;
   }
@@ -292,7 +292,7 @@ NtUserGetMouseMovePointsEx(
    if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
    {
       UserLeave();
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      EngSetLastError(ERROR_INVALID_PARAMETER);
       return -1;
    }
 
@@ -304,7 +304,7 @@ NtUserGetMouseMovePointsEx(
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
        SetLastNtError(_SEH2_GetExceptionCode());
-       SetLastWin32Error(ERROR_NOACCESS);
+       EngSetLastError(ERROR_NOACCESS);
    }
    _SEH2_END;
 
@@ -316,7 +316,7 @@ NtUserGetMouseMovePointsEx(
      case GMMP_USE_HIGH_RESOLUTION_POINTS:
           break;
      default:
-        SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
+        EngSetLastError(GMMP_ERR_POINT_NOT_FOUND);
         return GMMP_ERR_POINT_NOT_FOUND;
    }
   */

@@ -1083,7 +1083,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       Status = MmCopyToCaller(UnsafeRect, &Rect, sizeof(RECTL));
       if (!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         EngSetLastError(ERROR_INVALID_PARAMETER);
          RETURN(FALSE);
       }
    }
@@ -1139,7 +1139,7 @@ NtUserRedrawWindow(
       _SEH2_END
       if (!NT_SUCCESS(Status))
       {
-         SetLastWin32Error(RtlNtStatusToDosError(Status));
+         EngSetLastError(RtlNtStatusToDosError(Status));
          RETURN( FALSE);
       }
    }
@@ -1149,7 +1149,7 @@ NtUserRedrawWindow(
                   RDW_ERASENOW|RDW_UPDATENOW|RDW_ALLCHILDREN|RDW_NOCHILDREN) )
    {
       /* RedrawWindow fails only in case that flags are invalid */
-      SetLastWin32Error(ERROR_INVALID_FLAGS);
+      EngSetLastError(ERROR_INVALID_FLAGS);
       RETURN( FALSE);
    }
 
@@ -2075,7 +2075,7 @@ NtUserPrintWindow(
           if ( (nFlags & PW_CLIENTONLY) == nFlags)
              Ret = IntPrintWindow( Window, hdcBlt, nFlags);
           else
-             SetLastWin32Error(ERROR_INVALID_PARAMETER);
+             EngSetLastError(ERROR_INVALID_PARAMETER);
        }
     }
 

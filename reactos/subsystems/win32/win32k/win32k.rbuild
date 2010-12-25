@@ -94,7 +94,6 @@
 	</directory>
 	<directory name="misc">
 		<file>driver.c</file>
-		<file>err.c</file>
 		<file>file.c</file>
 		<file>math.c</file>
 		<file>rtlstr.c</file>

@@ -492,7 +492,7 @@ NtUserSetActiveWindow(HWND hWnd)
 
       if (Window->head.pti->MessageQueue != ThreadQueue)
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
       }
 
@@ -614,7 +614,7 @@ HWND FASTCALL co_UserSetFocus(PWND Wnd OPTIONAL)
 
       if (Wnd->head.pti->MessageQueue != ThreadQueue)
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+         EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
          return( 0);
       }
 

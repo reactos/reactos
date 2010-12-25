@@ -73,7 +73,7 @@ IntArc( DC *dc,
     if (!pbrushPen)
     {
         DPRINT1("Arc Fail 1\n");
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
@@ -161,7 +161,7 @@ IntArc( DC *dc,
     {
         DPRINT1("Arc Fail 2\n");
         PEN_UnlockPen(pbrushPen);
-        SetLastWin32Error(ERROR_INTERNAL_ERROR);
+        EngSetLastError(ERROR_INTERNAL_ERROR);
         return FALSE;
     }
 
@@ -312,7 +312,7 @@ NtGdiAngleArc(
   pDC = DC_LockDc (hDC);
   if(!pDC)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
   if (pDC->dctype == DC_TYPE_INFO)
@@ -355,7 +355,7 @@ NtGdiArcInternal(
   dc = DC_LockDc (hDC);
   if(!dc)
   {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    EngSetLastError(ERROR_INVALID_HANDLE);
     return FALSE;
   }
   if (dc->dctype == DC_TYPE_INFO)

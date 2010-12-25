@@ -45,7 +45,7 @@ GreGetTextExtentW(
   pdc = DC_LockDc(hDC);
   if (!pdc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -97,7 +97,7 @@ GreGetTextExtentExW(
 
   if ( (!String && Count ) || !pSize )
   {
-     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     EngSetLastError(ERROR_INVALID_PARAMETER);
      return FALSE;
   }
 
@@ -110,7 +110,7 @@ GreGetTextExtentExW(
   pdc = DC_LockDc(hDC);
   if (NULL == pdc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
   pdcattr = pdc->pdcattr;
@@ -148,7 +148,7 @@ NtGdiGetCharSet(HDC hDC)
   Dc = DC_LockDc(hDC);
   if (!Dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return 0;
   }
   cscp = ftGdiGetTextCharsetInfo(Dc,NULL,0);
@@ -214,7 +214,7 @@ NtGdiGetTextCharsetInfo(
   Dc = DC_LockDc(hdc);
   if (!Dc)
   {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return DEFAULT_CHARSET;
   }
 
@@ -298,7 +298,7 @@ NtGdiGetTextExtentExW(
   String = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
   if (NULL == String)
     {
-      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return FALSE;
     }
 
@@ -308,7 +308,7 @@ NtGdiGetTextExtentExW(
       if (NULL == Dx)
 	{
 	  ExFreePoolWithTag(String, TAG_GDITEXT);
-	  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+	  EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	  return FALSE;
 	}
     }
@@ -337,7 +337,7 @@ NtGdiGetTextExtentExW(
 	  ExFreePoolWithTag(Dx, TAG_GDITEXT);
 	}
       ExFreePoolWithTag(String, TAG_GDITEXT);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
     }
   pdcattr = dc->pdcattr;
@@ -440,7 +440,7 @@ NtGdiSetTextJustification(HDC  hDC,
   pDc = DC_LockDc(hDC);
   if (!pDc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     EngSetLastError(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -476,7 +476,7 @@ NtGdiGetTextFaceW(
    Dc = DC_LockDc(hDC);
    if (Dc == NULL)
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      EngSetLastError(ERROR_INVALID_HANDLE);
       return FALSE;
    }
    pdcattr = Dc->pdcattr;

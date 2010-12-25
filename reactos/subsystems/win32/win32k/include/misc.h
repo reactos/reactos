@@ -73,3 +73,7 @@ RegWriteUserSetting(
     IN ULONG ulType,
     OUT PVOID pvData,
     IN ULONG cbDataSize);
+
+VOID FASTCALL
+SetLastNtError(
+  NTSTATUS Status);
