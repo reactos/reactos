@@ -47,7 +47,7 @@ IsVesaBiosOk(IN PVIDEO_PORT_INT10_INTERFACE Interface,
     VideoPortDebugPrint(0, "Vendor: %s Product: %s Revision: %s (%lx)\n", Vendor, Product, Revision, OemRevision);
     for (i = 0; i < (sizeof(BrokenVesaBiosList) / sizeof(PCHAR)); i++)
     {
-        if (!strncmp(Product, BrokenVesaBiosList[i], sizeof(BrokenVesaBiosList[i]))) return FALSE;
+        if (!strncmp(Product, BrokenVesaBiosList[i], strlen(BrokenVesaBiosList[i]))) return FALSE;
     }
 
     /* For Brookdale-G (Intel), special hack used */
