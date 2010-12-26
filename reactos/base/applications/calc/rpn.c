@@ -351,7 +351,7 @@ static void evalStack(calc_number_t *number)
         } else {
             push(op);
             break;
-        }  
+        }
     }
 
     if(ip.node.operation != RPN_OPERATOR_EQUAL && ip.node.operation != RPN_OPERATOR_PERCENT)
@@ -380,6 +380,7 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
     tmp.node.number = *number;
     tmp.node.base = calc.base;
     tmp.node.operation = func;
+    tmp.next = NULL;
 
     push(&tmp);
 
@@ -446,7 +447,7 @@ void flush_postfix()
     while (!is_stack_empty())
         pop();
     /* clear prev and last typed operators */
-    calc.prev_operator = 
+    calc.prev_operator =
     calc.last_operator = 0;
 }
 
